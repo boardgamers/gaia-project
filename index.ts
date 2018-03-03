@@ -1,6 +1,3 @@
-import {defineGrid} from "honeycomb-grid";
+import SpaceMap from "./src/map";
 
-const Grid = defineGrid();
-const grid1 = Grid.hexagon({radius: 2});
-
-console.log(grid1[0], grid1.length);
+const map = new SpaceMap();

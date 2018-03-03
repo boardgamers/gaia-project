@@ -1,15 +1,6 @@
-enum Planet {
-  Empty = "e",
-  Terra = "r",
-  Desert = "d",
-  Swamp = "s",
-  Oxide = "o",
-  Volcanic = "v",
-  Titanium = "t",
-  Ice = "i",
-  Gaia = "g",
-  Transdim = "m"
-}
+import * as seedrandom from "seedrandom";
+import * as shuffleSeed from "shuffle-seed";
+import Sector from "./sector";
 
 const s1 = "eee,dsee,eeere,eeem,ove"
 const s2 = "evt,eeee,eseie,oeed,eme"
@@ -27,6 +18,41 @@ const s10 = "eee,edem,reeem,oege,eee"
 
 const sectors = [[s1,s1],[s2,s2],[s3,s3],[s4,s4],[s5,s5b],[s6,s6b],[s7,s7b],[s8,s8],[s9,s9],[s10,s10]]
 
-function chooseSides() : string[] {
-  return sectors.map(el => Math.random() >= 0.5 ? el[0] : el[1])
+export default class SpaceMap {
+  rng: seedrandom.prng = seedrandom("seed");
+  nbPlayers: number = 2;
+  grid; // honeycomb-grid
+
+  constructor(nbPlayers? : number) {
+    if (nbPlayers !== undefined) {
+      this.nbPlayers = nbPlayers;
+    }
+    
+    do {
+      this.generate();
+    } while (!this.isValid());
+  }
+
+  /** 
+   *  Check if the map is correct (no two planets of the same color side by side)
+  */
+  isValid(): boolean {
+    return true;
+  }
+
+  /** 
+   * Generate the map
+  */
+  generate() {
+    const definitions = this.chooseSides();
+    const hexagons = definitions.map((side, index) => Sector.create(side, index));
+
+    //Todo: concatenate the hexagons in the right way, and store in this.grid
+  }
+
+  chooseSides() : string[] {
+    const definitions = sectors.map(el => this.rng() >= 0.5 ? el[0] : el[1]);
+    // Random sort of the chosen sectors, limited to 8
+    return shuffleSeed.shuffle(definitions, this.rng()).slice(0, 8);
+  }
 }

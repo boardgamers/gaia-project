@@ -7,9 +7,12 @@
   "author": "coyotte508, randomboolean",
   "license": "MIT",
   "dependencies": {
-    "honeycomb-grid": "^1.1.5"
+    "honeycomb-grid": "^1.1.5",
+    "seedrandom": "^2.4.3",
+    "shuffle-seed": "^1.1.6"
   },
   "devDependencies": {
+    "@types/seedrandom": "^2.4.27",
     "ts-node": "^5.0.1",
     "typescript": "^2.7.2"
   }
