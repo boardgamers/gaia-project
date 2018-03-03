@@ -1,14 +1,14 @@
 enum Planet {
-    Empty = "e",
-    Terra = "r",
-    Desert = "d",
-    Swamp = "s",
-    Oxide = "o",
-    Volcanic = "v",
-    Titanium = "t",
-    Ice = "i",
-    Gaia = "g",
-    Transdim = "m"    
+  Empty = "e",
+  Terra = "r",
+  Desert = "d",
+  Swamp = "s",
+  Oxide = "o",
+  Volcanic = "v",
+  Titanium = "t",
+  Ice = "i",
+  Gaia = "g",
+  Transdim = "m"
 }
 
 const s1 = "eee,dsee,eeere,eeem,ove"
