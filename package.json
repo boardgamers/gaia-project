@@ -1,0 +1,9 @@
+{
+  "name": "gaia-engine",
+  "version": "1.0.0",
+  "description": "Javascript engine for project gaia",
+  "main": "dist/index.js",
+  "repository": "git@github.com:donkeytech/gaia-engine.git",
+  "author": "coyotte508, randomboolean",
+  "license": "MIT"
+}
