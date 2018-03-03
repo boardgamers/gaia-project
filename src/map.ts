@@ -26,3 +26,7 @@ const s9 = "eve,eeem,steei,eege,eee"
 const s10 = "eee,edem,reeem,oege,eee"
 
 const sectors = [[s1,s1],[s2,s2],[s3,s3],[s4,s4],[s5,s5b],[s6,s6b],[s7,s7b],[s8,s8],[s9,s9],[s10,s10]]
+
+function chooseSides() : string[] {
+  return sectors.map(el => Math.random() >= 0.5 ? el[0] : el[1])
+}
