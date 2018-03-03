@@ -8,5 +8,9 @@
   "license": "MIT",
   "dependencies": {
     "honeycomb-grid": "^1.1.5"
+  },
+  "devDependencies": {
+    "ts-node": "^5.0.1",
+    "typescript": "^2.7.2"
   }
 }
