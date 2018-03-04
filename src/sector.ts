@@ -1,8 +1,15 @@
 import {defineGrid, extendHex} from "honeycomb-grid";
 import { Planet } from "./enums";
 
+interface GaiaHex {
+  data: {
+    planet: Planet,
+    sector: number
+  }
+}
+
 // flat-topped hexagons
-const Grid = defineGrid(extendHex({orientation: "flat"}));
+const Grid = defineGrid(extendHex<GaiaHex>({orientation: "flat", data: {planet: Planet.Empty, sector: null}}));
 
 export default class Sector {
   /**
