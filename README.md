@@ -8,3 +8,9 @@ npm install
 tsc
 npm start
 ```
+
+To automatically compile Typescript: 
+
+```
+tsc --watch
+```
