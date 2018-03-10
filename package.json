@@ -12,7 +12,11 @@
     "shuffle-seed": "^1.1.6"
   },
   "devDependencies": {
+    "@types/express": "^4.11.1",
+    "@types/node": "^9.4.7",
     "@types/seedrandom": "^2.4.27",
+    "body-parser": "^1.18.2",
+    "express": "^4.16.2",
     "ts-node": "^5.0.1",
     "typescript": "^2.7.2"
   }

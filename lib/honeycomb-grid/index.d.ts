@@ -33,7 +33,7 @@ interface CubeCoordinates {
   s: number;
 }
 
-declare namespace Types {
+export namespace Types {
   export interface Point {
       x: number;
       y: number;

@@ -1,6 +1,7 @@
+import {Types} from "honeycomb-grid";
 import * as seedrandom from "seedrandom";
 import * as shuffleSeed from "shuffle-seed";
-import Sector from "./sector";
+import Sector, { GaiaHex } from "./sector";
 
 const s1 = "eee,dsee,eeere,eeem,ove"
 const s2 = "evt,eeee,eseie,oeed,eme"
@@ -19,14 +20,16 @@ const s10 = "eee,edem,reeem,oege,eee"
 const sectors = [[s1,s1],[s2,s2],[s3,s3],[s4,s4],[s5,s5b],[s6,s6b],[s7,s7b],[s8,s8],[s9,s9],[s10,s10]]
 
 export default class SpaceMap {
-  rng: seedrandom.prng = seedrandom("seed");
-  nbPlayers: number = 2;
-  grid; // honeycomb-grid
+  rng: seedrandom.prng;
+  nbPlayers;
+  grid: Types.Grid<GaiaHex>; // honeycomb-grid
 
-  constructor(nbPlayers? : number) {
+  constructor(nbPlayers : number, seed : string) {
     if (nbPlayers !== undefined) {
       this.nbPlayers = nbPlayers;
     }
+
+    this.rng = seedrandom(seed);
     
     do {
       this.generate();
@@ -48,11 +51,19 @@ export default class SpaceMap {
     const hexagons = definitions.map((side, index) => Sector.create(side, index));
 
     //Todo: concatenate the hexagons in the right way, and store in this.grid
+    this.grid = hexagons[0];
   }
 
   chooseSides() : string[] {
     const definitions = sectors.map(el => this.rng() >= 0.5 ? el[0] : el[1]);
     // Random sort of the chosen sectors, limited to 8
     return shuffleSeed.shuffle(definitions, this.rng()).slice(0, 8);
+  }
+
+  toJSON() {
+    return {
+      grid: this.grid,
+      nbPlayers: this.nbPlayers
+    }
   }
 }

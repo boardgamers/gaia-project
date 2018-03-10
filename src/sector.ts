@@ -1,7 +1,7 @@
 import {defineGrid, extendHex} from "honeycomb-grid";
 import { Planet } from "./enums";
 
-interface GaiaHex {
+export interface GaiaHex {
   data: {
     planet: Planet,
     sector: number
