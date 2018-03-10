@@ -1,7 +1,10 @@
 // const CopyWebpackPlugin = require('copy-webpack-plugin');
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 const webpack = require("webpack");
 const path = require("path");
+
+const distDir = path.join(__dirname, "dist/public/");
 
 module.exports = {
   context: path.join(__dirname, 'app/assets'),
@@ -9,7 +12,7 @@ module.exports = {
     extensions: ['.ts', '.tsx', '.js', '.jsx']
   },
   output: {
-    path: path.join(__dirname, "dist/public/"),
+    path: distDir,
     filename: "javascript/[name].js"
   },
   entry: {
@@ -76,7 +79,14 @@ module.exports = {
     //   'window.jQuery': 'jquery',
     //   Popper: ['popper.js', 'default']
     // }),
-    // new ExtractTextPlugin("stylesheets/styles.css")
+    // new ExtractTextPlugin("stylesheets/styles.css"),
+    new HtmlWebpackPlugin({
+      // minify: {removeAttributeQuotes: false}, // pour conserver les quotes dans les contenus remplacés par node
+      // HtmlWebpackPlugin, par défaut, essaie de parser les fichiers avec le template lodash qui ressemble à ejs
+      // Au contraire, on ne veux que pas que l'ejs soit parsé et templaté par webpack, on le traite comme du html simple
+      template: 'views/index.html',
+      filename: path.join(distDir, 'index.html')
+    })
   ],
   // externals: {
   //   jquery: 'jQuery'
