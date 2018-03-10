@@ -4,7 +4,7 @@ import Engine from "./src/engine";
 
 const app = express();
 
-app.use(bodyParser());
+app.use(bodyParser.json());
 
 app.post("/", (req, res) => {
   const moves = req.body.moves;
