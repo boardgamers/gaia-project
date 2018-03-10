@@ -30,9 +30,8 @@ interface Reward {
   count: number;
   type: Resource
 }
-//definition = definition.split(",").map(str => str.split("") as Planet[]);
-export class Tech {
-  //advance: boolean
+
+export class Event {
   spec: string
   condition : Condition
   operator : Operator
