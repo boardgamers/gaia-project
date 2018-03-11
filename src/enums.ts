@@ -30,7 +30,7 @@ export enum Operator {
   Trigger = ">>",
   Activate = "=>",
   Pass = "|",
-  Special = "S"
+  Special = "S" // reserved op for PI and AC becoming 4pw structures
 }
 
 export enum Condition {
