@@ -22,6 +22,8 @@ export default class MapRenderer {
   }
 
   render(map: Honeycomb.Types.Hex<GaiaHex>[] ) {
+    this.graphics.clear();
+    
     const Hex = Honeycomb.extendHex<GaiaHex>({ size: HEXRADIUS , orientation: "flat", data: {planet: Planet.Empty, sector: null}});
     const Grid = Honeycomb.defineGrid(Hex);
 

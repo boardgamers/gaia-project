@@ -10,7 +10,7 @@ $("form").on("submit", function(event) {
   event.preventDefault();
 
   const data = {
-    moves: $("textarea").text().split("\n")
+    moves: ($("textarea").val() as string).split("\n")
   }
 
   $.post("http://localhost:9508/", 
