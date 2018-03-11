@@ -2,6 +2,9 @@ import "jquery";
 import "bootstrap";
 import "../stylesheets/frontend.scss";
 import { showError } from "./utils";
+import MapRenderer from "../../renderers/map";
+
+const map = new MapRenderer($("canvas").get(0) as HTMLCanvasElement);
 
 $("form").on("submit", function(event) {
   event.preventDefault();
@@ -23,5 +26,4 @@ $("form").on("submit", function(event) {
       showError("Error " + error.status + ": " + error.responseText);
     }
   });
-
 })
