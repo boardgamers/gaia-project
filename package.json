@@ -1,6 +1,6 @@
 {
   "name": "@gaia-project/engine",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Javascript engine for project gaia",
   "main": "dist/index.js",
   "types": "index.d.ts",
@@ -12,7 +12,10 @@
   "scripts": {
     "prepublishOnly": "tsc"
   },
-  "contributors": ["coyotte508 <coyotte508@gmail.com>", "randomboolean <randomboolean@gmail.com>"],
+  "contributors": [
+    "coyotte508 <coyotte508@gmail.com>",
+    "randomboolean <randomboolean@gmail.com>"
+  ],
   "license": "MIT",
   "dependencies": {
     "honeycomb-grid": "^1.1.5",
