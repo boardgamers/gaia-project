@@ -51,7 +51,7 @@ const SCORING6 = "d >> 3:vp"
 const SCORING7 = "piac >> 5:vp"
 const scorings = [SCORING1, SCORING2, SCORING3, SCORING4, SCORING5, SCORING5, SCORING6, SCORING6, SCORING7, SCORING7]
 
-interface Reward {
+export interface Reward {
   count: number;
   type: Resource
 }

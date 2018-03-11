@@ -1,4 +1,4 @@
-import {defineGrid, extendHex} from "honeycomb-grid";
+import {defineGrid, extendHex, Types} from "honeycomb-grid";
 import { Planet } from "./enums";
 
 export interface GaiaHex {

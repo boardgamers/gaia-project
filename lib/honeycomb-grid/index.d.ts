@@ -123,12 +123,14 @@ type HexConstructor<T> = HexConstructor1<T> | HexConstructor2<T>;
 
 export function extendHex<T={}>(prototype?: ExtendHexParams & T): HexConstructor<T>;
 
-interface GridMaker<T={}> {
-  hexagon(params: {radius: number, center?: Hex<T>}): Grid<T>;
-  rectangle(width: number, height: number, start?: Hex<T>, direction?: Direction): Grid<T>;
-  parallelogram(width: number, height: number, start?: Hex<T>, direction?: Direction): Grid<T>;
-  triangle(size: number, start?: Hex<T>, direction?: 1|5): Grid<T>;
+declare interface GridMaker<T={}> {
+  hexagon(params: {radius: number, center?: HexParams<T>}): Grid<T>;
+  rectangle(width: number, height: number, start?: HexParams<T>, direction?: Direction): Grid<T>;
+  parallelogram(width: number, height: number, start?: HexParams<T>, direction?: Direction): Grid<T>;
+  triangle(size: number, start?: HexParams<T>, direction?: 1|5): Grid<T>;
 }
+
+declare function GridMaker<T>(...args: HexParams<T>[]): Grid<T>; 
 
 export function defineGrid<T={}>(extendHex: HexConstructor<T>): GridMaker<T>;
 
