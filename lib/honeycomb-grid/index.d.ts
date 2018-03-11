@@ -119,7 +119,7 @@ import Hex = Types.Hex;
 
 type HexConstructor1<T> = (x?: number, y?: number) => Hex<T>;
 type HexConstructor2<T> = (params: HexParams<T>) => Hex<T>;
-type HexConstructor<T> = HexConstructor1<T> | HexConstructor2<T>;
+type HexConstructor<T> = HexConstructor1<T> & HexConstructor2<T>;
 
 export function extendHex<T={}>(prototype?: ExtendHexParams & T): HexConstructor<T>;
 
@@ -130,9 +130,9 @@ declare interface GridMaker<T={}> {
   triangle(size: number, start?: HexParams<T>, direction?: 1|5): Grid<T>;
 }
 
-declare function GridMaker<T>(...args: HexParams<T>[]): Grid<T>; 
+type GridConstructor<T={}> = (...args: HexParams<T>[]) => Grid<T>;
 
-export function defineGrid<T={}>(extendHex: HexConstructor<T>): GridMaker<T>;
+export function defineGrid<T={}>(extendHex: HexConstructor<T>): GridMaker<T> & GridConstructor<T>;
 
 declare function PointConstructor(coordinates: Partial<Coordinates>) : Point;
 declare function PointConstructor(arr: number[]) : Point;
