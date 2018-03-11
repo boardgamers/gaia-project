@@ -32,7 +32,8 @@ export default class Engine {
 
   data(): Object {
     return {
-      map: this.map.toJSON()
+      map: this.map.toJSON(),
+      nbPlayers: this.map.nbPlayers
     };
   }
 }

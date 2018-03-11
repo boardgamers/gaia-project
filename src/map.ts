@@ -61,9 +61,6 @@ export default class SpaceMap {
   }
 
   toJSON() {
-    return {
-      grid: this.grid,
-      nbPlayers: this.nbPlayers
-    }
+    return this.grid;
   }
 }
