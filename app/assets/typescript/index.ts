@@ -1,4 +1,6 @@
-require("jquery");
+import "jquery";
+import "bootstrap";
+import "../stylesheets/frontend.scss";
 
 $("form").on("submit", function(event) {
   event.preventDefault();

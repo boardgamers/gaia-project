@@ -33,19 +33,19 @@ module.exports = {
           fallback: "style-loader"
         })
       },
-      // {
-      //   test: /\.scss$/,
-      //   use: ExtractTextPlugin.extract({
-      //     use: [{
-      //       loader: "css-loader"
-      //     }, {
-      //       loader: "resolve-url-loader"
-      //     }, {
-      //       loader: "sass-loader?sourceMap"
-      //     }],
-      //     fallback: "style-loader"
-      //   })
-      // },
+      {
+        test: /\.scss$/,
+        use: ExtractTextPlugin.extract({
+          use: [{
+            loader: "css-loader"
+          }, {
+            loader: "resolve-url-loader"
+          }, {
+            loader: "sass-loader?sourceMap"
+          }],
+          fallback: "style-loader"
+        })
+      },
       {
         test: /\.(ttf|eot|svg|jpg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
         use: "file-loader?publicPath=../&name=./files/[hash].[ext]"
@@ -79,7 +79,7 @@ module.exports = {
       'window.jQuery': 'jquery',
       // Popper: ['popper.js', 'default']
     }),
-    // new ExtractTextPlugin("stylesheets/styles.css"),
+    new ExtractTextPlugin("stylesheets/styles.css"),
     new HtmlWebpackPlugin({
       // minify: {removeAttributeQuotes: false}, // pour conserver les quotes dans les contenus remplacés par node
       // HtmlWebpackPlugin, par défaut, essaie de parser les fichiers avec le template lodash qui ressemble à ejs
