@@ -61,10 +61,10 @@ module.exports = {
     ]
   },
   plugins: [
-    new CopyWebpackPlugin([{
-      context: __dirname,
-      from: "node_modules/jquery/dist/jquery.min.js",
-      to: "javascript"
+    // new CopyWebpackPlugin([{
+    //   context: __dirname,
+    //   from: "node_modules/jquery/dist/jquery.min.js",
+    //   to: "javascript"
     // }, {
     //   context: __dirname,
     //   from: "node_modules/popper.js/dist/umd/popper.min.js",
@@ -72,7 +72,7 @@ module.exports = {
     // }, {
     //   from: 'images/profile-joined-litnovel.png',
     //   to: 'images'
-    }]),
+    // }]),
     new webpack.ProvidePlugin({
       $: 'jquery',
       jQuery: 'jquery',
@@ -81,12 +81,11 @@ module.exports = {
     }),
     new ExtractTextPlugin("stylesheets/styles.css"),
     new HtmlWebpackPlugin({
-      // minify: {removeAttributeQuotes: false}, // pour conserver les quotes dans les contenus remplacés par node
-      // HtmlWebpackPlugin, par défaut, essaie de parser les fichiers avec le template lodash qui ressemble à ejs
-      // Au contraire, on ne veux que pas que l'ejs soit parsé et templaté par webpack, on le traite comme du html simple
       template: 'views/index.html',
       filename: path.join(distDir, 'index.html')
-    })
+    }),
+    // Ignore code that the gaia project engine doesn't run as a dependency
+    new webpack.IgnorePlugin(/^\.\/app$/, /@gaia-project(\/|\\)engine(\/|\\)dist$/)
   ],
   // externals: {
   //   jquery: 'jQuery'

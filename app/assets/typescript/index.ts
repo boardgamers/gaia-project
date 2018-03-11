@@ -16,6 +16,7 @@ $("form").on("submit", function(event) {
   $.post("http://localhost:9508/", 
     data,
     data => {
+      map.render(data.map);
       console.log(data)
     },
     "json"
