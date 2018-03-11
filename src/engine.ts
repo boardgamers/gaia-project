@@ -19,8 +19,8 @@ export default class Engine {
       assert (move.startsWith("init"));
       const split = move.trim().split(" ");
 
-      const players = +move[1] || 2;
-      const seed = move[2] || "defaultSeed";
+      const players = +split[1] || 2;
+      const seed = split[2] || "defaultSeed";
 
       this.map = new SpaceMap(players, seed);
 
