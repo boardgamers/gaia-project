@@ -1,6 +1,7 @@
 import "jquery";
 import "bootstrap";
 import "../stylesheets/frontend.scss";
+import { showError } from "./utils";
 
 $("form").on("submit", function(event) {
   event.preventDefault();
@@ -15,6 +16,12 @@ $("form").on("submit", function(event) {
       console.log(data)
     },
     "json"
-  );
+  ).fail((error, status, exception) => {
+    if (error.status === 0) {
+      showError("Are you sure gaia engine is running on port 9508?");  
+    } else {
+      showError("Error " + error.status + ": " + error.responseText);
+    }
+  });
 
 })
