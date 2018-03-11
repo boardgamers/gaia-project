@@ -1,4 +1,4 @@
-// const CopyWebpackPlugin = require('copy-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const webpack = require("webpack");
@@ -24,7 +24,7 @@ module.exports = {
     rules: [
       {
         test: /\.ts$/,
-        use: "ts-loader"
+        use: "ts-loader?configFile=app/assets/tsconfig.json"
       },
       {
         test: /\.css$/,
@@ -61,10 +61,10 @@ module.exports = {
     ]
   },
   plugins: [
-    // new CopyWebpackPlugin([{
-    //   context: __dirname,
-    //   from: "node_modules/jquery/dist/jquery.min.js",
-    //   to: "javascript"
+    new CopyWebpackPlugin([{
+      context: __dirname,
+      from: "node_modules/jquery/dist/jquery.min.js",
+      to: "javascript"
     // }, {
     //   context: __dirname,
     //   from: "node_modules/popper.js/dist/umd/popper.min.js",
@@ -72,13 +72,13 @@ module.exports = {
     // }, {
     //   from: 'images/profile-joined-litnovel.png',
     //   to: 'images'
-    // }]),
-    // new webpack.ProvidePlugin({
-    //   $: 'jquery',
-    //   jQuery: 'jquery',
-    //   'window.jQuery': 'jquery',
-    //   Popper: ['popper.js', 'default']
-    // }),
+    }]),
+    new webpack.ProvidePlugin({
+      $: 'jquery',
+      jQuery: 'jquery',
+      'window.jQuery': 'jquery',
+      // Popper: ['popper.js', 'default']
+    }),
     // new ExtractTextPlugin("stylesheets/styles.css"),
     new HtmlWebpackPlugin({
       // minify: {removeAttributeQuotes: false}, // pour conserver les quotes dans les contenus remplacés par node
