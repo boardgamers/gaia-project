@@ -56,13 +56,17 @@ export class Reward {
   type: Resource;
 
   constructor(reward: string) {
-    const regex = /^([1-9][0-9]*)(~|o|c|k|q|pw|t|vp|d|r)$/
+    const regex = /^([1-9][0-9]*)?(~|o|c|k|q|pw|t|vp|d|r)$/
 
     assert(regex.test(reward), "Cannot construct reward from " + reward);
 
     const [_, count, type] = regex.exec(reward);
     this.count = +count || 1;
     this.type = type as Resource;
+  }
+
+  toString() {
+    return `${this.count || 1}${this.type}`;
   }
 }
 
