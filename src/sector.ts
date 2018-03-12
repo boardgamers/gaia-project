@@ -1,4 +1,4 @@
-import {defineGrid, extendHex, Types} from "honeycomb-grid";
+import {defineGrid, extendHex, Types, Coordinates} from "honeycomb-grid";
 import { Planet } from "./enums";
 
 export interface GaiaHex {
@@ -18,7 +18,7 @@ export default class Sector {
    * @param definition The contents of the sector
    * @param id The id of the sector
    */
-  public static create(definition: Planet[][] | string, id: number) {
+  public static create(definition: Planet[][] | string, id: number, center: Coordinates = {x:0, y:0}) {
     // Converts a string like eee,dsee,eeere,eeem,ove into an array of array of planets
     if (typeof definition === "string") {
       definition = definition.split(",").map(str => str.split("") as Planet[]);
@@ -26,7 +26,7 @@ export default class Sector {
 
     //flatten the array
     const planetArray: Planet[] = [].concat(...definition);
-    const grid = Grid.hexagon({radius: 2});
+    const grid = Grid.hexagon({radius: 2, center});
 
     for (let i = 0; i < planetArray.length; i++) {
       // Todo: check it's done in the right order. If not, maybe do a double loop with coordinates
