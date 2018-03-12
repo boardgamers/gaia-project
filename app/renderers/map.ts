@@ -11,6 +11,7 @@ const LINEWIDTH = 1;
 export default class MapRenderer {
   app: PIXI.Application;
   graphics: PIXI.Graphics;
+  lastData: Honeycomb.Types.Hex<GaiaHex>[];
 
   constructor(view?: HTMLCanvasElement) {
     this.app = new PIXI.Application({transparent: true, antialias: true, view});
@@ -19,11 +20,17 @@ export default class MapRenderer {
     this.graphics = new PIXI.Graphics();
 
     this.app.stage.addChild(this.graphics);
+
+    $(window).on("resize", () => {
+      this.app.renderer.resize(view.offsetWidth, view.offsetHeight);
+      this.render(this.lastData);
+    });
   }
 
   render(map: Honeycomb.Types.Hex<GaiaHex>[] ) {
+    this.lastData = map;
     this.graphics.clear();
-    
+
     const Hex = Honeycomb.extendHex<GaiaHex>({ size: HEXRADIUS , orientation: "flat", data: {planet: Planet.Empty, sector: null}});
     const Grid = Honeycomb.defineGrid(Hex);
 
