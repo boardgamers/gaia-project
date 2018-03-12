@@ -22,17 +22,6 @@ interface BaseHexParams {
 
 type HexParams<T> = BaseHexParams & Partial<T>;
 
-interface Coordinates {
-  x: number;
-  y: number;
-}
-
-interface CubeCoordinates {
-  q: number;
-  r: number;
-  s: number;
-}
-
 export namespace Types {
   export interface Point {
       x: number;
@@ -45,22 +34,18 @@ export namespace Types {
   }
 
   export class Grid<T={}> extends Array<Hex<T>> {
-      includes(p: Point): boolean;
-      //lastIndexOf, map etc. should be redefined using Point instead of Hex<T>, but I'm too lazy to do it
+      includes(p: HexParams<T>): boolean;
+      concat(...grids: Grid<T>[]): Grid<T>; 
   
       static isValidHex(val: any): boolean;
   
       get(key: number) : Hex<T>;
-      get(key: Hex<T>);
-      get(key: Point);
-      get(key: PointConstructorArgument);
+      get(key: HexParams<T>);
       set(key: number, hex: Hex<T>);
-      set(key: Hex<T>, hex: Hex<T>);
-      set(key: Point, hex: Hex<T>);
-      set(key: PointConstructorArgument, hex: Hex<T>);
+      set(key: HexParams<T>, hex: Hex<T>);
   
-      hexesBetween(hex1: Hex<T>, hex2: Hex<T>): Hex<T>[];
-      neighborsOf(hex: Hex<T>, which: number | Direction | Array<number|Direction>);
+      hexesBetween(hex1: HexParams<T>, hex2: HexParams<T>): Hex<T>[];
+      neighborsOf(hex: HexParams<T>, which: number | Direction | Array<number|Direction>);
   }
 
   class BaseHex<T> {
@@ -110,12 +95,25 @@ export namespace Types {
       static thirdCoordinate(x: number, y: number): number;
   }
 
+  export interface Coordinates {
+    x: number;
+    y: number;
+  }
+  
+  export interface CubeCoordinates {
+    q: number;
+    r: number;
+    s: number;
+  }  
+
   export type Hex<T> = BaseHex<T> & T; 
 }
 
 import Point = Types.Point;
 import Grid = Types.Grid;
 import Hex = Types.Hex;
+import Coordinates = Types.Coordinates;
+import CubeCoordinates = Types.CubeCoordinates;
 
 type HexConstructor1<T> = (x?: number, y?: number) => Hex<T>;
 type HexConstructor2<T> = (params: HexParams<T>) => Hex<T>;
