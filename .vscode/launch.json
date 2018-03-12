@@ -6,7 +6,7 @@
             "type": "node",
             "request": "launch",
             "program": "${workspaceRoot}/node_modules/ts-node/dist/bin.js",
-            "args": ["index.ts"], //["${relativeFile}"],
+            "args": ["index.ts"],
             "cwd": "${workspaceRoot}",
             "protocol": "inspector"
         },
@@ -16,10 +16,19 @@
             "request": "launch",
             // "preLaunchTask": "tsc: build - tsconfig.json",
             "program": "${workspaceRoot}/dist/index.js",
-            "args": ["index.ts"], //["${relativeFile}"],
+            "args": ["index.ts"],
             "cwd": "${workspaceRoot}",
             "protocol": "inspector"
-        }        
+        },
+        {
+            "name": "Current TS File",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceRoot}/node_modules/ts-node/dist/bin.js",
+            "args": ["${relativeFile}"],
+            "cwd": "${workspaceRoot}",
+            "protocol": "inspector"
+        },    
         // {
         //     "name": "Current TS Tests File",
         //     "type": "node",
