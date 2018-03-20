@@ -1,4 +1,4 @@
-import {Types} from "honeycomb-grid";
+import {Grid, Hex} from "honeycomb-grid";
 import * as seedrandom from "seedrandom";
 import * as shuffleSeed from "shuffle-seed";
 import Sector, { GaiaHex } from "./sector";
@@ -38,8 +38,8 @@ const bigConfiguration = {
 
 export default class SpaceMap {
   rng: seedrandom.prng;
-  nbPlayers;
-  grid: Types.Grid<GaiaHex>; // honeycomb-grid
+  nbPlayers: number;
+  grid: Grid<Hex<GaiaHex>>; // honeycomb-grid
 
   constructor(nbPlayers : number, seed : string) {
     if (nbPlayers !== undefined) {

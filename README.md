@@ -40,3 +40,18 @@ tsc --watch
 ```
 npm start
 ```
+
+### Test
+
+```
+npm test
+```
+
+### Usage as a dependency from another module
+
+If you want to use your local copy of this module instead of the npm version, as a dependency of
+another module, in the other module's directory:
+
+```
+npm link <path-to-this-module>
+```
