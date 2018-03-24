@@ -9,6 +9,14 @@
   "publishConfig": {
     "access": "public"
   },
+  "files": [
+    "src",
+    "dist",
+    "index.d.ts",
+    "index.ts",
+    "server.ts",
+    "tsconfig.json"
+  ],
   "scripts": {
     "prepublishOnly": "tsc",
     "server": "node dist/server.js",
