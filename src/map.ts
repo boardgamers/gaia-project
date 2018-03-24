@@ -4,19 +4,19 @@ import * as shuffleSeed from "shuffle-seed";
 import Sector, { GaiaHexData } from "./sector";
 
 // Data: from outer ring to inside ring, starting from a corner
-const s1 = "eeeeemevoeed,sereee,e".replace(/,/g, "");
-const s2 = "evteedemeoee,eeiees,e".replace(/,/g, "");
-const s3 = "eemeeteedree,geeiee,e".replace(/,/g, "");
-const s4 = "eeteeereeeei,eoesev,e".replace(/,/g, "");
-const s5 = "eeiemoeedvee,geeeee,e".replace(/,/g, "");
-const s5b = "eeiemoeeevee,geeeee,e".replace(/,/g, "");
-const s6 = "eeemeedmeeee,serege,e".replace(/,/g, "");
-const s6b = "eeemeedmeeee,eerege,e".replace(/,/g, "");
-const s7 = "meeseeeeteee,eoegeg,e".replace(/,/g, "");
-const s7b = "meeeeeeeteee,egeseg,e".replace(/,/g, "");
-const s8 = "eeremeeeemee,eietev,e".replace(/,/g, "");
-const s9 = "evemieeeeese,eeeget,e".replace(/,/g, "");
-const s10 = "eeemmeeeeore,deegee,e".replace(/,/g, "");
+const s1 = {name: "s1", map: "eeeeemevoeed,sereee,e".replace(/,/g, "")};
+const s2 = {name: "s2", map: "evteedemeoee,eeiees,e".replace(/,/g, "")};
+const s3 = {name: "s3", map: "eemeeteedree,geeiee,e".replace(/,/g, "")};
+const s4 = {name: "s4", map: "eeteeereeeei,eoesev,e".replace(/,/g, "")};
+const s5 = {name: "s5", map: "eeiemoeedvee,geeeee,e".replace(/,/g, "")};
+const s5b = {name: "s5b", map: "eeiemoeeevee,geeeee,e".replace(/,/g, "")};
+const s6 = {name: "s6", map: "eeemeedmeeee,serege,e".replace(/,/g, "")};
+const s6b = {name: "s6b", map: "eeemeedmeeee,eerege,e".replace(/,/g, "")};
+const s7 = {name: "s7", map: "meeseeeeteee,eoegeg,e".replace(/,/g, "")};
+const s7b = {name: "s7b", map: "meeeeeeeteee,egeseg,e".replace(/,/g, "")};
+const s8 = {name: "s8", map: "eeremeeeemee,eietev,e".replace(/,/g, "")};
+const s9 = {name: "s9", map: "evemieeeeese,eeeget,e".replace(/,/g, "")};
+const s10 = {name: "s10", map: "eeemmeeeeore,deegee,e".replace(/,/g, "")};
 
 const smallConfiguration = {
   sectors: [s1, s2, s3, s4, s5b, s6b, s7b],
@@ -77,12 +77,12 @@ export default class SpaceMap {
     const definitions = this.chooseSides();
     const centers = this.configuration().centers;
 
-    const [hexagon, ...hexagons] = definitions.map((side, index) => Sector.create(side, index, centers[index]).rotateLeft(Math.floor(this.rng()*6), centers[index]));
+    const [hexagon, ...hexagons] = definitions.map((side, index) => Sector.create(side.map, side.name, centers[index]).rotateLeft(Math.floor(this.rng()*6), centers[index]));
 
     this.grid = hexagon.merge(...hexagons);
   }
 
-  chooseSides() : string[] {
+  chooseSides() : Array<{map: string, name: string}> {
     const definitions = this.configuration().sectors;
     // Random sort of the chosen sectors, sliced
     return shuffleSeed.shuffle(definitions, this.rng()).slice(0, this.configuration().nbSectors);
