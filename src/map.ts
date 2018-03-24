@@ -1,45 +1,55 @@
-import {Grid, Hex} from "honeycomb-grid";
+import {Grid, Hex, CubeCoordinates} from "hexagrid";
 import * as seedrandom from "seedrandom";
 import * as shuffleSeed from "shuffle-seed";
-import Sector, { GaiaHex } from "./sector";
+import Sector, { GaiaHexData } from "./sector";
 
-const s1 = "eee,dsee,eeere,eeem,ove";
-const s2 = "evt,eeee,eseie,oeed,eme";
-const s3 = "eem,egee,eeeee,reit,dee";
-const s4 = "eet,ieoe,eveee,eese,eer";
-const s5 = "eei,egee,eeeem,veeo,dee";
-const s5b = "eei,egee,eeeem,veeo,eee";
-const s6 = "eee,esem,eeere,egee,emd";
-const s6b = "eee,eeem,eeere,egee,emd";
-const s7 = "mee,eeos,egeee,eege,tee";
-const s7b = "mee,eege,egeee,eese,tee";
-const s8 = "eer,eeie,eveem,mete,eee";
-const s9 = "eve,eeem,steei,eege,eee";
-const s10 = "eee,edem,reeem,oege,eee";
+// Data: from outer ring to inside ring, starting from a corner
+const s1 = "eeeeemevoeed,sereee,e".replace(/,/g, "");
+const s2 = "evteedemeoee,eeiees,e".replace(/,/g, "");
+const s3 = "eemeeteedree,geeiee,e".replace(/,/g, "");
+const s4 = "eeteeereeeei,eoesev,e".replace(/,/g, "");
+const s5 = "eeiemoeedvee,geeeee,e".replace(/,/g, "");
+const s5b = "eeiemoeeevee,geeeee,e".replace(/,/g, "");
+const s6 = "eeemeedmeeee,serege,e".replace(/,/g, "");
+const s6b = "eeemeedmeeee,eerege,e".replace(/,/g, "");
+const s7 = "meeseeeeteee,eoegeg,e".replace(/,/g, "");
+const s7b = "meeeeeeeteee,egeseg,e".replace(/,/g, "");
+const s8 = "eeremeeeemee,eietev,e".replace(/,/g, "");
+const s9 = "evemieeeeese,eeeget,e".replace(/,/g, "");
+const s10 = "eeemmeeeeore,deegee,e".replace(/,/g, "");
 
 const smallConfiguration = {
   sectors: [s1, s2, s3, s4, s5b, s6b, s7b],
   nbSectors: 7,
-  centers: [{x:0, y: 0}, {x: -2, y: -4}, {x: -5, y: -1}, {x: -3, y: 3}, {x: 3, y: -4}, {x: 5, y: 0}, {x: 2, y: 4}]
+  centers: [{q: 0, r: 0, s: 0}]
 };
 
 const bigConfiguration = {
   sectors: [s1, s2, s3, s4, s5, s6, s7, s8, s9, s10],
   nbSectors: 10,
-  centers: [
-    // ROW 1
-    {x: -2, y: -4}, {x: 3, y: -4}, {x: 8, y: -3},
-    // ROW 2
-    {x: -5, y: -1}, {x:0, y: 0}, {x: 5, y: 0}, {x: 10, y: 1},
-    // ROW 3 
-    {x: -3, y: 3}, {x: 2, y: 4}, {x: 7, y: 4}
-  ]
+  centers: [{q: 0, r: 0, s: 0}]
 };
+
+// Centers of the small configuration
+for (let i = 0; i < 6; i++) {
+  const hex = new Hex(5, -2);
+  hex.rotateLeft(i);
+
+  smallConfiguration.centers.push(hex.toJSON());
+  bigConfiguration.centers.push(hex.toJSON());
+}
+
+// Big configuration: add 3 more
+for (let i = -1; i <= 1; i++) {
+  const hex = new Hex(10, -4);
+  hex.rotateLeft(i, {q: 5, r: -2, s: -3});
+  bigConfiguration.centers.push(hex);
+}
 
 export default class SpaceMap {
   rng: seedrandom.prng;
   nbPlayers: number;
-  grid: Grid<Hex<GaiaHex>>; // honeycomb-grid
+  grid: Grid<GaiaHexData>; // hexagrid
 
   constructor(nbPlayers : number, seed : string) {
     if (nbPlayers !== undefined) {
@@ -65,10 +75,11 @@ export default class SpaceMap {
   */
   generate() {
     const definitions = this.chooseSides();
-    const [hexagon, ...hexagons] = definitions.map((side, index) => Sector.create(side, index, this.configuration().centers[index]));
+    const centers = this.configuration().centers;
 
-    //Todo: concatenate the hexagons in the right way, and store in this.grid
-    this.grid = hexagon.concat(...hexagons);
+    const [hexagon, ...hexagons] = definitions.map((side, index) => Sector.create(side, index, centers[index]).rotateLeft(Math.floor(this.rng()*6), centers[index]));
+
+    this.grid = hexagon.merge(...hexagons);
   }
 
   chooseSides() : string[] {

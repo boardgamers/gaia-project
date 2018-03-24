@@ -19,7 +19,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "honeycomb-grid": "^1.3.3",
+    "hexagrid": "^0.1.5",
     "seedrandom": "^2.4.3",
     "shuffle-seed": "^1.1.6"
   },
