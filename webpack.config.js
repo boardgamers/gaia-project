@@ -77,6 +77,7 @@ module.exports = {
       $: 'jquery',
       jQuery: 'jquery',
       'window.jQuery': 'jquery',
+      '@gaia-project/engine': null,
       // Popper: ['popper.js', 'default']
     }),
     new ExtractTextPlugin("stylesheets/styles.css"),

@@ -1,6 +1,6 @@
 import * as PIXI from "pixi.js";
 import * as Honeycomb from "honeycomb-grid";
-import {GaiaHex, Planet} from "@gaia-project/engine";
+import {GaiaHexData, Planet} from "@gaia-project/engine";
 import { center } from "../graphics/reposition";
 import planetData from "../data/planets";
 
@@ -8,10 +8,12 @@ const HEXRADIUS = 15;
 const HEXBORDER = 0x666666;
 const LINEWIDTH = 1;
 
+type GaiaHex = {data: GaiaHexData, orientation: "flat"} & {size: number};
+
 export default class MapRenderer {
   app: PIXI.Application;
   graphics: PIXI.Graphics;
-  lastData: Honeycomb.Types.Hex<GaiaHex>[];
+  lastData: Array<Honeycomb.CubeCoordinates & {data: GaiaHexData}>;
 
   constructor(view?: HTMLCanvasElement) {
     this.app = new PIXI.Application({transparent: true, antialias: true, view});
@@ -27,7 +29,7 @@ export default class MapRenderer {
     });
   }
 
-  render(map: Honeycomb.Types.Hex<GaiaHex>[] ) {
+  render(map: Array<Honeycomb.CubeCoordinates & {data: GaiaHexData}> ) {
     this.lastData = map;
     this.graphics.clear();
 
@@ -42,7 +44,7 @@ export default class MapRenderer {
     center(this.graphics, this.app.screen);
   }
 
-  drawHex(hex: Honeycomb.Types.Hex<GaiaHex>) {
+  drawHex(hex: Honeycomb.Hex<GaiaHex>) {
     this.graphics.lineStyle(LINEWIDTH, HEXBORDER);
 
     const point = hex.toPoint();
@@ -63,7 +65,7 @@ export default class MapRenderer {
     this.drawPlanet(hex.data.planet, point.add(hex.center()));
   }
 
-  drawPlanet(planet: Planet, point: Honeycomb.Types.Point) {
+  drawPlanet(planet: Planet, point: Honeycomb.PointLike) {
     if (planet === Planet.Empty) {
       return;
     }
