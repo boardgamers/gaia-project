@@ -1,20 +1,21 @@
 import { Condition, Operator, Resource } from "./enums";
 import * as assert from "assert";
+import Reward from "./reward";
 
-const TECH1 = "~ > o,q"
+const TECH1 = "o,q"
 const TECH2 = "pt > k"
-const TECH3 = "~ S ~"
-const TECH4 = "~ > 7vp"
-const TECH5 = "~ + o,pw"
-const TECH6 = "~ + k,c"
+const TECH3 = "S"
+const TECH4 = "7vp"
+const TECH5 = "+o,pw"
+const TECH6 = "+k,c"
 const TECH7 = "mg >> 3vp"
-const TECH8 = "~ + 4c"
-const TECH9 = "~ => 4pw"
+const TECH8 = "+4c"
+const TECH9 = "=> 4pw"
 const techs = [TECH1, TECH2, TECH3, TECH4, TECH5, TECH6, TECH7, TECH8, TECH9]
 
 const ATECH1 = "fed | 3vp"
 const ATECH2 = "a >> 2vp"
-const ATECH3 = "~ => q,5c"
+const ATECH3 = "=> q,5c"
 const ATECH4 = "m > 2vp"
 const ATECH5 = "lab | 3vp"
 const ATECH6 = "s > o"
@@ -22,23 +23,23 @@ const ATECH7 = "pt | vp"
 const ATECH8 = "g > 2vp"
 const ATECH9 = "ts > 4vp"
 const ATECH10 = "s > 2vp"
-const ATECH11 = "~ => 3o"
+const ATECH11 = "=> 3o"
 const ATECH12 = "fed > 5vp"
-const ATECH13 = "~ => 3k"
+const ATECH13 = "=> 3k"
 const ATECH14 = "m >> 3vp"
 const ATECH15 = "ts >> 3vp"
 const advancedTechs = [ATECH1, ATECH2, ATECH3, ATECH4, ATECH5, ATECH6, ATECH7, ATECH8, ATECH9, ATECH10, ATECH11, ATECH12, ATECH13, ATECH14, ATECH15]
 
-const BOOSTER1 = ["~ + k", "~ + o"]
-const BOOSTER2 = ["~ + o", "~ + 2t"]
-const BOOSTER3 = ["~ + q", "~ + 2c"]
-const BOOSTER4 = ["~ + 2c", "~ => d"]
-const BOOSTER5 = ["~ + 2pw", "~ => 3r"]
-const BOOSTER6 = ["~ + o", "m | vp"]
-const BOOSTER7 = ["~ + o", "ts | 2vp"]
-const BOOSTER8 = ["~ + k", "lab | 3vp"]
-const BOOSTER9 = ["~ + 4pw", "piac | 4vp"]
-const BOOSTER10 = ["~ + 4c", "g | vp"]
+const BOOSTER1 = ["+k", "+o"]
+const BOOSTER2 = ["+o", "+2t"]
+const BOOSTER3 = ["+q", "+2c"]
+const BOOSTER4 = ["+2c", "=> d"]
+const BOOSTER5 = ["+2pw", "=> 3r"]
+const BOOSTER6 = ["+o", "m | vp"]
+const BOOSTER7 = ["+o", "ts | 2vp"]
+const BOOSTER8 = ["+k", "lab | 3vp"]
+const BOOSTER9 = ["+4pw", "piac | 4vp"]
+const BOOSTER10 = ["+4c", "g | vp"]
 const boosters = [BOOSTER1, BOOSTER2, BOOSTER3, BOOSTER4, BOOSTER5, BOOSTER6, BOOSTER7, BOOSTER8, BOOSTER9, BOOSTER10]
 
 // check 5, 6, 7 in box
@@ -51,23 +52,30 @@ const SCORING6 = "d >> 3vp"
 const SCORING7 = "piac >> 5vp"
 const scorings = [SCORING1, SCORING2, SCORING3, SCORING4, SCORING5, SCORING5, SCORING6, SCORING6, SCORING7, SCORING7]
 
-export class Reward {
-  count: number;
-  type: Resource;
+function findCondition(spec: string) : [Condition, string] {
+  const conditionString = /^(.+?)(\b| )/.exec(spec)[1];
 
-  constructor(reward: string) {
-    const regex = /^([1-9][0-9]*)?(~|o|c|k|q|pw|t|vp|d|r)$/
-
-    assert(regex.test(reward), "Cannot construct reward from " + reward);
-
-    const [_, count, type] = regex.exec(reward);
-    this.count = +count || 1;
-    this.type = type as Resource;
+  for (const cond of Object.values(Condition) as Condition[]) {
+    if (conditionString === cond) {
+      const remaining = spec.substr(conditionString.length).trimLeft();
+      return [cond, remaining];
+    }
   }
 
-  toString() {
-    return `${this.count || 1}${this.type}`;
+  return [Condition.None, spec];
+}
+
+function findOperator(spec: string) : [Operator, string] {
+  const operatorString = /^(.+?)(\b| )/.exec(spec)[1];
+
+  for (const op of Object.values(Operator) as Operator[]) {
+    if (operatorString === op) {
+      const remaining = spec.substr(operatorString.length).trimLeft();
+      return [op, remaining];
+    }
   }
+
+  return [Operator.Once, spec];
 }
 
 export class Event {
@@ -78,10 +86,11 @@ export class Event {
 
   constructor(spec : string) {
     this.spec = spec;
-    const [cond, op, preReward] = spec.split(" ");
-    this.condition = cond as Condition;
-    this.operator = op as Operator;
-    this.rewards = preReward.split(",").map(reward => new Reward(reward));
+    let remaining: string;
+
+    [this.condition, remaining] = findCondition(spec);
+    [this.operator, remaining] = findOperator(spec);
+    this.rewards = remaining.split(",").map(reward => new Reward(reward));
   }
 }
 

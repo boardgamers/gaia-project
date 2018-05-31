@@ -21,16 +21,27 @@ export enum Resource {
   GainToken = "t",
   VictoryPoint = "vp",
   TerraformStep = "d",
-  RangeExtension = "r"
+  RangeExtension = "r",
+  UpgradeTerraforming = "up-terra",
+  UpgradeNavigation = "up-nav",
+  UpgradeIntelligence = "up-int",
+  UpgradeGaiaProject = "up-gaia",
+  UpgradeEconomy = "up-eco",
+  UpgradeScience = "up-sci"
 }
 
 export enum Operator {
+  /** One-time income */
   Once = ">",
+  /** Income at the beginning of every turn */
   Income = "+",
   Trigger = ">>",
+  /** Activate during turn once */
   Activate = "=>",
+  /** On turn end for player */
   Pass = "|",
-  Special = "S" // reserved op for PI and AC becoming 4pw structures
+  /** reserved op for PI and AC becoming 4pw structures */
+  Special = "S" 
 }
 
 export enum Condition {

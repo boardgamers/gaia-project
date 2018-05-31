@@ -13,8 +13,9 @@ import Firaks from "./firaks";
 import Bescods from "./bescods";
 import Nevlas from "./nevlas";
 import Itars from "./itars";
+import {FactionBoard} from "./types";
 
-export default {
+const factionBoards: {[key in Faction]: FactionBoard} = {
   [Faction.Terrans]: Terrans,
   [Faction.Lantids]: Lantids,
   [Faction.Xenos]: Xenos,
