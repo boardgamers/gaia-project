@@ -53,3 +53,20 @@ export enum Condition {
   AdvanceTech = "a",
   TerraformStep = "d"
 }
+
+export enum Faction {
+  Terrans = "terrans",
+  Lantids = "lantids",
+  Xenos = "xenos",
+  Gleens = "gleens",
+  Taklons = "taklons",
+  Ambas = "ambas",
+  HadschHallas = "hadsch-hallas",
+  Ivits = "ivits",
+  Geodens = "geodens",
+  BalTaks = "baltaks",
+  Firaks = "firaks",
+  Bescods = "bescods",
+  Nevlas = "nevlas",
+  Itars = "itars"
+}
