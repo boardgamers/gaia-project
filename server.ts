@@ -19,4 +19,6 @@ app.post("/", (req, res) => {
   res.json(engine.data());
 });
 
-app.listen(9508, "localhost");
+app.listen(9508, "localhost", () => {
+  console.log("Listening on port 9508");
+});

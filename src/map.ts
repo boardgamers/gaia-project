@@ -89,7 +89,7 @@ export default class SpaceMap {
   }
 
   toJSON() {
-    return this.grid;
+    return Array.from(this.grid.values());
   }
 
   configuration() {
