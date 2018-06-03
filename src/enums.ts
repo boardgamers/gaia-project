@@ -11,7 +11,7 @@ export enum Planet {
   Transdim = "m"
 }
 
-export enum KnowledgeTrack {
+export enum ResearchField {
   Terraforming = "terra",
   Navigation = "nav",
   Intelligence = "int",
@@ -44,6 +44,7 @@ export enum Operator {
   Once = ">",
   /** Income at the beginning of every turn */
   Income = "+",
+  /** Each time condition is fulfilled, reward is gained */
   Trigger = ">>",
   /** Activate during turn once */
   Activate = "=>",

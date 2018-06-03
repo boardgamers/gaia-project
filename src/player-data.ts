@@ -1,13 +1,13 @@
 import Reward from "./reward";
 import { Resource } from "..";
-import { KnowledgeTrack } from "./enums";
+import { ResearchField } from "./enums";
 
 const MAX_ORE = 15;
 const MAX_CREDIT = 30;
 const MAX_KNOWLEDGE = 15;
 
 export default class PlayerData {
-  victoryPoints: number = 20;
+  victoryPoints: number = 10;
   credits: number = 0;
   ores: number = 0;
   qics: number = 0;
@@ -33,12 +33,13 @@ export default class PlayerData {
   } = {
     first: false,
     second: false
-  }
+  };
   research: {
-    [key in KnowledgeTrack]: number
+    [key in ResearchField]: number
   } = {
     terra: 0, nav: 0,int: 0, gaia: 0, eco: 0, sci: 0
-  }
+  };
+  range: number = 1;
 
   gainRewards(rewards: Reward[]) {
     for (let reward of rewards) {
@@ -53,7 +54,7 @@ export default class PlayerData {
     const { count, type: resource } = reward;
     
     if (resource.startsWith("up-")) {
-      this.upgradeResearch(resource.slice(3) as KnowledgeTrack, count);
+      this.upgradeResearch(resource.slice("up-".length) as ResearchField, count);
       return;
     }
     
@@ -65,6 +66,7 @@ export default class PlayerData {
       case Resource.Qic: this.qics += count; return;
       case Resource.GainToken: this.power.bowl1 += count; return;
       case Resource.ChargePower: this.chargePower(count); return;
+      case Resource.RangeExtension: this.range += count; return;
       default: break; // Not implemented
     }
   }
@@ -92,7 +94,7 @@ export default class PlayerData {
     this.power.bowl3 += bowl2ToUp;
   }
 
-  upgradeResearch(which: KnowledgeTrack, count: number) {
+  upgradeResearch(which: ResearchField, count: number) {
     this.research[which] += count;
   }
 }
