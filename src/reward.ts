@@ -20,6 +20,9 @@ export default class Reward {
   }
 
   toString() {
+    if (this.isEmpty()) {
+      return '~';
+    }
     return `${this.count}${this.type}`;
   }
 

@@ -78,7 +78,7 @@ function findOperator(spec: string) : [Operator, string] {
   return [Operator.Once, spec];
 }
 
-export class Event {
+export default class Event {
   spec: string
   condition : Condition
   operator : Operator
@@ -91,6 +91,10 @@ export class Event {
     [this.condition, remaining] = findCondition(spec);
     [this.operator, remaining] = findOperator(spec);
     this.rewards = remaining.split(",").map(reward => new Reward(reward));
+  }
+
+  toString() {
+    return this.spec;
   }
 }
 

@@ -40,7 +40,7 @@ export enum Operator {
   Activate = "=>",
   /** On turn end for player */
   Pass = "|",
-  /** reserved op for PI and AC becoming 4pw structures */
+  /** reserved op for planetary institute and academies becoming 4pw structures */
   Special = "S" 
 }
 
@@ -80,4 +80,17 @@ export enum Faction {
   Bescods = "bescods",
   Nevlas = "nevlas",
   Itars = "itars"
+}
+
+export enum Command {
+  Init = "init",
+  ChooseFaction = "faction"
+}
+
+export enum Player {
+  Player1,
+  Player2,
+  Player3,
+  Player4,
+  Player5
 }

@@ -1,4 +1,5 @@
 import Reward from "../reward";
+import Event from "../events";
 
 export interface FactionBoard {
   mines: {
@@ -23,4 +24,8 @@ export interface FactionBoard {
     income: Event;
   };
   income: Event[];
+  power: {
+    bowl1: number,
+    bowl2: number
+  };
 }

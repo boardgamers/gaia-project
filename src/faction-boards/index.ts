@@ -31,3 +31,5 @@ const factionBoards: {[key in Faction]: FactionBoard} = {
   [Faction.Nevlas]: Nevlas,
   [Faction.Itars]: Itars,
 };
+
+export default factionBoards;

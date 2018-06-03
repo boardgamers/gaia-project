@@ -1,6 +1,7 @@
 import { FactionBoard } from "./types";
 import Reward, {parseRewards} from "../reward";
 import * as _ from "lodash";
+import Event from "../events";
 
 interface Input {
   mines?: {
@@ -25,6 +26,10 @@ interface Input {
     income?: string
   };
   income?: string[];
+  power?: {
+    bowl1?: number,
+    bowl2?: number
+  };
 }
 
 const defaultBoard: Input = {
@@ -49,12 +54,16 @@ const defaultBoard: Input = {
     cost: "6c,4o",
     income: "+4pw,t"
   },
-  income: ["3k,4o,15c,q", "+o,k"]
+  income: ["3k,4o,15c,q", "+o,k"],
+  power: {
+    bowl1: 4,
+    bowl2: 4
+  }
 };
 
 export function boardify(input: Input): FactionBoard {
   const {
-    mines, tradingStations, researchLabs, academies, planetaryInstitute, income
+    mines, tradingStations, researchLabs, academies, planetaryInstitute, income, power
   } = _.merge({}, defaultBoard, input);
 
   return {
@@ -79,6 +88,14 @@ export function boardify(input: Input): FactionBoard {
       cost: parseRewards(planetaryInstitute.cost),
       income: new Event(input.planetaryInstitute.income)
     },
-    income: income.map(ev => new Event(ev))
+    income: income.map(ev => new Event(ev)),
+    power: {
+      bowl1: power.bowl1,
+      bowl2: power.bowl2
+    }
   };
+}
+
+export function getEvents(board: FactionBoard) : Event[] {
+  return board.income.concat(board.mines.income, board.tradingStations.income, board.planetaryInstitute.income, board.researchLabs.income, board.academies.income);
 }
