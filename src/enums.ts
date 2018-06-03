@@ -11,6 +11,15 @@ export enum Planet {
   Transdim = "m"
 }
 
+export enum KnowledgeTrack {
+  Terraforming = "terra",
+  Navigation = "nav",
+  Intelligence = "int",
+  GaiaProject = "gaia",
+  Economy = "eco",
+  Science = "sci"
+}
+
 export enum Resource {
   None = "~",
   Ore = "o",

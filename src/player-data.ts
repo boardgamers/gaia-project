@@ -1,5 +1,6 @@
 import Reward from "./reward";
 import { Resource } from "..";
+import { KnowledgeTrack } from "./enums";
 
 const MAX_ORE = 15;
 const MAX_CREDIT = 30;
@@ -34,19 +35,9 @@ export default class PlayerData {
     second: false
   }
   research: {
-    terraForming: number,
-    navigation: number,
-    intelligence: number,
-    gaiaProject: number,
-    economy: number
-    science: number
+    [key in KnowledgeTrack]: number
   } = {
-    terraForming: 0,
-    navigation: 0,
-    intelligence: 0,
-    gaiaProject: 0,
-    economy: 0,
-    science: 0
+    terra: 0, nav: 0,int: 0, gaia: 0, eco: 0, sci: 0
   }
 
   gainRewards(rewards: Reward[]) {
@@ -59,15 +50,21 @@ export default class PlayerData {
     if (reward.isEmpty()) {
       return;
     }
-    const { count } = reward;
-    switch(reward.type) {
-      case Resource.Ore: this.ores = Math.min(MAX_ORE, this.ores + count); break;
-      case Resource.Credit: this.credits = Math.min(MAX_CREDIT, this.credits + count); break;
-      case Resource.Knowledge: this.knowledge = Math.min(MAX_KNOWLEDGE, this.knowledge + count); break;
-      case Resource.VictoryPoint: this.victoryPoints += count; break;
-      case Resource.Qic: this.qics += count; break;
-      case Resource.GainToken: this.power.bowl1 += count; break;
-      case Resource.ChargePower: this.chargePower(count); break;
+    const { count, type: resource } = reward;
+    
+    if (resource.startsWith("up-")) {
+      this.upgradeResearch(resource.slice(3) as KnowledgeTrack, count);
+      return;
+    }
+    
+    switch(resource) {
+      case Resource.Ore: this.ores = Math.min(MAX_ORE, this.ores + count); return;
+      case Resource.Credit: this.credits = Math.min(MAX_CREDIT, this.credits + count); return;
+      case Resource.Knowledge: this.knowledge = Math.min(MAX_KNOWLEDGE, this.knowledge + count); return;
+      case Resource.VictoryPoint: this.victoryPoints += count; return;
+      case Resource.Qic: this.qics += count; return;
+      case Resource.GainToken: this.power.bowl1 += count; return;
+      case Resource.ChargePower: this.chargePower(count); return;
       default: break; // Not implemented
     }
   }
@@ -93,5 +90,9 @@ export default class PlayerData {
 
     this.power.bowl2 -= bowl2ToUp;
     this.power.bowl3 += bowl2ToUp;
+  }
+
+  upgradeResearch(which: KnowledgeTrack, count: number) {
+    this.research[which] += count;
   }
 }
