@@ -1,8 +1,6 @@
-import { boardify } from "./util";
-
-export default boardify({
+export default {
   planetaryInstitute: {
     income: "+4pw"
   },
   income: ["3k,4o,13c,q", "+o,k"]
-});
+};

@@ -1,6 +1,4 @@
-import { boardify } from "./util";
-
-export default boardify({
+export default {
   tradingStations: {
     income: ["+k","+k","+k","+k"],
   },
@@ -11,4 +9,4 @@ export default boardify({
     income: "+4pw,2t"
   },
   income: ["k,4o,15c,q", "+o"]
-});
+};

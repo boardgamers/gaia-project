@@ -1,9 +1,7 @@
-import { Faction, Operator } from "./enums";
-import { FactionBoard } from "./faction-boards/types";
+import { Faction, Operator, ResearchField } from "./enums";
 import PlayerData from "./player-data";
 import Event from "./events";
-import factionBoards from "./faction-boards";
-import { getEvents } from "./faction-boards/util";
+import { factionBoard, FactionBoard } from "./faction-boards";
 
 export default class Player {
   faction: Faction = null;
@@ -20,6 +18,10 @@ export default class Player {
     [Operator.Special]: []
   };
 
+  constructor() {
+    this.data.on("upgrade-knowledge", track => this.onKnowledgeUpgraded(track));
+  }
+
   toJSON() {
     return {
       faction: this.faction,
@@ -29,17 +31,22 @@ export default class Player {
 
   loadFaction(faction: Faction) {
     this.faction = faction;
-    this.board = factionBoards[faction];
+    this.board = factionBoard(faction);
 
-    const events = getEvents(this.board);
+    this.loadEvents(this.board.income);
+  }
 
+  loadEvents(events: Event[]) {
     for (const event of events) {
-      
       this.events[event.operator].push(event);
 
       if (event.operator === Operator.Once) {
         this.data.gainRewards(event.rewards);
       }
     }
+  }
+
+  onKnowledgeUpgraded(track: ResearchField) {
+    // Todo: get corresponding income
   }
 }

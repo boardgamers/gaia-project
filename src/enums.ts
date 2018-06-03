@@ -61,7 +61,7 @@ export enum Condition {
   Mine = "m",
   TradingStation = "ts",
   ResearchLab = "lab",
-  PIorAc = "piac",
+  PlanetaryInstituteOrAcademy = "PA",
   Federation = "fed",
   
   // count only

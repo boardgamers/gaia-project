@@ -1,12 +1,13 @@
 import Reward from "./reward";
 import { Resource } from "..";
 import { ResearchField } from "./enums";
+import * as EventEmitter from "eventemitter3";
 
 const MAX_ORE = 15;
 const MAX_CREDIT = 30;
 const MAX_KNOWLEDGE = 15;
 
-export default class PlayerData {
+export default class PlayerData extends EventEmitter {
   victoryPoints: number = 10;
   credits: number = 0;
   ores: number = 0;
@@ -95,6 +96,7 @@ export default class PlayerData {
   }
 
   upgradeResearch(which: ResearchField, count: number) {
+    this.emit("upgrade-knowledge", which);
     this.research[which] += count;
   }
 }

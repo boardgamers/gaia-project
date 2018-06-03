@@ -1,5 +1,3 @@
-import { boardify } from "./util";
-
-export default boardify({
+export default {
   income: ["3k,4o,15c,q,up-gaia", "+o,k"]
-});
+};

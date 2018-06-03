@@ -13,9 +13,10 @@ import Firaks from "./firaks";
 import Bescods from "./bescods";
 import Nevlas from "./nevlas";
 import Itars from "./itars";
-import {FactionBoard} from "./types";
+import {FactionBoard, FactionBoardRaw} from "./types";
+export {FactionBoard} from "./types";
 
-const factionBoards: {[key in Faction]: FactionBoard} = {
+const factionBoards: {[key in Faction]: FactionBoardRaw} = {
   [Faction.Terrans]: Terrans,
   [Faction.Lantids]: Lantids,
   [Faction.Xenos]: Xenos,
@@ -33,3 +34,7 @@ const factionBoards: {[key in Faction]: FactionBoard} = {
 };
 
 export default factionBoards;
+
+export function factionBoard(faction: Faction) {
+  return new FactionBoard(factionBoards[faction]);
+}

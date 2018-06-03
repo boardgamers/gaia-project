@@ -1,16 +1,6 @@
 import { ResearchField } from "./enums";
 import Event from "./events";
 
-function eventify(data: Array<string[]>) {
-  const ret = [];
-
-  for (const arr of data) {
-    ret.push(arr.map(s => new Event(s)));
-  }
-
-  return ret;
-}
-
 export default {
   [ResearchField.Terraforming]: [
     [],["2o"],[],[],["2o"],[]

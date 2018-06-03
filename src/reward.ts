@@ -26,11 +26,15 @@ export default class Reward {
     return `${this.count}${this.type}`;
   }
 
+  toJSON() {
+    return this.toString();
+  }
+
   isEmpty() {
     return this.count === 0 || this.type === Resource.None;
   }
-}
 
-export function parseRewards(source: string) : Reward[] {
-  return source.split(",").map(rew => new Reward(rew));
+  static parse(source: string): Reward[] {
+    return source.split(",").map(rew => new Reward(rew));
+  }
 }

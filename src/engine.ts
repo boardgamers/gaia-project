@@ -6,8 +6,6 @@ import { Faction, Command, Player as PlayerEnum, Operator } from "./enums";
 import Event from "./events";
 
 import AvailableCommand from "./available-command";
-import { getEvents } from "./faction-boards/util";
-import factionBoards from "./faction-boards";
 
 export default class Engine {
   map: SpaceMap;
