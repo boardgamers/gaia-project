@@ -1,7 +1,13 @@
 @import "~bootstrap/scss/bootstrap.scss";
 
-canvas {
+canvas#map {
   border: dotted dodgerblue 1px; 
-  width: 100%;
+  width: 66%;
+  height: 400px;
+}
+
+canvas#research {
+  border: dotted rosybrown 1px; 
+  width: 33%;
   height: 400px;
 }

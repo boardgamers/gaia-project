@@ -3,8 +3,10 @@ import "bootstrap";
 import "../stylesheets/frontend.scss";
 import { showError, removeError } from "./utils";
 import MapRenderer from "../../renderers/map";
+import ResearchRenderer from "../../renderers/research";
 
-const map = new MapRenderer($("canvas").get(0) as HTMLCanvasElement);
+const map = new MapRenderer($("canvas#map").get(0) as HTMLCanvasElement);
+const research = new ResearchRenderer($("canvas#research").get(0) as HTMLCanvasElement);
 
 $("form").on("submit", function(event) {
   event.preventDefault();
@@ -18,6 +20,7 @@ $("form").on("submit", function(event) {
     data => {
       removeError();
       map.render(data.map);
+      research.render(data.map);
       console.log(data)
     },
     "json"
