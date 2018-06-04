@@ -1,7 +1,7 @@
 import Reward from "./reward";
 import { Resource } from "..";
 import { ResearchField } from "./enums";
-import * as EventEmitter from "eventemitter3";
+import { EventEmitter } from "eventemitter3";
 
 const MAX_ORE = 15;
 const MAX_CREDIT = 30;
