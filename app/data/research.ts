@@ -7,4 +7,16 @@ export default {
   [ResearchField.Navigation]: {color: 0x275175},
   [ResearchField.GaiaProject]: {color: 0xa41894},
   [ResearchField.Intelligence]: {color: 0x2b8617},
+
+  fullWidth: 360,
+  fullHeight: 360,
+
+  trackHeight: 50,
+  trackWidth: 60,
+
+  trackBorder: {
+    width: 1,
+    color: 0x666666,
+    radius: 10
+  }
 };

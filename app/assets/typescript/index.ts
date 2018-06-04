@@ -20,7 +20,7 @@ $("form").on("submit", function(event) {
     data => {
       removeError();
       map.render(data.map);
-      research.render(data.map);
+      research.render(data.players);
       console.log(data)
     },
     "json"

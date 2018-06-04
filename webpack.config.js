@@ -86,7 +86,7 @@ module.exports = {
       filename: path.join(distDir, 'index.html')
     }),
     // Ignore code that the gaia project engine doesn't run as a dependency
-    new webpack.IgnorePlugin(/^\.\/app$/, /@gaia-project(\/|\\)engine(\/|\\)dist$/)
+    // new webpack.IgnorePlugin(/^\.\/app$/, /@gaia-project(\/|\\)engine(\/|\\)dist$/)
   ],
   // externals: {
   //   jquery: 'jQuery'
