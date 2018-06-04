@@ -75,6 +75,14 @@ export enum Condition {
   TerraformStep = "d"
 }
 
+export enum Building {
+  Mine = "m",
+  TradingStation = "ts",
+  ResearchLab = "lab",
+  PlanetaryInstitute = "PI",
+  Academy = "ac",
+}
+
 export enum Faction {
   Terrans = "terrans",
   Lantids = "lantids",
@@ -94,7 +102,8 @@ export enum Faction {
 
 export enum Command {
   Init = "init",
-  ChooseFaction = "faction"
+  ChooseFaction = "faction",
+  Build = "build"
 }
 
 export enum Player {

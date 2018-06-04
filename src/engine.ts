@@ -2,8 +2,9 @@ import SpaceMap from "./map";
 import * as assert from "assert";
 import * as _ from 'lodash';
 import Player from "./player";
-import { Faction, Command, Player as PlayerEnum, Operator } from "./enums";
+import { Faction, Command, Player as PlayerEnum, Operator, Building } from "./enums";
 import Event from "./events";
+import { CubeCoordinates} from "hexagrid";
 
 import AvailableCommand from "./available-command";
 import factions from "./factions";
@@ -12,6 +13,7 @@ export default class Engine {
   map: SpaceMap;
   players: Player[];
   availableCommands: AvailableCommand[] = [];
+  turn: number = 0;
 
   constructor(moves: string [] = []) {
     this.generateAvailableCommands();
@@ -30,17 +32,51 @@ export default class Engine {
       return this.availableCommands = [{name: Command.Init}];
     }
 
-    return this.availableCommands = [{
-      name: Command.ChooseFaction, 
-      player: this.numberOfPlayersWithFactions(), 
-      data: _.difference(Object.values(Faction), this.players.map(pl => pl.faction), this.players.map(pl => factions.opposite(pl.faction)))
-    }];
+    if (this.numberOfPlayersWithFactions() < this.players.length) {
+      return this.availableCommands = [{
+        name: Command.ChooseFaction, 
+        player: this.numberOfPlayersWithFactions(), 
+        data: _.difference(Object.values(Faction), this.players.map(pl => pl.faction), this.players.map(pl => factions.opposite(pl.faction)))
+      }];
+    }
+
+    if (this.nextPlayerToSetup() !== undefined) {
+      return this.availableCommands = [{
+        name: Command.Build, 
+        player: this.nextPlayerToSetup(), 
+        data: {buildings: [Building.Mine]}
+      }];
+    }
   }
 
   availableCommand(player: PlayerEnum, command: Command) {
     return this.availableCommands.find(
       availableCommand => availableCommand.name === command && (!(player in availableCommand) || availableCommand.player === player)
     );
+  }
+
+  nextPlayerToSetup() {
+    if (this.turn > 0) {
+      return undefined;
+    }
+
+    // Find the first player with zero mine
+    let player = this.players.findIndex(pl => pl.data.mines === 0);
+
+    if (player !== undefined) {
+      return player;
+    }
+
+    // Find the last player with one mine
+    player = _.findLastIndex(this.players, pl => pl.data.mines === 1);
+
+    if (player !== undefined) {
+      return player;
+    }
+
+    // Todo: if the faction with three mines, return corresponding player
+
+    return player;
   }
 
   move(move: string) {
@@ -79,7 +115,9 @@ export default class Engine {
   data(): Object {
     return {
       map: this.map.toJSON(),
-      players: this.players
+      players: this.players,
+      availableCommands: this.availableCommands,
+      turn: this.turn
     };
   }
 
@@ -103,5 +141,22 @@ export default class Engine {
     assert(avail.data.includes(faction), `${faction} is not in the available factions`);
 
     this.players[player].loadFaction(faction as Faction);
+  }
+
+  [Command.Build](player: PlayerEnum, building: Building, location: string) {
+    const avail = this.availableCommand(player, Command.Build);
+    const {q, r} = CubeCoordinates.parse(location);
+
+    if (this.turn === 0) {
+      // Free building
+
+      // ...
+
+      if (this.nextPlayerToSetup() === undefined) {
+        this.turn = 1;
+      }
+    } else {
+      // Check cost
+    }
   }
 }

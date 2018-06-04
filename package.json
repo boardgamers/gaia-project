@@ -1,6 +1,6 @@
 {
   "name": "@gaia-project/engine",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "Javascript engine for project gaia",
   "main": "dist/index.js",
   "types": "index.d.ts",
@@ -31,7 +31,7 @@
   "license": "MIT",
   "dependencies": {
     "eventemitter3": "^3.1.0",
-    "hexagrid": "^0.1.8",
+    "hexagrid": "^0.1.9",
     "lodash": "^4.17.10",
     "nodemon": "^1.17.5",
     "seedrandom": "^2.4.3",
