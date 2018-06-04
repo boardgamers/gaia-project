@@ -42,6 +42,24 @@ export default class PlayerData extends EventEmitter {
   };
   range: number = 1;
 
+  toJSON() {
+    return {
+      victoryPoints: this.victoryPoints,
+      credits: this.credits,
+      ores: this.ores,
+      qics: this.qics,
+      knowledge: this.knowledge,
+      power: this.power,
+      mines: this.mines,
+      tradingStations: this.tradingStations,
+      platenaryInstitute: this.platenaryInstitute,
+      researchLabs: this.researchLabs,
+      sanctuary: this.sanctuary,
+      research: this.research,
+      range: this.range
+    }
+  }
+
   gainRewards(rewards: Reward[]) {
     for (let reward of rewards) {
       this.gainReward(reward);

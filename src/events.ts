@@ -3,7 +3,13 @@ import * as assert from "assert";
 import Reward from "./reward";
 
 function findCondition(spec: string) : [Condition, string] {
-  const conditionString = /^(.+?)(\b| )/.exec(spec)[1];
+  let conditionMatch = /^(.+?)(\b| )/.exec(spec);
+
+  if (!conditionMatch) {
+    conditionMatch = /^([^ ]*)$/.exec(spec);
+  }
+
+  const conditionString = conditionMatch[1];
 
   for (const cond of Object.values(Condition) as Condition[]) {
     if (conditionString === cond) {
@@ -16,7 +22,13 @@ function findCondition(spec: string) : [Condition, string] {
 }
 
 function findOperator(spec: string) : [Operator, string] {
-  const operatorString = /^(.+?)(\b| )/.exec(spec)[1];
+  let operatorMatch = /^(.+?)(\b| )/.exec(spec);
+
+  if (!operatorMatch) {
+    operatorMatch = /^([^ ]*)$/.exec(spec);
+  }
+
+  const operatorString = operatorMatch[1];
 
   for (const op of Object.values(Operator) as Operator[]) {
     if (operatorString === op) {
@@ -52,7 +64,12 @@ export default class Event {
     return this.toString();
   }
 
-  static parse(events: string[]): Event[] {
+  static parse(event: string): Event
+  static parse(events: string[]): Event[]
+  static parse(events: string[] | string): Event[] | Event {
+    if (typeof events === "string") {
+      return [new Event(events)];
+    }
     return events.map(ev => new Event(ev));
   }
 }

@@ -1,7 +1,7 @@
 import { Faction, Planet } from './enums';
 import Boards from "./faction-boards";
 
-export default {
+const factions = {
   [Faction.Terrans]: {
     name: "Terrans",
     planet: Planet.Terra,
@@ -72,4 +72,18 @@ export default {
     planet: Planet.Ice,
     board: Boards[Faction.Itars]
   },
+
+  opposite(faction: Faction): Faction {
+    if (!Object.values(Faction).includes(faction)) {
+      return null;
+    } 
+
+    for (const fct of Object.values(Faction)) {
+      if (fct !== faction && factions[fct].planet === factions[faction].planet) {
+        return fct;
+      }
+    }
+  }
 };
+
+export default factions;

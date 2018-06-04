@@ -6,17 +6,7 @@
             "type": "node",
             "request": "launch",
             "program": "${workspaceRoot}/node_modules/ts-node/dist/bin.js",
-            "args": ["index.ts"],
-            "cwd": "${workspaceRoot}",
-            "protocol": "inspector"
-        },
-        {
-            "name": "Node.js (don't forget to compile the typescript code)",
-            "type": "node",
-            "request": "launch",
-            // "preLaunchTask": "tsc: build - tsconfig.json",
-            "program": "${workspaceRoot}/dist/index.js",
-            "args": ["index.ts"],
+            "args": ["server.ts"],
             "cwd": "${workspaceRoot}",
             "protocol": "inspector"
         },

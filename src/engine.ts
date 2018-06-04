@@ -6,6 +6,7 @@ import { Faction, Command, Player as PlayerEnum, Operator } from "./enums";
 import Event from "./events";
 
 import AvailableCommand from "./available-command";
+import factions from "./factions";
 
 export default class Engine {
   map: SpaceMap;
@@ -32,7 +33,7 @@ export default class Engine {
     return this.availableCommands = [{
       name: Command.ChooseFaction, 
       player: this.numberOfPlayersWithFactions(), 
-      data: _.difference(Object.values(Faction), this.players.map(pl => pl.faction))
+      data: _.difference(Object.values(Faction), this.players.map(pl => pl.faction), this.players.map(pl => factions.opposite(pl.faction)))
     }];
   }
 
@@ -57,8 +58,8 @@ export default class Engine {
     } else {
       const playerS = split[0];
 
-      assert(/^p[0-4]$/.test(playerS), "Wrong player format, expected p1, p2, ...");
-      const player = +playerS[1];
+      assert(/^p[1-5]$/.test(playerS), "Wrong player format, expected p1, p2, ...");
+      const player = +playerS[1] - 1;
 
       const command = split[1] as Command;
 
@@ -78,7 +79,7 @@ export default class Engine {
   data(): Object {
     return {
       map: this.map.toJSON(),
-      players: this.players.map(pl => pl.toJSON())
+      players: this.players
     };
   }
 
