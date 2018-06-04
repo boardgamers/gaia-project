@@ -21,6 +21,7 @@
     "nodemon": "nodemon -e ts --exec yarn start",
     "prepublishOnly": "tsc",
     "start": "ts-node server.ts",
+    "build": "tsc",
     "test": "mocha -r ts-node/register src/**/*.spec.ts"
   },
   "contributors": [
