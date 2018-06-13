@@ -51,11 +51,12 @@ export default class SpaceMap {
   nbPlayers: number;
   grid: Grid<GaiaHexData>; // hexagrid
 
-  constructor(nbPlayers : number, seed : string) {
-    if (nbPlayers !== undefined) {
-      this.nbPlayers = nbPlayers;
+  constructor(nbPlayers ?: number, seed ?: string) {
+    if (nbPlayers === undefined) {
+      return;
     }
 
+    this.nbPlayers = nbPlayers;
     this.rng = seedrandom(seed);
     
     do {
@@ -90,6 +91,14 @@ export default class SpaceMap {
 
   toJSON() {
     return Array.from(this.grid.values());
+  }
+
+  static fromData(data: any) {
+    const map = new SpaceMap();
+
+    map.grid = new Grid(...data);
+
+    return map;
   }
 
   configuration() {

@@ -2,6 +2,7 @@ import { Faction, Operator, ResearchField } from "./enums";
 import PlayerData from "./player-data";
 import Event from "./events";
 import { factionBoard, FactionBoard } from "./faction-boards";
+import * as _ from "lodash";
 
 export default class Player {
   faction: Faction = null;
@@ -27,6 +28,20 @@ export default class Player {
       faction: this.faction,
       data: this.data
     }
+  }
+
+  static fromData(data: any) {
+    const player = new Player();
+
+    if (data.faction) {
+      player.loadFaction(data.faction);
+    }
+
+    if (data.data) {
+      _.merge(player.data, data.data);
+    }
+
+    return player;
   }
 
   loadFaction(faction: Faction) {

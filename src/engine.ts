@@ -121,6 +121,18 @@ export default class Engine {
     };
   }
 
+  static fromData(data: any) {
+    const engine = new Engine();
+    engine.turn = data.turn;
+    engine.availableCommands = data.availableCommands;
+    engine.map = SpaceMap.fromData(data.map);
+    for (let player of data.players) {
+      engine.players.push(new Player())
+    }
+
+    return engine;
+  }
+
   /** Commands */
   [Command.Init](players: string, seed: string) {
     const nbPlayers = +players || 2;
