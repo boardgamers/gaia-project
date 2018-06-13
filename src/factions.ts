@@ -83,6 +83,10 @@ const factions = {
         return fct;
       }
     }
+  },
+
+  planet(faction: Faction): Planet {
+    return factions[faction].planet;
   }
 };
 

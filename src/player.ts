@@ -3,6 +3,7 @@ import PlayerData from "./player-data";
 import Event from "./events";
 import { factionBoard, FactionBoard } from "./faction-boards";
 import * as _ from "lodash";
+import factions from "./factions";
 
 export default class Player {
   faction: Faction = null;
@@ -42,6 +43,10 @@ export default class Player {
     }
 
     return player;
+  }
+
+  get planet() {
+    return factions.planet(this.faction);
   }
 
   loadFaction(faction: Faction) {

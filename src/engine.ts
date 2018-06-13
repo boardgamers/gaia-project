@@ -61,6 +61,10 @@ export default class Engine {
     return player;
   }
 
+  player(player: number): Player {
+    return this.players[player];
+  }
+
   move(move: string) {
     const split = move.trim().split(" ");
 
