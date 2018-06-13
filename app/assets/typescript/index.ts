@@ -5,7 +5,7 @@ import { showError, removeError } from "./utils";
 import MapRenderer from "../../renderers/map";
 import ResearchRenderer from "../../renderers/research";
 import AvailableCommand from "@gaia-project/engine/src/available-command";
-import { Command } from "@gaia-project/engine";
+import { Command, factions } from "@gaia-project/engine";
 
 const map = new MapRenderer($("canvas#map").get(0) as HTMLCanvasElement);
 const research = new ResearchRenderer($("canvas#research").get(0) as HTMLCanvasElement);
@@ -46,18 +46,47 @@ $(function() {
 
 function showAvailableMoves(commands: AvailableCommand[]) {
   const $move = $("#move");
+
+  // Clear move choice
   $move.html("");
 
   const command = commands[0];
 
   if (!command || command.name === Command.Init) {
+    commandTitle("Choose the number of players");
     for (let i = 2; i <= 5; i++) {
-      const button = $('<button class="btn btn-secondary mr-2">');
-      button.text(`${i} players`);
-      button.attr("command", `init ${i} randomSeed`);
-      $move.append(button);
+      addButton(`${i} players`, `init ${i} randomSeed`);
+    }
+
+    return;
+  }
+
+  const player = `p${command.player+1}`;
+
+  switch (command.name) {
+    case Command.ChooseFaction: {
+      commandTitle("Choose a faction", player);
+      for (const faction of command.data) {
+        addButton(factions[faction].name, `${player} ${Command.ChooseFaction} ${faction}`);
+      }
     }
   }
+}
+
+function commandTitle(text: string, player?: string) {
+  if (!player) {
+    $("#move").append(`<div class='mb-2'>${text}</div>`);
+  } else {
+    $("#move").append(`<div class='mb-2'>(${player}) ${text}</div>`);
+  }  
+}
+
+function addButton(text: string, command: string) {
+  const button = $('<button class="btn btn-secondary mr-2 mb-2">');
+  button.text(text);
+  button.attr("command", command);
+
+  $("#move").append(button);
 }
 
 $(document).on("click", "*[command]", function() {
@@ -69,5 +98,6 @@ $(document).on("click", "*[command]", function() {
   }
 
   $("#moves").val(($("#moves").val() + "\n" + $(this).attr("command")).trim());
+  $("#moves").scrollTop($("#moves")[0].scrollHeight);
   $("form").triggerHandler("submit");
 });
