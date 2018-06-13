@@ -6,7 +6,7 @@ import { Faction, Command, Player as PlayerEnum, Operator, Building } from "./en
 import Event from "./events";
 import { CubeCoordinates} from "hexagrid";
 
-import AvailableCommand from "./available-command";
+import AvailableCommand, { generate as generateAvailableCommands } from "./available-command";
 import factions from "./factions";
 
 export default class Engine {
@@ -28,25 +28,7 @@ export default class Engine {
   }
 
   generateAvailableCommands(): AvailableCommand[] {
-    if (!this.map) {
-      return this.availableCommands = [{name: Command.Init}];
-    }
-
-    if (this.numberOfPlayersWithFactions() < this.players.length) {
-      return this.availableCommands = [{
-        name: Command.ChooseFaction, 
-        player: this.numberOfPlayersWithFactions(), 
-        data: _.difference(Object.values(Faction), this.players.map(pl => pl.faction), this.players.map(pl => factions.opposite(pl.faction)))
-      }];
-    }
-
-    if (this.nextPlayerToSetup() !== undefined) {
-      return this.availableCommands = [{
-        name: Command.Build, 
-        player: this.nextPlayerToSetup(), 
-        data: {buildings: [Building.Mine]}
-      }];
-    }
+    return this.availableCommands = generateAvailableCommands(this);
   }
 
   availableCommand(player: PlayerEnum, command: Command) {
