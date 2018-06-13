@@ -3,7 +3,7 @@
     /* Basic Options */
     "target": "es2017",
     "module": "commonjs",
-    "declaration": true,                   /* Generates corresponding '.d.ts' file. */
+    // "declaration": true,                   /* Generates corresponding '.d.ts' file. */
     "sourceMap": true,                     /* Generates corresponding '.map' file. */
     // "outFile": "./",                       /* Concatenate and emit output to single file. */
     "outDir": "./dist",                        /* Redirect output structure to the directory. */
