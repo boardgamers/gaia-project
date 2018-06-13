@@ -1,6 +1,5 @@
 import * as PIXI from "pixi.js";
 import {GaiaHexData, Planet, ResearchField, Player} from "@gaia-project/engine";
-import { center } from "../graphics/reposition";
 import researchData from "../data/research";
 import ResearchTile from "./research-tile";
 
@@ -13,25 +12,14 @@ const {
 } = researchData;
 
 export default class ResearchRenderer {
-  app: PIXI.Application;
   graphics: PIXI.Graphics;
   lastData: Player[];
   researchTiles: {
     [key in ResearchField]: ResearchTile[]
   };
 
-  constructor(view?: HTMLCanvasElement) {
-    this.app = new PIXI.Application({transparent: true, antialias: true, view});
-    this.app.renderer.resize(view.offsetWidth, view.offsetHeight);
-
+  constructor() {
     this.graphics = new PIXI.Graphics();
-
-    this.app.stage.addChild(this.graphics);
-
-    $(window).on("resize", () => {
-      this.app.renderer.resize(view.offsetWidth, view.offsetHeight);
-      this.render(this.lastData);
-    });
 
     this.researchTiles = {} as any;
 
@@ -70,9 +58,6 @@ export default class ResearchRenderer {
     for (const tile of this.tilesList()) {
       tile.draw(this.graphics);
     }
-
-    // Moves the board back in view
-    center(this.graphics, this.app.screen);
   }
 
   updateInfo(players: Player[]) {

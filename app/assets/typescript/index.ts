@@ -4,11 +4,13 @@ import "../stylesheets/frontend.scss";
 import { showError, removeError } from "./utils";
 import MapRenderer from "../../renderers/map";
 import ResearchRenderer from "../../renderers/research";
+import Renderer from "../../renderers";
 import { AvailableCommand, Command, factions, Building } from "@gaia-project/engine";
 import { CubeCoordinates } from "hexagrid";
 
-const map = new MapRenderer($("canvas#map").get(0) as HTMLCanvasElement);
-const research = new ResearchRenderer($("canvas#research").get(0) as HTMLCanvasElement);
+const renderer = new Renderer($("canvas#map").get(0) as HTMLCanvasElement);
+const map = renderer.map;
+const research = renderer.research;
 let lastData: any = {};
 let pendingCommand = "";
 
@@ -27,8 +29,7 @@ $("form").on("submit", function(event) {
       lastData = data;
 
       if (data.map) {
-        map.render(data.map, data.players.map(pl => pl.faction));
-        research.render(data.players);
+        renderer.render(data);
       }
       
       showAvailableMoves(data.availableCommands);
@@ -125,7 +126,7 @@ $(document).on("click", "*[data-command]", function() {
 
   if (hexes) {
     pendingCommand = command;
-    map.render(lastData.map, lastData.players.map(pl => pl.faction), hexes.split(",").map(hex => CubeCoordinates.parse(hex)));
+    renderer.render(lastData, hexes.split(",").map(hex => CubeCoordinates.parse(hex)));
 
     return;
   }
