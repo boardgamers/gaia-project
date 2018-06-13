@@ -1,10 +1,11 @@
 import * as PIXI from "pixi.js";
 import * as Honeycomb from "honeycomb-grid";
-import {GaiaHexData, Planet} from "@gaia-project/engine";
+import {GaiaHexData, Planet, Faction} from "@gaia-project/engine";
 import { center } from "../graphics/reposition";
-import planetData from "../data/planets";
 import { CubeCoordinates } from "hexagrid";
 import { EventEmitter } from "eventemitter3";
+import PlanetRenderer from "./planet";
+import BuildingRenderer from "./building";
 
 const hexData = {
   radius: 15,
@@ -23,6 +24,7 @@ export default class MapRenderer extends EventEmitter {
   graphics: PIXI.Graphics;
   lastData: Array<Honeycomb.CubeCoordinates & {data: GaiaHexData}>;
   zonesOfInterest: CubeCoordinates[] = [];
+  factions: Faction[] = [];
 
   constructor(view?: HTMLCanvasElement) {
     super();
@@ -37,13 +39,14 @@ export default class MapRenderer extends EventEmitter {
 
     $(window).on("resize", () => {
       this.app.renderer.resize(view.offsetWidth, view.offsetHeight);
-      this.render(this.lastData, this.zonesOfInterest);
+      this.render(this.lastData, this.factions, this.zonesOfInterest);
     });
   }
 
-  render(map: Array<Honeycomb.CubeCoordinates & {data: GaiaHexData}>, zonesOfInterest?: CubeCoordinates[]) {
+  render(map: Array<Honeycomb.CubeCoordinates & {data: GaiaHexData}>, factions: Faction[], zonesOfInterest?: CubeCoordinates[]) {
     this.lastData = map;
     this.zonesOfInterest = zonesOfInterest;
+    this.factions = factions;
 
     this.graphics.clear();
     this.app.stage.removeChildren();
@@ -66,26 +69,28 @@ export default class MapRenderer extends EventEmitter {
     const point = hex.toPoint();
     // separate the first from the other corners
     const [firstCorner, ...otherCorners] = hex.corners();
+    const center = {x: hexData.radius, y: otherCorners[1].y/2};
 
     graphics.lineStyle(hexData.border.width, hexData.border.color);
     graphics.beginFill(ofInterest ? hexData.backgroundHighlight : hexData.background);
     graphics.drawPolygon([].concat(...hex.corners().map(corner => [corner.x, corner.y])));
     graphics.endFill();
 
-    const planet = hex.data.planet;
-
-    if (planet && planet !== Planet.Empty && planetData[planet]) {
-      const planetInfo = planetData[planet];
-
-      graphics.beginFill(planetInfo.color);
-      graphics.lineStyle(hexData.border.width, planetInfo.borderColor);
-      graphics.drawCircle(hexData.radius, otherCorners[1].y/2, planetInfo.radius * hexData.radius);
-      graphics.endFill();
+    /* Draw planet if there */
+    if (hex.data.planet !== Planet.Empty) {
+      const planetGraphics = new PlanetRenderer(hex.data.planet, hexData.radius, hexData.border.width);
+      [planetGraphics.x, planetGraphics.y] = [center.x, center.y];
+      graphics.addChild(planetGraphics);
     }
 
-    const {x, y} = hex.toPoint();
-    graphics.x = x;
-    graphics.y = y;
+    /* Draw building if there */
+    if (hex.data.building) {
+      const building = new BuildingRenderer(hex.data.building, this.factions[hex.data.player], hexData.radius, hexData.border.width);
+      [building.x, building.y] = [center.x, center.y];
+      graphics.addChild(building);
+    }
+
+    [graphics.x, graphics.y] = [point.x, point.y];
 
     if (ofInterest) {
       graphics.interactive = true;

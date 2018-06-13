@@ -27,7 +27,7 @@ $("form").on("submit", function(event) {
       lastData = data;
 
       if (data.map) {
-        map.render(data.map);
+        map.render(data.map, data.players.map(pl => pl.faction));
         research.render(data.players);
       }
       
@@ -55,6 +55,10 @@ function showAvailableMoves(commands: AvailableCommand[]) {
   pendingCommand = "";
 
   const command = commands[0];
+
+  if (!command && lastData.turn > 0) {
+    return;
+  }
 
   if (!command || command.name === Command.Init) {
     commandTitle("Choose the number of players");
@@ -121,7 +125,7 @@ $(document).on("click", "*[data-command]", function() {
 
   if (hexes) {
     pendingCommand = command;
-    map.render(lastData.map, hexes.split(",").map(hex => CubeCoordinates.parse(hex)));
+    map.render(lastData.map, lastData.players.map(pl => pl.faction), hexes.split(",").map(hex => CubeCoordinates.parse(hex)));
 
     return;
   }
