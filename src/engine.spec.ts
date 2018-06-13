@@ -20,4 +20,8 @@ describe("Engine", () => {
 
     expect(() => new Engine(moves)).to.throw(AssertionError);
   });
+
+  it("should give a valid JSON even when not initialized", () => {
+    expect(() => JSON.stringify(new Engine([]))).to.not.throw();
+  });
 });

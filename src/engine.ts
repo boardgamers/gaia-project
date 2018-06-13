@@ -98,15 +98,6 @@ export default class Engine {
     return this.players.filter(pl => pl.faction).length;
   }
 
-  data(): Object {
-    return {
-      map: this.map.toJSON(),
-      players: this.players,
-      availableCommands: this.availableCommands,
-      turn: this.turn
-    };
-  }
-
   static fromData(data: any) {
     const engine = new Engine();
     engine.turn = data.turn;

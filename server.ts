@@ -16,7 +16,7 @@ app.post("/", (req, res) => {
   const moves = req.body.moves;
   const engine = new Engine(moves);
 
-  res.json(engine.data());
+  res.json(engine);
 });
 
 app.listen(9508, "localhost", () => {
