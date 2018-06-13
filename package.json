@@ -1,6 +1,6 @@
 {
   "name": "@gaia-project/engine",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Javascript engine for project gaia",
   "main": "dist/index.js",
   "types": "index.ts",
@@ -19,9 +19,9 @@
   ],
   "scripts": {
     "nodemon": "nodemon -e ts --exec yarn start",
-    "prepublishOnly": "tsc",
+    "prepublishOnly": "rm -Rf dist && tsc",
     "start": "ts-node server.ts",
-    "build": "tsc",
+    "build": "rm -Rf dist && tsc",
     "test": "mocha -r ts-node/register src/**/*.spec.ts"
   },
   "contributors": [
