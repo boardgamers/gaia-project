@@ -1,9 +1,10 @@
-import { Faction, Operator, ResearchField, Planet } from "./enums";
+import { Faction, Operator, ResearchField, Planet, Building } from "./enums";
 import PlayerData from "./player-data";
 import Event from "./events";
 import { factionBoard, FactionBoard } from "./faction-boards";
 import * as _ from "lodash";
 import factions from "./factions";
+import Reward from "./reward";
 
 export default class Player {
   faction: Faction = null;
@@ -68,5 +69,16 @@ export default class Player {
 
   onKnowledgeUpgraded(track: ResearchField) {
     // Todo: get corresponding income
+  }
+
+  build(building: Building, cost: Reward[]) {
+    this.data.payCosts(cost);
+
+    switch (building) {
+      case Building.Mine: {
+        this.data.mines += 1;
+        return;
+      }
+    }
   }
 }

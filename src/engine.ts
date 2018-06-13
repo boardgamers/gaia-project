@@ -8,6 +8,7 @@ import { CubeCoordinates} from "hexagrid";
 
 import AvailableCommand, { generate as generateAvailableCommands } from "./available-command";
 import factions from "./factions";
+import Reward from "./reward";
 
 export default class Engine {
   map: SpaceMap;
@@ -45,20 +46,20 @@ export default class Engine {
     // Find the first player with zero mine
     let player = this.players.findIndex(pl => pl.data.mines === 0);
 
-    if (player !== undefined) {
+    if (player !== -1) {
       return player;
     }
 
     // Find the last player with one mine
     player = _.findLastIndex(this.players, pl => pl.data.mines === 1);
 
-    if (player !== undefined) {
+    if (player !== -1) {
       return player;
     }
 
     // Todo: if the faction with three mines, return corresponding player
 
-    return player;
+    return undefined;
   }
 
   player(player: number): Player {
@@ -134,18 +135,19 @@ export default class Engine {
 
   [Command.Build](player: PlayerEnum, building: Building, location: string) {
     const avail = this.availableCommand(player, Command.Build);
-    const {q, r} = CubeCoordinates.parse(location);
+    const { buildings } = avail.data;
 
-    if (this.turn === 0) {
-      // Free building
+    for (const elem of buildings) {
+      if (elem.building === building && elem.coordinates === location) {
+        const {q, r} = CubeCoordinates.parse(location);
 
-      // ...
+        this.player(player).build(Building.Mine, Reward.parse(elem.cost));
+        this.map.grid.get(q, r).data.building = building;
 
-      if (this.nextPlayerToSetup() === undefined) {
-        this.turn = 1;
+        if (this.turn === 0 && this.nextPlayerToSetup() === undefined) {
+          this.turn = 1;
+        }
       }
-    } else {
-      // Check cost
     }
   }
 }

@@ -4,7 +4,13 @@ import { AssertionError } from "assert";
 
 describe("Engine", () => {
   it("should process a simple game without errors", () => {
-    const moves = ["init 3 seed?2", "p1 faction terrans", "p2 faction geodens"];
+    const moves = [
+      "init 2 randomSeed",
+      "p1 faction terrans",
+      "p2 faction ambas",
+      "p1 build m 2x2",
+      "p2 build m -2x5"
+    ];
 
     expect(() => new Engine(moves)).to.not.throw();
   });

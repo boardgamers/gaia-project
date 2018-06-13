@@ -59,6 +59,15 @@ export default class PlayerData extends EventEmitter {
       range: this.range
     }
   }
+  payCosts(costs: Reward[]) {
+    for (let cost of costs) {
+      this.payCost(cost);
+    }
+  }
+
+  payCost(cost: Reward) {
+    this.gainReward(cost, true);
+  }
 
   gainRewards(rewards: Reward[]) {
     for (let reward of rewards) {
@@ -66,11 +75,15 @@ export default class PlayerData extends EventEmitter {
     }
   }
 
-  gainReward(reward: Reward) {
+  gainReward(reward: Reward, pay = false) {
     if (reward.isEmpty()) {
       return;
     }
-    const { count, type: resource } = reward;
+    let { count, type: resource } = reward;
+
+    if (pay) {
+      count = -count;
+    }
     
     if (resource.startsWith("up-")) {
       this.upgradeResearch(resource.slice("up-".length) as ResearchField, count);
