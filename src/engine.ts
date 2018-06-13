@@ -142,7 +142,10 @@ export default class Engine {
         const {q, r} = CubeCoordinates.parse(location);
 
         this.player(player).build(Building.Mine, Reward.parse(elem.cost));
-        this.map.grid.get(q, r).data.building = building;
+        
+        const hex = this.map.grid.get(q, r);
+        hex.data.building = building;
+        hex.data.player = player;
 
         if (this.turn === 0 && this.nextPlayerToSetup() === undefined) {
           this.turn = 1;
