@@ -4,10 +4,8 @@ import "../stylesheets/frontend.scss";
 import { showError, removeError } from "./utils";
 import MapRenderer from "../../renderers/map";
 import ResearchRenderer from "../../renderers/research";
-import { AvailableCommand } from "@gaia-project/engine";
-import { Command, factions } from "@gaia-project/engine";
+import { AvailableCommand, Command, factions, Building } from "@gaia-project/engine";
 import { CubeCoordinates } from "hexagrid";
-import { Building } from "@gaia-project/engine";
 
 const map = new MapRenderer($("canvas#map").get(0) as HTMLCanvasElement);
 const research = new ResearchRenderer($("canvas#research").get(0) as HTMLCanvasElement);
