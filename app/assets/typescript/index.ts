@@ -6,9 +6,13 @@ import MapRenderer from "../../renderers/map";
 import ResearchRenderer from "../../renderers/research";
 import AvailableCommand from "@gaia-project/engine/src/available-command";
 import { Command, factions } from "@gaia-project/engine";
+import { CubeCoordinates } from "hexagrid";
+import { Building } from "@gaia-project/engine/src/enums";
 
 const map = new MapRenderer($("canvas#map").get(0) as HTMLCanvasElement);
 const research = new ResearchRenderer($("canvas#research").get(0) as HTMLCanvasElement);
+let lastData: any = {};
+let pendingCommand = "";
 
 $("form").on("submit", function(event) {
   event.preventDefault();
@@ -22,6 +26,7 @@ $("form").on("submit", function(event) {
     data,
     data => {
       removeError();
+      lastData = data;
 
       if (data.map) {
         map.render(data.map);
@@ -49,6 +54,7 @@ function showAvailableMoves(commands: AvailableCommand[]) {
 
   // Clear move choice
   $move.html("");
+  pendingCommand = "";
 
   const command = commands[0];
 
@@ -69,6 +75,16 @@ function showAvailableMoves(commands: AvailableCommand[]) {
       for (const faction of command.data) {
         addButton(factions[faction].name, `${player} ${Command.ChooseFaction} ${faction}`);
       }
+
+      break;
+    }
+    case Command.Build: {
+      commandTitle("Your turn", player);
+      addButton("Place a mine", `${player} ${Command.Build} ${Building.Mine}`, {
+        hexes: command.data.buildings.map(building => building.coordinates)
+      });
+
+      break;
     }
   }
 }
@@ -81,23 +97,53 @@ function commandTitle(text: string, player?: string) {
   }  
 }
 
-function addButton(text: string, command: string) {
+function addButton(text: string, command: string, {hexes}: {hexes?: string[]} = {}) {
   const button = $('<button class="btn btn-secondary mr-2 mb-2">');
   button.text(text);
-  button.attr("command", command);
+  
+  if (command) {
+    button.attr("data-command", command);
+  }
 
   $("#move").append(button);
+
+  if (hexes) {
+    button.attr("data-hexes", hexes.join(","));
+  }
+
+  return button;
 }
 
-$(document).on("click", "*[command]", function() {
-  const command = $(this).attr("command");
+$(document).on("click", "*[data-command]", function() {
+  // Clear pending
+  pendingCommand = "";
+
+  const command = $(this).attr("data-command");
+  const hexes = $(this).attr("data-hexes");
+
+  if (hexes) {
+    pendingCommand = command;
+    map.render(lastData.map, hexes.split(",").map(hex => CubeCoordinates.parse(hex)));
+
+    return;
+  }
 
   // Clear exitings list of moves if the game starts anew
   if (command.startsWith("init")) {
     $("#moves").val("");
   }
+  
+  addMove(command);
+});
 
-  $("#moves").val(($("#moves").val() + "\n" + $(this).attr("command")).trim());
+function addMove(move: string) {
+  $("#moves").val((($("#moves").val() as string).trim() + "\n" + move).trim());
   $("#moves").scrollTop($("#moves")[0].scrollHeight);
   $("form").triggerHandler("submit");
+}
+
+map.on("hexClick", hex => {
+  if (pendingCommand) {
+    addMove(pendingCommand + " " + CubeCoordinates.toString(hex))
+  }
 });

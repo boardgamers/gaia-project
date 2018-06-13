@@ -3,21 +3,33 @@ import * as Honeycomb from "honeycomb-grid";
 import {GaiaHexData, Planet} from "@gaia-project/engine";
 import { center } from "../graphics/reposition";
 import planetData from "../data/planets";
+import { CubeCoordinates } from "hexagrid";
+import { EventEmitter } from "eventemitter3";
 
-const HEXRADIUS = 15;
-const HEXBORDER = 0x666666;
-const LINEWIDTH = 1;
+const hexData = {
+  radius: 15,
+  border: {
+    width: 1,
+    color: 0x666666,
+  },
+  background: 0x172E62,
+  backgroundHighlight: 0xF0F0F0
+};
 
 type GaiaHex = {data: GaiaHexData, orientation: "flat"} & {size: number};
 
-export default class MapRenderer {
+export default class MapRenderer extends EventEmitter {
   app: PIXI.Application;
   graphics: PIXI.Graphics;
   lastData: Array<Honeycomb.CubeCoordinates & {data: GaiaHexData}>;
+  zonesOfInterest: CubeCoordinates[] = [];
 
   constructor(view?: HTMLCanvasElement) {
+    super();
+
     this.app = new PIXI.Application({transparent: true, antialias: true, view});
     this.app.renderer.resize(view.offsetWidth, view.offsetHeight);
+    this.app.renderer.autoResize = true;
 
     this.graphics = new PIXI.Graphics();
 
@@ -25,61 +37,64 @@ export default class MapRenderer {
 
     $(window).on("resize", () => {
       this.app.renderer.resize(view.offsetWidth, view.offsetHeight);
-      this.render(this.lastData);
+      this.render(this.lastData, this.zonesOfInterest);
     });
   }
 
-  render(map: Array<Honeycomb.CubeCoordinates & {data: GaiaHexData}> ) {
+  render(map: Array<Honeycomb.CubeCoordinates & {data: GaiaHexData}>, zonesOfInterest?: CubeCoordinates[]) {
     this.lastData = map;
-    this.graphics.clear();
+    this.zonesOfInterest = zonesOfInterest;
 
-    const Hex = Honeycomb.extendHex<GaiaHex>({ size: HEXRADIUS , orientation: "flat", data: {planet: Planet.Empty, sector: null}});
+    this.graphics.clear();
+    this.app.stage.removeChildren();
+
+    const Hex = Honeycomb.extendHex<GaiaHex>({ size: hexData.radius , orientation: "flat", data: {planet: Planet.Empty, sector: null}});
     const Grid = Honeycomb.defineGrid(Hex);
 
     Grid(...map.map(hex=>Hex(hex))).forEach(hex => {
-      this.drawHex(hex);
+      const ofInterest = zonesOfInterest && zonesOfInterest.some(zone => zone.q === hex.q && zone.r === hex.r);
+      this.drawHex(hex, ofInterest);
     });
 
     // Moves the board back in view
-    center(this.graphics, this.app.screen);
+    center(this.app.stage, this.app.screen);
   }
 
-  drawHex(hex: Honeycomb.Hex<GaiaHex>) {
-    this.graphics.lineStyle(LINEWIDTH, HEXBORDER);
+  drawHex(hex: Honeycomb.Hex<GaiaHex>, ofInterest = false) {
+    const graphics = new PIXI.Graphics();
 
     const point = hex.toPoint();
-    // add the hex's position to each of its corner points
-    const corners = hex.corners().map(corner => corner.add(point));
     // separate the first from the other corners
-    const [firstCorner, ...otherCorners] = corners;
+    const [firstCorner, ...otherCorners] = hex.corners();
 
-    // move the "pencil" to the first corner
-    this.graphics.moveTo(firstCorner.x, firstCorner.y);
-    this.graphics.beginFill(0x172E62);
-    // draw lines to the other corners
-    otherCorners.forEach(({ x, y }) => this.graphics.lineTo(x, y));
-    // finish at the first corner
-    this.graphics.lineTo(firstCorner.x, firstCorner.y);
-    this.graphics.endFill();
+    graphics.lineStyle(hexData.border.width, hexData.border.color);
+    graphics.beginFill(ofInterest ? hexData.backgroundHighlight : hexData.background);
+    graphics.drawPolygon([].concat(...hex.corners().map(corner => [corner.x, corner.y])));
+    graphics.endFill();
 
-    this.drawPlanet(hex.data.planet, point.add(hex.center()));
-  }
+    const planet = hex.data.planet;
 
-  drawPlanet(planet: Planet, point: Honeycomb.PointLike) {
-    if (planet === Planet.Empty) {
-      return;
-    }
-    if (!planetData[planet]) {
-      console.log("Unknown planet for drawing", planet);
-      return;
+    if (planet && planet !== Planet.Empty && planetData[planet]) {
+      const planetInfo = planetData[planet];
+
+      graphics.beginFill(planetInfo.color);
+      graphics.lineStyle(hexData.border.width, planetInfo.borderColor);
+      graphics.drawCircle(hexData.radius, otherCorners[1].y/2, planetInfo.radius * hexData.radius);
+      graphics.endFill();
     }
 
-    const planetInfo = planetData[planet];
+    const {x, y} = hex.toPoint();
+    graphics.x = x;
+    graphics.y = y;
 
-    this.graphics.beginFill(planetInfo.color);
-    this.graphics.moveTo(point.x, point.y);
-    this.graphics.lineStyle(LINEWIDTH, planetInfo.borderColor);
-    this.graphics.drawCircle(point.x, point.y, planetInfo.radius * HEXRADIUS);
-    this.graphics.endFill();
+    if (ofInterest) {
+      graphics.interactive = true;
+      graphics.cursor = "pointer";
+      graphics.on("click", () => {
+        this.emit("hexClick", hex);
+      });
+    }
+
+    this.app.stage.addChild(graphics);
   }
 }
