@@ -1,5 +1,5 @@
 import { Faction, Planet } from './enums';
-import Boards from "./faction-boards";
+import Boards, { FactionBoardRaw } from "./faction-boards";
 
 const factions = {
   [Faction.Terrans]: {

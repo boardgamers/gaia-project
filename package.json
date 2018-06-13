@@ -3,7 +3,7 @@
   "version": "0.5.6",
   "description": "Javascript engine for project gaia",
   "main": "dist/index.js",
-  "types": "index.d.ts",
+  "types": "dist/index.d.ts",
   "source": "index.ts",
   "repository": "git@github.com:donkeytech/gaia-engine.git",
   "publishConfig": {

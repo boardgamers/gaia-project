@@ -1,4 +1,4 @@
-import { Faction, Operator, ResearchField } from "./enums";
+import { Faction, Operator, ResearchField, Planet } from "./enums";
 import PlayerData from "./player-data";
 import Event from "./events";
 import { factionBoard, FactionBoard } from "./faction-boards";
@@ -45,7 +45,7 @@ export default class Player {
     return player;
   }
 
-  get planet() {
+  get planet(): Planet {
     return factions.planet(this.faction);
   }
 

@@ -14,7 +14,7 @@ import Bescods from "./bescods";
 import Nevlas from "./nevlas";
 import Itars from "./itars";
 import {FactionBoard, FactionBoardRaw} from "./types";
-export {FactionBoard} from "./types";
+export {FactionBoard, FactionBoardRaw} from "./types";
 
 const factionBoards: {[key in Faction]: FactionBoardRaw} = {
   [Faction.Terrans]: Terrans,
