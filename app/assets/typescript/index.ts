@@ -32,6 +32,7 @@ $("form").on("submit", function(event) {
         renderer.render(data);
       }
       
+      updatePlayerInfo();
       showAvailableMoves(data.availableCommands);
     },
     "json"
@@ -150,3 +151,29 @@ map.on("hexClick", hex => {
     addMove(pendingCommand + " " + CubeCoordinates.toString(hex))
   }
 });
+
+function updatePlayerInfo() {
+  for (let i = 0; i < 5; i++) {
+    const player = `p${i+1}`;
+    const panel = `#${player}`;
+    const tab = `${panel}-tab`;
+    
+    if (lastData.players.length <= i) {
+      $(tab).hide();
+      continue;
+    }
+
+    $(tab).show();
+
+    const data = lastData.players[i].data;
+    const faction = factions[lastData.players[i].faction].name;
+
+    const info = [
+      `Faction: ${faction}`,
+      `vp: ${data.victoryPoints}, c: ${data.credits}, o: ${data.ores}, q: ${data.qics}, k: ${data.knowledge}`,
+      `bowl 1: ${data.power.bowl1}, bowl 2: ${data.power.bowl2}, bowl 3: ${data.power.bowl3}`,
+    ];
+
+    $(panel).html(info.join('<br>'));
+  }
+}
