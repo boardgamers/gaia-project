@@ -3,6 +3,29 @@ import Engine from "..";
 import { AssertionError } from "assert";
 
 describe("Engine", () => {
+
+  it("should throw when trying to build on the wrong place", () => {
+    const moves = [
+      "init 2 randomSeed",
+      "p1 faction terrans",
+      "p2 faction xenos",
+      "p1 build m 0x0",
+    ];
+
+    expect(() => new Engine(moves)).to.not.throw();
+  });
+
+  it("should process a simple game with Xenos (three mines) without errors", () => {
+    const moves = [
+      "init 2 randomSeed",
+      "p1 faction terrans",
+      "p2 faction xenos",
+      "p1 build m 2x2",
+      "p2 build m -2x5"
+    ];
+
+    expect(() => new Engine(moves)).to.not.throw();
+  });
   it("should process a simple game without errors", () => {
     const moves = [
       "init 2 randomSeed",
