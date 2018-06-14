@@ -7,6 +7,7 @@ import ResearchRenderer from "../../renderers/research";
 import Renderer from "../../renderers";
 import { AvailableCommand, Command, factions, Building } from "@gaia-project/engine";
 import { CubeCoordinates } from "hexagrid";
+import { buildingName } from "../../data/building";
 
 const renderer = new Renderer($("canvas#map").get(0) as HTMLCanvasElement);
 const map = renderer.map;
@@ -73,21 +74,40 @@ function showAvailableMoves(commands: AvailableCommand[]) {
 
   const player = `p${command.player+1}`;
 
+  if (command.name === Command.ChooseFaction) {
+    commandTitle("Choose a faction", player);
+    
+    for (const faction of command.data) {
+      addButton(factions[faction].name, `${player} ${Command.ChooseFaction} ${faction}`);
+    }
+
+    return;
+  }
+
+  commandTitle("Your turn", player);
+  for (const comm of commands) {
+    showAvailableMove(player, comm);
+  }
+}
+
+function showAvailableMove(player: string, command: AvailableCommand) {
   switch (command.name) {
-    case Command.ChooseFaction: {
-      commandTitle("Choose a faction", player);
-      for (const faction of command.data) {
-        addButton(factions[faction].name, `${player} ${Command.ChooseFaction} ${faction}`);
+    case Command.Build: {
+      for (const building of Object.values(Building)) {
+        const coordinates = command.data.buildings.filter(bld => bld.building === building).map(bld => bld.coordinates);
+
+        if (coordinates.length > 0) {
+          addButton(`Place ${buildingName(building)}`, `${player} ${Command.Build} ${Building.Mine}`, {
+            hexes: coordinates
+          });
+        }
       }
 
       break;
     }
-    case Command.Build: {
-      commandTitle("Your turn", player);
-      addButton("Place a mine", `${player} ${Command.Build} ${Building.Mine}`, {
-        hexes: command.data.buildings.map(building => building.coordinates)
-      });
 
+    case Command.Pass: {
+      addButton("Pass", `${player} ${Command.Pass}`);
       break;
     }
   }
