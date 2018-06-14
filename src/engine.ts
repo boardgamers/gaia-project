@@ -52,7 +52,7 @@ export default class Engine {
     }
 
     // Find the last player with one mine
-    player = _.findLastIndex(this.players, pl => pl.data.mines === 1);
+    player = _.findLastIndex(this.players, pl => ((pl.data.mines === 0) || (pl.faction !== Faction.Ivits)));
 
     if (player !== -1) {
       return player;
@@ -66,7 +66,7 @@ export default class Engine {
     }
 
      // Ivits is last 
-     player = this.players.findIndex(pl =>  pl.faction === Faction.Ivits) ;
+     player = this.players.findIndex(pl => ((pl.data.platenaryInstitute === false) || (pl.faction === Faction.Ivits))) ;
 
      if (player !== -1) {
        return player;
