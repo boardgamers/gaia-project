@@ -22,7 +22,7 @@
     "prepublishOnly": "npm run clean && tsc",
     "postpublish": "npm run clean",
     "start": "ts-node server.ts",
-    "build": "npm run clean",
+    "build": "npm run clean && tsc",
     "clean": "rm -Rf dist",
     "test": "mocha -r ts-node/register src/**/*.spec.ts"
   },

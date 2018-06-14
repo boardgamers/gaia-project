@@ -103,7 +103,8 @@ export enum Faction {
 export enum Command {
   Init = "init",
   ChooseFaction = "faction",
-  Build = "build"
+  Build = "build",
+  Pass = "pass"
 }
 
 export enum Player {

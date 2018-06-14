@@ -45,9 +45,56 @@ export function generate(engine: Engine): AvailableCommand[] {
   }
 
   // We are in a regular round
+  const commands = [];
   const player = engine.currentPlayer;
+  const data = engine.player(player).data;
+  const board = engine.player(player).board;
 
-  // Todo: Find available moves for player
+  // Add building moves
+  for (const hex of engine.map.toJSON()) {
+    const planet = engine.player(player).planet;
+    const buildings = [];
+
+    for (const hex of engine.map.toJSON()) {
+      if (hex.data.planet !== planet) {
+        continue;
+      }
+
+      if (hex.data.building) {
+        if (hex.data.player !== player) {
+          // Existing building belongs to another player
+          continue;
+        }
+        // Todo: See if current building can be upgraded
+      } else {
+        if (board.mines.income.length <= data.mines + 1) {
+          // There are already too many mines
+          continue;
+        }
+
+        if (!data.canPay(board.mines.cost)) {
+          continue;
+        }
+
+        buildings.push({
+          building: Building.Mine,
+          coordinates: hex.toString(),
+          cost: board.mines.cost.map(c => c.toString()).join(',')
+        });
+      }
+    }
+
+    commands.push({
+      name: Command.Build, 
+      player, 
+      data: {buildings}
+    });
+  }
+
+  commands.push({
+    name: Command.Pass,
+    player
+  });
 
   return [];
 }

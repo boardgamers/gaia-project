@@ -103,6 +103,11 @@ export default class PlayerData extends EventEmitter {
     }
   }
 
+  canPay(reward: Reward[]): boolean {
+    // TODO: proper check whether the player can pay or not
+    return true;
+  }
+
   /**
    * Move power tokens from a bowl to an upper one, depending on the amount
    * of power chaged
