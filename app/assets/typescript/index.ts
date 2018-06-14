@@ -153,6 +153,9 @@ map.on("hexClick", hex => {
 });
 
 function updatePlayerInfo() {
+  if (!lastData.players) {
+    return;
+  }
   for (let i = 0; i < 5; i++) {
     const player = `p${i+1}`;
     const panel = `#${player}`;
@@ -164,6 +167,10 @@ function updatePlayerInfo() {
     }
 
     $(tab).show();
+
+    if (!lastData.players[i].faction) {
+      continue;
+    }
 
     const data = lastData.players[i].data;
     const faction = factions[lastData.players[i].faction].name;
