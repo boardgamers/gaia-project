@@ -15,7 +15,19 @@ describe("Engine", () => {
     expect(() => new Engine(moves)).to.throw();
   });
 
-  it("should process a simple game with Xenos (three mines) without errors", () => {
+  it("should allow a simple setup without errors", () => {
+    const moves = parseMoves(`
+      init 2 randomSeed
+      p1 faction terrans
+      p2 faction ambas
+      p1 build m 2x2
+      p2 build m -2x5
+    `);
+
+    expect(() => new Engine(moves)).to.not.throw();
+  });
+
+  it("should allow to set up with Xenos (three mines) without errors", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans
@@ -30,18 +42,20 @@ describe("Engine", () => {
     expect(() => new Engine(moves)).to.not.throw();
   });
 
-  
-  it("should process a simple game without errors", () => {
+  it("should allow players to pass", () => {
     const moves = parseMoves(`
       init 2 randomSeed
-      p1 faction terrans
-      p2 faction ambas
+      p1 faction lantids
+      p2 faction gleens
       p1 build m 2x2
-      p2 build m -2x5
+      p2 build m 0x3
+      p2 build m 3x0
+      p1 build m 4x0
+      p1 pass
     `);
 
     expect(() => new Engine(moves)).to.not.throw();
-  });
+  })
 
   it("should throw when two players choose factions on the same planet", () => {
     const moves = ["init 3 seed?2", "p1 faction terrans", "p2 faction lantids"];

@@ -209,4 +209,11 @@ export default class Engine {
 
     throw new Error(`Impossible to execute build command at ${location}`);
   }
+
+  [Command.Pass](player: PlayerEnum) {
+    this.passedPlayers.push(player);
+    
+    this.currentPlayer = this.nextPlayer();
+    this.turnOrder.splice(this.turnOrder.indexOf(player), 1);
+  }
 }

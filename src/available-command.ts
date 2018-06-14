@@ -51,7 +51,7 @@ export function generate(engine: Engine): AvailableCommand[] {
   const board = engine.player(player).board;
 
   // Add building moves
-  for (const hex of engine.map.toJSON()) {
+  {
     const planet = engine.player(player).planet;
     const buildings = [];
 
@@ -91,10 +91,11 @@ export function generate(engine: Engine): AvailableCommand[] {
     });
   }
 
+  // Give the player the ability to pass
   commands.push({
     name: Command.Pass,
     player
   });
 
-  return [];
+  return commands;
 }
