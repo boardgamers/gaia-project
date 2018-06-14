@@ -126,6 +126,14 @@ export default class Engine {
     return engine;
   }
 
+  endTurn() {
+    this.turn += 1;
+
+    for (const player of this.players) {
+      player.receiveIncome();
+    }
+  }
+
   /** Commands */
   [Command.Init](players: string, seed: string) {
     const nbPlayers = +players || 2;
@@ -155,14 +163,21 @@ export default class Engine {
     for (const elem of buildings) {
       if (elem.building === building && elem.coordinates === location) {
         const {q, r} = CubeCoordinates.parse(location);
-          
+        
         this.player(player).build(building, Reward.parse(elem.cost));
-        this.map.grid.get(q, r).data.building = building;
+ 
+        const hex = this.map.grid.get(q, r);
+        hex.data.building = building;
+        hex.data.player = player;
 
         if (this.turn === 0 && this.nextPlayerToSetup() === undefined) {
-          this.turn = 1;
+          this.endTurn();
         }
+
+        return;
       }
     }
+
+    throw new Error("Impossible to execute build command");
   }
 }

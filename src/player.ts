@@ -59,11 +59,15 @@ export default class Player {
 
   loadEvents(events: Event[]) {
     for (const event of events) {
-      this.events[event.operator].push(event);
+      this.loadEvent(event);
+    }
+  }
 
-      if (event.operator === Operator.Once) {
-        this.data.gainRewards(event.rewards);
-      }
+  loadEvent(event: Event) {
+    this.events[event.operator].push(event);
+
+    if (event.operator === Operator.Once) {
+      this.data.gainRewards(event.rewards);
     }
   }
 
@@ -76,9 +80,17 @@ export default class Player {
 
     switch (building) {
       case Building.Mine: {
+        // Add income of the building to the list of events
+        this.loadEvent(this.board.mines.income[this.data.mines]);
         this.data.mines += 1;
         return;
       }
+    }
+  }
+
+  receiveIncome() {
+    for (const event of this.events[Operator.Income]) {
+      this.data.gainRewards(event.rewards);
     }
   }
 }
