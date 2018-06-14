@@ -111,6 +111,14 @@ export default class Engine {
     return engine;
   }
 
+  endTurn() {
+    this.turn += 1;
+
+    for (const player of this.players) {
+      player.receiveIncome();
+    }
+  }
+
   /** Commands */
   [Command.Init](players: string, seed: string) {
     const nbPlayers = +players || 2;
@@ -148,7 +156,7 @@ export default class Engine {
         hex.data.player = player;
 
         if (this.turn === 0 && this.nextPlayerToSetup() === undefined) {
-          this.turn = 1;
+          this.endTurn();
         }
 
         return;
