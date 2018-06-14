@@ -15,6 +15,15 @@ export default class Engine {
   players: Player[];
   availableCommands: AvailableCommand[] = [];
   turn: number = 0;
+  /** Order of players in the turn */
+  turnOrder: PlayerEnum[] = [];
+  /** 
+   * Players who have passed, in order. Will be used to determine next round's
+   * order
+   */
+  passedPlayers : PlayerEnum[] = [];
+  /** Current player to make a move */
+  currentPlayer: PlayerEnum;
 
   constructor(moves: string [] = []) {
     this.generateAvailableCommands();
@@ -127,9 +136,31 @@ export default class Engine {
   endTurn() {
     this.turn += 1;
 
-    for (const player of this.players) {
+    if (this.turn === 1) {
+      // First round, the players are in regular order
+      this.turnOrder = this.players.map((pl, i) => i as PlayerEnum);
+    } else {
+      // The players play in the order in which they passed
+      this.turnOrder = this.passedPlayers;
+      this.passedPlayers = [];
+    }
+
+    this.currentPlayer = this.turnOrder[0];
+
+    for (const player of this.playersInOrder()) {
       player.receiveIncome();
     }
+  }
+
+  /** Next player to make a move, after current player makes their move */
+  nextPlayer() : PlayerEnum {
+    const index = this.turnOrder.indexOf(this.currentPlayer);
+
+    return this.turnOrder[index + 1 % this.turnOrder.length];
+  }
+
+  playersInOrder(): Player[] {
+    return this.turnOrder.map(i => this.players[i]);
   }
 
   /** Commands */

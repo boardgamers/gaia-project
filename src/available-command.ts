@@ -44,5 +44,10 @@ export function generate(engine: Engine): AvailableCommand[] {
     }];
   }
 
+  // We are in a regular round
+  const player = engine.currentPlayer;
+
+  // Todo: Find available moves for player
+
   return [];
 }
