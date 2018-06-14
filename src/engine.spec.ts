@@ -12,7 +12,7 @@ describe("Engine", () => {
       "p1 build m 0x0",
     ];
 
-    expect(() => new Engine(moves)).to.throw(AssertionError);
+    expect(() => new Engine(moves)).to.throw();
   });
 
   it("should process a simple game with Xenos (three mines) without errors", () => {
@@ -32,13 +32,13 @@ describe("Engine", () => {
 
   
   it("should process a simple game without errors", () => {
-    const moves = [
-      "init 2 randomSeed",
-      "p1 faction terrans",
-      "p2 faction ambas",
-      "p1 build m 2x2",
-      "p2 build m -2x5"
-    ];
+    const moves = parseMoves(`
+      init 2 randomSeed
+      p1 faction terrans
+      p2 faction ambas
+      p1 build m 2x2
+      p2 build m -2x5
+    `);
 
     expect(() => new Engine(moves)).to.not.throw();
   });
@@ -59,3 +59,7 @@ describe("Engine", () => {
     expect(() => JSON.stringify(new Engine([]))).to.not.throw();
   });
 });
+
+function parseMoves(moves: string) {
+  return moves.trim().split("\n").map(move => move.trim());
+}

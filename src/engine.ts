@@ -22,7 +22,7 @@ export default class Engine {
   }
 
   loadMoves(moves: string[]) {
-    for (let move of moves) {
+    for (const move of moves) {
       this.move(move);
       this.generateAvailableCommands();
     }
