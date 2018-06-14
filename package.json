@@ -19,9 +19,11 @@
   ],
   "scripts": {
     "nodemon": "nodemon -e ts --exec yarn start",
-    "prepublishOnly": "rm -Rf dist && tsc",
+    "prepublishOnly": "npm run clean && tsc",
+    "postpublish": "npm run clean",
     "start": "ts-node server.ts",
-    "build": "rm -Rf dist && tsc",
+    "build": "npm run clean",
+    "clean": "rm -Rf dist",
     "test": "mocha -r ts-node/register src/**/*.spec.ts"
   },
   "contributors": [

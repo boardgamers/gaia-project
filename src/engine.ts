@@ -150,7 +150,11 @@ export default class Engine {
         if (this.turn === 0 && this.nextPlayerToSetup() === undefined) {
           this.turn = 1;
         }
+
+        return;
       }
     }
+
+    throw new Error("Impossible to execute build command");
   }
 }
