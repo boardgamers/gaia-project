@@ -55,6 +55,9 @@ export default class Player {
     this.board = factionBoard(faction);
 
     this.loadEvents(this.board.income);
+
+    this.data.power.bowl1 = this.board.power.bowl1;
+    this.data.power.bowl2 = this.board.power.bowl2;
   }
 
   loadEvents(events: Event[]) {
