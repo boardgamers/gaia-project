@@ -16,16 +16,16 @@ describe("Engine", () => {
   });
 
   it("should process a simple game with Xenos (three mines) without errors", () => {
-    const moves = [
-      "init 2 randomSeed",
-      "p1 faction terrans",
-      "p2 faction xenos",
-      "p1 build m 2x2",
-      "p2 build m 4x0",
-      "p2 build m -7x2",
-      "p1 build m 0x0",
-      "p2 build m 4x-6"
-    ];
+    const moves = parseMoves(`
+      init 2 randomSeed
+      p1 faction terrans
+      p2 faction xenos
+      p1 build m 2x2
+      p2 build m 3x0
+      p2 build m 0x3
+      p1 build m -7x2
+      p2 build m 2x-3
+    `);
 
     expect(() => new Engine(moves)).to.not.throw();
   });

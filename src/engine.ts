@@ -45,34 +45,32 @@ export default class Engine {
 
     // Find the first player with zero mine
     // excluding Ivits, they have to place the PI at the end
-    let player = this.players.findIndex(pl => ((pl.data.mines === 0) || (pl.faction !== Faction.Ivits))) ;
+    let player = this.players.findIndex(pl => pl.data.mines === 0 && pl.faction !== Faction.Ivits);
 
     if (player !== -1) {
       return player;
     }
 
     // Find the last player with one mine
-    player = _.findLastIndex(this.players, pl => ((pl.data.mines === 0) || (pl.faction !== Faction.Ivits)));
+    player = _.findLastIndex(this.players, pl => pl.data.mines === 1 && pl.faction !== Faction.Ivits);
 
     if (player !== -1) {
       return player;
     }
 
     // three mines for Xenos
-    player = this.players.findIndex(pl =>  pl.faction === Faction.Xenos) ;
+    player = this.players.findIndex(pl => pl.data.mines === 2 && pl.faction === Faction.Xenos) ;
 
     if (player !== -1) {
       return player;
     }
 
-     // Ivits is last 
-     player = this.players.findIndex(pl => ((pl.data.platenaryInstitute === false) || (pl.faction === Faction.Ivits))) ;
+    // Ivits is last 
+    player = this.players.findIndex(pl => !pl.data.platenaryInstitute && pl.faction === Faction.Ivits);
 
-     if (player !== -1) {
-       return player;
-     }
- 
-
+    if (player !== -1) {
+      return player;
+    }
 
     return undefined;
   }
@@ -178,6 +176,6 @@ export default class Engine {
       }
     }
 
-    throw new Error("Impossible to execute build command");
+    throw new Error(`Impossible to execute build command at ${location}`);
   }
 }
