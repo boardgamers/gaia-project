@@ -30,7 +30,7 @@ export function generate(engine: Engine): AvailableCommand[] {
     for (const hex of engine.map.toJSON()) {
       if (hex.data.planet === planet && !hex.data.building) {
         buildings.push({
-          building: Building.Mine,
+          building: (engine.player(player).faction !== Faction.Ivits ? Building.Mine : Building.PlanetaryInstitute),
           coordinates: hex.toString(),
           cost: "~"
         });

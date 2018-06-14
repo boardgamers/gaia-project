@@ -44,20 +44,35 @@ export default class Engine {
     }
 
     // Find the first player with zero mine
-    let player = this.players.findIndex(pl => pl.data.mines === 0);
+    // excluding Ivits, they have to place the PI at the end
+    let player = this.players.findIndex(pl => ((pl.data.mines === 0) || (pl.faction !== Faction.Ivits))) ;
 
     if (player !== -1) {
       return player;
     }
 
     // Find the last player with one mine
-    player = _.findLastIndex(this.players, pl => pl.data.mines === 1);
+    player = _.findLastIndex(this.players, pl => ((pl.data.mines === 0) || (pl.faction !== Faction.Ivits)));
 
     if (player !== -1) {
       return player;
     }
 
-    // Todo: if the faction with three mines, return corresponding player
+    // three mines for Xenos
+    player = this.players.findIndex(pl =>  pl.faction === Faction.Xenos) ;
+
+    if (player !== -1) {
+      return player;
+    }
+
+     // Ivits is last 
+     player = this.players.findIndex(pl => ((pl.data.platenaryInstitute === false) || (pl.faction === Faction.Ivits))) ;
+
+     if (player !== -1) {
+       return player;
+     }
+ 
+
 
     return undefined;
   }
@@ -148,9 +163,9 @@ export default class Engine {
     for (const elem of buildings) {
       if (elem.building === building && elem.coordinates === location) {
         const {q, r} = CubeCoordinates.parse(location);
-
-        this.player(player).build(Building.Mine, Reward.parse(elem.cost));
         
+        this.player(player).build(building, Reward.parse(elem.cost));
+ 
         const hex = this.map.grid.get(q, r);
         hex.data.building = building;
         hex.data.player = player;
