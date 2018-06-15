@@ -97,7 +97,7 @@ function showAvailableMove(player: string, command: AvailableCommand) {
         const coordinates = command.data.buildings.filter(bld => bld.building === building).map(bld => bld.coordinates);
 
         if (coordinates.length > 0) {
-          addButton(`Place ${buildingName(building)}`, `${player} ${Command.Build} ${Building.Mine}`, {
+          addButton(`Place ${buildingName(building)}`, `${player} ${Command.Build} ${building}`, {
             hexes: coordinates
           });
         }
