@@ -2,6 +2,7 @@ import { Command, Faction, Building } from "./enums";
 import Engine from "./engine";
 import * as _ from 'lodash';
 import factions from "./factions";
+import * as assert from "assert";
 
 export default interface AvailableCommand {
   name: Command,
@@ -47,6 +48,9 @@ export function generate(engine: Engine): AvailableCommand[] {
   // We are in a regular round
   const commands = [];
   const player = engine.currentPlayer;
+
+  assert(player !== undefined, "Problem with the engine, player to play is unknown");
+
   const data = engine.player(player).data;
   const board = engine.player(player).board;
 

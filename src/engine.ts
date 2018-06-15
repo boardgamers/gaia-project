@@ -102,6 +102,7 @@ export default class Engine {
       (this[command] as any)(...split.slice(1));
     } else {
       const playerS = split[0];
+      const next = this.nextPlayer();
 
       assert(/^p[1-5]$/.test(playerS), "Wrong player format, expected p1, p2, ...");
       const player = +playerS[1] - 1;
@@ -114,6 +115,18 @@ export default class Engine {
       assert(this.availableCommand(player, command), "Available commands: " + commandNames.join(", "));
   
       (this[command] as any)(player as PlayerEnum, ...split.slice(2));
+      
+      if (this.turn >= 1) {
+        if (this.turnOrder.length === 0) {
+          // If all players have passed
+          this.endTurn();
+        } else {
+          // Let the next player move
+          this.currentPlayer = next;
+        }
+      } else if (this.nextPlayerToSetup() === undefined) {
+        this.endTurn();
+      }
     }
   }
 
@@ -156,7 +169,7 @@ export default class Engine {
   nextPlayer() : PlayerEnum {
     const index = this.turnOrder.indexOf(this.currentPlayer);
 
-    return this.turnOrder[index + 1 % this.turnOrder.length];
+    return this.turnOrder[(index + 1) % this.turnOrder.length];
   }
 
   playersInOrder(): Player[] {
@@ -199,10 +212,6 @@ export default class Engine {
         hex.data.building = building;
         hex.data.player = player;
 
-        if (this.turn === 0 && this.nextPlayerToSetup() === undefined) {
-          this.endTurn();
-        }
-
         return;
       }
     }
@@ -212,8 +221,6 @@ export default class Engine {
 
   [Command.Pass](player: PlayerEnum) {
     this.passedPlayers.push(player);
-    
-    this.currentPlayer = this.nextPlayer();
     this.turnOrder.splice(this.turnOrder.indexOf(player), 1);
   }
 }
