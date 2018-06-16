@@ -8,7 +8,7 @@ export default class BuildingRenderer extends PIXI.Graphics {
 
     this.lineStyle(border*2, 0x303030);
     this.beginFill(factionColor(faction));
-
+//TODO render different buildings
     switch (building) {
       case Building.Mine: {
         this.drawRect(-0.2*scale, -0.2 * scale, 0.4 * scale, 0.4 * scale);
@@ -28,7 +28,7 @@ export default class BuildingRenderer extends PIXI.Graphics {
       }
       case Building.Academy1:
       case Building.Academy2: {
-        this.drawCircle(0, 0, 0.5*scale);
+        this.drawRect(-0.3*scale, -0.3 * scale, 0.6 * scale, 0.6 * scale);
         break;
       }
       case Building.GaiaFormer: {
@@ -38,6 +38,8 @@ export default class BuildingRenderer extends PIXI.Graphics {
 
         this.drawPolygon([].concat(...[firstCorner, ...otherCorners, firstCorner].map(corner => [corner.x-center.x, corner.y-center.y])));
       };
+
+      }
     }
 
     this.endFill();
