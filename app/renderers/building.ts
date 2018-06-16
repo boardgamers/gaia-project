@@ -7,9 +7,13 @@ export default class BuildingRenderer extends PIXI.Graphics {
 
     this.lineStyle(border*2, 0x303030);
     this.beginFill(factionColor(faction));
-
+//TODO render different buildings
     switch (building) {
       case Building.Mine: {
+        this.drawRect(-0.3*scale, -0.3 * scale, 0.6 * scale, 0.6 * scale);
+        break;
+      }
+      case Building.PlanetaryInstitute: {
         this.drawRect(-0.3*scale, -0.3 * scale, 0.6 * scale, 0.6 * scale);
         break;
       }
