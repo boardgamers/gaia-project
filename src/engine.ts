@@ -43,7 +43,15 @@ export default class Engine {
 
   availableCommand(player: PlayerEnum, command: Command) {
     return this.availableCommands.find(
-      availableCommand => availableCommand.name === command && (!(player in availableCommand) || availableCommand.player === player)
+      availableCommand => {
+        if (availableCommand.name !== command) {
+          return false;
+        } 
+        if (availableCommand.player === undefined) {
+          return false;
+        }
+        return availableCommand.player === player;
+      }
     );
   }
 
@@ -106,8 +114,6 @@ export default class Engine {
 
       assert(/^p[1-5]$/.test(playerS), "Wrong player format, expected p1, p2, ...");
       const player = +playerS[1] - 1;
-
-    //TODO check the right player is moving  assert(  this.currentPlayer === (player as PlayerEnum), "Wrong turn order, expected "+ this.currentPlayer +' found '+player);
 
       const command = split[1] as Command;
 
