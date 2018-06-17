@@ -107,7 +107,25 @@ describe("Engine", () => {
   // TODO we should check resources after upgrading
   // TODO test to do: bescods upgrade 
   // TODO test to do: uprgrade to RL an AC1 AC2, to PI
-  // TODO test check error for upgrade without resources
+  
+  it ("should throw when upgrading without resources", () => {
+    const moves = parseMoves(`
+      init 2 randomSeed
+      p1 faction lantids
+      p2 faction gleens
+      p1 build m -7x2
+      p2 build m 0x3
+      p2 build m 3x0
+      p1 build m 2x2
+      p1 build ts 2x2
+      p2 build ts 0x3
+      p1 build PI 2x2
+      p2 build PI 0x3
+      p1 build ts -7x2
+    `);
+
+    expect(() => new Engine(moves)).to.throw();
+  })
 
   it("should allow a full round to pass", () => {
     const moves = parseMoves(`
@@ -122,7 +140,9 @@ describe("Engine", () => {
       p2 pass
       p1 build m 4x-6
       p1 pass
-    `)
+    `);
+
+    expect(() => new Engine(moves)).to.not.throw();
   });
 
   it("should throw when two players choose factions on the same planet", () => {

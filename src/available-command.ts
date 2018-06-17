@@ -83,6 +83,10 @@ export function generate(engine: Engine): AvailableCommand[] {
         const upgraded = upgradedBuildings(hex.data.building, engine.player(player).faction);
 
         for (const upgrade of upgraded) {
+          if (!engine.player(player).canBuild(upgrade, isolated)) {
+            continue;
+          }
+
           buildings.push({
             upgradedBuilding: hex.data.building,
             building: upgrade,
