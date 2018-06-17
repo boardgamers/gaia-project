@@ -5,6 +5,7 @@ import { factionBoard, FactionBoard } from './faction-boards';
 import * as _ from 'lodash';
 import factions from './factions';
 import Reward from './reward';
+import { CubeCoordinates } from 'hexagrid';
 
 export default class Player {
   faction: Faction = null;
@@ -90,8 +91,9 @@ export default class Player {
     // Todo: get corresponding income
   }
 
-  build(upgradedBuilding, building: Building, cost: Reward[]) {
+  build(upgradedBuilding, building: Building, cost: Reward[], location: CubeCoordinates) {
     this.data.payCosts(cost);
+    this.data.occupied = _.uniqWith([].concat(this.data.occupied, location), _.isEqual)
 
     // Add income of the building to the list of events
     this.loadEvent(this.board[building].income[this.data[building]]);

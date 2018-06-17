@@ -240,12 +240,13 @@ export default class Engine {
 
     for (const elem of buildings) {
       if (elem.building === building && elem.coordinates === location) {
-        const { q, r } = CubeCoordinates.parse(location);
-
+        const {q, r, s} = CubeCoordinates.parse(location);
+        
         this.player(player).build(
           elem.upgradedBuilding,
           building,
-          Reward.parse(elem.cost)
+          Reward.parse(elem.cost),
+          {q, r, s}
         );
 
         const hex = this.map.grid.get(q, r);

@@ -2,6 +2,7 @@ import Reward from "./reward";
 import { Resource } from "..";
 import { ResearchField, Building } from "./enums";
 import { EventEmitter } from "eventemitter3";
+import { CubeCoordinates } from "hexagrid";
 
 const MAX_ORE = 15;
 const MAX_CREDIT = 30;
@@ -36,6 +37,8 @@ export default class PlayerData extends EventEmitter {
     terra: 0, nav: 0,int: 0, gaia: 0, eco: 0, sci: 0
   };
   range: number = 1;
+  // Coordinates occupied by buildings
+  occupied: CubeCoordinates[] = [];
 
   toJSON(): Object {
     const ret = {
@@ -46,7 +49,8 @@ export default class PlayerData extends EventEmitter {
       knowledge: this.knowledge,
       power: this.power,
       research: this.research,
-      range: this.range
+      range: this.range,
+      occupied: this.occupied
     }
 
     for (const building of Object.values(Building)) {

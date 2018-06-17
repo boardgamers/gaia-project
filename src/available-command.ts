@@ -5,6 +5,8 @@ import factions from './factions';
 import * as assert from "assert";
 import { upgradedBuildings } from './buildings';
 
+const ISOLATED_DISTANCE = 3;
+
 export default interface AvailableCommand {
   name: Command;
   data?: any;
@@ -67,6 +69,7 @@ export function generate(engine: Engine): AvailableCommand[] {
 
   const data = engine.player(player).data;
   const board = engine.player(player).board;
+  const grid = engine.map.grid;
 
   // Add building moves
   {
@@ -80,8 +83,26 @@ export function generate(engine: Engine): AvailableCommand[] {
       }
 
       if (hex.data.building) {
-        // Todo: check if mine is isolated
-        const isolated = hex.data.building === Building.Mine && true; 
+        const isolated = (() => {
+          // We only care about mines that can transform into trading stations;
+          if(hex.data.building !== Building.Mine) {
+            return true;
+          }
+
+          // Check each other player to see if there's a building in range
+          for (const pl of engine.players) {
+            if (pl !== engine.player(player)) {
+              for (const loc of pl.data.occupied) {
+                if (grid.distance(loc.q, loc.r, hex.q, hex.r) < ISOLATED_DISTANCE) {
+                  return false;
+                }
+              }
+            }
+          }
+
+          return true;
+        })();
+
         const upgraded = upgradedBuildings(hex.data.building, engine.player(player).faction);
 
         for (const upgrade of upgraded) {
@@ -97,12 +118,18 @@ export function generate(engine: Engine): AvailableCommand[] {
           });
         }
       } else {
-        // empty faction planet
+        // The planet is empty, we can build a mine
+
         if (!engine.player(player).canBuild(Building.Mine)) {
           continue;
         }
 
-        // TODO check if planet is accessable (distance from hex<= player.data.range)
+        // Check if the range is enough to access the planet
+        const inRange = data.occupied.some(loc => grid.distance(hex.q, hex.r, loc.q, loc.r) <= data.range);
+
+        if (!inRange) {
+          continue;
+        }
 
         buildings.push({
           building: Building.Mine,

@@ -136,9 +136,9 @@ describe("Engine", () => {
       p2 build m 0x3
       p2 build m 3x0
       p1 build m 4x0
-      p1 build m -7x2
+      p1 build ts 2x2
       p2 pass
-      p1 build m 4x-6
+      p1 build ts 4x0
       p1 pass
     `);
 
