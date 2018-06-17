@@ -5,7 +5,7 @@ import { showError, removeError } from "./utils";
 import MapRenderer from "../../renderers/map";
 import ResearchRenderer from "../../renderers/research";
 import Renderer from "../../renderers";
-import { AvailableCommand, Command, factions, Building } from "@gaia-project/engine";
+import { AvailableCommand, Command, factions, Building, ResearchField } from "@gaia-project/engine";
 import { CubeCoordinates } from "hexagrid";
 import { buildingName } from "../../data/building";
 
@@ -110,6 +110,14 @@ function showAvailableMove(player: string, command: AvailableCommand) {
       addButton("Pass", `${player} ${Command.Pass}`);
       break;
     }
+
+    case Command.UpgradeResearch: {
+      addButton("Advance research", `${player} ${Command.UpgradeResearch}`, {
+        tracks: command.data.tracks.map(tr => ({level: tr.to, field: tr.field}))
+      });
+
+      break;
+    }
   }
 }
 
@@ -121,7 +129,7 @@ function commandTitle(text: string, player?: string) {
   }  
 }
 
-function addButton(text: string, command: string, {hexes}: {hexes?: string[]} = {}) {
+function addButton(text: string, command: string, {hexes, tracks}: {hexes?: string[], tracks?: any[]} = {}) {
   const button = $('<button class="btn btn-secondary mr-2 mb-2">');
   button.text(text);
   
@@ -135,6 +143,10 @@ function addButton(text: string, command: string, {hexes}: {hexes?: string[]} = 
     button.attr("data-hexes", hexes.join(","));
   }
 
+  if (tracks) {
+    button.attr("data-fields", JSON.stringify(tracks));
+  }
+
   return button;
 }
 
@@ -144,10 +156,18 @@ $(document).on("click", "*[data-command]", function() {
 
   const command = $(this).attr("data-command");
   const hexes = $(this).attr("data-hexes");
+  const fields = $(this).attr("data-fields");
 
   if (hexes) {
     pendingCommand = command;
-    renderer.render(lastData, hexes.split(",").map(hex => CubeCoordinates.parse(hex)));
+    renderer.render(lastData, {hexes: hexes.split(",").map(hex => CubeCoordinates.parse(hex))});
+
+    return;
+  }
+
+  if (fields) {
+    pendingCommand = command;
+    renderer.render(lastData, {fields: JSON.parse(fields)});
 
     return;
   }
@@ -169,6 +189,12 @@ function addMove(move: string) {
 map.on("hexClick", hex => {
   if (pendingCommand) {
     addMove(pendingCommand + " " + CubeCoordinates.toString(hex))
+  }
+});
+
+research.on("fieldClick", field => {
+  if (pendingCommand) {
+    addMove(pendingCommand + " " + field);
   }
 });
 

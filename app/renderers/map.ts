@@ -2,12 +2,11 @@ import * as PIXI from "pixi.js";
 import * as Honeycomb from "honeycomb-grid";
 import {GaiaHexData, Planet, Faction} from "@gaia-project/engine";
 import { CubeCoordinates } from "hexagrid";
-import { EventEmitter } from "eventemitter3";
 import PlanetRenderer from "./planet";
 import BuildingRenderer from "./building";
 
 const hexData = {
-  radius: 15,
+  radius: 16,
   border: {
     width: 1,
     color: 0x666666,
@@ -18,16 +17,13 @@ const hexData = {
 
 type GaiaHex = {data: GaiaHexData, orientation: "flat"} & {size: number};
 
-export default class MapRenderer extends EventEmitter {
-  graphics: PIXI.Graphics;
+export default class MapRenderer extends PIXI.Graphics {
   lastData: Array<Honeycomb.CubeCoordinates & {data: GaiaHexData}>;
   zonesOfInterest: CubeCoordinates[] = [];
   factions: Faction[] = [];
 
   constructor() {
     super();
-
-    this.graphics = new PIXI.Graphics();
   }
 
   render(map: Array<Honeycomb.CubeCoordinates & {data: GaiaHexData}>, factions: Faction[], zonesOfInterest?: CubeCoordinates[]) {
@@ -35,8 +31,8 @@ export default class MapRenderer extends EventEmitter {
     this.zonesOfInterest = zonesOfInterest;
     this.factions = factions;
 
-    this.graphics.clear();
-    this.graphics.removeChildren();
+    this.clear();
+    this.removeChildren();
 
     const Hex = Honeycomb.extendHex<GaiaHex>({ size: hexData.radius , orientation: "flat", data: {planet: Planet.Empty, sector: null}});
     const Grid = Honeycomb.defineGrid(Hex);
@@ -84,6 +80,6 @@ export default class MapRenderer extends EventEmitter {
       });
     }
 
-    this.graphics.addChild(graphics);
+    this.addChild(graphics);
   }
 }

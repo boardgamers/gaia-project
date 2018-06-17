@@ -11,15 +11,14 @@ const {
   fullWidth
 } = researchData;
 
-export default class ResearchRenderer {
-  graphics: PIXI.Graphics;
+export default class ResearchRenderer extends PIXI.Graphics {
   lastData: Player[];
   researchTiles: {
     [key in ResearchField]: ResearchTile[]
   };
 
   constructor() {
-    this.graphics = new PIXI.Graphics();
+    super();
 
     this.researchTiles = {} as any;
 
@@ -46,17 +45,26 @@ export default class ResearchRenderer {
       tile.move(x, fullHeight - trackHeight * 6 - 60);
       arr.push(tile);
     }
+
+    for (const tile of this.tilesList()) {
+      this.addChild(tile);
+      tile.on("fieldClick", (field, level) => {
+        this.emit("fieldClick", field, level);
+      });
+    }
   }
 
-  render(data: Player[]) {
+  render(data: Player[], highlight?: Array<{field: ResearchField, level: number}>) {
     if (data !== this.lastData) {
       this.updateInfo(data);
     }
     this.lastData = data;
-    this.graphics.clear();
+    this.clear();
 
     for (const tile of this.tilesList()) {
-      tile.draw(this.graphics);
+      const highlighted = highlight && highlight.some(data => data.field === tile.field && data.level === tile.level);
+
+      tile.draw(highlighted);
     }
   }
 
@@ -70,12 +78,5 @@ export default class ResearchRenderer {
 
   tilesList() : ResearchTile[] {
     return [].concat(...Object.values(this.researchTiles));
-  }
- 
-  drawResearchTile(research: ResearchField, x: number, y: number) {
-    this.graphics.beginFill(researchData[research].color);
-    this.graphics.lineStyle(trackBorder.width, trackBorder.color); 
-    this.graphics.drawRoundedRect(x, y, trackWidth, trackHeight, trackBorder.radius);
-    this.graphics.endFill();
   }
 }

@@ -2,12 +2,18 @@ import MapRenderer from "./map";
 import ResearchRenderer from "./research";
 import { CubeCoordinates } from "hexagrid";
 import { center } from "../graphics/reposition";
+import { ResearchField } from "@gaia-project/engine";
+
+interface Highlight {
+  hexes?: CubeCoordinates[],
+  fields?: Array<{field: ResearchField, level: number}>
+};
 
 export default class Renderer {
   app: PIXI.Application;
 
   data: any;
-  zonesOfInterest: CubeCoordinates[];
+  highlighted: Highlight;
 
   map: MapRenderer;
   research: ResearchRenderer;
@@ -20,8 +26,8 @@ export default class Renderer {
     this.map = new MapRenderer();
     this.research = new ResearchRenderer();
 
-    this.app.stage.addChild(this.map.graphics);
-    this.app.stage.addChild(this.research.graphics);
+    this.app.stage.addChild(this.map);
+    this.app.stage.addChild(this.research);
 
     $(window).on("resize", () => {
       this.app.renderer.resize(view.offsetWidth, view.offsetHeight);
@@ -29,21 +35,21 @@ export default class Renderer {
     });
   }
 
-  render(data: any, zonesOfInterest?: CubeCoordinates[]) {
+  render(data: any, highlighted?: Highlight) {
     this.data = data;
-    this.zonesOfInterest = zonesOfInterest;
+    this.highlighted = highlighted;
 
     this.rerender();
   }
 
   rerender() {
-    this.map.render(this.data.map, this.data.players.map(pl => pl.faction), this.zonesOfInterest);
-    this.research.render(this.data.players);
+    this.map.render(this.data.map, this.data.players.map(pl => pl.faction), (this.highlighted||{}).hexes);
+    this.research.render(this.data.players, (this.highlighted||{}).fields);
 
-    const bounds = this.map.graphics.getLocalBounds();
+    const bounds = this.map.getLocalBounds();
 
-    this.research.graphics.x = bounds.x + bounds.width + 80;
-    this.research.graphics.y = bounds.y;
+    this.research.x = bounds.x + bounds.width + 80;
+    this.research.y = bounds.y;
 
     center(this.app.stage, this.app.screen);
   }
