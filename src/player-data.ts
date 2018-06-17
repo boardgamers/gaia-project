@@ -100,8 +100,27 @@ export default class PlayerData extends EventEmitter {
   }
 
   canPay(reward: Reward[]): boolean {
-    // TODO: proper check whether the player can pay or not
+    const rewards = Reward.merge(reward);
+
+    for (const reward of rewards) {
+      if (!this.hasResource(reward)) {
+        return false;
+      }
+    }
     return true;
+  }
+
+  hasResource(reward: Reward) {
+    switch (reward.type) {
+      case Resource.Ore: return this.ores >= reward.count;
+      case Resource.Credit: return this.credits >= reward.count;
+      case Resource.Knowledge: return this.knowledge >= reward.count;
+      case Resource.VictoryPoint: return this.victoryPoints >= reward.count;
+      case Resource.Qic: return this.qics >= reward.count;
+      case Resource.None: return true;
+    }
+
+    return false;
   }
 
   /**
