@@ -145,6 +145,21 @@ describe("Engine", () => {
     expect(() => new Engine(moves)).to.not.throw();
   });
 
+  it ("should throw when building out of range", () => {
+    const moves = parseMoves(`
+      init 2 randomSeed
+      p1 faction lantids
+      p2 faction gleens
+      p1 build m 2x2
+      p2 build m 0x3
+      p2 build m 3x0
+      p1 build m 4x0
+      p1 build m -7x2
+    `);
+
+    expect(() => new Engine(moves)).to.throw();
+  });
+
   it("should throw when two players choose factions on the same planet", () => {
     const moves = ["init 3 seed?2", "p1 faction terrans", "p2 faction lantids"];
 
