@@ -80,7 +80,8 @@ export enum Building {
   TradingStation = "ts",
   ResearchLab = "lab",
   PlanetaryInstitute = "PI",
-  Academy = "ac",
+  Academy1 = "ac1",
+  Academy2 = "ac2"
 }
 
 export enum Faction {

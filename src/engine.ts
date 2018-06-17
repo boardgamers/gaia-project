@@ -107,6 +107,8 @@ export default class Engine {
       assert(/^p[1-5]$/.test(playerS), "Wrong player format, expected p1, p2, ...");
       const player = +playerS[1] - 1;
 
+    //TODO check the right player is moving  assert(  this.currentPlayer === (player as PlayerEnum), "Wrong turn order, expected "+ this.currentPlayer +' found '+player);
+
       const command = split[1] as Command;
 
       const available = this.availableCommands;
@@ -206,7 +208,7 @@ export default class Engine {
       if (elem.building === building && elem.coordinates === location) {
         const {q, r} = CubeCoordinates.parse(location);
         
-        this.player(player).build(building, Reward.parse(elem.cost));
+        this.player(player).build( elem.upgradedBuilding , building, Reward.parse(elem.cost));
  
         const hex = this.map.grid.get(q, r);
         hex.data.building = building;

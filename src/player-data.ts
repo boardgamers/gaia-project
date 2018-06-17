@@ -28,13 +28,8 @@ export default class PlayerData extends EventEmitter {
   tradingStations: number = 0;
   platenaryInstitute: boolean = false;
   researchLabs: number = 0;
-  sanctuary: {
-    first: boolean,
-    second: boolean
-  } = {
-    first: false,
-    second: false
-  };
+  academy1: boolean = false;
+  academy2: boolean = false; 
   research: {
     [key in ResearchField]: number
   } = {
@@ -54,7 +49,8 @@ export default class PlayerData extends EventEmitter {
       tradingStations: this.tradingStations,
       platenaryInstitute: this.platenaryInstitute,
       researchLabs: this.researchLabs,
-      sanctuary: this.sanctuary,
+      academy1: this.academy1,
+      academy2: this.academy2,
       research: this.research,
       range: this.range
     }

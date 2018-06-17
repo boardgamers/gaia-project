@@ -16,9 +16,13 @@ export interface FactionBoardRaw {
     cost?: string,
     income?: string[]
   };
-  academies?: {
+  academy1?: {
     cost?: string,
-    income?: string[]
+    income?: string
+  };
+  academy2?: {
+    cost?: string,
+    income?: string
   };
   planetaryInstitute?: {
     cost?: string,
@@ -45,9 +49,13 @@ const defaultBoard: FactionBoardRaw = {
     cost: "5c,3o",
     income: ["+k","+k","+k"]
   },
-  academies: {
+  academy1: {
     cost: "6c,6o",
-    income: ["+2k","=>q"]
+    income: "+2k"
+  },
+  academy2: {
+    cost: "6c,6o",
+    income: "=>q"
   },
   planetaryInstitute: {
     cost: "6c,4o",
@@ -74,9 +82,13 @@ export class FactionBoard {
     cost: Reward[],
     income: Event[]
   };
-  academies: {
+  academy1: {
     cost: Reward[],
-    income: Event[]
+    income: Event
+  };
+  academy2: {
+    cost: Reward[],
+    income: Event
   };
   planetaryInstitute: {
     cost: Reward[];
@@ -91,7 +103,7 @@ export class FactionBoard {
   constructor(input: FactionBoardRaw) {
     Object.assign(this, _.merge({}, defaultBoard, input));
 
-    const buildings = ["mines", "tradingStations", "researchLabs", "academies", "planetaryInstitute"];
+    const buildings = ["mines", "tradingStations", "researchLabs", "academy1", "academy2", "planetaryInstitute"];
     const toRewards = ["tradingStations.isolatedCost"].concat(buildings.map(bld => `${bld}.cost`));
     const toIncome = ["income"].concat(buildings.map(bld => `${bld}.income`));
 
