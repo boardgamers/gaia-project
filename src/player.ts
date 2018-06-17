@@ -6,6 +6,7 @@ import * as _ from 'lodash';
 import factions from './factions';
 import Reward from './reward';
 import { CubeCoordinates } from 'hexagrid';
+import researchTracks from './research-tracks';
 
 export default class Player {
   faction: Faction = null;
@@ -87,8 +88,10 @@ export default class Player {
     );
     this.events[event.operator].slice(findEvent, 1);
   }
-  onKnowledgeUpgraded(track: ResearchField) {
-    // Todo: get corresponding income
+  onKnowledgeUpgraded(field: ResearchField) {
+    const events = Event.parse(researchTracks[field][this.data.research[field]]);
+
+    this.loadEvents(events);
   }
 
   build(upgradedBuilding, building: Building, cost: Reward[], location: CubeCoordinates) {

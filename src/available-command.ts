@@ -1,11 +1,14 @@
-import { Command, Faction, Building } from './enums';
+import { Command, Faction, Building, ResearchField } from './enums';
 import Engine from './engine';
 import * as _ from 'lodash';
 import factions from './factions';
 import * as assert from "assert";
 import { upgradedBuildings } from './buildings';
+import * as research from './research-tracks';
+import Reward from './reward';
 
 const ISOLATED_DISTANCE = 3;
+const UPGRADE_RESEARCH_COST = "4k";
 
 export default interface AvailableCommand {
   name: Command;
@@ -139,12 +142,36 @@ export function generate(engine: Engine): AvailableCommand[] {
       }
     } //end for hex
 
-    commands.push({
-      name: Command.Build,
-      player,
-      data: { buildings }
-    });
+    if (buildings.length > 0) {
+      commands.push({
+        name: Command.Build,
+        player,
+        data: { buildings }
+      });
+    }
   } // end add buildings
+
+  // Upgrade research
+  if (data.canPay(Reward.parse(UPGRADE_RESEARCH_COST))) {
+    const tracks = [];
+
+    for (const field of Object.values(ResearchField)) {
+      if (data.research[field] < research.lastTile(field) && !research.keyNeeded(field, data.research[field] + 1)) {
+        tracks.push({
+          field,
+          cost: UPGRADE_RESEARCH_COST
+        });
+      }
+    }
+
+    if (tracks.length > 0) {
+      commands.push({
+        name: Command.UpgradeResearch,
+        player,
+        data: { tracks }
+      });
+    }
+  }
 
   // Give the player the ability to pass
   commands.push({

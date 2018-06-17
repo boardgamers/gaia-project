@@ -9,7 +9,7 @@ export default {
     [],["q"],["r"],["q"],["r"],[]
   ],
   [ResearchField.Intelligence]: [
-    [],["q"],["q"],["qq"],["qq"],["qqqq"]
+    [],["q"],["q"],["2q"],["2q"],["4q"]
   ],
   [ResearchField.GaiaProject]: [
     [],[],[],[],[],["4vp", "g > vp"]
@@ -19,5 +19,13 @@ export default {
   ],
   [ResearchField.Science]: [
     [],["+k"],["+k"],["+k"],["+k"],["9k"]
-  ]
+  ],
+}
+
+export function lastTile(field: ResearchField) {
+  return 5;
+}
+
+export function keyNeeded(field: ResearchField, dest: number) : boolean {
+  return dest === lastTile(field);
 }

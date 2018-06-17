@@ -105,7 +105,8 @@ export enum Command {
   Init = "init",
   ChooseFaction = "faction",
   Build = "build",
-  Pass = "pass"
+  Pass = "pass",
+  UpgradeResearch = "up"
 }
 
 export enum Player {

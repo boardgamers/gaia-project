@@ -7,7 +7,8 @@ import {
   Command,
   Player as PlayerEnum,
   Operator,
-  Building
+  Building,
+  ResearchField
 } from './enums';
 import Event from './events';
 import { CubeCoordinates } from 'hexagrid';
@@ -258,6 +259,16 @@ export default class Engine {
     }
 
     throw new Error(`Impossible to execute build command at ${location}`);
+  }
+
+  [Command.UpgradeResearch](player: PlayerEnum, field: ResearchField) {
+    const { tracks } = this.availableCommand(player, Command.UpgradeResearch).data;
+    const track = tracks.find(tr => track.field === field);
+
+    assert(track, `Impossible to upgrade knowledge for ${field}`);
+
+    this.player(player).data.payCosts(Reward.parse(track.cost));
+    this.player(player).data.gainReward(new Reward(`${Command.UpgradeResearch}-${field}`));
   }
 
   [Command.Pass](player: PlayerEnum) {
