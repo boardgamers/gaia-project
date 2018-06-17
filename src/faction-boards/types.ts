@@ -1,32 +1,33 @@
 import Reward from "../reward";
 import * as _ from "lodash";
 import Event from "../events";
+import { Building } from "../enums";
 
 export interface FactionBoardRaw {
-  mines?: {
+  [Building.Mine]?: {
     cost?: string,
     income?: string[]
   };
-  tradingStations?: {
+  [Building.TradingStation]?: {
     cost?: string,
     isolatedCost?: string,
     income?: string[]
   };
-  researchLabs?: {
+  [Building.ResearchLab]?: {
     cost?: string,
     income?: string[]
   };
-  academy1?: {
+  [Building.Academy1]?: {
     cost?: string,
-    income?: string
+    income?: string[]
   };
-  academy2?: {
+  [Building.Academy2]?: {
     cost?: string,
-    income?: string
+    income?: string[]
   };
-  planetaryInstitute?: {
+  [Building.PlanetaryInstitute]?: {
     cost?: string,
-    income?: string
+    income?: string[]
   };
   income?: string[];
   power?: {
@@ -36,30 +37,30 @@ export interface FactionBoardRaw {
 }
 
 const defaultBoard: FactionBoardRaw = {
-  mines: {
+  [Building.Mine]: {
     cost: "2c,o",
     income: ["+o","+o","~","+o","+o","+o","+o","+o"]
   },
-  tradingStations: {
+  [Building.TradingStation]: {
     cost: "3c,2o",
     isolatedCost: "6c,2o",
     income: ["+3c","+4c","+4c","+5c"],
   },
-  researchLabs: {
+  [Building.ResearchLab]: {
     cost: "5c,3o",
     income: ["+k","+k","+k"]
   },
-  academy1: {
+  [Building.Academy1]: {
     cost: "6c,6o",
-    income: "+2k"
+    income: ["+2k"]
   },
-  academy2: {
+  [Building.Academy2]: {
     cost: "6c,6o",
-    income: "=>q"
+    income: ["=>q"]
   },
-  planetaryInstitute: {
+  [Building.PlanetaryInstitute]: {
     cost: "6c,4o",
-    income: "+4pw,t"
+    income: ["+4pw,t"]
   },
   income: ["3k,4o,15c,q", "+o,k"],
   power: {
@@ -69,30 +70,30 @@ const defaultBoard: FactionBoardRaw = {
 };
 
 export class FactionBoard {
-  mines: {
+  [Building.Mine]: {
     cost: Reward[],
     income: Event[]
   };
-  tradingStations: {
+  [Building.TradingStation]: {
     cost: Reward[],
     isolatedCost: Reward[],
     income: Event[]
   };
-  researchLabs: {
+  [Building.ResearchLab]: {
     cost: Reward[],
     income: Event[]
   };
-  academy1: {
+  [Building.Academy1]: {
     cost: Reward[],
-    income: Event
+    income: Event[]
   };
-  academy2: {
+  [Building.Academy2]: {
     cost: Reward[],
-    income: Event
+    income: Event[]
   };
-  planetaryInstitute: {
+  [Building.PlanetaryInstitute]: {
     cost: Reward[];
-    income: Event;
+    income: Event[];
   };
   income: Event[];
   power: {
@@ -103,8 +104,8 @@ export class FactionBoard {
   constructor(input: FactionBoardRaw) {
     Object.assign(this, _.merge({}, defaultBoard, input));
 
-    const buildings = ["mines", "tradingStations", "researchLabs", "academy1", "academy2", "planetaryInstitute"];
-    const toRewards = ["tradingStations.isolatedCost"].concat(buildings.map(bld => `${bld}.cost`));
+    const buildings = Object.values(Building);
+    const toRewards = [`${Building.TradingStation}.isolatedCost`].concat(buildings.map(bld => `${bld}.cost`));
     const toIncome = ["income"].concat(buildings.map(bld => `${bld}.income`));
 
     for (const toRew of toRewards) {
@@ -113,5 +114,17 @@ export class FactionBoard {
     for (const toInc of toIncome) {
       _.set(this, toInc, Event.parse(_.get(this, toInc)));
     }
+  }
+
+  maxBuildings(building: Building): number {
+    return this[building].income.length;
+  }
+
+  cost(building: Building, isolated = true): Reward[] {
+    if (building === Building.TradingStation && isolated) {
+      return this[building].isolatedCost;
+    }
+
+    return this[building].cost;
   }
 }

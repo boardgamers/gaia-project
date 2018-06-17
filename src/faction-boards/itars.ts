@@ -1,9 +1,14 @@
-export default {
-  academy1: {
-    income: "+3k"
+import { FactionBoardRaw } from ".";
+import { Building } from "../enums";
+
+const itars: FactionBoardRaw = {
+  [Building.Academy1]: {
+    income: ["+3k"]
   },
-  academy2: {
-    income: "=>q"
+  [Building.Academy2]: {
+    income: ["=>q"]
   },
   income: ["3k,5o,15c,q", "+o,k,t"]
 };
+
+export default itars;

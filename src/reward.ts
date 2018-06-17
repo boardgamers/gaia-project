@@ -36,6 +36,8 @@ export default class Reward {
   }
 
   static parse(source: string): Reward[] {
+    assert (typeof source === "string", `Reward.parse: ${source} is not a string`);
+    
     return source.split(",").map(rew => new Reward(rew));
   }
 

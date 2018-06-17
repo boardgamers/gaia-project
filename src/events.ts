@@ -64,12 +64,7 @@ export default class Event {
     return this.toString();
   }
 
-  static parse(event: string): Event
-  static parse(events: string[]): Event[]
-  static parse(events: string[] | string): Event[] | Event {
-    if (typeof events === "string") {
-      return [new Event(events)];
-    }
+  static parse(events: string[]): Event[] {
     return events.map(ev => new Event(ev));
   }
 }
