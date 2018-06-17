@@ -106,7 +106,11 @@ export enum Command {
   ChooseFaction = "faction",
   Build = "build",
   Pass = "pass",
-  UpgradeResearch = "up"
+  UpgradeResearch = "up",
+  Convert = "convert",
+  Leech = "leech",
+  DeclineLeech = "decline",
+  BurnPower = "burn"
 }
 
 export enum Player {
