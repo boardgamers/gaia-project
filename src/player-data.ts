@@ -37,7 +37,7 @@ export default class PlayerData extends EventEmitter {
   };
   range: number = 1;
 
-  toJSON() {
+  toJSON(): Object {
     const ret = {
       victoryPoints: this.victoryPoints,
       credits: this.credits,
@@ -52,6 +52,8 @@ export default class PlayerData extends EventEmitter {
     for (const building of Object.values(Building)) {
       ret[building] = this[building];
     }
+
+    return ret;
   }
 
   payCosts(costs: Reward[]) {
