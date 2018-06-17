@@ -263,7 +263,7 @@ export default class Engine {
 
   [Command.UpgradeResearch](player: PlayerEnum, field: ResearchField) {
     const { tracks } = this.availableCommand(player, Command.UpgradeResearch).data;
-    const track = tracks.find(tr => track.field === field);
+    const track = tracks.find(tr => tr.field === field);
 
     assert(track, `Impossible to upgrade knowledge for ${field}`);
 

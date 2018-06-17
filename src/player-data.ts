@@ -152,7 +152,9 @@ export default class PlayerData extends EventEmitter {
   }
 
   upgradeResearch(which: ResearchField, count: number) {
-    this.emit("upgrade-knowledge", which);
-    this.research[which] += count;
+    while (count-- > 0) {
+      this.research[which] += 1;
+      this.emit("upgrade-knowledge", which);
+    }
   }
 }

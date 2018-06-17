@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import Engine from "..";
 import { AssertionError } from "assert";
+import { Player } from "./enums";
 
 describe("Engine", () => {
 
@@ -158,6 +159,29 @@ describe("Engine", () => {
     `);
 
     expect(() => new Engine(moves)).to.throw();
+  });
+
+  it ("should grant a qic when upgrading navigation", () => {
+    const moves = parseMoves(`
+      init 3 randomSeed
+      p1 faction lantids
+      p2 faction taklons
+      p3 faction hadsch-hallas
+      p1 build m -3x3
+      p2 build m 3x3
+      p3 build m -2x3
+      p3 build m 1x-1
+      p2 build m -5x4
+      p1 build m 2x2
+    `);
+
+    const engine = new Engine(moves);
+
+    expect(engine.players[Player.Player1].data.qics).to.equal(1);
+    
+    engine.move("p1 up nav");
+
+    expect(engine.players[Player.Player1].data.qics).to.equal(2);
   });
 
   it("should throw when two players choose factions on the same planet", () => {

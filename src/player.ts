@@ -88,6 +88,7 @@ export default class Player {
     );
     this.events[event.operator].slice(findEvent, 1);
   }
+  
   onKnowledgeUpgraded(field: ResearchField) {
     const events = Event.parse(researchTracks[field][this.data.research[field]]);
 
