@@ -86,7 +86,6 @@ export default class Player {
     );
     this.events[event.operator].slice(findEvent, 1);
   }
-
   onKnowledgeUpgraded(track: ResearchField) {
     // Todo: get corresponding income
   }

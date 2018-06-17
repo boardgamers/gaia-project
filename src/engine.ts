@@ -1,31 +1,42 @@
-import SpaceMap from "./map";
-import * as assert from "assert";
+import SpaceMap from './map';
+import * as assert from 'assert';
 import * as _ from 'lodash';
-import Player from "./player";
-import { Faction, Command, Player as PlayerEnum, Operator, Building } from "./enums";
-import Event from "./events";
-import { CubeCoordinates} from "hexagrid";
+import Player from './player';
+import {
+  Faction,
+  Command,
+  Player as PlayerEnum,
+  Operator,
+  Building
+} from './enums';
+import Event from './events';
+import { CubeCoordinates } from 'hexagrid';
 
-import AvailableCommand, { generate as generateAvailableCommands } from "./available-command";
-import factions from "./factions";
-import Reward from "./reward";
+import AvailableCommand, {
+  generate as generateAvailableCommands
+} from './available-command';
+import factions from './factions';
+import Reward from './reward';
 
 export default class Engine {
   map: SpaceMap;
   players: Player[];
   availableCommands: AvailableCommand[] = [];
+  round: number = -2;
   turn: number = 0;
   /** Order of players in the turn */
   turnOrder: PlayerEnum[] = [];
-  /** 
+  /**
    * Players who have passed, in order. Will be used to determine next round's
    * order
    */
-  passedPlayers : PlayerEnum[] = [];
+  passedPlayers: PlayerEnum[] = [];
   /** Current player to make a move */
   currentPlayer: PlayerEnum;
+  /** position of the current player in turn order */
+  currentPlayerTurnOrderPos: number = 0;
 
-  constructor(moves: string [] = []) {
+  constructor(moves: string[] = []) {
     this.generateAvailableCommands();
     this.loadMoves(moves);
   }
@@ -38,7 +49,7 @@ export default class Engine {
   }
 
   generateAvailableCommands(): AvailableCommand[] {
-    return this.availableCommands = generateAvailableCommands(this);
+    return (this.availableCommands = generateAvailableCommands(this));
   }
 
   availableCommand(player: PlayerEnum, command: Command) {
@@ -55,85 +66,58 @@ export default class Engine {
     );
   }
 
-  nextPlayerToSetup() {
-    if (this.turn > 0) {
-      return undefined;
-    }
-
-    // Find the first player with zero mine
-    // excluding Ivits, they have to place the PI at the end
-    let player = this.players.findIndex(pl => pl.data[Building.Mine] === 0 && pl.faction !== Faction.Ivits);
-
-    if (player !== -1) {
-      return player;
-    }
-
-    // Find the last player with one mine
-    player = _.findLastIndex(this.players, pl => pl.data[Building.Mine] === 1 && pl.faction !== Faction.Ivits);
-
-    if (player !== -1) {
-      return player;
-    }
-
-    // three mines for Xenos
-    player = this.players.findIndex(pl => pl.data[Building.Mine] === 2 && pl.faction === Faction.Xenos) ;
-
-    if (player !== -1) {
-      return player;
-    }
-
-    // Ivits is last 
-    player = this.players.findIndex(pl => !pl.data[Building.PlanetaryInstitute] && pl.faction === Faction.Ivits);
-
-    if (player !== -1) {
-      return player;
-    }
-
-    return undefined;
-  }
-
   player(player: number): Player {
     return this.players[player];
   }
 
   move(move: string) {
-    const split = move.trim().split(" ");
+    const split = move.trim().split(' ');
 
-    if (!this.map) {
+    if (this.round === -2) {
       const command = split[0] as Command;
 
       const available = this.availableCommands;
       const commandNames = available.map(cmd => cmd.name);
 
-      assert(commandNames.includes(command), "Available commands: " + commandNames.join(", "));
+      assert(
+        commandNames.includes(command),
+        'Available commands: ' + commandNames.join(', ')
+      );
 
       (this[command] as any)(...split.slice(1));
+      this.endRound();
     } else {
       const playerS = split[0];
-      const next = this.nextPlayer();
 
-      assert(/^p[1-5]$/.test(playerS), "Wrong player format, expected p1, p2, ...");
+      assert(
+        /^p[1-5]$/.test(playerS),
+        'Wrong player format, expected p1, p2, ...'
+      );
       const player = +playerS[1] - 1;
+
+      assert(  this.currentPlayer === (player as PlayerEnum), "Wrong turn order, expected "+ this.currentPlayer +' found '+player);
 
       const command = split[1] as Command;
 
       const available = this.availableCommands;
       const commandNames = available.map(cmd => cmd.name);
-  
-      assert(this.availableCommand(player, command), "Available commands: " + commandNames.join(", "));
-  
+
+      assert(
+        this.availableCommand(player, command),
+        'Available commands: ' + commandNames.join(', ')
+      );
+
       (this[command] as any)(player as PlayerEnum, ...split.slice(2));
-      
-      if (this.turn >= 1) {
-        if (this.turnOrder.length === 0) {
-          // If all players have passed
-          this.endTurn();
-        } else {
-          // Let the next player move
-          this.currentPlayer = next;
+
+      if (this.turnOrder.length === 0) {
+        // If all players have passed
+        this.endRound();
+      } else {
+        // Let the next player move
+        this.moveToNextPlayer();
+        if (this.currentPlayer === undefined) {
+          this.endRound();
         }
-      } else if (this.nextPlayerToSetup() === undefined) {
-        this.endTurn();
       }
     }
   }
@@ -148,36 +132,77 @@ export default class Engine {
     engine.availableCommands = data.availableCommands;
     engine.map = SpaceMap.fromData(data.map);
     for (let player of data.players) {
-      engine.players.push(new Player())
+      engine.players.push(new Player());
     }
 
     return engine;
   }
 
-  endTurn() {
-    this.turn += 1;
+  endRound() {
+  
+    if ( this.round < 6 ) {
+      this.beginRound();
 
-    if (this.turn === 1) {
-      // First round, the players are in regular order
-      this.turnOrder = this.players.map((pl, i) => i as PlayerEnum);
+    } else
+    {
+      //TODO end game
+    }
+  };
+
+  beginRound() {
+    this.round += 1;
+    if (this.round === 0) {
+      // Setup round - add Ivits to the end, before third Xenos
+      const setupTurnOrder = this.players
+        .filter(pl => pl.faction !== Faction.Ivits)
+        .map((pl, i) => i as PlayerEnum);
+      const reverseSetupTurnOrder = setupTurnOrder.slice().reverse();
+      this.turnOrder = setupTurnOrder.concat(reverseSetupTurnOrder);
+
+      const posXenos = this.players.findIndex(
+        pl => pl.faction === Faction.Xenos
+      );
+      if (posXenos !== -1) {
+        this.turnOrder.push(posXenos as PlayerEnum);
+      }
+
+      const posIvits = this.players.findIndex(
+        pl => pl.faction === Faction.Ivits
+      );
+      if (posIvits !== -1) {
+        this.turnOrder.push(posIvits as PlayerEnum);
+      }
     } else {
-      // The players play in the order in which they passed
-      this.turnOrder = this.passedPlayers;
+      // The players play in the order in which they passed or 
+      // First round or faction selection the players are in regular order
+      this.turnOrder = (this.round === 1 || this.round === -1) ? this.players.map((pl, i) => i as PlayerEnum) :
+      this.passedPlayers;
       this.passedPlayers = [];
+      for (const player of this.playersInOrder()) {
+        player.receiveIncome();
+      }
     }
 
     this.currentPlayer = this.turnOrder[0];
-
-    for (const player of this.playersInOrder()) {
-      player.receiveIncome();
-    }
+    this.currentPlayerTurnOrderPos = 0;
   }
 
   /** Next player to make a move, after current player makes their move */
-  nextPlayer() : PlayerEnum {
-    const index = this.turnOrder.indexOf(this.currentPlayer);
-
-    return this.turnOrder[(index + 1) % this.turnOrder.length];
+  moveToNextPlayer(): PlayerEnum {
+    if (
+      this.round <= 0 &&
+      this.currentPlayerTurnOrderPos + 1 === this.turnOrder.length
+    ) {
+      // all players played a one round only turn (faction selection and initial buildings)
+      this.currentPlayerTurnOrderPos = undefined;
+      this.currentPlayer = undefined;
+      return;
+    } else {
+      const next = (this.currentPlayerTurnOrderPos + 1) % this.turnOrder.length;
+      this.currentPlayerTurnOrderPos = next;
+      this.currentPlayer = this.turnOrder[next];
+      return;
+    }
   }
 
   playersInOrder(): Player[] {
@@ -187,7 +212,7 @@ export default class Engine {
   /** Commands */
   [Command.Init](players: string, seed: string) {
     const nbPlayers = +players || 2;
-    seed = seed || "defaultSeed";
+    seed = seed || 'defaultSeed';
 
     this.map = new SpaceMap(nbPlayers, seed);
 
@@ -201,7 +226,10 @@ export default class Engine {
   [Command.ChooseFaction](player: PlayerEnum, faction: string) {
     const avail = this.availableCommand(player, Command.ChooseFaction);
 
-    assert(avail.data.includes(faction), `${faction} is not in the available factions`);
+    assert(
+      avail.data.includes(faction),
+      `${faction} is not in the available factions`
+    );
 
     this.players[player].loadFaction(faction as Faction);
   }
@@ -212,10 +240,14 @@ export default class Engine {
 
     for (const elem of buildings) {
       if (elem.building === building && elem.coordinates === location) {
-        const {q, r} = CubeCoordinates.parse(location);
-        
-        this.player(player).build( elem.upgradedBuilding , building, Reward.parse(elem.cost));
- 
+        const { q, r } = CubeCoordinates.parse(location);
+
+        this.player(player).build(
+          elem.upgradedBuilding,
+          building,
+          Reward.parse(elem.cost)
+        );
+
         const hex = this.map.grid.get(q, r);
         hex.data.building = building;
         hex.data.player = player;
@@ -229,6 +261,6 @@ export default class Engine {
 
   [Command.Pass](player: PlayerEnum) {
     this.passedPlayers.push(player);
-    this.turnOrder.splice(this.turnOrder.indexOf(player), 1);
+    this.turnOrder.splice(this.currentPlayerTurnOrderPos, 1);
   }
 }
