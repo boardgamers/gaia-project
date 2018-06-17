@@ -159,6 +159,7 @@ export function generate(engine: Engine): AvailableCommand[] {
       if (data.research[field] < research.lastTile(field) && !research.keyNeeded(field, data.research[field] + 1)) {
         tracks.push({
           field,
+          to: data.research[field] + 1,
           cost: UPGRADE_RESEARCH_COST
         });
       }
