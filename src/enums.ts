@@ -27,6 +27,7 @@ export enum Resource {
   Knowledge = "k",
   Qic = "q",
   ChargePower = "pw",
+  SpendPower = "spw",
   GainToken = "t",
   VictoryPoint = "vp",
   TerraformStep = "d",
@@ -81,7 +82,8 @@ export enum Building {
   ResearchLab = "lab",
   PlanetaryInstitute = "PI",
   Academy1 = "ac1",
-  Academy2 = "ac2"
+  Academy2 = "ac2",
+  GaiaFormer = "gf"
 }
 
 export enum Faction {

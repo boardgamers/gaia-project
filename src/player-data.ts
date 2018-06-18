@@ -31,6 +31,7 @@ export default class PlayerData extends EventEmitter {
   [Building.ResearchLab]: number = 0;
   [Building.Academy1]: number = 0;
   [Building.Academy2]: number = 0; 
+  [Building.GaiaFormer]: number = 0; 
   research: {
     [key in ResearchField]: number
   } = {
@@ -123,6 +124,7 @@ export default class PlayerData extends EventEmitter {
       case Resource.VictoryPoint: return this.victoryPoints >= reward.count;
       case Resource.Qic: return this.qics >= reward.count;
       case Resource.None: return true;
+      case Resource.SpendPower: return this.power.bowl1 + this.power.bowl2 + this.power.bowl3 >= reward.count;
     }
 
     return false;
