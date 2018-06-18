@@ -184,7 +184,7 @@ describe("Engine", () => {
     expect(engine.players[Player.Player1].data.qics).to.equal(2);
   });
 
-  it ("should allow to place a gaia former", () => {
+  it ("should allow to place a gaia former and next round checks for transformation to gaia planet", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans
@@ -193,11 +193,11 @@ describe("Engine", () => {
       p2 build m 4x-2
       p2 build m 2x-2
       p1 build m 4x0
+      p1 build gf 3x1
+      p2 pass
+      p1 pass
     `);
-
-    const engine = new Engine(moves);
-    engine.move("p1 build gf 3x1");
-    expect(() => new Engine(moves)).to.not.throw();
+   expect(() => new Engine(moves)).to.not.throw();
   });
 
   it("should throw when two players choose factions on the same planet", () => {

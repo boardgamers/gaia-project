@@ -8,7 +8,8 @@ import {
   Player as PlayerEnum,
   Operator,
   Building,
-  ResearchField
+  ResearchField,
+  Planet
 } from './enums';
 import Event from './events';
 import { CubeCoordinates } from 'hexagrid';
@@ -179,13 +180,30 @@ export default class Engine {
       this.turnOrder = (this.round === 1 || this.round === -1) ? this.players.map((pl, i) => i as PlayerEnum) :
       this.passedPlayers;
       this.passedPlayers = [];
-      for (const player of this.playersInOrder()) {
-        player.receiveIncome();
-      }
     }
 
     this.currentPlayer = this.turnOrder[0];
     this.currentPlayerTurnOrderPos = 0;
+    this.incomePhase();
+    this.gaiaPhase();
+
+  }
+
+  incomePhase(){
+    for (const player of this.playersInOrder()) {
+      player.receiveIncome();
+      //TODO split power actions and request player order
+    }
+  }
+
+  gaiaPhase(){
+    // transform Transdim planets into Gaia if gaiaformed
+    for (const hex of this.map.toJSON()) {
+      if (hex.data.planet === Planet.Transdim  && hex.data.player !== undefined && hex.data.building === Building.GaiaFormer ) {
+        hex.data.planet = Planet.Gaia;
+      }
+    }
+    //TODO manage gaia phase actions for specific factions
   }
 
   /** Next player to make a move, after current player makes their move */
