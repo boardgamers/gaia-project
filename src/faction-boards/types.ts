@@ -133,8 +133,7 @@ export class FactionBoard {
   }
 
   maxBuildings(building: Building): number {
-    //TODO limit gaiaformers by tech level
-    return building === Building.GaiaFormer ? 3 : this[building].income.length;
+    return this[building].income.length;
   }
 
   cost( targetPlanet: Planet, building: Building, isolated = true): Reward[] {
