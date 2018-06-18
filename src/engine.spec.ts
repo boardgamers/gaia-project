@@ -184,6 +184,22 @@ describe("Engine", () => {
     expect(engine.players[Player.Player1].data.qics).to.equal(2);
   });
 
+  it ("should allow to place a gaia former", () => {
+    const moves = parseMoves(`
+      init 2 randomSeed
+      p1 faction terrans
+      p2 faction nevlas
+      p1 build m 2x2
+      p2 build m 4x-2
+      p2 build m 2x-2
+      p1 build m 4x0
+    `);
+
+    const engine = new Engine(moves);
+    engine.move("p1 build gf 3x1");
+    expect(() => new Engine(moves)).to.not.throw();
+  });
+
   it("should throw when two players choose factions on the same planet", () => {
     const moves = ["init 3 seed?2", "p1 faction terrans", "p2 faction lantids"];
 

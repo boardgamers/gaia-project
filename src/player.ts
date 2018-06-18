@@ -7,6 +7,7 @@ import factions from './factions';
 import Reward from './reward';
 import { CubeCoordinates } from 'hexagrid';
 import researchTracks from './research-tracks';
+import { terraformingStepsRequired } from './planets';
 
 export default class Player {
   faction: Faction = null;
@@ -50,12 +51,12 @@ export default class Player {
     return factions.planet(this.faction);
   }
 
-  canBuild(building: Building, isolated = true) : boolean {
+  canBuild(targetPlanet: Planet, building: Building, isolated = true) : boolean {
     if (this.data[building] >= this.board.maxBuildings(building)) {
       // Too many buildings of the same kind
       return false;
     }
-    return this.data.canPay(this.board.cost(building, isolated));
+    return this.data.canPay(this.board.cost(targetPlanet, building, isolated));
   }
 
   loadFaction(faction: Faction) {
