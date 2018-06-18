@@ -52,10 +52,11 @@ export default class Player {
   }
 
   canBuild(targetPlanet: Planet, building: Building, isolated = true) : boolean {
-    if (this.data[building] >= this.board.maxBuildings(building)) {
+    if (this.data[building] >= (building === Building.GaiaFormer ? this.data.gainedGaiaformers : this.board.maxBuildings(building))) {
       // Too many buildings of the same kind
       return false;
     }
+  
     return this.data.canPay(this.board.cost(targetPlanet, building, isolated));
   }
 

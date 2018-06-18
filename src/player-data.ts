@@ -38,6 +38,7 @@ export default class PlayerData extends EventEmitter {
     terra: 0, nav: 0,int: 0, gaia: 0, eco: 0, sci: 0
   };
   range: number = 1;
+  gainedGaiaformers: number = 0;
   // Coordinates occupied by buildings
   occupied: CubeCoordinates[] = [];
 
@@ -51,6 +52,7 @@ export default class PlayerData extends EventEmitter {
       power: this.power,
       research: this.research,
       range: this.range,
+      gainedGaiaformers: this.gainedGaiaformers,
       occupied: this.occupied
     }
 
@@ -101,6 +103,7 @@ export default class PlayerData extends EventEmitter {
       case Resource.GainToken: this.power.bowl1 += count; return;
       case Resource.ChargePower: this.chargePower(count); return;
       case Resource.RangeExtension: this.range += count; return;
+      case Resource.GainGaiaFormer: this.gainedGaiaformers +=count; return;
       default: break; // Not implemented
     }
   }

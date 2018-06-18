@@ -32,6 +32,7 @@ export enum Resource {
   VictoryPoint = "vp",
   TerraformStep = "d",
   RangeExtension = "r",
+  GainGaiaFormer = "ggf",
   UpgradeTerraforming = "up-terra",
   UpgradeNavigation = "up-nav",
   UpgradeIntelligence = "up-int",
