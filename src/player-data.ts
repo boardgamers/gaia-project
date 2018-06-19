@@ -39,6 +39,8 @@ export default class PlayerData extends EventEmitter {
   };
   range: number = 1;
   gaiaformers: number = 0;
+  terraformSteps: number = 0;
+
   // Coordinates occupied by buildings
   occupied: CubeCoordinates[] = [];
 
@@ -53,6 +55,7 @@ export default class PlayerData extends EventEmitter {
       research: this.research,
       range: this.range,
       gaiaformers: this.gaiaformers,
+      terraformSteps: this.terraformSteps,
       occupied: this.occupied
     }
 
@@ -105,6 +108,7 @@ export default class PlayerData extends EventEmitter {
       case Resource.MovePower: this.movePower(count); return;
       case Resource.RangeExtension: this.range += count; return;
       case Resource.GaiaFormer: this.gaiaformers +=count; return;
+      case Resource.TerraformStep: this.terraformSteps +=count; return;
       default: break; // Not implemented
     }
   }

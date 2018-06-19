@@ -143,7 +143,7 @@ export class FactionBoard {
     if (building === Building.TradingStation && isolated) {
       return this[building].isolatedCost;
     }
-    //TODO add terraforming costs
+    
     return this[building].cost;
   }
 }

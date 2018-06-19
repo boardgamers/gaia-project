@@ -3,7 +3,7 @@ import Event from "./events";
 
 export default {
   [ResearchField.Terraforming]: [
-    [],["2o"],[],["3pw"],["2o"],[]
+    [],["2o"],["d"],["3pw","d"],["2o"],[]
   ], 
   [ResearchField.Navigation]: [
     [],["q"],["r"],["q,3pw"],["r"],["r"]
