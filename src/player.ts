@@ -53,10 +53,10 @@ export default class Player {
     return factions.planet(this.faction);
   }
 
-  canBuild(targetPlanet: Planet, building: Building, isolated = true) : boolean {
+  canBuild(targetPlanet: Planet, building: Building, isolated = true) : Reward[] {
     if (this.data[building] >= (building === Building.GaiaFormer ? this.data.gaiaformers : this.board.maxBuildings(building))) {
       // Too many buildings of the same kind
-      return false;
+      return undefined;
     }
 
     let addedCost = "";
@@ -70,7 +70,7 @@ export default class Player {
     }
 
     const cost = Reward.merge([].concat( this.board.cost(targetPlanet, building, isolated), [new Reward( addedCost)]));
-    return this.data.canPay(cost);
+    return this.data.canPay(cost) ? cost : undefined;
   }
 
   loadFaction(faction: Faction) {

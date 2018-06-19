@@ -109,16 +109,15 @@ export function generate(engine: Engine): AvailableCommand[] {
         const upgraded = upgradedBuildings(hex.data.building, engine.player(player).faction);
 
         for (const upgrade of upgraded) {
-          if (!engine.player(player).canBuild(hex.data.planet, upgrade, isolated)) {
-            continue;
+          var buildCost = engine.player(player).canBuild(hex.data.planet, upgrade, isolated);
+          if ( buildCost !== undefined) {
+            buildings.push({
+              upgradedBuilding: hex.data.building,
+              building: upgrade,
+              cost: buildCost.map(c => c.toString()).join(','),
+              coordinates: hex.toString()
+            });
           }
-
-          buildings.push({
-            upgradedBuilding: hex.data.building,
-            building: upgrade,
-            cost: board.cost(hex.data.planet, upgrade, isolated).map(c => c.toString()).join(','),
-            coordinates: hex.toString()
-          });
         }
         continue;
       } 
@@ -131,21 +130,27 @@ export function generate(engine: Engine): AvailableCommand[] {
       }
 
       // The planet is empty (faction planet or gaia), we can build a mine
-      if (  hex.data.planet !== Planet.Transdim && engine.player(player).canBuild( hex.data.planet,Building.Mine,false)) {
-        buildings.push({
-          building: Building.Mine,
-          coordinates: hex.toString(),
-          cost: board.cost(hex.data.planet, Building.Mine,false ).map(c => c.toString()).join(',')
-        });      
+      if (  hex.data.planet !== Planet.Transdim ) {
+        var buildCost = engine.player(player).canBuild( hex.data.planet,Building.Mine,false);
+        if ( buildCost !== undefined ){
+          buildings.push({
+            building: Building.Mine,
+            coordinates: hex.toString(),
+            cost: buildCost.map(c => c.toString()).join(',')
+          });   
+        }         
       }
 
       // The planet is a trasdim 
-      if (  hex.data.planet === Planet.Transdim && engine.player(player).canBuild( hex.data.planet,Building.GaiaFormer,false)) {
-        buildings.push({
-          building: Building.GaiaFormer,
-          coordinates: hex.toString(),
-          cost: board.cost(hex.data.planet, Building.GaiaFormer,false ).map(c => c.toString()).join(',')
-        });      
+      if (  hex.data.planet === Planet.Transdim ) {
+        var buildCost = engine.player(player).canBuild( hex.data.planet,Building.GaiaFormer,false);
+        if ( buildCost !== undefined ){
+          buildings.push({
+            building: Building.GaiaFormer,
+            coordinates: hex.toString(),
+            cost: buildCost.map(c => c.toString()).join(',')
+          }); 
+        } 
       }
     } //end for hex
 
