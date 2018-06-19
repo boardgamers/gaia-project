@@ -1,8 +1,8 @@
 import { Planet, Faction } from "..";
 
-const planetCycle = [ Planet.Terra, Planet.Oxide, Planet.Volcanic, Planet.Desert, Planet.Swamp, Planet.Titanium, Planet.Ice];
 
 export function terraformingStepsRequired(factionPlanet: Planet, targetPlanet: Planet): number {
+  const planetCycle = [ Planet.Terra, Planet.Oxide, Planet.Volcanic, Planet.Desert, Planet.Swamp, Planet.Titanium, Planet.Ice];
 
     if ( targetPlanet === Planet.Gaia || targetPlanet === Planet.Transdim){ 
       return 0;

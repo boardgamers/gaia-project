@@ -7,7 +7,7 @@ export default class Reward {
   type: Resource;
 
   constructor(reward: string = "~") {
-    const regex = /^([0-9]*)?(.*)$/
+    const regex = /^(-?[0-9]*)?(.*)$/
 
     const [_, count, type] = regex.exec(reward);
 

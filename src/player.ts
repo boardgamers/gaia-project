@@ -1,4 +1,4 @@
-import { Faction, Operator, ResearchField, Planet, Building } from './enums';
+import { Faction, Operator, ResearchField, Planet, Building, Resource } from './enums';
 import PlayerData from './player-data';
 import Event from './events';
 import { factionBoard, FactionBoard } from './faction-boards';
@@ -8,6 +8,8 @@ import Reward from './reward';
 import { CubeCoordinates } from 'hexagrid';
 import researchTracks from './research-tracks';
 import { terraformingStepsRequired } from './planets';
+
+const TERRAFORMING_COST = 3;
 
 export default class Player {
   faction: Faction = null;
@@ -56,8 +58,19 @@ export default class Player {
       // Too many buildings of the same kind
       return false;
     }
-  
-    return this.data.canPay(this.board.cost(targetPlanet, building, isolated));
+
+    let addedCost = "";
+    if (building === Building.GaiaFormer){
+      const gaiaformingDiscount =  this.data.gaiaformers > 1  ? this.data.gaiaformers :0 ;
+      addedCost = -1*gaiaformingDiscount + Resource.MovePower;
+    } else {
+      // Get the number of terraforming steps to pay. freeTerraforming is the terraforming steps gained
+      const steps = terraformingStepsRequired(factions[this.faction].planet, targetPlanet); 
+      addedCost =  ( TERRAFORMING_COST - this.data.terraformSteps)*steps + Resource.Ore;
+    }
+
+    const cost = Reward.merge([].concat( this.board.cost(targetPlanet, building, isolated), [new Reward( addedCost)]));
+    return this.data.canPay(cost);
   }
 
   loadFaction(faction: Faction) {
