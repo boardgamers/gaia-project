@@ -197,6 +197,7 @@ describe("Engine", () => {
       p2 pass
       p1 pass
     `);
+    
    expect(() => new Engine(moves)).to.not.throw();
   });
 
