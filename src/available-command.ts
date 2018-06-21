@@ -84,8 +84,14 @@ export function generate(engine: Engine): AvailableCommand[] {
       if (( hex.data.planet === Planet.Empty  ) || (hex.data.player !== undefined && hex.data.player !== player)) {
         continue;
       }
-      //upgrade exting player's building, excluding Transdim planet until transformed into Gaia planets
-      if (hex.data.building && hex.data.planet !== Planet.Transdim ) {
+      //upgrade existing player's building
+      if (hex.data.building ) {
+
+        //excluding Transdim planet until transformed into Gaia planets
+        if (hex.data.planet === Planet.Transdim){
+          continue
+        }
+
         const isolated = (() => {
           // We only care about mines that can transform into trading stations;
           if(hex.data.building !== Building.Mine) {
@@ -119,47 +125,45 @@ export function generate(engine: Engine): AvailableCommand[] {
             });
           }
         }
-        continue;
+      } else {
+        // planet without building
+        // Check if the range is enough to access the planet
+        const inRange = data.occupied.some(loc => grid.distance(hex.q, hex.r, loc.q, loc.r) <= data.range);
+
+        if (!inRange) {
+          continue;
+        }
+
+        // The planet is empty (faction planet or gaia), we can build a mine
+        if (  hex.data.planet !== Planet.Transdim ) {
+          var buildCost = engine.player(player).canBuild( hex.data.planet,Building.Mine,false);
+          if ( buildCost !== undefined ){
+            buildings.push({
+              building: Building.Mine,
+              coordinates: hex.toString(),
+              cost: buildCost.map(c => c.toString()).join(',')
+            });   
+          }         
+        } else {
+        // The planet is a trasdim 
+          var buildCost = engine.player(player).canBuild( hex.data.planet,Building.GaiaFormer,false);
+          if ( buildCost !== undefined ){
+            buildings.push({
+              building: Building.GaiaFormer,
+              coordinates: hex.toString(),
+              cost: buildCost.map(c => c.toString()).join(',')
+            }); 
+          } 
+        }
       } 
-
-      // Check if the range is enough to access the planet
-      const inRange = data.occupied.some(loc => grid.distance(hex.q, hex.r, loc.q, loc.r) <= data.range);
-
-      if (!inRange) {
-        continue;
-      }
-
-      // The planet is empty (faction planet or gaia), we can build a mine
-      if (  hex.data.planet !== Planet.Transdim ) {
-        var buildCost = engine.player(player).canBuild( hex.data.planet,Building.Mine,false);
-        if ( buildCost !== undefined ){
-          buildings.push({
-            building: Building.Mine,
-            coordinates: hex.toString(),
-            cost: buildCost.map(c => c.toString()).join(',')
-          });   
-        }         
-      }
-
-      // The planet is a trasdim 
-      if (  hex.data.planet === Planet.Transdim ) {
-        var buildCost = engine.player(player).canBuild( hex.data.planet,Building.GaiaFormer,false);
-        if ( buildCost !== undefined ){
-          buildings.push({
-            building: Building.GaiaFormer,
-            coordinates: hex.toString(),
-            cost: buildCost.map(c => c.toString()).join(',')
-          }); 
-        } 
-      }
     } //end for hex
 
-     if (buildings.length > 0) {
-      commands.push({
-        name: Command.Build,
-        player,
-        data: { buildings }
-      });
+    if (buildings.length > 0) {
+    commands.push({
+      name: Command.Build,
+      player,
+      data: { buildings }
+    });
     }
   } // end add buildings
 
