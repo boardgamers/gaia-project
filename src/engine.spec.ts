@@ -196,9 +196,11 @@ describe("Engine", () => {
       p1 build gf 3x1
       p2 pass
       p1 pass
+      p2 build ts 4x-2
+      p1 build m 3x1
     `);
-    
-   expect(() => new Engine(moves)).to.not.throw();
+ 
+    expect(() => new Engine(moves)).to.not.throw();
   });
 
   it("should throw when two players choose factions on the same planet", () => {

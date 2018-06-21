@@ -6,7 +6,6 @@ import { Building, Planet } from "../enums";
 export interface FactionBoardRaw {
   [Building.Mine]?: {
     cost?: string,
-    costGaia?: string;
     income?: string[]
   };
   [Building.TradingStation]?: {
@@ -45,7 +44,6 @@ export interface FactionBoardRaw {
 const defaultBoard: FactionBoardRaw = {
   [Building.Mine]: {
     cost: "2c,o",
-    costGaia: "2c,o,q",
     income: ["+o","+o","~","+o","+o","+o","+o","+o"]
   },
   [Building.TradingStation]: {
@@ -83,7 +81,6 @@ const defaultBoard: FactionBoardRaw = {
 export class FactionBoard {
   [Building.Mine]: {
     cost: Reward[],
-    costGaia: Reward[],
     income: Event[]
   };
   [Building.TradingStation]: {
@@ -137,9 +134,7 @@ export class FactionBoard {
   }
 
   cost( targetPlanet: Planet, building: Building, isolated = true): Reward[] {
-    if (building === Building.Mine && targetPlanet === Planet.Gaia) {
-      return this[building].costGaia;
-    }
+ 
     if (building === Building.TradingStation && isolated) {
       return this[building].isolatedCost;
     }

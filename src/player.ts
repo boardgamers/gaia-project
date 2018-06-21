@@ -58,16 +58,23 @@ export default class Player {
       // Too many buildings of the same kind
       return undefined;
     }
-
+    
+    //gaiaforming discount
     let addedCost = "";
     if (building === Building.GaiaFormer){
       const gaiaformingDiscount =  this.data.gaiaformers > 1  ? this.data.gaiaformers :0 ;
       addedCost = -1*gaiaformingDiscount + Resource.MovePower;
-    } else {
-      // Get the number of terraforming steps to pay. freeTerraforming is the terraforming steps gained
-      const steps = terraformingStepsRequired(factions[this.faction].planet, targetPlanet); 
-      addedCost =  ( TERRAFORMING_COST - this.data.terraformSteps)*steps + Resource.Ore;
-    }
+    };
+    
+    //habiltability costs
+    if (building === Building.Mine ){
+     if ( targetPlanet === Planet.Gaia) {
+        addedCost = "1q";
+      } else { // Get the number of terraforming steps to pay discounting terraforming track
+        const steps = terraformingStepsRequired(factions[this.faction].planet, targetPlanet); 
+        addedCost =  ( TERRAFORMING_COST - this.data.terraformSteps)*steps + Resource.Ore;
+      }
+    };
 
     const cost = Reward.merge([].concat( this.board.cost(targetPlanet, building, isolated), [new Reward( addedCost)]));
     return this.data.canPay(cost) ? cost : undefined;
