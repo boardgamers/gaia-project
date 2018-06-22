@@ -184,8 +184,11 @@ export default class Engine {
 
     this.currentPlayer = this.turnOrder[0];
     this.currentPlayerTurnOrderPos = 0;
-    this.incomePhase();
-    this.gaiaPhase();
+    
+    if ( this.round >= 1) {
+      this.incomePhase();
+      this.gaiaPhase();
+    };
 
   }
 
