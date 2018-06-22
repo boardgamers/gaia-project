@@ -134,27 +134,16 @@ export function generate(engine: Engine): AvailableCommand[] {
           continue;
         }
 
-        // The planet is empty (faction planet or gaia), we can build a mine
-        if (  hex.data.planet !== Planet.Transdim ) {
-          var buildCost = engine.player(player).canBuild( hex.data.planet,Building.Mine,false);
-          if ( buildCost !== undefined ){
+        const building = hex.data.planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine  ;
+        const buildCost = engine.player(player).canBuild( hex.data.planet, building, false);
+        if ( buildCost !== undefined ){
             buildings.push({
-              building: Building.Mine,
-              coordinates: hex.toString(),
-              cost: buildCost.map(c => c.toString()).join(',')
-            });   
-          }         
-        } else {
-        // The planet is a trasdim 
-          var buildCost = engine.player(player).canBuild( hex.data.planet,Building.GaiaFormer,false);
-          if ( buildCost !== undefined ){
-            buildings.push({
-              building: Building.GaiaFormer,
-              coordinates: hex.toString(),
-              cost: buildCost.map(c => c.toString()).join(',')
-            }); 
-          } 
-        }
+            building: building,
+            coordinates: hex.toString(),
+            cost: buildCost.map(c => c.toString()).join(',')
+          });   
+        }         
+         
       } 
     } //end for hex
 

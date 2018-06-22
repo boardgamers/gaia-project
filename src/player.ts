@@ -63,7 +63,7 @@ export default class Player {
     let addedCost = "";
     if (building === Building.GaiaFormer){
       const gaiaformingDiscount =  this.data.gaiaformers > 1  ? this.data.gaiaformers :0 ;
-      addedCost = -1*gaiaformingDiscount + Resource.MovePower;
+      addedCost = `-${gaiaformingDiscount}${Resource.MovePower}`
     };
     
     //habiltability costs
@@ -72,7 +72,7 @@ export default class Player {
         addedCost = "1q";
       } else { // Get the number of terraforming steps to pay discounting terraforming track
         const steps = terraformingStepsRequired(factions[this.faction].planet, targetPlanet); 
-        addedCost =  ( TERRAFORMING_COST - this.data.terraformSteps)*steps + Resource.Ore;
+        addedCost = `${(TERRAFORMING_COST - this.data.terraformSteps)*steps}${Resource.Ore}`;
       }
     };
 
