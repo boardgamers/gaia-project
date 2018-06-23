@@ -6,23 +6,18 @@ import {
   Faction,
   Command,
   Player as PlayerEnum,
-  Operator,
   Building,
   ResearchField,
   Planet,
   Round,
   Booster
 } from './enums';
-import Event from './events';
 import { CubeCoordinates } from 'hexagrid';
 
 import AvailableCommand, {
   generate as generateAvailableCommands
 } from './available-command';
 import Reward from './reward';
-import boosts from './tiles/boosters';
-import { SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION } from 'constants';
-
 
 export default class Engine {
   map: SpaceMap;
