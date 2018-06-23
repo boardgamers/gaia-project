@@ -13,33 +13,19 @@
           <canvas id="map"></canvas>
       </div>
       <div id="errors"></div>
-      <ul class="nav nav-tabs" id="myTab" role="tablist">
-        <li class="nav-item">
-          <a class="nav-link active" id="move-tab" data-toggle="tab" href="#move-panel" role="tab" aria-controls="Move" aria-selected="true">Move</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" id="p1-tab" data-toggle="tab" href="#p1" role="tab" aria-controls="Player 1" aria-selected="false">Player 1</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" id="p2-tab" data-toggle="tab" href="#p2" role="tab" aria-controls="Player 2" aria-selected="false">Player 2</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" id="p3-tab" data-toggle="tab" href="#p3" role="tab" aria-controls="Player 3" aria-selected="false" style="display: none">Player 3</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" id="p4-tab" data-toggle="tab" href="#p4" role="tab" aria-controls="Player 4" aria-selected="false" style="display: none">Player 4</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" id="p5-tab" data-toggle="tab" href="#p5" role="tab" aria-controls="Player 5" aria-selected="false" style="display: none">Player 5</a>
-        </li>
-      </ul>
-      <div class="tab-content" id="myTabContent">
-        <div class="tab-pane fade show active" id="move-panel" role="tabpanel" aria-labelledby="move-tab">
-          <div class="row mt-2">
-            <div class="col-md-6" id="move">
+      <div class="row mt-2">
+        <div class="col-md-6 order-2 order-md-1">
+          <div id="p1"></div>
+          <div id="p2"></div>
+          <div id="p3"></div>
+          <div id="p4"></div>
+          <div id="p5"></div>
+        </div>
+        <div class="col-md-6 order-1 order-md-2" id="move-panel">
+            <div id="move">
               
             </div>
-            <div class="col-md-6">
+            <div>
               <form>
                 <div class="form-group">
                   <label for="moves">Moves</label>
@@ -50,11 +36,6 @@
             </div>
           </div>
         </div>
-        <div class="tab-pane fade" id="p1" role="tabpanel" aria-labelledby="p1-tab">p1</div>
-        <div class="tab-pane fade" id="p2" role="tabpanel" aria-labelledby="p2-tab">p2</div>
-        <div class="tab-pane fade" id="p3" role="tabpanel" aria-labelledby="p3-tab">p3</div>
-        <div class="tab-pane fade" id="p4" role="tabpanel" aria-labelledby="p4-tab">p4</div>
-        <div class="tab-pane fade" id="p5" role="tabpanel" aria-labelledby="p5-tab">p5</div>
       </div>
     </div>
   </body>

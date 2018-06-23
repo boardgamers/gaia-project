@@ -8,6 +8,7 @@ import Renderer from "../../renderers";
 import { AvailableCommand, Command, factions, Building, ResearchField } from "@gaia-project/engine";
 import { CubeCoordinates } from "hexagrid";
 import { buildingName } from "../../data/building";
+import { factionColor } from "../../graphics/utils";
 
 const renderer = new Renderer($("canvas#map").get(0) as HTMLCanvasElement);
 const map = renderer.map;
@@ -205,28 +206,27 @@ function updatePlayerInfo() {
   for (let i = 0; i < 5; i++) {
     const player = `p${i+1}`;
     const panel = `#${player}`;
-    const tab = `${panel}-tab`;
     
     if (lastData.players.length <= i) {
-      $(tab).hide();
+      $(panel).html('');
       continue;
     }
-
-    $(tab).show();
 
     if (!lastData.players[i].faction) {
       continue;
     }
 
     const data = lastData.players[i].data;
-    const faction = factions[lastData.players[i].faction].name;
+    const factionEnum = lastData.players[i].faction;
+    const faction = factions[factionEnum].name;
 
     const info = [
-      `Faction: ${faction}`,
+      `<b>Player ${i+1}</b> - ${faction}`,
       `vp: ${data.victoryPoints}, c: ${data.credits}, o: ${data.ores}, q: ${data.qics}, k: ${data.knowledge}`,
-      `bowl 1: ${data.power.bowl1}, bowl 2: ${data.power.bowl2}, bowl 3: ${data.power.bowl3}`,
+      `<b>Power</b> - gaia: ${data.power.gaia}, bowl 1: ${data.power.bowl1}, bowl 2: ${data.power.bowl2}, bowl 3: ${data.power.bowl3}`,
     ];
 
     $(panel).html(info.join('<br>'));
+    $(panel).css('background-color', `#${factionColor(factionEnum).toString(16)}a0`);
   }
 }
