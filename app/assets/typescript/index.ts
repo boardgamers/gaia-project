@@ -203,25 +203,34 @@ function updatePlayerInfo() {
   if (!lastData.players) {
     return;
   }
+  
+  const playerOrder = lastData.round <= 0 ? lastData.players.map((pl, i) => i) : lastData.turnOrder.concat(lastData.passedPlayers);
+
   for (let i = 0; i < 5; i++) {
-    const player = `p${i+1}`;
-    const panel = `#${player}`;
+    const pl = playerOrder[i];
+    const panel = `#p${i+1}`;
     
-    if (lastData.players.length <= i) {
-      $(panel).html('');
+    if (pl === undefined) {
+      $(panel).hide();
       continue;
     }
 
-    if (!lastData.players[i].faction) {
+    const player = lastData.players[pl];
+
+    if (!player.faction) {
+      $(panel).hide();
       continue;
     }
 
-    const data = lastData.players[i].data;
-    const factionEnum = lastData.players[i].faction;
+    $(panel).show();
+
+    const data = player.data;
+    const factionEnum = player.faction;
     const faction = factions[factionEnum].name;
+    const passed = lastData.passedPlayers.includes(pl) ? "(passed)" : "";
 
     const info = [
-      `<b>Player ${i+1}</b> - ${faction}`,
+      `<b>Player ${pl+1}</b> - ${faction} ${passed}`,
       `vp: ${data.victoryPoints}, c: ${data.credits}, o: ${data.ores}, q: ${data.qics}, k: ${data.knowledge}`,
       `<b>Power</b> - gaia: ${data.power.gaia}, bowl 1: ${data.power.bowl1}, bowl 2: ${data.power.bowl2}, bowl 3: ${data.power.bowl3}`,
     ];
