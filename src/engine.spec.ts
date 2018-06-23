@@ -71,7 +71,26 @@ describe("Engine", () => {
     `);
 
     expect(() => new Engine(moves)).to.not.throw();
-  })
+  });
+
+  it("should have passedPlayers empty at beginning of a new round", () => {
+    const moves = parseMoves(`
+      init 2 randomSeed
+      p1 faction lantids
+      p2 faction gleens
+      p1 build m 2x2
+      p2 build m 0x3
+      p2 build m 3x0
+      p1 build m 4x0
+      p2 booster booster2
+      p1 booster booster3
+      p1 pass booster5
+      p2 pass booster3
+    `);
+
+    const engine = new Engine(moves);
+    expect(engine.passedPlayers).to.have.length(0);
+  });
   
   it("should check wrong player order", () => {
     const moves = parseMoves(`
@@ -89,7 +108,7 @@ describe("Engine", () => {
       p2 pass booster5
     `);
     expect(() => new Engine(moves)).to.throw(AssertionError);
-  })
+  });
 
   it("should allow players to upgrade a mine to a TS, either isolated or not", () => {
     const moves = parseMoves(`
@@ -107,7 +126,7 @@ describe("Engine", () => {
     `);
 
     expect(() => new Engine(moves)).to.not.throw();
-  })
+  });
 
   // TODO we should check resources after upgrading
   // TODO test to do: bescods upgrade 
@@ -132,7 +151,7 @@ describe("Engine", () => {
     `);
 
     expect(() => new Engine(moves)).to.throw();
-  })
+  });
 
   it("should allow a full round to pass", () => {
     const moves = parseMoves(`
@@ -246,7 +265,7 @@ describe("Engine", () => {
       expect(Object.keys(engine4.roundBoosters)).to.have.length(7);
       expect(Object.keys(engine5.roundBoosters)).to.have.length(8);
     });
-    
+
     it("should allow to select round boosters  without errors", () => {
       const moves = parseMoves(`
         init 2 randomSeed

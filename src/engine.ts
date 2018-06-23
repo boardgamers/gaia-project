@@ -189,6 +189,7 @@ export default class Engine {
       default: {
         // The players play in the order in which they passed or 
         this.turnOrder = this.passedPlayers;
+        this.passedPlayers = [];
       };
     };
 
