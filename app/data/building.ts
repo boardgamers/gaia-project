@@ -8,5 +8,6 @@ export function buildingName(building: Building): string {
     case Building.TradingStation: return "trading station";
     case Building.ResearchLab: return "research lab";
     case Building.PlanetaryInstitute: return "planetary institute";
+    case Building.GaiaFormer: return "gaia-former";
   }
 }
