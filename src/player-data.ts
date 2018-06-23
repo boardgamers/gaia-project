@@ -103,9 +103,8 @@ export default class PlayerData extends EventEmitter {
       case Resource.Knowledge: this.knowledge = Math.min(MAX_KNOWLEDGE, this.knowledge + count); return;
       case Resource.VictoryPoint: this.victoryPoints += count; return;
       case Resource.Qic: this.qics += count; return;
-      case Resource.GainToken: this.power.bowl1 += count; return;
+      case Resource.GainToken: count >= 0 ? this.power.bowl1 += count : this.movePowerToGaia(-count); return;
       case Resource.ChargePower: this.chargePower(count); return;
-      case Resource.MovePower: this.movePower(count); return;
       case Resource.RangeExtension: this.range += count; return;
       case Resource.GaiaFormer: this.gaiaformers +=count; return;
       case Resource.TerraformStep: this.terraformSteps +=count; return;
@@ -132,7 +131,7 @@ export default class PlayerData extends EventEmitter {
       case Resource.VictoryPoint: return this.victoryPoints >= reward.count;
       case Resource.Qic: return this.qics >= reward.count;
       case Resource.None: return true;
-      case Resource.MovePower: return this.power.bowl1 + this.power.bowl2 + this.power.bowl3 >= reward.count;
+      case Resource.GainToken: return this.power.bowl1 + this.power.bowl2 + this.power.bowl3 >= reward.count;
     }
 
     return false;
@@ -161,7 +160,7 @@ export default class PlayerData extends EventEmitter {
     this.power.bowl3 += bowl2ToUp;
   }
 
-  movePower(power: number) {
+  movePowerToGaia(power: number) {
     const bowl1ToGaia = Math.min(power, this.power.bowl1);
     this.power.gaia += bowl1ToGaia;
     power -= bowl1ToGaia;
@@ -185,7 +184,6 @@ export default class PlayerData extends EventEmitter {
    if (power <= 0) {
       return;
     }
-  
   }
 
   upgradeResearch(which: ResearchField, count: number) {

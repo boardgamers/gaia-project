@@ -62,8 +62,8 @@ export default class Player {
     //gaiaforming discount
     let addedCost = "";
     if (building === Building.GaiaFormer){
-      const gaiaformingDiscount =  this.data.gaiaformers > 1  ? this.data.gaiaformers :0 ;
-      addedCost = `-${gaiaformingDiscount}${Resource.MovePower}`
+      const gaiaformingDiscount =  this.data.gaiaformers > 1  ? this.data.gaiaformers : 0;
+      addedCost = `-${gaiaformingDiscount}${Resource.GainToken}`
     };
     
     //habiltability costs
