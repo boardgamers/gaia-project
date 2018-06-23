@@ -10,3 +10,7 @@ canvas#map {
   margin-bottom: 1em;
   padding-bottom: 0.5em;
 }
+
+#move-title {
+  @extend .mb-2;
+}

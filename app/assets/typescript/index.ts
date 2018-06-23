@@ -9,6 +9,7 @@ import { AvailableCommand, Command, factions, Building, ResearchField } from "@g
 import { CubeCoordinates } from "hexagrid";
 import { buildingName } from "../../data/building";
 import { factionColor } from "../../graphics/utils";
+import { Booster } from "@gaia-project/engine/src/enums";
 
 const renderer = new Renderer($("canvas#map").get(0) as HTMLCanvasElement);
 const map = renderer.map;
@@ -52,10 +53,9 @@ $(function() {
 });
 
 function showAvailableMoves(commands: AvailableCommand[]) {
-  const $move = $("#move");
-
   // Clear move choice
-  $move.html("");
+  // $("#move-title").html("");
+  $("#move-buttons").html("");
   pendingCommand = "";
 
   const command = commands[0];
@@ -108,9 +108,14 @@ function showAvailableMove(player: string, command: AvailableCommand) {
     }
 
     case Command.Pass: {
-      addButton("Pass", `${player} ${Command.Pass}`);
+      addButton("Pass", `${player} ${Command.Pass}`, {boosters: command.data.boosters});
       break;
     }
+
+    case Command.ChooseRoundBooster: {
+      addButton("Pick booster", `${player} ${Command.ChooseRoundBooster}`, {boosters: command.data.boosters});
+      break;
+    };
 
     case Command.UpgradeResearch: {
       addButton("Advance research", `${player} ${Command.UpgradeResearch}`, {
@@ -124,13 +129,13 @@ function showAvailableMove(player: string, command: AvailableCommand) {
 
 function commandTitle(text: string, player?: string) {
   if (!player) {
-    $("#move").append(`<div class='mb-2'>${text}</div>`);
+    $("#move-title").text(text);
   } else {
-    $("#move").append(`<div class='mb-2'>(${player}) ${text}</div>`);
+    $("#move-title").text(`(${player}) ${text}`);
   }  
 }
 
-function addButton(text: string, command: string, {hexes, tracks}: {hexes?: string[], tracks?: any[]} = {}) {
+function addButton(text: string, command: string, {hexes, tracks, boosters}: {hexes?: string[], tracks?: any[], boosters?: Booster[]} = {}) {
   const button = $('<button class="btn btn-secondary mr-2 mb-2">');
   button.text(text);
   
@@ -138,7 +143,7 @@ function addButton(text: string, command: string, {hexes, tracks}: {hexes?: stri
     button.attr("data-command", command);
   }
 
-  $("#move").append(button);
+  $("#move-buttons").append(button);
 
   if (hexes) {
     button.attr("data-hexes", hexes.join(","));
@@ -146,6 +151,10 @@ function addButton(text: string, command: string, {hexes, tracks}: {hexes?: stri
 
   if (tracks) {
     button.attr("data-fields", JSON.stringify(tracks));
+  }
+
+  if (boosters) {
+    button.attr("data-boosters", JSON.stringify(boosters));
   }
 
   return button;
@@ -157,8 +166,7 @@ $(document).on("click", "*[data-command]", function() {
 
   const command = $(this).attr("data-command");
   const hexes = $(this).attr("data-hexes");
-  const fields = $(this).attr("data-fields");
-
+  
   if (hexes) {
     pendingCommand = command;
     renderer.render(lastData, {hexes: hexes.split(",").map(hex => CubeCoordinates.parse(hex))});
@@ -166,9 +174,27 @@ $(document).on("click", "*[data-command]", function() {
     return;
   }
 
+  const fields = $(this).attr("data-fields");
+
   if (fields) {
     pendingCommand = command;
     renderer.render(lastData, {fields: JSON.parse(fields)});
+
+    return;
+  }
+
+  let boosters = $(this).attr("data-boosters");
+
+  if (boosters) {
+    $("#move-buttons").html("");
+    $("#move-title").append(" - Pick a booster");
+    boosters = JSON.parse(boosters);
+
+    Object.values(Booster).map((booster, i) => {
+      if (boosters.includes(booster)) {
+        addButton(`Booster ${i+1}`, `${command} ${booster}`);
+      }
+    });
 
     return;
   }
