@@ -221,7 +221,7 @@ export default class Engine {
 
   /** Next player to make a move, after current player makes their move */
   moveToNextPlayer(command : Command): PlayerEnum {
-    if ( command === Command.ChooseRoundBooster || this.round === Round.SetupFaction || this.round === Round.SetupBuilding ) {
+    if ( command === Command.Pass || this.round === Round.SetupFaction || this.round === Round.SetupBuilding || this.round === Round.SetupRoundBooster) {
         // happens in round SetupROundBooster and standard rounds after pass move
         const playerPos = this.currentPlayerTurnOrderPos;
         this.passedPlayers.push(this.currentPlayer);
@@ -231,8 +231,7 @@ export default class Engine {
         this.currentPlayer = this.turnOrder[newPlayerPos];  
         this.currentPlayerTurnOrderPos = newPlayerPos;
 
-    } else if ( command !== Command.Pass) {
-        // Command.PAss stays with the current player
+    } else {
         const next = (this.currentPlayerTurnOrderPos + 1) % this.turnOrder.length;
         this.currentPlayerTurnOrderPos = next;
         this.currentPlayer = this.turnOrder[next];
@@ -272,8 +271,8 @@ export default class Engine {
     this.players[player].loadFaction(faction as Faction);
   }
 
-  [Command.ChooseRoundBooster](player: PlayerEnum, booster: Booster) {
-    const { boosters } = this.availableCommand(player, Command.ChooseRoundBooster).data;
+  [Command.ChooseRoundBooster](player: PlayerEnum, booster: Booster, fromCommand: Command = Command.ChooseRoundBooster ) {
+    const { boosters } = this.availableCommand(player, fromCommand).data;
     const boost = boosters.find(boo => boo.booster === booster);
 
     assert(boost,
@@ -320,8 +319,9 @@ export default class Engine {
     this.player(player).data.gainReward(new Reward(`${Command.UpgradeResearch}-${field}`));
   }
 
-  [Command.Pass](player: PlayerEnum) {
+  [Command.Pass](player: PlayerEnum, booster: Booster) {
     this.roundBoosters[this.players[player].data.roundBooster] = true;
     this.players[player].pass();
+    (this[Command.ChooseRoundBooster] as any)(player, booster, Command.Pass);
   }
 }

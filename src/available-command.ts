@@ -75,25 +75,25 @@ export function generate(engine: Engine): AvailableCommand[] {
       const board = engine.player(player).board;
       const grid = engine.map.grid;
    
-      // initial roundbooster setup or pass sub action
-      if (!data.roundBooster || engine.round === Round.SetupRoundBooster) {
-        for (const booster of Object.values(Booster)) {
+      for (const booster of Object.values(Booster)) {
           if (engine.roundBoosters[booster]) {
             boosters.push({
               booster
             });
           }    
+      }
+
+      commands.push(
+        {
+          name: engine.round === Round.SetupRoundBooster ? Command.ChooseRoundBooster : Command.Pass,
+          player,
+          data: { boosters }
         }
+      )
 
-        return [
-          {
-            name: Command.ChooseRoundBooster,
-            player,
-            data: { boosters }
-          }
-        ];
-      };
-
+      if (engine.round === Round.SetupRoundBooster) {
+        return commands;
+      } 
 
       // Add building moves
       {
@@ -199,12 +199,6 @@ export function generate(engine: Engine): AvailableCommand[] {
           });
         }
       }
-
-      // Give the player the ability to pass
-      commands.push({
-        name: Command.Pass,
-        player
-      });
 
       return commands;
     }

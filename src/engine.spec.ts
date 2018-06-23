@@ -67,7 +67,7 @@ describe("Engine", () => {
       p1 build m 4x0
       p2 booster booster1
       p1 booster booster2
-      p1 pass
+      p1 pass booster3
     `);
 
     expect(() => new Engine(moves)).to.not.throw();
@@ -84,7 +84,7 @@ describe("Engine", () => {
       p1 build m 4x0
       p2 booster booster1
       p1 booster booster2
-      p1 pass
+      p1 pass booster3
     `);
 
     expect(() => new Engine(moves)).to.not.throw();
@@ -92,35 +92,35 @@ describe("Engine", () => {
   
   it("should check wrong player order", () => {
     const moves = parseMoves(`
-    init 2 randomSeed
-    p1 faction terrans
-    p2 faction nevlas
-    p1 build m 4x0
-    p2 build m 4x-2
-    p2 build m -4x3
-    p1 build m -7x2
-    p2 booster booster1
-    p1 booster booster2
-    p1 build ts 4x0
-    p2 build ts -4x3
-    p2 pass
+      init 2 randomSeed
+      p1 faction terrans
+      p2 faction nevlas
+      p1 build m 4x0
+      p2 build m 4x-2
+      p2 build m -4x3
+      p1 build m -7x2
+      p2 booster booster1
+      p1 booster booster2
+      p1 build ts 4x0
+      p2 build ts -4x3
+      p2 pass booster3
     `);
     expect(() => new Engine(moves)).to.throw(AssertionError);
   })
 
   it("should allow players to upgrade a mine to a TS, either isolated or not", () => {
     const moves = parseMoves(`
-    init 2 randomSeed
-    p1 faction terrans
-    p2 faction nevlas
-    p1 build m 4x0
-    p2 build m 4x-2
-    p2 build m -4x3
-    p1 build m -7x2
-    p2 booster booster1
-    p1 booster booster2
-    p1 build ts 4x0
-    p2 build ts -4x3  
+      init 2 randomSeed
+      p1 faction terrans
+      p2 faction nevlas
+      p1 build m 4x0
+      p2 build m 4x-2
+      p2 build m -4x3
+      p1 build m -7x2
+      p2 booster booster1
+      p1 booster booster2
+      p1 build ts 4x0
+      p2 build ts -4x3  
     `);
 
     expect(() => new Engine(moves)).to.not.throw();
@@ -163,10 +163,9 @@ describe("Engine", () => {
       p2 booster booster1
       p1 booster booster2
       p1 build ts 2x2
-      p2 pass
-      p2 booster booster4
+      p2 pass booster4
       p1 build ts 4x0
-      p1 pass
+      p1 pass booster1
     `);
 
     expect(() => new Engine(moves)).to.not.throw();
@@ -227,10 +226,8 @@ describe("Engine", () => {
       p2 booster booster1
       p1 booster booster2
       p1 build gf 3x1
-      p2 pass
-      p2 booster booster4
-      p1 pass
-      p1 booster booster1
+      p2 pass booster4
+      p1 pass booster1
       p2 build ts 4x-2
       p1 build m 3x1
     `);
