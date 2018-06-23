@@ -25,7 +25,6 @@ export default class Engine {
   players: Player[];
   availableCommands: AvailableCommand[] = [];
   round: number = -2;
-  turn: number = 0;
   /** Order of players in the turn */
   turnOrder: PlayerEnum[] = [];
   /**
@@ -130,7 +129,7 @@ export default class Engine {
 
   static fromData(data: any) {
     const engine = new Engine();
-    engine.turn = data.turn;
+    engine.round = data.round;
     engine.availableCommands = data.availableCommands;
     engine.map = SpaceMap.fromData(data.map);
     for (let player of data.players) {
