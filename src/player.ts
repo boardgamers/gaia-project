@@ -1,4 +1,4 @@
-import { Faction, Operator, ResearchField, Planet, Building, Resource } from './enums';
+import { Faction, Operator, ResearchField, Planet, Building, Resource, Booster } from './enums';
 import PlayerData from './player-data';
 import Event from './events';
 import { factionBoard, FactionBoard } from './faction-boards';
@@ -8,6 +8,7 @@ import Reward from './reward';
 import { CubeCoordinates } from 'hexagrid';
 import researchTracks from './research-tracks';
 import { terraformingStepsRequired } from './planets';
+import boosts from './tiles/boosters';
 
 const TERRAFORMING_COST = 3;
 
@@ -104,6 +105,12 @@ export default class Player {
     }
   }
 
+  removeEvents(events: Event[]) {
+    for (const event of events) {
+      this.removeEvent(event);
+    }  
+  }
+
   removeEvent(event: Event) {
     let findEvent = this.events[event.operator].findIndex(
       ev => ev.toJSON === event.toJSON
@@ -132,8 +139,28 @@ export default class Player {
     }
   }
 
+  pass(){
+    this.receivePassIncome();
+    // remove the old booster  
+    this.removeEvents( Event.parse( boosts[this.data.roundBooster]));
+    this.data.roundBooster =  undefined;
+  }
+
+  getRoundBooster(roundBooster: Booster){  
+    // add the booster to the the player
+    this.data.roundBooster =  roundBooster;
+    this.loadEvents( Event.parse( boosts[roundBooster]));
+  }
+
   receiveIncome() {
     for (const event of this.events[Operator.Income]) {
+      this.data.gainRewards(event.rewards);
+    }
+  }
+
+  receivePassIncome() {
+    // this is for pass tile income (e.g. rounboosters, adv tiles)
+    for (const event of this.events[Operator.Pass]) {
       this.data.gainRewards(event.rewards);
     }
   }

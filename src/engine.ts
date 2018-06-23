@@ -9,7 +9,9 @@ import {
   Operator,
   Building,
   ResearchField,
-  Planet
+  Planet,
+  Round,
+  Booster
 } from './enums';
 import Event from './events';
 import { CubeCoordinates } from 'hexagrid';
@@ -17,14 +19,19 @@ import { CubeCoordinates } from 'hexagrid';
 import AvailableCommand, {
   generate as generateAvailableCommands
 } from './available-command';
-import factions from './factions';
 import Reward from './reward';
+import boosts from './tiles/boosters';
+import { SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION } from 'constants';
+
 
 export default class Engine {
   map: SpaceMap;
   players: Player[];
+  roundBoosters:  {
+    [key in Booster]: boolean 
+  }  = { booster1: true ,  booster2: true,  booster3: true, booster4: true, booster5: true, booster6: true, booster7: true, booster8: true, booster9: true, booster10: true  }; 
   availableCommands: AvailableCommand[] = [];
-  round: number = -2;
+  round: number = Round.Init;
   turn: number = 0;
   /** Order of players in the turn */
   turnOrder: PlayerEnum[] = [];
@@ -75,7 +82,7 @@ export default class Engine {
   move(move: string) {
     const split = move.trim().split(' ');
 
-    if (this.round === -2) {
+    if (this.round === Round.Init) {
       const command = split[0] as Command;
 
       const available = this.availableCommands;
@@ -83,7 +90,7 @@ export default class Engine {
 
       assert(
         commandNames.includes(command),
-        'Available commands: ' + commandNames.join(', ')
+        'Move ' + move + ' not in Available commands: ' + commandNames.join(', ')
       );
 
       (this[command] as any)(...split.slice(1));
@@ -106,22 +113,19 @@ export default class Engine {
 
       assert(
         this.availableCommand(player, command),
-        'Available commands: ' + commandNames.join(', ')
+        'Move ' + move + ' not in Available commands: ' + commandNames.join(', ')
       );
 
       (this[command] as any)(player as PlayerEnum, ...split.slice(2));
 
+      // Let the next player move based on the command
+      this.moveToNextPlayer(command);
+
       if (this.turnOrder.length === 0) {
         // If all players have passed
         this.endRound();
-      } else {
-        // Let the next player move
-        this.moveToNextPlayer();
-        if (this.currentPlayer === undefined) {
-          this.endRound();
-        }
       }
-    }
+    } 
   }
 
   numberOfPlayersWithFactions(): number {
@@ -140,8 +144,7 @@ export default class Engine {
     return engine;
   }
 
-  endRound() {
-  
+  endRound() { 
     if ( this.round < 6 ) {
       this.beginRound();
 
@@ -153,34 +156,46 @@ export default class Engine {
 
   beginRound() {
     this.round += 1;
-    if (this.round === 0) {
-      // Setup round - add Ivits to the end, before third Xenos
-      const setupTurnOrder = this.players
-        .filter(pl => pl.faction !== Faction.Ivits)
-        .map((pl, i) => i as PlayerEnum);
-      const reverseSetupTurnOrder = setupTurnOrder.slice().reverse();
-      this.turnOrder = setupTurnOrder.concat(reverseSetupTurnOrder);
 
-      const posXenos = this.players.findIndex(
-        pl => pl.faction === Faction.Xenos
-      );
-      if (posXenos !== -1) {
-        this.turnOrder.push(posXenos as PlayerEnum);
-      }
+    switch (this.round) {
+      case Round.SetupBuilding: {
+        // Setup round - add Ivits to the end, before third Xenos
+        const setupTurnOrder = this.players
+          .filter(pl => pl.faction !== Faction.Ivits)
+          .map((pl, i) => i as PlayerEnum);
+        const reverseSetupTurnOrder = setupTurnOrder.slice().reverse();
+        this.turnOrder = setupTurnOrder.concat(reverseSetupTurnOrder);
 
-      const posIvits = this.players.findIndex(
-        pl => pl.faction === Faction.Ivits
-      );
-      if (posIvits !== -1) {
-        this.turnOrder.push(posIvits as PlayerEnum);
-      }
-    } else {
-      // The players play in the order in which they passed or 
-      // First round or faction selection the players are in regular order
-      this.turnOrder = (this.round === 1 || this.round === -1) ? this.players.map((pl, i) => i as PlayerEnum) :
-      this.passedPlayers;
-      this.passedPlayers = [];
-    }
+        const posXenos = this.players.findIndex(
+          pl => pl.faction === Faction.Xenos
+        );
+        if (posXenos !== -1) {
+          this.turnOrder.push(posXenos as PlayerEnum);
+        }
+
+        const posIvits = this.players.findIndex(
+          pl => pl.faction === Faction.Ivits
+        );
+        if (posIvits !== -1) {
+          this.turnOrder.push(posIvits as PlayerEnum);
+        }
+        break;
+      };
+      case Round.SetupFaction:
+      case Round.Round1: {
+        this.turnOrder = this.players.map((pl, i) => i as PlayerEnum);
+        this.passedPlayers = [];
+        break;
+      };
+      case Round.SetupRoundBooster:{
+        this.turnOrder = this.players.map((pl, i) => i as PlayerEnum).reverse();
+        break;
+      };
+      default: {
+        // The players play in the order in which they passed or 
+        this.turnOrder = this.passedPlayers;
+      };
+    };
 
     this.currentPlayer = this.turnOrder[0];
     this.currentPlayerTurnOrderPos = 0;
@@ -190,7 +205,7 @@ export default class Engine {
       this.gaiaPhase();
     };
 
-  }
+  };
 
   incomePhase(){
     for (const player of this.playersInOrder()) {
@@ -210,22 +225,26 @@ export default class Engine {
   }
 
   /** Next player to make a move, after current player makes their move */
-  moveToNextPlayer(): PlayerEnum {
-    if (
-      this.round <= 0 &&
-      this.currentPlayerTurnOrderPos + 1 === this.turnOrder.length
-    ) {
-      // all players played a one round only turn (faction selection and initial buildings)
-      this.currentPlayerTurnOrderPos = undefined;
-      this.currentPlayer = undefined;
-      return;
-    } else {
-      const next = (this.currentPlayerTurnOrderPos + 1) % this.turnOrder.length;
-      this.currentPlayerTurnOrderPos = next;
-      this.currentPlayer = this.turnOrder[next];
-      return;
-    }
+  moveToNextPlayer(command : Command): PlayerEnum {
+    if ( command === Command.ChooseRoundBooster || this.round === Round.SetupFaction || this.round === Round.SetupBuilding ) {
+        // happens in round SetupROundBooster and standard rounds after pass move
+        const playerPos = this.currentPlayerTurnOrderPos;
+        this.passedPlayers.push(this.currentPlayer);
+        this.turnOrder.splice( playerPos, 1); 
+        // if latest player is passing
+        const newPlayerPos = playerPos + 1 > this.turnOrder.length ? 0 : playerPos;
+        this.currentPlayer = this.turnOrder[newPlayerPos];  
+        this.currentPlayerTurnOrderPos = newPlayerPos;
+
+    } else if ( command !== Command.Pass) {
+        // Command.PAss stays with the current player
+        const next = (this.currentPlayerTurnOrderPos + 1) % this.turnOrder.length;
+        this.currentPlayerTurnOrderPos = next;
+        this.currentPlayer = this.turnOrder[next];
+        return;
+      } 
   }
+  
 
   playersInOrder(): Player[] {
     return this.turnOrder.map(i => this.players[i]);
@@ -237,6 +256,8 @@ export default class Engine {
     seed = seed || 'defaultSeed';
 
     this.map = new SpaceMap(nbPlayers, seed);
+
+    // TODO remove 10- ( players + 3) boosters 
 
     this.players = [];
 
@@ -254,6 +275,18 @@ export default class Engine {
     );
 
     this.players[player].loadFaction(faction as Faction);
+  }
+
+  [Command.ChooseRoundBooster](player: PlayerEnum, booster: Booster) {
+    const { boosters } = this.availableCommand(player, Command.ChooseRoundBooster).data;
+    const boost = boosters.find(boo => boo.booster === booster);
+
+    assert(boost,
+      `${booster} is not in the available boosters`
+    );
+    
+    this.roundBoosters[booster] = false;
+    this.players[player].getRoundBooster(booster);
   }
 
   [Command.Build](player: PlayerEnum, building: Building, location: string) {
@@ -293,7 +326,7 @@ export default class Engine {
   }
 
   [Command.Pass](player: PlayerEnum) {
-    this.passedPlayers.push(player);
-    this.turnOrder.splice(this.currentPlayerTurnOrderPos, 1);
+    this.roundBoosters[this.players[player].data.roundBooster] = true;
+    this.players[player].pass();
   }
 }
