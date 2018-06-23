@@ -26,8 +26,12 @@ export default class Engine {
     [key in Booster]: boolean 
   }  = { booster1: true ,  booster2: true,  booster3: true, booster4: true, booster5: true, booster6: true, booster7: true, booster8: true, booster9: true, booster10: true  }; 
   availableCommands: AvailableCommand[] = [];
+<<<<<<< HEAD
   round: number = Round.Init;
   turn: number = 0;
+=======
+  round: number = -2;
+>>>>>>> b40c19a4186ed30b3464116b266dfae8bc524f1b
   /** Order of players in the turn */
   turnOrder: PlayerEnum[] = [];
   /**
@@ -129,7 +133,7 @@ export default class Engine {
 
   static fromData(data: any) {
     const engine = new Engine();
-    engine.turn = data.turn;
+    engine.round = data.round;
     engine.availableCommands = data.availableCommands;
     engine.map = SpaceMap.fromData(data.map);
     for (let player of data.players) {
@@ -215,6 +219,9 @@ export default class Engine {
       if (hex.data.planet === Planet.Transdim  && hex.data.player !== undefined && hex.data.building === Building.GaiaFormer ) {
         hex.data.planet = Planet.Gaia;
       }
+    }
+    for (const player of this.playersInOrder()) {
+      player.gaiaPhase();
     }
     //TODO manage gaia phase actions for specific factions
   }

@@ -63,8 +63,8 @@ export default class Player {
     //gaiaforming discount
     let addedCost = "";
     if (building === Building.GaiaFormer){
-      const gaiaformingDiscount =  this.data.gaiaformers > 1  ? this.data.gaiaformers :0 ;
-      addedCost = `-${gaiaformingDiscount}${Resource.MovePower}`
+      const gaiaformingDiscount =  this.data.gaiaformers > 1  ? this.data.gaiaformers : 0;
+      addedCost = `-${gaiaformingDiscount}${Resource.GainToken}`
     };
     
     //habiltability costs
@@ -158,10 +158,22 @@ export default class Player {
     }
   }
 
+<<<<<<< HEAD
   receivePassIncome() {
     // this is for pass tile income (e.g. rounboosters, adv tiles)
     for (const event of this.events[Operator.Pass]) {
       this.data.gainRewards(event.rewards);
     }
+=======
+  gaiaPhase() {
+    /* Move gaia power tokens to regular power bowls */
+    // Terrans move directly to power bowl 2
+    if (this.faction === Faction.Terrans) {
+      this.data.power.bowl2 += this.data.power.gaia;
+    } else {
+      this.data.power.bowl1 += this.data.power.gaia;
+    }
+    this.data.power.gaia = 0;
+>>>>>>> b40c19a4186ed30b3464116b266dfae8bc524f1b
   }
 }
