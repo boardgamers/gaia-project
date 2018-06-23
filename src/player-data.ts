@@ -1,6 +1,6 @@
 import Reward from "./reward";
 import { Resource } from "..";
-import { ResearchField, Building } from "./enums";
+import { ResearchField, Building, Booster } from "./enums";
 import { EventEmitter } from "eventemitter3";
 import { CubeCoordinates } from "hexagrid";
 
@@ -40,6 +40,7 @@ export default class PlayerData extends EventEmitter {
   range: number = 1;
   gaiaformers: number = 0;
   terraformSteps: number = 0;
+  roundBooster: Booster;
 
   // Coordinates occupied by buildings
   occupied: CubeCoordinates[] = [];
@@ -56,6 +57,7 @@ export default class PlayerData extends EventEmitter {
       range: this.range,
       gaiaformers: this.gaiaformers,
       terraformSteps: this.terraformSteps,
+      roundBooster: this.roundBooster,
       occupied: this.occupied
     }
 

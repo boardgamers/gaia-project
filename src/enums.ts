@@ -106,6 +106,7 @@ export enum Faction {
 export enum Command {
   Init = "init",
   ChooseFaction = "faction",
+  ChooseRoundBooster = "booster",
   Build = "build",
   Pass = "pass",
   UpgradeResearch = "up",
@@ -121,4 +122,30 @@ export enum Player {
   Player3,
   Player4,
   Player5
+}
+
+export enum Round {
+  Init = -3,
+  SetupFaction=-2,
+  SetupBuilding=-1,
+  SetupRoundBooster=0,
+  Round1=1,
+  Round2=2,
+  Round3=3,
+  Round4=4,
+  Round5=5,
+  Round6=6
+}
+
+export enum Booster {
+  Booster1= "booster1",
+  Booster2= "booster2",
+  Booster3= "booster3",
+  Booster4= "booster4",
+  Booster5= "booster5",
+  Booster6= "booster6",
+  Booster7= "booster7",
+  Booster8= "booster8",
+  Booster9= "booster9",
+  Booster10= "booster10"
 }

@@ -55,8 +55,23 @@ describe("Engine", () => {
 
     expect(() => new Engine(moves)).to.not.throw();
   });
+ 
+  it("should allow to select round boosters  without errors", () => {
+    const moves = parseMoves(`
+      init 2 randomSeed
+      p1 faction lantids
+      p2 faction gleens
+      p1 build m 2x2
+      p2 build m 0x3
+      p2 build m 3x0
+      p1 build m 4x0
+      p2 booster booster1
+      p1 booster booster2
+      p1 pass booster3
+    `);
 
-
+    expect(() => new Engine(moves)).to.not.throw();
+  });
 
   it("should allow players to pass", () => {
     const moves = parseMoves(`
@@ -67,7 +82,9 @@ describe("Engine", () => {
       p2 build m 0x3
       p2 build m 3x0
       p1 build m 4x0
-      p1 pass
+      p2 booster booster1
+      p1 booster booster2
+      p1 pass booster3
     `);
 
     expect(() => new Engine(moves)).to.not.throw();
@@ -75,31 +92,35 @@ describe("Engine", () => {
   
   it("should check wrong player order", () => {
     const moves = parseMoves(`
-    init 2 randomSeed
-    p1 faction terrans
-    p2 faction nevlas
-    p1 build m 4x0
-    p2 build m 4x-2
-    p2 build m -4x3
-    p1 build m -7x2
-    p1 build ts 4x0
-    p2 build ts -4x3
-    p2 pass
+      init 2 randomSeed
+      p1 faction terrans
+      p2 faction nevlas
+      p1 build m 4x0
+      p2 build m 4x-2
+      p2 build m -4x3
+      p1 build m -7x2
+      p2 booster booster1
+      p1 booster booster2
+      p1 build ts 4x0
+      p2 build ts -4x3
+      p2 pass booster3
     `);
     expect(() => new Engine(moves)).to.throw(AssertionError);
   })
 
   it("should allow players to upgrade a mine to a TS, either isolated or not", () => {
     const moves = parseMoves(`
-    init 2 randomSeed
-    p1 faction terrans
-    p2 faction nevlas
-    p1 build m 4x0
-    p2 build m 4x-2
-    p2 build m -4x3
-    p1 build m -7x2
-    p1 build ts 4x0
-    p2 build ts -4x3  
+      init 2 randomSeed
+      p1 faction terrans
+      p2 faction nevlas
+      p1 build m 4x0
+      p2 build m 4x-2
+      p2 build m -4x3
+      p1 build m -7x2
+      p2 booster booster1
+      p1 booster booster2
+      p1 build ts 4x0
+      p2 build ts -4x3  
     `);
 
     expect(() => new Engine(moves)).to.not.throw();
@@ -118,6 +139,8 @@ describe("Engine", () => {
       p2 build m 0x3
       p2 build m 3x0
       p1 build m 2x2
+      p2 booster booster1
+      p1 booster booster2
       p1 build ts 2x2
       p2 build ts 0x3
       p1 build PI 2x2
@@ -137,10 +160,12 @@ describe("Engine", () => {
       p2 build m 0x3
       p2 build m 3x0
       p1 build m 4x0
+      p2 booster booster1
+      p1 booster booster2
       p1 build ts 2x2
-      p2 pass
+      p2 pass booster4
       p1 build ts 4x0
-      p1 pass
+      p1 pass booster1
     `);
 
     expect(() => new Engine(moves)).to.not.throw();
@@ -155,6 +180,8 @@ describe("Engine", () => {
       p2 build m 0x3
       p2 build m 3x0
       p1 build m 4x0
+      p2 booster booster1
+      p1 booster booster2
       p1 build m -7x2
     `);
 
@@ -173,6 +200,9 @@ describe("Engine", () => {
       p3 build m 1x-1
       p2 build m -5x4
       p1 build m 2x2
+      p3 booster booster1
+      p2 booster booster2
+      p1 booster booster4
     `);
 
     const engine = new Engine(moves);
@@ -184,7 +214,7 @@ describe("Engine", () => {
     expect(engine.players[Player.Player1].data.qics).to.equal(2);
   });
 
-  it ("should allow to place a gaia former and next round checks for transformation to gaia planet", () => {
+  it ("should allow to place a gaia former and next round checks for transformation to gaia planet, pass is checking booster availablity", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans
@@ -193,9 +223,11 @@ describe("Engine", () => {
       p2 build m 4x-2
       p2 build m 2x-2
       p1 build m 4x0
+      p2 booster booster1
+      p1 booster booster2
       p1 build gf 3x1
-      p2 pass
-      p1 pass
+      p2 pass booster4
+      p1 pass booster1
       p2 build ts 4x-2
       p1 build m 3x1
     `);
