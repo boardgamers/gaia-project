@@ -163,6 +163,7 @@ export default class PlayerData extends EventEmitter {
   movePowerToGaia(power: number) {
     const bowl1ToGaia = Math.min(power, this.power.bowl1);
     this.power.gaia += bowl1ToGaia;
+    this.power.bowl1 -= bowl1ToGaia;
     power -= bowl1ToGaia;
 
     if (power <= 0) {
@@ -171,6 +172,7 @@ export default class PlayerData extends EventEmitter {
 
     const bowl2ToGaia = Math.min(power, this.power.bowl2);
     this.power.gaia += bowl2ToGaia;
+    this.power.bowl2 -= bowl2ToGaia;
     power -= bowl2ToGaia
 
     if (power <= 0) {
@@ -180,6 +182,7 @@ export default class PlayerData extends EventEmitter {
     const bowl3ToGaia = Math.min(power, this.power.bowl2);
     this.power.gaia += bowl3ToGaia;
     power -= bowl3ToGaia
+    this.power.bowl3 -= bowl3ToGaia;
 
    if (power <= 0) {
       return;
