@@ -158,13 +158,13 @@ export default class Player {
     }
   }
 
-<<<<<<< HEAD
   receivePassIncome() {
     // this is for pass tile income (e.g. rounboosters, adv tiles)
     for (const event of this.events[Operator.Pass]) {
       this.data.gainRewards(event.rewards);
     }
-=======
+  }
+
   gaiaPhase() {
     /* Move gaia power tokens to regular power bowls */
     // Terrans move directly to power bowl 2
@@ -174,6 +174,5 @@ export default class Player {
       this.data.power.bowl1 += this.data.power.gaia;
     }
     this.data.power.gaia = 0;
->>>>>>> b40c19a4186ed30b3464116b266dfae8bc524f1b
   }
 }

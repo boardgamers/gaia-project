@@ -26,12 +26,7 @@ export default class Engine {
     [key in Booster]: boolean 
   }  = { booster1: true ,  booster2: true,  booster3: true, booster4: true, booster5: true, booster6: true, booster7: true, booster8: true, booster9: true, booster10: true  }; 
   availableCommands: AvailableCommand[] = [];
-<<<<<<< HEAD
   round: number = Round.Init;
-  turn: number = 0;
-=======
-  round: number = -2;
->>>>>>> b40c19a4186ed30b3464116b266dfae8bc524f1b
   /** Order of players in the turn */
   turnOrder: PlayerEnum[] = [];
   /**
