@@ -137,4 +137,15 @@ export default class Player {
       this.data.gainRewards(event.rewards);
     }
   }
+
+  gaiaPhase() {
+    /* Move gaia power tokens to regular power bowls */
+    // Terrans move directly to power bowl 2
+    if (this.faction === Faction.Terrans) {
+      this.data.power.bowl2 += this.data.power.gaia;
+    } else {
+      this.data.power.bowl1 += this.data.power.gaia;
+    }
+    this.data.power.gaia = 0;
+  }
 }

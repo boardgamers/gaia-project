@@ -202,6 +202,9 @@ export default class Engine {
         hex.data.planet = Planet.Gaia;
       }
     }
+    for (const player of this.playersInOrder()) {
+      player.gaiaPhase();
+    }
     //TODO manage gaia phase actions for specific factions
   }
 
