@@ -66,7 +66,6 @@ export function generate(engine: Engine): AvailableCommand[] {
     default : {
       // We are in a regular round
       const commands = [];
-      const boosters = [];
       const player = engine.currentPlayer;
 
       assert(player !== undefined, "Problem with the engine, player to play is unknown");
@@ -75,13 +74,7 @@ export function generate(engine: Engine): AvailableCommand[] {
       const board = engine.player(player).board;
       const grid = engine.map.grid;
    
-      for (const booster of Object.values(Booster)) {
-          if (engine.roundBoosters[booster]) {
-            boosters.push({
-              booster
-            });
-          }    
-      }
+      const boosters = Object.values(Booster).filter(booster => engine.roundBoosters[booster]);
 
       commands.push(
         {

@@ -280,9 +280,8 @@ export default class Engine {
 
   [Command.ChooseRoundBooster](player: PlayerEnum, booster: Booster, fromCommand: Command = Command.ChooseRoundBooster ) {
     const { boosters } = this.availableCommand(player, fromCommand).data;
-    const boost = boosters.find(boo => boo.booster === booster);
-
-    assert(boost,
+    
+    assert(boosters.includes(booster),
       `${booster} is not in the available boosters`
     );
     
