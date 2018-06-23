@@ -55,23 +55,6 @@ describe("Engine", () => {
 
     expect(() => new Engine(moves)).to.not.throw();
   });
- 
-  it("should allow to select round boosters  without errors", () => {
-    const moves = parseMoves(`
-      init 2 randomSeed
-      p1 faction lantids
-      p2 faction gleens
-      p1 build m 2x2
-      p2 build m 0x3
-      p2 build m 3x0
-      p1 build m 4x0
-      p2 booster booster1
-      p1 booster booster2
-      p1 pass booster3
-    `);
-
-    expect(() => new Engine(moves)).to.not.throw();
-  });
 
   it("should allow players to pass", () => {
     const moves = parseMoves(`
@@ -82,9 +65,9 @@ describe("Engine", () => {
       p2 build m 0x3
       p2 build m 3x0
       p1 build m 4x0
-      p2 booster booster1
-      p1 booster booster2
-      p1 pass booster3
+      p2 booster booster2
+      p1 booster booster3
+      p1 pass booster5
     `);
 
     expect(() => new Engine(moves)).to.not.throw();
@@ -99,11 +82,11 @@ describe("Engine", () => {
       p2 build m 4x-2
       p2 build m -4x3
       p1 build m -7x2
-      p2 booster booster1
-      p1 booster booster2
+      p2 booster booster2
+      p1 booster booster3
       p1 build ts 4x0
       p2 build ts -4x3
-      p2 pass booster3
+      p2 pass booster5
     `);
     expect(() => new Engine(moves)).to.throw(AssertionError);
   })
@@ -117,8 +100,8 @@ describe("Engine", () => {
       p2 build m 4x-2
       p2 build m -4x3
       p1 build m -7x2
-      p2 booster booster1
-      p1 booster booster2
+      p2 booster booster2
+      p1 booster booster3
       p1 build ts 4x0
       p2 build ts -4x3  
     `);
@@ -139,8 +122,8 @@ describe("Engine", () => {
       p2 build m 0x3
       p2 build m 3x0
       p1 build m 2x2
-      p2 booster booster1
-      p1 booster booster2
+      p2 booster booster2
+      p1 booster booster3
       p1 build ts 2x2
       p2 build ts 0x3
       p1 build PI 2x2
@@ -160,12 +143,12 @@ describe("Engine", () => {
       p2 build m 0x3
       p2 build m 3x0
       p1 build m 4x0
-      p2 booster booster1
-      p1 booster booster2
+      p2 booster booster2
+      p1 booster booster3
       p1 build ts 2x2
-      p2 pass booster4
+      p2 pass booster5
       p1 build ts 4x0
-      p1 pass booster1
+      p1 pass booster2
     `);
 
     expect(() => new Engine(moves)).to.not.throw();
@@ -180,8 +163,8 @@ describe("Engine", () => {
       p2 build m 0x3
       p2 build m 3x0
       p1 build m 4x0
-      p2 booster booster1
-      p1 booster booster2
+      p2 booster booster2
+      p1 booster booster3
       p1 build m -7x2
     `);
 
@@ -202,16 +185,16 @@ describe("Engine", () => {
       p1 build m 2x2
       p3 booster booster1
       p2 booster booster2
-      p1 booster booster4
+      p1 booster booster3
     `);
 
     const engine = new Engine(moves);
 
-    expect(engine.players[Player.Player1].data.qics).to.equal(1);
+    expect(engine.players[Player.Player1].data.qics).to.equal(2);
     
     engine.move("p1 up nav");
 
-    expect(engine.players[Player.Player1].data.qics).to.equal(2);
+    expect(engine.players[Player.Player1].data.qics).to.equal(3);
   });
 
   it ("should allow to place a gaia former and next round checks for transformation to gaia planet, pass is checking booster availablity", () => {
@@ -223,11 +206,11 @@ describe("Engine", () => {
       p2 build m 4x-2
       p2 build m 2x-2
       p1 build m 4x0
-      p2 booster booster1
-      p1 booster booster2
+      p2 booster booster2
+      p1 booster booster3
       p1 build gf 3x1
-      p2 pass booster4
-      p1 pass booster1
+      p2 pass booster5
+      p1 pass booster2
       p2 build ts 4x-2
       p1 build m 3x1
     `);
@@ -249,6 +232,69 @@ describe("Engine", () => {
 
   it("should give a valid JSON even when not initialized", () => {
     expect(() => JSON.stringify(new Engine([]))).to.not.throw();
+  });
+
+  describe("boosters", () => {
+    it("should have the correct number of round boosters depending on the number of players", () => {
+      const engine2 = new Engine(['init 2 randomSeed']);
+      const engine3 = new Engine(['init 3 randomSeed']);
+      const engine4 = new Engine(['init 4 randomSeed']);
+      const engine5 = new Engine(['init 5 randomSeed']);
+  
+      expect(Object.keys(engine2.roundBoosters)).to.have.length(5);
+      expect(Object.keys(engine3.roundBoosters)).to.have.length(6);
+      expect(Object.keys(engine4.roundBoosters)).to.have.length(7);
+      expect(Object.keys(engine5.roundBoosters)).to.have.length(8);
+    });
+    
+    it("should allow to select round boosters  without errors", () => {
+      const moves = parseMoves(`
+        init 2 randomSeed
+        p1 faction lantids
+        p2 faction gleens
+        p1 build m 2x2
+        p2 build m 0x3
+        p2 build m 3x0
+        p1 build m 4x0
+        p2 booster booster2
+        p1 booster booster3
+        p1 pass booster5
+      `);
+  
+      expect(() => new Engine(moves)).to.not.throw();
+    });
+
+    it("should throw when selecting invalid round booster", () => {
+      const moves = parseMoves(`
+        init 2 randomSeed
+        p1 faction lantids
+        p2 faction gleens
+        p1 build m 2x2
+        p2 build m 0x3
+        p2 build m 3x0
+        p1 build m 4x0
+        p2 booster booster2
+        p1 booster booster1
+      `);
+  
+      expect(() => new Engine(moves)).to.throw(AssertionError);
+    });
+
+    it("should throw when selecting taken round booster", () => {
+      const moves = parseMoves(`
+        init 2 randomSeed
+        p1 faction lantids
+        p2 faction gleens
+        p1 build m 2x2
+        p2 build m 0x3
+        p2 build m 3x0
+        p1 build m 4x0
+        p2 booster booster2
+        p1 booster booster2
+      `);
+  
+      expect(() => new Engine(moves)).to.throw(AssertionError);
+    });
   });
 });
 

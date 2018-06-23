@@ -2,6 +2,7 @@ import SpaceMap from './map';
 import * as assert from 'assert';
 import * as _ from 'lodash';
 import Player from './player';
+import * as shuffleSeed from "shuffle-seed";
 import {
   Faction,
   Command,
@@ -23,8 +24,8 @@ export default class Engine {
   map: SpaceMap;
   players: Player[];
   roundBoosters:  {
-    [key in Booster]: boolean 
-  }  = { booster1: true ,  booster2: true,  booster3: true, booster4: true, booster5: true, booster6: true, booster7: true, booster8: true, booster9: true, booster10: true  }; 
+    [key in Booster]?: boolean 
+  } = { }; 
   availableCommands: AvailableCommand[] = [];
   round: number = Round.Init;
   /** Order of players in the turn */
@@ -253,7 +254,11 @@ export default class Engine {
 
     this.map = new SpaceMap(nbPlayers, seed);
 
-    // TODO remove 10- ( players + 3) boosters 
+    // Choose nbPlayers+3 boosters as part of the pool
+    const boosters = shuffleSeed.shuffle(Object.values(Booster), this.map.rng()).slice(0, nbPlayers+3);
+    for (const booster of boosters) {
+      this.roundBoosters[booster] = true;
+    }
 
     this.players = [];
 
