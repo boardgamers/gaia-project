@@ -107,9 +107,9 @@ export default class SpaceMap {
     return SpaceMap.configuration(this.nbPlayers);
   }
 
-  distance(hex1, hex2) {
-    const h1 = hex1.toString();
-    const h2 = hex2.toString();
+  distance(hex1: CubeCoordinates, hex2: CubeCoordinates) {
+    const h1 = `${hex1.q}x${hex1.r}`;
+    const h2 = `${hex2.q}x${hex2.r}`;
 
     let distance = _.get(this.distanceCache, `${h1}.${h2}`) as any as number;
 

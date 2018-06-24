@@ -190,6 +190,29 @@ describe("Engine", () => {
     expect(() => new Engine(moves)).to.throw();
   });
 
+  it ("should not spend a qic when building a mine nearby", () => {
+    const moves = parseMoves(`
+      init 2 randomSeed
+      p1 faction terrans
+      p2 faction bescods
+      p1 build m 2x2
+      p2 build m -1x3
+      p2 build m -3x0
+      p1 build m 4x-6
+      p2 booster booster2
+      p1 booster booster3
+      p1 up nav
+    `);
+
+    const engine = new Engine(moves);
+
+    expect(engine.player(Player.Player2).data.qics).to.equal(1);
+
+    engine.move("p2 build m 0x3");
+
+    expect(engine.player(Player.Player2).data.qics).to.equal(1);
+  });
+
   it ("should grant a qic when upgrading navigation", () => {
     const moves = parseMoves(`
       init 3 randomSeed

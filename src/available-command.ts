@@ -1,4 +1,4 @@
-import { Command, Faction, Building, ResearchField, Planet, Round, Booster, Resource } from './enums';
+import { Command, Faction, Building, ResearchField, Planet, Round, Booster, Resource, Player } from './enums';
 import Engine from './engine';
 import * as _ from 'lodash';
 import factions from './factions';
