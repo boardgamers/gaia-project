@@ -262,8 +262,9 @@ function updatePlayerInfo() {
 
     const info = [
       `<b>Player ${pl+1}</b> - ${faction} ${passed}`,
-      `${data.victoryPoints} vp, ${data.credits} c, ${data.ores} o, ${data.knowledge} k, ${data.qics} qic, [${data.power.gaia}] ${data.power.bowl1}/${data.power.bowl2}/${data.power.bowl3} pw`,
-      `range: ${data.range}, gaia-form level: ${data.terraformSteps}`
+      `${data.victoryPoints}vp, ${data.credits}c, ${data.ores}o, ${data.knowledge}k, ${data.qics}q, [${data.power.gaia}] ${data.power.bowl1}/${data.power.bowl2}/${data.power.bowl3} pw`,
+      `range: ${data.range}, gaia-form level: ${data.terraformSteps}`,
+      `income: ${player.income.replace(/,/g, ', ')}`
     ];
 
     $(panel).html(info.join('<br>'));
