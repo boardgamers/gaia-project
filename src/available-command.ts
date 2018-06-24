@@ -73,7 +73,7 @@ export function generate(engine: Engine): AvailableCommand[] {
 
       const data = engine.player(player).data;
       const board = engine.player(player).board;
-      const grid = engine.map.grid;
+      const map = engine.map;
    
       const boosters = Object.values(Booster).filter(booster => engine.roundBoosters[booster]);
 
@@ -117,7 +117,7 @@ export function generate(engine: Engine): AvailableCommand[] {
               for (const pl of engine.players) {
                 if (pl !== engine.player(player)) {
                   for (const loc of pl.data.occupied) {
-                    if (grid.distance(loc.q, loc.r, hex.q, hex.r) < ISOLATED_DISTANCE) {
+                    if (map.distance(loc, hex) < ISOLATED_DISTANCE) {
                       return false;
                     }
                   }
@@ -143,7 +143,7 @@ export function generate(engine: Engine): AvailableCommand[] {
           } else {
             // planet without building
             // Check if the range is enough to access the planet
-            const distance = _.min(data.occupied.map(loc => grid.distance(hex.q, hex.r, loc.q, loc.r)));
+            const distance = _.min(data.occupied.map(loc => map.distance(hex, loc)));
             const qicNeeded = Math.max(Math.ceil( (distance - data.range) / QIC_RANGE_UPGRADE), 0);
 
             const building = hex.data.planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine  ;

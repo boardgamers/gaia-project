@@ -1,6 +1,7 @@
 import {Grid, Hex, CubeCoordinates} from "hexagrid";
 import * as seedrandom from "seedrandom";
 import * as shuffleSeed from "shuffle-seed";
+import * as _ from "lodash";
 import Sector, { GaiaHexData } from "./sector";
 
 // Data: from outer ring to inside ring, starting from a corner
@@ -50,6 +51,7 @@ export default class SpaceMap {
   rng: seedrandom.prng;
   nbPlayers: number;
   grid: Grid<GaiaHexData>; // hexagrid
+  distanceCache: {[coord: string]: {[coord: string]: number}} = {};
 
   constructor(nbPlayers ?: number, seed ?: string) {
     if (nbPlayers === undefined) {
@@ -103,6 +105,24 @@ export default class SpaceMap {
 
   configuration() {
     return SpaceMap.configuration(this.nbPlayers);
+  }
+
+  distance(hex1, hex2) {
+    const h1 = hex1.toString();
+    const h2 = hex2.toString();
+
+    let distance = _.get(this.distanceCache, `${h1}.${h2}`) as any as number;
+
+    if (distance !== undefined) {
+      return distance;
+    }
+
+    distance = this.grid.distance(hex1.q, hex1.r, hex2.q, hex2.r);
+
+    _.set(this.distanceCache, `${h1}.${h2}`, distance);
+    _.set(this.distanceCache, `${h2}.${h1}`, distance);
+
+    return distance;
   }
 
   static configuration(nbPlayers: number) {
