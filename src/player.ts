@@ -32,7 +32,8 @@ export default class Player {
   toJSON() {
     return {
       faction: this.faction,
-      data: this.data
+      data: this.data,
+      income: Reward.toString(Reward.merge([].concat(...this.events[Operator.Income].map(event => event.rewards))), true)
     };
   }
 
