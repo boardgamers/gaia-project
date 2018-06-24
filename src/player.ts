@@ -54,30 +54,35 @@ export default class Player {
     return factions.planet(this.faction);
   }
 
-  canBuild(targetPlanet: Planet, building: Building, isolated = true) : Reward[] {
+  canBuild(targetPlanet: Planet, building: Building, {isolated, addedCost}: {isolated?: boolean, addedCost?: Reward[]}) : Reward[] {
     if (this.data[building] >= (building === Building.GaiaFormer ? this.data.gaiaformers : this.board.maxBuildings(building))) {
       // Too many buildings of the same kind
       return undefined;
     }
+
+    if (!addedCost) {
+      addedCost = [];
+    }
+
+    if (!this.data.canPay(addedCost)) {
+      return undefined;
+    }
     
     //gaiaforming discount
-    let addedCost = "";
     if (building === Building.GaiaFormer){
       const gaiaformingDiscount =  this.data.gaiaformers > 1  ? this.data.gaiaformers : 0;
-      addedCost = `-${gaiaformingDiscount}${Resource.GainToken}`
-    };
-    
-    //habiltability costs
-    if (building === Building.Mine ){
+      addedCost.push(new Reward(-gaiaformingDiscount, Resource.GainToken));
+    } else if (building === Building.Mine){
+      //habiltability costs
      if ( targetPlanet === Planet.Gaia) {
-        addedCost = "1q";
+        addedCost.push(new Reward("1q"));
       } else { // Get the number of terraforming steps to pay discounting terraforming track
         const steps = terraformingStepsRequired(factions[this.faction].planet, targetPlanet); 
-        addedCost = `${(TERRAFORMING_COST - this.data.terraformSteps)*steps}${Resource.Ore}`;
+        addedCost.push(new Reward((TERRAFORMING_COST - this.data.terraformSteps)*steps, Resource.Ore));
       }
     };
 
-    const cost = Reward.merge([].concat( this.board.cost(targetPlanet, building, isolated), [new Reward( addedCost)]));
+    const cost = Reward.merge([].concat(this.board.cost(targetPlanet, building, isolated), addedCost));
     return this.data.canPay(cost) ? cost : undefined;
   }
 
