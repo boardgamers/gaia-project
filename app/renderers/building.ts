@@ -6,7 +6,7 @@ export default class BuildingRenderer extends PIXI.Graphics {
   constructor(building: Building, faction:Faction, scale: number, border: number) {
     super();
 
-    this.lineStyle(border*2, 0x303030);
+    this.lineStyle(border*2, (faction === Faction.Bescods || faction === Faction.Firaks) ? 0xc0c0c0 : 0x303030);
     this.beginFill(factionColor(faction));
 
     switch (building) {
