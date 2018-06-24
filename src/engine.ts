@@ -11,7 +11,8 @@ import {
   ResearchField,
   Planet,
   Round,
-  Booster
+  Booster,
+  Turn
 } from './enums';
 import { CubeCoordinates } from 'hexagrid';
 
@@ -28,6 +29,7 @@ export default class Engine {
   } = { }; 
   availableCommands: AvailableCommand[] = [];
   round: number = Round.Init;
+  turn: number = Turn.Generic;
   /** Order of players in the turn */
   turnOrder: PlayerEnum[] = [];
   /**
@@ -113,13 +115,7 @@ export default class Engine {
 
       (this[command] as any)(player as PlayerEnum, ...split.slice(2));
 
-      // Let the next player move based on the command
-      this.moveToNextPlayer(command);
-
-      if (this.turnOrder.length === 0) {
-        // If all players have passed
-        this.endRound();
-      }
+      this.endTurn(command);
     } 
   }
 
@@ -137,6 +133,16 @@ export default class Engine {
     }
 
     return engine;
+  }
+
+  endTurn(command : Command) {
+    // Let the next player move based on the command
+    this.moveToNextPlayer(command);
+
+    if (this.turnOrder.length === 0) {
+      // If all players have passed
+      this.endRound();
+    }
   }
 
   endRound() { 
@@ -331,4 +337,11 @@ export default class Engine {
     this.players[player].pass();
     (this[Command.ChooseRoundBooster] as any)(player, booster, Command.Pass);
   }
+
+  [Command.Leech](player: PlayerEnum) {
+  }
+
+  [Command.DeclineLeech](player: PlayerEnum) {
+  }
+
 }

@@ -266,7 +266,7 @@ describe("Engine", () => {
       expect(Object.keys(engine5.roundBoosters)).to.have.length(8);
     });
 
-    it("should allow to select round boosters  without errors", () => {
+    it("should allow to select round boosters without errors", () => {
       const moves = parseMoves(`
         init 2 randomSeed
         p1 faction lantids
