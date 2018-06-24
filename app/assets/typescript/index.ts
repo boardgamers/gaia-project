@@ -229,6 +229,8 @@ function updatePlayerInfo() {
   if (!lastData.players) {
     return;
   }
+
+  $("#round").text(`Round ${Math.max(lastData.round, 0)}`);
   
   const playerOrder = lastData.round <= 0 ? lastData.players.map((pl, i) => i) : lastData.turnOrder.concat(lastData.passedPlayers);
 
@@ -257,8 +259,8 @@ function updatePlayerInfo() {
 
     const info = [
       `<b>Player ${pl+1}</b> - ${faction} ${passed}`,
-      `vp: ${data.victoryPoints}, c: ${data.credits}, o: ${data.ores}, q: ${data.qics}, k: ${data.knowledge}`,
-      `<b>Power</b> - gaia: ${data.power.gaia}, bowl 1: ${data.power.bowl1}, bowl 2: ${data.power.bowl2}, bowl 3: ${data.power.bowl3}`,
+      `${data.victoryPoints} vp, ${data.credits} c, ${data.ores} o, ${data.knowledge} k, ${data.qics} qic, [${data.power.gaia}] ${data.power.bowl1}/${data.power.bowl2}/${data.power.bowl3} pw`,
+      `range: ${data.range}, gaia-form level: ${data.terraformSteps}`
     ];
 
     $(panel).html(info.join('<br>'));
