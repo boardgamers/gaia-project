@@ -12,9 +12,12 @@ import {
   Planet,
   Round,
   Booster,
-  Turn
+  Turn,
+  Resource
 } from './enums';
 import { CubeCoordinates } from 'hexagrid';
+
+const ISOLATED_DISTANCE = 3;
 
 import AvailableCommand, {
   generate as generateAvailableCommands
@@ -32,6 +35,7 @@ export default class Engine {
   turn: number = Turn.Generic;
   /** Order of players in the turn */
   turnOrder: PlayerEnum[] = [];
+  passiveChargeCommands: AvailableCommand[] = [];
   /**
    * Players who have passed, in order. Will be used to determine next round's
    * order
@@ -136,7 +140,12 @@ export default class Engine {
   }
 
   endTurn(command : Command) {
-    // Let the next player move based on the command
+    // subactions :  checks if the player has to do another action
+    // build can need tech tile
+    // tech tile can need to advance research
+
+
+    // if not subactions Let the next player move based on the command
     this.moveToNextPlayer(command);
 
     if (this.turnOrder.length === 0) {
@@ -229,12 +238,49 @@ export default class Engine {
     //TODO manage gaia phase actions for specific factions
   }
 
+  leechingPhase(player: PlayerEnum, location: CubeCoordinates){
+    // exclude setiup rounds
+    if (this.round <=0) {
+      return;
+    } 
+    // all players excluded leecher
+    this.passiveChargeCommands = [];
+
+    for (const pl of this.players){     
+      if ( pl !== this.player(player)){
+        let leech = 0;
+        for (const loc of pl.data.occupied) {
+          if (this.map.grid.distance(loc.q, loc.r, location.q, location.r) < ISOLATED_DISTANCE) {
+            leech = Math.max(leech, pl.buildingValue( this.map.grid.get(loc.q, loc.r).data.building, this.map.grid.get(loc.q, loc.r).data.planet))
+          }
+        }
+        leech =  Math.min( leech,  pl.maxLeech());
+        if (leech > 0) {
+          this.turnOrder.splice( this.currentPlayerTurnOrderPos +1, 0, this.players.indexOf(pl) )
+          this.passiveChargeCommands.push( {
+              name: Command.Leech,
+              player: this.players.indexOf(pl),
+              data: { leech }
+            }
+          )
+        }
+        }
+      }
+  }
+
   /** Next player to make a move, after current player makes their move */
   moveToNextPlayer(command : Command): PlayerEnum {
-    if ( command === Command.Pass || this.round === Round.SetupFaction || this.round === Round.SetupBuilding || this.round === Round.SetupRoundBooster) {
+    if ( command === Command.Pass || 
+      command === Command.Leech || 
+      command === Command.DeclineLeech ||
+      this.round === Round.SetupFaction || 
+      this.round === Round.SetupBuilding || 
+      this.round === Round.SetupRoundBooster) {
         // happens in round SetupROundBooster and standard rounds after pass move
         const playerPos = this.currentPlayerTurnOrderPos;
+        if ( command !== Command.Leech && command !== Command.DeclineLeech) {
         this.passedPlayers.push(this.currentPlayer);
+        }
         this.turnOrder.splice( playerPos, 1); 
         // if latest player is passing
         const newPlayerPos = playerPos + 1 > this.turnOrder.length ? 0 : playerPos;
@@ -315,6 +361,7 @@ export default class Engine {
         hex.data.building = building;
         hex.data.player = player;
 
+        this.leechingPhase( player, {q, r, s} );
         return;
       }
     }
@@ -338,10 +385,14 @@ export default class Engine {
     (this[Command.ChooseRoundBooster] as any)(player, booster, Command.Pass);
   }
 
-  [Command.Leech](player: PlayerEnum) {
+  [Command.Leech](player: PlayerEnum, leech: number) {
+    const powerLeeched = this.players[player].data.chargePower(leech);
+    const victoryPoints = `-${powerLeeched}${Resource.VictoryPoint}`;
+    this.player(player).data.payCost( new Reward( victoryPoints ));
   }
 
   [Command.DeclineLeech](player: PlayerEnum) {
+    
   }
 
 }

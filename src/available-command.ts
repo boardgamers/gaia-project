@@ -1,4 +1,4 @@
-import { Command, Faction, Building, ResearchField, Planet, Round, Booster } from './enums';
+import { Command, Faction, Building, ResearchField, Planet, Round, Booster, Player as PlayerEnum } from './enums';
 import Engine from './engine';
 import * as _ from 'lodash';
 import factions from './factions';
@@ -73,6 +73,38 @@ export function generate(engine: Engine): AvailableCommand[] {
       const data = engine.player(player).data;
       const board = engine.player(player).board;
       const grid = engine.map.grid;
+
+      //power leech needed for current player
+      const playerPassiveCommand = engine.passiveChargeCommands.find(command => (command.player as PlayerEnum === engine.currentPlayer))
+      if (playerPassiveCommand) {
+        commands.push(
+          {
+            name: Command.Leech,
+            player,
+            data: playerPassiveCommand.data 
+          }
+        );
+        commands.push(
+          {
+            name: Command.DeclineLeech,
+            player,
+            data: playerPassiveCommand.data 
+          }
+        );
+        // remove playerPassiveCommands (leech declineleech)
+        let passiveCommandIndex =  engine.passiveChargeCommands.findIndex(command => (command.player as PlayerEnum === engine.currentPlayer))
+        if (passiveCommandIndex !== -1) {
+          engine.passiveChargeCommands.splice( passiveCommandIndex, 1)
+        }
+        passiveCommandIndex =  engine.passiveChargeCommands.findIndex(command => (command.player as PlayerEnum === engine.currentPlayer))
+        if (passiveCommandIndex !== -1) {
+          engine.passiveChargeCommands.splice( passiveCommandIndex, 1)
+        }
+
+
+
+        return commands;  
+      } //end leech
    
       const boosters = Object.values(Booster).filter(booster => engine.roundBoosters[booster]);
 
@@ -86,7 +118,7 @@ export function generate(engine: Engine): AvailableCommand[] {
 
       if (engine.round === Round.SetupRoundBooster) {
         return commands;
-      } 
+      }  
 
       // Add building moves
       {
