@@ -1,4 +1,4 @@
-import { Command, Faction, Building, ResearchField, Planet, Round, Booster, Player as PlayerEnum } from './enums';
+import { Command, Faction, Building, ResearchField, Planet, Round, Booster, Resource, Player } from './enums';
 import Engine from './engine';
 import * as _ from 'lodash';
 import factions from './factions';
@@ -9,6 +9,7 @@ import Reward from './reward';
 
 const ISOLATED_DISTANCE = 3;
 const UPGRADE_RESEARCH_COST = "4k";
+const QIC_RANGE_UPGRADE = 2;
 
 export default interface AvailableCommand {
   name: Command;
@@ -72,6 +73,7 @@ export function generate(engine: Engine): AvailableCommand[] {
 
       const data = engine.player(player).data;
       const board = engine.player(player).board;
+      const map = engine.map;
       const grid = engine.map.grid;
 
       //power leech needed for current player
@@ -96,13 +98,6 @@ export function generate(engine: Engine): AvailableCommand[] {
         if (passiveCommandIndex !== -1) {
           engine.passiveChargeCommands.splice( passiveCommandIndex, 1)
         }
-        passiveCommandIndex =  engine.passiveChargeCommands.findIndex(command => (command.player as PlayerEnum === engine.currentPlayer))
-        if (passiveCommandIndex !== -1) {
-          engine.passiveChargeCommands.splice( passiveCommandIndex, 1)
-        }
-
-
-
         return commands;  
       } //end leech
    
@@ -148,7 +143,7 @@ export function generate(engine: Engine): AvailableCommand[] {
               for (const pl of engine.players) {
                 if (pl !== engine.player(player)) {
                   for (const loc of pl.data.occupied) {
-                    if (grid.distance(loc.q, loc.r, hex.q, hex.r) < ISOLATED_DISTANCE) {
+                    if (map.distance(loc, hex) < ISOLATED_DISTANCE) {
                       return false;
                     }
                   }
@@ -161,7 +156,7 @@ export function generate(engine: Engine): AvailableCommand[] {
             const upgraded = upgradedBuildings(hex.data.building, engine.player(player).faction);
 
             for (const upgrade of upgraded) {
-              var buildCost = engine.player(player).canBuild(hex.data.planet, upgrade, isolated);
+              var buildCost = engine.player(player).canBuild(hex.data.planet, upgrade, {isolated});
               if ( buildCost !== undefined) {
                 buildings.push({
                   upgradedBuilding: hex.data.building,
@@ -174,31 +169,27 @@ export function generate(engine: Engine): AvailableCommand[] {
           } else {
             // planet without building
             // Check if the range is enough to access the planet
-            const inRange = data.occupied.some(loc => grid.distance(hex.q, hex.r, loc.q, loc.r) <= data.range);
-
-            if (!inRange) {
-              continue;
-            }
+            const distance = _.min(data.occupied.map(loc => map.distance(hex, loc)));
+            const qicNeeded = Math.max(Math.ceil( (distance - data.range) / QIC_RANGE_UPGRADE), 0);
 
             const building = hex.data.planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine  ;
-            const buildCost = engine.player(player).canBuild( hex.data.planet, building, false);
+            const buildCost = engine.player(player).canBuild(hex.data.planet, building, {addedCost: [new Reward(qicNeeded, Resource.Qic)]});
             if ( buildCost !== undefined ){
                 buildings.push({
                 building: building,
                 coordinates: hex.toString(),
                 cost: buildCost.map(c => c.toString()).join(',')
-              });   
+              });
             }         
-            
           } 
         } //end for hex
 
         if (buildings.length > 0) {
-        commands.push({
-          name: Command.Build,
-          player,
-          data: { buildings }
-        });
+          commands.push({
+            name: Command.Build,
+            player,
+            data: { buildings }
+          });
         }
       } // end add buildings
 

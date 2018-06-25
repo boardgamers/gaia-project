@@ -43,4 +43,8 @@ describe('Reward', () => {
     expect(new Reward("vp").toString()).to.equal("1vp");
     expect(new Reward("5c").toString()).to.equal("5c");
   });
+
+  it ('should convert an array of rewards to a string', () => {
+    expect(Reward.toString([new Reward("3vp"), new Reward("q")], true)).to.equal("1q,3vp");
+  });
 });
