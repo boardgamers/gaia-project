@@ -10,3 +10,16 @@ export function upgradedBuildings(currentBuilding: Building, faction: Faction): 
 
   return [];
 }
+
+export function stdBuildingValue(building: Building): number {
+  switch (building) {
+    case Building.Mine: return 1;
+    case Building.TradingStation:
+    case Building.ResearchLab: return 2;
+    case Building.PlanetaryInstitute:
+    case Building.Academy1:
+    case Building.Academy2: return 3;
+  }
+
+  return 0;
+}

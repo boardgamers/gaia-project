@@ -9,6 +9,7 @@ import { CubeCoordinates } from 'hexagrid';
 import researchTracks from './research-tracks';
 import { terraformingStepsRequired } from './planets';
 import boosts from './tiles/boosters';
+import { stdBuildingValue } from './buildings';
 
 const TERRAFORMING_COST = 3;
 
@@ -174,5 +175,16 @@ export default class Player {
       this.data.power.bowl1 += this.data.power.gaia;
     }
     this.data.power.gaia = 0;
+  }
+
+  buildingValue( building: Building, planet: Planet ){ 
+    //TODO different value for MadAndroids
+    //TODO value if TECH3
+    return stdBuildingValue(building);
+  }
+
+  maxLeech(){ 
+    //TODO min(calculate charge Power, victory points (i.e. cannot charge if cannot pay)
+    return 100;
   }
 }

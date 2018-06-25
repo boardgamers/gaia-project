@@ -49,7 +49,7 @@ const defaultBoard: FactionBoardRaw = {
   [Building.TradingStation]: {
     cost: "3c,2o",
     isolatedCost: "6c,2o",
-    income: ["+3c","+4c","+4c","+5c"],
+    income: ["+3c","+4c","+4c","+5c"]
   },
   [Building.ResearchLab]: {
     cost: "5c,3o",
@@ -101,12 +101,12 @@ export class FactionBoard {
     income: Event[]
   };
   [Building.PlanetaryInstitute]: {
-    cost: Reward[];
-    income: Event[];
+    cost: Reward[],
+    income: Event[]
   };
   [Building.GaiaFormer]: {
-    cost: Reward[];
-    income: Event[];
+    cost: Reward[],
+    income: Event[]
   };
   income: Event[];
   power: {
