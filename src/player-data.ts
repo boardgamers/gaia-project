@@ -145,7 +145,7 @@ export default class PlayerData extends EventEmitter {
    * 
    * @param power Power charged
    */
-  chargePower(power: number) {
+  chargePower(power: number) : number {
     const bowl1ToUp = Math.min(power, this.power.bowl1);
 
     this.power.bowl1 -= bowl1ToUp;
@@ -153,13 +153,16 @@ export default class PlayerData extends EventEmitter {
     power -= bowl1ToUp;
 
     if (power <= 0) {
-      return;
+      return bowl1ToUp;
     }
 
     const bowl2ToUp = Math.min(power, this.power.bowl2);
 
     this.power.bowl2 -= bowl2ToUp;
     this.power.bowl3 += bowl2ToUp;
+
+    //returns real charged power
+    return bowl1ToUp + bowl2ToUp;
   }
 
   movePowerToGaia(power: number) {
