@@ -133,8 +133,11 @@ export default class Player {
 
   build(upgradedBuilding, building: Building, cost: Reward[], location: CubeCoordinates) {
     this.data.payCosts(cost);
-    this.data.occupied = _.uniqWith([].concat(this.data.occupied, location), _.isEqual)
-
+    //excluding Gaiaformers as occupied 
+    if ( building !== Building.GaiaFormer ) {
+      this.data.occupied = _.uniqWith([].concat(this.data.occupied, location), _.isEqual)
+    }
+    
     // Add income of the building to the list of events
     this.loadEvent(this.board[building].income[this.data[building]]);
     this.data[building] += 1;
