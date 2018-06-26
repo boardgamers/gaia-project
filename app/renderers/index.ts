@@ -5,7 +5,7 @@ import { center } from "../graphics/reposition";
 import { ResearchField } from "@gaia-project/engine";
 
 interface Highlight {
-  hexes?: CubeCoordinates[],
+  hexes?: Array<{coord: CubeCoordinates, qic: boolean}>,
   fields?: Array<{field: ResearchField, level: number}>
 };
 

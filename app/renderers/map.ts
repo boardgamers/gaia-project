@@ -12,21 +12,23 @@ const hexData = {
     color: 0x666666,
   },
   background: 0x172E62,
-  backgroundHighlight: 0xF0F0F0
+  backgroundHighlight: 0xF0F0F0,
+  backgroundQicHighlight: 0x91ffc4
 };
 
 type GaiaHex = {data: GaiaHexData, orientation: "flat"} & {size: number};
+type ZonesOfInterest = Array<{coord: CubeCoordinates, qic: boolean}>;
 
 export default class MapRenderer extends PIXI.Graphics {
   lastData: Array<Honeycomb.CubeCoordinates & {data: GaiaHexData}>;
-  zonesOfInterest: CubeCoordinates[] = [];
+  zonesOfInterest: ZonesOfInterest = [];
   factions: Faction[] = [];
 
   constructor() {
     super();
   }
 
-  render(map: Array<Honeycomb.CubeCoordinates & {data: GaiaHexData}>, factions: Faction[], zonesOfInterest?: CubeCoordinates[]) {
+  render(map: Array<Honeycomb.CubeCoordinates & {data: GaiaHexData}>, factions: Faction[], zonesOfInterest?: ZonesOfInterest) {
     this.lastData = map;
     this.zonesOfInterest = zonesOfInterest;
     this.factions = factions;
@@ -38,12 +40,12 @@ export default class MapRenderer extends PIXI.Graphics {
     const Grid = Honeycomb.defineGrid(Hex);
 
     Grid(...map.map(hex=>Hex(hex))).forEach(hex => {
-      const ofInterest = zonesOfInterest && zonesOfInterest.some(zone => zone.q === hex.q && zone.r === hex.r);
-      this.drawHex(hex, ofInterest);
+      const ofInterest = zonesOfInterest && zonesOfInterest.find(zone => zone.coord.q === hex.q && zone.coord.r === hex.r);
+      this.drawHex(hex, !!ofInterest, ofInterest && ofInterest.qic);
     });
   }
 
-  drawHex(hex: Honeycomb.Hex<GaiaHex>, ofInterest = false) {
+  drawHex(hex: Honeycomb.Hex<GaiaHex>, ofInterest = false, qic = false) {
     const graphics = new PIXI.Graphics();
 
     const point = hex.toPoint();
@@ -52,7 +54,7 @@ export default class MapRenderer extends PIXI.Graphics {
     const center = {x: hexData.radius, y: otherCorners[1].y/2};
 
     graphics.lineStyle(hexData.border.width, hexData.border.color);
-    graphics.beginFill(ofInterest ? hexData.backgroundHighlight : hexData.background);
+    graphics.beginFill(ofInterest ? (qic ? hexData.backgroundQicHighlight : hexData.backgroundHighlight) : hexData.background);
     graphics.drawPolygon([].concat(...hex.corners().map(corner => [corner.x, corner.y])));
     graphics.endFill();
 

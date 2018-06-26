@@ -95,7 +95,7 @@ function showAvailableMove(player: string, command: AvailableCommand) {
   switch (command.name) {
     case Command.Build: {
       for (const building of Object.values(Building)) {
-        const coordinates = command.data.buildings.filter(bld => bld.building === building).map(bld => bld.coordinates);
+        const coordinates = command.data.buildings.filter(bld => bld.building === building);
 
         if (coordinates.length > 0) {
           addButton(`Place ${buildingName(building)}`, `${player} ${Command.Build} ${building}`, {
@@ -135,7 +135,7 @@ function commandTitle(text: string, player?: string) {
   }  
 }
 
-function addButton(text: string, command: string, {hexes, tracks, boosters}: {hexes?: string[], tracks?: any[], boosters?: Booster[]} = {}) {
+function addButton(text: string, command: string, {hexes, tracks, boosters}: {hexes?: Array<{coordinates: string}>, tracks?: any[], boosters?: Booster[]} = {}) {
   const button = $('<button class="btn btn-secondary mr-2 mb-2">');
   button.text(text);
   
@@ -146,7 +146,7 @@ function addButton(text: string, command: string, {hexes, tracks, boosters}: {he
   $("#move-buttons").append(button);
 
   if (hexes) {
-    button.attr("data-hexes", hexes.join(","));
+    button.attr("data-hexes", JSON.stringify(hexes));
   }
 
   if (tracks) {
@@ -169,7 +169,10 @@ $(document).on("click", "*[data-command]", function() {
   
   if (hexes) {
     pendingCommand = command;
-    renderer.render(lastData, {hexes: hexes.split(",").map(hex => CubeCoordinates.parse(hex))});
+    renderer.render(lastData, {hexes: JSON.parse(hexes).map(obj => ({
+      coord: CubeCoordinates.parse(obj.coordinates),
+      qic: obj.cost.includes('q')
+    }))});
 
     return;
   }
@@ -229,6 +232,8 @@ function updatePlayerInfo() {
   if (!lastData.players) {
     return;
   }
+
+  $("#round").text(`Round ${Math.max(lastData.round, 0)}`);
   
   const playerOrder = lastData.round <= 0 ? lastData.players.map((pl, i) => i) : lastData.turnOrder.concat(lastData.passedPlayers);
 
@@ -257,8 +262,9 @@ function updatePlayerInfo() {
 
     const info = [
       `<b>Player ${pl+1}</b> - ${faction} ${passed}`,
-      `vp: ${data.victoryPoints}, c: ${data.credits}, o: ${data.ores}, q: ${data.qics}, k: ${data.knowledge}`,
-      `<b>Power</b> - gaia: ${data.power.gaia}, bowl 1: ${data.power.bowl1}, bowl 2: ${data.power.bowl2}, bowl 3: ${data.power.bowl3}`,
+      `${data.victoryPoints}vp, ${data.credits}c, ${data.ores}o, ${data.knowledge}k, ${data.qics}q, [${data.power.gaia}] ${data.power.bowl1}/${data.power.bowl2}/${data.power.bowl3} pw`,
+      `range: ${data.range}, gaia-form level: ${data.terraformSteps}`,
+      `income: ${player.income.replace(/,/g, ', ')}`
     ];
 
     $(panel).html(info.join('<br>'));
