@@ -35,7 +35,7 @@ export default class Engine {
   turn: number = Turn.Generic;
   /** Order of players in the turn */
   turnOrder: PlayerEnum[] = [];
-  passiveChargeCommands: AvailableCommand[] = [];
+  roundSubCommands: AvailableCommand[] = [];
   /**
    * Players who have passed, in order. Will be used to determine next round's
    * order
@@ -244,7 +244,7 @@ export default class Engine {
       return;
     } 
     // all players excluded leecher
-    this.passiveChargeCommands = [];
+    this.roundSubCommands = [];
 
     for (const pl of this.players){     
       if ( pl !== this.player(player)){
@@ -257,7 +257,7 @@ export default class Engine {
         leech =  Math.min( leech,  pl.maxLeech());
         if (leech > 0) {
           this.turnOrder.splice( this.currentPlayerTurnOrderPos +1, 0, this.players.indexOf(pl) )
-          this.passiveChargeCommands.push( {
+          this.roundSubCommands.push( {
               name: Command.Leech,
               player: this.players.indexOf(pl),
               data: { leech }

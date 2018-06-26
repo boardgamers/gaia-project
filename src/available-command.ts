@@ -77,29 +77,33 @@ export function generate(engine: Engine): AvailableCommand[] {
       const grid = engine.map.grid;
 
       //power leech needed for current player
-      const playerPassiveCommand = engine.passiveChargeCommands.find(command => (command.player as PlayerEnum === engine.currentPlayer))
-      if (playerPassiveCommand) {
-        commands.push(
-          {
-            name: Command.Leech,
-            player,
-            data: playerPassiveCommand.data 
-          }
-        );
-        commands.push(
-          {
-            name: Command.DeclineLeech,
-            player,
-            data: playerPassiveCommand.data 
-          }
-        );
-        // remove playerPassiveCommands (leech declineleech)
-        let passiveCommandIndex =  engine.passiveChargeCommands.findIndex(command => (command.player as PlayerEnum === engine.currentPlayer))
-        if (passiveCommandIndex !== -1) {
-          engine.passiveChargeCommands.splice( passiveCommandIndex, 1)
+      const  subCommandIndex =  engine.roundSubCommands.findIndex(command => (command.player as Player === engine.currentPlayer))
+       
+      if (subCommandIndex !== -1) {
+        const subCommand = engine.roundSubCommands[subCommandIndex];
+        if (subCommand.name === Command.Leech) {
+          commands.push(
+            {
+              name: Command.Leech,
+              player,
+              data: subCommand.data 
+            }
+          );
+          commands.push(
+            {
+              name: Command.DeclineLeech,
+              player,
+              data: subCommand.data 
+            }
+          );
+  
         }
+     
+        // remove playerPassiveCommands (leech declineleech)
+        engine.roundSubCommands.splice( subCommandIndex, 1)
+
         return commands;  
-      } //end leech
+      } //end subCommand
    
       const boosters = Object.values(Booster).filter(booster => engine.roundBoosters[booster]);
 
