@@ -194,6 +194,6 @@ export default class Player {
 
   maxLeech( possibleLeech: number ){ 
     // considers real chargeable power and victory points
-    return Math.min( this.data.chargePower(possibleLeech, true), this.data.victoryPoints);
+    return Math.min( this.data.chargePower(possibleLeech, true), this.data.victoryPoints + 1);
   }
 }
