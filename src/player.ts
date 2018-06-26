@@ -137,7 +137,7 @@ export default class Player {
     if ( building !== Building.GaiaFormer ) {
       this.data.occupied = _.uniqWith([].concat(this.data.occupied, location), _.isEqual)
     }
-    
+
     // Add income of the building to the list of events
     this.loadEvent(this.board[building].income[this.data[building]]);
     this.data[building] += 1;
@@ -187,13 +187,13 @@ export default class Player {
   }
 
   buildingValue( building: Building, planet: Planet ){ 
-    //TODO different value for MadAndroids
+    const addedBescods = this.faction === Faction.Bescods && this.data[Building.PlanetaryInstitute] === 1  && planet === Planet.Titanium ? 1 : 0;
     //TODO value if TECH3
     return stdBuildingValue(building);
   }
 
-  maxLeech(){ 
-    //TODO min(calculate charge Power, victory points (i.e. cannot charge if cannot pay)
-    return 100;
+  maxLeech( possibleLeech: number ){ 
+    // considers real chargeable power and victory points
+    return Math.min( this.data.chargePower(possibleLeech, true), this.data.victoryPoints);
   }
 }

@@ -250,11 +250,11 @@ export default class Engine {
       if ( pl !== this.player(player)){
         let leech = 0;
         for (const loc of pl.data.occupied) {
-          if (this.map.grid.distance(loc.q, loc.r, location.q, location.r) < ISOLATED_DISTANCE) {
+          if (this.map.distance(loc, location) < ISOLATED_DISTANCE) {
             leech = Math.max(leech, pl.buildingValue( this.map.grid.get(loc.q, loc.r).data.building, this.map.grid.get(loc.q, loc.r).data.planet))
           }
         }
-        leech =  Math.min( leech,  pl.maxLeech());
+        leech =  Math.min( leech,  pl.maxLeech(leech));
         if (leech > 0) {
           this.turnOrder.splice( this.currentPlayerTurnOrderPos +1, 0, this.players.indexOf(pl) )
           this.roundSubCommands.push( {
