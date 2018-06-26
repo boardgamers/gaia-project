@@ -12,7 +12,6 @@ import {
   Planet,
   Round,
   Booster,
-  Turn,
   Resource
 } from './enums';
 import { CubeCoordinates } from 'hexagrid';
@@ -32,7 +31,6 @@ export default class Engine {
   } = { }; 
   availableCommands: AvailableCommand[] = [];
   round: number = Round.Init;
-  turn: number = Turn.Generic;
   /** Order of players in the turn */
   turnOrder: PlayerEnum[] = [];
   roundSubCommands: AvailableCommand[] = [];
@@ -257,15 +255,14 @@ export default class Engine {
         leech =  Math.min( leech,  pl.maxLeech(leech));
         if (leech > 0) {
           this.turnOrder.splice( this.currentPlayerTurnOrderPos +1, 0, this.players.indexOf(pl) )
-          this.roundSubCommands.push( {
+          this.roundSubCommands.push({
               name: Command.Leech,
               player: this.players.indexOf(pl),
-              data: { leech }
-            }
-          )
-        }
+              data: leech 
+          })
         }
       }
+    }
   }
 
   /** Next player to make a move, after current player makes their move */
@@ -276,23 +273,23 @@ export default class Engine {
       this.round === Round.SetupFaction || 
       this.round === Round.SetupBuilding || 
       this.round === Round.SetupRoundBooster) {
-        // happens in round SetupROundBooster and standard rounds after pass move
-        const playerPos = this.currentPlayerTurnOrderPos;
-        if ( command !== Command.Leech && command !== Command.DeclineLeech) {
+      // happens in round SetupROundBooster and standard rounds after pass move
+      const playerPos = this.currentPlayerTurnOrderPos;
+      if ( command !== Command.Leech && command !== Command.DeclineLeech) {
         this.passedPlayers.push(this.currentPlayer);
-        }
-        this.turnOrder.splice( playerPos, 1); 
-        // if latest player is passing
-        const newPlayerPos = playerPos + 1 > this.turnOrder.length ? 0 : playerPos;
-        this.currentPlayer = this.turnOrder[newPlayerPos];  
-        this.currentPlayerTurnOrderPos = newPlayerPos;
+      }
+      this.turnOrder.splice( playerPos, 1); 
+      // if latest player is passing
+      const newPlayerPos = playerPos + 1 > this.turnOrder.length ? 0 : playerPos;
+      this.currentPlayer = this.turnOrder[newPlayerPos];  
+      this.currentPlayerTurnOrderPos = newPlayerPos;
 
     } else {
-        const next = (this.currentPlayerTurnOrderPos + 1) % this.turnOrder.length;
-        this.currentPlayerTurnOrderPos = next;
-        this.currentPlayer = this.turnOrder[next];
-        return;
-      } 
+      const next = (this.currentPlayerTurnOrderPos + 1) % this.turnOrder.length;
+      this.currentPlayerTurnOrderPos = next;
+      this.currentPlayer = this.turnOrder[next];
+      return;
+    } 
   }
   
 
@@ -386,9 +383,12 @@ export default class Engine {
   }
 
   [Command.Leech](player: PlayerEnum, leech: number) {
+    const leechCommand  = this.availableCommand(player, Command.Leech).data;
+  
+    assert( leechCommand == leech , `Impossible to charge ${leech} power`);
+
     const powerLeeched = this.players[player].data.chargePower(leech);
-    const victoryPoints = `-${powerLeeched}${Resource.VictoryPoint}`;
-    this.player(player).data.payCost( new Reward( victoryPoints ));
+    this.player(player).data.payCost( new Reward(Math.max(powerLeeched - 1, 0), Resource.VictoryPoint));
   }
 
   [Command.DeclineLeech](player: PlayerEnum) {

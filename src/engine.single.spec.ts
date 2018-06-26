@@ -5,7 +5,7 @@ import { Player } from "./enums";
 
 describe("Engine", () => {
 
-  it("should allow to select round boosters without errors", () => {
+  it("should allow a full round to pass", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction lantids
@@ -16,7 +16,12 @@ describe("Engine", () => {
       p1 build m 4x0
       p2 booster booster2
       p1 booster booster3
-      p1 pass booster5
+      p1 build ts 2x2
+      p2 leech 1
+      p2 pass booster5
+      p1 build ts 4x0
+      p2 leech 1
+      p1 pass booster2
     `);
 
     expect(() => new Engine(moves)).to.not.throw();

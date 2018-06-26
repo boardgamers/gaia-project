@@ -72,10 +72,8 @@ export function generate(engine: Engine): AvailableCommand[] {
       assert(player !== undefined, "Problem with the engine, player to play is unknown");
 
       const data = engine.player(player).data;
-      const board = engine.player(player).board;
       const map = engine.map;
-      const grid = engine.map.grid;
-
+      
       //power leech needed for current player
       const  subCommandIndex =  engine.roundSubCommands.findIndex(command => (command.player as Player === engine.currentPlayer))
        

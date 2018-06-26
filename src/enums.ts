@@ -137,14 +137,6 @@ export enum Round {
   Round6=6
 }
 
-export enum Turn {
-  Generic = 0,
-  Leech = 1,
-  GainTechTile = 2,
-  AdvanceResearchArea = 3
-  
-}
-
 export enum Booster {
   Booster1= "booster1",
   Booster2= "booster2",
