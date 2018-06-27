@@ -149,3 +149,15 @@ export enum Booster {
   Booster9= "booster9",
   Booster10= "booster10"
 }
+
+export enum TechTile {
+  Tech1= "tech1",
+  Tech2= "tech2",
+  Tech3= "tech3",
+  Tech4= "tech4",
+  Tech5= "tech5",
+  Tech6= "tech6",
+  Tech7= "tech7",
+  Tech8= "tech8",
+  Tech9= "tech9"
+}
