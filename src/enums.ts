@@ -161,3 +161,21 @@ export enum TechTile {
   Tech8= "tech8",
   Tech9= "tech9"
 }
+
+export enum AdvTechTile {
+  AdvTech1= "advtech1",
+  AdvTech2= "advtech2",
+  AdvTech3= "advtech3",
+  AdvTech4= "advtech4",
+  AdvTech5= "advtech5",
+  AdvTech6= "advtech6",
+  AdvTech7= "advtech7",
+  AdvTech8= "advtech8",
+  AdvTech9= "advtech9",
+  AdvTech10= "advtech10",
+  AdvTech11= "advtech11",
+  AdvTech12= "advtech12",
+  AdvTech13= "advtech13",
+  AdvTech14= "advtech14",
+  AdvTech15= "advtech15"
+}
