@@ -72,8 +72,36 @@ export function generate(engine: Engine): AvailableCommand[] {
       assert(player !== undefined, "Problem with the engine, player to play is unknown");
 
       const data = engine.player(player).data;
-      const board = engine.player(player).board;
       const map = engine.map;
+      
+      //power leech needed for current player
+      const  subCommandIndex =  engine.roundSubCommands.findIndex(command => (command.player as Player === engine.currentPlayer))
+       
+      if (subCommandIndex !== -1) {
+        const subCommand = engine.roundSubCommands[subCommandIndex];
+        if (subCommand.name === Command.Leech) {
+          commands.push(
+            {
+              name: Command.Leech,
+              player,
+              data: subCommand.data 
+            }
+          );
+          commands.push(
+            {
+              name: Command.DeclineLeech,
+              player,
+              data: subCommand.data 
+            }
+          );
+  
+        }
+     
+        // remove playerPassiveCommands (leech declineleech)
+        engine.roundSubCommands.splice( subCommandIndex, 1)
+
+        return commands;  
+      } //end subCommand
    
       const boosters = Object.values(Booster).filter(booster => engine.roundBoosters[booster]);
 
@@ -87,7 +115,7 @@ export function generate(engine: Engine): AvailableCommand[] {
 
       if (engine.round === Round.SetupRoundBooster) {
         return commands;
-      } 
+      }  
 
       // Add building moves
       {

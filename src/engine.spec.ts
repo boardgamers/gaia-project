@@ -122,6 +122,7 @@ describe("Engine", () => {
       p2 booster booster2
       p1 booster booster3
       p1 build ts 4x0
+      p2 leech 1
       p2 build ts -4x3  
     `);
 
@@ -165,8 +166,10 @@ describe("Engine", () => {
       p2 booster booster2
       p1 booster booster3
       p1 build ts 2x2
+      p2 leech 1
       p2 pass booster5
       p1 build ts 4x0
+      p2 leech 1
       p1 pass booster2
     `);
 
@@ -254,6 +257,7 @@ describe("Engine", () => {
       p2 pass booster5
       p1 pass booster2
       p2 build ts 4x-2
+      p1 leech 1
       p1 build m 3x1
     `);
  
@@ -289,7 +293,7 @@ describe("Engine", () => {
       expect(Object.keys(engine5.roundBoosters)).to.have.length(8);
     });
 
-    it("should allow to select round boosters  without errors", () => {
+    it("should allow to select round boosters without errors", () => {
       const moves = parseMoves(`
         init 2 randomSeed
         p1 faction lantids
