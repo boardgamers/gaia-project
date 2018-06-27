@@ -28,7 +28,7 @@ export default class BuildingRenderer extends PIXI.Graphics {
       }
       case Building.Academy1:
       case Building.Academy2: {
-        this.drawRect(-0.3*scale, -0.3 * scale, 0.6 * scale, 0.6 * scale);
+        this.drawCircle(0, 0, 0.5*scale);
         break;
       }
       case Building.GaiaFormer: {
@@ -38,11 +38,6 @@ export default class BuildingRenderer extends PIXI.Graphics {
 
         this.drawPolygon([].concat(...[firstCorner, ...otherCorners, firstCorner].map(corner => [corner.x-center.x, corner.y-center.y])));
       };
-
-      case Building.PlanetaryInstitute: {
-        this.drawRect(-0.3*scale, -0.3 * scale, 0.6 * scale, 0.6 * scale);
-        break;
-      }
     }
 
     this.endFill();

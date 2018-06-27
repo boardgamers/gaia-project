@@ -10,7 +10,7 @@ import { CubeCoordinates } from "hexagrid";
 import { buildingName } from "../../data/building";
 import { factionColor } from "../../graphics/utils";
 import { Booster } from "@gaia-project/engine/src/enums";
-import boosts from "@gaia-project/engine/src/tiles/boosters";
+import boosterTiles  from "@gaia-project/engine/src/tiles/boosters";
 
 const renderer = new Renderer($("canvas#map").get(0) as HTMLCanvasElement);
 const map = renderer.map;
@@ -102,7 +102,7 @@ function showAvailableMove(player: string, command: AvailableCommand) {
           const buildDesc =  building === Building.Mine ? "Build a" : building === Building.GaiaFormer ? "Place a ": "Upgrade to";
         
           addButton(`${buildDesc} ${buildingName(building)}`, `${player} ${Command.Build} ${building}`, {
-          hexes: coordinates
+            hexes: coordinates
           });
           
         }
@@ -130,12 +130,12 @@ function showAvailableMove(player: string, command: AvailableCommand) {
     }
 
     case Command.Leech: {
-      addButton("Charge power: " + command.data, `${player} ${Command.Leech} ${command.data}`, {leech: command.data});
+      addButton("Charge power: " + command.data, `${player} ${Command.Leech} ${command.data}`);
       break;
     }
 
     case Command.DeclineLeech: {
-      addButton("Decline charge power", `${player} ${Command.DeclineLeech}`, {leech: command.data});
+      addButton("Decline charge power", `${player} ${Command.DeclineLeech}`);
       break;
     }
   }
@@ -171,10 +171,6 @@ function addButton(text: string, command: string, {hexes, tracks, boosters, leec
     button.attr("data-boosters", JSON.stringify(boosters));
   }
 
-  if (leech) {
-    button.attr("data-leech", JSON.stringify(leech));
-  }
-
   return button;
 }
 
@@ -204,16 +200,16 @@ $(document).on("click", "*[data-command]", function() {
     return;
   }
 
-  let boosters = $(this).attr("data-boosters");
+  let boostersData = $(this).attr("data-boosters");
 
-  if (boosters) {
+  if (boostersData) {
     $("#move-buttons").html("");
     $("#move-title").append(" - Pick a booster");
-    boosters = JSON.parse(boosters);
+    boostersData = JSON.parse(boostersData);
 
     Object.values(Booster).map((booster, i) => {
-      if (boosters.includes(booster)) {
-        addButton(`Booster ${i+1}: ${boosts[booster]}`, `${command} ${booster}`);
+      if (boostersData.includes(booster)) {
+        addButton(`Booster ${i+1}: ${boosterTiles[booster]}`, `${command} ${booster}`);
       }
     });
 
@@ -277,7 +273,7 @@ function updatePlayerInfo() {
     const factionEnum = player.faction;
     const faction = factions[factionEnum].name;
     const passed = lastData.passedPlayers.includes(pl) ? " - (passed)" : "";
-    const boosterDesc = data.roundBooster ? data.roundBooster + ": " + boosts[data.roundBooster] : "(not selected)";
+    const boosterDesc = data.roundBooster ? data.roundBooster + ": " + boosterTiles[data.roundBooster] : "(not selected)";
 
     const info = [
       `<b>Player ${pl+1}</b> - ${faction} - ${data.victoryPoints}vp ${passed}`,
