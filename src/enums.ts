@@ -162,6 +162,19 @@ export enum TechTile {
   Tech9= "tech9"
 }
 
+
+export enum TechTilePos {
+  Terraforming = "terra",
+  Navigation = "nav",
+  Intelligence = "int",
+  GaiaProject = "gaia",
+  Economy = "eco",
+  Science = "sci",
+  Free1 = "free1",
+  Free2 = "free2",
+  Free3 = "free3"
+}
+
 export enum AdvTechTile {
   AdvTech1= "advtech1",
   AdvTech2= "advtech2",
@@ -178,4 +191,13 @@ export enum AdvTechTile {
   AdvTech13= "advtech13",
   AdvTech14= "advtech14",
   AdvTech15= "advtech15"
+}
+
+export enum AdvTechTilePos {
+  Terraforming = "terra",
+  Navigation = "nav",
+  Intelligence = "int",
+  GaiaProject = "gaia",
+  Economy = "eco",
+  Science = "sci"
 }

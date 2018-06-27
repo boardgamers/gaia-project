@@ -12,7 +12,11 @@ import {
   Planet,
   Round,
   Booster,
-  Resource
+  Resource,
+  TechTile,
+  TechTilePos,
+  AdvTechTile,
+  AdvTechTilePos
 } from './enums';
 import { CubeCoordinates } from 'hexagrid';
 
@@ -29,6 +33,12 @@ export default class Engine {
   roundBoosters:  {
     [key in Booster]?: boolean 
   } = { }; 
+  techTiles: {
+    [key in TechTilePos]?: {tile: TechTile; available: boolean}
+  } = {};
+  advTechTiles: {
+    [key in AdvTechTilePos]?: {tile: AdvTechTile; available: boolean}
+  } = {};
   availableCommands: AvailableCommand[] = [];
   round: number = Round.Init;
   /** Order of players in the turn */
@@ -310,8 +320,22 @@ export default class Engine {
       this.roundBoosters[booster] = true;
     }
 
-    this.players = [];
+    // Shuffle tech tiles 
+    const techtiles = shuffleSeed.shuffle(Object.values(TechTile), this.map.rng());
+    for (const techTilePos of Object.values(TechTilePos)) {
+      this.techTiles[techTilePos] = { tile : techtiles[0], available : true } ;
+      techtiles.splice(0,1);
+    }
 
+    // Choose adv tech tiles as part of the pool
+    const advtechtiles = shuffleSeed.shuffle(Object.values(AdvTechTile), this.map.rng()).slice(0, 6);
+    for (const advTechTilePos of Object.values(AdvTechTilePos)) {
+    this.advTechTiles[advTechTilePos] = { tile : advtechtiles[0], available : true } ;
+    advtechtiles.splice(0,1);
+    }
+
+    this.players = [];
+    
     for (let i = 0; i < nbPlayers; i++) {
       this.players.push(new Player());
     }
