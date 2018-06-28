@@ -107,6 +107,7 @@ export enum Command {
   Init = "init",
   ChooseFaction = "faction",
   ChooseRoundBooster = "booster",
+  ChooseTechTile = "tech",
   Build = "build",
   Pass = "pass",
   UpgradeResearch = "up",
@@ -200,4 +201,14 @@ export enum AdvTechTilePos {
   GaiaProject = "gaia",
   Economy = "eco",
   Science = "sci"
+}
+
+export enum Federation {
+  Federation1= "federation1",
+  Federation2= "federation2",
+  Federation3= "federation3",
+  Federation4= "federation4",
+  Federation5= "federation5",
+  Federation6= "federation6",
+  FederationGleens= "federationGleens"
 }
