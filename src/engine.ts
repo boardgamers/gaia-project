@@ -34,10 +34,10 @@ export default class Engine {
     [key in Booster]?: boolean 
   } = { }; 
   techTiles: {
-    [key in TechTilePos]?: {tile: TechTile; available: boolean}
+    [key in TechTilePos]?: {tile: TechTile; numTiles: number}
   } = {};
   advTechTiles: {
-    [key in AdvTechTilePos]?: {tile: AdvTechTile; available: boolean}
+    [key in AdvTechTilePos]?: {tile: AdvTechTile; numTiles: number}
   } = {};
   availableCommands: AvailableCommand[] = [];
   round: number = Round.Init;
@@ -275,11 +275,50 @@ export default class Engine {
     }
   }
 
+  techTilePhase(player: PlayerEnum) {
+    const tiles = [];
+        
+    //  tech tiles that player doesn't already have  
+    for (const tilePos of Object.values(TechTilePos)) {
+      if (!this.players[player].data.techTiles.includes(tilePos) ) {
+        tiles.push({
+          tile: this.techTiles[tilePos].tile,
+          tilePos: tilePos,
+          type: "std"
+        });
+      }
+    }
+
+    // adv tech tiles where player has lev 4/5, free federation tokens, available std tech tiles to cover
+    for (const tilePos of Object.values(AdvTechTilePos)) {
+      if (this.advTechTiles[tilePos].numTiles > 0  &&
+          this.players[player].data.greenFederations > 0 &&
+          this.players[player].data.research[tile] >=4 && 
+          this.players[player].data.techTiles.filter(tech => tech.enabled).length>0 ) {
+            tiles.push({
+              tile: this.advTechTiles[tilePos].tile,
+              tilePos: tilePos,
+              type: "adv"
+            });
+      }
+    }
+
+    if (tiles.length>0) {
+      this.turnOrder.splice( this.currentPlayerTurnOrderPos +1, 0, player )
+      this.roundSubCommands.push({
+        name: Command.ChooseTechTile,
+        player: player,
+        data: { tiles } 
+    })
+    }
+  }
+
   /** Next player to make a move, after current player makes their move */
   moveToNextPlayer(command : Command): PlayerEnum {
     if ( command === Command.Pass || 
       command === Command.Leech || 
       command === Command.DeclineLeech ||
+      command === Command.ChooseTechTile ||
       this.round === Round.SetupFaction || 
       this.round === Round.SetupBuilding || 
       this.round === Round.SetupRoundBooster) {
@@ -322,17 +361,15 @@ export default class Engine {
 
     // Shuffle tech tiles 
     const techtiles = shuffleSeed.shuffle(Object.values(TechTile), this.map.rng());
-    for (const techTilePos of Object.values(TechTilePos)) {
-      this.techTiles[techTilePos] = { tile : techtiles[0], available : true } ;
-      techtiles.splice(0,1);
-    }
-
+    Object.values(TechTilePos).forEach( (pos, i) => {
+      this.techTiles[pos] = {tile: techtiles[i], numTiles: 4};
+    });
+ 
     // Choose adv tech tiles as part of the pool
     const advtechtiles = shuffleSeed.shuffle(Object.values(AdvTechTile), this.map.rng()).slice(0, 6);
-    for (const advTechTilePos of Object.values(AdvTechTilePos)) {
-    this.advTechTiles[advTechTilePos] = { tile : advtechtiles[0], available : true } ;
-    advtechtiles.splice(0,1);
-    }
+    Object.values(AdvTechTilePos).forEach( (pos, i) => {
+      this.advTechTiles[pos] = {tile: advtechtiles[i], numTiles: 1};
+    });
 
     this.players = [];
     
@@ -382,7 +419,12 @@ export default class Engine {
         hex.data.building = building;
         hex.data.player = player;
 
-        this.leechingPhase( player, {q, r, s} );
+        this.leechingPhase(player, {q, r, s} );
+
+        if ( building === Building.ResearchLab || buildings === Building.Academy1 || building === Building.Academy2) {
+          this.techTilePhase(player);
+        }
+       
         return;
       }
     }
@@ -417,6 +459,19 @@ export default class Engine {
 
   [Command.DeclineLeech](player: PlayerEnum) {
     
+  }
+
+  [Command.ChooseTechTile](player: PlayerEnum, leech: number) {
+    const { techtiles }  = this.availableCommand(player, Command.ChooseTechTile).data;
+  
+    for (const elem of techtiles) {
+
+    };
+
+    // assert( leechCommand == leech , `Impossible to charge ${leech} power`);
+
+    // const powerLeeched = this.players[player].data.chargePower(leech);
+    // this.player(player).data.payCost( new Reward(Math.max(powerLeeched - 1, 0), Resource.VictoryPoint));
   }
 
 }
