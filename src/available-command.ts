@@ -1,4 +1,4 @@
-import { Command, Faction, Building, ResearchField, Planet, Round, Booster, Resource, Player } from './enums';
+import { Command, Faction, Building, ResearchField, Planet, Round, Booster, Resource, Player, TechTile, TechTilePos, AdvTechTilePos } from './enums';
 import Engine from './engine';
 import * as _ from 'lodash';
 import factions from './factions';
@@ -79,28 +79,40 @@ export function generate(engine: Engine): AvailableCommand[] {
        
       if (subCommandIndex !== -1) {
         const subCommand = engine.roundSubCommands[subCommandIndex];
-        if (subCommand.name === Command.Leech) {
-          commands.push(
-            {
-              name: Command.Leech,
-              player,
-              data: subCommand.data 
-            }
-          );
-          commands.push(
-            {
-              name: Command.DeclineLeech,
-              player,
-              data: subCommand.data 
-            }
-          );
-  
-        }
-     
-        // remove playerPassiveCommands (leech declineleech)
-        engine.roundSubCommands.splice( subCommandIndex, 1)
+        switch ( subCommand.name ) {
+          case  Command.Leech: {
+            commands.push(
+              {
+                name: Command.Leech,
+                player,
+                data: subCommand.data 
+              }
+            );
+            commands.push(
+              {
+                name: Command.DeclineLeech,
+                player,
+                data: subCommand.data 
+              }
+            );
+        
+          }
 
-        return commands;  
+          case Command.ChooseTechTile: {
+            commands.push(
+              {
+                name: Command.ChooseTechTile,
+                player,
+                data: subCommand.data 
+              }
+            );
+          }
+           
+          // remove playerPassiveCommands (leech declineleech)
+          engine.roundSubCommands.splice( subCommandIndex, 1)
+
+          return commands; 
+        } 
       } //end subCommand
    
       const boosters = Object.values(Booster).filter(booster => engine.roundBoosters[booster]);
