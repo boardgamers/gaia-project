@@ -6,6 +6,7 @@ import * as assert from "assert";
 import { upgradedBuildings } from './buildings';
 import * as research from './research-tracks';
 import Reward from './reward';
+import { PlayerData } from '..';
 
 const ISOLATED_DISTANCE = 3;
 const UPGRADE_RESEARCH_COST = "4k";
@@ -17,9 +18,38 @@ export default interface AvailableCommand {
   player?: number;
 }
 
+export function upgradeResearchCommands(player: number,data: PlayerData, commands: AvailableCommand[], cost: string, destResearchArea?: ResearchField ) {
+  
+
+  if (data.canPay(Reward.parse(cost))) {
+    const tracks = [];
+
+    for (const field of Object.values(ResearchField)) {
+      if ( ((destResearchArea && destResearchArea === field) || !destResearchArea) &&
+        (data.research[field] < 4 || 
+        (data.research[field] === 4 && data.greenFederations > 0) ||
+         data.research[field] === 5)) {
+          tracks.push({
+            field,
+            to: Math.min(data.research[field] + 1, 5),
+            cost: cost
+          });
+      }
+    }
+
+    if (tracks.length > 0) {
+      commands.push({
+        name: Command.UpgradeResearch,
+        player,
+        data: { tracks }
+      });
+    }
+  }
+}
+
 export function generate(engine: Engine): AvailableCommand[] {
 
-  switch ( engine.round ) {
+  switch (engine.round) {
     case Round.Init: {
       return [{ name: Command.Init }];
     };
@@ -62,7 +92,6 @@ export function generate(engine: Engine): AvailableCommand[] {
         }
       ];
     };
-
     case Round.SetupRoundBooster: 
     default : {
       // We are in a regular round
@@ -73,14 +102,15 @@ export function generate(engine: Engine): AvailableCommand[] {
 
       const data = engine.player(player).data;
       const map = engine.map;
+     
       
       //power leech needed for current player
       const  subCommandIndex =  engine.roundSubCommands.findIndex(command => (command.player as Player === engine.currentPlayer))
        
       if (subCommandIndex !== -1) {
         const subCommand = engine.roundSubCommands[subCommandIndex];
-        switch ( subCommand.name ) {
-          case  Command.Leech: {
+        switch (subCommand.name) {
+          case Command.Leech: {
             commands.push(
               {
                 name: Command.Leech,
@@ -107,27 +137,44 @@ export function generate(engine: Engine): AvailableCommand[] {
               }
             );
           }
+
+          case Command.ChooseCoverTechTile: {
+            const tiles = data.techTiles.map( tl => tl.enabled );
+            commands.push(
+              {
+                name: Command.ChooseCoverTechTile,
+                player,
+                data: { tiles } 
+              }
+            );
+          }
            
-          // remove playerPassiveCommands (leech declineleech)
+          case Command.UpgradeResearch: {
+            this.upgradeResearchCommands(player, data,   commands, "0", subCommand.data.destResearchArea);
+          }
+          // remove playerPassiveCommands 
           engine.roundSubCommands.splice( subCommandIndex, 1)
 
           return commands; 
         } 
       } //end subCommand
    
-      const boosters = Object.values(Booster).filter(booster => engine.roundBoosters[booster]);
+      // add boosters
+      {
+        const boosters = Object.values(Booster).filter(booster => engine.roundBoosters[booster]);
 
-      commands.push(
-        {
-          name: engine.round === Round.SetupRoundBooster ? Command.ChooseRoundBooster : Command.Pass,
-          player,
-          data: { boosters }
-        }
-      )
+        commands.push(
+          {
+            name: engine.round === Round.SetupRoundBooster ? Command.ChooseRoundBooster : Command.Pass,
+            player,
+            data: { boosters }
+          }
+        )
 
-      if (engine.round === Round.SetupRoundBooster) {
-        return commands;
-      }  
+        if (engine.round === Round.SetupRoundBooster) {
+          return commands;
+        }  
+      } // end add boosters
 
       // Add building moves
       {
@@ -208,27 +255,7 @@ export function generate(engine: Engine): AvailableCommand[] {
       } // end add buildings
 
       // Upgrade research
-      if (data.canPay(Reward.parse(UPGRADE_RESEARCH_COST))) {
-        const tracks = [];
-
-        for (const field of Object.values(ResearchField)) {
-          if (data.research[field] < research.lastTile(field) && !research.keyNeeded(field, data.research[field] + 1)) {
-            tracks.push({
-              field,
-              to: data.research[field] + 1,
-              cost: UPGRADE_RESEARCH_COST
-            });
-          }
-        }
-
-        if (tracks.length > 0) {
-          commands.push({
-            name: Command.UpgradeResearch,
-            player,
-            data: { tracks }
-          });
-        }
-      }
+      this.upgradeResearchCommands(player, data, commands, UPGRADE_RESEARCH_COST);
 
       return commands;
     }

@@ -19,6 +19,9 @@ import {
   AdvTechTilePos
 } from './enums';
 import { CubeCoordinates } from 'hexagrid';
+import Event from './events';
+import techs from './tiles/techs';
+
 
 const ISOLATED_DISTANCE = 3;
 
@@ -247,13 +250,11 @@ export default class Engine {
   }
 
   leechingPhase(player: PlayerEnum, location: CubeCoordinates){
-    // exclude setiup rounds
+    // exclude setup rounds
     if (this.round <=0) {
       return;
     } 
     // all players excluded leecher
-    this.roundSubCommands = [];
-
     for (const pl of this.players){     
       if ( pl !== this.player(player)){
         let leech = 0;
@@ -293,7 +294,7 @@ export default class Engine {
     for (const tilePos of Object.values(AdvTechTilePos)) {
       if (this.advTechTiles[tilePos].numTiles > 0  &&
           this.players[player].data.greenFederations > 0 &&
-          this.players[player].data.research[tile] >=4 && 
+          this.players[player].data.research[tilePos] >=4 && 
           this.players[player].data.techTiles.filter(tech => tech.enabled).length>0 ) {
             tiles.push({
               tile: this.advTechTiles[tilePos].tile,
@@ -313,18 +314,53 @@ export default class Engine {
     }
   }
 
+  coverTechTilePhase(player: PlayerEnum) {
+    this.turnOrder.splice( this.currentPlayerTurnOrderPos +1, 0, player )
+    this.roundSubCommands.push({
+      name: Command.ChooseCoverTechTile,
+      player: player,
+      data: {  } 
+    })   
+  }
+
+  advanceResearchAreaPhase(player: PlayerEnum, tile: string) {
+    // search if tech is not a free position
+    let destResearchArea = "";
+    for (const tilePos of Object.values(TechTilePos))
+      if ( this.techTiles[tilePos].tile === tile ) {
+        if ( tilePos !== TechTilePos.Free1 &&
+          tilePos !== TechTilePos.Free2 &&
+          tilePos !== TechTilePos.Free3 ) {
+            destResearchArea = tilePos;
+            break;
+          }
+      }
+
+    this.turnOrder.splice( this.currentPlayerTurnOrderPos +1, 0, player )
+    this.roundSubCommands.push({
+      name: Command.UpgradeResearch,
+      player: player,
+      data: destResearchArea 
+    })  
+    
+  }
+
   /** Next player to make a move, after current player makes their move */
   moveToNextPlayer(command : Command): PlayerEnum {
     if ( command === Command.Pass || 
       command === Command.Leech || 
       command === Command.DeclineLeech ||
       command === Command.ChooseTechTile ||
+      command === Command.ChooseCoverTechTile ||
       this.round === Round.SetupFaction || 
       this.round === Round.SetupBuilding || 
       this.round === Round.SetupRoundBooster) {
       // happens in round SetupROundBooster and standard rounds after pass move
       const playerPos = this.currentPlayerTurnOrderPos;
-      if ( command !== Command.Leech && command !== Command.DeclineLeech) {
+      if ( command !== Command.Leech &&
+           command !== Command.DeclineLeech && 
+           command !== Command.ChooseTechTile &&
+           command !== Command.ChooseCoverTechTile ){
         this.passedPlayers.push(this.currentPlayer);
       }
       this.turnOrder.splice( playerPos, 1); 
@@ -461,17 +497,38 @@ export default class Engine {
     
   }
 
-  [Command.ChooseTechTile](player: PlayerEnum, leech: number) {
-    const { techtiles }  = this.availableCommand(player, Command.ChooseTechTile).data;
+  [Command.ChooseTechTile](player: PlayerEnum, tile: string) {
+    const { tiles }  = this.availableCommand(player, Command.ChooseTechTile).data;
+    const tileAvailable = tiles.find(ta => ta.tile == tile );
+   
+    assert( tileAvailable !== undefined, `Impossible to get ${tile} tile`);
+
+    this.player(player).loadEvents( Event.parse(techs[tile]) );
+    this.player(player).data.techTiles.push( 
+      {
+        tile: tileAvailable.tile,
+        enabled: true
+      }
+    )
+    this.techTiles[tileAvailable.tilePos].numTiles -= 1;
   
-    for (const elem of techtiles) {
-
+    if (tileAvailable.type === "adv") {
+      this.coverTechTilePhase(player)
     };
+    // add advance research area subCommand
+    this.advanceResearchAreaPhase(player, tile)
+  }
 
-    // assert( leechCommand == leech , `Impossible to charge ${leech} power`);
-
-    // const powerLeeched = this.players[player].data.chargePower(leech);
-    // this.player(player).data.payCost( new Reward(Math.max(powerLeeched - 1, 0), Resource.VictoryPoint));
+  [Command.ChooseCoverTechTile](player: PlayerEnum, tile: string) {
+    const { tiles }  = this.availableCommand(player, Command.ChooseCoverTechTile).data;
+    const tileAvailable = tiles.find(ta => ta.tile == tile );
+   
+    assert( tileAvailable !== undefined, `Impossible to cover ${tile} tile`);
+    //remove tile
+    const tileIndex = this.player(player).data.techTiles.findIndex( tl => tl.tile = tileAvailable.tile )
+    this.player(player).data.techTiles.splice(tileIndex,1);
+    //remove bonus
+    this.player(player).removeEvents( Event.parse(techs[tile]));
   }
 
 }

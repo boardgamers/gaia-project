@@ -108,6 +108,7 @@ export enum Command {
   ChooseFaction = "faction",
   ChooseRoundBooster = "booster",
   ChooseTechTile = "tech",
+  ChooseCoverTechTile = "cover",
   Build = "build",
   Pass = "pass",
   UpgradeResearch = "up",
