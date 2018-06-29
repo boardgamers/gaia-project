@@ -110,7 +110,7 @@ describe("Engine", () => {
     expect(() => new Engine(moves)).to.throw(AssertionError);
   });
 
-  it("should allow players to upgrade a mine to a TS, either isolated or not", () => {
+  it ("should allow players to upgrade a mine to a TS, either isolated or not", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans
@@ -154,7 +154,7 @@ describe("Engine", () => {
     expect(() => new Engine(moves)).to.throw();
   });
 
-  it("should allow a full round to pass", () => {
+  it ("should allow a full round to pass", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction lantids

@@ -16,7 +16,8 @@ import {
   TechTile,
   TechTilePos,
   AdvTechTile,
-  AdvTechTilePos
+  AdvTechTilePos,
+  Federation
 } from './enums';
 import { CubeCoordinates } from 'hexagrid';
 import Event from './events';
@@ -42,6 +43,7 @@ export default class Engine {
   advTechTiles: {
     [key in AdvTechTilePos]?: {tile: AdvTechTile; numTiles: number}
   } = {};
+  terraformingFederation: Federation;
   availableCommands: AvailableCommand[] = [];
   round: number = Round.Init;
   /** Order of players in the turn */
@@ -116,7 +118,7 @@ export default class Engine {
       );
       const player = +playerS[1] - 1;
 
-      assert(  this.currentPlayer === (player as PlayerEnum), "Wrong turn order, expected "+ this.currentPlayer +' found '+player);
+      assert(  this.currentPlayer === (player as PlayerEnum), "Wrong turn order in move " + move + ", expected "+ this.currentPlayer +' found '+player);
 
       const command = split[1] as Command;
 
@@ -265,7 +267,6 @@ export default class Engine {
         }
         leech =  Math.min( leech,  pl.maxLeech(leech));
         if (leech > 0) {
-          this.turnOrder.splice( this.currentPlayerTurnOrderPos +1, 0, this.players.indexOf(pl) )
           this.roundSubCommands.push({
               name: Command.Leech,
               player: this.players.indexOf(pl),
@@ -278,10 +279,11 @@ export default class Engine {
 
   techTilePhase(player: PlayerEnum) {
     const tiles = [];
+    const data = this.players[player].data;
         
     //  tech tiles that player doesn't already have  
     for (const tilePos of Object.values(TechTilePos)) {
-      if (!this.players[player].data.techTiles.includes(tilePos) ) {
+      if (!data.techTiles.includes(tilePos) ) {
         tiles.push({
           tile: this.techTiles[tilePos].tile,
           tilePos: tilePos,
@@ -290,12 +292,13 @@ export default class Engine {
       }
     }
 
-    // adv tech tiles where player has lev 4/5, free federation tokens, available std tech tiles to cover
+    // adv tech tiles where player has lev 4/5, free federation tokens, 
+    // and available std tech tiles to cover
     for (const tilePos of Object.values(AdvTechTilePos)) {
       if (this.advTechTiles[tilePos].numTiles > 0  &&
-          this.players[player].data.greenFederations > 0 &&
-          this.players[player].data.research[tilePos] >=4 && 
-          this.players[player].data.techTiles.filter(tech => tech.enabled).length>0 ) {
+          data.greenFederations > 0 &&
+          data.research[tilePos] >=4 && 
+          data.techTiles.filter(tech => tech.enabled).length>0 ) {
             tiles.push({
               tile: this.advTechTiles[tilePos].tile,
               tilePos: tilePos,
@@ -305,8 +308,7 @@ export default class Engine {
     }
 
     if (tiles.length>0) {
-      this.turnOrder.splice( this.currentPlayerTurnOrderPos +1, 0, player )
-      this.roundSubCommands.push({
+      this.roundSubCommands.unshift({
         name: Command.ChooseTechTile,
         player: player,
         data: { tiles } 
@@ -315,8 +317,7 @@ export default class Engine {
   }
 
   coverTechTilePhase(player: PlayerEnum) {
-    this.turnOrder.splice( this.currentPlayerTurnOrderPos +1, 0, player )
-    this.roundSubCommands.push({
+    this.roundSubCommands.unshift({
       name: Command.ChooseCoverTechTile,
       player: player,
       data: {  } 
@@ -324,7 +325,7 @@ export default class Engine {
   }
 
   advanceResearchAreaPhase(player: PlayerEnum, tile: string) {
-    // search if tech is not a free position
+    // if stdTech in a free position or advTech, any researchArea
     let destResearchArea = "";
     for (const tilePos of Object.values(TechTilePos))
       if ( this.techTiles[tilePos].tile === tile ) {
@@ -336,8 +337,7 @@ export default class Engine {
           }
       }
 
-    this.turnOrder.splice( this.currentPlayerTurnOrderPos +1, 0, player )
-    this.roundSubCommands.push({
+    this.roundSubCommands.unshift({
       name: Command.UpgradeResearch,
       player: player,
       data: destResearchArea 
@@ -347,35 +347,28 @@ export default class Engine {
 
   /** Next player to make a move, after current player makes their move */
   moveToNextPlayer(command : Command): PlayerEnum {
-    if ( command === Command.Pass || 
-      command === Command.Leech || 
-      command === Command.DeclineLeech ||
-      command === Command.ChooseTechTile ||
-      command === Command.ChooseCoverTechTile ||
-      this.round === Round.SetupFaction || 
-      this.round === Round.SetupBuilding || 
-      this.round === Round.SetupRoundBooster) {
-      // happens in round SetupROundBooster and standard rounds after pass move
-      const playerPos = this.currentPlayerTurnOrderPos;
-      if ( command !== Command.Leech &&
-           command !== Command.DeclineLeech && 
-           command !== Command.ChooseTechTile &&
-           command !== Command.ChooseCoverTechTile ){
-        this.passedPlayers.push(this.currentPlayer);
-      }
-      this.turnOrder.splice( playerPos, 1); 
-      // if latest player is passing
-      const newPlayerPos = playerPos + 1 > this.turnOrder.length ? 0 : playerPos;
-      this.currentPlayer = this.turnOrder[newPlayerPos];  
-      this.currentPlayerTurnOrderPos = newPlayerPos;
-
+    const subPhaseTurn = this.roundSubCommands.length > 0;
+    const playRounds = this.round > 0;
+    if ( subPhaseTurn) {
+      this.currentPlayer = this.roundSubCommands[0].player;
     } else {
-      const next = (this.currentPlayerTurnOrderPos + 1) % this.turnOrder.length;
-      this.currentPlayerTurnOrderPos = next;
-      this.currentPlayer = this.turnOrder[next];
-      return;
-    } 
-  }
+      if ( playRounds && command !== Command.Pass) {
+        const next = (this.currentPlayerTurnOrderPos + 1) % this.turnOrder.length;
+        this.currentPlayerTurnOrderPos = next;
+        this.currentPlayer = this.turnOrder[next];
+        return;
+      } else {
+        const playerPos = this.currentPlayerTurnOrderPos;
+        if ( command === Command.Pass) {
+          this.passedPlayers.push(this.currentPlayer);
+        } 
+        this.turnOrder.splice( playerPos, 1); 
+        const newPlayerPos = playerPos + 1 > this.turnOrder.length ? 0 : playerPos;
+        this.currentPlayer = this.turnOrder[newPlayerPos]; 
+        this.currentPlayerTurnOrderPos = newPlayerPos; 
+      } 
+    }
+}
   
 
   playersInOrder(): Player[] {
@@ -494,7 +487,6 @@ export default class Engine {
   }
 
   [Command.DeclineLeech](player: PlayerEnum) {
-    
   }
 
   [Command.ChooseTechTile](player: PlayerEnum, tile: string) {
