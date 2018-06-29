@@ -18,35 +18,6 @@ export default interface AvailableCommand {
   player?: number;
 }
 
-export function upgradeResearchCommands(player: number,data: PlayerData, commands: AvailableCommand[], cost: string, destResearchArea?: ResearchField ) {
-  
-
-  if (data.canPay(Reward.parse(cost))) {
-    const tracks = [];
-
-    for (const field of Object.values(ResearchField)) {
-      if ( ((destResearchArea && destResearchArea === field) || !destResearchArea) &&
-        (data.research[field] < 4 || 
-        (data.research[field] === 4 && data.greenFederations > 0) ||
-         data.research[field] === 5)) {
-          tracks.push({
-            field,
-            to: Math.min(data.research[field] + 1, 5),
-            cost: cost
-          });
-      }
-    }
-
-    if (tracks.length > 0) {
-      commands.push({
-        name: Command.UpgradeResearch,
-        player,
-        data: { tracks }
-      });
-    }
-  }
-}
-
 export function generate(engine: Engine): AvailableCommand[] {
 
   switch (engine.round) {
@@ -104,11 +75,8 @@ export function generate(engine: Engine): AvailableCommand[] {
       const map = engine.map;
      
       
-      //power leech needed for current player
-      const  subCommandIndex =  engine.roundSubCommands.findIndex(command => (command.player as Player === engine.currentPlayer))
-       
-      if (subCommandIndex !== -1) {
-        const subCommand = engine.roundSubCommands[subCommandIndex];
+      if (engine.roundSubCommands.length > 0) {
+        const subCommand = engine.roundSubCommands[0];
         switch (subCommand.name) {
           case Command.Leech: {
             commands.push(
@@ -150,10 +118,18 @@ export function generate(engine: Engine): AvailableCommand[] {
           }
            
           case Command.UpgradeResearch: {
-            this.upgradeResearchCommands(player, data,   commands, "0", subCommand.data.destResearchArea);
+            const tracks = engine.player(player).possibleResearchAreas("", subCommand.data.destResearchArea)
+   
+            if (tracks.length > 0) {
+              commands.push({
+                name: Command.UpgradeResearch,
+                player,
+                data: { tracks }
+              });
+            }
           }
           // remove playerPassiveCommands 
-          engine.roundSubCommands.splice( subCommandIndex, 1)
+          engine.roundSubCommands.splice( 0, 1)
 
           return commands; 
         } 
@@ -255,7 +231,15 @@ export function generate(engine: Engine): AvailableCommand[] {
       } // end add buildings
 
       // Upgrade research
-      this.upgradeResearchCommands(player, data, commands, UPGRADE_RESEARCH_COST);
+      const tracks = engine.player(player).possibleResearchAreas(UPGRADE_RESEARCH_COST)
+   
+      if (tracks.length > 0) {
+        commands.push({
+          name: Command.UpgradeResearch,
+          player,
+          data: { tracks }
+        });
+      }
 
       return commands;
     }
