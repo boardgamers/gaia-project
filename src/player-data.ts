@@ -102,7 +102,7 @@ export default class PlayerData extends EventEmitter {
     }
     
     if (resource.startsWith("up-")) {
-      this.upgradeResearch(resource.slice("up-".length) as ResearchField, count);
+      this.advanceResearch(resource.slice("up-".length) as ResearchField, count);
       return;
     }
     
@@ -197,10 +197,10 @@ export default class PlayerData extends EventEmitter {
     }
   }
 
-  upgradeResearch(which: ResearchField, count: number) {
+  advanceResearch(which: ResearchField, count: number) {
     while (count-- > 0) {
       this.research[which] += 1;
-      this.emit("upgrade-knowledge", which);
+      this.emit("advance-research", which);
     }
   }
 }

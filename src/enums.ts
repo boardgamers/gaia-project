@@ -73,7 +73,7 @@ export enum Condition {
 
   // trigger only
   MineOnGaia = "mg",
-  AdvanceTech = "a",
+  AdvanceResearch = "a",
   TerraformStep = "d"
 }
 

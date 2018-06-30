@@ -28,7 +28,7 @@ export default class Player {
   };
 
   constructor() {
-    this.data.on('upgrade-knowledge', track => this.onKnowledgeUpgraded(track));
+    this.data.on('advance-research', track => this.onResearchAdvanced(track));
   }
 
   toJSON() {
@@ -126,10 +126,11 @@ export default class Player {
     this.events[event.operator].slice(findEvent, 1);
   }
   
-  onKnowledgeUpgraded(field: ResearchField) {
+  onResearchAdvanced(field: ResearchField) {
     const events = Event.parse(researchTracks[field][this.data.research[field]]);
-
     this.loadEvents(events);
+    
+    this.receiveAdvanceResearchTriggerIncome();
   }
 
   build(upgradedBuilding, building: Building, planet: Planet, cost: Reward[], location: CubeCoordinates) {
@@ -190,9 +191,9 @@ export default class Player {
   }
 
 
-  receiveUpgradeResearchTriggerIncome() {
+  receiveAdvanceResearchTriggerIncome() {
     for (const event of this.events[Operator.Trigger]) {
-      if (event.condition === Condition.AdvanceTech) {
+      if (event.condition === Condition.AdvanceResearch) {
         this.data.gainRewards(event.rewards)
       };
     }
