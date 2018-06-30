@@ -149,7 +149,7 @@ function commandTitle(text: string, player?: string) {
   }  
 }
 
-function addButton(text: string, command: string, {hexes, tracks, boosters, leech}: {hexes?: Array<{coordinates: string}>, tracks?: any[], boosters?: Booster[], leech?: number} = {}) {
+function addButton(text: string, command: string, {hexes, tracks, boosters}: {hexes?: Array<{coordinates: string}>, tracks?: any[], boosters?: Booster[], leech?: number} = {}) {
   const button = $('<button class="btn btn-secondary mr-2 mb-2">');
   button.text(text);
   

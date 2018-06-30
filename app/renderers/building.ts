@@ -8,7 +8,7 @@ export default class BuildingRenderer extends PIXI.Graphics {
 
     this.lineStyle(border*2, (faction === Faction.Bescods || faction === Faction.Firaks) ? 0xc0c0c0 : 0x303030);
     this.beginFill(factionColor(faction));
-//TODO render different buildings
+
     switch (building) {
       case Building.Mine: {
         this.drawRect(-0.2*scale, -0.2 * scale, 0.4 * scale, 0.4 * scale);
