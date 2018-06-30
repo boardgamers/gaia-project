@@ -117,7 +117,7 @@ export class FactionBoard {
   constructor(input: FactionBoardRaw) {
     Object.assign(this, _.merge({}, defaultBoard, input));
 
-    const buildings = Object.values(Building);
+    const buildings = Object.values(Building).filter(bld => bld !== Building.SpaceStation);
     const toRewards = [`${Building.TradingStation}.isolatedCost`].concat(buildings.map(bld => `${bld}.cost`));
     const toIncome = ["income"].concat(buildings.map(bld => `${bld}.income`));
 

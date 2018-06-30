@@ -97,7 +97,8 @@ export enum Building {
   PlanetaryInstitute = "PI",
   Academy1 = "ac1",
   Academy2 = "ac2",
-  GaiaFormer = "gf"
+  GaiaFormer = "gf",
+  SpaceStation = "sp"
 }
 
 export enum Faction {
@@ -130,7 +131,8 @@ export enum Command {
   Leech = "leech",
   DeclineLeech = "decline",
   BurnPower = "burn",
-  PlaceLostPlanet  = "lostPlanet"
+  PlaceLostPlanet = "lostPlanet",
+  FormFederation = "federation"
 }
 
 export enum Player {
