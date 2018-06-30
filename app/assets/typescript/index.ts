@@ -10,6 +10,7 @@ import { CubeCoordinates } from "hexagrid";
 import { buildingName } from "../../data/building";
 import { factionColor } from "../../graphics/utils";
 import { Booster } from "@gaia-project/engine/src/enums";
+import boosterTiles  from "@gaia-project/engine/src/tiles/boosters";
 
 const renderer = new Renderer($("canvas#map").get(0) as HTMLCanvasElement);
 const map = renderer.map;
@@ -98,9 +99,12 @@ function showAvailableMove(player: string, command: AvailableCommand) {
         const coordinates = command.data.buildings.filter(bld => bld.building === building);
 
         if (coordinates.length > 0) {
-          addButton(`Place ${buildingName(building)}`, `${player} ${Command.Build} ${building}`, {
+          const buildDesc =  building === Building.Mine ? "Build a" : building === Building.GaiaFormer ? "Place a ": "Upgrade to";
+        
+          addButton(`${buildDesc} ${buildingName(building)}`, `${player} ${Command.Build} ${building}`, {
             hexes: coordinates
           });
+          
         }
       }
 
@@ -124,6 +128,16 @@ function showAvailableMove(player: string, command: AvailableCommand) {
 
       break;
     }
+
+    case Command.Leech: {
+      addButton("Charge power: " + command.data, `${player} ${Command.Leech} ${command.data}`);
+      break;
+    }
+
+    case Command.DeclineLeech: {
+      addButton("Decline charge power", `${player} ${Command.DeclineLeech}`);
+      break;
+    }
   }
 }
 
@@ -135,7 +149,7 @@ function commandTitle(text: string, player?: string) {
   }  
 }
 
-function addButton(text: string, command: string, {hexes, tracks, boosters}: {hexes?: Array<{coordinates: string}>, tracks?: any[], boosters?: Booster[]} = {}) {
+function addButton(text: string, command: string, {hexes, tracks, boosters}: {hexes?: Array<{coordinates: string}>, tracks?: any[], boosters?: Booster[], leech?: number} = {}) {
   const button = $('<button class="btn btn-secondary mr-2 mb-2">');
   button.text(text);
   
@@ -186,16 +200,16 @@ $(document).on("click", "*[data-command]", function() {
     return;
   }
 
-  let boosters = $(this).attr("data-boosters");
+  let boostersData = $(this).attr("data-boosters");
 
-  if (boosters) {
+  if (boostersData) {
     $("#move-buttons").html("");
     $("#move-title").append(" - Pick a booster");
-    boosters = JSON.parse(boosters);
+    boostersData = JSON.parse(boostersData);
 
     Object.values(Booster).map((booster, i) => {
-      if (boosters.includes(booster)) {
-        addButton(`Booster ${i+1}`, `${command} ${booster}`);
+      if (boostersData.includes(booster)) {
+        addButton(`Booster ${i+1}: ${boosterTiles[booster]}`, `${command} ${booster}`);
       }
     });
 
@@ -258,13 +272,15 @@ function updatePlayerInfo() {
     const data = player.data;
     const factionEnum = player.faction;
     const faction = factions[factionEnum].name;
-    const passed = lastData.passedPlayers.includes(pl) ? "(passed)" : "";
+    const passed = lastData.passedPlayers.includes(pl) ? " - (passed)" : "";
+    const boosterDesc = data.roundBooster ? data.roundBooster + ": " + boosterTiles[data.roundBooster] : "(not selected)";
 
     const info = [
-      `<b>Player ${pl+1}</b> - ${faction} ${passed}`,
-      `${data.victoryPoints}vp, ${data.credits}c, ${data.ores}o, ${data.knowledge}k, ${data.qics}q, [${data.power.gaia}] ${data.power.bowl1}/${data.power.bowl2}/${data.power.bowl3} pw`,
+      `<b>Player ${pl+1}</b> - ${faction} - ${data.victoryPoints}vp ${passed}`,
+      `${data.credits}c, ${data.ores}o, ${data.knowledge}k, ${data.qics}q, [${data.power.gaia}] ${data.power.bowl1}/${data.power.bowl2}/${data.power.bowl3} pw`,
       `range: ${data.range}, gaia-form level: ${data.terraformSteps}`,
-      `income: ${player.income.replace(/,/g, ', ')}`
+      `income: ${player.income.replace(/,/g, ', ')}`,
+      `round booster: ${boosterDesc}`
     ];
 
     $(panel).html(info.join('<br>'));
