@@ -83,17 +83,17 @@ export function generate(engine: Engine): AvailableCommand[] {
               {
                 name: Command.Leech,
                 player,
-                data: subCommand.data 
+                data: subCommand.data
               }
             );
             commands.push(
               {
                 name: Command.DeclineLeech,
                 player,
-                data: subCommand.data 
+                data: subCommand.data
               }
             );
-        
+
           }
 
           case Command.ChooseTechTile: {
@@ -101,25 +101,25 @@ export function generate(engine: Engine): AvailableCommand[] {
               {
                 name: Command.ChooseTechTile,
                 player,
-                data: subCommand.data 
+                data: subCommand.data
               }
             );
           }
 
           case Command.ChooseCoverTechTile: {
-            const tiles = data.techTiles.map( tl => tl.enabled );
+            const tiles = data.techTiles.map(tl => tl.enabled);
             commands.push(
               {
                 name: Command.ChooseCoverTechTile,
                 player,
-                data: { tiles } 
+                data: { tiles }
               }
             );
           }
-           
+
           case Command.UpgradeResearch: {
             const tracks = engine.possibleResearchAreas(player, "", subCommand.data.destResearchArea)
-   
+
             if (tracks.length > 0) {
               commands.push({
                 name: Command.UpgradeResearch,
@@ -128,13 +128,13 @@ export function generate(engine: Engine): AvailableCommand[] {
               });
             }
           }
-          // remove playerPassiveCommands 
-          engine.roundSubCommands.splice( 0, 1)
+            // remove playerPassiveCommands 
+            engine.roundSubCommands.splice(0, 1)
 
-          return commands; 
-        } 
+            return commands;
+        }
       } //end subCommand
-   
+
       // add boosters
       {
         const boosters = Object.values(Booster).filter(booster => engine.roundBoosters[booster]);

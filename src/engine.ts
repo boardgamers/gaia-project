@@ -253,26 +253,26 @@ export default class Engine {
     //TODO manage gaia phase actions for specific factions
   }
 
-  leechingPhase(player: PlayerEnum, location: CubeCoordinates){
+  leechingPhase(player: PlayerEnum, location: CubeCoordinates) {
     // exclude setup rounds
-    if (this.round <=0) {
+    if (this.round <= 0) {
       return;
-    } 
+    }
     // all players excluded leecher
-    for (const pl of this.players){     
-      if ( pl !== this.player(player)){
+    for (const pl of this.players) {
+      if (pl !== this.player(player)) {
         let leech = 0;
         for (const loc of pl.data.occupied) {
           if (this.map.distance(loc, location) < ISOLATED_DISTANCE) {
-            leech = Math.max(leech, pl.buildingValue( this.map.grid.get(loc.q, loc.r).data.building, this.map.grid.get(loc.q, loc.r).data.planet))
+            leech = Math.max(leech, pl.buildingValue(this.map.grid.get(loc.q, loc.r).data.building, this.map.grid.get(loc.q, loc.r).data.planet))
           }
         }
-        leech =  Math.min( leech,  pl.maxLeech(leech));
+        leech = Math.min(leech, pl.maxLeech(leech));
         if (leech > 0) {
           this.roundSubCommands.push({
-              name: Command.Leech,
-              player: this.players.indexOf(pl),
-              data: leech 
+            name: Command.Leech,
+            player: this.players.indexOf(pl),
+            data: leech
           })
         }
       }
@@ -282,10 +282,10 @@ export default class Engine {
   techTilePhase(player: PlayerEnum) {
     const tiles = [];
     const data = this.players[player].data;
-        
+
     //  tech tiles that player doesn't already have  
     for (const tilePos of Object.values(TechTilePos)) {
-      if (!data.techTiles.includes(tilePos) ) {
+      if (!data.techTiles.includes(tilePos)) {
         tiles.push({
           tile: this.techTiles[tilePos].tile,
           tilePos: tilePos,
@@ -294,7 +294,7 @@ export default class Engine {
       }
     }
 
-    // adv tech tiles where player has lev 4/5, free federation tokens, 
+    // adv tech tiles where player has lev 4/5, free federation tokens,
     // and available std tech tiles to cover
     for (const tilePos of Object.values(AdvTechTilePos)) {
       if (this.advTechTiles[tilePos].numTiles > 0  &&
@@ -322,87 +322,97 @@ export default class Engine {
     this.roundSubCommands.unshift({
       name: Command.ChooseCoverTechTile,
       player: player,
-      data: {  } 
-    })   
+      data: {}
+    })
   }
 
   advanceResearchAreaPhase(player: PlayerEnum, tile: string) {
     // if stdTech in a free position or advTech, any researchArea
     let destResearchArea = "";
     for (const tilePos of Object.values(TechTilePos))
-      if ( this.techTiles[tilePos].tile === tile ) {
-        if ( tilePos !== TechTilePos.Free1 &&
+      if (this.techTiles[tilePos].tile === tile) {
+        if (tilePos !== TechTilePos.Free1 &&
           tilePos !== TechTilePos.Free2 &&
-          tilePos !== TechTilePos.Free3 ) {
-            destResearchArea = tilePos;
-            break;
-          }
+          tilePos !== TechTilePos.Free3) {
+          destResearchArea = tilePos;
+          break;
+        }
       }
 
     this.roundSubCommands.unshift({
       name: Command.UpgradeResearch,
       player: player,
-      data: destResearchArea 
-    })  
-    
+      data: destResearchArea
+    })
+
   }
 
-  possibleResearchAreas( player: PlayerEnum, cost: string, destResearchArea?: ResearchField){
+  possibleResearchAreas(player: PlayerEnum, cost: string, destResearchArea?: ResearchField) {
     const tracks = [];
     const data = this.players[player].data;
 
     if (data.canPay(Reward.parse(cost))) {
       for (const field of Object.values(ResearchField)) {
 
+        // up in a specific research area
         if (destResearchArea && destResearchArea !== field) {
           continue;
         }
 
+        //already on top
+        if (data.research[field] === LAST_RESEARCH_TILE) {
+          continue;
+        }
+
         // end of the track reached
-        var destTile = Math.max(data.research[field] + 1, LAST_RESEARCH_TILE);
+        const destTile = data.research[field] + 1;
 
         // To go from 4 to 5, we need to flip a federation and nobody inside
-        const occupied  = this.playersInOrder().filter( pl =>  pl.data.research[field] === LAST_RESEARCH_TILE ).length > 0 ;
-        if ( destTile === LAST_RESEARCH_TILE && ( data.greenFederations === 0 || occupied)) {
-          destTile -= 1;
+        if (data.research[field] + 1 === LAST_RESEARCH_TILE) {
+          if (data.greenFederations === 0) {
+            continue;
+          }
+          if (this.playersInOrder().filter(pl => pl.data.research[field] === LAST_RESEARCH_TILE).length > 0) {
+            continue;
+          };
         }
 
         tracks.push({
           field,
-          to: destTile,
+          to: data.research[field],
           cost: cost
         });
-        
+
       }
-    } 
+    }
 
     return tracks;
   }
 
   /** Next player to make a move, after current player makes their move */
-  moveToNextPlayer(command : Command): PlayerEnum {
+  moveToNextPlayer(command: Command): PlayerEnum {
     const subPhaseTurn = this.roundSubCommands.length > 0;
     const playRounds = this.round > 0;
-    if ( subPhaseTurn) {
+    if (subPhaseTurn) {
       this.currentPlayer = this.roundSubCommands[0].player;
     } else {
-      if ( playRounds && command !== Command.Pass) {
+      if (playRounds && command !== Command.Pass) {
         const next = (this.currentPlayerTurnOrderPos + 1) % this.turnOrder.length;
         this.currentPlayerTurnOrderPos = next;
         this.currentPlayer = this.turnOrder[next];
         return;
       } else {
         const playerPos = this.currentPlayerTurnOrderPos;
-        if ( command === Command.Pass) {
+        if (command === Command.Pass) {
           this.passedPlayers.push(this.currentPlayer);
-        } 
-        this.turnOrder.splice( playerPos, 1); 
+        }
+        this.turnOrder.splice(playerPos, 1);
         const newPlayerPos = playerPos + 1 > this.turnOrder.length ? 0 : playerPos;
-        this.currentPlayer = this.turnOrder[newPlayerPos]; 
-        this.currentPlayerTurnOrderPos = newPlayerPos; 
-      } 
+        this.currentPlayer = this.turnOrder[newPlayerPos];
+        this.currentPlayerTurnOrderPos = newPlayerPos;
+      }
     }
-}
+  }
   
 
   playersInOrder(): Player[] {
@@ -527,20 +537,20 @@ export default class Engine {
   }
 
   [Command.ChooseTechTile](player: PlayerEnum, tile: string) {
-    const { tiles }  = this.availableCommand(player, Command.ChooseTechTile).data;
-    const tileAvailable = tiles.find(ta => ta.tile == tile );
-   
-    assert( tileAvailable !== undefined, `Impossible to get ${tile} tile`);
+    const { tiles } = this.availableCommand(player, Command.ChooseTechTile).data;
+    const tileAvailable = tiles.find(ta => ta.tile == tile);
 
-    this.player(player).loadEvents( Event.parse(techs[tile]) );
-    this.player(player).data.techTiles.push( 
+    assert(tileAvailable !== undefined, `Impossible to get ${tile} tile`);
+
+    this.player(player).loadEvents(Event.parse(techs[tile]));
+    this.player(player).data.techTiles.push(
       {
         tile: tileAvailable.tile,
         enabled: true
       }
     )
     this.techTiles[tileAvailable.tilePos].numTiles -= 1;
-  
+
     if (tileAvailable.type === "adv") {
       this.coverTechTilePhase(player)
     };
@@ -549,15 +559,15 @@ export default class Engine {
   }
 
   [Command.ChooseCoverTechTile](player: PlayerEnum, tile: string) {
-    const { tiles }  = this.availableCommand(player, Command.ChooseCoverTechTile).data;
-    const tileAvailable = tiles.find(ta => ta.tile == tile );
-   
-    assert( tileAvailable !== undefined, `Impossible to cover ${tile} tile`);
+    const { tiles } = this.availableCommand(player, Command.ChooseCoverTechTile).data;
+    const tileAvailable = tiles.find(ta => ta.tile == tile);
+
+    assert(tileAvailable !== undefined, `Impossible to cover ${tile} tile`);
     //remove tile
-    const tileIndex = this.player(player).data.techTiles.findIndex( tl => tl.tile = tileAvailable.tile )
-    this.player(player).data.techTiles.splice(tileIndex,1);
+    const tileIndex = this.player(player).data.techTiles.findIndex(tl => tl.tile = tileAvailable.tile)
+    this.player(player).data.techTiles.splice(tileIndex, 1);
     //remove bonus
-    this.player(player).removeEvents( Event.parse(techs[tile]));
+    this.player(player).removeEvents(Event.parse(techs[tile]));
   }
 
 }
