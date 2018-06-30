@@ -1,4 +1,4 @@
-import { Faction, Operator, ResearchField, Planet, Building, Resource, Booster } from './enums';
+import { Faction, Operator, ResearchField, Planet, Building, Resource, Booster, Condition } from './enums';
 import PlayerData from './player-data';
 import Event from './events';
 import { factionBoard, FactionBoard } from './faction-boards';
@@ -132,7 +132,7 @@ export default class Player {
     this.loadEvents(events);
   }
 
-  build(upgradedBuilding, building: Building, cost: Reward[], location: CubeCoordinates) {
+  build(upgradedBuilding, building: Building, planet: Planet, cost: Reward[], location: CubeCoordinates) {
     this.data.payCosts(cost);
     //excluding Gaiaformers as occupied 
     if ( building !== Building.GaiaFormer ) {
@@ -148,6 +148,9 @@ export default class Player {
       this.data[upgradedBuilding] -= 1;
       this.removeEvent(this.board[upgradedBuilding].income[this.data[upgradedBuilding]]);
     }
+
+    // get triggered income for new building
+    this.receiveBuildingTriggerIncome(building, planet);
   }
 
   pass(){
@@ -173,6 +176,25 @@ export default class Player {
     // this is for pass tile income (e.g. rounboosters, adv tiles)
     for (const event of this.events[Operator.Pass]) {
       this.data.gainRewards(event.rewards);
+    }
+  }
+
+  receiveBuildingTriggerIncome(building: Building, planet: Planet) {
+    // this is for roundboosters, techtiles and adv tile
+    for (const event of this.events[Operator.Trigger]) {
+      if (event.condition as any as string === building as any as string ||
+        (event.condition === Condition.MineOnGaia && building === Building.Mine && planet === Planet.Gaia)) {
+        this.data.gainRewards(event.rewards)
+      };
+    }
+  }
+
+
+  receiveUpgradeResearchTriggerIncome() {
+    for (const event of this.events[Operator.Trigger]) {
+      if (event.condition === Condition.AdvanceTech) {
+        this.data.gainRewards(event.rewards)
+      };
     }
   }
 
