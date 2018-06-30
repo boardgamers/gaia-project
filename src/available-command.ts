@@ -93,7 +93,7 @@ export function generate(engine: Engine): AvailableCommand[] {
                 data: subCommand.data
               }
             );
-
+            break;
           }
 
           case Command.ChooseTechTile: {
@@ -104,6 +104,7 @@ export function generate(engine: Engine): AvailableCommand[] {
                 data: subCommand.data
               }
             );
+            break;
           }
 
           case Command.ChooseCoverTechTile: {
@@ -115,6 +116,7 @@ export function generate(engine: Engine): AvailableCommand[] {
                 data: { tiles }
               }
             );
+            break;
           }
 
           case Command.UpgradeResearch: {
@@ -126,7 +128,8 @@ export function generate(engine: Engine): AvailableCommand[] {
                 player,
                 data: { tracks }
               });
-            }
+            };
+            break;
           }
 
           case Command.PlaceLostPlanet: {
@@ -139,6 +142,7 @@ export function generate(engine: Engine): AvailableCommand[] {
                 data: { spaces }
               });
             }
+            break;
           }
         }
         // remove playerPassiveCommands 
