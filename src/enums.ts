@@ -8,7 +8,8 @@ export enum Planet {
   Titanium = "t",
   Ice = "i",
   Gaia = "g",
-  Transdim = "m"
+  Transdim = "m",
+  Lost = "l"
 }
 
 export enum ResearchField {
@@ -72,7 +73,7 @@ export enum Condition {
 
   // trigger only
   MineOnGaia = "mg",
-  AdvanceTech = "a",
+  AdvanceResearch = "a",
   TerraformStep = "d"
 }
 
@@ -107,13 +108,16 @@ export enum Command {
   Init = "init",
   ChooseFaction = "faction",
   ChooseRoundBooster = "booster",
+  ChooseTechTile = "tech",
+  ChooseCoverTechTile = "cover",
   Build = "build",
   Pass = "pass",
   UpgradeResearch = "up",
   Convert = "convert",
   Leech = "leech",
   DeclineLeech = "decline",
-  BurnPower = "burn"
+  BurnPower = "burn",
+  PlaceLostPlanet  = "lostPlanet"
 }
 
 export enum Player {
@@ -148,4 +152,66 @@ export enum Booster {
   Booster8= "booster8",
   Booster9= "booster9",
   Booster10= "booster10"
+}
+
+export enum TechTile {
+  Tech1= "tech1",
+  Tech2= "tech2",
+  Tech3= "tech3",
+  Tech4= "tech4",
+  Tech5= "tech5",
+  Tech6= "tech6",
+  Tech7= "tech7",
+  Tech8= "tech8",
+  Tech9= "tech9"
+}
+
+
+export enum TechTilePos {
+  Terraforming = "terra",
+  Navigation = "nav",
+  Intelligence = "int",
+  GaiaProject = "gaia",
+  Economy = "eco",
+  Science = "sci",
+  Free1 = "free1",
+  Free2 = "free2",
+  Free3 = "free3"
+}
+
+export enum AdvTechTile {
+  AdvTech1= "advtech1",
+  AdvTech2= "advtech2",
+  AdvTech3= "advtech3",
+  AdvTech4= "advtech4",
+  AdvTech5= "advtech5",
+  AdvTech6= "advtech6",
+  AdvTech7= "advtech7",
+  AdvTech8= "advtech8",
+  AdvTech9= "advtech9",
+  AdvTech10= "advtech10",
+  AdvTech11= "advtech11",
+  AdvTech12= "advtech12",
+  AdvTech13= "advtech13",
+  AdvTech14= "advtech14",
+  AdvTech15= "advtech15"
+}
+
+export enum AdvTechTilePos {
+  Terraforming = "terra",
+  Navigation = "nav",
+  Intelligence = "int",
+  GaiaProject = "gaia",
+  Economy = "eco",
+  Science = "sci"
+}
+
+export enum Federation {
+  Federation1= "federation1",
+  Federation2= "federation2",
+  Federation3= "federation3",
+  Federation4= "federation4",
+  Federation5= "federation5",
+  Federation6= "federation6",
+  FederationGleens= "federationGleens"
 }

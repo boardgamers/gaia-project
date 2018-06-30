@@ -1,6 +1,6 @@
 import Reward from "./reward";
 import { Resource } from "..";
-import { ResearchField, Building, Booster } from "./enums";
+import { ResearchField, Building, Booster, TechTile, AdvTechTile, Federation } from "./enums";
 import { EventEmitter } from "eventemitter3";
 import { CubeCoordinates } from "hexagrid";
 
@@ -41,7 +41,10 @@ export default class PlayerData extends EventEmitter {
   gaiaformers: number = 0;
   terraformSteps: number = 0;
   roundBooster: Booster;
-
+  techTiles: { tile: TechTile, enabled: boolean}[] = [];
+  advTechTiles: AdvTechTile[] = [];
+  federations: Federation[] = [];
+  greenFederations: number = 0;
   // Coordinates occupied by buildings
   occupied: CubeCoordinates[] = [];
 
@@ -58,6 +61,10 @@ export default class PlayerData extends EventEmitter {
       gaiaformers: this.gaiaformers,
       terraformSteps: this.terraformSteps,
       roundBooster: this.roundBooster,
+      techTiles: this.techTiles,
+      advTechTiles: this.advTechTiles,
+      federations: this.federations,
+      greenFederations: this.federations,
       occupied: this.occupied
     }
 
@@ -95,7 +102,7 @@ export default class PlayerData extends EventEmitter {
     }
     
     if (resource.startsWith("up-")) {
-      this.upgradeResearch(resource.slice("up-".length) as ResearchField, count);
+      this.advanceResearch(resource.slice("up-".length) as ResearchField, count);
       return;
     }
     
@@ -190,10 +197,10 @@ export default class PlayerData extends EventEmitter {
     }
   }
 
-  upgradeResearch(which: ResearchField, count: number) {
+  advanceResearch(which: ResearchField, count: number) {
     while (count-- > 0) {
       this.research[which] += 1;
-      this.emit("upgrade-knowledge", which);
+      this.emit("advance-research", which);
     }
   }
 }

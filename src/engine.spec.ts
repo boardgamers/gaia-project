@@ -110,7 +110,7 @@ describe("Engine", () => {
     expect(() => new Engine(moves)).to.throw(AssertionError);
   });
 
-  it("should allow players to upgrade a mine to a TS, either isolated or not", () => {
+  it ("should allow players to upgrade a mine to a TS, either isolated or not", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans
@@ -154,7 +154,7 @@ describe("Engine", () => {
     expect(() => new Engine(moves)).to.throw();
   });
 
-  it("should allow a full round to pass", () => {
+  it ("should allow a full round to pass", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction lantids
@@ -263,6 +263,53 @@ describe("Engine", () => {
  
     expect(() => new Engine(moves)).to.not.throw();
   });
+
+  it ("should allow to upgrade research area after building a RL, pick tech in terra", () => {
+    const moves = parseMoves(`
+      init 2 randomSeed
+      p1 faction terrans
+      p2 faction nevlas
+      p1 build m 4x0
+      p2 build m 4x-2
+      p2 build m 2x-2
+      p1 build m 2x2
+      p2 booster booster2
+      p1 booster booster3
+      p1 build ts 4x0
+      p2 leech 1
+      p2 build ts 4x-2
+      p1 decline
+      p1 build lab 4x0
+      p1 tech tech6
+      p1 up terra
+    `);
+ 
+    expect(() => new Engine(moves)).to.not.throw();
+  });
+
+  it ("should trown when upgrading research area after building a RL, pick tech in nav", () => {
+    const moves = parseMoves(`
+      init 2 randomSeed
+      p1 faction terrans
+      p2 faction nevlas
+      p1 build m 4x0
+      p2 build m 4x-2
+      p2 build m 2x-2
+      p1 build m 2x2
+      p2 booster booster2
+      p1 booster booster3
+      p1 build ts 4x0
+      p2 leech 1
+      p2 build ts 4x-2
+      p1 decline
+      p1 build lab 4x0
+      p1 tech tech6
+      p1 up nav
+    `);
+ 
+    expect(() => new Engine(moves)).to.not.throw();
+  });
+  
 
   it("should throw when two players choose factions on the same planet", () => {
     const moves = ["init 3 seed?2", "p1 faction terrans", "p2 faction lantids"];

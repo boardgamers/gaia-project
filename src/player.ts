@@ -1,4 +1,4 @@
-import { Faction, Operator, ResearchField, Planet, Building, Resource, Booster } from './enums';
+import { Faction, Operator, ResearchField, Planet, Building, Resource, Booster, Condition } from './enums';
 import PlayerData from './player-data';
 import Event from './events';
 import { factionBoard, FactionBoard } from './faction-boards';
@@ -12,6 +12,7 @@ import boosts from './tiles/boosters';
 import { stdBuildingValue } from './buildings';
 
 const TERRAFORMING_COST = 3;
+
 
 export default class Player {
   faction: Faction = null;
@@ -27,7 +28,7 @@ export default class Player {
   };
 
   constructor() {
-    this.data.on('upgrade-knowledge', track => this.onKnowledgeUpgraded(track));
+    this.data.on('advance-research', track => this.onResearchAdvanced(track));
   }
 
   toJSON() {
@@ -125,13 +126,14 @@ export default class Player {
     this.events[event.operator].slice(findEvent, 1);
   }
   
-  onKnowledgeUpgraded(field: ResearchField) {
+  onResearchAdvanced(field: ResearchField) {
     const events = Event.parse(researchTracks[field][this.data.research[field]]);
-
     this.loadEvents(events);
+    
+    this.receiveAdvanceResearchTriggerIncome();
   }
 
-  build(upgradedBuilding, building: Building, cost: Reward[], location: CubeCoordinates) {
+  build(upgradedBuilding, building: Building, planet: Planet, cost: Reward[], location: CubeCoordinates) {
     this.data.payCosts(cost);
     //excluding Gaiaformers as occupied 
     if ( building !== Building.GaiaFormer ) {
@@ -147,6 +149,9 @@ export default class Player {
       this.data[upgradedBuilding] -= 1;
       this.removeEvent(this.board[upgradedBuilding].income[this.data[upgradedBuilding]]);
     }
+
+    // get triggered income for new building
+    this.receiveBuildingTriggerIncome(building, planet);
   }
 
   pass(){
@@ -175,6 +180,25 @@ export default class Player {
     }
   }
 
+  receiveBuildingTriggerIncome(building: Building, planet: Planet) {
+    // this is for roundboosters, techtiles and adv tile
+    for (const event of this.events[Operator.Trigger]) {
+      if (event.condition as any as string === building as any as string ||
+        (event.condition === Condition.MineOnGaia && building === Building.Mine && planet === Planet.Gaia)) {
+        this.data.gainRewards(event.rewards)
+      };
+    }
+  }
+
+
+  receiveAdvanceResearchTriggerIncome() {
+    for (const event of this.events[Operator.Trigger]) {
+      if (event.condition === Condition.AdvanceResearch) {
+        this.data.gainRewards(event.rewards)
+      };
+    }
+  }
+
   gaiaPhase() {
     /* Move gaia power tokens to regular power bowls */
     // Terrans move directly to power bowl 2
@@ -186,14 +210,15 @@ export default class Player {
     this.data.power.gaia = 0;
   }
 
-  buildingValue( building: Building, planet: Planet ){ 
+  buildingValue(building: Building, planet: Planet){ 
     const addedBescods = this.faction === Faction.Bescods && this.data[Building.PlanetaryInstitute] === 1  && planet === Planet.Titanium ? 1 : 0;
     //TODO value if TECH3
     return stdBuildingValue(building);
   }
 
-  maxLeech( possibleLeech: number ){ 
+  maxLeech(possibleLeech: number){ 
     // considers real chargeable power and victory points
     return Math.min( this.data.chargePower(possibleLeech, true), this.data.victoryPoints + 1);
   }
+
 }

@@ -1,12 +1,13 @@
-const TECH1 = "o,q";
-const TECH2 = "pt > k";
-const TECH3 = "S";
-const TECH4 = "7vp";
-const TECH5 = "+o,pw";
-const TECH6 = "+k,c";
-const TECH7 = "mg >> 3vp";
-const TECH8 = "+4c";
-const TECH9 = "=> 4pw";
-const techs = [TECH1, TECH2, TECH3, TECH4, TECH5, TECH6, TECH7, TECH8, TECH9];
+import { TechTile } from "../enums";
 
-export default techs;
+export default  {
+  [TechTile.Tech1]: ["o,q"],
+  [TechTile.Tech2]: ["pt > k"],
+  [TechTile.Tech3]: ["S"],
+  [TechTile.Tech4]: ["7vp"],
+  [TechTile.Tech5]: ["+o,pw"],
+  [TechTile.Tech6]: ["+k,c"],
+  [TechTile.Tech7]: ["mg >> 3vp"],
+  [TechTile.Tech8]: ["+4c"],
+  [TechTile.Tech9]: ["=> 4pw"]
+};

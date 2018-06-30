@@ -1,4 +1,4 @@
-import { Command, Faction, Building, ResearchField, Planet, Round, Booster, Resource, Player } from './enums';
+import { Command, Faction, Building, ResearchField, Planet, Round, Booster, Resource, Player, TechTile, TechTilePos, AdvTechTilePos } from './enums';
 import Engine from './engine';
 import * as _ from 'lodash';
 import factions from './factions';
@@ -6,6 +6,7 @@ import * as assert from "assert";
 import { upgradedBuildings } from './buildings';
 import * as research from './research-tracks';
 import Reward from './reward';
+import { PlayerData } from '..';
 
 const ISOLATED_DISTANCE = 3;
 const UPGRADE_RESEARCH_COST = "4k";
@@ -19,7 +20,7 @@ export default interface AvailableCommand {
 
 export function generate(engine: Engine): AvailableCommand[] {
 
-  switch ( engine.round ) {
+  switch (engine.round) {
     case Round.Init: {
       return [{ name: Command.Init }];
     };
@@ -62,7 +63,6 @@ export function generate(engine: Engine): AvailableCommand[] {
         }
       ];
     };
-
     case Round.SetupRoundBooster: 
     default : {
       // We are in a regular round
@@ -73,49 +73,100 @@ export function generate(engine: Engine): AvailableCommand[] {
 
       const data = engine.player(player).data;
       const map = engine.map;
-      
-      //power leech needed for current player
-      const  subCommandIndex =  engine.roundSubCommands.findIndex(command => (command.player as Player === engine.currentPlayer))
-       
-      if (subCommandIndex !== -1) {
-        const subCommand = engine.roundSubCommands[subCommandIndex];
-        if (subCommand.name === Command.Leech) {
-          commands.push(
-            {
-              name: Command.Leech,
-              player,
-              data: subCommand.data 
-            }
-          );
-          commands.push(
-            {
-              name: Command.DeclineLeech,
-              player,
-              data: subCommand.data 
-            }
-          );
-  
-        }
      
-        // remove playerPassiveCommands (leech declineleech)
-        engine.roundSubCommands.splice( subCommandIndex, 1)
+      
+      if (engine.roundSubCommands.length > 0) {
+        const subCommand = engine.roundSubCommands[0];
+        switch (subCommand.name) {
+          case Command.Leech: {
+            commands.push(
+              {
+                name: Command.Leech,
+                player,
+                data: subCommand.data
+              }
+            );
+            commands.push(
+              {
+                name: Command.DeclineLeech,
+                player,
+                data: subCommand.data
+              }
+            );
+            break;
+          }
 
-        return commands;  
-      } //end subCommand
-   
-      const boosters = Object.values(Booster).filter(booster => engine.roundBoosters[booster]);
+          case Command.ChooseTechTile: {
+            commands.push(
+              {
+                name: Command.ChooseTechTile,
+                player,
+                data: subCommand.data
+              }
+            );
+            break;
+          }
 
-      commands.push(
-        {
-          name: engine.round === Round.SetupRoundBooster ? Command.ChooseRoundBooster : Command.Pass,
-          player,
-          data: { boosters }
+          case Command.ChooseCoverTechTile: {
+            const tiles = data.techTiles.map(tl => tl.enabled);
+            commands.push(
+              {
+                name: Command.ChooseCoverTechTile,
+                player,
+                data: { tiles }
+              }
+            );
+            break;
+          }
+
+          case Command.UpgradeResearch: {
+            const tracks = engine.possibleResearchAreas(player, "", subCommand.data.destResearchArea)
+
+            if (tracks.length > 0) {
+              commands.push({
+                name: Command.UpgradeResearch,
+                player,
+                data: { tracks }
+              });
+            };
+            break;
+          }
+
+          case Command.PlaceLostPlanet: {
+            const spaces = engine.possibleSpaceLostPlanet(player)
+
+            if (spaces.length > 0) {
+              commands.push({
+                name: Command.PlaceLostPlanet,
+                player,
+                data: { spaces }
+              });
+            }
+            break;
+          }
         }
-      )
+        // remove playerPassiveCommands 
+        engine.roundSubCommands.splice(0, 1)
 
-      if (engine.round === Round.SetupRoundBooster) {
         return commands;
-      }  
+      } //end subCommand
+
+      // add boosters
+      {
+        const boosters = Object.values(Booster).filter(booster => engine.roundBoosters[booster]);
+
+        commands.push(
+          {
+            name: engine.round === Round.SetupRoundBooster ? Command.ChooseRoundBooster : Command.Pass,
+            player,
+            data: { boosters }
+          }
+        )
+
+        if (engine.round === Round.SetupRoundBooster) {
+          return commands;
+        }  
+      } // end add boosters
 
       // Add building moves
       {
@@ -196,26 +247,14 @@ export function generate(engine: Engine): AvailableCommand[] {
       } // end add buildings
 
       // Upgrade research
-      if (data.canPay(Reward.parse(UPGRADE_RESEARCH_COST))) {
-        const tracks = [];
-
-        for (const field of Object.values(ResearchField)) {
-          if (data.research[field] < research.lastTile(field) && !research.keyNeeded(field, data.research[field] + 1)) {
-            tracks.push({
-              field,
-              to: data.research[field] + 1,
-              cost: UPGRADE_RESEARCH_COST
-            });
-          }
-        }
-
-        if (tracks.length > 0) {
-          commands.push({
-            name: Command.UpgradeResearch,
-            player,
-            data: { tracks }
-          });
-        }
+      const tracks = engine.possibleResearchAreas( player, UPGRADE_RESEARCH_COST)
+   
+      if (tracks.length > 0) {
+        commands.push({
+          name: Command.UpgradeResearch,
+          player,
+          data: { tracks }
+        });
       }
 
       return commands;

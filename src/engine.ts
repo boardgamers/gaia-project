@@ -12,11 +12,20 @@ import {
   Planet,
   Round,
   Booster,
-  Resource
+  Resource,
+  TechTile,
+  TechTilePos,
+  AdvTechTile,
+  AdvTechTilePos,
+  Federation
 } from './enums';
 import { CubeCoordinates } from 'hexagrid';
+import Event from './events';
+import techs from './tiles/techs';
+import researchTracks from './research-tracks'
 
 const ISOLATED_DISTANCE = 3;
+const LAST_RESEARCH_TILE = 5;
 
 import AvailableCommand, {
   generate as generateAvailableCommands
@@ -29,6 +38,13 @@ export default class Engine {
   roundBoosters:  {
     [key in Booster]?: boolean 
   } = { }; 
+  techTiles: {
+    [key in TechTilePos]?: {tile: TechTile; numTiles: number}
+  } = {};
+  advTechTiles: {
+    [key in AdvTechTilePos]?: {tile: AdvTechTile; numTiles: number}
+  } = {};
+  terraformingFederation: Federation;
   availableCommands: AvailableCommand[] = [];
   round: number = Round.Init;
   /** Order of players in the turn */
@@ -103,7 +119,7 @@ export default class Engine {
       );
       const player = +playerS[1] - 1;
 
-      assert(  this.currentPlayer === (player as PlayerEnum), "Wrong turn order, expected "+ this.currentPlayer +' found '+player);
+      assert(  this.currentPlayer === (player as PlayerEnum), "Wrong turn order in move " + move + ", expected "+ this.currentPlayer +' found '+player);
 
       const command = split[1] as Command;
 
@@ -236,60 +252,198 @@ export default class Engine {
     //TODO manage gaia phase actions for specific factions
   }
 
-  leechingPhase(player: PlayerEnum, location: CubeCoordinates){
-    // exclude setiup rounds
-    if (this.round <=0) {
+  leechingPhase(player: PlayerEnum, location: CubeCoordinates) {
+    // exclude setup rounds
+    if (this.round <= 0) {
       return;
-    } 
+    }
     // all players excluded leecher
-    this.roundSubCommands = [];
-
-    for (const pl of this.players){     
-      if ( pl !== this.player(player)){
+    for (const pl of this.players) {
+      if (pl !== this.player(player)) {
         let leech = 0;
         for (const loc of pl.data.occupied) {
           if (this.map.distance(loc, location) < ISOLATED_DISTANCE) {
-            leech = Math.max(leech, pl.buildingValue( this.map.grid.get(loc.q, loc.r).data.building, this.map.grid.get(loc.q, loc.r).data.planet))
+            leech = Math.max(leech, pl.buildingValue(this.map.grid.get(loc.q, loc.r).data.building, this.map.grid.get(loc.q, loc.r).data.planet))
           }
         }
-        leech =  Math.min( leech,  pl.maxLeech(leech));
+        leech = Math.min(leech, pl.maxLeech(leech));
         if (leech > 0) {
-          this.turnOrder.splice( this.currentPlayerTurnOrderPos +1, 0, this.players.indexOf(pl) )
           this.roundSubCommands.push({
-              name: Command.Leech,
-              player: this.players.indexOf(pl),
-              data: leech 
+            name: Command.Leech,
+            player: this.players.indexOf(pl),
+            data: leech
           })
         }
       }
     }
   }
 
-  /** Next player to make a move, after current player makes their move */
-  moveToNextPlayer(command : Command): PlayerEnum {
-    if ( command === Command.Pass || 
-      command === Command.Leech || 
-      command === Command.DeclineLeech ||
-      this.round === Round.SetupFaction || 
-      this.round === Round.SetupBuilding || 
-      this.round === Round.SetupRoundBooster) {
-      // happens in round SetupROundBooster and standard rounds after pass move
-      const playerPos = this.currentPlayerTurnOrderPos;
-      if ( command !== Command.Leech && command !== Command.DeclineLeech) {
-        this.passedPlayers.push(this.currentPlayer);
-      }
-      this.turnOrder.splice( playerPos, 1); 
-      // if latest player is passing
-      const newPlayerPos = playerPos + 1 > this.turnOrder.length ? 0 : playerPos;
-      this.currentPlayer = this.turnOrder[newPlayerPos];  
-      this.currentPlayerTurnOrderPos = newPlayerPos;
+  techTilePhase(player: PlayerEnum) {
+    const tiles = [];
+    const data = this.players[player].data;
 
+    //  tech tiles that player doesn't already have  
+    for (const tilePos of Object.values(TechTilePos)) {
+      if (!data.techTiles.includes(tilePos)) {
+        tiles.push({
+          tile: this.techTiles[tilePos].tile,
+          tilePos: tilePos,
+          type: "std"
+        });
+      }
+    }
+
+    // adv tech tiles where player has lev 4/5, free federation tokens,
+    // and available std tech tiles to cover
+    for (const tilePos of Object.values(AdvTechTilePos)) {
+      if (this.advTechTiles[tilePos].numTiles > 0  &&
+          data.greenFederations > 0 &&
+          data.research[tilePos] >=4 && 
+          data.techTiles.filter(tech => tech.enabled).length>0 ) {
+            tiles.push({
+              tile: this.advTechTiles[tilePos].tile,
+              tilePos: tilePos,
+              type: "adv"
+            });
+      }
+    }
+
+    if (tiles.length>0) {
+      this.roundSubCommands.unshift({
+        name: Command.ChooseTechTile,
+        player: player,
+        data: { tiles } 
+    })
+    }
+  }
+
+  coverTechTilePhase(player: PlayerEnum) {
+    this.roundSubCommands.unshift({
+      name: Command.ChooseCoverTechTile,
+      player: player,
+      data: {}
+    })
+  }
+
+  lostPlanetPhase(player: PlayerEnum) {
+    this.roundSubCommands.unshift({
+      name: Command.PlaceLostPlanet,
+      player: player,
+      data: {}
+    })
+  }
+
+  advanceResearchAreaPhase(player: PlayerEnum, tile: string) {
+    // if stdTech in a free position or advTech, any researchArea
+    let destResearchArea = "";
+    for (const tilePos of Object.values(TechTilePos))
+      if (this.techTiles[tilePos].tile === tile) {
+        if (tilePos !== TechTilePos.Free1 &&
+          tilePos !== TechTilePos.Free2 &&
+          tilePos !== TechTilePos.Free3) {
+          destResearchArea = tilePos;
+          break;
+        }
+      }
+
+    this.roundSubCommands.unshift({
+      name: Command.UpgradeResearch,
+      player: player,
+      data: destResearchArea
+    })
+
+  }
+
+  possibleResearchAreas(player: PlayerEnum, cost: string, destResearchArea?: ResearchField) {
+    const tracks = [];
+    const data = this.players[player].data;
+
+    if (data.canPay(Reward.parse(cost))) {
+      for (const field of Object.values(ResearchField)) {
+
+        // up in a specific research area
+        if (destResearchArea && destResearchArea !== field) {
+          continue;
+        }
+
+        //already on top
+        if (data.research[field] === LAST_RESEARCH_TILE) {
+          continue;
+        }
+
+        // end of the track reached
+        const destTile = data.research[field] + 1;
+
+        // To go from 4 to 5, we need to flip a federation and nobody inside
+        if (data.research[field] + 1 === LAST_RESEARCH_TILE) {
+          if (data.greenFederations === 0) {
+            continue;
+          }
+          if (this.playersInOrder().filter(pl => pl.data.research[field] === LAST_RESEARCH_TILE).length > 0) {
+            continue;
+          };
+        }
+
+        tracks.push({
+          field,
+          to: data.research[field],
+          cost: cost
+        });
+
+      }
+    }
+
+    return tracks;
+  }
+
+  possibleSpaceLostPlanet(player: PlayerEnum) {
+    const data = this.player(player).data;
+    const spaces = [];
+
+    for (const hex of this.map.toJSON()) {
+      // exclude empty planets and other players' planets
+      if (hex.data.planet !== Planet.Empty) {
+        continue;
+      }
+      //TODO: check no satelittes, nor space stations
+      const distance = _.min(data.occupied.map(loc => this.map.distance(hex, loc)));
+      //TODO posible to extened? check rules const qicNeeded = Math.max(Math.ceil( (distance - data.range) / QIC_RANGE_UPGRADE), 0);
+      if (distance > data.range) {
+        continue;
+      }
+
+      spaces.push({
+        building: Building.Mine,
+        coordinates: hex.toString(),
+      });
+    }
+
+    return spaces;
+  }
+
+  /** Next player to make a move, after current player makes their move */
+  moveToNextPlayer(command: Command): PlayerEnum {
+    const subPhaseTurn = this.roundSubCommands.length > 0;
+    const playRounds = this.round > 0;
+    if (subPhaseTurn) {
+      this.currentPlayer = this.roundSubCommands[0].player;
     } else {
-      const next = (this.currentPlayerTurnOrderPos + 1) % this.turnOrder.length;
-      this.currentPlayerTurnOrderPos = next;
-      this.currentPlayer = this.turnOrder[next];
-      return;
-    } 
+      if (playRounds && command !== Command.Pass) {
+        const next = (this.currentPlayerTurnOrderPos + 1) % this.turnOrder.length;
+        this.currentPlayerTurnOrderPos = next;
+        this.currentPlayer = this.turnOrder[next];
+        return;
+      } else {
+        const playerPos = this.currentPlayerTurnOrderPos;
+        if (command === Command.Pass) {
+          this.passedPlayers.push(this.currentPlayer);
+        }
+        this.turnOrder.splice(playerPos, 1);
+        const newPlayerPos = playerPos + 1 > this.turnOrder.length ? 0 : playerPos;
+        this.currentPlayer = this.turnOrder[newPlayerPos];
+        this.currentPlayerTurnOrderPos = newPlayerPos;
+      }
+    }
   }
   
 
@@ -310,8 +464,22 @@ export default class Engine {
       this.roundBoosters[booster] = true;
     }
 
-    this.players = [];
+    // Shuffle tech tiles 
+    const techtiles = shuffleSeed.shuffle(Object.values(TechTile), this.map.rng());
+    Object.values(TechTilePos).forEach( (pos, i) => {
+      this.techTiles[pos] = {tile: techtiles[i], numTiles: 4};
+    });
+ 
+    // Choose adv tech tiles as part of the pool
+    const advtechtiles = shuffleSeed.shuffle(Object.values(AdvTechTile), this.map.rng()).slice(0, 6);
+    Object.values(AdvTechTilePos).forEach( (pos, i) => {
+      this.advTechTiles[pos] = {tile: advtechtiles[i], numTiles: 1};
+    });
 
+    this.terraformingFederation = shuffleSeed.shuffle(Object.values(Federation), this.map.rng()).slice(0,1);
+    
+    this.players = [];
+    
     for (let i = 0; i < nbPlayers; i++) {
       this.players.push(new Player());
     }
@@ -346,19 +514,26 @@ export default class Engine {
     for (const elem of buildings) {
       if (elem.building === building && elem.coordinates === location) {
         const {q, r, s} = CubeCoordinates.parse(location);
-        
+        const hex = this.map.grid.get(q, r);
+
         this.player(player).build(
           elem.upgradedBuilding,
           building,
+          hex.data.planet,
           Reward.parse(elem.cost),
           {q, r, s}
         );
 
-        const hex = this.map.grid.get(q, r);
         hex.data.building = building;
         hex.data.player = player;
 
-        this.leechingPhase( player, {q, r, s} );
+
+        this.leechingPhase(player, {q, r, s} );
+
+        if ( building === Building.ResearchLab || buildings === Building.Academy1 || building === Building.Academy2) {
+          this.techTilePhase(player);
+        }
+       
         return;
       }
     }
@@ -372,8 +547,20 @@ export default class Engine {
 
     assert(track, `Impossible to upgrade knowledge for ${field}`);
 
-    this.player(player).data.payCosts(Reward.parse(track.cost));
-    this.player(player).data.gainReward(new Reward(`${Command.UpgradeResearch}-${field}`));
+    const data = this.player(player).data;
+
+    data.payCosts(Reward.parse(track.cost));
+    data.gainReward(new Reward(`${Command.UpgradeResearch}-${field}`));
+
+    if (field === ResearchField.Terraforming && data.research[field] === LAST_RESEARCH_TILE) {
+      //gets federation token
+      //TODO
+    }
+
+    if (field === ResearchField.Navigation && data.research[field] === LAST_RESEARCH_TILE) {
+      //gets LostPlanet
+      this.lostPlanetPhase(player);
+    }
   }
 
   [Command.Pass](player: PlayerEnum, booster: Booster) {
@@ -392,7 +579,63 @@ export default class Engine {
   }
 
   [Command.DeclineLeech](player: PlayerEnum) {
-    
+  }
+
+  [Command.ChooseTechTile](player: PlayerEnum, tile: string) {
+    const { tiles } = this.availableCommand(player, Command.ChooseTechTile).data;
+    const tileAvailable = tiles.find(ta => ta.tile == tile);
+
+    assert(tileAvailable !== undefined, `Impossible to get ${tile} tile`);
+
+    this.player(player).loadEvents(Event.parse(techs[tile]));
+    this.player(player).data.techTiles.push(
+      {
+        tile: tileAvailable.tile,
+        enabled: true
+      }
+    )
+    this.techTiles[tileAvailable.tilePos].numTiles -= 1;
+    if (tileAvailable.type === "adv") {
+      this.coverTechTilePhase(player)
+    };
+    // add advance research area subCommand
+    this.advanceResearchAreaPhase(player, tile)
+  }
+
+  [Command.ChooseCoverTechTile](player: PlayerEnum, tile: string) {
+    const { tiles } = this.availableCommand(player, Command.ChooseCoverTechTile).data;
+    const tileAvailable = tiles.find(ta => ta.tile == tile);
+
+    assert(tileAvailable !== undefined, `Impossible to cover ${tile} tile`);
+    //remove tile
+    const tileIndex = this.player(player).data.techTiles.findIndex(tl => tl.tile = tileAvailable.tile)
+    this.player(player).data.techTiles.splice(tileIndex, 1);
+    //remove bonus
+    this.player(player).removeEvents(Event.parse(techs[tile]));
+  }
+
+  [Command.PlaceLostPlanet](player: PlayerEnum, location: string) {
+    const avail = this.availableCommand(player, Command.Build);
+    const { spaces } = avail.data;
+
+    for (const elem of spaces) {
+      if (elem.coordinates === location) {
+        const { q, r, s } = CubeCoordinates.parse(location);
+        const hex = this.map.grid.get(q, r);
+        hex.data.planet = Planet.Lost;
+        hex.data.building = Building.Mine;
+        hex.data.player = player;
+
+        this.players[player].data.occupied = _.uniqWith([].concat(this.players[player].data.occupied, location), _.isEqual)
+  
+        this.players[player].receiveBuildingTriggerIncome(Building.Mine, Planet.Lost)
+        this.leechingPhase(player, { q, r, s });
+
+        return;
+      }
+    }
+
+    throw new Error(`Impossible to execute build command at ${location}`);
   }
 
 }
