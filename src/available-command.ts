@@ -130,13 +130,13 @@ export function generate(engine: Engine): AvailableCommand[] {
           }
 
           case Command.PlaceLostPlanet: {
-            const tracks = engine.possibleResearchAreas(player, "", subCommand.data.destResearchArea)
+            const spaces = engine.possibleSpaceLostPlanet(player)
 
-            if (tracks.length > 0) {
+            if (spaces.length > 0) {
               commands.push({
-                name: Command.UpgradeResearch,
+                name: Command.PlaceLostPlanet,
                 player,
-                data: { tracks }
+                data: { spaces }
               });
             }
           }
