@@ -22,10 +22,9 @@ import {
 import { CubeCoordinates } from 'hexagrid';
 import Event from './events';
 import techs from './tiles/techs';
-import researchTracks from './research-tracks'
+import * as researchTracks from './research-tracks'
 
 const ISOLATED_DISTANCE = 3;
-const LAST_RESEARCH_TILE = 5;
 
 import AvailableCommand, {
   generate as generateAvailableCommands
@@ -336,7 +335,7 @@ export default class Engine {
   advanceResearchAreaPhase(player: PlayerEnum, tile: string) {
     // if stdTech in a free position or advTech, any researchArea
     let destResearchArea = "";
-    for (const tilePos of Object.values(TechTilePos))
+    for (const tilePos of Object.values(TechTilePos)) {
       if (this.techTiles[tilePos].tile === tile) {
         if (tilePos !== TechTilePos.Free1 &&
           tilePos !== TechTilePos.Free2 &&
@@ -345,12 +344,13 @@ export default class Engine {
           break;
         }
       }
+    }
 
     this.roundSubCommands.unshift({
       name: Command.UpgradeResearch,
       player: player,
       data: destResearchArea
-    })
+    });
 
   }
 
@@ -367,7 +367,7 @@ export default class Engine {
         }
 
         //already on top
-        if (data.research[field] === LAST_RESEARCH_TILE) {
+        if (data.research[field] === researchTracks.lastTile(field)) {
           continue;
         }
 
@@ -375,18 +375,17 @@ export default class Engine {
         const destTile = data.research[field] + 1;
 
         // To go from 4 to 5, we need to flip a federation and nobody inside
-        if (data.research[field] + 1 === LAST_RESEARCH_TILE) {
-          if (data.greenFederations === 0) {
-            continue;
-          }
-          if (this.playersInOrder().filter(pl => pl.data.research[field] === LAST_RESEARCH_TILE).length > 0) {
-            continue;
-          };
+        if (researchTracks.keyNeeded(field, destTile) && data.greenFederations === 0) {
+          continue;
         }
+
+        if (this.playersInOrder().some(pl => pl.data.research[field] === researchTracks.lastTile(field))) {
+          continue;
+        };
 
         tracks.push({
           field,
-          to: data.research[field],
+          to: destTile,
           cost: cost
         });
 
@@ -552,14 +551,14 @@ export default class Engine {
     data.payCosts(Reward.parse(track.cost));
     data.gainReward(new Reward(`${Command.UpgradeResearch}-${field}`));
 
-    if (field === ResearchField.Terraforming && data.research[field] === LAST_RESEARCH_TILE) {
-      //gets federation token
-      //TODO
-    }
-
-    if (field === ResearchField.Navigation && data.research[field] === LAST_RESEARCH_TILE) {
-      //gets LostPlanet
-      this.lostPlanetPhase(player);
+    if (data.research[field] === researchTracks.lastTile(field)) {
+      if (field === ResearchField.Terraforming) {
+        //gets federation token
+        //TODO
+      } else if (field === ResearchField.Navigation) {
+        //gets LostPlanet
+        this.lostPlanetPhase(player);
+      }
     }
   }
 
@@ -618,24 +617,21 @@ export default class Engine {
     const avail = this.availableCommand(player, Command.Build);
     const { spaces } = avail.data;
 
-    for (const elem of spaces) {
-      if (elem.coordinates === location) {
-        const { q, r, s } = CubeCoordinates.parse(location);
-        const hex = this.map.grid.get(q, r);
-        hex.data.planet = Planet.Lost;
-        hex.data.building = Building.Mine;
-        hex.data.player = player;
-
-        this.players[player].data.occupied = _.uniqWith([].concat(this.players[player].data.occupied, location), _.isEqual)
-  
-        this.players[player].receiveBuildingTriggerIncome(Building.Mine, Planet.Lost)
-        this.leechingPhase(player, { q, r, s });
-
-        return;
-      }
+    if (spaces.indexOf(location) === -1) {
+      throw new Error(`Impossible to execute build command at ${location}`);
     }
 
-    throw new Error(`Impossible to execute build command at ${location}`);
-  }
+    const { q, r, s } = CubeCoordinates.parse(location);
+    const hex = this.map.grid.get(q, r);
+    hex.data.planet = Planet.Lost;
+    hex.data.building = Building.Mine;
+    hex.data.player = player;
 
+    this.players[player].data.occupied = _.uniqWith([].concat(this.players[player].data.occupied, location), _.isEqual)
+
+    this.players[player].receiveBuildingTriggerIncome(Building.Mine, Planet.Lost)
+    this.leechingPhase(player, { q, r, s });
+
+    return;
+  }
 }

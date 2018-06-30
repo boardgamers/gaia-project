@@ -13,7 +13,6 @@ import { stdBuildingValue } from './buildings';
 
 const TERRAFORMING_COST = 3;
 
-
 export default class Player {
   faction: Faction = null;
   board: FactionBoard = null;
@@ -183,8 +182,7 @@ export default class Player {
   receiveBuildingTriggerIncome(building: Building, planet: Planet) {
     // this is for roundboosters, techtiles and adv tile
     for (const event of this.events[Operator.Trigger]) {
-      if (event.condition as any as string === building as any as string ||
-        (event.condition === Condition.MineOnGaia && building === Building.Mine && planet === Planet.Gaia)) {
+      if (Condition.matchesBuilding(event.condition, building, planet)) {
         this.data.gainRewards(event.rewards)
       };
     }
@@ -210,15 +208,21 @@ export default class Player {
     this.data.power.gaia = 0;
   }
 
-  buildingValue(building: Building, planet: Planet){ 
+  buildingValue(building: Building, planet: Planet){
+    const baseValue =  stdBuildingValue(building);
+
+    if (baseValue === 0) {
+      return 0;
+    }
+    
     const addedBescods = this.faction === Faction.Bescods && this.data[Building.PlanetaryInstitute] === 1  && planet === Planet.Titanium ? 1 : 0;
     //TODO value if TECH3
-    return stdBuildingValue(building);
+    return baseValue + addedBescods;
   }
 
   maxLeech(possibleLeech: number){ 
     // considers real chargeable power and victory points
-    return Math.min( this.data.chargePower(possibleLeech, true), this.data.victoryPoints + 1);
+    return Math.min(possibleLeech, this.data.power.bowl1 * 2 + this.data.power.bowl2, this.data.victoryPoints + 1);
   }
 
 }

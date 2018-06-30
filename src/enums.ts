@@ -77,6 +77,19 @@ export enum Condition {
   TerraformStep = "d"
 }
 
+export namespace Condition {
+  export function matchesBuilding(condition: Condition, building: Building, planet: Planet) : boolean {
+    if (condition as string === building as string) {
+      return true;
+    }
+    switch (condition) {
+      case Condition.MineOnGaia: return building === Building.Mine && planet === Planet.Gaia;
+      case Condition.PlanetaryInstituteOrAcademy: return building === Building.PlanetaryInstitute || building === Building.Academy1 || building === Building.Academy2;
+    }
+    return false;
+  }
+}
+
 export enum Building {
   Mine = "m",
   TradingStation = "ts",

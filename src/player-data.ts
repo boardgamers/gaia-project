@@ -152,17 +152,13 @@ export default class PlayerData extends EventEmitter {
    * 
    * @param power Power charged
    */
-  chargePower(power: number, checkOnly : boolean = false) : number {
+  chargePower(power: number) : number {
     const bowl1ToUp = Math.min(power, this.power.bowl1);
-    power -= bowl1ToUp;
-    const bowl2ToUp = Math.min(power, this.power.bowl2 + bowl1ToUp );
+    const bowl2ToUp = Math.min(power - bowl1ToUp, this.power.bowl2 + bowl1ToUp );
 
-    if (!checkOnly) {
-      this.power.bowl1 -= bowl1ToUp;
-      this.power.bowl2 += bowl1ToUp;
-      this.power.bowl2 -= bowl2ToUp;
-      this.power.bowl3 += bowl2ToUp;
-    }
+    this.power.bowl1 -= bowl1ToUp;
+    this.power.bowl2 += bowl1ToUp - bowl2ToUp;
+    this.power.bowl3 += bowl2ToUp;
     
     //returns real charged power
     return bowl1ToUp + bowl2ToUp;
