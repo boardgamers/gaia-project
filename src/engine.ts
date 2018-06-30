@@ -22,9 +22,10 @@ import {
 import { CubeCoordinates } from 'hexagrid';
 import Event from './events';
 import techs from './tiles/techs';
-
+import researchTracks from './research-tracks'
 
 const ISOLATED_DISTANCE = 3;
+const LAST_RESEARCH_TILE = 5;
 
 import AvailableCommand, {
   generate as generateAvailableCommands
@@ -44,6 +45,7 @@ export default class Engine {
     [key in AdvTechTilePos]?: {tile: AdvTechTile; numTiles: number}
   } = {};
   terraformingFederation: Federation;
+  lostPlanet: boolean = true;
   availableCommands: AvailableCommand[] = [];
   round: number = Round.Init;
   /** Order of players in the turn */
@@ -345,6 +347,38 @@ export default class Engine {
     
   }
 
+  possibleResearchAreas( player: PlayerEnum, cost: string, destResearchArea?: ResearchField){
+    const tracks = [];
+    const data = this.players[player].data;
+
+    if (data.canPay(Reward.parse(cost))) {
+      for (const field of Object.values(ResearchField)) {
+
+        if (destResearchArea && destResearchArea !== field) {
+          continue;
+        }
+
+        // end of the track reached
+        var destTile = Math.max(data.research[field] + 1, LAST_RESEARCH_TILE);
+
+        // To go from 4 to 5, we need to flip a federation and nobody inside
+        const occupied  = this.playersInOrder().filter( pl =>  pl.data.research[field] === LAST_RESEARCH_TILE ).length > 0 ;
+        if ( destTile === LAST_RESEARCH_TILE && ( data.greenFederations === 0 || occupied)) {
+          destTile -= 1;
+        }
+
+        tracks.push({
+          field,
+          to: destTile,
+          cost: cost
+        });
+        
+      }
+    } 
+
+    return tracks;
+  }
+
   /** Next player to make a move, after current player makes their move */
   moveToNextPlayer(command : Command): PlayerEnum {
     const subPhaseTurn = this.roundSubCommands.length > 0;
@@ -400,6 +434,8 @@ export default class Engine {
       this.advTechTiles[pos] = {tile: advtechtiles[i], numTiles: 1};
     });
 
+    this.terraformingFederation = shuffleSeed.shuffle(Object.values(Federation), this.map.rng()).slice(0,1);
+    
     this.players = [];
     
     for (let i = 0; i < nbPlayers; i++) {
@@ -469,6 +505,7 @@ export default class Engine {
 
     this.player(player).data.payCosts(Reward.parse(track.cost));
     this.player(player).data.gainReward(new Reward(`${Command.UpgradeResearch}-${field}`));
+
   }
 
   [Command.Pass](player: PlayerEnum, booster: Booster) {

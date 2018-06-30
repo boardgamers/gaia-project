@@ -13,6 +13,7 @@ import { stdBuildingValue } from './buildings';
 
 const TERRAFORMING_COST = 3;
 
+
 export default class Player {
   faction: Faction = null;
   board: FactionBoard = null;
@@ -197,24 +198,4 @@ export default class Player {
     return Math.min( this.data.chargePower(possibleLeech, true), this.data.victoryPoints + 1);
   }
 
-  possibleResearchAreas( cost: string, destResearchArea?: ResearchField){
-    const tracks = [];
-
-    if (this.data.canPay(Reward.parse(cost))) {
-      for (const field of Object.values(ResearchField)) {
-        if ( ((destResearchArea && destResearchArea === field) || !destResearchArea) &&
-          (this.data.research[field] < 4 || 
-          (this.data.research[field] === 4 && this.data.greenFederations > 0) ||
-           this.data.research[field] === 5)) {
-            tracks.push({
-              field,
-              to: Math.min(this.data.research[field] + 1, 5),
-              cost: cost
-            });
-        }
-      }
-    } 
-
-    return tracks;
-  }
 }

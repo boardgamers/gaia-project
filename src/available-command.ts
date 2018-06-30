@@ -118,7 +118,7 @@ export function generate(engine: Engine): AvailableCommand[] {
           }
            
           case Command.UpgradeResearch: {
-            const tracks = engine.player(player).possibleResearchAreas("", subCommand.data.destResearchArea)
+            const tracks = engine.possibleResearchAreas(player, "", subCommand.data.destResearchArea)
    
             if (tracks.length > 0) {
               commands.push({
@@ -231,7 +231,7 @@ export function generate(engine: Engine): AvailableCommand[] {
       } // end add buildings
 
       // Upgrade research
-      const tracks = engine.player(player).possibleResearchAreas(UPGRADE_RESEARCH_COST)
+      const tracks = engine.possibleResearchAreas( player, UPGRADE_RESEARCH_COST)
    
       if (tracks.length > 0) {
         commands.push({
