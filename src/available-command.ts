@@ -128,11 +128,23 @@ export function generate(engine: Engine): AvailableCommand[] {
               });
             }
           }
-            // remove playerPassiveCommands 
-            engine.roundSubCommands.splice(0, 1)
 
-            return commands;
+          case Command.PlaceLostPlanet: {
+            const tracks = engine.possibleResearchAreas(player, "", subCommand.data.destResearchArea)
+
+            if (tracks.length > 0) {
+              commands.push({
+                name: Command.UpgradeResearch,
+                player,
+                data: { tracks }
+              });
+            }
+          }
         }
+        // remove playerPassiveCommands 
+        engine.roundSubCommands.splice(0, 1)
+
+        return commands;
       } //end subCommand
 
       // add boosters

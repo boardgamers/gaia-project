@@ -45,7 +45,6 @@ export default class Engine {
     [key in AdvTechTilePos]?: {tile: AdvTechTile; numTiles: number}
   } = {};
   terraformingFederation: Federation;
-  lostPlanet: boolean = true;
   availableCommands: AvailableCommand[] = [];
   round: number = Round.Init;
   /** Order of players in the turn */
@@ -326,6 +325,14 @@ export default class Engine {
     })
   }
 
+  lostPlanetPhase(player: PlayerEnum) {
+    this.roundSubCommands.unshift({
+      name: Command.PlaceLostPlanet,
+      player: player,
+      data: {}
+    })
+  }
+
   advanceResearchAreaPhase(player: PlayerEnum, tile: string) {
     // if stdTech in a free position or advTech, any researchArea
     let destResearchArea = "";
@@ -387,6 +394,31 @@ export default class Engine {
     }
 
     return tracks;
+  }
+
+  possibleSpaceLostPlanet(player: PlayerEnum) {
+    const data = this.player(player).data;
+    const spaces = [];
+
+    for (const hex of this.map.toJSON()) {
+      // exclude empty planets and other players' planets
+      if (hex.data.planet !== Planet.Empty) {
+        continue;
+      }
+      //TODO: check no satelittes, nor space stations
+      const distance = _.min(data.occupied.map(loc => this.map.distance(hex, loc)));
+      //TODO posible to extened? check rules const qicNeeded = Math.max(Math.ceil( (distance - data.range) / QIC_RANGE_UPGRADE), 0);
+      if (distance > data.range) {
+        continue;
+      }
+
+      spaces.push({
+        building: Building.Mine,
+        coordinates: hex.toString(),
+      });
+    }
+
+    return spaces;
   }
 
   /** Next player to make a move, after current player makes their move */
@@ -513,9 +545,20 @@ export default class Engine {
 
     assert(track, `Impossible to upgrade knowledge for ${field}`);
 
-    this.player(player).data.payCosts(Reward.parse(track.cost));
-    this.player(player).data.gainReward(new Reward(`${Command.UpgradeResearch}-${field}`));
+    const data = this.player(player).data;
 
+    data.payCosts(Reward.parse(track.cost));
+    data.gainReward(new Reward(`${Command.UpgradeResearch}-${field}`));
+
+    if (field === ResearchField.Terraforming && data.research[field] === LAST_RESEARCH_TILE) {
+      //gets federation token
+      //TODO
+    }
+
+    if (field === ResearchField.Navigation && data.research[field] === LAST_RESEARCH_TILE) {
+      //gets LostPlanet
+      this.lostPlanetPhase(player);
+    }
   }
 
   [Command.Pass](player: PlayerEnum, booster: Booster) {
@@ -550,7 +593,6 @@ export default class Engine {
       }
     )
     this.techTiles[tileAvailable.tilePos].numTiles -= 1;
-
     if (tileAvailable.type === "adv") {
       this.coverTechTilePhase(player)
     };
@@ -568,6 +610,29 @@ export default class Engine {
     this.player(player).data.techTiles.splice(tileIndex, 1);
     //remove bonus
     this.player(player).removeEvents(Event.parse(techs[tile]));
+  }
+
+  [Command.PlaceLostPlanet](player: PlayerEnum, location: string) {
+    const avail = this.availableCommand(player, Command.Build);
+    const { spaces } = avail.data;
+
+    for (const elem of spaces) {
+      if (elem.coordinates === location) {
+        const { q, r, s } = CubeCoordinates.parse(location);
+        const hex = this.map.grid.get(q, r);
+        hex.data.planet = Planet.Lost;
+        hex.data.building = Building.Mine;
+        hex.data.player = player;
+
+        this.players[player].data.occupied = _.uniqWith([].concat(this.players[player].data.occupied, location), _.isEqual)
+  
+        this.leechingPhase(player, { q, r, s });
+
+        return;
+      }
+    }
+
+    throw new Error(`Impossible to execute build command at ${location}`);
   }
 
 }

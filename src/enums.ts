@@ -8,7 +8,8 @@ export enum Planet {
   Titanium = "t",
   Ice = "i",
   Gaia = "g",
-  Transdim = "m"
+  Transdim = "m",
+  Lost = "l"
 }
 
 export enum ResearchField {
@@ -115,7 +116,8 @@ export enum Command {
   Convert = "convert",
   Leech = "leech",
   DeclineLeech = "decline",
-  BurnPower = "burn"
+  BurnPower = "burn",
+  PlaceLostPlanet  = "lostPlanet"
 }
 
 export enum Player {
