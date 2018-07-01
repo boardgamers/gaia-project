@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import Event from "./events";
-import { Condition, Operator } from "..";
+import { Condition, Operator } from "./enums";
 
 describe("Events", () => {
   it("should load the ~ event", () => {
@@ -12,5 +12,13 @@ describe("Events", () => {
     expect(event.operator).to.equal(Operator.Once);
     expect(event.rewards).to.have.length(1);
     expect(event.rewards[0].isEmpty()).to.be.true;
+  });
+
+  it("should load pass events", () => {
+    const event = new Event("ts | 2vp");
+
+    expect(event.condition).to.equal(Condition.TradingStation);
+    expect(event.operator).to.equal(Operator.Pass);
+    expect(event.rewards).to.have.length(1);
   });
 });

@@ -52,7 +52,7 @@ export default class Event {
     let remaining: string;
 
     [this.condition, remaining] = findCondition(spec);
-    [this.operator, remaining] = findOperator(spec);
+    [this.operator, remaining] = findOperator(remaining);
     this.rewards = Reward.parse(remaining);
   }
 
