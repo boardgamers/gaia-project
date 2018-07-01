@@ -67,7 +67,6 @@ export default class Engine {
   loadMoves(moves: string[]) {
     for (const move of moves) {
       this.move(move);
-      this.generateAvailableCommands();
     }
   }
 
@@ -133,7 +132,9 @@ export default class Engine {
       (this[command] as any)(player as PlayerEnum, ...split.slice(2));
 
       this.endTurn(command);
-    } 
+    }
+
+    this.generateAvailableCommands();
   }
 
   numberOfPlayersWithFactions(): number {
