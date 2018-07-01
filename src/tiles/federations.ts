@@ -9,3 +9,7 @@ export default  {
   [Federation.Federation6]: ["6vp,2k"],
   [Federation.FederationGleens]: ["o,k,2c"]
 };
+
+export function isGreen(federation: Federation) {
+  return federation !== Federation.Federation1;
+}

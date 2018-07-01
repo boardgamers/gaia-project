@@ -1,8 +1,9 @@
 import Reward from "./reward";
-import { Resource } from "..";
-import { ResearchField, Building, Booster, TechTile, AdvTechTile, Federation } from "./enums";
+import { GaiaHexData, GaiaHex } from "./gaia-hex";
+import { ResearchField, Building, Booster, TechTile, AdvTechTile, Federation, Resource } from "./enums";
 import { EventEmitter } from "eventemitter3";
-import { CubeCoordinates } from "hexagrid";
+import { CubeCoordinates, Hex } from "hexagrid";
+import federationTiles, { isGreen }from "./tiles/federations";
 
 const MAX_ORE = 15;
 const MAX_CREDIT = 30;
@@ -46,7 +47,7 @@ export default class PlayerData extends EventEmitter {
   federations: Federation[] = [];
   greenFederations: number = 0;
   // Coordinates occupied by buildings
-  occupied: CubeCoordinates[] = [];
+  occupied: GaiaHex[] = [];
 
   toJSON(): Object {
     const ret = {
@@ -140,10 +141,14 @@ export default class PlayerData extends EventEmitter {
       case Resource.VictoryPoint: return this.victoryPoints >= reward.count;
       case Resource.Qic: return this.qics >= reward.count;
       case Resource.None: return true;
-      case Resource.GainToken: return this.power.bowl1 + this.power.bowl2 + this.power.bowl3 >= reward.count;
+      case Resource.GainToken: return this.discardablePowerTokens() >= reward.count;
     }
 
     return false;
+  }
+
+  discardablePowerTokens(): number {
+    return this.power.bowl1 + this.power.bowl2 + this.power.bowl3;
   }
 
   /**
@@ -198,5 +203,13 @@ export default class PlayerData extends EventEmitter {
       this.research[which] += 1;
       this.emit("advance-research", which);
     }
+  }
+
+  gainFederationToken(federation: Federation) {
+    this.federations.push(federation);
+    if (isGreen(federation)) {
+      this.greenFederations += 1;
+    }
+    this.gainRewards(federationTiles[federation].map(str => new Reward(str)));
   }
 }

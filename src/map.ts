@@ -2,7 +2,9 @@ import {Grid, Hex, CubeCoordinates} from "hexagrid";
 import * as seedrandom from "seedrandom";
 import * as shuffleSeed from "shuffle-seed";
 import * as _ from "lodash";
-import Sector, { GaiaHexData } from "./sector";
+import Sector from "./sector";
+import { Player, Planet } from "./enums";
+import { GaiaHexData, GaiaHex } from "./gaia-hex";
 
 // Data: from outer ring to inside ring, starting from a corner
 const s1 = {name: "s1", map: "eeeeemevoeed,sereee,e".replace(/,/g, "")};
@@ -123,6 +125,29 @@ export default class SpaceMap {
     _.set(this.distanceCache, `${h2}.${h1}`, distance);
 
     return distance;
+  }
+
+  excludedHexesForBuildingFederation(player: Player) {
+    const ret: Set<GaiaHex> = new Set();
+
+    for (const hex of this.grid.values()) {
+      // A planet not occupied by the player can't be used to build a federation
+      if (hex.data.planet !== Planet.Empty && hex.data.player !== player) {
+        ret.add(hex);
+        continue;
+      }
+
+      // If the player already has a federation including this hex, then this hex
+      // and the ones around are off limits.
+      if (hex.data.federations && hex.data.federations.includes(player)) {
+        ret.add(hex);
+        for (const neighbour of this.grid.neighbours(hex.q, hex.r)) {
+          ret.add(neighbour);
+        }
+      }
+    }
+
+    return ret;
   }
 
   static configuration(nbPlayers: number) {

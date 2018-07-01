@@ -1,13 +1,13 @@
 import {expect} from "chai";
 import 'mocha';
 import Player from "./player";
-import { Faction, Planet, Building, Resource } from "./enums";
+import { Faction, Planet, Building, Resource, Player as PlayerEnum } from "./enums";
 import Reward from "./reward";
 
 describe("Player", () => {
   describe("canBuild", () => {
     it("should take addedCost into account", () => {
-      const player = new Player();
+      const player = new Player(PlayerEnum.Player1);
 
       player.loadFaction(Faction.Terrans);
 

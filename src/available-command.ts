@@ -212,7 +212,6 @@ export function generate(engine: Engine): AvailableCommand[] {
               const buildCost = engine.player(player).canBuild(hex.data.planet, upgrade, {isolated, existingBuilding: hex.data.building});
               if ( buildCost !== undefined) {
                 buildings.push({
-                  upgradedBuilding: hex.data.building,
                   building: upgrade,
                   cost: buildCost.map(c => c.toString()).join(','),
                   coordinates: hex.toString()
@@ -245,6 +244,26 @@ export function generate(engine: Engine): AvailableCommand[] {
           });
         }
       } // end add buildings
+
+      // Add federations
+      {
+        const possibleTiles = Object.keys(engine.federations).filter(key => engine.federations[key] > 0);
+
+        if (possibleTiles.length > 0) {
+          const possibleFederations = engine.player(player).availableFederations(engine.map);
+
+          if (possibleFederations.length > 0) {
+            commands.push({
+              name: Command.FormFederation,
+              player,
+              data: {
+                federations: possibleTiles,
+                locations: possibleFederations.map(arr => arr.map(hex => hex.toString()).sort().join(','))
+              }
+            });
+          }
+        }
+      }
 
       // Upgrade research
       const tracks = engine.possibleResearchAreas( player, UPGRADE_RESEARCH_COST)

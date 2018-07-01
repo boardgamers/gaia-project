@@ -7,7 +7,7 @@ import Event from "./src/events";
 import AvailableCommand from "./src/available-command";
 
 export {Condition, Planet, Resource, Operator, ResearchField, Faction, Command, Building, Booster} from "./src/enums";
-export {GaiaHexData} from "./src/sector";
+export {GaiaHexData, GaiaHex} from "./src/gaia-hex";
 
 export { Player, PlayerData, Event, FactionBoard, factions, AvailableCommand };
 

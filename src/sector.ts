@@ -1,13 +1,6 @@
 import {Hex, Grid} from "hexagrid";
 import { Planet, Building, Player } from "./enums";
-
-export interface GaiaHexData {
-  planet: Planet,
-  sector: string,
-  building?: Building,
-  /** Who occupies the spot */
-  player?: Player
-}
+import { GaiaHexData } from "./gaia-hex";
 
 export default class Sector {
   /**

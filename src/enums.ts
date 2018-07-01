@@ -222,11 +222,11 @@ export enum AdvTechTilePos {
 }
 
 export enum Federation {
-  Federation1= "federation1",
-  Federation2= "federation2",
-  Federation3= "federation3",
-  Federation4= "federation4",
-  Federation5= "federation5",
-  Federation6= "federation6",
-  FederationGleens= "federationGleens"
+  Federation1= "fed1",
+  Federation2= "fed2",
+  Federation3= "fed3",
+  Federation4= "fed4",
+  Federation5= "fed5",
+  Federation6= "fed6",
+  FederationGleens= "gleens"
 }

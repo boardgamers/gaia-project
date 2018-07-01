@@ -5,13 +5,18 @@ import { factionBoard, FactionBoard } from './faction-boards';
 import * as _ from 'lodash';
 import factions from './factions';
 import Reward from './reward';
-import { CubeCoordinates } from 'hexagrid';
+import { CubeCoordinates, Hex, Grid } from 'hexagrid';
 import researchTracks from './research-tracks';
 import { terraformingStepsRequired } from './planets';
 import boosts from './tiles/boosters';
+import { Player as PlayerEnum } from './enums';
 import { stdBuildingValue } from './buildings';
+import SpaceMap from './map';
+import { GaiaHexData, GaiaHex } from './gaia-hex';
+import spanningTree from './algorithms/spanning-tree';
 
 const TERRAFORMING_COST = 3;
+const FEDERATION_COST = 7;
 
 export default class Player {
   faction: Faction = null;
@@ -26,7 +31,7 @@ export default class Player {
     [Operator.Special]: []
   };
 
-  constructor() {
+  constructor(public player: PlayerEnum) {
     this.data.on('advance-research', track => this.onResearchAdvanced(track));
   }
 
@@ -39,7 +44,7 @@ export default class Player {
   }
 
   static fromData(data: any) {
-    const player = new Player();
+    const player = new Player(data.player);
 
     if (data.faction) {
       player.loadFaction(data.faction);
@@ -136,11 +141,11 @@ export default class Player {
     this.receiveAdvanceResearchTriggerIncome();
   }
 
-  build(upgradedBuilding, building: Building, planet: Planet, cost: Reward[], location: CubeCoordinates) {
+  build(building: Building, hex: GaiaHex, cost: Reward[]) {
     this.data.payCosts(cost);
     //excluding Gaiaformers as occupied 
     if ( building !== Building.GaiaFormer ) {
-      this.data.occupied = _.uniqWith([].concat(this.data.occupied, location), _.isEqual)
+      this.data.occupied = _.uniqWith([].concat(this.data.occupied, hex), _.isEqual)
     }
 
     // Add income of the building to the list of events
@@ -148,13 +153,24 @@ export default class Player {
     this.data[building] += 1;
 
     // remove upgraded building and the associated event
-    if(upgradedBuilding) {
+    const upgradedBuilding = hex.data.building;
+    if (upgradedBuilding) {
       this.data[upgradedBuilding] -= 1;
       this.removeEvent(this.board[upgradedBuilding].income[this.data[upgradedBuilding]]);
     }
 
+    //Add to nearby federation
+    for (const occupied of this.data.occupied) {
+      if (CubeCoordinates.distance(occupied, hex) === 1 && occupied.data.federations && occupied.data.federations.includes(this.player)) {
+        hex.data.federations = (hex.data.federations||[]).concat([this.player]);
+      }
+    }
+
+    hex.data.building = building;
+    hex.data.player = this.player;
+
     // get triggered income for new building
-    this.receiveBuildingTriggerIncome(building, planet);
+    this.receiveBuildingTriggerIncome(building, hex.data.planet);
   }
 
   pass() {
@@ -215,6 +231,7 @@ export default class Player {
   buildingValue(building: Building, planet: Planet){
     const baseValue =  stdBuildingValue(building);
 
+    // Space stations or gaia-formers do not get any bonus
     if (baseValue === 0) {
       return 0;
     }
@@ -242,5 +259,57 @@ export default class Player {
     }
 
     return 0;
+  }
+  
+  availableFederations(map: SpaceMap): GaiaHex[][] {
+    const excluded = map.excludedHexesForBuildingFederation(this.player);
+
+    const hexes = this.data.occupied.map(coord => map.grid.get(coord.q, coord.r)).filter(hex => !excluded.has(hex));
+    const hexesWithBuildings = new Set(hexes);
+    const values = hexes.map(node => this.buildingValue(node.data.building, node.data.planet));
+
+    const combinations = this.possibleCombinationsForFederations(_.zipWith(hexes, values, (val1, val2) => ({hex: val1, value: val2})));
+    const maxSatellites = this.data.discardablePowerTokens();
+    
+    // We now have several combinations of buildings that can form federations
+    // We need to see if they can be connected
+    const federations: GaiaHex[][] = [];
+
+    const allHexes = [...map.grid.values()].filter(hex => !excluded.has(hex));
+    const workingGrid = new Grid(...allHexes.map(hex => new Hex(hex.q, hex.r)));
+    for (const combination of combinations) {
+      const tree = spanningTree(combination, workingGrid);
+      if (tree) {
+        // Convert from regular hex to gaia hex of grid
+        federations.push(tree.map(hex => map.grid.get(hex.q, hex.r)));
+      }
+    }
+
+    // TODO: remove federations with one more planet & one more satellite
+    // TODO: remove federations included in another
+
+    return federations;
+  }
+
+  possibleCombinationsForFederations(nodes: Array<{hex: GaiaHex, value: number}>, toReach = FEDERATION_COST): GaiaHex[][] {
+    const ret: GaiaHex[][] = [];
+
+    for (let i = 0; i < nodes.length; i ++) {
+      if (nodes[i].value === 0) {
+        continue;
+      }
+
+      if (nodes[i].value >= toReach) {
+        ret.push([nodes[i].hex]);
+        continue;
+      }
+
+      for (const possibility of this.possibleCombinationsForFederations(nodes.slice(i+1), toReach - nodes[i].value)) {
+        possibility.push(nodes[i].hex);
+        ret.push(possibility);
+      }
+    }
+
+    return ret;
   }
 }

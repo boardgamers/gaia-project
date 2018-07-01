@@ -23,13 +23,12 @@ import { CubeCoordinates } from 'hexagrid';
 import Event from './events';
 import techs from './tiles/techs';
 import * as researchTracks from './research-tracks'
-
-const ISOLATED_DISTANCE = 3;
-
 import AvailableCommand, {
   generate as generateAvailableCommands
 } from './available-command';
 import Reward from './reward';
+
+const ISOLATED_DISTANCE = 3;
 
 export default class Engine {
   map: SpaceMap;
@@ -42,6 +41,9 @@ export default class Engine {
   } = {};
   advTechTiles: {
     [key in AdvTechTilePos]?: {tile: AdvTechTile; numTiles: number}
+  } = {};
+  federations: {
+    [key in Federation]?: number
   } = {};
   terraformingFederation: Federation;
   availableCommands: AvailableCommand[] = [];
@@ -146,8 +148,8 @@ export default class Engine {
     engine.round = data.round;
     engine.availableCommands = data.availableCommands;
     engine.map = SpaceMap.fromData(data.map);
-    for (let player of data.players) {
-      engine.players.push(new Player());
+    for (const player of data.players) {
+      engine.players.push(Player.fromData(player));
     }
 
     return engine;
@@ -393,8 +395,8 @@ export default class Engine {
     const spaces = [];
 
     for (const hex of this.map.toJSON()) {
-      // exclude empty planets and other players' planets
-      if (hex.data.planet !== Planet.Empty) {
+      // exclude existing planets, satellites and space stations
+      if (hex.data.planet !== Planet.Empty || hex.data.federations || hex.data.building) {
         continue;
       }
       //TODO: check no satelittes, nor space stations
@@ -437,7 +439,6 @@ export default class Engine {
       }
     }
   }
-  
 
   playersInOrder(): Player[] {
     return this.turnOrder.map(i => this.players[i]);
@@ -469,11 +470,16 @@ export default class Engine {
     });
 
     this.terraformingFederation = shuffleSeed.shuffle(Object.values(Federation), this.map.rng()).slice(0,1);
+    for (const federation of Object.values(Federation)) {
+      if (federation !== Federation.FederationGleens) {
+        this.federations[federation] = federation === this.terraformingFederation ? 2: 3;
+      }
+    }
     
     this.players = [];
     
     for (let i = 0; i < nbPlayers; i++) {
-      this.players.push(new Player());
+      this.players.push(new Player(i));
     }
   }
 
@@ -509,16 +515,10 @@ export default class Engine {
         const hex = this.map.grid.get(q, r);
 
         this.player(player).build(
-          elem.upgradedBuilding,
           building,
-          hex.data.planet,
-          Reward.parse(elem.cost),
-          {q, r, s}
+          hex,
+          Reward.parse(elem.cost)
         );
-
-        hex.data.building = building;
-        hex.data.player = player;
-
 
         this.leechingPhase(player, {q, r, s} );
 
@@ -547,7 +547,10 @@ export default class Engine {
     if (data.research[field] === researchTracks.lastTile(field)) {
       if (field === ResearchField.Terraforming) {
         //gets federation token
-        //TODO
+        if (this.terraformingFederation) {
+          data.gainFederationToken(this.terraformingFederation);
+          this.terraformingFederation = undefined;
+        }
       } else if (field === ResearchField.Navigation) {
         //gets LostPlanet
         this.lostPlanetPhase(player);
@@ -617,14 +620,37 @@ export default class Engine {
     const { q, r, s } = CubeCoordinates.parse(location);
     const hex = this.map.grid.get(q, r);
     hex.data.planet = Planet.Lost;
-    hex.data.building = Building.Mine;
-    hex.data.player = player;
 
-    this.players[player].data.occupied = _.uniqWith([].concat(this.players[player].data.occupied, location), _.isEqual)
-
-    this.players[player].receiveBuildingTriggerIncome(Building.Mine, Planet.Lost)
+    this.player(player).build(Building.Mine, hex, []);
     this.leechingPhase(player, { q, r, s });
 
     return;
+  }
+
+  [Command.FormFederation](player: PlayerEnum, location: string, federation: Federation) {
+    const avail = this.availableCommand(player, Command.FormFederation);
+
+    if (!avail.data.locations.includes(location)) {
+      throw new Error(`Impossible to form federation at ${location}`);
+    }
+    if (!avail.data.federations.includes(federation)) {
+      throw new Error(`Impossible to form federation ${federation}`);
+    }
+
+    const pl = this.player(player);
+
+    pl.data.gainFederationToken(federation);
+    this.federations[federation] -= 1;
+
+    let nSatellites = 0;
+    const hexes = location.split(',').map(str => this.map.grid.getS(str));
+    for (const hex of hexes) {
+      hex.data.federations.push(player);
+      // TODO lantids
+      if (hex.data.player !== player) {
+        nSatellites++;
+      }
+    }
+    pl.data.payCost(new Reward(nSatellites, Resource.GainToken));
   }
 }
