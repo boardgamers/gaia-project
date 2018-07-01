@@ -153,7 +153,7 @@ export default class Player {
     this.receiveBuildingTriggerIncome(building, planet);
   }
 
-  pass(){
+  pass() {
     this.receivePassIncome();
     // remove the old booster  
     this.removeEvents( Event.parse( boosts[this.data.roundBooster]));
@@ -175,7 +175,8 @@ export default class Player {
   receivePassIncome() {
     // this is for pass tile income (e.g. rounboosters, adv tiles)
     for (const event of this.events[Operator.Pass]) {
-      this.data.gainRewards(event.rewards);
+      const times = this.eventConditionCount(event.condition);
+      this.data.gainRewards(event.rewards.map(reward => new Reward(reward.count * times, reward.type)));
     }
   }
 
@@ -187,7 +188,6 @@ export default class Player {
       };
     }
   }
-
 
   receiveAdvanceResearchTriggerIncome() {
     for (const event of this.events[Operator.Trigger]) {
@@ -225,4 +225,18 @@ export default class Player {
     return Math.min(possibleLeech, this.data.power.bowl1 * 2 + this.data.power.bowl2, this.data.victoryPoints + 1);
   }
 
+  eventConditionCount(condition: Condition) {
+    switch (condition) {
+      case Condition.None: return 1;
+      case Condition.Mine: return this.data[Building.Mine];
+      case Condition.TradingStation: return this.data[Building.TradingStation];
+      case Condition.ResearchLab: return this.data[Building.ResearchLab];
+      case Condition.PlanetaryInstituteOrAcademy: return this.data[Building.Academy1] + this.data[Building.Academy2] + this.data[Building.PlanetaryInstitute];
+      case Condition.Federation: return this.data.federations.length;
+      // TODO when federations branch is merged, use hexes of data.occupied to determine
+      case Condition.Gaia: case Condition.PlanetType: case Condition.Sector: return 0;
+    }
+
+    return 0;
+  }
 }
