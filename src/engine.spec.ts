@@ -258,10 +258,15 @@ describe("Engine", () => {
       p1 pass booster2
       p2 build ts 4x-2
       p1 leech 1
-      p1 build m 3x1
     `);
  
-    expect(() => new Engine(moves)).to.not.throw();
+    const engine = new Engine(moves);
+
+    const qicCount = engine.player(Player.Player1).data.qics;
+
+    engine.move("p1 build m 3x1");
+
+    expect(engine.player(Player.Player1).data.qics).to.equal(qicCount, "Building a mine from a gaia former doest NOT need a qic");
   });
 
   it ("should allow to upgrade research area after building a RL, pick tech in terra", () => {
