@@ -1,5 +1,6 @@
 import { Hex } from "hexagrid";
 import { Planet, Building, Player } from "./enums";
+import { stdBuildingValue } from "./buildings";
 
 export interface GaiaHexData {
   planet: Planet,
@@ -20,8 +21,19 @@ export class GaiaHex extends Hex<GaiaHexData> {
     return this.data.planet !== Planet.Empty;
   }
 
+  // Space stations do not count as colonized, gaia-formers do not count as colonized
   colonizedBy(player: Player): boolean {
+    // Neither space stations nor gaia formers have a building value, and every building with a building
+    // value counts as colonized.
+    return stdBuildingValue(this.buildingOf(player)) > 0;
+  }
+
+  buildingOf(player: Player): Building {
     // TODO lantids
-    return this.data.player === player;
+    if (this.data.player !== player) {
+      return undefined;
+    }
+
+    return this.data.building;
   }
 }

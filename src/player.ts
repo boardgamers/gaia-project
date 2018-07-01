@@ -254,8 +254,9 @@ export default class Player {
       case Condition.ResearchLab: return this.data[Building.ResearchLab];
       case Condition.PlanetaryInstituteOrAcademy: return this.data[Building.Academy1] + this.data[Building.Academy2] + this.data[Building.PlanetaryInstitute];
       case Condition.Federation: return this.data.federations.length;
-      // TODO when federations branch is merged, use hexes of data.occupied to determine
-      case Condition.Gaia: case Condition.PlanetType: case Condition.Sector: return 0;
+      case Condition.Gaia: return this.data.occupied.filter(hex => hex.data.planet === Planet.Gaia && hex.colonizedBy(this.player)).length;
+      case Condition.PlanetType: return _.uniq(this.data.occupied.filter(hex => hex.data.planet !== Planet.Empty && hex.colonizedBy(this.player)).map(hex => hex.data.planet)).length;
+      case Condition.Sector: return _.uniq(this.data.occupied.filter(hex => hex.colonizedBy(this.player)).map(hex => hex.data.sector)).length;
     }
 
     return 0;
