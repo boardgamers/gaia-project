@@ -332,18 +332,11 @@ export default class Engine {
     })
   }
 
-  advanceResearchAreaPhase(player: PlayerEnum, tile: string) {
+  advanceResearchAreaPhase(player: PlayerEnum, pos: TechTilePos) {
     // if stdTech in a free position or advTech, any researchArea
     let destResearchArea = "";
-    for (const tilePos of Object.values(TechTilePos)) {
-      if (this.techTiles[tilePos].tile === tile) {
-        if (tilePos !== TechTilePos.Free1 &&
-          tilePos !== TechTilePos.Free2 &&
-          tilePos !== TechTilePos.Free3) {
-          destResearchArea = tilePos;
-          break;
-        }
-      }
+    if (![TechTilePos.Free1, TechTilePos.Free2, TechTilePos.Free3].includes(pos) && Object.values(TechTilePos).includes(pos)) {
+      destResearchArea = pos;
     }
 
     this.roundSubCommands.unshift({
@@ -351,7 +344,6 @@ export default class Engine {
       player: player,
       data: destResearchArea
     });
-
   }
 
   possibleResearchAreas(player: PlayerEnum, cost: string, destResearchArea?: ResearchField) {
@@ -580,25 +572,25 @@ export default class Engine {
   [Command.DeclineLeech](player: PlayerEnum) {
   }
 
-  [Command.ChooseTechTile](player: PlayerEnum, tile: string) {
+  [Command.ChooseTechTile](player: PlayerEnum, pos: TechTilePos) {
     const { tiles } = this.availableCommand(player, Command.ChooseTechTile).data;
-    const tileAvailable = tiles.find(ta => ta.tile == tile);
+    const tileAvailable = tiles.find(ta => ta.tilePos == pos);
 
-    assert(tileAvailable !== undefined, `Impossible to get ${tile} tile`);
+    assert(tileAvailable !== undefined, `Impossible to get ${pos} tile`);
 
-    this.player(player).loadEvents(Event.parse(techs[tile]));
+    this.player(player).loadEvents(Event.parse(techs[this.techTiles[pos].tile]));
     this.player(player).data.techTiles.push(
       {
         tile: tileAvailable.tile,
         enabled: true
       }
-    )
-    this.techTiles[tileAvailable.tilePos].numTiles -= 1;
+    );
+    this.techTiles[pos].numTiles -= 1;
     if (tileAvailable.type === "adv") {
-      this.coverTechTilePhase(player)
+      this.coverTechTilePhase(player);
     };
     // add advance research area subCommand
-    this.advanceResearchAreaPhase(player, tile)
+    this.advanceResearchAreaPhase(player, pos);
   }
 
   [Command.ChooseCoverTechTile](player: PlayerEnum, tile: string) {
