@@ -209,7 +209,7 @@ export function generate(engine: Engine): AvailableCommand[] {
             const upgraded = upgradedBuildings(hex.data.building, engine.player(player).faction);
 
             for (const upgrade of upgraded) {
-              var buildCost = engine.player(player).canBuild(hex.data.planet, upgrade, {isolated});
+              const buildCost = engine.player(player).canBuild(hex.data.planet, upgrade, {isolated, existingBuilding: hex.data.building});
               if ( buildCost !== undefined) {
                 buildings.push({
                   upgradedBuilding: hex.data.building,

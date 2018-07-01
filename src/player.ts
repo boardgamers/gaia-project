@@ -56,7 +56,7 @@ export default class Player {
     return factions.planet(this.faction);
   }
 
-  canBuild(targetPlanet: Planet, building: Building, {isolated, addedCost}: {isolated?: boolean, addedCost?: Reward[]}) : Reward[] {
+  canBuild(targetPlanet: Planet, building: Building, {isolated, addedCost, existingBuilding}: {isolated?: boolean, addedCost?: Reward[], existingBuilding?: Building}) : Reward[] {
     if (this.data[building] >= (building === Building.GaiaFormer ? this.data.gaiaformers : this.board.maxBuildings(building))) {
       // Too many buildings of the same kind
       return undefined;
@@ -75,9 +75,13 @@ export default class Player {
       const gaiaformingDiscount =  this.data.gaiaformers > 1  ? this.data.gaiaformers : 0;
       addedCost.push(new Reward(-gaiaformingDiscount, Resource.GainToken));
     } else if (building === Building.Mine){
-      //habiltability costs
-     if ( targetPlanet === Planet.Gaia) {
-        addedCost.push(new Reward("1q"));
+      //habitability costs
+      if (targetPlanet === Planet.Gaia) {
+        if (!existingBuilding) {
+          addedCost.push(new Reward("1q"));
+        } else {
+          // Already a gaia-former on the planet, so no need to pay a Q.I.C.
+        }
       } else { // Get the number of terraforming steps to pay discounting terraforming track
         const steps = terraformingStepsRequired(factions[this.faction].planet, targetPlanet); 
         addedCost.push(new Reward((TERRAFORMING_COST - this.data.terraformSteps)*steps, Resource.Ore));
