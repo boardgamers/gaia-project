@@ -129,6 +129,14 @@ function showAvailableMove(player: string, command: AvailableCommand) {
       break;
     }
 
+    case Command.ChooseTechTile: {
+      $("#move-title").append(" - Pick tech tile");
+      for (const tile of command.data.tiles) {
+        addButton(tile.tilePos, `${player} ${Command.ChooseTechTile} ${tile.tilePos}`);
+      }
+      break;
+    }
+
     case Command.Leech: {
       addButton("Charge power: " + command.data, `${player} ${Command.Leech} ${command.data}`);
       break;
