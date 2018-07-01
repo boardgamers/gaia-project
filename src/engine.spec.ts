@@ -415,6 +415,31 @@ describe("Engine", () => {
   
       expect(() => new Engine(moves)).to.throw(AssertionError);
     });
+
+    it("should gain 2 victory points when upgrading to ts and having booster7", () => {
+      //booster7: ["o", "ts | 2vp"]
+      const moves = parseMoves(`
+        init 2 randomSeed
+        p1 faction terrans
+        p2 faction ambas
+        p1 build m 2x2
+        p2 build m -6x2
+        p2 build m 3x-4
+        p1 build m 4x-6
+        p2 booster booster2
+        p1 booster booster7
+      `);
+
+      const engine = new Engine(moves);
+      const vp = engine.player(Player.Player1).data.victoryPoints;
+      
+      engine.move("p1 build ts 4x-6");
+      engine.move("p2 decline");
+      engine.move("p2 pass booster3");
+      engine.move("p1 pass booster2");
+
+      expect(engine.player(Player.Player1).data.victoryPoints).to.equal(vp+2);
+    });
   });
 });
 
