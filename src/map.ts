@@ -52,7 +52,7 @@ for (let i = -1; i <= 1; i++) {
 export default class SpaceMap {
   rng: seedrandom.prng;
   nbPlayers: number;
-  grid: Grid<GaiaHexData>; // hexagrid
+  grid: Grid<GaiaHex>; // hexagrid
   distanceCache: {[coord: string]: {[coord: string]: number}} = {};
 
   constructor(nbPlayers ?: number, seed ?: string) {

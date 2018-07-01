@@ -11,4 +11,17 @@ export interface GaiaHexData {
   federations?: Player[]
 }
 
-export type GaiaHex = Hex<GaiaHexData>;
+export class GaiaHex extends Hex<GaiaHexData> {
+  constructor(q?: number, r?: number, data?: GaiaHexData) {
+    super(q, r, data);
+  }
+
+  hasPlanet(): boolean {
+    return this.data.planet !== Planet.Empty;
+  }
+
+  colonizedBy(player: Player): boolean {
+    // TODO lantids
+    return this.data.player === player;
+  }
+}
