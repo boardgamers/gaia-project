@@ -29,6 +29,7 @@ export enum Resource {
   Qic = "q",
   ChargePower = "pw",
   GainToken = "t",
+  GainTokenGaiaArea = "tg",
   VictoryPoint = "vp",
   TerraformStep = "d",
   RangeExtension = "r",
@@ -131,7 +132,9 @@ export enum Command {
   Leech = "leech",
   DeclineLeech = "decline",
   BurnPower = "burn",
-  PlaceLostPlanet = "lostPlanet",
+  Spend = "spend",
+  PlaceLostPlanet  = "lostPlanet",
+  FreeAction = "freeact",
   FormFederation = "federation"
 }
 

@@ -28,7 +28,9 @@ import AvailableCommand, {
 } from './available-command';
 import Reward from './reward';
 
+
 const ISOLATED_DISTANCE = 3;
+
 
 export default class Engine {
   map: SpaceMap;
@@ -268,7 +270,7 @@ export default class Engine {
             leech = Math.max(leech, pl.buildingValue(this.map.grid.get(loc.q, loc.r).data.building, this.map.grid.get(loc.q, loc.r).data.planet))
           }
         }
-        leech = Math.min(leech, pl.maxLeech(leech));
+        leech = pl.maxLeech(leech);
         if (leech > 0) {
           this.roundSubCommands.push({
             name: Command.Leech,
@@ -423,11 +425,13 @@ export default class Engine {
       this.currentPlayer = this.roundSubCommands[0].player;
     } else {
       if (playRounds && command !== Command.Pass) {
-        const next = (this.currentPlayerTurnOrderPos + 1) % this.turnOrder.length;
+        // if freeAction current player stays current player
+        const next = command !== Command.FreeAction || Command.BurnPower ? (this.currentPlayerTurnOrderPos + 1) % this.turnOrder.length : this.currentPlayerTurnOrderPos;
         this.currentPlayerTurnOrderPos = next;
         this.currentPlayer = this.turnOrder[next];
         return;
       } else {
+        // not playRounds or pass
         const playerPos = this.currentPlayerTurnOrderPos;
         if (command === Command.Pass) {
           this.passedPlayers.push(this.currentPlayer);
@@ -625,6 +629,28 @@ export default class Engine {
     this.leechingPhase(player, { q, r, s });
 
     return;
+  }
+
+  [Command.Spend](player: PlayerEnum, cost, income: string) {
+    const { actions } = this.availableCommand(player, Command.Spend).data;
+
+    for (const elem of actions) {
+      if (elem.cost === cost && elem.income === income) {
+        this.players[player].data.payCost(new Reward(cost));
+        this.players[player].data.gainReward(new Reward(income));
+        return;
+      }
+    }
+
+    assert(false, `spend ${cost} for ${income} is not allowed`
+    );
+  }
+
+  [Command.BurnPower](player: PlayerEnum, cost: number) {
+    const burn = this.availableCommand(player, Command.BurnPower).data;
+    assert(burn == cost, `Impossible to burn ${cost} power`);
+
+    this.players[player].data.payCost(new Reward(cost));
   }
 
   [Command.FormFederation](player: PlayerEnum, location: string, federation: Federation) {

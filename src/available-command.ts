@@ -1,12 +1,11 @@
-import { Command, Faction, Building, ResearchField, Planet, Round, Booster, Resource, Player, TechTile, TechTilePos, AdvTechTilePos } from './enums';
+import { Command, Faction, Building, Planet, Round, Booster, Resource} from './enums';
 import Engine from './engine';
 import * as _ from 'lodash';
 import factions from './factions';
 import * as assert from "assert";
 import { upgradedBuildings } from './buildings';
-import * as research from './research-tracks';
 import Reward from './reward';
-import { PlayerData } from '..';
+import freeActions from './actions';
 
 const ISOLATED_DISTANCE = 3;
 const UPGRADE_RESEARCH_COST = "4k";
@@ -120,7 +119,7 @@ export function generate(engine: Engine): AvailableCommand[] {
           }
 
           case Command.UpgradeResearch: {
-            const tracks = engine.possibleResearchAreas(player, "", subCommand.data.destResearchArea)
+            const tracks = engine.possibleResearchAreas(player, "", subCommand.data)
 
             if (tracks.length > 0) {
               commands.push({
@@ -273,6 +272,36 @@ export function generate(engine: Engine): AvailableCommand[] {
           name: Command.UpgradeResearch,
           player,
           data: { tracks }
+        });
+      }
+
+      // free action - spend
+      const acts = []
+      for (let i = 0; i < freeActions.length; i++) {
+        if (engine.player(player).data.canPay(Reward.parse(freeActions[i].cost))) {
+          acts.push({ 
+            cost: freeActions[i].cost,
+            income: freeActions[i].income  
+          });
+        };
+      };
+
+      if (acts.length > 0) {
+        commands.push({
+          name: Command.Spend,
+          player,
+          data: { acts }
+        });
+      }
+    
+
+      //free action - burn
+      //TODO generate burn actions based on  Math.ceil( engine.player(player).data.power.area2 / 2)
+      if (engine.player(player).data.power.area2 >= 2) {
+        commands.push({
+          name: Command.BurnPower,
+          player,
+          data: 1
         });
       }
 

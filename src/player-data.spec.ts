@@ -1,6 +1,7 @@
 import {expect} from "chai";
 import 'mocha';
 import PlayerData from "./player-data";
+import { Resource } from "./enums";
 
 describe("PlayerData", () => {
   it('should export to JSON', () => {
@@ -10,15 +11,15 @@ describe("PlayerData", () => {
   });
 
   describe("movePowerToGaia", () => {
-    it ("should remove power tokens from bowls", () => {
+    it ("should remove power tokens from power areas", () => {
       const data = new PlayerData();
-      data.power.bowl1 = 4;
-      data.power.bowl2 = 4;
+      data.power.area1 = 4;
+      data.power.area2 = 4;
 
-      data.movePowerToGaia(6);
+      data.discardPower(6, Resource.GainTokenGaiaArea);
 
-      expect(data.power.bowl1).to.equal(0);
-      expect(data.power.bowl2).to.equal(2);
+      expect(data.power.area1).to.equal(0);
+      expect(data.power.area2).to.equal(2);
       expect(data.power.gaia).to.equal(6);
     });
   });
