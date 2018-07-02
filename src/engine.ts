@@ -631,7 +631,7 @@ export default class Engine {
     return;
   }
 
-  [Command.Spend](player: PlayerEnum, cost, income: string) {
+  [Command.Spend](player: PlayerEnum, cost, _: "for", income: string) {
     const { actions } = this.availableCommand(player, Command.Spend).data;
 
     for (const elem of actions) {
