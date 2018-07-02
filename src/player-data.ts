@@ -46,7 +46,7 @@ export default class PlayerData extends EventEmitter {
   advTechTiles: AdvTechTile[] = [];
   federations: Federation[] = [];
   greenFederations: number = 0;
-  // Coordinates occupied by buildings
+  /** Coordinates occupied by buildings */
   occupied: GaiaHex[] = [];
 
   toJSON(): Object {
@@ -209,6 +209,6 @@ export default class PlayerData extends EventEmitter {
     if (isGreen(federation)) {
       this.greenFederations += 1;
     }
-    this.gainRewards(federationTiles[federation].map(str => new Reward(str)));
+    this.gainRewards(Reward.parse(federationTiles[federation]));
   }
 }

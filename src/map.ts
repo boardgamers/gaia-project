@@ -132,14 +132,14 @@ export default class SpaceMap {
 
     for (const hex of this.grid.values()) {
       // A planet not occupied by the player can't be used to build a federation
-      if (hex.data.planet !== Planet.Empty && hex.data.player !== player) {
+      if (hex.data.planet !== Planet.Empty && !hex.colonizedBy(player)) {
         ret.add(hex);
         continue;
       }
 
       // If the player already has a federation including this hex, then this hex
       // and the ones around are off limits.
-      if (hex.data.federations && hex.data.federations.includes(player)) {
+      if (hex.belongsToFederationOf(player)) {
         ret.add(hex);
         for (const neighbour of this.grid.neighbours(hex.q, hex.r)) {
           ret.add(neighbour);

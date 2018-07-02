@@ -36,4 +36,19 @@ export class GaiaHex extends Hex<GaiaHexData> {
 
     return this.data.building;
   }
+
+  belongsToFederationOf(player: Player): boolean {
+    return this.data.federations && this.data.federations.includes(player);
+  }
+
+  addToFederationOf(player: Player) {
+    if (this.belongsToFederationOf(player)) {
+      return;
+    }
+    if (this.data.federations) {
+      this.data.federations.push(player);
+    } else {
+      this.data.federations = [player];
+    }
+  }
 }
