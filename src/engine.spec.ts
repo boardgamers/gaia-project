@@ -338,6 +338,52 @@ describe("Engine", () => {
     expect(() => new Engine(moves)).to.throw();
   });
 
+  it ("should allow to form a federation and gain rewards", () => {
+    const moves = parseMoves(`
+      init 2 randomSeed
+      p1 faction terrans
+      p2 faction ambas
+      p1 build m 2x2
+      p2 build m -6x2
+      p2 build m 3x-4
+      p1 build m 4x-6
+      p2 booster booster2
+      p1 booster booster7
+      p1 build ts 4x-6
+      p2 leech 1
+      p2 up terra
+      p1 up gaia
+      p2 build ts 3x-4
+      p1 leech 2
+      p1 build gf 4x-7
+      p2 build PI 3x-4
+      p1 leech 2
+      p1 build lab 4x-6
+      p1 tech gaia
+      p1 up gaia
+      p2 leech 3
+      p2 build m 2x-3
+      p1 pass booster3
+      p2 pass booster7
+      p1 build m 4x-7
+      p2 build m 2x-2
+      p1 build ac2 4x-6
+      p1 tech free1
+      p1 up nav
+      p2 leech 3
+      p2 pass booster10
+      p1 pass booster2
+      p2 build ts 2x-3
+      p1 up nav
+    `);
+
+    const engine = new Engine(moves);
+
+    const vp = engine.player(Player.Player2).data.victoryPoints;
+    engine.move("p2 federation -1x0,-2x0,-3x1,-4x2,-5x2,-6x2,0x-1,1x-2,2x-2,2x-3,3x-4 fed2");
+    expect(engine.player(Player.Player2).data.victoryPoints).to.equal(vp+8);
+  });
+
   it("should throw when two players choose factions on the same planet", () => {
     const moves = ["init 3 seed?2", "p1 faction terrans", "p2 faction lantids"];
 
