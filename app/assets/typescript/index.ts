@@ -5,12 +5,10 @@ import { showError, removeError } from "./utils";
 import MapRenderer from "../../renderers/map";
 import ResearchRenderer from "../../renderers/research";
 import Renderer from "../../renderers";
-import { AvailableCommand, Command, factions, Building, ResearchField } from "@gaia-project/engine";
+import { AvailableCommand, Command, factions, Building, ResearchField, tiles, Booster, Federation } from "@gaia-project/engine";
 import { CubeCoordinates } from "hexagrid";
 import { buildingName } from "../../data/building";
 import { factionColor } from "../../graphics/utils";
-import { Booster } from "@gaia-project/engine/src/enums";
-import boosterTiles  from "@gaia-project/engine/src/tiles/boosters";
 
 const renderer = new Renderer($("canvas#map").get(0) as HTMLCanvasElement);
 const map = renderer.map;
@@ -157,6 +155,12 @@ function showAvailableMove(player: string, command: AvailableCommand) {
       break;
     }
 
+    case Command.FormFederation: {
+      addButton("Form federation", `${player} ${Command.FormFederation}`, {
+        hexGroups: command.data.federations.map(fed => fed.hexes),
+        federations: command.data.tiles
+      });
+    }
   }
 }
 
@@ -168,7 +172,7 @@ function commandTitle(text: string, player?: string) {
   }  
 }
 
-function addButton(text: string, command: string, {hexes, tracks, boosters, acts}: {hexes?: Array<{coordinates: string}>, tracks?: any[], boosters?: Booster[], acts?: any[]} = {}) {
+function addButton(text: string, command: string, params: {hexes?: Array<{coordinates: string}>, tracks?: any[], boosters?: Booster[], hexGroups?: string[], federations?: Federation[], hoverHexes?: CubeCoordinates[], acts?: any[]} = {}) {
   const button = $('<button class="btn btn-secondary mr-2 mb-2">');
   button.text(text);
   
@@ -178,21 +182,10 @@ function addButton(text: string, command: string, {hexes, tracks, boosters, acts
 
   $("#move-buttons").append(button);
 
-  if (hexes) {
-    button.attr("data-hexes", JSON.stringify(hexes));
+  for (const param of Object.keys(params)) {
+    button.attr(`data-${param}`, JSON.stringify(params[param]));
   }
 
-  if (tracks) {
-    button.attr("data-fields", JSON.stringify(tracks));
-  }
-
-  if (boosters) {
-    button.attr("data-boosters", JSON.stringify(boosters));
-  }
-
-  if (acts) {
-    button.attr("data-acts", JSON.stringify(acts));
-  }
   return button;
 }
 
@@ -231,7 +224,7 @@ $(document).on("click", "*[data-command]", function() {
 
     Object.values(Booster).map((booster, i) => {
       if (boostersData.includes(booster)) {
-        addButton(`Booster ${i+1}: ${boosterTiles[booster]}`, `${command} ${booster}`);
+        addButton(`Booster ${i+1}: ${tiles.boosters[booster]}`, `${command} ${booster}`);
       }
     });
 
@@ -244,21 +237,64 @@ $(document).on("click", "*[data-command]", function() {
     $("#move-buttons").html("");
     $("#move-title").append(" - Spend");
     JSON.parse(actsData).map(act => (
-      addButton(`Spend ${act.cost} Get ${act.income}`, `${command} ${act.cost} ${act.cost}`)
+      addButton(`Spend ${act.cost} to gain ${act.income}`, `${command} ${act.cost} for ${act.income}`)
     ));
 
     return;
-  };
+  };  
 
-  
+  const hexGroups = $(this).attr("data-hexGroups");
 
+  if (hexGroups) {
+    $("#move-buttons").html("");
+    $("#move-title").append(" - Federation");
 
-  // Clear exitings list of moves if the game starts anew
+    console.log(JSON.parse(hexGroups));
+    (JSON.parse(hexGroups) as string[]).forEach((hexGroup, i) => {
+      addButton(`Location ${i+1}`, `${command} ${hexGroup}`, {
+        hoverHexes: hexGroup.split(',').map(str => CubeCoordinates.parse(str)),
+        federations: JSON.parse($(this).attr("data-federations"))
+      });
+    });
+
+    return;
+  }
+
+  let federationData = $(this).attr("data-federations");
+
+  if (federationData) {
+    $("#move-buttons").html("");
+    $("#move-title").append(" - Pick a token");
+    federationData = JSON.parse(federationData);
+
+    Object.values(Federation).map((federation, i) => {
+      if (federationData.includes(federation)) {
+        addButton(`Federation ${i+1}: ${tiles.federations[federation]}`, `${command} ${federation}`);
+      }
+    });
+
+    return;
+  }
+
+  // Clear existing list of moves if the game starts anew
   if (command.startsWith("init")) {
     $("#moves").val("");
   }
   
   addMove(command);
+});
+
+// When button is hovered, highlight hexes in data-hoverHexes
+$(document).on("mouseenter", "*[data-hoverHexes]", function() {
+  const hexes = $(this).attr("data-hoverHexes");
+  
+  renderer.render(lastData, {hexes: JSON.parse(hexes).map(obj => ({
+    coord: obj
+  }))});
+});
+
+$(document).on("mouseleave", "*[data-hoverHexes]", function() {
+  renderer.render(lastData);
 });
 
 function addMove(move: string) {
@@ -310,7 +346,7 @@ function updatePlayerInfo() {
     const factionEnum = player.faction;
     const faction = factions[factionEnum].name;
     const passed = lastData.passedPlayers.includes(pl) ? " - (passed)" : "";
-    const boosterDesc = data.roundBooster ? data.roundBooster + ": " + boosterTiles[data.roundBooster] : "(not selected)";
+    const boosterDesc = data.roundBooster ? data.roundBooster + ": " + tiles.boosters [data.roundBooster] : "(not selected)";
 
     const info = [
       `<b>Player ${pl+1}</b> - ${faction} - ${data.victoryPoints}vp ${passed}`,

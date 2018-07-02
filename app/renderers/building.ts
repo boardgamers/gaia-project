@@ -1,6 +1,6 @@
 import { Building, Faction } from "@gaia-project/engine";
 import { factionColor } from "../graphics/utils";
-import * as Honeycomb from "honeycomb-grid";
+import { corners } from "../graphics/hex";
 
 export default class BuildingRenderer extends PIXI.Graphics {
   constructor(building: Building, faction:Faction, scale: number, border: number) {
@@ -32,11 +32,9 @@ export default class BuildingRenderer extends PIXI.Graphics {
         break;
       }
       case Building.GaiaFormer: {
-        const hex = Honeycomb.extendHex({ size: scale * 0.4, orientation: "flat"})(0, 0);
-        const [firstCorner, ...otherCorners] = hex.corners();
-        const center = {x: scale*0.4, y: otherCorners[1].y/2};
+        const [firstCorner, ...otherCorners] = corners(scale * 0.4);
 
-        this.drawPolygon([].concat(...[firstCorner, ...otherCorners, firstCorner].map(corner => [corner.x-center.x, corner.y-center.y])));
+        this.drawPolygon([].concat(...[firstCorner, ...otherCorners, firstCorner].map(corner => [corner.x, corner.y])));
       };
     }
 
