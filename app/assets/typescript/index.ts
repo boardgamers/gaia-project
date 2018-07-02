@@ -145,6 +145,16 @@ function showAvailableMove(player: string, command: AvailableCommand) {
       break;
     }
 
+    case Command.Spend: {
+      addButton("Spend", `${player} ${Command.Spend}`, {acts: command.data.acts});
+      break;
+    };
+
+    case Command.BurnPower: {
+      addButton("Burn power: " + command.data, `${player} ${Command.BurnPower} ${command.data}`);
+      break;
+    }
+
     case Command.FormFederation: {
       addButton("Form federation", `${player} ${Command.FormFederation}`, {
         hexGroups: command.data.federations.map(fed => fed.hexes),
@@ -162,7 +172,7 @@ function commandTitle(text: string, player?: string) {
   }  
 }
 
-function addButton(text: string, command: string, params: {hexes?: Array<{coordinates: string}>, tracks?: any[], boosters?: Booster[], hexGroups?: string[], federations?: Federation[], hoverHexes?: CubeCoordinates[]} = {}) {
+function addButton(text: string, command: string, params: {hexes?: Array<{coordinates: string}>, tracks?: any[], boosters?: Booster[], hexGroups?: string[], federations?: Federation[], hoverHexes?: CubeCoordinates[], acts?: any[]} = {}) {
   const button = $('<button class="btn btn-secondary mr-2 mb-2">');
   button.text(text);
   
@@ -220,6 +230,18 @@ $(document).on("click", "*[data-command]", function() {
 
     return;
   }
+
+  let actsData = $(this).attr("data-acts");
+
+  if (actsData) {
+    $("#move-buttons").html("");
+    $("#move-title").append(" - Spend");
+    JSON.parse(actsData).map(act => (
+      addButton(`Spend ${act.cost} to gain ${act.income}`, `${command} ${act.cost} for ${act.income}`)
+    ));
+
+    return;
+  };  
 
   const hexGroups = $(this).attr("data-hexGroups");
 
@@ -328,7 +350,7 @@ function updatePlayerInfo() {
 
     const info = [
       `<b>Player ${pl+1}</b> - ${faction} - ${data.victoryPoints}vp ${passed}`,
-      `${data.credits}c, ${data.ores}o, ${data.knowledge}k, ${data.qics}q, [${data.power.gaia}] ${data.power.bowl1}/${data.power.bowl2}/${data.power.bowl3} pw`,
+      `${data.credits}c, ${data.ores}o, ${data.knowledge}k, ${data.qics}q, [${data.power.gaia}] ${data.power.area1}/${data.power.area2}/${data.power.area3} pw`,
       `range: ${data.range}, gaia-form level: ${data.terraformSteps}`,
       `income: ${player.income.replace(/,/g, ', ')}`,
       `round booster: ${boosterDesc}`
