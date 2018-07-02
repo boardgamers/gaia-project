@@ -210,6 +210,6 @@ export default class PlayerData extends EventEmitter {
     if (isGreen(federation)) {
       this.greenFederations += 1;
     }
-    this.gainRewards(federationTiles[federation].map(str => new Reward(str)));
+    this.gainRewards(Reward.parse(federationTiles[federation]));
   }
 }
