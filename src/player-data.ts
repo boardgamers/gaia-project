@@ -46,7 +46,7 @@ export default class PlayerData extends EventEmitter {
   advTechTiles: AdvTechTile[] = [];
   federations: Federation[] = [];
   greenFederations: number = 0;
-  // Coordinates occupied by buildings
+  /** Coordinates occupied by buildings */
   occupied: GaiaHex[] = [];
 
   toJSON(): Object {

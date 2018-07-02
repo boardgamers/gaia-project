@@ -517,7 +517,8 @@ export default class Engine {
         this.player(player).build(
           building,
           hex,
-          Reward.parse(elem.cost)
+          Reward.parse(elem.cost),
+          this.map
         );
 
         this.leechingPhase(player, {q, r, s} );
@@ -621,7 +622,7 @@ export default class Engine {
     const hex = this.map.grid.get(q, r);
     hex.data.planet = Planet.Lost;
 
-    this.player(player).build(Building.Mine, hex, []);
+    this.player(player).build(Building.Mine, hex, [], this.map);
     this.leechingPhase(player, { q, r, s });
 
     return;

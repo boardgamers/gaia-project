@@ -141,7 +141,7 @@ export default class Player {
     this.receiveAdvanceResearchTriggerIncome();
   }
 
-  build(building: Building, hex: GaiaHex, cost: Reward[]) {
+  build(building: Building, hex: GaiaHex, cost: Reward[], map: SpaceMap) {
     this.data.payCosts(cost);
     //excluding Gaiaformers as occupied 
     if ( building !== Building.GaiaFormer ) {
@@ -159,15 +159,20 @@ export default class Player {
       this.removeEvent(this.board[upgradedBuilding].income[this.data[upgradedBuilding]]);
     }
 
-    //Add to nearby federation
-    for (const occupied of this.data.occupied) {
-      if (CubeCoordinates.distance(occupied, hex) === 1 && occupied.data.federations && occupied.data.federations.includes(this.player)) {
-        hex.data.federations = (hex.data.federations||[]).concat([this.player]);
-      }
-    }
-
     hex.data.building = building;
     hex.data.player = this.player;
+
+    //Add to nearby federation
+    if (building !== Building.GaiaFormer && !hex.belongsToFederationOf(this.player)) {
+      const group: GaiaHex[] = this.buildingGroup(hex);
+      const hasFederation = group.some(hex => hex.belongsToFederationOf(this.player));
+
+      if (hasFederation) {
+        for (const h of group) {
+          h.addToFederationOf(this.player);
+        }
+      }
+    }
 
     // get triggered income for new building
     this.receiveBuildingTriggerIncome(building, hex.data.planet);
@@ -275,11 +280,21 @@ export default class Player {
     // We now have several combinations of buildings that can form federations
     // We need to see if they can be connected
     const federations: GaiaHex[][] = [];
+    const buildingGroups = this.buildingGroups();
 
-    const allHexes = [...map.grid.values()].filter(hex => !excluded.has(hex));
-    const workingGrid = new Grid(...allHexes.map(hex => new Hex(hex.q, hex.r)));
     for (const combination of combinations) {
-      const tree = spanningTree(combination, workingGrid);
+      const destGroups = _.uniq(combination.map(building => buildingGroups.get(building)));
+      const buildingsInDestGroups: Set<GaiaHex> = new Set([].concat(...destGroups));
+      // Create a new grid. The following are removed:
+      // - hexes in a federation or nearby a federation
+      // - hexes belonging to a building group not part of combination
+      //
+      // Because of this second constraint, we do avoid some valid possibilites.
+      // However, those possibilites are explored in another combination
+      const allHexes = [...map.grid.values()].filter(hex => !excluded.has(hex) && (buildingsInDestGroups.has(hex) || !hexesWithBuildings.has(hex)));
+      const workingGrid = new Grid(...allHexes.map(hex => new Hex(hex.q, hex.r)));
+      const convertedDestGroups = destGroups.map(destGroup => destGroup.map(hex => workingGrid.get(hex.q, hex.r)));
+      const tree = spanningTree(convertedDestGroups, workingGrid);
       if (tree) {
         // Convert from regular hex to gaia hex of grid
         federations.push(tree.map(hex => map.grid.get(hex.q, hex.r)));
@@ -311,6 +326,38 @@ export default class Player {
       }
     }
 
+    return ret;
+  }
+
+  buildingGroups(): Map<GaiaHex, GaiaHex[]> {
+    const groups: Map<GaiaHex, GaiaHex[]> = new Map();
+
+    for (const hexWithbuilding of this.data.occupied) {
+      if (groups.has(hexWithbuilding)) {
+        continue;
+      }
+      const group = this.buildingGroup(hexWithbuilding);
+      for (const hex of group) {
+        groups.set(hex, group);
+      }
+    }
+
+    return groups;
+  }
+
+  buildingGroup(hex: GaiaHex): GaiaHex[] {
+    const ret = [];
+
+    const addHex = hex => {
+      ret.push(hex);
+      for (const building of this.data.occupied) {
+        if (CubeCoordinates.distance(hex, building) === 1 && !ret.includes(building)) {
+          addHex(building);
+        } 
+      }
+    }
+
+    addHex(hex);
     return ret;
   }
 }
