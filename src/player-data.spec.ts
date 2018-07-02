@@ -23,4 +23,19 @@ describe("PlayerData", () => {
       expect(data.power.gaia).to.equal(6);
     });
   });
+
+  describe("burn Power", () => {
+    it ("should remove power tokens from power areas 2 to power area 3", () => {
+      const data = new PlayerData();
+      data.power.area1 = 4;
+      data.power.area2 = 4;
+
+      data.burnPower(1);
+
+      expect(data.power.area1).to.equal(4);
+      expect(data.power.area2).to.equal(2);
+      expect(data.power.area3).to.equal(1);
+    });
+  });
+
 });

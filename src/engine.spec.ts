@@ -387,6 +387,25 @@ describe("Engine", () => {
     expect(data.discardablePowerTokens()).to.be.equal(powerTokens-7, "The 7 satellites should remove one power token each");
   });
 
+  it("should allow leech and burn power", () => {
+    const moves = parseMoves(`
+      init 2 randomSeed
+      p1 faction terrans
+      p2 faction nevlas
+      p1 build m 2x2
+      p2 build m 4x-2
+      p2 build m 2x-2
+      p1 build m 4x0
+      p2 booster booster2
+      p1 booster booster5
+      p1 build ts 4x0
+      p2 leech 1
+      p2 burn 1
+    `);
+ 
+    expect(() => new Engine(moves)).to.not.throw();
+  });
+
   it("should throw when two players choose factions on the same planet", () => {
     const moves = ["init 3 seed?2", "p1 faction terrans", "p2 faction lantids"];
 

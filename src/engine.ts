@@ -425,7 +425,8 @@ export default class Engine {
     } else {
       if (playRounds && command !== Command.Pass) {
         // if freeAction current player stays current player
-        const next = command !== Command.FreeAction || Command.BurnPower ? (this.currentPlayerTurnOrderPos + 1) % this.turnOrder.length : this.currentPlayerTurnOrderPos;
+        const stayCurrentPlayer = command === Command.FreeAction || command === Command.BurnPower;
+        const next = stayCurrentPlayer ? this.currentPlayerTurnOrderPos : (this.currentPlayerTurnOrderPos + 1) % this.turnOrder.length ;
         this.currentPlayerTurnOrderPos = next;
         this.currentPlayer = this.turnOrder[next];
         return;
@@ -568,12 +569,12 @@ export default class Engine {
     (this[Command.ChooseRoundBooster] as any)(player, booster, Command.Pass);
   }
 
-  [Command.Leech](player: PlayerEnum, leech: number) {
+  [Command.Leech](player: PlayerEnum, leech: string) {
     const leechCommand  = this.availableCommand(player, Command.Leech).data;
   
     assert( leechCommand == leech , `Impossible to charge ${leech} power`);
 
-    const powerLeeched = this.players[player].data.chargePower(leech);
+    const powerLeeched = this.players[player].data.chargePower(Number(leech));
     this.player(player).data.payCost( new Reward(Math.max(powerLeeched - 1, 0), Resource.VictoryPoint));
   }
 
@@ -646,11 +647,11 @@ export default class Engine {
     );
   }
 
-  [Command.BurnPower](player: PlayerEnum, cost: number) {
+  [Command.BurnPower](player: PlayerEnum, cost: string) {
     const burn = this.availableCommand(player, Command.BurnPower).data;
     assert(burn == cost, `Impossible to burn ${cost} power`);
 
-    this.players[player].data.payCost(new Reward(cost));
+    this.players[player].data.burnPower(Number(cost));
   }
 
   [Command.FormFederation](player: PlayerEnum, hexes: string, federation: Federation) {
