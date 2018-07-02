@@ -378,10 +378,13 @@ describe("Engine", () => {
     `);
 
     const engine = new Engine(moves);
-
-    const vp = engine.player(Player.Player2).data.victoryPoints;
+    const data = engine.player(Player.Player2).data;
+    const vp = data.victoryPoints;
+    const powerTokens = data.discardablePowerTokens();
     engine.move("p2 federation -1x0,-2x0,-3x1,-4x2,-5x2,-6x2,0x-1,1x-2,2x-2,2x-3,3x-4 fed2");
-    expect(engine.player(Player.Player2).data.victoryPoints).to.equal(vp+8);
+    expect(data.victoryPoints).to.equal(vp+8);
+    expect(data.power.gaia).to.be.gte(0);
+    expect(data.discardablePowerTokens()).to.be.equal(powerTokens-7, "The 7 satellites should remove one power token each");
   });
 
   it("should throw when two players choose factions on the same planet", () => {
