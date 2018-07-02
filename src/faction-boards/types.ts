@@ -35,8 +35,8 @@ export interface FactionBoardRaw {
   };
   income?: string[];
   power?: {
-    bowl1?: number,
-    bowl2?: number
+    area1?: number,
+    area2?: number
   };
 
 }
@@ -68,13 +68,13 @@ const defaultBoard: FactionBoardRaw = {
     income: ["+4pw,t"]
   },
   [Building.GaiaFormer]: {
-    cost: "6t",
+    cost: "6tg",
     income: ["~","~","~"]
   },
   income: ["3k,4o,15c,q", "+o,k"],
   power: {
-    bowl1: 4,
-    bowl2: 4
+    area1: 4,
+    area2: 4
   }
 };
 
@@ -110,8 +110,8 @@ export class FactionBoard {
   };
   income: Event[];
   power: {
-    bowl1: number,
-    bowl2: number
+    area1: number,
+    area2: number
   };
 
   constructor(input: FactionBoardRaw) {

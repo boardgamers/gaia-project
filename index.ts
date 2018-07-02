@@ -5,10 +5,11 @@ import { FactionBoard } from "./src/faction-boards";
 import factions from "./src/factions";
 import Event from "./src/events";
 import AvailableCommand from "./src/available-command";
+import tiles from "./src/tiles";
 
-export {Condition, Planet, Resource, Operator, ResearchField, Faction, Command, Building, Booster} from "./src/enums";
+export {Condition, Planet, Resource, Operator, ResearchField, Faction, Command, Building, Booster, Federation} from "./src/enums";
 export {GaiaHexData, GaiaHex} from "./src/gaia-hex";
 
-export { Player, PlayerData, Event, FactionBoard, factions, AvailableCommand };
+export { Player, PlayerData, Event, FactionBoard, factions, AvailableCommand, tiles };
 
 export default Engine;

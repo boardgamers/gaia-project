@@ -79,12 +79,12 @@ export default class Player {
     //gaiaforming discount
     if (building === Building.GaiaFormer){
       const gaiaformingDiscount =  this.data.gaiaformers > 1  ? this.data.gaiaformers : 0;
-      addedCost.push(new Reward(-gaiaformingDiscount, Resource.GainToken));
+      addedCost.push(new Reward(-gaiaformingDiscount, Resource.GainTokenGaiaArea));
     } else if (building === Building.Mine){
       //habitability costs
       if (targetPlanet === Planet.Gaia) {
         if (!existingBuilding) {
-          addedCost.push(new Reward("1q"));
+          addedCost.push(new Reward(1,Resource.Qic));
         } else {
           // Already a gaia-former on the planet, so no need to pay a Q.I.C.
         }
@@ -104,8 +104,8 @@ export default class Player {
 
     this.loadEvents(this.board.income);
 
-    this.data.power.bowl1 = this.board.power.bowl1;
-    this.data.power.bowl2 = this.board.power.bowl2;
+    this.data.power.area1 = this.board.power.area1;
+    this.data.power.area2 = this.board.power.area2;
   }
 
   loadEvents(events: Event[]) {
@@ -224,12 +224,12 @@ export default class Player {
   }
 
   gaiaPhase() {
-    /* Move gaia power tokens to regular power bowls */
-    // Terrans move directly to power bowl 2
+    /* Move gaia power tokens to regular power areas */
+    // Terrans move directly to power area 2
     if (this.faction === Faction.Terrans) {
-      this.data.power.bowl2 += this.data.power.gaia;
+      this.data.power.area2 += this.data.power.gaia;
     } else {
-      this.data.power.bowl1 += this.data.power.gaia;
+      this.data.power.area1 += this.data.power.gaia;
     }
     this.data.power.gaia = 0;
   }
@@ -249,9 +249,9 @@ export default class Player {
 
   maxLeech(possibleLeech: number){ 
     // considers real chargeable power and victory points
-    return Math.min(possibleLeech, this.data.power.bowl1 * 2 + this.data.power.bowl2, this.data.victoryPoints + 1);
+    return Math.min(possibleLeech, this.data.power.area1 * 2 + this.data.power.area2, this.data.victoryPoints + 1);
   }
-
+  
   eventConditionCount(condition: Condition) {
     switch (condition) {
       case Condition.None: return 1;

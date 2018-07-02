@@ -1,6 +1,7 @@
-import {Hex, Grid} from "hexagrid";
-import { Planet, Building, Player } from "./enums";
-import { GaiaHexData, GaiaHex } from "./gaia-hex";
+import { Grid} from "hexagrid";
+import { Planet } from "./enums";
+
+import {  GaiaHex } from "./gaia-hex";
 
 export default class Sector {
   /**
