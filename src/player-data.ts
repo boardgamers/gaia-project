@@ -115,7 +115,7 @@ export default class PlayerData extends EventEmitter {
       case Resource.Qic: this.qics += count; return;
       case Resource.GainToken: count>0 ?  this.power.area1 += count : this.discardPower(-count, Resource.GainToken); return;
       case Resource.GainTokenGaiaArea:  this.discardPower(-count, Resource.GainTokenGaiaArea); return;
-      case Resource.ChargePower: count>0 ? this.chargePower(count) : this.spendPower(count); return;
+      case Resource.ChargePower: count>0 ? this.chargePower(count) : this.spendPower(-count); return;
       case Resource.RangeExtension: this.range += count; return;
       case Resource.GaiaFormer: this.gaiaformers += count; return;
       case Resource.TerraformStep: this.terraformSteps += count; return;
