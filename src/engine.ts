@@ -632,7 +632,7 @@ export default class Engine {
   }
 
   [Command.Spend](player: PlayerEnum, cost, _: "for", income: string) {
-    const { actions } = this.availableCommand(player, Command.Spend).data;
+    const { acts: actions } = this.availableCommand(player, Command.Spend).data;
 
     for (const elem of actions) {
       if (elem.cost === cost && elem.income === income) {
