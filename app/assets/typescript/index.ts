@@ -152,6 +152,11 @@ function showAvailableMove(player: string, command: AvailableCommand) {
       break;
     };
 
+    case Command.BurnPower: {
+      addButton("Burn power: " + command.data, `${player} ${Command.BurnPower} ${command.data}`);
+      break;
+    }
+
   }
 }
 
@@ -163,7 +168,7 @@ function commandTitle(text: string, player?: string) {
   }  
 }
 
-function addButton(text: string, command: string, {hexes, tracks, boosters, acts}: {hexes?: Array<{coordinates: string}>, tracks?: any[], boosters?: Booster[], acts?: any[],leech?: number} = {}) {
+function addButton(text: string, command: string, {hexes, tracks, boosters, acts}: {hexes?: Array<{coordinates: string}>, tracks?: any[], boosters?: Booster[], acts?: any[]} = {}) {
   const button = $('<button class="btn btn-secondary mr-2 mb-2">');
   button.text(text);
   
@@ -241,7 +246,7 @@ $(document).on("click", "*[data-command]", function() {
     JSON.parse(actsData).map(act => (
       addButton(`Spend ${act.cost} Get ${act.income}`, `${command} ${act.cost} ${act.cost}`)
     ));
-    
+
     return;
   };
 
