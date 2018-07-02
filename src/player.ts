@@ -288,14 +288,15 @@ export default class Player {
       const buildingsInDestGroups: Set<GaiaHex> = new Set([].concat(...destGroups));
       // Create a new grid. The following are removed:
       // - hexes in a federation or nearby a federation
-      // - hexes belonging to a building group not part of combination
+      // - hexes belonging to a building group not part of combination, or adjacent to them
       //
       // Because of this second constraint, we do avoid some valid possibilites.
       // However, those possibilites are explored in another combination
-      const allHexes = [...map.grid.values()].filter(hex => !excluded.has(hex) && (buildingsInDestGroups.has(hex) || !hexesWithBuildings.has(hex)));
+      const otherExcluded: Set<GaiaHex> = new Set([].concat(...this.data.occupied.map(hex => buildingsInDestGroups.has(hex) ? [] : [hex, ...map.grid.neighbours(hex.q, hex.r)])));
+      const allHexes = [...map.grid.values()].filter(hex => !excluded.has(hex) && !otherExcluded.has(hex));
       const workingGrid = new Grid(...allHexes.map(hex => new Hex(hex.q, hex.r)));
       const convertedDestGroups = destGroups.map(destGroup => destGroup.map(hex => workingGrid.get(hex.q, hex.r)));
-      const tree = spanningTree(convertedDestGroups, workingGrid, maxSatellites);
+      const tree = spanningTree(convertedDestGroups, workingGrid, maxSatellites, "heuristic");
       if (tree) {
         // Convert from regular hex to gaia hex of grid
         federations.push(tree.map(hex => map.grid.get(hex.q, hex.r)));
@@ -380,5 +381,9 @@ export default class Player {
 
     addHex(hex);
     return ret;
+  }
+
+  addAdjacentBuildings(hexes: GaiaHex[], buildingGroups = this.buildingGroups()): GaiaHex[] {
+    return _.uniq([].concat(...hexes.map(hex => this.buildingGroup(hex))));
   }
 }
