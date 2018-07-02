@@ -21,7 +21,6 @@
   "dependencies": {
     "@gaia-project/engine": "^0.13.2",
     "hexagrid": "^0.1.10",
-    "honeycomb-grid": "^1.3.3",
     "pixi.js": "^4.7.0"
   },
   "devDependencies": {
