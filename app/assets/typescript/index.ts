@@ -146,6 +146,12 @@ function showAvailableMove(player: string, command: AvailableCommand) {
       addButton("Decline charge power", `${player} ${Command.DeclineLeech}`);
       break;
     }
+
+    case Command.Spend: {
+      addButton("Spend", `${player} ${Command.Spend}`, {acts: command.data.acts});
+      break;
+    };
+
   }
 }
 
@@ -157,7 +163,7 @@ function commandTitle(text: string, player?: string) {
   }  
 }
 
-function addButton(text: string, command: string, {hexes, tracks, boosters}: {hexes?: Array<{coordinates: string}>, tracks?: any[], boosters?: Booster[], leech?: number} = {}) {
+function addButton(text: string, command: string, {hexes, tracks, boosters, acts}: {hexes?: Array<{coordinates: string}>, tracks?: any[], boosters?: Booster[], acts?: any[],leech?: number} = {}) {
   const button = $('<button class="btn btn-secondary mr-2 mb-2">');
   button.text(text);
   
@@ -179,6 +185,9 @@ function addButton(text: string, command: string, {hexes, tracks, boosters}: {he
     button.attr("data-boosters", JSON.stringify(boosters));
   }
 
+  if (acts) {
+    button.attr("data-acts", JSON.stringify(acts));
+  }
   return button;
 }
 
@@ -223,6 +232,21 @@ $(document).on("click", "*[data-command]", function() {
 
     return;
   }
+
+  let actsData = $(this).attr("data-acts");
+
+  if (actsData) {
+    $("#move-buttons").html("");
+    $("#move-title").append(" - Spend");
+    JSON.parse(actsData).map(act => (
+      addButton(`Spend ${act.cost} Get ${act.income}`, `${command} ${act.cost} ${act.cost}`)
+    ));
+    
+    return;
+  };
+
+  
+
 
   // Clear exitings list of moves if the game starts anew
   if (command.startsWith("init")) {
