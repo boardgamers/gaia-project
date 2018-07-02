@@ -257,8 +257,12 @@ export function generate(engine: Engine): AvailableCommand[] {
               name: Command.FormFederation,
               player,
               data: {
-                federations: possibleTiles,
-                locations: possibleFederations.map(arr => arr.map(hex => hex.toString()).sort().join(','))
+                tiles: possibleTiles,
+                federations: possibleFederations.map(fed => ({
+                  planets: fed.planets,
+                  satellites: fed.satellites,
+                  hexes: fed.hexes.map(hex => hex.toString()).sort().join(',')
+                }))
               }
             });
           }

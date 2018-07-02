@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import { Grid, Hex } from "hexagrid";
 import shortestPath from './shortest-path';
 
-export default function spanningTree(destGroups: Hex[][], grid: Grid): Hex[] {
+export default function spanningTree(destGroups: Hex[][], grid: Grid, maxAdditional = -1): Hex[] {
   const destHexes: Hex[] = [].concat(...destGroups);
   const destHexesSet = new Set(destHexes);
 
@@ -34,7 +34,7 @@ export default function spanningTree(destGroups: Hex[][], grid: Grid): Hex[] {
     }
   }
 
-  let minScore = grid.size;
+  let minScore = maxAdditional === -1 ? grid.size + 1 : destHexes.length + maxAdditional + 1;
   let bestSolution = undefined;
 
   for (const startingPoint of startingPoints) {

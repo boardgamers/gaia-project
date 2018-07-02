@@ -14,6 +14,7 @@ import { stdBuildingValue } from './buildings';
 import SpaceMap from './map';
 import { GaiaHexData, GaiaHex } from './gaia-hex';
 import spanningTree from './algorithms/spanning-tree';
+import { FederationInfo, isOutclassedBy } from './federation';
 
 const TERRAFORMING_COST = 3;
 const FEDERATION_COST = 7;
@@ -267,7 +268,7 @@ export default class Player {
     return 0;
   }
   
-  availableFederations(map: SpaceMap): GaiaHex[][] {
+  availableFederations(map: SpaceMap): FederationInfo[] {
     const excluded = map.excludedHexesForBuildingFederation(this.player);
 
     const hexes = this.data.occupied.map(coord => map.grid.get(coord.q, coord.r)).filter(hex => !excluded.has(hex));
@@ -294,17 +295,37 @@ export default class Player {
       const allHexes = [...map.grid.values()].filter(hex => !excluded.has(hex) && (buildingsInDestGroups.has(hex) || !hexesWithBuildings.has(hex)));
       const workingGrid = new Grid(...allHexes.map(hex => new Hex(hex.q, hex.r)));
       const convertedDestGroups = destGroups.map(destGroup => destGroup.map(hex => workingGrid.get(hex.q, hex.r)));
-      const tree = spanningTree(convertedDestGroups, workingGrid);
+      const tree = spanningTree(convertedDestGroups, workingGrid, maxSatellites);
       if (tree) {
         // Convert from regular hex to gaia hex of grid
         federations.push(tree.map(hex => map.grid.get(hex.q, hex.r)));
       }
     }
 
-    // TODO: remove federations with one more planet & one more satellite
-    // TODO: remove federations included in another
+    const fedsWithInfo: FederationInfo[] = federations.map(federation => {
+      const nSatellites = federation.filter(hex => map.grid.get(hex.q, hex.r).data.planet === Planet.Empty).length;
+      const nPlanets = federation.filter(hex => map.grid.get(hex.q, hex.r).colonizedBy(this.player)).length;
 
-    return federations;
+      return {
+        hexes: federation,
+        satellites: nSatellites,
+        planets: nPlanets
+      };
+    });
+
+    // Remove federations with one more planet & one more satellite
+    // Also remove federations containing another
+    const toRemove: FederationInfo[] = [];
+    for (const fed of fedsWithInfo) {
+      for (const comparison of fedsWithInfo) {
+        if (comparison !== fed && isOutclassedBy(fed, comparison)) {
+          toRemove.push(fed);
+          break;
+        }
+      }
+    }
+
+    return _.difference(fedsWithInfo, toRemove);
   }
 
   possibleCombinationsForFederations(nodes: Array<{hex: GaiaHex, value: number}>, toReach = FEDERATION_COST): GaiaHex[][] {
