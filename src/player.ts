@@ -149,9 +149,12 @@ export default class Player {
       this.data.occupied = _.uniqWith([].concat(this.data.occupied, hex), _.isEqual)
     }
 
-    // Add income of the building to the list of events
-    this.loadEvent(this.board[building].income[this.data[building]]);
-    this.data[building] += 1;
+    // The mine of the lost planet doesn't grant any extra income
+    if (hex.data.planet !== Planet.Lost) {
+      // Add income of the building to the list of events
+      this.loadEvent(this.board[building].income[this.data[building]]);
+      this.data[building] += 1;
+    }
 
     // remove upgraded building and the associated event
     const upgradedBuilding = hex.data.building;
