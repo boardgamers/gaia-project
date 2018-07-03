@@ -261,8 +261,10 @@ export default class Engine {
     if (this.round <= 0) {
       return;
     }
-    // all players excluded leecher
+    // From rules, this is in clockwise order. We assume the order of players in this.players is the
+    // clockwise order
     for (const pl of this.players) {
+      // Exclude the one whould made the building from the leech
       if (pl !== this.player(player)) {
         let leech = 0;
         for (const loc of pl.data.occupied) {
