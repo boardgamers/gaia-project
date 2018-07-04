@@ -206,7 +206,7 @@ $(document).on("click", "*[data-command]", function() {
     return;
   }
 
-  const fields = $(this).attr("data-fields");
+  const fields = $(this).attr("data-tracks");
 
   if (fields) {
     pendingCommand = command;
