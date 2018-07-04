@@ -151,7 +151,7 @@ function showAvailableMove(player: string, command: AvailableCommand) {
     };
 
     case Command.BurnPower: {
-      addButton("Burn power: " + command.data, `${player} ${Command.BurnPower} ${command.data}`);
+      addButton("Burn power", `${player} ${Command.BurnPower} 1`);
       break;
     }
 
