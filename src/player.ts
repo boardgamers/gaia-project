@@ -270,15 +270,19 @@ export default class Player {
   }
 
   buildingValue(building: Building, planet: Planet){
-    const baseValue =  stdBuildingValue(building);
+    let baseValue =  stdBuildingValue(building);
 
     // Space stations or gaia-formers do not get any bonus
     if (baseValue === 0) {
       return 0;
     }
+
+    if (baseValue === 3 && this.events[Operator.Special].length > 0) {
+      baseValue = 4;
+    }
     
     const addedBescods = this.faction === Faction.Bescods && this.data[Building.PlanetaryInstitute] === 1  && planet === Planet.Titanium ? 1 : 0;
-    //TODO value if TECH3
+
     return baseValue + addedBescods;
   }
 

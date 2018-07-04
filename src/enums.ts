@@ -56,7 +56,7 @@ export enum Operator {
   /** On turn end for player */
   Pass = "|",
   /** reserved op for planetary institute and academies becoming 4pw structures */
-  Special = "S" 
+  Special = "PA-4pw" 
 }
 
 export enum Condition {

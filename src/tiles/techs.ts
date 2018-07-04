@@ -3,7 +3,7 @@ import { TechTile } from "../enums";
 export default  {
   [TechTile.Tech1]: ["o,q"],
   [TechTile.Tech2]: ["pt > k"],
-  [TechTile.Tech3]: ["S"],
+  [TechTile.Tech3]: ["PA-4pw"],
   [TechTile.Tech4]: ["7vp"],
   [TechTile.Tech5]: ["+o,pw"],
   [TechTile.Tech6]: ["+k,c"],
