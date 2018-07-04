@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import Engine from "..";
 import { AssertionError } from "assert";
-import { Player } from "./enums";
+import { Player, Federation } from "./enums";
 
 describe("Engine", () => {
 
@@ -46,11 +46,11 @@ describe("Engine", () => {
   it("should allow to set up with Ivits (PI as last player) without errors", () => {
     const moves = parseMoves(`  
       init 2 randomSeed
-      p1 faction terrans
-      p2 faction ivits
-      p1 build m 2x2
-      p1 build m 4x0
-      p2 build PI -1x-1
+      p1 faction ivits
+      p2 faction terrans
+      p2 build m 2x2
+      p2 build m 4x0
+      p1 build PI -1x-1
     `);
 
     expect(() => new Engine(moves)).to.not.throw();
@@ -387,7 +387,7 @@ describe("Engine", () => {
     expect(data.discardablePowerTokens()).to.be.equal(powerTokens-7, "The 7 satellites should remove one power token each");
   });
 
-  it("should allow leech and burn power", () => {
+  it("should allow poweraction", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans
@@ -398,12 +398,57 @@ describe("Engine", () => {
       p1 build m 4x0
       p2 booster booster2
       p1 booster booster5
-      p1 build ts 4x0
-      p2 leech 1
-      p2 burn 1
+      p1 burn 1
+      p1 burn 1
+      p1 burn 1
+      p1 action poweraction7
     `);
  
     expect(() => new Engine(moves)).to.not.throw();
+  });
+
+  it("should manage Gleens to get ores instead of qics", () => {
+    const moves = parseMoves(`  
+      init 2 randomSeed
+      p1 faction gleens
+      p2 faction terrans
+      p1 build m 0x3
+      p2 build m 2x2
+      p2 build m 4x0
+      p1 build m 3x0
+      p2 booster booster5
+      p1 booster booster3
+    `);
+ 
+    const engine = new Engine(moves);
+    const data = engine.player(Player.Player1).data;
+   
+    expect(data.ores).to.equal(8);
+    expect(data.qics).to.equal(0);
+  });
+
+  it("should allow Gleens to get the faction federation and managing ore instead qic", () => {
+    const moves = parseMoves(`
+      init 2 randomSeed
+      p1 faction gleens
+      p2 faction nevlas
+      p1 build m 2x-3
+      p2 build m 2x-2
+      p2 build m 4x-2
+      p1 build m 3x0
+      p2 booster booster5
+      p1 booster booster3
+      p1 build ts 3x0
+      p2 leech 1
+      p2 build ts 4x-2
+      p1 leech 2
+      p1 build PI 3x0
+    `);
+ 
+    const engine = new Engine(moves);
+    const data = engine.player(Player.Player1).data;
+   
+    expect(data.federations.includes(Federation.FederationGleens)).to.be.true;
   });
 
   it("should throw when two players choose factions on the same planet", () => {

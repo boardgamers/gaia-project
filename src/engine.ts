@@ -17,16 +17,20 @@ import {
   TechTilePos,
   AdvTechTile,
   AdvTechTilePos,
-  Federation
+  Federation,
+  BoardAction
+
 } from './enums';
 import { CubeCoordinates } from 'hexagrid';
 import Event from './events';
 import techs from './tiles/techs';
+import federations from './tiles/federations';
 import * as researchTracks from './research-tracks'
 import AvailableCommand, {
   generate as generateAvailableCommands
 } from './available-command';
 import Reward from './reward';
+import { boardActions } from './actions';
 
 
 const ISOLATED_DISTANCE = 3;
@@ -44,6 +48,8 @@ export default class Engine {
   advTechTiles: {
     [key in AdvTechTilePos]?: {tile: AdvTechTile; numTiles: number}
   } = {};
+  boardActions: {
+    [key in BoardAction]?: boolean  } = {};
   federations: {
     [key in Federation]?: number
   } = {};
@@ -188,9 +194,14 @@ export default class Engine {
     switch (this.round) {
       case Round.SetupBuilding: {
         // Setup round - add Ivits to the end, before third Xenos
+
+        const posIvits = this.players.findIndex(
+          pl => pl.faction === Faction.Ivits
+        );
+
         const setupTurnOrder = this.players
-          .filter(pl => pl.faction !== Faction.Ivits)
-          .map((pl, i) => i as PlayerEnum);
+          .map((pl, i) => i as PlayerEnum)
+          .filter(i => i !==  posIvits);
         const reverseSetupTurnOrder = setupTurnOrder.slice().reverse();
         this.turnOrder = setupTurnOrder.concat(reverseSetupTurnOrder);
 
@@ -201,9 +212,6 @@ export default class Engine {
           this.turnOrder.push(posXenos as PlayerEnum);
         }
 
-        const posIvits = this.players.findIndex(
-          pl => pl.faction === Faction.Ivits
-        );
         if (posIvits !== -1) {
           this.turnOrder.push(posIvits as PlayerEnum);
         }
@@ -353,11 +361,23 @@ export default class Engine {
     });
   }
 
+  selectFederationTilePhase(player: PlayerEnum, fromCommand: Command){
+    const possibleTiles = Object.keys(this.federations).filter(key => this.federations[key] > 0);
+    const playerTiles = Object.keys(this.player(player).data.federations);
+
+    this.roundSubCommands.unshift({
+      name: Command.ChooseFederationTile,
+      player: player,
+      data: fromCommand === Command.Action ? playerTiles : possibleTiles
+    });
+
+  }
+
   possibleResearchAreas(player: PlayerEnum, cost: string, destResearchArea?: ResearchField) {
     const tracks = [];
     const data = this.players[player].data;
 
-    if (data.canPay(Reward.parse(cost))) {
+    if (this.players[player].canPay(Reward.parse(cost))) {
       for (const field of Object.values(ResearchField)) {
 
         // up in a specific research area
@@ -418,6 +438,11 @@ export default class Engine {
     return spaces;
   }
 
+  possibleBoardActions(player: PlayerEnum) {
+    return  Object.values(BoardAction).filter(pwract => this.boardActions[pwract] && this.player(player).canPay(Reward.parse(boardActions[pwract].cost)));
+
+  }
+
   /** Next player to make a move, after current player makes their move */
   moveToNextPlayer(command: Command): PlayerEnum {
     const subPhaseTurn = this.roundSubCommands.length > 0;
@@ -475,13 +500,18 @@ export default class Engine {
       this.advTechTiles[pos] = {tile: advtechtiles[i], numTiles: 1};
     });
 
+    //powerActions
+    Object.values(BoardAction).forEach( pos => {
+      this.boardActions[pos] = true;
+    });
+
     this.terraformingFederation = shuffleSeed.shuffle(Object.values(Federation), this.map.rng())[0];
     for (const federation of Object.values(Federation) as Federation[]) {
       if (federation !== Federation.FederationGleens) {
         this.federations[federation] = federation === this.terraformingFederation ? 2: 3;
       }
     }
-    
+  
     this.players = [];
     
     for (let i = 0; i < nbPlayers; i++) {
@@ -519,8 +549,9 @@ export default class Engine {
       if (elem.building === building && elem.coordinates === location) {
         const {q, r, s} = CubeCoordinates.parse(location);
         const hex = this.map.grid.get(q, r);
+        const pl = this.player(player);
 
-        this.player(player).build(
+        pl.build(
           building,
           hex,
           Reward.parse(elem.cost),
@@ -529,7 +560,11 @@ export default class Engine {
 
         this.leechingPhase(player, {q, r, s} );
 
-        if ( building === Building.ResearchLab || buildings === Building.Academy1 || building === Building.Academy2) {
+        if ( pl.faction === Faction.Gleens && building === Building.PlanetaryInstitute){
+          pl.gainFederationToken(Federation.FederationGleens);
+        }
+
+        if ( building === Building.ResearchLab || building === Building.Academy1 || building === Building.Academy2) {
           this.techTilePhase(player);
         }
        
@@ -546,16 +581,16 @@ export default class Engine {
 
     assert(track, `Impossible to upgrade knowledge for ${field}`);
 
-    const data = this.player(player).data;
+    const pl = this.player(player);
+   
+    pl.payCosts(Reward.parse(track.cost));
+    pl.gainRewards([new Reward(`${Command.UpgradeResearch}-${field}`)]);
 
-    data.payCosts(Reward.parse(track.cost));
-    data.gainReward(new Reward(`${Command.UpgradeResearch}-${field}`));
-
-    if (data.research[field] === researchTracks.lastTile(field)) {
+    if (pl.data.research[field] === researchTracks.lastTile(field)) {
       if (field === ResearchField.Terraforming) {
         //gets federation token
         if (this.terraformingFederation) {
-          data.gainFederationToken(this.terraformingFederation);
+          pl.gainFederationToken(this.terraformingFederation);
           this.terraformingFederation = undefined;
         }
       } else if (field === ResearchField.Navigation) {
@@ -577,7 +612,7 @@ export default class Engine {
     assert( leechCommand == leech , `Impossible to charge ${leech} power`);
 
     const powerLeeched = this.players[player].data.chargePower(Number(leech));
-    this.player(player).data.payCost( new Reward(Math.max(powerLeeched - 1, 0), Resource.VictoryPoint));
+    this.player(player).payCosts( [new Reward(Math.max(powerLeeched - 1, 0), Resource.VictoryPoint)]);
   }
 
   [Command.DeclineLeech](player: PlayerEnum) {
@@ -616,6 +651,20 @@ export default class Engine {
     this.player(player).removeEvents(Event.parse(techs[tile]));
   }
 
+  [Command.ChooseFederationTile](player: PlayerEnum, federation: Federation, fromCommand: Command = Command.ChooseFederationTile) {
+    const { tiles } = this.availableCommand(player, fromCommand).data;
+    const tileAvailable = tiles.find(ta => ta.tile == federation);
+
+    assert(tileAvailable !== undefined, `Federation ${federation} is not available`);
+
+    if (fromCommand === Command.Action) {
+      //rescore a federation
+      this.player(player).gainRewards(Reward.parse(federations[federation]));
+    } else {
+
+    }
+  }
+
   [Command.PlaceLostPlanet](player: PlayerEnum, location: string) {
     const avail = this.availableCommand(player, Command.Build);
     const { spaces } = avail.data;
@@ -639,8 +688,8 @@ export default class Engine {
 
     for (const elem of actions) {
       if (elem.cost === cost && elem.income === income) {
-        this.players[player].data.payCost(new Reward(cost));
-        this.players[player].data.gainReward(new Reward(income));
+        this.players[player].payCosts([new Reward(cost)]);
+        this.players[player].gainRewards([new Reward(income)]);
         return;
       }
     }
@@ -654,6 +703,23 @@ export default class Engine {
     assert(burn == cost, `Impossible to burn ${cost} power`);
 
     this.players[player].data.burnPower(Number(cost));
+  }
+
+  [Command.Action](player: PlayerEnum, action: BoardAction) {
+    const { poweracts: acts} = this.availableCommand(player, Command.Action).data;
+
+    assert(acts.includes(action), `${action} is not in the available power actions`);
+  
+    const pl = this.player(player);
+    this.boardActions[action] = false;
+  
+    pl.payCosts(Reward.parse(boardActions[action].cost));
+    //rescore 
+    if (action === BoardAction.BoardAction9) {
+      this.selectFederationTilePhase(player, Command.Action);
+    } else {   
+      pl.gainRewards([new Reward(boardActions[action].income)]);
+    };
   }
 
   [Command.FormFederation](player: PlayerEnum, hexes: string, federation: Federation) {
@@ -671,13 +737,13 @@ export default class Engine {
 
     const pl = this.player(player);
 
-    pl.data.gainFederationToken(federation);
+    pl.gainFederationToken(federation);
     this.federations[federation] -= 1;
 
     const hexList = hexes.split(',').map(str => this.map.grid.getS(str));
     for (const hex of hexList) {
       hex.addToFederationOf(player);
     }
-    pl.data.payCost(new Reward(fedInfo.satellites, Resource.GainToken));
+    pl.payCosts([new Reward(fedInfo.satellites, Resource.GainToken)]);
   }
 }

@@ -5,7 +5,7 @@ import factions from './factions';
 import * as assert from "assert";
 import { upgradedBuildings } from './buildings';
 import Reward from './reward';
-import freeActions from './actions';
+import {freeActions, boardActions} from './actions';
 
 const ISOLATED_DISTANCE = 3;
 const UPGRADE_RESEARCH_COST = "4k";
@@ -113,6 +113,17 @@ export function generate(engine: Engine): AvailableCommand[] {
                 name: Command.ChooseCoverTechTile,
                 player,
                 data: { tiles }
+              }
+            );
+            break;
+          }
+
+          case Command.ChooseFederationTile: {
+            commands.push(
+              {
+                name: Command.ChooseFederationTile,
+                player,
+                data: subCommand.data
               }
             );
             break;
@@ -282,7 +293,7 @@ export function generate(engine: Engine): AvailableCommand[] {
       // free action - spend
       const acts = []
       for (let i = 0; i < freeActions.length; i++) {
-        if (engine.player(player).data.canPay(Reward.parse(freeActions[i].cost))) {
+        if (engine.player(player).canPay(Reward.parse(freeActions[i].cost))) {
           acts.push({ 
             cost: freeActions[i].cost,
             income: freeActions[i].income  
@@ -309,6 +320,18 @@ export function generate(engine: Engine): AvailableCommand[] {
         });
       }
 
+      // power actions 
+
+      const poweracts = engine.possibleBoardActions(player);
+   
+      if (poweracts.length > 0) {
+        commands.push({
+          name: Command.Action,
+          player,
+          data: { poweracts }
+        });
+      }
+       
       return commands;
     }
   }

@@ -1,4 +1,4 @@
-import { Faction, Operator, ResearchField, Planet, Building, Resource, Booster, Condition } from './enums';
+import { Faction, Operator, ResearchField, Planet, Building, Resource, Booster, Condition, Federation} from './enums';
 import PlayerData from './player-data';
 import Event from './events';
 import { factionBoard, FactionBoard } from './faction-boards';
@@ -12,9 +12,10 @@ import boosts from './tiles/boosters';
 import { Player as PlayerEnum } from './enums';
 import { stdBuildingValue } from './buildings';
 import SpaceMap from './map';
-import { GaiaHexData, GaiaHex } from './gaia-hex';
+import { GaiaHex } from './gaia-hex';
 import spanningTree from './algorithms/spanning-tree';
 import { FederationInfo, isOutclassedBy } from './federation';
+import federationTiles, { isGreen }from "./tiles/federations";
 
 const TERRAFORMING_COST = 3;
 const FEDERATION_COST = 7;
@@ -62,6 +63,30 @@ export default class Player {
     return factions.planet(this.faction);
   }
 
+  payCosts(costs: Reward[]) {
+    for (let cost of costs) {
+      this.data.payCost(cost);
+    }
+  }
+
+  gainRewards(rewards: Reward[]) {
+    for (let reward of rewards) {
+      this.data.gainReward(this.factionReward(reward));
+    }
+  }
+
+
+  canPay(reward: Reward[]): boolean {
+    const rewards = Reward.merge(reward);
+
+    for (const reward of rewards) {
+      if (!this.data.hasResource(reward)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   canBuild(targetPlanet: Planet, building: Building, {isolated, addedCost, existingBuilding}: {isolated?: boolean, addedCost?: Reward[], existingBuilding?: Building}) : Reward[] {
     if (this.data[building] >= (building === Building.GaiaFormer ? this.data.gaiaformers : this.board.maxBuildings(building))) {
       // Too many buildings of the same kind
@@ -72,7 +97,7 @@ export default class Player {
       addedCost = [];
     }
 
-    if (!this.data.canPay(addedCost)) {
+    if (!this.canPay(addedCost)) {
       return undefined;
     }
     
@@ -84,7 +109,8 @@ export default class Player {
       //habitability costs
       if (targetPlanet === Planet.Gaia) {
         if (!existingBuilding) {
-          addedCost.push(new Reward(1,Resource.Qic));
+          // different cost for Gleens
+          addedCost.push(this.factionReward(new Reward(1,Resource.Qic)));
         } else {
           // Already a gaia-former on the planet, so no need to pay a Q.I.C.
         }
@@ -95,7 +121,7 @@ export default class Player {
     };
 
     const cost = Reward.merge([].concat(this.board.cost(targetPlanet, building, isolated), addedCost));
-    return this.data.canPay(cost) ? cost : undefined;
+    return this.canPay(cost) ? cost : undefined;
   }
 
   loadFaction(faction: Faction) {
@@ -118,7 +144,7 @@ export default class Player {
     this.events[event.operator].push(event);
 
     if (event.operator === Operator.Once) {
-      this.data.gainRewards(event.rewards);
+      this.gainRewards(event.rewards);
     }
   }
 
@@ -143,7 +169,7 @@ export default class Player {
   }
 
   build(building: Building, hex: GaiaHex, cost: Reward[], map: SpaceMap) {
-    this.data.payCosts(cost);
+    this.payCosts(cost);
     //excluding Gaiaformers as occupied 
     if ( building !== Building.GaiaFormer ) {
       this.data.occupied = _.uniqWith([].concat(this.data.occupied, hex), _.isEqual)
@@ -197,7 +223,7 @@ export default class Player {
 
   receiveIncome() {
     for (const event of this.events[Operator.Income]) {
-      this.data.gainRewards(event.rewards);
+      this.gainRewards(event.rewards);
     }
   }
 
@@ -205,7 +231,7 @@ export default class Player {
     // this is for pass tile income (e.g. rounboosters, adv tiles)
     for (const event of this.events[Operator.Pass]) {
       const times = this.eventConditionCount(event.condition);
-      this.data.gainRewards(event.rewards.map(reward => new Reward(reward.count * times, reward.type)));
+      this.gainRewards(event.rewards.map(reward => new Reward(reward.count * times, reward.type)));
     }
   }
 
@@ -213,7 +239,7 @@ export default class Player {
     // this is for roundboosters, techtiles and adv tile
     for (const event of this.events[Operator.Trigger]) {
       if (Condition.matchesBuilding(event.condition, building, planet)) {
-        this.data.gainRewards(event.rewards)
+        this.gainRewards(event.rewards)
       };
     }
   }
@@ -221,7 +247,7 @@ export default class Player {
   receiveAdvanceResearchTriggerIncome() {
     for (const event of this.events[Operator.Trigger]) {
       if (event.condition === Condition.AdvanceResearch) {
-        this.data.gainRewards(event.rewards)
+        this.gainRewards(event.rewards)
       };
     }
   }
@@ -255,6 +281,22 @@ export default class Player {
     return Math.min(possibleLeech, this.data.power.area1 * 2 + this.data.power.area2, this.data.victoryPoints + 1);
   }
   
+  gainFederationToken(federation: Federation) {
+    this.data.federations.push(federation);
+    if (isGreen(federation)) {
+      this.data.greenFederations += 1;
+    }
+    this.gainRewards(Reward.parse(federationTiles[federation]));
+  }
+
+  factionReward(reward: Reward): Reward {
+    // this is for Gleens getting ore instead of qics until Academy2
+    if (this.faction === Faction.Gleens && this.data[Building.Academy2] === 0 && reward.type === Resource.Qic) {
+      reward.type = Resource.Ore
+    }
+    return reward;
+  }
+
   eventConditionCount(condition: Condition) {
     switch (condition) {
       case Condition.None: return 1;

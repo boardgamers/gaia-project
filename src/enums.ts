@@ -125,6 +125,7 @@ export enum Command {
   ChooseRoundBooster = "booster",
   ChooseTechTile = "tech",
   ChooseCoverTechTile = "cover",
+  ChooseFederationTile = "fedtile",
   Build = "build",
   Pass = "pass",
   UpgradeResearch = "up",
@@ -133,8 +134,10 @@ export enum Command {
   DeclineLeech = "decline",
   BurnPower = "burn",
   Spend = "spend",
+  Action = "action",
   PlaceLostPlanet  = "lostPlanet",
-  FormFederation = "federation"
+  FormFederation = "federation",
+  EndTurn = "end"
 }
 
 export enum Player {
@@ -231,4 +234,17 @@ export enum Federation {
   Federation5= "fed5",
   Federation6= "fed6",
   FederationGleens= "gleens"
+}
+
+export enum BoardAction {
+  BoardAction1= "power1",
+  BoardAction2= "power2",
+  BoardAction3= "power3",
+  BoardAction4= "power4",
+  BoardAction5= "power5",
+  BoardAction6= "power6",
+  BoardAction7= "power7",
+  BoardAction8= "qic1",
+  BoardAction9= "qic2",
+  BoardAction10= "qic3",  
 }

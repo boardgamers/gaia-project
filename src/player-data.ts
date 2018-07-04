@@ -1,9 +1,7 @@
 import Reward from "./reward";
-import { GaiaHexData, GaiaHex } from "./gaia-hex";
+import { GaiaHex } from "./gaia-hex";
 import { ResearchField, Building, Booster, TechTile, AdvTechTile, Federation, Resource } from "./enums";
 import { EventEmitter } from "eventemitter3";
-import { CubeCoordinates, Hex } from "hexagrid";
-import federationTiles, { isGreen }from "./tiles/federations";
 
 const MAX_ORE = 15;
 const MAX_CREDIT = 30;
@@ -76,20 +74,8 @@ export default class PlayerData extends EventEmitter {
     return ret;
   }
 
-  payCosts(costs: Reward[]) {
-    for (let cost of costs) {
-      this.payCost(cost);
-    }
-  }
-
   payCost(cost: Reward) {
     this.gainReward(cost, true);
-  }
-
-  gainRewards(rewards: Reward[]) {
-    for (let reward of rewards) {
-      this.gainReward(reward);
-    }
   }
 
   gainReward(reward: Reward, pay = false) {
@@ -121,17 +107,6 @@ export default class PlayerData extends EventEmitter {
       case Resource.TerraformStep: this.terraformSteps += count; return;
       default: break; // Not implemented
     }
-  }
-
-  canPay(reward: Reward[]): boolean {
-    const rewards = Reward.merge(reward);
-
-    for (const reward of rewards) {
-      if (!this.hasResource(reward)) {
-        return false;
-      }
-    }
-    return true;
   }
 
   hasResource(reward: Reward) {
@@ -203,11 +178,4 @@ export default class PlayerData extends EventEmitter {
     }
   }
 
-  gainFederationToken(federation: Federation) {
-    this.federations.push(federation);
-    if (isGreen(federation)) {
-      this.greenFederations += 1;
-    }
-    this.gainRewards(Reward.parse(federationTiles[federation]));
-  }
 }
