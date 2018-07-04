@@ -31,6 +31,8 @@ import AvailableCommand, {
 } from './available-command';
 import Reward from './reward';
 import { boardActions } from './actions';
+import { GaiaHex } from '..';
+import { stdBuildingValue } from './buildings';
 
 
 const ISOLATED_DISTANCE = 3;
@@ -267,9 +269,13 @@ export default class Engine {
     //TODO manage gaia phase actions for specific factions
   }
 
-  leechingPhase(player: PlayerEnum, location: CubeCoordinates) {
+  leechingPhase(player: PlayerEnum, hex: GaiaHex) {
     // exclude setup rounds
     if (this.round <= 0) {
+      return;
+    }
+    // Gaia-formers & space stations don't trigger leech
+    if (stdBuildingValue(hex.buildingOf(player)) === 0) {
       return;
     }
     // From rules, this is in clockwise order. We assume the order of players in this.players is the
@@ -279,8 +285,8 @@ export default class Engine {
       if (pl !== this.player(player)) {
         let leech = 0;
         for (const loc of pl.data.occupied) {
-          if (this.map.distance(loc, location) < ISOLATED_DISTANCE) {
-            leech = Math.max(leech, pl.buildingValue(this.map.grid.get(loc.q, loc.r).data.building, this.map.grid.get(loc.q, loc.r).data.planet))
+          if (this.map.distance(loc, hex) < ISOLATED_DISTANCE) {
+            leech = Math.max(leech, pl.buildingValue(this.map.grid.get(loc.q, loc.r).buildingOf(pl.player), this.map.grid.get(loc.q, loc.r).data.planet))
           }
         }
         leech = pl.maxLeech(leech);
@@ -570,7 +576,7 @@ export default class Engine {
           this.map
         );
 
-        this.leechingPhase(player, {q, r, s} );
+        this.leechingPhase(player, hex);
 
         if ( pl.faction === Faction.Gleens && building === Building.PlanetaryInstitute){
           pl.gainFederationToken(Federation.FederationGleens);
@@ -690,7 +696,7 @@ export default class Engine {
     hex.data.planet = Planet.Lost;
 
     this.player(player).build(Building.Mine, hex, [], this.map);
-    this.leechingPhase(player, { q, r, s });
+    this.leechingPhase(player, hex);
 
     return;
   }
@@ -712,9 +718,9 @@ export default class Engine {
 
   [Command.BurnPower](player: PlayerEnum, cost: string) {
     const burn = this.availableCommand(player, Command.BurnPower).data;
-    assert(burn == cost, `Impossible to burn ${cost} power`);
+    assert(burn.includes(+cost), `Impossible to burn ${cost} power`);
 
-    this.players[player].data.burnPower(Number(cost));
+    this.players[player].data.burnPower(+cost);
   }
 
   [Command.Action](player: PlayerEnum, action: BoardAction) {

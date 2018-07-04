@@ -16,28 +16,16 @@ describe("Engine", () => {
     expect(() => new Engine(moves)).to.throw();
   });
 
-  it("should allow a simple setup without errors", () => {
-    const moves = parseMoves(`
-      init 2 randomSeed
-      p1 faction terrans
-      p2 faction ambas
-      p1 build m 2x2
-      p2 build m -2x5
-    `);
-
-    expect(() => new Engine(moves)).to.not.throw();
-  });
-
   it("should allow to set up with Xenos (three mines) without errors", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans
       p2 faction xenos
-      p1 build m 2x2
-      p2 build m 3x0
-      p2 build m 0x3
-      p1 build m -7x2
-      p2 build m 2x-3
+      p1 build m -1x2
+      p2 build m -2x2
+      p2 build m -5x5
+      p1 build m -3x4
+      p2 build m -7x3
     `);
 
     expect(() => new Engine(moves)).to.not.throw();
@@ -48,26 +36,9 @@ describe("Engine", () => {
       init 2 randomSeed
       p1 faction ivits
       p2 faction terrans
-      p2 build m 2x2
-      p2 build m 4x0
-      p1 build PI -1x-1
-    `);
-
-    expect(() => new Engine(moves)).to.not.throw();
-  });
-
-  it("should allow players to pass", () => {
-    const moves = parseMoves(`
-      init 2 randomSeed
-      p1 faction lantids
-      p2 faction gleens
-      p1 build m 2x2
-      p2 build m 0x3
-      p2 build m 3x0
-      p1 build m 4x0
-      p2 booster booster2
-      p1 booster booster3
-      p1 pass booster5
+      p2 build m -1x2
+      p2 build m -4x2
+      p1 build PI -2x-4
     `);
 
     expect(() => new Engine(moves)).to.not.throw();
@@ -78,14 +49,14 @@ describe("Engine", () => {
       init 2 randomSeed
       p1 faction lantids
       p2 faction gleens
-      p1 build m 2x2
-      p2 build m 0x3
-      p2 build m 3x0
-      p1 build m 4x0
-      p2 booster booster2
-      p1 booster booster3
+      p1 build m -4x2
+      p2 build m -2x2
+      p2 build m 1x2
+      p1 build m -4x-1
+      p2 booster booster3
+      p1 booster booster4
       p1 pass booster5
-      p2 pass booster3
+      p2 pass booster4
     `);
 
     const engine = new Engine(moves);
@@ -95,16 +66,14 @@ describe("Engine", () => {
   it("should check wrong player order", () => {
     const moves = parseMoves(`
       init 2 randomSeed
-      p1 faction terrans
-      p2 faction nevlas
-      p1 build m 4x0
-      p2 build m 4x-2
-      p2 build m -4x3
-      p1 build m -7x2
-      p2 booster booster2
-      p1 booster booster3
-      p1 build ts 4x0
-      p2 build ts -4x3
+      p1 faction lantids
+      p2 faction gleens
+      p1 build m -4x2
+      p2 build m -2x2
+      p2 build m 1x2
+      p1 build m -4x-1
+      p2 booster booster3
+      p1 booster booster4
       p2 pass booster5
     `);
     expect(() => new Engine(moves)).to.throw(AssertionError);
@@ -115,199 +84,141 @@ describe("Engine", () => {
       init 2 randomSeed
       p1 faction terrans
       p2 faction nevlas
-      p1 build m 4x0
-      p2 build m 4x-2
-      p2 build m -4x3
-      p1 build m -7x2
-      p2 booster booster2
+      p1 build m -1x2
+      p2 build m -1x0
+      p2 build m 0x-4
+      p1 build m -4x-1
+      p2 booster booster7
       p1 booster booster3
-      p1 build ts 4x0
+      p1 build ts -1x2
       p2 leech 1
-      p2 build ts -4x3  
+      p2 build ts 0x-4  
     `);
 
     expect(() => new Engine(moves)).to.not.throw();
   });
 
-  // TODO we should check resources after upgrading
-  // TODO test to do: bescods upgrade 
-  // TODO test to do: uprgrade to RL an AC1 AC2, to PI
-  
   it ("should throw when upgrading without resources", () => {
-    const moves = parseMoves(`
+    const engine = new Engine(parseMoves(`
       init 2 randomSeed
-      p1 faction lantids
-      p2 faction gleens
-      p1 build m -7x2
-      p2 build m 0x3
-      p2 build m 3x0
-      p1 build m 2x2
-      p2 booster booster2
-      p1 booster booster3
-      p1 build ts 2x2
-      p2 build ts 0x3
-      p1 build PI 2x2
-      p2 build PI 0x3
-      p1 build ts -7x2
-    `);
+      p1 faction terrans
+      p2 faction firaks
+      p1 build m -3x4
+      p2 build m -1x-1
+      p2 build m -2x-5
+      p1 build m -4x2
+      p2 booster booster3
+      p1 booster booster4
+      p1 build m -5x0
+      p2 build m 3x-2
+      p1 build ts -5x0
+      p2 build ts -1x-1
+    `));
 
-    expect(() => new Engine(moves)).to.throw();
-  });
-
-  it ("should allow a full round to pass", () => {
-    const moves = parseMoves(`
-      init 2 randomSeed
-      p1 faction lantids
-      p2 faction gleens
-      p1 build m 2x2
-      p2 build m 0x3
-      p2 build m 3x0
-      p1 build m 4x0
-      p2 booster booster2
-      p1 booster booster3
-      p1 build ts 2x2
-      p2 leech 1
-      p2 pass booster5
-      p1 build ts 4x0
-      p2 leech 1
-      p1 pass booster2
-    `);
-
-    expect(() => new Engine(moves)).to.not.throw();
+    expect(() => engine.move("p1 build ts -4x2")).to.throw();
   });
 
   it ("should throw when building out of range", () => {
     const moves = parseMoves(`
       init 2 randomSeed
-      p1 faction lantids
+      p1 faction terrans
       p2 faction gleens
-      p1 build m 2x2
-      p2 build m 0x3
-      p2 build m 3x0
-      p1 build m 4x0
-      p2 booster booster2
-      p1 booster booster3
-      p1 build m -7x2
+      p1 build m -4x-1
+      p2 build m -7x3
+      p2 build m -5x5
+      p1 build m -3x4
+      p2 booster booster4
+      p1 booster booster5
     `);
 
-    expect(() => new Engine(moves)).to.throw();
+    const engine = new Engine(moves);
+    expect(() => engine.move("p1 build -1x0")).to.throw();
   });
 
   it ("should not spend a qic when building a mine nearby", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans
-      p2 faction bescods
-      p1 build m 2x2
-      p2 build m -1x3
-      p2 build m -3x0
-      p1 build m 4x-6
-      p2 booster booster2
-      p1 booster booster3
-      p1 up nav
+      p2 faction gleens
+      p1 build m -4x-1
+      p2 build m -7x3
+      p2 build m -5x5
+      p1 build m -3x4
+      p2 booster booster4
+      p1 booster booster5
     `);
 
     const engine = new Engine(moves);
 
-    expect(engine.player(Player.Player2).data.qics).to.equal(1);
+    const qic = engine.player(Player.Player1).data.qics;
 
-    engine.move("p2 build m 0x3");
+    engine.move("p1 build m -5x0");
 
-    expect(engine.player(Player.Player2).data.qics).to.equal(1);
+    expect(engine.player(Player.Player1).data.qics).to.equal(qic);
   });
 
   it ("should grant a qic when upgrading navigation", () => {
     const moves = parseMoves(`
-      init 3 randomSeed
-      p1 faction lantids
-      p2 faction taklons
-      p3 faction hadsch-hallas
-      p1 build m -3x3
-      p2 build m 3x3
-      p3 build m -2x3
-      p3 build m 1x-1
-      p2 build m -5x4
-      p1 build m 2x2
-      p3 booster booster1
-      p2 booster booster2
-      p1 booster booster3
+      init 2 randomSeed
+      p1 faction terrans
+      p2 faction gleens
+      p1 build m -4x-1
+      p2 build m -7x3
+      p2 build m -5x5
+      p1 build m -3x4
+      p2 booster booster4
+      p1 booster booster5
     `);
 
     const engine = new Engine(moves);
 
-    expect(engine.players[Player.Player1].data.qics).to.equal(2);
-    
+    const qic = engine.player(Player.Player1).data.qics;
+
     engine.move("p1 up nav");
 
-    expect(engine.players[Player.Player1].data.qics).to.equal(3);
+    expect(engine.player(Player.Player1).data.qics).to.equal(qic + 1);
   });
 
   it("should allow to place a gaia former and next round checks for transformation to gaia planet, pass is checking booster availablity", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans
-      p2 faction nevlas
-      p1 build m 2x2
-      p2 build m 4x-2
-      p2 build m 2x-2
-      p1 build m 4x0
-      p2 booster booster2
-      p1 booster booster3
-      p1 build gf 3x1
-      p2 pass booster5
-      p1 pass booster2
-      p2 build ts 4x-2
-      p1 leech 1
+      p2 faction bescods
+      p1 build m -4x2
+      p2 build m -1x-1
+      p2 build m -2x-5
+      p1 build m -1x2
+      p2 booster booster3
+      p1 booster booster4
+      p1 build gf -3x1
+      p2 pass booster7
+      p1 pass booster3
+      p2 pass booster4
     `);
  
     const engine = new Engine(moves);
 
     const qicCount = engine.player(Player.Player1).data.qics;
 
-    engine.move("p1 build m 3x1");
+    engine.move("p1 build m -3x1");
 
     expect(engine.player(Player.Player1).data.qics).to.equal(qicCount, "Building a mine from a gaia former doest NOT need a qic");
   });
 
-  it ("should allow to upgrade research area after building a RL, pick tech in terra", () => {
+  it ("should allow to upgrade research area after building a RL, pick tech in nav", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans
-      p2 faction nevlas
-      p1 build m 4x0
-      p2 build m 4x-2
-      p2 build m 2x-2
-      p1 build m 2x2
-      p2 booster booster2
-      p1 booster booster3
-      p1 build ts 4x0
-      p2 leech 1
-      p2 build ts 4x-2
-      p1 decline
-      p1 build lab 4x0
-      p1 tech terra
-      p1 up terra
-    `);
- 
-    expect(() => new Engine(moves)).to.not.throw();
-  });
-
-  it ("should work when upgrading research area after building a RL, pick tech in nav", () => {
-    const moves = parseMoves(`
-      init 2 randomSeed
-      p1 faction terrans
-      p2 faction nevlas
-      p1 build m 4x0
-      p2 build m 4x-2
-      p2 build m 2x-2
-      p1 build m 2x2
-      p2 booster booster2
-      p1 booster booster3
-      p1 build ts 4x0
-      p2 leech 1
-      p2 build ts 4x-2
-      p1 decline
-      p1 build lab 4x0
+      p2 faction bescods
+      p1 build m -4x2
+      p2 build m -1x-1
+      p2 build m -2x-5
+      p1 build m -1x2
+      p2 booster booster3
+      p1 booster booster4
+      p1 build ts -1x2
+      p2 pass booster5
+      p1 build lab -1x2
       p1 tech nav
       p1 up nav
     `);
@@ -319,18 +230,16 @@ describe("Engine", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans
-      p2 faction nevlas
-      p1 build m 4x0
-      p2 build m 4x-2
-      p2 build m 2x-2
-      p1 build m 2x2
-      p2 booster booster2
-      p1 booster booster3
-      p1 build ts 4x0
-      p2 leech 1
-      p2 build ts 4x-2
-      p1 decline
-      p1 build lab 4x0
+      p2 faction bescods
+      p1 build m -4x2
+      p2 build m -1x-1
+      p2 build m -2x-5
+      p1 build m -1x2
+      p2 booster booster3
+      p1 booster booster4
+      p1 build ts -1x2
+      p2 pass booster5
+      p1 build lab -1x2
       p1 tech nav
       p1 up gaia
     `);
@@ -342,110 +251,110 @@ describe("Engine", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans
-      p2 faction ambas
-      p1 build m 2x2
-      p2 build m -6x2
-      p2 build m 3x-4
-      p1 build m 4x-6
-      p2 booster booster2
+      p2 faction bescods
+      p1 build m -1x2
+      p2 build m -1x-1
+      p2 build m 3x-2
+      p1 build m -4x2
+      p2 booster booster3
       p1 booster booster7
-      p1 build ts 4x-6
+      p1 up gaia
+      p2 build ts -1x-1
+      p1 build gf -2x3
+      p2 build m -1x0
+      p1 leech 1
+      p1 build ts -1x2
       p2 leech 1
-      p2 up terra
-      p1 up gaia
-      p2 build ts 3x-4
+      p2 build m 1x0
       p1 leech 2
-      p1 build gf 4x-7
-      p2 build PI 3x-4
-      p1 leech 2
-      p1 build lab 4x-6
-      p1 tech gaia
-      p1 up gaia
-      p2 leech 3
-      p2 build m 2x-3
+      p1 build m -3x4
+      p2 pass booster8
+      p1 build PI -1x2
+      p2 leech 1
       p1 pass booster3
-      p2 pass booster7
-      p1 build m 4x-7
-      p2 burn 1
+      p2 burn 3
       p2 spend 3pw for 1o
-      p2 build m 2x-2
-      p1 build ts 4x-7
-      p2 pass booster10
-      p1 pass booster2
-      p2 build ts -6x2
-      p1 up nav
+      p2 pass booster5
+      p1 build m -2x3
+      p1 spend 1pw for 1c
+      p1 spend 1pw for 1c
+      p1 build ts -4x2
     `);
 
     const engine = new Engine(moves);
-    const data = engine.player(Player.Player2).data;
+    const data = engine.player(Player.Player1).data;
     const vp = data.victoryPoints;
     const powerTokens = data.discardablePowerTokens();
-    engine.move("p2 federation -1x0,-2x0,-3x1,-4x2,-5x2,-6x2,0x-1,1x-2,2x-2,2x-3,3x-4 fed2");
+    engine.move("p1 federation -1x2,-2x3,-3x2,-3x3,-3x4,-4x2 fed2");
     expect(data.victoryPoints).to.equal(vp+8);
     expect(data.power.gaia).to.be.gte(0);
-    expect(data.discardablePowerTokens()).to.be.equal(powerTokens-7, "The 7 satellites should remove one power token each");
+    expect(data.discardablePowerTokens()).to.be.equal(powerTokens-2, "The 2 satellites should remove one power token each");
   });
 
   it("should allow poweraction", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans
-      p2 faction nevlas
-      p1 build m 2x2
-      p2 build m 4x-2
-      p2 build m 2x-2
-      p1 build m 4x0
-      p2 booster booster2
-      p1 booster booster5
-      p1 burn 1
-      p1 burn 1
-      p1 burn 1
-      p1 action power7
+      p2 faction bescods
+      p1 build m -1x2
+      p2 build m -1x-1
+      p2 build m 3x-2
+      p1 build m -4x2
+      p2 booster booster3
+      p1 booster booster7
+      p1 up gaia
+      p2 build ts -1x-1
+      p1 build m -1x0
+      p2 leech 2
+      p2 burn 3
+      p2 action power7
     `);
  
     expect(() => new Engine(moves)).to.not.throw();
   });
 
-  it("should manage Gleens to get ores instead of qics", () => {
-    const moves = parseMoves(`  
+  it ("should grant gleens an ore instead of qic when upgrading navigation without an academy", () => {
+    const engine = new Engine(parseMoves(`
       init 2 randomSeed
-      p1 faction gleens
-      p2 faction terrans
-      p1 build m 0x3
-      p2 build m 2x2
-      p2 build m 4x0
-      p1 build m 3x0
-      p2 booster booster5
-      p1 booster booster3
-    `);
- 
-    const engine = new Engine(moves);
-    const data = engine.player(Player.Player1).data;
-   
-    expect(data.ores).to.equal(8);
-    expect(data.qics).to.equal(0);
+      p1 faction terrans
+      p2 faction gleens
+      p1 build m -4x-1
+      p2 build m -7x3
+      p2 build m -5x5
+      p1 build m -3x4
+      p2 booster booster4
+      p1 booster booster5
+      p1 build m -5x0
+    `));
+
+    const ore = engine.player(Player.Player2).data.ores;
+
+    engine.move("p2 up nav");
+
+    expect(engine.player(Player.Player2).data.ores).to.equal(ore + 1);
   });
 
-  it("should allow Gleens to get the faction federation and managing ore instead qic", () => {
+  it("should allow Gleens to get the faction federation", () => {
     const moves = parseMoves(`
       init 2 randomSeed
-      p1 faction gleens
-      p2 faction nevlas
-      p1 build m 2x-3
-      p2 build m 2x-2
-      p2 build m 4x-2
-      p1 build m 3x0
-      p2 booster booster5
-      p1 booster booster3
-      p1 build ts 3x0
-      p2 leech 1
-      p2 build ts 4x-2
-      p1 leech 2
-      p1 build PI 3x0
+      p1 faction terrans
+      p2 faction gleens
+      p1 build m -4x-1
+      p2 build m -7x3
+      p2 build m -5x5
+      p1 build m -3x4
+      p2 booster booster4
+      p1 booster booster5
+      p1 build m -5x0
+      p2 build ts -5x5
+      p1 leech 1
+      p1 build m -4x2
+      p2 build PI -5x5
+      p1 leech 1
     `);
  
     const engine = new Engine(moves);
-    const data = engine.player(Player.Player1).data;
+    const data = engine.player(Player.Player2).data;
    
     expect(data.federations.includes(Federation.FederationGleens)).to.be.true;
   });
@@ -479,34 +388,16 @@ describe("Engine", () => {
       expect(Object.keys(engine5.roundBoosters)).to.have.length(8);
     });
 
-    it("should allow to select round boosters without errors", () => {
-      const moves = parseMoves(`
-        init 2 randomSeed
-        p1 faction lantids
-        p2 faction gleens
-        p1 build m 2x2
-        p2 build m 0x3
-        p2 build m 3x0
-        p1 build m 4x0
-        p2 booster booster2
-        p1 booster booster3
-        p1 pass booster5
-      `);
-  
-      expect(() => new Engine(moves)).to.not.throw();
-    });
-
     it("should throw when selecting invalid round booster", () => {
       const moves = parseMoves(`
         init 2 randomSeed
-        p1 faction lantids
+        p1 faction terrans
         p2 faction gleens
-        p1 build m 2x2
-        p2 build m 0x3
-        p2 build m 3x0
-        p1 build m 4x0
+        p1 build m -4x-1
+        p2 build m -7x3
+        p2 build m -5x5
+        p1 build m -3x4
         p2 booster booster2
-        p1 booster booster1
       `);
   
       expect(() => new Engine(moves)).to.throw(AssertionError);
@@ -515,14 +406,14 @@ describe("Engine", () => {
     it("should throw when selecting taken round booster", () => {
       const moves = parseMoves(`
         init 2 randomSeed
-        p1 faction lantids
+        p1 faction terrans
         p2 faction gleens
-        p1 build m 2x2
-        p2 build m 0x3
-        p2 build m 3x0
-        p1 build m 4x0
-        p2 booster booster2
-        p1 booster booster2
+        p1 build m -4x-1
+        p2 build m -7x3
+        p2 build m -5x5
+        p1 build m -3x4
+        p2 booster booster4
+        p1 booster booster4
       `);
   
       expect(() => new Engine(moves)).to.throw(AssertionError);
@@ -533,24 +424,25 @@ describe("Engine", () => {
       const moves = parseMoves(`
         init 2 randomSeed
         p1 faction terrans
-        p2 faction ambas
-        p1 build m 2x2
-        p2 build m -6x2
-        p2 build m 3x-4
-        p1 build m 4x-6
-        p2 booster booster2
-        p1 booster booster7
+        p2 faction gleens
+        p1 build m -4x-1
+        p2 build m -7x3
+        p2 build m -5x5
+        p1 build m -3x4
+        p2 booster booster7
+        p1 booster booster3
+        p1 build m -4x0
+        p2 build ts -5x5
+        p1 leech 1
+        p1 pass booster4
       `);
 
       const engine = new Engine(moves);
       const vp = engine.player(Player.Player1).data.victoryPoints;
       
-      engine.move("p1 build ts 4x-6");
-      engine.move("p2 decline");
       engine.move("p2 pass booster3");
-      engine.move("p1 pass booster2");
-
-      expect(engine.player(Player.Player1).data.victoryPoints).to.equal(vp+2);
+      
+      expect(engine.player(Player.Player2).data.victoryPoints).to.equal(vp+2);
     });
   });
 });

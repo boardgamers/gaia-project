@@ -72,6 +72,13 @@ export default class SpaceMap {
    *  Check if the map is correct (no two planets of the same color side by side)
   */
   isValid(): boolean {
+    for (const hex of this.grid.values()) {
+      for (const nb of this.grid.neighbours(hex.q, hex.r)) {
+        if (hex.data.sector !== nb.data.sector && hex.data.planet !== Planet.Empty && hex.data.planet === nb.data.planet) {
+          return false;
+        }
+      }
+    }
     return true;
   }
 
