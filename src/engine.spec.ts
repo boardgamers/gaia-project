@@ -220,31 +220,9 @@ describe("Engine", () => {
       p2 pass booster5
       p1 build lab -1x2
       p1 tech nav
-      p1 up nav
     `);
  
     expect(() => new Engine(moves)).to.not.throw();
-  });
-  
-  it("should throw when picking tech in nav & upgrading gaia", () => {
-    const moves = parseMoves(`
-      init 2 randomSeed
-      p1 faction terrans
-      p2 faction bescods
-      p1 build m -4x2
-      p2 build m -1x-1
-      p2 build m -2x-5
-      p1 build m -1x2
-      p2 booster booster3
-      p1 booster booster4
-      p1 build ts -1x2
-      p2 pass booster5
-      p1 build lab -1x2
-      p1 tech nav
-      p1 up gaia
-    `);
- 
-    expect(() => new Engine(moves)).to.throw();
   });
 
   it ("should allow to form a federation and gain rewards", () => {

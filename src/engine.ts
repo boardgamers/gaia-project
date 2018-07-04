@@ -360,7 +360,9 @@ export default class Engine {
     // if stdTech in a free position or advTech, any researchArea
     let destResearchArea = "";
     if (![TechTilePos.Free1, TechTilePos.Free2, TechTilePos.Free3].includes(pos) && Object.values(TechTilePos).includes(pos)) {
-      destResearchArea = pos;
+      // There's only one track to advance, so no need to give the player a choice
+      this.player(player).gainRewards(Reward.parse(`up-${pos}`));
+      return;
     }
 
     this.roundSubCommands.unshift({
