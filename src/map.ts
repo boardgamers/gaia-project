@@ -44,8 +44,8 @@ for (let i = 0; i < 6; i++) {
 
 // Big configuration: add 3 more
 for (let i = -1; i <= 1; i++) {
-  const hex = new Hex(10, -4);
-  hex.rotateLeft(i, {q: 5, r: -2, s: -3});
+  const hex = new Hex(-6, 10);
+  hex.rotateLeft(i, {q: -3, r: 5, s: -2});
   bigConfiguration.centers.push(hex);
 }
 
