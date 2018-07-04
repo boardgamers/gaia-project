@@ -313,7 +313,7 @@ export function generate(engine: Engine): AvailableCommand[] {
         commands.push({
           name: Command.BurnPower,
           player,
-          data: _.range(0, Math.floor(engine.player(player).data.power.area2 / 2) + 1)
+          data: _.range(1, Math.floor(engine.player(player).data.power.area2 / 2) + 1)
         });
       }
 
