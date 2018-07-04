@@ -5,7 +5,6 @@ import factions from './factions';
 import * as assert from "assert";
 import { upgradedBuildings } from './buildings';
 import Reward from './reward';
-import {freeActions, boardActions} from './actions';
 
 const ISOLATED_DISTANCE = 3;
 const UPGRADE_RESEARCH_COST = "4k";
@@ -153,6 +152,20 @@ export function generate(engine: Engine): AvailableCommand[] {
             }
             break;
           }
+
+          case Command.EndTurn: {
+            commands.push({
+              name: Command.EndTurn,
+              player,
+              data: subCommand.data
+            });
+
+            //add free actions before to end turn
+            commands.push(...engine.possibleFreeActions(player));
+            break;
+          }
+
+
         }
         // remove playerPassiveCommands 
         engine.roundSubCommands.splice(0, 1)
@@ -289,49 +302,13 @@ export function generate(engine: Engine): AvailableCommand[] {
         });
       }
 
-      // free action - spend
-      const acts = []
-      for (let i = 0; i < freeActions.length; i++) {
-        if (engine.player(player).canPay(Reward.parse(freeActions[i].cost))) {
-          acts.push({ 
-            cost: freeActions[i].cost,
-            income: freeActions[i].income  
-          });
-        };
-      };
-
-      if (acts.length > 0) {
-        commands.push({
-          name: Command.Spend,
-          player,
-          data: { acts }
-        });
-      }
-    
-      //free action - burn
-      if (engine.player(player).data.power.area2 >= 2) {
-        commands.push({
-          name: Command.BurnPower,
-          player,
-          data: _.range(1, Math.floor(engine.player(player).data.power.area2 / 2) + 1)
-        });
-      }
+      // free actions
+      commands.push(...engine.possibleFreeActions(player));
 
       // power actions 
 
-      const poweracts = engine.possibleBoardActions(player);
-   
-      if (poweracts.length > 0) {
-        commands.push({
-          name: Command.Action,
-          player,
-          data: { poweracts: poweracts.map(act => ({
-            name: act,
-            cost: boardActions[act].cost,
-            income: boardActions[act].income
-          }))}
-        });
-      }
+      commands.push(...engine.possibleBoardActions(player));
+  
        
       return commands;
     }
