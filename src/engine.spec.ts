@@ -401,7 +401,7 @@ describe("Engine", () => {
       p1 burn 1
       p1 burn 1
       p1 burn 1
-      p1 action poweraction7
+      p1 action power7
     `);
  
     expect(() => new Engine(moves)).to.not.throw();
