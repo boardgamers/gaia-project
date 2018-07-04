@@ -4,6 +4,7 @@ import { CubeCoordinates } from "hexagrid";
 import PlanetRenderer from "./planet";
 import BuildingRenderer from "./building";
 import {hexCenter, corners} from '../graphics/hex';
+import { factionColor } from "../graphics/utils";
 
 const hexData = {
   radius: 16,
@@ -55,6 +56,19 @@ export default class MapRenderer extends PIXI.Graphics {
     graphics.beginFill(ofInterest ? (qic ? hexData.backgroundQicHighlight : hexData.backgroundHighlight) : hexData.background);
     graphics.drawPolygon([].concat(...vertices.map(p => [p.x, p.y])));
     graphics.endFill();
+
+    if (hex.data.federations) {
+      let radius = hexData.radius;
+
+      // Draw an inner border for each player using the hex for their own federation
+      for (const player of hex.data.federations) {
+        radius -= 1;
+
+        const [firstCorner, ...otherCorners] = corners(radius);
+        graphics.lineStyle(1, factionColor(this.factions[player]));
+        graphics.drawPolygon([].concat(...[firstCorner, ...otherCorners, firstCorner].map(p => [p.x, p.y])));
+      }
+    }
 
     /* Draw planet if there */
     if (hex.data.planet !== Planet.Empty) {
