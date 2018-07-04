@@ -102,6 +102,14 @@ export default class Engine {
     return this.players[player];
   }
 
+  playerToMove(): PlayerEnum {
+    if (this.availableCommands.length > 0) {
+      return this.availableCommands[0].player;
+    }
+
+    return this.currentPlayer;
+  }
+
   move(move: string) {
     const split = move.trim().split(' ');
 
@@ -127,7 +135,7 @@ export default class Engine {
       );
       const player = +playerS[1] - 1;
 
-      assert(  this.currentPlayer === (player as PlayerEnum), "Wrong turn order in move " + move + ", expected "+ this.currentPlayer +' found '+player);
+      assert(this.playerToMove() === (player as PlayerEnum), "Wrong turn order in move " + move + ", expected "+ this.currentPlayer +' found '+player);
 
       const command = split[1] as Command;
 
@@ -164,11 +172,6 @@ export default class Engine {
   }
 
   endTurn(command : Command) {
-    // subactions :  checks if the player has to do another action
-    // build can need tech tile
-    // tech tile can need to advance research
-
-
     // if not subactions Let the next player move based on the command
     this.moveToNextPlayer(command);
 
@@ -286,7 +289,7 @@ export default class Engine {
             name: Command.Leech,
             player: this.players.indexOf(pl),
             data: leech
-          })
+          });
         }
       }
     }
@@ -445,29 +448,39 @@ export default class Engine {
   /** Next player to make a move, after current player makes their move */
   moveToNextPlayer(command: Command): PlayerEnum {
     const subPhaseTurn = this.roundSubCommands.length > 0;
-    const playRounds = this.round > 0;
+    
     if (subPhaseTurn) {
-      this.currentPlayer = this.roundSubCommands[0].player;
-    } else {
-      if (playRounds && command !== Command.Pass) {
-        // if freeAction current player stays current player
-        const stayCurrentPlayer = command === Command.Spend || command === Command.BurnPower;
-        const next = stayCurrentPlayer ? this.currentPlayerTurnOrderPos : (this.currentPlayerTurnOrderPos + 1) % this.turnOrder.length ;
-        this.currentPlayerTurnOrderPos = next;
-        this.currentPlayer = this.turnOrder[next];
-        return;
-      } else {
-        // not playRounds or pass
-        const playerPos = this.currentPlayerTurnOrderPos;
-        if (command === Command.Pass) {
-          this.passedPlayers.push(this.currentPlayer);
-        }
-        this.turnOrder.splice(playerPos, 1);
-        const newPlayerPos = playerPos + 1 > this.turnOrder.length ? 0 : playerPos;
-        this.currentPlayer = this.turnOrder[newPlayerPos];
-        this.currentPlayerTurnOrderPos = newPlayerPos;
-      }
+      // This is a sub command, wait until they are all done
+      return;
+    } 
+
+    // if freeAction current player stays current player
+    if (command === Command.Spend || command === Command.BurnPower) {
+      return;
     }
+
+    if (this.round <= 0) {
+      const playerPos = this.currentPlayerTurnOrderPos;
+      if (command === Command.Pass) {
+        this.passedPlayers.push(this.currentPlayer);
+      }
+      this.turnOrder.splice(playerPos, 1);
+      this.currentPlayerTurnOrderPos = playerPos % this.turnOrder.length;
+      this.currentPlayer = this.turnOrder[this.currentPlayerTurnOrderPos];
+
+      return;
+    }
+
+    const playerPos = this.turnOrder.indexOf(this.currentPlayer);
+
+    if (command === Command.Pass) {
+      this.passedPlayers.push(this.currentPlayer);
+      this.turnOrder.splice(playerPos, 1);
+      this.currentPlayer = this.turnOrder[playerPos % this.turnOrder.length];
+      return;
+    }
+    
+    this.currentPlayer = this.turnOrder[(playerPos + 1) % this.turnOrder.length];
   }
 
   playersInOrder(): Player[] {

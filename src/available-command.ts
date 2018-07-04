@@ -72,7 +72,6 @@ export function generate(engine: Engine): AvailableCommand[] {
 
       const data = engine.player(player).data;
       const map = engine.map;
-     
       
       if (engine.roundSubCommands.length > 0) {
         const subCommand = engine.roundSubCommands[0];
@@ -81,14 +80,14 @@ export function generate(engine: Engine): AvailableCommand[] {
             commands.push(
               {
                 name: Command.Leech,
-                player,
+                player: subCommand.player,
                 data: subCommand.data
               }
             );
             commands.push(
               {
                 name: Command.DeclineLeech,
-                player,
+                player: subCommand.player,
                 data: subCommand.data
               }
             );
@@ -99,7 +98,7 @@ export function generate(engine: Engine): AvailableCommand[] {
             commands.push(
               {
                 name: Command.ChooseTechTile,
-                player,
+                player: subCommand.player,
                 data: subCommand.data
               }
             );
@@ -111,7 +110,7 @@ export function generate(engine: Engine): AvailableCommand[] {
             commands.push(
               {
                 name: Command.ChooseCoverTechTile,
-                player,
+                player: subCommand.player,
                 data: { tiles }
               }
             );
@@ -122,7 +121,7 @@ export function generate(engine: Engine): AvailableCommand[] {
             commands.push(
               {
                 name: Command.ChooseFederationTile,
-                player,
+                player: subCommand.player,
                 data: subCommand.data
               }
             );
@@ -135,7 +134,7 @@ export function generate(engine: Engine): AvailableCommand[] {
             if (tracks.length > 0) {
               commands.push({
                 name: Command.UpgradeResearch,
-                player,
+                player: subCommand.player,
                 data: { tracks }
               });
             };
@@ -148,7 +147,7 @@ export function generate(engine: Engine): AvailableCommand[] {
             if (spaces.length > 0) {
               commands.push({
                 name: Command.PlaceLostPlanet,
-                player,
+                player: subCommand.player,
                 data: { spaces }
               });
             }
