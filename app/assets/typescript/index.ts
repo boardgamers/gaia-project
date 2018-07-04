@@ -109,13 +109,19 @@ function showAvailableMove(player: string, command: AvailableCommand) {
       break;
     }
 
-    case Command.Pass: {
-      addButton("Pass", `${player} ${Command.Pass}`, {boosters: command.data.boosters});
-      break;
-    }
-
+    case Command.Pass: 
     case Command.ChooseRoundBooster: {
-      addButton("Pick booster", `${player} ${Command.ChooseRoundBooster}`, {boosters: command.data.boosters});
+      const values = [];
+      const labels = [];
+
+      Object.values(Booster).forEach((booster, i) => {
+        if (command.data.boosters.includes(booster)) {
+          values.push(booster);
+          labels.push(`Booster ${i+1}: ${tiles.boosters[booster]}`);
+        }
+      });
+
+      addButton(command.name === Command.Pass ? "Pass" : "Pick booster", `${player} ${command.name}`, {values, labels});
       break;
     };
 
@@ -146,23 +152,38 @@ function showAvailableMove(player: string, command: AvailableCommand) {
     }
 
     case Command.Spend: {
-      addButton("Free action", `${player} ${Command.Spend}`, {acts: command.data.acts});
+      const acts = command.data.acts;
+      const values = acts.map(act => `${act.cost} for ${act.income}`);
+      const labels = acts.map(act => `Spend ${act.cost} to gain ${act.income}`);
+      addButton("Free action", `${player} ${Command.Spend}`, {values, labels});
       break;
     };
 
     case Command.Action: {
-      addButton("Power/Q.I.C Action", `${player} ${Command.Action}`, {poweracts: command.data.poweracts});
+      const acts = command.data.poweracts;
+      addButton("Power/Q.I.C Action", `${player} ${Command.Action}`, {values: acts.map(act => act.name), labels: acts.map(act => `Spend ${act.cost} for ${act.income.join(" / ")}`)});
     }
 
     case Command.BurnPower: {
-      addButton("Burn power", `${player} ${Command.BurnPower} 1`);
+      addButton("Burn power", `${player} ${Command.BurnPower}`, {values: command.data});
       break;
     }
 
     case Command.FormFederation: {
+      const values = [];
+      const labels = [];
+      
+      Object.values(Federation).forEach((federation, i) => {
+        if (command.data.tiles.includes(federation)) {
+          values.push(federation);
+          labels.push(`Federation ${i+1}: ${tiles.federations[federation]}`);
+        }
+      });
+
       addButton("Form federation", `${player} ${Command.FormFederation}`, {
         hexGroups: command.data.federations.map(fed => fed.hexes),
-        federations: command.data.tiles
+        values,
+        labels
       });
     }
   }
@@ -181,7 +202,7 @@ function addStep(title: string) {
   $("#move-title").append(" - " + title);
 }
 
-function addButton(text: string, command: string, params: {hexes?: Array<{coordinates: string}>, tracks?: any[], boosters?: Booster[], hexGroups?: string[], federations?: Federation[], hoverHexes?: CubeCoordinates[], acts?: any[], poweracts?: BoardAction[]} = {}) {
+function addButton(text: string, command: string, params: {hexes?: Array<{coordinates: string}>, tracks?: any[], hexGroups?: string[], hoverHexes?: CubeCoordinates[], labels?: string[], values?: string[]} = {}) {
   const button = $('<button class="btn btn-secondary mr-2 mb-2">');
   button.text(text);
   
@@ -224,39 +245,6 @@ $(document).on("click", "*[data-command]", function() {
     return;
   }
 
-  let boostersData = $(this).attr("data-boosters");
-
-  if (boostersData) {
-    addStep("Pick a booster");
-    boostersData = JSON.parse(boostersData);
-
-    Object.values(Booster).map((booster, i) => {
-      if (boostersData.includes(booster)) {
-        addButton(`Booster ${i+1}: ${tiles.boosters[booster]}`, `${command} ${booster}`);
-      }
-    });
-
-    return;
-  }
-
-  let actsData = $(this).attr("data-acts");
-
-  if (actsData) {
-    addStep("Free action");
-    JSON.parse(actsData).forEach(act => (
-      addButton(`Spend ${act.cost} to gain ${act.income}`, `${command} ${act.cost} for ${act.income}`)
-    ));
-
-    return;
-  };  
-
-  if (actsData = $(this).attr("data-poweracts")) {
-    addStep("Q.I.C/Power action");
-    JSON.parse(actsData).forEach(act => addButton(`Spend ${act.cost} for ${act.income.join(" / ")}`, `${command} ${act.name}`));
-
-    return;
-  }
-
   const hexGroups = $(this).attr("data-hexGroups");
 
   if (hexGroups) {
@@ -265,25 +253,23 @@ $(document).on("click", "*[data-command]", function() {
     (JSON.parse(hexGroups) as string[]).forEach((hexGroup, i) => {
       addButton(`Location ${i+1}`, `${command} ${hexGroup}`, {
         hoverHexes: hexGroup.split(',').map(str => CubeCoordinates.parse(str)),
-        federations: JSON.parse($(this).attr("data-federations"))
+        values: JSON.parse($(this).attr("data-values")),
+        labels: JSON.parse($(this).attr("data-labels"))
       });
     });
 
     return;
   }
 
-  let federationData = $(this).attr("data-federations");
+  if ($(this).attr("data-values")) {
+    addStep($(this).text());
 
-  if (federationData) {
-    addStep("Pick a token");
-    federationData = JSON.parse(federationData);
+    const values = JSON.parse($(this).attr("data-values"));
+    const labels = JSON.parse($(this).attr("data-labels") || "[]");
 
-    Object.values(Federation).map((federation, i) => {
-      if (federationData.includes(federation)) {
-        addButton(`Federation ${i+1}: ${tiles.federations[federation]}`, `${command} ${federation}`);
-      }
+    values.forEach((value, i) => {
+      addButton(labels[i] || value, `${command} ${value}`);
     });
-
     return;
   }
 
