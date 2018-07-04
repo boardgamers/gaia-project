@@ -325,7 +325,11 @@ export function generate(engine: Engine): AvailableCommand[] {
         commands.push({
           name: Command.Action,
           player,
-          data: { poweracts }
+          data: { poweracts: poweracts.map(act => ({
+            name: act,
+            cost: boardActions[act].cost,
+            income: boardActions[act].income
+          }))}
         });
       }
        

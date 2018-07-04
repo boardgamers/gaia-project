@@ -25,6 +25,4 @@ const boardActions =  {
   [BoardAction.Qic3]: { cost: "2q", income: ["3vp", "pt > vp"]}
 };
 
-
-
 export { freeActions, boardActions };

@@ -447,7 +447,7 @@ export default class Engine {
     return spaces;
   }
 
-  possibleBoardActions(player: PlayerEnum) {
+  possibleBoardActions(player: PlayerEnum): BoardAction[] {
     return  Object.values(BoardAction).filter(pwract => this.boardActions[pwract] && this.player(player).canPay(Reward.parse(boardActions[pwract].cost)));
   }
 
@@ -726,11 +726,11 @@ export default class Engine {
   [Command.Action](player: PlayerEnum, action: BoardAction) {
     const { poweracts: acts} = this.availableCommand(player, Command.Action).data;
 
-    assert(acts.includes(action), `${action} is not in the available power actions`);
+    assert(_.find(acts, {name: action}), `${action} is not in the available power actions`);
   
     const pl = this.player(player);
     this.boardActions[action] = false;
-  
+
     pl.payCosts(Reward.parse(boardActions[action].cost));
     //rescore 
     if (action === BoardAction.Qic2) {
