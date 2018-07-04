@@ -47,4 +47,9 @@ describe('Reward', () => {
   it ('should convert an array of rewards to a string', () => {
     expect(Reward.toString([new Reward("3vp"), new Reward("q")], true)).to.equal("1q,3vp");
   });
+
+  it ('should be able to test whether two sets of rewards are equal', () => {
+    expect(Reward.match(Reward.parse("c,o,3q"), [new Reward("c"), new Reward(3, Resource.Qic), new Reward("o")])).to.be.true;
+    expect(Reward.match(Reward.parse("c,o,2q"), [new Reward("c"), new Reward(3, Resource.Qic), new Reward("o")])).to.be.false;
+  });
 });

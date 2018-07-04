@@ -366,14 +366,13 @@ describe("Engine", () => {
       p1 pass booster3
       p2 pass booster7
       p1 build m 4x-7
+      p2 burn 1
+      p2 spend 3pw for 1o
       p2 build m 2x-2
-      p1 build ac2 4x-6
-      p1 tech free1
-      p1 up nav
-      p2 leech 3
+      p1 build ts 4x-7
       p2 pass booster10
       p1 pass booster2
-      p2 build ts 2x-3
+      p2 build ts -6x2
       p1 up nav
     `);
 

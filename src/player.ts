@@ -33,7 +33,7 @@ export default class Player {
     [Operator.Special]: []
   };
 
-  constructor(public player: PlayerEnum) {
+  constructor(public player: PlayerEnum = PlayerEnum.Player1) {
     this.data.on('advance-research', track => this.onResearchAdvanced(track));
   }
 
@@ -159,10 +159,12 @@ export default class Player {
   }
 
   removeEvent(event: Event) {
-    let findEvent = this.events[event.operator].findIndex(
-      ev => ev.toJSON === event.toJSON
-    );
-    this.events[event.operator].slice(findEvent, 1);
+    this.events[event.operator].some((ev, i) => {
+      if (ev.spec === event.spec) {
+        this.events[event.operator].splice(i, 1);
+        return true;
+      }
+    });
   }
   
   onResearchAdvanced(field: ResearchField) {

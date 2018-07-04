@@ -69,6 +69,6 @@ export default class Reward {
   }
 
   static match(rewards1: Reward[], rewards2: Reward[]): boolean {
-    return Reward.toString(rewards1) === Reward.toString(rewards2);
+    return Reward.toString(rewards1, true) === Reward.toString(rewards2, true);
   }
 }
