@@ -717,8 +717,8 @@ export default class Engine {
     if (action === BoardAction.Qic2) {
       // TODO move that to player.gainRewards()
       this.selectFederationTilePhase(player, Command.Action);
-    } else {   
-      pl.gainRewards([new Reward(boardActions[action].income)]);
+    } else {
+      pl.loadEvents(Event.parse(boardActions[action].income));
     };
   }
 
