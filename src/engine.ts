@@ -114,9 +114,9 @@ export default class Engine {
   }
 
   move(move: string) {
-    const split = move.trim().split(' ');
 
     if (this.round === Round.Init) {
+      const split = move.trim().split(' ');
       const command = split[0] as Command;
 
       const available = this.availableCommands;
@@ -130,7 +130,7 @@ export default class Engine {
       (this[command] as any)(...split.slice(1));
       this.endRound();
     } else {
-      const playerS = split[0];
+      const playerS = move.substr(0,2);
 
       assert(
         /^p[1-5]$/.test(playerS),
@@ -140,17 +140,25 @@ export default class Engine {
 
       assert(this.playerToMove() === (player as PlayerEnum), "Wrong turn order in move " + move + ", expected "+ this.currentPlayer +' found '+player);
 
-      const command = split[1] as Command;
+      const moves = move.substr(2, move.length - 2).trim().split('.');
 
-      const available = this.availableCommands;
-      const commandNames = available.map(cmd => cmd.name);
+      for (let i = 0; i < moves.length; i++)  {
+        const split = moves[i].trim().split(' ');  
+        var command = split[0] as Command;
 
-      assert(
-        this.availableCommand(player, command),
-        'Move ' + move + ' not in Available commands: ' + commandNames.join(', ')
-      );
+        const available = this.availableCommands;
+        const commandNames = available.map(cmd => cmd.name);
 
-      (this[command] as any)(player as PlayerEnum, ...split.slice(2));
+        assert(
+          this.availableCommand(player, command),
+          'Move ' + move + ' not in Available commands: ' + commandNames.join(', ')
+        );
+
+        (this[command] as any)(player as PlayerEnum, ...split.slice(1));
+      }
+
+      //implicit endturn
+      //(this[Command.EndTurn] as any)(player as PlayerEnum);
 
       this.endTurn(command);
     }
@@ -385,6 +393,10 @@ export default class Engine {
   }
 
   endTurnPhase(player: PlayerEnum, fromCommand: Command){
+    // exclude setup rounds
+    if (this.round <= 0) {
+      return;
+    }
     this.roundSubCommands.unshift({
       name: Command.EndTurn,
       player: player,
@@ -643,7 +655,7 @@ export default class Engine {
           this.techTilePhase(player);
         }
 
-        this.endTurnPhase(player, Command.Build);
+        //this.endTurnPhase(player, Command.Build);
        
         return;
       }
