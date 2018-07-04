@@ -5,7 +5,7 @@ import { showError, removeError } from "./utils";
 import MapRenderer from "../../renderers/map";
 import ResearchRenderer from "../../renderers/research";
 import Renderer from "../../renderers";
-import { AvailableCommand, Command, factions, Building, ResearchField, tiles, Booster, Federation } from "@gaia-project/engine";
+import { AvailableCommand, Command, factions, Building, ResearchField, tiles, Booster, Federation, BoardAction } from "@gaia-project/engine";
 import { CubeCoordinates } from "hexagrid";
 import { buildingName } from "../../data/building";
 import { factionColor } from "../../graphics/utils";
@@ -146,9 +146,13 @@ function showAvailableMove(player: string, command: AvailableCommand) {
     }
 
     case Command.Spend: {
-      addButton("Spend", `${player} ${Command.Spend}`, {acts: command.data.acts});
+      addButton("Free action", `${player} ${Command.Spend}`, {acts: command.data.acts});
       break;
     };
+
+    case Command.Action: {
+      addButton("Power/Q.I.C Action", `${player} ${Command.Action}`, {poweracts: command.data.poweracts});
+    }
 
     case Command.BurnPower: {
       addButton("Burn power", `${player} ${Command.BurnPower} 1`);
@@ -172,7 +176,12 @@ function commandTitle(text: string, player?: string) {
   }  
 }
 
-function addButton(text: string, command: string, params: {hexes?: Array<{coordinates: string}>, tracks?: any[], boosters?: Booster[], hexGroups?: string[], federations?: Federation[], hoverHexes?: CubeCoordinates[], acts?: any[]} = {}) {
+function addStep(title: string) {
+  $("#move-buttons").html("");
+  $("#move-title").append(" - " + title);
+}
+
+function addButton(text: string, command: string, params: {hexes?: Array<{coordinates: string}>, tracks?: any[], boosters?: Booster[], hexGroups?: string[], federations?: Federation[], hoverHexes?: CubeCoordinates[], acts?: any[], poweracts?: BoardAction[]} = {}) {
   const button = $('<button class="btn btn-secondary mr-2 mb-2">');
   button.text(text);
   
@@ -218,8 +227,7 @@ $(document).on("click", "*[data-command]", function() {
   let boostersData = $(this).attr("data-boosters");
 
   if (boostersData) {
-    $("#move-buttons").html("");
-    $("#move-title").append(" - Pick a booster");
+    addStep("Pick a booster");
     boostersData = JSON.parse(boostersData);
 
     Object.values(Booster).map((booster, i) => {
@@ -234,22 +242,26 @@ $(document).on("click", "*[data-command]", function() {
   let actsData = $(this).attr("data-acts");
 
   if (actsData) {
-    $("#move-buttons").html("");
-    $("#move-title").append(" - Spend");
-    JSON.parse(actsData).map(act => (
+    addStep("Free action");
+    JSON.parse(actsData).forEach(act => (
       addButton(`Spend ${act.cost} to gain ${act.income}`, `${command} ${act.cost} for ${act.income}`)
     ));
 
     return;
   };  
 
+  if (actsData = $(this).attr("data-poweracts")) {
+    addStep("Q.I.C/Power action");
+    JSON.parse(actsData).forEach(act => addButton(`Spend ${act.cost} for ${act.income.join(" / ")}`, `${command} ${act.name}`));
+
+    return;
+  }
+
   const hexGroups = $(this).attr("data-hexGroups");
 
   if (hexGroups) {
-    $("#move-buttons").html("");
-    $("#move-title").append(" - Federation");
+    addStep("Federation");
 
-    console.log(JSON.parse(hexGroups));
     (JSON.parse(hexGroups) as string[]).forEach((hexGroup, i) => {
       addButton(`Location ${i+1}`, `${command} ${hexGroup}`, {
         hoverHexes: hexGroup.split(',').map(str => CubeCoordinates.parse(str)),
@@ -263,8 +275,7 @@ $(document).on("click", "*[data-command]", function() {
   let federationData = $(this).attr("data-federations");
 
   if (federationData) {
-    $("#move-buttons").html("");
-    $("#move-title").append(" - Pick a token");
+    addStep("Pick a token");
     federationData = JSON.parse(federationData);
 
     Object.values(Federation).map((federation, i) => {
