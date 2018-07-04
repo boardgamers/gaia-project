@@ -70,9 +70,13 @@ export default class Player {
   }
 
   gainRewards(rewards: Reward[]) {
-    for (let reward of rewards) {
+    for (const reward of rewards) {
       this.data.gainReward(this.factionReward(reward));
     }
+
+    // TODO: Trigger subcommand build action if Resource.TerraformSteps is in the rewards
+    // TODO: Trigger subcommand chooseTechTile if Resource.TechTile is in the rewards
+    // TODO: Trigger subcommand chooseFederationTile if Resource.RescoreFederation is in the rewards
   }
 
 

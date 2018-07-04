@@ -39,7 +39,9 @@ export enum Resource {
   UpgradeIntelligence = "up-int",
   UpgradeGaiaProject = "up-gaia",
   UpgradeEconomy = "up-eco",
-  UpgradeScience = "up-sci"
+  UpgradeScience = "up-sci",
+  TechTile = "tech",
+  RescoreFederation = "fed"
 }
 
 export enum Operator {
@@ -227,24 +229,24 @@ export enum AdvTechTilePos {
 }
 
 export enum Federation {
-  Federation1= "fed1",
-  Federation2= "fed2",
-  Federation3= "fed3",
-  Federation4= "fed4",
-  Federation5= "fed5",
-  Federation6= "fed6",
-  FederationGleens= "gleens"
+  Federation1 = "fed1",
+  Federation2 = "fed2",
+  Federation3 = "fed3",
+  Federation4 = "fed4",
+  Federation5 = "fed5",
+  Federation6 = "fed6",
+  FederationGleens = "gleens"
 }
 
 export enum BoardAction {
-  BoardAction1= "power1",
-  BoardAction2= "power2",
-  BoardAction3= "power3",
-  BoardAction4= "power4",
-  BoardAction5= "power5",
-  BoardAction6= "power6",
-  BoardAction7= "power7",
-  BoardAction8= "qic1",
-  BoardAction9= "qic2",
-  BoardAction10= "qic3",  
+  Power1= "power1",
+  Power2= "power2",
+  Power3= "power3",
+  Power4= "power4",
+  Power5= "power5",
+  Power6= "power6",
+  Power7= "power7",
+  Qic1 = "qic1",
+  Qic2 = "qic2",
+  Qic3 = "qic3",  
 }

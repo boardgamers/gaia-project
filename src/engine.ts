@@ -440,7 +440,6 @@ export default class Engine {
 
   possibleBoardActions(player: PlayerEnum) {
     return  Object.values(BoardAction).filter(pwract => this.boardActions[pwract] && this.player(player).canPay(Reward.parse(boardActions[pwract].cost)));
-
   }
 
   /** Next player to make a move, after current player makes their move */
@@ -715,7 +714,8 @@ export default class Engine {
   
     pl.payCosts(Reward.parse(boardActions[action].cost));
     //rescore 
-    if (action === BoardAction.BoardAction9) {
+    if (action === BoardAction.Qic2) {
+      // TODO move that to player.gainRewards()
       this.selectFederationTilePhase(player, Command.Action);
     } else {   
       pl.gainRewards([new Reward(boardActions[action].income)]);
