@@ -12,7 +12,6 @@ const freeActions =  [
   { cost: "1o", income: "1t" }
 ];
 
-//TODO rescore on act9
 const boardActions =  {
   [BoardAction.Power1]: { cost: "7pw", income: "3k" },
   [BoardAction.Power2]: { cost: "5pw", income: "2d" },
@@ -23,7 +22,7 @@ const boardActions =  {
   [BoardAction.Power7]: { cost: "3pw", income: "2t" },
   [BoardAction.Qic1]: { cost: "4q", income: "tech" },
   [BoardAction.Qic2]: { cost: "3q", income: "fed" },
-  [BoardAction.Qic3]: { cost: "2q", income: "3pv, pt > pw" }
+  [BoardAction.Qic3]: { cost: "2q", income: "3vp, pt > vp" }
 };
 
 
