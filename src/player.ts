@@ -110,7 +110,7 @@ export default class Player {
       if (targetPlanet === Planet.Gaia) {
         if (!existingBuilding) {
           // different cost for Gleens
-          addedCost.push(this.factionReward(new Reward(1,Resource.Qic)));
+          addedCost.push(this.gaiaFormingCost());
         } else {
           // Already a gaia-former on the planet, so no need to pay a Q.I.C.
         }
@@ -295,6 +295,16 @@ export default class Player {
       reward.type = Resource.Ore
     }
     return reward;
+  }
+
+  /**
+   * Additional cost to pay to transform a gaia planet into an habitable planet
+   */
+  gaiaFormingCost(): Reward {
+    if (this.faction === Faction.Gleens) {
+      return new Reward(1, Resource.Ore);
+    }
+    return new Reward(1, Resource.Qic);
   }
 
   eventConditionCount(condition: Condition) {
