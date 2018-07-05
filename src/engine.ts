@@ -70,8 +70,6 @@ export default class Engine {
   /** Current player to make a move */
   currentPlayer: PlayerEnum;
   nextPlayer: PlayerEnum;
-  /** position of the current player in turn order */
-  currentPlayerTurnOrderPos: number = 0;
 
   constructor(moves: string[] = []) {
     this.generateAvailableCommands();
@@ -253,7 +251,6 @@ export default class Engine {
     };
 
     this.currentPlayer = this.turnOrder[0];
-    this.currentPlayerTurnOrderPos = 0;
     
     if ( this.round >= 1) {
       this.incomePhase();
@@ -559,6 +556,7 @@ export default class Engine {
 
     if (this.currentPlayer !== this.nextPlayer) {
       this.currentPlayer = this.nextPlayer;
+      this.nextPlayer = undefined;
     }
 
     return this.currentPlayer;   
