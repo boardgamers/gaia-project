@@ -62,6 +62,25 @@ describe("Engine", () => {
     const engine = new Engine(moves);
     expect(engine.passedPlayers).to.have.length(0);
   });
+
+  it("should allow free action as first move after setupsetup is correct", () => {
+    const moves = parseMoves(`
+      init 2 randomSeed
+      p1 faction terrans
+      p2 faction nevlas
+      p1 build m -4x-1
+      p2 build m -1x0
+      p2 build m 0x-4
+      p1 build m -4x2
+      p2 booster booster3
+      p1 booster booster4
+      p1 spend 1q for 1o
+    `);
+
+    const engine = new Engine(moves);
+    expect(() => new Engine(moves)).to.not.throw();
+  });
+  
   
   it("should check wrong player order", () => {
     const moves = parseMoves(`

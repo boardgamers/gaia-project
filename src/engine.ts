@@ -251,6 +251,7 @@ export default class Engine {
     };
 
     this.currentPlayer = this.turnOrder[0];
+    this.nextPlayer = this.turnOrder[0];
     
     if ( this.round >= 1) {
       this.incomePhase();
@@ -543,13 +544,12 @@ export default class Engine {
     if (this.round <= 0 || command === Command.Pass) {
       this.turnOrder.splice(playerPos, 1);
       this.currentPlayer = this.turnOrder[playerPos % this.turnOrder.length];
-
+      this.nextPlayer = this.currentPlayer;
       return;
     }
 
     if (this.currentPlayer !== this.nextPlayer) {
       this.currentPlayer = this.nextPlayer;
-      this.nextPlayer = undefined;
     }
 
     return this.currentPlayer;   
