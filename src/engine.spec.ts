@@ -331,6 +331,52 @@ describe("Engine", () => {
     expect(data.federations.includes(Federation.FederationGleens)).to.be.true;
   });
 
+  it("should allow this 4 player game", () => {
+    const moves = parseMoves(`
+      init 4 randomSeed
+      p1 faction terrans
+      p2 faction xenos
+      p3 faction geodens
+      p4 faction nevlas
+      p1 build m -1x6
+      p2 build m -3x-1
+      p3 build m -4x1
+      p4 build m -1x3
+      p4 build m 1x4
+      p3 build m -9x6
+      p2 build m 1x5
+      p1 build m -5x4
+      p2 build m -8x5
+      p4 booster booster1
+      p3 booster booster2
+      p2 booster booster3
+      p1 booster booster4
+      p1 build ts -1x6.
+      p2 leech 1
+      p4 leech 1
+      p2 build ts 1x5.
+      p1 leech 2
+      p4 leech 1
+      p3 build ts -4x1.
+      p2 leech 1
+      p4 build ts 1x4.
+      p1 leech 2
+      p2 leech 2
+      p1 build m -6x6.
+      p2 burn 1. build lab 1x5. tech int. spend 1pw for 1c.
+      p1 decline
+      p4 decline
+      p3 build lab -4x1. tech terra.
+      p2 leech 1
+      p4 build lab 1x4. tech sci. burn 2.
+      p1 leech 2
+      p2 decline
+      p1 build gf -6x7. spend 1o for 1c.
+      `);
+ 
+    expect(() => new Engine(moves)).to.not.throw();
+  });
+  
   it("should throw when two players choose factions on the same planet", () => {
     const moves = ["init 3 seed?2", "p1 faction terrans", "p2 faction lantids"];
 
