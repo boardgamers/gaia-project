@@ -533,15 +533,8 @@ export default class Engine {
     const subPhaseTurn = this.roundSubCommands.length > 0;
     
     if (subPhaseTurn) {
-      // This is a sub command, sets currentplayer 
-      this.currentPlayer = this.roundSubCommands[0].player;
       return;
     } 
-
-    // if freeAction current player stays current player
-    if (command === Command.Spend || command === Command.BurnPower) {
-      return;
-    }
 
     if (command === Command.Pass) {
       this.passedPlayers.push(this.currentPlayer);
