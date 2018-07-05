@@ -79,7 +79,7 @@ describe("Engine", () => {
     expect(() => new Engine(moves)).to.throw(AssertionError);
   });
 
-  it ("should allow players to upgrade a mine to a TS, either isolated or not", () => {
+  it("should allow players to upgrade a mine to a TS, either isolated or not", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans
@@ -90,7 +90,7 @@ describe("Engine", () => {
       p1 build m -4x-1
       p2 booster booster7
       p1 booster booster3
-      p1 build ts -1x2
+      p1 build ts -1x2.
       p2 leech 1
       p2 build ts 0x-4  
     `);
@@ -98,7 +98,7 @@ describe("Engine", () => {
     expect(() => new Engine(moves)).to.not.throw();
   });
 
-  it ("should throw when upgrading without resources", () => {
+  it("should throw when upgrading without resources", () => {
     const engine = new Engine(parseMoves(`
       init 2 randomSeed
       p1 faction terrans
@@ -109,10 +109,10 @@ describe("Engine", () => {
       p1 build m -4x2
       p2 booster booster3
       p1 booster booster4
-      p1 build m -5x0
-      p2 build m 3x-2
-      p1 build ts -5x0
-      p2 build ts -1x-1
+      p1 build m -5x0.
+      p2 build m 3x-2.
+      p1 build ts -5x0.
+      p2 build ts -1x-1.
     `));
 
     expect(() => engine.move("p1 build ts -4x2")).to.throw();
@@ -157,7 +157,7 @@ describe("Engine", () => {
     expect(engine.player(Player.Player1).data.qics).to.equal(qic);
   });
 
-  it ("should grant a qic when upgrading navigation", () => {
+  it("should grant a qic when upgrading navigation", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans
@@ -190,7 +190,7 @@ describe("Engine", () => {
       p1 build m -1x2
       p2 booster booster3
       p1 booster booster4
-      p1 build gf -3x1
+      p1 build gf -3x1.
       p2 pass booster7
       p1 pass booster3
       p2 pass booster4
@@ -205,7 +205,7 @@ describe("Engine", () => {
     expect(engine.player(Player.Player1).data.qics).to.equal(qicCount, "Building a mine from a gaia former doest NOT need a qic");
   });
 
-  it ("should allow to upgrade research area after building a RL, pick tech in nav", () => {
+  it("should allow to upgrade research area after building a RL, pick tech in nav", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans
@@ -216,10 +216,9 @@ describe("Engine", () => {
       p1 build m -1x2
       p2 booster booster3
       p1 booster booster4
-      p1 build ts -1x2
+      p1 build ts -1x2.
       p2 pass booster5
-      p1 build lab -1x2
-      p1 tech nav
+      p1 build lab -1x2. tech nav.
     `);
  
     expect(() => new Engine(moves)).to.not.throw();
@@ -236,27 +235,23 @@ describe("Engine", () => {
       p1 build m -4x2
       p2 booster booster3
       p1 booster booster7
-      p1 up gaia
-      p2 build ts -1x-1
-      p1 build gf -2x3
-      p2 build m -1x0
+      p1 up gaia.
+      p2 build ts -1x-1.
+      p1 build gf -2x3.
+      p2 build m -1x0.
       p1 leech 1
-      p1 build ts -1x2
+      p1 build ts -1x2.
       p2 leech 1
-      p2 build m 1x0
+      p2 build m 1x0.
       p1 leech 2
-      p1 build m -3x4
+      p1 build m -3x4.
       p2 pass booster8
-      p1 build PI -1x2
+      p1 build PI -1x2.
       p2 leech 1
       p1 pass booster3
-      p2 burn 3
-      p2 spend 3pw for 1o
-      p2 pass booster5
-      p1 build m -2x3
-      p1 spend 1pw for 1c
-      p1 spend 1pw for 1c
-      p1 build ts -4x2
+      p2 burn 3. spend 3pw for 1o. pass booster5
+      p1 build m -2x3.spend 1pw for 1c.spend 1pw for 1c.
+      p1 build ts -4x2.
     `);
 
     const engine = new Engine(moves);
@@ -280,12 +275,11 @@ describe("Engine", () => {
       p1 build m -4x2
       p2 booster booster3
       p1 booster booster7
-      p1 up gaia
-      p2 build ts -1x-1
-      p1 build m -1x0
+      p1 up gaia.
+      p2 build ts -1x-1.
+      p1 build m -1x0.
       p2 leech 2
-      p2 burn 3
-      p2 action power7
+      p2 burn 3. action power7
     `);
  
     expect(() => new Engine(moves)).to.not.throw();
@@ -302,7 +296,7 @@ describe("Engine", () => {
       p1 build m -3x4
       p2 booster booster4
       p1 booster booster5
-      p1 build m -5x0
+      p1 build m -5x0.
     `));
 
     const ore = engine.player(Player.Player2).data.ores;
@@ -323,11 +317,11 @@ describe("Engine", () => {
       p1 build m -3x4
       p2 booster booster4
       p1 booster booster5
-      p1 build m -5x0
-      p2 build ts -5x5
+      p1 build m -5x0.
+      p2 build ts -5x5.
       p1 leech 1
-      p1 build m -4x2
-      p2 build PI -5x5
+      p1 build m -4x2.
+      p2 build PI -5x5.
       p1 leech 1
     `);
  
@@ -397,6 +391,25 @@ describe("Engine", () => {
       expect(() => new Engine(moves)).to.throw(AssertionError);
     });
 
+    it("should allow to do free actions after main actions", () => {
+      const moves = parseMoves(`
+        init 2 randomSeed
+        p1 faction terrans
+        p2 faction nevlas
+        p1 build m -1x2
+        p2 build m -1x0
+        p2 build m 0x-4
+        p1 build m -4x2
+        p2 booster booster4
+        p1 booster booster7
+        p1 build ts -1x2. burn 1. burn 1.
+        p2 leech 1
+        p2 build ts -1x0. burn 1
+      `);
+  
+      expect(() => new Engine(moves)).to.not.throw(AssertionError);
+    });
+
     it("should gain 2 victory points when upgrading to ts and having booster7", () => {
       //booster7: ["o", "ts | 2vp"]
       const moves = parseMoves(`
@@ -409,8 +422,8 @@ describe("Engine", () => {
         p1 build m -3x4
         p2 booster booster7
         p1 booster booster3
-        p1 build m -4x0
-        p2 build ts -5x5
+        p1 build m -4x0.
+        p2 build ts -5x5.
         p1 leech 1
         p1 pass booster4
       `);

@@ -167,8 +167,10 @@ export function generate(engine: Engine): AvailableCommand[] {
 
 
         }
-        // remove playerPassiveCommands 
-        engine.roundSubCommands.splice(0, 1)
+        // remove playerPassiveCommands but not endTurn
+        if ( engine.roundSubCommands[0].name !== Command.EndTurn ) {
+          engine.roundSubCommands.splice(0, 1)
+        }
 
         return commands;
       } //end subCommand

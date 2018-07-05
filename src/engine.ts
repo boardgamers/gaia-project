@@ -69,6 +69,7 @@ export default class Engine {
   passedPlayers: PlayerEnum[] = [];
   /** Current player to make a move */
   currentPlayer: PlayerEnum;
+  nextPlayer: PlayerEnum;
   /** position of the current player in turn order */
   currentPlayerTurnOrderPos: number = 0;
 
@@ -144,21 +145,24 @@ export default class Engine {
 
       for (let i = 0; i < moves.length; i++)  {
         const split = moves[i].trim().split(' ');  
-        var command = split[0] as Command;
+        // the final dot is the end turn command
+        var command = split[0] === "" ? Command.EndTurn : split[0] as Command;
 
         const available = this.availableCommands;
         const commandNames = available.map(cmd => cmd.name);
 
         assert(
           this.availableCommand(player, command),
-          'Move ' + move + ' not in Available commands: ' + commandNames.join(', ')
+          'Move ' + split + ' not in Available commands: ' + commandNames.join(', ')
         );
 
         (this[command] as any)(player as PlayerEnum, ...split.slice(1));
-      }
 
-      //implicit endturn
-      //(this[Command.EndTurn] as any)(player as PlayerEnum);
+        //exclude last move
+        if (i< moves.length - 1) {
+          this.generateAvailableCommands();
+        }
+      }
 
       this.endTurn(command);
     }
@@ -339,7 +343,6 @@ export default class Engine {
             });
       }
     }
-
     if (tiles.length>0) {
       this.roundSubCommands.unshift({
         name: Command.ChooseTechTile,
@@ -347,6 +350,7 @@ export default class Engine {
         data: { tiles } 
     })
     }
+
   }
 
   coverTechTilePhase(player: PlayerEnum) {
@@ -369,8 +373,9 @@ export default class Engine {
     // if stdTech in a free position or advTech, any researchArea
     let destResearchArea = "";
     if (![TechTilePos.Free1, TechTilePos.Free2, TechTilePos.Free3].includes(pos) && Object.values(TechTilePos).includes(pos)) {
-      // There's only one track to advance, so no need to give the player a choice
+      // There's only one track to advance, so no need to give the player a choice, but end turn
       this.player(player).gainRewards(Reward.parse(`up-${pos}`));
+      this.endTurnPhase(player, Command.ChooseTechTile);
       return;
     }
 
@@ -404,6 +409,7 @@ export default class Engine {
     });
   }
 
+  
   possibleResearchAreas(player: PlayerEnum, cost: string, destResearchArea?: ResearchField) {
     const tracks = [];
     const data = this.players[player].data;
@@ -477,7 +483,11 @@ export default class Engine {
       commands.push({
         name: Command.Action,
         player,
-        data: { poweracts }
+        data: { poweracts: poweracts.map(act => ({
+          name: act,
+          cost: boardActions[act].cost,
+          income: boardActions[act].income
+        }))}
       });
     };
 
@@ -513,7 +523,7 @@ export default class Engine {
       commands.push({
         name: Command.BurnPower,
         player,
-        data: 1
+        data: _.range(1, Math.floor(this.player(player).data.power.area2 / 2) + 1)
       });
     }
     return commands;
@@ -522,10 +532,12 @@ export default class Engine {
 
   /** Next player to make a move, after current player makes their move */
   moveToNextPlayer(command: Command): PlayerEnum {
+    const playerPos = this.turnOrder.indexOf(this.currentPlayer);
     const subPhaseTurn = this.roundSubCommands.length > 0;
     
     if (subPhaseTurn) {
-      // This is a sub command, wait until they are all done
+      // This is a sub command, sets currentplayer 
+      this.currentPlayer = this.roundSubCommands[0].player;
       return;
     } 
 
@@ -534,28 +546,22 @@ export default class Engine {
       return;
     }
 
-    if (this.round <= 0) {
-      const playerPos = this.currentPlayerTurnOrderPos;
-      if (command === Command.Pass) {
-        this.passedPlayers.push(this.currentPlayer);
-      }
-      this.turnOrder.splice(playerPos, 1);
-      this.currentPlayerTurnOrderPos = playerPos % this.turnOrder.length;
-      this.currentPlayer = this.turnOrder[this.currentPlayerTurnOrderPos];
-
-      return;
-    }
-
-    const playerPos = this.turnOrder.indexOf(this.currentPlayer);
-
     if (command === Command.Pass) {
       this.passedPlayers.push(this.currentPlayer);
+    }
+
+    if (this.round <= 0 || command === Command.Pass) {
       this.turnOrder.splice(playerPos, 1);
       this.currentPlayer = this.turnOrder[playerPos % this.turnOrder.length];
+
       return;
     }
-    
-    this.currentPlayer = this.turnOrder[(playerPos + 1) % this.turnOrder.length];
+
+    if (this.currentPlayer !== this.nextPlayer) {
+      this.currentPlayer = this.nextPlayer;
+    }
+
+    return this.currentPlayer;   
   }
 
   playersInOrder(): Player[] {
@@ -647,15 +653,17 @@ export default class Engine {
 
         this.leechingPhase(player, hex);
 
+        if ( building === Building.ResearchLab || building === Building.Academy1 || building === Building.Academy2) {
+          this.techTilePhase(player);
+          return;
+        }
+
+
         if ( pl.faction === Faction.Gleens && building === Building.PlanetaryInstitute){
           pl.gainFederationToken(Federation.FederationGleens);
         }
 
-        if ( building === Building.ResearchLab || building === Building.Academy1 || building === Building.Academy2) {
-          this.techTilePhase(player);
-        }
-
-        //this.endTurnPhase(player, Command.Build);
+        this.endTurnPhase(player, Command.Build);
        
         return;
       }
@@ -687,6 +695,7 @@ export default class Engine {
         this.lostPlanetPhase(player);
       }
     }
+    this.endTurnPhase(player, Command.Build);
   }
 
   [Command.Pass](player: PlayerEnum, booster: Booster) {
@@ -708,7 +717,11 @@ export default class Engine {
   }
 
   [Command.EndTurn](player: PlayerEnum){
-
+    // removes endTurn subcommand
+    this.roundSubCommands.splice(0, 1);
+    //sets nextPlayer
+    const playerPos = this.turnOrder.indexOf(this.currentPlayer);
+    this.nextPlayer = this.turnOrder[(playerPos + 1) % this.turnOrder.length];
   }
 
   [Command.ChooseTechTile](player: PlayerEnum, pos: TechTilePos) {
@@ -742,6 +755,8 @@ export default class Engine {
     this.player(player).data.techTiles.splice(tileIndex, 1);
     //remove bonus
     this.player(player).removeEvents(Event.parse(techs[tile]));
+
+    this.endTurnPhase(player, Command.Build);
   }
 
   [Command.ChooseFederationTile](player: PlayerEnum, federation: Federation, fromCommand: Command = Command.ChooseFederationTile) {
@@ -753,6 +768,7 @@ export default class Engine {
     if (fromCommand === Command.Action) {
       //rescore a federation
       this.player(player).gainRewards(Reward.parse(federations[federation]));
+      this.endTurnPhase(player,Command.ChooseFederationTile);
     } else {
 
     }
@@ -813,6 +829,7 @@ export default class Engine {
       this.selectFederationTilePhase(player, Command.Action);
     } else {
       pl.loadEvents(Event.parse(boardActions[action].income));
+      this.endTurnPhase(player, Command.Action);
     };
   }
 
@@ -839,5 +856,7 @@ export default class Engine {
       hex.addToFederationOf(player);
     }
     pl.payCosts([new Reward(fedInfo.satellites, Resource.GainToken)]);
+
+    this.endTurnPhase(player, Command.FormFederation);
   }
 }
