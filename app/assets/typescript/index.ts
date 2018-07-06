@@ -162,6 +162,7 @@ function showAvailableMove(player: string, command: AvailableCommand) {
     case Command.Action: {
       const acts = command.data.poweracts;
       addButton("Power/Q.I.C Action", `${player} ${Command.Action}`, {values: acts.map(act => act.name), labels: acts.map(act => `Spend ${act.cost} for ${act.income.join(" / ")}`)});
+      break;
     }
 
     case Command.BurnPower: {
