@@ -32,7 +32,7 @@ export enum Resource {
   GainTokenGaiaArea = "tg",
   VictoryPoint = "vp",
   TerraformCostDiscount = "d",
-  RangeExtension = "r",
+  Range = "r",
   GaiaFormer = "gf",
   UpgradeTerraforming = "up-terra",
   UpgradeNavigation = "up-nav",
@@ -42,8 +42,8 @@ export enum Resource {
   UpgradeScience = "up-sci",
   TechTile = "tech",
   RescoreFederation = "fed",
-  Step = "step",
-  Range = "range"
+  TemporaryStep = "tempstep",
+  TemporaryRange = "temprange"
 
 }
 
