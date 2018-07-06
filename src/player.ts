@@ -216,6 +216,12 @@ export default class Player extends EventEmitter {
       }
     }
 
+    // Gain tech tile if lab / academy
+    if ( building === Building.ResearchLab || building === Building.Academy1 || building === Building.Academy2) {
+      this.emit("gain-tech");
+      return;
+    }
+
     // get triggered income for new building
     this.receiveBuildingTriggerIncome(building, hex.data.planet);
   }

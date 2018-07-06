@@ -688,12 +688,6 @@ export default class Engine {
 
         this.leechingPhase(player, hex);
 
-        if ( building === Building.ResearchLab || building === Building.Academy1 || building === Building.Academy2) {
-          this.techTilePhase(player);
-          return;
-        }
-
-
         if ( pl.faction === Faction.Gleens && building === Building.PlanetaryInstitute){
           pl.gainFederationToken(Federation.FederationGleens);
         }
