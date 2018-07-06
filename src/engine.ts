@@ -18,7 +18,8 @@ import {
   AdvTechTile,
   AdvTechTilePos,
   Federation,
-  BoardAction
+  BoardAction,
+  Operator
 
 } from './enums';
 import { CubeCoordinates } from 'hexagrid';
@@ -570,6 +571,29 @@ export default class Engine {
     }
     return commands;
 
+  }
+
+  possibleSpecialActions(player: PlayerEnum) {
+    const commands = [];
+    const specialacts = [];
+
+    for (const event of this.player(player).events[Operator.Activate]) {
+      specialacts.push(
+        {
+          income: event.rewards
+        }
+      )
+    };
+
+    if (specialacts.length > 0) {
+      commands.push({
+        name: Command.Special,
+        player,
+        data: { specialacts }
+      });
+    };
+
+    return commands;
   }
 
   /** Next player to make a move, after current player makes their move */

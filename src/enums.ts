@@ -137,6 +137,7 @@ export enum Command {
   BurnPower = "burn",
   Spend = "spend",
   Action = "action",
+  Special = "special",
   PlaceLostPlanet  = "lostPlanet",
   FormFederation = "federation",
   EndTurn = "turn"

@@ -202,9 +202,10 @@ export function generate(engine: Engine): AvailableCommand[] {
       commands.push(...engine.possibleFreeActions(player));
 
       // power actions 
-
       commands.push(...engine.possibleBoardActions(player));
-  
+
+      // special actions 
+      commands.push(...engine.possibleSpecialActions(player));  
        
       return commands;
     }
