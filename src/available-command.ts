@@ -1,4 +1,4 @@
-import { Command, Faction, Building, Planet, Round, Booster, Resource} from './enums';
+import { Command, Faction, Building, Planet, Round, Booster, Resource, Player} from './enums';
 import Engine from './engine';
 import * as _ from 'lodash';
 import factions from './factions';
@@ -76,13 +76,7 @@ export function generate(engine: Engine): AvailableCommand[] {
         const subCommand = engine.roundSubCommands[0];
         switch (subCommand.name) {
           case Command.Leech: {
-            commands.push(
-              {
-                name: Command.Leech,
-                player: subCommand.player,
-                data: subCommand.data
-              }
-            );
+            commands.push(subCommand);
             commands.push(
               {
                 name: Command.DeclineLeech,
@@ -92,18 +86,6 @@ export function generate(engine: Engine): AvailableCommand[] {
             );
             break;
           }
-
-          case Command.ChooseTechTile: {
-            commands.push(
-              {
-                name: Command.ChooseTechTile,
-                player: subCommand.player,
-                data: subCommand.data
-              }
-            );
-            break;
-          }
-
           case Command.ChooseCoverTechTile: {
             const tiles = data.techTiles.map(tl => tl.enabled);
             commands.push(
@@ -111,17 +93,6 @@ export function generate(engine: Engine): AvailableCommand[] {
                 name: Command.ChooseCoverTechTile,
                 player: subCommand.player,
                 data: { tiles }
-              }
-            );
-            break;
-          }
-
-          case Command.ChooseFederationTile: {
-            commands.push(
-              {
-                name: Command.ChooseFederationTile,
-                player: subCommand.player,
-                data: subCommand.data
               }
             );
             break;
@@ -154,18 +125,14 @@ export function generate(engine: Engine): AvailableCommand[] {
           }
 
           case Command.EndTurn: {
-            commands.push({
-              name: Command.EndTurn,
-              player,
-              data: subCommand.data
-            });
+            commands.push(subCommand);
 
             //add free actions before to end turn
             commands.push(...engine.possibleFreeActions(player));
             break;
           }
 
-
+          default: commands.push(subCommand);
         }
         // remove playerPassiveCommands but not endTurn
         if ( engine.roundSubCommands[0].name !== Command.EndTurn ) {
@@ -192,83 +159,10 @@ export function generate(engine: Engine): AvailableCommand[] {
         }  
       } // end add boosters
 
-      // Add building moves
-      {
-        const planet = engine.player(player).planet;
-        const buildings = [];
-
-        for (const hex of engine.map.toJSON()) {
-          // exclude empty planets and other players' planets
-          if (( hex.data.planet === Planet.Empty  ) || (hex.data.player !== undefined && hex.data.player !== player)) {
-            continue;
-          }
-          //upgrade existing player's building
-          if (hex.data.building ) {
-
-            //excluding Transdim planet until transformed into Gaia planets
-            if (hex.data.planet === Planet.Transdim){
-              continue
-            }
-
-            const isolated = (() => {
-              // We only care about mines that can transform into trading stations;
-              if(hex.data.building !== Building.Mine) {
-                return true;
-              }
-
-              // Check each other player to see if there's a building in range
-              for (const pl of engine.players) {
-                if (pl !== engine.player(player)) {
-                  for (const loc of pl.data.occupied) {
-                    if (map.distance(loc, hex) < ISOLATED_DISTANCE) {
-                      return false;
-                    }
-                  }
-                }
-              }
-
-              return true;
-            })();
-
-            const upgraded = upgradedBuildings(hex.data.building, engine.player(player).faction);
-
-            for (const upgrade of upgraded) {
-              const buildCost = engine.player(player).canBuild(hex.data.planet, upgrade, {isolated, existingBuilding: hex.data.building});
-              if ( buildCost !== undefined) {
-                buildings.push({
-                  building: upgrade,
-                  cost: buildCost.map(c => c.toString()).join(','),
-                  coordinates: hex.toString()
-                });
-              }
-            }
-          } else {
-            // planet without building
-            // Check if the range is enough to access the planet
-            const distance = _.min(data.occupied.map(loc => map.distance(hex, loc)));
-            const qicNeeded = Math.max(Math.ceil( (distance - data.range) / QIC_RANGE_UPGRADE), 0);
-
-            const building = hex.data.planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine  ;
-            const buildCost = engine.player(player).canBuild(hex.data.planet, building, {addedCost: [new Reward(qicNeeded, Resource.Qic)]});
-            if ( buildCost !== undefined ){
-                buildings.push({
-                building: building,
-                coordinates: hex.toString(),
-                cost: buildCost.map(c => c.toString()).join(',')
-              });
-            }         
-          } 
-        } //end for hex
-
-        if (buildings.length > 0) {
-          commands.push({
-            name: Command.Build,
-            player,
-            data: { buildings }
-          });
-        }
-      } // end add buildings
-
+      const buildingCommand = generateBuildingCommand(engine, player);
+      if (buildingCommand) {
+        commands.push(buildingCommand);
+      }
       // Add federations
       {
         const possibleTiles = Object.keys(engine.federations).filter(key => engine.federations[key] > 0);
@@ -314,5 +208,83 @@ export function generate(engine: Engine): AvailableCommand[] {
        
       return commands;
     }
+  }
+}
+
+export function generateBuildingCommand(engine: Engine, player: Player) {
+  const map = engine.map;
+  const data = engine.player(player).data;
+  const planet = engine.player(player).planet;
+  const buildings = [];
+
+  for (const hex of engine.map.toJSON()) {
+    // exclude empty planets and other players' planets
+    if (( hex.data.planet === Planet.Empty  ) || (hex.data.player !== undefined && hex.data.player !== player)) {
+      continue;
+    }
+    //upgrade existing player's building
+    if (hex.data.building ) {
+
+      //excluding Transdim planet until transformed into Gaia planets
+      if (hex.data.planet === Planet.Transdim){
+        continue
+      }
+
+      const isolated = (() => {
+        // We only care about mines that can transform into trading stations;
+        if(hex.data.building !== Building.Mine) {
+          return true;
+        }
+
+        // Check each other player to see if there's a building in range
+        for (const pl of engine.players) {
+          if (pl !== engine.player(player)) {
+            for (const loc of pl.data.occupied) {
+              if (map.distance(loc, hex) < ISOLATED_DISTANCE) {
+                return false;
+              }
+            }
+          }
+        }
+
+        return true;
+      })();
+
+      const upgraded = upgradedBuildings(hex.data.building, engine.player(player).faction);
+
+      for (const upgrade of upgraded) {
+        const buildCost = engine.player(player).canBuild(hex.data.planet, upgrade, {isolated, existingBuilding: hex.data.building});
+        if ( buildCost !== undefined) {
+          buildings.push({
+            building: upgrade,
+            cost: buildCost.map(c => c.toString()).join(','),
+            coordinates: hex.toString()
+          });
+        }
+      }
+    } else {
+      // planet without building
+      // Check if the range is enough to access the planet
+      const distance = _.min(data.occupied.map(loc => map.distance(hex, loc)));
+      const qicNeeded = Math.max(Math.ceil( (distance - data.range) / QIC_RANGE_UPGRADE), 0);
+
+      const building = hex.data.planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine  ;
+      const buildCost = engine.player(player).canBuild(hex.data.planet, building, {addedCost: [new Reward(qicNeeded, Resource.Qic)]});
+      if ( buildCost !== undefined ){
+          buildings.push({
+            building: building,
+            coordinates: hex.toString(),
+            cost: buildCost.map(c => c.toString()).join(',')
+        });
+      }         
+    } 
+  } //end for hex
+
+  if (buildings.length > 0) {
+    return {
+      name: Command.Build,
+      player,
+      data: { buildings }
+    };
   }
 }

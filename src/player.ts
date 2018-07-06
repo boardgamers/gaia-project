@@ -16,11 +16,12 @@ import { GaiaHex } from './gaia-hex';
 import spanningTree from './algorithms/spanning-tree';
 import { FederationInfo, isOutclassedBy } from './federation';
 import federationTiles, { isGreen }from "./tiles/federations";
+import { EventEmitter } from "eventemitter3";
 
 const TERRAFORMING_COST = 3;
 const FEDERATION_COST = 7;
 
-export default class Player {
+export default class Player extends EventEmitter {
   faction: Faction = null;
   board: FactionBoard = null;
   data: PlayerData = new PlayerData();
@@ -34,6 +35,7 @@ export default class Player {
   };
 
   constructor(public player: PlayerEnum = PlayerEnum.Player1) {
+    super();
     this.data.on('advance-research', track => this.onResearchAdvanced(track));
   }
 
@@ -72,11 +74,15 @@ export default class Player {
   gainRewards(rewards: Reward[]) {
     for (const reward of rewards) {
       this.data.gainReward(this.factionReward(reward));
-    }
 
-    // TODO: Trigger subcommand build action if Resource.TerraformSteps is in the rewards
-    // TODO: Trigger subcommand chooseTechTile if Resource.TechTile is in the rewards
-    // TODO: Trigger subcommand chooseFederationTile if Resource.RescoreFederation is in the rewards
+      if (reward.type === Resource.TechTile) {
+        this.emit("gain-tech");
+      } else if (reward.type === Resource.RescoreFederation) {
+        this.emit("rescore-fed");
+      } else if (reward.type === Resource.TerraformStep) {
+        this.emit("build-mine");
+      }
+    }
   }
 
 
@@ -212,6 +218,12 @@ export default class Player {
 
     // get triggered income for new building
     this.receiveBuildingTriggerIncome(building, hex.data.planet);
+  }
+
+  // Not to confuse with the end of a round
+  endTurn() {
+    // Reset free terraforming steps
+    this.data.terraformSteps = 0;
   }
 
   pass() {

@@ -27,7 +27,8 @@ import techs from './tiles/techs';
 import federations from './tiles/federations';
 import * as researchTracks from './research-tracks'
 import AvailableCommand, {
-  generate as generateAvailableCommands
+  generate as generateAvailableCommands,
+  generateBuildingCommand
 } from './available-command';
 import Reward from './reward';
 import { boardActions, freeActions } from './actions';
@@ -100,6 +101,36 @@ export default class Engine {
     );
   }
 
+  addPlayer(player: Player) {
+    this.players.push(player);
+
+    player.on('gain-tech', () => {
+      this.techTilePhase(player.player);
+    });
+    player.on('build-mine', () => {
+      const buildingCommand = generateBuildingCommand(this, player.player);
+
+      if (buildingCommand) {
+        // We filter buildings that aren't mines (like gaia-formers) or 
+        // that already have a building on there (like gaia-formers)
+        buildingCommand.data.buildings = buildingCommand.data.buildings.filter(bld => {
+          if (bld.building !== Building.Mine) {
+            return false;
+          }
+          return this.map.grid.getS(bld.coordinates).buildingOf(player.player) === undefined;
+        });
+
+        if (buildingCommand.data.buildings.length > 0) {
+          this.roundSubCommands.unshift(buildingCommand);
+        }
+      }
+    });
+
+    player.on('rescore-fed', () => {
+      this.selectFederationTilePhase(player.player, "player");
+    });
+  }
+
   player(player: number): Player {
     return this.players[player];
   }
@@ -110,6 +141,12 @@ export default class Engine {
     }
 
     return this.currentPlayer;
+  }
+
+  nextSubcommandPlayer(): PlayerEnum {
+    if (this.roundSubCommands.length > 0) {
+      return this.roundSubCommands[0].player;
+    }
   }
 
   move(move: string) {
@@ -137,7 +174,7 @@ export default class Engine {
       );
       const player = +playerS[1] - 1;
 
-      assert(this.playerToMove() === (player as PlayerEnum), "Wrong turn order in move " + move + ", expected "+ this.currentPlayer +' found '+player);
+      assert(this.playerToMove() === (player as PlayerEnum), "Wrong turn order in move " + move + ", expected "+ this.playerToMove() +' found '+player);
 
       const moves = move.substr(2, move.length - 2).trim().split('.');
 
@@ -162,7 +199,7 @@ export default class Engine {
         }
       }
 
-      this.endTurn(command);
+      this.endTurn(player, command);
     }
 
     this.generateAvailableCommands();
@@ -178,13 +215,14 @@ export default class Engine {
     engine.availableCommands = data.availableCommands;
     engine.map = SpaceMap.fromData(data.map);
     for (const player of data.players) {
-      engine.players.push(Player.fromData(player));
+      engine.addPlayer(Player.fromData(player));
     }
 
     return engine;
   }
 
-  endTurn(command : Command) {
+  endTurn(player:PlayerEnum, command : Command) {
+    this.player(player).endTurn();
     // if not subactions Let the next player move based on the command
     this.moveToNextPlayer(command);
 
@@ -384,14 +422,18 @@ export default class Engine {
     });
   }
 
-  selectFederationTilePhase(player: PlayerEnum, fromCommand: Command){
+  selectFederationTilePhase(player: PlayerEnum, from: "pool" | "player"){
     const possibleTiles = Object.keys(this.federations).filter(key => this.federations[key] > 0);
     const playerTiles = Object.keys(this.player(player).data.federations);
 
     this.roundSubCommands.unshift({
       name: Command.ChooseFederationTile,
       player: player,
-      data: fromCommand === Command.Action ? playerTiles : possibleTiles
+      data: {
+        tiles: from === "player" ? playerTiles : possibleTiles,
+        // Tiles that are rescored just add the rewards, but don't take the token
+        rescore: from === "player"
+      }
     });
   }
 
@@ -400,13 +442,15 @@ export default class Engine {
     if (this.round <= 0) {
       return;
     }
+    if (this.nextSubcommandPlayer() === player) {
+      return;
+    }
     this.roundSubCommands.unshift({
       name: Command.EndTurn,
       player: player,
       data: fromCommand
     });
   }
-
   
   possibleResearchAreas(player: PlayerEnum, cost: string, destResearchArea?: ResearchField) {
     const tracks = [];
@@ -599,7 +643,7 @@ export default class Engine {
     this.players = [];
     
     for (let i = 0; i < nbPlayers; i++) {
-      this.players.push(new Player(i));
+      this.addPlayer(new Player(i));
     }
   }
 
@@ -750,13 +794,13 @@ export default class Engine {
     this.endTurnPhase(player, Command.Build);
   }
 
-  [Command.ChooseFederationTile](player: PlayerEnum, federation: Federation, fromCommand: Command = Command.ChooseFederationTile) {
-    const { tiles } = this.availableCommand(player, fromCommand).data;
+  [Command.ChooseFederationTile](player: PlayerEnum, federation: Federation) {
+    const { tiles, rescore } = this.availableCommand(player, Command.ChooseFederationTile).data;
     const tileAvailable = tiles.find(ta => ta.tile == federation);
 
     assert(tileAvailable !== undefined, `Federation ${federation} is not available`);
 
-    if (fromCommand === Command.Action) {
+    if (rescore) {
       //rescore a federation
       this.player(player).gainRewards(Reward.parse(federations[federation]));
       this.endTurnPhase(player,Command.ChooseFederationTile);
@@ -814,14 +858,8 @@ export default class Engine {
     this.boardActions[action] = false;
 
     pl.payCosts(Reward.parse(boardActions[action].cost));
-    //rescore 
-    if (action === BoardAction.Qic2) {
-      // TODO move that to player.gainRewards()
-      this.selectFederationTilePhase(player, Command.Action);
-    } else {
-      pl.loadEvents(Event.parse(boardActions[action].income));
-      this.endTurnPhase(player, Command.Action);
-    };
+    pl.loadEvents(Event.parse(boardActions[action].income));
+    this.endTurnPhase(player, Command.Action);
   }
 
   [Command.FormFederation](player: PlayerEnum, hexes: string, federation: Federation) {
