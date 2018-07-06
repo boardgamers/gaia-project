@@ -580,7 +580,7 @@ export default class Engine {
     for (const event of this.player(player).events[Operator.Activate]) {
       specialacts.push(
         {
-          income: event.rewards
+          income: event.spec.replace(/\s/g,'')
         }
       )
     };
@@ -812,11 +812,24 @@ export default class Engine {
     this.endTurnPhase(player, Command.Build);
   }
 
+
+  [Command.Special](player: PlayerEnum, income: string){
+    const specialEvent = Event.parse([income]);
+    const { specialacts } = this.availableCommand(player, Command.Special).data;
+    const actAvailable = specialacts.find(sa => sa.income == income);
+    
+    assert(actAvailable !== undefined, `Special action ${income} is not available`);
+
+    //gets income for standard once per turn activated income
+    this.player(player).gainRewards(specialEvent[0].rewards);
+    //mark as activated special action for this turn
+    this.player(player).activateEvents(specialEvent, true);
+
+  }
+
   [Command.ChooseFederationTile](player: PlayerEnum, federation: Federation) {
     const { tiles, rescore } = this.availableCommand(player, Command.ChooseFederationTile).data;
     const tileAvailable = tiles.find(ta => ta.tile == federation);
-
-    assert(tileAvailable !== undefined, `Federation ${federation} is not available`);
 
     if (rescore) {
       //rescore a federation

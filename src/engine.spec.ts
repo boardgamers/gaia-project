@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import Engine from "..";
 import { AssertionError } from "assert";
-import { Player, Federation } from "./enums";
+import { Player, Federation, Operator } from "./enums";
 
 describe("Engine", () => {
 
@@ -489,7 +489,7 @@ describe("Engine", () => {
         p1 booster booster3
         p1 build m -4x0.
         p2 build ts -5x5.
-        p1 leech 1
+        p1 leech 1  
         p1 pass booster4
       `);
 
@@ -500,6 +500,25 @@ describe("Engine", () => {
       
       expect(engine.player(Player.Player2).data.victoryPoints).to.equal(vp+2);
     });
+
+    it("should allow to do use a special action and actiavted it", () => {
+      const moves = parseMoves(`
+        init 2 randomSeed
+        p1 faction terrans
+        p2 faction nevlas
+        p1 build m -4x2
+        p2 build m -1x0
+        p2 build m 0x-4
+        p1 build m -1x2
+        p2 booster booster5
+        p1 booster booster4
+        p1 special =>d
+      `);
+      const engine = new Engine(moves);
+      
+      expect(engine.player(Player.Player1).events[Operator.Activate][0].activated).to.be.true;
+    });
+
   });
 });
 

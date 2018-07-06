@@ -173,6 +173,21 @@ export default class Player extends EventEmitter {
     });
   }
   
+  activateEvents(events: Event[], status: boolean) {
+    for (const event of events) {
+      this.activateEvent(event, status);
+    }  
+  }
+
+  activateEvent(event: Event, status: boolean) {
+    this.events[event.operator].some((ev, i) => {
+      if (ev.spec.replace(/\s/g,'') === event.spec) {
+        this.events[event.operator][i].activated = status;
+        return true;
+      }
+    });
+  }
+  
   onResearchAdvanced(field: ResearchField) {
     const events = Event.parse(researchTracks[field][this.data.research[field]]);
     this.loadEvents(events);
@@ -249,6 +264,8 @@ export default class Player extends EventEmitter {
     for (const event of this.events[Operator.Income]) {
       this.gainRewards(event.rewards);
     }
+
+    //TODO : reactivate events 
   }
 
   receivePassIncome() {
