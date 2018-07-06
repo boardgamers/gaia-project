@@ -139,7 +139,7 @@ export enum Command {
   Action = "action",
   PlaceLostPlanet  = "lostPlanet",
   FormFederation = "federation",
-  EndTurn = "end"
+  EndTurn = "turn"
 }
 
 export enum Player {
