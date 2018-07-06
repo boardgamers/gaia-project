@@ -34,12 +34,11 @@ import AvailableCommand, {
 import Reward from './reward';
 import { boardActions, freeActions } from './actions';
 import { GaiaHex } from '..';
-import { stdBuildingValue } from './buildings';
-
+import { stdBuildingValue, upgradedBuildings } from './buildings';
 
 
 const ISOLATED_DISTANCE = 3;
-
+const QIC_RANGE_UPGRADE = 2;
 
 export default class Engine {
   map: SpaceMap;
@@ -452,6 +451,15 @@ export default class Engine {
       data: fromCommand
     });
   }
+
+  buildMinePhase(player: PlayerEnum, benefit: string){
+    this.roundSubCommands.unshift({
+      name: Command.Build,
+      player: player,
+      data: benefit
+    });
+  }
+
   
   possibleResearchAreas(player: PlayerEnum, cost: string, destResearchArea?: ResearchField) {
     const tracks = [];
@@ -592,6 +600,87 @@ export default class Engine {
         data: { specialacts }
       });
     };
+
+    return commands;
+  }
+
+  possibleBuildings(player: PlayerEnum, benefit?: string){
+    const buildings = [];
+    const commands = [];
+
+    const rangeExtension  = benefit === "=>range" ? 3 : 0;
+    const terraformStepDiscount = benefit === "=>step" ? 1 : 0;  
+
+    for (const hex of this.map.toJSON()) {
+      // exclude empty planets and other players' planets
+      if (( hex.data.planet === Planet.Empty  ) || (hex.data.player !== undefined && hex.data.player !== player)) {
+        continue;
+      }
+      //upgrade existing player's building
+      if (hex.data.building && !benefit) {
+
+        //excluding Transdim planet until transformed into Gaia planets
+        if (hex.data.planet === Planet.Transdim){
+          continue
+        }
+
+        const isolated = (() => {
+          // We only care about mines that can transform into trading stations;
+          if(hex.data.building !== Building.Mine) {
+            return true;
+          }
+
+          // Check each other player to see if there's a building in range
+          for (const pl of this.players) {
+            if (pl !== this.player(player)) {
+              for (const loc of pl.data.occupied) {
+                if (this.map.distance(loc, hex) < ISOLATED_DISTANCE) {
+                  return false;
+                }
+              }
+            }
+          }
+
+          return true;
+        })();
+
+        const upgraded = upgradedBuildings(hex.data.building, this.player(player).faction);
+
+        for (const upgrade of upgraded) {
+          const buildCost = this.player(player).canBuild(hex.data.planet, upgrade, {isolated, existingBuilding: hex.data.building});
+          if ( buildCost !== undefined) {
+            buildings.push({
+              building: upgrade,
+              cost: buildCost.map(c => c.toString()).join(','),
+              coordinates: hex.toString()
+            });
+          }
+        }
+      } else {
+        // planet without building
+        // Check if the range is enough to access the planet
+        const distance = _.min(this.player(player).data.occupied.map(loc => this.map.distance(hex, loc)));
+        const qicNeeded = Math.max(Math.ceil( (distance - this.player(player).data.range - rangeExtension ) / QIC_RANGE_UPGRADE), 0);
+
+        const building = hex.data.planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine  ;
+        const buildCost = this.player(player).canBuild(hex.data.planet, building, {addedCost: [new Reward(qicNeeded, Resource.Qic)], terraformStepDiscount: terraformStepDiscount });
+        if ( buildCost !== undefined ){
+            buildings.push({
+            building: building,
+            coordinates: hex.toString(),
+            cost: buildCost.map(c => c.toString()).join(',')
+          });
+        }         
+      } 
+    } //end for hex
+
+    if (buildings.length > 0) {
+      commands.push({
+        name: Command.Build,
+        player,
+        data: { buildings }
+      });
+    }
 
     return commands;
   }
@@ -825,6 +914,12 @@ export default class Engine {
     //mark as activated special action for this turn
     this.player(player).activateEvents(specialEvent, true);
 
+    if ( income === "=>range" || income === "=>step" ){
+      this.buildMinePhase(player, income);
+      return;
+    }
+
+    this.endTurnPhase(player,Command.Special);
   }
 
   [Command.ChooseFederationTile](player: PlayerEnum, federation: Federation) {

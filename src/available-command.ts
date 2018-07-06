@@ -6,6 +6,7 @@ import * as assert from "assert";
 import { upgradedBuildings } from './buildings';
 import Reward from './reward';
 
+
 const ISOLATED_DISTANCE = 3;
 const UPGRADE_RESEARCH_COST = "4k";
 const QIC_RANGE_UPGRADE = 2;
@@ -111,6 +112,12 @@ export function generate(engine: Engine): AvailableCommand[] {
             break;
           }
 
+          case Command.Build: {
+            //filters only available places for mines/gaiaformers
+            commands.push(...engine.possibleBuildings(player, subCommand.data ))
+            break;
+          }
+
           case Command.PlaceLostPlanet: {
             const spaces = engine.possibleSpaceLostPlanet(player)
 
@@ -163,6 +170,7 @@ export function generate(engine: Engine): AvailableCommand[] {
       if (buildingCommand) {
         commands.push(buildingCommand);
       }
+
       // Add federations
       {
         const possibleTiles = Object.keys(engine.federations).filter(key => engine.federations[key] > 0);

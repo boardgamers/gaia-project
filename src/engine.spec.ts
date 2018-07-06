@@ -512,12 +512,32 @@ describe("Engine", () => {
         p1 build m -1x2
         p2 booster booster5
         p1 booster booster4
-        p1 special =>d
+        p1 special =>step
       `);
       const engine = new Engine(moves);
       
       expect(engine.player(Player.Player1).events[Operator.Activate][0].activated).to.be.true;
     });
+
+    it("should allow to do use a range special action", () => {
+      const moves = parseMoves(`
+        init 2 randomSeed
+        p1 faction terrans
+        p2 faction nevlas
+        p1 build m -4x2
+        p2 build m -1x0
+        p2 build m 0x-4
+        p1 build m -3x4
+        p2 booster booster5
+        p1 booster booster4
+        p1 special =>step. build m -1x-1.
+        p2 leech 1
+        p2 special =>range. build m 3x-3.
+      `);
+      
+      expect(() => new Engine(moves)).to.not.throw(AssertionError);
+    });
+
 
   });
 });

@@ -31,7 +31,7 @@ export enum Resource {
   GainToken = "t",
   GainTokenGaiaArea = "tg",
   VictoryPoint = "vp",
-  TerraformStep = "d",
+  TerraformCostDiscount = "d",
   RangeExtension = "r",
   GaiaFormer = "gf",
   UpgradeTerraforming = "up-terra",
@@ -41,7 +41,10 @@ export enum Resource {
   UpgradeEconomy = "up-eco",
   UpgradeScience = "up-sci",
   TechTile = "tech",
-  RescoreFederation = "fed"
+  RescoreFederation = "fed",
+  Step = "step",
+  Range = "range"
+
 }
 
 export enum Operator {
@@ -77,7 +80,7 @@ export enum Condition {
   // trigger only
   MineOnGaia = "mg",
   AdvanceResearch = "a",
-  TerraformStep = "d"
+  TerraformCostDiscount = "d"
 }
 
 export namespace Condition {

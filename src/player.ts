@@ -97,7 +97,7 @@ export default class Player extends EventEmitter {
     return true;
   }
 
-  canBuild(targetPlanet: Planet, building: Building, {isolated, addedCost, existingBuilding}: {isolated?: boolean, addedCost?: Reward[], existingBuilding?: Building}) : Reward[] {
+  canBuild(targetPlanet: Planet, building: Building, {isolated, addedCost, existingBuilding, terraformStepDiscount}: {isolated?: boolean, addedCost?: Reward[], existingBuilding?: Building, terraformStepDiscount?: number}) : Reward[] {
     if (this.data[building] >= (building === Building.GaiaFormer ? this.data.gaiaformers : this.board.maxBuildings(building))) {
       // Too many buildings of the same kind
       return undefined;
@@ -125,8 +125,8 @@ export default class Player extends EventEmitter {
           // Already a gaia-former on the planet, so no need to pay a Q.I.C.
         }
       } else { // Get the number of terraforming steps to pay discounting terraforming track
-        const steps = terraformingStepsRequired(factions[this.faction].planet, targetPlanet); 
-        addedCost.push(new Reward((TERRAFORMING_COST - this.data.terraformSteps)*steps, Resource.Ore));
+        const steps = terraformingStepsRequired(factions[this.faction].planet, targetPlanet) - (terraformStepDiscount || 0); 
+        addedCost.push(new Reward((TERRAFORMING_COST - this.data.terraformCostDiscount)*steps, Resource.Ore));
       }
     };
 

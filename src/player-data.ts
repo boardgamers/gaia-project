@@ -38,7 +38,7 @@ export default class PlayerData extends EventEmitter {
   };
   range: number = 1;
   gaiaformers: number = 0;
-  terraformSteps: number = 0;
+  terraformCostDiscount: number = 0;
   roundBooster: Booster;
   techTiles: { tile: TechTile, enabled: boolean}[] = [];
   advTechTiles: AdvTechTile[] = [];
@@ -58,7 +58,7 @@ export default class PlayerData extends EventEmitter {
       research: this.research,
       range: this.range,
       gaiaformers: this.gaiaformers,
-      terraformSteps: this.terraformSteps,
+      terraformCostDiscount: this.terraformCostDiscount,
       roundBooster: this.roundBooster,
       techTiles: this.techTiles,
       advTechTiles: this.advTechTiles,
@@ -104,7 +104,7 @@ export default class PlayerData extends EventEmitter {
       case Resource.ChargePower: count>0 ? this.chargePower(count) : this.spendPower(-count); return;
       case Resource.RangeExtension: this.range += count; return;
       case Resource.GaiaFormer: this.gaiaformers += count; return;
-      case Resource.TerraformStep: this.terraformSteps += count; return;
+      case Resource.TerraformCostDiscount: this.terraformCostDiscount += count; return;
       default: break; // Not implemented
     }
   }
