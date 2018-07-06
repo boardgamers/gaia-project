@@ -169,6 +169,11 @@ function showAvailableMove(player: string, command: AvailableCommand) {
       break;
     }
 
+    case Command.EndTurn: {
+      addButton("End turn", `${player} ${Command.EndTurn}`);
+      break;
+    }
+
     case Command.FormFederation: {
       const values = [];
       const labels = [];
@@ -295,7 +300,20 @@ $(document).on("mouseleave", "*[data-hoverHexes]", function() {
 });
 
 function addMove(move: string) {
-  $("#moves").val((($("#moves").val() as string).trim() + "\n" + move).trim());
+  
+  const text = ($("#moves").val() as string).trim(); 
+  const moves = text ? text.split("\n") : [];
+  // check if the same player as penultimate move
+  const lastMove = moves[moves.length-1];
+  if (move.substr(0, 2) === lastMove.substr(0, 2) &&
+    !lastMove.includes(Command.ChooseRoundBooster) &&
+    !lastMove.includes(Command.Leech) &&
+    !lastMove.includes(Command.DeclineLeech)) {
+    move = !move.includes(Command.EndTurn) ? move.substr(2, move.length - 2) : "";
+    $("#moves").val((($("#moves").val() as string).trim() + "." + move).trim());
+  }
+  else { $("#moves").val((($("#moves").val() as string).trim() + "\n" + move).trim()); }
+
   $("#moves").scrollTop($("#moves")[0].scrollHeight);
   $("form").triggerHandler("submit");
 }
