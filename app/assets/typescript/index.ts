@@ -88,6 +88,11 @@ function showAvailableMoves(commands: AvailableCommand[]) {
   for (const comm of commands) {
     showAvailableMove(player, comm);
   }
+
+  // Only one move button, save time and click it directly
+  if (commands.length === 1 && $(".move-button").length === 1) {
+    $(".move-button").click();
+  }
 }
 
 function showAvailableMove(player: string, command: AvailableCommand) {
@@ -215,7 +220,7 @@ function addStep(title: string) {
 }
 
 function addButton(text: string, command: string, params: {hexes?: Array<{coordinates: string}>, tracks?: any[], hexGroups?: string[], hoverHexes?: CubeCoordinates[], labels?: string[], values?: string[]} = {}) {
-  const button = $('<button class="btn btn-secondary mr-2 mb-2">');
+  const button = $('<button class="btn btn-secondary mr-2 mb-2 move-button">');
   button.text(text);
   
   if (command) {
