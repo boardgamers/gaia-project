@@ -79,7 +79,7 @@ export default class Player extends EventEmitter {
         this.emit("gain-tech");
       } else if (reward.type === Resource.RescoreFederation) {
         this.emit("rescore-fed");
-      } else if (reward.type === Resource.TerraformStep) {
+      } else if (reward.type === Resource.TemporaryRange || reward.type === Resource.TemporaryStep) {
         this.emit("build-mine");
       }
     }
@@ -97,7 +97,7 @@ export default class Player extends EventEmitter {
     return true;
   }
 
-  canBuild(targetPlanet: Planet, building: Building, {isolated, addedCost, existingBuilding, terraformStepDiscount}: {isolated?: boolean, addedCost?: Reward[], existingBuilding?: Building, terraformStepDiscount?: number}) : Reward[] {
+  canBuild(targetPlanet: Planet, building: Building, {isolated, addedCost, existingBuilding}: {isolated?: boolean, addedCost?: Reward[], existingBuilding?: Building}) : Reward[] {
     if (this.data[building] >= (building === Building.GaiaFormer ? this.data.gaiaformers : this.board.maxBuildings(building))) {
       // Too many buildings of the same kind
       return undefined;
@@ -125,7 +125,7 @@ export default class Player extends EventEmitter {
           // Already a gaia-former on the planet, so no need to pay a Q.I.C.
         }
       } else { // Get the number of terraforming steps to pay discounting terraforming track
-        const steps = terraformingStepsRequired(factions[this.faction].planet, targetPlanet) - (terraformStepDiscount || 0); 
+        const steps = terraformingStepsRequired(factions[this.faction].planet, targetPlanet) - this.data.temporaryStep; 
         addedCost.push(new Reward((TERRAFORMING_COST - this.data.terraformCostDiscount)*steps, Resource.Ore));
       }
     };
@@ -216,6 +216,11 @@ export default class Player extends EventEmitter {
       this.removeEvent(this.board[upgradedBuilding].income[this.data[upgradedBuilding]]);
     }
 
+    // reset temporary benefits
+    this.data.temporaryRange = 0;
+    this.data.temporaryStep = 0;
+    
+
     hex.data.building = building;
     hex.data.player = this.player;
 
@@ -244,7 +249,7 @@ export default class Player extends EventEmitter {
   // Not to confuse with the end of a round
   endTurn() {
     // Reset free terraforming steps
-    this.data.terraformSteps = 0;
+    this.data.terraformCostDiscount = 0;
   }
 
   pass() {

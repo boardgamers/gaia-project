@@ -112,12 +112,6 @@ export function generate(engine: Engine): AvailableCommand[] {
             break;
           }
 
-          case Command.Build: {
-            //filters only available places for mines/gaiaformers
-            commands.push(...engine.possibleBuildings(player, subCommand.data ))
-            break;
-          }
-
           case Command.PlaceLostPlanet: {
             const spaces = engine.possibleSpaceLostPlanet(player)
 
@@ -275,7 +269,7 @@ export function generateBuildingCommand(engine: Engine, player: Player) {
       // planet without building
       // Check if the range is enough to access the planet
       const distance = _.min(data.occupied.map(loc => map.distance(hex, loc)));
-      const qicNeeded = Math.max(Math.ceil( (distance - data.range) / QIC_RANGE_UPGRADE), 0);
+      const qicNeeded = Math.max(Math.ceil( (distance - data.range - data.temporaryRange) / QIC_RANGE_UPGRADE), 0);
 
       const building = hex.data.planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine  ;
       const buildCost = engine.player(player).canBuild(hex.data.planet, building, {addedCost: [new Reward(qicNeeded, Resource.Qic)]});
