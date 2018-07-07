@@ -219,7 +219,7 @@ export default class Player extends EventEmitter {
     // reset temporary benefits
     this.data.temporaryRange = 0;
     this.data.temporaryStep = 0;
-    
+
 
     hex.data.building = building;
     hex.data.player = this.player;
@@ -248,8 +248,7 @@ export default class Player extends EventEmitter {
 
   // Not to confuse with the end of a round
   endTurn() {
-    // Reset free terraforming steps
-    this.data.terraformCostDiscount = 0;
+  
   }
 
   pass() {
@@ -270,7 +269,9 @@ export default class Player extends EventEmitter {
       this.gainRewards(event.rewards);
     }
 
-    //TODO : reactivate events 
+    for (const event of this.events[Operator.Activate]) {
+      event.activated = false;
+    }
   }
 
   receivePassIncome() {

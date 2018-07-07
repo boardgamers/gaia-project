@@ -108,24 +108,8 @@ export default class Engine {
       this.techTilePhase(player.player);
     });
     player.on('build-mine', () => {
-      const buildingCommand = generateBuildingCommand(this, player.player);
-
-      if (buildingCommand) {
-        // We filter buildings that aren't mines (like gaia-formers) or 
-        // that already have a building on there (like gaia-formers)
-        buildingCommand.data.buildings = buildingCommand.data.buildings.filter(bld => {
-          if (bld.building !== Building.Mine) {
-            return false;
-          }
-          return this.map.grid.getS(bld.coordinates).buildingOf(player.player) === undefined;
-        });
-
-        if (buildingCommand.data.buildings.length > 0) {
-          this.roundSubCommands.unshift(buildingCommand);
-        }
-      }
+      this.buildMinePhase(player.player);
     });
-
     player.on('rescore-fed', () => {
       this.selectFederationTilePhase(player.player, "player");
     });
@@ -452,12 +436,23 @@ export default class Engine {
     });
   }
 
-  buildMinePhase(player: PlayerEnum, benefit: string){
-    this.roundSubCommands.unshift({
-      name: Command.Build,
-      player: player,
-      data: benefit
-    });
+  buildMinePhase(player: PlayerEnum){
+    const buildingCommand = generateBuildingCommand(this, player);
+
+    if (buildingCommand) {
+      // We filter buildings that aren't mines (like gaia-formers) or 
+      // that already have a building on there (like gaia-formers)
+      buildingCommand.data.buildings = buildingCommand.data.buildings.filter(bld => {
+        if (bld.building !== Building.Mine && bld.building !== Building.GaiaFormer) {
+          return false;
+        }
+        return this.map.grid.getS(bld.coordinates).buildingOf(player) === undefined;
+      });
+
+      if (buildingCommand.data.buildings.length > 0) {
+        this.roundSubCommands.unshift(buildingCommand);
+      }
+    }
   }
 
   
@@ -586,11 +581,13 @@ export default class Engine {
     const specialacts = [];
 
     for (const event of this.player(player).events[Operator.Activate]) {
-      specialacts.push(
-        {
-          income: event.spec.replace(/\s/g,'')
-        }
-      )
+      if (!event.activated) {
+        specialacts.push(
+          {
+            income: event.spec.replace(/\s/g, '')
+          }
+        )
+      }
     };
 
     if (specialacts.length > 0) {
@@ -833,8 +830,7 @@ export default class Engine {
     //mark as activated special action for this turn
     this.player(player).activateEvents(specialEvent, true);
 
-    if ( income === "=>range" || income === "=>step" ){
-      this.buildMinePhase(player, income);
+    if ( income == Resource.TemporaryRange || income == Resource.TemporaryStep ){
       return;
     }
 

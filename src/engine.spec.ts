@@ -532,7 +532,7 @@ describe("Engine", () => {
         p1 booster booster4
         p1 special =>tempstep. build m -1x-1.
         p2 leech 1
-        p2 special =>temprange. build m 3x-3.
+        p2 special =>3temprange. build m 3x-3.
       `);
       
       expect(() => new Engine(moves)).to.not.throw(AssertionError);
