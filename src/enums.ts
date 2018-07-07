@@ -80,7 +80,7 @@ export enum Condition {
   // trigger only
   MineOnGaia = "mg",
   AdvanceResearch = "a",
-  TerraformCostDiscount = "d"
+  TerraformStep = "step"
 }
 
 export namespace Condition {
@@ -253,4 +253,17 @@ export enum BoardAction {
   Qic1 = "qic1",
   Qic2 = "qic2",
   Qic3 = "qic3",  
+}
+
+export enum ScoringTile {
+  Score1= "score1",
+  Score2= "score2",
+  Score3= "score3",
+  Score4= "score4",
+  Score5= "score5",
+  Score6= "score6",
+  Score7= "score7",
+  Score8= "score8",
+  Score9= "score9",
+  Score10= "score10"
 }

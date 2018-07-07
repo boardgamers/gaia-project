@@ -19,7 +19,8 @@ import {
   AdvTechTilePos,
   Federation,
   BoardAction,
-  Operator
+  Operator,
+  ScoringTile
 
 } from './enums';
 import { CubeCoordinates } from 'hexagrid';
@@ -57,6 +58,7 @@ export default class Engine {
   federations: {
     [key in Federation]?: number
   } = {};
+  roundScoringTiles : ScoringTile[];
   terraformingFederation: Federation;
   availableCommands: AvailableCommand[] = [];
   round: number = Round.Init;
@@ -439,7 +441,7 @@ export default class Engine {
 
   buildMinePhase(player: PlayerEnum){
     const buildingCommand = possibleBuildings(this, player);
-    
+
     if (buildingCommand) {
       // We filter buildings that aren't mines (like gaia-formers) or 
       // that already have a building on there (like gaia-formers)
@@ -523,7 +525,12 @@ export default class Engine {
         this.federations[federation] = federation === this.terraformingFederation ? 2: 3;
       }
     }
-  
+
+
+    // Choose roundScoring Tiles as part of the pool
+    const roundscoringtiles = shuffleSeed.shuffle(Object.values(ScoringTile), this.map.rng()).slice(0, 6);
+    this.roundScoringTiles = roundscoringtiles;
+    
     this.players = [];
     
     for (let i = 0; i < nbPlayers; i++) {
