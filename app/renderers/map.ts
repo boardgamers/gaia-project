@@ -25,7 +25,6 @@ export default class MapRenderer extends PIXI.Graphics {
   lastData: GaiaHex[];
   zonesOfInterest: ZonesOfInterest = [];
   factions: Faction[] = [];
-  tiles: {[coord: string]: PIXI.Graphics} = null;
 
   constructor() {
     super();
@@ -36,6 +35,9 @@ export default class MapRenderer extends PIXI.Graphics {
     this.zonesOfInterest = zonesOfInterest;
     this.factions = factions;
 
+    this.clear();
+    this.removeChildren();
+
     for (const hex of map) {
       const ofInterest = zonesOfInterest && zonesOfInterest.find(zone => zone.coord.q === hex.q && zone.coord.r === hex.r);
       this.drawHex(hex, !!ofInterest, ofInterest && ofInterest.qic, ofInterest && ofInterest.hint);
@@ -43,23 +45,7 @@ export default class MapRenderer extends PIXI.Graphics {
   }
 
   drawHex(hex: GaiaHex, ofInterest = false, qic = false, hint = null) {
-    if (!this.tiles) {
-      this.tiles = {};
-    }
-    const coords = `${hex.q},${hex.r}`;
-    if (!this.tiles[coords]) {
-      this.addChild(this.tiles[coords] = new PIXI.Graphics());
-    }
-    const graphics = this.tiles[coords];
-
-    // Reset element
-    this.emit("tooltip-remove", graphics);
-    graphics.off("mouseover");
-    graphics.off("mouseout");
-    graphics.off("click");
-    delete graphics.cursor;
-    graphics.interactive = true;
-    graphics.clear();
+    const graphics = new PIXI.Graphics();
 
     const point = hexCenter(hex, hexData.radius);
     // separate the first from the other corners
@@ -98,6 +84,7 @@ export default class MapRenderer extends PIXI.Graphics {
 
     [graphics.x, graphics.y] = [point.x, point.y];
 
+    graphics.interactive = true;
     if (ofInterest) {  
       graphics.cursor = "pointer";
       graphics.on("click", () => {
@@ -109,8 +96,10 @@ export default class MapRenderer extends PIXI.Graphics {
         this.emit("tooltip", graphics, hint);
       });
       graphics.on("mouseout", () => {
-        this.emit("tooltip-remove", graphics);
+        this.emit("tooltip-remove", graphics, hint);
       });
     }
+
+    this.addChild(graphics);
   }
 }
