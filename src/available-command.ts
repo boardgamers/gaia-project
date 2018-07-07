@@ -6,6 +6,7 @@ import * as assert from "assert";
 import { upgradedBuildings } from './buildings';
 import Reward from './reward';
 
+
 const ISOLATED_DISTANCE = 3;
 const UPGRADE_RESEARCH_COST = "4k";
 const QIC_RANGE_UPGRADE = 2;
@@ -163,6 +164,7 @@ export function generate(engine: Engine): AvailableCommand[] {
       if (buildingCommand) {
         commands.push(buildingCommand);
       }
+
       // Add federations
       {
         const possibleTiles = Object.keys(engine.federations).filter(key => engine.federations[key] > 0);
@@ -202,9 +204,10 @@ export function generate(engine: Engine): AvailableCommand[] {
       commands.push(...engine.possibleFreeActions(player));
 
       // power actions 
-
       commands.push(...engine.possibleBoardActions(player));
-  
+
+      // special actions 
+      commands.push(...engine.possibleSpecialActions(player));  
        
       return commands;
     }
@@ -266,7 +269,7 @@ export function generateBuildingCommand(engine: Engine, player: Player) {
       // planet without building
       // Check if the range is enough to access the planet
       const distance = _.min(data.occupied.map(loc => map.distance(hex, loc)));
-      const qicNeeded = Math.max(Math.ceil( (distance - data.range) / QIC_RANGE_UPGRADE), 0);
+      const qicNeeded = Math.max(Math.ceil( (distance - data.range - data.temporaryRange) / QIC_RANGE_UPGRADE), 0);
 
       const building = hex.data.planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine  ;
       const buildCost = engine.player(player).canBuild(hex.data.planet, building, {addedCost: [new Reward(qicNeeded, Resource.Qic)]});

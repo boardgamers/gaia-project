@@ -18,7 +18,8 @@ import {
   AdvTechTile,
   AdvTechTilePos,
   Federation,
-  BoardAction
+  BoardAction,
+  Operator
 
 } from './enums';
 import { CubeCoordinates } from 'hexagrid';
@@ -33,12 +34,11 @@ import AvailableCommand, {
 import Reward from './reward';
 import { boardActions, freeActions } from './actions';
 import { GaiaHex } from '..';
-import { stdBuildingValue } from './buildings';
-
+import { stdBuildingValue, upgradedBuildings } from './buildings';
 
 
 const ISOLATED_DISTANCE = 3;
-
+const QIC_RANGE_UPGRADE = 2;
 
 export default class Engine {
   map: SpaceMap;
@@ -108,24 +108,8 @@ export default class Engine {
       this.techTilePhase(player.player);
     });
     player.on('build-mine', () => {
-      const buildingCommand = generateBuildingCommand(this, player.player);
-
-      if (buildingCommand) {
-        // We filter buildings that aren't mines (like gaia-formers) or 
-        // that already have a building on there (like gaia-formers)
-        buildingCommand.data.buildings = buildingCommand.data.buildings.filter(bld => {
-          if (bld.building !== Building.Mine) {
-            return false;
-          }
-          return this.map.grid.getS(bld.coordinates).buildingOf(player.player) === undefined;
-        });
-
-        if (buildingCommand.data.buildings.length > 0) {
-          this.roundSubCommands.unshift(buildingCommand);
-        }
-      }
+      this.buildMinePhase(player.player);
     });
-
     player.on('rescore-fed', () => {
       this.selectFederationTilePhase(player.player, "player");
     });
@@ -451,6 +435,26 @@ export default class Engine {
       data: fromCommand
     });
   }
+
+  buildMinePhase(player: PlayerEnum){
+    const buildingCommand = generateBuildingCommand(this, player);
+
+    if (buildingCommand) {
+      // We filter buildings that aren't mines (like gaia-formers) or 
+      // that already have a building on there (like gaia-formers)
+      buildingCommand.data.buildings = buildingCommand.data.buildings.filter(bld => {
+        if (bld.building !== Building.Mine && bld.building !== Building.GaiaFormer) {
+          return false;
+        }
+        return this.map.grid.getS(bld.coordinates).buildingOf(player) === undefined;
+      });
+
+      if (buildingCommand.data.buildings.length > 0) {
+        this.roundSubCommands.unshift(buildingCommand);
+      }
+    }
+  }
+
   
   possibleResearchAreas(player: PlayerEnum, cost: string, destResearchArea?: ResearchField) {
     const tracks = [];
@@ -570,6 +574,31 @@ export default class Engine {
     }
     return commands;
 
+  }
+
+  possibleSpecialActions(player: PlayerEnum) {
+    const commands = [];
+    const specialacts = [];
+
+    for (const event of this.player(player).events[Operator.Activate]) {
+      if (!event.activated) {
+        specialacts.push(
+          {
+            income: event.spec.replace(/\s/g, '')
+          }
+        )
+      }
+    };
+
+    if (specialacts.length > 0) {
+      commands.push({
+        name: Command.Special,
+        player,
+        data: { specialacts }
+      });
+    };
+
+    return commands;
   }
 
   /** Next player to make a move, after current player makes their move */
@@ -788,11 +817,29 @@ export default class Engine {
     this.endTurnPhase(player, Command.Build);
   }
 
+
+  [Command.Special](player: PlayerEnum, income: string){
+    const specialEvent = Event.parse([income]);
+    const { specialacts } = this.availableCommand(player, Command.Special).data;
+    const actAvailable = specialacts.find(sa => sa.income == income);
+    
+    assert(actAvailable !== undefined, `Special action ${income} is not available`);
+
+    //gets income for standard once per turn activated income
+    this.player(player).gainRewards(specialEvent[0].rewards);
+    //mark as activated special action for this turn
+    this.player(player).activateEvents(specialEvent, true);
+
+    if ( income == Resource.TemporaryRange || income == Resource.TemporaryStep ){
+      return;
+    }
+
+    this.endTurnPhase(player,Command.Special);
+  }
+
   [Command.ChooseFederationTile](player: PlayerEnum, federation: Federation) {
     const { tiles, rescore } = this.availableCommand(player, Command.ChooseFederationTile).data;
     const tileAvailable = tiles.find(ta => ta.tile == federation);
-
-    assert(tileAvailable !== undefined, `Federation ${federation} is not available`);
 
     if (rescore) {
       //rescore a federation

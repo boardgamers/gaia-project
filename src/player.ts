@@ -79,7 +79,7 @@ export default class Player extends EventEmitter {
         this.emit("gain-tech");
       } else if (reward.type === Resource.RescoreFederation) {
         this.emit("rescore-fed");
-      } else if (reward.type === Resource.TerraformStep) {
+      } else if (reward.type === Resource.TemporaryRange || reward.type === Resource.TemporaryStep) {
         this.emit("build-mine");
       }
     }
@@ -125,8 +125,8 @@ export default class Player extends EventEmitter {
           // Already a gaia-former on the planet, so no need to pay a Q.I.C.
         }
       } else { // Get the number of terraforming steps to pay discounting terraforming track
-        const steps = terraformingStepsRequired(factions[this.faction].planet, targetPlanet); 
-        addedCost.push(new Reward((TERRAFORMING_COST - this.data.terraformSteps)*steps, Resource.Ore));
+        const steps = terraformingStepsRequired(factions[this.faction].planet, targetPlanet) - this.data.temporaryStep; 
+        addedCost.push(new Reward((TERRAFORMING_COST - this.data.terraformCostDiscount)*steps, Resource.Ore));
       }
     };
 
@@ -173,6 +173,21 @@ export default class Player extends EventEmitter {
     });
   }
   
+  activateEvents(events: Event[], status: boolean) {
+    for (const event of events) {
+      this.activateEvent(event, status);
+    }  
+  }
+
+  activateEvent(event: Event, status: boolean) {
+    this.events[event.operator].some((ev, i) => {
+      if (ev.spec.replace(/\s/g,'') === event.spec) {
+        this.events[event.operator][i].activated = status;
+        return true;
+      }
+    });
+  }
+  
   onResearchAdvanced(field: ResearchField) {
     const events = Event.parse(researchTracks[field][this.data.research[field]]);
     this.loadEvents(events);
@@ -201,6 +216,11 @@ export default class Player extends EventEmitter {
       this.removeEvent(this.board[upgradedBuilding].income[this.data[upgradedBuilding]]);
     }
 
+    // reset temporary benefits
+    this.data.temporaryRange = 0;
+    this.data.temporaryStep = 0;
+
+
     hex.data.building = building;
     hex.data.player = this.player;
 
@@ -228,8 +248,7 @@ export default class Player extends EventEmitter {
 
   // Not to confuse with the end of a round
   endTurn() {
-    // Reset free terraforming steps
-    this.data.terraformSteps = 0;
+  
   }
 
   pass() {
@@ -248,6 +267,10 @@ export default class Player extends EventEmitter {
   receiveIncome() {
     for (const event of this.events[Operator.Income]) {
       this.gainRewards(event.rewards);
+    }
+
+    for (const event of this.events[Operator.Activate]) {
+      event.activated = false;
     }
   }
 

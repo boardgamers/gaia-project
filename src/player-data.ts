@@ -37,8 +37,11 @@ export default class PlayerData extends EventEmitter {
     terra: 0, nav: 0,int: 0, gaia: 0, eco: 0, sci: 0
   };
   range: number = 1;
+  temporaryRange : number = 0;
   gaiaformers: number = 0;
-  terraformSteps: number = 0;
+  terraformCostDiscount: number = 0;
+  temporaryStep: number = 0;
+
   roundBooster: Booster;
   techTiles: { tile: TechTile, enabled: boolean}[] = [];
   advTechTiles: AdvTechTile[] = [];
@@ -57,8 +60,10 @@ export default class PlayerData extends EventEmitter {
       power: this.power,
       research: this.research,
       range: this.range,
+      temporaryRange: this.temporaryRange,
       gaiaformers: this.gaiaformers,
-      terraformSteps: this.terraformSteps,
+      terraformCostDiscount: this.terraformCostDiscount,
+      temporaryStep: this.temporaryStep,
       roundBooster: this.roundBooster,
       techTiles: this.techTiles,
       advTechTiles: this.advTechTiles,
@@ -102,9 +107,12 @@ export default class PlayerData extends EventEmitter {
       case Resource.GainToken: count>0 ?  this.power.area1 += count : this.discardPower(-count, Resource.GainToken); return;
       case Resource.GainTokenGaiaArea:  this.discardPower(-count, Resource.GainTokenGaiaArea); return;
       case Resource.ChargePower: count>0 ? this.chargePower(count) : this.spendPower(-count); return;
-      case Resource.RangeExtension: this.range += count; return;
+      case Resource.Range: this.range += count; return;
+      case Resource.TemporaryRange: this.temporaryRange += count; return;
       case Resource.GaiaFormer: this.gaiaformers += count; return;
-      case Resource.TerraformStep: this.terraformSteps += count; return;
+      case Resource.TerraformCostDiscount: this.terraformCostDiscount += count; return;
+      case Resource.TemporaryStep: this.temporaryStep += count; return;
+
       default: break; // Not implemented
     }
   }
