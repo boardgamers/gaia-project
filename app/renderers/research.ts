@@ -51,6 +51,12 @@ export default class ResearchRenderer extends PIXI.Graphics {
       tile.on("fieldClick", (field, level) => {
         this.emit("fieldClick", field, level);
       });
+      tile.on("tooltip", (elem, text) => {
+        this.emit("tooltip", elem, text);
+      });
+      tile.on("tooltip-remove", (elem, text) => {
+        this.emit("tooltip-remove", elem, text);
+      });
     }
   }
 

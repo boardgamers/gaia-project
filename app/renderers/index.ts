@@ -3,6 +3,9 @@ import ResearchRenderer from "./research";
 import { CubeCoordinates } from "hexagrid";
 import { center } from "../graphics/reposition";
 import { ResearchField } from "@gaia-project/engine";
+import Tooltip from "tooltip.js";
+
+const tooltipArrowHeight = 7;
 
 interface Highlight {
   hexes?: Array<{coord: CubeCoordinates, qic: boolean}>,
@@ -10,6 +13,7 @@ interface Highlight {
 };
 
 export default class Renderer {
+  currentTooltipElement: PIXI.Graphics = null;
   app: PIXI.Application;
 
   data: any;
@@ -33,6 +37,11 @@ export default class Renderer {
       this.app.renderer.resize(view.offsetWidth, view.offsetHeight);
       this.rerender();
     });
+
+    this.research.on("tooltip", this.handleTooltip.bind(this));
+    this.map.on("tooltip", this.handleTooltip.bind(this));
+    this.research.on("tooltip-remove", this.removeTooltip.bind(this));
+    this.map.on("tooltip-remove", this.removeTooltip.bind(this));
   }
 
   render(data: any, highlighted?: Highlight) {
@@ -52,5 +61,38 @@ export default class Renderer {
     this.research.y = bounds.y;
 
     center(this.app.stage, this.app.screen);
+  }
+
+  handleTooltip(elem: PIXI.Graphics, text: string) {
+    const elemPos = elem.getGlobalPosition();
+    const $tooltip = $(".tooltip");
+    const $tooltipArrow = $tooltip.find(".arrow");
+    const $tooltipInner = $tooltip.find(".tooltip-inner");
+    
+    this.currentTooltipElement = elem;
+
+    $tooltipInner.html(text);
+    $tooltip.addClass('tooltip-show');
+
+    if (elemPos.x < this.app.view.width/2) {
+      $tooltip.addClass("bs-tooltip-right");
+      $tooltip.removeClass("bs-tooltip-left");
+    } else {
+      $tooltip.removeClass("bs-tooltip-right");
+      $tooltip.addClass("bs-tooltip-left");
+
+      $tooltip.css({
+        top: $(this.app.view).offset().top + elemPos.y + (elem.height- $tooltip.height())/2,
+        left: $(this.app.view).offset().left + elemPos.x - $tooltip.width() - 2*tooltipArrowHeight,
+      });
+    }
+
+  }
+
+  removeTooltip(elem: PIXI.Graphics) {
+    if (elem === this.currentTooltipElement) {
+      $(".tooltip").removeClass("tooltip-show");
+      this.currentTooltipElement = null;
+    }
   }
 }

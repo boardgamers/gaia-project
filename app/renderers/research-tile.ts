@@ -1,6 +1,7 @@
 import { ResearchField, Faction } from "@gaia-project/engine";
-import researchData from "../data/research";
+import researchData, {descriptions} from "../data/research";
 import Token from "./token";
+import { Graphics } from "pixi.js";
 
 const {
   trackBorder, trackHeight, trackWidth
@@ -14,7 +15,7 @@ const tokenPositions = {
   5: [{x: 20, y: 15}, {x: 40, y: 15}, {x: 12, y: 35}, {x: 30, y: 35}, {x: 48, y: 35}],
 };
 
-export default class ResearchTile extends PIXI.Graphics {
+export default class ResearchTile extends Graphics {
   constructor(public field: ResearchField, public level: number) {
     super();
   }
@@ -24,6 +25,8 @@ export default class ResearchTile extends PIXI.Graphics {
   }
 
   draw(highlighted: boolean) {
+    this.interactive = true;
+
     const baseColor = researchData[this.field].color;
     let fillColor = baseColor;
 
@@ -49,15 +52,20 @@ export default class ResearchTile extends PIXI.Graphics {
     }
 
     if (highlighted) {
-      this.interactive = true;
       this.cursor = "pointer";
       this.on("click", () => {
         this.emit("fieldClick", this.field, this.level);
       });
     } else {
       this.off("click");
-      this.interactive = false;
     }
+
+    this.on("mouseover", () => {
+      this.emit("tooltip", this, `<b>Level ${this.level}:</b> ${descriptions[this.field][this.level]}`);
+    });
+    this.on("mouseout", () => {
+      this.emit("tooltip-remove", this);
+    });
   }
 
   factions: Faction[] = [];
