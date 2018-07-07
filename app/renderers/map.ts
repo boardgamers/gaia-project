@@ -19,7 +19,7 @@ const hexData = {
 
 type GaiaHex = CubeCoordinates & {data: GaiaHexData};
 
-type ZonesOfInterest = Array<{coord: CubeCoordinates, qic: boolean}>;
+type ZonesOfInterest = Array<{coord: CubeCoordinates, qic: boolean, hint?: string}>;
 
 export default class MapRenderer extends PIXI.Graphics {
   lastData: GaiaHex[];
@@ -40,11 +40,11 @@ export default class MapRenderer extends PIXI.Graphics {
 
     for (const hex of map) {
       const ofInterest = zonesOfInterest && zonesOfInterest.find(zone => zone.coord.q === hex.q && zone.coord.r === hex.r);
-      this.drawHex(hex, !!ofInterest, ofInterest && ofInterest.qic);
+      this.drawHex(hex, !!ofInterest, ofInterest && ofInterest.qic, ofInterest && ofInterest.hint);
     };
   }
 
-  drawHex(hex: GaiaHex, ofInterest = false, qic = false) {
+  drawHex(hex: GaiaHex, ofInterest = false, qic = false, hint = null) {
     const graphics = new PIXI.Graphics();
 
     const point = hexCenter(hex, hexData.radius);
@@ -84,11 +84,19 @@ export default class MapRenderer extends PIXI.Graphics {
 
     [graphics.x, graphics.y] = [point.x, point.y];
 
-    if (ofInterest) {
-      graphics.interactive = true;
+    graphics.interactive = true;
+    if (ofInterest) {  
       graphics.cursor = "pointer";
       graphics.on("click", () => {
         this.emit("hexClick", hex);
+      });
+    }
+    if (hint) {
+      graphics.on("mouseover", () => {
+        this.emit("tooltip", graphics, hint);
+      });
+      graphics.on("mouseout", () => {
+        this.emit("tooltip-remove", graphics, hint);
       });
     }
 

@@ -65,10 +65,13 @@ export default class Renderer {
 
   handleTooltip(elem: PIXI.Graphics, text: string) {
     const elemPos = elem.getGlobalPosition();
+    const elemBounds = elem.getLocalBounds();
     const $tooltip = $(".tooltip");
     const $tooltipArrow = $tooltip.find(".arrow");
     const $tooltipInner = $tooltip.find(".tooltip-inner");
-    
+
+    const middleY = elemPos.y + (elemBounds.top + elemBounds.bottom) / 2;
+
     this.currentTooltipElement = elem;
 
     $tooltipInner.html(text);
@@ -77,12 +80,17 @@ export default class Renderer {
     if (elemPos.x < this.app.view.width/2) {
       $tooltip.addClass("bs-tooltip-right");
       $tooltip.removeClass("bs-tooltip-left");
+
+      $tooltip.css({
+        top: $(this.app.view).offset().top + middleY - $tooltip.height()/2,
+        left: $(this.app.view).offset().left + elemPos.x + elemBounds.right,
+      });
     } else {
       $tooltip.removeClass("bs-tooltip-right");
       $tooltip.addClass("bs-tooltip-left");
 
       $tooltip.css({
-        top: $(this.app.view).offset().top + elemPos.y + (elem.height- $tooltip.height())/2,
+        top: $(this.app.view).offset().top + middleY - $tooltip.height()/2,
         left: $(this.app.view).offset().left + elemPos.x - $tooltip.width() - 2*tooltipArrowHeight,
       });
     }

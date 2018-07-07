@@ -247,7 +247,8 @@ $(document).on("click", "*[data-command]", function() {
     pendingCommand = command;
     renderer.render(lastData, {hexes: JSON.parse(hexes).map(obj => ({
       coord: CubeCoordinates.parse(obj.coordinates),
-      qic: obj.cost.includes('q')
+      qic: obj.cost.includes('q'),
+      hint: "Cost: " + obj.cost.replace(/,/g, ', ')
     }))});
 
     return;
@@ -383,7 +384,7 @@ function updatePlayerInfo() {
     const info = [
       `<b>Player ${pl+1}</b> - ${faction} - ${data.victoryPoints}vp ${passed}`,
       `${data.credits}c, ${data.ores}o, ${data.knowledge}k, ${data.qics}q, [${data.power.gaia}] ${data.power.area1}/${data.power.area2}/${data.power.area3} pw`,
-      `range: ${data.range}, gaia-form level: ${data.terraformSteps}`,
+      `range: ${data.range}, gaia-form level: ${data.terraformCostDiscount}`,
       `income: ${player.income.replace(/,/g, ', ')}`,
       `round booster: ${boosterDesc}`
     ];
