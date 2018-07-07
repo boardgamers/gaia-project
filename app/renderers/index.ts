@@ -66,7 +66,7 @@ export default class Renderer {
   handleTooltip(elem: PIXI.Graphics, text: string) {
     const elemPos = elem.getGlobalPosition();
     const elemBounds = elem.getLocalBounds();
-    const $tooltip = $(".tooltip");
+    const $tooltip = $(".tooltip#tooltip-canvas");
     const $tooltipArrow = $tooltip.find(".arrow");
     const $tooltipInner = $tooltip.find(".tooltip-inner");
 
@@ -99,7 +99,7 @@ export default class Renderer {
 
   removeTooltip(elem: PIXI.Graphics) {
     if (elem === this.currentTooltipElement) {
-      $(".tooltip").removeClass("tooltip-show");
+      $(".tooltip#tooltip-canvas").removeClass("tooltip-show");
       this.currentTooltipElement = null;
     }
   }
