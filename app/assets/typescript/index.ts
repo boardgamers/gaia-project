@@ -248,7 +248,7 @@ $(document).on("click", "*[data-command]", function() {
     renderer.render(lastData, {hexes: JSON.parse(hexes).map(obj => ({
       coord: CubeCoordinates.parse(obj.coordinates),
       qic: obj.cost.includes('q'),
-      hint: "Cost: " + obj.cost.replace(/,/g, ', ')
+      hint: obj.cost !== "~" ? "Cost: " + obj.cost.replace(/,/g, ', ') : null
     }))});
 
     return;

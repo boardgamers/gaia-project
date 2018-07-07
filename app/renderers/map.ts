@@ -36,6 +36,10 @@ export default class MapRenderer extends PIXI.Graphics {
     this.factions = factions;
 
     this.clear();
+    // Remove existing tooltips
+    for (const child of this.children) {
+      this.emit("tooltip-remove", child);
+    }
     this.removeChildren();
 
     for (const hex of map) {
@@ -96,7 +100,7 @@ export default class MapRenderer extends PIXI.Graphics {
         this.emit("tooltip", graphics, hint);
       });
       graphics.on("mouseout", () => {
-        this.emit("tooltip-remove", graphics, hint);
+        this.emit("tooltip-remove", graphics);
       });
     }
 
