@@ -20,6 +20,8 @@ import { EventEmitter } from "eventemitter3";
 
 const TERRAFORMING_COST = 3;
 const FEDERATION_COST = 7;
+// 25 satellites - 2 used on the final scoring board
+const MAX_SATELLITES = 23;
 
 export default class Player extends EventEmitter {
   faction: Faction = null;
@@ -374,7 +376,7 @@ export default class Player extends EventEmitter {
     const values = hexes.map(node => this.buildingValue(node.data.building, node.data.planet));
 
     const combinations = this.possibleCombinationsForFederations(_.zipWith(hexes, values, (val1, val2) => ({hex: val1, value: val2})));
-    const maxSatellites = this.data.discardablePowerTokens();
+    const maxSatellites = Math.min(this.data.discardablePowerTokens(), MAX_SATELLITES - this.data.satellites);
     
     // We now have several combinations of buildings that can form federations
     // We need to see if they can be connected

@@ -280,6 +280,7 @@ describe("Engine", () => {
     engine.move("p1 federation -1x2,-2x3,-3x2,-3x3,-3x4,-4x2 fed2");
     expect(data.victoryPoints).to.equal(vp+8);
     expect(data.power.gaia).to.be.gte(0);
+    expect(data.satellites).to.equal(2);
     expect(data.discardablePowerTokens()).to.be.equal(powerTokens-2, "The 2 satellites should remove one power token each");
   });
 

@@ -31,6 +31,7 @@ export default class PlayerData extends EventEmitter {
   [Building.Academy1]: number = 0;
   [Building.Academy2]: number = 0; 
   [Building.GaiaFormer]: number = 0; 
+  satellites: number = 0;
   research: {
     [key in ResearchField]: number
   } = {
@@ -69,7 +70,8 @@ export default class PlayerData extends EventEmitter {
       advTechTiles: this.advTechTiles,
       federations: this.federations,
       greenFederations: this.federations,
-      occupied: this.occupied
+      occupied: this.occupied,
+      satellites: this.satellites
     }
 
     for (const building of Object.values(Building)) {

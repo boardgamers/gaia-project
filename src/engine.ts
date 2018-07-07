@@ -774,6 +774,7 @@ export default class Engine {
       hex.addToFederationOf(player);
     }
     pl.payCosts([new Reward(fedInfo.satellites, Resource.GainToken)]);
+    pl.data.satellites += fedInfo.satellites;
 
     this.endTurnPhase(player, Command.FormFederation);
   }
