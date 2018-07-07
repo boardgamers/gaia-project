@@ -1,10 +1,12 @@
-import { Command, Faction, Building, Planet, Round, Booster, Resource, Player} from './enums';
+import { Command, Faction, Building, Planet, Round, Booster, Resource, Player, Operator, BoardAction, ResearchField } from './enums';
 import Engine from './engine';
 import * as _ from 'lodash';
 import factions from './factions';
 import * as assert from "assert";
 import { upgradedBuildings } from './buildings';
 import Reward from './reward';
+import { boardActions, freeActions } from './actions';
+import * as researchTracks from './research-tracks'
 
 
 const ISOLATED_DISTANCE = 3;
@@ -100,28 +102,12 @@ export function generate(engine: Engine): AvailableCommand[] {
           }
 
           case Command.UpgradeResearch: {
-            const tracks = engine.possibleResearchAreas(player, "", subCommand.data)
-
-            if (tracks.length > 0) {
-              commands.push({
-                name: Command.UpgradeResearch,
-                player: subCommand.player,
-                data: { tracks }
-              });
-            };
+            commands.push(...possibleResearchAreas(engine, player, "", subCommand.data));
             break;
           }
 
           case Command.PlaceLostPlanet: {
-            const spaces = engine.possibleSpaceLostPlanet(player)
-
-            if (spaces.length > 0) {
-              commands.push({
-                name: Command.PlaceLostPlanet,
-                player: subCommand.player,
-                data: { spaces }
-              });
-            }
+            commands.push(...possibleSpaceLostPlanet(engine, player));
             break;
           }
 
@@ -129,7 +115,7 @@ export function generate(engine: Engine): AvailableCommand[] {
             commands.push(subCommand);
 
             //add free actions before to end turn
-            commands.push(...engine.possibleFreeActions(player));
+            commands.push(...possibleFreeActions(engine, player));
             break;
           }
 
@@ -160,7 +146,7 @@ export function generate(engine: Engine): AvailableCommand[] {
         }  
       } // end add boosters
 
-      const buildingCommand = generateBuildingCommand(engine, player);
+      const buildingCommand = possibleBuildings(engine, player);
       if (buildingCommand) {
         commands.push(buildingCommand);
       }
@@ -190,31 +176,23 @@ export function generate(engine: Engine): AvailableCommand[] {
       }
 
       // Upgrade research
-      const tracks = engine.possibleResearchAreas( player, UPGRADE_RESEARCH_COST)
+      commands.push(...possibleResearchAreas(engine, player, UPGRADE_RESEARCH_COST));
    
-      if (tracks.length > 0) {
-        commands.push({
-          name: Command.UpgradeResearch,
-          player,
-          data: { tracks }
-        });
-      }
-
       // free actions
-      commands.push(...engine.possibleFreeActions(player));
+      commands.push(...possibleFreeActions(engine, player));
 
       // power actions 
-      commands.push(...engine.possibleBoardActions(player));
+      commands.push(...possibleBoardActions(engine, player));
 
       // special actions 
-      commands.push(...engine.possibleSpecialActions(player));  
+      commands.push(...possibleSpecialActions(engine, player));
        
       return commands;
     }
   }
 }
 
-export function generateBuildingCommand(engine: Engine, player: Player) {
+export function possibleBuildings(engine: Engine, player: Player) {
   const map = engine.map;
   const data = engine.player(player).data;
   const planet = engine.player(player).planet;
@@ -290,4 +268,167 @@ export function generateBuildingCommand(engine: Engine, player: Player) {
       data: { buildings }
     };
   }
+}
+
+export function possibleSpecialActions(engine: Engine, player: Player) {
+  const commands = [];
+  const specialacts = [];
+
+  for (const event of engine.player(player).events[Operator.Activate]) {
+    if (!event.activated) {
+      specialacts.push(
+        {
+          income: event.spec.replace(/\s/g, '')
+        }
+      )
+    }
+  };
+
+  if (specialacts.length > 0) {
+    commands.push({
+      name: Command.Special,
+      player,
+      data: { specialacts }
+    });
+  };
+  
+  return commands;
+}
+
+export function possibleBoardActions(engine: Engine, player: Player) {
+  const commands = [];
+
+  let poweracts = Object.values(BoardAction).filter(pwract => engine.boardActions[pwract] && engine.player(player).canPay(Reward.parse(boardActions[pwract].cost)));
+  if (poweracts.length > 0) {
+    commands.push({
+      name: Command.Action,
+      player,
+      data: { poweracts: poweracts.map(act => ({
+        name: act,
+        cost: boardActions[act].cost,
+        income: boardActions[act].income
+      }))}
+    });
+  };
+
+  return commands;
+
+}
+
+export function possibleFreeActions(engine: Engine, player: Player) {
+
+  // free action - spend
+  const acts = [];
+  const commands = [];
+  for (let i = 0; i < freeActions.length; i++) {
+    if (engine.player(player).canPay(Reward.parse(freeActions[i].cost))) {
+      acts.push({ 
+        cost: freeActions[i].cost,
+        income: freeActions[i].income  
+      });
+    };
+  };
+
+  if (acts.length > 0) {
+    commands.push({
+      name: Command.Spend,
+      player,
+      data: { acts }
+    });
+  }
+
+  //free action - burn
+  //TODO generate burn actions based on  Math.ceil( engine.player(player).data.power.area2 / 2)
+  if (engine.player(player).data.power.area2 >= 2) {
+    commands.push({
+      name: Command.BurnPower,
+      player,
+      data: _.range(1, Math.floor(engine.player(player).data.power.area2 / 2) + 1)
+    });
+  }
+  return commands;
+
+}
+
+export function possibleResearchAreas(engine: Engine, player: Player, cost: string, destResearchArea?: ResearchField) {
+  const commands = [];
+  const tracks = [];
+  const data = engine.players[player].data;
+
+  if (engine.players[player].canPay(Reward.parse(cost))) {
+    for (const field of Object.values(ResearchField)) {
+
+      // up in a specific research area
+      if (destResearchArea && destResearchArea !== field) {
+        continue;
+      }
+
+      //already on top
+      if (data.research[field] === researchTracks.lastTile(field)) {
+        continue;
+      }
+
+      // end of the track reached
+      const destTile = data.research[field] + 1;
+
+      // To go from 4 to 5, we need to flip a federation and nobody inside
+      if (researchTracks.keyNeeded(field, destTile) && data.greenFederations === 0) {
+        continue;
+      }
+
+      if (engine.playersInOrder().some(pl => pl.data.research[field] === researchTracks.lastTile(field))) {
+        continue;
+      };
+
+      tracks.push({
+        field,
+        to: destTile,
+        cost: cost
+      });
+
+    }
+  }
+
+  if (tracks.length > 0) {
+    commands.push({
+      name: Command.UpgradeResearch,
+      player,
+      data: { tracks }
+    });
+  }
+
+  return commands;
+}
+
+export function possibleSpaceLostPlanet(engine: Engine, player: Player) {
+  const commands = [];
+  const data = engine.player(player).data;
+  const spaces = [];
+
+  for (const hex of engine.map.toJSON()) {
+    // exclude existing planets, satellites and space stations
+    if (hex.data.planet !== Planet.Empty || hex.data.federations || hex.data.building) {
+      continue;
+    }
+    const distance = _.min(data.occupied.map(loc => engine.map.distance(hex, loc)));
+    //TODO posible to extened? check rules const qicNeeded = Math.max(Math.ceil( (distance - data.range) / QIC_RANGE_UPGRADE), 0);
+    if (distance > data.range) {
+      continue;
+    }
+
+    spaces.push({
+      building: Building.Mine,
+      coordinates: hex.toString(),
+    });
+  }
+
+  if (spaces.length > 0) {
+    commands.push({
+      name: Command.PlaceLostPlanet,
+      player: player,
+      data: { spaces }
+    });
+  }
+
+  return commands;
 }
