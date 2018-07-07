@@ -216,11 +216,6 @@ export default class Player extends EventEmitter {
       this.removeEvent(this.board[upgradedBuilding].income[this.data[upgradedBuilding]]);
     }
 
-    // reset temporary benefits
-    this.data.temporaryRange = 0;
-    this.data.temporaryStep = 0;
-
-
     hex.data.building = building;
     hex.data.player = this.player;
 
@@ -248,7 +243,9 @@ export default class Player extends EventEmitter {
 
   // Not to confuse with the end of a round
   endTurn() {
-  
+    // reset temporary benefits
+    this.data.temporaryRange = 0;
+    this.data.temporaryStep = 0;
   }
 
   pass() {

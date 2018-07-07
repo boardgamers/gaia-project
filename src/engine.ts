@@ -830,10 +830,6 @@ export default class Engine {
     //mark as activated special action for this turn
     this.player(player).activateEvents(specialEvent, true);
 
-    if ( income == Resource.TemporaryRange || income == Resource.TemporaryStep ){
-      return;
-    }
-
     this.endTurnPhase(player,Command.Special);
   }
 
