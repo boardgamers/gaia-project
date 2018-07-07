@@ -313,19 +313,15 @@ $(document).on("mouseleave", "*[data-hoverHexes]", function() {
 });
 
 function addMove(move: string) {
-
   const text = ($("#moves").val() as string).trim();
   const moves = text ? text.split("\n") : [];
 
   const lastMove = moves.length > 0 ? moves[moves.length - 1] : "";
   let separator = "\n";
 
-  // check if the same player as penultimate move, excluding build after build, which happens on round setup
-  if (move.substr(0, 2) === lastMove.substr(0, 2)) {
-    if (!(lastMove.includes(Command.Build) && move.includes(Command.Build)) &&
-      !lastMove.includes(Command.ChooseRoundBooster) &&
-      !lastMove.includes(Command.Leech) &&
-      !lastMove.includes(Command.DeclineLeech)) {
+  // check if the same player as penultimate move
+  if (move.substr(0, 2) === lastMove.substr(0, 2) && lastData.round > 0) {
+    if (!lastMove.includes(Command.ChooseRoundBooster) && !lastMove.includes(Command.Leech) && !lastMove.includes(Command.DeclineLeech)) {
       move = !move.includes(Command.EndTurn) ? move.substr(2, move.length - 2) : "";
       separator = ".";
     }
