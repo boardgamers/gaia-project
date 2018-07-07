@@ -276,11 +276,10 @@ export function possibleSpecialActions(engine: Engine, player: Player) {
 
   for (const event of engine.player(player).events[Operator.Activate]) {
     if (!event.activated) {
-      specialacts.push(
-        {
-          income: event.spec.replace(/\s/g, '')
-        }
-      )
+      specialacts.push({
+        income: event.spec.replace(Operator.Activate, '').trim(), // Reward.toString(event.rewards),
+        spec: event.spec
+      });
     }
   };
 

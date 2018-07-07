@@ -512,7 +512,7 @@ describe("Engine", () => {
         p1 build m -1x2
         p2 booster booster5
         p1 booster booster4
-        p1 special =>tempstep
+        p1 special tempstep
       `);
       const engine = new Engine(moves);
       
@@ -530,9 +530,9 @@ describe("Engine", () => {
         p1 build m -3x4
         p2 booster booster5
         p1 booster booster4
-        p1 special =>tempstep. build m -1x-1.
+        p1 special tempstep. build m -1x-1.
         p2 leech 1
-        p2 special =>3temprange. build m 3x-3.
+        p2 special 3temprange. build m 3x-3.
       `);
       
       expect(() => new Engine(moves)).to.not.throw(AssertionError);

@@ -674,16 +674,13 @@ export default class Engine {
 
 
   [Command.Special](player: PlayerEnum, income: string){
-    const specialEvent = Event.parse([income]);
     const { specialacts } = this.availableCommand(player, Command.Special).data;
-    const actAvailable = specialacts.find(sa => sa.income == income);
+    const actAvailable = specialacts.find(sa => Reward.match(Reward.parse(sa.income), Reward.parse(income)));
     
     assert(actAvailable !== undefined, `Special action ${income} is not available`);
 
-    //gets income for standard once per turn activated income
-    this.player(player).gainRewards(specialEvent[0].rewards);
     //mark as activated special action for this turn
-    this.player(player).activateEvents(specialEvent, true);
+    this.player(player).activateEvent(actAvailable.spec);
 
     this.endTurnPhase(player,Command.Special);
   }

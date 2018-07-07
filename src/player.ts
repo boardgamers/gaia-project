@@ -173,19 +173,14 @@ export default class Player extends EventEmitter {
     });
   }
   
-  activateEvents(events: Event[], status: boolean) {
-    for (const event of events) {
-      this.activateEvent(event, status);
-    }  
-  }
-
-  activateEvent(event: Event, status: boolean) {
-    this.events[event.operator].some((ev, i) => {
-      if (ev.spec.replace(/\s/g,'') === event.spec) {
-        this.events[event.operator][i].activated = status;
-        return true;
+  activateEvent(spec: string) {
+    for (const event of this.events[Operator.Activate]) {
+      if (event.spec === spec && !event.activated) {
+        this.gainRewards(event.rewards);
+        event.activated = true;
+        return;
       }
-    });
+    }
   }
   
   onResearchAdvanced(field: ResearchField) {

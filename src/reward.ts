@@ -57,7 +57,7 @@ export default class Reward {
     return Object.keys(grouped).map(key => new Reward(grouped[key].reduce((val, rew) => val+rew.count, 0), key as Resource)).filter(rew => !rew.isEmpty());
   }
 
-  static toString(rewards: Reward[], sorted = false) {
+  static toString(rewards: Reward[], sorted = true) {
     if(sorted) {
       rewards.sort((rew1, rew2) => rew1.type < rew2.type ? -1: 1);
     }
