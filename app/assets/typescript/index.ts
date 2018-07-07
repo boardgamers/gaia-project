@@ -172,7 +172,7 @@ function showAvailableMove(player: string, command: AvailableCommand) {
 
     case Command.Special: {
       const acts = command.data.specialacts;
-      addButton("Special Action", `${player} ${Command.Special}`, {values: acts.map(act => act.income), labels: acts.map(act => `${act.income.join(" / ")}`)});
+      addButton("Special Action", `${player} ${Command.Special}`, {values: acts.map(act => act.income)});
       break;
     }
 
