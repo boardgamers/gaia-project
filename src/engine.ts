@@ -29,7 +29,7 @@ import federations from './tiles/federations';
 import * as researchTracks from './research-tracks'
 import AvailableCommand, {
   generate as generateAvailableCommands,
-  generateBuildingCommand
+  possibleBuildings
 } from './available-command';
 import Reward from './reward';
 import { boardActions, freeActions } from './actions';
@@ -426,6 +426,7 @@ export default class Engine {
     if (this.round <= 0) {
       return;
     }
+    //if the current player has subCommands to do, cannot endTurn
     if (this.nextSubcommandPlayer() === player) {
       return;
     }
@@ -437,8 +438,8 @@ export default class Engine {
   }
 
   buildMinePhase(player: PlayerEnum){
-    const buildingCommand = generateBuildingCommand(this, player);
-
+    const buildingCommand = possibleBuildings(this, player);
+    
     if (buildingCommand) {
       // We filter buildings that aren't mines (like gaia-formers) or 
       // that already have a building on there (like gaia-formers)
@@ -454,153 +455,7 @@ export default class Engine {
       }
     }
   }
-
   
-  possibleResearchAreas(player: PlayerEnum, cost: string, destResearchArea?: ResearchField) {
-    const tracks = [];
-    const data = this.players[player].data;
-
-    if (this.players[player].canPay(Reward.parse(cost))) {
-      for (const field of Object.values(ResearchField)) {
-
-        // up in a specific research area
-        if (destResearchArea && destResearchArea !== field) {
-          continue;
-        }
-
-        //already on top
-        if (data.research[field] === researchTracks.lastTile(field)) {
-          continue;
-        }
-
-        // end of the track reached
-        const destTile = data.research[field] + 1;
-
-        // To go from 4 to 5, we need to flip a federation and nobody inside
-        if (researchTracks.keyNeeded(field, destTile) && data.greenFederations === 0) {
-          continue;
-        }
-
-        if (this.playersInOrder().some(pl => pl.data.research[field] === researchTracks.lastTile(field))) {
-          continue;
-        };
-
-        tracks.push({
-          field,
-          to: destTile,
-          cost: cost
-        });
-
-      }
-    }
-
-    return tracks;
-  }
-
-  possibleSpaceLostPlanet(player: PlayerEnum) {
-    const data = this.player(player).data;
-    const spaces = [];
-
-    for (const hex of this.map.toJSON()) {
-      // exclude existing planets, satellites and space stations
-      if (hex.data.planet !== Planet.Empty || hex.data.federations || hex.data.building) {
-        continue;
-      }
-      const distance = _.min(data.occupied.map(loc => this.map.distance(hex, loc)));
-      //TODO posible to extened? check rules const qicNeeded = Math.max(Math.ceil( (distance - data.range) / QIC_RANGE_UPGRADE), 0);
-      if (distance > data.range) {
-        continue;
-      }
-
-      spaces.push({
-        building: Building.Mine,
-        coordinates: hex.toString(),
-      });
-    }
-
-    return spaces;
-  }
-
-  possibleBoardActions(player: PlayerEnum) {
-    const commands = [];
-
-    let poweracts = Object.values(BoardAction).filter(pwract => this.boardActions[pwract] && this.player(player).canPay(Reward.parse(boardActions[pwract].cost)));
-    if (poweracts.length > 0) {
-      commands.push({
-        name: Command.Action,
-        player,
-        data: { poweracts: poweracts.map(act => ({
-          name: act,
-          cost: boardActions[act].cost,
-          income: boardActions[act].income
-        }))}
-      });
-    };
-
-    return commands;
-
-  }
-
-  possibleFreeActions(player: PlayerEnum) {
-
-    // free action - spend
-    const acts = [];
-    const commands = [];
-    for (let i = 0; i < freeActions.length; i++) {
-      if (this.player(player).canPay(Reward.parse(freeActions[i].cost))) {
-        acts.push({ 
-          cost: freeActions[i].cost,
-          income: freeActions[i].income  
-        });
-      };
-    };
-
-    if (acts.length > 0) {
-      commands.push({
-        name: Command.Spend,
-        player,
-        data: { acts }
-      });
-    }
-
-    //free action - burn
-    //TODO generate burn actions based on  Math.ceil( engine.player(player).data.power.area2 / 2)
-    if (this.player(player).data.power.area2 >= 2) {
-      commands.push({
-        name: Command.BurnPower,
-        player,
-        data: _.range(1, Math.floor(this.player(player).data.power.area2 / 2) + 1)
-      });
-    }
-    return commands;
-
-  }
-
-  possibleSpecialActions(player: PlayerEnum) {
-    const commands = [];
-    const specialacts = [];
-
-    for (const event of this.player(player).events[Operator.Activate]) {
-      if (!event.activated) {
-        specialacts.push(
-          {
-            income: event.spec.replace(/\s/g, '')
-          }
-        )
-      }
-    };
-
-    if (specialacts.length > 0) {
-      commands.push({
-        name: Command.Special,
-        player,
-        data: { specialacts }
-      });
-    };
-
-    return commands;
-  }
-
   /** Next player to make a move, after current player makes their move */
   moveToNextPlayer(command: Command): PlayerEnum {
     const playerPos = this.turnOrder.indexOf(this.currentPlayer);
