@@ -111,6 +111,7 @@ export function generate(engine: Engine): AvailableCommand[] {
             break;
           }
 
+          case Command.Build:
           case Command.EndTurn: {
             commands.push(subCommand);
 
