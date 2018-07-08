@@ -27,6 +27,7 @@ import { CubeCoordinates } from 'hexagrid';
 import Event from './events';
 import techs from './tiles/techs';
 import federations from './tiles/federations';
+import roundScorings from './tiles/scoring';
 import * as researchTracks from './research-tracks'
 import AvailableCommand, {
   generate as generateAvailableCommands,
@@ -288,6 +289,10 @@ export default class Engine {
   incomePhase(){
     for (const player of this.playersInOrder()) {
       player.receiveIncome();
+  
+      //asign roundScoring tile to each player
+      player.loadEvents( Event.parse(roundScorings[this.roundScoringTiles[this.round]]));
+        
       //TODO split power actions and request player order
     }
   }
@@ -460,9 +465,22 @@ export default class Engine {
   }
   
   cleanUpPhase() {
-    // remove roundScoringTile
+  
+    for (const player of this.playersInOrder()) {
+      // remove roundScoringTile
+      player.removeEvents( Event.parse(roundScorings[this.roundScoringTiles[this.round]]));
+
+      // resets special action
+      for (const event of player.events[Operator.Activate]) {
+        event.activated = false;
+      }
+    }
     // resets power and qic actions
-    // resets special action
+    Object.values(BoardAction).forEach( pos => {
+      this.boardActions[pos] = true;
+    });
+
+
 
   }
   /** Next player to make a move, after current player makes their move */

@@ -263,9 +263,6 @@ export default class Player extends EventEmitter {
       this.gainRewards(event.rewards);
     }
 
-    for (const event of this.events[Operator.Activate]) {
-      event.activated = false;
-    }
   }
 
   receivePassIncome() {
