@@ -241,7 +241,8 @@ export function possibleBuildings(engine: Engine, player: Player) {
           buildings.push({
             building: upgrade,
             cost: buildCost.map(c => c.toString()).join(','),
-            coordinates: hex.toString()
+            coordinates: hex.toString(),
+            steps : 0
           });
         }
       }
