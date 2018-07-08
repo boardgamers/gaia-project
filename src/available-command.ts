@@ -7,6 +7,7 @@ import { upgradedBuildings } from './buildings';
 import Reward from './reward';
 import { boardActions, freeActions } from './actions';
 import * as researchTracks from './research-tracks'
+import { terraformingStepsRequired } from './planets';
 
 
 const ISOLATED_DISTANCE = 3;
@@ -111,7 +112,7 @@ export function generate(engine: Engine): AvailableCommand[] {
             break;
           }
 
-          case Command.Build:
+          case Command.Build: 
           case Command.EndTurn: {
             commands.push(subCommand);
 
@@ -256,7 +257,8 @@ export function possibleBuildings(engine: Engine, player: Player) {
           buildings.push({
             building: building,
             coordinates: hex.toString(),
-            cost: buildCost.map(c => c.toString()).join(',')
+            cost: buildCost.map(c => c.toString()).join(','),
+            steps: terraformingStepsRequired(factions[engine.player(player).faction].planet, hex.data.planet) 
         });
       }         
     } 

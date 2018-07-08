@@ -220,6 +220,7 @@ export default class Engine {
 
   endRound() { 
     if ( this.round < 6 ) {
+      this.cleanUpPhase();
       this.beginRound();
 
     } else
@@ -458,6 +459,12 @@ export default class Engine {
     }
   }
   
+  cleanUpPhase() {
+    // remove roundScoringTile
+    // resets power and qic actions
+    // resets special action
+
+  }
   /** Next player to make a move, after current player makes their move */
   moveToNextPlayer(command: Command): PlayerEnum {
     const playerPos = this.turnOrder.indexOf(this.currentPlayer);
@@ -530,7 +537,7 @@ export default class Engine {
     // Choose roundScoring Tiles as part of the pool
     const roundscoringtiles = shuffleSeed.shuffle(Object.values(ScoringTile), this.map.rng()).slice(0, 6);
     this.roundScoringTiles = roundscoringtiles;
-    
+
     this.players = [];
     
     for (let i = 0; i < nbPlayers; i++) {
@@ -574,7 +581,8 @@ export default class Engine {
           building,
           hex,
           Reward.parse(elem.cost),
-          this.map
+          this.map,
+          elem.steps
         );
 
         this.leechingPhase(player, hex);
@@ -717,7 +725,7 @@ export default class Engine {
     const hex = this.map.grid.get(q, r);
     hex.data.planet = Planet.Lost;
 
-    this.player(player).build(Building.Mine, hex, [], this.map);
+    this.player(player).build(Building.Mine, hex, [], this.map, 0);
     this.leechingPhase(player, hex);
 
     return;
