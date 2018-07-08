@@ -20,14 +20,15 @@ import {
   Federation,
   BoardAction,
   Operator,
-  ScoringTile
+  ScoringTile,
+  FinalTile
 
 } from './enums';
 import { CubeCoordinates } from 'hexagrid';
 import Event from './events';
 import techs from './tiles/techs';
 import federations from './tiles/federations';
-import roundScorings from './tiles/scoring';
+import {roundScorings} from './tiles/scoring';
 import * as researchTracks from './research-tracks'
 import AvailableCommand, {
   generate as generateAvailableCommands,
@@ -60,6 +61,7 @@ export default class Engine {
     [key in Federation]?: number
   } = {};
   roundScoringTiles : ScoringTile[];
+  finalScoringTiles : FinalTile[];
   terraformingFederation: Federation;
   availableCommands: AvailableCommand[] = [];
   round: number = Round.Init;
@@ -555,6 +557,10 @@ export default class Engine {
     // Choose roundScoring Tiles as part of the pool
     const roundscoringtiles = shuffleSeed.shuffle(Object.values(ScoringTile), this.map.rng()).slice(0, 6);
     this.roundScoringTiles = roundscoringtiles;
+
+    // Choose finalScoring Tiles as part of the pool
+    const finalscoringtiles = shuffleSeed.shuffle(Object.values(FinalTile), this.map.rng()).slice(0, 2);
+    this.finalScoringTiles = finalscoringtiles;
 
     this.players = [];
     

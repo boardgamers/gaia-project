@@ -50,13 +50,13 @@ export enum Resource {
 export enum Operator {
   /** One-time income */
   Once = ">",
-  /** Income at the beginning of every turn */
+  /** Income at the beginning of every round */
   Income = "+",
   /** Each time condition is fulfilled, reward is gained */
   Trigger = ">>",
-  /** Activate during turn once */
+  /** Activate during round once */
   Activate = "=>",
-  /** On turn end for player */
+  /** On round end for player */
   Pass = "|",
   /** reserved op for planetary institute and academies becoming 4pw structures */
   Special = "PA-4pw" 
@@ -76,6 +76,9 @@ export enum Condition {
   Gaia = "g",
   PlanetType = "pt",
   Sector = "s",
+  Structure = "st",
+  StructureFed = "stfed",
+  Satellite = "sat",
 
   // trigger only
   MineOnGaia = "mg",
@@ -266,4 +269,13 @@ export enum ScoringTile {
   Score8= "score8",
   Score9= "score9",
   Score10= "score10"
+}
+
+export enum FinalTile {
+  FinScore1= "finscore1",
+  FinScore2= "finscore2",
+  FinScore3= "finscore3",
+  FinScore4= "finscore4",
+  FinScore5= "finscore5",
+  FinScore6= "finscore6"
 }
