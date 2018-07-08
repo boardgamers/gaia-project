@@ -127,8 +127,8 @@ export default class Player extends EventEmitter {
           // Already a gaia-former on the planet, so no need to pay a Q.I.C.
         }
       } else { // Get the number of terraforming steps to pay discounting terraforming track
-        const steps = terraformingStepsRequired(factions[this.faction].planet, targetPlanet) - this.data.temporaryStep; 
-        addedCost.push(new Reward((TERRAFORMING_COST - this.data.terraformCostDiscount)*steps, Resource.Ore));
+        const steps = Math.max(terraformingStepsRequired(factions[this.faction].planet, targetPlanet) - this.data.temporaryStep,0); 
+        addedCost.push(new Reward((TERRAFORMING_COST - this.data.terraformCostDiscount)* steps, Resource.Ore));
       }
     };
 
@@ -192,7 +192,7 @@ export default class Player extends EventEmitter {
     this.receiveAdvanceResearchTriggerIncome();
   }
 
-  build(building: Building, hex: GaiaHex, cost: Reward[], map: SpaceMap) {
+  build(building: Building, hex: GaiaHex, cost: Reward[], map: SpaceMap, stepsReq: number) {
     this.payCosts(cost);
     //excluding Gaiaformers as occupied 
     if ( building !== Building.GaiaFormer ) {
@@ -236,6 +236,8 @@ export default class Player extends EventEmitter {
 
     // get triggered income for new building
     this.receiveBuildingTriggerIncome(building, hex.data.planet);
+    // get triggerd terffaorming step income for new building
+    this.receiveTerraformingStepTriggerIncome(stepsReq);
   }
 
   // Not to confuse with the end of a round
@@ -263,9 +265,6 @@ export default class Player extends EventEmitter {
       this.gainRewards(event.rewards);
     }
 
-    for (const event of this.events[Operator.Activate]) {
-      event.activated = false;
-    }
   }
 
   receivePassIncome() {
@@ -289,6 +288,14 @@ export default class Player extends EventEmitter {
     for (const event of this.events[Operator.Trigger]) {
       if (event.condition === Condition.AdvanceResearch) {
         this.gainRewards(event.rewards)
+      };
+    }
+  }
+
+  receiveTerraformingStepTriggerIncome(stepsReq: number) {
+    for (const event of this.events[Operator.Trigger]) {
+      if (event.condition === Condition.TerraformStep) {
+        this.gainRewards(event.rewards.map( rw => new Reward(rw.count*stepsReq, rw.type)))
       };
     }
   }

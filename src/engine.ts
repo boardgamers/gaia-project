@@ -19,13 +19,16 @@ import {
   AdvTechTilePos,
   Federation,
   BoardAction,
-  Operator
+  Operator,
+  ScoringTile,
+  FinalTile
 
 } from './enums';
 import { CubeCoordinates } from 'hexagrid';
 import Event from './events';
 import techs from './tiles/techs';
 import federations from './tiles/federations';
+import {roundScorings} from './tiles/scoring';
 import * as researchTracks from './research-tracks'
 import AvailableCommand, {
   generate as generateAvailableCommands,
@@ -57,6 +60,8 @@ export default class Engine {
   federations: {
     [key in Federation]?: number
   } = {};
+  roundScoringTiles : ScoringTile[];
+  finalScoringTiles : FinalTile[];
   terraformingFederation: Federation;
   availableCommands: AvailableCommand[] = [];
   round: number = Round.Init;
@@ -218,6 +223,7 @@ export default class Engine {
 
   endRound() { 
     if ( this.round < 6 ) {
+      this.cleanUpPhase();
       this.beginRound();
 
     } else
@@ -285,6 +291,10 @@ export default class Engine {
   incomePhase(){
     for (const player of this.playersInOrder()) {
       player.receiveIncome();
+  
+      //asign roundScoring tile to each player
+      player.loadEvents( Event.parse(roundScorings[this.roundScoringTiles[this.round]]));
+        
       //TODO split power actions and request player order
     }
   }
@@ -439,7 +449,7 @@ export default class Engine {
 
   buildMinePhase(player: PlayerEnum){
     const buildingCommand = possibleBuildings(this, player);
-    
+
     if (buildingCommand) {
       // We filter buildings that aren't mines (like gaia-formers) or 
       // that already have a building on there (like gaia-formers)
@@ -456,6 +466,25 @@ export default class Engine {
     }
   }
   
+  cleanUpPhase() {
+  
+    for (const player of this.playersInOrder()) {
+      // remove roundScoringTile
+      player.removeEvents( Event.parse(roundScorings[this.roundScoringTiles[this.round]]));
+
+      // resets special action
+      for (const event of player.events[Operator.Activate]) {
+        event.activated = false;
+      }
+    }
+    // resets power and qic actions
+    Object.values(BoardAction).forEach( pos => {
+      this.boardActions[pos] = true;
+    });
+
+
+
+  }
   /** Next player to make a move, after current player makes their move */
   moveToNextPlayer(command: Command): PlayerEnum {
     const playerPos = this.turnOrder.indexOf(this.currentPlayer);
@@ -523,7 +552,16 @@ export default class Engine {
         this.federations[federation] = federation === this.terraformingFederation ? 2: 3;
       }
     }
-  
+
+
+    // Choose roundScoring Tiles as part of the pool
+    const roundscoringtiles = shuffleSeed.shuffle(Object.values(ScoringTile), this.map.rng()).slice(0, 6);
+    this.roundScoringTiles = roundscoringtiles;
+
+    // Choose finalScoring Tiles as part of the pool
+    const finalscoringtiles = shuffleSeed.shuffle(Object.values(FinalTile), this.map.rng()).slice(0, 2);
+    this.finalScoringTiles = finalscoringtiles;
+
     this.players = [];
     
     for (let i = 0; i < nbPlayers; i++) {
@@ -567,7 +605,8 @@ export default class Engine {
           building,
           hex,
           Reward.parse(elem.cost),
-          this.map
+          this.map,
+          elem.steps
         );
 
         this.leechingPhase(player, hex);
@@ -710,7 +749,7 @@ export default class Engine {
     const hex = this.map.grid.get(q, r);
     hex.data.planet = Planet.Lost;
 
-    this.player(player).build(Building.Mine, hex, [], this.map);
+    this.player(player).build(Building.Mine, hex, [], this.map, 0);
     this.leechingPhase(player, hex);
 
     return;
