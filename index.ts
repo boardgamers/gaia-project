@@ -8,6 +8,7 @@ import AvailableCommand from "./src/available-command";
 import tiles from "./src/tiles";
 
 export {Condition, Planet, Resource, Operator, ResearchField, Faction, Command, Building, Booster, Federation, BoardAction} from "./src/enums";
+export {TechTile, AdvTechTile, ScoringTile, FinalTile} from "./src/enums";
 export {GaiaHexData, GaiaHex} from "./src/gaia-hex";
 
 export { Player, PlayerData, Event, FactionBoard, factions, AvailableCommand, tiles };
