@@ -11,7 +11,7 @@ export default class TechTile extends PIXI.Graphics {
     
     this.lineStyle(2, 0xCCCCCC);
     this.beginFill(0xFFFFFF);
-    this.drawRect(0, 0, 60, 35);
+    this.drawPolygon([].concat([0, 0], [47, 0], [57, 10], [57, 35], [0, 35], [0, 0]));
     this.endFill();
     
     const text = new PIXI.Text(`${this.pos} (${number})`, {fontSize: 10});
