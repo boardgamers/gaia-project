@@ -228,7 +228,7 @@ export default class Engine {
 
     } else
     {
-      //TODO end game
+      this.finalScoringPhase()
     }
   };
 
@@ -483,36 +483,42 @@ export default class Engine {
     });
   }
 
-  finalTileRanking(tile: FinalTile) {
-    const players = _.sortBy(this.players, player => player.finalCount(tile)).reverse();
-  
-    return players.slice(0,3).map(pl => ({
-       player: pl,
-       count: pl.finalCount(tile)
-    }));
- }
-
- finalScoring() {
+  finalScoringPhase() {
+    //finalScoring tiles
     for (const tile of this.finalScoringTiles) {
-      const rankings = this.finalTileRanking(tile);
+      const players = _.sortBy(this.players, player => player.finalCount(tile)).reverse();
+
+      const rankings = players.slice(0, 3).map(pl => ({
+        player: pl,
+        count: pl.finalCount(tile)
+      }));
+
       if (this.players.length === 2) {
-         rankings.push({player: null, count: 8});
-         rankings.sort((pl1, pl2) => pl2.count - pl1.count);
+        rankings.push({ player: null, count: 8 });
+        rankings.sort((pl1, pl2) => pl2.count - pl1.count);
       }
 
       for (const ranking of rankings) {
-         const count = ranking.count;
-         // index of the first player with that score
-         const first = rankings.findIndex(pl => pl.count === count);
-         // number of other players with the same score
-         const ties = rankings.filter(pl => pl.count === count).length - 1;
+        const count = ranking.count;
+        // index of the first player with that score
+        const first = rankings.findIndex(pl => pl.count === count);
+        // number of other players with the same score
+        const ties = rankings.filter(pl => pl.count === count).length - 1;
 
-         if (ranking.player) {
-            ranking.player.data.victoryPoints += (6 - ties) * (3-first);
-         }
+        if (ranking.player) {
+          ranking.player.data.victoryPoints += (6 - ties) * (3 - first);
+        }
       }
     }
- }
+
+    //research VP and remaining resources
+    for (const pl of this.playersInOrder()) {
+      Object.values(ResearchField).forEach(research => (pl.data.victoryPoints += Math.max(pl.data.research[research] - 3, 0) * 4));
+      const resources = pl.data.ores + pl.data.credits + pl.data.qics + pl.data.knowledge + (Math.ceil(pl.data.power.area2 / 2) + pl.data.power.area3);
+      pl.data.victoryPoints += resources;
+    }
+
+  }
 
   /** Next player to make a move, after current player makes their move */
   moveToNextPlayer(command: Command): PlayerEnum {
