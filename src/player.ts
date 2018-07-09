@@ -47,7 +47,7 @@ export default class Player extends EventEmitter {
       faction: this.faction,
       data: this.data,
       income: Reward.toString(Reward.merge([].concat(...this.events[Operator.Income].map(event => event.rewards))), true),
-      progress:  Object.values(finalScorings).forEach( (i) => ({ track: FinalTile[i], count: this.eventConditionCount(finalScorings[i])}))
+      progress:  Object.values(FinalTile).forEach( (i) => ({ track: FinalTile[i], count: this.eventConditionCount(finalScorings[i])}))
     };
   }
 
@@ -385,7 +385,7 @@ export default class Player extends EventEmitter {
       case Condition.Sector: return _.uniq(this.data.occupied.filter(hex => hex.colonizedBy(this.player)).map(hex => hex.data.sector)).length;
       case Condition.Structure: return this.data.occupied.filter(hex => hex.colonizedBy(this.player)).length;
       case Condition.StructureFed: return this.data.occupied.filter(hex => hex.colonizedBy(this.player) && hex.belongsToFederationOf(this.player)).length;
-      case Condition.Satellite: return this.data.occupied.filter(hex => hex.data.federations.includes(this.player) && !hex.colonizedBy(this.player)).length   }
+      case Condition.Satellite: return this.data.occupied.filter(hex => hex.data.federations && hex.data.federations.includes(this.player) && !hex.colonizedBy(this.player)).length   }
 
     return 0;
   }

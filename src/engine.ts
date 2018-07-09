@@ -488,7 +488,7 @@ export default class Engine {
     for (const tile of this.finalScoringTiles) {
       const players = _.sortBy(this.players, player => player.finalCount(tile)).reverse();
 
-      const rankings = players.slice(0, 3).map(pl => ({
+      const rankings = players.map(pl => ({
         player: pl,
         count: pl.finalCount(tile)
       }));
@@ -503,10 +503,11 @@ export default class Engine {
         // index of the first player with that score
         const first = rankings.findIndex(pl => pl.count === count);
         // number of other players with the same score
-        const ties = rankings.filter(pl => pl.count === count).length - 1;
+        const ties = rankings.filter(pl => pl.count === count).length;
 
         if (ranking.player) {
-          ranking.player.data.victoryPoints += (6 - ties) * (3 - first);
+          const VPs = [18, 12, 6, 0, 0, 0];
+          ranking.player.data.victoryPoints += Math.floor(_.sum(VPs.slice(first, ties)) / ties);
         }
       }
     }
