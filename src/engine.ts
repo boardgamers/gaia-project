@@ -347,7 +347,7 @@ export default class Engine {
 
     //  tech tiles that player doesn't already have  
     for (const tilePos of Object.values(TechTilePos)) {
-      if (!data.techTiles.includes(tilePos)) {
+      if (!_.find(data.techTiles, {tile: this.techTiles[tilePos].tile})) {
         tiles.push({
           tile: this.techTiles[tilePos].tile,
           tilePos: tilePos,

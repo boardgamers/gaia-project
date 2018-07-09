@@ -243,6 +243,37 @@ describe("Engine", () => {
     expect(() => new Engine(moves)).to.not.throw();
   });
 
+  it("should prevent picking the same tech tile twice", () => {
+    const moves = parseMoves(`
+      init 2 randomSeed
+      p1 faction terrans
+      p2 faction gleens
+      p1 build m -1x2
+      p2 build m -2x2
+      p2 build m -5x5
+      p1 build m -3x4
+      p2 booster booster7
+      p1 booster booster3
+      p1 up gaia.
+      p2 up sci.
+      p1 build ts -3x4.
+      p2 leech 1
+      p2 build ts -2x2.
+      p1 leech 2
+      p1 build lab -3x4. tech free1. up gaia.
+      p2 leech 2
+      p2 build PI -2x2.
+      p1 leech 2
+      p1 spend 1q for 1o. spend 1q for 1o. burn 4. action power3.
+      p2 build ts -5x5.
+      p1 leech 2
+    `);
+
+    const engine = new Engine(moves);
+
+    expect(() => engine.move('p1 build ac1 -3x4. tech free1')).to.throw();
+  });
+
   it("should allow to form a federation and gain rewards", () => {
     const moves = parseMoves(`
       init 2 randomSeed
