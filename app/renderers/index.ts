@@ -94,7 +94,6 @@ export default class Renderer {
         left: $(this.app.view).offset().left + elemPos.x - $tooltip.width() - 2*tooltipArrowHeight,
       });
     }
-
   }
 
   removeTooltip(elem: PIXI.Graphics) {

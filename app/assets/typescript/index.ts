@@ -138,12 +138,12 @@ function showAvailableMove(player: string, command: AvailableCommand) {
       break;
     }
 
-    case Command.ChooseTechTile: {
-      $("#move-title").append(" - Pick tech tile");
+    case Command.ChooseTechTile: case Command.ChooseCoverTechTile: {
+      $("#move-title").append(Command.ChooseCoverTechTile ? "- Pick tech tile to cover" : " - Pick tech tile");
       for (const tile of command.data.tiles) {
-        addButton(tile.tilePos, `${player} ${Command.ChooseTechTile} ${tile.tilePos}`);
+        addButton(tile.tilePos, `${player} ${command.name} ${tile.tilePos}`);
       }
-      pendingCommand = `${player} ${Command.ChooseTechTile}`,
+      pendingCommand = `${player} ${command.name}`,
       renderer.render(lastData, {techs: command.data.tiles.map(tile => tile.tilePos)});
       break;
     }
