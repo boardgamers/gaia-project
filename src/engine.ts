@@ -464,8 +464,10 @@ export default class Engine {
   }
   
   cleanUpPhase() {
-
-    for (const player of this.playersInOrder()) {
+    if (this.round < 1) {
+      return;
+    }
+    for (const player of this.players) {
       // remove roundScoringTile
       player.removeEvents(Event.parse(roundScorings[this.roundScoringTiles[this.round]]));
 
