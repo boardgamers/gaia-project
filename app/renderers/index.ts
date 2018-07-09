@@ -3,7 +3,6 @@ import ResearchRenderer from "./research";
 import { CubeCoordinates } from "hexagrid";
 import { center } from "../graphics/reposition";
 import { ResearchField } from "@gaia-project/engine";
-import Tooltip from "tooltip.js";
 
 const tooltipArrowHeight = 7;
 
