@@ -2,13 +2,14 @@ import MapRenderer from "./map";
 import ResearchRenderer from "./research";
 import { CubeCoordinates } from "hexagrid";
 import { center } from "../graphics/reposition";
-import { ResearchField } from "@gaia-project/engine";
+import { ResearchField, TechTilePos } from "@gaia-project/engine";
 
 const tooltipArrowHeight = 7;
 
 interface Highlight {
   hexes?: Array<{coord: CubeCoordinates, qic: boolean}>,
-  fields?: Array<{field: ResearchField, level: number}>
+  fields?: Array<{field: ResearchField, level: number}>,
+  techs?: Array<TechTilePos>
 };
 
 export default class Renderer {
@@ -52,7 +53,7 @@ export default class Renderer {
 
   rerender() {
     this.map.render(this.data.map, this.data.players.map(pl => pl.faction), (this.highlighted||{}).hexes);
-    this.research.render(this.data, (this.highlighted||{}).fields);
+    this.research.render(this.data, this.highlighted);
 
     const bounds = this.map.getLocalBounds();
 

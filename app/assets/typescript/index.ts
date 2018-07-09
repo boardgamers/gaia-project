@@ -143,6 +143,8 @@ function showAvailableMove(player: string, command: AvailableCommand) {
       for (const tile of command.data.tiles) {
         addButton(tile.tilePos, `${player} ${Command.ChooseTechTile} ${tile.tilePos}`);
       }
+      pendingCommand = `${player} ${Command.ChooseTechTile}`,
+      renderer.render(lastData, {techs: command.data.tiles.map(tile => tile.tilePos)});
       break;
     }
 
@@ -341,6 +343,18 @@ map.on("hexClick", hex => {
 research.on("fieldClick", field => {
   if (pendingCommand) {
     addMove(pendingCommand + " " + field);
+  }
+});
+
+research.on("techClick", pos => {
+  if (pendingCommand) {
+    addMove(pendingCommand + " " + pos);
+  }
+});
+
+research.on("advTechClick", pos => {
+  if (pendingCommand) {
+    addMove(pendingCommand + " " + pos);
   }
 });
 

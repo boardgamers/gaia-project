@@ -76,7 +76,7 @@ export default class ResearchRenderer extends PIXI.Graphics {
       [techTile.x, techTile.y] = [arr[0].x, arr[0].y + trackHeight + 5];
       this.addChild(techTile);
       
-      const advTechTile = this.advTechTiles[research] = new TechTile(research as any);
+      const advTechTile = this.advTechTiles[`adv-${research}`] = new TechTile(`adv-${research}` as any);
       [advTechTile.x, advTechTile.y] = [arr[5].x, arr[5].y + trackHeight + 4];
       this.addChild(advTechTile);
     }
@@ -104,33 +104,43 @@ export default class ResearchRenderer extends PIXI.Graphics {
       [techTile.x, techTile.y] = [researchTile.x + trackWidth/2, researchTile.y + trackHeight*0.8];
       this.addChild(techTile);
     }
+
+    for (const techPos of Object.values(TechTilePos)) {
+      this.techTiles[techPos].on("techClick", pos => this.emit("techClick", pos));
+    }
+    for (const techPos of Object.values(AdvTechTilePos)) {
+      this.advTechTiles[techPos].on("techClick", pos => this.emit("advTechClick", pos));
+    }
   }
 
-  render(data: Data, highlight?: Array<{field: ResearchField, level: number}>) {
+  render(data: Data, highlight?: {fields?: Array<{field: ResearchField, level: number}>, techs?: Array<TechTilePos|AdvTechTilePos>}) {
     if (data !== this.lastData) {
       this.updateInfo(data);
     }
     this.lastData = data;
     this.clear();
 
+    const fields = highlight && highlight.fields || [];
+    const techs = highlight && highlight.techs || [];
+
     for (const tile of this.tilesList()) {
-      const highlighted = highlight && highlight.some(data => data.field === tile.field && data.level === tile.level);
+      const highlighted = fields.some(data => data.field === tile.field && data.level === tile.level);
 
       tile.draw(highlighted);
     }
     
     for (const techTilePos of Object.values(TechTilePos)) {
       const tile: TechTile = this.techTiles[techTilePos];
+      const highlighted = techs.includes(techTilePos);
 
-      if (!tile) {
-        continue;
-      }
-
-      tile.draw(data.techTiles[techTilePos].tile, data.techTiles[techTilePos].numTiles);
+      tile.draw(data.techTiles[techTilePos].tile, data.techTiles[techTilePos].numTiles, highlighted);
     }
 
     for (const advTechTilePos of Object.values(AdvTechTilePos)) {
-      this.advTechTiles[advTechTilePos].draw(data.advTechTiles[advTechTilePos].tile, data.advTechTiles[advTechTilePos].numTiles);
+      const tile: TechTile = this.advTechTiles[advTechTilePos];
+      const highlighted = techs.includes(advTechTilePos);
+
+      tile.draw(data.advTechTiles[advTechTilePos].tile, data.advTechTiles[advTechTilePos].numTiles, highlighted);
     }
   }
 

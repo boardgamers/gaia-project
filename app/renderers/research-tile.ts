@@ -32,7 +32,6 @@ export default class ResearchTile extends Graphics {
 
     if (highlighted) {
       const [r, g, b] = PIXI.utils.hex2rgb(baseColor);
-      console.log(r,g,b);
       fillColor = PIXI.utils.rgb2hex([r*0.6 + 0.4, g*0.6 + 0.4, b*0.6 + 0.4]);
     }
 
