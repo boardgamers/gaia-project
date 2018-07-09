@@ -52,7 +52,7 @@ export default class Renderer {
 
   rerender() {
     this.map.render(this.data.map, this.data.players.map(pl => pl.faction), (this.highlighted||{}).hexes);
-    this.research.render(this.data.players, (this.highlighted||{}).fields);
+    this.research.render(this.data, (this.highlighted||{}).fields);
 
     const bounds = this.map.getLocalBounds();
 
