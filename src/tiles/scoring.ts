@@ -1,4 +1,4 @@
-import { ScoringTile, FinalTile } from "../enums";
+import { ScoringTile, FinalTile, Condition } from "../enums";
 
 const roundScorings =  {
   [ScoringTile.Score1]: ["step >> 2vp"],
@@ -13,14 +13,14 @@ const roundScorings =  {
   [ScoringTile.Score10]: ["PA >> 5vp"]
 }
 
-const finalScoring =  {
-  [FinalTile.FinScore1]: ["st > 18vp"],
-  [FinalTile.FinScore2]: ["stfed > 18vp"],
-  [FinalTile.FinScore3]: ["pt > 18vp"],
-  [FinalTile.FinScore4]: ["g > 18vp"],
-  [FinalTile.FinScore5]: ["s > 18vp"],
-  [FinalTile.FinScore6]: ["sat > 18vp"]
+const finalScorings =  {
+  [FinalTile.Structure]: Condition.Structure,
+  [FinalTile.StructureFed]: Condition.StructureFed,
+  [FinalTile.PlanetType]: Condition.PlanetType ,
+  [FinalTile.Gaia]: Condition.Gaia,
+  [FinalTile.Sector]: Condition.Sector,
+  [FinalTile.Satellite]: Condition.Satellite
 }
 
 
-export {roundScorings};
+export {roundScorings, finalScorings};
