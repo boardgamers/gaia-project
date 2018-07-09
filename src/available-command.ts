@@ -95,7 +95,7 @@ export function generate(engine: Engine): AvailableCommand[] {
             commands.push({
               name: Command.ChooseCoverTechTile,
               player: subCommand.player,
-              data: {tile: tiles.map(tech => ({
+              data: {tiles: tiles.map(tech => ({
                 tile: tech.tile, 
                 tilePos: Object.values(TechTilePos).find(pos => engine.techTiles[pos].tile === tech.tile)
               }))}

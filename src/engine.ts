@@ -361,7 +361,7 @@ export default class Engine {
     for (const tilePos of Object.values(AdvTechTilePos)) {
       if (this.advTechTiles[tilePos].numTiles > 0  &&
           data.greenFederations > 0 &&
-          data.research[tilePos] >=4 && 
+          data.research[tilePos.slice("adv-".length)] >=4 && 
           data.techTiles.filter(tech => tech.enabled).length>0 ) {
             tiles.push({
               tile: this.advTechTiles[tilePos].tile,
@@ -722,6 +722,7 @@ export default class Engine {
     if (advanced) {
       this.player(player).gainAdvTechTile(tileAvailable.tile);
       this.coverTechTilePhase(player);
+      this.advTechTiles[pos].numTiles -= 1;
     } else {
       this.player(player).gainTechTile(tileAvailable.tile);
       this.techTiles[pos].numTiles -= 1;
