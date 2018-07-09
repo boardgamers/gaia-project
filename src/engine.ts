@@ -467,10 +467,10 @@ export default class Engine {
   }
   
   cleanUpPhase() {
-  
+
     for (const player of this.playersInOrder()) {
       // remove roundScoringTile
-      player.removeEvents( Event.parse(roundScorings[this.roundScoringTiles[this.round]]));
+      player.removeEvents(Event.parse(roundScorings[this.roundScoringTiles[this.round]]));
 
       // resets special action
       for (const event of player.events[Operator.Activate]) {
@@ -478,13 +478,42 @@ export default class Engine {
       }
     }
     // resets power and qic actions
-    Object.values(BoardAction).forEach( pos => {
+    Object.values(BoardAction).forEach(pos => {
       this.boardActions[pos] = true;
     });
-
-
-
   }
+
+  finalTileRanking(tile: FinalTile) {
+    const players = _.sortBy(this.players, player => player.finalCount(tile)).reverse();
+  
+    return players.slice(0,3).map(pl => ({
+       player: pl,
+       count: pl.finalCount(tile)
+    }));
+ }
+
+ finalScoring() {
+    for (const tile of this.finalScoringTiles) {
+      const rankings = this.finalTileRanking(tile);
+      if (this.players.length === 2) {
+         rankings.push({player: null, count: 8});
+         rankings.sort((pl1, pl2) => pl2.count - pl1.count);
+      }
+
+      for (const ranking of rankings) {
+         const count = ranking.count;
+         // index of the first player with that score
+         const first = rankings.findIndex(pl => pl.count === count);
+         // number of other players with the same score
+         const ties = rankings.filter(pl => pl.count === count).length - 1;
+
+         if (ranking.player) {
+            ranking.player.data.victoryPoints += (6 - ties) * (3-first);
+         }
+      }
+    }
+ }
+
   /** Next player to make a move, after current player makes their move */
   moveToNextPlayer(command: Command): PlayerEnum {
     const playerPos = this.turnOrder.indexOf(this.currentPlayer);

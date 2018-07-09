@@ -272,10 +272,10 @@ export enum ScoringTile {
 }
 
 export enum FinalTile {
-  FinScore1= "finscore1",
-  FinScore2= "finscore2",
-  FinScore3= "finscore3",
-  FinScore4= "finscore4",
-  FinScore5= "finscore5",
-  FinScore6= "finscore6"
+  Structure= "structure",
+  StructureFed= "structureFed",
+  PlanetType= "planetType",
+  Gaia= "gaia",
+  Sector= "sector",
+  Satellite= "satellite"
 }

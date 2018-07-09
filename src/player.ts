@@ -1,4 +1,4 @@
-import { Faction, Operator, ResearchField, Planet, Building, Resource, Booster, Condition, Federation} from './enums';
+import { Faction, Operator, ResearchField, Planet, Building, Resource, Booster, Condition, Federation, FinalTile} from './enums';
 import PlayerData from './player-data';
 import Event from './events';
 import { factionBoard, FactionBoard } from './faction-boards';
@@ -15,8 +15,9 @@ import SpaceMap from './map';
 import { GaiaHex } from './gaia-hex';
 import spanningTree from './algorithms/spanning-tree';
 import { FederationInfo, isOutclassedBy } from './federation';
-import federationTiles, { isGreen }from "./tiles/federations";
+import federationTiles, { isGreen } from "./tiles/federations";
 import { EventEmitter } from "eventemitter3";
+import { finalScorings } from './tiles/scoring';
 
 const TERRAFORMING_COST = 3;
 const FEDERATION_COST = 7;
@@ -45,7 +46,8 @@ export default class Player extends EventEmitter {
     return {
       faction: this.faction,
       data: this.data,
-      income: Reward.toString(Reward.merge([].concat(...this.events[Operator.Income].map(event => event.rewards))), true)
+      income: Reward.toString(Reward.merge([].concat(...this.events[Operator.Income].map(event => event.rewards))), true),
+      progress:  Object.values(finalScorings).forEach( (i) => ({ track: FinalTile[i], count: this.eventConditionCount(finalScorings[i])}))
     };
   }
 
@@ -300,6 +302,17 @@ export default class Player extends EventEmitter {
     }
   }
 
+  finalCount(tile: FinalTile) {
+    switch (tile) {
+      case FinalTile.Structure : return this.eventConditionCount(finalScorings[FinalTile.Structure]);
+      case FinalTile.StructureFed : return this.eventConditionCount(finalScorings[FinalTile.StructureFed]);
+      case FinalTile.PlanetType : return this.eventConditionCount(finalScorings[FinalTile.PlanetType]);
+      case FinalTile.Gaia : return this.eventConditionCount(finalScorings[FinalTile.Gaia]);
+      case FinalTile.Sector : return this.eventConditionCount(finalScorings[FinalTile.Sector]);
+      case FinalTile.Satellite : return this.eventConditionCount(finalScorings[FinalTile.Satellite]);
+     }
+  }
+
   gaiaPhase() {
     /* Move gaia power tokens to regular power areas */
     // Terrans move directly to power area 2
@@ -370,7 +383,9 @@ export default class Player extends EventEmitter {
       case Condition.Gaia: return this.data.occupied.filter(hex => hex.data.planet === Planet.Gaia && hex.colonizedBy(this.player)).length;
       case Condition.PlanetType: return _.uniq(this.data.occupied.filter(hex => hex.data.planet !== Planet.Empty && hex.colonizedBy(this.player)).map(hex => hex.data.planet)).length;
       case Condition.Sector: return _.uniq(this.data.occupied.filter(hex => hex.colonizedBy(this.player)).map(hex => hex.data.sector)).length;
-    }
+      case Condition.Structure: return this.data.occupied.filter(hex => hex.colonizedBy(this.player)).length;
+      case Condition.StructureFed: return this.data.occupied.filter(hex => hex.colonizedBy(this.player) && hex.belongsToFederationOf(this.player)).length;
+      case Condition.Satellite: return this.data.occupied.filter(hex => hex.data.federations.includes(this.player) && !hex.colonizedBy(this.player)).length   }
 
     return 0;
   }

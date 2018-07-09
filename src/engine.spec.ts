@@ -243,7 +243,7 @@ describe("Engine", () => {
     expect(() => new Engine(moves)).to.not.throw();
   });
 
-  it ("should allow to form a federation and gain rewards", () => {
+  it("should allow to form a federation and gain rewards", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans
