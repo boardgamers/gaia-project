@@ -227,12 +227,12 @@ export enum AdvTechTile {
 }
 
 export enum AdvTechTilePos {
-  Terraforming = "terra",
-  Navigation = "nav",
-  Intelligence = "int",
-  GaiaProject = "gaia",
-  Economy = "eco",
-  Science = "sci"
+  Terraforming = "adv-terra",
+  Navigation = "adv-nav",
+  Intelligence = "adv-int",
+  GaiaProject = "adv-gaia",
+  Economy = "adv-eco",
+  Science = "adv-sci"
 }
 
 export enum Federation {

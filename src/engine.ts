@@ -22,11 +22,9 @@ import {
   Operator,
   ScoringTile,
   FinalTile
-
 } from './enums';
 import { CubeCoordinates } from 'hexagrid';
 import Event from './events';
-import techs from './tiles/techs';
 import federations from './tiles/federations';
 import {roundScorings} from './tiles/scoring';
 import * as researchTracks from './research-tracks'
@@ -38,7 +36,6 @@ import Reward from './reward';
 import { boardActions, freeActions } from './actions';
 import { GaiaHex } from '..';
 import { stdBuildingValue, upgradedBuildings } from './buildings';
-
 
 const ISOLATED_DISTANCE = 3;
 const QIC_RANGE_UPGRADE = 2;
@@ -712,41 +709,35 @@ export default class Engine {
     this.nextPlayer = this.turnOrder[(playerPos + 1) % this.turnOrder.length];
   }
 
-  [Command.ChooseTechTile](player: PlayerEnum, pos: TechTilePos) {
+  [Command.ChooseTechTile](player: PlayerEnum, pos: TechTilePos | AdvTechTilePos) {
     const { tiles } = this.availableCommand(player, Command.ChooseTechTile).data;
     const tileAvailable = tiles.find(ta => ta.tilePos == pos);
 
     assert(tileAvailable !== undefined, `Impossible to get ${pos} tile`);
 
-    this.player(player).loadEvents(Event.parse(techs[this.techTiles[pos].tile]));
-    this.player(player).data.techTiles.push(
-      {
-        tile: tileAvailable.tile,
-        enabled: true
-      }
-    );
-    this.techTiles[pos].numTiles -= 1;
-    if (tileAvailable.type === "adv") {
+    const advanced = tileAvailable.type === "adv";
+    
+    if (advanced) {
+      this.player(player).gainAdvTechTile(tileAvailable.tile);
       this.coverTechTilePhase(player);
-    };
-    // add advance research area subCommand
-    this.advanceResearchAreaPhase(player, pos);
+    } else {
+      this.player(player).gainTechTile(tileAvailable.tile);
+      this.techTiles[pos].numTiles -= 1;
+      // add advance research area subCommand
+      this.advanceResearchAreaPhase(player, pos as TechTilePos);
+    }
   }
 
-  [Command.ChooseCoverTechTile](player: PlayerEnum, tile: string) {
+  [Command.ChooseCoverTechTile](player: PlayerEnum, tilePos: TechTilePos) {
     const { tiles } = this.availableCommand(player, Command.ChooseCoverTechTile).data;
-    const tileAvailable = tiles.find(ta => ta.tile == tile);
+    const tileAvailable = tiles.find(ta => ta.tilePos == tilePos);
 
-    assert(tileAvailable !== undefined, `Impossible to cover ${tile} tile`);
+    assert(tileAvailable !== undefined, `Impossible to cover ${tilePos} tile`);
     //remove tile
-    const tileIndex = this.player(player).data.techTiles.findIndex(tl => tl.tile = tileAvailable.tile)
-    this.player(player).data.techTiles.splice(tileIndex, 1);
-    //remove bonus
-    this.player(player).removeEvents(Event.parse(techs[tile]));
+    this.player(player).coverTechTile(tileAvailable.tile);
 
     this.endTurnPhase(player, Command.Build);
   }
-
 
   [Command.Special](player: PlayerEnum, income: string){
     const { specialacts } = this.availableCommand(player, Command.Special).data;

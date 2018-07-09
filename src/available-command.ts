@@ -1,4 +1,4 @@
-import { Command, Faction, Building, Planet, Round, Booster, Resource, Player, Operator, BoardAction, ResearchField } from './enums';
+import { Command, Faction, Building, Planet, Round, Booster, Resource, Player, Operator, BoardAction, ResearchField, TechTilePos } from './enums';
 import Engine from './engine';
 import * as _ from 'lodash';
 import factions from './factions';
@@ -91,14 +91,15 @@ export function generate(engine: Engine): AvailableCommand[] {
             break;
           }
           case Command.ChooseCoverTechTile: {
-            const tiles = data.techTiles.map(tl => tl.enabled);
-            commands.push(
-              {
-                name: Command.ChooseCoverTechTile,
-                player: subCommand.player,
-                data: { tiles }
-              }
-            );
+            const tiles = data.techTiles.filter(tl => tl.enabled);
+            commands.push({
+              name: Command.ChooseCoverTechTile,
+              player: subCommand.player,
+              data: {tile: tiles.map(tech => ({
+                tile: tech.tile, 
+                tilePos: Object.values(TechTilePos).find(pos => engine.techTiles[pos].tile === tech.tile)
+              }))}
+            });
             break;
           }
 

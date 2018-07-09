@@ -1,4 +1,4 @@
-import { Faction, Operator, ResearchField, Planet, Building, Resource, Booster, Condition, Federation, FinalTile} from './enums';
+import { Faction, Operator, ResearchField, Planet, Building, Resource, Booster, Condition, Federation, FinalTile, TechTile, AdvTechTile} from './enums';
 import PlayerData from './player-data';
 import Event from './events';
 import { factionBoard, FactionBoard } from './faction-boards';
@@ -18,6 +18,8 @@ import { FederationInfo, isOutclassedBy } from './federation';
 import federationTiles, { isGreen } from "./tiles/federations";
 import { EventEmitter } from "eventemitter3";
 import { finalScorings } from './tiles/scoring';
+import techs from './tiles/techs';
+import advancedTechs from './tiles/advanced-techs';
 
 const TERRAFORMING_COST = 3;
 const FEDERATION_COST = 7;
@@ -256,17 +258,34 @@ export default class Player extends EventEmitter {
     this.data.roundBooster =  undefined;
   }
 
-  getRoundBooster(roundBooster: Booster){  
+  getRoundBooster(roundBooster: Booster) {
     // add the booster to the the player
     this.data.roundBooster =  roundBooster;
     this.loadEvents( Event.parse( boosts[roundBooster]));
+  }
+
+  gainTechTile(tile: TechTile) {
+    this.loadEvents(Event.parse(techs[tile]));
+    this.data.techTiles.push({
+      tile,
+      enabled: true
+    });
+  }
+
+  gainAdvTechTile(tile: AdvTechTile) {
+    this.loadEvents(Event.parse(advancedTechs[tile]));
+    this.data.advTechTiles.push(tile);
+  }
+
+  coverTechTile(tile: TechTile) {
+    this.data.techTiles.find(tech => tech.tile === tile).enabled = false;
+    this.removeEvents(Event.parse(techs[tile]));
   }
 
   receiveIncome() {
     for (const event of this.events[Operator.Income]) {
       this.gainRewards(event.rewards);
     }
-
   }
 
   receivePassIncome() {
