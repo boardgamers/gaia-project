@@ -51,9 +51,15 @@ export default class Event {
     this.spec = spec;
     let remaining: string;
 
-    [this.condition, remaining] = findCondition(spec);
-    [this.operator, remaining] = findOperator(remaining);
-    this.rewards = Reward.parse(remaining);
+    if (spec === Operator.Special) {
+      this.condition = Condition.None;
+      this.rewards = [];
+      this.operator = Operator.Special;
+    } else {
+      [this.condition, remaining] = findCondition(spec);
+      [this.operator, remaining] = findOperator(remaining);
+      this.rewards = Reward.parse(remaining);
+    }
   }
 
   toString() {
