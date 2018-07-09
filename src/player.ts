@@ -385,7 +385,7 @@ export default class Player extends EventEmitter {
       case Condition.Sector: return _.uniq(this.data.occupied.filter(hex => hex.colonizedBy(this.player)).map(hex => hex.data.sector)).length;
       case Condition.Structure: return this.data.occupied.filter(hex => hex.colonizedBy(this.player)).length;
       case Condition.StructureFed: return this.data.occupied.filter(hex => hex.colonizedBy(this.player) && hex.belongsToFederationOf(this.player)).length;
-      case Condition.Satellite: return 0  }
+      case Condition.Satellite: return this.data.satellites }
 
     return 0;
   }
