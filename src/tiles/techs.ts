@@ -1,9 +1,9 @@
-import { TechTile } from "../enums";
+import { TechTile, Operator } from "../enums";
 
 export default  {
   [TechTile.Tech1]: ["o,q"],
   [TechTile.Tech2]: ["pt > k"],
-  [TechTile.Tech3]: ["PA-4pw"],
+  [TechTile.Tech3]: [Operator.Special],
   [TechTile.Tech4]: ["7vp"],
   [TechTile.Tech5]: ["+o,pw"],
   [TechTile.Tech6]: ["+k,c"],

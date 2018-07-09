@@ -51,7 +51,7 @@ export default class Event {
     this.spec = spec;
     let remaining: string;
 
-    if (spec === Operator.Special) {
+    if (spec.toLowerCase().trim() === Operator.Special.toLowerCase()) {
       this.condition = Condition.None;
       this.rewards = [];
       this.operator = Operator.Special;

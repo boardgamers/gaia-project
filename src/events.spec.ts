@@ -14,8 +14,8 @@ describe("Events", () => {
     expect(event.rewards[0].isEmpty()).to.be.true;
   });
 
-  it("should load the PA-4PW event", () => {
-    const event = new Event("PA-4pw");
+  it("should load the PA->4PW event", () => {
+    const event = new Event("PA->4pw");
 
     expect(event.operator).to.equal(Operator.Special);
   });
