@@ -530,7 +530,7 @@ describe("Engine", () => {
         p1 leech 4
         p1 action power4.
         p2 pass booster3
-        p1 up terra.. build lab -2x3. tech adv-gaia. cover free2.
+        p1 up terra.. build lab -2x3. tech adv-gaia. cover free2. up terra.
       `);
 
       const engine = new Engine(moves);
