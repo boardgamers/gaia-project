@@ -460,10 +460,12 @@ describe("Engine", () => {
         p1 build m -4x2
         p2 booster booster3
         p1 booster booster4
-        p1 spend 1q for 2o
       `);
+
+      const engine = new Engine(moves);
   
-      expect(() => new Engine(moves)).to.throw();
+      expect(() => engine.move("p1 spend ~ for ~")).to.throw();
+      expect(() => engine.move("p1 spend 1q for 2o")).to.throw();
     });
 
     it("should allow to do free actions after main actions", () => {
