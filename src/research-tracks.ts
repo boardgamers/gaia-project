@@ -15,10 +15,10 @@ export default {
     [],["gf"],["3t"],["3pw","gf"],["gf"],["4vp", "g > vp"]
   ],
   [ResearchField.Economy]: [
-    [],["+2c,pw"],["+o,pw"],["+c,pw", "3pw"],["+o,c,pw"],["3o,6c,6pw"]
+    [],["+2c,pw"],["+2c,1o,2pw"],["+3c,1o,3pw", "3pw"],["+2o,4c,4pw"],["3o,6c,6pw"]
   ],
   [ResearchField.Science]: [
-    [],["+k"],["+k"],["+k", "3pw"],["+k"],["9k"]
+    [],["+k"],["+2k"],["+3k", "3pw"],["+4k"],["9k"]
   ],
 }
 
