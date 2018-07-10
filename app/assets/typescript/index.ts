@@ -5,10 +5,11 @@ import { showError, removeError } from "./utils";
 import MapRenderer from "../../renderers/map";
 import ResearchRenderer from "../../renderers/research";
 import Renderer from "../../renderers";
-import { AvailableCommand, Command, factions, Building, ResearchField, tiles, Booster, Federation, BoardAction } from "@gaia-project/engine";
+import { AvailableCommand, Command, factions, Building, ResearchField, tiles, Booster, Federation, BoardAction, Event } from "@gaia-project/engine";
 import { CubeCoordinates } from "hexagrid";
 import { buildingName } from "../../data/building";
 import { factionColor } from "../../graphics/utils";
+import { eventDesc } from "../../data/event";
 
 const renderer = new Renderer($("canvas#map").get(0) as HTMLCanvasElement);
 const map = renderer.map;
@@ -118,15 +119,17 @@ function showAvailableMove(player: string, command: AvailableCommand) {
     case Command.ChooseRoundBooster: {
       const values = [];
       const labels = [];
+      const tooltips = [];
 
       Object.values(Booster).forEach((booster, i) => {
         if (command.data.boosters.includes(booster)) {
           values.push(booster);
           labels.push(`Booster ${i+1}: ${tiles.boosters[booster]}`);
+          tooltips.push(tiles.boosters[booster].map(spec => eventDesc(new Event(spec))).join("\n"));
         }
       });
 
-      addButton(command.name === Command.Pass ? "Pass" : "Pick booster", `${player} ${command.name}`, {values, labels});
+      addButton(command.name === Command.Pass ? "Pass" : "Pick booster", `${player} ${command.name}`, {values, labels, tooltips});
       break;
     };
 
@@ -221,7 +224,7 @@ function addStep(title: string) {
   $("#move-title").append(" - " + title);
 }
 
-function addButton(text: string, command: string, params: {hexes?: Array<{coordinates: string}>, tracks?: any[], hexGroups?: string[], hoverHexes?: CubeCoordinates[], labels?: string[], values?: string[]} = {}) {
+function addButton(text: string, command: string, params: {hexes?: Array<{coordinates: string}>, tracks?: any[], hexGroups?: string[], hoverHexes?: CubeCoordinates[], labels?: string[], values?: string[], tooltips?: string[]} = {}) {
   const button = $('<button class="btn btn-secondary mr-2 mb-2 move-button">');
   button.text(text);
   
@@ -286,9 +289,14 @@ $(document).on("click", "*[data-command]", function() {
 
     const values = JSON.parse($(this).attr("data-values"));
     const labels = JSON.parse($(this).attr("data-labels") || "[]");
+    const tooltips = JSON.parse($(this).attr("data-tooltips") || "[]");
 
     values.forEach((value, i) => {
-      addButton(labels[i] || value, `${command} ${value}`);
+      const button = addButton(labels[i] || value, `${command} ${value}`);
+
+      if (tooltips[i]) {
+        button.attr("title", tooltips[i]);
+      }
     });
     return;
   }
