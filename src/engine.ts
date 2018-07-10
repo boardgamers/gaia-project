@@ -396,10 +396,10 @@ export default class Engine {
     })
   }
 
-  advanceResearchAreaPhase(player: PlayerEnum, pos: TechTilePos) {
+  advanceResearchAreaPhase(player: PlayerEnum, pos: TechTilePos | AdvTechTilePos) {
     // if stdTech in a free position or advTech, any researchArea
     let destResearchArea = "";
-    if (![TechTilePos.Free1, TechTilePos.Free2, TechTilePos.Free3].includes(pos) && Object.values(TechTilePos).includes(pos)) {
+    if (![TechTilePos.Free1, TechTilePos.Free2, TechTilePos.Free3].includes(pos as any) && Object.values(TechTilePos).includes(pos)) {
       // There's only one track to advance, so no need to give the player a choice, but end turn
       this.player(player).gainRewards(Reward.parse(`up-${pos}`));
       this.endTurnPhase(player, Command.ChooseTechTile);
@@ -721,13 +721,14 @@ export default class Engine {
     
     if (advanced) {
       this.player(player).gainAdvTechTile(tileAvailable.tile);
-      this.coverTechTilePhase(player);
       this.advTechTiles[pos].numTiles -= 1;
+      this.advanceResearchAreaPhase(player, pos);
+      this.coverTechTilePhase(player);
     } else {
       this.player(player).gainTechTile(tileAvailable.tile);
       this.techTiles[pos].numTiles -= 1;
       // add advance research area subCommand
-      this.advanceResearchAreaPhase(player, pos as TechTilePos);
+      this.advanceResearchAreaPhase(player, pos);
     }
   }
 
