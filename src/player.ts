@@ -404,7 +404,8 @@ export default class Player extends EventEmitter {
       case Condition.Sector: return _.uniq(this.data.occupied.filter(hex => hex.colonizedBy(this.player)).map(hex => hex.data.sector)).length;
       case Condition.Structure: return this.data.occupied.filter(hex => hex.colonizedBy(this.player)).length;
       case Condition.StructureFed: return this.data.occupied.filter(hex => hex.colonizedBy(this.player) && hex.belongsToFederationOf(this.player)).length;
-      case Condition.Satellite: return this.data.satellites }
+      case Condition.Satellite: return this.data.satellites + this.data[Building.SpaceStation];
+    }
 
     return 0;
   }
