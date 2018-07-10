@@ -1,10 +1,15 @@
-import { TechTile as TechTileEnum, TechTilePos, tiles, AdvTechTile } from "@gaia-project/engine";
+import { TechTile as TechTileEnum, TechTilePos, tiles, AdvTechTile, Event } from "@gaia-project/engine";
+import { eventDesc } from "../data/event";
 
 export default class TechTile extends PIXI.Graphics {
   constructor(public pos: TechTilePos) {
     super();
 
     this.interactive = true;
+
+    this.on("mouseout", () => {
+      this.emit("tooltip-remove", this);
+    });
   }
 
   draw(which: TechTileEnum | AdvTechTile, number: number, highlighted = false) {
@@ -37,5 +42,11 @@ export default class TechTile extends PIXI.Graphics {
       this.cursor = this.defaultCursor;
       this.off("click");
     }
+
+    this.emit("tooltip-remove", this);
+    this.off("mouseover");
+    this.on("mouseover", () => {
+      this.emit("tooltip", this, eventDesc(new Event(events[0])));
+    });
   }
 }

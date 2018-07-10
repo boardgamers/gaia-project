@@ -74,11 +74,9 @@ export default class ResearchRenderer extends PIXI.Graphics {
 
       const techTile = this.techTiles[research] = new TechTile(research as any);
       [techTile.x, techTile.y] = [arr[0].x, arr[0].y + trackHeight + 5];
-      this.addChild(techTile);
       
       const advTechTile = this.advTechTiles[`adv-${research}`] = new TechTile(`adv-${research}` as any);
       [advTechTile.x, advTechTile.y] = [arr[5].x, arr[5].y + trackHeight + 4];
-      this.addChild(advTechTile);
     }
 
     for (const tile of this.tilesList()) {
@@ -102,7 +100,6 @@ export default class ResearchRenderer extends PIXI.Graphics {
       const researchTile = this.researchTiles[researchs[i*2]][3];
 
       [techTile.x, techTile.y] = [researchTile.x + trackWidth/2, researchTile.y + trackHeight*0.8];
-      this.addChild(techTile);
     }
 
     for (const techPos of Object.values(TechTilePos)) {
@@ -110,6 +107,15 @@ export default class ResearchRenderer extends PIXI.Graphics {
     }
     for (const techPos of Object.values(AdvTechTilePos)) {
       this.advTechTiles[techPos].on("techClick", pos => this.emit("advTechClick", pos));
+    }
+    for (const tile of Object.values(this.techTiles).concat(Object.values(this.advTechTiles))) {
+      this.addChild(tile);
+      tile.on("tooltip", (elem, text) => {
+        this.emit("tooltip", elem, text);
+      });
+      tile.on("tooltip-remove", (elem, text) => {
+        this.emit("tooltip-remove", elem, text);
+      });
     }
   }
 
