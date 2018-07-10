@@ -51,10 +51,14 @@ export default class Reward {
    * 
    * @param rewards 
    */
-  static merge(rewards: Reward[]): Reward[] {
-    const grouped = _.groupBy(rewards, "type");
+  static merge(...rewards: Reward[][]): Reward[] {
+    const grouped = _.groupBy(_.flatten(rewards), "type");
 
     return Object.keys(grouped).map(key => new Reward(grouped[key].reduce((val, rew) => val+rew.count, 0), key as Resource)).filter(rew => !rew.isEmpty());
+  }
+
+  static negative(rewards: Reward[]): Reward[] {
+    return rewards.map(reward => new Reward(-reward.count, reward.type));
   }
 
   static toString(rewards: Reward[], sorted = true) {
@@ -70,5 +74,21 @@ export default class Reward {
 
   static match(rewards1: Reward[], rewards2: Reward[]): boolean {
     return Reward.toString(rewards1, true) === Reward.toString(rewards2, true);
+  }
+
+  static includes(container: Reward[], contained: Reward[]): boolean {
+    const indexed: _.Dictionary<number> = {};
+    for (const reward of container) {
+      indexed[reward.type] = (indexed[reward.type] || 0) + reward.count; 
+    }
+
+    for (const reward of contained) {
+      indexed[reward.type] = (indexed[reward.type] || 0) - reward.count;
+      if (indexed[reward.type] < 0) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }

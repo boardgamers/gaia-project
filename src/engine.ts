@@ -786,19 +786,44 @@ export default class Engine {
     return;
   }
 
-  [Command.Spend](player: PlayerEnum, cost, _: "for", income: string) {
+  [Command.Spend](player: PlayerEnum, costS: string, _: "for", incomeS: string) {
     const { acts: actions } = this.availableCommand(player, Command.Spend).data;
 
-    for (const elem of actions) {
-      if (elem.cost === cost && elem.income === income) {
-        this.players[player].payCosts([new Reward(cost)]);
-        this.players[player].gainRewards([new Reward(income)]);
-        return;
+    const pl = this.player(player);
+    const cost = Reward.merge(Reward.parse(costS));
+    const income = Reward.merge(Reward.parse(incomeS));
+
+    assert(!cost.some(r => r.count <= 0) && !income.some(r => r.count <= 0), "Nice try!");
+    assert(pl.canPay(cost) && cost, `Impossible to pay ${costS}`);
+
+    const isPossible = (cost: Reward[], income: Reward[]) => {
+      for (const action of actions) {
+        const actionCost = Reward.parse(action.cost);
+        if (Reward.includes(cost, actionCost)) {
+          // Remove income & cost of action
+          const newCost = Reward.merge(cost, Reward.negative(actionCost));
+          let newIncome = Reward.merge(income, Reward.negative(Reward.parse(action.income)));
+          
+          // Convert unused income into cost
+          newCost.push(...Reward.negative(newIncome.filter(rew => rew.count < 0)));
+          newIncome = newIncome.filter(rew => rew.count > 0);
+
+          if (newIncome.length === 0 && newCost.length === 0) {
+            return true;
+          }
+
+          if (isPossible(newCost, newIncome)) {
+            return true;
+          }
+        }
       }
+      return false;
     }
 
-    assert(false, `spend ${cost} for ${income} is not allowed`
-    );
+    assert(isPossible(cost, income), `spend ${cost} for ${income} is not allowed`);
+
+    pl.payCosts(cost);
+    pl.gainRewards(income);
   }
 
   [Command.BurnPower](player: PlayerEnum, cost: string) {

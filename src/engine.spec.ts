@@ -62,25 +62,6 @@ describe("Engine", () => {
     const engine = new Engine(moves);
     expect(engine.passedPlayers).to.have.length(0);
   });
-
-  it("should allow free action as first move after setupsetup is correct", () => {
-    const moves = parseMoves(`
-      init 2 randomSeed
-      p1 faction terrans
-      p2 faction nevlas
-      p1 build m -4x-1
-      p2 build m -1x0
-      p2 build m 0x-4
-      p1 build m -4x2
-      p2 booster booster3
-      p1 booster booster4
-      p1 spend 1q for 1o
-    `);
-
-    const engine = new Engine(moves);
-    expect(() => new Engine(moves)).to.not.throw();
-  });
-  
   
   it("should check wrong player order", () => {
     const moves = parseMoves(`
@@ -245,7 +226,7 @@ describe("Engine", () => {
       p2 leech 2
       p2 build PI -2x2.
       p1 leech 2
-      p1 spend 1q for 1o. spend 1q for 1o. burn 4. action power3.
+      p1 spend 2q for 2o. burn 4. action power3.
       p2 build ts -5x5.
       p1 leech 2
       p1 build ac1 -3x4. tech free2. up gaia.
@@ -289,7 +270,7 @@ describe("Engine", () => {
       p2 leech 1
       p1 pass booster3
       p2 burn 3. spend 3pw for 1o. pass booster5
-      p1 build m -2x3.spend 1pw for 1c.spend 1pw for 1c.
+      p1 build m -2x3. spend 2pw for 2c.
       p1 build ts -4x2.
     `);
 
@@ -433,6 +414,78 @@ describe("Engine", () => {
     expect(() => JSON.stringify(new Engine([]))).to.not.throw();
   });
 
+  describe("free actions", () => {
+    it("should allow free action as first move after setupsetup is correct", () => {
+      const moves = parseMoves(`
+        init 2 randomSeed
+        p1 faction terrans
+        p2 faction nevlas
+        p1 build m -4x-1
+        p2 build m -1x0
+        p2 build m 0x-4
+        p1 build m -4x2
+        p2 booster booster3
+        p1 booster booster4
+        p1 spend 1q for 1o
+      `);
+  
+      expect(() => new Engine(moves)).to.not.throw();
+    });
+  
+    it("should allow free actions to spend 1q for 1c", () => {
+      const moves = parseMoves(`
+        init 2 randomSeed
+        p1 faction terrans
+        p2 faction nevlas
+        p1 build m -4x-1
+        p2 build m -1x0
+        p2 build m 0x-4
+        p1 build m -4x2
+        p2 booster booster3
+        p1 booster booster4
+        p1 spend 1q for 1c
+      `);
+  
+      expect(() => new Engine(moves)).to.not.throw();
+    });
+  
+    it("should prevent unreasonable free actions", () => {
+      const moves = parseMoves(`
+        init 2 randomSeed
+        p1 faction terrans
+        p2 faction nevlas
+        p1 build m -4x-1
+        p2 build m -1x0
+        p2 build m 0x-4
+        p1 build m -4x2
+        p2 booster booster3
+        p1 booster booster4
+        p1 spend 1q for 2o
+      `);
+  
+      expect(() => new Engine(moves)).to.throw();
+    });
+
+    it("should allow to do free actions after main actions", () => {
+      const moves = parseMoves(`
+        init 2 randomSeed
+        p1 faction terrans
+        p2 faction nevlas
+        p1 build m -1x2
+        p2 build m -1x0
+        p2 build m 0x-4
+        p1 build m -4x2
+        p2 booster booster4
+        p1 booster booster7
+        p1 build ts -1x2. burn 2.
+        p2 leech 1
+        p2 build ts -1x0. burn 1
+      `);
+  
+      expect(() => new Engine(moves)).to.not.throw(AssertionError);
+    });
+  });
+
   describe("tech tiles", () => {
     it("should prevent picking the same tech tile twice", () => {
       const moves = parseMoves(`
@@ -455,7 +508,7 @@ describe("Engine", () => {
         p2 leech 2
         p2 build PI -2x2.
         p1 leech 2
-        p1 spend 1q for 1o. spend 1q for 1o. burn 4. action power3.
+        p1 spend 2q for 2o. burn 4. action power3.
         p2 build ts -5x5.
         p1 leech 2
       `);
@@ -505,7 +558,7 @@ describe("Engine", () => {
         p2 leech 2
         p2 build PI -2x2.
         p1 leech 2
-        p1 spend 1q for 1o. spend 1q for 1o. burn 4. action power3.
+        p1 spend 2q for 2o. burn 4. action power3.
         p2 build ts -5x5.
         p1 leech 2
         p1 build ac1 -3x4. tech free2. up gaia.
@@ -516,7 +569,7 @@ describe("Engine", () => {
         p1 build m -2x3.
         p2 leech 3
         p2 up nav.
-        p1 spend 1k for 1c. spend 1k for 1c. build ts -2x3.
+        p1 spend 2k for 2c. build ts -2x3.
         p2 leech 3
         p2 build m -4x6.
         p1 leech 4
@@ -526,7 +579,7 @@ describe("Engine", () => {
         p1 action power3.
         p2 federation -2x2,-3x3,-4x4,-4x5,-4x6,-5x5 fed4.
         p1 special 4pw.
-        p2 spend 3pw for 1o. spend 1pw for 1c. spend 1k for 1c. build lab -5x5. tech free3. up nav.
+        p2 spend 4pw,k for 1o,2c. build lab -5x5. tech free3. up nav.
         p1 leech 4
         p1 action power4.
         p2 pass booster3
@@ -584,25 +637,6 @@ describe("Engine", () => {
       expect(() => new Engine(moves)).to.throw(AssertionError);
     });
 
-    it("should allow to do free actions after main actions", () => {
-      const moves = parseMoves(`
-        init 2 randomSeed
-        p1 faction terrans
-        p2 faction nevlas
-        p1 build m -1x2
-        p2 build m -1x0
-        p2 build m 0x-4
-        p1 build m -4x2
-        p2 booster booster4
-        p1 booster booster7
-        p1 build ts -1x2. burn 1. burn 1.
-        p2 leech 1
-        p2 build ts -1x0. burn 1
-      `);
-  
-      expect(() => new Engine(moves)).to.not.throw(AssertionError);
-    });
-
     it("should gain 2 victory points when upgrading to ts and having booster7", () => {
       //booster7: ["o", "ts | 2vp"]
       const moves = parseMoves(`
@@ -629,7 +663,7 @@ describe("Engine", () => {
       expect(engine.player(Player.Player2).data.victoryPoints).to.equal(vp+2);
     });
 
-    it("should allow to do use a special action and actiavted it", () => {
+    it("should allow to use a terraforming special action from a booster", () => {
       const moves = parseMoves(`
         init 2 randomSeed
         p1 faction terrans
@@ -647,7 +681,7 @@ describe("Engine", () => {
       expect(engine.player(Player.Player1).events[Operator.Activate][0].activated).to.be.true;
     });
 
-    it("should allow to do use a range special action", () => {
+    it("should allow to use a range special action from a booster", () => {
       const moves = parseMoves(`
         init 2 randomSeed
         p1 faction terrans
@@ -665,8 +699,6 @@ describe("Engine", () => {
       
       expect(() => new Engine(moves)).to.not.throw(AssertionError);
     });
-
-
   });
 });
 
