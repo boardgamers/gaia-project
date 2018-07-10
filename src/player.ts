@@ -192,6 +192,8 @@ export default class Player extends EventEmitter {
   onResearchAdvanced(field: ResearchField) {
     const events = Event.parse(researchTracks[field][this.data.research[field]]);
     this.loadEvents(events);
+    const oldEvents = Event.parse(researchTracks[field][this.data.research[field] - 1]);
+    this.removeEvents(oldEvents);
     
     this.receiveAdvanceResearchTriggerIncome();
   }
