@@ -321,7 +321,7 @@ export default class Player extends EventEmitter {
     }
   }
 
-  finalCount(tile: FinalTile) {
+  finalCount(tile: FinalTile): number {
     switch (tile) {
       case FinalTile.Structure : return this.eventConditionCount(finalScorings[FinalTile.Structure]);
       case FinalTile.StructureFed : return this.eventConditionCount(finalScorings[FinalTile.StructureFed]);
@@ -391,7 +391,7 @@ export default class Player extends EventEmitter {
     return new Reward(1, Resource.Qic);
   }
 
-  eventConditionCount(condition: Condition) {
+  eventConditionCount(condition: Condition): number {
     switch (condition) {
       case Condition.None: return 1;
       case Condition.Mine: return this.data[Building.Mine];

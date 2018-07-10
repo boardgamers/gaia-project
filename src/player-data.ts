@@ -30,7 +30,8 @@ export default class PlayerData extends EventEmitter {
   [Building.ResearchLab]: number = 0;
   [Building.Academy1]: number = 0;
   [Building.Academy2]: number = 0; 
-  [Building.GaiaFormer]: number = 0; 
+  [Building.GaiaFormer]: number = 0;
+  [Building.SpaceStation]: number = 0;
   satellites: number = 0;
   research: {
     [key in ResearchField]: number
