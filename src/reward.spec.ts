@@ -52,4 +52,9 @@ describe('Reward', () => {
     expect(Reward.match(Reward.parse("c,o,3q"), [new Reward("c"), new Reward(3, Resource.Qic), new Reward("o")])).to.be.true;
     expect(Reward.match(Reward.parse("c,o,2q"), [new Reward("c"), new Reward(3, Resource.Qic), new Reward("o")])).to.be.false;
   });
+
+  it ("should test if an array of rewards contains another", () => {
+    expect(Reward.includes(Reward.parse("q"), Reward.parse("4pw"))).to.be.false;
+    expect(Reward.includes(Reward.parse("3q,o,2pw"), Reward.parse("2q,pw"))).to.be.true;
+  });
 });

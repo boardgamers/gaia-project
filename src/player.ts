@@ -136,7 +136,7 @@ export default class Player extends EventEmitter {
       }
     };
 
-    const cost = Reward.merge([].concat(this.board.cost(targetPlanet, building, isolated), addedCost));
+    const cost = Reward.merge(this.board.cost(targetPlanet, building, isolated), addedCost);
     return this.canPay(cost) ? cost : undefined;
   }
 
