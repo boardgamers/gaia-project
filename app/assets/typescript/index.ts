@@ -388,8 +388,6 @@ function updatePlayerInfo() {
     return;
   }
 
-  $("#round").text(`Round ${Math.max(lastData.round, 0)}`);
-  
   const playerOrder = lastData.round <= 0 ? lastData.players.map((pl, i) => i) : lastData.turnOrder.concat(lastData.passedPlayers);
 
   for (let i = 0; i < 5; i++) {

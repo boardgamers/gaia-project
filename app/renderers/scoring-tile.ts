@@ -1,6 +1,5 @@
 import { ScoringTile as ScoringTileEnum, tiles, Event } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
-import { roundScorings } from "@gaia-project/engine/src/tiles/scoring";
 
 export default class ScoringTile extends PIXI.Graphics {
   titleText: PIXI.Text;
@@ -15,7 +14,7 @@ export default class ScoringTile extends PIXI.Graphics {
       this.emit("tooltip-remove", this);
     });
 
-    this.titleText = new PIXI.Text('Round ' + (round+1), {fontSize: 10});
+    this.titleText = new PIXI.Text('', {fontSize: 10});
     this.titleText.position.set(4, 2);
     this.addChild(this.titleText);
 
@@ -32,7 +31,9 @@ export default class ScoringTile extends PIXI.Graphics {
     this.drawRect(0, 0, 75, 40);
     this.endFill();
 
-    const events = roundScorings[which];
+    this.titleText.text = 'Round ' + (this.round+1);
+
+    const events = tiles.roundscorings[which];
     this.content.text = events.join(" / ");
 
     this.emit("tooltip-remove", this);
