@@ -701,9 +701,9 @@ export default class Engine {
     const leech =  leechRewards.find( lr => lr.type === Resource.ChargePower);
     const freeIncome =  leechRewards.find( lr => lr.type === Resource.GainToken);
 
-    assert( leechCommand.leech === leech , `Impossible to charge ${leech}`);
+    assert(leechCommand.leech === leech.toString() , `Impossible to charge ${leech}`);
     if ( freeIncome ) {
-      assert( leechCommand.freeIncome === freeIncome , `Impossible to get ${freeIncome} for free`);
+      assert(leechCommand.freeIncome === freeIncome.toString() , `Impossible to get ${freeIncome} for free`);
     }
 
     this.player(player).gainRewards(leechRewards);
