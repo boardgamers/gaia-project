@@ -233,6 +233,9 @@ export default class Player extends EventEmitter {
     if (!upgradedBuilding && hex.occupied()) {
       // Lantids
       hex.data.additionalMine = this.player;
+      if (this.data.hasPlanetaryInstitute()) {
+        this.data.gainReward(new Reward("2k"));
+      }
     } else {
       hex.data.building = building;
       hex.data.player = this.player;
