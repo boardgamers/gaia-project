@@ -342,7 +342,7 @@ function addMove(move: string) {
       return text + ".";
     }
     // Check if the player already did the previous move, and previous move isn't final
-    if (move.substr(0, 2) === lastMove.substr(0, 2) && !lastMove.endsWith(".")) {
+    if (move.substr(0, 2) === lastMove.substr(0, 2) && !lastMove.endsWith(".") && lastData.round > 0) {
       if (lastMove.includes(Command.ChooseRoundBooster) || lastMove.includes(Command.Leech) || lastMove.includes(Command.DeclineLeech)) {
         // Those are commands that are alone in one line, and we shouldn't carry on the same line
       } else {
