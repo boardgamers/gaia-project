@@ -2,7 +2,7 @@ import { Condition, Operator, Resource } from "./enums";
 import * as assert from "assert";
 import Reward from "./reward";
 
-function findCondition(spec: string) : [Condition, string] {
+function findCondition(spec: string): [Condition, string] {
   let conditionMatch = /^(.+?)(\b| )/.exec(spec);
 
   if (!conditionMatch) {
@@ -21,7 +21,7 @@ function findCondition(spec: string) : [Condition, string] {
   return [Condition.None, spec];
 }
 
-function findOperator(spec: string) : [Operator, string] {
+function findOperator(spec: string): [Operator, string] {
   let operatorMatch = /^(.+?)(\b| )/.exec(spec);
 
   if (!operatorMatch) {
@@ -42,12 +42,12 @@ function findOperator(spec: string) : [Operator, string] {
 
 export default class Event {
   spec: string;
-  condition : Condition;
-  operator : Operator;
+  condition: Condition;
+  operator: Operator;
   rewards: Reward[];
   activated: boolean = false;
 
-  constructor(spec : string) {
+  constructor(spec: string) {
     this.spec = spec;
     let remaining: string;
 
@@ -63,7 +63,7 @@ export default class Event {
   }
 
   toString() {
-    return this.spec + this.activated? "!" : "";
+    return this.spec + this.activated ? "!" : "";
   }
 
   toJSON() {

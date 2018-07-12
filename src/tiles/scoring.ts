@@ -11,7 +11,7 @@ const roundScorings =  {
   [ScoringTile.Score8]: ["ts >> 3vp"],
   [ScoringTile.Score9]: ["d >> 3vp"],
   [ScoringTile.Score10]: ["PA >> 5vp"]
-}
+};
 
 const finalScorings =  {
   [FinalTile.Structure]: Condition.Structure,
@@ -20,7 +20,6 @@ const finalScorings =  {
   [FinalTile.Gaia]: Condition.Gaia,
   [FinalTile.Sector]: Condition.Sector,
   [FinalTile.Satellite]: Condition.Satellite
-}
-
+};
 
 export {roundScorings, finalScorings};

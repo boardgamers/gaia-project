@@ -45,16 +45,16 @@ export interface FactionBoardRaw {
 const defaultBoard: FactionBoardRaw = {
   [Building.Mine]: {
     cost: "2c,o",
-    income: ["+o","+o","~","+o","+o","+o","+o","+o"]
+    income: ["+o", "+o", "~", "+o", "+o", "+o", "+o", "+o"]
   },
   [Building.TradingStation]: {
     cost: "3c,2o",
     isolatedCost: "6c,2o",
-    income: ["+3c","+4c","+4c","+5c"]
+    income: ["+3c", "+4c", "+4c", "+5c"]
   },
   [Building.ResearchLab]: {
     cost: "5c,3o",
-    income: ["+k","+k","+k"]
+    income: ["+k", "+k", "+k"]
   },
   [Building.Academy1]: {
     cost: "6c,6o",
@@ -70,7 +70,7 @@ const defaultBoard: FactionBoardRaw = {
   },
   [Building.GaiaFormer]: {
     cost: "6tg",
-    income: ["~","~","~"]
+    income: ["~", "~", "~"]
   },
   income: ["3k,4o,15c,q", "+o,k"],
   power: {
@@ -115,7 +115,7 @@ export class FactionBoard {
     area1: number,
     area2: number
   };
-  brainstone: BrainstoneArea
+  brainstone: BrainstoneArea;
 
   constructor(input: FactionBoardRaw) {
     Object.assign(this, _.merge({}, defaultBoard, input));
@@ -137,11 +137,11 @@ export class FactionBoard {
   }
 
   cost( targetPlanet: Planet, building: Building, isolated = true): Reward[] {
- 
+
     if (building === Building.TradingStation && isolated) {
       return this[building].isolatedCost;
     }
-    
+
     return this[building].cost;
   }
 }

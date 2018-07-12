@@ -14,6 +14,7 @@ describe("Player", () => {
 
       const cost = player.canBuild(Planet.Terra, Building.Mine, {addedCost: [new Reward(1, Resource.Qic)]});
 
+      // tslint:disable-next-line no-unused-expression
       expect(Reward.match(Reward.parse("2c,o,q"), cost)).to.be.true;
     });
   });
@@ -26,7 +27,9 @@ describe("Player", () => {
       player.removeEvent(new Event("+o"));
 
       expect(player.events[Operator.Income]).to.have.lengthOf(2);
+      // tslint:disable-next-line no-unused-expression
       expect(Reward.match(player.events[Operator.Income][0].rewards, [new Reward("k")])).to.be.true;
+      // tslint:disable-next-line no-unused-expression
       expect(Reward.match(player.events[Operator.Income][1].rewards, [new Reward("1c")])).to.be.true;
     });
 

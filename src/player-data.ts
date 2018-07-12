@@ -29,23 +29,23 @@ export default class PlayerData extends EventEmitter {
   [Building.PlanetaryInstitute]: number = 0;
   [Building.ResearchLab]: number = 0;
   [Building.Academy1]: number = 0;
-  [Building.Academy2]: number = 0; 
+  [Building.Academy2]: number = 0;
   [Building.GaiaFormer]: number = 0;
   [Building.SpaceStation]: number = 0;
   satellites: number = 0;
   research: {
     [key in ResearchField]: number
   } = {
-    terra: 0, nav: 0,int: 0, gaia: 0, eco: 0, sci: 0
+    terra: 0, nav: 0, int: 0, gaia: 0, eco: 0, sci: 0
   };
   range: number = 1;
-  temporaryRange : number = 0;
+  temporaryRange: number = 0;
   gaiaformers: number = 0;
   terraformCostDiscount: number = 0;
   temporaryStep: number = 0;
 
   roundBooster: Booster;
-  techTiles: { tile: TechTile, enabled: boolean}[] = [];
+  techTiles: Array<{ tile: TechTile, enabled: boolean}> = [];
   advTechTiles: AdvTechTile[] = [];
   federations: Federation[] = [];
   greenFederations: number = 0;
@@ -75,7 +75,7 @@ export default class PlayerData extends EventEmitter {
       occupied: this.occupied,
       satellites: this.satellites,
       brainstone: this.brainstone
-    }
+    };
 
     for (const building of Object.values(Building)) {
       ret[building] = this[building];
@@ -92,26 +92,27 @@ export default class PlayerData extends EventEmitter {
     if (reward.isEmpty()) {
       return;
     }
-    let { count, type: resource } = reward;
+    let { count } = reward;
+    const resource = reward.type;
 
     if (pay) {
       count = -count;
     }
-    
+
     if (resource.startsWith("up-")) {
       this.advanceResearch(resource.slice("up-".length) as ResearchField, count);
       return;
     }
-    
-    switch(resource) {
+
+    switch (resource) {
       case Resource.Ore: this.ores = Math.min(MAX_ORE, this.ores + count); return;
       case Resource.Credit: this.credits = Math.min(MAX_CREDIT, this.credits + count); return;
       case Resource.Knowledge: this.knowledge = Math.min(MAX_KNOWLEDGE, this.knowledge + count); return;
       case Resource.VictoryPoint: this.victoryPoints += count; return;
       case Resource.Qic: this.qics += count; return;
-      case Resource.GainToken: count>0 ?  this.power.area1 += count : this.discardPower(-count, Resource.GainToken); return;
+      case Resource.GainToken: count > 0 ?  this.power.area1 += count : this.discardPower(-count, Resource.GainToken); return;
       case Resource.GainTokenGaiaArea:  this.discardPower(-count, Resource.GainTokenGaiaArea); return;
-      case Resource.ChargePower: count>0 ? this.chargePower(count) : this.spendPower(-count); return;
+      case Resource.ChargePower: count > 0 ? this.chargePower(count) : this.spendPower(-count); return;
       case Resource.Range: this.range += count; return;
       case Resource.TemporaryRange: this.temporaryRange += count; return;
       case Resource.GaiaFormer: this.gaiaformers += count; return;
@@ -145,7 +146,7 @@ export default class PlayerData extends EventEmitter {
   /**
    * Move power tokens from a power area to an upper one, depending on the amount
    * of power chaged
-   * 
+   *
    * @param power Power charged
    */
   chargePower(power: number, apply: boolean = true): number {
@@ -156,7 +157,7 @@ export default class PlayerData extends EventEmitter {
       brainstoneUsage += 1;
       power -= 1;
       brainstonePos = BrainstoneArea.Area2;
-    };
+    }
 
     const area1ToUp = Math.min(power, this.power.area1);
 
@@ -173,13 +174,13 @@ export default class PlayerData extends EventEmitter {
       this.power.area2 += area1ToUp - area2ToUp;
       this.power.area3 += area2ToUp;
       this.brainstone = brainstonePos;
-    };
+    }
 
-    //returns real charged power
+    // returns real charged power
     return area1ToUp + area2ToUp + brainstoneUsage;
   }
 
-  
+
 
   spendPower(power: number) {
     if (this.brainstone === BrainstoneArea.Area3 && (power >= 3 || this.power.area3 < power)) {

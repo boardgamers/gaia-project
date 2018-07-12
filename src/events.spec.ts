@@ -11,6 +11,7 @@ describe("Events", () => {
     expect(event.condition).to.equal(Condition.None);
     expect(event.operator).to.equal(Operator.Once);
     expect(event.rewards).to.have.length(1);
+    // tslint:disable-next-line no-unused-expression
     expect(event.rewards[0].isEmpty()).to.be.true;
   });
 

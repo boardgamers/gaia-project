@@ -59,7 +59,7 @@ export enum Operator {
   /** On round end for player */
   Pass = "|",
   /** reserved op for planetary institute and academies becoming 4pw structures */
-  Special = "PA->4pw" 
+  Special = "PA->4pw"
 }
 
 export enum Condition {
@@ -71,7 +71,7 @@ export enum Condition {
   ResearchLab = "lab",
   PlanetaryInstituteOrAcademy = "PA",
   Federation = "fed",
-  
+
   // count only
   Gaia = "g",
   PlanetType = "pt",
@@ -87,7 +87,7 @@ export enum Condition {
 }
 
 export namespace Condition {
-  export function matchesBuilding(condition: Condition, building: Building, planet: Planet) : boolean {
+  export function matchesBuilding(condition: Condition, building: Building, planet: Planet): boolean {
     if (condition as string === building as string) {
       return true;
     }
@@ -160,15 +160,15 @@ export enum Player {
 
 export enum Round {
   Init = -3,
-  SetupFaction=-2,
-  SetupBuilding=-1,
-  SetupRoundBooster=0,
-  Round1=1,
-  Round2=2,
-  Round3=3,
-  Round4=4,
-  Round5=5,
-  Round6=6
+  SetupFaction= -2,
+  SetupBuilding= -1,
+  SetupRoundBooster= 0,
+  Round1= 1,
+  Round2= 2,
+  Round3= 3,
+  Round4= 4,
+  Round5= 5,
+  Round6= 6
 }
 
 export enum Booster {
@@ -256,7 +256,7 @@ export enum BoardAction {
   Power7= "power7",
   Qic1 = "qic1",
   Qic2 = "qic2",
-  Qic3 = "qic3",  
+  Qic3 = "qic3",
 }
 
 export enum ScoringTile {

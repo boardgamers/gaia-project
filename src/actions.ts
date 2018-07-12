@@ -1,4 +1,4 @@
-import { BoardAction } from './enums'
+import { BoardAction } from './enums';
 // QIC to extend range is already included in the distance calculation
 
 const freeActions =  [

@@ -76,7 +76,7 @@ const factions = {
   opposite(faction: Faction): Faction {
     if (!Object.values(Faction).includes(faction)) {
       return null;
-    } 
+    }
 
     for (const fct of Object.values(Faction)) {
       if (fct !== faction && factions[fct].planet === factions[faction].planet) {

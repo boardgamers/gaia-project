@@ -28,7 +28,7 @@ import { CubeCoordinates } from 'hexagrid';
 import Event from './events';
 import federations from './tiles/federations';
 import {roundScorings} from './tiles/scoring';
-import * as researchTracks from './research-tracks'
+import * as researchTracks from './research-tracks';
 import AvailableCommand, {
   generate as generateAvailableCommands,
   possibleBuildings
@@ -44,9 +44,9 @@ const QIC_RANGE_UPGRADE = 2;
 export default class Engine {
   map: SpaceMap;
   players: Player[];
-  roundBoosters:  {
-    [key in Booster]?: boolean 
-  } = { }; 
+  roundBoosters: {
+    [key in Booster]?: boolean
+  } = { };
   techTiles: {
     [key in TechTilePos]?: {tile: TechTile; numTiles: number}
   } = {};
@@ -58,8 +58,8 @@ export default class Engine {
   federations: {
     [key in Federation]?: number
   } = {};
-  roundScoringTiles : ScoringTile[];
-  finalScoringTiles : FinalTile[];
+  roundScoringTiles: ScoringTile[];
+  finalScoringTiles: FinalTile[];
   terraformingFederation: Federation;
   availableCommands: AvailableCommand[] = [];
   round: number = Round.Init;
@@ -95,7 +95,7 @@ export default class Engine {
       availableCommand => {
         if (availableCommand.name !== command) {
           return false;
-        } 
+        }
         if (availableCommand.player === undefined) {
           return false;
         }
@@ -137,10 +137,10 @@ export default class Engine {
   }
 
   move(move: string) {
-
+    let command: Command;
     if (this.round === Round.Init) {
       const split = move.trim().split(' ');
-      const command = split[0] as Command;
+      command = split[0] as Command;
 
       const available = this.availableCommands;
       const commandNames = available.map(cmd => cmd.name);
@@ -153,7 +153,7 @@ export default class Engine {
       (this[command] as any)(...split.slice(1));
       this.endRound();
     } else {
-      const playerS = move.substr(0,2);
+      const playerS = move.substr(0, 2);
 
       assert(
         /^p[1-5]$/.test(playerS),
@@ -161,14 +161,14 @@ export default class Engine {
       );
       const player = +playerS[1] - 1;
 
-      assert(this.playerToMove() === (player as PlayerEnum), "Wrong turn order in move " + move + ", expected "+ this.playerToMove() +' found '+player);
+      assert(this.playerToMove() === (player as PlayerEnum), "Wrong turn order in move " + move + ", expected " + this.playerToMove() + ' found ' + player);
 
       const moves = move.substr(2, move.length - 2).trim().split('.');
 
       for (let i = 0; i < moves.length; i++)  {
-        const split = moves[i].trim().split(' ');  
+        const split = moves[i].trim().split(' ');
         // the final dot is the end turn command
-        var command = split[0] === "" ? Command.EndTurn : split[0] as Command;
+        command = split[0] === "" ? Command.EndTurn : split[0] as Command;
 
         const available = this.availableCommands;
         const commandNames = available.map(cmd => cmd.name);
@@ -180,8 +180,8 @@ export default class Engine {
 
         (this[command] as any)(player as PlayerEnum, ...split.slice(1));
 
-        //exclude last move
-        if (i< moves.length - 1) {
+        // exclude last move
+        if (i < moves.length - 1) {
           this.generateAvailableCommands();
         }
       }
@@ -208,7 +208,7 @@ export default class Engine {
     return engine;
   }
 
-  endTurn(player:PlayerEnum, command : Command) {
+  endTurn(player: PlayerEnum, command: Command) {
     this.player(player).endTurn();
     // if not subactions Let the next player move based on the command
     this.moveToNextPlayer(command);
@@ -219,16 +219,15 @@ export default class Engine {
     }
   }
 
-  endRound() { 
+  endRound() {
     if ( this.round < 6 ) {
       this.cleanUpPhase();
       this.beginRound();
 
-    } else
-    {
-      this.finalScoringPhase()
+    } else {
+      this.finalScoringPhase();
     }
-  };
+  }
 
   beginRound() {
     this.round += 1;
@@ -258,46 +257,46 @@ export default class Engine {
           this.turnOrder.push(posIvits as PlayerEnum);
         }
         break;
-      };
+      }
       case Round.SetupFaction:
       case Round.Round1: {
         this.turnOrder = this.players.map((pl, i) => i as PlayerEnum);
         this.passedPlayers = [];
         break;
-      };
-      case Round.SetupRoundBooster:{
+      }
+      case Round.SetupRoundBooster: {
         this.turnOrder = this.players.map((pl, i) => i as PlayerEnum).reverse();
         break;
-      };
+      }
       default: {
-        // The players play in the order in which they passed or 
+        // The players play in the order in which they passed or
         this.turnOrder = this.passedPlayers;
         this.passedPlayers = [];
-      };
-    };
+      }
+    }
 
     this.currentPlayer = this.turnOrder[0];
     this.nextPlayer = this.turnOrder[0];
-    
+
     if ( this.round >= 1) {
       this.incomePhase();
       this.gaiaPhase();
-    };
+    }
 
-  };
+  }
 
-  incomePhase(){
+  incomePhase() {
     for (const player of this.playersInOrder()) {
       player.receiveIncome();
-  
-      //asign roundScoring tile to each player
+
+      // asign roundScoring tile to each player
       player.loadEvents( Event.parse(roundScorings[this.roundScoringTiles[this.round]]));
-        
-      //TODO split power actions and request player order
+
+      // TODO split power actions and request player order
     }
   }
 
-  gaiaPhase(){
+  gaiaPhase() {
     // transform Transdim planets into Gaia if gaiaformed
     for (const hex of this.map.toJSON()) {
       if (hex.data.planet === Planet.Transdim  && hex.data.player !== undefined && hex.data.building === Building.GaiaFormer ) {
@@ -307,7 +306,7 @@ export default class Engine {
     for (const player of this.playersInOrder()) {
       player.gaiaPhase();
     }
-    //TODO manage gaia phase actions for specific factions
+    // TODO manage gaia phase actions for specific factions
   }
 
   leechingPhase(player: PlayerEnum, hex: GaiaHex) {
@@ -327,7 +326,7 @@ export default class Engine {
         let leech = 0;
         for (const loc of pl.data.occupied) {
           if (this.map.distance(loc, hex) < ISOLATED_DISTANCE) {
-            leech = Math.max(leech, pl.buildingValue(this.map.grid.get(loc.q, loc.r).buildingOf(pl.player), this.map.grid.get(loc.q, loc.r).data.planet))
+            leech = Math.max(leech, pl.buildingValue(this.map.grid.get(loc.q, loc.r).buildingOf(pl.player), this.map.grid.get(loc.q, loc.r).data.planet));
           }
         }
         leech = pl.maxLeech(leech);
@@ -335,9 +334,9 @@ export default class Engine {
           this.roundSubCommands.push({
             name: Command.Leech,
             player: this.players.indexOf(pl),
-            data: { 
-              leech : leech + Resource.ChargePower, 
-              freeIncome : pl.faction === Faction.Taklons && pl.data[Building.PlanetaryInstitute]>0 ? "1t" : "" }
+            data: {
+              leech : leech + Resource.ChargePower,
+              freeIncome : pl.faction === Faction.Taklons && pl.data[Building.PlanetaryInstitute] > 0 ? "1t" : "" }
           });
         }
       }
@@ -348,12 +347,12 @@ export default class Engine {
     const tiles = [];
     const data = this.players[player].data;
 
-    //  tech tiles that player doesn't already have  
+    //  tech tiles that player doesn't already have
     for (const tilePos of Object.values(TechTilePos)) {
       if (!_.find(data.techTiles, {tile: this.techTiles[tilePos].tile})) {
         tiles.push({
           tile: this.techTiles[tilePos].tile,
-          tilePos: tilePos,
+          tilePos,
           type: "std"
         });
       }
@@ -364,21 +363,21 @@ export default class Engine {
     for (const tilePos of Object.values(AdvTechTilePos)) {
       if (this.advTechTiles[tilePos].numTiles > 0  &&
           data.greenFederations > 0 &&
-          data.research[tilePos.slice("adv-".length)] >=4 && 
-          data.techTiles.filter(tech => tech.enabled).length>0 ) {
+          data.research[tilePos.slice("adv-".length)] >= 4 &&
+          data.techTiles.filter(tech => tech.enabled).length > 0 ) {
             tiles.push({
               tile: this.advTechTiles[tilePos].tile,
-              tilePos: tilePos,
+              tilePos,
               type: "adv"
             });
       }
     }
-    if (tiles.length>0) {
+    if (tiles.length > 0) {
       this.roundSubCommands.unshift({
         name: Command.ChooseTechTile,
-        player: player,
-        data: { tiles } 
-    })
+        player,
+        data: { tiles }
+    });
     }
 
   }
@@ -386,22 +385,22 @@ export default class Engine {
   coverTechTilePhase(player: PlayerEnum) {
     this.roundSubCommands.unshift({
       name: Command.ChooseCoverTechTile,
-      player: player,
+      player,
       data: {}
-    })
+    });
   }
 
   lostPlanetPhase(player: PlayerEnum) {
     this.roundSubCommands.unshift({
       name: Command.PlaceLostPlanet,
-      player: player,
+      player,
       data: {}
-    })
+    });
   }
 
   advanceResearchAreaPhase(player: PlayerEnum, pos: TechTilePos | AdvTechTilePos) {
     // if stdTech in a free position or advTech, any researchArea
-    let destResearchArea = "";
+    const destResearchArea = "";
     if (![TechTilePos.Free1, TechTilePos.Free2, TechTilePos.Free3].includes(pos as any) && Object.values(TechTilePos).includes(pos)) {
       // There's only one track to advance, so no need to give the player a choice, but end turn
       this.player(player).gainRewards(Reward.parse(`up-${pos}`));
@@ -411,18 +410,18 @@ export default class Engine {
 
     this.roundSubCommands.unshift({
       name: Command.UpgradeResearch,
-      player: player,
+      player,
       data: destResearchArea
     });
   }
 
-  selectFederationTilePhase(player: PlayerEnum, from: "pool" | "player"){
+  selectFederationTilePhase(player: PlayerEnum, from: "pool" | "player") {
     const possibleTiles = Object.keys(this.federations).filter(key => this.federations[key] > 0);
     const playerTiles = Object.keys(this.player(player).data.federations);
 
     this.roundSubCommands.unshift({
       name: Command.ChooseFederationTile,
-      player: player,
+      player,
       data: {
         tiles: from === "player" ? playerTiles : possibleTiles,
         // Tiles that are rescored just add the rewards, but don't take the token
@@ -431,27 +430,27 @@ export default class Engine {
     });
   }
 
-  endTurnPhase(player: PlayerEnum, fromCommand: Command){
+  endTurnPhase(player: PlayerEnum, fromCommand: Command) {
     // exclude setup rounds
     if (this.round <= 0) {
       return;
     }
-    //if the current player has subCommands to do, cannot endTurn
+    // if the current player has subCommands to do, cannot endTurn
     if (this.nextSubcommandPlayer() === player) {
       return;
     }
     this.roundSubCommands.unshift({
       name: Command.EndTurn,
-      player: player,
+      player,
       data: fromCommand
     });
   }
 
-  buildMinePhase(player: PlayerEnum){
+  buildMinePhase(player: PlayerEnum) {
     const buildingCommand = possibleBuildings(this, player);
 
     if (buildingCommand) {
-      // We filter buildings that aren't mines (like gaia-formers) or 
+      // We filter buildings that aren't mines (like gaia-formers) or
       // that already have a building on there (like gaia-formers)
       buildingCommand.data.buildings = buildingCommand.data.buildings.filter(bld => {
         if (bld.building !== Building.Mine && bld.building !== Building.GaiaFormer) {
@@ -465,7 +464,7 @@ export default class Engine {
       }
     }
   }
-  
+
   cleanUpPhase() {
     if (this.round < 1) {
       return;
@@ -486,7 +485,7 @@ export default class Engine {
   }
 
   finalScoringPhase() {
-    //finalScoring tiles
+    // finalScoring tiles
     for (const tile of this.finalScoringTiles) {
       const players = _.sortBy(this.players, player => player.finalCount(tile)).reverse();
 
@@ -514,11 +513,11 @@ export default class Engine {
       }
     }
 
-    //research VP and remaining resources
+    // research VP and remaining resources
     for (const pl of this.playersInOrder()) {
       Object.values(ResearchField).forEach(research => (pl.data.victoryPoints += Math.max(pl.data.research[research] - 3, 0) * 4));
-      const resources = pl.data.ores + pl.data.credits + pl.data.qics + pl.data.knowledge + Math.floor((pl.data.power.area2 + (BrainstoneArea.Area2 ? 3 : 0))/ 2) + pl.data.power.area3 + (BrainstoneArea.Area3 ? 3 : 0);
-      pl.data.victoryPoints += Math.floor(resources/3);
+      const resources = pl.data.ores + pl.data.credits + pl.data.qics + pl.data.knowledge + Math.floor((pl.data.power.area2 + (BrainstoneArea.Area2 ? 3 : 0)) / 2) + pl.data.power.area3 + (BrainstoneArea.Area3 ? 3 : 0);
+      pl.data.victoryPoints += Math.floor(resources / 3);
     }
 
   }
@@ -527,10 +526,10 @@ export default class Engine {
   moveToNextPlayer(command: Command): PlayerEnum {
     const playerPos = this.turnOrder.indexOf(this.currentPlayer);
     const subPhaseTurn = this.roundSubCommands.length > 0;
-    
+
     if (subPhaseTurn) {
       return;
-    } 
+    }
 
     if (command === Command.Pass) {
       this.passedPlayers.push(this.currentPlayer);
@@ -547,7 +546,7 @@ export default class Engine {
       this.currentPlayer = this.nextPlayer;
     }
 
-    return this.currentPlayer;   
+    return this.currentPlayer;
   }
 
   playersInOrder(): Player[] {
@@ -562,24 +561,24 @@ export default class Engine {
     this.map = new SpaceMap(nbPlayers, seed);
 
     // Choose nbPlayers+3 boosters as part of the pool
-    const boosters = shuffleSeed.shuffle(Object.values(Booster), this.map.rng()).slice(0, nbPlayers+3);
+    const boosters = shuffleSeed.shuffle(Object.values(Booster), this.map.rng()).slice(0, nbPlayers + 3);
     for (const booster of boosters) {
       this.roundBoosters[booster] = true;
     }
 
-    // Shuffle tech tiles 
+    // Shuffle tech tiles
     const techtiles = shuffleSeed.shuffle(Object.values(TechTile), this.map.rng());
     Object.values(TechTilePos).forEach( (pos, i) => {
       this.techTiles[pos] = {tile: techtiles[i], numTiles: 4};
     });
- 
+
     // Choose adv tech tiles as part of the pool
     const advtechtiles = shuffleSeed.shuffle(Object.values(AdvTechTile), this.map.rng()).slice(0, 6);
     Object.values(AdvTechTilePos).forEach( (pos, i) => {
       this.advTechTiles[pos] = {tile: advtechtiles[i], numTiles: 1};
     });
 
-    //powerActions
+    // powerActions
     Object.values(BoardAction).forEach( pos => {
       this.boardActions[pos] = true;
     });
@@ -587,7 +586,7 @@ export default class Engine {
     this.terraformingFederation = shuffleSeed.shuffle(Object.values(Federation), this.map.rng())[0];
     for (const federation of Object.values(Federation) as Federation[]) {
       if (federation !== Federation.FederationGleens) {
-        this.federations[federation] = federation === this.terraformingFederation ? 2: 3;
+        this.federations[federation] = federation === this.terraformingFederation ? 2 : 3;
       }
     }
 
@@ -601,7 +600,7 @@ export default class Engine {
     this.finalScoringTiles = finalscoringtiles;
 
     this.players = [];
-    
+
     for (let i = 0; i < nbPlayers; i++) {
       this.addPlayer(new Player(i));
     }
@@ -620,11 +619,11 @@ export default class Engine {
 
   [Command.ChooseRoundBooster](player: PlayerEnum, booster: Booster, fromCommand: Command = Command.ChooseRoundBooster ) {
     const { boosters } = this.availableCommand(player, fromCommand).data;
-    
+
     assert(boosters.includes(booster),
       `${booster} is not in the available boosters`
     );
-    
+
     this.roundBoosters[booster] = false;
     this.players[player].getRoundBooster(booster);
   }
@@ -649,12 +648,12 @@ export default class Engine {
 
         this.leechingPhase(player, hex);
 
-        if ( pl.faction === Faction.Gleens && building === Building.PlanetaryInstitute){
+        if ( pl.faction === Faction.Gleens && building === Building.PlanetaryInstitute) {
           pl.gainFederationToken(Federation.FederationGleens);
         }
 
         this.endTurnPhase(player, Command.Build);
-       
+
         return;
       }
     }
@@ -669,19 +668,19 @@ export default class Engine {
     assert(track, `Impossible to upgrade knowledge for ${field}`);
 
     const pl = this.player(player);
-   
+
     pl.payCosts(Reward.parse(track.cost));
     pl.gainRewards([new Reward(`${Command.UpgradeResearch}-${field}`)]);
 
     if (pl.data.research[field] === researchTracks.lastTile(field)) {
       if (field === ResearchField.Terraforming) {
-        //gets federation token
+        // gets federation token
         if (this.terraformingFederation) {
           pl.gainFederationToken(this.terraformingFederation);
           this.terraformingFederation = undefined;
         }
       } else if (field === ResearchField.Navigation) {
-        //gets LostPlanet
+        // gets LostPlanet
         this.lostPlanetPhase(player);
       }
     }
@@ -696,41 +695,42 @@ export default class Engine {
 
   [Command.Leech](player: PlayerEnum, income: string) {
     const leechCommand  = this.availableCommand(player, Command.Leech).data;
-    //leech rewards are including +t, if needed and in the right sequence
+    // leech rewards are including +t, if needed and in the right sequence
     const leechRewards = Reward.parse(income);
 
     const leech =  leechRewards.find( lr => lr.type === Resource.ChargePower);
     const freeIncome =  leechRewards.find( lr => lr.type === Resource.GainToken);
-    
-    assert( leechCommand.leech == leech , `Impossible to charge ${leech}`);
-    if ( freeIncome ){
-      assert( leechCommand.freeIncome == freeIncome , `Impossible to get ${freeIncome} for free`);
+
+    assert( leechCommand.leech === leech , `Impossible to charge ${leech}`);
+    if ( freeIncome ) {
+      assert( leechCommand.freeIncome === freeIncome , `Impossible to get ${freeIncome} for free`);
     }
-   
+
     this.player(player).gainRewards(leechRewards);
     this.player(player).payCosts( [new Reward(Math.max(leech.count - 1, 0), Resource.VictoryPoint)]);
 
   }
 
   [Command.DeclineLeech](player: PlayerEnum) {
+    // no action needeed
   }
 
-  [Command.EndTurn](player: PlayerEnum){
+  [Command.EndTurn](player: PlayerEnum) {
     // removes endTurn subcommand
     this.roundSubCommands.splice(0, 1);
-    //sets nextPlayer
+    // sets nextPlayer
     const playerPos = this.turnOrder.indexOf(this.currentPlayer);
     this.nextPlayer = this.turnOrder[(playerPos + 1) % this.turnOrder.length];
   }
 
   [Command.ChooseTechTile](player: PlayerEnum, pos: TechTilePos | AdvTechTilePos) {
     const { tiles } = this.availableCommand(player, Command.ChooseTechTile).data;
-    const tileAvailable = tiles.find(ta => ta.tilePos == pos);
+    const tileAvailable = tiles.find(ta => ta.tilePos === pos);
 
     assert(tileAvailable !== undefined, `Impossible to get ${pos} tile`);
 
     const advanced = tileAvailable.type === "adv";
-    
+
     if (advanced) {
       this.player(player).gainAdvTechTile(tileAvailable.tile);
       this.advTechTiles[pos].numTiles -= 1;
@@ -746,37 +746,37 @@ export default class Engine {
 
   [Command.ChooseCoverTechTile](player: PlayerEnum, tilePos: TechTilePos) {
     const { tiles } = this.availableCommand(player, Command.ChooseCoverTechTile).data;
-    const tileAvailable = tiles.find(ta => ta.tilePos == tilePos);
+    const tileAvailable = tiles.find(ta => ta.tilePos === tilePos);
 
     assert(tileAvailable !== undefined, `Impossible to cover ${tilePos} tile`);
-    //remove tile
+    // remove tile
     this.player(player).coverTechTile(tileAvailable.tile);
 
     this.endTurnPhase(player, Command.Build);
   }
 
-  [Command.Special](player: PlayerEnum, income: string){
+  [Command.Special](player: PlayerEnum, income: string) {
     const { specialacts } = this.availableCommand(player, Command.Special).data;
     const actAvailable = specialacts.find(sa => Reward.match(Reward.parse(sa.income), Reward.parse(income)));
-    
+
     assert(actAvailable !== undefined, `Special action ${income} is not available`);
 
-    //mark as activated special action for this turn
+    // mark as activated special action for this turn
     this.player(player).activateEvent(actAvailable.spec);
 
-    this.endTurnPhase(player,Command.Special);
+    this.endTurnPhase(player, Command.Special);
   }
 
   [Command.ChooseFederationTile](player: PlayerEnum, federation: Federation) {
     const { tiles, rescore } = this.availableCommand(player, Command.ChooseFederationTile).data;
-    const tileAvailable = tiles.find(ta => ta.tile == federation);
+    const tileAvailable = tiles.find(ta => ta.tile === federation);
 
     if (rescore) {
-      //rescore a federation
+      // rescore a federation
       this.player(player).gainRewards(Reward.parse(federations[federation]));
-      this.endTurnPhase(player,Command.ChooseFederationTile);
+      this.endTurnPhase(player, Command.ChooseFederationTile);
     } else {
-
+      // no other type of individual choose-fereation-tile
     }
   }
 
@@ -798,7 +798,7 @@ export default class Engine {
     return;
   }
 
-  [Command.Spend](player: PlayerEnum, costS: string, _: "for", incomeS: string) {
+  [Command.Spend](player: PlayerEnum, costS: string, _for: "for", incomeS: string) {
     const { acts: actions } = this.availableCommand(player, Command.Spend).data;
 
     const pl = this.player(player);
@@ -807,7 +807,9 @@ export default class Engine {
 
     assert(!cost.some(r => r.count <= 0) && !income.some(r => r.count <= 0), "Nice try!");
     assert(pl.canPay(cost) && cost, `Impossible to pay ${costS}`);
+    assert(_for === 'for', "Expect second part of command to be 'for'");
 
+    // tslint:disable-next-line no-shadowed-variable
     const isPossible = (cost: Reward[], income: Reward[]) => {
       for (const action of actions) {
         const actionCost = Reward.parse(action.cost);
@@ -815,7 +817,7 @@ export default class Engine {
           // Remove income & cost of action
           const newCost = Reward.merge(cost, Reward.negative(actionCost));
           let newIncome = Reward.merge(income, Reward.negative(Reward.parse(action.income)));
-          
+
           // Convert unused income into cost
           newCost.push(...Reward.negative(newIncome.filter(rew => rew.count < 0)));
           newIncome = newIncome.filter(rew => rew.count > 0);
@@ -830,7 +832,7 @@ export default class Engine {
         }
       }
       return false;
-    }
+    };
 
     assert(isPossible(cost, income), `spend ${cost} for ${income} is not allowed`);
 
@@ -849,7 +851,7 @@ export default class Engine {
     const { poweracts: acts} = this.availableCommand(player, Command.Action).data;
 
     assert(_.find(acts, {name: action}), `${action} is not in the available power actions`);
-  
+
     const pl = this.player(player);
     this.boardActions[action] = false;
 
@@ -864,7 +866,7 @@ export default class Engine {
     assert( income === incom, `${income} is not in the available income`);
 
     this.player(player).gainRewards( Reward.parse(income));
-    //player
+    // player
   }
 
   [Command.FormFederation](player: PlayerEnum, hexes: string, federation: Federation) {
