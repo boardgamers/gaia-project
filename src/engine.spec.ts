@@ -608,11 +608,12 @@ describe("Engine", () => {
         p1 action power3.
         p2 federation -2x2,-3x3,-4x4,-4x5,-4x6,-5x5 fed4.
         p1 special 4pw.
-        p2 spend 4pw,k for 1o,2c. build lab -5x5. tech free3. up nav.
+        p2 spend 3pw for 1o. pass booster3
+        p1 up terra.
+        p1 pass booster4
+        p2 build lab -5x5. tech free2. up nav.
         p1 leech 4pw
-        p1 action power4.
-        p2 pass booster3
-        p1 up terra.. build lab -2x3. tech adv-gaia. cover free2. up terra.
+        p1 build lab -2x3. tech adv-gaia. cover free1. up gaia
       `);
 
       const engine = new Engine(moves);
