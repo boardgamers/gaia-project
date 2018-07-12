@@ -14,7 +14,7 @@ export default class ScoringRenderer extends PIXI.Graphics {
 
       this.round.push(tile);
 
-      tile.position.set(0, (scoring.round.tileHeight+5) * (5-i) + 80);
+      tile.position.set(0, (scoring.round.tileHeight+5) * (5-i) + 130);
 
       tile.on('tooltip', (elem, text) => this.emit("tooltip", elem, text));
       tile.on('tooltip-remove', elem => this.emit("tooltip-remove", elem));
@@ -22,7 +22,6 @@ export default class ScoringRenderer extends PIXI.Graphics {
   }
 
   render(data: Data) {
-    console.log("rendering scoring");
     data.roundScoringTiles.forEach((tile, i) => {
       this.round[i].draw(tile, i === data.round - 1);
     });

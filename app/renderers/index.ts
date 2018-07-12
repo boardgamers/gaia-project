@@ -60,11 +60,19 @@ export default class Renderer {
     this.map.render(this.data.map, this.data.players.map(pl => pl.faction), (this.highlighted||{}).hexes);
     this.research.render(this.data, this.highlighted);
 
-    const scoringBounds = this.scoring.getLocalBounds();
-    const mapBounds = this.map.getLocalBounds();
+    const chain = (...renderers: PIXI.Graphics[]) => {
+      renderers.slice(1).forEach((renderer, i) => {
+        const prev = renderers[i];
+        const prevBounds = prev.getLocalBounds();
+        const bounds = renderer.getLocalBounds();
 
-    this.map.position.set(scoringBounds.x + scoringBounds.width + 40 - mapBounds.x, scoringBounds.y - mapBounds.y);
-    this.research.position.set(this.map.x + mapBounds.x + mapBounds.width + 40, this.map.y + mapBounds.y);
+        renderer.x = prevBounds.x + prevBounds.width + 40 + prev.x - bounds.x;
+        renderer.y = prevBounds.y + prev.y - bounds.y;
+      });
+    }
+
+    // position the map, research board and scoring tiles side by side
+    chain(this.map, this.research, this.scoring);
 
     center(this.app.stage, this.app.screen);
   }
