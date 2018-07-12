@@ -39,7 +39,6 @@ export interface FactionBoardRaw {
     area2?: number
   };
   brainstone?: BrainstoneArea;
-
 }
 
 const defaultBoard: FactionBoardRaw = {
