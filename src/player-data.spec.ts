@@ -1,7 +1,7 @@
 import {expect} from "chai";
 import 'mocha';
 import PlayerData from "./player-data";
-import { Resource } from "./enums";
+import { Resource, BrainstoneArea } from "./enums";
 
 describe("PlayerData", () => {
   it('should export to JSON', () => {
@@ -38,4 +38,20 @@ describe("PlayerData", () => {
     });
   });
 
+  describe("charge Power with brainstone", () => {
+    it ("should move power tokens from power area 1 to power area 3 and brainstone from area 2 to 3", () => {
+      const data = new PlayerData();
+      data.power.area1 = 2;
+      data.power.area2 = 1;
+      data.brainstone = BrainstoneArea.Area2;
+
+      const charged = data.chargePower(5);
+
+      expect(data.power.area1).to.equal(0);
+      expect(data.power.area2).to.equal(1);
+      expect(data.power.area3).to.equal(2);
+      expect(data.brainstone).to.equal(BrainstoneArea.Area3);
+      expect(charged).to.equal(5);
+    });
+  });
 });

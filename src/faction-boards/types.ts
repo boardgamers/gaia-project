@@ -1,7 +1,7 @@
 import Reward from "../reward";
 import * as _ from "lodash";
 import Event from "../events";
-import { Building, Planet } from "../enums";
+import { Building, Planet, BrainstoneArea } from "../enums";
 
 export interface FactionBoardRaw {
   [Building.Mine]?: {
@@ -38,6 +38,7 @@ export interface FactionBoardRaw {
     area1?: number,
     area2?: number
   };
+  brainstone?: BrainstoneArea;
 
 }
 
@@ -75,7 +76,8 @@ const defaultBoard: FactionBoardRaw = {
   power: {
     area1: 4,
     area2: 4
-  }
+  },
+  brainstone : BrainstoneArea.Out
 };
 
 export class FactionBoard {
@@ -113,6 +115,7 @@ export class FactionBoard {
     area1: number,
     area2: number
   };
+  brainstone: BrainstoneArea
 
   constructor(input: FactionBoardRaw) {
     Object.assign(this, _.merge({}, defaultBoard, input));

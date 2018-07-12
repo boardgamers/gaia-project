@@ -78,6 +78,7 @@ export function generate(engine: Engine): AvailableCommand[] {
       
       if (engine.roundSubCommands.length > 0) {
         const subCommand = engine.roundSubCommands[0];
+        const subPlayer = engine.player(subCommand.player);
         switch (subCommand.name) {
           case Command.Leech: {
             commands.push(subCommand);
@@ -91,7 +92,7 @@ export function generate(engine: Engine): AvailableCommand[] {
             break;
           }
           case Command.ChooseCoverTechTile: {
-            const tiles = data.techTiles.filter(tl => tl.enabled);
+            const tiles = subPlayer.data.techTiles.filter(tl => tl.enabled);
             commands.push({
               name: Command.ChooseCoverTechTile,
               player: subCommand.player,
@@ -104,12 +105,12 @@ export function generate(engine: Engine): AvailableCommand[] {
           }
 
           case Command.UpgradeResearch: {
-            commands.push(...possibleResearchAreas(engine, player, "", subCommand.data));
+            commands.push(...possibleResearchAreas(engine, subCommand.player, "", subCommand.data));
             break;
           }
 
           case Command.PlaceLostPlanet: {
-            commands.push(...possibleSpaceLostPlanet(engine, player));
+            commands.push(...possibleSpaceLostPlanet(engine, subCommand.player));
             break;
           }
 
@@ -118,7 +119,7 @@ export function generate(engine: Engine): AvailableCommand[] {
             commands.push(subCommand);
 
             //add free actions before to end turn
-            commands.push(...possibleFreeActions(engine, player));
+            commands.push(...possibleFreeActions(engine, subCommand.player));
             break;
           }
 

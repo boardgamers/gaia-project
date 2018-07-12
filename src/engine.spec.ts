@@ -91,7 +91,7 @@ describe("Engine", () => {
       p2 booster booster7
       p1 booster booster3
       p1 build ts -1x2.
-      p2 leech 1
+      p2 leech 1pw
       p2 build ts 0x-4  
     `);
 
@@ -219,23 +219,23 @@ describe("Engine", () => {
       p1 up gaia.
       p2 up nav.
       p1 build ts -3x4.
-      p2 leech 1
+      p2 leech 1pw
       p2 build ts -2x2.
-      p1 leech 2
+      p1 leech 2pw
       p1 build lab -3x4. tech free1. up gaia.
-      p2 leech 2
+      p2 leech 2pw
       p2 build PI -2x2.
-      p1 leech 2
+      p1 leech 2pw
       p1 spend 2q for 2o. burn 4. action power3.
       p2 build ts -5x5.
-      p1 leech 2
+      p1 leech 2pw
       p1 build ac1 -3x4. tech free2. up gaia.
-      p2 leech 3
+      p2 leech 3pw
       p2 pass booster8
       p1 build gf -2x3.. special 4pw. spend 4pw for 1k.. pass booster7
       p2 action power5.
       p1 build m -2x3.
-      p2 leech 3
+      p2 leech 3pw
       p2 up nav.
     `);
 
@@ -259,15 +259,15 @@ describe("Engine", () => {
       p2 build ts -1x-1.
       p1 build gf -2x3.
       p2 build m -1x0.
-      p1 leech 1
+      p1 leech 1pw
       p1 build ts -1x2.
-      p2 leech 1
+      p2 leech 1pw
       p2 build m 1x0.
-      p1 leech 2
+      p1 leech 2pw
       p1 build m -3x4.
       p2 pass booster8
       p1 build PI -1x2.
-      p2 leech 1
+      p2 leech 1pw
       p1 pass booster3
       p2 burn 3. spend 3pw for 1o. pass booster5
       p1 build m -2x3. spend 2pw for 2c.
@@ -299,7 +299,7 @@ describe("Engine", () => {
       p1 up gaia.
       p2 build ts -1x-1.
       p1 build m -1x0.
-      p2 leech 2
+      p2 leech 2pw
       p2 burn 3. action power7
     `);
  
@@ -340,10 +340,10 @@ describe("Engine", () => {
       p1 booster booster5
       p1 build m -5x0.
       p2 build ts -5x5.
-      p1 leech 1
+      p1 leech 1pw
       p1 build m -4x2.
       p2 build PI -5x5.
-      p1 leech 1
+      p1 leech 1pw
     `);
  
     const engine = new Engine(moves);
@@ -373,24 +373,24 @@ describe("Engine", () => {
       p2 booster booster3
       p1 booster booster4
       p1 build ts -1x6.
-      p2 leech 1
-      p4 leech 1
+      p2 leech 1pw
+      p4 leech 1pw
       p2 build ts 1x5.
-      p1 leech 2
-      p4 leech 1
+      p1 leech 2pw
+      p4 leech 1pw
       p3 build ts -4x1.
-      p2 leech 1
+      p2 leech 1pw
       p4 build ts 1x4.
-      p1 leech 2
-      p2 leech 2
+      p1 leech 2pw
+      p2 leech 2pw
       p1 build m -6x6.
       p2 burn 1. build lab 1x5. tech int. spend 1pw for 1c.
       p1 decline
       p4 decline
       p3 build lab -4x1. tech terra.
-      p2 leech 1
+      p2 leech 1pw
       p4 build lab 1x4. tech sci. burn 2.
-      p1 leech 2
+      p1 leech 2pw
       p2 decline
       p1 build gf -6x7. spend 1o for 1c.
       `);
@@ -412,6 +412,32 @@ describe("Engine", () => {
 
   it("should give a valid JSON even when not initialized", () => {
     expect(() => JSON.stringify(new Engine([]))).to.not.throw();
+  });
+  
+  it("should allow Taklons to leech with +t freeIncome", () => {
+    const moves = parseMoves(`
+      init 2 randomSeed
+      p1 faction terrans
+      p2 faction taklons
+      p1 build m -4x-1
+      p2 build m -3x-2
+      p2 build m -6x3
+      p1 build m -4x2
+      p2 booster booster3
+      p1 booster booster4
+      p1 build ts -4x-1.
+      p2 leech 1pw
+      p2 build ts -3x-2.
+      p1 leech 2pw
+      p1 build ts -4x2.
+      p2 leech 1pw
+      p2 build PI -3x-2.
+      p1 leech 2pw
+      p1 build lab -4x-1. tech gaia.
+    `);
+ 
+    expect(() => new Engine([...moves, "p2 leech 3pw,1t"])).to.not.throw();
+    expect(() => new Engine([...moves, "p2 leech 1t,3pw"])).to.not.throw();
   });
 
   describe("free actions", () => {
@@ -480,7 +506,7 @@ describe("Engine", () => {
         p2 booster booster4
         p1 booster booster7
         p1 build ts -1x2. burn 2.
-        p2 leech 1
+        p2 leech 1pw
         p2 build ts -1x0. burn 1
       `);
   
@@ -503,16 +529,16 @@ describe("Engine", () => {
         p1 up gaia.
         p2 up sci.
         p1 build ts -3x4.
-        p2 leech 1
+        p2 leech 1pw
         p2 build ts -2x2.
-        p1 leech 2
+        p1 leech 2pw
         p1 build lab -3x4. tech free1. up gaia.
-        p2 leech 2
+        p2 leech 2pw
         p2 build PI -2x2.
-        p1 leech 2
+        p1 leech 2pw
         p1 spend 2q for 2o. burn 4. action power3.
         p2 build ts -5x5.
-        p1 leech 2
+        p1 leech 2pw
       `);
   
       const engine = new Engine(moves);
@@ -553,36 +579,36 @@ describe("Engine", () => {
         p1 up gaia.
         p2 up nav.
         p1 build ts -3x4.
-        p2 leech 1
+        p2 leech 1pw
         p2 build ts -2x2.
-        p1 leech 2
+        p1 leech 2pw
         p1 build lab -3x4. tech free1. up gaia.
-        p2 leech 2
+        p2 leech 2pw
         p2 build PI -2x2.
-        p1 leech 2
+        p1 leech 2pw
         p1 spend 2q for 2o. burn 4. action power3.
         p2 build ts -5x5.
-        p1 leech 2
+        p1 leech 2pw
         p1 build ac1 -3x4. tech free2. up gaia.
-        p2 leech 3
+        p2 leech 3pw
         p2 pass booster8
         p1 build gf -2x3.. special 4pw. spend 4pw for 1k.. pass booster7
         p2 action power5.
         p1 build m -2x3.
-        p2 leech 3
+        p2 leech 3pw
         p2 up nav.
         p1 spend 2k for 2c. build ts -2x3.
-        p2 leech 3
+        p2 leech 3pw
         p2 build m -4x6.
-        p1 leech 4
+        p1 leech 4pw
         p1 federation -1x2,-2x3,-3x4 fed6.
         p2 build ts -4x6.
-        p1 leech 4
+        p1 leech 4pw
         p1 action power3.
         p2 federation -2x2,-3x3,-4x4,-4x5,-4x6,-5x5 fed4.
         p1 special 4pw.
         p2 spend 4pw,k for 1o,2c. build lab -5x5. tech free3. up nav.
-        p1 leech 4
+        p1 leech 4pw
         p1 action power4.
         p2 pass booster3
         p1 up terra.. build lab -2x3. tech adv-gaia. cover free2. up terra.
@@ -593,6 +619,8 @@ describe("Engine", () => {
       expect(engine.player(Player.Player1).data.advTechTiles).to.include(engine.advTechTiles[AdvTechTilePos.GaiaProject].tile);
       expect(engine.advTechTiles[AdvTechTilePos.GaiaProject].numTiles).to.equal(0);
     });
+
+  
   });
 
   describe("boosters", () => {
@@ -653,7 +681,7 @@ describe("Engine", () => {
         p1 booster booster3
         p1 build m -4x0.
         p2 build ts -5x5.
-        p1 leech 1  
+        p1 leech 1pw
         p1 pass booster4
       `);
 
@@ -695,7 +723,7 @@ describe("Engine", () => {
         p2 booster booster5
         p1 booster booster4
         p1 special tempstep. build m -1x-1.
-        p2 leech 1
+        p2 leech 1pw
         p2 special 3temprange. build m 3x-3.
       `);
       

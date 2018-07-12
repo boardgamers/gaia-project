@@ -21,7 +21,8 @@ import {
   BoardAction,
   Operator,
   ScoringTile,
-  FinalTile
+  FinalTile,
+  BrainstoneArea
 } from './enums';
 import { CubeCoordinates } from 'hexagrid';
 import Event from './events';
@@ -334,7 +335,9 @@ export default class Engine {
           this.roundSubCommands.push({
             name: Command.Leech,
             player: this.players.indexOf(pl),
-            data: leech
+            data: { 
+              leech : leech + Resource.ChargePower, 
+              freeIncome : pl.faction === Faction.Taklons && pl.data[Building.PlanetaryInstitute]>0 ? "1t" : "" }
           });
         }
       }
@@ -514,7 +517,7 @@ export default class Engine {
     //research VP and remaining resources
     for (const pl of this.playersInOrder()) {
       Object.values(ResearchField).forEach(research => (pl.data.victoryPoints += Math.max(pl.data.research[research] - 3, 0) * 4));
-      const resources = pl.data.ores + pl.data.credits + pl.data.qics + pl.data.knowledge + (Math.floor(pl.data.power.area2 / 2) + pl.data.power.area3);
+      const resources = pl.data.ores + pl.data.credits + pl.data.qics + pl.data.knowledge + Math.floor((pl.data.power.area2 + (BrainstoneArea.Area2 ? 3 : 0))/ 2) + pl.data.power.area3 + (BrainstoneArea.Area3 ? 3 : 0);
       pl.data.victoryPoints += Math.floor(resources/3);
     }
 
@@ -691,13 +694,22 @@ export default class Engine {
     (this[Command.ChooseRoundBooster] as any)(player, booster, Command.Pass);
   }
 
-  [Command.Leech](player: PlayerEnum, leech: string) {
+  [Command.Leech](player: PlayerEnum, income: string) {
     const leechCommand  = this.availableCommand(player, Command.Leech).data;
-  
-    assert( leechCommand == leech , `Impossible to charge ${leech} power`);
+    //leech rewards are including +t, if needed and in the right sequence
+    const leechRewards = Reward.parse(income);
 
-    const powerLeeched = this.players[player].data.chargePower(Number(leech));
-    this.player(player).payCosts( [new Reward(Math.max(powerLeeched - 1, 0), Resource.VictoryPoint)]);
+    const leech =  leechRewards.find( lr => lr.type === Resource.ChargePower);
+    const freeIncome =  leechRewards.find( lr => lr.type === Resource.GainToken);
+    
+    assert( leechCommand.leech == leech , `Impossible to charge ${leech}`);
+    if ( freeIncome ){
+      assert( leechCommand.freeIncome == freeIncome , `Impossible to get ${freeIncome} for free`);
+    }
+   
+    this.player(player).gainRewards(leechRewards);
+    this.player(player).payCosts( [new Reward(Math.max(leech.count - 1, 0), Resource.VictoryPoint)]);
+
   }
 
   [Command.DeclineLeech](player: PlayerEnum) {
@@ -844,6 +856,15 @@ export default class Engine {
     pl.payCosts(Reward.parse(boardActions[action].cost));
     pl.loadEvents(Event.parse(boardActions[action].income));
     this.endTurnPhase(player, Command.Action);
+  }
+
+  [Command.FreeIncome](player: PlayerEnum, income: string) {
+    const incom = this.availableCommand(player, Command.FreeIncome).data;
+
+    assert( income === incom, `${income} is not in the available income`);
+
+    this.player(player).gainRewards( Reward.parse(income));
+    //player
   }
 
   [Command.FormFederation](player: PlayerEnum, hexes: string, federation: Federation) {

@@ -134,6 +134,7 @@ export enum Command {
   ChooseTechTile = "tech",
   ChooseCoverTechTile = "cover",
   ChooseFederationTile = "fedtile",
+  FreeIncome = "freeIncome",
   Build = "build",
   Pass = "pass",
   UpgradeResearch = "up",
@@ -278,4 +279,12 @@ export enum FinalTile {
   Gaia= "gaia",
   Sector= "sector",
   Satellite= "satellite"
+}
+
+export enum BrainstoneArea {
+  Out = "out",
+  Area1 = "area1",
+  Area2 = "area2",
+  Area3 = "area3",
+  Gaia = "gaia"
 }

@@ -1,4 +1,4 @@
-import { Faction, Operator, ResearchField, Planet, Building, Resource, Booster, Condition, Federation, FinalTile, TechTile, AdvTechTile} from './enums';
+import { Faction, Operator, ResearchField, Planet, Building, Resource, Booster, Condition, Federation, FinalTile, TechTile, AdvTechTile, BrainstoneArea} from './enums';
 import PlayerData from './player-data';
 import Event from './events';
 import { factionBoard, FactionBoard } from './faction-boards';
@@ -148,6 +148,7 @@ export default class Player extends EventEmitter {
 
     this.data.power.area1 = this.board.power.area1;
     this.data.power.area2 = this.board.power.area2;
+
   }
 
   loadEvents(events: Event[]) {
@@ -341,6 +342,9 @@ export default class Player extends EventEmitter {
       this.data.power.area2 += this.data.power.gaia;
     } else {
       this.data.power.area1 += this.data.power.gaia;
+      if (this.data.brainstone === BrainstoneArea.Gaia ) {
+        this.data.brainstone = BrainstoneArea.Area1;
+      } 
     }
     this.data.power.gaia = 0;
   }
@@ -364,7 +368,7 @@ export default class Player extends EventEmitter {
 
   maxLeech(possibleLeech: number){ 
     // considers real chargeable power and victory points
-    return Math.min(possibleLeech, this.data.power.area1 * 2 + this.data.power.area2, this.data.victoryPoints + 1);
+    return Math.min(possibleLeech, this.data.chargePower(possibleLeech,false), this.data.victoryPoints + 1);
   }
   
   gainFederationToken(federation: Federation) {
