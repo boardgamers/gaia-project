@@ -233,4 +233,29 @@ export default class PlayerData extends EventEmitter {
     return this.brainstone === BrainstoneArea.Area3 ? 3 : 0;
   }
 
+  gainFinalVictoryPoints() {
+    // Gain 4 points for research at level 3, 8 points for research at level 4
+    // and 12 points for research at level 12
+    for (const research of Object.values(ResearchField)) {
+      this.victoryPoints += Math.max(this.research[research] - 3, 0) * 4;
+    }
+
+    // Gain 1 point for any 3 of ore, credits & knowledge.
+    // Knowing that pw at area3 can be converted for credits
+    // and Q.I.C for ore
+    let resources = this.ores + this.credits + this.qics + this.knowledge;
+    resources += this.power.area3;
+
+    // If brainstone is in area 2, we need to see if we can burn 1 power
+    // to move it to area 3
+    if (this.brainstone === BrainstoneArea.Area2 && this.power.area2 > 0) {
+      this.brainstone = BrainstoneArea.Area3;
+      this.power.area2 -= 1;
+    }
+
+    // Add burnt power & brain stone value
+    resources += Math.floor(this.power.area2 / 2) + this.brainstone === BrainstoneArea.Area3 ? this.brainstoneValue() : 0;
+
+    this.victoryPoints += Math.floor(resources / 3);
+  }
 }
