@@ -16,7 +16,7 @@ export default {
 
   trackBorder: {
     width: 1,
-    color: 0x666666,
+    color: 0x222222,
     radius: 10
   }
 };

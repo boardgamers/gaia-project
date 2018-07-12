@@ -26,17 +26,9 @@ export default class ResearchTile extends Graphics {
 
   draw(highlighted: boolean) {
     this.interactive = true;
-
-    const baseColor = researchData[this.field].color;
-    let fillColor = baseColor;
-
-    if (highlighted) {
-      const [r, g, b] = PIXI.utils.hex2rgb(baseColor);
-      fillColor = PIXI.utils.rgb2hex([r*0.6 + 0.4, g*0.6 + 0.4, b*0.6 + 0.4]);
-    }
-
+    
     this.clear();
-    this.beginFill(fillColor);
+    this.beginFill(researchData[this.field].color, highlighted ? 0.5 : 0.8);
     this.lineStyle(trackBorder.width, trackBorder.color); 
     this.drawRoundedRect(0, 0, trackWidth, trackHeight, trackBorder.radius);
     this.endFill();

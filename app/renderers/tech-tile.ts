@@ -30,7 +30,7 @@ export default class TechTile extends PIXI.Graphics {
       return;
     }
     
-    this.lineStyle(2, highlighted ? 0x22CC44 : 0xCCCCCC);
+    this.lineStyle(2, highlighted ? 0x22CC44 : 0xAAAAAA);
     this.beginFill(0xFFFFFF);
     this.drawPolygon([].concat([0, 0], [47, 0], [57, 10], [57, 35], [0, 35], [0, 0]));
     this.endFill();
