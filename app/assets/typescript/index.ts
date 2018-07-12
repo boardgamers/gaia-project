@@ -415,9 +415,11 @@ function updatePlayerInfo() {
     const passed = lastData.passedPlayers.includes(pl) ? " - (passed)" : "";
     const boosterDesc = data.roundBooster ? data.roundBooster + ": " + tiles.boosters [data.roundBooster] : "(not selected)";
 
+    const power = area => data.brainstone === area ? `${data.power[area]}(b)` : data.power[area];
+
     const info = [
       `<b>Player ${pl+1}</b> - ${faction} - ${data.victoryPoints}vp ${passed}`,
-      `${data.credits}c, ${data.ores}o, ${data.knowledge}k, ${data.qics}q, [${data.power.gaia}] ${data.power.area1}/${data.power.area2}/${data.power.area3} pw`,
+      `${data.credits}c, ${data.ores}o, ${data.knowledge}k, ${data.qics}q, [${power('gaia')}] ${power('area1')}/${power('area2')}/${power('area3')} pw`,
       `range: ${data.range}, gaia-form level: ${data.terraformCostDiscount}`,
       `income: ${player.income.replace(/,/g, ', ')}`,
       `round booster: ${boosterDesc}`
