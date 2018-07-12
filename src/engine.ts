@@ -858,15 +858,6 @@ export default class Engine {
     this.endTurnPhase(player, Command.Action);
   }
 
-  [Command.FreeIncome](player: PlayerEnum, income: string) {
-    const incom = this.availableCommand(player, Command.FreeIncome).data;
-
-    assert( income === incom, `${income} is not in the available income`);
-
-    this.player(player).gainRewards( Reward.parse(income));
-    //player
-  }
-
   [Command.FormFederation](player: PlayerEnum, hexes: string, federation: Federation) {
     const avail = this.availableCommand(player, Command.FormFederation);
 

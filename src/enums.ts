@@ -134,11 +134,9 @@ export enum Command {
   ChooseTechTile = "tech",
   ChooseCoverTechTile = "cover",
   ChooseFederationTile = "fedtile",
-  FreeIncome = "freeIncome",
   Build = "build",
   Pass = "pass",
   UpgradeResearch = "up",
-  Convert = "convert",
   Leech = "leech",
   DeclineLeech = "decline",
   BurnPower = "burn",
@@ -147,7 +145,7 @@ export enum Command {
   Special = "special",
   PlaceLostPlanet  = "lostPlanet",
   FormFederation = "federation",
-  EndTurn = "turn"
+  EndTurn = "endturn"
 }
 
 export enum Player {
