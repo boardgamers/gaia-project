@@ -142,7 +142,7 @@ function showAvailableMove(player: string, command: AvailableCommand) {
     }
 
     case Command.ChooseTechTile: case Command.ChooseCoverTechTile: {
-      $("#move-title").append(Command.ChooseCoverTechTile ? "- Pick tech tile to cover" : " - Pick tech tile");
+      $("#move-title").append(command.name === Command.ChooseCoverTechTile ? "- Pick tech tile to cover" : " - Pick tech tile");
       for (const tile of command.data.tiles) {
         addButton(tile.tilePos, `${player} ${command.name} ${tile.tilePos}`);
       }
