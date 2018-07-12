@@ -4,6 +4,7 @@ import researchData from "../data/research";
 import ResearchTile from "./research-tile";
 import { TechTilePos, TechTile as TechTileEnum } from "@gaia-project/engine";
 import TechTile from "./tech-tile";
+import { Data } from "../data";
 
 const {
   trackBorder,
@@ -12,22 +13,6 @@ const {
   fullHeight,
   fullWidth
 } = researchData;
-
-interface Data {
-  players: Player[];
-  techTiles: {
-    [key in TechTilePos]: {
-      tile: TechTileEnum,
-      numTiles: number
-    }
-  },
-  advTechTiles: {
-    [key in TechTilePos]: {
-      tile: AdvTechTile,
-      numTiles: number
-    }
-  }
-}
 
 export default class ResearchRenderer extends PIXI.Graphics {
   lastData: Data;

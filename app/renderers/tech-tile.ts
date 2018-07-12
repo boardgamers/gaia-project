@@ -14,7 +14,6 @@ export default class TechTile extends PIXI.Graphics {
 
   draw(which: TechTileEnum | AdvTechTile, number: number, highlighted = false) {
     this.clear();
-    this.removeChildren();
 
     if (number === 0) {
       return;

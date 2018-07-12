@@ -3,6 +3,7 @@ import ResearchRenderer from "./research";
 import { CubeCoordinates } from "hexagrid";
 import { center } from "../graphics/reposition";
 import { ResearchField, TechTilePos } from "@gaia-project/engine";
+import ScoringRenderer from "./scoring";
 
 const tooltipArrowHeight = 7;
 
@@ -21,6 +22,7 @@ export default class Renderer {
 
   map: MapRenderer;
   research: ResearchRenderer;
+  scoring: ScoringRenderer;
 
   constructor(view: HTMLCanvasElement) {
     this.app = new PIXI.Application({transparent: true, antialias: true, view});
@@ -29,19 +31,21 @@ export default class Renderer {
 
     this.map = new MapRenderer();
     this.research = new ResearchRenderer();
+    this.scoring = new ScoringRenderer();
 
     this.app.stage.addChild(this.map);
     this.app.stage.addChild(this.research);
+    this.app.stage.addChild(this.scoring);
 
     $(window).on("resize", () => {
       this.app.renderer.resize(view.offsetWidth, view.offsetHeight);
       this.rerender();
     });
 
-    this.research.on("tooltip", this.handleTooltip.bind(this));
-    this.map.on("tooltip", this.handleTooltip.bind(this));
-    this.research.on("tooltip-remove", this.removeTooltip.bind(this));
-    this.map.on("tooltip-remove", this.removeTooltip.bind(this));
+    for (const renderer of [this.research, this.map, this.scoring]) {
+      renderer.on("tooltip", this.handleTooltip.bind(this));
+      renderer.on("tooltip-remove", this.removeTooltip.bind(this));
+    }
   }
 
   render(data: any, highlighted?: Highlight) {
@@ -52,13 +56,15 @@ export default class Renderer {
   }
 
   rerender() {
+    this.scoring.render(this.data);
     this.map.render(this.data.map, this.data.players.map(pl => pl.faction), (this.highlighted||{}).hexes);
     this.research.render(this.data, this.highlighted);
 
-    const bounds = this.map.getLocalBounds();
+    const scoringBounds = this.scoring.getLocalBounds();
+    const mapBounds = this.map.getLocalBounds();
 
-    this.research.x = bounds.x + bounds.width + 80;
-    this.research.y = bounds.y;
+    this.map.position.set(scoringBounds.x + scoringBounds.width + 40 - mapBounds.x, scoringBounds.y - mapBounds.y);
+    this.research.position.set(this.map.x + mapBounds.x + mapBounds.width + 40, this.map.y + mapBounds.y);
 
     center(this.app.stage, this.app.screen);
   }
