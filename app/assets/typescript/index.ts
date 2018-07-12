@@ -79,7 +79,8 @@ function showAvailableMoves(commands: AvailableCommand[]) {
     commandTitle("Choose a faction", player);
     
     for (const faction of command.data) {
-      addButton(factions[faction].name, `${player} ${Command.ChooseFaction} ${faction}`);
+      const button = addButton(factions[faction].name, `${player} ${Command.ChooseFaction} ${faction}`);
+      button.append(` <i class='planet ${factions[faction].planet}'></i>`);
     }
 
     return;
