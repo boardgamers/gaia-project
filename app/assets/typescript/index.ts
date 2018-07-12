@@ -152,7 +152,15 @@ function showAvailableMove(player: string, command: AvailableCommand) {
     }
 
     case Command.Leech: {
-      addButton("Charge power: " + command.data, `${player} ${Command.Leech} ${command.data}`);
+      const leech = command.data.leech;
+      const gainToken = command.data.freeIncome;
+
+      if (gainToken) {
+        addButton("Charge " + leech + " get " + gainToken, `${player} ${Command.Leech} ${leech},${gainToken}`);
+        addButton("Get " + gainToken + " charge " + leech, `${player} ${Command.Leech} ${gainToken},${leech}`);
+      } else {
+        addButton("Charge " + leech, `${player} ${Command.Leech} ${leech}`);
+      }
       break;
     }
 
