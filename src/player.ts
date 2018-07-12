@@ -49,7 +49,7 @@ export default class Player extends EventEmitter {
       faction: this.faction,
       data: this.data,
       income: Reward.toString(Reward.merge([].concat(...this.events[Operator.Income].map(event => event.rewards))), true),
-      progress:  Object.values(FinalTile).map( track => ({ track: track, count: this.eventConditionCount(finalScorings[track])}))
+      progress:  Object.values(FinalTile).map( track => ({ track, count: this.eventConditionCount(finalScorings[track])}))
     };
   }
 
@@ -72,7 +72,7 @@ export default class Player extends EventEmitter {
   }
 
   payCosts(costs: Reward[]) {
-    for (let cost of costs) {
+    for (const cost of costs) {
       this.data.payCost(cost);
     }
   }
@@ -95,15 +95,15 @@ export default class Player extends EventEmitter {
   canPay(reward: Reward[]): boolean {
     const rewards = Reward.merge(reward);
 
-    for (const reward of rewards) {
-      if (!this.data.hasResource(reward)) {
+    for (const rew of rewards) {
+      if (!this.data.hasResource(rew)) {
         return false;
       }
     }
     return true;
   }
 
-  canBuild(targetPlanet: Planet, building: Building, {isolated, addedCost, existingBuilding}: {isolated?: boolean, addedCost?: Reward[], existingBuilding?: Building}) : Reward[] {
+  canBuild(targetPlanet: Planet, building: Building, {isolated, addedCost, existingBuilding}: {isolated?: boolean, addedCost?: Reward[], existingBuilding?: Building}): Reward[] {
     if (this.data[building] >= (building === Building.GaiaFormer ? this.data.gaiaformers : this.board.maxBuildings(building))) {
       // Too many buildings of the same kind
       return undefined;
@@ -116,13 +116,13 @@ export default class Player extends EventEmitter {
     if (!this.canPay(addedCost)) {
       return undefined;
     }
-    
-    //gaiaforming discount
-    if (building === Building.GaiaFormer){
+
+    // gaiaforming discount
+    if (building === Building.GaiaFormer) {
       const gaiaformingDiscount =  this.data.gaiaformers > 1  ? this.data.gaiaformers : 0;
       addedCost.push(new Reward(-gaiaformingDiscount, Resource.GainTokenGaiaArea));
-    } else if (building === Building.Mine){
-      //habitability costs
+    } else if (building === Building.Mine) {
+      // habitability costs
       if (targetPlanet === Planet.Gaia) {
         if (!existingBuilding) {
           // different cost for Gleens
@@ -131,10 +131,10 @@ export default class Player extends EventEmitter {
           // Already a gaia-former on the planet, so no need to pay a Q.I.C.
         }
       } else { // Get the number of terraforming steps to pay discounting terraforming track
-        const steps = Math.max(terraformingStepsRequired(factions[this.faction].planet, targetPlanet) - this.data.temporaryStep,0); 
-        addedCost.push(new Reward((TERRAFORMING_COST - this.data.terraformCostDiscount)* steps, Resource.Ore));
+        const steps = Math.max(terraformingStepsRequired(factions[this.faction].planet, targetPlanet) - this.data.temporaryStep, 0);
+        addedCost.push(new Reward((TERRAFORMING_COST - this.data.terraformCostDiscount) * steps, Resource.Ore));
       }
-    };
+    }
 
     const cost = Reward.merge(this.board.cost(targetPlanet, building, isolated), addedCost);
     return this.canPay(cost) ? cost : undefined;
@@ -168,7 +168,7 @@ export default class Player extends EventEmitter {
   removeEvents(events: Event[]) {
     for (const event of events) {
       this.removeEvent(event);
-    }  
+    }
   }
 
   removeEvent(event: Event) {
@@ -179,7 +179,7 @@ export default class Player extends EventEmitter {
       }
     });
   }
-  
+
   activateEvent(spec: string) {
     for (const event of this.events[Operator.Activate]) {
       if (event.spec === spec && !event.activated) {
@@ -189,21 +189,21 @@ export default class Player extends EventEmitter {
       }
     }
   }
-  
+
   onResearchAdvanced(field: ResearchField) {
     const events = Event.parse(researchTracks[field][this.data.research[field]]);
     this.loadEvents(events);
     const oldEvents = Event.parse(researchTracks[field][this.data.research[field] - 1]);
     this.removeEvents(oldEvents);
-    
+
     this.receiveAdvanceResearchTriggerIncome();
   }
 
   build(building: Building, hex: GaiaHex, cost: Reward[], map: SpaceMap, stepsReq: number) {
     this.payCosts(cost);
-    //excluding Gaiaformers as occupied 
+    // excluding Gaiaformers as occupied
     if ( building !== Building.GaiaFormer ) {
-      this.data.occupied = _.uniqWith([].concat(this.data.occupied, hex), _.isEqual)
+      this.data.occupied = _.uniqWith([].concat(this.data.occupied, hex), _.isEqual);
     }
 
     // The mine of the lost planet doesn't grant any extra income
@@ -223,10 +223,10 @@ export default class Player extends EventEmitter {
     hex.data.building = building;
     hex.data.player = this.player;
 
-    //Add to nearby federation
+    // Add to nearby federation
     if (building !== Building.GaiaFormer && !hex.belongsToFederationOf(this.player)) {
       const group: GaiaHex[] = this.buildingGroup(hex);
-      const hasFederation = group.some(hex => hex.belongsToFederationOf(this.player));
+      const hasFederation = group.some(hx => hx.belongsToFederationOf(this.player));
 
       if (hasFederation) {
         for (const h of group) {
@@ -256,7 +256,7 @@ export default class Player extends EventEmitter {
 
   pass() {
     this.receivePassIncome();
-    // remove the old booster  
+    // remove the old booster
     this.removeEvents( Event.parse( boosts[this.data.roundBooster]));
     this.data.roundBooster =  undefined;
   }
@@ -303,24 +303,24 @@ export default class Player extends EventEmitter {
     // this is for roundboosters, techtiles and adv tile
     for (const event of this.events[Operator.Trigger]) {
       if (Condition.matchesBuilding(event.condition, building, planet)) {
-        this.gainRewards(event.rewards)
-      };
+        this.gainRewards(event.rewards);
+      }
     }
   }
 
   receiveAdvanceResearchTriggerIncome() {
     for (const event of this.events[Operator.Trigger]) {
       if (event.condition === Condition.AdvanceResearch) {
-        this.gainRewards(event.rewards)
-      };
+        this.gainRewards(event.rewards);
+      }
     }
   }
 
   receiveTerraformingStepTriggerIncome(stepsReq: number) {
     for (const event of this.events[Operator.Trigger]) {
       if (event.condition === Condition.TerraformStep) {
-        this.gainRewards(event.rewards.map( rw => new Reward(rw.count*stepsReq, rw.type)))
-      };
+        this.gainRewards(event.rewards.map( rw => new Reward(rw.count * stepsReq, rw.type)));
+      }
     }
   }
 
@@ -344,12 +344,12 @@ export default class Player extends EventEmitter {
       this.data.power.area1 += this.data.power.gaia;
       if (this.data.brainstone === BrainstoneArea.Gaia ) {
         this.data.brainstone = BrainstoneArea.Area1;
-      } 
+      }
     }
     this.data.power.gaia = 0;
   }
 
-  buildingValue(building: Building, planet: Planet){
+  buildingValue(building: Building, planet: Planet) {
     let baseValue =  stdBuildingValue(building);
 
     // Space stations or gaia-formers do not get any bonus
@@ -360,17 +360,17 @@ export default class Player extends EventEmitter {
     if (baseValue === 3 && this.events[Operator.Special].length > 0) {
       baseValue = 4;
     }
-    
+
     const addedBescods = this.faction === Faction.Bescods && this.data[Building.PlanetaryInstitute] === 1  && planet === Planet.Titanium ? 1 : 0;
 
     return baseValue + addedBescods;
   }
 
-  maxLeech(possibleLeech: number){ 
+  maxLeech(possibleLeech: number) {
     // considers real chargeable power and victory points
-    return Math.min(possibleLeech, this.data.chargePower(possibleLeech,false), this.data.victoryPoints + 1);
+    return Math.min(possibleLeech, this.data.chargePower(possibleLeech, false), this.data.victoryPoints + 1);
   }
-  
+
   gainFederationToken(federation: Federation) {
     this.data.federations.push(federation);
     if (isGreen(federation)) {
@@ -382,7 +382,7 @@ export default class Player extends EventEmitter {
   factionReward(reward: Reward): Reward {
     // this is for Gleens getting ore instead of qics until Academy2
     if (this.faction === Faction.Gleens && this.data[Building.Academy2] === 0 && reward.type === Resource.Qic) {
-      reward.type = Resource.Ore
+      reward.type = Resource.Ore;
     }
     return reward;
   }
@@ -415,7 +415,7 @@ export default class Player extends EventEmitter {
 
     return 0;
   }
-  
+
   availableFederations(map: SpaceMap): FederationInfo[] {
     const excluded = map.excludedHexesForBuildingFederation(this.player);
 
@@ -425,7 +425,7 @@ export default class Player extends EventEmitter {
 
     const combinations = this.possibleCombinationsForFederations(_.zipWith(hexes, values, (val1, val2) => ({hex: val1, value: val2})));
     const maxSatellites = Math.min(this.data.discardablePowerTokens(), MAX_SATELLITES - this.data.satellites);
-    
+
     // We now have several combinations of buildings that can form federations
     // We need to see if they can be connected
     const federations: GaiaHex[][] = [];
@@ -490,7 +490,7 @@ export default class Player extends EventEmitter {
         continue;
       }
 
-      for (const possibility of this.possibleCombinationsForFederations(nodes.slice(i+1), toReach - nodes[i].value)) {
+      for (const possibility of this.possibleCombinationsForFederations(nodes.slice(i + 1), toReach - nodes[i].value)) {
         possibility.push(nodes[i].hex);
         ret.push(possibility);
       }
@@ -518,14 +518,14 @@ export default class Player extends EventEmitter {
   buildingGroup(hex: GaiaHex): GaiaHex[] {
     const ret = [];
 
-    const addHex = hex => {
-      ret.push(hex);
+    const addHex = hx => {
+      ret.push(hx);
       for (const building of this.data.occupied) {
-        if (CubeCoordinates.distance(hex, building) === 1 && !ret.includes(building)) {
+        if (CubeCoordinates.distance(hx, building) === 1 && !ret.includes(building)) {
           addHex(building);
-        } 
+        }
       }
-    }
+    };
 
     addHex(hex);
     return ret;

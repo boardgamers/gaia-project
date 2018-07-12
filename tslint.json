@@ -1,0 +1,25 @@
+{
+  "defaultSeverity": "warning",
+  "extends": [
+    "tslint:recommended"
+  ],
+  "rules": {
+    "quotemark": false,
+    "indent": [true, "spaces", 2],
+    "interface-name": false,
+    "ordered-imports": false,
+    "object-literal-sort-keys": false,
+    "no-consecutive-blank-lines": false,
+    "trailing-comma": false,
+    "no-angle-bracket-type-assertion": false,
+    "no-console": false,
+    "arrow-parens": false,
+    "variable-name": false,
+    "member-ordering": false,
+    "max-classes-per-file": false,
+    "ban-types": false,
+    "max-line-length": false,
+    "member-access": false,
+    "no-namespace": false
+  }
+}

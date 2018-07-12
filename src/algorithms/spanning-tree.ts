@@ -33,10 +33,10 @@ function spanningTreeWithHeuristic(destGroups: Hex[][], grid: Grid, maxAdditiona
   const [minR, maxR] = [_.minBy(destHexes, 'r').r, _.maxBy(destHexes, 'r').r];
   const [minS, maxS] = [_.minBy(destHexes, 's').s, _.maxBy(destHexes, 's').s];
 
-  const startingPoints: Hex<any>[] = [];
+  const startingPoints: Array<Hex<any>> = [];
   if (destGroups.length > 2) {
     // We pick all the hexes that are in the middle of the federation buildings, and try to create a network from them
-    startingPoints.push(...[...grid.values()].filter(hex => !destHexesSet.has(hex) && _.inRange(hex.q, minQ+1, maxQ) && _.inRange(hex.r, minR+1, maxR) && _.inRange(hex.s, minS+1, maxS)));
+    startingPoints.push(...[...grid.values()].filter(hex => !destHexesSet.has(hex) && _.inRange(hex.q, minQ + 1, maxQ) && _.inRange(hex.r, minR + 1, maxR) && _.inRange(hex.s, minS + 1, maxS)));
   }
   for (const group of destGroups) {
     startingPoints.push(group[0]);
@@ -48,15 +48,15 @@ function spanningTreeWithHeuristic(destGroups: Hex[][], grid: Grid, maxAdditiona
     } else {
       return [hex];
     }
-  }
+  };
 
   let minScore = maxAdditional === -1 ? grid.size + 1 : destHexes.length + maxAdditional + 1;
-  let bestSolution = undefined;
+  let bestSolution;
 
   for (const startingPoint of startingPoints) {
     let hexes = groupAround(startingPoint);
     let toReach = _.difference(destHexes, hexes);
-    
+
     do {
       const path: Hex[] = shortestPath(hexes, toReach, grid);
 
@@ -65,8 +65,8 @@ function spanningTreeWithHeuristic(destGroups: Hex[][], grid: Grid, maxAdditiona
         break;
       }
 
-      hexes = _.uniq(hexes.concat(path.slice(1, -1), groupAround(path[path.length-1])));
-      toReach = _.difference(toReach, groupAround(path[path.length-1]));
+      hexes = _.uniq(hexes.concat(path.slice(1, -1), groupAround(path[path.length - 1])));
+      toReach = _.difference(toReach, groupAround(path[path.length - 1]));
     } while (hexes.length < minScore && toReach.length > 0);
 
     if (hexes && hexes.length < minScore) {
@@ -115,7 +115,7 @@ function spanningTreeBreadthWidth(destGroups: Hex[][], grid: Grid, maxAdditional
   }
 
   let minScore = maxAdditional === -1 ? grid.size + 1 : destHexes.length + maxAdditional + 1;
-  let bestSolution: Hex[] = undefined;
+  let bestSolution: Hex[];
   const explored: Map<string, HexGroup> = new Map();
 
   const groupAround = hex => {
@@ -124,15 +124,15 @@ function spanningTreeBreadthWidth(destGroups: Hex[][], grid: Grid, maxAdditional
     } else {
       return [hex];
     }
-  }
+  };
 
   let toExplore: Map<string, HexGroup> = new Map();
   let toExploreNext: Map<string, HexGroup> = new Map();
-  
+
   const startingGroup = new HexGroup(destGroups[0]);
   toExplore.set(startingGroup.key(), startingGroup);
 
-  while(toExplore.size > 0) {
+  while (toExplore.size > 0) {
     for (const hexGroup of toExplore.values()) {
       if (!(hexGroup.hexes.length < minScore)) {
         continue;

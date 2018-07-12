@@ -32,7 +32,7 @@ describe("Engine", () => {
   });
 
   it("should allow to set up with Ivits (PI as last player) without errors", () => {
-    const moves = parseMoves(`  
+    const moves = parseMoves(`
       init 2 randomSeed
       p1 faction ivits
       p2 faction terrans
@@ -62,7 +62,7 @@ describe("Engine", () => {
     const engine = new Engine(moves);
     expect(engine.passedPlayers).to.have.length(0);
   });
-  
+
   it("should check wrong player order", () => {
     const moves = parseMoves(`
       init 2 randomSeed
@@ -92,7 +92,7 @@ describe("Engine", () => {
       p1 booster booster3
       p1 build ts -1x2.
       p2 leech 1pw
-      p2 build ts 0x-4  
+      p2 build ts 0x-4
     `);
 
     expect(() => new Engine(moves)).to.not.throw();
@@ -195,7 +195,7 @@ describe("Engine", () => {
       p1 pass booster3
       p2 pass booster4
     `);
- 
+
     const engine = new Engine(moves);
 
     const qicCount = engine.player(Player.Player1).data.qics;
@@ -242,7 +242,7 @@ describe("Engine", () => {
     const engine = new Engine(moves);
 
     expect(() => engine.move("p1 up gaia.")).to.throw();
-  });  
+  });
 
   it("should allow to form a federation and gain rewards", () => {
     const moves = parseMoves(`
@@ -279,10 +279,10 @@ describe("Engine", () => {
     const vp = data.victoryPoints;
     const powerTokens = data.discardablePowerTokens();
     engine.move("p1 federation -1x2,-2x3,-3x2,-3x3,-3x4,-4x2 fed2");
-    expect(data.victoryPoints).to.equal(vp+8);
+    expect(data.victoryPoints).to.equal(vp + 8);
     expect(data.power.gaia).to.be.gte(0);
     expect(data.satellites).to.equal(2);
-    expect(data.discardablePowerTokens()).to.be.equal(powerTokens-2, "The 2 satellites should remove one power token each");
+    expect(data.discardablePowerTokens()).to.be.equal(powerTokens - 2, "The 2 satellites should remove one power token each");
   });
 
   it("should allow poweraction", () => {
@@ -302,7 +302,7 @@ describe("Engine", () => {
       p2 leech 2pw
       p2 burn 3. action power7
     `);
- 
+
     expect(() => new Engine(moves)).to.not.throw();
   });
 
@@ -345,10 +345,11 @@ describe("Engine", () => {
       p2 build PI -5x5.
       p1 leech 1pw
     `);
- 
+
     const engine = new Engine(moves);
     const data = engine.player(Player.Player2).data;
-   
+
+    // tslint:disable-next-line no-unused-expression
     expect(data.federations.includes(Federation.FederationGleens)).to.be.true;
   });
 
@@ -394,10 +395,10 @@ describe("Engine", () => {
       p2 decline
       p1 build gf -6x7. spend 1o for 1c.
       `);
- 
+
     expect(() => new Engine(moves)).to.not.throw();
   });
-  
+
   it("should throw when two players choose factions on the same planet", () => {
     const moves = ["init 3 seed?2", "p1 faction terrans", "p2 faction lantids"];
 
@@ -413,7 +414,7 @@ describe("Engine", () => {
   it("should give a valid JSON even when not initialized", () => {
     expect(() => JSON.stringify(new Engine([]))).to.not.throw();
   });
-  
+
   it("should allow Taklons to leech with +t freeIncome", () => {
     const moves = parseMoves(`
       init 2 randomSeed
@@ -435,7 +436,7 @@ describe("Engine", () => {
       p1 leech 2pw
       p1 build lab -4x-1. tech gaia.
     `);
- 
+
     expect(() => new Engine([...moves, "p2 leech 3pw,1t"])).to.not.throw();
     expect(() => new Engine([...moves, "p2 leech 1t,3pw"])).to.not.throw();
   });
@@ -454,10 +455,10 @@ describe("Engine", () => {
         p1 booster booster4
         p1 spend 1q for 1o
       `);
-  
+
       expect(() => new Engine(moves)).to.not.throw();
     });
-  
+
     it("should allow free actions to spend 1q for 1c", () => {
       const moves = parseMoves(`
         init 2 randomSeed
@@ -471,10 +472,10 @@ describe("Engine", () => {
         p1 booster booster4
         p1 spend 1q for 1c
       `);
-  
+
       expect(() => new Engine(moves)).to.not.throw();
     });
-  
+
     it("should prevent unreasonable free actions", () => {
       const moves = parseMoves(`
         init 2 randomSeed
@@ -489,7 +490,7 @@ describe("Engine", () => {
       `);
 
       const engine = new Engine(moves);
-  
+
       expect(() => engine.move("p1 spend ~ for ~")).to.throw();
       expect(() => engine.move("p1 spend 1q for 2o")).to.throw();
     });
@@ -509,7 +510,7 @@ describe("Engine", () => {
         p2 leech 1pw
         p2 build ts -1x0. burn 1
       `);
-  
+
       expect(() => new Engine(moves)).to.not.throw(AssertionError);
     });
   });
@@ -540,9 +541,9 @@ describe("Engine", () => {
         p2 build ts -5x5.
         p1 leech 2pw
       `);
-  
+
       const engine = new Engine(moves);
-  
+
       expect(() => engine.move('p1 build ac1 -3x4. tech free1')).to.throw();
     });
 
@@ -561,10 +562,10 @@ describe("Engine", () => {
         p2 pass booster5
         p1 build lab -1x2. tech nav.
       `);
-   
+
       expect(() => new Engine(moves)).to.not.throw();
     });
-    
+
     it("should allow to get an advanced tech tiles when conditions are met", () => {
       const moves = parseMoves(`
         init 2 randomSeed
@@ -620,7 +621,7 @@ describe("Engine", () => {
       expect(engine.advTechTiles[AdvTechTilePos.GaiaProject].numTiles).to.equal(0);
     });
 
-  
+
   });
 
   describe("boosters", () => {
@@ -629,7 +630,7 @@ describe("Engine", () => {
       const engine3 = new Engine(['init 3 randomSeed']);
       const engine4 = new Engine(['init 4 randomSeed']);
       const engine5 = new Engine(['init 5 randomSeed']);
-  
+
       expect(Object.keys(engine2.roundBoosters)).to.have.length(5);
       expect(Object.keys(engine3.roundBoosters)).to.have.length(6);
       expect(Object.keys(engine4.roundBoosters)).to.have.length(7);
@@ -647,7 +648,7 @@ describe("Engine", () => {
         p1 build m -3x4
         p2 booster booster2
       `);
-  
+
       expect(() => new Engine(moves)).to.throw(AssertionError);
     });
 
@@ -663,12 +664,12 @@ describe("Engine", () => {
         p2 booster booster4
         p1 booster booster4
       `);
-  
+
       expect(() => new Engine(moves)).to.throw(AssertionError);
     });
 
     it("should gain 2 victory points when upgrading to ts and having booster7", () => {
-      //booster7: ["o", "ts | 2vp"]
+      // booster7: ["o", "ts | 2vp"]
       const moves = parseMoves(`
         init 2 randomSeed
         p1 faction terrans
@@ -687,10 +688,10 @@ describe("Engine", () => {
 
       const engine = new Engine(moves);
       const vp = engine.player(Player.Player1).data.victoryPoints;
-      
+
       engine.move("p2 pass booster3");
-      
-      expect(engine.player(Player.Player2).data.victoryPoints).to.equal(vp+2);
+
+      expect(engine.player(Player.Player2).data.victoryPoints).to.equal(vp + 2);
     });
 
     it("should allow to use a terraforming special action from a booster", () => {
@@ -707,7 +708,8 @@ describe("Engine", () => {
         p1 special tempstep
       `);
       const engine = new Engine(moves);
-      
+
+      // tslint:disable-next-line no-unused-expression
       expect(engine.player(Player.Player1).events[Operator.Activate][0].activated).to.be.true;
     });
 
@@ -726,7 +728,7 @@ describe("Engine", () => {
         p2 leech 1pw
         p2 special 3temprange. build m 3x-3.
       `);
-      
+
       expect(() => new Engine(moves)).to.not.throw(AssertionError);
     });
   });

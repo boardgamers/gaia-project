@@ -3,13 +3,13 @@ import { Planet, Building, Player } from "./enums";
 import { stdBuildingValue } from "./buildings";
 
 export interface GaiaHexData {
-  planet: Planet,
-  sector: string,
-  building?: Building,
+  planet: Planet;
+  sector: string;
+  building?: Building;
   /** Who occupies the spot */
-  player?: Player,
+  player?: Player;
   /** List of players who have a federation occupying this square */
-  federations?: Player[]
+  federations?: Player[];
 }
 
 export class GaiaHex extends Hex<GaiaHexData> {

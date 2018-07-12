@@ -62,15 +62,15 @@ export default class SpaceMap {
 
     this.nbPlayers = nbPlayers;
     this.rng = seedrandom(seed);
-    
+
     do {
       this.generate();
     } while (!this.isValid());
   }
 
-  /** 
+  /**
    *  Check if the map is correct (no two planets of the same color side by side)
-  */
+   */
   isValid(): boolean {
     for (const hex of this.grid.values()) {
       for (const nb of this.grid.neighbours(hex.q, hex.r)) {
@@ -82,19 +82,19 @@ export default class SpaceMap {
     return true;
   }
 
-  /** 
+  /**
    * Generate the map
-  */
+   */
   generate() {
     const definitions = this.chooseSides();
     const centers = this.configuration().centers;
 
-    const [hexagon, ...hexagons] = definitions.map((side, index) => Sector.create(side.map, side.name, centers[index]).rotateLeft(Math.floor(this.rng()*6), centers[index]));
+    const [hexagon, ...hexagons] = definitions.map((side, index) => Sector.create(side.map, side.name, centers[index]).rotateLeft(Math.floor(this.rng() * 6), centers[index]));
 
     this.grid = hexagon.merge(...hexagons);
   }
 
-  chooseSides() : Array<{map: string, name: string}> {
+  chooseSides(): Array<{map: string, name: string}> {
     const definitions = this.configuration().sectors;
     // Random sort of the chosen sectors, sliced
     return shuffleSeed.shuffle(definitions, this.rng()).slice(0, this.configuration().nbSectors);

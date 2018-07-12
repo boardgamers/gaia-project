@@ -9,17 +9,17 @@ export default class Reward {
   constructor(countOrRewardString: number | string, type?: Resource) {
     let count = countOrRewardString;
     if (arguments.length === 1) {
-      const regex = /^(-?[0-9]*)?(.*)$/
+      const regex = /^(-?[0-9]*)?(.*)$/;
 
-      let _;
-      [_, count, type] = regex.exec(count as string) as any;
+      let _unused;
+      [_unused, count, type] = regex.exec(count as string) as any;
     }
-    
+
     if (type === Resource.None || !Object.values(Resource).includes(type)) {
       this.count = 0;
-      this.type = Resource.None
+      this.type = Resource.None;
     } else {
-      this.count = typeof count === "number" ? count : ((count !== undefined && count.length > 0) ? +count : 1); 
+      this.count = typeof count === "number" ? count : ((count !== undefined && count.length > 0) ? +count : 1);
       this.type = type as Resource;
     }
   }
@@ -41,20 +41,20 @@ export default class Reward {
 
   static parse(source: string): Reward[] {
     assert (typeof source === "string", `Reward.parse: ${source} is not a string`);
-    
+
     return source.split(",").map(rew => new Reward(rew));
   }
 
   /**
-   * Given an array of rewards, merge rewards that give the same 
+   * Given an array of rewards, merge rewards that give the same
    * kind of resource, and return a new array of rewards
-   * 
-   * @param rewards 
+   *
+   * @param rewards
    */
   static merge(...rewards: Reward[][]): Reward[] {
     const grouped = _.groupBy(_.flatten(rewards), "type");
 
-    return Object.keys(grouped).map(key => new Reward(grouped[key].reduce((val, rew) => val+rew.count, 0), key as Resource)).filter(rew => !rew.isEmpty());
+    return Object.keys(grouped).map(key => new Reward(grouped[key].reduce((val, rew) => val + rew.count, 0), key as Resource)).filter(rew => !rew.isEmpty());
   }
 
   static negative(rewards: Reward[]): Reward[] {
@@ -62,8 +62,8 @@ export default class Reward {
   }
 
   static toString(rewards: Reward[], sorted = true) {
-    if(sorted) {
-      rewards.sort((rew1, rew2) => rew1.type < rew2.type ? -1: 1);
+    if (sorted) {
+      rewards.sort((rew1, rew2) => rew1.type < rew2.type ? -1 : 1);
     }
     if (rewards.length === 0) {
       return "~";
@@ -79,7 +79,7 @@ export default class Reward {
   static includes(container: Reward[], contained: Reward[]): boolean {
     const indexed: _.Dictionary<number> = {};
     for (const reward of container) {
-      indexed[reward.type] = (indexed[reward.type] || 0) + reward.count; 
+      indexed[reward.type] = (indexed[reward.type] || 0) + reward.count;
     }
 
     for (const reward of contained) {
