@@ -334,18 +334,26 @@ function addMove(move: string) {
   const text = ($("#moves").val() as string).trim();
   const moves = text ? text.split("\n") : [];
 
-  const lastMove = moves.length > 0 ? moves[moves.length - 1] : "";
-  let separator = "\n";
+  const lastMove = (moves.length > 0 ? moves[moves.length - 1] : "").trim();
 
-  // check if the same player as penultimate move
-  if (move.substr(0, 2) === lastMove.substr(0, 2) && lastData.round > 0) {
-    if (!lastMove.includes(Command.ChooseRoundBooster) && !lastMove.includes(Command.Leech) && !lastMove.includes(Command.DeclineLeech)) {
-      move = !move.includes(Command.EndTurn) ? move.substr(2, move.length - 2) : "";
-      separator = ".";
+  const moveList = (() => {
+    if (move.includes(Command.EndTurn)) {
+      // End line
+      return text + ".";
     }
-  }
+    // Check if the player already did the previous move, and previous move isn't final
+    if (move.substr(0, 2) === lastMove.substr(0, 2) && !lastMove.endsWith(".")) {
+      if (lastMove.includes(Command.ChooseRoundBooster) || lastMove.includes(Command.Leech) || lastMove.includes(Command.DeclineLeech)) {
+        // Those are commands that are alone in one line, and we shouldn't carry on the same line
+      } else {
+        // join moves on the same line
+        return text + "." + move.substr(2);
+      }
+    }
+    return text + "\n" + move;
+  }) ();
 
-  $("#moves").val((($("#moves").val() as string).trim() + separator + move).trim());
+  $("#moves").val(moveList.trim());
   $("#moves").scrollTop($("#moves")[0].scrollHeight);
   $("form").triggerHandler("submit");
 }
