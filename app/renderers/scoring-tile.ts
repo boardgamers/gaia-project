@@ -29,11 +29,11 @@ export default class ScoringTile extends PIXI.Graphics {
     
     this.lineStyle(1, highlighted ? 0x22CC44 : 0x444444);
     this.beginFill(highlighted ? 0xFFFFFF : 0xEEEEEE);
-    this.drawRect(0, 0, 60, 40);
+    this.drawRect(0, 0, 75, 40);
     this.endFill();
 
     const events = roundScorings[which];
-    this.content.text = events.join(" / ").replace(/\s/g, '');
+    this.content.text = events.join(" / ");
 
     this.emit("tooltip-remove", this);
     this.off("mouseover");

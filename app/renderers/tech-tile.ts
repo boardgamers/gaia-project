@@ -2,6 +2,9 @@ import { TechTile as TechTileEnum, TechTilePos, tiles, AdvTechTile, Event } from
 import { eventDesc } from "../data/event";
 
 export default class TechTile extends PIXI.Graphics {
+  titleText: PIXI.Text;
+  content: PIXI.Text;
+
   constructor(public pos: TechTilePos) {
     super();
 
@@ -10,6 +13,14 @@ export default class TechTile extends PIXI.Graphics {
     this.on("mouseout", () => {
       this.emit("tooltip-remove", this);
     });
+
+    this.titleText = new PIXI.Text('', {fontSize: 10});
+    this.titleText.position.set(4, 2);
+    this.addChild(this.titleText);
+
+    this.content = new PIXI.Text('', {fontSize: 12});
+    this.content.position.set(4, 17);
+    this.addChild(this.content);
   }
 
   draw(which: TechTileEnum | AdvTechTile, number: number, highlighted = false) {
@@ -24,15 +35,10 @@ export default class TechTile extends PIXI.Graphics {
     this.drawPolygon([].concat([0, 0], [47, 0], [57, 10], [57, 35], [0, 35], [0, 0]));
     this.endFill();
     
-    const titleText = number > 1 ? `${this.pos} (${number})` : this.pos;
-    const text = new PIXI.Text(titleText, {fontSize: 10});
-    [text.x, text.y] = [4, 2];
-    this.addChild(text);
-
+    this.titleText.text = number > 1 ? `${this.pos} (${number})` : this.pos;
+    
     const events = tiles.techs[which] || tiles.advancedTechs[which];
-    const content = new PIXI.Text(events.join(" / ").replace(/\s/g, ''), {fontSize: 12});
-    [content.x, content.y] = [4, 17];
-    this.addChild(content);
+    this.content.text = events.join(" / ").replace(/\s/g, '');
 
     if (highlighted) {
       this.cursor = "pointer";
