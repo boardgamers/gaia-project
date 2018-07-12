@@ -114,7 +114,6 @@ export function generate(engine: Engine): AvailableCommand[] {
             break;
           }
 
-          case Command.Build:
           case Command.EndTurn: {
             commands.push(subCommand);
 
@@ -198,33 +197,40 @@ export function generate(engine: Engine): AvailableCommand[] {
 
 export function possibleBuildings(engine: Engine, player: Player) {
   const map = engine.map;
-  const data = engine.player(player).data;
-  const planet = engine.player(player).planet;
+  const pl = engine.player(player);
+  const {data} = pl;
   const buildings = [];
 
   for (const hex of engine.map.toJSON()) {
-    // exclude empty planets and other players' planets
-    if (( hex.data.planet === Planet.Empty  ) || (hex.data.player !== undefined && hex.data.player !== player)) {
-      continue;
-    }
     // upgrade existing player's building
-    if (hex.data.building ) {
+    if (hex.buildingOf(player)) {
+      const building = hex.buildingOf(player);
+
+      if (player !== hex.data.player) {
+        // This is a secondary building, so we can't upgrade it
+        continue;
+      }
 
       // excluding Transdim planet until transformed into Gaia planets
       if (hex.data.planet === Planet.Transdim) {
         continue;
       }
 
+      // Lost planet can't be upgraded
+      if (hex.data.planet === Planet.Lost) {
+        continue;
+      }
+
       const isolated = (() => {
         // We only care about mines that can transform into trading stations;
-        if (hex.data.building !== Building.Mine) {
+        if (building !== Building.Mine) {
           return true;
         }
 
         // Check each other player to see if there's a building in range
-        for (const pl of engine.players) {
-          if (pl !== engine.player(player)) {
-            for (const loc of pl.data.occupied) {
+        for (const _pl of engine.players) {
+          if (_pl !== engine.player(player)) {
+            for (const loc of _pl.data.occupied) {
               if (map.distance(loc, hex) < ISOLATED_DISTANCE) {
                 return false;
               }
@@ -235,33 +241,35 @@ export function possibleBuildings(engine: Engine, player: Player) {
         return true;
       })();
 
-      const upgraded = upgradedBuildings(hex.data.building, engine.player(player).faction);
+      const upgraded = upgradedBuildings(building, engine.player(player).faction);
 
       for (const upgrade of upgraded) {
-        const buildCost = engine.player(player).canBuild(hex.data.planet, upgrade, {isolated, existingBuilding: hex.data.building});
-        if ( buildCost !== undefined) {
+        const {cost, possible} = engine.player(player).canBuild(hex.data.planet, upgrade, {isolated, existingBuilding: building});
+        if (possible) {
           buildings.push({
             building: upgrade,
-            cost: buildCost.map(c => c.toString()).join(','),
-            coordinates: hex.toString(),
-            steps : 0
+            cost: Reward.toString(cost),
+            coordinates: hex.toString()
           });
         }
       }
-    } else {
+    } else if (pl.canOccupy(hex)) {
       // planet without building
       // Check if the range is enough to access the planet
       const distance = _.min(data.occupied.map(loc => map.distance(hex, loc)));
       const qicNeeded = Math.max(Math.ceil( (distance - data.range - data.temporaryRange) / QIC_RANGE_UPGRADE), 0);
 
-      const building = hex.data.planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine  ;
-      const buildCost = engine.player(player).canBuild(hex.data.planet, building, {addedCost: [new Reward(qicNeeded, Resource.Qic)]});
-      if ( buildCost !== undefined ) {
+      const building = hex.data.planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine;
+      // No need for terra forming if already occupied by another faction
+      const planet = (hex.occupied() ? pl.planet : hex.data.planet);
+      const {possible, cost, steps} = pl.canBuild(planet, building, {addedCost: [new Reward(qicNeeded, Resource.Qic)]});
+
+      if (possible) {
           buildings.push({
             building,
             coordinates: hex.toString(),
-            cost: buildCost.map(c => c.toString()).join(','),
-            steps: terraformingStepsRequired(factions[engine.player(player).faction].planet, hex.data.planet)
+            cost: Reward.toString(cost),
+            steps
         });
       }
     }

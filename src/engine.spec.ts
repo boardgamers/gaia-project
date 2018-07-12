@@ -394,7 +394,7 @@ describe("Engine", () => {
       p1 leech 2pw
       p2 decline
       p1 build gf -6x7. spend 1o for 1c.
-      `);
+    `);
 
     expect(() => new Engine(moves)).to.not.throw();
   });
@@ -439,6 +439,27 @@ describe("Engine", () => {
 
     expect(() => new Engine([...moves, "p2 leech 3pw,1t"])).to.not.throw();
     expect(() => new Engine([...moves, "p2 leech 1t,3pw"])).to.not.throw();
+  });
+
+  describe("lantids", () => {
+    it ("should be able to build a mine on other players' planets", () => {
+      const moves = parseMoves(`
+        init 2 randomSeed
+        p1 faction lantids
+        p2 faction xenos
+        p1 build m -3x4
+        p2 build m -2x2
+        p2 build m -5x5
+        p1 build m -1x2
+        p2 build m 1x2
+        p2 booster booster3
+        p1 booster booster7
+        p1 build m -2x2.
+        p2 leech 1pw
+      `);
+
+      expect(() => new Engine(moves)).to.not.throw();
+    });
   });
 
   describe("free actions", () => {

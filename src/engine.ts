@@ -138,8 +138,9 @@ export default class Engine {
 
   move(move: string) {
     let command: Command;
+    move = move.trim();
     if (this.round === Round.Init) {
-      const split = move.trim().split(' ');
+      const split = move.split(' ');
       command = split[0] as Command;
 
       const available = this.availableCommands;
@@ -321,7 +322,7 @@ export default class Engine {
     // From rules, this is in clockwise order. We assume the order of players in this.players is the
     // clockwise order
     for (const pl of this.players) {
-      // Exclude the one whould made the building from the leech
+      // Exclude the one who made the building from the leech
       if (pl !== this.player(player)) {
         let leech = 0;
         for (const loc of pl.data.occupied) {
@@ -333,7 +334,7 @@ export default class Engine {
         if (leech > 0) {
           this.roundSubCommands.push({
             name: Command.Leech,
-            player: this.players.indexOf(pl),
+            player: pl.player,
             data: {
               leech : leech + Resource.ChargePower,
               freeIncome : pl.faction === Faction.Taklons && pl.data.hasPlanetaryInstitute() ? "1t" : "" }

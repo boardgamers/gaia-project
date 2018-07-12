@@ -102,10 +102,10 @@ export default class Player extends EventEmitter {
     return true;
   }
 
-  canBuild(targetPlanet: Planet, building: Building, {isolated, addedCost, existingBuilding}: {isolated?: boolean, addedCost?: Reward[], existingBuilding?: Building}): Reward[] {
+  canBuild(targetPlanet: Planet, building: Building, {isolated, addedCost, existingBuilding}: {isolated?: boolean, addedCost?: Reward[], existingBuilding?: Building}): {cost?: Reward[], possible: boolean, steps?: number} {
     if (this.data[building] >= (building === Building.GaiaFormer ? this.data.gaiaformers : this.board.maxBuildings(building))) {
       // Too many buildings of the same kind
-      return undefined;
+      return {possible: false};
     }
 
     if (!addedCost) {
@@ -113,8 +113,10 @@ export default class Player extends EventEmitter {
     }
 
     if (!this.canPay(addedCost)) {
-      return undefined;
+      return {possible: false};
     }
+
+    let steps = 0;
 
     // gaiaforming discount
     if (building === Building.GaiaFormer) {
@@ -130,13 +132,21 @@ export default class Player extends EventEmitter {
           // Already a gaia-former on the planet, so no need to pay a Q.I.C.
         }
       } else { // Get the number of terraforming steps to pay discounting terraforming track
-        const steps = Math.max(terraformingStepsRequired(factions[this.faction].planet, targetPlanet) - this.data.temporaryStep, 0);
+        steps = Math.max(terraformingStepsRequired(factions[this.faction].planet, targetPlanet) - this.data.temporaryStep, 0);
         addedCost.push(new Reward((TERRAFORMING_COST - this.data.terraformCostDiscount) * steps, Resource.Ore));
       }
     }
 
     const cost = Reward.merge(this.board.cost(targetPlanet, building, isolated), addedCost);
-    return this.canPay(cost) ? cost : undefined;
+
+    if (!this.canPay(cost)) {
+      return {possible: false};
+    }
+    return {
+      possible: true,
+      cost,
+      steps
+    };
   }
 
   loadFaction(faction: Faction) {
@@ -198,7 +208,7 @@ export default class Player extends EventEmitter {
     this.receiveAdvanceResearchTriggerIncome();
   }
 
-  build(building: Building, hex: GaiaHex, cost: Reward[], map: SpaceMap, stepsReq: number) {
+  build(building: Building, hex: GaiaHex, cost: Reward[], map: SpaceMap, stepsReq?: number) {
     this.payCosts(cost);
     // excluding Gaiaformers as occupied
     if ( building !== Building.GaiaFormer ) {
@@ -213,14 +223,20 @@ export default class Player extends EventEmitter {
     }
 
     // remove upgraded building and the associated event
-    const upgradedBuilding = hex.data.building;
+    const upgradedBuilding = hex.buildingOf(this.player);
     if (upgradedBuilding) {
       this.data[upgradedBuilding] -= 1;
       this.removeEvent(this.board[upgradedBuilding].income[this.data[upgradedBuilding]]);
     }
 
-    hex.data.building = building;
-    hex.data.player = this.player;
+    // If the planet is already occupied by someone else
+    if (!upgradedBuilding && hex.occupied()) {
+      // Lantids
+      hex.data.additionalMine = this.player;
+    } else {
+      hex.data.building = building;
+      hex.data.player = this.player;
+    }
 
     // Add to nearby federation
     if (building !== Building.GaiaFormer && !hex.belongsToFederationOf(this.player)) {
@@ -243,7 +259,9 @@ export default class Player extends EventEmitter {
     // get triggered income for new building
     this.receiveBuildingTriggerIncome(building, hex.data.planet);
     // get triggerd terffaorming step income for new building
-    this.receiveTerraformingStepTriggerIncome(stepsReq);
+    if (stepsReq) {
+      this.receiveTerraformingStepTriggerIncome(stepsReq);
+    }
   }
 
   // Not to confuse with the end of a round
@@ -539,5 +557,31 @@ export default class Player extends EventEmitter {
 
   addAdjacentBuildings(hexes: GaiaHex[], buildingGroups = this.buildingGroups()): GaiaHex[] {
     return _.uniq([].concat(...hexes.map(hex => this.buildingGroup(hex))));
+  }
+
+  /**
+   * Check if player can build there, regardless of cost
+   * @param hex
+   */
+  canOccupy(hex: GaiaHex) {
+    if (hex.colonizedBy(this.player)) {
+      return false;
+    }
+    if (!hex.hasPlanet()) {
+      return false;
+    }
+    if (hex.data.player !== undefined) {
+      // If it's already occupied by another player and we aren't lantids
+      if (this.faction !== Faction.Lantids) {
+        return false;
+      }
+      // If the player that occupies the planet didn't colonize it yet,
+      // for example if there is a gaia former there, lantids can't place
+      // their additional mine
+      if (!hex.colonizedBy(hex.data.player)) {
+        return false;
+      }
+    }
+    return true;
   }
 }

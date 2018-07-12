@@ -4,6 +4,7 @@ import Player from "./player";
 import { Faction, Planet, Building, Resource, Player as PlayerEnum, Operator } from "./enums";
 import Reward from "./reward";
 import Event from "./events";
+import { GaiaHex } from "..";
 
 describe("Player", () => {
   describe("canBuild", () => {
@@ -12,7 +13,7 @@ describe("Player", () => {
 
       player.loadFaction(Faction.Terrans);
 
-      const cost = player.canBuild(Planet.Terra, Building.Mine, {addedCost: [new Reward(1, Resource.Qic)]});
+      const {cost} = player.canBuild(Planet.Terra, Building.Mine, {addedCost: [new Reward(1, Resource.Qic)]});
 
       // tslint:disable-next-line no-unused-expression
       expect(Reward.match(Reward.parse("2c,o,q"), cost)).to.be.true;
@@ -41,6 +42,23 @@ describe("Player", () => {
       player.removeEvent(new Event("=> 4c"));
 
       expect(player.events[Operator.Activate]).to.have.lengthOf(0);
+    });
+  });
+
+  describe("canOccupy", () => {
+    it("should allow lantids to occupy an hex used by another faction", () => {
+      const player = new Player();
+
+      player.loadFaction(Faction.Lantids);
+      const hex = new GaiaHex(0, 0, {
+        sector: "s1",
+        planet: Planet.Lost,
+        player: PlayerEnum.Player2,
+        building: Building.Mine
+      });
+
+      // tslint:disable-next-line no-unused-expression
+      expect(player.canOccupy(hex)).to.be.true;
     });
   });
 });

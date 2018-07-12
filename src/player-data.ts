@@ -184,8 +184,6 @@ export default class PlayerData extends EventEmitter {
     return area1ToUp + area2ToUp + brainstoneUsage;
   }
 
-
-
   spendPower(power: number) {
     if (this.brainstone === BrainstoneArea.Area3 && (power >= 3 || this.power.area3 < power)) {
       this.brainstone = BrainstoneArea.Area1;

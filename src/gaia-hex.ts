@@ -10,6 +10,8 @@ export interface GaiaHexData {
   player?: Player;
   /** List of players who have a federation occupying this square */
   federations?: Player[];
+  /** Additional mine of lantids */
+  additionalMine?: Player;
 }
 
 export class GaiaHex extends Hex<GaiaHexData> {
@@ -21,6 +23,10 @@ export class GaiaHex extends Hex<GaiaHexData> {
     return this.data.planet !== Planet.Empty;
   }
 
+  occupied(): boolean {
+    return this.data.player !== undefined;
+  }
+
   // Space stations do not count as colonized, gaia-formers do not count as colonized
   colonizedBy(player: Player): boolean {
     // Neither space stations nor gaia formers have a building value, and every building with a building
@@ -29,7 +35,9 @@ export class GaiaHex extends Hex<GaiaHexData> {
   }
 
   buildingOf(player: Player): Building {
-    // TODO lantids
+    if (this.data.additionalMine === player) {
+      return Building.Mine;
+    }
     if (this.data.player !== player) {
       return undefined;
     }
