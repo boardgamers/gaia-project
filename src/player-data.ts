@@ -139,6 +139,10 @@ export default class PlayerData extends EventEmitter {
     return false;
   }
 
+  hasPlanetaryInstitute(): boolean {
+    return this[Building.PlanetaryInstitute] > 0;
+  }
+
   discardablePowerTokens(): number {
     return this.power.area1 + this.power.area2 + this.power.area3 + (this.brainstoneInPlay() ? 1 : 0);
   }

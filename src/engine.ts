@@ -336,7 +336,7 @@ export default class Engine {
             player: this.players.indexOf(pl),
             data: {
               leech : leech + Resource.ChargePower,
-              freeIncome : pl.faction === Faction.Taklons && pl.data[Building.PlanetaryInstitute] > 0 ? "1t" : "" }
+              freeIncome : pl.faction === Faction.Taklons && pl.data.hasPlanetaryInstitute() ? "1t" : "" }
           });
         }
       }
