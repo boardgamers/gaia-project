@@ -81,7 +81,7 @@ export enum Condition {
   Satellite = "sat",
 
   // trigger only
-  MineOnGaia = "mg",
+  MineOnGaia = "g",
   AdvanceResearch = "a",
   TerraformStep = "step"
 }
