@@ -392,21 +392,21 @@ function updatePlayerInfo() {
 
   for (let i = 0; i < 5; i++) {
     const pl = playerOrder[i];
-    const panel = `#p${i+1}`;
+    const $panel = $(`#p${i+1}`);
     
     if (pl === undefined) {
-      $(panel).hide();
+      $panel.hide();
       continue;
     }
 
     const player = lastData.players[pl];
 
     if (!player.faction) {
-      $(panel).hide();
+      $panel.hide();
       continue;
     }
 
-    $(panel).show();
+    $panel.show();
 
     const data = player.data;
     const factionEnum = player.faction;
@@ -416,15 +416,24 @@ function updatePlayerInfo() {
 
     const power = area => data.brainstone === area ? `${data.power[area]}(b)` : data.power[area];
 
+    const $text = $panel.find(".text");
+
     const info = [
       `<b>Player ${pl+1}</b> - ${faction} - ${data.victoryPoints}vp ${passed}`,
       `${data.credits}c, ${data.ores}o, ${data.knowledge}k, ${data.qics}q, [${power('gaia')}] ${power('area1')}/${power('area2')}/${power('area3')} pw`,
       `range: ${data.range}, gaia-form level: ${data.terraformCostDiscount}`,
       `income: ${player.income.replace(/,/g, ', ')}`,
-      `round booster: ${boosterDesc}`
+      `${boosterDesc}`
     ];
 
-    $(panel).html(info.join('<br>'));
-    $(panel).css('background-color', `#${factionColor(factionEnum).toString(16)}a0`);
+    $text.html(info.join('<br>'));
+    $panel.css('background-color', `#${factionColor(factionEnum).toString(16)}a0`);
+
+    const $tiles = $panel.find(".tiles");
+    $tiles.html("");
+    
+    for (const tile of data.techTiles.filter(t => t.enabled).map(t => t.tile).concat(data.advTechTiles)) {
+      $tiles.append(`<canvas class='tech-tile' data-tile='${tile}'></canvas>`);
+    }
   }
 }
