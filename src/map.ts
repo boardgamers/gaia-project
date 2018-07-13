@@ -73,7 +73,7 @@ export default class SpaceMap {
    */
   isValid(): boolean {
     for (const hex of this.grid.values()) {
-      for (const nb of this.grid.neighbours(hex.q, hex.r)) {
+      for (const nb of this.grid.neighbours(hex)) {
         if (hex.data.sector !== nb.data.sector && hex.data.planet !== Planet.Empty && hex.data.planet === nb.data.planet) {
           return false;
         }
@@ -126,7 +126,7 @@ export default class SpaceMap {
       return distance;
     }
 
-    distance = this.grid.distance(hex1.q, hex1.r, hex2.q, hex2.r);
+    distance = this.grid.distance(hex1, hex2);
 
     _.set(this.distanceCache, `${h1}.${h2}`, distance);
     _.set(this.distanceCache, `${h2}.${h1}`, distance);
@@ -148,7 +148,7 @@ export default class SpaceMap {
       // and the ones around are off limits.
       if (hex.belongsToFederationOf(player)) {
         ret.add(hex);
-        for (const neighbour of this.grid.neighbours(hex.q, hex.r)) {
+        for (const neighbour of this.grid.neighbours(hex)) {
           ret.add(neighbour);
         }
       }

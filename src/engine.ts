@@ -327,7 +327,7 @@ export default class Engine {
         let leech = 0;
         for (const loc of pl.data.occupied) {
           if (this.map.distance(loc, hex) < ISOLATED_DISTANCE) {
-            leech = Math.max(leech, pl.buildingValue(this.map.grid.get(loc.q, loc.r).buildingOf(pl.player), this.map.grid.get(loc.q, loc.r).data.planet));
+            leech = Math.max(leech, pl.buildingValue(this.map.grid.get(loc).buildingOf(pl.player), this.map.grid.get(loc).data.planet));
           }
         }
         leech = pl.maxLeech(leech);
@@ -638,7 +638,7 @@ export default class Engine {
     for (const elem of buildings) {
       if (elem.building === building && elem.coordinates === location) {
         const {q, r, s} = CubeCoordinates.parse(location);
-        const hex = this.map.grid.get(q, r);
+        const hex = this.map.grid.get({q, r});
         const pl = this.player(player);
 
         pl.build(
@@ -792,7 +792,7 @@ export default class Engine {
     }
 
     const { q, r, s } = CubeCoordinates.parse(location);
-    const hex = this.map.grid.get(q, r);
+    const hex = this.map.grid.get({q, r});
     hex.data.planet = Planet.Lost;
 
     this.player(player).build(Building.Mine, hex, [], this.map, 0);

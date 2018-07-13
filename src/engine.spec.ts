@@ -465,7 +465,7 @@ describe("Engine", () => {
       expect(engine.player(Player.Player1).data.victoryPoints).to.equal(vp + 2);
     });
   });
-  
+
   describe("lantids", () => {
     it ("should be able to build a mine on other players' planets", () => {
       const moves = parseMoves(`

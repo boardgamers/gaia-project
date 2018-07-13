@@ -26,7 +26,7 @@ export default function shortestPath(starts: Hex[], dests: Hex[], grid: Grid): H
         continue;
       }
 
-      for (const neighbour of grid.neighbours(hex.q, hex.r)) {
+      for (const neighbour of grid.neighbours(hex)) {
         if (pathTo.has(neighbour) && pathTo.get(neighbour).length <= curPath.length + 1) {
           continue;
         }

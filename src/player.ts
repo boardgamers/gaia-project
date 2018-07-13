@@ -439,7 +439,7 @@ export default class Player extends EventEmitter {
   availableFederations(map: SpaceMap): FederationInfo[] {
     const excluded = map.excludedHexesForBuildingFederation(this.player);
 
-    const hexes = this.data.occupied.map(coord => map.grid.get(coord.q, coord.r)).filter(hex => !excluded.has(hex));
+    const hexes = this.data.occupied.map(coord => map.grid.get(coord)).filter(hex => !excluded.has(hex));
     const hexesWithBuildings = new Set(hexes);
     const values = hexes.map(node => this.buildingValue(node.data.building, node.data.planet));
 
@@ -460,20 +460,20 @@ export default class Player extends EventEmitter {
       //
       // Because of this second constraint, we do avoid some valid possibilites.
       // However, those possibilites are explored in another combination
-      const otherExcluded: Set<GaiaHex> = new Set([].concat(...this.data.occupied.map(hex => buildingsInDestGroups.has(hex) ? [] : [hex, ...map.grid.neighbours(hex.q, hex.r)])));
+      const otherExcluded: Set<GaiaHex> = new Set([].concat(...this.data.occupied.map(hex => buildingsInDestGroups.has(hex) ? [] : [hex, ...map.grid.neighbours(hex)])));
       const allHexes = [...map.grid.values()].filter(hex => !excluded.has(hex) && !otherExcluded.has(hex));
       const workingGrid = new Grid(...allHexes.map(hex => new Hex(hex.q, hex.r)));
-      const convertedDestGroups = destGroups.map(destGroup => destGroup.map(hex => workingGrid.get(hex.q, hex.r)));
+      const convertedDestGroups = destGroups.map(destGroup => destGroup.map(hex => workingGrid.get(hex)));
       const tree = spanningTree(convertedDestGroups, workingGrid, maxSatellites, "heuristic");
       if (tree) {
         // Convert from regular hex to gaia hex of grid
-        federations.push(tree.map(hex => map.grid.get(hex.q, hex.r)));
+        federations.push(tree.map(hex => map.grid.get(hex)));
       }
     }
 
     const fedsWithInfo: FederationInfo[] = federations.map(federation => {
-      const nSatellites = federation.filter(hex => map.grid.get(hex.q, hex.r).data.planet === Planet.Empty).length;
-      const nPlanets = federation.filter(hex => map.grid.get(hex.q, hex.r).colonizedBy(this.player)).length;
+      const nSatellites = federation.filter(hex => map.grid.get(hex).data.planet === Planet.Empty).length;
+      const nPlanets = federation.filter(hex => map.grid.get(hex).colonizedBy(this.player)).length;
 
       return {
         hexes: federation,
