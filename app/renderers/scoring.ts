@@ -1,9 +1,11 @@
 import { Data } from "../data";
 import ScoringTile from "./scoring-tile";
 import scoring from "../data/scoring";
+import FinalScoringTile from "./final-scoring-tile";
 
 export default class ScoringRenderer extends PIXI.Graphics {
   round: ScoringTile[] = [];
+  final: FinalScoringTile[] = [];
   
   constructor() {
     super();
@@ -19,11 +21,27 @@ export default class ScoringRenderer extends PIXI.Graphics {
       tile.on('tooltip', (elem, text) => this.emit("tooltip", elem, text));
       tile.on('tooltip-remove', elem => this.emit("tooltip-remove", elem));
     }
+
+    for (let i = 0; i < 2; i++) {
+      const tile = new FinalScoringTile();
+      this.addChild(tile);
+
+      this.final.push(tile);
+
+      tile.position.set(0, (scoring.final.tileHeight+5) * i);
+
+      tile.on('tooltip', (elem, text) => this.emit("tooltip", elem, text));
+      tile.on('tooltip-remove', elem => this.emit("tooltip-remove", elem));
+    }
   }
 
   render(data: Data) {
     data.roundScoringTiles.forEach((tile, i) => {
       this.round[i].draw(tile, i === data.round - 1);
+    });
+
+    data.finalScoringTiles.forEach((tile, i) => {
+      this.final[i].draw(tile, data.players);
     });
   }
 }

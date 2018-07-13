@@ -1,7 +1,11 @@
 import {Player, AdvTechTilePos, AdvTechTile, TechTile, TechTilePos, ScoringTile, FinalTile} from "@gaia-project/engine";
 
+export interface AugmentedPlayer extends Player {
+  progress: {[key in FinalTile]: number};
+}
+
 export interface Data {
-  players: Player[];
+  players: AugmentedPlayer[];
   round: number;
   techTiles: {
     [key in TechTilePos]: {

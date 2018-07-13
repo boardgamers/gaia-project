@@ -91,13 +91,15 @@ export default class Renderer {
     $tooltipInner.html(text);
     $tooltip.addClass('tooltip-show');
 
+    const r = $("#map").width() / this.app.screen.width;
+
     if (elemPos.x < this.app.view.width/2) {
       $tooltip.addClass("bs-tooltip-right");
       $tooltip.removeClass("bs-tooltip-left");
 
       $tooltip.css({
         top: $(this.app.view).offset().top + middleY - $tooltip.height()/2,
-        left: $(this.app.view).offset().left + elemPos.x + elemBounds.right,
+        left: $(this.app.view).offset().left + (elemPos.x + elemBounds.right) * r,
       });
     } else {
       $tooltip.removeClass("bs-tooltip-right");
@@ -105,7 +107,7 @@ export default class Renderer {
 
       $tooltip.css({
         top: $(this.app.view).offset().top + middleY - $tooltip.height()/2,
-        left: $(this.app.view).offset().left + elemPos.x - $tooltip.width() - 2*tooltipArrowHeight,
+        left: $(this.app.view).offset().left - $tooltip.width() + (elemPos.x - 2*tooltipArrowHeight) * r,
       });
     }
   }
