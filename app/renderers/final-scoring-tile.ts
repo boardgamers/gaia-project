@@ -30,8 +30,10 @@ export default class FinalScoringTile extends PIXI.Graphics {
 
     this.titleText.text = which;
 
+    players = players.filter(player => !!player && player.faction);
+
     const min = Math.min(...players.map(pl => pl.progress[which]), 0);
-    const max = Math.max(...players.map(pl => pl.progress[which]), 10);
+    const max = Math.max(...players.map(pl => pl.progress[which]), which == FinalTile.PlanetType ? 9 : 10);
 
     players.forEach((player, i) => {
       const progress = player.progress[which];
