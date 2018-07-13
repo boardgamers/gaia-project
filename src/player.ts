@@ -471,16 +471,7 @@ export default class Player extends EventEmitter {
       }
     }
 
-    const fedsWithInfo: FederationInfo[] = federations.map(federation => {
-      const nSatellites = federation.filter(hex => map.grid.get(hex).data.planet === Planet.Empty).length;
-      const nPlanets = federation.filter(hex => map.grid.get(hex).colonizedBy(this.player)).length;
-
-      return {
-        hexes: federation,
-        satellites: nSatellites,
-        planets: nPlanets
-      };
-    });
+    const fedsWithInfo: FederationInfo[] = federations.map(federation => this.federationInfo(federation));
 
     // Remove federations with one more planet & one more satellite
     // Also remove federations containing another
@@ -495,6 +486,71 @@ export default class Player extends EventEmitter {
     }
 
     return _.difference(fedsWithInfo, toRemove);
+  }
+
+  federationInfo(federation: GaiaHex[]): FederationInfo {
+    const nSatellites = federation.filter(hex => hex.data.planet === Planet.Empty).length;
+    const nPlanets = federation.filter(hex => hex.colonizedBy(this.player)).length;
+
+    return {
+      hexes: federation,
+      satellites: nSatellites,
+      planets: nPlanets
+    };
+  }
+
+  checkAndGetFederationInfo(location: string, map: SpaceMap): false | FederationInfo {
+    const coords = location.split(',').map(loc => CubeCoordinates.parse(loc));
+
+    for (const coord of coords) {
+      // Off the map
+      if (!map.grid.get(coord)) {
+        return false;
+      }
+    }
+
+    if (coords.length > 30 || coords.length < 2) {
+      return false;
+    }
+
+    let hexes: GaiaHex[] = _.uniq(coords.map(coord => map.grid.get(coord)));
+
+    if (hexes.length !== coords.length) {
+      // Duplicate hexes
+      return false;
+    }
+
+    // Extend to nearby buidlings
+    hexes = this.addAdjacentBuildings(hexes);
+
+    // Check if no forbidden square
+    const excluded = map.excludedHexesForBuildingFederation(this.player);
+    for (const hex of hexes) {
+      if (excluded.has(hex)) {
+        return false;
+      }
+    }
+
+    // Check if all the buildings are in one group
+    if (map.grid.groups(hexes).length !== 1) {
+      return false;
+    }
+
+    // Get the power value of the buildings
+    const powerValue = _.sum(hexes.map(hex => this.buildingValue(hex.buildingOf(this.player), hex.data.planet)));
+    if (powerValue < this.federationCost) {
+      return false;
+    }
+
+    const info = this.federationInfo(hexes);
+
+    // Check if outclassed by available federations
+    const available = this.availableFederations(map);
+    if (available.some(fed => isOutclassedBy(info, fed))) {
+      return false;
+    }
+
+    return info;
   }
 
   get federationCost(): number {

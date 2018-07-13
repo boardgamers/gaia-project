@@ -283,6 +283,9 @@ describe("Engine", () => {
     expect(data.power.gaia).to.be.gte(0);
     expect(data.satellites).to.equal(2);
     expect(data.discardablePowerTokens()).to.be.equal(powerTokens - 2, "The 2 satellites should remove one power token each");
+
+    // Test other federation with the same buildings
+    expect(() => new Engine([...moves, "p1 federation -1x2,-2x3,-3x3,-3x4,-4x2,-4x3 fed2"])).to.not.throw();
   });
 
   it("should allow poweraction", () => {
@@ -708,8 +711,6 @@ describe("Engine", () => {
       expect(engine.player(Player.Player1).data.advTechTiles).to.include(engine.advTechTiles[AdvTechTilePos.GaiaProject].tile);
       expect(engine.advTechTiles[AdvTechTilePos.GaiaProject].numTiles).to.equal(0);
     });
-
-
   });
 
   describe("boosters", () => {

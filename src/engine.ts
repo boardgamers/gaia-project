@@ -865,18 +865,15 @@ export default class Engine {
 
   [Command.FormFederation](player: PlayerEnum, hexes: string, federation: Federation) {
     const avail = this.availableCommand(player, Command.FormFederation);
+    const pl = this.player(player);
 
-    if (!avail.data.federations.find(fed => fed.hexes === hexes)) {
-      // Todo: allow custom federations which respect the rules (isOutclassedBy)
+    const fedInfo = pl.checkAndGetFederationInfo(hexes, this.map);
+    if (!fedInfo) {
       throw new Error(`Impossible to form federation at ${hexes}`);
     }
     if (!avail.data.tiles.includes(federation)) {
       throw new Error(`Impossible to form federation ${federation}`);
     }
-
-    const fedInfo = avail.data.federations.find(fed => fed.hexes === hexes);
-
-    const pl = this.player(player);
 
     pl.gainFederationToken(federation);
     this.federations[federation] -= 1;
