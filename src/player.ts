@@ -22,7 +22,6 @@ import techs from './tiles/techs';
 import advancedTechs from './tiles/advanced-techs';
 
 const TERRAFORMING_COST = 3;
-const FEDERATION_COST = 7;
 // 25 satellites - 2 used on the final scoring board
 const MAX_SATELLITES = 23;
 
@@ -477,7 +476,14 @@ export default class Player extends EventEmitter {
     return _.difference(fedsWithInfo, toRemove);
   }
 
-  possibleCombinationsForFederations(nodes: Array<{hex: GaiaHex, value: number}>, toReach = FEDERATION_COST): GaiaHex[][] {
+  get federationCost(): number {
+    if (this.faction === Faction.Xenos && this.data.hasPlanetaryInstitute()) {
+      return 6;
+    }
+    return 7;
+  }
+
+  possibleCombinationsForFederations(nodes: Array<{hex: GaiaHex, value: number}>, toReach = this.federationCost): GaiaHex[][] {
     const ret: GaiaHex[][] = [];
 
     for (let i = 0; i < nodes.length; i ++) {
