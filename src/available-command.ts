@@ -5,7 +5,7 @@ import factions from './factions';
 import * as assert from "assert";
 import { upgradedBuildings } from './buildings';
 import Reward from './reward';
-import { boardActions, freeActions } from './actions';
+import { boardActions, freeActions, freeActionsHadschHallas } from './actions';
 import * as researchTracks from './research-tracks';
 import { terraformingStepsRequired } from './planets';
 
@@ -322,10 +322,17 @@ export function possibleBoardActions(engine: Engine, player: Player) {
 
 export function possibleFreeActions(engine: Engine, player: Player) {
   // free action - spend
+  const pl = engine.player(player);
   const acts = [];
   const commands = [];
-  for (const freeAction of freeActions) {
-    if (engine.player(player).canPay(Reward.parse(freeAction.cost))) {
+
+  let pool = freeActions;
+  if (pl.faction === Faction.HadschHallas && pl.data.hasPlanetaryInstitute()) {
+    pool = [].concat(pool, freeActionsHadschHallas);
+  }
+
+  for (const freeAction of pool) {
+    if (pl.canPay(Reward.parse(freeAction.cost))) {
       acts.push({
         cost: freeAction.cost,
         income: freeAction.income
