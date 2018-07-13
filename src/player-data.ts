@@ -133,7 +133,7 @@ export default class PlayerData extends EventEmitter {
       case Resource.None: return true;
       case Resource.GainToken: return this.discardablePowerTokens() >= reward.count;
       case Resource.GainTokenGaiaArea: return this.discardablePowerTokens() >= reward.count;
-      case Resource.ChargePower: return this.power.area3 + this.brainstoneValue() >= reward.count;
+      case Resource.ChargePower: return this.spendablePowerTokens() >= reward.count;
     }
 
     return false;
@@ -141,6 +141,10 @@ export default class PlayerData extends EventEmitter {
 
   discardablePowerTokens(): number {
     return this.power.area1 + this.power.area2 + this.power.area3 + (this.brainstoneInPlay() ? 1 : 0);
+  }
+
+  spendablePowerTokens(): number {
+    return this.power.area3 + this.brainstoneValue();
   }
 
   /**
@@ -180,8 +184,6 @@ export default class PlayerData extends EventEmitter {
     return area1ToUp + area2ToUp + brainstoneUsage;
   }
 
-
-
   spendPower(power: number) {
     if (this.brainstone === BrainstoneArea.Area3 && (power >= 3 || this.power.area3 < power)) {
       this.brainstone = BrainstoneArea.Area1;
@@ -209,8 +211,12 @@ export default class PlayerData extends EventEmitter {
     }
   }
 
+  burnablePower() {
+    return Math.floor(this.power.area2 + (this.brainstone === BrainstoneArea.Area2 ? 1 : 0));
+  }
+
   burnPower(power: number) {
-    if ( this.brainstone === BrainstoneArea.Area2) {
+    if (this.brainstone === BrainstoneArea.Area2) {
       this.brainstone = BrainstoneArea.Area3;
       power -= 1;
     }
@@ -244,17 +250,10 @@ export default class PlayerData extends EventEmitter {
     // Knowing that pw at area3 can be converted for credits
     // and Q.I.C for ore
     let resources = this.ores + this.credits + this.qics + this.knowledge;
-    resources += this.power.area3;
 
-    // If brainstone is in area 2, we need to see if we can burn 1 power
-    // to move it to area 3
-    if (this.brainstone === BrainstoneArea.Area2 && this.power.area2 > 0) {
-      this.brainstone = BrainstoneArea.Area3;
-      this.power.area2 -= 1;
-    }
-
-    // Add burnt power & brain stone value
-    resources += Math.floor(this.power.area2 / 2) + this.brainstone === BrainstoneArea.Area3 ? this.brainstoneValue() : 0;
+    // Move as many tokens as possible into area3 and add to power tokens
+    this.burnPower(this.burnablePower());
+    resources += this.spendablePowerTokens();
 
     this.victoryPoints += Math.floor(resources / 3);
   }
