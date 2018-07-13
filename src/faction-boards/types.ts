@@ -39,7 +39,6 @@ export interface FactionBoardRaw {
     area2?: number
   };
   brainstone?: BrainstoneArea;
-
 }
 
 const defaultBoard: FactionBoardRaw = {
@@ -74,7 +73,7 @@ const defaultBoard: FactionBoardRaw = {
   },
   income: ["3k,4o,15c,q", "+o,k"],
   power: {
-    area1: 4,
+    area1: 2,
     area2: 4
   },
   brainstone : BrainstoneArea.Out

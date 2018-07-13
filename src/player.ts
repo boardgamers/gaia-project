@@ -147,7 +147,7 @@ export default class Player extends EventEmitter {
 
     this.data.power.area1 = this.board.power.area1;
     this.data.power.area2 = this.board.power.area2;
-
+    this.data.brainstone = this.board.brainstone;
   }
 
   loadEvents(events: Event[]) {

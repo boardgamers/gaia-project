@@ -10,7 +10,10 @@ const baltaks: FactionBoardRaw = {
     cost: "6c,6o",
     income: ["=>4c"]
   },
-  income: ["3k,4o,15c,up-gaia", "+o,k"]
+  income: ["3k,4o,15c,up-gaia", "+o,k"],
+  power: {
+    area2: 2
+  }
 };
 
 export default baltaks;
