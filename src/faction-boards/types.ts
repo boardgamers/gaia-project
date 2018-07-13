@@ -65,7 +65,7 @@ const defaultBoard: FactionBoardRaw = {
   },
   [Building.PlanetaryInstitute]: {
     cost: "6c,4o",
-    income: ["+4pw,t"]
+    income: ["+4pw", "+t"]
   },
   [Building.GaiaFormer]: {
     cost: "6tg",
@@ -76,7 +76,7 @@ const defaultBoard: FactionBoardRaw = {
     area1: 2,
     area2: 4
   },
-  brainstone : BrainstoneArea.Out
+  brainstone: BrainstoneArea.Out
 };
 
 export class FactionBoard {
@@ -135,7 +135,7 @@ export class FactionBoard {
     return this[building].income.length;
   }
 
-  cost( targetPlanet: Planet, building: Building, isolated = true): Reward[] {
+  cost(targetPlanet: Planet, building: Building, isolated = true): Reward[] {
 
     if (building === Building.TradingStation && isolated) {
       return this[building].isolatedCost;

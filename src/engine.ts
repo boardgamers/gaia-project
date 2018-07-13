@@ -280,7 +280,7 @@ export default class Engine {
     this.nextPlayer = this.turnOrder[0];
 
     if ( this.round >= 1) {
-      this.incomePhase();
+      this.incomePhase(); 
       this.gaiaPhase();
     }
 
@@ -288,12 +288,30 @@ export default class Engine {
 
   incomePhase() {
     for (const player of this.playersInOrder()) {
-      player.receiveIncome();
+      this.selectIncomePhase(player.player);
+      player.loadEvents( Event.parse(roundScorings[this.roundScoringTiles[this.round]]));
+    }
 
-      // asign roundScoring tile to each player
-      player.loadEvents(this.currentRoundScoringEvents);
+  };
 
-      // TODO split power actions and request player order
+  selectIncomePhase(player: PlayerEnum){
+    const pl = this.player(player);
+
+    // we need to check if rewards contains Resource.GainToken and Resource.GainPower
+    // player has to select the order
+
+    const gainTokens = pl.events[Operator.Income].filter( ev => !ev.activated && ev.rewards.find( rw => rw.type === Resource.GainToken));
+    const chargePowers = pl.events[Operator.Income].filter( ev => !ev.activated && ev.rewards.find( rw => rw.type === Resource.ChargePower));
+
+    if ( gainTokens.length>0 && chargePowers.length>0) {     
+        this.roundSubCommands.unshift({
+          name: Command.ChooseIncome,
+          player: player,
+          data: { incomes : gainTokens.concat(chargePowers)} 
+      });
+      
+    } else {
+      pl.receiveIncome();  
     }
   }
 
@@ -480,6 +498,10 @@ export default class Engine {
 
       // resets special action
       for (const event of player.events[Operator.Activate]) {
+        event.activated = false;
+      }
+      // resets income action
+      for (const event of player.events[Operator.Income]) {
         event.activated = false;
       }
     }
@@ -861,6 +883,19 @@ export default class Engine {
     pl.payCosts(Reward.parse(boardActions[action].cost));
     pl.loadEvents(Event.parse(boardActions[action].income));
     this.endTurnPhase(player, Command.Action);
+  }
+  
+  [Command.ChooseIncome](player: PlayerEnum, income: string) {
+    const { incomes } = this.availableCommand(player, Command.ChooseIncome).data;
+    const incomeRewards = income.split(",") ;
+
+    for (const incR of incomeRewards) {
+      const eventIdx = incomes.findIndex(ev => Reward.match(Reward.parse(incR), ev.rewards));
+      assert(eventIdx > -1, `${incR} is not in the available income`);
+      incomes.splice(eventIdx, 1);
+    }
+    this.player(player).receiveIncomeEvent(Reward.parse(income));
+    this.selectIncomePhase(player);
   }
 
   [Command.FormFederation](player: PlayerEnum, hexes: string, federation: Federation) {

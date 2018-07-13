@@ -9,7 +9,7 @@ const bescods: FactionBoardRaw = {
     income: ["+3c", "+4c", "+5c"]
   },
   [Building.PlanetaryInstitute]: {
-    income: ["+4pw,2t"]
+    income: ["+4pw", "+2t"]
   },
   income: ["k,4o,15c,q", "+o"]
 };

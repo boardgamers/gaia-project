@@ -199,6 +199,20 @@ export default class Player extends EventEmitter {
     }
   }
 
+  receiveIncomeEvent(rewards: Reward[]) {
+    //this is managing Income phase to solve +t and +pw ordering
+    //it's assuming that each reward belongs to a different event, which has only that reward  
+    //in case of multiple matchings pick the first
+    for ( const rew of rewards) {
+      const event =  this.events[Operator.Income].find( ev => !ev.activated && Reward.match( [rew], ev.rewards));
+      if (event) {
+        this.gainRewards(event.rewards);
+        event.activated = true;
+      }
+    }
+  }
+  
+  
   onResearchAdvanced(field: ResearchField) {
     const events = Event.parse(researchTracks[field][this.data.research[field]]);
     this.loadEvents(events);
@@ -211,14 +225,19 @@ export default class Player extends EventEmitter {
   build(building: Building, hex: GaiaHex, cost: Reward[], map: SpaceMap, stepsReq?: number) {
     this.payCosts(cost);
     // excluding Gaiaformers as occupied
-    if ( building !== Building.GaiaFormer ) {
+    if (building !== Building.GaiaFormer) {
       this.data.occupied = _.uniqWith([].concat(this.data.occupied, hex), _.isEqual);
     }
 
     // The mine of the lost planet doesn't grant any extra income
     if (hex.data.planet !== Planet.Lost) {
-      // Add income of the building to the list of events
-      this.loadEvent(this.board[building].income[this.data[building]]);
+      if (building === Building.PlanetaryInstitute) {
+        // PI has different events
+        this.loadEvents(this.board[Building.PlanetaryInstitute].income);
+      } else {
+        // Add income of the building to the list of events
+        this.loadEvent(this.board[building].income[this.data[building]]);
+      }
       this.data[building] += 1;
     }
 
@@ -307,7 +326,10 @@ export default class Player extends EventEmitter {
 
   receiveIncome() {
     for (const event of this.events[Operator.Income]) {
-      this.gainRewards(event.rewards);
+      if ( !event.activated ) {
+        this.gainRewards(event.rewards);
+        event.activated = true;
+      }
     }
   }
 
