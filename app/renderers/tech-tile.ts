@@ -38,7 +38,8 @@ export default class TechTile extends PIXI.Graphics {
     this.titleText.text = number > 1 ? `${this.pos} (${number})` : this.pos;
     
     const events = tiles.techs[which] || tiles.advancedTechs[which];
-    this.content.text = events.join(" / ").replace(/\s/g, '');
+    // The tile with 'mg' has text too long
+    this.content.text = events[0].indexOf("mg") === -1 ? events[0] : events[0].replace(/\s/g, '');
 
     if (highlighted) {
       this.cursor = "pointer";
