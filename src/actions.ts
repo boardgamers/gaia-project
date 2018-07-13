@@ -20,11 +20,11 @@ export const freeActionsHadschHallas = [
 
 export const boardActions =  {
   [BoardAction.Power1]: { cost: "7pw", income: ["3k"] },
-  [BoardAction.Power2]: { cost: "5pw", income: ["2tempstep"] },
+  [BoardAction.Power2]: { cost: "5pw", income: ["step+2"] },
   [BoardAction.Power3]: { cost: "4pw", income: ["2o"] },
   [BoardAction.Power4]: { cost: "4pw", income: ["7c"] },
   [BoardAction.Power5]: { cost: "4pw", income: ["2k"] },
-  [BoardAction.Power6]: { cost: "3pw", income: ["1tempstep"] },
+  [BoardAction.Power6]: { cost: "3pw", income: ["step+1"] },
   [BoardAction.Power7]: { cost: "3pw", income: ["2t"] },
   [BoardAction.Qic1]: { cost: "4q", income: ["tech"] },
   [BoardAction.Qic2]: { cost: "3q", income: ["fed"] },

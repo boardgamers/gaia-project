@@ -42,8 +42,8 @@ export enum Resource {
   UpgradeScience = "up-sci",
   TechTile = "tech",
   RescoreFederation = "fed",
-  TemporaryStep = "tempstep",
-  TemporaryRange = "temprange"
+  TemporaryStep = "step",
+  TemporaryRange = "range"
 
 }
 
