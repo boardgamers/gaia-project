@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import Engine from "..";
 import { AssertionError } from "assert";
-import { Player, Federation, Operator, AdvTechTilePos } from "./enums";
+import { Player, Federation, Operator, AdvTechTilePos, Building } from "./enums";
 
 describe("Engine", () => {
 
@@ -347,7 +347,7 @@ describe("Engine", () => {
       p1 leech 2pw
       p2 decline
       p1 build gf -6x7. spend 1o for 1c.
-      `);
+    `);
 
     expect(() => new Engine(moves)).to.not.throw();
   });
@@ -465,6 +465,47 @@ describe("Engine", () => {
       expect(engine.player(Player.Player1).data.victoryPoints).to.equal(vp + 2);
     });
   });
+  
+  describe("lantids", () => {
+    it ("should be able to build a mine on other players' planets", () => {
+      const moves = parseMoves(`
+        init 2 randomSeed
+        p1 faction lantids
+        p2 faction xenos
+        p1 build m -3x4
+        p2 build m -2x2
+        p2 build m -5x5
+        p1 build m -1x2
+        p2 build m 1x2
+        p2 booster booster3
+        p1 booster booster7
+        p1 build m -2x2.
+        p2 leech 1pw
+      `);
+
+      expect(() => new Engine(moves)).to.not.throw();
+    });
+
+    it ("should gain knowledge when having a PI and building on someone else's planet", () => {
+      const engine = new Engine(parseMoves(`
+        init 2 randomSeed
+        p1 faction lantids
+        p2 faction xenos
+        p1 build m -3x4
+        p2 build m -2x2
+        p2 build m -5x5
+        p1 build m -1x2
+        p2 build m 1x2
+        p2 booster booster3
+        p1 booster booster7
+      `));
+
+      engine.player(Player.Player1).data[Building.PlanetaryInstitute] = 1;
+      const k = engine.player(Player.Player1).data.knowledge;
+      engine.move("p1 build m -2x2.");
+      expect(engine.player(Player.Player1).data.knowledge).to.equal(k + 2);
+    });
+  });
 
   describe("free actions", () => {
     it("should allow free action as first move after setupsetup is correct", () => {
@@ -537,6 +578,27 @@ describe("Engine", () => {
       `);
 
       expect(() => new Engine(moves)).to.not.throw(AssertionError);
+    });
+
+    it("should grant hadsch hallas new free actions after the PI is built", () => {
+      const moves = parseMoves(`
+        init 2 randomSeed
+        p1 faction hadsch-hallas
+        p2 faction ambas
+        p1 build m -5x0
+        p2 build m -3x-2
+        p2 build m 2x4
+        p1 build m 1x5
+        p2 booster booster3
+        p1 booster booster7
+        p1 build ts 1x5.
+        p2 leech 1pw
+        p2 build ts 2x4.
+        p1 leech 2pw
+        p1 build PI 1x5. spend 4c for 1k
+      `);
+
+      expect(() => new Engine(moves)).to.not.throw();
     });
   });
 
@@ -633,11 +695,12 @@ describe("Engine", () => {
         p1 action power3.
         p2 federation -2x2,-3x3,-4x4,-4x5,-4x6,-5x5 fed4.
         p1 special 4pw.
-        p2 spend 4pw,k for 1o,2c. build lab -5x5. tech free3. up nav.
+        p2 spend 3pw for 1o. pass booster3
+        p1 up terra.
+        p1 pass booster4
+        p2 build lab -5x5. tech free2. up nav.
         p1 leech 4pw
-        p1 action power4.
-        p2 pass booster3
-        p1 up terra.. build lab -2x3. tech adv-gaia. cover free2. up terra.
+        p1 build lab -2x3. tech adv-gaia. cover free1. up gaia
       `);
 
       const engine = new Engine(moves);

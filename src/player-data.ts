@@ -139,6 +139,10 @@ export default class PlayerData extends EventEmitter {
     return false;
   }
 
+  hasPlanetaryInstitute(): boolean {
+    return this[Building.PlanetaryInstitute] > 0;
+  }
+
   discardablePowerTokens(): number {
     return this.power.area1 + this.power.area2 + this.power.area3 + (this.brainstoneInPlay() ? 1 : 0);
   }
@@ -179,8 +183,6 @@ export default class PlayerData extends EventEmitter {
     // returns real charged power
     return area1ToUp + area2ToUp + brainstoneUsage;
   }
-
-
 
   spendPower(power: number) {
     if (this.brainstone === BrainstoneArea.Area3 && (power >= 3 || this.power.area3 < power)) {

@@ -25,7 +25,8 @@
     "build": "npm run clean && tsc",
     "clean": "rm -Rf dist",
     "lint": "tslint -c tslint.json index.ts src/**/*.ts",
-    "test": "npm run lint && mocha -r ts-node/register src/**/*.spec.ts"
+    "test": "npm run lint && mocha -r ts-node/register src/**/*.spec.ts",
+    "just-test": "mocha -r ts-node/register src/**/*.spec.ts"
   },
   "contributors": [
     "coyotte508 <coyotte508@gmail.com>",
