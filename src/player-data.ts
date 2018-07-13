@@ -133,7 +133,7 @@ export default class PlayerData extends EventEmitter {
       case Resource.None: return true;
       case Resource.GainToken: return this.discardablePowerTokens() >= reward.count;
       case Resource.GainTokenGaiaArea: return this.discardablePowerTokens() >= reward.count;
-      case Resource.ChargePower: return this.power.area3 + this.brainstoneValue() >= reward.count;
+      case Resource.ChargePower: return this.spendablePowerTokens() >= reward.count;
     }
 
     return false;
@@ -145,6 +145,10 @@ export default class PlayerData extends EventEmitter {
 
   discardablePowerTokens(): number {
     return this.power.area1 + this.power.area2 + this.power.area3 + (this.brainstoneInPlay() ? 1 : 0);
+  }
+
+  spendablePowerTokens(): number {
+    return this.power.area3 + this.brainstoneValue();
   }
 
   /**
@@ -211,8 +215,12 @@ export default class PlayerData extends EventEmitter {
     }
   }
 
+  burnablePower() {
+    return Math.floor((this.power.area2 + (this.brainstone === BrainstoneArea.Area2 ? 1 : 0)) / 2);
+  }
+
   burnPower(power: number) {
-    if ( this.brainstone === BrainstoneArea.Area2) {
+    if (this.brainstone === BrainstoneArea.Area2) {
       this.brainstone = BrainstoneArea.Area3;
       power -= 1;
     }
@@ -235,4 +243,22 @@ export default class PlayerData extends EventEmitter {
     return this.brainstone === BrainstoneArea.Area3 ? 3 : 0;
   }
 
+  gainFinalVictoryPoints() {
+    // Gain 4 points for research at level 3, 8 points for research at level 4
+    // and 12 points for research at level 12
+    for (const research of Object.values(ResearchField)) {
+      this.victoryPoints += Math.max(this.research[research] - 3, 0) * 4;
+    }
+
+    // Gain 1 point for any 3 of ore, credits & knowledge.
+    // Knowing that pw at area3 can be converted for credits
+    // and Q.I.C for ore
+    let resources = this.ores + this.credits + this.qics + this.knowledge;
+
+    // Move as many tokens as possible into area3 and add to power tokens
+    this.burnPower(this.burnablePower());
+    resources += this.spendablePowerTokens();
+
+    this.victoryPoints += Math.floor(resources / 3);
+  }
 }

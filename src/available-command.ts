@@ -362,11 +362,11 @@ export function possibleFreeActions(engine: Engine, player: Player) {
     commands.push({
       name: Command.BurnPower,
       player,
-      data: _.range(1, Math.floor(engine.player(player).data.power.area2 / 2) + 1)
+      data: _.range(1, engine.player(player).data.burnablePower() + 1)
     });
   }
-  return commands;
 
+  return commands;
 }
 
 export function possibleResearchAreas(engine: Engine, player: Player, cost: string, destResearchArea?: ResearchField) {
