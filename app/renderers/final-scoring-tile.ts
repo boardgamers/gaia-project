@@ -30,13 +30,15 @@ export default class FinalScoringTile extends PIXI.Graphics {
 
     this.titleText.text = which;
 
-    const order = [...players].sort((pl1, pl2) => pl1.progress[which] - pl2.progress[which]);
+    const min = Math.min(...players.map(pl => pl.progress[which]), 0);
+    const max = Math.max(...players.map(pl => pl.progress[which]), 10);
 
-    order.forEach((player, i) => {
-      Token.draw(player.faction, 16 + i * 10, 27, this, 4);
+    players.forEach((player, i) => {
+      const progress = player.progress[which];
+      Token.draw(player.faction, 10 + (progress - min) * 55 / (max - min), 19 + (14 / (players.length-1)) * i, this, 3);
     });
 
-    const tooltips: string[] = order.map(pl => `- ${factions[pl.faction].name}: ${pl.progress[which]}`);
+    const tooltips: string[] = players.map(pl => `- ${factions[pl.faction].name}: ${pl.progress[which]}`);
 
     this.emit("tooltip-remove", this);
     this.off("mouseover");
