@@ -212,7 +212,7 @@ export default class PlayerData extends EventEmitter {
   }
 
   burnablePower() {
-    return Math.floor(this.power.area2 + (this.brainstone === BrainstoneArea.Area2 ? 1 : 0));
+    return Math.floor((this.power.area2 + (this.brainstone === BrainstoneArea.Area2 ? 1 : 0)) / 2);
   }
 
   burnPower(power: number) {
