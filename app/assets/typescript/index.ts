@@ -361,7 +361,7 @@ function addMove(move: string) {
 
 map.on("hexClick", hex => {
   if (pendingCommand) {
-    addMove(pendingCommand + " " + CubeCoordinates.toString(hex))
+    addMove(pendingCommand + " " + `${hex.q}x${hex.r}`);
   }
 });
 

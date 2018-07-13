@@ -1,6 +1,6 @@
 import * as PIXI from "pixi.js";
-import {GaiaHexData, Planet, Faction} from "@gaia-project/engine";
-import { CubeCoordinates } from "hexagrid";
+import {GaiaHexData, Planet, Faction, GaiaHex} from "@gaia-project/engine";
+import { CubeCoordinates, Grid, Direction } from "hexagrid";
 import PlanetRenderer from "./planet";
 import BuildingRenderer from "./building";
 import {hexCenter, corners} from '../graphics/hex';
@@ -17,12 +17,10 @@ const hexData = {
   backgroundQicHighlight: 0x91ffc4
 };
 
-type GaiaHex = CubeCoordinates & {data: GaiaHexData};
-
 type ZonesOfInterest = Array<{coord: CubeCoordinates, qic: boolean, hint?: string}>;
 
 export default class MapRenderer extends PIXI.Graphics {
-  lastData: GaiaHex[];
+  map: Grid<GaiaHex>;
   zonesOfInterest: ZonesOfInterest = [];
   factions: Faction[] = [];
 
@@ -30,8 +28,9 @@ export default class MapRenderer extends PIXI.Graphics {
     super();
   }
 
-  render(map: GaiaHex[], factions: Faction[], zonesOfInterest?: ZonesOfInterest) {
-    this.lastData = map;
+  render(map: Array<CubeCoordinates & {data: GaiaHexData}>, factions: Faction[], zonesOfInterest?: ZonesOfInterest) {
+    const hexes = map.map(elem => new GaiaHex(elem.q, elem.r, elem.data));
+    this.map = new Grid<GaiaHex>(...hexes);
     this.zonesOfInterest = zonesOfInterest;
     this.factions = factions;
 
@@ -42,7 +41,7 @@ export default class MapRenderer extends PIXI.Graphics {
     }
     this.removeChildren();
 
-    for (const hex of map) {
+    for (const hex of this.map.values()) {
       const ofInterest = zonesOfInterest && zonesOfInterest.find(zone => zone.coord.q === hex.q && zone.coord.r === hex.r);
       this.drawHex(hex, !!ofInterest, ofInterest && ofInterest.qic, ofInterest && ofInterest.hint);
     };
@@ -56,10 +55,21 @@ export default class MapRenderer extends PIXI.Graphics {
     const [firstCorner, ...otherCorners] = corners(hexData.radius);
     const vertices = [firstCorner, ...otherCorners, firstCorner];
 
-    graphics.lineStyle(hexData.border.width, hexData.border.color);
+    graphics.lineStyle(hexData.border.width, 0xFFFFFF, 0.7);
     graphics.beginFill(ofInterest ? (qic ? hexData.backgroundQicHighlight : hexData.backgroundHighlight) : hexData.background);
     graphics.drawPolygon([].concat(...vertices.map(p => [p.x, p.y])));
     graphics.endFill();
+
+    // Draw individual sides
+    graphics.lineStyle(hexData.border.width, hexData.border.color);
+    [Direction.NorthWest, Direction.North, Direction.NorthEast, Direction.SouthEast, Direction.South, Direction.SouthWest].forEach((direction, i) => {
+      const neighbour = this.map.neighbour(hex, direction);
+
+      // Don't draw side if sector is different
+      if (!neighbour || neighbour.data.sector === hex.data.sector) {
+        graphics.drawPolygon([vertices[i].x, vertices[i].y, vertices[i+1].x, vertices[i+1].y]);
+      }
+    });
 
     if (hex.data.federations) {
       let radius = hexData.radius;
