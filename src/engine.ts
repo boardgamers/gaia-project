@@ -290,7 +290,7 @@ export default class Engine {
       player.receiveIncome();
 
       // asign roundScoring tile to each player
-      player.loadEvents( Event.parse(roundScorings[this.roundScoringTiles[this.round]]));
+      player.loadEvents(this.currentRoundScoringEvents);
 
       // TODO split power actions and request player order
     }
@@ -465,13 +465,17 @@ export default class Engine {
     }
   }
 
+  get currentRoundScoringEvents() {
+    return Event.parse(roundScorings[this.roundScoringTiles[this.round - 1]]);
+  }
+
   cleanUpPhase() {
     if (this.round < 1) {
       return;
     }
     for (const player of this.players) {
       // remove roundScoringTile
-      player.removeEvents(Event.parse(roundScorings[this.roundScoringTiles[this.round]]));
+      player.removeEvents(this.currentRoundScoringEvents);
 
       // resets special action
       for (const event of player.events[Operator.Activate]) {
