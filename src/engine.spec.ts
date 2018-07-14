@@ -443,7 +443,7 @@ describe("Engine", () => {
       expect(data.federations.includes(Federation.FederationGleens)).to.be.true;
     });
 
-    it ("should grant gleens two victory points when building a mine on a gaia planet", () => {
+    it('should grant gleens two victory points when building a mine on a gaia planet', () => {
       const engine = new Engine(parseMoves(`
         init 2 randomSeed
         p1 faction gleens
@@ -462,7 +462,7 @@ describe("Engine", () => {
       `));
 
       const vp = engine.player(Player.Player1).data.victoryPoints;
-      engine.move("p1 build m -2x3");
+      engine.move('p1 build m -2x3');
       expect(engine.player(Player.Player1).data.victoryPoints).to.equal(vp + 2);
     });
   });
@@ -796,7 +796,7 @@ describe("Engine", () => {
       `);
 
       const engine = new Engine(moves);
-      const vp = engine.player(Player.Player1).data.victoryPoints;
+      const vp = engine.player(Player.Player2).data.victoryPoints;
 
       engine.move("p2 pass booster3");
 

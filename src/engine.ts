@@ -289,7 +289,7 @@ export default class Engine {
   incomePhase() {
     for (const player of this.playersInOrder()) {
       this.selectIncomePhase(player.player);
-      player.loadEvents( Event.parse(roundScorings[this.roundScoringTiles[this.round]]));
+      player.loadEvents(this.currentRoundScoringEvents);
     }
 
   };
