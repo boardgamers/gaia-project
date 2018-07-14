@@ -671,6 +671,11 @@ export default class Engine {
           elem.steps
         );
 
+        //remove subCommand build if present
+        if (this.roundSubCommands[0] && this.roundSubCommands[0].name === Command.Build) {
+          this.roundSubCommands.splice(0, 1);
+        }
+
         this.leechingPhase(player, hex);
 
         if ( pl.faction === Faction.Gleens && building === Building.PlanetaryInstitute) {

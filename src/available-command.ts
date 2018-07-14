@@ -114,6 +114,7 @@ export function generate(engine: Engine): AvailableCommand[] {
             break;
           }
 
+          case Command.Build:
           case Command.EndTurn: {
             commands.push(subCommand);
 
@@ -124,8 +125,8 @@ export function generate(engine: Engine): AvailableCommand[] {
 
           default: commands.push(subCommand);
         }
-        // remove playerPassiveCommands but not endTurn
-        if ( engine.roundSubCommands[0].name !== Command.EndTurn ) {
+        // remove playerPassiveCommands but not endTurn or BuildsubPhase
+        if (engine.roundSubCommands[0].name !== Command.EndTurn && engine.roundSubCommands[0].name !== Command.Build) {
           engine.roundSubCommands.splice(0, 1);
         }
 
