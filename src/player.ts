@@ -20,6 +20,7 @@ import { EventEmitter } from "eventemitter3";
 import { finalScorings } from './tiles/scoring';
 import techs from './tiles/techs';
 import advancedTechs from './tiles/advanced-techs';
+import * as assert from "assert";
 
 const TERRAFORMING_COST = 3;
 // 25 satellites - 2 used on the final scoring board
@@ -499,26 +500,18 @@ export default class Player extends EventEmitter {
     };
   }
 
-  checkAndGetFederationInfo(location: string, map: SpaceMap): false | FederationInfo {
+  checkAndGetFederationInfo(location: string, map: SpaceMap): FederationInfo {
     const coords = location.split(',').map(loc => CubeCoordinates.parse(loc));
 
     for (const coord of coords) {
-      // Off the map
-      if (!map.grid.get(coord)) {
-        return false;
-      }
+      assert(map.grid.get(coord), `Coord ${coord.q}x${coord.r} is not part of the map`);
     }
 
-    if (coords.length > 30 || coords.length < 2) {
-      return false;
-    }
+    assert (coords.length <= 30, "The federation is too big, it is impossible to build with only 23 satellites");
 
     let hexes: GaiaHex[] = _.uniq(coords.map(coord => map.grid.get(coord)));
 
-    if (hexes.length !== coords.length) {
-      // Duplicate hexes
-      return false;
-    }
+    assert (hexes.length === coords.length, "There are repeating coordinates in the given federation");
 
     // Extend to nearby buidlings
     hexes = this.addAdjacentBuildings(hexes);
@@ -526,29 +519,23 @@ export default class Player extends EventEmitter {
     // Check if no forbidden square
     const excluded = map.excludedHexesForBuildingFederation(this.player);
     for (const hex of hexes) {
-      if (excluded.has(hex)) {
-        return false;
-      }
+      assert (!excluded.has(hex), `${hex.toString()} can't be part of a new federation`);
     }
 
     // Check if all the buildings are in one group
-    if (map.grid.groups(hexes).length !== 1) {
-      return false;
-    }
+    assert(map.grid.groups(hexes).length === 1, 'The hexes of the federation must be adjacent');
 
     // Get the power value of the buildings
     const powerValue = _.sum(hexes.map(hex => this.buildingValue(hex.buildingOf(this.player), hex.data.planet)));
-    if (powerValue < this.federationCost) {
-      return false;
-    }
+    assert(powerValue >= this.federationCost, "Your buildings need to have a total value of at least " + this.federationCost);
 
     const info = this.federationInfo(hexes);
 
     // Check if outclassed by available federations
     const available = this.availableFederations(map);
-    if (available.some(fed => isOutclassedBy(info, fed))) {
-      return false;
-    }
+    const outclasser = available.find(fed => isOutclassedBy(info, fed));
+
+    assert(!outclasser, "Federation is outclassed by other federation at " + _.get(outclasser, "hexes", []).join(','));
 
     return info;
   }
