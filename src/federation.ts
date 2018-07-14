@@ -1,8 +1,10 @@
 import { CubeCoordinates } from "hexagrid";
 import * as _ from "lodash";
+import SpaceMap from "./map";
+import { GaiaHex } from "./gaia-hex";
 
 export interface FederationInfo {
-  hexes: CubeCoordinates[];
+  hexes: GaiaHex[];
   planets: number;
   satellites: number;
 }
@@ -23,9 +25,29 @@ export function isOutclassedBy(fed: FederationInfo, comparison: FederationInfo) 
     return true;
   }
 
-  if (fed.hexes.length <= comparison.hexes.length) {
+  // We don't use more satellites, we win!
+  if (fed.satellites <= comparison.satellites) {
     return false;
   }
 
-  return _.differenceWith(comparison.hexes, fed.hexes, (h1, h2) => h1.q === h2.q && h1.r === h2.r).length === 0;
+  // We use less planets, we win!
+  if (fed.planets < comparison.planets) {
+    return false;
+  }
+
+  // We check if the federations share the same planets.
+  // If so, and fed has more satellites, then fed is invalid
+  // because it can be built with less satellites
+  const fedPlanets = fed.hexes.filter(hex => hex.hasPlanet());
+  const compPlanets = comparison.hexes.filter(hex => hex.hasPlanet());
+
+  if (fedPlanets.length === compPlanets.length && _.difference(fedPlanets, compPlanets).length === 0) {
+    if (fed.satellites > comparison.satellites) {
+      // We use more satellites and the same planets, so we lose
+      return true;
+    }
+  }
+
+  // Not outclassed
+  return false;
 }
