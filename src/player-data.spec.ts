@@ -10,17 +10,34 @@ describe("PlayerData", () => {
     expect(data.toJSON()).to.be.an.instanceof(Object);
   });
 
-  describe("movePowerToGaia", () => {
+  describe("discardPower", () => {
     it ("should remove power tokens from power areas", () => {
       const data = new PlayerData();
       data.power.area1 = 4;
       data.power.area2 = 4;
 
-      data.discardPower(6, Resource.GainTokenGaiaArea);
+      data.discardPower(6);
 
       expect(data.power.area1).to.equal(0);
       expect(data.power.area2).to.equal(2);
-      expect(data.power.gaia).to.equal(6);
+      expect(data.power.gaia).to.equal(0);
+      expect(data.brainstone).to.equal(BrainstoneArea.Out)
+    });
+  });
+
+  describe("discardPower with brainstone in play", () => {
+    it ("should remove power tokens from power areas and brainstone in transit", () => {
+      const data = new PlayerData();
+      data.power.area1 = 4;
+      data.power.area2 = 1;
+      data.brainstone = BrainstoneArea.Area2;
+
+      data.discardPower(6);
+
+      expect(data.power.area1).to.equal(0);
+      expect(data.power.area2).to.equal(0);
+      expect(data.power.gaia).to.equal(0);
+      expect(data.brainstone).to.equal(BrainstoneArea.Transit)
     });
   });
 

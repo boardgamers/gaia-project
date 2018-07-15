@@ -68,7 +68,7 @@ const defaultBoard: FactionBoardRaw = {
     income: ["+4pw", "+t"]
   },
   [Building.GaiaFormer]: {
-    cost: "6tg",
+    cost: "6t",
     income: ["~", "~", "~"]
   },
   income: ["3k,4o,15c,q", "+o,k"],

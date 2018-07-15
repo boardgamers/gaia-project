@@ -18,6 +18,13 @@ export const freeActionsHadschHallas = [
   { cost: "4c", income: "1k" }
 ];
 
+export const freeActionsTerrans = [
+  { cost: "4tg", income: "1q" },
+  { cost: "3tg", income: "1o" },
+  { cost: "4tg", income: "1k" },
+  { cost: "1tg", income: "1c" }
+];
+
 export const boardActions =  {
   [BoardAction.Power1]: { cost: "7pw", income: ["3k"] },
   [BoardAction.Power2]: { cost: "5pw", income: ["2step"] },

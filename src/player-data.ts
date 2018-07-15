@@ -110,8 +110,8 @@ export default class PlayerData extends EventEmitter {
       case Resource.Knowledge: this.knowledge = Math.min(MAX_KNOWLEDGE, this.knowledge + count); return;
       case Resource.VictoryPoint: this.victoryPoints += count; return;
       case Resource.Qic: this.qics += count; return;
-      case Resource.GainToken: count > 0 ?  this.power.area1 += count : this.discardPower(-count, Resource.GainToken); return;
-      case Resource.GainTokenGaiaArea:  this.discardPower(-count, Resource.GainTokenGaiaArea); return;
+      case Resource.GainToken: count > 0 ?  this.power.area1 += count : this.discardPower(-count); return;
+      case Resource.GainTokenGaiaArea: count > 0 ? this.chargeGaiaPower(count) :  this.discardGaiaPower(-count); return;
       case Resource.ChargePower: count > 0 ? this.chargePower(count) : this.spendPower(-count); return;
       case Resource.Range: this.range += count; return;
       case Resource.TemporaryRange: this.temporaryRange += count; return;
@@ -132,7 +132,7 @@ export default class PlayerData extends EventEmitter {
       case Resource.Qic: return this.qics >= reward.count;
       case Resource.None: return true;
       case Resource.GainToken: return this.discardablePowerTokens() >= reward.count;
-      case Resource.GainTokenGaiaArea: return this.discardablePowerTokens() >= reward.count;
+      case Resource.GainTokenGaiaArea: return this.gaiaPowerTokens() >= reward.count;
       case Resource.ChargePower: return this.spendablePowerTokens() >= reward.count;
     }
 
@@ -149,6 +149,10 @@ export default class PlayerData extends EventEmitter {
 
   spendablePowerTokens(): number {
     return this.power.area3 + this.brainstoneValue();
+  }
+
+  gaiaPowerTokens(): number {
+    return this.power.gaia + (this.brainstoneInPlay() ? 1 : 0);
   }
 
   /**
@@ -197,7 +201,7 @@ export default class PlayerData extends EventEmitter {
     this.power.area1 += power;
   }
 
-  discardPower(power: number, type: Resource) {
+  discardPower(power: number) {
     const area1ToGaia = Math.min(power, this.power.area1);
     const area2ToGaia = Math.min(power - area1ToGaia, this.power.area2);
     const area3ToGaia = Math.min(power - area1ToGaia - area2ToGaia, this.power.area3);
@@ -207,13 +211,25 @@ export default class PlayerData extends EventEmitter {
     this.power.area2 -= area2ToGaia;
     this.power.area3 -= area3ToGaia;
     if (brainstoneNeeded) {
-      this.brainstone = type === Resource.GainTokenGaiaArea ? BrainstoneArea.Gaia : BrainstoneArea.Out;
-    }
-
-    if (type === Resource.GainTokenGaiaArea) {
-      this.power.gaia += area1ToGaia + area2ToGaia + area3ToGaia;
+      this.brainstone =  BrainstoneArea.Transit;
     }
   }
+
+  chargeGaiaPower(power: number){
+    if ( this.brainstone === BrainstoneArea.Transit){
+      this.brainstone = BrainstoneArea.Gaia;
+      power -= 1;
+    }
+    this.power.gaia += power;
+  };
+
+  discardGaiaPower(power: number){
+    if ( this.brainstone === BrainstoneArea.Gaia){
+      this.brainstone = BrainstoneArea.Transit;
+      power -= 1;
+    }
+    this.power.gaia -= power;
+  };
 
   burnablePower() {
     return Math.floor((this.power.area2 + (this.brainstone === BrainstoneArea.Area2 ? 1 : 0)) / 2);
@@ -241,6 +257,10 @@ export default class PlayerData extends EventEmitter {
 
   brainstoneValue() {
     return this.brainstone === BrainstoneArea.Area3 ? 3 : 0;
+  }
+
+  gaiaFormingDiscount() {
+    return this.gaiaformers > 1  ?  this.gaiaformers : 0;
   }
 
   gainFinalVictoryPoints() {

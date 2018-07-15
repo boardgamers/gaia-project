@@ -83,7 +83,8 @@ export enum Condition {
   // trigger only
   MineOnGaia = "g",
   AdvanceResearch = "a",
-  TerraformStep = "step"
+  TerraformStep = "step",
+  GaiaFormer = "gf"
 }
 
 export namespace Condition {
@@ -285,5 +286,6 @@ export enum BrainstoneArea {
   Area1 = "area1",
   Area2 = "area2",
   Area3 = "area3",
-  Gaia = "gaia"
+  Gaia = "gaia",
+  Transit = "transit"
 }
