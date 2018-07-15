@@ -7,7 +7,7 @@ import { AssertionError } from "assert";
 describe('Reward', () => {
 
   it('should construct from strings', () => {
-    const [R3vp, R2vp, Rvp, R1vp, Rq, R5c, Ro] = ["3vp", "2vp", "vp", "1vp", "q", "5c", "o"].map(str => new Reward(str));
+    const [R3vp, R2vp, Rvp, R1vp, Rq, R5c, Ro, R4vp] = ["3vp", "2vp", "vp", "1vp", "q", "5c", "o", "vp+4"].map(str => new Reward(str));
 
     expect(R3vp.count).to.equal(3);
     expect(R3vp.type).to.equal(Resource.VictoryPoint);
@@ -26,6 +26,9 @@ describe('Reward', () => {
 
     expect(R5c.count).to.equal(5);
     expect(R5c.type).to.equal(Resource.Credit);
+
+    expect(R4vp.count).to.equal(4);
+    expect(R4vp.type).to.equal(Resource.VictoryPoint);
   });
 
   it('should give empty rewards on invalid strings', () => {

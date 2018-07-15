@@ -9,10 +9,18 @@ export default class Reward {
   constructor(countOrRewardString: number | string, type?: Resource) {
     let count = countOrRewardString;
     if (arguments.length === 1) {
-      const regex = /^(-?[0-9]*)?(.*)$/;
+      const str = count as string;
 
-      let _unused;
-      [_unused, count, type] = regex.exec(count as string) as any;
+      if (str.indexOf("+") > 0) {
+        const regex =  /^(.*)\+([0-9]*)$/;
+
+        let _unused;
+        [_unused, type, count] = regex.exec(str) as any;
+      } else {
+        const regex =  /^(-?[0-9]*)?(.*)$/;
+        let _unused;
+        [_unused, count, type] = regex.exec(str) as any;
+      }
     }
 
     if (type === Resource.None || !Object.values(Resource).includes(type)) {

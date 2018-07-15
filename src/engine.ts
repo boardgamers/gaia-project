@@ -280,7 +280,7 @@ export default class Engine {
     this.nextPlayer = this.turnOrder[0];
 
     if ( this.round >= 1) {
-      this.incomePhase(); 
+      this.incomePhase();
       this.gaiaPhase();
     }
 
@@ -292,9 +292,9 @@ export default class Engine {
       player.loadEvents(this.currentRoundScoringEvents);
     }
 
-  };
+  }
 
-  selectIncomePhase(player: PlayerEnum){
+  selectIncomePhase(player: PlayerEnum) {
     const pl = this.player(player);
 
     // we need to check if rewards contains Resource.GainToken and Resource.GainPower
@@ -303,15 +303,15 @@ export default class Engine {
     const gainTokens = pl.events[Operator.Income].filter( ev => !ev.activated && ev.rewards.find( rw => rw.type === Resource.GainToken));
     const chargePowers = pl.events[Operator.Income].filter( ev => !ev.activated && ev.rewards.find( rw => rw.type === Resource.ChargePower));
 
-    if ( gainTokens.length>0 && chargePowers.length>0) {     
+    if ( gainTokens.length > 0 && chargePowers.length > 0) {
         this.roundSubCommands.unshift({
           name: Command.ChooseIncome,
-          player: player,
-          data: { incomes : gainTokens.concat(chargePowers)} 
+          player,
+          data: { incomes : gainTokens.concat(chargePowers)}
       });
-      
+
     } else {
-      pl.receiveIncome();  
+      pl.receiveIncome();
     }
   }
 
@@ -671,7 +671,7 @@ export default class Engine {
           elem.steps
         );
 
-        //remove subCommand build if present
+        // remove subCommand build if present
         if (this.roundSubCommands[0] && this.roundSubCommands[0].name === Command.Build) {
           this.roundSubCommands.splice(0, 1);
         }
@@ -889,7 +889,7 @@ export default class Engine {
     pl.loadEvents(Event.parse(boardActions[action].income));
     this.endTurnPhase(player, Command.Action);
   }
-  
+
   [Command.ChooseIncome](player: PlayerEnum, income: string) {
     const { incomes } = this.availableCommand(player, Command.ChooseIncome).data;
     const incomeRewards = income.split(",") ;
