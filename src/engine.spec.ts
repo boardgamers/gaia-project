@@ -818,14 +818,14 @@ describe("Engine", () => {
       const engine = new Engine(moves);
 
       // tslint:disable-next-line no-unused-expression
-      expect(() => new Engine([...moves, "p1 special step+1"])).to.not.throw();
+      expect(() => new Engine([...moves, "p1 special step"])).to.not.throw();
       // tslint:disable-next-line no-unused-expression
-      expect(new Engine([...moves, "p1 special step+1"]).player(Player.Player1).events[Operator.Activate][0].activated).to.be.true;
+      expect(new Engine([...moves, "p1 special step"]).player(Player.Player1).events[Operator.Activate][0].activated).to.be.true;
 
       // test free action before and after, and to build something different then a mine
-      expect(() => new Engine([...moves, "p1 special step+1. spend 1o for 1c. build m -1x-1. spend 1o for 1c."])).to.not.throw();
-      expect(() => new Engine([...moves, "p1 special step+1. spend 1o for 1c. build ts -4x2"])).to.throw();
-      expect(() => new Engine([...moves, "p1 special step+1. build m -1x-1. spend 1o for 1c."])).to.not.throw();
+      expect(() => new Engine([...moves, "p1 special step. spend 1o for 1c. build m -1x-1. spend 1o for 1c."])).to.not.throw();
+      expect(() => new Engine([...moves, "p1 special step. spend 1o for 1c. build ts -4x2"])).to.throw();
+      expect(() => new Engine([...moves, "p1 special step. build m -1x-1. spend 1o for 1c."])).to.not.throw();
 
     });
 
@@ -840,7 +840,7 @@ describe("Engine", () => {
         p1 build m -3x4
         p2 booster booster5
         p1 booster booster4
-        p1 special step+1. spend 1o for 1c. build m -1x-1.
+        p1 special step. spend 1o for 1c. build m -1x-1.
         p2 leech 1pw
         p2 special range+3. spend 1o for 1c. build m 3x-3.
       `);

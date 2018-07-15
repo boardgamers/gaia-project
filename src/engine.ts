@@ -292,7 +292,7 @@ export default class Engine {
       player.loadEvents(this.currentRoundScoringEvents);
     }
 
-  };
+  }
 
   selectIncomePhase(player: PlayerEnum) {
     const pl = this.player(player);
@@ -303,7 +303,7 @@ export default class Engine {
     const gainTokens = pl.events[Operator.Income].filter( ev => !ev.activated && ev.rewards.find( rw => rw.type === Resource.GainToken));
     const chargePowers = pl.events[Operator.Income].filter( ev => !ev.activated && ev.rewards.find( rw => rw.type === Resource.ChargePower));
 
-    if ( gainTokens.length>0 && chargePowers.length>0) {
+    if ( gainTokens.length > 0 && chargePowers.length > 0) {
         this.roundSubCommands.unshift({
           name: Command.ChooseIncome,
           player,
