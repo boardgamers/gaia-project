@@ -333,7 +333,7 @@ export default class Engine {
     if (pl.data.gaiaPowerTokens() > 0 && pl.faction === Faction.Terrans && pl.data.hasPlanetaryInstitute()) {
       this.roundSubCommands.push({
         name: Command.Spend,
-        player: player,
+        player,
         data: { gaiaPhase: true }
       });
 
@@ -883,7 +883,7 @@ export default class Engine {
     pl.payCosts(cost);
     pl.gainRewards(income);
 
-    // check if it's a gaia phase 
+    // check if it's a gaia phase
     if (cost[0].type === Resource.GainTokenGaiaArea) {
 
       if (pl.data.brainstone === BrainstoneArea.Transit) {
