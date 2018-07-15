@@ -121,8 +121,7 @@ export default class Player extends EventEmitter {
 
     // gaiaforming discount
     if (building === Building.GaiaFormer) {
-      const gaiaformingDiscount =  this.data.gaiaformers > 1  ? this.data.gaiaformers : 0;
-      addedCost.push(new Reward(-gaiaformingDiscount, Resource.GainTokenGaiaArea));
+      addedCost.push(new Reward(-this.data.gaiaFormingDiscount(), Resource.GainToken));
     } else if (building === Building.Mine) {
       // habitability costs
       if (targetPlanet === Planet.Gaia) {
@@ -229,7 +228,7 @@ export default class Player extends EventEmitter {
     if (building !== Building.GaiaFormer) {
       this.data.occupied = _.uniqWith([].concat(this.data.occupied, hex), _.isEqual);
     }
-
+    
     // The mine of the lost planet doesn't grant any extra income
     if (hex.data.planet !== Planet.Lost) {
       if (building === Building.PlanetaryInstitute) {
@@ -292,6 +291,11 @@ export default class Player extends EventEmitter {
     // reset temporary benefits
     this.data.temporaryRange = 0;
     this.data.temporaryStep = 0;
+
+    // removes brainstone if still in transit after turn End
+    if ( this.data.brainstone === BrainstoneArea.Transit) {
+      this.data.brainstone = BrainstoneArea.Out
+    }
   }
 
   pass() {
@@ -383,6 +387,9 @@ export default class Player extends EventEmitter {
     // Terrans move directly to power area 2
     if (this.faction === Faction.Terrans) {
       this.data.power.area2 += this.data.power.gaia;
+      if (this.data.brainstone === BrainstoneArea.Gaia ) {
+        this.data.brainstone = BrainstoneArea.Area2;
+      }
     } else {
       this.data.power.area1 += this.data.power.gaia;
       if (this.data.brainstone === BrainstoneArea.Gaia ) {

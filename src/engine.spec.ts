@@ -244,7 +244,7 @@ describe("Engine", () => {
     expect(() => engine.move("p1 up gaia.")).to.throw();
   });
 
-  it("should allow to form a federation and gain rewards", () => {
+  it("should allow to form a federation and gain rewards. Gaia phase to test income for terrans", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans
@@ -269,7 +269,7 @@ describe("Engine", () => {
       p1 build PI -1x2.
       p2 leech 1pw
       p1 pass booster3
-      p1 income t
+      p1 income t. spend 4tg for 1k. spend 2tg for 2c
       p2 burn 3. spend 3pw for 1o. pass booster5
       p1 build m -2x3. spend 2pw for 2c.
       p1 build ts -4x2.

@@ -5,7 +5,7 @@ import factions from './factions';
 import * as assert from "assert";
 import { upgradedBuildings } from './buildings';
 import Reward from './reward';
-import { boardActions, freeActions, freeActionsHadschHallas } from './actions';
+import { boardActions, freeActions, freeActionsHadschHallas, freeActionsTerrans } from './actions';
 import * as researchTracks from './research-tracks';
 import { terraformingStepsRequired } from './planets';
 
@@ -101,6 +101,11 @@ export function generate(engine: Engine): AvailableCommand[] {
                 tilePos: Object.values(TechTilePos).find(pos => engine.techTiles[pos].tile === tech.tile)
               }))}
             });
+            break;
+          }
+
+          case Command.Spend: {
+            commands.push(...possibleFreeActions(engine, subCommand.player, subCommand.data));
             break;
           }
 
@@ -329,7 +334,7 @@ export function possibleBoardActions(engine: Engine, player: Player) {
 
 }
 
-export function possibleFreeActions(engine: Engine, player: Player) {
+export function possibleFreeActions(engine: Engine, player: Player, gaiaPhase?: boolean) {
   // free action - spend
   const pl = engine.player(player);
   const acts = [];
@@ -338,6 +343,11 @@ export function possibleFreeActions(engine: Engine, player: Player) {
   let pool = freeActions;
   if (pl.faction === Faction.HadschHallas && pl.data.hasPlanetaryInstitute()) {
     pool = [].concat(pool, freeActionsHadschHallas);
+  }
+
+  //freeActions for Terrans during gaiaPhase
+  if ( gaiaPhase && engine.player(player).faction === Faction.Terrans) {
+    pool = freeActionsTerrans;
   }
 
   for (const freeAction of pool) {

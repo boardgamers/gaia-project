@@ -323,9 +323,23 @@ export default class Engine {
       }
     }
     for (const player of this.playersInOrder()) {
-      player.gaiaPhase();
+      this.selectGaiaPhase(player.player);
     }
-    // TODO manage gaia phase actions for specific factions
+  }
+
+  selectGaiaPhase(player: PlayerEnum) {
+    const pl = this.player(player);
+
+    if (pl.data.gaiaPowerTokens() > 0 && pl.faction === Faction.Terrans && pl.data.hasPlanetaryInstitute()) {
+      this.roundSubCommands.push({
+        name: Command.Spend,
+        player: player,
+        data: { gaiaPhase: true }
+      });
+
+    } else {
+      pl.gaiaPhase();
+    }
   }
 
   leechingPhase(player: PlayerEnum, hex: GaiaHex) {
@@ -868,6 +882,18 @@ export default class Engine {
 
     pl.payCosts(cost);
     pl.gainRewards(income);
+
+    // check if it's a gaia phase 
+    if (cost[0].type === Resource.GainTokenGaiaArea) {
+
+      if (pl.data.brainstone === BrainstoneArea.Transit) {
+        pl.data.brainstone = BrainstoneArea.Area2;
+        pl.data.power.area2 += cost[0].count - 1;
+      } else {
+        pl.data.power.area2 += cost[0].count;
+      }
+      this.selectGaiaPhase(player);
+    }
   }
 
   [Command.BurnPower](player: PlayerEnum, cost: string) {
