@@ -20,6 +20,7 @@ import { EventEmitter } from "eventemitter3";
 import { finalScorings } from './tiles/scoring';
 import techs from './tiles/techs';
 import advancedTechs from './tiles/advanced-techs';
+import * as assert from "assert";
 
 const TERRAFORMING_COST = 3;
 // 25 satellites - 2 used on the final scoring board
@@ -461,7 +462,7 @@ export default class Player extends EventEmitter {
   availableFederations(map: SpaceMap): FederationInfo[] {
     const excluded = map.excludedHexesForBuildingFederation(this.player);
 
-    const hexes = this.data.occupied.map(coord => map.grid.get(coord.q, coord.r)).filter(hex => !excluded.has(hex));
+    const hexes = this.data.occupied.map(coord => map.grid.get(coord)).filter(hex => !excluded.has(hex));
     const hexesWithBuildings = new Set(hexes);
     const values = hexes.map(node => this.buildingValue(node.data.building, node.data.planet));
 
@@ -482,27 +483,18 @@ export default class Player extends EventEmitter {
       //
       // Because of this second constraint, we do avoid some valid possibilites.
       // However, those possibilites are explored in another combination
-      const otherExcluded: Set<GaiaHex> = new Set([].concat(...this.data.occupied.map(hex => buildingsInDestGroups.has(hex) ? [] : [hex, ...map.grid.neighbours(hex.q, hex.r)])));
+      const otherExcluded: Set<GaiaHex> = new Set([].concat(...this.data.occupied.map(hex => buildingsInDestGroups.has(hex) ? [] : [hex, ...map.grid.neighbours(hex)])));
       const allHexes = [...map.grid.values()].filter(hex => !excluded.has(hex) && !otherExcluded.has(hex));
       const workingGrid = new Grid(...allHexes.map(hex => new Hex(hex.q, hex.r)));
-      const convertedDestGroups = destGroups.map(destGroup => destGroup.map(hex => workingGrid.get(hex.q, hex.r)));
+      const convertedDestGroups = destGroups.map(destGroup => destGroup.map(hex => workingGrid.get(hex)));
       const tree = spanningTree(convertedDestGroups, workingGrid, maxSatellites, "heuristic");
       if (tree) {
         // Convert from regular hex to gaia hex of grid
-        federations.push(tree.map(hex => map.grid.get(hex.q, hex.r)));
+        federations.push(tree.map(hex => map.grid.get(hex)));
       }
     }
 
-    const fedsWithInfo: FederationInfo[] = federations.map(federation => {
-      const nSatellites = federation.filter(hex => map.grid.get(hex.q, hex.r).data.planet === Planet.Empty).length;
-      const nPlanets = federation.filter(hex => map.grid.get(hex.q, hex.r).colonizedBy(this.player)).length;
-
-      return {
-        hexes: federation,
-        satellites: nSatellites,
-        planets: nPlanets
-      };
-    });
+    const fedsWithInfo: FederationInfo[] = federations.map(federation => this.federationInfo(federation));
 
     // Remove federations with one more planet & one more satellite
     // Also remove federations containing another
@@ -517,6 +509,57 @@ export default class Player extends EventEmitter {
     }
 
     return _.difference(fedsWithInfo, toRemove);
+  }
+
+  federationInfo(federation: GaiaHex[]): FederationInfo {
+    const nSatellites = federation.filter(hex => hex.data.planet === Planet.Empty).length;
+    const nPlanets = federation.filter(hex => hex.colonizedBy(this.player)).length;
+
+    return {
+      hexes: federation,
+      satellites: nSatellites,
+      planets: nPlanets
+    };
+  }
+
+  checkAndGetFederationInfo(location: string, map: SpaceMap): FederationInfo {
+    const coords = location.split(',').map(loc => CubeCoordinates.parse(loc));
+
+    for (const coord of coords) {
+      assert(map.grid.get(coord), `Coord ${coord.q}x${coord.r} is not part of the map`);
+    }
+
+    assert (coords.length <= 30, "The federation is too big, it is impossible to build with only 23 satellites");
+
+    let hexes: GaiaHex[] = _.uniq(coords.map(coord => map.grid.get(coord)));
+
+    assert (hexes.length === coords.length, "There are repeating coordinates in the given federation");
+
+    // Extend to nearby buidlings
+    hexes = this.addAdjacentBuildings(hexes);
+
+    // Check if no forbidden square
+    const excluded = map.excludedHexesForBuildingFederation(this.player);
+    for (const hex of hexes) {
+      assert (!excluded.has(hex), `${hex.toString()} can't be part of a new federation`);
+    }
+
+    // Check if all the buildings are in one group
+    assert(map.grid.groups(hexes).length === 1, 'The hexes of the federation must be adjacent');
+
+    // Get the power value of the buildings
+    const powerValue = _.sum(hexes.map(hex => this.buildingValue(hex.buildingOf(this.player), hex.data.planet)));
+    assert(powerValue >= this.federationCost, "Your buildings need to have a total value of at least " + this.federationCost);
+
+    const info = this.federationInfo(hexes);
+
+    // Check if outclassed by available federations
+    const available = this.availableFederations(map);
+    const outclasser = available.find(fed => isOutclassedBy(info, fed));
+
+    assert(!outclasser, "Federation is outclassed by other federation at " + _.get(outclasser, "hexes", []).join(','));
+
+    return info;
   }
 
   get federationCost(): number {

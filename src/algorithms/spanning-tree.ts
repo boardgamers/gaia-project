@@ -139,7 +139,7 @@ function spanningTreeBreadthWidth(destGroups: Hex[][], grid: Grid, maxAdditional
       }
 
       for (const hex of hexGroup.hexes) {
-        for (const neighbour of grid.neighbours(hex.q, hex.r)) {
+        for (const neighbour of grid.neighbours(hex)) {
           if (hexGroup.hexes.includes(neighbour)) {
             continue;
           }

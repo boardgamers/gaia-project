@@ -345,7 +345,7 @@ export default class Engine {
         let leech = 0;
         for (const loc of pl.data.occupied) {
           if (this.map.distance(loc, hex) < ISOLATED_DISTANCE) {
-            leech = Math.max(leech, pl.buildingValue(this.map.grid.get(loc.q, loc.r).buildingOf(pl.player), this.map.grid.get(loc.q, loc.r).data.planet));
+            leech = Math.max(leech, pl.buildingValue(this.map.grid.get(loc).buildingOf(pl.player), this.map.grid.get(loc).data.planet));
           }
         }
         leech = pl.maxLeech(leech);
@@ -660,7 +660,7 @@ export default class Engine {
     for (const elem of buildings) {
       if (elem.building === building && elem.coordinates === location) {
         const {q, r, s} = CubeCoordinates.parse(location);
-        const hex = this.map.grid.get(q, r);
+        const hex = this.map.grid.get({q, r});
         const pl = this.player(player);
 
         pl.build(
@@ -819,7 +819,7 @@ export default class Engine {
     }
 
     const { q, r, s } = CubeCoordinates.parse(location);
-    const hex = this.map.grid.get(q, r);
+    const hex = this.map.grid.get({q, r});
     hex.data.planet = Planet.Lost;
 
     this.player(player).build(Building.Mine, hex, [], this.map, 0);
@@ -905,18 +905,15 @@ export default class Engine {
 
   [Command.FormFederation](player: PlayerEnum, hexes: string, federation: Federation) {
     const avail = this.availableCommand(player, Command.FormFederation);
+    const pl = this.player(player);
 
-    if (!avail.data.federations.find(fed => fed.hexes === hexes)) {
-      // Todo: allow custom federations which respect the rules (isOutclassedBy)
+    const fedInfo = pl.checkAndGetFederationInfo(hexes, this.map);
+    if (!fedInfo) {
       throw new Error(`Impossible to form federation at ${hexes}`);
     }
     if (!avail.data.tiles.includes(federation)) {
       throw new Error(`Impossible to form federation ${federation}`);
     }
-
-    const fedInfo = avail.data.federations.find(fed => fed.hexes === hexes);
-
-    const pl = this.player(player);
 
     pl.gainFederationToken(federation);
     this.federations[federation] -= 1;
