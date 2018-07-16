@@ -885,13 +885,7 @@ export default class Engine {
 
     // check if it's a gaia phase
     if (cost[0].type === Resource.GainTokenGaiaArea) {
-
-      if (pl.data.brainstone === BrainstoneArea.Transit) {
-        pl.data.brainstone = BrainstoneArea.Area2;
-        pl.data.power.area2 += cost[0].count - 1;
-      } else {
-        pl.data.power.area2 += cost[0].count;
-      }
+      pl.data.power.area2 += cost[0].count;
       this.selectGaiaPhase(player);
     }
   }
