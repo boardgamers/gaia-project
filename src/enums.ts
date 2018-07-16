@@ -159,10 +159,7 @@ export enum Player {
 }
 
 export enum Round {
-  Init = -3,
-  SetupFaction= -2,
-  SetupBuilding= -1,
-  SetupRoundBooster= 0,
+  None= 0,
   Round1= 1,
   Round2= 2,
   Round3= 3,
@@ -288,4 +285,18 @@ export enum BrainstoneArea {
   Area3 = "area3",
   Gaia = "gaia",
   Transit = "transit"
+}
+
+export enum Phase {
+  SetupInit = "setupInit",
+  SetupFaction = "setupFaction",
+  SetupBuilding = "setupBuilding",
+  SetupBooster = "setupBooster",
+  BeginGame = "beginGame",
+  RoundStart = "roundStart",
+  RoundIncome = "roundIncome",
+  RoundGaia = "roundGaia",
+  RoundMove = "roundMove",
+  RoundFinish = "roundFinish",
+  EndGame = "endGame"
 }

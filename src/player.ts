@@ -228,7 +228,7 @@ export default class Player extends EventEmitter {
     if (building !== Building.GaiaFormer) {
       this.data.occupied = _.uniqWith([].concat(this.data.occupied, hex), _.isEqual);
     }
-    
+
     // The mine of the lost planet doesn't grant any extra income
     if (hex.data.planet !== Planet.Lost) {
       if (building === Building.PlanetaryInstitute) {
@@ -294,7 +294,7 @@ export default class Player extends EventEmitter {
 
     // removes brainstone if still in transit after turn End
     if ( this.data.brainstone === BrainstoneArea.Transit) {
-      this.data.brainstone = BrainstoneArea.Out
+      this.data.brainstone = BrainstoneArea.Out;
     }
   }
 
@@ -327,6 +327,18 @@ export default class Player extends EventEmitter {
   coverTechTile(tile: TechTile) {
     this.data.techTiles.find(tech => tech.tile === tile).enabled = false;
     this.removeEvents(Event.parse(techs[tile]));
+  }
+
+  needIncomeSelection(): { events?: Event[], needed: boolean} {
+    // we need to check if rewards contains Resource.GainToken and Resource.GainPower
+    // player has to select the order
+    const gainTokens = this.events[Operator.Income].filter( ev => !ev.activated && ev.rewards.find( rw => rw.type === Resource.GainToken));
+    const chargePowers = this.events[Operator.Income].filter( ev => !ev.activated && ev.rewards.find( rw => rw.type === Resource.ChargePower));
+    return { events: gainTokens.concat(chargePowers), needed: gainTokens.length > 0 && chargePowers.length > 0};
+  }
+
+  needGaiaSelection(): boolean {
+    return this.data.gaiaPowerTokens() > 0 && this.faction === Faction.Terrans && this.data.hasPlanetaryInstitute();
   }
 
   receiveIncome() {
@@ -387,9 +399,6 @@ export default class Player extends EventEmitter {
     // Terrans move directly to power area 2
     if (this.faction === Faction.Terrans) {
       this.data.power.area2 += this.data.power.gaia;
-      if (this.data.brainstone === BrainstoneArea.Gaia ) {
-        this.data.brainstone = BrainstoneArea.Area2;
-      }
     } else {
       this.data.power.area1 += this.data.power.gaia;
       if (this.data.brainstone === BrainstoneArea.Gaia ) {

@@ -111,7 +111,7 @@ export default class PlayerData extends EventEmitter {
       case Resource.VictoryPoint: this.victoryPoints += count; return;
       case Resource.Qic: this.qics += count; return;
       case Resource.GainToken: count > 0 ?  this.power.area1 += count : this.discardPower(-count); return;
-      case Resource.GainTokenGaiaArea: count > 0 ? this.chargeGaiaPower(count) :  this.discardGaiaPower(-count); return;
+      case Resource.GainTokenGaiaArea: count > 0 ? this.chargeGaiaPower(count) :  this.returnGaiaPower(-count); return;
       case Resource.ChargePower: count > 0 ? this.chargePower(count) : this.spendPower(-count); return;
       case Resource.Range: this.range += count; return;
       case Resource.TemporaryRange: this.temporaryRange += count; return;
@@ -215,21 +215,20 @@ export default class PlayerData extends EventEmitter {
     }
   }
 
-  chargeGaiaPower(power: number){
-    if ( this.brainstone === BrainstoneArea.Transit){
+  chargeGaiaPower(power: number) {
+    if ( this.brainstone === BrainstoneArea.Transit) {
       this.brainstone = BrainstoneArea.Gaia;
       power -= 1;
     }
     this.power.gaia += power;
-  };
+  }
 
-  discardGaiaPower(power: number){
-    if ( this.brainstone === BrainstoneArea.Gaia){
-      this.brainstone = BrainstoneArea.Transit;
-      power -= 1;
-    }
+  returnGaiaPower(power: number) {
+    // this is used only by Terrans for the conversion when PI in place
+    // they pay tg to get x
+    this.power.area2 += power;
     this.power.gaia -= power;
-  };
+  }
 
   burnablePower() {
     return Math.floor((this.power.area2 + (this.brainstone === BrainstoneArea.Area2 ? 1 : 0)) / 2);

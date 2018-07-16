@@ -22,7 +22,8 @@ import {
   Operator,
   ScoringTile,
   FinalTile,
-  BrainstoneArea
+  BrainstoneArea,
+  Phase
 } from './enums';
 import { CubeCoordinates } from 'hexagrid';
 import Event from './events';
@@ -62,7 +63,8 @@ export default class Engine {
   finalScoringTiles: FinalTile[];
   terraformingFederation: Federation;
   availableCommands: AvailableCommand[] = [];
-  round: number = Round.Init;
+  phase: Phase ;
+  round: number = Round.None;
   /** Order of players in the turn */
   turnOrder: PlayerEnum[] = [];
   roundSubCommands: AvailableCommand[] = [];
@@ -74,8 +76,12 @@ export default class Engine {
   /** Current player to make a move */
   currentPlayer: PlayerEnum;
   nextPlayer: PlayerEnum;
+  // used to transit between phases
+  tempTurnOrder: PlayerEnum[] = [];
+  tempCurrentPlayer: PlayerEnum;
 
   constructor(moves: string[] = []) {
+    this.phaseBegin(Phase.SetupInit);
     this.generateAvailableCommands();
     this.loadMoves(moves);
   }
@@ -130,16 +136,51 @@ export default class Engine {
     return this.currentPlayer;
   }
 
+  playersInOrder(): Player[] {
+    return this.turnOrder.map(i => this.players[i]);
+  }
+
   nextSubcommandPlayer(): PlayerEnum {
     if (this.roundSubCommands.length > 0) {
       return this.roundSubCommands[0].player;
     }
   }
 
+  numberOfPlayersWithFactions(): number {
+    return this.players.filter(pl => pl.faction).length;
+  }
+
+  setFirstPlayer() {
+    this.currentPlayer = this.turnOrder[0];
+  }
+
+  storeTurnOrder() {
+    this.tempCurrentPlayer = this.currentPlayer;
+    this.tempTurnOrder = this.turnOrder;
+  }
+
+  restoreTurnOrder() {
+    this.currentPlayer = this.tempCurrentPlayer;
+    this.turnOrder = this.tempTurnOrder;
+  }
+
+  static fromData(data: any) {
+    const engine = new Engine();
+    engine.phase = data.phase;
+    engine.round = data.round;
+    engine.availableCommands = data.availableCommands;
+    engine.map = SpaceMap.fromData(data.map);
+    for (const player of data.players) {
+      engine.addPlayer(Player.fromData(player));
+    }
+
+    return engine;
+  }
+
   move(move: string) {
     let command: Command;
     move = move.trim();
-    if (this.round === Round.Init) {
+    if (this.phase === Phase.SetupInit) {
       const split = move.split(' ');
       command = split[0] as Command;
 
@@ -152,7 +193,7 @@ export default class Engine {
       );
 
       (this[command] as any)(...split.slice(1));
-      this.endRound();
+      this.phaseEnd();
     } else {
       const playerS = move.substr(0, 2);
 
@@ -190,23 +231,12 @@ export default class Engine {
       this.endTurn(player, command);
     }
 
-    this.generateAvailableCommands();
-  }
-
-  numberOfPlayersWithFactions(): number {
-    return this.players.filter(pl => pl.faction).length;
-  }
-
-  static fromData(data: any) {
-    const engine = new Engine();
-    engine.round = data.round;
-    engine.availableCommands = data.availableCommands;
-    engine.map = SpaceMap.fromData(data.map);
-    for (const player of data.players) {
-      engine.addPlayer(Player.fromData(player));
+    if (this.turnOrder.length === 0) {
+      // If all players have passed
+      this.phaseEnd();
     }
 
-    return engine;
+    this.generateAvailableCommands();
   }
 
   endTurn(player: PlayerEnum, command: Command) {
@@ -216,129 +246,278 @@ export default class Engine {
 
     if (this.turnOrder.length === 0) {
       // If all players have passed
-      this.endRound();
+      this.phaseEnd();
     }
   }
 
-  endRound() {
-    if ( this.round < 6 ) {
-      this.cleanUpPhase();
-      this.beginRound();
+   /** Next player to make a move, after current player makes their move */
+   moveToNextPlayer(command: Command): PlayerEnum {
+    const playerPos = this.turnOrder.indexOf(this.currentPlayer);
+    const subPhaseTurn = this.roundSubCommands.length > 0;
 
-    } else {
-      this.finalScoringPhase();
+    if (subPhaseTurn) {
+      return;
+    }
+
+    if (command === Command.Pass) {
+      this.passedPlayers.push(this.currentPlayer);
+    }
+
+    if ( [Phase.SetupFaction, Phase.SetupBuilding, Phase.SetupBooster, Phase.RoundIncome, Phase.RoundGaia].includes(this.phase) || command === Command.Pass) {
+      this.turnOrder.splice(playerPos, 1);
+      this.currentPlayer = this.turnOrder[playerPos % this.turnOrder.length];
+      return;
+    }
+
+    this.currentPlayer = this.turnOrder[(playerPos + 1) % this.turnOrder.length];
+
+    return this.currentPlayer;
+  }
+
+  phaseBegin( phase: Phase) {
+    this.phase = phase;
+    switch ( phase ) {
+      case Phase.SetupInit : {
+        this.beginSetupInitPhase();
+        break;
+      }
+      case Phase.SetupFaction : {
+        this.beginSetupFactionPhase();
+        break;
+      }
+      case Phase.SetupBuilding : {
+        this.beginSetupBuildingPhase();
+        break;
+      }
+      case Phase.SetupBooster : {
+        this.beginSetupBoosterPhase();
+        break;
+      }
+      case Phase.RoundStart : {
+        this.beginRoundStartPhase();
+        break;
+      }
+      case Phase.RoundIncome : {
+        this.incomePhase();
+        break;
+      }
+      case Phase.RoundGaia : {
+        this.gaiaPhase();
+        break;
+      }
+      case Phase.RoundMove : {
+        return Phase.RoundFinish;
+      }
+      case Phase.RoundFinish : {
+        this.cleanUpPhase();
+        break;
+      }
+      case Phase.EndGame : {
+        this.finalScoringPhase();
+        break;
+      }
     }
   }
 
-  beginRound() {
+  phaseEnd() {
+    const nextPhase = this.onPhaseEnd(this.phase);
+    this.phaseBegin( nextPhase );
+  }
+
+  onPhaseEnd( currentPhase: Phase ): Phase {
+    switch ( currentPhase ) {
+      case Phase.SetupInit : {
+        return Phase.SetupFaction;
+      }
+      case Phase.SetupFaction : {
+        return Phase.SetupBuilding;
+      }
+      case Phase.SetupBuilding : {
+        return Phase.SetupBooster;
+      }
+      case Phase.SetupBooster : {
+        this.turnOrder = [];
+        this.passedPlayers = this.players.map((pl, i) => i as PlayerEnum);
+        return Phase.RoundStart;
+      }
+      case Phase.RoundStart : {
+        return Phase.RoundIncome;
+      }
+      case Phase.RoundIncome : {
+        this.restoreTurnOrder();
+        this.setFirstPlayer();
+        return Phase.RoundGaia;
+      }
+      case Phase.RoundGaia : {
+        this.restoreTurnOrder();
+        this.setFirstPlayer();
+        return Phase.RoundMove;
+      }
+      case Phase.RoundMove : {
+        return Phase.RoundFinish;
+      }
+      case Phase.RoundFinish: {
+        if (this.round === 6) {
+          return Phase.EndGame;
+        } else {
+          return Phase.RoundStart;
+        }
+      }
+    }
+  }
+
+  beginSetupInitPhase() {
+    return;
+  }
+
+  beginSetupFactionPhase() {
+    this.turnOrder = this.players.map((pl, i) => i as PlayerEnum);
+    this.setFirstPlayer();
+  }
+
+  beginSetupBuildingPhase() {
+    const posIvits = this.players.findIndex(
+      pl => pl.faction === Faction.Ivits
+    );
+
+    const setupTurnOrder = this.players
+      .map((pl, i) => i as PlayerEnum)
+      .filter(i => i !== posIvits);
+    const reverseSetupTurnOrder = setupTurnOrder.slice().reverse();
+    this.turnOrder = setupTurnOrder.concat(reverseSetupTurnOrder);
+
+    const posXenos = this.players.findIndex(
+      pl => pl.faction === Faction.Xenos
+    );
+    if (posXenos !== -1) {
+      this.turnOrder.push(posXenos as PlayerEnum);
+    }
+
+    if (posIvits !== -1) {
+      this.turnOrder.push(posIvits as PlayerEnum);
+    }
+    this.setFirstPlayer();
+  }
+
+  beginSetupBoosterPhase() {
+    this.turnOrder = this.players.map((pl, i) => i as PlayerEnum).reverse();
+    this.setFirstPlayer();
+  }
+
+  beginRoundStartPhase() {
     this.round += 1;
-
-    switch (this.round) {
-      case Round.SetupBuilding: {
-        // Setup round - add Ivits to the end, before third Xenos
-
-        const posIvits = this.players.findIndex(
-          pl => pl.faction === Faction.Ivits
-        );
-
-        const setupTurnOrder = this.players
-          .map((pl, i) => i as PlayerEnum)
-          .filter(i => i !==  posIvits);
-        const reverseSetupTurnOrder = setupTurnOrder.slice().reverse();
-        this.turnOrder = setupTurnOrder.concat(reverseSetupTurnOrder);
-
-        const posXenos = this.players.findIndex(
-          pl => pl.faction === Faction.Xenos
-        );
-        if (posXenos !== -1) {
-          this.turnOrder.push(posXenos as PlayerEnum);
-        }
-
-        if (posIvits !== -1) {
-          this.turnOrder.push(posIvits as PlayerEnum);
-        }
-        break;
-      }
-      case Round.SetupFaction:
-      case Round.Round1: {
-        this.turnOrder = this.players.map((pl, i) => i as PlayerEnum);
-        this.passedPlayers = [];
-        break;
-      }
-      case Round.SetupRoundBooster: {
-        this.turnOrder = this.players.map((pl, i) => i as PlayerEnum).reverse();
-        break;
-      }
-      default: {
-        // The players play in the order in which they passed or
-        this.turnOrder = this.passedPlayers;
-        this.passedPlayers = [];
-      }
-    }
-
-    this.currentPlayer = this.turnOrder[0];
-    this.nextPlayer = this.turnOrder[0];
-
-    if ( this.round >= 1) {
-      this.incomePhase();
-      this.gaiaPhase();
-    }
-
+    this.turnOrder = this.passedPlayers;
+    this.passedPlayers = [];
+    this.setFirstPlayer();
+    this.phaseEnd();
   }
 
   incomePhase() {
+    this.storeTurnOrder();
+
+    const newOrder = [];
+    // creates a turnOrder for players that are needing income selection
     for (const player of this.playersInOrder()) {
-      this.selectIncomePhase(player.player);
       player.loadEvents(this.currentRoundScoringEvents);
+      const { needed } = player.needIncomeSelection();
+      if (needed) {
+        newOrder.push(player.player);
+      } else {
+        player.receiveIncome();
+      }
     }
 
-  }
-
-  selectIncomePhase(player: PlayerEnum) {
-    const pl = this.player(player);
-
-    // we need to check if rewards contains Resource.GainToken and Resource.GainPower
-    // player has to select the order
-
-    const gainTokens = pl.events[Operator.Income].filter( ev => !ev.activated && ev.rewards.find( rw => rw.type === Resource.GainToken));
-    const chargePowers = pl.events[Operator.Income].filter( ev => !ev.activated && ev.rewards.find( rw => rw.type === Resource.ChargePower));
-
-    if ( gainTokens.length > 0 && chargePowers.length > 0) {
-        this.roundSubCommands.unshift({
-          name: Command.ChooseIncome,
-          player,
-          data: { incomes : gainTokens.concat(chargePowers)}
-      });
-
+    if (newOrder.length === 0) {
+      this.phaseEnd();
     } else {
-      pl.receiveIncome();
+      this.turnOrder = newOrder;
+      this.setFirstPlayer();
     }
   }
 
   gaiaPhase() {
+    this.storeTurnOrder();
+
+    const newOrder = [];
     // transform Transdim planets into Gaia if gaiaformed
     for (const hex of this.map.toJSON()) {
-      if (hex.data.planet === Planet.Transdim  && hex.data.player !== undefined && hex.data.building === Building.GaiaFormer ) {
+      if (hex.data.planet === Planet.Transdim && hex.data.player !== undefined && hex.data.building === Building.GaiaFormer) {
         hex.data.planet = Planet.Gaia;
       }
     }
     for (const player of this.playersInOrder()) {
-      this.selectGaiaPhase(player.player);
+      if (player.needGaiaSelection()) {
+        newOrder.push(player.player);
+      } else {
+        player.gaiaPhase();
+      }
+    }
+
+    if (newOrder.length === 0) {
+      this.phaseEnd();
+    } else {
+      this.turnOrder = newOrder;
+      this.setFirstPlayer();
     }
   }
 
-  selectGaiaPhase(player: PlayerEnum) {
-    const pl = this.player(player);
+  cleanUpPhase() {
+    if (this.round < 1) {
+      return;
+    }
+    for (const player of this.players) {
+      // remove roundScoringTile
+      player.removeEvents(this.currentRoundScoringEvents);
 
-    if (pl.data.gaiaPowerTokens() > 0 && pl.faction === Faction.Terrans && pl.data.hasPlanetaryInstitute()) {
-      this.roundSubCommands.push({
-        name: Command.Spend,
-        player,
-        data: { gaiaPhase: true }
-      });
+      // resets special action
+      for (const event of player.events[Operator.Activate]) {
+        event.activated = false;
+      }
+      // resets income action
+      for (const event of player.events[Operator.Income]) {
+        event.activated = false;
+      }
+    }
+    // resets power and qic actions
+    Object.values(BoardAction).forEach(pos => {
+      this.boardActions[pos] = true;
+    });
 
-    } else {
-      pl.gaiaPhase();
+    this.phaseEnd();
+  }
+
+  finalScoringPhase() {
+    // finalScoring tiles
+    for (const tile of this.finalScoringTiles) {
+      const players = _.sortBy(this.players, player => player.finalCount(tile)).reverse();
+
+      const rankings = players.map(pl => ({
+        player: pl,
+        count: pl.finalCount(tile)
+      }));
+
+      if (this.players.length === 2) {
+        rankings.push({ player: null, count: 8 });
+        rankings.sort((pl1, pl2) => pl2.count - pl1.count);
+      }
+
+      for (const ranking of rankings) {
+        const count = ranking.count;
+        // index of the first player with that score
+        const first = rankings.findIndex(pl => pl.count === count);
+        // number of other players with the same score
+        const ties = rankings.filter(pl => pl.count === count).length;
+
+        if (ranking.player) {
+          const VPs = [18, 12, 6, 0, 0, 0];
+          ranking.player.data.victoryPoints += Math.floor(_.sum(VPs.slice(first, ties)) / ties);
+        }
+      }
+    }
+
+    // research VP and remaining resources
+    for (const pl of this.playersInOrder()) {
+      pl.data.gainFinalVictoryPoints();
     }
   }
 
@@ -500,96 +679,6 @@ export default class Engine {
 
   get currentRoundScoringEvents() {
     return Event.parse(roundScorings[this.roundScoringTiles[this.round - 1]]);
-  }
-
-  cleanUpPhase() {
-    if (this.round < 1) {
-      return;
-    }
-    for (const player of this.players) {
-      // remove roundScoringTile
-      player.removeEvents(this.currentRoundScoringEvents);
-
-      // resets special action
-      for (const event of player.events[Operator.Activate]) {
-        event.activated = false;
-      }
-      // resets income action
-      for (const event of player.events[Operator.Income]) {
-        event.activated = false;
-      }
-    }
-    // resets power and qic actions
-    Object.values(BoardAction).forEach(pos => {
-      this.boardActions[pos] = true;
-    });
-  }
-
-  finalScoringPhase() {
-    // finalScoring tiles
-    for (const tile of this.finalScoringTiles) {
-      const players = _.sortBy(this.players, player => player.finalCount(tile)).reverse();
-
-      const rankings = players.map(pl => ({
-        player: pl,
-        count: pl.finalCount(tile)
-      }));
-
-      if (this.players.length === 2) {
-        rankings.push({ player: null, count: 8 });
-        rankings.sort((pl1, pl2) => pl2.count - pl1.count);
-      }
-
-      for (const ranking of rankings) {
-        const count = ranking.count;
-        // index of the first player with that score
-        const first = rankings.findIndex(pl => pl.count === count);
-        // number of other players with the same score
-        const ties = rankings.filter(pl => pl.count === count).length;
-
-        if (ranking.player) {
-          const VPs = [18, 12, 6, 0, 0, 0];
-          ranking.player.data.victoryPoints += Math.floor(_.sum(VPs.slice(first, ties)) / ties);
-        }
-      }
-    }
-
-    // research VP and remaining resources
-    for (const pl of this.playersInOrder()) {
-      pl.data.gainFinalVictoryPoints();
-    }
-
-  }
-
-  /** Next player to make a move, after current player makes their move */
-  moveToNextPlayer(command: Command): PlayerEnum {
-    const playerPos = this.turnOrder.indexOf(this.currentPlayer);
-    const subPhaseTurn = this.roundSubCommands.length > 0;
-
-    if (subPhaseTurn) {
-      return;
-    }
-
-    if (command === Command.Pass) {
-      this.passedPlayers.push(this.currentPlayer);
-    }
-
-    if (this.round <= 0 || command === Command.Pass) {
-      this.turnOrder.splice(playerPos, 1);
-      this.currentPlayer = this.turnOrder[playerPos % this.turnOrder.length];
-      this.nextPlayer = this.currentPlayer;
-      return;
-    }
-
-    if (this.currentPlayer !== this.nextPlayer) {
-      this.currentPlayer = this.nextPlayer;
-    }
-
-    return this.currentPlayer;
-  }
-
-  playersInOrder(): Player[] {
-    return this.turnOrder.map(i => this.players[i]);
   }
 
   /** Commands */
@@ -763,8 +852,8 @@ export default class Engine {
     // removes endTurn subcommand
     this.roundSubCommands.splice(0, 1);
     // sets nextPlayer
-    const playerPos = this.turnOrder.indexOf(this.currentPlayer);
-    this.nextPlayer = this.turnOrder[(playerPos + 1) % this.turnOrder.length];
+    // const playerPos = this.turnOrder.indexOf(this.currentPlayer);
+    // this.nextPlayer = this.turnOrder[(playerPos + 1) % this.turnOrder.length];
   }
 
   [Command.ChooseTechTile](player: PlayerEnum, pos: TechTilePos | AdvTechTilePos) {
@@ -883,10 +972,11 @@ export default class Engine {
     pl.payCosts(cost);
     pl.gainRewards(income);
 
-    // check if it's a gaia phase
-    if (cost[0].type === Resource.GainTokenGaiaArea) {
-      pl.data.power.area2 += cost[0].count;
-      this.selectGaiaPhase(player);
+    // check if it's a gaia phase and don't need gaia selection
+    if (this.phase === Phase.RoundGaia) {
+      if ( !pl.needGaiaSelection ) {
+        this.moveToNextPlayer(Command.ChooseIncome);
+      }
     }
   }
 
@@ -913,14 +1003,20 @@ export default class Engine {
   [Command.ChooseIncome](player: PlayerEnum, income: string) {
     const { incomes } = this.availableCommand(player, Command.ChooseIncome).data;
     const incomeRewards = income.split(",") ;
+    const pl = this.player(player);
 
     for (const incR of incomeRewards) {
       const eventIdx = incomes.findIndex(ev => Reward.match(Reward.parse(incR), ev.rewards));
       assert(eventIdx > -1, `${incR} is not in the available income`);
       incomes.splice(eventIdx, 1);
     }
-    this.player(player).receiveIncomeEvent(Reward.parse(income));
-    this.selectIncomePhase(player);
+    pl.receiveIncomeEvent(Reward.parse(income));
+    // no more income selection needed
+    const { needed } = pl.needIncomeSelection();
+    if (!needed) {
+      pl.receiveIncome();
+      this.moveToNextPlayer(Command.ChooseIncome);
+    }
   }
 
   [Command.FormFederation](player: PlayerEnum, hexes: string, federation: Federation) {
