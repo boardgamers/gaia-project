@@ -73,7 +73,9 @@ export function generate(engine: Engine): AvailableCommand[] {
     case Phase.RoundGaia: {
       return possibleGaias(engine, player);
     }
-
+    case Phase.RoundLeech: {
+      return possibleLeech(engine, player);
+    }
     case Phase.RoundMove : {
       // We are in a regular round
       const commands = [];
@@ -88,17 +90,6 @@ export function generate(engine: Engine): AvailableCommand[] {
         const subCommand = engine.roundSubCommands[0];
         const subPlayer = engine.player(subCommand.player);
         switch (subCommand.name) {
-          case Command.Leech: {
-            commands.push(subCommand);
-            commands.push(
-              {
-                name: Command.DeclineLeech,
-                player: subCommand.player,
-                data: subCommand.data
-              }
-            );
-            break;
-          }
           case Command.ChooseCoverTechTile: {
             const tiles = subPlayer.data.techTiles.filter(tl => tl.enabled);
             commands.push({
@@ -498,6 +489,31 @@ export function possibleGaias(engine: Engine, player: Player) {
 
   if (pl.needGaiaSelection()) {
     commands.push(...possibleFreeActions(engine, player));
+  }
+  return commands;
+}
+
+export function possibleLeech(engine: Engine, player: Player) {
+  const commands = [];
+  const pl = engine.player(player);
+  if ( pl.data.leechPossible > 0) {
+    commands.push({
+      name: Command.Leech,
+      player,
+      data: {
+        leech: pl.data.leechPossible + Resource.ChargePower,
+        freeIncome : pl.faction === Faction.Taklons && pl.data.hasPlanetaryInstitute() ? "1t" : ""
+      }
+    });
+    commands.push({
+      name: Command.DeclineLeech,
+      player,
+      data: {
+        leech: pl.data.leechPossible + Resource.ChargePower,
+        freeIncome : pl.faction === Faction.Taklons && pl.data.hasPlanetaryInstitute() ? "1t" : ""
+      }
+    });
+
   }
   return commands;
 }

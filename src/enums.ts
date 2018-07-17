@@ -297,6 +297,7 @@ export enum Phase {
   RoundIncome = "roundIncome",
   RoundGaia = "roundGaia",
   RoundMove = "roundMove",
+  RoundLeech = "roundLeech",
   RoundFinish = "roundFinish",
   EndGame = "endGame"
 }

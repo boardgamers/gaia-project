@@ -52,6 +52,7 @@ export default class PlayerData extends EventEmitter {
   /** Coordinates occupied by buildings */
   occupied: GaiaHex[] = [];
   brainstone: BrainstoneArea = BrainstoneArea.Out;
+  leechPossible: number;
 
   toJSON(): Object {
     const ret = {
@@ -74,7 +75,8 @@ export default class PlayerData extends EventEmitter {
       greenFederations: this.federations,
       occupied: this.occupied,
       satellites: this.satellites,
-      brainstone: this.brainstone
+      brainstone: this.brainstone,
+      leechPossible: this.leechPossible
     };
 
     for (const building of Object.values(Building)) {
