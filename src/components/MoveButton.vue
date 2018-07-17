@@ -19,19 +19,21 @@ export default class Navbar extends Vue {
   private subscription: () => {} = null;
 
   subscribe(action: string, callback: any) {
-    // Unsuscribe
-    if (this.subscription) {
-      this.subscription();
-    }
+    this.unsubscribe();
 
     this.subscription = this.$store.subscribeAction(({type, payload}) => {
       if (type !== action) {
         return;
       }
 
-      console.log("calling calllback");
       callback(payload);
     });
+  }
+
+  unsubscribe() {
+    if (this.subscription) {
+      this.subscription();
+    }
   }
 
   handleClick() {
@@ -47,6 +49,8 @@ export default class Navbar extends Vue {
   }
 
   emitCommand(append?: string) {
+    this.unsubscribe();
+    
     this.$store.commit("activeButton", null);
 
     if (append) {

@@ -103,6 +103,8 @@ export default class Game extends Vue {
 
   updateMoveList() {
     this.moveList = this.moves.join("\n");
+
+    setTimeout(() => $("#moves").scrollTop($("#moves")[0].scrollHeight));
   }
 }
 

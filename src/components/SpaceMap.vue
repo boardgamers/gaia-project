@@ -5,6 +5,7 @@
       <polygon :points="hexCorners.map(p => `${p.x},${p.y}`).join(' ')" :class="{spaceHex: true, highlighted: !!highlightedHexes.has(hex)}" @click='hexClick(hex)'>
       </polygon>
       <Planet v-if="hex.data.planet !== 'e'" :planet='hex.data.planet' />
+      <Building v-if="hex.data.building" :building='hex.data.building' :faction='faction(hex.data.player)' />
     </g>
   </svg>
 </template>
@@ -16,6 +17,7 @@ import {MapData} from '../data';
 import { GaiaHex } from '@gaia-project/engine';
 import {corners, hexCenter } from "../graphics/hex";
 import Planet from './Planet.vue';
+import Building from './Building.vue';
 
 @Component<SpaceMap>({
   computed: {
@@ -27,7 +29,8 @@ import Planet from './Planet.vue';
     }
   },
   components: {
-    Planet
+    Planet,
+    Building
   }
 })
 export default class SpaceMap extends Vue {
@@ -40,10 +43,13 @@ export default class SpaceMap extends Vue {
   }
 
   hexClick(hex: GaiaHex) {
-    console.log('hexclick', hex)
     if (this.highlightedHexes.has(hex)) {
       this.$store.dispatch('hexClick', hex);
     }
+  }
+
+  faction(player) {
+    return this.$store.state.game.data.players[player].faction;
   }
 }
 export default interface SpaceMap {
