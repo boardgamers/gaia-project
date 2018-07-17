@@ -5,8 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "webpack": "webpack-cli",
-    "watch-front": "webpack-cli --watch"
+    "serve": "vue-cli-service serve"
   },
   "repository": {
     "type": "git",
@@ -27,22 +26,21 @@
     "@types/jquery": "^3.3.1",
     "@types/node": "^10.5.2",
     "@types/pixi.js": "^4.7.2",
+    "@vue/cli-plugin-typescript": "^3.0.0-rc.5",
+    "@vue/cli-service": "^3.0.0-rc.5",
     "bootstrap": "^4.0.0",
-    "copy-webpack-plugin": "^4.5.1",
-    "css-loader": "^1.0.0",
-    "extract-text-webpack-plugin": "^4.0.0-beta.0",
-    "file-loader": "^1.1.11",
-    "html-webpack-plugin": "^3.0.6",
     "jquery": "^3.3.1",
     "node-sass": "^4.7.2",
     "popper.js": "^1.12.9",
-    "resolve-url-loader": "^2.3.0",
     "sass-loader": "^7.0.3",
-    "style-loader": "^0.21.0",
-    "ts-loader": "^4.4.1",
     "typescript": "^2.7.2",
-    "url-loader": "^1.0.1",
-    "webpack": "^4.1.1",
-    "webpack-cli": "^3.0.8"
-  }
+    "vue": "^2.5.16",
+    "vue-property-decorator": "^7.0.0",
+    "vuex": "^3.0.1"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not ie <= 8"
+  ]
 }

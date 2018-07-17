@@ -4,7 +4,8 @@
 Functions to visualize the map and boards for gaia project inside html canvas
 
 ```bash
-npm run webpack
+npm install
+npm run serve
 ```
 
-And open dist/public/index.html
+And open localhost:8080 in the browser.
