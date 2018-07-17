@@ -1,4 +1,4 @@
-import { Command, Faction, Building, Planet, Round, Booster, Resource, Player, Operator, BoardAction, ResearchField, TechTilePos, Phase } from './enums';
+import { Command, Faction, Building, Planet, Round, Booster, Resource, Player, Operator, BoardAction, ResearchField, TechTilePos, AdvTechTilePos, Phase, SubPhase } from './enums';
 import Engine from './engine';
 import * as _ from 'lodash';
 import factions from './factions';
@@ -7,7 +7,6 @@ import { upgradedBuildings } from './buildings';
 import Reward from './reward';
 import { boardActions, freeActions, freeActionsHadschHallas, freeActionsTerrans } from './actions';
 import * as researchTracks from './research-tracks';
-import { terraformingStepsRequired } from './planets';
 
 
 const ISOLATED_DISTANCE = 3;
@@ -83,84 +82,81 @@ export function generate(engine: Engine): AvailableCommand[] {
 
       assert(player !== undefined, "Problem with the engine, player to play is unknown");
 
-      const data = engine.player(player).data;
-      const map = engine.map;
-
-      if (engine.roundSubCommands.length > 0) {
-        const subCommand = engine.roundSubCommands[0];
-        const subPlayer = engine.player(subCommand.player);
-        switch (subCommand.name) {
-          case Command.ChooseCoverTechTile: {
-            const tiles = subPlayer.data.techTiles.filter(tl => tl.enabled);
-            commands.push({
-              name: Command.ChooseCoverTechTile,
-              player: subCommand.player,
-              data: {tiles: tiles.map(tech => ({
-                tile: tech.tile,
-                tilePos: Object.values(TechTilePos).find(pos => engine.techTiles[pos].tile === tech.tile)
-              }))}
-            });
-            break;
-          }
-
-          case Command.Spend: {
-            commands.push(...possibleFreeActions(engine, subCommand.player));
-            break;
-          }
-
-          case Command.UpgradeResearch: {
-            commands.push(...possibleResearchAreas(engine, subCommand.player, "", subCommand.data));
-            break;
-          }
-
-          case Command.PlaceLostPlanet: {
-            commands.push(...possibleSpaceLostPlanet(engine, subCommand.player));
-            break;
-          }
-
-          case Command.Build:
-          case Command.EndTurn: {
-            commands.push(subCommand);
-
-            // add free actions before to end turn
-            commands.push(...possibleFreeActions(engine, subCommand.player));
-            break;
-          }
-
-          default: commands.push(subCommand);
-        }
-        // remove playerPassiveCommands but not endTurn or BuildsubPhase
-        if (engine.roundSubCommands[0].name !== Command.EndTurn && engine.roundSubCommands[0].name !== Command.Build) {
-          engine.roundSubCommands.splice(0, 1);
-        }
-
+      if (engine.subPhase === SubPhase.ChooseTechTile) {
+        commands.push(...possibleTechTiles(engine, player));
         return commands;
-      } // end subCommand
-
-      //  boosters
-      commands.push(...possibleRoundBoosters(engine, player));
-
-      const buildingCommand = possibleBuildings(engine, player);
-      if (buildingCommand) {
-        commands.push(buildingCommand);
       }
 
-      // Add federations
-      commands.push(...possibleFederations(engine, player));
+      if (engine.subPhase === SubPhase.CoverTechTile) {
+        commands.push(...possibleCoverTechTiles(engine, player));
+        return commands;
+      }
 
-      // Upgrade research
-      commands.push(...possibleResearchAreas(engine, player, UPGRADE_RESEARCH_COST));
+      if (engine.subPhase === SubPhase.UpgradeResearch) {
+        commands.push(...possibleResearchAreas(engine, player, ""));
+        return commands;
+      }
 
-      // free actions
-      commands.push(...possibleFreeActions(engine, player));
+      if (engine.subPhase === SubPhase.PlaceLostPlanet) {
+        commands.push(...possibleSpaceLostPlanet(engine, player));
+        return commands;
+      }
 
-      // power actions
-      commands.push(...possibleBoardActions(engine, player));
+      if (engine.subPhase === SubPhase.ChooseFederationTile) {
+        commands.push(...possibleFederationTiles(engine, player, "pool"));
+        return commands;
+      }
 
-      // special actions
-      commands.push(...possibleSpecialActions(engine, player));
+      if (engine.subPhase === SubPhase.RescoreFederationTile) {
+        commands.push(...possibleFederationTiles(engine, player, "player"));
+        return commands;
+      }
 
-      return commands;
+      if (engine.subPhase === SubPhase.BuildMine) {
+        commands.push(...possibleMineBuildings(engine, player));
+        commands.push(...possibleFreeActions(engine, player));
+        return commands;
+      }
+
+      if (engine.subPhase === SubPhase.BeforeMove) {
+        //  boosters
+        commands.push(...possibleRoundBoosters(engine, player));
+
+        const buildingCommand = possibleBuildings(engine, player);
+        if (buildingCommand) {
+          commands.push(buildingCommand);
+        }
+
+        // Add federations
+        commands.push(...possibleFederations(engine, player));
+
+        // Upgrade research
+        commands.push(...possibleResearchAreas(engine, player, UPGRADE_RESEARCH_COST));
+
+        // free actions
+        commands.push(...possibleFreeActions(engine, player));
+
+        // power actions
+        commands.push(...possibleBoardActions(engine, player));
+
+        // special actions
+        commands.push(...possibleSpecialActions(engine, player));
+
+        return commands;
+      }
+
+      if (engine.subPhase === SubPhase.AfterMove) {
+        // free actions
+        commands.push(...possibleFreeActions(engine, player));
+
+        commands.push({
+          name: Command.EndTurn,
+          player
+        });
+
+        return commands;
+      }
+
     }
   }
 }
@@ -254,6 +250,26 @@ export function possibleBuildings(engine: Engine, player: Player) {
   }
 }
 
+export function possibleMineBuildings(engine: Engine, player: Player) {
+  const commands = [];
+  const buildingCommand = possibleBuildings(engine, player);
+
+  if (buildingCommand) {
+    // We filter buildings that aren't mines (like gaia-formers) or
+    // that already have a building on there (like gaia-formers)
+    buildingCommand.data.buildings = buildingCommand.data.buildings.filter(bld => {
+      if (bld.building !== Building.Mine && bld.building !== Building.GaiaFormer) {
+        return false;
+      }
+      return engine.map.grid.getS(bld.coordinates).buildingOf(player) === undefined;
+    });
+
+    if (buildingCommand.data.buildings.length > 0) {
+      commands.push(buildingCommand);
+    }
+  }
+  return commands;
+}
 export function possibleSpecialActions(engine: Engine, player: Player) {
   const commands = [];
   const specialacts = [];
@@ -344,18 +360,13 @@ export function possibleFreeActions(engine: Engine, player: Player, gaiaPhase?: 
   return commands;
 }
 
-export function possibleResearchAreas(engine: Engine, player: Player, cost: string, destResearchArea?: ResearchField) {
+export function possibleResearchAreas(engine: Engine, player: Player, cost: string) {
   const commands = [];
   const tracks = [];
   const data = engine.players[player].data;
 
   if (engine.players[player].canPay(Reward.parse(cost))) {
     for (const field of Object.values(ResearchField)) {
-
-      // up in a specific research area
-      if (destResearchArea && destResearchArea !== field) {
-        continue;
-      }
 
       // already on top
       if (data.research[field] === researchTracks.lastTile(field)) {
@@ -514,6 +525,81 @@ export function possibleLeech(engine: Engine, player: Player) {
       }
     });
 
+  }
+  return commands;
+}
+
+export function possibleCoverTechTiles(engine: Engine, player: Player) {
+  const commands = [];
+
+  const tiles = engine.player(player).data.techTiles.filter(tl => tl.enabled);
+  commands.push({
+    name: Command.ChooseCoverTechTile,
+    player,
+    data: {tiles: tiles.map(tech => ({
+      tile: tech.tile,
+      tilePos: Object.values(TechTilePos).find(pos => engine.techTiles[pos].tile === tech.tile)
+    }))}
+  });
+
+  return commands;
+}
+
+export function possibleFederationTiles(engine: Engine, player: Player, from: "pool" | "player") {
+  const commands = [];
+
+  const possibleTiles = Object.keys(engine.federations).filter(key => engine.federations[key] > 0);
+  const playerTiles = Object.keys(engine.player(player).data.federations);
+
+  commands.push({
+    name: Command.ChooseFederationTile,
+    player,
+    data: {
+      tiles: from === "player" ? playerTiles : possibleTiles,
+      // Tiles that are rescored just add the rewards, but don't take the token
+      rescore: from === "player"
+    }
+  });
+
+  return commands;
+}
+
+export function possibleTechTiles(engine: Engine, player: Player) {
+  const commands = [];
+  const tiles = [];
+  const data = engine.players[player].data;
+
+  //  tech tiles that player doesn't already have
+  for (const tilePos of Object.values(TechTilePos)) {
+    if (!_.find(data.techTiles, {tile: engine.techTiles[tilePos].tile})) {
+      tiles.push({
+        tile: engine.techTiles[tilePos].tile,
+        tilePos,
+        type: "std"
+      });
+    }
+  }
+
+  // adv tech tiles where player has lev 4/5, free federation tokens,
+  // and available std tech tiles to cover
+  for (const tilePos of Object.values(AdvTechTilePos)) {
+    if (engine.advTechTiles[tilePos].numTiles > 0  &&
+        data.greenFederations > 0 &&
+        data.research[tilePos.slice("adv-".length)] >= 4 &&
+        data.techTiles.filter(tech => tech.enabled).length > 0 ) {
+          tiles.push({
+            tile: engine.advTechTiles[tilePos].tile,
+            tilePos,
+            type: "adv"
+          });
+    }
+  }
+  if (tiles.length > 0) {
+    commands.push({
+      name: Command.ChooseTechTile,
+      player,
+      data: { tiles }
+  });
   }
   return commands;
 }

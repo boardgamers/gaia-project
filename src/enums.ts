@@ -301,3 +301,15 @@ export enum Phase {
   RoundFinish = "roundFinish",
   EndGame = "endGame"
 }
+
+export enum SubPhase {
+  BeforeMove = "beforeMove",
+  AfterMove = "afterMove",
+  UpgradeResearch = "upgradeResearch",
+  PlaceLostPlanet = "placeLostPlanet",
+  ChooseTechTile = "chooseTechTile",
+  CoverTechTile = "coverTechTile",
+  ChooseFederationTile = "chooseFederationTile",
+  RescoreFederationTile = "rescoreFederationTile",
+  BuildMine = "buildMine"
+}

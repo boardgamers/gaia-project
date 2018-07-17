@@ -22,8 +22,8 @@ import {
   Operator,
   ScoringTile,
   FinalTile,
-  BrainstoneArea,
-  Phase
+  Phase,
+  SubPhase
 } from './enums';
 import { CubeCoordinates } from 'hexagrid';
 import Event from './events';
@@ -37,10 +37,9 @@ import AvailableCommand, {
 import Reward from './reward';
 import { boardActions, freeActions } from './actions';
 import { GaiaHex } from '..';
-import { stdBuildingValue, upgradedBuildings } from './buildings';
+import { stdBuildingValue } from './buildings';
 
 const ISOLATED_DISTANCE = 3;
-const QIC_RANGE_UPGRADE = 2;
 
 export default class Engine {
   map: SpaceMap;
@@ -65,10 +64,11 @@ export default class Engine {
   availableCommands: AvailableCommand[] = [];
   phase: Phase ;
   prevPhase: Phase;
+  subPhase: SubPhase;
+
   round: number = Round.None;
   /** Order of players in the turn */
   turnOrder: PlayerEnum[] = [];
-  roundSubCommands: AvailableCommand[] = [];
   /**
    * Players who have passed, in order. Will be used to determine next round's
    * order
@@ -115,26 +115,18 @@ export default class Engine {
     this.players.push(player);
 
     player.on('gain-tech', () => {
-      this.techTilePhase(player.player);
+      this.subPhase = SubPhase.ChooseTechTile;
     });
     player.on('build-mine', () => {
-      this.buildMinePhase(player.player);
+      this.subPhase = SubPhase.BuildMine;
     });
     player.on('rescore-fed', () => {
-      this.selectFederationTilePhase(player.player, "player");
+      this.subPhase = SubPhase.RescoreFederationTile;
     });
   }
 
   player(player: number): Player {
     return this.players[player];
-  }
-
-  playerToMove(): PlayerEnum {
-    if (this.availableCommands.length > 0) {
-      return this.availableCommands[0].player;
-    }
-
-    return this.currentPlayer;
   }
 
   playersInOrder(): Player[] {
@@ -143,12 +135,6 @@ export default class Engine {
 
   playersInTableOrderFromCurrent(): Player[] {
     return [...this.players.slice(this.currentPlayer + 1), ...this.players.slice(0, this.currentPlayer)];
-  }
-
-  nextSubcommandPlayer(): PlayerEnum {
-    if (this.roundSubCommands.length > 0) {
-      return this.roundSubCommands[0].player;
-    }
   }
 
   numberOfPlayersWithFactions(): number {
@@ -229,8 +215,11 @@ export default class Engine {
 
       }
 
-      this.player(player).endTurn();
-      this.moveToNextPlayer(command);
+      // implicit endTurn
+      if (command !== Command.EndTurn) {
+        this.player(player).endTurn();
+        this.moveToNextPlayer(command);
+      }
     }
 
   }
@@ -238,9 +227,10 @@ export default class Engine {
    /** Next player to make a move, after current player makes their move */
    moveToNextPlayer(command: Command): PlayerEnum {
     const playerPos = this.turnOrder.indexOf(this.currentPlayer);
-    const subPhaseTurn = this.roundSubCommands.length > 0;
 
-    if (subPhaseTurn) {
+    // check if need to start a leechingPhase
+    if ( this.phase === Phase.RoundMove && this.leechingSource ) {
+      this.phaseBegin(Phase.RoundLeech);
       return;
     }
 
@@ -257,6 +247,7 @@ export default class Engine {
     if ( [Phase.SetupFaction, Phase.SetupBuilding, Phase.SetupBooster, Phase.RoundIncome, Phase.RoundGaia, Phase.RoundLeech].includes(this.phase) || command === Command.Pass) {
       this.turnOrder.splice(playerPos, 1);
       this.currentPlayer = this.turnOrder[playerPos % this.turnOrder.length];
+      this.subPhase = SubPhase.BeforeMove;
 
       // If all players have passed
       if (this.turnOrder.length === 0) {
@@ -266,6 +257,7 @@ export default class Engine {
     }
 
     this.currentPlayer = this.turnOrder[(playerPos + 1) % this.turnOrder.length];
+    this.subPhase = SubPhase.BeforeMove;
 
     return this.currentPlayer;
   }
@@ -302,6 +294,7 @@ export default class Engine {
         break;
       }
       case Phase.RoundMove : {
+        this.subPhase = SubPhase.BeforeMove;
         this.beginRoundMovePhase();
         break;
       }
@@ -569,127 +562,28 @@ export default class Engine {
     }
   }
 
-  techTilePhase(player: PlayerEnum) {
-    const tiles = [];
-    const data = this.players[player].data;
+  advanceResearchAreaPhase(player: PlayerEnum, cost: string, field: ResearchField ) {
+    const pl = this.player(player);
 
-    //  tech tiles that player doesn't already have
-    for (const tilePos of Object.values(TechTilePos)) {
-      if (!_.find(data.techTiles, {tile: this.techTiles[tilePos].tile})) {
-        tiles.push({
-          tile: this.techTiles[tilePos].tile,
-          tilePos,
-          type: "std"
-        });
-      }
-    }
+    pl.payCosts(Reward.parse(cost));
+    pl.gainRewards([new Reward(`${Command.UpgradeResearch}-${field}`)]);
 
-    // adv tech tiles where player has lev 4/5, free federation tokens,
-    // and available std tech tiles to cover
-    for (const tilePos of Object.values(AdvTechTilePos)) {
-      if (this.advTechTiles[tilePos].numTiles > 0  &&
-          data.greenFederations > 0 &&
-          data.research[tilePos.slice("adv-".length)] >= 4 &&
-          data.techTiles.filter(tech => tech.enabled).length > 0 ) {
-            tiles.push({
-              tile: this.advTechTiles[tilePos].tile,
-              tilePos,
-              type: "adv"
-            });
-      }
-    }
-    if (tiles.length > 0) {
-      this.roundSubCommands.unshift({
-        name: Command.ChooseTechTile,
-        player,
-        data: { tiles }
-    });
-    }
-
-  }
-
-  coverTechTilePhase(player: PlayerEnum) {
-    this.roundSubCommands.unshift({
-      name: Command.ChooseCoverTechTile,
-      player,
-      data: {}
-    });
-  }
-
-  lostPlanetPhase(player: PlayerEnum) {
-    this.roundSubCommands.unshift({
-      name: Command.PlaceLostPlanet,
-      player,
-      data: {}
-    });
-  }
-
-  advanceResearchAreaPhase(player: PlayerEnum, pos: TechTilePos | AdvTechTilePos) {
-    // if stdTech in a free position or advTech, any researchArea
-    const destResearchArea = "";
-    if (![TechTilePos.Free1, TechTilePos.Free2, TechTilePos.Free3].includes(pos as any) && Object.values(TechTilePos).includes(pos)) {
-      // There's only one track to advance, so no need to give the player a choice, but end turn
-      this.player(player).gainRewards(Reward.parse(`up-${pos}`));
-      this.endTurnPhase(player, Command.ChooseTechTile);
-      return;
-    }
-
-    this.roundSubCommands.unshift({
-      name: Command.UpgradeResearch,
-      player,
-      data: destResearchArea
-    });
-  }
-
-  selectFederationTilePhase(player: PlayerEnum, from: "pool" | "player") {
-    const possibleTiles = Object.keys(this.federations).filter(key => this.federations[key] > 0);
-    const playerTiles = Object.keys(this.player(player).data.federations);
-
-    this.roundSubCommands.unshift({
-      name: Command.ChooseFederationTile,
-      player,
-      data: {
-        tiles: from === "player" ? playerTiles : possibleTiles,
-        // Tiles that are rescored just add the rewards, but don't take the token
-        rescore: from === "player"
-      }
-    });
-  }
-
-  endTurnPhase(player: PlayerEnum, fromCommand: Command) {
-    // exclude setup rounds
-    if (this.round <= 0) {
-      return;
-    }
-    // if the current player has subCommands to do, cannot endTurn
-    if (this.nextSubcommandPlayer() === player) {
-      return;
-    }
-    this.roundSubCommands.unshift({
-      name: Command.EndTurn,
-      player,
-      data: fromCommand
-    });
-  }
-
-  buildMinePhase(player: PlayerEnum) {
-    const buildingCommand = possibleBuildings(this, player);
-
-    if (buildingCommand) {
-      // We filter buildings that aren't mines (like gaia-formers) or
-      // that already have a building on there (like gaia-formers)
-      buildingCommand.data.buildings = buildingCommand.data.buildings.filter(bld => {
-        if (bld.building !== Building.Mine && bld.building !== Building.GaiaFormer) {
-          return false;
+    if (pl.data.research[field] === researchTracks.lastTile(field)) {
+      if (field === ResearchField.Terraforming) {
+        // gets federation token
+        if (this.terraformingFederation) {
+          pl.gainFederationToken(this.terraformingFederation);
+          this.terraformingFederation = undefined;
         }
-        return this.map.grid.getS(bld.coordinates).buildingOf(player) === undefined;
-      });
-
-      if (buildingCommand.data.buildings.length > 0) {
-        this.roundSubCommands.unshift(buildingCommand);
+      } else if (field === ResearchField.Navigation) {
+        // gets LostPlanet
+        this.subPhase = SubPhase.PlaceLostPlanet;
+        return;
       }
     }
+    this.subPhase = SubPhase.AfterMove;
   }
+
 
   get currentRoundScoringEvents() {
     return Event.parse(roundScorings[this.roundScoringTiles[this.round - 1]]);
@@ -768,6 +662,7 @@ export default class Engine {
 
     this.roundBoosters[booster] = false;
     this.players[player].getRoundBooster(booster);
+    this.subPhase = SubPhase.AfterMove;
   }
 
   [Command.Build](player: PlayerEnum, building: Building, location: string) {
@@ -788,22 +683,22 @@ export default class Engine {
           elem.steps
         );
 
-        // remove subCommand build if present
-        if (this.roundSubCommands[0] && this.roundSubCommands[0].name === Command.Build) {
-          this.roundSubCommands.splice(0, 1);
-        }
-
         // will trigger a LeechPhase
         if (this.phase === Phase.RoundMove && building !== Building.GaiaFormer) {
           this.leechingSource = hex;
         }
-
+        
         if ( pl.faction === Faction.Gleens && building === Building.PlanetaryInstitute) {
           pl.gainFederationToken(Federation.FederationGleens);
         }
 
-        this.endTurnPhase(player, Command.Build);
+          // Gain tech tile if lab / academy
+        if ( building === Building.ResearchLab || building === Building.Academy1 || building === Building.Academy2) {
+          this.subPhase = SubPhase.ChooseTechTile;
+          return;
+        }
 
+        this.subPhase = SubPhase.AfterMove;
         return;
       }
     }
@@ -817,24 +712,7 @@ export default class Engine {
 
     assert(track, `Impossible to upgrade knowledge for ${field}`);
 
-    const pl = this.player(player);
-
-    pl.payCosts(Reward.parse(track.cost));
-    pl.gainRewards([new Reward(`${Command.UpgradeResearch}-${field}`)]);
-
-    if (pl.data.research[field] === researchTracks.lastTile(field)) {
-      if (field === ResearchField.Terraforming) {
-        // gets federation token
-        if (this.terraformingFederation) {
-          pl.gainFederationToken(this.terraformingFederation);
-          this.terraformingFederation = undefined;
-        }
-      } else if (field === ResearchField.Navigation) {
-        // gets LostPlanet
-        this.lostPlanetPhase(player);
-      }
-    }
-    this.endTurnPhase(player, Command.Build);
+    this.advanceResearchAreaPhase(player, track.cost, field);
   }
 
   [Command.Pass](player: PlayerEnum, booster: Booster) {
@@ -867,11 +745,8 @@ export default class Engine {
   }
 
   [Command.EndTurn](player: PlayerEnum) {
-    // removes endTurn subcommand
-    this.roundSubCommands.splice(0, 1);
-    // sets nextPlayer
-    // const playerPos = this.turnOrder.indexOf(this.currentPlayer);
-    // this.nextPlayer = this.turnOrder[(playerPos + 1) % this.turnOrder.length];
+    this.player(player).endTurn();
+    this.moveToNextPlayer(Command.EndTurn);
   }
 
   [Command.ChooseTechTile](player: PlayerEnum, pos: TechTilePos | AdvTechTilePos) {
@@ -881,18 +756,27 @@ export default class Engine {
     assert(tileAvailable !== undefined, `Impossible to get ${pos} tile`);
 
     const advanced = tileAvailable.type === "adv";
+    const stdNoFree = ![TechTilePos.Free1, TechTilePos.Free2, TechTilePos.Free3].includes(pos as any) &&  tileAvailable.type === "std";
+    const std =  [TechTilePos.Free1, TechTilePos.Free2, TechTilePos.Free3].includes(pos as any);
 
     if (advanced) {
+      // need to cover before to upgrade
       this.player(player).gainAdvTechTile(tileAvailable.tile);
       this.advTechTiles[pos].numTiles -= 1;
-      this.advanceResearchAreaPhase(player, pos);
-      this.coverTechTilePhase(player);
-    } else {
-      this.player(player).gainTechTile(tileAvailable.tile);
-      this.techTiles[pos].numTiles -= 1;
-      // add advance research area subCommand
-      this.advanceResearchAreaPhase(player, pos);
+      this.subPhase = SubPhase.CoverTechTile;
+      return;
     }
+
+    this.player(player).gainTechTile(tileAvailable.tile);
+    this.techTiles[pos].numTiles -= 1;
+
+    if ( stdNoFree ) {
+      this.advanceResearchAreaPhase(player, "", pos as any );
+      return;
+    } else {
+      this.subPhase = SubPhase.UpgradeResearch;
+    }
+
   }
 
   [Command.ChooseCoverTechTile](player: PlayerEnum, tilePos: TechTilePos) {
@@ -902,8 +786,7 @@ export default class Engine {
     assert(tileAvailable !== undefined, `Impossible to cover ${tilePos} tile`);
     // remove tile
     this.player(player).coverTechTile(tileAvailable.tile);
-
-    this.endTurnPhase(player, Command.Build);
+    this.subPhase = SubPhase.UpgradeResearch;
   }
 
   [Command.Special](player: PlayerEnum, income: string) {
@@ -912,23 +795,25 @@ export default class Engine {
 
     assert(actAvailable !== undefined, `Special action ${income} is not available`);
 
+    this.subPhase = SubPhase.AfterMove;
+
     // mark as activated special action for this turn
+    // triggers buildMine subphase from the activation
     this.player(player).activateEvent(actAvailable.spec);
 
-    this.endTurnPhase(player, Command.Special);
   }
 
   [Command.ChooseFederationTile](player: PlayerEnum, federation: Federation) {
     const { tiles, rescore } = this.availableCommand(player, Command.ChooseFederationTile).data;
     const tileAvailable = tiles.find(ta => ta.tile === federation);
 
-    if (rescore) {
-      // rescore a federation
-      this.player(player).gainRewards(Reward.parse(federations[federation]));
-      this.endTurnPhase(player, Command.ChooseFederationTile);
-    } else {
-      // no other type of individual choose-fereation-tile
+    this.player(player).gainRewards(Reward.parse(federations[federation]));
+
+    if (!rescore) {
+      this.player(player).data.federations.push(federation);
     }
+
+    this.subPhase = SubPhase.AfterMove;
   }
 
   [Command.PlaceLostPlanet](player: PlayerEnum, location: string) {
@@ -946,6 +831,7 @@ export default class Engine {
     this.player(player).build(Building.Mine, hex, [], this.map, 0);
 
     this.leechingSource = hex;
+    this.subPhase = SubPhase.AfterMove;
   }
 
   [Command.Spend](player: PlayerEnum, costS: string, _for: "for", incomeS: string) {
@@ -1007,7 +893,7 @@ export default class Engine {
 
     pl.payCosts(Reward.parse(boardActions[action].cost));
     pl.loadEvents(Event.parse(boardActions[action].income));
-    this.endTurnPhase(player, Command.Action);
+    this.subPhase = SubPhase.AfterMove;
   }
 
   [Command.ChooseIncome](player: PlayerEnum, income: string) {
@@ -1050,6 +936,6 @@ export default class Engine {
     pl.payCosts([new Reward(fedInfo.satellites, Resource.GainToken)]);
     pl.data.satellites += fedInfo.satellites;
 
-    this.endTurnPhase(player, Command.FormFederation);
+    this.subPhase = SubPhase.AfterMove;
   }
 }

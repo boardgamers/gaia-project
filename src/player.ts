@@ -272,12 +272,6 @@ export default class Player extends EventEmitter {
       }
     }
 
-    // Gain tech tile if lab / academy
-    if ( building === Building.ResearchLab || building === Building.Academy1 || building === Building.Academy2) {
-      this.emit("gain-tech");
-      return;
-    }
-
     // get triggered income for new building
     this.receiveBuildingTriggerIncome(building, hex.data.planet);
     // get triggerd terffaorming step income for new building
@@ -383,6 +377,14 @@ export default class Player extends EventEmitter {
     }
   }
 
+  receiveNewFederationTriggerIncome() {
+    for (const event of this.events[Operator.Trigger]) {
+      if (event.condition === Condition.Federation) {
+        this.gainRewards(event.rewards);
+      }
+    }
+  }
+
   finalCount(tile: FinalTile): number {
     switch (tile) {
       case FinalTile.Structure : return this.eventConditionCount(finalScorings[FinalTile.Structure]);
@@ -436,6 +438,7 @@ export default class Player extends EventEmitter {
       this.data.greenFederations += 1;
     }
     this.gainRewards(Reward.parse(federationTiles[federation]));
+    this.receiveNewFederationTriggerIncome();
   }
 
   factionReward(reward: Reward): Reward {
