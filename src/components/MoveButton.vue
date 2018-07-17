@@ -25,6 +25,10 @@ export default class Navbar extends Vue {
         return;
       }
 
+      if (this.$store.state.game.context.activeButton !== this) {
+        return;
+      }
+
       callback(payload);
     });
   }
@@ -48,6 +52,7 @@ export default class Navbar extends Vue {
   }
 
   emitCommand(append?: string) {
+    console.log("emit command", append);
     this.unsubscribe();
 
     this.$store.commit("activeButton", null);

@@ -89,10 +89,46 @@ export default class Game extends Vue {
         this.moves.push(command);
         return;
       }
+
+      const lastMoveStr = this.moves[this.moves.length - 1];
+
+      if (lastMoveStr.endsWith('.')) {
+        this.moves.push(command);
+        return;
+      }
+
+      const lastMove = this.parseMove(lastMoveStr);
+      const move = this.parseMove(command);
+
+      if (lastMove.player !== move.player) {
+        this.moves.push(command);
+        return;
+      }
+
+      if (lastMove.command === Command.Leech || lastMove.command === Command.DeclineLeech || lastMove.command === Command.ChooseRoundBooster) {
+        this.moves.push(command);
+        return;
+      }
+
+      this.moves[this.moves.length-1] += `. ${command.slice(move.player.length+1)}`;
     })();
 
     this.updateMoveList();
     this.submit();
+  }
+
+  parseMove(command: string): {player: string, command: string, args: string[]} {
+    if (command.includes('.')) {
+      return this.parseMove(command.slice(0, command.indexOf('.')));
+    }
+
+    const split = command.split(' ');
+
+    return {
+      player: split[0],
+      command: split[1],
+      args: split.slice(2)
+    };
   }
 
   updateMoveList() {

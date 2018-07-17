@@ -5,7 +5,7 @@
     <polygon v-else-if="gaiaFormer" :points='hexCorners' />
     <circle v-else-if="lab" r="0.3" />
     <circle v-else-if="academy" r="0.5" />
-    <polygon v-else-if="tradingStation" points="-0.5,0.433 0.5,0.433 0,-0.433"/>
+    <polygon v-else-if="tradingStation" :points="triangleCorners"/>
   </g>
 </template>
 
@@ -29,6 +29,10 @@ export default class Building extends Vue {
 
   get hexCorners() {
     return corners().map(({x, y}) => `${x*0.4},${y*0.4}`).join(" ");
+  }
+
+  get triangleCorners() {
+    return [{x: -0.5, y: Math.sqrt(3)/4}, {x: 0.5, y: Math.sqrt(3)/4}, {x: 0, y: -Math.sqrt(3)/4}].map(({x, y}) => `${x*0.68},${y*0.68}`).join(" ");
   }
 
   get mine() { return this.building === BuildingEnum.Mine }

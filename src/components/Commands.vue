@@ -91,7 +91,9 @@ export default class Commands extends Vue {
   }
 
   handleCommand(command: string, source: MoveButton) {
+    console.log("handle command", command);
     if (source.button.buttons && source.button.buttons.length > 0) {
+      console.log("source.buttons");
       this.commandTitles.push(source.button.label);
       this.commandChain.push(source.button.command);
       this.customButtons = source.button.buttons;
