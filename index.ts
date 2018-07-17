@@ -9,7 +9,7 @@ import tiles from "./src/tiles";
 import Reward from "./src/reward";
 
 export {Condition, Planet, Resource, Operator, ResearchField, Faction, Command, Building, Booster, Federation, BoardAction} from "./src/enums";
-export {TechTile, AdvTechTile, ScoringTile, FinalTile, TechTilePos, AdvTechTilePos} from "./src/enums";
+export {TechTile, AdvTechTile, ScoringTile, FinalTile, TechTilePos, AdvTechTilePos, Phase, Round} from "./src/enums";
 export {GaiaHexData, GaiaHex} from "./src/gaia-hex";
 
 export { Player, PlayerData, Event, FactionBoard, factions, AvailableCommand, tiles, Reward };
