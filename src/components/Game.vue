@@ -90,6 +90,13 @@ export default class Game extends Vue {
         return;
       }
 
+      const move = this.parseMove(command);
+
+      if (move.command === Command.EndTurn) {
+        this.moves[this.moves.length - 1] += ".";
+        return;
+      }
+
       const lastMoveStr = this.moves[this.moves.length - 1];
 
       if (lastMoveStr.endsWith('.')) {
@@ -98,7 +105,6 @@ export default class Game extends Vue {
       }
 
       const lastMove = this.parseMove(lastMoveStr);
-      const move = this.parseMove(command);
 
       if (lastMove.player !== move.player) {
         this.moves.push(command);

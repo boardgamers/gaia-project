@@ -18,7 +18,7 @@
       </div>
       <div v-else>
         <MoveButton v-for="button in buttons" @trigger="handleCommand" :button="button">
-          {{button.label}}
+          {{button.label || button.command}}
         </MoveButton>
       </div>
     </div>
@@ -27,6 +27,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import $ from "jquery";
 import { Component } from 'vue-property-decorator';
 import { AvailableCommand, Command, factions, Building, GaiaHex, Booster, tiles, Event } from '@gaia-project/engine';
 import MoveButton from './MoveButton.vue';
@@ -55,6 +56,15 @@ export default class Commands extends Vue {
         this.title('Choose your faction');
         return;
       }
+    }
+
+    // If there's only one button, save the player the hassle and click it
+    if (val.length === 1) {
+      setTimeout(() => {
+        if ($(".move-button").length <= 1)  {
+          $(".move-button").click();
+        }
+      });
     }
   }
 
@@ -163,71 +173,97 @@ export default class Commands extends Vue {
           break;
         };
 
-        // case Command.UpgradeResearch: {
-        //   addButton("Advance research", `${player} ${Command.UpgradeResearch}`, {
-        //     tracks: command.data.tracks.map(tr => ({level: tr.to, field: tr.field}))
-        //   });
+        case Command.UpgradeResearch: {
+          ret.push({
+            label: "Advance research",
+            command: command.name,
+            // track.to contains actual level, to use when implementing research viewer
+            buttons: command.data.tracks.map(track => ({command: track.field}))
+          });
+          break;
+        }
 
-        //   break;
-        // }
+        case Command.ChooseTechTile: case Command.ChooseCoverTechTile: {
+          ret.push({
+            label: command.name === Command.ChooseCoverTechTile ? "- Pick tech tile to cover" : " - Pick tech tile",
+            command: command.name,
+            buttons: command.data.tiles.map(tile => ({command: tile.tilePos}))
+          });
+          break;
+        }
 
-        // case Command.ChooseTechTile: case Command.ChooseCoverTechTile: {
-        //   $("#move-title").append(command.name === Command.ChooseCoverTechTile ? "- Pick tech tile to cover" : " - Pick tech tile");
-        //   for (const tile of command.data.tiles) {
-        //     addButton(tile.tilePos, `${player} ${command.name} ${tile.tilePos}`);
-        //   }
-        //   pendingCommand = `${player} ${command.name}`,
-        //   renderer.render(lastData, {techs: command.data.tiles.map(tile => tile.tilePos)});
-        //   break;
-        // }
+        case Command.Leech: {
+          const leech = command.data.leech;
+          const gainToken = command.data.freeIncome;
 
-        // case Command.Leech: {
-        //   const leech = command.data.leech;
-        //   const gainToken = command.data.freeIncome;
+          if (gainToken) {
+            ret.push({
+              label: "Charge " + leech + " get " + gainToken,
+              command: `${Command.Leech} ${leech},${gainToken}`
+            }, {
+              label: "Get " + gainToken + " charge " + leech,
+              command: `${Command.Leech} ${gainToken},${leech}`
+            });
+          } else {
+            ret.push({
+              label: "Charge " + leech,
+              command: `${Command.Leech} ${leech}`
+            });
+          }
+          break;
+        }
 
-        //   if (gainToken) {
-        //     addButton("Charge " + leech + " get " + gainToken, `${player} ${Command.Leech} ${leech},${gainToken}`);
-        //     addButton("Get " + gainToken + " charge " + leech, `${player} ${Command.Leech} ${gainToken},${leech}`);
-        //   } else {
-        //     addButton("Charge " + leech, `${player} ${Command.Leech} ${leech}`);
-        //   }
-        //   break;
-        // }
+        case Command.DeclineLeech: {
+          ret.push({
+            label: "Decline charge power",
+            command: Command.DeclineLeech
+          });
+          break;
+        }
 
-        // case Command.DeclineLeech: {
-        //   addButton("Decline charge power", `${player} ${Command.DeclineLeech}`);
-        //   break;
-        // }
+        case Command.Spend: {
+          ret.push({
+            label: "Free action",
+            command: Command.Spend,
+            buttons: command.data.acts.map(act => ({label: `Spend ${act.cost} to gain ${act.income}`, value: `${act.cost} for ${act.income}`}))
+          });
+          break;
+        };
 
-        // case Command.Spend: {
-        //   const acts = command.data.acts;
-        //   const values = acts.map(act => `${act.cost} for ${act.income}`);
-        //   const labels = acts.map(act => `Spend ${act.cost} to gain ${act.income}`);
-        //   addButton("Free action", `${player} ${Command.Spend}`, {values, labels});
-        //   break;
-        // };
+        case Command.Action: {
+          ret.push({
+            label: "Power/Q.I.C Action",
+            command: Command.Action,
+            buttons: command.data.poweracts.map(act => ({command: act.name, label: `Spend ${act.cost} for ${act.income.join(" / ")}`}))
+          });
+          break;
+        }
 
-        // case Command.Action: {
-        //   const acts = command.data.poweracts;
-        //   addButton("Power/Q.I.C Action", `${player} ${Command.Action}`, {values: acts.map(act => act.name), labels: acts.map(act => `Spend ${act.cost} for ${act.income.join(" / ")}`)});
-        //   break;
-        // }
+        case Command.Special: {
+          ret.push({
+            label: "Special Action",
+            command: Command.Special,
+            buttons: command.data.poweracts.map(act => ({command: act.income}))
+          });
+          break;
+        }
 
-        // case Command.Special: {
-        //   const acts = command.data.specialacts;
-        //   addButton("Special Action", `${player} ${Command.Special}`, {values: acts.map(act => act.income)});
-        //   break;
-        // }
+        case Command.BurnPower: {
+          ret.push({
+            label: "Burn power",
+            command: Command.BurnPower,
+            buttons: command.data.map(val => ({command: val}))
+          });
+          break;
+        }
 
-        // case Command.BurnPower: {
-        //   addButton("Burn power", `${player} ${Command.BurnPower}`, {values: command.data});
-        //   break;
-        // }
-
-        // case Command.EndTurn: {
-        //   addButton("End turn", `${player} ${Command.EndTurn}`);
-        //   break;
-        // }
+        case Command.EndTurn: {
+          ret.push({
+            label: "End Turn",
+            command: Command.EndTurn
+          });
+          break;
+        }
 
         // case Command.FormFederation: {
         //   const values = [];
@@ -258,7 +294,7 @@ export default class Commands extends Vue {
 }
 
 export interface ButtonData {
-  label: string;
+  label?: string;
   command: string;
   tooltip?: string;
   hexes?: GaiaHex[];
