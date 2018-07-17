@@ -46,6 +46,7 @@ export default class Player extends EventEmitter {
 
   toJSON() {
     return {
+      player: this.player,
       faction: this.faction,
       data: this.data,
       income: Reward.toString(Reward.merge([].concat(...this.events[Operator.Income].map(event => event.rewards))), true),
