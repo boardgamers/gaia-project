@@ -6,7 +6,9 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    game: {data: {players: []}} as {data: Data},
+    game: {
+      data: {players: []}
+    } as {data: Data},
     error: null as string,
     info: null as string,
     errorIssued: null as Date,
@@ -23,7 +25,6 @@ export default new Vuex.Store({
     removeInfo: state => state.info = state.infoIssued = null
   },
   actions: {
-
   },
   getters: {
     data: state => state.game.data,

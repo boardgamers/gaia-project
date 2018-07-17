@@ -13,7 +13,7 @@
         </div>
       </div>
       <div class="col-md-6 order-1 order-md-2" id="move-panel">
-        <Commands/>
+        <Commands @command="handleCommand"/>
         <div>
           <form id="move-form" @submit.prevent="submit">
             <div class="form-group">
@@ -38,8 +38,9 @@
 import * as $ from 'jquery';
 import Vue from 'vue'
 import { Component } from 'vue-property-decorator';
-import { Data } from '@/data';
+import { Data } from '../data';
 import Commands from './Commands.vue';
+import { Command } from '@gaia-project/engine';
 
 @Component<Game>({
   computed: {
@@ -56,11 +57,14 @@ import Commands from './Commands.vue';
 })
 export default class Game extends Vue {
   public moveList = "";
+  public moves: string[] = [];
 
   submit() {
     const text = this.moveList.trim(); 
+    this.moves = text ? text.split("\n") : [];
+    
     const data = {
-      moves: text ? text.split("\n") : []
+      moves: this.moves
     }
 
     $.post("http://localhost:9508/", 
@@ -78,8 +82,33 @@ export default class Game extends Vue {
       }
     });
   }
+
+  handleCommand(command: string) {
+    (() => {
+      if (command.startsWith(Command.Init)) {
+        this.moves = [command];
+        return;
+      }
+
+      if (this.data.round <= 0) {
+        this.moves.push(command);
+        return;
+      }
+    })();
+
+    this.updateMoveList();
+    this.submit();
+  }
+
+  updateMoveList() {
+    this.moveList = this.moves.join("\n");
+  }
 }
 
+// Used for type augmentation
+export default interface Game {
+  data: Data;
+}
 </script>
 
 <style lang="scss" scoped>
