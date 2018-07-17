@@ -6,10 +6,7 @@
     <div id="errors"></div>
     <div class="row mt-2">
       <div class="col-md-6 order-2 order-md-1">
-        <div v-for="(player, index) in data.players" :id="'p'+(index+1)">
-          <div class="text"></div>
-          <div class="tiles"></div>
-        </div>
+        <PlayerInfo v-for="player in data.players" :player='player' />
       </div>
       <div class="col-md-6 order-1 order-md-2" id="move-panel">
         <Commands @command="handleCommand"/>
@@ -34,6 +31,7 @@ import { Component } from 'vue-property-decorator';
 import { Data } from '../data';
 import Commands from './Commands.vue';
 import SpaceMap from './SpaceMap.vue';
+import PlayerInfo from './PlayerInfo.vue';
 import { Command } from '@gaia-project/engine';
 
 @Component<Game>({
@@ -47,7 +45,8 @@ import { Command } from '@gaia-project/engine';
   },
   components: {
     Commands,
-    SpaceMap
+    SpaceMap,
+    PlayerInfo
   }
 })
 export default class Game extends Vue {
@@ -152,37 +151,10 @@ export default interface Game {
 
 <style lang="scss" scoped>
 
-@import "../stylesheets/frontend.scss";
-
 canvas#map {
   border: solid dodgerblue 1px; 
   width: 100%;
   height: 450px;
-}
-
-#p1, #p2, #p3, #p4, #p5 {
-  margin-bottom: 1em;
-  padding-bottom: 0.5em;
-  padding-left: 0.5em;
-  padding-top: 0.2em;
-
-  @extend .row;
-  @extend .no-gutters;
-
-  .tiles {
-    @extend .row;
-    @extend .no-gutters;
-    @extend .pl-3;
-    
-    flex-wrap: wrap;
-
-    canvas {
-      &.tech-tile {
-        width: 60px;
-        height: 40px;
-      }
-    }
-  }
 }
 
 </style>

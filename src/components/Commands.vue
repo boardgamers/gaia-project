@@ -243,7 +243,7 @@ export default class Commands extends Vue {
           ret.push({
             label: "Special Action",
             command: Command.Special,
-            buttons: command.data.poweracts.map(act => ({command: act.income}))
+            buttons: command.data.specialacts.map(act => ({command: act.income}))
           });
           break;
         }
