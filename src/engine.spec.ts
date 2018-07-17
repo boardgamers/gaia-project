@@ -79,6 +79,25 @@ describe("Engine", () => {
     expect(() => new Engine(moves)).to.throw(AssertionError);
   });
 
+  it("should force a player to do an action before ending his turn", () => {
+    const moves = parseMoves(`
+      init 2 randomSeed
+      p1 faction terrans
+      p2 faction xenos
+      p1 build m -4x2
+      p2 build m -7x3
+      p2 build m -2x2
+      p1 build m -4x-1
+      p2 build m -5x5
+      p2 booster booster3
+      p1 booster booster4
+      p1 burn 2
+      p2 build m -6x3
+    `);
+
+    expect(() => new Engine(moves)).to.throw();
+  });
+
   it("should allow players to upgrade a mine to a TS, either isolated or not", () => {
     const moves = parseMoves(`
       init 2 randomSeed

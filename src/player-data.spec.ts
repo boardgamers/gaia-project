@@ -21,7 +21,7 @@ describe("PlayerData", () => {
       expect(data.power.area1).to.equal(0);
       expect(data.power.area2).to.equal(2);
       expect(data.power.gaia).to.equal(0);
-      expect(data.brainstone).to.equal(BrainstoneArea.Out)
+      expect(data.brainstone).to.equal(BrainstoneArea.Out);
     });
   });
 
@@ -37,7 +37,7 @@ describe("PlayerData", () => {
       expect(data.power.area1).to.equal(0);
       expect(data.power.area2).to.equal(0);
       expect(data.power.gaia).to.equal(0);
-      expect(data.brainstone).to.equal(BrainstoneArea.Transit)
+      expect(data.brainstone).to.equal(BrainstoneArea.Transit);
     });
   });
 

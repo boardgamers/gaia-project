@@ -687,7 +687,7 @@ export default class Engine {
         if (this.phase === Phase.RoundMove && building !== Building.GaiaFormer) {
           this.leechingSource = hex;
         }
-        
+
         if ( pl.faction === Faction.Gleens && building === Building.PlanetaryInstitute) {
           pl.gainFederationToken(Federation.FederationGleens);
         }
