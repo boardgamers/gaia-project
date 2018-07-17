@@ -24,12 +24,6 @@
         </div>
       </div>
     </div>
-    <div class="tooltip bs-tooltip-left" id="tooltip-canvas" role="tooltip">
-      <div class="arrow"></div>
-      <div class="tooltip-inner">
-        Some tooltip text!
-      </div>
-    </div>
   </div>
 </template>
 

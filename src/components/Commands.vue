@@ -8,16 +8,16 @@
     </div>
     <div id="move-buttons">
       <div v-if="init">
-        <MoveButton v-for="i in [2,3,4,5]" :command="`init ${i} randomSeed`" @trigger="handleCommand">{{i}} players</MoveButton>
+        <MoveButton v-for="i in [2,3,4,5]" :button="{command: `init ${i} randomSeed`}" @trigger="handleCommand">{{i}} players</MoveButton>
       </div>
       <div v-else-if="chooseFaction">
-        <MoveButton v-for="faction in command.data" :command="`${command.name} ${faction}`" @trigger="handleCommand">
+        <MoveButton v-for="faction in command.data" :button="{command: `${command.name} ${faction}`}" @trigger="handleCommand">
           {{factions[faction].name}}
           <i :class="['planet', factions[faction].planet]"></i>
         </MoveButton>
       </div>
       <div v-else>
-        <MoveButton v-for="button in buttons" :command="button.command" @trigger="handleCommand" :hexes="button.hexes">
+        <MoveButton v-for="button in buttons" @trigger="handleCommand" :button="button">
           {{button.label}}
         </MoveButton>
       </div>
@@ -28,10 +28,11 @@
 <script lang="ts">
 import Vue from 'vue'
 import { Component } from 'vue-property-decorator';
-import { AvailableCommand, Command, factions, Building, GaiaHex } from '@gaia-project/engine';
+import { AvailableCommand, Command, factions, Building, GaiaHex, Booster, tiles, Event } from '@gaia-project/engine';
 import MoveButton from './MoveButton.vue';
 import {buildingName} from '../data/building';
 import {GameContext} from '../data';
+import { eventDesc } from '@/data/event';
 
 @Component<Commands>({
   watch: {
@@ -46,6 +47,8 @@ import {GameContext} from '../data';
 export default class Commands extends Vue {
   loadCommands(val: AvailableCommand[]) {
     this.commandTitles = [];
+    this.customButtons = [];
+    this.commandChain = [];
 
     for (const command of val) {
       if (command.name === Command.ChooseFaction) {
@@ -87,11 +90,18 @@ export default class Commands extends Vue {
     return factions;
   }
 
-  handleCommand(command: string) {
+  handleCommand(command: string, source: MoveButton) {
+    if (source.button.buttons && source.button.buttons.length > 0) {
+      this.commandTitles.push(source.button.label);
+      this.commandChain.push(source.button.command);
+      this.customButtons = source.button.buttons;
+
+      return;
+    }
     if (this.init) {
       this.$emit("command", command);
     } else {
-      this.$emit("command", `p${this.command.player+1} ${command}`);
+      this.$emit("command", `p${this.command.player+1} ${[...this.commandChain, command].join(' ')}`);
     }
   }
 
@@ -104,6 +114,10 @@ export default class Commands extends Vue {
   }
 
   get buttons(): ButtonData[] {
+    if (this.customButtons.length > 0) {
+      return this.customButtons;
+    }
+
     const ret: ButtonData[] = [];
 
     for (const command of this.availableCommands) {
@@ -124,23 +138,28 @@ export default class Commands extends Vue {
           break;
         }
 
-        // case Command.Pass: 
-        // case Command.ChooseRoundBooster: {
-        //   const values = [];
-        //   const labels = [];
-        //   const tooltips = [];
+        case Command.Pass: 
+        case Command.ChooseRoundBooster: {
+          const buttons: ButtonData[] = [];
 
-        //   Object.values(Booster).forEach((booster, i) => {
-        //     if (command.data.boosters.includes(booster)) {
-        //       values.push(booster);
-        //       labels.push(`Booster ${i+1}: ${tiles.boosters[booster]}`);
-        //       tooltips.push(tiles.boosters[booster].map(spec => eventDesc(new Event(spec))).join("\n"));
-        //     }
-        //   });
+          Object.values(Booster).forEach((booster, i) => {
+            if (command.data.boosters.includes(booster)) {
+              buttons.push({
+                command: booster,
+                label: `Booster ${i+1}: ${tiles.boosters[booster]}`,
+                tooltip: tiles.boosters[booster].map(spec => eventDesc(new Event(spec))).join("\n")
+              });
+            }
+          });
 
-        //   addButton(command.name === Command.Pass ? "Pass" : "Pick booster", `${player} ${command.name}`, {values, labels, tooltips});
-        //   break;
-        // };
+          ret.push({
+            label: command.name === Command.Pass ? "Pass" : "Pick booster",
+            command: command.name,
+            buttons
+          });
+
+          break;
+        };
 
         // case Command.UpgradeResearch: {
         //   addButton("Advance research", `${player} ${Command.UpgradeResearch}`, {
@@ -231,13 +250,18 @@ export default class Commands extends Vue {
     return ret;
   }
 
-  private commandTitles = [];
+  private commandTitles: string[] = [];
+  private customButtons: ButtonData[] = [];
+  private commandChain: string[] = [];
 }
 
-interface ButtonData {
+export interface ButtonData {
   label: string;
   command: string;
+  tooltip?: string;
   hexes?: GaiaHex[];
+
+  buttons?: ButtonData[];
 }
 
 </script>

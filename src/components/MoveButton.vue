@@ -8,13 +8,12 @@
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
 import {GaiaHex} from '@gaia-project/engine';
+import { ButtonData } from '@/components/Commands.vue';
 
 @Component
 export default class Navbar extends Vue {
   @Prop()
-  public command: string;
-  @Prop()
-  public hexes: GaiaHex[];
+  public button: ButtonData;
 
   private subscription: () => {} = null;
 
@@ -37,9 +36,9 @@ export default class Navbar extends Vue {
   }
 
   handleClick() {
-    if (this.hexes) {
+    if (this.button.hexes) {
       this.$store.commit("activeButton", this);
-      this.$store.commit("highlightHexes", this.hexes);
+      this.$store.commit("highlightHexes", this.button.hexes);
 
       this.subscribe('hexClick', hex => this.emitCommand(`${hex.q}x${hex.r}`));
       return;
@@ -50,13 +49,13 @@ export default class Navbar extends Vue {
 
   emitCommand(append?: string) {
     this.unsubscribe();
-    
+
     this.$store.commit("activeButton", null);
 
     if (append) {
-      this.$emit('trigger', this.command + " " + append);
+      this.$emit('trigger', this.button.command + " " + append, this);
     } else {
-      this.$emit('trigger', this.command);
+      this.$emit('trigger', this.button.command, this);
     }
   }
 
