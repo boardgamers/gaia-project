@@ -1,8 +1,7 @@
 <template>
   <div>
     <div class="row">
-      <canvas id="map">
-      </canvas>
+      <SpaceMap/>
     </div>
     <div id="errors"></div>
     <div class="row mt-2">
@@ -40,6 +39,7 @@ import Vue from 'vue'
 import { Component } from 'vue-property-decorator';
 import { Data } from '../data';
 import Commands from './Commands.vue';
+import SpaceMap from './SpaceMap.vue';
 import { Command } from '@gaia-project/engine';
 
 @Component<Game>({
@@ -52,7 +52,8 @@ import { Command } from '@gaia-project/engine';
     this.submit();
   },
   components: {
-    Commands
+    Commands,
+    SpaceMap
   }
 })
 export default class Game extends Vue {
@@ -62,7 +63,7 @@ export default class Game extends Vue {
   submit() {
     const text = this.moveList.trim(); 
     this.moves = text ? text.split("\n") : [];
-    
+
     const data = {
       moves: this.moves
     }
@@ -105,7 +106,7 @@ export default class Game extends Vue {
   }
 }
 
-// Used for type augmentation
+// Used for type augmentation from computed properties
 export default interface Game {
   data: Data;
 }

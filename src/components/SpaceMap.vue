@@ -1,0 +1,54 @@
+<template>
+  <svg viewBox="-13 -13 36 26" height="450px" width="100%">
+    <g v-for="hex in map" :transform="`translate(${center(hex).x}, ${center(hex).y})`">
+      <title>Coordinates: {{hex.q}}x{{hex.r}}&#10;Sector: {{hex.data.sector}}</title>
+      <polygon :points="hexCorners.map(p => `${p.x},${p.y}`).join(' ')" class="spaceHex">
+      </polygon>
+      <Planet v-if="hex.data.planet !== 'e'" :planet='hex.data.planet' />
+    </g>
+  </svg>
+</template>
+
+<script lang="ts">
+import Vue from 'vue'
+import { Component } from 'vue-property-decorator';
+import {MapData} from '../data';
+import { GaiaHex } from '@gaia-project/engine';
+import {corners, hexCenter } from "../graphics/hex";
+import Planet from './Planet.vue';
+
+@Component<SpaceMap>({
+  computed: {
+    map(this: SpaceMap): MapData {
+      return this.$store.state.game.data.map
+    }
+  },
+  components: {
+    Planet
+  }
+})
+export default class SpaceMap extends Vue {
+  get hexCorners() {
+    return corners();
+  }
+
+  center(hex: GaiaHex) {
+    return hexCenter(hex);
+  }
+}
+
+</script>
+
+<style lang="scss" scoped>
+
+.spaceHex {
+  fill: #172E62;
+  stroke: #666;
+  stroke-width: 0.01;
+
+  &:hover {
+    fill-opacity: 0.5;
+  }
+}
+
+</style>
