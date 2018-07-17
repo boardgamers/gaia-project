@@ -35,4 +35,26 @@ export default class App extends Vue {
   // -moz-osx-font-smoothing: grayscale;
 }
 
+.tooltip#tooltip-canvas {
+  opacity: 1;
+  display: none;
+
+  &.tooltip-show {
+    display: block;
+  }
+
+  // Center-vertically
+  .arrow {
+    top: 0;
+    bottom: 0;
+    margin-top: auto;
+    margin-bottom: auto;
+  }
+
+  .tooltip-inner {
+    max-width: 400px;
+    text-align: left;
+  }
+}
+
 </style>

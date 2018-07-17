@@ -45,4 +45,36 @@ export default class Commands extends Vue {
 
 <style lang="scss" scoped>
 
+@import "../stylesheets/frontend.scss";
+
+#move-title {
+  @extend .mb-2;
+}
+
+i.planet {
+  &::before {
+    content: "\25cf";
+    filter: drop-shadow(0px 0px 3px white);
+  }
+
+  // terra
+  &.r {color: #99ccff}
+  // desert
+  &.d {color: #ffd700}
+  // swamp
+  &.s {color: #a25b15}
+  // oxide
+  &.o {color: #f30}
+  // titanium
+  &.t {color: #3d3d5c}
+  // ice
+  &.i {color: #cff}
+  // volcanic
+  &.v {color: #f90}
+  // gaia
+  &.g {color: #093}
+  // transdim
+  &.m {color: #a64dff}
+}
+
 </style>

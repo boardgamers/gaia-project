@@ -81,3 +81,40 @@ export default class Game extends Vue {
 }
 
 </script>
+
+<style lang="scss" scoped>
+
+@import "../stylesheets/frontend.scss";
+
+canvas#map {
+  border: solid dodgerblue 1px; 
+  width: 100%;
+  height: 450px;
+}
+
+#p1, #p2, #p3, #p4, #p5 {
+  margin-bottom: 1em;
+  padding-bottom: 0.5em;
+  padding-left: 0.5em;
+  padding-top: 0.2em;
+
+  @extend .row;
+  @extend .no-gutters;
+
+  .tiles {
+    @extend .row;
+    @extend .no-gutters;
+    @extend .pl-3;
+    
+    flex-wrap: wrap;
+
+    canvas {
+      &.tech-tile {
+        width: 60px;
+        height: 40px;
+      }
+    }
+  }
+}
+
+</style>
