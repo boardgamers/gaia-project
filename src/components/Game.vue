@@ -79,7 +79,7 @@ export default class Game extends Vue {
       if (error.status === 0) {
         this.$store.commit("error", "Are you sure gaia engine is running on port 9508?");  
       } else {
-        this.$store.commit("error", "Error " + error.status + ": " + error.responseText);
+        this.$store.commit("error", error.responseText);
       }
     });
   }

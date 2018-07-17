@@ -2,7 +2,7 @@
   <svg viewBox="-13 -13 36 26" height="450px" width="100%">
     <g v-for="hex in map" :transform="`translate(${center(hex).x}, ${center(hex).y})`">
       <title>Coordinates: {{hex.q}}x{{hex.r}}&#10;Sector: {{hex.data.sector}}</title>
-      <polygon :points="hexCorners.map(p => `${p.x},${p.y}`).join(' ')" class="spaceHex">
+      <polygon :points="hexCorners.map(p => `${p.x},${p.y}`).join(' ')" :class="{spaceHex: true, highlighted: !!highlightedHexes.has(hex)}" @click='hexClick(hex)'>
       </polygon>
       <Planet v-if="hex.data.planet !== 'e'" :planet='hex.data.planet' />
     </g>
@@ -21,6 +21,9 @@ import Planet from './Planet.vue';
   computed: {
     map(this: SpaceMap): MapData {
       return this.$store.state.game.data.map
+    },
+    highlightedHexes(): Set<GaiaHex> {
+      return this.$store.state.game.context.highlighted.hexes
     }
   },
   components: {
@@ -35,6 +38,16 @@ export default class SpaceMap extends Vue {
   center(hex: GaiaHex) {
     return hexCenter(hex);
   }
+
+  hexClick(hex: GaiaHex) {
+    console.log('hexclick', hex)
+    if (this.highlightedHexes.has(hex)) {
+      this.$store.dispatch('hexClick', hex);
+    }
+  }
+}
+export default interface SpaceMap {
+  highlightedHexes: Set<GaiaHex>
 }
 
 </script>
@@ -48,6 +61,11 @@ export default class SpaceMap extends Vue {
 
   &:hover {
     fill-opacity: 0.5;
+  }
+
+  &.highlighted {
+    fill: white;
+    cursor: pointer;
   }
 }
 

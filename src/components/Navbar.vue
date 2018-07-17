@@ -17,7 +17,7 @@ export default class Navbar extends Vue {
 <style lang="scss" scoped>
 
 .navbar {
-  margin-bottom: 0 !important;
+  // margin-bottom: 0 !important;
 }
 
 </style>

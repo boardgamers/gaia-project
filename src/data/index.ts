@@ -26,3 +26,12 @@ export interface Data {
   roundScoringTiles: [ScoringTile, ScoringTile, ScoringTile, ScoringTile, ScoringTile, ScoringTile];
   finalScoringTiles: [FinalTile, FinalTile];
 }
+
+export interface GameContext {
+  highlighted: {
+    hexes: Set<GaiaHex>
+  };
+
+  coordsMap: Map<string, GaiaHex>;
+  activeButton: any;
+}

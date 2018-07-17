@@ -17,7 +17,7 @@
         </MoveButton>
       </div>
       <div v-else>
-        <MoveButton v-for="button in buttons" :command="button.command" @trigger="handleCommand">
+        <MoveButton v-for="button in buttons" :command="button.command" @trigger="handleCommand" :hexes="button.hexes">
           {{button.label}}
         </MoveButton>
       </div>
@@ -28,9 +28,10 @@
 <script lang="ts">
 import Vue from 'vue'
 import { Component } from 'vue-property-decorator';
-import { AvailableCommand, Command, factions, Building } from '@gaia-project/engine';
+import { AvailableCommand, Command, factions, Building, GaiaHex } from '@gaia-project/engine';
 import MoveButton from './MoveButton.vue';
 import {buildingName} from '../data/building';
+import {GameContext} from '../data';
 
 @Component<Commands>({
   watch: {
@@ -98,6 +99,10 @@ export default class Commands extends Vue {
     this.commandTitles.push(title);
   }
 
+  get context(): GameContext {
+    return this.$store.state.game.context;
+  }
+
   get buttons(): ButtonData[] {
     const ret: ButtonData[] = [];
 
@@ -110,7 +115,8 @@ export default class Commands extends Vue {
             if (coordinates.length > 0) {
               ret.push({
                 label: (building === Building.Mine ? "Build a" : building === Building.GaiaFormer ? "Place a ": "Upgrade to") + " " + buildingName(building),
-                command: `${Command.Build} ${building}`
+                command: `${Command.Build} ${building}`,
+                hexes: coordinates.map(coord => this.context.coordsMap.get(coord.coordinates))
               });
             }
           }
@@ -231,6 +237,7 @@ export default class Commands extends Vue {
 interface ButtonData {
   label: string;
   command: string;
+  hexes?: GaiaHex[];
 }
 
 </script>
