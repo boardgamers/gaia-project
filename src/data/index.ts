@@ -27,9 +27,11 @@ export interface Data {
   finalScoringTiles: [FinalTile, FinalTile];
 }
 
+export type HighlightHexData = Map<GaiaHex, {cost?: string}>;
+
 export interface GameContext {
   highlighted: {
-    hexes: Set<GaiaHex>,
+    hexes: HighlightHexData,
     researchTiles: Set<string>
   };
 

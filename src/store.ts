@@ -11,7 +11,7 @@ export default new Vuex.Store({
       data: {players: []} as Data,
       context: {
         highlighted: {
-          hexes: new Set(),
+          hexes: new Map(),
           researchTiles: new Set()
         },
         coordsMap: new Map()
@@ -32,8 +32,8 @@ export default new Vuex.Store({
       }
     },
 
-    highlightHexes(state, hexes: GaiaHex[]) {
-      state.game.context.highlighted.hexes = new Set(hexes);
+    highlightHexes(state, hexes: Map<GaiaHex, {cost?: string}>) {
+      state.game.context.highlighted.hexes = hexes;
     },
 
     highlightResearchTiles(state, tiles: string[]) {

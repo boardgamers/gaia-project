@@ -8,12 +8,13 @@
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
 import {GaiaHex} from '@gaia-project/engine';
+import {HighlightHexData} from '../data';
 
 export interface ButtonData {
   label?: string;
   command: string;
   tooltip?: string;
-  hexes?: GaiaHex[];
+  hexes?: HighlightHexData;
   researchTiles?: string[];
 
   buttons?: ButtonData[];
