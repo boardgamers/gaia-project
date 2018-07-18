@@ -87,6 +87,7 @@ svg {
   .spaceHexFederation {
     stroke-width: 0.03;
     fill: none;
+    pointer-events: none;
   }
 }
 
