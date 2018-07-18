@@ -1,5 +1,5 @@
 <template>
-  <svg height="400px" viewBox="0 0 360 450">
+  <svg height="400px" viewBox="0 0 360 440">
     <ResearchTrack v-for="(field, index) in fields" :field=field :x="index*60" :key="field" />
     <TechTile pos="free1" transform="translate(70, 400)" />
     <TechTile pos="free2" transform="translate(150, 400)" />

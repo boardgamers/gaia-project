@@ -67,6 +67,28 @@ svg {
     // transdim
     &.m {fill: #a64dff}
   }
+
+  // Used in federation display on the map
+  .planet-stroke {
+    // terra
+    &.r {stroke: #99ccff}
+    // desert
+    &.d {stroke: #ffd700}
+    // swamp
+    &.s {stroke: #a25b15}
+    // oxide
+    &.o {stroke: #f30}
+    // titanium
+    &.t {stroke: #3d3d5c}
+    // ice
+    &.i {stroke: #cff}
+    // volcanic
+    &.v {stroke: #f90}
+    // gaia
+    &.g {stroke: #093}
+    // transdim
+    &.m {stroke: #a64dff}
+  }
 }
 
 </style>
