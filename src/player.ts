@@ -243,6 +243,8 @@ export default class Player extends EventEmitter {
       if (building === Building.PlanetaryInstitute) {
         // PI has different events
         this.loadEvents(this.board[Building.PlanetaryInstitute].income);
+        // Nevlas token in area3
+        if (this.faction === Faction.Nevlas) { this.data.tokenModifier = 2; }
       } else {
         // Add income of the building to the list of events
         this.loadEvent(this.board[building].income[this.data[building]]);

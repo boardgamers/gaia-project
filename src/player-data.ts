@@ -53,6 +53,7 @@ export default class PlayerData extends EventEmitter {
   occupied: GaiaHex[] = [];
   brainstone: BrainstoneArea = BrainstoneArea.Out;
   leechPossible: number;
+  tokenModifier: number = 1;
 
   toJSON(): Object {
     const ret = {
@@ -76,7 +77,8 @@ export default class PlayerData extends EventEmitter {
       occupied: this.occupied,
       satellites: this.satellites,
       brainstone: this.brainstone,
-      leechPossible: this.leechPossible
+      leechPossible: this.leechPossible,
+      tokenModifier: this.tokenModifier
     };
 
     for (const building of Object.values(Building)) {
@@ -152,7 +154,7 @@ export default class PlayerData extends EventEmitter {
   }
 
   spendablePowerTokens(): number {
-    return this.power.area3 + this.brainstoneValue();
+    return Math.floor(this.power.area3 * this.tokenModifier) + this.brainstoneValue();
   }
 
   gaiaPowerTokens(): number {
@@ -201,7 +203,7 @@ export default class PlayerData extends EventEmitter {
       this.brainstone = BrainstoneArea.Area1;
       power = Math.max(power - 3, 0);
     }
-    this.power.area3 -= power;
+    this.power.area3 -= Math.ceil( power / this.tokenModifier );
     this.power.area1 += power;
   }
 
