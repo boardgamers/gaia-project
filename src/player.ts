@@ -332,15 +332,22 @@ export default class Player extends EventEmitter {
     this.removeEvents(Event.parse(techs[tile]));
   }
 
-  needIncomeSelection(): { events?: Reward[], needed: boolean} {
+  needIncomeSelection(): { events?: Event[], needed: boolean, descs: Reward[]} {
     // we need to check if rewards contains Resource.GainToken and Resource.GainPower
     // player has to select the order
     const allEvents = this.events[Operator.Income].filter( ev => !ev.activated);
 
-    const gainTokens = allEvents.map(ev => ev.rewards.find( rw => rw.type === Resource.GainToken)).filter(rew => !!rew);
-    const chargePowers = allEvents.map(ev => ev.rewards.find( rw => rw.type === Resource.ChargePower)).filter(rew => !!rew);
+    const gainTokens = allEvents.filter(ev => ev.rewards.some(rw => rw.type === Resource.GainToken));
+    const chargePowers = allEvents.filter(ev => ev.rewards.some(rw => rw.type === Resource.ChargePower));
 
-    return {events: gainTokens.concat(chargePowers), needed: gainTokens.length > 0 && chargePowers.length > 0};
+    return {
+      events: gainTokens.concat(chargePowers),
+      needed: gainTokens.length > 0 && chargePowers.length > 0,
+      descs: [
+        ... gainTokens.map(ev => ev.rewards.find(rw => rw.type === Resource.GainToken)),
+        ... chargePowers.map(ev => ev.rewards.find(rw => rw.type === Resource.ChargePower))
+      ]
+    };
   }
 
   canGaiaTerrans(): boolean {

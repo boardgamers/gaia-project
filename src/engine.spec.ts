@@ -643,7 +643,7 @@ describe("Engine", () => {
       expect(() => new Engine([...moves, "p1 income t,2pw"])).to.not.throw();
       expect(() => new Engine([...moves, "p1 income t"])).to.not.throw();
       expect(() => new Engine([...moves, "p1 income 3pw"])).to.throw();
-    });
+    }) ;
 
   });
 

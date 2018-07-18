@@ -903,12 +903,12 @@ export default class Engine {
   }
 
   [Command.ChooseIncome](player: PlayerEnum, income: string) {
-    const { incomes } = this.availableCommand(player, Command.ChooseIncome).data;
+    const incomes = this.availableCommand(player, Command.ChooseIncome).data;
     const incomeRewards = income.split(",") ;
     const pl = this.player(player);
 
     for (const incR of incomeRewards) {
-      const eventIdx = incomes.findIndex(ev => Reward.match(Reward.parse(incR), ev.rewards));
+      const eventIdx = incomes.findIndex(rw => Reward.match(Reward.parse(incR), [rw]));
       assert(eventIdx > -1, `${incR} is not in the available income`);
       incomes.splice(eventIdx, 1);
     }
