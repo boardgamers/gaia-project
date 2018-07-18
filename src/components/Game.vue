@@ -43,6 +43,10 @@ import { Command } from '@gaia-project/engine';
     }
   },
   created(this: Game) {
+    if (window.sessionStorage.getItem('moves')) {
+      this.moves = JSON.parse(window.sessionStorage.getItem('moves'));
+      this.updateMoveList();
+    }
     this.submit();
   },
   components: {
@@ -69,6 +73,8 @@ export default class Game extends Vue {
       data => {
         this.$store.commit('removeError');
         this.$store.commit('receiveData', data);
+
+        window.sessionStorage.setItem('moves', JSON.stringify(this.moves));
       },
       "json"
     ).fail((error, status, exception) => {
