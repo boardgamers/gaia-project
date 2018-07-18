@@ -43,7 +43,8 @@ export enum Resource {
   TechTile = "tech",
   RescoreFederation = "fed",
   TemporaryStep = "step",
-  TemporaryRange = "range"
+  TemporaryRange = "range",
+  TokenArea3 = "t-a3"
 
 }
 

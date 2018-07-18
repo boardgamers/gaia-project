@@ -120,6 +120,7 @@ export default class PlayerData extends EventEmitter {
       case Resource.GaiaFormer: this.gaiaformers += count; return;
       case Resource.TerraformCostDiscount: this.terraformCostDiscount += count; return;
       case Resource.TemporaryStep: this.temporaryStep += count; return;
+      case Resource.TokenArea3: if (count < 0) { this.power.area3 += count; this.power.gaia -= count; } return;
 
       default: break; // Not implemented
     }
@@ -136,6 +137,7 @@ export default class PlayerData extends EventEmitter {
       case Resource.GainToken: return this.discardablePowerTokens() >= reward.count;
       case Resource.GainTokenGaiaArea: return this.gaiaPowerTokens() >= reward.count;
       case Resource.ChargePower: return this.spendablePowerTokens() >= reward.count;
+      case Resource.TokenArea3: return this.power.area3 >= reward.count;
     }
 
     return false;
