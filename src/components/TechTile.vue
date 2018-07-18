@@ -1,9 +1,9 @@
 <template>
-  <g :class='["techTile", {highlighted}]' v-if="$store.state.game.data.techTiles" v-b-tooltip :title="tooltip" @click="onClick">
+  <svg :class='["techTile", {highlighted}]' v-if="$store.state.game.data.techTiles" v-show="this.count" v-b-tooltip :title="tooltip" @click="onClick" width="59" height="37">
     <polygon points="2,1 48,1 58,11 58,36 2,36" />
     <text class="title" x="5" y="12">{{title}}</text>
     <text class="content" x="5" y="30">{{content}}</text>
-  </g>
+  </svg>
 </template>
 
 <script lang="ts">
@@ -68,7 +68,7 @@ export default interface TechTile {
 <style lang="scss" scoped>
 
 svg {
-  .techTile {
+  &.techTile {
     polygon {
       stroke: #333;
       stroke-width: 1px;

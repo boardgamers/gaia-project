@@ -7,7 +7,10 @@
       income: {{player.income.replace(/,/g, ', ')}}<br/>
       {{boosterDesc}}
     </div>
-    <div class="tiles"></div>
+    <div class="tiles">
+      <TechTile v-for="tech in data.techTiles" v-show="tech.enabled" :key="tech.pos" :pos="tech.pos" :player="player.player" />
+      <TechTile v-for="tech in data.advTechTiles" :key="tech.pos" :pos="tech.pos" :player="player.player" />
+    </div>
   </div>
 </template>
 
@@ -16,12 +19,16 @@ import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
 import { Player, factions, tiles, PlayerData } from '@gaia-project/engine';
 import { factionColor } from '@/graphics/utils';
+import TechTile from './TechTile.vue';
 
 @Component({
   computed: {
     data() {
       return this.player ? this.player.data : null;
     }
+  },
+  components: {
+    TechTile
   }
 })
 export default class PlayerInfo extends Vue {
@@ -71,14 +78,12 @@ export default interface PlayerInfo {
     @extend .row;
     @extend .no-gutters;
     @extend .pl-3;
+    @extend .mt-1;
     
     flex-wrap: wrap;
 
-    canvas {
-      &.tech-tile {
-        width: 60px;
-        height: 40px;
-      }
+    svg {
+      @extend .mr-1;
     }
   }
 }
