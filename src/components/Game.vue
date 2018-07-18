@@ -121,6 +121,7 @@ export default class Game extends Vue {
       this.moves[this.moves.length-1] += `. ${command.slice(move.player.length+1)}`;
     })();
 
+    this.$store.commit('clearContext');
     this.updateMoveList();
     this.submit();
   }

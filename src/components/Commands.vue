@@ -17,7 +17,7 @@
         </MoveButton>
       </div>
       <div v-else>
-        <MoveButton v-for="button in buttons" @trigger="handleCommand" :button="button" :key="button.label || button.command">
+        <MoveButton v-for="button in buttons" v-show="!button.hide" @trigger="handleCommand" :button="button" :key="button.label || button.command">
           {{button.label || button.command}}
         </MoveButton>
       </div>
@@ -100,10 +100,9 @@ export default class Commands extends Vue {
     return factions;
   }
 
-  handleCommand(command: string, source: MoveButton) {
+  handleCommand(command: string, source: MoveButton, final: boolean) {
     console.log("handle command", command);
-    if (source.button.buttons && source.button.buttons.length > 0) {
-      console.log("source.buttons");
+    if (source.button.buttons && source.button.buttons.length > 0 && !final) {
       this.commandTitles.push(source.button.label);
       this.commandChain.push(source.button.command);
       this.customButtons = source.button.buttons;
@@ -126,10 +125,6 @@ export default class Commands extends Vue {
   }
 
   get buttons(): ButtonData[] {
-    if (this.customButtons.length > 0) {
-      return this.customButtons;
-    }
-
     const ret: ButtonData[] = [];
 
     for (const command of this.availableCommands) {
@@ -178,7 +173,8 @@ export default class Commands extends Vue {
             label: "Advance research",
             command: command.name,
             // track.to contains actual level, to use when implementing research viewer
-            buttons: command.data.tracks.map(track => ({command: track.field}))
+            buttons: command.data.tracks.map(track => ({command: track.field})),
+            researchTiles: command.data.tracks.map(track => track.field + "-" + track.to),
           });
           break;
         }
@@ -292,6 +288,14 @@ export default class Commands extends Vue {
         //   });
         // }
       }
+    }
+
+    if (this.customButtons.length > 0) {
+      for (const button of ret) {
+        button.hide = true;
+      }
+
+      ret.push(...this.customButtons);
     }
 
     return ret;

@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import { Data, GameContext } from './data';
-import { GaiaHex } from '../node_modules/@gaia-project/engine';
+import { GaiaHex, ResearchField } from '../node_modules/@gaia-project/engine';
 
 Vue.use(Vuex);
 
@@ -11,7 +11,8 @@ export default new Vuex.Store({
       data: {players: []} as Data,
       context: {
         highlighted: {
-          hexes: new Set()
+          hexes: new Set(),
+          researchTiles: new Set()
         },
         coordsMap: new Map()
       } as GameContext
@@ -35,8 +36,13 @@ export default new Vuex.Store({
       state.game.context.highlighted.hexes = new Set(hexes);
     },
 
+    highlightResearchTiles(state, tiles: string[]) {
+      state.game.context.highlighted.researchTiles = new Set(tiles);
+    },
+
     clearContext(state) {
       state.game.context.highlighted.hexes.clear();
+      state.game.context.highlighted.researchTiles = new Set();
     },
     
     activeButton(state, button) {state.game.context.activeButton = button},
@@ -47,9 +53,8 @@ export default new Vuex.Store({
   },
   actions: {
     // No body, used for signalling with store.suscribeAction
-    hexClick(context, hex: GaiaHex) {
-
-    }
+    hexClick(context, hex: GaiaHex) {},
+    researchClick(context, field: ResearchField) {}
   },
   getters: {
     data: state => state.game.data,

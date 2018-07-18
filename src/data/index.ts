@@ -29,7 +29,8 @@ export interface Data {
 
 export interface GameContext {
   highlighted: {
-    hexes: Set<GaiaHex>
+    hexes: Set<GaiaHex>,
+    researchTiles: Set<string>
   };
 
   coordsMap: Map<string, GaiaHex>;

@@ -14,8 +14,10 @@ export interface ButtonData {
   command: string;
   tooltip?: string;
   hexes?: GaiaHex[];
+  researchTiles?: string[];
 
   buttons?: ButtonData[];
+  hide?: boolean;
 }
 
 @Component
@@ -55,21 +57,34 @@ export default class Navbar extends Vue {
       this.subscribe('hexClick', hex => this.emitCommand(`${hex.q}x${hex.r}`));
       return;
     }
+
+    if (this.button.researchTiles) {
+      this.$store.commit("activeButton", this);
+      this.$store.commit("highlightResearchTiles", this.button.researchTiles);
+
+      this.subscribe('researchClick', field => this.emitCommand(field, {final: true}));
+
+      this.emitCommand(null, {disappear: false});
+      return;
+    }
     
     this.emitCommand();
   }
 
-  emitCommand(append?: string) {
+  emitCommand(append?: string, params: {disappear?: boolean, final?: boolean} = {disappear: true, final: false}) {
     console.log("emit command", append);
-    this.unsubscribe();
 
-    this.$store.commit("activeButton", null);
+    const {disappear, final} = params;
 
-    if (append) {
-      this.$emit('trigger', this.button.command + " " + append, this);
-    } else {
-      this.$emit('trigger', this.button.command, this);
+    if (disappear) {
+      this.unsubscribe();
+
+      this.$store.commit("activeButton", null);
     }
+
+    const commandBody = [final ? null : this.button.command, append].filter(x => !!x);
+
+    this.$emit('trigger', commandBody.join(" "), this, final);
   }
 
   hover() {
