@@ -1,6 +1,9 @@
 <template>
   <svg height="400px" viewBox="0 0 360 450">
     <ResearchTrack v-for="(field, index) in fields" :field=field :x="index*60" :key="field" />
+    <TechTile pos="free1" transform="translate(70, 400)" />
+    <TechTile pos="free2" transform="translate(150, 400)" />
+    <TechTile pos="free3" transform="translate(230, 400)" />
   </svg>
 </template>
 
@@ -9,6 +12,7 @@ import Vue from 'vue'
 import { Component } from 'vue-property-decorator';
 import { ResearchField } from '@gaia-project/engine';
 import ResearchTrack from './ResearchTrack.vue';
+import TechTile from './TechTile.vue';
 
 @Component({
   computed: {
@@ -17,7 +21,8 @@ import ResearchTrack from './ResearchTrack.vue';
     }
   },
   components: {
-    ResearchTrack
+    ResearchTrack,
+    TechTile
   }
 })
 export default class ResearchBoard extends Vue {

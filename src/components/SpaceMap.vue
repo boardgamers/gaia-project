@@ -49,7 +49,7 @@ export default class SpaceMap extends Vue {
   cost(hex: GaiaHex) {
     const data = this.highlightedHexes.get(hex);
 
-    return (data && data.cost && data.cost !== "~") ? data.cost : '';
+    return (data && data.cost && data.cost !== "~") ? data.cost.replace(/,/g, ', ') : '';
   }
 
   hexClick(hex: GaiaHex) {
