@@ -32,7 +32,7 @@ export default class Building extends Vue {
   }
 
   get triangleCorners() {
-    return [{x: -0.5, y: Math.sqrt(3)/4}, {x: 0.5, y: Math.sqrt(3)/4}, {x: 0, y: -Math.sqrt(3)/4}].map(({x, y}) => `${x*0.68},${y*0.68}`).join(" ");
+    return [{x: -0.5, y: Math.sqrt(3)/4}, {x: 0.5, y: Math.sqrt(3)/4}, {x: 0, y: -Math.sqrt(3)/4}].map(({x, y}) => `${x*0.5},${y*0.5}`).join(" ");
   }
 
   get mine() { return this.building === BuildingEnum.Mine }

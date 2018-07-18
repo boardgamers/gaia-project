@@ -1,5 +1,5 @@
 <template>
-  <g class='techTile' v-if="$store.state.game.data.techTiles">
+  <g class='techTile' v-if="$store.state.game.data.techTiles" v-b-tooltip :title="tooltip">
     <polygon points="2,1 48,1 58,11 58,36 2,36" />
     <text class="title" x="5" y="12">{{title}}</text>
     <text class="content" x="5" y="30">{{content}}</text>
@@ -9,7 +9,8 @@
 <script lang="ts">
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
-import { tiles, PlayerEnum } from '@gaia-project/engine';
+import { tiles, PlayerEnum, Event } from '@gaia-project/engine';
+import { eventDesc } from '../data/event';
 
 @Component<TechTile>({
   computed: {
@@ -34,6 +35,10 @@ import { tiles, PlayerEnum } from '@gaia-project/engine';
       }
 
       return this.pos;
+    },
+
+    tooltip() {
+      return eventDesc(new Event(this.content));
     }
   }
 })
@@ -60,10 +65,12 @@ svg {
       font-family: sans-serif;
       font-size: 10px;
       font-weight: bold;
+      user-select: none;
     }
     .content {
       font-family: sans-serif;
       font-size: 12px;
+      user-select: none;
     }
   }
 }
