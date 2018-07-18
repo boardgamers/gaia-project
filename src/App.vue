@@ -20,6 +20,9 @@ import Game from '@/components/Game.vue';
     Alert, 
     Game
   },
+  created() {
+    document.title = "Gaia project";
+  }
 })
 export default class App extends Vue {
 
