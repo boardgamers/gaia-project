@@ -7,7 +7,7 @@
     <div id="errors"></div>
     <div class="row mt-2">
       <div class="col-md-6 order-2 order-md-1">
-        <PlayerInfo v-for="player in data.players" :player='player' />
+        <PlayerInfo v-for="player in data.players" :player='player' :key="player.player" />
       </div>
       <div class="col-md-6 order-1 order-md-2" id="move-panel">
         <Commands @command="handleCommand"/>

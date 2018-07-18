@@ -20,7 +20,10 @@
   "dependencies": {
     "@gaia-project/engine": "^0.20.1",
     "hexagrid": "^1.0.0",
-    "pixi.js": "^4.7.0"
+    "bootstrap-vue": "^2.0.0-rc.11",
+    "vue": "^2.5.16",
+    "vue-property-decorator": "^7.0.0",
+    "vuex": "^3.0.1"
   },
   "devDependencies": {
     "@types/jquery": "^3.3.1",
@@ -28,15 +31,11 @@
     "@types/pixi.js": "^4.7.2",
     "@vue/cli-plugin-typescript": "^3.0.0-rc.5",
     "@vue/cli-service": "^3.0.0-rc.5",
-    "bootstrap": "^4.0.0",
+    "bootstrap-vue": "^2.0.0-rc.11",
     "jquery": "^3.3.1",
     "node-sass": "^4.7.2",
-    "popper.js": "^1.12.9",
     "sass-loader": "^7.0.3",
-    "typescript": "^2.7.2",
-    "vue": "^2.5.16",
-    "vue-property-decorator": "^7.0.0",
-    "vuex": "^3.0.1"
+    "typescript": "^2.7.2"
   },
   "browserslist": [
     "> 1%",

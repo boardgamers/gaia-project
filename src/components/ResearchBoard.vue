@@ -1,6 +1,6 @@
 <template>
   <svg height="400px" viewBox="0 0 360 450">
-    <ResearchTrack v-for="(field, index) in fields" :field=field :x="index*60" />
+    <ResearchTrack v-for="(field, index) in fields" :field=field :x="index*60" :key="field" />
   </svg>
 </template>
 

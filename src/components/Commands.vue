@@ -8,16 +8,16 @@
     </div>
     <div id="move-buttons">
       <div v-if="init">
-        <MoveButton v-for="i in [2,3,4,5]" :button="{command: `init ${i} randomSeed`}" @trigger="handleCommand">{{i}} players</MoveButton>
+        <MoveButton v-for="i in [2,3,4,5]" :button="{command: `init ${i} randomSeed`}" @trigger="handleCommand" :key="i">{{i}} players</MoveButton>
       </div>
       <div v-else-if="chooseFaction">
-        <MoveButton v-for="faction in command.data" :button="{command: `${command.name} ${faction}`}" @trigger="handleCommand">
+        <MoveButton v-for="faction in command.data" :button="{command: `${command.name} ${faction}`}" @trigger="handleCommand" :key="faction">
           {{factions[faction].name}}
           <i :class="['planet', factions[faction].planet]"></i>
         </MoveButton>
       </div>
       <div v-else>
-        <MoveButton v-for="button in buttons" @trigger="handleCommand" :button="button">
+        <MoveButton v-for="button in buttons" @trigger="handleCommand" :button="button" :key="button.label || button.command">
           {{button.label || button.command}}
         </MoveButton>
       </div>
@@ -27,10 +27,10 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import $ from "jquery";
+import * as $ from "jquery";
 import { Component } from 'vue-property-decorator';
 import { AvailableCommand, Command, factions, Building, GaiaHex, Booster, tiles, Event } from '@gaia-project/engine';
-import MoveButton from './MoveButton.vue';
+import MoveButton, {ButtonData} from './MoveButton.vue';
 import {buildingName} from '../data/building';
 import {GameContext} from '../data';
 import { eventDesc } from '@/data/event';
@@ -300,15 +300,6 @@ export default class Commands extends Vue {
   private commandTitles: string[] = [];
   private customButtons: ButtonData[] = [];
   private commandChain: string[] = [];
-}
-
-export interface ButtonData {
-  label?: string;
-  command: string;
-  tooltip?: string;
-  hexes?: GaiaHex[];
-
-  buttons?: ButtonData[];
 }
 
 </script>

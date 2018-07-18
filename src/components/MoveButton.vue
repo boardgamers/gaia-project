@@ -8,7 +8,15 @@
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
 import {GaiaHex} from '@gaia-project/engine';
-import { ButtonData } from '@/components/Commands.vue';
+
+export interface ButtonData {
+  label?: string;
+  command: string;
+  tooltip?: string;
+  hexes?: GaiaHex[];
+
+  buttons?: ButtonData[];
+}
 
 @Component
 export default class Navbar extends Vue {
@@ -20,7 +28,7 @@ export default class Navbar extends Vue {
   subscribe(action: string, callback: any) {
     this.unsubscribe();
 
-    this.subscription = this.$store.subscribeAction(({type, payload}) => {
+    this.subscription = (this.$store as any).subscribeAction(({type, payload}) => {
       if (type !== action) {
         return;
       }

@@ -1,6 +1,6 @@
 <template>
   <svg :viewBox="`-11.5 -11.5 ${right} 24`" height="400px">
-    <g v-for="hex in map" :transform="`translate(${center(hex).x}, ${center(hex).y})`">
+    <g v-for="hex in map" :transform="`translate(${center(hex).x}, ${center(hex).y})`" v-bind:key="`${hex.q}x${hex.r}`">
       <title>Coordinates: {{hex.q}}x{{hex.r}}&#10;Sector: {{hex.data.sector}}</title>
       <polygon :points="hexCorners.map(p => `${p.x},${p.y}`).join(' ')" :class="{spaceHex: true, highlighted: !!highlightedHexes.has(hex)}" @click='hexClick(hex)'>
       </polygon>

@@ -1,7 +1,7 @@
 <template>
-  <g :transform="`translate(0, ${y})`">
+  <g :transform="`translate(0, ${y})`" v-b-tooltip.html.left :title="tooltip">
     <rect x="2" y="2" :class='["researchTile", field]' width=56 height=46 rx="5" ry="5" />
-    <Token v-for="(player, index) in players" v-if="player.faction && player.data.research[field] == level" :faction="player.faction" :x="tokenX(index)" :y="tokenY(index)" />
+    <Token v-for="(player, index) in players" v-if="player.faction && player.data.research[field] == level" :faction="player.faction" :x="tokenX(index)" :y="tokenY(index)" :key="player.player"/>
   </g>
 </template>
 
@@ -9,13 +9,16 @@
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
 import { ResearchField, Player } from '@gaia-project/engine';
-
+import { descriptions } from '../data/research';
 import Token from './Token.vue';
 
 @Component<ResearchTile>({
   computed: {
     players(): Player[] {
       return this.$store.state.game.data.players;
+    },
+    tooltip() {
+      return `<b>Level ${this.level}:</b> ${descriptions[this.field][this.level]}`;
     }
   },
   components: {
@@ -31,11 +34,11 @@ export default class ResearchTile extends Vue {
   level: number;
 
   tokenX(index: number) {
-    return 15 + 15*(index%3) + 7*(index > 2);
+    return 15 + 15*(index%3) + 7*(index > 2 ? 1 : 0);
   }
 
   tokenY(index: number) {
-    return 15 + 15*(index > 2);
+    return 15 + 15*(index > 2 ? 1 : 0);
   }
 }
 </script>
