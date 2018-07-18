@@ -305,6 +305,7 @@ export enum Phase {
 export enum SubPhase {
   BeforeMove = "beforeMove",
   AfterMove = "afterMove",
+  EndMove = "endMove",
   UpgradeResearch = "upgradeResearch",
   PlaceLostPlanet = "placeLostPlanet",
   ChooseTechTile = "chooseTechTile",

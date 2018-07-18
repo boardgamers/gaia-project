@@ -62,3 +62,8 @@ dist
 
 #using npm, not yarn
 yarn.lock
+
+
+.vscode/*
+.vscode/settings.json
+.vscode/launch.json

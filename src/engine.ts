@@ -141,9 +141,6 @@ export default class Engine {
     return this.players.filter(pl => pl.faction).length;
   }
 
-  setFirstPlayer() {
-    this.currentPlayer = this.turnOrder[0];
-  }
 
   storeTurnOrder() {
     this.tempCurrentPlayer = this.currentPlayer;
@@ -216,23 +213,24 @@ export default class Engine {
       }
 
       // implicit endTurn
-      if (command !== Command.EndTurn) {
-        this.player(player).endTurn();
+      if (this.subPhase === SubPhase.EndMove) {
         this.moveToNextPlayer(command);
       }
     }
-
   }
+
+    moveToFirstPlayer() {
+      this.currentPlayer = this.turnOrder[0];
+      this.subPhase = SubPhase.BeforeMove;
+      // If all players have passed
+      if (this.turnOrder.length === 0) {
+        this.phaseEnd();
+      }
+    }
 
    /** Next player to make a move, after current player makes their move */
    moveToNextPlayer(command: Command): PlayerEnum {
     const playerPos = this.turnOrder.indexOf(this.currentPlayer);
-
-    // check if need to start a leechingPhase
-    if ( this.phase === Phase.RoundMove && this.leechingSource ) {
-      this.phaseBegin(Phase.RoundLeech);
-      return;
-    }
 
     // check if need to start a leechingPhase
     if ( this.phase === Phase.RoundMove && this.leechingSource ) {
@@ -286,20 +284,19 @@ export default class Engine {
         break;
       }
       case Phase.RoundIncome : {
-        this.incomePhase();
+        this.beginIncomePhase();
         break;
       }
       case Phase.RoundGaia : {
-        this.gaiaPhase();
+        this.beginGaiaPhase();
         break;
       }
       case Phase.RoundMove : {
-        this.subPhase = SubPhase.BeforeMove;
         this.beginRoundMovePhase();
         break;
       }
       case Phase.RoundLeech : {
-        this.leechingPhase();
+        this.beginLeechingPhase();
         break;
       }
       case Phase.RoundFinish : {
@@ -339,13 +336,13 @@ export default class Engine {
         return Phase.RoundIncome;
       }
       case Phase.RoundIncome : {
+        this.endIncomePhase();
         this.restoreTurnOrder();
-        this.setFirstPlayer();
         return Phase.RoundGaia;
       }
       case Phase.RoundGaia : {
+        this.endGaiaPhase();
         this.restoreTurnOrder();
-        this.setFirstPlayer();
         return Phase.RoundMove;
       }
       case Phase.RoundMove : {
@@ -372,7 +369,7 @@ export default class Engine {
 
   beginSetupFactionPhase() {
     this.turnOrder = this.players.map((pl, i) => i as PlayerEnum);
-    this.setFirstPlayer();
+    this.moveToFirstPlayer();
   }
 
   beginSetupBuildingPhase() {
@@ -396,23 +393,23 @@ export default class Engine {
     if (posIvits !== -1) {
       this.turnOrder.push(posIvits as PlayerEnum);
     }
-    this.setFirstPlayer();
+    this.moveToFirstPlayer();
   }
 
   beginSetupBoosterPhase() {
     this.turnOrder = this.players.map((pl, i) => i as PlayerEnum).reverse();
-    this.setFirstPlayer();
+    this.moveToFirstPlayer();
   }
 
   beginRoundStartPhase() {
     this.round += 1;
     this.turnOrder = this.passedPlayers;
     this.passedPlayers = [];
-    this.setFirstPlayer();
+    this.moveToFirstPlayer();
     this.phaseEnd();
   }
 
-  incomePhase() {
+  beginIncomePhase() {
     this.storeTurnOrder();
 
     const newOrder = [];
@@ -422,20 +419,19 @@ export default class Engine {
       const { needed } = player.needIncomeSelection();
       if (needed) {
         newOrder.push(player.player);
-      } else {
-        player.receiveIncome();
       }
     }
+    this.turnOrder = newOrder;
+    this.moveToFirstPlayer();
+  }
 
-    if (newOrder.length === 0) {
-      this.phaseEnd();
-    } else {
-      this.turnOrder = newOrder;
-      this.setFirstPlayer();
+  endIncomePhase() {
+    for (const player of this.players) {
+      player.receiveIncome();
     }
   }
 
-  gaiaPhase() {
+  beginGaiaPhase() {
     this.storeTurnOrder();
 
     const newOrder = [];
@@ -446,18 +442,17 @@ export default class Engine {
       }
     }
     for (const player of this.playersInOrder()) {
-      if (player.needGaiaSelection()) {
+      if (player.canGaiaTerrans() || player.canGaiaItars() ) {
         newOrder.push(player.player);
-      } else {
-        player.gaiaPhase();
       }
     }
+    this.turnOrder = newOrder;
+    this.moveToFirstPlayer();
+  }
 
-    if (newOrder.length === 0) {
-      this.phaseEnd();
-    } else {
-      this.turnOrder = newOrder;
-      this.setFirstPlayer();
+  endGaiaPhase() {
+    for (const player of this.players) {
+        player.gaiaPhase();
     }
   }
 
@@ -465,6 +460,8 @@ export default class Engine {
     // returning from a leech phase
     if ( this.prevPhase === Phase.RoundLeech ) {
       this.moveToNextPlayer(Command.Leech);
+    } else {
+      this.moveToFirstPlayer();
     }
   }
 
@@ -528,7 +525,7 @@ export default class Engine {
     }
   }
 
-  leechingPhase() {
+  beginLeechingPhase() {
     this.storeTurnOrder();
     const newOrder = [];
     // Gaia-formers & space stations don't trigger leech
@@ -554,12 +551,8 @@ export default class Engine {
       }
     }
 
-    if (newOrder.length === 0) {
-      this.phaseEnd();
-    } else {
-      this.turnOrder = newOrder;
-      this.setFirstPlayer();
-    }
+    this.turnOrder = newOrder;
+    this.moveToFirstPlayer();
   }
 
   advanceResearchAreaPhase(player: PlayerEnum, cost: string, field: ResearchField ) {
@@ -651,6 +644,7 @@ export default class Engine {
     );
 
     this.players[player].loadFaction(faction as Faction);
+    this.subPhase = SubPhase.EndMove;
   }
 
   [Command.ChooseRoundBooster](player: PlayerEnum, booster: Booster, fromCommand: Command = Command.ChooseRoundBooster ) {
@@ -662,7 +656,7 @@ export default class Engine {
 
     this.roundBoosters[booster] = false;
     this.players[player].getRoundBooster(booster);
-    this.subPhase = SubPhase.AfterMove;
+    this.subPhase = SubPhase.EndMove;
   }
 
   [Command.Build](player: PlayerEnum, building: Building, location: string) {
@@ -695,6 +689,11 @@ export default class Engine {
           // Gain tech tile if lab / academy
         if ( building === Building.ResearchLab || building === Building.Academy1 || building === Building.Academy2) {
           this.subPhase = SubPhase.ChooseTechTile;
+          return;
+        }
+
+        if ( this.phase === Phase.SetupBuilding) {
+          this.subPhase = SubPhase.EndMove;
           return;
         }
 
@@ -737,11 +736,13 @@ export default class Engine {
     this.player(player).gainRewards(leechRewards);
     this.player(player).payCosts( [new Reward(Math.max(leech.count - 1, 0), Resource.VictoryPoint)]);
     this.player(player).data.leechPossible = 0;
+    this.subPhase = SubPhase.EndMove;
 
   }
 
   [Command.DeclineLeech](player: PlayerEnum) {
     // no action needeed
+    this.subPhase = SubPhase.EndMove;
   }
 
   [Command.EndTurn](player: PlayerEnum) {
@@ -757,7 +758,6 @@ export default class Engine {
 
     const advanced = tileAvailable.type === "adv";
     const stdNoFree = ![TechTilePos.Free1, TechTilePos.Free2, TechTilePos.Free3].includes(pos as any) &&  tileAvailable.type === "std";
-    const std =  [TechTilePos.Free1, TechTilePos.Free2, TechTilePos.Free3].includes(pos as any);
 
     if (advanced) {
       // need to cover before to upgrade
@@ -874,6 +874,12 @@ export default class Engine {
 
     pl.payCosts(cost);
     pl.gainRewards(income);
+
+    // Terrans are no needing more conversion for gaia?
+    if ( this.phase === Phase.RoundGaia && pl.faction === Faction.Terrans && !pl.canGaiaTerrans() ) {
+      this.subPhase = SubPhase.EndMove;
+    }
+
   }
 
   [Command.BurnPower](player: PlayerEnum, cost: string) {
@@ -911,6 +917,7 @@ export default class Engine {
     const { needed } = pl.needIncomeSelection();
     if (!needed) {
       pl.receiveIncome();
+      this.subPhase = SubPhase.EndMove;
     }
   }
 

@@ -42,6 +42,14 @@ export default class Player extends EventEmitter {
   constructor(public player: PlayerEnum = PlayerEnum.Player1) {
     super();
     this.data.on('advance-research', track => this.onResearchAdvanced(track));
+    // Itars power to burn into Gaia
+    if (this.faction === Faction.Itars) {
+      this.data.on('burn', amount => this.data.power.gaia += amount);
+    }
+    // Terrans power to discard from Gaia to area2
+    if (this.faction === Faction.Terrans) {
+      this.data.on('discardGaia', amount => this.data.power.area2 += amount);
+    }
   }
 
   toJSON() {
@@ -332,9 +340,14 @@ export default class Player extends EventEmitter {
     return { events: gainTokens.concat(chargePowers), needed: gainTokens.length > 0 && chargePowers.length > 0};
   }
 
-  needGaiaSelection(): boolean {
+  canGaiaTerrans(): boolean {
     return this.data.gaiaPowerTokens() > 0 && this.faction === Faction.Terrans && this.data.hasPlanetaryInstitute();
   }
+
+  canGaiaItars(): boolean {
+    return this.data.gaiaPowerTokens() >= 4 && this.faction === Faction.Itars && this.data.hasPlanetaryInstitute();
+  }
+
 
   receiveIncome() {
     for (const event of this.events[Operator.Income]) {

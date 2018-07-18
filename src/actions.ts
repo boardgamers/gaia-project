@@ -25,6 +25,10 @@ export const freeActionsTerrans = [
   { cost: "1tg", income: "1c" }
 ];
 
+export const freeActionsItars = [
+  { cost: "4tg", income: "tech" }
+];
+
 export const boardActions =  {
   [BoardAction.Power1]: { cost: "7pw", income: ["3k"] },
   [BoardAction.Power2]: { cost: "5pw", income: ["2step"] },
