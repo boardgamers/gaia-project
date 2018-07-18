@@ -1,7 +1,7 @@
 <template>
   <g :class='["building", "planet-fill", planet]'>
     <rect v-if="mine" x="-0.2" y="-0.2" width="0.4" height="0.4" />
-    <rect v-else-if="planetaryInstitute" x="-0.4" y="-0.4" width="0.8" height="0.8" />
+    <rect v-else-if="planetaryInstitute" x="-0.35" y="-0.35" width="0.7" height="0.7" />
     <polygon v-else-if="gaiaFormer" :points='hexCorners' />
     <circle v-else-if="lab" r="0.3" />
     <circle v-else-if="academy" r="0.5" />
