@@ -1,5 +1,5 @@
 <template>
-  <svg :viewBox="`-11.5 -11.5 ${right} 24`" height="400px">
+  <svg :viewBox="`-11.5 -11.5 ${right} 24`">
     <SpaceHex v-for="hex in map" :key="`${hex.q}x${hex.r}`" :transform="`translate(${center(hex).x}, ${center(hex).y})`" :hex="hex" />
   </svg>
 </template>
