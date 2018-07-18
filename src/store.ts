@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import { Data, GameContext } from './data';
-import { GaiaHex, ResearchField } from '../node_modules/@gaia-project/engine';
+import { GaiaHex, ResearchField, TechTilePos, AdvTechTilePos } from '../node_modules/@gaia-project/engine';
 
 Vue.use(Vuex);
 
@@ -12,7 +12,8 @@ export default new Vuex.Store({
       context: {
         highlighted: {
           hexes: new Map(),
-          researchTiles: new Set()
+          researchTiles: new Set(),
+          techs: new Set()
         },
         coordsMap: new Map()
       } as GameContext
@@ -40,9 +41,14 @@ export default new Vuex.Store({
       state.game.context.highlighted.researchTiles = new Set(tiles);
     },
 
+    highlightTechs(state, techs: Array<TechTilePos | AdvTechTilePos>) {
+      state.game.context.highlighted.techs = new Set(techs);
+    },
+
     clearContext(state) {
       state.game.context.highlighted.hexes.clear();
       state.game.context.highlighted.researchTiles = new Set();
+      state.game.context.highlighted.techs = new Set();
     },
     
     activeButton(state, button) {state.game.context.activeButton = button},
@@ -52,9 +58,10 @@ export default new Vuex.Store({
     removeInfo: state => state.info = state.infoIssued = null
   },
   actions: {
-    // No body, used for signalling with store.suscribeAction
+    // No body, used for signalling with store.subscribeAction
     hexClick(context, hex: GaiaHex) {},
-    researchClick(context, field: ResearchField) {}
+    researchClick(context, field: ResearchField) {},
+    techClick(context, pos: TechTilePos | AdvTechTilePos) {}
   },
   getters: {
     data: state => state.game.data,

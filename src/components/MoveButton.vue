@@ -7,7 +7,7 @@
 <script lang="ts">
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
-import {GaiaHex} from '@gaia-project/engine';
+import {GaiaHex, TechTilePos, AdvTechTilePos} from '@gaia-project/engine';
 import {HighlightHexData} from '../data';
 
 export interface ButtonData {
@@ -16,6 +16,7 @@ export interface ButtonData {
   tooltip?: string;
   hexes?: HighlightHexData;
   researchTiles?: string[];
+  techs?: Array<TechTilePos | AdvTechTilePos>;
 
   buttons?: ButtonData[];
   hide?: boolean;
@@ -64,6 +65,16 @@ export default class Navbar extends Vue {
       this.$store.commit("highlightResearchTiles", this.button.researchTiles);
 
       this.subscribe('researchClick', field => this.emitCommand(field, {final: true}));
+
+      this.emitCommand(null, {disappear: false});
+      return;
+    }
+
+    if (this.button.techs) {
+      this.$store.commit("activeButton", this);
+      this.$store.commit("highlightTechs", this.button.techs);
+
+      this.subscribe('techClick', pos => this.emitCommand(pos, {final: true}));
 
       this.emitCommand(null, {disappear: false});
       return;

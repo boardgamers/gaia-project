@@ -183,6 +183,7 @@ export default class Commands extends Vue {
           ret.push({
             label: command.name === Command.ChooseCoverTechTile ? "- Pick tech tile to cover" : " - Pick tech tile",
             command: command.name,
+            techs: command.data.tiles.map(tile => tile.tilePos),
             buttons: command.data.tiles.map(tile => ({command: tile.tilePos}))
           });
           break;

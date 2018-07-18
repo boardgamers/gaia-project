@@ -1,5 +1,5 @@
 <template>
-  <g class='techTile' v-if="$store.state.game.data.techTiles" v-b-tooltip :title="tooltip">
+  <g :class='["techTile", {highlighted}]' v-if="$store.state.game.data.techTiles" v-b-tooltip :title="tooltip" @click="onClick">
     <polygon points="2,1 48,1 58,11 58,36 2,36" />
     <text class="title" x="5" y="12">{{title}}</text>
     <text class="content" x="5" y="30">{{content}}</text>
@@ -9,7 +9,7 @@
 <script lang="ts">
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
-import { tiles, PlayerEnum, Event } from '@gaia-project/engine';
+import { tiles, PlayerEnum, Event, TechTilePos, AdvTechTilePos } from '@gaia-project/engine';
 import { eventDesc } from '../data/event';
 
 @Component<TechTile>({
@@ -39,15 +39,28 @@ import { eventDesc } from '../data/event';
 
     tooltip() {
       return eventDesc(new Event(this.content));
+    },
+
+    highlighted() {
+      return this.$store.state.game.context.highlighted.techs.has(this.pos);
     }
   }
 })
 export default class TechTile extends Vue {
   @Prop()
-  pos: ResearchPos;
+  pos: TechTilePos | AdvTechTilePos;
   
   @Prop()
-  player: PlayerEnum
+  player: PlayerEnum;
+
+  onClick() {
+    if (this.highlighted) {
+      this.$store.dispatch("techClick", this.pos);
+    }
+  }
+}
+export default interface TechTile {
+  highlighted: boolean;
 }
 
 </script>
@@ -65,12 +78,17 @@ svg {
       font-family: sans-serif;
       font-size: 10px;
       font-weight: bold;
-      user-select: none;
+      pointer-events: none;
     }
     .content {
       font-family: sans-serif;
       font-size: 12px;
-      user-select: none;
+      pointer-events: none;
+    }
+
+    &.highlighted polygon {
+      stroke: #2C4;
+      cursor: pointer;
     }
   }
 }
