@@ -63,7 +63,7 @@ export default class Event {
   }
 
   toString() {
-    return this.spec + this.activated ? "!" : "";
+    return this.spec + (this.activated ? "!" : "");
   }
 
   toJSON() {
