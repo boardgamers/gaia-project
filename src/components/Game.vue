@@ -1,7 +1,8 @@
 <template>
   <div>
-    <div class="row">
-      <SpaceMap/>
+    <div class="row justify-content-center">
+      <SpaceMap class="pr-4 mr-4"/>
+      <ResearchBoard />
     </div>
     <div id="errors"></div>
     <div class="row mt-2">
@@ -32,6 +33,7 @@ import { Data } from '../data';
 import Commands from './Commands.vue';
 import SpaceMap from './SpaceMap.vue';
 import PlayerInfo from './PlayerInfo.vue';
+import ResearchBoard from './ResearchBoard.vue';
 import { Command } from '@gaia-project/engine';
 
 @Component<Game>({
@@ -46,7 +48,8 @@ import { Command } from '@gaia-project/engine';
   components: {
     Commands,
     SpaceMap,
-    PlayerInfo
+    PlayerInfo,
+    ResearchBoard
   }
 })
 export default class Game extends Vue {

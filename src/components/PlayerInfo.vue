@@ -1,7 +1,7 @@
 <template>
   <div class="player-info" v-if="player.faction" :style="`background-color: ${factionColor}`">
     <div class="text">
-      <b>Player {{player.player}}</b> - {{faction}} - {{data.victoryPoints}}vp <span v-if="passed">(passed)</span><br/>
+      <b>Player {{player.player + 1}}</b> - {{faction}} - {{data.victoryPoints}}vp <span v-if="passed">(passed)</span><br/>
       {{data.credits}}c, {{data.ores}}o, {{data.knowledge}}k, {{data.qics}}q, [{{power('gaia')}}] {{power('area1')}}/{{power('area2')}}/{{power('area3')}} pw<br/>
       range: {{data.range}}, gaia-form level: {{data.terraformCostDiscount}}<br/>
       income: {{player.income.replace(/,/g, ', ')}}<br/>

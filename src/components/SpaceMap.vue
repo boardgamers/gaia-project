@@ -1,5 +1,5 @@
 <template>
-  <svg viewBox="-13 -13 36 26" height="450px" width="100%">
+  <svg :viewBox="`-11.5 -11.5 ${right} 24`" height="400px">
     <g v-for="hex in map" :transform="`translate(${center(hex).x}, ${center(hex).y})`">
       <title>Coordinates: {{hex.q}}x{{hex.r}}&#10;Sector: {{hex.data.sector}}</title>
       <polygon :points="hexCorners.map(p => `${p.x},${p.y}`).join(' ')" :class="{spaceHex: true, highlighted: !!highlightedHexes.has(hex)}" @click='hexClick(hex)'>
@@ -26,6 +26,9 @@ import Building from './Building.vue';
     },
     highlightedHexes(): Set<GaiaHex> {
       return this.$store.state.game.context.highlighted.hexes
+    },
+    right() {
+      return (this.$store.state.game.data.players || []).length > 2 ? 31 : 24;
     }
   },
   components: {
@@ -58,20 +61,22 @@ export default interface SpaceMap {
 
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 
-.spaceHex {
-  fill: #172E62;
-  stroke: #666;
-  stroke-width: 0.01;
+svg {
+  .spaceHex {
+    fill: #172E62;
+    stroke: #666;
+    stroke-width: 0.01;
 
-  &:hover {
-    fill-opacity: 0.5;
-  }
+    &:hover {
+      fill-opacity: 0.5;
+    }
 
-  &.highlighted {
-    fill: white;
-    cursor: pointer;
+    &.highlighted {
+      fill: white;
+      cursor: pointer;
+    }
   }
 }
 

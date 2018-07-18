@@ -1,5 +1,5 @@
 <template>
-  <g :class='["building", planet]'>
+  <g :class='["building", "planet-fill", planet]'>
     <rect v-if="mine" x="-0.2" y="-0.2" width="0.4" height="0.4" />
     <rect v-else-if="planetaryInstitute" x="-0.4" y="-0.4" width="0.8" height="0.8" />
     <polygon v-else-if="gaiaFormer" :points='hexCorners' />
@@ -53,24 +53,8 @@ svg {
     pointer-events: none;
     stroke: #111;
 
-    // terra
-    &.r {fill: #99ccff}
-    // desert
-    &.d {fill: #ffd700}
-    // swamp
-    &.s {fill: #a25b15}
-    // oxide
-    &.o {fill: #f30}
     // titanium
     &.t {fill: #3d3d5c; stroke: #d1d1e0}
-    // ice
-    &.i {fill: #cff}
-    // volcanic
-    &.v {fill: #f90}
-    // gaia
-    &.g {fill: #093}
-    // transdim
-    &.m {fill: #a64dff}
   }
 }
 

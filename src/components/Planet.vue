@@ -1,5 +1,5 @@
 <template>
-  <circle :r='radius' :class='["planet", planet]' />
+  <circle :r='radius' :class='["planet", "planet-fill", planet]' />
 </template>
 
 <script lang="ts">
@@ -28,23 +28,44 @@ svg {
     pointer-events: none;
 
     // terra
-    &.r {fill: #99ccff; stroke: #39f}
+    &.r {stroke: #39f}
     // desert
-    &.d {fill: #ffd700; stroke: #c1a925}
+    &.d {stroke: #c1a925}
     // swamp
-    &.s {fill: #a25b15; stroke: #874d12}
+    &.s {stroke: #874d12}
     // oxide
-    &.o {fill: #f30; stroke: #ff8566}
+    &.o {stroke: #ff8566}
     // titanium
-    &.t {fill: #3d3d5c; stroke: #d1d1e0}
+    &.t {stroke: #d1d1e0}
     // ice
-    &.i {fill: #cff; stroke: #00c2c2}
+    &.i {stroke: #00c2c2}
     // volcanic
-    &.v {fill: #f90; stroke: #ff0000}
+    &.v {stroke: #ff0000}
     // gaia
-    &.g {fill: #093; stroke: #004d1a}
+    &.g {stroke: #004d1a}
     // transdim
-    &.m {fill: #a64dff; stroke: #a64dff}
+    &.m {stroke: #a64dff}
+  }
+
+  .planet-fill {
+    // terra
+    &.r {fill: #99ccff}
+    // desert
+    &.d {fill: #ffd700}
+    // swamp
+    &.s {fill: #a25b15}
+    // oxide
+    &.o {fill: #f30}
+    // titanium
+    &.t {fill: #3d3d5c}
+    // ice
+    &.i {fill: #cff}
+    // volcanic
+    &.v {fill: #f90}
+    // gaia
+    &.g {fill: #093}
+    // transdim
+    &.m {fill: #a64dff}
   }
 }
 
