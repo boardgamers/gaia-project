@@ -1,4 +1,4 @@
-import { Faction, Operator, ResearchField, Planet, Building, Resource, Booster, Condition, Federation, FinalTile, TechTile, AdvTechTile, BrainstoneArea} from './enums';
+import { Faction, Operator, ResearchField, Planet, Building, Resource, Booster, Condition, Federation, FinalTile, TechTile, AdvTechTile, BrainstoneArea, TechTilePos, AdvTechTilePos} from './enums';
 import PlayerData from './player-data';
 import Event from './events';
 import { factionBoard, FactionBoard } from './faction-boards';
@@ -316,22 +316,24 @@ export default class Player extends EventEmitter {
     this.loadEvents( Event.parse( boosts[roundBooster]));
   }
 
-  gainTechTile(tile: TechTile) {
+  gainTechTile(tile: TechTile, pos: TechTilePos) {
     this.loadEvents(Event.parse(techs[tile]));
     this.data.techTiles.push({
       tile,
+      pos,
       enabled: true
     });
   }
 
-  gainAdvTechTile(tile: AdvTechTile) {
+  gainAdvTechTile(tile: AdvTechTile, pos: AdvTechTilePos) {
     this.loadEvents(Event.parse(advancedTechs[tile]));
-    this.data.advTechTiles.push(tile);
+    this.data.advTechTiles.push({tile, pos});
   }
 
-  coverTechTile(tile: TechTile) {
-    this.data.techTiles.find(tech => tech.tile === tile).enabled = false;
-    this.removeEvents(Event.parse(techs[tile]));
+  coverTechTile(pos: TechTilePos) {
+    const tile = this.data.techTiles.find(tech => tech.pos === pos);
+    tile.enabled = false;
+    this.removeEvents(Event.parse(techs[tile.tile]));
   }
 
   needIncomeSelection(): { events?: Event[], needed: boolean, descs: Reward[]} {

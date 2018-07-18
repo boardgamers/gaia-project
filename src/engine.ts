@@ -761,13 +761,13 @@ export default class Engine {
 
     if (advanced) {
       // need to cover before to upgrade
-      this.player(player).gainAdvTechTile(tileAvailable.tile);
+      this.player(player).gainAdvTechTile(tileAvailable.tile, tileAvailable.tilePos);
       this.advTechTiles[pos].numTiles -= 1;
       this.subPhase = SubPhase.CoverTechTile;
       return;
     }
 
-    this.player(player).gainTechTile(tileAvailable.tile);
+    this.player(player).gainTechTile(tileAvailable.tile, tileAvailable.tilePos);
     this.techTiles[pos].numTiles -= 1;
 
     if ( stdNoFree ) {
@@ -785,7 +785,7 @@ export default class Engine {
 
     assert(tileAvailable !== undefined, `Impossible to cover ${tilePos} tile`);
     // remove tile
-    this.player(player).coverTechTile(tileAvailable.tile);
+    this.player(player).coverTechTile(tileAvailable.tilePos);
     this.subPhase = SubPhase.UpgradeResearch;
   }
 

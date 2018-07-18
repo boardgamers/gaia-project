@@ -1,6 +1,6 @@
 import Reward from "./reward";
 import { GaiaHex } from "./gaia-hex";
-import { ResearchField, Building, Booster, TechTile, AdvTechTile, Federation, Resource, BrainstoneArea } from "./enums";
+import { ResearchField, Building, Booster, TechTile, AdvTechTile, Federation, Resource, BrainstoneArea, TechTilePos, AdvTechTilePos } from "./enums";
 import { EventEmitter } from "eventemitter3";
 
 const MAX_ORE = 15;
@@ -45,8 +45,8 @@ export default class PlayerData extends EventEmitter {
   temporaryStep: number = 0;
 
   roundBooster: Booster;
-  techTiles: Array<{ tile: TechTile, enabled: boolean}> = [];
-  advTechTiles: AdvTechTile[] = [];
+  techTiles: Array<{ tile: TechTile, pos: TechTilePos, enabled: boolean}> = [];
+  advTechTiles: Array<{ tile: AdvTechTile, pos: AdvTechTilePos}> = [];
   federations: Federation[] = [];
   greenFederations: number = 0;
   /** Coordinates occupied by buildings */

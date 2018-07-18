@@ -790,7 +790,8 @@ describe("Engine", () => {
 
       const engine = new Engine(moves);
 
-      expect(engine.player(Player.Player1).data.advTechTiles).to.include(engine.advTechTiles[AdvTechTilePos.GaiaProject].tile);
+      // tslint:disable-next-line no-unused-expression
+      expect(engine.player(Player.Player1).data.advTechTiles.find(tile => tile.pos === AdvTechTilePos.GaiaProject)).to.not.be.undefined;
       expect(engine.advTechTiles[AdvTechTilePos.GaiaProject].numTiles).to.equal(0);
     });
   });
