@@ -265,6 +265,15 @@ export default class Commands extends Vue {
           break;
         }
 
+        case Command.ChooseIncome: {
+          ret.push({
+            label: "Income order",
+            command: Command.ChooseIncome,
+            buttons: command.data.map(command => ({command}))
+          });
+          break;
+        }
+
         // case Command.FormFederation: {
         //   const values = [];
         //   const labels = [];
