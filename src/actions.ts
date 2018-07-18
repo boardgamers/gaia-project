@@ -29,6 +29,10 @@ export const freeActionsItars = [
   { cost: "4tg", income: "tech" }
 ];
 
+export const freeActionsNevlas = [
+  { cost: "t-a3", income: "k" }
+];
+
 export const boardActions =  {
   [BoardAction.Power1]: { cost: "7pw", income: ["3k"] },
   [BoardAction.Power2]: { cost: "5pw", income: ["2step"] },
