@@ -23,3 +23,16 @@ export function stdBuildingValue(building: Building): number {
 
   return 0;
 }
+
+export function maxBuildings(building: Building): number {
+  switch (building) {
+    case Building.Mine: return 8;
+    case Building.TradingStation: return 4;
+    case Building.ResearchLab: return 3;
+    case Building.PlanetaryInstitute: return 1;
+    case Building.Academy1:
+    case Building.Academy2: return 1;
+  }
+
+  return 0;
+}
