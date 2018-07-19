@@ -29,7 +29,7 @@
 import Vue from 'vue'
 import * as $ from "jquery";
 import { Component } from 'vue-property-decorator';
-import { AvailableCommand, Command, factions, Building, GaiaHex, Booster, tiles, Event } from '@gaia-project/engine';
+import { AvailableCommand, Command, factions, Building, GaiaHex, Booster, tiles, Event, Federation } from '@gaia-project/engine';
 import MoveButton, {ButtonData} from './MoveButton.vue';
 import {buildingName} from '../data/building';
 import {GameContext} from '../data';
@@ -271,23 +271,26 @@ export default class Commands extends Vue {
           break;
         }
 
-        // case Command.FormFederation: {
-        //   const values = [];
-        //   const labels = [];
-          
-        //   Object.values(Federation).forEach((federation, i) => {
-        //     if (command.data.tiles.includes(federation)) {
-        //       values.push(federation);
-        //       labels.push(`Federation ${i+1}: ${tiles.federations[federation]}`);
-        //     }
-        //   });
+        case Command.FormFederation: {
+          const tilesButtons = Object.values(Federation).map((fed, i) => ({
+            command: fed,
+            label: `Federation ${i+1}: ${tiles.federations[fed]}`
+          }));
 
-        //   addButton("Form federation", `${player} ${Command.FormFederation}`, {
-        //     hexGroups: command.data.federations.map(fed => fed.hexes),
-        //     values,
-        //     labels
-        //   });
-        // }
+          const locationButtons = command.data.federations.map((fed, i) => ({
+            command: fed.hexes,
+            label: `Location ${i+1}`,
+            hexes: new Map(fed.hexes.split(',').map(coord => [this.context.coordsMap.get(coord), {coordinates: coord}])),
+            hover: true,
+            buttons: tilesButtons
+          }));
+
+          ret.push(({
+            label: "Form federation",
+            command: Command.FormFederation,
+            buttons: locationButtons
+          }));
+        }
       }
     }
 

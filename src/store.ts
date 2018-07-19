@@ -46,7 +46,7 @@ export default new Vuex.Store({
     },
 
     clearContext(state) {
-      state.game.context.highlighted.hexes.clear();
+      state.game.context.highlighted.hexes = new Map();
       state.game.context.highlighted.researchTiles = new Set();
       state.game.context.highlighted.techs = new Set();
     },

@@ -15,6 +15,7 @@ export interface ButtonData {
   command: string;
   tooltip?: string;
   hexes?: HighlightHexData;
+  hover?: boolean;
   researchTiles?: string[];
   techs?: Array<TechTilePos | AdvTechTilePos>;
 
@@ -52,7 +53,7 @@ export default class Navbar extends Vue {
   }
 
   handleClick() {
-    if (this.button.hexes) {
+    if (this.button.hexes && !this.button.hover) {
       this.$store.commit("activeButton", this);
       this.$store.commit("highlightHexes", this.button.hexes);
 
@@ -100,11 +101,19 @@ export default class Navbar extends Vue {
   }
 
   hover() {
+    if (!this.button.hover) {
+      return;
+    }
 
+    this.$store.commit("highlightHexes", this.button.hexes);
   }
 
   leave() {
-    
+    if (!this.button.hover) {
+      return;
+    }
+
+    this.$store.commit("clearContext");
   }
 }
 
