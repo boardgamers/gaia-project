@@ -8,7 +8,7 @@
     <div id="errors"></div>
     <div class="row mt-2">
       <div class="col-md-6 order-2 order-md-1">
-        <PlayerInfo v-for="player in data.players" :player='player' :key="player.player" />
+        <PlayerInfo v-for="player in orderedPlayers" :player='player' :key="player.player" />
       </div>
       <div class="col-md-6 order-1 order-md-2" id="move-panel">
         <Commands @command="handleCommand"/>
@@ -42,6 +42,16 @@ import { Command } from '@gaia-project/engine';
   computed: {
     data() {
       return this.$store.state.game.data;
+    },
+    orderedPlayers() {
+      const data = this.data;
+
+      if (data.round <= 0 || !data.turnOrder) {
+        return data.players;
+      }
+
+      const indexes = data.turnOrder.concat(data.passedPlayers);
+      return indexes.map(player => data.players[player]);
     }
   },
   created(this: Game) {
