@@ -71,6 +71,15 @@ export default interface PlayerInfo {
   padding-top: 0.2em;
   border-radius: 5px;
 
+  position: relative;
+
+  &::after {
+    position: absolute;
+    content: " ";
+    background: rgba(white, 0.4);
+    top: 0; bottom: 0; left: 0; right: 0;
+  }
+
   @extend .row;
   @extend .no-gutters;
 
@@ -85,6 +94,10 @@ export default interface PlayerInfo {
     svg {
       @extend .mr-1;
     }
+  }
+
+  .tiles, .text {
+    z-index: 1;
   }
 }
 </style>
