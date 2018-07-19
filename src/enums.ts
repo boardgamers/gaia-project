@@ -44,7 +44,8 @@ export enum Resource {
   RescoreFederation = "fed",
   TemporaryStep = "step",
   TemporaryRange = "range",
-  TokenArea3 = "t-a3"
+  TokenArea3 = "t-a3",
+  PISwap = "piswap"
 
 }
 
@@ -148,7 +149,8 @@ export enum Command {
   Special = "special",
   PlaceLostPlanet  = "lostPlanet",
   FormFederation = "federation",
-  EndTurn = "endturn"
+  EndTurn = "endturn",
+  PISwap = "piswap"
 }
 
 export enum Player {
@@ -313,5 +315,6 @@ export enum SubPhase {
   CoverTechTile = "coverTechTile",
   ChooseFederationTile = "chooseFederationTile",
   RescoreFederationTile = "rescoreFederationTile",
-  BuildMine = "buildMine"
+  BuildMine = "buildMine",
+  PISwap = "piSwap"
 }

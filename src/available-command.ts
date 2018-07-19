@@ -128,7 +128,10 @@ export function generate(engine: Engine): AvailableCommand[] {
         commands.push(...possibleFreeActions(engine, player));
         return commands;
       }
-
+      if (engine.subPhase === SubPhase.PISwap) {
+        commands.push(...possiblePISwaps(engine, player));
+        return commands;
+      }
       if (engine.subPhase === SubPhase.BeforeMove) {
         //  boosters
         commands.push(...possibleRoundBoosters(engine, player));
@@ -621,5 +624,31 @@ export function possibleTechTiles(engine: Engine, player: Player) {
       data: { tiles }
   });
   }
+  return commands;
+}
+
+export function possiblePISwaps(engine: Engine, player: Player) {
+  const commands = [];
+  const data = engine.player(player).data;
+  const buildings = [];
+
+  for (const hex of data.occupied) {
+    // exclude existing planets, satellites and space stations
+    if (hex.buildingOf(player) === Building.Mine) {
+      buildings.push({
+        building: Building.Mine,
+        coordinates: hex.toString(),
+      });
+    }
+  }
+
+  if (buildings.length > 0) {
+    commands.push({
+      name: Command.PISwap,
+      player,
+      data: { buildings }
+    });
+  }
+
   return commands;
 }

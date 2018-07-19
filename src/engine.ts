@@ -123,6 +123,9 @@ export default class Engine {
     player.on('rescore-fed', () => {
       this.subPhase = SubPhase.RescoreFederationTile;
     });
+    player.on('pi-swap', () => {
+      this.subPhase = SubPhase.PISwap;
+    });
   }
 
   player(player: number): Player {
@@ -944,5 +947,30 @@ export default class Engine {
     pl.data.satellites += fedInfo.satellites;
 
     this.subPhase = SubPhase.AfterMove;
+  }
+
+  [Command.PISwap](player: PlayerEnum, location: string) {
+    const avail = this.availableCommand(player, Command.PISwap);
+    const { buildings } = avail.data;
+    const pl = this.player(player);
+
+    const PIHex =  pl.data.occupied.find( hex => hex.buildingOf(player) === Building.PlanetaryInstitute);
+
+    for (const elem of buildings) {
+      if (elem.coordinates === location) {
+        const {q, r, s} = CubeCoordinates.parse(location);
+        const hex = this.map.grid.get({q, r});
+
+        if ( hex.buildingOf(player) === Building.Mine ) {
+          hex.data.building = Building.PlanetaryInstitute;
+          PIHex.data.building = Building.Mine;
+        }
+
+        this.subPhase = SubPhase.AfterMove;
+        return;
+      }
+    }
+
+    throw new Error(`Impossible to execute PI swap command at ${location}`);
   }
 }
