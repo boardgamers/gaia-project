@@ -131,10 +131,6 @@ export class FactionBoard {
     }
   }
 
-  maxBuildings(building: Building): number {
-    return this[building].income.length;
-  }
-
   cost(targetPlanet: Planet, building: Building, isolated = true): Reward[] {
 
     if (building === Building.TradingStation && isolated) {
