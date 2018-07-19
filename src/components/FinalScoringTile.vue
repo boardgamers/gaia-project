@@ -20,7 +20,7 @@ import Token from "./Token.vue";
     },
 
     content() {
-      return tiles.finalscorings[this.tile];
+      return this.tile;
     },
 
     players() {
