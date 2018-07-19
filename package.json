@@ -20,7 +20,6 @@
   "dependencies": {
     "@gaia-project/engine": "^0.20.1",
     "hexagrid": "^1.0.0",
-    "bootstrap-vue": "^2.0.0-rc.11",
     "vue": "^2.5.16",
     "vue-property-decorator": "^7.0.0",
     "vuex": "^3.0.1"
