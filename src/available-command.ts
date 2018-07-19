@@ -73,15 +73,12 @@ export function generate(engine: Engine): AvailableCommand[] {
       switch (engine.subPhase) {
         case SubPhase.ChooseTechTile : {
           return possibleTechTiles(engine, player);
-          break;
         }
         case SubPhase.CoverTechTile : {
           return possibleCoverTechTiles(engine, player);
-          break;
         }
         case SubPhase.UpgradeResearch : {
           return possibleResearchAreas(engine, player, "");
-          break;
         }
         default: return possibleGaiaFreeActions(engine, player);
       }
