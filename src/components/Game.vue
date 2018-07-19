@@ -50,7 +50,7 @@ import { Command } from '@gaia-project/engine';
         return data.players;
       }
 
-      const indexes = data.turnOrder.concat(data.passedPlayers);
+      const indexes = (data.tempTurnOrder || data.turnOrder).concat(data.passedPlayers);
       return indexes.map(player => data.players[player]);
     }
   },
