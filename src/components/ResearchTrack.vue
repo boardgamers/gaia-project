@@ -6,8 +6,8 @@
     <ResearchTile y="143" level="3" :field="field" />
     <ResearchTile y="93" level="4" :field="field" />
     <ResearchTile y="0" level="5" :field="field" />
-    <TechTile :pos="'adv-'+field" transform="translate(0, 53)" />
-    <TechTile :pos="field" transform="translate(0, 362)" />
+    <TechTile :pos="'adv-'+field" y="53" />
+    <TechTile :pos="field" y="362" />
   </g>
 </template>
 
