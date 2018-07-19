@@ -26,10 +26,6 @@ import SpaceHex from './SpaceHex.vue';
   }
 })
 export default class SpaceMap extends Vue {
-  get hexCorners() {
-    return corners();
-  }
-
   center(hex: GaiaHex) {
     return hexCenter(hex);
   }

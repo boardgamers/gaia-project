@@ -29,7 +29,7 @@ import Building from './Building.vue';
     Building
   }
 })
-export default class SpaceMap extends Vue {
+export default class SpaceHex extends Vue {
   @Prop()
   hex: GaiaHex;
 
