@@ -7,7 +7,7 @@ Functions to visualize the map and boards for gaia project inside html canvas
 
 Depending on your version of node and your OS, the binaries for node-sass might need to be built rather than downloaded.
 
-This can generally be added if you have a LTS version of node installed: https://nodejs.org/en/.
+This can generally be avoided if you have a LTS version of node installed: https://nodejs.org/en/.
 
 If you have errors during `npm install` due to manually building modules, you can try this:
 
