@@ -18,7 +18,7 @@ import { eventDesc } from '../data/event';
       return (this.$store.state.game.data.techTiles[this.pos] || this.$store.state.game.data.advTechTiles[this.pos]);
     },
 
-    tile(this: TechTile) {
+    tile() {
       return this.tileObject.tile;
     },
 
