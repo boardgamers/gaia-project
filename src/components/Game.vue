@@ -3,6 +3,7 @@
     <div class="row justify-content-center">
       <SpaceMap class="pr-3 mr-3" height="450" />
       <ResearchBoard height="450" />
+      <ScoringBoard class="ml-4" height="450" />
     </div>
     <div id="errors"></div>
     <div class="row mt-2">
@@ -34,6 +35,7 @@ import Commands from './Commands.vue';
 import SpaceMap from './SpaceMap.vue';
 import PlayerInfo from './PlayerInfo.vue';
 import ResearchBoard from './ResearchBoard.vue';
+import ScoringBoard from './ScoringBoard.vue';
 import { Command } from '@gaia-project/engine';
 
 @Component<Game>({
@@ -53,7 +55,8 @@ import { Command } from '@gaia-project/engine';
     Commands,
     SpaceMap,
     PlayerInfo,
-    ResearchBoard
+    ResearchBoard,
+    ScoringBoard
   }
 })
 export default class Game extends Vue {
