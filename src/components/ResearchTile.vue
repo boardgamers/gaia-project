@@ -1,7 +1,7 @@
 <template>
   <g :transform="`translate(0, ${y})`" v-b-tooltip.html.left :title="tooltip">
     <rect x="2" y="2" :class='["researchTile", field, {highlighted}]' width=56 height=46 rx="5" ry="5" @click="onClick" />
-    <Token v-for="(player, index) in players" v-if="player.faction && player.data.research[field] == level" :faction="player.faction" :x="tokenX(index)" :y="tokenY(index)" :key="player.player"/>
+    <Token v-for="(player, index) in players" v-if="player.faction && player.data.research[field] == level" :faction="player.faction" :transform="`translate(${tokenX(index)}, ${tokenY(index)})`" :key="player.player" :scale="5" />
   </g>
 </template>
 

@@ -1,5 +1,5 @@
 <template>
-  <svg :class='["techTile", {highlighted}]' v-if="$store.state.game.data.techTiles" v-show="this.count" v-b-tooltip :title="tooltip" @click="onClick" width="58" height="37" viewBox="0 0 58 37">
+  <svg :class='["techTile", {highlighted}]' v-show="this.count" v-b-tooltip :title="tooltip" @click="onClick" width="58" height="37" viewBox="0 0 58 37">
     <polygon points="1,1 48,1 57,11 57,36 1,36" />
     <text class="title" x="4" y="12">{{title}}</text>
     <text class="content" x="4" y="30">{{content}}</text>
@@ -14,15 +14,19 @@ import { eventDesc } from '../data/event';
 
 @Component<TechTile>({
   computed: {
+    tileObject() {
+      return (this.$store.state.game.data.techTiles[this.pos] || this.$store.state.game.data.advTechTiles[this.pos]);
+    },
+
     tile(this: TechTile) {
-      return (this.$store.state.game.data.techTiles[this.pos] || this.$store.state.game.data.advTechTiles[this.pos]).tile;
+      return this.tileObject.tile;
     },
 
     count() {
       if (this.player !== undefined) {
         return 1;
       }
-      return (this.$store.state.game.data.techTiles[this.pos] || this.$store.state.game.data.advTechTiles[this.pos]).numTiles;
+      return this.tileObject.numTiles;
     },
 
     content() {

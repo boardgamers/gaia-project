@@ -1,6 +1,8 @@
 <template>
   <svg viewBox="0 0 80 400">
-    <ScoringTile v-for="i in [0, 1, 2, 3, 4, 5]" :round="i+1" :transform="`translate(0, ${405 - (i+1)*50})`" :key="i" />
+    <FinalScoringTile :index="0" v-if="$store.state.game.data.finalScoringTiles" />
+    <FinalScoringTile :index="1" transform="translate(0, 60)" v-if="$store.state.game.data.finalScoringTiles" />
+    <ScoringTile v-for="i in [0, 1, 2, 3, 4, 5]" :round="i+1" :transform="`translate(0, ${400 - (i+1)*45})`" :key="i" v-if="$store.state.game.data.finalScoringTiles" />
   </svg>
 </template>
 
@@ -8,10 +10,12 @@
 import Vue from 'vue'
 import { Component } from 'vue-property-decorator';
 import ScoringTile from './ScoringTile.vue';
+import FinalScoringTile from './FinalScoringTile.vue';
 
 @Component({
   components: {
-    ScoringTile
+    ScoringTile,
+    FinalScoringTile
   }
 })
 export default class ScoringBoard extends Vue {

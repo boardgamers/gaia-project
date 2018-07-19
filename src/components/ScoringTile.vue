@@ -1,5 +1,5 @@
 <template>
-  <g :class='["scoringTile", {highlighted, faded}]' v-if="$store.state.game.data.techTiles"  v-b-tooltip :title="tooltip">
+  <g :class='["scoringTile", {highlighted, faded}]' v-b-tooltip :title="tooltip">
     <rect x="1" y="1" width="75" height="40" />
     <text class="title" x="5" y="12">Round {{round}}</text>
     <text class="content" x="5" y="31">{{content}}</text>

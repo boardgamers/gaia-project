@@ -1,5 +1,7 @@
 <template>
-  <circle :cx="x" :cy="y" r="5" :class="['player-token', 'planet-fill', planet]" />
+  <g>
+    <circle cx="0" cy="0" r="1" :transform="`scale(${scale})`" :class="['player-token', 'planet-fill', planet]" />
+  </g>
 </template>
 
 <script lang="ts">
@@ -12,9 +14,7 @@ export default class PlayerToken extends Vue {
   @Prop()
   faction: Faction;
   @Prop()
-  x: number;
-  @Prop()
-  y: number;
+  scale: number;
 
   get planet(): Planet {
     return factions.planet(this.faction);
@@ -26,8 +26,8 @@ export default class PlayerToken extends Vue {
 
 g .player-token {
   stroke: #444;
-  stroke-width: 1;
   pointer-events: none;
+  stroke-width: 0.2;
 }
 
 </style>
