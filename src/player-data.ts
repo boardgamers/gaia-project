@@ -150,6 +150,7 @@ export default class PlayerData extends EventEmitter {
       case Resource.Knowledge: this.knowledge = Math.min(MAX_KNOWLEDGE, this.knowledge + count); break;
       case Resource.VictoryPoint: this.victoryPoints += count; break;
       case Resource.Qic: this.qics += count; break;
+      case Resource.MoveTokenToGaiaArea: this.movePowerToGaia(-count); break;
       case Resource.GainToken: count > 0 ?  this.power.area1 += count : this.discardPower(-count); break;
       case Resource.GainTokenGaiaArea: count > 0 ? this.chargeGaiaPower(count) :  this.discardGaiaPower(-count); break;
       case Resource.ChargePower: count > 0 ? this.chargePower(count) : this.spendPower(-count); break;
@@ -178,6 +179,7 @@ export default class PlayerData extends EventEmitter {
       case Resource.VictoryPoint: return this.victoryPoints >= reward.count;
       case Resource.Qic: return this.qics >= reward.count;
       case Resource.None: return true;
+      case Resource.MoveTokenToGaiaArea:
       case Resource.GainToken: return this.discardablePowerTokens() >= reward.count;
       case Resource.GainTokenGaiaArea: return this.gaiaPowerTokens() >= reward.count;
       case Resource.ChargePower: return this.spendablePowerTokens() >= reward.count;
@@ -263,16 +265,29 @@ export default class PlayerData extends EventEmitter {
     this.power.area1 -= area1ToGaia;
     this.power.area2 -= area2ToGaia;
     this.power.area3 -= area3ToGaia;
+
     if (brainstoneNeeded) {
-      this.brainstone =  BrainstoneArea.Transit;
+      this.brainstone = null;
+    }
+  }
+
+  movePowerToGaia(power: number) {
+    const area1ToGaia = Math.min(power, this.power.area1);
+    const area2ToGaia = Math.min(power - area1ToGaia, this.power.area2);
+    const area3ToGaia = Math.min(power - area1ToGaia - area2ToGaia, this.power.area3);
+    const brainstoneNeeded = this.brainstoneInPlay() && this.discardablePowerTokens() === power;
+
+    this.power.area1 -= area1ToGaia;
+    this.power.area2 -= area2ToGaia;
+    this.power.area3 -= area3ToGaia;
+    this.power.gaia += area1ToGaia + area2ToGaia + area3ToGaia;
+
+    if (brainstoneNeeded) {
+      this.brainstone = BrainstoneArea.Gaia;
     }
   }
 
   chargeGaiaPower(power: number) {
-    if ( this.brainstone === BrainstoneArea.Transit) {
-      this.brainstone = BrainstoneArea.Gaia;
-      power -= 1;
-    }
     this.power.gaia += power;
   }
 

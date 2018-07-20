@@ -12,7 +12,7 @@ export default {
     [], ["q"], ["q"], ["2q,3pw"], ["2q"], ["4q"]
   ],
   [ResearchField.GaiaProject]: [
-    [], [">gf", "gf >> 6tg"], ["3t", "gf >> 6tg"], ["3pw", ">gf", "gf >> 4tg"], [">gf", "gf >> 3tg"], ["4vp", "gf >> 3tg", "g > vp"]
+    [], [">gf"], ["3t"], ["3pw", ">gf"], [">gf"], ["4vp", "g > vp"]
   ],
   [ResearchField.Economy]: [
     [], ["+2c,pw"], ["+2c,1o,2pw"], ["+3c,1o,3pw", "3pw"], ["+2o,4c,4pw"], ["3o,6c,6pw"]

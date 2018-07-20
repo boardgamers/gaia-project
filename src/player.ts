@@ -113,7 +113,7 @@ export default class Player extends EventEmitter {
 
     // gaiaforming discount
     if (building === Building.GaiaFormer) {
-      addedCost.push(new Reward(-this.data.gaiaFormingDiscount(), Resource.GainToken));
+      addedCost.push(new Reward(-this.data.gaiaFormingDiscount(), Resource.MoveTokenToGaiaArea));
     } else if (building === Building.Mine) {
       // habitability costs
       if (targetPlanet === Planet.Gaia) {
@@ -286,11 +286,6 @@ export default class Player extends EventEmitter {
     // reset temporary benefits
     this.data.temporaryRange = 0;
     this.data.temporaryStep = 0;
-
-    // removes brainstone if still in transit after turn End
-    if ( this.data.brainstone === BrainstoneArea.Transit) {
-      this.data.brainstone = null;
-    }
   }
 
   pass() {

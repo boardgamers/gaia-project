@@ -30,6 +30,7 @@ export enum Resource {
   ChargePower = "pw",
   GainToken = "t",
   GainTokenGaiaArea = "tg",
+  MoveTokenToGaiaArea = "t->tg",
   VictoryPoint = "vp",
   TerraformCostDiscount = "d",
   Range = "r",
@@ -46,7 +47,6 @@ export enum Resource {
   TemporaryRange = "range",
   TokenArea3 = "t-a3",
   PISwap = "piswap"
-
 }
 
 export enum Operator {
@@ -287,8 +287,7 @@ export enum BrainstoneArea {
   Area1 = "area1",
   Area2 = "area2",
   Area3 = "area3",
-  Gaia = "gaia",
-  Transit = "transit"
+  Gaia = "gaia"
 }
 
 export enum Phase {
