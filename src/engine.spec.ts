@@ -421,32 +421,6 @@ describe("Engine", () => {
     expect(() => JSON.stringify(new Engine([]))).to.not.throw();
   });
 
-  it("should allow Taklons to leech with +t freeIncome", () => {
-    const moves = parseMoves(`
-      init 2 randomSeed
-      p1 faction terrans
-      p2 faction taklons
-      p1 build m -4x-1
-      p2 build m -3x-2
-      p2 build m -6x3
-      p1 build m -4x2
-      p2 booster booster3
-      p1 booster booster4
-      p1 build ts -4x-1.
-      p2 leech 1pw
-      p2 build ts -3x-2.
-      p1 leech 2pw
-      p1 build ts -4x2.
-      p2 leech 1pw
-      p2 build PI -3x-2.
-      p1 leech 2pw
-      p1 build lab -4x-1. tech gaia.
-    `);
-
-    expect(() => new Engine([...moves, "p2 leech 3pw,1t"])).to.not.throw();
-    expect(() => new Engine([...moves, "p2 leech 1t,3pw"])).to.not.throw();
-  });
-
   it("should allow Ambas to use piswap", () => {
     const moves = parseMoves(`
       init 2 randomSeed
@@ -1030,5 +1004,5 @@ describe("Engine", () => {
 });
 
 function parseMoves(moves: string) {
-  return moves.trim().split("\n").map(move => move.trim());
+  return Engine.parseMoves(moves);
 }

@@ -21,12 +21,12 @@ describe("PlayerData", () => {
       expect(data.power.area1).to.equal(0);
       expect(data.power.area2).to.equal(2);
       expect(data.power.gaia).to.equal(0);
-      expect(data.brainstone).to.equal(BrainstoneArea.Out);
+      expect(data.brainstone).to.equal(null);
     });
   });
 
   describe("discardPower with brainstone in play", () => {
-    it ("should remove power tokens from power areas and brainstone in transit", () => {
+    it ("should remove power tokens from power areas and brainstone", () => {
       const data = new PlayerData();
       data.power.area1 = 4;
       data.power.area2 = 1;
@@ -37,7 +37,7 @@ describe("PlayerData", () => {
       expect(data.power.area1).to.equal(0);
       expect(data.power.area2).to.equal(0);
       expect(data.power.gaia).to.equal(0);
-      expect(data.brainstone).to.equal(BrainstoneArea.Transit);
+      expect(data.brainstone).to.equal(null);
     });
   });
 

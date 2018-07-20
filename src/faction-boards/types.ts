@@ -70,7 +70,7 @@ const defaultBoard: FactionBoardRaw = {
     income: [["+4pw", "+t"]]
   },
   [Building.GaiaFormer]: {
-    cost: "6t",
+    cost: "6t->tg",
     income: [[], [], []]
   },
   income: ["3k,4o,15c,q", "+o,k"],
@@ -78,7 +78,7 @@ const defaultBoard: FactionBoardRaw = {
     area1: 2,
     area2: 4
   },
-  brainstone: BrainstoneArea.Out,
+  brainstone: null,
   handlers: {}
 };
 
