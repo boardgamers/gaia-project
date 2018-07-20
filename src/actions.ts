@@ -33,7 +33,6 @@ export const freeActionsNevlas = [
   { cost: "t-a3", income: "1k" }
 ];
 
-
 export const freeActionsBaltaks = [
   { cost: "1gf", income: "1q" }
 ];

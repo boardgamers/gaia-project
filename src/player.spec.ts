@@ -4,7 +4,7 @@ import Player from "./player";
 import { Faction, Planet, Building, Resource, Player as PlayerEnum, Operator } from "./enums";
 import Reward from "./reward";
 import Event from "./events";
-import { GaiaHex } from "..";
+import { GaiaHex } from "./gaia-hex";
 
 describe("Player", () => {
   describe("canBuild", () => {
