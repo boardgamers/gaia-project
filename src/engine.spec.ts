@@ -407,7 +407,7 @@ describe("Engine", () => {
       p2 booster booster3
       p1 booster booster4
       p1 build ts -4x-1.
-      p2 leech 1pw
+      p2 leech 1pw. brainstone area2
       p2 build ts -3x-2.
       p1 leech 2pw
       p1 build ts -4x2.

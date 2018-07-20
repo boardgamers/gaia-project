@@ -2,6 +2,7 @@ import Reward from "./reward";
 import { GaiaHex } from "./gaia-hex";
 import { ResearchField, Building, Booster, TechTile, AdvTechTile, Federation, Resource, BrainstoneArea, TechTilePos, AdvTechTilePos } from "./enums";
 import { EventEmitter } from "eventemitter3";
+import * as _ from "lodash";
 
 const MAX_ORE = 15;
 const MAX_CREDIT = 30;
@@ -55,6 +56,10 @@ export default class PlayerData extends EventEmitter {
   leechPossible: number;
   tokenModifier: number = 1;
 
+  // Internal variables, not meant to be in toJSON():
+  followBrainStoneHeuristics = true;
+  brainstoneDest: BrainstoneArea | "discard";
+
   toJSON(): Object {
     const ret = {
       victoryPoints: this.victoryPoints,
@@ -88,17 +93,42 @@ export default class PlayerData extends EventEmitter {
     return ret;
   }
 
+  /**
+   * Creates a copy of the current player data, except its event emitter is not linked to anything
+   */
+  clone(): PlayerData {
+    return Object.assign(new PlayerData(), _.cloneDeep(this.toJSON()));
+  }
+
   payCost(cost: Reward) {
     this.gainReward(cost, true);
   }
 
-  gainRewards(rewards: Reward[]) {
+  gainRewards(rewards: Reward[], forced = false) {
+    if (!forced && this.brainstone && rewards.some(rew => rew.type === Resource.ChargePower)) {
+      // We need to do something about the brainstone
+      const [cloneHeuristic, cloneNoHeuristic] = [this.clone(), this.clone()];
+      cloneHeuristic.followBrainStoneHeuristics = true;
+      cloneNoHeuristic.followBrainStoneHeuristics = false;
+
+      cloneHeuristic.gainRewards(rewards, true);
+      cloneNoHeuristic.gainRewards(rewards, true);
+
+      if (cloneHeuristic.brainstone !== cloneNoHeuristic.brainstone) {
+        // The brainstone can end up in two different places.
+        this.emit('brainstone', [cloneHeuristic.brainstone, cloneNoHeuristic.brainstone]);
+
+        this.followBrainStoneHeuristics = this.brainstoneDest === cloneHeuristic.brainstone;
+      }
+    }
+
     for (const reward of rewards) {
       this.gainReward(reward);
     }
   }
 
-  gainReward(reward: Reward, pay = false) {
+  // Not to be called by Player. use gainRewards instead.
+  private gainReward(reward: Reward, pay = false) {
     if (reward.isEmpty()) {
       return;
     }
@@ -184,20 +214,25 @@ export default class PlayerData extends EventEmitter {
     let brainstonePos = this.brainstone;
 
     if (brainstonePos === BrainstoneArea.Area1) {
-      brainstoneUsage += 1;
-      power -= 1;
-      brainstonePos = BrainstoneArea.Area2;
+      if (this.followBrainStoneHeuristics || this.power.area1 < power) {
+        brainstoneUsage += 1;
+        power -= 1;
+        brainstonePos = BrainstoneArea.Area2;
+      }
     }
 
     const area1ToUp = Math.min(power, this.power.area1);
+    power -= area1ToUp;
 
-    if (brainstonePos === BrainstoneArea.Area2 && (power - area1ToUp) > 0) {
-      brainstoneUsage += 1;
-      power -= 1;
-      brainstonePos = BrainstoneArea.Area3;
+    if (brainstonePos === BrainstoneArea.Area2 && power > 0) {
+      if (this.followBrainStoneHeuristics || (this.power.area2 + area1ToUp) < power) {
+        brainstoneUsage += 1;
+        power -= 1;
+        brainstonePos = BrainstoneArea.Area3;
+      }
     }
 
-    const area2ToUp = Math.min(power - area1ToUp, this.power.area2 + area1ToUp);
+    const area2ToUp = Math.min(power, this.power.area2 + area1ToUp);
 
     if (apply) {
       this.power.area1 -= area1ToUp;

@@ -315,6 +315,7 @@ export enum SubPhase {
   CoverTechTile = "coverTechTile",
   ChooseFederationTile = "chooseFederationTile",
   RescoreFederationTile = "rescoreFederationTile",
+  BrainStone = "brainStone",
   BuildMine = "buildMine",
   BuildMineOrGaiaFormer = "buildMineOrGaiaFormer",
   PISwap = "piSwap"

@@ -110,8 +110,8 @@ export default class Engine {
     }
   }
 
-  generateAvailableCommands(subphase: SubPhase = SubPhase.BeforeMove): AvailableCommand[] {
-    return this.availableCommands = generateAvailableCommands(this, subphase);
+  generateAvailableCommands(subphase: SubPhase = null, data?: any): AvailableCommand[] {
+    return this.availableCommands = generateAvailableCommands(this, subphase, data);
   }
 
   findAvailableCommand(player: PlayerEnum, command: Command) {
@@ -152,6 +152,7 @@ export default class Engine {
     player.data.on(`gain-${Resource.PISwap}`, () => {
       this.processNextMove(SubPhase.PISwap);
     });
+    player.data.on('brainstone', areas => this.processNextMove(SubPhase.BrainStone, areas));
   }
 
   player(player: number): Player {
@@ -216,12 +217,19 @@ export default class Engine {
     const player = +playerS[1] - 1;
     assert(this.playerToMove === (player as PlayerEnum), "Wrong turn order in move " + move + ", expected " + this.playerToMove + ' found ' + player);
 
+    const split = _.get(params, 'split', true);
+    const processFirst = _.get(params, 'processFirst', false);
+
+    if (!split) {
+      assert(processFirst);
+    }
+
     this.turnMoves = move.substr(playerS.length).split('.').map(x => x.trim());
 
-    assert (_.get(params, 'split', true) || this.turnMoves.length === 1, "You can only do one command this turn");
-
-    if (_.get(params, 'processFirst', false)) {
+    if (processFirst) {
       this.processNextMove();
+
+      assert(split || this.turnMoves.length === 0, "There is an extra command at the end of the turn: " + this.turnMoves.join('. '));
     }
   }
 
@@ -253,9 +261,9 @@ export default class Engine {
     };
   }
 
-  processNextMove(subphase?: SubPhase) {
+  processNextMove(subphase?: SubPhase, data?: any) {
     if (subphase) {
-      this.generateAvailableCommands(subphase);
+      this.generateAvailableCommands(subphase, data);
       if (this.availableCommands.length === 0) {
         return;
       }
@@ -901,6 +909,11 @@ export default class Engine {
     assert(burn.includes(+cost), `Impossible to burn ${cost} power`);
 
     this.players[player].data.burnPower(+cost);
+  }
+
+  [Command.BrainStone](player: PlayerEnum, dest: string) {
+    assert(this.availableCommand.data.includes(dest), "Possible brain stone areas: " + this.availableCommand.data.join(", "));
+    this.players[player].data.brainstoneDest = dest as any;
   }
 
   [Command.Action](player: PlayerEnum, action: BoardAction) {

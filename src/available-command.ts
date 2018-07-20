@@ -19,25 +19,51 @@ export default interface AvailableCommand {
   player?: number;
 }
 
-export function generate(engine: Engine, subPhase: SubPhase = SubPhase.BeforeMove): AvailableCommand[] {
+export function generate(engine: Engine, subPhase: SubPhase = null, data?: any): AvailableCommand[] {
   const player = engine.playerToMove;
-  switch (engine.phase) {
-    case Phase.SetupInit: {
-      return [{ name: Command.Init }];
-    }
-    case Phase.SetupFaction: {
+
+  if (engine.phase === Phase.RoundMove && !subPhase) {
+    subPhase = SubPhase.BeforeMove;
+  }
+
+  switch (subPhase) {
+    case SubPhase.ChooseTechTile: return possibleTechTiles(engine, player);
+    case SubPhase.CoverTechTile: return possibleCoverTechTiles(engine, player);
+    case SubPhase.UpgradeResearch: return possibleResearchAreas(engine, player, "");
+    case SubPhase.PlaceLostPlanet: return possibleSpaceLostPlanet(engine, player);
+    case SubPhase.ChooseFederationTile: return possibleFederationTiles(engine, player, "pool");
+    case SubPhase.RescoreFederationTile: return possibleFederationTiles(engine, player, "player");
+    case SubPhase.BuildMine: return possibleMineBuildings(engine, player, false);
+    case SubPhase.BuildMineOrGaiaFormer: return possibleMineBuildings(engine, player, true);
+    case SubPhase.PISwap: return possiblePISwaps(engine, player);
+    case SubPhase.BrainStone: return [{name: Command.BrainStone, player, data}];
+    case SubPhase.BeforeMove: {
       return [
-        {
-          name: Command.ChooseFaction,
-          player: engine.currentPlayer,
-          data: _.difference(
-            Object.values(Faction),
-            engine.players.map(pl => pl.faction),
-            engine.players.map(pl => factions.opposite(pl.faction))
-          )
-        }
+        ...possibleRoundBoosters(engine, player),
+        ...possibleBuildings(engine, player),
+        ...possibleFederations(engine, player),
+        ...possibleResearchAreas(engine, player, UPGRADE_RESEARCH_COST),
+        ...possibleFreeActions(engine, player),
+        ...possibleBoardActions(engine, player),
+        ...possibleSpecialActions(engine, player)
       ];
     }
+    case SubPhase.AfterMove: return [...possibleFreeActions(engine, player), {name: Command.EndTurn, player}];
+  }
+
+  switch (engine.phase) {
+    case Phase.SetupInit: return [{ name: Command.Init }];
+    case Phase.SetupFaction: return [
+      {
+        name: Command.ChooseFaction,
+        player: engine.currentPlayer,
+        data: _.difference(
+          Object.values(Faction),
+          engine.players.map(pl => pl.faction),
+          engine.players.map(pl => factions.opposite(pl.faction))
+        )
+      }
+    ];
     case Phase.SetupBuilding: {
       const planet = engine.player(player).planet;
       const buildings = [];
@@ -55,59 +81,15 @@ export function generate(engine: Engine, subPhase: SubPhase = SubPhase.BeforeMov
         }
       }
 
-      return [{
-        name: Command.Build,
-        player,
-        data: { buildings }
-      }];
+      return [{name: Command.Build, player, data: { buildings }}];
     }
-    case Phase.SetupBooster: {
-      return possibleRoundBoosters(engine, player);
-    }
-    case Phase.RoundIncome: {
-      return possibleIncomes(engine, player);
-    }
-    case Phase.RoundGaia: {
-      switch (subPhase) {
-        case SubPhase.ChooseTechTile: return possibleTechTiles(engine, player);
-        case SubPhase.CoverTechTile: return possibleCoverTechTiles(engine, player);
-        case SubPhase.UpgradeResearch: return possibleResearchAreas(engine, player, "");
-        default: return possibleGaiaFreeActions(engine, player);
-      }
-    }
-    case Phase.RoundLeech: {
-      return possibleLeech(engine, player);
-    }
-    case Phase.RoundMove : {
-      // We are in a regular round
-      assert(player !== undefined, "Problem with the engine, player to play is unknown");
-
-      switch (subPhase) {
-        case SubPhase.ChooseTechTile: return possibleTechTiles(engine, player);
-        case SubPhase.CoverTechTile: return possibleCoverTechTiles(engine, player);
-        case SubPhase.UpgradeResearch: return possibleResearchAreas(engine, player, "");
-        case SubPhase.PlaceLostPlanet: return possibleSpaceLostPlanet(engine, player);
-        case SubPhase.ChooseFederationTile: return possibleFederationTiles(engine, player, "pool");
-        case SubPhase.RescoreFederationTile: return possibleFederationTiles(engine, player, "player");
-        case SubPhase.BuildMine: return possibleMineBuildings(engine, player, false);
-        case SubPhase.BuildMineOrGaiaFormer: return possibleMineBuildings(engine, player, true);
-        case SubPhase.PISwap: return possiblePISwaps(engine, player);
-        case SubPhase.BeforeMove: {
-          return [
-            ...possibleRoundBoosters(engine, player),
-            ...possibleBuildings(engine, player),
-            ...possibleFederations(engine, player),
-            ...possibleResearchAreas(engine, player, UPGRADE_RESEARCH_COST),
-            ...possibleFreeActions(engine, player),
-            ...possibleBoardActions(engine, player),
-            ...possibleSpecialActions(engine, player)
-          ];
-        }
-        case SubPhase.AfterMove: return [...possibleFreeActions(engine, player), {name: Command.EndTurn, player}];
-        default: return [];
-      }
-    }
+    case Phase.SetupBooster: return possibleRoundBoosters(engine, player);
+    case Phase.RoundIncome: return possibleIncomes(engine, player);
+    case Phase.RoundGaia: return possibleGaiaFreeActions(engine, player);
+    case Phase.RoundLeech: return possibleLeech(engine, player);
   }
+
+  return [];
 }
 
 export function possibleBuildings(engine: Engine, player: Player) {
