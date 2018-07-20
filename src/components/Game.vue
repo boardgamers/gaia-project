@@ -146,6 +146,8 @@ export default class Game extends Vue {
   }
 
   parseMove(command: string): {player: string, command: string, args: string[]} {
+    command = command.trim();
+    
     if (command.includes('.')) {
       return this.parseMove(command.slice(0, command.indexOf('.')));
     }

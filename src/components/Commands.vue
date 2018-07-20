@@ -153,7 +153,7 @@ export default class Commands extends Vue {
             if (command.data.boosters.includes(booster)) {
               buttons.push({
                 command: booster,
-                label: `Booster ${i+1}: ${tiles.boosters[booster]}`,
+                label: `Booster ${i+1}: ${tiles.boosters[booster].map(x => x.replace(/,/g, ', ')).join(", ")}`,
                 tooltip: tiles.boosters[booster].map(spec => eventDesc(new Event(spec))).join("\n")
               });
             }
@@ -215,6 +215,14 @@ export default class Commands extends Vue {
             label: command.data.cost === '~' ? `Decline ${command.data.offer}` : `Decline ${command.data.offer} for ${command.data.cost}`,
             command: Command.Decline
           });
+          break;
+        }
+
+        case Command.BrainStone: {
+          ret.push(...command.data.sort().map(area => ({
+            label: `Brainstone ${area}`,
+            command: `${command.name} ${area}`
+          })));
           break;
         }
 

@@ -52,7 +52,7 @@ export default class PlayerInfo extends Vue {
   }
 
   get boosterDesc() {
-    return this.data.roundBooster ? this.data.roundBooster + ": " + tiles.boosters[this.data.roundBooster] : "(not selected)";
+    return this.data.roundBooster ? this.data.roundBooster + ": " + tiles.boosters[this.data.roundBooster].map(x => x.replace(/,/g, ', ')).join(", ") : "(not selected)";
   }
 }
 export default interface PlayerInfo {
