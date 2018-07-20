@@ -333,6 +333,32 @@ describe("Engine", () => {
     expect(() => new Engine(moves)).to.not.throw();
   });
 
+  it ("should prevent the rescore fed action when no federation token", () => {
+    const moves = parseMoves(`
+      init 2 randomSeed
+      p1 faction bescods
+      p2 faction hadsch-hallas
+      p1 build m 3x-2
+      p2 build m -2x-4
+      p2 build m -5x0
+      p1 build m -2x-5
+      p2 booster booster4
+      p1 booster booster3
+      p1 build ts -2x-5.
+      p2 leech 1pw
+      p2 build ts -2x-4.
+      p1 leech 2pw
+      p1 build lab -2x-5. tech nav.
+      p2 leech 2pw
+      p2 build lab -2x-4. tech eco.
+      p1 leech 2pw
+    `);
+
+    const engine = new Engine(moves);
+    expect(engine.player(Player.Player1).data.qics).to.equal(3);
+    expect(() => engine.move("p1 action qic2")).to.throw();
+  });
+
   it("should allow this 4 player game", () => {
     const moves = parseMoves(`
       init 4 randomSeed

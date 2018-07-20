@@ -253,6 +253,11 @@ export function possibleBoardActions(engine: Engine, player: Player) {
   const commands = [];
 
   const poweracts = Object.values(BoardAction).filter(pwract => engine.boardActions[pwract] && engine.player(player).canPay(Reward.parse(boardActions[pwract].cost)));
+
+  // Prevent using the rescore action if no federation token
+  if (engine.player(player).data.federations.length === 0) {
+    _.remove(poweracts, act => act === BoardAction.Qic2);
+  }
   if (poweracts.length > 0) {
     commands.push({
       name: Command.Action,
