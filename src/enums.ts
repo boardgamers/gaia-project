@@ -45,7 +45,7 @@ export enum Resource {
   TemporaryStep = "step",
   TemporaryRange = "range",
   TokenArea3 = "t-a3",
-  PISwap = "piswap"
+  PISwap = "swap-PI"
 
 }
 
@@ -150,7 +150,7 @@ export enum Command {
   PlaceLostPlanet  = "lostPlanet",
   FormFederation = "federation",
   EndTurn = "endturn",
-  PISwap = "piswap"
+  PISwap = "swap-PI"
 }
 
 export enum Player {
@@ -317,5 +317,5 @@ export enum SubPhase {
   RescoreFederationTile = "rescoreFederationTile",
   BuildMine = "buildMine",
   BuildMineOrGaiaFormer = "buildMineOrGaiaFormer",
-  PISwap = "piSwap"
+  PISwap = "swap-PI"
 }

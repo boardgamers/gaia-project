@@ -441,8 +441,8 @@ describe("Engine", () => {
       p1 leech 2pw
     `);
 
-    expect(() => new Engine([...moves, "p2 special piswap. piswap 5x-3."])).to.not.throw();
-    expect(() => new Engine([...moves, "p2 special piswap. piswap 3x-3."])).to.throw();
+    expect(() => new Engine([...moves, "p2 special swap-PI. swap-PI 5x-3."])).to.not.throw();
+    expect(() => new Engine([...moves, "p2 special swap-PI. swap-PI 3x-3."])).to.throw();
   });
 
   describe("gleens", () => {
