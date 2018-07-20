@@ -89,21 +89,9 @@ export default class Player extends EventEmitter {
   gainRewards(rewards: Reward[]) {
     for (const reward of rewards) {
       this.data.gainReward(this.factionReward(reward));
-
-      if (reward.type === Resource.TechTile) {
-        this.emit("gain-tech");
-      } else if (reward.type === Resource.RescoreFederation) {
-        this.emit("rescore-fed");
-      } else if (reward.type === Resource.TemporaryStep) {
-        this.emit("build-mine");
-      } else if (reward.type === Resource.TemporaryRange) {
-        this.emit("build-mine-gf");
-      } else if (reward.type === Resource.PISwap ) {
-        this.emit("pi-swap");
-      }
+      this.emit(`gain-${reward.type}`);
     }
   }
-
 
   canPay(reward: Reward[]): boolean {
     const rewards = Reward.merge(reward);
