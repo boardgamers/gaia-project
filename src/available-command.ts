@@ -5,7 +5,7 @@ import factions from './factions';
 import * as assert from "assert";
 import { upgradedBuildings } from './buildings';
 import Reward from './reward';
-import { boardActions, freeActions, freeActionsHadschHallas, freeActionsTerrans, freeActionsItars, freeActionsNevlas } from './actions';
+import { boardActions, freeActions, freeActionsTerrans, freeActionsItars } from './actions';
 import * as researchTracks from './research-tracks';
 
 
@@ -277,13 +277,8 @@ export function possibleFreeActions(engine: Engine, player: Player) {
   let burnDisabled = false;
 
   let pool = freeActions;
-  if (pl.faction === Faction.HadschHallas && pl.data.hasPlanetaryInstitute()) {
-    pool = [].concat(pool, freeActionsHadschHallas);
-  }
 
-  if (pl.faction === Faction.Nevlas) {
-    pool = [].concat(pool, freeActionsNevlas);
-  }
+  engine.player(player).emit("freeActionChoice", pool);
 
   // freeActions for Terrans / Itars during gaiaPhase
   if (engine.phase === Phase.RoundGaia && (pl.canGaiaTerrans() || pl.canGaiaItars())) {

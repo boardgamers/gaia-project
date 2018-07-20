@@ -42,14 +42,6 @@ export default class Player extends EventEmitter {
   constructor(public player: PlayerEnum = PlayerEnum.Player1) {
     super();
     this.data.on('advance-research', track => this.onResearchAdvanced(track));
-    // Itars power to burn into Gaia
-    if (this.faction === Faction.Itars) {
-      this.data.on('burn', amount => this.data.power.gaia += amount);
-    }
-    // Terrans power to discard from Gaia to area2
-    if (this.faction === Faction.Terrans) {
-      this.data.on('discardGaia', amount => this.data.power.area2 += amount);
-    }
   }
 
   toJSON() {
@@ -420,15 +412,13 @@ export default class Player extends EventEmitter {
 
   gaiaPhase() {
     /* Move gaia power tokens to regular power areas */
-    // Terrans move directly to power area 2
-    if (this.faction === Faction.Terrans) {
-      this.data.power.area2 += this.data.power.gaia;
-    } else {
-      this.data.power.area1 += this.data.power.gaia;
-      if (this.data.brainstone === BrainstoneArea.Gaia ) {
-        this.data.brainstone = BrainstoneArea.Area1;
-      }
+    this.emit('gaiaPhase-beforeTokenMove');
+
+    this.data.power.area1 += this.data.power.gaia;
+    if (this.data.brainstone === BrainstoneArea.Gaia ) {
+      this.data.brainstone = BrainstoneArea.Area1;
     }
+
     this.data.power.gaia = 0;
   }
 
