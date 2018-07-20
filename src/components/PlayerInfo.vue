@@ -44,7 +44,7 @@ export default class PlayerInfo extends Vue {
   }
 
   get passed() {
-    return this.$store.state.game.data.passedPlayers.includes(this.player.player);
+    return (this.$store.state.game.data.passedPlayers || []).includes(this.player.player);
   }
 
   power(area: string) {

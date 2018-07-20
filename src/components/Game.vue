@@ -46,7 +46,7 @@ import { Command } from '@gaia-project/engine';
     orderedPlayers() {
       const data = this.data;
 
-      if (data.round <= 0 || !data.turnOrder) {
+      if (!data.round || !data.turnOrder) {
         return data.players;
       }
 
