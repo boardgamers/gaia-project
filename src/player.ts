@@ -419,7 +419,6 @@ export default class Player extends EventEmitter {
     }
 
     this.data.power.gaia = 0;
-    this.data.gaiaformers += this.data.gaiaformersInGaia;
     this.data.gaiaformersInGaia = 0;
   }
 
