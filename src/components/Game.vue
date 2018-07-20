@@ -132,7 +132,7 @@ export default class Game extends Vue {
         return;
       }
 
-      if (lastMove.command === Command.Leech || lastMove.command === Command.DeclineLeech || lastMove.command === Command.ChooseRoundBooster) {
+      if (this.data.newTurn) {
         this.moves.push(command);
         return;
       }

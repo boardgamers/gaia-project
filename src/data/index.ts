@@ -25,6 +25,8 @@ export interface Data {
   },
   roundScoringTiles: [ScoringTile, ScoringTile, ScoringTile, ScoringTile, ScoringTile, ScoringTile];
   finalScoringTiles: [FinalTile, FinalTile];
+  // Should the next move be placed on a whole new line?
+  newTurn: boolean;
 }
 
 export type HighlightHexData = Map<GaiaHex, {cost?: string}>;

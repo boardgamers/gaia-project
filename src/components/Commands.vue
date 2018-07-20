@@ -210,10 +210,10 @@ export default class Commands extends Vue {
           break;
         }
 
-        case Command.DeclineLeech: {
+        case Command.Decline: {
           ret.push({
             label: `Decline ${command.data.offer} for ${command.data.cost}`,
-            command: Command.DeclineLeech
+            command: Command.Decline
           });
           break;
         }
