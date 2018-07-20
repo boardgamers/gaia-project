@@ -137,16 +137,19 @@ export default class Engine {
   addPlayer(player: Player) {
     this.players.push(player);
 
-    player.on('gain-tech', () => {
+    player.on(`gain-${Resource.TechTile}`, () => {
       this.processNextMove(SubPhase.ChooseTechTile);
     });
-    player.on('build-mine', () => {
+    player.on(`gain-${Resource.TemporaryStep}`, () => {
       this.processNextMove(SubPhase.BuildMine);
     });
-    player.on('rescore-fed', () => {
+    player.on(`gain-${Resource.TemporaryRange}`, () => {
+      this.processNextMove(SubPhase.BuildMineOrGaiaFormer);
+    });
+    player.on(`gain-${Resource.RescoreFederation}`, () => {
       this.processNextMove(SubPhase.RescoreFederationTile);
     });
-    player.on('pi-swap', () => {
+    player.on(`gain-${Resource.PISwap}`, () => {
       this.processNextMove(SubPhase.PISwap);
     });
   }
@@ -253,6 +256,9 @@ export default class Engine {
   processNextMove(subphase?: SubPhase) {
     if (subphase) {
       this.generateAvailableCommands(subphase);
+      if (this.availableCommands.length === 0) {
+        return;
+      }
     }
     if (this.turnMoves.length === 0) {
       throw Object.assign(new Error('Missing command to end turn'), {availableCommands: this.availableCommands});

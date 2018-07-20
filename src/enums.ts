@@ -316,5 +316,6 @@ export enum SubPhase {
   ChooseFederationTile = "chooseFederationTile",
   RescoreFederationTile = "rescoreFederationTile",
   BuildMine = "buildMine",
+  BuildMineOrGaiaFormer = "buildMineOrGaiaFormer",
   PISwap = "piSwap"
 }

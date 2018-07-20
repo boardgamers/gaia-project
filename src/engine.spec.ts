@@ -908,10 +908,12 @@ describe("Engine", () => {
       `);
       const engine = new Engine(moves);
 
-      // tslint:disable-next-line no-unused-expression
       expect(() => new Engine([...moves, "p1 special step"])).to.not.throw();
       // tslint:disable-next-line no-unused-expression
       expect(new Engine([...moves, "p1 special step. build m -2x2."]).player(Player.Player1).events[Operator.Activate][0].activated).to.be.true;
+
+      // The step special action can't be used to build a gaia-former
+      expect(() => new Engine([...moves, "p1 special step. build gf -2x3."])).to.throw();
 
       // test free action before and after, and to build something different then a mine
       expect(() => new Engine([...moves, "p1 spend 2o for 2c. special step. build m -1x-1"])).to.not.throw();
@@ -928,14 +930,12 @@ describe("Engine", () => {
         p2 build m -1x0
         p2 build m 0x-4
         p1 build m -3x4
-        p2 booster booster5
-        p1 booster booster4
-        p1 spend 1o for 1c. special step. build m -1x-1.
-        p2 leech 1pw
-        p2 spend 1o for 1c. special range+3. build m 3x-3.
+        p2 booster booster4
+        p1 booster booster5
       `);
 
-      expect(() => new Engine(moves)).to.not.throw(AssertionError);
+      expect(() => new Engine([...moves, "p1 special range+3. build m -4x-1"])).to.not.throw();
+      expect(() => new Engine([...moves, "p1 special range+3. build gf 0x4"])).to.not.throw();
     });
   });
 });
