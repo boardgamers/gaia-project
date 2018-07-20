@@ -92,6 +92,12 @@ export default class PlayerData extends EventEmitter {
     this.gainReward(cost, true);
   }
 
+  gainRewards(rewards: Reward[]) {
+    for (const reward of rewards) {
+      this.gainReward(reward);
+    }
+  }
+
   gainReward(reward: Reward, pay = false) {
     if (reward.isEmpty()) {
       return;
@@ -109,22 +115,28 @@ export default class PlayerData extends EventEmitter {
     }
 
     switch (resource) {
-      case Resource.Ore: this.ores = Math.min(MAX_ORE, this.ores + count); return;
-      case Resource.Credit: this.credits = Math.min(MAX_CREDIT, this.credits + count); return;
-      case Resource.Knowledge: this.knowledge = Math.min(MAX_KNOWLEDGE, this.knowledge + count); return;
-      case Resource.VictoryPoint: this.victoryPoints += count; return;
-      case Resource.Qic: this.qics += count; return;
-      case Resource.GainToken: count > 0 ?  this.power.area1 += count : this.discardPower(-count); return;
-      case Resource.GainTokenGaiaArea: count > 0 ? this.chargeGaiaPower(count) :  this.discardGaiaPower(-count); return;
-      case Resource.ChargePower: count > 0 ? this.chargePower(count) : this.spendPower(-count); return;
-      case Resource.Range: this.range += count; return;
-      case Resource.TemporaryRange: this.temporaryRange += count; return;
-      case Resource.GaiaFormer: this.gaiaformers += count; return;
-      case Resource.TerraformCostDiscount: this.terraformCostDiscount += count; return;
-      case Resource.TemporaryStep: this.temporaryStep += count; return;
-      case Resource.TokenArea3: if (count < 0) { this.power.area3 += count; this.power.gaia -= count; } return;
+      case Resource.Ore: this.ores = Math.min(MAX_ORE, this.ores + count); break;
+      case Resource.Credit: this.credits = Math.min(MAX_CREDIT, this.credits + count); break;
+      case Resource.Knowledge: this.knowledge = Math.min(MAX_KNOWLEDGE, this.knowledge + count); break;
+      case Resource.VictoryPoint: this.victoryPoints += count; break;
+      case Resource.Qic: this.qics += count; break;
+      case Resource.GainToken: count > 0 ?  this.power.area1 += count : this.discardPower(-count); break;
+      case Resource.GainTokenGaiaArea: count > 0 ? this.chargeGaiaPower(count) :  this.discardGaiaPower(-count); break;
+      case Resource.ChargePower: count > 0 ? this.chargePower(count) : this.spendPower(-count); break;
+      case Resource.Range: this.range += count; break;
+      case Resource.TemporaryRange: this.temporaryRange += count; break;
+      case Resource.GaiaFormer: this.gaiaformers += count; break;
+      case Resource.TerraformCostDiscount: this.terraformCostDiscount += count; break;
+      case Resource.TemporaryStep: this.temporaryStep += count; break;
+      case Resource.TokenArea3: if (count < 0) { this.power.area3 += count; this.power.gaia -= count; } break;
 
       default: break; // Not implemented
+    }
+
+    if (count > 0) {
+      this.emit(`gain-${reward.type}`);
+    } else if (count < 0) {
+      this.emit(`pay-${reward.type}`);
     }
   }
 

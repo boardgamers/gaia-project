@@ -81,10 +81,7 @@ export default class Player extends EventEmitter {
   }
 
   gainRewards(rewards: Reward[]) {
-    for (const reward of rewards) {
-      this.data.gainReward(this.factionReward(reward));
-      this.emit(`gain-${reward.type}`);
-    }
+    this.data.gainRewards(rewards.map(rew => this.factionReward(rew)));
   }
 
   canPay(reward: Reward[]): boolean {

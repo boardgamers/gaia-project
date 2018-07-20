@@ -137,19 +137,19 @@ export default class Engine {
   addPlayer(player: Player) {
     this.players.push(player);
 
-    player.on(`gain-${Resource.TechTile}`, () => {
+    player.data.on(`gain-${Resource.TechTile}`, () => {
       this.processNextMove(SubPhase.ChooseTechTile);
     });
-    player.on(`gain-${Resource.TemporaryStep}`, () => {
+    player.data.on(`gain-${Resource.TemporaryStep}`, () => {
       this.processNextMove(SubPhase.BuildMine);
     });
-    player.on(`gain-${Resource.TemporaryRange}`, () => {
+    player.data.on(`gain-${Resource.TemporaryRange}`, () => {
       this.processNextMove(SubPhase.BuildMineOrGaiaFormer);
     });
-    player.on(`gain-${Resource.RescoreFederation}`, () => {
+    player.data.on(`gain-${Resource.RescoreFederation}`, () => {
       this.processNextMove(SubPhase.RescoreFederationTile);
     });
-    player.on(`gain-${Resource.PISwap}`, () => {
+    player.data.on(`gain-${Resource.PISwap}`, () => {
       this.processNextMove(SubPhase.PISwap);
     });
   }

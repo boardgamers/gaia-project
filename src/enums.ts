@@ -145,6 +145,7 @@ export enum Command {
   Decline = "decline",
   BurnPower = "burn",
   Spend = "spend",
+  BrainStone = "brainstone",
   Action = "action",
   Special = "special",
   PlaceLostPlanet  = "lostPlanet",
