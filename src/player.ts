@@ -142,7 +142,7 @@ export default class Player extends EventEmitter {
   }
 
   maxBuildings(building: Building) {
-    return building === Building.GaiaFormer ? this.data.gaiaformers : this.board[building].income.length;
+    return building === Building.GaiaFormer ? (this.data.gaiaformers - this.data.gaiaformersInGaia) : this.board[building].income.length;
   }
 
   loadFaction(faction: Faction) {
