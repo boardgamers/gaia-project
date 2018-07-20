@@ -202,7 +202,7 @@ export default class PlayerData extends EventEmitter {
   }
 
   gaiaPowerTokens(): number {
-    return this.power.gaia + (this.brainstoneInPlay() ? 1 : 0);
+    return this.power.gaia + (this.brainstone === BrainstoneArea.Gaia ? 1 : 0);
   }
 
   /**
@@ -256,35 +256,63 @@ export default class PlayerData extends EventEmitter {
     this.power.area1 += power;
   }
 
+  tokensBelowArea(area: BrainstoneArea) {
+    let power = 0;
+    switch (area) {
+      case BrainstoneArea.Area3: power += this.power.area3;
+      case BrainstoneArea.Area2: power += this.power.area2;
+      case BrainstoneArea.Area1: power += this.power.area1;
+    }
+    return power;
+  }
+
   discardPower(power: number) {
+    if (this.brainstone && this.brainstone !== BrainstoneArea.Gaia) {
+      if (this.discardablePowerTokens() === power) {
+        this.brainstone = null;
+        power -= 1;
+      } else if (this.tokensBelowArea(this.brainstone) < power) {
+        this.emit("brainstone", [this.brainstone, 'discard']);
+
+        if (this.brainstoneDest === 'discard') {
+          this.brainstone = null;
+          power -= 1;
+        }
+      }
+    }
+
     const area1ToGaia = Math.min(power, this.power.area1);
     const area2ToGaia = Math.min(power - area1ToGaia, this.power.area2);
     const area3ToGaia = Math.min(power - area1ToGaia - area2ToGaia, this.power.area3);
-    const brainstoneNeeded = this.brainstoneInPlay() && this.discardablePowerTokens() === power;
 
     this.power.area1 -= area1ToGaia;
     this.power.area2 -= area2ToGaia;
     this.power.area3 -= area3ToGaia;
-
-    if (brainstoneNeeded) {
-      this.brainstone = null;
-    }
   }
 
   movePowerToGaia(power: number) {
+    if (this.brainstone && this.brainstone !== BrainstoneArea.Gaia) {
+      if (this.discardablePowerTokens() === power) {
+        this.brainstone = BrainstoneArea.Gaia;
+        power -= 1;
+      } else {
+        this.emit("brainstone", [this.brainstone, BrainstoneArea.Gaia]);
+
+        if (this.brainstoneDest === BrainstoneArea.Gaia) {
+          this.brainstone = BrainstoneArea.Gaia;
+          power -= 1;
+        }
+      }
+    }
+
     const area1ToGaia = Math.min(power, this.power.area1);
     const area2ToGaia = Math.min(power - area1ToGaia, this.power.area2);
     const area3ToGaia = Math.min(power - area1ToGaia - area2ToGaia, this.power.area3);
-    const brainstoneNeeded = this.brainstoneInPlay() && this.discardablePowerTokens() === power;
 
     this.power.area1 -= area1ToGaia;
     this.power.area2 -= area2ToGaia;
     this.power.area3 -= area3ToGaia;
     this.power.gaia += area1ToGaia + area2ToGaia + area3ToGaia;
-
-    if (brainstoneNeeded) {
-      this.brainstone = BrainstoneArea.Gaia;
-    }
   }
 
   chargeGaiaPower(power: number) {
@@ -318,7 +346,7 @@ export default class PlayerData extends EventEmitter {
   }
 
   brainstoneInPlay() {
-    return !!this.brainstone;
+    return this.brainstone && this.brainstone !== BrainstoneArea.Gaia;
   }
 
   brainstoneValue() {

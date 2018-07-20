@@ -210,6 +210,10 @@ export default class Engine {
     return engine;
   }
 
+  static parseMoves(moves: string) {
+    return moves.trim().split("\n").map(move => move.trim());
+  }
+
   loadTurnMoves(move: string, params: {split?: boolean, processFirst?: boolean} = {split: true, processFirst: false}) {
     // Todo: replace players by factions in the future
     const playerS = move.substr(0, move.indexOf(' '));
