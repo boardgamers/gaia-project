@@ -142,7 +142,7 @@ export enum Command {
   Pass = "pass",
   UpgradeResearch = "up",
   Leech = "leech",
-  DeclineLeech = "decline",
+  Decline = "decline",
   BurnPower = "burn",
   Spend = "spend",
   Action = "action",

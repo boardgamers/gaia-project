@@ -5,7 +5,7 @@ import factions from './factions';
 import * as assert from "assert";
 import { upgradedBuildings } from './buildings';
 import Reward from './reward';
-import { boardActions, freeActions, freeActionsHadschHallas, freeActionsTerrans, freeActionsItars, freeActionsNevlas } from './actions';
+import { boardActions, freeActions, freeActionsTerrans, freeActionsItars } from './actions';
 import * as researchTracks from './research-tracks';
 
 
@@ -273,17 +273,12 @@ export function possibleFreeActions(engine: Engine, player: Player) {
   // free action - spend
   const pl = engine.player(player);
   const acts = [];
-  const commands = [];
+  const commands: AvailableCommand[] = [];
   let burnDisabled = false;
 
   let pool = freeActions;
-  if (pl.faction === Faction.HadschHallas && pl.data.hasPlanetaryInstitute()) {
-    pool = [].concat(pool, freeActionsHadschHallas);
-  }
 
-  if (pl.faction === Faction.Nevlas) {
-    pool = [].concat(pool, freeActionsNevlas);
-  }
+  engine.player(player).emit("freeActionChoice", pool);
 
   // freeActions for Terrans / Itars during gaiaPhase
   if (engine.phase === Phase.RoundGaia && (pl.canGaiaTerrans() || pl.canGaiaItars())) {
@@ -291,6 +286,7 @@ export function possibleFreeActions(engine: Engine, player: Player) {
       pool = freeActionsTerrans;
     } else if (pl.canGaiaItars()) {
       pool = freeActionsItars;
+      commands.push({name: Command.Decline, player, data: {offer: Resource.TechTile, cost: new Reward(4, Resource.GainTokenGaiaArea).toString()}});
     }
 
     burnDisabled = true;
@@ -467,11 +463,12 @@ export function possibleLeech(engine: Engine, player: Player) {
   const pl = engine.player(player);
 
   if ( pl.data.leechPossible > 0) {
-    [Command.Leech, Command.DeclineLeech].map(name => commands.push({
+    [Command.Leech, Command.Decline].map(name => commands.push({
       name,
       player,
       data: {
-        leech: pl.data.leechPossible + Resource.ChargePower,
+        offer: pl.data.leechPossible + Resource.ChargePower,
+        cost: new Reward(pl.data.leechPossible - 1, Resource.VictoryPoint).toString(),
         freeIncome : pl.faction === Faction.Taklons && pl.data.hasPlanetaryInstitute() ? "1t" : ""
       }
     }));
