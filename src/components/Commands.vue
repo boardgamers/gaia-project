@@ -8,7 +8,7 @@
     </div>
     <div id="move-buttons">
       <div v-if="init">
-        <MoveButton v-for="i in [2,3,4,5]" :button="{command: `init ${i} randomSeed`}" @trigger="handleCommand" :key="i">{{i}} players</MoveButton>
+        <MoveButton v-for="i in [2,3,4]" :button="{command: `init ${i} randomSeed`}" @trigger="handleCommand" :key="i">{{i}} players</MoveButton>
       </div>
       <div v-else-if="chooseFaction">
         <MoveButton v-for="faction in command.data" :button="{command: `${command.name} ${faction}`}" @trigger="handleCommand" :key="faction">
