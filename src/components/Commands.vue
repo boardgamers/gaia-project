@@ -190,7 +190,7 @@ export default class Commands extends Vue {
         }
 
         case Command.Leech: {
-          const leech = command.data.leech;
+          const leech = command.data.offer;
           const gainToken = command.data.freeIncome;
 
           if (gainToken) {
@@ -212,7 +212,7 @@ export default class Commands extends Vue {
 
         case Command.DeclineLeech: {
           ret.push({
-            label: "Decline charge power",
+            label: `Decline ${command.data.offer} for ${command.data.cost}`,
             command: Command.DeclineLeech
           });
           break;
