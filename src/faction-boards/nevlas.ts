@@ -11,7 +11,7 @@ const nevlas: FactionBoardRaw = {
   },
   income: ["2k,4o,15c,q,up-sci", "+o,k"],
   handlers: {
-    'planetary-institute': (player: Player) => player.data.tokenModifier = 2
+    [`build-${Building.PlanetaryInstitute}`]: (player: Player) => player.data.tokenModifier = 2
   }
 };
 

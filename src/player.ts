@@ -246,11 +246,6 @@ export default class Player extends EventEmitter {
       // Add income of the building to the list of events
       this.loadEvents(this.board[building].income[this.data[building]]);
       this.data[building] += 1;
-
-      if (building === Building.PlanetaryInstitute) {
-        // For nevlas, gleens, ....
-        this.emit('planetary-institute');
-      }
     }
 
     // remove upgraded building and the associated event
@@ -290,6 +285,9 @@ export default class Player extends EventEmitter {
     if (stepsReq) {
       this.receiveTerraformingStepTriggerIncome(stepsReq);
     }
+
+    // Faction-specific code on building
+    this.emit(`build-${building}`);
   }
 
   // Not to confuse with the end of a round
