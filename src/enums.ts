@@ -168,7 +168,8 @@ export enum Round {
   Round3= 3,
   Round4= 4,
   Round5= 5,
-  Round6= 6
+  Round6= 6,
+  LastRound = 6
 }
 
 export enum Booster {
@@ -308,7 +309,6 @@ export enum Phase {
 export enum SubPhase {
   BeforeMove = "beforeMove",
   AfterMove = "afterMove",
-  EndMove = "endMove",
   UpgradeResearch = "upgradeResearch",
   PlaceLostPlanet = "placeLostPlanet",
   ChooseTechTile = "chooseTechTile",

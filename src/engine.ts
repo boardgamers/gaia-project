@@ -61,10 +61,9 @@ export default class Engine {
   roundScoringTiles: ScoringTile[];
   finalScoringTiles: FinalTile[];
   terraformingFederation: Federation;
-  availableCommands: AvailableCommand[] = [];
-  phase: Phase ;
-  prevPhase: Phase;
-  subPhase: SubPhase;
+  availableCommands: AvailableCommand[];
+  availableCommand: AvailableCommand;
+  phase: Phase = Phase.SetupInit;
 
   round: number = Round.None;
   /** Order of players in the turn */
@@ -73,31 +72,50 @@ export default class Engine {
    * Players who have passed, in order. Will be used to determine next round's
    * order
    */
-  passedPlayers: PlayerEnum[] = [];
+  passedPlayers: PlayerEnum[];
   /** Current player to make a move */
   currentPlayer: PlayerEnum;
-  nextPlayer: PlayerEnum;
   // used to transit between phases
   tempTurnOrder: PlayerEnum[] = [];
   tempCurrentPlayer: PlayerEnum;
   leechingSource: GaiaHex;
 
+  // All moves
+  moveHistory: string[] = [];
+  // Current move being processed, separated in phase
+  turnMoves: string[] = [];
+  // Tells the UI if the new move should be on the same line or not
+  newTurn: boolean = true;
+
   constructor(moves: string[] = []) {
-    this.phaseBegin(Phase.SetupInit);
     this.loadMoves(moves);
   }
 
-  loadMoves(moves: string[]) {
-    for (const move of moves) {
-      this.move(move);
+  loadMoves(_moves: string[]) {
+    const moves = [..._moves];
+
+    this.newTurn = true;
+
+    while (moves.length > 0) {
+      const move = moves.shift().trim();
+
+      if (!this.move(move)) {
+        assert(moves.length === 0, `Move ${move} (line ${this.moveHistory.length + 1}) is not complete!`);
+        this.newTurn = false;
+      }
+
+      assert(this.turnMoves.length === 0, "Unnecessary commands at the end of the turn: " + this.turnMoves.join('. '));
+
+      this.moveHistory.push(move);
     }
   }
 
-  generateAvailableCommands(): AvailableCommand[] {
-    return (this.availableCommands = generateAvailableCommands(this));
+  generateAvailableCommands(subphase: SubPhase = SubPhase.BeforeMove): AvailableCommand[] {
+    return this.availableCommands = generateAvailableCommands(this, subphase);
   }
 
-  availableCommand(player: PlayerEnum, command: Command) {
+  findAvailableCommand(player: PlayerEnum, command: Command) {
+    this.availableCommands = this.availableCommands || this.generateAvailableCommands();
     return this.availableCommands.find(
       availableCommand => {
         if (availableCommand.name !== command) {
@@ -111,20 +129,25 @@ export default class Engine {
     );
   }
 
+  clearAvailableCommands() {
+    this.availableCommands = null;
+    this.availableCommand = null;
+  }
+
   addPlayer(player: Player) {
     this.players.push(player);
 
     player.on('gain-tech', () => {
-      this.subPhase = SubPhase.ChooseTechTile;
+      this.processNextMove(SubPhase.ChooseTechTile);
     });
     player.on('build-mine', () => {
-      this.subPhase = SubPhase.BuildMine;
+      this.processNextMove(SubPhase.BuildMine);
     });
     player.on('rescore-fed', () => {
-      this.subPhase = SubPhase.RescoreFederationTile;
+      this.processNextMove(SubPhase.RescoreFederationTile);
     });
     player.on('pi-swap', () => {
-      this.subPhase = SubPhase.PISwap;
+      this.processNextMove(SubPhase.PISwap);
     });
   }
 
@@ -140,19 +163,34 @@ export default class Engine {
     return [...this.players.slice(this.currentPlayer + 1), ...this.players.slice(0, this.currentPlayer)];
   }
 
+  get playerToMove(): PlayerEnum {
+    if (this.tempCurrentPlayer !== undefined) {
+      return this.tempCurrentPlayer;
+    }
+
+    return this.currentPlayer;
+  }
+
   numberOfPlayersWithFactions(): number {
     return this.players.filter(pl => pl.faction).length;
   }
 
-
-  storeTurnOrder() {
-    this.tempCurrentPlayer = this.currentPlayer;
-    this.tempTurnOrder = this.turnOrder;
+  getNextPlayer(list: PlayerEnum[] = this.turnOrder) {
+    return list[(list.indexOf(this.currentPlayer) + 1) % list.length];
   }
 
-  restoreTurnOrder() {
-    this.currentPlayer = this.tempCurrentPlayer;
-    this.turnOrder = this.tempTurnOrder;
+  moveToNextPlayer(list: PlayerEnum[], params: {loop?: boolean} = {loop: true}) {
+    if (list.length === 0) {
+      return false;
+    }
+    if (!_.get(params, 'loop', true)) {
+      // No loop, we just remove the first element of the list
+      this.currentPlayer = list.shift();
+    } else {
+      this.currentPlayer = this.getNextPlayer(list);
+    }
+
+    return true;
   }
 
   static fromData(data: any) {
@@ -168,214 +206,149 @@ export default class Engine {
     return engine;
   }
 
+  loadTurnMoves(move: string, params: {split?: boolean, processFirst?: boolean} = {split: true, processFirst: false}) {
+    // Todo: replace players by factions in the future
+    const playerS = move.substr(0, move.indexOf(' '));
+    assert(/^p[1-5]$/.test(playerS), 'Wrong player format, expected p1, p2, ...');
+    const player = +playerS[1] - 1;
+    assert(this.playerToMove === (player as PlayerEnum), "Wrong turn order in move " + move + ", expected " + this.playerToMove + ' found ' + player);
+
+    this.turnMoves = move.substr(playerS.length).split('.').map(x => x.trim());
+
+    assert (_.get(params, 'split', true) || this.turnMoves.length === 1, "You can only do one command this turn");
+
+    if (_.get(params, 'processFirst', false)) {
+      this.processNextMove();
+    }
+  }
+
+  /**
+   * Return true if it is a full move
+   * @param move
+   */
   move(move: string) {
-    let command: Command;
-    move = move.trim();
-    if (this.phase === Phase.SetupInit) {
-      const split = move.split(' ');
-      command = split[0] as Command;
+    try {
+      (this[this.phase])(move);
+      this.clearAvailableCommands();
+    } catch (err) {
+      if (err.availableCommands) {
+        this.availableCommands = err.availableCommands;
+        return false;
+      } else {
+        throw err;
+      }
+    }
 
-      this.generateAvailableCommands();
-      const available = this.availableCommands;
-      const commandNames = available.map(cmd => cmd.name);
+    return true;
+  }
 
-      assert(
-        commandNames.includes(command),
-        'Move ' + move + ' not in Available commands: ' + commandNames.join(', ')
-      );
+  parseMove(move: string) {
+    const split = move.split(' ');
+    return {
+      command: (split[0] || Command.EndTurn) as Command,
+      args: split.slice(1)
+    };
+  }
 
-      (this[command] as any)(...split.slice(1));
-      this.phaseEnd();
+  processNextMove(subphase?: SubPhase) {
+    if (subphase) {
+      this.generateAvailableCommands(subphase);
+    }
+    if (this.turnMoves.length === 0) {
+      throw Object.assign(new Error('Missing command to end turn'), {availableCommands: this.availableCommands});
+    }
+    const move = this.parseMove(this.turnMoves.shift());
+
+    this.checkCommand(move.command);
+    (this[move.command] as any)(this.playerToMove, ...move.args);
+
+    return move;
+  }
+
+  peekNextMove() {
+    return this.parseMove(this.turnMoves[0]);
+  }
+
+  checkCommand(command: Command) {
+    assert(this.availableCommand = this.findAvailableCommand(this.playerToMove, command), `Command ${command} is not in the list of available commands`);
+  }
+
+  doFreeActions(subPhase: SubPhase) {
+    while (this.turnMoves.length > 0) {
+      if (![Command.Spend, Command.BurnPower].includes(this.peekNextMove().command)) {
+        return;
+      }
+
+      this.processNextMove();
+      this.generateAvailableCommands(subPhase);
+    }
+  }
+
+  handleMainMove() {
+    if (this.processNextMove().command === Command.Pass) {
+      return Command.Pass;
     } else {
-      const playerS = move.substr(0, 2);
-
-      assert(
-        /^p[1-5]$/.test(playerS),
-        'Wrong player format, expected p1, p2, ...'
-      );
-      const player = +playerS[1] - 1;
-      assert(this.currentPlayer === (player as PlayerEnum), "Wrong turn order in move " + move + ", expected " + this.currentPlayer + ' found ' + player);
-
-      const moves = move.substr(2, move.length - 2).trim().split('.');
-
-      for ( const mv of moves )  {
-        const split = mv.trim().split(' ');
-        // the final dot is the end turn command
-        command = split[0] === "" ? Command.EndTurn : split[0] as Command;
-
-        this.generateAvailableCommands();
-        const commandNames = this.availableCommands.map(cmd => cmd.name);
-
-        assert(
-          this.availableCommand(player, command),
-          'Move ' + split + ' not in Available commands: ' + commandNames.join(', ')
-        );
-
-        (this[command] as any)(player as PlayerEnum, ...split.slice(1));
-
-      }
-
-      // implicit endTurn
-      if (this.subPhase === SubPhase.EndMove) {
-        this.moveToNextPlayer(command);
-      }
+      this.generateAvailableCommands(SubPhase.AfterMove);
     }
   }
 
-    moveToFirstPlayer() {
-      this.currentPlayer = this.turnOrder[0];
-      this.subPhase = SubPhase.BeforeMove;
-      // If all players have passed
-      if (this.turnOrder.length === 0) {
-        this.phaseEnd();
-      }
-    }
-
-   /** Next player to make a move, after current player makes their move */
-   moveToNextPlayer(command: Command): PlayerEnum {
-    const playerPos = this.turnOrder.indexOf(this.currentPlayer);
-
-    // check if need to start a leechingPhase
-    if ( this.phase === Phase.RoundMove && this.leechingSource ) {
-      this.phaseBegin(Phase.RoundLeech);
-      return;
-    }
-
-    if (command === Command.Pass) {
-      this.passedPlayers.push(this.currentPlayer);
-    }
-
-    if ( [Phase.SetupFaction, Phase.SetupBuilding, Phase.SetupBooster, Phase.RoundIncome, Phase.RoundGaia, Phase.RoundLeech].includes(this.phase) || command === Command.Pass) {
-      this.turnOrder.splice(playerPos, 1);
-      this.currentPlayer = this.turnOrder[playerPos % this.turnOrder.length];
-      this.subPhase = SubPhase.BeforeMove;
-
-      // If all players have passed
-      if (this.turnOrder.length === 0) {
-        this.phaseEnd();
-      }
-      return;
-    }
-
-    this.currentPlayer = this.turnOrder[(playerPos + 1) % this.turnOrder.length];
-    this.subPhase = SubPhase.BeforeMove;
-
-    return this.currentPlayer;
+  handleEndTurn() {
+    this.processNextMove();
   }
 
-  phaseBegin( phase: Phase) {
-    this.phase = phase;
-    switch ( phase ) {
-      case Phase.SetupInit : {
-        this.beginSetupInitPhase();
-        break;
-      }
-      case Phase.SetupFaction : {
-        this.beginSetupFactionPhase();
-        break;
-      }
-      case Phase.SetupBuilding : {
-        this.beginSetupBuildingPhase();
-        break;
-      }
-      case Phase.SetupBooster : {
-        this.beginSetupBoosterPhase();
-        break;
-      }
-      case Phase.RoundStart : {
-        this.beginRoundStartPhase();
-        break;
-      }
-      case Phase.RoundIncome : {
-        this.beginIncomePhase();
-        break;
-      }
-      case Phase.RoundGaia : {
-        this.beginGaiaPhase();
-        break;
-      }
-      case Phase.RoundMove : {
-        this.beginRoundMovePhase();
-        break;
-      }
-      case Phase.RoundLeech : {
-        this.beginLeechingPhase();
-        break;
-      }
-      case Phase.RoundFinish : {
-        this.cleanUpPhase();
-        break;
-      }
-      case Phase.EndGame : {
-        this.finalScoringPhase();
-        break;
-      }
+  get currentRoundScoringEvents() {
+    return Event.parse(roundScorings[this.roundScoringTiles[this.round - 1]]);
+  }
+
+  /**
+   * Handle income phase of current player, and the one after that and so on.
+   * Pauses if an action is needed from the player.
+   */
+  handleNextIncome() {
+    if (this.player(this.currentPlayer).needIncomeSelection().needed) {
+      return false;
     }
-  }
 
-  phaseEnd() {
-    this.prevPhase = this.phase;
-    const nextPhase = this.onPhaseEnd(this.phase);
-    this.phaseBegin( nextPhase );
-  }
+    this.player(this.currentPlayer).receiveIncome();
 
-  onPhaseEnd( currentPhase: Phase ): Phase {
-    switch ( currentPhase ) {
-      case Phase.SetupInit : {
-        return Phase.SetupFaction;
-      }
-      case Phase.SetupFaction : {
-        return Phase.SetupBuilding;
-      }
-      case Phase.SetupBuilding : {
-        return Phase.SetupBooster;
-      }
-      case Phase.SetupBooster : {
-        this.turnOrder = [];
-        this.passedPlayers = this.players.map((pl, i) => i as PlayerEnum);
-        return Phase.RoundStart;
-      }
-      case Phase.RoundStart : {
-        return Phase.RoundIncome;
-      }
-      case Phase.RoundIncome : {
-        this.endIncomePhase();
-        this.restoreTurnOrder();
-        return Phase.RoundGaia;
-      }
-      case Phase.RoundGaia : {
-        this.endGaiaPhase();
-        this.restoreTurnOrder();
-        return Phase.RoundMove;
-      }
-      case Phase.RoundMove : {
-        return Phase.RoundFinish;
-      }
-      case Phase.RoundLeech : {
-        this.restoreTurnOrder();
-        this.leechingSource = undefined;
-        return Phase.RoundMove;
-      }
-      case Phase.RoundFinish: {
-        if (this.round === 6) {
-          return Phase.EndGame;
-        } else {
-          return Phase.RoundStart;
-        }
-      }
+    if (!this.moveToNextPlayer(this.tempTurnOrder, {loop: false})) {
+      this.endIncomePhase();
+    } else {
+      this.handleNextIncome();
     }
+
+    return true;
   }
 
-  beginSetupInitPhase() {
-    return;
+  handleNextGaia() {
+    const player = this.player(this.currentPlayer);
+
+    if (player.canGaiaTerrans() || player.canGaiaItars()) {
+      return false;
+    }
+
+    player.gaiaPhase();
+
+    if (!this.moveToNextPlayer(this.tempTurnOrder, {loop: false})) {
+      this.endGaiaPhase();
+    } else {
+      this.handleNextGaia();
+    }
+
+    return true;
   }
 
+  // ****************************************
+  // ********** PHASE BEGIN / END ***********
+  // ****************************************
   beginSetupFactionPhase() {
+    this.phase = Phase.SetupFaction;
     this.turnOrder = this.players.map((pl, i) => i as PlayerEnum);
-    this.moveToFirstPlayer();
+    this.moveToNextPlayer(this.turnOrder, {loop: false});
   }
 
   beginSetupBuildingPhase() {
+    this.phase = Phase.SetupBuilding;
     const posIvits = this.players.findIndex(
       pl => pl.faction === Faction.Ivits
     );
@@ -396,82 +369,65 @@ export default class Engine {
     if (posIvits !== -1) {
       this.turnOrder.push(posIvits as PlayerEnum);
     }
-    this.moveToFirstPlayer();
+    this.moveToNextPlayer(this.turnOrder, {loop: false});
   }
 
   beginSetupBoosterPhase() {
+    this.phase = Phase.SetupBooster;
     this.turnOrder = this.players.map((pl, i) => i as PlayerEnum).reverse();
-    this.moveToFirstPlayer();
+    this.moveToNextPlayer(this.turnOrder, {loop: false});
   }
 
   beginRoundStartPhase() {
     this.round += 1;
-    this.turnOrder = this.passedPlayers;
+    this.turnOrder = this.passedPlayers || this.players.map((pl, i) => i);
     this.passedPlayers = [];
-    this.moveToFirstPlayer();
-    this.phaseEnd();
+    this.currentPlayer = this.turnOrder[0];
+
+    for (const player of this.playersInOrder()) {
+      player.loadEvents(this.currentRoundScoringEvents);
+    }
+
+    this.beginIncomePhase();
   }
 
   beginIncomePhase() {
-    this.storeTurnOrder();
+    this.phase = Phase.RoundIncome;
+    this.tempTurnOrder = [...this.turnOrder];
 
-    const newOrder = [];
-    // creates a turnOrder for players that are needing income selection
-    for (const player of this.playersInOrder()) {
-      player.loadEvents(this.currentRoundScoringEvents);
-      const { needed } = player.needIncomeSelection();
-      if (needed) {
-        newOrder.push(player.player);
-      }
-    }
-    this.turnOrder = newOrder;
-    this.moveToFirstPlayer();
+    this.moveToNextPlayer(this.tempTurnOrder, {loop: false});
+    this.handleNextIncome();
   }
 
   endIncomePhase() {
-    for (const player of this.players) {
-      player.receiveIncome();
-    }
+    this.beginGaiaPhase();
   }
 
   beginGaiaPhase() {
-    this.storeTurnOrder();
+    this.phase = Phase.RoundGaia;
+    this.tempTurnOrder = [...this.turnOrder];
 
-    const newOrder = [];
     // transform Transdim planets into Gaia if gaiaformed
     for (const hex of this.map.toJSON()) {
       if (hex.data.planet === Planet.Transdim && hex.data.player !== undefined && hex.data.building === Building.GaiaFormer) {
         hex.data.planet = Planet.Gaia;
       }
     }
-    for (const player of this.playersInOrder()) {
-      if (player.canGaiaTerrans() || player.canGaiaItars() ) {
-        newOrder.push(player.player);
-      }
-    }
-    this.turnOrder = newOrder;
-    this.moveToFirstPlayer();
+
+    this.moveToNextPlayer(this.tempTurnOrder, {loop: false});
+    this.handleNextGaia();
   }
 
   endGaiaPhase() {
-    for (const player of this.players) {
-        player.gaiaPhase();
-    }
+    this.currentPlayer = this.turnOrder[0];
+    this.beginRoundMovePhase();
   }
 
   beginRoundMovePhase() {
-    // returning from a leech phase
-    if ( this.prevPhase === Phase.RoundLeech ) {
-      this.moveToNextPlayer(Command.Leech);
-    } else {
-      this.moveToFirstPlayer();
-    }
+    this.phase = Phase.RoundMove;
   }
 
   cleanUpPhase() {
-    if (this.round < 1) {
-      return;
-    }
     for (const player of this.players) {
       // remove roundScoringTile
       player.removeEvents(this.currentRoundScoringEvents);
@@ -490,7 +446,11 @@ export default class Engine {
       this.boardActions[pos] = true;
     });
 
-    this.phaseEnd();
+    if (this.round === Round.LastRound) {
+      this.finalScoringPhase();
+    } else {
+      this.beginRoundStartPhase();
+    }
   }
 
   finalScoringPhase() {
@@ -529,8 +489,6 @@ export default class Engine {
   }
 
   beginLeechingPhase() {
-    this.storeTurnOrder();
-    const newOrder = [];
     // Gaia-formers & space stations don't trigger leech
     if (stdBuildingValue(this.leechingSource.buildingOf(this.currentPlayer)) === 0) {
       return;
@@ -547,15 +505,15 @@ export default class Engine {
           }
         }
         leech = pl.maxLeech(leech);
-        if (leech > 0) {
-          newOrder.push( pl.player );
-          pl.data.leechPossible = leech;
-        }
+        pl.data.leechPossible = leech;
       }
     }
 
-    this.turnOrder = newOrder;
-    this.moveToFirstPlayer();
+    if (this.playersInTableOrderFromCurrent().some(pl => !!pl.data.leechPossible)) {
+      this.phase = Phase.RoundLeech;
+      this.tempTurnOrder = this.playersInTableOrderFromCurrent().filter(pl => pl.data.leechPossible).map(pl => pl.player);
+      this.tempCurrentPlayer = this.tempTurnOrder.shift();
+    }
   }
 
   advanceResearchAreaPhase(player: PlayerEnum, cost: string, field: ResearchField ) {
@@ -573,19 +531,110 @@ export default class Engine {
         }
       } else if (field === ResearchField.Navigation) {
         // gets LostPlanet
-        this.subPhase = SubPhase.PlaceLostPlanet;
-        return;
+        this.processNextMove(SubPhase.PlaceLostPlanet);
       }
     }
-    this.subPhase = SubPhase.AfterMove;
   }
 
+  // ****************************************
+  // ******** PHASE COMMAND HANDLING ********
+  // ****************************************
+  [Phase.SetupInit](move: string) {
+    const split = move.split(' ');
+    const command = split[0] as Command;
 
-  get currentRoundScoringEvents() {
-    return Event.parse(roundScorings[this.roundScoringTiles[this.round - 1]]);
+    assert(command === Command.Init, "The first command of a game needs to be the initialization command");
+
+    (this[Command.Init] as any)(...split.slice(1));
   }
 
-  /** Commands */
+  [Phase.SetupFaction](move: string) {
+    this.loadTurnMoves(move, {split: false, processFirst: true});
+
+    if (!this.moveToNextPlayer(this.turnOrder, {loop: false})) {
+      this.beginSetupBuildingPhase();
+    }
+  }
+
+  [Phase.SetupBuilding](move: string) {
+    this.loadTurnMoves(move, {split: false, processFirst: true});
+
+    if (!this.moveToNextPlayer(this.turnOrder, {loop: false})) {
+      this.beginSetupBoosterPhase();
+    }
+  }
+
+  [Phase.SetupBooster](move: string) {
+    this.loadTurnMoves(move, {split: false, processFirst: true});
+
+    if (!this.moveToNextPlayer(this.turnOrder, {loop: false})) {
+      this.beginRoundStartPhase();
+    }
+  }
+
+  [Phase.RoundIncome](move: string) {
+    this.loadTurnMoves(move, {processFirst: true});
+
+    while (!this.handleNextIncome()) {
+      this.generateAvailableCommands();
+      this.processNextMove();
+    }
+  }
+
+  [Phase.RoundGaia](move: string) {
+    this.loadTurnMoves(move, {processFirst: true});
+
+    while (!this.handleNextGaia()) {
+      this.generateAvailableCommands();
+      this.processNextMove();
+    }
+  }
+
+  [Phase.RoundMove](move: string) {
+    this.loadTurnMoves(move);
+
+    const playerAfter = this.getNextPlayer();
+
+    // Execute all upcoming freeactions
+    this.doFreeActions(SubPhase.BeforeMove);
+
+    // If queue is empty, interrupt and ask for free actions / main command
+    // otherwise execute main command
+    if (this.handleMainMove() === Command.Pass) {
+      if (this.turnOrder.length === 0) {
+        this.cleanUpPhase();
+        return;
+      }
+    } else {
+      // Execute all upcoming freeactions
+      this.doFreeActions(SubPhase.AfterMove);
+
+      // If the player has no possible command or the queue has the end turn command,
+      // end turns.
+      // If the player has possible free actions & the queue is empty, ask for free actions / end turn
+      this.handleEndTurn();
+    }
+
+    if (this.leechingSource) {
+      this.beginLeechingPhase();
+      this.leechingSource = null;
+    }
+
+    this.currentPlayer = playerAfter;
+  }
+
+  [Phase.RoundLeech](move: string) {
+    this.loadTurnMoves(move, {split: false, processFirst: true});
+    this.tempCurrentPlayer = this.tempTurnOrder.shift();
+
+    if (this.tempCurrentPlayer === undefined) {
+      this.beginRoundMovePhase();
+    }
+  }
+
+  // ****************************************
+  // ************** COMMANDS ****************
+  // ****************************************
   [Command.Init](players: string, seed: string) {
     const nbPlayers = +players || 2;
     seed = seed || 'defaultSeed';
@@ -622,7 +671,6 @@ export default class Engine {
       }
     }
 
-
     // Choose roundScoring Tiles as part of the pool
     const roundscoringtiles = shuffleSeed.shuffle(Object.values(ScoringTile), this.map.rng()).slice(0, 6);
     this.roundScoringTiles = roundscoringtiles;
@@ -636,35 +684,28 @@ export default class Engine {
     for (let i = 0; i < nbPlayers; i++) {
       this.addPlayer(new Player(i));
     }
+
+    // Turn order for Setup Factions
+    this.beginSetupFactionPhase();
   }
 
   [Command.ChooseFaction](player: PlayerEnum, faction: string) {
-    const avail = this.availableCommand(player, Command.ChooseFaction);
-
-    assert(
-      avail.data.includes(faction),
-      `${faction} is not in the available factions`
-    );
+    assert(this.availableCommand.data.includes(faction), `${faction} is not in the available factions`);
 
     this.players[player].loadFaction(faction as Faction);
-    this.subPhase = SubPhase.EndMove;
   }
 
   [Command.ChooseRoundBooster](player: PlayerEnum, booster: Booster, fromCommand: Command = Command.ChooseRoundBooster ) {
-    const { boosters } = this.availableCommand(player, fromCommand).data;
+    const { boosters } = this.availableCommand.data;
 
-    assert(boosters.includes(booster),
-      `${booster} is not in the available boosters`
-    );
+    assert(boosters.includes(booster), `${booster} is not in the available boosters`);
 
     this.roundBoosters[booster] = false;
     this.players[player].getRoundBooster(booster);
-    this.subPhase = SubPhase.EndMove;
   }
 
   [Command.Build](player: PlayerEnum, building: Building, location: string) {
-    const avail = this.availableCommand(player, Command.Build);
-    const { buildings } = avail.data;
+    const { buildings } = this.availableCommand.data;
 
     for (const elem of buildings) {
       if (elem.building === building && elem.coordinates === location) {
@@ -672,35 +713,13 @@ export default class Engine {
         const hex = this.map.grid.get({q, r});
         const pl = this.player(player);
 
-        pl.build(
-          building,
-          hex,
-          Reward.parse(elem.cost),
-          this.map,
-          elem.steps
-        );
+        pl.build(building, hex, Reward.parse(elem.cost), this.map, elem.steps);
 
         // will trigger a LeechPhase
-        if (this.phase === Phase.RoundMove && building !== Building.GaiaFormer) {
+        if (this.phase === Phase.RoundMove) {
           this.leechingSource = hex;
         }
 
-        if ( pl.faction === Faction.Gleens && building === Building.PlanetaryInstitute) {
-          pl.gainFederationToken(Federation.FederationGleens);
-        }
-
-          // Gain tech tile if lab / academy
-        if ( building === Building.ResearchLab || building === Building.Academy1 || building === Building.Academy2) {
-          this.subPhase = SubPhase.ChooseTechTile;
-          return;
-        }
-
-        if ( this.phase === Phase.SetupBuilding) {
-          this.subPhase = SubPhase.EndMove;
-          return;
-        }
-
-        this.subPhase = SubPhase.AfterMove;
         return;
       }
     }
@@ -709,7 +728,7 @@ export default class Engine {
   }
 
   [Command.UpgradeResearch](player: PlayerEnum, field: ResearchField) {
-    const { tracks } = this.availableCommand(player, Command.UpgradeResearch).data;
+    const { tracks } = this.availableCommand.data;
     const track = tracks.find(tr => tr.field === field);
 
     assert(track, `Impossible to upgrade knowledge for ${field}`);
@@ -721,10 +740,13 @@ export default class Engine {
     this.roundBoosters[this.players[player].data.roundBooster] = true;
     this.players[player].pass();
     (this[Command.ChooseRoundBooster] as any)(player, booster, Command.Pass);
+
+    this.passedPlayers.push(player);
+    this.turnOrder.splice(this.turnOrder.indexOf(player), 1);
   }
 
   [Command.Leech](player: PlayerEnum, income: string) {
-    const leechCommand  = this.availableCommand(player, Command.Leech).data;
+    const leechCommand = this.availableCommand.data;
     // leech rewards are including +t, if needed and in the right sequence
     const leechRewards = Reward.parse(income);
 
@@ -738,76 +760,64 @@ export default class Engine {
 
     this.player(player).gainRewards(leechRewards);
     this.player(player).payCosts( [new Reward(Math.max(leech.count - 1, 0), Resource.VictoryPoint)]);
-    this.player(player).data.leechPossible = 0;
-    this.subPhase = SubPhase.EndMove;
-
   }
 
   [Command.DeclineLeech](player: PlayerEnum) {
     // no action needeed
-    this.subPhase = SubPhase.EndMove;
   }
 
   [Command.EndTurn](player: PlayerEnum) {
     this.player(player).endTurn();
-    this.moveToNextPlayer(Command.EndTurn);
   }
 
   [Command.ChooseTechTile](player: PlayerEnum, pos: TechTilePos | AdvTechTilePos) {
-    const { tiles } = this.availableCommand(player, Command.ChooseTechTile).data;
+    const { tiles } = this.availableCommand.data;
     const tileAvailable = tiles.find(ta => ta.tilePos === pos);
 
     assert(tileAvailable !== undefined, `Impossible to get ${pos} tile`);
 
     const advanced = tileAvailable.type === "adv";
-    const stdNoFree = ![TechTilePos.Free1, TechTilePos.Free2, TechTilePos.Free3].includes(pos as any) &&  tileAvailable.type === "std";
 
     if (advanced) {
       // need to cover before to upgrade
       this.player(player).gainAdvTechTile(tileAvailable.tile, tileAvailable.tilePos);
       this.advTechTiles[pos].numTiles -= 1;
-      this.subPhase = SubPhase.CoverTechTile;
-      return;
-    }
-
-    this.player(player).gainTechTile(tileAvailable.tile, tileAvailable.tilePos);
-    this.techTiles[pos].numTiles -= 1;
-
-    if ( stdNoFree ) {
-      this.advanceResearchAreaPhase(player, "", pos as any );
-      return;
+      this.processNextMove(SubPhase.CoverTechTile);
     } else {
-      this.subPhase = SubPhase.UpgradeResearch;
+      this.player(player).gainTechTile(tileAvailable.tile, tileAvailable.tilePos);
+      this.techTiles[pos].numTiles -= 1;
     }
 
+    if (Object.values(ResearchField).includes(pos)) {
+      this.advanceResearchAreaPhase(player, "", pos as any);
+    } else {
+      this.processNextMove(SubPhase.UpgradeResearch);
+    }
   }
 
   [Command.ChooseCoverTechTile](player: PlayerEnum, tilePos: TechTilePos) {
-    const { tiles } = this.availableCommand(player, Command.ChooseCoverTechTile).data;
+    const { tiles } = this.availableCommand.data;
     const tileAvailable = tiles.find(ta => ta.tilePos === tilePos);
 
     assert(tileAvailable !== undefined, `Impossible to cover ${tilePos} tile`);
     // remove tile
     this.player(player).coverTechTile(tileAvailable.tilePos);
-    this.subPhase = SubPhase.UpgradeResearch;
+    this.processNextMove(SubPhase.UpgradeResearch);
   }
 
   [Command.Special](player: PlayerEnum, income: string) {
-    const { specialacts } = this.availableCommand(player, Command.Special).data;
+    const { specialacts } = this.availableCommand.data;
     const actAvailable = specialacts.find(sa => Reward.match(Reward.parse(sa.income), Reward.parse(income)));
 
     assert(actAvailable !== undefined, `Special action ${income} is not available`);
 
-    this.subPhase = SubPhase.AfterMove;
-
     // mark as activated special action for this turn
     // triggers buildMine subphase from the activation
     this.player(player).activateEvent(actAvailable.spec);
-
   }
 
   [Command.ChooseFederationTile](player: PlayerEnum, federation: Federation) {
-    const { tiles, rescore } = this.availableCommand(player, Command.ChooseFederationTile).data;
+    const { tiles, rescore } = this.availableCommand.data;
     const tileAvailable = tiles.find(ta => ta.tile === federation);
 
     this.player(player).gainRewards(Reward.parse(federations[federation]));
@@ -815,13 +825,10 @@ export default class Engine {
     if (!rescore) {
       this.player(player).data.federations.push(federation);
     }
-
-    this.subPhase = SubPhase.AfterMove;
   }
 
   [Command.PlaceLostPlanet](player: PlayerEnum, location: string) {
-    const avail = this.availableCommand(player, Command.Build);
-    const { spaces } = avail.data;
+    const { spaces } = this.availableCommand.data;
 
     if (spaces.indexOf(location) === -1) {
       throw new Error(`Impossible to execute build command at ${location}`);
@@ -834,11 +841,10 @@ export default class Engine {
     this.player(player).build(Building.Mine, hex, [], this.map, 0);
 
     this.leechingSource = hex;
-    this.subPhase = SubPhase.AfterMove;
   }
 
   [Command.Spend](player: PlayerEnum, costS: string, _for: "for", incomeS: string) {
-    const { acts: actions } = this.availableCommand(player, Command.Spend).data;
+    const { acts: actions } = this.availableCommand.data;
 
     const pl = this.player(player);
     const cost = Reward.merge(Reward.parse(costS));
@@ -877,23 +883,17 @@ export default class Engine {
 
     pl.payCosts(cost);
     pl.gainRewards(income);
-
-    // Terrans are no needing more conversion for gaia?
-    if ( this.phase === Phase.RoundGaia && pl.faction === Faction.Terrans && !pl.canGaiaTerrans() ) {
-      this.subPhase = SubPhase.EndMove;
-    }
-
   }
 
   [Command.BurnPower](player: PlayerEnum, cost: string) {
-    const burn = this.availableCommand(player, Command.BurnPower).data;
+    const burn = this.availableCommand.data;
     assert(burn.includes(+cost), `Impossible to burn ${cost} power`);
 
     this.players[player].data.burnPower(+cost);
   }
 
   [Command.Action](player: PlayerEnum, action: BoardAction) {
-    const { poweracts: acts} = this.availableCommand(player, Command.Action).data;
+    const { poweracts: acts} = this.availableCommand.data;
 
     assert(_.find(acts, {name: action}), `${action} is not in the available power actions`);
 
@@ -902,11 +902,10 @@ export default class Engine {
 
     pl.payCosts(Reward.parse(boardActions[action].cost));
     pl.loadEvents(Event.parse(boardActions[action].income));
-    this.subPhase = SubPhase.AfterMove;
   }
 
   [Command.ChooseIncome](player: PlayerEnum, income: string) {
-    const incomes = this.availableCommand(player, Command.ChooseIncome).data;
+    const incomes = this.availableCommand.data;
     const incomeRewards = income.split(",") ;
     const pl = this.player(player);
 
@@ -920,19 +919,17 @@ export default class Engine {
     const { needed } = pl.needIncomeSelection();
     if (!needed) {
       pl.receiveIncome();
-      this.subPhase = SubPhase.EndMove;
     }
   }
 
   [Command.FormFederation](player: PlayerEnum, hexes: string, federation: Federation) {
-    const avail = this.availableCommand(player, Command.FormFederation);
     const pl = this.player(player);
 
     const fedInfo = pl.checkAndGetFederationInfo(hexes, this.map);
     if (!fedInfo) {
       throw new Error(`Impossible to form federation at ${hexes}`);
     }
-    if (!avail.data.tiles.includes(federation)) {
+    if (!this.availableCommand.data.tiles.includes(federation)) {
       throw new Error(`Impossible to form federation ${federation}`);
     }
 
@@ -945,13 +942,10 @@ export default class Engine {
     }
     pl.payCosts([new Reward(fedInfo.satellites, Resource.GainToken)]);
     pl.data.satellites += fedInfo.satellites;
-
-    this.subPhase = SubPhase.AfterMove;
   }
 
   [Command.PISwap](player: PlayerEnum, location: string) {
-    const avail = this.availableCommand(player, Command.PISwap);
-    const { buildings } = avail.data;
+    const { buildings } = this.availableCommand.data;
     const pl = this.player(player);
 
     const PIHex =  pl.data.occupied.find( hex => hex.buildingOf(player) === Building.PlanetaryInstitute);
@@ -964,10 +958,9 @@ export default class Engine {
         if ( hex.buildingOf(player) === Building.Mine ) {
           hex.data.building = Building.PlanetaryInstitute;
           PIHex.data.building = Building.Mine;
-        }
 
-        this.subPhase = SubPhase.AfterMove;
-        return;
+          return;
+        }
       }
     }
 

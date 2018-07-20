@@ -17,7 +17,10 @@ app.post("/", (req, res) => {
   try {
     const moves = req.body.moves;
     const engine = new Engine(moves);
-    engine.generateAvailableCommands();
+
+    if (!engine.availableCommands) {
+      engine.generateAvailableCommands();
+    }
 
     res.json(engine);
   } catch (err) {

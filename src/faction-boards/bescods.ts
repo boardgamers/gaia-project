@@ -3,13 +3,13 @@ import { Building } from "../enums";
 
 const bescods: FactionBoardRaw = {
   [Building.TradingStation]: {
-    income: ["+k", "+k", "+k", "+k"],
+    income: [["+k"], ["+k"], ["+k"], ["+k"]],
   },
   [Building.ResearchLab]: {
-    income: ["+3c", "+4c", "+5c"]
+    income: [["+3c", "tech"], ["+4c", "tech"], ["+5c", "tech"]]
   },
   [Building.PlanetaryInstitute]: {
-    income: ["+4pw", "+2t"]
+    income: [["+4pw", "+2t"]]
   },
   income: ["k,4o,15c,q", "+o"]
 };
