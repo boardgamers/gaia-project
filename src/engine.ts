@@ -326,10 +326,15 @@ export default class Engine {
     return true;
   }
 
-  handleNextGaia() {
+  handleNextGaia(afterCommand: boolean = false) {
     const player = this.player(this.currentPlayer);
 
-    if (player.canGaiaTerrans() || player.canGaiaItars()) {
+    if (!afterCommand) {
+      // The player didn't have a chance to decline their gaia action yet
+      player.declined = false;
+    }
+
+    if (!player.declined && (player.canGaiaTerrans() || player.canGaiaItars())) {
       return false;
     }
 
@@ -590,7 +595,7 @@ export default class Engine {
   [Phase.RoundGaia](move: string) {
     this.loadTurnMoves(move, {processFirst: true});
 
-    while (!this.handleNextGaia()) {
+    while (!this.handleNextGaia(true)) {
       this.generateAvailableCommands();
       this.processNextMove();
     }
@@ -759,7 +764,7 @@ export default class Engine {
     const leech =  leechRewards.find( lr => lr.type === Resource.ChargePower);
     const freeIncome =  leechRewards.find( lr => lr.type === Resource.GainToken);
 
-    assert(leechCommand.leech === leech.toString() , `Impossible to charge ${leech}`);
+    assert(leechCommand.offer === leech.toString() , `Impossible to charge ${leech}`);
     if ( freeIncome ) {
       assert(leechCommand.freeIncome === freeIncome.toString() , `Impossible to get ${freeIncome} for free`);
     }
@@ -768,8 +773,8 @@ export default class Engine {
     this.player(player).payCosts( [new Reward(Math.max(leech.count - 1, 0), Resource.VictoryPoint)]);
   }
 
-  [Command.DeclineLeech](player: PlayerEnum) {
-    // no action needeed
+  [Command.Decline](player: PlayerEnum) {
+    this.player(player).declined = true;
   }
 
   [Command.EndTurn](player: PlayerEnum) {

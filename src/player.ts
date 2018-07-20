@@ -38,6 +38,8 @@ export default class Player extends EventEmitter {
     [Operator.Pass]: [],
     [Operator.Special]: []
   };
+  // Did we decline the last offer?
+  declined = false;
 
   constructor(public player: PlayerEnum = PlayerEnum.Player1) {
     super();
