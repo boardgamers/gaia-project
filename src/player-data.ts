@@ -51,7 +51,7 @@ export default class PlayerData extends EventEmitter {
   greenFederations: number = 0;
   /** Coordinates occupied by buildings */
   occupied: GaiaHex[] = [];
-  brainstone: BrainstoneArea = BrainstoneArea.Out;
+  brainstone: BrainstoneArea = null;
   leechPossible: number;
   tokenModifier: number = 1;
 
@@ -268,7 +268,7 @@ export default class PlayerData extends EventEmitter {
   }
 
   brainstoneInPlay() {
-    return this.brainstone !== BrainstoneArea.Out;
+    return !!this.brainstone;
   }
 
   brainstoneValue() {

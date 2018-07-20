@@ -78,7 +78,7 @@ const defaultBoard: FactionBoardRaw = {
     area1: 2,
     area2: 4
   },
-  brainstone: BrainstoneArea.Out,
+  brainstone: null,
   handlers: {}
 };
 

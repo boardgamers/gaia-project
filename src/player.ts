@@ -289,7 +289,7 @@ export default class Player extends EventEmitter {
 
     // removes brainstone if still in transit after turn End
     if ( this.data.brainstone === BrainstoneArea.Transit) {
-      this.data.brainstone = BrainstoneArea.Out;
+      this.data.brainstone = null;
     }
   }
 
