@@ -42,6 +42,7 @@ export default class PlayerData extends EventEmitter {
   range: number = 1;
   temporaryRange: number = 0;
   gaiaformers: number = 0;
+  gaiaformersInGaia: number = 0;
   terraformCostDiscount: number = 0;
   temporaryStep: number = 0;
 
@@ -145,21 +146,21 @@ export default class PlayerData extends EventEmitter {
     }
 
     switch (resource) {
-      case Resource.Ore: this.ores = Math.min(MAX_ORE, this.ores + count); break;
-      case Resource.Credit: this.credits = Math.min(MAX_CREDIT, this.credits + count); break;
-      case Resource.Knowledge: this.knowledge = Math.min(MAX_KNOWLEDGE, this.knowledge + count); break;
-      case Resource.VictoryPoint: this.victoryPoints += count; break;
-      case Resource.Qic: this.qics += count; break;
+      case Resource.Ore: this.ores = Math.min(MAX_ORE, this.ores + count); return;
+      case Resource.Credit: this.credits = Math.min(MAX_CREDIT, this.credits + count); return;
+      case Resource.Knowledge: this.knowledge = Math.min(MAX_KNOWLEDGE, this.knowledge + count); return;
+      case Resource.VictoryPoint: this.victoryPoints += count; return;
+      case Resource.Qic: this.qics += count; return;
+      case Resource.GainToken: count > 0 ?  this.power.area1 += count : this.discardPower(-count); return;
+      case Resource.GainTokenGaiaArea: count > 0 ? this.chargeGaiaPower(count) :  this.discardGaiaPower(-count); return;
       case Resource.MoveTokenToGaiaArea: this.movePowerToGaia(-count); break;
-      case Resource.GainToken: count > 0 ?  this.power.area1 += count : this.discardPower(-count); break;
-      case Resource.GainTokenGaiaArea: count > 0 ? this.chargeGaiaPower(count) :  this.discardGaiaPower(-count); break;
-      case Resource.ChargePower: count > 0 ? this.chargePower(count) : this.spendPower(-count); break;
-      case Resource.Range: this.range += count; break;
-      case Resource.TemporaryRange: this.temporaryRange += count; break;
-      case Resource.GaiaFormer: this.gaiaformers += count; break;
-      case Resource.TerraformCostDiscount: this.terraformCostDiscount += count; break;
-      case Resource.TemporaryStep: this.temporaryStep += count; break;
-      case Resource.TokenArea3: if (count < 0) { this.power.area3 += count; this.power.gaia -= count; } break;
+      case Resource.ChargePower: count > 0 ? this.chargePower(count) : this.spendPower(-count); return;
+      case Resource.Range: this.range += count; return;
+      case Resource.TemporaryRange: this.temporaryRange += count; return;
+      case Resource.GaiaFormer: count > 0 ? this.gaiaformers += count : this.gaiaformersInGaia -= count; return;
+      case Resource.TerraformCostDiscount: this.terraformCostDiscount += count; return;
+      case Resource.TemporaryStep: this.temporaryStep += count; return;
+      case Resource.TokenArea3: if (count < 0) { this.power.area3 += count; this.power.gaia -= count; } return;
 
       default: break; // Not implemented
     }
@@ -184,6 +185,7 @@ export default class PlayerData extends EventEmitter {
       case Resource.GainTokenGaiaArea: return this.gaiaPowerTokens() >= reward.count;
       case Resource.ChargePower: return this.spendablePowerTokens() >= reward.count;
       case Resource.TokenArea3: return this.power.area3 >= reward.count;
+      case Resource.GaiaFormer: return this.gaiaformers - this.gaiaformersInGaia - this[Building.GaiaFormer]  >= reward.count;
     }
 
     return false;
