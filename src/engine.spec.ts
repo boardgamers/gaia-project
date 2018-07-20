@@ -744,7 +744,36 @@ describe("Engine", () => {
       expect(() => new Engine([...moves, "p1 income t"])).to.not.throw();
       expect(() => new Engine([...moves, "p1 income 3pw"])).to.throw();
     }) ;
+  });
 
+  it("should handle when an income event contains another reward in addition to the power token", () => {
+    const moves = parseMoves(`
+      init 2 randomSeed
+      p1 faction terrans
+      p2 faction itars
+      p1 build m -1x2
+      p2 build m -1x0
+      p2 build m 0x-4
+      p1 build m -4x2
+      p2 booster booster3
+      p1 booster booster4
+      p1 build ts -1x2.
+      p2 leech 1pw
+      p2 build ts -1x0.
+      p1 leech 2pw
+      p1 build lab -1x2. tech gaia.
+      p2 leech 2pw
+      p2 up gaia.
+      p1 up gaia.
+      p2 spend 1o for 1t. build gf -3x1. burn 2.
+      p1 pass booster5
+      p2 build PI -1x0.
+      p1 leech 2pw
+      p2 pass booster4
+    `);
+
+    expect(() => new Engine([...moves, "p2 income 1t,1t. income 1t"])).to.throw();
+    expect(() => new Engine([...moves, "p2 income 1t,1t"])).to.not.throw();
   });
 
   describe("tech tiles", () => {

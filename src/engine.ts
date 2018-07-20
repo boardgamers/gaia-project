@@ -94,20 +94,26 @@ export default class Engine {
   loadMoves(_moves: string[]) {
     const moves = [..._moves];
 
-    this.newTurn = true;
-
     while (moves.length > 0) {
       const move = moves.shift().trim();
 
-      if (!this.move(move)) {
-        assert(moves.length === 0, `Move ${move} (line ${this.moveHistory.length + 1}) is not complete!`);
-        this.newTurn = false;
-      }
-
-      assert(this.turnMoves.length === 0, "Unnecessary commands at the end of the turn: " + this.turnMoves.join('. '));
-
-      this.moveHistory.push(move);
+      this.move(move, moves.length === 0);
     }
+  }
+
+  move(_move: string, lastMove = true) {
+    this.newTurn = true;
+
+    const move = _move.trim();
+
+    if (!this.executeMove(move)) {
+      assert(lastMove, `Move ${move} (line ${this.moveHistory.length + 1}) is not complete!`);
+      this.newTurn = false;
+    }
+
+    assert(this.turnMoves.length === 0, "Unnecessary commands at the end of the turn: " + this.turnMoves.join('. '));
+
+    this.moveHistory.push(move);
   }
 
   generateAvailableCommands(subphase: SubPhase = SubPhase.BeforeMove): AvailableCommand[] {
@@ -229,7 +235,7 @@ export default class Engine {
    * Return true if it is a full move
    * @param move
    */
-  move(move: string) {
+  executeMove(move: string) {
     try {
       (this[this.phase])(move);
       this.clearAvailableCommands();

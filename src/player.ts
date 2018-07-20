@@ -210,11 +210,12 @@ export default class Player extends EventEmitter {
     // it's assuming that each reward belongs to a different event, which has only that reward
     // in case of multiple matchings pick the first
     for ( const rew of rewards) {
-      const event =  this.events[Operator.Income].find( ev => !ev.activated && Reward.match( [rew], ev.rewards));
-      if (event) {
-        this.gainRewards(event.rewards);
-        event.activated = true;
-      }
+      const event =  this.events[Operator.Income].find(ev => !ev.activated && ev.rewards.some(rew2 => Reward.match([rew], [rew2])));
+
+      assert(event);
+
+      this.gainRewards(event.rewards);
+      event.activated = true;
     }
   }
 
