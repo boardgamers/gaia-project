@@ -10,7 +10,7 @@ import researchTracks from './research-tracks';
 import { terraformingStepsRequired } from './planets';
 import boosts from './tiles/boosters';
 import { Player as PlayerEnum } from './enums';
-import { stdBuildingValue, maxBuildings } from './buildings';
+import { stdBuildingValue } from './buildings';
 import SpaceMap from './map';
 import { GaiaHex } from './gaia-hex';
 import spanningTree from './algorithms/spanning-tree';
@@ -115,7 +115,7 @@ export default class Player extends EventEmitter {
   }
 
   canBuild(targetPlanet: Planet, building: Building, {isolated, addedCost, existingBuilding}: {isolated?: boolean, addedCost?: Reward[], existingBuilding?: Building}): {cost?: Reward[], possible: boolean, steps?: number} {
-    if (this.data[building] >= (building === Building.GaiaFormer ? this.data.gaiaformers : maxBuildings(building))) {
+    if (this.data[building] >= this.maxBuildings(building)) {
       // Too many buildings of the same kind
       return {possible: false};
     }
@@ -160,6 +160,10 @@ export default class Player extends EventEmitter {
     };
   }
 
+  maxBuildings(building: Building) {
+    return building === Building.GaiaFormer ? this.data.gaiaformers : this.board[building].income.length;
+  }
+
   loadFaction(faction: Faction) {
     this.faction = faction;
     this.board = factionBoard(faction);
@@ -169,6 +173,13 @@ export default class Player extends EventEmitter {
     this.data.power.area1 = this.board.power.area1;
     this.data.power.area2 = this.board.power.area2;
     this.data.brainstone = this.board.brainstone;
+
+    // Load faction specific code changes
+    for (const eventName of Object.keys(this.board.handlers)) {
+      for (const emitter of [this, this.data]) {
+        emitter.on(eventName, (...args) => this.board.handlers[eventName](this, ...args));
+      }
+    }
   }
 
   loadEvents(events: Event[]) {
@@ -242,23 +253,21 @@ export default class Player extends EventEmitter {
 
     // The mine of the lost planet doesn't grant any extra income
     if (hex.data.planet !== Planet.Lost) {
-      if (building === Building.PlanetaryInstitute) {
-        // PI has different events
-        this.loadEvents(this.board[Building.PlanetaryInstitute].income);
-        // Nevlas token in area3
-        if (this.faction === Faction.Nevlas) { this.data.tokenModifier = 2; }
-      } else {
-        // Add income of the building to the list of events
-        this.loadEvent(this.board[building].income[this.data[building]]);
-      }
+      // Add income of the building to the list of events
+      this.loadEvents(this.board[building].income[this.data[building]]);
       this.data[building] += 1;
+
+      if (building === Building.PlanetaryInstitute) {
+        // For nevlas, gleens, ....
+        this.emit('planetary-institute');
+      }
     }
 
     // remove upgraded building and the associated event
     const upgradedBuilding = hex.buildingOf(this.player);
     if (upgradedBuilding) {
       this.data[upgradedBuilding] -= 1;
-      this.removeEvent(this.board[upgradedBuilding].income[this.data[upgradedBuilding]]);
+      this.removeEvents(this.board[upgradedBuilding].income[this.data[upgradedBuilding]]);
     }
 
     // If the planet is already occupied by someone else
@@ -308,23 +317,19 @@ export default class Player extends EventEmitter {
   pass() {
     this.receivePassIncome();
     // remove the old booster
-    this.removeEvents( Event.parse( boosts[this.data.roundBooster]));
+    this.removeEvents(Event.parse( boosts[this.data.roundBooster]));
     this.data.roundBooster =  undefined;
   }
 
   getRoundBooster(roundBooster: Booster) {
     // add the booster to the the player
     this.data.roundBooster =  roundBooster;
-    this.loadEvents( Event.parse( boosts[roundBooster]));
+    this.loadEvents(Event.parse( boosts[roundBooster]));
   }
 
   gainTechTile(tile: TechTile, pos: TechTilePos) {
     this.loadEvents(Event.parse(techs[tile]));
-    this.data.techTiles.push({
-      tile,
-      pos,
-      enabled: true
-    });
+    this.data.techTiles.push({tile, pos, enabled: true});
   }
 
   gainAdvTechTile(tile: AdvTechTile, pos: AdvTechTilePos) {
@@ -363,7 +368,6 @@ export default class Player extends EventEmitter {
   canGaiaItars(): boolean {
     return this.data.gaiaPowerTokens() >= 4 && this.faction === Faction.Itars && this.data.hasPlanetaryInstitute();
   }
-
 
   receiveIncome() {
     for (const event of this.events[Operator.Income]) {

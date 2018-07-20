@@ -19,8 +19,8 @@ export default interface AvailableCommand {
   player?: number;
 }
 
-export function generate(engine: Engine): AvailableCommand[] {
-  const player = engine.currentPlayer;
+export function generate(engine: Engine, subPhase: SubPhase = SubPhase.BeforeMove): AvailableCommand[] {
+  const player = engine.playerToMove;
   switch (engine.phase) {
     case Phase.SetupInit: {
       return [{ name: Command.Init }];
@@ -55,13 +55,11 @@ export function generate(engine: Engine): AvailableCommand[] {
         }
       }
 
-      return [
-        {
-          name: Command.Build,
-          player,
-          data: { buildings }
-        }
-      ];
+      return [{
+        name: Command.Build,
+        player,
+        data: { buildings }
+      }];
     }
     case Phase.SetupBooster: {
       return possibleRoundBoosters(engine, player);
@@ -70,16 +68,10 @@ export function generate(engine: Engine): AvailableCommand[] {
       return possibleIncomes(engine, player);
     }
     case Phase.RoundGaia: {
-      switch (engine.subPhase) {
-        case SubPhase.ChooseTechTile : {
-          return possibleTechTiles(engine, player);
-        }
-        case SubPhase.CoverTechTile : {
-          return possibleCoverTechTiles(engine, player);
-        }
-        case SubPhase.UpgradeResearch : {
-          return possibleResearchAreas(engine, player, "");
-        }
+      switch (subPhase) {
+        case SubPhase.ChooseTechTile: return possibleTechTiles(engine, player);
+        case SubPhase.CoverTechTile: return possibleCoverTechTiles(engine, player);
+        case SubPhase.UpgradeResearch: return possibleResearchAreas(engine, player, "");
         default: return possibleGaiaFreeActions(engine, player);
       }
     }
@@ -88,89 +80,31 @@ export function generate(engine: Engine): AvailableCommand[] {
     }
     case Phase.RoundMove : {
       // We are in a regular round
-      const commands = [];
-
-
       assert(player !== undefined, "Problem with the engine, player to play is unknown");
 
-      if (engine.subPhase === SubPhase.ChooseTechTile) {
-        commands.push(...possibleTechTiles(engine, player));
-        return commands;
-      }
-
-      if (engine.subPhase === SubPhase.CoverTechTile) {
-        commands.push(...possibleCoverTechTiles(engine, player));
-        return commands;
-      }
-
-      if (engine.subPhase === SubPhase.UpgradeResearch) {
-        commands.push(...possibleResearchAreas(engine, player, ""));
-        return commands;
-      }
-
-      if (engine.subPhase === SubPhase.PlaceLostPlanet) {
-        commands.push(...possibleSpaceLostPlanet(engine, player));
-        return commands;
-      }
-
-      if (engine.subPhase === SubPhase.ChooseFederationTile) {
-        commands.push(...possibleFederationTiles(engine, player, "pool"));
-        return commands;
-      }
-
-      if (engine.subPhase === SubPhase.RescoreFederationTile) {
-        commands.push(...possibleFederationTiles(engine, player, "player"));
-        return commands;
-      }
-
-      if (engine.subPhase === SubPhase.BuildMine) {
-        commands.push(...possibleMineBuildings(engine, player));
-        commands.push(...possibleFreeActions(engine, player));
-        return commands;
-      }
-      if (engine.subPhase === SubPhase.PISwap) {
-        commands.push(...possiblePISwaps(engine, player));
-        return commands;
-      }
-      if (engine.subPhase === SubPhase.BeforeMove) {
-        //  boosters
-        commands.push(...possibleRoundBoosters(engine, player));
-
-        const buildingCommand = possibleBuildings(engine, player);
-        if (buildingCommand) {
-          commands.push(buildingCommand);
+      switch (subPhase) {
+        case SubPhase.ChooseTechTile: return possibleTechTiles(engine, player);
+        case SubPhase.CoverTechTile: return possibleCoverTechTiles(engine, player);
+        case SubPhase.UpgradeResearch: return possibleResearchAreas(engine, player, "");
+        case SubPhase.PlaceLostPlanet: return possibleSpaceLostPlanet(engine, player);
+        case SubPhase.ChooseFederationTile: return possibleFederationTiles(engine, player, "pool");
+        case SubPhase.RescoreFederationTile: return possibleFederationTiles(engine, player, "player");
+        case SubPhase.BuildMine: return possibleMineBuildings(engine, player);
+        case SubPhase.PISwap: return possiblePISwaps(engine, player);
+        case SubPhase.BeforeMove: {
+          return [
+            ...possibleRoundBoosters(engine, player),
+            ...possibleBuildings(engine, player),
+            ...possibleFederations(engine, player),
+            ...possibleResearchAreas(engine, player, UPGRADE_RESEARCH_COST),
+            ...possibleFreeActions(engine, player),
+            ...possibleBoardActions(engine, player),
+            ...possibleSpecialActions(engine, player)
+          ];
         }
-
-        // Add federations
-        commands.push(...possibleFederations(engine, player));
-
-        // Upgrade research
-        commands.push(...possibleResearchAreas(engine, player, UPGRADE_RESEARCH_COST));
-
-        // free actions
-        commands.push(...possibleFreeActions(engine, player));
-
-        // power actions
-        commands.push(...possibleBoardActions(engine, player));
-
-        // special actions
-        commands.push(...possibleSpecialActions(engine, player));
-
-        return commands;
+        case SubPhase.AfterMove: return [...possibleFreeActions(engine, player), {name: Command.EndTurn, player}];
+        default: return [];
       }
-
-      if (engine.subPhase === SubPhase.AfterMove) {
-        // free actions
-        commands.push(...possibleFreeActions(engine, player));
-
-        commands.push({
-          name: Command.EndTurn,
-          player
-        });
-
-        return commands;
-      }
-
     }
   }
 }
@@ -256,17 +190,19 @@ export function possibleBuildings(engine: Engine, player: Player) {
   } // end for hex
 
   if (buildings.length > 0) {
-    return {
+    return [{
       name: Command.Build,
       player,
       data: { buildings }
-    };
+    }];
   }
+
+  return [];
 }
 
 export function possibleMineBuildings(engine: Engine, player: Player) {
   const commands = [];
-  const buildingCommand = possibleBuildings(engine, player);
+  const [buildingCommand] = possibleBuildings(engine, player);
 
   if (buildingCommand) {
     // We filter buildings that aren't mines (like gaia-formers) or
@@ -282,6 +218,7 @@ export function possibleMineBuildings(engine: Engine, player: Player) {
       commands.push(buildingCommand);
     }
   }
+
   return commands;
 }
 export function possibleSpecialActions(engine: Engine, player: Player) {
@@ -333,6 +270,7 @@ export function possibleFreeActions(engine: Engine, player: Player) {
   const pl = engine.player(player);
   const acts = [];
   const commands = [];
+  let burnDisabled = false;
 
   let pool = freeActions;
   if (pl.faction === Faction.HadschHallas && pl.data.hasPlanetaryInstitute()) {
@@ -343,36 +281,29 @@ export function possibleFreeActions(engine: Engine, player: Player) {
     pool = [].concat(pool, freeActionsNevlas);
   }
 
-  // freeActions for Terrans during gaiaPhase
-  if ( engine.phase === Phase.RoundGaia && pl.canGaiaTerrans() ) {
-    pool = freeActionsTerrans;
-  }
+  // freeActions for Terrans / Itars during gaiaPhase
+  if (engine.phase === Phase.RoundGaia && (pl.canGaiaTerrans() || pl.canGaiaItars())) {
+    if (pl.canGaiaTerrans()) {
+      pool = freeActionsTerrans;
+    } else if (pl.canGaiaItars()) {
+      pool = freeActionsItars;
+    }
 
-  // freeActions for Itars during gaiaPhase
-  if ( engine.phase === Phase.RoundGaia && pl.canGaiaItars() ) {
-    pool = freeActionsItars;
+    burnDisabled = true;
   }
 
   for (const freeAction of pool) {
     if (pl.canPay(Reward.parse(freeAction.cost))) {
-      acts.push({
-        cost: freeAction.cost,
-        income: freeAction.income
-      });
+      acts.push({cost: freeAction.cost, income: freeAction.income});
     }
   }
 
   if (acts.length > 0) {
-    commands.push({
-      name: Command.Spend,
-      player,
-      data: { acts }
-    });
+    commands.push({name: Command.Spend, player, data: { acts }});
   }
 
   // free action - burn
-  // TODO generate burn actions based on  Math.ceil( engine.player(player).data.power.area2 / 2)
-  if (engine.player(player).data.power.area2 >= 2) {
+  if (!burnDisabled && engine.player(player).data.burnablePower() > 0) {
     commands.push({
       name: Command.BurnPower,
       player,
@@ -530,25 +461,18 @@ export function possibleGaiaFreeActions(engine: Engine, player: Player) {
 export function possibleLeech(engine: Engine, player: Player) {
   const commands = [];
   const pl = engine.player(player);
-  if ( pl.data.leechPossible > 0) {
-    commands.push({
-      name: Command.Leech,
-      player,
-      data: {
-        leech: pl.data.leechPossible + Resource.ChargePower,
-        freeIncome : pl.faction === Faction.Taklons && pl.data.hasPlanetaryInstitute() ? "1t" : ""
-      }
-    });
-    commands.push({
-      name: Command.DeclineLeech,
-      player,
-      data: {
-        leech: pl.data.leechPossible + Resource.ChargePower,
-        freeIncome : pl.faction === Faction.Taklons && pl.data.hasPlanetaryInstitute() ? "1t" : ""
-      }
-    });
 
+  if ( pl.data.leechPossible > 0) {
+    [Command.Leech, Command.DeclineLeech].map(name => commands.push({
+      name,
+      player,
+      data: {
+        leech: pl.data.leechPossible + Resource.ChargePower,
+        freeIncome : pl.faction === Faction.Taklons && pl.data.hasPlanetaryInstitute() ? "1t" : ""
+      }
+    }));
   }
+
   return commands;
 }
 

@@ -251,7 +251,9 @@ describe("Engine", () => {
       p1 build ac1 -3x4. tech free2. up gaia.
       p2 leech 3pw
       p2 pass booster8
-      p1 build gf -2x3.. special 4pw. spend 4pw for 1k.. pass booster7
+      p1 build gf -2x3.
+      p1 special 4pw. spend 4pw for 1k.
+      p1 pass booster7
       p2 action power5.
       p1 build m -2x3.
       p2 leech 3pw
@@ -442,7 +444,6 @@ describe("Engine", () => {
     expect(() => new Engine([...moves, "p2 special piswap. piswap 5x-3."])).to.not.throw();
     expect(() => new Engine([...moves, "p2 special piswap. piswap 3x-3."])).to.throw();
   });
-
 
   describe("gleens", () => {
     it ("should grant gleens an ore instead of qic when upgrading navigation without an academy", () => {
@@ -790,7 +791,9 @@ describe("Engine", () => {
         p1 build ac1 -3x4. tech free2. up gaia.
         p2 leech 3pw
         p2 pass booster8
-        p1 build gf -2x3.. special 4pw. spend 4pw for 1k.. pass booster7
+        p1 build gf -2x3.
+        p1 special 4pw. spend 4pw for 1k.
+        p1 pass booster7
         p2 action power5.
         p1 build m -2x3.
         p2 leech 3pw
@@ -908,13 +911,12 @@ describe("Engine", () => {
       // tslint:disable-next-line no-unused-expression
       expect(() => new Engine([...moves, "p1 special step"])).to.not.throw();
       // tslint:disable-next-line no-unused-expression
-      expect(new Engine([...moves, "p1 special step"]).player(Player.Player1).events[Operator.Activate][0].activated).to.be.true;
+      expect(new Engine([...moves, "p1 special step. build m -2x2."]).player(Player.Player1).events[Operator.Activate][0].activated).to.be.true;
 
       // test free action before and after, and to build something different then a mine
-      expect(() => new Engine([...moves, "p1 special step. spend 1o for 1c. build m -1x-1. spend 1o for 1c."])).to.not.throw();
-      expect(() => new Engine([...moves, "p1 special step. spend 1o for 1c. build ts -4x2"])).to.throw();
+      expect(() => new Engine([...moves, "p1 spend 2o for 2c. special step. build m -1x-1"])).to.not.throw();
+      expect(() => new Engine([...moves, "p1 spend 1o for 1c. special step. build ts -4x2"])).to.throw();
       expect(() => new Engine([...moves, "p1 special step. build m -1x-1. spend 1o for 1c."])).to.not.throw();
-
     });
 
     it("should allow to use a range special action from a booster", () => {
@@ -928,9 +930,9 @@ describe("Engine", () => {
         p1 build m -3x4
         p2 booster booster5
         p1 booster booster4
-        p1 special step. spend 1o for 1c. build m -1x-1.
+        p1 spend 1o for 1c. special step. build m -1x-1.
         p2 leech 1pw
-        p2 special range+3. spend 1o for 1c. build m 3x-3.
+        p2 spend 1o for 1c. special range+3. build m 3x-3.
       `);
 
       expect(() => new Engine(moves)).to.not.throw(AssertionError);
