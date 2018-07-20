@@ -94,8 +94,10 @@ export default class Player extends EventEmitter {
         this.emit("gain-tech");
       } else if (reward.type === Resource.RescoreFederation) {
         this.emit("rescore-fed");
-      } else if (reward.type === Resource.TemporaryRange || reward.type === Resource.TemporaryStep) {
+      } else if (reward.type === Resource.TemporaryStep) {
         this.emit("build-mine");
+      } else if (reward.type === Resource.TemporaryRange) {
+        this.emit("build-mine-gf");
       } else if (reward.type === Resource.PISwap ) {
         this.emit("pi-swap");
       }

@@ -89,7 +89,8 @@ export function generate(engine: Engine, subPhase: SubPhase = SubPhase.BeforeMov
         case SubPhase.PlaceLostPlanet: return possibleSpaceLostPlanet(engine, player);
         case SubPhase.ChooseFederationTile: return possibleFederationTiles(engine, player, "pool");
         case SubPhase.RescoreFederationTile: return possibleFederationTiles(engine, player, "player");
-        case SubPhase.BuildMine: return possibleMineBuildings(engine, player);
+        case SubPhase.BuildMine: return possibleMineBuildings(engine, player, false);
+        case SubPhase.BuildMineOrGaiaFormer: return possibleMineBuildings(engine, player, true);
         case SubPhase.PISwap: return possiblePISwaps(engine, player);
         case SubPhase.BeforeMove: {
           return [
@@ -163,7 +164,8 @@ export function possibleBuildings(engine: Engine, player: Player) {
           buildings.push({
             building: upgrade,
             cost: Reward.toString(cost),
-            coordinates: hex.toString()
+            coordinates: hex.toString(),
+            upgrade: true
           });
         }
       }
@@ -200,18 +202,20 @@ export function possibleBuildings(engine: Engine, player: Player) {
   return [];
 }
 
-export function possibleMineBuildings(engine: Engine, player: Player) {
+export function possibleMineBuildings(engine: Engine, player: Player, acceptGaiaFormer: boolean) {
   const commands = [];
   const [buildingCommand] = possibleBuildings(engine, player);
 
   if (buildingCommand) {
-    // We filter buildings that aren't mines (like gaia-formers) or
-    // that already have a building on there (like gaia-formers)
     buildingCommand.data.buildings = buildingCommand.data.buildings.filter(bld => {
-      if (bld.building !== Building.Mine && bld.building !== Building.GaiaFormer) {
+      // If it's a gaia-former upgradable to a mine, it doesn't count
+      if (bld.upgrade) {
         return false;
       }
-      return engine.map.grid.getS(bld.coordinates).buildingOf(player) === undefined;
+      if (bld.building === Building.Mine) {
+        return true;
+      }
+      return acceptGaiaFormer && bld.building === Building.GaiaFormer;
     });
 
     if (buildingCommand.data.buildings.length > 0) {

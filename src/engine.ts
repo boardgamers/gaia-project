@@ -143,6 +143,9 @@ export default class Engine {
     player.on('build-mine', () => {
       this.processNextMove(SubPhase.BuildMine);
     });
+    player.on('build-mine-gf', () => {
+      this.processNextMove(SubPhase.BuildMineOrGaiaFormer);
+    });
     player.on('rescore-fed', () => {
       this.processNextMove(SubPhase.RescoreFederationTile);
     });
@@ -253,6 +256,9 @@ export default class Engine {
   processNextMove(subphase?: SubPhase) {
     if (subphase) {
       this.generateAvailableCommands(subphase);
+      if (this.availableCommands.length === 0) {
+        return;
+      }
     }
     if (this.turnMoves.length === 0) {
       throw Object.assign(new Error('Missing command to end turn'), {availableCommands: this.availableCommands});
