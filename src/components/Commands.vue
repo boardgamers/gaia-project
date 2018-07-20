@@ -212,7 +212,7 @@ export default class Commands extends Vue {
 
         case Command.Decline: {
           ret.push({
-            label: `Decline ${command.data.offer} for ${command.data.cost}`,
+            label: command.data.cost === '~' ? `Decline ${command.data.offer}` : `Decline ${command.data.offer} for ${command.data.cost}`,
             command: Command.Decline
           });
           break;
