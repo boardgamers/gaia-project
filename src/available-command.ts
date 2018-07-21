@@ -296,7 +296,7 @@ export function possibleFreeActions(engine: Engine, player: Player) {
   const commands: AvailableCommand[] = [];
   let burnDisabled = false;
 
-  let pool = freeActions;
+  let pool = [...freeActions];
 
   engine.player(player).emit("freeActionChoice", pool);
 
