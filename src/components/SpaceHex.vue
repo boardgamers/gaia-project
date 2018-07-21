@@ -1,6 +1,6 @@
 <template>
   <g :id="`${hex.q}x${hex.r}`" :title="'Cost: ' + cost(hex)">
-    <title>Coordinates: {{hex.q}}x{{hex.r}}&#10;Sector: {{hex.data.sector}}</title>
+    <title>Coordinates: {{hex.q}}x{{hex.r}}&#10;Sector: {{hex.data.sector}}{{hex.data.building ? `&#10;Building: ${buildingName(hex.data.building)}` : ''}}</title>
     <polygon :points="hexCorners.map(p => `${p.x},${p.y}`).join(' ')" :class="{spaceHex: true, highlighted: highlightedHexes.has(hex), qic: cost(hex).includes('q')}" @click='hexClick(hex)' />
     <Planet v-if="hex.data.planet !== 'e'" :planet='hex.data.planet' />
     <Building v-if="hex.data.building" :building='hex.data.building' :faction='faction(hex.data.player)' />
@@ -17,6 +17,7 @@ import { GaiaHex, factions } from '@gaia-project/engine';
 import {corners } from "../graphics/hex";
 import Planet from './Planet.vue';
 import Building from './Building.vue';
+import { buildingName } from '../data/building';
 
 @Component<SpaceHex>({
   computed: {
@@ -52,8 +53,13 @@ export default class SpaceHex extends Vue {
   faction(player) {
     return this.$store.state.game.data.players[player].faction;
   }
+
   planet(player) {
     return factions.planet(this.faction(player));
+  }
+
+  buildingName(building: Building) {
+    return buildingName(building);
   }
 }
 export default interface SpaceMap {
