@@ -43,9 +43,9 @@ export const boardActions =  {
   [BoardAction.Power3]: { cost: "4pw", income: ["2o"] },
   [BoardAction.Power4]: { cost: "4pw", income: ["7c"] },
   [BoardAction.Power5]: { cost: "4pw", income: ["2k"] },
-  [BoardAction.Power6]: { cost: "3pw", income: ["step"] },
+  [BoardAction.Power6]: { cost: "3pw", income: ["1step"] },
   [BoardAction.Power7]: { cost: "3pw", income: ["2t"] },
   [BoardAction.Qic1]: { cost: "4q", income: ["tech"] },
-  [BoardAction.Qic2]: { cost: "3q", income: ["fed"] },
+  [BoardAction.Qic2]: { cost: "3q", income: [">fed"] },
   [BoardAction.Qic3]: { cost: "2q", income: ["3vp", "pt > vp"]}
 };

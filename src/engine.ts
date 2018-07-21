@@ -837,12 +837,14 @@ export default class Engine {
 
   [Command.ChooseFederationTile](player: PlayerEnum, federation: Federation) {
     const { tiles, rescore } = this.availableCommand.data;
-    const tileAvailable = tiles.find(ta => ta.tile === federation);
 
-    this.player(player).gainRewards(Reward.parse(federations[federation]));
+    assert(tiles.indexOf(federation) !== -1, `Federation ${federation} is not availabe`);
 
-    if (!rescore) {
-      this.player(player).data.federations.push(federation);
+    if (rescore) {
+      this.player(player).gainRewards(Reward.parse(federations[federation]));
+    } else {
+      this.player(player).gainFederationToken(federation);
+      this.federations[federation] -= 1;
     }
   }
 

@@ -519,7 +519,7 @@ export function possibleFederationTiles(engine: Engine, player: Player, from: "p
   const commands = [];
 
   const possibleTiles = Object.keys(engine.federations).filter(key => engine.federations[key] > 0);
-  const playerTiles = Object.keys(engine.player(player).data.federations);
+  const playerTiles = engine.player(player).data.federations;
 
   commands.push({
     name: Command.ChooseFederationTile,
