@@ -34,7 +34,8 @@ import { eventDesc } from '../data/event';
     },
 
     title() {
-      if (this.count > 1) {
+      // Only show count if there are more players than tech tiles available
+      if (this.count > 1 && this.$store.state.game.data.players.length > 4) {
         return `${this.pos} (${this.count})`;
       }
 
