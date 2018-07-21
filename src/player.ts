@@ -52,7 +52,8 @@ export default class Player extends EventEmitter {
       faction: this.faction,
       data: this.data,
       income: Reward.toString(Reward.merge([].concat(...this.events[Operator.Income].map(event => event.rewards))), true),
-      progress:  Object.assign({}, ...Object.values(FinalTile).map( track => ({ [track]: this.eventConditionCount(finalScorings[track])})))
+      progress:  Object.assign({}, ...Object.values(FinalTile).map( track => ({ [track]: this.eventConditionCount(finalScorings[track])}))),
+      actions: this.events[Operator.Activate].map(event => ({rewards: event.spec.replace('=>', '').trim(), enabled: !event.activated}))
     };
   }
 
