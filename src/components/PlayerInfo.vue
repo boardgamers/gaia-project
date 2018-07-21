@@ -8,7 +8,7 @@
       {{boosterDesc}}
     </div>
     <div class="tiles">
-      <TechTile v-for="tech in data.techTiles" v-show="tech.enabled" :key="tech.pos" :pos="tech.pos" :player="player.player" />
+      <TechTile v-for="tech in data.techTiles" :disabled="!tech.enabled" :key="tech.pos" :pos="tech.pos" :player="player.player" />
       <TechTile v-for="tech in data.advTechTiles" :key="tech.pos" :pos="tech.pos" :player="player.player" />
     </div>
   </div>
