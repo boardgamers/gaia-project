@@ -3,8 +3,12 @@
     <div class="text">
       <b>Player {{player.player + 1}}</b> - {{faction}} - {{data.victoryPoints}}vp <span v-if="passed">(passed)</span><br/>
       {{data.credits}}c, {{data.ores}}o, {{data.knowledge}}k, {{data.qics}}q, [{{power('gaia')}}] {{power('area1')}}/{{power('area2')}}/{{power('area3')}} pw<br/>
-      range: {{data.range}}, terraform level: {{data.terraformCostDiscount}}<br/>
-      income: {{player.income.replace(/,/g, ', ')}}
+      Range: {{data.range}}, terraform level: {{data.terraformCostDiscount}}<br/>
+      Income: {{player.income.replace(/,/g, ', ')}} <br/>
+      Steps: 
+      <span v-for="i in [0, 1, 2, 3]" :key="i" class="ml-2">
+        <i v-for="planet in planetsWithSteps(i)" :class="['planet', planet]" :key="planet" /> {{i}}
+      </span>
     </div>
     <div class="tiles">
       <Booster v-if="data.roundBooster" :booster="data.roundBooster" :disabled="passed"/>
@@ -17,7 +21,7 @@
 <script lang="ts">
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
-import { Player, factions, tiles, PlayerData } from '@gaia-project/engine';
+import { Player, factions, tiles, PlayerData, Planet, terraformingStepsRequired } from '@gaia-project/engine';
 import { factionColor } from '@/graphics/utils';
 import TechTile from './TechTile.vue';
 import Booster from './Booster.vue';
@@ -43,6 +47,16 @@ export default class PlayerInfo extends Vue {
 
   get factionColor() {
     return factionColor(this.player.faction);
+  }
+
+  get planet() {
+    return factions[this.player.faction].planet;
+  }
+
+  planetsWithSteps(steps: number) {
+    const list = [Planet.Terra, Planet.Desert, Planet.Swamp, Planet.Oxide, Planet.Volcanic, Planet.Titanium, Planet.Ice];
+
+    return list.filter(p => terraformingStepsRequired(this.planet, p) === steps);
   }
 
   get passed() {

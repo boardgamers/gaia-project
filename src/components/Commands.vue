@@ -321,7 +321,7 @@ export default class Commands extends Vue {
 
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 
 @import "../stylesheets/frontend.scss";
 
