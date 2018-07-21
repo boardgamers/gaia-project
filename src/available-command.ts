@@ -35,6 +35,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
     case SubPhase.RescoreFederationTile: return possibleFederationTiles(engine, player, "player");
     case SubPhase.BuildMine: return possibleMineBuildings(engine, player, false);
     case SubPhase.BuildMineOrGaiaFormer: return possibleMineBuildings(engine, player, true);
+    case SubPhase.SpaceStation: return possibleSpaceStations(engine, player);
     case SubPhase.PISwap: return possiblePISwaps(engine, player);
     case SubPhase.BrainStone: return [{name: Command.BrainStone, player, data}];
     case SubPhase.BeforeMove: {
@@ -128,7 +129,7 @@ export function possibleBuildings(engine: Engine, player: Player) {
         for (const _pl of engine.players) {
           if (_pl !== engine.player(player)) {
             for (const loc of _pl.data.occupied) {
-              if (map.distance(loc, hex) < ISOLATED_DISTANCE) {
+              if (hex.hasStructure() && map.distance(loc, hex) < ISOLATED_DISTANCE) {
                 return false;
               }
             }
@@ -154,7 +155,7 @@ export function possibleBuildings(engine: Engine, player: Player) {
     } else if (pl.canOccupy(hex)) {
       // planet without building
       // Check if the range is enough to access the planet
-      const distance = _.min(data.occupied.map(loc => map.distance(hex, loc)));
+      const distance = _.min(data.occupied.filter(loc => loc.isRangeStartingPoint(player)).map(loc => map.distance(hex, loc)));
       const qicNeeded = Math.max(Math.ceil( (distance - data.range - data.temporaryRange) / QIC_RANGE_UPGRADE), 0);
 
       const building = hex.data.planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine;
@@ -184,6 +185,37 @@ export function possibleBuildings(engine: Engine, player: Player) {
   return [];
 }
 
+export function possibleSpaceStations(engine: Engine, player: Player) {
+  const map = engine.map;
+  const pl = engine.player(player);
+  const {data} = pl;
+  const buildings = [];
+
+  for (const hex of map.toJSON()) {
+    if (hex.occupied() || hex.hasPlanet()) {
+      continue;
+    }
+
+    const distance = _.min(data.occupied.filter(loc => loc.isRangeStartingPoint(player)).map(loc => map.distance(hex, loc)));
+    const qicNeeded = Math.max(Math.ceil( (distance - data.range - data.temporaryRange) / QIC_RANGE_UPGRADE), 0);
+    const {possible, cost, steps} = pl.canBuild(pl.planet, Building.SpaceStation, {addedCost: [new Reward(qicNeeded, Resource.Qic)]});
+
+    if (possible) {
+      buildings.push({
+        building: Building.SpaceStation,
+        coordinates: hex.toString(),
+        cost: Reward.toString(cost)
+      });
+    }
+  }
+
+  if (buildings.length > 0) {
+    return [{name: Command.Build, player, data: { buildings }}];
+  }
+
+  return [];
+}
+
 export function possibleMineBuildings(engine: Engine, player: Player, acceptGaiaFormer: boolean) {
   const commands = [];
   const [buildingCommand] = possibleBuildings(engine, player);
@@ -207,6 +239,7 @@ export function possibleMineBuildings(engine: Engine, player: Player, acceptGaia
 
   return commands;
 }
+
 export function possibleSpecialActions(engine: Engine, player: Player) {
   const commands = [];
   const specialacts = [];

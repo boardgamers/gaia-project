@@ -143,21 +143,12 @@ export default class Engine {
   addPlayer(player: Player) {
     this.players.push(player);
 
-    player.data.on(`gain-${Resource.TechTile}`, () => {
-      this.processNextMove(SubPhase.ChooseTechTile);
-    });
-    player.data.on(`gain-${Resource.TemporaryStep}`, () => {
-      this.processNextMove(SubPhase.BuildMine);
-    });
-    player.data.on(`gain-${Resource.TemporaryRange}`, () => {
-      this.processNextMove(SubPhase.BuildMineOrGaiaFormer);
-    });
-    player.data.on(`gain-${Resource.RescoreFederation}`, () => {
-      this.processNextMove(SubPhase.RescoreFederationTile);
-    });
-    player.data.on(`gain-${Resource.PISwap}`, () => {
-      this.processNextMove(SubPhase.PISwap);
-    });
+    player.data.on(`gain-${Resource.TechTile}`, () => this.processNextMove(SubPhase.ChooseTechTile));
+    player.data.on(`gain-${Resource.TemporaryStep}`, () => this.processNextMove(SubPhase.BuildMine));
+    player.data.on(`gain-${Resource.TemporaryRange}`, () => this.processNextMove(SubPhase.BuildMineOrGaiaFormer));
+    player.data.on(`gain-${Resource.RescoreFederation}`, () => this.processNextMove(SubPhase.RescoreFederationTile));
+    player.data.on(`gain-${Resource.PISwap}`, () => this.processNextMove(SubPhase.PISwap));
+    player.data.on(`gain-${Resource.SpaceStation}`, () => this.processNextMove(SubPhase.SpaceStation));
     player.data.on('brainstone', areas => this.processNextMove(SubPhase.BrainStone, areas));
   }
 

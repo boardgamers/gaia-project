@@ -35,6 +35,7 @@ export enum Resource {
   TerraformCostDiscount = "d",
   Range = "r",
   GaiaFormer = "gf",
+  SpaceStation = "space-station",
   UpgradeTerraforming = "up-terra",
   UpgradeNavigation = "up-nav",
   UpgradeIntelligence = "up-int",
@@ -317,5 +318,6 @@ export enum SubPhase {
   BrainStone = "brainStone",
   BuildMine = "buildMine",
   BuildMineOrGaiaFormer = "buildMineOrGaiaFormer",
+  SpaceStation = "spaceStation",
   PISwap = "swap-PI"
 }

@@ -4,8 +4,10 @@ import Player from "../player";
 import { freeActionsHadschHallas } from "../actions";
 
 const hadschHallas: FactionBoardRaw = {
-  [Building.PlanetaryInstitute]: {
-    cost: "~"
+  buildings: {
+    [Building.PlanetaryInstitute]: {
+      cost: "~"
+    }
   },
   income: ["3k,4o,15c,q,up-eco", "+o,k,3c"],
   handlers: {

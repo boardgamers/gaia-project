@@ -34,6 +34,19 @@ export class GaiaHex extends Hex<GaiaHexData> {
     return stdBuildingValue(this.buildingOf(player)) > 0;
   }
 
+  /** Space stations are not structures, so a trading station built near one will still be isolated */
+  hasStructure(): boolean {
+    return this.occupied && this.data.building !== Building.GaiaFormer && this.data.building !== Building.SpaceStation;
+  }
+
+  /**
+   * Can the player use this hex as a starting point to create new buildings?
+   * @param player
+   */
+  isRangeStartingPoint(player: Player): boolean {
+    return this.colonizedBy(player) || this.buildingOf(player) === Building.SpaceStation;
+  }
+
   buildingOf(player: Player): Building {
     if (this.data.additionalMine === player) {
       return Building.Mine;

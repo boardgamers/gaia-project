@@ -4,11 +4,13 @@ import Player from "../player";
 import { freeActionsNevlas } from "../actions";
 
 const nevlas: FactionBoardRaw = {
-  [Building.TradingStation]: {
-    income: [["+3c"], ["+4c"], ["+4c"], ["+5c"]],
-  },
-  [Building.ResearchLab]: {
-    income: [["+2pw", "tech"], ["+2pw", "tech"], ["+2pw", "tech"]]
+  buildings: {
+    [Building.TradingStation]: {
+      income: [["+3c"], ["+4c"], ["+4c"], ["+5c"]],
+    },
+    [Building.ResearchLab]: {
+      income: [["+2pw", "tech"], ["+2pw", "tech"], ["+2pw", "tech"]]
+    }
   },
   income: ["2k,4o,15c,q,up-sci", "+o,k"],
   handlers: {

@@ -142,7 +142,7 @@ export default class Player extends EventEmitter {
   }
 
   maxBuildings(building: Building) {
-    return building === Building.GaiaFormer ? (this.data.gaiaformers - this.data.gaiaformersInGaia) : this.board[building].income.length;
+    return building === Building.GaiaFormer ? (this.data.gaiaformers - this.data.gaiaformersInGaia) : this.board.buildings[building].income.length;
   }
 
   loadFaction(faction: Faction) {
@@ -236,7 +236,7 @@ export default class Player extends EventEmitter {
     // The mine of the lost planet doesn't grant any extra income
     if (hex.data.planet !== Planet.Lost) {
       // Add income of the building to the list of events
-      this.loadEvents(this.board[building].income[this.data[building]]);
+      this.loadEvents(this.board.buildings[building].income[this.data[building]]);
       this.data[building] += 1;
     }
 
@@ -244,7 +244,7 @@ export default class Player extends EventEmitter {
     const upgradedBuilding = hex.buildingOf(this.player);
     if (upgradedBuilding) {
       this.data[upgradedBuilding] -= 1;
-      this.removeEvents(this.board[upgradedBuilding].income[this.data[upgradedBuilding]]);
+      this.removeEvents(this.board.buildings[upgradedBuilding].income[this.data[upgradedBuilding]]);
     }
 
     // If the planet is already occupied by someone else
@@ -425,7 +425,7 @@ export default class Player extends EventEmitter {
   buildingValue(building: Building, planet: Planet) {
     let baseValue =  stdBuildingValue(building);
 
-    // Space stations or gaia-formers do not get any bonus
+    // Space stations and gaia-formers can't get leech when someone makes a structure nearby
     if (baseValue === 0) {
       return 0;
     }

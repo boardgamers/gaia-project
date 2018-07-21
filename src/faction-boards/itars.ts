@@ -2,8 +2,10 @@ import { FactionBoardRaw } from ".";
 import { Building } from "../enums";
 
 const itars: FactionBoardRaw = {
-  [Building.Academy1]: {
-    income: [["+3k", "tech"]]
+  buildings: {
+    [Building.Academy1]: {
+      income: [["+3k", "tech"]]
+    },
   },
   income: ["3k,5o,15c,q", "+o,k,t"],
   power: {
