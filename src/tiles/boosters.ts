@@ -1,9 +1,9 @@
 import { Booster } from "../enums";
 
-export default  {
-  [Booster.Booster1]: ["+k,o"],
+export default {
+  [Booster.Booster1]: ["+k", "+o"],
   [Booster.Booster2]: ["+o", "+2t"],
-  [Booster.Booster3]: ["+q,2c"],
+  [Booster.Booster3]: ["+q", "+2c"],
   [Booster.Booster4]: ["+2c", "=> step"],
   [Booster.Booster5]: ["+2pw", "=> range+3"],
   [Booster.Booster6]: ["+o", "m | vp"],
