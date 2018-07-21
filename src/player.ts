@@ -310,6 +310,7 @@ export default class Player extends EventEmitter {
   gainAdvTechTile(tile: AdvTechTile, pos: AdvTechTilePos) {
     this.loadEvents(Event.parse(advancedTechs[tile]));
     this.data.advTechTiles.push({tile, pos});
+    this.data.greenFederations -= 1;
   }
 
   coverTechTile(pos: TechTilePos) {

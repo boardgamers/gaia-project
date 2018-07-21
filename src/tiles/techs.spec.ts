@@ -102,13 +102,16 @@ describe("Tech Tiles", () => {
       p1 pass booster4
       p2 build lab -5x5. tech free2. up nav.
       p1 leech 4pw
-      p1 build lab -2x3. tech adv-gaia. cover free1. up gaia.
     `);
 
     const engine = new Engine(moves);
 
+    expect(() => engine.move('p1 build lab -2x3. tech adv-gaia. cover free1. up gaia.')).to.throw();
+
+    const engine1 = new Engine(moves);
+    expect(() => engine1.move('p1 build lab -2x3. tech adv-gaia. cover free1. up terra.')).to.not.throw();
     // tslint:disable-next-line no-unused-expression
-    expect(engine.player(Player.Player1).data.advTechTiles.find(tile => tile.pos === AdvTechTilePos.GaiaProject)).to.not.be.undefined;
-    expect(engine.advTechTiles[AdvTechTilePos.GaiaProject].numTiles).to.equal(0);
+    expect(engine1.player(Player.Player1).data.advTechTiles.find(tile => tile.pos === AdvTechTilePos.GaiaProject)).to.not.be.undefined;
+    expect(engine1.advTechTiles[AdvTechTilePos.GaiaProject].numTiles).to.equal(0);
   });
 });
