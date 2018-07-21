@@ -1,4 +1,4 @@
-import {Player, AdvTechTile, TechTile, TechTilePos, ScoringTile, FinalTile, AvailableCommand, GaiaHex, AdvTechTilePos} from "@gaia-project/engine";
+import {Player, AdvTechTile, TechTile, TechTilePos, ScoringTile, FinalTile, AvailableCommand, GaiaHex, AdvTechTilePos, Booster} from "@gaia-project/engine";
 
 export interface AugmentedPlayer extends Player {
   progress: {[key in FinalTile]: number};
@@ -23,6 +23,9 @@ export interface Data {
       numTiles: number
     }
   },
+  roundBoosters: {
+    [key in Booster]?: boolean
+  },
   roundScoringTiles: [ScoringTile, ScoringTile, ScoringTile, ScoringTile, ScoringTile, ScoringTile];
   finalScoringTiles: [FinalTile, FinalTile];
   // Should the next move be placed on a whole new line?
@@ -35,7 +38,8 @@ export interface GameContext {
   highlighted: {
     hexes: HighlightHexData,
     researchTiles: Set<string>,
-    techs: Set<TechTilePos | AdvTechTilePos>
+    techs: Set<TechTilePos | AdvTechTilePos>,
+    boosters: Set<Booster>
   };
 
   coordsMap: Map<string, GaiaHex>;

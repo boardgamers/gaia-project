@@ -9,6 +9,7 @@
     <div class="row mt-2">
       <div class="col-md-6 order-2 order-md-1">
         <PlayerInfo v-for="player in orderedPlayers" :player='player' :key="player.player" />
+        <Pool />
       </div>
       <div class="col-md-6 order-1 order-md-2" id="move-panel">
         <Commands @command="handleCommand"/>
@@ -36,6 +37,7 @@ import SpaceMap from './SpaceMap.vue';
 import PlayerInfo from './PlayerInfo.vue';
 import ResearchBoard from './ResearchBoard.vue';
 import ScoringBoard from './ScoringBoard.vue';
+import Pool from './Pool.vue';
 import { Command } from '@gaia-project/engine';
 
 @Component<Game>({
@@ -66,7 +68,8 @@ import { Command } from '@gaia-project/engine';
     SpaceMap,
     PlayerInfo,
     ResearchBoard,
-    ScoringBoard
+    ScoringBoard,
+    Pool
   }
 })
 export default class Game extends Vue {

@@ -3,11 +3,11 @@
     <div class="text">
       <b>Player {{player.player + 1}}</b> - {{faction}} - {{data.victoryPoints}}vp <span v-if="passed">(passed)</span><br/>
       {{data.credits}}c, {{data.ores}}o, {{data.knowledge}}k, {{data.qics}}q, [{{power('gaia')}}] {{power('area1')}}/{{power('area2')}}/{{power('area3')}} pw<br/>
-      range: {{data.range}}, gaia-form level: {{data.terraformCostDiscount}}<br/>
-      income: {{player.income.replace(/,/g, ', ')}}<br/>
-      {{boosterDesc}}
+      range: {{data.range}}, terraform level: {{data.terraformCostDiscount}}<br/>
+      income: {{player.income.replace(/,/g, ', ')}}
     </div>
     <div class="tiles">
+      <Booster v-if="data.roundBooster" :booster="data.roundBooster" :disabled="passed"/>
       <TechTile v-for="tech in data.techTiles" :disabled="!tech.enabled" :key="tech.pos" :pos="tech.pos" :player="player.player" />
       <TechTile v-for="tech in data.advTechTiles" :key="tech.pos" :pos="tech.pos" :player="player.player" />
     </div>
@@ -20,6 +20,7 @@ import { Component, Prop } from 'vue-property-decorator';
 import { Player, factions, tiles, PlayerData } from '@gaia-project/engine';
 import { factionColor } from '@/graphics/utils';
 import TechTile from './TechTile.vue';
+import Booster from './Booster.vue';
 
 @Component({
   computed: {
@@ -28,7 +29,8 @@ import TechTile from './TechTile.vue';
     }
   },
   components: {
-    TechTile
+    TechTile,
+    Booster
   }
 })
 export default class PlayerInfo extends Vue {
@@ -49,10 +51,6 @@ export default class PlayerInfo extends Vue {
 
   power(area: string) {
     return this.data.power[area] + (this.data.brainstone === area ? "(b)" : "");
-  }
-
-  get boosterDesc() {
-    return this.data.roundBooster ? this.data.roundBooster + ": " + tiles.boosters[this.data.roundBooster].map(x => x.replace(/,/g, ', ')).join(", ") : "(not selected)";
   }
 }
 export default interface PlayerInfo {
