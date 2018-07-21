@@ -281,7 +281,7 @@ export default class Commands extends Vue {
         }
 
         case Command.FormFederation: {
-          const tilesButtons = Object.values(Federation).map((fed, i) => ({
+          const tilesButtons = command.data.tiles.map((fed, i) => ({
             command: fed,
             label: `Federation ${i+1}: ${tiles.federations[fed]}`
           }));
