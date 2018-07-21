@@ -102,7 +102,7 @@ describe("Tech Tiles", () => {
       p1 pass booster4
       p2 build lab -5x5. tech free2. up nav.
       p1 leech 4pw
-      p1 build lab -2x3. tech adv-gaia. cover free1. up gaia
+      p1 build lab -2x3. tech adv-gaia. cover free1. up gaia.
     `);
 
     const engine = new Engine(moves);

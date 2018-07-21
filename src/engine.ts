@@ -822,7 +822,6 @@ export default class Engine {
     assert(tileAvailable !== undefined, `Impossible to cover ${tilePos} tile`);
     // remove tile
     this.player(player).coverTechTile(tileAvailable.tilePos);
-    this.processNextMove(SubPhase.UpgradeResearch);
   }
 
   [Command.Special](player: PlayerEnum, income: string) {
