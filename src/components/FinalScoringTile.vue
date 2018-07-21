@@ -2,9 +2,9 @@
   <g :class='["finalScoringTile", {highlighted}]' v-b-tooltip :title="tooltip">
     <rect x="1" y="1" width="75" height="55" />
     <text class="title" x="5" y="12">{{content}}</text>
-    <line v-for="i in [-1,0,1,2,3,4,5,6,7,8,9,10]" :key="i" :x1="posX(i)+3" :x2="posX(i)+3" y1="16" y2="52" />
-    <line :x1="posX(0)-3" :x2="posX(10)+3" y1="16" y2="16" />
-    <line :x1="posX(0)-3" :x2="posX(10)+3" y1="52" y2="52" />
+    <line v-for="i in [-1,0,1,2,3,4,5,6,7,8,9,10]" :key="i" :x1="posX(i)+3.05" :x2="posX(i)+3.05" y1="16" y2="52" />
+    <line :x1="posX(0)-3.05" :x2="posX(10)+3.05" y1="16" y2="16" />
+    <line :x1="posX(0)-3.05" :x2="posX(10)+3.05" y1="52" y2="52" />
     <Token v-for="(player, index) in players" :faction="player.faction" :transform="`translate(${tokenX(player)}, ${tokenY(index)})`" :key="player.faction" :scale="2.7" />
   </g>
 </template>
@@ -55,7 +55,7 @@ export default class FinalScoringTile extends Vue {
   }
 
   posX(progress: number) {
-    return 8 + Math.min(progress, 10) * 6;
+    return 8 + Math.min(progress, 10) * 6.1;
   }
 
   tokenY(index: number) {
