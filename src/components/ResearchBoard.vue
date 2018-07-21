@@ -1,6 +1,7 @@
 <template>
   <svg viewBox="0 0 360 440">
     <ResearchTrack v-for="(field, index) in fields" :field=field :x="index*60" :key="field" />
+    <text y="205" x="130" style="font-size: 14px">Charge 3 power</text>
     <g v-if="$store.state.game.data.techTiles && $store.state.game.data.techTiles['gaia']">
       <TechTile pos="free1" x="70" y="400" />
       <TechTile pos="free2" x="150" y="400" />
