@@ -1,5 +1,5 @@
 <template>
-  <button class='btn btn-secondary mr-2 mb-2 move-button' @click="handleClick" @mouseenter="hover" @mouseleave="leave">
+  <button class='btn btn-secondary mr-2 mb-2 move-button' @click="handleClick" @mouseenter="hover" @mouseleave="leave" :title="button.tooltip" v-b-tooltip>
     <slot></slot>
   </button>
 </template>
@@ -76,6 +76,16 @@ export default class Navbar extends Vue {
       this.$store.commit("highlightTechs", this.button.techs);
 
       this.subscribe('techClick', pos => this.emitCommand(pos, {final: true}));
+
+      this.emitCommand(null, {disappear: false});
+      return;
+    }
+
+    if (this.button.boosters) {
+      this.$store.commit("activeButton", this);
+      this.$store.commit("highlightBoosters", this.button.boosters);
+
+      this.subscribe('boosterClick', booster => this.emitCommand(booster, {final: true}));
 
       this.emitCommand(null, {disappear: false});
       return;

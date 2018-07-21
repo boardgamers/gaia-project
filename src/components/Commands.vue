@@ -153,7 +153,7 @@ export default class Commands extends Vue {
             if (command.data.boosters.includes(booster)) {
               buttons.push({
                 command: booster,
-                label: `Booster ${i+1}: ${tiles.boosters[booster].map(x => x.replace(/,/g, ', ')).join(", ")}`,
+                label: `Booster ${i+1}`,
                 tooltip: tiles.boosters[booster].map(spec => eventDesc(new Event(spec))).join("\n")
               });
             }
@@ -162,7 +162,8 @@ export default class Commands extends Vue {
           ret.push({
             label: command.name === Command.Pass ? "Pass" : "Pick booster",
             command: command.name,
-            buttons
+            buttons,
+            boosters: command.data.boosters
           });
 
           break;
