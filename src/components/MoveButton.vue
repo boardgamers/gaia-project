@@ -7,7 +7,7 @@
 <script lang="ts">
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
-import {GaiaHex, TechTilePos, AdvTechTilePos} from '@gaia-project/engine';
+import {GaiaHex, TechTilePos, AdvTechTilePos, Booster} from '@gaia-project/engine';
 import {HighlightHexData} from '../data';
 
 export interface ButtonData {
@@ -18,6 +18,7 @@ export interface ButtonData {
   hover?: boolean;
   researchTiles?: string[];
   techs?: Array<TechTilePos | AdvTechTilePos>;
+  boosters?: Booster[];
 
   buttons?: ButtonData[];
   hide?: boolean;

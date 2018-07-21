@@ -42,7 +42,7 @@ export default class ScoringTile extends Vue {
 
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 
 g {
   &.scoringTile {

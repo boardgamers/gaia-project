@@ -1,6 +1,6 @@
 <template>
   <g :transform="`translate(0, ${y})`" v-b-tooltip.html.left :title="tooltip">
-    <rect x="2" y="2" :class='["researchTile", field, {highlighted}]' width=56 height=46 rx="5" ry="5" @click="onClick" />
+    <rect x="2" y="2" :class='["researchTile", field, {highlighted}]' width=56 :height="height" rx="5" ry="5" @click="onClick" />
     <Token v-for="(player, index) in players" v-if="player.faction && player.data.research[field] == level" :faction="player.faction" :transform="`translate(${tokenX(index)}, ${tokenY(index)})`" :key="player.player" :scale="5" />
   </g>
 </template>
@@ -23,6 +23,9 @@ import Token from './Token.vue';
     highlighted(): boolean {
       return this.$store.state.game.context.highlighted.researchTiles.has(this.field + "-" + this.level)
     },
+    height() {
+      return (this.level == 0 || this.level == 5) ? 46 : 36
+    }
   },
   components: {
     Token
@@ -37,11 +40,11 @@ export default class ResearchTile extends Vue {
   level: number;
 
   tokenX(index: number) {
-    return 15 + 15*(index%3) + 7*(index > 2 ? 1 : 0);
+    return 15 + 15*(index%3) + 22*(index > 2 ? 1 : 0);
   }
 
   tokenY(index: number) {
-    return 15 + 15*(index > 2 ? 1 : 0);
+    return 13 + 13*(index > 2 ? 1 : 0);
   }
 
   onClick() {

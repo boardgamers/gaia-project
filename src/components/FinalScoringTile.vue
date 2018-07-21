@@ -79,7 +79,7 @@ export default interface FinalScoringTile {
 
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 
 g {
   &.finalScoringTile {
