@@ -16,7 +16,9 @@ export default new Vuex.Store({
           techs: new Set(),
           boosters: new Set()
         },
-        coordsMap: new Map()
+        coordsMap: new Map(),
+        hexSelection: false,
+        activeButton: null
       } as GameContext
     },
     error: null as string,
@@ -50,14 +52,23 @@ export default new Vuex.Store({
       state.game.context.highlighted.boosters = new Set(boosters);
     },
 
+    selectHexes(state, defaultHexes) {
+      state.game.context.hexSelection = true;
+      state.game.context.highlighted.hexes = new Map(defaultHexes || []);
+    },
+
     clearContext(state) {
       state.game.context.highlighted.hexes = new Map();
       state.game.context.highlighted.researchTiles = new Set();
       state.game.context.highlighted.techs = new Set();
       state.game.context.highlighted.boosters = new Set();
+      state.game.context.hexSelection = false;
     },
     
-    activeButton(state, button) {state.game.context.activeButton = button},
+    activeButton(state, button) {
+      state.game.context.activeButton = button;
+    },
+
     error: (state, error: string) => { state.error = error; state.errorIssued = new Date(); },
     info: (state, info: string) => { state.info = info; state.infoIssued = new Date(); },
     removeError: state => state.error = state.errorIssued = null,

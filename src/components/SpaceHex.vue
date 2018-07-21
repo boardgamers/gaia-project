@@ -1,7 +1,7 @@
 <template>
   <g :id="`${hex.q}x${hex.r}`" :title="'Cost: ' + cost(hex)">
     <title>Coordinates: {{hex.q}}x{{hex.r}}&#10;Sector: {{hex.data.sector}}{{hex.data.building ? `&#10;Building: ${buildingName(hex.data.building)}` : ''}}</title>
-    <polygon :points="hexCorners.map(p => `${p.x},${p.y}`).join(' ')" :class="{spaceHex: true, highlighted: highlightedHexes.has(hex), qic: cost(hex).includes('q')}" @click='hexClick(hex)' />
+    <polygon :points="hexCorners.map(p => `${p.x},${p.y}`).join(' ')" :class="['spaceHex', {toSelect, highlighted: highlightedHexes.has(hex), qic: cost(hex).includes('q')}]" @click='hexClick(hex)' />
     <Planet v-if="hex.data.planet !== 'e'" :planet='hex.data.planet' />
     <Building v-if="hex.data.building" :building='hex.data.building' :faction='faction(hex.data.player)' />
     <polygon v-for="(player, index) in hex.data.federations || []" :points="hexCorners.map(p => `${p.x*(1-(index+0.5)/8)},${p.y*(1-(index+0.5)/8)}`).join(' ')" :class="['spaceHexFederation', 'planet-stroke', planet(player)]" />
@@ -22,7 +22,10 @@ import { buildingName } from '../data/building';
 @Component<SpaceHex>({
   computed: {
     highlightedHexes(): Set<GaiaHex> {
-      return this.$store.state.game.context.highlighted.hexes
+      return this.$store.state.game.context.highlighted.hexes;
+    },
+    toSelect() {
+      return !!this.$store.state.game.context.hexSelection;
     }
   },
   components: {
@@ -45,7 +48,7 @@ export default class SpaceHex extends Vue {
   }
 
   hexClick(hex: GaiaHex) {
-    if (this.highlightedHexes.has(hex)) {
+    if (this.highlightedHexes.has(hex) || this.toSelect) {
       this.$store.dispatch('hexClick', hex);
     }
   }
@@ -63,7 +66,8 @@ export default class SpaceHex extends Vue {
   }
 }
 export default interface SpaceMap {
-  highlightedHexes: HighlightHexData
+  highlightedHexes: HighlightHexData;
+  toSelect: boolean;
 }
 
 </script>
@@ -87,6 +91,11 @@ svg {
       &.qic {
         fill: lightGreen
       }
+    }
+
+    &.toSelect {
+      cursor: pointer;
+      opacity: 0.7;
     }
   }
 

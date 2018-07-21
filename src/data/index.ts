@@ -4,6 +4,21 @@ export interface AugmentedPlayer extends Player {
   progress: {[key in FinalTile]: number};
 }
 
+export interface ButtonData {
+  label?: string;
+  command: string;
+  tooltip?: string;
+  hexes?: HighlightHexData;
+  hover?: boolean;
+  researchTiles?: string[];
+  techs?: Array<TechTilePos | AdvTechTilePos>;
+  boosters?: Booster[];
+  selectHexes?: boolean;
+
+  buttons?: ButtonData[];
+  hide?: boolean;
+}
+
 export type MapData = GaiaHex[];
 
 export interface Data {
@@ -43,5 +58,6 @@ export interface GameContext {
   };
 
   coordsMap: Map<string, GaiaHex>;
-  activeButton: any;
+  activeButton: ButtonData;
+  hexSelection: boolean;
 }

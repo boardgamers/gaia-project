@@ -8,24 +8,16 @@
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
 import {GaiaHex, TechTilePos, AdvTechTilePos, Booster} from '@gaia-project/engine';
-import {HighlightHexData} from '../data';
+import {HighlightHexData, ButtonData} from '../data';
 
-export interface ButtonData {
-  label?: string;
-  command: string;
-  tooltip?: string;
-  hexes?: HighlightHexData;
-  hover?: boolean;
-  researchTiles?: string[];
-  techs?: Array<TechTilePos | AdvTechTilePos>;
-  boosters?: Booster[];
-
-  buttons?: ButtonData[];
-  hide?: boolean;
-}
-
-@Component
-export default class Navbar extends Vue {
+@Component({
+  computed: {
+    isActiveButton() {
+      return this.$store.state.game.context.activeButton === this.button;
+    }
+  }
+})
+export default class MoveButton extends Vue {
   @Prop()
   public button: ButtonData;
 
@@ -39,7 +31,7 @@ export default class Navbar extends Vue {
         return;
       }
 
-      if (this.$store.state.game.context.activeButton !== this) {
+      if (!this.isActiveButton) {
         return;
       }
 
@@ -54,8 +46,8 @@ export default class Navbar extends Vue {
   }
 
   handleClick() {
-    if (this.button.hexes && !this.button.hover) {
-      this.$store.commit("activeButton", this);
+    if (this.button.hexes && !this.button.hover && !this.button.selectHexes) {
+      this.$store.commit("activeButton", this.button);
       this.$store.commit("highlightHexes", this.button.hexes);
 
       this.subscribe('hexClick', hex => this.emitCommand(`${hex.q}x${hex.r}`));
@@ -63,7 +55,7 @@ export default class Navbar extends Vue {
     }
 
     if (this.button.researchTiles) {
-      this.$store.commit("activeButton", this);
+      this.$store.commit("activeButton", this.button);
       this.$store.commit("highlightResearchTiles", this.button.researchTiles);
 
       this.subscribe('researchClick', field => this.emitCommand(field, {final: true}));
@@ -73,7 +65,7 @@ export default class Navbar extends Vue {
     }
 
     if (this.button.techs) {
-      this.$store.commit("activeButton", this);
+      this.$store.commit("activeButton", this.button);
       this.$store.commit("highlightTechs", this.button.techs);
 
       this.subscribe('techClick', pos => this.emitCommand(pos, {final: true}));
@@ -83,12 +75,41 @@ export default class Navbar extends Vue {
     }
 
     if (this.button.boosters) {
-      this.$store.commit("activeButton", this);
+      this.$store.commit("activeButton", this.button);
       this.$store.commit("highlightBoosters", this.button.boosters);
 
       this.subscribe('boosterClick', booster => this.emitCommand(booster, {final: true}));
 
       this.emitCommand(null, {disappear: false});
+      return;
+    }
+
+    if (this.button.selectHexes) {
+      // If already the active button, end the selection
+      if (this.isActiveButton) {
+        this.button.command = [...this.$store.state.game.context.highlighted.hexes.keys()].map(hex => `${hex.q}x${hex.r}`).join(',');
+        this.emitCommand();
+        return;
+      }
+
+      this.$store.commit("activeButton", this.button);
+      this.$store.commit("selectHexes", this.button.hexes);
+
+      this.button.label = "Custom location - End selection";
+
+      this.subscribe('hexClick', hex => {
+        const highlighted = this.$store.state.game.context.highlighted.hexes;
+
+        if (highlighted.has(hex)) {
+          highlighted.delete(hex);
+        } else {
+          highlighted.set(hex, null);
+        }
+
+        const keys: GaiaHex[] = [...highlighted.keys()];
+        this.$store.commit("highlightHexes", new Map([...keys.map(key => [key, null])] as any));
+      });
+
       return;
     }
     
@@ -126,6 +147,9 @@ export default class Navbar extends Vue {
 
     this.$store.commit("clearContext");
   }
+}
+export default interface MoveButton {
+  isActiveButton: boolean;
 }
 
 </script>

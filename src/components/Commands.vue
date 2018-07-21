@@ -30,9 +30,9 @@ import Vue from 'vue'
 import * as $ from "jquery";
 import { Component } from 'vue-property-decorator';
 import { AvailableCommand, Command, factions, Building, GaiaHex, Booster, tiles, Event, Federation } from '@gaia-project/engine';
-import MoveButton, {ButtonData} from './MoveButton.vue';
+import MoveButton from './MoveButton.vue';
 import {buildingName} from '../data/building';
-import {GameContext} from '../data';
+import {GameContext, ButtonData} from '../data';
 import { eventDesc } from '@/data/event';
 
 @Component<Commands>({
@@ -293,6 +293,13 @@ export default class Commands extends Vue {
             hover: true,
             buttons: tilesButtons
           }));
+
+          locationButtons.push({
+            label: "Custom location",
+            selectHexes: true,
+            hexes: locationButtons[0].hexes,
+            buttons: tilesButtons
+          });
 
           ret.push(({
             label: "Form federation",
