@@ -8,7 +8,7 @@ Vue.use(Vuex);
 export default new Vuex.Store({
   state: {
     game: {
-      data: {players: [], roundBoosters: [], map: [], availableCommands: [], round: 0, techTiles: null, advTechTiles: null, roundScoringTiles: null, finalScoringTiles: null, newTurn: true} as Data,
+      data: {players: [], roundBoosters: [], map: [], availableCommands: [], round: 0, techTiles: null, advTechTiles: null, roundScoringTiles: null, finalScoringTiles: null, newTurn: true, boardActions: {}} as Data,
       context: {
         highlighted: {
           hexes: new Map(),

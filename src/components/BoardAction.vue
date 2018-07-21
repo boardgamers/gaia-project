@@ -33,7 +33,7 @@ import { eventDesc } from '../data/event';
     },
 
     faded() {
-      return false; //this.$store.state.game.data.round > 0;
+      return !this.$store.state.game.data.boardActions[this.action];
     },
 
     kind() {
