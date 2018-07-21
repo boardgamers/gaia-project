@@ -47,7 +47,7 @@ export default class Building extends Vue {
   get lab() {return this.building === BuildingEnum.ResearchLab}
   get academy() {return this.building === BuildingEnum.Academy1 || this.building === BuildingEnum.Academy2}
   get gaiaFormer() {return this.building === BuildingEnum.GaiaFormer}
-  get spaceStation() { console.log(this.building); return this.building === BuildingEnum.SpaceStation }
+  get spaceStation() { return this.building === BuildingEnum.SpaceStation }
 }
 
 </script>
