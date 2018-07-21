@@ -12,6 +12,7 @@ export {Condition, Planet, Resource, Operator, ResearchField, Faction, Command, 
 export {TechTile, AdvTechTile, ScoringTile, FinalTile, TechTilePos, AdvTechTilePos, Phase, Round, Player as PlayerEnum} from "./src/enums";
 export {BrainstoneArea} from './src/enums';
 export {GaiaHexData, GaiaHex} from "./src/gaia-hex";
+export {terraformingStepsRequired} from './src/planets';
 
 export { Player, PlayerData, Event, FactionBoard, factions, AvailableCommand, tiles, Reward };
 
