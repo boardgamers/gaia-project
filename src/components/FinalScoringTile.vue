@@ -2,7 +2,10 @@
   <g :class='["finalScoringTile", {highlighted}]' v-b-tooltip :title="tooltip">
     <rect x="1" y="1" width="75" height="55" />
     <text class="title" x="5" y="12">{{content}}</text>
-    <Token v-for="(player, index) in players" :faction="player.faction" :transform="`translate(${tokenX(player)}, ${tokenY(index)})`" :key="player.faction" :scale="3" />
+    <line v-for="i in [-1,0,1,2,3,4,5,6,7,8,9,10]" :key="i" :x1="posX(i)+3" :x2="posX(i)+3" y1="16" y2="52" />
+    <line :x1="posX(0)-3" :x2="posX(10)+3" y1="16" y2="16" />
+    <line :x1="posX(0)-3" :x2="posX(10)+3" y1="52" y2="52" />
+    <Token v-for="(player, index) in players" :faction="player.faction" :transform="`translate(${tokenX(player)}, ${tokenY(index)})`" :key="player.faction" :scale="2.7" />
   </g>
 </template>
 
@@ -48,7 +51,11 @@ export default class FinalScoringTile extends Vue {
   index: number;
 
   tokenX(player: AugmentedPlayer) {
-    return 10 + Math.min(player.progress[this.tile], 10) * 5.5;
+    return this.posX(player.progress[this.tile]);
+  }
+
+  posX(progress: number) {
+    return 8 + Math.min(progress, 10) * 6;
   }
 
   tokenY(index: number) {
@@ -86,6 +93,11 @@ g {
       font-size: 10px;
       font-weight: bold;
       pointer-events: none;
+    }
+
+    line {
+      stroke-width: 0.2;
+      stroke: #111;
     }
 
     &.highlighted rect {
