@@ -9,5 +9,6 @@ export function buildingName(building: Building): string {
     case Building.ResearchLab: return "research lab";
     case Building.PlanetaryInstitute: return "planetary institute";
     case Building.GaiaFormer: return "gaia-former";
+    case Building.SpaceStation: return "space station";
   }
 }

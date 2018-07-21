@@ -6,6 +6,7 @@
     <circle v-else-if="lab" r="0.3" />
     <circle v-else-if="academy" r="0.5" />
     <polygon v-else-if="tradingStation" :points="triangleCorners"/>
+    <Token v-else-if="spaceStation" :faction="faction" :scale="0.3" />
   </g>
 </template>
 
@@ -14,8 +15,13 @@ import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import { factions, Faction, Building as BuildingEnum } from '@gaia-project/engine';
 import { corners } from '@/graphics/hex';
+import Token from './Token.vue';
 
-@Component
+@Component({
+  components: {
+    Token
+  }
+})
 export default class Building extends Vue {
   @Prop()
   faction: Faction;
@@ -41,6 +47,7 @@ export default class Building extends Vue {
   get lab() {return this.building === BuildingEnum.ResearchLab}
   get academy() {return this.building === BuildingEnum.Academy1 || this.building === BuildingEnum.Academy2}
   get gaiaFormer() {return this.building === BuildingEnum.GaiaFormer}
+  get spaceStation() { console.log(this.building); return this.building === BuildingEnum.SpaceStation }
 }
 
 </script>

@@ -135,7 +135,7 @@ export default class Commands extends Vue {
 
             if (coordinates.length > 0) {
               ret.push({
-                label: (building === Building.Mine ? "Build a" : building === Building.GaiaFormer ? "Place a ": "Upgrade to") + " " + buildingName(building),
+                label: (building === Building.Mine ? "Build a" : (building === Building.GaiaFormer || building === Building.SpaceStation) ? "Place a ": "Upgrade to") + " " + buildingName(building),
                 command: `${Command.Build} ${building}`,
                 hexes: new Map(coordinates.map(coord => [this.context.coordsMap.get(coord.coordinates), coord]))
               });
