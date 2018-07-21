@@ -1,4 +1,4 @@
-import {Condition, Event, Operator, Reward} from "@gaia-project/engine";
+import {Condition, Event, Operator, Reward, Resource} from "@gaia-project/engine";
 
 const conditionsCount = {
   [Condition.Mine]: "mine",
@@ -34,10 +34,22 @@ const operators = {
   [Operator.Special]: "Planetary institutes and academies have a power value of 4, when building federations and charging power."
 }
 
+function rewardDesc(rewards: Reward[]) {
+  return rewards.map(reward => {
+    switch (reward.type) {
+      case Resource.TechTile: return `${reward.count} tech tile${reward.count > 1 ? 's' : ''}`;
+      case Resource.TemporaryStep: return `${reward.count} temporary step${reward.count > 1 ? 's' : ''}`;
+      case Resource.TemporaryRange: return `${reward.count} temporary range`;
+      case Resource.RescoreFederation: return `the rewards from one of your federation tokens`;
+      default: return reward.toString();
+    }
+  }).join(", ");
+}
+
 export function eventDesc(event: Event) {
   const operatorString = operators[event.operator];
   const conditionString = event.operator === Operator.Trigger ? conditionsTrigger[event.condition] + "," : (conditionsCount[event.condition] && "for each " + conditionsCount[event.condition] + ",");
-  const rewardString = event.rewards.length === 0 ? '' : "gain " + Reward.toString(event.rewards);
+  const rewardString = event.rewards.length === 0 ? '' : "gain " + rewardDesc(event.rewards);
 
   return [operatorString, conditionString, rewardString].filter(x => !!x).join(" ");
 }

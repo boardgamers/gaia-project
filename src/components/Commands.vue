@@ -300,6 +300,19 @@ export default class Commands extends Vue {
             buttons: locationButtons
           }));
         }
+
+        case Command.ChooseFederationTile: {
+          const tilesButtons = command.data.tiles.map((fed, i) => ({
+            command: fed,
+            label: `Federation ${i+1}: ${tiles.federations[fed]}`
+          }));
+
+          ret.push(({
+            label: "Rescore federation",
+            command: Command.ChooseFederationTile,
+            buttons: tilesButtons
+          }));
+        }
       }
     }
 
