@@ -299,6 +299,7 @@ export default class Commands extends Vue {
             command: Command.FormFederation,
             buttons: locationButtons
           }));
+          break;
         }
 
         case Command.ChooseFederationTile: {
@@ -312,6 +313,7 @@ export default class Commands extends Vue {
             command: Command.ChooseFederationTile,
             buttons: tilesButtons
           }));
+          break;
         }
       }
     }
