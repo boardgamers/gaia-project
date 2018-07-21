@@ -13,7 +13,7 @@
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
 import {MapData, HighlightHexData} from '../data';
-import { GaiaHex, factions } from '@gaia-project/engine';
+import { GaiaHex, factions, Building as BuildingEnum } from '@gaia-project/engine';
 import {corners } from "../graphics/hex";
 import Planet from './Planet.vue';
 import Building from './Building.vue';
@@ -58,7 +58,7 @@ export default class SpaceHex extends Vue {
     return factions.planet(this.faction(player));
   }
 
-  buildingName(building: Building) {
+  buildingName(building: BuildingEnum) {
     return buildingName(building);
   }
 }
