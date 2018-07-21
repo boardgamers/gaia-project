@@ -51,8 +51,11 @@ export default class PlayerData extends EventEmitter {
   roundBooster: Booster;
   techTiles: Array<{ tile: TechTile, pos: TechTilePos, enabled: boolean}> = [];
   advTechTiles: Array<{ tile: AdvTechTile, pos: AdvTechTilePos}> = [];
+  /** Federation tiles (including gleens & terraforming federation) */
   federations: Federation[] = [];
   greenFederations: number = 0;
+  /** Number of federations built (used for ivits) */
+  federationCount: number = 0;
   /** Coordinates occupied by buildings */
   occupied: GaiaHex[] = [];
   brainstone: BrainstoneArea = null;

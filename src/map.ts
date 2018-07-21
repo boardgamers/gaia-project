@@ -3,7 +3,7 @@ import * as seedrandom from "seedrandom";
 import * as shuffleSeed from "shuffle-seed";
 import * as _ from "lodash";
 import Sector from "./sector";
-import { Player, Planet } from "./enums";
+import { Player, Planet, Faction } from "./enums";
 import { GaiaHexData, GaiaHex } from "./gaia-hex";
 
 // Data: from outer ring to inside ring, starting from a corner
@@ -134,7 +134,7 @@ export default class SpaceMap {
     return distance;
   }
 
-  excludedHexesForBuildingFederation(player: Player) {
+  excludedHexesForBuildingFederation(player: Player, faction: Faction) {
     const ret: Set<GaiaHex> = new Set();
 
     for (const hex of this.grid.values()) {
@@ -146,7 +146,7 @@ export default class SpaceMap {
 
       // If the player already has a federation including this hex, then this hex
       // and the ones around are off limits.
-      if (hex.belongsToFederationOf(player)) {
+      if (faction !== Faction.Ivits && hex.belongsToFederationOf(player)) {
         ret.add(hex);
         for (const neighbour of this.grid.neighbours(hex)) {
           ret.add(neighbour);
