@@ -370,23 +370,12 @@ export function possibleResearchAreas(engine: Engine, player: Player, cost: stri
   const tracks = [];
   const data = engine.player(player).data;
 
-  if (engine.players[player].canPay(Reward.parse(cost))) {
+  if (engine.player(player).canPay(Reward.parse(cost))) {
     for (const field of Object.values(ResearchField)) {
-
-      // already on top
-      if (data.research[field] === researchTracks.lastTile(field)) {
-        continue;
-      }
-
       // end of the track reached
       const destTile = data.research[field] + 1;
 
-      // To go from 4 to 5, we need to flip a federation and nobody inside
-      if (researchTracks.keyNeeded(field, destTile) && data.greenFederations === 0) {
-        continue;
-      }
-
-      if (engine.playersInOrder().some(pl => pl.data.research[field] === researchTracks.lastTile(field))) {
+      if (destTile === researchTracks.lastTile(field) && engine.playersInOrder().some(pl => pl.data.research[field] === destTile)) {
         continue;
       }
 
