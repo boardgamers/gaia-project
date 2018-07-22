@@ -83,7 +83,6 @@ export default class PlayerData extends EventEmitter {
       gaiaformers: this.gaiaformers,
       terraformCostDiscount: this.terraformCostDiscount,
       tiles: this.tiles,
-      occupied: this.occupied,
       satellites: this.satellites,
       brainstone: this.brainstone,
       leechPossible: this.leechPossible,
@@ -382,6 +381,7 @@ export default class PlayerData extends EventEmitter {
   }
 
   gainFinalVictoryPoints() {
+    const before = this.victoryPoints;
     // Gain 4 points for research at level 3, 8 points for research at level 4
     // and 12 points for research at level 12
     for (const research of Object.values(ResearchField)) {

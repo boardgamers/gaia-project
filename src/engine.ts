@@ -43,7 +43,7 @@ const ISOLATED_DISTANCE = 3;
 
 export default class Engine {
   map: SpaceMap;
-  players: Player[];
+  players: Player[] = [];
   tiles: {
     boosters: {
       [key in Booster]?: boolean
@@ -201,15 +201,35 @@ export default class Engine {
 
   static fromData(data: any) {
     const engine = new Engine();
-    engine.phase = data.phase;
-    engine.round = data.round;
-    engine.availableCommands = data.availableCommands;
+
+    Object.assign(engine, _.omit(data, "map", "players"));
     engine.map = SpaceMap.fromData(data.map);
     for (const player of data.players) {
       engine.addPlayer(Player.fromData(player));
     }
 
+    for (const hex of engine.map.grid.values()) {
+      for (const player of hex.occupyingPlayers()) {
+        engine.player(player).data.occupied.push(hex);
+      }
+    }
+
     return engine;
+  }
+
+  static slowMotion([first, ...moves]: string[]): Engine {
+    if (!first) {
+      return new Engine();
+    }
+    let state = JSON.parse(JSON.stringify(new Engine([first])));
+
+    for (const move of moves) {
+      const tempEngine = Engine.fromData(state);
+      tempEngine.move(move);
+      state = JSON.parse(JSON.stringify(tempEngine));
+    }
+
+    return Engine.fromData(state);
   }
 
   static parseMoves(moves: string) {
@@ -469,10 +489,6 @@ export default class Engine {
 
       // resets special action
       for (const event of player.events[Operator.Activate]) {
-        event.activated = false;
-      }
-      // resets income action
-      for (const event of player.events[Operator.Income]) {
         event.activated = false;
       }
     }
@@ -986,11 +1002,6 @@ export default class Engine {
       incomes.splice(eventIdx, 1);
     }
     pl.receiveIncomeEvent(Reward.parse(income));
-    // no more income selection needed
-    const { needed } = pl.needIncomeSelection();
-    if (!needed) {
-      pl.receiveIncome();
-    }
   }
 
   [Command.FormFederation](player: PlayerEnum, hexes: string, federation: Federation) {

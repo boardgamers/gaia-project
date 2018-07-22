@@ -52,7 +52,8 @@ export default class Player extends EventEmitter {
       data: this.data,
       income: Reward.toString(Reward.merge([].concat(...this.events[Operator.Income].map(event => event.rewards))), true),
       progress:  Object.assign({}, ...Object.values(FinalTile).map( track => ({ [track]: this.eventConditionCount(finalScorings[track])}))),
-      actions: this.events[Operator.Activate].map(event => ({rewards: event.spec.replace('=>', '').trim(), enabled: !event.activated}))
+      actions: this.events[Operator.Activate].map(event => ({rewards: event.spec.replace('=>', '').trim(), enabled: !event.activated})),
+      events: this.events
     };
   }
 
@@ -60,11 +61,15 @@ export default class Player extends EventEmitter {
     const player = new Player(data.player);
 
     if (data.faction) {
-      player.loadFaction(data.faction);
+      player.loadFaction(data.faction, true);
     }
 
     if (data.data) {
       _.merge(player.data, data.data);
+    }
+
+    for (const kind of Object.keys(data.events)) {
+      player.events[kind] = data.events[kind].map(ev => new Event(ev));
     }
 
     return player;
@@ -145,11 +150,13 @@ export default class Player extends EventEmitter {
     return building === Building.GaiaFormer ? (this.data.gaiaformers - this.data.gaiaformersInGaia) : this.board.buildings[building].income.length;
   }
 
-  loadFaction(faction: Faction) {
+  loadFaction(faction: Faction, skipIncome = false) {
     this.faction = faction;
     this.board = factionBoard(faction);
 
-    this.loadEvents(this.board.income);
+    if (!skipIncome) {
+      this.loadEvents(this.board.income);
+    }
 
     this.data.power.area1 = this.board.power.area1;
     this.data.power.area2 = this.board.power.area2;
@@ -378,7 +385,9 @@ export default class Player extends EventEmitter {
     for (const event of this.events[Operator.Income]) {
       if ( !event.activated ) {
         this.gainRewards(event.rewards);
-        event.activated = true;
+      } else {
+        // clean up event
+        event.activated = false;
       }
     }
   }
@@ -487,7 +496,7 @@ export default class Player extends EventEmitter {
   factionReward(reward: Reward): Reward {
     // this is for Gleens getting ore instead of qics until Academy2
     if (this.faction === Faction.Gleens && this.data.buildings[Building.Academy2] === 0 && reward.type === Resource.Qic) {
-      reward.type = Resource.Ore;
+      return new Reward(reward.count, Resource.Ore);
     }
     return reward;
   }

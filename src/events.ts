@@ -49,14 +49,19 @@ export default class Event {
 
   constructor(spec: string) {
     this.spec = spec;
+
+    if (this.spec.endsWith("!")) {
+      this.spec = this.spec.slice(0, this.spec.length - 1);
+      this.activated = true;
+    }
     let remaining: string;
 
-    if (spec.toLowerCase().trim() === Operator.Special.toLowerCase()) {
+    if (this.spec.toLowerCase().trim() === Operator.Special.toLowerCase()) {
       this.condition = Condition.None;
       this.rewards = [];
       this.operator = Operator.Special;
     } else {
-      [this.condition, remaining] = findCondition(spec);
+      [this.condition, remaining] = findCondition(this.spec);
       [this.operator, remaining] = findOperator(remaining);
       this.rewards = Reward.parse(remaining);
     }

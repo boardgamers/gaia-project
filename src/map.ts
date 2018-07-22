@@ -107,7 +107,7 @@ export default class SpaceMap {
   static fromData(data: any) {
     const map = new SpaceMap();
 
-    map.grid = new Grid(...data);
+    map.grid = new Grid(...data.map(hex => new GaiaHex(hex.q, hex.r, hex.data)));
 
     return map;
   }

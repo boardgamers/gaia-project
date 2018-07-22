@@ -27,6 +27,10 @@ export class GaiaHex extends Hex<GaiaHexData> {
     return this.data.player !== undefined;
   }
 
+  occupyingPlayers(): Player[] {
+    return [this.data.player, this.data.additionalMine].filter(x => x !== undefined);
+  }
+
   // Space stations do not count as colonized, gaia-formers do not count as colonized
   colonizedBy(player: Player): boolean {
     // Neither space stations nor gaia formers have a building value, and every building with a building

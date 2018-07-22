@@ -4,7 +4,6 @@ import { AssertionError } from "assert";
 import { Player, Federation, Operator, AdvTechTilePos, Building } from "./enums";
 
 describe("Engine", () => {
-
   it("should throw when trying to build on the wrong place", () => {
     const moves = [
       "init 2 randomSeed",
@@ -249,157 +248,44 @@ describe("Engine", () => {
   });
 
   it("should handle this full 2 player game with lost planet", () => {
-    const moves = Engine.parseMoves(`
-      init 2 randomSeed
-      p1 faction terrans
-      p2 faction gleens
-      p1 build m -1x2
-      p2 build m -2x2
-      p2 build m -5x5
-      p1 build m -3x4
-      p2 booster booster5
-      p1 booster booster3
-      p1 up gaia.
-      p2 special range+3. build m 1x0.
-      p1 charge 1pw
-      p1 build ts -3x4.
-      p2 charge 1pw
-      p2 build ts -5x5.
-      p1 decline
-      p1 build lab -3x4. tech free2. up gaia.
-      p2 charge 2pw
-      p2 build lab -5x5. tech free2. up nav.
-      p1 decline
-      p1 build gf -2x3.
-      p2 up nav.
-      p1 build ts -1x2.
-      p2 charge 1pw
-      p2 action power3.
-      p1 special 4pw.
-      p2 special 4pw.
-      p1 action power5.
-      p2 build ts -2x2.
-      p1 decline
-      p1 build gf -3x1.
-      p2 build m 1x2.
-      p1 charge 2pw
-      p1 pass booster4
-      p2 pass booster3
-      p1 special 4pw.
-      p2 special 4pw.
-      p1 up terra.
-      p2 action power5.
-      p1 action power3.
-      p2 up nav.
-      p1 build PI -1x2.
-      p2 charge 2pw
-      p2 spend 1pw for 1c. build PI -2x2.
-      p1 decline
-      p1 build m -2x3.
-      p2 decline
-      p2 federation -1x1,-2x2,-3x3,-4x4,-5x5,0x1,0x2,1x0,1x2 fed4. spend 1o for 1t.
-      p1 build gf -5x6.
-      p2 spend 1k for 1c. build ts 1x0.
-      p1 charge 3pw
-      p1 spend 3pw for 1o. burn 1. spend 3pw for 1o. build ts -2x3.
-      p2 charge 3pw
-      p2 spend 2pw for 2c. pass booster7
-      p1 federation -1x2,-2x3,-3x4 fed6.
-      p1 pass booster5
-      p1 income 1t
-      p1 spend 4tg for 1q
-      p2 build lab 1x0. tech free3. up nav. spend 1pw for 1c. spend 1pw for 1c.
-      p1 charge 3pw
-      p1 up terra.
-      p2 special 4pw. spend 1pw for 1c. spend 1pw for 1c.
-      p1 build m -3x1.
-      p2 charge 3pw
-      p2 spend 1pw for 1c. spend 1o for 1t. pass booster3
-      p1 special 4pw.
-      p1 action power3.
-      p1 special range+3. build gf 0x4.
-      p1 spend 1pw for 1c. build m -5x6.
-      p2 charge 2pw
-      p1 burn 1. spend 2pw for 2c. build m -4x6.
-      p2 decline
-      p1 pass booster8
-      p1 income 4pw
-      p1 spend 4tg for 1k
-      p2 spend 1o for 1t. special 4pw.
-      p1 up terra.
-      p2 action power3.
-      p1 build m 0x4.
-      p2 charge 1pw
-      p2 up nav. lostPlanet 1x-4.
-      p1 special 4pw.
-      p2 build m 4x-1.
-      p1 action power4.
-      p2 build m 2x-4.
-      p1 build m -4x2.
-      p2 charge 3pw
-      p2 build m -7x3.
-      p1 burn 1. spend 4pw for 1q. build m -4x-1.
-      p2 pass booster7
-      p1 pass booster5
-      p1 income 2pw. income 4pw
-      p2 build ac2 1x0. tech terra.
-      p1 charge 3pw
-      p1 build ac2 -3x4. tech terra.
-      p2 up terra.
-      p1 special 4pw.
-      p2 action power3.
-      p1 action power5.
-      p2 special 4pw.
-      p1 up terra.
-      p2 special q.
-      p1 special range+3. build gf 2x-2.
-      p2 build ts 1x2.
-      p1 charge 3pw
-      p1 special q.
-      p2 pass booster8
-      p1 burn 1. action power4.
-      p1 build ts -3x1.
-      p2 decline
-      p1 pass booster7
-      p1 income 4pw
-      p1 spend 4tg for 1q
-      p2 action power4.
-      p1 special 4pw.
-      p2 up terra.
-      p1 special q.
-      p2 build m -4x0.
-      p1 charge 2pw
-      p1 build m 2x-2.
-      p2 charge 3pw
-      p2 special q.
-      p1 up gaia.
-      p2 build lab 1x2. tech adv-nav. cover terra. up terra.
-      p1 charge 3pw
-      p1 action qic2. fedtile fed6.
-      p2 build ts 2x-4.
-      p1 charge 1pw
-      p1 action power5.
-      p2 special 4pw.
-      p1 up gaia.
-      p2 action power3.
-      p1 build ts -4x2.
-      p2 decline
-      p2 build m -3x-2.
-      p1 charge 1pw
-      p1 build ts -4x-1.
-      p2 charge 1pw
-      p2 action qic3.
-      p1 spend 3pw for 1o. build m -5x0.
-      p2 charge 1pw
-      p2 pass
-      p1 federation -3x-1,-3x0,-3x1,-4x-1,-4x2,-5x0 fed1.
-      p1 pass
-    `);
-
-    const engine = new Engine(moves);
+    const engine = new Engine(fullGame());
 
     expect(engine.player(Player.Player1).data.victoryPoints).to.equal(122);
-    expect(engine.player(Player.Player2).data.victoryPoints).to.equal(95);
+    expect(engine.player(Player.Player2).data.victoryPoints).to.equal(96);
+  });
+
+  it ("should be able to load/save state", function() {
+    this.timeout(10000);
+    let state: any = null;
+    const baseLine = new Engine();
+    const moveList = fullGame();
+
+    for (const move of moveList.slice(0, moveList.length - 1)) {
+      baseLine.move(move);
+      if (!state) {
+        const engine = new Engine([move]);
+        state = JSON.parse(JSON.stringify(engine));
+      } else {
+        const engine = Engine.fromData(state);
+        engine.move(move);
+        state = JSON.parse(JSON.stringify(engine));
+      }
+
+      expect(state.players[0].data.knowledge).to.equal(baseLine.players[0].data.knowledge, "Error loading move " + move);
+      expect(state.players[1].income).to.equal(baseLine.players[1].toJSON().income, "Error loading move " + move);
+      expect(state.players[1].events[Operator.Income].length).to.equal(baseLine.players[1].events[Operator.Income].length, "Error loading move " + move);
+      expect(state.players[1].data.ores).to.equal(baseLine.players[1].data.ores, "Error loading move " + move);
+    }
+
+    const endEngine = Engine.fromData(state);
+    expect(endEngine.player(Player.Player1).data.victoryPoints).to.equal(baseLine.player(Player.Player1).data.victoryPoints);
+    expect(endEngine.player(Player.Player2).data.victoryPoints).to.equal(baseLine.player(Player.Player2).data.victoryPoints);
+
+    const lastMove = moveList.pop();
+    endEngine.move(lastMove);
+    baseLine.move(lastMove);
+    expect(endEngine.player(Player.Player1).data.victoryPoints).to.equal(baseLine.player(Player.Player1).data.victoryPoints);
+    expect(endEngine.player(Player.Player2).data.victoryPoints).to.equal(baseLine.player(Player.Player2).data.victoryPoints);
   });
 
   it("should throw when two players choose factions on the same planet", () => {
@@ -470,4 +356,153 @@ describe("Engine", () => {
 
 function parseMoves(moves: string) {
   return Engine.parseMoves(moves);
+}
+
+function fullGame() {
+  return parseMoves(`
+    init 2 randomSeed
+    p1 faction terrans
+    p2 faction gleens
+    p1 build m -1x2
+    p2 build m -2x2
+    p2 build m -5x5
+    p1 build m -3x4
+    p2 booster booster5
+    p1 booster booster3
+    p1 up gaia.
+    p2 special range+3. build m 1x0.
+    p1 charge 1pw
+    p1 build ts -3x4.
+    p2 charge 1pw
+    p2 build ts -5x5.
+    p1 decline
+    p1 build lab -3x4. tech free2. up gaia.
+    p2 charge 2pw
+    p2 build lab -5x5. tech free2. up nav.
+    p1 decline
+    p1 build gf -2x3.
+    p2 up nav.
+    p1 build ts -1x2.
+    p2 charge 1pw
+    p2 action power3.
+    p1 special 4pw.
+    p2 special 4pw.
+    p1 action power5.
+    p2 build ts -2x2.
+    p1 decline
+    p1 build gf -3x1.
+    p2 build m 1x2.
+    p1 charge 2pw
+    p1 pass booster4
+    p2 pass booster3
+    p1 special 4pw.
+    p2 special 4pw.
+    p1 up terra.
+    p2 action power5.
+    p1 action power3.
+    p2 up nav.
+    p1 build PI -1x2.
+    p2 charge 2pw
+    p2 spend 1pw for 1c. build PI -2x2.
+    p1 decline
+    p1 build m -2x3.
+    p2 decline
+    p2 federation -1x1,-2x2,-3x3,-4x4,-5x5,0x1,0x2,1x0,1x2 fed4. spend 1o for 1t.
+    p1 build gf -5x6.
+    p2 spend 1k for 1c. build ts 1x0.
+    p1 charge 3pw
+    p1 spend 3pw for 1o. burn 1. spend 3pw for 1o. build ts -2x3.
+    p2 charge 3pw
+    p2 spend 2pw for 2c. pass booster7
+    p1 federation -1x2,-2x3,-3x4 fed6.
+    p1 pass booster5
+    p1 income 1t
+    p1 spend 4tg for 1q
+    p2 build lab 1x0. tech free3. up nav. spend 1pw for 1c. spend 1pw for 1c.
+    p1 charge 3pw
+    p1 up terra.
+    p2 special 4pw. spend 1pw for 1c. spend 1pw for 1c.
+    p1 build m -3x1.
+    p2 charge 3pw
+    p2 spend 1pw for 1c. spend 1o for 1t. pass booster3
+    p1 special 4pw.
+    p1 action power3.
+    p1 special range+3. build gf 0x4.
+    p1 spend 1pw for 1c. build m -5x6.
+    p2 charge 2pw
+    p1 burn 1. spend 2pw for 2c. build m -4x6.
+    p2 decline
+    p1 pass booster8
+    p1 income 4pw
+    p1 spend 4tg for 1k
+    p2 spend 1o for 1t. special 4pw.
+    p1 up terra.
+    p2 action power3.
+    p1 build m 0x4.
+    p2 charge 1pw
+    p2 up nav. lostPlanet 1x-4.
+    p1 special 4pw.
+    p2 build m 4x-1.
+    p1 action power4.
+    p2 build m 2x-4.
+    p1 build m -4x2.
+    p2 charge 3pw
+    p2 build m -7x3.
+    p1 burn 1. spend 4pw for 1q. build m -4x-1.
+    p2 pass booster7
+    p1 pass booster5
+    p1 income 2pw. income 4pw
+    p2 build ac2 1x0. tech terra.
+    p1 charge 3pw
+    p1 build ac2 -3x4. tech terra.
+    p2 up terra.
+    p1 special 4pw.
+    p2 action power3.
+    p1 action power5.
+    p2 special 4pw.
+    p1 up terra.
+    p2 special q.
+    p1 special range+3. build gf 2x-2.
+    p2 build ts 1x2.
+    p1 charge 3pw
+    p1 special q.
+    p2 pass booster8
+    p1 burn 1. action power4.
+    p1 build ts -3x1.
+    p2 decline
+    p1 pass booster7
+    p1 income 4pw
+    p1 spend 4tg for 1q
+    p2 action power4.
+    p1 special 4pw.
+    p2 up terra.
+    p1 special q.
+    p2 build m -4x0.
+    p1 charge 2pw
+    p1 build m 2x-2.
+    p2 charge 3pw
+    p2 special q.
+    p1 up gaia.
+    p2 build lab 1x2. tech adv-nav. cover terra. up terra.
+    p1 charge 3pw
+    p1 action qic2. fedtile fed6.
+    p2 build ts 2x-4.
+    p1 charge 1pw
+    p1 action power5.
+    p2 special 4pw.
+    p1 up gaia.
+    p2 action power3.
+    p1 build ts -4x2.
+    p2 decline
+    p2 build m -3x-2.
+    p1 charge 1pw
+    p1 build ts -4x-1.
+    p2 charge 1pw
+    p2 action qic3.
+    p1 spend 3pw for 1o. build m -5x0.
+    p2 charge 1pw
+    p2 pass
+    p1 federation -3x-1,-3x0,-3x1,-4x-1,-4x2,-5x0 fed1.
+    p1 pass
+  `);
 }

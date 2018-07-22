@@ -16,7 +16,7 @@ app.post("/", (req, res) => {
 
   try {
     const moves = req.body.moves;
-    const engine = new Engine(moves);
+    const engine = new Engine(moves); // Engine.slowMotion(moves || []);
 
     if (!engine.availableCommands) {
       engine.generateAvailableCommands();
