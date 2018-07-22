@@ -555,6 +555,19 @@ export default class Engine {
   advanceResearchAreaPhase(player: PlayerEnum, cost: string, field: ResearchField ) {
     const pl = this.player(player);
 
+    if (!pl.canUpgradeResearch(field)) {
+      return;
+    }
+
+    const destTile = pl.data.research[field] + 1;
+
+    // If someone is already on last tile
+    if (destTile === researchTracks.lastTile(field)) {
+      if (this.players.some(pl2 => pl2.data.research[field] === destTile)) {
+        return;
+      }
+    }
+
     pl.payCosts(Reward.parse(cost));
     pl.gainRewards([new Reward(`${Command.UpgradeResearch}-${field}`)]);
 

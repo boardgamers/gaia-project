@@ -6,7 +6,7 @@ import * as _ from 'lodash';
 import factions from './factions';
 import Reward from './reward';
 import { CubeCoordinates, Hex, Grid } from 'hexagrid';
-import researchTracks from './research-tracks';
+import * as researchTracks from './research-tracks';
 import { terraformingStepsRequired } from './planets';
 import boosts from './tiles/boosters';
 import { Player as PlayerEnum } from './enums';
@@ -350,8 +350,25 @@ export default class Player extends EventEmitter {
     return this.data.gaiaPowerTokens() >= 4 && this.faction === Faction.Itars && this.data.hasPlanetaryInstitute();
   }
 
-  canUpgradeResearch( field: ResearchField): boolean {
-    return this.faction !== Faction.BalTaks || (this.data.hasPlanetaryInstitute() && field === ResearchField.Navigation || field !== ResearchField.Navigation);
+  canUpgradeResearch(field: ResearchField): boolean {
+    // already on top
+    if (this.data.research[field] === researchTracks.lastTile(field)) {
+      return false;
+    }
+
+    // end of the track reached
+    const destTile = this.data.research[field] + 1;
+
+    // To go from 4 to 5, we need to flip a federation and nobody inside
+    if (researchTracks.keyNeeded(field, destTile) && this.data.greenFederations === 0) {
+      return false;
+    }
+
+    if (this.faction === Faction.BalTaks && !this.data.hasPlanetaryInstitute() && field === ResearchField.Navigation) {
+      return false;
+    }
+
+    return true;
   }
 
   receiveIncome() {
