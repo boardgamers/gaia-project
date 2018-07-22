@@ -373,12 +373,6 @@ export function possibleResearchAreas(engine: Engine, player: Player, cost?: str
     const minArea = Math.min(...Object.values(data.research));
     const avFields = !lowestOnly ? Object.values(ResearchField) : Object.values(ResearchField).filter( field => data.research[field] === minArea);
     for (const field of avFields) {
-
-      // already on top
-      if (data.research[field] === researchTracks.lastTile(field)) {
-        continue;
-      }
-
       // end of the track reached
       const destTile = data.research[field] + 1;
 
