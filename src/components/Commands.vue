@@ -79,6 +79,9 @@ export default class Commands extends Vue {
   }
 
   get player(): string {
+    if (this.$store.state.game.data.players[this.command.player].faction) {
+      return factions[this.$store.state.game.data.players[this.command.player].faction].name;
+    }
     return "Player " + (this.command.player+1);
   }
 
