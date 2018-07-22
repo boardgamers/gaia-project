@@ -16,9 +16,9 @@ describe('Hadsch Hallas', () => {
       p2 booster booster3
       p1 booster booster7
       p1 build ts 1x5.
-      p2 leech 1pw
+      p2 charge 1pw
       p2 build ts 2x4.
-      p1 leech 2pw
+      p1 charge 2pw
       p1 build PI 1x5. spend 4c for 1k
     `);
 

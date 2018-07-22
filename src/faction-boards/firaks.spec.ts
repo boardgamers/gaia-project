@@ -17,19 +17,19 @@ describe("Firaks", () => {
       p2 booster booster3
       p1 booster booster7
       p1 build ts -1x-1.
-      p2 leech 1pw
+      p2 charge 1pw
       p2 build ts -1x0.
-      p1 leech 2pw
+      p1 charge 2pw
       p1 build PI -1x-1.
-      p2 leech 2pw
+      p2 charge 2pw
       p2 build PI -1x0.
-      p1 leech 3pw
+      p1 charge 3pw
       p1 up terra.
       p2 up sci.
       p1 build ts 3x-2.
-      p2 leech 1pw
+      p2 charge 1pw
       p2 spend 1q for 1o. build ts 3x-3.
-      p1 leech 2pw
+      p1 charge 2pw
       p1 action power3.
       p2 burn 2. spend 4t-a3 for 4k. up sci.
       p1 spend 1pw for 1c. spend 1q for 1o. spend 1o for 1c. build lab 3x-2. tech terra.

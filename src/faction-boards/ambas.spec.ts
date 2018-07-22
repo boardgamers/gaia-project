@@ -17,12 +17,12 @@ describe("Ambas", () => {
       p2 booster booster3
       p1 booster booster4
       p1 build ts 2x2.
-      p2 leech 1pw
+      p2 charge 1pw
       p2 build ts 2x4.
-      p1 leech 2pw
+      p1 charge 2pw
       p1 pass booster7
       p2 build PI 2x4.
-      p1 leech 2pw
+      p1 charge 2pw
     `);
 
     expect(() => new Engine([...moves, "p2 special swap-PI. swap-PI 5x-3."])).to.not.throw();

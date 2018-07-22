@@ -17,17 +17,17 @@ describe('Itars', () => {
       p2 booster booster3
       p1 booster booster4
       p1 build ts -1x2.
-      p2 leech 1pw
+      p2 charge 1pw
       p2 build ts -1x0.
-      p1 leech 2pw
+      p1 charge 2pw
       p1 build lab -1x2. tech gaia.
-      p2 leech 2pw
+      p2 charge 2pw
       p2 up gaia.
       p1 up gaia.
       p2 spend 1o for 1t. build gf -3x1. burn 2.
       p1 pass booster5
       p2 build PI -1x0.
-      p1 leech 2pw
+      p1 charge 2pw
       p2 pass booster4
       p2 income 4pw
       p2 spend 4tg for tech. tech int. decline

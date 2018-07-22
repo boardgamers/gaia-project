@@ -37,13 +37,13 @@ describe('Ivits', () => {
       p1 income 4pw
       p1 special step. build m 1x2.
       p2 build ts 3x-1.
-      p1 leech 3pw
+      p1 charge 3pw
       p1 build m 3x0.
-      p2 leech 2pw
+      p2 charge 2pw
       p2 build lab 3x-1. tech free3. up gaia.
-      p1 leech 3pw
+      p1 charge 3pw
       p1 action power2. build m 2x1.
-      p2 leech 2pw
+      p2 charge 2pw
       p2 up gaia.
       p1 up int.
       p2 build gf 2x0.

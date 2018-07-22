@@ -19,7 +19,6 @@ import federationTiles, { isGreen } from "./tiles/federations";
 import { EventEmitter } from "eventemitter3";
 import { finalScorings } from './tiles/scoring';
 import techs from './tiles/techs';
-import advancedTechs from './tiles/advanced-techs';
 import * as assert from "assert";
 
 const TERRAFORMING_COST = 3;
@@ -97,7 +96,7 @@ export default class Player extends EventEmitter {
   }
 
   canBuild(targetPlanet: Planet, building: Building, {isolated, addedCost, existingBuilding}: {isolated?: boolean, addedCost?: Reward[], existingBuilding?: Building}): {cost?: Reward[], possible: boolean, steps?: number} {
-    if (this.data[building] >= this.maxBuildings(building)) {
+    if (this.data.buildings[building] >= this.maxBuildings(building)) {
       // Too many buildings of the same kind
       return {possible: false};
     }
@@ -226,7 +225,7 @@ export default class Player extends EventEmitter {
     this.removeEvents(oldEvents);
 
     if (this.data.research[field] === lastTile(field)) {
-      this.data.greenFederations -= 1;
+      this.data.removeGreenFederation();
     }
 
     this.receiveAdvanceResearchTriggerIncome();
@@ -242,8 +241,8 @@ export default class Player extends EventEmitter {
     // The mine of the lost planet doesn't grant any extra income
     if (hex.data.planet !== Planet.Lost) {
       // Add income of the building to the list of events
-      this.data[building] += 1; // NEEDS TO BE BEFORE, so gleens can get qic from tech if they build academy 2
-      this.loadEvents(this.board.buildings[building].income[this.data[building] - 1]);
+      this.data.buildings[building] += 1; // NEEDS TO BE BEFORE REWARDS, so gleens can get qic from tech if they build academy 2
+      this.loadEvents(this.board.buildings[building].income[this.data.buildings[building] - 1]);
     } else {
       this.data.lostPlanet += 1;
     }
@@ -251,8 +250,8 @@ export default class Player extends EventEmitter {
     // remove upgraded building and the associated event
     const upgradedBuilding = hex.buildingOf(this.player);
     if (upgradedBuilding) {
-      this.data[upgradedBuilding] -= 1;
-      this.removeEvents(this.board.buildings[upgradedBuilding].income[this.data[upgradedBuilding]]);
+      this.data.buildings[upgradedBuilding] -= 1;
+      this.removeEvents(this.board.buildings[upgradedBuilding].income[this.data.buildings[upgradedBuilding]]);
     }
 
     // If the planet is already occupied by someone else
@@ -300,8 +299,8 @@ export default class Player extends EventEmitter {
   pass(lastRound = false) {
     this.receivePassIncome();
     // remove the old booster
-    this.removeEvents(Event.parse( boosts[this.data.roundBooster]));
-    this.data.roundBooster =  undefined;
+    this.removeEvents(Event.parse( boosts[this.data.tiles.booster]));
+    this.data.tiles.booster =  undefined;
 
     if (lastRound) {
       this.data.finalResourceHandling();
@@ -310,23 +309,17 @@ export default class Player extends EventEmitter {
 
   getRoundBooster(roundBooster: Booster) {
     // add the booster to the the player
-    this.data.roundBooster =  roundBooster;
+    this.data.tiles.booster =  roundBooster;
     this.loadEvents(Event.parse( boosts[roundBooster]));
   }
 
-  gainTechTile(tile: TechTile, pos: TechTilePos) {
+  gainTechTile(tile: TechTile | AdvTechTile, pos: TechTilePos | AdvTechTilePos) {
     this.loadEvents(Event.parse(techs[tile]));
-    this.data.techTiles.push({tile, pos, enabled: true});
-  }
-
-  gainAdvTechTile(tile: AdvTechTile, pos: AdvTechTilePos) {
-    this.loadEvents(Event.parse(advancedTechs[tile]));
-    this.data.advTechTiles.push({tile, pos});
-    this.data.greenFederations -= 1;
+    this.data.tiles.techs.push({tile, pos, enabled: Object.values(TechTilePos).includes(pos)});
   }
 
   coverTechTile(pos: TechTilePos) {
-    const tile = this.data.techTiles.find(tech => tech.pos === pos);
+    const tile = this.data.tiles.techs.find(tech => tech.pos === pos);
     tile.enabled = false;
     this.removeEvents(Event.parse(techs[tile.tile]));
   }
@@ -367,7 +360,7 @@ export default class Player extends EventEmitter {
     const destTile = this.data.research[field] + 1;
 
     // To go from 4 to 5, we need to flip a federation and nobody inside
-    if (keyNeeded(field, destTile) && this.data.greenFederations === 0) {
+    if (keyNeeded(field, destTile) && this.data.hasGreenFederation) {
       return false;
     }
 
@@ -468,7 +461,7 @@ export default class Player extends EventEmitter {
       baseValue = 4;
     }
 
-    const addedBescods = this.faction === Faction.Bescods && this.data[Building.PlanetaryInstitute] === 1  && planet === Planet.Titanium ? 1 : 0;
+    const addedBescods = this.faction === Faction.Bescods && this.data.buildings[Building.PlanetaryInstitute] === 1  && planet === Planet.Titanium ? 1 : 0;
 
     return baseValue + addedBescods;
   }
@@ -479,17 +472,18 @@ export default class Player extends EventEmitter {
   }
 
   gainFederationToken(federation: Federation) {
-    this.data.federations.push(federation);
-    if (isGreen(federation)) {
-      this.data.greenFederations += 1;
-    }
+    this.data.tiles.federations.push({
+      tile: federation,
+      green: isGreen(federation)
+    });
+
     this.gainRewards(Reward.parse(federationTiles[federation]));
     this.receiveNewFederationTriggerIncome();
   }
 
   factionReward(reward: Reward): Reward {
     // this is for Gleens getting ore instead of qics until Academy2
-    if (this.faction === Faction.Gleens && this.data[Building.Academy2] === 0 && reward.type === Resource.Qic) {
+    if (this.faction === Faction.Gleens && this.data.buildings[Building.Academy2] === 0 && reward.type === Resource.Qic) {
       reward.type = Resource.Ore;
     }
     return reward;
@@ -508,17 +502,17 @@ export default class Player extends EventEmitter {
   eventConditionCount(condition: Condition): number {
     switch (condition) {
       case Condition.None: return 1;
-      case Condition.Mine: return this.data[Building.Mine];
-      case Condition.TradingStation: return this.data[Building.TradingStation];
-      case Condition.ResearchLab: return this.data[Building.ResearchLab];
-      case Condition.PlanetaryInstituteOrAcademy: return this.data[Building.Academy1] + this.data[Building.Academy2] + this.data[Building.PlanetaryInstitute];
-      case Condition.Federation: return this.data.federations.length;
+      case Condition.Mine: return this.data.buildings[Building.Mine];
+      case Condition.TradingStation: return this.data.buildings[Building.TradingStation];
+      case Condition.ResearchLab: return this.data.buildings[Building.ResearchLab];
+      case Condition.PlanetaryInstituteOrAcademy: return this.data.buildings[Building.Academy1] + this.data.buildings[Building.Academy2] + this.data.buildings[Building.PlanetaryInstitute];
+      case Condition.Federation: return this.data.tiles.federations.length;
       case Condition.Gaia: return this.data.occupied.filter(hex => hex.data.planet === Planet.Gaia && hex.colonizedBy(this.player)).length;
       case Condition.PlanetType: return _.uniq(this.data.occupied.filter(hex => hex.data.planet !== Planet.Empty && hex.colonizedBy(this.player)).map(hex => hex.data.planet)).length;
       case Condition.Sector: return _.uniq(this.data.occupied.filter(hex => hex.colonizedBy(this.player)).map(hex => hex.data.sector)).length;
       case Condition.Structure: return this.data.occupied.filter(hex => hex.colonizedBy(this.player)).length;
       case Condition.StructureFed: return this.data.occupied.filter(hex => hex.colonizedBy(this.player) && hex.belongsToFederationOf(this.player)).length;
-      case Condition.Satellite: return this.data.satellites + this.data[Building.SpaceStation];
+      case Condition.Satellite: return this.data.satellites + this.data.buildings[Building.SpaceStation];
     }
 
     return 0;

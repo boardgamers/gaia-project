@@ -17,12 +17,12 @@ describe("Geodens", () => {
       p2 booster booster5
       p1 booster booster4
       p1 build ts -4x0.
-      p2 leech 1pw
+      p2 charge 1pw
       p2 special range+3. build m -1x2.
       p1 build PI -4x0.
-      p2 leech 1pw
+      p2 charge 1pw
       p2 build ts -4x-1.
-      p1 leech 3pw
+      p1 charge 3pw
     `));
 
     const k = engine.player(Player.Player1).data.knowledge;
@@ -33,7 +33,7 @@ describe("Geodens", () => {
     expect(engine.player(Player.Player1).data.knowledge).to.equal(k + 3);
 
     engine.loadMoves(parseMoves(`
-      p2 leech 2pw
+      p2 charge 2pw
       p2 up gaia.
       p1 burn 2. action power6. build m -2x-4
     `));

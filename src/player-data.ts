@@ -25,14 +25,12 @@ export default class PlayerData extends EventEmitter {
     area3: 0,
     gaia: 0
   };
-  [Building.Mine]: number = 0;
-  [Building.TradingStation]: number = 0;
-  [Building.PlanetaryInstitute]: number = 0;
-  [Building.ResearchLab]: number = 0;
-  [Building.Academy1]: number = 0;
-  [Building.Academy2]: number = 0;
-  [Building.GaiaFormer]: number = 0;
-  [Building.SpaceStation]: number = 0;
+  brainstone: BrainstoneArea = null;
+
+  buildings: {
+    [key in Building]: number
+  } = _.fromPairs(Object.values(Building).map(bld => [bld, 0])) as any;
+
   satellites: number = 0;
   research: {
     [key in ResearchField]: number
@@ -46,19 +44,22 @@ export default class PlayerData extends EventEmitter {
   /** number of gaiaformers gained that are in gaia area */
   gaiaformersInGaia: number = 0;
   terraformCostDiscount: number = 0;
-  temporaryStep: number = 0;
 
-  roundBooster: Booster;
-  techTiles: Array<{ tile: TechTile, pos: TechTilePos, enabled: boolean}> = [];
-  advTechTiles: Array<{ tile: AdvTechTile, pos: AdvTechTilePos}> = [];
-  /** Federation tiles (including gleens & terraforming federation) */
-  federations: Federation[] = [];
-  greenFederations: number = 0;
+  tiles: {
+    booster: Booster;
+    techs: Array<{ tile: TechTile | AdvTechTile, pos: TechTilePos | AdvTechTilePos, enabled: boolean}>
+    federations: Array<{tile: Federation, green: boolean}>
+  } = {
+    booster: null,
+    techs: [],
+    federations: []
+  };
+
   /** Number of federations built (used for ivits) */
   federationCount: number = 0;
+
   /** Coordinates occupied by buildings */
   occupied: GaiaHex[] = [];
-  brainstone: BrainstoneArea = null;
   leechPossible: number;
   tokenModifier: number = 1;
   lostPlanet: number = 0;
@@ -66,6 +67,7 @@ export default class PlayerData extends EventEmitter {
   // Internal variables, not meant to be in toJSON():
   followBrainStoneHeuristics = true;
   brainstoneDest: BrainstoneArea | "discard";
+  temporaryStep: number = 0;
 
   toJSON(): Object {
     const ret = {
@@ -80,22 +82,14 @@ export default class PlayerData extends EventEmitter {
       temporaryRange: this.temporaryRange,
       gaiaformers: this.gaiaformers,
       terraformCostDiscount: this.terraformCostDiscount,
-      temporaryStep: this.temporaryStep,
-      roundBooster: this.roundBooster,
-      techTiles: this.techTiles,
-      advTechTiles: this.advTechTiles,
-      federations: this.federations,
-      greenFederations: this.greenFederations,
+      tiles: this.tiles,
       occupied: this.occupied,
       satellites: this.satellites,
       brainstone: this.brainstone,
       leechPossible: this.leechPossible,
-      tokenModifier: this.tokenModifier
+      tokenModifier: this.tokenModifier,
+      buildings: this.buildings
     };
-
-    for (const building of Object.values(Building)) {
-      ret[building] = this[building];
-    }
 
     return ret;
   }
@@ -191,14 +185,14 @@ export default class PlayerData extends EventEmitter {
       case Resource.GainTokenGaiaArea: return this.gaiaPowerTokens() >= reward.count;
       case Resource.ChargePower: return this.spendablePowerTokens() >= reward.count;
       case Resource.TokenArea3: return this.power.area3 >= reward.count;
-      case Resource.GaiaFormer: return this.gaiaformers - this.gaiaformersInGaia - this[Building.GaiaFormer]  >= reward.count;
+      case Resource.GaiaFormer: return this.gaiaformers - this.gaiaformersInGaia - this.buildings[Building.GaiaFormer]  >= reward.count;
     }
 
     return false;
   }
 
   hasPlanetaryInstitute(): boolean {
-    return this[Building.PlanetaryInstitute] > 0;
+    return this.buildings[Building.PlanetaryInstitute] > 0;
   }
 
   discardablePowerTokens(): number {
@@ -361,6 +355,10 @@ export default class PlayerData extends EventEmitter {
     return this.brainstone === BrainstoneArea.Area3 ? 3 : 0;
   }
 
+  hasGreenFederation() {
+    return this.tiles.federations.some(fed => fed.green);
+  }
+
   gaiaFormingDiscount() {
     return this.gaiaformers > 1  ?  this.gaiaformers : 0;
   }
@@ -394,5 +392,14 @@ export default class PlayerData extends EventEmitter {
     const resources = this.ores + this.credits + this.knowledge;
 
     this.victoryPoints += Math.floor(resources / 3);
+  }
+
+  removeGreenFederation() {
+    this.tiles.federations.some(fed => {
+      if (fed.green) {
+        fed.green = false;
+        return true;
+      }
+    });
   }
 }

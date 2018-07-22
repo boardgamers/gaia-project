@@ -11,10 +11,10 @@ describe("boosters", () => {
     const engine4 = new Engine(['init 4 randomSeed']);
     const engine5 = new Engine(['init 5 randomSeed']);
 
-    expect(Object.keys(engine2.roundBoosters)).to.have.length(5);
-    expect(Object.keys(engine3.roundBoosters)).to.have.length(6);
-    expect(Object.keys(engine4.roundBoosters)).to.have.length(7);
-    expect(Object.keys(engine5.roundBoosters)).to.have.length(8);
+    expect(Object.keys(engine2.tiles.boosters)).to.have.length(5);
+    expect(Object.keys(engine3.tiles.boosters)).to.have.length(6);
+    expect(Object.keys(engine4.tiles.boosters)).to.have.length(7);
+    expect(Object.keys(engine5.tiles.boosters)).to.have.length(8);
   });
 
   it("should throw when selecting invalid round booster", () => {
@@ -62,7 +62,7 @@ describe("boosters", () => {
       p1 booster booster3
       p1 build m -4x0.
       p2 build ts -5x5.
-      p1 leech 1pw
+      p1 charge 1pw
       p1 pass booster4
     `);
 

@@ -39,17 +39,17 @@ describe("gleens", () => {
       p1 booster booster5
       p1 build m -5x0.
       p2 build ts -5x5.
-      p1 leech 1pw
+      p1 charge 1pw
       p1 build m -4x2.
       p2 build PI -5x5.
-      p1 leech 1pw
+      p1 charge 1pw
     `);
 
     const engine = new Engine(moves);
     const data = engine.player(Player.Player2).data;
 
     // tslint:disable-next-line no-unused-expression
-    expect(data.federations.includes(Federation.FederationGleens)).to.be.true;
+    expect(data.tiles.federations.some(fed => fed.tile === Federation.FederationGleens)).to.be.true;
   });
 
   it('should grant gleens two victory points when building a mine on a gaia planet', () => {

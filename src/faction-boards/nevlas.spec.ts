@@ -17,17 +17,17 @@ describe("Nevlas", () => {
       p2 booster booster4
       p1 booster booster3
       p1 build ts -1x0.
-      p2 leech 1pw
+      p2 charge 1pw
       p2 build ts -2x2.
-      p1 leech 2pw
+      p1 charge 2pw
       p1 build ts 2x2.
-      p2 leech 1pw
+      p2 charge 1pw
       p2 build lab -2x2. tech terra.
-      p1 leech 2pw
+      p1 charge 2pw
       p1 spend 1q for 1o. build PI -1x0.
-      p2 leech 2pw
+      p2 charge 2pw
       p2 build ts 1x2.
-      p1 leech 2pw
+      p1 charge 2pw
     `));
 
     const a3 = engine.player(Player.Player1).data.power.area3;
@@ -55,13 +55,13 @@ describe("Nevlas", () => {
       p2 booster booster3
       p1 booster booster7
       p1 build ts -1x-1.
-      p2 leech 1pw
+      p2 charge 1pw
       p2 build ts -1x0.
-      p1 leech 2pw
+      p1 charge 2pw
       p1 build PI -1x-1.
-      p2 leech 2pw
+      p2 charge 2pw
       p2 build PI -1x0.
-      p1 leech 3pw
+      p1 charge 3pw
       p1 up terra.
     `));
 

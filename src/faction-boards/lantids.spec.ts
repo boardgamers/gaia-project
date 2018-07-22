@@ -18,7 +18,7 @@ describe("Lantids", () => {
       p2 booster booster3
       p1 booster booster7
       p1 build m -2x2.
-      p2 leech 1pw
+      p2 charge 1pw
     `);
 
     expect(() => new Engine(moves)).to.not.throw();
@@ -38,7 +38,7 @@ describe("Lantids", () => {
       p1 booster booster7
     `));
 
-    engine.player(Player.Player1).data[Building.PlanetaryInstitute] = 1;
+    engine.player(Player.Player1).data.buildings[Building.PlanetaryInstitute] = 1;
     const k = engine.player(Player.Player1).data.knowledge;
     engine.move("p1 build m -2x2.");
     expect(engine.player(Player.Player1).data.knowledge).to.equal(k + 2);

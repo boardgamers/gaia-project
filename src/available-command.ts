@@ -248,10 +248,10 @@ export function possibleSpecialActions(engine: Engine, player: Player) {
 
   for (const event of pl.events[Operator.Activate]) {
     if (!event.activated) {
-      if (event.rewards[0].type === Resource.DowngradeLab && (pl.data[Building.ResearchLab] === 0 || pl.data[Building.TradingStation] >= pl.maxBuildings(Building.TradingStation))) {
+      if (event.rewards[0].type === Resource.DowngradeLab && (pl.data.buildings[Building.ResearchLab] === 0 || pl.data.buildings[Building.TradingStation] >= pl.maxBuildings(Building.TradingStation))) {
         continue;
       }
-      if (event.rewards[0].type === Resource.PISwap && pl.data[Building.Mine] === 0) {
+      if (event.rewards[0].type === Resource.PISwap && pl.data.buildings[Building.Mine] === 0) {
         continue;
       }
       specialacts.push({
@@ -278,7 +278,7 @@ export function possibleBoardActions(engine: Engine, player: Player) {
   const poweracts = Object.values(BoardAction).filter(pwract => engine.boardActions[pwract] && engine.player(player).canPay(Reward.parse(boardActions[pwract].cost)));
 
   // Prevent using the rescore action if no federation token
-  if (engine.player(player).data.federations.length === 0) {
+  if (engine.player(player).data.tiles.federations.length === 0) {
     _.remove(poweracts, act => act === BoardAction.Qic2);
   }
   if (poweracts.length > 0) {
@@ -441,7 +441,7 @@ export function possibleSpaceLostPlanet(engine: Engine, player: Player) {
 
 export function possibleRoundBoosters(engine: Engine, player: Player) {
   const commands = [];
-  const boosters = engine.isLastRound ? [] : Object.values(Booster).filter(booster => engine.roundBoosters[booster]);
+  const boosters = engine.isLastRound ? [] : Object.values(Booster).filter(booster => engine.tiles.boosters[booster]);
 
   commands.push(
     {
@@ -456,7 +456,7 @@ export function possibleRoundBoosters(engine: Engine, player: Player) {
 
 export function possibleFederations(engine: Engine, player: Player) {
   const commands = [];
-  const possibleTiles = Object.keys(engine.federations).filter(key => engine.federations[key] > 0);
+  const possibleTiles = Object.keys(engine.tiles.federations).filter(key => engine.tiles.federations[key] > 0);
 
   if (possibleTiles.length > 0) {
     const possibleFeds = engine.player(player).availableFederations(engine.map);
@@ -510,7 +510,7 @@ export function possibleLeech(engine: Engine, player: Player) {
   const pl = engine.player(player);
 
   if ( pl.data.leechPossible > 0) {
-    [Command.Leech, Command.Decline].map(name => commands.push({
+    [Command.ChargePower, Command.Decline].map(name => commands.push({
       name,
       player,
       data: {
@@ -527,13 +527,13 @@ export function possibleLeech(engine: Engine, player: Player) {
 export function possibleCoverTechTiles(engine: Engine, player: Player) {
   const commands = [];
 
-  const tiles = engine.player(player).data.techTiles.filter(tl => tl.enabled);
+  const tiles = engine.player(player).data.tiles.techs.filter(tl => tl.enabled);
   commands.push({
     name: Command.ChooseCoverTechTile,
     player,
     data: {tiles: tiles.map(tech => ({
       tile: tech.tile,
-      tilePos: Object.values(TechTilePos).find(pos => engine.techTiles[pos].tile === tech.tile)
+      pos: Object.values(TechTilePos).find(pos => engine.tiles.techs[pos].tile === tech.tile)
     }))}
   });
 
@@ -543,8 +543,8 @@ export function possibleCoverTechTiles(engine: Engine, player: Player) {
 export function possibleFederationTiles(engine: Engine, player: Player, from: "pool" | "player") {
   const commands = [];
 
-  const possibleTiles = Object.keys(engine.federations).filter(key => engine.federations[key] > 0);
-  const playerTiles = engine.player(player).data.federations;
+  const possibleTiles = Object.keys(engine.tiles.federations).filter(key => engine.tiles.federations[key] > 0);
+  const playerTiles = engine.player(player).data.tiles.federations.map(fed => fed.tile);
 
   commands.push({
     name: Command.ChooseFederationTile,
@@ -566,11 +566,10 @@ export function possibleTechTiles(engine: Engine, player: Player) {
 
   //  tech tiles that player doesn't already have
   for (const tilePos of Object.values(TechTilePos)) {
-    if (!_.find(data.techTiles, {tile: engine.techTiles[tilePos].tile})) {
+    if (!_.find(data.tiles.techs, {tile: engine.tiles.techs[tilePos].tile})) {
       tiles.push({
-        tile: engine.techTiles[tilePos].tile,
-        tilePos,
-        type: "std"
+        tile: engine.tiles.techs[tilePos].tile,
+        pos: tilePos
       });
     }
   }
@@ -578,23 +577,30 @@ export function possibleTechTiles(engine: Engine, player: Player) {
   // adv tech tiles where player has lev 4/5, free federation tokens,
   // and available std tech tiles to cover
   for (const tilePos of Object.values(AdvTechTilePos)) {
-    if (engine.advTechTiles[tilePos].numTiles > 0  &&
-        data.greenFederations > 0 &&
-        data.research[tilePos.slice("adv-".length)] >= 4 &&
-        data.techTiles.filter(tech => tech.enabled).length > 0 ) {
-          tiles.push({
-            tile: engine.advTechTiles[tilePos].tile,
-            tilePos,
-            type: "adv"
-          });
+    if (engine.tiles.techs[tilePos].numTiles <= 0) {
+      continue;
     }
+    if (!data.hasGreenFederation) {
+      continue;
+    }
+    if (data.research[tilePos.slice("adv-".length)] < 4) {
+      continue;
+    }
+    if (!data.tiles.techs.some(tech => tech.enabled)) {
+      continue;
+    }
+
+    tiles.push({
+      tile: engine.tiles.techs[tilePos].tile,
+      pos: tilePos
+    });
   }
   if (tiles.length > 0) {
     commands.push({
       name: Command.ChooseTechTile,
       player,
       data: { tiles }
-  });
+    });
   }
   return commands;
 }

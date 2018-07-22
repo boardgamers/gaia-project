@@ -70,7 +70,7 @@ describe("Free Actions", () => {
       p2 booster booster4
       p1 booster booster7
       p1 build ts -1x2. burn 2.
-      p2 leech 1pw
+      p2 charge 1pw
       p2 build ts -1x0. burn 1
     `);
 
@@ -93,7 +93,7 @@ describe("Power/QIC Actions", () => {
       p1 up gaia.
       p2 build ts -1x-1.
       p1 build m -1x0.
-      p2 leech 2pw
+      p2 charge 2pw
       p2 burn 3. action power7
     `);
 
@@ -119,7 +119,7 @@ describe("Power/QIC Actions", () => {
 
   it("action qic2 should rescore federation", () => {
     const moves = parseMoves(`
-    init 2 randomSeed
+      init 2 randomSeed
       p1 faction terrans
       p2 faction bescods
       p1 build m -1x2
@@ -132,15 +132,15 @@ describe("Power/QIC Actions", () => {
       p2 build ts -1x-1.
       p1 build gf -2x3.
       p2 build m -1x0.
-      p1 leech 1pw
+      p1 charge 1pw
       p1 build ts -1x2.
-      p2 leech 1pw
+      p2 charge 1pw
       p2 build m 1x0.
-      p1 leech 2pw
+      p1 charge 2pw
       p1 build m -3x4.
       p2 pass booster8
       p1 build PI -1x2.
-      p2 leech 1pw
+      p2 charge 1pw
       p1 pass booster3
       p1 income t
       p1 spend 4tg for 1k. spend 2tg for 2c
@@ -170,13 +170,13 @@ describe("Power/QIC Actions", () => {
       p2 booster booster4
       p1 booster booster3
       p1 build ts -2x-5.
-      p2 leech 1pw
+      p2 charge 1pw
       p2 build ts -2x-4.
-      p1 leech 2pw
+      p1 charge 2pw
       p1 build lab -2x-5. tech nav.
-      p2 leech 2pw
+      p2 charge 2pw
       p2 build lab -2x-4. tech eco.
-      p1 leech 2pw
+      p1 charge 2pw
     `);
 
     const engine = new Engine(moves);
