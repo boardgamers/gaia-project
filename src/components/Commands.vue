@@ -134,8 +134,18 @@ export default class Commands extends Vue {
             const coordinates = command.data.buildings.filter(bld => bld.building === building);
 
             if (coordinates.length > 0) {
+              let label = `Build a ${buildingName(building)}`;
+
+              if (coordinates[0].upgrade) {
+                label = `Upgrade to ${buildingName(building)}`;
+              } else if (coordinates[0].downgrade) {
+                label = `Downgrade to ${buildingName(building)}`;
+              } else if (coordinates[0].cost === "~" || building === Building.SpaceStation || building === Building.GaiaFormer) {
+                label = `Place a ${buildingName(building)}`;
+              }
+
               ret.push({
-                label: (building === Building.Mine ? "Build a" : (building === Building.GaiaFormer || building === Building.SpaceStation) ? "Place a ": "Upgrade to") + " " + buildingName(building),
+                label,
                 command: `${Command.Build} ${building}`,
                 hexes: new Map(coordinates.map(coord => [this.context.coordsMap.get(coord.coordinates), coord]))
               });

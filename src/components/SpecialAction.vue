@@ -63,6 +63,10 @@ g {
     &.disabled {
       stroke-opacity: 0.5;
       fill-opacity: 0.5;
+
+      text {
+        fill: #333;
+      }
     }
   }
 }
