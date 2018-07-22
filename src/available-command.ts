@@ -248,7 +248,7 @@ export function possibleSpecialActions(engine: Engine, player: Player) {
 
   for (const event of pl.events[Operator.Activate]) {
     if (!event.activated) {
-      if (event.rewards[0].type === Resource.DowngradeLab && pl.data[Building.ResearchLab] === 0) {
+      if (event.rewards[0].type === Resource.DowngradeLab && (pl.data[Building.ResearchLab] === 0 || pl.data[Building.TradingStation] >= pl.maxBuildings(Building.TradingStation))) {
         continue;
       }
       specialacts.push({
