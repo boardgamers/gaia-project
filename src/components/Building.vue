@@ -63,6 +63,10 @@ svg {
     // titanium
     &.t {fill: #3d3d5c; stroke: #d1d1e0}
   }
+
+  .additionalMine {
+    stroke-width: 0.05;
+  }
 }
 
 </style>

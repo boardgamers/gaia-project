@@ -4,6 +4,7 @@
     <polygon :points="hexCorners.map(p => `${p.x},${p.y}`).join(' ')" :class="['spaceHex', {toSelect, highlighted: highlightedHexes.has(hex), qic: cost(hex).includes('q')}]" @click='hexClick(hex)' />
     <Planet v-if="hex.data.planet !== 'e'" :planet='hex.data.planet' />
     <Building v-if="hex.data.building" :building='hex.data.building' :faction='faction(hex.data.player)' />
+    <Building v-if="hex.data.additionalMine !== undefined" :faction='faction(hex.data.additionalMine)' building="m" transform="translate(0.38, 0.5) rotate(36) scale(0.9)" class="additionalMine" />
     <polygon v-for="(player, index) in hex.data.federations || []" :points="hexCorners.map(p => `${p.x*(1-(index+0.5)/8)},${p.y*(1-(index+0.5)/8)}`).join(' ')" :class="['spaceHexFederation', 'planet-stroke', planet(player)]" />
     <b-tooltip v-if="cost(hex)" :target='`${hex.q}x${hex.r}`' :html='true' />
   </g>
