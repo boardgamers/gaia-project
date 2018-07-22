@@ -212,10 +212,10 @@ export default class Commands extends Vue {
 
         case Command.ChooseTechTile: case Command.ChooseCoverTechTile: {
           ret.push({
-            label: command.name === Command.ChooseCoverTechTile ? "- Pick tech tile to cover" : " - Pick tech tile",
+            label: command.name === Command.ChooseCoverTechTile ? "Pick tech tile to cover" : "Pick tech tile",
             command: command.name,
-            techs: command.data.tiles.map(tile => tile.tilePos),
-            buttons: command.data.tiles.map(tile => ({command: tile.tilePos}))
+            techs: command.data.tiles.map(tile => tile.pos),
+            buttons: command.data.tiles.map(tile => ({command: tile.pos}))
           });
           break;
         }
