@@ -60,7 +60,7 @@ g {
     polygon {
       stroke: #333;
       stroke-width: 0.02;
-      fill: lawngreen;
+      fill: #c9ffca;
     }
 
     text {
