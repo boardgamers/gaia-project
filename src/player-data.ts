@@ -361,6 +361,24 @@ export default class PlayerData extends EventEmitter {
     return this.gaiaformers > 1  ?  this.gaiaformers : 0;
   }
 
+  /**
+   * Convert all resources into knowledge / ore / credits,
+   * to have the maximum victory points
+   */
+  finalResourceHandling() {
+    this.burnPower(this.burnablePower());
+
+    // Convert power into credits
+    // Taklons & Nevlas have different power rules, so this is why we use that roundabout way
+    const spentPower = this.spendablePowerTokens();
+    this.spendPower(spentPower);
+    this.credits += spentPower;
+
+    // Convert qics into ore
+    this.ores += this.qics;
+    this.qics = 0;
+  }
+
   gainFinalVictoryPoints() {
     // Gain 4 points for research at level 3, 8 points for research at level 4
     // and 12 points for research at level 12
@@ -369,13 +387,7 @@ export default class PlayerData extends EventEmitter {
     }
 
     // Gain 1 point for any 3 of ore, credits & knowledge.
-    // Knowing that pw at area3 can be converted for credits
-    // and Q.I.C for ore
-    let resources = this.ores + this.credits + this.qics + this.knowledge;
-
-    // Move as many tokens as possible into area3 and add to power tokens
-    this.burnPower(this.burnablePower());
-    resources += this.spendablePowerTokens();
+    const resources = this.ores + this.credits + this.knowledge;
 
     this.victoryPoints += Math.floor(resources / 3);
   }

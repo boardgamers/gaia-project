@@ -290,11 +290,15 @@ export default class Player extends EventEmitter {
     this.data.temporaryStep = 0;
   }
 
-  pass() {
+  pass(lastRound = false) {
     this.receivePassIncome();
     // remove the old booster
     this.removeEvents(Event.parse( boosts[this.data.roundBooster]));
     this.data.roundBooster =  undefined;
+
+    if (lastRound) {
+      this.data.finalResourceHandling();
+    }
   }
 
   getRoundBooster(roundBooster: Booster) {

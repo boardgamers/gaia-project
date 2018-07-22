@@ -467,14 +467,24 @@ export default class Engine {
       this.boardActions[pos] = true;
     });
 
-    if (this.round === Round.LastRound) {
+    if (this.isLastRound) {
       this.finalScoringPhase();
     } else {
       this.beginRoundStartPhase();
     }
   }
 
+  get ended() {
+    return this.phase === Phase.EndGame;
+  }
+
+  get isLastRound() {
+    return this.round === Round.LastRound;
+  }
+
   finalScoringPhase() {
+    this.phase = Phase.EndGame;
+
     // finalScoring tiles
     for (const tile of this.finalScoringTiles) {
       const players = _.sortBy(this.players, player => player.finalCount(tile)).reverse();
@@ -517,6 +527,11 @@ export default class Engine {
     // From rules, this is in clockwise order. We assume the order of players in this.players is the
     // clockwise order
     for (const pl of this.playersInTableOrderFromCurrent()) {
+      // If the player has passed and it's the last round, there's absolutely no points in leeching
+      // There's no cultists in gaia project.
+      if (this.isLastRound && this.passedPlayers.includes(pl.player)) {
+        continue;
+      }
       // Exclude the one who made the building from the leech
       if (pl !== this.player(this.currentPlayer)) {
         let leech = 0;
@@ -759,8 +774,11 @@ export default class Engine {
 
   [Command.Pass](player: PlayerEnum, booster: Booster) {
     this.roundBoosters[this.players[player].data.roundBooster] = true;
-    this.players[player].pass();
-    (this[Command.ChooseRoundBooster] as any)(player, booster, Command.Pass);
+    this.players[player].pass(this.isLastRound);
+
+    if (!this.isLastRound) {
+      (this[Command.ChooseRoundBooster] as any)(player, booster, Command.Pass);
+    }
 
     this.passedPlayers.push(player);
     this.turnOrder.splice(this.turnOrder.indexOf(player), 1);

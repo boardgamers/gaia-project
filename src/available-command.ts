@@ -444,7 +444,7 @@ export function possibleSpaceLostPlanet(engine: Engine, player: Player) {
 
 export function possibleRoundBoosters(engine: Engine, player: Player) {
   const commands = [];
-  const boosters = Object.values(Booster).filter(booster => engine.roundBoosters[booster]);
+  const boosters = engine.isLastRound ? [] : Object.values(Booster).filter(booster => engine.roundBoosters[booster]);
 
   commands.push(
     {
