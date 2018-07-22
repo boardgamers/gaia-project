@@ -20,6 +20,7 @@
     "ban-types": false,
     "max-line-length": false,
     "member-access": false,
-    "no-namespace": false
+    "no-namespace": false,
+    "no-bitwise": false
   }
 }

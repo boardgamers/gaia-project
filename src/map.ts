@@ -117,21 +117,22 @@ export default class SpaceMap {
   }
 
   distance(hex1: CubeCoordinates, hex2: CubeCoordinates) {
-    const h1 = `${hex1.q}x${hex1.r}`;
-    const h2 = `${hex2.q}x${hex2.r}`;
+    // const h1 = `${hex1.q}x${hex1.r}`;
+    // const h2 = `${hex2.q}x${hex2.r}`;
 
-    let distance = _.get(this.distanceCache, `${h1}.${h2}`) as any as number;
+    // let distance = _.get(this.distanceCache, `${h1}.${h2}`) as any as number;
 
-    if (distance !== undefined) {
-      return distance;
-    }
+    // if (distance !== undefined) {
+    //   return distance;
+    // }
 
-    distance = this.grid.distance(hex1, hex2);
+    // distance = this.grid.distance(hex1, hex2);
 
-    _.set(this.distanceCache, `${h1}.${h2}`, distance);
-    _.set(this.distanceCache, `${h2}.${h1}`, distance);
+    // _.set(this.distanceCache, `${h1}.${h2}`, distance);
+    // _.set(this.distanceCache, `${h2}.${h1}`, distance);
 
-    return distance;
+    // return distance;
+    return CubeCoordinates.distance(hex1, hex2);
   }
 
   excludedHexesForBuildingFederation(player: Player, faction: Faction) {
