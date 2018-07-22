@@ -37,6 +37,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
     case SubPhase.BuildMineOrGaiaFormer: return possibleMineBuildings(engine, player, true);
     case SubPhase.SpaceStation: return possibleSpaceStations(engine, player);
     case SubPhase.PISwap: return possiblePISwaps(engine, player);
+    case SubPhase.DowngradeLab: return possibleLabDowngrades(engine, player);
     case SubPhase.BrainStone: return [{name: Command.BrainStone, player, data}];
     case SubPhase.BeforeMove: {
       return [
@@ -243,9 +244,13 @@ export function possibleMineBuildings(engine: Engine, player: Player, acceptGaia
 export function possibleSpecialActions(engine: Engine, player: Player) {
   const commands = [];
   const specialacts = [];
+  const pl = engine.player(player);
 
-  for (const event of engine.player(player).events[Operator.Activate]) {
+  for (const event of pl.events[Operator.Activate]) {
     if (!event.activated) {
+      if (event.rewards[0].type === Resource.DowngradeLab && pl.data[Building.ResearchLab] === 0) {
+        continue;
+      }
       specialacts.push({
         income: event.spec.replace(Operator.Activate, '').trim(), // Reward.toString(event.rewards),
         spec: event.spec
@@ -286,7 +291,6 @@ export function possibleBoardActions(engine: Engine, player: Player) {
   }
 
   return commands;
-
 }
 
 export function possibleFreeActions(engine: Engine, player: Player) {
@@ -334,10 +338,34 @@ export function possibleFreeActions(engine: Engine, player: Player) {
   return commands;
 }
 
+export function possibleLabDowngrades(engine: Engine, player: Player) {
+  const pl = engine.player(player);
+  const spots = pl.data.occupied.filter(hex => hex.buildingOf(player) === Building.ResearchLab);
+
+  console.log(spots);
+
+  if (!spots) {
+    return [];
+  }
+
+  return [{
+    name: Command.Build,
+    player,
+    data: {
+      buildings: spots.map(hex => ({
+        building: Building.TradingStation,
+        coordinates: hex.toString(),
+        cost: "~",
+        downgrade: true
+      }))
+    }
+  }] as AvailableCommand[];
+}
+
 export function possibleResearchAreas(engine: Engine, player: Player, cost: string) {
   const commands = [];
   const tracks = [];
-  const data = engine.players[player].data;
+  const data = engine.player(player).data;
 
   if (engine.players[player].canPay(Reward.parse(cost))) {
     for (const field of Object.values(ResearchField)) {

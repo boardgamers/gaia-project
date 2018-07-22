@@ -36,6 +36,7 @@ export enum Resource {
   Range = "r",
   GaiaFormer = "gf",
   SpaceStation = "space-station",
+  DowngradeLab = "down-lab",
   UpgradeTerraforming = "up-terra",
   UpgradeNavigation = "up-nav",
   UpgradeIntelligence = "up-int",
@@ -319,5 +320,6 @@ export enum SubPhase {
   BuildMine = "buildMine",
   BuildMineOrGaiaFormer = "buildMineOrGaiaFormer",
   SpaceStation = "spaceStation",
-  PISwap = "swap-PI"
+  PISwap = "swap-PI",
+  DowngradeLab = "down-lab"
 }
