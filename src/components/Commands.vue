@@ -85,6 +85,10 @@ export default class Commands extends Vue {
     return "Player " + (this.command.player+1);
   }
 
+  get playerSlug(): string {
+    return this.$store.state.game.data.players[this.command.player].faction || `p${command.player+1}`;
+  }
+
   get init() {
     return !this.command || this.command.name === Command.Init;
   }
@@ -117,7 +121,7 @@ export default class Commands extends Vue {
     if (this.init) {
       this.$emit("command", command);
     } else {
-      this.$emit("command", `p${this.command.player+1} ${[...this.commandChain, command].join(' ')}`);
+      this.$emit("command", `${this.playerSlug} ${[...this.commandChain, command].join(' ')}`);
     }
   }
 
