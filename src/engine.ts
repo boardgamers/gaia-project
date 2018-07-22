@@ -508,13 +508,14 @@ export default class Engine {
 
         if (ranking.player) {
           const VPs = [18, 12, 6, 0, 0, 0];
-          ranking.player.data.victoryPoints += Math.floor(_.sum(VPs.slice(first, ties)) / ties);
+
+          ranking.player.data.victoryPoints += Math.floor(_.sum(VPs.slice(first, first + ties)) / ties);
         }
       }
     }
 
     // research VP and remaining resources
-    for (const pl of this.playersInOrder()) {
+    for (const pl of this.players) {
       pl.data.gainFinalVictoryPoints();
     }
   }
@@ -883,7 +884,9 @@ export default class Engine {
   [Command.PlaceLostPlanet](player: PlayerEnum, location: string) {
     const { spaces } = this.availableCommand.data;
 
-    if (spaces.indexOf(location) === -1) {
+    const data = spaces.find(space => space.coordinates === location);
+
+    if (!data) {
       throw new Error(`Impossible to execute build command at ${location}`);
     }
 
@@ -891,7 +894,7 @@ export default class Engine {
     const hex = this.map.grid.get({q, r});
     hex.data.planet = Planet.Lost;
 
-    this.player(player).build(Building.Mine, hex, [], this.map, 0);
+    this.player(player).build(Building.Mine, hex, Reward.parse(data.cost), this.map, 0);
 
     this.leechingSource = hex;
   }

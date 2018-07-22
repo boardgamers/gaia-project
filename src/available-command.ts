@@ -345,8 +345,6 @@ export function possibleLabDowngrades(engine: Engine, player: Player) {
   const pl = engine.player(player);
   const spots = pl.data.occupied.filter(hex => hex.buildingOf(player) === Building.ResearchLab);
 
-  console.log(spots);
-
   if (!spots) {
     return [];
   }
@@ -414,14 +412,16 @@ export function possibleSpaceLostPlanet(engine: Engine, player: Player) {
       continue;
     }
     const distance = _.min(data.occupied.map(loc => engine.map.distance(hex, loc)));
-    // TODO posible to extened? check rules const qicNeeded = Math.max(Math.ceil( (distance - data.range) / QIC_RANGE_UPGRADE), 0);
-    if (distance > data.range) {
+    const qicNeeded = Math.max(Math.ceil( (distance - data.range) / QIC_RANGE_UPGRADE), 0);
+
+    if (qicNeeded > data.qics) {
       continue;
     }
 
     spaces.push({
       building: Building.Mine,
       coordinates: hex.toString(),
+      cost: qicNeeded > 0 ? new Reward(qicNeeded, Resource.Qic).toString() : "~"
     });
   }
 

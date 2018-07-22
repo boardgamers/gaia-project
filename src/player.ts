@@ -174,7 +174,8 @@ export default class Player extends EventEmitter {
     this.events[event.operator].push(event);
 
     if (event.operator === Operator.Once) {
-      this.gainRewards(event.rewards);
+      const times = this.eventConditionCount(event.condition);
+      this.gainRewards(event.rewards.map(reward => new Reward(reward.count * times, reward.type)));
     }
   }
 
@@ -224,6 +225,10 @@ export default class Player extends EventEmitter {
     const oldEvents = Event.parse(researchTracks[field][this.data.research[field] - 1]);
     this.removeEvents(oldEvents);
 
+    if (this.data.research[field] === lastTile(field)) {
+      this.data.greenFederations -= 1;
+    }
+
     this.receiveAdvanceResearchTriggerIncome();
   }
 
@@ -237,8 +242,8 @@ export default class Player extends EventEmitter {
     // The mine of the lost planet doesn't grant any extra income
     if (hex.data.planet !== Planet.Lost) {
       // Add income of the building to the list of events
-      this.loadEvents(this.board.buildings[building].income[this.data[building]]);
-      this.data[building] += 1;
+      this.data[building] += 1; // NEEDS TO BE BEFORE, so gleens can get qic from tech if they build academy 2
+      this.loadEvents(this.board.buildings[building].income[this.data[building] - 1]);
     }
 
     // remove upgraded building and the associated event
