@@ -1,10 +1,12 @@
 <template>
   <div id="move">
     <div id="move-title">
-      <span v-if="init">Pick the number of players</span>
-      <span v-else>
-        {{[player, ...titles].join(' - ')}}
-      </span>
+      <h4>
+        <span v-if="init">Pick the number of players</span>
+        <span v-else>
+          {{[player, ...titles].join(' - ')}}
+        </span>
+      </h4>
     </div>
     <div id="move-buttons">
       <div v-if="init">
@@ -152,6 +154,15 @@ export default class Commands extends Vue {
             }
           }
 
+          break;
+        }
+
+        case Command.PISwap: {
+          ret.push({
+            label: "Swap Planetary Institute",
+            command: command.name,
+            hexes: new Map(command.data.buildings.map(coord => [this.context.coordsMap.get(coord.coordinates), coord]))
+          });
           break;
         }
 
