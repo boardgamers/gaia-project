@@ -12,7 +12,7 @@
 <script lang="ts">
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
-import { tiles, Event, factions, FinalTile } from '@gaia-project/engine';
+import { tiles, Event, factions, FinalTile, Phase } from '@gaia-project/engine';
 import { AugmentedPlayer } from "../data";
 import Token from "./Token.vue";
 
@@ -38,7 +38,7 @@ import Token from "./Token.vue";
     },
 
     highlighted() {
-      return this.$store.state.game.data.round > 6;
+      return this.$store.state.game.data.phase === Phase.EndGame;
     }
   },
 
@@ -55,7 +55,7 @@ export default class FinalScoringTile extends Vue {
   }
 
   posX(progress: number) {
-    return 8 + Math.min(progress, 10) * 6.1;
+    return 8 + (progress % 11) * 6.1;
   }
 
   tokenY(index: number) {

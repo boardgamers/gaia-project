@@ -166,6 +166,15 @@ export default class Commands extends Vue {
           break;
         }
 
+        case Command.PlaceLostPlanet: {
+          ret.push({
+            label: "Place Lost Planet",
+            command: command.name,
+            hexes: new Map(command.data.spaces.map(coord => [this.context.coordsMap.get(coord.coordinates), coord]))
+          });
+          break;
+        }
+
         case Command.Pass: 
         case Command.ChooseRoundBooster: {
           const buttons: ButtonData[] = [];

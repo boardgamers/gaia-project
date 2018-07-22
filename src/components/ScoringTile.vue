@@ -9,7 +9,7 @@
 <script lang="ts">
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
-import { tiles, Event} from '@gaia-project/engine';
+import { tiles, Event, Phase} from '@gaia-project/engine';
 import { eventDesc } from '../data/event';
 
 @Component<ScoringTile>({
@@ -27,11 +27,11 @@ import { eventDesc } from '../data/event';
     },
 
     highlighted() {
-      return this.$store.state.game.data.round === this.round;
+      return this.$store.state.game.data.round === this.round && !this.faded;
     },
 
     faded() {
-      return this.$store.state.game.data.round > this.round;
+      return this.$store.state.game.data.round > this.round || this.$store.state.game.data.phase === Phase.EndGame;
     }
   }
 })
