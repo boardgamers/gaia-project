@@ -580,7 +580,7 @@ export function possibleTechTiles(engine: Engine, player: Player) {
     if (engine.tiles.techs[tilePos].numTiles <= 0) {
       continue;
     }
-    if (!data.hasGreenFederation) {
+    if (!data.hasGreenFederation()) {
       continue;
     }
     if (data.research[tilePos.slice("adv-".length)] < 4) {

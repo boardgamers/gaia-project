@@ -314,8 +314,11 @@ export default class Player extends EventEmitter {
   }
 
   gainTechTile(tile: TechTile | AdvTechTile, pos: TechTilePos | AdvTechTilePos) {
-    this.loadEvents(Event.parse(techs[tile]));
+    if (Object.values(AdvTechTilePos).includes(pos)) {
+      this.data.removeGreenFederation();
+    }
     this.data.tiles.techs.push({tile, pos, enabled: Object.values(TechTilePos).includes(pos)});
+    this.loadEvents(Event.parse(techs[tile]));
   }
 
   coverTechTile(pos: TechTilePos) {
@@ -360,7 +363,7 @@ export default class Player extends EventEmitter {
     const destTile = this.data.research[field] + 1;
 
     // To go from 4 to 5, we need to flip a federation and nobody inside
-    if (keyNeeded(field, destTile) && this.data.hasGreenFederation) {
+    if (keyNeeded(field, destTile) && !this.data.hasGreenFederation()) {
       return false;
     }
 

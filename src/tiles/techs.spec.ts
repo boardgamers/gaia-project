@@ -106,6 +106,7 @@ describe("Tech Tiles", () => {
 
     const engine = new Engine(moves);
 
+    /** Spends two green federations: one for the last tile, one for the advanced tech */
     expect(() => engine.move('p1 build lab -2x3. tech adv-gaia. cover free1. up gaia.')).to.throw();
 
     const engine1 = new Engine(moves);
