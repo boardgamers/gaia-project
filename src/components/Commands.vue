@@ -220,22 +220,22 @@ export default class Commands extends Vue {
           break;
         }
 
-        case Command.Leech: {
+        case Command.ChargePower: {
           const leech = command.data.offer;
           const gainToken = command.data.freeIncome;
 
           if (gainToken) {
             ret.push({
               label: "Charge " + leech + " get " + gainToken,
-              command: `${Command.Leech} ${leech},${gainToken}`
+              command: `${Command.ChargePower} ${leech},${gainToken}`
             }, {
               label: "Get " + gainToken + " charge " + leech,
-              command: `${Command.Leech} ${gainToken},${leech}`
+              command: `${Command.ChargePower} ${gainToken},${leech}`
             });
           } else {
             ret.push({
               label: "Charge " + leech,
-              command: `${Command.Leech} ${leech}`
+              command: `${Command.ChargePower} ${leech}`
             });
           }
           break;

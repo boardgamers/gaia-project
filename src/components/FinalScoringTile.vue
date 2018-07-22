@@ -19,7 +19,7 @@ import Token from "./Token.vue";
 @Component<FinalScoringTile>({
   computed: {
     tile() {
-      return this.$store.state.game.data.finalScoringTiles[this.index];
+      return this.$store.state.game.data.tiles.scorings.final[this.index];
     },
 
     content() {

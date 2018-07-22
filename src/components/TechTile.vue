@@ -15,7 +15,7 @@ import { eventDesc } from '../data/event';
 @Component<TechTile>({
   computed: {
     tileObject() {
-      return (this.$store.state.game.data.techTiles[this.pos] || this.$store.state.game.data.advTechTiles[this.pos]);
+      return this.$store.state.game.data.tiles.techs[this.pos];
     },
 
     tile() {
@@ -26,11 +26,11 @@ import { eventDesc } from '../data/event';
       if (this.player !== undefined) {
         return 1;
       }
-      return this.tileObject.numTiles;
+      return this.tileObject.count;
     },
 
     content() {
-      return (tiles.techs[this.tile] || tiles.advancedTechs[this.tile])[0];
+      return tiles.techs[this.tile][0];
     },
 
     title() {

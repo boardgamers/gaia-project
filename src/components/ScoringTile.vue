@@ -15,11 +15,11 @@ import { eventDesc } from '../data/event';
 @Component<ScoringTile>({
   computed: {
     tile(this: ScoringTile) {
-      return this.$store.state.game.data.roundScoringTiles[this.round - 1];
+      return this.$store.state.game.data.tiles.scorings.round[this.round - 1];
     },
 
     content() {
-      return tiles.roundscorings[this.tile][0];
+      return tiles.roundScorings[this.tile][0];
     },
 
     tooltip() {

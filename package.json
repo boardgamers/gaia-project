@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/donkeytech/gaia-viewer#readme",
   "dependencies": {
-    "@gaia-project/engine": "^0.23.0",
+    "@gaia-project/engine": "^1.0.0",
     "hexagrid": "^1.0.0",
     "vue": "^2.5.16",
     "vue-property-decorator": "^7.0.0",

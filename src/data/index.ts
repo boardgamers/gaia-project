@@ -28,23 +28,22 @@ export interface Data {
   availableCommands: AvailableCommand[];
   players: AugmentedPlayer[];
   round: number;
-  techTiles: {
-    [key in TechTilePos]: {
-      tile: TechTile,
-      numTiles: number
+  tiles: {
+    techs: {
+      [key in TechTilePos | AdvTechTilePos]: {
+        tile: TechTile,
+        count: number
+      }
+    },
+    boosters: {
+      [key in Booster]?: boolean
+    },
+    scorings: {
+      round: [ScoringTile, ScoringTile, ScoringTile, ScoringTile, ScoringTile, ScoringTile],
+      final: [FinalTile, FinalTile]
     }
-  },
-  advTechTiles: {
-    [key in TechTilePos]: {
-      tile: AdvTechTile,
-      numTiles: number
-    }
-  },
-  roundBoosters: {
-    [key in Booster]?: boolean
-  },
-  roundScoringTiles: [ScoringTile, ScoringTile, ScoringTile, ScoringTile, ScoringTile, ScoringTile];
-  finalScoringTiles: [FinalTile, FinalTile];
+  }
+
   // Should the next move be placed on a whole new line?
   newTurn: boolean;
 }
