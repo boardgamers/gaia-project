@@ -61,6 +61,7 @@ export default class PlayerData extends EventEmitter {
   brainstone: BrainstoneArea = null;
   leechPossible: number;
   tokenModifier: number = 1;
+  lostPlanet: number = 0;
 
   // Internal variables, not meant to be in toJSON():
   followBrainStoneHeuristics = true;

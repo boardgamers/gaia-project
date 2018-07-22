@@ -244,6 +244,8 @@ export default class Player extends EventEmitter {
       // Add income of the building to the list of events
       this.data[building] += 1; // NEEDS TO BE BEFORE, so gleens can get qic from tech if they build academy 2
       this.loadEvents(this.board.buildings[building].income[this.data[building] - 1]);
+    } else {
+      this.data.lostPlanet += 1;
     }
 
     // remove upgraded building and the associated event
@@ -530,7 +532,7 @@ export default class Player extends EventEmitter {
     const values = hexes.map(node => this.buildingValue(node.data.building, node.data.planet, true));
 
     let combinations = this.possibleCombinationsForFederations(_.zipWith(hexes, values, (val1, val2) => ({hex: val1, value: val2})));
-    const maxSatellites = this.faction === Faction.Ivits ? this.data.qics : Math.min(this.data.discardablePowerTokens(), MAX_SATELLITES - this.data.satellites);
+    const maxSatellites = this.maxSatellites;
 
     // Ivits can only expand their first federation
     if (this.faction === Faction.Ivits && this.data.federationCount > 0) {
@@ -577,6 +579,17 @@ export default class Player extends EventEmitter {
     }
 
     return _.difference(fedsWithInfo, toRemove);
+  }
+
+  get maxSatellites() {
+    // Lost planet consumes one satellite
+    const maxNumber = MAX_SATELLITES - this.data.satellites - this.data.lostPlanet;
+
+    if (this.faction === Faction.Ivits) {
+      return Math.min(this.data.qics, maxNumber);
+    } else {
+      return Math.min(this.data.discardablePowerTokens(), maxNumber);
+    }
   }
 
   federationInfo(federation: GaiaHex[]): FederationInfo {
