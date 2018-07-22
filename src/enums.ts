@@ -43,6 +43,7 @@ export enum Resource {
   UpgradeGaiaProject = "up-gaia",
   UpgradeEconomy = "up-eco",
   UpgradeScience = "up-sci",
+  UpgradeLowest = "up-lowest",
   TechTile = "tech",
   RescoreFederation = "fed",
   TemporaryStep = "step",

@@ -13,7 +13,7 @@ const bescods: FactionBoardRaw = {
       income: [["+4pw", "+2t"]]
     }
   },
-  income: ["k,4o,15c,q", "+o"]
+  income: ["k,4o,15c,q", "+o", "=> up-lowest"]
 };
 
 export default bescods;

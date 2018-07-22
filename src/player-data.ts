@@ -145,7 +145,7 @@ export default class PlayerData extends EventEmitter {
       count = -count;
     }
 
-    if (resource.startsWith("up-")) {
+    if (resource.startsWith("up-") && resource !== Resource.UpgradeLowest) {
       this.advanceResearch(resource.slice("up-".length) as ResearchField, count);
       return;
     }
