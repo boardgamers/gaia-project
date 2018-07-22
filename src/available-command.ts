@@ -251,6 +251,9 @@ export function possibleSpecialActions(engine: Engine, player: Player) {
       if (event.rewards[0].type === Resource.DowngradeLab && (pl.data[Building.ResearchLab] === 0 || pl.data[Building.TradingStation] >= pl.maxBuildings(Building.TradingStation))) {
         continue;
       }
+      if (event.rewards[0].type === Resource.PISwap && pl.data[Building.Mine] === 0) {
+        continue;
+      }
       specialacts.push({
         income: event.spec.replace(Operator.Activate, '').trim(), // Reward.toString(event.rewards),
         spec: event.spec
@@ -608,8 +611,7 @@ export function possiblePISwaps(engine: Engine, player: Player) {
   const buildings = [];
 
   for (const hex of data.occupied) {
-    // exclude existing planets, satellites and space stations
-    if (hex.buildingOf(player) === Building.Mine) {
+    if (hex.buildingOf(player) === Building.Mine && hex.data.planet !== Planet.Lost) {
       buildings.push({
         building: Building.Mine,
         coordinates: hex.toString(),
