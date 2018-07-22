@@ -14,7 +14,8 @@ export default new Vuex.Store({
           hexes: new Map(),
           researchTiles: new Set(),
           techs: new Set(),
-          boosters: new Set()
+          boosters: new Set(),
+          actions: new Set()
         },
         coordsMap: new Map(),
         hexSelection: false,
@@ -52,6 +53,10 @@ export default new Vuex.Store({
       state.game.context.highlighted.boosters = new Set(boosters);
     },
 
+    highlightActions(state, actions: string[]) {
+      state.game.context.highlighted.actions = new Set(actions);
+    },
+
     selectHexes(state, defaultHexes) {
       state.game.context.hexSelection = true;
       state.game.context.highlighted.hexes = new Map(defaultHexes || []);
@@ -62,6 +67,7 @@ export default new Vuex.Store({
       state.game.context.highlighted.researchTiles = new Set();
       state.game.context.highlighted.techs = new Set();
       state.game.context.highlighted.boosters = new Set();
+      state.game.context.highlighted.actions = new Set();
       state.game.context.hexSelection = false;
     },
     
@@ -79,7 +85,8 @@ export default new Vuex.Store({
     hexClick(context, hex: GaiaHex) {},
     researchClick(context, field: ResearchField) {},
     techClick(context, pos: TechTilePos | AdvTechTilePos) {},
-    boosterClick(context, booster: Booster) {}
+    boosterClick(context, booster: Booster) {},
+    actionClick(context, action: string) {}
   },
   getters: {
     data: state => state.game.data,

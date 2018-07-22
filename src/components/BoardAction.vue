@@ -1,7 +1,7 @@
 <template>
   <g :class='["boardAction", kind, {highlighted, faded}]' v-b-tooltip :title="tooltip">
     <g>
-      <polygon points="-1,0.5 -0.5,1 0.5,1 1,0.5 1,-0.5 0.5,-1 -0.5,-1 -1,-0.5" :transform="`scale(${scale})`" />
+      <polygon points="-1,0.5 -0.5,1 0.5,1 1,0.5 1,-0.5 0.5,-1 -0.5,-1 -1,-0.5" :transform="`scale(${scale})`" @click="onClick" />
       <text :transform="`scale(${scale/17})`">
         <tspan x="0" v-for="(line, i) in income" :dy="`${i*1.15 - (income.length - 1) / 2.5}em`"> 
           {{line.replace(/ /g, '')}}
@@ -25,11 +25,10 @@ import { eventDesc } from '../data/event';
       } else {
         return this.income.map(income => "- " + eventDesc(new Event(income))).join("\n");
       }
-      return ''; // eventDesc(new Event(this.content));
     },
 
     highlighted() {
-      return false; // this.$store.state.game.data.round === 0;
+      return this.$store.state.game.context.highlighted.actions.has(this.action);
     },
 
     faded() {
@@ -50,7 +49,17 @@ export default class BoardAction extends Vue {
   scale: number;
 
   @Prop()
-  action: BoardActionEnum
+  action: BoardActionEnum;
+
+  onClick() {
+    if (!this.highlighted) {
+      return;
+    }
+    this.$store.dispatch("actionClick", this.action);
+  }
+}
+export default interface BoardAction {
+  highlighted: boolean;
 }
 
 </script>
@@ -87,6 +96,8 @@ g {
 
     &.highlighted polygon {
       stroke: #2C4;
+      cursor: pointer;
+      stroke-width: 0.08;
     }
 
     &.faded {

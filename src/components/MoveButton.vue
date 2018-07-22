@@ -40,6 +40,11 @@ export default class MoveButton extends Vue {
     });
   }
 
+  subscribeFinal(action: string) {
+    this.subscribe(action, field => this.emitCommand(field, {final: true}));
+    this.emitCommand(null, {disappear: false});
+  }
+
   unsubscribe() {
     if (this.subscription) {
       this.subscription();
@@ -49,41 +54,21 @@ export default class MoveButton extends Vue {
   handleClick() {
     if (this.button.hexes && !this.button.hover && !this.button.selectHexes) {
       this.$store.commit("highlightHexes", this.button.hexes);
-
       this.subscribe('hexClick', hex => this.emitCommand(`${hex.q}x${hex.r}`));
-      return;
-    }
-
-    if (this.button.researchTiles) {
+    } else if (this.button.researchTiles) {
       this.$store.commit("highlightResearchTiles", this.button.researchTiles);
-
-      this.subscribe('researchClick', field => this.emitCommand(field, {final: true}));
-
-      this.emitCommand(null, {disappear: false});
-      return;
-    }
-
-    if (this.button.techs) {
+      this.subscribeFinal('researchClick');
+    } else if (this.button.techs) {
       this.$store.commit("highlightTechs", this.button.techs);
-
-      this.subscribe('techClick', pos => this.emitCommand(pos, {final: true}));
-
-      this.emitCommand(null, {disappear: false});
-      return;
-    }
-
-    if (this.button.boosters) {
+      this.subscribeFinal('techClick');
+    } else if (this.button.boosters) {
       this.$store.commit("highlightBoosters", this.button.boosters);
-
-      this.subscribe('boosterClick', booster => {
-        this.emitCommand(booster, {final: true})
-      });
-
-      this.emitCommand(null, {disappear: false});
-      return;
-    }
-
-    if (this.button.selectHexes) {
+      this.subscribeFinal('boosterClick');
+    } else if (this.button.actions) {
+      console.log("highlightActions", this.button.actions);
+      this.$store.commit("highlightActions", this.button.actions);
+      this.subscribeFinal('actionClick');
+    } else if (this.button.selectHexes) {
       // If already the active button, end the selection
       if (this.isActiveButton) {
         this.button.command = [...this.$store.state.game.context.highlighted.hexes.keys()].map(hex => `${hex.q}x${hex.r}`).join(',');
@@ -107,11 +92,9 @@ export default class MoveButton extends Vue {
         const keys: GaiaHex[] = [...highlighted.keys()];
         this.$store.commit("highlightHexes", new Map([...keys.map(key => [key, null])] as any));
       });
-
-      return;
+    } else {
+      this.emitCommand();
     }
-    
-    this.emitCommand();
   }
 
   emitCommand(append?: string, params: {disappear?: boolean, final?: boolean} = {disappear: true, final: false}) {

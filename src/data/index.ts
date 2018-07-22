@@ -14,6 +14,7 @@ export interface ButtonData {
   techs?: Array<TechTilePos | AdvTechTilePos>;
   boosters?: Booster[];
   selectHexes?: boolean;
+  actions?: string[];
 
   buttons?: ButtonData[];
   hide?: boolean;
@@ -54,7 +55,8 @@ export interface GameContext {
     hexes: HighlightHexData,
     researchTiles: Set<string>,
     techs: Set<TechTilePos | AdvTechTilePos>,
-    boosters: Set<Booster>
+    boosters: Set<Booster>,
+    actions: Set<string>
   };
 
   coordsMap: Map<string, GaiaHex>;

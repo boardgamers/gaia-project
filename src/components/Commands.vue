@@ -250,6 +250,7 @@ export default class Commands extends Vue {
           ret.push({
             label: "Power/Q.I.C Action",
             command: Command.Action,
+            actions: command.data.poweracts.map(act => act.name),
             buttons: command.data.poweracts.map(act => ({command: act.name, label: `Spend ${act.cost} for ${act.income.join(" / ")}`}))
           });
           break;
@@ -259,6 +260,7 @@ export default class Commands extends Vue {
           ret.push({
             label: "Special Action",
             command: Command.Special,
+            actions: command.data.specialacts.map(act => act.income),
             buttons: command.data.specialacts.map(act => ({command: act.income}))
           });
           break;
