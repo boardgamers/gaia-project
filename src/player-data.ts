@@ -81,7 +81,7 @@ export default class PlayerData extends EventEmitter {
       techTiles: this.techTiles,
       advTechTiles: this.advTechTiles,
       federations: this.federations,
-      greenFederations: this.federations,
+      greenFederations: this.greenFederations,
       occupied: this.occupied,
       satellites: this.satellites,
       brainstone: this.brainstone,
