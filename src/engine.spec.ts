@@ -103,15 +103,15 @@ describe("Engine", () => {
       init 2 randomSeed
       p1 faction terrans
       p2 faction nevlas
-      p1 build m -1x2
-      p2 build m -1x0
-      p2 build m 0x-4
-      p1 build m -4x-1
-      p2 booster booster7
-      p1 booster booster3
-      p1 build ts -1x2.
-      p2 leech 1pw
-      p2 build ts 0x-4
+      terrans build m -1x2
+      nevlas build m -1x0
+      nevlas build m 0x-4
+      terrans build m -4x-1
+      nevlas booster booster7
+      terrans booster booster3
+      terrans build ts -1x2.
+      nevlas leech 1pw
+      nevlas build ts 0x-4
     `);
 
     expect(() => new Engine(moves)).to.not.throw();

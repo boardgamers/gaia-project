@@ -216,9 +216,19 @@ export default class Engine {
   loadTurnMoves(move: string, params: {split?: boolean, processFirst?: boolean} = {split: true, processFirst: false}) {
     // Todo: replace players by factions in the future
     const playerS = move.substr(0, move.indexOf(' '));
-    assert(/^p[1-7]$/.test(playerS), 'Wrong player format, expected p1, p2, ...');
-    const player = +playerS[1] - 1;
-    assert(this.playerToMove === (player as PlayerEnum), "Wrong turn order in move " + move + ", expected " + this.playerToMove + ' found ' + player);
+    let player: number;
+
+    if (/^p[1-7]$/.test(playerS)) {
+      player = +playerS[1] - 1;
+    } else {
+      const  pl = this.players.find(_pl => _pl.faction === playerS);
+
+      if (pl) {
+        player = pl.player;
+      }
+    }
+
+    assert(this.playerToMove === (player as PlayerEnum), "Wrong turn order in move " + move + ", expected player " + (this.playerToMove + 1));
 
     const split = _.get(params, 'split', true);
     const processFirst = _.get(params, 'processFirst', false);
