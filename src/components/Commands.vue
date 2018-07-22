@@ -86,7 +86,7 @@ export default class Commands extends Vue {
   }
 
   get playerSlug(): string {
-    return this.$store.state.game.data.players[this.command.player].faction || `p${command.player+1}`;
+    return this.$store.state.game.data.players[this.command.player].faction || `p${this.command.player+1}`;
   }
 
   get init() {
