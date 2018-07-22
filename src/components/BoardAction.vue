@@ -1,13 +1,11 @@
 <template>
   <g :class='["boardAction", kind, {highlighted, faded}]' v-b-tooltip :title="tooltip">
-    <g>
-      <polygon points="-1,0.5 -0.5,1 0.5,1 1,0.5 1,-0.5 0.5,-1 -0.5,-1 -1,-0.5" :transform="`scale(${scale})`" @click="onClick" />
-      <text :transform="`scale(${scale/17})`">
-        <tspan x="0" v-for="(line, i) in income" :dy="`${i*1.15 - (income.length - 1) / 2.5}em`"> 
-          {{line.replace(/ /g, '')}}
-        </tspan>
-      </text>
-    </g>
+    <polygon points="-1,0.5 -0.5,1 0.5,1 1,0.5 1,-0.5 0.5,-1 -0.5,-1 -1,-0.5" :transform="`scale(${scale})`" @click="onClick" />
+    <text :transform="`scale(${scale/17})`">
+      <tspan x="0" v-for="(line, i) in income" :dy="`${i*1.15 - (income.length - 1) / 2.5}em`"> 
+        {{line.replace(/ /g, '')}}
+      </tspan>
+    </text>
   </g>
 </template>
 

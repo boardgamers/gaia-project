@@ -1,6 +1,7 @@
 <template>
   <div class="pool" v-show="boosters.length > 0">
-    <Booster v-for="booster in boosters" :key="booster" :booster="booster" />
+    <Booster v-for="booster in boosters" :key="booster" :booster="booster" class="mb-2"  />
+    <FederationTile v-for="(federation, i) in federations" :key="`${federation}-${i}`" :federation="federation" class="mb-2" />
   </div>
 </template>
 
@@ -8,15 +9,29 @@
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
 import Booster from './Booster.vue';
+import FederationTile from "./FederationTile.vue";
 
 @Component({
   computed: {
     boosters() {
       return Object.keys(this.$store.state.game.data.roundBoosters).filter(key => !!this.$store.state.game.data.roundBoosters[key]).sort();
+    },
+    federations() {
+      const federationObject = this.$store.state.game.data.federations;
+
+      const ret = [];
+
+      for (const key of Object.keys(federationObject).sort()) {
+        for (let i = 0; i < federationObject[key]; i++) {
+          ret.push(key);
+        }
+      }
+      return ret;
     }
   },
   components: {
-    Booster
+    Booster,
+    FederationTile
   }
 })
 export default class Pool extends Vue {

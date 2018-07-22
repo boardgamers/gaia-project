@@ -1,4 +1,4 @@
-import {Player, AdvTechTile, TechTile, TechTilePos, ScoringTile, FinalTile, AvailableCommand, GaiaHex, AdvTechTilePos, Booster} from "@gaia-project/engine";
+import {Player, AdvTechTile, TechTile, TechTilePos, ScoringTile, FinalTile, AvailableCommand, GaiaHex, AdvTechTilePos, Booster, Federation} from "@gaia-project/engine";
 
 export interface AugmentedPlayer extends Player {
   progress: {[key in FinalTile]: number};
@@ -15,6 +15,7 @@ export interface ButtonData {
   boosters?: Booster[];
   selectHexes?: boolean;
   actions?: string[];
+  federations?: Federation[];
 
   buttons?: ButtonData[];
   hide?: boolean;
@@ -56,7 +57,8 @@ export interface GameContext {
     researchTiles: Set<string>,
     techs: Set<TechTilePos | AdvTechTilePos>,
     boosters: Set<Booster>,
-    actions: Set<string>
+    actions: Set<string>,
+    federations: Set<Federation>
   };
 
   coordsMap: Map<string, GaiaHex>;

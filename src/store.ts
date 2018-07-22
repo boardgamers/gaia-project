@@ -1,21 +1,22 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import { Data, GameContext } from './data';
-import { GaiaHex, ResearchField, TechTilePos, AdvTechTilePos, Booster } from '../node_modules/@gaia-project/engine';
+import { GaiaHex, ResearchField, TechTilePos, AdvTechTilePos, Booster, Federation } from '../node_modules/@gaia-project/engine';
 
 Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
     game: {
-      data: {players: [], roundBoosters: [], map: [], availableCommands: [], round: 0, techTiles: null, advTechTiles: null, roundScoringTiles: null, finalScoringTiles: null, newTurn: true, boardActions: {}} as Data,
+      data: {players: [], roundBoosters: [], map: [], availableCommands: [], round: 0, techTiles: null, advTechTiles: null, roundScoringTiles: null, finalScoringTiles: null, newTurn: true, boardActions: {}, federations: {}} as Data,
       context: {
         highlighted: {
           hexes: new Map(),
           researchTiles: new Set(),
           techs: new Set(),
           boosters: new Set(),
-          actions: new Set()
+          actions: new Set(),
+          federations: new Set()
         },
         coordsMap: new Map(),
         hexSelection: false,
@@ -57,6 +58,10 @@ export default new Vuex.Store({
       state.game.context.highlighted.actions = new Set(actions);
     },
 
+    highlightFederations(state, federations: Federation[]) {
+      state.game.context.highlighted.federations = new Set(federations);
+    },
+
     selectHexes(state, defaultHexes) {
       state.game.context.hexSelection = true;
       state.game.context.highlighted.hexes = new Map(defaultHexes || []);
@@ -68,6 +73,7 @@ export default new Vuex.Store({
       state.game.context.highlighted.techs = new Set();
       state.game.context.highlighted.boosters = new Set();
       state.game.context.highlighted.actions = new Set();
+      state.game.context.highlighted.federations = new Set();
       state.game.context.hexSelection = false;
     },
     
@@ -86,7 +92,8 @@ export default new Vuex.Store({
     researchClick(context, field: ResearchField) {},
     techClick(context, pos: TechTilePos | AdvTechTilePos) {},
     boosterClick(context, booster: Booster) {},
-    actionClick(context, action: string) {}
+    actionClick(context, action: string) {},
+    federationClick(context, federation: Federation) {}
   },
   getters: {
     data: state => state.game.data,
