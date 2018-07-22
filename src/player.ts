@@ -445,7 +445,11 @@ export default class Player extends EventEmitter {
     this.data.gaiaformersInGaia = 0;
   }
 
-  buildingValue(building: Building, planet: Planet) {
+  buildingValue(building: Building, planet: Planet, forFederation = false) {
+    if (forFederation && building === Building.SpaceStation) {
+      return 1;
+    }
+
     let baseValue =  stdBuildingValue(building);
 
     // Space stations and gaia-formers can't get leech when someone makes a structure nearby
@@ -514,14 +518,19 @@ export default class Player extends EventEmitter {
   }
 
   availableFederations(map: SpaceMap): FederationInfo[] {
-    const excluded = map.excludedHexesForBuildingFederation(this.player);
+    const excluded = map.excludedHexesForBuildingFederation(this.player, this.faction);
 
     const hexes = this.data.occupied.map(coord => map.grid.get(coord)).filter(hex => !excluded.has(hex));
     const hexesWithBuildings = new Set(hexes);
-    const values = hexes.map(node => this.buildingValue(node.data.building, node.data.planet));
+    const values = hexes.map(node => this.buildingValue(node.data.building, node.data.planet, true));
 
-    const combinations = this.possibleCombinationsForFederations(_.zipWith(hexes, values, (val1, val2) => ({hex: val1, value: val2})));
-    const maxSatellites = Math.min(this.data.discardablePowerTokens(), MAX_SATELLITES - this.data.satellites);
+    let combinations = this.possibleCombinationsForFederations(_.zipWith(hexes, values, (val1, val2) => ({hex: val1, value: val2})));
+    const maxSatellites = this.faction === Faction.Ivits ? this.data.qics : Math.min(this.data.discardablePowerTokens(), MAX_SATELLITES - this.data.satellites);
+
+    // Ivits can only expand their first federation
+    if (this.faction === Faction.Ivits && this.data.federationCount > 0) {
+      combinations = combinations.filter(combination => combination.some(hex => hex.belongsToFederationOf(this.player)));
+    }
 
     // We now have several combinations of buildings that can form federations
     // We need to see if they can be connected
@@ -576,6 +585,20 @@ export default class Player extends EventEmitter {
     };
   }
 
+  formFederation(info: FederationInfo, token: Federation) {
+    let newSatellites = 0;
+    for (const hex of info.hexes) {
+      hex.addToFederationOf(this.player);
+      if (hex.buildingOf(this.player) === undefined) {
+        newSatellites += 1;
+      }
+    }
+    this.payCosts([new Reward(newSatellites, this.faction === Faction.Ivits ? Resource.Qic : Resource.GainToken)]);
+    this.data.satellites += newSatellites;
+    this.gainFederationToken(token);
+    this.data.federationCount += 1;
+  }
+
   checkAndGetFederationInfo(location: string, map: SpaceMap): FederationInfo {
     const coords = location.split(',').map(loc => CubeCoordinates.parse(loc));
 
@@ -593,7 +616,7 @@ export default class Player extends EventEmitter {
     hexes = this.addAdjacentBuildings(hexes);
 
     // Check if no forbidden square
-    const excluded = map.excludedHexesForBuildingFederation(this.player);
+    const excluded = map.excludedHexesForBuildingFederation(this.player, this.faction);
     for (const hex of hexes) {
       assert (!excluded.has(hex), `${hex.toString()} can't be part of a new federation`);
     }
@@ -602,7 +625,7 @@ export default class Player extends EventEmitter {
     assert(map.grid.groups(hexes).length === 1, 'The hexes of the federation must be adjacent');
 
     // Get the power value of the buildings
-    const powerValue = _.sum(hexes.map(hex => this.buildingValue(hex.buildingOf(this.player), hex.data.planet)));
+    const powerValue = _.sum(hexes.map(hex => this.buildingValue(hex.buildingOf(this.player), hex.data.planet, true)));
     assert(powerValue >= this.federationCost, "Your buildings need to have a total value of at least " + this.federationCost);
 
     const info = this.federationInfo(hexes);
@@ -613,12 +636,17 @@ export default class Player extends EventEmitter {
 
     assert(!outclasser, "Federation is outclassed by other federation at " + _.get(outclasser, "hexes", []).join(','));
 
+    assert (this.faction !== Faction.Ivits || this.data.federationCount === 0 || hexes.some(hex => hex.belongsToFederationOf(this.player)), "Ivits must extend their first federation");
+
     return info;
   }
 
   get federationCost(): number {
     if (this.faction === Faction.Xenos && this.data.hasPlanetaryInstitute()) {
       return 6;
+    }
+    if (this.faction === Faction.Ivits) {
+      return 7 * (1 + this.data.federationCount);
     }
     return 7;
   }

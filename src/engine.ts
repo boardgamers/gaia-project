@@ -991,15 +991,8 @@ export default class Engine {
       throw new Error(`Impossible to form federation ${federation}`);
     }
 
-    pl.gainFederationToken(federation);
+    pl.formFederation(fedInfo, federation);
     this.federations[federation] -= 1;
-
-    const hexList = hexes.split(',').map(str => this.map.grid.getS(str));
-    for (const hex of hexList) {
-      hex.addToFederationOf(player);
-    }
-    pl.payCosts([new Reward(fedInfo.satellites, Resource.GainToken)]);
-    pl.data.satellites += fedInfo.satellites;
   }
 
   [Command.PISwap](player: PlayerEnum, location: string) {
