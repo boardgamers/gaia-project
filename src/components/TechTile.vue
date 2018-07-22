@@ -1,5 +1,5 @@
 <template>
-  <svg :class='["techTile", {highlighted, disabled}]' v-show="this.count" v-b-tooltip :title="tooltip" @click="onClick" width="58" height="37" viewBox="0 0 58 37">
+  <svg :class='["techTile", {highlighted, covered}]' v-show="this.count" v-b-tooltip :title="tooltip" @click="onClick" width="58" height="37" viewBox="0 0 58 37">
     <polygon points="1,1 48,1 57,11 57,36 1,36" />
     <text class="title" x="4" y="12">{{title}}</text>
     <text class="content" x="4" y="30">{{content}}</text>
@@ -59,7 +59,7 @@ export default class TechTile extends Vue {
   player: PlayerEnum;
 
   @Prop()
-  disabled: boolean;
+  covered: boolean;
 
   onClick() {
     if (this.highlighted) {
@@ -99,7 +99,7 @@ svg {
       cursor: pointer;
     }
 
-    &.disabled {
+    &.covered {
       stroke-opacity: 0.5;
       fill-opacity: 0.7;
     }
