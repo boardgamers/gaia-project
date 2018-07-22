@@ -14,6 +14,7 @@
       <Booster v-if="data.roundBooster" :booster="data.roundBooster" :disabled="passed"/>
       <TechTile v-for="tech in data.techTiles" :disabled="!tech.enabled" :key="tech.pos" :pos="tech.pos" :player="player.player" />
       <TechTile v-for="tech in data.advTechTiles" :key="tech.pos" :pos="tech.pos" :player="player.player" />
+      <SpecialAction v-for="(action, i) in player.actions" :action="action.rewards" :disabled="!action.enabled || passed" :key="action.action + '-' + i" />
     </div>
   </div>
 </template>
@@ -25,6 +26,7 @@ import { Player, factions, tiles, PlayerData, Planet, terraformingStepsRequired 
 import { factionColor } from '@/graphics/utils';
 import TechTile from './TechTile.vue';
 import Booster from './Booster.vue';
+import SpecialAction from './SpecialAction.vue';
 
 @Component({
   computed: {
@@ -34,7 +36,8 @@ import Booster from './Booster.vue';
   },
   components: {
     TechTile,
-    Booster
+    Booster,
+    SpecialAction
   }
 })
 export default class PlayerInfo extends Vue {

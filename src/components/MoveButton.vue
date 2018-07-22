@@ -13,7 +13,7 @@ import {HighlightHexData, ButtonData} from '../data';
 @Component({
   computed: {
     isActiveButton() {
-      return this.$store.state.game.context.activeButton === this.button;
+      return this.$store.state.game.context.activeButton.label === this.button.label;
     }
   }
 })
@@ -25,6 +25,7 @@ export default class MoveButton extends Vue {
 
   subscribe(action: string, callback: any) {
     this.unsubscribe();
+    this.$store.commit("activeButton", this.button);
 
     this.subscription = (this.$store as any).subscribeAction(({type, payload}) => {
       if (type !== action) {
@@ -47,7 +48,6 @@ export default class MoveButton extends Vue {
 
   handleClick() {
     if (this.button.hexes && !this.button.hover && !this.button.selectHexes) {
-      this.$store.commit("activeButton", this.button);
       this.$store.commit("highlightHexes", this.button.hexes);
 
       this.subscribe('hexClick', hex => this.emitCommand(`${hex.q}x${hex.r}`));
@@ -55,7 +55,6 @@ export default class MoveButton extends Vue {
     }
 
     if (this.button.researchTiles) {
-      this.$store.commit("activeButton", this.button);
       this.$store.commit("highlightResearchTiles", this.button.researchTiles);
 
       this.subscribe('researchClick', field => this.emitCommand(field, {final: true}));
@@ -65,7 +64,6 @@ export default class MoveButton extends Vue {
     }
 
     if (this.button.techs) {
-      this.$store.commit("activeButton", this.button);
       this.$store.commit("highlightTechs", this.button.techs);
 
       this.subscribe('techClick', pos => this.emitCommand(pos, {final: true}));
@@ -75,10 +73,11 @@ export default class MoveButton extends Vue {
     }
 
     if (this.button.boosters) {
-      this.$store.commit("activeButton", this.button);
       this.$store.commit("highlightBoosters", this.button.boosters);
 
-      this.subscribe('boosterClick', booster => this.emitCommand(booster, {final: true}));
+      this.subscribe('boosterClick', booster => {
+        this.emitCommand(booster, {final: true})
+      });
 
       this.emitCommand(null, {disappear: false});
       return;
@@ -92,7 +91,6 @@ export default class MoveButton extends Vue {
         return;
       }
 
-      this.$store.commit("activeButton", this.button);
       this.$store.commit("selectHexes", this.button.hexes);
 
       this.button.label = "Custom location - End selection";

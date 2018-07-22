@@ -49,6 +49,7 @@ export default class Booster extends Vue {
   
   onClick() {
     if (this.highlighted) {
+      console.log("dispatch", this.booster);
       this.$store.dispatch("boosterClick", this.booster);
     }
   }
