@@ -280,7 +280,7 @@ export default class Player extends EventEmitter {
     }
 
     // Faction-specific code on building
-    this.emit(`build-${building}`);
+    this.emit(`build-${building}`, hex);
   }
 
   // Not to confuse with the end of a round
