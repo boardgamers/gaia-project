@@ -12,14 +12,23 @@
         <Pool />
       </div>
       <div class="col-md-6 order-1 order-md-2" id="move-panel">
-        <Commands @command="handleCommand"/>
+        <Commands @command="handleCommand" v-if="!ended" />
+        <span v-else><b>Game ended!</b></span>
         <div>
           <form id="move-form" @submit.prevent="submit">
-            <div class="form-group">
-              <label for="moves">Moves</label>
+            <label for="current-move">Current Move</label>
+            <div class="input-group">
+              <input type="text" class="form-control" placeholder="Current move" aria-label="Current move" id="current-move" v-model="currentMove">
+              <div class="input-group-append">
+                <!-- <button class="btn btn-danger" type="button" @click="addMove('')">Clear</button> -->
+                <button class="btn btn-primary" type="button" @click="addMove(currentMove)">Send</button>
+              </div>
+            </div>
+            <div class="form-group mt-2">
+              <label for="moves">Move log</label>
               <textarea class="form-control" rows="4" id="moves" v-model="moveList"></textarea>
             </div> 
-            <input type="submit" class="btn btn-primary d-block ml-auto" value="Execute">
+            <input type="button" class="btn btn-default d-block ml-auto" value="Replay" @click="replay">
           </form>  
         </div>
       </div>
@@ -38,12 +47,15 @@ import PlayerInfo from './PlayerInfo.vue';
 import ResearchBoard from './ResearchBoard.vue';
 import ScoringBoard from './ScoringBoard.vue';
 import Pool from './Pool.vue';
-import { Command } from '@gaia-project/engine';
+import { Command, Phase } from '@gaia-project/engine';
 
 @Component<Game>({
   computed: {
     data() {
       return this.$store.state.game.data;
+    },
+    ended() {
+      return this.data.phase === Phase.EndGame;
     },
     orderedPlayers() {
       const data = this.data;
@@ -58,10 +70,10 @@ import { Command } from '@gaia-project/engine';
   },
   created(this: Game) {
     if (window.sessionStorage.getItem('moves')) {
-      this.moves = JSON.parse(window.sessionStorage.getItem('moves'));
+      this.moveList = JSON.parse(window.sessionStorage.getItem('moves')).join("\n");
       this.updateMoveList();
     }
-    this.submit();
+    this.replay();
   },
   components: {
     Commands,
@@ -74,14 +86,16 @@ import { Command } from '@gaia-project/engine';
 })
 export default class Game extends Vue {
   public moveList = "";
-  public moves: string[] = [];
+  public currentMove = "";
 
-  submit() {
+  replay() {
+    this.$store.commit("clearContext");
+
     const text = this.moveList.trim(); 
-    this.moves = text ? text.split("\n") : [];
+    const moveList = text ? text.split("\n") : [];
 
     const data = {
-      moves: this.moves
+      moves: moveList
     }
 
     $.post("http://localhost:9508/", 
@@ -90,7 +104,17 @@ export default class Game extends Vue {
         this.$store.commit('removeError');
         this.$store.commit('receiveData', data);
 
-        window.sessionStorage.setItem('moves', JSON.stringify(this.moves));
+        window.sessionStorage.setItem('moves', JSON.stringify(data.moveHistory));
+
+        if (data.newTurn) {
+          this.moveList = data.moveHistory.join("\n");
+          this.currentMove = "";
+        } else {
+          this.currentMove = data.moveHistory.pop();
+          this.moveList = data.moveHistory.join("\n");
+        }
+
+        this.updateMoveList();
       },
       "json"
     ).fail((error, status, exception) => {
@@ -103,49 +127,30 @@ export default class Game extends Vue {
   }
 
   handleCommand(command: string) {
-    (() => {
-      if (command.startsWith(Command.Init)) {
-        this.moves = [command];
-        return;
-      }
+    if (command.startsWith(Command.Init) || this.data.round <= 0) {
+      this.addMove(command);
+      return;
+    }
 
-      if (this.data.round <= 0) {
-        this.moves.push(command);
-        return;
-      }
+    const move = this.parseMove(command);
 
-      const move = this.parseMove(command);
+    if (move.command === Command.EndTurn) {
+      this.addMove(this.currentMove + ".");
+      return;
+    }
 
-      if (move.command === Command.EndTurn) {
-        this.moves[this.moves.length - 1] += ".";
-        return;
-      }
+    if (this.currentMove) {
+      this.addMove(this.currentMove + `. ${command.slice(move.player.length+1)}`);
+    } else {
+      this.addMove(command);
+    }
+  }
 
-      const lastMoveStr = this.moves[this.moves.length - 1];
+  addMove(command: string) {
+    this.moveList = (this.moveList.trim() + "\n" + command).trim();
+    this.currentMove = "";
 
-      if (lastMoveStr.endsWith('.')) {
-        this.moves.push(command);
-        return;
-      }
-
-      const lastMove = this.parseMove(lastMoveStr);
-
-      if (lastMove.player !== move.player) {
-        this.moves.push(command);
-        return;
-      }
-
-      if (this.data.newTurn) {
-        this.moves.push(command);
-        return;
-      }
-
-      this.moves[this.moves.length-1] += `. ${command.slice(move.player.length+1)}`;
-    })();
-
-    this.$store.commit('clearContext');
-    this.updateMoveList();
-    this.submit();
+    this.replay();
   }
 
   parseMove(command: string): {player: string, command: string, args: string[]} {
@@ -165,8 +170,6 @@ export default class Game extends Vue {
   }
 
   updateMoveList() {
-    this.moveList = this.moves.join("\n");
-
     setTimeout(() => $("#moves").scrollTop($("#moves")[0].scrollHeight));
   }
 }

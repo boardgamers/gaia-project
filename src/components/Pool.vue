@@ -1,5 +1,5 @@
 <template>
-  <div class="pool" v-show="boosters.length > 0">
+  <div class="pool pb-0 mb-1" v-show="boosters.length > 0">
     <Booster v-for="booster in boosters" :key="booster" :booster="booster" class="mb-2"  />
     <FederationTile v-for="(federation, i) in federations" :key="`${federation}-${i}`" :federation="federation" class="mb-2" />
   </div>
