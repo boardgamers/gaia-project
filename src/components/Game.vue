@@ -98,7 +98,7 @@ export default class Game extends Vue {
       moves: moveList
     }
 
-    $.post("http://localhost:9508/", 
+    $.post(`${window.location.protocol}//${window.location.hostname}:9508/`, 
       data,
       data => {
         this.$store.commit('removeError');
