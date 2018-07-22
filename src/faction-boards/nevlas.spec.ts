@@ -42,4 +42,33 @@ describe("Nevlas", () => {
     expect(engine.player(Player.Player1).data.power.gaia).to.equal(gaia + 2);
     expect(engine.player(Player.Player1).data.knowledge).to.equal(know + 1 - 1 - 4 + 1);
   });
+
+  it("should move the correct number of tokens to area 1", () => {
+    const engine = new Engine(parseMoves(`
+      init 2 randomSeed
+      p1 faction firaks
+      p2 faction nevlas
+      p1 build m -1x-1
+      p2 build m -1x0
+      p2 build m 3x-3
+      p1 build m 3x-2
+      p2 booster booster3
+      p1 booster booster7
+      p1 build ts -1x-1.
+      p2 leech 1pw
+      p2 build ts -1x0.
+      p1 leech 2pw
+      p1 build PI -1x-1.
+      p2 leech 2pw
+      p2 build PI -1x0.
+      p1 leech 3pw
+      p1 up terra.
+    `));
+
+    const area1 = engine.player(Player.Player2).data.power.area1;
+
+    // Only actually spend 2 power tokens due to nevlas' ability
+    engine.move("p2 burn 1. spend 4pw for 1k");
+    expect(engine.player(Player.Player2).data.power.area1).to.equal(area1 + 2);
+  });
 });

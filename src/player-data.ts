@@ -257,7 +257,7 @@ export default class PlayerData extends EventEmitter {
       power = Math.max(power - 3, 0);
     }
     this.power.area3 -= Math.ceil( power / this.tokenModifier );
-    this.power.area1 += power;
+    this.power.area1 += Math.ceil( power / this.tokenModifier );
   }
 
   tokensBelowArea(area: BrainstoneArea) {
