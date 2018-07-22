@@ -6,7 +6,7 @@ import * as _ from 'lodash';
 import factions from './factions';
 import Reward from './reward';
 import { CubeCoordinates, Hex, Grid } from 'hexagrid';
-import * as researchTracks from './research-tracks';
+import researchTracks, {lastTile, keyNeeded} from './research-tracks';
 import { terraformingStepsRequired } from './planets';
 import boosts from './tiles/boosters';
 import { Player as PlayerEnum } from './enums';
@@ -352,7 +352,7 @@ export default class Player extends EventEmitter {
 
   canUpgradeResearch(field: ResearchField): boolean {
     // already on top
-    if (this.data.research[field] === researchTracks.lastTile(field)) {
+    if (this.data.research[field] === lastTile(field)) {
       return false;
     }
 
@@ -360,7 +360,7 @@ export default class Player extends EventEmitter {
     const destTile = this.data.research[field] + 1;
 
     // To go from 4 to 5, we need to flip a federation and nobody inside
-    if (researchTracks.keyNeeded(field, destTile) && this.data.greenFederations === 0) {
+    if (keyNeeded(field, destTile) && this.data.greenFederations === 0) {
       return false;
     }
 
