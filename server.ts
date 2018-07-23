@@ -16,9 +16,12 @@ app.use(cookieParser());
 
 app.use(morgan('dev'));
 
-app.post("/", (req, res) => {
+app.use((req, res, next) => {
   res.set("Access-Control-Allow-Origin", req.get('origin'));
+  next();
+});
 
+app.post("/", (req, res) => {
   try {
     const moves = req.body.moves;
     const engine = new Engine(moves);
@@ -52,13 +55,13 @@ app.post("/g/", (req, res) => {
     return;
   }
 
-  if (!/^[A-Za-z-_0-9]$/.test(gameId)) {
+  if (!/^[A-Za-z-_0-9]+$/.test(gameId) || gameId.length > 16) {
     res.status(400).json('Invalid game id format');
     return;
   }
 
   try {
-    const engine = new Engine([`init ${players} gameId`]);
+    const engine = new Engine([`init ${players} ${gameId}`]);
     engine.generateAvailableCommands();
 
     games[gameId] = JSON.parse(JSON.stringify(engine));
