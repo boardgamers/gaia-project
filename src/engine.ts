@@ -719,6 +719,8 @@ export default class Engine {
     const nbPlayers = +players || 2;
     seed = seed || 'defaultSeed';
 
+    assert(nbPlayers >= 2 && nbPlayers <= 5, "Invalid number of players");
+
     this.map = new SpaceMap(nbPlayers, seed);
 
     // Choose nbPlayers+3 boosters as part of the pool
