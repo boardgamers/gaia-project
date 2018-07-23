@@ -18,7 +18,7 @@
     "tsconfig.json"
   ],
   "scripts": {
-    "nodemon": "nodemon -e ts --exec yarn start",
+    "nodemon": "nodemon -e ts --exec npm start",
     "prepublishOnly": "npm run clean && tsc",
     "postpublish": "npm run clean",
     "start": "ts-node server.ts",
