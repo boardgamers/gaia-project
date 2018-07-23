@@ -165,7 +165,7 @@ app.post("/g/:gameId/move", (req , res) => {
   }
 });
 
-app.listen(9508, "localhost", () => {
+app.listen(9508, () => {
   console.log("Listening on port 9508");
 });
 

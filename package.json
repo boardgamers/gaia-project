@@ -47,6 +47,7 @@
     "@types/fs-extra": "^5.0.4",
     "@types/lodash": "^4.14.109",
     "@types/mocha": "^2.2.48",
+    "@types/morgan": "^1.7.35",
     "@types/node": "^9.4.7",
     "@types/seedrandom": "^2.4.27",
     "body-parser": "^1.18.2",
