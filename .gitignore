@@ -67,3 +67,6 @@ yarn.lock
 .vscode/*
 .vscode/settings.json
 .vscode/launch.json
+
+# Folder with save data
+bin

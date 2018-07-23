@@ -39,6 +39,9 @@ export default class Player extends EventEmitter {
   };
   // Did we decline the last offer?
   declined = false;
+  // OPTIONAL
+  name?: string;
+  auth?: string;
 
   constructor(public player: PlayerEnum = PlayerEnum.Player1) {
     super();
@@ -53,7 +56,9 @@ export default class Player extends EventEmitter {
       income: Reward.toString(Reward.merge([].concat(...this.events[Operator.Income].map(event => event.rewards))), true),
       progress:  Object.assign({}, ...Object.values(FinalTile).map( track => ({ [track]: this.eventConditionCount(finalScorings[track])}))),
       actions: this.events[Operator.Activate].map(event => ({rewards: event.spec.replace('=>', '').trim(), enabled: !event.activated})),
-      events: this.events
+      events: this.events,
+      name: this.name,
+      auth: this.auth
     };
   }
 
@@ -71,6 +76,9 @@ export default class Player extends EventEmitter {
     for (const kind of Object.keys(data.events)) {
       player.events[kind] = data.events[kind].map(ev => new Event(ev));
     }
+
+    player.auth = data.name;
+    player.auth = data.auth;
 
     return player;
   }
