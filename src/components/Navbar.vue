@@ -1,6 +1,6 @@
 <template>
   <nav class="navbar navbar-dark bg-primary navbar-expand-sm navbar-fixed-top mb-3" id="navbar">
-    <a class="navbar-brand" href="/" @click.prevent>Gaia project</a>
+    <a class="navbar-brand" href="/">Gaia project</a>
     <form class="form-inline my-2 my-lg-0 ml-auto" method="get" @submit.prevent="createGame">
       <input class="form-control mr-sm-2" type="text" name="g" v-model=gameId placeholder="Game ID" aria-label="Game ID" required>
       <select v-model="players" class="form-control mr-sm-2">
