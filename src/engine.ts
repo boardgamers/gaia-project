@@ -746,7 +746,7 @@ export default class Engine {
       this.boardActions[pos] = true;
     });
 
-    this.terraformingFederation = shuffleSeed.shuffle(Object.values(Federation), this.map.rng())[0];
+    this.terraformingFederation = shuffleSeed.shuffle(Object.values(Federation).filter(fed => fed !== Federation.FederationGleens), this.map.rng())[0];
     for (const federation of Object.values(Federation) as Federation[]) {
       if (federation !== Federation.FederationGleens) {
         this.tiles.federations[federation] = federation === this.terraformingFederation ? 2 : 3;
