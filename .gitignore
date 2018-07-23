@@ -60,9 +60,8 @@ typings/
 # Dist directory
 dist
 
-#using npm, not yarn
 yarn.lock
-
+package-lock.json
 
 .vscode/*
 .vscode/settings.json
