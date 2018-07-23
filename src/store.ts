@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import { Data, GameContext } from './data';
-import { GaiaHex, ResearchField, TechTilePos, AdvTechTilePos, Booster, Federation } from '../node_modules/@gaia-project/engine';
+import { GaiaHex, ResearchField, TechTilePos, AdvTechTilePos, Booster, Federation } from '@gaia-project/engine';
 
 Vue.use(Vuex);
 

@@ -1,12 +1,12 @@
 <template>
   <div id="move">
     <div id="move-title">
-      <h4>
+      <h5>
         <span v-if="init">Pick the number of players</span>
         <span v-else>
           {{[player, ...titles].join(' - ')}}
         </span>
-      </h4>
+      </h5>
     </div>
     <div id="move-buttons">
       <div v-if="init">
@@ -81,6 +81,9 @@ export default class Commands extends Vue {
   get player(): string {
     if (this.$store.state.game.data.players[this.command.player].faction) {
       return factions[this.$store.state.game.data.players[this.command.player].faction].name;
+    }
+    if (this.$store.state.game.data.players[this.command.player].name) {
+      return this.$store.state.game.data.players[this.command.player].name;
     }
     return "Player " + (this.command.player+1);
   }

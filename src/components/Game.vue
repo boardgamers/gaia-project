@@ -12,12 +12,26 @@
         <Pool />
       </div>
       <div class="col-md-6 order-1 order-md-2" id="move-panel">
-        <Commands @command="handleCommand" v-if="!ended" />
-        <span v-else><b>Game ended!</b></span>
+        <span v-if="ended"><b>Game ended!</b></span>
+        <Commands @command="handleCommand" v-else-if="canPlay" />
+        <div v-else-if="freeSpots">
+          <form @submit.prevent="joinGame">
+            <label for="name">Waiting for {{freeSpots}} players to join the game</label>
+            <div class="input-group" v-if="canJoin">
+              <input type="text" class="form-control" placeholder="Your name" id="name" v-model="name" required>
+              <div class="input-group-append">
+                <!-- <button class="btn btn-danger" type="button" @click="addMove('')">Clear</button> -->
+                <button class="btn btn-primary" type="submit">Join!</button>
+              </div>
+            </div>
+          </form>
+          <div v-if="!canJoin"><button class="btn btn-default" @click="loadGame">Refresh</button></div>
+        </div>
+        <div v-else-if="data.players[player]">Waiting for {{data.players[player].name}} to play.<br/> <button class="btn btn-default mt-2" @click="loadGame">Refresh</button></div>
         <div>
           <form id="move-form" @submit.prevent="submit">
-            <label for="current-move">Current Move</label>
-            <div class="input-group">
+            <label for="current-move" v-if="canPlay">Current Move</label>
+            <div class="input-group" v-if="canPlay">
               <input type="text" class="form-control" placeholder="Current move" aria-label="Current move" id="current-move" v-model="currentMove">
               <div class="input-group-append">
                 <!-- <button class="btn btn-danger" type="button" @click="addMove('')">Clear</button> -->
@@ -28,7 +42,7 @@
               <label for="moves">Move log</label>
               <textarea class="form-control" rows="4" id="moves" v-model="moveList"></textarea>
             </div> 
-            <input type="button" class="btn btn-default d-block ml-auto" value="Replay" @click="replay">
+            <input type="button" class="btn btn-default d-block ml-auto" value="Replay" @click="replay" v-if="!gameId">
           </form>  
         </div>
       </div>
@@ -66,9 +80,30 @@ import { Command, Phase } from '@gaia-project/engine';
 
       const indexes = data.turnOrder.concat(data.passedPlayers);
       return indexes.map(player => data.players[player]);
+    },
+    gameId() {
+      if (window.location.search.startsWith("?g=")) {
+        return window.location.search.slice("?g=".length);
+      }  
+    },
+    canPlay() {
+      return !this.gameId || this.player !== undefined && this.data.players[this.player].auth === this.auth && !this.freeSpots;
+    },
+    canJoin() {
+      return !this.data.players.some(pl => pl.auth === this.auth) && this.freeSpots;
+    },
+    freeSpots() {
+      return this.data.players.filter(pl => !pl.auth).length;
+    },
+    player() {
+      return this.data.availableCommands.length > 0 ? this.data.availableCommands[0].player : undefined;
     }
   },
   created(this: Game) {
+    if (this.gameId) {
+      this.loadGame();
+      return;
+    }
     if (window.sessionStorage.getItem('moves')) {
       this.moveList = JSON.parse(window.sessionStorage.getItem('moves')).join("\n");
       this.updateMoveList();
@@ -87,6 +122,8 @@ import { Command, Phase } from '@gaia-project/engine';
 export default class Game extends Vue {
   public moveList = "";
   public currentMove = "";
+  // When joining a game
+  name = "";
 
   replay() {
     this.$store.commit("clearContext");
@@ -101,29 +138,59 @@ export default class Game extends Vue {
     $.post(`${window.location.protocol}//${window.location.hostname}:9508/`, 
       data,
       data => {
-        this.$store.commit('removeError');
-        this.$store.commit('receiveData', data);
-
+        this.handleData(data);
         window.sessionStorage.setItem('moves', JSON.stringify(data.moveHistory));
-
-        if (data.newTurn) {
-          this.moveList = data.moveHistory.join("\n");
-          this.currentMove = "";
-        } else {
-          this.currentMove = data.moveHistory.pop();
-          this.moveList = data.moveHistory.join("\n");
-        }
-
-        this.updateMoveList();
       },
       "json"
-    ).fail((error, status, exception) => {
-      if (error.status === 0) {
-        this.$store.commit("error", "Are you sure gaia engine is running on port 9508?");  
-      } else {
-        this.$store.commit("error", error.responseText);
-      }
-    });
+    ).fail(this.handleError.bind(this));
+  }
+
+  handleError(error, status, exception) {
+    if (error.status === 0) {
+      this.$store.commit("error", "Are you sure gaia engine is running on port 9508?");  
+    } else {
+      this.$store.commit("error", error.responseText);
+    }
+  }
+
+  handleData(data: any) {
+    this.$store.commit('removeError');
+    this.$store.commit('receiveData', data);
+
+    if (data.newTurn) {
+      this.moveList = data.moveHistory.join("\n");
+      this.currentMove = "";
+    } else {
+      this.currentMove = data.moveHistory.pop();
+      this.moveList = data.moveHistory.join("\n");
+    }
+
+    this.updateMoveList();
+  }
+
+  loadGame() {
+    this.$store.commit("clearContext");
+
+    $.get(`${window.location.protocol}//${window.location.hostname}:9508/g/${this.gameId}`, 
+      data => {
+        this.handleData(data);
+      },
+      "json"
+    ).fail(this.handleError.bind(this));
+  }
+
+  joinGame() {
+    if (!this.auth) {
+      const string = this.name + "-" + this.gameId + "-" + Math.random();
+      console.log("setting auth", string);
+      window.localStorage.setItem("auth", string);
+    }
+
+    $.post(`${window.location.protocol}//${window.location.hostname}:9508/g/${this.gameId}/join`, {name: this.name, auth: this.auth}, 
+      data => {
+        this.loadGame();
+      },
+    ).fail(this.handleError.bind(this));
   }
 
   handleCommand(command: string) {
@@ -147,10 +214,19 @@ export default class Game extends Vue {
   }
 
   addMove(command: string) {
-    this.moveList = (this.moveList.trim() + "\n" + command).trim();
-    this.currentMove = "";
+    if (this.gameId) {
+      $.post(`${window.location.protocol}//${window.location.hostname}:9508/g/${this.gameId}/move`,  {auth: this.auth, move: command},
+        data => {
+          this.handleData(data);
+        },
+        "json"
+      ).fail(this.handleError.bind(this));
+    } else {
+      this.moveList = (this.moveList.trim() + "\n" + command).trim();
+      this.currentMove = "";
 
-    this.replay();
+      this.replay();
+    }
   }
 
   parseMove(command: string): {player: string, command: string, args: string[]} {
@@ -172,11 +248,16 @@ export default class Game extends Vue {
   updateMoveList() {
     setTimeout(() => $("#moves").scrollTop($("#moves")[0].scrollHeight));
   }
+
+  get auth() {
+    return window.localStorage.getItem('auth');
+  }
 }
 
 // Used for type augmentation from computed properties
 export default interface Game {
   data: Data;
+  gameId: string;
 }
 </script>
 
