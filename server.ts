@@ -43,7 +43,7 @@ app.post("/", (req, res) => {
 
 interface MetaData {}
 
-const games: {[gameId: string]: Engine} = {
+let games: {[gameId: string]: Engine} = {
 
 };
 
@@ -76,7 +76,7 @@ app.post("/g/:gameId/join", (req , res) => {
   const gameId = req.params.gameId;
 
   if (!games[gameId]) {
-    req.sendStatus(404);
+    res.sendStatus(404);
     return;
   }
 
@@ -114,7 +114,7 @@ app.get("/g/:gameId", (req , res) => {
   const gameId = req.params.gameId;
 
   if (!games[gameId]) {
-    req.sendStatus(404);
+    res.sendStatus(404);
     return;
   }
 
@@ -125,15 +125,20 @@ app.post("/g/:gameId/move", (req , res) => {
   const gameId = req.params.gameId;
 
   if (!games[gameId]) {
-    req.sendStatus(404);
+    res.sendStatus(404);
     return;
   }
 
   const game = games[gameId];
   const {auth, move} = req.body;
 
-  if (game.availableCommands.length === 0 || game.player[game.availableCommands[0].player].auth !== auth) {
+  if (game.availableCommands.length === 0 || game.players[game.availableCommands[0].player].auth !== auth) {
     res.status(400).json("Not your turn to play");
+    return;
+  }
+
+  if (game.players.some(pl => !pl.auth)) {
+    res.status(400).json("Wait for everybody to join");
     return;
   }
 
@@ -164,7 +169,17 @@ app.listen(9508, "localhost", () => {
   console.log("Listening on port 9508");
 });
 
+const load = async () => {
+  try {
+    games = JSON.parse((await fs.readFile("bin/data.json")).toString());
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 // Every 20 minutes, save game data in a local file
 setInterval(async () => {
   await fs.writeFile('bin/data.json', JSON.stringify(games));
 }, 1000 * 20 * 60);
+
+load();

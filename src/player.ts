@@ -77,7 +77,7 @@ export default class Player extends EventEmitter {
       player.events[kind] = data.events[kind].map(ev => new Event(ev));
     }
 
-    player.auth = data.name;
+    player.name = data.name;
     player.auth = data.auth;
 
     return player;
