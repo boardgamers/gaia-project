@@ -44,7 +44,7 @@ const games: {[gameId: string]: Engine} = {
 
 };
 
-app.put("/g/", (req, res) => {
+app.post("/g/", (req, res) => {
   const {gameId, players} = req.body;
 
   if (games[gameId]) {
