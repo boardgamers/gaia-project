@@ -77,7 +77,7 @@ app.post("/g/:gameId/join", (req , res) => {
     return;
   }
 
-  const {auth, name} = req.cookies;
+  const {auth, name} = req.body;
 
   if (!auth || !name) {
     res.status(400).json("Please enable cookies and choose a name");
@@ -127,7 +127,7 @@ app.post("/g/:gameId/move", (req , res) => {
   }
 
   const game = games[gameId];
-  const {auth} = req.cookies;
+  const {auth, move} = req.body;
 
   if (game.availableCommands.length === 0 || game.player[game.availableCommands[0].player].auth !== auth) {
     res.status(400).json("Not your turn to play");
@@ -135,7 +135,6 @@ app.post("/g/:gameId/move", (req , res) => {
   }
 
   const engine = Engine.fromData(game);
-  const {move} = req.body;
 
   try {
     engine.move(move);
