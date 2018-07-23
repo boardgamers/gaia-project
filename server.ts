@@ -5,6 +5,8 @@ import * as cookieParser from 'cookie-parser';
 import { AssertionError } from "assert";
 import Engine from "./src/engine";
 import * as fs from "fs-extra";
+import * as _ from "lodash";
+
 
 fs.mkdirp("bin");
 
@@ -142,7 +144,7 @@ app.post("/g/:gameId/move", (req , res) => {
     return;
   }
 
-  const engine = Engine.fromData(game);
+  const engine = Engine.fromData(_.cloneDeep(game));
 
   try {
     engine.move(move);
