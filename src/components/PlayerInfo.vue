@@ -1,7 +1,7 @@
 <template>
   <div :class="['player-info', player.faction]" v-if="player.faction" :style="`background-color: ${factionColor}`">
     <div class="text">
-      <b>Player {{player.player + 1}}</b> - {{faction}} - {{data.victoryPoints}}vp <span v-if="passed">(passed)</span><br/>
+      <b>{{name}}</b> - {{faction}} - {{data.victoryPoints}}vp <span v-if="passed">(passed)</span><br/>
       {{data.credits}}c, {{data.ores}}o, {{data.knowledge}}k, {{data.qics}}q, [{{power('gaia')}}] {{power('area1')}}/{{power('area2')}}/{{power('area3')}} pw<br/>
       Range: {{data.range}}, Terraforming cost: {{3 - data.terraformCostDiscount}}o<br/>
       Income: {{player.income.replace(/,/g, ', ')}} <br/>
@@ -50,6 +50,13 @@ export default class PlayerInfo extends Vue {
 
   get faction() {
     return factions[this.player.faction].name;
+  }
+
+  get name() {
+    if (this.player.name) {
+      return this.player.name;
+    }
+    return "Player " + (this.player.player + 1);
   }
 
   get factionColor() {
