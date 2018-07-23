@@ -3,7 +3,7 @@
     <div class="text">
       <b>Player {{player.player + 1}}</b> - {{faction}} - {{data.victoryPoints}}vp <span v-if="passed">(passed)</span><br/>
       {{data.credits}}c, {{data.ores}}o, {{data.knowledge}}k, {{data.qics}}q, [{{power('gaia')}}] {{power('area1')}}/{{power('area2')}}/{{power('area3')}} pw<br/>
-      Range: {{data.range}}, terraform level: {{data.terraformCostDiscount}}<br/>
+      Range: {{data.range}}, Terraforming cost: {{3 - data.terraformCostDiscount}}o<br/>
       Income: {{player.income.replace(/,/g, ', ')}} <br/>
       <span style="white-space: nowrap;">
         Steps: 
