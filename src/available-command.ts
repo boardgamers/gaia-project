@@ -602,6 +602,13 @@ export function possibleTechTiles(engine: Engine, player: Player) {
       data: { tiles }
     });
   }
+
+  commands.push({
+    name: Command.DeclineTechTile,
+    player,
+    data: {  }
+  });
+
   return commands;
 }
 

@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import Engine from '../engine';
-import {Player, AdvTechTilePos} from '../enums';
+import {Player, AdvTechTilePos, TechTilePos} from '../enums';
 
 describe("Tech Tiles", () => {
   it("should prevent picking the same tech tile twice", () => {
@@ -47,10 +47,18 @@ describe("Tech Tiles", () => {
       p1 booster booster4
       p1 build ts -1x2.
       p2 pass booster5
-      p1 build lab -1x2. tech nav.
     `);
 
-    expect(() => new Engine(moves)).to.not.throw();
+    const engine = new Engine(moves);
+
+    /** Spends two green federations: one for the last tile, one for the advanced tech */
+    expect(() => engine.move('p1 build lab -1x2. tech nav.')).to.not.throw();
+    // tslint:disable-next-line no-unused-expression
+    expect(engine.player(Player.Player1).data.tiles.techs.find(tile => tile.pos === TechTilePos.Navigation)).to.not.be.undefined;
+
+    const engine1 = new Engine(moves);
+    expect(() => engine1.move('p1 build lab -1x2. declinetech.')).to.not.throw();
+
   });
 
   it("should allow to get an advanced tech tiles when conditions are met", () => {
@@ -114,5 +122,10 @@ describe("Tech Tiles", () => {
     // tslint:disable-next-line no-unused-expression
     expect(engine1.player(Player.Player1).data.tiles.techs.find(tile => tile.pos === AdvTechTilePos.GaiaProject)).to.not.be.undefined;
     expect(engine1.tiles.techs[AdvTechTilePos.GaiaProject].count).to.equal(0);
+
+    const engine2 = new Engine(moves);
+    expect(() => engine2.move('p1 build lab -2x3. declinetech.')).to.not.throw();
+
   });
+
 });

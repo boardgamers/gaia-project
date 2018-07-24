@@ -876,6 +876,11 @@ export default class Engine {
     }
   }
 
+  [Command.DeclineTechTile](player: PlayerEnum) {
+    // nothing to do
+  }
+
+
   [Command.ChooseCoverTechTile](player: PlayerEnum, tilePos: TechTilePos) {
     const { tiles } = this.availableCommand.data;
     const tileAvailable = tiles.find(ta => ta.pos === tilePos);
