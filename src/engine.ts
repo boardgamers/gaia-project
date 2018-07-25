@@ -455,11 +455,6 @@ export default class Engine {
   }
 
   endIncomePhase() {
-    // remove incomes from roundboosters
-    for (const player of this.playersInOrder()) {
-      player.removeRoundBoosterIncomeEvents();
-    }
-
     this.beginGaiaPhase();
   }
 
