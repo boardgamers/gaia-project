@@ -403,12 +403,14 @@ export function possibleResearchAreas(engine: Engine, player: Player, cost?: str
     });
   }
 
-  commands.push({
-    name: Command.Decline,
-    player,
-    data: { offer :  Command.UpgradeResearch }
-  });
-
+  // decline not for main action
+  if (cost !== UPGRADE_RESEARCH_COST) {
+    commands.push({
+      name: Command.Decline,
+      player,
+      data: { offer: Command.UpgradeResearch }
+    });
+  }
   return commands;
 }
 

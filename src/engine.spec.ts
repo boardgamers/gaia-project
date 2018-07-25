@@ -233,12 +233,12 @@ describe("Engine", () => {
       p1 charge 2pw
       p2 charge 2pw
       p1 build m -6x6.
-      p2 burn 1. build lab 1x5. tech int. spend 1pw for 1c.
+      p2 burn 1. build lab 1x5. tech int. up int. spend 1pw for 1c.
       p4 decline
       p1 decline
-      p3 build lab -4x1. tech terra.
+      p3 build lab -4x1. tech terra. up terra.
       p2 charge 1pw
-      p4 build lab 1x4. tech sci. burn 2.
+      p4 build lab 1x4. tech sci. up sci. burn 2.
       p1 charge 2pw
       p2 decline
       p1 build gf -6x7. spend 1o for 1c.
@@ -248,10 +248,10 @@ describe("Engine", () => {
   });
 
   it("should handle this full 2 player game with lost planet", () => {
-    // const engine = new Engine(fullGame());
+    const engine = new Engine(fullGame());
 
-    // expect(engine.player(Player.Player1).data.victoryPoints).to.equal(122);
-    // expect(engine.player(Player.Player2).data.victoryPoints).to.equal(96);
+    expect(engine.player(Player.Player1).data.victoryPoints).to.equal(27);
+    expect(engine.player(Player.Player2).data.victoryPoints).to.equal(26);
   });
 
   it ("should be able to load/save state", function() {
@@ -307,7 +307,7 @@ describe("Engine", () => {
       gleens charge 1pw
       baltaks spend 1gf for 1q. up sci.
       gleens up nav.
-      nevlas build lab 0x1. tech sci.
+      nevlas build lab 0x1. tech sci. up sci.
       gleens charge 1pw
       baltaks build ts -2x-2.
       nevlas charge 1pw
@@ -316,7 +316,7 @@ describe("Engine", () => {
       nevlas special 4pw.
       baltaks build lab -2x-2. tech free2. up eco.
       nevlas charge 1pw
-      gleens build lab 2x0. tech nav.
+      gleens build lab 2x0. tech nav. up nav.
       nevlas action power3.
       baltaks build ts 1x3.
       gleens pass booster8
@@ -324,7 +324,7 @@ describe("Engine", () => {
       baltaks pass booster1
       nevlas pass booster3
       gleens build m -4x2.
-      baltaks build lab 1x3. tech sci.
+      baltaks build lab 1x3. tech sci. up sci.
       nevlas special 4pw.
       gleens build m -7x6.
       baltaks special 4pw.
@@ -420,7 +420,7 @@ describe("Engine", () => {
       p2 charge 1pw
       p2 build ts -1x0.
       p1 charge 2pw
-      p1 build lab -1x2. tech gaia.
+      p1 build lab -1x2. tech gaia. up gaia.
       p2 charge 2pw
       p2 up gaia.
       p1 up gaia.

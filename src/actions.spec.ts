@@ -173,9 +173,9 @@ describe("Power/QIC Actions", () => {
       p2 charge 1pw
       p2 build ts -2x-4.
       p1 charge 2pw
-      p1 build lab -2x-5. tech nav.
+      p1 build lab -2x-5. tech nav. up nav.
       p2 charge 2pw
-      p2 build lab -2x-4. tech eco.
+      p2 build lab -2x-4. tech eco. up eco.
       p1 charge 2pw
     `);
 

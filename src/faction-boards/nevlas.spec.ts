@@ -22,7 +22,7 @@ describe("Nevlas", () => {
       p1 charge 2pw
       p1 build ts 2x2.
       p2 charge 1pw
-      p2 build lab -2x2. tech terra.
+      p2 build lab -2x2. tech terra. up terra.
       p1 charge 2pw
       p1 spend 1q for 1o. build PI -1x0.
       p2 charge 2pw

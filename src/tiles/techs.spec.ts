@@ -124,7 +124,7 @@ describe("Tech Tiles", () => {
     expect(engine1.tiles.techs[AdvTechTilePos.GaiaProject].count).to.equal(0);
 
     const engine2 = new Engine(moves);
-    expect(() => engine2.move('p1 build lab -2x3. decline.')).to.not.throw();
+    expect(() => engine2.move('p1 build lab -2x3. tech adv-gaia. cover free1. decline.')).to.not.throw();
 
   });
 

@@ -22,7 +22,7 @@ describe("Taklons", () => {
       p2 charge 1pw
       p2 build PI -3x-2.
       p1 charge 2pw
-      p1 build lab -4x-1. tech gaia.
+      p1 build lab -4x-1. tech gaia. up gaia.
     `);
 
     expect(() => new Engine([...moves, "p2 charge 3pw,1t"])).to.not.throw();
