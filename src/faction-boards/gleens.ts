@@ -8,7 +8,7 @@ const gleens: FactionBoardRaw = {
       income: [["+4pw", "+o"]]
     }
   },
-  income: ["3k,4o,15c", "+o,k", "g >> 2vp"],
+  income: ["3k,4o,15c,up-nav", "+o,k", "g >> 2vp"],
   handlers: {
     [`build-${Building.PlanetaryInstitute}`]: (player: Player) => player.gainFederationToken(Federation.FederationGleens)
   }

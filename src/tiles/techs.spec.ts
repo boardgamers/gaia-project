@@ -88,7 +88,7 @@ describe("Tech Tiles", () => {
       p2 charge 3pw
       p2 up nav.
       p1 spend 2k for 2c. build ts -2x3.
-      p2 charge 3pw
+      p2 charge 2pw
       p2 build m -4x6.
       p1 charge 4pw
       p1 federation -1x2,-2x3,-3x4 fed6.

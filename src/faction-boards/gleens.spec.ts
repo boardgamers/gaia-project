@@ -19,11 +19,11 @@ describe("gleens", () => {
       p1 build m -5x0.
     `));
 
-    const ore = engine.player(Player.Player2).data.ores;
+    const range = engine.player(Player.Player2).data.range;
 
     engine.move("p2 up nav");
 
-    expect(engine.player(Player.Player2).data.ores).to.equal(ore + 1);
+    expect(engine.player(Player.Player2).data.range).to.equal(range + 1);
   });
 
   it("should allow Gleens to get the faction federation", () => {
