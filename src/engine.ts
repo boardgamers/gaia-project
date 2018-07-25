@@ -153,7 +153,7 @@ export default class Engine {
     player.data.on(`gain-${Resource.PISwap}`, () => this.processNextMove(SubPhase.PISwap));
     player.data.on(`gain-${Resource.SpaceStation}`, () => this.processNextMove(SubPhase.SpaceStation));
     player.data.on(`gain-${Resource.DowngradeLab}`, () => {this.processNextMove(SubPhase.DowngradeLab); this.processNextMove(SubPhase.UpgradeResearch); });
-    player.data.on(`gain-${Resource.UpgradeLowest}`, () => this.processNextMove(SubPhase.UpgradeResearch, true));
+    player.data.on(`gain-${Resource.UpgradeLowest}`, () => this.processNextMove(SubPhase.UpgradeResearch, {bescods: true}));
     player.data.on('brainstone', areas => this.processNextMove(SubPhase.BrainStone, areas));
   }
 
@@ -869,17 +869,9 @@ export default class Engine {
       this.processNextMove(SubPhase.CoverTechTile);
     }
 
-    if (Object.values(ResearchField).includes(pos)) {
-      this.advanceResearchAreaPhase(player, "", pos as any);
-    } else {
-      this.processNextMove(SubPhase.UpgradeResearch);
-    }
-  }
+    this.processNextMove(SubPhase.UpgradeResearch, Object.values(ResearchField).includes(pos) ? {pos} : undefined) ;
 
-  [Command.DeclineTechTile](player: PlayerEnum) {
-    // nothing to do
   }
-
 
   [Command.ChooseCoverTechTile](player: PlayerEnum, tilePos: TechTilePos) {
     const { tiles } = this.availableCommand.data;

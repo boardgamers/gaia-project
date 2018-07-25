@@ -29,7 +29,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
   switch (subPhase) {
     case SubPhase.ChooseTechTile: return possibleTechTiles(engine, player);
     case SubPhase.CoverTechTile: return possibleCoverTechTiles(engine, player);
-    case SubPhase.UpgradeResearch: return possibleResearchAreas(engine, player, "", !!data);
+    case SubPhase.UpgradeResearch: return possibleResearchAreas(engine, player, "", data);
     case SubPhase.PlaceLostPlanet: return possibleSpaceLostPlanet(engine, player);
     case SubPhase.ChooseFederationTile: return possibleFederationTiles(engine, player, "pool");
     case SubPhase.RescoreFederationTile: return possibleFederationTiles(engine, player, "player");
@@ -363,24 +363,26 @@ export function possibleLabDowngrades(engine: Engine, player: Player) {
   }] as AvailableCommand[];
 }
 
-export function possibleResearchAreas(engine: Engine, player: Player, cost?: string, lowestOnly?: boolean) {
+export function possibleResearchAreas(engine: Engine, player: Player, cost?: string, data?: any) {
   const commands = [];
   const tracks = [];
-  const data = engine.player(player).data;
+  const pl = engine.player(player);
 
-  if (engine.player(player).canPay(Reward.parse(cost))) {
+  if (pl.canPay(Reward.parse(cost))) {
 
-    const minArea = Math.min(...Object.values(data.research));
-    const avFields = !lowestOnly ? Object.values(ResearchField) : Object.values(ResearchField).filter( field => data.research[field] === minArea);
+    const minArea = Math.min(...Object.values(pl.data.research));
+
+    const avFields = (data && data.bescods) ? Object.values(ResearchField).filter( field => pl.data.research[field] === minArea) : (data && data.pos) ? [data.pos] : Object.values(ResearchField) ;
+
     for (const field of avFields) {
       // end of the track reached
-      const destTile = data.research[field] + 1;
+      const destTile = pl.data.research[field] + 1;
 
-      if (destTile === researchTracks.lastTile(field) && engine.playersInOrder().some(pl => pl.data.research[field] === destTile)) {
+      if (destTile === researchTracks.lastTile(field) && engine.playersInOrder().some(pla => pla.data.research[field] === destTile)) {
         continue;
       }
 
-      if (!engine.player(player).canUpgradeResearch(field)) {
+      if (!pl.canUpgradeResearch(field)) {
         continue;
       }
 
@@ -400,6 +402,12 @@ export function possibleResearchAreas(engine: Engine, player: Player, cost?: str
       data: { tracks }
     });
   }
+
+  commands.push({
+    name: Command.Decline,
+    player,
+    data: { offer :  Command.UpgradeResearch }
+  });
 
   return commands;
 }
@@ -602,12 +610,6 @@ export function possibleTechTiles(engine: Engine, player: Player) {
       data: { tiles }
     });
   }
-
-  commands.push({
-    name: Command.DeclineTechTile,
-    player,
-    data: {  }
-  });
 
   return commands;
 }

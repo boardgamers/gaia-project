@@ -20,7 +20,7 @@ describe('Itars', () => {
       p2 charge 1pw
       p2 build ts -1x0.
       p1 charge 2pw
-      p1 build lab -1x2. tech gaia.
+      p1 build lab -1x2. tech gaia. up gaia.
       p2 charge 2pw
       p2 up gaia.
       p1 up gaia.

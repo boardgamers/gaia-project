@@ -32,7 +32,7 @@ describe("Firaks", () => {
       p1 charge 2pw
       p1 action power3.
       p2 burn 2. spend 4t-a3 for 4k. up sci.
-      p1 spend 1pw for 1c. spend 1q for 1o. spend 1o for 1c. build lab 3x-2. tech terra.
+      p1 spend 1pw for 1c. spend 1q for 1o. spend 1o for 1c. build lab 3x-2. tech terra. up terra.
       p2 pass booster4
     `));
 

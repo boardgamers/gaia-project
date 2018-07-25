@@ -52,12 +52,12 @@ describe("Tech Tiles", () => {
     const engine = new Engine(moves);
 
     /** Spends two green federations: one for the last tile, one for the advanced tech */
-    expect(() => engine.move('p1 build lab -1x2. tech nav.')).to.not.throw();
+    expect(() => engine.move('p1 build lab -1x2. tech nav. up nav.')).to.not.throw();
     // tslint:disable-next-line no-unused-expression
     expect(engine.player(Player.Player1).data.tiles.techs.find(tile => tile.pos === TechTilePos.Navigation)).to.not.be.undefined;
 
     const engine1 = new Engine(moves);
-    expect(() => engine1.move('p1 build lab -1x2. declinetech.')).to.not.throw();
+    expect(() => engine1.move('p1 build lab -1x2. tech nav. decline.')).to.not.throw();
 
   });
 
@@ -124,7 +124,7 @@ describe("Tech Tiles", () => {
     expect(engine1.tiles.techs[AdvTechTilePos.GaiaProject].count).to.equal(0);
 
     const engine2 = new Engine(moves);
-    expect(() => engine2.move('p1 build lab -2x3. declinetech.')).to.not.throw();
+    expect(() => engine2.move('p1 build lab -2x3. decline.')).to.not.throw();
 
   });
 
