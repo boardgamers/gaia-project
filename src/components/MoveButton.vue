@@ -13,7 +13,7 @@ import {HighlightHexData, ButtonData} from '../data';
 @Component({
   computed: {
     isActiveButton() {
-      return this.$store.state.game.context.activeButton.label === this.button.label;
+      return this.$store.state.game.context.activeButton && this.$store.state.game.context.activeButton.label === this.button.label;
     }
   }
 })
