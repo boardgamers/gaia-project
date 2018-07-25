@@ -123,6 +123,23 @@ app.get("/g/:gameId", (req , res) => {
   res.json(games[gameId]);
 });
 
+app.get("/g/:gameId/status", (req , res) => {
+  const gameId = req.params.gameId;
+
+  if (!games[gameId]) {
+    res.sendStatus(404);
+    return;
+  }
+
+  const {round, phase, availableCommands} = games[gameId];
+
+  if (availableCommands && availableCommands.length > 0) {
+    res.json({round, phase, player: availableCommands[0].player});
+  } else {
+    res.json({round, phase});
+  }
+});
+
 app.post("/g/:gameId/move", (req , res) => {
   const gameId = req.params.gameId;
 
