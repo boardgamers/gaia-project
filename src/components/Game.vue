@@ -166,7 +166,16 @@ export default class Game extends Vue {
       this.moveList = data.moveHistory.join("\n");
     }
 
+    this.updateFavicon();
     this.updateMoveList();
+  }
+
+  updateFavicon() {
+    if (this.canPlay) {
+      $("#favicon-gp").attr("href", "/favicon-active.png");
+    } else {
+      $("#favicon-gp").attr("href", "/favicon.png");
+    }
   }
 
   loadGame() {
@@ -175,10 +184,6 @@ export default class Game extends Vue {
     $.get(`${window.location.protocol}//${window.location.hostname}:9508/g/${this.gameId}`, 
       data => {
         this.handleData(data);
-
-        if (this.canPlay) {
-          // TODO: notification or favicon change
-        }
       },
       "json"
     ).fail(this.handleError.bind(this));
