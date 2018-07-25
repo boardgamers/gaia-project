@@ -5,7 +5,7 @@
     <polygon v-else-if="gaiaFormer" :points='hexCorners' />
     <circle v-else-if="lab" r="0.3" />
     <circle v-else-if="academy" r="0.5" />
-    <polygon v-else-if="tradingStation" :points="triangleCorners"/>
+    <polygon v-else-if="tradingStation" points="-0.2,-0.2 0,-0.38 0.2,-0.2 0.2,0.2 -0.2,0.2"/>
     <Token v-else-if="spaceStation" :faction="faction" :scale="0.3" />
   </g>
 </template>
