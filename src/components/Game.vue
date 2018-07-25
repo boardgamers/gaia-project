@@ -101,6 +101,7 @@ import { Command, Phase } from '@gaia-project/engine';
   },
   created(this: Game) {
     if (this.gameId) {
+      setInterval(() => this.refreshStatus(), 3000);
       this.loadGame();
       return;
     }
@@ -174,9 +175,32 @@ export default class Game extends Vue {
     $.get(`${window.location.protocol}//${window.location.hostname}:9508/g/${this.gameId}`, 
       data => {
         this.handleData(data);
+
+        if (this.canPlay) {
+          // TODO: notification or favicon change
+        }
       },
       "json"
     ).fail(this.handleError.bind(this));
+  }
+
+  /**
+   * Check if we need to refresh the whole game
+   */
+  refreshStatus() {
+    if (this.canPlay) {
+      return;
+    }
+
+    $.get(`${window.location.protocol}//${window.location.hostname}:9508/g/${this.gameId}/status`, 
+      data => {
+        if (data.round != this.data.round || data.phase != this.data.phase || data.player !== this.player) {
+          this.loadGame();
+          return;
+        }
+      },
+      "json"
+    ).fail(() => {});
   }
 
   joinGame() {
@@ -215,6 +239,7 @@ export default class Game extends Vue {
 
   addMove(command: string) {
     if (this.gameId) {
+      this.$store.commit("clearContext");
       $.post(`${window.location.protocol}//${window.location.hostname}:9508/g/${this.gameId}/move`,  {auth: this.auth, move: command},
         data => {
           this.handleData(data);
@@ -258,6 +283,9 @@ export default class Game extends Vue {
 export default interface Game {
   data: Data;
   gameId: string;
+  player: number;
+
+  canPlay(): boolean;
 }
 </script>
 
