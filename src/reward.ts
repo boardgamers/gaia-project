@@ -70,8 +70,10 @@ export default class Reward {
   }
 
   static toString(rewards: Reward[], sorted = true) {
+    // const sortOrder = ['c', 'o', 'k', 'q', 'pw'];
+    const sortOrder = ['pw', 'q', 'k', 'o', 'c'];
     if (sorted) {
-      rewards.sort((rew1, rew2) => rew1.type < rew2.type ? -1 : 1);
+      rewards.sort((rew1, rew2) => ( sortOrder.findIndex( so => so === rew2.type ) - sortOrder.findIndex(so => so === rew1.type)));
     }
     if (rewards.length === 0) {
       return "~";

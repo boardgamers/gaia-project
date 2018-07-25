@@ -61,4 +61,16 @@ describe("Player", () => {
       expect(player.canOccupy(hex)).to.be.true;
     });
   });
+
+  describe("order Events", () => {
+    it("should order based on type order", () => {
+      const player = new Player();
+
+      player.loadEvents(Event.parse([ "+t", "+k", "+c", "+o"]));
+      const orderedEvents = Reward.toString(Reward.merge([].concat(...player.events[Operator.Income].map(event => event.rewards))), true);
+
+      expect(orderedEvents).to.be.equal("1c,1o,1k,1t");
+
+    });
+  });
 });
