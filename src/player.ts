@@ -208,6 +208,14 @@ export default class Player extends EventEmitter {
     });
   }
 
+  removeRoundBoosterIncomeEvents() {
+    for (const event of Event.parse( boosts[this.data.tiles.booster]).filter( ev => ev.operator === Operator.Income)) {
+      this.removeEvent(event);
+    }
+  }
+
+
+
   activateEvent(spec: string) {
     for (const event of this.events[Operator.Activate]) {
       if (event.spec === spec && !event.activated) {

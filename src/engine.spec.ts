@@ -328,7 +328,7 @@ describe("Engine", () => {
       nevlas special 4pw.
       gleens build m -7x6.
       baltaks special 4pw.
-      nevlas build ac1 0x1. tech free3. up sci.
+      nevlas spend 3pw for 1o. build ac1 0x1. tech free3. up sci.
       gleens charge 2pw
       gleens build m -8x8.
       baltaks up sci.
@@ -342,6 +342,7 @@ describe("Engine", () => {
       nevlas up nav.
       baltaks build m 1x2.
       gleens charge 2pw
+      nevlas charge 3pw
       gleens action power4.
       nevlas action power3.
       baltaks build ts 1x2.
@@ -362,6 +363,7 @@ describe("Engine", () => {
       nevlas pass booster2
       nevlas income 1pw. income 1pw
       baltaks special 4pw.
+      gleens pass booster1
     `);
 
     // This would throw if the gaia former was in data.occupied, since it would
