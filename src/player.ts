@@ -208,6 +208,16 @@ export default class Player extends EventEmitter {
     });
   }
 
+  removeRoundBoosterEvents( type?: Operator) {
+
+    for (const event of Event.parse( boosts[this.data.tiles.booster])
+    .filter( ev => (type === Operator.Income && ev.operator === type ) || ( !type && ev.operator !== Operator.Income ))) {
+      this.removeEvent(event);
+    }
+  }
+
+
+
   activateEvent(spec: string) {
     for (const event of this.events[Operator.Activate]) {
       if (event.spec === spec && !event.activated) {
@@ -313,8 +323,8 @@ export default class Player extends EventEmitter {
 
   pass(lastRound = false) {
     this.receivePassIncome();
-    // remove the old booster
-    this.removeEvents(Event.parse( boosts[this.data.tiles.booster]));
+    // remove the remaing reward of the round booster events
+    this.removeRoundBoosterEvents();
     this.data.tiles.booster =  undefined;
 
     if (lastRound) {
