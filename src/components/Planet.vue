@@ -1,20 +1,33 @@
 <template>
-  <circle :r='radius' :class='["planet", "planet-fill", planet]' />
+  <g>
+    <circle :r="radius" :class='["planet-fill", fill ]' />
+    <circle :r='radius' :class='["planet", planet]' />
+  </g>
 </template>
 
 <script lang="ts">
 import Vue from 'vue';
 import planets from "../data/planets";
 import { Component, Prop } from 'vue-property-decorator';
-import { Planet as PlanetEnum } from '@gaia-project/engine';
+import { Planet as PlanetEnum, factions, Faction } from '@gaia-project/engine';
 
 @Component
 export default class Planet extends Vue {
   @Prop()
   planet: PlanetEnum;
+  @Prop()
+  faction: Faction;
 
   get radius() {
     return planets[this.planet].radius;
+  }
+
+  get fill() {
+    // Comment for planet staying planets!
+    if (this.faction) {
+      return factions.planet(this.faction);
+    }
+    return this.planet;
   }
 }
 
@@ -25,6 +38,7 @@ export default class Planet extends Vue {
 svg {
   .planet {
     stroke-width: 0.04;
+    fill: none;
     pointer-events: none;
 
     // terra

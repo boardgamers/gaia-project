@@ -2,7 +2,7 @@
   <g :id="`${hex.q}x${hex.r}`" :title="'Cost: ' + cost(hex)">
     <title>Coordinates: {{hex.q}}x{{hex.r}}&#10;Sector: {{hex.data.sector}}{{hex.data.building ? `&#10;Building: ${buildingName(hex.data.building)}` : ''}}</title>
     <polygon :points="hexCorners.map(p => `${p.x},${p.y}`).join(' ')" :class="['spaceHex', {toSelect, highlighted: highlightedHexes.has(hex), qic: cost(hex).includes('q')}]" @click='hexClick(hex)' />
-    <Planet v-if="hex.data.planet !== 'e'" :planet='hex.data.planet' />
+    <Planet v-if="hex.data.planet !== 'e'" :planet='hex.data.planet' :faction='faction(hex.data.player)' />
     <Building v-if="hex.data.building" :building='hex.data.building' :faction='faction(hex.data.player)' />
     <Building v-if="hex.data.additionalMine !== undefined" :faction='faction(hex.data.additionalMine)' building="m" transform="translate(0.38, 0.5) rotate(36) scale(0.9)" class="additionalMine" />
     <polygon v-for="(player, index) in hex.data.federations || []" :points="hexCorners.map(p => `${p.x*(1-(index+0.5)/8)},${p.y*(1-(index+0.5)/8)}`).join(' ')" :class="['spaceHexFederation', 'planet-stroke', planet(player)]" />
@@ -55,6 +55,9 @@ export default class SpaceHex extends Vue {
   }
 
   faction(player) {
+    if (player === undefined) {
+      return;
+    }
     return this.$store.state.game.data.players[player].faction;
   }
 
