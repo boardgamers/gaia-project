@@ -13,7 +13,8 @@
         <span v-for="i in [0, 1, 2, 3]" :key="i" class="ml-2">
           <i v-for="planet in planetsWithSteps(i)" :class="['planet', planet]" :key="planet" /> {{i}}
         </span>
-      </span>
+      </span><br/>
+      Colonized: <i v-for="planet in player.ownedPlanets" :class="['planet', planet]" :key="planet" />
     </div>
     <div class="tiles">
       <Booster v-if="data.tiles.booster" class="mb-1" :booster="data.tiles.booster" :disabled="passed"/>
