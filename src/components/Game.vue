@@ -8,6 +8,7 @@
     <div id="errors"></div>
     <div class="row mt-2">
       <div class="col-md-6 order-2 order-md-1">
+        <PlayerInfo :player='data.players[this.player]' />
         <PlayerInfo v-for="player in orderedPlayers" :player='player' :key="player.player" />
         <Pool />
       </div>
@@ -79,7 +80,7 @@ import { Command, Phase } from '@gaia-project/engine';
       }
 
       const indexes = data.turnOrder.concat(data.passedPlayers);
-      return indexes.map(player => data.players[player]);
+      return indexes.filter(pl => pl !== this.player).map(player => data.players[player]);
     },
     gameId() {
       if (window.location.search.startsWith("?g=")) {
