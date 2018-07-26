@@ -89,7 +89,8 @@ export default class PlayerData extends EventEmitter {
       leechPossible: this.leechPossible,
       tokenModifier: this.tokenModifier,
       buildings: this.buildings,
-      federationCount: this.federationCount
+      federationCount: this.federationCount,
+      lostPlanet: this.lostPlanet
     };
 
     return ret;
