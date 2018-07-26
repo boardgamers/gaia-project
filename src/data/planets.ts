@@ -11,3 +11,16 @@ export default {
   [Planet.Gaia]: {radius: 0.65, color: "#009933", borderColor: "#004d1a"},
   [Planet.Transdim]: {radius: 0.5, color: "#a64dff", borderColor: "#a64dff"}
 };
+
+export const planetNames = {
+  [Planet.Swamp]: "Swamp",
+  [Planet.Desert]: "Deset",
+  [Planet.Terra]: "Terra",
+  [Planet.Volcanic]: "Volcanic",
+  [Planet.Oxide]: "Oxide",
+  [Planet.Titanium]: "Titanium",
+  [Planet.Ice]: "Ice",
+  [Planet.Gaia]: "Gaia",
+  [Planet.Transdim]: "Transdim",
+  [Planet.Lost]: "Lost planet"
+};

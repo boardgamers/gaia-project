@@ -1,6 +1,6 @@
 <template>
   <g :id="`${hex.q}x${hex.r}`" :title="'Cost: ' + cost(hex)">
-    <title>Coordinates: {{hex.q}}x{{hex.r}}&#10;Sector: {{hex.data.sector}}{{hex.data.building ? `&#10;Building: ${buildingName(hex.data.building)}` : ''}}</title>
+    <title>Coordinates: {{hex.q}}x{{hex.r}}&#10;Sector: {{hex.data.sector}}{{hex.data.planet !== 'e' ? `&#10;Planet: ${planetName(hex.data.planet)}`: ''}}{{hex.data.building ? `&#10;Building: ${buildingName(hex.data.building)}` : ''}}</title>
     <polygon :points="hexCorners.map(p => `${p.x},${p.y}`).join(' ')" :class="['spaceHex', {toSelect, highlighted: highlightedHexes.has(hex), qic: cost(hex).includes('q')}]" @click='hexClick(hex)' />
     <Planet v-if="hex.data.planet !== 'e'" :planet='hex.data.planet' :faction='faction(hex.data.player)' />
     <Building v-if="hex.data.building" :building='hex.data.building' :faction='faction(hex.data.player)' />
@@ -14,11 +14,12 @@
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
 import {MapData, HighlightHexData} from '../data';
-import { GaiaHex, factions, Building as BuildingEnum } from '@gaia-project/engine';
+import { GaiaHex, factions, Building as BuildingEnum, Planet as PlanetEnum } from '@gaia-project/engine';
 import {corners } from "../graphics/hex";
 import Planet from './Planet.vue';
 import Building from './Building.vue';
 import { buildingName } from '../data/building';
+import { planetNames }  from '../data/planets';
 
 @Component<SpaceHex>({
   computed: {
@@ -67,6 +68,10 @@ export default class SpaceHex extends Vue {
 
   buildingName(building: BuildingEnum) {
     return buildingName(building);
+  }
+
+  planetName(planet: PlanetEnum) {
+    return planetNames[planet];
   }
 }
 export default interface SpaceMap {
