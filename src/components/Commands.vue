@@ -244,7 +244,7 @@ export default class Commands extends Vue {
             });
           } else {
             ret.push({
-              label: "Charge " + leech,
+              label: "Charge " + leech + " for " + command.data.cost ,
               command: `${Command.ChargePower} ${leech}`
             });
           }
@@ -253,7 +253,7 @@ export default class Commands extends Vue {
 
         case Command.Decline: {
           ret.push({
-            label: command.data.cost === '~' ? `Decline ${command.data.offer}` : `Decline ${command.data.offer} for ${command.data.cost}`,
+            label: `Decline ${command.data.offer}`,
             command: Command.Decline
           });
           break;
