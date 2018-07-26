@@ -81,6 +81,7 @@ export default class PlayerData extends EventEmitter {
       range: this.range,
       temporaryRange: this.temporaryRange,
       gaiaformers: this.gaiaformers,
+      gaiaformersInGaia: this.gaiaformersInGaia,
       terraformCostDiscount: this.terraformCostDiscount,
       tiles: this.tiles,
       satellites: this.satellites,
