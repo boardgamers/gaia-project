@@ -21,10 +21,6 @@ export interface FederationInfo {
  * @param comparison The comparison point
  */
 export function isOutclassedBy(fed: FederationInfo, comparison: FederationInfo) {
-  if (fed.planets > comparison.planets && fed.satellites > comparison.satellites) {
-    return true;
-  }
-
   // We don't use more satellites, we win!
   if (fed.satellites <= comparison.satellites) {
     return false;
@@ -40,6 +36,11 @@ export function isOutclassedBy(fed: FederationInfo, comparison: FederationInfo) 
   // because it can be built with less satellites
   const fedPlanets = fed.hexes.filter(hex => hex.hasPlanet());
   const compPlanets = comparison.hexes.filter(hex => hex.hasPlanet());
+
+  // Comp buildings included in fed buildings, & one more planet & one more satellite
+  if (fed.planets > comparison.planets && fed.satellites > comparison.satellites && _.difference(compPlanets, fedPlanets).length === 0) {
+    return true;
+  }
 
   if (fedPlanets.length === compPlanets.length && _.difference(fedPlanets, compPlanets).length === 0) {
     if (fed.satellites > comparison.satellites) {
