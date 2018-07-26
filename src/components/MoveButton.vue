@@ -114,7 +114,7 @@ export default class MoveButton extends Vue {
   }
 
   hover() {
-    if (!this.button.hover) {
+    if (!this.button.hover || this.$store.state.game.context.activeButton !== null) {
       return;
     }
 
@@ -122,7 +122,7 @@ export default class MoveButton extends Vue {
   }
 
   leave() {
-    if (!this.button.hover) {
+    if (!this.button.hover || this.$store.state.game.context.activeButton !== null) {
       return;
     }
 
