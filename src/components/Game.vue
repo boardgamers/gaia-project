@@ -8,8 +8,9 @@
     <div id="errors"></div>
     <div class="row mt-2">
       <div class="col-md-6 order-2 order-md-1">
-        <PlayerInfo :player='data.players[this.player]' />
-        <PlayerInfo v-for="player in orderedPlayers" :player='player' :key="player.player" />
+        <PlayerInfo :player='orderedPlayers[0]'/>
+        <!-- todo: turnOrder -->
+        <PlayerInfo v-for="player in orderedPlayers.slice(1)" :player='player' :key="player.player" />
         <Pool />
       </div>
       <div class="col-md-6 order-1 order-md-2" id="move-panel">
@@ -85,8 +86,7 @@ import { Command, Phase } from '@gaia-project/engine';
         turnOrder = turnOrder.slice(turnOrder.indexOf(this.player)).concat(turnOrder.slice(0, turnOrder.indexOf(this.player)));
       }
 
-      const indexes = turnOrder.concat(data.passedPlayers);
-      return indexes.filter(pl => pl !== this.player).map(player => data.players[player]);
+      return turnOrder.concat(data.passedPlayers).map(player => data.players[player]);
     },
     gameId() {
       if (window.location.search.startsWith("?g=")) {
