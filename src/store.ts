@@ -75,6 +75,7 @@ export default new Vuex.Store({
       state.game.context.highlighted.actions = new Set();
       state.game.context.highlighted.federations = new Set();
       state.game.context.hexSelection = false;
+      state.game.context.activeButton = null;
     },
     
     activeButton(state, button) {
