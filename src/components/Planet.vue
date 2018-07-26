@@ -1,6 +1,6 @@
 <template>
   <g>
-    <circle :r="radius" :class='["planet-fill", fill ]' />
+    <circle :r="radius" :class='["planet-fill", fill ]' style="pointer-events: none;" />
     <circle :r='radius' :class='["planet", planet]' />
   </g>
 </template>
