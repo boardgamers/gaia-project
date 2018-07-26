@@ -58,7 +58,8 @@ export default class Player extends EventEmitter {
       actions: this.events[Operator.Activate].map(event => ({rewards: event.spec.replace('=>', '').trim(), enabled: !event.activated})),
       events: this.events,
       name: this.name,
-      auth: this.auth
+      auth: this.auth,
+      ownedPlanets:  _.uniq(this.data.occupied.filter(hex => hex.data.planet !== Planet.Empty && hex.colonizedBy(this.player)).map(hex => hex.data.planet))
     };
   }
 
