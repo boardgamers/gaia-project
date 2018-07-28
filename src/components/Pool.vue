@@ -21,12 +21,7 @@ import FederationTile from "./FederationTile.vue";
 
       const ret = [];
 
-      for (const key of Object.keys(federationObject).sort()) {
-        for (let i = 0; i < federationObject[key]; i++) {
-          ret.push(key);
-        }
-      }
-      return ret;
+      return Object.keys(federationObject).sort();
     }
   },
   components: {

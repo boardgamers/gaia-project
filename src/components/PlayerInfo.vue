@@ -17,7 +17,7 @@
     </div>
     <div class="tiles">
       <Booster v-if="data.tiles.booster" class="mb-1" :booster="data.tiles.booster" :disabled="passed"/>
-      <FederationTile v-for="(fed,i) in data.tiles.federations" class="mb-1" :key="i" :federation="fed.tile" :used="!fed.green" />
+      <FederationTile v-for="(fed,i) in data.tiles.federations" class="mb-1" :key="i" :federation="fed.tile" :used="!fed.green" :player="player.player" />
       <TechTile v-for="tech in data.tiles.techs" :covered="!tech.enabled" class="mb-1" :key="tech.pos" :pos="tech.pos" :player="player.player" />
       <SpecialAction v-for="(action, i) in player.actions" :action="action.rewards" :disabled="!action.enabled || passed" :key="action.action + '-' + i" />
     </div>
