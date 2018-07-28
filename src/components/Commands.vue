@@ -395,8 +395,9 @@ export default class Commands extends Vue {
 
 i.planet {
   &::before {
+    font-size: 25px;
     content: "\25cf";
-    filter: drop-shadow(0px 0px 3px white);
+   
   }
 
   // terra

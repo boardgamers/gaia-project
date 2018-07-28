@@ -90,7 +90,7 @@ svg {
     }
     .content {
       font-family: arial;
-      font-size: 12px;
+      font-size: 11px;
       pointer-events: none;
     }
 

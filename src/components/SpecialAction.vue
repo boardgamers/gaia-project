@@ -74,7 +74,7 @@ g {
 
     &.disabled {
       stroke-opacity: 0.6;
-      fill-opacity: 0.6;
+      fill-opacity: 0.3;
 
       text {
         fill: #000;

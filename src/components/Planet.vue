@@ -40,7 +40,7 @@ svg {
     stroke-width: 0.04;
     fill: none;
     pointer-events: none;
-
+    
     // terra
     &.r {stroke: #39f}
     // desert
