@@ -1,5 +1,5 @@
 <template>
-  <div :class="['player-info', player.faction]" v-if="player.faction" :style="`background-color: ${factionColor}`">
+  <div :class="['player-info', player.faction]" v-if="player && player.faction" :style="`background-color: ${factionColor}`">
     <div class="text">
       <b>{{name}}</b> - {{faction}} - {{data.victoryPoints}}vp <span v-if="passed">(passed)</span><br/>
       {{data.credits}}c, {{data.ores}}o, {{data.knowledge}}k, {{data.qics}}q, [{{power('gaia')}}] {{power('area1')}}/{{power('area2')}}/{{power('area3')}} pw<br/>

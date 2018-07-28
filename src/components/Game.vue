@@ -8,9 +8,16 @@
     <div id="errors"></div>
     <div class="row mt-2">
       <div class="col-md-6 order-2 order-md-1">
-        <PlayerInfo :player='orderedPlayers[0]'/>
-        <!-- todo: turnOrder -->
-        <PlayerInfo v-for="player in orderedPlayers.slice(1)" :player='player' :key="player.player" />
+        <div v-if="sessionPlayer === undefined">
+          <PlayerInfo :player='orderedPlayers[0]'/>
+          <!-- todo: turnOrder -->
+          <PlayerInfo v-for="player in orderedPlayers.slice(1)" :player='player' :key="player.player" />
+        </div>
+        <div v-else>
+          <PlayerInfo :player='sessionPlayer'/>
+          <!-- todo: turnOrder -->
+          <PlayerInfo v-for="player in orderedPlayers.filter(pl => pl !== sessionPlayer)" :player='player' :key="player.player" />
+        </div>
         <Pool />
       </div>
       <div class="col-md-6 order-1 order-md-2" id="move-panel">
@@ -104,6 +111,11 @@ import { Command, Phase } from '@gaia-project/engine';
     },
     player() {
       return this.data.availableCommands.length > 0 ? this.data.availableCommands[0].player : undefined;
+    },
+    sessionPlayer() {
+      if (this.auth) {
+        return this.data.players.find(pl => pl.auth === this.auth);
+      }
     }
   },
   created(this: Game) {
