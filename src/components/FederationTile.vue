@@ -2,8 +2,8 @@
   <svg viewBox="-25 -25 50 50" width="50" height="50">
     <g :class='["federationTile", {highlighted, disabled}]'>
       <polygon points="-1,0.5 -0.5,1 0.5,1 1,0.5 1,-0.7 0.5,-1 -0.5,-1 -1,-0.7" transform="scale(24)" @click="onClick" />
-      <circle cx="16.5" cy="-16.5" r="8" stroke="black" stroke-width="1" fill="white" v-if="this.numTiles>1" />
-      <text x="16.5" y="-16.5" v-if="this.numTiles>1">
+      <circle cx="16.5" cy="-16.5" r="8" stroke="black" stroke-width="1" fill="white" v-if="numTiles>1" />
+      <text x="16.5" y="-16.5" v-if="numTiles>1">
           {{numTiles}}
       </text>
       <text>
@@ -34,14 +34,6 @@ import { eventDesc } from '../data/event';
 
     disabled() {
       return this.used || this.federation === Federation.Federation1;
-    },
-
-    numTiles() {
-      const federationObject = this.$store.state.game.data.tiles.federations;
-      if (this.player !== undefined) {
-        return 1;
-      }
-      return federationObject[this.federation];
     }
   }
 })
@@ -53,7 +45,7 @@ export default class FederationTile extends Vue {
   used: boolean;
 
   @Prop()
-  player: PlayerEnum;
+  numTiles: number;
 
   onClick() {
     if (!this.highlighted) {

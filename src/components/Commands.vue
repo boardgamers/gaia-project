@@ -397,7 +397,7 @@ i.planet {
   &::before {
     font-size: 25px;
     content: "\25cf";
-   
+    filter: drop-shadow(0px 0px 1px black);
   }
 
   // terra

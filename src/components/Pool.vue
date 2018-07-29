@@ -1,7 +1,7 @@
 <template>
   <div class="pool pb-0 mb-1" v-if="$store.state.game.data.tiles && $store.state.game.data.tiles.techs['gaia']">
     <Booster v-for="booster in boosters" :key="booster" :booster="booster" class="mb-2"  />
-    <FederationTile v-for="(federation, i) in federations" :key="`${federation}-${i}`" :federation="federation" class="mb-2" />
+    <FederationTile v-for="(federation, key, i) in federations" :key="`${key}-${i}`" :federation="key" :numTiles="federation" class="mb-2" />
   </div>
 </template>
 
@@ -17,11 +17,7 @@ import FederationTile from "./FederationTile.vue";
       return Object.keys(this.$store.state.game.data.tiles.boosters).filter(key => this.$store.state.game.data.tiles.boosters[key]).sort();
     },
     federations() {
-      const federationObject = this.$store.state.game.data.tiles.federations;
-
-      const ret = [];
-
-      return Object.keys(federationObject).sort();
+      return this.$store.state.game.data.tiles.federations;
     }
   },
   components: {
