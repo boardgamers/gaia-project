@@ -251,7 +251,7 @@ describe("Engine", () => {
     const engine = new Engine(fullGame());
 
     expect(engine.player(Player.Player1).data.victoryPoints).to.equal(27);
-    expect(engine.player(Player.Player2).data.victoryPoints).to.equal(26);
+    expect(engine.player(Player.Player2).data.victoryPoints).to.equal(23);
   });
 
   it ("should be able to load/save state", function() {

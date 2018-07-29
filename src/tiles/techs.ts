@@ -7,7 +7,7 @@ export default  {
   [TechTile.Tech4]: ["7vp"],
   [TechTile.Tech5]: ["+o,pw"],
   [TechTile.Tech6]: ["+k,c"],
-  [TechTile.Tech7]: ["g >> 3vp"],
+  [TechTile.Tech7]: ["mg >> 3vp"],
   [TechTile.Tech8]: ["+4c"],
   [TechTile.Tech9]: ["=> 4pw"],
   [AdvTechTile.AdvTech1]: ["fed | 3vp"],

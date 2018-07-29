@@ -59,7 +59,7 @@ export default class Player extends EventEmitter {
       events: this.events,
       name: this.name,
       auth: this.auth,
-      ownedPlanets:  _.omit(_.countBy(this.data.occupied, 'data.planet'), Planet.Empty)
+      ownedPlanets:  _.countBy(this.ownedPlanets, 'data.planet')
     };
   }
 
@@ -157,6 +157,10 @@ export default class Player extends EventEmitter {
 
   maxBuildings(building: Building) {
     return building === Building.GaiaFormer ? (this.data.gaiaformers - this.data.gaiaformersInGaia) : this.board.buildings[building].income.length;
+  }
+
+  get ownedPlanets(): GaiaHex[] {
+    return this.data.occupied.filter(hex => hex.data.planet !== Planet.Empty && hex.isMainOccupier(this.player));
   }
 
   loadFaction(faction: Faction, skipIncome = false) {
@@ -281,8 +285,10 @@ export default class Player extends EventEmitter {
     }
 
     // If the planet is already occupied by someone else
-    if (!upgradedBuilding && hex.occupied()) {
-      // Lantids
+    // Lantids
+    const isAdditionalMine = !upgradedBuilding && hex.occupied();
+
+    if (isAdditionalMine) {
       hex.data.additionalMine = this.player;
       if (this.data.hasPlanetaryInstitute()) {
         this.data.gainRewards([new Reward("2k")]);
@@ -305,7 +311,8 @@ export default class Player extends EventEmitter {
     }
 
     // get triggered income for new building
-    this.receiveBuildingTriggerIncome(building, hex.data.planet);
+    this.receiveBuildingTriggerIncome(building, hex.data.planet, isAdditionalMine);
+
     // get triggerd terffaorming step income for new building
     if (stepsReq) {
       this.receiveTerraformingStepTriggerIncome(stepsReq);
@@ -419,10 +426,11 @@ export default class Player extends EventEmitter {
     }
   }
 
-  receiveBuildingTriggerIncome(building: Building, planet: Planet) {
+  receiveBuildingTriggerIncome(building: Building, planet: Planet, isAdditionalMine: boolean) {
     // this is for roundboosters, techtiles and adv tile
     for (const event of this.events[Operator.Trigger]) {
-      if (Condition.matchesBuilding(event.condition, building, planet)) {
+      // only new mine trigger event for Lantids in other's planet
+      if (Condition.matchesBuilding(event.condition, building, planet) && (!isAdditionalMine || event.condition === Condition.Mine)) {
         this.gainRewards(event.rewards);
       }
     }
@@ -538,8 +546,8 @@ export default class Player extends EventEmitter {
       case Condition.ResearchLab: return this.data.buildings[Building.ResearchLab];
       case Condition.PlanetaryInstituteOrAcademy: return this.data.buildings[Building.Academy1] + this.data.buildings[Building.Academy2] + this.data.buildings[Building.PlanetaryInstitute];
       case Condition.Federation: return this.data.tiles.federations.length;
-      case Condition.Gaia: return this.data.occupied.filter(hex => hex.data.planet === Planet.Gaia && hex.colonizedBy(this.player)).length;
-      case Condition.PlanetType: return _.uniq(this.data.occupied.filter(hex => hex.data.planet !== Planet.Empty && hex.colonizedBy(this.player)).map(hex => hex.data.planet)).length;
+      case Condition.Gaia: return this.ownedPlanets.filter(hex => hex.data.planet === Planet.Gaia).length;
+      case Condition.PlanetType: return _.uniq(this.ownedPlanets.map( hex => hex.data.planet)).length;
       case Condition.Sector: return _.uniq(this.data.occupied.filter(hex => hex.colonizedBy(this.player)).map(hex => hex.data.sector)).length;
       case Condition.Structure: return this.data.occupied.filter(hex => hex.colonizedBy(this.player)).length;
       case Condition.StructureFed: return this.data.occupied.filter(hex => hex.colonizedBy(this.player) && hex.belongsToFederationOf(this.player)).length;

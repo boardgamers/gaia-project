@@ -34,7 +34,7 @@ export class GaiaHex extends Hex<GaiaHexData> {
     if (this.buildingOf(this.data.player) === Building.GaiaFormer) {
       // Gaia former is the only building which doesn't extend range and is not counted
       // into federations
-      return this.data.additionalMine === undefined ? [] : [this.data.additionalMine];
+      return [];
     }
     return [this.data.player, this.data.additionalMine].filter(x => x !== undefined);
   }
@@ -44,6 +44,10 @@ export class GaiaHex extends Hex<GaiaHexData> {
     // Neither space stations nor gaia formers have a building value, and every building with a building
     // value counts as colonized.
     return stdBuildingValue(this.buildingOf(player)) > 0;
+  }
+
+  isMainOccupier(player: Player): boolean {
+    return this.colonizedBy(player) && this.data.additionalMine !== player;
   }
 
   /** Space stations are not structures, so a trading station built near one will still be isolated */
