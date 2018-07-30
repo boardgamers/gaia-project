@@ -29,7 +29,7 @@ describe("Taklons", () => {
     expect(() => new Engine([...moves, "p2 charge 1t,3pw"])).to.not.throw();
   });
 
-  it("should choose brainstone destination when chargeing power", () => {
+  it("should choose brainstone destination when charging power", () => {
     const moves = Engine.parseMoves(`
       init 2 randomSeed
       p1 faction terrans
@@ -46,6 +46,28 @@ describe("Taklons", () => {
     expect(new Engine([...moves, "p2 charge 1pw. brainstone area2"]).player(Player.Player2).data.brainstone).to.equal(BrainstoneArea.Area2);
     expect(new Engine([...moves, "p2 charge 1pw. brainstone area1"]).player(Player.Player2).data.brainstone).to.equal(BrainstoneArea.Area1);
     expect(() => new Engine([...moves, "p2 charge 1pw. brainstone area3"])).to.throw();
+  });
+
+  it("should not cause problems when deciding brainstone destination in income phase", () => {
+    const moves = Engine.parseMoves(`
+      init 3 9876
+      p1 faction terrans
+      p2 faction gleens
+      p3 faction taklons
+      terrans build m -4x1
+      gleens build m -5x0
+      taklons build m -5x3
+      taklons build m -1x3
+      gleens build m 1x5
+      terrans build m 0x2
+      taklons booster booster5
+      gleens booster booster4
+      terrans booster booster2
+      taklons brainstone area1
+      terrans build m -4x4.
+    `);
+
+    expect(() => new Engine(moves)).to.not.throw();
   });
 
   it("should ask when moving power tokens to gaia, whether to move the brainstone", () => {

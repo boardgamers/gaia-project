@@ -78,6 +78,8 @@ export default class Engine {
   passedPlayers: PlayerEnum[];
   /** Current player to make a move */
   currentPlayer: PlayerEnum;
+  /** Player of the current command being processed */
+  processedPlayer: PlayerEnum;
   // used to transit between phases
   tempTurnOrder: PlayerEnum[] = [];
   tempCurrentPlayer: PlayerEnum;
@@ -252,6 +254,7 @@ export default class Engine {
     }
 
     assert(this.playerToMove === (player as PlayerEnum), "Wrong turn order in move " + move + ", expected player " + (this.playerToMove + 1));
+    this.processedPlayer = player;
 
     const split = _.get(params, 'split', true);
     const processFirst = _.get(params, 'processFirst', false);
@@ -280,7 +283,7 @@ export default class Engine {
     } catch (err) {
       if (err.availableCommands) {
         this.availableCommands = err.availableCommands;
-        return false;
+        return this.playerToMove !== this.processedPlayer;
       } else {
         throw err;
       }

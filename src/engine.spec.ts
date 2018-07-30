@@ -271,10 +271,10 @@ describe("Engine", () => {
         state = JSON.parse(JSON.stringify(engine));
       }
 
-      expect(state.players[0].data.knowledge).to.equal(baseLine.players[0].data.knowledge, "Error loading move " + move);
-      expect(state.players[1].income).to.equal(baseLine.players[1].toJSON().income, "Error loading move " + move);
-      expect(state.players[1].events[Operator.Income].length).to.equal(baseLine.players[1].events[Operator.Income].length, "Error loading move " + move);
-      expect(state.players[1].data.ores).to.equal(baseLine.players[1].data.ores, "Error loading move " + move);
+      expect(state.players[Player.Player1].data.knowledge).to.equal(baseLine.players[Player.Player1].data.knowledge, "Error loading move " + move);
+      expect(state.players[Player.Player2].income).to.equal(baseLine.players[Player.Player2].toJSON().income, "Error loading move " + move);
+      expect(state.players[Player.Player2].events[Operator.Income].length).to.equal(baseLine.players[Player.Player2].events[Operator.Income].length, "Error loading move " + move);
+      expect(state.players[Player.Player2].data.ores).to.equal(baseLine.players[Player.Player2].data.ores, "Error loading move " + move);
     }
 
     const endEngine = Engine.fromData(state);

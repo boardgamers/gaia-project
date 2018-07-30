@@ -119,9 +119,13 @@ export default class PlayerData extends EventEmitter {
 
       if (cloneHeuristic.brainstone !== cloneNoHeuristic.brainstone) {
         // The brainstone can end up in two different places.
-        this.emit('brainstone', [cloneHeuristic.brainstone, cloneNoHeuristic.brainstone]);
+        if (this.brainstoneDest === undefined) {
+          this.emit('brainstone', [cloneHeuristic.brainstone, cloneNoHeuristic.brainstone]);
+        }
 
         this.followBrainStoneHeuristics = this.brainstoneDest === cloneHeuristic.brainstone;
+
+        delete this.brainstoneDest;
       }
     }
 
@@ -276,12 +280,16 @@ export default class PlayerData extends EventEmitter {
         this.brainstone = null;
         power -= 1;
       } else if (this.tokensBelowArea(this.brainstone) < power) {
-        this.emit("brainstone", [this.brainstone, 'discard']);
+        if (this.brainstoneDest === undefined) {
+          this.emit("brainstone", [this.brainstone, 'discard']);
+        }
 
         if (this.brainstoneDest === 'discard') {
           this.brainstone = null;
           power -= 1;
         }
+
+        delete this.brainstoneDest;
       }
     }
 
@@ -300,12 +308,16 @@ export default class PlayerData extends EventEmitter {
         this.brainstone = BrainstoneArea.Gaia;
         power -= 1;
       } else {
-        this.emit("brainstone", [this.brainstone, BrainstoneArea.Gaia]);
+        if (this.brainstoneDest === undefined) {
+          this.emit("brainstone", [this.brainstone, BrainstoneArea.Gaia]);
+        }
 
         if (this.brainstoneDest === BrainstoneArea.Gaia) {
           this.brainstone = BrainstoneArea.Gaia;
           power -= 1;
         }
+
+        delete this.brainstoneDest;
       }
     }
 

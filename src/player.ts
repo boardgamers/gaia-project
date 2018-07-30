@@ -411,10 +411,12 @@ export default class Player extends EventEmitter {
     for (const event of this.events[Operator.Income]) {
       if ( !event.activated ) {
         this.gainRewards(event.rewards);
-      } else {
-        // clean up event
-        event.activated = false;
+        event.activated = true;
       }
+    }
+    // Clean up in a separate phase in case there is an interruption in the first phase
+    for (const event of this.events[Operator.Income]) {
+      event.activated = false;
     }
   }
 
