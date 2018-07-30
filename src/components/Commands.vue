@@ -244,7 +244,7 @@ export default class Commands extends Vue {
             });
           } else {
             ret.push({
-              label: "Charge " + leech + " for " + command.data.cost ,
+              label: command.data.cost && command.data.cost !== "~" ? "Charge " + leech + " for " + command.data.cost : "Charge " + leech,
               command: `${Command.ChargePower} ${leech}`
             });
           }
