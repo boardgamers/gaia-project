@@ -7,13 +7,13 @@
       Income: {{player.income.replace(/,/g, ', ')}} <br/>
       Range: {{data.range}}, Terraforming cost: {{3 - data.terraformCostDiscount}}o<br/>
 
-      <span style="white-space: nowrap;">
+      <span style="white-space: nowrap; line-height: 1em">
         Steps: 
         <span v-for="i in [0, 1, 2, 3]" :key="i" :class="{'ml-2': i > 0}">
           <i v-for="planet in planetsWithSteps(i)" :class="['planet', planet]" :key="planet" /> {{i}}
         </span>
       </span><br/>
-      Colonized: <span v-for="(count, planet, index) in player.ownedPlanets" :class="{'ml-2': index > 0}"><i :class="['planet', planet]" :key="planet" /> {{count}} </span>
+      <span style="line-height: 1em">Colonized: <span v-for="(count, planet, index) in player.ownedPlanets" :class="{'ml-2': index > 0}"><i :class="['planet', planet]" :key="planet" /> {{count}} </span></span>
     </div>
     <div class="tiles">
       <Booster v-if="data.tiles.booster" class="mb-1" :booster="data.tiles.booster" :disabled="passed"/>
