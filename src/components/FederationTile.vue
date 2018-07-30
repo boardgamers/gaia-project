@@ -3,7 +3,7 @@
     <g :class='["federationTile", {highlighted, disabled}]'>
       <polygon points="-1,0.5 -0.5,1 0.5,1 1,0.5 1,-0.7 0.5,-1 -0.5,-1 -1,-0.7" transform="scale(24)" @click="onClick" />
       <circle cx="16.5" cy="-16.5" r="8" stroke="black" stroke-width="1" fill="white" v-if="numTiles>1" />
-      <text x="16.5" y="-16.5" v-if="numTiles>1">
+      <text x="16.5" y="-15.5" v-if="numTiles>1">
           {{numTiles}}
       </text>
       <text>
