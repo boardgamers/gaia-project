@@ -75,6 +75,10 @@ export default class Event {
     return this.toString();
   }
 
+  clone() {
+    return new Event(this.spec);
+  }
+
   static parse(events: string[]): Event[] {
     return events.map(ev => new Event(ev));
   }

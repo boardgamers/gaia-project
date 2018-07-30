@@ -190,7 +190,9 @@ export default class Player extends EventEmitter {
   }
 
   loadEvent(event: Event) {
-    this.events[event.operator].push(event);
+    // Make sure to not have several of the same event, otherwise with event.activated
+    // it is a mess
+    this.events[event.operator].push(event.clone());
 
     if (event.operator === Operator.Once) {
       const times = this.eventConditionCount(event.condition);
@@ -409,9 +411,11 @@ export default class Player extends EventEmitter {
 
   receiveIncome() {
     for (const event of this.events[Operator.Income]) {
-      if ( !event.activated ) {
+      if (!event.activated) {
         this.gainRewards(event.rewards);
         event.activated = true;
+      } else {
+        // console.log("activated", event.spec);
       }
     }
     // Clean up in a separate phase in case there is an interruption in the first phase
