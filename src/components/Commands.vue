@@ -409,23 +409,33 @@ i.planet {
   }
 
   // terra
-  &.r {color: #99ccff; filter: drop-shadow(0px 0px 1px black);}
+  &.r {color: #99ccff;}
   // desert
-  &.d {color: #ffd700; filter: drop-shadow(0px 0px 1px black);}
+  &.d {color: #ffd700;}
   // swamp
-  &.s {color: #a25b15; filter: drop-shadow(0px 0px 1px white);}
+  &.s {color: #a25b15;}
   // oxide
-  &.o {color: #f30 ; filter: drop-shadow(0px 0px 1px white);}
+  &.o {color: #f30;}
   // titanium
-  &.t {color: #3d3d5c; filter: drop-shadow(0px 0px 1px white);}
+  &.t {color: #3d3d5c;}
   // ice
-  &.i {color: #cff; filter: drop-shadow(0px 0px 1px black);}
+  &.i {color: #cff;}
   // volcanic
-  &.v {color: #f90; filter: drop-shadow(0px 0px 1px white);}
+  &.v {color: #f90;}
   // gaia
-  &.g {color: #093; filter: drop-shadow(0px 0px 1px white);}
+  &.g {color: #093;}
   // transdim
-  &.m {color: #a64dff; filter: drop-shadow(0px 0px 1px white);}
+  &.m {color: #a64dff;}
+
+  filter: drop-shadow(0px 0px 3px white);
+  .player-info & {
+    filter: drop-shadow(0px 0px 1px white);
+    
+    &.r, &.d, &.i {
+      filter: drop-shadow(0px 0px 1px black);
+    }
+  }
+  
 }
 
 </style>
