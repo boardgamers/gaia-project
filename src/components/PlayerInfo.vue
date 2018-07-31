@@ -1,11 +1,12 @@
 <template>
   <div :class="['player-info', player.faction]" v-if="player && player.faction" :style="`background-color: ${factionColor}`">
     <div class="text">
-      <b>{{name}}</b> - {{faction}} - {{data.victoryPoints}}vp <span v-if="passed">(passed)</span><br/>
+      <b>{{name}}</b> - <span v-b-tooltip.hoover.html="factionDesc" >{{faction}}</span> - {{data.victoryPoints}}vp <span v-if="passed">(passed)</span><br/>
       {{data.credits}}c, {{data.ores}}o, {{data.knowledge}}k, {{data.qics}}q, [{{power('gaia')}}] {{power('area1')}}/{{power('area2')}}/{{power('area3')}} pw<br/>
       m: {{data.buildings.m}}/8, ts: {{data.buildings.ts}}/4, lab: {{data.buildings.lab}}/3<span v-if="data.buildings.PI">, PI</span><span v-if="data.buildings.ac1">, ac1</span><span v-if="data.buildings.ac2">, ac2</span>, gf: <span  v-if="data.gaiaformersInGaia>0">[{{data.gaiaformersInGaia}}]</span> {{data.buildings.gf}}/{{data.gaiaformers}}<br/>
-      Income: {{player.income.replace(/,/g, ', ')}} <br/>
+      <span v-if="round<6">Income: {{player.income.replace(/,/g, ', ')}}</span> <br/>
       Range: {{data.range}}, Terraforming cost: {{3 - data.terraformCostDiscount}}o<br/>
+      <span v-if="faction === 'Ivits'">Fed value: {{player.progress.structureFedValue }}, No fed value: {{player.progress.structureValue - player.progress.structureFedValue }} <br/></span> 
 
       <span style="white-space: nowrap; line-height: 1em">
         Steps: 
@@ -27,12 +28,13 @@
 <script lang="ts">
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
-import { Player, factions, tiles, PlayerData, Planet, Federation, terraformingStepsRequired, Building } from '@gaia-project/engine';
+import { Player, factions, tiles, PlayerData, Planet, Federation, terraformingStepsRequired, Building, Condition } from '@gaia-project/engine';
 import { factionColor } from '@/graphics/utils';
 import TechTile from './TechTile.vue';
 import Booster from './Booster.vue';
 import SpecialAction from './SpecialAction.vue';
 import FederationTile from './FederationTile.vue';
+import { factionDesc } from '@/data/factions';
 
 @Component({
   computed: {
@@ -66,6 +68,10 @@ export default class PlayerInfo extends Vue {
     return factionColor(this.player.faction);
   }
 
+  get factionDesc() {
+      return `<b>Ability: </b> ${factionDesc[this.player.faction].ability} </br><b>PI: </b> ${factionDesc[this.player.faction].PI} `;
+  }
+
   get planet() {
     return factions[this.player.faction].planet;
   }
@@ -82,6 +88,14 @@ export default class PlayerInfo extends Vue {
 
   power(area: string) {
     return this.data.power[area] + (this.data.brainstone === area ? "(b)" : "");
+  }
+
+  get round() {
+    return this.$store.state.game.data.round;
+  }
+
+  get progress() {
+    return "";
   }
 }
 export default interface PlayerInfo {

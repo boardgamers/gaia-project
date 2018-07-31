@@ -13,7 +13,7 @@
         <MoveButton v-for="i in [2,3,4]" :button="{command: `init ${i} randomSeed`}" @trigger="handleCommand" :key="i">{{i}} players</MoveButton>
       </div>
       <div v-else-if="chooseFaction">
-        <MoveButton v-for="faction in command.data" :button="{command: `${command.name} ${faction}`}" @trigger="handleCommand" :key="faction">
+        <MoveButton v-for="faction in command.data" :button="{command: `${command.name} ${faction}`,  tooltip:`${tooltip(faction)}`}" @trigger="handleCommand" :key="faction">
           {{factions[faction].name}}
           <i :class="['planet', factions[faction].planet]"></i>
         </MoveButton>
@@ -31,16 +31,22 @@
 import Vue from 'vue'
 import * as $ from "jquery";
 import { Component } from 'vue-property-decorator';
-import { AvailableCommand, Command, factions, Building, GaiaHex, Booster, tiles, Event, Federation } from '@gaia-project/engine';
+import { AvailableCommand, Command, factions, Building, GaiaHex, Booster, tiles, Event, Federation, Faction } from '@gaia-project/engine';
 import MoveButton from './MoveButton.vue';
 import {buildingName} from '../data/building';
 import {GameContext, ButtonData} from '../data';
 import { eventDesc } from '@/data/event';
+import { factionDesc } from '@/data/factions';
 
 @Component<Commands>({
   watch: {
     availableCommands(this: Commands, val) {
       this.loadCommands(val);
+    }
+  },
+  methods: {
+    tooltip(faction: Faction) {
+      return `<b>Ability: </b> ${factionDesc[faction].ability} </br><b>PI: </b> ${factionDesc[faction].PI} `;
     }
   },
   components: {
@@ -396,32 +402,30 @@ export default class Commands extends Vue {
 i.planet {
   &::before {
     content: "\25cf";
-    filter: drop-shadow(0px 0px 3px white);
 
     .player-info & {
-      filter: drop-shadow(0px 0px 1px black);
       font-size: 25px;
     }
   }
 
   // terra
-  &.r {color: #99ccff}
+  &.r {color: #99ccff; filter: drop-shadow(0px 0px 1px black);}
   // desert
-  &.d {color: #ffd700}
+  &.d {color: #ffd700; filter: drop-shadow(0px 0px 1px black);}
   // swamp
-  &.s {color: #a25b15}
+  &.s {color: #a25b15; filter: drop-shadow(0px 0px 1px white);}
   // oxide
-  &.o {color: #f30}
+  &.o {color: #f30 ; filter: drop-shadow(0px 0px 1px white);}
   // titanium
-  &.t {color: #3d3d5c}
+  &.t {color: #3d3d5c; filter: drop-shadow(0px 0px 1px white);}
   // ice
-  &.i {color: #cff}
+  &.i {color: #cff; filter: drop-shadow(0px 0px 1px black);}
   // volcanic
-  &.v {color: #f90}
+  &.v {color: #f90; filter: drop-shadow(0px 0px 1px white);}
   // gaia
-  &.g {color: #093}
+  &.g {color: #093; filter: drop-shadow(0px 0px 1px white);}
   // transdim
-  &.m {color: #a64dff}
+  &.m {color: #a64dff; filter: drop-shadow(0px 0px 1px white);}
 }
 
 </style>

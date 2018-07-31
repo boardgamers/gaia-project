@@ -14,7 +14,7 @@ export default {
 
 export const planetNames = {
   [Planet.Swamp]: "Swamp",
-  [Planet.Desert]: "Deset",
+  [Planet.Desert]: "Desert",
   [Planet.Terra]: "Terra",
   [Planet.Volcanic]: "Volcanic",
   [Planet.Oxide]: "Oxide",
