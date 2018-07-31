@@ -84,6 +84,8 @@ export enum Condition {
   Structure = "st",
   StructureFed = "stfed",
   Satellite = "sat",
+  StructureValue = "stvalue",
+  StructureFedValue = "stfedvalue",
 
   // trigger only
   MineOnGaia = "mg",
