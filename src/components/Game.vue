@@ -129,6 +129,9 @@ export default class Game extends Vue {
   @Prop()
   gameId: string;
 
+  @Prop()
+  auth: string;
+
   replay() {
     this.$store.commit("gaiaViewer/clearContext");
 
@@ -247,10 +250,6 @@ export default class Game extends Vue {
 
   updateMoveList() {
     setTimeout(() => $("#moves").scrollTop($("#moves")[0].scrollHeight));
-  }
-
-  get auth() {
-    return window.localStorage.getItem('auth');
   }
 }
 
