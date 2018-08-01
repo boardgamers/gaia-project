@@ -46,7 +46,7 @@ import { factionDesc } from '@/data/factions';
   },
   methods: {
     tooltip(faction: Faction) {
-      return `<b>Ability: </b> ${factionDesc[faction].ability} </br><b>PI: </b> ${factionDesc[faction].PI} `;
+      return factionDesc(faction);
     }
   },
   components: {

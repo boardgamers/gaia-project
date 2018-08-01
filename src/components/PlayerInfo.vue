@@ -1,7 +1,7 @@
 <template>
   <div :class="['player-info', player.faction]" v-if="player && player.faction" :style="`background-color: ${factionColor}`">
     <div class="text">
-      <b>{{name}}</b> - <span v-b-tooltip.hoover.html="factionDesc" >{{faction}}</span> - {{data.victoryPoints}}vp <span v-if="passed">(passed)</span><br/>
+      <b>{{name}}</b> - <span v-b-tooltip.hoover.html="tooltip" >{{faction}}</span> - {{data.victoryPoints}}vp <span v-if="passed">(passed)</span><br/>
       {{data.credits}}c, {{data.ores}}o, {{data.knowledge}}k, {{data.qics}}q, [{{power('gaia')}}] {{power('area1')}}/{{power('area2')}}/{{power('area3')}} pw<br/>
       m: {{data.buildings.m}}/8, ts: {{data.buildings.ts}}/4, lab: {{data.buildings.lab}}/3<span v-if="data.buildings.PI">, PI</span><span v-if="data.buildings.ac1">, ac1</span><span v-if="data.buildings.ac2">, ac2</span>, gf: <span  v-if="data.gaiaformersInGaia>0">[{{data.gaiaformersInGaia}}]</span> {{data.buildings.gf}}/{{data.gaiaformers}}<br/>
       <span v-if="round<6">Income: {{player.income.replace(/,/g, ', ')}}</span> <br/>
@@ -68,8 +68,8 @@ export default class PlayerInfo extends Vue {
     return factionColor(this.player.faction);
   }
 
-  get factionDesc() {
-      return `<b>Ability: </b> ${factionDesc[this.player.faction].ability} </br><b>PI: </b> ${factionDesc[this.player.faction].PI} `;
+  get tooltip() {
+      return factionDesc(this.player.faction);
   }
 
   get planet() {
@@ -93,10 +93,7 @@ export default class PlayerInfo extends Vue {
   get round() {
     return this.$store.state.gaiaViewer.data.round;
   }
-
-  get progress() {
-    return "";
-  }
+  
 }
 export default interface PlayerInfo {
   data: PlayerData;
