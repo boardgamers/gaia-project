@@ -79,14 +79,14 @@ export function factionDesc(faction: Faction) {
 
   const board = factionBoard(faction);
 
-  const buildingDesc = "<ul>" + Object.values(Building).filter(bld => bld !== Building.GaiaFormer && bld !== Building.SpaceStation).map( bld => "<li><b>"+ bld + "</b> - " + board.buildings[bld].cost + " => " + (bld === Building.TradingStation ? board.buildings[bld].income : board.buildings[bld].income[0]) + "</li>").join("\n") + "</ul>";
+  const buildingDesc = "<ul>" + Object.values(Building).filter(bld => bld !== Building.GaiaFormer && bld !== Building.SpaceStation).map( bld => "<li><b>"+ bld + "</b> - " + board.buildings[bld].cost + " -> " + (bld !== Building.ResearchLab ? board.buildings[bld].income : board.buildings[bld].income[0]) + "</li>").join("\n") + "</ul>";
   const startingIncome = board.income.filter(ev => ev.operator === Operator.Once);
   const roundIncome = board.income.filter(ev => ev.operator === Operator.Income);
 
   return `
   <b>Ability: </b> ${factionData[faction].ability} </br>
   <b>Planetary Institute: </b> ${factionData[faction].PI}<br/>
-  <b>Buildings:</b> ${buildingDesc}
+  <b>Buildings:</b> ${buildingDesc.replace(/,,/g, ',~,').replace(/,/g, ', ')}
   <b>Starting Income:</b> ${startingIncome.toString().replace(/,/g, ', ')} </br>
   <b>Round Income:</b> ${roundIncome} </br>
   `;
