@@ -3,7 +3,7 @@
     <Navbar/>
     <Alert/>
     <main class="container-fluid">
-      <Game/>
+      <Game :api="api"/>
     </main>
   </div>
 </template>
@@ -13,6 +13,7 @@ import { Component, Vue } from 'vue-property-decorator';
 import Navbar from './components/Navbar.vue';
 import Alert from './components/Alert.vue';
 import Game from './components/Game.vue';
+import api from './api';
 import * as $ from "jquery";
 
 @Component({
@@ -25,10 +26,14 @@ import * as $ from "jquery";
     document.title = "Gaia project";
     // No mobile display
     $("meta[name='viewport']").attr("content", "width=800, initial-scale=1.0");
+  },
+  computed: {
+    api() {
+      return api;
+    }
   }
 })
 export default class App extends Vue {
-
 }
 </script>
 

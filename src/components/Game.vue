@@ -23,20 +23,7 @@
       <div class="col-md-6 order-1 order-md-2" id="move-panel">
         <span v-if="ended"><b>Game ended!</b></span>
         <Commands @command="handleCommand" v-else-if="canPlay" />
-        <div v-else-if="freeSpots">
-          <form @submit.prevent="joinGame">
-            <label for="name">Waiting for {{freeSpots}} players to join the game</label>
-            <div class="input-group" v-if="canJoin">
-              <input type="text" class="form-control" placeholder="Your name" id="name" v-model="name" required>
-              <div class="input-group-append">
-                <!-- <button class="btn btn-danger" type="button" @click="addMove('')">Clear</button> -->
-                <button class="btn btn-primary" type="submit">Join!</button>
-              </div>
-            </div>
-          </form>
-          <div v-if="!canJoin"><button class="btn btn-default" @click="loadGame">Refresh</button></div>
-        </div>
-        <div v-else-if="data.players[player]">Waiting for {{data.players[player].name}} to play.<br/> <button class="btn btn-default mt-2" @click="loadGame">Refresh</button></div>
+        <div v-else-if="data.players[player]">Waiting for {{data.players[player].name}} to play.<br/> <button class="btn btn-default mt-2" @click="loadGame(gameId)">Refresh</button></div>
         <div>
           <form id="move-form" @submit.prevent="submit">
             <label for="current-move" v-if="canPlay">Current Move</label>
@@ -62,7 +49,7 @@
 <script lang="ts">
 import * as $ from 'jquery';
 import Vue from 'vue'
-import { Component } from 'vue-property-decorator';
+import { Component, Prop } from 'vue-property-decorator';
 import { Data } from '../data';
 import Commands from './Commands.vue';
 import SpaceMap from './SpaceMap.vue';
@@ -71,6 +58,7 @@ import ResearchBoard from './ResearchBoard.vue';
 import ScoringBoard from './ScoringBoard.vue';
 import Pool from './Pool.vue';
 import { Command, Phase } from '@gaia-project/engine';
+import { GameApi } from '../api';
 
 @Component<Game>({
   computed: {
@@ -95,19 +83,8 @@ import { Command, Phase } from '@gaia-project/engine';
 
       return turnOrder.concat(data.passedPlayers).map(player => data.players[player]);
     },
-    gameId() {
-      if (window.location.search.startsWith("?g=")) {
-        return window.location.search.slice("?g=".length);
-      }  
-    },
     canPlay() {
-      return !this.gameId || this.player !== undefined && this.data.players[this.player].auth === this.auth && !this.freeSpots;
-    },
-    canJoin() {
-      return !this.data.players.some(pl => pl.auth === this.auth) && this.freeSpots;
-    },
-    freeSpots() {
-      return this.data.players.filter(pl => !pl.auth).length;
+      return !this.gameId || this.player !== undefined && this.data.players[this.player].auth === this.auth;
     },
     player() {
       return this.data.availableCommands.length > 0 ? this.data.availableCommands[0].player : undefined;
@@ -144,6 +121,13 @@ export default class Game extends Vue {
   public currentMove = "";
   // When joining a game
   name = "";
+  lastUpdated = null;
+
+  @Prop()
+  api: GameApi;
+
+  @Prop()
+  gameId: string;
 
   replay() {
     this.$store.commit("gaiaViewer/clearContext");
@@ -151,18 +135,10 @@ export default class Game extends Vue {
     const text = this.moveList.trim(); 
     const moveList = text ? text.split("\n") : [];
 
-    const data = {
-      moves: moveList
-    }
-
-    $.post(`${window.location.protocol}//${window.location.hostname}:9508/`, 
-      data,
-      data => {
-        this.handleData(data);
-        window.sessionStorage.setItem('moves', JSON.stringify(data.moveHistory));
-      },
-      "json"
-    ).fail(this.handleError.bind(this));
+    this.api.replay(moveList).then(data => {
+      this.handleData(data);
+      window.sessionStorage.setItem('moves', JSON.stringify(data.moveHistory));
+    }, this.handleError.bind(this));
   }
 
   handleError(error, status, exception) {
@@ -174,6 +150,8 @@ export default class Game extends Vue {
   }
 
   handleData(data: any) {
+    this.lastUpdated = data.lastUpdated;
+
     this.$store.commit('removeError');
     this.$store.commit('gaiaViewer/receiveData', data);
 
@@ -200,12 +178,7 @@ export default class Game extends Vue {
   loadGame() {
     this.$store.commit("gaiaViewer/clearContext");
 
-    $.get(`${window.location.protocol}//${window.location.hostname}:9508/g/${this.gameId}`, 
-      data => {
-        this.handleData(data);
-      },
-      "json"
-    ).fail(this.handleError.bind(this));
+    this.api.loadGame(this.gameId).then(data => this.handleData(data), this.handleError.bind(this));
   }
 
   /**
@@ -216,29 +189,12 @@ export default class Game extends Vue {
       return;
     }
 
-    $.get(`${window.location.protocol}//${window.location.hostname}:9508/g/${this.gameId}/status`, 
-      data => {
-        if (data.round != this.data.round || data.phase != this.data.phase || data.player !== this.player) {
-          this.loadGame();
-          return;
-        }
-      },
-      "json"
-    ).fail(() => {});
-  }
-
-  joinGame() {
-    if (!this.auth) {
-      const string = this.name + "-" + this.gameId + "-" + Math.random();
-      console.log("setting auth", string);
-      window.localStorage.setItem("auth", string);
-    }
-
-    $.post(`${window.location.protocol}//${window.location.hostname}:9508/g/${this.gameId}/join`, {name: this.name, auth: this.auth}, 
-      data => {
+    this.api.checkStatus(this.gameId).then(data => {
+      if (data.lastUpdated !== this.lastUpdated) {
+        this.lastUpdated = data;
         this.loadGame();
-      },
-    ).fail(this.handleError.bind(this));
+      }
+    }, () => {});
   }
 
   handleCommand(command: string) {
@@ -264,12 +220,7 @@ export default class Game extends Vue {
   addMove(command: string) {
     if (this.gameId) {
       this.$store.commit("gaiaViewer/clearContext");
-      $.post(`${window.location.protocol}//${window.location.hostname}:9508/g/${this.gameId}/move`,  {auth: this.auth, move: command},
-        data => {
-          this.handleData(data);
-        },
-        "json"
-      ).fail(this.handleError.bind(this));
+      this.api.addMove(this.gameId, command).then(data => this.handleData(data), this.handleError.bind(this));
     } else {
       this.moveList = (this.moveList.trim() + "\n" + command).trim();
       this.currentMove = "";
@@ -306,7 +257,6 @@ export default class Game extends Vue {
 // Used for type augmentation from computed properties
 export default interface Game {
   data: Data;
-  gameId: string;
   player: number;
 
   canPlay(): boolean;
