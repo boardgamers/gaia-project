@@ -20,7 +20,6 @@
   "homepage": "https://github.com/donkeytech/gaia-viewer#readme",
   "dependencies": {
     "@gaia-project/engine": "^1.1.0",
-    "bootstrap-vue": "^2.0.0-rc.11",
     "hexagrid": "^1.0.0",
     "jquery": "^3.3.1",
     "register-service-worker": "^1.4.1",
@@ -37,7 +36,11 @@
     "node-sass": "^4.7.2",
     "sass-loader": "^7.0.3",
     "typescript": "^2.7.2",
-    "webpack": "^4.16.1"
+    "webpack": "^4.16.1",
+    "bootstrap-vue": "^2.0.0-rc.11"
+  },
+  "peerDependencies": {
+    "bootstrap-vue": "^2.0.0-rc.11"
   },
   "browserslist": [
     "> 1%",
