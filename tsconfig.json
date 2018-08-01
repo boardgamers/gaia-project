@@ -6,11 +6,11 @@
     "moduleResolution": "node",
     "sourceMap": true,
     "outDir": "./dist",                        /* Redirect output structure to the directory. */
-    "paths": {
-      "@/*": [
-        "src/*"
-      ]
-    },
+    // "paths": {
+    //   "@/*": [
+    //     "src/*"
+    //   ]
+    // },
     "baseUrl": ".",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true

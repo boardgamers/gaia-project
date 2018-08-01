@@ -14,7 +14,7 @@
 import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import { factions, Faction, Building as BuildingEnum } from '@gaia-project/engine';
-import { corners } from '@/graphics/hex';
+import { corners } from '../graphics/hex';
 import Token from './Token.vue';
 
 @Component({

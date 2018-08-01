@@ -35,8 +35,8 @@ import { AvailableCommand, Command, factions, Building, GaiaHex, Booster, tiles,
 import MoveButton from './MoveButton.vue';
 import {buildingName} from '../data/building';
 import {GameContext, ButtonData} from '../data';
-import { eventDesc } from '@/data/event';
-import { factionDesc } from '@/data/factions';
+import { eventDesc } from '../data/event';
+import { factionDesc } from '../data/factions';
 
 @Component<Commands>({
   watch: {

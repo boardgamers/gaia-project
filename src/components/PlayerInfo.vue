@@ -29,12 +29,12 @@
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
 import { Player, factions, tiles, PlayerData, Planet, Federation, terraformingStepsRequired, Building, Condition } from '@gaia-project/engine';
-import { factionColor } from '@/graphics/utils';
+import { factionColor } from '../graphics/utils';
 import TechTile from './TechTile.vue';
 import Booster from './Booster.vue';
 import SpecialAction from './SpecialAction.vue';
 import FederationTile from './FederationTile.vue';
-import { factionDesc } from '@/data/factions';
+import { factionDesc } from '../data/factions';
 
 @Component({
   computed: {

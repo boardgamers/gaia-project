@@ -10,9 +10,9 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
-import Navbar from '@/components/Navbar.vue';
-import Alert from '@/components/Alert.vue';
-import Game from '@/components/Game.vue';
+import Navbar from './components/Navbar.vue';
+import Alert from './components/Alert.vue';
+import Game from './components/Game.vue';
 import * as $ from "jquery";
 
 @Component({
