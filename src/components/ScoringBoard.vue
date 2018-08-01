@@ -1,5 +1,5 @@
 <template>
-  <svg viewBox="0 0 80 400" v-if="$store.state.game.data.tiles && $store.state.game.data.tiles.scorings.final">
+  <svg viewBox="0 0 80 400" v-if="$store.state.gaiaViewer.data.tiles && $store.state.gaiaViewer.data.tiles.scorings.final">
     <FinalScoringTile :index="0" />
     <FinalScoringTile :index="1" transform="translate(0, 60)"/>
     <ScoringTile v-for="i in [0, 1, 2, 3, 4, 5]" :round="i+1" :transform="`translate(0, ${400 - (i+1)*45})`" :key="i" />

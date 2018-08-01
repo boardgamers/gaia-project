@@ -3,7 +3,7 @@
     <g :class='["specialAction", {highlighted, disabled}]'>
       <polygon points="-1,0.5 -0.5,1 0.5,1 1,0.5 1,-0.5 0.5,-1 -0.5,-1 -1,-0.5" transform="scale(24)" @click="onClick" />
       <text>
-        <tspan x="0" v-for="(line, i) in income" :dy="`${i*1.25 - (income.length - 1) / 2.5}em`"> 
+        <tspan x="0" v-for="(line, i) in income" :dy="`${i*1.25 - (income.length - 1) / 2.5}em`" :key="i"> 
           {{line.replace(/ /g, '')}}
         </tspan>
       </text>
@@ -20,7 +20,7 @@ import { eventDesc } from '../data/event';
 @Component<SpecialAction>({
   computed: {
     highlighted() {
-      return this.$store.state.game.context.highlighted.actions.has(this.action);
+      return this.$store.state.gaiaViewer.context.highlighted.actions.has(this.action);
     },
 
     income() {
@@ -39,7 +39,7 @@ export default class SpecialAction extends Vue {
     if (!this.highlighted) {
       return;
     }
-    this.$store.dispatch("actionClick", this.action);
+    this.$store.dispatch("gaiaViewer/actionClick", this.action);
   }
 }
 export default interface SpecialAction {

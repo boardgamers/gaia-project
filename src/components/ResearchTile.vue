@@ -17,20 +17,20 @@ import FederationTile from './FederationTile.vue';
 @Component<ResearchTile>({
   computed: {
     players(): Player[] {
-      return this.$store.state.game.data.players;
+      return this.$store.state.gaiaViewer.data.players;
     },
     tooltip() {
       return `<b>Level ${this.level}:</b> ${descriptions[this.field][this.level]}`;
     },
     highlighted(): boolean {
-      return this.$store.state.game.context.highlighted.researchTiles.has(this.field + "-" + this.level)
+      return this.$store.state.gaiaViewer.context.highlighted.researchTiles.has(this.field + "-" + this.level)
     },
     height() {
       return (this.level == 0 || this.level == 5) ? 46 : 36
     },
     federation(): Federation {
       if (this.level == 5 && this.field === ResearchField.Terraforming) {
-        return this.$store.state.game.data.terraformingFederation;
+        return this.$store.state.gaiaViewer.data.terraformingFederation;
       }
     }
   },
@@ -57,7 +57,7 @@ export default class ResearchTile extends Vue {
 
   onClick() {
     if (this.highlighted) {
-      this.$store.dispatch('researchClick', this.field)
+      this.$store.dispatch('gaiaViewer/researchClick', this.field)
     }
   }
 }

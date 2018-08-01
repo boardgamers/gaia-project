@@ -36,7 +36,7 @@ import { eventDesc } from '../data/event';
     },
 
     highlighted() {
-      return this.$store.state.game.context.highlighted.boosters.has(this.booster);
+      return this.$store.state.gaiaViewer.context.highlighted.boosters.has(this.booster);
     }
   }
 })
@@ -49,8 +49,7 @@ export default class Booster extends Vue {
   
   onClick() {
     if (this.highlighted) {
-      console.log("dispatch", this.booster);
-      this.$store.dispatch("boosterClick", this.booster);
+      this.$store.dispatch("gaiaViewer/boosterClick", this.booster);
     }
   }
 }

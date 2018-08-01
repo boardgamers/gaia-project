@@ -19,7 +19,7 @@ import Token from "./Token.vue";
 @Component<FinalScoringTile>({
   computed: {
     tile() {
-      return this.$store.state.game.data.tiles.scorings.final[this.index];
+      return this.$store.state.gaiaViewer.data.tiles.scorings.final[this.index];
     },
 
     content() {
@@ -27,7 +27,7 @@ import Token from "./Token.vue";
     },
 
     players() {
-      return this.$store.state.game.data.players.filter(player => !!player && player.faction);
+      return this.$store.state.gaiaViewer.data.players.filter(player => !!player && player.faction);
     },
 
     tooltip() {
@@ -38,7 +38,7 @@ import Token from "./Token.vue";
     },
 
     highlighted() {
-      return this.$store.state.game.data.phase === Phase.EndGame;
+      return this.$store.state.gaiaViewer.data.phase === Phase.EndGame;
     }
   },
 

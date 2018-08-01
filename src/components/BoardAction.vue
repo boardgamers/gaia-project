@@ -26,11 +26,11 @@ import { eventDesc } from '../data/event';
     },
 
     highlighted() {
-      return this.$store.state.game.context.highlighted.actions.has(this.action);
+      return this.$store.state.gaiaViewer.context.highlighted.actions.has(this.action);
     },
 
     faded() {
-      return !this.$store.state.game.data.boardActions[this.action];
+      return !this.$store.state.gaiaViewer.data.boardActions[this.action];
     },
 
     kind() {
@@ -53,7 +53,7 @@ export default class BoardAction extends Vue {
     if (!this.highlighted) {
       return;
     }
-    this.$store.dispatch("actionClick", this.action);
+    this.$store.dispatch("gaiaViewer/actionClick", this.action);
   }
 }
 export default interface BoardAction {

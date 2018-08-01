@@ -15,7 +15,7 @@ import { eventDesc } from '../data/event';
 @Component<ScoringTile>({
   computed: {
     tile(this: ScoringTile) {
-      return this.$store.state.game.data.tiles.scorings.round[this.round - 1];
+      return this.$store.state.gaiaViewer.data.tiles.scorings.round[this.round - 1];
     },
 
     content() {
@@ -27,11 +27,11 @@ import { eventDesc } from '../data/event';
     },
 
     highlighted() {
-      return this.$store.state.game.data.round === this.round && !this.faded;
+      return this.$store.state.gaiaViewer.data.round === this.round && !this.faded;
     },
 
     faded() {
-      return this.$store.state.game.data.round > this.round || this.$store.state.game.data.phase === Phase.EndGame;
+      return this.$store.state.gaiaViewer.data.round > this.round || this.$store.state.gaiaViewer.data.phase === Phase.EndGame;
     }
   }
 })

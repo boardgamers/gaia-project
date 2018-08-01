@@ -24,7 +24,7 @@ import { eventDesc } from '../data/event';
 @Component<FederationTile>({
   computed: {
     highlighted() {
-      return this.$store.state.game.context.highlighted.federations.has(this.federation);
+      return this.$store.state.gaiaViewer.context.highlighted.federations.has(this.federation);
     },
 
     income() {   
@@ -51,7 +51,7 @@ export default class FederationTile extends Vue {
     if (!this.highlighted) {
       return;
     }
-    this.$store.dispatch("federationClick", this.federation);
+    this.$store.dispatch("gaiaViewer/federationClick", this.federation);
   }
 }
 export default interface Federation {

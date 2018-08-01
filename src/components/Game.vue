@@ -75,7 +75,7 @@ import { Command, Phase } from '@gaia-project/engine';
 @Component<Game>({
   computed: {
     data() {
-      return this.$store.state.game.data;
+      return this.$store.state.gaiaViewer.data;
     },
     ended() {
       return this.data.phase === Phase.EndGame;
@@ -146,7 +146,7 @@ export default class Game extends Vue {
   name = "";
 
   replay() {
-    this.$store.commit("clearContext");
+    this.$store.commit("gaiaViewer/clearContext");
 
     const text = this.moveList.trim(); 
     const moveList = text ? text.split("\n") : [];
@@ -175,7 +175,7 @@ export default class Game extends Vue {
 
   handleData(data: any) {
     this.$store.commit('removeError');
-    this.$store.commit('receiveData', data);
+    this.$store.commit('gaiaViewer/receiveData', data);
 
     if (data.newTurn) {
       this.moveList = data.moveHistory.join("\n");
@@ -198,7 +198,7 @@ export default class Game extends Vue {
   }
 
   loadGame() {
-    this.$store.commit("clearContext");
+    this.$store.commit("gaiaViewer/clearContext");
 
     $.get(`${window.location.protocol}//${window.location.hostname}:9508/g/${this.gameId}`, 
       data => {
@@ -263,7 +263,7 @@ export default class Game extends Vue {
 
   addMove(command: string) {
     if (this.gameId) {
-      this.$store.commit("clearContext");
+      this.$store.commit("gaiaViewer/clearContext");
       $.post(`${window.location.protocol}//${window.location.hostname}:9508/g/${this.gameId}/move`,  {auth: this.auth, move: command},
         data => {
           this.handleData(data);

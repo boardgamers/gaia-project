@@ -77,7 +77,7 @@ export default class Commands extends Vue {
   }
 
   get availableCommands(): AvailableCommand[] {
-    return this.$store.state.game.data.availableCommands;
+    return this.$store.state.gaiaViewer.data.availableCommands;
   }
 
   get command(): AvailableCommand {
@@ -85,17 +85,17 @@ export default class Commands extends Vue {
   }
 
   get player(): string {
-    if (this.$store.state.game.data.players[this.command.player].faction) {
-      return factions[this.$store.state.game.data.players[this.command.player].faction].name;
+    if (this.$store.state.gaiaViewer.data.players[this.command.player].faction) {
+      return factions[this.$store.state.gaiaViewer.data.players[this.command.player].faction].name;
     }
-    if (this.$store.state.game.data.players[this.command.player].name) {
-      return this.$store.state.game.data.players[this.command.player].name;
+    if (this.$store.state.gaiaViewer.data.players[this.command.player].name) {
+      return this.$store.state.gaiaViewer.data.players[this.command.player].name;
     }
     return "Player " + (this.command.player+1);
   }
 
   get playerSlug(): string {
-    return this.$store.state.game.data.players[this.command.player].faction || `p${this.command.player+1}`;
+    return this.$store.state.gaiaViewer.data.players[this.command.player].faction || `p${this.command.player+1}`;
   }
 
   get init() {
@@ -139,7 +139,7 @@ export default class Commands extends Vue {
   }
 
   get context(): GameContext {
-    return this.$store.state.game.context;
+    return this.$store.state.gaiaViewer.context;
   }
 
   get buttons(): ButtonData[] {

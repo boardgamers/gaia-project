@@ -15,10 +15,10 @@ import SpaceHex from './SpaceHex.vue';
 @Component<SpaceMap>({
   computed: {
     map(this: SpaceMap): MapData {
-      return this.$store.state.game.data.map
+      return this.$store.state.gaiaViewer.data.map
     },
     right() {
-      return (this.$store.state.game.data.players || []).length > 2 ? 31 : 24;
+      return (this.$store.state.gaiaViewer.data.players || []).length > 2 ? 31 : 24;
     }
   },
   components: {

@@ -15,7 +15,7 @@ import { eventDesc } from '../data/event';
 @Component<TechTile>({
   computed: {
     tileObject() {
-      return this.$store.state.game.data.tiles.techs[this.pos];
+      return this.$store.state.gaiaViewer.data.tiles.techs[this.pos];
     },
 
     tile() {
@@ -35,7 +35,7 @@ import { eventDesc } from '../data/event';
 
     title() {
       // Only show count if there are more players than tech tiles available
-      if (this.count > 1 && this.$store.state.game.data.players.length > 4) {
+      if (this.count > 1 && this.$store.state.gaiaViewer.data.players.length > 4) {
         return `${this.pos} (${this.count})`;
       }
 
@@ -47,7 +47,7 @@ import { eventDesc } from '../data/event';
     },
 
     highlighted() {
-      return this.$store.state.game.context.highlighted.techs.has(this.pos);
+      return this.$store.state.gaiaViewer.context.highlighted.techs.has(this.pos);
     }
   }
 })
@@ -63,7 +63,7 @@ export default class TechTile extends Vue {
 
   onClick() {
     if (this.highlighted) {
-      this.$store.dispatch("techClick", this.pos);
+      this.$store.dispatch("gaiaViewer/techClick", this.pos);
     }
   }
 }

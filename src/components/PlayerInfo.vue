@@ -14,7 +14,7 @@
           <i v-for="planet in planetsWithSteps(i)" :class="['planet', planet]" :key="planet" /> {{i}}
         </span>
       </span><br/>
-      <span style="line-height: 1em">Colonized: <span v-for="(count, planet, index) in player.ownedPlanets" :class="{'ml-2': index > 0}"><i :class="['planet', planet]" :key="planet" /> {{count}} </span></span>
+      <span style="line-height: 1em">Colonized: <span v-for="(count, planet, index) in player.ownedPlanets" :key="planet" :class="{'ml-2': index > 0}"><i :class="['planet', planet]" :key="planet" /> {{count}} </span></span>
     </div>
     <div class="tiles">
       <Booster v-if="data.tiles.booster" class="mb-1" :booster="data.tiles.booster" :disabled="passed"/>
@@ -83,7 +83,7 @@ export default class PlayerInfo extends Vue {
   }
 
   get passed() {
-    return (this.$store.state.game.data.passedPlayers || []).includes(this.player.player);
+    return (this.$store.state.gaiaViewer.data.passedPlayers || []).includes(this.player.player);
   }
 
   power(area: string) {
@@ -91,7 +91,7 @@ export default class PlayerInfo extends Vue {
   }
 
   get round() {
-    return this.$store.state.game.data.round;
+    return this.$store.state.gaiaViewer.data.round;
   }
 
   get progress() {
