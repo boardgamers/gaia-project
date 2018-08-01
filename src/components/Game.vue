@@ -107,6 +107,9 @@ import { GameApi } from '../api';
     }
     this.replay();
   },
+  destroyed() {
+    clearInterval(this.refresher);
+  },
   components: {
     Commands,
     SpaceMap,
@@ -122,6 +125,7 @@ export default class Game extends Vue {
   // When joining a game
   name = "";
   lastUpdated = null;
+  refresher = undefined;
 
   @Prop()
   api: GameApi;
