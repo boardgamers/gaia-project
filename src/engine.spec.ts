@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import Engine from "./engine";
 import { AssertionError } from "assert";
-import { Player, Federation, Operator, AdvTechTilePos, Building } from "./enums";
+import { Player, Federation, Operator, AdvTechTilePos, Building, Condition } from "./enums";
 
 describe("Engine", () => {
   it("should throw when trying to build on the wrong place", () => {
@@ -433,6 +433,47 @@ describe("Engine", () => {
 
     expect(() => new Engine([...moves, "p2 income 1t,1t. income 1t"])).to.throw();
     expect(() => new Engine([...moves, "p2 income 1t,1t"])).to.not.throw();
+  });
+
+  it ("should add a mine to a federation through a nearby satellite", function() {
+    const moves = parseMoves(`
+      init 2 randomSeed
+      p1 faction terrans
+      p2 faction bescods
+      p1 build m -1x2
+      p2 build m -1x-1
+      p2 build m 3x-2
+      p1 build m -4x2
+      p2 booster booster3
+      p1 booster booster7
+      p1 up gaia.
+      p2 build ts -1x-1.
+      p1 build gf -2x3.
+      p2 build m -1x0.
+      p1 charge 1pw
+      p1 build ts -1x2.
+      p2 charge 1pw
+      p2 build m 1x0.
+      p1 charge 2pw
+      p1 build m -3x4.
+      p2 pass booster8
+      p1 build PI -1x2.
+      p2 charge 1pw
+      p1 pass booster3
+      p1 income t
+      p1 spend 4tg for 1k. spend 2tg for 2c
+      p2 burn 3. spend 3pw for 1o. pass booster5
+      p1 build m -2x3. spend 2pw for 2c.
+      p1 build ts -4x2.
+      terrans federation -4x4,-4x3,-4x2,-3x4,-2x3,-1x2 fed4.
+      terrans pass booster7
+      terrans income 4pw
+      bescods pass booster4
+    `);
+    const engine = new Engine(moves);
+    const structure = engine.player(Player.Player1).eventConditionCount(Condition.StructureFed);
+    engine.move('terrans action power2. build m -5x5.');
+    expect(  engine.player(Player.Player1).eventConditionCount(Condition.StructureFed) ).to.be.equal(structure + 1 );
   });
 });
 

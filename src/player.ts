@@ -315,7 +315,7 @@ export default class Player extends EventEmitter {
     // Add to nearby federation
     if (building !== Building.GaiaFormer && !hex.belongsToFederationOf(this.player)) {
       const group: GaiaHex[] = this.buildingGroup(hex);
-      const hasFederation = group.some(hx => hx.belongsToFederationOf(this.player));
+      const hasFederation = group.concat(map.grid.neighbours(hex)).some(hx => hx.belongsToFederationOf(this.player));
 
       if (hasFederation) {
         for (const h of group) {
