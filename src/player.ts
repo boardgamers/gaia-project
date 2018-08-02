@@ -109,6 +109,18 @@ export default class Player extends EventEmitter {
     return true;
   }
 
+  maxPayRange(reward: Reward[]): number {
+    const rewards = Reward.merge(reward);
+
+    for (let max = 0; ; max += 1) {
+      for (const rew of rewards) {
+        if (!this.data.hasResource(new Reward( rew.count * (max + 1), rew.type ))) {
+          return max;
+        }
+      }
+    }
+  }
+
   canBuild(targetPlanet: Planet, building: Building, {isolated, addedCost, existingBuilding}: {isolated?: boolean, addedCost?: Reward[], existingBuilding?: Building}): {cost?: Reward[], possible: boolean, steps?: number} {
     if (this.data.buildings[building] >= this.maxBuildings(building)) {
       // Too many buildings of the same kind

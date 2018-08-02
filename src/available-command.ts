@@ -320,8 +320,9 @@ export function possibleFreeActions(engine: Engine, player: Player) {
   }
 
   for (const freeAction of pool) {
-    if (pl.canPay(Reward.parse(freeAction.cost))) {
-      acts.push({cost: freeAction.cost, income: freeAction.income});
+    const maxPay = pl.maxPayRange(Reward.parse(freeAction.cost));
+    if ( maxPay > 0 ) {
+      acts.push({cost: freeAction.cost, income: freeAction.income, range: _.range(1, maxPay + 1)});
     }
   }
 
