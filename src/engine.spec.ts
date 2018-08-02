@@ -435,7 +435,7 @@ describe("Engine", () => {
     expect(() => new Engine([...moves, "p2 income 1t,1t"])).to.not.throw();
   });
 
-  it ("should add a mine to a federation through a nearby satellite", function() {
+  it ("should add a mine to a federation through a nearby satellite", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans
