@@ -216,7 +216,7 @@ export default class Commands extends Vue {
         };
 
         case Command.UpgradeResearch: {
-          if ( command.data.tracks.length = 1 ) {
+          if ( command.data.tracks.length === 1 ) {
             ret.push({
               label: "Advance " + command.data.tracks[0].field,
               command: `${Command.UpgradeResearch} ${command.data.tracks[0].field}`
