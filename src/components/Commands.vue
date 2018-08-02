@@ -352,7 +352,6 @@ export default class Commands extends Vue {
           locationButtons.push({
             label: "Custom location",
             selectHexes: true,
-            hexes: locationButtons[0].hexes,
             buttons: tilesButtons
           });
 
