@@ -97,7 +97,7 @@ import { GameApi } from '../api';
   },
   created(this: Game) {
     if (this.gameId) {
-      setInterval(() => this.refreshStatus(), 3000);
+      this.refresher = setInterval(() => this.refreshStatus(), 3000);
       this.loadGame();
       return;
     }
