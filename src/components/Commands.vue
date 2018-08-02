@@ -216,13 +216,20 @@ export default class Commands extends Vue {
         };
 
         case Command.UpgradeResearch: {
-          ret.push({
-            label: "Advance research",
-            command: command.name,
-            // track.to contains actual level, to use when implementing research viewer
-            buttons: command.data.tracks.map(track => ({command: track.field})),
-            researchTiles: command.data.tracks.map(track => track.field + "-" + track.to),
-          });
+          if ( command.data.tracks.length = 1 ) {
+            ret.push({
+              label: "Advance " + command.data.tracks[0].field,
+              command: `${Command.UpgradeResearch} ${command.data.tracks[0].field}`
+            });
+          } else {
+            ret.push({
+              label: "Advance research",
+              command: command.name,
+              // track.to contains actual level, to use when implementing research viewer
+              buttons: command.data.tracks.map(track => ({command: track.field})),
+              researchTiles: command.data.tracks.map(track => track.field + "-" + track.to),
+            });
+          }
           break;
         }
 
