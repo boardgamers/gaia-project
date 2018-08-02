@@ -547,7 +547,7 @@ export default class Player extends EventEmitter {
   eventConditionCount(condition: Condition): number {
     switch (condition) {
       case Condition.None: return 1;
-      case Condition.Mine: return this.data.buildings[Building.Mine];
+      case Condition.Mine: return this.data.buildings[Building.Mine] + this.data.lostPlanet;
       case Condition.TradingStation: return this.data.buildings[Building.TradingStation];
       case Condition.ResearchLab: return this.data.buildings[Building.ResearchLab];
       case Condition.PlanetaryInstituteOrAcademy: return this.data.buildings[Building.Academy1] + this.data.buildings[Building.Academy2] + this.data.buildings[Building.PlanetaryInstitute];

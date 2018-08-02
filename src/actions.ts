@@ -33,6 +33,11 @@ export const freeActionsNevlas = [
   { cost: "t-a3", income: "1k" }
 ];
 
+export const freeActionsNevlasPI = [
+  { cost: "4pw", income: "1o,1c" },
+  { cost: "6pw", income: "2o" }
+];
+
 export const freeActionsBaltaks = [
   { cost: "1gf", income: "1q" }
 ];

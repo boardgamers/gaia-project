@@ -1,7 +1,7 @@
 import { FactionBoardRaw } from ".";
 import { Building } from "../enums";
 import Player from "../player";
-import { freeActionsNevlas } from "../actions";
+import { freeActionsNevlas, freeActionsNevlasPI } from "../actions";
 
 const nevlas: FactionBoardRaw = {
   buildings: {
@@ -15,7 +15,12 @@ const nevlas: FactionBoardRaw = {
   income: ["2k,4o,15c,q,up-sci", "+o,k"],
   handlers: {
     [`build-${Building.PlanetaryInstitute}`]: (player: Player) => player.data.tokenModifier = 2,
-    freeActionChoice:  (player: Player, pool: any[]) => pool.push(...freeActionsNevlas)
+    freeActionChoice:  (player: Player, pool: any[]) => {
+      pool.push(...freeActionsNevlas);
+      if (player.data.hasPlanetaryInstitute()) {
+        pool.push(...freeActionsNevlasPI);
+      }
+    }
   }
 };
 
