@@ -22,8 +22,8 @@
       </div>
       <div class="col-md-6 order-1 order-md-2" id="move-panel">
         <span v-if="ended"><b>Game ended!</b></span>
-        <Commands @command="handleCommand" @undo="undoMove" v-else-if="canPlay" />
-        <div v-else-if="data.players[player]">Waiting for {{data.players[player].name}} to play.<br/> <button class="btn btn-default mt-2" @click="loadGame()">Refresh</button></div>
+        <Commands @command="handleCommand" v-else-if="canPlay" />
+        <div v-else-if="data.players[player]">Waiting for {{data.players[player].name}} to play.<br/> <button class="btn btn-default mt-2" @click="loadGame(gameId)">Refresh</button></div>
         <div>
           <form id="move-form" @submit.prevent="submit">
             <label for="current-move" v-if="canPlay">Current Move</label>
@@ -126,6 +126,8 @@ export default class Game extends Vue {
   name = "";
   lastUpdated = null;
   refresher = undefined;
+  // When refreshing status, count the number of times the status is the same
+  refreshCount = 0;
 
   @Prop()
   api: GameApi;
@@ -192,12 +194,26 @@ export default class Game extends Vue {
    * Check if we need to refresh the whole game
    */
   refreshStatus() {
-    if (this.canPlay || this.ended) {
+    if (this.canPlay) {
       return;
+    }
+
+    this.refreshCount += 1;  
+
+    if (this.refreshCount >= 3600/3) {
+      // more than an hour without changes, only check every minute
+      if (this.refreshCount % 20 !== 0) return;
+    } else if (this.refreshCount >= 600/3) {
+      // more than 10 minutes without change, only check every 20 seconds
+      if (this.refreshCount % 6 !== 0) return;
+    } else if (this.refreshCount >= 300/3) {
+      // more than 5 minutes without change, only check every 10 seconds
+      if (this.refreshCount % 3 !== 0) return;
     }
 
     this.api.checkStatus(this.gameId).then(data => {
       if (data.lastUpdated !== this.lastUpdated) {
+        this.refreshCount = 0;
         this.lastUpdated = data;
         this.loadGame();
       }
@@ -224,25 +240,13 @@ export default class Game extends Vue {
     }
   }
 
-  undoMove() {
-    if (this.currentMove.includes(".")) {
-      this.currentMove = this.currentMove.slice(0, this.currentMove.lastIndexOf("."));
-    } else {
-      this.currentMove = "";
-    }
-    this.addMove(this.currentMove);
-  }
-
   addMove(command: string) {
-    this.$store.commit("gaiaViewer/clearContext");
     if (this.gameId) {
-      if (command) {
-        this.api.addMove(this.gameId, command).then(data => this.handleData(data), this.handleError.bind(this));
-      } else {
-        this.loadGame();
-      }
+      this.$store.commit("gaiaViewer/clearContext");
+      this.api.addMove(this.gameId, command).then(data => this.handleData(data), this.handleError.bind(this));
     } else {
       this.moveList = (this.moveList.trim() + "\n" + command).trim();
+      this.currentMove = "";
 
       this.replay();
     }
@@ -274,8 +278,7 @@ export default interface Game {
   data: Data;
   player: number;
 
-  canPlay: boolean;
-  ended: boolean;
+  canPlay(): boolean;
 }
 </script>
 
