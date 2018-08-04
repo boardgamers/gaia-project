@@ -538,7 +538,7 @@ export function possibleLeech(engine: Engine, player: Player) {
 export function possibleCoverTechTiles(engine: Engine, player: Player) {
   const commands = [];
 
-  const tiles = engine.player(player).data.tiles.techs.filter(tl => tl.enabled && Object.values(TechTilePos).includes(tl.pos));
+  const tiles = engine.player(player).data.tiles.techs.filter(tl => tl.enabled && !TechTilePos.isAdvanced(tl.pos));
   commands.push({
     name: Command.ChooseCoverTechTile,
     player,
@@ -594,7 +594,7 @@ export function possibleTechTiles(engine: Engine, player: Player) {
     if (data.research[tilePos.slice("adv-".length)] < 4) {
       continue;
     }
-    if (!data.tiles.techs.some(tech => tech.enabled)) {
+    if (!data.tiles.techs.some(tech => tech.enabled && !TechTilePos.isAdvanced(tech.pos))) {
       continue;
     }
 
