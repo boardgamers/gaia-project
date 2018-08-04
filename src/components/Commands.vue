@@ -15,7 +15,7 @@
         <MoveButton v-for="i in [2,3,4]" :button="{command: `init ${i} randomSeed`}" @trigger="handleCommand" :key="i">{{i}} players</MoveButton>
       </div>
       <div v-else-if="chooseFaction">
-        <MoveButton v-for="faction in command.data" :button="{command: `${command.name} ${faction}`,  tooltip:`${tooltip(faction)}`}" @trigger="handleCommand" :key="faction">
+        <MoveButton v-for="faction in command.data" :button="{command: `${command.name} ${faction}`,  modal:`${tooltip(faction)}`, label:`${factions[faction].name}`}" @trigger="handleCommand" :key="faction">
           {{factions[faction].name}}
           <i :class="['planet', factions[faction].planet]"></i>
         </MoveButton>

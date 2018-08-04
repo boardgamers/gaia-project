@@ -1,7 +1,8 @@
 <template>
   <div :class="['player-info', player.faction]" v-if="player && player.faction" :style="`background-color: ${factionColor}`">
     <div class="text">
-      <b>{{name}}</b> - <span v-b-tooltip.hoover.html="tooltip" >{{faction}}</span> - {{data.victoryPoints}}vp <span v-if="passed">(passed)</span><br/>
+      <b>{{name}}</b> - <span v-b-modal="faction" class="faction-name" role="button">{{faction}}</span> - {{data.victoryPoints}}vp <span v-if="passed">(passed)</span>
+      <br/>
       {{data.credits}}c, {{data.ores}}o, {{data.knowledge}}k, {{data.qics}}q, [{{power('gaia')}}] {{power('area1')}}/{{power('area2')}}/{{power('area3')}} pw<br/>
       m: {{data.buildings.m}}/8, ts: {{data.buildings.ts}}/4, lab: {{data.buildings.lab}}/3<span v-if="data.buildings.PI">, PI</span><span v-if="data.buildings.ac1">, ac1</span><span v-if="data.buildings.ac2">, ac2</span>, gf: <span  v-if="data.gaiaformersInGaia>0">[{{data.gaiaformersInGaia}}]</span> {{data.buildings.gf}}/{{data.gaiaformers}}<br/>
       <span v-if="round<6">Income: {{player.income.replace(/,/g, ', ')}}<br/></span>
@@ -22,6 +23,9 @@
       <TechTile v-for="tech in data.tiles.techs" :covered="!tech.enabled" class="mb-1" :key="tech.pos" :pos="tech.pos" :player="player.player" />
       <SpecialAction v-for="(action, i) in player.actions" :action="action.rewards" :disabled="!action.enabled || passed" :key="action.action + '-' + i" />
     </div>
+    <b-modal :id="faction" :title="faction" size="lg">
+      <p class="my-2" v-html="tooltip"> </p>
+    </b-modal>
   </div>
 </template>
 
@@ -145,6 +149,10 @@ export default interface PlayerInfo {
 
   .tiles, .text {
     z-index: 1;
+  }
+
+  .faction-name {
+    cursor: pointer;
   }
 }
 </style>

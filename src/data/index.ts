@@ -8,6 +8,7 @@ export interface ButtonData {
   label?: string;
   command: string;
   tooltip?: string;
+  modal?: string;
   hexes?: HighlightHexData;
   hover?: boolean;
   researchTiles?: string[];
