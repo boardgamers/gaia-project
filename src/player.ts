@@ -25,6 +25,11 @@ const TERRAFORMING_COST = 3;
 // 25 satellites - 2 used on the final scoring board
 const MAX_SATELLITES = 23;
 
+interface FederationCache {
+  federations: FederationInfo[];
+  availableSatellites: number;
+}
+
 export default class Player extends EventEmitter {
   faction: Faction = null;
   board: FactionBoard = null;
@@ -37,6 +42,8 @@ export default class Player extends EventEmitter {
     [Operator.Pass]: [],
     [Operator.Special]: []
   };
+  // To avoid recalculating federations every time
+  federationCache: FederationCache;
   // Did we decline the last offer?
   declined = false;
   // OPTIONAL
@@ -54,11 +61,14 @@ export default class Player extends EventEmitter {
       faction: this.faction,
       data: this.data,
       income: Reward.toString(Reward.merge([].concat(...this.events[Operator.Income].map(event => event.rewards))), true),
+      // TODO: calculate structureValue & structureFedValue client-side
       progress:  Object.assign({}, ...Object.values(FinalTile).map( track => ({ [track]: this.eventConditionCount(finalScorings[track])})), { structureValue: this.eventConditionCount(Condition.StructureValue) }, { structureFedValue: this.eventConditionCount(Condition.StructureFedValue) }),
       actions: this.events[Operator.Activate].map(event => ({rewards: event.spec.replace('=>', '').trim(), enabled: !event.activated})),
       events: this.events,
       name: this.name,
       auth: this.auth,
+      federationCache: this.federationCache,
+      // TODO: Calculate client-side
       ownedPlanets:  _.countBy(this.ownedPlanets, 'data.planet')
     };
   }
@@ -280,6 +290,10 @@ export default class Player extends EventEmitter {
     // excluding Gaiaformers as occupied
     if (building !== Building.GaiaFormer) {
       this.data.occupied = _.uniqWith([].concat(this.data.occupied, hex), _.isEqual);
+
+      // Clear federation cache on new building
+      // TODO do not clear if building already belonged to federation, except ivits
+      this.federationCache = null;
     }
 
     // The mine of the lost planet doesn't grant any extra income
@@ -578,6 +592,16 @@ export default class Player extends EventEmitter {
   }
 
   availableFederations(map: SpaceMap): FederationInfo[] {
+    const maxSatellites = this.maxSatellites;
+
+    if (this.federationCache) {
+      if (maxSatellites <= this.federationCache.availableSatellites) {
+        return this.federationCache.federations.filter(fed => fed.satellites <= maxSatellites);
+      } else {
+        // Only try federations with building combinations not in federationCache.federations
+      }
+    }
+
     const excluded = map.excludedHexesForBuildingFederation(this.player, this.faction);
 
     const hexes = this.data.occupied.map(coord => map.grid.get(coord)).filter(hex => !excluded.has(hex));
@@ -585,7 +609,6 @@ export default class Player extends EventEmitter {
     const values = hexes.map(node => this.buildingValue(node.data.building, node.data.planet, true));
 
     let combinations = this.possibleCombinationsForFederations(_.zipWith(hexes, values, (val1, val2) => ({hex: val1, value: val2})));
-    const maxSatellites = this.maxSatellites;
 
     // Ivits can only expand their first federation
     if (this.faction === Faction.Ivits && this.data.federationCount > 0) {
