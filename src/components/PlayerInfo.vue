@@ -24,7 +24,7 @@
       <SpecialAction v-for="(action, i) in player.actions" :action="action.rewards" :disabled="!action.enabled || passed" :key="action.action + '-' + i" />
     </div>
     <b-modal :id="faction" :title="faction" size="lg">
-      <p class="my-2" v-html="tooltip"> </p>
+      <div v-html="tooltip"> </div>
     </b-modal>
   </div>
 </template>

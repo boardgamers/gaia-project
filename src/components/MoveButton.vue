@@ -4,7 +4,7 @@
       <slot></slot>
     </button>
     <b-modal v-if="button.modal" v-model="modalShow" size="lg" @ok="handleOK" :title="button.label" ok-title="OK, I pick this one!">
-      <p class="my-2"  v-html="button.modal"></p>
+      <div  v-html="button.modal"></div>
     </b-modal>
   </div>
 </template>
