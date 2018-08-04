@@ -207,7 +207,7 @@ export default class Engine {
     Object.assign(engine, _.omit(data, "map", "players"));
     engine.map = SpaceMap.fromData(data.map);
     for (const player of data.players) {
-      engine.addPlayer(Player.fromData(player));
+      engine.addPlayer(Player.fromData(player, engine.map));
     }
 
     for (const hex of engine.map.grid.values()) {

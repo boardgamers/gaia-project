@@ -56,7 +56,7 @@ export default class Player extends EventEmitter {
   }
 
   toJSON() {
-    return {
+    const json = {
       player: this.player,
       faction: this.faction,
       data: this.data,
@@ -67,13 +67,25 @@ export default class Player extends EventEmitter {
       events: this.events,
       name: this.name,
       auth: this.auth,
-      federationCache: this.federationCache,
       // TODO: Calculate client-side
       ownedPlanets:  _.countBy(this.ownedPlanets, 'data.planet')
-    };
+    } as any;
+
+    if (this.federationCache) {
+      json.federationCache = {
+        availableSatellites: this.federationCache.availableSatellites,
+        federations: this.federationCache.federations.map(fedInfo => ({
+          planets: fedInfo.planets,
+          satellites: fedInfo.satellites,
+          hexes: fedInfo.hexes.map(h => h.toString())
+        }))
+      };
+    }
+
+    return json;
   }
 
-  static fromData(data: any) {
+  static fromData(data: any, map: SpaceMap) {
     const player = new Player(data.player);
 
     if (data.faction) {
@@ -90,6 +102,13 @@ export default class Player extends EventEmitter {
 
     player.name = data.name;
     player.auth = data.auth;
+
+    if (data.federationCache) {
+      player.federationCache = data.federationCache;
+      for (const fed of player.federationCache.federations) {
+        fed.hexes = (fed.hexes as any as string[]).map(hex => map.grid.getS(hex));
+      }
+    }
 
     return player;
   }
@@ -654,7 +673,14 @@ export default class Player extends EventEmitter {
       }
     }
 
-    return _.difference(fedsWithInfo, toRemove);
+    const feds = _.difference(fedsWithInfo, toRemove);
+
+    this.federationCache = {
+      availableSatellites: maxSatellites,
+      federations: feds
+    };
+
+    return feds;
   }
 
   get maxSatellites() {
