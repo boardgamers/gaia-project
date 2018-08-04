@@ -412,7 +412,7 @@ export default class Player extends EventEmitter {
     if (Object.values(AdvTechTilePos).includes(pos)) {
       this.data.removeGreenFederation();
     }
-    this.data.tiles.techs.push({tile, pos, enabled: Object.values(TechTilePos).includes(pos)});
+    this.data.tiles.techs.push({tile, pos, enabled: true});
     this.loadEvents(Event.parse(techs[tile]));
   }
 

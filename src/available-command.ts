@@ -538,14 +538,11 @@ export function possibleLeech(engine: Engine, player: Player) {
 export function possibleCoverTechTiles(engine: Engine, player: Player) {
   const commands = [];
 
-  const tiles = engine.player(player).data.tiles.techs.filter(tl => tl.enabled);
+  const tiles = engine.player(player).data.tiles.techs.filter(tl => tl.enabled && Object.values(TechTilePos).includes(tl.pos));
   commands.push({
     name: Command.ChooseCoverTechTile,
     player,
-    data: {tiles: tiles.map(tech => ({
-      tile: tech.tile,
-      pos: Object.values(TechTilePos).find(pos => engine.tiles.techs[pos].tile === tech.tile)
-    }))}
+    data: {tiles}
   });
 
   return commands;
