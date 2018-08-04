@@ -67,6 +67,7 @@ app.post("/g/", (req, res) => {
     engine.generateAvailableCommands();
 
     games[gameId] = JSON.parse(JSON.stringify(engine));
+    Object.assign(games[gameId], {lastUpdated: Date.now()});
 
     res.sendStatus(200);
   } catch (err) {
@@ -108,6 +109,7 @@ app.post("/g/:gameId/join", (req , res) => {
       break;
     }
   }
+  Object.assign(game, {lastUpdated: Date.now()});
 
   res.sendStatus(200);
 });
@@ -131,13 +133,7 @@ app.get("/g/:gameId/status", (req , res) => {
     return;
   }
 
-  const {round, phase, availableCommands} = games[gameId];
-
-  if (availableCommands && availableCommands.length > 0) {
-    res.json({round, phase, player: availableCommands[0].player});
-  } else {
-    res.json({round, phase});
-  }
+  return _.pick(games[gameId], "lastUpdated");
 });
 
 app.post("/g/:gameId/move", (req , res) => {
@@ -173,6 +169,7 @@ app.post("/g/:gameId/move", (req , res) => {
 
     if (engine.newTurn) {
       games[gameId] = JSON.parse(JSON.stringify(engine));
+      Object.assign(game, {lastUpdated: Date.now()});
     }
   } catch (err) {
     console.error(err);
