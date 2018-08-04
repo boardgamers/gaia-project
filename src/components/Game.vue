@@ -175,7 +175,7 @@ export default class Game extends Vue {
   }
 
   updateFavicon() {
-    if (this.canPlay || this.ended) {
+    if (this.canPlay) {
       $("#favicon-gp").attr("href", "/favicon-active.png");
     } else {
       $("#favicon-gp").attr("href", "/favicon.png");
@@ -192,7 +192,7 @@ export default class Game extends Vue {
    * Check if we need to refresh the whole game
    */
   refreshStatus() {
-    if (this.canPlay) {
+    if (this.canPlay || this.ended) {
       return;
     }
 
