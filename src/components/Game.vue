@@ -84,7 +84,7 @@ import { GameApi } from '../api';
       return turnOrder.concat(data.passedPlayers).map(player => data.players[player]);
     },
     canPlay() {
-      return !this.gameId || this.player !== undefined && this.data.players[this.player].auth === this.auth;
+      return !this.ended && !this.gameId || this.player !== undefined && this.data.players[this.player].auth === this.auth;
     },
     player() {
       return this.data.availableCommands.length > 0 ? this.data.availableCommands[0].player : undefined;
