@@ -1,9 +1,11 @@
 <template>
   <div>
     <div class="row justify-content-center">
-      <SpaceMap class="pr-3 mr-3" height="450" />
-      <ResearchBoard height="450" />
-      <ScoringBoard class="ml-4" height="450" />
+      <SpaceMap height="450" />
+      <svg height="450" viewBox="0 0 500 450">
+        <ResearchBoard height="450" width="380" x="0"/>
+        <ScoringBoard class="ml-4" height="450" width="90" x="405" />
+      </svg>
     </div>
     <div id="errors"></div>
     <div class="row mt-2">
@@ -38,7 +40,7 @@
                 <button class="btn btn-primary" type="button" @click="addMove(currentMove)">Send</button>
               </div>
             </div>
-            <div class="form-group mt-2">
+            <div class="form-group mt-2 d-none d-md-block">
               <label for="moves">Move log</label>
               <textarea class="form-control" rows="4" id="moves" v-model="moveList"></textarea>
             </div> 

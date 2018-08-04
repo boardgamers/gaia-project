@@ -1,5 +1,5 @@
 <template>
-  <svg :viewBox="`-11.5 -11.5 ${right} 24`">
+  <svg :viewBox="`-13 -11.5 ${right} 24`">
     <SpaceHex v-for="hex in map" :key="`${hex.q}x${hex.r}`" :transform="`translate(${center(hex).x}, ${center(hex).y})`" :hex="hex" />
   </svg>
 </template>
@@ -18,7 +18,7 @@ import SpaceHex from './SpaceHex.vue';
       return this.$store.state.gaiaViewer.data.map
     },
     right() {
-      return (this.$store.state.gaiaViewer.data.players || []).length > 2 ? 31 : 24;
+      return (this.$store.state.gaiaViewer.data.players || []).length > 2 ? 33.5 : 26;
     }
   },
   components: {
