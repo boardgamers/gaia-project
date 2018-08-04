@@ -126,6 +126,8 @@ export default class Game extends Vue {
   name = "";
   lastUpdated = null;
   refresher = undefined;
+  // When refreshing status, count the number of times the status is the same
+  refreshCount = 0;
 
   @Prop()
   api: GameApi;
@@ -196,8 +198,22 @@ export default class Game extends Vue {
       return;
     }
 
+    this.refreshCount += 1;  
+
+    if (this.refreshCount >= 3600/3) {
+      // more than an hour without changes, only check every minute
+      if (this.refreshCount % 20 !== 0) return;
+    } else if (this.refreshCount >= 600/3) {
+      // more than 10 minutes without change, only check every 20 seconds
+      if (this.refreshCount % 6 !== 0) return;
+    } else if (this.refreshCount >= 300/3) {
+      // more than 5 minutes without change, only check every 10 seconds
+      if (this.refreshCount % 3 !== 0) return;
+    }
+
     this.api.checkStatus(this.gameId).then(data => {
       if (data.lastUpdated !== this.lastUpdated) {
+        this.refreshCount = 0;
         this.lastUpdated = data;
         this.loadGame();
       }
