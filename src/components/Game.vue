@@ -175,7 +175,7 @@ export default class Game extends Vue {
   }
 
   updateFavicon() {
-    if (this.canPlay) {
+    if (this.canPlay || this.ended) {
       $("#favicon-gp").attr("href", "/favicon-active.png");
     } else {
       $("#favicon-gp").attr("href", "/favicon.png");
@@ -262,7 +262,8 @@ export default interface Game {
   data: Data;
   player: number;
 
-  canPlay(): boolean;
+  canPlay: boolean;
+  ended: boolean;
 }
 </script>
 
