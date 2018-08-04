@@ -22,8 +22,8 @@
       </div>
       <div class="col-md-6 order-1 order-md-2" id="move-panel">
         <span v-if="ended"><b>Game ended!</b></span>
-        <Commands @command="handleCommand" v-else-if="canPlay" />
-        <div v-else-if="data.players[player]">Waiting for {{data.players[player].name}} to play.<br/> <button class="btn btn-default mt-2" @click="loadGame(gameId)">Refresh</button></div>
+        <Commands @command="handleCommand" @undo="undoMove" v-else-if="canPlay" />
+        <div v-else-if="data.players[player]">Waiting for {{data.players[player].name}} to play.<br/> <button class="btn btn-default mt-2" @click="loadGame()">Refresh</button></div>
         <div>
           <form id="move-form" @submit.prevent="submit">
             <label for="current-move" v-if="canPlay">Current Move</label>
@@ -224,13 +224,25 @@ export default class Game extends Vue {
     }
   }
 
+  undoMove() {
+    if (this.currentMove.includes(".")) {
+      this.currentMove = this.currentMove.slice(0, this.currentMove.lastIndexOf("."));
+    } else {
+      this.currentMove = "";
+    }
+    this.addMove(this.currentMove);
+  }
+
   addMove(command: string) {
+    this.$store.commit("gaiaViewer/clearContext");
     if (this.gameId) {
-      this.$store.commit("gaiaViewer/clearContext");
-      this.api.addMove(this.gameId, command).then(data => this.handleData(data), this.handleError.bind(this));
+      if (command) {
+        this.api.addMove(this.gameId, command).then(data => this.handleData(data), this.handleError.bind(this));
+      } else {
+        this.loadGame();
+      }
     } else {
       this.moveList = (this.moveList.trim() + "\n" + command).trim();
-      this.currentMove = "";
 
       this.replay();
     }

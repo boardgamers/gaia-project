@@ -6,6 +6,7 @@
         <span v-else>
           {{[player, ...titles].join(' - ')}}
           <a href="#" v-if="commandChain.length > 0" class="smaller small" @click.prevent="back()">(back)</a>
+          <a href="#" v-else-if="canUndo" class="smaller small" @click.prevent="undo()">(undo)</a>
         </span>
       </h5>
     </div>
@@ -48,6 +49,11 @@ import { factionDesc } from '../data/factions';
   methods: {
     tooltip(faction: Faction) {
       return factionDesc(faction);
+    }
+  },
+  computed: {
+    canUndo() {
+      return !this.$store.state.gaiaViewer.data.newTurn;
     }
   },
   components: {
@@ -135,6 +141,10 @@ export default class Commands extends Vue {
     } else {
       this.$emit("command", `${this.playerSlug} ${[...this.commandChain, command].join(' ')}`);
     }
+  }
+
+  undo() {
+    this.$emit("undo");
   }
 
   title(title: string) {
