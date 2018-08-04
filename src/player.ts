@@ -306,13 +306,28 @@ export default class Player extends EventEmitter {
 
   build(building: Building, hex: GaiaHex, cost: Reward[], map: SpaceMap, stepsReq?: number) {
     this.payCosts(cost);
+    const wasOccupied = this.data.occupied.includes(hex);
     // excluding Gaiaformers as occupied
     if (building !== Building.GaiaFormer) {
-      this.data.occupied = _.uniqWith([].concat(this.data.occupied, hex), _.isEqual);
+      if (!wasOccupied) {
+        this.data.occupied.push(hex);
+        // Clear federation cache on new building
+        this.federationCache = null;
+      }
 
-      // Clear federation cache on new building
-      // TODO do not clear if building already belonged to federation, except ivits
-      this.federationCache = null;
+
+      if (this.federationCache) {
+        assert(wasOccupied, "logic error");
+
+        if (this.buildingValue(hex.buildingOf(this.player), hex.data.planet, true) === this.buildingValue(building, hex.data.planet, true)) {
+          // No need to clear federation cache, when the building value remains the same
+        } else if (!hex.belongsToFederationOf(this.player)) {
+          this.federationCache = null;
+        } else if (this.faction === Faction.Ivits) {
+          // Ivits can build a federation with existing federation buildings
+          this.federationCache = null;
+        }
+      }
     }
 
     // The mine of the lost planet doesn't grant any extra income
