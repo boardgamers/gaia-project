@@ -247,11 +247,12 @@ describe("Engine", () => {
     expect(() => new Engine(moves)).to.not.throw();
   });
 
-  it("should handle this full 2 player game with lost planet", () => {
+  it("should handle this full 2 player game", function() {
+    this.timeout(10000);
     const engine = new Engine(fullGame());
 
-    expect(engine.player(Player.Player1).data.victoryPoints).to.equal(27);
-    expect(engine.player(Player.Player2).data.victoryPoints).to.equal(23);
+    expect(engine.player(Player.Player1).data.victoryPoints).to.equal(106);
+    expect(engine.player(Player.Player2).data.victoryPoints).to.equal(106);
   });
 
   it ("should be able to load/save state", function() {
@@ -483,84 +484,158 @@ function parseMoves(moves: string) {
 
 function fullGame() {
   return parseMoves(`
-    init 2 randomSeed
-    p1 faction terrans
-    p2 faction gleens
-    p1 build m -1x2
-    p2 build m -2x2
-    p2 build m -5x5
-    p1 build m -3x4
-    p2 booster booster5
-    p1 booster booster3
-    p1 up gaia.
-    p2 special range+3. build m 1x0.
-    p1 charge 1pw
-    p1 build ts -3x4.
-    p2 charge 1pw
-    p2 build ts -5x5.
-    p1 decline
-    p1 build lab -3x4. tech free2. up gaia.
-    p2 charge 2pw
-    p2 build lab -5x5. tech free2. up nav.
-    p1 decline
-    p1 build gf -2x3.
-    p2 up nav.
-    p1 build ts -1x2.
-    p2 action power3.
-    p1 special 4pw.
-    p2 special 4pw.
-    p1 action power5.
-    p2 build ts -2x2.
-    p1 decline
-    p1 build gf -3x1.
-    p2 build m 1x2.
-    p1 charge 2pw
-    p1 pass booster4
-    p2 pass booster3
-    p1 special 4pw.
-    p2 special 4pw.
-    p1 up terra.
-    p2 action power5.
-    p1 action power3.
-    p2 up nav.
-    p1 build PI -1x2.
-    p2 charge 2pw
-    p2 spend 1pw for 1c. build PI -2x2.
-    p1 decline
-    p1 build m -2x3.
-    p2 decline
-    p2 federation -1x1,-2x2,-3x3,-4x4,-5x5,0x1,0x2,1x0,1x2 fed4. spend 1o for 1t.
-    p1 build gf -5x6.
-    p2 spend 1k for 1c. build ts 1x0.
-    p1 charge 3pw
-    p1 spend 3pw for 1o. burn 1. spend 3pw for 1o. build ts -2x3.
-    p2 charge 2pw
-    p2 spend 2pw for 2c. pass booster7
-    p1 federation -1x2,-2x3,-3x4 fed6.
-    p1 pass booster5
-    p1 income 1t
-    p1 spend 4tg for 1q
-    p2 build lab 1x0. tech free3. up nav. lostPlanet 1x-4. spend 1pw for 1c. spend 1pw for 1c.
-    p1 charge 3pw
-    p1 up terra.
-    p2 special 4pw. spend 1pw for 1c. spend 1pw for 1c.
-    p1 build m -3x1.
-    p2 charge 3pw
-    p2 spend 1pw for 1c. spend 1o for 1t. pass booster3
-    p1 special 4pw.
-    p1 action power3.
-    p1 special range+3. build gf 0x4.
-    p1 spend 1pw for 1c. build m -5x6.
-    p2 charge 2pw
-    p1 burn 1. spend 2pw for 2c. build m -4x6.
-    p2 decline
-    p1 pass booster8
-    p1 income 4pw
-    p1 spend 4tg for 1k
-    p2 spend 1o for 1t. special 4pw.
-    p1 up terra.
-    p2 action power3.
-    p1 build m 0x4.
-    p2 charge 1pw
+    init 2 djfjjv4k
+    p1 faction geodens
+    p2 faction itars
+    geodens build m 1x-1
+    itars build m 1x-2
+    itars build m -6x2
+    geodens build m 0x4
+    itars booster booster4
+    geodens booster booster1
+    geodens build ts 1x-1.
+    itars charge 1pw
+    itars special step. build m -6x1.
+    geodens build lab 1x-1. tech free1. up eco.
+    itars charge 1pw
+    itars build ts 1x-2.
+    geodens charge 2pw
+    geodens build m 2x-3.
+    itars charge 2pw
+    itars build lab 1x-2. tech int. up int.
+    geodens charge 2pw
+    geodens up eco.
+    itars special 4pw.
+    geodens build ts 2x-3.
+    itars charge 2pw
+    itars up gaia.
+    geodens pass booster5
+    itars build gf 4x-3.
+    itars pass booster3
+    geodens build PI 2x-3.
+    itars charge 2pw
+    itars special 4pw.
+    geodens action power6. build m 0x5.
+    itars build m 4x-3.
+    geodens charge 3pw
+    geodens up eco.
+    itars build m -3x-2.
+    geodens action power3.
+    itars build ts 4x-3.
+    geodens charge 3pw
+    geodens pass booster4
+    itars build gf -1x-2.
+    itars pass booster5
+    geodens income 1t
+    itars income 1t
+    geodens spend 4pw for 1q. special step. build m -1x0.
+    itars charge 2pw
+    itars special 4pw.
+    geodens up terra.
+    itars action power4.
+    geodens build ts -1x0.
+    itars charge 2pw
+    itars build PI 4x-3.
+    geodens charge 3pw
+    geodens build lab -1x0. tech int. up int.
+    itars charge 2pw
+    itars burn 4. action power3.
+    geodens special 4pw.
+    itars special range+3. build m 5x-7.
+    geodens spend 1pw for 1c. spend 1pw for 1c. spend 1pw for 1c. pass booster1
+    itars up int.
+    itars build m -1x-2.
+    geodens charge 2pw
+    itars build gf -3x0.
+    itars pass booster10
+    geodens income 1t
+    itars income 1t. income 1t
+    itars spend 4tg for tech. tech free1. up terra. spend 4tg for tech. tech terra. up terra
+    geodens action power2. build m 4x-2.
+    itars decline
+    itars special 4pw.
+    geodens up terra.
+    itars action power4.
+    geodens build ts 4x-2.
+    itars decline
+    itars build m -3x0.
+    geodens charge 2pw
+    geodens special 4pw.
+    itars build ts -3x0.
+    geodens charge 1pw
+    geodens spend 4pw for 1q. action power6. build m -3x-1.
+    itars decline
+    itars build lab -3x0. tech free2. up int.
+    geodens charge 2pw
+    geodens federation 1x-1,2x-2,2x-3,3x-2,4x-2 fed4.
+    itars federation -1x-2,0x-2,1x-2,2x-2,3x-2,4x-3 fed3.
+    geodens up eco.
+    itars pass booster3
+    geodens build lab 4x-2. tech adv-eco. cover int. up terra.
+    itars charge 4pw
+    geodens pass booster5
+    itars income 1pw. income 1t. income 1t
+    geodens income 1t
+    itars action power4.
+    geodens spend 4pw for 1q. special range+3. build m -4x2.
+    itars decline
+    itars up int.
+    geodens up nav.
+    itars build m 4x-5.
+    geodens charge 3pw
+    geodens up nav.
+    itars build m -3x4.
+    geodens action power6. build m -2x5.
+    itars charge 1pw
+    itars special 4pw.
+    geodens build m -4x6.
+    itars charge 1pw
+    itars burn 1. action power3.
+    geodens build m 0x1.
+    itars build ac2 -3x0. tech free3. up int.
+    geodens charge 2pw
+    geodens pass booster4
+    itars action qic2. fedtile fed3.
+    itars special q.
+    itars build m 5x-1.
+    geodens decline
+    itars up terra.
+    itars build gf 4x0.
+    itars pass booster10
+    geodens income 1t
+    itars income 1t. income 1t
+    itars spend 4tg for tech. tech gaia. up gaia
+    geodens action power2. build m -1x3.
+    itars charge 1pw
+    itars special 4pw.
+    geodens federation -1x0,-1x1,-1x2,-1x3,-1x4,-2x5,0x1,0x4,0x5 fed5.
+    itars special q.
+    geodens build ts -4x2.
+    itars decline
+    itars federation -3x-2,-3x0,-4x-1,-4x0,-5x1,-6x1,-6x2 fed2.
+    geodens up terra.
+    itars action qic2. fedtile fed2.
+    geodens up nav.
+    itars build ts 5x-1.
+    geodens charge 2pw
+    geodens build ts -3x-1.
+    itars charge 3pw
+    itars action power3.
+    geodens up eco.
+    itars build lab 5x-1. tech adv-int. cover gaia. up gaia.
+    geodens action power7.
+    itars build m 4x0.
+    geodens decline
+    geodens special step. build m -7x4.
+    itars charge 1pw
+    itars spend 1pw for 1c. build ts 4x0.
+    geodens decline
+    geodens build ts -7x4.
+    itars charge 1pw
+    itars burn 1. spend 1pw for 1c. spend 1pw for 1c. build m 3x0.
+    geodens decline
+    geodens spend 1pw for 1c. spend 1pw for 1c. federation -3x-1,-4x0,-4x1,-4x2,-4x3,-4x4,-4x5,-4x6,-5x3,-6x3,-7x4 fed4.
+    itars pass
+    geodens pass
   `);
 }
