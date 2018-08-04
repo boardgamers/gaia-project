@@ -54,7 +54,11 @@ export default class MoveButton extends Vue {
   }
 
   handleClick() {
-    if (this.button.hexes && !this.button.hover && !this.button.selectHexes) {
+    // Remove highglights caused by another button
+    if (!this.isActiveButton) {
+      this.$store.commit("gaiaViewer/clearContext");
+    }
+    if (this.button.hexes && !this.button.selectHexes && !this.button.hover) {
       this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
       this.subscribe('hexClick', hex => this.emitCommand(`${hex.q}x${hex.r}`));
     } else if (this.button.researchTiles) {
@@ -95,6 +99,10 @@ export default class MoveButton extends Vue {
         this.$store.commit("gaiaViewer/highlightHexes", new Map([...keys.map(key => [key, null])] as any));
       });
     } else {
+      // Keep hexes highlighted for next command (federation tile)
+      if (this.button.hexes && this.button.hover) {
+        this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
+      }
       this.emitCommand();
     }
   }

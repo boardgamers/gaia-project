@@ -5,6 +5,7 @@
         <span v-if="init">Pick the number of players</span>
         <span v-else>
           {{[player, ...titles].join(' - ')}}
+          <a href="#" v-if="commandChain.length > 0" class="smaller small" @click.prevent="back()">(back)</a>
         </span>
       </h5>
     </div>
@@ -58,6 +59,7 @@ export default class Commands extends Vue {
     this.commandTitles = [];
     this.customButtons = [];
     this.commandChain = [];
+    this.buttonChain = [];
 
     for (const command of val) {
       if (command.name === Command.ChooseFaction) {
@@ -123,6 +125,7 @@ export default class Commands extends Vue {
     if (source.button.buttons && source.button.buttons.length > 0 && !final) {
       this.commandTitles.push(source.button.label);
       this.commandChain.push(source.button.command);
+      this.buttonChain.push(source.button);
       this.customButtons = source.button.buttons;
 
       return;
@@ -390,9 +393,28 @@ export default class Commands extends Vue {
     return ret;
   }
 
+  back() {
+    this.$store.commit("gaiaViewer/clearContext");
+    this.commandChain.pop();
+    this.commandTitles.pop();
+    this.buttonChain.pop();
+
+    if (this.buttonChain.length > 0) {
+      const [last] = this.buttonChain.slice(-1);
+      this.customButtons = last.buttons; 
+
+      for (const button of last.buttons) {
+        button.hide = false;
+      }
+    } else {
+      this.customButtons = [];
+    }
+  }
+
   private commandTitles: string[] = [];
   private customButtons: ButtonData[] = [];
   private commandChain: string[] = [];
+  private buttonChain: ButtonData[] = [];
 }
 
 </script>
