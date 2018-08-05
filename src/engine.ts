@@ -1024,6 +1024,10 @@ export default class Engine {
 
     pl.formFederation(fedInfo, federation);
     this.tiles.federations[federation] -= 1;
+
+    // reset federationCache
+    pl.federationCache = null;
+    pl.availableFederations(this.map);
   }
 
   [Command.PISwap](player: PlayerEnum, location: string) {
