@@ -732,6 +732,7 @@ export default class Player extends EventEmitter {
     this.data.satellites += newSatellites;
     this.gainFederationToken(token);
     this.data.federationCount += 1;
+    this.federationCache = null;
   }
 
   checkAndGetFederationInfo(location: string, map: SpaceMap): FederationInfo {
