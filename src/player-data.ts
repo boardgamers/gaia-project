@@ -223,6 +223,9 @@ export default class PlayerData extends EventEmitter {
     let brainstoneUsage = 0;
     let brainstonePos = this.brainstone;
 
+    // needed to avoid wrong usage of  the brainstone
+    if (power === 0) { return 0; }
+
     if (brainstonePos === BrainstoneArea.Area1) {
       if (this.followBrainStoneHeuristics || this.power.area1 < power) {
         brainstoneUsage += 1;
