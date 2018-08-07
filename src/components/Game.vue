@@ -12,16 +12,13 @@
       <div class="col-md-6 order-2 order-md-1">
         <div v-if="sessionPlayer === undefined">
           <PlayerInfo :player='orderedPlayers[0]'/>
-          <div>
-            {{turnOrderDesc}} 
-          </div>
           <PlayerInfo v-for="player in orderedPlayers.slice(1)" :player='player' :key="player.player" />
         </div>
         <div v-else>
           <PlayerInfo :player='sessionPlayer'/>
-          <div>
+          <div v-if="data.players.length > 2" class="turn order">
             {{turnOrderDesc}} 
-          </div>   
+          </div>
           <PlayerInfo v-for="player in orderedPlayers.filter(pl => pl !== sessionPlayer)" :player='player' :key="player.player" />
         </div>
         <Pool />
@@ -320,6 +317,10 @@ canvas#map {
   border: solid dodgerblue 1px; 
   width: 100%;
   height: 450px;
+}
+
+.turnorder {
+  margin-bottom: 1em;
 }
 
 </style>
