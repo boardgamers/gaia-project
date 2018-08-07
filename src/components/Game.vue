@@ -90,8 +90,16 @@ import { GameApi } from '../api';
       return turnOrder.concat(data.passedPlayers).map(player => data.players[player]);
     },
     turnOrderDesc() {
-      const {players, passedPlayers} = this.data;
-      const desc= pl => passedPlayers.includes(pl.player) ? `${players[pl.player].faction} (passed)` : players[pl.player].faction;
+      let {players, passedPlayers} = this.data;
+      
+      players = players.filter(pl => !!pl.faction);
+      passedPlayers = passedPlayers || [];
+
+      if (players.length === 0 && passedPlayers.length === 0) {
+        return;
+      }
+      
+      const desc = pl => passedPlayers.includes(pl.player) ? `${players[pl.player].faction} (passed)` : players[pl.player].faction;
       return "Turn order: " + this.orderedPlayers.map(desc).join(", ");
     },
     canPlay() {
