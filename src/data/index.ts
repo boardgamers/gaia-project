@@ -1,4 +1,4 @@
-import {Player, AdvTechTile, TechTile, TechTilePos, ScoringTile, FinalTile, AvailableCommand, GaiaHex, AdvTechTilePos, Booster, Federation, Phase} from "@gaia-project/engine";
+import {Player, PlayerEnum, TechTile, TechTilePos, ScoringTile, FinalTile, AvailableCommand, GaiaHex, AdvTechTilePos, Booster, Federation, Phase} from "@gaia-project/engine";
 
 export interface AugmentedPlayer extends Player {
   progress: {[key in FinalTile]: number};
@@ -28,6 +28,7 @@ export interface Data {
   map: MapData,
   availableCommands: AvailableCommand[];
   players: AugmentedPlayer[];
+  passedPlayers: PlayerEnum[];
   round: number;
   phase: Phase;
   tiles: {

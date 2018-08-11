@@ -60,7 +60,7 @@ import PlayerInfo from './PlayerInfo.vue';
 import ResearchBoard from './ResearchBoard.vue';
 import ScoringBoard from './ScoringBoard.vue';
 import Pool from './Pool.vue';
-import { Command, Phase } from '@gaia-project/engine';
+import { Command, Phase, factions } from '@gaia-project/engine';
 import { GameApi } from '../api';
 
 @Component<Game>({
@@ -87,17 +87,7 @@ import { GameApi } from '../api';
       return turnOrder.concat(data.passedPlayers).map(player => data.players[player]);
     },
     turnOrderDesc() {
-      let {players, passedPlayers} = this.data;
-      
-      players = players.filter(pl => !!pl.faction);
-      passedPlayers = passedPlayers || [];
-
-      if (players.length === 0 && passedPlayers.length === 0) {
-        return;
-      }
-      
-      const desc = pl => passedPlayers.includes(pl.player) ? `${players[pl.player].faction} (passed)` : players[pl.player].faction;
-      return "Turn order: " + this.orderedPlayers.map(desc).join(", ");
+      return "Turn order: " + this.orderedPlayers.map(this.desc).filter(desc => !!desc).join(", ");
     },
     canPlay() {
       return !this.ended && !this.gameId || this.player !== undefined && this.data.players[this.player].auth === this.auth;
@@ -190,6 +180,20 @@ export default class Game extends Vue {
 
     this.updateFavicon();
     this.updateMoveList();
+  }
+
+  desc(player: number) {
+    const pl = this.data.players[player];
+
+    if (!pl.faction) {
+      return pl.name;
+    }
+
+    if (this.data.passedPlayers.includes(player)) {
+      return `${factions[pl.faction].name} (passed)`
+    }
+
+    return factions[pl.faction].name;
   }
 
   updateFavicon() {
