@@ -16,7 +16,7 @@
         </div>
         <div v-else>
           <PlayerInfo :player='sessionPlayer'/>
-          <div v-if="data.players.length > 2" class="turn order">
+          <div v-if="data.players.length > 2" class="turn-order">
             {{turnOrderDesc}} 
           </div>
           <PlayerInfo v-for="player in orderedPlayers.filter(pl => pl !== sessionPlayer)" :player='player' :key="player.player" />
@@ -321,7 +321,7 @@ canvas#map {
   height: 450px;
 }
 
-.turnorder {
+.turn-order {
   margin-bottom: 1em;
 }
 
