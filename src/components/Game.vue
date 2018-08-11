@@ -187,7 +187,7 @@ export default class Game extends Vue {
       return pl.name;
     }
 
-    if (this.data.passedPlayers.includes(pl.player)) {
+    if (this.data.passedPlayers && this.data.passedPlayers.includes(pl.player)) {
       return `${factions[pl.faction].name} (passed)`
     }
 
