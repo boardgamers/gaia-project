@@ -53,7 +53,7 @@
 import * as $ from 'jquery';
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
-import { Data } from '../data';
+import { Data, AugmentedPlayer } from '../data';
 import Commands from './Commands.vue';
 import SpaceMap from './SpaceMap.vue';
 import PlayerInfo from './PlayerInfo.vue';
@@ -87,7 +87,7 @@ import { GameApi } from '../api';
       return turnOrder.concat(data.passedPlayers).map(player => data.players[player]);
     },
     turnOrderDesc() {
-      return "Turn order: " + this.orderedPlayers.map(this.desc).filter(desc => !!desc).join(", ");
+      return "Turn order: " + this.orderedPlayers.map(pl => this.desc(pl)).filter(desc => !!desc).join(", ");
     },
     canPlay() {
       return !this.ended && !this.gameId || this.player !== undefined && this.data.players[this.player].auth === this.auth;
@@ -182,14 +182,12 @@ export default class Game extends Vue {
     this.updateMoveList();
   }
 
-  desc(player: number) {
-    const pl = this.data.players[player];
-
+  desc(pl: AugmentedPlayer) {
     if (!pl.faction) {
       return pl.name;
     }
 
-    if (this.data.passedPlayers.includes(player)) {
+    if (this.data.passedPlayers.includes(pl.player)) {
       return `${factions[pl.faction].name} (passed)`
     }
 
