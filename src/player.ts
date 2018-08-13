@@ -618,8 +618,8 @@ export default class Player extends EventEmitter {
       case Condition.Structure: return this.data.occupied.filter(hex => hex.colonizedBy(this.player)).length;
       case Condition.StructureFed: return this.data.occupied.filter(hex => hex.colonizedBy(this.player) && hex.belongsToFederationOf(this.player)).length;
       case Condition.Satellite: return this.data.satellites + this.data.buildings[Building.SpaceStation];
-      case Condition.StructureValue: return _.sum(this.data.occupied.map(hex => this.buildingValue(hex.buildingOf(this.player), hex.data.planet, false)));
-      case Condition.StructureFedValue: return _.sum(this.data.occupied.map(hex => hex.belongsToFederationOf(this.player) ? this.buildingValue(hex.buildingOf(this.player), hex.data.planet, false) : 0 ));
+      case Condition.StructureValue: return _.sum(this.data.occupied.map(hex => this.buildingValue(hex.buildingOf(this.player), hex.data.planet, true)));
+      case Condition.StructureFedValue: return _.sum(this.data.occupied.map(hex => hex.belongsToFederationOf(this.player) ? this.buildingValue(hex.buildingOf(this.player), hex.data.planet, true) : 0 ));
     }
 
     return 0;
