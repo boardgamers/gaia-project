@@ -251,7 +251,7 @@ describe("Engine", () => {
     this.timeout(10000);
     const engine = new Engine(fullGame());
 
-    expect(engine.player(Player.Player1).data.victoryPoints).to.equal(106);
+    expect(engine.player(Player.Player1).data.victoryPoints).to.equal(112);
     expect(engine.player(Player.Player2).data.victoryPoints).to.equal(106);
   });
 
@@ -476,7 +476,68 @@ describe("Engine", () => {
     engine.move('terrans action power2. build m -5x5.');
     expect(  engine.player(Player.Player1).eventConditionCount(Condition.StructureFed) ).to.be.equal(structure + 1 );
   });
+
+  it ("should give step vps", () => {
+    const moves = parseMoves(`
+      init 2 SGAMBATA
+      p1 faction nevlas
+      p2 faction terrans
+      nevlas build m -4x0
+      terrans build m -3x-2
+      terrans build m 1x-1
+      nevlas build m 3x3
+      terrans booster booster9
+      nevlas booster booster5
+      nevlas build ts -4x0.
+      terrans charge 1pw
+      terrans build ts -3x-2.
+      nevlas charge 2pw
+      nevlas build PI -4x0.
+      terrans charge 2pw
+      terrans build PI -3x-2.
+      nevlas charge 3pw
+      nevlas special range+3. build m -1x-3.
+      terrans charge 3pw
+      terrans up terra.
+      nevlas action power5.
+      terrans action power4.
+      nevlas action power3.
+      terrans build ts 1x-1.
+      nevlas pass booster3
+      terrans spend 1pw for 1c. spend 1pw for 1c. build gf 1x-2.
+      terrans pass booster8
+      nevlas income 4pw
+      terrans income 1t
+      terrans spend 3tg for 1o. spend 3tg for 1o
+      nevlas up nav.
+      terrans build lab 1x-1. tech free3. up terra.
+      nevlas up nav.
+      terrans build m 1x-2.
+      nevlas build m 3x-4.
+      terrans charge 1pw
+      terrans action power5.
+      nevlas build m 5x-4.
+      terrans build gf -4x-2.
+      nevlas build m 1x3.
+      terrans up terra.
+      nevlas burn 1. action power4.
+      terrans spend 1pw for 1c. pass booster5
+      nevlas pass booster9
+      terrans income 1t
+      nevlas income 4pw. income 4pw
+      terrans spend 3tg for 1o. spend 3tg for 1o
+      terrans action power5.
+    `);
+    const engine = new Engine(moves);
+    const vps = engine.player(Player.Player1).data.victoryPoints;
+    engine.move('nevlas action power6. build m -1x3.');
+    expect(  engine.player(Player.Player1).data.victoryPoints ).to.be.equal(vps + 2 );
+    expect(  engine.player(Player.Player1).data.temporaryStep ).to.be.equal(0 );
+  });
 });
+
+
+
 
 function parseMoves(moves: string) {
   return Engine.parseMoves(moves);

@@ -179,8 +179,8 @@ export default class Player extends EventEmitter {
           // Already a gaia-former on the planet, so no need to pay a Q.I.C.
         }
       } else { // Get the number of terraforming steps to pay discounting terraforming track
-        steps = Math.max(terraformingStepsRequired(factions[this.faction].planet, targetPlanet) - this.data.temporaryStep, 0);
-        addedCost.push(new Reward((TERRAFORMING_COST - this.data.terraformCostDiscount) * steps, Resource.Ore));
+        steps = terraformingStepsRequired(factions[this.faction].planet, targetPlanet);
+        addedCost.push(new Reward((TERRAFORMING_COST - this.data.terraformCostDiscount) * Math.max(steps - this.data.temporaryStep, 0), Resource.Ore));
       }
     }
 
