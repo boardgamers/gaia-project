@@ -61,4 +61,38 @@ describe('Ivits', () => {
     // 1 qic discarded (satellite) & one gained (federation tile)
     expect(engine.player(Player.Player1).data.qics).to.equal(qic - 1 + 1);
   });
+
+  it ("should be able to build a federation using using PA->4pw", () => {
+    const moves = parseMoves(`
+      init 2 waiting-fabs-1
+      p1 faction baltaks
+      p2 faction ivits
+      baltaks build m 0x-4
+      baltaks build m -4x4
+      ivits build PI 2x-5
+      ivits booster booster9
+      baltaks booster booster3
+      ivits income 4pw. income 4pw
+      baltaks build ts 0x-4.
+      ivits charge 2pw
+      ivits special space-station. build sp 3x-6.
+      baltaks up gaia.
+      ivits action power6. build m 4x-6.
+      baltaks build lab 0x-4. tech free1. up gaia.
+      ivits charge 3pw
+      ivits action power4.
+      baltaks build ts -4x4.
+      ivits build ts 4x-6.
+      baltaks pass booster1
+      ivits up terra.
+      ivits build lab 4x-6. tech free3. up terra.
+      ivits spend 1o for 1c
+    `);
+
+    const engine = new Engine(moves);
+
+    expect(engine.player(Player.Player2).federationCache.federations.length).to.equal(1);
+
+  });
+
 });

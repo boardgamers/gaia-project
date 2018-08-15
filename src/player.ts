@@ -414,6 +414,9 @@ export default class Player extends EventEmitter {
     }
     this.data.tiles.techs.push({tile, pos, enabled: true});
     this.loadEvents(Event.parse(techs[tile]));
+
+    // resets federationCache if Special PA->4pw
+    if ( tile === TechTile.Tech3  ) { this.federationCache = null; }
   }
 
   coverTechTile(pos: TechTilePos) {
