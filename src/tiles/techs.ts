@@ -1,4 +1,4 @@
-import { TechTile, AdvTechTile, Operator } from "../enums";
+import { TechTile, AdvTechTile, Operator, TechTilePos, AdvTechTilePos } from "../enums";
 
 export default  {
   [TechTile.Tech1]: ["o,q"],
@@ -26,3 +26,8 @@ export default  {
   [AdvTechTile.AdvTech14]: ["m >> 3vp"],
   [AdvTechTile.AdvTech15]: ["ts >> 3vp"]
 };
+
+
+export function isAdvanced(pos: TechTilePos | AdvTechTilePos): boolean {
+  return pos.startsWith("adv");
+}

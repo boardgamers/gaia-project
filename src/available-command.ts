@@ -7,6 +7,7 @@ import { upgradedBuildings } from './buildings';
 import Reward from './reward';
 import { boardActions, freeActions, freeActionsTerrans, freeActionsItars } from './actions';
 import * as researchTracks from './research-tracks';
+import { isAdvanced } from './tiles/techs';
 
 
 const ISOLATED_DISTANCE = 3;
@@ -538,7 +539,7 @@ export function possibleLeech(engine: Engine, player: Player) {
 export function possibleCoverTechTiles(engine: Engine, player: Player) {
   const commands = [];
 
-  const tiles = engine.player(player).data.tiles.techs.filter(tl => tl.enabled && !TechTilePos.isAdvanced(tl.pos));
+  const tiles = engine.player(player).data.tiles.techs.filter(tl => tl.enabled && !isAdvanced(tl.pos));
   commands.push({
     name: Command.ChooseCoverTechTile,
     player,
@@ -594,7 +595,7 @@ export function possibleTechTiles(engine: Engine, player: Player) {
     if (data.research[tilePos.slice("adv-".length)] < 4) {
       continue;
     }
-    if (!data.tiles.techs.some(tech => tech.enabled && !TechTilePos.isAdvanced(tech.pos))) {
+    if (!data.tiles.techs.some(tech => tech.enabled && !isAdvanced(tech.pos))) {
       continue;
     }
 

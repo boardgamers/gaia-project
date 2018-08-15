@@ -216,12 +216,6 @@ export enum TechTilePos {
   Free3 = "free3"
 }
 
-export namespace TechTilePos {
-  export function isAdvanced(pos: TechTilePos | AdvTechTilePos): boolean {
-    return pos.startsWith("adv");
-  }
-}
-
 export enum AdvTechTile {
   AdvTech1= "advtech1",
   AdvTech2= "advtech2",
