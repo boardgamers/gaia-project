@@ -15,7 +15,7 @@
           <i v-for="planet in planetsWithSteps(i)" :class="['planet', planet]" :key="planet" /> {{i}}
         </span>
       </span><br/>
-      <span style="line-height: 1em">Colonized: <span v-for="(count, planet, index) in player.ownedPlanets" :key="planet" :class="{'ml-2': index > 0}"><i :class="['planet', planet]" :key="planet" /> {{count}} </span></span>
+      <span style="line-height: 1em" v-if="hasPlanets">Colonized: <span v-for="(count, planet, index) in player.ownedPlanets" :key="planet" :class="{'ml-2': index > 0}"><i :class="['planet', planet]" :key="planet" /> {{count}} </span></span>
     </div>
     <div class="tiles">
       <Booster v-if="data.tiles.booster" class="mb-1" :booster="data.tiles.booster" :disabled="passed"/>
@@ -98,6 +98,9 @@ export default class PlayerInfo extends Vue {
     return this.$store.state.gaiaViewer.data.round;
   }
   
+  get hasPlanets() {
+    return Object.keys(this.player.ownedPlanets).length > 0;
+  }
 }
 export default interface PlayerInfo {
   data: PlayerData;
