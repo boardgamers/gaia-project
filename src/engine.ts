@@ -1040,7 +1040,7 @@ export default class Engine {
         if ( hex.buildingOf(player) === Building.Mine ) {
           hex.data.building = Building.PlanetaryInstitute;
           PIHex.data.building = Building.Mine;
-
+          pl.federationCache = null ;
           return;
         }
       }
