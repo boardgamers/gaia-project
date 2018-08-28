@@ -42,13 +42,13 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
     case SubPhase.BrainStone: return [{name: Command.BrainStone, player, data}];
     case SubPhase.BeforeMove: {
       return [
-        ...possibleRoundBoosters(engine, player),
         ...possibleBuildings(engine, player),
         ...possibleFederations(engine, player),
         ...possibleResearchAreas(engine, player, UPGRADE_RESEARCH_COST),
-        ...possibleFreeActions(engine, player),
         ...possibleBoardActions(engine, player),
-        ...possibleSpecialActions(engine, player)
+        ...possibleSpecialActions(engine, player),
+        ...possibleFreeActions(engine, player),
+        ...possibleRoundBoosters(engine, player)
       ];
     }
     case SubPhase.AfterMove: return [...possibleFreeActions(engine, player), {name: Command.EndTurn, player}];
