@@ -69,13 +69,13 @@ svg {
     // swamp
     &.s {fill: #a25b15}
     // oxide
-    &.o {fill: #f30}
+    &.o {fill: #f90}
     // titanium
     &.t {fill: #3d3d5c}
     // ice
     &.i {fill: #cff}
     // volcanic
-    &.v {fill: #f90}
+    &.v {fill: #f30}
     // gaia
     &.g {fill: #093}
     // transdim
@@ -91,13 +91,13 @@ svg {
     // swamp
     &.s {stroke: #a25b15}
     // oxide
-    &.o {stroke: #f30}
+    &.o {stroke: #f90}
     // titanium
     &.t {stroke: #3d3d5c}
     // ice
     &.i {stroke: #cff}
     // volcanic
-    &.v {stroke: #f90}
+    &.v {stroke: #f30}
     // gaia
     &.g {stroke: #093}
     // transdim
