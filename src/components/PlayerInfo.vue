@@ -58,7 +58,7 @@ export default class PlayerInfo extends Vue {
   player: Player;
 
   playerClick(player: Player) {
-    this.$store.dispatch("gaiaViewer/player-click", player);
+    this.$store.dispatch("gaiaViewer/playerClick", player);
   }
 
   get faction() {
