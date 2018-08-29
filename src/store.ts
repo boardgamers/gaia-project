@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import { Data, GameContext } from './data';
-import { GaiaHex, ResearchField, TechTilePos, AdvTechTilePos, Booster, Federation } from '@gaia-project/engine';
+import { GaiaHex, ResearchField, TechTilePos, AdvTechTilePos, Booster, Federation, Player } from '@gaia-project/engine';
 
 Vue.use(Vuex);
 
@@ -89,7 +89,8 @@ const gaiaViewer = {
     techClick(context, pos: TechTilePos | AdvTechTilePos) {},
     boosterClick(context, booster: Booster) {},
     actionClick(context, action: string) {},
-    federationClick(context, federation: Federation) {}
+    federationClick(context, federation: Federation) {},
+    playerClick(context, player: Player) {}
   },
   getters: {
     data: state => state.data,
