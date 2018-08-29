@@ -194,7 +194,7 @@ export default class Game extends Vue {
     return factions[pl.faction].name;
   }
 
-  updateFavicon() {
+  public updateFavicon() {
     if (this.canPlay) {
       $("#favicon-gp").attr("href", "/favicon-active.png");
     } else {
