@@ -20,6 +20,9 @@ import {HighlightHexData, ButtonData} from '../data';
     isActiveButton() {
       return this.$store.state.gaiaViewer.context.activeButton && this.$store.state.gaiaViewer.context.activeButton.label === this.button.label;
     }
+  },
+  destroyed() {
+    this.unsubscribe();
   }
 })
 
@@ -29,7 +32,6 @@ export default class MoveButton extends Vue {
 
   private subscription: () => {} = null;
   private modalShow: boolean = false;
-
 
   subscribe(action: string, callback: any) {
     action = "gaiaViewer/" + action;
