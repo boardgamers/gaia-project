@@ -48,13 +48,13 @@ svg {
     // swamp
     &.s {stroke: #874d12}
     // oxide
-    &.o {stroke: #ff8566}
+    &.o {stroke: #ff0000}
     // titanium
     &.t {stroke: #d1d1e0}
     // ice
     &.i {stroke: #00c2c2}
     // volcanic
-    &.v {stroke: #ff0000}
+    &.v {stroke: #ff8566}
     // gaia
     &.g {stroke: #004d1a}
     // transdim
@@ -69,13 +69,13 @@ svg {
     // swamp
     &.s {fill: #a25b15}
     // oxide
-    &.o {fill: #f90}
+    &.o {fill: #f30}
     // titanium
     &.t {fill: #3d3d5c}
     // ice
     &.i {fill: #cff}
     // volcanic
-    &.v {fill: #f30}
+    &.v {fill: #f90}
     // gaia
     &.g {fill: #093}
     // transdim
@@ -91,13 +91,13 @@ svg {
     // swamp
     &.s {stroke: #a25b15}
     // oxide
-    &.o {stroke: #f90}
+    &.o {stroke: #f30}
     // titanium
     &.t {stroke: #3d3d5c}
     // ice
     &.i {stroke: #cff}
     // volcanic
-    &.v {stroke: #f30}
+    &.v {stroke: #f90}
     // gaia
     &.g {stroke: #093}
     // transdim
