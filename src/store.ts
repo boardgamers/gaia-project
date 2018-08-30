@@ -8,7 +8,7 @@ Vue.use(Vuex);
 const gaiaViewer = {
   namespaced: true,
   state: {
-    data: {players: [], roundBoosters: [], map: [], availableCommands: [], round: 0, tiles: null, newTurn: true, boardActions: {}, phase: null, passedPlayers: []} as Data,
+    data: {players: [], roundBoosters: [], map: null, availableCommands: [], round: 0, tiles: null, newTurn: true, boardActions: {}, phase: null, passedPlayers: []} as Data,
     context: {
       highlighted: {
         hexes: new Map(),
