@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="row justify-content-center">
+    <div class="row justify-content-center" v-if="hasMap">
       <SpaceMap height="450" />
       <svg height="450" viewBox="0 0 500 450">
         <ResearchBoard height="450" width="380" x="0"/>
@@ -91,6 +91,9 @@ import { GameApi } from '../api';
     },
     canPlay() {
       return !this.ended && !this.gameId || this.player !== undefined && this.data.players[this.player].auth === this.auth;
+    },
+    hasMap() {
+      return !!this.$store.state.gaiaViewer.data.map;
     },
     player() {
       return this.data.availableCommands.length > 0 ? this.data.availableCommands[0].player : undefined;
