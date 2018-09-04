@@ -26,7 +26,7 @@
       <div class="col-md-6 order-1 order-md-2" id="move-panel">
         <span v-if="ended"><b>Game ended!</b></span>
         <Commands @command="handleCommand" @undo="undoMove" v-else-if="canPlay" :remainingTime="remainingTime" />
-        <div v-else-if="data.players[player]">Waiting for {{data.players[player].name}} to play. <span v-if="remainingTime">({{remainingTime}} remaining)</span><br/> <button class="btn btn-default mt-2" @click="loadGame()">Refresh</button></div>
+        <div v-else-if="data.players[player]">Waiting for {{data.players[player].name}} to play. <span v-if="remainingTime" class="small smaller">({{remainingTime}} remaining)</span><br/> <button class="btn btn-default mt-2" @click="loadGame()">Refresh</button></div>
         <div>
           <form id="move-form" @submit.prevent="submit">
             <label for="current-move" v-if="canPlay">Current Move</label>
@@ -330,10 +330,10 @@ export default class Game extends Vue {
       parts.push(`${days}d`);
     }
     if (hours > 0) {
-      parts.push(`${days}h`);
+      parts.push(`${hours}h`);
     }
     if (minutes > 0) {
-      parts.push(`${days}m`);
+      parts.push(`${minutes}m`);
     }
     if (seconds > 0 || parts.length === 0) {
       parts.push(`${seconds}s`);
