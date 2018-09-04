@@ -207,21 +207,24 @@ export default class Engine {
 
     assert(toMove !== undefined, "Can't execute a move when no player can move");
 
+    const pl = this.player(toMove);
+    const ps = pl.faction || `p${toMove + 1}`;
+
     if (this.availableCommands.some(cmd => cmd.name === Command.Decline)) {
       const cmd = this.findAvailableCommand(this.playerToMove, Command.Decline);
-      this.move(`${Command.Decline} ${cmd.data.offer}`, false);
+      this.move(`${ps} ${Command.Decline} ${cmd.data.offer}`, false);
     } else if (this.availableCommands.some(cmd => cmd.name === Command.Pass)) {
       const cmd = this.findAvailableCommand(this.playerToMove, Command.Pass);
       const boosters = cmd.data.boosters;
 
       if (boosters.length > 0) {
-        this.move(`${Command.Pass} ${boosters[0]}`, false);
+        this.move(`${ps} ${Command.Pass} ${boosters[0]}`, false);
       } else {
-        this.move(`${Command.Pass}`, false);
+        this.move(`${ps} ${Command.Pass}`, false);
       }
     } else if (this.availableCommands.some(cmd => cmd.name === Command.ChooseIncome)) {
       const cmd = this.findAvailableCommand(this.playerToMove, Command.ChooseIncome);
-      this.move(`${Command.ChooseIncome} ${cmd.data}`);
+      this.move(`${ps} ${Command.ChooseIncome} ${cmd.data}`);
     } else {
       assert(false, "Can't automove for player " + (this.playerToMove + 1));
     }
