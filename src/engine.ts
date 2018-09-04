@@ -201,6 +201,40 @@ export default class Engine {
     return true;
   }
 
+  /** Automatically move as a dropped player */
+  autoPass() {
+    const toMove = this.playerToMove;
+
+    assert(toMove !== undefined, "Can't execute a move when no player can move");
+
+    if (this.availableCommands.some(cmd => cmd.name === Command.Decline)) {
+      const cmd = this.findAvailableCommand(this.playerToMove, Command.Decline);
+      this.move(`${Command.Decline} ${cmd.data.offer}`, false);
+    } else if (this.availableCommands.some(cmd => cmd.name === Command.Pass)) {
+      const cmd = this.findAvailableCommand(this.playerToMove, Command.Pass);
+      const boosters = cmd.data.boosters;
+
+      if (boosters.length > 0) {
+        this.move(`${Command.Pass} ${boosters[0]}`, false);
+      } else {
+        this.move(`${Command.Pass}`, false);
+      }
+    } else if (this.availableCommands.some(cmd => cmd.name === Command.ChooseIncome)) {
+      const cmd = this.findAvailableCommand(this.playerToMove, Command.ChooseIncome);
+      this.move(`${Command.ChooseIncome} ${cmd.data}`);
+    } else {
+      assert(false, "Can't automove for player " + (this.playerToMove + 1));
+    }
+
+    // Again
+    if (!this.availableCommands) {
+      this.generateAvailableCommands();
+    }
+    if (this.playerToMove === toMove) {
+      this.autoPass();
+    }
+  }
+
   static fromData(data: any) {
     const engine = new Engine();
 
@@ -522,6 +556,7 @@ export default class Engine {
 
   finalScoringPhase() {
     this.phase = Phase.EndGame;
+    this.currentPlayer = this.tempCurrentPlayer = undefined;
 
     // finalScoring tiles
     for (const tile of this.tiles.scorings.final) {

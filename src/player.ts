@@ -49,6 +49,8 @@ export default class Player extends EventEmitter {
   // OPTIONAL
   name?: string;
   auth?: string;
+  /** Is the player dropped (i.e. no move) */
+  dropped?: boolean;
 
   constructor(public player: PlayerEnum = PlayerEnum.Player1) {
     super();
@@ -67,6 +69,7 @@ export default class Player extends EventEmitter {
       events: this.events,
       name: this.name,
       auth: this.auth,
+      dropped: this.dropped,
       // TODO: Calculate client-side
       ownedPlanets:  _.countBy(this.ownedPlanets, 'data.planet')
     } as any;
@@ -102,6 +105,7 @@ export default class Player extends EventEmitter {
 
     player.name = data.name;
     player.auth = data.auth;
+    player.dropped = data.dropped;
 
     if (data.federationCache) {
       player.federationCache = data.federationCache;
