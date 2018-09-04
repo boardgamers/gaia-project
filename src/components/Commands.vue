@@ -7,6 +7,8 @@
           {{[player, ...titles].join(' - ')}}
           <a href="#" v-if="commandChain.length > 0" class="smaller small" @click.prevent="back()">(back)</a>
           <a href="#" v-else-if="canUndo" class="smaller small" @click.prevent="undo()">(undo)</a>
+
+          <span v-if="remaining" class="smaller small">({{remainingTime}})</span>
         </span>
       </h5>
     </div>
@@ -32,14 +34,13 @@
 <script lang="ts">
 import Vue from 'vue'
 import * as $ from "jquery";
-import { Component } from 'vue-property-decorator';
+import { Component, Prop } from 'vue-property-decorator';
 import { AvailableCommand, Command, factions, Building, GaiaHex, Booster, tiles, Event, Federation, Faction } from '@gaia-project/engine';
 import MoveButton from './MoveButton.vue';
 import {buildingName} from '../data/building';
 import {GameContext, ButtonData} from '../data';
 import { eventDesc } from '../data/event';
 import { factionDesc } from '../data/factions';
-
 @Component<Commands>({
   watch: {
     availableCommands(this: Commands, val) {
@@ -61,6 +62,9 @@ import { factionDesc } from '../data/factions';
   }
 })
 export default class Commands extends Vue {
+  @Prop({default: ''})
+  remainingTime: string;
+
   loadCommands(val: AvailableCommand[]) {
     this.commandTitles = [];
     this.customButtons = [];

@@ -25,8 +25,8 @@
       </div>
       <div class="col-md-6 order-1 order-md-2" id="move-panel">
         <span v-if="ended"><b>Game ended!</b></span>
-        <Commands @command="handleCommand" @undo="undoMove" v-else-if="canPlay" />
-        <div v-else-if="data.players[player]">Waiting for {{data.players[player].name}} to play.<br/> <button class="btn btn-default mt-2" @click="loadGame()">Refresh</button></div>
+        <Commands @command="handleCommand" @undo="undoMove" v-else-if="canPlay" :remainingTime="remainingTime" />
+        <div v-else-if="data.players[player]">Waiting for {{data.players[player].name}} to play. <span v-if="remainingTime">({{remainingTime}} remaining)</span><br/> <button class="btn btn-default mt-2" @click="loadGame()">Refresh</button></div>
         <div>
           <form id="move-form" @submit.prevent="submit">
             <label for="current-move" v-if="canPlay">Current Move</label>
@@ -107,6 +107,7 @@ import { GameApi } from '../api';
   created(this: Game) {
     if (this.gameId) {
       this.refresher = setInterval(() => this.refreshStatus(), 3000);
+      this.deadlineTicker = setInterval(() => this.updateDeadline(), 1000);
       this.loadGame();
       return;
     }
@@ -118,6 +119,7 @@ import { GameApi } from '../api';
   },
   destroyed() {
     clearInterval(this.refresher);
+    clearInterval(this.deadlineTicker);
   },
   components: {
     Commands,
@@ -134,7 +136,10 @@ export default class Game extends Vue {
   // When joining a game
   name = "";
   lastUpdated = null;
+  remainingTime = null;
+  nextMoveDeadline = null;
   refresher = undefined;
+  deadlineTicker = undefined;
   // When refreshing status, count the number of times the status is the same
   refreshCount = 0;
 
@@ -169,6 +174,7 @@ export default class Game extends Vue {
 
   handleData(data: any) {
     this.lastUpdated = data.lastUpdated;
+    this.nextMoveDeadline = data.nextMoveDeadline;
 
     this.$store.commit('removeError');
     this.$store.commit('gaiaViewer/receiveData', data);
@@ -183,6 +189,7 @@ export default class Game extends Vue {
 
     this.updateFavicon();
     this.updateMoveList();
+    this.updateDeadline();
   }
 
   desc(pl: AugmentedPlayer) {
@@ -303,6 +310,36 @@ export default class Game extends Vue {
 
   updateMoveList() {
     setTimeout(() => $("#moves").scrollTop($("#moves")[0].scrollHeight));
+  }
+
+  updateDeadline() {
+    if (!this.nextMoveDeadline) {
+      this.remainingTime = null;
+      return;
+    }
+
+    const timeDiff = Math.floor(Math.max(new Date(this.nextMoveDeadline).getTime() - Date.now(), 0)/1000);
+    const parts = [];
+
+    const seconds = timeDiff % 60;
+    const minutes = ((timeDiff-seconds) % 3600) / 60;
+    const hours = ((timeDiff-seconds- minutes * 60) % (3600*24)) / 3600;
+    const days = (timeDiff - seconds - minutes * 60 - hours * 3600) / (24 * 3600);
+
+    if (days > 0) {
+      parts.push(`${days}d`);
+    }
+    if (hours > 0) {
+      parts.push(`${days}h`);
+    }
+    if (minutes > 0) {
+      parts.push(`${days}m`);
+    }
+    if (seconds > 0 || parts.length === 0) {
+      parts.push(`${seconds}s`);
+    }
+
+    this.remainingTime = parts.join(', ');
   }
 }
 
