@@ -5,10 +5,9 @@
         <span v-if="init">Pick the number of players</span>
         <span v-else>
           {{[player, ...titles].join(' - ')}}
+          <span v-if="remainingTime" class="smaller small"> ({{remainingTime}}) </span>
           <a href="#" v-if="commandChain.length > 0" class="smaller small" @click.prevent="back()">(back)</a>
           <a href="#" v-else-if="canUndo" class="smaller small" @click.prevent="undo()">(undo)</a>
-
-          <span v-if="remainingTime" class="smaller small">({{remainingTime}})</span>
         </span>
       </h5>
     </div>
