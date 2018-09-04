@@ -8,7 +8,7 @@
           <a href="#" v-if="commandChain.length > 0" class="smaller small" @click.prevent="back()">(back)</a>
           <a href="#" v-else-if="canUndo" class="smaller small" @click.prevent="undo()">(undo)</a>
 
-          <span v-if="remaining" class="smaller small">({{remainingTime}})</span>
+          <span v-if="remainingTime" class="smaller small">({{remainingTime}})</span>
         </span>
       </h5>
     </div>
