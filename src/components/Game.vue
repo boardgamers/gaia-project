@@ -365,7 +365,7 @@ canvas#map {
   margin-bottom: 1em;
 }
 
-.space-map, .research-scoring-board {
+.space-map, .scoring-research-board {
   max-height: 450px;
 
   // Unfortunately, necessary for chrome, otherwise would be nicer!
