@@ -373,7 +373,7 @@ canvas#map {
 }
 
 @-moz-document url-prefix() {
-  .space-map, .research-scoring-board {
+  .space-map, .scoring-research-board {
     // On firefox, grows automatically width & height until the width of the screen is filled,
     // or max-height is reached
     height: auto;
