@@ -1,8 +1,8 @@
 <template>
   <div>
     <div class="row justify-content-center" v-if="hasMap">
-      <SpaceMap height="450" />
-      <svg height="450" viewBox="0 0 500 450">
+      <SpaceMap style="max-height: 450px" class="mb-1" />
+      <svg style="max-height: 450px" viewBox="0 0 500 450">
         <ResearchBoard height="450" width="380" x="0"/>
         <ScoringBoard class="ml-4" height="450" width="90" x="405" />
       </svg>
@@ -26,7 +26,7 @@
       <div class="col-md-6 order-1 order-md-2" id="move-panel">
         <span v-if="ended"><b>Game ended!</b></span>
         <Commands @command="handleCommand" @undo="undoMove" v-else-if="canPlay" :remainingTime="remainingTime" />
-        <div v-else-if="data.players[player]">Waiting for {{data.players[player].name}} to play. <span v-if="remainingTime" class="small smaller">({{remainingTime}} remaining)</span><br/> <button class="btn btn-default mt-2" @click="loadGame()">Refresh</button></div>
+        <div v-else-if="data.players[player]">Waiting for {{data.players[player].name}} to play. <span v-if="remainingTime" class="small smaller">({{remainingTime}} remaining)</span><br/> <button class="btn btn-default my-2" @click="loadGame()">Refresh</button></div>
         <div>
           <form id="move-form" @submit.prevent="submit">
             <label for="current-move" v-if="canPlay">Current Move</label>
