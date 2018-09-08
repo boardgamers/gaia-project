@@ -1,7 +1,7 @@
 <template>
   <div>
-    <div class="row justify-content-center" v-if="hasMap">
-      <SpaceMap class="mb-1 space-map" />
+    <div :class="['row', 'justify-content-center', data.players.length > 2 ? 'medium-map' : 'small-map']" v-if="hasMap">
+      <SpaceMap :class="['mb-1', 'space-map']" />
       <svg class="scoring-research-board" viewBox="0 0 500 450">
         <ResearchBoard height="450" width="380" x="0"/>
         <ScoringBoard class="ml-4" height="450" width="90" x="405" />
@@ -30,7 +30,7 @@
         <div>
           <form id="move-form" @submit.prevent="submit">
             <label for="current-move" v-if="canPlay">Current Move</label>
-            <div class="input-group" v-if="canPlay">
+            <div class="input-group mb-2" v-if="canPlay">
               <input type="text" class="form-control" placeholder="Current move" aria-label="Current move" id="current-move" v-model="currentMove">
               <div class="input-group-append">
                 <!-- <button class="btn btn-danger" type="button" @click="addMove('')">Clear</button> -->
@@ -41,7 +41,7 @@
               <label for="moves">Move log</label>
               <textarea class="form-control" rows="4" id="moves" v-model="moveList"></textarea>
             </div> 
-            <input type="button" class="btn btn-default d-block ml-auto" value="Replay" @click="replay" v-if="!gameId">
+            <input type="button" class="btn btn-default d-none d-md-block ml-auto" value="Replay" @click="replay" v-if="!gameId">
           </form>  
         </div>
       </div>
@@ -368,15 +368,18 @@ canvas#map {
 .space-map, .scoring-research-board {
   max-height: 450px;
 
+  width: 100%;
   // Unfortunately, necessary for chrome, otherwise would be nicer!
-  height: 450px;
+  height: 100%;
 }
 
-@-moz-document url-prefix() {
-  .space-map, .scoring-research-board {
-    // On firefox, grows automatically width & height until the width of the screen is filled,
-    // or max-height is reached
-    height: auto;
+.medium-map, .small-map {
+  flex-wrap: nowrap;
+}
+
+@media (max-width: 767px) {
+  .small-map, .medium-map {
+    flex-wrap: wrap;
   }
 }
 
