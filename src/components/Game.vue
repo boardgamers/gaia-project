@@ -1,8 +1,8 @@
 <template>
   <div>
     <div class="row justify-content-center" v-if="hasMap">
-      <SpaceMap style="max-height: 450px" class="mb-1" />
-      <svg style="max-height: 450px" viewBox="0 0 500 450">
+      <SpaceMap class="mb-1 space-map" />
+      <svg class="scoring-research-board" viewBox="0 0 500 450">
         <ResearchBoard height="450" width="380" x="0"/>
         <ScoringBoard class="ml-4" height="450" width="90" x="405" />
       </svg>
@@ -363,6 +363,21 @@ canvas#map {
 
 .turn-order {
   margin-bottom: 1em;
+}
+
+.space-map, .research-scoring-board {
+  max-height: 450px;
+
+  // Unfortunately, necessary for chrome, otherwise would be nicer!
+  height: 450px;
+}
+
+@-moz-document url-prefix() {
+  .space-map, .research-scoring-board {
+    // On firefox, grows automatically width & height until the width of the screen is filled,
+    // or max-height is reached
+    height: auto;
+  }
 }
 
 </style>
