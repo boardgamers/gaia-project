@@ -64,7 +64,7 @@ export default class Player extends EventEmitter {
       data: this.data,
       income: Reward.toString(Reward.merge([].concat(...this.events[Operator.Income].map(event => event.rewards))), true),
       // TODO: calculate structureValue & structureFedValue client-side
-      progress:  Object.assign({}, ...Object.values(FinalTile).map( track => ({ [track]: this.eventConditionCount(finalScorings[track])})), { structureValue: this.eventConditionCount(Condition.StructureValue) }, { structureFedValue: this.eventConditionCount(Condition.StructureFedValue) }),
+      progress:  Object.assign({}, ...Object.values(FinalTile).map( track => ({ [track]: this.eventConditionCount(finalScorings[track].condition)})), { structureValue: this.eventConditionCount(Condition.StructureValue) }, { structureFedValue: this.eventConditionCount(Condition.StructureFedValue) }),
       actions: this.events[Operator.Activate].map(event => ({rewards: event.spec.replace('=>', '').trim(), enabled: !event.activated})),
       events: this.events,
       name: this.name,
@@ -535,12 +535,12 @@ export default class Player extends EventEmitter {
 
   finalCount(tile: FinalTile): number {
     switch (tile) {
-      case FinalTile.Structure : return this.eventConditionCount(finalScorings[FinalTile.Structure]);
-      case FinalTile.StructureFed : return this.eventConditionCount(finalScorings[FinalTile.StructureFed]);
-      case FinalTile.PlanetType : return this.eventConditionCount(finalScorings[FinalTile.PlanetType]);
-      case FinalTile.Gaia : return this.eventConditionCount(finalScorings[FinalTile.Gaia]);
-      case FinalTile.Sector : return this.eventConditionCount(finalScorings[FinalTile.Sector]);
-      case FinalTile.Satellite : return this.eventConditionCount(finalScorings[FinalTile.Satellite]);
+      case FinalTile.Structure : return this.eventConditionCount(finalScorings[FinalTile.Structure].condition);
+      case FinalTile.StructureFed : return this.eventConditionCount(finalScorings[FinalTile.StructureFed].condition);
+      case FinalTile.PlanetType : return this.eventConditionCount(finalScorings[FinalTile.PlanetType].condition);
+      case FinalTile.Gaia : return this.eventConditionCount(finalScorings[FinalTile.Gaia].condition);
+      case FinalTile.Sector : return this.eventConditionCount(finalScorings[FinalTile.Sector].condition);
+      case FinalTile.Satellite : return this.eventConditionCount(finalScorings[FinalTile.Satellite].condition);
      }
   }
 

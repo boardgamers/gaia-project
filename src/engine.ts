@@ -571,7 +571,7 @@ export default class Engine {
       }));
 
       if (this.players.length === 2) {
-        rankings.push({ player: null, count: 8 });
+        rankings.push({ player: null, count: finalScorings[tile].neutralPlayer });
         rankings.sort((pl1, pl2) => pl2.count - pl1.count);
       }
 

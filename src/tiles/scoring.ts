@@ -14,12 +14,12 @@ const roundScorings =  {
 };
 
 const finalScorings =  {
-  [FinalTile.Structure]: Condition.Structure,
-  [FinalTile.StructureFed]: Condition.StructureFed,
-  [FinalTile.PlanetType]: Condition.PlanetType ,
-  [FinalTile.Gaia]: Condition.Gaia,
-  [FinalTile.Sector]: Condition.Sector,
-  [FinalTile.Satellite]: Condition.Satellite
+  [FinalTile.Structure]: { condition: Condition.Structure, neutralPlayer: 11 },
+  [FinalTile.StructureFed]: { condition:  Condition.StructureFed, neutralPlayer: 10 },
+  [FinalTile.PlanetType]: { condition:  Condition.PlanetType, neutralPlayer: 5 },
+  [FinalTile.Gaia]: { condition: Condition.Gaia, neutralPlayer: 4 },
+  [FinalTile.Sector]: { condition: Condition.Sector, neutralPlayer: 6 },
+  [FinalTile.Satellite]: { condition: Condition.Satellite, neutralPlayer: 8 },
 };
 
 export {roundScorings, finalScorings};
