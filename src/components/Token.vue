@@ -12,12 +12,12 @@ import { factions, Faction, Planet } from '@gaia-project/engine';
 @Component
 export default class PlayerToken extends Vue {
   @Prop()
-  faction: Faction;
+  faction: Faction | 'automa';
   @Prop()
   scale: number;
 
   get planet(): Planet {
-    return factions.planet(this.faction);
+    return this.faction === 'automa' ? Planet.Lost : factions.planet(this.faction);
   }
 }
 </script>

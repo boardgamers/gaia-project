@@ -12,7 +12,7 @@
 <script lang="ts">
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
-import { tiles, Event, factions, FinalTile, Phase, Player } from '@gaia-project/engine';
+import { tiles, Event, factions, FinalTile, Phase, Player, finalScorings, Faction } from '@gaia-project/engine';
 import Token from "./Token.vue";
 
 @Component<FinalScoringTile>({
@@ -26,14 +26,24 @@ import Token from "./Token.vue";
     },
 
     players() {
-      return this.$store.state.gaiaViewer.data.players.filter(player => !!player && player.faction);
+      const pls = this.$store.state.gaiaViewer.data.players.filter(player => !!player && player.faction);
+
+      if (this.$store.state.gaiaViewer.data.players.length === 2) {
+        pls.push({faction: "automa"});
+      }
+
+      return pls;
     },
 
     tooltip() {
       const tile = this.tile;
       const players = this.players;
 
-      return players.map(pl => `- ${factions[pl.faction].name}: ${pl.eventConditionCount(tile)}`).join('\n');
+      return players.map(pl => {
+        const name = pl.faction === "automa" ? "Automa" : factions[pl.faction].name;
+        const points = this.progress(pl);
+        return `- ${name}: ${points}`;
+      }).join('\n');
     },
 
     highlighted() {
@@ -49,8 +59,12 @@ export default class FinalScoringTile extends Vue {
   @Prop()
   index: number;
 
+  progress(player: Player) {
+    return (player.faction as Faction | "automa") === "automa" ? finalScorings[this.tile].neutralPlayer : player.progress(this.tile);
+  }
+
   tokenX(player: Player) {
-    return this.posX(player.progress(this.tile));
+    return this.posX(this.progress(player));
   }
 
   posX(progress: number) {
