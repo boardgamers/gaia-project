@@ -16,6 +16,7 @@ export {GaiaHexData, GaiaHex} from "./src/gaia-hex";
 export {terraformingStepsRequired} from './src/planets';
 export { boardActions } from "./src/actions";
 export { FactionBoard, factionBoard } from "./src/faction-boards";
+export {roundScorings, finalScorings} from './src/tiles/scoring';
 export {factionBoards};
 
 export { Player, PlayerData, Event, factions, AvailableCommand, tiles, Reward, SpaceMap };
