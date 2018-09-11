@@ -77,6 +77,10 @@ export default class Player extends EventEmitter {
     return this.eventConditionCount(Condition.StructureValue);
   }
 
+  get ownedPlanetsCount() {
+    return _.countBy(this.ownedPlanets, 'data.planet');
+  }
+
   toJSON() {
     const json = {
       player: this.player,
