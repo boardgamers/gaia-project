@@ -20,7 +20,7 @@
         <MoveButton :button="randomFactionButton" @cancel="updateRandomFaction" @trigger="handleCommand" />
       </div>
       <div v-else>
-        <MoveButton v-for="button in buttons" v-show="!button.hide" @trigger="handleCommand" :button="button" :key="button.label || button.command">
+        <MoveButton v-for="button in buttons" :class="{'d-none': button.hide}" @trigger="handleCommand" :button="button" :key="button.label || button.command">
           {{button.label || button.command}}
         </MoveButton>
       </div>
@@ -92,8 +92,8 @@ export default class Commands extends Vue {
     // If there's only one button, save the player the hassle and click it
     if (val.length === 1) {
       setTimeout(() => {
-        if ($(".move-button").length <= 1)  {
-          $(".move-button").click();
+        if ($(".move-button:not(.d-none)").length <= 1)  {
+          $(".move-button:not(.d-none)").click();
         }
       });
     }
