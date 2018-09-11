@@ -64,7 +64,7 @@ export default class Engine {
   } = {};
 
   terraformingFederation: Federation;
-  availableCommands: AvailableCommand[];
+  availableCommands: AvailableCommand[] = [];
   availableCommand: AvailableCommand;
   phase: Phase = Phase.SetupInit;
 
