@@ -1,17 +1,18 @@
 import * as $ from 'jquery';
-import { Data } from './data';
+import Engine from '@gaia-project/engine';
 
 export interface GameApi {
-  loadGame(gameId: string): Promise<Data>;
+  loadGame(gameId: string): Promise<Engine>;
   /** Check if we need to refresh the game */
   checkStatus(gameId: string): Promise<any>;
   addMove(gameId: string, move: string): Promise<any>;
-  replay(moveList: string[]): Promise<any>;
+  replay(moveList: string[]): Promise<Engine>;
 }
 
 const api: GameApi = {
-  loadGame(gameId: string) {
-    return $.get(`${window.location.protocol}//${window.location.hostname}:9508/g/${gameId}`) as any;
+  async loadGame(gameId: string) {
+    const data = await $.get(`${window.location.protocol}//${window.location.hostname}:9508/g/${gameId}`);
+    return Engine.fromData(data);
   },
   checkStatus(gameId: string) {
     return $.get(`${window.location.protocol}//${window.location.hostname}:9508/g/${gameId}/status`) as any;
@@ -19,8 +20,9 @@ const api: GameApi = {
   addMove(gameId: string, move: string) {
     return $.post(`${window.location.protocol}//${window.location.hostname}:9508/g/${gameId}/move`,  {move}) as any;
   },
-  replay(moves: string[]) {
-    return $.post(`${window.location.protocol}//${window.location.hostname}:9508/`, {moves}) as any;
+  async replay(moves: string[]) {
+    const data = await $.post(`${window.location.protocol}//${window.location.hostname}:9508/`, {moves}) as any;
+    return Engine.fromData(data);
   }
 }
 

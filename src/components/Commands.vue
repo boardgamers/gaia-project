@@ -34,7 +34,7 @@
 import Vue from 'vue'
 import * as $ from "jquery";
 import { Component, Prop } from 'vue-property-decorator';
-import { AvailableCommand, Command, factions, Building, GaiaHex, Booster, tiles, Event, Federation, Faction } from '@gaia-project/engine';
+import Engine,{ AvailableCommand,Command,factions,Building,GaiaHex,Booster,tiles,Event,Federation,Faction } from '@gaia-project/engine';
 import MoveButton from './MoveButton.vue';
 import {buildingName} from '../data/building';
 import {GameContext, ButtonData} from '../data';
@@ -88,7 +88,7 @@ export default class Commands extends Vue {
   }
 
   get availableCommands(): AvailableCommand[] {
-    return this.$store.state.gaiaViewer.data.availableCommands;
+    return this.engine.availableCommands;
   }
 
   get command(): AvailableCommand {
@@ -96,11 +96,11 @@ export default class Commands extends Vue {
   }
 
   get player(): string {
-    if (this.$store.state.gaiaViewer.data.players[this.command.player].faction) {
-      return factions[this.$store.state.gaiaViewer.data.players[this.command.player].faction].name;
+    if (this.engine.players[this.command.player].faction) {
+      return factions[this.engine.players[this.command.player].faction].name;
     }
-    if (this.$store.state.gaiaViewer.data.players[this.command.player].name) {
-      return this.$store.state.gaiaViewer.data.players[this.command.player].name;
+    if (this.engine.players[this.command.player].name) {
+      return this.engine.players[this.command.player].name;
     }
     return "Player " + (this.command.player+1);
   }
@@ -158,6 +158,10 @@ export default class Commands extends Vue {
     return this.$store.state.gaiaViewer.context;
   }
 
+  get engine(): Engine {
+    return this.$store.state.gaiaViewer.data;
+  }
+
   get buttons(): ButtonData[] {
     const ret: ButtonData[] = [];
 
@@ -181,7 +185,7 @@ export default class Commands extends Vue {
               ret.push({
                 label,
                 command: `${Command.Build} ${building}`,
-                hexes: new Map(coordinates.map(coord => [this.context.coordsMap.get(coord.coordinates), coord]))
+                hexes: new Map<GaiaHex, {cost?: string}>(coordinates.map(coord => [this.engine.map.grid.getS(coord.coordinates), coord]))
               });
             }
           }
@@ -193,7 +197,7 @@ export default class Commands extends Vue {
           ret.push({
             label: "Swap Planetary Institute",
             command: command.name,
-            hexes: new Map(command.data.buildings.map(coord => [this.context.coordsMap.get(coord.coordinates), coord]))
+            hexes: new Map(command.data.buildings.map(coord => [this.engine.map.grid.getS(coord.coordinates), coord]))
           });
           break;
         }
@@ -202,7 +206,7 @@ export default class Commands extends Vue {
           ret.push({
             label: "Place Lost Planet",
             command: command.name,
-            hexes: new Map(command.data.spaces.map(coord => [this.context.coordsMap.get(coord.coordinates), coord]))
+            hexes: new Map(command.data.spaces.map(coord => [this.engine.map.grid.getS(coord.coordinates), coord]))
           });
           break;
         }
@@ -360,7 +364,7 @@ export default class Commands extends Vue {
           const locationButtons = command.data.federations.map((fed, i) => ({
             command: fed.hexes,
             label: `Location ${i+1}`,
-            hexes: new Map(fed.hexes.split(',').map(coord => [this.context.coordsMap.get(coord), {coordinates: coord}])),
+            hexes: new Map(fed.hexes.split(',').map(coord => [this.engine.map.grid.getS(coord), {coordinates: coord}])),
             hover: true,
             buttons: tilesButtons
           }));

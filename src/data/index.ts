@@ -1,8 +1,4 @@
-import {Player, PlayerEnum, TechTile, TechTilePos, ScoringTile, FinalTile, AvailableCommand, GaiaHex, AdvTechTilePos, Booster, Federation, Phase} from "@gaia-project/engine";
-
-export interface AugmentedPlayer extends Player {
-  progress: {[key in FinalTile]: number};
-}
+import {TechTilePos, GaiaHex, AdvTechTilePos, Booster, Federation} from "@gaia-project/engine";
 
 export interface ButtonData {
   label?: string;
@@ -23,34 +19,6 @@ export interface ButtonData {
 }
 
 export type MapData = GaiaHex[];
-
-export interface Data {
-  map: MapData,
-  availableCommands: AvailableCommand[];
-  players: AugmentedPlayer[];
-  passedPlayers: PlayerEnum[];
-  round: number;
-  phase: Phase;
-  tiles: {
-    techs: {
-      [key in TechTilePos | AdvTechTilePos]: {
-        tile: TechTile,
-        count: number
-      }
-    },
-    boosters: {
-      [key in Booster]?: boolean
-    },
-    scorings: {
-      round: [ScoringTile, ScoringTile, ScoringTile, ScoringTile, ScoringTile, ScoringTile],
-      final: [FinalTile, FinalTile]
-    }
-  }
-
-  // Should the next move be placed on a whole new line?
-  newTurn: boolean;
-}
-
 export type HighlightHexData = Map<GaiaHex, {cost?: string}>;
 
 export interface GameContext {
@@ -63,7 +31,6 @@ export interface GameContext {
     federations: Set<Federation>
   };
 
-  coordsMap: Map<string, GaiaHex>;
   activeButton: ButtonData;
   hexSelection: boolean;
 }

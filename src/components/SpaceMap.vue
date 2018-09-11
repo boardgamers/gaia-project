@@ -15,7 +15,7 @@ import SpaceHex from './SpaceHex.vue';
 @Component<SpaceMap>({
   computed: {
     map(this: SpaceMap): MapData {
-      return this.$store.state.gaiaViewer.data.map
+      return this.$store.state.gaiaViewer.data.map.toJSON()
     },
     right() {
       return (this.$store.state.gaiaViewer.data.players || []).length > 2 ? 33.5 : 26;

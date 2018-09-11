@@ -12,8 +12,7 @@
 <script lang="ts">
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
-import { tiles, Event, factions, FinalTile, Phase } from '@gaia-project/engine';
-import { AugmentedPlayer } from "../data";
+import { tiles, Event, factions, FinalTile, Phase, Player } from '@gaia-project/engine';
 import Token from "./Token.vue";
 
 @Component<FinalScoringTile>({
@@ -34,7 +33,7 @@ import Token from "./Token.vue";
       const tile = this.tile;
       const players = this.players;
 
-      return players.map(pl => `- ${factions[pl.faction].name}: ${pl.progress[tile]}`).join('\n');
+      return players.map(pl => `- ${factions[pl.faction].name}: ${pl.eventConditionCount(tile)}`).join('\n');
     },
 
     highlighted() {
@@ -50,8 +49,8 @@ export default class FinalScoringTile extends Vue {
   @Prop()
   index: number;
 
-  tokenX(player: AugmentedPlayer) {
-    return this.posX(player.progress[this.tile]);
+  tokenX(player: Player) {
+    return this.posX(player.progress(this.tile));
   }
 
   posX(progress: number) {
@@ -74,7 +73,7 @@ export default class FinalScoringTile extends Vue {
 }
 export default interface FinalScoringTile {
   tile: FinalTile;
-  players: AugmentedPlayer[];
+  players: Player[];
 }
 
 </script>

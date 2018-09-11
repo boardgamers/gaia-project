@@ -7,7 +7,7 @@
       m: {{data.buildings.m}}/8, ts: {{data.buildings.ts}}/4, lab: {{data.buildings.lab}}/3<span v-if="data.buildings.PI">, PI</span><span v-if="data.buildings.ac1">, ac1</span><span v-if="data.buildings.ac2">, ac2</span>, gf: <span  v-if="data.gaiaformersInGaia>0">[{{data.gaiaformersInGaia}}]</span> {{data.buildings.gf}}/{{data.gaiaformers}}<br/>
       <span v-if="round<6">Income: {{player.income.replace(/,/g, ', ')}}<br/></span>
       Range: {{data.range}}, Terraforming cost: {{3 - data.terraformCostDiscount}}o<br/>
-      <span v-if="faction === 'Ivits'">Fed value: {{player.progress.structureFedValue }}, No fed value: {{player.progress.structureValue - player.progress.structureFedValue }} <br/></span> 
+      <span v-if="faction === 'Ivits'">Fed value: {{player.fedValue }}, No fed value: {{player.structureValue - player.fedValue }} <br/></span> 
 
       <span style="white-space: nowrap; line-height: 1em">
         Steps: 
@@ -15,7 +15,7 @@
           <i v-for="planet in planetsWithSteps(i)" :class="['planet', planet]" :key="planet" /> {{i}}
         </span>
       </span><br/>
-      <span style="line-height: 1em" v-if="hasPlanets">Colonized: <span v-for="(count, planet, index) in player.ownedPlanets" :key="planet" :class="{'ml-2': index > 0}"><i :class="['planet', planet]" :key="planet" /> {{count}} </span></span>
+      <span style="line-height: 1em" v-if="hasPlanets">Colonized: <span v-for="(count, planet, index) in player.ownedPlanetsCount" :key="planet" :class="{'ml-2': index > 0}"><i :class="['planet', planet]" :key="planet" /> {{count}} </span></span>
     </div>
     <div class="tiles">
       <Booster v-if="data.tiles.booster" class="mb-1" :booster="data.tiles.booster" :disabled="passed"/>
@@ -103,7 +103,7 @@ export default class PlayerInfo extends Vue {
   }
   
   get hasPlanets() {
-    return Object.keys(this.player.ownedPlanets).length > 0;
+    return this.player.ownedPlanets.length > 0;
   }
 }
 export default interface PlayerInfo {

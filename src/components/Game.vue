@@ -53,14 +53,13 @@
 import * as $ from 'jquery';
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
-import { Data, AugmentedPlayer } from '../data';
 import Commands from './Commands.vue';
 import SpaceMap from './SpaceMap.vue';
 import PlayerInfo from './PlayerInfo.vue';
 import ResearchBoard from './ResearchBoard.vue';
 import ScoringBoard from './ScoringBoard.vue';
 import Pool from './Pool.vue';
-import { Command, Phase, factions } from '@gaia-project/engine';
+import Engine,{ Command,Phase,factions, Player } from '@gaia-project/engine';
 import { GameApi } from '../api';
 
 @Component<Game>({
@@ -192,7 +191,7 @@ export default class Game extends Vue {
     this.updateDeadline();
   }
 
-  desc(pl: AugmentedPlayer) {
+  desc(pl: Player) {
     if (!pl.faction) {
       return pl.name;
     }
@@ -345,7 +344,7 @@ export default class Game extends Vue {
 
 // Used for type augmentation from computed properties
 export default interface Game {
-  data: Data;
+  data: Engine;
   player: number;
 
   canPlay: boolean;

@@ -1,14 +1,14 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
-import { Data, GameContext } from './data';
-import { GaiaHex, ResearchField, TechTilePos, AdvTechTilePos, Booster, Federation, Player } from '@gaia-project/engine';
+import { GameContext } from './data';
+import Engine, { GaiaHex, ResearchField, TechTilePos, AdvTechTilePos, Booster, Federation, Player } from '@gaia-project/engine';
 
 Vue.use(Vuex);
 
 const gaiaViewer = {
   namespaced: true,
   state: {
-    data: {players: [], roundBoosters: [], map: null, availableCommands: [], round: 0, tiles: null, newTurn: true, boardActions: {}, phase: null, passedPlayers: []} as Data,
+    data: new Engine(),
     context: {
       highlighted: {
         hexes: new Map(),
@@ -18,19 +18,13 @@ const gaiaViewer = {
         actions: new Set(),
         federations: new Set()
       },
-      coordsMap: new Map(),
       hexSelection: false,
       activeButton: null
     } as GameContext
   },
   mutations: {
-    receiveData(state, data: Data) {
+    receiveData(state, data: Engine) {
       state.data = data;
-      state.context.coordsMap.clear();
-
-      for (const hex of data.map || []) {
-        state.context.coordsMap.set(`${hex.q}x${hex.r}`, hex);
-      }
     },
 
     highlightHexes(state, hexes: Map<GaiaHex, {cost?: string}>) {

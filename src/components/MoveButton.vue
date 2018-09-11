@@ -1,7 +1,6 @@
 <template>
   <div class="move-button">
-    <button class='btn btn-secondary mr-2 mb-2 move-button' @click="handleClick" @mouseenter="hover" @mouseleave="leave" :title="button.tooltip" v-b-tooltip.html>
-      <slot></slot>
+    <button class='btn btn-secondary mr-2 mb-2 move-button' @click="handleClick" @mouseenter="hover" @mouseleave="leave" :title="button.tooltip" v-b-tooltip.html v-html="customLabel || button.label">
     </button>
     <b-modal v-if="button.modal" v-model="modalShow" size="lg" @ok="handleOK" :title="button.label" ok-title="OK, I pick this one!">
       <div  v-html="button.modal"></div>
@@ -32,6 +31,7 @@ export default class MoveButton extends Vue {
 
   private subscription: () => {} = null;
   private modalShow: boolean = false;
+  private customLabel = '';
 
   subscribe(action: string, callback: any) {
     action = "gaiaViewer/" + action;
@@ -81,7 +81,6 @@ export default class MoveButton extends Vue {
       this.$store.commit("gaiaViewer/highlightBoosters", this.button.boosters);
       this.subscribeFinal('boosterClick');
     } else if (this.button.actions) {
-      console.log("highlightActions", this.button.actions);
       this.$store.commit("gaiaViewer/highlightActions", this.button.actions);
       this.subscribeFinal('actionClick');
     } else if (this.button.selectHexes) {
@@ -94,7 +93,7 @@ export default class MoveButton extends Vue {
 
       this.$store.commit("gaiaViewer/selectHexes", this.button.hexes);
 
-      this.button.label = "Custom location - End selection";
+      this.customLabel = "Custom location - End selection";
 
       this.subscribe('hexClick', hex => {
         const highlighted = this.$store.state.gaiaViewer.context.highlighted.hexes;
