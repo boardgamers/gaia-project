@@ -65,6 +65,18 @@ export default class Player extends EventEmitter {
     return this.events[Operator.Activate].map(event => ({rewards: event.spec.replace('=>', '').trim(), enabled: !event.activated}));
   }
 
+  progress(finalTile: FinalTile) {
+    return this.eventConditionCount(finalScorings[finalTile].condition);
+  }
+
+  get fedValue() {
+    return this.eventConditionCount(Condition.StructureFedValue);
+  }
+
+  get structureValue() {
+    return this.eventConditionCount(Condition.StructureValue);
+  }
+
   toJSON() {
     const json = {
       player: this.player,
