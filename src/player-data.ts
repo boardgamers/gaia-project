@@ -349,9 +349,10 @@ export default class PlayerData extends EventEmitter {
   }
 
   burnPower(power: number) {
-    if (this.brainstone === BrainstoneArea.Area2) {
+    if (this.brainstone === BrainstoneArea.Area2 && power > 0) {
       this.brainstone = BrainstoneArea.Area3;
       power -= 1;
+      this.power.area2 -= 1;
     }
     this.power.area2 -= 2 * power;
     this.power.area3 += power;

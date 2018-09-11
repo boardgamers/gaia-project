@@ -141,4 +141,60 @@ describe("Taklons", () => {
 
     expect(() => new Engine(moves)).to.not.throw();
   });
+
+  it("should properly burn power when moving up brainstone", () => {
+    const moves = Engine.parseMoves(`
+      init 2 yellow-paint-8951
+      p1 faction xenos
+      p2 faction taklons
+      xenos build m 0x-2
+      taklons build m -1x-3
+      taklons build m -2x5
+      xenos build m -4x3
+      xenos build m -2x6
+      taklons booster booster9
+      xenos booster booster7
+      taklons brainstone area3
+      xenos build ts 0x-2.
+      taklons charge 1pw
+      taklons build ts -1x-3.
+      xenos charge 2pw
+      xenos build ts -2x6.
+      taklons charge 1pw
+      taklons action power3.
+      xenos build ts -4x3.
+      taklons build ts -2x5.
+      xenos charge 2pw
+      xenos up terra.
+      taklons build lab -1x-3. tech terra. up terra.
+      xenos charge 2pw
+      xenos action power4.
+      taklons up nav.
+      xenos pass booster3
+      taklons spend 1pw for 1c. build lab -2x5. tech free2. up int.
+      xenos charge 2pw
+      taklons action qic1. tech sci. up sci.
+      taklons burn 2. special 4pw. brainstone area3.
+      taklons pass booster1
+      xenos build lab 0x-2. tech terra. up terra.
+      taklons charge 2pw
+      taklons action power3.
+      xenos pass booster9
+      taklons special 4pw.
+      taklons action power4.
+      taklons build ac2 -1x-3. tech free1. up nav.
+      xenos charge 2pw
+      taklons up nav. brainstone area3.
+      taklons special q. spend 6pw for 2o.
+      taklons build m -2x-4.
+      taklons build m -3x-2.
+      taklons pass booster3. brainstone area2
+      xenos action power3.
+      taklons burn 1
+    `);
+
+    const engine = new Engine(moves);
+
+    expect(engine.player(Player.Player2).data.power.area2).to.equal(0);
+  });
 });
