@@ -5,7 +5,7 @@ export interface GameApi {
   loadGame(gameId: string): Promise<Engine>;
   /** Check if we need to refresh the game */
   checkStatus(gameId: string): Promise<any>;
-  addMove(gameId: string, move: string): Promise<any>;
+  addMove(gameId: string, move: string): Promise<Engine>;
   replay(moveList: string[]): Promise<Engine>;
 }
 
@@ -17,8 +17,9 @@ const api: GameApi = {
   checkStatus(gameId: string) {
     return $.get(`${window.location.protocol}//${window.location.hostname}:9508/g/${gameId}/status`) as any;
   },
-  addMove(gameId: string, move: string) {
-    return $.post(`${window.location.protocol}//${window.location.hostname}:9508/g/${gameId}/move`,  {move}) as any;
+  async addMove(gameId: string, move: string) {
+    const data = await $.post(`${window.location.protocol}//${window.location.hostname}:9508/g/${gameId}/move`,  {move}) as any;
+    return Engine.fromData(data);
   },
   async replay(moves: string[]) {
     const data = await $.post(`${window.location.protocol}//${window.location.hostname}:9508/`, {moves}) as any;
