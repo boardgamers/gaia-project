@@ -302,7 +302,7 @@ export default class Commands extends Vue {
           ret.push({
             label: "Free action",
             command: Command.Spend,
-            buttons: command.data.acts.map(act => ({label: `Spend ${act.cost} to gain ${act.income}`, command: `${act.cost} for ${act.income}`}))
+            buttons: command.data.acts.map(act => ({label: `Spend ${act.cost} to gain ${act.income}`, command: `${act.cost} for ${act.income}`, times: act.range}))
           });
           break;
         };

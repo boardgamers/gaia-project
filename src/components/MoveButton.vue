@@ -1,7 +1,10 @@
 <template>
   <div class="move-button">
-    <button class='btn btn-secondary mr-2 mb-2 move-button' @click="handleClick" @mouseenter="hover" @mouseleave="leave" :title="button.tooltip" v-b-tooltip.html v-html="customLabel || button.label">
+    <button class='btn btn-secondary mr-2 mb-2 move-button' @click="handleClick" @mouseenter="hover" @mouseleave="leave" :title="button.tooltip" v-b-tooltip.html v-html="customLabel || button.label" v-if="!button.times">
     </button>
+    <b-dropdown class='mr-2 mb-2 move-button' v-else split right :text="customLabel || button.label">
+      <b-dropdown-item v-for="i in button.times" :key="i" @click="handleRangeClick(i)">{{i}}</b-dropdown-item>
+    </b-dropdown>
     <b-modal v-if="button.modal" v-model="modalShow" size="lg" @ok="handleOK" :title="button.label" ok-title="OK, I pick this one!">
       <div  v-html="button.modal"></div>
     </b-modal>
@@ -118,14 +121,19 @@ export default class MoveButton extends Vue {
     }
   }
 
+  handleRangeClick(times: number) {
+    this.emitCommand(null, {times});
+  }
+
   handleOK() {
     this.emitCommand();
   }
 
-  emitCommand(append?: string, params: {disappear?: boolean, final?: boolean} = {disappear: true, final: false}) {
+  emitCommand(append?: string, params?: {disappear?: boolean, final?: boolean, times?: number}) {
     console.log("emit command", append);
 
-    const {disappear, final} = params;
+    params = Object.assign({}, {disappear: true, final: false, times: 1}, params)
+    const {disappear, final, times} = params;
 
     if (disappear) {
       this.unsubscribe();
@@ -133,7 +141,15 @@ export default class MoveButton extends Vue {
       this.$store.commit("gaiaViewer/activeButton", null);
     }
 
-    const commandBody = [final ? null : this.button.command, append].filter(x => !!x);
+    let commandBody: string [] = [];
+
+    if (final) {
+      // No command boody
+    } else {
+      // Parse numbers
+      const command = (this.button.command || "").replace(/[0-9]+/g, x => ('' + (+x * times)));
+      commandBody = [command, append].filter(x => !!x);
+    }
 
     this.$emit('trigger', commandBody.join(" "), this, final);
   }
