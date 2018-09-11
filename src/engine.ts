@@ -276,7 +276,6 @@ export default class Engine {
   }
 
   loadTurnMoves(move: string, params: {split?: boolean, processFirst?: boolean} = {split: true, processFirst: false}) {
-    // Todo: replace players by factions in the future
     const playerS = move.substr(0, move.indexOf(' '));
     let player: number;
 

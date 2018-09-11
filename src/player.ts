@@ -22,8 +22,8 @@ import techs from './tiles/techs';
 import * as assert from "assert";
 
 const TERRAFORMING_COST = 3;
-// 25 satellites - 2 used on the final scoring board
-const MAX_SATELLITES = 23;
+// 25 satellites - 2 used on the final scoring board - 1 used in the player order
+const MAX_SATELLITES = 22;
 
 interface FederationCache {
   federations: FederationInfo[];
@@ -63,15 +63,11 @@ export default class Player extends EventEmitter {
       faction: this.faction,
       data: this.data,
       income: Reward.toString(Reward.merge([].concat(...this.events[Operator.Income].map(event => event.rewards))), true),
-      // TODO: calculate structureValue & structureFedValue client-side
-      progress:  Object.assign({}, ...Object.values(FinalTile).map( track => ({ [track]: this.eventConditionCount(finalScorings[track].condition)})), { structureValue: this.eventConditionCount(Condition.StructureValue) }, { structureFedValue: this.eventConditionCount(Condition.StructureFedValue) }),
       actions: this.events[Operator.Activate].map(event => ({rewards: event.spec.replace('=>', '').trim(), enabled: !event.activated})),
       events: this.events,
       name: this.name,
       auth: this.auth,
-      dropped: this.dropped,
-      // TODO: Calculate client-side
-      ownedPlanets:  _.countBy(this.ownedPlanets, 'data.planet')
+      dropped: this.dropped
     } as any;
 
     if (this.federationCache) {
