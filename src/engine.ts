@@ -606,6 +606,7 @@ export default class Engine {
       // If the player has passed and it's the last round, there's absolutely no points in leeching
       // There's no cultists in gaia project.
       if (this.isLastRound && this.passedPlayers.includes(pl.player)) {
+        pl.data.leechPossible = 0;
         continue;
       }
       // Exclude the one who made the building from the leech
