@@ -20,7 +20,7 @@
         <MoveButton :button="randomFactionButton" @cancel="updateRandomFaction" @trigger="handleCommand" />
       </div>
       <div v-else>
-        <MoveButton v-for="button in buttons" :class="{'d-none': button.hide}" @trigger="handleCommand" :button="button" :key="button.label || button.command">
+        <MoveButton v-for="(button, i) in buttons" :class="{'d-none': button.hide, 'shown': !button.hide}" :ref='`button-${i}`' :data-ref='`button-${i}`' @trigger="handleCommand" :button="button" :key="button.label || button.command">
           {{button.label || button.command}}
         </MoveButton>
       </div>
@@ -77,6 +77,7 @@ export default class Commands extends Vue {
   updater: number = 0;
 
   loadCommands(val: AvailableCommand[]) {
+    console.log("load commands", val.length);
     this.commandTitles = [];
     this.customButtons = [];
     this.commandChain = [];
@@ -90,13 +91,12 @@ export default class Commands extends Vue {
     }
 
     // If there's only one button, save the player the hassle and click it
-    if (val.length === 1) {
-      setTimeout(() => {
-        if ($(".move-button:not(.d-none)").length <= 1)  {
-          $(".move-button:not(.d-none)").click();
-        }
-      });
-    }
+    setTimeout(() => {
+      if ($(".move-button.shown").length <= 1)  {
+        const ref = $(".move-button.shown").attr("data-ref");
+        (this.$refs[ref][0] as MoveButton).handleClick();
+      }
+    });
   }
 
   get availableCommands(): AvailableCommand[] {
@@ -152,6 +152,13 @@ export default class Commands extends Vue {
       this.commandChain.push(source.button.command);
       this.buttonChain.push(source.button);
       this.customButtons = source.button.buttons;
+
+      setTimeout(() => {
+        if ($(".move-button.shown").length <= 1)  {
+          const ref = $(".move-button.shown").attr("data-ref");
+          (this.$refs[ref][0] as MoveButton).handleClick();
+        }
+      });
 
       return;
     }
