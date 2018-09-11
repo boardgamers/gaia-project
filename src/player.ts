@@ -57,13 +57,19 @@ export default class Player extends EventEmitter {
     this.data.on('advance-research', track => this.onResearchAdvanced(track));
   }
 
+  get income() {
+    return Reward.toString(Reward.merge([].concat(...this.events[Operator.Income].map(event => event.rewards))), true);
+  }
+
+  get actions() {
+    return this.events[Operator.Activate].map(event => ({rewards: event.spec.replace('=>', '').trim(), enabled: !event.activated}));
+  }
+
   toJSON() {
     const json = {
       player: this.player,
       faction: this.faction,
       data: this.data,
-      income: Reward.toString(Reward.merge([].concat(...this.events[Operator.Income].map(event => event.rewards))), true),
-      actions: this.events[Operator.Activate].map(event => ({rewards: event.spec.replace('=>', '').trim(), enabled: !event.activated})),
       events: this.events,
       name: this.name,
       auth: this.auth,
