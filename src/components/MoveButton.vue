@@ -1,11 +1,11 @@
 <template>
   <div class="move-button">
-    <button class='btn btn-secondary mr-2 mb-2 move-button' @click="handleClick" @mouseenter="hover" @mouseleave="leave" :title="button.tooltip" v-b-tooltip.html v-html="customLabel || button.label" v-if="!button.times">
+    <button class='btn btn-secondary mr-2 mb-2 move-button' @click="handleClick" @mouseenter="hover" @mouseleave="leave" :title="button.tooltip" v-b-tooltip.html v-html="customLabel || button.label || button.command" v-if="!button.times">
     </button>
-    <b-dropdown class='mr-2 mb-2 move-button' v-else split right :text="customLabel || button.label">
+    <b-dropdown class='mr-2 mb-2 move-button' v-else split right :text="customLabel || button.label || button.command">
       <b-dropdown-item v-for="i in button.times" :key="i" @click="handleRangeClick(i)">{{i}}</b-dropdown-item>
     </b-dropdown>
-    <b-modal v-if="button.modal" v-model="modalShow" size="lg" @ok="handleOK" @hide="modalCancel" :title="button.title || button.label" ok-title="OK, I pick this one!">
+    <b-modal v-if="button.modal" v-model="modalShow" size="lg" @ok="handleOK" @hide="modalCancel" :title="button.title || button.label || button.command" ok-title="OK, I pick this one!">
       <div  v-html="button.modal"></div>
     </b-modal>
   </div>
@@ -148,7 +148,7 @@ export default class MoveButton extends Vue {
     let commandBody: string [] = [];
 
     if (final) {
-      // No command boody
+      commandBody = append ? [append] : [];
     } else {
       // Parse numbers
       const command = (this.button.command || "").replace(/[0-9]+/g, x => ('' + (+x * times)));
