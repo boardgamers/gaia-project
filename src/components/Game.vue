@@ -221,8 +221,13 @@ export default class Game extends Vue {
    * Check if we need to refresh the whole game
    */
   refreshStatus() {
-    if (this.canPlay || this.ended) {
+    if (this.ended) {
       return;
+    }
+
+    // Slow refresh if the player can play
+    if (this.canPlay && this.refreshCount < 1000) {
+      this.refreshCount = 1000;
     }
 
     this.refreshCount += 1;  
