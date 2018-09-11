@@ -4,6 +4,8 @@ export interface ButtonData {
   label?: string;
   command: string;
   tooltip?: string;
+  // Simple label
+  title?: string;
   times?: number[];
   modal?: string;
   hexes?: HighlightHexData;

@@ -16,8 +16,8 @@
         <MoveButton v-for="i in [2,3,4]" :button="{command: `init ${i} randomSeed`, label: `${i} players`}" @trigger="handleCommand" :key="i"></MoveButton>
       </div>
       <div v-else-if="chooseFaction">
-        <MoveButton v-for="faction in command.data" :button="{command: `${command.name} ${faction}`,  modal:`${tooltip(faction)}`, label:`${factions[faction].name} <i class='planet ${factions[faction].planet}'></i>`}" @trigger="handleCommand" :key="faction">
-        </MoveButton>
+        <MoveButton v-for="faction in command.data" :button="{command: `${command.name} ${faction}`,  modal: tooltip(faction), title: factions[faction].name, label: `${factions[faction].name} <i class='planet ${factions[faction].planet}'></i>`}" @trigger="handleCommand" :key="faction" />
+        <MoveButton :button="randomFactionButton" @cancel="updateRandomFaction" @trigger="handleCommand" />
       </div>
       <div v-else>
         <MoveButton v-for="button in buttons" v-show="!button.hide" @trigger="handleCommand" :button="button" :key="button.label || button.command">
@@ -52,6 +52,18 @@ import { factionDesc } from '../data/factions';
   computed: {
     canUndo() {
       return !this.$store.state.gaiaViewer.data.newTurn;
+    },
+    randomFactionButton() {
+      this.updater = this.updater + 1;
+      const command = this.command;
+      const faction = command.data[Math.floor(Math.random() * command.data.length)];
+
+      return {
+        command: `${command.name} ${faction}`,
+        label: "Random",
+        modal: this.tooltip(faction),
+        title: factions[faction].name
+      }
     }
   },
   components: {
@@ -61,6 +73,8 @@ import { factionDesc } from '../data/factions';
 export default class Commands extends Vue {
   @Prop({default: ''})
   remainingTime: string;
+
+  updater: number = 0;
 
   loadCommands(val: AvailableCommand[]) {
     this.commandTitles = [];
@@ -125,6 +139,10 @@ export default class Commands extends Vue {
 
   get factions() {
     return factions;
+  }
+
+  updateRandomFaction() {
+    this.updater += 1;
   }
 
   handleCommand(command: string, source: MoveButton, final: boolean) {

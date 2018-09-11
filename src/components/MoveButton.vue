@@ -5,7 +5,7 @@
     <b-dropdown class='mr-2 mb-2 move-button' v-else split right :text="customLabel || button.label">
       <b-dropdown-item v-for="i in button.times" :key="i" @click="handleRangeClick(i)">{{i}}</b-dropdown-item>
     </b-dropdown>
-    <b-modal v-if="button.modal" v-model="modalShow" size="lg" @ok="handleOK" :title="button.label" ok-title="OK, I pick this one!">
+    <b-modal v-if="button.modal" v-model="modalShow" size="lg" @ok="handleOK" @hide="modalCancel" :title="button.title || button.label" ok-title="OK, I pick this one!">
       <div  v-html="button.modal"></div>
     </b-modal>
   </div>
@@ -35,6 +35,10 @@ export default class MoveButton extends Vue {
   private subscription: () => {} = null;
   private modalShow: boolean = false;
   private customLabel = '';
+
+  modalCancel(arg: string) {
+    this.$emit("cancel");
+  }
 
   subscribe(action: string, callback: any) {
     action = "gaiaViewer/" + action;
@@ -130,7 +134,7 @@ export default class MoveButton extends Vue {
   }
 
   emitCommand(append?: string, params?: {disappear?: boolean, final?: boolean, times?: number}) {
-    console.log("emit command", append);
+    console.log("emit command", this.button.command, append);
 
     params = Object.assign({}, {disappear: true, final: false, times: 1}, params)
     const {disappear, final, times} = params;
