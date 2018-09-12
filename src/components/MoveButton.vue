@@ -151,7 +151,12 @@ export default class MoveButton extends Vue {
       commandBody = append ? [append] : [];
     } else {
       // Parse numbers
-      const command = ((this.button.command || "") + "").replace(/[0-9]+/g, x => ('' + (+x * times)));
+      let command = (this.button.command || "") + "";
+
+      if (times && times !== 1 && typeof "times" === "number") {
+        command = command.replace(/[0-9]+/g, x => ('' + (parseInt(x) * times)));
+      }
+      
       commandBody = [command, append].filter(x => !!x);
     }
 
