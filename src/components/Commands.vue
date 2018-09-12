@@ -77,7 +77,6 @@ export default class Commands extends Vue {
   updater: number = 0;
 
   loadCommands(val: AvailableCommand[]) {
-    console.log("load commands", val.length);
     this.commandTitles = [];
     this.customButtons = [];
     this.commandChain = [];
