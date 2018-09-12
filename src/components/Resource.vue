@@ -33,6 +33,10 @@ export default class Resource extends Vue {
 
 <style lang="scss">
 g.resource {
+  .hide-research-track-resources & {
+    display: none;
+  }
+  
   .qic {
     fill: green;
     stroke: #333;
