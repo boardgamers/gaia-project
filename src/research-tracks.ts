@@ -1,5 +1,4 @@
 import { ResearchField } from "./enums";
-import Event from "./events";
 
 export default {
   [ResearchField.Terraforming]: [
