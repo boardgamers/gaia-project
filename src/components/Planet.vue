@@ -1,6 +1,7 @@
 <template>
   <g>
-    <circle :r="radius" :class='["planet-fill", fill ]' style="pointer-events: none;" />
+    <circle :r="radius" :class='["planet-fill", planet ]' style="pointer-events: none;" />
+    <circle :r="radius" :class='["planet-fill", "faction-fill", fill ]' v-if="faction" style="pointer-events: none;" />
     <circle :r='radius' :class='["planet", planet]' />
   </g>
 </template>
@@ -62,6 +63,10 @@ svg {
   }
 
   .planet-fill {
+    .no-faction-fill &.faction-fill {
+      display: none;
+    }
+    
     // terra
     &.r {fill: #99ccff}
     // desert
