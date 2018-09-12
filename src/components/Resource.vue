@@ -6,7 +6,7 @@
     <rect v-else-if="kind=='pw' || kind=='t'" class="power" width="14" height="14" ry="7" rx="7" x="-7" y="-7" />
     <Building v-else-if="kind=='k'" faction="terrans" building="gf" transform="translate(0.5, 0) scale(20)" />
     <Building v-else-if="kind=='gf'" faction="ivits" building="gf" transform="translate(0.5, 0) scale(20)" style="fill: none !important" />
-    <text x="0" y="0" v-if="count" :class="{plus: count === '+'}">{{kind !== 'vp' ? count : '4vp, g>vp'}}</text>
+    <text x="0" y="0" v-if="count && count !='1'" :class="{plus: count === '+'}">{{kind !== 'vp' ? count : '4vp, g>vp'}}</text>
   </g>
 </template>
 
@@ -33,6 +33,8 @@ export default class Resource extends Vue {
 
 <style lang="scss">
 g.resource {
+  opacity: 0.7;
+
   .hide-research-track-resources & {
     display: none;
   }
@@ -62,8 +64,8 @@ g.resource {
     stroke-width: 0.04px;
   }
 
-  .ore, .credit, .building {
-    &.r + text {
+  .ore, .credit, .building.r {
+    & + text {
       fill: black
     }
   }
@@ -78,7 +80,7 @@ g.resource {
 
     &.plus {
       font-size: 15px;
-      opacity: 0.5;
+      
       fill: #333;
     }
   }
