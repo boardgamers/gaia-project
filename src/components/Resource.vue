@@ -36,42 +36,33 @@ g.resource {
   .hide-research-track-resources & {
     display: none;
   }
-  
+
+  rect {
+    stroke: #333;
+    stroke-width: 0.8px;
+  }
+
   .qic {
     fill: green;
-    stroke: #333;
-    stroke-width: 1px;
   }
 
   .ore {
     fill: #bbb;
-    stroke: #333;
-    stroke-width: 1px;
-
-    & + text {
-      fill: black;
-    }
   }
 
   .credit {
     fill: #e8de24;
-    stroke: #333;
-    stroke-width: 1px;
-
-    & + text {
-      fill: black;
-    }
   }
 
   .power {
     fill: #a41894;
-    stroke: #333;
-    stroke-width: 1px;
   }
 
   .building {
     stroke-width: 0.04px;
+  }
 
+  .ore, .credit, .building {
     &.r + text {
       fill: black
     }
@@ -87,12 +78,8 @@ g.resource {
 
     &.plus {
       font-size: 15px;
-      opacity: 0.8;
-
-      .eco & {
-        fill: black;
-        opacity: 0.5;
-      }
+      opacity: 0.5;
+      fill: #333;
     }
   }
 }
