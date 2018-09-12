@@ -80,6 +80,7 @@ g.resource {
 
     &.plus {
       font-size: 15px;
+      font-weight: bold;
       
       fill: #333;
     }
