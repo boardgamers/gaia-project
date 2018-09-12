@@ -1,18 +1,20 @@
 <template>
-  <g :transform="`translate(0, ${y})`" v-b-tooltip.html.left :title="tooltip">
+  <g :transform="`translate(0, ${y})`" v-b-tooltip.html.left :title="tooltip" :class="field">
     <rect x="2" y="2" :class='["researchTile", field, {highlighted}]' width=56 :height="height" rx="5" ry="5" @click="onClick" />
     <Token v-for="(player, index) in players" v-if="player.faction && player.data.research[field] == level" :faction="player.faction" :transform="`translate(${tokenX(index)}, ${tokenY(index)})`" :key="player.player" :scale="5" />
     <FederationTile v-if="this.federation" :federation="this.federation" :numTiles="1" x="5" y="7" height="35" style="pointer-events: none" />
+    <Resource v-for="(resource,i) in resources" :key="'field-' + i" :transform="`translate(${2 + 56/2 - 6 * (resources.length - 1) + i * 12}, ${height/2 + 2})`" :kind="resource.type" :count="resource.count" />
   </g>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
-import { ResearchField, Player, Federation } from '@gaia-project/engine';
+import { ResearchField, Player, Federation, Resource as ResourceEnum, researchTracks, Event, Reward, Operator } from '@gaia-project/engine';
 import { descriptions } from '../data/research';
 import Token from './Token.vue';
 import FederationTile from './FederationTile.vue';
+import Resource from './Resource.vue';
 
 @Component<ResearchTile>({
   computed: {
@@ -36,7 +38,8 @@ import FederationTile from './FederationTile.vue';
   },
   components: {
     Token,
-    FederationTile
+    FederationTile,
+    Resource
   }
 })
 export default class ResearchTile extends Vue {
@@ -59,6 +62,19 @@ export default class ResearchTile extends Vue {
     if (this.highlighted) {
       this.$store.dispatch('gaiaViewer/researchClick', this.field)
     }
+  }
+
+  get resources() {
+    const events = researchTracks[this.field][this.level].map(s => new Event(s));
+
+    const rewards = Reward.merge(...events.map(ev => ev.rewards), this.level == 3 ? [new Reward('-3pw')] : []);
+
+    if (events[0] && events[0].operator === Operator.Income) {
+      rewards.unshift(new Reward('+', ResourceEnum.None));
+      rewards[0].count = '+' as any;
+    }
+    
+    return rewards;
   }
 }
 export default interface ResearchTile {
