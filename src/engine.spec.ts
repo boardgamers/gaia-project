@@ -251,8 +251,8 @@ describe("Engine", () => {
     this.timeout(10000);
     const engine = new Engine(fullGame());
 
-    expect(engine.player(Player.Player1).data.victoryPoints).to.equal(118);
-    expect(engine.player(Player.Player2).data.victoryPoints).to.equal(112);
+    expect(engine.player(Player.Player1).data.victoryPoints).to.equal(130);
+    expect(engine.player(Player.Player2).data.victoryPoints).to.equal(124);
   });
 
   it ("should be able to load/save state", function() {

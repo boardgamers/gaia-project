@@ -173,7 +173,7 @@ export default class PlayerData extends EventEmitter {
     }
 
     if (count > 0) {
-      this.emit(`gain-${reward.type}`);
+      this.emit(`gain-${reward.type}`, count);
     } else if (count < 0) {
       this.emit(`pay-${reward.type}`);
     }
@@ -401,17 +401,16 @@ export default class PlayerData extends EventEmitter {
   }
 
   gainFinalVictoryPoints() {
-    const before = this.victoryPoints;
     // Gain 4 points for research at level 3, 8 points for research at level 4
     // and 12 points for research at level 12
     for (const research of Object.values(ResearchField)) {
-      this.victoryPoints += Math.max(this.research[research] - 3, 0) * 4;
+      this.gainReward(new Reward(Math.max(this.research[research] - 2, 0) * 4, Resource.VictoryPoint));
     }
 
     // Gain 1 point for any 3 of ore, credits & knowledge.
     const resources = this.ores + this.credits + this.knowledge;
 
-    this.victoryPoints += Math.floor(resources / 3);
+    this.gainReward(new Reward(Math.max(Math.floor(resources / 3)), Resource.VictoryPoint));
   }
 
   removeGreenFederation() {
