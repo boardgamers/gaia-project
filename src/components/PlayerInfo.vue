@@ -147,6 +147,10 @@ export default interface PlayerInfo {
   @extend .no-gutters;
   flex-wrap: nowrap;
 
+  @media (max-width: 600px) {
+    flex-wrap: wrap;
+  }
+
   .tiles {
     @extend .row;
     @extend .no-gutters;
