@@ -33,6 +33,7 @@ export default class Resource extends Vue {
 
 <style lang="scss">
 g.resource {
+  pointer-events: none;
   opacity: 0.7;
 
   .hide-research-track-resources & {
@@ -73,7 +74,6 @@ g.resource {
   text {
     font-family: arial;
     font-size: 10px;
-    pointer-events: none;
     fill: white;
     dominant-baseline: central;
     text-anchor: middle;
