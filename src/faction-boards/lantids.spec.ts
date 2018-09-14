@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import Engine from "../engine";
-import { Player, Building } from '../enums';
+import { Player, Building, Command } from '../enums';
 
 
 
@@ -74,4 +74,40 @@ describe("Lantids", () => {
     expect(pl.data.knowledge).to.equal(k + 1);
   });
 
+  it("should not get the option to build a federation using other players' buildings", () => {
+    const moves = parseMoves(`
+      init 2 zadbd
+      p1 faction geodens
+      p2 faction lantids
+      geodens build m 2x-1
+      lantids build m 3x-1
+      lantids build m 1x-3
+      geodens build m 4x-5
+      lantids booster booster1
+      geodens booster booster4
+      geodens build ts 2x-1.
+      lantids charge 1pw
+      lantids build ts 3x-1.
+      geodens charge 2pw
+      geodens build PI 2x-1.
+      lantids charge 2pw
+      lantids build PI 3x-1.
+      geodens charge 3pw
+      geodens special step. build m 3x-2.
+      lantids charge 3pw
+      lantids build m 3x-2.
+      geodens charge 3pw
+      geodens action power5.
+      lantids build m 2x-1.
+      geodens charge 3pw
+      geodens up terra.
+    `);
+
+    const engine = new Engine(moves);
+
+    const commands = engine.generateAvailableCommands();
+
+    // tslint:disable-next-line no-unused-expression
+    expect(commands.some(cmd => cmd.name === Command.FormFederation)).to.be.false;
+  });
 });

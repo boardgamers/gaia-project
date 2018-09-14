@@ -664,8 +664,7 @@ export default class Player extends EventEmitter {
     const excluded = map.excludedHexesForBuildingFederation(this.player, this.faction);
 
     const hexes = this.data.occupied.map(coord => map.grid.get(coord)).filter(hex => !excluded.has(hex));
-    const hexesWithBuildings = new Set(hexes);
-    const values = hexes.map(node => this.buildingValue(node.data.building, node.data.planet, true));
+    const values = hexes.map(node => this.buildingValue(node.buildingOf(this.player), node.data.planet, true));
 
     let combinations = this.possibleCombinationsForFederations(_.zipWith(hexes, values, (val1, val2) => ({hex: val1, value: val2})));
 
