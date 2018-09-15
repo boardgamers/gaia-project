@@ -146,6 +146,10 @@ export default class Commands extends Vue {
 
   handleCommand(command: string, source: MoveButton, final: boolean) {
     console.log("handle command", command);
+    if (source.button.hide) {
+      console.log("Seems to be a double click, ignoring");
+      return;
+    }
     if (source.button.buttons && source.button.buttons.length > 0 && !final) {
       this.commandTitles.push(source.button.label);
       this.commandChain.push(source.button.command);

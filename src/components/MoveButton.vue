@@ -71,6 +71,10 @@ export default class MoveButton extends Vue {
   }
 
   handleClick() {
+    if (this.button.hide) {
+      console.log("click on hidden button, ignoring");
+      return;
+    }
     // Remove highglights caused by another button
     if (!this.isActiveButton) {
       this.$store.commit("gaiaViewer/clearContext");
