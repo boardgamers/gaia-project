@@ -113,10 +113,6 @@ export default class Player extends EventEmitter {
       player.loadFaction(data.faction, true);
     }
 
-    if (data.data) {
-      _.merge(player.data, data.data);
-    }
-
     for (const kind of Object.keys(data.events)) {
       player.events[kind] = data.events[kind].map(ev => new Event(ev));
     }
@@ -132,7 +128,17 @@ export default class Player extends EventEmitter {
       }
     }
 
+    if (data.data) {
+      _.merge(player.data, data.data);
+    }
+
     return player;
+  }
+
+  loadPlayerData(data: any) {
+    if (data) {
+      _.merge(this.data, data);
+    }
   }
 
   get planet(): Planet {

@@ -28,9 +28,7 @@ app.post("/", (req, res) => {
     const moves = req.body.moves;
     const engine = new Engine(moves);
 
-    if (!engine.availableCommands) {
-      engine.generateAvailableCommands();
-    }
+    engine.generateAvailableCommandsIfNeeded();
 
     res.json(engine);
   } catch (err) {
@@ -161,9 +159,7 @@ app.post("/g/:gameId/move", (req , res) => {
 
   try {
     engine.move(move);
-    if (!engine.availableCommands) {
-      engine.generateAvailableCommands();
-    }
+    engine.generateAvailableCommandsIfNeeded();
 
     res.json(engine);
 

@@ -121,6 +121,10 @@ export default class Engine {
     this.moveHistory.push(move);
   }
 
+  generateAvailableCommandsIfNeeded(subphase: SubPhase = null, data?: any): AvailableCommand[] {
+    return this.availableCommands || this.generateAvailableCommands(subphase, data);
+  }
+
   generateAvailableCommands(subphase: SubPhase = null, data?: any): AvailableCommand[] {
     return this.availableCommands = generateAvailableCommands(this, subphase, data);
   }
@@ -239,6 +243,39 @@ export default class Engine {
     }
     if (this.playerToMove === toMove) {
       this.autoPass();
+    }
+  }
+
+  /**
+   * Automatically leech when there's no cost
+   */
+  autoChargePower(): boolean {
+    if (!this.playerToMove) {
+      return false;
+    }
+    this.generateAvailableCommandsIfNeeded();
+    const cmd = this.findAvailableCommand(this.playerToMove, Command.ChargePower);
+    if (!cmd) {
+      return false;
+    }
+
+    const offers = cmd.data.offers;
+
+    // Only leech when only one option and cost is nothing
+    if (offers.length > 1 || offers[0].cost !== '~') {
+      return false;
+    }
+
+    const pl = this.player(this.playerToMove);
+    // const jsonData = pl.data.toJSON();
+
+    try {
+      this.move(`${pl.faction} ${Command.ChargePower} ${offers[0].offer}`, false);
+      return true;
+    } catch (err) {
+      /* Restore player data to what it was, like if the taklons cause an incomplete move error requiring brainstone destination */
+      // pl.loadPlayerData(jsonData);
+      return false;
     }
   }
 

@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import Engine from "./engine";
 import { AssertionError } from "assert";
-import { Player, Federation, Operator, AdvTechTilePos, Building, Condition } from "./enums";
+import { Player, Federation, Operator, AdvTechTilePos, Building, Condition, BrainstoneArea } from "./enums";
 
 describe("Engine", () => {
   it("should throw when trying to build on the wrong place", () => {
@@ -533,6 +533,61 @@ describe("Engine", () => {
     engine.move('nevlas action power6. build m -1x3.');
     expect(  engine.player(Player.Player1).data.victoryPoints ).to.be.equal(vps + 2 );
     expect(  engine.player(Player.Player1).data.temporaryStep ).to.be.equal(0 );
+  });
+
+  describe("autoChargePower", () => {
+    it ("should leech 1pw and not do anything on 2pw", () => {
+      const moves = parseMoves(`
+        init 2 SGAMBATA
+        p1 faction nevlas
+        p2 faction terrans
+        nevlas build m -4x0
+        terrans build m -3x-2
+        terrans build m 1x-1
+        nevlas build m 3x3
+        terrans booster booster9
+        nevlas booster booster5
+        nevlas build ts -4x0.
+      `);
+
+      const engine = new Engine(moves);
+
+      engine.generateAvailableCommandsIfNeeded();
+      // tslint:disable-next-line no-unused-expression
+      expect(engine.autoChargePower()).to.be.true;
+      expect(engine.moveHistory.length).to.equal(moves.length + 1);
+      expect(engine.moveHistory.slice(-1).pop()).to.equal("terrans charge 1pw");
+
+      /* Test with 2pw leech */
+      engine.move('terrans build ts -3x-2.');
+      // tslint:disable-next-line no-unused-expression
+      expect(engine.autoChargePower()).to.be.false;
+      expect(engine.moveHistory.length).to.equal(moves.length + 2);
+    });
+
+    it ("should not leech 1pw when brainstone may move", () => {
+      const moves = parseMoves(`
+        init 2 randomSeed
+        p1 faction terrans
+        p2 faction taklons
+        terrans build m -4x-1
+        taklons build m -3x-2
+        taklons build m -6x3
+        terrans build m -4x2
+        taklons booster booster3
+        terrans booster booster4
+        terrans build ts -4x-1.
+      `);
+
+      const engine = new Engine(moves);
+
+      // tslint:disable-next-line no-unused-expression
+      expect(engine.autoChargePower()).to.be.false;
+      expect(engine.moveHistory.length).to.equal(moves.length);
+      expect(engine.player(Player.Player2).data.power.area1).to.equal(2);
+      expect(engine.player(Player.Player2).data.power.area2).to.equal(4);
+      expect(engine.player(Player.Player2).data.brainstone).to.equal(BrainstoneArea.Area1);
+    });
   });
 });
 
