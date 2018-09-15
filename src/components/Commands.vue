@@ -286,31 +286,52 @@ export default class Commands extends Vue {
         }
 
         case Command.ChargePower: {
-          const leech = command.data.offer;
-          const gainToken = command.data.freeIncome;
-
-          if (gainToken) {
-            ret.push({
-              label: "Charge " + leech + " get " + gainToken,
-              command: `${Command.ChargePower} ${leech},${gainToken}`
-            }, {
-              label: "Get " + gainToken + " charge " + leech,
-              command: `${Command.ChargePower} ${gainToken},${leech}`
-            });
+          if (command.data.offers) {
+            for (const offer of command.data.offers) {
+              const leech = offer.offer;
+              ret.push({
+                label: offer.cost && offer.cost !== "~" ? "Charge " + leech + " for " + offer.cost : "Charge " + leech,
+                command: `${Command.ChargePower} ${leech}`
+              });
+            }
           } else {
-            ret.push({
-              label: command.data.cost && command.data.cost !== "~" ? "Charge " + leech + " for " + command.data.cost : "Charge " + leech,
-              command: `${Command.ChargePower} ${leech}`
-            });
+            const leech = command.data.offer;
+            const gainToken = command.data.freeIncome;
+            // LEGACY CODE
+            // TODO: Remove when games are updated
+            if (gainToken) {
+              ret.push({
+                label: "Charge " + leech + " get " + gainToken,
+                command: `${Command.ChargePower} ${leech},${gainToken}`
+              }, {
+                label: "Get " + gainToken + " charge " + leech,
+                command: `${Command.ChargePower} ${gainToken},${leech}`
+              });
+            } else {
+              ret.push({
+                label: command.data.cost && command.data.cost !== "~" ? "Charge " + leech + " for " + command.data.cost : "Charge " + leech,
+                command: `${Command.ChargePower} ${leech}`
+              });
+            }
           }
+          
           break;
         }
 
         case Command.Decline: {
-          ret.push({
-            label: `Decline ${command.data.offer}`,
-            command: Command.Decline
-          });
+          if (command.data.offers) {
+            ret.push({
+              label: `Decline ${command.data.offers[0].offer}`,
+              command:  `${Command.Decline} ${command.data.offers[0].offer}`
+            });  
+          } else {
+            // LEGACY CODE
+            // TODO: Remove when games are updated
+            ret.push({
+              label: `Decline ${command.data.offer}`,
+              command:  `${Command.Decline} ${command.data.offer}`
+            });
+          }
           break;
         }
 
