@@ -250,7 +250,7 @@ export default class Engine {
    * Automatically leech when there's no cost
    */
   autoChargePower(): boolean {
-    if (!this.playerToMove) {
+    if (this.playerToMove === undefined) {
       return false;
     }
     this.generateAvailableCommandsIfNeeded();
