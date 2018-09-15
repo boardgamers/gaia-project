@@ -1,11 +1,6 @@
 import { Faction, Operator, Building } from "@gaia-project/engine";
 import {factionBoard} from '@gaia-project/engine';
 
-const stdCost = 'm:2c,1o ts:3/6c,2o lab:5c,3o PI:6c,4o AC:6c,6o';
-const stdIncome = 'm:1o ts:3/4/4/5c lab:1k PI:4pw,1t AC1:2k AC2:1q';
-const stdBasicIncome = '1o,1k';
-const stdStartResources = '15c,4o,3k,1q 2/4/0';
-
 const  factionData: { [faction in Faction]: { ability: string, PI: string}} = {
   [Faction.Terrans] : {
     ability : "During the Gaia phase, move the power tokens in your Gaia area to area II of your power cycle instead of to area I.",
@@ -20,8 +15,8 @@ const  factionData: { [faction in Faction]: { ability: string, PI: string}} = {
     PI : "You can form federations with a total power value of six instead of seven. You gain one Q.I.C. as income instead of one power token."
   },
   [Faction.Gleens] : {
-    ability : "If you would ever gain Q.I.C., gain that much ore instead; once you have upgraded to the indicated academy, this effect no longer applies. To make a Gaia Planet habitable, pay one ore instead of one Q.I.C. Each time you build a mine on a Gaia Planet, gain two additional VP.",
-    PI : "When you upgrade to the planetary institute, immediately gain the Gleens’ federation token (gaining the resources shown as normal). Gaining this tile counts as forming a federation. The planetary institute itself can still be part of a federation on the board."
+    ability : "If you would ever gain Q.I.C., gain that much ore instead; once you have upgraded to the second academy, this effect no longer applies. To make a Gaia Planet habitable, pay one ore instead of one Q.I.C. Each time you build a mine on a Gaia Planet, gain two additional VP.",
+    PI : "When you upgrade to the planetary institute, immediately gain the Gleens’ federation token (2 credits, 1 ore, 1 knowledge). Gaining this tile counts as forming a federation. The planetary institute itself can still be part of a federation on the board."
   },
   [Faction.Taklons] : {
     ability : "The Brainstone counts as one power token (when starting a Gaia Project, building satellites, etc.), but you can spend it as if it were three power.",
