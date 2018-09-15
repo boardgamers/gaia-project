@@ -214,4 +214,31 @@ describe("Taklons", () => {
 
     expect(() => new Engine(moves)).to.not.throw();
   });
+
+  it("should allow to gain a power token when leeching even if all power tokens are in bowl 3", () => {
+    const moves = Engine.parseMoves(`
+      init 2 randomseed
+      p1 faction taklons
+      p2 faction hadsch-hallas
+      taklons build m 1x4
+      hadsch-hallas build m 0x4
+      hadsch-hallas build m -4x0
+      taklons build m -3x-2
+      hadsch-hallas booster booster4
+      taklons booster booster9
+      taklons brainstone area3
+      taklons build ts 1x4.
+      hadsch-hallas charge 1pw
+      hadsch-hallas build ts 0x4.
+      taklons charge 2pw
+      taklons build PI 1x4. burn 2.
+      hadsch-hallas charge 2pw
+      hadsch-hallas build PI 0x4.
+      taklons charge 0pw,1t
+    `);
+
+    const engine = new Engine(moves);
+
+    expect(engine.player(Player.Player1).data.power.area1).to.equal(1);
+  });
 });

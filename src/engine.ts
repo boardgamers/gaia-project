@@ -909,7 +909,7 @@ export default class Engine {
 
     const offer = leechCommand.offers.find(ofr => ofr.offer === income);
 
-    assert(offer, `Cannot leech ${income}. Possible leeches: ${leechCommand.offers.map(ofr => ofr.offer)}`);
+    assert(offer, `Cannot leech ${income}. Possible leeches: ${leechCommand.offers.map(ofr => ofr.offer).join(' - ')}`);
 
     this.player(player).gainRewards(leechRewards);
     this.player(player).payCosts(Reward.parse(offer.cost));
