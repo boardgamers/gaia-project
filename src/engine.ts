@@ -83,7 +83,6 @@ export default class Engine {
   // used to transit between phases
   tempTurnOrder: PlayerEnum[] = [];
   tempCurrentPlayer: PlayerEnum;
-  leechingSource: GaiaHex;
   leechSources: Array<{player: PlayerEnum, coordinates: string}> = [];
 
   // All moves
@@ -173,7 +172,7 @@ export default class Engine {
    * @param player
    */
   playersInTableOrderFrom(player: PlayerEnum): Player[] {
-    return [...this.players.slice(player + 1), ...this.players.slice(0, player)];
+    return [...this.players.slice(player), ...this.players.slice(0, player)];
   }
 
   get playerToMove(): PlayerEnum {
@@ -607,12 +606,16 @@ export default class Engine {
   }
 
   beginLeechingPhase() {
+    if (this.leechSources.length === 0) {
+      this.beginRoundMovePhase();
+      return;
+    }
     const source = this.leechSources.shift();
     const sourceHex = this.map.grid.getS(source.coordinates);
 
     // Gaia-formers & space stations don't trigger leech
     if (stdBuildingValue(sourceHex.buildingOf(source.player)) === 0) {
-      return;
+      return this.beginLeechingPhase(); // next building on the list
     }
     // From rules, this is in clockwise order. We assume the order of players in this.players is the
     // clockwise order
@@ -623,18 +626,21 @@ export default class Engine {
         pl.data.leechPossible = 0;
         continue;
       }
-      // Exclude the one who made the building from the leech
-      if (pl !== this.player(this.currentPlayer)) {
-        let leech = 0;
-        for (const loc of pl.data.occupied) {
-          if (this.map.distance(loc, sourceHex) < ISOLATED_DISTANCE) {
-            leech = Math.max(leech, pl.buildingValue(this.map.grid.get(loc).buildingOf(pl.player), this.map.grid.get(loc).data.planet));
-          }
-        }
-
-        // Do not use maxLeech() here, cuz taklons
-        pl.data.leechPossible = leech;
+      // If source, exclude too
+      if (source.player === pl.player) {
+        pl.data.leechPossible = 0;
+        continue;
       }
+      // Exclude the one who made the building from the leech
+      let leech = 0;
+      for (const loc of pl.data.occupied) {
+        if (this.map.distance(loc, sourceHex) < ISOLATED_DISTANCE) {
+          leech = Math.max(leech, pl.buildingValue(this.map.grid.get(loc).buildingOf(pl.player), this.map.grid.get(loc).data.planet));
+        }
+      }
+
+      // Do not use maxLeech() here, cuz taklons
+      pl.data.leechPossible = leech;
     }
 
     const canLeechPlayers = this.playersInTableOrderFrom(source.player).filter(pl => pl.canLeech());
@@ -642,6 +648,8 @@ export default class Engine {
       this.changePhase(Phase.RoundLeech);
       this.tempTurnOrder = canLeechPlayers.map(pl => pl.player);
       this.tempCurrentPlayer = this.tempTurnOrder.shift();
+    } else {
+      return this.beginLeechingPhase();
     }
   }
 
@@ -757,10 +765,7 @@ export default class Engine {
       this.handleEndTurn();
     }
 
-    while (this.leechSources.length > 0) {
-      this.beginLeechingPhase();
-    }
-
+    this.beginLeechingPhase();
     this.currentPlayer = playerAfter;
   }
 
@@ -771,11 +776,7 @@ export default class Engine {
     // Current leech round ended
     if (this.tempCurrentPlayer === undefined) {
       // Next leech rounds (eg: double leech happens with lab + lost planet in same turn)
-      while (this.leechSources.length > 0) {
-        this.beginLeechingPhase();
-      }
-
-      this.beginRoundMovePhase();
+      this.beginLeechingPhase();
     }
   }
 
@@ -866,7 +867,7 @@ export default class Engine {
 
         // will trigger a LeechPhase
         if (this.phase === Phase.RoundMove) {
-          this.leechSources.push({player, coordinates: location});
+          this.leechSources.unshift({player, coordinates: location});
         }
 
         return;
@@ -989,7 +990,7 @@ export default class Engine {
 
     this.player(player).build(Building.Mine, hex, Reward.parse(data.cost), this.map, 0);
 
-    this.leechingSource = hex;
+    this.leechSources.unshift({player, coordinates: location});
   }
 
   [Command.Spend](player: PlayerEnum, costS: string, _for: "for", incomeS: string) {

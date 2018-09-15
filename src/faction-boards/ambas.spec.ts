@@ -128,6 +128,7 @@ describe("Ambas", () => {
         geodens spend 1q for 1o. build m 3x1.
         ambas build ac2 -3x-3. tech nav. up nav. lostPlanet 4x-1.
         geodens charge 2pw
+        geodens charge 1pw
         geodens up int.
         ambas spend 4pw for 1q. build m 5x-1.
         geodens charge 1pw
