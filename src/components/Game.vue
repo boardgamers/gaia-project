@@ -11,8 +11,7 @@
     <div class="row mt-2">
       <div class="col-md-6 order-2 order-md-1">
         <div v-if="sessionPlayer === undefined">
-          <PlayerInfo :player='orderedPlayers[0]'/>
-          <PlayerInfo v-for="player in orderedPlayers.slice(1)" :player='player' :key="player.player" />
+          <PlayerInfo v-for="player in orderedPlayers" :player='player' :key="player.player" />
         </div>
         <div v-else>
           <PlayerInfo :player='sessionPlayer'/>
