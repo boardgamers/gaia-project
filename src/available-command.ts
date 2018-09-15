@@ -522,13 +522,35 @@ export function possibleLeech(engine: Engine, player: Player) {
   const pl = engine.player(player);
 
   if ( pl.data.leechPossible > 0) {
+    const extraPower = pl.faction === Faction.Taklons && pl.data.hasPlanetaryInstitute();
+    const maxLeech = pl.maxLeech();
+    const offers: Array<{offer: string, cost: string}> = [];
+
+    if (extraPower) {
+      offers.push({
+        offer: `${maxLeech}${Resource.ChargePower},1t`,
+        cost: new Reward(Math.max(maxLeech - 1, 0), Resource.VictoryPoint).toString()
+      }, {
+        offer: `1t,${pl.maxLeech(true)}${Resource.ChargePower}`,
+        cost: new Reward(Math.max(pl.maxLeech(true) - 1, 0), Resource.VictoryPoint).toString()
+      });
+    } else {
+      offers.push({
+        offer: `${maxLeech}${Resource.ChargePower}`,
+        cost: new Reward(Math.max(maxLeech - 1, 0), Resource.VictoryPoint).toString()
+      });
+    }
+
     [Command.ChargePower, Command.Decline].map(name => commands.push({
       name,
       player,
       data: {
-        offer: pl.data.leechPossible + Resource.ChargePower,
-        cost: new Reward(pl.data.leechPossible - 1, Resource.VictoryPoint).toString(),
-        freeIncome : pl.faction === Faction.Taklons && pl.data.hasPlanetaryInstitute() ? "1t" : ""
+        // Kept for compatibility with older viewer
+        offer: offers[0].offer,
+        // Kept for compatibility with older viewer
+        cost: offers[0].cost,
+        // new format
+        offers
       }
     }));
   }

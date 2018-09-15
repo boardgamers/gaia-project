@@ -596,9 +596,22 @@ export default class Player extends EventEmitter {
     return baseValue + addedBescods;
   }
 
-  maxLeech(possibleLeech: number) {
+  maxLeech(extraPowerToken?: boolean) {
     // considers real chargeable power and victory points
-    return Math.min(possibleLeech, this.data.chargePower(possibleLeech, false), this.data.victoryPoints + 1);
+    return Math.min(this.data.leechPossible, this.data.chargePower(this.data.leechPossible, false) + (extraPowerToken ? 2 : 0), this.data.victoryPoints + 1);
+  }
+
+  canLeech(): boolean {
+    if (!this.data.leechPossible) {
+      return false;
+    }
+
+    /* Taklons can always charge power, just to gain the PI power token */
+    if (this.faction === Faction.Taklons && this.data.hasPlanetaryInstitute()) {
+      return true;
+    }
+
+    return !!this.data.chargePower(1, false);
   }
 
   gainFederationToken(federation: Federation) {

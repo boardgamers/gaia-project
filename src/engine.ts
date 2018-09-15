@@ -32,10 +32,9 @@ import {roundScorings, finalScorings} from './tiles/scoring';
 import * as researchTracks from './research-tracks';
 import AvailableCommand, {
   generate as generateAvailableCommands,
-  possibleBuildings
 } from './available-command';
 import Reward from './reward';
-import { boardActions, freeActions } from './actions';
+import { boardActions } from './actions';
 import { GaiaHex } from '..';
 import { stdBuildingValue } from './buildings';
 
@@ -84,6 +83,7 @@ export default class Engine {
   tempTurnOrder: PlayerEnum[] = [];
   tempCurrentPlayer: PlayerEnum;
   leechingSource: GaiaHex;
+  leechSources: Array<{player: PlayerEnum, coordinates: string}> = [];
 
   // All moves
   moveHistory: string[] = [];
@@ -167,8 +167,12 @@ export default class Engine {
     return this.turnOrder.map(i => this.players[i]);
   }
 
-  playersInTableOrderFromCurrent(): Player[] {
-    return [...this.players.slice(this.currentPlayer + 1), ...this.players.slice(0, this.currentPlayer)];
+  /**
+   * Get next players starting from `player`, finishing to the player before `player`
+   * @param player
+   */
+  playersInTableOrderFrom(player: PlayerEnum): Player[] {
+    return [...this.players.slice(player + 1), ...this.players.slice(0, player)];
   }
 
   get playerToMove(): PlayerEnum {
@@ -596,13 +600,16 @@ export default class Engine {
   }
 
   beginLeechingPhase() {
+    const source = this.leechSources.shift();
+    const sourceHex = this.map.grid.getS(source.coordinates);
+
     // Gaia-formers & space stations don't trigger leech
-    if (stdBuildingValue(this.leechingSource.buildingOf(this.currentPlayer)) === 0) {
+    if (stdBuildingValue(sourceHex.buildingOf(source.player)) === 0) {
       return;
     }
     // From rules, this is in clockwise order. We assume the order of players in this.players is the
     // clockwise order
-    for (const pl of this.playersInTableOrderFromCurrent()) {
+    for (const pl of this.playersInTableOrderFrom(source.player)) {
       // If the player has passed and it's the last round, there's absolutely no points in leeching
       // There's no cultists in gaia project.
       if (this.isLastRound && this.passedPlayers.includes(pl.player)) {
@@ -613,18 +620,20 @@ export default class Engine {
       if (pl !== this.player(this.currentPlayer)) {
         let leech = 0;
         for (const loc of pl.data.occupied) {
-          if (this.map.distance(loc, this.leechingSource) < ISOLATED_DISTANCE) {
+          if (this.map.distance(loc, sourceHex) < ISOLATED_DISTANCE) {
             leech = Math.max(leech, pl.buildingValue(this.map.grid.get(loc).buildingOf(pl.player), this.map.grid.get(loc).data.planet));
           }
         }
-        leech = pl.maxLeech(leech);
+
+        // Do not use maxLeech() here, cuz taklons
         pl.data.leechPossible = leech;
       }
     }
 
-    if (this.playersInTableOrderFromCurrent().some(pl => !!pl.data.leechPossible)) {
+    const canLeechPlayers = this.playersInTableOrderFrom(source.player).filter(pl => pl.canLeech());
+    if (canLeechPlayers.length > 0) {
       this.phase = Phase.RoundLeech;
-      this.tempTurnOrder = this.playersInTableOrderFromCurrent().filter(pl => pl.data.leechPossible).map(pl => pl.player);
+      this.tempTurnOrder = canLeechPlayers.map(pl => pl.player);
       this.tempCurrentPlayer = this.tempTurnOrder.shift();
     }
   }
@@ -741,9 +750,8 @@ export default class Engine {
       this.handleEndTurn();
     }
 
-    if (this.leechingSource) {
+    while (this.leechSources.length > 0) {
       this.beginLeechingPhase();
-      this.leechingSource = null;
     }
 
     this.currentPlayer = playerAfter;
@@ -753,7 +761,13 @@ export default class Engine {
     this.loadTurnMoves(move, {split: false, processFirst: true});
     this.tempCurrentPlayer = this.tempTurnOrder.shift();
 
+    // Current leech round ended
     if (this.tempCurrentPlayer === undefined) {
+      // Next leech rounds (eg: double leech happens with lab + lost planet in same turn)
+      while (this.leechSources.length > 0) {
+        this.beginLeechingPhase();
+      }
+
       this.beginRoundMovePhase();
     }
   }
@@ -837,7 +851,7 @@ export default class Engine {
 
     for (const elem of buildings) {
       if (elem.building === building && elem.coordinates === location) {
-        const {q, r, s} = CubeCoordinates.parse(location);
+        const {q, r} = CubeCoordinates.parse(location);
         const hex = this.map.grid.get({q, r});
         const pl = this.player(player);
 
@@ -845,7 +859,7 @@ export default class Engine {
 
         // will trigger a LeechPhase
         if (this.phase === Phase.RoundMove) {
-          this.leechingSource = hex;
+          this.leechSources.push({player, coordinates: location});
         }
 
         return;
@@ -881,16 +895,17 @@ export default class Engine {
     // leech rewards are including +t, if needed and in the right sequence
     const leechRewards = Reward.parse(income);
 
-    const leech =  leechRewards.find( lr => lr.type === Resource.ChargePower);
-    const freeIncome =  leechRewards.find( lr => lr.type === Resource.GainToken);
-
-    assert(leechCommand.offer === leech.toString() , `Impossible to charge ${leech}`);
-    if ( freeIncome ) {
-      assert(leechCommand.freeIncome === freeIncome.toString() , `Impossible to get ${freeIncome} for free`);
+    // Handles legacy stuff. To remove when all games with old engine have ended
+    if (!leechCommand.offers) {
+      leechCommand.offers = [{offer: leechCommand.offer, cost: leechCommand.cost}];
     }
 
+    const offer = leechCommand.offers.find(ofr => ofr.offer === income);
+
+    assert(offer, `Cannot leech ${income}. Possible leeches: ${leechCommand.offers.map(ofr => ofr.offer)}`);
+
     this.player(player).gainRewards(leechRewards);
-    this.player(player).payCosts( [new Reward(Math.max(leech.count - 1, 0), Resource.VictoryPoint)]);
+    this.player(player).payCosts(Reward.parse(offer.cost));
   }
 
   [Command.Decline](player: PlayerEnum) {
