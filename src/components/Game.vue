@@ -225,11 +225,6 @@ export default class Game extends Vue {
       return;
     }
 
-    // Slow refresh if the player can play
-    if (this.canPlay && this.refreshCount < 1000) {
-      this.refreshCount = 1000;
-    }
-
     this.refreshCount += 1;  
 
     if (this.refreshCount >= 3600/3) {
