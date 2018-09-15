@@ -121,6 +121,7 @@ export default class PlayerData extends EventEmitter {
       if (cloneHeuristic.brainstone !== cloneNoHeuristic.brainstone) {
         // The brainstone can end up in two different places.
         if (this.brainstoneDest === undefined) {
+          // Interrupt by asking player where to put the brainstone
           this.emit('brainstone', [cloneHeuristic.brainstone, cloneNoHeuristic.brainstone]);
         }
 

@@ -66,6 +66,7 @@ export default class Engine {
   availableCommands: AvailableCommand[] = [];
   availableCommand: AvailableCommand;
   phase: Phase = Phase.SetupInit;
+  oldPhase: Phase;
 
   round: number = Round.None;
   /** Order of players in the turn */
@@ -280,6 +281,8 @@ export default class Engine {
   }
 
   loadTurnMoves(move: string, params: {split?: boolean, processFirst?: boolean} = {split: true, processFirst: false}) {
+    this.oldPhase = this.phase;
+
     const playerS = move.substr(0, move.indexOf(' '));
     let player: number;
 
@@ -323,7 +326,7 @@ export default class Engine {
     } catch (err) {
       if (err.availableCommands) {
         this.availableCommands = err.availableCommands;
-        return this.playerToMove !== this.processedPlayer;
+        return this.playerToMove !== this.processedPlayer || this.phase !== this.oldPhase;
       } else {
         throw err;
       }
@@ -439,14 +442,18 @@ export default class Engine {
   // ****************************************
   // ********** PHASE BEGIN / END ***********
   // ****************************************
+  changePhase(phase: Phase) {
+    this.phase = phase;
+  }
+
   beginSetupFactionPhase() {
-    this.phase = Phase.SetupFaction;
+    this.changePhase(Phase.SetupFaction);
     this.turnOrder = this.players.map((pl, i) => i as PlayerEnum);
     this.moveToNextPlayer(this.turnOrder, {loop: false});
   }
 
   beginSetupBuildingPhase() {
-    this.phase = Phase.SetupBuilding;
+    this.changePhase(Phase.SetupBuilding);
     const posIvits = this.players.findIndex(
       pl => pl.faction === Faction.Ivits
     );
@@ -471,7 +478,7 @@ export default class Engine {
   }
 
   beginSetupBoosterPhase() {
-    this.phase = Phase.SetupBooster;
+    this.changePhase(Phase.SetupBooster);
     this.turnOrder = this.players.map((pl, i) => i as PlayerEnum).reverse();
     this.moveToNextPlayer(this.turnOrder, {loop: false});
   }
@@ -490,7 +497,7 @@ export default class Engine {
   }
 
   beginIncomePhase() {
-    this.phase = Phase.RoundIncome;
+    this.changePhase(Phase.RoundIncome);
     this.tempTurnOrder = [...this.turnOrder];
 
     this.moveToNextPlayer(this.tempTurnOrder, {loop: false});
@@ -507,7 +514,7 @@ export default class Engine {
   }
 
   beginGaiaPhase() {
-    this.phase = Phase.RoundGaia;
+    this.changePhase(Phase.RoundGaia);
     this.tempTurnOrder = [...this.turnOrder];
 
     // transform Transdim planets into Gaia if gaiaformed
@@ -527,7 +534,7 @@ export default class Engine {
   }
 
   beginRoundMovePhase() {
-    this.phase = Phase.RoundMove;
+    this.changePhase(Phase.RoundMove);
   }
 
   cleanUpPhase() {
@@ -561,7 +568,7 @@ export default class Engine {
   }
 
   finalScoringPhase() {
-    this.phase = Phase.EndGame;
+    this.changePhase(Phase.EndGame);
     this.currentPlayer = this.tempCurrentPlayer = undefined;
 
     // finalScoring tiles
@@ -632,7 +639,7 @@ export default class Engine {
 
     const canLeechPlayers = this.playersInTableOrderFrom(source.player).filter(pl => pl.canLeech());
     if (canLeechPlayers.length > 0) {
-      this.phase = Phase.RoundLeech;
+      this.changePhase(Phase.RoundLeech);
       this.tempTurnOrder = canLeechPlayers.map(pl => pl.player);
       this.tempCurrentPlayer = this.tempTurnOrder.shift();
     }

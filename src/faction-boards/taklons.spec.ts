@@ -197,4 +197,21 @@ describe("Taklons", () => {
 
     expect(engine.player(Player.Player2).data.power.area2).to.equal(0);
   });
+
+  it("should work when moving brainstone right after picking booster", () => {
+    const moves = Engine.parseMoves(`
+      init 2 randomseed
+      p1 faction taklons
+      p2 faction hadsch-hallas
+      taklons build m 1x4
+      hadsch-hallas build m 0x4
+      hadsch-hallas build m -4x0
+      taklons build m -3x-2
+      hadsch-hallas booster booster4
+      taklons booster booster9
+      taklons brainstone area3
+    `);
+
+    expect(() => new Engine(moves)).to.not.throw();
+  });
 });
