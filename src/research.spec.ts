@@ -67,4 +67,91 @@ describe('Research', () => {
 
     expect(() => engine.move("p1 up gaia.")).to.throw();
   });
+
+  it("should prevent upgrading to last research track when another player is there", function() {
+    this.timeout(10000);
+
+    const moves = Engine.parseMoves(`
+      init 2 zadbd
+      p1 faction geodens
+      p2 faction lantids
+      geodens build m 2x-1
+      lantids build m 3x-1
+      lantids build m 1x-3
+      geodens build m 4x-5
+      lantids booster booster1
+      geodens booster booster4
+      geodens build ts 2x-1.
+      lantids charge 1pw
+      lantids build ts 3x-1.
+      geodens charge 2pw
+      geodens build PI 2x-1.
+      lantids charge 2pw
+      lantids build PI 3x-1.
+      geodens charge 3pw
+      geodens special step. build m 3x-2.
+      lantids charge 3pw
+      lantids build m 3x-2.
+      geodens charge 3pw
+      geodens action power5.
+      lantids build m 2x-1.
+      geodens charge 3pw
+      geodens up terra.
+      lantids up terra.
+      geodens up terra.
+      lantids up terra.
+      geodens action power3.
+      lantids spend 2pw for 2c. build m 4x-5.
+      geodens charge 1pw
+      geodens build m 2x-4.
+      lantids charge 1pw
+      lantids federation 1x-3,2x-1,2x-3,3x-1,3x-2,3x-3,3x-4,4x-5 fed3.
+      geodens up terra.
+      lantids pass booster10
+      geodens build ts 3x-2.
+      lantids charge 3pw
+      geodens federation 2x-1,2x-4,3x-2,3x-3,3x-4,4x-5 fed2.
+      geodens pass booster1
+      lantids income 1t
+      geodens income 4pw
+      lantids action power5.
+      geodens build m 3x-6.
+      lantids charge 1pw
+      lantids up terra.
+      geodens up terra.
+      lantids build m 2x-4.
+      geodens charge 1pw
+      geodens burn 1. action power4.
+      lantids up terra.
+      geodens build lab 3x-2. tech nav. up nav.
+      lantids charge 3pw
+      lantids spend 3pw for 3c. build ts 1x-3.
+      geodens charge 1pw
+      geodens up int.
+      lantids pass booster8
+      geodens spend 2q for 2o. build ts 2x-4.
+      lantids charge 2pw
+      geodens pass booster10
+      lantids income 4pw
+      geodens income 4pw
+      lantids pass booster1
+      geodens pass booster8
+      lantids income 4pw
+      geodens income 4pw
+      lantids pass booster10
+      geodens pass booster7
+      lantids income 1t
+      geodens income 4pw
+      lantids pass booster8
+      geodens pass booster10
+      lantids income 1t
+      geodens income 4pw
+      lantids action power4.
+      geodens pass
+    `);
+
+    const engine = new Engine(moves);
+
+    expect(() => engine.move('lantids up terra.')).to.throw();
+  });
 });

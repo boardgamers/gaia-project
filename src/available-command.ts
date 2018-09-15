@@ -380,7 +380,7 @@ export function possibleResearchAreas(engine: Engine, player: Player, cost?: str
       // end of the track reached
       const destTile = pl.data.research[field] + 1;
 
-      if (destTile === researchTracks.lastTile(field) && engine.playersInOrder().some(pla => pla.data.research[field] === destTile)) {
+      if (destTile === researchTracks.lastTile(field) && engine.players.some(pla => pla.data.research[field] === destTile)) {
         continue;
       }
 
