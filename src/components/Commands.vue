@@ -148,7 +148,7 @@ export default class Commands extends Vue {
     console.log("handle command", command);
     
     // Some users seem to have a bug with repeating commands on mobile, like clicking the income button twice
-    if (this.commandChain.length > 0 && this.commandChain.slice(-1).pop() === command) {
+    if (this.commandChain.length > 0 && this.commandChain.slice(-1).pop() === command && (command === "income" || command === "booster")) {
       console.log("repeating command, ignoring");
       return;
     }
