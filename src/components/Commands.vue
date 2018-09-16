@@ -91,7 +91,7 @@ export default class Commands extends Vue {
 
     // If there's only one button, save the player the hassle and click it
     setTimeout(() => {
-      if ($(".move-button.shown").length <= 1)  {
+      if ($(".move-button.shown").length === 1)  {
         const ref = $(".move-button.shown").attr("data-ref");
         (this.$refs[ref][0] as MoveButton).handleClick();
       }
@@ -146,8 +146,10 @@ export default class Commands extends Vue {
 
   handleCommand(command: string, source: MoveButton, final: boolean) {
     console.log("handle command", command);
-    if (source.button.hide) {
-      console.log("Seems to be a double click, ignoring");
+    
+    // Some users seem to have a bug with repeating commands on mobile, like clicking the income button twice
+    if (this.commandChain.length > 0 && this.commandChain.slice(-1).pop() === command) {
+      console.log("repeating command, ignoring");
       return;
     }
     if (source.button.buttons && source.button.buttons.length > 0 && !final) {
