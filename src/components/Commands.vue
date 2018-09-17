@@ -396,11 +396,10 @@ export default class Commands extends Vue {
         }
 
         case Command.ChooseIncome: {
-          ret.push({
-            label: "Income order",
-            command: Command.ChooseIncome,
-            buttons: command.data.map(command => ({command}))
-          });
+          ret.push(...command.data.map(income => ({
+            label: `Income ${income}`,
+            command: `${Command.ChooseIncome} ${income}`
+          })));
           break;
         }
 
