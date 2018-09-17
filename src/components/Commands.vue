@@ -205,7 +205,7 @@ export default class Commands extends Vue {
           ret.push({
             label: "Rotate sectors",
             command: Command.RotateSectors,
-            hexes: new Map<GaiaHex, {}>(this.map.configuration().centers.map(center => [this.engine.map.grid.get(center), {coordinates: center}])),
+            hexes: new Map<GaiaHex, {}>(this.map.configuration().centers.map(center => [this.engine.map.grid.get(center), {}] as [GaiaHex, {}])),
             rotation: true
           });
 
