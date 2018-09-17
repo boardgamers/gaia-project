@@ -37,8 +37,6 @@ export default class Sector extends Vue {
     const coords = Hex.hexagon(2, {center: this.center});
     const ret = coords.map(coord => this.map.grid.get(coord));
 
-    console.log(coords, ret);
-
     return ret;
   }
 }

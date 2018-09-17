@@ -174,6 +174,8 @@ export default class Game extends Vue {
     this.lastUpdated = data.lastUpdated;
     this.nextMoveDeadline = data.nextMoveDeadline;
 
+    $('.sector').addClass('notransition');
+
     this.$store.commit('removeError');
     this.$store.commit('gaiaViewer/receiveData', data);
 
@@ -188,6 +190,8 @@ export default class Game extends Vue {
     this.updateFavicon();
     this.updateMoveList();
     this.updateDeadline();
+
+    setTimeout(() => $('.sector').removeClass('notransition'));
   }
 
   desc(pl: Player) {

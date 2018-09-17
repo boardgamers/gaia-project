@@ -87,6 +87,10 @@ export default interface App {
   // -moz-osx-font-smoothing: grayscale;
 }
 
+.notransition {
+  transition: none !important;
+}
+
 .tooltip#tooltip-canvas {
   opacity: 1;
   display: none;
