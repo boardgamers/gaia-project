@@ -26,7 +26,7 @@ app.use((req, res, next) => {
 app.post("/", (req, res) => {
   try {
     const moves = req.body.moves;
-    const engine = new Engine(moves);
+    const engine = new Engine(moves, {advancedRules: true});
 
     engine.generateAvailableCommandsIfNeeded();
 

@@ -25,10 +25,10 @@ describe("Map", () => {
     it ("should not throw when rotating sectors and creating a valid map", () => {
       const moves = Engine.parseMoves(`
         init 2 randomSeed
-        p2 rotate 0x0 5
+        p2 rotate 0x0 1
       `);
 
-      expect(() => new Engine(moves, {advancedRules: true})).to.throw();
+      expect(() => new Engine(moves, {advancedRules: true})).to.not.throw();
     });
   });
 });

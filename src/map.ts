@@ -37,7 +37,7 @@ const bigConfiguration = {
 // Centers of the small configuration
 for (let i = 0; i < 6; i++) {
   const hex = new Hex(5, -2);
-  hex.rotateLeft(i);
+  hex.rotateRight(i);
 
   smallConfiguration.centers.push(hex.toJSON());
   bigConfiguration.centers.push(hex.toJSON());
@@ -46,7 +46,7 @@ for (let i = 0; i < 6; i++) {
 // Big configuration: add 3 more
 for (let i = -1; i <= 1; i++) {
   const hex = new Hex(-6, 10);
-  hex.rotateLeft(i, {q: -3, r: 5, s: -2});
+  hex.rotateRight(i, {q: -3, r: 5, s: -2});
   bigConfiguration.centers.push(hex);
 }
 
@@ -90,7 +90,7 @@ export default class SpaceMap {
     const definitions = this.chooseSides();
     const centers = this.configuration().centers;
 
-    const [hexagon, ...hexagons] = definitions.map((side, index) => Sector.create(side.map, side.name, centers[index]).rotateLeft(Math.floor(this.rng() * 6), centers[index]));
+    const [hexagon, ...hexagons] = definitions.map((side, index) => Sector.create(side.map, side.name, centers[index]).rotateRight(Math.floor(this.rng() * 6), centers[index]));
 
     this.grid = hexagon.merge(...hexagons);
   }

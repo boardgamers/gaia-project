@@ -508,7 +508,6 @@ export default class Engine {
   }
 
   beginSetupFactionPhase() {
-    console.log("begin setup faction phase");
     this.changePhase(Phase.SetupFaction);
     this.turnOrder = this.players.map(pl => pl.player as PlayerEnum);
     this.moveToNextPlayer(this.turnOrder, {loop: false});
