@@ -35,14 +35,19 @@ import AvailableCommand, {
 } from './available-command';
 import Reward from './reward';
 import { boardActions } from './actions';
-import { GaiaHex } from '..';
 import { stdBuildingValue } from './buildings';
 
 const ISOLATED_DISTANCE = 3;
 
+interface EngineOptions {
+  /** Allow last player to rotate sector BEFORE faction selection */
+  advancedRules?: boolean;
+}
+
 export default class Engine {
   map: SpaceMap;
   players: Player[] = [];
+  options: EngineOptions = {};
   tiles: {
     boosters: {
       [key in Booster]?: boolean
@@ -92,7 +97,8 @@ export default class Engine {
   // Tells the UI if the new move should be on the same line or not
   newTurn: boolean = true;
 
-  constructor(moves: string[] = []) {
+  constructor(moves: string[] = [], options: EngineOptions = {}) {
+    this.options = options;
     this.loadMoves(moves);
   }
 
@@ -284,6 +290,7 @@ export default class Engine {
 
     Object.assign(engine, _.omit(data, "map", "players"));
     engine.map = SpaceMap.fromData(data.map);
+    engine.map.nbPlayers = data.players.length;
     for (const player of data.players) {
       engine.addPlayer(Player.fromData(player, engine.map));
     }
@@ -316,6 +323,12 @@ export default class Engine {
     return moves.trim().split("\n").map(move => move.trim());
   }
 
+  /**
+   * Load turn moves.
+   *
+   * @param move The move string to process. Can contain multiple moves separated by a dot
+   * @param params params.processFist indicates to process the first move. params.split is set to true if leftover commands are allowed
+   */
   loadTurnMoves(move: string, params: {split?: boolean, processFirst?: boolean} = {split: true, processFirst: false}) {
     this.oldPhase = this.phase;
 
@@ -482,9 +495,22 @@ export default class Engine {
     this.phase = phase;
   }
 
+  beginSetupBoardPhase() {
+    this.changePhase(Phase.SetupBoard);
+    // The last player is the one to rotate the sectors
+    this.currentPlayer = this.players.slice(-1).pop().player;
+
+    if (!this.options.advancedRules) {
+      // No sector rotation
+      this.beginSetupFactionPhase();
+      return;
+    }
+  }
+
   beginSetupFactionPhase() {
+    console.log("begin setup faction phase");
     this.changePhase(Phase.SetupFaction);
-    this.turnOrder = this.players.map((pl, i) => i as PlayerEnum);
+    this.turnOrder = this.players.map(pl => pl.player as PlayerEnum);
     this.moveToNextPlayer(this.turnOrder, {loop: false});
   }
 
@@ -733,6 +759,14 @@ export default class Engine {
     assert(command === Command.Init, "The first command of a game needs to be the initialization command");
 
     (this[Command.Init] as any)(...split.slice(1));
+
+    this.beginSetupBoardPhase();
+  }
+
+  [Phase.SetupBoard](move: string) {
+    this.loadTurnMoves(move, {split: false, processFirst: true});
+
+    this.beginSetupFactionPhase();
   }
 
   [Phase.SetupFaction](move: string) {
@@ -871,9 +905,23 @@ export default class Engine {
     for (let i = 0; i < nbPlayers; i++) {
       this.addPlayer(new Player(i));
     }
+  }
 
-    // Turn order for Setup Factions
-    this.beginSetupFactionPhase();
+  [Command.RotateSectors](player: PlayerEnum, ...params: string[]) {
+    assert(params.length % 2 === 0, "The rotate command needs an even number of parameters");
+
+    const pairs: Array<[string, string]> = [];
+    for (let i = 0; i < params.length; i += 2) {
+      pairs.push([params[i], params[i + 1]]);
+    }
+
+    assert(_.uniq(pairs.map(pair => pair[0])).length === params.length / 2, "Duplicate rotations are not allowed");
+
+    for (const pair of pairs) {
+      this.map.rotateSector(pair[0], +pair[1]);
+    }
+    this.map.recalibrate();
+    assert(this.map.isValid(), "Map is invalid with two planets for the same type being near each other");
   }
 
   [Command.ChooseFaction](player: PlayerEnum, faction: string) {

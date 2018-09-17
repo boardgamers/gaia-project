@@ -27,7 +27,7 @@ describe("Engine", () => {
       p2 build m -7x3
     `);
 
-    expect(() => new Engine(moves)).to.not.throw();
+    expect(() => new Engine(moves, {advancedRules: true})).to.not.throw();
   });
 
   it("should allow to set up with Ivits (PI as last player) without errors", () => {

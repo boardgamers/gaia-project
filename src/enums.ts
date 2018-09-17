@@ -137,6 +137,7 @@ export enum Faction {
 
 export enum Command {
   Init = "init",
+  RotateSectors = "rotate",
   ChooseFaction = "faction",
   ChooseRoundBooster = "booster",
   ChooseTechTile = "tech",
@@ -297,6 +298,7 @@ export enum BrainstoneArea {
 
 export enum Phase {
   SetupInit = "setupInit",
+  SetupBoard = "setupBoard",
   SetupFaction = "setupFaction",
   SetupBuilding = "setupBuilding",
   SetupBooster = "setupBooster",

@@ -56,10 +56,11 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
 
   switch (engine.phase) {
     case Phase.SetupInit: return [{ name: Command.Init }];
+    case Phase.SetupBoard: return [{name: Command.RotateSectors, player}];
     case Phase.SetupFaction: return [
       {
         name: Command.ChooseFaction,
-        player: engine.currentPlayer,
+        player,
         data: _.difference(
           Object.values(Faction),
           engine.players.map(pl => pl.faction),

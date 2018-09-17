@@ -1,10 +1,11 @@
 import {Grid, Hex, CubeCoordinates} from "hexagrid";
 import * as seedrandom from "seedrandom";
 import * as shuffleSeed from "shuffle-seed";
+import * as assert from 'assert';
 import * as _ from "lodash";
 import Sector from "./sector";
 import { Player, Planet, Faction } from "./enums";
-import { GaiaHexData, GaiaHex } from "./gaia-hex";
+import { GaiaHex } from "./gaia-hex";
 
 // Data: from outer ring to inside ring, starting from a corner
 const s1 = {name: "s1", map: "eeeeemevoeed,sereee,e".replace(/,/g, "")};
@@ -94,6 +95,19 @@ export default class SpaceMap {
     this.grid = hexagon.merge(...hexagons);
   }
 
+  rotateSector(center: string, times: number) {
+    const coords = CubeCoordinates.parse(center);
+
+    assert(this.configuration().centers.some(pt => pt.q === coords.q && pt.r === coords.r), `${center} is not the center of a sector`);
+
+    // Easy way to get coordinates of hexes in a sector
+    const sectorHexes = Hex.hexagon(2, {center: coords});
+
+    for (const hex of sectorHexes) {
+      this.grid.get(hex).rotateRight(times);
+    }
+  }
+
   chooseSides(): Array<{map: string, name: string}> {
     const definitions = this.configuration().sectors;
     // Random sort of the chosen sectors, sliced
@@ -158,6 +172,10 @@ export default class SpaceMap {
     return ret;
   }
 
+  recalibrate() {
+    this.grid.recalibrate();
+  }
+
   static configuration(nbPlayers: number) {
     if (nbPlayers <= 2) {
       return smallConfiguration;
@@ -166,3 +184,5 @@ export default class SpaceMap {
     }
   }
 }
+
+export {smallConfiguration, bigConfiguration};
