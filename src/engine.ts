@@ -239,6 +239,9 @@ export default class Engine {
     } else if (this.availableCommands.some(cmd => cmd.name === Command.ChooseIncome)) {
       const cmd = this.findAvailableCommand(this.playerToMove, Command.ChooseIncome);
       this.move(`${ps} ${Command.ChooseIncome} ${cmd.data}`);
+    } else if (this.availableCommands.some(cmd => cmd.name === Command.BrainStone)) {
+      const cmd = this.findAvailableCommand(this.playerToMove, Command.BrainStone);
+      this.move(`${ps} ${Command.BrainStone} ${cmd.data[0]}`);
     } else {
       assert(false, "Can't automove for player " + (this.playerToMove + 1));
     }
