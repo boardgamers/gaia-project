@@ -68,19 +68,19 @@ svg {
     }
     
     // terra
-    &.r {fill: #99ccff}
+    &.r {fill: #2080f0 }
     // desert
-    &.d {fill: #ffd700}
+    &.d {fill: #F2FF00}
     // swamp
-    &.s {fill: #a25b15}
+    &.s {fill: #523A00}
     // oxide
-    &.o {fill: #f30}
+    &.o {fill: #FF160A}
     // titanium
-    &.t {fill: #3d3d5c}
+    &.t {fill: #808080}
     // ice
-    &.i {fill: #cff}
+    &.i {fill: #F8FFF5}
     // volcanic
-    &.v {fill: #f90}
+    &.v {fill: #ffa135}
     // gaia
     &.g {fill: #093}
     // transdim
@@ -89,24 +89,24 @@ svg {
 
   // Used in federation display on the map
   .planet-stroke {
-    // terra
-    &.r {stroke: #99ccff}
+     // terra
+    &.r {fill: #2080f0 }
     // desert
-    &.d {stroke: #ffd700}
+    &.d {fill: #F2FF00}
     // swamp
-    &.s {stroke: #a25b15}
+    &.s {fill: #523A00}
     // oxide
-    &.o {stroke: #f30}
+    &.o {fill: #FF160A}
     // titanium
-    &.t {stroke: #3d3d5c}
+    &.t {fill: #808080}
     // ice
-    &.i {stroke: #cff}
+    &.i {fill: #F8FFF5}
     // volcanic
-    &.v {stroke: #f90}
+    &.v {fill: #ffa135}
     // gaia
-    &.g {stroke: #093}
+    &.g {fill: #093}
     // transdim
-    &.m {stroke: #a64dff}
+    &.m {fill: #a64dff}
   }
 }
 
