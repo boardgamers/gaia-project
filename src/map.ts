@@ -104,7 +104,7 @@ export default class SpaceMap {
     const sectorHexes = Hex.hexagon(2, {center: coords});
 
     for (const hex of sectorHexes) {
-      this.grid.get(hex).rotateRight(times);
+      this.grid.get(hex).rotateRight(times, coords);
     }
   }
 
