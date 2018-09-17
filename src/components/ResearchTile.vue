@@ -1,7 +1,7 @@
 <template>
   <g :transform="`translate(0, ${y})`" v-b-tooltip.html.left :title="tooltip" :class="field">
     <rect x="2" y="2" :class='["researchTile", field, {highlighted}]' width=56 :height="height" rx="5" ry="5" @click="onClick" />
-    <Resource v-for="(resource,i) in resources" :key="'field-' + i" :transform="`translate(${2 + 56/2 + resourceX(i)}, ${height/2 + 2})`" :kind="resource.type" :count="resource.count" />
+    <Resource v-for="(resource,i) in resources" :key="'field-' + i" :transform="`translate(${2 + 56/2 + resourceX(i)}, ${height/3*2 + 3})`" :kind="resource.type" :count="resource.count" :level="level"/>
     <Token v-for="(player, index) in players" v-if="player.faction && player.data.research[field] == level" :faction="player.faction" :transform="`translate(${tokenX(index)}, ${tokenY(index)})`" :key="player.player" :scale="5" />
     <FederationTile v-if="this.federation" :federation="this.federation" :numTiles="1" x="5" y="7" height="35" style="pointer-events: none" />
   </g>
@@ -59,11 +59,11 @@ export default class ResearchTile extends Vue {
   }
 
   tokenX(index: number) {
-    return 15 + 15*(index%3) + 22*(index > 2 ? 1 : 0);
+    return 10 + 13*(index%4) + 22*(index > 3 ? 1 : 0);
   }
 
   tokenY(index: number) {
-    return 13 + 13*(index > 2 ? 1 : 0);
+    return 10 + 13*(index > 3 ? 1 : 0);
   }
 
   onClick() {
@@ -99,22 +99,22 @@ svg {
     stroke-width: 1;
 
     &.eco {
-      fill: #e8de24;
+      fill: #ffd700;
     }
     &.sci {
-      fill: #3287F7;
+      fill: #99ccff;
     }
     &.terra {
-      fill: #ae5409;
+      fill: #856443;
     }
     &.nav {
-      fill: #275175;
+      fill: #516372;
     }
     &.gaia {
-      fill: #a41894;
+      fill: #a5589c;
     }
     &.int {
-      fill: #2b8617;
+      fill: #508344;
     }
 
     &:hover {

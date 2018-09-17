@@ -6,7 +6,7 @@
     <rect v-else-if="kind=='pw' || kind=='t'" class="power" width="14" height="14" ry="7" rx="7" x="-7" y="-7" />
     <Building v-else-if="kind=='k'" faction="terrans" building="gf" transform="translate(0.5, 0) scale(20)" />
     <Building v-else-if="kind=='gf'" faction="ivits" building="gf" transform="translate(0.5, 0) scale(20)" style="fill: none !important" />
-    <text x="0" y="0" v-if="count && count !='1'" :class="{plus: count === '+'}">{{kind !== 'vp' ? count : '4vp, g>vp'}}</text>
+    <text x="0" y="0" v-if="count && ['o','c','q','k','pw','t','vp','r'].includes(kind)" :class="{plus: count === '+'}">{{label(kind,count,level)}}</text>
   </g>
 </template>
 
@@ -27,6 +27,13 @@ export default class Resource extends Vue {
 
   @Prop()
   count: number;
+
+  @Prop()
+  level: number;
+
+  label(kind,count,level): string {
+    return kind !== 'vp' ? count : '4vp, g>vp';
+  }
 }
 </script>
 
