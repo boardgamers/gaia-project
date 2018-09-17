@@ -275,6 +275,11 @@ export default class Engine {
     const pl = this.player(this.playerToMove);
     // const jsonData = pl.data.toJSON();
 
+    // Itars may want to burn power instead
+    if (pl.faction === Faction.Itars) {
+      return false;
+    }
+
     try {
       this.move(`${pl.faction} ${Command.ChargePower} ${offers[0].offer}`, false);
       return true;
