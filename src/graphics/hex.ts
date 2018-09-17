@@ -1,8 +1,8 @@
-import { CubeCoordinates } from "hexagrid";
+import { CubeCoordinatesPartial } from "hexagrid/src/cubecoordinates";
 
 const vSpacing = Math.sqrt(3)/2;
 
-export function hexCenter(hex: CubeCoordinates, radius: number = 1) {
+export function hexCenter(hex: CubeCoordinatesPartial, radius: number = 1) {
   return  {
     x: hex.r * 1.5 * radius,
     y: -(2*hex.q + hex.r) * vSpacing * radius

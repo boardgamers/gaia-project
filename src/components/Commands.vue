@@ -32,7 +32,7 @@
 import Vue from 'vue'
 import * as $ from "jquery";
 import { Component, Prop } from 'vue-property-decorator';
-import Engine,{ AvailableCommand,Command,factions,Building,GaiaHex,Booster,tiles,Event,Federation,Faction } from '@gaia-project/engine';
+import Engine,{ AvailableCommand,Command,factions,Building,GaiaHex,Booster,tiles,Event,Federation,Faction, SpaceMap } from '@gaia-project/engine';
 import MoveButton from './MoveButton.vue';
 import {buildingName} from '../data/building';
 import {GameContext, ButtonData} from '../data';
@@ -192,11 +192,25 @@ export default class Commands extends Vue {
     return this.$store.state.gaiaViewer.data;
   }
 
+  get map() : SpaceMap {
+    return this.engine.map;
+  }
+
   get buttons(): ButtonData[] {
     const ret: ButtonData[] = [];
 
     for (const command of this.availableCommands) {
       switch (command.name) {
+        case Command.RotateSectors: {
+          ret.push({
+            label: "Rotate sectors",
+            command: Command.RotateSectors,
+            hexes: new Map<GaiaHex, {}>(this.map.configuration().centers.map(center => [this.engine.map.grid.get(center), {coordinates: center}])),
+            rotation: true
+          });
+
+          break;
+        }
         case Command.Build: {
           for (const building of Object.values(Building)) {
             const coordinates = command.data.buildings.filter(bld => bld.building === building);

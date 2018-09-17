@@ -57,7 +57,7 @@ export default class SpaceHex extends Vue {
     [Direction.NorthWest, Direction.North, Direction.NorthEast, Direction.SouthEast, Direction.South, Direction.SouthWest].forEach((direction, i) => {
       const neighbour = this.map.grid.neighbour(this.hex, direction);
       // Draw delimiter if sector is different
-      if (neighbour && neighbour.data.sector !== this.hex.data.sector) {
+      if (!neighbour || neighbour.data.sector !== this.hex.data.sector) {
         lines.push({
           x1: corners[i].x,
           y1: corners[i].y,

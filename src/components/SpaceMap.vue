@@ -1,37 +1,45 @@
 <template>
   <svg :viewBox="`-13 -11.5 ${right} 24`">
-    <SpaceHex v-for="hex in map" :key="`${hex.q}x${hex.r}`" :transform="`translate(${center(hex).x}, ${center(hex).y})`" :hex="hex" />
+    <Sector v-for="center in this.sectors" :center="center" :key="`${center.q}x{center.r}`" :style="`transform: translate(${hexCenter(center).x}px, ${hexCenter(center).y}px) rotate(${rotation(center) * 60}deg);`"/>
   </svg>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
 import { Component } from 'vue-property-decorator';
-import {MapData, HighlightHexData} from '../data';
-import { GaiaHex } from '@gaia-project/engine';
+import { GaiaHex, SpaceMap as SpaceMapData } from '@gaia-project/engine';
 import { hexCenter } from "../graphics/hex";
-import SpaceHex from './SpaceHex.vue';
+import Sector from './Sector.vue';
+import { CubeCoordinates } from 'hexagrid';
 
 @Component<SpaceMap>({
   computed: {
-    map(this: SpaceMap): MapData {
-      return this.$store.state.gaiaViewer.data.map.toJSON()
+    map(this: SpaceMap): SpaceMapData {
+      return this.$store.state.gaiaViewer.data.map
     },
     right() {
       return (this.$store.state.gaiaViewer.data.players || []).length > 2 ? 33.5 : 26;
     }
   },
   components: {
-    SpaceHex
+    Sector
   }
 })
 export default class SpaceMap extends Vue {
-  center(hex: GaiaHex) {
+  hexCenter(hex: GaiaHex) {
     return hexCenter(hex);
+  }
+
+  get sectors(): CubeCoordinates[] {
+    return this.map.configuration().centers;
+  }
+
+  rotation(center: CubeCoordinates) {
+    return this.$store.state.gaiaViewer.context.rotation.get(`${center.q}x${center.r}`) || 0;
   }
 }
 export default interface SpaceMap {
-  highlightedHexes: HighlightHexData
+  map: SpaceMapData
 }
 
 </script>

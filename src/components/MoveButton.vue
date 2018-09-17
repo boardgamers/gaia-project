@@ -79,7 +79,7 @@ export default class MoveButton extends Vue {
     if (!this.isActiveButton) {
       this.$store.commit("gaiaViewer/clearContext");
     }
-    if (this.button.hexes && !this.button.selectHexes && !this.button.hover) {
+    if (this.button.hexes && !this.button.selectHexes && !this.button.hover && !this.button.rotation) {
       this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
       this.subscribe('hexClick', hex => this.emitCommand(`${hex.q}x${hex.r}`));
     } else if (this.button.researchTiles) {
@@ -120,6 +120,19 @@ export default class MoveButton extends Vue {
       });
     } else if( this.button.modal ) {
       this.modalShow = true;
+    } else if (this.button.rotation) {
+      if (this.isActiveButton) {
+        const rotations = [...this.$store.state.gaiaViewer.context.rotation.entries()];
+        for (const rotation of rotations) {
+          rotation[1] %= 6;
+        }
+        this.emitCommand([].concat(...rotations.filter(r => !!r[1])).join(' '));
+        return;
+      }
+
+      this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
+      this.subscribe('hexClick', hex => this.$store.commit("gaiaViewer/rotate", hex));
+      this.customLabel = "Sector rotations finished"
     } else {
       // Keep hexes highlighted for next command (federation tile)
       if (this.button.hexes && this.button.hover) {

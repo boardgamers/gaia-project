@@ -2,6 +2,7 @@ import Vue from 'vue';
 import Vuex from 'vuex';
 import { GameContext } from './data';
 import Engine, { GaiaHex, ResearchField, TechTilePos, AdvTechTilePos, Booster, Federation, Player } from '@gaia-project/engine';
+import { CubeCoordinates } from 'hexagrid';
 
 Vue.use(Vuex);
 
@@ -18,6 +19,7 @@ const gaiaViewer = {
         actions: new Set(),
         federations: new Set()
       },
+      rotation: new Map(),
       hexSelection: false,
       activeButton: null
     } as GameContext
@@ -25,6 +27,7 @@ const gaiaViewer = {
   mutations: {
     receiveData(state, data: Engine) {
       state.data = data;
+      state.context.rotation = new Map();
     },
 
     highlightHexes(state, hexes: Map<GaiaHex, {cost?: string}>) {
@@ -56,6 +59,13 @@ const gaiaViewer = {
       state.context.highlighted.hexes = new Map(defaultHexes || []);
     },
 
+    rotate(state, coords: CubeCoordinates) {
+      const coordsStr = `${coords.q}x${coords.r}`;
+
+      state.context.rotation.set(coordsStr, (state.context.rotation.get(coordsStr) || 0) + 1);
+      state.context.rotation = new Map(state.context.rotation.entries());
+    },
+
     clearContext(state) {
       state.context.highlighted.hexes = new Map();
       state.context.highlighted.researchTiles = new Set();
@@ -63,6 +73,7 @@ const gaiaViewer = {
       state.context.highlighted.boosters = new Set();
       state.context.highlighted.actions = new Set();
       state.context.highlighted.federations = new Set();
+      // state.context.rotation = new Map();
       state.context.hexSelection = false;
       state.context.activeButton = null;
     },

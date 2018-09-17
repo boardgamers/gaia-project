@@ -17,6 +17,9 @@ export interface ButtonData {
   actions?: string[];
   federations?: Federation[];
 
+  // Rotate sectors command?
+  rotation?: boolean;
+
   buttons?: ButtonData[];
   hide?: boolean;
 }
@@ -33,6 +36,8 @@ export interface GameContext {
     actions: Set<string>,
     federations: Set<Federation>
   };
+
+  rotation: Map<string, number>;
 
   activeButton: ButtonData;
   hexSelection: boolean;
