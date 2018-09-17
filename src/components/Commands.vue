@@ -89,13 +89,14 @@ export default class Commands extends Vue {
       }
     }
 
+    // Seems to cause problems on mobile
     // If there's only one button, save the player the hassle and click it
-    setTimeout(() => {
-      if ($(".move-button.shown").length === 1)  {
-        const ref = $(".move-button.shown").attr("data-ref");
-        (this.$refs[ref][0] as MoveButton).handleClick();
-      }
-    });
+    // setTimeout(() => {
+    //   if ($(".move-button.shown").length === 1)  {
+    //     const ref = $(".move-button.shown").attr("data-ref");
+    //     (this.$refs[ref][0] as MoveButton).handleClick();
+    //   }
+    // });
   }
 
   get availableCommands(): AvailableCommand[] {
@@ -158,12 +159,13 @@ export default class Commands extends Vue {
       this.buttonChain.push(source.button);
       this.customButtons = source.button.buttons;
 
-      setTimeout(() => {
-        if ($(".move-button.shown").length <= 1)  {
-          const ref = $(".move-button.shown").attr("data-ref");
-          (this.$refs[ref][0] as MoveButton).handleClick();
-        }
-      });
+      // Seems to cause problems on mobile
+      // setTimeout(() => {
+      //   if ($(".move-button.shown").length <= 1)  {
+      //     const ref = $(".move-button.shown").attr("data-ref");
+      //     (this.$refs[ref][0] as MoveButton).handleClick();
+      //   }
+      // });
 
       return;
     }
