@@ -42,22 +42,22 @@ svg {
     fill: none;
     pointer-events: none;
     
-    // terra
-    &.r {stroke: #39f}
+   // terra
+    &.r {stroke: #2080f0 }
     // desert
-    &.d {stroke: #c1a925}
+    &.d {stroke: #F2FF00}
     // swamp
-    &.s {stroke: #874d12}
+    &.s {stroke: #523A00}
     // oxide
-    &.o {stroke: #ff0000}
+    &.o {stroke: #FF160A}
     // titanium
-    &.t {stroke: #d1d1e0}
+    &.t {stroke: #808080}
     // ice
-    &.i {stroke: #00c2c2}
+    &.i {stroke: #F8FFF5}
     // volcanic
-    &.v {stroke: #ff8566}
+    &.v {stroke: #ffa135}
     // gaia
-    &.g {stroke: #004d1a}
+    &.g {stroke: #093}
     // transdim
     &.m {stroke: #a64dff}
   }
@@ -85,6 +85,8 @@ svg {
     &.g {fill: #093}
     // transdim
     &.m {fill: #a64dff}
+    // lost
+    &.l {fill: lightgray}
   }
 
   // Used in federation display on the map

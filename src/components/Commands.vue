@@ -518,27 +518,27 @@ i.planet {
   }
 
   // terra
-  &.r {color: #99ccff;}
+  &.r {color: #2080f0 }
   // desert
-  &.d {color: #ffd700;}
+  &.d {color: #F2FF00}
   // swamp
-  &.s {color: #a25b15;}
+  &.s {color: #523A00}
   // oxide
-  &.o {color: #f30;}
+  &.o {color: #FF160A}
   // titanium
-  &.t {color: #3d3d5c;}
+  &.t {color: #808080}
   // ice
-  &.i {color: #cff;}
+  &.i {color: #F8FFF5}
   // volcanic
-  &.v {color: #f90;}
+  &.v {color: #ffa135}
   // gaia
-  &.g {color: #093;}
+  &.g {color: #093}
   // transdim
-  &.m {color: #a64dff;}
+  &.m {color: #a64dff}
 
-  filter: drop-shadow(0px 0px 3px white);
+  filter: drop-shadow(0px 0px 1px black);
   .player-info & {
-    filter: drop-shadow(0px 0px 1px white);
+    filter: drop-shadow(0px 0px 1px black);
     
     &.r, &.d, &.i {
       filter: drop-shadow(0px 0px 1px black);
