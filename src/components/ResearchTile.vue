@@ -4,16 +4,18 @@
     <Resource v-for="(resource,i) in resources" :key="'field-' + i" :transform="`translate(${2 + 56/2 + resourceX(i)}, ${height/3*2 + 3})`" :kind="resource.type" :count="resource.count" :level="level"/>
     <Token v-for="(player, index) in players" v-if="player.faction && player.data.research[field] == level" :faction="player.faction" :transform="`translate(${tokenX(index)}, ${tokenY(index)})`" :key="player.player" :scale="5.5" />
     <FederationTile v-if="this.federation" :federation="this.federation" :numTiles="1" x="5" y="7" height="35" style="pointer-events: none" />
+    <circle v-if="this.lostPlanet" :class='["planet-fill", this.lostPlanet ]' cx="30" cy="18" r="10" style="pointer-events: none" />
   </g>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
-import { ResearchField, Player, Federation, Resource as ResourceEnum, researchTracks, Event, Reward, Operator } from '@gaia-project/engine';
+import { ResearchField, Player, Federation, Resource as ResourceEnum, researchTracks, Event, Reward, Operator, Planet as PlanetEnum } from '@gaia-project/engine';
 import { descriptions } from '../data/research';
 import Token from './Token.vue';
 import FederationTile from './FederationTile.vue';
+import Planet from './Planet.vue';
 import Resource from './Resource.vue';
 
 @Component<ResearchTile>({
@@ -33,13 +35,19 @@ import Resource from './Resource.vue';
     federation(): Federation {
       if (this.level == 5 && this.field === ResearchField.Terraforming) {
         return this.$store.state.gaiaViewer.data.terraformingFederation;
+      }    
+    },
+    lostPlanet(): PlanetEnum {
+      if (this.level == 5 && this.field === ResearchField.Navigation) {
+        return PlanetEnum.Lost;
       }
     }
   },
   components: {
     Token,
     FederationTile,
-    Resource
+    Resource,
+    Planet
   }
 })
 export default class ResearchTile extends Vue {
