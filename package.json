@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git+https://github.com/donkeytech/gaia-viewer.git"
   },
-  "author": "coyotte508, randomboolean",
+  "author": "coyotte508, randomboolean, rzulian",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/donkeytech/gaia-viewer/issues"
