@@ -59,11 +59,6 @@ svg {
     stroke-width: 0.1;
     pointer-events: none;
     stroke: #111;
-
-    // swamp
-    &.s {stroke: #aa5f15}
-    // titanium
-    &.t {stroke: #d1d1e0}
   }
 
   .additionalMine {

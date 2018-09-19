@@ -502,6 +502,8 @@ export default class Commands extends Vue {
 
 <style lang="scss">
 
+@import '../stylesheets/planets.scss';
+
 i.planet {
   &::before {
     content: "\25cf";
@@ -512,23 +514,25 @@ i.planet {
   }
 
   // terra
-  &.r {color: #2080f0 }
+  &.r {color: $terra }
   // desert
-  &.d {color: #F2FF00}
+  &.d {color: $desert}
   // swamp
-  &.s {color: #523A00}
+  &.s {color: $swamp}
   // oxide
-  &.o {color: #FF160A}
+  &.o {color: $oxide}
   // titanium
-  &.t {color: #808080}
+  &.t {color: $titanium}
   // ice
-  &.i {color: #F8FFF5}
+  &.i {color: $ice}
   // volcanic
-  &.v {color: #ffa135}
+  &.v {color: $volcanic}
   // gaia
-  &.g {color: #093}
+  &.g {color: $gaia}
   // transdim
-  &.m {color: #a64dff}
+  &.m {color: $transdim}
+  // lost planet
+  &.l {color: $lost}
 
   filter: drop-shadow(0px 0px 1px black);
   .player-info & {

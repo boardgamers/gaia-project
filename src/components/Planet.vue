@@ -36,79 +36,61 @@ export default class Planet extends Vue {
 
 <style lang="scss">
 
+@import '../stylesheets/planets.scss';
+
 svg {
   .planet {
     stroke-width: 0.04;
     fill: none;
     pointer-events: none;
     
-   // terra
-    &.r {stroke: #2080f0 }
+    // terra
+    &.r {stroke: $terra }
     // desert
-    &.d {stroke: #F2FF00}
+    &.d {stroke: $desert}
     // swamp
-    &.s {stroke: #523A00}
+    &.s {stroke: $swamp}
     // oxide
-    &.o {stroke: #FF160A}
+    &.o {stroke: $oxide}
     // titanium
-    &.t {stroke: #808080}
+    &.t {stroke: $titanium}
     // ice
-    &.i {stroke: #F8FFF5}
+    &.i {stroke: $ice}
     // volcanic
-    &.v {stroke: #ffa135}
+    &.v {stroke: $volcanic}
     // gaia
-    &.g {stroke: #093}
+    &.g {stroke: $gaia}
     // transdim
-    &.m {stroke: #a64dff}
+    &.m {stroke: $transdim}
+    // lost planet
+    &.l {stroke: $lost}
   }
 
-  .planet-fill {
+  .planet-fill, .planet-stroke {
     .no-faction-fill &.faction-fill {
       display: none;
     }
     
     // terra
-    &.r {fill: #2080f0 }
+    &.r {fill: $terra }
     // desert
-    &.d {fill: #F2FF00}
+    &.d {fill: $desert}
     // swamp
-    &.s {fill: #523A00}
+    &.s {fill: $swamp}
     // oxide
-    &.o {fill: #FF160A}
+    &.o {fill: $oxide}
     // titanium
-    &.t {fill: #808080}
+    &.t {fill: $titanium}
     // ice
-    &.i {fill: #F8FFF5}
+    &.i {fill: $ice}
     // volcanic
-    &.v {fill: #ffa135}
+    &.v {fill: $volcanic}
     // gaia
-    &.g {fill: #093}
+    &.g {fill: $gaia}
     // transdim
-    &.m {fill: #a64dff}
-    // lost
-    &.l {fill: lightgray}
-  }
-
-  // Used in federation display on the map
-  .planet-stroke {
-     // terra
-    &.r {fill: #2080f0 }
-    // desert
-    &.d {fill: #F2FF00}
-    // swamp
-    &.s {fill: #523A00}
-    // oxide
-    &.o {fill: #FF160A}
-    // titanium
-    &.t {fill: #808080}
-    // ice
-    &.i {fill: #F8FFF5}
-    // volcanic
-    &.v {fill: #ffa135}
-    // gaia
-    &.g {fill: #093}
-    // transdim
-    &.m {fill: #a64dff}
+    &.m {fill: $transdim}
+    // lost planet
+    &.l {fill: $lost}
   }
 }
 
