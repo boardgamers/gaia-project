@@ -142,10 +142,10 @@ export default interface PlayerInfo {
     }
   }
 
-  flex-wrap: nowrap;
+  flex-wrap: nowrap !important;
 
   @media (max-width: 600px) {
-    flex-wrap: wrap;
+    flex-wrap: wrap !important;
   }
 
   .tiles {
