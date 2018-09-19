@@ -5,6 +5,7 @@
     <Token v-for="(player, index) in players" v-if="player.faction && player.data.research[field] == level" :faction="player.faction" :transform="`translate(${tokenX(index)}, ${tokenY(index)})`" :key="player.player" :scale="5.5" />
     <FederationTile v-if="this.federation" :federation="this.federation" :numTiles="1" x="5" y="7" height="35" style="pointer-events: none" />
     <circle v-if="this.lostPlanet" :class='["planet-fill", this.lostPlanet ]' cx="30" cy="18" r="10" style="pointer-events: none" />
+    <text x="0" y="0" :transform="`translate(${2 + 56/2 }, ${height-10})`" :class='[ "levDesc"]'  >{{label()}}</text>
   </g>
 </template>
 
@@ -39,6 +40,9 @@ import Resource from './Resource.vue';
     },
     lostPlanet(): PlanetEnum {
       if (this.level == 5 && this.field === ResearchField.Navigation) {
+        for (const pl of this.players) {
+          if ( pl.data.lostPlanet ) { return undefined }
+        }
         return PlanetEnum.Lost;
       }
     }
@@ -78,6 +82,21 @@ export default class ResearchTile extends Vue {
     if (this.highlighted) {
       this.$store.dispatch('gaiaViewer/researchClick', this.field)
     }
+  }
+
+  label() {
+       
+    if (this.field == ResearchField.Terraforming) {
+      return this.level == 0 ? "cost 3" : this.level == 2 ? "cost 2" : this.level == 3 ? "cost 1" : "";
+    };
+    if (this.field == ResearchField.Navigation) {
+      return this.level == 0 ? "nav 1" : this.level == 2 ? "nav 2" : this.level == 4 ? "nav 3" : this.level == 5 ? "nav 4" : "";
+    };
+    if (this.field == ResearchField.GaiaProject) {
+      return this.level == 5 ? '4vp, g>vp' : "";
+    };
+      
+    return '';
   }
 
   get resources() {
@@ -133,6 +152,22 @@ svg {
       fill-opacity: 0.3;
       cursor: pointer;
     }
+
+  }
+
+
+    text {
+    font-family: arial;
+    font-size: 10px;
+    fill: black;
+
+
+    &.levDesc {
+      dominant-baseline: central;
+      text-anchor: middle;
+      fill: white;
+    }
+  
   }
 }
 
