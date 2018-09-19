@@ -11,6 +11,9 @@
     <div class="row mt-2">
       <div class="col-md-6 order-2 order-md-1">
         <div v-if="sessionPlayer === undefined">
+          <div class="turn-order">
+            {{turnOrderDesc}} 
+          </div>
           <PlayerInfo v-for="player in orderedPlayers" :player='player' :key="player.player" />
         </div>
         <div v-else>
@@ -75,17 +78,24 @@ import { GameApi } from '../api';
       if (!data.round || !data.turnOrder) {
         return data.players;
       }
-
       let turnOrder = data.turnOrder;
-
       if (data.turnOrder.indexOf(this.player) !== -1) {
         turnOrder = turnOrder.slice(turnOrder.indexOf(this.player)).concat(turnOrder.slice(0, turnOrder.indexOf(this.player)));
       }
 
       return turnOrder.concat(data.passedPlayers).map(player => data.players[player]);
     },
+    turnOrder() {
+      const data = this.data;
+
+      if (!data.round || !data.turnOrder) {
+        return data.players;
+      }
+      
+      return this.data.turnOrder.concat(this.data.passedPlayers).map(player => this.data.players[player]);
+    },
     turnOrderDesc() {
-      return "Turn order: " + this.orderedPlayers.map(pl => this.desc(pl)).filter(desc => !!desc).join(", ");
+      return "Turn order: " + this.turnOrder.map(pl => this.desc(pl)).filter(desc => !!desc).join(", ");
     },
     canPlay() {
       return !this.ended && !this.gameId || this.player !== undefined && this.data.players[this.player].auth === this.auth;
