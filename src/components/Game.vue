@@ -95,7 +95,13 @@ import { GameApi } from '../api';
       return this.data.turnOrder.concat(this.data.passedPlayers).map(player => this.data.players[player]);
     },
     turnOrderDesc() {
-      return "Turn order: " + this.turnOrder.map(pl => this.desc(pl)).filter(desc => !!desc).join(", ");
+      const turnOrder = this.turnOrder;
+
+      if (!turnOrder || turnOrder.length === 0) {
+        return '';
+      }
+
+      return "Turn order: " + turnOrder.map(pl => this.desc(pl)).filter(desc => !!desc).join(", ");
     },
     canPlay() {
       return !this.ended && !this.gameId || this.player !== undefined && this.data.players[this.player].auth === this.auth;
