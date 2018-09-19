@@ -1,5 +1,5 @@
 <template>
-  <div :class="['player-info', player.faction]" v-if="player && player.faction" :style="`background-color: ${factionColor}`">
+  <div :class="['player-info', 'row', 'no-gutters', player.faction]" v-if="player && player.faction" :style="`background-color: ${factionColor}`">
     <div class="text">
       <b :class="['player-name', {dropped: player.dropped}]" @click="playerClick(player)">{{name}}</b> - <span v-b-modal="faction" class="faction-name" role="button">{{faction}}</span> - {{data.victoryPoints}}vp <span v-if="passed">(passed)</span>
       <br/>
@@ -17,10 +17,10 @@
       </span><br/>
       <span style="line-height: 1em" v-if="hasPlanets">Colonized: <span v-for="(count, planet, index) in player.ownedPlanetsCount" :key="planet" :class="{'ml-2': index > 0}"><i :class="['planet', planet]" :key="planet" /> {{count}} </span></span>
     </div>
-    <div class="tiles">
-      <Booster v-if="data.tiles.booster" class="mb-1" :booster="data.tiles.booster" :disabled="passed"/>
-      <FederationTile v-for="(fed,i) in data.tiles.federations" class="mb-1" :key="i" :federation="fed.tile" :used="!fed.green" :player="player.player" :numTiles="1"/>
-      <TechTile v-for="tech in data.tiles.techs" :covered="!tech.enabled" class="mb-1" :key="tech.pos" :pos="tech.pos" :player="player.player" />
+    <div class="tiles row no-gutters pl-3 mt-1">
+      <Booster v-if="data.tiles.booster" class="mb-1 mr-1" :booster="data.tiles.booster" :disabled="passed"/>
+      <FederationTile v-for="(fed,i) in data.tiles.federations" class="mb-1 mr-1" :key="i" :federation="fed.tile" :used="!fed.green" :player="player.player" :numTiles="1"/>
+      <TechTile v-for="tech in data.tiles.techs" :covered="!tech.enabled" class="mb-1 mr-1" :key="tech.pos" :pos="tech.pos" :player="player.player" />
       <SpecialAction v-for="(action, i) in player.actions" :action="action.rewards" :disabled="!action.enabled || passed" :key="action.action + '-' + i" />
     </div>
     <b-modal :id="faction" :title="faction" size="lg">
@@ -113,7 +113,6 @@ export default interface PlayerInfo {
 </script>
 
 <style lang="scss">
-@import "../stylesheets/frontend.scss";
 
 .player-info {
   margin-bottom: 1em;
@@ -143,8 +142,6 @@ export default interface PlayerInfo {
     }
   }
 
-  @extend .row;
-  @extend .no-gutters;
   flex-wrap: nowrap;
 
   @media (max-width: 600px) {
@@ -152,18 +149,8 @@ export default interface PlayerInfo {
   }
 
   .tiles {
-    @extend .row;
-    @extend .no-gutters;
-    @extend .pl-3;
-    @extend .mt-1;
-    
-    flex-wrap: wrap;
     align-content: baseline;
     align-items: center;
-
-    svg {
-      @extend .mr-1;
-    }
   }
 
   .tiles, .text {

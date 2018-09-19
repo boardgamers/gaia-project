@@ -1,7 +1,7 @@
 <template>
-  <div class="pool pb-0 mb-1" v-if="$store.state.gaiaViewer.data.tiles && $store.state.gaiaViewer.data.tiles.techs['gaia']">
-    <Booster v-for="booster in boosters" :key="booster" :booster="booster" class="mb-2"  />
-    <FederationTile v-for="(federation, key, i) in federations" :key="`${key}-${i}`" :federation="key" :numTiles="federation" class="mb-2" />
+  <div class="pool pb-0 mb-1 row no-gutters" v-if="$store.state.gaiaViewer.data.tiles && $store.state.gaiaViewer.data.tiles.techs['gaia']">
+    <Booster v-for="booster in boosters" :key="booster" :booster="booster" class="mb-2 mr-1"  />
+    <FederationTile v-for="(federation, key, i) in federations" :key="`${key}-${i}`" :federation="key" :numTiles="federation" class="mb-2 mr-1" />
   </div>
 </template>
 
@@ -32,7 +32,6 @@ export default class Pool extends Vue {
 </script>
 
 <style lang="scss" scoped>
-@import "../stylesheets/frontend.scss";
 
 .pool {
   margin-bottom: 1em;
@@ -45,12 +44,6 @@ export default class Pool extends Vue {
   border: 2px solid #333;
   background-color: white;
 
-  @extend .row;
-  @extend .no-gutters;
   flex-wrap: wrap;
-
-  svg {
-    @extend .mr-1;
-  }
 }
 </style>

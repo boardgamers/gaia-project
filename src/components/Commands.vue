@@ -502,12 +502,6 @@ export default class Commands extends Vue {
 
 <style lang="scss">
 
-@import "../stylesheets/frontend.scss";
-
-#move-title {
-  @extend .mb-2;
-}
-
 i.planet {
   &::before {
     content: "\25cf";
