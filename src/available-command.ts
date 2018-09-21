@@ -609,7 +609,7 @@ export function possibleTechTiles(engine: Engine, player: Player) {
   // adv tech tiles where player has lev 4/5, free federation tokens,
   // and available std tech tiles to cover
   for (const tilePos of Object.values(AdvTechTilePos)) {
-    if (engine.tiles.techs[tilePos].numTiles <= 0) {
+    if (engine.tiles.techs[tilePos].count <= 0) {
       continue;
     }
     if (!data.hasGreenFederation()) {
