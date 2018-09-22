@@ -24,6 +24,10 @@
           <PlayerInfo v-for="player in orderedPlayers.filter(pl => pl !== sessionPlayer)" :player='player' :key="player.player" />
         </div>
         <Pool />
+        <div class="form-group mt-2 d-md-none">
+              <label for="moves">Move log</label>
+              <textarea class="form-control" rows="4" id="moves" v-model="moveList"></textarea>
+        </div> 
       </div>
       <div class="col-md-6 order-1 order-md-2" id="move-panel">
         <span v-if="ended"><b>Game ended!</b></span>
