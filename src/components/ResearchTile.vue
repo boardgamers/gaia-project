@@ -5,7 +5,7 @@
     <Token v-for="(player, index) in players" v-if="player.faction && player.data.research[field] == level" :faction="player.faction" :transform="`translate(${tokenX(index)}, ${tokenY(index)})`" :key="player.player" :scale="5.5" />
     <FederationTile v-if="this.federation" :federation="this.federation" :numTiles="1" x="5" y="7" height="35" style="pointer-events: none" />
     <circle v-if="this.lostPlanet" :class='["planet-fill", this.lostPlanet ]' cx="30" cy="18" r="10" style="pointer-events: none" />
-    <text x="0" y="0" :transform="`translate(${2 + 56/2 }, ${height-10})`" :class='[ "levDesc"]'  >{{label()}}</text>
+    <text x="0" y="0" :transform="`translate(${2 + 56/2 }, ${height-10})`" class="levDesc">{{label()}}</text>
   </g>
 </template>
 
@@ -166,6 +166,7 @@ svg {
       dominant-baseline: central;
       text-anchor: middle;
       fill: white;
+      pointer-events: none;
     }
   
   }
