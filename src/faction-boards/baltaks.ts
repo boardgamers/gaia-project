@@ -1,9 +1,10 @@
 import { FactionBoardRaw } from ".";
-import { Building } from "../enums";
+import { Building, Faction } from "../enums";
 import Player from "../player";
 import { freeActionsBaltaks } from "../actions";
 
 const baltaks: FactionBoardRaw = {
+  faction: Faction.BalTaks,
   buildings: {
     [Building.Academy2]: {
       cost: "6c,6o",

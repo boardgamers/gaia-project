@@ -1,5 +1,4 @@
-import { Condition, Operator, Resource } from "./enums";
-import * as assert from "assert";
+import { Condition, Operator, Booster, TechTilePos, AdvTechTilePos, Command, FinalTile, ScoringTile, ResearchField, BoardAction, Faction} from "./enums";
 import Reward from "./reward";
 
 function findCondition(spec: string): [Condition, string] {
@@ -40,15 +39,24 @@ function findOperator(spec: string): [Operator, string] {
   return [Operator.Once, spec];
 }
 
+type EventSource = Booster | TechTilePos | AdvTechTilePos | Command.ChargePower | FinalTile | ScoringTile | ResearchField | BoardAction | Faction;
+
 export default class Event {
   spec: string;
   condition: Condition;
   operator: Operator;
+  source: EventSource;
   rewards: Reward[];
   activated: boolean = false;
 
-  constructor(spec: string) {
-    this.spec = spec;
+  constructor(spec: string | {spec: string, source: EventSource}, source?: EventSource) {
+    if (typeof spec === "object") {
+      this.spec = spec.spec;
+      this.source = spec.source;
+    } else {
+      this.spec = spec;
+      this.source = source;
+    }
 
     if (this.spec.endsWith("!")) {
       this.spec = this.spec.slice(0, this.spec.length - 1);
@@ -72,14 +80,14 @@ export default class Event {
   }
 
   toJSON() {
-    return this.toString();
+    return {spec: this.toString(), source: this.source};
   }
 
   clone() {
-    return new Event(this.spec);
+    return new Event(this.spec, this.source);
   }
 
-  static parse(events: string[]): Event[] {
-    return events.map(ev => new Event(ev));
+  static parse(events: string[], source?: EventSource): Event[] {
+    return events.map(ev => new Event(ev, source));
   }
 }

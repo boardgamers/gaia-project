@@ -1,7 +1,8 @@
 import { FactionBoardRaw } from ".";
-import { Building } from "../enums";
+import { Building, Faction } from "../enums";
 
 const bescods: FactionBoardRaw = {
+  faction: Faction.Bescods,
   buildings: {
     [Building.TradingStation]: {
       income: [["+k"], ["+k"], ["+k"], ["+k"]],

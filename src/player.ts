@@ -285,9 +285,8 @@ export default class Player extends EventEmitter {
   }
 
   removeRoundBoosterEvents( type?: Operator.Income) {
-
-    for (const event of Event.parse( boosts[this.data.tiles.booster])
-    .filter( ev => (type && ev.operator === Operator.Income ) || ( !type && ev.operator !== Operator.Income ))) {
+    const eventList = Event.parse(boosts[this.data.tiles.booster]).filter( ev => (type && ev.operator === Operator.Income ) || ( !type && ev.operator !== Operator.Income ));
+    for (const event of eventList) {
       this.removeEvent(event);
     }
   }
@@ -320,9 +319,9 @@ export default class Player extends EventEmitter {
 
 
   onResearchAdvanced(field: ResearchField) {
-    const events = Event.parse(researchTracks[field][this.data.research[field]]);
+    const events = Event.parse(researchTracks[field][this.data.research[field]], field);
     this.loadEvents(events);
-    const oldEvents = Event.parse(researchTracks[field][this.data.research[field] - 1]);
+    const oldEvents = Event.parse(researchTracks[field][this.data.research[field] - 1], field);
     this.removeEvents(oldEvents);
 
     if (this.data.research[field] === lastTile(field)) {
@@ -433,7 +432,7 @@ export default class Player extends EventEmitter {
   getRoundBooster(roundBooster: Booster) {
     // add the booster to the the player
     this.data.tiles.booster =  roundBooster;
-    this.loadEvents(Event.parse( boosts[roundBooster]));
+    this.loadEvents(Event.parse(boosts[roundBooster], roundBooster));
   }
 
   gainTechTile(tile: TechTile | AdvTechTile, pos: TechTilePos | AdvTechTilePos) {
@@ -441,7 +440,7 @@ export default class Player extends EventEmitter {
       this.data.removeGreenFederation();
     }
     this.data.tiles.techs.push({tile, pos, enabled: true});
-    this.loadEvents(Event.parse(techs[tile]));
+    this.loadEvents(Event.parse(techs[tile], pos));
 
     // resets federationCache if Special PA->4pw
     if ( tile === TechTile.Tech3  ) { this.federationCache = null; }
@@ -450,7 +449,7 @@ export default class Player extends EventEmitter {
   coverTechTile(pos: TechTilePos) {
     const tile = this.data.tiles.techs.find(tech => tech.pos === pos);
     tile.enabled = false;
-    this.removeEvents(Event.parse(techs[tile.tile]));
+    this.removeEvents(Event.parse(techs[tile.tile], pos));
   }
 
   needIncomeSelection(): { events?: Event[], needed: boolean, descs: Reward[]} {

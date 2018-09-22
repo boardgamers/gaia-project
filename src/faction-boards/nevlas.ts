@@ -1,9 +1,10 @@
 import { FactionBoardRaw } from ".";
-import { Building } from "../enums";
+import { Building, Faction } from "../enums";
 import Player from "../player";
 import { freeActionsNevlas, freeActionsNevlasPI } from "../actions";
 
 const nevlas: FactionBoardRaw = {
+  faction: Faction.Nevlas,
   buildings: {
     [Building.TradingStation]: {
       income: [["+3c"], ["+4c"], ["+4c"], ["+5c"]],

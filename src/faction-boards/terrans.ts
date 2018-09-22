@@ -1,4 +1,7 @@
+import { Faction } from "../enums";
+
 export default {
+  faction: Faction.Terrans,
   income: ["3k,4o,15c,q,up-gaia", "+o,k"],
   power: {
     area1: 4

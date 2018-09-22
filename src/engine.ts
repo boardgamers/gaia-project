@@ -450,7 +450,8 @@ export default class Engine {
   }
 
   get currentRoundScoringEvents() {
-    return Event.parse(roundScorings[this.tiles.scorings.round[this.round - 1]]);
+    const roundScoringTile = this.tiles.scorings.round[this.round - 1];
+    return Event.parse(roundScorings[roundScoringTile], roundScoringTile);
   }
 
   /**
@@ -1148,7 +1149,7 @@ export default class Engine {
     this.boardActions[action] = false;
 
     pl.payCosts(Reward.parse(boardActions[action].cost));
-    pl.loadEvents(Event.parse(boardActions[action].income));
+    pl.loadEvents(Event.parse(boardActions[action].income, action));
   }
 
   [Command.ChooseIncome](player: PlayerEnum, income: string) {

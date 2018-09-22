@@ -2,9 +2,10 @@ import { FactionBoardRaw } from ".";
 import Player from "../player";
 import { GaiaHex } from "../gaia-hex";
 import Reward from "../reward";
-import { Building } from "../enums";
+import { Building, Faction } from "../enums";
 
 const geodens: FactionBoardRaw = {
+  faction: Faction.Geodens,
   income: ["3k,4o,15c,q,up-terra", "+o,k"],
   handlers: {
     [`build-${Building.Mine}`]: (player: Player, hex: GaiaHex) => {

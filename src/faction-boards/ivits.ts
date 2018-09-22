@@ -1,7 +1,8 @@
 import { FactionBoardRaw } from ".";
-import { Building } from "../enums";
+import { Building, Faction } from "../enums";
 
 const ivits: FactionBoardRaw = {
+  faction: Faction.Ivits,
   buildings: {
     [Building.PlanetaryInstitute]: {
       cost: "~",

@@ -1,8 +1,9 @@
 import { FactionBoardRaw } from ".";
-import { Building, Federation } from "../enums";
+import { Building, Federation, Faction } from "../enums";
 import Player from "../player";
 
 const gleens: FactionBoardRaw = {
+  faction: Faction.Gleens,
   buildings: {
     [Building.PlanetaryInstitute]: {
       income: [["+4pw", "+o"]]
