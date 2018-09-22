@@ -27,10 +27,10 @@ const conditionsTrigger = {
 
 const operators = {
   [Operator.Pass]: "After passing,",
-  [Operator.Activate]: "Once per turn, as a special action,",
-  [Operator.Income]: "At the beginning of each round,",
-  [Operator.Once]: "Upon receiving,",
-  [Operator.Trigger]: "When",
+  [Operator.Activate]: "Once per round, as a special action,",
+  [Operator.Income]: "During the income phase,",
+  [Operator.Once]: "Immediately ",
+  [Operator.Trigger]: "When ",
   [Operator.Special]: "Planetary institutes and academies have a power value of 4, when building federations and charging power."
 }
 
