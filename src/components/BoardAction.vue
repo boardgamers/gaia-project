@@ -18,10 +18,11 @@ import { eventDesc } from '../data/event';
 @Component<BoardAction>({
   computed: {
     tooltip() {
+      const costDesc = "Spend "+ this.cost + "\n";
       if (this.income.length === 1) {
-        return eventDesc(new Event(this.income[0]));
+        return costDesc + eventDesc(new Event(this.income[0]));
       } else {
-        return this.income.map(income => "- " + eventDesc(new Event(income))).join("\n");
+        return costDesc + this.income.map(income => "- " + eventDesc(new Event(income))).join("\n");
       }
     },
 
@@ -39,6 +40,10 @@ import { eventDesc } from '../data/event';
 
     income() {
       return boardActions[this.action].income;
+    },
+
+    cost() {
+      return boardActions[this.action].cost;
     }
   }
 })
