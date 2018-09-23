@@ -26,7 +26,7 @@ import {
   SubPhase
 } from './enums';
 import { CubeCoordinates } from 'hexagrid';
-import Event, {EventSource} from './events';
+import Event, {EventSource, RoundScoring} from './events';
 import federations from './tiles/federations';
 import {roundScorings, finalScorings} from './tiles/scoring';
 import * as researchTracks from './research-tracks';
@@ -65,7 +65,7 @@ export interface LogEntry {
   // For round changes
   round?: number;
   // For phase change
-  phase?: Phase.RoundIncome | Phase.RoundGaia;
+  phase?: Phase.RoundIncome | Phase.RoundGaia | Phase.EndGame;
 }
 
 export default class Engine {
@@ -140,6 +140,7 @@ export default class Engine {
 
   move(_move: string, lastMove = true) {
     this.newTurn = true;
+    const player = this.playerToMove;
 
     const move = _move.trim();
 
@@ -150,31 +151,49 @@ export default class Engine {
 
     assert(this.turnMoves.length === 0, "Unnecessary commands at the end of the turn: " + this.turnMoves.join('. '));
 
+    if (player !== undefined) {
+      this.log(player, undefined, 0, undefined);
+    }
     this.moveHistory.push(move);
   }
 
-  log(player: Player, resource: Resource, amount: number, source: EventSource) {
-    const pl = player.player;
+  log(player: PlayerEnum, resource: Resource, amount: number, source: EventSource) {
     const lastEntry = this.advancedLog[this.advancedLog.length - 1];
     let move = this.moveHistory.length;
 
-    if (lastEntry && lastEntry.player === pl && lastEntry.move === move) {
-      // Add to existing log entry
-      _.set(lastEntry, `changes.${source}.${resource}`, _.get(lastEntry, `changes.${source}.${resource}`, 0) + amount);
-    } else {
-      // Add new entry
+    let lastMoveRegistered: number;
+    let lastPlayerRegistered: PlayerEnum;
+    const playersEncountered: Set<number> = new Set();
 
-      // Only add move, if it corresponds to a move played
-      if (!lastEntry || lastEntry.player === undefined || lastEntry.move === move) {
+    for (let i = this.advancedLog.length - 1; i >= 0; i--) {
+      playersEncountered.add(this.advancedLog[i].player);
+      if (this.advancedLog[i].move !== undefined) {
+        lastMoveRegistered = this.advancedLog[i].move;
+        lastPlayerRegistered = this.advancedLog[i].player;
+        break;
+      }
+    }
+
+    // Only add move, if it corresponds to a move played
+    if (lastMoveRegistered === move) {
+      if (lastPlayerRegistered !== player || playersEncountered.size > 1) {
         move = undefined;
       }
+    }
 
+    if (lastEntry && lastEntry.player === player && lastEntry.move === move) {
+      // Add to existing log entry
+      if (amount) {
+        _.set(lastEntry, `changes.${source}.${resource}`, _.get(lastEntry, `changes.${source}.${resource}`, 0) + amount);
+      }
+    } else {
+      // Add new entry
       this.advancedLog.push({
-        player: pl,
+        player,
         move,
-        changes: {
+        changes: amount ? {
           [source]: {[resource]: amount}
-        }
+        } : undefined
       });
     }
   }
@@ -221,8 +240,10 @@ export default class Engine {
     player.data.on('brainstone', areas => this.processNextMove(SubPhase.BrainStone, areas));
 
     /* For advanced log */
-    player.data.on(`gain-${Resource.VictoryPoint}`, (amount: number, source: EventSource) => this.log(player, Resource.VictoryPoint, amount, source));
-    player.data.on(`pay-${Resource.VictoryPoint}`, (amount: number, source: EventSource) => this.log(player, Resource.VictoryPoint, -amount, source));
+    for (const resource of [Resource.VictoryPoint, Resource.ChargePower, Resource.Credit, Resource.Qic, Resource.Knowledge, Resource.Ore]) {
+      player.data.on(`gain-${resource}`, (amount: number, source: EventSource) => this.log(player.player, resource, amount, source));
+      player.data.on(`pay-${resource}`, (amount: number, source: EventSource) => this.log(player.player, resource, -amount, source));
+    }
   }
 
   player(player: number): Player {
@@ -517,7 +538,7 @@ export default class Engine {
 
   get currentRoundScoringEvents() {
     const roundScoringTile = this.tiles.scorings.round[this.round - 1];
-    return Event.parse(roundScorings[roundScoringTile], roundScoringTile);
+    return Event.parse(roundScorings[roundScoringTile], `round${this.round}` as RoundScoring);
   }
 
   /**
@@ -708,7 +729,10 @@ export default class Engine {
 
   finalScoringPhase() {
     this.changePhase(Phase.EndGame);
+    this.advancedLog.push({phase: Phase.EndGame});
     this.currentPlayer = this.tempCurrentPlayer = undefined;
+
+    const allRankings: Array<Array<{player: Player, count: number}>> = [];
 
     // finalScoring tiles
     for (const tile of this.tiles.scorings.final) {
@@ -724,7 +748,15 @@ export default class Engine {
         rankings.sort((pl1, pl2) => pl2.count - pl1.count);
       }
 
-      for (const ranking of rankings) {
+      allRankings.push(rankings);
+    }
+
+    // Group gained points per player
+    for (const player of this.players) {
+      // Gain points from final scoring
+      allRankings.forEach((rankings, index) => {
+        const ranking = rankings.find(rnk => rnk.player === player);
+
         const count = ranking.count;
         // index of the first player with that score
         const first = rankings.findIndex(pl => pl.count === count);
@@ -734,14 +766,12 @@ export default class Engine {
         if (ranking.player) {
           const VPs = [18, 12, 6, 0, 0, 0];
 
-          ranking.player.gainRewards([new Reward(Math.floor(_.sum(VPs.slice(first, first + ties)) / ties), Resource.VictoryPoint)], tile);
+          ranking.player.gainRewards([new Reward(Math.floor(_.sum(VPs.slice(first, first + ties)) / ties), Resource.VictoryPoint)], `final${index + 1}` as 'final1' | 'final2');
         }
-      }
-    }
+      });
 
-    // research VP and remaining resources
-    for (const pl of this.players) {
-      pl.data.gainFinalVictoryPoints();
+      // research VP and remaining resources
+      player.data.gainFinalVictoryPoints();
     }
   }
 
