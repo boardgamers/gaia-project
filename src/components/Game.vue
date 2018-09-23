@@ -178,10 +178,8 @@ export default class Game extends Vue {
     const text = this.moveList.trim(); 
     const moveList = text ? text.split("\n") : [];
 
-    console.log("api replay", moveList);
     try {
       const data = await this.api.replay(moveList);
-      console.log("handling data!");
       this.handleData(data);
       window.sessionStorage.setItem('moves', JSON.stringify(data.moveHistory));
     } catch(err) {
@@ -190,7 +188,6 @@ export default class Game extends Vue {
   }
 
   handleData(data: any) {
-    console.log("handle data", JSON.parse(JSON.stringify(data)));
     this.lastUpdated = data.lastUpdated;
     this.nextMoveDeadline = data.nextMoveDeadline;
 

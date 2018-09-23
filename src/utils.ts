@@ -14,6 +14,8 @@ export function handleError(err: Error | JQuery.jqXHR | string) {
     return;
   }
 
+  console.error(err);
+
   if (typeof err !== "object") {
     store.commit('error', err);
   } else if (isError(err)) {
