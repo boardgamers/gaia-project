@@ -25,8 +25,9 @@
         </div>
         <Pool />
         <div class="form-group mt-2 d-md-none">
-              <label for="moves">Move log</label>
-              <textarea class="form-control" rows="4" id="moves" v-model="moveList"></textarea>
+          <label for="moves-mobile">Move log</label>
+          <!-- Error is normal. Can't have two textareas with the same model -->
+          <textarea class="form-control" rows="4" id="moves-mobile">{{moveList}}</textarea>
         </div> 
       </div>
       <div class="col-md-6 order-1 order-md-2" id="move-panel">
@@ -67,6 +68,7 @@ import ScoringBoard from './ScoringBoard.vue';
 import Pool from './Pool.vue';
 import Engine,{ Command,Phase,factions, Player } from '@gaia-project/engine';
 import { GameApi } from '../api';
+import {handleError} from '../utils';
 
 @Component<Game>({
   computed: {
@@ -170,27 +172,25 @@ export default class Game extends Vue {
   @Prop()
   auth: string;
 
-  replay() {
+  async replay() {
     this.$store.commit("gaiaViewer/clearContext");
 
     const text = this.moveList.trim(); 
     const moveList = text ? text.split("\n") : [];
 
-    this.api.replay(moveList).then(data => {
+    console.log("api replay", moveList);
+    try {
+      const data = await this.api.replay(moveList);
+      console.log("handling data!");
       this.handleData(data);
       window.sessionStorage.setItem('moves', JSON.stringify(data.moveHistory));
-    }, this.handleError.bind(this));
-  }
-
-  handleError(error, status, exception) {
-    if (error.status === 0) {
-      this.$store.commit("error", "Are you sure gaia engine is running on port 9508?");  
-    } else {
-      this.$store.commit("error", error.responseText);
+    } catch(err) {
+      handleError(err);
     }
   }
 
   handleData(data: any) {
+    console.log("handle data", JSON.parse(JSON.stringify(data)));
     this.lastUpdated = data.lastUpdated;
     this.nextMoveDeadline = data.nextMoveDeadline;
 
@@ -237,7 +237,7 @@ export default class Game extends Vue {
   loadGame() {
     this.$store.commit("gaiaViewer/clearContext");
 
-    this.api.loadGame(this.gameId).then(data => this.handleData(data), this.handleError.bind(this));
+    this.api.loadGame(this.gameId).then(data => this.handleData(data), handleError);
   }
 
   /**
@@ -303,7 +303,7 @@ export default class Game extends Vue {
     this.$store.commit("gaiaViewer/clearContext");
     if (this.gameId) {
       if (command) {
-        this.api.addMove(this.gameId, command).then(data => this.handleData(data), this.handleError.bind(this));
+        this.api.addMove(this.gameId, command).then(data => this.handleData(data), handleError);
       } else {
         this.loadGame();
       }
