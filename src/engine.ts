@@ -140,7 +140,10 @@ export default class Engine {
 
   move(_move: string, lastMove = true) {
     this.newTurn = true;
-    const player = this.playerToMove;
+
+    if (this.playerToMove) {
+      this.log(this.playerToMove, undefined, 0, undefined);
+    }
 
     const move = _move.trim();
 
@@ -150,10 +153,6 @@ export default class Engine {
     }
 
     assert(this.turnMoves.length === 0, "Unnecessary commands at the end of the turn: " + this.turnMoves.join('. '));
-
-    if (player !== undefined) {
-      this.log(player, undefined, 0, undefined);
-    }
     this.moveHistory.push(move);
   }
 
