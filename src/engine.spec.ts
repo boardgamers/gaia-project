@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import Engine from "./engine";
 import { AssertionError } from "assert";
-import { Player, Federation, Operator, AdvTechTilePos, Building, Condition, BrainstoneArea } from "./enums";
+import { Player, Federation, Operator, AdvTechTilePos, Building, Condition, BrainstoneArea, Phase } from "./enums";
 
 describe("Engine", () => {
   it("should throw when trying to build on the wrong place", () => {
@@ -593,10 +593,36 @@ describe("Engine", () => {
       expect(engine.player(Player.Player2).data.brainstone).to.equal(BrainstoneArea.Area1);
     });
   });
+
+  describe("advanced logs", () => {
+    it("pass move should appear before new round move", () => {
+      const moves = parseMoves(`
+        init 2 Alex-Del-Pieroooooo
+        p1 faction xenos
+        p2 faction firaks
+        xenos build m 3x0
+        firaks build m 4x-3
+        firaks build m 5x-5
+        xenos build m -2x2
+        xenos build m 4x-7
+        firaks booster booster4
+        xenos booster booster5
+      `);
+
+      const engine = new Engine(moves);
+      const log = engine.advancedLog.slice(-6);
+
+      expect(log[0].move).to.equal(9);
+      expect(log[1].round).to.equal(1);
+      expect(log[2].phase).to.equal(Phase.RoundIncome);
+      // tslint:disable-next-line no-unused-expression
+      expect(log[3].move).to.be.undefined;
+      // tslint:disable-next-line no-unused-expression
+      expect(log[4].move).to.be.undefined;
+      expect(log[5].phase).to.equal(Phase.RoundGaia);
+    });
+  });
 });
-
-
-
 
 function parseMoves(moves: string) {
   return Engine.parseMoves(moves);
