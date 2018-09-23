@@ -296,16 +296,26 @@ export default class Engine {
   static fromData(data: any) {
     const engine = new Engine();
 
+    if (!data) {
+      return engine;
+    }
+
     Object.assign(engine, _.omit(data, "map", "players"));
-    engine.map = SpaceMap.fromData(data.map);
-    engine.map.nbPlayers = data.players.length;
+
+    if (data.map) {
+      engine.map = SpaceMap.fromData(data.map);
+      engine.map.nbPlayers = data.players.length;
+    }
+
     for (const player of data.players) {
       engine.addPlayer(Player.fromData(player, engine.map));
     }
 
-    for (const hex of engine.map.grid.values()) {
-      for (const player of hex.occupyingPlayers()) {
-        engine.player(player).data.occupied.push(hex);
+    if (data.map) {
+      for (const hex of engine.map.grid.values()) {
+        for (const player of hex.occupyingPlayers()) {
+          engine.player(player).data.occupied.push(hex);
+        }
       }
     }
 

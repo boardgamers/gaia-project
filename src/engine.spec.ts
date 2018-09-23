@@ -289,6 +289,10 @@ describe("Engine", () => {
     expect(endEngine.player(Player.Player2).data.victoryPoints).to.equal(baseLine.player(Player.Player2).data.victoryPoints);
   });
 
+  it("should be able to load state from an empty game", () => {
+    expect(() => Engine.fromData(JSON.parse(JSON.stringify(new Engine())))).to.not.throw();
+  });
+
   it("should not count gaiaformers in data.occupied when loading a game from state", () => {
     const moves = parseMoves(`
       init 3 12

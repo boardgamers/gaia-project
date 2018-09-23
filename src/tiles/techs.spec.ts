@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import Engine from '../engine';
-import {Player, AdvTechTilePos, TechTilePos} from '../enums';
+import {Player, AdvTechTilePos, TechTilePos, Command} from '../enums';
 
 describe("Tech Tiles", () => {
   it("should prevent picking the same tech tile twice", () => {
@@ -128,4 +128,89 @@ describe("Tech Tiles", () => {
 
   });
 
+  it("should refuse advanced tech tile when no tech tile to cover", () => {
+    const moves = Engine.parseMoves(`
+      init 3 polite-food-8474
+      p1 faction hadsch-hallas
+      p2 faction itars
+      p3 faction ambas
+      hadsch-hallas build m 0x2
+      itars build m 1x4
+      ambas build m -7x3
+      ambas build m 1x-1
+      itars build m -6x8
+      hadsch-hallas build m 2x-4
+      ambas booster booster4
+      itars booster booster2
+      hadsch-hallas booster booster1
+      hadsch-hallas build m -1x3.
+      itars up eco.
+      ambas up nav.
+      hadsch-hallas build m -1x4.
+      itars charge 1pw
+      itars build ts 1x4.
+      hadsch-hallas charge 1pw
+      ambas special step. build m 1x-3.
+      hadsch-hallas charge 1pw
+      hadsch-hallas up eco.
+      itars build lab 1x4. tech terra. up terra.
+      hadsch-hallas charge 1pw
+      ambas build m -5x3.
+      hadsch-hallas pass booster7
+      itars special 4pw.
+      ambas build m -4x1.
+      itars build ac1 1x4. tech free3. up eco.
+      hadsch-hallas charge 1pw
+      ambas build m -4x-1.
+      itars burn 4. action power3.
+      ambas build ts 1x-3.
+      hadsch-hallas charge 1pw
+      itars pass booster10
+      ambas pass booster1
+      itars income 2pw
+      hadsch-hallas action power6. build m 1x2.
+      itars charge 3pw
+      itars up gaia.
+      ambas build lab 1x-3. tech terra. up terra.
+      hadsch-hallas charge 1pw
+      hadsch-hallas build ts 1x2.
+      itars charge 3pw
+      itars burn 1. spend 1pw for 1c. special 4pw. burn 5. spend 1pw for 1c.
+      ambas special 4pw.
+      hadsch-hallas build PI 1x2.
+      itars charge 3pw
+      itars action power3.
+      ambas pass booster2
+      hadsch-hallas build ts -1x4.
+      itars charge 3pw
+      itars burn 1. action power7.
+      hadsch-hallas federation -1x4,-1x3,0x2,1x2 fed6.
+      itars build gf -5x7.
+      hadsch-hallas up eco.
+      itars build ts -6x8.
+      hadsch-hallas action power5.
+      itars build PI -6x8.
+      hadsch-hallas pass booster1
+      itars pass booster4
+      hadsch-hallas income 1t
+      itars income 1t. income 1t
+      itars spend 4tg for tech. tech free2. up sci. spend 4tg for tech. tech free1. up sci. spend 4tg for tech. tech int. up int
+      ambas pass booster7
+      hadsch-hallas burn 2. action power5.
+      itars special step. build m 0x3.
+      hadsch-hallas charge 3pw
+      hadsch-hallas up eco.
+      itars spend 3pw for 1o. special 4pw.
+      hadsch-hallas build ts 2x-4.
+      ambas decline 2pw
+      itars up sci.
+    `);
+
+    const engine = new Engine(moves);
+    engine.move("hadsch-hallas build lab 2x-4", true);
+
+    const availableCommand = engine.findAvailableCommand(Player.Player1, Command.ChooseTechTile);
+    // tslint:disable-next-line no-unused-expression
+    expect(availableCommand.data.tiles.find(tech => tech.pos === AdvTechTilePos.Economy)).to.be.undefined;
+  });
 });
