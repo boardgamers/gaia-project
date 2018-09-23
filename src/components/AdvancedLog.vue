@@ -64,9 +64,7 @@ import Engine, {LogEntry} from '@gaia-project/engine';
           entry.entry = nextLogEntry;
           bumpLog();
         }
-        if (entry.entry.changes) {
-          ret.push(entry);
-        }
+        ret.push(entry);
         while (nextLogEntry && nextLogEntry.move === undefined) {
           if (nextLogEntry.player === undefined || !!nextLogEntry.changes) {
             ret.push({entry: nextLogEntry});
