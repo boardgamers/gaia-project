@@ -410,8 +410,9 @@ export default class PlayerData extends EventEmitter {
     }
 
     // Gain 1 point for any 3 of ore, credits & knowledge.
-    const resources = this.ores + this.credits + this.knowledge;
+    this.finalResourceHandling();
 
+    const resources = this.ores + this.credits + this.knowledge;
     this.gainReward(new Reward(Math.max(Math.floor(resources / 3)), Resource.VictoryPoint), false, Command.Spend);
   }
 

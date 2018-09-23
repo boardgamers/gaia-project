@@ -790,13 +790,12 @@ export default class Engine {
     // From rules, this is in clockwise order. We assume the order of players in this.players is the
     // clockwise order
     for (const pl of this.playersInTableOrderFrom(source.player)) {
-      // If the player has passed and it's the last round, there's absolutely no points in leeching
-      // There's no cultists in gaia project.
-      if (this.isLastRound && this.passedPlayers.includes(pl.player)) {
-        pl.data.leechPossible = 0;
-        continue;
-      }
-      // If source, exclude too
+      // Maybe should decline leech > 1 for factions other than nevlas & taklons
+      // if (this.isLastRound && this.passedPlayers.includes(pl.player)) {
+      //   pl.data.leechPossible = 0;
+      //   continue;
+      // }
+      // If pl is the one that made the building, exclude from leeching
       if (source.player === pl.player) {
         pl.data.leechPossible = 0;
         continue;
@@ -1080,7 +1079,7 @@ export default class Engine {
 
   [Command.Pass](player: PlayerEnum, booster: Booster) {
     this.tiles.boosters[this.players[player].data.tiles.booster] = true;
-    this.players[player].pass(this.isLastRound);
+    this.players[player].pass();
 
     if (!this.isLastRound) {
       (this[Command.ChooseRoundBooster] as any)(player, booster, Command.Pass);
@@ -1287,7 +1286,7 @@ export default class Engine {
 
     for (const elem of buildings) {
       if (elem.coordinates === location) {
-        const {q, r, s} = CubeCoordinates.parse(location);
+        const {q, r} = CubeCoordinates.parse(location);
         const hex = this.map.grid.get({q, r});
 
         if ( hex.buildingOf(player) === Building.Mine ) {
