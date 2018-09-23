@@ -6,6 +6,7 @@
     <line :x1="posX(0)-3.05" :x2="posX(10)+3.05" y1="16" y2="16" />
     <line :x1="posX(0)-3.05" :x2="posX(10)+3.05" y1="52" y2="52" />
     <Token v-for="(player, index) in players" :faction="player.faction" :transform="`translate(${tokenX(player)}, ${tokenY(index)})`" :key="player.faction" :scale="2.7" />
+    <Token v-for="(player, index) in players" v-if="progress(player) > 10" :faction="player.faction" :transform="`translate(${posX(10)}, ${tokenY(index)})`" :key="player.faction+'-10'" :scale="2.7" />
   </g>
 </template>
 
@@ -68,7 +69,7 @@ export default class FinalScoringTile extends Vue {
   }
 
   posX(progress: number) {
-    return 8 + (progress % 11) * 6.1;
+    return 8 + (progress === 10 ? 10 : progress % 10) * 6.1;
   }
 
   tokenY(index: number) {
