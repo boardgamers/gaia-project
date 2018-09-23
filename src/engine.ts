@@ -141,7 +141,7 @@ export default class Engine {
   move(_move: string, lastMove = true) {
     this.newTurn = true;
 
-    if (this.playerToMove) {
+    if (this.playerToMove !== undefined) {
       this.log(this.playerToMove, undefined, 0, undefined);
     }
 
