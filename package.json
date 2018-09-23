@@ -1,6 +1,6 @@
 {
   "name": "@gaia-project/viewer",
-  "version": "2.4.4",
+  "version": "2.4.5",
   "description": "Functions to visualize the map and boards for gaia project inside html canvas",
   "main": "dist/index.js",
   "scripts": {
@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/donkeytech/gaia-viewer#readme",
   "dependencies": {
-    "@gaia-project/engine": "^2.4.1",
+    "@gaia-project/engine": "^2.4.4",
     "hexagrid": "^1.4.1",
     "jquery": "^3.3.1"
   },
