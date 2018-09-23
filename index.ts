@@ -2,7 +2,7 @@ import Engine from "./src/engine";
 import Player from "./src/player";
 import PlayerData from "./src/player-data";
 import factions from "./src/factions";
-import Event from "./src/events";
+import Event, {EventSource} from "./src/events";
 import AvailableCommand from "./src/available-command";
 import tiles from "./src/tiles";
 import Reward from "./src/reward";
@@ -20,6 +20,6 @@ export { FactionBoard, factionBoard } from "./src/faction-boards";
 export {roundScorings, finalScorings} from './src/tiles/scoring';
 export {LogEntry} from './src/engine';
 
-export { Player, PlayerData, Event, factions, AvailableCommand, tiles, Reward, SpaceMap, researchTracks, factionBoards };
+export { Player, PlayerData, Event, factions, AvailableCommand, tiles, Reward, SpaceMap, researchTracks, factionBoards, EventSource };
 
 export default Engine;
