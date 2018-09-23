@@ -52,7 +52,7 @@ const  factionData: { [faction in Faction]: { ability: string, PI: string}} = {
   },
   [Faction.Firaks] : {
     ability : "-",
-    PI : "As an action, you can “downgrade” a research lab into a trading station and immediately advance one level in a research area of your choice. Advancing in a research area is explained on page 15. This counts as an “Upgrade to a Trading Station” action. You can later upgrade the trading station back into a research lab using the normal rules (including gaining a new tech tile)."
+    PI : "As an action, you can “downgrade” a research lab into a trading station and immediately advance one level in a research area of your choice. This counts as an “Upgrade to a Trading Station” action. You can later upgrade the trading station back into a research lab using the normal rules (including gaining a new tech tile)."
   },
   [Faction.Bescods] : {
     ability : `The positions of your planetary institute and academies are swapped on your faction board, as is the income you gain for trading stations and research labs. As with the other factions, upgrading to an academy or a research lab allows you to gain a tech tile.
@@ -66,7 +66,7 @@ const  factionData: { [faction in Faction]: { ability: string, PI: string}} = {
   },
   [Faction.Itars] : {
     ability : "Each time you discard a power token from area II of your power cycle to move another power token to area III, place the discarded power token in your Gaia area instead of returning it to the supply.",
-    PI : `During the Gaia phase, you can discard 4 power tokens from your Gaia area to immediately gain a tech tile (standard or advanced). The rules for Gaining a Tech Tile are explained on page 13. You may do this as many times as you can afford to.`
+    PI : `During the Gaia phase, you can discard 4 power tokens from your Gaia area to immediately gain a tech tile. You may do this as many times as you can afford to.`
   },
 };
 
