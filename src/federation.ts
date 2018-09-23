@@ -1,7 +1,5 @@
-import { CubeCoordinates } from "hexagrid";
-import * as _ from "lodash";
-import SpaceMap from "./map";
 import { GaiaHex } from "./gaia-hex";
+import * as difference from "lodash.difference";
 
 export interface FederationInfo {
   hexes: GaiaHex[];
@@ -38,11 +36,11 @@ export function isOutclassedBy(fed: FederationInfo, comparison: FederationInfo) 
   const compPlanets = comparison.hexes.filter(hex => hex.hasPlanet());
 
   // Comp buildings included in fed buildings, & one more planet & one more satellite
-  if (fed.planets > comparison.planets && fed.satellites > comparison.satellites && _.difference(compPlanets, fedPlanets).length === 0) {
+  if (fed.planets > comparison.planets && fed.satellites > comparison.satellites && difference(compPlanets, fedPlanets).length === 0) {
     return true;
   }
 
-  if (fedPlanets.length === compPlanets.length && _.difference(fedPlanets, compPlanets).length === 0) {
+  if (fedPlanets.length === compPlanets.length && difference(fedPlanets, compPlanets).length === 0) {
     if (fed.satellites > comparison.satellites) {
       // We use more satellites and the same planets, so we lose
       return true;

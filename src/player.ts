@@ -2,7 +2,13 @@ import { Faction, Operator, ResearchField, Planet, Building, Resource, Booster, 
 import PlayerData from './player-data';
 import Event, {EventSource} from './events';
 import { factionBoard, FactionBoard } from './faction-boards';
-import * as _ from 'lodash';
+import * as uniq from 'lodash.uniq';
+import * as get from 'lodash.get';
+import * as sum from 'lodash.sum';
+import * as difference from 'lodash.difference';
+import * as zipWith from 'lodash.zipwith';
+import * as merge from 'lodash.merge';
+import * as countBy from 'lodash.countby';
 import factions from './factions';
 import Reward from './reward';
 import { CubeCoordinates, Hex, Grid } from 'hexagrid';
@@ -78,7 +84,7 @@ export default class Player extends EventEmitter {
   }
 
   get ownedPlanetsCount() {
-    return _.countBy(this.ownedPlanets, 'data.planet');
+    return countBy(this.ownedPlanets, 'data.planet');
   }
 
   toJSON() {
@@ -129,7 +135,7 @@ export default class Player extends EventEmitter {
     }
 
     if (data.data) {
-      _.merge(player.data, data.data);
+      merge(player.data, data.data);
     }
 
     return player;
@@ -137,7 +143,7 @@ export default class Player extends EventEmitter {
 
   loadPlayerData(data: any) {
     if (data) {
-      _.merge(this.data, data);
+      merge(this.data, data);
     }
   }
 
@@ -654,13 +660,13 @@ export default class Player extends EventEmitter {
       case Condition.PlanetaryInstituteOrAcademy: return this.data.buildings[Building.Academy1] + this.data.buildings[Building.Academy2] + this.data.buildings[Building.PlanetaryInstitute];
       case Condition.Federation: return this.data.tiles.federations.length;
       case Condition.Gaia: return this.ownedPlanets.filter(hex => hex.data.planet === Planet.Gaia).length;
-      case Condition.PlanetType: return _.uniq(this.ownedPlanets.map( hex => hex.data.planet)).length;
-      case Condition.Sector: return _.uniq(this.data.occupied.filter(hex => hex.colonizedBy(this.player)).map(hex => hex.data.sector)).length;
+      case Condition.PlanetType: return uniq(this.ownedPlanets.map( hex => hex.data.planet)).length;
+      case Condition.Sector: return uniq(this.data.occupied.filter(hex => hex.colonizedBy(this.player)).map(hex => hex.data.sector)).length;
       case Condition.Structure: return this.data.occupied.filter(hex => hex.colonizedBy(this.player)).length;
       case Condition.StructureFed: return this.data.occupied.filter(hex => hex.colonizedBy(this.player) && hex.belongsToFederationOf(this.player)).length;
       case Condition.Satellite: return this.data.satellites + this.data.buildings[Building.SpaceStation];
-      case Condition.StructureValue: return _.sum(this.data.occupied.map(hex => this.buildingValue(hex.buildingOf(this.player), hex.data.planet, true)));
-      case Condition.StructureFedValue: return _.sum(this.data.occupied.map(hex => hex.belongsToFederationOf(this.player) ? this.buildingValue(hex.buildingOf(this.player), hex.data.planet, true) : 0 ));
+      case Condition.StructureValue: return sum(this.data.occupied.map(hex => this.buildingValue(hex.buildingOf(this.player), hex.data.planet, true)));
+      case Condition.StructureFedValue: return sum(this.data.occupied.map(hex => hex.belongsToFederationOf(this.player) ? this.buildingValue(hex.buildingOf(this.player), hex.data.planet, true) : 0 ));
     }
 
     return 0;
@@ -682,7 +688,7 @@ export default class Player extends EventEmitter {
     const hexes = this.data.occupied.map(coord => map.grid.get(coord)).filter(hex => !excluded.has(hex));
     const values = hexes.map(node => this.buildingValue(node.buildingOf(this.player), node.data.planet, true));
 
-    let combinations = this.possibleCombinationsForFederations(_.zipWith(hexes, values, (val1, val2) => ({hex: val1, value: val2})));
+    let combinations = this.possibleCombinationsForFederations(zipWith(hexes, values, (val1, val2) => ({hex: val1, value: val2})));
 
     // Ivits can only expand their first federation
     if (this.faction === Faction.Ivits && this.data.federationCount > 0) {
@@ -695,7 +701,7 @@ export default class Player extends EventEmitter {
     const buildingGroups = this.buildingGroups();
 
     for (const combination of combinations) {
-      const destGroups = _.uniq(combination.map(building => buildingGroups.get(building)));
+      const destGroups = uniq(combination.map(building => buildingGroups.get(building)));
       const buildingsInDestGroups: Set<GaiaHex> = new Set([].concat(...destGroups));
       // Create a new grid. The following are removed:
       // - hexes in a federation or nearby a federation
@@ -728,7 +734,7 @@ export default class Player extends EventEmitter {
       }
     }
 
-    const feds = _.difference(fedsWithInfo, toRemove);
+    const feds = difference(fedsWithInfo, toRemove);
 
     this.federationCache = {
       availableSatellites: maxSatellites,
@@ -784,7 +790,7 @@ export default class Player extends EventEmitter {
 
     assert (coords.length <= 30, "The federation is too big, it is impossible to build with only 23 satellites");
 
-    let hexes: GaiaHex[] = _.uniq(coords.map(coord => map.grid.get(coord)));
+    let hexes: GaiaHex[] = uniq(coords.map(coord => map.grid.get(coord)));
 
     assert (hexes.length === coords.length, "There are repeating coordinates in the given federation");
 
@@ -801,7 +807,7 @@ export default class Player extends EventEmitter {
     assert(map.grid.groups(hexes).length === 1, 'The hexes of the federation must be adjacent');
 
     // Get the power value of the buildings
-    const powerValue = _.sum(hexes.map(hex => this.buildingValue(hex.buildingOf(this.player), hex.data.planet, true)));
+    const powerValue = sum(hexes.map(hex => this.buildingValue(hex.buildingOf(this.player), hex.data.planet, true)));
     assert(powerValue >= this.federationCost, "Your buildings need to have a total value of at least " + this.federationCost);
 
     const info = this.federationInfo(hexes);
@@ -810,7 +816,7 @@ export default class Player extends EventEmitter {
     const available = this.availableFederations(map);
     const outclasser = available.find(fed => isOutclassedBy(info, fed));
 
-    assert(!outclasser, "Federation is outclassed by other federation at " + _.get(outclasser, "hexes", []).join(','));
+    assert(!outclasser, "Federation is outclassed by other federation at " + get(outclasser, "hexes", []).join(','));
 
     assert (this.faction !== Faction.Ivits || this.data.federationCount === 0 || hexes.some(hex => hex.belongsToFederationOf(this.player)), "Ivits must extend their first federation");
 
@@ -882,7 +888,7 @@ export default class Player extends EventEmitter {
   }
 
   addAdjacentBuildings(hexes: GaiaHex[], buildingGroups = this.buildingGroups()): GaiaHex[] {
-    return _.uniq([].concat(...hexes.map(hex => this.buildingGroup(hex))));
+    return uniq([].concat(...hexes.map(hex => this.buildingGroup(hex))));
   }
 
   /**

@@ -3,7 +3,8 @@ import { GaiaHex } from "./gaia-hex";
 import { ResearchField, Building, Booster, TechTile, AdvTechTile, Federation, Resource, BrainstoneArea, TechTilePos, AdvTechTilePos, Command } from "./enums";
 import { EventEmitter } from "eventemitter3";
 import { EventSource } from './events';
-import * as _ from "lodash";
+import * as fromPairs from "lodash.frompairs";
+import * as cloneDeep from 'lodash.clonedeep';
 
 const MAX_ORE = 15;
 const MAX_CREDIT = 30;
@@ -30,7 +31,7 @@ export default class PlayerData extends EventEmitter {
 
   buildings: {
     [key in Building]: number
-  } = _.fromPairs(Object.values(Building).map(bld => [bld, 0])) as any;
+  } = fromPairs(Object.values(Building).map(bld => [bld, 0])) as any;
 
   satellites: number = 0;
   research: {
@@ -102,7 +103,7 @@ export default class PlayerData extends EventEmitter {
    * Creates a copy of the current player data, except its event emitter is not linked to anything
    */
   clone(): PlayerData {
-    return Object.assign(new PlayerData(), _.cloneDeep(this.toJSON()));
+    return Object.assign(new PlayerData(), cloneDeep(this.toJSON()));
   }
 
   payCost(cost: Reward, source: EventSource) {

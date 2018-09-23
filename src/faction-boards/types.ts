@@ -1,5 +1,7 @@
 import Reward from "../reward";
-import * as _ from "lodash";
+import * as merge from "lodash.merge";
+import * as set from "lodash.set";
+import * as get from "lodash.get";
 import Event from "../events";
 import { Building, Planet, BrainstoneArea, Faction, Command } from "../enums";
 import Player from "../player";
@@ -84,18 +86,18 @@ export class FactionBoard {
   handlers?: {[event: string]: (player: Player, ...args: any[]) => any};
 
   constructor(input: FactionBoardRaw) {
-    Object.assign(this, _.merge({}, defaultBoard, input));
+    Object.assign(this, merge({}, defaultBoard, input));
 
     const buildings = Object.values(Building);
     const toRewards = [`${Building.TradingStation}.isolatedCost`].concat(buildings.map(bld => `${bld}.cost`));
     const toIncome = buildings.map(bld => `${bld}.income`);
 
     for (const toRew of toRewards) {
-      _.set(this.buildings, toRew, Reward.parse(_.get(this.buildings, toRew)));
+      set(this.buildings, toRew, Reward.parse(get(this.buildings, toRew)));
     }
     this.income = Event.parse(this.income as any, Command.ChooseIncome);
     for (const toInc of toIncome) {
-      _.set(this.buildings, toInc, _.get(this.buildings, toInc).map(events => Event.parse(events, Command.ChooseIncome)));
+      set(this.buildings, toInc, get(this.buildings, toInc).map(events => Event.parse(events, Command.ChooseIncome)));
     }
   }
 
