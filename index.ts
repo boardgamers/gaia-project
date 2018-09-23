@@ -18,8 +18,8 @@ export {terraformingStepsRequired} from './src/planets';
 export { boardActions } from "./src/actions";
 export { FactionBoard, factionBoard } from "./src/faction-boards";
 export {roundScorings, finalScorings} from './src/tiles/scoring';
-export {factionBoards};
+export {LogEntry} from './src/engine';
 
-export { Player, PlayerData, Event, factions, AvailableCommand, tiles, Reward, SpaceMap, researchTracks };
+export { Player, PlayerData, Event, factions, AvailableCommand, tiles, Reward, SpaceMap, researchTracks, factionBoards };
 
 export default Engine;

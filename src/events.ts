@@ -39,7 +39,7 @@ function findOperator(spec: string): [Operator, string] {
   return [Operator.Once, spec];
 }
 
-type EventSource = Booster | TechTilePos | AdvTechTilePos | Command.ChargePower | FinalTile | ScoringTile | ResearchField | BoardAction | Faction;
+export type EventSource = Booster | TechTilePos | AdvTechTilePos | Command.ChargePower | Command.Spend | FinalTile | ScoringTile | ResearchField | BoardAction | Command.ChooseIncome | Command.Build | Command.ChooseFederationTile | Command.FormFederation | Command.UpgradeResearch | Faction;
 
 export default class Event {
   spec: string;
@@ -87,7 +87,7 @@ export default class Event {
     return new Event(this.spec, this.source);
   }
 
-  static parse(events: string[], source?: EventSource): Event[] {
+  static parse(events: string[], source: EventSource): Event[] {
     return events.map(ev => new Event(ev, source));
   }
 }

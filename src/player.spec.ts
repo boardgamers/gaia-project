@@ -1,7 +1,7 @@
 import {expect} from "chai";
 import 'mocha';
 import Player from "./player";
-import { Faction, Planet, Building, Resource, Player as PlayerEnum, Operator } from "./enums";
+import { Faction, Planet, Building, Resource, Player as PlayerEnum, Operator, Command } from "./enums";
 import Reward from "./reward";
 import Event from "./events";
 import { GaiaHex } from "./gaia-hex";
@@ -24,7 +24,7 @@ describe("Player", () => {
     it("should work", () => {
       const player = new Player();
 
-      player.loadEvents(Event.parse(["+k", "+o", "+c"]));
+      player.loadEvents(Event.parse(["+k", "+o", "+c"], Command.ChooseIncome));
       player.removeEvent(new Event("+o"));
 
       expect(player.events[Operator.Income]).to.have.lengthOf(2);
@@ -37,7 +37,7 @@ describe("Player", () => {
     it ("should work on events that were activated", () => {
       const player = new Player();
 
-      player.loadEvents(Event.parse(["+k", "=> 4c", "+c"]));
+      player.loadEvents(Event.parse(["+k", "=> 4c", "+c"], Command.ChooseIncome));
       player.events[Operator.Activate][0].activated = true;
       player.removeEvent(new Event("=> 4c"));
 
@@ -66,7 +66,7 @@ describe("Player", () => {
     it("should order based on type order", () => {
       const player = new Player();
 
-      player.loadEvents(Event.parse([ "+t", "+k", "+c", "+o"]));
+      player.loadEvents(Event.parse([ "+t", "+k", "+c", "+o"], Command.ChooseIncome));
       const orderedEvents = Reward.toString(Reward.merge([].concat(...player.events[Operator.Income].map(event => event.rewards))), true);
 
       expect(orderedEvents).to.be.equal("1c,1o,1k,1t");

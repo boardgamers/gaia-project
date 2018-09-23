@@ -1,7 +1,7 @@
 import Reward from "../reward";
 import * as _ from "lodash";
 import Event from "../events";
-import { Building, Planet, BrainstoneArea, Faction } from "../enums";
+import { Building, Planet, BrainstoneArea, Faction, Command } from "../enums";
 import Player from "../player";
 
 export interface FactionBoardRaw {
@@ -93,9 +93,9 @@ export class FactionBoard {
     for (const toRew of toRewards) {
       _.set(this.buildings, toRew, Reward.parse(_.get(this.buildings, toRew)));
     }
-    this.income = Event.parse(this.income as any, input.faction);
+    this.income = Event.parse(this.income as any, Command.ChooseIncome);
     for (const toInc of toIncome) {
-      _.set(this.buildings, toInc, _.get(this.buildings, toInc).map(events => Event.parse(events)));
+      _.set(this.buildings, toInc, _.get(this.buildings, toInc).map(events => Event.parse(events, Command.ChooseIncome)));
     }
   }
 

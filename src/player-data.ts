@@ -1,7 +1,8 @@
 import Reward from "./reward";
 import { GaiaHex } from "./gaia-hex";
-import { ResearchField, Building, Booster, TechTile, AdvTechTile, Federation, Resource, BrainstoneArea, TechTilePos, AdvTechTilePos } from "./enums";
+import { ResearchField, Building, Booster, TechTile, AdvTechTile, Federation, Resource, BrainstoneArea, TechTilePos, AdvTechTilePos, Command } from "./enums";
 import { EventEmitter } from "eventemitter3";
+import { EventSource } from './events';
 import * as _ from "lodash";
 
 const MAX_ORE = 15;
@@ -104,11 +105,11 @@ export default class PlayerData extends EventEmitter {
     return Object.assign(new PlayerData(), _.cloneDeep(this.toJSON()));
   }
 
-  payCost(cost: Reward) {
-    this.gainReward(cost, true);
+  payCost(cost: Reward, source: EventSource) {
+    this.gainReward(cost, true, source);
   }
 
-  gainRewards(rewards: Reward[], forced = false) {
+  gainRewards(rewards: Reward[], forced = false, source?: EventSource) {
     if (!forced && this.brainstone && rewards.some(rew => rew.type === Resource.ChargePower)) {
       // We need to do something about the brainstone
       const [cloneHeuristic, cloneNoHeuristic] = [this.clone(), this.clone()];
@@ -132,12 +133,12 @@ export default class PlayerData extends EventEmitter {
     }
 
     for (const reward of rewards) {
-      this.gainReward(reward);
+      this.gainReward(reward, false, source);
     }
   }
 
   // Not to be called by Player. use gainRewards instead.
-  private gainReward(reward: Reward, pay = false) {
+  private gainReward(reward: Reward, pay = false, source?: EventSource) {
     if (reward.isEmpty()) {
       return;
     }
@@ -174,9 +175,9 @@ export default class PlayerData extends EventEmitter {
     }
 
     if (count > 0) {
-      this.emit(`gain-${reward.type}`, count);
+      this.emit(`gain-${reward.type}`, count, source);
     } else if (count < 0) {
-      this.emit(`pay-${reward.type}`);
+      this.emit(`pay-${reward.type}`, -count, source);
     }
   }
 
@@ -404,14 +405,14 @@ export default class PlayerData extends EventEmitter {
   gainFinalVictoryPoints() {
     // Gain 4 points for research at level 3, 8 points for research at level 4
     // and 12 points for research at level 12
-    for (const research of Object.values(ResearchField)) {
-      this.gainReward(new Reward(Math.max(this.research[research] - 2, 0) * 4, Resource.VictoryPoint));
+    for (const research of (Object.values(ResearchField) as ResearchField[])) {
+      this.gainReward(new Reward(Math.max(this.research[research] - 2, 0) * 4, Resource.VictoryPoint), false, research);
     }
 
     // Gain 1 point for any 3 of ore, credits & knowledge.
     const resources = this.ores + this.credits + this.knowledge;
 
-    this.gainReward(new Reward(Math.max(Math.floor(resources / 3)), Resource.VictoryPoint));
+    this.gainReward(new Reward(Math.max(Math.floor(resources / 3)), Resource.VictoryPoint), false, Command.Spend);
   }
 
   removeGreenFederation() {

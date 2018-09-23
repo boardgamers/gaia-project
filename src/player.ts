@@ -1,6 +1,6 @@
-import { Faction, Operator, ResearchField, Planet, Building, Resource, Booster, Condition, Federation, FinalTile, TechTile, AdvTechTile, BrainstoneArea, TechTilePos, AdvTechTilePos} from './enums';
+import { Faction, Operator, ResearchField, Planet, Building, Resource, Booster, Condition, Federation, FinalTile, TechTile, AdvTechTile, BrainstoneArea, TechTilePos, AdvTechTilePos, Command} from './enums';
 import PlayerData from './player-data';
-import Event from './events';
+import Event, {EventSource} from './events';
 import { factionBoard, FactionBoard } from './faction-boards';
 import * as _ from 'lodash';
 import factions from './factions';
@@ -145,14 +145,14 @@ export default class Player extends EventEmitter {
     return factions.planet(this.faction);
   }
 
-  payCosts(costs: Reward[]) {
+  payCosts(costs: Reward[], source: EventSource) {
     for (const cost of costs) {
-      this.data.payCost(cost);
+      this.data.payCost(cost, source);
     }
   }
 
-  gainRewards(rewards: Reward[]) {
-    this.data.gainRewards(rewards.map(rew => this.factionReward(rew)));
+  gainRewards(rewards: Reward[], source: EventSource) {
+    this.data.gainRewards(rewards.map(rew => this.factionReward(rew)), false, source);
   }
 
   canPay(reward: Reward[]): boolean {
@@ -265,7 +265,7 @@ export default class Player extends EventEmitter {
 
     if (event.operator === Operator.Once) {
       const times = this.eventConditionCount(event.condition);
-      this.gainRewards(event.rewards.map(reward => new Reward(reward.count * times, reward.type)));
+      this.gainRewards(event.rewards.map(reward => new Reward(reward.count * times, reward.type)), event.source);
     }
   }
 
@@ -285,7 +285,9 @@ export default class Player extends EventEmitter {
   }
 
   removeRoundBoosterEvents( type?: Operator.Income) {
-    const eventList = Event.parse(boosts[this.data.tiles.booster]).filter( ev => (type && ev.operator === Operator.Income ) || ( !type && ev.operator !== Operator.Income ));
+    let eventList = Event.parse(boosts[this.data.tiles.booster], this.data.tiles.booster);
+    eventList = eventList.filter( ev => (type && ev.operator === Operator.Income ) || ( !type && ev.operator !== Operator.Income ));
+
     for (const event of eventList) {
       this.removeEvent(event);
     }
@@ -296,7 +298,7 @@ export default class Player extends EventEmitter {
   activateEvent(spec: string) {
     for (const event of this.events[Operator.Activate]) {
       if (event.spec === spec && !event.activated) {
-        this.gainRewards(event.rewards);
+        this.gainRewards(event.rewards, event.source);
         event.activated = true;
         return;
       }
@@ -312,7 +314,7 @@ export default class Player extends EventEmitter {
 
       assert(event);
 
-      this.gainRewards(event.rewards);
+      this.gainRewards(event.rewards, event.source);
       event.activated = true;
     }
   }
@@ -332,7 +334,7 @@ export default class Player extends EventEmitter {
   }
 
   build(building: Building, hex: GaiaHex, cost: Reward[], map: SpaceMap, stepsReq?: number) {
-    this.payCosts(cost);
+    this.payCosts(cost, Command.Build);
     const wasOccupied = this.data.occupied.includes(hex);
     // excluding Gaiaformers as occupied
     if (building !== Building.GaiaFormer) {
@@ -502,7 +504,7 @@ export default class Player extends EventEmitter {
   receiveIncome() {
     for (const event of this.events[Operator.Income]) {
       if (!event.activated) {
-        this.gainRewards(event.rewards);
+        this.gainRewards(event.rewards, event.source);
         event.activated = true;
       } else {
         // console.log("activated", event.spec);
@@ -518,7 +520,7 @@ export default class Player extends EventEmitter {
     // this is for pass tile income (e.g. rounboosters, adv tiles)
     for (const event of this.events[Operator.Pass]) {
       const times = this.eventConditionCount(event.condition);
-      this.gainRewards(event.rewards.map(reward => new Reward(reward.count * times, reward.type)));
+      this.gainRewards(event.rewards.map(reward => new Reward(reward.count * times, reward.type)), event.source);
     }
   }
 
@@ -527,7 +529,7 @@ export default class Player extends EventEmitter {
     for (const event of this.events[Operator.Trigger]) {
       // only new mine trigger event for Lantids in other's planet
       if (Condition.matchesBuilding(event.condition, building, planet) && (!isAdditionalMine || event.condition === Condition.Mine)) {
-        this.gainRewards(event.rewards);
+        this.gainRewards(event.rewards, event.source);
       }
     }
   }
@@ -535,7 +537,7 @@ export default class Player extends EventEmitter {
   receiveAdvanceResearchTriggerIncome() {
     for (const event of this.events[Operator.Trigger]) {
       if (event.condition === Condition.AdvanceResearch) {
-        this.gainRewards(event.rewards);
+        this.gainRewards(event.rewards, event.source);
       }
     }
   }
@@ -543,7 +545,7 @@ export default class Player extends EventEmitter {
   receiveTerraformingStepTriggerIncome(stepsReq: number) {
     for (const event of this.events[Operator.Trigger]) {
       if (event.condition === Condition.TerraformStep) {
-        this.gainRewards(event.rewards.map( rw => new Reward(rw.count * stepsReq, rw.type)));
+        this.gainRewards(event.rewards.map( rw => new Reward(rw.count * stepsReq, rw.type)), event.source);
       }
     }
   }
@@ -551,7 +553,7 @@ export default class Player extends EventEmitter {
   receiveNewFederationTriggerIncome() {
     for (const event of this.events[Operator.Trigger]) {
       if (event.condition === Condition.Federation) {
-        this.gainRewards(event.rewards);
+        this.gainRewards(event.rewards, event.source);
       }
     }
   }
@@ -625,7 +627,7 @@ export default class Player extends EventEmitter {
       green: isGreen(federation)
     });
 
-    this.gainRewards(Reward.parse(federationTiles[federation]));
+    this.gainRewards(Reward.parse(federationTiles[federation]), Command.FormFederation);
     this.receiveNewFederationTriggerIncome();
   }
 
@@ -770,7 +772,7 @@ export default class Player extends EventEmitter {
         newSatellites += 1;
       }
     }
-    this.payCosts([new Reward(newSatellites, this.faction === Faction.Ivits ? Resource.Qic : Resource.GainToken)]);
+    this.payCosts([new Reward(newSatellites, this.faction === Faction.Ivits ? Resource.Qic : Resource.GainToken)], Command.FormFederation);
     this.data.satellites += newSatellites;
     this.gainFederationToken(token);
     this.data.federationCount += 1;

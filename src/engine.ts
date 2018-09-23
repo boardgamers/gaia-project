@@ -26,7 +26,7 @@ import {
   SubPhase
 } from './enums';
 import { CubeCoordinates } from 'hexagrid';
-import Event from './events';
+import Event, {EventSource} from './events';
 import federations from './tiles/federations';
 import {roundScorings, finalScorings} from './tiles/scoring';
 import * as researchTracks from './research-tracks';
@@ -42,6 +42,30 @@ const ISOLATED_DISTANCE = 3;
 interface EngineOptions {
   /** Allow last player to rotate sector BEFORE faction selection */
   advancedRules?: boolean;
+}
+
+/**
+ * Example:
+ *
+ * {
+ *   move: 123,
+ *   player: 0,
+ *   changes: {
+ *     eco: {c: 2, pw: 1},
+ *     income: {o: 3, k: 1}
+ *   }
+ * }
+ */
+export interface LogEntry {
+  move?: number;
+  player?: PlayerEnum;
+  changes?: {
+    [source in EventSource]?: {[resource in Resource]?: number}
+  };
+  // For round changes
+  round?: number;
+  // For phase change
+  phase?: Phase.RoundIncome | Phase.RoundGaia;
 }
 
 export default class Engine {
@@ -92,6 +116,8 @@ export default class Engine {
 
   // All moves
   moveHistory: string[] = [];
+  // Advanced log
+  advancedLog: LogEntry[] = [];
   // Current move being processed, separated in phase
   turnMoves: string[] = [];
   // Tells the UI if the new move should be on the same line or not
@@ -125,6 +151,32 @@ export default class Engine {
     assert(this.turnMoves.length === 0, "Unnecessary commands at the end of the turn: " + this.turnMoves.join('. '));
 
     this.moveHistory.push(move);
+  }
+
+  log(player: Player, resource: Resource, amount: number, source: EventSource) {
+    const pl = player.player;
+    const lastEntry = this.advancedLog[this.advancedLog.length - 1];
+    let move = this.moveHistory.length;
+
+    if (lastEntry && lastEntry.player === pl && lastEntry.move === move) {
+      // Add to existing log entry
+      _.set(lastEntry, `changes.${source}.${resource}`, _.get(lastEntry, `changes.${source}.${resource}`, 0) + amount);
+    } else {
+      // Add new entry
+
+      // Only add move, if it corresponds to a move played
+      if (!lastEntry || lastEntry.player === undefined || lastEntry.move === move) {
+        move = undefined;
+      }
+
+      this.advancedLog.push({
+        player: pl,
+        move,
+        changes: {
+          [source]: {[resource]: amount}
+        }
+      });
+    }
   }
 
   generateAvailableCommandsIfNeeded(subphase: SubPhase = null, data?: any): AvailableCommand[] {
@@ -167,6 +219,10 @@ export default class Engine {
     player.data.on(`gain-${Resource.DowngradeLab}`, () => {this.processNextMove(SubPhase.DowngradeLab); this.processNextMove(SubPhase.UpgradeResearch); });
     player.data.on(`gain-${Resource.UpgradeLowest}`, () => this.processNextMove(SubPhase.UpgradeResearch, {bescods: true}));
     player.data.on('brainstone', areas => this.processNextMove(SubPhase.BrainStone, areas));
+
+    /* For advanced log */
+    player.data.on(`gain-${Resource.VictoryPoint}`, (amount: number, source: EventSource) => this.log(player, Resource.VictoryPoint, amount, source));
+    player.data.on(`pay-${Resource.VictoryPoint}`, (amount: number, source: EventSource) => this.log(player, Resource.VictoryPoint, -amount, source));
   }
 
   player(player: number): Player {
@@ -565,6 +621,7 @@ export default class Engine {
 
   beginRoundStartPhase() {
     this.round += 1;
+    this.advancedLog.push({round: this.round});
     this.turnOrder = this.passedPlayers || this.players.map((pl, i) => i);
     this.passedPlayers = [];
     this.currentPlayer = this.turnOrder[0];
@@ -578,6 +635,7 @@ export default class Engine {
 
   beginIncomePhase() {
     this.changePhase(Phase.RoundIncome);
+    this.advancedLog.push({phase: Phase.RoundIncome});
     this.tempTurnOrder = [...this.turnOrder];
 
     this.moveToNextPlayer(this.tempTurnOrder, {loop: false});
@@ -595,6 +653,7 @@ export default class Engine {
 
   beginGaiaPhase() {
     this.changePhase(Phase.RoundGaia);
+    this.advancedLog.push({phase: Phase.RoundGaia});
     this.tempTurnOrder = [...this.turnOrder];
 
     // transform Transdim planets into Gaia if gaiaformed
@@ -675,7 +734,7 @@ export default class Engine {
         if (ranking.player) {
           const VPs = [18, 12, 6, 0, 0, 0];
 
-          ranking.player.data.victoryPoints += Math.floor(_.sum(VPs.slice(first, first + ties)) / ties);
+          ranking.player.gainRewards([new Reward(Math.floor(_.sum(VPs.slice(first, first + ties)) / ties), Resource.VictoryPoint)], tile);
         }
       }
     }
@@ -750,8 +809,8 @@ export default class Engine {
       }
     }
 
-    pl.payCosts(Reward.parse(cost));
-    pl.gainRewards([new Reward(`${Command.UpgradeResearch}-${field}`)]);
+    pl.payCosts(Reward.parse(cost), Command.UpgradeResearch);
+    pl.gainRewards([new Reward(`${Command.UpgradeResearch}-${field}`)], Command.UpgradeResearch);
 
     if (pl.data.research[field] === researchTracks.lastTile(field)) {
       if (field === ResearchField.Terraforming) {
@@ -1015,8 +1074,8 @@ export default class Engine {
 
     assert(offer, `Cannot leech ${income}. Possible leeches: ${leechCommand.offers.map(ofr => ofr.offer).join(' - ')}`);
 
-    this.player(player).gainRewards(leechRewards);
-    this.player(player).payCosts(Reward.parse(offer.cost));
+    this.player(player).gainRewards(leechRewards, Command.ChargePower);
+    this.player(player).payCosts(Reward.parse(offer.cost), Command.ChargePower);
   }
 
   [Command.Decline](player: PlayerEnum) {
@@ -1071,7 +1130,7 @@ export default class Engine {
     assert(tiles.indexOf(federation) !== -1, `Federation ${federation} is not availabe`);
 
     if (rescore) {
-      this.player(player).gainRewards(Reward.parse(federations[federation]));
+      this.player(player).gainRewards(Reward.parse(federations[federation]), BoardAction.Qic2);
     } else {
       this.player(player).gainFederationToken(federation);
       this.tiles.federations[federation] -= 1;
@@ -1134,8 +1193,8 @@ export default class Engine {
 
     assert(isPossible(cost, income), `spend ${cost} for ${income} is not allowed`);
 
-    pl.payCosts(cost);
-    pl.gainRewards(income);
+    pl.payCosts(cost, Command.Spend);
+    pl.gainRewards(income, Command.Spend);
   }
 
   [Command.BurnPower](player: PlayerEnum, cost: string) {
@@ -1158,7 +1217,7 @@ export default class Engine {
     const pl = this.player(player);
     this.boardActions[action] = false;
 
-    pl.payCosts(Reward.parse(boardActions[action].cost));
+    pl.payCosts(Reward.parse(boardActions[action].cost), action);
     pl.loadEvents(Event.parse(boardActions[action].income, action));
   }
 
