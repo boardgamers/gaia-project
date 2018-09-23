@@ -79,12 +79,13 @@ export default class SpaceMap {
     for (const hex of this.grid.values()) {
       for (const nb of this.grid.neighbours(hex)) {
         if (germanRules) {
-          if (hex.data.planet !== Planet.Transdim && hex.data.planet !== Planet.Empty && hex.data.planet === nb.data.planet) {
+          // German rules only forbid HOME planets from being next to each other, so gaia / transdim planets are ok
+          if (hex.data.planet !== Planet.Transdim && hex.data.planet !== Planet.Empty && hex.data.planet !== Planet.Gaia && hex.data.planet === nb.data.planet) {
             return false;
           }
         } else {
           // English rules are kept for backwards compatibility as most of the tests are based on them
-          // English rules do not allow transdim planets next to each other, German rules do
+          // English rules do not allow transdim/gaia planets next to each other, German rules do
           if (hex.data.sector !== nb.data.sector && hex.data.planet !== Planet.Empty && hex.data.planet === nb.data.planet) {
             return false;
           }
