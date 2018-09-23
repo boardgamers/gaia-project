@@ -23,12 +23,7 @@
           </div>
           <PlayerInfo v-for="player in orderedPlayers.filter(pl => pl !== sessionPlayer)" :player='player' :key="player.player" />
         </div>
-        <Pool />
-        <div class="form-group mt-2 d-md-none">
-          <label for="moves-mobile">Move log</label>
-          <!-- Error is normal. Can't have two textareas with the same model -->
-          <textarea class="form-control" rows="4" id="moves-mobile">{{moveList}}</textarea>
-        </div> 
+        <Pool /> 
       </div>
       <div class="col-md-6 order-1 order-md-2" id="move-panel">
         <span v-if="ended"><b>Game ended!</b></span>
@@ -52,6 +47,7 @@
           </form>  
         </div>
       </div>
+      <AdvancedLog class="col-12 order-3 mt-4" />
     </div>
   </div>
 </template>
@@ -65,6 +61,7 @@ import SpaceMap from './SpaceMap.vue';
 import PlayerInfo from './PlayerInfo.vue';
 import ResearchBoard from './ResearchBoard.vue';
 import ScoringBoard from './ScoringBoard.vue';
+import AdvancedLog from './AdvancedLog.vue';
 import Pool from './Pool.vue';
 import Engine,{ Command,Phase,factions, Player } from '@gaia-project/engine';
 import { GameApi } from '../api';
@@ -147,7 +144,8 @@ import {handleError} from '../utils';
     PlayerInfo,
     ResearchBoard,
     ScoringBoard,
-    Pool
+    Pool,
+    AdvancedLog
   }
 })
 export default class Game extends Vue {
