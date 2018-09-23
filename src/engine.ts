@@ -365,6 +365,7 @@ export default class Engine {
     } catch (err) {
       /* Restore player data to what it was, like if the taklons cause an incomplete move error requiring brainstone destination */
       // pl.loadPlayerData(jsonData);
+      this.generateAvailableCommands();
       return false;
     }
   }

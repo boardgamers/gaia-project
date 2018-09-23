@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import Engine from "./engine";
 import { AssertionError } from "assert";
-import { Player, Federation, Operator, AdvTechTilePos, Building, Condition, BrainstoneArea, Phase } from "./enums";
+import { Player, Federation, Operator, AdvTechTilePos, Building, Condition, BrainstoneArea, Phase, Command } from "./enums";
 
 describe("Engine", () => {
   it("should throw when trying to build on the wrong place", () => {
@@ -591,6 +591,9 @@ describe("Engine", () => {
       expect(engine.player(Player.Player2).data.power.area1).to.equal(2);
       expect(engine.player(Player.Player2).data.power.area2).to.equal(4);
       expect(engine.player(Player.Player2).data.brainstone).to.equal(BrainstoneArea.Area1);
+      expect(engine.player(Player.Player2).data.leechPossible).to.equal(1);
+      // tslint:disable-next-line no-unused-expression
+      expect(engine.findAvailableCommand(Player.Player2, Command.ChargePower)).to.not.be.undefined;
     });
   });
 
