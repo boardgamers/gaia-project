@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="data.round > 0">
     <table class="table table-hover table-striped table-sm">
       <!-- <thead>
         <tr>
