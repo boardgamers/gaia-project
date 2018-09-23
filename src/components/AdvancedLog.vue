@@ -17,7 +17,7 @@
           <td v-else>{{event.move || data.players[event.entry.player].faction}}</td>
           <td style="width: 1px; white-space: nowrap;">
             <div v-for="(changes, source) in event.entry.changes">
-              {{source}}
+              {{source === 'undefined' ? '' : source}}
             </div>
           </td>
           <td style="width: 1px; white-space: nowrap;">
