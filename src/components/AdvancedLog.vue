@@ -16,9 +16,7 @@
           <td v-else-if="event.entry.phase==='endGame'" class="phase-change">End scoring</td>
           <td v-else>{{event.move || data.players[event.entry.player].faction}}</td>
           <td style="width: 1px; white-space: nowrap;">
-            <div v-for="(changes, source) in event.entry.changes">
-              {{source === 'undefined' ? '' : source}}
-            </div>
+            <div v-for="(changes, source) in event.entry.changes" v-html="source === 'undefined' ? '&nbsp;' : source" />
           </td>
           <td style="width: 1px; white-space: nowrap;">
             <div v-for="(changes, source) in event.entry.changes">
