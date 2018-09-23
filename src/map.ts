@@ -66,17 +66,25 @@ export default class SpaceMap {
 
     do {
       this.generate();
-    } while (!this.isValid());
+    } while (!this.isValid(false));
   }
 
   /**
-   *  Check if the map is correct (no two planets of the same color side by side)
+   *  Check if the map is correct (no two HOME planets of the same color side by side - following german rules)
    */
-  isValid(): boolean {
+  isValid(germanRules: boolean = true): boolean {
     for (const hex of this.grid.values()) {
       for (const nb of this.grid.neighbours(hex)) {
-        if (hex.data.sector !== nb.data.sector && hex.data.planet !== Planet.Empty && hex.data.planet === nb.data.planet) {
-          return false;
+        if (germanRules) {
+          if (hex.data.planet !== Planet.Transdim && hex.data.planet !== Planet.Empty && hex.data.planet === nb.data.planet) {
+            return false;
+          }
+        } else {
+          // English rules are kept for backwards compatibility as most of the tests are based on them
+          // English rules do not allow transdim planets next to each other, German rules do
+          if (hex.data.sector !== nb.data.sector && hex.data.planet !== Planet.Empty && hex.data.planet === nb.data.planet) {
+            return false;
+          }
         }
       }
     }
