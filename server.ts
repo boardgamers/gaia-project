@@ -26,7 +26,7 @@ app.use((req, res, next) => {
 app.post("/", (req, res) => {
   try {
     const moves = req.body.moves;
-    const advancedRules = moves && (moves.length < 2 || moves[2].includes('rotate'));
+    const advancedRules = moves && (moves.length < 2 || moves[1].includes('rotate'));
     const engine = new Engine(moves, {advancedRules});
 
     engine.generateAvailableCommandsIfNeeded();
