@@ -110,4 +110,32 @@ describe("Lantids", () => {
     // tslint:disable-next-line no-unused-expression
     expect(commands.some(cmd => cmd.name === Command.FormFederation)).to.be.false;
   });
+
+  it("should not get token income from planetary institute", () => {
+    const moves = parseMoves(`
+      init 2 randomSeed
+      p1 faction lantids
+      p2 faction xenos
+      lantids build m -1x2
+      xenos build m -2x2
+      xenos build m 1x2
+      lantids build m -4x2
+      xenos build m -5x5
+      xenos booster booster5
+      lantids booster booster4
+      lantids build ts -1x2.
+      xenos charge 1pw
+      xenos build ts -2x2.
+      lantids charge 2pw
+      lantids build PI -1x2.
+    `);
+
+    const engine = new Engine(moves);
+    const income = engine.player(Player.Player1).income;
+
+    // tslint:disable-next-line no-unused-expression
+    expect(income.includes('4pw')).to.be.true;
+    // tslint:disable-next-line no-unused-expression
+    expect(income.includes('t')).to.be.false;
+  });
 });
