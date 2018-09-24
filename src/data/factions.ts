@@ -1,4 +1,4 @@
-import { Faction, Operator, Building } from "@gaia-project/engine";
+import { Faction, Operator, Building, Planet, factions, terraformingStepsRequired } from "@gaia-project/engine";
 import {factionBoard} from '@gaia-project/engine';
 
 const  factionData: { [faction in Faction]: { ability: string, PI: string}} = {
@@ -70,19 +70,31 @@ const  factionData: { [faction in Faction]: { ability: string, PI: string}} = {
   },
 };
 
-export function factionDesc(faction: Faction) {
+export function planetsWithSteps(planet: Planet, steps: number) {
+  const list = [Planet.Terra, Planet.Desert, Planet.Swamp, Planet.Oxide, Planet.Volcanic, Planet.Titanium, Planet.Ice];
 
+  return list.filter(p => terraformingStepsRequired(planet, p) === steps);
+}
+
+export function factionDesc(faction: Faction) {
   const board = factionBoard(faction);
+  const p = factions[faction].planet;
 
   const buildingDesc = "<ul>" + Object.values(Building).filter(bld => bld !== Building.GaiaFormer && bld !== Building.SpaceStation).map( bld => "<li><b>"+ bld + "</b> - " + board.buildings[bld].cost + " -> " + (bld !== Building.ResearchLab ? board.buildings[bld].income : board.buildings[bld].income[0]) + "</li>").join("\n") + "</ul>";
   const startingIncome = board.income.filter(ev => ev.operator === Operator.Once);
   const roundIncome = board.income.filter(ev => ev.operator === Operator.Income);
 
   return `
-  <b>Ability: </b> ${factionData[faction].ability} </br>
-  <b>Planetary Institute: </b> ${factionData[faction].PI}<br/>
-  <b>Buildings:</b> ${buildingDesc.replace(/,,/g, ',~,').replace(/,/g, ', ')}
-  <b>Starting Income:</b> ${startingIncome.toString().replace(/,/g, ', ')} </br>
-  <b>Round Income:</b> ${roundIncome} </br>
+  <div class='faction-desc'>
+    <b>Ability: </b> ${factionData[faction].ability} </br>
+    <b>Planetary Institute: </b> ${factionData[faction].PI}<br/>
+    <b>Buildings:</b> ${buildingDesc.replace(/,,/g, ',~,').replace(/,/g, ', ')}
+    <b>Starting Income:</b> ${startingIncome.toString().replace(/,/g, ', ')} </br>
+    <b>Round Income:</b> ${roundIncome} </br>
+    <span style="white-space: nowrap; line-height: 1em">
+      <b>Steps:</b> 
+      ${[0,1,2,3].map(i => `<span class="ml-2">${planetsWithSteps(p, i).map(p => `<i class="planet ${p}"></i>`).join(" ")} ${i}</span>`).join(" ")}
+    </span>
+  </div>
   `;
 }

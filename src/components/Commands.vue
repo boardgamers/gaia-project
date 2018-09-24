@@ -508,7 +508,7 @@ i.planet {
   &::before {
     content: "\25cf";
 
-    .player-info & {
+    .player-info &, .faction-desc & {
       font-size: 25px;
     }
   }

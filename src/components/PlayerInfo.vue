@@ -38,7 +38,7 @@ import TechTile from './TechTile.vue';
 import Booster from './Booster.vue';
 import SpecialAction from './SpecialAction.vue';
 import FederationTile from './FederationTile.vue';
-import { factionDesc } from '../data/factions';
+import { factionDesc, planetsWithSteps } from '../data/factions';
 
 @Component({
   computed: {
@@ -85,9 +85,7 @@ export default class PlayerInfo extends Vue {
   }
 
   planetsWithSteps(steps: number) {
-    const list = [Planet.Terra, Planet.Desert, Planet.Swamp, Planet.Oxide, Planet.Volcanic, Planet.Titanium, Planet.Ice];
-
-    return list.filter(p => terraformingStepsRequired(this.planet, p) === steps);
+    return planetsWithSteps(this.planet, steps);
   }
 
   get passed() {
