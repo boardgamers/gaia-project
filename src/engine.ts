@@ -804,7 +804,7 @@ export default class Engine {
       let leech = 0;
       for (const loc of pl.data.occupied) {
         if (this.map.distance(loc, sourceHex) < ISOLATED_DISTANCE) {
-          leech = Math.max(leech, pl.buildingValue(this.map.grid.get(loc).buildingOf(pl.player), this.map.grid.get(loc).data.planet));
+          leech = Math.max(leech, pl.buildingValue(this.map.grid.get(loc)));
         }
       }
 

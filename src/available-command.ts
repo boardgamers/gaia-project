@@ -1,8 +1,7 @@
-import { Command, Faction, Building, Planet, Round, Booster, Resource, Player, Operator, BoardAction, ResearchField, TechTilePos, AdvTechTilePos, Phase, SubPhase } from './enums';
+import { Command, Faction, Building, Planet, Booster, Resource, Player, Operator, BoardAction, ResearchField, TechTilePos, AdvTechTilePos, Phase, SubPhase } from './enums';
 import Engine from './engine';
 import * as _ from 'lodash';
 import factions from './factions';
-import * as assert from "assert";
 import { upgradedBuildings } from './buildings';
 import Reward from './reward';
 import { boardActions, freeActions, freeActionsTerrans, freeActionsItars } from './actions';

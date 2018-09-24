@@ -348,7 +348,7 @@ export default class Player extends EventEmitter {
       if (this.federationCache) {
         assert(wasOccupied, "logic error");
 
-        if (this.buildingValue(hex.buildingOf(this.player), hex.data.planet, true) === this.buildingValue(building, hex.data.planet, true)) {
+        if (this.buildingValue(hex, {federation: true}) === this.buildingValue(hex, {federation: true, building})) {
           // No need to clear federation cache, when the building value remains the same
         } else if (!hex.belongsToFederationOf(this.player)) {
           this.federationCache = null;
@@ -578,7 +578,10 @@ export default class Player extends EventEmitter {
     this.data.gaiaformersInGaia = 0;
   }
 
-  buildingValue(building: Building, planet: Planet, forFederation = false) {
+  buildingValue(hex: GaiaHex, options?: {federation?: boolean, building?: Building}) {
+    const building = _.get(options, "building") || hex.buildingOf(this.player);
+    const forFederation = _.get(options, "federation", false);
+
     if (forFederation && building === Building.SpaceStation) {
       return 1;
     }
@@ -594,7 +597,7 @@ export default class Player extends EventEmitter {
       baseValue = 4;
     }
 
-    const addedBescods = this.faction === Faction.Bescods && this.data.buildings[Building.PlanetaryInstitute] === 1  && planet === Planet.Titanium ? 1 : 0;
+    const addedBescods = this.faction === Faction.Bescods && this.data.buildings[Building.PlanetaryInstitute] === 1  && hex.data.planet === Planet.Titanium ? 1 : 0;
 
     return baseValue + addedBescods;
   }
@@ -659,8 +662,8 @@ export default class Player extends EventEmitter {
       case Condition.Structure: return this.data.occupied.filter(hex => hex.colonizedBy(this.player)).length;
       case Condition.StructureFed: return this.data.occupied.filter(hex => hex.colonizedBy(this.player) && hex.belongsToFederationOf(this.player)).length;
       case Condition.Satellite: return this.data.satellites + this.data.buildings[Building.SpaceStation];
-      case Condition.StructureValue: return _.sum(this.data.occupied.map(hex => this.buildingValue(hex.buildingOf(this.player), hex.data.planet, true)));
-      case Condition.StructureFedValue: return _.sum(this.data.occupied.map(hex => hex.belongsToFederationOf(this.player) ? this.buildingValue(hex.buildingOf(this.player), hex.data.planet, true) : 0 ));
+      case Condition.StructureValue: return _.sum(this.data.occupied.map(hex => this.buildingValue(hex, {federation: true})));
+      case Condition.StructureFedValue: return _.sum(this.data.occupied.map(hex => hex.belongsToFederationOf(this.player) ? this.buildingValue(hex, {federation: true}) : 0 ));
     }
 
     return 0;
@@ -680,7 +683,7 @@ export default class Player extends EventEmitter {
     const excluded = map.excludedHexesForBuildingFederation(this.player, this.faction);
 
     const hexes = this.data.occupied.map(coord => map.grid.get(coord)).filter(hex => !excluded.has(hex));
-    const values = hexes.map(node => this.buildingValue(node.buildingOf(this.player), node.data.planet, true));
+    const values = hexes.map(node => this.buildingValue(node, {federation: true}));
 
     let combinations = this.possibleCombinationsForFederations(_.zipWith(hexes, values, (val1, val2) => ({hex: val1, value: val2})));
 
@@ -750,7 +753,8 @@ export default class Player extends EventEmitter {
   }
 
   federationInfo(federation: GaiaHex[]): FederationInfo {
-    const nSatellites = federation.filter(hex => hex.data.planet === Planet.Empty).length;
+    // Be careful of Ivits & space stations for nSatellites!
+    const nSatellites = federation.filter(hex => hex.data.planet === Planet.Empty && this.buildingValue(hex, {federation: true}) === 0).length;
     const nPlanets = federation.filter(hex => hex.colonizedBy(this.player)).length;
 
     return {
@@ -801,7 +805,7 @@ export default class Player extends EventEmitter {
     assert(map.grid.groups(hexes).length === 1, 'The hexes of the federation must be adjacent');
 
     // Get the power value of the buildings
-    const powerValue = _.sum(hexes.map(hex => this.buildingValue(hex.buildingOf(this.player), hex.data.planet, true)));
+    const powerValue = _.sum(hexes.map(hex => this.buildingValue(hex, {federation: true})));
     assert(powerValue >= this.federationCost, "Your buildings need to have a total value of at least " + this.federationCost);
 
     const info = this.federationInfo(hexes);
@@ -881,7 +885,7 @@ export default class Player extends EventEmitter {
     return ret;
   }
 
-  addAdjacentBuildings(hexes: GaiaHex[], buildingGroups = this.buildingGroups()): GaiaHex[] {
+  addAdjacentBuildings(hexes: GaiaHex[]): GaiaHex[] {
     return _.uniq([].concat(...hexes.map(hex => this.buildingGroup(hex))));
   }
 
