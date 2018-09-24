@@ -20,7 +20,7 @@
         <MoveButton :button="randomFactionButton" @cancel="updateRandomFaction" @trigger="handleCommand" />
       </div>
       <div v-else>
-        <MoveButton v-for="(button, i) in buttons" :class="{'d-none': button.hide, 'shown': !button.hide}" :ref='`button-${i}`' :data-ref='`button-${i}`' @trigger="handleCommand" :button="button" :key="button.label || button.command">
+        <MoveButton v-for="(button, i) in buttons" :class="{'d-none': button.hide, 'shown': !button.hide}" :ref='`button-${i}`' :data-ref='`button-${i}`' @trigger="handleCommand" :button="button" :key="(button.label || button.command) + '-' + i">
           {{button.label || button.command}}
         </MoveButton>
       </div>
