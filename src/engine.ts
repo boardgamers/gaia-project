@@ -1065,7 +1065,7 @@ export default class Engine {
       }
     }
 
-    throw new Error(`Impossible to execute build command at ${location}`);
+    assert(false, `Impossible to execute build command at ${location}`);
   }
 
   [Command.UpgradeResearch](player: PlayerEnum, field: ResearchField) {
@@ -1171,9 +1171,7 @@ export default class Engine {
 
     const data = spaces.find(space => space.coordinates === location);
 
-    if (!data) {
-      throw new Error(`Impossible to execute build command at ${location}`);
-    }
+    assert(data, `Impossible to execute build command at ${location}`);
 
     const { q, r, s } = CubeCoordinates.parse(location);
     const hex = this.map.grid.get({q, r});
@@ -1267,12 +1265,9 @@ export default class Engine {
     const pl = this.player(player);
 
     const fedInfo = pl.checkAndGetFederationInfo(hexes, this.map);
-    if (!fedInfo) {
-      throw new Error(`Impossible to form federation at ${hexes}`);
-    }
-    if (!this.availableCommand.data.tiles.includes(federation)) {
-      throw new Error(`Impossible to form federation ${federation}`);
-    }
+
+    assert(fedInfo, `Impossible to form federation at ${hexes}`);
+    assert(this.availableCommand.data.tiles.includes(federation), `Impossible to form federation ${federation}`);
 
     pl.formFederation(fedInfo, federation);
     this.tiles.federations[federation] -= 1;
@@ -1298,6 +1293,6 @@ export default class Engine {
       }
     }
 
-    throw new Error(`Impossible to execute PI swap command at ${location}`);
+    assert(false, `Impossible to execute PI swap command at ${location}`);
   }
 }
