@@ -131,7 +131,7 @@ export function possibleBuildings(engine: Engine, player: Player) {
         for (const _pl of engine.players) {
           if (_pl !== engine.player(player)) {
             for (const loc of _pl.data.occupied) {
-              if (hex.hasStructure() && map.distance(loc, hex) < ISOLATED_DISTANCE) {
+              if (loc.hasStructure() && map.distance(loc, hex) < ISOLATED_DISTANCE) {
                 return false;
               }
             }

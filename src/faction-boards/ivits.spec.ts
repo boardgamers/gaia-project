@@ -24,6 +24,46 @@ describe('Ivits', () => {
     expect (() => new Engine(moves)).to.not.throw();
   });
 
+  it ("spacestation is not discounting upgrade cost for others", () => {
+    const moves = parseMoves(`
+      init 2 curious-stay-2150
+      p1 faction nevlas
+      p2 faction ivits
+      nevlas build m -2x0
+      nevlas build m 1x3
+      ivits build PI -3x1
+      ivits booster booster9
+      nevlas booster booster3
+      ivits income 4pw. income 4pw
+      nevlas build m 0x-1.
+      ivits up nav.
+      nevlas build ts -2x0.
+      ivits charge 2pw
+      ivits special space-station. build sp -3x0.
+      nevlas build lab -2x0. tech free2. up eco.
+      ivits action power2. build m -3x-1.
+      nevlas charge 2pw
+      nevlas special 4pw.
+      ivits build ts -3x-1.
+      nevlas charge 2pw
+      nevlas up eco.
+      ivits pass booster8
+      nevlas spend t-a3 for 1k. spend t-a3 for 1k. spend t-a3 for 1k. spend t-a3 for 1k. up sci.
+      nevlas pass booster2
+      ivits income 4pw
+      nevlas income 2t
+      ivits build lab -3x-1. tech free2. up nav.
+      nevlas charge 2pw
+      nevlas spend t-a3 for 1k. up eco.
+      ivits special space-station. build sp -1x1.
+    `);
+    const engine = new Engine(moves);
+    const credits = engine.player(Player.Player1).data.credits;
+    engine.move("nevlas build ts 0x-1.");
+    expect(engine.player(Player.Player1).data.credits).to.equal(credits - 6);
+
+  });
+
   it ("should be able to build a federation using a space station and qic", () => {
     const moves = parseMoves(`
       init 2 randomSeed2
