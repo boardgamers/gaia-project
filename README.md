@@ -1,7 +1,7 @@
 [![Join the chat at https://gitter.im/gaia-engine](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/gaia-engine?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 # gaia-engine
-Javascript engine for project gaia. Depends on [honeycomb](https://github.com/flauwekeul/honeycomb) for the hexagonal grid.
+Javascript engine for project gaia.
 
 ## Setup
 
@@ -20,7 +20,6 @@ cd gaia-engine
 
 ```
 npm install
-cp lib/honeycomb-grid/index.d.ts node_modules/honeycomb-grid # to be removed soon
 ```
 
 ### Build
