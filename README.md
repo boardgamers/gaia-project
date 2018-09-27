@@ -9,14 +9,9 @@ Javascript engine for Gaia Project.
 
 Have node 6+, hopefully 8+. Have npm 5+, and tsc.
 
-### Clone the repository
-
-```
-git clone git@github.com:donkeytech/gaia-engine
-cd gaia-engine
-```
-
 ### Dependencies
+
+In the project's folder:
 
 ```
 npm install
@@ -24,16 +19,10 @@ npm install
 
 ### Build
 
-Each time the code is changed, you need to run `tsc` to compile Typescript into javascript:
+To compile Typescript into javascript:
 
 ```
-tsc
-```
-
-To automatically compile Typescript at each code change: 
-
-```
-tsc --watch
+npm run build
 ```
 
 ### Run
