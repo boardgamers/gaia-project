@@ -1,6 +1,6 @@
 <template>
   <g>
-    <circle cx="0" cy="0" r="1" :transform="`scale(${scale})`" :class="['player-token', 'planet-fill', planet]" />
+    <circle cx="0" cy="0" r="1" :transform="`scale(${scale})`" :class="['player-token', 'planet-fill', renderPlanet]" />
   </g>
 </template>
 
@@ -15,8 +15,13 @@ export default class PlayerToken extends Vue {
   faction: Faction | 'automa';
   @Prop()
   scale: number;
+  @Prop()
+  planet: Planet;
 
-  get planet(): Planet {
+  get renderPlanet(): Planet {
+    if (this.planet) {
+      return this.planet;
+    }
     return this.faction === 'automa' ? Planet.Lost : factions.planet(this.faction);
   }
 }
