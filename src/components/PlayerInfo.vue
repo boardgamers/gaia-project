@@ -8,15 +8,9 @@
       <span v-if="round<6">Income: {{player.income.replace(/,/g, ', ')}}<br/></span>
       Range: {{data.range}}, Terraforming cost: {{3 - data.terraformCostDiscount}}o<br/>
       <span v-if="faction === 'Ivits'">Fed value: {{player.fedValue }}, No fed value: {{player.structureValue - player.fedValue }} <br/></span> 
-
-      <span style="white-space: nowrap; line-height: 1em">
-        Steps: 
-        <span v-for="i in [0, 1, 2, 3]" :key="i" :class="{'ml-2': i > 0}">
-          <i v-for="planet in planetsWithSteps(i)" :class="['planet', planet]" :key="planet" /> {{i}}
-        </span>
-      </span><br/>
-      <span style="line-height: 1em" v-if="hasPlanets">Colonized: <span v-for="(count, planet, index) in player.ownedPlanetsCount" :key="planet" :class="{'ml-2': index > 0}"><i :class="['planet', planet]" :key="planet" /> {{count}} </span></span>
+      <StepInfo :player="player" />
     </div>
+
     <div class="tiles row no-gutters pl-3 mt-1">
       <Booster v-if="data.tiles.booster" class="mb-1 mr-1" :booster="data.tiles.booster" :disabled="passed"/>
       <FederationTile v-for="(fed,i) in data.tiles.federations" class="mb-1 mr-1" :key="i" :federation="fed.tile" :used="!fed.green" :player="player.player" :numTiles="1"/>
@@ -38,6 +32,7 @@ import TechTile from './TechTile.vue';
 import Booster from './Booster.vue';
 import SpecialAction from './SpecialAction.vue';
 import FederationTile from './FederationTile.vue';
+import StepInfo from './StepInfo.vue';
 import { factionDesc, planetsWithSteps } from '../data/factions';
 
 @Component({
@@ -50,7 +45,8 @@ import { factionDesc, planetsWithSteps } from '../data/factions';
     TechTile,
     Booster,
     SpecialAction,
-    FederationTile
+    FederationTile,
+    StepInfo
   }
 })
 export default class PlayerInfo extends Vue {
