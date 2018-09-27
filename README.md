@@ -39,3 +39,5 @@ npm run serve # or 'yarn serve'
 ```
 
 And open localhost:8080 in the browser.
+
+You will also need to run gaia-engine on the same machine.
