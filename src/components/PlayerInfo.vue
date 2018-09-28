@@ -9,11 +9,11 @@
       Range: {{data.range}}, Terraforming cost: {{3 - data.terraformCostDiscount}}o<br/>
       <span v-if="faction === 'Ivits'">Fed value: {{player.fedValue }}, No fed value: {{player.structureValue - player.fedValue }} <br/></span> 
  
-        <span style="white-space: nowrap; line-height: 1em">
+      <span style="white-space: nowrap; line-height: 1em">
         Steps: 
         <span v-for="i in [0, 1, 2, 3]" :key="i" :class="{'ml-2': i > 0}">
-          <span v-for="planet in planetsWithSteps(i)"  :key="planet"  >
-            <svg width="15" height="20" viewbox="0 0 15 15" >
+          <span v-for="planet in planetsWithSteps(i)" :key="planet"  >
+            <svg width="16" height="20" viewbox="0 0 16 15" >
               <circle :cx="8" :cy="8" :r="6"  :class="['player-token', 'planet-fill', planet]" />
             </svg>
           </span> 
@@ -21,11 +21,11 @@
         </span>
       </span><br/>
       <span style="line-height: 1em" v-if="hasPlanets">Colonized: 
-        <span v-for="(count, planet, index) in player.ownedPlanetsCount"  :key="planet"  :class="'ml-2'">
-          <svg width="15" height="20" viewbox="0 0 15 15" >
+        <span v-for="(count, planet, index) in player.ownedPlanetsCount"  :key="planet"  class="'mr-2'">
+          <svg width="16" height="20" viewbox="0 0 16 15" >
             <circle :cx="8" :cy="8" :r="6"  :class="['player-token', 'planet-fill', planet]" />
           </svg>
-        <span>{{count}}</span>
+        <span>{{count}} </span>
         </span>
       </span>
     </div>
@@ -124,18 +124,18 @@ export default interface PlayerInfo {
 </script>
 
 <style lang="scss">
- .player-token {
+.player-token {
   stroke: #111;
   pointer-events: none;
   stroke-width: 1;
 }
 
- .content {
-      font-family: arial;
-      font-size: 1rem;
-      color: #212529;
-      pointer-events: none;
-    }
+.content {
+  font-family: arial;
+  font-size: 1rem;
+  color: #212529;
+  pointer-events: none;
+}
 
 .player-info {
   margin-bottom: 1em;
