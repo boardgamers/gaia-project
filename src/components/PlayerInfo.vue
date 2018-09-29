@@ -21,7 +21,7 @@
         </span>
       </span><br/>
       <span style="line-height: 1em" v-if="hasPlanets">Colonized: 
-        <span v-for="(count, planet, index) in player.ownedPlanetsCount"  :key="planet"  class="'mr-2'">
+        <span v-for="(count, planet) in player.ownedPlanetsCount"  :key="planet"  class="mr-2">
           <svg width="16" height="20" viewbox="0 0 16 15" >
             <circle :cx="8" :cy="8" :r="6"  :class="['player-token', 'planet-fill', planet]" />
           </svg>
