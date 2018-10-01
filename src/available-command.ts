@@ -471,23 +471,35 @@ export function possibleFederations(engine: Engine, player: Player) {
   const possibleTiles = Object.keys(engine.tiles.federations).filter(key => engine.tiles.federations[key] > 0);
 
   if (possibleTiles.length > 0) {
-    const possibleFeds = engine.player(player).availableFederations(engine.map);
-
-    if (possibleFeds.length > 0) {
+    if (engine.options.noFedCheck) {
       commands.push({
         name: Command.FormFederation,
         player,
         data: {
           tiles: possibleTiles,
-          federations: possibleFeds.map(fed => ({
-            planets: fed.planets,
-            satellites: fed.satellites,
-            hexes: fed.hexes.map(hex => hex.toString()).sort().join(',')
-          }))
+          federations: []
         }
       });
+    } else {
+      const possibleFeds = engine.player(player).availableFederations(engine.map);
+
+      if (possibleFeds.length > 0) {
+        commands.push({
+          name: Command.FormFederation,
+          player,
+          data: {
+            tiles: possibleTiles,
+            federations: possibleFeds.map(fed => ({
+              planets: fed.planets,
+              satellites: fed.satellites,
+              hexes: fed.hexes.map(hex => hex.toString()).sort().join(',')
+            }))
+          }
+        });
+      }
     }
   }
+
   return commands;
 }
 
