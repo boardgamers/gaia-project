@@ -26,12 +26,6 @@
         <Pool /> 
       </div>
       <div class="col-md-6 order-1 order-md-2" id="move-panel">
-        <div  v-if="!gameId">
-            <input type="button" class="btn btn-default  ml-auto" value="Prev Move" @click="replayPrevMove">
-            <input type="text" id="replayMove" v-model="replayMove">
-            <input type="button" class="btn btn-default  ml-auto" value="Next Move" @click="replayNextMove">
-            <input type="button" class="btn btn-default ml-auto" value="Replay" @click="replayLastMove" >
-        </div>
         <span v-if="ended"><b>Game ended!</b></span>
         <Commands @command="handleCommand" @undo="undoMove" v-else-if="canPlay" :remainingTime="remainingTime" />
         <div v-else-if="data.players[player]">Waiting for {{data.players[player].name}} to play. <span v-if="remainingTime" class="small smaller">({{remainingTime}} remaining)</span><br/> <button class="btn btn-default my-2" @click="loadGame()">Refresh</button></div>
@@ -48,6 +42,12 @@
             <div class="form-group mt-2 d-none d-md-block">
               <label for="moves">Move log</label>
               <textarea class="form-control" rows="4" id="moves" v-model="moveList"></textarea>
+              <div v-if="!gameId" class="mt-2 row no-gutters">
+                <button class="btn btn-default mr-2" @click="replayPrevMove">&lt;&lt; <span class="sr-only">Previous move</span></button>
+                <span class="mr-2"><input type="text" id="replayMove" style="max-width: 40px" v-model="replayMove"> / {{numberOfMoves}}</span>
+                <button class="btn btn-default mr-2" @click="replayNextMove">&gt;&gt; <span class="sr-only">Next move</span></button>
+                <input type="button" class="btn btn-default ml-auto" value="Replay" @click="replay(true)" >
+              </div>
             </div> 
           </form>  
         </div>
@@ -163,6 +163,7 @@ export default class Game extends Vue {
   nextMoveDeadline = null;
   refresher = undefined;
   deadlineTicker = undefined;
+
   // When refreshing status, count the number of times the status is the same
   refreshCount = 0;
   replayMove = 0;
@@ -176,27 +177,32 @@ export default class Game extends Vue {
   @Prop()
   auth: string;
 
+  get numberOfMoves() {
+    return this.moveList.length === 0 ? 0 : this.moveList.split("\n").length;
+  }
+
   replayPrevMove() {
     this.replayMove > 0 ? this.replayMove -- : 0;
     this.replay();
   }
 
   replayNextMove() {
-    const lastMove = this.moveList.split("\n").length; 
+    const lastMove = this.numberOfMoves; 
     this.replayMove < lastMove ? this.replayMove ++ : lastMove ;
     this.replay();
   }
 
-  replayLastMove() {
-    this.replayMove = this.moveList.split("\n").length;
-    this.replay();
-  }
-
-  async replay() {
+  async replay(goToLastMove = false) {
     this.$store.commit("gaiaViewer/clearContext");
 
     const text = this.moveList.trim(); 
-    const moveList = text ? text.split("\n").slice(0,this.replayMove) : [];
+    let moveList = text ? text.split("\n") : [];
+
+    if (!goToLastMove) {
+      moveList = moveList.slice(0, this.replayMove);
+    } else {
+      this.replayMove = moveList.length;
+    }
  
     try {
       const data = await this.api.replay(moveList);
@@ -227,8 +233,6 @@ export default class Game extends Vue {
         this.currentMove = data.moveHistory.pop();
       }
     }
-
-  
 
     this.updateFavicon();
     this.updateMoveList();
@@ -324,6 +328,7 @@ export default class Game extends Vue {
 
   addMove(command: string) {
     this.$store.commit("gaiaViewer/clearContext");
+    
     if (this.gameId) {
       if (command) {
         this.api.addMove(this.gameId, command).then(data => this.handleData(data), handleError);
@@ -333,7 +338,7 @@ export default class Game extends Vue {
     } else {
       this.moveList = (this.moveList.trim() + "\n" + command).trim();
 
-      this.replay();
+      this.replay(true);
     }
   }
 
