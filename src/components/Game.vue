@@ -26,6 +26,12 @@
         <Pool /> 
       </div>
       <div class="col-md-6 order-1 order-md-2" id="move-panel">
+        <div  v-if="!gameId">
+            <input type="button" class="btn btn-default  ml-auto" value="Prev Move" @click="replayPrevMove">
+            <input type="text" id="replayMove" v-model="replayMove">
+            <input type="button" class="btn btn-default  ml-auto" value="Next Move" @click="replayNextMove">
+            <input type="button" class="btn btn-default ml-auto" value="Replay" @click="replayLastMove" >
+        </div>
         <span v-if="ended"><b>Game ended!</b></span>
         <Commands @command="handleCommand" @undo="undoMove" v-else-if="canPlay" :remainingTime="remainingTime" />
         <div v-else-if="data.players[player]">Waiting for {{data.players[player].name}} to play. <span v-if="remainingTime" class="small smaller">({{remainingTime}} remaining)</span><br/> <button class="btn btn-default my-2" @click="loadGame()">Refresh</button></div>
@@ -43,7 +49,6 @@
               <label for="moves">Move log</label>
               <textarea class="form-control" rows="4" id="moves" v-model="moveList"></textarea>
             </div> 
-            <input type="button" class="btn btn-default d-none d-md-block ml-auto" value="Replay" @click="replay" v-if="!gameId">
           </form>  
         </div>
       </div>
@@ -160,6 +165,7 @@ export default class Game extends Vue {
   deadlineTicker = undefined;
   // When refreshing status, count the number of times the status is the same
   refreshCount = 0;
+  replayMove = 0;
 
   @Prop()
   api: GameApi;
@@ -170,22 +176,37 @@ export default class Game extends Vue {
   @Prop()
   auth: string;
 
+  replayPrevMove() {
+   this.replayMove --;
+   this.replay();
+  }
+
+  replayNextMove() {
+   this.replayMove ++;
+   this.replay();
+  }
+
+  replayLastMove() {
+   this.replayMove = this.moveList.split("\n").length;
+   this.replay();
+  }
+
   async replay() {
     this.$store.commit("gaiaViewer/clearContext");
 
     const text = this.moveList.trim(); 
-    const moveList = text ? text.split("\n") : [];
-
+    const moveList = text ? text.split("\n").slice(0,this.replayMove) : [];
+ 
     try {
       const data = await this.api.replay(moveList);
-      this.handleData(data);
+      this.handleData(data, true);
       window.sessionStorage.setItem('moves', JSON.stringify(data.moveHistory));
     } catch(err) {
       handleError(err);
     }
   }
 
-  handleData(data: any) {
+  handleData(data: any, keepMoveHistory?: boolean) {
     this.lastUpdated = data.lastUpdated;
     this.nextMoveDeadline = data.nextMoveDeadline;
 
@@ -194,13 +215,19 @@ export default class Game extends Vue {
     this.$store.commit('removeError');
     this.$store.commit('gaiaViewer/receiveData', data);
 
-    if (data.newTurn) {
-      this.moveList = data.moveHistory.join("\n");
-      this.currentMove = "";
+    if (keepMoveHistory) { 
+      // moveList stays the same 
+      this.currentMove = this.moveList.split("\n")[this.replayMove];
     } else {
-      this.currentMove = data.moveHistory.pop();
       this.moveList = data.moveHistory.join("\n");
+      if (data.newTurn) {
+        this.currentMove = "";
+      } else {
+        this.currentMove = data.moveHistory.pop();
+      }
     }
+
+  
 
     this.updateFavicon();
     this.updateMoveList();
