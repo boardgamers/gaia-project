@@ -135,6 +135,7 @@ import {handleError} from '../utils';
     }
     if (window.sessionStorage.getItem('moves')) {
       this.moveList = JSON.parse(window.sessionStorage.getItem('moves')).join("\n");
+      this.replayMove = this.numberOfMoves;
       this.updateMoveList();
     }
     this.replay();
