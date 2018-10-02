@@ -400,7 +400,7 @@ export default class Player extends EventEmitter {
 
     // Add to nearby federation
     if (building !== Building.GaiaFormer && !hex.belongsToFederationOf(this.player)) {
-      const group: GaiaHex[] = this.buildingGroup(hex);
+      const group: GaiaHex[] = this.buildingGroup(hex, map);
       const hasFederation = map.grid.neighbours(hex).some(hx => hx.belongsToFederationOf(this.player));
 
       if (hasFederation) {
@@ -692,22 +692,24 @@ export default class Player extends EventEmitter {
     const excluded = map.excludedHexesForBuildingFederation(this.player, this.faction);
 
     const hexes = this.data.occupied.map(coord => map.grid.get(coord)).filter(hex => !excluded.has(hex));
-    const values = hexes.map(node => this.buildingValue(node, {federation: true}));
 
-    let combinations = this.possibleCombinationsForFederations(zipWith(hexes, values, (val1, val2) => ({hex: val1, value: val2})));
+    const buildingGroups = this.buildingGroups(hexes, map);
+    const buildingGroupsList = uniq([...buildingGroups.values()]);
+    const values = buildingGroupsList.map(buildings => sum(buildings.map(node => this.buildingValue(node, {federation: true}))))  ;
+
+    let combinations = this.possibleCombinationsForFederations(zipWith(buildingGroupsList, values, (val1, val2) => ({hexes: val1, value: val2})));
 
     // Ivits can only expand their first federation
     if (this.faction === Faction.Ivits && this.data.federationCount > 0) {
-      combinations = combinations.filter(combination => combination.some(hex => hex.belongsToFederationOf(this.player)));
+      combinations = combinations.filter(combination => combination.some(hexList => hexList[0].belongsToFederationOf(this.player)));
     }
 
     // We now have several combinations of buildings that can form federations
     // We need to see if they can be connected
     const federations: GaiaHex[][] = [];
-    const buildingGroups = this.buildingGroups();
 
     for (const combination of combinations) {
-      const destGroups = uniq(combination.map(building => buildingGroups.get(building)));
+      const destGroups = combination;
       const buildingsInDestGroups: Set<GaiaHex> = new Set([].concat(...destGroups));
       // Create a new grid. The following are removed:
       // - hexes in a federation or nearby a federation
@@ -802,7 +804,7 @@ export default class Player extends EventEmitter {
     assert (hexes.length === coords.length, "There are repeating coordinates in the given federation");
 
     // Extend to nearby buidlings
-    hexes = this.addAdjacentBuildings(hexes);
+    hexes = this.addAdjacentBuildings(hexes, map);
 
     // Check if no forbidden square
     const excluded = map.excludedHexesForBuildingFederation(this.player, this.faction);
@@ -840,8 +842,8 @@ export default class Player extends EventEmitter {
     return 7;
   }
 
-  possibleCombinationsForFederations(nodes: Array<{hex: GaiaHex, value: number}>, toReach = this.federationCost): GaiaHex[][] {
-    const ret: GaiaHex[][] = [];
+  possibleCombinationsForFederations(nodes: Array<{hexes: GaiaHex[], value: number}>, toReach = this.federationCost): GaiaHex[][][] {
+    const ret: GaiaHex[][][] = [];
 
     for (let i = 0; i < nodes.length; i ++) {
       if (nodes[i].value === 0) {
@@ -849,12 +851,12 @@ export default class Player extends EventEmitter {
       }
 
       if (nodes[i].value >= toReach) {
-        ret.push([nodes[i].hex]);
+        ret.push([nodes[i].hexes]);
         continue;
       }
 
       for (const possibility of this.possibleCombinationsForFederations(nodes.slice(i + 1), toReach - nodes[i].value)) {
-        possibility.push(nodes[i].hex);
+        possibility.push(nodes[i].hexes);
         ret.push(possibility);
       }
     }
@@ -862,14 +864,14 @@ export default class Player extends EventEmitter {
     return ret;
   }
 
-  buildingGroups(): Map<GaiaHex, GaiaHex[]> {
+  buildingGroups(hexes = this.data.occupied, map: SpaceMap): Map<GaiaHex, GaiaHex[]> {
     const groups: Map<GaiaHex, GaiaHex[]> = new Map();
 
-    for (const hexWithbuilding of this.data.occupied) {
+    for (const hexWithbuilding of hexes) {
       if (groups.has(hexWithbuilding)) {
         continue;
       }
-      const group = this.buildingGroup(hexWithbuilding);
+      const group = this.buildingGroup(hexWithbuilding, map);
       for (const hex of group) {
         groups.set(hex, group);
       }
@@ -878,14 +880,14 @@ export default class Player extends EventEmitter {
     return groups;
   }
 
-  buildingGroup(hex: GaiaHex): GaiaHex[] {
+  buildingGroup(hex: GaiaHex, map: SpaceMap): GaiaHex[] {
     const ret = [];
 
     const addHex = hx => {
       ret.push(hx);
-      for (const building of this.data.occupied) {
-        if (CubeCoordinates.distance(hx, building) === 1 && !ret.includes(building)) {
-          addHex(building);
+      for (const hx2 of map.grid.neighbours(hx)) {
+        if (!ret.includes(hx2) && (hx2.belongsToFederationOf(this.player) || this.buildingValue(hx2, {federation: true})) > 0) {
+          addHex(hx2);
         }
       }
     };
@@ -894,8 +896,8 @@ export default class Player extends EventEmitter {
     return ret;
   }
 
-  addAdjacentBuildings(hexes: GaiaHex[]): GaiaHex[] {
-    return uniq([].concat(...hexes.map(hex => this.buildingGroup(hex))));
+  addAdjacentBuildings(hexes: GaiaHex[], map: SpaceMap): GaiaHex[] {
+    return uniq([].concat(...hexes.map(hex => this.buildingGroup(hex, map))));
   }
 
   /**
