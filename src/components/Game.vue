@@ -30,7 +30,7 @@
         <Commands @command="handleCommand" @undo="undoMove" v-else-if="canPlay" :remainingTime="remainingTime" />
         <div v-else-if="data.players[player]">Waiting for {{data.players[player].name}} to play. <span v-if="remainingTime" class="small smaller">({{remainingTime}} remaining)</span><br/> <button class="btn btn-default my-2" @click="loadGame()">Refresh</button></div>
         <div>
-          <form id="move-form" @submit.prevent="submit">
+          <form id="move-form" @submit.prevent="addMove(currentMove)">
             <label for="current-move" v-if="canPlay">Current Move</label>
             <div class="input-group mb-2" v-if="canPlay">
               <input type="text" class="form-control" placeholder="Current move" aria-label="Current move" id="current-move" v-model="currentMove">
