@@ -336,7 +336,8 @@ export default class Game extends Vue {
         this.loadGame();
       }
     } else {
-      this.moveList = (this.moveList.trim() + "\n" + command).trim();
+      let moveList = this.moveList ? this.moveList.trim().split("\n") : [];
+      this.moveList = (moveList.slice(0, this.replayMove).join('\n').trim() + "\n" + command).trim();
 
       this.replay(true);
     }
