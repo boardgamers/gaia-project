@@ -1,6 +1,11 @@
 import SpaceMap from './map';
 import * as assert from 'assert';
-import * as _ from 'lodash';
+import * as sortBy from 'lodash.sortby';
+import * as omit from 'lodash.omit';
+import * as set from 'lodash.set';
+import * as get from 'lodash.get';
+import * as uniq from 'lodash.uniq';
+import * as sum from 'lodash.sum';
 import Player from './player';
 import * as shuffleSeed from "shuffle-seed";
 import {
@@ -185,7 +190,7 @@ export default class Engine {
     if (lastEntry && lastEntry.player === player && lastEntry.move === move) {
       // Add to existing log entry
       if (amount) {
-        _.set(lastEntry, `changes.${source}.${resource}`, _.get(lastEntry, `changes.${source}.${resource}`, 0) + amount);
+        set(lastEntry, `changes.${source}.${resource}`, get(lastEntry, `changes.${source}.${resource}`, 0) + amount);
       }
     } else {
       // Add new entry
@@ -283,7 +288,7 @@ export default class Engine {
     if (list.length === 0) {
       return false;
     }
-    if (!_.get(params, 'loop', true)) {
+    if (!get(params, 'loop', true)) {
       // No loop, we just remove the first element of the list
       this.currentPlayer = list.shift();
     } else {
@@ -379,7 +384,7 @@ export default class Engine {
       return engine;
     }
 
-    Object.assign(engine, _.omit(data, "map", "players"));
+    Object.assign(engine, omit(data, "map", "players"));
 
     if (data.map) {
       engine.map = SpaceMap.fromData(data.map);
@@ -445,8 +450,8 @@ export default class Engine {
     assert(this.playerToMove === (player as PlayerEnum), "Wrong turn order in move " + move + ", expected player " + (this.playerToMove + 1));
     this.processedPlayer = player;
 
-    const split = _.get(params, 'split', true);
-    const processFirst = _.get(params, 'processFirst', false);
+    const split = get(params, 'split', true);
+    const processFirst = get(params, 'processFirst', false);
 
     if (!split) {
       assert(processFirst);
@@ -738,7 +743,7 @@ export default class Engine {
 
     // finalScoring tiles
     for (const tile of this.tiles.scorings.final) {
-      const players = _.sortBy(this.players, player => player.finalCount(tile)).reverse();
+      const players = sortBy(this.players, player => player.finalCount(tile)).reverse();
 
       const rankings = players.map(pl => ({
         player: pl,
@@ -768,7 +773,7 @@ export default class Engine {
         if (ranking.player) {
           const VPs = [18, 12, 6, 0, 0, 0];
 
-          ranking.player.gainRewards([new Reward(Math.floor(_.sum(VPs.slice(first, first + ties)) / ties), Resource.VictoryPoint)], `final${index + 1}` as 'final1' | 'final2');
+          ranking.player.gainRewards([new Reward(Math.floor(sum(VPs.slice(first, first + ties)) / ties), Resource.VictoryPoint)], `final${index + 1}` as 'final1' | 'final2');
         }
       });
 
@@ -1023,7 +1028,7 @@ export default class Engine {
       pairs.push([params[i], params[i + 1]]);
     }
 
-    assert(_.uniq(pairs.map(pair => pair[0])).length === params.length / 2, "Duplicate rotations are not allowed");
+    assert(uniq(pairs.map(pair => pair[0])).length === params.length / 2, "Duplicate rotations are not allowed");
 
     for (const pair of pairs) {
       this.map.rotateSector(pair[0], +pair[1]);
@@ -1241,7 +1246,7 @@ export default class Engine {
   [Command.Action](player: PlayerEnum, action: BoardAction) {
     const { poweracts: acts} = this.availableCommand.data;
 
-    assert(_.find(acts, {name: action}), `${action} is not in the available power actions`);
+    assert(acts.find(act => act.name === action), `${action} is not in the available power actions`);
 
     const pl = this.player(player);
     this.boardActions[action] = false;

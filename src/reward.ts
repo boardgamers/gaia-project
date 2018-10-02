@@ -1,6 +1,6 @@
 import { Resource } from "./enums";
 import * as assert from "assert";
-import * as _ from "lodash";
+import * as groupBy from "lodash.groupby";
 
 export default class Reward {
   count: number;
@@ -60,7 +60,7 @@ export default class Reward {
    * @param rewards
    */
   static merge(...rewards: Reward[][]): Reward[] {
-    const grouped = _.groupBy(_.flatten(rewards), "type");
+    const grouped = groupBy([].concat(...rewards), "type");
 
     return Object.keys(grouped).map(key => new Reward(grouped[key].reduce((val, rew) => val + rew.count, 0), key as Resource)).filter(rew => !rew.isEmpty());
   }

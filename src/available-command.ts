@@ -1,13 +1,13 @@
 import { Command, Faction, Building, Planet, Booster, Resource, Player, Operator, BoardAction, ResearchField, TechTilePos, AdvTechTilePos, Phase, SubPhase } from './enums';
 import Engine from './engine';
-import * as _ from 'lodash';
+import * as range from 'lodash.range';
+import * as difference from 'lodash.difference';
 import factions from './factions';
 import { upgradedBuildings } from './buildings';
 import Reward from './reward';
 import { boardActions, freeActions, freeActionsTerrans, freeActionsItars } from './actions';
 import * as researchTracks from './research-tracks';
 import { isAdvanced } from './tiles/techs';
-
 
 const ISOLATED_DISTANCE = 3;
 const UPGRADE_RESEARCH_COST = "4k";
@@ -60,7 +60,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
       {
         name: Command.ChooseFaction,
         player,
-        data: _.difference(
+        data: difference(
           Object.values(Faction),
           engine.players.map(pl => pl.faction),
           engine.players.map(pl => factions.opposite(pl.faction))
@@ -157,7 +157,7 @@ export function possibleBuildings(engine: Engine, player: Player) {
     } else if (pl.canOccupy(hex)) {
       // planet without building
       // Check if the range is enough to access the planet
-      const distance = _.min(data.occupied.filter(loc => loc.isRangeStartingPoint(player)).map(loc => map.distance(hex, loc)));
+      const distance = Math.min(...data.occupied.filter(loc => loc.isRangeStartingPoint(player)).map(loc => map.distance(hex, loc)));
       const qicNeeded = Math.max(Math.ceil( (distance - data.range - data.temporaryRange) / QIC_RANGE_UPGRADE), 0);
 
       const building = hex.data.planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine;
@@ -198,7 +198,7 @@ export function possibleSpaceStations(engine: Engine, player: Player) {
       continue;
     }
 
-    const distance = _.min(data.occupied.filter(loc => loc.isRangeStartingPoint(player)).map(loc => map.distance(hex, loc)));
+    const distance = Math.min(...data.occupied.filter(loc => loc.isRangeStartingPoint(player)).map(loc => map.distance(hex, loc)));
     const qicNeeded = Math.max(Math.ceil( (distance - data.range - data.temporaryRange) / QIC_RANGE_UPGRADE), 0);
     const {possible, cost, steps} = pl.canBuild(pl.planet, Building.SpaceStation, {addedCost: [new Reward(qicNeeded, Resource.Qic)]});
 
@@ -276,11 +276,11 @@ export function possibleSpecialActions(engine: Engine, player: Player) {
 export function possibleBoardActions(engine: Engine, player: Player) {
   const commands = [];
 
-  const poweracts = Object.values(BoardAction).filter(pwract => engine.boardActions[pwract] && engine.player(player).canPay(Reward.parse(boardActions[pwract].cost)));
+  let poweracts = Object.values(BoardAction).filter(pwract => engine.boardActions[pwract] && engine.player(player).canPay(Reward.parse(boardActions[pwract].cost)));
 
   // Prevent using the rescore action if no federation token
   if (engine.player(player).data.tiles.federations.length === 0) {
-    _.remove(poweracts, act => act === BoardAction.Qic2);
+    poweracts = poweracts.filter(act => act !== BoardAction.Qic2);
   }
   if (poweracts.length > 0) {
     commands.push({
@@ -323,7 +323,7 @@ export function possibleFreeActions(engine: Engine, player: Player) {
   for (const freeAction of pool) {
     const maxPay = pl.maxPayRange(Reward.parse(freeAction.cost));
     if ( maxPay > 0 ) {
-      acts.push({cost: freeAction.cost, income: freeAction.income, range: _.range(1, maxPay + 1)});
+      acts.push({cost: freeAction.cost, income: freeAction.income, range: range(1, maxPay + 1)});
     }
   }
 
@@ -336,7 +336,7 @@ export function possibleFreeActions(engine: Engine, player: Player) {
     commands.push({
       name: Command.BurnPower,
       player,
-      data: _.range(1, engine.player(player).data.burnablePower() + 1)
+      data: range(1, engine.player(player).data.burnablePower() + 1)
     });
   }
 
@@ -426,7 +426,7 @@ export function possibleSpaceLostPlanet(engine: Engine, player: Player) {
     if (hex.data.planet !== Planet.Empty || hex.data.federations || hex.data.building) {
       continue;
     }
-    const distance = _.min(data.occupied.map(loc => engine.map.distance(hex, loc)));
+    const distance = Math.min(...data.occupied.map(loc => engine.map.distance(hex, loc)));
     const qicNeeded = Math.max(Math.ceil( (distance - data.range) / QIC_RANGE_UPGRADE), 0);
 
     if (qicNeeded > data.qics) {
@@ -609,7 +609,7 @@ export function possibleTechTiles(engine: Engine, player: Player) {
 
   //  tech tiles that player doesn't already have
   for (const tilePos of Object.values(TechTilePos)) {
-    if (!_.find(data.tiles.techs, {tile: engine.tiles.techs[tilePos].tile})) {
+    if (!data.tiles.techs.find(tech => tech.tile === engine.tiles.techs[tilePos].tile)) {
       tiles.push({
         tile: engine.tiles.techs[tilePos].tile,
         pos: tilePos

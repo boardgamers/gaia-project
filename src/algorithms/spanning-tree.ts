@@ -1,4 +1,9 @@
-import * as _ from 'lodash';
+import * as inRange from 'lodash.inrange';
+import * as minBy from 'lodash.minby';
+import * as maxBy from 'lodash.maxby';
+import * as uniq from 'lodash.uniq';
+import * as difference from 'lodash.difference';
+import * as sortBy from 'lodash.sortby';
 import { Grid, Hex } from "hexagrid";
 import shortestPath from './shortest-path';
 
@@ -29,14 +34,14 @@ function spanningTreeWithHeuristic(destGroups: Hex[][], grid: Grid, maxAdditiona
     }
   }
 
-  const [minQ, maxQ] = [_.minBy(destHexes, 'q').q, _.maxBy(destHexes, 'q').q];
-  const [minR, maxR] = [_.minBy(destHexes, 'r').r, _.maxBy(destHexes, 'r').r];
-  const [minS, maxS] = [_.minBy(destHexes, 's').s, _.maxBy(destHexes, 's').s];
+  const [minQ, maxQ] = [minBy(destHexes, 'q').q, maxBy(destHexes, 'q').q];
+  const [minR, maxR] = [minBy(destHexes, 'r').r, maxBy(destHexes, 'r').r];
+  const [minS, maxS] = [minBy(destHexes, 's').s, maxBy(destHexes, 's').s];
 
   const startingPoints: Array<Hex<any>> = [];
   if (destGroups.length > 2) {
     // We pick all the hexes that are in the middle of the federation buildings, and try to create a network from them
-    startingPoints.push(...[...grid.values()].filter(hex => !destHexesSet.has(hex) && _.inRange(hex.q, minQ + 1, maxQ) && _.inRange(hex.r, minR + 1, maxR) && _.inRange(hex.s, minS + 1, maxS)));
+    startingPoints.push(...[...grid.values()].filter(hex => !destHexesSet.has(hex) && inRange(hex.q, minQ + 1, maxQ) && inRange(hex.r, minR + 1, maxR) && inRange(hex.s, minS + 1, maxS)));
   }
   for (const group of destGroups) {
     startingPoints.push(group[0]);
@@ -55,7 +60,7 @@ function spanningTreeWithHeuristic(destGroups: Hex[][], grid: Grid, maxAdditiona
 
   for (const startingPoint of startingPoints) {
     let hexes = groupAround(startingPoint);
-    let toReach = _.difference(destHexes, hexes);
+    let toReach = difference(destHexes, hexes);
 
     do {
       const path: Hex[] = shortestPath(hexes, toReach, grid);
@@ -65,8 +70,8 @@ function spanningTreeWithHeuristic(destGroups: Hex[][], grid: Grid, maxAdditiona
         break;
       }
 
-      hexes = _.uniq(hexes.concat(path.slice(1, -1), groupAround(path[path.length - 1])));
-      toReach = _.difference(toReach, groupAround(path[path.length - 1]));
+      hexes = uniq(hexes.concat(path.slice(1, -1), groupAround(path[path.length - 1])));
+      toReach = difference(toReach, groupAround(path[path.length - 1]));
     } while (hexes.length < minScore && toReach.length > 0);
 
     if (hexes && hexes.length < minScore) {
@@ -98,7 +103,7 @@ function spanningTreeBreadthWidth(destGroups: Hex[][], grid: Grid, maxAdditional
     hexes: Hex[] = [];
 
     constructor(hexes: Hex[] = []) {
-      this.hexes = _.sortBy(hexes, hex => hex.toString());
+      this.hexes = sortBy(hexes, hex => hex.toString());
     }
 
     key(): string {
@@ -106,7 +111,7 @@ function spanningTreeBreadthWidth(destGroups: Hex[][], grid: Grid, maxAdditional
     }
 
     withAdditionalHexes(hexes: Hex[]): HexGroup {
-      return new HexGroup(_.uniq(this.hexes.concat(hexes)));
+      return new HexGroup(uniq(this.hexes.concat(hexes)));
     }
 
     get winning(): boolean {

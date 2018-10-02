@@ -5,8 +5,7 @@ import * as cookieParser from 'cookie-parser';
 import { AssertionError } from "assert";
 import Engine from "./src/engine";
 import * as fs from "fs-extra";
-import * as _ from "lodash";
-
+import * as cloneDeep from "lodash.clonedeep";
 
 fs.mkdirp("bin");
 
@@ -136,7 +135,7 @@ app.get("/g/:gameId/status", (req , res) => {
     return;
   }
 
-  return _.pick(games[gameId], "lastUpdated");
+  res.json({lastUpdate: (games[gameId] as any).lastUpdated});
 });
 
 app.post("/g/:gameId/move", (req , res) => {
@@ -160,7 +159,7 @@ app.post("/g/:gameId/move", (req , res) => {
     return;
   }
 
-  const engine = Engine.fromData(_.cloneDeep(game));
+  const engine = Engine.fromData(cloneDeep(game));
 
   try {
     engine.move(move);
