@@ -167,11 +167,13 @@ export default class MoveButton extends Vue {
     if (final) {
       commandBody = append ? [append] : [];
     } else {
-      // Parse numbers
+      // Parse numbers, ie the command is executed X times, multiply 
+      // each number by X instead of repeating the command X times.
       let command = (this.button.command || "") + "";
 
       if (times && times !== 1 && typeof times === "number") {
-        command = command.replace(/[0-9]+/g, x => ('' + (parseInt(x) * times)));
+        // the \b is necessary for things like '1t-a3', so the 3 is not caught
+        command = command.replace(/\b[0-9]+/g, x => ('' + (parseInt(x) * times)));
       }
       
       commandBody = [command, append].filter(x => !!x);
