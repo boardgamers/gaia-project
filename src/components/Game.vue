@@ -177,18 +177,19 @@ export default class Game extends Vue {
   auth: string;
 
   replayPrevMove() {
-   this.replayMove --;
-   this.replay();
+    this.replayMove > 0 ? this.replayMove -- : 0;
+    this.replay();
   }
 
   replayNextMove() {
-   this.replayMove ++;
-   this.replay();
+    const lastMove = this.moveList.split("\n").length; 
+    this.replayMove < lastMove ? this.replayMove ++ : lastMove ;
+    this.replay();
   }
 
   replayLastMove() {
-   this.replayMove = this.moveList.split("\n").length;
-   this.replay();
+    this.replayMove = this.moveList.split("\n").length;
+    this.replay();
   }
 
   async replay() {
