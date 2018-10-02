@@ -207,7 +207,7 @@ export default class Game extends Vue {
  
     try {
       const data = await this.api.replay(moveList);
-      this.handleData(data, true);
+      this.handleData(data, !goToLastMove);
       window.sessionStorage.setItem('moves', JSON.stringify(data.moveHistory));
     } catch(err) {
       handleError(err);
@@ -215,6 +215,7 @@ export default class Game extends Vue {
   }
 
   handleData(data: any, keepMoveHistory?: boolean) {
+    console.log("handle data", keepMoveHistory);
     this.lastUpdated = data.lastUpdated;
     this.nextMoveDeadline = data.nextMoveDeadline;
 
@@ -227,12 +228,12 @@ export default class Game extends Vue {
       // moveList stays the same 
       this.currentMove = this.moveList.split("\n")[this.replayMove];
     } else {
-      this.moveList = data.moveHistory.join("\n");
       if (data.newTurn) {
         this.currentMove = "";
       } else {
         this.currentMove = data.moveHistory.pop();
       }
+      this.moveList = data.moveHistory.join("\n");
     }
 
     this.updateFavicon();
