@@ -1,6 +1,6 @@
 import { Faction, Operator, ResearchField, Planet, Building, Resource, Booster, Condition, Federation, FinalTile, TechTile, AdvTechTile, BrainstoneArea, TechTilePos, AdvTechTilePos, Command} from './enums';
 import PlayerData from './player-data';
-import Event, {EventSource} from './events';
+import Event, {EventSource, TechPos} from './events';
 import { factionBoard, FactionBoard } from './faction-boards';
 import * as uniq from 'lodash.uniq';
 import * as get from 'lodash.get';
@@ -444,7 +444,7 @@ export default class Player extends EventEmitter {
       this.data.removeGreenFederation();
     }
     this.data.tiles.techs.push({tile, pos, enabled: true});
-    this.loadEvents(Event.parse(techs[tile], pos));
+    this.loadEvents(Event.parse(techs[tile], Object.values(TechTilePos).includes(pos) ? `tech-${pos}` as TechPos : pos as AdvTechTilePos));
 
     // resets federationCache if Special PA->4pw
     if ( tile === TechTile.Tech3  ) { this.federationCache = null; }
@@ -453,7 +453,7 @@ export default class Player extends EventEmitter {
   coverTechTile(pos: TechTilePos) {
     const tile = this.data.tiles.techs.find(tech => tech.pos === pos);
     tile.enabled = false;
-    this.removeEvents(Event.parse(techs[tile.tile], pos));
+    this.removeEvents(Event.parse(techs[tile.tile], `tech-${pos}` as TechPos));
   }
 
   needIncomeSelection(): { events?: Event[], needed: boolean, descs: Reward[]} {

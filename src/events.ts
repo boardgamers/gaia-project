@@ -1,4 +1,4 @@
-import { Condition, Operator, Booster, TechTilePos, AdvTechTilePos, Command, ResearchField, BoardAction, Faction} from "./enums";
+import { Condition, Operator, Booster, AdvTechTilePos, Command, ResearchField, BoardAction, Faction} from "./enums";
 import Reward from "./reward";
 
 function findCondition(spec: string): [Condition, string] {
@@ -40,7 +40,8 @@ function findOperator(spec: string): [Operator, string] {
 }
 
 export type RoundScoring = 'round1' | 'round2' | 'round3' | 'round4' | 'round5' | 'round6';
-export type EventSource = Booster | TechTilePos | AdvTechTilePos | Command.ChargePower | Command.Spend | 'final1' | 'final2' | RoundScoring | ResearchField | BoardAction | Command.ChooseIncome | Command.Build | Command.ChooseFederationTile | Command.FormFederation | Command.UpgradeResearch | Faction;
+export type TechPos = 'tech-gaia' | 'tech-nav' | 'tech-sci' | 'tech-eco' | 'tech-terra' | 'tech-int' | 'tech-free1' | 'tech-free2' | 'tech-free2';
+export type EventSource = Booster | TechPos | AdvTechTilePos | Command.ChargePower | Command.Spend | 'final1' | 'final2' | RoundScoring | ResearchField | BoardAction | Command.ChooseIncome | Command.Build | Command.ChooseFederationTile | Command.FormFederation | Command.UpgradeResearch | Faction;
 
 export default class Event {
   spec: string;
