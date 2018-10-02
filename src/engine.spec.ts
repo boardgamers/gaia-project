@@ -249,7 +249,7 @@ describe("Engine", () => {
 
   it("should handle this full 2 player game", function() {
     this.timeout(10000);
-    const engine = new Engine(fullGame());
+    const engine = new Engine(fullGame(), {noFedCheck: true});
 
     expect(engine.player(Player.Player1).data.victoryPoints).to.equal(130);
     expect(engine.player(Player.Player2).data.victoryPoints).to.equal(124);
@@ -258,13 +258,13 @@ describe("Engine", () => {
   it ("should be able to load/save state", function() {
     this.timeout(10000);
     let state: any = null;
-    const baseLine = new Engine();
+    const baseLine = new Engine([], {noFedCheck: true});
     const moveList = fullGame();
 
     for (const move of moveList.slice(0, moveList.length - 1)) {
       baseLine.move(move);
       if (!state) {
-        const engine = new Engine([move]);
+        const engine = new Engine([move], {noFedCheck: true});
         state = JSON.parse(JSON.stringify(engine));
       } else {
         const engine = Engine.fromData(state);
