@@ -886,7 +886,7 @@ export default class Player extends EventEmitter {
     const addHex = hx => {
       ret.push(hx);
       for (const hx2 of map.grid.neighbours(hx)) {
-        if (!ret.includes(hx2) && (hx2.belongsToFederationOf(this.player) || hx2.buildingOf(this.player))) {
+        if (!ret.includes(hx2) && (hx2.belongsToFederationOf(this.player) || this.buildingValue(hx2, {federation: true})) > 0) {
           addHex(hx2);
         }
       }
