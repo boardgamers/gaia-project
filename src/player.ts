@@ -282,12 +282,17 @@ export default class Player extends EventEmitter {
   }
 
   removeEvent(event: Event) {
-    this.events[event.operator].some((ev, i) => {
-      if (ev.spec === event.spec) {
-        this.events[event.operator].splice(i, 1);
-        return true;
-      }
-    });
+    // First try same source & same definition
+    let index = this.events[event.operator].findIndex(ev => ev.spec === event.spec && ev.source === event.source);
+
+    // Then try just same definition
+    if (index === -1) {
+      index = this.events[event.operator].findIndex(ev => ev.spec === event.spec);
+    }
+
+    assert(index !== -1, "Impossible to remove event " + event.spec);
+
+    this.events[event.operator].splice(index, 1);
   }
 
   removeRoundBoosterEvents( type?: Operator.Income) {
@@ -298,8 +303,6 @@ export default class Player extends EventEmitter {
       this.removeEvent(event);
     }
   }
-
-
 
   activateEvent(spec: string) {
     for (const event of this.events[Operator.Activate]) {
