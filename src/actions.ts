@@ -30,7 +30,7 @@ export const freeActionsItars = [
 ];
 
 export const freeActionsNevlas = [
-  { cost: "t-a3", income: "1k" }
+  { cost: "1t-a3", income: "1k" }
 ];
 
 export const freeActionsNevlasPI = [
