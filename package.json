@@ -62,7 +62,6 @@
     "@types/chai": "^4.1.2",
     "@types/cookie-parser": "^1.4.1",
     "@types/fs-extra": "^5.0.4",
-    "@types/lodash": "^4.14.109",
     "@types/lodash.clonedeep": "^4.5.4",
     "@types/lodash.countby": "^4.6.4",
     "@types/lodash.difference": "^4.5.4",
