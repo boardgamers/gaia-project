@@ -87,7 +87,7 @@ export default class Reward {
   }
 
   static includes(container: Reward[], contained: Reward[]): boolean {
-    const indexed: _.Dictionary<number> = {};
+    const indexed: {[res in Resource]?: number} = {};
     for (const reward of container) {
       indexed[reward.type] = (indexed[reward.type] || 0) + reward.count;
     }
