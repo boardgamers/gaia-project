@@ -1,9 +1,9 @@
-import * as inRange from 'lodash.inrange';
-import * as minBy from 'lodash.minby';
-import * as maxBy from 'lodash.maxby';
-import * as uniq from 'lodash.uniq';
-import * as difference from 'lodash.difference';
-import * as sortBy from 'lodash.sortby';
+import inRange = require('lodash.inrange');
+import minBy = require('lodash.minby');
+import maxBy = require('lodash.maxby');
+import uniq = require('lodash.uniq');
+import difference = require('lodash.difference');
+import sortBy = require('lodash.sortby');
 import { Grid, Hex } from "hexagrid";
 import shortestPath from './shortest-path';
 

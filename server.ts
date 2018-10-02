@@ -5,7 +5,7 @@ import * as cookieParser from 'cookie-parser';
 import { AssertionError } from "assert";
 import Engine from "./src/engine";
 import * as fs from "fs-extra";
-import * as cloneDeep from "lodash.clonedeep";
+import cloneDeep = require("lodash.clonedeep");
 
 fs.mkdirp("bin");
 

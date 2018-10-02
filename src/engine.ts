@@ -1,11 +1,11 @@
 import SpaceMap from './map';
 import * as assert from 'assert';
-import * as sortBy from 'lodash.sortby';
-import * as omit from 'lodash.omit';
-import * as set from 'lodash.set';
-import * as get from 'lodash.get';
-import * as uniq from 'lodash.uniq';
-import * as sum from 'lodash.sum';
+import sortBy = require('lodash.sortby');
+import omit = require('lodash.omit');
+import set = require('lodash.set');
+import get = require('lodash.get');
+import uniq = require('lodash.uniq');
+import sum = require('lodash.sum');
 import Player from './player';
 import * as shuffleSeed from "shuffle-seed";
 import {
