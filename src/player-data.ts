@@ -3,8 +3,8 @@ import { GaiaHex } from "./gaia-hex";
 import { ResearchField, Building, Booster, TechTile, AdvTechTile, Federation, Resource, BrainstoneArea, TechTilePos, AdvTechTilePos, Command } from "./enums";
 import { EventEmitter } from "eventemitter3";
 import { EventSource } from './events';
-import fromPairs = require("lodash.frompairs");
-import cloneDeep = require('lodash.clonedeep');
+import * as fromPairs from "lodash.frompairs";
+import * as cloneDeep from 'lodash.clonedeep';
 
 const MAX_ORE = 15;
 const MAX_CREDIT = 30;

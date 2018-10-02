@@ -1,6 +1,6 @@
 import Reward from "../reward";
-import set = require("lodash.set");
-import get = require("lodash.get");
+import * as set from "lodash.set";
+import * as get from "lodash.get";
 import Event from "../events";
 import { Building, Planet, BrainstoneArea, Faction, Command } from "../enums";
 import Player from "../player";

@@ -1,5 +1,5 @@
 import { GaiaHex } from "./gaia-hex";
-import difference = require("lodash.difference");
+import * as difference from "lodash.difference";
 
 export interface FederationInfo {
   hexes: GaiaHex[];

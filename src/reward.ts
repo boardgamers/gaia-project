@@ -1,6 +1,6 @@
 import { Resource } from "./enums";
 import * as assert from "assert";
-import groupBy = require("lodash.groupby");
+import * as groupBy from "lodash.groupby";
 
 export default class Reward {
   count: number;
