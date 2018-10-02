@@ -1,10 +1,10 @@
 import Reward from "../reward";
-import * as merge from "lodash.merge";
 import * as set from "lodash.set";
 import * as get from "lodash.get";
 import Event from "../events";
 import { Building, Planet, BrainstoneArea, Faction, Command } from "../enums";
 import Player from "../player";
+import { merge } from "../utils";
 
 export interface FactionBoardRaw {
   faction?: Faction;
