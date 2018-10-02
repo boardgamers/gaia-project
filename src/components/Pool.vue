@@ -10,11 +10,12 @@ import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
 import Booster from './Booster.vue';
 import FederationTile from "./FederationTile.vue";
+import { Booster as BoosterEnum } from '@gaia-project/engine';
 
 @Component({
   computed: {
     boosters() {
-      return Object.keys(this.$store.state.gaiaViewer.data.tiles.boosters).filter(key => this.$store.state.gaiaViewer.data.tiles.boosters[key]).sort();
+      return Object.values(BoosterEnum).filter(key => this.$store.state.gaiaViewer.data.tiles.boosters[key]);
     },
     federations() {
       return this.$store.state.gaiaViewer.data.tiles.federations;
