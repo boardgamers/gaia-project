@@ -27,14 +27,13 @@ app.post("/", (req, res) => {
   try {
     const moves = req.body.moves;
     const advancedRules = moves && (moves.length < 2 || moves[1].includes('rotate'));
-    const noFedCheck = req.body.noFedCheck;
     const engine = new Engine(moves, {advancedRules, noFedCheck: true});
 
     // reenable fedCheck
     engine.options.noFedCheck = false;
 
     // regenerate commands
-    engine.generateAvailableCommandsIfNeeded();
+    engine.generateAvailableCommands();
 
     res.json(engine);
   } catch (err) {
