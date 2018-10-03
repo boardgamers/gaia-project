@@ -372,7 +372,6 @@ export default class Player extends EventEmitter {
     if (hex.data.planet !== Planet.Lost) {
       // Add income of the building to the list of events
       this.data.buildings[building] += 1; // NEEDS TO BE BEFORE REWARDS, so gleens can get qic from tech if they build academy 2
-      this.loadEvents(this.board.buildings[building].income[this.data.buildings[building] - 1]);
     } else {
       this.data.lostPlanet += 1;
     }
@@ -382,6 +381,11 @@ export default class Player extends EventEmitter {
     if (upgradedBuilding) {
       this.data.buildings[upgradedBuilding] -= 1;
       this.removeEvents(this.board.buildings[upgradedBuilding].income[this.data.buildings[upgradedBuilding]]);
+    }
+
+    // NEEDS TO BE AFTER REMOVAL, so the tech ts > 4vp counts the correct number of ts after being upgraded from a lab
+    if (hex.data.planet !== Planet.Lost) {
+      this.loadEvents(this.board.buildings[building].income[this.data.buildings[building] - 1]);
     }
 
     // If the planet is already occupied by someone else
