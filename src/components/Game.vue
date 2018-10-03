@@ -157,6 +157,7 @@ import {handleError} from '../utils';
 export default class Game extends Vue {
   public moveList = "";
   public currentMove = "";
+  clearCurrentMove = false;
   // When joining a game
   name = "";
   lastUpdated = null;
@@ -227,7 +228,9 @@ export default class Game extends Vue {
     if (keepMoveHistory) { 
       // moveList stays the same 
       this.currentMove = this.moveList.split("\n")[this.replayMove];
+      this.clearCurrentMove = true;
     } else {
+      this.clearCurrentMove = false;
       if (data.newTurn) {
         this.currentMove = "";
       } else {
@@ -312,9 +315,10 @@ export default class Game extends Vue {
       return;
     }
 
-    if (this.currentMove) {
+    if (this.currentMove && !this.clearCurrentMove) {
       this.addMove(this.currentMove + `. ${command.slice(move.player.length+1)}`);
     } else {
+      this.clearCurrentMove = false;
       this.addMove(command);
     }
   }
