@@ -765,12 +765,12 @@ export default class Player extends EventEmitter {
 
   federationInfo(federation: GaiaHex[]): FederationInfo {
     // Be careful of Ivits & space stations for nSatellites!
-    const nSatellites = federation.filter(hex => hex.data.planet === Planet.Empty && this.buildingValue(hex, {federation: true}) === 0).length;
+    const satellites = federation.filter(hex => hex.buildingOf(this.player) === undefined);
     const nPlanets = federation.filter(hex => hex.colonizedBy(this.player)).length;
 
     return {
       hexes: federation,
-      satellites: nSatellites,
+      satellites: satellites.length,
       planets: nPlanets
     };
   }
@@ -778,10 +778,11 @@ export default class Player extends EventEmitter {
   formFederation(info: FederationInfo, token: Federation) {
     let newSatellites = 0;
     for (const hex of info.hexes) {
-      hex.addToFederationOf(this.player);
-      if (hex.buildingOf(this.player) === undefined) {
+      // Second test is for ivits
+      if (hex.buildingOf(this.player) === undefined && !hex.belongsToFederationOf(this.player)) {
         newSatellites += 1;
       }
+      hex.addToFederationOf(this.player);
     }
     this.payCosts([new Reward(newSatellites, this.faction === Faction.Ivits ? Resource.Qic : Resource.GainToken)], Command.FormFederation);
     this.data.satellites += newSatellites;
