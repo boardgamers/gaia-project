@@ -1,6 +1,6 @@
 <template>
   <g class="sector">
-    <SpaceHex v-for="hex in sector" :key="`${hex.q}x${hex.r}`" :transform="`translate(${centerOffset(hex).x}, ${centerOffset(hex).y})`" :hex="hex" />
+    <SpaceHex v-for="hex in sector" :key="`${hex.q}x${hex.r}`" :transform="`translate(${centerOffset(hex).x}, ${centerOffset(hex).y})`" :hex="hex" :isCenter="isCenter(hex)" />
   </g>
 </template>
 
@@ -8,7 +8,7 @@
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
 import {MapData, HighlightHexData} from '../data';
-import { GaiaHex } from '@gaia-project/engine';
+import { GaiaHex, GaiaHexData } from '@gaia-project/engine';
 import { hexCenter } from "../graphics/hex";
 import SpaceHex from './SpaceHex.vue';
 import { CubeCoordinates, Hex } from 'hexagrid';
@@ -27,6 +27,10 @@ export default class Sector extends Vue {
       q: hex.q - this.center.q,
       r: hex.r - this.center.r
     });
+  }
+
+  isCenter(hex: GaiaHex) {
+    return hex.q === this.center.q && hex.r === this.center.r;
   }
 
   get map() {
