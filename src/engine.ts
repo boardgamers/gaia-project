@@ -980,6 +980,7 @@ export default class Engine {
     if (this.options.map) {
       this.map.load(this.options.map);
     }
+    this.options.map = this.map.placement;
 
     // Choose nbPlayers+3 boosters as part of the pool
     const boosters = shuffleSeed.shuffle(Object.values(Booster), this.map.rng()).slice(0, nbPlayers + 3);
