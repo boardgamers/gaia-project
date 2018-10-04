@@ -1,4 +1,4 @@
-import SpaceMap from './map';
+import SpaceMap, { MapConfiguration } from './map';
 import * as assert from 'assert';
 import * as sortBy from 'lodash.sortby';
 import * as omit from 'lodash.omit';
@@ -49,6 +49,8 @@ interface EngineOptions {
   advancedRules?: boolean;
   /** disable Federation check for available commands */
   noFedCheck?: boolean;
+  /** Custom map given */
+  map?: MapConfiguration;
 }
 
 /**
@@ -362,7 +364,7 @@ export default class Engine {
     // const jsonData = pl.data.toJSON();
 
     // Itars may want to burn power instead
-    if (pl.faction === Faction.Itars) {
+    if (pl.faction === Faction.Itars && this.round < 6) {
       return false;
     }
 
@@ -974,6 +976,10 @@ export default class Engine {
     assert(nbPlayers >= 2 && nbPlayers <= 5, "Invalid number of players");
 
     this.map = new SpaceMap(nbPlayers, seed);
+
+    if (this.options.map) {
+      this.map.load(this.options.map);
+    }
 
     // Choose nbPlayers+3 boosters as part of the pool
     const boosters = shuffleSeed.shuffle(Object.values(Booster), this.map.rng()).slice(0, nbPlayers + 3);

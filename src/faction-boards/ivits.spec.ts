@@ -61,7 +61,6 @@ describe('Ivits', () => {
     const credits = engine.player(Player.Player1).data.credits;
     engine.move("nevlas build ts 0x-1.");
     expect(engine.player(Player.Player1).data.credits).to.equal(credits - 6);
-
   });
 
   it ("should be able to build a federation using a space station and qic", () => {

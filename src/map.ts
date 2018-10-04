@@ -2,24 +2,43 @@ import {Grid, Hex, CubeCoordinates} from "hexagrid";
 import * as seedrandom from "seedrandom";
 import * as shuffleSeed from "shuffle-seed";
 import * as assert from 'assert';
+import * as keyBy from 'lodash.keyby';
 import Sector from "./sector";
 import { Player, Planet, Faction } from "./enums";
 import { GaiaHex } from "./gaia-hex";
 
-// Data: from outer ring to inside ring, starting from a corner
-const s1 = {name: "s1", map: "eeeeemevoeed,sereee,e".replace(/,/g, "")};
-const s2 = {name: "s2", map: "evteedemeoee,eeiees,e".replace(/,/g, "")};
-const s3 = {name: "s3", map: "eemeeteedree,geeiee,e".replace(/,/g, "")};
-const s4 = {name: "s4", map: "eeteeereeeei,eoesev,e".replace(/,/g, "")};
-const s5 = {name: "s5", map: "eeiemoeedvee,geeeee,e".replace(/,/g, "")};
-const s5b = {name: "s5b", map: "eeiemoeeevee,geeeee,e".replace(/,/g, "")};
-const s6 = {name: "s6", map: "eeemeedmeeee,serege,e".replace(/,/g, "")};
-const s6b = {name: "s6b", map: "eeemeedmeeee,eerege,e".replace(/,/g, "")};
-const s7 = {name: "s7", map: "meeseeeeteee,eoegeg,e".replace(/,/g, "")};
-const s7b = {name: "s7b", map: "meeeeeeeteee,egeseg,e".replace(/,/g, "")};
-const s8 = {name: "s8", map: "eeremeeeemee,eietev,e".replace(/,/g, "")};
-const s9 = {name: "s9", map: "evemieeeeese,eeeget,e".replace(/,/g, "")};
-const s10 = {name: "s10", map: "eeemmeeeeore,deegee,e".replace(/,/g, "")};
+// Data: from outer ring to inside ring, starting from top
+const s1 = {name: "1", map: "eeemevoeedee,ereees,e".replace(/,/g, "")};
+const s2 = {name: "2", map: "teedemeoeeev,eieese,e".replace(/,/g, "")};
+const s3 = {name: "3", map: "meeteedreeee,eeieeg,e".replace(/,/g, "")};
+const s4 = {name: "4", map: "teeereeeeiee,oeseve,e".replace(/,/g, "")};
+const s5 = {name: "5A", map: "iemoeedveeee,eeeeeg,e".replace(/,/g, "")};
+const s5b = {name: "5B", map: "iemoeeeveeee,eeeeeg,e".replace(/,/g, "")};
+const s6 = {name: "6A", map: "emeedmeeeeee,ereges,e".replace(/,/g, "")};
+const s6b = {name: "6B", map: "emeedmeeeeee,eregee,e".replace(/,/g, "")};
+const s7 = {name: "7A", map: "eseeeeteeeme,oegege,e".replace(/,/g, "")};
+const s7b = {name: "7B", map: "eeeeeeteeeme,gesege,e".replace(/,/g, "")};
+const s8 = {name: "8", map: "remeeeemeeee,ieteve,e".replace(/,/g, "")};
+const s9 = {name: "9", map: "emieeeeeseev,eegete,e".replace(/,/g, "")};
+const s10 = {name: "10", map: "emmeeeeoreee,eegeed,e".replace(/,/g, "")};
+
+const sectors = keyBy([s1, s2, s3, s4, s5, s5b, s6, s6b, s7, s7b, s8, s9, s10], "name");
+// Due to legacy issues
+
+const reverseSide = (side: string) => {
+  return side[0] + side.slice(1, 12).split("").reverse().join("") + side[12] + side.slice(13, 18).split("").reverse().join("") + side[18];
+};
+
+const rSectors = keyBy([s1, s2, s3, s4, s5, s5b, s6, s6b, s7, s7b, s8, s9, s10].map(s => ({name: s.name, map: reverseSide(s.map)})), "name");
+
+const smallCenters = ["5x-2", "2x3", "3x-5", "0x0", "-3x5", "-2x-3", "-5x2"].map(coord => CubeCoordinates.parse(coord));
+const bigCenters = ["5x-2", "2x3", "-1x8", "3x-5", "0x0", "-3x5", "-6x10", "-2x-3", "-5x2", "-8x7"].map(coord => CubeCoordinates.parse(coord));
+
+export interface MapConfiguration {
+  map: Array<{sector: string, rotation: number, center?: CubeCoordinates}>;
+  // Are sector tiles mirrored?
+  mirror?: boolean;
+}
 
 const smallConfiguration = {
   sectors: [s1, s2, s3, s4, s5b, s6b, s7b],
@@ -53,6 +72,10 @@ export default class SpaceMap {
   rng: seedrandom.prng;
   nbPlayers: number;
   seed: string;
+  /**
+   * Simple array listing sectors and how they are placed. Allows to reconstruct the map with little data
+   */
+  placement?: MapConfiguration;
   grid: Grid<GaiaHex>; // hexagrid
   distanceCache: {[coord: string]: {[coord: string]: number}} = {};
 
@@ -70,6 +93,17 @@ export default class SpaceMap {
     do {
       this.generate();
     } while (!this.isValid(germanRules));
+  }
+
+  load(conf: MapConfiguration) {
+    const centers = conf.map.length === 7 ? smallCenters : bigCenters;
+
+    // Legacy map generation, to keep old tests valid
+    const oldGen = ["randomSeed", "12", "9876", "yellow-paint-8951", "green-jeans-8458", "Fastgame01", "zadbd", "bosco-marcuzzo3", "Alex-Del-Pieroooooo", "SGAMBATA", "djfjjv4k", "randomSeed2", "randomseed", "polite-food-8474", "green-jeans-8458", "waiting-fabs-1", "curious-stay-2150", "Three"].includes(this.seed);
+
+    const [hexagon, ...hexagons] = conf.map.map((val, i) => Sector.create(((conf.mirror || oldGen) ? rSectors : sectors)[val.sector].map, val.sector, val.center || centers[i]).rotateRight(val.rotation, val.center || centers[i]));
+    this.grid = hexagon.merge(...hexagons);
+    this.placement = conf;
   }
 
   /**
@@ -102,9 +136,8 @@ export default class SpaceMap {
     const definitions = this.chooseSides();
     const centers = this.configuration().centers;
 
-    const [hexagon, ...hexagons] = definitions.map((side, index) => Sector.create(side.map, side.name, centers[index]).rotateRight(Math.floor(this.rng() * 6), centers[index]));
-
-    this.grid = hexagon.merge(...hexagons);
+    this.placement = {map: definitions.map((side, i) => ({sector: side.name, rotation: Math.floor(this.rng() * 6), center: centers[i]}))};
+    this.load(this.placement);
   }
 
   rotateSector(center: string, times: number) {
@@ -138,7 +171,7 @@ export default class SpaceMap {
     return map;
   }
 
-  configuration() {
+  private configuration() {
     return SpaceMap.configuration(this.nbPlayers);
   }
 

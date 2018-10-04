@@ -36,7 +36,7 @@
   "license": "MIT",
   "dependencies": {
     "eventemitter3": "^3.1.0",
-    "hexagrid": "^1.4.1",
+    "hexagrid": "^2.0.0",
     "lodash.clonedeep": "^4.5.0",
     "lodash.countby": "^4.6.0",
     "lodash.difference": "^4.5.0",
@@ -44,6 +44,7 @@
     "lodash.get": "^4.4.2",
     "lodash.groupby": "^4.6.0",
     "lodash.inrange": "^3.3.6",
+    "lodash.keyby": "^4.6.0",
     "lodash.maxby": "^4.6.0",
     "lodash.merge": "^4.6.1",
     "lodash.mergewith": "^4.6.1",
