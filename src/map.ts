@@ -171,7 +171,7 @@ export default class SpaceMap {
     return map;
   }
 
-  private configuration() {
+  configuration() {
     return SpaceMap.configuration(this.nbPlayers);
   }
 
