@@ -975,9 +975,9 @@ export default class Engine {
 
     assert(nbPlayers >= 2 && nbPlayers <= 5, "Invalid number of players");
 
-    this.map = new SpaceMap(nbPlayers, seed);
+    this.map = new SpaceMap(nbPlayers, seed, get(this.options, "map.mirror", false));
 
-    if (this.options.map) {
+    if (get(this.options, "map.map")) {
       this.map.load(this.options.map);
     }
     this.options.map = this.map.placement;

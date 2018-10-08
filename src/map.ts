@@ -35,7 +35,7 @@ const smallCenters = ["5x-2", "2x3", "3x-5", "0x0", "-3x5", "-2x-3", "-5x2"].map
 const bigCenters = ["5x-2", "2x3", "-1x8", "3x-5", "0x0", "-3x5", "-6x10", "-2x-3", "-5x2", "-8x7"].map(coord => CubeCoordinates.parse(coord));
 
 export interface MapConfiguration {
-  map: Array<{sector: string, rotation: number, center?: CubeCoordinates}>;
+  map?: Array<{sector: string, rotation: number, center?: CubeCoordinates}>;
   // Are sector tiles mirrored?
   mirror?: boolean;
 }
@@ -79,7 +79,7 @@ export default class SpaceMap {
   grid: Grid<GaiaHex>; // hexagrid
   distanceCache: {[coord: string]: {[coord: string]: number}} = {};
 
-  constructor(nbPlayers ?: number, seed ?: string) {
+  constructor(nbPlayers ?: number, seed ?: string, mirror?: boolean) {
     if (nbPlayers === undefined) {
       return;
     }
@@ -91,7 +91,7 @@ export default class SpaceMap {
     // Keep tests valid even under new map generation rules
     const germanRules = !["randomSeed", "12", "9876", "yellow-paint-8951", "green-jeans-8458", "Fastgame01"].includes(seed);
     do {
-      this.generate();
+      this.generate(mirror);
     } while (!this.isValid(germanRules));
   }
 
@@ -132,11 +132,11 @@ export default class SpaceMap {
   /**
    * Generate the map
    */
-  generate() {
+  generate(mirror = false) {
     const definitions = this.chooseSides();
     const centers = this.configuration().centers;
 
-    this.placement = {map: definitions.map((side, i) => ({sector: side.name, rotation: Math.floor(this.rng() * 6), center: centers[i]}))};
+    this.placement = {map: definitions.map((side, i) => ({sector: side.name, rotation: Math.floor(this.rng() * 6), center: centers[i]})), mirror};
     this.load(this.placement);
   }
 
