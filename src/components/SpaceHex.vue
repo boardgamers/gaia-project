@@ -3,7 +3,7 @@
     <title>Coordinates: {{hex.q}}x{{hex.r}}&#10;Sector: {{hex.data.sector}}{{hex.data.planet !== 'e' ? `&#10;Planet: ${planetName(hex.data.planet)}`: ''}}{{hex.data.building ? `&#10;Building: ${buildingName(hex.data.building)}` : ''}}</title>
     <polygon :points="hexCorners.map(p => `${p.x},${p.y}`).join(' ')" :class="['spaceHex', {toSelect, highlighted: highlightedHexes.has(hex), qic: cost(hex).includes('q')}]" @click='hexClick(hex)' />
     <line v-for="(l, i) in lines" :key="i" :x1="l.x1" :y1="l.y1" :x2="l.x2" :y2="l.y2" class="spaceLine" />
-    <text class="sector-name" v-if="isCenter">{{hex.data.sector[0] === 's' ? hex.data.sector[1] : hex.data.sector[0]}}</text>
+    <text class="sector-name" v-if="isCenter">{{hex.data.sector[0] === 's' ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector)}}</text>
     <Planet v-if="hex.data.planet !== 'e'" :planet='hex.data.planet' :faction='faction(hex.data.player)' />
     <Building v-if="hex.data.building" :building='hex.data.building' :faction='faction(hex.data.player)' />
     <Building v-if="hex.data.additionalMine !== undefined" :faction='faction(hex.data.additionalMine)' building="m" transform="translate(0.38, 0.5) rotate(36) scale(0.9)" class="additionalMine" />
