@@ -35,10 +35,10 @@
         </transition>
         <div>
           <form id="move-form" @submit.prevent="">
-            <label for="current-move" v-if="canPlay">Current Move</label>
-            <div class="input-group mb-2" v-if="canPlay">
+            <label for="current-move" v-if="canPlay || replaying">Current Move</label>
+            <div class="input-group mb-2" v-if="canPlay || replaying">
               <input type="text" class="form-control" placeholder="Current move" aria-label="Current move" id="current-move" v-model="currentMove">
-              <div class="input-group-append">
+              <div class="input-group-append" v-if="!replaying">
                 <!-- <button class="btn btn-danger" type="button" @click="addMove('')">Clear</button> -->
                 <button class="btn btn-primary" type="button" @click="addMove(currentMove)">Send</button>
               </div>
