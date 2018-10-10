@@ -244,8 +244,7 @@ export default class Game extends Vue {
     }
  
     try {
-      // console.log(JSON.stringify(this.backupEngine.options));
-      const data = await this.api.replay(moveList, this.backupEngine.options);
+      const data = await this.api.replay(moveList, this.replaying ? this.backupEngine.options : this.data.options);
       this.handleData(data, !goToLastMove);
       window.sessionStorage.setItem('moves', JSON.stringify(data.moveHistory));
     } catch(err) {
