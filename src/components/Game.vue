@@ -133,6 +133,9 @@ import {handleError} from '../utils';
       return !!this.$store.state.gaiaViewer.data.map;
     },
     player() {
+      if (!this.data.availableCommands) {
+        return undefined;
+      }
       return this.data.availableCommands.length > 0 ? this.data.availableCommands[0].player : undefined;
     },
     sessionPlayer() {
@@ -241,7 +244,8 @@ export default class Game extends Vue {
     }
  
     try {
-      const data = await this.api.replay(moveList, this.data.options);
+      // console.log(JSON.stringify(this.backupEngine.options));
+      const data = await this.api.replay(moveList, this.backupEngine.options);
       this.handleData(data, !goToLastMove);
       window.sessionStorage.setItem('moves', JSON.stringify(data.moveHistory));
     } catch(err) {
