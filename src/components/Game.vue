@@ -26,9 +26,13 @@
         <Pool /> 
       </div>
       <div class="col-md-6 order-1 order-md-2" id="move-panel">
-        <span v-if="ended"><b>Game ended!</b></span>
-        <Commands @command="handleCommand" @undo="undoMove" v-else-if="canPlay" :remainingTime="remainingTime" />
-        <div v-else-if="data.players[player]">Waiting for {{data.players[player].name}} to play. <span v-if="remainingTime" class="small smaller">({{remainingTime}} remaining)</span><br/> <button class="btn btn-default my-2" @click="loadGame()">Refresh</button></div>
+        <transition name="fade">
+          <div v-if="!replaying">
+            <span v-if="ended"><b>Game ended!</b></span>
+            <Commands @command="handleCommand" @undo="undoMove" v-else-if="canPlay" :remainingTime="remainingTime" />
+            <div v-else-if="data.players[player]">Waiting for {{data.players[player].name}} to play. <span v-if="remainingTime" class="small smaller">({{remainingTime}} remaining)</span><br/> <button class="btn btn-default my-2" @click="loadGame()">Refresh</button></div>
+          </div>
+        </transition>
         <div>
           <form id="move-form" @submit.prevent="">
             <label for="current-move" v-if="canPlay">Current Move</label>
@@ -39,14 +43,25 @@
                 <button class="btn btn-primary" type="button" @click="addMove(currentMove)">Send</button>
               </div>
             </div>
-            <div class="form-group mt-2 d-none d-md-block">
+            <div class="form-group mt-2 d-none d-md-block" v-if="moveList">
               <label for="moves">Move log</label>
               <textarea class="form-control" rows="4" id="moves" v-model="moveList"></textarea>
-              <div v-if="!gameId" class="mt-2 row no-gutters">
-                <button class="btn btn-default mr-2" @click="replayPrevMove">&lt;&lt; <span class="sr-only">Previous move</span></button>
-                <span class="mr-2"><input type="text" id="replayMove" style="max-width: 40px" v-model="replayMove"> / {{numberOfMoves}}</span>
-                <button class="btn btn-default mr-2" @click="replayNextMove">&gt;&gt; <span class="sr-only">Next move</span></button>
-                <input type="button" class="btn btn-default ml-auto" value="Replay" @click="replay(true)" >
+              <div class="mt-2 row no-gutters">
+                <transition name="fade">
+                  <span v-if="replaying" class="input-group" role="group" style="width: auto">
+                    <div class="input-group-prepend">
+                      <button class="btn btn-outline-secondary" @click="goto(0)">« <span class="sr-only">Previous move</span></button>
+                      <button class="btn btn-outline-secondary" @click="replayPrevMove">‹ <span class="sr-only">Previous move</span></button>
+                    </div>
+                    <input type="text" id="replayMove" style="max-width: 60px" v-model="replayMove" @keydown.enter.prevent="goto(replayMove)" class="form-control">
+                    <div class="input-group-append">
+                      <span class="input-group-text"> / {{numberOfMoves}}</span>
+                      <button class="btn btn-outline-secondary" @click="replayNextMove">› <span class="sr-only">Next move</span></button>
+                      <button class="btn btn-outline-secondary" @click="replay(true)">» <span class="sr-only">Next move</span></button>
+                    </div>
+                  </span>
+                </transition>
+                <input type="button" class="btn btn-default ml-auto" :value="!replaying ? 'Replay Mode' : 'Leave Replay'" @click="toggleReplayMode" >
               </div>
             </div> 
           </form>  
@@ -69,7 +84,7 @@ import ScoringBoard from './ScoringBoard.vue';
 import AdvancedLog from './AdvancedLog.vue';
 import Pool from './Pool.vue';
 import Engine,{ Command,Phase,factions, Player } from '@gaia-project/engine';
-import { GameApi } from '../api';
+import { GameApi, EngineData } from '../api';
 import {handleError} from '../utils';
 
 @Component<Game>({
@@ -163,8 +178,10 @@ export default class Game extends Vue {
   lastUpdated = null;
   remainingTime = null;
   nextMoveDeadline = null;
+  backupEngine: EngineData = null;
   refresher = undefined;
   deadlineTicker = undefined;
+  replaying = false;
 
   // When refreshing status, count the number of times the status is the same
   refreshCount = 0;
@@ -181,6 +198,23 @@ export default class Game extends Vue {
 
   get numberOfMoves() {
     return this.moveList.length === 0 ? 0 : this.moveList.split("\n").length;
+  }
+
+  toggleReplayMode() {
+    if (this.replaying) {
+      this.handleData(this.backupEngine);
+      this.backupEngine = null;
+      this.replaying = false;
+    } else {
+      this.replaying = true;
+      this.backupEngine = this.data;
+      this.replay(true);
+    }
+  }
+
+  goto(move: number) {
+    this.replayMove = move;
+    this.replay();
   }
 
   replayPrevMove() {
@@ -207,7 +241,7 @@ export default class Game extends Vue {
     }
  
     try {
-      const data = await this.api.replay(moveList);
+      const data = await this.api.replay(moveList, this.data.options);
       this.handleData(data, !goToLastMove);
       window.sessionStorage.setItem('moves', JSON.stringify(data.moveHistory));
     } catch(err) {
@@ -215,7 +249,7 @@ export default class Game extends Vue {
     }
   }
 
-  handleData(data: any, keepMoveHistory?: boolean) {
+  handleData(data: EngineData, keepMoveHistory?: boolean) {
     console.log("handle data", keepMoveHistory);
     this.lastUpdated = data.lastUpdated;
     this.nextMoveDeadline = data.nextMoveDeadline;

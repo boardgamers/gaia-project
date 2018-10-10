@@ -1,12 +1,17 @@
 import * as $ from 'jquery';
-import Engine from '@gaia-project/engine';
+import Engine, {EngineOptions} from '@gaia-project/engine';
+
+export interface EngineData extends Engine {
+  nextMoveDeadline?: Date;
+  lastUpdated?: Date;
+}
 
 export interface GameApi {
   loadGame(gameId: string): Promise<Engine>;
   /** Check if we need to refresh the game */
   checkStatus(gameId: string): Promise<any>;
   addMove(gameId: string, move: string): Promise<Engine>;
-  replay(moveList: string[]): Promise<Engine>;
+  replay(moveList: string[], options: EngineOptions): Promise<EngineData>;
 }
 
 const api: GameApi = {
@@ -21,7 +26,7 @@ const api: GameApi = {
     const data = await $.post(`${window.location.protocol}//${window.location.hostname}:9508/g/${gameId}/move`,  {move}) as any;
     return Engine.fromData(data);
   },
-  async replay(moves: string[]) {
+  async replay(moves: string[], options: EngineOptions) {
     const data = await $.post(`${window.location.protocol}//${window.location.hostname}:9508/`, {moves}) as any;
     return Engine.fromData(data);
   }
