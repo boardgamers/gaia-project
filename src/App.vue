@@ -81,12 +81,6 @@ export default interface App {
 <style lang="scss">
 @import "./stylesheets/frontend.scss";
 
-#app {
-  // font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  // -webkit-font-smoothing: antialiased;
-  // -moz-osx-font-smoothing: grayscale;
-}
-
 .notransition {
   transition: none !important;
 }

@@ -69,13 +69,11 @@ svg {
       fill: white;
     }
     .title {
-      font-family: arial;
       font-size: 10px;
       font-weight: bold;
       pointer-events: none;
     }
     .event1, .event2 {
-      font-family: arial;
       font-size: 12px;
       pointer-events: none;
     }

@@ -131,7 +131,6 @@ export default interface PlayerInfo {
 }
 
 .content {
-  font-family: arial;
   font-size: 1rem;
   color: #212529;
   pointer-events: none;

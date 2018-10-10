@@ -156,7 +156,7 @@ svg {
   }
 
 
-    text {
+  text {
     font-family: arial;
     font-size: 10px;
     fill: black;

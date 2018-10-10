@@ -83,13 +83,11 @@ svg {
       fill: white;
     }
     .title {
-      font-family: arial;
       font-size: 10px;
       font-weight: bold;
       pointer-events: none;
     }
     .content {
-      font-family: arial;
       font-size: 11px;
       pointer-events: none;
     }

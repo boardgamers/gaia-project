@@ -75,7 +75,6 @@ g.resource {
   }
 
   text {
-    font-family: arial;
     font-size: 10px;
     fill: white;
     dominant-baseline: central;

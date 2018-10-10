@@ -103,7 +103,6 @@ g {
       fill: white;
     }
     .title {
-      font-family: arial;
       font-size: 10px;
       font-weight: bold;
       pointer-events: none;
