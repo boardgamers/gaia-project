@@ -50,7 +50,7 @@
                 <transition name="fade">
                   <span v-if="replaying" class="input-group" role="group" style="width: auto">
                     <div class="input-group-prepend">
-                      <button class="btn btn-outline-secondary" @click="goto(0)">« <span class="sr-only">Previous move</span></button>
+                      <button class="btn btn-outline-secondary" @click="goto(1)">« <span class="sr-only">Previous move</span></button>
                       <button class="btn btn-outline-secondary" @click="replayPrevMove">‹ <span class="sr-only">Previous move</span></button>
                     </div>
                     <input type="text" id="replayMove" style="max-width: 60px" v-model="replayMove" @keydown.enter.prevent="goto(replayMove)" class="form-control">
