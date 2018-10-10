@@ -44,7 +44,7 @@ import { stdBuildingValue } from './buildings';
 
 const ISOLATED_DISTANCE = 3;
 
-interface EngineOptions {
+export interface EngineOptions {
   /** Allow last player to rotate sector BEFORE faction selection */
   advancedRules?: boolean;
   /** disable Federation check for available commands */
