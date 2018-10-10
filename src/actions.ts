@@ -52,5 +52,9 @@ export const boardActions =  {
   [BoardAction.Power7]: { cost: "3pw", income: ["2t"] },
   [BoardAction.Qic1]: { cost: "4q", income: ["tech"] },
   [BoardAction.Qic2]: { cost: "3q", income: [">fed"] },
-  [BoardAction.Qic3]: { cost: "2q", income: ["3vp", "pt > vp"]}
+  [BoardAction.Qic3]: { cost: "2q", income: ["3vp", "pt > vp"]},
+  [BoardAction.ShipPower1]: { cost: "5pw", income: ["range+3"]},
+  [BoardAction.ShipPower2]: { cost: "3pw", income: ["qic"]},
+  [BoardAction.ShipPower3]: { cost: "3pw", income: ["move-all"]},
+  [BoardAction.ShipQic1]: { cost: "1q", income: ["ship"]}
 };

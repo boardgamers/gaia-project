@@ -369,12 +369,19 @@ export function possibleResearchAreas(engine: Engine, player: Player, cost?: str
   const commands = [];
   const tracks = [];
   const pl = engine.player(player);
+  const fields = ResearchField.values(engine.expansions);
 
   if (pl.canPay(Reward.parse(cost))) {
+    let avFields: ResearchField[] = fields;
 
-    const minArea = Math.min(...Object.values(pl.data.research));
-
-    const avFields = (data && data.bescods) ? Object.values(ResearchField).filter( field => pl.data.research[field] === minArea) : (data && data.pos) ? [data.pos] : Object.values(ResearchField) ;
+    if (data) {
+      if (data.bescods) {
+        const minArea = Math.min(...fields.map(field => pl.data.research[field]));
+        avFields = fields.filter(field => pl.data.research[field] === minArea);
+      } else if (data.pos) {
+        avFields = [data.pos];
+      }
+    }
 
     for (const field of avFields) {
       // end of the track reached
@@ -608,7 +615,7 @@ export function possibleTechTiles(engine: Engine, player: Player) {
   const data = engine.players[player].data;
 
   //  tech tiles that player doesn't already have
-  for (const tilePos of Object.values(TechTilePos)) {
+  for (const tilePos of TechTilePos.values(engine.expansions)) {
     if (!data.tiles.techs.find(tech => tech.tile === engine.tiles.techs[tilePos].tile)) {
       tiles.push({
         tile: engine.tiles.techs[tilePos].tile,
@@ -619,7 +626,7 @@ export function possibleTechTiles(engine: Engine, player: Player) {
 
   // adv tech tiles where player has lev 4/5, free federation tokens,
   // and available std tech tiles to cover
-  for (const tilePos of Object.values(AdvTechTilePos)) {
+  for (const tilePos of AdvTechTilePos.values(engine.expansions)) {
     if (engine.tiles.techs[tilePos].count <= 0) {
       continue;
     }

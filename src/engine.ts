@@ -28,7 +28,8 @@ import {
   ScoringTile,
   FinalTile,
   Phase,
-  SubPhase
+  SubPhase,
+  Expansion
 } from './enums';
 import { CubeCoordinates } from 'hexagrid';
 import Event, {EventSource, RoundScoring} from './events';
@@ -41,6 +42,7 @@ import AvailableCommand, {
 import Reward from './reward';
 import { boardActions } from './actions';
 import { stdBuildingValue } from './buildings';
+import { isAdvanced } from './tiles/techs';
 
 const ISOLATED_DISTANCE = 3;
 
@@ -51,6 +53,8 @@ interface EngineOptions {
   noFedCheck?: boolean;
   /** Custom map given */
   map?: MapConfiguration;
+  /** Spaceship expansion */
+  spaceShips?: boolean;
 }
 
 /**
@@ -105,6 +109,10 @@ export default class Engine {
   availableCommand: AvailableCommand;
   phase: Phase = Phase.SetupInit;
   oldPhase: Phase;
+
+  get expansions() {
+    return 0 | (this.options.spaceShips ? Expansion.Spaceships : 0);
+  }
 
   round: number = Round.None;
   /** Order of players in the turn */
@@ -717,7 +725,7 @@ export default class Engine {
       }
     }
     // resets power and qic actions
-    Object.values(BoardAction).forEach(pos => {
+    BoardAction.values(this.expansions).forEach(pos => {
       this.boardActions[pos] = true;
     });
 
@@ -983,41 +991,41 @@ export default class Engine {
     this.options.map = this.map.placement;
 
     // Choose nbPlayers+3 boosters as part of the pool
-    const boosters = shuffleSeed.shuffle(Object.values(Booster), this.map.rng()).slice(0, nbPlayers + 3);
+    const boosters = shuffleSeed.shuffle(Booster.values(this.expansions), this.map.rng()).slice(0, nbPlayers + 3);
     for (const booster of boosters) {
       this.tiles.boosters[booster] = true;
     }
 
     // Shuffle tech tiles
-    const techtiles = shuffleSeed.shuffle(Object.values(TechTile), this.map.rng());
-    Object.values(TechTilePos).forEach( (pos, i) => {
+    const techtiles = shuffleSeed.shuffle(TechTile.values(this.expansions), this.map.rng());
+    TechTilePos.values(this.expansions).forEach( (pos, i) => {
       this.tiles.techs[pos] = {tile: techtiles[i], count: 4};
     });
 
     // Choose adv tech tiles as part of the pool
-    const advtechtiles = shuffleSeed.shuffle(Object.values(AdvTechTile), this.map.rng()).slice(0, 6);
-    Object.values(AdvTechTilePos).forEach( (pos, i) => {
+    const advtechtiles = shuffleSeed.shuffle(AdvTechTile.values(this.expansions), this.map.rng()).slice(0, 6);
+    AdvTechTilePos.values(this.expansions).forEach( (pos, i) => {
       this.tiles.techs[pos] = {tile: advtechtiles[i], count: 1};
     });
 
     // powerActions
-    Object.values(BoardAction).forEach( pos => {
+    BoardAction.values(this.expansions).forEach( pos => {
       this.boardActions[pos] = true;
     });
 
-    this.terraformingFederation = shuffleSeed.shuffle(Object.values(Federation).filter(fed => fed !== Federation.FederationGleens), this.map.rng())[0];
-    for (const federation of Object.values(Federation) as Federation[]) {
-      if (federation !== Federation.FederationGleens) {
-        this.tiles.federations[federation] = federation === this.terraformingFederation ? 2 : 3;
-      }
+    const feds = Federation.values();
+    this.terraformingFederation = shuffleSeed.shuffle(feds, this.map.rng())[0];
+    for (const federation of feds) {
+      this.tiles.federations[federation] = 3;
     }
+    this.tiles.federations[this.terraformingFederation] -= 1;
 
     // Choose roundScoring Tiles as part of the pool
-    const roundscoringtiles = shuffleSeed.shuffle(Object.values(ScoringTile), this.map.rng()).slice(0, 6);
+    const roundscoringtiles = shuffleSeed.shuffle(ScoringTile.values(this.expansions), this.map.rng()).slice(0, 6);
     this.tiles.scorings.round = roundscoringtiles;
 
     // Choose finalScoring Tiles as part of the pool
-    const finalscoringtiles = shuffleSeed.shuffle(Object.values(FinalTile), this.map.rng()).slice(0, 2);
+    const finalscoringtiles = shuffleSeed.shuffle(FinalTile.values(this.expansions), this.map.rng()).slice(0, 2);
     this.tiles.scorings.final = finalscoringtiles;
 
     this.players = [];
@@ -1132,19 +1140,17 @@ export default class Engine {
   [Command.ChooseTechTile](player: PlayerEnum, pos: TechTilePos | AdvTechTilePos) {
     const { tiles } = this.availableCommand.data;
     const tileAvailable = tiles.find(ta => ta.pos === pos);
-    const advanced = Object.values(AdvTechTilePos).includes(pos);
 
     assert(tileAvailable !== undefined, `Impossible to get ${pos} tile`);
 
     this.player(player).gainTechTile(tileAvailable.tile, tileAvailable.pos);
     this.tiles.techs[pos].count -= 1;
 
-    if (advanced) {
+    if (isAdvanced(pos)) {
       this.processNextMove(SubPhase.CoverTechTile);
     }
 
     this.processNextMove(SubPhase.UpgradeResearch, Object.values(ResearchField).includes(pos) ? {pos} : undefined) ;
-
   }
 
   [Command.ChooseCoverTechTile](player: PlayerEnum, tilePos: TechTilePos) {

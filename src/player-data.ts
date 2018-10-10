@@ -1,6 +1,6 @@
 import Reward from "./reward";
 import { GaiaHex } from "./gaia-hex";
-import { ResearchField, Building, Booster, TechTile, AdvTechTile, Federation, Resource, BrainstoneArea, TechTilePos, AdvTechTilePos, Command } from "./enums";
+import { ResearchField, Building, Booster, TechTile, AdvTechTile, Federation, Resource, BrainstoneArea, TechTilePos, AdvTechTilePos, Command, Expansion } from "./enums";
 import { EventEmitter } from "eventemitter3";
 import { EventSource } from './events';
 import * as fromPairs from "lodash.frompairs";
@@ -37,7 +37,7 @@ export default class PlayerData extends EventEmitter {
   research: {
     [key in ResearchField]: number
   } = {
-    terra: 0, nav: 0, int: 0, gaia: 0, eco: 0, sci: 0
+    terra: 0, nav: 0, int: 0, gaia: 0, eco: 0, sci: 0, trade: 0, ship: 0
   };
   range: number = 1;
   temporaryRange: number = 0;
@@ -406,7 +406,7 @@ export default class PlayerData extends EventEmitter {
   gainFinalVictoryPoints() {
     // Gain 4 points for research at level 3, 8 points for research at level 4
     // and 12 points for research at level 12
-    for (const research of (Object.values(ResearchField) as ResearchField[])) {
+    for (const research of ResearchField.values(Expansion.All)) {
       this.gainReward(new Reward(Math.max(this.research[research] - 2, 0) * 4, Resource.VictoryPoint), false, research);
     }
 

@@ -19,6 +19,12 @@ export default {
   [ResearchField.Science]: [
     [], ["+k"], ["+2k"], ["+3k", "3pw"], ["+4k"], ["9k"]
   ],
+  [ResearchField.TradingBonus]: [
+    ["trade >> 1k"], ["trade 1>> 2k,o"], ["trade 1>> 2k,o,3c,3pw"], ["trade 1>> 2k,2o,4c,4pw,q", "3pw"], ["trade 2>> 2k,2o,4c,4pw,q"], ["trade 3>> 2k,2o,4c,4pw,q"]
+  ],
+  [ResearchField.TradingVolume]: [
+    [], ["ship-range"], ["ship-move"], ["ship-range", "3pw"], ["ship-move", "1> up-nav,up-int"], ["ship-range"]
+  ]
 };
 
 export function lastTile(field: ResearchField) {

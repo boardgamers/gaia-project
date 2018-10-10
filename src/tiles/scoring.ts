@@ -10,7 +10,9 @@ const roundScorings =  {
   [ScoringTile.Score7]: ["PA >> 5vp"],
   [ScoringTile.Score8]: ["ts >> 3vp"],
   [ScoringTile.Score9]: ["mg >> 3vp"],
-  [ScoringTile.Score10]: ["PA >> 5vp"]
+  [ScoringTile.Score10]: ["PA >> 5vp"],
+  [ScoringTile.Ship1]: ["trade >> 4vp"],
+  [ScoringTile.Ship2]: ["trade >> 3vp"],
 };
 
 const finalScorings =  {
@@ -20,6 +22,8 @@ const finalScorings =  {
   [FinalTile.Gaia]: { condition: Condition.Gaia, neutralPlayer: 4 },
   [FinalTile.Sector]: { condition: Condition.Sector, neutralPlayer: 6 },
   [FinalTile.Satellite]: { condition: Condition.Satellite, neutralPlayer: 8 },
+  [FinalTile.Culture]: { condition: Condition.Culture, neutralPlayer: 20 },
+  [FinalTile.TradeTokens]: { condition: Condition.Trade, neutralPlayer: 8 }
 };
 
 export {roundScorings, finalScorings};

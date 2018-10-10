@@ -24,7 +24,7 @@ import { FederationInfo, isOutclassedBy } from './federation';
 import federationTiles, { isGreen } from "./tiles/federations";
 import { EventEmitter } from "eventemitter3";
 import { finalScorings } from './tiles/scoring';
-import techs from './tiles/techs';
+import techs, { isAdvanced } from './tiles/techs';
 import * as assert from "assert";
 
 const TERRAFORMING_COST = 3;
@@ -447,11 +447,12 @@ export default class Player extends EventEmitter {
   }
 
   gainTechTile(tile: TechTile | AdvTechTile, pos: TechTilePos | AdvTechTilePos) {
-    if (Object.values(AdvTechTilePos).includes(pos)) {
+    const advanced = isAdvanced(pos);
+    if (advanced) {
       this.data.removeGreenFederation();
     }
     this.data.tiles.techs.push({tile, pos, enabled: true});
-    this.loadEvents(Event.parse(techs[tile], Object.values(TechTilePos).includes(pos) ? `tech-${pos}` as TechPos : pos as AdvTechTilePos));
+    this.loadEvents(Event.parse(techs[tile], !advanced ? `tech-${pos}` as TechPos : pos as AdvTechTilePos));
 
     // resets federationCache if Special PA->4pw
     if ( tile === TechTile.Tech3  ) { this.federationCache = null; }

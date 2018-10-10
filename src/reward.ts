@@ -2,6 +2,8 @@ import { Resource } from "./enums";
 import * as assert from "assert";
 import * as groupBy from "lodash.groupby";
 
+const resources = new Set(Object.values(Resource));
+
 export default class Reward {
   count: number;
   type: Resource;
@@ -23,7 +25,7 @@ export default class Reward {
       }
     }
 
-    if (type === Resource.None || !Object.values(Resource).includes(type)) {
+    if (type === Resource.None || !resources.has(type)) {
       this.count = 0;
       this.type = Resource.None;
     } else {
