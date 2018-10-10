@@ -310,7 +310,7 @@ export default class Game extends Vue {
    * Check if we need to refresh the whole game
    */
   refreshStatus() {
-    if (this.ended) {
+    if (this.ended || this.replaying) {
       return;
     }
 
