@@ -1,10 +1,10 @@
 <template>
   <div>
-    <div :class="['row', 'justify-content-center', data.players.length > 2 ? 'medium-map' : 'small-map']" v-if="hasMap">
+    <div :class="['row', 'no-gutters', 'justify-content-center', data.players.length > 2 ? 'medium-map' : 'small-map']" v-if="hasMap">
       <SpaceMap :class="['mb-1', 'space-map']" />
-      <svg class="scoring-research-board" viewBox="0 0 500 450">
-        <ResearchBoard height="450" width="380" x="0"/>
-        <ScoringBoard class="ml-4" height="450" width="90" x="405" />
+      <svg class="scoring-research-board" viewBox="0 0 475 450">
+        <ResearchBoard height="450" width="368" x="0"/>
+        <ScoringBoard class="ml-4" height="450" width="90" x="385" />
       </svg>
     </div>
     <div id="errors"></div>
@@ -50,7 +50,7 @@
                 <transition name="fade">
                   <span v-if="replaying" class="input-group" role="group" style="width: auto">
                     <div class="input-group-prepend">
-                      <button class="btn btn-outline-secondary" @click="goto(1)">« <span class="sr-only">Previous move</span></button>
+                      <button class="btn btn-outline-secondary" @click="goto(0)">« <span class="sr-only">Previous move</span></button>
                       <button class="btn btn-outline-secondary" @click="replayPrevMove">‹ <span class="sr-only">Previous move</span></button>
                     </div>
                     <input type="text" id="replayMove" style="max-width: 60px" v-model="replayMove" @keydown.enter.prevent="goto(replayMove)" class="form-control">
@@ -244,7 +244,8 @@ export default class Game extends Vue {
     }
  
     try {
-      const data = await this.api.replay(moveList, this.replaying ? this.backupEngine.options : this.data.options);
+      // console.log(JSON.stringify(this.backupEngine.options));
+      const data = await this.api.replay(moveList, this.backupEngine.options);
       this.handleData(data, !goToLastMove);
       window.sessionStorage.setItem('moves', JSON.stringify(data.moveHistory));
     } catch(err) {
