@@ -89,7 +89,7 @@ export default class SpaceMap {
     this.seed = seed;
 
     // Keep tests valid even under new map generation rules
-    const germanRules = !["randomSeed", "12", "9876", "yellow-paint-8951", "green-jeans-8458", "Fastgame01"].includes(seed);
+    const germanRules = !["Gianluigi-Buffon", "randomSeed", "12", "9876", "yellow-paint-8951", "green-jeans-8458", "Fastgame01"].includes(seed);
     do {
       this.generate(mirror);
     } while (!this.isValid(germanRules));
@@ -99,7 +99,7 @@ export default class SpaceMap {
     const centers = conf.map.length === 7 ? smallCenters : bigCenters;
 
     // Legacy map generation, to keep old tests valid
-    const oldGen = ["randomSeed", "12", "9876", "yellow-paint-8951", "green-jeans-8458", "Fastgame01", "zadbd", "bosco-marcuzzo3", "Alex-Del-Pieroooooo", "SGAMBATA", "djfjjv4k", "randomSeed2", "randomseed", "polite-food-8474", "green-jeans-8458", "waiting-fabs-1", "curious-stay-2150", "Three"].includes(this.seed);
+    const oldGen = ["Gianluigi-Buffon", "randomSeed", "12", "9876", "yellow-paint-8951", "green-jeans-8458", "Fastgame01", "zadbd", "bosco-marcuzzo3", "Alex-Del-Pieroooooo", "SGAMBATA", "djfjjv4k", "randomSeed2", "randomseed", "polite-food-8474", "green-jeans-8458", "waiting-fabs-1", "curious-stay-2150", "Three"].includes(this.seed);
 
     const [hexagon, ...hexagons] = conf.map.map((val, i) => Sector.create(((conf.mirror || oldGen) ? rSectors : sectors)[val.sector].map, val.sector, val.center || centers[i]).rotateRight(val.rotation, val.center || centers[i]));
     this.grid = hexagon.merge(...hexagons);
