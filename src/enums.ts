@@ -218,19 +218,19 @@ export enum Booster {
   Booster8 = "booster8",
   Booster9 = "booster9",
   Booster10 = "booster10",
-  Ship1 = "ship1",
-  Ship2 = "ship2",
-  Ship3 = "ship3"
+  Ship1 = "booster-ship1",
+  Ship2 = "booster-ship2",
+  Ship3 = "booster-ship3"
 }
 
 export namespace Booster {
   export function values(expansions: number = 0): Booster[] {
     return Object.values(Booster).filter((val: Booster) => {
       if (typeof val !== "string") {return; }
-      if (val.startsWith('booster')) {
+      if (/^booster[0-9]/.test(val)) {
         return true;
       }
-      if (expansions & Expansion.Spaceships && val.startsWith('ship')) {
+      if (expansions & Expansion.Spaceships && val.startsWith('booster-ship')) {
         return true;
       }
     });
@@ -248,20 +248,20 @@ export enum TechTile {
   Tech8 = "tech8",
   Tech9 = "tech9",
   /** This techtile is one every player starts with. Not included in the shuffles */
-  Ship0 = "ship0",
-  Ship1 = "ship1",
-  Ship2 = "ship2",
-  Ship3 = "ship3"
+  Ship0 = "tech-ship0",
+  Ship1 = "tech-ship1",
+  Ship2 = "tech-ship2",
+  Ship3 = "tech-ship3"
 }
 
 export namespace TechTile {
   export function values(expansions: number = 0): TechTile[] {
     return Object.values(TechTile).filter((val: TechTile) => {
       if (typeof val !== "string") {return; }
-      if (val.startsWith('tech')) {
+      if (/^tech[0-9]/.test(val)) {
         return true;
       }
-      if (expansions & Expansion.Spaceships && val.startsWith('ship') && val !== TechTile.Ship0) {
+      if (expansions & Expansion.Spaceships && val.startsWith('tech-ship') && val !== TechTile.Ship0) {
         return true;
       }
     });
@@ -416,18 +416,18 @@ export enum ScoringTile {
   Score8= "score8",
   Score9= "score9",
   Score10= "score10",
-  Ship1 = "ship1",
-  Ship2 = "ship2"
+  Ship1 = "score-ship1",
+  Ship2 = "score-ship2"
 }
 
 export namespace ScoringTile {
   export function values(expansions: number = 0): ScoringTile[] {
     return Object.values(ScoringTile).filter((val: ScoringTile) => {
       if (typeof val !== "string") {return; }
-      if (val.startsWith('score')) {
+      if (/^score[0-9]/.test(val)) {
         return true;
       }
-      if (expansions & Expansion.Spaceships && val.startsWith('ship')) {
+      if (expansions & Expansion.Spaceships && val.startsWith('score-ship')) {
         return true;
       }
     });
