@@ -46,7 +46,7 @@ import { isAdvanced } from './tiles/techs';
 
 const ISOLATED_DISTANCE = 3;
 
-interface EngineOptions {
+export interface EngineOptions {
   /** Allow last player to rotate sector BEFORE faction selection */
   advancedRules?: boolean;
   /** disable Federation check for available commands */
@@ -142,7 +142,16 @@ export default class Engine {
 
   constructor(moves: string[] = [], options: EngineOptions = {}) {
     this.options = options;
+    this.sanitizeOptions();
     this.loadMoves(moves);
+  }
+
+  /** Fix old options passed. To remove when legacy data is no more in database */
+  sanitizeOptions() {
+    if (get(this.options, "map.map")) {
+      this.options.map.sectors = get(this.options, "map.map");
+      set(this.options, "map.map", undefined);
+    }
   }
 
   loadMoves(_moves: string[]) {
@@ -396,6 +405,8 @@ export default class Engine {
 
     Object.assign(engine, omit(data, "map", "players"));
 
+    engine.sanitizeOptions();
+
     if (data.map) {
       engine.map = SpaceMap.fromData(data.map);
       engine.map.nbPlayers = data.players.length;
@@ -416,11 +427,11 @@ export default class Engine {
     return engine;
   }
 
-  static slowMotion([first, ...moves]: string[]): Engine {
+  static slowMotion([first, ...moves]: string[], options: EngineOptions = {}): Engine {
     if (!first) {
-      return new Engine();
+      return new Engine([], options);
     }
-    let state = JSON.parse(JSON.stringify(new Engine([first])));
+    let state = JSON.parse(JSON.stringify(new Engine([first], options)));
 
     for (const move of moves) {
       const tempEngine = Engine.fromData(state);
@@ -985,7 +996,7 @@ export default class Engine {
 
     this.map = new SpaceMap(nbPlayers, seed, get(this.options, "map.mirror", false));
 
-    if (get(this.options, "map.map")) {
+    if (get(this.options, "map.sectors")) {
       this.map.load(this.options.map);
     }
     this.options.map = this.map.placement;
@@ -1087,6 +1098,7 @@ export default class Engine {
       }
     }
 
+    console.log(this.map.grid.getS(location));
     assert(false, `Impossible to execute build command at ${location}`);
   }
 
