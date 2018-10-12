@@ -48,5 +48,21 @@ export const descriptions = {
     "To start a Gaia project, you must move four power tokens to your Gaia area. Immediately gain one of your Gaiaformers.",
     "To start a Gaia project, you must move three power tokens to your Gaia area. Immediately gain one of your Gaiaformers.",
     "To start a Gaia project, you must move three power tokens to your Gaia area. Immediately gain 4 VP and 1 additional VP for each Gaia Planet with one of your structures on it (you do not gain VP for Gaiaformers on Gaia Planets)."
+  ],
+  [ResearchField.TradingBonus]: [
+    "Each time you deliver a trade, gain one knowledge",
+    "Each time you deliver a trade, gain two knowledge or one ore",
+    "Each time you deliver a trade, gain two knowledge, one ore, three coins or charge three power",
+    "Each time you deliver a trade, gain two knowledge, two ore, four coins or charge four power",
+    "Each time you deliver a trade, pick two of two knowledge, two ore, four coins and charging four power",
+    "Each time you deliver a trade, pick three of two knowledge, two ore, four coins and charging four power",
+  ],
+  [ResearchField.TradingVolume]: [
+    "1 Spaceship moves at current Navigation",
+    "1 Spaceship moves +1 above Navigation",
+    "2 Spaceships move +1 above Navigation",
+    "2 Spaceships move +2 above Navigation",
+    "3 Spaceships move +2 above Navigation AND one free advance on nav or int track",
+    "3 Spaceships move +3 above Navigation AND a special federation token with no vp that gives a 4th ship: Advanced Spaceship",
   ]
 };

@@ -3,8 +3,8 @@
     <div :class="['row', 'no-gutters', 'justify-content-center', data.players.length > 2 ? 'medium-map' : 'small-map']" v-if="hasMap">
       <SpaceMap :class="['mb-1', 'space-map']" />
       <svg class="scoring-research-board" viewBox="0 0 475 450">
-        <ResearchBoard height="450" width="368" x="0"/>
-        <ScoringBoard class="ml-4" height="450" width="90" x="385" />
+        <ResearchBoard :height="450" ref="researchBoard"/>
+        <ScoringBoard class="ml-4" height="450" width="90" :x="scoringX" />
       </svg>
     </div>
     <div id="errors"></div>
@@ -87,6 +87,7 @@ import Pool from './Pool.vue';
 import Engine,{ Command,Phase,factions, Player, EngineOptions } from '@gaia-project/engine';
 import { GameApi, EngineData } from '../api';
 import {handleError} from '../utils';
+import { Expansion } from '@gaia-project/engine/src/enums';
 
 @Component<Game>({
   computed: {
@@ -95,6 +96,9 @@ import {handleError} from '../utils';
     },
     ended() {
       return this.data.phase === Phase.EndGame;
+    },
+    scoringX() {
+      return this.data.expansions ? 505 : 385;
     },
     orderedPlayers() {
       const data = this.data;
