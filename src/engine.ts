@@ -1098,7 +1098,7 @@ export default class Engine {
       }
     }
 
-    console.log(this.map.grid.getS(location));
+    // console.log(this.map.grid.getS(location));
     assert(false, `Impossible to execute build command at ${location}`);
   }
 
