@@ -1014,7 +1014,7 @@ export default class Engine {
     });
 
     // Choose adv tech tiles as part of the pool
-    const advtechtiles = shuffleSeed.shuffle(AdvTechTile.values(this.expansions), this.map.rng()).slice(0, 6);
+    const advtechtiles = shuffleSeed.shuffle(AdvTechTile.values(this.expansions), this.map.rng());
     AdvTechTilePos.values(this.expansions).forEach( (pos, i) => {
       this.tiles.techs[pos] = {tile: advtechtiles[i], count: 1};
     });
