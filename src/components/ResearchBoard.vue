@@ -6,6 +6,7 @@
       <TechTile pos="free1" x="70" y="360" />
       <TechTile pos="free2" x="150" y="360" />
       <TechTile pos="free3" x="230" y="360" />
+      <TechTile pos="free4" v-if="expansions" x="310" y="360" />
     </g>
     <BoardAction :scale="17" :transform="`translate(${18 + 36*Math.min(i, 12)}, ${i == 13 ? 382 : 420})`" v-for="(action, i) in actions" :key="action" :action="action" />
   </svg>

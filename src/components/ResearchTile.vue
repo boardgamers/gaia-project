@@ -121,10 +121,16 @@ export default interface ResearchTile {
 
 svg {
   .researchTile {
-    fill: blue;
+    fill: none;
     stroke: #444;
     stroke-width: 1;
 
+    &.trade {
+      fill: orange;
+    }
+    &.ship {
+      fill: gray;
+    }
     &.eco {
       fill: #ffd700;
     }

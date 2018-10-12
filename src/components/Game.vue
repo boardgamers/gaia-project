@@ -2,7 +2,7 @@
   <div>
     <div :class="['row', 'no-gutters', 'justify-content-center', data.players.length > 2 ? 'medium-map' : 'small-map']" v-if="hasMap">
       <SpaceMap :class="['mb-1', 'space-map']" />
-      <svg class="scoring-research-board" viewBox="0 0 475 450">
+      <svg class="scoring-research-board" :viewBox="`0 0 ${scoringX + 90} 450`">
         <ResearchBoard :height="450" ref="researchBoard"/>
         <ScoringBoard class="ml-4" height="450" width="90" :x="scoringX" />
       </svg>
