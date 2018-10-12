@@ -7,7 +7,7 @@
           {{numTiles}}
       </text>
       <text>
-        <tspan x="0" v-for="(line, i) in income" :dy="`${i*1.5 - (income.length - 1) / 2.2}em`"> 
+        <tspan x="0" v-for="(line, i) in income" :key="i" :dy="`${i*1.5 - (income.length - 1) / 2.2}em`"> 
           {{line.replace(/ /g, '')}}
         </tspan>
       </text>
@@ -33,7 +33,7 @@ import { eventDesc } from '../data/event';
     },
 
     disabled() {
-      return this.used || this.federation === Federation.Federation1;
+      return this.used || this.federation === Federation.Fed1;
     }
   }
 })

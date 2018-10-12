@@ -84,7 +84,7 @@ import ResearchBoard from './ResearchBoard.vue';
 import ScoringBoard from './ScoringBoard.vue';
 import AdvancedLog from './AdvancedLog.vue';
 import Pool from './Pool.vue';
-import Engine,{ Command,Phase,factions, Player } from '@gaia-project/engine';
+import Engine,{ Command,Phase,factions, Player, EngineOptions } from '@gaia-project/engine';
 import { GameApi, EngineData } from '../api';
 import {handleError} from '../utils';
 
@@ -249,7 +249,7 @@ export default class Game extends Vue {
  
     try {
       // console.log(JSON.stringify(this.backupEngine.options));
-      const options = this.backupEngine ? this.backupEngine.options : {};
+      const options: EngineOptions = this.backupEngine ? this.backupEngine.options : {spaceShips: true};
       const data = await this.api.replay(moveList, options);
       this.handleData(data, !goToLastMove);
       window.sessionStorage.setItem('moves', JSON.stringify(data.moveHistory));
