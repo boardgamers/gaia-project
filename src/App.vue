@@ -15,7 +15,7 @@
           </div>
         </form>
       </div>
-      <Game :api="api" :gameId="gameId" :auth="auth" v-else />
+      <Game :api="api" :gameId="gameId" :auth="auth" :developmentMode="true" v-else />
     </main>
   </div>
 </template>
