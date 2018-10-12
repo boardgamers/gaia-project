@@ -384,21 +384,21 @@ export enum BoardAction {
   Qic1 = "qic1",
   Qic2 = "qic2",
   Qic3 = "qic3",
-  ShipPower1 = "ship-power1",
-  ShipPower2 = "ship-power2",
-  ShipPower3 = "ship-power3",
-  ShipQic1 = "ship-qic1"
+  ShipPower1 = "power-ship1",
+  ShipPower2 = "power-ship2",
+  ShipPower3 = "power-ship3",
+  ShipQic1 = "qic-ship1"
 }
 
 export namespace BoardAction {
   export function values(expansions= 0) {
     return Object.values(BoardAction).filter((val: BoardAction) => {
       if (typeof val !== "string") {return; }
-      if (val.startsWith("qic") || val.startsWith("power")) {
+      if (/^qic[0-9]/.test(val) || /^power[0-9]/.test(val)) {
         return true;
       }
 
-      if (expansions & Expansion.Spaceships && val.startsWith("ship")) {
+      if (expansions & Expansion.Spaceships && val.includes("ship")) {
         return true;
       }
     });
