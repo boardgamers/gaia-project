@@ -12,6 +12,10 @@ const conditionsCount = {
   [Condition.Structure]: "colonized planet",
   [Condition.StructureFed]: "colonized planet in a federation",
   [Condition.Satellite]: "satellite or space station",
+  [Condition.HighestResearchLevel]: "level of your highest research track",
+  [Condition.Trade]: "trade token",
+  [Condition.AdvanceResearch]: "level reached in any research track",
+  [Condition.PlanetsWithTradeToken]: "planet with a trade token"
 }
 
 const conditionsTrigger = {
@@ -22,7 +26,8 @@ const conditionsTrigger = {
   [Condition.Federation]: "forming a federation",
   [Condition.MineOnGaia]: "building a mine on a gaia planet",
   [Condition.AdvanceResearch]: "advancing a level in research",
-  [Condition.TerraformStep]: "terraforming a planet one step"
+  [Condition.TerraformStep]: "terraforming a planet one step",
+  [Condition.Trade]: "delivering trade"
 }
 
 const operators = {
@@ -41,6 +46,7 @@ function rewardDesc(rewards: Reward[]) {
       case Resource.TemporaryStep: return `${reward.count} temporary step${reward.count > 1 ? 's' : ''}`;
       case Resource.TemporaryRange: return `${reward.count} temporary range`;
       case Resource.RescoreFederation: return `the rewards from one of your federation tokens`;
+      case Resource.Range: return `${reward.count} range for the duration of the round`
       default: return reward.toString();
     }
   }).join(", ");
