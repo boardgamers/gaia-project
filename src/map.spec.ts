@@ -1,4 +1,4 @@
-import SpaceMap from "./map";
+import SpaceMap, { MapConfiguration } from "./map";
 import Engine from './engine';
 import { Hex } from "hexagrid";
 import { expect } from "chai";
@@ -34,8 +34,8 @@ describe("Map", () => {
   });
 
   it("should load from a configuration", () => {
-    const conf = {
-      map: [
+    const conf: MapConfiguration = {
+      sectors: [
         { sector: '3', rotation: 5 },
         { sector: '7B', rotation: 0 },
         { sector: '2', rotation: 3 },
@@ -58,8 +58,8 @@ describe("Map", () => {
   });
 
   it("should load from a configuration in reverse", () => {
-    const conf = {
-      map: [
+    const conf: MapConfiguration = {
+      sectors: [
         {sector: "4", rotation: 3},
         {sector: "3", rotation: 5},
         {sector: "7B", rotation: 3},

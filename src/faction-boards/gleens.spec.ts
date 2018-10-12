@@ -75,7 +75,7 @@ describe("gleens", () => {
     expect(engine.player(Player.Player1).data.victoryPoints).to.equal(vp + 2);
   });
 
-  it.only("should only grant two vps when building a mine on a gaia planet on the website", () => {
+  it("should only grant two vps when building a mine on a gaia planet on the website", () => {
     const moves = parseMoves(`
       init 3 timid-front-3625
       p1 faction lantids
