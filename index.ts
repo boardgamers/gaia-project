@@ -11,7 +11,7 @@ import SpaceMap from './src/map';
 import researchTracks from './src/research-tracks';
 
 export {Condition, Planet, Resource, Operator, ResearchField, Faction, Command, Building, Booster, Federation, BoardAction} from "./src/enums";
-export {TechTile, AdvTechTile, ScoringTile, FinalTile, TechTilePos, AdvTechTilePos, Phase, Round, Player as PlayerEnum} from "./src/enums";
+export {TechTile, AdvTechTile, ScoringTile, FinalTile, TechTilePos, AdvTechTilePos, Phase, Round, Player as PlayerEnum, Expansion} from "./src/enums";
 export {BrainstoneArea} from './src/enums';
 export {GaiaHexData, GaiaHex} from "./src/gaia-hex";
 export {terraformingStepsRequired} from './src/planets';
