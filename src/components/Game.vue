@@ -61,7 +61,8 @@
                     </div>
                   </span>
                 </transition>
-                <input type="button" class="btn btn-default ml-auto" :value="!replaying ? 'Replay Mode' : 'Leave Replay'" @click="toggleReplayMode" >
+                <input type="button" class="btn btn-secondary ml-auto" :value="!replaying ? 'Replay Mode' : 'Leave Replay'" @click="toggleReplayMode" >
+                <input type="button" class="btn btn-primary ml-2" v-if="developmentMode" :disabled="replaying" value="Execute" @click="replay(true)" >
               </div>
             </div> 
           </form>  
@@ -198,6 +199,9 @@ export default class Game extends Vue {
 
   @Prop()
   auth: string;
+
+  @Prop({default: false})
+  developmentMode: boolean;
 
   get numberOfMoves() {
     return this.moveList.length === 0 ? 0 : this.moveList.split("\n").length;
