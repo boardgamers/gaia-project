@@ -100,6 +100,7 @@ export enum Condition {
   ResearchLab = "lab",
   PlanetaryInstituteOrAcademy = "PA",
   Federation = "fed",
+  Trade = "trade",
 
   // count only
   Gaia = "g",
@@ -113,13 +114,13 @@ export enum Condition {
   Culture = "culture",
   ResearchLevels = "a",
   HighestResearchLevel = "L",
+  PlanetsWithTradeToken = "import",
 
   // trigger only
   MineOnGaia = "mg",
   AdvanceResearch = "a",
   TerraformStep = "step",
-  GaiaFormer = "gf",
-  Trade = "trade"
+  GaiaFormer = "gf"
 }
 
 export namespace Condition {
