@@ -184,6 +184,8 @@ export enum Command {
   Action = "action",
   Special = "special",
   PlaceLostPlanet  = "lostPlanet",
+  PlaceShip = "ship",
+  MoveShip = "move",
   FormFederation = "federation",
   EndTurn = "endturn",
   PISwap = "swap-PI"
@@ -471,6 +473,7 @@ export enum Phase {
   SetupFaction = "setupFaction",
   SetupBuilding = "setupBuilding",
   SetupBooster = "setupBooster",
+  SetupShip = "setupShip",
   BeginGame = "beginGame",
   RoundStart = "roundStart",
   RoundIncome = "roundIncome",
@@ -494,6 +497,8 @@ export enum SubPhase {
   BuildMine = "buildMine",
   BuildMineOrGaiaFormer = "buildMineOrGaiaFormer",
   SpaceStation = "spaceStation",
+  PlaceShip = "placeShip",
+  MoveShip = "moveShip",
   PISwap = "swap-PI",
   DowngradeLab = "down-lab"
 }

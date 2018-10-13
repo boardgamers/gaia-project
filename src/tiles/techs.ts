@@ -32,7 +32,7 @@ export default  {
   [AdvTechTile.Ship1]: ["a > vp"],
   [AdvTechTile.Ship2]: ["trade > vp"],
   [AdvTechTile.Ship3]: ["4up-0"],
-  [AdvTechTile.Ship4]: [],
+  [AdvTechTile.Ship4]: ["2ship+4"], // Place two ships, and move them at +4 range
   [AdvTechTile.Ship5]: ["=> 5vp"],
   [AdvTechTile.Ship6]: ["=> q,o,2turn"],
 };

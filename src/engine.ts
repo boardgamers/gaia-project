@@ -255,6 +255,11 @@ export default class Engine {
     this.players.push(player);
 
     player.data.on(`gain-${Resource.TechTile}`, () => this.processNextMove(SubPhase.ChooseTechTile));
+    player.data.on(`gain-${Resource.SpaceShip}`, (count: number) => {
+      for (let i = 0; i < count; i++) {
+        this.processNextMove(SubPhase.PlaceShip);
+      }
+    });
     player.data.on(`gain-${Resource.TemporaryStep}`, () => this.processNextMove(SubPhase.BuildMine));
     player.data.on(`gain-${Resource.TemporaryRange}`, () => this.processNextMove(SubPhase.BuildMineOrGaiaFormer));
     player.data.on(`gain-${Resource.RescoreFederation}`, () => this.processNextMove(SubPhase.RescoreFederationTile));
@@ -668,6 +673,12 @@ export default class Engine {
     this.moveToNextPlayer(this.turnOrder, {loop: false});
   }
 
+  beginSetupShipPhase() {
+    this.changePhase(Phase.SetupShip);
+    this.turnOrder = this.players.map((pl, i) => i as PlayerEnum);
+    this.moveToNextPlayer(this.turnOrder, {loop: false});
+  }
+
   beginRoundStartPhase() {
     this.round += 1;
     this.advancedLog.push({round: this.round});
@@ -912,6 +923,18 @@ export default class Engine {
   }
 
   [Phase.SetupBuilding](move: string) {
+    this.loadTurnMoves(move, {split: false, processFirst: true});
+
+    if (!this.moveToNextPlayer(this.turnOrder, {loop: false})) {
+      if (this.expansions & Expansion.Spaceships) {
+        this.beginSetupShipPhase();
+      } else {
+        this.beginSetupBoosterPhase();
+      }
+    }
+  }
+
+  [Phase.SetupShip](move: string) {
     this.loadTurnMoves(move, {split: false, processFirst: true});
 
     if (!this.moveToNextPlayer(this.turnOrder, {loop: false})) {
@@ -1205,13 +1228,21 @@ export default class Engine {
 
     assert(data, `Impossible to execute build command at ${location}`);
 
-    const { q, r, s } = CubeCoordinates.parse(location);
-    const hex = this.map.grid.get({q, r});
+    const hex = this.map.grid.get(CubeCoordinates.parse(location));
     hex.data.planet = Planet.Lost;
 
     this.player(player).build(Building.Mine, hex, Reward.parse(data.cost), this.map, 0);
 
     this.leechSources.unshift({player, coordinates: location});
+  }
+
+  [Command.PlaceShip](player: PlayerEnum, location: string) {
+    const { locations } = this.availableCommand.data;
+
+    assert(locations.find(loc => loc.coordinates === location), `Impossible to place ship at ${location}`);
+
+    const hex = this.map.grid.get(CubeCoordinates.parse(location));
+    this.player(player).placeShip(hex);
   }
 
   [Command.Spend](player: PlayerEnum, costS: string, _for: "for", incomeS: string) {

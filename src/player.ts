@@ -426,6 +426,11 @@ export default class Player extends EventEmitter {
     this.emit(`build-${building}`, hex);
   }
 
+  placeShip(hex: GaiaHex) {
+    hex.addShip(this.player);
+    this.data.ships += 1;
+  }
+
   // Not to confuse with the end of a round
   endTurn() {
     // reset temporary benefits

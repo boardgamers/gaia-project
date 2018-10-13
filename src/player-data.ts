@@ -9,6 +9,7 @@ import * as cloneDeep from 'lodash.clonedeep';
 const MAX_ORE = 15;
 const MAX_CREDIT = 30;
 const MAX_KNOWLEDGE = 15;
+const MAX_SHIP = 3;
 
 export default class PlayerData extends EventEmitter {
   victoryPoints: number = 10;
@@ -16,6 +17,7 @@ export default class PlayerData extends EventEmitter {
   ores: number = 0;
   qics: number = 0;
   knowledge: number = 0;
+  ships: number = 0;
   power: {
     area1: number,
     area2: number,
@@ -159,6 +161,7 @@ export default class PlayerData extends EventEmitter {
       case Resource.Ore: this.ores = Math.min(MAX_ORE, this.ores + count); break;
       case Resource.Credit: this.credits = Math.min(MAX_CREDIT, this.credits + count); break;
       case Resource.Knowledge: this.knowledge = Math.min(MAX_KNOWLEDGE, this.knowledge + count); break;
+      case Resource.SpaceShip: this.ships = Math.min(MAX_SHIP, this.ships + count); break;
       case Resource.VictoryPoint: this.victoryPoints += count; break;
       case Resource.Qic: this.qics += count; break;
       case Resource.GainToken: count > 0 ?  this.power.area1 += count : this.discardPower(-count); break;

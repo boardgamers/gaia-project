@@ -39,6 +39,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
     case SubPhase.PISwap: return possiblePISwaps(engine, player);
     case SubPhase.DowngradeLab: return possibleLabDowngrades(engine, player);
     case SubPhase.BrainStone: return [{name: Command.BrainStone, player, data}];
+    case SubPhase.PlaceShip: return possibleShips(engine, player);
     case SubPhase.BeforeMove: {
       return [
         ...possibleBuildings(engine, player),
@@ -56,6 +57,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
   switch (engine.phase) {
     case Phase.SetupInit: return [{ name: Command.Init }];
     case Phase.SetupBoard: return [{name: Command.RotateSectors, player}];
+    case Phase.SetupShip: return possibleShips(engine, player);
     case Phase.SetupFaction: return [
       {
         name: Command.ChooseFaction,
@@ -181,6 +183,27 @@ export function possibleBuildings(engine: Engine, player: Player) {
       name: Command.Build,
       player,
       data: { buildings }
+    }];
+  }
+
+  return [];
+}
+
+export function possibleShips(engine: Engine, player: Player) {
+  const locations = [];
+  const pl = engine.player(player);
+
+  for (const hex of pl.data.occupied) {
+    if (hex.buildingOf(player) === Building.Mine || pl.faction === Faction.Ivits && hex.buildingOf(player) === Building.PlanetaryInstitute) {
+      locations.push({coordinates: hex.toString()});
+    }
+  }
+
+  if (locations.length > 0) {
+    return [{
+      name: Command.PlaceShip,
+      player,
+      data: {locations}
     }];
   }
 

@@ -10,6 +10,7 @@ export interface GaiaHexData {
   player?: Player;
   /** List of players who have a federation occupying this square */
   federations?: Player[];
+  ships?: Player[];
   /** Additional mine of lantids */
   additionalMine?: Player;
 }
@@ -86,6 +87,22 @@ export class GaiaHex extends Hex<GaiaHexData> {
       this.data.federations.push(player);
     } else {
       this.data.federations = [player];
+    }
+  }
+
+  addShip(player: Player) {
+    if (this.data.ships) {
+      this.data.ships = [player];
+    } else {
+      this.data.ships = [player];
+    }
+  }
+
+  removeShip(player: Player) {
+    if (this.data.ships.length === 1) {
+      this.data.ships = undefined;
+    } else {
+      this.data.ships.splice(this.data.ships.indexOf(player), 1);
     }
   }
 }
