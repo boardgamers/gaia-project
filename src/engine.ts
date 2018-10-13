@@ -548,7 +548,7 @@ export default class Engine {
     const move = this.parseMove(this.turnMoves.shift());
 
     this.checkCommand(move.command);
-    (this[move.command] as any)(this.playerToMove, ...move.args);
+    (this[move.command === Command.MoveShip ? "_move" : move.command] as any)(this.playerToMove, ...move.args);
 
     return move;
   }
@@ -1272,6 +1272,23 @@ export default class Engine {
 
     const hex = this.map.grid.get(CubeCoordinates.parse(location));
     this.player(player).placeShip(hex);
+  }
+
+  _move(player: PlayerEnum, ship: string, dest: string) {
+    const pl = this.player(player);
+    const { ships, range, costs } = this.availableCommand.data;
+
+    assert(ships.find(loc => loc.coordinates === (ship)), `There is no movable ship at ${ship}`);
+
+    const distance = this.map.distance(CubeCoordinates.parse(ship), CubeCoordinates.parse(dest));
+
+    assert(range >= distance, 'The ship cannot move that far');
+
+    const cost = costs[distance] || "~";
+    pl.payCosts(Reward.parse(cost), Command.MoveShip);
+
+    pl.removeShip(this.map.grid.getS(ship));
+    pl.placeShip(this.map.grid.getS(dest));
   }
 
   [Command.Spend](player: PlayerEnum, costS: string, _for: "for", incomeS: string) {

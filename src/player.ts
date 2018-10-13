@@ -444,6 +444,11 @@ export default class Player extends EventEmitter {
     this.data.shipLocations.push(hex.toString());
   }
 
+  removeShip(hex: GaiaHex) {
+    hex.removeShip(this.player);
+    this.data.shipLocations.splice(this.data.shipLocations.indexOf(hex.toString()), 1);
+  }
+
   resetTemporaryVariables() {
     // reset temporary benefits
     this.data.temporaryRange = 0;

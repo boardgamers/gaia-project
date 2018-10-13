@@ -2,7 +2,6 @@ import { Command, Faction, Building, Planet, Booster, Resource, Player, Operator
 import Engine from './engine';
 import * as range from 'lodash.range';
 import * as difference from 'lodash.difference';
-import * as keyBy from 'lodash.keyby';
 import factions from './factions';
 import { upgradedBuildings } from './buildings';
 import Reward from './reward';
@@ -214,7 +213,12 @@ export function possibleShips(engine: Engine, player: Player) {
 
 export function possibleShipMovements(engine: Engine, player: Player) {
   const baseRange = engine.player(player).shipMovementRange;
-  const maxRange = engine.player(player).shipMovementRange + engine.player(player).data.spendablePowerTokens();
+  const maxRange = engine.player(player).shipMovementRange + (engine.player(player).data.spendablePowerTokens() ? 1 : 0);
+  const costs = {};
+
+  range(baseRange + 1, maxRange + 1).forEach(val => {
+    costs[val] = new Reward(val - baseRange, Resource.ChargePower).toString();
+  });
 
   return [{
     name: Command.MoveShip,
@@ -222,8 +226,7 @@ export function possibleShipMovements(engine: Engine, player: Player) {
     data: {
       ships: engine.player(player).data.movableShipLocations.map(loc => ({coordinates: loc})),
       range: maxRange,
-      // Todo: update with nevlas discount
-      costs: keyBy(range(baseRange + 1, maxRange + 1).map(val => ({range: val, cost: new Reward(val - baseRange, Resource.ChargePower)})), 'range')
+      costs
     }
   }];
 }
