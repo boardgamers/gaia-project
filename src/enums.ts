@@ -56,6 +56,8 @@ export enum Resource {
   GaiaFormer = "gf",
   SpaceStation = "space-station",
   SpaceShip = "ship",
+  MoveShips = "move",
+  MoveAllShips = "move-all",
   SpaceShipRange = "ship-range",
   SpaceShipMove = "ship-move",
   DowngradeLab = "down-lab",
