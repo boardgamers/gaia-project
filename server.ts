@@ -26,6 +26,7 @@ app.post("/", (req, res) => {
   try {
     const moves = req.body.moves || [];
     const options = Object.assign({}, req.body.options, {noFedCheck: true});
+    options.spaceShips = options.spaceShips === "false" ? false : options.spaceShips;
     const engine = new Engine(moves.slice(0, -1), options);
 
     // reenable fedCheck

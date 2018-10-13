@@ -528,8 +528,13 @@ export default class Player extends EventEmitter {
   receiveIncome() {
     for (const event of this.events[Operator.Income]) {
       if (!event.activated) {
-        event.activated = true; // before next line, in case it trigger events (like placing ship)
+        // Taklons + brainstone need to not activate the event until the reward is gained...
+        // This is UGLY. Maybe a better handling of placing ships in income phase would avoid this hack
+        if (!event.rewards.some(rew => rew.type === Resource.ChargePower)) {
+          event.activated = true; // before next line, in case it trigger events (like placing ship)
+        }
         this.gainRewards(event.rewards, event.source);
+        event.activated = true;
       } else {
         // console.log("activated", event.spec);
       }
