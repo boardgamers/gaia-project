@@ -11,6 +11,7 @@ export interface GaiaHexData {
   /** List of players who have a federation occupying this square */
   federations?: Player[];
   ships?: Player[];
+  tradeTokens?: Player[];
   /** Additional mine of lantids */
   additionalMine?: Player;
 }
@@ -95,6 +96,14 @@ export class GaiaHex extends Hex<GaiaHexData> {
       this.data.ships.push(player);
     } else {
       this.data.ships = [player];
+    }
+  }
+
+  addTradeToken(player: Player) {
+    if (this.data.tradeTokens) {
+      this.data.tradeTokens.push(player);
+    } else {
+      this.data.tradeTokens = [player];
     }
   }
 

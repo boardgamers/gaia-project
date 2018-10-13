@@ -255,7 +255,7 @@ export default class Engine {
     this.players.push(player);
 
     player.data.on(`gain-${Resource.TechTile}`, () => this.processNextMove(SubPhase.ChooseTechTile));
-    player.data.on(`gain-${Resource.SpaceShip}`, (count: number) => {
+    player.data.on(`gain-${Resource.SpaceShip}`, (count: number, source: Player) => {
       for (let i = 0; i < count; i++) {
         this.processNextMove(SubPhase.PlaceShip);
       }
@@ -267,6 +267,12 @@ export default class Engine {
     player.data.on(`gain-${Resource.SpaceStation}`, () => this.processNextMove(SubPhase.SpaceStation));
     player.data.on(`gain-${Resource.DowngradeLab}`, () => {this.processNextMove(SubPhase.DowngradeLab); this.processNextMove(SubPhase.UpgradeResearch); });
     player.data.on(`gain-${Resource.UpgradeLowest}`, () => this.processNextMove(SubPhase.UpgradeResearch, {bescods: true}));
+    player.data.on(`gain-${Resource.UpgradeBasic}`, (count: number) => {
+      for (let i = 0; i < count; i++) {
+        this.processNextMove(SubPhase.UpgradeResearch, {zero: true});
+      }
+    });
+    player.data.on(`gain-${Resource.SpaceShipMove}`, () => {});
     player.data.on('brainstone', areas => this.processNextMove(SubPhase.BrainStone, areas));
 
     /* For advanced log */
@@ -418,7 +424,7 @@ export default class Engine {
     }
 
     for (const player of data.players) {
-      engine.addPlayer(Player.fromData(player, engine.map));
+      engine.addPlayer(Player.fromData(player, engine.map, engine.expansions));
     }
 
     if (data.map) {
@@ -1096,7 +1102,7 @@ export default class Engine {
   [Command.ChooseFaction](player: PlayerEnum, faction: string) {
     assert(this.availableCommand.data.includes(faction), `${faction} is not in the available factions`);
 
-    this.players[player].loadFaction(faction as Faction);
+    this.players[player].loadFaction(faction as Faction, this.expansions);
   }
 
   [Command.ChooseRoundBooster](player: PlayerEnum, booster: Booster, fromCommand: Command = Command.ChooseRoundBooster ) {

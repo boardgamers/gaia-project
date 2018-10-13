@@ -10,6 +10,7 @@ const MAX_ORE = 15;
 const MAX_CREDIT = 30;
 const MAX_KNOWLEDGE = 15;
 const MAX_SHIP = 3;
+const MAX_TRADE_TOKENS = 15;
 
 export default class PlayerData extends EventEmitter {
   victoryPoints: number = 10;
@@ -17,7 +18,10 @@ export default class PlayerData extends EventEmitter {
   ores: number = 0;
   qics: number = 0;
   knowledge: number = 0;
-  ships: number = 0;
+  get ships() {
+    return this.shipLocations.length;
+  }
+  tradeTokens = MAX_TRADE_TOKENS;
   power: {
     area1: number,
     area2: number,
@@ -64,6 +68,7 @@ export default class PlayerData extends EventEmitter {
 
   /** Coordinates occupied by buildings */
   occupied: GaiaHex[] = [];
+  shipLocations: string[] = [];
   leechPossible: number;
   tokenModifier: number = 1;
   lostPlanet: number = 0;
@@ -161,7 +166,7 @@ export default class PlayerData extends EventEmitter {
       case Resource.Ore: this.ores = Math.min(MAX_ORE, this.ores + count); break;
       case Resource.Credit: this.credits = Math.min(MAX_CREDIT, this.credits + count); break;
       case Resource.Knowledge: this.knowledge = Math.min(MAX_KNOWLEDGE, this.knowledge + count); break;
-      case Resource.SpaceShip: this.ships = Math.min(MAX_SHIP, this.ships + count); break;
+      case Resource.SpaceShip: count = Math.min(count, MAX_SHIP - this.ships); break;
       case Resource.VictoryPoint: this.victoryPoints += count; break;
       case Resource.Qic: this.qics += count; break;
       case Resource.GainToken: count > 0 ?  this.power.area1 += count : this.discardPower(-count); break;

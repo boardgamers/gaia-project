@@ -112,11 +112,11 @@ export default class Player extends EventEmitter {
     return json;
   }
 
-  static fromData(data: any, map: SpaceMap) {
+  static fromData(data: any, map: SpaceMap, expansions: number) {
     const player = new Player(data.player);
 
     if (data.faction) {
-      player.loadFaction(data.faction, true);
+      player.loadFaction(data.faction, expansions, true);
     }
 
     for (const kind of Object.keys(data.events)) {
@@ -238,11 +238,12 @@ export default class Player extends EventEmitter {
     return this.data.occupied.filter(hex => hex.data.planet !== Planet.Empty && hex.isMainOccupier(this.player));
   }
 
-  loadFaction(faction: Faction, skipIncome = false) {
+  loadFaction(faction: Faction, expansions: number, skipIncome = false) {
     this.faction = faction;
     this.board = factionBoard(faction);
 
     if (!skipIncome) {
+      this.loadTechs(expansions);
       this.loadEvents(this.board.income);
     }
 
@@ -255,6 +256,14 @@ export default class Player extends EventEmitter {
       for (const emitter of [this, this.data]) {
         emitter.on(eventName, (...args) => this.board.handlers[eventName](this, ...args));
       }
+    }
+  }
+
+  loadTechs(expansions: number) {
+    const fields = ResearchField.values(expansions);
+
+    for (const field of fields) {
+      this.loadEvents(Event.parse(researchTracks[field][this.data.research[field]], field));
     }
   }
 
@@ -428,7 +437,7 @@ export default class Player extends EventEmitter {
 
   placeShip(hex: GaiaHex) {
     hex.addShip(this.player);
-    this.data.ships += 1;
+    this.data.shipLocations.push(hex.toString());
   }
 
   // Not to confuse with the end of a round
@@ -519,8 +528,8 @@ export default class Player extends EventEmitter {
   receiveIncome() {
     for (const event of this.events[Operator.Income]) {
       if (!event.activated) {
+        event.activated = true; // before next line, in case it trigger events (like placing ship)
         this.gainRewards(event.rewards, event.source);
-        event.activated = true;
       } else {
         // console.log("activated", event.spec);
       }

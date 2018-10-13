@@ -68,6 +68,7 @@ export enum Resource {
   UpgradeLowest = "up-lowest",
   UpgradeTradingBonus = "up-trade",
   UpgradeTradingVolume = "up-ship",
+  UpgradeBasic = "up-0",
   TechTile = "tech",
   RescoreFederation = "fed",
   TemporaryStep = "step",
