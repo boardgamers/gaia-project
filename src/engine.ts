@@ -1041,6 +1041,7 @@ export default class Engine {
     TechTilePos.values(this.expansions).forEach( (pos, i) => {
       this.tiles.techs[pos] = {tile: techtiles[i], count: 4};
     });
+    this.tiles.techs[TechTilePos.BasicShip] = {tile: TechTile.Ship0, count: 0};
 
     // Choose adv tech tiles as part of the pool
     const advtechtiles = shuffleSeed.shuffle(AdvTechTile.values(this.expansions), this.map.rng());

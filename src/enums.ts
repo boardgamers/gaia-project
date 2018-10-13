@@ -285,7 +285,7 @@ export enum TechTilePos {
   Free2 = "free2",
   Free3 = "free3",
   Free4 = "free4",
-  BasicShip = "basic"
+  BasicShip = "move"
 }
 
 export namespace TechTilePos {
