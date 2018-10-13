@@ -16,7 +16,8 @@ export interface ButtonData {
   selectHexes?: boolean;
   actions?: string[];
   federations?: Federation[];
-
+  range?: number;
+  costs?: {[range: number]: string};
   // Rotate sectors command?
   rotation?: boolean;
 

@@ -1,7 +1,7 @@
 <template>
-  <g :id="`${hex.q}x${hex.r}`" :title="'Cost: ' + cost(hex)">
-    <title>Coordinates: {{hex.q}}x{{hex.r}}&#10;Sector: {{hex.data.sector}}{{hex.data.planet !== 'e' ? `&#10;Planet: ${planetName(hex.data.planet)}`: ''}}{{hex.data.building ? `&#10;Building: ${buildingName(hex.data.building)}` : ''}}</title>
-    <polygon :points="hexCorners.map(p => `${p.x},${p.y}`).join(' ')" :class="['spaceHex', {toSelect, highlighted: highlightedHexes.has(hex), qic: cost(hex).includes('q')}]" @click='hexClick(hex)' />
+  <g :id="`${hex.q}x${hex.r}`">
+    <title>Coordinates: {{hex.q}}x{{hex.r}}&#10;Sector: {{hex.data.sector}}{{hex.data.planet !== 'e' ? `&#10;Planet: ${planetName(hex.data.planet)}`: ''}}{{hex.data.building ? `&#10;Building: ${buildingName(hex.data.building)}` : ''}}{{cost(hex) ? `&#10;Cost: ${cost(hex)}` : ''}}</title>
+    <polygon :points="hexCorners.map(p => `${p.x},${p.y}`).join(' ')" :class="['spaceHex', {toSelect, highlighted: highlightedHexes.has(hex), qic: cost(hex).includes('q'), power: cost(hex).includes('pw')}]" @click='hexClick(hex)' />
     <line v-for="(l, i) in lines" :key="i" :x1="l.x1" :y1="l.y1" :x2="l.x2" :y2="l.y2" class="spaceLine" />
     <text class="sector-name" v-if="isCenter">{{hex.data.sector[0] === 's' ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector)}}</text>
     <Planet v-if="hex.data.planet !== 'e'" :planet='hex.data.planet' :faction='faction(hex.data.player)' />
@@ -9,7 +9,6 @@
     <Building v-if="hex.data.additionalMine !== undefined" :faction='faction(hex.data.additionalMine)' building="m" transform="translate(0.38, 0.5) rotate(36) scale(0.9)" class="additionalMine" />
     <SpaceShip v-for="(player, index) in hex.data.ships || []" :key="`${player}-${index}`" :faction='faction(player)' :scale="0.4" :x="shipX(index)" :y="shipY(index)" />
     <polygon v-for="(player, index) in hex.data.federations || []" :points="hexCorners.map(p => `${p.x*(1-(index+0.5)/8)},${p.y*(1-(index+0.5)/8)}`).join(' ')" :class="['spaceHexFederation', 'planet', planet(player)]" :key="`${player}-${index}`" />
-    <b-tooltip v-if="cost(hex)" :target='`${hex.q}x${hex.r}`' :html='true' />
   </g>
 </template>
 
@@ -143,6 +142,10 @@ svg {
 
       &.qic {
         fill: lightGreen
+      }
+
+      &.power {
+        fill: #d378d3
       }
     }
 

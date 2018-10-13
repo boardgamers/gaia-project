@@ -264,6 +264,17 @@ export default class Commands extends Vue {
           break;
         }
 
+        case Command.MoveShip: {
+          ret.push({
+            label: "Move Ship",
+            command: command.name,
+            hexes: new Map(command.data.ships.map(coord => [this.engine.map.grid.getS(coord.coordinates), coord])),
+            range: command.data.range,
+            costs: command.data.costs
+          })
+          break;
+        }
+
         case Command.Pass: 
         case Command.ChooseRoundBooster: {
           const buttons: ButtonData[] = [];

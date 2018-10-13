@@ -51,8 +51,8 @@ export const descriptions = {
   ],
   [ResearchField.TradingBonus]: [
     "Each time you deliver a trade, gain two knowledge.",
-    "Each time you deliver a trade, gain two knowledge or one ore.",
-    "Each time you deliver a trade, gain two knowledge, one ore. Gain a tech tile.",
+    "Each time you deliver a trade, gain two knowledge or three coins.",
+    "Each time you deliver a trade, gain two knowledge or three coins. Gain a tech tile.",
     "Each time you deliver a trade, gain two knowledge, one ore or three coins.",
     "Each time you deliver a trade, gain two knowledge, one ore, three coins or a Q.I.C. Gain a tech tile.",
     "Each time you deliver a trade, gain two of: two knowledge, one ore, three coins, a Q.I.C."

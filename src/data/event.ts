@@ -42,12 +42,13 @@ const operators = {
 function rewardDesc(rewards: Reward[]) {
   return rewards.map(reward => {
     switch (reward.type) {
-      case Resource.TechTile: return `${reward.count} tech tile${reward.count > 1 ? 's' : ''}`;
-      case Resource.TemporaryStep: return `${reward.count} temporary step${reward.count > 1 ? 's' : ''}`;
-      case Resource.TemporaryRange: return `${reward.count} temporary range`;
-      case Resource.RescoreFederation: return `the rewards from one of your federation tokens`;
-      case Resource.Range: return `${reward.count} range for the duration of the round`
-      default: return reward.toString();
+      case Resource.TechTile: return `gain ${reward.count} tech tile${reward.count > 1 ? 's' : ''}`;
+      case Resource.TemporaryStep: return `gain ${reward.count} temporary step${reward.count > 1 ? 's' : ''}`;
+      case Resource.TemporaryRange: return `gain ${reward.count} temporary range`;
+      case Resource.RescoreFederation: return `gain the rewards from one of your federation tokens`;
+      // case Resource.Range: return `gain ${reward.count} range for the duration of the round`;
+      case Resource.MoveShips: return `move your ships according to your level in the ship track`;
+      default: return "gain " + reward.toString();
     }
   }).join(", ");
 }
@@ -55,7 +56,7 @@ function rewardDesc(rewards: Reward[]) {
 export function eventDesc(event: Event) {
   const operatorString = operators[event.operator];
   const conditionString = event.operator === Operator.Trigger ? conditionsTrigger[event.condition] + "," : (conditionsCount[event.condition] && "for each " + conditionsCount[event.condition] + ",");
-  const rewardString = event.rewards.length === 0 ? '' : "gain " + rewardDesc(event.rewards);
+  const rewardString = event.rewards.length === 0 ? '' : rewardDesc(event.rewards);
 
   return [operatorString, conditionString, rewardString].filter(x => !!x).join(" ");
 }

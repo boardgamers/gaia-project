@@ -14,7 +14,7 @@
 <script lang="ts">
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
-import {GaiaHex, TechTilePos, AdvTechTilePos, Booster, Command} from '@gaia-project/engine';
+import {GaiaHex, TechTilePos, AdvTechTilePos, Booster, Command, SpaceMap} from '@gaia-project/engine';
 import {HighlightHexData, ButtonData} from '../data';
 
 @Component({
@@ -35,6 +35,7 @@ export default class MoveButton extends Vue {
   private subscription: () => {} = null;
   private modalShow: boolean = false;
   private customLabel = '';
+  private startingHex = null; // For range command
 
   modalCancel(arg: string) {
     this.$emit("cancel");
@@ -79,7 +80,7 @@ export default class MoveButton extends Vue {
     if (!this.isActiveButton) {
       this.$store.commit("gaiaViewer/clearContext");
     }
-    if (this.button.hexes && !this.button.selectHexes && !this.button.hover && !this.button.rotation) {
+    if (this.button.hexes && !this.button.selectHexes && !this.button.hover && !this.button.rotation && !this.button.range) {
       this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
       this.subscribe('hexClick', hex => this.emitCommand(`${hex.q}x${hex.r}`));
     } else if (this.button.researchTiles) {
@@ -133,6 +134,29 @@ export default class MoveButton extends Vue {
       this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
       this.subscribe('hexClick', hex => this.$store.commit("gaiaViewer/rotate", hex));
       this.customLabel = "Sector rotations finished"
+    } else if (this.button.range) {
+      console.log("range click");
+      this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
+      this.subscribe('hexClick', hex => {
+        if (this.startingHex) {
+          this.emitCommand(`${this.startingHex.q}x${this.startingHex.r} ${hex.q}x${hex.r}`);
+          return;
+        }
+        this.startingHex = hex;
+
+        const map: SpaceMap = this.$store.state.gaiaViewer.data.map;
+        const {range, costs} = this.button;
+
+        const highlighted = new Map();
+
+        const withinDistance = map.withinDistance(hex, range);
+        // debugger;
+        for (const target of withinDistance) {
+          highlighted.set(target, {cost: costs[map.distance(hex, target)] || '~'});
+        }
+        
+        this.$store.commit("gaiaViewer/highlightHexes", highlighted);
+      });
     } else {
       // Keep hexes highlighted for next command (federation tile)
       if (this.button.hexes && this.button.hover) {
