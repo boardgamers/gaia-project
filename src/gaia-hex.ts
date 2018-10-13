@@ -92,7 +92,7 @@ export class GaiaHex extends Hex<GaiaHexData> {
 
   addShip(player: Player) {
     if (this.data.ships) {
-      this.data.ships = [player];
+      this.data.ships.push(player);
     } else {
       this.data.ships = [player];
     }
