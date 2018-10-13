@@ -43,7 +43,7 @@
                 <button class="btn btn-primary" type="button" @click="addMove(currentMove)">Send</button>
               </div>
             </div>
-            <div class="form-group mt-2 d-none d-md-block" v-if="moveList">
+            <div class="form-group mt-2 d-none d-md-block" v-if="data.moveHistory.length > 0">
               <label for="moves">Move log</label>
               <textarea class="form-control" rows="4" id="moves" v-model="moveList"></textarea>
               <div class="mt-2 row no-gutters">
