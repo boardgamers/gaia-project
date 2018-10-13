@@ -29,7 +29,7 @@ import { eventDesc } from '../data/event';
 
     income() {   
       const [first, ...others] = tiles.federations[this.federation].split(",");
-      return others.length > 0 ? [first, others.join(", ")] : [first];
+      return others.length > 0 ? [first, others.join(", ")] : first.split("-");
     },
 
     disabled() {
