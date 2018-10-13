@@ -46,7 +46,8 @@ export default class PlayerData extends EventEmitter {
     terra: 0, nav: 0, int: 0, gaia: 0, eco: 0, sci: 0, trade: 0, ship: 0
   };
   range: number = 1;
-  temporaryRange: number = 0;
+  shipRange: number = 0;
+  movingShips: number = 1;
   /** Total number of gaiaformers gained (including those on the board & the gaia area) */
   gaiaformers: number = 0;
   /** number of gaiaformers gained that are in gaia area */
@@ -76,7 +77,10 @@ export default class PlayerData extends EventEmitter {
   // Internal variables, not meant to be in toJSON():
   followBrainStoneHeuristics = true;
   brainstoneDest: BrainstoneArea | "discard";
+  temporaryRange: number = 0;
   temporaryStep: number = 0;
+  movableShips: number = 0;
+  movableShipLocations: string[] = [];
 
   toJSON(): Object {
     const ret = {
@@ -88,8 +92,6 @@ export default class PlayerData extends EventEmitter {
       power: this.power,
       research: this.research,
       range: this.range,
-      temporaryRange: this.temporaryRange,
-      temporaryStep: this.temporaryStep,
       gaiaformers: this.gaiaformers,
       gaiaformersInGaia: this.gaiaformersInGaia,
       terraformCostDiscount: this.terraformCostDiscount,
@@ -100,7 +102,10 @@ export default class PlayerData extends EventEmitter {
       tokenModifier: this.tokenModifier,
       buildings: this.buildings,
       federationCount: this.federationCount,
-      lostPlanet: this.lostPlanet
+      lostPlanet: this.lostPlanet,
+      shipLocations: this.shipLocations,
+      shipRange: this.shipRange,
+      movingShips: this.movingShips
     };
 
     return ret;
@@ -175,6 +180,8 @@ export default class PlayerData extends EventEmitter {
       case Resource.ChargePower: count > 0 ? this.chargePower(count) : this.spendPower(-count); break;
       case Resource.Range: this.range += count; break;
       case Resource.TemporaryRange: this.temporaryRange += count; break;
+      case Resource.SpaceShipRange: this.shipRange += 1; break;
+      case Resource.SpaceShipMove: this.movingShips += 1; break;
       case Resource.GaiaFormer: count > 0 ? this.gaiaformers += count : this.gaiaformersInGaia -= count; break;
       case Resource.TerraformCostDiscount: this.terraformCostDiscount += count; break;
       case Resource.TemporaryStep: this.temporaryStep += count; break;

@@ -272,7 +272,12 @@ export default class Engine {
         this.processNextMove(SubPhase.UpgradeResearch, {zero: true});
       }
     });
-    player.data.on(`gain-${Resource.SpaceShipMove}`, () => {});
+    player.data.on(`gain-${Resource.SpaceShipMove}`, () => {
+      player.data.movableShips = player.data.movingShips;
+      player.data.movableShipLocations = [...player.data.shipLocations];
+
+      this.processNextMove(SubPhase.MoveShip);
+    });
     player.data.on('brainstone', areas => this.processNextMove(SubPhase.BrainStone, areas));
 
     /* For advanced log */
