@@ -100,9 +100,9 @@ export default class ResearchTile extends Vue {
   }
 
   get resources() {
-    const events = researchTracks[this.field][this.level].map(s => new Event(s));
+    const events = researchTracks[this.field][this.level].map(s => new Event(s)).slice(0, 1);
 
-    const rewards = Reward.merge(...events.map(ev => ev.rewards), this.level == 3 ? [new Reward('-3pw')] : []);
+    const rewards = Reward.merge(...events.map(ev => ev.rewards), this.level == 37 ? [new Reward('-3pw')] : []);
 
     if (events[0] && events[0].operator === Operator.Income) {
       rewards.unshift(new Reward('+', ResourceEnum.None));

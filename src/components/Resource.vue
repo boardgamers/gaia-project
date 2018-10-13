@@ -4,9 +4,10 @@
     <rect v-else-if="kind=='o'" class="ore" width="14" height="14" x="-7" y="-7" />
     <rect v-else-if="kind=='c'" class="credit" width="14" height="14" ry="7" rx="7" x="-7" y="-7" />
     <rect v-else-if="kind=='pw' || kind=='t'" class="power" width="14" height="14" ry="7" rx="7" x="-7" y="-7" />
+    <path v-else-if="kind=='ship'" class="ship" d="m-7,0 v7 h14 v-7 a7,10 0 1,0 -14,0" />
     <Building v-else-if="kind=='k'" faction="terrans" building="gf" transform="translate(0.5, 0) scale(20)" />
     <Building v-else-if="kind=='gf'" faction="ivits" building="gf" transform="translate(0.5, 0) scale(20)" style="fill: none !important" />
-    <text x="0" y="0" v-if="count && (['o','c','q','k','pw','t'].includes(kind) || count === '+')" :class="{plus: count === '+'}">{{count}}</text>
+    <text x="0" y="0" v-if="count && (['o','c','q','k','pw','t','ship'].includes(kind) || count === '+')" :class="{plus: count === '+'}">{{count}}</text>
    </g>
 </template>
 
@@ -48,6 +49,12 @@ g.resource {
     stroke-width: 0.8px;
   }
 
+  path {
+    stroke: #333;
+    fill: #bbb;
+    stroke-width: 0.8px;
+  }
+
   .qic {
     fill: green;
   }
@@ -68,7 +75,7 @@ g.resource {
     stroke-width: 0.04px;
   }
 
-  .ore, .credit, .building.r {
+  .ore, .credit, .building.r, .ship {
     & + text {
       fill: black
     }

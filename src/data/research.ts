@@ -50,19 +50,19 @@ export const descriptions = {
     "To start a Gaia project, you must move three power tokens to your Gaia area. Immediately gain 4 VP and 1 additional VP for each Gaia Planet with one of your structures on it (you do not gain VP for Gaiaformers on Gaia Planets)."
   ],
   [ResearchField.TradingBonus]: [
-    "Each time you deliver a trade, gain one knowledge",
-    "Each time you deliver a trade, gain two knowledge or one ore",
-    "Each time you deliver a trade, gain two knowledge, one ore, three coins or charge three power",
-    "Each time you deliver a trade, gain two knowledge, two ore, four coins or charge four power",
-    "Each time you deliver a trade, pick two of two knowledge, two ore, four coins and charging four power",
-    "Each time you deliver a trade, pick three of two knowledge, two ore, four coins and charging four power",
+    "Each time you deliver a trade, gain two knowledge.",
+    "Each time you deliver a trade, gain two knowledge or one ore.",
+    "Each time you deliver a trade, gain two knowledge, one ore. Gain a tech tile.",
+    "Each time you deliver a trade, gain two knowledge, one ore or three coins.",
+    "Each time you deliver a trade, gain two knowledge, one ore, three coins or a Q.I.C. Gain a tech tile.",
+    "Each time you deliver a trade, gain two of: two knowledge, one ore, three coins, a Q.I.C."
   ],
   [ResearchField.TradingVolume]: [
-    "1 Spaceship moves at current Navigation",
-    "1 Spaceship moves +1 above Navigation",
-    "2 Spaceships move +1 above Navigation",
-    "2 Spaceships move +2 above Navigation",
-    "3 Spaceships move +2 above Navigation AND one free advance on nav or int track",
-    "3 Spaceships move +3 above Navigation AND a special federation token with no vp that gives a 4th ship: Advanced Spaceship",
+    "One spacehip income. The move action moves one spaceship moves at current range.",
+    "One spacehip income. The move action moves one spaceship moves at current range + 1.",
+    "Two spaceships income. The move action moves two spaceships at current range + 1.",
+    "Two spaceships income. The move action moves two spaceships at current range + 2.",
+    "Three spaceships income. The move action moves three spaceships at current range + 2. Advance on the navigation or intelligence research track by one level.",
+    "Three spaceships income. The move action moves three spaceships at current range + 3. Gain a special federation token with no vp that gives a 4th ship: Advanced Spaceship."
   ]
 };
