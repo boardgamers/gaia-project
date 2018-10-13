@@ -78,6 +78,7 @@ export default class PlayerData extends EventEmitter {
   followBrainStoneHeuristics = true;
   brainstoneDest: BrainstoneArea | "discard";
   temporaryRange: number = 0;
+  temporaryShipRange: number = 0; // unused for now, using temporaryRange instead
   temporaryStep: number = 0;
   movableShips: number = 0;
   movableShipLocations: string[] = [];

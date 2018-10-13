@@ -40,6 +40,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
     case SubPhase.DowngradeLab: return possibleLabDowngrades(engine, player);
     case SubPhase.BrainStone: return [{name: Command.BrainStone, player, data}];
     case SubPhase.PlaceShip: return possibleShips(engine, player);
+    case SubPhase.MoveShip: return possibleShipMovements(engine, player);
     case SubPhase.BeforeMove: {
       return [
         ...possibleBuildings(engine, player),
@@ -208,6 +209,22 @@ export function possibleShips(engine: Engine, player: Player) {
   }
 
   return [];
+}
+
+export function possibleShipMovements(engine: Engine, player: Player) {
+  const baseRange = engine.player(player).shipMovementRange;
+  const maxRange = engine.player(player).shipMovementRange + engine.player(player).data.spendablePowerTokens();
+
+  return [{
+    name: Command.MoveShip,
+    player,
+    data: {
+      ships: engine.player(player).data.movableShipLocations.map(loc => ({coordinates: loc})),
+      range: maxRange,
+      // Todo: update with nevlas discount
+      costs: range(baseRange + 1, maxRange + 1).map(val => new Reward(val - baseRange, Resource.ChargePower))
+    }
+  }];
 }
 
 export function possibleSpaceStations(engine: Engine, player: Player) {

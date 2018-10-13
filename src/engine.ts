@@ -108,6 +108,7 @@ export default class Engine {
   availableCommands: AvailableCommand[] = [];
   availableCommand: AvailableCommand;
   phase: Phase = Phase.SetupInit;
+  subPhase: SubPhase = SubPhase.BeforeMove;
   oldPhase: Phase;
 
   get expansions() {
@@ -272,7 +273,8 @@ export default class Engine {
         this.processNextMove(SubPhase.UpgradeResearch, {zero: true});
       }
     });
-    player.data.on(`gain-${Resource.SpaceShipMove}`, () => {
+    player.data.on(`gain-${Resource.MoveShips}`, () => {
+      player.resetTemporaryVariables();
       player.data.movableShips = player.data.movingShips;
       player.data.movableShipLocations = [...player.data.shipLocations];
 
@@ -532,6 +534,8 @@ export default class Engine {
   }
 
   processNextMove(subphase?: SubPhase, data?: any) {
+    this.subPhase = this.subPhase;
+
     if (subphase) {
       this.generateAvailableCommands(subphase, data);
       if (this.availableCommands.length === 0) {
@@ -980,6 +984,9 @@ export default class Engine {
   }
 
   [Phase.RoundMove](move: string) {
+    const pl = this.player(this.playerToMove);
+    pl.resetTemporaryVariables();
+
     this.loadTurnMoves(move);
 
     const playerAfter = this.getNextPlayer();
@@ -989,7 +996,10 @@ export default class Engine {
 
     // If queue is empty, interrupt and ask for free actions / main command
     // otherwise execute main command
-    if (this.handleMainMove() === Command.Pass) {
+    const executedCommand = this.handleMainMove();
+    pl.resetTemporaryVariables();
+
+    if (executedCommand === Command.Pass) {
       if (this.turnOrder.length === 0) {
         this.cleanUpPhase();
         return;
@@ -1188,7 +1198,7 @@ export default class Engine {
   }
 
   [Command.EndTurn](player: PlayerEnum) {
-    this.player(player).endTurn();
+    // this.player(player).endTurn();
   }
 
   [Command.ChooseTechTile](player: PlayerEnum, pos: TechTilePos | AdvTechTilePos) {

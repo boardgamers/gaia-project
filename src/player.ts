@@ -151,6 +151,10 @@ export default class Player extends EventEmitter {
     return factions.planet(this.faction);
   }
 
+  get shipMovementRange(): number {
+    return this.data.range + this.data.shipRange + this.data.temporaryRange;
+  }
+
   payCosts(costs: Reward[], source: EventSource) {
     for (const cost of costs) {
       this.data.payCost(cost, source);
@@ -440,11 +444,11 @@ export default class Player extends EventEmitter {
     this.data.shipLocations.push(hex.toString());
   }
 
-  // Not to confuse with the end of a round
-  endTurn() {
+  resetTemporaryVariables() {
     // reset temporary benefits
     this.data.temporaryRange = 0;
     this.data.temporaryStep = 0;
+    this.data.temporaryRange = 0;
   }
 
   pass() {
