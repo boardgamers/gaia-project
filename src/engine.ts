@@ -1067,6 +1067,13 @@ export default class Engine {
     for (let i = 0; i < nbPlayers; i++) {
       this.addPlayer(new Player(i));
     }
+
+    // With the expansion, each player starts with a tech tile
+    if (this.expansions & Expansion.Spaceships) {
+      for (const player of this.players) {
+        player.gainTechTile(TechTile.Ship0, TechTilePos.BasicShip);
+      }
+    }
   }
 
   [Command.RotateSectors](player: PlayerEnum, ...params: string[]) {
