@@ -12,6 +12,6 @@ export default {
   [Booster.Booster9]: ["+4pw", "PA | 4vp"],
   [Booster.Booster10]: ["+4c", "g | vp"],
   [Booster.Ship1]: ["trade >> 3vp", "=>range+1"],
-  [Booster.Ship2]: ["ship", "r"],
+  [Booster.Ship2]: ["+ship", "=>move-all"],
   [Booster.Ship3]: ["+2k", "L | vp"]
 };
