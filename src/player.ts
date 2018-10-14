@@ -188,7 +188,7 @@ export default class Player extends EventEmitter {
     }
   }
 
-  canBuild(targetPlanet: Planet, building: Building, {isolated, addedCost, existingBuilding}: {isolated?: boolean, addedCost?: Reward[], existingBuilding?: Building}): {cost?: Reward[], possible: boolean, steps?: number} {
+  canBuild(targetPlanet: Planet, building: Building, {isolated, addedCost, existingBuilding}: {isolated?: boolean, addedCost?: Reward[], existingBuilding?: Building} = {}): {cost?: Reward[], possible: boolean, steps?: number} {
     if (this.data.buildings[building] >= this.maxBuildings(building)) {
       // Too many buildings of the same kind
       return {possible: false};

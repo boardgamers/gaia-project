@@ -1274,7 +1274,7 @@ export default class Engine {
     this.player(player).placeShip(hex);
   }
 
-  _move(player: PlayerEnum, ship: string, dest: string) {
+  [`_${Command.MoveShip}`](player: PlayerEnum, ship: string, dest: string) {
     const pl = this.player(player);
     const { ships, range, costs } = this.availableCommand.data;
 
@@ -1284,11 +1284,39 @@ export default class Engine {
 
     assert(range >= distance, 'The ship cannot move that far');
 
-    const cost = costs[distance] || "~";
-    pl.payCosts(Reward.parse(cost), Command.MoveShip);
+    const moveCost = costs[distance] || "~";
+    pl.payCosts(Reward.parse(moveCost), Command.MoveShip);
 
     pl.removeShip(this.map.grid.getS(ship));
-    pl.placeShip(this.map.grid.getS(dest));
+
+    const destHex = this.map.grid.getS(dest);
+
+    assert (!destHex.hasTradeToken(player), `The destination planet already has a trade token for your faction`);
+
+    if (destHex.hasPlanet()) {
+      if (destHex.occupied) {
+        assert(destHex.hasStructure(), `When moving a ship to an occupied planet, there needs to be a valid building on it`);
+        assert(!destHex.isMainOccupier(player), "You can't move a ship to a planet that is occupied by you.");
+        assert(pl.data.tradeTokens > 0, "You do not have remaining trade tokens, so you can't move the ship to another faction's planet");
+
+        this.processNextMove(SubPhase.DeliverTrade, {target: dest});
+      } else {
+        const planet = destHex.data.planet;
+        const building = planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine;
+
+        const {possible, cost, steps} = pl.canBuild(planet, building);
+        assert(possible, "Impossible to move ship to empty destination planet as you cannot build anything there");
+
+        this.processNextMove(SubPhase.BuildMineOrGaiaFormer, {buildings: [{
+          building,
+          coordinates: dest,
+          cost: Reward.toString(cost),
+          steps
+        }]});
+      }
+    } else {
+      pl.placeShip(destHex);
+    }
   }
 
   [Command.Spend](player: PlayerEnum, costS: string, _for: "for", incomeS: string) {

@@ -107,6 +107,10 @@ export class GaiaHex extends Hex<GaiaHexData> {
     }
   }
 
+  hasTradeToken(player: Player) {
+    return this.data.tradeTokens && this.data.tradeTokens.includes(player);
+  }
+
   removeShip(player: Player) {
     if (this.data.ships.length === 1) {
       this.data.ships = undefined;

@@ -34,7 +34,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
     case SubPhase.ChooseFederationTile: return possibleFederationTiles(engine, player, "pool");
     case SubPhase.RescoreFederationTile: return possibleFederationTiles(engine, player, "player");
     case SubPhase.BuildMine: return possibleMineBuildings(engine, player, false);
-    case SubPhase.BuildMineOrGaiaFormer: return possibleMineBuildings(engine, player, true);
+    case SubPhase.BuildMineOrGaiaFormer: return possibleMineBuildings(engine, player, true, data);
     case SubPhase.SpaceStation: return possibleSpaceStations(engine, player);
     case SubPhase.PISwap: return possiblePISwaps(engine, player);
     case SubPhase.DowngradeLab: return possibleLabDowngrades(engine, player);
@@ -262,7 +262,11 @@ export function possibleSpaceStations(engine: Engine, player: Player) {
   return [];
 }
 
-export function possibleMineBuildings(engine: Engine, player: Player, acceptGaiaFormer: boolean) {
+export function possibleMineBuildings(engine: Engine, player: Player, acceptGaiaFormer: boolean, data?: {buildings?: [{building: Building, coordinates: string, cost: string, steps?: number}]}) {
+  if (data && data.buildings) {
+    return [{name: Command.Build, player, data}];
+  }
+
   const commands = [];
   const [buildingCommand] = possibleBuildings(engine, player);
 

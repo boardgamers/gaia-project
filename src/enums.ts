@@ -503,6 +503,7 @@ export enum SubPhase {
   SpaceStation = "spaceStation",
   PlaceShip = "placeShip",
   MoveShip = "moveShip",
+  DeliverTrade = "deliver",
   PISwap = "swap-PI",
   DowngradeLab = "down-lab"
 }
