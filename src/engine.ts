@@ -447,6 +447,9 @@ export default class Engine {
         for (const player of hex.occupyingPlayers()) {
           engine.player(player).data.occupied.push(hex);
         }
+        // for (const player of (hex.data.ships || [])) {
+        //   engine.player(player).data.shipLocations.push(hex);
+        // }
       }
     }
 
@@ -993,33 +996,42 @@ export default class Engine {
 
   [Phase.RoundMove](move: string) {
     const pl = this.player(this.playerToMove);
-    pl.resetTemporaryVariables();
+    pl.data.turns = 1;
 
     this.loadTurnMoves(move);
 
     const playerAfter = this.getNextPlayer();
 
-    // Execute all upcoming freeactions
-    this.doFreeActions(SubPhase.BeforeMove);
+    while (pl.data.turns > 0) {
+      pl.resetTemporaryVariables();
 
-    // If queue is empty, interrupt and ask for free actions / main command
-    // otherwise execute main command
-    const executedCommand = this.handleMainMove();
-    pl.resetTemporaryVariables();
-
-    if (executedCommand === Command.Pass) {
-      if (this.turnOrder.length === 0) {
-        this.cleanUpPhase();
-        return;
-      }
-    } else {
       // Execute all upcoming freeactions
-      this.doFreeActions(SubPhase.AfterMove);
+      this.doFreeActions(SubPhase.BeforeMove);
 
-      // If the player has no possible command or the queue has the end turn command,
-      // end turns.
-      // If the player has possible free actions & the queue is empty, ask for free actions / end turn
-      this.handleEndTurn();
+      // If queue is empty, interrupt and ask for free actions / main command
+      // otherwise execute main command
+      const executedCommand = this.handleMainMove();
+      pl.resetTemporaryVariables();
+      pl.data.turns -= 1;
+
+      if (executedCommand === Command.Pass) {
+        if (this.turnOrder.length === 0) {
+          this.cleanUpPhase();
+          return;
+        } else {
+          break;
+        }
+      } else if (pl.data.turns <= 0) {
+        // Execute all upcoming freeactions
+        this.doFreeActions(SubPhase.AfterMove);
+
+        // If the player has no possible command or the queue has the end turn command,
+        // end turns.
+        // If the player has possible free actions & the queue is empty, ask for free actions / end turn
+        this.handleEndTurn();
+      } else {
+        this.generateAvailableCommands();
+      }
     }
 
     this.beginLeechingPhase();
@@ -1335,7 +1347,7 @@ export default class Engine {
     }
 
     pl.data.movableShips -= 1;
-    pl.data.movableShipLocations.splice(pl.data.movableShipLocations.indexOf(dest), 1);
+    pl.data.movableShipLocations.splice(pl.data.movableShipLocations.indexOf(ship), 1);
 
     if (pl.data.movableShips > 0) {
       this.processNextMove(SubPhase.MoveShip);

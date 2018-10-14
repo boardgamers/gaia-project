@@ -46,7 +46,8 @@ export default class Player extends EventEmitter {
     [Operator.Trigger]: [],
     [Operator.Activate]: [],
     [Operator.Pass]: [],
-    [Operator.Special]: []
+    [Operator.Special]: [],
+    [Operator.AdvShip4]: []
   };
   // To avoid recalculating federations every time
   federationCache: FederationCache;
@@ -134,9 +135,7 @@ export default class Player extends EventEmitter {
       }
     }
 
-    if (data.data) {
-      merge(player.data, data.data);
-    }
+    player.loadPlayerData(data.data);
 
     return player;
   }
@@ -450,8 +449,10 @@ export default class Player extends EventEmitter {
   }
 
   removeShip(hex: GaiaHex) {
+    const idx = this.data.shipLocations.indexOf(hex.toString());
+
     hex.removeShip(this.player);
-    this.data.shipLocations.splice(this.data.shipLocations.indexOf(hex.toString()), 1);
+    this.data.shipLocations.splice(idx, 1);
   }
 
   deliverTrade(hex: GaiaHex) {

@@ -22,6 +22,12 @@ describe("Events", () => {
     expect(event.operator).to.equal(Operator.Special);
   });
 
+  it("should load the 2ship+4 event", () => {
+    const event = new Event("2ship+4");
+
+    expect(event.operator).to.equal(Operator.AdvShip4);
+  });
+
   it("should load pass events", () => {
     const event = new Event("ts | 2vp");
 

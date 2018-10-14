@@ -83,6 +83,7 @@ export default class PlayerData extends EventEmitter {
   temporaryStep: number = 0;
   movableShips: number = 0;
   movableShipLocations: string[] = [];
+  turns = 0;
   // when picking rewards
   toPick: {rewards: Reward[], count: number, source: EventSource} = undefined;
 
@@ -191,6 +192,7 @@ export default class PlayerData extends EventEmitter {
       case Resource.TemporaryStep: this.temporaryStep += count; break;
       case Resource.TokenArea3: if (count < 0) { this.power.area3 += count; this.power.gaia -= count; } break;
       case Resource.AdvancedSpaceShip: this.advancedShips += count; break;
+      case Resource.Turn: this.turns += count; break;
 
       default: break; // Not implemented
     }

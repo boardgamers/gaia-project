@@ -77,7 +77,8 @@ export enum Resource {
   TemporaryStep = "step",
   TemporaryRange = "range",
   TokenArea3 = "t-a3",
-  PISwap = "swap-PI"
+  PISwap = "swap-PI",
+  Turn = "turn"
 }
 
 export enum Operator {
@@ -92,7 +93,9 @@ export enum Operator {
   /** On round end for player */
   Pass = "|",
   /** reserved op for planetary institute and academies becoming 4pw structures */
-  Special = "PA->4pw"
+  Special = "PA->4pw",
+  /** Special annoying adv tech */
+  AdvShip4 = "2ship+4"
 }
 
 export enum Condition {
