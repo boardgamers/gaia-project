@@ -29,8 +29,12 @@ import { eventDesc } from '../data/event';
       return this.tileObject.count;
     },
 
+    rawContent() {
+      return tiles.techs[this.tile][0];
+    },
+
     content() {
-      const val = tiles.techs[this.tile][0];
+      const val = this.rawContent;
 
       return val.length > 10 && val[0] !== '=' ? val.replace(/ /g, '') : val;
     },
@@ -45,7 +49,7 @@ import { eventDesc } from '../data/event';
     },
 
     tooltip() {
-      return eventDesc(new Event(this.content));
+      return eventDesc(new Event(this.rawContent));
     },
 
     highlighted() {
