@@ -73,6 +73,7 @@ export default class PlayerData extends EventEmitter {
   leechPossible: number;
   tokenModifier: number = 1;
   lostPlanet: number = 0;
+  advancedShips: number = 0;
 
   // Internal variables, not meant to be in toJSON():
   followBrainStoneHeuristics = true;
@@ -174,7 +175,7 @@ export default class PlayerData extends EventEmitter {
       case Resource.Ore: this.ores = Math.min(MAX_ORE, this.ores + count); break;
       case Resource.Credit: this.credits = Math.min(MAX_CREDIT, this.credits + count); break;
       case Resource.Knowledge: this.knowledge = Math.min(MAX_KNOWLEDGE, this.knowledge + count); break;
-      case Resource.SpaceShip: count = Math.min(count, MAX_SHIP - this.ships); break;
+      case Resource.SpaceShip: count = Math.min(count, MAX_SHIP + this.advancedShips - this.ships); break;
       case Resource.VictoryPoint: this.victoryPoints += count; break;
       case Resource.Qic: this.qics += count; break;
       case Resource.GainToken: count > 0 ?  this.power.area1 += count : this.discardPower(-count); break;
@@ -189,6 +190,7 @@ export default class PlayerData extends EventEmitter {
       case Resource.TerraformCostDiscount: this.terraformCostDiscount += count; break;
       case Resource.TemporaryStep: this.temporaryStep += count; break;
       case Resource.TokenArea3: if (count < 0) { this.power.area3 += count; this.power.gaia -= count; } break;
+      case Resource.AdvancedSpaceShip: this.advancedShips += count; break;
 
       default: break; // Not implemented
     }

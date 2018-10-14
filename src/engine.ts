@@ -268,7 +268,7 @@ export default class Engine {
     player.data.on(`gain-${Resource.SpaceStation}`, () => this.processNextMove(SubPhase.SpaceStation));
     player.data.on(`gain-${Resource.DowngradeLab}`, () => {this.processNextMove(SubPhase.DowngradeLab); this.processNextMove(SubPhase.UpgradeResearch); });
     player.data.on(`gain-${Resource.UpgradeLowest}`, () => this.processNextMove(SubPhase.UpgradeResearch, {bescods: true}));
-    player.data.on(`gain-${Resource.UpgradeBasic}`, (count: number) => {
+    player.data.on(`gain-${Resource.UpgradeZero}`, (count: number) => {
       for (let i = 0; i < count; i++) {
         this.processNextMove(SubPhase.UpgradeResearch, {zero: true});
       }
@@ -276,6 +276,13 @@ export default class Engine {
     player.data.on(`gain-${Resource.MoveShips}`, () => {
       player.resetTemporaryVariables();
       player.data.movableShips = player.data.movingShips;
+      player.data.movableShipLocations = [...player.data.shipLocations];
+
+      this.processNextMove(SubPhase.MoveShip);
+    });
+    player.data.on(`gain-${Resource.MoveAllShips}`, () => {
+      player.resetTemporaryVariables();
+      player.data.movableShips = player.data.shipLocations.length;
       player.data.movableShipLocations = [...player.data.shipLocations];
 
       this.processNextMove(SubPhase.MoveShip);
