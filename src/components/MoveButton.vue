@@ -81,8 +81,13 @@ export default class MoveButton extends Vue {
       this.$store.commit("gaiaViewer/clearContext");
     }
     if (this.button.hexes && !this.button.selectHexes && !this.button.hover && !this.button.rotation && !this.button.range) {
-      this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
-      this.subscribe('hexClick', hex => this.emitCommand(`${hex.q}x${hex.r}`));
+      if (this.button.automatic && this.button.hexes.size === 1) {
+        const hex = this.button.hexes.keys().next().value;
+        this.emitCommand(`${hex.q}x${hex.r}`);
+      } else {
+        this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
+        this.subscribe('hexClick', hex => this.emitCommand(`${hex.q}x${hex.r}`));
+      }
     } else if (this.button.researchTiles) {
       this.$store.commit("gaiaViewer/highlightResearchTiles", this.button.researchTiles);
       this.subscribeFinal('researchClick');
@@ -154,7 +159,7 @@ export default class MoveButton extends Vue {
         for (const target of withinDistance) {
           highlighted.set(target, {cost: costs[map.distance(hex, target)] || '~'});
         }
-        
+
         this.$store.commit("gaiaViewer/highlightHexes", highlighted);
       });
     } else {

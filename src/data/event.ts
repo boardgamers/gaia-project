@@ -15,7 +15,7 @@ const conditionsCount = {
   [Condition.HighestResearchLevel]: "level of your highest research track",
   [Condition.Trade]: "trade token",
   [Condition.AdvanceResearch]: "level reached in any research track",
-  [Condition.PlanetsWithTradeToken]: "planet with a trade token"
+  [Condition.PlanetsWithTradeToken]: "planet with a trade token (max 8)"
 }
 
 const conditionsTrigger = {

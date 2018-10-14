@@ -229,6 +229,7 @@ export default class Commands extends Vue {
               ret.push({
                 label,
                 command: `${Command.Build} ${building}`,
+                automatic: command.data.automatic,
                 hexes: new Map<GaiaHex, {cost?: string}>(coordinates.map(coord => [this.engine.map.grid.getS(coord.coordinates), coord]))
               });
             }

@@ -9,6 +9,7 @@ export interface ButtonData {
   times?: number[];
   modal?: string;
   hexes?: HighlightHexData;
+  automatic?: boolean; // Should the user have to click on the hex or is it automatic?
   hover?: boolean;
   researchTiles?: string[];
   techs?: Array<TechTilePos | AdvTechTilePos>;
