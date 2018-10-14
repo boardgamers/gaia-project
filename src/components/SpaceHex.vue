@@ -112,11 +112,11 @@ export default class SpaceHex extends Vue {
   }
 
   shipX(index) {
-    return SpaceHex.shipXs[index]
+    return SpaceHex.shipXs[index % 7]
   }
 
   shipY(index) {
-    return SpaceHex.shipYs[index]
+    return SpaceHex.shipYs[index % 7]
   }
 
   tradeX(index) {
