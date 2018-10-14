@@ -90,9 +90,9 @@ export default class Event {
       this.rewards = Reward.parse(remaining);
     }
 
-    if (this.operator === Operator.Activate && this.condition) {
+    if (this.operator === Operator.Activate && this.condition !== Condition.None) {
       this.rewards.splice(0, 0, new Reward(-1, this.condition as any));
-      this.condition = undefined;
+      this.condition = Condition.None;
     }
   }
 
