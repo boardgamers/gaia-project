@@ -265,6 +265,16 @@ export default class Commands extends Vue {
           break;
         }
 
+        case Command.DeliverTrade: {
+          ret.push({
+            label: "Deliver Trade",
+            command: command.name,
+            hexes: new Map(command.data.locations.map(coord => [this.engine.map.grid.getS(coord.coordinates), coord])),
+            automatic: command.data.automatic
+          });
+          break;
+        }
+
         case Command.MoveShip: {
           ret.push({
             label: "Move Ship",
@@ -436,6 +446,14 @@ export default class Commands extends Vue {
           ret.push(...command.data.map(income => ({
             label: `Income ${income}`,
             command: `${Command.ChooseIncome} ${income}`
+          })));
+          break;
+        }
+
+        case Command.PickReward: {
+          ret.push(...command.data.rewards.map(reward => ({
+            label: `Gain ${reward}`,
+            command: `${Command.PickReward} ${reward}`
           })));
           break;
         }
