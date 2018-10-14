@@ -214,8 +214,14 @@ export function possibleShips(engine: Engine, player: Player) {
 }
 
 export function possibleShipMovements(engine: Engine, player: Player) {
-  const baseRange = engine.player(player).shipMovementRange;
-  const maxRange = engine.player(player).shipMovementRange + (engine.player(player).data.spendablePowerTokens() ? 1 : 0);
+  const pl = engine.player(player);
+
+  if (pl.data.movableShipLocations.length === 0) {
+    return [];
+  }
+
+  const baseRange = pl.shipMovementRange;
+  const maxRange = pl.shipMovementRange + (pl.data.spendablePowerTokens() ? 1 : 0);
   const costs = {};
 
   range(baseRange + 1, maxRange + 1).forEach(val => {
@@ -226,7 +232,7 @@ export function possibleShipMovements(engine: Engine, player: Player) {
     name: Command.MoveShip,
     player,
     data: {
-      ships: engine.player(player).data.movableShipLocations.map(loc => ({coordinates: loc})),
+      ships: pl.data.movableShipLocations.map(loc => ({coordinates: loc})),
       range: maxRange,
       costs
     }

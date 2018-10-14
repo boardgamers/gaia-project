@@ -256,10 +256,9 @@ export default class Engine {
     this.players.push(player);
 
     player.data.on(`gain-${Resource.TechTile}`, () => this.processNextMove(SubPhase.ChooseTechTile));
-    player.data.on(`gain-${Resource.SpaceShip}`, (count: number, source: Player) => {
-      for (let i = 0; i < count; i++) {
-        this.processNextMove(SubPhase.PlaceShip);
-      }
+    player.data.on(`gain-${Resource.SpaceShip}`, (count: number) => {
+      player.data.shipsToPlace = count;
+      this.processNextMove(SubPhase.PlaceShip);
     });
     player.data.on(`gain-${Resource.TemporaryStep}`, () => this.processNextMove(SubPhase.BuildMine));
     player.data.on(`gain-${Resource.TemporaryRange}`, () => this.processNextMove(SubPhase.BuildMineOrGaiaFormer));
@@ -1231,13 +1230,16 @@ export default class Engine {
 
     assert(tileAvailable !== undefined, `Impossible to get ${pos} tile`);
 
-    this.player(player).gainTechTile(tileAvailable.tile, tileAvailable.pos);
-    this.tiles.techs[pos].count -= 1;
-
+    // BEFORE gaining the tech tile (e.g. the ship+move tech tile can generate trade, and so the tech tile
+    // with trade >> 2vp needs to be covered before)
     if (isAdvanced(pos)) {
       this.processNextMove(SubPhase.CoverTechTile);
     }
 
+    this.player(player).gainTechTile(tileAvailable.tile, tileAvailable.pos);
+    this.tiles.techs[pos].count -= 1;
+
+    // AFTER gaining the tech tile (as green federation can be flipped and lock research tracks)
     this.processNextMove(SubPhase.UpgradeResearch, Object.values(ResearchField).includes(pos) ? {pos} : undefined) ;
   }
 
@@ -1290,12 +1292,18 @@ export default class Engine {
   }
 
   [Command.PlaceShip](player: PlayerEnum, location: string) {
+    const pl = this.player(player);
     const { locations } = this.availableCommand.data;
 
     assert(locations.find(loc => loc.coordinates === location), `Impossible to place ship at ${location}`);
 
     const hex = this.map.grid.get(CubeCoordinates.parse(location));
-    this.player(player).placeShip(hex);
+    pl.placeShip(hex);
+
+    pl.data.shipsToPlace -= 1;
+    if (pl.data.shipsToPlace > 0) {
+      this.processNextMove(SubPhase.PlaceShip);
+    }
   }
 
   [Command.DeliverTrade](player: PlayerEnum, location: string) {
