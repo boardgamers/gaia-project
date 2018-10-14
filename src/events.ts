@@ -80,10 +80,10 @@ export default class Event {
     }
     let remaining: string;
 
-    if (this.spec.toLowerCase().trim() === Operator.Special.toLowerCase()) {
+    if ([Operator.Special, Operator.AdvShip4].includes(this.spec as Operator)) {
       this.condition = Condition.None;
       this.rewards = [];
-      this.operator = Operator.Special;
+      this.operator = spec as Operator;
     } else {
       [this.condition, remaining] = findCondition(this.spec);
       [this.operator, remaining, this.toPick] = findOperator(remaining);

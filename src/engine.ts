@@ -287,6 +287,10 @@ export default class Engine {
 
       this.processNextMove(SubPhase.MoveShip);
     });
+    player.on(`move-preset-ships`, () => {
+      player.resetTemporaryVariables();
+      this.processNextMove(SubPhase.MoveShip);
+    });
     player.data.on('brainstone', areas => this.processNextMove(SubPhase.BrainStone, areas));
     player.on('pick-rewards', () => this.processNextMove(SubPhase.PickRewards));
 

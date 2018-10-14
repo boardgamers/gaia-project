@@ -40,7 +40,7 @@ describe("Events", () => {
     const event = new Event("k => range+1");
 
     // tslint:disable-next-line no-unused-expression
-    expect(event.condition).to.be.undefined;
+    expect(event.condition).to.equal(Condition.None);
     expect(event.operator).to.equal(Operator.Activate);
     // tslint:disable-next-line no-unused-expression
     expect(Reward.match(event.rewards, [new Reward(-1, Resource.Knowledge), new Reward(1, Resource.TemporaryRange)])).to.be.true;
