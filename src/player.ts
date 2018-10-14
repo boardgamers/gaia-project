@@ -68,7 +68,7 @@ export default class Player extends EventEmitter {
   }
 
   get actions() {
-    return this.events[Operator.Activate].map(event => ({rewards: event.spec.replace('=>', '').trim(), enabled: !event.activated}));
+    return this.events[Operator.Activate].map(event => ({rewards: Reward.toString(event.rewards, false), enabled: !event.activated}));
   }
 
   progress(finalTile: FinalTile) {
