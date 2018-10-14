@@ -710,9 +710,32 @@ export default class Player extends EventEmitter {
       case Condition.Satellite: return this.data.satellites + this.data.buildings[Building.SpaceStation];
       case Condition.StructureValue: return sum(this.data.occupied.map(hex => this.buildingValue(hex, {federation: true})));
       case Condition.StructureFedValue: return sum(this.data.occupied.map(hex => hex.belongsToFederationOf(this.player) ? this.buildingValue(hex, {federation: true}) : 0 ));
+      case Condition.Trade: return this.data.tradeTokens;
+      // Max 8 (for tech tile which gains 1k per planet)
+      case Condition.PlanetsWithTradeToken: return Math.min(this.data.occupied.filter(hex => hex.isMainOccupier(this.player) && hex.colonizedBy(this.player) && hex.hasTradeTokens()).length, 8);
+      case Condition.AdvanceResearch: return sum(Object.values(this.data.research));
+      case Condition.HighestResearchLevel: return Math.max(...Object.values(this.data.research));
+      case Condition.Culture: return this.cultureLevel();
     }
 
     return 0;
+  }
+
+  cultureLevel() {
+    // Buildings including space stations
+    const buildings = sum(this.data.occupied.map(hex => this.buildingValue(hex, {federation: true})));
+    // Two satellites = 1pw
+    const satellites = Math.floor(this.data.satellites / 2);
+    // Federation tiles
+    const federations = this.data.tiles.federations.length * 3;
+    // Spaceship income
+    const ships = (Reward.parse(this.income).find(rew => rew.type === Resource.SpaceShip) || new Reward('~')).count;
+    // Gaia formers
+    const gaiaFormers = this.data.gaiaformers;
+    // Highest level or Adv Tech
+    const advanced = Object.values(this.data.research).filter(val => val === 5).length + this.data.tiles.techs.filter(tech => isAdvanced(tech.pos)).length;
+
+    return buildings + satellites + federations + ships + gaiaFormers + advanced;
   }
 
   availableFederations(map: SpaceMap): FederationInfo[] {
