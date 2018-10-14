@@ -281,7 +281,7 @@ export default class Engine {
       this.processNextMove(SubPhase.MoveShip);
     });
     player.data.on('brainstone', areas => this.processNextMove(SubPhase.BrainStone, areas));
-    player.data.on('pick-rewards', () => this.processNextMove(SubPhase.PickRewards));
+    player.on('pick-rewards', () => this.processNextMove(SubPhase.PickRewards));
 
     /* For advanced log */
     for (const resource of [Resource.VictoryPoint, Resource.ChargePower, Resource.Credit, Resource.Qic, Resource.Knowledge, Resource.Ore]) {
