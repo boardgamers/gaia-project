@@ -1274,6 +1274,14 @@ export default class Engine {
     this.player(player).placeShip(hex);
   }
 
+  [Command.DeliverTrade](player: PlayerEnum, location: string) {
+    assert(location === this.availableCommand.data.location, "Impossible to deliver trade at " + location);
+
+    this.player(player).deliverTrade(this.map.grid.getS(location));
+
+    // TODO: charge power / token for target
+  }
+
   [`_${Command.MoveShip}`](player: PlayerEnum, ship: string, dest: string) {
     const pl = this.player(player);
     const { ships, range, costs } = this.availableCommand.data;
@@ -1294,25 +1302,25 @@ export default class Engine {
     assert (!destHex.hasTradeToken(player), `The destination planet already has a trade token for your faction`);
 
     if (destHex.hasPlanet()) {
-      if (destHex.occupied) {
+      if (destHex.occupied()) {
         assert(destHex.hasStructure(), `When moving a ship to an occupied planet, there needs to be a valid building on it`);
         assert(!destHex.isMainOccupier(player), "You can't move a ship to a planet that is occupied by you.");
-        assert(pl.data.tradeTokens > 0, "You do not have remaining trade tokens, so you can't move the ship to another faction's planet");
+        assert(pl.data.availableTradeTokens() > 0, "You do not have remaining trade tokens, so you can't move the ship to another faction's planet");
 
-        this.processNextMove(SubPhase.DeliverTrade, {target: dest});
+        this.processNextMove(SubPhase.DeliverTrade, {location: dest});
       } else {
         const planet = destHex.data.planet;
         const building = planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine;
 
         const {possible, cost, steps} = pl.canBuild(planet, building);
-        assert(possible, "Impossible to move ship to empty destination planet as you cannot build anything there");
+        assert(possible, "Impossible to move ship to this empty planet as you cannot build there");
 
         this.processNextMove(SubPhase.BuildMineOrGaiaFormer, {buildings: [{
           building,
           coordinates: dest,
           cost: Reward.toString(cost),
           steps
-        }]});
+        }], automatic: true});
       }
     } else {
       pl.placeShip(destHex);

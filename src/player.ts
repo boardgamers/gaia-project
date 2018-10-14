@@ -352,7 +352,7 @@ export default class Player extends EventEmitter {
       this.data.removeGreenFederation();
     }
 
-    this.receiveAdvanceResearchTriggerIncome();
+    this.receiveTriggerIncome(Condition.AdvanceResearch);
   }
 
   build(building: Building, hex: GaiaHex, cost: Reward[], map: SpaceMap, stepsReq?: number) {
@@ -447,6 +447,13 @@ export default class Player extends EventEmitter {
   removeShip(hex: GaiaHex) {
     hex.removeShip(this.player);
     this.data.shipLocations.splice(this.data.shipLocations.indexOf(hex.toString()), 1);
+  }
+
+  deliverTrade(hex: GaiaHex) {
+    hex.addTradeToken(this.player);
+    this.data.tradeTokens += 1;
+
+    this.receiveTriggerIncome(Condition.Trade);
   }
 
   resetTemporaryVariables() {
@@ -572,9 +579,9 @@ export default class Player extends EventEmitter {
     }
   }
 
-  receiveAdvanceResearchTriggerIncome() {
+  receiveTriggerIncome(condition: Condition) {
     for (const event of this.events[Operator.Trigger]) {
-      if (event.condition === Condition.AdvanceResearch) {
+      if (event.condition === condition) {
         this.gainRewards(event.rewards, event.source);
       }
     }
@@ -584,14 +591,6 @@ export default class Player extends EventEmitter {
     for (const event of this.events[Operator.Trigger]) {
       if (event.condition === Condition.TerraformStep) {
         this.gainRewards(event.rewards.map( rw => new Reward(rw.count * stepsReq, rw.type)), event.source);
-      }
-    }
-  }
-
-  receiveNewFederationTriggerIncome() {
-    for (const event of this.events[Operator.Trigger]) {
-      if (event.condition === Condition.Federation) {
-        this.gainRewards(event.rewards, event.source);
       }
     }
   }
@@ -669,7 +668,7 @@ export default class Player extends EventEmitter {
     });
 
     this.gainRewards(Reward.parse(federationTiles[federation]), Command.FormFederation);
-    this.receiveNewFederationTriggerIncome();
+    this.receiveTriggerIncome(Condition.Federation);
   }
 
   factionReward(reward: Reward): Reward {

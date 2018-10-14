@@ -189,6 +189,7 @@ export enum Command {
   PlaceLostPlanet  = "lostPlanet",
   PlaceShip = "ship",
   MoveShip = "move",
+  DeliverTrade = "trade",
   FormFederation = "federation",
   EndTurn = "endturn",
   PISwap = "swap-PI"

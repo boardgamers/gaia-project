@@ -35,6 +35,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
     case SubPhase.RescoreFederationTile: return possibleFederationTiles(engine, player, "player");
     case SubPhase.BuildMine: return possibleMineBuildings(engine, player, false);
     case SubPhase.BuildMineOrGaiaFormer: return possibleMineBuildings(engine, player, true, data);
+    case SubPhase.DeliverTrade: return [{name: Command.DeliverTrade, player, data}];
     case SubPhase.SpaceStation: return possibleSpaceStations(engine, player);
     case SubPhase.PISwap: return possiblePISwaps(engine, player);
     case SubPhase.DowngradeLab: return possibleLabDowngrades(engine, player);

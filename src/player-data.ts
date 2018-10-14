@@ -21,7 +21,7 @@ export default class PlayerData extends EventEmitter {
   get ships() {
     return this.shipLocations.length;
   }
-  tradeTokens = MAX_TRADE_TOKENS;
+  tradeTokens = 0;
   power: {
     area1: number,
     area2: number,
@@ -196,6 +196,10 @@ export default class PlayerData extends EventEmitter {
     } else if (count < 0) {
       this.emit(`pay-${reward.type}`, -count, source);
     }
+  }
+
+  availableTradeTokens() {
+    return MAX_TRADE_TOKENS - this.tradeTokens;
   }
 
   hasResource(reward: Reward) {
