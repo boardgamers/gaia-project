@@ -310,7 +310,7 @@ export function possibleSpecialActions(engine: Engine, player: Player) {
         continue;
       }
       specialacts.push({
-        income: event.spec.replace(Operator.Activate, '').trim(), // Reward.toString(event.rewards),
+        income: event.action().rewards, // Reward.toString(event.rewards),
         spec: event.spec
       });
     }
