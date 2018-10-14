@@ -24,7 +24,7 @@ import { eventDesc } from '../data/event';
     },
 
     income() {
-      return this.action.split('-');
+      return this.action.includes(',') ? this.action.split(',') : this.action.split('-');
     }
   }
 })

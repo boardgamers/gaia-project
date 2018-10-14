@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/donkeytech/gaia-viewer#readme",
   "dependencies": {
-    "@gaia-project/engine": "^3.0.0-beta13",
+    "@gaia-project/engine": "^3.0.0-beta16",
     "hexagrid": "^2.0.0",
     "jquery": "^3.3.1"
   },
