@@ -145,6 +145,7 @@ export default class MoveButton extends Vue {
       this.subscribe('hexClick', hex => {
         if (this.startingHex) {
           this.emitCommand(`${this.startingHex.q}x${this.startingHex.r} ${hex.q}x${hex.r}`);
+          this.startingHex = undefined;
           return;
         }
         this.startingHex = hex;
