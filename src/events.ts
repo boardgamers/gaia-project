@@ -104,6 +104,17 @@ export default class Event {
     return {spec: this.toString(), source: this.source};
   }
 
+  action(): {rewards: string, enabled: boolean} {
+    const idx = this.spec.indexOf('=>');
+    const ret = {rewards: this.spec.slice(idx + 2).trim(), enabled: !this.activated};
+
+    if (idx > 0) {
+      ret.rewards = "-" + this.spec.slice(0, idx).trim() + "," + ret.rewards;
+    }
+
+    return ret;
+  }
+
   clone() {
     return new Event(this.spec, this.source);
   }

@@ -38,6 +38,7 @@ describe("Events", () => {
     expect(event.operator).to.equal(Operator.Activate);
     // tslint:disable-next-line no-unused-expression
     expect(Reward.match(event.rewards, [new Reward(-1, Resource.Knowledge), new Reward(1, Resource.TemporaryRange)])).to.be.true;
+    expect(event.action().rewards).to.equal("-k,range+1");
   });
 
   it("should load a 'pick X of rewards' event", () => {
