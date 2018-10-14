@@ -161,8 +161,13 @@ export default class Player extends EventEmitter {
     }
   }
 
-  gainRewards(rewards: Reward[], source: EventSource) {
-    this.data.gainRewards(rewards.map(rew => this.factionReward(rew)), false, source);
+  gainRewards(rewards: Reward[], source: EventSource, toPick: number = 0) {
+    if (toPick) {
+      this.data.toPick = {count: toPick, rewards, source};
+      this.emit("pick-rewards");
+    } else {
+      this.data.gainRewards(rewards.map(rew => this.factionReward(rew)), false, source);
+    }
   }
 
   canPay(reward: Reward[]): boolean {
@@ -284,7 +289,7 @@ export default class Player extends EventEmitter {
 
     if (event.operator === Operator.Once) {
       const times = this.eventConditionCount(event.condition);
-      this.gainRewards(event.rewards.map(reward => new Reward(reward.count * times, reward.type)), event.source);
+      this.gainRewards(event.rewards.map(reward => new Reward(reward.count * times, reward.type)), event.source, event.toPick);
     }
   }
 
@@ -582,7 +587,7 @@ export default class Player extends EventEmitter {
   receiveTriggerIncome(condition: Condition) {
     for (const event of this.events[Operator.Trigger]) {
       if (event.condition === condition) {
-        this.gainRewards(event.rewards, event.source);
+        this.gainRewards(event.rewards, event.source, event.toPick);
       }
     }
   }

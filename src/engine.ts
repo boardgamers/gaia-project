@@ -281,6 +281,7 @@ export default class Engine {
       this.processNextMove(SubPhase.MoveShip);
     });
     player.data.on('brainstone', areas => this.processNextMove(SubPhase.BrainStone, areas));
+    player.data.on('pick-rewards', () => this.processNextMove(SubPhase.PickRewards));
 
     /* For advanced log */
     for (const resource of [Resource.VictoryPoint, Resource.ChargePower, Resource.Credit, Resource.Qic, Resource.Knowledge, Resource.Ore]) {
@@ -1275,7 +1276,7 @@ export default class Engine {
   }
 
   [Command.DeliverTrade](player: PlayerEnum, location: string) {
-    assert(location === this.availableCommand.data.location, "Impossible to deliver trade at " + location);
+    assert(location === this.availableCommand.data.locations[0].coordinates, "Impossible to deliver trade at " + location);
 
     this.player(player).deliverTrade(this.map.grid.getS(location));
 
@@ -1307,7 +1308,7 @@ export default class Engine {
         assert(!destHex.isMainOccupier(player), "You can't move a ship to a planet that is occupied by you.");
         assert(pl.data.availableTradeTokens() > 0, "You do not have remaining trade tokens, so you can't move the ship to another faction's planet");
 
-        this.processNextMove(SubPhase.DeliverTrade, {location: dest});
+        this.processNextMove(SubPhase.DeliverTrade, {locations: [{coordinates: dest}], automatic: true});
       } else {
         const planet = destHex.data.planet;
         const building = planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine;
@@ -1324,6 +1325,30 @@ export default class Engine {
       }
     } else {
       pl.placeShip(destHex);
+    }
+
+    pl.data.movableShips -= 1;
+    pl.data.movableShipLocations.splice(pl.data.movableShipLocations.indexOf(dest), 1);
+
+    if (pl.data.movableShips > 0) {
+      this.processNextMove(SubPhase.MoveShip);
+    }
+  }
+
+  [Command.PickReward](player: PlayerEnum, rewardString: string) {
+    const pl = this.player(player);
+    const reward = new Reward(rewardString);
+    const index = pl.data.toPick.rewards.findIndex(rw => rw.type === reward.type && rw.count === reward.count);
+
+    assert(index !== -1, "Cannot pick " + rewardString);
+
+    pl.gainRewards([reward], pl.data.toPick.source);
+    pl.data.toPick.count -= 1;
+    pl.data.toPick.rewards.splice(index, 1);
+
+    // Pick remaining reward
+    if (pl.data.toPick.count > 0) {
+      this.processNextMove(SubPhase.PickRewards);
     }
   }
 

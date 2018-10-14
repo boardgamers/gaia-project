@@ -190,6 +190,7 @@ export enum Command {
   PlaceShip = "ship",
   MoveShip = "move",
   DeliverTrade = "trade",
+  PickReward = "gain",
   FormFederation = "federation",
   EndTurn = "endturn",
   PISwap = "swap-PI"
@@ -504,7 +505,8 @@ export enum SubPhase {
   SpaceStation = "spaceStation",
   PlaceShip = "placeShip",
   MoveShip = "moveShip",
-  DeliverTrade = "deliver",
+  PickRewards = "pickRewards",
+  DeliverTrade = "deliverTrade",
   PISwap = "swap-PI",
   DowngradeLab = "down-lab"
 }

@@ -41,6 +41,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
     case SubPhase.DowngradeLab: return possibleLabDowngrades(engine, player);
     case SubPhase.BrainStone: return [{name: Command.BrainStone, player, data}];
     case SubPhase.PlaceShip: return possibleShips(engine, player);
+    case SubPhase.PickRewards: return [{name: Command.PickReward, player, data: {rewards: engine.player(player).data.toPick.rewards}}];
     case SubPhase.MoveShip: return possibleShipMovements(engine, player);
     case SubPhase.BeforeMove: {
       return [

@@ -82,6 +82,8 @@ export default class PlayerData extends EventEmitter {
   temporaryStep: number = 0;
   movableShips: number = 0;
   movableShipLocations: string[] = [];
+  // when picking rewards
+  toPick: {rewards: Reward[], count: number, source: EventSource} = undefined;
 
   toJSON(): Object {
     const ret = {
