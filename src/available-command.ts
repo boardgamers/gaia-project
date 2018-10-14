@@ -305,6 +305,10 @@ export function possibleSpecialActions(engine: Engine, player: Player) {
       if (event.rewards[0].type === Resource.PISwap && pl.data.buildings[Building.Mine] === 0) {
         continue;
       }
+      // If the action decreases rewards, the player must have them
+      if (!pl.canPay(Reward.negative(event.rewards.filter(rw => rw.count < 0)))) {
+        continue;
+      }
       specialacts.push({
         income: event.spec.replace(Operator.Activate, '').trim(), // Reward.toString(event.rewards),
         spec: event.spec
