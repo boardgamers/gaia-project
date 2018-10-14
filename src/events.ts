@@ -89,6 +89,11 @@ export default class Event {
       [this.operator, remaining, this.toPick] = findOperator(remaining);
       this.rewards = Reward.parse(remaining);
     }
+
+    if (this.operator === Operator.Activate && this.condition) {
+      this.rewards.splice(0, 0, new Reward(-1, this.condition as any));
+      this.condition = undefined;
+    }
   }
 
   toString() {
