@@ -5,7 +5,7 @@ import * as difference from 'lodash.difference';
 import factions from './factions';
 import { upgradedBuildings } from './buildings';
 import Reward from './reward';
-import { boardActions, freeActions, freeActionsTerrans, freeActionsItars } from './actions';
+import { boardActions, freeActions, freeActionsTerrans, freeActionsItars, freeActionsMoveShip } from './actions';
 import * as researchTracks from './research-tracks';
 import { isAdvanced } from './tiles/techs';
 
@@ -34,11 +34,15 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
     case SubPhase.ChooseFederationTile: return possibleFederationTiles(engine, player, "pool");
     case SubPhase.RescoreFederationTile: return possibleFederationTiles(engine, player, "player");
     case SubPhase.BuildMine: return possibleMineBuildings(engine, player, false);
-    case SubPhase.BuildMineOrGaiaFormer: return possibleMineBuildings(engine, player, true);
+    case SubPhase.BuildMineOrGaiaFormer: return possibleMineBuildings(engine, player, true, data);
+    case SubPhase.DeliverTrade: return [{name: Command.DeliverTrade, player, data}];
     case SubPhase.SpaceStation: return possibleSpaceStations(engine, player);
     case SubPhase.PISwap: return possiblePISwaps(engine, player);
     case SubPhase.DowngradeLab: return possibleLabDowngrades(engine, player);
     case SubPhase.BrainStone: return [{name: Command.BrainStone, player, data}];
+    case SubPhase.PlaceShip: return possibleShips(engine, player);
+    case SubPhase.PickRewards: return [{name: Command.PickReward, player, data: {rewards: engine.player(player).data.toPick.rewards}}];
+    case SubPhase.MoveShip: return possibleShipMovements(engine, player);
     case SubPhase.BeforeMove: {
       return [
         ...possibleBuildings(engine, player),
@@ -56,6 +60,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
   switch (engine.phase) {
     case Phase.SetupInit: return [{ name: Command.Init }];
     case Phase.SetupBoard: return [{name: Command.RotateSectors, player}];
+    case Phase.SetupShip: return possibleShips(engine, player);
     case Phase.SetupFaction: return [
       {
         name: Command.ChooseFaction,
@@ -187,6 +192,55 @@ export function possibleBuildings(engine: Engine, player: Player) {
   return [];
 }
 
+export function possibleShips(engine: Engine, player: Player) {
+  const locations = [];
+  const pl = engine.player(player);
+
+  for (const hex of pl.data.occupied) {
+    if (hex.buildingOf(player) === Building.Mine || pl.faction === Faction.Ivits && hex.buildingOf(player) === Building.PlanetaryInstitute) {
+      locations.push({coordinates: hex.toString()});
+    }
+  }
+
+  if (locations.length > 0) {
+    return [{
+      name: Command.PlaceShip,
+      player,
+      data: {locations}
+    }];
+  }
+
+  return [];
+}
+
+export function possibleShipMovements(engine: Engine, player: Player) {
+  const pl = engine.player(player);
+
+  if (pl.data.movableShipLocations.length === 0) {
+    return [];
+  }
+
+  const baseRange = pl.shipMovementRange;
+  const maxRange = pl.shipMovementRange + (pl.data.spendablePowerTokens() ? 1 : 0);
+  const costs = {};
+
+  range(baseRange + 1, maxRange + 1).forEach(val => {
+    costs[val] = new Reward(val - baseRange, Resource.ChargePower).toString();
+  });
+
+  const commands: AvailableCommand[] = [...possibleFreeActions(engine, player, {moveShips: true}), {
+    name: Command.MoveShip,
+    player,
+    data: {
+      ships: pl.data.movableShipLocations.map(loc => ({coordinates: loc})),
+      range: maxRange,
+      costs
+    }
+  }];
+
+  return commands;
+}
+
 export function possibleSpaceStations(engine: Engine, player: Player) {
   const map = engine.map;
   const pl = engine.player(player);
@@ -218,7 +272,11 @@ export function possibleSpaceStations(engine: Engine, player: Player) {
   return [];
 }
 
-export function possibleMineBuildings(engine: Engine, player: Player, acceptGaiaFormer: boolean) {
+export function possibleMineBuildings(engine: Engine, player: Player, acceptGaiaFormer: boolean, data?: {buildings?: [{building: Building, coordinates: string, cost: string, steps?: number}]}) {
+  if (data && data.buildings) {
+    return [{name: Command.Build, player, data}];
+  }
+
   const commands = [];
   const [buildingCommand] = possibleBuildings(engine, player);
 
@@ -255,8 +313,12 @@ export function possibleSpecialActions(engine: Engine, player: Player) {
       if (event.rewards[0].type === Resource.PISwap && pl.data.buildings[Building.Mine] === 0) {
         continue;
       }
+      // If the action decreases rewards, the player must have them
+      if (!pl.canPay(Reward.negative(event.rewards.filter(rw => rw.count < 0)))) {
+        continue;
+      }
       specialacts.push({
-        income: event.spec.replace(Operator.Activate, '').trim(), // Reward.toString(event.rewards),
+        income: event.action().rewards, // Reward.toString(event.rewards),
         spec: event.spec
       });
     }
@@ -297,7 +359,7 @@ export function possibleBoardActions(engine: Engine, player: Player) {
   return commands;
 }
 
-export function possibleFreeActions(engine: Engine, player: Player) {
+export function possibleFreeActions(engine: Engine, player: Player, data?: {moveShips: boolean}) {
   // free action - spend
   const pl = engine.player(player);
   const acts = [];
@@ -320,10 +382,19 @@ export function possibleFreeActions(engine: Engine, player: Player) {
     burnDisabled = true;
   }
 
+  if (data && data.moveShips) {
+    if (pl.data.qicUsedToBoostShip) {
+      pool = [];
+    } else {
+      pool = freeActionsMoveShip;
+    }
+    burnDisabled = true;
+  }
+
   for (const freeAction of pool) {
-    const maxPay = pl.maxPayRange(Reward.parse(freeAction.cost));
+    const maxPay = (data && data.moveShips) ? 1 : pl.maxPayRange(Reward.parse(freeAction.cost));
     if ( maxPay > 0 ) {
-      acts.push({cost: freeAction.cost, income: freeAction.income, range: range(1, maxPay + 1)});
+      acts.push({cost: freeAction.cost, income: freeAction.income, range: maxPay > 1 ? range(1, maxPay + 1) : undefined});
     }
   }
 
@@ -369,12 +440,21 @@ export function possibleResearchAreas(engine: Engine, player: Player, cost?: str
   const commands = [];
   const tracks = [];
   const pl = engine.player(player);
+  const fields = ResearchField.values(engine.expansions);
 
   if (pl.canPay(Reward.parse(cost))) {
+    let avFields: ResearchField[] = fields;
 
-    const minArea = Math.min(...Object.values(pl.data.research));
-
-    const avFields = (data && data.bescods) ? Object.values(ResearchField).filter( field => pl.data.research[field] === minArea) : (data && data.pos) ? [data.pos] : Object.values(ResearchField) ;
+    if (data) {
+      if (data.bescods) {
+        const minArea = Math.min(...fields.map(field => pl.data.research[field]));
+        avFields = fields.filter(field => pl.data.research[field] === minArea);
+      } else if (data.pos) {
+        avFields = [data.pos];
+      } else if (data.zero) {
+        avFields = fields.filter(field => pl.data.research[field] === 0);
+      }
+    }
 
     for (const field of avFields) {
       // end of the track reached
@@ -532,12 +612,20 @@ export function possibleGaiaFreeActions(engine: Engine, player: Player) {
 export function possibleLeech(engine: Engine, player: Player) {
   const commands = [];
   const pl = engine.player(player);
+  // TODO: Remove first part of test when legacy games are finished.
+  const isTrade = engine.lastLeechSource && engine.lastLeechSource.tradeDelivery === player;
 
   if ( pl.data.leechPossible > 0) {
     const extraPower = pl.faction === Faction.Taklons && pl.data.hasPlanetaryInstitute();
     const maxLeech = pl.maxLeech();
     const offers: Array<{offer: string, cost: string}> = [];
 
+    if (isTrade) {
+      offers.push({
+        offer: "1t",
+        cost: "~"
+      });
+    }
     if (extraPower) {
       offers.push({
         offer: `${maxLeech}${Resource.ChargePower},1t`,
@@ -608,7 +696,7 @@ export function possibleTechTiles(engine: Engine, player: Player) {
   const data = engine.players[player].data;
 
   //  tech tiles that player doesn't already have
-  for (const tilePos of Object.values(TechTilePos)) {
+  for (const tilePos of TechTilePos.values(engine.expansions)) {
     if (!data.tiles.techs.find(tech => tech.tile === engine.tiles.techs[tilePos].tile)) {
       tiles.push({
         tile: engine.tiles.techs[tilePos].tile,
@@ -619,7 +707,7 @@ export function possibleTechTiles(engine: Engine, player: Player) {
 
   // adv tech tiles where player has lev 4/5, free federation tokens,
   // and available std tech tiles to cover
-  for (const tilePos of Object.values(AdvTechTilePos)) {
+  for (const tilePos of AdvTechTilePos.values(engine.expansions)) {
     if (engine.tiles.techs[tilePos].count <= 0) {
       continue;
     }

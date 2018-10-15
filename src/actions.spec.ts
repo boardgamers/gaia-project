@@ -158,7 +158,7 @@ describe("Power/QIC Actions", () => {
     expect(engine.player(Player.Player1).data.victoryPoints).to.equal(vp + 8);
   });
 
-  it ("should prevent the rescore fed action when no federation token", () => {
+  it("should prevent the rescore fed action when no federation token", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction bescods

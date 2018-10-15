@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import Event from "./events";
-import { Condition, Operator } from "./enums";
+import { Condition, Operator, Resource } from "./enums";
+import Reward from "./reward";
 
 describe("Events", () => {
   it("should load the ~ event", () => {
@@ -21,12 +22,39 @@ describe("Events", () => {
     expect(event.operator).to.equal(Operator.Special);
   });
 
+  it("should load the 2ship+4 event", () => {
+    const event = new Event("2ship+4");
+
+    expect(event.operator).to.equal(Operator.AdvShip4);
+  });
+
   it("should load pass events", () => {
     const event = new Event("ts | 2vp");
 
     expect(event.condition).to.equal(Condition.TradingStation);
     expect(event.operator).to.equal(Operator.Pass);
     expect(event.rewards).to.have.length(1);
+  });
+
+  it("should load action event with cost", () => {
+    const event = new Event("k => range+1");
+
+    // tslint:disable-next-line no-unused-expression
+    expect(event.condition).to.equal(Condition.None);
+    expect(event.operator).to.equal(Operator.Activate);
+    // tslint:disable-next-line no-unused-expression
+    expect(Reward.match(event.rewards, [new Reward(-1, Resource.Knowledge), new Reward(1, Resource.TemporaryRange)])).to.be.true;
+    expect(event.action().rewards).to.equal("-k,range+1");
+  });
+
+  it("should load a 'pick X of rewards' event", () => {
+    const event = new Event("trade 2>> 2k,2o,4c,4pw,q");
+
+    expect(event.condition).to.equal(Condition.Trade);
+    expect(event.operator).to.equal(Operator.Trigger);
+    expect(event.toPick).to.equal(2);
+    // tslint:disable-next-line no-unused-expression
+    expect(event.rewards).to.have.length(5);
   });
 
   describe("toString", () => {
@@ -38,6 +66,11 @@ describe("Events", () => {
       const event = new Event("=> 3t");
       event.activated = true;
       expect(event.toString()).to.equal("=> 3t!");
+    });
+
+    it ("should render properly for a pick X event", () => {
+      const event = new Event("a 1>> o,k");
+      expect(event.toString()).to.equal("a 1>> o,k");
     });
   });
 });

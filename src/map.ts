@@ -105,7 +105,7 @@ export default class SpaceMap {
     const centers = conf.sectors.length === 7 ? smallCenters : bigCenters;
 
     // Legacy map generation, to keep old tests valid
-    const oldGen = ["Gianluigi-Buffon", "randomSeed", "12", "9876", "yellow-paint-8951", "green-jeans-8458", "Fastgame01", "zadbd", "bosco-marcuzzo3", "Alex-Del-Pieroooooo", "SGAMBATA", "djfjjv4k", "randomSeed2", "randomseed", "polite-food-8474", "green-jeans-8458", "waiting-fabs-1", "curious-stay-2150", "Three"].includes(this.seed);
+    const oldGen = ["Gianluigi-Buffon", "randomSeed", "12", "9876", "yellow-paint-8951", "green-jeans-8458", "Fastgame01", "zadbd", "bosco-marcuzzo3", "Alex-Del-Pieroooooo", "SGAMBATA", "djfjjv4k", "randomSeed2", "randomseed", "polite-food-8474", "green-jeans-8458", "waiting-fabs-1", "curious-stay-2150", "Three", "GaiaRocks"].includes(this.seed);
 
     const [hexagon, ...hexagons] = conf.sectors.map((val: SectorInMapConfiguration, i) => {
       const def = ((conf.mirror || oldGen) ? rSectors : sectors)[val.sector].map;
@@ -204,6 +204,19 @@ export default class SpaceMap {
 
     // return distance;
     return CubeCoordinates.distance(hex1, hex2);
+  }
+
+  withinDistance(center: CubeCoordinates, distance: number): GaiaHex[] {
+    const group = GaiaHex.hexagon(distance, {center});
+    const ret: GaiaHex[] = [];
+
+    for (const hex of group) {
+      if (this.grid.get(hex)) {
+        ret.push(this.grid.get(hex));
+      }
+    }
+
+    return ret;
   }
 
   excludedHexesForBuildingFederation(player: Player, faction: Faction) {

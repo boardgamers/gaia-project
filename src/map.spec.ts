@@ -82,4 +82,10 @@ describe("Map", () => {
     expect(map.grid.getS("3x1").data.planet).to.equal(Planet.Empty, "3x1 != empty");
     expect(map.grid.getS("1x5").data.planet).to.equal(Planet.Terra, "1x5 != terra");
   });
+
+  it("withinDistance should work", () => {
+    const map = new SpaceMap(2);
+
+    expect(map.withinDistance({q: 0, r: 0, s: 0}, 2)).to.have.length(19);
+  });
 });

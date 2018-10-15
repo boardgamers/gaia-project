@@ -13,7 +13,7 @@ const gleens: FactionBoardRaw = {
   },
   income: ["3k,4o,15c,up-nav", "+o,k"],
   handlers: {
-    [`build-${Building.PlanetaryInstitute}`]: (player: Player) => player.gainFederationToken(Federation.FederationGleens),
+    [`build-${Building.PlanetaryInstitute}`]: (player: Player) => player.gainFederationToken(Federation.Gleens),
     [`build-${Building.Mine}`]: (player: Player, hex: GaiaHex) => {
       if (hex.data.planet === Planet.Gaia) {
         player.gainRewards([new Reward("2vp")], Faction.Gleens);
