@@ -1,5 +1,4 @@
-import store from './store';
-
+import { Store } from "vuex";
 
 function isError(err: Error | JQuery.jqXHR): err is Error {
   return (<any> err).message;
@@ -9,7 +8,7 @@ function isJqXHR(err: Error | JQuery.jqXHR | {message: string}): err is JQuery.j
   return 'responseText' in (<JQuery.jqXHR> err);
 }
 
-export function handleError(err: Error | JQuery.jqXHR | string) {
+export function handleError(store: Store<any>, err: Error | JQuery.jqXHR | string) {
   if (!err) {
     return;
   }

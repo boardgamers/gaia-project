@@ -261,7 +261,7 @@ export default class Game extends Vue {
       this.handleData(data, !goToLastMove);
       window.sessionStorage.setItem('moves', JSON.stringify(data.moveHistory));
     } catch(err) {
-      handleError(err);
+      handleError(this.$store, err);
     }
   }
 
@@ -319,7 +319,7 @@ export default class Game extends Vue {
   loadGame() {
     this.$store.commit("gaiaViewer/clearContext");
 
-    this.api.loadGame(this.gameId).then(data => this.handleData(data), handleError);
+    this.api.loadGame(this.gameId).then(data => this.handleData(data), err => handleError(this.$store, err));
   }
 
   /**
@@ -387,7 +387,7 @@ export default class Game extends Vue {
     
     if (this.gameId) {
       if (command) {
-        this.api.addMove(this.gameId, command).then(data => this.handleData(data), handleError);
+        this.api.addMove(this.gameId, command).then(data => this.handleData(data), err => handleError(this.$store, err));
       } else {
         this.loadGame();
       }
