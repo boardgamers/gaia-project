@@ -228,7 +228,7 @@ export function possibleShipMovements(engine: Engine, player: Player) {
     costs[val] = new Reward(val - baseRange, Resource.ChargePower).toString();
   });
 
-  return [{
+  const commands: AvailableCommand[] = [{
     name: Command.MoveShip,
     player,
     data: {
@@ -237,6 +237,17 @@ export function possibleShipMovements(engine: Engine, player: Player) {
       costs
     }
   }];
+
+  // Free action to boost ship
+  if (!pl.data.qicUsedToBoostShip && pl.canPay([new Reward("1q")])) {
+    commands.unshift({
+      name: Command.Spend,
+      player,
+      data: { acts: [{cost: "1q", income: "range+2"}] }
+    });
+  }
+
+  return commands;
 }
 
 export function possibleSpaceStations(engine: Engine, player: Player) {

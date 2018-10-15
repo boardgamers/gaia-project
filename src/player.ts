@@ -291,17 +291,15 @@ export default class Player extends EventEmitter {
       this.gainRewards(event.rewards.map(reward => new Reward(reward.count * times, reward.type)), event.source, event.toPick);
     } else if (event.operator === Operator.AdvShip4) {
       const nShips = this.data.shipLocations.length;
-      const shipRange = this.data.shipRange;
+      this.data.shipRange += 4;
 
       this.gainRewards([new Reward("2ship")], event.source);
 
       this.data.movableShipLocations = this.data.shipLocations.slice(nShips);
       this.data.movableShips = this.data.shipLocations.length - nShips;
-      this.data.shipRange = 4;
 
       this.emit("move-preset-ships");
-
-      this.data.shipRange = shipRange;
+      this.data.shipRange -= 4;
     }
   }
 
@@ -479,7 +477,8 @@ export default class Player extends EventEmitter {
     // reset temporary benefits
     this.data.temporaryRange = 0;
     this.data.temporaryStep = 0;
-    this.data.temporaryRange = 0;
+    this.data.temporaryShipRange = 0;
+    this.data.qicUsedToBoostShip = 0;
   }
 
   pass() {

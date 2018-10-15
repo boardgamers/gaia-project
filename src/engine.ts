@@ -261,7 +261,14 @@ export default class Engine {
       this.processNextMove(SubPhase.PlaceShip);
     });
     player.data.on(`gain-${Resource.TemporaryStep}`, () => this.processNextMove(SubPhase.BuildMine));
-    player.data.on(`gain-${Resource.TemporaryRange}`, () => this.processNextMove(SubPhase.BuildMineOrGaiaFormer));
+    player.data.on(`gain-${Resource.TemporaryRange}`, () => {
+      if (this.findAvailableCommand(player.player, Command.MoveShip)) {
+        player.data.qicUsedToBoostShip += 1;
+        this.processNextMove(SubPhase.MoveShip);
+      } else {
+        this.processNextMove(SubPhase.BuildMineOrGaiaFormer);
+      }
+    });
     player.data.on(`gain-${Resource.RescoreFederation}`, () => this.processNextMove(SubPhase.RescoreFederationTile));
     player.data.on(`gain-${Resource.PISwap}`, () => this.processNextMove(SubPhase.PISwap));
     player.data.on(`gain-${Resource.SpaceStation}`, () => this.processNextMove(SubPhase.SpaceStation));
