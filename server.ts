@@ -25,8 +25,9 @@ app.use((req, res, next) => {
 app.post("/", (req, res) => {
   try {
     const moves = req.body.moves || [];
-    const advancedRules = moves.length < 2 || moves[1].includes('rotate');
-    const engine = new Engine(moves.slice(0, -1), {advancedRules, noFedCheck: true});
+    const options = Object.assign({}, req.body.options, {noFedCheck: true});
+    options.spaceShips = options.spaceShips === "false" ? false : options.spaceShips;
+    const engine = new Engine(moves.slice(0, -1), options);
 
     // reenable fedCheck
     engine.options.noFedCheck = false;

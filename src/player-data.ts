@@ -1,6 +1,6 @@
 import Reward from "./reward";
 import { GaiaHex } from "./gaia-hex";
-import { ResearchField, Building, Booster, TechTile, AdvTechTile, Federation, Resource, BrainstoneArea, TechTilePos, AdvTechTilePos, Command } from "./enums";
+import { ResearchField, Building, Booster, TechTile, AdvTechTile, Federation, Resource, BrainstoneArea, TechTilePos, AdvTechTilePos, Command, Expansion } from "./enums";
 import { EventEmitter } from "eventemitter3";
 import { EventSource } from './events';
 import * as fromPairs from "lodash.frompairs";
@@ -9,6 +9,8 @@ import * as cloneDeep from 'lodash.clonedeep';
 const MAX_ORE = 15;
 const MAX_CREDIT = 30;
 const MAX_KNOWLEDGE = 15;
+const MAX_SHIP = 3;
+const MAX_TRADE_TOKENS = 15;
 
 export default class PlayerData extends EventEmitter {
   victoryPoints: number = 10;
@@ -16,6 +18,10 @@ export default class PlayerData extends EventEmitter {
   ores: number = 0;
   qics: number = 0;
   knowledge: number = 0;
+  get ships() {
+    return this.shipLocations.length;
+  }
+  tradeTokens = 0;
   power: {
     area1: number,
     area2: number,
@@ -37,10 +43,11 @@ export default class PlayerData extends EventEmitter {
   research: {
     [key in ResearchField]: number
   } = {
-    terra: 0, nav: 0, int: 0, gaia: 0, eco: 0, sci: 0
+    terra: 0, nav: 0, int: 0, gaia: 0, eco: 0, sci: 0, trade: 0, ship: 0
   };
   range: number = 1;
-  temporaryRange: number = 0;
+  shipRange: number = 0;
+  movingShips: number = 1;
   /** Total number of gaiaformers gained (including those on the board & the gaia area) */
   gaiaformers: number = 0;
   /** number of gaiaformers gained that are in gaia area */
@@ -62,14 +69,25 @@ export default class PlayerData extends EventEmitter {
 
   /** Coordinates occupied by buildings */
   occupied: GaiaHex[] = [];
+  shipLocations: string[] = [];
   leechPossible: number;
   tokenModifier: number = 1;
   lostPlanet: number = 0;
+  advancedShips: number = 0;
 
   // Internal variables, not meant to be in toJSON():
   followBrainStoneHeuristics = true;
   brainstoneDest: BrainstoneArea | "discard";
+  temporaryRange: number = 0;
+  temporaryShipRange: number = 0; // unused for now, using temporaryRange instead
   temporaryStep: number = 0;
+  qicUsedToBoostShip: number = 0;
+  movableShips: number = 0;
+  movableShipLocations: string[] = [];
+  shipsToPlace: number = 0;
+  turns = 0;
+  // when picking rewards
+  toPick: {rewards: Reward[], count: number, source: EventSource} = undefined;
 
   toJSON(): Object {
     const ret = {
@@ -81,8 +99,6 @@ export default class PlayerData extends EventEmitter {
       power: this.power,
       research: this.research,
       range: this.range,
-      temporaryRange: this.temporaryRange,
-      temporaryStep: this.temporaryStep,
       gaiaformers: this.gaiaformers,
       gaiaformersInGaia: this.gaiaformersInGaia,
       terraformCostDiscount: this.terraformCostDiscount,
@@ -93,7 +109,10 @@ export default class PlayerData extends EventEmitter {
       tokenModifier: this.tokenModifier,
       buildings: this.buildings,
       federationCount: this.federationCount,
-      lostPlanet: this.lostPlanet
+      lostPlanet: this.lostPlanet,
+      shipLocations: this.shipLocations,
+      shipRange: this.shipRange,
+      movingShips: this.movingShips
     };
 
     return ret;
@@ -159,6 +178,7 @@ export default class PlayerData extends EventEmitter {
       case Resource.Ore: this.ores = Math.min(MAX_ORE, this.ores + count); break;
       case Resource.Credit: this.credits = Math.min(MAX_CREDIT, this.credits + count); break;
       case Resource.Knowledge: this.knowledge = Math.min(MAX_KNOWLEDGE, this.knowledge + count); break;
+      case Resource.SpaceShip: count = Math.min(count, MAX_SHIP + this.advancedShips - this.ships); break;
       case Resource.VictoryPoint: this.victoryPoints += count; break;
       case Resource.Qic: this.qics += count; break;
       case Resource.GainToken: count > 0 ?  this.power.area1 += count : this.discardPower(-count); break;
@@ -167,10 +187,14 @@ export default class PlayerData extends EventEmitter {
       case Resource.ChargePower: count > 0 ? this.chargePower(count) : this.spendPower(-count); break;
       case Resource.Range: this.range += count; break;
       case Resource.TemporaryRange: this.temporaryRange += count; break;
+      case Resource.SpaceShipRange: this.shipRange += 1; break;
+      case Resource.SpaceShipMove: this.movingShips += 1; break;
       case Resource.GaiaFormer: count > 0 ? this.gaiaformers += count : this.gaiaformersInGaia -= count; break;
       case Resource.TerraformCostDiscount: this.terraformCostDiscount += count; break;
       case Resource.TemporaryStep: this.temporaryStep += count; break;
       case Resource.TokenArea3: if (count < 0) { this.power.area3 += count; this.power.gaia -= count; } break;
+      case Resource.AdvancedSpaceShip: this.advancedShips += count; break;
+      case Resource.Turn: this.turns += count; break;
 
       default: break; // Not implemented
     }
@@ -180,6 +204,10 @@ export default class PlayerData extends EventEmitter {
     } else if (count < 0) {
       this.emit(`pay-${reward.type}`, -count, source);
     }
+  }
+
+  availableTradeTokens() {
+    return MAX_TRADE_TOKENS - this.tradeTokens;
   }
 
   hasResource(reward: Reward) {
@@ -406,7 +434,7 @@ export default class PlayerData extends EventEmitter {
   gainFinalVictoryPoints() {
     // Gain 4 points for research at level 3, 8 points for research at level 4
     // and 12 points for research at level 12
-    for (const research of (Object.values(ResearchField) as ResearchField[])) {
+    for (const research of ResearchField.values(Expansion.All)) {
       this.gainReward(new Reward(Math.max(this.research[research] - 2, 0) * 4, Resource.VictoryPoint), false, research);
     }
 

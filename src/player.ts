@@ -24,7 +24,7 @@ import { FederationInfo, isOutclassedBy } from './federation';
 import federationTiles, { isGreen } from "./tiles/federations";
 import { EventEmitter } from "eventemitter3";
 import { finalScorings } from './tiles/scoring';
-import techs from './tiles/techs';
+import techs, { isAdvanced } from './tiles/techs';
 import * as assert from "assert";
 
 const TERRAFORMING_COST = 3;
@@ -46,7 +46,8 @@ export default class Player extends EventEmitter {
     [Operator.Trigger]: [],
     [Operator.Activate]: [],
     [Operator.Pass]: [],
-    [Operator.Special]: []
+    [Operator.Special]: [],
+    [Operator.AdvShip4]: []
   };
   // To avoid recalculating federations every time
   federationCache: FederationCache;
@@ -68,7 +69,7 @@ export default class Player extends EventEmitter {
   }
 
   get actions() {
-    return this.events[Operator.Activate].map(event => ({rewards: event.spec.replace('=>', '').trim(), enabled: !event.activated}));
+    return this.events[Operator.Activate].map(event => event.action());
   }
 
   progress(finalTile: FinalTile) {
@@ -112,11 +113,11 @@ export default class Player extends EventEmitter {
     return json;
   }
 
-  static fromData(data: any, map: SpaceMap) {
+  static fromData(data: any, map: SpaceMap, expansions: number) {
     const player = new Player(data.player);
 
     if (data.faction) {
-      player.loadFaction(data.faction, true);
+      player.loadFaction(data.faction, expansions, true);
     }
 
     for (const kind of Object.keys(data.events)) {
@@ -134,9 +135,7 @@ export default class Player extends EventEmitter {
       }
     }
 
-    if (data.data) {
-      merge(player.data, data.data);
-    }
+    player.loadPlayerData(data.data);
 
     return player;
   }
@@ -151,14 +150,23 @@ export default class Player extends EventEmitter {
     return factions.planet(this.faction);
   }
 
+  get shipMovementRange(): number {
+    return this.data.range + this.data.shipRange + this.data.temporaryRange;
+  }
+
   payCosts(costs: Reward[], source: EventSource) {
     for (const cost of costs) {
       this.data.payCost(cost, source);
     }
   }
 
-  gainRewards(rewards: Reward[], source: EventSource) {
-    this.data.gainRewards(rewards.map(rew => this.factionReward(rew)), false, source);
+  gainRewards(rewards: Reward[], source: EventSource, toPick: number = 0) {
+    if (toPick) {
+      this.data.toPick = {count: toPick, rewards, source};
+      this.emit("pick-rewards");
+    } else {
+      this.data.gainRewards(rewards.map(rew => this.factionReward(rew)), false, source);
+    }
   }
 
   canPay(reward: Reward[]): boolean {
@@ -184,7 +192,7 @@ export default class Player extends EventEmitter {
     }
   }
 
-  canBuild(targetPlanet: Planet, building: Building, {isolated, addedCost, existingBuilding}: {isolated?: boolean, addedCost?: Reward[], existingBuilding?: Building}): {cost?: Reward[], possible: boolean, steps?: number} {
+  canBuild(targetPlanet: Planet, building: Building, {isolated, addedCost, existingBuilding}: {isolated?: boolean, addedCost?: Reward[], existingBuilding?: Building} = {}): {cost?: Reward[], possible: boolean, steps?: number} {
     if (this.data.buildings[building] >= this.maxBuildings(building)) {
       // Too many buildings of the same kind
       return {possible: false};
@@ -238,11 +246,12 @@ export default class Player extends EventEmitter {
     return this.data.occupied.filter(hex => hex.data.planet !== Planet.Empty && hex.isMainOccupier(this.player));
   }
 
-  loadFaction(faction: Faction, skipIncome = false) {
+  loadFaction(faction: Faction, expansions: number, skipIncome = false) {
     this.faction = faction;
     this.board = factionBoard(faction);
 
     if (!skipIncome) {
+      this.loadTechs(expansions);
       this.loadEvents(this.board.income);
     }
 
@@ -255,6 +264,14 @@ export default class Player extends EventEmitter {
       for (const emitter of [this, this.data]) {
         emitter.on(eventName, (...args) => this.board.handlers[eventName](this, ...args));
       }
+    }
+  }
+
+  loadTechs(expansions: number) {
+    const fields = ResearchField.values(expansions);
+
+    for (const field of fields) {
+      this.loadEvents(Event.parse(researchTracks[field][this.data.research[field]], field));
     }
   }
 
@@ -271,7 +288,18 @@ export default class Player extends EventEmitter {
 
     if (event.operator === Operator.Once) {
       const times = this.eventConditionCount(event.condition);
-      this.gainRewards(event.rewards.map(reward => new Reward(reward.count * times, reward.type)), event.source);
+      this.gainRewards(event.rewards.map(reward => new Reward(reward.count * times, reward.type)), event.source, event.toPick);
+    } else if (event.operator === Operator.AdvShip4) {
+      const nShips = this.data.shipLocations.length;
+      this.data.shipRange += 4;
+
+      this.gainRewards([new Reward("2ship")], event.source);
+
+      this.data.movableShipLocations = this.data.shipLocations.slice(nShips);
+      this.data.movableShips = this.data.shipLocations.length - nShips;
+
+      this.emit("move-preset-ships");
+      this.data.shipRange -= 4;
     }
   }
 
@@ -339,7 +367,7 @@ export default class Player extends EventEmitter {
       this.data.removeGreenFederation();
     }
 
-    this.receiveAdvanceResearchTriggerIncome();
+    this.receiveTriggerIncome(Condition.AdvanceResearch);
   }
 
   build(building: Building, hex: GaiaHex, cost: Reward[], map: SpaceMap, stepsReq?: number) {
@@ -426,11 +454,31 @@ export default class Player extends EventEmitter {
     this.emit(`build-${building}`, hex);
   }
 
-  // Not to confuse with the end of a round
-  endTurn() {
+  placeShip(hex: GaiaHex) {
+    hex.addShip(this.player);
+    this.data.shipLocations.push(hex.toString());
+  }
+
+  removeShip(hex: GaiaHex) {
+    const idx = this.data.shipLocations.indexOf(hex.toString());
+
+    hex.removeShip(this.player);
+    this.data.shipLocations.splice(idx, 1);
+  }
+
+  deliverTrade(hex: GaiaHex) {
+    hex.addTradeToken(this.player);
+    this.data.tradeTokens += 1;
+
+    this.receiveTriggerIncome(Condition.Trade);
+  }
+
+  resetTemporaryVariables() {
     // reset temporary benefits
     this.data.temporaryRange = 0;
     this.data.temporaryStep = 0;
+    this.data.temporaryShipRange = 0;
+    this.data.qicUsedToBoostShip = 0;
   }
 
   pass() {
@@ -447,11 +495,12 @@ export default class Player extends EventEmitter {
   }
 
   gainTechTile(tile: TechTile | AdvTechTile, pos: TechTilePos | AdvTechTilePos) {
-    if (Object.values(AdvTechTilePos).includes(pos)) {
+    const advanced = isAdvanced(pos);
+    if (advanced) {
       this.data.removeGreenFederation();
     }
     this.data.tiles.techs.push({tile, pos, enabled: true});
-    this.loadEvents(Event.parse(techs[tile], Object.values(TechTilePos).includes(pos) ? `tech-${pos}` as TechPos : pos as AdvTechTilePos));
+    this.loadEvents(Event.parse(techs[tile], !advanced ? `tech-${pos}` as TechPos : pos as AdvTechTilePos));
 
     // resets federationCache if Special PA->4pw
     if ( tile === TechTile.Tech3  ) { this.federationCache = null; }
@@ -513,6 +562,11 @@ export default class Player extends EventEmitter {
   receiveIncome() {
     for (const event of this.events[Operator.Income]) {
       if (!event.activated) {
+        // Taklons + brainstone need to not activate the event until the reward is gained...
+        // This is UGLY. Maybe a better handling of placing ships in income phase would avoid this hack
+        if (!event.rewards.some(rew => rew.type === Resource.ChargePower)) {
+          event.activated = true; // before next line, in case it trigger events (like placing ship)
+        }
         this.gainRewards(event.rewards, event.source);
         event.activated = true;
       } else {
@@ -543,10 +597,10 @@ export default class Player extends EventEmitter {
     }
   }
 
-  receiveAdvanceResearchTriggerIncome() {
+  receiveTriggerIncome(condition: Condition) {
     for (const event of this.events[Operator.Trigger]) {
-      if (event.condition === Condition.AdvanceResearch) {
-        this.gainRewards(event.rewards, event.source);
+      if (event.condition === condition) {
+        this.gainRewards(event.rewards, event.source, event.toPick);
       }
     }
   }
@@ -555,14 +609,6 @@ export default class Player extends EventEmitter {
     for (const event of this.events[Operator.Trigger]) {
       if (event.condition === Condition.TerraformStep) {
         this.gainRewards(event.rewards.map( rw => new Reward(rw.count * stepsReq, rw.type)), event.source);
-      }
-    }
-  }
-
-  receiveNewFederationTriggerIncome() {
-    for (const event of this.events[Operator.Trigger]) {
-      if (event.condition === Condition.Federation) {
-        this.gainRewards(event.rewards, event.source);
       }
     }
   }
@@ -640,7 +686,7 @@ export default class Player extends EventEmitter {
     });
 
     this.gainRewards(Reward.parse(federationTiles[federation]), Command.FormFederation);
-    this.receiveNewFederationTriggerIncome();
+    this.receiveTriggerIncome(Condition.Federation);
   }
 
   factionReward(reward: Reward): Reward {
@@ -677,9 +723,32 @@ export default class Player extends EventEmitter {
       case Condition.Satellite: return this.data.satellites + this.data.buildings[Building.SpaceStation];
       case Condition.StructureValue: return sum(this.data.occupied.map(hex => this.buildingValue(hex, {federation: true})));
       case Condition.StructureFedValue: return sum(this.data.occupied.map(hex => hex.belongsToFederationOf(this.player) ? this.buildingValue(hex, {federation: true}) : 0 ));
+      case Condition.Trade: return this.data.tradeTokens;
+      // Max 8 (for tech tile which gains 1k per planet)
+      case Condition.PlanetsWithTradeToken: return Math.min(this.data.occupied.filter(hex => hex.isMainOccupier(this.player) && hex.colonizedBy(this.player) && hex.hasTradeTokens()).length, 8);
+      case Condition.AdvanceResearch: return sum(Object.values(this.data.research));
+      case Condition.HighestResearchLevel: return Math.max(...Object.values(this.data.research));
+      case Condition.Culture: return this.cultureLevel();
     }
 
     return 0;
+  }
+
+  cultureLevel() {
+    // Buildings including space stations
+    const buildings = sum(this.data.occupied.map(hex => this.buildingValue(hex, {federation: true})));
+    // Two satellites = 1pw
+    const satellites = Math.floor(this.data.satellites / 2);
+    // Federation tiles
+    const federations = this.data.tiles.federations.length * 3;
+    // Spaceship income
+    const ships = (Reward.parse(this.income).find(rew => rew.type === Resource.SpaceShip) || new Reward('~')).count;
+    // Gaia formers
+    const gaiaFormers = this.data.gaiaformers;
+    // Highest level or Adv Tech
+    const advanced = Object.values(this.data.research).filter(val => val === 5).length + this.data.tiles.techs.filter(tech => isAdvanced(tech.pos)).length;
+
+    return buildings + satellites + federations + ships + gaiaFormers + advanced;
   }
 
   availableFederations(map: SpaceMap, flexible: boolean): FederationInfo[] {

@@ -49,7 +49,7 @@ describe("gleens", () => {
     const data = engine.player(Player.Player2).data;
 
     // tslint:disable-next-line no-unused-expression
-    expect(data.tiles.federations.some(fed => fed.tile === Federation.FederationGleens)).to.be.true;
+    expect(data.tiles.federations.some(fed => fed.tile === Federation.Gleens)).to.be.true;
   });
 
   it('should grant gleens two victory points when building a mine on a gaia planet', () => {

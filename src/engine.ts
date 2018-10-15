@@ -28,7 +28,8 @@ import {
   ScoringTile,
   FinalTile,
   Phase,
-  SubPhase
+  SubPhase,
+  Expansion
 } from './enums';
 import { CubeCoordinates } from 'hexagrid';
 import Event, {EventSource, RoundScoring} from './events';
@@ -41,8 +42,10 @@ import AvailableCommand, {
 import Reward from './reward';
 import { boardActions } from './actions';
 import { stdBuildingValue } from './buildings';
+import { isAdvanced } from './tiles/techs';
 
 const ISOLATED_DISTANCE = 3;
+const LEECHING_DISTANCE = 2;
 
 export interface EngineOptions {
   /** Allow last player to rotate sector BEFORE faction selection */
@@ -53,6 +56,8 @@ export interface EngineOptions {
   map?: MapConfiguration;
   /** Are the federations flexible (allows you to avoid planets with buildings to form federation even if it's not the shortest route)? */
   flexibleFederations?: boolean;
+  /** Spaceship expansion */
+  spaceShips?: boolean;
 }
 
 /**
@@ -106,7 +111,12 @@ export default class Engine {
   availableCommands: AvailableCommand[] = [];
   availableCommand: AvailableCommand;
   phase: Phase = Phase.SetupInit;
+  subPhase: SubPhase = SubPhase.BeforeMove;
   oldPhase: Phase;
+
+  get expansions() {
+    return 0 | (this.options.spaceShips ? Expansion.Spaceships : 0);
+  }
 
   round: number = Round.None;
   /** Order of players in the turn */
@@ -123,7 +133,9 @@ export default class Engine {
   // used to transit between phases
   tempTurnOrder: PlayerEnum[] = [];
   tempCurrentPlayer: PlayerEnum;
-  leechSources: Array<{player: PlayerEnum, coordinates: string}> = [];
+  leechSources: Array<{player: PlayerEnum, coordinates: string, tradeDelivery?: PlayerEnum}> = [];
+  // When ongoing leech, remember the source in case
+  lastLeechSource: {player: PlayerEnum, coordinates: string, tradeDelivery?: PlayerEnum};
 
   // All moves
   moveHistory: string[] = [];
@@ -249,14 +261,50 @@ export default class Engine {
     this.players.push(player);
 
     player.data.on(`gain-${Resource.TechTile}`, () => this.processNextMove(SubPhase.ChooseTechTile));
+    player.data.on(`gain-${Resource.SpaceShip}`, (count: number) => {
+      player.data.shipsToPlace = count;
+      this.processNextMove(SubPhase.PlaceShip);
+    });
     player.data.on(`gain-${Resource.TemporaryStep}`, () => this.processNextMove(SubPhase.BuildMine));
-    player.data.on(`gain-${Resource.TemporaryRange}`, () => this.processNextMove(SubPhase.BuildMineOrGaiaFormer));
+    player.data.on(`gain-${Resource.TemporaryRange}`, (count: number) => {
+      if (this.findAvailableCommand(player.player, Command.MoveShip)) {
+        assert(player.data.qicUsedToBoostShip === 0 && count === 2, "Impossible to gain range more than once during move ship phase");
+        player.data.qicUsedToBoostShip += 1;
+        this.processNextMove(SubPhase.MoveShip);
+      } else {
+        this.processNextMove(SubPhase.BuildMineOrGaiaFormer);
+      }
+    });
     player.data.on(`gain-${Resource.RescoreFederation}`, () => this.processNextMove(SubPhase.RescoreFederationTile));
     player.data.on(`gain-${Resource.PISwap}`, () => this.processNextMove(SubPhase.PISwap));
     player.data.on(`gain-${Resource.SpaceStation}`, () => this.processNextMove(SubPhase.SpaceStation));
     player.data.on(`gain-${Resource.DowngradeLab}`, () => {this.processNextMove(SubPhase.DowngradeLab); this.processNextMove(SubPhase.UpgradeResearch); });
     player.data.on(`gain-${Resource.UpgradeLowest}`, () => this.processNextMove(SubPhase.UpgradeResearch, {bescods: true}));
+    player.data.on(`gain-${Resource.UpgradeZero}`, (count: number) => {
+      for (let i = 0; i < count; i++) {
+        this.processNextMove(SubPhase.UpgradeResearch, {zero: true});
+      }
+    });
+    player.data.on(`gain-${Resource.MoveShips}`, () => {
+      player.resetTemporaryVariables();
+      player.data.movableShips = player.data.movingShips;
+      player.data.movableShipLocations = [...player.data.shipLocations];
+
+      this.processNextMove(SubPhase.MoveShip);
+    });
+    player.data.on(`gain-${Resource.MoveAllShips}`, () => {
+      player.resetTemporaryVariables();
+      player.data.movableShips = player.data.shipLocations.length;
+      player.data.movableShipLocations = [...player.data.shipLocations];
+
+      this.processNextMove(SubPhase.MoveShip);
+    });
+    player.on(`move-preset-ships`, () => {
+      player.resetTemporaryVariables();
+      this.processNextMove(SubPhase.MoveShip);
+    });
     player.data.on('brainstone', areas => this.processNextMove(SubPhase.BrainStone, areas));
+    player.on('pick-rewards', () => this.processNextMove(SubPhase.PickRewards));
 
     /* For advanced log */
     for (const resource of [Resource.VictoryPoint, Resource.ChargePower, Resource.Credit, Resource.Qic, Resource.Knowledge, Resource.Ore]) {
@@ -407,7 +455,7 @@ export default class Engine {
     }
 
     for (const player of data.players) {
-      engine.addPlayer(Player.fromData(player, engine.map));
+      engine.addPlayer(Player.fromData(player, engine.map, engine.expansions));
     }
 
     if (data.map) {
@@ -415,6 +463,9 @@ export default class Engine {
         for (const player of hex.occupyingPlayers()) {
           engine.player(player).data.occupied.push(hex);
         }
+        // for (const player of (hex.data.ships || [])) {
+        //   engine.player(player).data.shipLocations.push(hex);
+        // }
       }
     }
 
@@ -510,6 +561,8 @@ export default class Engine {
   }
 
   processNextMove(subphase?: SubPhase, data?: any) {
+    this.subPhase = this.subPhase;
+
     if (subphase) {
       this.generateAvailableCommands(subphase, data);
       if (this.availableCommands.length === 0) {
@@ -522,7 +575,7 @@ export default class Engine {
     const move = this.parseMove(this.turnMoves.shift());
 
     this.checkCommand(move.command);
-    (this[move.command] as any)(this.playerToMove, ...move.args);
+    (this[move.command === Command.MoveShip ? "_move" : move.command] as any)(this.playerToMove, ...move.args);
 
     return move;
   }
@@ -662,6 +715,12 @@ export default class Engine {
     this.moveToNextPlayer(this.turnOrder, {loop: false});
   }
 
+  beginSetupShipPhase() {
+    this.changePhase(Phase.SetupShip);
+    this.turnOrder = this.players.map((pl, i) => i as PlayerEnum);
+    this.moveToNextPlayer(this.turnOrder, {loop: false});
+  }
+
   beginRoundStartPhase() {
     this.round += 1;
     this.advancedLog.push({round: this.round});
@@ -730,7 +789,7 @@ export default class Engine {
       }
     }
     // resets power and qic actions
-    Object.values(BoardAction).forEach(pos => {
+    BoardAction.values(this.expansions).forEach(pos => {
       this.boardActions[pos] = true;
     });
 
@@ -804,9 +863,13 @@ export default class Engine {
     }
     const source = this.leechSources.shift();
     const sourceHex = this.map.grid.getS(source.coordinates);
+    const isTrade = source.tradeDelivery !== undefined;
+    const canLeechPlayers: Player[] = [];
+
+    this.lastLeechSource = source;
 
     // Gaia-formers & space stations don't trigger leech
-    if (stdBuildingValue(sourceHex.buildingOf(source.player)) === 0) {
+    if (!isTrade && stdBuildingValue(sourceHex.buildingOf(source.player)) === 0) {
       return this.beginLeechingPhase(); // next building on the list
     }
     // From rules, this is in clockwise order. We assume the order of players in this.players is the
@@ -822,19 +885,24 @@ export default class Engine {
         pl.data.leechPossible = 0;
         continue;
       }
+      if (isTrade && source.tradeDelivery !== pl.player) {
+        pl.data.leechPossible = 0;
+        continue;
+      }
+
       // Exclude the one who made the building from the leech
       let leech = 0;
-      for (const loc of pl.data.occupied) {
-        if (this.map.distance(loc, sourceHex) < ISOLATED_DISTANCE) {
-          leech = Math.max(leech, pl.buildingValue(this.map.grid.get(loc)));
-        }
+      for (const hex of this.map.withinDistance(sourceHex, isTrade ? 0 : LEECHING_DISTANCE)) {
+        leech = Math.max(leech, pl.buildingValue(this.map.grid.get(hex)));
       }
 
       // Do not use maxLeech() here, cuz taklons
       pl.data.leechPossible = leech;
+      if (pl.canLeech() || isTrade) {
+        canLeechPlayers.push(pl);
+      }
     }
 
-    const canLeechPlayers = this.playersInTableOrderFrom(source.player).filter(pl => pl.canLeech());
     if (canLeechPlayers.length > 0) {
       this.changePhase(Phase.RoundLeech);
       this.tempTurnOrder = canLeechPlayers.map(pl => pl.player);
@@ -909,6 +977,18 @@ export default class Engine {
     this.loadTurnMoves(move, {split: false, processFirst: true});
 
     if (!this.moveToNextPlayer(this.turnOrder, {loop: false})) {
+      if (this.expansions & Expansion.Spaceships) {
+        this.beginSetupShipPhase();
+      } else {
+        this.beginSetupBoosterPhase();
+      }
+    }
+  }
+
+  [Phase.SetupShip](move: string) {
+    this.loadTurnMoves(move, {split: false, processFirst: true});
+
+    if (!this.moveToNextPlayer(this.turnOrder, {loop: false})) {
       this.beginSetupBoosterPhase();
     }
   }
@@ -940,28 +1020,43 @@ export default class Engine {
   }
 
   [Phase.RoundMove](move: string) {
+    const pl = this.player(this.playerToMove);
+    pl.data.turns = 1;
+
     this.loadTurnMoves(move);
 
     const playerAfter = this.getNextPlayer();
 
-    // Execute all upcoming freeactions
-    this.doFreeActions(SubPhase.BeforeMove);
+    while (pl.data.turns > 0) {
+      pl.resetTemporaryVariables();
 
-    // If queue is empty, interrupt and ask for free actions / main command
-    // otherwise execute main command
-    if (this.handleMainMove() === Command.Pass) {
-      if (this.turnOrder.length === 0) {
-        this.cleanUpPhase();
-        return;
-      }
-    } else {
       // Execute all upcoming freeactions
-      this.doFreeActions(SubPhase.AfterMove);
+      this.doFreeActions(SubPhase.BeforeMove);
 
-      // If the player has no possible command or the queue has the end turn command,
-      // end turns.
-      // If the player has possible free actions & the queue is empty, ask for free actions / end turn
-      this.handleEndTurn();
+      // If queue is empty, interrupt and ask for free actions / main command
+      // otherwise execute main command
+      const executedCommand = this.handleMainMove();
+      pl.resetTemporaryVariables();
+      pl.data.turns -= 1;
+
+      if (executedCommand === Command.Pass) {
+        if (this.turnOrder.length === 0) {
+          this.cleanUpPhase();
+          return;
+        } else {
+          break;
+        }
+      } else if (pl.data.turns <= 0) {
+        // Execute all upcoming freeactions
+        this.doFreeActions(SubPhase.AfterMove);
+
+        // If the player has no possible command or the queue has the end turn command,
+        // end turns.
+        // If the player has possible free actions & the queue is empty, ask for free actions / end turn
+        this.handleEndTurn();
+      } else {
+        this.generateAvailableCommands();
+      }
     }
 
     this.beginLeechingPhase();
@@ -996,47 +1091,55 @@ export default class Engine {
     this.options.map = this.map.placement;
 
     // Choose nbPlayers+3 boosters as part of the pool
-    const boosters = shuffleSeed.shuffle(Object.values(Booster), this.map.rng()).slice(0, nbPlayers + 3);
+    const boosters = shuffleSeed.shuffle(Booster.values(this.expansions), this.map.rng()).slice(0, nbPlayers + 3);
     for (const booster of boosters) {
       this.tiles.boosters[booster] = true;
     }
 
     // Shuffle tech tiles
-    const techtiles = shuffleSeed.shuffle(Object.values(TechTile), this.map.rng());
-    Object.values(TechTilePos).forEach( (pos, i) => {
+    const techtiles = shuffleSeed.shuffle(TechTile.values(this.expansions), this.map.rng());
+    TechTilePos.values(this.expansions).forEach( (pos, i) => {
       this.tiles.techs[pos] = {tile: techtiles[i], count: 4};
     });
+    this.tiles.techs[TechTilePos.BasicShip] = {tile: TechTile.Ship0, count: 0};
 
     // Choose adv tech tiles as part of the pool
-    const advtechtiles = shuffleSeed.shuffle(Object.values(AdvTechTile), this.map.rng()).slice(0, 6);
-    Object.values(AdvTechTilePos).forEach( (pos, i) => {
+    const advtechtiles = shuffleSeed.shuffle(AdvTechTile.values(this.expansions), this.map.rng());
+    AdvTechTilePos.values(this.expansions).forEach( (pos, i) => {
       this.tiles.techs[pos] = {tile: advtechtiles[i], count: 1};
     });
 
     // powerActions
-    Object.values(BoardAction).forEach( pos => {
+    BoardAction.values(this.expansions).forEach( pos => {
       this.boardActions[pos] = true;
     });
 
-    this.terraformingFederation = shuffleSeed.shuffle(Object.values(Federation).filter(fed => fed !== Federation.FederationGleens), this.map.rng())[0];
-    for (const federation of Object.values(Federation) as Federation[]) {
-      if (federation !== Federation.FederationGleens) {
-        this.tiles.federations[federation] = federation === this.terraformingFederation ? 2 : 3;
-      }
+    const feds = Federation.values();
+    this.terraformingFederation = shuffleSeed.shuffle(feds, this.map.rng())[0];
+    for (const federation of feds) {
+      this.tiles.federations[federation] = 3;
     }
+    this.tiles.federations[this.terraformingFederation] -= 1;
 
     // Choose roundScoring Tiles as part of the pool
-    const roundscoringtiles = shuffleSeed.shuffle(Object.values(ScoringTile), this.map.rng()).slice(0, 6);
+    const roundscoringtiles = shuffleSeed.shuffle(ScoringTile.values(this.expansions), this.map.rng()).slice(0, 6);
     this.tiles.scorings.round = roundscoringtiles;
 
     // Choose finalScoring Tiles as part of the pool
-    const finalscoringtiles = shuffleSeed.shuffle(Object.values(FinalTile), this.map.rng()).slice(0, 2);
+    const finalscoringtiles = shuffleSeed.shuffle(FinalTile.values(this.expansions), this.map.rng()).slice(0, 2);
     this.tiles.scorings.final = finalscoringtiles;
 
     this.players = [];
 
     for (let i = 0; i < nbPlayers; i++) {
       this.addPlayer(new Player(i));
+    }
+
+    // With the expansion, each player starts with a tech tile
+    if (this.expansions & Expansion.Spaceships) {
+      for (const player of this.players) {
+        player.gainTechTile(TechTile.Ship0, TechTilePos.BasicShip);
+      }
     }
   }
 
@@ -1060,7 +1163,7 @@ export default class Engine {
   [Command.ChooseFaction](player: PlayerEnum, faction: string) {
     assert(this.availableCommand.data.includes(faction), `${faction} is not in the available factions`);
 
-    this.players[player].loadFaction(faction as Faction);
+    this.players[player].loadFaction(faction as Faction, this.expansions);
   }
 
   [Command.ChooseRoundBooster](player: PlayerEnum, booster: Booster, fromCommand: Command = Command.ChooseRoundBooster ) {
@@ -1092,7 +1195,7 @@ export default class Engine {
       }
     }
 
-    console.log(this.map.grid.getS(location));
+    // console.log(this.map.grid.getS(location));
     assert(false, `Impossible to execute build command at ${location}`);
   }
 
@@ -1140,25 +1243,26 @@ export default class Engine {
   }
 
   [Command.EndTurn](player: PlayerEnum) {
-    this.player(player).endTurn();
+    // this.player(player).endTurn();
   }
 
   [Command.ChooseTechTile](player: PlayerEnum, pos: TechTilePos | AdvTechTilePos) {
     const { tiles } = this.availableCommand.data;
     const tileAvailable = tiles.find(ta => ta.pos === pos);
-    const advanced = Object.values(AdvTechTilePos).includes(pos);
 
     assert(tileAvailable !== undefined, `Impossible to get ${pos} tile`);
+
+    // BEFORE gaining the tech tile (e.g. the ship+move tech tile can generate trade, and so the tech tile
+    // with trade >> 2vp needs to be covered before)
+    if (isAdvanced(pos)) {
+      this.processNextMove(SubPhase.CoverTechTile);
+    }
 
     this.player(player).gainTechTile(tileAvailable.tile, tileAvailable.pos);
     this.tiles.techs[pos].count -= 1;
 
-    if (advanced) {
-      this.processNextMove(SubPhase.CoverTechTile);
-    }
-
+    // AFTER gaining the tech tile (as green federation can be flipped and lock research tracks)
     this.processNextMove(SubPhase.UpgradeResearch, Object.values(ResearchField).includes(pos) ? {pos} : undefined) ;
-
   }
 
   [Command.ChooseCoverTechTile](player: PlayerEnum, tilePos: TechTilePos) {
@@ -1201,13 +1305,105 @@ export default class Engine {
 
     assert(data, `Impossible to execute build command at ${location}`);
 
-    const { q, r, s } = CubeCoordinates.parse(location);
-    const hex = this.map.grid.get({q, r});
+    const hex = this.map.grid.get(CubeCoordinates.parse(location));
     hex.data.planet = Planet.Lost;
 
     this.player(player).build(Building.Mine, hex, Reward.parse(data.cost), this.map, 0);
 
     this.leechSources.unshift({player, coordinates: location});
+  }
+
+  [Command.PlaceShip](player: PlayerEnum, location: string) {
+    const pl = this.player(player);
+    const { locations } = this.availableCommand.data;
+
+    assert(locations.find(loc => loc.coordinates === location), `Impossible to place ship at ${location}`);
+
+    const hex = this.map.grid.get(CubeCoordinates.parse(location));
+    pl.placeShip(hex);
+
+    pl.data.shipsToPlace -= 1;
+    if (pl.data.shipsToPlace > 0) {
+      this.processNextMove(SubPhase.PlaceShip);
+    }
+  }
+
+  [Command.DeliverTrade](player: PlayerEnum, location: string) {
+    assert(location === this.availableCommand.data.locations[0].coordinates, "Impossible to deliver trade at " + location);
+    const destHex = this.map.grid.getS(location);
+
+    this.player(player).deliverTrade(destHex);
+    // The main occupier of the planet can charge power
+    this.leechSources.unshift({player, coordinates: location, tradeDelivery: destHex.data.player});
+  }
+
+  [`_${Command.MoveShip}`](player: PlayerEnum, ship: string, dest: string) {
+    const pl = this.player(player);
+    const { ships, range, costs } = this.availableCommand.data;
+
+    assert(ships.find(loc => loc.coordinates === (ship)), `There is no movable ship at ${ship}`);
+
+    const distance = this.map.distance(CubeCoordinates.parse(ship), CubeCoordinates.parse(dest));
+
+    assert(range >= distance, 'The ship cannot move that far');
+
+    const moveCost = costs[distance] || "~";
+    pl.payCosts(Reward.parse(moveCost), Command.MoveShip);
+
+    pl.removeShip(this.map.grid.getS(ship));
+
+    const destHex = this.map.grid.getS(dest);
+
+    assert (!destHex.hasTradeToken(player), `The destination planet already has a trade token for your faction`);
+
+    if (destHex.hasPlanet()) {
+      if (destHex.occupied()) {
+        assert(destHex.hasStructure(), `When moving a ship to an occupied planet, there needs to be a valid building on it`);
+        assert(!destHex.isMainOccupier(player), "You can't move a ship to a planet that is occupied by you.");
+        assert(pl.data.availableTradeTokens() > 0, "You do not have remaining trade tokens, so you can't move the ship to another faction's planet");
+
+        this.processNextMove(SubPhase.DeliverTrade, {locations: [{coordinates: dest}], automatic: true});
+      } else {
+        const planet = destHex.data.planet;
+        const building = planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine;
+
+        const {possible, cost, steps} = pl.canBuild(planet, building);
+        assert(possible, "Impossible to move ship to this empty planet as you cannot build there");
+
+        this.processNextMove(SubPhase.BuildMineOrGaiaFormer, {buildings: [{
+          building,
+          coordinates: dest,
+          cost: Reward.toString(cost),
+          steps
+        }], automatic: true});
+      }
+    } else {
+      pl.placeShip(destHex);
+    }
+
+    pl.data.movableShips -= 1;
+    pl.data.movableShipLocations.splice(pl.data.movableShipLocations.indexOf(ship), 1);
+
+    if (pl.data.movableShips > 0) {
+      this.processNextMove(SubPhase.MoveShip);
+    }
+  }
+
+  [Command.PickReward](player: PlayerEnum, rewardString: string) {
+    const pl = this.player(player);
+    const reward = new Reward(rewardString);
+    const index = pl.data.toPick.rewards.findIndex(rw => rw.type === reward.type && rw.count === reward.count);
+
+    assert(index !== -1, "Cannot pick " + rewardString);
+
+    pl.gainRewards([reward], pl.data.toPick.source);
+    pl.data.toPick.count -= 1;
+    pl.data.toPick.rewards.splice(index, 1);
+
+    // Pick remaining reward
+    if (pl.data.toPick.count > 0) {
+      this.processNextMove(SubPhase.PickRewards);
+    }
   }
 
   [Command.Spend](player: PlayerEnum, costS: string, _for: "for", incomeS: string) {

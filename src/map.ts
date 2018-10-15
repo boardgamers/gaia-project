@@ -206,6 +206,19 @@ export default class SpaceMap {
     return CubeCoordinates.distance(hex1, hex2);
   }
 
+  withinDistance(center: CubeCoordinates, distance: number): GaiaHex[] {
+    const group = GaiaHex.hexagon(distance, {center});
+    const ret: GaiaHex[] = [];
+
+    for (const hex of group) {
+      if (this.grid.get(hex)) {
+        ret.push(this.grid.get(hex));
+      }
+    }
+
+    return ret;
+  }
+
   excludedHexesForBuildingFederation(player: Player, faction: Faction) {
     const ret: Set<GaiaHex> = new Set();
 
