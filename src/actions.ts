@@ -42,6 +42,11 @@ export const freeActionsBaltaks = [
   { cost: "1gf", income: "1q" }
 ];
 
+/** Temporarily increase range of all ships */
+export const freeActionsMoveShip = [{
+  cost: "1q", income: "range+2"
+}];
+
 export const boardActions =  {
   [BoardAction.Power1]: { cost: "7pw", income: ["3k"] },
   [BoardAction.Power2]: { cost: "5pw", income: ["2step"] },

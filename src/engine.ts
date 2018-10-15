@@ -264,8 +264,9 @@ export default class Engine {
       this.processNextMove(SubPhase.PlaceShip);
     });
     player.data.on(`gain-${Resource.TemporaryStep}`, () => this.processNextMove(SubPhase.BuildMine));
-    player.data.on(`gain-${Resource.TemporaryRange}`, () => {
+    player.data.on(`gain-${Resource.TemporaryRange}`, (count: number) => {
       if (this.findAvailableCommand(player.player, Command.MoveShip)) {
+        assert(player.data.qicUsedToBoostShip === 0 && count === 2, "Impossible to gain range more than once during move ship phase");
         player.data.qicUsedToBoostShip += 1;
         this.processNextMove(SubPhase.MoveShip);
       } else {

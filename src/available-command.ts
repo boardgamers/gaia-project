@@ -5,7 +5,7 @@ import * as difference from 'lodash.difference';
 import factions from './factions';
 import { upgradedBuildings } from './buildings';
 import Reward from './reward';
-import { boardActions, freeActions, freeActionsTerrans, freeActionsItars } from './actions';
+import { boardActions, freeActions, freeActionsTerrans, freeActionsItars, freeActionsMoveShip } from './actions';
 import * as researchTracks from './research-tracks';
 import { isAdvanced } from './tiles/techs';
 
@@ -228,7 +228,7 @@ export function possibleShipMovements(engine: Engine, player: Player) {
     costs[val] = new Reward(val - baseRange, Resource.ChargePower).toString();
   });
 
-  const commands: AvailableCommand[] = [{
+  const commands: AvailableCommand[] = [...possibleFreeActions(engine, player, {moveShips: true}), {
     name: Command.MoveShip,
     player,
     data: {
@@ -237,15 +237,6 @@ export function possibleShipMovements(engine: Engine, player: Player) {
       costs
     }
   }];
-
-  // Free action to boost ship
-  if (!pl.data.qicUsedToBoostShip && pl.canPay([new Reward("1q")])) {
-    commands.unshift({
-      name: Command.Spend,
-      player,
-      data: { acts: [{cost: "1q", income: "range+2"}] }
-    });
-  }
 
   return commands;
 }
@@ -368,7 +359,7 @@ export function possibleBoardActions(engine: Engine, player: Player) {
   return commands;
 }
 
-export function possibleFreeActions(engine: Engine, player: Player) {
+export function possibleFreeActions(engine: Engine, player: Player, data?: {moveShips: boolean}) {
   // free action - spend
   const pl = engine.player(player);
   const acts = [];
@@ -391,10 +382,19 @@ export function possibleFreeActions(engine: Engine, player: Player) {
     burnDisabled = true;
   }
 
+  if (data && data.moveShips) {
+    if (pl.data.qicUsedToBoostShip) {
+      pool = [];
+    } else {
+      pool = freeActionsMoveShip;
+    }
+    burnDisabled = true;
+  }
+
   for (const freeAction of pool) {
-    const maxPay = pl.maxPayRange(Reward.parse(freeAction.cost));
+    const maxPay = (data && data.moveShips) ? 1 : pl.maxPayRange(Reward.parse(freeAction.cost));
     if ( maxPay > 0 ) {
-      acts.push({cost: freeAction.cost, income: freeAction.income, range: range(1, maxPay + 1)});
+      acts.push({cost: freeAction.cost, income: freeAction.income, range: maxPay > 1 ? range(1, maxPay + 1) : undefined});
     }
   }
 
