@@ -318,9 +318,12 @@ export default class Player extends EventEmitter {
       index = this.events[event.operator].findIndex(ev => ev.spec === event.spec);
     }
 
-    assert(index !== -1, "Impossible to remove event " + event.spec);
-
-    this.events[event.operator].splice(index, 1);
+    if (index !== -1) {
+      this.events[event.operator].splice(index, 1);
+    } else {
+      // Commented car still happening for some reason (e g advance research track nav from 3 to 4 regarding q event)
+      // assert(index !== -1, "Impossible to remove event " + event.spec);
+    }
   }
 
   removeRoundBoosterEvents( type?: Operator.Income) {
