@@ -361,8 +361,9 @@ export default class Commands extends Vue {
                 command: `${Command.ChargePower} ${gainToken},${leech}`
               });
             } else {
+              const action = leech.includes('pw') ? "Charge" : "Gain";
               ret.push({
-                label: command.data.cost && command.data.cost !== "~" ? "Charge " + leech + " for " + command.data.cost : "Charge " + leech,
+                label: command.data.cost && command.data.cost !== "~" ? `${action} ${leech} for ${command.data.cost}` : `${action} ${leech}`,
                 command: `${Command.ChargePower} ${leech}`
               });
             }
@@ -398,7 +399,7 @@ export default class Commands extends Vue {
 
         case Command.Spend: {
           // If only one free action, display it here
-          if (command.data.acts.length === 1) {
+          if (command.data.acts.length === 1 && this.availableCommands.some(cmd => cmd.name === Command.MoveShip)) {
             const act = command.data.acts[0];
             ret.push({label: `Spend ${act.cost} to gain ${act.income}`, command: `${Command.Spend} ${act.cost} for ${act.income}`});
           } else {
