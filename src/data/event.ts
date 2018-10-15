@@ -36,7 +36,8 @@ const operators = {
   [Operator.Income]: "During the income phase,",
   [Operator.Once]: "Immediately ",
   [Operator.Trigger]: "When ",
-  [Operator.Special]: "Planetary institutes and academies have a power value of 4, when building federations and charging power."
+  [Operator.Special]: "Planetary institutes and academies have a power value of 4, when building federations and charging power.",
+  [Operator.AdvShip4]: "Gain two spaceships. Move them with a bonus range of 4 in addition to their normal range."
 }
 
 function rewardDesc(rewards: Reward[]) {
@@ -48,6 +49,7 @@ function rewardDesc(rewards: Reward[]) {
       case Resource.RescoreFederation: return `gain the rewards from one of your federation tokens`;
       // case Resource.Range: return `gain ${reward.count} range for the duration of the round`;
       case Resource.MoveShips: return `move your ships according to your level in the ship track`;
+      case Resource.Turn: return `play an extra ${reward.count} turn${reward.count > 1 ? 's' : ''} at once`;
       default: return "gain " + reward.toString();
     }
   }).join(", ");
