@@ -2,7 +2,7 @@
   <g :class='["boardAction", kind, {highlighted, faded}]' v-b-tooltip :title="tooltip">
     <polygon points="-1,0.5 -0.5,1 0.5,1 1,0.5 1,-0.5 0.5,-1 -0.5,-1 -1,-0.5" :transform="`scale(${scale})`" @click="onClick" />
     <text :transform="`scale(${scale/17})`">
-      <tspan x="0" v-for="(line, i) in income" :dy="`${i*1.15 - (income.length - 1) / 2.5}em`"> 
+      <tspan :x="i+1 < income.length ? 1 : 0" v-for="(line, i) in income" :key="i" :dy="`${i*1.15 - (income.length - 1) / 4}em`"> 
         {{line.replace(/ /g, '')}}
       </tspan>
     </text>
@@ -19,11 +19,9 @@ import { eventDesc } from '../data/event';
   computed: {
     tooltip() {
       const costDesc = "Spend "+ this.cost + "\n";
-      if (this.income.length === 1) {
-        return costDesc + eventDesc(new Event(this.income[0]));
-      } else {
-        return costDesc + this.income.map(income => "- " + eventDesc(new Event(income))).join("\n");
-      }
+
+      const [income] = boardActions[this.action].income;
+      return costDesc + eventDesc(new Event(income));
     },
 
     highlighted() {
@@ -39,7 +37,13 @@ import { eventDesc } from '../data/event';
     },
 
     income() {
-      return boardActions[this.action].income;
+      const [income] = boardActions[this.action].income;
+
+      if (income.indexOf("+") != -1) {
+        return [income.slice(0, income.indexOf("+")), income.slice(income.indexOf("+"))];
+      } else {
+        return income.split('-');
+      }
     },
 
     cost() {

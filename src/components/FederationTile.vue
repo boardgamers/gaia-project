@@ -7,7 +7,7 @@
           {{numTiles}}
       </text>
       <text>
-        <tspan x="0" v-for="(line, i) in income" :dy="`${i*1.5 - (income.length - 1) / 2.2}em`"> 
+        <tspan x="0" v-for="(line, i) in income" :key="i" :dy="`${i*1.5 - (income.length - 1) / 2.2}em`"> 
           {{line.replace(/ /g, '')}}
         </tspan>
       </text>
@@ -29,11 +29,11 @@ import { eventDesc } from '../data/event';
 
     income() {   
       const [first, ...others] = tiles.federations[this.federation].split(",");
-      return others.length > 0 ? [first, others.join(", ")] : [first];
+      return others.length > 0 ? [first, others.join(", ")] : first.split("-");
     },
 
     disabled() {
-      return this.used || this.federation === Federation.Federation1;
+      return this.used || this.federation === Federation.Fed1;
     }
   }
 })

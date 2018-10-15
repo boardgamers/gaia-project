@@ -15,7 +15,7 @@
           </div>
         </form>
       </div>
-      <Game :api="api" :gameId="gameId" :auth="auth" :developmentMode="true" v-else />
+      <Game :api="api" :gameId="gameId" :auth="auth" :options="options" :developmentMode="true" v-else />
     </main>
   </div>
 </template>
@@ -62,6 +62,9 @@ import * as $ from "jquery";
     },
     freeSpots() {
       return this.data.players.filter(pl => !pl.auth).length;
+    },
+    options() {
+      return this.$store.state.options;
     }
   }
 })

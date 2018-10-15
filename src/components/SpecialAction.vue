@@ -3,7 +3,7 @@
     <g :class='["specialAction", {highlighted, disabled}]'>
       <polygon points="-1,0.5 -0.5,1 0.5,1 1,0.5 1,-0.5 0.5,-1 -0.5,-1 -1,-0.5" transform="scale(24)" @click="onClick" />
       <text>
-        <tspan x="0" v-for="(line, i) in income" :dy="`${i*1.25 - (income.length - 1) / 2.5}em`" :key="i"> 
+        <tspan x="0" v-for="(line, i) in income" :dy="`${i === 0 ? - 0.5*(income.length - 1)*11 : 11}px`" :key="i"> 
           {{line.replace(/ /g, '')}}
         </tspan>
       </text>
@@ -24,7 +24,7 @@ import { eventDesc } from '../data/event';
     },
 
     income() {
-      return this.action.split('-');
+      return this.action.includes(',') ? this.action.split(',') : this.action.split('-');
     }
   }
 })

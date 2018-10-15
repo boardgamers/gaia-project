@@ -2,9 +2,9 @@
   <div>
     <div :class="['row', 'no-gutters', 'justify-content-center', data.players.length > 2 ? 'medium-map' : 'small-map']" v-if="hasMap">
       <SpaceMap :class="['mb-1', 'space-map']" />
-      <svg class="scoring-research-board" viewBox="0 0 475 450">
-        <ResearchBoard height="450" width="368" x="0"/>
-        <ScoringBoard class="ml-4" height="450" width="90" x="385" />
+      <svg class="scoring-research-board" :viewBox="`0 0 ${scoringX + 90} 450`">
+        <ResearchBoard :height="450" ref="researchBoard"/>
+        <ScoringBoard class="ml-4" height="450" width="90" :x="scoringX" />
       </svg>
     </div>
     <div id="errors"></div>
@@ -43,7 +43,7 @@
                 <button class="btn btn-primary" type="button" @click="addMove(currentMove)">Send</button>
               </div>
             </div>
-            <div class="form-group mt-2 d-none d-md-block" v-if="moveList">
+            <div class="form-group mt-2 d-none d-md-block" v-if="data.moveHistory.length > 0">
               <label for="moves">Move log</label>
               <textarea class="form-control" rows="4" id="moves" v-model="moveList"></textarea>
               <div class="mt-2 row no-gutters">
@@ -84,9 +84,10 @@ import ResearchBoard from './ResearchBoard.vue';
 import ScoringBoard from './ScoringBoard.vue';
 import AdvancedLog from './AdvancedLog.vue';
 import Pool from './Pool.vue';
-import Engine,{ Command,Phase,factions, Player } from '@gaia-project/engine';
+import Engine,{ Command,Phase,factions, Player, EngineOptions } from '@gaia-project/engine';
 import { GameApi, EngineData } from '../api';
 import {handleError} from '../utils';
+import { Expansion } from '@gaia-project/engine/src/enums';
 
 @Component<Game>({
   computed: {
@@ -95,6 +96,9 @@ import {handleError} from '../utils';
     },
     ended() {
       return this.data.phase === Phase.EndGame;
+    },
+    scoringX() {
+      return this.data.expansions ? 505 : 385;
     },
     orderedPlayers() {
       const data = this.data;
@@ -200,6 +204,9 @@ export default class Game extends Vue {
   @Prop()
   auth: string;
 
+  @Prop()
+  options: EngineOptions;
+
   @Prop({default: false})
   developmentMode: boolean;
 
@@ -249,7 +256,7 @@ export default class Game extends Vue {
  
     try {
       // console.log(JSON.stringify(this.backupEngine.options));
-      const options = this.backupEngine ? this.backupEngine.options : {};
+      const options: EngineOptions = Object.assign({}, this.backupEngine && this.backupEngine.options, this.options);
       const data = await this.api.replay(moveList, options);
       this.handleData(data, !goToLastMove);
       window.sessionStorage.setItem('moves', JSON.stringify(data.moveHistory));

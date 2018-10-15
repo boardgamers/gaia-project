@@ -229,6 +229,7 @@ export default class Commands extends Vue {
               ret.push({
                 label,
                 command: `${Command.Build} ${building}`,
+                automatic: command.data.automatic,
                 hexes: new Map<GaiaHex, {cost?: string}>(coordinates.map(coord => [this.engine.map.grid.getS(coord.coordinates), coord]))
               });
             }
@@ -252,6 +253,36 @@ export default class Commands extends Vue {
             command: command.name,
             hexes: new Map(command.data.spaces.map(coord => [this.engine.map.grid.getS(coord.coordinates), coord]))
           });
+          break;
+        }
+
+        case Command.PlaceShip: {
+          ret.push({
+            label: "Place Ship",
+            command: command.name,
+            hexes: new Map(command.data.locations.map(coord => [this.engine.map.grid.getS(coord.coordinates), coord]))
+          });
+          break;
+        }
+
+        case Command.DeliverTrade: {
+          ret.push({
+            label: "Deliver Trade",
+            command: command.name,
+            hexes: new Map(command.data.locations.map(coord => [this.engine.map.grid.getS(coord.coordinates), coord])),
+            automatic: command.data.automatic
+          });
+          break;
+        }
+
+        case Command.MoveShip: {
+          ret.push({
+            label: "Move Ship",
+            command: command.name,
+            hexes: new Map(command.data.ships.map(coord => [this.engine.map.grid.getS(coord.coordinates), coord])),
+            range: command.data.range,
+            costs: command.data.costs
+          })
           break;
         }
 
@@ -366,11 +397,17 @@ export default class Commands extends Vue {
         }
 
         case Command.Spend: {
-          ret.push({
-            label: "Free action",
-            command: Command.Spend,
-            buttons: command.data.acts.map(act => ({label: `Spend ${act.cost} to gain ${act.income}`, command: `${act.cost} for ${act.income}`, times: act.range}))
-          });
+          // If only one free action, display it here
+          if (command.data.acts.length === 1) {
+            const act = command.data.acts[0];
+            ret.push({label: `Spend ${act.cost} to gain ${act.income}`, command: `${Command.Spend} ${act.cost} for ${act.income}`});
+          } else {
+            ret.push({
+              label: "Free action",
+              command: Command.Spend,
+              buttons: command.data.acts.map(act => ({label: `Spend ${act.cost} to gain ${act.income}`, command: `${act.cost} for ${act.income}`, times: act.range}))
+            });
+          }
           break;
         };
 
@@ -415,6 +452,14 @@ export default class Commands extends Vue {
           ret.push(...command.data.map(income => ({
             label: `Income ${income}`,
             command: `${Command.ChooseIncome} ${income}`
+          })));
+          break;
+        }
+
+        case Command.PickReward: {
+          ret.push(...command.data.rewards.map(reward => ({
+            label: `Gain ${reward}`,
+            command: `${Command.PickReward} ${reward}`
           })));
           break;
         }

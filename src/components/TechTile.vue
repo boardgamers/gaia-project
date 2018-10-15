@@ -2,7 +2,7 @@
   <svg :class='["techTile", {highlighted, covered}]' v-show="this.count" v-b-tooltip :title="tooltip" @click="onClick" width="58" height="37" viewBox="0 0 58 37">
     <polygon points="1,1 48,1 57,11 57,36 1,36" />
     <text class="title" x="4" y="12">{{title}}</text>
-    <text class="content" x="4" y="30">{{content}}</text>
+    <text :class="['content', {smaller: content.length >= 10}]" x="4" y="30">{{content}}</text>
   </svg>
 </template>
 
@@ -29,8 +29,14 @@ import { eventDesc } from '../data/event';
       return this.tileObject.count;
     },
 
-    content() {
+    rawContent() {
       return tiles.techs[this.tile][0];
+    },
+
+    content() {
+      const val = this.rawContent;
+
+      return val.length > 10 && val[0] !== '=' ? val.replace(/ /g, '') : val;
     },
 
     title() {
@@ -43,7 +49,7 @@ import { eventDesc } from '../data/event';
     },
 
     tooltip() {
-      return eventDesc(new Event(this.content));
+      return eventDesc(new Event(this.rawContent));
     },
 
     highlighted() {
@@ -90,6 +96,10 @@ svg {
     .content {
       font-size: 11px;
       pointer-events: none;
+
+      &.smaller {
+        font-size: 9px;
+      }
     }
 
     &.highlighted polygon {
