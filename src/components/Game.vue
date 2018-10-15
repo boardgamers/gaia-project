@@ -204,6 +204,9 @@ export default class Game extends Vue {
   @Prop()
   auth: string;
 
+  @Prop()
+  options: EngineOptions;
+
   @Prop({default: false})
   developmentMode: boolean;
 
@@ -253,7 +256,7 @@ export default class Game extends Vue {
  
     try {
       // console.log(JSON.stringify(this.backupEngine.options));
-      const options: EngineOptions = this.backupEngine ? this.backupEngine.options : {spaceShips: true};
+      const options: EngineOptions = Object.assign({}, this.backupEngine && this.backupEngine.options, this.options);
       const data = await this.api.replay(moveList, options);
       this.handleData(data, !goToLastMove);
       window.sessionStorage.setItem('moves', JSON.stringify(data.moveHistory));

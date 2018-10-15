@@ -2,6 +2,8 @@
   <nav class="navbar navbar-dark bg-primary navbar-expand-sm navbar-fixed-top mb-md-3 mb-1" id="navbar">
     <a class="navbar-brand" href="/">Gaia project</a>
     <form class="form-inline my-2 my-lg-0 ml-auto" method="get" @submit.prevent="createGame" v-show="!online">
+      <input type="checkbox" name="spaceShips" id="spaceShips" class="form-check-input" v-model="options.spaceShips" @change="updateOptions(options)">
+      <label class="navbar-text mr-2" for="spaceShips">Spaceships </label>
       <input class="form-control mr-sm-2" type="text" name="g" v-model=gameId placeholder="Game ID" aria-label="Game ID" required>
       <select v-model="players" class="form-control mr-sm-2">
         <option value="2">2 players</option>
@@ -17,6 +19,7 @@
 import Vue from 'vue'
 import * as $ from "jquery";
 import { Component, Prop } from 'vue-property-decorator';
+import { EngineOptions } from '@gaia-project/engine';
 
 @Component({
 })
@@ -38,6 +41,14 @@ export default class Navbar extends Vue {
       console.log(exception, status);
       this.$store.commit("error", error.responseText);
     });
+  }
+
+  updateOptions() {
+    this.$store.commit("options", this.options);
+  }
+
+  options() {
+    return this.$store.state.options;
   }
 }
 

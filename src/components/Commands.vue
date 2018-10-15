@@ -397,11 +397,17 @@ export default class Commands extends Vue {
         }
 
         case Command.Spend: {
-          ret.push({
-            label: "Free action",
-            command: Command.Spend,
-            buttons: command.data.acts.map(act => ({label: `Spend ${act.cost} to gain ${act.income}`, command: `${act.cost} for ${act.income}`, times: act.range}))
-          });
+          // If only one free action, display it here
+          if (command.data.acts.length === 1) {
+            const act = command.data.acts[0];
+            ret.push({label: `Spend ${act.cost} to gain ${act.income}`, command: `${Command.Spend} ${act.cost} for ${act.income}`});
+          } else {
+            ret.push({
+              label: "Free action",
+              command: Command.Spend,
+              buttons: command.data.acts.map(act => ({label: `Spend ${act.cost} to gain ${act.income}`, command: `${act.cost} for ${act.income}`, times: act.range}))
+            });
+          }
           break;
         };
 

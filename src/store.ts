@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import { GameContext } from './data';
-import Engine, { GaiaHex, ResearchField, TechTilePos, AdvTechTilePos, Booster, Federation, Player } from '@gaia-project/engine';
+import Engine, { GaiaHex, ResearchField, TechTilePos, AdvTechTilePos, Booster, Federation, Player, EngineOptions } from '@gaia-project/engine';
 import { CubeCoordinates } from 'hexagrid';
 
 Vue.use(Vuex);
@@ -108,12 +108,14 @@ export default new Vuex.Store({
     gaiaViewer
   },
   state: {
+    options: {spaceShips: true} as EngineOptions,
     error: null as string,
     info: null as string,
     errorIssued: null as Date,
     infoIssued: null as Date
   },
   mutations: {
+    options: (state, options: EngineOptions) => state.options = options,
     error: (state, error: string) => { state.error = error; state.errorIssued = new Date(); },
     info: (state, info: string) => { state.info = info; state.infoIssued = new Date(); },
     removeError: state => state.error = state.errorIssued = null,
