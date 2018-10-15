@@ -2,11 +2,10 @@
   <g :class='["finalScoringTile", {highlighted}]' v-b-tooltip :title="tooltip">
     <rect x="1" y="1" width="75" height="55" />
     <text class="title" x="5" y="12">{{content}}</text>
-    <line v-for="i in [-1,0,1,2,3,4,5,6,7,8,9,10]" :key="i" :x1="posX(i)+3.05" :x2="posX(i)+3.05" y1="16" y2="52" />
-    <line :x1="posX(0)-3.05" :x2="posX(10)+3.05" y1="16" y2="16" />
-    <line :x1="posX(0)-3.05" :x2="posX(10)+3.05" y1="52" y2="52" />
-    <Token v-for="(player, index) in players" :faction="player.faction" :transform="`translate(${tokenX(player)}, ${tokenY(index)})`" :key="player.faction" :scale="2.7" />
-    <Token v-for="(player, index) in players" v-if="progress(player) > 10" :faction="player.faction" :transform="`translate(${posX(10)}, ${tokenY(index)})`" :key="player.faction+'-10'" :scale="2.7" />
+    <Token v-for="(player, index) in players" :faction="player.faction" :transform="`translate(${tokenX(index)}, ${tokenY(index)})`" :key="player.faction" :scale="8" />
+    <text v-for="(player, index) in players" :key="player.faction + '-text'" :transform="`translate(${tokenX(index)}, ${tokenY(index)+0.5})`" :class="['score', player.faction]">
+      {{progress(player)}}
+    </text>
   </g>
 </template>
 
@@ -64,26 +63,12 @@ export default class FinalScoringTile extends Vue {
     return (player.faction as Faction | "automa") === "automa" ? finalScorings[this.tile].neutralPlayer : player.progress(this.tile);
   }
 
-  tokenX(player: Player) {
-    return this.posX(this.progress(player));
-  }
-
-  posX(progress: number) {
-    return 8 + (progress === 10 ? 10 : progress % 10) * 6.1;
+  tokenX(index: number) {
+    return (index%2) * 30 + 23;
   }
 
   tokenY(index: number) {
-    const nPlayers = this.players.length;
-
-    const yCenter = 34;
-
-    switch (nPlayers) {
-      case 1: return yCenter;
-      case 2: return yCenter + (index*2-1) * 7.5;
-      case 3: return yCenter + (index - 1) * 9;
-      case 4: return yCenter + (index - 1.5) * 9;
-      default: return 19 + index * 7.5;
-    }
+    return 25 + (index > 1 ? 17 : 0);
   }
 }
 export default interface FinalScoringTile {
@@ -106,6 +91,21 @@ g {
       font-size: 10px;
       font-weight: bold;
       pointer-events: none;
+    }
+    .score {
+      font-size: 12px;
+      pointer-events: none;
+      fill: white;
+      text-anchor: middle;
+      dominant-baseline: mathematical;
+
+      &.automa {
+        fill: #333;
+      }
+    }
+
+    g .player-token {
+      stroke-width: 0.01;
     }
 
     line {

@@ -68,7 +68,7 @@ g.resource {
     stroke-width: 0.04px;
   }
 
-  .ore, .credit, .building.r {
+  .ore, .credit {
     & + text {
       fill: black
     }
