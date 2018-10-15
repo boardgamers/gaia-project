@@ -339,34 +339,13 @@ export default class Commands extends Vue {
         }
 
         case Command.ChargePower: {
-          if (command.data.offers) {
-            for (const offer of command.data.offers) {
-              const leech = offer.offer;
-              ret.push({
-                label: offer.cost && offer.cost !== "~" ? "Charge " + leech + " for " + offer.cost : "Charge " + leech,
-                command: `${Command.ChargePower} ${leech}`
-              });
-            }
-          } else {
-            const leech = command.data.offer;
-            const gainToken = command.data.freeIncome;
-            // LEGACY CODE
-            // TODO: Remove when games are updated
-            if (gainToken) {
-              ret.push({
-                label: "Charge " + leech + " get " + gainToken,
-                command: `${Command.ChargePower} ${leech},${gainToken}`
-              }, {
-                label: "Get " + gainToken + " charge " + leech,
-                command: `${Command.ChargePower} ${gainToken},${leech}`
-              });
-            } else {
-              const action = leech.includes('pw') ? "Charge" : "Gain";
-              ret.push({
-                label: command.data.cost && command.data.cost !== "~" ? `${action} ${leech} for ${command.data.cost}` : `${action} ${leech}`,
-                command: `${Command.ChargePower} ${leech}`
-              });
-            }
+          for (const offer of command.data.offers) {
+            const leech = offer.offer;
+            const action = leech.includes('pw') ? "Charge" : "Gain";
+            ret.push({
+              label: offer.cost && offer.cost !== "~" ? `${action} ${leech} for ${offer.cost}` : `${action} ${leech}`,
+              command: `${Command.ChargePower} ${leech}`
+            });
           }
           
           break;
