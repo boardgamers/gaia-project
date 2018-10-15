@@ -392,7 +392,10 @@ export function possibleFreeActions(engine: Engine, player: Player, data?: {move
   }
 
   for (const freeAction of pool) {
-    const maxPay = (data && data.moveShips) ? 1 : pl.maxPayRange(Reward.parse(freeAction.cost));
+    let maxPay = pl.maxPayRange(Reward.parse(freeAction.cost));
+    if (data && data.moveShips) {
+      maxPay = Math.min(maxPay, 1);
+    }
     if ( maxPay > 0 ) {
       acts.push({cost: freeAction.cost, income: freeAction.income, range: maxPay > 1 ? range(1, maxPay + 1) : undefined});
     }
