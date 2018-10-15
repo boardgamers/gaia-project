@@ -1354,6 +1354,8 @@ export default class Engine {
 
     assert (!destHex.hasTradeToken(player), `The destination planet already has a trade token for your faction`);
 
+    pl.placeShip(destHex);
+
     if (destHex.hasPlanet()) {
       if (destHex.occupied()) {
         assert(destHex.hasStructure(), `When moving a ship to an occupied planet, there needs to be a valid building on it`);
@@ -1375,8 +1377,8 @@ export default class Engine {
           steps
         }], automatic: true});
       }
-    } else {
-      pl.placeShip(destHex);
+
+      pl.removeShip(destHex);
     }
 
     pl.data.movableShips -= 1;
