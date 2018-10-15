@@ -612,12 +612,20 @@ export function possibleGaiaFreeActions(engine: Engine, player: Player) {
 export function possibleLeech(engine: Engine, player: Player) {
   const commands = [];
   const pl = engine.player(player);
+  // TODO: Remove first part of test when legacy games are finished.
+  const isTrade = engine.lastLeechSource && engine.lastLeechSource.tradeDelivery === player;
 
   if ( pl.data.leechPossible > 0) {
     const extraPower = pl.faction === Faction.Taklons && pl.data.hasPlanetaryInstitute();
     const maxLeech = pl.maxLeech();
     const offers: Array<{offer: string, cost: string}> = [];
 
+    if (isTrade) {
+      offers.push({
+        offer: "1t",
+        cost: "~"
+      });
+    }
     if (extraPower) {
       offers.push({
         offer: `${maxLeech}${Resource.ChargePower},1t`,

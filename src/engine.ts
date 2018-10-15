@@ -45,6 +45,7 @@ import { stdBuildingValue } from './buildings';
 import { isAdvanced } from './tiles/techs';
 
 const ISOLATED_DISTANCE = 3;
+const LEECHING_DISTANCE = 2;
 
 export interface EngineOptions {
   /** Allow last player to rotate sector BEFORE faction selection */
@@ -130,7 +131,9 @@ export default class Engine {
   // used to transit between phases
   tempTurnOrder: PlayerEnum[] = [];
   tempCurrentPlayer: PlayerEnum;
-  leechSources: Array<{player: PlayerEnum, coordinates: string}> = [];
+  leechSources: Array<{player: PlayerEnum, coordinates: string, tradeDelivery?: PlayerEnum}> = [];
+  // When ongoing leech, remember the source in case
+  lastLeechSource: {player: PlayerEnum, coordinates: string, tradeDelivery?: PlayerEnum};
 
   // All moves
   moveHistory: string[] = [];
@@ -857,9 +860,13 @@ export default class Engine {
     }
     const source = this.leechSources.shift();
     const sourceHex = this.map.grid.getS(source.coordinates);
+    const isTrade = source.tradeDelivery !== undefined;
+    const canLeechPlayers: Player[] = [];
+
+    this.lastLeechSource = source;
 
     // Gaia-formers & space stations don't trigger leech
-    if (stdBuildingValue(sourceHex.buildingOf(source.player)) === 0) {
+    if (!isTrade && stdBuildingValue(sourceHex.buildingOf(source.player)) === 0) {
       return this.beginLeechingPhase(); // next building on the list
     }
     // From rules, this is in clockwise order. We assume the order of players in this.players is the
@@ -875,19 +882,24 @@ export default class Engine {
         pl.data.leechPossible = 0;
         continue;
       }
+      if (isTrade && source.tradeDelivery !== pl.player) {
+        pl.data.leechPossible = 0;
+        continue;
+      }
+
       // Exclude the one who made the building from the leech
       let leech = 0;
-      for (const loc of pl.data.occupied) {
-        if (this.map.distance(loc, sourceHex) < ISOLATED_DISTANCE) {
-          leech = Math.max(leech, pl.buildingValue(this.map.grid.get(loc)));
-        }
+      for (const hex of this.map.withinDistance(sourceHex, isTrade ? 0 : LEECHING_DISTANCE)) {
+        leech = Math.max(leech, pl.buildingValue(this.map.grid.get(hex)));
       }
 
       // Do not use maxLeech() here, cuz taklons
       pl.data.leechPossible = leech;
+      if (pl.canLeech() || isTrade) {
+        canLeechPlayers.push(pl);
+      }
     }
 
-    const canLeechPlayers = this.playersInTableOrderFrom(source.player).filter(pl => pl.canLeech());
     if (canLeechPlayers.length > 0) {
       this.changePhase(Phase.RoundLeech);
       this.tempTurnOrder = canLeechPlayers.map(pl => pl.player);
@@ -1315,10 +1327,11 @@ export default class Engine {
 
   [Command.DeliverTrade](player: PlayerEnum, location: string) {
     assert(location === this.availableCommand.data.locations[0].coordinates, "Impossible to deliver trade at " + location);
+    const destHex = this.map.grid.getS(location);
 
-    this.player(player).deliverTrade(this.map.grid.getS(location));
-
-    // TODO: charge power / token for target
+    this.player(player).deliverTrade(destHex);
+    // The main occupier of the planet can charge power
+    this.leechSources.unshift({player, coordinates: location, tradeDelivery: destHex.data.player});
   }
 
   [`_${Command.MoveShip}`](player: PlayerEnum, ship: string, dest: string) {
