@@ -3,7 +3,7 @@
     <rect x="1" y="1" width="75" height="55" />
     <text class="title" x="5" y="12">{{content}}</text>
     <Token v-for="(player, index) in players" :faction="player.faction" :transform="`translate(${tokenX(index)}, ${tokenY(index)})`" :key="player.faction" :scale="8" />
-    <text v-for="(player, index) in players" :key="player.faction + '-text'" :transform="`translate(${tokenX(index)}, ${tokenY(index)+0.5})`" :class="['score', player.faction]">
+    <text v-for="(player, index) in players" :key="player.faction + '-text'" :transform="`translate(${tokenX(index)}, ${tokenY(index)})`" :class="['score', player.faction]">
       {{progress(player)}}
     </text>
   </g>
@@ -97,7 +97,7 @@ g {
       pointer-events: none;
       fill: white;
       text-anchor: middle;
-      dominant-baseline: mathematical;
+      dominant-baseline: central;
 
       &.automa,&.gleens,&.xenos,&.itars,&.nevlas {
         fill: #333;
