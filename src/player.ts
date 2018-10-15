@@ -162,7 +162,7 @@ export default class Player extends EventEmitter {
 
   gainRewards(rewards: Reward[], source: EventSource, toPick: number = 0) {
     if (toPick) {
-      this.data.toPick = {count: toPick, rewards, source};
+      this.data.toPick = {count: toPick, rewards: [...rewards], source};
       this.emit("pick-rewards");
     } else {
       this.data.gainRewards(rewards.map(rew => this.factionReward(rew)), false, source);
