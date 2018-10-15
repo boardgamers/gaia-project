@@ -74,6 +74,8 @@ export default class PlayerData extends EventEmitter {
   tokenModifier: number = 1;
   lostPlanet: number = 0;
   advancedShips: number = 0;
+  // When placing ships. Not internal (because of income command on site)
+  shipsToPlace: number = 0;
 
   // Internal variables, not meant to be in toJSON():
   followBrainStoneHeuristics = true;
@@ -84,7 +86,6 @@ export default class PlayerData extends EventEmitter {
   qicUsedToBoostShip: number = 0;
   movableShips: number = 0;
   movableShipLocations: string[] = [];
-  shipsToPlace: number = 0;
   turns = 0;
   // when picking rewards
   toPick: {rewards: Reward[], count: number, source: EventSource} = undefined;
@@ -112,6 +113,7 @@ export default class PlayerData extends EventEmitter {
       lostPlanet: this.lostPlanet,
       shipLocations: this.shipLocations,
       shipRange: this.shipRange,
+      shipsToPlace: this.shipsToPlace,
       movingShips: this.movingShips
     };
 
@@ -178,7 +180,7 @@ export default class PlayerData extends EventEmitter {
       case Resource.Ore: this.ores = Math.min(MAX_ORE, this.ores + count); break;
       case Resource.Credit: this.credits = Math.min(MAX_CREDIT, this.credits + count); break;
       case Resource.Knowledge: this.knowledge = Math.min(MAX_KNOWLEDGE, this.knowledge + count); break;
-      case Resource.SpaceShip: count = Math.min(count, MAX_SHIP + this.advancedShips - this.ships); break;
+      case Resource.SpaceShip: console.log("original ship count", count); count = Math.min(count, MAX_SHIP + this.advancedShips - this.ships); break;
       case Resource.VictoryPoint: this.victoryPoints += count; break;
       case Resource.Qic: this.qics += count; break;
       case Resource.GainToken: count > 0 ?  this.power.area1 += count : this.discardPower(-count); break;
