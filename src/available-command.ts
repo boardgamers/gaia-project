@@ -561,7 +561,7 @@ export function possibleFederations(engine: Engine, player: Player) {
         }
       });
     } else {
-      const possibleFeds = engine.player(player).availableFederations(engine.map);
+      const possibleFeds = engine.player(player).availableFederations(engine.map, engine.options.flexibleFederations);
 
       if (possibleFeds.length > 0) {
         commands.push({

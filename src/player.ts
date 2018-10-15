@@ -751,7 +751,7 @@ export default class Player extends EventEmitter {
     return buildings + satellites + federations + ships + gaiaFormers + advanced;
   }
 
-  availableFederations(map: SpaceMap): FederationInfo[] {
+  availableFederations(map: SpaceMap, flexible: boolean): FederationInfo[] {
     const maxSatellites = this.maxSatellites;
 
     if (this.federationCache) {
@@ -786,18 +786,18 @@ export default class Player extends EventEmitter {
       const buildingsInDestGroups: Set<GaiaHex> = new Set([].concat(...destGroups));
       // Create a new grid. The following are removed:
       // - hexes in a federation or nearby a federation
-      // - hexes belonging to a building group not part of combination, or adjacent to them
+      // - hexes belonging to a building group not part of combination, or adjacent to them (only in flexible mode)
       //
       // Because of this second constraint, we do avoid some valid possibilites.
       // However, those possibilites are explored in another combination
-      const otherExcluded: Set<GaiaHex> = new Set([].concat(...this.data.occupied.map(hex => buildingsInDestGroups.has(hex) ? [] : [hex, ...map.grid.neighbours(hex)])));
+      const otherExcluded: Set<GaiaHex> = flexible ? new Set([].concat(...this.data.occupied.map(hex => buildingsInDestGroups.has(hex) ? [] : [hex, ...map.grid.neighbours(hex)]))) : new Set();
       const allHexes = [...map.grid.values()].filter(hex => !excluded.has(hex) && !otherExcluded.has(hex));
       const workingGrid = new Grid(...allHexes.map(hex => new Hex(hex.q, hex.r)));
       const convertedDestGroups = destGroups.map(destGroup => destGroup.map(hex => workingGrid.get(hex)));
       const tree = spanningTree(convertedDestGroups, workingGrid, maxSatellites, "heuristic");
       if (tree) {
         // Convert from regular hex to gaia hex of grid
-        federations.push(tree.map(hex => map.grid.get(hex)));
+        federations.push(this.addAdjacentBuildings(tree.map(hex => map.grid.get(hex)), map));
       }
     }
 
@@ -864,7 +864,7 @@ export default class Player extends EventEmitter {
     this.federationCache = null;
   }
 
-  checkAndGetFederationInfo(location: string, map: SpaceMap): FederationInfo {
+  checkAndGetFederationInfo(location: string, map: SpaceMap, flexible: boolean): FederationInfo {
     const coords = location.split(',').map(loc => CubeCoordinates.parse(loc));
 
     for (const coord of coords) {
@@ -896,10 +896,28 @@ export default class Player extends EventEmitter {
     const info = this.federationInfo(hexes);
 
     // Check if outclassed by available federations
-    const available = this.availableFederations(map);
+    const available = this.availableFederations(map, flexible);
     const outclasser = available.find(fed => isOutclassedBy(info, fed));
 
     assert(!outclasser, "Federation is outclassed by other federation at " + get(outclasser, "hexes", []).join(','));
+
+    // Check if federation can be built with less satellites
+    if (!flexible) {
+      const allHexes = [...map.grid.values()].filter(hex => !excluded.has(hex));
+
+      const workingGrid = new Grid(...allHexes.map(hex => new Hex(hex.q, hex.r)));
+      const allGroups = [...this.buildingGroups(hexes.filter(hx => hx.belongsToFederationOf(this.player) || this.buildingValue(hx, {federation: true}) > 0), map).values()];
+      const groups = uniq(allGroups);
+      const convertedDestGroups = groups.map(destGroup => destGroup.map(hex => workingGrid.get(hex)));
+
+      const tree = spanningTree(convertedDestGroups, workingGrid, info.satellites);
+
+      if (tree) {
+        const smallFederation = this.addAdjacentBuildings(tree.map(hex => map.grid.get(hex)), map);
+        const info2 = this.federationInfo(smallFederation);
+        assert(info2.satellites >= info.satellites, "The federation can be built with less satellites, for example: " + tree.join(","));
+      }
+    }
 
     assert (this.faction !== Faction.Ivits || this.data.federationCount === 0 || hexes.some(hex => hex.belongsToFederationOf(this.player)), "Ivits must extend their first federation");
 
