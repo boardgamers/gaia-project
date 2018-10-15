@@ -51,6 +51,8 @@ export interface EngineOptions {
   noFedCheck?: boolean;
   /** Custom map given */
   map?: MapConfiguration;
+  /** Are the federations flexible (allows you to avoid planets with buildings to form federation even if it's not the shortest route)? */
+  flexibleFederations?: boolean;
 }
 
 /**
@@ -1290,7 +1292,7 @@ export default class Engine {
   [Command.FormFederation](player: PlayerEnum, hexes: string, federation: Federation) {
     const pl = this.player(player);
 
-    const fedInfo = pl.checkAndGetFederationInfo(hexes, this.map);
+    const fedInfo = pl.checkAndGetFederationInfo(hexes, this.map, this.options.flexibleFederations);
 
     assert(fedInfo, `Impossible to form federation at ${hexes}`);
     assert(this.availableCommand.data.tiles.includes(federation), `Impossible to form federation ${federation}`);
