@@ -99,7 +99,7 @@ g {
       text-anchor: middle;
       dominant-baseline: mathematical;
 
-      &.automa {
+      &.automa,&.gleens,&.xenos,&.itars,&.nevlas {
         fill: #333;
       }
     }
