@@ -2,7 +2,6 @@
   <g :id="`${hex.q}x${hex.r}`">
     <title>Coordinates: {{hex.q}}x{{hex.r}}&#10;Sector: {{hex.data.sector}}{{hex.data.planet !== 'e' ? `&#10;Planet: ${planetName(hex.data.planet)}`: ''}}{{hex.data.building ? `&#10;Building: ${buildingName(hex.data.building)}` : ''}}{{cost(hex) ? `&#10;Cost: ${cost(hex)}` : ''}}</title>
     <polygon :points="hexCorners.map(p => `${p.x},${p.y}`).join(' ')" :class="['spaceHex', {toSelect, highlighted: highlightedHexes.has(hex), qic: cost(hex).includes('q'), power: cost(hex).includes('pw')}]" @click='hexClick(hex)' />
-    <line v-for="(l, i) in lines" :key="i" :x1="l.x1" :y1="l.y1" :x2="l.x2" :y2="l.y2" class="spaceLine" />
     <text class="sector-name" v-if="isCenter">{{hex.data.sector[0] === 's' ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector)}}</text>
     <Planet v-if="hex.data.planet !== 'e'" :planet='hex.data.planet' :faction='faction(hex.data.player)' />
     <Building v-if="hex.data.building" :building='hex.data.building' :faction='faction(hex.data.player)' />
@@ -57,27 +56,6 @@ export default class SpaceHex extends Vue {
 
   get tradeTokens() {
     return this.hex.data.tradeTokens || [];
-  }
-
-  get lines() {
-    const lines = [];
-    const corners = this.hexCorners;
-    const map = this.$store.state.gaiaViewer.data.map;
-
-    [Direction.NorthWest, Direction.North, Direction.NorthEast, Direction.SouthEast, Direction.South, Direction.SouthWest].forEach((direction, i) => {
-      const neighbour = this.map.grid.neighbour(this.hex, direction);
-      // Draw delimiter if sector is different
-      if (!neighbour || neighbour.data.sector !== this.hex.data.sector) {
-        lines.push({
-          x1: corners[i].x,
-          y1: corners[i].y,
-          x2: corners[(i+1) % 6].x,
-          y2: corners[(i+1) % 6].y,
-        })
-      }
-    });
-
-    return lines;
   }
 
   cost(hex: GaiaHex) {
@@ -169,11 +147,6 @@ svg {
       cursor: pointer;
       opacity: 0.7;
     }
-  }
-
-  .spaceLine {
-    stroke: #ddd;
-    stroke-width: 0.02;
   }
 
   .spaceHexFederation {

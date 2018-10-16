@@ -1,6 +1,6 @@
 <template>
   <svg :viewBox="`-13 -11.5 ${right} 24`">
-    <Sector v-for="center in this.sectors" :center="center" :key="`${center.q}x{center.r}`" :style="`transform: translate(${hexCenter(center).x}px, ${hexCenter(center).y}px) rotate(${rotation(center) * 60}deg);`"/>
+    <Sector v-for="center in this.sectors" :center="center" :key="`${center.q}x{center.r}`" :style="`transform: translate(${hexCenter(center).x * 1.02}px, ${hexCenter(center).y * 1.02}px) rotate(${rotation(center) * 60}deg);`"/>
   </svg>
 </template>
 
