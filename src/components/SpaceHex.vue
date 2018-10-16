@@ -5,9 +5,9 @@
     <text class="sector-name" v-if="isCenter">{{hex.data.sector[0] === 's' ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector)}}</text>
     <Planet v-if="hex.data.planet !== 'e'" :planet='hex.data.planet' :faction='faction(hex.data.player)' />
     <Building v-if="hex.data.building" :building='hex.data.building' :faction='faction(hex.data.player)' />
-    <Building v-if="hex.data.additionalMine !== undefined" :faction='faction(hex.data.additionalMine)' building="m" transform="translate(0.38, 0.5) rotate(36) scale(0.9)" class="additionalMine" />
-    <Building v-for="(player, index) in tradeTokens" :key="`${player}-${index}-trade`":faction=' faction(player)' building="gf" :transform="`scale(0.6) translate(${tradeX(index)}, ${tradeY(index)})`" />
-    <SpaceShip v-for="(player, index) in hex.data.ships || []" :key="`${player}-${index}-ship`" :faction='faction(player)' :scale="0.4" :x="shipX(index+tradeTokens.length)" :y="shipY(index+tradeTokens.length)" />
+    <Building v-if="hex.data.additionalMine !== undefined" :faction='faction(hex.data.additionalMine)' building="m" transform="translate(0.58, -0.2) rotate(36) scale(0.9)" class="additionalMine" />
+    <Building v-for="(player, index) in tradeTokens" :key="`${player}-${index}-trade`":faction=' faction(player)' building="gf" :transform="`scale(0.6) translate(${tradeX(6 - index)}, ${tradeY(6 - index)})`" />
+    <SpaceShip v-for="(player, index) in hex.data.ships || []" :key="`${player}-${index}-ship`" :faction='faction(player)' :scale="0.4" :x="shipX(index)" :y="shipY(index)" />
     <polygon v-for="(player, index) in hex.data.federations || []" :points="hexCorners.map(p => `${p.x*(1-(index+0.5)/8)},${p.y*(1-(index+0.5)/8)}`).join(' ')" :class="['spaceHexFederation', 'planet', planet(player)]" :key="`${player}-${index}`" />
   </g>
 </template>
@@ -108,8 +108,8 @@ export default class SpaceHex extends Vue {
   static shipXs = [-0.5, 0.5, -1.3, 1.3, -0.5, 0.5, 0];
   static shipYs = [-1.3, -1.3, 0, 0, 1.3, 1.3, 0];
 
-  static tradeXs = [-0.5, 0.5, -0.9, 0.9, -0.5, 0.5, 0];
-  static tradeYs = [-0.9, -0.9, 0, 0, 0.9, 0.9, 0];
+  static tradeXs = [-0.5, 0.5, -0.9, 0, 0.9, -0.5, 0.5];
+  static tradeYs = [-0.9, -0.9, 0, 0, 0, 0.9, 0.9];
 }
 export default interface SpaceMap {
   highlightedHexes: HighlightHexData;
