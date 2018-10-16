@@ -30,9 +30,6 @@ export default class Resource extends Vue {
 
   @Prop()
   count: number;
-
-  @Prop()
-  level: number;
 }
 </script>
 
