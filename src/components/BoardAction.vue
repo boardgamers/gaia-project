@@ -20,8 +20,7 @@ import { eventDesc } from '../data/event';
     tooltip() {
       const costDesc = "Spend "+ this.cost + "\n";
 
-      const [income] = boardActions[this.action].income;
-      return costDesc + eventDesc(new Event(income));
+      return costDesc + boardActions[this.action].income.map(x => eventDesc(new Event(x))).join('\n');
     },
 
     highlighted() {
@@ -37,13 +36,12 @@ import { eventDesc } from '../data/event';
     },
 
     income() {
-      const [income] = boardActions[this.action].income;
-
-      if (income.indexOf("+") != -1) {
-        return [income.slice(0, income.indexOf("+")), income.slice(income.indexOf("+"))];
-      } else {
-        return income.split('-');
-      }
+      return [].concat(...boardActions[this.action].income.map(x => {
+        if (x.includes('+')) {
+          return [x.slice(0, x.indexOf('+')), x.slice(x.indexOf('+'))];
+        }
+        return x.split('-');
+      }));
     },
 
     cost() {
