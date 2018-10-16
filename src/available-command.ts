@@ -198,6 +198,10 @@ export function possibleShips(engine: Engine, player: Player) {
 
   for (const hex of pl.data.occupied) {
     if (hex.buildingOf(player) === Building.Mine || pl.faction === Faction.Ivits && hex.buildingOf(player) === Building.PlanetaryInstitute) {
+      // Lantids need their PI before getting a ship from a shared mine
+      if (!hex.isMainOccupier(player) && !pl.data.hasPlanetaryInstitute()) {
+        continue;
+      }
       locations.push({coordinates: hex.toString()});
     }
   }
