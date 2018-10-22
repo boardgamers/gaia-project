@@ -819,7 +819,8 @@ export default class Engine {
     for (const tile of this.tiles.scorings.final) {
       const players = sortBy(this.players, player => player.finalCount(tile)).reverse();
 
-      const rankings = players.map(pl => ({
+      // only players that advaced are getting VPs
+      const rankings = players.filter( player => player.finalCount(tile) > 0).map(pl => ({
         player: pl,
         count: pl.finalCount(tile)
       }));
