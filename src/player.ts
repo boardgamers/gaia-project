@@ -34,6 +34,8 @@ const MAX_SATELLITES = 22;
 interface FederationCache {
   federations: FederationInfo[];
   availableSatellites: number;
+  /** Do we allow custom federations even if there are no possible federations detected by the algorithm? */
+  custom: boolean;
 }
 
 export default class Player extends EventEmitter {
@@ -756,6 +758,7 @@ export default class Player extends EventEmitter {
 
   availableFederations(map: SpaceMap, flexible: boolean): FederationInfo[] {
     const maxSatellites = this.maxSatellites;
+    let custom = false;
 
     if (this.federationCache) {
       if (maxSatellites <= this.federationCache.availableSatellites) {
@@ -771,7 +774,16 @@ export default class Player extends EventEmitter {
 
     const buildingGroups = this.buildingGroups(hexes, map);
     const buildingGroupsList = uniq([...buildingGroups.values()]);
-    const values = buildingGroupsList.map(buildings => sum(buildings.map(node => this.buildingValue(node, {federation: true}))))  ;
+    const values = buildingGroupsList.map(buildings => sum(buildings.map(node => this.buildingValue(node, {federation: true}))));
+
+    // The current algorithm is not all-knowing, so in some cases we allow player to generate their own federation
+    if (values.length >= 6 && maxSatellites >= 8) {
+      const sorted = [...values].sort().slice(0, 6);
+
+      if (sum(sorted) <= this.federationCost && sum(values) >= this.federationCost) {
+        custom = true;
+      }
+    }
 
     let combinations = this.possibleCombinationsForFederations(zipWith(buildingGroupsList, values, (val1, val2) => ({hexes: val1, value: val2})));
 
@@ -822,7 +834,8 @@ export default class Player extends EventEmitter {
 
     this.federationCache = {
       availableSatellites: maxSatellites,
-      federations: feds
+      federations: feds,
+      custom
     };
 
     return feds;
