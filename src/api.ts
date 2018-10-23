@@ -27,7 +27,7 @@ const api: GameApi = {
     return Engine.fromData(data);
   },
   async replay(moves: string[], options: EngineOptions) {
-    const data = await $.post(`${window.location.protocol}//${window.location.hostname}:9508/`, {moves, options}) as any;
+    const data = await $.post(`${window.location.protocol}//${window.location.hostname}:9508/`, {data: JSON.stringify({moves, options})}) as any;
     return Engine.fromData(data);
   }
 }
