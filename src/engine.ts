@@ -844,7 +844,9 @@ export default class Engine {
         // number of other players with the same score
         const ties = rankings.filter(pl => pl.count === count).length;
 
-        if (ranking.player) {
+        // only players that advaced are getting VPs
+        // see https://boardgamegeek.com/thread/1929227/0-end-score-0-vp
+        if (ranking.player && count > 0) {
           const VPs = [18, 12, 6, 0, 0, 0];
 
           ranking.player.gainRewards([new Reward(Math.floor(sum(VPs.slice(first, first + ties)) / ties), Resource.VictoryPoint)], `final${index + 1}` as 'final1' | 'final2');
