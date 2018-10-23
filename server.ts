@@ -24,8 +24,9 @@ app.use((req, res, next) => {
 
 app.post("/", (req, res) => {
   try {
-    const moves = req.body.moves || [];
-    const options = Object.assign({}, req.body.options, {noFedCheck: true});
+    const data = JSON.parse(req.body.data);
+    const moves = data.moves || [];
+    const options = Object.assign({}, data.options, {noFedCheck: true});
     options.spaceShips = options.spaceShips === "false" ? false : options.spaceShips;
     const engine = new Engine(moves.slice(0, -1), options);
 
