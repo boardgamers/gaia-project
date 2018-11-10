@@ -193,6 +193,9 @@ app.listen(9508, () => {
 
 const load = async () => {
   try {
+    if (! fs.existsSync("bin/data.json")) {
+      return;
+    }
     games = JSON.parse((await fs.readFile("bin/data.json")).toString());
   } catch (err) {
     console.error(err);
