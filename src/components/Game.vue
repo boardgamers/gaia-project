@@ -40,7 +40,7 @@
               <input type="text" class="form-control" placeholder="Current move" aria-label="Current move" id="current-move" v-model="currentMove">
               <div class="input-group-append" v-if="!replaying">
                 <!-- <button class="btn btn-danger" type="button" @click="addMove('')">Clear</button> -->
-                <button class="btn btn-primary" type="button" @click="addMove(currentMove)">Send</button>
+                <button class="btn btn-primary" type="button" @click="addMove(currentMove, auth)">Send</button>
               </div>
             </div>
             <div class="form-group mt-2 d-none d-md-block" v-if="data.moveHistory.length > 0">
@@ -387,7 +387,7 @@ export default class Game extends Vue {
     
     if (this.gameId) {
       if (command) {
-        this.api.addMove(this.gameId, command).then(data => this.handleData(data), err => handleError(this.$store, err));
+        this.api.addMove(this.gameId, command, this.auth).then(data => this.handleData(data), err => handleError(this.$store, err));
       } else {
         this.loadGame();
       }
