@@ -243,6 +243,18 @@ export default class PlayerData extends EventEmitter {
     return Math.floor(this.power.area3 * this.tokenModifier) + this.brainstoneValue();
   }
 
+  leechablePowerTokens(): number {
+    const base = this.power.area1 * 2 + this.power.area2;
+
+    if (this.brainstone === BrainstoneArea.Area1) {
+      return base + 2;
+    } else if (this.brainstone === BrainstoneArea.Area2) {
+      return base + 1;
+    }
+
+    return base;
+  }
+
   gaiaPowerTokens(): number {
     return this.power.gaia + (this.brainstone === BrainstoneArea.Gaia ? 1 : 0);
   }

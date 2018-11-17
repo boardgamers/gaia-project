@@ -414,16 +414,26 @@ export default class Engine {
 
     const offers = cmd.data.offers;
 
+    const pl = this.player(this.playerToMove);
+    // const jsonData = pl.data.toJSON();
+
+    // A passed player in last round should always decline a leech if there's a VP
+    // cost associated with it.
+    // If this not truth, please add an example (or link to) in the comments
+    if (this.isLastRound && this.passedPlayers.includes(pl.player)) {
+      if (!offers.some(offer => offer.cost === '~')) {
+        this.move(`${pl.faction} ${Command.Decline} ${offers[0].offer}`, false);
+        return true;
+      }
+    }
+
     // Only leech when only one option and cost is nothing
     if (offers.length > 1 || offers[0].cost !== '~') {
       return false;
     }
 
-    const pl = this.player(this.playerToMove);
-    // const jsonData = pl.data.toJSON();
-
     // Itars may want to burn power instead
-    if (pl.faction === Faction.Itars && this.round < 6) {
+    if (pl.faction === Faction.Itars && !this.isLastRound) {
       return false;
     }
 
@@ -877,11 +887,6 @@ export default class Engine {
     // From rules, this is in clockwise order. We assume the order of players in this.players is the
     // clockwise order
     for (const pl of this.playersInTableOrderFrom(source.player)) {
-      // Maybe should decline leech > 1 for factions other than nevlas & taklons
-      // if (this.isLastRound && this.passedPlayers.includes(pl.player)) {
-      //   pl.data.leechPossible = 0;
-      //   continue;
-      // }
       // If pl is the one that made the building, exclude from leeching
       if (source.player === pl.player) {
         pl.data.leechPossible = 0;
