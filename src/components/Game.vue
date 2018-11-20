@@ -258,7 +258,7 @@ export default class Game extends Vue {
 
   saveNotes() {
     this.api.saveNotes(this.gameId, this.notes, this.auth).then(
-      () => handleInfo(this.$store, "Notes saved!"),
+      () => {}, //handleInfo(this.$store, "Notes saved!"),
       err => handleError(this.$store, err)
     );
   }
