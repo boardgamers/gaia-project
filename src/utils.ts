@@ -32,3 +32,8 @@ export function handleError(store: Store<any>, err: Error | JQuery.jqXHR | strin
     store.commit('error', 'Unknown error');
   }
 }
+
+export function handleInfo(store: Store<any>, info: string) {
+  console.info(info);
+  store.commit('info', info);
+}

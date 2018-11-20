@@ -43,29 +43,40 @@
                 <button class="btn btn-primary" type="button" @click="addMove(currentMove, auth)">Send</button>
               </div>
             </div>
-            <div class="form-group mt-2 d-none d-md-block" v-if="data.moveHistory.length > 0">
-              <label for="moves">Move log</label>
-              <textarea class="form-control" rows="4" id="moves" v-model="moveList"></textarea>
-              <div class="mt-2 row no-gutters">
-                <transition name="fade">
-                  <span v-if="replaying" class="input-group" role="group" style="width: auto">
-                    <div class="input-group-prepend">
-                      <button class="btn btn-outline-secondary" @click="goto(1)">« <span class="sr-only">Previous move</span></button>
-                      <button class="btn btn-outline-secondary" @click="replayPrevMove">‹ <span class="sr-only">Previous move</span></button>
-                    </div>
-                    <input type="text" id="replayMove" style="max-width: 60px" v-model="replayMove" @keydown.enter.prevent="goto(replayMove)" class="form-control">
-                    <div class="input-group-append">
-                      <span class="input-group-text"> / {{numberOfMoves}}</span>
-                      <button class="btn btn-outline-secondary" @click="replayNextMove">› <span class="sr-only">Next move</span></button>
-                      <button class="btn btn-outline-secondary" @click="replay(true)">» <span class="sr-only">Next move</span></button>
-                    </div>
-                  </span>
-                </transition>
-                <input type="button" class="btn btn-secondary ml-auto" :value="!replaying ? 'Replay Mode' : 'Leave Replay'" @click="toggleReplayMode" >
-                <input type="button" class="btn btn-primary ml-2" v-if="developmentMode" :disabled="replaying" value="Execute" @click="replay(true)" >
-              </div>
-            </div> 
-          </form>  
+            <b-card v-if="data.moveHistory.length > 0" class="mb-2" no-body>
+              <b-tabs pills card>
+                <b-tab title="Notes">
+                  <textarea class="form-control" rows="4" id="notes" v-model="notes" maxlength="2000"></textarea>
+                  <div class="mt-2 row no-gutters">
+                    <input type="button" class="btn btn-secondary ml-auto" value="Refresh" @click="loadNotes" >
+                    <input type="button" class="btn btn-primary ml-2" value="Save" @click="saveNotes" >
+                  </div>
+                </b-tab>
+                <b-tab title="Move log">
+                  <textarea class="form-control" rows="4" id="moves" v-model="moveList"></textarea>  
+
+                  <div class="mt-2 row no-gutters">
+                    <transition name="fade">
+                      <span v-if="replaying" class="input-group" role="group" style="width: auto">
+                        <div class="input-group-prepend">
+                          <button class="btn btn-outline-secondary" @click="goto(1)">« <span class="sr-only">Previous move</span></button>
+                          <button class="btn btn-outline-secondary" @click="replayPrevMove">‹ <span class="sr-only">Previous move</span></button>
+                        </div>
+                        <input type="text" id="replayMove" style="max-width: 60px" v-model="replayMove" @keydown.enter.prevent="goto(replayMove)" class="form-control">
+                        <div class="input-group-append">
+                          <span class="input-group-text"> / {{numberOfMoves}}</span>
+                          <button class="btn btn-outline-secondary" @click="replayNextMove">› <span class="sr-only">Next move</span></button>
+                          <button class="btn btn-outline-secondary" @click="replay(true)">» <span class="sr-only">Next move</span></button>
+                        </div>
+                      </span>
+                    </transition>
+                    <input type="button" class="btn btn-secondary ml-auto" :value="!replaying ? 'Replay Mode' : 'Leave Replay'" @click="toggleReplayMode" >
+                    <input type="button" class="btn btn-primary ml-2" v-if="developmentMode" :disabled="replaying" value="Execute" @click="replay(true)" >
+                  </div>
+                </b-tab>
+              </b-tabs>
+            </b-card>
+          </form>
         </div>
       </div>
       <AdvancedLog class="col-12 order-3 mt-4" />
@@ -86,7 +97,7 @@ import AdvancedLog from './AdvancedLog.vue';
 import Pool from './Pool.vue';
 import Engine,{ Command,Phase,factions, Player, EngineOptions } from '@gaia-project/engine';
 import { GameApi, EngineData } from '../api';
-import {handleError} from '../utils';
+import {handleError, handleInfo} from '../utils';
 import { Expansion } from '@gaia-project/engine/src/enums';
 
 @Component<Game>({
@@ -154,6 +165,7 @@ import { Expansion } from '@gaia-project/engine/src/enums';
       this.refresher = setInterval(() => this.refreshStatus(), 3000);
       this.deadlineTicker = setInterval(() => this.updateDeadline(), 1000);
       this.loadGame();
+      this.loadNotes();
       return;
     }
     if (window.sessionStorage.getItem('moves')) {
@@ -190,6 +202,7 @@ export default class Game extends Vue {
   refresher = undefined;
   deadlineTicker = undefined;
   replaying = false;
+  notes = '';
 
   // When refreshing status, count the number of times the status is the same
   refreshCount = 0;
@@ -234,6 +247,19 @@ export default class Game extends Vue {
   replayPrevMove() {
     this.replayMove > 0 ? this.replayMove -- : 0;
     this.replay();
+  }
+
+  loadNotes() {
+    this.api.getNotes(this.gameId, this.auth)
+      .then(notes => this.notes = notes)
+      .catch(err => handleError(this.$store, err));
+  }
+
+  saveNotes() {
+    this.api.saveNotes(this.gameId, this.notes, this.auth).then(
+      () => handleInfo(this.$store, "Notes saved!"),
+      err => handleError(this.$store, err)
+    );
   }
 
   replayNextMove() {
