@@ -30,21 +30,22 @@
           <div v-if="!replaying">
             <span v-if="ended"><b>Game ended!</b></span>
             <Commands @command="handleCommand" @undo="undoMove" v-else-if="canPlay" :remainingTime="remainingTime" />
-            <div v-else-if="data.players[player]">Waiting for {{data.players[player].name}} to play. <span v-if="remainingTime" class="small smaller">({{remainingTime}} remaining)</span><br/> <button class="btn btn-default my-2" @click="loadGame()">Refresh</button></div>
+            <div v-else-if="data.players[player]" class="mb-2">Waiting for {{data.players[player].name}} to play <span v-if="remainingTime" class="small smaller">({{remainingTime}} remaining)</span><br/></div>
           </div>
         </transition>
         <div>
           <form id="move-form" @submit.prevent="">
-            <label for="current-move" v-if="canPlay || replaying">Current Move</label>
-            <div class="input-group mb-2" v-if="canPlay || replaying">
-              <input type="text" class="form-control" placeholder="Current move" aria-label="Current move" id="current-move" v-model="currentMove">
-              <div class="input-group-append" v-if="!replaying">
-                <!-- <button class="btn btn-danger" type="button" @click="addMove('')">Clear</button> -->
-                <button class="btn btn-primary" type="button" @click="addMove(currentMove, auth)">Send</button>
-              </div>
-            </div>
-            <b-card v-if="data.moveHistory.length > 0" class="mb-2" no-body>
+            <div class="card mb-2" v-if="data.moveHistory.length > 0">
               <b-tabs pills card>
+                <b-tab v-if="canPlay || replaying" title="Current Move">
+                  <div class="input-group mb-2" v-if="canPlay || replaying">
+                    <input type="text" class="form-control" placeholder="Current move" aria-label="Current move" id="current-move" v-model="currentMove">
+                    <div class="input-group-append" v-if="!replaying">
+                      <!-- <button class="btn btn-danger" type="button" @click="addMove('')">Clear</button> -->
+                      <button class="btn btn-primary" type="button" @click="addMove(currentMove, auth)">Send</button>
+                    </div>
+                  </div>
+                </b-tab>
                 <b-tab title="Notes">
                   <textarea class="form-control" rows="4" id="notes" v-model="notes" maxlength="2000"></textarea>
                   <div class="mt-2 row no-gutters">
@@ -75,7 +76,7 @@
                   </div>
                 </b-tab>
               </b-tabs>
-            </b-card>
+            </div>
           </form>
         </div>
       </div>
