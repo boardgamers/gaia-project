@@ -386,8 +386,11 @@ export default class Engine {
     } else if (this.availableCommands.some(cmd => cmd.name === Command.BrainStone)) {
       const cmd = this.findAvailableCommand(this.playerToMove, Command.BrainStone);
       this.move(`${ps} ${Command.BrainStone} ${cmd.data[0]}`);
+    } else if (this.availableCommands.some(cmd => cmd.name === Command.PlaceShip)) {
+      const cmd = this.findAvailableCommand(this.playerToMove, Command.PlaceShip);
+      this.move(`${ps} ${Command.PlaceShip} ${cmd.data.locations[0].coordinates}`);
     } else {
-      assert(false, "Can't automove for player " + (this.playerToMove + 1));
+      assert(false, "Can't automove for player " + (this.playerToMove + 1) + ", available command: " + this.availableCommands[0].name);
     }
 
     // Again
