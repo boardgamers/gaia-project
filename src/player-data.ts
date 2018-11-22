@@ -5,6 +5,7 @@ import { EventEmitter } from "eventemitter3";
 import { EventSource } from './events';
 import * as fromPairs from "lodash.frompairs";
 import * as cloneDeep from 'lodash.clonedeep';
+import { lastTile } from "./research-tracks";
 
 const MAX_ORE = 15;
 const MAX_CREDIT = 30;
@@ -22,6 +23,7 @@ export default class PlayerData extends EventEmitter {
     return this.shipLocations.length;
   }
   tradeTokens = 0;
+  wildTradeTokens = 0;
   power: {
     area1: number,
     area2: number,
@@ -114,7 +116,9 @@ export default class PlayerData extends EventEmitter {
       shipLocations: this.shipLocations,
       shipRange: this.shipRange,
       shipsToPlace: this.shipsToPlace,
-      movingShips: this.movingShips
+      movingShips: this.movingShips,
+      tradeTokens: this.tradeTokens,
+      wildTradeTokens: this.wildTradeTokens
     };
 
     return ret;
@@ -210,6 +214,10 @@ export default class PlayerData extends EventEmitter {
 
   availableTradeTokens() {
     return MAX_TRADE_TOKENS - this.tradeTokens;
+  }
+
+  availableWildTradeTokens() {
+    return (this.research[ResearchField.TradingVolume] === lastTile(ResearchField.TradingVolume) ? 5 : 0) - this.wildTradeTokens;
   }
 
   hasResource(reward: Reward) {

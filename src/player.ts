@@ -728,7 +728,7 @@ export default class Player extends EventEmitter {
       case Condition.Satellite: return this.data.satellites + this.data.buildings[Building.SpaceStation];
       case Condition.StructureValue: return sum(this.data.occupied.map(hex => this.buildingValue(hex, {federation: true})));
       case Condition.StructureFedValue: return sum(this.data.occupied.map(hex => hex.belongsToFederationOf(this.player) ? this.buildingValue(hex, {federation: true}) : 0 ));
-      case Condition.Trade: return this.data.tradeTokens;
+      case Condition.Trade: return this.data.tradeTokens + this.data.wildTradeTokens;
       // Max 8 (for tech tile which gains 1k per planet)
       case Condition.PlanetsWithTradeToken: return Math.min(this.data.occupied.filter(hex => hex.isMainOccupier(this.player) && hex.colonizedBy(this.player) && hex.hasTradeTokens()).length, 8);
       case Condition.AdvanceResearch: return sum(Object.values(this.data.research));

@@ -1,5 +1,5 @@
 import { Hex } from "hexagrid";
-import { Planet, Building, Player } from "./enums";
+import { Planet, Building, Player, TradeToken } from "./enums";
 import { stdBuildingValue } from "./buildings";
 
 export interface GaiaHexData {
@@ -11,7 +11,7 @@ export interface GaiaHexData {
   /** List of players who have a federation occupying this square */
   federations?: Player[];
   ships?: Player[];
-  tradeTokens?: Player[];
+  tradeTokens?: Array<Player | TradeToken>;
   /** Additional mine of lantids */
   additionalMine?: Player;
 }
@@ -109,6 +109,10 @@ export class GaiaHex extends Hex<GaiaHexData> {
 
   hasTradeToken(player: Player) {
     return this.data.tradeTokens && this.data.tradeTokens.includes(player);
+  }
+
+  hasWildTradeToken() {
+    return this.data.tradeTokens && this.data.tradeTokens.includes(TradeToken.Wild);
   }
 
   hasTradeTokens() {

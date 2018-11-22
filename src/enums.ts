@@ -200,6 +200,10 @@ export enum Command {
   PISwap = "swap-PI"
 }
 
+export enum TradeToken {
+  Wild = "wild"
+}
+
 export enum Player {
   Player1,
   Player2,

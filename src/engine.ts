@@ -1370,7 +1370,12 @@ export default class Engine {
 
     const destHex = this.map.grid.getS(dest);
 
-    assert (!destHex.hasTradeToken(player), `The destination planet already has a trade token for your faction`);
+    const blockedWildToken = pl.data.availableWildTradeTokens() > 0;
+    if (pl.data.availableWildTradeTokens() > 0) {
+      assert (!destHex.hasTradeToken(player) || !destHex.hasWildTradeToken(), `The destination planet already has a trade token for your faction`);
+    } else {
+      assert (!destHex.hasTradeToken(player), `The destination planet already has a trade token for your faction`);
+    }
 
     pl.placeShip(destHex);
 
@@ -1378,7 +1383,11 @@ export default class Engine {
       if (destHex.occupied()) {
         assert(destHex.hasStructure(), `When moving a ship to an occupied planet, there needs to be a valid building on it`);
         assert(!destHex.isMainOccupier(player), "You can't move a ship to a planet that is occupied by you.");
-        assert(pl.data.availableTradeTokens() > 0, "You do not have remaining trade tokens, so you can't move the ship to another faction's planet");
+
+        const canPutTradeToken = pl.data.availableTradeTokens() > 0 && !destHex.hasTradeToken(player);
+        const canPutWildTradeToken = pl.data.availableWildTradeTokens() > 0 && !destHex.hasWildTradeToken();
+
+        assert(canPutTradeToken || canPutWildTradeToken, "Impossible to put a trade token on the planet, either you already have a token there or all your tokens are used");
 
         this.processNextMove(SubPhase.DeliverTrade, {locations: [{coordinates: dest}], automatic: true});
       } else {
