@@ -86,7 +86,12 @@ const factions = {
   },
 
   planet(faction: Faction): Planet {
-    return factions[faction].planet;
+    const fact = factions[faction];
+
+    if (fact) {
+      return fact.planet;
+    }
+    return Planet.Lost;
   }
 };
 
