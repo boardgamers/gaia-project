@@ -265,6 +265,10 @@ export default class Engine {
       player.data.shipsToPlace = count;
       this.processNextMove(SubPhase.PlaceShip);
     });
+    player.data.on(`gain-${Resource.AdvancedSpaceShip}`, (count: number) => {
+      player.data.shipsToPlace = count;
+      this.processNextMove(SubPhase.PlaceShip);
+    });
     player.data.on(`gain-${Resource.TemporaryStep}`, () => this.processNextMove(SubPhase.BuildMine));
     player.data.on(`gain-${Resource.TemporaryRange}`, (count: number) => {
       if (this.findAvailableCommand(player.player, Command.MoveShip)) {
@@ -951,6 +955,8 @@ export default class Engine {
       } else if (field === ResearchField.Navigation) {
         // gets LostPlanet
         this.processNextMove(SubPhase.PlaceLostPlanet);
+      } else if (field === ResearchField.TradingVolume) {
+        pl.gainFederationToken(Federation.Ship);
       }
     }
   }

@@ -212,6 +212,8 @@ export function possibleShips(engine: Engine, player: Player) {
       player,
       data: {locations}
     }];
+  } else {
+    pl.data.shipsToPlace = 0;
   }
 
   return [];
