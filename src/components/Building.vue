@@ -13,7 +13,7 @@
 <script lang="ts">
 import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import { factions, Faction, Building as BuildingEnum } from '@gaia-project/engine';
+import { factions, Faction, Building as BuildingEnum, Planet } from '@gaia-project/engine';
 import { corners } from '../graphics/hex';
 import Token from './Token.vue';
 
@@ -30,7 +30,7 @@ export default class Building extends Vue {
   building: BuildingEnum;
 
   get planet() {
-    return factions.planet(this.faction);
+    return (this.faction as any === "wild") ? Planet.Transdim : factions.planet(this.faction);
   }
 
   get hexCorners() {
