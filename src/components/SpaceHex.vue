@@ -72,7 +72,7 @@ export default class SpaceHex extends Vue {
 
   faction(player) {
     if (player === undefined || player === "wild") {
-      return;
+      return player; // Wild will get recognized as purple, for trade tokens. A bit of a hack
     }
     return this.$store.state.gaiaViewer.data.players[player].faction;
   }
