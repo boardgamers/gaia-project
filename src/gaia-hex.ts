@@ -99,7 +99,7 @@ export class GaiaHex extends Hex<GaiaHexData> {
     }
   }
 
-  addTradeToken(player: Player) {
+  addTradeToken(player: Player | TradeToken.Wild) {
     if (this.data.tradeTokens) {
       this.data.tradeTokens.push(player);
     } else {

@@ -1370,7 +1370,6 @@ export default class Engine {
 
     const destHex = this.map.grid.getS(dest);
 
-    const blockedWildToken = pl.data.availableWildTradeTokens() > 0;
     if (pl.data.availableWildTradeTokens() > 0) {
       assert (!destHex.hasTradeToken(player) || !destHex.hasWildTradeToken(), `The destination planet already has a trade token for your faction`);
     } else {

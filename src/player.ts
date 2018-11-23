@@ -1,4 +1,4 @@
-import { Faction, Operator, ResearchField, Planet, Building, Resource, Booster, Condition, Federation, FinalTile, TechTile, AdvTechTile, BrainstoneArea, TechTilePos, AdvTechTilePos, Command} from './enums';
+import { Faction, Operator, ResearchField, Planet, Building, Resource, Booster, Condition, Federation, FinalTile, TechTile, AdvTechTile, BrainstoneArea, TechTilePos, AdvTechTilePos, Command, TradeToken} from './enums';
 import PlayerData from './player-data';
 import Event, {EventSource, TechPos} from './events';
 import { factionBoard, FactionBoard } from './faction-boards';
@@ -472,8 +472,13 @@ export default class Player extends EventEmitter {
   }
 
   deliverTrade(hex: GaiaHex) {
-    hex.addTradeToken(this.player);
-    this.data.tradeTokens += 1;
+    if (hex.hasTradeToken(this.player) && this.data.availableWildTradeTokens() > 0 && !hex.hasWildTradeToken()) {
+      hex.addTradeToken(TradeToken.Wild);
+      this.data.wildTradeTokens += 1;
+    } else {
+      hex.addTradeToken(this.player);
+      this.data.tradeTokens += 1;
+    }
 
     this.receiveTriggerIncome(Condition.Trade);
   }
