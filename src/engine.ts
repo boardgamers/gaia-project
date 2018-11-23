@@ -1350,7 +1350,7 @@ export default class Engine {
 
     this.player(player).deliverTrade(destHex);
     // The main occupier of the planet can charge power
-    this.leechSources.unshift({player, coordinates: location, tradeDelivery: destHex.data.player});
+    this.leechSources.push({player, coordinates: location, tradeDelivery: destHex.data.player});
   }
 
   [`_${Command.MoveShip}`](player: PlayerEnum, ship: string, dest: string) {
