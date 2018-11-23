@@ -308,6 +308,16 @@ export default class Engine {
       this.processNextMove(SubPhase.MoveShip);
     });
     player.data.on('brainstone', areas => this.processNextMove(SubPhase.BrainStone, areas));
+    // Test before upgrading research that it's actually possible. Needed when getting up-int or up-nav in
+    // the spaceship expansion
+    player.data.on('beforeResearchUpgrade', field => {
+      const destTile = player.data.research[field] + 1;
+      if (!player.canUpgradeResearch(field)) {
+        player.data.canUpgradeResearch = false;
+      } else if (destTile === researchTracks.lastTile(field) && this.players.some(pl => pl.data.research[field] === destTile)) {
+        player.data.canUpgradeResearch = false;
+      }
+    });
     player.on('pick-rewards', () => this.processNextMove(SubPhase.PickRewards));
 
     /* For advanced log */

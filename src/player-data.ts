@@ -88,6 +88,7 @@ export default class PlayerData extends EventEmitter {
   qicUsedToBoostShip: number = 0;
   movableShips: number = 0;
   movableShipLocations: string[] = [];
+  canUpgradeResearch = true;
   turns = 0;
   // when picking rewards
   toPick: {rewards: Reward[], count: number, source: EventSource} = undefined;
@@ -176,7 +177,12 @@ export default class PlayerData extends EventEmitter {
     }
 
     if (resource.startsWith("up-") && resource !== Resource.UpgradeLowest) {
-      this.advanceResearch(resource.slice("up-".length) as ResearchField, count);
+      const field = resource.slice("up-".length) as ResearchField;
+      this.canUpgradeResearch = true;
+      this.emit("beforeResearchUpgrade", field);
+      if (this.canUpgradeResearch) {
+        this.advanceResearch(resource.slice("up-".length) as ResearchField, count);
+      }
       return;
     }
 
