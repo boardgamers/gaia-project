@@ -119,7 +119,8 @@ export default class PlayerData extends EventEmitter {
       shipsToPlace: this.shipsToPlace,
       movingShips: this.movingShips,
       tradeTokens: this.tradeTokens,
-      wildTradeTokens: this.wildTradeTokens
+      wildTradeTokens: this.wildTradeTokens,
+      advancedShips: this.advancedShips
     };
 
     return ret;
