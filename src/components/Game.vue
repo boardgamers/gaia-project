@@ -10,10 +10,19 @@
     <div id="errors"></div>
     <div class="row mt-2">
       <div class="col-md-6 order-2 order-md-1">
-        <div class="turn-order">
-          {{turnOrderDesc}} 
+        <div v-if="sessionPlayer === undefined">
+          <div class="turn-order">
+            {{turnOrderDesc}} 
+          </div>
+          <PlayerInfo v-for="player in orderedPlayers" :player='player' :key="player.player" />
         </div>
-        <PlayerInfo v-for="player in orderedPlayers" :player='player' :key="player.player" />
+        <div v-else>
+          <PlayerInfo :player='sessionPlayer'/>
+          <div class="turn-order">
+            {{turnOrderDesc}} 
+          </div>
+          <PlayerInfo v-for="player in orderedPlayers.filter(pl => pl !== sessionPlayer)" :player='player' :key="player.player" />
+        </div>
         <Pool /> 
       </div>
       <div class="col-md-6 order-1 order-md-2" id="move-panel">
