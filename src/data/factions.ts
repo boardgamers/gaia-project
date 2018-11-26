@@ -72,7 +72,12 @@ const  factionData: { [faction in Faction]: { ability: string, PI: string}} = {
 
 export function planetsWithSteps(planet: Planet, steps: number) {
   // Planets are ordered the same as in the planet wheel
-  const list = [Planet.Terra, Planet.Oxide, Planet.Volcanic, Planet.Desert, Planet.Swamp, Planet.Titanium, Planet.Ice];
+  let list = [Planet.Terra, Planet.Oxide, Planet.Volcanic, Planet.Desert, Planet.Swamp, Planet.Titanium, Planet.Ice];
+
+  // Properly rearrange the list for wheel effect
+  if (list.includes(planet)) {
+    list = list.slice(list.lastIndexOf(planet)).concat(list.slice(0, list.indexOf(planet)));
+  }
 
   return list.filter(p => terraformingStepsRequired(planet, p) === steps);
 }
