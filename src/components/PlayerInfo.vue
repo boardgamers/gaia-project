@@ -5,8 +5,8 @@
       <svg viewBox="-0.2 -0.5 38.5 21.4" class="player-board" :style="`background-color: ${factionColor}`">
         <rect x=-1 y=-1 width=50 height=50 fill="#ffffff44"></rect>
         <PlayerBoardInfo transform="translate(0.5, 0.5)" :player="player" :faction="player.faction" :data="data" />
-        <BuildingGroup transform="translate(2.2, 10)" :nBuildings="1" building="PI" :faction="player.faction" :placed="data.buildings.PI" :resource="['pw','t']" />
-        <BuildingGroup transform="translate(12, 10)" :nBuildings="2" building="ac1" :faction="player.faction" :placed="0" :ac1="data.buildings.ac1" :ac2="data.buildings.ac2" :resource="['q']" />
+        <BuildingGroup :transform="player.faction !== 'bescods' ? 'translate(2.2, 10)' : 'translate(12, 10)'" :nBuildings="1" building="PI" :faction="player.faction" :placed="data.buildings.PI" :resource="['pw','t']" />
+        <BuildingGroup :transform="player.faction === 'bescods' ? 'translate(2.2, 10)' : 'translate(12, 10)'" :nBuildings="2" building="ac1" :faction="player.faction" :placed="0" :ac1="data.buildings.ac1" :ac2="data.buildings.ac2" :resource="['q']" />
         <BuildingGroup transform="translate(0, 13)" :nBuildings="4" building="ts" :faction="player.faction" :placed="data.buildings.ts" :resource="['c']" />
         <BuildingGroup transform="translate(11, 13)" :nBuildings="3" building="lab" :faction="player.faction" :placed="data.buildings.lab" :resource="['k']" />
         <BuildingGroup transform="translate(0, 16)" :nBuildings="8" building="m" :faction="player.faction" :placed="data.buildings.m" :resource="['o']" />
