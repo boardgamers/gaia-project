@@ -2,12 +2,12 @@
   <g class="resource">
     <rect v-if="kind=='q'" class="qic" width="14" height="14" x="-7" y="-7" />
     <rect v-else-if="kind=='o'" class="ore" width="14" height="14" x="-7" y="-7" />
-    <rect v-else-if="kind=='c'" class="credit" width="14" height="14" ry="7" rx="7" x="-7" y="-7" />
-    <rect v-else-if="kind=='pw' || kind=='t'" class="power" width="14" height="14" ry="7" rx="7" x="-7" y="-7" />
+    <rect v-else-if="kind=='c'" class="credit" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
+    <rect v-else-if="kind=='pw' || kind=='t'" class="power" width="15" height="15" ry="7.5" rx="7.5" x="-7.5" y="-7.5" />
     <SpaceShip v-else-if="kind=='ship'" class="ship" :scale="14" />
-    <Building v-else-if="kind=='k'" faction="terrans" building="gf" transform="translate(0.5, 0) scale(20)" />
+    <polygon points="-1,0.5 -0.5,1 0.5,1 1,0.5 1,-0.5 0.5,-1 -0.5,-1 -1,-0.5" transform="scale(7.5)" v-else-if="kind=='k'" class="planet-fill r" stroke=#333 stroke-width=0.1 />
     <Building v-else-if="kind=='gf'" faction="ivits" building="gf" transform="translate(0.5, 0) scale(20)" style="fill: none !important" />
-    <text x="0" y="0" v-if="count && (['o','c','q','k','pw','t','ship'].includes(kind) || count === '+')" :class="{plus: count === '+'}">{{count}}</text>
+    <text x="0" y="0" v-if="['o','c','q','k','pw','t','ship'].includes(kind) || count === '+'" :class="{plus: count === '+'}">{{count}}</text>
    </g>
 </template>
 
@@ -35,6 +35,8 @@ export default class Resource extends Vue {
 
 
 <style lang="scss">
+@import '../stylesheets/planets.scss';
+
 g.resource {
   pointer-events: none;
   opacity: 0.7;
@@ -57,7 +59,7 @@ g.resource {
   }
 
   .credit {
-    fill: #e8de24;
+    fill: $desert;
   }
 
   .power {

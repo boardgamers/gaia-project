@@ -108,7 +108,7 @@ export default new Vuex.Store({
     gaiaViewer
   },
   state: {
-    options: {spaceShips: true} as EngineOptions,
+    options: {spaceShips: false} as EngineOptions,
     error: null as string,
     info: null as string,
     errorIssued: null as Date,

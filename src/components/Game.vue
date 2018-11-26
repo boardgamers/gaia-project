@@ -35,7 +35,7 @@
         </transition>
         <div>
           <form id="move-form" @submit.prevent="">
-            <div class="card mb-2" v-if="data.moveHistory.length > 0">
+            <div class="card mb-2" v-if="data.moveHistory.length > 0 || !gameId">
               <b-tabs pills card>
                 <b-tab v-if="canPlay || replaying" title="Current Move">
                   <div class="input-group mb-2" v-if="canPlay || replaying">
@@ -495,9 +495,6 @@ canvas#map {
   height: 450px;
 }
 
-.turn-order {
-  margin-bottom: 1em;
-}
 
 .space-map, .scoring-research-board {
   max-height: 450px;
