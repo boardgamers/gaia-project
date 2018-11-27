@@ -164,7 +164,7 @@ export default interface PlayerInfo {
   margin-right: auto;
 
   .board-text {
-    dominant-baseline: central;
+    dominant-baseline: mathematical;
     font-size: 1.2px;
   }
 
