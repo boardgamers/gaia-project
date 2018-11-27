@@ -625,7 +625,7 @@ export function possibleLeech(engine: Engine, player: Player) {
   const isTrade = engine.lastLeechSource && engine.lastLeechSource.tradeDelivery === player;
 
   if ( pl.data.leechPossible > 0) {
-    const extraPower = pl.faction === Faction.Taklons && pl.data.hasPlanetaryInstitute();
+    const extraPower = pl.faction === Faction.Taklons && pl.data.hasPlanetaryInstitute() && !isTrade;
     const maxLeech = pl.maxLeech();
     const offers: Array<{offer: string, cost: string}> = [];
 
