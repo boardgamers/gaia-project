@@ -321,7 +321,7 @@ export default class Engine {
     player.on('pick-rewards', () => this.processNextMove(SubPhase.PickRewards));
 
     /* For advanced log */
-    for (const resource of [Resource.VictoryPoint, Resource.ChargePower, Resource.Credit, Resource.Qic, Resource.Knowledge, Resource.Ore]) {
+    for (const resource of [Resource.VictoryPoint, Resource.ChargePower, Resource.Credit, Resource.Qic, Resource.Knowledge, Resource.Ore, Resource.GainToken]) {
       player.data.on(`gain-${resource}`, (amount: number, source: EventSource) => this.log(player.player, resource, amount, source));
       player.data.on(`pay-${resource}`, (amount: number, source: EventSource) => this.log(player.player, resource, -amount, source));
     }
