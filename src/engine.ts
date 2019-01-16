@@ -403,6 +403,9 @@ export default class Engine {
     } else if (this.availableCommands.some(cmd => cmd.name === Command.PlaceShip)) {
       const cmd = this.findAvailableCommand(this.playerToMove, Command.PlaceShip);
       this.move(`${ps} ${Command.PlaceShip} ${cmd.data.locations[0].coordinates}`);
+    } else if (this.availableCommands.some(cmd => cmd.name === Command.Spend && cmd.data.acts[0].cost.includes(Resource.GainTokenGaiaArea))) {
+      // Terrans spending power in gaia phase to create resources
+      this.move(`${ps} ${Command.Spend} ${pl.data.power.gaia}${Resource.GainTokenGaiaArea} for ${pl.data.power.gaia}${Resource.Credit}`);
     } else {
       assert(false, "Can't automove for player " + (this.playerToMove + 1) + ", available command: " + this.availableCommands[0].name);
     }
