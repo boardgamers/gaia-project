@@ -65,7 +65,7 @@ app.post("/g/", (req, res) => {
     return;
   }
 
-  if (!/^[A-Za-z-_0-9]+$/.test(gameId) || gameId.length > 16) {
+  if (!/^[A-Za-z-_0-9]+$/.test(gameId) || gameId.length > 30) {
     res.status(400).json('Invalid game id format');
     return;
   }
