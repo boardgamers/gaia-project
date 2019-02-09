@@ -63,6 +63,6 @@ export const descriptions = {
     "Two spaceships income. The move action moves two spaceships at current range + 1.",
     "Two spaceships income. The move action moves two spaceships at current range + 2.",
     "Three spaceships income. The move action moves three spaceships at current range + 2. Advance on the navigation or intelligence research track by one level.",
-    "Three spaceships income. The move action moves four spaceships at current range + 3. Gain a special federation token with no vp that gives a 4th ship: Advanced Spaceship that is immmediately placed. You have an additional 5 wild trade tokens available, that can be placed on planets with one or none of your regular trade tokens when delivering trade."
+    "Four spaceships income. The move action moves four spaceships at current range + 3. Gain a special federation token with no vp that gives a 4th ship: Advanced Spaceship that is immmediately placed. You have an additional 5 wild trade tokens available, that can be placed on planets with one or none of your regular trade tokens when delivering trade."
   ]
 };
