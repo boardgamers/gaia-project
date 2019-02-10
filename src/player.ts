@@ -624,14 +624,7 @@ export default class Player extends EventEmitter {
   }
 
   finalCount(tile: FinalTile): number {
-    switch (tile) {
-      case FinalTile.Structure : return this.eventConditionCount(finalScorings[FinalTile.Structure].condition);
-      case FinalTile.StructureFed : return this.eventConditionCount(finalScorings[FinalTile.StructureFed].condition);
-      case FinalTile.PlanetType : return this.eventConditionCount(finalScorings[FinalTile.PlanetType].condition);
-      case FinalTile.Gaia : return this.eventConditionCount(finalScorings[FinalTile.Gaia].condition);
-      case FinalTile.Sector : return this.eventConditionCount(finalScorings[FinalTile.Sector].condition);
-      case FinalTile.Satellite : return this.eventConditionCount(finalScorings[FinalTile.Satellite].condition);
-     }
+    return this.eventConditionCount(finalScorings[tile].condition);
   }
 
   gaiaPhase() {
