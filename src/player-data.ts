@@ -191,7 +191,7 @@ export default class PlayerData extends EventEmitter {
       case Resource.Ore: this.ores = Math.min(MAX_ORE, this.ores + count); break;
       case Resource.Credit: this.credits = Math.min(MAX_CREDIT, this.credits + count); break;
       case Resource.Knowledge: this.knowledge = Math.min(MAX_KNOWLEDGE, this.knowledge + count); break;
-      case Resource.SpaceShip: console.log("original ship count", count); count = Math.min(count, MAX_SHIP + this.advancedShips - this.ships); break;
+      case Resource.SpaceShip: count = Math.min(count, MAX_SHIP + this.advancedShips - this.ships); break;
       case Resource.VictoryPoint: this.victoryPoints += count; break;
       case Resource.Qic: this.qics += count; break;
       case Resource.GainToken: count > 0 ?  this.power.area1 += count : this.discardPower(-count); break;
@@ -422,7 +422,7 @@ export default class PlayerData extends EventEmitter {
   advanceResearch(which: ResearchField, count: number) {
     while (count-- > 0) {
       this.research[which] += 1;
-      this.emit("advance-research", which);
+      this.emit("advance-research", which, this.research[which]);
     }
   }
 
@@ -475,6 +475,7 @@ export default class PlayerData extends EventEmitter {
   }
 
   removeGreenFederation() {
+    // console.log("removing green federation...");
     this.tiles.federations.some(fed => {
       if (fed.green) {
         fed.green = false;

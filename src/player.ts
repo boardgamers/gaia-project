@@ -63,7 +63,7 @@ export default class Player extends EventEmitter {
 
   constructor(public player: PlayerEnum = PlayerEnum.Player1) {
     super();
-    this.data.on('advance-research', track => this.onResearchAdvanced(track));
+    this.data.on('advance-research', (track, dest) => this.onResearchAdvanced(track, dest));
   }
 
   get income() {
@@ -362,13 +362,17 @@ export default class Player extends EventEmitter {
   }
 
 
-  onResearchAdvanced(field: ResearchField) {
+  /**
+   * Second parameter is necessary in case someone advances research mutliple times in one go, we don't
+   * want to remove multiple green federations for one track
+   */
+  onResearchAdvanced(field: ResearchField, dest: number) {
     const events = Event.parse(researchTracks[field][this.data.research[field]], field);
     this.loadEvents(events);
     const oldEvents = Event.parse(researchTracks[field][this.data.research[field] - 1], field);
     this.removeEvents(oldEvents);
 
-    if (this.data.research[field] === lastTile(field)) {
+    if (dest === lastTile(field)) {
       this.data.removeGreenFederation();
     }
 
