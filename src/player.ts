@@ -367,9 +367,9 @@ export default class Player extends EventEmitter {
    * want to remove multiple green federations for one track
    */
   onResearchAdvanced(field: ResearchField, dest: number) {
-    const events = Event.parse(researchTracks[field][this.data.research[field]], field);
+    const events = Event.parse(researchTracks[field][dest], field);
     this.loadEvents(events);
-    const oldEvents = Event.parse(researchTracks[field][this.data.research[field] - 1], field);
+    const oldEvents = Event.parse(researchTracks[field][dest - 1], field);
     this.removeEvents(oldEvents);
 
     if (dest === lastTile(field)) {
