@@ -178,10 +178,10 @@ describe("Taklons", () => {
       taklons pass booster1
       xenos build lab 0x-2. tech terra. up terra.
       taklons charge 2pw
-      taklons action power3.
+      taklons action power3. brainstone area1.
       xenos pass booster9
       taklons special 4pw.
-      taklons action power4.
+      taklons action power4. brainstone area1.
       taklons build ac2 -1x-3. tech free1. up nav.
       xenos charge 2pw
       taklons up nav. brainstone area3.

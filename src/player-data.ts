@@ -321,8 +321,25 @@ export default class PlayerData extends EventEmitter {
 
   spendPower(power: number) {
     if (this.brainstone === BrainstoneArea.Area3 && (power >= 3 || this.power.area3 < power)) {
-      this.brainstone = BrainstoneArea.Area1;
-      power = Math.max(power - 3, 0);
+      let useBrainStone = true;
+      // Choose whether to spend the brainstone power or not
+      if (this.power.area3 >= power) {
+        if (this.brainstoneDest === undefined) {
+          // Interrupt by asking player where to put the brainstone
+          this.emit('brainstone', [BrainstoneArea.Area3, BrainstoneArea.Area1]);
+        }
+
+        if (this.brainstoneDest === BrainstoneArea.Area3) {
+          useBrainStone = false;
+        }
+
+        delete this.brainstoneDest;
+      }
+
+      if (useBrainStone) {
+        this.brainstone = BrainstoneArea.Area1;
+        power = Math.max(power - 3, 0);
+      }
     }
     this.power.area3 -= Math.ceil( power / this.tokenModifier );
     this.power.area1 += Math.ceil( power / this.tokenModifier );

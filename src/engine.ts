@@ -615,7 +615,7 @@ export default class Engine {
   }
 
   checkCommand(command: Command) {
-    assert(this.availableCommand = this.findAvailableCommand(this.playerToMove, command), `Command ${command} is not in the list of available commands`);
+    assert(this.availableCommand = this.findAvailableCommand(this.playerToMove, command), `Command ${command} is not in the list of available commands: ${this.availableCommands.map(cmd => cmd.name)}`);
   }
 
   doFreeActions(subPhase: SubPhase) {
