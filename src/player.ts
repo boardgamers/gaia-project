@@ -848,7 +848,9 @@ export default class Player extends EventEmitter {
     const maxNumber = MAX_SATELLITES - this.data.satellites - this.data.lostPlanet;
 
     if (this.faction === Faction.Ivits) {
-      return Math.min(this.data.qics, maxNumber);
+      // for Ivits the federationCache is requesting the already payed satellites
+      // so the requested QICs have to include them
+      return Math.min(this.data.qics + this.data.satellites, maxNumber);
     } else {
       return Math.min(this.data.discardablePowerTokens(), maxNumber);
     }
