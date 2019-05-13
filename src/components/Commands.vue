@@ -153,6 +153,7 @@ export default class Commands extends Vue {
       console.log("repeating command, ignoring");
       return;
     }
+
     if (source.button.buttons && source.button.buttons.length > 0 && !final) {
       this.commandTitles.push(source.button.label);
       this.commandChain.push(source.button.command);
@@ -300,12 +301,25 @@ export default class Commands extends Vue {
             }
           });
 
-          ret.push({
-            label: command.name === Command.Pass ? "Pass" : "Pick booster",
-            command: command.name,
-            buttons,
-            boosters: command.data.boosters
-          });
+          // need a Pass confirmation if it's the last round, where Command = PAss but no Boosters
+          if ( command.data.boosters.length === 0 ) {
+            ret.push({
+              label: "Pass" ,
+              command: Command.Pass,
+              buttons: [{
+                  command: Command.PassConfirmation,
+                  label: `Confirm Pass`
+              }]
+            });
+          } else {
+            ret.push({
+              label: command.name === Command.Pass ? "Pass" : "Pick booster",
+              command: command.name,
+              buttons,
+              boosters: command.data.boosters
+            });
+          } 
+          
 
           break;
         };
@@ -423,7 +437,11 @@ export default class Commands extends Vue {
         case Command.EndTurn: {
           ret.push({
             label: "End Turn",
-            command: Command.EndTurn
+            command: "",
+            buttons: [{
+                command: Command.EndTurnConfirmation,
+                label: `Confirm End Turn`
+              }]
           });
           break;
         }

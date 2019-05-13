@@ -54,12 +54,14 @@
                   </div>
                 </b-tab>
                 <b-tab title="Move log">
+                  <input type="text" class="form-control" placeholder="Current move" aria-label="Current move" id="current-move" v-model="currentMove">
                   <textarea class="form-control" rows="4" id="moves" v-model="moveList"></textarea>  
 
                   <div class="mt-2 row no-gutters">
                     <transition name="fade">
                       <span v-if="replaying" class="input-group" role="group" style="width: auto">
                         <div class="input-group-prepend">
+                          
                           <button class="btn btn-outline-secondary" @click="goto(1)">« <span class="sr-only">Previous move</span></button>
                           <button class="btn btn-outline-secondary" @click="replayPrevMove">‹ <span class="sr-only">Previous move</span></button>
                         </div>
@@ -387,7 +389,7 @@ export default class Game extends Vue {
 
     const move = this.parseMove(command);
 
-    if (move.command === Command.EndTurn) {
+    if (move.command === Command.EndTurnConfirmation) {
       this.addMove(this.currentMove + ".");
       return;
     }
