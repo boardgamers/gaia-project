@@ -182,6 +182,7 @@ export enum Command {
   ChooseIncome = "income",
   Build = "build",
   Pass = "pass",
+  PassConfirmation = "pass",
   UpgradeResearch = "up",
   ChargePower = "charge",
   Decline = "decline",
@@ -197,6 +198,7 @@ export enum Command {
   PickReward = "gain",
   FormFederation = "federation",
   EndTurn = "endturn",
+  EndTurnConfirmation = "endturnConfirmation",
   PISwap = "swap-PI"
 }
 
