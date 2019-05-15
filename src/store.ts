@@ -95,7 +95,8 @@ const gaiaViewer = {
     boosterClick(context, booster: Booster) {},
     actionClick(context, action: string) {},
     federationClick(context, federation: Federation) {},
-    playerClick(context, player: Player) {}
+    playerClick(context, player: Player) {},
+    confirmClick(context, action: string) {},
   },
   getters: {
     data: state => state.data,

@@ -306,8 +306,9 @@ export default class Commands extends Vue {
             ret.push({
               label: "Pass" ,
               command: Command.Pass,
+              needConfirm: true,
               buttons: [{
-                  command: Command.PassConfirmation,
+                  command: "",
                   label: `Confirm Pass`
               }]
             });
@@ -437,9 +438,10 @@ export default class Commands extends Vue {
         case Command.EndTurn: {
           ret.push({
             label: "End Turn",
-            command: "",
+            command: Command.EndTurn,
+            needConfirm: true,
             buttons: [{
-                command: Command.EndTurnConfirmation,
+                command: Command.EndTurn,
                 label: `Confirm End Turn`
               }]
           });

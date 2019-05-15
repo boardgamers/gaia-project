@@ -100,6 +100,8 @@ export default class MoveButton extends Vue {
     } else if (this.button.actions) {
       this.$store.commit("gaiaViewer/highlightActions", this.button.actions);
       this.subscribeFinal('actionClick');
+    } else if (this.button.needConfirm) {
+      this.subscribeFinal('needConfirmClick');
     } else if (this.button.selectHexes) {
       // If already the active button, end the selection
       if (this.isActiveButton) {

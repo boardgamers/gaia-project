@@ -389,7 +389,7 @@ export default class Game extends Vue {
 
     const move = this.parseMove(command);
 
-    if (move.command === Command.EndTurnConfirmation) {
+    if (move.command === Command.EndTurn) {
       this.addMove(this.currentMove + ".");
       return;
     }

@@ -21,6 +21,7 @@ export interface ButtonData {
   costs?: {[range: number]: string};
   // Rotate sectors command?
   rotation?: boolean;
+  needConfirm?: boolean;
 
   buttons?: ButtonData[];
   hide?: boolean;
