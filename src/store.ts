@@ -108,7 +108,54 @@ export default new Vuex.Store({
     gaiaViewer
   },
   state: {
-    options: {spaceShips: false} as EngineOptions,
+    options: {
+      "advancedRules" : false,
+      "spaceShips" : true,
+      "map" : {
+          "sectors" : [ 
+              {
+                  "sector" : "10",
+                  "rotation" : 3
+              }, 
+              {
+                  "sector" : "8",
+                  "rotation" : 4
+              }, 
+              {
+                  "sector" : "1",
+                  "rotation" : 4
+              }, 
+              {
+                  "sector" : "9",
+                  "rotation" : 4
+              }, 
+              {
+                  "sector" : "6A",
+                  "rotation" : 1
+              }, 
+              {
+                  "sector" : "7A",
+                  "rotation" : 2
+              }, 
+              {
+                  "sector" : "4",
+                  "rotation" : 3
+              }, 
+              {
+                  "sector" : "3",
+                  "rotation" : 0
+              }, 
+              {
+                  "sector" : "5A",
+                  "rotation" : 0
+              }, 
+              {
+                  "sector" : "2",
+                  "rotation" : 4
+              }
+          ]
+      }
+  } as EngineOptions,
     error: null as string,
     info: null as string,
     errorIssued: null as Date,

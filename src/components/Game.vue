@@ -295,7 +295,7 @@ export default class Game extends Vue {
   }
 
   handleData(data: EngineData, keepMoveHistory?: boolean) {
-    console.log("handle data", keepMoveHistory);
+    console.log("handle data", keepMoveHistory, JSON.parse(JSON.stringify(data)));
     this.lastUpdated = data.lastUpdated;
     this.nextMoveDeadline = data.nextMoveDeadline;
 
