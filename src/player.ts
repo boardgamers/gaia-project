@@ -832,7 +832,7 @@ export default class Player extends EventEmitter {
       }
     }
 
-    const feds = difference(fedsWithInfo, toRemove);
+    const feds = difference(fedsWithInfo, toRemove).filter(fed => fed.satellites <= maxSatellites);
 
     this.federationCache = {
       availableSatellites: maxSatellites,
