@@ -595,6 +595,33 @@ describe("Engine", () => {
       // tslint:disable-next-line no-unused-expression
       expect(engine.findAvailableCommand(Player.Player2, Command.ChargePower)).to.not.be.undefined;
     });
+
+    it ("should leech 2pw when player's auto charge value is 2", () => {
+      const moves = parseMoves(`
+        init 2 SGAMBATA
+        p1 faction nevlas
+        p2 faction terrans
+        nevlas build m -4x0
+        terrans build m -3x-2
+        terrans build m 1x-1
+        nevlas build m 3x3
+        terrans booster booster9
+        nevlas booster booster5
+        nevlas build ts -4x0.
+        terrans charge 1pw
+        terrans build ts -3x-2.
+      `);
+
+      const engine = new Engine(moves);
+
+      engine.generateAvailableCommandsIfNeeded();
+      engine.player(Player.Player1).data.autoChargePower = 2;
+
+      // tslint:disable-next-line no-unused-expression
+      expect(engine.autoChargePower()).to.be.true;
+      expect(engine.moveHistory.length).to.equal(moves.length + 1);
+      expect(engine.moveHistory.slice(-1).pop()).to.equal("nevlas charge 2pw");
+    });
   });
 
   describe("advanced logs", () => {
