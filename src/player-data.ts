@@ -78,6 +78,7 @@ export default class PlayerData extends EventEmitter {
   advancedShips: number = 0;
   // When placing ships. Not internal (because of income command on site)
   shipsToPlace: number = 0;
+  autoChargePower: number = 1;
 
   // Internal variables, not meant to be in toJSON():
   followBrainStoneHeuristics = true;
@@ -92,6 +93,7 @@ export default class PlayerData extends EventEmitter {
   turns = 0;
   // when picking rewards
   toPick: {rewards: Reward[], count: number, source: EventSource} = undefined;
+
 
   toJSON(): Object {
     const ret = {
@@ -120,7 +122,8 @@ export default class PlayerData extends EventEmitter {
       movingShips: this.movingShips,
       tradeTokens: this.tradeTokens,
       wildTradeTokens: this.wildTradeTokens,
-      advancedShips: this.advancedShips
+      advancedShips: this.advancedShips,
+      autoChargePower: this.autoChargePower
     };
 
     return ret;

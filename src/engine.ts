@@ -448,7 +448,7 @@ export default class Engine {
     }
 
     // Only leech when only one option and cost is nothing
-    if (offers.length > 1 || offers[0].cost !== '~') {
+    if (offers.length > 1 || Reward.parse(offers[0].offer)[0].count > (pl.data.autoChargePower || 1) ){
       return false;
     }
 
