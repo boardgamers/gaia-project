@@ -36,7 +36,7 @@
   "license": "MIT",
   "dependencies": {
     "eventemitter3": "^3.1.0",
-    "hexagrid": "^2.0.0",
+    "hexagrid": "^2.0.1",
     "lodash.clonedeep": "^4.5.0",
     "lodash.countby": "^4.6.0",
     "lodash.difference": "^4.5.0",
@@ -77,6 +77,6 @@
     "nodemon": "^1.17.5",
     "ts-node": "^5.0.1",
     "tslint": "^5.10.0",
-    "typescript": "^2.7.2"
+    "typescript": "^3.6.3"
   }
 }

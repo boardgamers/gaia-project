@@ -251,7 +251,7 @@ export namespace Booster {
       if (expansions & Expansion.Spaceships && val.startsWith('booster-ship')) {
         return true;
       }
-    });
+    }) as Booster[];
   }
 }
 
@@ -282,7 +282,7 @@ export namespace TechTile {
       if (expansions & Expansion.Spaceships && val.startsWith('tech-ship') && val !== TechTile.Ship0) {
         return true;
       }
-    });
+    }) as TechTile[];
   }
 }
 
@@ -348,7 +348,7 @@ export namespace AdvTechTile {
       if (expansions & Expansion.Spaceships && val.startsWith('advship')) {
         return true;
       }
-    });
+    }) as AdvTechTile[];
   }
 }
 
@@ -410,7 +410,7 @@ export enum BoardAction {
 }
 
 export namespace BoardAction {
-  export function values(expansions= 0) {
+  export function values(expansions= 0): BoardAction[] {
     return Object.values(BoardAction).filter((val: BoardAction) => {
       if (typeof val !== "string") {return; }
       if (/^qic[0-9]/.test(val) || /^power[0-9]/.test(val)) {
@@ -420,7 +420,7 @@ export namespace BoardAction {
       if (expansions & Expansion.Spaceships && val.includes("ship")) {
         return true;
       }
-    });
+    }) as BoardAction[];
   }
 }
 
@@ -449,7 +449,7 @@ export namespace ScoringTile {
       if (expansions & Expansion.Spaceships && val.startsWith('score-ship')) {
         return true;
       }
-    });
+    }) as ScoringTile[];
   }
 }
 

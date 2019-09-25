@@ -1,4 +1,4 @@
-import { Command, Faction, Building, Planet, Booster, Resource, Player, Operator, BoardAction, ResearchField, TechTilePos, AdvTechTilePos, Phase, SubPhase } from './enums';
+import { Command, Faction, Building, Planet, Booster, Resource, Player, Operator, BoardAction, ResearchField, TechTilePos, AdvTechTilePos, Phase, SubPhase, Expansion } from './enums';
 import Engine from './engine';
 import * as range from 'lodash.range';
 import * as difference from 'lodash.difference';
@@ -344,7 +344,7 @@ export function possibleSpecialActions(engine: Engine, player: Player) {
 export function possibleBoardActions(engine: Engine, player: Player) {
   const commands = [];
 
-  let poweracts = Object.values(BoardAction).filter(pwract => engine.boardActions[pwract] && engine.player(player).canPay(Reward.parse(boardActions[pwract].cost)));
+  let poweracts = BoardAction.values(Expansion.All).filter(pwract => engine.boardActions[pwract] && engine.player(player).canPay(Reward.parse(boardActions[pwract].cost)));
 
   // Prevent using the rescore action if no federation token
   if (engine.player(player).data.tiles.federations.length === 0) {
@@ -542,7 +542,7 @@ export function possibleSpaceLostPlanet(engine: Engine, player: Player) {
 
 export function possibleRoundBoosters(engine: Engine, player: Player) {
   const commands = [];
-  const boosters = engine.isLastRound ? [] : Object.values(Booster).filter(booster => engine.tiles.boosters[booster]);
+  const boosters = engine.isLastRound ? [] : Booster.values(Expansion.All).filter(booster => engine.tiles.boosters[booster]);
 
   commands.push(
     {

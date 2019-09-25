@@ -1291,7 +1291,7 @@ export default class Engine {
     this.tiles.techs[pos].count -= 1;
 
     // AFTER gaining the tech tile (as green federation can be flipped and lock research tracks)
-    this.processNextMove(SubPhase.UpgradeResearch, Object.values(ResearchField).includes(pos) ? {pos} : undefined) ;
+    this.processNextMove(SubPhase.UpgradeResearch, ResearchField.values(Expansion.All).includes(pos as any as ResearchField) ? {pos} : undefined) ;
   }
 
   [Command.ChooseCoverTechTile](player: PlayerEnum, tilePos: TechTilePos) {
