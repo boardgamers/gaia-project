@@ -34,8 +34,8 @@ sudo apt install build-essentials
 ## Build
 
 ```bash
-npm install # or 'yarn', if installed
-npm run serve # or 'yarn serve'
+yarn install
+yarn serve
 ```
 
 And open localhost:8080 in the browser.

@@ -32,7 +32,7 @@
 import Vue from 'vue'
 import * as $ from "jquery";
 import { Component, Prop } from 'vue-property-decorator';
-import Engine,{ AvailableCommand,Command,factions,Building,GaiaHex,Booster,tiles,Event,Federation,Faction, SpaceMap } from '@gaia-project/engine';
+import Engine,{ AvailableCommand,Command,factions,Building,GaiaHex,Booster,tiles,Event,Federation,Faction, SpaceMap, Expansion } from '@gaia-project/engine';
 import MoveButton from './MoveButton.vue';
 import {buildingName} from '../data/building';
 import {GameContext, ButtonData} from '../data';
@@ -291,7 +291,7 @@ export default class Commands extends Vue {
         case Command.ChooseRoundBooster: {
           const buttons: ButtonData[] = [];
 
-          Object.values(Booster).forEach((booster, i) => {
+          Booster.values(Expansion.All).forEach((booster, i) => {
             if (command.data.boosters.includes(booster)) {
               buttons.push({
                 command: booster,
