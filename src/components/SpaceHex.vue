@@ -16,7 +16,7 @@
 import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import {MapData, HighlightHexData} from '../data';
-import { GaiaHex, factions, Building as BuildingEnum, Planet as PlanetEnum, SpaceMap, Faction } from '@gaia-project/engine';
+import { GaiaHex, factions, Building as BuildingEnum, Planet as PlanetEnum, SpaceMap as ISpaceMap, Faction } from '@gaia-project/engine';
 import {corners } from "../graphics/hex";
 import Planet from './Planet.vue';
 import Building from './Building.vue';
@@ -50,7 +50,7 @@ export default class SpaceHex extends Vue {
     return corners();
   }
 
-  get map(): SpaceMap {
+  get map(): ISpaceMap {
     return this.$store.state.gaiaViewer.data.map;
   }
 

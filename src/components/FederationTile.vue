@@ -7,7 +7,7 @@
           {{numTiles}}
       </text>
       <text>
-        <tspan x="0" v-for="(line, i) in income" :key="i" :dy="`${i*1.5 - (income.length - 1) / 2.2}em`"> 
+        <tspan x="0" v-for="(line, i) in income" :key="i" :dy="`${i*1.5 - (income.length - 1) / 2.2}em`">
           {{line.replace(/ /g, '')}}
         </tspan>
       </text>
@@ -18,7 +18,7 @@
 <script lang="ts">
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
-import { tiles, Event, Federation, PlayerEnum } from '@gaia-project/engine';
+import { tiles, Event, Federation as FederationEnum, PlayerEnum } from '@gaia-project/engine';
 import { eventDesc } from '../data/event';
 
 @Component<FederationTile>({
@@ -27,19 +27,19 @@ import { eventDesc } from '../data/event';
       return this.$store.state.gaiaViewer.context.highlighted.federations.has(this.federation);
     },
 
-    income() {   
+    income() {
       const [first, ...others] = tiles.federations[this.federation].split(",");
       return others.length > 0 ? [first, others.join(", ")] : first.split("-");
     },
 
     disabled() {
-      return this.used || this.federation === Federation.Fed1;
+      return this.used || this.federation === FederationEnum.Fed1;
     }
   }
 })
 export default class FederationTile extends Vue {
   @Prop()
-  federation: Federation;
+  federation: FederationEnum;
 
   @Prop()
   used: boolean;

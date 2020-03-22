@@ -2,22 +2,20 @@
   "name": "@gaia-project/viewer",
   "version": "3.3.12",
   "description": "Functions to visualize the map and boards for gaia project inside html canvas",
-  "main": "dist/index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "serve": "vue-cli-service serve --port 8080",
-    "build": "vue-cli-service build"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/donkeytech/gaia-viewer.git"
-  },
   "author": "coyotte508, randomboolean, rzulian",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/donkeytech/gaia-viewer/issues"
+  "scripts": {
+    "serve": "vue-cli-service serve --port 8080",
+    "build": "vue-cli-service build",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "homepage": "https://github.com/donkeytech/gaia-viewer#readme",
+  "main": "dist/index.js",
+  "files": [
+    "index.ts",
+    "tsconfig.json",
+    "src",
+    "README.md",
+    "public"
+  ],
   "dependencies": {
     "@gaia-project/engine": "^3.3.9",
     "hexagrid": "^2.0.1",
@@ -26,12 +24,12 @@
   "devDependencies": {
     "@types/jquery": "^3.3.1",
     "@types/node": "^10.5.2",
-    "@vue/cli-plugin-typescript": "^3.0.0-rc.5",
-    "@vue/cli-service": "^3.0.0-rc.5",
+    "@vue/cli-plugin-typescript": "~4.2.3",
+    "@vue/cli-service": "~4.2.3",
     "bootstrap-vue": "^2.0.0-rc.11",
     "node-sass": "^4.7.2",
-    "sass-loader": "^7.0.3",
-    "typescript": "^3.6.3",
+    "sass-loader": "^8.0.2",
+    "typescript": "~3.7.5",
     "vue": "^2.5.17",
     "vue-property-decorator": "^7.0.0",
     "vue-template-compiler": "^2.5.17",
@@ -46,11 +44,13 @@
     "last 2 versions",
     "not ie <= 8"
   ],
-  "files": [
-    "index.ts",
-    "tsconfig.json",
-    "src",
-    "README.md",
-    "public"
-  ]
+  "bugs": {
+    "url": "https://github.com/donkeytech/gaia-viewer/issues"
+  },
+  "homepage": "https://github.com/donkeytech/gaia-viewer#readme",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/donkeytech/gaia-viewer.git"
+  }
 }
