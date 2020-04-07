@@ -59,5 +59,3 @@ typings/
 
 # TS build files
 dist
-
-yarn.lock
