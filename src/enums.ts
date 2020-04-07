@@ -243,7 +243,7 @@ export enum Booster {
 
 export namespace Booster {
   export function values(expansions: number = 0): Booster[] {
-    return Object.values(Booster).filter((val: Booster) => {
+    return (Object.values(Booster) as Booster[]).filter((val: Booster) => {
       if (typeof val !== "string") {return; }
       if (/^booster[0-9]/.test(val)) {
         return true;
@@ -274,7 +274,7 @@ export enum TechTile {
 
 export namespace TechTile {
   export function values(expansions: number = 0): TechTile[] {
-    return Object.values(TechTile).filter((val: TechTile) => {
+    return (Object.values(TechTile) as TechTile[]).filter((val: TechTile) => {
       if (typeof val !== "string") {return; }
       if (/^tech[0-9]/.test(val)) {
         return true;
@@ -340,7 +340,7 @@ export enum AdvTechTile {
 
 export namespace AdvTechTile {
   export function values(expansions: number = 0): AdvTechTile[] {
-    return Object.values(AdvTechTile).filter((val: AdvTechTile) => {
+    return (Object.values(AdvTechTile) as AdvTechTile[]).filter((val: AdvTechTile) => {
       if (typeof val !== "string") {return; }
       if (val.startsWith('advtech')) {
         return true;
@@ -441,7 +441,7 @@ export enum ScoringTile {
 
 export namespace ScoringTile {
   export function values(expansions: number = 0): ScoringTile[] {
-    return Object.values(ScoringTile).filter((val: ScoringTile) => {
+    return (Object.values(ScoringTile) as ScoringTile[]).filter((val: ScoringTile) => {
       if (typeof val !== "string") {return; }
       if (/^score[0-9]/.test(val)) {
         return true;

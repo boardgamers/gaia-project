@@ -1,13 +1,16 @@
 {
   "compilerOptions": {
     /* Basic Options */
-    "target": "es2017",
+    "target": "es2018",
     "module": "commonjs",
     // "declaration": true,                   /* Generates corresponding '.d.ts' file. */
     "sourceMap": true,                     /* Generates corresponding '.map' file. */
     // "outFile": "./",                       /* Concatenate and emit output to single file. */
     "outDir": "./dist",                        /* Redirect output structure to the directory. */
   },
+  "types": [
+    "node"
+  ],
   "include": [
     "src/**/*.ts",
     "server.ts",

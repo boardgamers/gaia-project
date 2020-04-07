@@ -1,11 +1,6 @@
 import SpaceMap, { MapConfiguration } from './map';
 import * as assert from 'assert';
-import * as sortBy from 'lodash.sortby';
-import * as omit from 'lodash.omit';
-import * as set from 'lodash.set';
-import * as get from 'lodash.get';
-import * as uniq from 'lodash.uniq';
-import * as sum from 'lodash.sum';
+import { sortBy, omit, uniq, sum, set } from 'lodash';
 import Player from './player';
 import * as shuffleSeed from "shuffle-seed";
 import {
@@ -154,10 +149,10 @@ export default class Engine {
 
   /** Fix old options passed. To remove when legacy data is no more in database */
   sanitizeOptions() {
-    if (get(this.options, "map.map")) {
-      this.options.map.sectors = get(this.options, "map.map");
-      set(this.options, "map.map", undefined);
-    }
+    // if (get(this.options, "map.map")) {
+    //   this.options.map.sectors = get(this.options, "map.map");
+    //   set(this.options, "map.map", undefined);
+    // }
   }
 
   loadMoves(_moves: string[]) {
@@ -215,7 +210,7 @@ export default class Engine {
     if (lastEntry && lastEntry.player === player && lastEntry.move === move) {
       // Add to existing log entry
       if (amount) {
-        set(lastEntry, `changes.${source}.${resource}`, get(lastEntry, `changes.${source}.${resource}`, 0) + amount);
+        set(lastEntry, `changes.${source}.${resource}`, (lastEntry.changes?.[source]?.[resource] ?? 0) + amount);
       }
     } else {
       // Add new entry
@@ -363,7 +358,7 @@ export default class Engine {
     if (list.length === 0) {
       return false;
     }
-    if (!get(params, 'loop', true)) {
+    if (!(params.loop ?? true)) {
       // No loop, we just remove the first element of the list
       this.currentPlayer = list.shift();
     } else {
@@ -448,7 +443,7 @@ export default class Engine {
     }
 
     // Only leech when only one option and cost is nothing
-    if (offers.length > 1 || Reward.parse(offers[0].offer)[0].count > (pl.data.autoChargePower || 1) ){
+    if (offers.length > 1 || Reward.parse(offers[0].offer)[0].count > (pl.data.autoChargePower || 1) ) {
       return false;
     }
 
@@ -546,8 +541,8 @@ export default class Engine {
     assert(this.playerToMove === (player as PlayerEnum), "Wrong turn order in move " + move + ", expected player " + (this.playerToMove + 1));
     this.processedPlayer = player;
 
-    const split = get(params, 'split', true);
-    const processFirst = get(params, 'processFirst', false);
+    const split = params.split ?? true ;
+    const processFirst = params.processFirst ?? true;
 
     if (!split) {
       assert(processFirst);
@@ -819,7 +814,7 @@ export default class Engine {
       }
     }
     // resets power and qic actions
-    BoardAction.values(this.expansions).forEach(pos => {
+    BoardAction.values(this.expansions).forEach((pos: BoardAction) => {
       this.boardActions[pos] = true;
     });
 
@@ -1112,9 +1107,9 @@ export default class Engine {
 
     assert(nbPlayers >= 2 && nbPlayers <= 5, "Invalid number of players");
 
-    this.map = new SpaceMap(nbPlayers, seed, get(this.options, "map.mirror", false));
+    this.map = new SpaceMap(nbPlayers, seed, this.options.map?.mirror ?? false);
 
-    if (get(this.options, "map.sectors")) {
+    if (this.options.map?.sectors) {
       this.map.load(this.options.map);
     }
     this.options.map = this.map.placement;
@@ -1139,7 +1134,7 @@ export default class Engine {
     });
 
     // powerActions
-    BoardAction.values(this.expansions).forEach( pos => {
+    BoardAction.values(this.expansions).forEach( (pos: BoardAction) => {
       this.boardActions[pos] = true;
     });
 

@@ -2,13 +2,7 @@ import { Faction, Operator, ResearchField, Planet, Building, Resource, Booster, 
 import PlayerData from './player-data';
 import Event, {EventSource, TechPos} from './events';
 import { factionBoard, FactionBoard } from './faction-boards';
-import * as uniq from 'lodash.uniq';
-import * as get from 'lodash.get';
-import * as sum from 'lodash.sum';
-import * as difference from 'lodash.difference';
-import * as zipWith from 'lodash.zipwith';
-import * as merge from 'lodash.merge';
-import * as countBy from 'lodash.countby';
+import { uniq, sum, difference, zipWith, merge, countBy } from "lodash";
 import factions from './factions';
 import Reward from './reward';
 import { CubeCoordinates, Hex, Grid } from 'hexagrid';
@@ -645,8 +639,8 @@ export default class Player extends EventEmitter {
   }
 
   buildingValue(hex: GaiaHex, options?: {federation?: boolean, building?: Building}) {
-    const building = get(options, "building") || hex.buildingOf(this.player);
-    const forFederation = get(options, "federation", false);
+    const building = options?.building ?? hex.buildingOf(this.player);
+    const forFederation = options?.federation ?? false;
 
     if (forFederation && building === Building.SpaceStation) {
       return 1;
@@ -919,7 +913,7 @@ export default class Player extends EventEmitter {
     const available = this.availableFederations(map, flexible);
     const outclasser = available.find(fed => isOutclassedBy(info, fed));
 
-    assert(!outclasser, "Federation is outclassed by other federation at " + get(outclasser, "hexes", []).join(','));
+    assert(!outclasser, "Federation is outclassed by other federation at " + (outclasser?.hexes ?? []).join(','));
 
     // Check if federation can be built with less satellites
     if (!flexible) {

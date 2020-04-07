@@ -1,4 +1,4 @@
-import * as mergeWith from 'lodash.mergewith';
+import { mergeWith } from 'lodash';
 
 function customizer(objValue, srcValue) {
   if (Array.isArray(objValue)) {

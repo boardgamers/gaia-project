@@ -1,7 +1,6 @@
 import { Command, Faction, Building, Planet, Booster, Resource, Player, Operator, BoardAction, ResearchField, TechTilePos, AdvTechTilePos, Phase, SubPhase, Expansion } from './enums';
 import Engine from './engine';
-import * as range from 'lodash.range';
-import * as difference from 'lodash.difference';
+import { range, difference } from 'lodash';
 import factions from './factions';
 import { upgradedBuildings } from './buildings';
 import Reward from './reward';

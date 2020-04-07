@@ -37,25 +37,7 @@
   "dependencies": {
     "eventemitter3": "^3.1.0",
     "hexagrid": "^2.0.1",
-    "lodash.clonedeep": "^4.5.0",
-    "lodash.countby": "^4.6.0",
-    "lodash.difference": "^4.5.0",
-    "lodash.frompairs": "^4.0.1",
-    "lodash.get": "^4.4.2",
-    "lodash.groupby": "^4.6.0",
-    "lodash.inrange": "^3.3.6",
-    "lodash.keyby": "^4.6.0",
-    "lodash.maxby": "^4.6.0",
-    "lodash.merge": "^4.6.1",
-    "lodash.mergewith": "^4.6.1",
-    "lodash.minby": "^4.6.0",
-    "lodash.omit": "^4.5.0",
-    "lodash.range": "^3.2.0",
-    "lodash.set": "^4.3.2",
-    "lodash.sortby": "^4.7.0",
-    "lodash.sum": "^4.0.2",
-    "lodash.uniq": "^4.5.0",
-    "lodash.zipwith": "^4.2.0",
+    "lodash": "^4.17.15",
     "seedrandom": "2.4.3",
     "shuffle-seed": "1.1.6"
   },
@@ -63,9 +45,10 @@
     "@types/chai": "^4.1.2",
     "@types/cookie-parser": "^1.4.1",
     "@types/fs-extra": "^5.0.4",
+    "@types/lodash": "^4.14.149",
     "@types/mocha": "^2.2.48",
     "@types/morgan": "^1.7.35",
-    "@types/node": "^9.4.7",
+    "@types/node": "^13.11.0",
     "@types/seedrandom": "^2.4.27",
     "body-parser": "^1.18.2",
     "chai": "^4.1.2",
@@ -77,6 +60,6 @@
     "nodemon": "^1.17.5",
     "ts-node": "^5.0.1",
     "tslint": "^5.10.0",
-    "typescript": "^3.6.3"
+    "typescript": "^3.8.3"
   }
 }

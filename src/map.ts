@@ -2,7 +2,7 @@ import {Grid, Hex, CubeCoordinates} from "hexagrid";
 import * as seedrandom from "seedrandom";
 import * as shuffleSeed from "shuffle-seed";
 import * as assert from 'assert';
-import * as keyBy from 'lodash.keyby';
+import { keyBy } from 'lodash';
 import Sector from "./sector";
 import { Player, Planet, Faction } from "./enums";
 import { GaiaHex } from "./gaia-hex";
