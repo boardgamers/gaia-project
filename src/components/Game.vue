@@ -12,18 +12,18 @@
       <div class="col-md-6 order-2 order-md-1">
         <div v-if="sessionPlayer === undefined">
           <div class="turn-order">
-            {{turnOrderDesc}} 
+            {{turnOrderDesc}}
           </div>
           <PlayerInfo v-for="player in orderedPlayers" :player='player' :key="player.player" />
         </div>
         <div v-else>
           <PlayerInfo :player='sessionPlayer'/>
           <div class="turn-order">
-            {{turnOrderDesc}} 
+            {{turnOrderDesc}}
           </div>
           <PlayerInfo v-for="player in orderedPlayers.filter(pl => pl !== sessionPlayer)" :player='player' :key="player.player" />
         </div>
-        <Pool /> 
+        <Pool />
       </div>
       <div class="col-md-6 order-1 order-md-2" id="move-panel">
         <transition name="fade">
@@ -55,13 +55,13 @@
                 </b-tab>
                 <b-tab title="Move log">
                   <input type="text" class="form-control" placeholder="Current move" aria-label="Current move" id="current-move" v-model="currentMove">
-                  <textarea class="form-control" rows="4" id="moves" v-model="moveList"></textarea>  
+                  <textarea class="form-control" rows="4" id="moves" v-model="moveList"></textarea>
 
                   <div class="mt-2 row no-gutters">
                     <transition name="fade">
                       <span v-if="replaying" class="input-group" role="group" style="width: auto">
                         <div class="input-group-prepend">
-                          
+
                           <button class="btn btn-outline-secondary" @click="goto(1)">« <span class="sr-only">Previous move</span></button>
                           <button class="btn btn-outline-secondary" @click="replayPrevMove">‹ <span class="sr-only">Previous move</span></button>
                         </div>
@@ -133,7 +133,7 @@ import { Expansion } from '@gaia-project/engine/src/enums';
       if (!data.round || !data.turnOrder) {
         return data.players;
       }
-      
+
       return this.data.turnOrder.concat(this.data.passedPlayers).map(player => this.data.players[player]);
     },
     turnOrderDesc() {
@@ -266,7 +266,7 @@ export default class Game extends Vue {
   }
 
   replayNextMove() {
-    const lastMove = this.numberOfMoves; 
+    const lastMove = this.numberOfMoves;
     this.replayMove < lastMove ? this.replayMove ++ : lastMove ;
     this.replay();
   }
@@ -274,7 +274,7 @@ export default class Game extends Vue {
   async replay(goToLastMove = false) {
     this.$store.commit("gaiaViewer/clearContext");
 
-    const text = this.moveList.trim(); 
+    const text = this.moveList.trim();
     let moveList = text ? text.split("\n") : [];
 
     if (!goToLastMove) {
@@ -282,7 +282,7 @@ export default class Game extends Vue {
     } else {
       this.replayMove = moveList.length;
     }
- 
+
     try {
       // console.log(JSON.stringify(this.backupEngine.options));
       const options: EngineOptions = Object.assign({}, this.backupEngine && this.backupEngine.options, this.options);
@@ -304,8 +304,8 @@ export default class Game extends Vue {
     this.$store.commit('removeError');
     this.$store.commit('gaiaViewer/receiveData', data);
 
-    if (keepMoveHistory) { 
-      // moveList stays the same 
+    if (keepMoveHistory) {
+      // moveList stays the same
       this.currentMove = this.moveList.split("\n")[this.replayMove];
       this.clearCurrentMove = true;
     } else {
@@ -359,7 +359,7 @@ export default class Game extends Vue {
       return;
     }
 
-    this.refreshCount += 1;  
+    this.refreshCount += 1;
 
     if (this.refreshCount >= 3600/3) {
       // more than an hour without changes, only check every minute
@@ -413,7 +413,7 @@ export default class Game extends Vue {
 
   addMove(command: string) {
     this.$store.commit("gaiaViewer/clearContext");
-    
+
     if (this.gameId) {
       if (command) {
         this.api.addMove(this.gameId, command, this.auth).then(data => this.handleData(data), err => handleError(this.$store, err));
@@ -430,7 +430,7 @@ export default class Game extends Vue {
 
   parseMove(command: string): {player: string, command: string, args: string[]} {
     command = command.trim();
-    
+
     if (command.includes('.')) {
       return this.parseMove(command.slice(0, command.indexOf('.')));
     }
@@ -462,20 +462,7 @@ export default class Game extends Vue {
     const hours = ((timeDiff-seconds- minutes * 60) % (3600*24)) / 3600;
     const days = (timeDiff - seconds - minutes * 60 - hours * 3600) / (24 * 3600);
 
-    if (days > 0) {
-      parts.push(`${days}d`);
-    }
-    if (hours > 0) {
-      parts.push(`${hours}h`);
-    }
-    if (minutes > 0) {
-      parts.push(`${minutes}m`);
-    }
-    if (seconds > 0 || parts.length === 0) {
-      parts.push(`${seconds}s`);
-    }
-
-    this.remainingTime = parts.join(', ');
+    this.remainingTime = `${days > 0 ? `${days}d`: ''}${hours > 0 ? `${hours}h`: ''}${minutes > 0 ? `${minutes}m`: ''}${(seconds > 0 ||  timeDiff < 60)? `${seconds}s`: ''}`;
   }
 }
 
@@ -492,7 +479,7 @@ export default interface Game {
 <style lang="scss" scoped>
 
 canvas#map {
-  border: solid dodgerblue 1px; 
+  border: solid dodgerblue 1px;
   width: 100%;
   height: 450px;
 }
