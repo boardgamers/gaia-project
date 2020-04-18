@@ -26,12 +26,12 @@ import Navbar from './components/Navbar.vue';
 import Alert from './components/Alert.vue';
 import Game from './components/Game.vue';
 import api from './api';
-import * as $ from "jquery";
+import $ from "jquery";
 
 @Component({
   components: {
     Navbar,
-    Alert, 
+    Alert,
     Game
   },
   created() {

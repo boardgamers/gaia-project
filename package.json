@@ -18,15 +18,15 @@
   ],
   "dependencies": {
     "@gaia-project/engine": "^3.4.0",
-    "hexagrid": "^2.0.1",
-    "jquery": "^3.3.1"
+    "hexagrid": "^2.0.1"
   },
   "devDependencies": {
     "@types/jquery": "^3.3.1",
     "@types/node": "^10.5.2",
     "@vue/cli-plugin-typescript": "~4.2.3",
     "@vue/cli-service": "~4.2.3",
-    "bootstrap-vue": "^2.0.0-rc.11",
+    "bootstrap-vue": "^2.0.0",
+    "jquery": "^3.3.1",
     "node-sass": "^4.7.2",
     "sass-loader": "^8.0.2",
     "typescript": "^3.8.3",
@@ -37,7 +37,7 @@
     "webpack": "^4.16.1"
   },
   "peerDependencies": {
-    "bootstrap-vue": "^2.0.0-rc.11"
+    "bootstrap-vue": "^2.0.0"
   },
   "browserslist": [
     "> 1%",

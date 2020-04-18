@@ -17,7 +17,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import * as $ from "jquery";
+import $ from 'jquery';
 import { Component, Prop } from 'vue-property-decorator';
 import { EngineOptions } from '@gaia-project/engine';
 
@@ -29,9 +29,9 @@ export default class Navbar extends Vue {
 
   gameId: string = "";
   players: number = 2;
-  
+
   createGame() {
-    $.post(`${window.location.protocol}//${window.location.hostname}:9508/g`, 
+    $.post(`${window.location.protocol}//${window.location.hostname}:9508/g`,
       {gameId: this.gameId, players: this.players},
       data => {
         console.log("redirecting");

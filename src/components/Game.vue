@@ -88,7 +88,6 @@
 </template>
 
 <script lang="ts">
-import * as $ from 'jquery';
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
 import Commands from './Commands.vue';
@@ -99,7 +98,7 @@ import ScoringBoard from './ScoringBoard.vue';
 import AdvancedLog from './AdvancedLog.vue';
 import Pool from './Pool.vue';
 import Engine,{ Command,Phase,factions, Player, EngineOptions } from '@gaia-project/engine';
-import { GameApi, EngineData } from '../api';
+import { GameApi, EngineData } from '../types/api';
 import {handleError, handleInfo} from '../utils';
 import { Expansion } from '@gaia-project/engine/src/enums';
 
@@ -299,7 +298,9 @@ export default class Game extends Vue {
     this.lastUpdated = data.lastUpdated;
     this.nextMoveDeadline = data.nextMoveDeadline;
 
-    $('.sector').addClass('notransition');
+    for (const sector of document.getElementsByClassName('sector') as any as Element[]) {
+      sector.classList.add("notransition");
+    }
 
     this.$store.commit('removeError');
     this.$store.commit('gaiaViewer/receiveData', data);
@@ -322,7 +323,11 @@ export default class Game extends Vue {
     this.updateMoveList();
     this.updateDeadline();
 
-    setTimeout(() => $('.sector').removeClass('notransition'));
+    setTimeout(() => {
+      for (const sector of document.getElementsByClassName('sector') as any as Element[]) {
+        sector.classList.remove("notransition");
+      }
+    });
   }
 
   desc(pl: Player) {
@@ -339,9 +344,11 @@ export default class Game extends Vue {
 
   public updateFavicon() {
     if (this.canPlay) {
-      $("#favicon-gp").attr("href", "/favicon-active.png");
+      this.$emit("viewer:active");
+      // $("#favicon-gp").attr("href", "/favicon-active.png");
     } else {
-      $("#favicon-gp").attr("href", "/favicon.png");
+      this.$emit("viewer:inactive");
+      // $("#favicon-gp").attr("href", "/favicon.png");
     }
   }
 
@@ -445,7 +452,7 @@ export default class Game extends Vue {
   }
 
   updateMoveList() {
-    setTimeout(() => $("#moves").scrollTop($("#moves")[0].scrollHeight));
+    setTimeout(() => document.getElementById("moves").scrollTop = document.getElementById("moves").scrollHeight);
   }
 
   updateDeadline() {

@@ -30,7 +30,6 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import * as $ from "jquery";
 import { Component, Prop } from 'vue-property-decorator';
 import Engine,{ AvailableCommand,Command,factions,Building,GaiaHex,Booster,tiles,Event,Federation,Faction, SpaceMap, Expansion } from '@gaia-project/engine';
 import MoveButton from './MoveButton.vue';
@@ -147,7 +146,7 @@ export default class Commands extends Vue {
 
   handleCommand(command: string, source: MoveButton, final: boolean) {
     console.log("handle command", command);
-    
+
     // Some users seem to have a bug with repeating commands on mobile, like clicking the income button twice
     if (this.commandChain.length > 0 && this.commandChain.slice(-1).pop() === command && (command === "income" || command === "booster")) {
       console.log("repeating command, ignoring");
@@ -287,7 +286,7 @@ export default class Commands extends Vue {
           break;
         }
 
-        case Command.Pass: 
+        case Command.Pass:
         case Command.ChooseRoundBooster: {
           const buttons: ButtonData[] = [];
 
@@ -319,8 +318,8 @@ export default class Commands extends Vue {
               buttons,
               boosters: command.data.boosters
             });
-          } 
-          
+          }
+
 
           break;
         };
@@ -362,7 +361,7 @@ export default class Commands extends Vue {
               command: `${Command.ChargePower} ${leech}`
             });
           }
-          
+
           break;
         }
 
@@ -371,7 +370,7 @@ export default class Commands extends Vue {
             ret.push({
               label: `Decline ${command.data.offers[0].offer}`,
               command:  `${Command.Decline} ${command.data.offers[0].offer}`
-            });  
+            });
           } else {
             // LEGACY CODE
             // TODO: Remove when games are updated
@@ -527,7 +526,7 @@ export default class Commands extends Vue {
 
     if (this.buttonChain.length > 0) {
       const [last] = this.buttonChain.slice(-1);
-      this.customButtons = last.buttons; 
+      this.customButtons = last.buttons;
 
       for (const button of last.buttons) {
         button.hide = false;
@@ -582,12 +581,12 @@ i.planet {
   filter: drop-shadow(0px 0px 1px black);
   .player-info & {
     filter: drop-shadow(0px 0px 1px black);
-    
+
     &.r, &.d, &.i {
       filter: drop-shadow(0px 0px 1px black);
     }
   }
-  
+
 }
 
 </style>

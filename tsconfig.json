@@ -13,7 +13,8 @@
     // },
     "baseUrl": ".",
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "src/**/*.ts",
