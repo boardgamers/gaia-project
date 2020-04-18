@@ -462,14 +462,15 @@ export default class Game extends Vue {
     }
 
     const timeDiff = Math.floor(Math.max(new Date(this.nextMoveDeadline).getTime() - Date.now(), 0)/1000);
-    const parts = [];
 
     const seconds = timeDiff % 60;
     const minutes = ((timeDiff-seconds) % 3600) / 60;
     const hours = ((timeDiff-seconds- minutes * 60) % (3600*24)) / 3600;
     const days = (timeDiff - seconds - minutes * 60 - hours * 3600) / (24 * 3600);
 
-    this.remainingTime = `${days > 0 ? `${days}d`: ''}${hours > 0 ? `${hours}h`: ''}${minutes > 0 ? `${minutes}m`: ''}${(seconds > 0 ||  timeDiff < 60)? `${seconds}s`: ''}`;
+    const parts = [days > 0 ? `${days}d`: '', hours > 0 ? `${hours}h`: '', minutes > 0 ? `${minutes}m`: '', (seconds > 0 ||  timeDiff < 60)? `${seconds}s`: ''];
+
+    this.remainingTime = parts.filter(x => !!x).join(", ");
   }
 }
 
