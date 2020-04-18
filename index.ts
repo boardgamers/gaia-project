@@ -1,6 +1,6 @@
 import Game from './src/components/Game.vue';
 
 import { gaiaViewer } from './src/store';
-import api, {GameApi} from './src/api';
+import { GameApi } from './src/types/api';
 
-export {Game, gaiaViewer, api, GameApi};
+export {Game, gaiaViewer, GameApi};
