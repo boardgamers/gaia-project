@@ -41,3 +41,12 @@ yarn serve
 And open localhost:8080 in the browser.
 
 You will also need to run gaia-engine on the same machine.
+
+## Env
+
+If you want to launch bg.io, create a .env file with:
+
+```
+VUE_APP_BGIO=1
+#VUE_APP_SelfContained=1
+```
