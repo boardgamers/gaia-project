@@ -25,7 +25,6 @@ import { Component, Vue } from 'vue-property-decorator';
 import Navbar from './components/Navbar.vue';
 import Alert from './components/Alert.vue';
 import Game from './components/Game.vue';
-import api from './api';
 import $ from "jquery";
 
 @Component({
@@ -40,9 +39,6 @@ import $ from "jquery";
     $("meta[name='viewport']").attr("content", "width=800, initial-scale=1.0");
   },
   computed: {
-    api() {
-      return api;
-    },
     gameId() {
       if (window.location.search.startsWith("?g=")) {
         return window.location.search.slice("?g=".length);
@@ -70,10 +66,6 @@ import $ from "jquery";
 })
 export default class App extends Vue {
   private name: string = "";
-
-  joinGame() {
-    $.post(`${window.location.protocol}//${window.location.hostname}:9508/g/${this.gameId}/join`, {name: this.name, auth: this.auth}).always(() => api.loadGame(this.gameId).then(data => this.$store.commit('gaiaViewer/receiveData', data)));
-  }
 }
 export default interface App {
   gameId: string;

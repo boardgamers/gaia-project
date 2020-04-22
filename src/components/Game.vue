@@ -27,54 +27,23 @@
       </div>
       <div class="col-md-6 order-1 order-md-2" id="move-panel">
         <transition name="fade">
-          <div v-if="!replaying">
+          <div>
             <span v-if="ended"><b>Game ended!</b></span>
-            <Commands @command="handleCommand" @undo="undoMove" v-else-if="canPlay" :remainingTime="remainingTime" />
-            <div v-else-if="data.players[player]" class="mb-2">Waiting for {{data.players[player].name}} to play <span v-if="remainingTime" class="small smaller">({{remainingTime}} remaining)</span><br/></div>
+            <Commands @command="handleCommand" @undo="undoMove" v-else-if="canPlay" />
+            <div v-else-if="data.players[player]" class="mb-2">Waiting for {{data.players[player].name}} to play <br/></div>
           </div>
         </transition>
         <div>
           <form id="move-form" @submit.prevent="">
             <div class="card mb-2" v-if="data.moveHistory.length > 0 || !gameId">
               <b-tabs pills card>
-                <b-tab v-if="canPlay || replaying" title="Current Move">
-                  <div class="input-group mb-2" v-if="canPlay || replaying">
+                <b-tab v-if="canPlay" title="Current Move">
+                  <div class="input-group mb-2" v-if="canPlay">
                     <input type="text" class="form-control" placeholder="Current move" aria-label="Current move" id="current-move" v-model="currentMove">
-                    <div class="input-group-append" v-if="!replaying">
+                    <div class="input-group-append">
                       <!-- <button class="btn btn-danger" type="button" @click="addMove('')">Clear</button> -->
-                      <button class="btn btn-primary" type="button" @click="addMove(currentMove, auth)">Send</button>
+                      <button class="btn btn-primary" type="button" @click="addMove(currentMove)">Send</button>
                     </div>
-                  </div>
-                </b-tab>
-                <b-tab title="Notes">
-                  <textarea class="form-control" rows="4" id="notes" v-model="notes" maxlength="2000"></textarea>
-                  <div class="mt-2 row no-gutters">
-                    <input type="button" class="btn btn-secondary ml-auto" value="Refresh" @click="loadNotes" >
-                    <input type="button" class="btn btn-primary ml-2" value="Save" @click="saveNotes" >
-                  </div>
-                </b-tab>
-                <b-tab title="Move log">
-                  <input type="text" class="form-control" placeholder="Current move" aria-label="Current move" id="current-move" v-model="currentMove">
-                  <textarea class="form-control" rows="4" id="moves" v-model="moveList"></textarea>
-
-                  <div class="mt-2 row no-gutters">
-                    <transition name="fade">
-                      <span v-if="replaying" class="input-group" role="group" style="width: auto">
-                        <div class="input-group-prepend">
-
-                          <button class="btn btn-outline-secondary" @click="goto(1)">« <span class="sr-only">Previous move</span></button>
-                          <button class="btn btn-outline-secondary" @click="replayPrevMove">‹ <span class="sr-only">Previous move</span></button>
-                        </div>
-                        <input type="text" id="replayMove" style="max-width: 60px" v-model="replayMove" @keydown.enter.prevent="goto(replayMove)" class="form-control">
-                        <div class="input-group-append">
-                          <span class="input-group-text"> / {{numberOfMoves}}</span>
-                          <button class="btn btn-outline-secondary" @click="replayNextMove">› <span class="sr-only">Next move</span></button>
-                          <button class="btn btn-outline-secondary" @click="replay(true)">» <span class="sr-only">Next move</span></button>
-                        </div>
-                      </span>
-                    </transition>
-                    <input type="button" class="btn btn-secondary ml-auto" :value="!replaying ? 'Replay Mode' : 'Leave Replay'" @click="toggleReplayMode" >
-                    <input type="button" class="btn btn-primary ml-2" v-if="developmentMode" :disabled="replaying" value="Execute" @click="replay(true)" >
                   </div>
                 </b-tab>
               </b-tabs>
@@ -97,10 +66,8 @@ import ResearchBoard from './ResearchBoard.vue';
 import ScoringBoard from './ScoringBoard.vue';
 import AdvancedLog from './AdvancedLog.vue';
 import Pool from './Pool.vue';
-import Engine,{ Command,Phase,factions, Player, EngineOptions } from '@gaia-project/engine';
-import { GameApi, EngineData } from '../types/api';
+import Engine,{ Command,Phase,factions, Player, EngineOptions, Expansion } from '@gaia-project/engine';
 import {handleError, handleInfo} from '../utils';
-import { Expansion } from '@gaia-project/engine/src/enums';
 
 @Component<Game>({
   computed: {
@@ -162,21 +129,6 @@ import { Expansion } from '@gaia-project/engine/src/enums';
       }
     }
   },
-  created(this: Game) {
-    if (this.gameId) {
-      this.refresher = setInterval(() => this.refreshStatus(), 3000);
-      this.deadlineTicker = setInterval(() => this.updateDeadline(), 1000);
-      this.loadGame();
-      this.loadNotes();
-      return;
-    }
-    if (window.sessionStorage.getItem('moves')) {
-      this.moveList = JSON.parse(window.sessionStorage.getItem('moves')).join("\n");
-      this.replayMove = this.numberOfMoves;
-      this.updateMoveList();
-    }
-    this.replay();
-  },
   destroyed() {
     clearInterval(this.refresher);
     clearInterval(this.deadlineTicker);
@@ -192,111 +144,16 @@ import { Expansion } from '@gaia-project/engine/src/enums';
   }
 })
 export default class Game extends Vue {
-  public moveList = "";
   public currentMove = "";
   clearCurrentMove = false;
   // When joining a game
   name = "";
-  lastUpdated = null;
-  remainingTime = null;
-  nextMoveDeadline = null;
-  backupEngine: EngineData = null;
-  refresher = undefined;
-  deadlineTicker = undefined;
-  replaying = false;
-  notes = '';
-
-  // When refreshing status, count the number of times the status is the same
-  refreshCount = 0;
-  replayMove = 0;
-
-  @Prop()
-  api: GameApi;
-
-  @Prop()
-  gameId: string;
-
-  @Prop()
-  auth: string;
 
   @Prop()
   options: EngineOptions;
 
-  @Prop({default: false})
-  developmentMode: boolean;
-
-  get numberOfMoves() {
-    return this.moveList.length === 0 ? 0 : this.moveList.split("\n").length;
-  }
-
-  toggleReplayMode() {
-    if (this.replaying) {
-      this.handleData(this.backupEngine);
-      this.backupEngine = null;
-      this.replaying = false;
-    } else {
-      this.replaying = true;
-      this.backupEngine = this.data;
-      this.replay(true);
-    }
-  }
-
-  goto(move: number) {
-    this.replayMove = move;
-    this.replay();
-  }
-
-  replayPrevMove() {
-    this.replayMove > 0 ? this.replayMove -- : 0;
-    this.replay();
-  }
-
-  loadNotes() {
-    this.api.getNotes(this.gameId, this.auth)
-      .then(notes => this.notes = notes)
-      .catch(err => handleError(this.$store, err));
-  }
-
-  saveNotes() {
-    this.api.saveNotes(this.gameId, this.notes, this.auth).then(
-      () => {}, //handleInfo(this.$store, "Notes saved!"),
-      err => handleError(this.$store, err)
-    );
-  }
-
-  replayNextMove() {
-    const lastMove = this.numberOfMoves;
-    this.replayMove < lastMove ? this.replayMove ++ : lastMove ;
-    this.replay();
-  }
-
-  async replay(goToLastMove = false) {
-    this.$store.commit("gaiaViewer/clearContext");
-
-    const text = this.moveList.trim();
-    let moveList = text ? text.split("\n") : [];
-
-    if (!goToLastMove) {
-      moveList = moveList.slice(0, this.replayMove);
-    } else {
-      this.replayMove = moveList.length;
-    }
-
-    try {
-      // console.log(JSON.stringify(this.backupEngine.options));
-      const options: EngineOptions = Object.assign({}, this.backupEngine && this.backupEngine.options, this.options);
-      const data = await this.api.replay(moveList, options);
-      this.handleData(data, !goToLastMove);
-      window.sessionStorage.setItem('moves', JSON.stringify(data.moveHistory));
-    } catch(err) {
-      handleError(this.$store, err);
-    }
-  }
-
-  handleData(data: EngineData, keepMoveHistory?: boolean) {
+  handleData(data: Engine, keepMoveHistory?: boolean) {
     console.log("handle data", keepMoveHistory);
-    this.lastUpdated = data.lastUpdated;
-    this.nextMoveDeadline = data.nextMoveDeadline;
 
     for (const sector of document.getElementsByClassName('sector') as any as Element[]) {
       sector.classList.add("notransition");
@@ -305,23 +162,12 @@ export default class Game extends Vue {
     this.$store.commit('removeError');
     this.$store.commit('gaiaViewer/receiveData', data);
 
-    if (keepMoveHistory) {
-      // moveList stays the same
-      this.currentMove = this.moveList.split("\n")[this.replayMove];
-      this.clearCurrentMove = true;
+    this.clearCurrentMove = false;
+    if (data.newTurn) {
+      this.currentMove = "";
     } else {
-      this.clearCurrentMove = false;
-      if (data.newTurn) {
-        this.currentMove = "";
-      } else {
-        this.currentMove = data.moveHistory.pop();
-      }
-      this.moveList = data.moveHistory.join("\n");
+      this.currentMove = data.moveHistory.pop();
     }
-
-    this.updateFavicon();
-    this.updateMoveList();
-    this.updateDeadline();
 
     setTimeout(() => {
       for (const sector of document.getElementsByClassName('sector') as any as Element[]) {
@@ -340,52 +186,6 @@ export default class Game extends Vue {
     }
 
     return factions[pl.faction].name;
-  }
-
-  public updateFavicon() {
-    if (this.canPlay) {
-      this.$emit("viewer:active");
-      // $("#favicon-gp").attr("href", "/favicon-active.png");
-    } else {
-      this.$emit("viewer:inactive");
-      // $("#favicon-gp").attr("href", "/favicon.png");
-    }
-  }
-
-  loadGame() {
-    this.$store.commit("gaiaViewer/clearContext");
-
-    this.api.loadGame(this.gameId).then(data => this.handleData(data), err => handleError(this.$store, err));
-  }
-
-  /**
-   * Check if we need to refresh the whole game
-   */
-  refreshStatus() {
-    if (this.ended || this.replaying) {
-      return;
-    }
-
-    this.refreshCount += 1;
-
-    if (this.refreshCount >= 3600/3) {
-      // more than an hour without changes, only check every minute
-      if (this.refreshCount % 20 !== 0) return;
-    } else if (this.refreshCount >= 600/3) {
-      // more than 10 minutes without change, only check every 20 seconds
-      if (this.refreshCount % 6 !== 0) return;
-    } else if (this.refreshCount >= 300/3) {
-      // more than 5 minutes without change, only check every 10 seconds
-      if (this.refreshCount % 3 !== 0) return;
-    }
-
-    this.api.checkStatus(this.gameId).then(data => {
-      if (data.lastUpdated !== this.lastUpdated) {
-        this.refreshCount = 0;
-        this.lastUpdated = data;
-        this.loadGame();
-      }
-    }, () => {});
   }
 
   handleCommand(command: string) {
@@ -420,19 +220,7 @@ export default class Game extends Vue {
 
   addMove(command: string) {
     this.$store.commit("gaiaViewer/clearContext");
-
-    if (this.gameId) {
-      if (command) {
-        this.api.addMove(this.gameId, command, this.auth).then(data => this.handleData(data), err => handleError(this.$store, err));
-      } else {
-        this.loadGame();
-      }
-    } else {
-      let moveList = this.moveList ? this.moveList.trim().split("\n") : [];
-      this.moveList = (moveList.slice(0, this.replayMove).join('\n').trim() + "\n" + command).trim();
-
-      this.replay(true);
-    }
+    this.$store.dispatch("gaiaViewer/move", command);
   }
 
   parseMove(command: string): {player: string, command: string, args: string[]} {
@@ -449,28 +237,6 @@ export default class Game extends Vue {
       command: split[1],
       args: split.slice(2)
     };
-  }
-
-  updateMoveList() {
-    setTimeout(() => document.getElementById("moves").scrollTop = document.getElementById("moves").scrollHeight);
-  }
-
-  updateDeadline() {
-    if (!this.nextMoveDeadline) {
-      this.remainingTime = null;
-      return;
-    }
-
-    const timeDiff = Math.floor(Math.max(new Date(this.nextMoveDeadline).getTime() - Date.now(), 0)/1000);
-
-    const seconds = timeDiff % 60;
-    const minutes = ((timeDiff-seconds) % 3600) / 60;
-    const hours = ((timeDiff-seconds- minutes * 60) % (3600*24)) / 3600;
-    const days = (timeDiff - seconds - minutes * 60 - hours * 3600) / (24 * 3600);
-
-    const parts = [days > 0 ? `${days}d`: '', hours > 0 ? `${hours}h`: '', minutes > 0 ? `${minutes}m`: '', (seconds > 0 ||  timeDiff < 60)? `${seconds}s`: ''];
-
-    this.remainingTime = parts.filter(x => !!x).join(", ");
   }
 }
 
