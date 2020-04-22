@@ -586,8 +586,6 @@ export default class Engine {
   }
 
   processNextMove(subphase?: SubPhase, data?: any) {
-    this.subPhase = this.subPhase;
-
     if (subphase) {
       this.generateAvailableCommands(subphase, data);
       if (this.availableCommands.length === 0) {
