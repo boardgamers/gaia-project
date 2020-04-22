@@ -74,7 +74,6 @@ export default interface App {
 </script>
 
 <style lang="scss">
-@import "./stylesheets/frontend.scss";
 
 .notransition {
   transition: none !important;

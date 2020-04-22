@@ -3,24 +3,18 @@ import Vue from 'vue';
 import App from './App.vue';
 import AppBGIO from './AppBGIO.vue';
 import Game from './components/Game.vue';
-import store from './store';
+import launch from './launcher';
+import launchSelfContained from './self-contained';
 
 Vue.use(BootstrapVue);
 Vue.config.productionTip = false;
 
-let selected: any = App;
-
 console.log(process.env);
 
 if (process.env.VUE_APP_BGIO) {
-  selected = AppBGIO;
+  launch("#app");
+} else if (process.env.VUE_APP_SelfContained) {
+  launchSelfContained();
+} else {
+  launch("#app");
 }
-
-if (process.env.VUE_APP_SelfContained) {
-  selected = Game;
-}
-
-new Vue({
-  store,
-  render: (h) => h(selected),
-}).$mount('#app');

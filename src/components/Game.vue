@@ -33,23 +33,6 @@
             <div v-else-if="data.players[player]" class="mb-2">Waiting for {{data.players[player].name}} to play <br/></div>
           </div>
         </transition>
-        <div>
-          <form id="move-form" @submit.prevent="">
-            <div class="card mb-2" v-if="data.moveHistory.length > 0 || !gameId">
-              <b-tabs pills card>
-                <b-tab v-if="canPlay" title="Current Move">
-                  <div class="input-group mb-2" v-if="canPlay">
-                    <input type="text" class="form-control" placeholder="Current move" aria-label="Current move" id="current-move" v-model="currentMove">
-                    <div class="input-group-append">
-                      <!-- <button class="btn btn-danger" type="button" @click="addMove('')">Clear</button> -->
-                      <button class="btn btn-primary" type="button" @click="addMove(currentMove)">Send</button>
-                    </div>
-                  </div>
-                </b-tab>
-              </b-tabs>
-            </div>
-          </form>
-        </div>
       </div>
       <AdvancedLog class="col-12 order-3 mt-4" />
     </div>
@@ -112,7 +95,7 @@ import {handleError, handleInfo} from '../utils';
       return "Turn order: " + turnOrder.map(pl => this.desc(pl)).filter(desc => !!desc).join(", ");
     },
     canPlay() {
-      return !this.ended && !this.gameId || this.player !== undefined && this.data.players[this.player].auth === this.auth;
+      return !this.ended;
     },
     hasMap() {
       return !!this.$store.state.gaiaViewer.data.map;
@@ -129,9 +112,14 @@ import {handleError, handleInfo} from '../utils';
       }
     }
   },
-  destroyed() {
-    clearInterval(this.refresher);
-    clearInterval(this.deadlineTicker);
+  created(this: Game) {
+    const unsub = this.$store.subscribeAction(({type, payload}) => {
+      if (type === "gaiaViewer/externalData") {
+        this.handleData(payload);
+      }
+    });
+
+    this.$once("hook:beforeDestroy", unsub);
   },
   components: {
     Commands,
@@ -163,6 +151,7 @@ export default class Game extends Vue {
     this.$store.commit('gaiaViewer/receiveData', data);
 
     this.clearCurrentMove = false;
+
     if (data.newTurn) {
       this.currentMove = "";
     } else {
@@ -250,7 +239,9 @@ export default interface Game {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
+
+@import "../stylesheets/frontend.scss";
 
 canvas#map {
   border: solid dodgerblue 1px;

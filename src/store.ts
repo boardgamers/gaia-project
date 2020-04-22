@@ -97,7 +97,9 @@ const gaiaViewer = {
     federationClick(context, federation: Federation) {},
     playerClick(context, player: Player) {},
     confirmClick(context, action: string) {},
+    // API COMMUNICATOIN
     move(context, move: string) {},
+      externalData(context, data: Engine) {},
   },
   getters: {
     data: state => state.data,

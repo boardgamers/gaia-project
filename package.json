@@ -2,7 +2,7 @@
   "name": "@gaia-project/viewer",
   "version": "3.5.2",
   "description": "Functions to visualize the map and boards for gaia project inside html canvas",
-  "author": "coyotte508, randomboolean, rzulian",
+  "author": "coyotte508, rzulian",
   "scripts": {
     "serve": "vue-cli-service serve --port 8080",
     "build": "vue-cli-service build",
@@ -18,7 +18,11 @@
   ],
   "dependencies": {
     "@gaia-project/engine": "^3.4.0",
-    "hexagrid": "^2.0.1"
+    "bootstrap": "^4.4.1",
+    "bootstrap-vue": "^2.12.0",
+    "hexagrid": "^2.0.1",
+    "js": "^0.1.0",
+    "popper": "^1.0.1"
   },
   "devDependencies": {
     "@types/jquery": "^3.3.1",
@@ -26,7 +30,6 @@
     "@vue/cli-plugin-typescript": "~4.2.3",
     "@vue/cli-service": "~4.2.3",
     "boardgame.io": "^0.39.7",
-    "bootstrap-vue": "^2.0.0",
     "jquery": "^3.3.1",
     "node-sass": "^4.7.2",
     "sass-loader": "^8.0.2",
@@ -36,9 +39,6 @@
     "vue-template-compiler": "^2.6.11",
     "vuex": "^3.0.1",
     "webpack": "^4.16.1"
-  },
-  "peerDependencies": {
-    "bootstrap-vue": "^2.0.0"
   },
   "browserslist": [
     "> 1%",
