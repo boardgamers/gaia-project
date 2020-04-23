@@ -17,7 +17,7 @@ function launch(selector: string) {
   item.addListener("state:updated", data => store.dispatch("gaiaViewer/externalData", data));
 
   const unsub1 = store.subscribeAction(({type, payload}) => {
-    console.log("spy action", type, payload);
+    // console.log("spy action", type, payload);
 
     if (type === "gaiaViewer/move") {
       item.emit("move", payload);
@@ -25,7 +25,7 @@ function launch(selector: string) {
   });
 
   const unsub2 = store.subscribe(({type, payload}) => {
-    console.log("spy mutation", type, payload);
+    // console.log("spy mutation", type, payload);
 
     if (type == "info" || type == "error") {
       item.emit(type, payload);

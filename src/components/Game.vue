@@ -9,23 +9,8 @@
     </div>
     <div id="errors"></div>
     <div class="row mt-2">
-      <div class="col-md-6 order-2 order-md-1">
-        <div v-if="sessionPlayer === undefined">
-          <div class="turn-order">
-            {{turnOrderDesc}}
-          </div>
-          <PlayerInfo v-for="player in orderedPlayers" :player='player' :key="player.player" />
-        </div>
-        <div v-else>
-          <PlayerInfo :player='sessionPlayer'/>
-          <div class="turn-order">
-            {{turnOrderDesc}}
-          </div>
-          <PlayerInfo v-for="player in orderedPlayers.filter(pl => pl !== sessionPlayer)" :player='player' :key="player.player" />
-        </div>
-        <Pool />
-      </div>
-      <div class="col-md-6 order-1 order-md-2" id="move-panel">
+      <TurnOrder v-if="!ended && data.players.length > 0" class="col-md-4 order-4 order-md-1" />
+      <div class="col-md-8 order-1 order-md-2" id="move-panel">
         <transition name="fade">
           <div>
             <span v-if="ended"><b>Game ended!</b></span>
@@ -34,7 +19,13 @@
           </div>
         </transition>
       </div>
-      <AdvancedLog class="col-12 order-3 mt-4" />
+      <template v-if="sessionPlayer === undefined">
+        <PlayerInfo v-for="player in orderedPlayers" :player='player' :key="player.player" class="col-md-6 order-6" />
+      </template>
+      <template v-else>
+        <PlayerInfo :player='sessionPlayer' class="col-md-6 order-3"/>
+        <PlayerInfo v-for="player in orderedPlayers.filter(pl => pl !== sessionPlayer)" :player='player' :key="player.player" class="col-md-6 order-6" />
+      </template>
     </div>
   </div>
 </template>
@@ -42,15 +33,17 @@
 <script lang="ts">
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
+import Engine,{ Command,Phase,factions, Player, EngineOptions, Expansion } from '@gaia-project/engine';
+import {handleError, handleInfo} from '../utils';
+
+import AdvancedLog from './AdvancedLog.vue';
 import Commands from './Commands.vue';
-import SpaceMap from './SpaceMap.vue';
+import Pool from './Pool.vue';
 import PlayerInfo from './PlayerInfo.vue';
 import ResearchBoard from './ResearchBoard.vue';
 import ScoringBoard from './ScoringBoard.vue';
-import AdvancedLog from './AdvancedLog.vue';
-import Pool from './Pool.vue';
-import Engine,{ Command,Phase,factions, Player, EngineOptions, Expansion } from '@gaia-project/engine';
-import {handleError, handleInfo} from '../utils';
+import SpaceMap from './SpaceMap.vue';
+import TurnOrder from './TurnOrder.vue';
 
 @Component<Game>({
   computed: {
@@ -76,24 +69,6 @@ import {handleError, handleInfo} from '../utils';
 
       return turnOrder.concat(data.passedPlayers).map(player => data.players[player]);
     },
-    turnOrder() {
-      const data = this.data;
-
-      if (!data.round || !data.turnOrder) {
-        return data.players;
-      }
-
-      return this.data.turnOrder.concat(this.data.passedPlayers).map(player => this.data.players[player]);
-    },
-    turnOrderDesc() {
-      const turnOrder = this.turnOrder;
-
-      if (!turnOrder || turnOrder.length === 0) {
-        return '';
-      }
-
-      return "Turn order: " + turnOrder.map(pl => this.desc(pl)).filter(desc => !!desc).join(", ");
-    },
     canPlay() {
       return !this.ended;
     },
@@ -101,10 +76,7 @@ import {handleError, handleInfo} from '../utils';
       return !!this.$store.state.gaiaViewer.data.map;
     },
     player() {
-      if (!this.data.availableCommands) {
-        return undefined;
-      }
-      return this.data.availableCommands.length > 0 ? this.data.availableCommands[0].player : undefined;
+      return this.data.availableCommands?.[0]?.player;
     },
     sessionPlayer() {
       if (this.auth) {
@@ -122,13 +94,14 @@ import {handleError, handleInfo} from '../utils';
     this.$once("hook:beforeDestroy", unsub);
   },
   components: {
+    AdvancedLog,
     Commands,
-    SpaceMap,
     PlayerInfo,
+    Pool,
     ResearchBoard,
     ScoringBoard,
-    Pool,
-    AdvancedLog
+    SpaceMap,
+    TurnOrder,
   }
 })
 export default class Game extends Vue {
@@ -163,18 +136,6 @@ export default class Game extends Vue {
         sector.classList.remove("notransition");
       }
     });
-  }
-
-  desc(pl: Player) {
-    if (!pl.faction) {
-      return pl.name || `Player ${pl.player+1}`;
-    }
-
-    if (this.data.passedPlayers && this.data.passedPlayers.includes(pl.player)) {
-      return `${factions[pl.faction].name} (passed)`
-    }
-
-    return factions[pl.faction].name;
   }
 
   handleCommand(command: string) {

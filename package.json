@@ -20,21 +20,20 @@
     "@gaia-project/engine": "^3.4.0",
     "bootstrap": "^4.4.1",
     "bootstrap-vue": "^2.12.0",
-    "hexagrid": "^2.0.1",
-    "js": "^0.1.0",
-    "popper": "^1.0.1"
+    "vue": "^2.6.11",
+    "vuex": "^3.0.1"
   },
   "devDependencies": {
     "@types/jquery": "^3.3.1",
     "@types/node": "^10.5.2",
     "@vue/cli-plugin-typescript": "~4.2.3",
     "@vue/cli-service": "~4.2.3",
-    "boardgame.io": "^0.39.7",
     "jquery": "^3.3.1",
+    "hexagrid": "^2.0.1",
     "node-sass": "^4.7.2",
+    "popper": "^1.0.1",
     "sass-loader": "^8.0.2",
     "typescript": "^3.8.3",
-    "vue": "^2.6.11",
     "vue-property-decorator": "^8.4.1",
     "vue-template-compiler": "^2.6.11",
     "vuex": "^3.0.1",
@@ -43,7 +42,7 @@
   "browserslist": [
     "> 1%",
     "last 2 versions",
-    "not ie <= 8"
+    "not dead"
   ],
   "bugs": {
     "url": "https://github.com/donkeytech/gaia-viewer/issues"

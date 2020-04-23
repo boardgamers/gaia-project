@@ -102,8 +102,6 @@ const gaiaViewer = {
       externalData(context, data: Engine) {},
   },
   getters: {
-    data: state => state.data,
-    availableCommands: state => state.data.availableCommands
   }
 }
 

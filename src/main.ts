@@ -1,8 +1,5 @@
 import BootstrapVue from 'bootstrap-vue';
 import Vue from 'vue';
-import App from './App.vue';
-import AppBGIO from './AppBGIO.vue';
-import Game from './components/Game.vue';
 import launch from './launcher';
 import launchSelfContained from './self-contained';
 
@@ -13,8 +10,8 @@ console.log(process.env);
 
 if (process.env.VUE_APP_BGIO) {
   launch("#app");
-} else if (process.env.VUE_APP_SelfContained) {
+} else if (process.env.VUE_APP_SelfContained || 1) {
   launchSelfContained();
-} else {
+} /* else {
   launch("#app");
-}
+} */
