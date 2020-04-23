@@ -3,7 +3,7 @@
     <h5>Turn order</h5>
     <svg viewBox="-1.2 -1.2 12.5 2.5">
       <g v-for="(player, index) in turnOrder" :key="index" :transform="`translate(${index * 2.5})`">
-        <circle :r="1" :style='isCurrentPlayer(player) ? "stroke-width: 0.16px !important; stroke: #5599FF" : "stroke-width: 0.06px !important"'  :class="['player-token', 'planet-fill', planet(player)]" />
+        <circle :r="1" :style='isCurrentPlayer(player) ? "stroke-width: 0.16px !important; stroke: #2c4" : "stroke-width: 0.06px !important"'  :class="['player-token', 'planet-fill', planet(player)]" />
         <text :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(planet(player))}`">{{initial(player)}}</text>
       </g>
 

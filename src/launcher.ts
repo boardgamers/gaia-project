@@ -9,7 +9,7 @@ function launch(selector: string) {
 
   const app = new Vue({
     store,
-    render: (h) => h(Game),
+    render: (h) => h("div", {class: "container-fluid py-2"}, [h(Game)]),
   }).$mount(selector);
 
   const item = new EventEmitter();

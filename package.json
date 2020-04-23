@@ -4,11 +4,14 @@
   "description": "Functions to visualize the map and boards for gaia project inside html canvas",
   "author": "coyotte508, rzulian",
   "scripts": {
-    "serve": "vue-cli-service serve --port 8080",
     "build": "vue-cli-service build",
+    "package": "vue-cli-service build --target lib --inline-vue src/wrapper.ts",
+    "prepublishOnly": "npm run package",
+    "serve": "vue-cli-service serve --port 8080",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "main": "dist/index.js",
+  "unpkg": "dist/package/viewer.umd.min.js",
+  "source": "index.ts",
   "files": [
     "index.ts",
     "tsconfig.json",
@@ -28,10 +31,10 @@
     "@types/node": "^10.5.2",
     "@vue/cli-plugin-typescript": "~4.2.3",
     "@vue/cli-service": "~4.2.3",
-    "jquery": "^3.3.1",
     "hexagrid": "^2.0.1",
     "node-sass": "^4.7.2",
     "popper": "^1.0.1",
+    "popper.js": "^1.16.1",
     "sass-loader": "^8.0.2",
     "typescript": "^3.8.3",
     "vue-property-decorator": "^8.4.1",
