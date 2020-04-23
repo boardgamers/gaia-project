@@ -1,5 +1,6 @@
 // Import vue component
 import launch from './launcher';
+import launchSelfContained from './self-contained';
 
 let globalItem: any;
 if (typeof window !== 'undefined') {
@@ -9,8 +10,8 @@ if (typeof window !== 'undefined') {
 }
 
 if (globalItem) {
-  globalItem.launch = launch;
+  globalItem.gaiaViewer = {launch, launchSelfContained};
 }
 
-// To allow use as module (npm/webpack/etc.) export component
+export {launchSelfContained};
 export default launch;

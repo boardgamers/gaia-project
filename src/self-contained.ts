@@ -1,8 +1,8 @@
 import launch from './launcher';
 import Engine from '@gaia-project/engine';
 
-function launchSelfContained() {
-  const emitter = launch("#app");
+function launchSelfContained(selector = "#app") {
+  const emitter = launch(selector);
 
   let engine = new Engine();
 
