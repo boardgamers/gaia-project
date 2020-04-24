@@ -26,8 +26,7 @@ const gaiaViewer = {
     preferences: {
       noFactionFill: false
     },
-    player: {
-    } as {index?: number, auth?: string}
+    player: null as {index?: number, auth?: string} | null
   },
   mutations: {
     receiveData(state, data: Engine) {
