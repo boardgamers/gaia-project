@@ -1,4 +1,5 @@
 import Vue from "vue";
+import { Store } from "vuex";
 import BootstrapVue from 'bootstrap-vue';
 import { EventEmitter } from 'events';
 
@@ -25,6 +26,11 @@ function launch(selector: string) {
 
     if (type === "gaiaViewer/move") {
       item.emit("move", payload);
+      return;
+    }
+
+    if (type === "gaiaViewer/playerClick") {
+      item.emit("player:clicked", {name: payload.name, auth: payload.auth, index: (store as Store<any>).state.gaiaViewer.data?.players?.findIndex(pl => pl === payload)});
     }
   });
 

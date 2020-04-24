@@ -69,6 +69,8 @@ emitter.emit('player', {auth: "xxx"});
 emitter.emit('player', {index: 0});
 // Listen for move actions
 emitter.on('move', (move) => {/* send move to backend and give back result */});
+// Signals that a player's name was clicked
+emitter.on('player:clicked', ({name, index, auth}) => {/* ... */});
 ```
 
 If you want a self-contained game which plays in the browser with no interaction with your code, you can do:

@@ -117,20 +117,6 @@ function makeStore() {
   return new Vuex.Store({
     modules: {
       gaiaViewer
-    },
-    state: {
-      options: {spaceShips: false} as EngineOptions,
-      error: null as string,
-      info: null as string,
-      errorIssued: null as Date,
-      infoIssued: null as Date
-    },
-    mutations: {
-      options: (state, options: EngineOptions) => state.options = options,
-      error: (state, error: string) => { state.error = error; state.errorIssued = new Date(); },
-      info: (state, info: string) => { state.info = info; state.infoIssued = new Date(); },
-      removeError: state => state.error = state.errorIssued = null,
-      removeInfo: state => state.info = state.infoIssued = null
     }
   });
 };
