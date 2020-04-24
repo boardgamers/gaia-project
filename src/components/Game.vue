@@ -62,7 +62,7 @@ import TurnOrder from './TurnOrder.vue';
       return turnOrder.concat(data.passedPlayers).map(player => data.players[player]);
     },
     canPlay() {
-      return this.player !== undefined && (!this.$store.state.gaiaViewer.player || this.sessionPlayer === this.data.players[this.player]);
+      return !this.ended && (!this.$store.state.gaiaViewer.player || this.sessionPlayer === this.data.players[this.player]);
     },
     hasMap() {
       return !!this.$store.state.gaiaViewer.data.map;

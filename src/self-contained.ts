@@ -20,7 +20,7 @@ function launchSelfContained(selector = "#app") {
       }
     }
 
-    emitter.emit("state:updated", copy);
+    emitter.emit("state:updated", JSON.parse(JSON.stringify(copy)));
   });
 }
 

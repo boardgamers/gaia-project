@@ -43,10 +43,10 @@
   dependencies:
     utilise "^2.3.5"
 
-"@gaia-project/engine@^3.4.0":
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/@gaia-project/engine/-/engine-3.4.0.tgz#02b940986aa1e8570a13a09c0ef0f98c2689bfab"
-  integrity sha512-vHaPVtEVxJuAzyrszMH5O29DH5oB6a0ehyYDe4ZZ/leJEoriv5Qfj9IQRqBLg2K2Bbv7XdFfnhmAuGKQ0Za3KA==
+"@gaia-project/engine@^3.4.1":
+  version "3.4.2"
+  resolved "https://registry.yarnpkg.com/@gaia-project/engine/-/engine-3.4.2.tgz#1660db55bc12a8a428b91509f452b4dc68f15951"
+  integrity sha512-rkdBq/HowmuAmVU3ak66RMqN0v1VM2JijjDWXJ1iKEBHjOXZCHddVO/uPT59MbUTfWeAZAwBCVO8g/74ZdrZRA==
   dependencies:
     eventemitter3 "^3.1.0"
     hexagrid "^2.0.1"
