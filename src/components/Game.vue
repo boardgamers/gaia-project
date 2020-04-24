@@ -10,7 +10,9 @@
     <div id="errors"></div>
     <div class="row mt-2">
       <TurnOrder v-if="!ended && data.players.length > 0" class="col-md-4 order-4 order-md-1" />
-      <Commands @command="handleCommand" class="col-md-8 order-1 order-md-2" @undo="undoMove" v-if="canPlay" />
+      <div class="col-md-8 order-1 order-md-2">
+        <Commands @command="handleCommand" @undo="undoMove" v-if="canPlay" />
+      </div>
       <template v-if="sessionPlayer === undefined">
         <PlayerInfo v-for="player in orderedPlayers" :player='player' :key="player.player" class="col-md-6 order-6" />
       </template>
