@@ -107,7 +107,7 @@ const gaiaViewer = {
     confirmClick(context, action: string) {},
     // API COMMUNICATOIN
     move(context, move: string) {},
-      externalData(context, data: Engine) {},
+    externalData(context, data: Engine) {},
   },
   getters: {
   }

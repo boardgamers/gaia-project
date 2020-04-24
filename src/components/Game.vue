@@ -92,7 +92,7 @@ import TurnOrder from './TurnOrder.vue';
   created(this: Game) {
     const unsub = this.$store.subscribeAction(({type, payload}) => {
       if (type === "gaiaViewer/externalData") {
-        this.handleData(payload);
+        this.handleData(Engine.fromData(payload));
       }
     });
 
