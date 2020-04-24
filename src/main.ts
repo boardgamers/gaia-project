@@ -1,10 +1,5 @@
-import BootstrapVue from 'bootstrap-vue';
-import Vue from 'vue';
 import launch from './launcher';
 import launchSelfContained from './self-contained';
-
-Vue.use(BootstrapVue);
-Vue.config.productionTip = false;
 
 console.log(process.env);
 

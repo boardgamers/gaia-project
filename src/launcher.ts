@@ -1,8 +1,11 @@
 import Vue from "vue";
+import BootstrapVue from 'bootstrap-vue';
 import { EventEmitter } from 'events';
 
 import {makeStore} from './store';
 import Game from './components/Game.vue';
+
+Vue.use(BootstrapVue);
 
 function launch(selector: string) {
   const store = makeStore();
