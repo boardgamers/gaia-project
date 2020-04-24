@@ -19,7 +19,7 @@
   ],
   "scripts": {
     "nodemon": "nodemon -e ts --exec npm start",
-    "prepublishOnly": "npm run clean && tsc",
+    "prepublishOnly": "npm run just-test && npm run clean && tsc",
     "postpublish": "npm run clean",
     "start": "ts-node server.ts",
     "build": "npm run clean && tsc",

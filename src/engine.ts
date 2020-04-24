@@ -472,7 +472,7 @@ export default class Engine {
 
     for (const key of Object.keys(data)) {
       // Skip map, players, and getters
-      if (key === "map" || key === "players" || Object.getOwnPropertyDescriptor(engine, key)?.get) {
+      if (key === "map" || key === "players" || Object.getOwnPropertyDescriptor(Engine.prototype, key)?.get) {
         continue;
       }
 
@@ -517,7 +517,7 @@ export default class Engine {
             const val = (this as any)[key];
             jsonObj[key] = val;
           } catch (error) {
-            console.error(`Error calling getter ${key}`, error);
+            // console.error(`Error calling getter ${key}`, error);
           }
         }
       });

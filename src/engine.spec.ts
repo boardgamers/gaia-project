@@ -15,6 +15,24 @@ describe("Engine", () => {
     expect(() => new Engine(moves)).to.throw();
   });
 
+
+  it("should export playerToMove in JSON", () => {
+    const moves = parseMoves(`
+      init 2 randomSeed
+      p1 faction terrans
+      p2 faction xenos
+      p1 build m -1x2
+      p2 build m -2x2
+      p2 build m -5x5
+      p1 build m -3x4
+      p2 build m -7x3
+    `);
+
+    const engine = new Engine(moves);
+    const jsoned = JSON.parse(JSON.stringify(engine));
+    expect(jsoned.playerToMove).to.equal(1);
+  });
+
   it("should allow to set up with Xenos (three mines) without errors", () => {
     const moves = parseMoves(`
       init 2 randomSeed
