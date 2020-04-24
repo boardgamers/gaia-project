@@ -470,7 +470,14 @@ export default class Engine {
       return engine;
     }
 
-    Object.assign(engine, omit(data, "map", "players"));
+    for (const key of Object.keys(data)) {
+      // Skip map, players, and getters
+      if (key === "map" || key === "players" || Object.getOwnPropertyDescriptor(engine, key)?.get) {
+        continue;
+      }
+
+      engine[key] = data[key];
+    }
 
     engine.sanitizeOptions();
 
@@ -495,6 +502,27 @@ export default class Engine {
     }
 
     return engine;
+  }
+
+  toJSON() {
+    // Export getters as well as data
+    const proto = Object.getPrototypeOf(this);
+    const jsonObj: any = Object.assign({}, this);
+
+    Object.entries(Object.getOwnPropertyDescriptors(proto))
+      .filter(([key, descriptor]) => typeof descriptor.get === 'function')
+      .map(([key, descriptor]) => {
+        if (descriptor && key[0] !== '_') {
+          try {
+            const val = (this as any)[key];
+            jsonObj[key] = val;
+          } catch (error) {
+            console.error(`Error calling getter ${key}`, error);
+          }
+        }
+      });
+
+    return jsonObj;
   }
 
   static slowMotion([first, ...moves]: string[], options: EngineOptions = {}): Engine {
