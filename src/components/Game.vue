@@ -1,5 +1,5 @@
 <template>
-  <div :class="{['no-faction-fill']: $store.state.gaiaViewer.preferences.noFactionFill}">
+  <div :class="{['no-faction-fill']: $store.state.gaiaViewer.preferences && $store.state.gaiaViewer.preferences.noFactionFill}">
     <div :class="['row', 'no-gutters', 'justify-content-center', data.players.length > 2 ? 'medium-map' : 'small-map']" v-if="hasMap">
       <SpaceMap :class="['mb-1', 'space-map']" />
       <svg class="scoring-research-board" :viewBox="`0 0 ${scoringX + 90} 450`">
