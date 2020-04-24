@@ -10,15 +10,7 @@
     <div id="errors"></div>
     <div class="row mt-2">
       <TurnOrder v-if="!ended && data.players.length > 0" class="col-md-4 order-4 order-md-1" />
-      <div class="col-md-8 order-1 order-md-2" id="move-panel">
-        <transition name="fade">
-          <div>
-            <span v-if="ended"><b>Game ended!</b></span>
-            <Commands @command="handleCommand" @undo="undoMove" v-else-if="canPlay" />
-            <div v-else-if="data.players[player]" class="mb-2">Waiting for {{data.players[player].name}} to play <br/></div>
-          </div>
-        </transition>
-      </div>
+      <Commands @command="handleCommand" class="col-md-8 order-1 order-md-2" @undo="undoMove" v-if="canPlay" />
       <template v-if="sessionPlayer === undefined">
         <PlayerInfo v-for="player in orderedPlayers" :player='player' :key="player.player" class="col-md-6 order-6" />
       </template>
