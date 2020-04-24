@@ -7,7 +7,6 @@
         <ScoringBoard class="ml-4" height="450" width="90" :x="scoringX" />
       </svg>
     </div>
-    <div id="errors"></div>
     <div class="row mt-2">
       <TurnOrder v-if="!ended && data.players.length > 0" class="col-md-4 order-4 order-md-1" />
       <div class="col-md-8 order-1 order-md-2">
@@ -20,6 +19,7 @@
         <PlayerInfo :player='sessionPlayer' class="col-md-6 order-3"/>
         <PlayerInfo v-for="player in orderedPlayers.filter(pl => pl !== sessionPlayer)" :player='player' :key="player.player" class="col-md-6 order-6" />
       </template>
+      <Pool class="col-12 order-10 mt-4" />
       <AdvancedLog class="col-12 order-last mt-4" />
     </div>
   </div>
