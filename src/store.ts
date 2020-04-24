@@ -22,7 +22,12 @@ const gaiaViewer = {
       rotation: new Map(),
       hexSelection: false,
       activeButton: null
-    } as GameContext
+    } as GameContext,
+    preferences: {
+      noFactionFill: false
+    },
+    player: {
+    } as {index?: number, auth?: string}
   },
   mutations: {
     receiveData(state, data: Engine) {
@@ -82,10 +87,13 @@ const gaiaViewer = {
       state.context.activeButton = button;
     },
 
-    error: (state, error: string) => { state.error = error; state.errorIssued = new Date(); },
-    info: (state, info: string) => { state.info = info; state.infoIssued = new Date(); },
-    removeError: state => state.error = state.errorIssued = null,
-    removeInfo: state => state.info = state.infoIssued = null
+    preferences(state, preferences) {
+      state.preferences = preferences;
+    },
+
+    player(state, data) {
+      state.player = data;
+    }
   },
   actions: {
     // No body, used for signalling with store.subscribeAction

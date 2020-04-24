@@ -61,11 +61,15 @@ The EventEmitter has this interface:
 ```
 // Give the new game data to the viewer
 emitter.emit('state:updated', gameData);
+// Update preferences
+emitter.emit('preferences', {noFactionFill: true});
+// Set player - choose either. If no player is set, then everyone can play
+// in the same window
+emitter.emit('player', {auth: "xxx"});
+emitter.emit('player', {index: 0});
 // Listen for move actions
 emitter.on('move', (move) => {/* send move to backend and give back result */});
 ```
-
-Possibly more functions will be added, for example to set / unset planetFill, there could be a `preferences` event.
 
 If you want a self-contained game which plays in the browser with no interaction with your code, you can do:
 

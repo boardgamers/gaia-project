@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :class="{['no-faction-fill']: $store.state.gaiaViewer.preferences.noFactionFill}">
     <div :class="['row', 'no-gutters', 'justify-content-center', data.players.length > 2 ? 'medium-map' : 'small-map']" v-if="hasMap">
       <SpaceMap :class="['mb-1', 'space-map']" />
       <svg class="scoring-research-board" :viewBox="`0 0 ${scoringX + 90} 450`">
@@ -34,7 +34,6 @@
 import Vue from 'vue'
 import { Component, Prop } from 'vue-property-decorator';
 import Engine,{ Command,Phase,factions, Player, EngineOptions, Expansion } from '@gaia-project/engine';
-import {handleError, handleInfo} from '../utils';
 
 import AdvancedLog from './AdvancedLog.vue';
 import Commands from './Commands.vue';
@@ -79,8 +78,14 @@ import TurnOrder from './TurnOrder.vue';
       return this.data.availableCommands?.[0]?.player;
     },
     sessionPlayer() {
-      if (this.auth) {
-        return this.data.players.find(pl => pl.auth === this.auth);
+      const player = this.$store.state.gaiaViewer.player;
+      if (player) {
+        if (player.index !== undefined) {
+          return this.data.players[player.index];
+        }
+        if (player.auth) {
+          return this.data.players.find(pl => pl.auth === player.auth);
+        }
       }
     }
   },
@@ -120,7 +125,6 @@ export default class Game extends Vue {
       sector.classList.add("notransition");
     }
 
-    this.$store.commit('removeError');
     this.$store.commit('gaiaViewer/receiveData', data);
 
     this.clearCurrentMove = false;

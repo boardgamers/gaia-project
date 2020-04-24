@@ -18,6 +18,7 @@ function launch(selector: string) {
   const item = new EventEmitter();
 
   item.addListener("state:updated", data => store.dispatch("gaiaViewer/externalData", data));
+  item.addListener("preferences", data => store.commit("gaiaViewer/preferences", data));
 
   const unsub1 = store.subscribeAction(({type, payload}) => {
     // console.log("spy action", type, payload);

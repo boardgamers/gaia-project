@@ -41,10 +41,6 @@ g.resource {
   pointer-events: none;
   opacity: 0.7;
 
-  .hide-research-track-resources & {
-    display: none;
-  }
-
   rect {
     stroke: #333;
     stroke-width: 0.8px;
@@ -85,7 +81,7 @@ g.resource {
     &.plus {
       font-size: 15px;
       font-weight: bold;
-      
+
       fill: #333;
     }
   }
