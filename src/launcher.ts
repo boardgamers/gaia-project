@@ -20,6 +20,7 @@ function launch(selector: string) {
 
   item.addListener("state:updated", data => store.dispatch("gaiaViewer/externalData", data));
   item.addListener("preferences", data => store.commit("gaiaViewer/preferences", data));
+  item.addListener("player", data => store.commit("gaiaViewer/player", data));
 
   const unsub1 = store.subscribeAction(({type, payload}) => {
     // console.log("spy action", type, payload);
