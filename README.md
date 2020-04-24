@@ -41,3 +41,38 @@ yarn serve
 And open localhost:8080 in the browser.
 
 You will also need to run gaia-engine on the same machine.
+
+## Include in other projects
+
+For now there are three ways to include the viewer:
+
+- By importing individual components: If you want to integrate into an existing Vue APP, for example
+- Through `index.ts`, the default export is the `launch` function: The viewer will create its own Vue App on the given selector
+- Through `unpkg.com/@gaia-project/viewer`, which will set `window.gaiaViewer` or `global.gaiaViewer`. All dependencies are included in the bundle, including `vue` itself.
+
+If you want something else, like an standalone bundle *without* vue, or a standalone bundle without *any* external dependency, contact us and we will add those.
+
+### launch function
+
+The default export, and `window.gaiaViewer.launch` / `global.gaiaViewer.launch` when included via a `script` tag, is a function taking a css selector as an argument. When executed, it instantiates a Game on the aformentioned element, and returns an `EventEmitter` that can be communicated with.
+
+The EventEmitter has this interface:
+
+```
+// Give the new game data to the viewer
+emitter.emit('state:updated', gameData);
+// Listen for move actions
+emitter.on('move', (move) => {/* send move to backend and give back result */});
+```
+
+Possibly more functions will be added, for example to set / unset planetFill, there could be a `preferences` event.
+
+If you want a self-contained game which plays in the browser with no interaction with your code, you can do:
+
+```
+// via <script>
+window.gaiaViewer.launchSelfContained("#my-selector");
+
+// via import
+import {launchSelfContained} from '@gaia-project/viewer';
+```

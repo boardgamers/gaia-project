@@ -1,13 +1,17 @@
 import BootstrapVue from 'bootstrap-vue';
 import Vue from 'vue';
-import App from './App.vue';
-import store from './store';
-import './registerServiceWorker';
+import launch from './launcher';
+import launchSelfContained from './self-contained';
 
 Vue.use(BootstrapVue);
 Vue.config.productionTip = false;
 
-new Vue({
-  store,
-  render: (h) => h(App),
-}).$mount('#app');
+console.log(process.env);
+
+if (process.env.VUE_APP_BGIO) {
+  launch("#app");
+} else if (process.env.VUE_APP_SelfContained || 1) {
+  launchSelfContained();
+} /* else {
+  launch("#app");
+} */

@@ -1,6 +1,8 @@
 import Game from './src/components/Game.vue';
 
-import { gaiaViewer } from './src/store';
-import { GameApi } from './src/types/api';
+import { gaiaViewer, makeStore } from './src/store';
+import launch from './src/launcher';
+import launchSelfContained from './src/self-contained';
 
-export {Game, gaiaViewer, GameApi};
+export {Game, gaiaViewer, makeStore, launchSelfContained};
+export default launch;

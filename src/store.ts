@@ -77,7 +77,7 @@ const gaiaViewer = {
       state.context.hexSelection = false;
       state.context.activeButton = null;
     },
-    
+
     activeButton(state, button) {
       state.context.activeButton = button;
     },
@@ -97,31 +97,36 @@ const gaiaViewer = {
     federationClick(context, federation: Federation) {},
     playerClick(context, player: Player) {},
     confirmClick(context, action: string) {},
+    // API COMMUNICATOIN
+    move(context, move: string) {},
+      externalData(context, data: Engine) {},
   },
   getters: {
-    data: state => state.data,
-    availableCommands: state => state.data.availableCommands
   }
 }
 
-export default new Vuex.Store({
-  modules: {
-    gaiaViewer
-  },
-  state: {
-    options: {spaceShips: false} as EngineOptions,
-    error: null as string,
-    info: null as string,
-    errorIssued: null as Date,
-    infoIssued: null as Date
-  },
-  mutations: {
-    options: (state, options: EngineOptions) => state.options = options,
-    error: (state, error: string) => { state.error = error; state.errorIssued = new Date(); },
-    info: (state, info: string) => { state.info = info; state.infoIssued = new Date(); },
-    removeError: state => state.error = state.errorIssued = null,
-    removeInfo: state => state.info = state.infoIssued = null
-  }
-});
+function makeStore() {
+  return new Vuex.Store({
+    modules: {
+      gaiaViewer
+    },
+    state: {
+      options: {spaceShips: false} as EngineOptions,
+      error: null as string,
+      info: null as string,
+      errorIssued: null as Date,
+      infoIssued: null as Date
+    },
+    mutations: {
+      options: (state, options: EngineOptions) => state.options = options,
+      error: (state, error: string) => { state.error = error; state.errorIssued = new Date(); },
+      info: (state, info: string) => { state.info = info; state.infoIssued = new Date(); },
+      removeError: state => state.error = state.errorIssued = null,
+      removeInfo: state => state.info = state.infoIssued = null
+    }
+  });
+};
 
-export {gaiaViewer};
+export default makeStore();
+
+export {gaiaViewer, makeStore};
