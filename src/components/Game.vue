@@ -26,6 +26,7 @@
         <PlayerInfo :player='sessionPlayer' class="col-md-6 order-3"/>
         <PlayerInfo v-for="player in orderedPlayers.filter(pl => pl !== sessionPlayer)" :player='player' :key="player.player" class="col-md-6 order-6" />
       </template>
+      <AdvancedLog class="col-12 order-last mt-4" />
     </div>
   </div>
 </template>
