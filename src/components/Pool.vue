@@ -1,7 +1,9 @@
 <template>
-  <div class="pool pb-0 mb-1 row no-gutters" v-if="$store.state.gaiaViewer.data.tiles && $store.state.gaiaViewer.data.tiles.techs['gaia']">
-    <Booster v-for="booster in boosters" :key="booster" :booster="booster" class="mb-2 mr-1"  />
-    <FederationTile v-for="(numTiles, tile, i) in federations" :key="`${tile}-${i}`" :federation="tile" :numTiles="numTiles" v-if="numTiles" class="mb-2 mr-1" />
+  <div class="container-fluid">
+    <div class="pool pb-0 mb-1 row no-gutters" v-if="$store.state.gaiaViewer.data.tiles && $store.state.gaiaViewer.data.tiles.techs['gaia']">
+      <Booster v-for="booster in boosters" :key="booster" :booster="booster" class="mb-2 mr-1"  />
+      <FederationTile v-for="(numTiles, tile, i) in federations" :key="`${tile}-${i}`" :federation="tile" :numTiles="numTiles" v-if="numTiles" class="mb-2 mr-1" />
+    </div>
   </div>
 </template>
 
@@ -27,7 +29,7 @@ import { Booster as BoosterEnum, Expansion } from '@gaia-project/engine';
   }
 })
 export default class Pool extends Vue {
-  
+
 }
 
 </script>
