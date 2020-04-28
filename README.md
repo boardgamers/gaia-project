@@ -48,9 +48,17 @@ For now there are three ways to include the viewer:
 
 - By importing individual components: If you want to integrate into an existing Vue APP, for example
 - Through `index.ts`, the default export is the `launch` function: The viewer will create its own Vue App on the given selector
-- Through `unpkg.com/@gaia-project/viewer`, which will set `window.gaiaViewer` or `global.gaiaViewer`. All dependencies are included in the bundle, including `vue` itself.
+- Through `unpkg.com/@gaia-project/viewer`, which will set `window.gaiaViewer` or `global.gaiaViewer`. Here is an example:
 
-If you want something else, like an standalone bundle *without* vue, or a standalone bundle without *any* external dependency, contact us and we will add those.
+```html
+<script src="//unpkg.com/vue@latest/dist/vue.min.js"></script>
+<script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.js"></script>
+
+<script source="//unpkg.com/@gaia-project/viewer">
+<link type="text/css" rel="stylesheet" source="//unpkg.com/@gaia-project/viewer/dist/package/viewer.css">
+```
+
+If you want something else, contact us.
 
 ### launch function
 
