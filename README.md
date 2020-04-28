@@ -51,8 +51,8 @@ For now there are three ways to include the viewer:
 - Through `unpkg.com/@gaia-project/viewer`, which will set `window.gaiaViewer` or `global.gaiaViewer`. Here is an example:
 
 ```html
-<script src="//unpkg.com/vue@latest/dist/vue.min.js"></script>
-<script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.js"></script>
+<script src="//unpkg.com/vue@^2/dist/vue.min.js"></script>
+<script src="//unpkg.com/bootstrap-vue@^2/dist/bootstrap-vue.min.js"></script>
 
 <script source="//unpkg.com/@gaia-project/viewer">
 <link type="text/css" rel="stylesheet" source="//unpkg.com/@gaia-project/viewer/dist/package/viewer.css">
