@@ -66,7 +66,7 @@ The default export, and `window.gaiaViewer.launch` / `global.gaiaViewer.launch` 
 
 The EventEmitter has this interface:
 
-```
+```js
 // Give the new game data to the viewer
 emitter.emit('state:updated', gameData);
 // Update preferences
@@ -83,7 +83,7 @@ emitter.on('player:clicked', ({name, index, auth}) => {/* ... */});
 
 If you want a self-contained game which plays in the browser with no interaction with your code, you can do:
 
-```
+```js
 // via <script>
 window.gaiaViewer.launchSelfContained("#my-selector");
 
