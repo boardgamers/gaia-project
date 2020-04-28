@@ -55,7 +55,7 @@ For now there are three ways to include the viewer:
 <script src="//unpkg.com/bootstrap-vue@^2/dist/bootstrap-vue.min.js"></script>
 
 <script source="//unpkg.com/@gaia-project/viewer">
-<link type="text/css" rel="stylesheet" source="//unpkg.com/@gaia-project/viewer/dist/package/viewer.css">
+<link type="text/css" rel="stylesheet" href="//unpkg.com/@gaia-project/viewer/dist/package/viewer.css">
 ```
 
 If you want something else, contact us.
