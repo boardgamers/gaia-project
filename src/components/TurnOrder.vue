@@ -75,7 +75,7 @@ export default class TurnOrder extends Vue {
 
 .turn-order {
   & > svg {
-    max-width: 300px;
+    max-width: 250px;
   }
 }
 

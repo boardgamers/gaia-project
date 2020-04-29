@@ -203,15 +203,8 @@ export default interface Game {
 
 @import "../stylesheets/frontend.scss";
 
-canvas#map {
-  border: solid dodgerblue 1px;
-  width: 100%;
-  height: 450px;
-}
-
-
 .space-map, .scoring-research-board {
-  max-height: 450px;
+  max-height: 550px;
 
   width: 100%;
   // Unfortunately, necessary for chrome, otherwise would be nicer!
