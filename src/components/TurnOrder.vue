@@ -7,9 +7,9 @@
         <text :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(planet(player))}`">{{initial(player)}}</text>
       </g>
 
-      <g v-for="(player, index) in passedPlayers" :key="'p-' + index" :transform="`translate(${(index + 1 + turnOrder.length) * 2.5})`">
-        <circle :r="1"  :style='isCurrentPlayer(player) ? "stroke-width: 0.16px !important; stroke: #2c4" : "stroke-width: 0.06px !important; stroke: #ccc"' style="stroke-width: 0.06px !important; stroke: #ccc"  :class="['player-token', 'planet-fill', planet(player)]" />
-        <text :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; opacity: 0.6; fill: ${planetFill(planet(player))}`">{{initial(player)}}</text>
+      <g v-for="(player, index) in passedPlayers" :key="'p-' + index" :transform="`translate(${(index + 1 + turnOrder.length) * 2.5})`" style="opacity: 0.5">
+        <circle :r="1"  :style='isCurrentPlayer(player) ? "stroke-width: 0.16px !important; stroke: #2c4" : "stroke-width: 0.06px !important"' :class="['player-token', 'planet-fill', planet(player)]" />
+        <text :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(planet(player))}`">{{initial(player)}}</text>
       </g>
     </svg>
   </div>
