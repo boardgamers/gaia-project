@@ -107,6 +107,8 @@ const gaiaViewer = {
     // API COMMUNICATOIN
     move(context, move: string) {},
     externalData(context, data: Engine) {},
+    // WRAPPER / DEBUG COMMUNICATION
+    loadFromJSON(context, data: any) {}
   },
   getters: {
   }

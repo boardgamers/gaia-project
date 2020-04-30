@@ -43,7 +43,7 @@ export default class MoveButton extends Vue {
 
   subscribe(action: string, callback: any) {
     action = "gaiaViewer/" + action;
-    
+
     this.unsubscribe();
     this.$store.commit("gaiaViewer/activeButton", this.button);
 
@@ -158,7 +158,6 @@ export default class MoveButton extends Vue {
         const highlighted = new Map();
 
         const withinDistance = map.withinDistance(hex, range);
-        // debugger;
         for (const target of withinDistance) {
           highlighted.set(target, {cost: costs[map.distance(hex, target)] || '~'});
         }
@@ -199,7 +198,7 @@ export default class MoveButton extends Vue {
     if (final) {
       commandBody = append ? [append] : [];
     } else {
-      // Parse numbers, ie the command is executed X times, multiply 
+      // Parse numbers, ie the command is executed X times, multiply
       // each number by X instead of repeating the command X times.
       let command = (this.button.command || "") + "";
 
@@ -207,7 +206,7 @@ export default class MoveButton extends Vue {
         // the \b is necessary for things like '1t-a3', so the 3 is not caught
         command = command.replace(/\b[0-9]+/g, x => ('' + (parseInt(x) * times)));
       }
-      
+
       commandBody = [command, append].filter(x => !!x);
     }
 

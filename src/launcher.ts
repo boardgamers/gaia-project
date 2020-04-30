@@ -5,18 +5,19 @@ import { EventEmitter } from 'events';
 
 import {makeStore} from './store';
 import Game from './components/Game.vue';
+import type { VueConstructor } from "vue/types/umd";
 
 Vue.use(BootstrapVue);
 
-function launch(selector: string) {
+function launch(selector: string, component: VueConstructor<Vue> = Game) {
   const store = makeStore();
 
   const app = new Vue({
     store,
-    render: (h) => h("div", {class: "container-fluid py-2"}, [h(Game)]),
+    render: (h) => h("div", {class: "container-fluid py-2"}, [h(component)]),
   }).$mount(selector);
 
-  const item = new EventEmitter();
+  const item: EventEmitter & {store?: Store<unknown>, app?: Vue} = new EventEmitter();
 
   item.addListener("state:updated", data => store.dispatch("gaiaViewer/externalData", data));
   item.addListener("preferences", data => store.commit("gaiaViewer/preferences", data));
@@ -47,6 +48,9 @@ function launch(selector: string) {
     unsub1();
     unsub2();
   });
+
+  item.store = store;
+  item.app = app;
 
   return item;
 }
