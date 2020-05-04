@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import Engine from "./engine";
 import { AssertionError } from "assert";
-import { Player, Federation, Operator, AdvTechTilePos, Building, Condition, BrainstoneArea, Phase, Command } from "./enums";
+import { Player, Federation, Operator, AdvTechTilePos, Building, Condition, BrainstoneArea, Phase, Command, Faction } from "./enums";
 
 describe("Engine", () => {
   it("should throw when trying to build on the wrong place", () => {
@@ -670,6 +670,60 @@ describe("Engine", () => {
       expect(log[5].phase).to.equal(Phase.RoundGaia);
     });
   });
+});
+
+describe("auction", () => {
+  it ("should allow auction, everyone is fine wiht the current", () => {
+    const moves = Engine.parseMoves(`
+        init 2 djfjjv4k
+        p1 faction geodens
+        p2 faction itars
+        p1 bid geodens 1
+        p2 bid itars 1
+    `);
+    const engine = new Engine(moves, {auction: true});
+    expect(engine.setup[0].player).to.equal(0)
+    expect(engine.setup[1].player).to.equal(1)
+    expect(engine.players[0].faction).to.equal(Faction.Geodens);
+    expect(engine.players[1].faction).to.equal(Faction.Itars);
+    
+    
+  });
+
+  it ("should allow auction, geodens are good", () => {
+    const moves = Engine.parseMoves(`
+        init 2 djfjjv4k
+        p1 faction geodens
+        p2 faction itars
+        p1 bid geodens 1
+        p2 bid geodens 2
+        p1 bid geodens 3
+        p2 bid geodens 4
+        p1 bid itars 1
+    `);
+
+    const engine = new Engine(moves, {auction: true});
+    expect(engine.setup[0].player).to.equal(1)
+    expect(engine.setup[1].player).to.equal(0)
+    expect(engine.setup[0].bid).to.equal(4)
+    expect(engine.setup[1].bid).to.equal(1) 
+    expect(engine.players[0].faction).to.equal(Faction.Itars);
+    
+  });
+
+  it ("should allow auction, everyone is fine wiht the current", () => {
+    const moves = Engine.parseMoves(`
+        init 2 djfjjv4k
+        p1 faction geodens
+        p2 faction itars
+        p1 bid itars 1
+        p2 bid geodens 1
+    `);
+
+    expect(() => new Engine(moves, {auction: true})).to.not.throw();
+  });
+
+
 });
 
 function parseMoves(moves: string) {
