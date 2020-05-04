@@ -36,6 +36,7 @@ import {buildingName} from '../data/building';
 import {GameContext, ButtonData} from '../data';
 import { eventDesc } from '../data/event';
 import { factionDesc } from '../data/factions';
+import { BIconDash } from 'bootstrap-vue';
 @Component<Commands>({
   watch: {
     availableCommands(this: Commands, val) {
@@ -197,7 +198,6 @@ export default class Commands extends Vue {
 
   get buttons(): ButtonData[] {
     const ret: ButtonData[] = [];
-
     for (const command of this.availableCommands) {
       switch (command.name) {
         case Command.RotateSectors: {
@@ -450,6 +450,14 @@ export default class Commands extends Vue {
           ret.push(...command.data.map(income => ({
             label: `Income ${income}`,
             command: `${Command.ChooseIncome} ${income}`
+          })));
+          break;
+        }
+
+        case Command.Bid: {
+          ret.push(...command.data.bids.map(auction => ({
+            label: `Bid ${auction.bid} for ${auction.faction}`,
+            command: `${Command.Bid} ${auction.faction} ${auction.bid}`
           })));
           break;
         }
