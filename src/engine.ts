@@ -930,6 +930,11 @@ export default class Engine {
 
       // research VP and remaining resources
       player.data.gainFinalVictoryPoints();
+
+      //remove bids
+      for (const pos of this.setup) {
+        this.players[pos.player].gainRewards([new Reward(Math.max(Math.floor(-1*pos.bid )), Resource.VictoryPoint)], Command.Bid );
+      }
     }
   }
 
