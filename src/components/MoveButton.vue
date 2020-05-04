@@ -159,7 +159,7 @@ export default class MoveButton extends Vue {
 
         const withinDistance = map.withinDistance(hex, range);
         for (const target of withinDistance) {
-          highlighted.set(target, {cost: costs[map.distance(hex, target)] || '~'});
+          highlighted.set(target, {cost: costs?.[map.distance(hex, target)] ?? '~'});
         }
 
         this.$store.commit("gaiaViewer/highlightHexes", highlighted);
