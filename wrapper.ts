@@ -26,7 +26,7 @@ export async function init (nbPlayers: number, expansions: string[], options: En
   if (options.balancedGeneration) {
     delete options.balancedGeneration;
 
-    const resp = await axios.post('http://gaia-project.hol.es', {seed: numberSeed, player: this.options.setup.nbPlayers}).then(r => r.data);
+    const resp = await axios.post('http://gaia-project.hol.es', {seed: numberSeed, player: nbPlayers}).then(r => r.data);
 
     options.map = {sectors: resp.map};
 
