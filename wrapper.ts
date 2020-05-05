@@ -53,7 +53,7 @@ export function setPlayerMetaData(engine: Engine, player: number, metaData: {nam
 export async function move(engine: Engine, move: string, player: number) {
   if (!move) {
     // Don't save
-    engine.newTurn = false;
+    (engine as any).noSave = true;
     return engine;
   }
 
@@ -139,7 +139,7 @@ export function currentPlayer (engine: Engine) {
 }
 
 export function toSave (engine: Engine) {
-  if (!engine.newTurn) {
+  if (!engine.newTurn || (engine as any).noSave) {
     return undefined;
   }
   return engine;
