@@ -19,7 +19,7 @@ import federationTiles, { isGreen } from "./tiles/federations";
 import { EventEmitter } from "eventemitter3";
 import { finalScorings } from './tiles/scoring';
 import techs, { isAdvanced } from './tiles/techs';
-import * as assert from "assert";
+import assert from "assert";
 
 const TERRAFORMING_COST = 3;
 // 25 satellites - 2 used on the final scoring board - 1 used in the player order
@@ -51,7 +51,6 @@ export default class Player extends EventEmitter {
   declined = false;
   // OPTIONAL
   name?: string;
-  auth?: string;
   /** Is the player dropped (i.e. no move) */
   dropped?: boolean;
 
@@ -91,7 +90,6 @@ export default class Player extends EventEmitter {
       data: this.data,
       events: this.events,
       name: this.name,
-      auth: this.auth,
       dropped: this.dropped
     } as any;
 
@@ -121,7 +119,6 @@ export default class Player extends EventEmitter {
     }
 
     player.name = data.name;
-    player.auth = data.auth;
     player.dropped = data.dropped;
 
     if (data.federationCache) {

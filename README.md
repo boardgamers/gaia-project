@@ -14,7 +14,7 @@ Have node 6+, hopefully 8+. Have npm 5+, and tsc.
 In the project's folder:
 
 ```
-npm install
+yarn
 ```
 
 ### Build
@@ -22,26 +22,24 @@ npm install
 To compile Typescript into javascript:
 
 ```
-npm run build
-```
-
-### Run
-
-```
-npm start
+yarn build
 ```
 
 ### Test
 
 ```
-npm test
+yarn test
 ```
 
 ### Usage as a dependency from another module
 
 If you want to use your local copy of this module instead of the npm version, as a dependency of
-another module, in the other module's directory:
+another module, do this:
 
 ```
-npm link <path-to-this-module>
+## In this folder
+yarn link
+
+## In the other project's folder
+yarn link @gaia-project/engine
 ```

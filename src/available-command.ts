@@ -54,6 +54,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
       ];
     }
     case SubPhase.AfterMove: return [...possibleFreeActions(engine, player), {name: Command.EndTurn, player}];
+    default: break;
   }
 
   switch (engine.phase) {
