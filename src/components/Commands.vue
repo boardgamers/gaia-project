@@ -455,10 +455,12 @@ export default class Commands extends Vue {
         }
 
         case Command.Bid: {
-          ret.push(...command.data.bids.map(auction => ({
-            label: `Bid ${auction.bid} for ${auction.faction}`,
-            command: `${Command.Bid} ${auction.faction} ${auction.bid}`
-          })));
+
+          ret.push(...command.data.bids.map(pos => ({
+            label: `Bid ${pos.bid[0]} for ${pos.faction}`,
+            command: `${Command.Bid} ${pos.faction} 1`,
+            times: pos.bid          
+            })));
           break;
         }
 

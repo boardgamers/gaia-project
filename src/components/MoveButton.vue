@@ -2,7 +2,7 @@
   <div class="move-button">
     <button class='btn btn-secondary mr-2 mb-2 move-button' @click="handleClick" @mouseenter="hover" @mouseleave="leave" :title="button.tooltip" v-b-tooltip.html v-html="customLabel || button.label || button.command" v-if="!button.times">
     </button>
-    <b-dropdown class='mr-2 mb-2 move-button' v-else split right :text="customLabel || button.label || button.command" @click="handleClick">
+    <b-dropdown class='mr-2 mb-2 move-button' v-else split right :text="customLabel || button.label || button.command" @click="handleRangeClick(button.times[0])">
       <b-dropdown-item v-for="i in button.times" :key="i" @click="handleRangeClick(i)">{{i}}</b-dropdown-item>
     </b-dropdown>
     <b-modal v-if="button.modal" v-model="modalShow" size="lg" @ok="handleOK" @hide="modalCancel" :title="button.title || button.label || button.command" ok-title="OK, I pick this one!">
@@ -202,7 +202,7 @@ export default class MoveButton extends Vue {
       // each number by X instead of repeating the command X times.
       let command = (this.button.command || "") + "";
 
-      if (times && times !== 1 && typeof times === "number") {
+      if (times && typeof times === "number") {
         // the \b is necessary for things like '1t-a3', so the 3 is not caught
         command = command.replace(/\b[0-9]+/g, x => ('' + (parseInt(x) * times)));
       }
