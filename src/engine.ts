@@ -38,6 +38,8 @@ import Reward from './reward';
 import { boardActions } from './actions';
 import { stdBuildingValue } from './buildings';
 import { isAdvanced } from './tiles/techs';
+import { isNull } from 'util';
+import { range } from 'lodash';
 
 const ISOLATED_DISTANCE = 3;
 const LEECHING_DISTANCE = 2;
@@ -53,6 +55,8 @@ export interface EngineOptions {
   flexibleFederations?: boolean;
   /** Spaceship expansion */
   spaceShips?: boolean;
+  /** auction */
+  auction?: boolean;
 }
 
 /**
@@ -82,6 +86,7 @@ export interface LogEntry {
 export default class Engine {
   map: SpaceMap;
   players: Player[] = [];
+  setup: Array<{faction: Faction, player?: PlayerEnum, bid?: number}> = []
   options: EngineOptions = {};
   tiles: {
     boosters: {
@@ -548,7 +553,7 @@ export default class Engine {
    * Load turn moves.
    *
    * @param move The move string to process. Can contain multiple moves separated by a dot
-   * @param params params.processFist indicates to process the first move. params.split is set to true if leftover commands are allowed
+   * @param params params.processFirst indicates to process the first move. params.split is set to true if leftover commands are allowed
    */
   loadTurnMoves(move: string, params: {split?: boolean, processFirst?: boolean} = {split: true, processFirst: false}) {
     this.oldPhase = this.phase;
@@ -735,20 +740,39 @@ export default class Engine {
     this.moveToNextPlayer(this.turnOrder, {loop: false});
   }
 
+  beginSetupAuctionPhase() {
+    this.changePhase(Phase.SetupAuction);
+    this.turnOrder = this.players.map(pl => pl.player as PlayerEnum);
+    
+    for ( const pos of this.setup ){
+      pos.player = null;
+    };
+
+    this.moveToNextPlayer(this.turnOrder, {loop: false});
+
+  }
+
+  endSetupAuctionPhase() {
+    for ( const pos of this.setup ){
+      this.players[pos.player].loadFaction(pos.faction, this.expansions);
+    };
+
+    this.beginSetupBuildingPhase();
+  }
+
   beginSetupBuildingPhase() {
     this.changePhase(Phase.SetupBuilding);
-    const posIvits = this.players.findIndex(
-      pl => pl.faction === Faction.Ivits
+    const posIvits = this.setup.findIndex(
+      pos => pos.faction === Faction.Ivits
     );
 
-    const setupTurnOrder = this.players
-      .map((pl, i) => i as PlayerEnum)
+    const setupTurnOrder = this.setup.map(pos => pos.player)
       .filter(i => i !== posIvits);
     const reverseSetupTurnOrder = setupTurnOrder.slice().reverse();
     this.turnOrder = setupTurnOrder.concat(reverseSetupTurnOrder);
 
-    const posXenos = this.players.findIndex(
-      pl => pl.faction === Faction.Xenos
+    const posXenos = this.setup.findIndex(
+      pos => pos.faction === Faction.Xenos
     );
     if (posXenos !== -1) {
       this.turnOrder.push(posXenos as PlayerEnum);
@@ -762,20 +786,20 @@ export default class Engine {
 
   beginSetupBoosterPhase() {
     this.changePhase(Phase.SetupBooster);
-    this.turnOrder = this.players.map((pl, i) => i as PlayerEnum).reverse();
+    this.turnOrder = this.setup.map(pos => pos.player).reverse();
     this.moveToNextPlayer(this.turnOrder, {loop: false});
   }
 
   beginSetupShipPhase() {
     this.changePhase(Phase.SetupShip);
-    this.turnOrder = this.players.map((pl, i) => i as PlayerEnum);
+    this.turnOrder = this.setup.map(pos => pos.player);
     this.moveToNextPlayer(this.turnOrder, {loop: false});
   }
 
   beginRoundStartPhase() {
     this.round += 1;
     this.advancedLog.push({round: this.round});
-    this.turnOrder = this.passedPlayers || this.players.map((pl, i) => i);
+    this.turnOrder = this.passedPlayers || this.setup.map(pos => pos.player);
     this.passedPlayers = [];
     this.currentPlayer = this.turnOrder[0];
 
@@ -911,6 +935,11 @@ export default class Engine {
 
       // research VP and remaining resources
       player.data.gainFinalVictoryPoints();
+
+      //remove bids
+      for (const pos of this.setup) {
+        this.players[pos.player].gainRewards([new Reward(Math.max(Math.floor(-1*pos.bid )), Resource.VictoryPoint)], Command.Bid );
+      }
     }
   }
 
@@ -1024,7 +1053,24 @@ export default class Engine {
     this.loadTurnMoves(move, {split: false, processFirst: true});
 
     if (!this.moveToNextPlayer(this.turnOrder, {loop: false})) {
-      this.beginSetupBuildingPhase();
+      if (this.options.auction) {
+        this.beginSetupAuctionPhase();
+      } else {
+        this.endSetupAuctionPhase();
+      };
+      return;
+    }
+  }
+
+  [Phase.SetupAuction](move: string) {
+    this.loadTurnMoves(move, {processFirst: true});
+
+    const player = [...range(this.currentPlayer + 1, this.players.length), ...range(0, this.currentPlayer)].find(player => !this.setup.some(item => item.player === player));
+
+    if (player !== undefined) {
+       this.currentPlayer = player;
+    } else {
+       this.endSetupAuctionPhase();
     }
   }
 
@@ -1185,6 +1231,7 @@ export default class Engine {
     this.tiles.scorings.final = finalscoringtiles;
 
     this.players = [];
+    this.setup = []; 
 
     for (let i = 0; i < nbPlayers; i++) {
       this.addPlayer(new Player(i));
@@ -1217,8 +1264,23 @@ export default class Engine {
 
   [Command.ChooseFaction](player: PlayerEnum, faction: string) {
     assert(this.availableCommand.data.includes(faction), `${faction} is not in the available factions`);
+    this.setup.push( {faction: faction as Faction, player: player, bid: 0} );
+  }
 
-    this.players[player].loadFaction(faction as Faction, this.expansions);
+  [Command.Bid](player: PlayerEnum, faction: string, bid: number) { 
+    const bidsAC  = this.availableCommand.data.bids;
+    const bidAC = bidsAC.find( b => b.faction == faction)
+    assert( bidAC.bid.includes(+bid), 'You have to bid the right amount');
+    assert( bidAC, `${faction} is not in the available factions`);
+
+    const pos = this.setup.find(s => s.faction == faction);
+    // add previous owner to the turn
+    if (!isNull(pos.player) && !this.tempTurnOrder.includes(pos.player)) {
+      this.tempTurnOrder.push(pos.player)
+    };
+
+    pos.player = player;
+    pos.bid = +bid;
   }
 
   [Command.ChooseRoundBooster](player: PlayerEnum, booster: Booster, fromCommand: Command = Command.ChooseRoundBooster ) {

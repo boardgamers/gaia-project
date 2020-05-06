@@ -67,11 +67,12 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
         player,
         data: difference(
           Object.values(Faction),
-          engine.players.map(pl => pl.faction),
-          engine.players.map(pl => factions.opposite(pl.faction))
+          engine.setup.map(s => s.faction),
+          engine.setup.map(s => factions.opposite(s.faction))
         )
       }
     ];
+    case Phase.SetupAuction: return possibleBids(engine, player);
     case Phase.SetupBuilding: {
       const planet = engine.player(player).planet;
       const buildings = [];
@@ -765,6 +766,29 @@ export function possiblePISwaps(engine: Engine, player: Player) {
       name: Command.PISwap,
       player,
       data: { buildings }
+    });
+  }
+
+  return commands;
+}
+
+
+export function possibleBids(engine: Engine, player: Player) {
+  const commands = [];
+  const bids = [];
+
+  for ( const pos of engine.setup) {
+    bids.push({
+      faction: pos.faction,
+      bid: range(+pos.bid + 1, +pos.bid + 10)
+    })
+  }
+
+  if (bids.length > 0) {
+    commands.push({
+      name: Command.Bid,
+      player,
+      data: { bids }
     });
   }
 
