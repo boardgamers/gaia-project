@@ -779,7 +779,7 @@ export function possibleBids(engine: Engine, player: Player) {
   for ( const pos of engine.setup) {
     bids.push({
       faction: pos.faction,
-      bid: +pos.bid+1
+      bid: range(+pos.bid + 1, +pos.bid + 10)
     })
   }
 
