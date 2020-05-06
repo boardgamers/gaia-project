@@ -1,4 +1,4 @@
-import { Planet, Faction } from "..";
+import { Planet } from "..";
 
 export function terraformingStepsRequired(factionPlanet: Planet, targetPlanet: Planet): number {
   const planetCycle = [ Planet.Terra, Planet.Oxide, Planet.Volcanic, Planet.Desert, Planet.Swamp, Planet.Titanium, Planet.Ice];
