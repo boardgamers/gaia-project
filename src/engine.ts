@@ -39,6 +39,7 @@ import { boardActions } from './actions';
 import { stdBuildingValue } from './buildings';
 import { isAdvanced } from './tiles/techs';
 import { isNull } from 'util';
+import { range } from 'lodash';
 
 const ISOLATED_DISTANCE = 3;
 const LEECHING_DISTANCE = 2;
@@ -742,13 +743,12 @@ export default class Engine {
   beginSetupAuctionPhase() {
     this.changePhase(Phase.SetupAuction);
     this.turnOrder = this.players.map(pl => pl.player as PlayerEnum);
-    this.tempTurnOrder = [...this.turnOrder];
     
     for ( const pos of this.setup ){
       pos.player = null;
     };
 
-    this.moveToNextPlayer(this.tempTurnOrder, {loop: false});
+    this.moveToNextPlayer(this.turnOrder, {loop: false});
 
   }
 
@@ -1060,8 +1060,12 @@ export default class Engine {
   [Phase.SetupAuction](move: string) {
     this.loadTurnMoves(move, {processFirst: true});
 
-    if (!this.moveToNextPlayer(this.tempTurnOrder, {loop: false})) {
-      this.endSetupAuctionPhase();
+    const player = [...range(this.currentPlayer + 1, this.players.length), ...range(0, this.currentPlayer)].find(player => !this.setup.some(item => item.player === player));
+
+    if (player !== undefined) {
+       this.currentPlayer = player;
+    } else {
+       this.endSetupAuctionPhase();
     }
   }
 
