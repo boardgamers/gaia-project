@@ -86,7 +86,7 @@ export interface LogEntry {
 export default class Engine {
   map: SpaceMap;
   players: Player[] = [];
-  setup: Array<{faction: Faction, player?: PlayerEnum, bid?: number}> = []
+  setup: Array<{faction: Faction, player?: PlayerEnum, bid?: number}> = [];
   options: EngineOptions = {};
   tiles: {
     boosters: {
@@ -743,19 +743,19 @@ export default class Engine {
   beginSetupAuctionPhase() {
     this.changePhase(Phase.SetupAuction);
     this.turnOrder = this.players.map(pl => pl.player as PlayerEnum);
-    
-    for ( const pos of this.setup ){
+
+    for ( const pos of this.setup ) {
       pos.player = null;
-    };
+    }
 
     this.moveToNextPlayer(this.turnOrder, {loop: false});
 
   }
 
   endSetupAuctionPhase() {
-    for ( const pos of this.setup ){
+    for ( const pos of this.setup ) {
       this.players[pos.player].loadFaction(pos.faction, this.expansions);
-    };
+    }
 
     this.beginSetupBuildingPhase();
   }
@@ -936,9 +936,9 @@ export default class Engine {
       // research VP and remaining resources
       player.data.gainFinalVictoryPoints();
 
-      //remove bids
+      // remove bids
       for (const pos of this.setup) {
-        this.players[pos.player].gainRewards([new Reward(Math.max(Math.floor(-1*pos.bid )), Resource.VictoryPoint)], Command.Bid );
+        this.players[pos.player].gainRewards([new Reward(Math.max(Math.floor(-1 * pos.bid )), Resource.VictoryPoint)], Command.Bid );
       }
     }
   }
@@ -1057,7 +1057,7 @@ export default class Engine {
         this.beginSetupAuctionPhase();
       } else {
         this.endSetupAuctionPhase();
-      };
+      }
       return;
     }
   }
@@ -1065,7 +1065,10 @@ export default class Engine {
   [Phase.SetupAuction](move: string) {
     this.loadTurnMoves(move, {processFirst: true});
 
-    const player = [...range(this.currentPlayer + 1, this.players.length), ...range(0, this.currentPlayer)].find(player => !this.setup.some(item => item.player === player));
+    const player = [
+      ...range(this.currentPlayer + 1, this.players.length),
+      ...range(0, this.currentPlayer)
+    ].find(pl => !this.setup.some(item => item.player === pl));
 
     if (player !== undefined) {
        this.currentPlayer = player;
@@ -1231,7 +1234,7 @@ export default class Engine {
     this.tiles.scorings.final = finalscoringtiles;
 
     this.players = [];
-    this.setup = []; 
+    this.setup = [];
 
     for (let i = 0; i < nbPlayers; i++) {
       this.addPlayer(new Player(i));
@@ -1264,20 +1267,20 @@ export default class Engine {
 
   [Command.ChooseFaction](player: PlayerEnum, faction: string) {
     assert(this.availableCommand.data.includes(faction), `${faction} is not in the available factions`);
-    this.setup.push( {faction: faction as Faction, player: player, bid: 0} );
+    this.setup.push( {faction: faction as Faction, player, bid: 0} );
   }
 
-  [Command.Bid](player: PlayerEnum, faction: string, bid: number) { 
+  [Command.Bid](player: PlayerEnum, faction: string, bid: number) {
     const bidsAC  = this.availableCommand.data.bids;
-    const bidAC = bidsAC.find( b => b.faction == faction)
+    const bidAC = bidsAC.find( b => b.faction === faction);
     assert( bidAC.bid.includes(+bid), 'You have to bid the right amount');
     assert( bidAC, `${faction} is not in the available factions`);
 
-    const pos = this.setup.find(s => s.faction == faction);
+    const pos = this.setup.find(s => s.faction === faction);
     // add previous owner to the turn
     if (!isNull(pos.player) && !this.tempTurnOrder.includes(pos.player)) {
-      this.tempTurnOrder.push(pos.player)
-    };
+      this.tempTurnOrder.push(pos.player);
+    }
 
     pos.player = player;
     pos.bid = +bid;
@@ -1456,6 +1459,7 @@ export default class Engine {
 
   [`_${Command.MoveShip}`](player: PlayerEnum, ship: string, dest: string) {
     const pl = this.player(player);
+    // tslint:disable-next-line no-shadowed-variable
     const { ships, range, costs } = this.availableCommand.data;
 
     assert(ships.find(loc => loc.coordinates === (ship)), `There is no movable ship at ${ship}`);

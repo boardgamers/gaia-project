@@ -682,12 +682,12 @@ describe("auction", () => {
         p2 bid itars 1
     `);
     const engine = new Engine(moves, {auction: true});
-    expect(engine.setup[0].player).to.equal(0)
-    expect(engine.setup[1].player).to.equal(1)
+    expect(engine.setup[0].player).to.equal(0);
+    expect(engine.setup[1].player).to.equal(1);
     expect(engine.players[0].faction).to.equal(Faction.Geodens);
     expect(engine.players[1].faction).to.equal(Faction.Itars);
-    
-    
+
+
   });
 
   it ("should allow auction, geodens are good", () => {
@@ -703,12 +703,12 @@ describe("auction", () => {
     `);
 
     const engine = new Engine(moves, {auction: true});
-    expect(engine.setup[0].player).to.equal(1)
-    expect(engine.setup[1].player).to.equal(0)
-    expect(engine.setup[0].bid).to.equal(4)
-    expect(engine.setup[1].bid).to.equal(1) 
+    expect(engine.setup[0].player).to.equal(1);
+    expect(engine.setup[1].player).to.equal(0);
+    expect(engine.setup[0].bid).to.equal(4);
+    expect(engine.setup[1].bid).to.equal(1);
     expect(engine.players[0].faction).to.equal(Faction.Itars);
-    
+
   });
 
   it ("should allow auction, everyone is fine wiht the current", () => {
@@ -741,16 +741,16 @@ describe("auction", () => {
     `);
 
     const engine = new Engine(moves, {auction: true});
-    expect(engine.setup[0].player).to.equal(2)
-    expect(engine.setup[1].player).to.equal(1)
-    expect(engine.setup[2].player).to.equal(0)
-    expect(engine.setup[0].bid).to.equal(6)
-    expect(engine.setup[1].bid).to.equal(2) 
-    expect(engine.setup[2].bid).to.equal(1) 
+    expect(engine.setup[0].player).to.equal(2);
+    expect(engine.setup[1].player).to.equal(1);
+    expect(engine.setup[2].player).to.equal(0);
+    expect(engine.setup[0].bid).to.equal(6);
+    expect(engine.setup[1].bid).to.equal(2);
+    expect(engine.setup[2].bid).to.equal(1);
     expect(engine.players[0].faction).to.equal(Faction.Itars);
     expect(engine.players[1].faction).to.equal(Faction.Taklons);
     expect(engine.players[2].faction).to.equal(Faction.Geodens);
-    
+
   });
 
   it ("should throw auction, faction is not in list", () => {
@@ -840,18 +840,18 @@ describe("auction", () => {
     `);
 
     const engine = new Engine(moves, {auction: true});
-    expect(engine.setup[0].player).to.equal(0)
-    expect(engine.setup[1].player).to.equal(3)
-    expect(engine.setup[2].player).to.equal(2)
-    expect(engine.setup[3].player).to.equal(1)
-    
+    expect(engine.setup[0].player).to.equal(0);
+    expect(engine.setup[1].player).to.equal(3);
+    expect(engine.setup[2].player).to.equal(2);
+    expect(engine.setup[3].player).to.equal(1);
+
     expect(engine.players[0].faction).to.equal(Faction.Geodens);
     expect(engine.players[1].faction).to.equal(Faction.Terrans);
     expect(engine.players[2].faction).to.equal(Faction.Itars);
     expect(engine.players[3].faction).to.equal(Faction.Taklons);
-    
+
   });
-  
+
 });
 
 function parseMoves(moves: string) {

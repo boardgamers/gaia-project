@@ -781,7 +781,7 @@ export function possibleBids(engine: Engine, player: Player) {
     bids.push({
       faction: pos.faction,
       bid: range(+pos.bid + 1, +pos.bid + 10)
-    })
+    });
   }
 
   if (bids.length > 0) {
