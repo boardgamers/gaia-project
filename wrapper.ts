@@ -120,6 +120,15 @@ export function factions (engine: Engine) {
   return engine.players.map(pl => pl.faction);
 }
 
+export async function replay (engine: Engine) {
+  engine = new Engine(engine.moveHistory, engine.options);
+  automove(engine);
+
+  delete (engine as any).messages;
+
+  return engine;
+}
+
 export async function dropPlayer (engine: Engine, player: number) {
   engine = engine instanceof Engine ? engine : Engine.fromData(engine);
 
