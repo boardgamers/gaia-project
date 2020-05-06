@@ -1,5 +1,5 @@
 <template>
-  <div v-if="data.round > 0">
+  <div v-if="data.phase !== 'setupInit'">
     <table class="table table-hover table-striped table-sm">
       <!-- <thead>
         <tr>
