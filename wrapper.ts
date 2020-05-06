@@ -3,6 +3,7 @@ import Engine from './index';
 import crypto from "crypto";
 import { EngineOptions } from './src/engine';
 import { Round } from './src/enums';
+import assert from "assert";
 
 export async function init (nbPlayers: number, expansions: string[], options: EngineOptions & {balancedGeneration: boolean}, seed?: string): Promise<Engine> {
   if (!seed) {
@@ -121,7 +122,19 @@ export function factions (engine: Engine) {
 }
 
 export async function replay (engine: Engine) {
+  const oldPlayers = engine.players;
+
   engine = new Engine(engine.moveHistory, engine.options);
+
+  assert(engine.newTurn, "Last move of the game is incomplete");
+
+  for (let i = 0; i < oldPlayers.length && i < engine.players.length; i++) {
+    engine.players[i].name = oldPlayers[i].name;
+    engine.players[i].dropped = oldPlayers[i].dropped;
+  }
+
+  engine.generateAvailableCommandsIfNeeded();
+
   automove(engine);
 
   delete (engine as any).messages;
