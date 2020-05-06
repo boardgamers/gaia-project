@@ -1259,16 +1259,17 @@ export default class Engine {
   }
 
   [Command.Bid](player: PlayerEnum, faction: string, bid: number) {
-    //assert(this.availableCommand.data.bids.includes(faction), `${faction} is not in the available factions`);
-    const set = this.setup.find(s => s.faction == faction);
-
+    const pos = this.setup.find(s => s.faction == faction);
+    assert( pos, `${faction} is not in the available factions`);
+    assert( bid > pos.bid, `Youhave to spend more than ${bid}`)
+    
     // add previous owner to the turn
-    if (!isNull(set.player) && !this.tempTurnOrder.includes(set.player)) {
-      this.tempTurnOrder.push(set.player)
+    if (!isNull(pos.player) && !this.tempTurnOrder.includes(pos.player)) {
+      this.tempTurnOrder.push(pos.player)
     };
 
-    set.player = player;
-    set.bid = +bid;
+    pos.player = player;
+    pos.bid = +bid;
   }
 
   [Command.ChooseRoundBooster](player: PlayerEnum, booster: Booster, fromCommand: Command = Command.ChooseRoundBooster ) {
