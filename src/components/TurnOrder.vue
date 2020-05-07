@@ -11,6 +11,7 @@
       <g v-for="(player, index) in passedPlayers" :key="'p-' + index" :transform="`translate(${(index + 1 + turnOrder.length) * 2.5})`" style="opacity: 0.5">
         <circle :r="1"  :style='isCurrentPlayer(player) ? "stroke-width: 0.16px !important; stroke: #2c4" : "stroke-width: 0.06px !important"' :class="['player-token', 'planet-fill', planet(player,index)]" />
         <text :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(planet(player,index))}`">{{initial(player,index)}}</text>
+        <text :style="`font-size: 1px; text-anchor: middle;`" y="2">{{name(player,index)}}</text>
       </g>
     </svg>
   </div>
@@ -82,7 +83,7 @@ export default class TurnOrder extends Vue {
 
     if (this.gameData.setup[index] && !isNull(this.gameData.setup[index].player)) { 
       if (player.name) {
-        return player.name;
+        return player.name.substring(0, 3);
       } else {
         return "P" + (this.gameData.setup[index].player + 1);  
       }     
