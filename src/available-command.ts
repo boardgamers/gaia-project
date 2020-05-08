@@ -67,8 +67,8 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
         player,
         data: difference(
           Object.values(Faction),
-          engine.setup.map(s => s.faction),
-          engine.setup.map(s => factions.opposite(s.faction))
+          engine.setup.map(f => f),
+          engine.setup.map(f => factions.opposite(f))
         )
       }
     ];
@@ -777,10 +777,11 @@ export function possibleBids(engine: Engine, player: Player) {
   const commands = [];
   const bids = [];
 
-  for ( const pos of engine.setup) {
+  for ( const faction of engine.setup) {
+    const bid = engine.players.find(pl => pl.faction == faction) ? engine.players.find(pl => pl.faction == faction).data.bid : -1;
     bids.push({
-      faction: pos.faction,
-      bid: range(+pos.bid + 1, +pos.bid + 10)
+      faction,
+      bid: range( bid + 1, bid + 10) 
     });
   }
 

@@ -14,6 +14,7 @@ const MAX_TRADE_TOKENS = 15;
 
 export default class PlayerData extends EventEmitter {
   victoryPoints: number = 10;
+  bid: number = 0;
   credits: number = 0;
   ores: number = 0;
   qics: number = 0;
@@ -97,6 +98,7 @@ export default class PlayerData extends EventEmitter {
   toJSON(): Object {
     const ret = {
       victoryPoints: this.victoryPoints,
+      bid: this.bid,
       credits: this.credits,
       ores: this.ores,
       qics: this.qics,
