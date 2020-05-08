@@ -86,7 +86,7 @@ export interface LogEntry {
 export default class Engine {
   map: SpaceMap;
   players: Player[] = [];
-  setup: Array<{faction: Faction, player?: PlayerEnum, bid?: number}> = [];
+  setup: Faction[] = [];
   options: EngineOptions = {};
   tiles: {
     boosters: {
@@ -744,18 +744,17 @@ export default class Engine {
     this.changePhase(Phase.SetupAuction);
     this.turnOrder = this.players.map(pl => pl.player as PlayerEnum);
 
-    for ( const pos of this.setup ) {
-      pos.player = null;
-    }
-
     this.moveToNextPlayer(this.turnOrder, {loop: false});
-
   }
 
   endSetupAuctionPhase() {
-    for ( const pos of this.setup ) {
-      this.players[pos.player].loadFaction(pos.faction, this.expansions);
-    }
+    for ( const pl of this.players ){
+      if (pl.faction) {
+        pl.loadFaction(pl.faction, this.expansions);
+      } else {
+        pl.loadFaction(this.setup[pl.player as PlayerEnum], this.expansions);
+      }
+    };
 
     this.beginSetupBuildingPhase();
   }
@@ -763,16 +762,16 @@ export default class Engine {
   beginSetupBuildingPhase() {
     this.changePhase(Phase.SetupBuilding);
     const posIvits = this.setup.findIndex(
-      pos => pos.faction === Faction.Ivits
+      faction => faction === Faction.Ivits
     );
 
-    const setupTurnOrder = this.setup.map(pos => pos.player)
+    const setupTurnOrder = this.setup.map(faction => this.players.findIndex(pl => pl.faction == faction))
       .filter(i => i !== posIvits);
     const reverseSetupTurnOrder = setupTurnOrder.slice().reverse();
     this.turnOrder = setupTurnOrder.concat(reverseSetupTurnOrder);
 
     const posXenos = this.setup.findIndex(
-      pos => pos.faction === Faction.Xenos
+      faction => faction === Faction.Xenos
     );
     if (posXenos !== -1) {
       this.turnOrder.push(posXenos as PlayerEnum);
@@ -786,20 +785,20 @@ export default class Engine {
 
   beginSetupBoosterPhase() {
     this.changePhase(Phase.SetupBooster);
-    this.turnOrder = this.setup.map(pos => pos.player).reverse();
+    this.turnOrder = this.setup.map(faction => this.players.findIndex(pl => pl.faction == faction)).reverse();
     this.moveToNextPlayer(this.turnOrder, {loop: false});
   }
 
   beginSetupShipPhase() {
     this.changePhase(Phase.SetupShip);
-    this.turnOrder = this.setup.map(pos => pos.player);
+    this.turnOrder = this.setup.map(faction => this.players.findIndex(pl => pl.faction == faction));
     this.moveToNextPlayer(this.turnOrder, {loop: false});
   }
 
   beginRoundStartPhase() {
     this.round += 1;
     this.advancedLog.push({round: this.round});
-    this.turnOrder = this.passedPlayers || this.setup.map(pos => pos.player);
+    this.turnOrder = this.passedPlayers || this.setup.map(faction => this.players.findIndex(pl => pl.faction == faction));
     this.passedPlayers = [];
     this.currentPlayer = this.turnOrder[0];
 
@@ -927,7 +926,7 @@ export default class Engine {
         // only players that advaced are getting VPs
         // see https://boardgamegeek.com/thread/1929227/0-end-score-0-vp
         if (ranking.player && count > 0) {
-          const VPs = [18, 12, 6, 0, 0, 0];
+          const VPs = [18, 12, 6, 0, 0,     0];
 
           ranking.player.gainRewards([new Reward(Math.floor(sum(VPs.slice(first, first + ties)) / ties), Resource.VictoryPoint)], `final${index + 1}` as 'final1' | 'final2');
         }
@@ -936,9 +935,9 @@ export default class Engine {
       // research VP and remaining resources
       player.data.gainFinalVictoryPoints();
 
-      // remove bids
-      for (const pos of this.setup) {
-        this.players[pos.player].gainRewards([new Reward(Math.max(Math.floor(-1 * pos.bid )), Resource.VictoryPoint)], Command.Bid );
+      //remove bids
+      for (const pl of this.players) {
+        pl.gainRewards([new Reward(Math.max(Math.floor(-1*pl.data.bid )), Resource.VictoryPoint)], Command.Bid );
       }
     }
   }
@@ -1065,10 +1064,7 @@ export default class Engine {
   [Phase.SetupAuction](move: string) {
     this.loadTurnMoves(move, {processFirst: true});
 
-    const player = [
-      ...range(this.currentPlayer + 1, this.players.length),
-      ...range(0, this.currentPlayer)
-    ].find(pl => !this.setup.some(item => item.player === pl));
+    const player = [...range(this.currentPlayer + 1, this.players.length), ...range(0, this.currentPlayer)].find(player => !this.players.some(pl => pl.player === player && pl.faction));
 
     if (player !== undefined) {
        this.currentPlayer = player;
@@ -1267,7 +1263,7 @@ export default class Engine {
 
   [Command.ChooseFaction](player: PlayerEnum, faction: string) {
     assert(this.availableCommand.data.includes(faction), `${faction} is not in the available factions`);
-    this.setup.push( {faction: faction as Faction, player, bid: 0} );
+    this.setup.push( faction as Faction );
   }
 
   [Command.Bid](player: PlayerEnum, faction: string, bid: number) {
@@ -1276,14 +1272,14 @@ export default class Engine {
     assert( bidAC.bid.includes(+bid), 'You have to bid the right amount');
     assert( bidAC, `${faction} is not in the available factions`);
 
-    const pos = this.setup.find(s => s.faction === faction);
-    // add previous owner to the turn
-    if (!isNull(pos.player) && !this.tempTurnOrder.includes(pos.player)) {
-      this.tempTurnOrder.push(pos.player);
-    }
+    const previous = this.players.find(s => s.faction == faction);
+    // remove faction from previous owner
+    if (previous) {
+      previous.faction = undefined;
+    };
 
-    pos.player = player;
-    pos.bid = +bid;
+    this.players[player].faction = faction as Faction;
+    this.players[player].data.bid = +bid;
   }
 
   [Command.ChooseRoundBooster](player: PlayerEnum, booster: Booster, fromCommand: Command = Command.ChooseRoundBooster ) {
