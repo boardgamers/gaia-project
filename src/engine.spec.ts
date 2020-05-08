@@ -858,6 +858,31 @@ describe("auction", () => {
 
   });
 
+  it ("should throw , wrong leech order based on auction setup", () => {
+    const moves = Engine.parseMoves(`
+      init 3 randomSeed
+      p1 faction terrans
+      p2 faction geodens
+      p3 faction ambas
+      p1 bid ambas 0
+      p2 bid geodens 0
+      p3 bid terrans 0
+      terrans build m -1x-4
+      geodens build m -3x-4
+      ambas build m -2x-2
+      ambas build m -5x3
+      geodens build m -4x1
+      terrans build m -5x4
+      ambas booster booster1
+      geodens booster booster2
+      terrans booster booster3
+      terrans build ts -1x-4.
+      ambas charge 1pw
+    `);
+
+    expect(() => new Engine(moves, {auction: true})).to.throw();
+    
+  });
 });
 
 function parseMoves(moves: string) {

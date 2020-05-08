@@ -340,7 +340,14 @@ export default class Engine {
    * @param player
    */
   playersInTableOrderFrom(player: PlayerEnum): Player[] {
-    return [...this.players.slice(player), ...this.players.slice(0, player)];
+  
+    const pos = this.turnOrderAfterSetupAuction.findIndex(pl => pl === player);
+    const turn= [...this.turnOrderAfterSetupAuction.slice(pos), ...this.turnOrderAfterSetupAuction.slice(0, pos)];
+    return turn.map(pl => this.players[pl]);
+  }
+
+  get turnOrderAfterSetupAuction(): PlayerEnum[] {
+    return this.setup.map(faction => this.players.findIndex(pl => pl.faction == faction))
   }
 
   get playerToMove(): PlayerEnum {
@@ -765,8 +772,8 @@ export default class Engine {
       faction => faction === Faction.Ivits
     );
 
-    const setupTurnOrder = this.setup.map(faction => this.players.findIndex(pl => pl.faction == faction))
-      .filter(i => i !== posIvits);
+    const setupTurnOrder = this.turnOrderAfterSetupAuction
+          .filter(i => i !== posIvits);
     const reverseSetupTurnOrder = setupTurnOrder.slice().reverse();
     this.turnOrder = setupTurnOrder.concat(reverseSetupTurnOrder);
 
@@ -785,20 +792,20 @@ export default class Engine {
 
   beginSetupBoosterPhase() {
     this.changePhase(Phase.SetupBooster);
-    this.turnOrder = this.setup.map(faction => this.players.findIndex(pl => pl.faction == faction)).reverse();
+    this.turnOrder = this.turnOrderAfterSetupAuction.reverse();
     this.moveToNextPlayer(this.turnOrder, {loop: false});
   }
 
   beginSetupShipPhase() {
     this.changePhase(Phase.SetupShip);
-    this.turnOrder = this.setup.map(faction => this.players.findIndex(pl => pl.faction == faction));
+    this.turnOrder = this.turnOrderAfterSetupAuction;
     this.moveToNextPlayer(this.turnOrder, {loop: false});
   }
 
   beginRoundStartPhase() {
     this.round += 1;
     this.advancedLog.push({round: this.round});
-    this.turnOrder = this.passedPlayers || this.setup.map(faction => this.players.findIndex(pl => pl.faction == faction));
+    this.turnOrder = this.passedPlayers || this.turnOrderAfterSetupAuction;
     this.passedPlayers = [];
     this.currentPlayer = this.turnOrder[0];
 
@@ -926,7 +933,7 @@ export default class Engine {
         // only players that advaced are getting VPs
         // see https://boardgamegeek.com/thread/1929227/0-end-score-0-vp
         if (ranking.player && count > 0) {
-          const VPs = [18, 12, 6, 0, 0,     0];
+          const VPs = [18, 12, 6, 0, 0, 0];
 
           ranking.player.gainRewards([new Reward(Math.floor(sum(VPs.slice(first, first + ties)) / ties), Resource.VictoryPoint)], `final${index + 1}` as 'final1' | 'final2');
         }
