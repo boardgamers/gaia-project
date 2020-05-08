@@ -1,6 +1,6 @@
 <template>
   <div :class="{['no-faction-fill']: $store.state.gaiaViewer.preferences && $store.state.gaiaViewer.preferences.noFactionFill}">
-    <div :class="['row', 'no-gutters', 'justify-content-center', data.players.length > 2 ? 'medium-map' : 'small-map']" v-if="hasMap">
+    <div :class="['row', 'no-gutters', 'justify-content-center', engine.players.length > 2 ? 'medium-map' : 'small-map']" v-if="hasMap">
       <SpaceMap :class="['mb-1', 'space-map']" />
       <svg class="scoring-research-board" :viewBox="`0 0 ${scoringX + 90} 450`">
         <ResearchBoard :height="450" ref="researchBoard"/>
@@ -8,7 +8,7 @@
       </svg>
     </div>
     <div class="row mt-2">
-      <TurnOrder v-if="!ended && data.players.length > 0" class="col-md-4 order-4 order-md-1" />
+      <TurnOrder v-if="!ended && engine.players.length > 0" class="col-md-4 order-4 order-md-1" />
       <div class="col-md-8 order-1 order-md-2">
         <Commands @command="handleCommand" @undo="undoMove" v-if="canPlay" />
       </div>
@@ -69,36 +69,36 @@ export default class Game extends Vue {
   @Prop()
   options: EngineOptions;
 
-  get data () {
+  get engine () {
     return this.$store.state.gaiaViewer.data;
   }
 
   get ended () {
-    return this.data.phase === Phase.EndGame;
+    return this.engine.phase === Phase.EndGame;
   }
 
   get scoringX () {
-    return this.data.expansions ? 505 : 385;
+    return this.engine.expansions ? 505 : 385;
   }
 
   get orderedPlayers () {
-    const data = this.data;
+    const engine = this.engine;
 
-    if (!data.round || !data.turnOrder) {
-      return data.players;
+    if (!engine.round || !engine.turnOrder) {
+      return engine.players;
     }
-    const turnOrder = data.turnOrder;
+    const turnOrder = engine.turnOrder;
 
     // Do not switch boards anymore now that there's two in  a row
-    // if (data.turnOrder.indexOf(this.player) !== -1) {
+    // if (engine.turnOrder.indexOf(this.player) !== -1) {
     //   turnOrder = turnOrder.slice(turnOrder.indexOf(this.player)).concat(turnOrder.slice(0, turnOrder.indexOf(this.player)));
     // }
 
-    return turnOrder.concat(data.passedPlayers).map(player => data.players[player]);
+    return turnOrder.concat(engine.passedPlayers).map(player => engine.players[player]);
   }
 
   get canPlay () {
-    return !this.ended && (!this.$store.state.gaiaViewer.player || this.sessionPlayer === this.data.players[this.player]);
+    return !this.ended && (!this.$store.state.gaiaViewer.player || this.sessionPlayer === this.engine.players[this.player]);
   }
 
   get hasMap () {
@@ -106,17 +106,17 @@ export default class Game extends Vue {
   }
 
   get player () {
-    return this.data.availableCommands?.[0]?.player;
+    return this.engine.availableCommands?.[0]?.player;
   }
 
   get sessionPlayer () {
     const player = this.$store.state.gaiaViewer.player;
     if (player) {
       if (player.index !== undefined) {
-        return this.data.players[player.index];
+        return this.engine.players[player.index];
       }
       if (player.auth) {
-        return this.data.players.find(pl => pl.auth === player.auth);
+        return this.engine.players.find(pl => pl.auth === player.auth);
       }
     }
   }
@@ -146,7 +146,7 @@ export default class Game extends Vue {
   }
 
   handleCommand (command: string) {
-    if (command.startsWith(Command.Init) || this.data.round <= 0) {
+    if (command.startsWith(Command.Init) || this.engine.round <= 0) {
       this.addMove(command);
       return;
     }

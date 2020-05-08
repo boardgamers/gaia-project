@@ -22,7 +22,7 @@
     "dist/package/viewer.css"
   ],
   "dependencies": {
-    "@gaia-project/engine": "^4.0.0",
+    "@gaia-project/engine": "^4.0.1",
     "bootstrap": "^4.4.1",
     "bootstrap-vue": "^2.12.0",
     "vue": "^2.6.11",

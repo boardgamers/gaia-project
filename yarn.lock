@@ -43,10 +43,10 @@
   dependencies:
     utilise "^2.3.5"
 
-"@gaia-project/engine@^4.0.0":
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/@gaia-project/engine/-/engine-4.0.0.tgz#77f275cd2e76513b2fb1914bb07817ef17f58549"
-  integrity sha512-+Ob75eo+3Cd9kxjnWqwA+6337l94hS6g1KVu6h0XQlsGpxvi86FW2aOQhcjM0Fhy/mbGvMmtnrOeqU3MaG7yKQ==
+"@gaia-project/engine@^4.0.1":
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/@gaia-project/engine/-/engine-4.0.1.tgz#39c6e90879a44a517971b65fe129acd7cd329f16"
+  integrity sha512-zIrUM2j94fg0DRA7kufid1tYXvwmX5t9rF7O90EbbrjzFHh3a7h6tIRiCf/emynI0XXGCMfSxjJTjbp9PI8m8A==
   dependencies:
     axios "^0.19.2"
     eventemitter3 "^3.1.0"
