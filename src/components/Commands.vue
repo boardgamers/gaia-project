@@ -458,7 +458,7 @@ export default class Commands extends Vue {
 
           ret.push(...command.data.bids.map(pos => ({
             label: `Bid ${pos.bid[0]} for ${pos.faction}`,
-            command: `${Command.Bid} ${pos.faction} 1`,
+            command: `${Command.Bid} ${pos.faction} $times`,
             times: pos.bid          
             })));
           break;

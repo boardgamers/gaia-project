@@ -27,13 +27,18 @@ export default class TurnOrder extends Vue {
     return this.$store.state.gaiaViewer.data;
   }
 
+  get phaseBeforeSetupBuilding(): boolean {
+    const data = this.gameData;
+    return ( data.phase == Phase.SetupInit || data.phase == Phase.SetupBoard || data.phase == Phase.SetupFaction || data.phase == Phase.SetupAuction);
+  } 
+
   get turnOrder(): Player[] {
     const data = this.gameData;
-    if ( data.phase == Phase.SetupInit || data.phase == Phase.SetupBoard || data.phase == Phase.SetupFaction || data.phase == Phase.SetupAuction) {
+    if ( this.phaseBeforeSetupBuilding ) {
       return data.players;
     }
     if ( data.phase == Phase.SetupBuilding || data.phase == Phase.SetupBooster || data.phase == Phase.SetupShip) {
-      return data.setup.map(bid => data.players[bid.player]);
+      return data.setup.map(faction => data.players.find( pl => pl.faction == faction));
     }
     return data.turnOrder.map(player => data.players[player]);
   }
@@ -43,7 +48,7 @@ export default class TurnOrder extends Vue {
   }
 
   isCurrentPlayer(pl: Player) {
-    return this.gameData.players[this.gameData.availableCommands?.[0]?.player] === pl;
+    return this.gameData.players[this.gameData.availableCommands?.[0]?.player] === pl && !(this.gameData.phase === Phase.SetupAuction);
   }
 
   stroke (pl: Player) {
@@ -70,26 +75,22 @@ export default class TurnOrder extends Vue {
   }
 
   planet(player: Player, index: number) {
-    if (player.faction) {  return factions.planet(player.faction)  };
-
-    if (this.gameData.setup[index] && this.gameData.setup[index].faction) {
-      return factions.planet(this.gameData.setup[index].faction);
+    if (this.phaseBeforeSetupBuilding && this.gameData.setup[index]) { 
+      return factions.planet(this.gameData.setup[index]);
     }
+
+    if (player.faction) {  return factions.planet(player.faction)  };
 
     return Planet.Lost;
   }
 
   initial(player: Player, index: number) {
+    if (this.phaseBeforeSetupBuilding && this.gameData.setup[index]) {     
+      return this.gameData.setup[index][0].toUpperCase();
+    }
+
     if (player.faction) {
       return player.faction[0].toUpperCase();
-    }
-
-    if (this.gameData.setup[index] && this.gameData.setup[index].faction) {
-      return this.gameData.setup[index].faction[0].toUpperCase();
-    }
-
-    if (player.name) {
-      return player.name[0];
     }
 
     return "?";
@@ -97,13 +98,22 @@ export default class TurnOrder extends Vue {
 
   name(player: Player, index: number) {
 
-    if (this.gameData.setup[index] && !isNull(this.gameData.setup[index].player)) {
-      if (player.name) {
-        return player.name.substring(0, 3);
+    if (this.phaseBeforeSetupBuilding ) { 
+      if (this.gameData.phase === Phase.SetupAuction) {
+        player = this.gameData.players.find(pl => pl.faction == this.gameData.setup[index])
       } else {
-        return "P" + (this.gameData.setup[index].player + 1);
-      }
+        return ""
+      }      
+    } 
+
+    if (player) {
+        if (player.name) {
+          return player.name.substring(0, 3);
+        } else {
+          return "P" + (player.player + 1);  
+        };
     }
+  
     return "?";
   }
 }
