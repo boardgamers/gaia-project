@@ -60,7 +60,6 @@ typings/
 # Dist directory
 dist
 
-yarn.lock
 package-lock.json
 
 .vscode/*
@@ -69,3 +68,5 @@ package-lock.json
 
 # Folder with save data
 bin
+
+yarn-error.log

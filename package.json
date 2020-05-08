@@ -1,6 +1,6 @@
 {
   "name": "@gaia-project/engine",
-  "version": "3.4.2",
+  "version": "4.0.0",
   "description": "Javascript engine for project gaia",
   "main": "dist/index.js",
   "types": "index.ts",
@@ -14,7 +14,8 @@
     "dist",
     "index.d.ts",
     "index.ts",
-    "tsconfig.json"
+    "tsconfig.json",
+    "wrapper.ts"
   ],
   "scripts": {
     "prepublishOnly": "npm run just-test && npm run clean && tsc",
@@ -31,6 +32,7 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "axios": "^0.19.2",
     "eventemitter3": "^3.1.0",
     "hexagrid": "^2.0.1",
     "lodash": "^4.17.15",

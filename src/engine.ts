@@ -1,8 +1,8 @@
 import SpaceMap, { MapConfiguration } from './map';
-import * as assert from 'assert';
+import assert from 'assert';
 import { sortBy, omit, uniq, sum, set } from 'lodash';
 import Player from './player';
-import * as shuffleSeed from "shuffle-seed";
+import shuffleSeed from "shuffle-seed";
 import {
   Faction,
   Command,
@@ -86,7 +86,7 @@ export interface LogEntry {
 export default class Engine {
   map: SpaceMap;
   players: Player[] = [];
-  setup: Faction[] = []
+  setup: Faction[] = [];
   options: EngineOptions = {};
   tiles: {
     boosters: {
@@ -743,6 +743,7 @@ export default class Engine {
   beginSetupAuctionPhase() {
     this.changePhase(Phase.SetupAuction);
     this.turnOrder = this.players.map(pl => pl.player as PlayerEnum);
+
     this.moveToNextPlayer(this.turnOrder, {loop: false});
   }
 
@@ -875,6 +876,11 @@ export default class Engine {
 
   get ended() {
     return this.phase === Phase.EndGame;
+  }
+
+  set ended(val: boolean) {
+    assert(val, "You can't set ended to false");
+    this.phase = Phase.EndGame;
   }
 
   get isLastRound() {
@@ -1050,7 +1056,7 @@ export default class Engine {
         this.beginSetupAuctionPhase();
       } else {
         this.endSetupAuctionPhase();
-      };
+      }
       return;
     }
   }
@@ -1058,7 +1064,7 @@ export default class Engine {
   [Phase.SetupAuction](move: string) {
     this.loadTurnMoves(move, {processFirst: true});
 
-    const player = [...range(this.currentPlayer + 1, this.players.length), ...range(0, this.currentPlayer)].find(player => !this.players.some(pl => pl.player == player && pl.faction));
+    const player = [...range(this.currentPlayer + 1, this.players.length), ...range(0, this.currentPlayer)].find(player => !this.players.some(pl => pl.player === player && pl.faction));
 
     if (player !== undefined) {
        this.currentPlayer = player;
@@ -1224,7 +1230,7 @@ export default class Engine {
     this.tiles.scorings.final = finalscoringtiles;
 
     this.players = [];
-    this.setup = []; 
+    this.setup = [];
 
     for (let i = 0; i < nbPlayers; i++) {
       this.addPlayer(new Player(i));
@@ -1260,16 +1266,16 @@ export default class Engine {
     this.setup.push( faction as Faction );
   }
 
-  [Command.Bid](player: PlayerEnum, faction: string, bid: number) { 
+  [Command.Bid](player: PlayerEnum, faction: string, bid: number) {
     const bidsAC  = this.availableCommand.data.bids;
-    const bidAC = bidsAC.find( b => b.faction == faction)
+    const bidAC = bidsAC.find( b => b.faction === faction);
     assert( bidAC.bid.includes(+bid), 'You have to bid the right amount');
     assert( bidAC, `${faction} is not in the available factions`);
 
     const previous = this.players.find(s => s.faction == faction);
     // remove faction from previous owner
     if (previous) {
-      previous.faction = undefined
+      previous.faction = undefined;
     };
 
     this.players[player].faction = faction as Faction;
@@ -1449,6 +1455,7 @@ export default class Engine {
 
   [`_${Command.MoveShip}`](player: PlayerEnum, ship: string, dest: string) {
     const pl = this.player(player);
+    // tslint:disable-next-line no-shadowed-variable
     const { ships, range, costs } = this.availableCommand.data;
 
     assert(ships.find(loc => loc.coordinates === (ship)), `There is no movable ship at ${ship}`);

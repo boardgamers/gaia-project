@@ -54,6 +54,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
       ];
     }
     case SubPhase.AfterMove: return [...possibleFreeActions(engine, player), {name: Command.EndTurn, player}];
+    default: break;
   }
 
   switch (engine.phase) {
@@ -781,7 +782,7 @@ export function possibleBids(engine: Engine, player: Player) {
     bids.push({
       faction,
       bid: range( bid + 1, bid + 10) 
-    })
+    });
   }
 
   if (bids.length > 0) {

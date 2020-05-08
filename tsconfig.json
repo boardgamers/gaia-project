@@ -3,6 +3,7 @@
     /* Basic Options */
     "target": "es2018",
     "module": "commonjs",
+    "esModuleInterop": true,
     // "declaration": true,                   /* Generates corresponding '.d.ts' file. */
     "sourceMap": true,                     /* Generates corresponding '.map' file. */
     // "outFile": "./",                       /* Concatenate and emit output to single file. */
@@ -13,8 +14,8 @@
   ],
   "include": [
     "src/**/*.ts",
-    "server.ts",
-    "index.ts"
+    "index.ts",
+    "wrapper.ts"
   ],
   "exclude": [
     "node_modules",

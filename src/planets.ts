@@ -1,4 +1,4 @@
-import { Planet, Faction } from "..";
+import { Planet } from "./enums";
 
 export function terraformingStepsRequired(factionPlanet: Planet, targetPlanet: Planet): number {
   const planetCycle = [ Planet.Terra, Planet.Oxide, Planet.Volcanic, Planet.Desert, Planet.Swamp, Planet.Titanium, Planet.Ice];
@@ -16,3 +16,17 @@ export function terraformingStepsRequired(factionPlanet: Planet, targetPlanet: P
 
   return Math.abs(dist);
 }
+
+export const planetNames = {
+  [Planet.Desert]: "desert",
+  [Planet.Oxide]: "oxide",
+  [Planet.Lost]: "lost",
+  [Planet.Gaia]: "gaia",
+  [Planet.Ice]: "ice",
+  [Planet.Empty]: "empty",
+  [Planet.Swamp]: "swamp",
+  [Planet.Terra]: "terra",
+  [Planet.Titanium]: "titanium",
+  [Planet.Transdim]: "transdim",
+  [Planet.Volcanic]: "volcanic"
+};
