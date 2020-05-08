@@ -13,6 +13,7 @@ function launchSelfContained(selector = "#app", debug = true) {
     if (type === "gaiaViewer/loadFromJSON") {
       const egData: Engine = payload;
       engine = new Engine(egData.moveHistory, egData.options);
+      engine.generateAvailableCommandsIfNeeded();
       emitter.emit("state:updated", JSON.parse(JSON.stringify(engine)));
     }
   });

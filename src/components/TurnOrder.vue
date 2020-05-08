@@ -3,13 +3,13 @@
     <h5>Turn order</h5>
     <svg viewBox="-1.2 -1.2 12.5 4">
       <g v-for="(player, index) in turnOrder" :key="index" :transform="`translate(${index * 2.5})`">
-        <circle :r="1" :style='isCurrentPlayer(player) ? "stroke-width: 0.16px !important; stroke: #2c4" : "stroke-width: 0.06px !important"'  :class="['player-token', 'planet-fill', planet(player,index)]" />
+        <circle :r="1" :style='stroke(player)'  :class="['player-token', 'planet-fill', planet(player,index)]" />
         <text :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(planet(player, index))}`">{{initial(player,index)}}</text>
         <text :style="`font-size: 1px; text-anchor: middle;`" y="2">{{name(player,index)}}</text>
       </g>
 
       <g v-for="(player, index) in passedPlayers" :key="'p-' + index" :transform="`translate(${(index + 1 + turnOrder.length) * 2.5})`" style="opacity: 0.5">
-        <circle :r="1"  :style='isCurrentPlayer(player) ? "stroke-width: 0.16px !important; stroke: #2c4" : "stroke-width: 0.06px !important"' :class="['player-token', 'planet-fill', planet(player,index)]" />
+        <circle :r="1" :style='stroke(player)' :class="['player-token', 'planet-fill', planet(player,index)]" />
         <text :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(planet(player,index))}`">{{initial(player,index)}}</text>
         <text :style="`font-size: 1px; text-anchor: middle;`" y="2">{{name(player,index)}}</text>
       </g>
@@ -46,6 +46,22 @@ export default class TurnOrder extends Vue {
     return this.gameData.players[this.gameData.availableCommands?.[0]?.player] === pl;
   }
 
+  stroke (pl: Player) {
+    if (this.gameData.players[this.gameData.currentPlayer] === pl) {
+      if (this.gameData.players[this.gameData.playerToMove] === pl) {
+        return "stroke-width: 0.16px !important; stroke: #2c4";
+      } else {
+        return "stroke-width: 0.10px !important; stroke: #2c4";
+      }
+    }
+
+    if (this.gameData.players[this.gameData.tempCurrentPlayer] === pl) {
+      return "stroke-width: 0.18px !important; stroke: rgb(250, 116, 255)";
+    }
+
+    return "stroke-width: 0.06px !important";
+  }
+
   planetFill(planet: string) {
     if (planet === Planet.Titanium || planet === Planet.Swamp) {
       return "white";
@@ -55,10 +71,10 @@ export default class TurnOrder extends Vue {
 
   planet(player: Player, index: number) {
     if (player.faction) {  return factions.planet(player.faction)  };
-    
-    if (this.gameData.setup[index] && this.gameData.setup[index].faction) { 
+
+    if (this.gameData.setup[index] && this.gameData.setup[index].faction) {
       return factions.planet(this.gameData.setup[index].faction);
-    } 
+    }
 
     return Planet.Lost;
   }
@@ -68,9 +84,9 @@ export default class TurnOrder extends Vue {
       return player.faction[0].toUpperCase();
     }
 
-    if (this.gameData.setup[index] && this.gameData.setup[index].faction) { 
+    if (this.gameData.setup[index] && this.gameData.setup[index].faction) {
       return this.gameData.setup[index].faction[0].toUpperCase();
-    } 
+    }
 
     if (player.name) {
       return player.name[0];
@@ -81,13 +97,13 @@ export default class TurnOrder extends Vue {
 
   name(player: Player, index: number) {
 
-    if (this.gameData.setup[index] && !isNull(this.gameData.setup[index].player)) { 
+    if (this.gameData.setup[index] && !isNull(this.gameData.setup[index].player)) {
       if (player.name) {
         return player.name.substring(0, 3);
       } else {
-        return "P" + (this.gameData.setup[index].player + 1);  
-      }     
-    } 
+        return "P" + (this.gameData.setup[index].player + 1);
+      }
+    }
     return "?";
   }
 }
