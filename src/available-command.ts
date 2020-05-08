@@ -12,11 +12,13 @@ const ISOLATED_DISTANCE = 3;
 const UPGRADE_RESEARCH_COST = "4k";
 const QIC_RANGE_UPGRADE = 2;
 
-export default interface AvailableCommand {
+interface AvailableCommand {
   name: Command;
   data?: any;
   player?: number;
 }
+
+export default AvailableCommand;
 
 export function generate(engine: Engine, subPhase: SubPhase = null, data?: any): AvailableCommand[] {
   const player = engine.playerToMove;
@@ -279,7 +281,7 @@ export function possibleSpaceStations(engine: Engine, player: Player) {
   return [];
 }
 
-export function possibleMineBuildings(engine: Engine, player: Player, acceptGaiaFormer: boolean, data?: {buildings?: [{building: Building, coordinates: string, cost: string, steps?: number}]}) {
+export function possibleMineBuildings(engine: Engine, player: Player, acceptGaiaFormer: boolean, data?: {buildings?: [{building: Building; coordinates: string; cost: string; steps?: number}]}) {
   if (data && data.buildings) {
     return [{name: Command.Build, player, data}];
   }
@@ -628,7 +630,7 @@ export function possibleLeech(engine: Engine, player: Player) {
   if ( pl.data.leechPossible > 0) {
     const extraPower = pl.faction === Faction.Taklons && pl.data.hasPlanetaryInstitute() && !isTrade;
     const maxLeech = pl.maxLeech();
-    const offers: Array<{offer: string, cost: string}> = [];
+    const offers: Array<{offer: string; cost: string}> = [];
 
     if (isTrade) {
       offers.push({

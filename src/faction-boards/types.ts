@@ -10,14 +10,14 @@ export interface FactionBoardRaw {
   income?: string[];
   buildings?: {
     [building in Building]?: {
-      cost?: string,
-      isolatedCost?: string,
-      income?: string[][]
+      cost?: string;
+      isolatedCost?: string;
+      income?: string[][];
     }
   };
   power?: {
-    area1?: number,
-    area2?: number
+    area1?: number;
+    area2?: number;
   };
   brainstone?: BrainstoneArea;
   handlers?: {[event: string]: (player: Player, ...args: any[]) => any};
@@ -71,15 +71,15 @@ const defaultBoard: FactionBoardRaw = {
 export class FactionBoard {
   buildings: {
     [building in Building]: {
-      cost: Reward[],
-      isolatedCost?: Reward[],
-      income: Event[][],
+      cost: Reward[];
+      isolatedCost?: Reward[];
+      income: Event[][];
     }
   };
   income: Event[];
   power: {
-    area1: number,
-    area2: number
+    area1: number;
+    area2: number;
   };
   brainstone: BrainstoneArea;
   handlers?: {[event: string]: (player: Player, ...args: any[]) => any};

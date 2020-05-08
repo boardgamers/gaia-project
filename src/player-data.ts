@@ -13,22 +13,22 @@ const MAX_SHIP = 3;
 const MAX_TRADE_TOKENS = 15;
 
 export default class PlayerData extends EventEmitter {
-  victoryPoints: number = 10;
-  bid: number = 0;
-  credits: number = 0;
-  ores: number = 0;
-  qics: number = 0;
-  knowledge: number = 0;
+  victoryPoints = 10;
+  bid = 0;
+  credits = 0;
+  ores = 0;
+  qics = 0;
+  knowledge = 0;
   get ships() {
     return this.shipLocations.length;
   }
   tradeTokens = 0;
   wildTradeTokens = 0;
   power: {
-    area1: number,
-    area2: number,
-    area3: number,
-    gaia: number
+    area1: number;
+    area2: number;
+    area3: number;
+    gaia: number;
   } = {
     area1: 0,
     area2: 0,
@@ -41,25 +41,25 @@ export default class PlayerData extends EventEmitter {
     [key in Building]: number
   } = fromPairs(Object.values(Building).map(bld => [bld, 0])) as any;
 
-  satellites: number = 0;
+  satellites = 0;
   research: {
     [key in ResearchField]: number
   } = {
     terra: 0, nav: 0, int: 0, gaia: 0, eco: 0, sci: 0, trade: 0, ship: 0
   };
-  range: number = 1;
-  shipRange: number = 0;
-  movingShips: number = 1;
+  range = 1;
+  shipRange = 0;
+  movingShips = 1;
   /** Total number of gaiaformers gained (including those on the board & the gaia area) */
-  gaiaformers: number = 0;
+  gaiaformers = 0;
   /** number of gaiaformers gained that are in gaia area */
-  gaiaformersInGaia: number = 0;
-  terraformCostDiscount: number = 0;
+  gaiaformersInGaia = 0;
+  terraformCostDiscount = 0;
 
   tiles: {
     booster: Booster;
-    techs: Array<{ tile: TechTile | AdvTechTile, pos: TechTilePos | AdvTechTilePos, enabled: boolean}>
-    federations: Array<{tile: Federation, green: boolean}>
+    techs: Array<{ tile: TechTile | AdvTechTile; pos: TechTilePos | AdvTechTilePos; enabled: boolean}>;
+    federations: Array<{tile: Federation; green: boolean}>;
   } = {
     booster: null,
     techs: [],
@@ -67,35 +67,35 @@ export default class PlayerData extends EventEmitter {
   };
 
   /** Number of federations built (used for ivits) */
-  federationCount: number = 0;
+  federationCount = 0;
 
   /** Coordinates occupied by buildings */
   occupied: GaiaHex[] = [];
   shipLocations: string[] = [];
   leechPossible: number;
-  tokenModifier: number = 1;
-  lostPlanet: number = 0;
-  advancedShips: number = 0;
+  tokenModifier = 1;
+  lostPlanet = 0;
+  advancedShips = 0;
   // When placing ships. Not internal (because of income command on site)
-  shipsToPlace: number = 0;
-  autoChargePower: number = 1;
+  shipsToPlace = 0;
+  autoChargePower = 1;
 
   // Internal variables, not meant to be in toJSON():
   followBrainStoneHeuristics = true;
   brainstoneDest: BrainstoneArea | "discard";
-  temporaryRange: number = 0;
-  temporaryShipRange: number = 0; // unused for now, using temporaryRange instead
-  temporaryStep: number = 0;
-  qicUsedToBoostShip: number = 0;
-  movableShips: number = 0;
+  temporaryRange = 0;
+  temporaryShipRange = 0; // unused for now, using temporaryRange instead
+  temporaryStep = 0;
+  qicUsedToBoostShip = 0;
+  movableShips = 0;
   movableShipLocations: string[] = [];
   canUpgradeResearch = true;
   turns = 0;
   // when picking rewards
-  toPick: {rewards: Reward[], count: number, source: EventSource} = undefined;
+  toPick: {rewards: Reward[]; count: number; source: EventSource} = undefined;
 
 
-  toJSON(): Object {
+  toJSON(): Record<string, any> {
     const ret = {
       victoryPoints: this.victoryPoints,
       bid: this.bid,
@@ -284,7 +284,7 @@ export default class PlayerData extends EventEmitter {
    *
    * @param power Power charged
    */
-  chargePower(power: number, apply: boolean = true): number {
+  chargePower(power: number, apply = true): number {
     let brainstoneUsage = 0;
     let brainstonePos = this.brainstone;
 

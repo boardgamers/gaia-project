@@ -29,7 +29,7 @@ export enum Expansion {
 }
 
 export namespace ResearchField {
-  export function values(expansions: number = 0): ResearchField[] {
+  export function values(expansions = 0): ResearchField[] {
     const ret = [ResearchField.Terraforming, ResearchField.Navigation, ResearchField.Intelligence, ResearchField.GaiaProject, ResearchField.Economy, ResearchField.Science];
 
     if (expansions & Expansion.Spaceships) {
@@ -243,7 +243,7 @@ export enum Booster {
 }
 
 export namespace Booster {
-  export function values(expansions: number = 0): Booster[] {
+  export function values(expansions = 0): Booster[] {
     return (Object.values(Booster) as Booster[]).filter((val: Booster) => {
       if (typeof val !== "string") {return; }
       if (/^booster[0-9]/.test(val)) {
@@ -274,7 +274,7 @@ export enum TechTile {
 }
 
 export namespace TechTile {
-  export function values(expansions: number = 0): TechTile[] {
+  export function values(expansions = 0): TechTile[] {
     return (Object.values(TechTile) as TechTile[]).filter((val: TechTile) => {
       if (typeof val !== "string") {return; }
       if (/^tech[0-9]/.test(val)) {
@@ -304,7 +304,7 @@ export enum TechTilePos {
 }
 
 export namespace TechTilePos {
-  export function values(expansions: number = 0): TechTilePos[] {
+  export function values(expansions = 0): TechTilePos[] {
     const ret = ["terra", "nav", "int", "gaia", "eco", "sci", "free1", "free2", "free3"] as TechTilePos[];
 
     if (expansions & Expansion.Spaceships) {
@@ -340,7 +340,7 @@ export enum AdvTechTile {
 }
 
 export namespace AdvTechTile {
-  export function values(expansions: number = 0): AdvTechTile[] {
+  export function values(expansions = 0): AdvTechTile[] {
     return (Object.values(AdvTechTile) as AdvTechTile[]).filter((val: AdvTechTile) => {
       if (typeof val !== "string") {return; }
       if (val.startsWith('advtech')) {
@@ -365,7 +365,7 @@ export enum AdvTechTilePos {
 }
 
 export namespace AdvTechTilePos {
-  export function values(expansions: number = 0): AdvTechTilePos[] {
+  export function values(expansions = 0): AdvTechTilePos[] {
     const ret = ["adv-terra", "adv-nav", "adv-int", "adv-gaia", "adv-eco", "adv-sci"] as AdvTechTilePos[];
 
     if (expansions & Expansion.Spaceships) {
@@ -441,7 +441,7 @@ export enum ScoringTile {
 }
 
 export namespace ScoringTile {
-  export function values(expansions: number = 0): ScoringTile[] {
+  export function values(expansions = 0): ScoringTile[] {
     return (Object.values(ScoringTile) as ScoringTile[]).filter((val: ScoringTile) => {
       if (typeof val !== "string") {return; }
       if (/^score[0-9]/.test(val)) {
@@ -466,7 +466,7 @@ export enum FinalTile {
 }
 
 export namespace FinalTile {
-  export function values(expansions: number = 0): FinalTile[] {
+  export function values(expansions = 0): FinalTile[] {
     const ret = [FinalTile.Structure, FinalTile.StructureFed, FinalTile.PlanetType, FinalTile.Gaia, FinalTile.Sector, FinalTile.Satellite];
 
     if (expansions & Expansion.Spaceships) {

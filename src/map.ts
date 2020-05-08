@@ -85,7 +85,7 @@ export default class SpaceMap {
   grid: Grid<GaiaHex>; // hexagrid
   distanceCache: {[coord: string]: {[coord: string]: number}} = {};
 
-  constructor(nbPlayers ?: number, seed ?: string, mirror?: boolean) {
+  constructor(nbPlayers?: number, seed?: string, mirror?: boolean) {
     if (nbPlayers === undefined) {
       return;
     }
@@ -121,7 +121,7 @@ export default class SpaceMap {
   /**
    *  Check if the map is correct (no two HOME planets of the same color side by side - following german rules)
    */
-  isValid(germanRules: boolean = true): boolean {
+  isValid(germanRules = true): boolean {
     for (const hex of this.grid.values()) {
       for (const nb of this.grid.neighbours(hex)) {
         if (germanRules) {
@@ -165,7 +165,7 @@ export default class SpaceMap {
     }
   }
 
-  chooseSides(): Array<{map: string, name: string}> {
+  chooseSides(): Array<{map: string; name: string}> {
     const definitions = this.configuration().sectors;
     // Random sort of the chosen sectors, sliced
     return shuffleSeed.shuffle(definitions, this.rng()).slice(0, this.configuration().nbSectors);

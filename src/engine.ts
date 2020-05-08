@@ -1,6 +1,6 @@
 import SpaceMap, { MapConfiguration } from './map';
 import assert from 'assert';
-import { sortBy, omit, uniq, sum, set } from 'lodash';
+import { sortBy, uniq, sum, set } from 'lodash';
 import Player from './player';
 import shuffleSeed from "shuffle-seed";
 import {
@@ -91,17 +91,17 @@ export default class Engine {
   tiles: {
     boosters: {
       [key in Booster]?: boolean
-    },
+    };
     techs: {
       [key in TechTilePos | AdvTechTilePos]?: {tile: TechTile | AdvTechTile; count: number}
-    },
+    };
     scorings: {
-      round: ScoringTile[]
-      final: FinalTile[]
-    },
+      round: ScoringTile[];
+      final: FinalTile[];
+    };
     federations: {
       [key in Federation]?: number
-    }
+    };
   } = {boosters: {}, techs: {}, scorings: {round: null, final: null}, federations: {}};
   boardActions: {
     [key in BoardAction]?: boolean
@@ -133,9 +133,9 @@ export default class Engine {
   // used to transit between phases
   tempTurnOrder: PlayerEnum[] = [];
   tempCurrentPlayer: PlayerEnum;
-  leechSources: Array<{player: PlayerEnum, coordinates: string, tradeDelivery?: PlayerEnum}> = [];
+  leechSources: Array<{player: PlayerEnum; coordinates: string; tradeDelivery?: PlayerEnum}> = [];
   // When ongoing leech, remember the source in case
-  lastLeechSource: {player: PlayerEnum, coordinates: string, tradeDelivery?: PlayerEnum};
+  lastLeechSource: {player: PlayerEnum; coordinates: string; tradeDelivery?: PlayerEnum};
 
   // All moves
   moveHistory: string[] = [];
@@ -144,7 +144,7 @@ export default class Engine {
   // Current move being processed, separated in phase
   turnMoves: string[] = [];
   // Tells the UI if the new move should be on the same line or not
-  newTurn: boolean = true;
+  newTurn = true;
 
   constructor(moves: string[] = [], options: EngineOptions = {}) {
     this.options = options;
@@ -340,14 +340,14 @@ export default class Engine {
    * @param player
    */
   playersInTableOrderFrom(player: PlayerEnum): Player[] {
-  
+
     const pos = this.turnOrderAfterSetupAuction.findIndex(pl => pl === player);
     const turn= [...this.turnOrderAfterSetupAuction.slice(pos), ...this.turnOrderAfterSetupAuction.slice(0, pos)];
     return turn.map(pl => this.players[pl]);
   }
 
   get turnOrderAfterSetupAuction(): PlayerEnum[] {
-    return this.setup.map(faction => this.players.findIndex(pl => pl.faction == faction))
+    return this.setup.map(faction => this.players.findIndex(pl => pl.faction == faction));
   }
 
   get playerToMove(): PlayerEnum {
@@ -562,7 +562,7 @@ export default class Engine {
    * @param move The move string to process. Can contain multiple moves separated by a dot
    * @param params params.processFirst indicates to process the first move. params.split is set to true if leftover commands are allowed
    */
-  loadTurnMoves(move: string, params: {split?: boolean, processFirst?: boolean} = {split: true, processFirst: false}) {
+  loadTurnMoves(move: string, params: {split?: boolean; processFirst?: boolean} = {split: true, processFirst: false}) {
     this.oldPhase = this.phase;
 
     const playerS = move.substr(0, move.indexOf(' '));
@@ -699,7 +699,7 @@ export default class Engine {
     return true;
   }
 
-  handleNextGaia(afterCommand: boolean = false) {
+  handleNextGaia(afterCommand = false) {
     const player = this.player(this.currentPlayer);
 
     if (!afterCommand) {
@@ -761,7 +761,7 @@ export default class Engine {
       } else {
         pl.loadFaction(this.setup[pl.player as PlayerEnum], this.expansions);
       }
-    };
+    }
 
     this.beginSetupBuildingPhase();
   }
@@ -899,7 +899,7 @@ export default class Engine {
     this.advancedLog.push({phase: Phase.EndGame});
     this.currentPlayer = this.tempCurrentPlayer = undefined;
 
-    const allRankings: Array<Array<{player: Player, count: number}>> = [];
+    const allRankings: Array<Array<{player: Player; count: number}>> = [];
 
     // finalScoring tiles
     for (const tile of this.tiles.scorings.final) {
@@ -1283,7 +1283,7 @@ export default class Engine {
     // remove faction from previous owner
     if (previous) {
       previous.faction = undefined;
-    };
+    }
 
     this.players[player].faction = faction as Faction;
     this.players[player].data.bid = +bid;

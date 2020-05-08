@@ -62,10 +62,10 @@ export default class Event {
   source: EventSource;
   rewards: Reward[];
   /** Number of rewards to pick. Default to ALL */
-  toPick: number = 0;
-  activated: boolean = false;
+  toPick = 0;
+  activated = false;
 
-  constructor(spec: string | {spec: string, source: EventSource}, source?: EventSource) {
+  constructor(spec: string | {spec: string; source: EventSource}, source?: EventSource) {
     if (typeof spec === "object") {
       this.spec = spec.spec;
       this.source = spec.source;
@@ -104,7 +104,7 @@ export default class Event {
     return {spec: this.toString(), source: this.source};
   }
 
-  action(): {rewards: string, enabled: boolean} {
+  action(): {rewards: string; enabled: boolean} {
     const idx = this.spec.indexOf('=>');
     const ret = {rewards: this.spec.slice(idx + 2).trim(), enabled: !this.activated};
 

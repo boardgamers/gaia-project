@@ -753,9 +753,9 @@ describe("auction", () => {
 
     const engine = new Engine(moves, {auction: true});
 
-    expect(engine.players[2].data.bid).to.equal(6)
-    expect(engine.players[1].data.bid).to.equal(2) 
-    expect(engine.players[0].data.bid).to.equal(1) 
+    expect(engine.players[2].data.bid).to.equal(6);
+    expect(engine.players[1].data.bid).to.equal(2); 
+    expect(engine.players[0].data.bid).to.equal(1); 
 
     expect(engine.players[0].faction).to.equal(Faction.Itars);
     expect(engine.players[1].faction).to.equal(Faction.Taklons);

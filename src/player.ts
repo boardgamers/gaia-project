@@ -153,7 +153,7 @@ export default class Player extends EventEmitter {
     }
   }
 
-  gainRewards(rewards: Reward[], source: EventSource, toPick: number = 0) {
+  gainRewards(rewards: Reward[], source: EventSource, toPick = 0) {
     if (toPick) {
       this.data.toPick = {count: toPick, rewards: [...rewards], source};
       this.emit("pick-rewards");
@@ -185,7 +185,7 @@ export default class Player extends EventEmitter {
     }
   }
 
-  canBuild(targetPlanet: Planet, building: Building, {isolated, addedCost, existingBuilding}: {isolated?: boolean, addedCost?: Reward[], existingBuilding?: Building} = {}): {cost?: Reward[], possible: boolean, steps?: number} {
+  canBuild(targetPlanet: Planet, building: Building, {isolated, addedCost, existingBuilding}: {isolated?: boolean; addedCost?: Reward[]; existingBuilding?: Building} = {}): {cost?: Reward[]; possible: boolean; steps?: number} {
     if (this.data.buildings[building] >= this.maxBuildings(building)) {
       // Too many buildings of the same kind
       return {possible: false};
@@ -517,7 +517,7 @@ export default class Player extends EventEmitter {
     this.removeEvents(Event.parse(techs[tile.tile], `tech-${pos}` as TechPos));
   }
 
-  needIncomeSelection(): { events?: Event[], needed: boolean, descs: Reward[]} {
+  needIncomeSelection(): { events?: Event[]; needed: boolean; descs: Reward[]} {
     // we need to check if rewards contains Resource.GainToken and Resource.GainPower
     // player has to select the order
     const allEvents = this.events[Operator.Income].filter( ev => !ev.activated);
@@ -635,7 +635,7 @@ export default class Player extends EventEmitter {
     this.data.gaiaformersInGaia = 0;
   }
 
-  buildingValue(hex: GaiaHex, options?: {federation?: boolean, building?: Building}) {
+  buildingValue(hex: GaiaHex, options?: {federation?: boolean; building?: Building}) {
     const building = options?.building ?? hex.buildingOf(this.player);
     const forFederation = options?.federation ?? false;
 
@@ -945,7 +945,7 @@ export default class Player extends EventEmitter {
     return 7;
   }
 
-  possibleCombinationsForFederations(nodes: Array<{hexes: GaiaHex[], value: number}>, toReach = this.federationCost): GaiaHex[][][] {
+  possibleCombinationsForFederations(nodes: Array<{hexes: GaiaHex[]; value: number}>, toReach = this.federationCost): GaiaHex[][][] {
     const ret: GaiaHex[][][] = [];
 
     for (let i = 0; i < nodes.length; i ++) {
