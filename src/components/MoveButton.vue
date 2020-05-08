@@ -12,18 +12,13 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
+import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import {GaiaHex, TechTilePos, AdvTechTilePos, Booster, Command, SpaceMap} from '@gaia-project/engine';
-import {HighlightHexData, ButtonData} from '../data';
+import { GaiaHex, TechTilePos, AdvTechTilePos, Booster, Command, SpaceMap } from '@gaia-project/engine';
+import { HighlightHexData, ButtonData } from '../data';
 
 @Component({
-  computed: {
-    isActiveButton() {
-      return this.$store.state.gaiaViewer.context.activeButton && this.$store.state.gaiaViewer.context.activeButton.label === this.button.label;
-    }
-  },
-  destroyed() {
+  destroyed () {
     this.unsubscribe();
   }
 })
@@ -33,21 +28,21 @@ export default class MoveButton extends Vue {
   public button: ButtonData;
 
   private subscription: () => {} = null;
-  private modalShow: boolean = false;
+  private modalShow = false;
   private customLabel = '';
   private startingHex = null; // For range command
 
-  modalCancel(arg: string) {
+  modalCancel (arg: string) {
     this.$emit("cancel");
   }
 
-  subscribe(action: string, callback: any) {
+  subscribe (action: string, callback: any) {
     action = "gaiaViewer/" + action;
 
     this.unsubscribe();
     this.$store.commit("gaiaViewer/activeButton", this.button);
 
-    this.subscription = (this.$store as any).subscribeAction(({type, payload}) => {
+    this.subscription = (this.$store as any).subscribeAction(({ type, payload }) => {
       if (type !== action) {
         return;
       }
@@ -60,18 +55,18 @@ export default class MoveButton extends Vue {
     });
   }
 
-  subscribeFinal(action: string) {
-    this.subscribe(action, field => this.emitCommand(field, {final: true}));
-    this.emitCommand(null, {disappear: false});
+  subscribeFinal (action: string) {
+    this.subscribe(action, field => this.emitCommand(field, { final: true }));
+    this.emitCommand(null, { disappear: false });
   }
 
-  unsubscribe() {
+  unsubscribe () {
     if (this.subscription) {
       this.subscription();
     }
   }
 
-  handleClick() {
+  handleClick () {
     if (this.button.hide) {
       console.log("click on hidden button, ignoring");
       return;
@@ -126,7 +121,7 @@ export default class MoveButton extends Vue {
         const keys: GaiaHex[] = [...highlighted.keys()];
         this.$store.commit("gaiaViewer/highlightHexes", new Map([...keys.map(key => [key, null])] as any));
       });
-    } else if( this.button.modal ) {
+    } else if (this.button.modal) {
       this.modalShow = true;
     } else if (this.button.rotation) {
       if (this.isActiveButton) {
@@ -140,7 +135,7 @@ export default class MoveButton extends Vue {
 
       this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
       this.subscribe('hexClick', hex => this.$store.commit("gaiaViewer/rotate", hex));
-      this.customLabel = "Sector rotations finished"
+      this.customLabel = "Sector rotations finished";
     } else if (this.button.range) {
       console.log("range click");
       this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
@@ -153,13 +148,13 @@ export default class MoveButton extends Vue {
         this.startingHex = hex;
 
         const map: SpaceMap = this.$store.state.gaiaViewer.data.map;
-        const {range, costs} = this.button;
+        const { range, costs } = this.button;
 
         const highlighted = new Map();
 
         const withinDistance = map.withinDistance(hex, range);
         for (const target of withinDistance) {
-          highlighted.set(target, {cost: costs?.[map.distance(hex, target)] ?? '~'});
+          highlighted.set(target, { cost: costs?.[map.distance(hex, target)] ?? '~' });
         }
 
         this.$store.commit("gaiaViewer/highlightHexes", highlighted);
@@ -173,19 +168,19 @@ export default class MoveButton extends Vue {
     }
   }
 
-  handleRangeClick(times: number) {
-    this.emitCommand(null, {times});
+  handleRangeClick (times: number) {
+    this.emitCommand(null, { times });
   }
 
-  handleOK() {
+  handleOK () {
     this.emitCommand();
   }
 
-  emitCommand(append?: string, params?: {disappear?: boolean, final?: boolean, times?: number}) {
+  emitCommand (append?: string, params?: {disappear?: boolean; final?: boolean; times?: number}) {
     console.log("emit command", this.button.command, append);
 
-    params = Object.assign({}, {disappear: true, final: false, times: 1}, params)
-    const {disappear, final, times} = params;
+    params = Object.assign({}, { disappear: true, final: false, times: 1 }, params);
+    const { disappear, final, times } = params;
 
     if (disappear) {
       this.unsubscribe();
@@ -215,7 +210,7 @@ export default class MoveButton extends Vue {
     this.$emit('trigger', commandBody.join(" "), this, final);
   }
 
-  hover() {
+  hover () {
     if (!this.button.hover || this.$store.state.gaiaViewer.context.activeButton !== null) {
       return;
     }
@@ -223,16 +218,17 @@ export default class MoveButton extends Vue {
     this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
   }
 
-  leave() {
+  leave () {
     if (!this.button.hover || this.$store.state.gaiaViewer.context.activeButton !== null) {
       return;
     }
 
     this.$store.commit("gaiaViewer/clearContext");
   }
-}
-export default interface MoveButton {
-  isActiveButton: boolean;
+
+  get isActiveButton () {
+    return this.$store.state.gaiaViewer.context.activeButton && this.$store.state.gaiaViewer.context.activeButton.label === this.button.label;
+  }
 }
 
 </script>

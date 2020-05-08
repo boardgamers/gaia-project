@@ -1,4 +1,4 @@
-import {Condition, Event, Operator, Reward, Resource} from "@gaia-project/engine";
+import { Condition, Event, Operator, Reward, Resource } from "@gaia-project/engine";
 
 const conditionsCount = {
   [Condition.Mine]: "mine",
@@ -16,7 +16,7 @@ const conditionsCount = {
   [Condition.Trade]: "trade token",
   [Condition.AdvanceResearch]: "level reached in any research track",
   [Condition.PlanetsWithTradeToken]: "planet with a trade token (max 8)"
-}
+};
 
 const conditionsTrigger = {
   [Condition.Mine]: "building a mine",
@@ -28,7 +28,7 @@ const conditionsTrigger = {
   [Condition.AdvanceResearch]: "advancing a level in research",
   [Condition.TerraformStep]: "terraforming a planet one step",
   [Condition.Trade]: "delivering trade"
-}
+};
 
 const operators = {
   [Operator.Pass]: "After passing,",
@@ -38,9 +38,9 @@ const operators = {
   [Operator.Trigger]: "When ",
   [Operator.Special]: "Planetary institutes and academies have a power value of 4, when building federations and charging power.",
   [Operator.AdvShip4]: "Gain two spaceships. Move them with a bonus range of 4 in addition to their normal range."
-}
+};
 
-function rewardDesc(rewards: Reward[]) {
+function rewardDesc (rewards: Reward[]) {
   return rewards.map(reward => {
     switch (reward.type) {
       case Resource.TechTile: return `gain ${reward.count} tech tile${reward.count > 1 ? 's' : ''}`;
@@ -55,7 +55,7 @@ function rewardDesc(rewards: Reward[]) {
   }).join(", ");
 }
 
-export function eventDesc(event: Event) {
+export function eventDesc (event: Event) {
   const operatorString = operators[event.operator];
   const conditionString = event.operator === Operator.Trigger ? conditionsTrigger[event.condition] + "," : (conditionsCount[event.condition] && "for each " + conditionsCount[event.condition] + ",");
   const rewardString = event.rewards.length === 0 ? '' : rewardDesc(event.rewards);

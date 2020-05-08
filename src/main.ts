@@ -5,7 +5,7 @@ console.log(process.env);
 
 if (process.env.VUE_APP_BGIO) {
   launch("#app");
-} else if (process.env.VUE_APP_SelfContained || 1) {
+} else /* if (process.env.VUE_APP_SelfContained || 1) */ {
   launchSelfContained();
 } /* else {
   launch("#app");

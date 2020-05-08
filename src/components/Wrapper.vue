@@ -13,21 +13,21 @@
   </div>
 </template>
 <script lang="ts">
-import {Vue, Prop, Watch, Component} from "vue-property-decorator";
+import { Vue, Prop, Watch, Component } from "vue-property-decorator";
 import Game from "./Game.vue";
 
-@Component ({
-  components: {Game}
+@Component({
+  components: { Game }
 })
 export default class Wrapper extends Vue {
   modalShow = false;
   text = "";
 
-  handleOK() {
+  handleOK () {
     this.$store.dispatch("gaiaViewer/loadFromJSON", JSON.parse(this.text));
   }
 
-  openExport() {
+  openExport () {
     this.text = JSON.stringify(this.$store.state.gaiaViewer.data);
     this.modalShow = true;
   }

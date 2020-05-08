@@ -10,7 +10,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
+import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import { ResearchField, Player, Federation, Resource as ResourceEnum, researchTracks, Event, Reward, Operator, Planet as PlanetEnum } from '@gaia-project/engine';
 import { descriptions } from '../data/research';
@@ -21,31 +21,28 @@ import Resource from './Resource.vue';
 
 @Component<ResearchTile>({
   computed: {
-    players(): Player[] {
-      return this.$store.state.gaiaViewer.data.players.filter(player => player.faction && player.data.research[this.field] == this.level);
+    players (): Player[] {
+      return this.$store.state.gaiaViewer.data.players.filter(player => player.faction && player.data.research[this.field] === this.level);
     },
-    tooltip() {
+    tooltip () {
       return `<b>Level ${this.level}:</b> ${descriptions[this.field][this.level]}`;
     },
-    highlighted(): boolean {
-      return this.$store.state.gaiaViewer.context.highlighted.researchTiles.has(this.field + "-" + this.level)
+    height () {
+      return (this.level === 0 || this.level === 5) ? 46 : 36;
     },
-    height() {
-      return (this.level == 0 || this.level == 5) ? 46 : 36
-    },
-    federation(): Federation {
-      if (this.level == 5) {
+    federation (): Federation {
+      if (this.level === 5) {
         if (this.field === ResearchField.Terraforming) {
           return this.$store.state.gaiaViewer.data.terraformingFederation;
         } else if (this.field === ResearchField.TradingVolume && this.players.length === 0) {
           return Federation.Ship;
         }
-      }   
+      }
     },
-    lostPlanet(): PlanetEnum {
-      if (this.level == 5 && this.field === ResearchField.Navigation) {
+    lostPlanet (): PlanetEnum {
+      if (this.level === 5 && this.field === ResearchField.Navigation) {
         for (const pl of this.players) {
-          if ( pl.data.lostPlanet ) { return undefined }
+          if (pl.data.lostPlanet) { return undefined; }
         }
         return PlanetEnum.Lost;
       }
@@ -61,63 +58,65 @@ import Resource from './Resource.vue';
 export default class ResearchTile extends Vue {
   @Prop()
   field: ResearchField;
+
   @Prop()
   y: number;
+
   @Prop()
   level: number;
 
-  resourceX(index: number) {
+  resourceX (index: number) {
     const res = this.resources;
     const l = res.length;
     const sep = l <= 2 ? 7 : 6;
 
-    return - 6 * (l - 1) + index * 2 * sep - (res[0].count as any === '+' ? 2 : 0)
+    return -6 * (l - 1) + index * 2 * sep - (res[0].count as any === '+' ? 2 : 0);
   }
 
-  tokenX(index: number) {
-    return 10 + 13*(index%4) + 22*(index > 3 ? 1 : 0);
+  tokenX (index: number) {
+    return 10 + 13 * (index % 4) + 22 * (index > 3 ? 1 : 0);
   }
 
-  tokenY(index: number) {
-    return 10 + 13*(index > 3 ? 1 : 0);
+  tokenY (index: number) {
+    return 10 + 13 * (index > 3 ? 1 : 0);
   }
 
-  onClick() {
+  onClick () {
     if (this.highlighted) {
-      this.$store.dispatch('gaiaViewer/researchClick', this.field)
+      this.$store.dispatch('gaiaViewer/researchClick', this.field);
     }
   }
 
-  label() {
-       
-    if (this.field == ResearchField.Terraforming) {
-      return this.level == 0 ? "cost 3" : this.level == 2 ? "cost 2" : this.level == 3 ? "cost 1" : "";
+  label () {
+    if (this.field === ResearchField.Terraforming) {
+      return this.level === 0 ? "cost 3" : this.level === 2 ? "cost 2" : this.level === 3 ? "cost 1" : "";
     };
-    if (this.field == ResearchField.Navigation) {
-      return this.level == 0 ? "nav 1" : this.level == 2 ? "nav 2" : this.level == 4 ? "nav 3" : this.level == 5 ? "nav 4" : "";
+    if (this.field === ResearchField.Navigation) {
+      return this.level === 0 ? "nav 1" : this.level === 2 ? "nav 2" : this.level === 4 ? "nav 3" : this.level === 5 ? "nav 4" : "";
     };
-    if (this.field == ResearchField.GaiaProject) {
-      return this.level == 5 ? '4vp, g>vp' : "";
+    if (this.field === ResearchField.GaiaProject) {
+      return this.level === 5 ? '4vp, g>vp' : "";
     };
-      
+
     return '';
   }
 
-  get resources() {
+  get resources () {
     const events = researchTracks[this.field][this.level].map(s => new Event(s)).slice(0, 1);
 
-    const rewards = Reward.merge(...events.map(ev => ev.rewards), this.level == 37 ? [new Reward('-3pw')] : []);
+    const rewards = Reward.merge(...events.map(ev => ev.rewards), this.level === 3 ? [new Reward('-3pw')] : []);
 
     if (events[0] && events[0].operator === Operator.Income) {
       rewards.unshift(new Reward('+', ResourceEnum.None));
       rewards[0].count = '+' as any;
     }
-    
+
     return rewards;
   }
-}
-export default interface ResearchTile {
-  highlighted: boolean;
+
+  get highlighted (): boolean {
+    return this.$store.state.gaiaViewer.context.highlighted.researchTiles.has(this.field + "-" + this.level);
+  }
 }
 </script>
 
@@ -165,12 +164,10 @@ svg {
 
   }
 
-
   text {
     font-family: arial;
     font-size: 10px;
     fill: black;
-
 
     &.levDesc {
       dominant-baseline: central;
@@ -178,7 +175,7 @@ svg {
       fill: white;
       pointer-events: none;
     }
-  
+
   }
 }
 

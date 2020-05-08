@@ -8,35 +8,31 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
+import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import { tiles, Event } from '@gaia-project/engine';
 import { eventDesc } from '../data/event';
 
 @Component<Booster>({
   computed: {
-    tileObject() {
+    tileObject () {
       return tiles.boosters[this.booster];
     },
 
-    event1() {
+    event1 () {
       return this.tileObject[0];
     },
 
-    event2() {
+    event2 () {
       return this.tileObject[1];
     },
 
-    title() {
+    title () {
       return this.booster;
     },
 
-    tooltip() {
+    tooltip () {
       return `- ${eventDesc(new Event(this.event1))}\n- ${eventDesc(new Event(this.event2))}`;
-    },
-
-    highlighted() {
-      return this.$store.state.gaiaViewer.context.highlighted.boosters.has(this.booster);
     }
   }
 })
@@ -46,17 +42,17 @@ export default class Booster extends Vue {
 
   @Prop()
   disabled: boolean;
-  
-  onClick() {
+
+  onClick () {
     if (this.highlighted) {
       this.$store.dispatch("gaiaViewer/boosterClick", this.booster);
     }
   }
-}
-export default interface TechTile {
-  highlighted: boolean;
-}
 
+  get highlighted () {
+    return this.$store.state.gaiaViewer.context.highlighted.boosters.has(this.booster);
+  }
+}
 </script>
 
 <style lang="scss" scoped>

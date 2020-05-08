@@ -1,4 +1,4 @@
-import {TechTilePos, GaiaHex, AdvTechTilePos, Booster, Federation} from "@gaia-project/engine";
+import { TechTilePos, GaiaHex, AdvTechTilePos, Booster, Federation } from "@gaia-project/engine";
 
 export interface ButtonData {
   label?: string;
@@ -32,12 +32,12 @@ export type HighlightHexData = Map<GaiaHex, {cost?: string}>;
 
 export interface GameContext {
   highlighted: {
-    hexes: HighlightHexData,
-    researchTiles: Set<string>,
-    techs: Set<TechTilePos | AdvTechTilePos>,
-    boosters: Set<Booster>,
-    actions: Set<string>,
-    federations: Set<Federation>
+    hexes: HighlightHexData;
+    researchTiles: Set<string>;
+    techs: Set<TechTilePos | AdvTechTilePos>;
+    boosters: Set<Booster>;
+    actions: Set<string>;
+    federations: Set<Federation>;
   };
 
   rotation: Map<string, number>;

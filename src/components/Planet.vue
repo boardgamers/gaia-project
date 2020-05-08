@@ -16,14 +16,15 @@ import { Planet as PlanetEnum, factions, Faction } from '@gaia-project/engine';
 export default class Planet extends Vue {
   @Prop()
   planet: PlanetEnum;
+
   @Prop()
   faction: Faction;
 
-  get radius() {
+  get radius () {
     return planets[this.planet].radius;
   }
 
-  get fill() {
+  get fill () {
     // Comment for planet staying planets!
     if (this.faction) {
       return factions.planet(this.faction);
@@ -43,7 +44,7 @@ svg {
     stroke-width: 0.04;
     fill: none;
     pointer-events: none;
-    
+
     // terra
     &.r {stroke: $terra }
     // desert
@@ -70,7 +71,7 @@ svg {
     .no-faction-fill &.faction-fill {
       display: none;
     }
-    
+
     // terra
     &.r {fill: $terra }
     // desert

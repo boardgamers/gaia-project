@@ -7,39 +7,39 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
+import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import { tiles, PlayerEnum, Event, TechTilePos, AdvTechTilePos } from '@gaia-project/engine';
 import { eventDesc } from '../data/event';
 
 @Component<TechTile>({
   computed: {
-    tileObject() {
+    tileObject () {
       return this.$store.state.gaiaViewer.data.tiles.techs[this.pos];
     },
 
-    tile() {
+    tile () {
       return this.tileObject.tile;
     },
 
-    count() {
+    count () {
       if (this.player !== undefined) {
         return 1;
       }
       return this.tileObject.count;
     },
 
-    rawContent() {
+    rawContent () {
       return tiles.techs[this.tile][0];
     },
 
-    content() {
+    content () {
       const val = this.rawContent;
 
       return val.length > 10 && val[0] !== '=' ? val.replace(/ /g, '') : val;
     },
 
-    title() {
+    title () {
       // Only show count if there are more players than tech tiles available
       if (this.count > 1 && this.$store.state.gaiaViewer.data.players.length > 4) {
         return `${this.pos} (${this.count})`;
@@ -48,33 +48,30 @@ import { eventDesc } from '../data/event';
       return this.pos;
     },
 
-    tooltip() {
+    tooltip () {
       return eventDesc(new Event(this.rawContent));
-    },
-
-    highlighted() {
-      return this.$store.state.gaiaViewer.context.highlighted.techs.has(this.pos);
     }
   }
 })
 export default class TechTile extends Vue {
   @Prop()
   pos: TechTilePos | AdvTechTilePos;
-  
+
   @Prop()
   player: PlayerEnum;
 
   @Prop()
   covered: boolean;
 
-  onClick() {
+  onClick () {
     if (this.highlighted) {
       this.$store.dispatch("gaiaViewer/techClick", this.pos);
     }
   }
-}
-export default interface TechTile {
-  highlighted: boolean;
+
+  get highlighted () {
+    return this.$store.state.gaiaViewer.context.highlighted.techs.has(this.pos);
+  }
 }
 
 </script>

@@ -5,7 +5,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
+import Vue from 'vue';
 import { Component } from 'vue-property-decorator';
 import { GaiaHex, SpaceMap as SpaceMapData } from '@gaia-project/engine';
 import { hexCenter } from "../graphics/hex";
@@ -14,10 +14,7 @@ import { CubeCoordinates } from 'hexagrid';
 
 @Component<SpaceMap>({
   computed: {
-    map(this: SpaceMap): SpaceMapData {
-      return this.$store.state.gaiaViewer.data.map
-    },
-    right() {
+    right () {
       return (this.$store.state.gaiaViewer.data.players || []).length > 2 ? 33.5 : 26;
     }
   },
@@ -26,20 +23,21 @@ import { CubeCoordinates } from 'hexagrid';
   }
 })
 export default class SpaceMap extends Vue {
-  hexCenter(hex: GaiaHex) {
+  hexCenter (hex: GaiaHex) {
     return hexCenter(hex);
   }
 
-  get sectors(): CubeCoordinates[] {
+  get sectors (): CubeCoordinates[] {
     return this.map.configuration().centers;
   }
 
-  rotation(center: CubeCoordinates) {
+  rotation (center: CubeCoordinates) {
     return this.$store.state.gaiaViewer.context.rotation.get(`${center.q}x${center.r}`) || 0;
   }
-}
-export default interface SpaceMap {
-  map: SpaceMapData
+
+  get map (this: SpaceMap): SpaceMapData {
+    return this.$store.state.gaiaViewer.data.map;
+  }
 }
 
 </script>

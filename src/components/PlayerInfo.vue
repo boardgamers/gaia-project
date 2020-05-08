@@ -54,7 +54,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
+import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import { Player, factions, tiles, PlayerData, Planet, Federation, terraformingStepsRequired, Building, Condition } from '@gaia-project/engine';
 import { factionColor } from '../graphics/utils';
@@ -68,11 +68,6 @@ import PowerBowls from './PlayerBoard/PowerBowls.vue';
 import { factionDesc, planetsWithSteps } from '../data/factions';
 
 @Component({
-  computed: {
-    data() {
-      return this.player ? this.player.data : null;
-    }
-  },
   components: {
     TechTile,
     Booster,
@@ -87,60 +82,60 @@ export default class PlayerInfo extends Vue {
   @Prop()
   player: Player;
 
-  playerClick(player: Player) {
+  get data () {
+    return this.player ? this.player.data : null;
+  }
+
+  playerClick (player: Player) {
     this.$store.dispatch("gaiaViewer/playerClick", player);
   }
 
-  get factionColor() {
+  get factionColor () {
     return factionColor(this.player.faction);
   }
 
-  get name() {
+  get name () {
     if (this.player.name) {
       return this.player.name;
     }
     return "Player " + (this.player.player + 1);
   }
 
-  get tooltip() {
-      return factionDesc(this.player.faction);
+  get tooltip () {
+    return factionDesc(this.player.faction);
   }
 
-  get planet() {
+  get planet () {
     return factions[this.player.faction].planet;
   }
 
-  get factionName(): string {
+  get factionName (): string {
     return factions[this.player.faction].name;
   }
 
-  planetFill(planet: string) {
+  planetFill (planet: string) {
     if (planet === Planet.Titanium || planet === Planet.Swamp) {
       return "white";
     }
     return "black";
   }
 
-  planetsWithSteps(steps: number) {
+  planetsWithSteps (steps: number) {
     return planetsWithSteps(this.planet, steps);
   }
 
-  get passed() {
+  get passed () {
     return (this.$store.state.gaiaViewer.data.passedPlayers || []).includes(this.player.player);
   }
 
-  get round() {
+  get round () {
     return this.$store.state.gaiaViewer.data.round;
   }
 
-  get hasPlanets() {
+  get hasPlanets () {
     return this.player.ownedPlanets.length > 0;
   }
 }
-export default interface PlayerInfo {
-  data: PlayerData;
-}
-
 </script>
 
 <style lang="scss">

@@ -13,7 +13,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
+import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import { ResearchField, BoardAction as BoardActionEnum } from '@gaia-project/engine';
 import ResearchTrack from './ResearchTrack.vue';
@@ -22,20 +22,20 @@ import BoardAction from "./BoardAction.vue";
 
 @Component({
   computed: {
-    fields(): ResearchField[] {
+    fields (): ResearchField[] {
       return ResearchField.values(this.expansions);
     },
-    actions(): BoardActionEnum[] {
+    actions (): BoardActionEnum[] {
       return BoardActionEnum.values(this.expansions);
     },
-    expansions() {
+    expansions () {
       return this.$store.state.gaiaViewer.data.expansions;
     },
-    viewWidth() {
+    viewWidth () {
       return this.fields.length * 60;
     },
-    width() {
-      return this.height/440*this.viewWidth;
+    width () {
+      return this.height / 440 * this.viewWidth;
     }
   },
   components: {
@@ -45,7 +45,7 @@ import BoardAction from "./BoardAction.vue";
   }
 })
 export default class ResearchBoard extends Vue {
-  @Prop({default: 450})
+  @Prop({ default: 450 })
   height: number
 }
 </script>

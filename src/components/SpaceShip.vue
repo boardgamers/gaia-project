@@ -4,27 +4,30 @@
   </g>
 </template>
 <script lang="ts">
-import Vue from 'vue'
+import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import { factions, Faction, Planet } from '@gaia-project/engine';
 
 /** Code similar to Token. See if it can be refactored / inherited */
 @Component
 export default class Ship extends Vue {
-  @Prop({default: 'automa'})
+  @Prop({ default: 'automa' })
   faction: Faction | 'automa';
-  @Prop({default: 1})
+
+  @Prop({ default: 1 })
   scale: number;
-  @Prop({default: 0})
+
+  @Prop({ default: 0 })
   x: number;
-  @Prop({default: 0})
+
+  @Prop({ default: 0 })
   y: number;
 
-  get animated() {
+  get animated () {
     return this.scale < 1;
   }
 
-  get planet(): Planet {
+  get planet (): Planet {
     return this.faction === 'automa' ? Planet.Lost : factions.planet(this.faction);
   }
 }
@@ -49,4 +52,3 @@ export default class Ship extends Vue {
   }
 
 </style>
-

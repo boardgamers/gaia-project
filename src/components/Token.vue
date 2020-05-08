@@ -5,7 +5,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
+import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import { factions, Faction, Planet } from '@gaia-project/engine';
 
@@ -13,12 +13,14 @@ import { factions, Faction, Planet } from '@gaia-project/engine';
 export default class PlayerToken extends Vue {
   @Prop()
   faction: Faction | 'automa';
+
   @Prop()
   scale: number;
+
   @Prop()
   planet: Planet;
 
-  get renderPlanet(): Planet {
+  get renderPlanet (): Planet {
     if (this.planet) {
       return this.planet;
     }

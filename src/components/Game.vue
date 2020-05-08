@@ -26,9 +26,9 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
+import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import Engine,{ Command,Phase,factions, Player, EngineOptions, Expansion } from '@gaia-project/engine';
+import Engine, { Command, Phase, factions, Player, EngineOptions, Expansion } from '@gaia-project/engine';
 
 import AdvancedLog from './AdvancedLog.vue';
 import Commands from './Commands.vue';
@@ -40,54 +40,8 @@ import SpaceMap from './SpaceMap.vue';
 import TurnOrder from './TurnOrder.vue';
 
 @Component<Game>({
-  computed: {
-    data() {
-      return this.$store.state.gaiaViewer.data;
-    },
-    ended() {
-      return this.data.phase === Phase.EndGame;
-    },
-    scoringX() {
-      return this.data.expansions ? 505 : 385;
-    },
-    orderedPlayers() {
-      const data = this.data;
-
-      if (!data.round || !data.turnOrder) {
-        return data.players;
-      }
-      let turnOrder = data.turnOrder;
-
-      // Do not switch boards anymore now that there's two in  a row
-      // if (data.turnOrder.indexOf(this.player) !== -1) {
-      //   turnOrder = turnOrder.slice(turnOrder.indexOf(this.player)).concat(turnOrder.slice(0, turnOrder.indexOf(this.player)));
-      // }
-
-      return turnOrder.concat(data.passedPlayers).map(player => data.players[player]);
-    },
-    canPlay() {
-      return !this.ended && (!this.$store.state.gaiaViewer.player || this.sessionPlayer === this.data.players[this.player]);
-    },
-    hasMap() {
-      return !!this.$store.state.gaiaViewer.data.map;
-    },
-    player() {
-      return this.data.availableCommands?.[0]?.player;
-    },
-    sessionPlayer() {
-      const player = this.$store.state.gaiaViewer.player;
-      if (player) {
-        if (player.index !== undefined) {
-          return this.data.players[player.index];
-        }
-        if (player.auth) {
-          return this.data.players.find(pl => pl.auth === player.auth);
-        }
-      }
-    }
-  },
-  created(this: Game) {
-    const unsub = this.$store.subscribeAction(({type, payload}) => {
+  created (this: Game) {
+    const unsub = this.$store.subscribeAction(({ type, payload }) => {
       if (type === "gaiaViewer/externalData") {
         this.handleData(Engine.fromData(payload));
       }
@@ -103,7 +57,7 @@ import TurnOrder from './TurnOrder.vue';
     ResearchBoard,
     ScoringBoard,
     SpaceMap,
-    TurnOrder,
+    TurnOrder
   }
 })
 export default class Game extends Vue {
@@ -115,7 +69,59 @@ export default class Game extends Vue {
   @Prop()
   options: EngineOptions;
 
-  handleData(data: Engine, keepMoveHistory?: boolean) {
+  get data () {
+    return this.$store.state.gaiaViewer.data;
+  }
+
+  get ended () {
+    return this.data.phase === Phase.EndGame;
+  }
+
+  get scoringX () {
+    return this.data.expansions ? 505 : 385;
+  }
+
+  get orderedPlayers () {
+    const data = this.data;
+
+    if (!data.round || !data.turnOrder) {
+      return data.players;
+    }
+    const turnOrder = data.turnOrder;
+
+    // Do not switch boards anymore now that there's two in  a row
+    // if (data.turnOrder.indexOf(this.player) !== -1) {
+    //   turnOrder = turnOrder.slice(turnOrder.indexOf(this.player)).concat(turnOrder.slice(0, turnOrder.indexOf(this.player)));
+    // }
+
+    return turnOrder.concat(data.passedPlayers).map(player => data.players[player]);
+  }
+
+  get canPlay () {
+    return !this.ended && (!this.$store.state.gaiaViewer.player || this.sessionPlayer === this.data.players[this.player]);
+  }
+
+  get hasMap () {
+    return !!this.$store.state.gaiaViewer.data.map;
+  }
+
+  get player () {
+    return this.data.availableCommands?.[0]?.player;
+  }
+
+  get sessionPlayer () {
+    const player = this.$store.state.gaiaViewer.player;
+    if (player) {
+      if (player.index !== undefined) {
+        return this.data.players[player.index];
+      }
+      if (player.auth) {
+        return this.data.players.find(pl => pl.auth === player.auth);
+      }
+    }
+  }
+
+  handleData (data: Engine, keepMoveHistory?: boolean) {
     console.log("handle data", keepMoveHistory);
 
     for (const sector of document.getElementsByClassName('sector') as any as Element[]) {
@@ -139,7 +145,7 @@ export default class Game extends Vue {
     });
   }
 
-  handleCommand(command: string) {
+  handleCommand (command: string) {
     if (command.startsWith(Command.Init) || this.data.round <= 0) {
       this.addMove(command);
       return;
@@ -153,14 +159,14 @@ export default class Game extends Vue {
     }
 
     if (this.currentMove && !this.clearCurrentMove) {
-      this.addMove(this.currentMove + `. ${command.slice(move.player.length+1)}`);
+      this.addMove(this.currentMove + `. ${command.slice(move.player.length + 1)}`);
     } else {
       this.clearCurrentMove = false;
       this.addMove(command);
     }
   }
 
-  undoMove() {
+  undoMove () {
     if (this.currentMove.includes(".")) {
       this.currentMove = this.currentMove.slice(0, this.currentMove.lastIndexOf("."));
     } else {
@@ -169,12 +175,12 @@ export default class Game extends Vue {
     this.addMove(this.currentMove);
   }
 
-  addMove(command: string) {
+  addMove (command: string) {
     this.$store.commit("gaiaViewer/clearContext");
     this.$store.dispatch("gaiaViewer/move", command);
   }
 
-  parseMove(command: string): {player: string, command: string, args: string[]} {
+  parseMove (command: string): {player: string; command: string; args: string[]} {
     command = command.trim();
 
     if (command.includes('.')) {
@@ -189,15 +195,6 @@ export default class Game extends Vue {
       args: split.slice(2)
     };
   }
-}
-
-// Used for type augmentation from computed properties
-export default interface Game {
-  data: Engine;
-  player: number;
-
-  canPlay: boolean;
-  ended: boolean;
 }
 </script>
 

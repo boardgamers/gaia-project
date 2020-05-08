@@ -12,7 +12,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
+import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import { Resource as ResourceEnum } from '@gaia-project/engine';
 import Building from './Building.vue';
@@ -32,7 +32,6 @@ export default class Resource extends Vue {
   count: number;
 }
 </script>
-
 
 <style lang="scss">
 @import '../stylesheets/planets.scss';

@@ -68,7 +68,7 @@
 import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import Resource from '../Resource.vue';
-import {Building as BuildingEnum, Faction, Reward, Operator, Resource as ResourceEnum, factions, PlayerData, Player} from '@gaia-project/engine';
+import { Building as BuildingEnum, Faction, Reward, Operator, Resource as ResourceEnum, factions, PlayerData, Player } from '@gaia-project/engine';
 
 @Component({
   components: {
@@ -78,20 +78,22 @@ import {Building as BuildingEnum, Faction, Reward, Operator, Resource as Resourc
 export default class BuildingGroup extends Vue {
   @Prop()
   faction: Faction;
+
   @Prop()
   data: PlayerData;
+
   @Prop()
   player: Player;
 
-  get factionName(): string {
+  get factionName (): string {
     return factions[this.faction].name;
   }
 
-  get spaceShips(): boolean {
+  get spaceShips (): boolean {
     return (this.$store.state.gaiaViewer.data.expansions % 2) === 1;
   }
 
-  income(resource: ResourceEnum) {
+  income (resource: ResourceEnum) {
     const index = this.player.income.search(new RegExp('[0-9]+' + resource));
 
     if (index < 0) {

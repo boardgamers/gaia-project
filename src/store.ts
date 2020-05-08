@@ -26,51 +26,51 @@ const gaiaViewer = {
     preferences: {
       noFactionFill: false
     },
-    player: null as {index?: number, auth?: string} | null
+    player: null as {index?: number; auth?: string} | null
   },
   mutations: {
-    receiveData(state, data: Engine) {
+    receiveData (state, data: Engine) {
       state.data = data;
       state.context.rotation = new Map();
     },
 
-    highlightHexes(state, hexes: Map<GaiaHex, {cost?: string}>) {
+    highlightHexes (state, hexes: Map<GaiaHex, {cost?: string}>) {
       state.context.highlighted.hexes = hexes;
     },
 
-    highlightResearchTiles(state, tiles: string[]) {
+    highlightResearchTiles (state, tiles: string[]) {
       state.context.highlighted.researchTiles = new Set(tiles);
     },
 
-    highlightTechs(state, techs: Array<TechTilePos | AdvTechTilePos>) {
+    highlightTechs (state, techs: Array<TechTilePos | AdvTechTilePos>) {
       state.context.highlighted.techs = new Set(techs);
     },
 
-    highlightBoosters(state, boosters: Booster[]) {
+    highlightBoosters (state, boosters: Booster[]) {
       state.context.highlighted.boosters = new Set(boosters);
     },
 
-    highlightActions(state, actions: string[]) {
+    highlightActions (state, actions: string[]) {
       state.context.highlighted.actions = new Set(actions);
     },
 
-    highlightFederations(state, federations: Federation[]) {
+    highlightFederations (state, federations: Federation[]) {
       state.context.highlighted.federations = new Set(federations);
     },
 
-    selectHexes(state, defaultHexes) {
+    selectHexes (state, defaultHexes) {
       state.context.hexSelection = true;
       state.context.highlighted.hexes = new Map(defaultHexes || []);
     },
 
-    rotate(state, coords: CubeCoordinates) {
+    rotate (state, coords: CubeCoordinates) {
       const coordsStr = `${coords.q}x${coords.r}`;
 
       state.context.rotation.set(coordsStr, (state.context.rotation.get(coordsStr) || 0) + 1);
       state.context.rotation = new Map(state.context.rotation.entries());
     },
 
-    clearContext(state) {
+    clearContext (state) {
       state.context.highlighted.hexes = new Map();
       state.context.highlighted.researchTiles = new Set();
       state.context.highlighted.techs = new Set();
@@ -82,39 +82,39 @@ const gaiaViewer = {
       state.context.activeButton = null;
     },
 
-    activeButton(state, button) {
+    activeButton (state, button) {
       state.context.activeButton = button;
     },
 
-    preferences(state, preferences) {
+    preferences (state, preferences) {
       state.preferences = preferences;
     },
 
-    player(state, data) {
+    player (state, data) {
       state.player = data;
     }
   },
   actions: {
     // No body, used for signalling with store.subscribeAction
-    hexClick(context, hex: GaiaHex) {},
-    researchClick(context, field: ResearchField) {},
-    techClick(context, pos: TechTilePos | AdvTechTilePos) {},
-    boosterClick(context, booster: Booster) {},
-    actionClick(context, action: string) {},
-    federationClick(context, federation: Federation) {},
-    playerClick(context, player: Player) {},
-    confirmClick(context, action: string) {},
+    hexClick (context, hex: GaiaHex) {},
+    researchClick (context, field: ResearchField) {},
+    techClick (context, pos: TechTilePos | AdvTechTilePos) {},
+    boosterClick (context, booster: Booster) {},
+    actionClick (context, action: string) {},
+    federationClick (context, federation: Federation) {},
+    playerClick (context, player: Player) {},
+    confirmClick (context, action: string) {},
     // API COMMUNICATOIN
-    move(context, move: string) {},
-    externalData(context, data: Engine) {},
+    move (context, move: string) {},
+    externalData (context, data: Engine) {},
     // WRAPPER / DEBUG COMMUNICATION
-    loadFromJSON(context, data: any) {}
+    loadFromJSON (context, data: any) {}
   },
   getters: {
   }
-}
+};
 
-function makeStore() {
+function makeStore () {
   return new Vuex.Store({
     modules: {
       gaiaViewer
@@ -124,4 +124,4 @@ function makeStore() {
 
 export default makeStore();
 
-export {gaiaViewer, makeStore};
+export { gaiaViewer, makeStore };

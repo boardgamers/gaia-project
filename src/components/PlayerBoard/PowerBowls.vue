@@ -31,7 +31,7 @@
 import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import Resource from '../Resource.vue';
-import {Faction, Reward, FactionBoard, Operator, Resource as ResourceEnum, factions, PlayerData, Player} from '@gaia-project/engine';
+import { Faction, Reward, FactionBoard, Operator, Resource as ResourceEnum, factions, PlayerData, Player } from '@gaia-project/engine';
 
 @Component({
   components: {
@@ -41,32 +41,34 @@ import {Faction, Reward, FactionBoard, Operator, Resource as ResourceEnum, facti
 export default class BuildingGroup extends Vue {
   @Prop()
   faction: Faction;
+
   @Prop()
   data: PlayerData;
+
   @Prop()
   player: Player;
 
-  get r() {
+  get r () {
     return 2;
   }
 
-  get spacing() {
+  get spacing () {
     return 1.1;
   }
 
-  get sin60() {
+  get sin60 () {
     return 0.86602540378;
   }
 
-  get isTerran() {
+  get isTerran () {
     return this.faction === Faction.Terrans;
   }
 
-  power(area: string) {
+  power (area: string) {
     return this.data.power[area] + (this.data.brainstone === area ? "(b)" : "");
   }
 
-  income(resource: ResourceEnum) {
+  income (resource: ResourceEnum) {
     const index = this.player.income.search(new RegExp('[0-9]+' + resource));
 
     if (index < 0) {

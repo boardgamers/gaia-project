@@ -14,7 +14,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
+import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import { ResearchField } from '@gaia-project/engine';
 import ResearchTile from './ResearchTile.vue';

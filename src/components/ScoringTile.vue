@@ -7,30 +7,30 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
+import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import { tiles, Event, Phase} from '@gaia-project/engine';
+import { tiles, Event, Phase } from '@gaia-project/engine';
 import { eventDesc } from '../data/event';
 
 @Component<ScoringTile>({
   computed: {
-    tile(this: ScoringTile) {
+    tile (this: ScoringTile) {
       return this.$store.state.gaiaViewer.data.tiles.scorings.round[this.round - 1];
     },
 
-    content() {
+    content () {
       return tiles.roundScorings[this.tile][0];
     },
 
-    tooltip() {
+    tooltip () {
       return eventDesc(new Event(this.content));
     },
 
-    highlighted() {
+    highlighted () {
       return this.$store.state.gaiaViewer.data.round === this.round && !this.faded;
     },
 
-    faded() {
+    faded () {
       return this.$store.state.gaiaViewer.data.round > this.round || this.$store.state.gaiaViewer.data.phase === Phase.EndGame;
     }
   }

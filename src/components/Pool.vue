@@ -2,13 +2,13 @@
   <div class="container-fluid">
     <div class="pool pb-0 mb-1 row no-gutters" v-if="$store.state.gaiaViewer.data.tiles && $store.state.gaiaViewer.data.tiles.techs['gaia']">
       <Booster v-for="booster in boosters" :key="booster" :booster="booster" class="mb-2 mr-1"  />
-      <FederationTile v-for="(numTiles, tile, i) in federations" :key="`${tile}-${i}`" :federation="tile" :numTiles="numTiles" v-if="numTiles" class="mb-2 mr-1" />
+      <FederationTile v-for="([tile, numTiles], i) in federations" :key="`${tile}-${i}`" :federation="tile" :numTiles="numTiles" class="mb-2 mr-1" />
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
+import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import Booster from './Booster.vue';
 import FederationTile from "./FederationTile.vue";
@@ -16,11 +16,11 @@ import { Booster as BoosterEnum, Expansion } from '@gaia-project/engine';
 
 @Component({
   computed: {
-    boosters() {
+    boosters () {
       return BoosterEnum.values(Expansion.All).filter(key => this.$store.state.gaiaViewer.data.tiles.boosters[key]);
     },
-    federations() {
-      return this.$store.state.gaiaViewer.data.tiles.federations;
+    federations () {
+      return Object.entries(this.$store.state.gaiaViewer.data.tiles.federations).filter(([key, value]) => value > 0);
     }
   },
   components: {

@@ -9,17 +9,17 @@
       </thead> -->
       <tbody>
         <tr class="major-event" v-if="data.phase === 'endGame'"><td colspan=3>Game Ended</td></tr>
-        <tr v-for="event in history">
+        <tr v-for="(event, i) in history" :key=history.length-i>
           <td v-if="event.entry.round" class="major-event">Round {{event.entry.round}}</td>
           <td v-else-if="event.entry.phase==='roundIncome'" class="phase-change">Income phase</td>
           <td v-else-if="event.entry.phase==='roundGaia'" class="phase-change">Gaia phase</td>
           <td v-else-if="event.entry.phase==='endGame'" class="phase-change">End scoring</td>
           <td v-else>{{event.move || data.players[event.entry.player].faction}}</td>
           <td style="width: 1px; white-space: nowrap;">
-            <div v-for="(changes, source) in event.entry.changes" v-html="source === 'undefined' ? '&nbsp;' : source" />
+            <div v-for="(changes, source, i) in event.entry.changes" v-html="source === 'undefined' ? '&nbsp;' : source" :key=i />
           </td>
           <td style="width: 1px; white-space: nowrap;">
-            <div v-for="(changes, source) in event.entry.changes">
+            <div v-for="(changes, source, i) in event.entry.changes" :key=i>
               {{Object.keys(changes).map(key => `${changes[key]}${key}`).join(', ')}}
             </div>
           </td>
@@ -31,16 +31,16 @@
 </template>
 <script lang="ts">
 
-import Vue from 'vue'
+import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import Engine, {LogEntry} from '@gaia-project/engine';
+import Engine, { LogEntry } from '@gaia-project/engine';
 
 @Component({
   computed: {
-    data() {
+    data () {
       return this.$store.state.gaiaViewer.data;
     },
-    history(): Array<{move: string, entry: LogEntry}> {
+    history (): Array<{move: string; entry: LogEntry}> {
       const ret = [];
       let advancedLogIndex = 0;
       let nextLogEntry = this.data.advancedLog[advancedLogIndex];
@@ -48,16 +48,16 @@ import Engine, {LogEntry} from '@gaia-project/engine';
       const bumpLog = () => {
         advancedLogIndex += 1;
         nextLogEntry = this.data.advancedLog[advancedLogIndex];
-      }
+      };
 
       this.data.moveHistory.forEach((move, i) => {
         while (nextLogEntry && (nextLogEntry.move === undefined || nextLogEntry.move < i)) {
           if (nextLogEntry.player === undefined || !!nextLogEntry.changes) {
-            ret.push({entry: nextLogEntry});
+            ret.push({ entry: nextLogEntry });
           }
           bumpLog();
         }
-        const entry = {move, entry: {} as LogEntry};
+        const entry = { move, entry: {} as LogEntry };
         if (nextLogEntry && nextLogEntry.move === i) {
           entry.entry = nextLogEntry;
           bumpLog();
@@ -65,12 +65,12 @@ import Engine, {LogEntry} from '@gaia-project/engine';
         ret.push(entry);
         while (nextLogEntry && nextLogEntry.move === undefined) {
           if (nextLogEntry.player === undefined || !!nextLogEntry.changes) {
-            ret.push({entry: nextLogEntry});
+            ret.push({ entry: nextLogEntry });
           }
           bumpLog();
         }
       });
-      
+
       ret.reverse();
       return ret;
     }

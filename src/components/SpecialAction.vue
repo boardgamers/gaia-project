@@ -3,7 +3,7 @@
     <g :class='["specialAction", {highlighted, disabled}]'>
       <polygon points="-1,0.5 -0.5,1 0.5,1 1,0.5 1,-0.5 0.5,-1 -0.5,-1 -1,-0.5" transform="scale(24)" @click="onClick" />
       <text>
-        <tspan x="0" v-for="(line, i) in income" :dy="`${i === 0 ? - 0.5*(income.length - 1)*11 : 11}px`" :key="i"> 
+        <tspan x="0" v-for="(line, i) in income" :dy="`${i === 0 ? - 0.5*(income.length - 1)*11 : 11}px`" :key="i">
           {{line.replace(/ /g, '')}}
         </tspan>
       </text>
@@ -12,18 +12,14 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
+import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import { tiles, Event} from '@gaia-project/engine';
+import { tiles, Event } from '@gaia-project/engine';
 import { eventDesc } from '../data/event';
 
 @Component<SpecialAction>({
   computed: {
-    highlighted() {
-      return this.$store.state.gaiaViewer.context.highlighted.actions.has(this.action);
-    },
-
-    income() {
+    income () {
       return this.action.includes(',') ? this.action.split(',') : this.action.split('-');
     }
   }
@@ -35,15 +31,16 @@ export default class SpecialAction extends Vue {
   @Prop()
   action: string;
 
-  onClick() {
+  onClick () {
     if (!this.highlighted) {
       return;
     }
     this.$store.dispatch("gaiaViewer/actionClick", this.action);
   }
-}
-export default interface SpecialAction {
-  highlighted: boolean;
+
+  get highlighted () {
+    return this.$store.state.gaiaViewer.context.highlighted.actions.has(this.action);
+  }
 }
 
 </script>

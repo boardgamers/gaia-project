@@ -4,14 +4,14 @@ import launchSelfContained from './self-contained';
 
 let globalItem: any;
 if (typeof window !== 'undefined') {
-	globalItem = window;
+  globalItem = window;
 } else if (typeof global !== 'undefined') {
   globalItem = global;
 }
 
 if (globalItem) {
-  globalItem.gaiaViewer = {launch, launchSelfContained};
+  globalItem.gaiaViewer = { launch, launchSelfContained };
 }
 
-export {launchSelfContained};
+export { launchSelfContained };
 export default launch;

@@ -2,7 +2,7 @@
   <g :class='["boardAction", kind, {highlighted, faded}]' v-b-tooltip :title="tooltip">
     <polygon points="-1,0.5 -0.5,1 0.5,1 1,0.5 1,-0.5 0.5,-1 -0.5,-1 -1,-0.5" :transform="`scale(${scale})`" @click="onClick" />
     <text :transform="`scale(${scale/17})`">
-      <tspan :x="i+1 < income.length ? 1 : 0" v-for="(line, i) in income" :key="i" :dy="`${i*1.15 - (income.length - 1) / 4}em`"> 
+      <tspan :x="i+1 < income.length ? 1 : 0" v-for="(line, i) in income" :key="i" :dy="`${i*1.15 - (income.length - 1) / 4}em`">
         {{line.replace(/ /g, '')}}
       </tspan>
     </text>
@@ -10,32 +10,28 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
+import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import { tiles, Event, BoardAction as BoardActionEnum, boardActions } from '@gaia-project/engine';
 import { eventDesc } from '../data/event';
 
 @Component<BoardAction>({
   computed: {
-    tooltip() {
-      const costDesc = "Spend "+ this.cost + "\n";
+    tooltip () {
+      const costDesc = "Spend " + this.cost + "\n";
 
       return costDesc + boardActions[this.action].income.map(x => eventDesc(new Event(x))).join('\n');
     },
 
-    highlighted() {
-      return this.$store.state.gaiaViewer.context.highlighted.actions.has(this.action);
-    },
-
-    faded() {
+    faded () {
       return !this.$store.state.gaiaViewer.data.boardActions[this.action];
     },
 
-    kind() {
+    kind () {
       return this.action[0] === 'p' ? 'power' : 'qic';
     },
 
-    income() {
+    income () {
       return [].concat(...boardActions[this.action].income.map(x => {
         if (x.includes('+')) {
           return [x.slice(0, x.indexOf('+')), x.slice(x.indexOf('+'))];
@@ -44,7 +40,7 @@ import { eventDesc } from '../data/event';
       }));
     },
 
-    cost() {
+    cost () {
       return boardActions[this.action].cost;
     }
   }
@@ -56,15 +52,16 @@ export default class BoardAction extends Vue {
   @Prop()
   action: BoardActionEnum;
 
-  onClick() {
+  onClick () {
     if (!this.highlighted) {
       return;
     }
     this.$store.dispatch("gaiaViewer/actionClick", this.action);
   }
-}
-export default interface BoardAction {
-  highlighted: boolean;
+
+  get highlighted () {
+    return this.$store.state.gaiaViewer.context.highlighted.actions.has(this.action);
+  }
 }
 
 </script>

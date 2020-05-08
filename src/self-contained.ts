@@ -4,12 +4,12 @@ import Engine from '@gaia-project/engine';
 import Wrapper from './components/Wrapper.vue';
 import Game from './components/Game.vue';
 
-function launchSelfContained(selector = "#app", debug = true) {
-  const emitter = launch(selector, debug ? Wrapper: Game);
+function launchSelfContained (selector = "#app", debug = true) {
+  const emitter = launch(selector, debug ? Wrapper : Game);
 
   let engine = new Engine();
 
-  const unsub = emitter.store.subscribeAction(({payload, type}) => {
+  const unsub = emitter.store.subscribeAction(({ payload, type }) => {
     if (type === "gaiaViewer/loadFromJSON") {
       const egData: Engine = payload;
       engine = new Engine(egData.moveHistory, egData.options);

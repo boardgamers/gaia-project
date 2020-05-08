@@ -1,6 +1,6 @@
 import { Building } from "@gaia-project/engine";
 
-export function buildingName(building: Building): string {
+export function buildingName (building: Building): string {
   switch (building) {
     case Building.Mine: return "mine";
     case Building.Academy1: return "academy1";

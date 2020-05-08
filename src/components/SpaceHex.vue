@@ -15,25 +15,17 @@
 <script lang="ts">
 import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import {MapData, HighlightHexData} from '../data';
+import { MapData, HighlightHexData } from '../data';
 import { GaiaHex, factions, Building as BuildingEnum, Planet as PlanetEnum, SpaceMap as ISpaceMap, Faction } from '@gaia-project/engine';
-import {corners } from "../graphics/hex";
+import { corners } from "../graphics/hex";
 import Planet from './Planet.vue';
 import Building from './Building.vue';
 import SpaceShip from './SpaceShip.vue';
 import { buildingName } from '../data/building';
-import { planetNames }  from '../data/planets';
+import { planetNames } from '../data/planets';
 import { Direction } from 'hexagrid';
 
 @Component<SpaceHex>({
-  computed: {
-    highlightedHexes(): Set<GaiaHex> {
-      return this.$store.state.gaiaViewer.context.highlighted.hexes;
-    },
-    toSelect() {
-      return !!this.$store.state.gaiaViewer.context.hexSelection;
-    }
-  },
   components: {
     Planet,
     Building,
@@ -43,66 +35,75 @@ import { Direction } from 'hexagrid';
 export default class SpaceHex extends Vue {
   @Prop()
   hex: GaiaHex;
+
   @Prop()
   isCenter: boolean;
 
-  get hexCorners() {
+  get hexCorners () {
     return corners();
   }
 
-  get map(): ISpaceMap {
+  get map (): ISpaceMap {
     return this.$store.state.gaiaViewer.data.map;
   }
 
-  get tradeTokens() {
+  get tradeTokens () {
     return this.hex.data.tradeTokens || [];
   }
 
-  cost(hex: GaiaHex) {
+  cost (hex: GaiaHex) {
     const data = this.highlightedHexes.get(hex);
 
     return (data && data.cost && data.cost !== "~") ? data.cost.replace(/,/g, ', ') : '';
   }
 
-  hexClick(hex: GaiaHex) {
+  hexClick (hex: GaiaHex) {
     if (this.highlightedHexes.has(hex) || this.toSelect) {
       this.$store.dispatch('gaiaViewer/hexClick', hex);
     }
   }
 
-  faction(player) {
+  faction (player) {
     if (player === undefined || player === "wild") {
       return player; // Wild will get recognized as purple, for trade tokens. A bit of a hack
     }
     return this.$store.state.gaiaViewer.data.players[player].faction;
   }
 
-  planet(player) {
+  planet (player) {
     return factions.planet(this.faction(player));
   }
 
-  buildingName(building: BuildingEnum) {
+  buildingName (building: BuildingEnum) {
     return buildingName(building);
   }
 
-  planetName(planet: PlanetEnum) {
+  planetName (planet: PlanetEnum) {
     return planetNames[planet];
   }
 
-  shipX(index) {
-    return SpaceHex.shipXs[index % 7]
+  get highlightedHexes (): Map<GaiaHex, any> {
+    return this.$store.state.gaiaViewer.context.highlighted.hexes;
   }
 
-  shipY(index) {
-    return SpaceHex.shipYs[index % 7]
+  get toSelect () {
+    return !!this.$store.state.gaiaViewer.context.hexSelection;
   }
 
-  tradeX(index) {
-    return SpaceHex.tradeXs[index]
+  shipX (index) {
+    return SpaceHex.shipXs[index % 7];
   }
 
-  tradeY(index) {
-    return SpaceHex.tradeYs[index]
+  shipY (index) {
+    return SpaceHex.shipYs[index % 7];
+  }
+
+  tradeX (index) {
+    return SpaceHex.tradeXs[index];
+  }
+
+  tradeY (index) {
+    return SpaceHex.tradeYs[index];
   }
 
   static shipXs = [-0.5, 0.5, -1.3, 1.3, -0.5, 0.5, 0];
@@ -111,11 +112,6 @@ export default class SpaceHex extends Vue {
   static tradeXs = [-0.5, 0.5, -0.9, 0, 0.9, -0.5, 0.5];
   static tradeYs = [-0.9, -0.9, 0, 0, 0, 0.9, 0.9];
 }
-export default interface SpaceMap {
-  highlightedHexes: HighlightHexData;
-  toSelect: boolean;
-}
-
 </script>
 
 <style lang="scss">

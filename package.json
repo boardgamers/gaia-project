@@ -4,14 +4,14 @@
   "description": "Functions to visualize the map and boards for gaia project inside html canvas",
   "author": "coyotte508, rzulian",
   "scripts": {
+    "serve": "vue-cli-service serve --port 8080",
     "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint",
     "package": "vue-cli-service build --target lib src/wrapper.ts",
     "prepublishOnly": "npm run package",
-    "serve": "vue-cli-service serve --port 8080",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "unpkg": "dist/package/viewer.umd.min.js",
-  "source": "index.ts",
   "files": [
     "index.ts",
     "tsconfig.json",
@@ -31,8 +31,19 @@
   "devDependencies": {
     "@types/jquery": "^3.3.1",
     "@types/node": "^10.5.2",
+    "@typescript-eslint/eslint-plugin": "^2.26.0",
+    "@typescript-eslint/parser": "^2.26.0",
+    "@vue/cli-plugin-eslint": "~4.3.0",
     "@vue/cli-plugin-typescript": "~4.2.3",
     "@vue/cli-service": "~4.2.3",
+    "@vue/eslint-config-standard": "^5.1.2",
+    "@vue/eslint-config-typescript": "^5.0.2",
+    "eslint": "^6.7.2",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.0",
+    "eslint-plugin-vue": "^6.2.2",
     "hexagrid": "^2.0.1",
     "node-sass": "^4.7.2",
     "popper": "^1.0.1",
@@ -60,5 +71,6 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/donkeytech/gaia-viewer.git"
-  }
+  },
+  "source": "index.ts"
 }

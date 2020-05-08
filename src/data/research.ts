@@ -1,4 +1,4 @@
-import { ResearchField } from "@gaia-project/engine"
+import { ResearchField } from "@gaia-project/engine";
 
 export const descriptions = {
   [ResearchField.Economy]: [

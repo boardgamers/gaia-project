@@ -28,31 +28,31 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
+import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import Engine,{ AvailableCommand,Command,factions,Building,GaiaHex,Booster,tiles,Event,Federation,Faction, SpaceMap, Expansion } from '@gaia-project/engine';
+import Engine, { AvailableCommand, Command, factions, Building, GaiaHex, Booster, tiles, Event, Federation, Faction, SpaceMap, Expansion } from '@gaia-project/engine';
 import MoveButton from './MoveButton.vue';
-import {buildingName} from '../data/building';
-import {GameContext, ButtonData} from '../data';
+import { buildingName } from '../data/building';
+import { GameContext, ButtonData } from '../data';
 import { eventDesc } from '../data/event';
 import { factionDesc } from '../data/factions';
 import { BIconDash } from 'bootstrap-vue';
 @Component<Commands>({
   watch: {
-    availableCommands(this: Commands, val) {
+    availableCommands (this: Commands, val) {
       this.loadCommands(val);
     }
   },
   methods: {
-    tooltip(faction: Faction) {
+    tooltip (faction: Faction) {
       return factionDesc(faction);
     }
   },
   computed: {
-    canUndo() {
+    canUndo () {
       return !this.$store.state.gaiaViewer.data.newTurn;
     },
-    randomFactionButton() {
+    randomFactionButton () {
       this.updater = this.updater + 1;
       const command = this.command;
       const faction = command.data[Math.floor(Math.random() * command.data.length)];
@@ -62,7 +62,7 @@ import { BIconDash } from 'bootstrap-vue';
         label: "Random",
         modal: this.tooltip(faction),
         title: factions[faction].name
-      }
+      };
     }
   },
   components: {
@@ -70,12 +70,12 @@ import { BIconDash } from 'bootstrap-vue';
   }
 })
 export default class Commands extends Vue {
-  @Prop({default: ''})
+  @Prop({ default: '' })
   remainingTime: string;
 
-  updater: number = 0;
+  updater = 0;
 
-  loadCommands(val: AvailableCommand[]) {
+  loadCommands (val: AvailableCommand[]) {
     this.commandTitles = [];
     this.customButtons = [];
     this.commandChain = [];
@@ -98,29 +98,29 @@ export default class Commands extends Vue {
     // });
   }
 
-  get availableCommands(): AvailableCommand[] {
+  get availableCommands (): AvailableCommand[] {
     return this.engine.availableCommands;
   }
 
-  get command(): AvailableCommand {
+  get command (): AvailableCommand {
     return this.availableCommands ? this.availableCommands[0] : null;
   }
 
-  get player(): string {
+  get player (): string {
     if (this.engine.players[this.command.player].faction) {
       return factions[this.engine.players[this.command.player].faction].name;
     }
     if (this.engine.players[this.command.player].name) {
       return this.engine.players[this.command.player].name;
     }
-    return "Player " + (this.command.player+1);
+    return "Player " + (this.command.player + 1);
   }
 
-  get playerSlug(): string {
-    return this.$store.state.gaiaViewer.data.players[this.command.player].faction || `p${this.command.player+1}`;
+  get playerSlug (): string {
+    return this.$store.state.gaiaViewer.data.players[this.command.player].faction || `p${this.command.player + 1}`;
   }
 
-  get init() {
+  get init () {
     return !this.command || this.command.name === Command.Init;
   }
 
@@ -128,23 +128,23 @@ export default class Commands extends Vue {
     return this.command ? this.command.name : null;
   }
 
-  get chooseFaction() {
+  get chooseFaction () {
     return this.commandName === Command.ChooseFaction;
   }
 
-  get titles() {
+  get titles () {
     return this.commandTitles.length === 0 ? ["Your turn"] : this.commandTitles;
   }
 
-  get factions() {
+  get factions () {
     return factions;
   }
 
-  updateRandomFaction() {
+  updateRandomFaction () {
     this.updater += 1;
   }
 
-  handleCommand(command: string, source: MoveButton, final: boolean) {
+  handleCommand (command: string, source: MoveButton, final: boolean) {
     console.log("handle command", command);
 
     // Some users seem to have a bug with repeating commands on mobile, like clicking the income button twice
@@ -176,27 +176,27 @@ export default class Commands extends Vue {
     }
   }
 
-  undo() {
+  undo () {
     this.$emit("undo");
   }
 
-  title(title: string) {
+  title (title: string) {
     this.commandTitles.push(title);
   }
 
-  get context(): GameContext {
+  get context (): GameContext {
     return this.$store.state.gaiaViewer.context;
   }
 
-  get engine(): Engine {
+  get engine (): Engine {
     return this.$store.state.gaiaViewer.data;
   }
 
-  get map() : SpaceMap {
+  get map (): SpaceMap {
     return this.engine.map;
   }
 
-  get buttons(): ButtonData[] {
+  get buttons (): ButtonData[] {
     const ret: ButtonData[] = [];
     for (const command of this.availableCommands) {
       switch (command.name) {
@@ -281,7 +281,7 @@ export default class Commands extends Vue {
             hexes: new Map(command.data.ships.map(coord => [this.engine.map.grid.getS(coord.coordinates), coord])),
             range: command.data.range,
             costs: command.data.costs
-          })
+          });
           break;
         }
 
@@ -293,21 +293,21 @@ export default class Commands extends Vue {
             if (command.data.boosters.includes(booster)) {
               buttons.push({
                 command: booster,
-                label: `Booster ${i+1}`,
+                label: `Booster ${i + 1}`,
                 tooltip: tiles.boosters[booster].map(spec => eventDesc(new Event(spec))).join("\n")
               });
             }
           });
 
           // need a Pass confirmation if it's the last round, where Command = PAss but no Boosters
-          if ( command.data.boosters.length === 0 ) {
+          if (command.data.boosters.length === 0) {
             ret.push({
-              label: "Pass" ,
+              label: "Pass",
               command: Command.Pass,
               needConfirm: true,
               buttons: [{
-                  command: "",
-                  label: `Confirm Pass`
+                command: "",
+                label: `Confirm Pass`
               }]
             });
           } else {
@@ -319,12 +319,11 @@ export default class Commands extends Vue {
             });
           }
 
-
           break;
         };
 
         case Command.UpgradeResearch: {
-          if ( command.data.tracks.length === 1 ) {
+          if (command.data.tracks.length === 1) {
             ret.push({
               label: "Advance " + command.data.tracks[0].field,
               command: `${Command.UpgradeResearch} ${command.data.tracks[0].field}`
@@ -334,8 +333,8 @@ export default class Commands extends Vue {
               label: "Advance research",
               command: command.name,
               // track.to contains actual level, to use when implementing research viewer
-              buttons: command.data.tracks.map(track => ({command: track.field})),
-              researchTiles: command.data.tracks.map(track => track.field + "-" + track.to),
+              buttons: command.data.tracks.map(track => ({ command: track.field })),
+              researchTiles: command.data.tracks.map(track => track.field + "-" + track.to)
             });
           }
           break;
@@ -346,7 +345,7 @@ export default class Commands extends Vue {
             label: command.name === Command.ChooseCoverTechTile ? "Pick tech tile to cover" : "Pick tech tile",
             command: command.name,
             techs: command.data.tiles.map(tile => tile.pos),
-            buttons: command.data.tiles.map(tile => ({command: tile.pos}))
+            buttons: command.data.tiles.map(tile => ({ command: tile.pos }))
           });
           break;
         }
@@ -368,14 +367,14 @@ export default class Commands extends Vue {
           if (command.data.offers) {
             ret.push({
               label: `Decline ${command.data.offers[0].offer}`,
-              command:  `${Command.Decline} ${command.data.offers[0].offer}`
+              command: `${Command.Decline} ${command.data.offers[0].offer}`
             });
           } else {
             // LEGACY CODE
             // TODO: Remove when games are updated
             ret.push({
               label: `Decline ${command.data.offer}`,
-              command:  `${Command.Decline} ${command.data.offer}`
+              command: `${Command.Decline} ${command.data.offer}`
             });
           }
           break;
@@ -393,12 +392,12 @@ export default class Commands extends Vue {
           // If only one free action, display it here
           if (command.data.acts.length === 1 && this.availableCommands.some(cmd => cmd.name === Command.MoveShip)) {
             const act = command.data.acts[0];
-            ret.push({label: `Spend ${act.cost} to gain ${act.income}`, command: `${Command.Spend} ${act.cost} for ${act.income}`});
+            ret.push({ label: `Spend ${act.cost} to gain ${act.income}`, command: `${Command.Spend} ${act.cost} for ${act.income}` });
           } else {
             ret.push({
               label: "Free action",
               command: Command.Spend,
-              buttons: command.data.acts.map(act => ({label: `Spend ${act.cost} to gain ${act.income}`, command: `${act.cost} for ${act.income}`, times: act.range}))
+              buttons: command.data.acts.map(act => ({ label: `Spend ${act.cost} to gain ${act.income}`, command: `${act.cost} for ${act.income}`, times: act.range }))
             });
           }
           break;
@@ -409,7 +408,7 @@ export default class Commands extends Vue {
             label: "Power/Q.I.C Action",
             command: Command.Action,
             actions: command.data.poweracts.map(act => act.name),
-            buttons: command.data.poweracts.map(act => ({command: act.name, label: `Spend ${act.cost} for ${act.income.join(" / ")}`}))
+            buttons: command.data.poweracts.map(act => ({ command: act.name, label: `Spend ${act.cost} for ${act.income.join(" / ")}` }))
           });
           break;
         }
@@ -419,7 +418,7 @@ export default class Commands extends Vue {
             label: "Special Action",
             command: Command.Special,
             actions: command.data.specialacts.map(act => act.income),
-            buttons: command.data.specialacts.map(act => ({command: act.income}))
+            buttons: command.data.specialacts.map(act => ({ command: act.income }))
           });
           break;
         }
@@ -428,7 +427,7 @@ export default class Commands extends Vue {
           ret.push({
             label: "Burn power",
             command: Command.BurnPower,
-            buttons: command.data.map(val => ({command: val}))
+            buttons: command.data.map(val => ({ command: val }))
           });
           break;
         }
@@ -439,9 +438,9 @@ export default class Commands extends Vue {
             command: Command.EndTurn,
             needConfirm: true,
             buttons: [{
-                command: Command.EndTurn,
-                label: `Confirm End Turn`
-              }]
+              command: Command.EndTurn,
+              label: `Confirm End Turn`
+            }]
           });
           break;
         }
@@ -455,12 +454,11 @@ export default class Commands extends Vue {
         }
 
         case Command.Bid: {
-
           ret.push(...command.data.bids.map(pos => ({
             label: `Bid ${pos.bid[0]} for ${pos.faction}`,
             command: `${Command.Bid} ${pos.faction} $times`,
-            times: pos.bid          
-            })));
+            times: pos.bid
+          })));
           break;
         }
 
@@ -475,13 +473,13 @@ export default class Commands extends Vue {
         case Command.FormFederation: {
           const tilesButtons = command.data.tiles.map((fed, i) => ({
             command: fed,
-            label: `Federation ${i+1}: ${tiles.federations[fed]}`
+            label: `Federation ${i + 1}: ${tiles.federations[fed]}`
           }));
 
           const locationButtons = command.data.federations.map((fed, i) => ({
             command: fed.hexes,
-            label: `Location ${i+1}`,
-            hexes: new Map(fed.hexes.split(',').map(coord => [this.engine.map.grid.getS(coord), {coordinates: coord}])),
+            label: `Location ${i + 1}`,
+            hexes: new Map(fed.hexes.split(',').map(coord => [this.engine.map.grid.getS(coord), { coordinates: coord }])),
             hover: true,
             buttons: tilesButtons
           }));
@@ -503,7 +501,7 @@ export default class Commands extends Vue {
         case Command.ChooseFederationTile: {
           const tilesButtons = command.data.tiles.map((fed, i) => ({
             command: fed,
-            label: `Federation ${i+1}: ${tiles.federations[fed]}`
+            label: `Federation ${i + 1}: ${tiles.federations[fed]}`
           }));
 
           ret.push(({
@@ -527,7 +525,7 @@ export default class Commands extends Vue {
     return ret;
   }
 
-  back() {
+  back () {
     this.$store.commit("gaiaViewer/clearContext");
     this.commandChain.pop();
     this.commandTitles.pop();
