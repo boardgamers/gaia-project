@@ -57,9 +57,11 @@ import TurnOrder from './TurnOrder.vue';
         return data.players;
       }
       let turnOrder = data.turnOrder;
-      if (data.turnOrder.indexOf(this.player) !== -1) {
-        turnOrder = turnOrder.slice(turnOrder.indexOf(this.player)).concat(turnOrder.slice(0, turnOrder.indexOf(this.player)));
-      }
+
+      // Do not switch boards anymore now that there's two in  a row
+      // if (data.turnOrder.indexOf(this.player) !== -1) {
+      //   turnOrder = turnOrder.slice(turnOrder.indexOf(this.player)).concat(turnOrder.slice(0, turnOrder.indexOf(this.player)));
+      // }
 
       return turnOrder.concat(data.passedPlayers).map(player => data.players[player]);
     },
