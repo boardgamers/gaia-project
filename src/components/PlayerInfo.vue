@@ -153,7 +153,7 @@ export default class PlayerInfo extends Vue {
 
 .player-board {
   border: 1px solid black;
-  max-width: 600px;
+  max-width: 700px;
   display: block;
   // margin-left: auto;
   margin-right: auto;
