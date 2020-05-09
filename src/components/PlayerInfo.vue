@@ -4,12 +4,12 @@
     <div class="board mt-2">
       <svg viewBox="-0.2 -0.5 38.5 21.4" class="player-board" :style="`background-color: ${factionColor}`">
         <rect x=-1 y=-1 width=50 height=50 fill="#ffffff44"></rect>
-        <PlayerBoardInfo transform="translate(0.5, 0.5)" :player="player" :faction="player.faction" :data="data" />
-        <BuildingGroup :transform="player.faction !== 'bescods' ? 'translate(2.2, 10)' : 'translate(12, 10)'" :nBuildings="1" building="PI" :faction="player.faction" :placed="data.buildings.PI" :resource="['pw','t']" />
-        <BuildingGroup :transform="player.faction === 'bescods' ? 'translate(2.2, 10)' : 'translate(12, 10)'" :nBuildings="2" building="ac1" :faction="player.faction" :placed="0" :ac1="data.buildings.ac1" :ac2="data.buildings.ac2" :resource="['q']" />
-        <BuildingGroup transform="translate(0, 13)" :nBuildings="4" building="ts" :faction="player.faction" :placed="data.buildings.ts" :resource="['c']" />
-        <BuildingGroup transform="translate(11, 13)" :nBuildings="3" building="lab" :faction="player.faction" :placed="data.buildings.lab" :resource="['k']" />
-        <BuildingGroup transform="translate(0, 16)" :nBuildings="8" building="m" :faction="player.faction" :placed="data.buildings.m" :resource="['o']" />
+        <PlayerBoardInfo transform="translate(0.5, 0.5)" :player="player" :faction="player.faction" :data="playerData" />
+        <BuildingGroup :transform="player.faction !== 'bescods' ? 'translate(2.2, 10)' : 'translate(12, 10)'" :nBuildings="1" building="PI" :faction="player.faction" :placed="playerData.buildings.PI" :resource="['pw','t']" />
+        <BuildingGroup :transform="player.faction === 'bescods' ? 'translate(2.2, 10)' : 'translate(12, 10)'" :nBuildings="2" building="ac1" :faction="player.faction" :placed="0" :ac1="playerData.buildings.ac1" :ac2="playerData.buildings.ac2" :resource="['q']" />
+        <BuildingGroup transform="translate(0, 13)" :nBuildings="4" building="ts" :faction="player.faction" :placed="playerData.buildings.ts" :resource="['c']" />
+        <BuildingGroup transform="translate(11, 13)" :nBuildings="3" building="lab" :faction="player.faction" :placed="playerData.buildings.lab" :resource="['k']" />
+        <BuildingGroup transform="translate(0, 16)" :nBuildings="8" building="m" :faction="player.faction" :placed="playerData.buildings.m" :resource="['o']" />
         <!-- M to TS -->
         <line x1=5.7 x2=5.7 y1=14.2 y2=14.8 stroke=black stroke-width="0.06" />
         <!-- TS to PI -->
@@ -18,7 +18,7 @@
         <line x1=15.3 x2=15.3 y1=11.2 y2=11.8 stroke=black stroke-width="0.06" />
         <!-- TS to LAB -->
         <line x1=10.4 x2=11 y1=13.0 y2=13.0 stroke=black stroke-width="0.06" />
-        <PowerBowls transform="translate(29,14.5)" :faction="player.faction" :data="data" :player="player" />
+        <PowerBowls transform="translate(29,14.5)" :faction="player.faction" :data="playerData" :player="player" />
 
         <g transform="translate(29.3, 5)">
           <g v-for="i in [0, 1, 2, 3]" :key="i" :transform="`translate(${(i-2)*3.8}, 0)`">
@@ -43,9 +43,9 @@
     </div>
 
     <div class="tiles row no-gutters mt-1">
-      <Booster v-if="data.tiles.booster" class="mb-1 mr-1" :booster="data.tiles.booster" :disabled="passed"/>
-      <FederationTile v-for="(fed,i) in data.tiles.federations" class="mb-1 mr-1" :key="i" :federation="fed.tile" :used="!fed.green" :player="player.player" :numTiles="1"/>
-      <TechTile v-for="tech in data.tiles.techs" :covered="!tech.enabled" class="mb-1 mr-1" :key="tech.pos" :pos="tech.pos" :player="player.player" />
+      <Booster v-if="playerData.tiles.booster" class="mb-1 mr-1" :booster="playerData.tiles.booster" :disabled="passed"/>
+      <FederationTile v-for="(fed,i) in playerData.tiles.federations" class="mb-1 mr-1" :key="i" :federation="fed.tile" :used="!fed.green" :player="player.player" :numTiles="1"/>
+      <TechTile v-for="tech in playerData.tiles.techs" :covered="!tech.enabled" class="mb-1 mr-1" :key="tech.pos" :pos="tech.pos" :player="player.player" />
     </div>
     <b-modal :id="player.faction" :title="factionName" size="lg">
       <div v-html="tooltip"> </div>
@@ -82,7 +82,7 @@ export default class PlayerInfo extends Vue {
   @Prop()
   player: Player;
 
-  get data () {
+  get playerData () {
     return this.player ? this.player.data : null;
   }
 
