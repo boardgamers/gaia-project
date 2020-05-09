@@ -13,8 +13,8 @@
         NAV: {{data.range}}
       </text>
       <text class="board-text" x=31>
-        <tspan>VP: {{data.victoryPoints}}</tspan>
-        <tspan v-if="data.bid>0"> (-{{data.bid}})</tspan>
+        <tspan class="board-text">VP: {{data.victoryPoints}}</tspan>
+        <tspan class="board-text" v-if="data.bid>0"> (-{{data.bid}})</tspan>
       </text>
     </g>
     <!-- Resources / Income -->
