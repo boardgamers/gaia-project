@@ -55,7 +55,7 @@ export default class Booster extends Vue {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 
 svg {
   &.booster {

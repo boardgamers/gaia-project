@@ -76,7 +76,7 @@ export default class TechTile extends Vue {
 
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 
 svg {
   &.techTile {
