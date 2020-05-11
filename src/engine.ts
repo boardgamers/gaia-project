@@ -768,8 +768,9 @@ export default class Engine {
 
   beginSetupBuildingPhase() {
     this.changePhase(Phase.SetupBuilding);
-    const posIvits = this.setup.findIndex(
-      faction => faction === Faction.Ivits
+
+    const posIvits = this.players.findIndex(
+      player => player.faction === Faction.Ivits
     );
 
     const setupTurnOrder = this.turnOrderAfterSetupAuction
@@ -777,9 +778,10 @@ export default class Engine {
     const reverseSetupTurnOrder = setupTurnOrder.slice().reverse();
     this.turnOrder = setupTurnOrder.concat(reverseSetupTurnOrder);
 
-    const posXenos = this.setup.findIndex(
-      faction => faction === Faction.Xenos
+    const posXenos = this.players.findIndex(
+      player => player.faction === Faction.Xenos
     );
+
     if (posXenos !== -1) {
       this.turnOrder.push(posXenos as PlayerEnum);
     }
@@ -787,6 +789,7 @@ export default class Engine {
     if (posIvits !== -1) {
       this.turnOrder.push(posIvits as PlayerEnum);
     }
+
     this.moveToNextPlayer(this.turnOrder, {loop: false});
   }
 
