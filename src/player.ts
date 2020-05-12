@@ -858,7 +858,7 @@ export default class Player extends EventEmitter {
 
   get maxSatellites() {
     // Lost planet consumes one satellite
-    const maxNumber = MAX_SATELLITES - this.data.satellites - this.data.lostPlanet;
+    const maxNumber = MAX_SATELLITES - this.data.satellites;
 
     if (this.faction === Faction.Ivits) {
       // for Ivits the federationCache is requesting the already payed satellites
