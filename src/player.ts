@@ -22,8 +22,9 @@ import techs, { isAdvanced } from './tiles/techs';
 import assert from "assert";
 
 const TERRAFORMING_COST = 3;
-// 25 satellites - 2 used on the final scoring board - 1 used in the player order
-const MAX_SATELLITES = 22;
+// 25 satellites total
+// The 2 used on the final scoring board and 1 used in the player order can be replaced by other markers
+const MAX_SATELLITES = 25;
 
 interface FederationCache {
   federations: FederationInfo[];
