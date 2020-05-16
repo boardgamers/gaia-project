@@ -206,8 +206,6 @@ export default class Game extends Vue {
   max-height: 550px;
 
   width: 100%;
-  // Unfortunately, necessary for chrome, otherwise would be nicer!
-  height: 100%;
 }
 
 .medium-map, .small-map {
