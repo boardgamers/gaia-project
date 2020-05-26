@@ -946,9 +946,7 @@ export default class Engine {
       player.data.gainFinalVictoryPoints();
 
       //remove bids
-      for (const pl of this.players) {
-        pl.gainRewards([new Reward(Math.max(Math.floor(-1*pl.data.bid )), Resource.VictoryPoint)], Command.Bid );
-      }
+      player.gainRewards([new Reward(Math.max(Math.floor(-1*player.data.bid )), Resource.VictoryPoint)], Command.Bid);
     }
   }
 
