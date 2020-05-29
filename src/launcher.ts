@@ -19,7 +19,8 @@ function launch (selector: string, component: VueConstructor<Vue> = Game) {
 
   const item: EventEmitter & {store?: Store<unknown>; app?: Vue} = new EventEmitter();
 
-  item.addListener("state:updated", data => store.dispatch("gaiaViewer/externalData", data));
+  item.addListener("state", data => store.dispatch("gaiaViewer/externalData", data));
+  item.addListener("state:updated", () => item.emit("fetchState"));
   item.addListener("preferences", data => store.commit("gaiaViewer/preferences", data));
   item.addListener("player", data => store.commit("gaiaViewer/player", data));
 

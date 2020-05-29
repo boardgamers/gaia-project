@@ -68,7 +68,7 @@ The EventEmitter has this interface:
 
 ```js
 // Give the new game data to the viewer
-emitter.emit('state:updated', gameData);
+emitter.emit('state', gameData);
 // Update preferences
 emitter.emit('preferences', {noFactionFill: true});
 // Set player - choose either. If no player is set, then everyone can play
