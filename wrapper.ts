@@ -176,3 +176,11 @@ export function messages (engine: Engine) {
     data: engine
   };
 }
+
+export function logLength (engine: Engine) {
+  return engine.moveHistory.length;
+}
+
+export function logBetween (engine: Engine, start: number, end?: number) {
+  return {state: engine};
+}
