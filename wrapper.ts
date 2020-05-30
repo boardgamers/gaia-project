@@ -181,6 +181,10 @@ export function logLength (engine: Engine) {
   return engine.moveHistory.length;
 }
 
-export function logBetween (engine: Engine, start: number, end?: number) {
+export function logSlice (engine: Engine, options?: {player?: number; start?: number; end?: number}) {
   return {state: engine};
+}
+
+export function round(engine: Engine) {
+  return engine.round;
 }
