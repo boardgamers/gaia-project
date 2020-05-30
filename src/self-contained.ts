@@ -14,7 +14,7 @@ function launchSelfContained (selector = "#app", debug = true) {
       const egData: Engine = payload;
       engine = new Engine(egData.moveHistory, egData.options);
       engine.generateAvailableCommandsIfNeeded();
-      emitter.emit("state:updated", JSON.parse(JSON.stringify(engine)));
+      emitter.emit("state", JSON.parse(JSON.stringify(engine)));
     }
   });
   emitter.app.$once("hook:beforeDestroy", unsub);
@@ -33,7 +33,7 @@ function launchSelfContained (selector = "#app", debug = true) {
       }
     }
 
-    emitter.emit("state:updated", JSON.parse(JSON.stringify(copy)));
+    emitter.emit("state", JSON.parse(JSON.stringify(copy)));
   });
 }
 
