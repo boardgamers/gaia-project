@@ -206,7 +206,7 @@ export default class Game extends Vue {
   max-height: 550px;
 
   width: 100%;
-  // this is needed fro Safari
+  // this is needed for Safari
   height: intrinsic;
 }
 
