@@ -1,6 +1,7 @@
 <template>
   <svg :viewBox="`-13 -11.5 ${right} 24`">
     <Sector v-for="center in this.sectors" :center="center" :key="`${center.q}x{center.r}`" :style="`transform: translate(${hexCenter(center).x * 1.01}px, ${hexCenter(center).y * 1.01}px) rotate(${rotation(center) * 60}deg);`"/>
+    <FactionWheel transform="translate(-10.5, -8.7) scale(0.5, 0.5)"/>
   </svg>
 </template>
 
@@ -11,6 +12,7 @@ import { GaiaHex, SpaceMap as SpaceMapData } from '@gaia-project/engine';
 import { hexCenter } from "../graphics/hex";
 import Sector from './Sector.vue';
 import { CubeCoordinates } from 'hexagrid';
+import FactionWheel from "./FactionWheel.vue";
 
 @Component<SpaceMap>({
   computed: {
@@ -19,7 +21,8 @@ import { CubeCoordinates } from 'hexagrid';
     }
   },
   components: {
-    Sector
+    Sector,
+    FactionWheel
   }
 })
 export default class SpaceMap extends Vue {
