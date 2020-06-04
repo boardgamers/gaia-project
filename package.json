@@ -1,6 +1,6 @@
 {
   "name": "@gaia-project/viewer",
-  "version": "5.1.4",
+  "version": "5.1.5",
   "description": "Functions to visualize the map and boards for gaia project inside html canvas",
   "author": "coyotte508, rzulian",
   "scripts": {
