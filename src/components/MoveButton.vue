@@ -1,6 +1,7 @@
 <template>
   <div class="move-button">
-    <button class='btn btn-secondary mr-2 mb-2 move-button' @click="handleClick" @mouseenter="hover" @mouseleave="leave" :title="button.tooltip" v-b-tooltip.html v-html="customLabel || button.label || button.command" v-if="!button.times">
+    <Booster v-if="button.booster" class="mb-1 mr-1" @click="handleClick" :booster="button.booster" />
+    <button v-else-if="!button.times" class='btn btn-secondary mr-2 mb-2 move-button' @click="handleClick" @mouseenter="hover" @mouseleave="leave" :title="button.tooltip" v-b-tooltip.html v-html="customLabel || button.label || button.command" >
     </button>
     <b-dropdown class='mr-2 mb-2 move-button' v-else split right :text="customLabel || button.label || button.command" @click="handleRangeClick(button.times[0])">
       <b-dropdown-item v-for="i in button.times" :key="i" @click="handleRangeClick(i)">{{i}}</b-dropdown-item>
@@ -8,16 +9,21 @@
     <b-modal v-if="button.modal" v-model="modalShow" size="lg" @ok="handleOK" @hide="modalCancel" :title="button.title || button.label || button.command" ok-title="OK, I pick this one!">
       <div  v-html="button.modal"></div>
     </b-modal>
+    
   </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import { GaiaHex, TechTilePos, AdvTechTilePos, Booster, Command, SpaceMap } from '@gaia-project/engine';
+import { GaiaHex, TechTilePos, AdvTechTilePos, Command, SpaceMap } from '@gaia-project/engine';
 import { HighlightHexData, ButtonData } from '../data';
+import Booster from './Booster.vue';
 
 @Component({
+  components: {
+    Booster
+  },
   destroyed () {
     this.unsubscribe();
   }
@@ -229,6 +235,7 @@ export default class MoveButton extends Vue {
   get isActiveButton () {
     return this.$store.state.gaiaViewer.context.activeButton && this.$store.state.gaiaViewer.context.activeButton.label === this.button.label;
   }
+
 }
 
 </script>
