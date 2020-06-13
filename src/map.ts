@@ -262,7 +262,7 @@ export default class SpaceMap {
       return CubeCoordinates.parse(coords);
     }
     assert(this.placement, "Needs sector info to parse sector coordinates");
-    const match = /^([0-9]{1,2})([ABC][0-9]{1,2})$/.exec(coords);
+    const match = /^([0-9]{1,2})([ABC][0-9]{0,2})$/.exec(coords);
     assert(match, "Malformed coordinate: " + coords);
     const [_, sector, suffix] = match;
 

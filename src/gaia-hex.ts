@@ -181,7 +181,7 @@ const suffixes = {
   "-1x0": "B3",
   "0x-1": "B4",
   "1x-1": "B5",
-  "0x0": "C0"
+  "0x0": "C"
 };
 
 const reverseSuffixes = Object.keys(suffixes).reduce((acc, key) => ({...acc, [suffixes[key]]: key}), {});
