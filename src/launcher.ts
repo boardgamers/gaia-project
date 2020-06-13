@@ -26,7 +26,10 @@ function launch (selector: string, component: VueConstructor<Vue> = Game) {
   item.addListener("state:updated", () => item.emit("fetchState"));
   item.addListener("preferences", data => store.commit("gaiaViewer/preferences", data));
   item.addListener("player", data => store.commit("gaiaViewer/player", data));
-  item.addListener("gamelog", logData => store.dispatch("gaiaViewer/externalData", logData.data.state));
+  item.addListener("gamelog", logData => {
+    store.dispatch("gaiaViewer/externalData", logData.data.state);
+    item.emit("replaceLog", logData.data.state?.moveHistory);
+  });
 
   const unsub1 = store.subscribeAction(({ type, payload }) => {
     // console.log("spy action", type, payload);
