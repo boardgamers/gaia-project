@@ -43,14 +43,14 @@
   dependencies:
     utilise "^2.3.5"
 
-"@gaia-project/engine@4.2.1":
-  version "4.2.1"
-  resolved "https://registry.yarnpkg.com/@gaia-project/engine/-/engine-4.2.1.tgz#49ae4183ec9926eccff7c4d630526688de34cda3"
-  integrity sha512-y5jebjLcgZOXq0MySpSor7+kXVzWOuiS23syzfH1ljaMPhELF4s0xmi8CoOhLQ432IjCqCHC/fa7S/aGFTECnQ==
+"@gaia-project/engine@4.3.2":
+  version "4.3.2"
+  resolved "https://registry.yarnpkg.com/@gaia-project/engine/-/engine-4.3.2.tgz#1aab70a2a8f0ca4d19662d14665076ba66dd1940"
+  integrity sha512-pou2nqC6/O2ajNzWtAa1Dga5i9znyFgnxmj1lxVrgFBsd9CD9xWutsJl6cdltRennFwgG85cNLhjQQOb7m+1eg==
   dependencies:
     axios "^0.19.2"
     eventemitter3 "^3.1.0"
-    hexagrid "^2.0.1"
+    hexagrid "^2.1.0"
     lodash "^4.17.15"
     seedrandom "2.4.3"
     shuffle-seed "1.1.6"
@@ -4341,6 +4341,11 @@ hexagrid@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/hexagrid/-/hexagrid-2.0.1.tgz#87920c341df19c20bb8dd95707f4691ad27882cc"
   integrity sha512-zSsMdZSEZ3oAb8yee4cUenB5kuVckpy14lJ9D5MtTYEoFqwTnZLu81Vv+kfA8vlLXCW+84TuMtda5CQomBCAeg==
+
+hexagrid@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/hexagrid/-/hexagrid-2.1.0.tgz#3b7ea6f713ddfd434e737531087f161a1bacffc9"
+  integrity sha512-ybB21HKP8POrXyGJGuFP2gckDNynATfC0IqSQy7NVyUIs6mXbuSdfrSXfGNDSdilRCjTKG0QP3cQZSTlyZAUvA==
 
 highlight.js@^9.6.0:
   version "9.18.1"

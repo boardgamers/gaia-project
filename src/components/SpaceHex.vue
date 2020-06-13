@@ -1,6 +1,6 @@
 <template>
-  <g :id="`${hex.q}x${hex.r}`">
-    <title>Coordinates: {{hex.q}}x{{hex.r}}&#10;Sector: {{hex.data.sector}}{{hex.data.planet !== 'e' ? `&#10;Planet: ${planetName(hex.data.planet)}`: ''}}{{hex.data.building ? `&#10;Building: ${buildingName(hex.data.building)}` : ''}}{{cost(hex) ? `&#10;Cost: ${cost(hex)}` : ''}}</title>
+  <g :id="`${hex}`">
+    <title>Coordinates: {{hex}}{{hex.data.planet !== 'e' ? `&#10;Planet: ${planetName(hex.data.planet)}`: ''}}{{hex.data.building ? `&#10;Building: ${buildingName(hex.data.building)}` : ''}}{{cost(hex) ? `&#10;Cost: ${cost(hex)}` : ''}}</title>
     <polygon :points="hexCorners.map(p => `${p.x},${p.y}`).join(' ')" :class="['spaceHex', {toSelect, highlighted: highlightedHexes.has(hex), qic: cost(hex).includes('q'), power: cost(hex).includes('pw')}]" @click='hexClick(hex)' />
     <text class="sector-name" v-if="isCenter">{{hex.data.sector[0] === 's' ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector)}}</text>
     <Planet v-if="hex.data.planet !== 'e'" :planet='hex.data.planet' :faction='faction(hex.data.player)' />

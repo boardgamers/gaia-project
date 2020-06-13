@@ -7,9 +7,8 @@
       <b-dropdown-item v-for="i in button.times" :key="i" @click="handleRangeClick(i)">{{i}}</b-dropdown-item>
     </b-dropdown>
     <b-modal v-if="button.modal" v-model="modalShow" size="lg" @ok="handleOK" @hide="modalCancel" :title="button.title || button.label || button.command" ok-title="OK, I pick this one!">
-      <div  v-html="button.modal"></div>
+      <div v-html="button.modal"></div>
     </b-modal>
-    
   </div>
 </template>
 
@@ -84,10 +83,10 @@ export default class MoveButton extends Vue {
     if (this.button.hexes && !this.button.selectHexes && !this.button.hover && !this.button.rotation && !this.button.range) {
       if (this.button.automatic && this.button.hexes.size === 1) {
         const hex = this.button.hexes.keys().next().value;
-        this.emitCommand(`${hex.q}x${hex.r}`);
+        this.emitCommand(hex.toString());
       } else {
         this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
-        this.subscribe('hexClick', hex => this.emitCommand(`${hex.q}x${hex.r}`));
+        this.subscribe('hexClick', hex => this.emitCommand(hex.toString()));
       }
     } else if (this.button.researchTiles) {
       this.$store.commit("gaiaViewer/highlightResearchTiles", this.button.researchTiles);
@@ -106,7 +105,7 @@ export default class MoveButton extends Vue {
     } else if (this.button.selectHexes) {
       // If already the active button, end the selection
       if (this.isActiveButton) {
-        this.button.command = [...this.$store.state.gaiaViewer.context.highlighted.hexes.keys()].map(hex => `${hex.q}x${hex.r}`).join(',');
+        this.button.command = [...this.$store.state.gaiaViewer.context.highlighted.hexes.keys()].map(hex => hex.toString()).join(',');
         this.emitCommand();
         return;
       }
@@ -147,7 +146,7 @@ export default class MoveButton extends Vue {
       this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
       this.subscribe('hexClick', hex => {
         if (this.startingHex) {
-          this.emitCommand(`${this.startingHex.q}x${this.startingHex.r} ${hex.q}x${hex.r}`);
+          this.emitCommand(`${this.startingHex} ${hex}`);
           this.startingHex = undefined;
           return;
         }
@@ -235,7 +234,6 @@ export default class MoveButton extends Vue {
   get isActiveButton () {
     return this.$store.state.gaiaViewer.context.activeButton && this.$store.state.gaiaViewer.context.activeButton.label === this.button.label;
   }
-
 }
 
 </script>
