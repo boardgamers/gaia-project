@@ -26,7 +26,6 @@ import {
   SubPhase,
   Expansion
 } from './enums';
-import { CubeCoordinates } from 'hexagrid';
 import Event, {EventSource, RoundScoring} from './events';
 import federations from './tiles/federations';
 import {roundScorings, finalScorings} from './tiles/scoring';
@@ -38,10 +37,9 @@ import Reward from './reward';
 import { boardActions } from './actions';
 import { stdBuildingValue } from './buildings';
 import { isAdvanced } from './tiles/techs';
-import { isNull } from 'util';
-import { range } from 'lodash';
+import { range, isEqual } from 'lodash';
 
-const ISOLATED_DISTANCE = 3;
+// const ISOLATED_DISTANCE = 3;
 const LEECHING_DISTANCE = 2;
 
 export interface EngineOptions {
@@ -496,6 +494,7 @@ export default class Engine {
     if (data.map) {
       engine.map = SpaceMap.fromData(data.map);
       engine.map.nbPlayers = data.players.length;
+      engine.map.placement = engine.options.map;
     }
 
     for (const player of data.players) {
@@ -956,7 +955,7 @@ export default class Engine {
       return;
     }
     const source = this.leechSources.shift();
-    const sourceHex = this.map.grid.getS(source.coordinates);
+    const sourceHex = this.map.grid.get(this.map.parse(source.coordinates));
     const isTrade = source.tradeDelivery !== undefined;
     const canLeechPlayers: Player[] = [];
 
@@ -1301,10 +1300,11 @@ export default class Engine {
 
   [Command.Build](player: PlayerEnum, building: Building, location: string) {
     const { buildings } = this.availableCommand.data;
+    const parsed = this.map.parse(location);
 
     for (const elem of buildings) {
-      if (elem.building === building && elem.coordinates === location) {
-        const {q, r} = CubeCoordinates.parse(location);
+      if (elem.building === building && isEqual(this.map.parse(elem.coordinates), parsed)) {
+        const {q, r} = this.map.parse(location);
         const hex = this.map.grid.get({q, r});
         const pl = this.player(player);
 
@@ -1319,7 +1319,6 @@ export default class Engine {
       }
     }
 
-    // console.log(this.map.grid.getS(location));
     assert(false, `Impossible to execute build command at ${location}`);
   }
 
@@ -1424,12 +1423,13 @@ export default class Engine {
 
   [Command.PlaceLostPlanet](player: PlayerEnum, location: string) {
     const { spaces } = this.availableCommand.data;
+    const parsed = this.map.parse(location);
 
-    const data = spaces.find(space => space.coordinates === location);
+    const data = spaces.find(space =>  isEqual(this.map.parse(space.coordinates), parsed));
 
     assert(data, `Impossible to execute build command at ${location}`);
 
-    const hex = this.map.grid.get(CubeCoordinates.parse(location));
+    const hex = this.map.grid.get(this.map.parse(location));
     hex.data.planet = Planet.Lost;
 
     this.player(player).build(Building.Mine, hex, Reward.parse(data.cost), this.map, 0);
@@ -1440,10 +1440,11 @@ export default class Engine {
   [Command.PlaceShip](player: PlayerEnum, location: string) {
     const pl = this.player(player);
     const { locations } = this.availableCommand.data;
+    const parsed = this.map.parse(location);
 
-    assert(locations.find(loc => loc.coordinates === location), `Impossible to place ship at ${location}`);
+    assert(locations.find(loc => isEqual(this.map.parse(loc.coordinates), parsed), `Impossible to place ship at ${location}`));
 
-    const hex = this.map.grid.get(CubeCoordinates.parse(location));
+    const hex = this.map.grid.get(parsed);
     pl.placeShip(hex);
 
     pl.data.shipsToPlace -= 1;
@@ -1454,7 +1455,7 @@ export default class Engine {
 
   [Command.DeliverTrade](player: PlayerEnum, location: string) {
     assert(location === this.availableCommand.data.locations[0].coordinates, "Impossible to deliver trade at " + location);
-    const destHex = this.map.grid.getS(location);
+    const destHex = this.map.grid.get(this.map.parse(location));
 
     this.player(player).deliverTrade(destHex);
     // The main occupier of the planet can charge power
@@ -1465,19 +1466,20 @@ export default class Engine {
     const pl = this.player(player);
     // tslint:disable-next-line no-shadowed-variable
     const { ships, range, costs } = this.availableCommand.data;
+    const parsedShip = this.map.parse(ship);
 
-    assert(ships.find(loc => loc.coordinates === (ship)), `There is no movable ship at ${ship}`);
+    assert(ships.find(loc => isEqual(this.map.parse(loc.coordinates), parsedShip), `There is no movable ship at ${ship}`));
 
-    const distance = this.map.distance(CubeCoordinates.parse(ship), CubeCoordinates.parse(dest));
+    const distance = this.map.distance(parsedShip, this.map.parse(dest));
 
     assert(range >= distance, 'The ship cannot move that far');
 
     const moveCost = costs[distance] || "~";
     pl.payCosts(Reward.parse(moveCost), Command.MoveShip);
 
-    pl.removeShip(this.map.grid.getS(ship));
+    pl.removeShip(this.map.grid.get(parsedShip));
 
-    const destHex = this.map.grid.getS(dest);
+    const destHex = this.map.grid.get(this.map.parse(dest));
 
     if (pl.data.availableWildTradeTokens() > 0) {
       assert (!destHex.hasTradeToken(player) || !destHex.hasWildTradeToken(), `The destination planet already has a trade token for your faction`);
@@ -1637,10 +1639,11 @@ export default class Engine {
     const pl = this.player(player);
 
     const PIHex =  pl.data.occupied.find( hex => hex.buildingOf(player) === Building.PlanetaryInstitute);
+    const parsed = this.map.parse(location);
 
     for (const elem of buildings) {
-      if (elem.coordinates === location) {
-        const {q, r} = CubeCoordinates.parse(location);
+      if (isEqual(this.map.parse(elem.coordinates), parsed)) {
+        const {q, r} = this.map.parse(location);
         const hex = this.map.grid.get({q, r});
 
         if ( hex.buildingOf(player) === Building.Mine ) {

@@ -34,7 +34,7 @@
   "dependencies": {
     "axios": "^0.19.2",
     "eventemitter3": "^3.1.0",
-    "hexagrid": "^2.0.1",
+    "hexagrid": "^2.1.0",
     "lodash": "^4.17.15",
     "seedrandom": "2.4.3",
     "shuffle-seed": "1.1.6"

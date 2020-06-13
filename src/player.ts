@@ -125,7 +125,7 @@ export default class Player extends EventEmitter {
     if (data.federationCache) {
       player.federationCache = data.federationCache;
       for (const fed of player.federationCache.federations) {
-        fed.hexes = (fed.hexes as any as string[]).map(hex => map.grid.getS(hex));
+        fed.hexes = (fed.hexes as any as string[]).map(hex => map.grid.get(map.parse(hex)));
       }
     }
 
@@ -898,7 +898,7 @@ export default class Player extends EventEmitter {
   }
 
   checkAndGetFederationInfo(location: string, map: SpaceMap, flexible: boolean): FederationInfo {
-    const coords = location.split(',').map(loc => CubeCoordinates.parse(loc));
+    const coords = location.split(',').map(loc => map.parse(loc));
 
     for (const coord of coords) {
       assert(map.grid.get(coord), `Coord ${coord.q}x${coord.r} is not part of the map`);

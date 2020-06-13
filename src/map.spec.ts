@@ -50,11 +50,11 @@ describe("Map", () => {
 
     map.load(conf);
 
-    expect(map.grid.getS("-2x0").data.sector).to.equal("5B");
-    expect(map.grid.getS("-2x0").data.planet).to.equal(Planet.Transdim);
-    expect(map.grid.getS("-3x1").data.sector).to.equal("6B");
-    expect(map.grid.getS("-3x1").data.planet).to.equal(Planet.Transdim);
-    expect(map.grid.getS("-4x2").data.planet).to.equal(Planet.Terra);
+    expect(map.grid.get({q: -2, r: 0}).data.sector).to.equal("5B");
+    expect(map.grid.get({q: -2, r: 0}).data.planet).to.equal(Planet.Transdim);
+    expect(map.grid.get({q: -3, r: 1}).data.sector).to.equal("6B");
+    expect(map.grid.get({q: -3, r: 1}).data.planet).to.equal(Planet.Transdim);
+    expect(map.grid.get({q: -4, r: 2}).data.planet).to.equal(Planet.Terra);
   });
 
   it("should load from a configuration in reverse", () => {
@@ -75,17 +75,23 @@ describe("Map", () => {
 
     map.load(conf);
 
-    expect(map.grid.getS("2x2").data.planet).to.equal(Planet.Empty, "2x2 != empty");
-    expect(map.grid.getS("3x2").data.planet).to.equal(Planet.Empty, "3x2 != empty");
-    expect(map.grid.getS("1x3").data.planet).to.equal(Planet.Ice, "1x3 != ice");
-    expect(map.grid.getS("3x3").data.planet).to.equal(Planet.Gaia, "3x3 != gaia");
-    expect(map.grid.getS("3x1").data.planet).to.equal(Planet.Empty, "3x1 != empty");
-    expect(map.grid.getS("1x5").data.planet).to.equal(Planet.Terra, "1x5 != terra");
+    expect(map.grid.get({q: 2, r: 2}).data.planet).to.equal(Planet.Empty, "2x2 != empty");
+    expect(map.grid.get({q: 3, r: 2}).data.planet).to.equal(Planet.Empty, "3x2 != empty");
+    expect(map.grid.get({q: 1, r: 3}).data.planet).to.equal(Planet.Ice, "1x3 != ice");
+    expect(map.grid.get({q: 3, r: 3}).data.planet).to.equal(Planet.Gaia, "3x3 != gaia");
+    expect(map.grid.get({q: 3, r: 1}).data.planet).to.equal(Planet.Empty, "3x1 != empty");
+    expect(map.grid.get({q: 1, r: 5}).data.planet).to.equal(Planet.Terra, "1x5 != terra");
   });
 
   it("withinDistance should work", () => {
     const map = new SpaceMap(2);
 
     expect(map.withinDistance({q: 0, r: 0, s: 0}, 2)).to.have.length(19);
+  });
+
+  it ("should be fine with new coordinate system", () => {
+    const map = new SpaceMap(4, "big");
+
+    // expect(map.grid)
   });
 });

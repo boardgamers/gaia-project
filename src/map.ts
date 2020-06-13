@@ -5,7 +5,7 @@ import assert from 'assert';
 import { keyBy } from 'lodash';
 import Sector from "./sector";
 import { Player, Planet, Faction } from "./enums";
-import { GaiaHex } from "./gaia-hex";
+import { GaiaHex, reverseSuffixes } from "./gaia-hex";
 
 // Data: from outer ring to inside ring, starting from top
 const s1 = {name: "1", map: "eeemevoeedee,ereees,e".replace(/,/g, "")};
@@ -109,7 +109,10 @@ export default class SpaceMap {
 
     const [hexagon, ...hexagons] = conf.sectors.map((val: SectorInMapConfiguration, i) => {
       const def = ((conf.mirror || oldGen) ? rSectors : sectors)[val.sector].map;
-      const center = val.center || centers[i];
+      if (!val.center) {
+        val.center = centers[i];
+      }
+      const center = val.center;
 
       return Sector.create(def, val.sector, center).rotateRight(val.rotation, center);
     });
@@ -153,7 +156,7 @@ export default class SpaceMap {
   }
 
   rotateSector(center: string, times: number) {
-    const coords = CubeCoordinates.parse(center);
+    const coords = this.parse(center);
 
     assert(this.configuration().centers.some(pt => pt.q === coords.q && pt.r === coords.r), `${center} is not the center of a sector`);
 
@@ -252,6 +255,26 @@ export default class SpaceMap {
     } else {
       return bigConfiguration;
     }
+  }
+
+  parse(coords: string) {
+    if (coords.includes("x")) {
+      return CubeCoordinates.parse(coords);
+    }
+    assert(this.placement, "Needs sector info to parse sector coordinates");
+    const match = /^([0-9]{1,2})([ABC][0-9]{1,2})$/.exec(coords);
+    assert(match, "Malformed coordinate: " + coords);
+    const [_, sector, suffix] = match;
+
+    const relative = CubeCoordinates.parse(reverseSuffixes[suffix]);
+
+    const center = this.placement!.sectors!.find(conf => conf.sector.replace(/[AB]/, '') === sector).center!;
+
+    return {
+      q: center.q + relative.q,
+      r: center.r + relative.r,
+      s: center.s + relative.s
+    };
   }
 }
 
