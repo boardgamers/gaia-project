@@ -276,6 +276,10 @@ export default class SpaceMap {
       s: center.s + relative.s
     };
   }
+
+  getS(coords: string) {
+    return this.grid.get(this.parse(coords));
+  }
 }
 
 export {smallConfiguration, bigConfiguration};

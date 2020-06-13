@@ -955,7 +955,7 @@ export default class Engine {
       return;
     }
     const source = this.leechSources.shift();
-    const sourceHex = this.map.grid.get(this.map.parse(source.coordinates));
+    const sourceHex = this.map.getS(source.coordinates);
     const isTrade = source.tradeDelivery !== undefined;
     const canLeechPlayers: Player[] = [];
 
@@ -1429,7 +1429,7 @@ export default class Engine {
 
     assert(data, `Impossible to execute build command at ${location}`);
 
-    const hex = this.map.grid.get(this.map.parse(location));
+    const hex = this.map.getS(location);
     hex.data.planet = Planet.Lost;
 
     this.player(player).build(Building.Mine, hex, Reward.parse(data.cost), this.map, 0);
@@ -1455,7 +1455,7 @@ export default class Engine {
 
   [Command.DeliverTrade](player: PlayerEnum, location: string) {
     assert(location === this.availableCommand.data.locations[0].coordinates, "Impossible to deliver trade at " + location);
-    const destHex = this.map.grid.get(this.map.parse(location));
+    const destHex = this.map.getS(location);
 
     this.player(player).deliverTrade(destHex);
     // The main occupier of the planet can charge power
@@ -1479,7 +1479,7 @@ export default class Engine {
 
     pl.removeShip(this.map.grid.get(parsedShip));
 
-    const destHex = this.map.grid.get(this.map.parse(dest));
+    const destHex = this.map.getS(dest);
 
     if (pl.data.availableWildTradeTokens() > 0) {
       assert (!destHex.hasTradeToken(player) || !destHex.hasWildTradeToken(), `The destination planet already has a trade token for your faction`);
