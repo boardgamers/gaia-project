@@ -38,12 +38,52 @@ import ResearchBoard from './ResearchBoard.vue';
 import ScoringBoard from './ScoringBoard.vue';
 import SpaceMap from './SpaceMap.vue';
 import TurnOrder from './TurnOrder.vue';
+import { resolve } from 'dns';
 
 @Component<Game>({
   created (this: Game) {
     const unsub = this.$store.subscribeAction(({ type, payload }) => {
       if (type === "gaiaViewer/externalData") {
         this.handleData(Engine.fromData(payload));
+        return;
+      }
+      if (type === "gaiaViewer/replayStart") {
+        this.$store.dispatch("gaiaViewer/replayInfo", { start: 1, end: this.engine.moveHistory.length, current: this.engine.moveHistory.length });
+
+        this.replayData = {
+          current: this.engine.moveHistory.length,
+          backup: JSON.parse(JSON.stringify(this.engine))
+        };
+        return;
+      }
+      if (type === "gaiaViewer/replayEnd") {
+        const restore = payload || this.replayData?.backup;
+        this.replayData = null;
+        this.handleData(Engine.fromData(restore));
+        return;
+      }
+      if (type === "gaiaViewer/replayTo") {
+        const dest: number = payload;
+        const current = this.replayData.current;
+
+        this.replayData.current = dest;
+
+        this.$store.dispatch("gaiaViewer/replayInfo", { start: 1, end: this.replayData.backup.moveHistory.length, current: dest });
+
+        if (dest === current) {
+          return;
+        }
+        if (dest < current) {
+          this.handleData(new Engine(this.replayData.backup.moveHistory.slice(0, dest), { ...this.replayData.backup.options, noFedCheck: true }));
+          return;
+        }
+
+        for (const move of this.replayData.backup.moveHistory.slice(current, dest)) {
+          this.engine.move(move);
+        }
+        this.handleData(Engine.fromData(JSON.parse(JSON.stringify(this.engine))));
+
+        return;
       }
     });
 
@@ -66,10 +106,12 @@ export default class Game extends Vue {
   // When joining a game
   name = "";
 
+  replayData: {current: number; backup: Engine} = null;
+
   @Prop()
   options: EngineOptions;
 
-  get engine () {
+  get engine (): Engine {
     return this.$store.state.gaiaViewer.data;
   }
 
@@ -114,9 +156,6 @@ export default class Game extends Vue {
     if (player) {
       if (player.index !== undefined) {
         return this.engine.players[player.index];
-      }
-      if (player.auth) {
-        return this.engine.players.find(pl => pl.auth === player.auth);
       }
     }
   }

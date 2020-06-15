@@ -23,6 +23,7 @@ module.exports = {
     'no-return-assign': 'off',
     'no-lone-blocks': 'off',
     'no-unmodified-loop-condition': 'off',
+    'no-useless-return': 'off',
     quotes: 'off'
   }
 };

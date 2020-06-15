@@ -3,6 +3,10 @@
 # gaia-viewer
 A Vue.js / SVG UI for Gaia Project
 
+## Demo
+
+Check out [boardgamers.space](https://www.boardgamers.space)!
+
 ## Requirements
 
 Depending on your version of node and your OS, the binaries for node-sass might need to be built rather than downloaded.

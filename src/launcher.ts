@@ -19,6 +19,9 @@ function launch (selector: string, component: VueConstructor<Vue> = Game) {
 
   const item: EventEmitter & {store?: Store<unknown>; app?: Vue} = new EventEmitter();
 
+  let replaying = false;
+  let finalState = null;
+
   item.addListener("state", data => {
     store.dispatch("gaiaViewer/externalData", data);
     item.emit("replaceLog", data?.moveHistory);
@@ -26,9 +29,27 @@ function launch (selector: string, component: VueConstructor<Vue> = Game) {
   item.addListener("state:updated", () => item.emit("fetchState"));
   item.addListener("preferences", data => store.commit("gaiaViewer/preferences", data));
   item.addListener("player", data => store.commit("gaiaViewer/player", data));
+  item.addListener("replay:start", () => {
+    store.dispatch("gaiaViewer/replayStart");
+    replaying = true;
+    finalState = null;
+  });
+  item.addListener("replay:to", (info) => {
+    store.dispatch("gaiaViewer/replayTo", info);
+    item.emit("replaceLog", (store.state as any).gaiaViewer.data.moveHistory);
+  })
+  item.addListener("replay:end", () => {
+    store.dispatch("gaiaViewer/replayEnd", finalState);
+    replaying = false;
+    item.emit("replaceLog", (finalState || (store.state as any).gaiaViewer.data).moveHistory);
+  });
   item.addListener("gamelog", logData => {
-    store.dispatch("gaiaViewer/externalData", logData.data.state);
-    item.emit("replaceLog", logData.data.state?.moveHistory);
+    if (replaying) {
+      finalState = logData.data.state;
+    } else {
+      store.dispatch("gaiaViewer/externalData", logData.data.state);
+      item.emit("replaceLog", logData.data.state?.moveHistory);
+    }
   });
 
   const unsub1 = store.subscribeAction(({ type, payload }) => {
@@ -41,6 +62,10 @@ function launch (selector: string, component: VueConstructor<Vue> = Game) {
 
     if (type === "gaiaViewer/playerClick") {
       item.emit("player:clicked", { name: payload.name, auth: payload.auth, index: (store as Store<any>).state.gaiaViewer.data?.players?.findIndex(pl => pl === payload) });
+    }
+
+    if (type === "gaiaViewer/replayInfo") {
+      item.emit("replay:info", payload);
     }
   });
 
