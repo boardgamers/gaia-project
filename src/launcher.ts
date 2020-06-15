@@ -20,32 +20,34 @@ function launch (selector: string, component: VueConstructor<Vue> = Game) {
   const item: EventEmitter & {store?: Store<unknown>; app?: Vue} = new EventEmitter();
 
   let replaying = false;
-  let finalState = null;
 
   item.addListener("state", data => {
     store.dispatch("gaiaViewer/externalData", data);
     item.emit("replaceLog", data?.moveHistory);
   });
-  item.addListener("state:updated", () => item.emit("fetchState"));
+  item.addListener("state:updated", () => {
+    if (!replaying) {
+      item.emit("fetchState");
+    }
+  });
   item.addListener("preferences", data => store.commit("gaiaViewer/preferences", data));
   item.addListener("player", data => store.commit("gaiaViewer/player", data));
   item.addListener("replay:start", () => {
     store.dispatch("gaiaViewer/replayStart");
     replaying = true;
-    finalState = null;
   });
   item.addListener("replay:to", (info) => {
     store.dispatch("gaiaViewer/replayTo", info);
     item.emit("replaceLog", (store.state as any).gaiaViewer.data.moveHistory);
   })
   item.addListener("replay:end", () => {
-    store.dispatch("gaiaViewer/replayEnd", finalState);
+    store.dispatch("gaiaViewer/replayEnd");
     replaying = false;
-    item.emit("replaceLog", (finalState || (store.state as any).gaiaViewer.data).moveHistory);
+    item.emit("fetchState");
   });
   item.addListener("gamelog", logData => {
     if (replaying) {
-      finalState = logData.data.state;
+      //
     } else {
       store.dispatch("gaiaViewer/externalData", logData.data.state);
       item.emit("replaceLog", logData.data.state?.moveHistory);
