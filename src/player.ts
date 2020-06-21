@@ -421,8 +421,11 @@ export default class Player extends EventEmitter {
     // Lantids
     const isAdditionalMine = !upgradedBuilding && hex.occupied();
 
-    if (isAdditionalMine) {
+    if (isAdditionalMine) {      
       hex.data.additionalMine = this.player;
+      if (hex.data.planet === Planet.Lost) {
+        this.data.buildings[building] += 1;
+      }
       if (this.data.hasPlanetaryInstitute()) {
         this.data.gainRewards([new Reward("2k")]);
       }
