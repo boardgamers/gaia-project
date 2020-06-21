@@ -57,6 +57,12 @@ describe("Events", () => {
     expect(event.rewards).to.have.length(5);
   });
 
+  it("should have no condition for o,q", () => {
+    const event = new Event('o,q');
+
+    expect(event.condition).to.equal(Condition.None);
+  });
+
   describe("toString", () => {
     it ("should render properly for a non-activated event", () => {
       expect(new Event("+t").toString()).to.equal("+t");
