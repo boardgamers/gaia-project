@@ -373,7 +373,9 @@ export default class Player extends EventEmitter {
 
   build(building: Building, hex: GaiaHex, cost: Reward[], map: SpaceMap, stepsReq?: number) {
     this.payCosts(cost, Command.Build);
-    const wasOccupied = this.data.occupied.includes(hex);
+    const wasOccupied = this.data.occupied.includes(hex);    
+    const isNewLostPlanet = hex.data.planet === Planet.Lost && !hex.occupied();
+
     // excluding Gaiaformers as occupied
     if (building !== Building.GaiaFormer) {
       if (!wasOccupied) {
@@ -398,7 +400,7 @@ export default class Player extends EventEmitter {
     }
 
     // The mine of the lost planet doesn't grant any extra income
-    if (hex.data.planet !== Planet.Lost) {
+    if (!isNewLostPlanet) {
       // Add income of the building to the list of events
       this.data.buildings[building] += 1; // NEEDS TO BE BEFORE REWARDS, so gleens can get qic from tech if they build academy 2
     } else {
@@ -413,7 +415,7 @@ export default class Player extends EventEmitter {
     }
 
     // NEEDS TO BE AFTER REMOVAL, so the tech ts > 4vp counts the correct number of ts after being upgraded from a lab
-    if (hex.data.planet !== Planet.Lost) {
+    if (!isNewLostPlanet) {
       this.loadEvents(this.board.buildings[building].income[this.data.buildings[building] - 1]);
     }
 
@@ -423,9 +425,6 @@ export default class Player extends EventEmitter {
 
     if (isAdditionalMine) {      
       hex.data.additionalMine = this.player;
-      if (hex.data.planet === Planet.Lost) {
-        this.data.buildings[building] += 1;
-      }
       if (this.data.hasPlanetaryInstitute()) {
         this.data.gainRewards([new Reward("2k")]);
       }

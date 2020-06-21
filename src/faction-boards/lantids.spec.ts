@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import Engine from "../engine";
-import { Player, Building, Command } from '../enums';
+import { Player, Building, Command, Planet, Operator } from '../enums';
 
 
 
@@ -137,5 +137,31 @@ describe("Lantids", () => {
     expect(income.includes('4pw')).to.be.true;
     // tslint:disable-next-line no-unused-expression
     expect(income.includes('t')).to.be.false;
+  });
+
+  it ("should allow to place a mine in the Lost Planet", () => {
+    const engine = new Engine(parseMoves(`
+      init 2 randomSeed
+      p1 faction lantids
+      p2 faction ivits
+      lantids build m 1B0
+      lantids build m 4A4
+      ivits build PI 1A8
+      ivits booster booster3
+      lantids booster booster4
+      ivits income 1t
+      lantids build m 6B4.
+      ivits pass booster5
+    `));
+    
+    const hex = engine.map.getS("1B5");
+    hex.data.planet = Planet.Lost;
+    hex.data.building = Building.Mine;
+    hex.data.player = Player.Player2;
+    const mines = engine.player(Player.Player1).data.buildings[Building.Mine]; 
+    const events = engine.player(Player.Player1).events[Operator.Income].length;
+    engine.move("p1 build m 1B5.");
+    expect(engine.player(Player.Player1).data.buildings[Building.Mine]).to.equal( mines + 1);
+    expect(engine.player(Player.Player1).events[Operator.Income].length).to.equal( events + 1);
   });
 });
