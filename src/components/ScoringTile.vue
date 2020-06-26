@@ -1,11 +1,12 @@
 <template>
   <g :class='["scoringTile", {highlighted, faded}]' v-b-tooltip :title="tooltip">
+    <rect x="1" y="1" width="75" height="40" rx=2 ry=2 stroke="none" fill="white" />
     <text class="title" x="58" y="36">R{{round}}</text>
     <!-- <text class="content" x="5" y="31">{{content.split(" ")[0]}}</text>-->
     <Resource :kind=reward.type :count=reward.count transform="translate(64.2, 12.6) scale(1.5)" />
     <Condition :condition=event.condition :transform="`translate(${(event.condition === 'step' || event.condition === 'a' || event.condition === 'PA') ? 27 + (event.condition === 'PA' ? 8 : 0 ) : 34}, ${event.condition === 'step' ? 20 : 22}) scale(1.3)`" />
     <Operator :condition=event.condition :operator=event.operator transform="translate(28, 27) scale(1)" />
-    <rect x="1" y="1" width="75" height="40" rx=2 ry=2 />
+    <rect x="1" y="1" width="75" height="40" rx=2 ry=2 class="contour" />
   </g>
 </template>
 
@@ -64,10 +65,10 @@ export default class ScoringTile extends Vue {
 
 g {
   &.scoringTile {
-    & > rect {
+    & > rect.contour {
+      fill: none;
       stroke: #333;
       stroke-width: 1px;
-      fill: none;
     }
     .title {
       font-size: 10px;
@@ -79,7 +80,7 @@ g {
       pointer-events: none;
     }
 
-    &.highlighted > rect {
+    &.highlighted > rect.contour {
       stroke: #2C4;
       stroke-width: 1.5px;
     }
