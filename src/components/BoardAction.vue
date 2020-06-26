@@ -123,8 +123,7 @@ g {
     }
 
     &.faded {
-      stroke-opacity: 0.5;
-      fill-opacity: 0.5;
+      opacity: 0.5;
     }
   }
 }
