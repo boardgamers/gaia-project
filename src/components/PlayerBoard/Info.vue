@@ -33,7 +33,7 @@
           <Resource kind="k" :count="data.knowledge" transform="scale(0.1)"/>
           <text :class="['board-text', {maxResource: data.knowledge >= 15}]" transform="translate(1,0) scale(0.7)">/15</text>
         </g>
-        <Resource kind="q" :count="data.qics" transform="translate(12.5,0) scale(0.1)"/>
+        <Resource kind="q" :count="data.qics" :center-left=true transform="translate(12.5,0) scale(0.1)"/>
       </g>
       <g transform="translate(0, 1.5)">
         <text class="board-text" x=0.25>I</text>

@@ -1,12 +1,9 @@
 <template>
-  <svg viewBox="-25 -25 50 50" width="50" height="50">
-    <g :class='["specialAction", {highlighted, disabled}]'>
-      <polygon points="-1,0.5 -0.5,1 0.5,1 1,0.5 1,-0.5 0.5,-1 -0.5,-1 -1,-0.5" transform="scale(24)" @click="onClick" />
-      <text>
-        <tspan x="0" v-for="(line, i) in income" :dy="`${i === 0 ? - 0.5*(income.length - 1)*11 : 11}px`" :key="i">
-          {{line.replace(/ /g, '')}}
-        </tspan>
-      </text>
+  <svg viewBox="-25 -25 50 50" width="50" height="50" style="overflow: visible">
+    <g :class='["specialAction", {highlighted: isHighlighted, disabled}]'>
+      <polygon points="-10,4 -4,10 4,10 10,4 10,-4 4,-10 -4,-10 -10,-4" transform="scale(2.4)" @click="onClick" />
+      <!-- <Resource v-for="(reward, i) in rewards" :key=i :count=reward.count :kind=reward.type :transform="`translate(${rewards.length > 1 ? (i - 0.5) * 20  : 0}, ${reward.type === 'pw' ? 4 : 0}), scale(1.5)`" />-->
+      <TechContent :content="act" v-for="(act, i) in action" :key=i :transform="`translate(0, ${(i - (action.length-1)/2) * 24}) scale(${action.length === 1 ? 0.8 : 0.55})`" />
     </g>
   </svg>
 </template>
@@ -14,32 +11,34 @@
 <script lang="ts">
 import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import { tiles, Event } from '@gaia-project/engine';
+import { tiles, Event, Reward } from '@gaia-project/engine';
 import { eventDesc } from '../data/event';
 
-@Component<SpecialAction>({
-  computed: {
-    income () {
-      return this.action.includes(',') ? this.action.split(',') : this.action.split('-');
-    }
-  }
-})
+@Component
 export default class SpecialAction extends Vue {
-  @Prop()
+  @Prop({ default: false })
   disabled: boolean;
 
+  @Prop({ default: false })
+  highlighted: boolean;
+
   @Prop()
-  action: string;
+  action: string[];
 
   onClick () {
-    if (!this.highlighted) {
+    if (!this.isHighlighted) {
+      this.$emit("click");
       return;
     }
-    this.$store.dispatch("gaiaViewer/actionClick", this.action);
+    this.$store.dispatch("gaiaViewer/actionClick", this.action.join(","));
   }
 
-  get highlighted () {
-    return this.$store.state.gaiaViewer.context.highlighted.actions.has(this.action);
+  get rewards () {
+    return new Event(this.action[0]).rewards;
+  }
+
+  get isHighlighted () {
+    return this.highlighted || this.$store.state.gaiaViewer.context.highlighted.actions.has(this.action.join(","));
   }
 }
 
@@ -49,33 +48,19 @@ export default class SpecialAction extends Vue {
 
 g {
   &.specialAction {
-    polygon {
-      stroke: #333;
-      stroke-width: 0.02;
+    & > polygon {
+      stroke: black;
+      stroke-width: 0.5;
       fill: orange;
     }
 
-    text {
-      fill: white;
-      text-anchor: middle;
-      dominant-baseline: middle;
-      font-size: 12px;
-      pointer-events: none;
-    }
-
-    &.highlighted polygon {
+    &.highlighted > polygon {
       stroke: #2C4;
       cursor: pointer;
-      stroke-width: 0.04;
     }
 
     &.disabled {
-      stroke-opacity: 0.6;
-      fill-opacity: 0.3;
-
-      text {
-        fill: #000;
-      }
+      opacity: 0.5;
     }
   }
 }

@@ -1,9 +1,10 @@
 <template>
-  <svg :class='["booster", {highlighted, disabled}]' v-b-tooltip :title="tooltip" @click="onClick" width="76" height="50" viewBox="0 0 76 50">
-    <rect x="1" y="1" width="74" height="48" rx="5" ry="5"/>
-    <text class="title" x="6" y="12">{{title}}</text>
-    <text class="event1" x="6" y="30">{{event1}}</text>
-    <text class="event1" x="6" y="44">{{event2}}</text>
+  <svg :class='["booster", {highlighted, disabled}]' v-b-tooltip :title="tooltip" @click="onClick" width="60" height="120" viewBox="-32 -62 64 124">
+    <rect x="-30" y="-60" width="60" height="120" rx="3" ry="3" stroke="black" stroke-width=0 fill="#777" />
+    <line x1=-29 x2=29 y1=-8 y2=-8 stroke=#aaa stroke-width=2 />
+    <TechContent :content=event1 transform="translate(0, -33)" />
+    <TechContent :content=event2 :transform="`translate(0, ${30 - (event2.startsWith('+') ? 4 : 0)})`" />
+    <rect x="-30" y="-60" width="60" height="120" rx="3" ry="3" stroke="black" stroke-width=1 fill="none" />
   </svg>
 </template>
 
@@ -12,6 +13,7 @@ import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import { tiles, Event } from '@gaia-project/engine';
 import { eventDesc } from '../data/event';
+import TechContent from './TechContent.vue';
 
 @Component<Booster>({
   computed: {
@@ -34,6 +36,9 @@ import { eventDesc } from '../data/event';
     tooltip () {
       return `- ${eventDesc(new Event(this.event1))}\n- ${eventDesc(new Event(this.event2))}`;
     }
+  },
+  components: {
+    TechContent
   }
 })
 export default class Booster extends Vue {
@@ -59,11 +64,6 @@ export default class Booster extends Vue {
 
 svg {
   &.booster {
-    rect {
-      stroke: #333;
-      stroke-width: 1px;
-      fill: white;
-    }
     .title {
       font-size: 10px;
       font-weight: bold;
@@ -74,14 +74,14 @@ svg {
       pointer-events: none;
     }
 
-    &.highlighted rect {
+    &.highlighted > rect {
       stroke: #2C4;
       cursor: pointer;
+      stroke-width: 2px;
     }
 
     &.disabled {
-      stroke-opacity: 0.5;
-      fill-opacity: 0.7;
+      opacity: 0.5;
     }
   }
 }

@@ -4,9 +4,9 @@
     <polygon :points="hexCorners.map(p => `${p.x},${p.y}`).join(' ')" :class="['spaceHex', {toSelect, highlighted: highlightedHexes.has(hex), qic: cost(hex).includes('q'), power: cost(hex).includes('pw')}]" @click='hexClick(hex)' />
     <text class="sector-name" v-if="isCenter">{{hex.data.sector[0] === 's' ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector)}}</text>
     <Planet v-if="hex.data.planet !== 'e'" :planet='hex.data.planet' :faction='faction(hex.data.player)' />
-    <Building v-if="hex.data.building" :building='hex.data.building' :faction='faction(hex.data.player)' />
-    <Building v-if="hex.data.additionalMine !== undefined" :faction='faction(hex.data.additionalMine)' building="m" transform="translate(0.58, -0.2) rotate(36) scale(0.9)" class="additionalMine" />
-    <Building v-for="(player, index) in tradeTokens" :key="`${player}-${index}-trade`" :faction='faction(player)' building="gf" :transform="`scale(0.6) translate(${tradeX(6 - index)}, ${tradeY(6 - index)})`" />
+    <Building v-if="hex.data.building" :building='hex.data.building' :faction='faction(hex.data.player)' :outline=true :flat="flat" transform="scale(0.1)" />
+    <Building v-if="hex.data.additionalMine !== undefined" :faction='faction(hex.data.additionalMine)' building="m" transform="translate(0.4, 0.2) scale(0.09)" class="additionalMine" :flat="flat" :outline=true />
+    <Building v-for="(player, index) in tradeTokens" :key="`${player}-${index}-trade`" :faction='faction(player)' building="gf" :transform="`scale(0.06) translate(${tradeX(6 - index)}, ${tradeY(6 - index)})`" :flat="flat" />
     <SpaceShip v-for="(player, index) in hex.data.ships || []" :key="`${player}-${index}-ship`" :faction='faction(player)' :scale="0.4" :x="shipX(index)" :y="shipY(index)" />
     <polygon v-for="(player, index) in hex.data.federations || []" :points="hexCorners.map(p => `${p.x*(1-(index+0.5)/8)},${p.y*(1-(index+0.5)/8)}`).join(' ')" :class="['spaceHexFederation', 'planet', planet(player)]" :key="`${player}-${index}`" />
   </g>
@@ -41,6 +41,10 @@ export default class SpaceHex extends Vue {
 
   get hexCorners () {
     return corners();
+  }
+
+  get flat () {
+    return this.$store.state.gaiaViewer.preferences.flatBuildings;
   }
 
   get map (): ISpaceMap {

@@ -2,7 +2,7 @@
   <div :class="{['no-faction-fill']: $store.state.gaiaViewer.preferences && $store.state.gaiaViewer.preferences.noFactionFill}">
     <div :class="['row', 'no-gutters', 'justify-content-center', engine.players.length > 2 ? 'medium-map' : 'small-map']" v-if="hasMap">
       <SpaceMap :class="['mb-1', 'space-map']" />
-      <svg class="scoring-research-board" :viewBox="`0 0 ${scoringX + 90} 450`">
+      <svg class="scoring-research-board" :viewBox="`-20 0 ${scoringX + 110} 450`" style=overflow:visible>
         <ResearchBoard :height="450" ref="researchBoard"/>
         <ScoringBoard class="ml-4" height="450" width="90" :x="scoringX" />
       </svg>
@@ -120,7 +120,7 @@ export default class Game extends Vue {
   }
 
   get scoringX () {
-    return this.engine.expansions ? 505 : 385;
+    return this.engine.expansions ? 535 : 415;
   }
 
   get orderedPlayers () {

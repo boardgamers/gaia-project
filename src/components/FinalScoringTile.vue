@@ -68,7 +68,7 @@ export default class FinalScoringTile extends Vue {
   }
 
   tokenY (index: number) {
-    return 25 + (index > 1 ? 17 : 0);
+    return 25 + (index > 1 ? 19 : 0);
   }
 }
 
@@ -101,7 +101,7 @@ g {
     }
 
     g .player-token {
-      stroke-width: 0.01;
+      stroke-width: 0.1;
     }
 
     line {

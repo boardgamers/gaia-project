@@ -56,6 +56,8 @@ export default class MoveButton extends Vue {
         return;
       }
 
+      console.log(type, payload);
+
       callback(payload);
     });
   }

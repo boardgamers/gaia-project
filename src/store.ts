@@ -24,7 +24,8 @@ const gaiaViewer = {
       activeButton: null
     } as GameContext,
     preferences: {
-      noFactionFill: false
+      noFactionFill: false,
+      flatBuildings: false
     },
     player: null as {index?: number; auth?: string} | null
   },

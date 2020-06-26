@@ -34,3 +34,8 @@ export default class Wrapper extends Vue {
 }
 
 </script>
+<style lang="scss">
+.b-avatar-custom {
+  display: contents !important;
+}
+</style>
