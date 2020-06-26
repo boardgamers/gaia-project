@@ -13,8 +13,8 @@
       <Building building="m" transform="translate(0, -5) scale(2.2)" />
     </g>
     <g v-else-if="condition === 'PA'">
-      <Building building="ac1" transform="translate(-8, 0) scale(1.8)" />
-      <Building building="PI" transform="translate(8, 1) scale(1.8)" />
+      <Building building="PI" transform="translate(-8, 1) scale(1.8)" />
+      <Building building="ac1" transform="translate(8, 1) scale(1.8)" />
     </g>
     <g v-else-if="condition === 'a'">
       <line x1="-15" x2="15" stroke ="#aaa" />
