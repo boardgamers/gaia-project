@@ -2,7 +2,7 @@
   <g :class='["finalScoringTile", {highlighted}]' v-b-tooltip :title="tooltip">
     <rect x="1" y="1" width="75" height="55" />
     <text class="title" x="5" y="12">{{content}}</text>
-    <Token v-for="(player, index) in players" :faction="player.faction" :transform="`translate(${tokenX(index)}, ${tokenY(index)})`" :key="player.faction" :scale="8" />
+    <Token v-for="(player, index) in players" :faction="player.faction" :transform="` translate(${tokenX(index)}, ${tokenY(index)}) scale(0.4)`" :key="player.faction" />
     <text v-for="(player, index) in players" :key="player.faction + '-text'" :transform="`translate(${tokenX(index)}, ${tokenY(index)})`" :class="['score', player.faction]">
       {{progress(player)}}
     </text>
@@ -98,10 +98,6 @@ g {
       &.automa,&.gleens,&.xenos,&.itars,&.nevlas {
         fill: #333;
       }
-    }
-
-    g .player-token {
-      stroke-width: 0.1;
     }
 
     line {

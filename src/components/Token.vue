@@ -1,6 +1,6 @@
 <template>
   <g>
-    <circle cx="0" cy="0" r="1" :transform="`scale(${scale})`" :class="['player-token', 'planet-fill', renderPlanet]" />
+    <circle cx="0" cy="0" r="20" :class="['player-token', 'planet-fill', renderPlanet]" />
   </g>
 </template>
 
@@ -13,9 +13,6 @@ import { factions, Faction, Planet } from '@gaia-project/engine';
 export default class PlayerToken extends Vue {
   @Prop()
   faction: Faction | 'automa';
-
-  @Prop()
-  scale: number;
 
   @Prop()
   planet: Planet;
@@ -32,9 +29,9 @@ export default class PlayerToken extends Vue {
 <style lang="scss">
 
 g .player-token {
-  stroke: #111;
+  stroke: black;
   pointer-events: none;
-  stroke-width: 0.2;
+  stroke-width: 2.5;
 }
 
 </style>
