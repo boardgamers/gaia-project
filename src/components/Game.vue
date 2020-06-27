@@ -2,9 +2,10 @@
   <div :class="{['no-faction-fill']: $store.state.gaiaViewer.preferences && $store.state.gaiaViewer.preferences.noFactionFill}">
     <div :class="['row', 'no-gutters', 'justify-content-center', engine.players.length > 2 ? 'medium-map' : 'small-map']" v-if="hasMap">
       <SpaceMap :class="['mb-1', 'space-map']" />
-      <svg class="scoring-research-board" :viewBox="`-20 0 ${scoringX + 110} 450`" style=overflow:visible>
-        <ResearchBoard :height="450" ref="researchBoard"/>
-        <ScoringBoard class="ml-4" height="450" width="90" :x="scoringX" />
+      <svg class="scoring-research-board" :viewBox="`0 0 480 505`" >
+        <ResearchBoard height="450" ref="researchBoard" x=-50  />
+        <ScoringBoard class="ml-4" width="90" x="380" y=-25 />
+        <BoardAction :scale="17" :transform="`translate(${30 + 45*i}, 480)`" v-for="(action, i) in actions" :key="action" :action="action" />
       </svg>
     </div>
     <div class="row mt-2">
@@ -28,9 +29,9 @@
 <script lang="ts">
 import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import Engine, { Command, Phase, factions, Player, EngineOptions, Expansion } from '@gaia-project/engine';
-
+import Engine, { Command, Phase, factions, Player, EngineOptions, Expansion, BoardAction as BoardActionEnum } from '@gaia-project/engine';
 import AdvancedLog from './AdvancedLog.vue';
+import BoardAction from './BoardAction.vue';
 import Commands from './Commands.vue';
 import Pool from './Pool.vue';
 import PlayerInfo from './PlayerInfo.vue';
@@ -91,6 +92,7 @@ import { resolve } from 'dns';
   },
   components: {
     AdvancedLog,
+    BoardAction,
     Commands,
     PlayerInfo,
     Pool,
@@ -115,12 +117,16 @@ export default class Game extends Vue {
     return this.$store.state.gaiaViewer.data;
   }
 
-  get ended () {
-    return this.engine.phase === Phase.EndGame;
+  get expansions () {
+    return this.$store.state.gaiaViewer.data.expansions;
   }
 
-  get scoringX () {
-    return this.engine.expansions ? 535 : 415;
+  get actions (): BoardActionEnum[] {
+    return BoardActionEnum.values(this.expansions);
+  }
+
+  get ended () {
+    return this.engine.phase === Phase.EndGame;
   }
 
   get orderedPlayers () {
@@ -242,7 +248,7 @@ export default class Game extends Vue {
 @import "../stylesheets/frontend.scss";
 
 .space-map, .scoring-research-board {
-  max-height: 550px;
+  max-height: 600px;
 
   width: 100%;
   // this is needed for Safari
