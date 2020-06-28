@@ -21,7 +21,7 @@
           <line x1=10.4 x2=11 y1=13.0 y2=13.0 stroke=black stroke-width="0.06" />
         </g>
 
-        <Booster v-if="playerData.tiles.booster" x=0 y=10 width=3.5 height=7 :booster="playerData.tiles.booster" :disabled="passed"/>
+        <Booster v-if="playerData.tiles.booster" x=0 y=10 width=3.5 height=7 :booster="playerData.tiles.booster" :disabled="passed" filter="url(#shadow-1)" />
         <PowerBowls transform="translate(30,14.5)" :faction="player.faction" :data="playerData" :player="player" />
 
         <g transform="translate(29.3, 5)">
@@ -47,7 +47,7 @@
     </div>
 
     <div class="tiles row no-gutters mt-1">
-      <FederationTile v-for="(fed,i) in playerData.tiles.federations" class="mb-1 mr-1" :key="i" :federation="fed.tile" :used="!fed.green" :player="player.player" :numTiles="1"/>
+      <FederationTile v-for="(fed,i) in playerData.tiles.federations" class="mb-1 mr-1" :key="i" :federation="fed.tile" :used="!fed.green" :player="player.player" :numTiles="1" filter="url(#shadow-1)" />
       <TechTile v-for="tech in playerData.tiles.techs" :covered="!tech.enabled" class="mb-1 mr-1" :key="tech.pos" :pos="tech.pos" :player="player.player" />
     </div>
     <b-modal :id="player.faction" :title="factionName" size="lg">
