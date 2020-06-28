@@ -5,11 +5,11 @@
       <g style="opacity: 0.7">
         <Resource v-for="(resource,i) in resources" :key="'field-' + i" :transform="`translate(${2 + 56/2 + resourceX(i)}, ${height/3*2 + 3 + resourceOffset})`" :kind="resource.type" :count="resource.count"  />
       </g>
-      <Token v-for="player in players" :faction="player.faction" :transform="`translate(${tokenX(player.player)}, ${tokenY(player.player)}) scale(0.25) `" :key="player.player" filter="url(#shadow-2)" />
+      <text x="0" y="0" :transform="`translate(${2 + 56/2 }, ${height - 10})`" class="levDesc">{{label}}</text>
+      <Token v-for="player in players" :faction="player.faction" :transform="`translate(${tokenX(player.player)}, ${tokenY(player.player)}) scale(0.33) `" :key="player.player" filter="url(#shadow-2)" />
       <FederationTile v-if="this.federation" :federation="this.federation" :numTiles="1" x="5" y="7.4" height="33" />
       <circle v-if="this.lostPlanet" :class='["planet-fill", this.lostPlanet ]' cx="30" cy="18" r="10" />
     </g>
-    <text x="0" y="0" :transform="`translate(${2 + 56/2 }, ${height - 10})`" class="levDesc">{{label}}</text>
   </g>
 </template>
 
@@ -78,11 +78,11 @@ export default class ResearchTile extends Vue {
   }
 
   tokenX (index: number) {
-    return 10 + 13 * (index % 4) + 22 * (index > 3 ? 1 : 0);
+    return 15 + 21 * (index % 2) + (index >= 2 ? 10 : 0);
   }
 
   tokenY (index: number) {
-    return 10 + 13 * (index > 3 ? 1 : 0);
+    return 12 + 15 * (index >= 2 ? 1 : 0);
   }
 
   onClick () {
