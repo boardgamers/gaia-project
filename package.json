@@ -23,7 +23,7 @@
     "dist/package/img"
   ],
   "dependencies": {
-    "@gaia-project/engine": "^4.3.4",
+    "@gaia-project/engine": "^4.3.5",
     "bootstrap": "^4.4.1",
     "bootstrap-vue": "^2.12.0",
     "vue": "^2.6.11",
