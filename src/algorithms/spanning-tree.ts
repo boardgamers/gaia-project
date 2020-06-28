@@ -1,28 +1,31 @@
 import { inRange, minBy, maxBy, uniq, difference, sortBy } from "lodash";
 import { Grid, Hex } from "hexagrid";
 import shortestPath from './shortest-path';
+import {sumBy} from 'lodash';
+import assert from 'assert';
 
 type algorithms = "exhaustive" | "heuristic";
-export default function spanningTree(destGroups: Hex[][], grid: Grid, maxAdditional = -1, algorithm: algorithms = "heuristic") {
+export default function spanningTree<T>(destGroups: Hex<T>[][], grid: Grid, maxAdditional, algorithm: algorithms, costOf: (hex: Hex<T>) => number) {
   // Choose which algorithm to use.
   // By the way, the heuristic always gives the best solution if destGroups.length <= 3 (maybe even with 4?)
   // The breadthwidth algorithm always gives the best solution anyway but is slower
   if (algorithm === "exhaustive") {
-    return spanningTreeBreadthWidth(destGroups, grid, maxAdditional);
+    assert(false, "Exhaustive spanning tree algorithm needs to be updated, use heuristic instead");
+    // return spanningTreeBreadthWidth(destGroups, grid, maxAdditional);
   } else {
-    return spanningTreeWithHeuristic(destGroups, grid, maxAdditional);
+    return spanningTreeWithHeuristic(destGroups, grid, maxAdditional, costOf);
   }
 }
 
-function spanningTreeWithHeuristic(destGroups: Hex[][], grid: Grid, maxAdditional = -1): Hex[] {
-  const destHexes: Hex[] = [].concat(...destGroups);
+function spanningTreeWithHeuristic<T>(destGroups: Hex<T>[][], grid: Grid<Hex<T>>, maxAdditional = -1, costOf = (hex: Hex<any>) => 1): {path: Hex[]; cost: number} | undefined {
+  const destHexes: Hex<T>[] = [].concat(...destGroups);
   const destHexesSet = new Set(destHexes);
 
   if (destGroups.length <= 1) {
-    return destHexes;
+    return {path: destHexes, cost: sumBy(destHexes, costOf)};
   }
 
-  const destGroupsMap: Map<Hex, Hex[]> = new Map();
+  const destGroupsMap: Map<Hex<T>, Hex<T>[]> = new Map();
   for (const group of destGroups) {
     for (const hex of group) {
       destGroupsMap.set(hex, group);
@@ -42,7 +45,7 @@ function spanningTreeWithHeuristic(destGroups: Hex[][], grid: Grid, maxAdditiona
     startingPoints.push(group[0]);
   }
 
-  const groupAround = hex => {
+  const groupAround = (hex: Hex<T>) => {
     if (destGroupsMap.has(hex)) {
       return destGroupsMap.get(hex);
     } else {
@@ -51,125 +54,131 @@ function spanningTreeWithHeuristic(destGroups: Hex[][], grid: Grid, maxAdditiona
   };
 
   let minScore = maxAdditional === -1 ? grid.size + 1 : destHexes.length + maxAdditional + 1;
-  let bestSolution;
+  let bestSolution: Hex<T>[];
 
   for (const startingPoint of startingPoints) {
     let hexes = groupAround(startingPoint);
+    let cost = 0;
     let toReach = difference(destHexes, hexes);
 
     do {
-      const path: Hex[] = shortestPath(hexes, toReach, grid);
+      const hexSet = new Set<Hex<T>>(hexes);
+      const path = shortestPath(hexes, toReach, grid, hex => hexSet.has(hex) ? 0 : costOf(hex));
 
       if (!path) {
         hexes = undefined;
         break;
       }
 
-      hexes = uniq(hexes.concat(path.slice(1, -1), groupAround(path[path.length - 1])));
-      toReach = difference(toReach, groupAround(path[path.length - 1]));
-    } while (hexes.length < minScore && toReach.length > 0);
+      hexes = uniq(hexes.concat(path.path.slice(1, -1), groupAround(path.path[path.path.length - 1])));
+      cost = sumBy(hexes, costOf);
+      toReach = difference(toReach, hexes);
+    } while (cost < minScore && toReach.length > 0);
 
-    if (hexes && hexes.length < minScore) {
-      minScore = hexes.length;
+    if (hexes && cost < minScore) {
+      minScore = cost;
       bestSolution = hexes;
     }
   }
 
-  return bestSolution;
+  if (bestSolution) {
+    return {path: bestSolution, cost: minScore};
+  }
 }
 
 // No heuristic, but exhaustive
-function spanningTreeBreadthWidth(destGroups: Hex[][], grid: Grid, maxAdditional = -1): Hex[] {
-  const destHexes: Hex[] = [].concat(...destGroups);
-  const destHexesSet = new Set(destHexes);
+// TO REDO to take into accoutn new parameters (passing through an occupied planet, even if not in destGroup, is 0 cost)
+// function spanningTreeBreadthWidth(destGroups: Hex[][], grid: Grid, maxAdditional = -1): Hex[] {
+//   const destHexes: Hex[] = [].concat(...destGroups);
+//   const destHexesSet = new Set(destHexes);
 
-  if (destGroups.length <= 1) {
-    return destHexes;
-  }
+//   if (destGroups.length <= 1) {
+//     return destHexes;
+//   }
 
-  const destGroupsMap: Map<Hex, Hex[]> = new Map();
-  for (const group of destGroups) {
-    for (const hex of group) {
-      destGroupsMap.set(hex, group);
-    }
-  }
+//   const destGroupsMap: Map<Hex, Hex[]> = new Map();
+//   for (const group of destGroups) {
+//     for (const hex of group) {
+//       destGroupsMap.set(hex, group);
+//     }
+//   }
 
-  class HexGroup {
-    hexes: Hex[] = [];
+//   class HexGroup {
+//     hexes: Hex[] = [];
 
-    constructor(hexes: Hex[] = []) {
-      this.hexes = sortBy(hexes, hex => hex.toString());
-    }
+//     constructor(hexes: Hex[] = []) {
+//       this.hexes = sortBy(hexes, hex => hex.toString());
+//     }
 
-    key(): string {
-      return this.hexes.map(h => h.toString()).join(',');
-    }
+//     key(): string {
+//       return this.hexes.map(h => h.toString()).join(',');
+//     }
 
-    withAdditionalHexes(hexes: Hex[]): HexGroup {
-      return new HexGroup(uniq(this.hexes.concat(hexes)));
-    }
+//     withAdditionalHexes(hexes: Hex[]): HexGroup {
+//       return new HexGroup(uniq(this.hexes.concat(hexes)));
+//     }
 
-    get winning(): boolean {
-      return this.hexes.filter(hex => destHexesSet.has(hex)).length === destHexesSet.size;
-    }
-  }
+//     get winning(): boolean {
+//       return this.hexes.filter(hex => destHexesSet.has(hex)).length === destHexesSet.size;
+//     }
+//   }
 
-  let minScore = maxAdditional === -1 ? grid.size + 1 : destHexes.length + maxAdditional + 1;
-  let bestSolution: Hex[];
-  const explored: Map<string, HexGroup> = new Map();
+//   let minScore = maxAdditional === -1 ? grid.size + 1 : destHexes.length + maxAdditional + 1;
+//   let bestSolution: Hex[];
+//   const explored: Map<string, HexGroup> = new Map();
 
-  const groupAround = hex => {
-    if (destGroupsMap.has(hex)) {
-      return destGroupsMap.get(hex);
-    } else {
-      return [hex];
-    }
-  };
+//   const groupAround = hex => {
+//     if (destGroupsMap.has(hex)) {
+//       return destGroupsMap.get(hex);
+//     } else {
+//       return [hex];
+//     }
+//   };
 
-  let toExplore: Map<string, HexGroup> = new Map();
-  let toExploreNext: Map<string, HexGroup> = new Map();
+//   let toExplore: Map<string, HexGroup> = new Map();
+//   let toExploreNext: Map<string, HexGroup> = new Map();
 
-  const startingGroup = new HexGroup(destGroups[0]);
-  toExplore.set(startingGroup.key(), startingGroup);
+//   const startingGroup = new HexGroup(destGroups[0]);
+//   toExplore.set(startingGroup.key(), startingGroup);
 
-  while (toExplore.size > 0) {
-    for (const hexGroup of toExplore.values()) {
-      if (!(hexGroup.hexes.length < minScore)) {
-        continue;
-      }
+//   while (toExplore.size > 0) {
+//     for (const hexGroup of toExplore.values()) {
+//       if (!(hexGroup.hexes.length < minScore)) {
+//         continue;
+//       }
 
-      for (const hex of hexGroup.hexes) {
-        for (const neighbour of grid.neighbours(hex)) {
-          if (hexGroup.hexes.includes(neighbour)) {
-            continue;
-          }
+//       for (const hex of hexGroup.hexes) {
+//         for (const neighbour of grid.neighbours(hex)) {
+//           if (hexGroup.hexes.includes(neighbour)) {
+//             continue;
+//           }
 
-          const newHexGroup = hexGroup.withAdditionalHexes(groupAround(neighbour));
-          const key = newHexGroup.key();
+//           const newHexGroup = hexGroup.withAdditionalHexes(groupAround(neighbour));
+//           const key = newHexGroup.key();
 
-          if (explored.has(key)) {
-            continue;
-          }
+//           if (explored.has(key)) {
+//             continue;
+//           }
 
-          explored.set(key, newHexGroup);
+//           explored.set(key, newHexGroup);
 
-          if (newHexGroup.hexes.length >= minScore) {
-            continue;
-          }
+//           if (newHexGroup.hexes.length >= minScore) {
+//             continue;
+//           }
 
-          if (newHexGroup.winning) {
-            minScore = newHexGroup.hexes.length;
-            bestSolution = newHexGroup.hexes;
-          } else {
-            toExploreNext.set(key, newHexGroup);
-          }
-        }
-      }
-    }
+//           if (newHexGroup.winning) {
+//             minScore = newHexGroup.hexes.length;
+//             bestSolution = newHexGroup.hexes;
+//           } else {
+//             toExploreNext.set(key, newHexGroup);
+//           }
+//         }
+//       }
+//     }
 
-    toExplore = toExploreNext;
-    toExploreNext = new Map();
-  }
+//     toExplore = toExploreNext;
+//     toExploreNext = new Map();
+//   }
 
-  return bestSolution;
-}
+//   return bestSolution;
+// }

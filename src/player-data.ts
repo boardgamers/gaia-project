@@ -69,7 +69,7 @@ export default class PlayerData extends EventEmitter {
   /** Number of federations built (used for ivits) */
   federationCount = 0;
 
-  /** Coordinates occupied by buildings */
+  /** Hexes occupied by buildings with value (not gaia formers), refs match the map hexes with a simple equality test */
   occupied: GaiaHex[] = [];
   shipLocations: string[] = [];
   leechPossible: number;

@@ -766,7 +766,7 @@ export default class Player extends EventEmitter {
 
     const excluded = map.excludedHexesForBuildingFederation(this.player, this.faction);
 
-    const hexes = this.data.occupied.map(coord => map.grid.get(coord)).filter(hex => !excluded.has(hex));
+    const hexes = this.data.occupied.filter(hex => !excluded.has(hex));
 
     const buildingGroups = this.buildingGroups(hexes, map);
     const buildingGroupsList = uniq([...buildingGroups.values()]);
@@ -791,6 +791,7 @@ export default class Player extends EventEmitter {
     // We now have several combinations of buildings that can form federations
     // We need to see if they can be connected
     const federations: GaiaHex[][] = [];
+    const occupiedSet = new Set(this.data.occupied);
 
     for (const combination of combinations) {
       const destGroups = combination;
@@ -803,26 +804,26 @@ export default class Player extends EventEmitter {
       // However, those possibilites are explored in another combination
       const flexibleExcluded: Set<GaiaHex> = new Set([].concat(...this.data.occupied.map(hex => buildingsInDestGroups.has(hex) ? [] : [hex, ...map.grid.neighbours(hex)])));
       const allHexes = [...map.grid.values()].filter(hex => !excluded.has(hex) && (!flexible || !flexibleExcluded.has(hex)));
-      const workingGrid = new Grid(...allHexes.map(hex => new Hex(hex.q, hex.r)));
+      const workingGrid = new Grid<Hex<{cost: number}>>(...allHexes.map(hex => new Hex(hex.q, hex.r, {cost: occupiedSet.has(hex) ? 0 : 1})));
       const convertedDestGroups = destGroups.map(destGroup => destGroup.map(hex => workingGrid.get(hex)));
-      let tree = spanningTree(convertedDestGroups, workingGrid, maxSatellites, "heuristic");
+      let tree = spanningTree(convertedDestGroups, workingGrid, maxSatellites, "heuristic", hex => hex.data.cost);
 
       if (tree && !flexible && flexibleExcluded.size > 0) {
         // In non flexible mode, we still try to suggest federations without extra planets, as long
         // as they don't add additional satellites
         const allHexes = [...map.grid.values()].filter(hex => !excluded.has(hex) && !flexibleExcluded.has(hex));
-        const workingGrid = new Grid(...allHexes.map(hex => new Hex(hex.q, hex.r)));
+        const workingGrid = new Grid<Hex<{cost: number}>>(...allHexes.map(hex => new Hex(hex.q, hex.r, {cost: occupiedSet.has(hex) ? 0 : 1})));
         const convertedDestGroups = destGroups.map(destGroup => destGroup.map(hex => workingGrid.get(hex)));
-        const treeWithoutOtherPlanets = spanningTree(convertedDestGroups, workingGrid, maxSatellites, "heuristic");
+        const treeWithoutOtherPlanets = spanningTree(convertedDestGroups, workingGrid, maxSatellites, "heuristic", hex => hex.data.cost);
 
-        if (treeWithoutOtherPlanets && treeWithoutOtherPlanets.length <= tree.length) {
+        if (treeWithoutOtherPlanets && treeWithoutOtherPlanets.cost <= tree.cost) {
           tree = treeWithoutOtherPlanets;
         }
       }
 
       if (tree) {
         // Convert from regular hex to gaia hex of grid
-        federations.push(this.addAdjacentBuildings(tree.map(hex => map.grid.get(hex)), map));
+        federations.push(this.addAdjacentBuildings(tree.path.map(hex => map.grid.get(hex)), map));
       }
     }
 
@@ -873,7 +874,7 @@ export default class Player extends EventEmitter {
 
   federationInfo(federation: GaiaHex[]): FederationInfo {
     // Be careful of Ivits & space stations for nSatellites!
-    const satellites = federation.filter(hex => hex.buildingOf(this.player) === undefined);
+    const satellites = federation.filter(hex => !hex.occupyingPlayers()?.includes(this.player));
     const nPlanets = federation.filter(hex => hex.colonizedBy(this.player)).length;
 
     return {
@@ -940,17 +941,18 @@ export default class Player extends EventEmitter {
     if (!flexible) {
       const allHexes = [...map.grid.values()].filter(hex => !excluded.has(hex));
 
-      const workingGrid = new Grid(...allHexes.map(hex => new Hex(hex.q, hex.r)));
+      const occupiedSet = new Set(this.data.occupied);
+      const workingGrid = new Grid<Hex<{cost: number}>>(...allHexes.map(hex => new Hex(hex.q, hex.r, {cost: occupiedSet.has(hex) ? 0 : 1})));
       const allGroups = [...this.buildingGroups(hexes.filter(hx => hx.belongsToFederationOf(this.player) || this.buildingValue(hx, {federation: true}) > 0), map).values()];
       const groups = uniq(allGroups);
       const convertedDestGroups = groups.map(destGroup => destGroup.map(hex => workingGrid.get(hex)));
 
-      const tree = spanningTree(convertedDestGroups, workingGrid, info.satellites);
+      const tree = spanningTree(convertedDestGroups, workingGrid, info.satellites, "heuristic", hex => hex.data.cost);
 
       if (tree) {
-        const smallFederation = this.addAdjacentBuildings(tree.map(hex => map.grid.get(hex)), map);
+        const smallFederation = this.addAdjacentBuildings(tree.path.map(hex => map.grid.get(hex)), map);
         const info2 = this.federationInfo(smallFederation);
-        assert(info2.satellites >= info.satellites, "The federation can be built with less satellites, for example: " + tree.join(","));
+        assert(info2.satellites >= info.satellites, "The federation can be built with less satellites, for example: " + tree.path.join(","));
       }
     }
 

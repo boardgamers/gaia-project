@@ -1,14 +1,14 @@
-import {Hex, Grid, CubeCoordinates} from "hexagrid";
+import {Hex, Grid} from "hexagrid";
 
-export default function shortestPath(starts: Hex[], dests: Hex[], grid: Grid): Hex[] {
-  const destSet: Set<Hex> = new Set(dests);
-  const pathTo: Map<Hex, Hex[]> = new Map();
+export default function shortestPath<T>(starts: Hex<T>[], dests: Hex<T>[], grid: Grid, costOf = (hex: Hex<T>) => 1): {path: Hex<T>[]; cost: number} {
+  const destSet: Set<Hex<T>> = new Set(dests);
+  const pathTo: Map<Hex<T>, {path: Hex<T>[]; cost: number}> = new Map();
 
   for (const start of starts) {
-    pathTo.set(start, [start]);
+    pathTo.set(start, {path: [start], cost: costOf(start)});
 
     if (destSet.has(start)) {
-      return [start];
+      return {path: [start], cost: costOf(start)};
     }
   }
 
@@ -16,28 +16,31 @@ export default function shortestPath(starts: Hex[], dests: Hex[], grid: Grid): H
   let toExpandNext = [];
 
   let minToDest = grid.size + 1;
-  let bestPath: Hex[];
+  let bestPath: {path: Hex[]; cost: number};
 
   while (toExpand.length > 0) {
     for (const hex of toExpand) {
       const curPath = pathTo.get(hex);
 
-      if (curPath.length + 1 >= minToDest) {
+      if (curPath.cost >= minToDest) {
         continue;
       }
 
       for (const neighbour of grid.neighbours(hex)) {
-        if (pathTo.has(neighbour) && pathTo.get(neighbour).length <= curPath.length + 1) {
+        if (pathTo.has(neighbour) && pathTo.get(neighbour).cost <= curPath.cost + costOf(neighbour)) {
           continue;
         }
 
-        const extendedPath = [].concat(curPath, [neighbour]);
+        const extendedPath = {
+          cost: curPath.cost + costOf(neighbour),
+          path: [...curPath.path, neighbour]
+        };
 
         pathTo.set(neighbour, extendedPath);
         toExpandNext.push(neighbour);
 
-        if (destSet.has(neighbour) && extendedPath.length < minToDest) {
-          minToDest = extendedPath.length;
+        if (destSet.has(neighbour) && extendedPath.cost < minToDest) {
+          minToDest = extendedPath.cost;
           bestPath = extendedPath;
         }
       }

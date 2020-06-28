@@ -10,11 +10,11 @@ describe("Federations", () => {
     expect(engine.findAvailableCommand(engine.playerToMove, Command.FormFederation).data.federations).to.have.length(21);
   });
 
-  it("should show 15 options with regular federation rules", function() {
+  it("should show 9 options with regular federation rules", function() {
     this.timeout(10000);
     const engine = new Engine(game());
 
-    expect(engine.findAvailableCommand(engine.playerToMove, Command.FormFederation).data.federations).to.have.length(15);
+    expect(engine.findAvailableCommand(engine.playerToMove, Command.FormFederation).data.federations).to.have.length(9);
 
     // This extra long federation should not work
     expect(() => engine.move('gleens federation 0x1,0x0,0x-1,-1x-1,-1x-2,-1x-3,-2x-3,-3x-2,-3x-1,-3x0,-1x1,-2x2 fed6.')).to.throw();
@@ -25,6 +25,14 @@ describe("Federations", () => {
     const engine = new Engine(game2.moveHistory, game2.options);
 
     expect(() => engine.move('ambas federation -2x3,-2x2,-1x1,0x0 fed3.')).to.throw();
+  });
+
+  it("should force to add a mine to the federation if it means less satellites", function() {
+    this.timeout(10000);
+
+    const engine = new Engine(game3.moveHistory, game3.options);
+    expect(() => engine.move("xenos federation 10A10,10A8,10A9,3A2,5A1,5A5,5A6,5B1,5B2 fed1.")).to.throw();
+    expect(() => engine.move("xenos federation 5B3,5C,5A11,3A5,3B2,3B1 fed1.")).to.not.throw();
   });
 });
 
@@ -456,4 +464,169 @@ const game2 = {
     "ivits charge 2pw",
     "ivits spend 1pw for 1c. special 3o."
   ]
+};
+
+const game3 = {
+  moveHistory: [
+    "init 4 jobefunhouse017",
+    "p1 faction itars",
+    "p2 faction ambas",
+    "p3 faction baltaks",
+    "p4 faction xenos",
+    "itars build m 3x-4",
+    "ambas build m 1x1",
+    "baltaks build m -4x4",
+    "xenos build m -5x5",
+    "xenos build m 3x-1",
+    "baltaks build m 5x-6",
+    "ambas build m -4x2",
+    "itars build m 3x3",
+    "xenos build m 2x5",
+    "xenos booster booster3",
+    "baltaks booster booster5",
+    "ambas booster booster4",
+    "itars booster booster6",
+    "itars build ts 3x-4.",
+    "baltaks charge 1pw",
+    "ambas up nav.",
+    "baltaks build ts -4x4.",
+    "xenos charge 1pw",
+    "ambas charge 1pw",
+    "xenos build ts 5A6.",
+    "baltaks charge 2pw",
+    "itars up terra.",
+    "ambas build ts 4B0.",
+    "baltaks charge 1pw",
+    "baltaks spend 1gf for 1q. special range+3. build m 7B2.",
+    "ambas charge 1pw",
+    "xenos build lab 5A6. tech terra. up terra.",
+    "itars build lab 2B1. tech free3. up eco.",
+    "ambas build m 1B3.",
+    "xenos charge 1pw",
+    "baltaks action power3.",
+    "xenos up nav.",
+    "itars build m 3B3.",
+    "ambas charge 1pw",
+    "ambas burn 2. action power6. build m 7A6.",
+    "baltaks charge 1pw",
+    "baltaks build lab 5A7. tech free2. up gaia.",
+    "xenos charge 2pw",
+    "ambas charge 2pw",
+    "xenos action qic1. tech free3. up eco.",
+    "itars burn 1. spend 1pw for 1c. build ac1 2B1. tech free2. up eco.",
+    "baltaks charge 1pw",
+    "ambas build m 7B4.",
+    "baltaks charge 1pw",
+    "baltaks up gaia.",
+    "xenos burn 1. spend 3pw for 1o. build ac1 5A6. tech eco. up eco.",
+    "baltaks charge 2pw",
+    "itars pass booster10",
+    "ambas build lab 4B0. tech terra. up terra.",
+    "baltaks charge 2pw",
+    "baltaks spend 1gf for 1q. build m 4B2.",
+    "ambas charge 2pw",
+    "xenos pass booster6",
+    "ambas special step. build m 2A3.",
+    "itars charge 3pw",
+    "baltaks build ts 7B2.",
+    "ambas charge 1pw",
+    "ambas pass booster3",
+    "baltaks pass booster4",
+    "itars income 2pw",
+    "itars up eco.",
+    "xenos up eco.",
+    "ambas build m 9B1.",
+    "baltaks spend 1gf for 1q. special step. build m 7B0.",
+    "xenos charge 1pw",
+    "ambas charge 1pw",
+    "itars burn 4. action power3.",
+    "xenos action power4.",
+    "ambas spend 1o for 1c. build ts 7B4.",
+    "baltaks charge 2pw",
+    "baltaks action power5.",
+    "itars build ts 3B0.",
+    "xenos charge 1pw",
+    "xenos build ts 3A2.",
+    "itars charge 2pw",
+    "ambas pass booster8",
+    "baltaks up eco.",
+    "itars build PI 3B0.",
+    "xenos charge 2pw",
+    "xenos build PI 3A2.",
+    "itars charge 3pw",
+    "baltaks spend 1gf for 1q. spend 1q for 1o. build lab 7B2. tech eco. up eco.",
+    "ambas charge 1pw",
+    "itars pass booster3",
+    "xenos pass booster2",
+    "baltaks pass booster5",
+    "itars income 4pw. income 1t. income 3pw",
+    "xenos income 2t",
+    "itars spend 4tg for tech. tech nav. up nav",
+    "ambas action power4.",
+    "itars action power3.",
+    "xenos build m 5B5.",
+    "baltaks charge 2pw",
+    "baltaks action power5.",
+    "ambas build ts 7A6.",
+    "baltaks charge 2pw",
+    "itars action power6. build m 3A11.",
+    "xenos up eco.",
+    "baltaks special range+3. build m 8B1.",
+    "ambas build lab 7B4. tech free1. up sci.",
+    "baltaks charge 2pw",
+    "itars up nav.",
+    "xenos build ts 1A5.",
+    "ambas charge 1pw",
+    "baltaks charge 1pw",
+    "baltaks up eco.",
+    "ambas up sci.",
+    "itars build m 5A0.",
+    "xenos charge 1pw"
+  ],
+  options: {
+    "map" : {
+      "sectors" : [
+        {
+          "sector" : "1",
+          "rotation" : 4
+        },
+        {
+          "sector" : "3",
+          "rotation" : 4
+        },
+        {
+          "sector" : "10",
+          "rotation" : 5
+        },
+        {
+          "sector" : "2",
+          "rotation" : 0
+        },
+        {
+          "sector" : "7A",
+          "rotation" : 0
+        },
+        {
+          "sector" : "5A",
+          "rotation" : 0
+        },
+        {
+          "sector" : "6A",
+          "rotation" : 0
+        },
+        {
+          "sector" : "9",
+          "rotation" : 5
+        },
+        {
+          "sector" : "4",
+          "rotation" : 4
+        },
+        {
+          "sector" : "8",
+          "rotation" : 3
+        }
+      ]
+    }
+  }
 };
