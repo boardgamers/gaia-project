@@ -3,13 +3,13 @@
     <ResearchTrack v-for="(field, index) in [...fields].reverse()" :field=field :x="(fields.length - 1 - index)*60" :key="field" />
     <text y="198" x="180" style="font-size: 12px; text-anchor: middle">Charge 3 power</text>
     <g v-if="$store.state.gaiaViewer.data.tiles && $store.state.gaiaViewer.data.tiles.techs['gaia']">
-      <g transform="translate(100, 410) scale(0.9)" >
+      <g transform="translate(100, 410) scale(0.95)" >
         <TechTile pos="free1" x="-30" y="-30" />
       </g>
-      <g transform="translate(180, 410) scale(0.9)" >
+      <g transform="translate(180, 410) scale(0.95)" >
         <TechTile pos="free2" x="-30" y="-30" />
       </g>
-      <g transform="translate(260, 410) scale(0.9)" >
+      <g transform="translate(260, 410) scale(0.95)" >
         <TechTile pos="free3" x="-30" y="-30" />
       </g>
     </g>

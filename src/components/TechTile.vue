@@ -1,7 +1,7 @@
 <template>
-  <svg :class='["techTile", {highlighted, covered}]' v-show="this.count" v-b-tooltip :title="tooltip" @click="onClick" width="60" height="60" viewBox="-32 -32 64 64">
+  <svg :class='["techTile", pos, {highlighted, covered, advanced: isAdvanced}]' v-show="this.count" v-b-tooltip :title="tooltip" @click="onClick" width="60" height="60" viewBox="-32 -32 64 64">
     <g :transform="`scale(${isAdvanced? 0.9 : 1})`">
-      <rect x=-30 y=-30 width=60 height=60 rx=3 ry=3 stroke="black" stroke-width=1 class="tech-border" :fill="isAdvanced ? '#6888FA' : '#ddd'" />
+      <rect x=-30 y=-30 width=60 height=60 rx=3 ry=3 stroke="black" stroke-width=1 class="tech-border" />
       <!--<text class="title" x="-25" y="-18">{{title}}</text>-->
       <TechContent :content=rawContent style="pointer-events:none;" />
     </g>
@@ -102,6 +102,33 @@ svg {
       &.smaller {
         font-size: 9px;
       }
+    }
+
+    .tech-border {
+      fill: #ddd;
+    }
+
+    &.advanced .tech-border {
+      fill: #6888FA;
+    }
+
+    &.eco .tech-border {
+      fill: #ffd700;
+    }
+    &.sci .tech-border {
+      fill: #79b9f8;
+    }
+    &.terra .tech-border {
+      fill: #856443;
+    }
+    &.nav .tech-border {
+      fill: #516372;
+    }
+    &.gaia .tech-border {
+      fill: #a5589c;
+    }
+    &.int .tech-border {
+      fill: #508344;
     }
 
     &.highlighted .tech-border {

@@ -146,7 +146,7 @@ svg {
       fill: #ffd700;
     }
     &.sci {
-      fill: #99ccff;
+      fill: #79b9f8;
     }
     &.terra {
       fill: #856443;
