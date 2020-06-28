@@ -1,9 +1,9 @@
 <template>
   <g :transform="`translate(${x}, 0)`">
-    <ResearchTile y="282" :level="0" :field="field" />
-    <ResearchTile y="243" :level="1" :field="field" />
-    <ResearchTile y="204" :level="2" :field="field" />
-    <ResearchTile y="147" :level="3" :field="field" />
+    <ResearchTile y="278" :level="0" :field="field" />
+    <ResearchTile y="240" :level="1" :field="field" />
+    <ResearchTile y="202" :level="2" :field="field" />
+    <ResearchTile y="146" :level="3" :field="field" />
     <ResearchTile y="108" :level="4" :field="field" />
     <ResearchTile y="0" :level="5" :field="field" />
     <g v-if="$store.state.gaiaViewer.data.tiles && $store.state.gaiaViewer.data.tiles.techs['gaia']">

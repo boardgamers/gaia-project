@@ -1,7 +1,7 @@
 <template>
   <svg :viewBox='`0 0 ${viewWidth} 440`' class="research-board">
     <ResearchTrack v-for="(field, index) in [...fields].reverse()" :field=field :x="(fields.length - 1 - index)*60" :key="field" />
-    <text y="200" x="180" style="font-size: 14px; text-anchor: middle">Charge 3 power</text>
+    <text y="198" x="180" style="font-size: 12px; text-anchor: middle">Charge 3 power</text>
     <g v-if="$store.state.gaiaViewer.data.tiles && $store.state.gaiaViewer.data.tiles.techs['gaia']">
       <TechTile pos="free1" x="70" y="380" />
       <TechTile pos="free2" x="150" y="380" />
