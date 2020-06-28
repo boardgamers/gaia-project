@@ -3,7 +3,7 @@
     <g :transform="`scale(${isAdvanced? 0.9 : 1})`">
       <rect x=-30 y=-30 width=60 height=60 rx=3 ry=3 stroke="black" stroke-width=1 class="tech-border" :fill="isAdvanced ? '#6888FA' : '#ddd'" />
       <!--<text class="title" x="-25" y="-18">{{title}}</text>-->
-      <TechContent :content=rawContent style="pointer-events:none" />
+      <TechContent :content=rawContent style="pointer-events:none;" />
     </g>
   </svg>
 </template>
@@ -111,8 +111,7 @@ svg {
     }
 
     &.covered {
-      stroke-opacity: 0.5;
-      fill-opacity: 0.7;
+      opacity: 0.5;
     }
   }
 }

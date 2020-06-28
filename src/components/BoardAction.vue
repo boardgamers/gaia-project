@@ -122,6 +122,8 @@ g {
       stroke-width: 0.08;
     }
 
+    // opacity: 0.8;
+
     &.faded {
       opacity: 0.5;
     }

@@ -7,8 +7,12 @@
     <ResearchTile y="108" :level="4" :field="field" />
     <ResearchTile y="0" :level="5" :field="field" />
     <g v-if="$store.state.gaiaViewer.data.tiles && $store.state.gaiaViewer.data.tiles.techs['gaia']">
-      <TechTile :pos="'adv-'+field" y="49" x="0" />
-      <TechTile :pos="field" y="321" x="0" />
+      <g transform="translate(30, 79) scale(0.90)">
+        <TechTile :pos="'adv-'+field" x=-30 y=-30 />
+      </g>
+      <g transform="translate(30, 351) scale(0.90)">
+        <TechTile :pos="field" x=-30 y=-30 />
+      </g>
     </g>
   </g>
 </template>
