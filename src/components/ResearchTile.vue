@@ -129,6 +129,7 @@ export default class ResearchTile extends Vue {
 </script>
 
 <style lang="scss">
+@import '../stylesheets/planets.scss';
 
 svg {
   .researchTile {
@@ -137,28 +138,28 @@ svg {
     stroke-width: 1;
 
     &.trade {
-      fill: orange;
+      fill: $rt-trade
     }
     &.ship {
-      fill: gray;
+      fill: $rt-ship
     }
     &.eco {
-      fill: #ffd700;
+      fill: $rt-eco
     }
     &.sci {
-      fill: #79b9f8;
+      fill: $rt-sci
     }
     &.terra {
-      fill: #856443;
+      fill: $rt-terra
     }
     &.nav {
-      fill: #516372;
+      fill: $rt-nav
     }
     &.gaia {
-      fill: #a5589c;
+      fill: $rt-gaia
     }
     &.int {
-      fill: #508344;
+      fill: $rt-int
     }
 
     &:hover {
