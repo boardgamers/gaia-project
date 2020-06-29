@@ -1,11 +1,10 @@
 <template>
   <svg :class='["booster", {highlighted, disabled}]' v-b-tooltip :title="tooltip" @click="onClick" width="60" height="120" viewBox="-32 -62 64 124">
-    <rect x="-30" y="-60" width="60" height="120" rx="3" ry="3" stroke="black" stroke-width=1 fill="#ddd"  />
+    <rect x="-30" y="-60" width="60" height="120" rx="3" ry="3" stroke="black" stroke-width=1  />
     <line x1=-29 x2=29 y1=-8 y2=-8 stroke=#aaa stroke-width=2 />
     <TechContent :content=event1 transform="translate(0, -33)" />
     <TechContent :content=event2 :transform="`translate(0, ${30 - (event2.startsWith('+') ? 4 : 0)})`" />
-    <rect x="-30" y="-60" width="60" height="120" rx="3" ry="3" stroke="black" stroke-width=1 fill="none" />
-  </svg>
+   </svg>
 </template>
 
 <script lang="ts">
@@ -61,9 +60,13 @@ export default class Booster extends Vue {
 </script>
 
 <style lang="scss">
+@import '../stylesheets/planets.scss';
 
 svg {
   &.booster {
+    & > rect {
+      fill: $booster-tile;
+    }
     .title {
       font-size: 10px;
       font-weight: bold;
