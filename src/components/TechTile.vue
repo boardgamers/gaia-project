@@ -84,6 +84,7 @@ export default class TechTile extends Vue {
 </script>
 
 <style lang="scss">
+@import '../stylesheets/planets.scss';
 
 svg {
   &.techTile {
@@ -105,30 +106,11 @@ svg {
     }
 
     .tech-border {
-      fill: #ddd;
+      fill: $tech-tile;
     }
 
     &.advanced .tech-border {
-      fill: #6888FA;
-    }
-
-    &.eco .tech-border {
-      fill: #ffd700;
-    }
-    &.sci .tech-border {
-      fill: #79b9f8;
-    }
-    &.terra .tech-border {
-      fill: #856443;
-    }
-    &.nav .tech-border {
-      fill: #516372;
-    }
-    &.gaia .tech-border {
-      fill: #a5589c;
-    }
-    &.int .tech-border {
-      fill: #508344;
+      fill: $adv-tech-tile;
     }
 
     &.highlighted .tech-border {
