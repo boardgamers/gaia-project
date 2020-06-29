@@ -29,9 +29,9 @@ export default class PlayerToken extends Vue {
 <style lang="scss">
 
 g .player-token {
-  stroke: black;
+  stroke: #111;
   pointer-events: none;
-  stroke-width: 2.5;
+  stroke-width: 3;
 }
 
 </style>
