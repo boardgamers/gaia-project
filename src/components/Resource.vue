@@ -1,9 +1,9 @@
 <template>
   <g class="resource">
-    <template v-if="kind === 'q'" >
+    <!-- <template v-if="kind === 'q'" >
       <Qic class="qic" :transform="`translate(${(((i-1) % 6) + 0.5 - Math.min(count, 6)/2 + (centerLeft ? Math.min(count, 6)/2 - 0.5 : 0)) * 11}, ${-16 * Math.floor((i-1)/6)})`" y="-10" :key=i v-for="i in count" />
-    </template>
-    <!-- <rect v-if="kind=='q'" class="qic" width="14" height="14" x="-7" y="-7" /> -->
+    </template> -->
+    <rect v-if="kind=='q'" class="qic" width="14" height="14" x="-7" y="-7" />
     <rect v-else-if="kind=='o'" class="ore" width="14" height="14" x="-7" y="-7" />
     <rect v-else-if="kind=='c'" class="credit" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
     <rect v-else-if="kind=='pw' || kind=='t'" class="power" width="15" height="15" ry="7.5" rx="7.5" x="-7.5" y="-7.5" />
@@ -43,10 +43,10 @@
         {{count}}
       </text>
     </template>
-    <image v-if="kind === 'pw'" xlink:href='../assets/resources/power-charge.svg' width=20 transform="translate(-9, -14)" />
+    <image v-if="kind === 'pw'" xlink:href='../assets/resources/power-charge.svg' width=20 transform="translate(-9.5, -13.5)" />
 
     <!-- <SpaceShip v-else-if="kind=='ship'" class="ship" :scale="14" /> -->
-    <text x="0" y="0" v-if="['o','c','k','pw','t','vp','ship'].includes(kind) || count === '+'" :class="{plus: count === '+'}">{{count}}</text>
+    <text x="0" y="0" v-if="['o','c','k','pw','t','vp','q','ship'].includes(kind) || count === '+'" :class="{plus: count === '+'}">{{count}}</text>
    </g>
 </template>
 
