@@ -71,7 +71,6 @@ svg {
     .no-faction-fill &.faction-fill {
       display: none;
     }
-
     // terra
     &.r {fill: $terra }
     // desert
