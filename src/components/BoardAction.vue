@@ -88,6 +88,7 @@ export default class BoardAction extends Vue {
 </script>
 
 <style lang="scss">
+@import '../stylesheets/planets.scss';
 
 g {
   &.boardAction {
@@ -98,13 +99,13 @@ g {
 
     &.qic {
       & > polygon {
-        fill: green;
+        fill: $res-qic;
       }
     }
 
     &.power {
       & > polygon {
-        fill: purple;
+        fill: $res-power;
       }
     }
 
@@ -117,7 +118,7 @@ g {
     }
 
     &.highlighted > polygon {
-      stroke: #2C4;
+      stroke: $highlighted;
       cursor: pointer;
       stroke-width: 0.08;
     }
