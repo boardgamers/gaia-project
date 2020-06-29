@@ -7,7 +7,7 @@
     <rect v-else-if="kind=='o'" class="ore" width="14" height="14" x="-7" y="-7" />
     <rect v-else-if="kind=='c'" class="credit" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
     <rect v-else-if="kind=='pw' || kind=='t'" class="power" width="15" height="15" ry="7.5" rx="7.5" x="-7.5" y="-7.5" />
-    <polygon points="-7.5,3 -3,7.5 3,7.5 7.5,3 7.5,-3 3,-7.5 -3,-7.5 -7.5,-3"  v-else-if="kind=='k'" class="planet-fill r knowledge" />
+    <polygon points="-7.5,3 -3,7.5 3,7.5 7.5,3 7.5,-3 3,-7.5 -3,-7.5 -7.5,-3"  v-else-if="kind=='k'" class="knowledge" />
     <g v-else-if="kind=='vp'" transform="translate(-7.5,-7.5)" class="vp">
       <VictoryPoint width="15" height="15" />
     </g>
@@ -90,22 +90,23 @@ g.resource {
   rect, .knowledge {
     stroke: #111;
     stroke-width: 0.9px;
+    fill: $res-knowledge;
   }
 
   .qic {
-    fill: green;
+    fill: $res-qic;
   }
 
   .ore {
-    fill: #ddd;
+    fill: $res-ore;
   }
 
   .credit {
-    fill: $desert;
+    fill: $res-credit;
   }
 
   .power {
-    fill: #984FF1;
+    fill: $res-power
   }
 
   .ore, .credit, .building.r, .ship {
