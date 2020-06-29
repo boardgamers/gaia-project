@@ -59,6 +59,7 @@ export default class FederationTile extends Vue {
 </script>
 
 <style lang="scss">
+@import '../stylesheets/planets.scss';
 
 g {
   &.federationTile {
@@ -76,7 +77,7 @@ g {
     }
 
     &.highlighted polygon {
-      stroke: #2C4;
+      stroke: $highlighted;
       cursor: pointer;
       stroke-width: 0.04;
     }

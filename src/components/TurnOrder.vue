@@ -53,9 +53,9 @@ export default class TurnOrder extends Vue {
   stroke (pl: Player) {
     if (this.gameData.players[this.gameData.currentPlayer] === pl) {
       if (this.gameData.players[this.gameData.playerToMove] === pl) {
-        return "stroke-width: 0.16px !important; stroke: #2c4";
+        return "stroke-width: 0.16px !important; stroke: #2C4";
       } else {
-        return "stroke-width: 0.10px !important; stroke: #2c4";
+        return "stroke-width: 0.10px !important; stroke: #2C4";
       }
     }
 

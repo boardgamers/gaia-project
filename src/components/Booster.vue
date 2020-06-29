@@ -75,7 +75,7 @@ svg {
     }
 
     &.highlighted > rect {
-      stroke: #2C4;
+      stroke: $highlighted;
       cursor: pointer;
       stroke-width: 2px;
     }

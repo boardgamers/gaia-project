@@ -75,6 +75,7 @@ export default class FinalScoringTile extends Vue {
 </script>
 
 <style lang="scss">
+@import '../stylesheets/planets.scss';
 
 g {
   &.finalScoringTile {
@@ -106,7 +107,7 @@ g {
     }
 
     &.highlighted rect {
-      stroke: #2C4;
+      stroke: $highlighted;
     }
   }
 }
