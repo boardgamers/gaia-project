@@ -13,7 +13,7 @@
           :key=i
           :count=reward.count
           :kind=reward.type
-          :transform="`translate(${i === 2 ? 0 : (i - Math.min(rewards.length - 1, 1)/2) * 18}, ${rewards.length === 1 ? 12.5 : (i === 2 ? -7 : 10)})`" />
+          :transform="`translate(${i === 2 ? 0 : (i - Math.min(rewards.length - 1, 1)/2) * 22}, ${rewards.length === 1 ? 12.5 : (i === 2 ? -7 : 10)})`" />
       </g>
     </g>
   </svg>
