@@ -3,10 +3,10 @@
     <text :class="['content', {smaller: content.length >= 10}]" x="-25" y="0" v-if="showText">{{content}}</text>
     <SpecialAction v-if="isAction" :action="['>' + content.split('=>')[1].trim()]" y=-20 width=40 height=40 x=-20 />
     <Condition :condition=condition v-if="condition === 'a'" transform="scale(1.5)" />
-    <Resource v-if="cornerReward" :count=cornerReward.count :kind=cornerReward.type transform="translate(19.5, -19.5), scale(1.35)" />
+    <Resource v-if="cornerReward" :count=cornerReward.count :kind=cornerReward.type transform="translate(19, -19), scale(1.35)" />
     <g v-if="event.operator === '|'">
-      <polygon points="-30,-28 -17,0 -30,28" fill="#F8031D" stroke=black stroke-width=1 stroke-miterlimit=1 />
-      <text x=-26.5 y=0 style="text-anchor: middle; dominant-baseline: central; font-size: 8px; fill: white !important; letter-spacing: -3px; writing-mode: vertical-rl; text-orientation: upright; font-stretch: condensed">PASS</text>
+      <polygon points="-30,-28 -20,-28 -20,28 -30,28" fill="#F8031D" stroke=black stroke-width=1 stroke-miterlimit=1 />
+      <text x=-25 y=0 style="text-anchor: middle; dominant-baseline: central; font-size: 8px; fill: white !important; letter-spacing: -1px; writing-mode: vertical-rl; text-orientation: upright; font-stretch: condensed">PASS</text>
     </g>
     <Condition :condition=condition v-if="condition !== 'a'" :transform="`translate(${event.operator==='>>' && condition !== 'a' ? 8 : 0}, 0) scale(1.5)`" />
     <Resource v-for="(res, i) in centerRewards" :count=res.count :kind=res.type :key=i :transform="`translate(${centerRewards.length > 1 ? (i - 0.5) * 26 : 0 }, 0) scale(${centerRewards.length === 1 ? 2 : 1.5})`" />

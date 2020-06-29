@@ -3,7 +3,7 @@
     <rect x="1" y="1" width="75" height="40" rx=2 ry=2 stroke="none" fill="white" />
     <text class="title" x="58" y="36">R{{round}}</text>
     <!-- <text class="content" x="5" y="31">{{content.split(" ")[0]}}</text>-->
-    <Resource :kind=reward.type :count=reward.count transform="translate(64.2, 12.6) scale(1.5)" />
+    <Resource :kind=reward.type :count=reward.count transform="translate(63.7, 13.1) scale(1.5)" />
     <Condition :condition=event.condition :transform="`translate(${(event.condition === 'step' || event.condition === 'a' || event.condition === 'PA') ? 27 + (event.condition === 'PA' ? 8 : 0 ) : 34}, ${event.condition === 'step' ? 20 : 22}) scale(1.3)`" />
     <Operator :condition=event.condition :operator=event.operator transform="translate(28, 27) scale(1)" />
     <rect x="1" y="1" width="75" height="40" rx=2 ry=2 class="contour" />
@@ -62,6 +62,7 @@ export default class ScoringTile extends Vue {
 </script>
 
 <style lang="scss">
+@import '../stylesheets/planets.scss';
 
 g {
   &.scoringTile {
@@ -81,7 +82,7 @@ g {
     }
 
     &.highlighted > rect.contour {
-      stroke: #2C4;
+      stroke: $highlighted;
       stroke-width: 1.5px;
     }
 
