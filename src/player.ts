@@ -373,7 +373,7 @@ export default class Player extends EventEmitter {
 
   build(building: Building, hex: GaiaHex, cost: Reward[], map: SpaceMap, stepsReq?: number) {
     this.payCosts(cost, Command.Build);
-    const wasOccupied = this.data.occupied.includes(hex);    
+    const wasOccupied = this.data.occupied.includes(hex);
     const isNewLostPlanet = hex.data.planet === Planet.Lost && !hex.occupied();
 
     // excluding Gaiaformers as occupied
@@ -423,7 +423,7 @@ export default class Player extends EventEmitter {
     // Lantids
     const isAdditionalMine = !upgradedBuilding && hex.occupied();
 
-    if (isAdditionalMine) {      
+    if (isAdditionalMine) {
       hex.data.additionalMine = this.player;
       if (this.data.hasPlanetaryInstitute()) {
         this.data.gainRewards([new Reward("2k")]);
@@ -944,7 +944,7 @@ export default class Player extends EventEmitter {
       const occupiedSet = new Set(this.data.occupied);
       const workingGrid = new Grid<Hex<{cost: number}>>(...allHexes.map(hex => new Hex(hex.q, hex.r, {cost: occupiedSet.has(hex) ? 0 : 1})));
       const allGroups = [...this.buildingGroups(hexes.filter(hx => hx.belongsToFederationOf(this.player) || this.buildingValue(hx, {federation: true}) > 0), map).values()];
-      const groups = uniq(allGroups);
+      const groups: GaiaHex[][] = uniq(allGroups);
       const convertedDestGroups = groups.map(destGroup => destGroup.map(hex => workingGrid.get(hex)));
 
       const tree = spanningTree(convertedDestGroups, workingGrid, info.satellites, "heuristic", hex => hex.data.cost);
