@@ -113,6 +113,25 @@ svg {
       fill: $adv-tech-tile;
     }
 
+    &.eco .tech-border {
+      fill: $rt-eco;
+    }
+    &.sci .tech-border {
+      fill: $rt-sci;
+    }
+    &.terra .tech-border {
+      fill: $rt-terra
+    }
+    &.nav .tech-border {
+      fill: $rt-nav;
+    }
+    &.gaia .tech-border {
+      fill: $rt-gaia;
+    }
+    &.int .tech-border {
+      fill: $rt-int;
+    }
+
     &.highlighted .tech-border {
       stroke: $highlighted;
       cursor: pointer;
