@@ -5,8 +5,9 @@
       <g style="opacity: 0.7">
         <Resource v-for="(resource,i) in resources" :key="'field-' + i" :transform="`translate(${2 + 56/2 + resourceX(i)}, ${height/3*2 + 3 + resourceOffset})`" :kind="resource.type" :count="resource.count"  />
       </g>
-      <text x="0" y="0" :transform="`translate(${2 + 56/2 }, ${height - 10})`" class="levDesc">{{label}}</text>
-      <Token v-for="player in players" :faction="player.faction" :transform="`translate(${tokenX(player.player)}, ${tokenY(player.player)}) scale(0.30) `" :key="player.player" filter="url(#shadow-1)"/>
+      <g v-for="player in players" :key="player.player" :transform="`translate(${tokenX(player.player)}, ${tokenY(player.player)}) scale(0.30)`">
+        <Token  :faction="player.faction"  filter="url(#shadow-1)"/>
+      </g>
       <g v-if="this.federation" transform="translate(30, 25) scale(0.6)">
         <FederationTile :federation="this.federation" :numTiles="1" x="-25" y="-25" height="50" filter="url(#shadow-1)" />
       </g>
@@ -186,6 +187,7 @@ svg {
       text-anchor: middle;
       fill: white;
       pointer-events: none;
+      opacity: 0.8;
     }
 
   }
