@@ -9,12 +9,12 @@
     </g>
     <Resource v-else-if="condition === 'step'" kind="step" />
     <g v-else-if="condition === 'mg'" transform="translate(-2,0)">
-      <image xlink:href="../assets/conditions/planet-flat.svg" width=30 x=-12 y=-11.5 filter="url(#color-planet-g)" transform="scale(-1,-1)" />
-      <Building building="m" outline-white transform="translate(0, -5) scale(2.2)" />
+      <image xlink:href="../assets/conditions/planet-flat.svg" width=30 x=-16 y=-12.5 filter="url(#color-planet-g)" transform="scale(-1,-1)" />
+      <Building building="m" outline-white transform="translate(2, -1) scale(2.2)" />
     </g>
     <g v-else-if="condition === 'PA'">
-      <Building building="PI" outline-white transform="translate(-6, 1) scale(1.8)" />
-      <Building building="ac1" outline-white transform="translate(6, 1) scale(1.8)" />
+      <Building building="PI" outline-white transform="translate(-2, 1) scale(1.8)" />
+      <Building building="ac1" outline-white transform="translate(5, 2) scale(1.8)" />
     </g>
     <g v-else-if="condition === 'a'">
       <line x1="-15" x2="15" stroke ="#666" />
