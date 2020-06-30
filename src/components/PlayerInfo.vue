@@ -21,7 +21,9 @@
           <line x1=10.4 x2=11 y1=13.0 y2=13.0 stroke=black stroke-width="0.06" />
         </g>
 
-        <Booster v-if="playerData.tiles.booster" x=0 y=10 width=3.5 height=7 :booster="playerData.tiles.booster" :disabled="passed" filter="url(#shadow-1)" />
+        <g transform="translate(1.8, 13.4) scale(0.06)">
+          <Booster v-if="playerData.tiles.booster" x=-30 y=-60 :booster="playerData.tiles.booster" :disabled="passed" />
+        </g>
         <PowerBowls transform="translate(30,14.5)" :faction="player.faction" :data="playerData" :player="player" />
 
         <g transform="translate(29.3, 5)">

@@ -1,9 +1,11 @@
 <template>
   <svg :class='["booster", {highlighted, disabled}]' v-b-tooltip :title="tooltip" @click="onClick" width="60" height="120" viewBox="-32 -62 64 124">
-    <rect x="-30" y="-60" width="60" height="120" rx="3" ry="3" stroke="black" stroke-width=1  />
-    <line x1=-29 x2=29 y1=-8 y2=-8 stroke=#aaa stroke-width=2 />
-    <TechContent :content=event1 transform="translate(0, -33)" />
-    <TechContent :content=event2 :transform="`translate(0, ${30 - (event2.startsWith('+') ? 4 : 0)})`" />
+      <g filter="url(#shadow-1)">
+        <rect x="-30" y="-60" width="60" height="120" rx="3" ry="3" stroke="black" stroke-width=1 class="booster-background" />
+        <line x1=-29 x2=29 y1=-8 y2=-8 stroke=#aaa stroke-width=2 />
+        <TechContent :content=event1 transform="translate(0, -33)" />
+        <TechContent :content=event2 :transform="`translate(0, ${30 - (event2.startsWith('+') ? 4 : 0)})`" />
+      </g>
    </svg>
 </template>
 
@@ -64,7 +66,7 @@ export default class Booster extends Vue {
 
 svg {
   &.booster {
-    & > rect {
+    .booster-background {
       fill: $booster-tile;
     }
     .title {
@@ -77,7 +79,7 @@ svg {
       pointer-events: none;
     }
 
-    &.highlighted > rect {
+    &.highlighted .booster-background {
       stroke: $highlighted;
       cursor: pointer;
       stroke-width: 2px;

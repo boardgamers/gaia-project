@@ -1,7 +1,7 @@
 <template>
   <div class="container-fluid">
     <div class="pool pb-0 mb-1 row no-gutters" v-if="$store.state.gaiaViewer.data.tiles && $store.state.gaiaViewer.data.tiles.techs['gaia']">
-      <Booster v-for="booster in boosters" :key="booster" :booster="booster" class="mb-2 mr-2" filter="url(#shadow-1)" />
+      <Booster v-for="booster in boosters" :key="booster" :booster="booster" class="mb-2 mr-2" />
       <FederationTile v-for="([tile, numTiles], i) in federations" :key="`${tile}-${i}`" :federation="tile" :numTiles="numTiles" class="mb-2 mr-2" filter="url(#shadow-1)" />
     </div>
   </div>
