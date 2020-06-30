@@ -22,7 +22,7 @@
         </g>
 
         <g transform="translate(1.8, 13.4) scale(0.06)">
-          <Booster v-if="playerData.tiles.booster" x=-30 y=-60 :booster="playerData.tiles.booster" :disabled="passed" />
+          <Booster v-if="playerData.tiles.booster" x=-30 y=-60 height=120 :booster="playerData.tiles.booster" :disabled="passed" />
         </g>
         <PowerBowls transform="translate(30,14.5)" :faction="player.faction" :data="playerData" :player="player" />
 
