@@ -1,6 +1,6 @@
 <template>
   <g :class='["boardAction", kind, {highlighted, faded}]' v-b-tooltip :title="tooltip">
-    <SpecialAction :action="boardActions[action].income" :highlighted=highlighted x=-20 y=-25 width=40 @click="onClick" />
+    <SpecialAction :action="boardActions[action].income" :highlighted=highlighted :board=true x=-20 y=-25 width=40 @click="onClick" />
 
     <!-- <text>
       <tspan :x="i+1 < income.length ? 1 : 0" v-for="(line, i) in income" :key="i" :dy="`${i*1.15 - (income.length - 1) / 4}em`">
