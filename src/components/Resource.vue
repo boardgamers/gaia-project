@@ -1,7 +1,8 @@
 <template>
   <g class="resource">
     <template v-if="kind === 'q'" >
-      <Qic class="qic" :transform="`translate(-0.5,0)`"   />
+      <Qic v-if="!flat" class="qic" :transform="`translate(-0.5,0)`"  />
+      <rect v-else class="qic" width="14" height="14" x="-7" y="-7" /> 
     </template>
     <!-- <rect v-if="kind=='q'" class="qic" width="14" height="14" x="-7" y="-7" /> -->
     <rect v-else-if="kind=='o'" class="ore" width="14" height="14" x="-7" y="-7" />
@@ -11,20 +12,21 @@
     <g v-else-if="kind=='vp'" transform="translate(-7.5,-7.5)" class="vp">
       <VictoryPoint width="15" height="15" />
     </g>
-    <Building v-else-if="kind=='gf'" building="gf" transform="translate(0.5, 0) scale(3)" />
+    <Building v-else-if="kind=='gf'" building="gf" transform="translate(0.5, 0) scale(2.5)" :flat="flat" />
     <g v-else-if="kind=='swap-PI'" transform="scale(-1,1)">
-      <Building faction="ambas" building="m" transform="translate(-8.5, 0) scale(1.5)"/>
-      <Building faction="ambas" building="PI" transform="translate(6, 0) scale(1.5)"/>
+      <Building faction="ambas" building="m" transform="translate(-8.5, 0) scale(1.5)" :flat="flat"/>
+      <Building faction="ambas" building="PI" transform="translate(6, 0) scale(1.5)" :flat="flat"/>
       <image xlink:href="../assets/resources/swap-arrow.svg" width=15 x=-7.5 y=-14 />
     </g>
     <g v-else-if="kind=='down-lab'" transform="scale(-1,1)">
-      <Building faction="firaks" building="lab" transform="translate(-7.5, 0) scale(1.5)"/>
-      <Building faction="firaks" building="ts" transform="translate(7.5, 0) scale(-1.5,1.5)"/>
+      <Building faction="firaks" building="lab" transform="translate(-7.5, 0) scale(1.5)" :flat="flat"/>
+      <Building faction="firaks" building="ts" transform="translate(7.5, 0) scale(-1.5,1.5)" :flat="flat"/>
       <image xlink:href="../assets/resources/arrow-charge.svg" width=15 x=-7.5 y=-14 />
     </g>
-    <Building v-else-if="kind=='space-station'" building="sp" transform="translate(0.5, 0) scale(2.5)" faction="ivits" />
+    <Building v-else-if="kind=='space-station'" building="sp" transform="translate(0.5, 0) scale(2.5)" faction="ivits" :flat="flat" />
     <template v-else-if="kind === 'step'">
-      <image xlink:href='../assets/resources/dig-planet.svg' width=20 x=-10 y=-10 />
+      <image v-if="!flat" xlink:href='../assets/resources/dig-planet.svg' width=20 x=-10 y=-10 />
+      <circle v-else r="10" style="fill: #502300" />
       <template v-if="count === 1 || !count">
         <image xlink:href='../assets/resources/dig-arrow.svg' width=14 x=-11 y=-4 />
       </template>
@@ -78,6 +80,10 @@ export default class Resource extends Vue {
 
   @Prop({ default: false })
   centerLeft: boolean;
+  
+  get flat () {
+      return this.$store.state.gaiaViewer.preferences.flatBuildings;
+  }
 }
 </script>
 

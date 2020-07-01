@@ -1,6 +1,6 @@
 <template>
   <g class="condition">
-    <Building v-if="isBuilding" outline-white :building="condition"  transform="translate(0, 0) scale(2.2)" />
+    <Building v-if="isBuilding" outline-white :building="condition" :flat="flat" transform="translate(0, 0) scale(2.2)" />
     <g v-else-if="condition === 'fed'" transform="scale(0.45)">
       <Federation width=50 x=-20 y=-30 :used=true filter="url(#white-shadow-1)" />
     </g>
@@ -10,13 +10,14 @@
       <image xlink:href="../assets/conditions/planet.svg" width=25 x=-12 y=-11.5 transform="scale(-1,1)" />
     </g>
     <Resource v-else-if="condition === 'step'" kind="step" />
-    <g v-else-if="condition === 'mg'" transform="translate(-2,0)">
-      <image xlink:href="../assets/conditions/planet-flat.svg" width=30 x=-12 y=-13.5 transform="scale(-1,-1)" />
-      <Building building="m" outline-white transform="translate(2, -1) scale(2.2)" />
+    <g v-else-if="condition === 'mg'" >
+      <image v-if="!flat" xlink:href="../assets/conditions/planet-flat.svg" width=30 x=-12 y=-13.5 transform="translate(-2,0) scale(-1,-1)" />
+      <circle v-else r="10" style="fill: #0a0" transform="translate(0,0)" />
+      <Building building="m" outline-white :flat="flat" :transform="`translate(${flat ? 0  : -2}, ${flat ? 0  : -1}) scale(2.2)`" />
     </g>
     <g v-else-if="condition === 'PA'">
-      <Building building="PI" outline-white transform="translate(-2, 1) scale(1.8)" />
-      <Building building="ac1" outline-white transform="translate(5, 2) scale(1.8)" />
+      <Building building="PI" outline-white :flat="flat" :transform="`translate(${flat ? -5  : -2}, 1) scale(1.8)`" />
+      <Building building="ac1" outline-white :flat="flat" :transform="`translate(5, ${flat ? 1 : -2}) scale(1.8)`" />
     </g>
     <g v-else-if="condition === 'a'">
       <line x1="-15" x2="15" stroke ="#666" />
@@ -54,6 +55,10 @@ export default class Condition extends Vue {
 
   get isBuilding () {
     return Object.values(BuildingEnum).includes(this.condition as any);
+  }
+
+  get flat () {
+      return this.$store.state.gaiaViewer.preferences.flatBuildings;
   }
 }
 

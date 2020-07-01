@@ -8,7 +8,7 @@
       <circle v-else-if="lab" r="30" />
       <circle v-else-if="academy" r="50" />
       <polygon v-else-if="tradingStation" points="-20,-20 0,-38 20,-20 20,20 -20,20" transform="translate(0, 0.08)"/>
-      <Token v-else-if="spaceStation" :faction="faction" transform="scale(1.5)" />
+      <circle v-else-if="spaceStation" r="20" />
     </g>
   </g>
 </template>
@@ -96,7 +96,7 @@ export default class Building extends Vue {
 
 svg {
   .building {
-    stroke-width: 10;
+    stroke-width: 3;
     pointer-events: none;
     stroke: #111;
 
