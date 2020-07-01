@@ -1,6 +1,6 @@
 <template>
   <g :class='["building"]'>
-    <component :is="buildingComponent" :faction=faction :filter="outline ? 'url(#shadow-5)' : (outlineWhite ? 'url(#white-shadow-5)' : '')" v-if="!flat || 1" />
+    <component :is="buildingComponent" :faction=faction :filter="outline ? 'url(#shadow-5)' : (outlineWhite ? 'url(#white-shadow-5)' : '')" v-if="!flat" />
     <g :class='["planet-fill", planet]' v-else >
       <rect v-if="mine" x="-20" y="-20" width="40" height="40" />
       <rect v-else-if="planetaryInstitute" x="-37.5" y="-37.5" width="75" height="75" />
