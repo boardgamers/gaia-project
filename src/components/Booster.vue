@@ -1,6 +1,6 @@
 <template>
-  <svg :class='["booster", {highlighted, disabled}]' v-b-tooltip :title="tooltip" @click="onClick" width="60" height="120" viewBox="-32 -62 64 124"  filter="url(#shadow-1)"  style="overflow: visible">
-    <rect x="-30" y="-60" width="60" height="120" rx="3" ry="3" stroke="black" stroke-width=1 class="booster-background" />
+  <svg :class='["booster", {highlighted, disabled}]' v-b-tooltip :title="tooltip" @click="onClick" width="60" height="120" viewBox="-32 -62 64 124"    style="overflow: visible">
+    <rect x="-30" y="-60" width="60" height="120" rx="3" ry="3" stroke="black" stroke-width=1 class="booster-background" filter="url(#shadow-1)" />
     <line x1=-29 x2=29 y1=-8 y2=-8 stroke=#aaa stroke-width=2 />
     <TechContent :content=event1 transform="translate(0, -33)" />
     <TechContent :content=event2 :transform="`translate(0, ${30 - (event2.startsWith('+') ? 4 : 0)})`" />
