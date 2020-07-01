@@ -1,45 +1,45 @@
 <template>
   <defs>
-    <filter id="shadow-1" x="-20" y="-20" width="140" height="140">
-      <feMorphology in="SourceAlpha" result="DILATED" operator="dilate" radius="1" ></feMorphology>
+    <filter id="shadow-2">
+      <feMorphology in="SourceAlpha" result="DILATED" operator="dilate" radius="2"></feMorphology>
 
-      <feFlood flood-color="black" flood-opacity="0.8" result="PINK"></feFlood>
+      <feFlood flood-color="black" flood-opacity="1" result="PINK"></feFlood>
       <feComposite in="PINK" in2="DILATED" operator="in" result="OUTLINE"></feComposite>
-      <feGaussianBlur in="OUTLINE" stdDeviation=2 result="BLURRED" />
+      <feGaussianBlur in="OUTLINE" stdDeviation=4 result="BLURRED"/>
 
       <feMerge>
         <feMergeNode in="BLURRED" />
         <feMergeNode in="SourceGraphic" />
       </feMerge>
     </filter>
-    <filter id="drop-shadow-1" x="-20" y="-20" width="140" height="140">
-      <feMorphology in="SourceAlpha" result="DILATED" operator="dilate" radius="0" ></feMorphology>
-      <feFlood flood-color="black" flood-opacity="1" result="BLACK"></feFlood>
-      <feComposite in="BLACK" in2="DILATED" operator="in" result="OUTLINE"></feComposite>
-      <feGaussianBlur in="OUTLINE" stdDeviation=2 result="BLURRED" />
-      <feOffset in="BLURRED" dx="2" dy="2" result="DROPPED" />
-
-      <feMerge>
-        <feMergeNode in="DROPPED" />
-        <feMergeNode in="SourceGraphic" />
-      </feMerge>
-    </filter>
-    <filter id="shadow-5" x="-20" y="-20" width="140" height="140">
-      <feMorphology in="SourceAlpha" result="DILATED" operator="dilate" radius="5"></feMorphology>
-
-      <feFlood flood-color="black" flood-opacity="0.8" result="PINK"></feFlood>
-      <feComposite in="PINK" in2="DILATED" operator="in" result="OUTLINE"></feComposite>
-      <feGaussianBlur in="OUTLINE" stdDeviation=10 result="BLURRED" />
-
-      <feMerge>
-        <feMergeNode in="BLURRED" />
-        <feMergeNode in="SourceGraphic" />
-      </feMerge>
-    </filter>
-    <filter id="white-shadow-1" x="-20" y="-20" width="140" height="140">
+    <filter id="shadow-1">
       <feMorphology in="SourceAlpha" result="DILATED" operator="dilate" radius="1"></feMorphology>
 
-      <feFlood flood-color="white" flood-opacity="0.8" result="PINK"></feFlood>
+      <feFlood flood-color="black" flood-opacity="1" result="PINK"></feFlood>
+      <feComposite in="PINK" in2="DILATED" operator="in" result="OUTLINE"></feComposite>
+      <feGaussianBlur in="OUTLINE" stdDeviation=2 result="BLURRED"/>
+
+      <feMerge>
+        <feMergeNode in="BLURRED" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <filter id="shadow-5">
+      <feMorphology in="SourceAlpha" result="DILATED" operator="dilate" radius="5"></feMorphology>
+
+      <feFlood flood-color="black" flood-opacity="1" result="PINK"></feFlood>
+      <feComposite in="PINK" in2="DILATED" operator="in" result="OUTLINE"></feComposite>
+      <feGaussianBlur in="OUTLINE" stdDeviation=4 result="BLURRED"/>
+
+      <feMerge>
+        <feMergeNode in="BLURRED" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <filter id="white-shadow-1">
+      <feMorphology in="SourceAlpha" result="DILATED" operator="dilate" radius="1"></feMorphology>
+
+      <feFlood flood-color="white" flood-opacity="1" result="PINK"></feFlood>
       <feComposite in="PINK" in2="DILATED" operator="in" result="OUTLINE"></feComposite>
       <feGaussianBlur in="OUTLINE" stdDeviation=3 result="BLURRED"/>
 
@@ -48,10 +48,10 @@
         <feMergeNode in="SourceGraphic" />
       </feMerge>
     </filter>
-    <filter id="white-shadow-5" x="-20" y="-20" width="140" height="140">
+    <filter id="white-shadow-5">
       <feMorphology in="SourceAlpha" result="DILATED" operator="dilate" radius="5"></feMorphology>
 
-      <feFlood flood-color="white" flood-opacity="0.8" result="PINK"></feFlood>
+      <feFlood flood-color="white" flood-opacity="1" result="PINK"></feFlood>
       <feComposite in="PINK" in2="DILATED" operator="in" result="OUTLINE"></feComposite>
       <feGaussianBlur in="OUTLINE" stdDeviation=4 result="BLURRED"/>
 
@@ -63,7 +63,7 @@
     <filter id="outline-1">
       <feMorphology in="SourceAlpha" result="DILATED" operator="dilate" radius="1"></feMorphology>
 
-      <feFlood flood-color="black" flood-opacity="0.8" result="PINK"></feFlood>
+      <feFlood flood-color="black" flood-opacity="1" result="PINK"></feFlood>
       <feComposite in="PINK" in2="DILATED" operator="in" result="OUTLINE"></feComposite>
 
       <feMerge>
@@ -74,7 +74,7 @@
     <filter id="outline-2">
       <feMorphology in="SourceAlpha" result="DILATED" operator="dilate" radius="2"></feMorphology>
 
-      <feFlood flood-color="black" flood-opacity="0.8" result="PINK"></feFlood>
+      <feFlood flood-color="black" flood-opacity="1" result="PINK"></feFlood>
       <feComposite in="PINK" in2="DILATED" operator="in" result="OUTLINE"></feComposite>
 
       <feMerge>

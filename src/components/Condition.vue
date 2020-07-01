@@ -7,11 +7,11 @@
     <PlanetType v-else-if="condition === 'pt'"  transform=scale(1.1) />
     <Sector v-else-if="condition === 's'" transform=scale(1.5) />
     <g v-else-if="condition === 'g'"  transform=scale(0.85) >
-      <image xlink:href="../assets/conditions/planet.svg" width=25 x=-12 y=-11.5 filter="url(#color-planet-g)" transform="scale(-1,1)" />
+      <image xlink:href="../assets/conditions/planet.svg" width=25 x=-12 y=-11.5 transform="scale(-1,1)" />
     </g>
     <Resource v-else-if="condition === 'step'" kind="step" />
     <g v-else-if="condition === 'mg'" transform="translate(-2,0)">
-      <image xlink:href="../assets/conditions/planet-flat.svg" width=30 x=-16 y=-12.5 filter="url(#color-planet-g)" transform="scale(-1,-1)" />
+      <image xlink:href="../assets/conditions/planet-flat.svg" width=30 x=-12 y=-13.5 transform="scale(-1,-1)" />
       <Building building="m" outline-white transform="translate(2, -1) scale(2.2)" />
     </g>
     <g v-else-if="condition === 'PA'">
@@ -59,9 +59,17 @@ export default class Condition extends Vue {
 
 </script>
 <style lang="scss">
+@import '../stylesheets/planets.scss';
 
-.condition {
+g {
+  &.condition {
+
+    &.gaia {
+      fill: $gaia;
+    }
+  }
 
 }
+
 
 </style>
