@@ -6,16 +6,8 @@
       <text class="board-text">
         <tspan class="faction-name" v-b-modal="faction" role="button">{{factionName}}</tspan>
       </text>
-      <text class="board-text" x=21>
-        TF: {{3 - data.terraformCostDiscount}}
-      </text>
-      <text class="board-text" x=26>
-        NAV: {{data.range}}
-      </text>
-      <text class="board-text" x=31>
-        <tspan class="board-text">VP: {{data.victoryPoints}}</tspan>
-        <tspan class="board-text" v-if="data.bid>0"> (-{{data.bid}})</tspan>
-      </text>
+      <Resource kind="d" :count="1+data.terraformCostDiscount" transform="translate(22,0) scale(0.08)" />
+      <Resource kind="r" :count="data.range" transform="translate(27,0) scale(0.08)" />
     </g>
     <!-- Resources / Income -->
     <g transform="translate(0, 3)">
@@ -35,8 +27,12 @@
         </g>
         <Resource kind="q" :count="data.qics" :center-left=true transform="translate(12.5,0) scale(0.1)"/>
         <g transform="translate(15, -3) scale(0.2)">
-            <VictoryPoint width="15" height="15"/>
-            <text class="vp-text" x="7" y="10">{{data.victoryPoints}}</text>  
+          <VictoryPoint width="15" height="15"/>
+          <text class="vp-text" x="7" y="10">{{data.victoryPoints}}</text>
+          <g transform="translate(13.5,2)" v-if="data.bid">
+            <circle r=3 fill="white" stroke="black" stroke-width=0.2 />
+            <text style="text-anchor: middle; dominant-baseline: central; font-size: 5px">-{{data.bid}}</text>
+          </g>
         </g>
       </g>
       <g transform="translate(0, 1.5)" v-if="engine.round < 6">
