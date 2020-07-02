@@ -11,7 +11,7 @@
       <g v-if="this.federation" transform="translate(30, 25) scale(0.6)">
         <FederationTile :federation="this.federation" :numTiles="1" x="-25" y="-25" height="50" filter="url(#shadow-1)" />
       </g>
-      <circle v-if="this.lostPlanet" :class='["planet-fill", this.lostPlanet ]' cx="30" cy="18" r="10" />
+      <circle v-if="this.lostPlanet" :class='["planet-fill", this.lostPlanet ]' cx="30" cy="16" r="9" />
     </g>
     <text x="0" y="0" :transform="`translate(${2 + 56/2 }, ${height - 10})`" class="levDesc">{{label}}</text>
   </g>
@@ -99,9 +99,6 @@ export default class ResearchTile extends Vue {
     if (this.field === ResearchField.Terraforming) {
       return this.level === 0 ? "cost 3" : this.level === 2 ? "cost 2" : this.level === 3 ? "cost 1" : "";
     };
-    if (this.field === ResearchField.Navigation) {
-      return this.level === 0 ? "nav 1" : this.level === 2 ? "nav 2" : this.level === 4 ? "nav 3" : this.level === 5 ? "nav 4" : "";
-    };
     if (this.field === ResearchField.GaiaProject) {
       return this.level === 5 ? 'g>vp' : "";
     };
@@ -122,6 +119,10 @@ export default class ResearchTile extends Vue {
       rewards.unshift(new Reward('+', ResourceEnum.None));
       rewards[0].count = '+' as any;
     }
+
+    if (this.field === ResearchField.Navigation) {
+      return this.level === 0 ? Reward.parse("1r") : this.level === 2 ? Reward.parse("2r") : this.level === 4 ? Reward.parse("3r") : this.level === 5 ? Reward.parse("4r") : rewards;
+    };
 
     return rewards;
   }

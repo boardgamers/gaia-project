@@ -2,7 +2,7 @@
   <g class="resource">
     <template v-if="kind === 'q'" >
       <Qic v-if="!flat" class="qic" :transform="`translate(-0.5,0)`"  />
-      <rect v-else class="qic" width="14" height="14" x="-7" y="-7" /> 
+      <rect v-else class="qic" width="14" height="14" x="-7" y="-7" />
     </template>
     <!-- <rect v-if="kind=='q'" class="qic" width="14" height="14" x="-7" y="-7" /> -->
     <rect v-else-if="kind=='o'" class="ore" width="14" height="14" x="-7" y="-7" />
@@ -45,6 +45,20 @@
         {{count}}
       </text>
     </template>
+    <template v-else-if="kind === 'r'">
+      <g transform="scale(1) translate(-13,0)">
+        <image xlink:href="../assets/resources/flat-hex.svg" width=20 x=-10 y=-4 />
+      </g>
+      <g transform="scale(1) translate(13,0)">
+        <image xlink:href="../assets/resources/flat-hex.svg" width=20 x=-10 y=-4 />
+      </g>
+      <g  transform="translate(1,0) rotate(70)">
+        <image xlink:href="../assets/resources/range-arrow.svg" width=10 x=-5 y=-8 />
+      </g>
+      <text v-if="count >= 1" x=13 y=1.2 stroke-width=0.3 style="font-weight: bold; font-size: 10px" >
+        {{count}}
+      </text>
+    </template>
     <image v-if="kind === 'pw'" xlink:href='../assets/resources/power-charge.svg' width=20 transform="translate(-9.5, -13.5)" />
 
     <!-- <SpaceShip v-else-if="kind=='ship'" class="ship" :scale="14" /> -->
@@ -80,9 +94,9 @@ export default class Resource extends Vue {
 
   @Prop({ default: false })
   centerLeft: boolean;
-  
+
   get flat () {
-      return this.$store.state.gaiaViewer.preferences.flatBuildings;
+    return this.$store.state.gaiaViewer.preferences.flatBuildings;
   }
 }
 </script>
