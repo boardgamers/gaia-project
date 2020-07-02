@@ -17,7 +17,7 @@
     </g>
     <g v-else-if="condition === 'PA'">
       <Building building="PI" outline-white :flat="flat" :transform="`translate(${flat ? -5  : -2}, 1) scale(1.8)`" />
-      <Building building="ac1" outline-white :flat="flat" :transform="`translate(5, ${flat ? 1 : -2}) scale(1.8)`" />
+      <Building building="ac1" outline-white :flat="flat" :transform="`translate(5, ${flat ? 1 : 2}) scale(1.8)`" />
     </g>
     <g v-else-if="condition === 'a'">
       <line x1="-15" x2="15" stroke ="#666" />
