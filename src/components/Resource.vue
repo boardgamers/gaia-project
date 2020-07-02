@@ -26,7 +26,7 @@
     <Building v-else-if="kind=='space-station'" building="sp" transform="translate(0.5, 0) scale(2.5)" faction="ivits" :flat="flat" />
     <template v-else-if="kind === 'step'">
       <image v-if="!flat" xlink:href='../assets/resources/dig-planet.svg' width=20 x=-10 y=-10 />
-      <circle v-else r="10" style="fill: #502300" />
+      <circle v-else r="10" :class='["planet-fill", "gen" ]'  />
       <template v-if="count === 1 || !count">
         <image xlink:href='../assets/resources/dig-arrow.svg' width=14 x=-11 y=-4 />
       </template>

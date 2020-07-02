@@ -12,7 +12,7 @@
     <Resource v-else-if="condition === 'step'" kind="step" />
     <g v-else-if="condition === 'mg'" >
       <image v-if="!flat" xlink:href="../assets/conditions/planet-flat.svg" width=30 x=-12 y=-13.5 transform="translate(-2,0) scale(-1,-1)" />
-      <circle v-else r="10" style="fill: #0a0" transform="translate(0,0)" />
+      <circle v-else r="10" :class='["planet-fill", "g" ]' transform="translate(0,0)" />
       <Building building="m" outline-white :flat="flat" :transform="`translate(${flat ? 0  : -2}, ${flat ? 0  : -1}) scale(2.2)`" />
     </g>
     <g v-else-if="condition === 'PA'">

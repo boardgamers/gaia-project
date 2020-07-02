@@ -91,6 +91,8 @@ svg {
     &.m {fill: $transdim}
     // lost planet
     &.l {fill: $lost}
+    // generic planet
+    &.gen {fill: $generic}
   }
 }
 
