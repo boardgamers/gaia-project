@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import { GameContext } from './data';
-import Engine, { GaiaHex, ResearchField, TechTilePos, AdvTechTilePos, Booster, Federation, Player, EngineOptions } from '@gaia-project/engine';
+import Engine, { GaiaHex, ResearchField, TechTilePos, AdvTechTilePos, Booster, Federation, Player } from '@gaia-project/engine';
 import { CubeCoordinates } from 'hexagrid';
 
 Vue.use(Vuex);
@@ -25,7 +25,7 @@ const gaiaViewer = {
     } as GameContext,
     preferences: {
       noFactionFill: false,
-      flatBuildings: true
+      flatBuildings: false
     },
     player: null as {index?: number; auth?: string} | null
   },
