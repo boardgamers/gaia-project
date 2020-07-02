@@ -36,7 +36,6 @@ import Building from './Building.vue';
 import Federation from './FederationTile.vue';
 import Planet from './Planet.vue';
 import PlanetType from './Conditions/PlanetType.vue';
-import Resource from './Resource.vue';
 import Sector from './Conditions/Sector.vue';
 
 @Component({
@@ -45,7 +44,6 @@ import Sector from './Conditions/Sector.vue';
     Federation,
     Planet,
     PlanetType,
-    Resource,
     Sector
   }
 })
@@ -58,7 +56,7 @@ export default class Condition extends Vue {
   }
 
   get flat () {
-      return this.$store.state.gaiaViewer.preferences.flatBuildings;
+    return this.$store.state.gaiaViewer.preferences.flatBuildings;
   }
 }
 
@@ -75,6 +73,5 @@ g {
   }
 
 }
-
 
 </style>

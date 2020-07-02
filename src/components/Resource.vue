@@ -70,6 +70,11 @@
         {{count}}
       </text>
     </template>
+    <template v-else-if="kind === 'up-lowest'">
+      <Condition condition="a" transform="scale(0.75)" />
+      <Token faction="bescods" transform="scale(0.15) translate(50,-24)" />
+      <Token faction="bescods" transform="scale(0.15) translate(-5,26)" />
+    </template>
     <image v-if="kind === 'pw'" xlink:href='../assets/resources/power-charge.svg' width=20 transform="translate(-9.5, -13.5)" />
 
     <!-- <SpaceShip v-else-if="kind=='ship'" class="ship" :scale="14" /> -->
@@ -86,6 +91,7 @@ import SpaceShip from './SpaceShip.vue';
 import Qic from './Resources/Qic.vue';
 import VictoryPoint from './Resources/VictoryPoint.vue';
 import Federation from './FederationTile.vue';
+import Token from './Token.vue';
 
 @Component({
   components: {
@@ -93,6 +99,7 @@ import Federation from './FederationTile.vue';
     Federation,
     Qic,
     SpaceShip,
+    Token,
     VictoryPoint
   }
 })

@@ -7,9 +7,11 @@ import { makeStore } from './store';
 import Game from './components/Game.vue';
 import Resource from './components/Resource.vue';
 import TechContent from './components/TechContent.vue';
+import Condition from './components/Condition.vue';
 import type { VueConstructor } from "vue/types/umd";
 
 Vue.use(BootstrapVue);
+Vue.component("Condition", Condition);
 Vue.component("TechContent", TechContent);
 Vue.component("Resource", Resource);
 
