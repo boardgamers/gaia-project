@@ -29,7 +29,7 @@ export default class SpecialAction extends Vue {
   action: string[];
 
   onClick () {
-    if (!this.isHighlighted) {
+    if (!this._highlighted) {
       this.$emit("click");
       return;
     }
@@ -40,8 +40,13 @@ export default class SpecialAction extends Vue {
     return new Event(this.action[0]).rewards;
   }
 
+  /** When the action content is highlighted - not the parent component */
+  get _highlighted () {
+    return this.$store.state.gaiaViewer.context.highlighted.actions.has(this.action.join(",")) || this.$store.state.gaiaViewer.context.highlighted.actions.has(this.action.join(",").replace(/>/g, ''));
+  }
+
   get isHighlighted () {
-    return this.highlighted || this.$store.state.gaiaViewer.context.highlighted.actions.has(this.action.join(",")) || this.$store.state.gaiaViewer.context.highlighted.actions.has(this.action.join(",").replace(/>/g, ''));
+    return this.highlighted || this._highlighted;
   }
 }
 
