@@ -41,7 +41,7 @@ export default class SpecialAction extends Vue {
   }
 
   get isHighlighted () {
-    return this.highlighted || this.$store.state.gaiaViewer.context.highlighted.actions.has(this.action.join(","));
+    return this.highlighted || this.$store.state.gaiaViewer.context.highlighted.actions.has(this.action.join(",")) || this.$store.state.gaiaViewer.context.highlighted.actions.has(this.action.join(",").replace(/>/g, ''));
   }
 }
 
@@ -58,15 +58,14 @@ g {
       fill: $specialAction;
     }
 
-    &.highlighted > polygon {
-      stroke: $highlighted;
-      cursor: pointer;
+    &.board > polygon {
+      fill: $systemGray6;
     }
 
-    &.board > polygon {
-      stroke: black;
-      stroke-width: 0.5;
-      fill: $systemGray6;
+    &.highlighted > polygon {
+      stroke: $highlighted;
+      stroke-width: 1;
+      cursor: pointer;
     }
 
     &.disabled {
