@@ -7,11 +7,11 @@
     <PlanetType v-else-if="condition === 'pt'"  transform=scale(1.1) />
     <Sector v-else-if="condition === 's'" transform=scale(1.5) />
     <g v-else-if="condition === 'g'"  transform=scale(0.85) >
-      <image xlink:href="../assets/conditions/planet.svg" width=25 x=-12 y=-11.5 transform="scale(-1,1)" />
+      <image xlink:href="../assets/conditions/planet.svg" width=25 height=25 x=-12 y=-11.5 transform="scale(-1,1)" />
     </g>
     <Resource v-else-if="condition === 'step'" kind="step" />
     <g v-else-if="condition === 'mg'" >
-      <image v-if="!flat" xlink:href="../assets/conditions/planet-flat.svg" width=30 x=-12 y=-13.5 transform="translate(-2,0) scale(-1,-1)" />
+      <image v-if="!flat" xlink:href="../assets/conditions/planet-flat.svg" :height=120/198*30 width=30 x=-12 y=-13.5 transform="translate(-2,0) scale(-1,-1)" />
       <circle v-else r="10" :class='["planet-fill", "g" ]' transform="translate(0,0)" />
       <Building building="m" outline-white :flat="flat" :transform="`translate(${flat ? 0  : 0}, ${flat ? 0  : 0}) scale(2.2)`" />
     </g>
@@ -23,7 +23,7 @@
       <line x1="-15" x2="15" stroke ="#666" />
       <line x1="-15" x2="15" y1=-10 y2=-10 stroke ="#666" />
       <line x1="-15" x2="15" y1=10 y2=10 stroke ="#666" />
-      <image xlink:href="../assets/operators/trigger.svg" width=15 :transform="`rotate(180), translate(6, -8), scale(0.7)`" />
+      <image xlink:href="../assets/operators/trigger.svg" width=15 :height=529/328*15 :transform="`rotate(180), translate(6, -8), scale(0.7)`" />
       <!-- <text y=-1 style="font-size: 9px">3</text>
       <text y=8.5 style="font-size: 9px">2</text>-->
     </g>

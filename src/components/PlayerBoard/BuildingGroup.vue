@@ -69,7 +69,7 @@ export default class BuildingGroup extends Vue {
   }
 
   get offset () {
-    return 1.4;
+    return this.building === BuildingEnum.GaiaFormer ? 0.2 : 1.4;
   }
 
   get buildingSpacing () {
@@ -81,7 +81,7 @@ export default class BuildingGroup extends Vue {
   }
 
   get width () {
-    return Math.max(this.nBuildings, 2) * this.buildingSpacing + this.offset + this.paddingRight;
+    return Math.max(this.nBuildings, this.building === BuildingEnum.GaiaFormer ? 3 : 2) * this.buildingSpacing + this.offset + this.paddingRight;
   }
 
   get factionIncome (): Reward[] {

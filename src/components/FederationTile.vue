@@ -1,8 +1,8 @@
 <template>
   <svg viewBox="-25 -25 50 50" width="50" height="50" style="overflow: visible">
     <g :class='["federationTile", {highlighted, disabled}]'>
-      <image xlink:href="../assets/conditions/federation.svg" v-if="!disabled" style="color: #247B0A" width=50 x=-25 y=-25 @click="onClick" :filter=filter />
-      <image xlink:href="../assets/conditions/federation-used.svg" v-if="disabled" style="color: #247B0A" width=50 x=-25 y=-25 @click="onClick" :filter=filter />
+      <image xlink:href="../assets/conditions/federation.svg" :height=739/636*50 v-if="!disabled" style="color: #247B0A" width=50 x=-25 y=-25 @click="onClick" :filter=filter />
+      <image xlink:href="../assets/conditions/federation-used.svg" v-if="disabled" :height=739/636*50 style="color: #247B0A" width=50 x=-25 y=-25 @click="onClick" :filter=filter />
       <circle cx="16.5" cy="-16.5" r="8" stroke="black" stroke-width="1" fill="white" v-if="numTiles>1" />
       <text x="16.5" y="-15.5" v-if="numTiles>1">
           {{numTiles}}
