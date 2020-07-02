@@ -96,9 +96,6 @@ export default class ResearchTile extends Vue {
   }
 
   get label () {
-    if (this.field === ResearchField.Terraforming) {
-      return this.level === 0 ? "cost 3" : this.level === 2 ? "cost 2" : this.level === 3 ? "cost 1" : "";
-    };
     if (this.field === ResearchField.GaiaProject) {
       return this.level === 5 ? 'g>vp' : "";
     };
@@ -123,6 +120,10 @@ export default class ResearchTile extends Vue {
     if (this.field === ResearchField.Navigation) {
       return this.level === 0 ? Reward.parse("1r") : this.level === 2 ? Reward.parse("2r") : this.level === 4 ? Reward.parse("3r") : this.level === 5 ? Reward.parse("4r") : rewards;
     };
+
+    if (this.field === ResearchField.Terraforming) {
+      return this.level === 0 ? Reward.parse("d") : (this.level === 2 ? Reward.parse("2d") : (this.level === 3 ? Reward.parse("3d") : rewards));
+    }
 
     return rewards;
   }

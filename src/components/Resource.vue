@@ -35,6 +35,17 @@
         <image xlink:href='../assets/resources/dig-arrow.svg' width=14 x=-9 y=-2 />
       </template>
     </template>
+    <template v-else-if="kind === 'd'">
+      <g transform=translate(6,0)>
+        <rect class="ore" width="14" height="14" x="-7" y="-7" />
+        <text x="0" y="0">{{4-count}}</text>
+      </g>
+      <g transform=translate(-7,0) >
+        <image v-if="!flat" xlink:href='../assets/resources/dig-planet.svg' width=20 x=-10 y=-10 />
+        <circle v-else r="10" :class='["planet-fill", "gen" ]'  />
+        <image xlink:href='../assets/resources/dig-arrow.svg' width=14 x=-11 y=-4 />
+      </g>
+    </template>
     <image v-else-if="kind === 'tech'" xlink:href='../assets/resources/tech.svg' width=22 x=-11 y=-8 />
     <Federation v-else-if="kind === 'fed'" width=22 x=-11 y=-26.5 :used=true />
     <template v-else-if="kind === 'range'">
