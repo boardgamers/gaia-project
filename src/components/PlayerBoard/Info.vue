@@ -34,6 +34,10 @@
           <text :class="['board-text', {maxResource: data.knowledge >= 15}]" transform="translate(1,0) scale(0.7)">/15</text>
         </g>
         <Resource kind="q" :count="data.qics" :center-left=true transform="translate(12.5,0) scale(0.1)"/>
+        <g transform="translate(15, -3) scale(0.2)">
+            <VictoryPoint width="15" height="15"/>
+            <text class="vp-text" x="7" y="10">{{data.victoryPoints}}</text>  
+        </g>
       </g>
       <g transform="translate(0, 1.5)" v-if="engine.round < 6">
         <text class="board-text" x=0.25>I</text>
@@ -69,10 +73,12 @@ import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import Resource from '../Resource.vue';
 import { Building as BuildingEnum, Faction, Reward, Operator, Resource as ResourceEnum, factions, PlayerData, Player } from '@gaia-project/engine';
+import VictoryPoint from '../Resources/VictoryPoint.vue';
 
 @Component({
   components: {
-    Resource
+    Resource,
+    VictoryPoint
   }
 })
 export default class BuildingGroup extends Vue {
@@ -118,5 +124,12 @@ export default class BuildingGroup extends Vue {
     g.resource {
       opacity: 1;
     }
+  }
+
+  .vp-text {
+    font-size: 7px;
+    fill: white;
+    font-weight: 600;
+    text-anchor: middle;
   }
 </style>
