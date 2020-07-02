@@ -1,13 +1,10 @@
 <template>
   <g class="board-info">
     <rect x=-0.5 y=-0.5 width=19.5 height=8 rx=0.1 ry=0.1 fill="#ffffff37" stroke=black stroke-width=0.07 />
-    <rect x=20 y=-0.5 width=17.5 height=2 rx=0.1 ry=0.1 fill="#ffffff37" stroke=black stroke-width=0.07 />
     <g transform="translate(0, 0.5)">
       <text class="board-text">
         <tspan class="faction-name" v-b-modal="faction" role="button">{{factionName}}</tspan>
       </text>
-      <Resource kind="d" :count="1+data.terraformCostDiscount" transform="translate(22,0) scale(0.08)" />
-      <Resource kind="r" :count="data.range" transform="translate(27,0) scale(0.08)" />
     </g>
     <!-- Resources / Income -->
     <g transform="translate(0, 3)">
@@ -51,14 +48,7 @@
         </g>
       </g>
       <g transform="translate(0,3.5) scale(0.8)">
-        <text class="board-text">
-          <tspan>GF: </tspan>
-          <tspan v-if="data.gaiaformersInGaia>0">[{{data.gaiaformersInGaia}}]</tspan>
-          <tspan>{{data.buildings.gf}}/{{data.gaiaformers}}</tspan>
-        </text>
         <text class="board-text" x=6>Sat: {{data.satellites}}</text>
-        <text class="board-text" x=10.3 v-if="spaceShips">Ship: {{data.ships}}/{{3+data.advancedShips}}</text>
-        <text class="board-text" x=16 v-if="spaceShips">TM: {{data.tradeTokens + data.wildTradeTokens}}</text>
       </g>
     </g>
   </g>

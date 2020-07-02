@@ -70,7 +70,7 @@ export default class Building extends Vue {
 
   // FLAT buildings
   get planet () {
-    return (this.faction as any === "wild") ? Planet.Transdim : factions.planet(this.faction);
+    return (this.faction as any === "wild") ? Planet.Transdim : (this.faction as any === "gaia" ? Planet.Gaia : factions.planet(this.faction));
   }
 
   get hexCorners () {

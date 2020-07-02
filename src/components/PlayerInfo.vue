@@ -21,16 +21,21 @@
           <line x1=10.4 x2=11 y1=13.0 y2=13.0 stroke=black stroke-width="0.06" />
         </g>
 
+        <Resource kind="d" :count="1+playerData.terraformCostDiscount" transform="translate(31.5,1) scale(0.09)" />
+        <Resource kind="r" :count="playerData.range" transform="translate(35.5,1) scale(0.09)" />
+
+        <BuildingGroup transform="translate(21, 1.2)" :nBuildings="playerData.gaiaformers" building="gf" :gaia="playerData.gaiaformersInGaia" :faction="player.faction" :placed="playerData.buildings.gf" :resource="[]" />
+
         <g transform="translate(1.8, 13.4) scale(0.06)">
           <Booster v-if="playerData.tiles.booster" x=-30 y=-60 height=120 :booster="playerData.tiles.booster" :disabled="passed" />
         </g>
         <PowerBowls transform="translate(30,14.5)" :faction="player.faction" :data="playerData" :player="player" />
 
-        <g transform="translate(29.3, 5)">
+        <g transform="translate(29.3, 4.7) scale(0.9) translate(0, 1)">
           <g v-for="i in [0, 1, 2, 3]" :key="i" :transform="`translate(${(i-2)*3.8}, 0)`">
             <g v-for="(planet, index) in planetsWithSteps(i)" :key="planet" :transform="`translate(0, ${(i > 0 ? (index > 0 ? 1 : -1) : 0)*1.4})`">
               <circle :r="1" style="stroke-width: 0.06px !important"  :class="['player-token', 'planet-fill', planet]" />
-              <text :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(planet)}`">{{player.ownedPlanetsCount[planet]}}</text>
+              <text :style="`font-size: 1.4px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(planet)}`">{{player.ownedPlanetsCount[planet]}}</text>
             </g>
             <line x1=1.9 x2=1.9 y1=-2.3 y2=2.3 stroke-width=0.06 stroke=black />
           </g>

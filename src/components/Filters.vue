@@ -107,9 +107,9 @@ import { Faction, Planet } from "@gaia-project/engine";
 import { factionColor, planetColor } from "../graphics/utils";
 export default class Filters extends Vue {
   get factionData () {
-    const factions = Object.values(Faction);
+    const factions = ["gaia", ...Object.values(Faction)];
     return factions.map(faction => {
-      const color = (faction === Faction.Ambas || faction === Faction.Taklons) ? "#8A482C" : factionColor(faction);
+      const color = faction === "gaia" ? planetColor(Planet.Gaia) : ((faction === Faction.Ambas || faction === Faction.Taklons) ? "#8A482C" : factionColor(faction as Faction));
       const darkness = (faction === Faction.Ambas || faction === Faction.Taklons) ? 1 : 1;
       const saturation = faction === (Faction.Ivits || faction === Faction.HadschHallas) ? 1.2 : 2;
 

@@ -5,7 +5,7 @@
     <g v-for="i in buildingList" :transform="`translate(${(i+0.5)*buildingSpacing+offset}, 0)`" :key=i v-b-tooltip :title="tooltip(i)">
       <circle stroke=black stroke-width=0.07 fill=white r=1  :key=i v-if="!isPI" />
       <rect stroke=black stroke-width=0.07 fill=white :x="-2.2+offset" width=4 y=-1 height=2  :key=i v-else />
-      <Building :building="building" class="building-in-group" :faction="faction" :transform="`translate(${isPI ? 0.5 : 0}, 0) scale(0.15)`" v-if="showBuilding(i)" :flat="flat" outline />
+      <Building :building="building" class="building-in-group" :faction="buildingFaction(i)" :transform="`translate(${isPI ? 0.5 : 0}, 0) scale(0.15)`" v-if="showBuilding(i)" :flat="flat" outline />
       <Resource v-for="(resource,index) in resources(i)" :key="'field-' + index"  :kind="resource.type" :count="resource.count" :transform="`translate(${index*1.5 + isPI*0.5}, 0) scale(0.08)`" style="opacity: 0.7" />
     </g>
   </g>
@@ -41,6 +41,9 @@ export default class BuildingGroup extends Vue {
 
   @Prop()
   placed: number;
+
+  @Prop({ default: 0 })
+  gaia: number;
 
   @Prop()
   resource: ResourceEnum[];
@@ -95,11 +98,22 @@ export default class BuildingGroup extends Vue {
     if (this.ac1 || this.ac2) {
       return i === 0 ? !this.ac1 : !this.ac2;
     }
-    return i >= this.placed;
+    return i >= this.placed || this.gaia > i;
+  }
+
+  buildingFaction (i: number) {
+    if (this.gaia > i) {
+      return "gaia";
+    }
+    return this.faction;
   }
 
   resources (i: number, forced = false): Reward[] {
     if (this.showBuilding(i) && !forced) {
+      return [];
+    }
+
+    if (this.building === BuildingEnum.GaiaFormer) {
       return [];
     }
 
