@@ -106,7 +106,7 @@ export default class TechContent extends Vue {
   }
 
   get flat () {
-      return this.$store.state.gaiaViewer.preferences.flatBuildings;
+    return this.$store.state.gaiaViewer.preferences.flatBuildings;
   }
 }
 

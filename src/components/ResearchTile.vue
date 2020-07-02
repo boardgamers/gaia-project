@@ -4,6 +4,7 @@
     <g style="pointer-events: none">
       <g style="opacity: 0.7">
         <Resource v-for="(resource,i) in resources" :key="'field-' + i" :transform="`translate(${2 + 56/2 + resourceX(i)}, ${height/3*2 + 3 + resourceOffset})`" :kind="resource.type" :count="resource.count"  />
+        <TechContent v-if="techContent.length > 0" :content=techContent[0].toString() :transform="`translate(${2 + 56/2 }, ${height - 10}) scale(0.55)`" />
       </g>
       <g v-for="player in players" :key="player.player" :transform="`translate(${tokenX(player.player)}, ${tokenY(player.player)}) scale(0.30)`">
         <Token  :faction="player.faction"  filter="url(#drop-shadow-1)"/>
@@ -13,14 +14,14 @@
       </g>
       <circle v-if="this.lostPlanet" :class='["planet-fill", this.lostPlanet ]' cx="30" cy="16" r="9" />
     </g>
-    <text x="0" y="0" :transform="`translate(${2 + 56/2 }, ${height - 10})`" class="levDesc">{{label}}</text>
+    <!-- <text x="0" y="0" :transform="`translate(${2 + 56/2 }, ${height - 10})`" class="levDesc">{{label}}</text> -->
   </g>
 </template>
 
 <script lang="ts">
 import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import { ResearchField, Player, Federation, Resource as ResourceEnum, researchTracks, Event, Reward, Operator, Planet as PlanetEnum } from '@gaia-project/engine';
+import { ResearchField, Player, Federation, Resource as ResourceEnum, researchTracks, Event, Reward, Operator, Planet as PlanetEnum, Condition } from '@gaia-project/engine';
 import { descriptions } from '../data/research';
 import Token from './Token.vue';
 import FederationTile from './FederationTile.vue';
@@ -95,24 +96,14 @@ export default class ResearchTile extends Vue {
     }
   }
 
-  get label () {
-    if (this.field === ResearchField.GaiaProject) {
-      return this.level === 5 ? 'g>vp' : "";
-    };
-
-    return '';
-  }
-
   get resourceOffset () {
-    return this.label ? -15 : 0;
+    return this.techContent.length > 0 ? -15 : 0;
   }
 
   get resources () {
-    const events = researchTracks[this.field][this.level].map(s => new Event(s)).slice(0, 1);
+    const rewards = Reward.merge(...this.events.slice(0, 1).map(ev => ev.rewards));
 
-    const rewards = Reward.merge(...events.map(ev => ev.rewards));
-
-    if (events[0] && events[0].operator === Operator.Income) {
+    if (this.events[0] && this.events[0].operator === Operator.Income) {
       rewards.unshift(new Reward('+', ResourceEnum.None));
       rewards[0].count = '+' as any;
     }
@@ -126,6 +117,14 @@ export default class ResearchTile extends Vue {
     }
 
     return rewards;
+  }
+
+  get events () {
+    return researchTracks[this.field][this.level].map(s => new Event(s));
+  }
+
+  get techContent () {
+    return this.events.filter(event => event.condition !== Condition.None);
   }
 
   get highlighted (): boolean {
@@ -184,13 +183,13 @@ svg {
     font-size: 10px;
     fill: black;
 
-    &.levDesc {
-      dominant-baseline: central;
-      text-anchor: middle;
-      fill: white;
-      pointer-events: none;
-      opacity: 0.8;
-    }
+    // &.levDesc {
+    //   dominant-baseline: central;
+    //   text-anchor: middle;
+    //   fill: white;
+    //   pointer-events: none;
+    //   opacity: 0.8;
+    // }
 
   }
 }
