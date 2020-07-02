@@ -1,6 +1,6 @@
 <template>
   <g>
-    <image xlink:href="../../assets/buildings/research-lab.svg" :filter="faction ? `url(#color-${faction})` : ''" width=90 x=-45 y=-45 />
+    <image xlink:href="../../assets/buildings/research-lab.svg" :filter="faction ? `url(#color-${faction})` : ''" width=80 height=80 x=-40 y=-40 />
   </g>
 </template>
 <script lang="ts">
