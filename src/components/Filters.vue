@@ -107,7 +107,7 @@ import { Faction, Planet } from "@gaia-project/engine";
 import { factionColor, planetColor } from "../graphics/utils";
 export default class Filters extends Vue {
   get factionData () {
-    const factions = ["gaia", ...Object.values(Faction)];
+    const factions = ["gen", "gaia", ...Object.values(Faction)];
     return factions.map(faction => {
       const color = faction === "gaia" ? planetColor(Planet.Gaia) : factionColor(faction as Faction);
       const darkness = (faction === Faction.Ambas || faction === Faction.Taklons) ? 2 : 1.2;

@@ -1,7 +1,10 @@
 import { Faction, factions, Planet } from "@gaia-project/engine";
 import planets from "../data/planets";
 
-export function factionColor (faction: Faction): string {
+export function factionColor (faction: Faction | "gen"): string {
+  if (faction === "gen") {
+    return "#d3d3d3";
+  }
   return planets[factions[faction].planet].color;
 }
 
