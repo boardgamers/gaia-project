@@ -109,9 +109,9 @@ export default class Filters extends Vue {
   get factionData () {
     const factions = ["gaia", ...Object.values(Faction)];
     return factions.map(faction => {
-      const color = faction === "gaia" ? planetColor(Planet.Gaia) : ((faction === Faction.Ambas || faction === Faction.Taklons) ? "#8A482C" : factionColor(faction as Faction));
-      const darkness = (faction === Faction.Ambas || faction === Faction.Taklons) ? 1 : 1;
-      const saturation = faction === (Faction.Ivits || faction === Faction.HadschHallas) ? 1.2 : 2;
+      const color = faction === "gaia" ? planetColor(Planet.Gaia) : factionColor(faction as Faction);
+      const darkness = (faction === Faction.Ambas || faction === Faction.Taklons) ? 2 : 1.2;
+      const saturation = faction === (Faction.Ivits || faction === Faction.HadschHallas) ? 1 : 1.5;
 
       return [faction, parseInt(color.slice(1, 3), 16) / 255, parseInt(color.slice(3, 5), 16) / 255, parseInt(color.slice(5, 7), 16) / 255, darkness, saturation];
     });
