@@ -1,6 +1,6 @@
 <template>
   <g :class='["boardAction", kind, {highlighted}]' v-b-tooltip :title="tooltip">
-    <SpecialAction :class='[{faded}]' :action="boardActions[action].income" :highlighted=highlighted :board=true x=-20 y=-25 width=40 @click="onClick" />
+    <SpecialAction :class='{faded}' :action="boardActions[action].income" :highlighted=highlighted :board=true x=-20 y=-25 width=40 @click="onClick" />
     <g transform=translate(-15,-15)>
       <image v-if="kind === 'power'" xlink:href='../assets/resources/power-charge.svg' width=20 :height=133/345*20 transform=" scale(-1,1) translate(-9, -12)" />
       <rect x=-8 y=-8 width=16 height=16 :rx="kind === 'power' ? 8 : 0" :ry="kind === 'power' ? 8 : 0" stroke="black" stroke-width="1" :fill="kind === 'power' ? '#984FF1' : 'green'" transform=scale(0.8) v-if="costNumber>1" />
