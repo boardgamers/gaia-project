@@ -21,8 +21,8 @@
           <line x1=10.4 x2=11 y1=13.0 y2=13.0 stroke=black stroke-width="0.06" />
         </g>
 
-        <Resource kind="d" :count="1+playerData.terraformCostDiscount" transform="translate(31.5,1) scale(0.09)" />
-        <Resource kind="r" :count="playerData.range" transform="translate(35.5,1) scale(0.09)" />
+        <Resource kind="d" :count="1+playerData.terraformCostDiscount" transform="translate(31.5,1) scale(0.09)" style="opacity: 0.7" />
+        <Resource kind="r" :count="playerData.range" transform="translate(35.5,1) scale(0.1)" style="opacity: 0.7" />
 
         <BuildingGroup transform="translate(21, 1.2)" :nBuildings="playerData.gaiaformers" building="gf" :gaia="playerData.gaiaformersInGaia" :faction="player.faction" :placed="playerData.buildings.gf" :resource="[]" />
 
