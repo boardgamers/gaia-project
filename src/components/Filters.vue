@@ -109,6 +109,7 @@ export default class Filters extends Vue {
   get factionData () {
     const factions = ["gen", "gaia", ...Object.values(Faction)];
     return factions.map(faction => {
+      /* Gaia faction is used for gaia-colored gaia formers for Baltaks */
       const color = faction === "gaia" ? planetColor(Planet.Gaia) : factionColor(faction as Faction);
       const darkness = (faction === Faction.Ambas || faction === Faction.Taklons) ? 2 : 1.2;
       const saturation = faction === (Faction.Ivits || faction === Faction.HadschHallas) ? 1 : 1.5;
