@@ -12,7 +12,7 @@
     <g v-else-if="kind=='vp'" transform="translate(-7.5,-7.5)" class="vp">
       <VictoryPoint width="15" height="15" />
     </g>
-    <Building v-else-if="kind=='gf'" building="gf" transform="translate(0.5, 0) scale(2.5)" :flat="flat" />
+    <Building v-else-if="kind=='gf'" building="gf" transform="translate(0.5, 0) scale(2.5)" :flat="flat" faction="gen"/>
     <g v-else-if="kind=='swap-PI'" transform="scale(-1,1)">
       <Building faction="ambas" building="m" transform="translate(-8.5, 0) scale(1.5)" :flat="flat"/>
       <Building faction="ambas" building="PI" transform="translate(6, 0) scale(1.5)" :flat="flat"/>
@@ -26,7 +26,7 @@
     <Building v-else-if="kind=='space-station'" building="sp" transform="translate(0.5, 0) scale(2.5)" faction="ivits" :flat="flat" />
     <template v-else-if="kind === 'step'">
       <image v-if="!flat" xlink:href='../assets/resources/dig-planet.svg' width=20 height=20 x=-10 y=-10 />
-      <circle v-else r="10" :class='["planet-fill", "gen" ]'  />
+      <circle v-else r="10" :class='["planet-fill", "dig" ]'  />
       <template v-if="count === 1 || !count">
         <image xlink:href='../assets/resources/dig-arrow.svg' width=14 :height=325/308*14 x=-11 y=-4 />
       </template>
@@ -38,7 +38,7 @@
     <template v-else-if="kind === 'd'">
       <g transform=translate(3,0) >
         <image v-if="!flat" xlink:href='../assets/resources/dig-planet.svg' width=20 height=20 x=-10 y=-10 />
-        <circle v-else r="10" :class='["planet-fill", "gen" ]'  />
+        <circle v-else r="10" :class='["planet-fill", "dig" ]'  />
         <image xlink:href='../assets/resources/dig-arrow.svg' :height=325/308*14 width=14 x=-11 y=-4 />
       </g>
       <g transform=translate(-7,-7)>

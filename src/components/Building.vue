@@ -1,7 +1,7 @@
 <template>
   <g :class='["building"]'>
     <component :is="buildingComponent" :faction=faction :filter="outline ? 'url(#shadow-5)' : (outlineWhite ? 'url(#white-shadow-5)' : '')" v-if="!flat" />
-    <g :class='["planet-fill", planet]' v-else >
+    <g :class='["planet-fill", planetClass]' v-else >
       <rect v-if="mine" x="-20" y="-20" width="40" height="40" />
       <rect v-else-if="planetaryInstitute" x="-37.5" y="-37.5" width="75" height="75" />
       <polygon v-else-if="gaiaFormer" :points='hexCorners' />
@@ -25,6 +25,7 @@ import ResearchLab from './Buildings/ResearchLab.vue';
 import SpaceStation from './Buildings/SpaceStation.vue';
 import TradingStation from './Buildings/TradingStation.vue';
 import { corners } from '../graphics/hex';
+import { planetClass } from '../graphics/utils';
 
 const components = {
   [BuildingEnum.Mine]: "Mine",
@@ -69,8 +70,8 @@ export default class Building extends Vue {
   }
 
   // FLAT buildings
-  get planet () {
-    return (this.faction as any === "wild") ? Planet.Transdim : (this.faction as any === "gaia" ? Planet.Gaia : factions.planet(this.faction));
+  get planetClass () {
+    return planetClass(this.faction);
   }
 
   get hexCorners () {
