@@ -15,9 +15,6 @@ export default class PlayerToken extends Vue {
   @Prop()
   faction: Faction | 'automa';
 
-  @Prop()
-  planet: Planet;
-
   get planetClass()   {
     return planetClass(this.faction);
   }
