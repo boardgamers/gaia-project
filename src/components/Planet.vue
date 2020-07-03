@@ -93,6 +93,8 @@ svg {
     &.l {fill: $lost}
     // generic planet
     &.gen {fill: $generic}
+    //diggable planet
+    &.dig {fill: $dig}
   }
 }
 

@@ -1,6 +1,6 @@
 <template>
   <g class="condition">
-    <Building v-if="isBuilding" outline-white :building="condition" :flat="flat" transform="translate(0, 0) scale(2.2)" />
+    <Building v-if="isBuilding" outline-white :building="condition" :flat="flat" faction='gen' transform="translate(0, 0) scale(2.2)" />
     <g v-else-if="condition === 'fed'" transform="scale(0.45)">
       <Federation width=50 x=-20 y=-30 :used=true filter="url(#white-shadow-1)" />
     </g>
@@ -13,11 +13,11 @@
     <g v-else-if="condition === 'mg'" >
       <image v-if="!flat" xlink:href="../assets/conditions/planet-flat.svg" :height=120/198*30 width=30 x=-12 y=-13.5 transform="translate(-2,0) scale(-1,-1)" />
       <circle v-else r="10" :class='["planet-fill", "g" ]' transform="translate(0,0)" />
-      <Building building="m" outline-white :flat="flat" :transform="`translate(${flat ? 0  : 0}, ${flat ? 0  : 0}) scale(2.2)`" />
+      <Building building="m" outline-white :flat="flat" faction='gen' :transform="`translate(${flat ? 0  : 0}, ${flat ? 0  : 0}) scale(2.2)`" />
     </g>
     <g v-else-if="condition === 'PA'">
-      <Building building="PI" outline-white :flat="flat" :transform="`translate(${flat ? -5  : -2}, 1) scale(1.8)`" />
-      <Building building="ac1" outline-white :flat="flat" :transform="`translate(5, ${flat ? 1 : 2}) scale(1.8)`" />
+      <Building building="PI" outline-white :flat="flat" faction='gen' :transform="`translate(${flat ? -5  : -2}, 1) scale(1.8)`" />
+      <Building building="ac1" outline-white :flat="flat" faction='gen' :transform="`translate(5, ${flat ? 1 : 2}) scale(1.8)`" />
     </g>
     <g v-else-if="condition === 'a'">
       <line x1="-15" x2="15" stroke ="#666" />

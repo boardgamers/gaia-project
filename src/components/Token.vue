@@ -1,6 +1,6 @@
 <template>
   <g>
-    <circle cx="0" cy="0" r="20" :class="['player-token', 'planet-fill', renderPlanet]" />
+    <circle cx="0" cy="0" r="20" :class="['player-token', 'planet-fill', planetClass]" />
   </g>
 </template>
 
@@ -8,20 +8,15 @@
 import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import { factions, Faction, Planet } from '@gaia-project/engine';
+import {planetClass} from '../graphics/utils';
 
 @Component
 export default class PlayerToken extends Vue {
   @Prop()
   faction: Faction | 'automa';
 
-  @Prop()
-  planet: Planet;
-
-  get renderPlanet (): Planet {
-    if (this.planet) {
-      return this.planet;
-    }
-    return this.faction === 'automa' ? Planet.Lost : factions.planet(this.faction);
+  get planetClass()   {
+    return planetClass(this.faction);
   }
 }
 </script>

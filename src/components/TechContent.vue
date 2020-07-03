@@ -12,8 +12,8 @@
     <Resource v-for="(res, i) in centerRewards" :count=res.count :kind=res.type :key=i :transform="`translate(${centerRewards.length > 1 ? (i - 0.5) * 26 : 0 }, 0) scale(${centerRewards.length === 1 ? 2 : 1.5})`" />
     <Resource v-for="(res, i) in rightRewards" :count=res.count :kind=res.type :key="'right-'+i" :transform="`translate(13, ${rightRewards.length > 1 ? (i - 0.5) * 28 : 0 }) scale(1.5)`" />
     <template v-if="event.operator === 'PA->4pw'">
-      <Building building="PI" :transform="`translate(${flat ? -8 : -5.5}, -8) scale(2.7)`" :flat="flat"   />
-      <Building building="ac1" :transform="`translate(${flat ? 8 : 5.5}, ${flat? -8 : -6 }) scale(2.7)`" :flat="flat"  />
+      <Building building="PI" :transform="`translate(${flat ? -8 : -5.5}, -8) scale(2.7)`" :flat="flat" faction='gen'  />
+      <Building building="ac1" :transform="`translate(${flat ? 8 : 5.5}, ${flat? -8 : -6 }) scale(2.7)`" :flat="flat" faction='gen' />
       <Resource kind="t" transform="translate(-20, 18) scale(0.8)" />
       <Resource kind="t" transform="translate(-6.66, 18) scale(0.8)" />
       <Resource kind="t" transform="translate(6.66, 18) scale(0.8)" />

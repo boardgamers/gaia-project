@@ -1,6 +1,6 @@
 <template>
   <g :class='["boardAction", kind, {highlighted}]' v-b-tooltip :title="tooltip">
-    <SpecialAction :action="boardActions[action].income" :highlighted=highlighted :board=true x=-20 y=-25 width=40 @click="onClick" />
+    <SpecialAction :class='[{faded}]' :action="boardActions[action].income" :highlighted=highlighted :board=true x=-20 y=-25 width=40 @click="onClick" />
     <g transform=translate(-15,-15)>
       <image v-if="kind === 'power'" xlink:href='../assets/resources/power-charge.svg' width=20 :height=133/345*20 transform=" scale(-1,1) translate(-9, -12)" />
       <rect x=-8 y=-8 width=16 height=16 :rx="kind === 'power' ? 8 : 0" :ry="kind === 'power' ? 8 : 0" stroke="black" stroke-width="1" :fill="kind === 'power' ? '#984FF1' : 'green'" transform=scale(0.8) v-if="costNumber>1" />
@@ -9,8 +9,8 @@
       </text>
     </g>
     <g v-if="faded">
-      <line y1="-15" y2="15" x1=-15 x2=15 stroke=#333 stroke-width=3 />
-      <line y1="15" y2="-15" x1=-15 x2=15 stroke=#333 stroke-width=3 />
+      <line y1="-11" y2="11" x1=-11 x2=11 stroke=#333 stroke-width=5 />
+      <line y1="11" y2="-11" x1=-11 x2=11 stroke=#333 stroke-width=5 />
     </g>
   </g>
 </template>
@@ -120,12 +120,11 @@ g {
       stroke-width: 0.08;
     }
 
-    // opacity: 0.8;
+  }
 
-    &.faded {
+  .faded {
       opacity: 0.5;
     }
-  }
 }
 
 </style>

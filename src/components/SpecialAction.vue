@@ -5,6 +5,10 @@
       <!-- <Resource v-for="(reward, i) in rewards" :key=i :count=reward.count :kind=reward.type :transform="`translate(${rewards.length > 1 ? (i - 0.5) * 20  : 0}, ${reward.type === 'pw' ? 4 : 0}), scale(1.5)`" />-->
       <TechContent :content="act" v-for="(act, i) in action" :key=i :transform="`translate(0, ${(i - (action.length-1)/2) * 24}) scale(${action.length === 1 ? 0.8 : 0.55})`" />
     </g>
+    <g v-if="disabled">
+      <line y1="-14" y2="14" x1=-14 x2=14 stroke=#333 stroke-width=5 />
+      <line y1="14" y2="-14" x1=-14 x2=14 stroke=#333 stroke-width=5 />
+    </g>
   </svg>
 </template>
 
