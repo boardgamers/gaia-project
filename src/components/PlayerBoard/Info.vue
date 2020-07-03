@@ -48,7 +48,7 @@
         </g>
       </g>
       <g transform="translate(0,3.5) scale(0.8)">
-        <text class="board-text" x=6>Sat: {{data.satellites}}</text>
+        <text class="board-text" x=0>Sat: {{data.satellites}}</text>
       </g>
     </g>
   </g>
