@@ -39,11 +39,11 @@
             </g>
             <line x1=1.9 x2=1.9 y1=-2.3 y2=2.3 stroke-width=0.06 stroke=black />
           </g>
-          <g :transform="`translate(7.6, -1.4)`">
+          <g :transform="`translate(7.6, ${ hasLostPlanet ? -1.4 : 0 })`">
             <circle :r="1" style="stroke-width: 0.06px !important"  :class="['player-token', 'planet-fill', 'g']" />
             <text style="font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: white">{{player.ownedPlanetsCount['g']}}</text>
           </g>
-          <g v-if="player.ownedPlanetsCount['l']>0" :transform="`translate(7.6, 1.4 )`">
+          <g v-if="hasLostPlanet" :transform="`translate(7.6, 1.4 )`">
             <circle :r="1" style="stroke-width: 0.06px !important"  :class="['player-token', 'planet-fill', 'l']" />
             <text style="font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: white">{{player.ownedPlanetsCount['l']}}</text>
           </g>
@@ -148,6 +148,11 @@ export default class PlayerInfo extends Vue {
 
   get hasPlanets () {
     return this.player.ownedPlanets.length > 0;
+  }
+
+  get hasLostPlanet () {
+    debugger;
+    return this.player.ownedPlanetsCount['l']??0 > 0;
   }
 }
 </script>
