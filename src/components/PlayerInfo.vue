@@ -151,7 +151,6 @@ export default class PlayerInfo extends Vue {
   }
 
   get hasLostPlanet () {
-    debugger;
     return this.player.ownedPlanetsCount['l']??0 > 0;
   }
 }
