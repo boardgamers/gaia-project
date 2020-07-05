@@ -10,7 +10,7 @@ export default {
   [Planet.Ice]: { radius: 0.65, color: "#F8FFF5", borderColor: "#00c2c2" },
   [Planet.Gaia]: { radius: 0.65, color: "#00aa00", borderColor: "#004d1a" },
   [Planet.Transdim]: { radius: 0.5, color: "#a64dff", borderColor: "#a64dff" },
-  [Planet.Lost]: { radius: 0.5, color: "#004570", borderColor: "#ccccff" }
+  [Planet.Lost]: { radius: 0.5, color: "#004570", borderColor: "#d1d1e0" }
 };
 
 export const planetNames = {
