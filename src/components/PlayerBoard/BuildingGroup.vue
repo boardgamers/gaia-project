@@ -65,7 +65,9 @@ export default class BuildingGroup extends Vue {
   }
 
   tooltip (i: number) {
-    return "Income: " + (this.resources(i, true).join(", ") || "~");
+    return "Cost: " + (this.board.buildings[this.building].cost.join(", ") || "~") 
+    + ( this.board.buildings[this.building].isolatedCost ?  "\n Isolated cost: " + (this.board.buildings[this.building].isolatedCost.join(", ") || "~") : "")  
+    + "\n Income: " + (this.resources(i, true).join(", ") || "~");
   }
 
   get offset () {
