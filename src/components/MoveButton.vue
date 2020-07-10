@@ -1,6 +1,7 @@
 <template>
   <div class="move-button">
     <Booster v-if="button.booster" class="mb-1 mr-1" @click="handleClick" :booster="button.booster" />
+    <TechTile v-else-if="button.tech" class="mb-1 mr-1" @click="handleClick" :pos="button.tech" />
     <button v-else-if="!button.times" class='btn btn-secondary mr-2 mb-2 move-button' @click="handleClick" @mouseenter="hover" @mouseleave="leave" :title="button.tooltip" v-b-tooltip.html v-html="customLabel || button.label || button.command" >
     </button>
     <b-dropdown class='mr-2 mb-2 move-button' v-else split right :text="customLabel || button.label || button.command" @click="handleRangeClick(button.times[0])">
@@ -18,10 +19,12 @@ import { Component, Prop } from 'vue-property-decorator';
 import { GaiaHex, TechTilePos, AdvTechTilePos, Command, SpaceMap } from '@gaia-project/engine';
 import { HighlightHexData, ButtonData } from '../data';
 import Booster from './Booster.vue';
+import TechTile from './TechTile.vue';
 
 @Component({
   components: {
-    Booster
+    Booster,
+    TechTile
   },
   destroyed () {
     this.unsubscribe();

@@ -34,6 +34,12 @@
   }
 }
 
+// Cancel bootstrap's nav
+.nav {
+  display: unset;
+  flex-wrap: unset;
+  padding-left: unset;
+}
 
 .notransition {
   transition: none !important;

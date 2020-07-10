@@ -26,6 +26,7 @@ export interface ButtonData {
   buttons?: ButtonData[];
   hide?: boolean;
   booster?: Booster;
+  tech?: TechTilePos | AdvTechTilePos;
 }
 
 export type MapData = GaiaHex[];
