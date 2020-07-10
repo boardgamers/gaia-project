@@ -11,7 +11,7 @@ describe("Federations", () => {
   });
 
   it("should show 9 options with regular federation rules", function() {
-    this.timeout(10000);
+    this.timeout(20000);
     const engine = new Engine(game());
 
     expect(engine.findAvailableCommand(engine.playerToMove, Command.FormFederation).data.federations).to.have.length(9);
