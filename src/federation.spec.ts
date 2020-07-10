@@ -34,6 +34,16 @@ describe("Federations", () => {
     expect(() => engine.move("xenos federation 10A10,10A8,10A9,3A2,5A1,5A5,5A6,5B1,5B2 fed1.")).to.throw();
     expect(() => engine.move("xenos federation 5B3,5C,5A11,3A5,3B2,3B1 fed1.")).to.not.throw();
   });
+
+  it("should show a federation with only 6 satellites", function() {
+    this.timeout(10000);
+
+    const engine = new Engine(game4.moveHistory, {advancedRules: true, auction: true});
+
+    engine.generateAvailableCommandsIfNeeded();
+
+    expect(engine.availableCommands.some(command => command.name === Command.FormFederation)).to.be.true;
+  });
 });
 
 const game = () => Engine.parseMoves(`
@@ -629,4 +639,343 @@ const game3 = {
       ]
     }
   }
+};
+
+const game4 = {
+  moveHistory: Engine.parseMoves(`
+  init 4 fast-turn-based-game-EU
+p4 rotate -5x2 1 0x0 1 -2x-3 1 -3x5 3 2x3 3
+p1 faction firaks
+p2 faction gleens
+p3 faction ivits
+p4 faction itars
+p1 bid firaks 0
+p2 bid gleens 0
+p3 bid ivits 0
+p4 bid itars 0
+firaks build m 4A4
+gleens build m 10B1
+itars build m 8B3
+itars build m 4A1
+gleens build m 3A4
+firaks build m 7A0
+ivits build PI 4B2
+itars booster booster9
+ivits booster booster4
+gleens booster booster2
+firaks booster booster3
+ivits income 4pw
+itars income 4pw
+firaks build m 7B5.
+gleens charge 1pw
+gleens up nav.
+ivits burn 2. action power3.
+itars build ts 4A1.
+ivits charge 3pw
+firaks build ts 7B5.
+gleens charge 1pw
+gleens build m 10B4.
+itars charge 2pw
+ivits up terra.
+itars build lab 4A1. tech sci. up sci.
+gleens charge 1pw
+ivits charge 3pw
+firaks build lab 7B5. tech sci. up sci.
+gleens charge 1pw
+gleens build ts 3A4.
+firaks charge 2pw
+ivits special space-station. build sp 4C.
+itars up terra.
+firaks up terra.
+gleens build lab 3A4. tech free2. up gaia.
+firaks charge 2pw
+ivits special step. build m 4B0.
+itars charge 2pw
+itars spend 3pw for 1o. build ac1 4A1. tech free2. up sci.
+gleens charge 1pw
+ivits charge 3pw
+firaks build ts 4A4.
+ivits charge 1pw
+gleens build gf 10A5.
+ivits action power2. build m 5A10.
+itars charge 3pw
+firaks charge 2pw
+itars burn 4. action power5.
+firaks pass booster7
+gleens pass booster3
+ivits build ts 4B0.
+itars charge 3pw
+itars pass booster2
+ivits build lab 4B0. tech free2. up terra.
+itars charge 3pw
+ivits pass booster9
+itars income 1pw
+ivits income 4pw. income 4pw
+firaks action power3.
+gleens build ac2 3A4. tech free1. up sci.
+firaks charge 2pw
+itars action power6. build m 8A6.
+ivits special space-station. build sp 4A3.
+firaks build PI 4A4.
+ivits charge 3pw
+gleens special q.
+itars up sci.
+ivits federation 4A3,4B0,4B2,4C,5A10 fed4.
+firaks special down-lab. build ts 7B5. up eco.
+gleens decline 3pw
+gleens spend 1q for 1o. build m 10A5.
+ivits charge 1pw
+itars up sci.
+ivits action power5.
+firaks up eco.
+gleens build gf 8A8.
+itars pass booster4
+ivits up terra.
+firaks pass booster8
+gleens pass booster2
+ivits build ac2 4B0. tech terra. up terra.
+itars charge 3pw
+ivits special q.
+ivits build m 5A11.
+gleens charge 1pw
+ivits spend 1q for 1o. spend 1pw for 1c. build m 5B1.
+itars charge 1pw
+ivits pass booster3
+itars income 1pw
+firaks income 4pw. income 2pw. income 1pw
+ivits income 4pw
+itars burn 4. action power4.
+firaks action power3.
+gleens build m 8A8.
+ivits charge 1pw
+itars charge 1pw
+ivits special q.
+itars up nav.
+firaks build lab 7B5. tech int. up int.
+gleens decline 3pw
+gleens build gf 10A6.
+ivits burn 1. spend 4pw for 1q. action qic1. tech free3. up int.
+itars up nav.
+firaks special down-lab. build ts 7B5. up eco.
+gleens charge 3pw
+gleens special q.
+ivits special space-station. build sp 5B2.
+itars special step. build m 5A4.
+firaks charge 1pw
+ivits charge 1pw
+firaks special 4pw.
+gleens build m 9B0.
+ivits build m 5A7.
+firaks charge 2pw
+itars build ts 5A4.
+ivits charge 1pw
+firaks spend 7pw for 7c. build lab 7B5. tech free2. up nav.
+gleens charge 1pw
+gleens spend 2pw for 2c. pass booster9
+ivits pass booster7
+itars build PI 5A4.
+firaks charge 1pw
+ivits charge 1pw
+firaks up nav.
+itars pass booster3
+firaks build m 7B1.
+firaks pass booster4
+ivits income 4pw
+itars income 4pw. income 1pw
+firaks income 4pw. income 3pw. income 1pw
+itars spend 4tg for tech. tech nav. up nav
+gleens action power3.
+ivits burn 1. action power5.
+itars build ts 8B3.
+gleens charge 1pw
+firaks build m 3A1.
+ivits charge 1pw
+gleens build m 10A6.
+ivits charge 1pw
+itars charge 3pw
+ivits special q.
+itars action power6. build m 6B5.
+firaks special step. build m 3B1.
+gleens decline 3pw
+ivits charge 1pw
+gleens build ts 10B4.
+itars decline 3pw
+ivits action qic3.
+itars build ts 8A6.
+gleens charge 1pw
+ivits charge 1pw
+firaks special 4pw.
+gleens build PI 10B4.
+itars decline 3pw
+ivits special space-station. build sp 5B0.
+itars federation 5A2,5A3,5A4,8A6,8B3 fed4.
+firaks action power4.
+gleens special q.
+ivits federation 4A3,4B0,4B2,4C,5A10,5A11,5B0,5B1,5B2 fed4.
+itars up gaia.
+firaks special down-lab. build ts 7B5. up terra.
+gleens decline 3pw
+gleens build m 3B4.
+firaks charge 1pw
+ivits build ts 5A10.
+itars charge 3pw
+firaks charge 3pw
+gleens charge 1pw
+itars burn 3. action power2. build m 9A4.
+gleens decline 3pw
+ivits decline 4pw
+firaks build lab 7B5. tech terra. up terra.
+gleens decline 3pw
+gleens federation 10B3,10B2,10A4 fed5.
+ivits up terra.
+itars action qic1. tech adv-sci. cover nav. up gaia.
+firaks up terra.
+gleens up gaia.
+ivits build lab 5A10. tech adv-terra. cover free3. up int.
+itars charge 3pw
+firaks charge 4pw
+gleens charge 1pw
+itars burn 1. spend 1pw for 1c. build gf 5A6.
+firaks build ts 3B1.
+gleens decline 3pw
+ivits charge 1pw
+gleens up gaia.
+ivits special q,5c.
+itars up eco.
+firaks spend 3pw for 1o. build ts 7A0.
+itars charge 2pw
+gleens build gf 3A10.
+ivits action qic2. fedtile fed4.
+itars spend 1pw for 1c. pass booster2
+firaks federation 3A1,3B1,4A4,5A8 fed2.
+gleens build gf 9A9.
+ivits build ts 5A7.
+firaks decline 4pw
+firaks spend 3pw for 1o. pass booster3
+gleens pass booster6
+ivits pass booster9
+itars income 1t. income 4pw. income 1t. income 1pw. income 1pw
+firaks income 4pw. income 3pw. income 1pw
+ivits income 1t
+itars spend 4tg for tech. tech eco. up eco. spend 4tg for tech. tech int. up int
+itars action power3.
+firaks action qic2. fedtile fed2.
+gleens special q.
+ivits action power4.
+itars up terra.
+firaks build lab 7A0. tech nav. up nav.
+itars decline 3pw
+gleens build m 3A10.
+ivits special q,5c.
+itars build m 6B1.
+firaks up eco.
+gleens build m 2A5.
+ivits action qic3.
+itars build m 5A6.
+firaks charge 1pw
+ivits decline 2pw
+firaks action power6. build m 7A7.
+gleens charge 3pw
+gleens build gf 2A7.
+ivits special q.
+itars up terra.
+firaks build ts 7A7.
+gleens charge 3pw
+gleens build ts 3B4.
+firaks decline 2pw
+ivits build ts 5B1.
+itars decline 3pw
+gleens charge 1pw
+itars build m 9B2.
+gleens charge 1pw
+firaks federation 7A0,7A7,7B0,7B1,7B4,7B5 fed2.
+gleens build m 9A9.
+ivits build lab 5B1. tech int. up int.
+itars decline 3pw
+itars build ts 9B2.
+firaks spend 3pw for 1o. spend 1q for 1o. build lab 7A7. tech adv-eco. cover nav. up nav.
+gleens spend 1pw for 1c. build ts 9B0.
+itars charge 2pw
+ivits special 4pw.
+itars build ts 9A4.
+gleens decline 2pw
+ivits charge 1pw
+firaks special 3o.
+gleens up gaia.
+ivits action power5.
+itars special 4pw.
+firaks special down-lab. build ts 7B5. up int.
+gleens decline 2pw
+itars charge 1pw
+gleens spend 1o for 1t. pass booster8
+ivits up nav.
+itars burn 1. action power7.
+firaks build m 2A2.
+gleens charge 1pw
+ivits build ts 5A11.
+gleens charge 1pw
+itars federation 10A8,4A1,9A4,9B2 fed3.
+firaks pass booster4
+ivits action qic1. tech gaia. up gaia.
+itars build gf 6A1.
+ivits special space-station. build sp 5B3.
+itars burn 1. spend 1pw for 1c. pass booster7
+ivits federation 4A3,4B0,4B2,4C,5A10,5A11,5A7,5B0,5B1,5B2,5B3 fed6.
+ivits up int.
+ivits pass booster3
+firaks income 4pw. income 4pw. income 1t
+itars income 1t. income 4pw. income 1t
+ivits income 4pw
+itars spend 4tg for tech. tech free3. up gaia. spend 4tg for tech. tech gaia. up gaia
+gleens build lab 9B0. tech adv-gaia. cover free2. up gaia.
+firaks action qic2. fedtile fed2.
+itars action power5.
+ivits action qic3.
+gleens action power7.
+firaks action power3.
+itars build m 6B3.
+ivits up int.
+gleens spend 3pw for 1o. build ac1 9B0. tech terra. up terra.
+itars charge 2pw
+firaks special down-lab. build ts 7A7. up eco.
+gleens decline 4pw
+itars up nav.
+ivits special 4pw.
+gleens federation 3B5,3C,3B2 fed3.
+firaks special 4pw.
+itars up terra.
+ivits burn 1. action power1.
+gleens spend 1pw for 1c. build m 2A7.
+firaks special step. build m 2B5.
+gleens charge 1pw
+itars special 4pw.
+ivits special q,5c.
+gleens federation 1A4,2A0,2A5,2A7,2B0,2B3,2C,4A10,4A9,9A6,9A9,9B0,9B3,9B4,9B5 fed5.
+firaks build m 1B2.
+itars build m 6A0.
+ivits special q.
+gleens special q.
+firaks build m 2B2.
+gleens charge 1pw
+itars up sci.
+ivits special space-station. build sp 5A5.
+gleens spend 1pw for 1c. up nav.
+firaks build ts 2A2.
+itars up int.
+ivits action qic1. tech nav. up nav.
+gleens spend 2q for 2o. build lab 3B4. tech free3. up nav.
+firaks spend 3pw for 3c. build lab 2A2. tech free3. up int.
+itars up int.
+ivits spend 4q for 4o. build ac1 5B1. tech free1. up nav.
+gleens spend 1pw for 1c. pass
+firaks special 3o.
+itars action power2. build m 7B3.
+firaks decline 2pw
+ivits up nav.
+firaks build ac2 2A2. tech gaia. up gaia.
+gleens charge 1pw
+itars spend 2q for 2o. build m 6A1. spend 1o for 1t.
+ivits pass
+firaks spend 4pw for 1k. federation 1A4,1B2,2A0,2A2,2B0,2B1,2B2,2B5 fed6.
+  `)
 };

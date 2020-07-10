@@ -241,7 +241,8 @@ describe('Research', () => {
     expect(() => new Engine(moves)).to.not.throw();
   });
 
-  it ("should upgrade 0 level research fine", () => {
+  it ("should upgrade 0 level research fine", function() {
+    this.timeout(10000);
     const moves = parseMoves(`
       init 2 playtest-spaceships-2
       p2 rotate -2x-3 1 -5x2 2 5x-2 3 0x0 5 3x-5 4

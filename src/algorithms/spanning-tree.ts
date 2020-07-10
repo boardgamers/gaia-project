@@ -58,7 +58,7 @@ function spanningTreeWithHeuristic<T>(destGroups: Hex<T>[][], grid: Grid<Hex<T>>
 
   for (const startingPoint of startingPoints) {
     let hexes = groupAround(startingPoint);
-    let cost = 0;
+    let cost: number;
     let toReach = difference(destHexes, hexes);
 
     do {
