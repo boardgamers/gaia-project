@@ -65,9 +65,9 @@ export default class BuildingGroup extends Vue {
   }
 
   tooltip (i: number) {
-    return "Cost: " + (this.board.buildings[this.building].cost.join(", ") || "~") 
-    + ( this.board.buildings[this.building].isolatedCost ?  "\n Isolated cost: " + (this.board.buildings[this.building].isolatedCost.join(", ") || "~") : "")  
-    + "\n Income: " + (this.resources(i, true).join(", ") || "~");
+    return "Cost: " + (this.board.buildings[this.building].cost.join(", ") || "~") +
+    (this.board.buildings[this.building].isolatedCost ? "\n Isolated cost: " + (this.board.buildings[this.building].isolatedCost.join(", ") || "~") : "") +
+    "\n Income: " + (this.resources(i, true).join(", ") || "~");
   }
 
   get offset () {
@@ -100,7 +100,7 @@ export default class BuildingGroup extends Vue {
     if (this.ac1 || this.ac2) {
       return i === 0 ? !this.ac1 : !this.ac2;
     }
-    return i >= this.placed || this.gaia > i;
+    return i >= this.placed + this.gaia || this.gaia > i;
   }
 
   buildingFaction (i: number) {
