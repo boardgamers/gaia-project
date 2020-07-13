@@ -7,12 +7,12 @@
     <!-- <rect v-if="kind=='q'" class="qic" width="14" height="14" x="-7" y="-7" /> -->
     <rect v-else-if="kind=='o'" class="ore" width="14" height="14" x="-7" y="-7" />
     <rect v-else-if="kind=='c'" class="credit" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
-    <rect v-else-if="kind=='pw' || kind=='t'" class="power" width="15" height="15" ry="7.5" rx="7.5" x="-7.5" y="-7.5" />
+    <rect v-else-if="kind=='pw' || kind=='t' || kind=='brainstone'" class="power" width="15" height="15" ry="7.5" rx="7.5" x="-7.5" y="-7.5" />
     <polygon points="-7.5,3 -3,7.5 3,7.5 7.5,3 7.5,-3 3,-7.5 -3,-7.5 -7.5,-3"  v-else-if="kind=='k'" class="knowledge" />
     <g v-else-if="kind=='vp'" transform="translate(-7.5,-7.5)" class="vp">
       <VictoryPoint width="15" height="15" />
     </g>
-    <Building v-else-if="kind=='gf'" building="gf" transform="translate(0.5, 0) scale(2.5)" :flat="flat" faction="gen"/>
+    <Building v-else-if="kind=='gf'" building="gf" transform="translate(0.5, 0) scale(2.5)" :flat="flat" :faction="faction"/>
     <g v-else-if="kind=='swap-PI'" transform="scale(-1,1)">
       <Building faction="ambas" building="m" transform="translate(-8.5, 0) scale(1.5)" :flat="flat"/>
       <Building faction="ambas" building="PI" transform="translate(6, 0) scale(1.5)" :flat="flat"/>
@@ -78,14 +78,15 @@
     <image v-if="kind === 'pw'" xlink:href='../assets/resources/power-charge.svg' :height=133/346*20 width=20 transform="translate(-9.5, -13.5)" />
 
     <!-- <SpaceShip v-else-if="kind=='ship'" class="ship" :scale="14" /> -->
-    <text x="0" y="0" v-if="['o','c','k','pw','t','vp','q','ship'].includes(kind) || count === '+'" :class="{plus: count === '+'}">{{count}}</text>
+    <text x="0" y="0" v-if="['o','c','k','pw','t','vp','q','ship','gf'].includes(kind) || count === '+'" :class="{plus: count === '+'}">{{count}}</text>
+    <text x="0" y="0" v-if="kind=='brainstone'">B</text>
    </g>
 </template>
 
 <script lang="ts">
 import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import { Resource as ResourceEnum } from '@gaia-project/engine';
+import { Resource as ResourceEnum , Faction} from '@gaia-project/engine';
 import Building from './Building.vue';
 import SpaceShip from './SpaceShip.vue';
 import Qic from './Resources/Qic.vue';
@@ -105,7 +106,7 @@ import Token from './Token.vue';
 })
 export default class Resource extends Vue {
   @Prop()
-  kind: Resource;
+  kind: Resource | "brainstone";
 
   @Prop()
   count: number;
@@ -113,6 +114,9 @@ export default class Resource extends Vue {
   @Prop({ default: false })
   centerLeft: boolean;
 
+  @Prop({ default: 'gen' })
+  faction: Faction;
+  
   get flat () {
     return this.$store.state.gaiaViewer.preferences.flatBuildings;
   }
