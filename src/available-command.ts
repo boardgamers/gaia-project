@@ -257,7 +257,8 @@ export function possibleSpaceStations(engine: Engine, player: Player) {
   const buildings = [];
 
   for (const hex of map.toJSON()) {
-    if (hex.occupied() || hex.hasPlanet()) {
+    // We can't put a space station where we already have a satellite
+    if (hex.occupied() || hex.hasPlanet() || hex.belongsToFederationOf(player)) {
       continue;
     }
 
@@ -783,7 +784,7 @@ export function possibleBids(engine: Engine, player: Player) {
     const bid = engine.players.find(pl => pl.faction == faction) ? engine.players.find(pl => pl.faction == faction).data.bid : -1;
     bids.push({
       faction,
-      bid: range( bid + 1, bid + 10) 
+      bid: range( bid + 1, bid + 10)
     });
   }
 
