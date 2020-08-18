@@ -17,11 +17,6 @@ import FactionWheel from "./FactionWheel.vue";
 import Filters from "./Filters.vue";
 
 @Component<SpaceMap>({
-  computed: {
-    right () {
-      return (this.$store.state.gaiaViewer.data.players || []).length > 2 ? 33.5 : 26;
-    }
-  },
   components: {
     FactionWheel,
     Filters,
@@ -41,8 +36,12 @@ export default class SpaceMap extends Vue {
     return this.$store.state.gaiaViewer.context.rotation.get(`${center.q}x${center.r}`) || 0;
   }
 
-  get map (this: SpaceMap): SpaceMapData {
+  get map (): SpaceMapData {
     return this.$store.state.gaiaViewer.data.map;
+  }
+
+  get right () {
+    return (this.sectors || []).length > 7 ? 33.5 : 26;
   }
 }
 
