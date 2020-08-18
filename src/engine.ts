@@ -496,6 +496,7 @@ export default class Engine {
     if (data.map) {
       engine.map = SpaceMap.fromData(data.map);
       engine.map.nbPlayers = data.players.length;
+      engine.map.layout = engine.options.layout;
       engine.map.placement = engine.options.map;
     }
 
