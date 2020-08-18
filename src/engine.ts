@@ -55,6 +55,8 @@ export interface EngineOptions {
   spaceShips?: boolean;
   /** auction */
   auction?: boolean;
+  /** Layout */
+  layout?: 'standard' | 'balanced' | 'xshape';
 }
 
 /**
@@ -1190,7 +1192,7 @@ export default class Engine {
 
     assert(nbPlayers >= 2 && nbPlayers <= 5, "Invalid number of players");
 
-    this.map = new SpaceMap(nbPlayers, seed, this.options.map?.mirror ?? false);
+    this.map = new SpaceMap(nbPlayers, seed, this.options.map?.mirror ?? false, this.options.layout);
 
     if (this.options.map?.sectors) {
       this.map.load(this.options.map);

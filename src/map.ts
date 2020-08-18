@@ -6,6 +6,7 @@ import { keyBy } from 'lodash';
 import Sector from "./sector";
 import { Player, Planet, Faction } from "./enums";
 import { GaiaHex, reverseSuffixes } from "./gaia-hex";
+import { EngineOptions } from "./engine";
 
 // Data: from outer ring to inside ring, starting from top
 const s1 = {name: "1", map: "eeemevoeedee,ereees,e".replace(/,/g, "")};
@@ -58,6 +59,12 @@ const bigConfiguration = {
   centers: [{q: 0, r: 0, s: 0}]
 };
 
+const xConfiguration = {
+  sectors: [s1, s2, s3, s4, s5, s6, s7, s8],
+  nbSectors: 8,
+  centers: [{q: 0, r: 0, s: 0}]
+};
+
 // Centers of the small configuration
 for (let i = 0; i < 6; i++) {
   const hex = new Hex(5, -2);
@@ -65,19 +72,29 @@ for (let i = 0; i < 6; i++) {
 
   smallConfiguration.centers.push(hex.toJSON());
   bigConfiguration.centers.push(hex.toJSON());
+  xConfiguration.centers.push(hex.toJSON());
 }
+
+// X Configuration: remove last and add top & bottom
+xConfiguration.centers.splice(xConfiguration.centers.length - 1);
 
 // Big configuration: add 3 more
 for (let i = -1; i <= 1; i++) {
   const hex = new Hex(-6, 10);
   hex.rotateRight(i, {q: -3, r: 5, s: -2});
   bigConfiguration.centers.push(hex);
+
+  if (i !== 0) {
+    xConfiguration.centers.push(hex);
+  }
 }
 
 export default class SpaceMap {
   rng: seedrandom.prng;
   nbPlayers: number;
   seed: string;
+  layout: EngineOptions['layout'];
+
   /**
    * Simple array listing sectors and how they are placed. Allows to reconstruct the map with little data
    */
@@ -85,7 +102,7 @@ export default class SpaceMap {
   grid: Grid<GaiaHex>; // hexagrid
   distanceCache: {[coord: string]: {[coord: string]: number}} = {};
 
-  constructor(nbPlayers?: number, seed?: string, mirror?: boolean) {
+  constructor(nbPlayers?: number, seed?: string, mirror?: boolean, layout: EngineOptions['layout'] = 'standard') {
     if (nbPlayers === undefined) {
       return;
     }
@@ -93,6 +110,7 @@ export default class SpaceMap {
     this.nbPlayers = nbPlayers;
     this.rng = seedrandom(seed);
     this.seed = seed;
+    this.layout = layout;
 
     // Keep tests valid even under new map generation rules
     const germanRules = !["Gianluigi-Buffon", "randomSeed", "12", "9876", "yellow-paint-8951", "green-jeans-8458", "Fastgame01"].includes(seed);
@@ -187,6 +205,9 @@ export default class SpaceMap {
   }
 
   configuration() {
+    if (this.layout === 'xshape') {
+      return xConfiguration;
+    }
     return SpaceMap.configuration(this.nbPlayers);
   }
 

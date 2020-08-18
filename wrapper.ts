@@ -24,7 +24,7 @@ export async function init (nbPlayers: number, expansions: string[], options: En
     options.spaceShips = true;
   }
 
-  if (options.balancedGeneration) {
+  if (options.balancedGeneration || options.layout === 'balanced') {
     delete options.balancedGeneration;
 
     const resp = await axios.post('http://gaia-project.hol.es', {seed: numberSeed, player: nbPlayers}).then(r => r.data);
