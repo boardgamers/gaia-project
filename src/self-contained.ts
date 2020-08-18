@@ -7,7 +7,7 @@ import Game from './components/Game.vue';
 function launchSelfContained (selector = "#app", debug = true) {
   const emitter = launch(selector, debug ? Wrapper : Game);
 
-  let engine = new Engine(["init 3 randomSeed2","p1 faction lantids","p2 faction geodens","p3 faction ivits","lantids build m 6B4","geodens build m 2A3","geodens build m 9A3","lantids build m 8A0","ivits build PI 2A7","ivits booster booster2","geodens booster booster4","lantids booster booster5","ivits income 4pw","lantids build ts 6B4.","geodens charge 1pw","geodens build m 2B3.","ivits charge 3pw"], {});
+  let engine = new Engine(["init 3 randomSeed2","p1 faction lantids","p2 faction geodens","p3 faction ivits"], {layout: 'xshape'});
   engine.generateAvailableCommandsIfNeeded();
 
   const unsub = emitter.store.subscribeAction(({ payload, type }) => {
