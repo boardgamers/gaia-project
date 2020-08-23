@@ -14,7 +14,7 @@
           <!-- M to TS -->
           <line x1=5.7 x2=5.7 y1=14.2 y2=14.8 stroke=black stroke-width="0.06" />
           <!-- TS to PI -->
-          <line x1=5.7 x2=5.7 y1=11.2 y2=11.8 stroke=black stroke-width="0.06" />
+          <line x1=5.7 x2=5.7 y1=11.2 y2=11.8 stroke=black stroke-width="0.06" v-if="player.faction !== 'ivits'" />
           <!-- LAB to AC -->
           <line x1=15.3 x2=15.3 y1=11.2 y2=11.8 stroke=black stroke-width="0.06" />
           <!-- TS to LAB -->
@@ -151,7 +151,7 @@ export default class PlayerInfo extends Vue {
   }
 
   get hasLostPlanet () {
-    return this.player.ownedPlanetsCount['l']??0 > 0;
+    return this.player.ownedPlanetsCount.l ?? 0 > 0;
   }
 }
 </script>
