@@ -28,6 +28,9 @@ export default class TechTile extends Vue {
   player: PlayerEnum;
 
   @Prop()
+  countOverride?: number;
+
+  @Prop()
   covered: boolean;
 
   onClick () {
@@ -53,6 +56,9 @@ export default class TechTile extends Vue {
   }
 
   get count () {
+    if (this.countOverride !== undefined) {
+      return this.countOverride;
+    }
     if (this.player !== undefined) {
       return 1;
     }
