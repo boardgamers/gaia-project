@@ -105,13 +105,31 @@
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { Faction, Planet } from "@gaia-project/engine";
 import { factionColor, planetColor } from "../graphics/utils";
+
+function getDarkness(faction : string) : number {
+  switch(faction)
+  {
+    case Faction.Ambas:
+    case Faction.Taklons:
+      return 2;
+    case Faction.Bescods:
+    case Faction.Firaks:
+      return 2.4;
+    case Faction.Itars:
+    case Faction.Nevlas:
+      return 0.8;
+    default:
+      return 1.2;
+  }
+}
+
 export default class Filters extends Vue {
   get factionData () {
     const factions = ["gen", "gaia", ...Object.values(Faction)];
     return factions.map(faction => {
       /* Gaia faction is used for gaia-colored gaia formers for Baltaks */
       const color = faction === "gaia" ? planetColor(Planet.Gaia) : factionColor(faction as Faction);
-      const darkness = (faction === Faction.Ambas || faction === Faction.Taklons) ? 2 : 1.2;
+      const darkness = getDarkness(faction);
       const saturation = faction === (Faction.Ivits || faction === Faction.HadschHallas) ? 1 : 1.5;
 
       return [faction, parseInt(color.slice(1, 3), 16) / 255, parseInt(color.slice(3, 5), 16) / 255, parseInt(color.slice(5, 7), 16) / 255, darkness, saturation];
