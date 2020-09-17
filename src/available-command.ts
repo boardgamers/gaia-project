@@ -386,7 +386,7 @@ export function possibleFreeActions(engine: Engine, player: Player, data?: {move
       pool = freeActionsTerrans;
     } else if (pl.canGaiaItars()) {
       pool = freeActionsItars;
-      commands.push({name: Command.Decline, player, data: {offer: Resource.TechTile, cost: new Reward(4, Resource.GainTokenGaiaArea).toString()}});
+      commands.push({name: Command.Decline, player, data: {offers: [Resource.TechTile], cost: new Reward(4, Resource.GainTokenGaiaArea).toString()}});
     }
 
     burnDisabled = true;
@@ -503,7 +503,7 @@ export function possibleResearchAreas(engine: Engine, player: Player, cost?: str
     commands.push({
       name: Command.Decline,
       player,
-      data: { offer: Command.UpgradeResearch }
+      data: { offers: [Command.UpgradeResearch] }
     });
   }
   return commands;
