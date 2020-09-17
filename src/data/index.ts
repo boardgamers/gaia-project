@@ -22,6 +22,7 @@ export interface ButtonData {
   // Rotate sectors command?
   rotation?: boolean;
   needConfirm?: boolean;
+  warning?: string;
 
   buttons?: ButtonData[];
   hide?: boolean;

@@ -2,8 +2,8 @@
   <div class="move-button">
     <Booster v-if="button.booster" class="mb-1 mr-1" @click="handleClick" :booster="button.booster" />
     <TechTile v-else-if="button.tech" class="mb-1 mr-1" @click="handleClick" :pos="button.tech" :count-override=1 />
-    <button v-else-if="!button.times" class='btn btn-secondary mr-2 mb-2 move-button' @click="handleClick" @mouseenter="hover" @mouseleave="leave" :title="button.tooltip" v-b-tooltip.html v-html="customLabel || button.label || button.command" >
-    </button>
+    <b-btn v-else-if="!button.times" :variant="button.warning ? 'warning': 'secondary'" class='mr-2 mb-2 move-button' @click="handleClick" @mouseenter="hover" @mouseleave="leave" :title="button.tooltip" v-b-tooltip.html v-html="customLabel || button.label || button.command" >
+    </b-btn>
     <b-dropdown class='mr-2 mb-2 move-button' v-else split right :text="customLabel || button.label || button.command" @click="handleRangeClick(button.times[0])">
       <b-dropdown-item v-for="i in button.times" :key="i" @click="handleRangeClick(i)">{{i}}</b-dropdown-item>
     </b-dropdown>
@@ -76,10 +76,22 @@ export default class MoveButton extends Vue {
     }
   }
 
-  handleClick () {
+  async handleClick () {
     if (this.button.hide) {
       console.log("click on hidden button, ignoring");
       return;
+    }
+    if (this.button.warning) {
+      try {
+        const ret = await this.$bvModal.msgBoxConfirm(this.button.warning);
+
+        if (!ret) {
+          return;
+        }
+      } catch (err) {
+        console.error(err);
+        return;
+      }
     }
     // Remove highglights caused by another button
     if (!this.isActiveButton) {

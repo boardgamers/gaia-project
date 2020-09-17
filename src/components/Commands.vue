@@ -289,6 +289,8 @@ export default class Commands extends Vue {
         case Command.ChooseRoundBooster: {
           const buttons: ButtonData[] = [];
 
+          const warning = (this.engine.round > 0 && this.engine.players[this.command.player].data.gaiaformers > this.engine.players[this.command.player].data.gaiaformersInGaia && this.engine.players[this.command.player].faction === Faction.BalTaks) ? "Are you sure you want to pass with gaiaformers not yet converted?" : undefined;
+
           Booster.values(Expansion.All).forEach((booster, i) => {
             if (command.data.boosters.includes(booster)) {
               buttons.push({
@@ -296,7 +298,8 @@ export default class Commands extends Vue {
                 label: `Booster ${i + 1}`,
                 booster,
                 needConfirm: true,
-                tooltip: tiles.boosters[booster].map(spec => eventDesc(new Event(spec))).join("\n")
+                tooltip: tiles.boosters[booster].map(spec => eventDesc(new Event(spec))).join("\n"),
+                warning
               });
             }
           });
@@ -310,14 +313,16 @@ export default class Commands extends Vue {
               buttons: [{
                 command: "",
                 label: `Confirm Pass`
-              }]
+              }],
+              warning
             });
           } else {
             ret.push({
               label: command.name === Command.Pass ? "Pass" : "Pick booster",
               command: command.name,
               buttons,
-              boosters: command.data.boosters
+              boosters: command.data.boosters,
+              warning
             });
           }
 
@@ -369,7 +374,8 @@ export default class Commands extends Vue {
           if (command.data.offers) {
             ret.push({
               label: `Decline ${command.data.offers[0].offer}`,
-              command: `${Command.Decline} ${command.data.offers[0].offer}`
+              command: `${Command.Decline} ${command.data.offers[0].offer}`,
+              warning: command.data.offers[0].offer === 'tech' ? "Are you sure you want to decline a tech tile?" : undefined
             });
           } else {
             // LEGACY CODE
