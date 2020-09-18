@@ -30,7 +30,7 @@
 <script lang="ts">
 import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import Engine, { AvailableCommand, Command, factions, Building, GaiaHex, Booster, tiles, Event, Federation, Faction, SpaceMap, Expansion } from '@gaia-project/engine';
+import Engine, { AvailableCommand, Command, factions, Building, GaiaHex, Booster, tiles, Event, Federation, Faction, SpaceMap, Expansion, Reward, Resource } from '@gaia-project/engine';
 import MoveButton from './MoveButton.vue';
 import { buildingName } from '../data/building';
 import { GameContext, ButtonData } from '../data';
@@ -289,7 +289,7 @@ export default class Commands extends Vue {
         case Command.ChooseRoundBooster: {
           const buttons: ButtonData[] = [];
 
-          const warning = (this.engine.round > 0 && this.engine.players[this.command.player].data.gaiaformers > this.engine.players[this.command.player].data.gaiaformersInGaia && this.engine.players[this.command.player].faction === Faction.BalTaks) ? "Are you sure you want to pass with gaiaformers not yet converted?" : undefined;
+          const warning = (this.engine.round > 0 && this.engine.players[this.command.player].data.hasResource(new Reward(1, Resource.GaiaFormer)) && this.engine.players[this.command.player].faction === Faction.BalTaks) ? "Are you sure you want to pass with gaiaformers not yet converted?" : undefined;
 
           Booster.values(Expansion.All).forEach((booster, i) => {
             if (command.data.boosters.includes(booster)) {
