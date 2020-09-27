@@ -7,44 +7,36 @@ A Vue.js / SVG UI for Gaia Project
 
 Check out [boardgamers.space](https://www.boardgamers.space)!
 
-## Requirements
-
-Depending on your version of node and your OS, the binaries for node-sass might need to be built rather than downloaded.
-
-This can generally be avoided if you have a LTS version of node installed: https://nodejs.org/en/.
-
-If you have errors during `npm install` due to manually building modules, you can try this:
-
-### Windows
+## Build and Run
 
 ```bash
-# From an elevated powershell / admin console
-npm install --global --production windows-build-tools
-```
-
-### Mac
-
-- install python 2.7 + (not 3.x)
-- run `xcode-select --install` in the terminal
-
-See [here](https://github.com/nodejs/node-gyp) for why.
-
-### Unix
-
-```bash
-sudo apt install build-essentials
-```
-
-## Build
-
-```bash
+# install deps, do this everytime yarn.lock is modified
 yarn install
+# run
 yarn serve
 ```
 
 And open localhost:8080 in the browser.
 
-You will also need to run gaia-engine on the same machine.
+You can change [src/self-contained.ts](src/self-contained.ts) to change the initial setup: number of players, factions...
+
+## Use local engine
+
+Download and install `gaia-engine`.
+
+In `gaia-engine`'s folder:
+
+```
+yarn link
+```
+
+In `gaia-viewer`'s folder
+
+```
+yarn link @gaia-project/engine
+```
+
+Now your gaia-viewer will use your local engine, instead of the one on NPM
 
 ## Include in other projects
 
