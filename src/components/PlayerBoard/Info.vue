@@ -48,7 +48,7 @@
         </g>
       </g>
       <g transform="translate(0,3.5) scale(0.8)">
-        <text class="board-text" x=0>Sat: {{data.satellites}}</text>
+        <text class="board-text" x=0>{{researchOverview}}</text>
       </g>
     </g>
   </g>
@@ -97,6 +97,11 @@ export default class BuildingGroup extends Vue {
     }
 
     return parseInt(this.player.income.substr(index));
+  }
+
+  get researchOverview (): string {
+    const r = this.data.research;
+    return `Sat: ${this.data.satellites} TF: ${r.terra} Nav: ${r.nav} AI: ${r.int} GP: ${r.gaia} Eco: ${r.eco} Sci: ${r.sci}`;
   }
 }
 
