@@ -1,11 +1,11 @@
 import { expect } from "chai";
 import Engine from "../engine";
-import { Player } from '../enums';
+import { Player } from "../enums";
 
 const parseMoves = Engine.parseMoves;
 
-describe('Itars', () => {
-  it ("should be able to gain a tech tile and decline another after PI is built", () => {
+describe("Itars", () => {
+  it("should be able to gain a tech tile and decline another after PI is built", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans
@@ -34,7 +34,7 @@ describe('Itars', () => {
       p1 build m -3x4
     `);
 
-    expect (() => new Engine(moves)).to.not.throw();
+    expect(() => new Engine(moves)).to.not.throw();
   });
 
   it("should autocharge when no power tokens are going to be put in area3", () => {

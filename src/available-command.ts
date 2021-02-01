@@ -1,12 +1,28 @@
-import { Command, Faction, Building, Planet, Booster, Resource, Player, Operator, BoardAction, ResearchField, TechTilePos, AdvTechTilePos, Phase, SubPhase, Expansion } from './enums';
-import Engine from './engine';
-import { range, difference } from 'lodash';
-import factions from './factions';
-import { upgradedBuildings } from './buildings';
-import Reward from './reward';
-import { boardActions, freeActions, freeActionsTerrans, freeActionsItars, freeActionsMoveShip } from './actions';
-import * as researchTracks from './research-tracks';
-import { isAdvanced } from './tiles/techs';
+import {
+  Command,
+  Faction,
+  Building,
+  Planet,
+  Booster,
+  Resource,
+  Player,
+  Operator,
+  BoardAction,
+  ResearchField,
+  TechTilePos,
+  AdvTechTilePos,
+  Phase,
+  SubPhase,
+  Expansion,
+} from "./enums";
+import Engine from "./engine";
+import { range, difference } from "lodash";
+import factions from "./factions";
+import { upgradedBuildings } from "./buildings";
+import Reward from "./reward";
+import { boardActions, freeActions, freeActionsTerrans, freeActionsItars, freeActionsMoveShip } from "./actions";
+import * as researchTracks from "./research-tracks";
+import { isAdvanced } from "./tiles/techs";
 
 const ISOLATED_DISTANCE = 3;
 const UPGRADE_RESEARCH_COST = "4k";
@@ -28,22 +44,38 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
   }
 
   switch (subPhase) {
-    case SubPhase.ChooseTechTile: return possibleTechTiles(engine, player);
-    case SubPhase.CoverTechTile: return possibleCoverTechTiles(engine, player);
-    case SubPhase.UpgradeResearch: return possibleResearchAreas(engine, player, "", data);
-    case SubPhase.PlaceLostPlanet: return possibleSpaceLostPlanet(engine, player);
-    case SubPhase.ChooseFederationTile: return possibleFederationTiles(engine, player, "pool");
-    case SubPhase.RescoreFederationTile: return possibleFederationTiles(engine, player, "player");
-    case SubPhase.BuildMine: return possibleMineBuildings(engine, player, false);
-    case SubPhase.BuildMineOrGaiaFormer: return possibleMineBuildings(engine, player, true, data);
-    case SubPhase.DeliverTrade: return [{name: Command.DeliverTrade, player, data}];
-    case SubPhase.SpaceStation: return possibleSpaceStations(engine, player);
-    case SubPhase.PISwap: return possiblePISwaps(engine, player);
-    case SubPhase.DowngradeLab: return possibleLabDowngrades(engine, player);
-    case SubPhase.BrainStone: return [{name: Command.BrainStone, player, data}];
-    case SubPhase.PlaceShip: return possibleShips(engine, player);
-    case SubPhase.PickRewards: return [{name: Command.PickReward, player, data: {rewards: engine.player(player).data.toPick.rewards}}];
-    case SubPhase.MoveShip: return possibleShipMovements(engine, player);
+    case SubPhase.ChooseTechTile:
+      return possibleTechTiles(engine, player);
+    case SubPhase.CoverTechTile:
+      return possibleCoverTechTiles(engine, player);
+    case SubPhase.UpgradeResearch:
+      return possibleResearchAreas(engine, player, "", data);
+    case SubPhase.PlaceLostPlanet:
+      return possibleSpaceLostPlanet(engine, player);
+    case SubPhase.ChooseFederationTile:
+      return possibleFederationTiles(engine, player, "pool");
+    case SubPhase.RescoreFederationTile:
+      return possibleFederationTiles(engine, player, "player");
+    case SubPhase.BuildMine:
+      return possibleMineBuildings(engine, player, false);
+    case SubPhase.BuildMineOrGaiaFormer:
+      return possibleMineBuildings(engine, player, true, data);
+    case SubPhase.DeliverTrade:
+      return [{ name: Command.DeliverTrade, player, data }];
+    case SubPhase.SpaceStation:
+      return possibleSpaceStations(engine, player);
+    case SubPhase.PISwap:
+      return possiblePISwaps(engine, player);
+    case SubPhase.DowngradeLab:
+      return possibleLabDowngrades(engine, player);
+    case SubPhase.BrainStone:
+      return [{ name: Command.BrainStone, player, data }];
+    case SubPhase.PlaceShip:
+      return possibleShips(engine, player);
+    case SubPhase.PickRewards:
+      return [{ name: Command.PickReward, player, data: { rewards: engine.player(player).data.toPick.rewards } }];
+    case SubPhase.MoveShip:
+      return possibleShipMovements(engine, player);
     case SubPhase.BeforeMove: {
       return [
         ...possibleBuildings(engine, player),
@@ -52,29 +84,36 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
         ...possibleBoardActions(engine, player),
         ...possibleSpecialActions(engine, player),
         ...possibleFreeActions(engine, player),
-        ...possibleRoundBoosters(engine, player)
+        ...possibleRoundBoosters(engine, player),
       ];
     }
-    case SubPhase.AfterMove: return [...possibleFreeActions(engine, player), {name: Command.EndTurn, player}];
-    default: break;
+    case SubPhase.AfterMove:
+      return [...possibleFreeActions(engine, player), { name: Command.EndTurn, player }];
+    default:
+      break;
   }
 
   switch (engine.phase) {
-    case Phase.SetupInit: return [{ name: Command.Init }];
-    case Phase.SetupBoard: return [{name: Command.RotateSectors, player}];
-    case Phase.SetupShip: return possibleShips(engine, player);
-    case Phase.SetupFaction: return [
-      {
-        name: Command.ChooseFaction,
-        player,
-        data: difference(
-          Object.values(Faction),
-          engine.setup.map(f => f),
-          engine.setup.map(f => factions.opposite(f))
-        )
-      }
-    ];
-    case Phase.SetupAuction: return possibleBids(engine, player);
+    case Phase.SetupInit:
+      return [{ name: Command.Init }];
+    case Phase.SetupBoard:
+      return [{ name: Command.RotateSectors, player }];
+    case Phase.SetupShip:
+      return possibleShips(engine, player);
+    case Phase.SetupFaction:
+      return [
+        {
+          name: Command.ChooseFaction,
+          player,
+          data: difference(
+            Object.values(Faction),
+            engine.setup.map((f) => f),
+            engine.setup.map((f) => factions.opposite(f))
+          ),
+        },
+      ];
+    case Phase.SetupAuction:
+      return possibleBids(engine, player);
     case Phase.SetupBuilding: {
       const planet = engine.player(player).planet;
       const buildings = [];
@@ -82,22 +121,23 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
       for (const hex of engine.map.toJSON()) {
         if (hex.data.planet === planet && !hex.data.building) {
           buildings.push({
-            building:
-              engine.player(player).faction !== Faction.Ivits
-                ? Building.Mine
-                : Building.PlanetaryInstitute,
+            building: engine.player(player).faction !== Faction.Ivits ? Building.Mine : Building.PlanetaryInstitute,
             coordinates: hex.toString(),
-            cost: '~'
+            cost: "~",
           });
         }
       }
 
-      return [{name: Command.Build, player, data: { buildings }}];
+      return [{ name: Command.Build, player, data: { buildings } }];
     }
-    case Phase.SetupBooster: return possibleRoundBoosters(engine, player);
-    case Phase.RoundIncome: return possibleIncomes(engine, player);
-    case Phase.RoundGaia: return possibleGaiaFreeActions(engine, player);
-    case Phase.RoundLeech: return possibleLeech(engine, player);
+    case Phase.SetupBooster:
+      return possibleRoundBoosters(engine, player);
+    case Phase.RoundIncome:
+      return possibleIncomes(engine, player);
+    case Phase.RoundGaia:
+      return possibleGaiaFreeActions(engine, player);
+    case Phase.RoundLeech:
+      return possibleLeech(engine, player);
   }
 
   return [];
@@ -106,7 +146,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
 export function possibleBuildings(engine: Engine, player: Player) {
   const map = engine.map;
   const pl = engine.player(player);
-  const {data} = pl;
+  const { data } = pl;
   const buildings = [];
 
   for (const hex of engine.map.toJSON()) {
@@ -152,44 +192,52 @@ export function possibleBuildings(engine: Engine, player: Player) {
       const upgraded = upgradedBuildings(building, engine.player(player).faction);
 
       for (const upgrade of upgraded) {
-        const {cost, possible} = engine.player(player).canBuild(hex.data.planet, upgrade, {isolated, existingBuilding: building});
+        const { cost, possible } = engine
+          .player(player)
+          .canBuild(hex.data.planet, upgrade, { isolated, existingBuilding: building });
         if (possible) {
           buildings.push({
             building: upgrade,
             cost: Reward.toString(cost),
             coordinates: hex.toString(),
-            upgrade: true
+            upgrade: true,
           });
         }
       }
     } else if (pl.canOccupy(hex)) {
       // planet without building
       // Check if the range is enough to access the planet
-      const distance = Math.min(...data.occupied.filter(loc => loc.isRangeStartingPoint(player)).map(loc => map.distance(hex, loc)));
-      const qicNeeded = Math.max(Math.ceil( (distance - data.range - data.temporaryRange) / QIC_RANGE_UPGRADE), 0);
+      const distance = Math.min(
+        ...data.occupied.filter((loc) => loc.isRangeStartingPoint(player)).map((loc) => map.distance(hex, loc))
+      );
+      const qicNeeded = Math.max(Math.ceil((distance - data.range - data.temporaryRange) / QIC_RANGE_UPGRADE), 0);
 
       const building = hex.data.planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine;
       // No need for terra forming if already occupied by another faction
-      const planet = (hex.occupied() ? pl.planet : hex.data.planet);
-      const {possible, cost, steps} = pl.canBuild(planet, building, {addedCost: [new Reward(qicNeeded, Resource.Qic)]});
+      const planet = hex.occupied() ? pl.planet : hex.data.planet;
+      const { possible, cost, steps } = pl.canBuild(planet, building, {
+        addedCost: [new Reward(qicNeeded, Resource.Qic)],
+      });
 
       if (possible) {
-          buildings.push({
-            building,
-            coordinates: hex.toString(),
-            cost: Reward.toString(cost),
-            steps
+        buildings.push({
+          building,
+          coordinates: hex.toString(),
+          cost: Reward.toString(cost),
+          steps,
         });
       }
     }
   } // end for hex
 
   if (buildings.length > 0) {
-    return [{
-      name: Command.Build,
-      player,
-      data: { buildings }
-    }];
+    return [
+      {
+        name: Command.Build,
+        player,
+        data: { buildings },
+      },
+    ];
   }
 
   return [];
@@ -200,21 +248,26 @@ export function possibleShips(engine: Engine, player: Player) {
   const pl = engine.player(player);
 
   for (const hex of pl.data.occupied) {
-    if (hex.buildingOf(player) === Building.Mine || pl.faction === Faction.Ivits && hex.buildingOf(player) === Building.PlanetaryInstitute) {
+    if (
+      hex.buildingOf(player) === Building.Mine ||
+      (pl.faction === Faction.Ivits && hex.buildingOf(player) === Building.PlanetaryInstitute)
+    ) {
       // Lantids need their PI before getting a ship from a shared mine
       if (!hex.isMainOccupier(player) && !pl.data.hasPlanetaryInstitute()) {
         continue;
       }
-      locations.push({coordinates: hex.toString()});
+      locations.push({ coordinates: hex.toString() });
     }
   }
 
   if (locations.length > 0) {
-    return [{
-      name: Command.PlaceShip,
-      player,
-      data: {locations}
-    }];
+    return [
+      {
+        name: Command.PlaceShip,
+        player,
+        data: { locations },
+      },
+    ];
   } else {
     pl.data.shipsToPlace = 0;
   }
@@ -233,19 +286,22 @@ export function possibleShipMovements(engine: Engine, player: Player) {
   const maxRange = pl.shipMovementRange + (pl.data.spendablePowerTokens() ? 1 : 0);
   const costs = {};
 
-  range(baseRange + 1, maxRange + 1).forEach(val => {
+  range(baseRange + 1, maxRange + 1).forEach((val) => {
     costs[val] = new Reward(val - baseRange, Resource.ChargePower).toString();
   });
 
-  const commands: AvailableCommand[] = [...possibleFreeActions(engine, player, {moveShips: true}), {
-    name: Command.MoveShip,
-    player,
-    data: {
-      ships: pl.data.movableShipLocations.map(loc => ({coordinates: loc})),
-      range: maxRange,
-      costs
-    }
-  }];
+  const commands: AvailableCommand[] = [
+    ...possibleFreeActions(engine, player, { moveShips: true }),
+    {
+      name: Command.MoveShip,
+      player,
+      data: {
+        ships: pl.data.movableShipLocations.map((loc) => ({ coordinates: loc })),
+        range: maxRange,
+        costs,
+      },
+    },
+  ];
 
   return commands;
 }
@@ -253,7 +309,7 @@ export function possibleShipMovements(engine: Engine, player: Player) {
 export function possibleSpaceStations(engine: Engine, player: Player) {
   const map = engine.map;
   const pl = engine.player(player);
-  const {data} = pl;
+  const { data } = pl;
   const buildings = [];
 
   for (const hex of map.toJSON()) {
@@ -262,36 +318,45 @@ export function possibleSpaceStations(engine: Engine, player: Player) {
       continue;
     }
 
-    const distance = Math.min(...data.occupied.filter(loc => loc.isRangeStartingPoint(player)).map(loc => map.distance(hex, loc)));
-    const qicNeeded = Math.max(Math.ceil( (distance - data.range - data.temporaryRange) / QIC_RANGE_UPGRADE), 0);
-    const {possible, cost, steps} = pl.canBuild(pl.planet, Building.SpaceStation, {addedCost: [new Reward(qicNeeded, Resource.Qic)]});
+    const distance = Math.min(
+      ...data.occupied.filter((loc) => loc.isRangeStartingPoint(player)).map((loc) => map.distance(hex, loc))
+    );
+    const qicNeeded = Math.max(Math.ceil((distance - data.range - data.temporaryRange) / QIC_RANGE_UPGRADE), 0);
+    const { possible, cost, steps } = pl.canBuild(pl.planet, Building.SpaceStation, {
+      addedCost: [new Reward(qicNeeded, Resource.Qic)],
+    });
 
     if (possible) {
       buildings.push({
         building: Building.SpaceStation,
         coordinates: hex.toString(),
-        cost: Reward.toString(cost)
+        cost: Reward.toString(cost),
       });
     }
   }
 
   if (buildings.length > 0) {
-    return [{name: Command.Build, player, data: { buildings }}];
+    return [{ name: Command.Build, player, data: { buildings } }];
   }
 
   return [];
 }
 
-export function possibleMineBuildings(engine: Engine, player: Player, acceptGaiaFormer: boolean, data?: {buildings?: [{building: Building; coordinates: string; cost: string; steps?: number}]}) {
+export function possibleMineBuildings(
+  engine: Engine,
+  player: Player,
+  acceptGaiaFormer: boolean,
+  data?: { buildings?: [{ building: Building; coordinates: string; cost: string; steps?: number }] }
+) {
   if (data && data.buildings) {
-    return [{name: Command.Build, player, data}];
+    return [{ name: Command.Build, player, data }];
   }
 
   const commands = [];
   const [buildingCommand] = possibleBuildings(engine, player);
 
   if (buildingCommand) {
-    buildingCommand.data.buildings = buildingCommand.data.buildings.filter(bld => {
+    buildingCommand.data.buildings = buildingCommand.data.buildings.filter((bld) => {
       // If it's a gaia-former upgradable to a mine, it doesn't count
       if (bld.upgrade) {
         return false;
@@ -317,19 +382,23 @@ export function possibleSpecialActions(engine: Engine, player: Player) {
 
   for (const event of pl.events[Operator.Activate]) {
     if (!event.activated) {
-      if (event.rewards[0].type === Resource.DowngradeLab && (pl.data.buildings[Building.ResearchLab] === 0 || pl.data.buildings[Building.TradingStation] >= pl.maxBuildings(Building.TradingStation))) {
+      if (
+        event.rewards[0].type === Resource.DowngradeLab &&
+        (pl.data.buildings[Building.ResearchLab] === 0 ||
+          pl.data.buildings[Building.TradingStation] >= pl.maxBuildings(Building.TradingStation))
+      ) {
         continue;
       }
       if (event.rewards[0].type === Resource.PISwap && pl.data.buildings[Building.Mine] === 0) {
         continue;
       }
       // If the action decreases rewards, the player must have them
-      if (!pl.canPay(Reward.negative(event.rewards.filter(rw => rw.count < 0)))) {
+      if (!pl.canPay(Reward.negative(event.rewards.filter((rw) => rw.count < 0)))) {
         continue;
       }
       specialacts.push({
         income: event.action().rewards, // Reward.toString(event.rewards),
-        spec: event.spec
+        spec: event.spec,
       });
     }
   }
@@ -338,7 +407,7 @@ export function possibleSpecialActions(engine: Engine, player: Player) {
     commands.push({
       name: Command.Special,
       player,
-      data: { specialacts }
+      data: { specialacts },
     });
   }
 
@@ -348,28 +417,32 @@ export function possibleSpecialActions(engine: Engine, player: Player) {
 export function possibleBoardActions(engine: Engine, player: Player) {
   const commands = [];
 
-  let poweracts = BoardAction.values(Expansion.All).filter(pwract => engine.boardActions[pwract] && engine.player(player).canPay(Reward.parse(boardActions[pwract].cost)));
+  let poweracts = BoardAction.values(Expansion.All).filter(
+    (pwract) => engine.boardActions[pwract] && engine.player(player).canPay(Reward.parse(boardActions[pwract].cost))
+  );
 
   // Prevent using the rescore action if no federation token
   if (engine.player(player).data.tiles.federations.length === 0) {
-    poweracts = poweracts.filter(act => act !== BoardAction.Qic2);
+    poweracts = poweracts.filter((act) => act !== BoardAction.Qic2);
   }
   if (poweracts.length > 0) {
     commands.push({
       name: Command.Action,
       player,
-      data: { poweracts: poweracts.map(act => ({
-        name: act,
-        cost: boardActions[act].cost,
-        income: boardActions[act].income
-      }))}
+      data: {
+        poweracts: poweracts.map((act) => ({
+          name: act,
+          cost: boardActions[act].cost,
+          income: boardActions[act].income,
+        })),
+      },
     });
   }
 
   return commands;
 }
 
-export function possibleFreeActions(engine: Engine, player: Player, data?: {moveShips: boolean}) {
+export function possibleFreeActions(engine: Engine, player: Player, data?: { moveShips: boolean }) {
   // free action - spend
   const pl = engine.player(player);
   const acts = [];
@@ -386,7 +459,11 @@ export function possibleFreeActions(engine: Engine, player: Player, data?: {move
       pool = freeActionsTerrans;
     } else if (pl.canGaiaItars()) {
       pool = freeActionsItars;
-      commands.push({name: Command.Decline, player, data: {offers: [{offer: Resource.TechTile, cost: new Reward(4, Resource.GainTokenGaiaArea).toString()}]}});
+      commands.push({
+        name: Command.Decline,
+        player,
+        data: { offers: [{ offer: Resource.TechTile, cost: new Reward(4, Resource.GainTokenGaiaArea).toString() }] },
+      });
     }
 
     burnDisabled = true;
@@ -406,13 +483,17 @@ export function possibleFreeActions(engine: Engine, player: Player, data?: {move
     if (data && data.moveShips) {
       maxPay = Math.min(maxPay, 1);
     }
-    if ( maxPay > 0 ) {
-      acts.push({cost: freeAction.cost, income: freeAction.income, range: maxPay > 1 ? range(1, maxPay + 1) : undefined});
+    if (maxPay > 0) {
+      acts.push({
+        cost: freeAction.cost,
+        income: freeAction.income,
+        range: maxPay > 1 ? range(1, maxPay + 1) : undefined,
+      });
     }
   }
 
   if (acts.length > 0) {
-    commands.push({name: Command.Spend, player, data: { acts }});
+    commands.push({ name: Command.Spend, player, data: { acts } });
   }
 
   // free action - burn
@@ -420,7 +501,7 @@ export function possibleFreeActions(engine: Engine, player: Player, data?: {move
     commands.push({
       name: Command.BurnPower,
       player,
-      data: range(1, engine.player(player).data.burnablePower() + 1)
+      data: range(1, engine.player(player).data.burnablePower() + 1),
     });
   }
 
@@ -429,24 +510,26 @@ export function possibleFreeActions(engine: Engine, player: Player, data?: {move
 
 export function possibleLabDowngrades(engine: Engine, player: Player) {
   const pl = engine.player(player);
-  const spots = pl.data.occupied.filter(hex => hex.buildingOf(player) === Building.ResearchLab);
+  const spots = pl.data.occupied.filter((hex) => hex.buildingOf(player) === Building.ResearchLab);
 
   if (!spots) {
     return [];
   }
 
-  return [{
-    name: Command.Build,
-    player,
-    data: {
-      buildings: spots.map(hex => ({
-        building: Building.TradingStation,
-        coordinates: hex.toString(),
-        cost: "~",
-        downgrade: true
-      }))
-    }
-  }] as AvailableCommand[];
+  return [
+    {
+      name: Command.Build,
+      player,
+      data: {
+        buildings: spots.map((hex) => ({
+          building: Building.TradingStation,
+          coordinates: hex.toString(),
+          cost: "~",
+          downgrade: true,
+        })),
+      },
+    },
+  ] as AvailableCommand[];
 }
 
 export function possibleResearchAreas(engine: Engine, player: Player, cost?: string, data?: any) {
@@ -460,12 +543,12 @@ export function possibleResearchAreas(engine: Engine, player: Player, cost?: str
 
     if (data) {
       if (data.bescods) {
-        const minArea = Math.min(...fields.map(field => pl.data.research[field]));
-        avFields = fields.filter(field => pl.data.research[field] === minArea);
+        const minArea = Math.min(...fields.map((field) => pl.data.research[field]));
+        avFields = fields.filter((field) => pl.data.research[field] === minArea);
       } else if (data.pos) {
         avFields = [data.pos];
       } else if (data.zero) {
-        avFields = fields.filter(field => pl.data.research[field] === 0);
+        avFields = fields.filter((field) => pl.data.research[field] === 0);
       }
     }
 
@@ -473,7 +556,10 @@ export function possibleResearchAreas(engine: Engine, player: Player, cost?: str
       // end of the track reached
       const destTile = pl.data.research[field] + 1;
 
-      if (destTile === researchTracks.lastTile(field) && engine.players.some(pla => pla.data.research[field] === destTile)) {
+      if (
+        destTile === researchTracks.lastTile(field) &&
+        engine.players.some((pla) => pla.data.research[field] === destTile)
+      ) {
         continue;
       }
 
@@ -484,9 +570,8 @@ export function possibleResearchAreas(engine: Engine, player: Player, cost?: str
       tracks.push({
         field,
         to: destTile,
-        cost
+        cost,
       });
-
     }
   }
 
@@ -494,7 +579,7 @@ export function possibleResearchAreas(engine: Engine, player: Player, cost?: str
     commands.push({
       name: Command.UpgradeResearch,
       player,
-      data: { tracks }
+      data: { tracks },
     });
   }
 
@@ -503,7 +588,7 @@ export function possibleResearchAreas(engine: Engine, player: Player, cost?: str
     commands.push({
       name: Command.Decline,
       player,
-      data: { offers: [{offer: Command.UpgradeResearch}] }
+      data: { offers: [{ offer: Command.UpgradeResearch }] },
     });
   }
   return commands;
@@ -519,8 +604,8 @@ export function possibleSpaceLostPlanet(engine: Engine, player: Player) {
     if (hex.data.planet !== Planet.Empty || hex.data.federations || hex.data.building) {
       continue;
     }
-    const distance = Math.min(...data.occupied.map(loc => engine.map.distance(hex, loc)));
-    const qicNeeded = Math.max(Math.ceil( (distance - data.range) / QIC_RANGE_UPGRADE), 0);
+    const distance = Math.min(...data.occupied.map((loc) => engine.map.distance(hex, loc)));
+    const qicNeeded = Math.max(Math.ceil((distance - data.range) / QIC_RANGE_UPGRADE), 0);
 
     if (qicNeeded > data.qics) {
       continue;
@@ -529,7 +614,7 @@ export function possibleSpaceLostPlanet(engine: Engine, player: Player) {
     spaces.push({
       building: Building.Mine,
       coordinates: hex.toString(),
-      cost: qicNeeded > 0 ? new Reward(qicNeeded, Resource.Qic).toString() : "~"
+      cost: qicNeeded > 0 ? new Reward(qicNeeded, Resource.Qic).toString() : "~",
     });
   }
 
@@ -537,7 +622,7 @@ export function possibleSpaceLostPlanet(engine: Engine, player: Player) {
     commands.push({
       name: Command.PlaceLostPlanet,
       player,
-      data: { spaces }
+      data: { spaces },
     });
   }
 
@@ -546,22 +631,22 @@ export function possibleSpaceLostPlanet(engine: Engine, player: Player) {
 
 export function possibleRoundBoosters(engine: Engine, player: Player) {
   const commands = [];
-  const boosters = engine.isLastRound ? [] : Booster.values(Expansion.All).filter(booster => engine.tiles.boosters[booster]);
+  const boosters = engine.isLastRound
+    ? []
+    : Booster.values(Expansion.All).filter((booster) => engine.tiles.boosters[booster]);
 
-  commands.push(
-    {
-      name: engine.phase === Phase.SetupBooster ? Command.ChooseRoundBooster : Command.Pass,
-      player,
-      data: { boosters }
-    }
-  );
+  commands.push({
+    name: engine.phase === Phase.SetupBooster ? Command.ChooseRoundBooster : Command.Pass,
+    player,
+    data: { boosters },
+  });
 
   return commands;
 }
 
 export function possibleFederations(engine: Engine, player: Player) {
   const commands = [];
-  const possibleTiles = Object.keys(engine.tiles.federations).filter(key => engine.tiles.federations[key] > 0);
+  const possibleTiles = Object.keys(engine.tiles.federations).filter((key) => engine.tiles.federations[key] > 0);
 
   if (possibleTiles.length > 0) {
     if (engine.options.noFedCheck) {
@@ -570,8 +655,8 @@ export function possibleFederations(engine: Engine, player: Player) {
         player,
         data: {
           tiles: possibleTiles,
-          federations: []
-        }
+          federations: [],
+        },
       });
     } else {
       const possibleFeds = engine.player(player).availableFederations(engine.map, engine.options.flexibleFederations);
@@ -582,12 +667,15 @@ export function possibleFederations(engine: Engine, player: Player) {
           player,
           data: {
             tiles: possibleTiles,
-            federations: possibleFeds.map(fed => ({
+            federations: possibleFeds.map((fed) => ({
               planets: fed.planets,
               satellites: fed.satellites,
-              hexes: fed.hexes.map(hex => hex.toString()).sort().join(',')
-            }))
-          }
+              hexes: fed.hexes
+                .map((hex) => hex.toString())
+                .sort()
+                .join(","),
+            })),
+          },
         });
       }
     }
@@ -606,7 +694,7 @@ export function possibleIncomes(engine: Engine, player: Player) {
     commands.push({
       name: Command.ChooseIncome,
       player,
-      data: descs
+      data: descs,
     });
   }
   return commands;
@@ -628,44 +716,49 @@ export function possibleLeech(engine: Engine, player: Player) {
   // TODO: Remove first part of test when legacy games are finished.
   const isTrade = engine.lastLeechSource && engine.lastLeechSource.tradeDelivery === player;
 
-  if ( pl.data.leechPossible > 0) {
+  if (pl.data.leechPossible > 0) {
     const extraPower = pl.faction === Faction.Taklons && pl.data.hasPlanetaryInstitute() && !isTrade;
     const maxLeech = pl.maxLeech();
-    const offers: Array<{offer: string; cost: string}> = [];
+    const offers: Array<{ offer: string; cost: string }> = [];
 
     if (isTrade) {
       offers.push({
         offer: "1t",
-        cost: "~"
+        cost: "~",
       });
     }
     if (extraPower) {
-      offers.push({
-        offer: `${maxLeech}${Resource.ChargePower},1t`,
-        cost: new Reward(Math.max(maxLeech - 1, 0), Resource.VictoryPoint).toString()
-      }, {
-        offer: `1t,${pl.maxLeech(true)}${Resource.ChargePower}`,
-        cost: new Reward(Math.max(pl.maxLeech(true) - 1, 0), Resource.VictoryPoint).toString()
-      });
+      offers.push(
+        {
+          offer: `${maxLeech}${Resource.ChargePower},1t`,
+          cost: new Reward(Math.max(maxLeech - 1, 0), Resource.VictoryPoint).toString(),
+        },
+        {
+          offer: `1t,${pl.maxLeech(true)}${Resource.ChargePower}`,
+          cost: new Reward(Math.max(pl.maxLeech(true) - 1, 0), Resource.VictoryPoint).toString(),
+        }
+      );
     } else {
       offers.push({
         offer: `${maxLeech}${Resource.ChargePower}`,
-        cost: new Reward(Math.max(maxLeech - 1, 0), Resource.VictoryPoint).toString()
+        cost: new Reward(Math.max(maxLeech - 1, 0), Resource.VictoryPoint).toString(),
       });
     }
 
-    [Command.ChargePower, Command.Decline].map(name => commands.push({
-      name,
-      player,
-      data: {
-        // Kept for compatibility with older viewer
-        offer: offers[0].offer,
-        // Kept for compatibility with older viewer
-        cost: offers[0].cost,
-        // new format
-        offers
-      }
-    }));
+    [Command.ChargePower, Command.Decline].map((name) =>
+      commands.push({
+        name,
+        player,
+        data: {
+          // Kept for compatibility with older viewer
+          offer: offers[0].offer,
+          // Kept for compatibility with older viewer
+          cost: offers[0].cost,
+          // new format
+          offers,
+        },
+      })
+    );
   }
 
   return commands;
@@ -674,11 +767,11 @@ export function possibleLeech(engine: Engine, player: Player) {
 export function possibleCoverTechTiles(engine: Engine, player: Player) {
   const commands = [];
 
-  const tiles = engine.player(player).data.tiles.techs.filter(tl => tl.enabled && !isAdvanced(tl.pos));
+  const tiles = engine.player(player).data.tiles.techs.filter((tl) => tl.enabled && !isAdvanced(tl.pos));
   commands.push({
     name: Command.ChooseCoverTechTile,
     player,
-    data: {tiles}
+    data: { tiles },
   });
 
   return commands;
@@ -687,8 +780,8 @@ export function possibleCoverTechTiles(engine: Engine, player: Player) {
 export function possibleFederationTiles(engine: Engine, player: Player, from: "pool" | "player") {
   const commands = [];
 
-  const possibleTiles = Object.keys(engine.tiles.federations).filter(key => engine.tiles.federations[key] > 0);
-  const playerTiles = engine.player(player).data.tiles.federations.map(fed => fed.tile);
+  const possibleTiles = Object.keys(engine.tiles.federations).filter((key) => engine.tiles.federations[key] > 0);
+  const playerTiles = engine.player(player).data.tiles.federations.map((fed) => fed.tile);
 
   commands.push({
     name: Command.ChooseFederationTile,
@@ -696,8 +789,8 @@ export function possibleFederationTiles(engine: Engine, player: Player, from: "p
     data: {
       tiles: from === "player" ? playerTiles : possibleTiles,
       // Tiles that are rescored just add the rewards, but don't take the token
-      rescore: from === "player"
-    }
+      rescore: from === "player",
+    },
   });
 
   return commands;
@@ -710,10 +803,10 @@ export function possibleTechTiles(engine: Engine, player: Player) {
 
   //  tech tiles that player doesn't already have
   for (const tilePos of TechTilePos.values(engine.expansions)) {
-    if (!data.tiles.techs.find(tech => tech.tile === engine.tiles.techs[tilePos].tile)) {
+    if (!data.tiles.techs.find((tech) => tech.tile === engine.tiles.techs[tilePos].tile)) {
       tiles.push({
         tile: engine.tiles.techs[tilePos].tile,
-        pos: tilePos
+        pos: tilePos,
       });
     }
   }
@@ -730,20 +823,20 @@ export function possibleTechTiles(engine: Engine, player: Player) {
     if (data.research[tilePos.slice("adv-".length)] < 4) {
       continue;
     }
-    if (!data.tiles.techs.some(tech => tech.enabled && !isAdvanced(tech.pos))) {
+    if (!data.tiles.techs.some((tech) => tech.enabled && !isAdvanced(tech.pos))) {
       continue;
     }
 
     tiles.push({
       tile: engine.tiles.techs[tilePos].tile,
-      pos: tilePos
+      pos: tilePos,
     });
   }
   if (tiles.length > 0) {
     commands.push({
       name: Command.ChooseTechTile,
       player,
-      data: { tiles }
+      data: { tiles },
     });
   }
 
@@ -768,23 +861,24 @@ export function possiblePISwaps(engine: Engine, player: Player) {
     commands.push({
       name: Command.PISwap,
       player,
-      data: { buildings }
+      data: { buildings },
     });
   }
 
   return commands;
 }
 
-
 export function possibleBids(engine: Engine, player: Player) {
   const commands = [];
   const bids = [];
 
-  for ( const faction of engine.setup) {
-    const bid = engine.players.find(pl => pl.faction == faction) ? engine.players.find(pl => pl.faction == faction).data.bid : -1;
+  for (const faction of engine.setup) {
+    const bid = engine.players.find((pl) => pl.faction == faction)
+      ? engine.players.find((pl) => pl.faction == faction).data.bid
+      : -1;
     bids.push({
       faction,
-      bid: range( bid + 1, bid + 10)
+      bid: range(bid + 1, bid + 10),
     });
   }
 
@@ -792,7 +886,7 @@ export function possibleBids(engine: Engine, player: Player) {
     commands.push({
       name: Command.Bid,
       player,
-      data: { bids }
+      data: { bids },
     });
   }
 

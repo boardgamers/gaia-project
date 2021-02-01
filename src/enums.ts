@@ -9,7 +9,7 @@ export enum Planet {
   Ice = "i",
   Gaia = "g",
   Transdim = "m",
-  Lost = "l"
+  Lost = "l",
 }
 
 export enum ResearchField {
@@ -25,12 +25,19 @@ export enum ResearchField {
 
 export enum Expansion {
   Spaceships = 1,
-  All = 1
+  All = 1,
 }
 
 export namespace ResearchField {
   export function values(expansions = 0): ResearchField[] {
-    const ret = [ResearchField.Terraforming, ResearchField.Navigation, ResearchField.Intelligence, ResearchField.GaiaProject, ResearchField.Economy, ResearchField.Science];
+    const ret = [
+      ResearchField.Terraforming,
+      ResearchField.Navigation,
+      ResearchField.Intelligence,
+      ResearchField.GaiaProject,
+      ResearchField.Economy,
+      ResearchField.Science,
+    ];
 
     if (expansions & Expansion.Spaceships) {
       ret.push(ResearchField.TradingBonus, ResearchField.TradingVolume);
@@ -78,7 +85,7 @@ export enum Resource {
   TemporaryRange = "range",
   TokenArea3 = "t-a3",
   PISwap = "swap-PI",
-  Turn = "turn"
+  Turn = "turn",
 }
 
 export enum Operator {
@@ -95,7 +102,7 @@ export enum Operator {
   /** reserved op for planetary institute and academies becoming 4pw structures */
   Special = "PA->4pw",
   /** Special annoying adv tech */
-  AdvShip4 = "2ship+4"
+  AdvShip4 = "2ship+4",
 }
 
 export enum Condition {
@@ -127,17 +134,21 @@ export enum Condition {
   MineOnGaia = "mg",
   AdvanceResearch = "a",
   TerraformStep = "step",
-  GaiaFormer = "gf"
+  GaiaFormer = "gf",
 }
 
 export namespace Condition {
   export function matchesBuilding(condition: Condition, building: Building, planet: Planet): boolean {
-    if (condition as string === building as string) {
+    if ((condition as string) === (building as string)) {
       return true;
     }
     switch (condition) {
-      case Condition.MineOnGaia: return building === Building.Mine && planet === Planet.Gaia;
-      case Condition.PlanetaryInstituteOrAcademy: return building === Building.PlanetaryInstitute || building === Building.Academy1 || building === Building.Academy2;
+      case Condition.MineOnGaia:
+        return building === Building.Mine && planet === Planet.Gaia;
+      case Condition.PlanetaryInstituteOrAcademy:
+        return (
+          building === Building.PlanetaryInstitute || building === Building.Academy1 || building === Building.Academy2
+        );
     }
     return false;
   }
@@ -151,7 +162,7 @@ export enum Building {
   Academy1 = "ac1",
   Academy2 = "ac2",
   GaiaFormer = "gf",
-  SpaceStation = "sp"
+  SpaceStation = "sp",
 }
 
 export enum Faction {
@@ -168,7 +179,7 @@ export enum Faction {
   Firaks = "firaks",
   Bescods = "bescods",
   Nevlas = "nevlas",
-  Itars = "itars"
+  Itars = "itars",
 }
 
 export enum Command {
@@ -192,7 +203,7 @@ export enum Command {
   BrainStone = "brainstone",
   Action = "action",
   Special = "special",
-  PlaceLostPlanet  = "lostPlanet",
+  PlaceLostPlanet = "lostPlanet",
   PlaceShip = "ship",
   MoveShip = "move",
   DeliverTrade = "trade",
@@ -200,11 +211,11 @@ export enum Command {
   FormFederation = "federation",
   EndTurn = "endturn",
   EndTurnConfirmation = "endturnConfirmation",
-  PISwap = "swap-PI"
+  PISwap = "swap-PI",
 }
 
 export enum TradeToken {
-  Wild = "wild"
+  Wild = "wild",
 }
 
 export enum Player {
@@ -212,18 +223,18 @@ export enum Player {
   Player2,
   Player3,
   Player4,
-  Player5
+  Player5,
 }
 
 export enum Round {
-  None= 0,
-  Round1= 1,
-  Round2= 2,
-  Round3= 3,
-  Round4= 4,
-  Round5= 5,
-  Round6= 6,
-  LastRound = 6
+  None = 0,
+  Round1 = 1,
+  Round2 = 2,
+  Round3 = 3,
+  Round4 = 4,
+  Round5 = 5,
+  Round6 = 6,
+  LastRound = 6,
 }
 
 export enum Booster {
@@ -239,17 +250,19 @@ export enum Booster {
   Booster10 = "booster10",
   Ship1 = "booster-ship1",
   Ship2 = "booster-ship2",
-  Ship3 = "booster-ship3"
+  Ship3 = "booster-ship3",
 }
 
 export namespace Booster {
   export function values(expansions = 0): Booster[] {
     return (Object.values(Booster) as Booster[]).filter((val: Booster) => {
-      if (typeof val !== "string") {return; }
+      if (typeof val !== "string") {
+        return;
+      }
       if (/^booster[0-9]/.test(val)) {
         return true;
       }
-      if (expansions & Expansion.Spaceships && val.startsWith('booster-ship')) {
+      if (expansions & Expansion.Spaceships && val.startsWith("booster-ship")) {
         return true;
       }
     }) as Booster[];
@@ -270,17 +283,19 @@ export enum TechTile {
   Ship0 = "tech-ship0",
   Ship1 = "tech-ship1",
   Ship2 = "tech-ship2",
-  Ship3 = "tech-ship3"
+  Ship3 = "tech-ship3",
 }
 
 export namespace TechTile {
   export function values(expansions = 0): TechTile[] {
     return (Object.values(TechTile) as TechTile[]).filter((val: TechTile) => {
-      if (typeof val !== "string") {return; }
+      if (typeof val !== "string") {
+        return;
+      }
       if (/^tech[0-9]/.test(val)) {
         return true;
       }
-      if (expansions & Expansion.Spaceships && val.startsWith('tech-ship') && val !== TechTile.Ship0) {
+      if (expansions & Expansion.Spaceships && val.startsWith("tech-ship") && val !== TechTile.Ship0) {
         return true;
       }
     }) as TechTile[];
@@ -300,7 +315,7 @@ export enum TechTilePos {
   Free2 = "free2",
   Free3 = "free3",
   Free4 = "free4",
-  BasicShip = "move"
+  BasicShip = "move",
 }
 
 export namespace TechTilePos {
@@ -316,37 +331,39 @@ export namespace TechTilePos {
 }
 
 export enum AdvTechTile {
-  AdvTech1= "advtech1",
-  AdvTech2= "advtech2",
-  AdvTech3= "advtech3",
-  AdvTech4= "advtech4",
-  AdvTech5= "advtech5",
-  AdvTech6= "advtech6",
-  AdvTech7= "advtech7",
-  AdvTech8= "advtech8",
-  AdvTech9= "advtech9",
-  AdvTech10= "advtech10",
-  AdvTech11= "advtech11",
-  AdvTech12= "advtech12",
-  AdvTech13= "advtech13",
-  AdvTech14= "advtech14",
-  AdvTech15= "advtech15",
+  AdvTech1 = "advtech1",
+  AdvTech2 = "advtech2",
+  AdvTech3 = "advtech3",
+  AdvTech4 = "advtech4",
+  AdvTech5 = "advtech5",
+  AdvTech6 = "advtech6",
+  AdvTech7 = "advtech7",
+  AdvTech8 = "advtech8",
+  AdvTech9 = "advtech9",
+  AdvTech10 = "advtech10",
+  AdvTech11 = "advtech11",
+  AdvTech12 = "advtech12",
+  AdvTech13 = "advtech13",
+  AdvTech14 = "advtech14",
+  AdvTech15 = "advtech15",
   Ship1 = "advship1",
   Ship2 = "advship2",
   Ship3 = "advship3",
   Ship4 = "advship4",
   Ship5 = "advship5",
-  Ship6 = "advship6"
+  Ship6 = "advship6",
 }
 
 export namespace AdvTechTile {
   export function values(expansions = 0): AdvTechTile[] {
     return (Object.values(AdvTechTile) as AdvTechTile[]).filter((val: AdvTechTile) => {
-      if (typeof val !== "string") {return; }
-      if (val.startsWith('advtech')) {
+      if (typeof val !== "string") {
+        return;
+      }
+      if (val.startsWith("advtech")) {
         return true;
       }
-      if (expansions & Expansion.Spaceships && val.startsWith('advship')) {
+      if (expansions & Expansion.Spaceships && val.startsWith("advship")) {
         return true;
       }
     }) as AdvTechTile[];
@@ -361,7 +378,7 @@ export enum AdvTechTilePos {
   Economy = "adv-eco",
   Science = "adv-sci",
   TradingBonus = "adv-trade",
-  TradingVolume = "adv-ship"
+  TradingVolume = "adv-ship",
 }
 
 export namespace AdvTechTilePos {
@@ -384,7 +401,7 @@ export enum Federation {
   Fed5 = "fed5",
   Fed6 = "fed6",
   Gleens = "gleens",
-  Ship = "ship"
+  Ship = "ship",
 }
 
 export namespace Federation {
@@ -394,26 +411,28 @@ export namespace Federation {
 }
 
 export enum BoardAction {
-  Power1= "power1",
-  Power2= "power2",
-  Power3= "power3",
-  Power4= "power4",
-  Power5= "power5",
-  Power6= "power6",
-  Power7= "power7",
+  Power1 = "power1",
+  Power2 = "power2",
+  Power3 = "power3",
+  Power4 = "power4",
+  Power5 = "power5",
+  Power6 = "power6",
+  Power7 = "power7",
   Qic1 = "qic1",
   Qic2 = "qic2",
   Qic3 = "qic3",
   ShipPower1 = "power-ship1",
   ShipPower2 = "power-ship2",
   ShipPower3 = "power-ship3",
-  ShipQic1 = "qic-ship1"
+  ShipQic1 = "qic-ship1",
 }
 
 export namespace BoardAction {
-  export function values(expansions= 0): BoardAction[] {
+  export function values(expansions = 0): BoardAction[] {
     return Object.values(BoardAction).filter((val: BoardAction) => {
-      if (typeof val !== "string") {return; }
+      if (typeof val !== "string") {
+        return;
+      }
       if (/^qic[0-9]/.test(val) || /^power[0-9]/.test(val)) {
         return true;
       }
@@ -426,28 +445,30 @@ export namespace BoardAction {
 }
 
 export enum ScoringTile {
-  Score1= "score1",
-  Score2= "score2",
-  Score3= "score3",
-  Score4= "score4",
-  Score5= "score5",
-  Score6= "score6",
-  Score7= "score7",
-  Score8= "score8",
-  Score9= "score9",
-  Score10= "score10",
+  Score1 = "score1",
+  Score2 = "score2",
+  Score3 = "score3",
+  Score4 = "score4",
+  Score5 = "score5",
+  Score6 = "score6",
+  Score7 = "score7",
+  Score8 = "score8",
+  Score9 = "score9",
+  Score10 = "score10",
   Ship1 = "score-ship1",
-  Ship2 = "score-ship2"
+  Ship2 = "score-ship2",
 }
 
 export namespace ScoringTile {
   export function values(expansions = 0): ScoringTile[] {
     return (Object.values(ScoringTile) as ScoringTile[]).filter((val: ScoringTile) => {
-      if (typeof val !== "string") {return; }
+      if (typeof val !== "string") {
+        return;
+      }
       if (/^score[0-9]/.test(val)) {
         return true;
       }
-      if (expansions & Expansion.Spaceships && val.startsWith('score-ship')) {
+      if (expansions & Expansion.Spaceships && val.startsWith("score-ship")) {
         return true;
       }
     }) as ScoringTile[];
@@ -455,19 +476,26 @@ export namespace ScoringTile {
 }
 
 export enum FinalTile {
-  Structure= "structure",
-  StructureFed= "structureFed",
-  PlanetType= "planetType",
-  Gaia= "gaia",
-  Sector= "sector",
-  Satellite= "satellite",
+  Structure = "structure",
+  StructureFed = "structureFed",
+  PlanetType = "planetType",
+  Gaia = "gaia",
+  Sector = "sector",
+  Satellite = "satellite",
   TradeTokens = "trade",
-  Culture = "culture"
+  Culture = "culture",
 }
 
 export namespace FinalTile {
   export function values(expansions = 0): FinalTile[] {
-    const ret = [FinalTile.Structure, FinalTile.StructureFed, FinalTile.PlanetType, FinalTile.Gaia, FinalTile.Sector, FinalTile.Satellite];
+    const ret = [
+      FinalTile.Structure,
+      FinalTile.StructureFed,
+      FinalTile.PlanetType,
+      FinalTile.Gaia,
+      FinalTile.Sector,
+      FinalTile.Satellite,
+    ];
 
     if (expansions & Expansion.Spaceships) {
       ret.push(FinalTile.TradeTokens, FinalTile.Culture);
@@ -481,7 +509,7 @@ export enum BrainstoneArea {
   Area1 = "area1",
   Area2 = "area2",
   Area3 = "area3",
-  Gaia = "gaia"
+  Gaia = "gaia",
 }
 
 export enum Phase {
@@ -499,7 +527,7 @@ export enum Phase {
   RoundMove = "roundMove",
   RoundLeech = "roundLeech",
   RoundFinish = "roundFinish",
-  EndGame = "endGame"
+  EndGame = "endGame",
 }
 
 export enum SubPhase {
@@ -520,5 +548,5 @@ export enum SubPhase {
   PickRewards = "pickRewards",
   DeliverTrade = "deliverTrade",
   PISwap = "swap-PI",
-  DowngradeLab = "down-lab"
+  DowngradeLab = "down-lab",
 }

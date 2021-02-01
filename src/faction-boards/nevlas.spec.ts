@@ -1,12 +1,13 @@
 import { expect } from "chai";
 import Engine from "../engine";
-import { Player } from '../enums';
+import { Player } from "../enums";
 
 const parseMoves = Engine.parseMoves;
 
 describe("Nevlas", () => {
   it("should allow Nevlas to use action power using empowered tokens and free actions", () => {
-    const engine = new Engine(parseMoves(`
+    const engine = new Engine(
+      parseMoves(`
       init 2 randomSeed
       p1 faction nevlas
       p2 faction gleens
@@ -28,13 +29,14 @@ describe("Nevlas", () => {
       p2 charge 2pw
       p2 build ts 1x2.
       p1 charge 2pw
-    `));
+    `)
+    );
 
     const a3 = engine.player(Player.Player1).data.power.area3;
     const gaia = engine.player(Player.Player1).data.power.gaia;
     const know = engine.player(Player.Player1).data.knowledge;
     // power7 is 3 power
-    engine.move('p1 action power7.');
+    engine.move("p1 action power7.");
     expect(engine.player(Player.Player1).data.power.area3).to.equal(a3 - 2);
 
     engine.move("p2 pass booster5");
@@ -44,7 +46,8 @@ describe("Nevlas", () => {
   });
 
   it("should move the correct number of tokens to area 1", () => {
-    const engine = new Engine(parseMoves(`
+    const engine = new Engine(
+      parseMoves(`
       init 2 randomSeed
       p1 faction firaks
       p2 faction nevlas
@@ -63,7 +66,8 @@ describe("Nevlas", () => {
       p2 build PI -1x0.
       p1 charge 3pw
       p1 up terra.
-    `));
+    `)
+    );
 
     const area1 = engine.player(Player.Player2).data.power.area1;
 

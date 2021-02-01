@@ -1,11 +1,11 @@
 import { expect } from "chai";
 import Engine from "../engine";
-import { Player } from '../enums';
+import { Player } from "../enums";
 
 const parseMoves = Engine.parseMoves;
 
-describe('Baltaks', () => {
-  it('should test ability to upgrade navigation', () => {
+describe("Baltaks", () => {
+  it("should test ability to upgrade navigation", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans
@@ -23,7 +23,7 @@ describe('Baltaks', () => {
     expect(() => new Engine(moves)).to.throw();
   });
 
-  it('should test ability to use freeaction and reset on new turn', () => {
+  it("should test ability to use freeaction and reset on new turn", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans

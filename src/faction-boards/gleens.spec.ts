@@ -1,12 +1,13 @@
 import { expect } from "chai";
 import Engine, { EngineOptions } from "../engine";
-import { Player, Federation } from '../enums';
+import { Player, Federation } from "../enums";
 
 const parseMoves = Engine.parseMoves;
 
 describe("gleens", () => {
-  it ("should grant gleens an ore instead of qic when upgrading navigation without an academy", () => {
-    const engine = new Engine(parseMoves(`
+  it("should grant gleens an ore instead of qic when upgrading navigation without an academy", () => {
+    const engine = new Engine(
+      parseMoves(`
       init 2 randomSeed
       p1 faction terrans
       p2 faction gleens
@@ -17,7 +18,8 @@ describe("gleens", () => {
       p2 booster booster4
       p1 booster booster5
       p1 build m -5x0.
-    `));
+    `)
+    );
 
     const range = engine.player(Player.Player2).data.range;
 
@@ -49,11 +51,12 @@ describe("gleens", () => {
     const data = engine.player(Player.Player2).data;
 
     // tslint:disable-next-line no-unused-expression
-    expect(data.tiles.federations.some(fed => fed.tile === Federation.Gleens)).to.be.true;
+    expect(data.tiles.federations.some((fed) => fed.tile === Federation.Gleens)).to.be.true;
   });
 
-  it('should grant gleens two victory points when building a mine on a gaia planet', () => {
-    const engine = new Engine(parseMoves(`
+  it("should grant gleens two victory points when building a mine on a gaia planet", () => {
+    const engine = new Engine(
+      parseMoves(`
       init 2 randomSeed
       p1 faction gleens
       p2 faction terrans
@@ -68,10 +71,11 @@ describe("gleens", () => {
       p1 build gf -2x3.
       p1 pass booster3
       p2 pass booster4
-    `));
+    `)
+    );
 
     const vp = engine.player(Player.Player1).data.victoryPoints;
-    engine.move('p1 build m -2x3');
+    engine.move("p1 build m -2x3");
     expect(engine.player(Player.Player1).data.victoryPoints).to.equal(vp + 2);
   });
 
@@ -111,10 +115,18 @@ describe("gleens", () => {
     const options: EngineOptions = {
       map: {
         sectors: [
-          {sector : "1", rotation : 3}, {sector : "7A", rotation : 1}, {sector : "3", rotation : 5}, {sector : "4", rotation : 1}, {sector : "8", rotation : 1},
-          {sector : "9", rotation : 3}, {sector : "5A", rotation : 5}, {sector : "2", rotation : 3}, {sector : "6A", rotation : 3}, {sector : "10", rotation : 2}
-        ]
-      }
+          { sector: "1", rotation: 3 },
+          { sector: "7A", rotation: 1 },
+          { sector: "3", rotation: 5 },
+          { sector: "4", rotation: 1 },
+          { sector: "8", rotation: 1 },
+          { sector: "9", rotation: 3 },
+          { sector: "5A", rotation: 5 },
+          { sector: "2", rotation: 3 },
+          { sector: "6A", rotation: 3 },
+          { sector: "10", rotation: 2 },
+        ],
+      },
     };
 
     expect(Engine.slowMotion(moves.slice(0, -1), options).player(Player.Player3).data.victoryPoints).to.equal(9);

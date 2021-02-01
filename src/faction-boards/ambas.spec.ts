@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import Engine from "../engine";
-import { Player } from '../enums';
+import { Player } from "../enums";
 
 const parseMoves = Engine.parseMoves;
 
@@ -159,7 +159,5 @@ describe("Ambas", () => {
     `);
 
     expect(() => new Engine([...moves, "ambas federation 3x-3,4x-1,4x-2,4x-3,5x-1 fed4."])).to.not.throw();
-
   });
-
 });

@@ -1,13 +1,11 @@
 import { expect } from "chai";
 import Engine from "../engine";
-import { Player, Building, Command, Planet, Operator } from '../enums';
-
-
+import { Player, Building, Command, Planet, Operator } from "../enums";
 
 const parseMoves = Engine.parseMoves;
 
 describe("Lantids", () => {
-  it ("should be able to build a mine on other players' planets", () => {
+  it("should be able to build a mine on other players' planets", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction lantids
@@ -26,8 +24,9 @@ describe("Lantids", () => {
     expect(() => new Engine(moves)).to.not.throw();
   });
 
-  it ("should gain knowledge when having a PI and building on someone else's planet", () => {
-    const engine = new Engine(parseMoves(`
+  it("should gain knowledge when having a PI and building on someone else's planet", () => {
+    const engine = new Engine(
+      parseMoves(`
       init 2 randomSeed
       p1 faction lantids
       p2 faction xenos
@@ -38,7 +37,8 @@ describe("Lantids", () => {
       p2 build m 1x2
       p2 booster booster3
       p1 booster booster7
-    `));
+    `)
+    );
 
     engine.player(Player.Player1).data.buildings[Building.PlanetaryInstitute] = 1;
     const k = engine.player(Player.Player1).data.knowledge;
@@ -46,8 +46,9 @@ describe("Lantids", () => {
     expect(engine.player(Player.Player1).data.knowledge).to.equal(k + 2);
   });
 
-  it ("should gain only 1 knowledge when getting pt | vp", () => {
-    const engine = new Engine(parseMoves(`
+  it("should gain only 1 knowledge when getting pt | vp", () => {
+    const engine = new Engine(
+      parseMoves(`
     init 2 randomSeed
     p1 faction lantids
     p2 faction hadsch-hallas
@@ -66,7 +67,8 @@ describe("Lantids", () => {
     hadsch-hallas pass booster3
     lantids build ts -4x-1.
     hadsch-hallas decline
-    `));
+    `)
+    );
 
     const pl = engine.player(Player.Player1);
     const k = pl.data.knowledge;
@@ -108,7 +110,7 @@ describe("Lantids", () => {
     const commands = engine.generateAvailableCommands();
 
     // tslint:disable-next-line no-unused-expression
-    expect(commands.some(cmd => cmd.name === Command.FormFederation)).to.be.false;
+    expect(commands.some((cmd) => cmd.name === Command.FormFederation)).to.be.false;
   });
 
   it("should not get token income from planetary institute", () => {
@@ -134,13 +136,14 @@ describe("Lantids", () => {
     const income = engine.player(Player.Player1).income;
 
     // tslint:disable-next-line no-unused-expression
-    expect(income.includes('4pw')).to.be.true;
+    expect(income.includes("4pw")).to.be.true;
     // tslint:disable-next-line no-unused-expression
-    expect(income.includes('t')).to.be.false;
+    expect(income.includes("t")).to.be.false;
   });
 
-  it ("should allow to place a mine in the Lost Planet", () => {
-    const engine = new Engine(parseMoves(`
+  it("should allow to place a mine in the Lost Planet", () => {
+    const engine = new Engine(
+      parseMoves(`
       init 2 randomSeed
       p1 faction lantids
       p2 faction ivits
@@ -152,16 +155,17 @@ describe("Lantids", () => {
       ivits income 1t
       lantids build m 6B4.
       ivits pass booster5
-    `));
-    
+    `)
+    );
+
     const hex = engine.map.getS("1B5");
     hex.data.planet = Planet.Lost;
     hex.data.building = Building.Mine;
     hex.data.player = Player.Player2;
-    const mines = engine.player(Player.Player1).data.buildings[Building.Mine]; 
+    const mines = engine.player(Player.Player1).data.buildings[Building.Mine];
     const events = engine.player(Player.Player1).events[Operator.Income].length;
     engine.move("p1 build m 1B5.");
-    expect(engine.player(Player.Player1).data.buildings[Building.Mine]).to.equal( mines + 1);
-    expect(engine.player(Player.Player1).events[Operator.Income].length).to.equal( events + 1);
+    expect(engine.player(Player.Player1).data.buildings[Building.Mine]).to.equal(mines + 1);
+    expect(engine.player(Player.Player1).events[Operator.Income].length).to.equal(events + 1);
   });
 });

@@ -1,12 +1,13 @@
 import { expect } from "chai";
 import Engine from "../engine";
-import { Player, Federation } from '../enums';
+import { Player, Federation } from "../enums";
 
 const parseMoves = Engine.parseMoves;
 
 describe("Geodens", () => {
-  it ("should grant Geodens 3 knowledge after building mine on a new planet type with PI", () => {
-    const engine = new Engine(parseMoves(`
+  it("should grant Geodens 3 knowledge after building mine on a new planet type with PI", () => {
+    const engine = new Engine(
+      parseMoves(`
       init 2 randomSeed
       p1 faction geodens
       p2 faction terrans
@@ -23,7 +24,8 @@ describe("Geodens", () => {
       p2 charge 1pw
       p2 build ts -4x-1.
       p1 charge 3pw
-    `));
+    `)
+    );
 
     const k = engine.player(Player.Player1).data.knowledge;
 
@@ -32,11 +34,13 @@ describe("Geodens", () => {
     // Increase knowledge after building a mine on new planet type
     expect(engine.player(Player.Player1).data.knowledge).to.equal(k + 3);
 
-    engine.loadMoves(parseMoves(`
+    engine.loadMoves(
+      parseMoves(`
       p2 charge 2pw
       p2 up gaia.
       p1 burn 2. action power6. build m -2x-4
-    `));
+    `)
+    );
 
     // Do NOT increase knowledge after building a mine on same planet type
     expect(engine.player(Player.Player1).data.knowledge).to.equal(k + 3);

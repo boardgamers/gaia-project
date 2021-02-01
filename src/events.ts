@@ -1,4 +1,4 @@
-import { Condition, Operator, Booster, AdvTechTilePos, Command, ResearchField, BoardAction, Faction} from "./enums";
+import { Condition, Operator, Booster, AdvTechTilePos, Command, ResearchField, BoardAction, Faction } from "./enums";
 import Reward from "./reward";
 
 function findCondition(spec: string): [Condition, string] {
@@ -45,15 +45,42 @@ function findOperator(spec: string): [Operator, string, number] {
   if (spec.split(" ").length === 2) {
     const [operator, remaining] = spec.split(" ");
     const toPick = parseInt(operator, 10);
-    return [operator.slice(('' + toPick).length) as Operator, remaining, toPick];
+    return [operator.slice(("" + toPick).length) as Operator, remaining, toPick];
   }
 
   return [Operator.Once, spec, 0];
 }
 
-export type RoundScoring = 'round1' | 'round2' | 'round3' | 'round4' | 'round5' | 'round6';
-export type TechPos = 'tech-gaia' | 'tech-nav' | 'tech-sci' | 'tech-eco' | 'tech-terra' | 'tech-int' | 'tech-free1' | 'tech-free2' | 'tech-free2';
-export type EventSource = Booster | TechPos | AdvTechTilePos | Command.ChargePower | Command.Spend | 'final1' | 'final2' | RoundScoring | ResearchField | BoardAction | Command.ChooseIncome | Command.Build | Command.ChooseFederationTile | Command.FormFederation | Command.UpgradeResearch | Faction | Command.MoveShip | Command.Bid;
+export type RoundScoring = "round1" | "round2" | "round3" | "round4" | "round5" | "round6";
+export type TechPos =
+  | "tech-gaia"
+  | "tech-nav"
+  | "tech-sci"
+  | "tech-eco"
+  | "tech-terra"
+  | "tech-int"
+  | "tech-free1"
+  | "tech-free2"
+  | "tech-free2";
+export type EventSource =
+  | Booster
+  | TechPos
+  | AdvTechTilePos
+  | Command.ChargePower
+  | Command.Spend
+  | "final1"
+  | "final2"
+  | RoundScoring
+  | ResearchField
+  | BoardAction
+  | Command.ChooseIncome
+  | Command.Build
+  | Command.ChooseFederationTile
+  | Command.FormFederation
+  | Command.UpgradeResearch
+  | Faction
+  | Command.MoveShip
+  | Command.Bid;
 
 export default class Event {
   spec: string;
@@ -65,7 +92,7 @@ export default class Event {
   toPick = 0;
   activated = false;
 
-  constructor(spec: string | {spec: string; source: EventSource}, source?: EventSource) {
+  constructor(spec: string | { spec: string; source: EventSource }, source?: EventSource) {
     if (typeof spec === "object") {
       this.spec = spec.spec;
       this.source = spec.source;
@@ -101,12 +128,12 @@ export default class Event {
   }
 
   toJSON() {
-    return {spec: this.toString(), source: this.source};
+    return { spec: this.toString(), source: this.source };
   }
 
-  action(): {rewards: string; enabled: boolean} {
-    const idx = this.spec.indexOf('=>');
-    const ret = {rewards: this.spec.slice(idx + 2).trim(), enabled: !this.activated};
+  action(): { rewards: string; enabled: boolean } {
+    const idx = this.spec.indexOf("=>");
+    const ret = { rewards: this.spec.slice(idx + 2).trim(), enabled: !this.activated };
 
     if (idx > 0) {
       ret.rewards = "-" + this.spec.slice(0, idx).trim() + "," + ret.rewards;
@@ -120,6 +147,6 @@ export default class Event {
   }
 
   static parse(events: string[], source: EventSource): Event[] {
-    return events.map(ev => new Event(ev, source));
+    return events.map((ev) => new Event(ev, source));
   }
 }

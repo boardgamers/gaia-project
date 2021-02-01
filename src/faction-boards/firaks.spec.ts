@@ -1,12 +1,13 @@
 import { expect } from "chai";
 import Engine from "../engine";
-import { Player, Federation } from '../enums';
+import { Player, Federation } from "../enums";
 
 const parseMoves = Engine.parseMoves;
 
 describe("Firaks", () => {
-  it ("should allow firaks to downgrade a research lab to a ts and advance research after PI", () => {
-    const engine = new Engine(parseMoves(`
+  it("should allow firaks to downgrade a research lab to a ts and advance research after PI", () => {
+    const engine = new Engine(
+      parseMoves(`
       init 2 randomSeed
       p1 faction firaks
       p2 faction nevlas
@@ -34,9 +35,9 @@ describe("Firaks", () => {
       p2 burn 2. spend 4t-a3 for 4k. up sci.
       p1 spend 1pw for 1c. spend 1q for 1o. spend 1o for 1c. build lab 3x-2. tech terra. up terra.
       p2 pass booster4
-    `));
+    `)
+    );
 
     expect(() => engine.move("p1 special down-lab. build ts 3x-2. up terra.")).to.not.throw();
   });
 });
-

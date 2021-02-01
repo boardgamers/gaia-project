@@ -1,5 +1,5 @@
-import {expect} from "chai";
-import 'mocha';
+import { expect } from "chai";
+import "mocha";
 import Player from "./player";
 import { Faction, Planet, Building, Resource, Player as PlayerEnum, Operator, Command } from "./enums";
 import Reward from "./reward";
@@ -13,7 +13,7 @@ describe("Player", () => {
 
       player.loadFaction(Faction.Terrans);
 
-      const {cost} = player.canBuild(Planet.Terra, Building.Mine, {addedCost: [new Reward(1, Resource.Qic)]});
+      const { cost } = player.canBuild(Planet.Terra, Building.Mine, { addedCost: [new Reward(1, Resource.Qic)] });
 
       // tslint:disable-next-line no-unused-expression
       expect(Reward.match(Reward.parse("2c,o,q"), cost)).to.be.true;
@@ -34,7 +34,7 @@ describe("Player", () => {
       expect(Reward.match(player.events[Operator.Income][1].rewards, [new Reward("1c")])).to.be.true;
     });
 
-    it ("should work on events that were activated", () => {
+    it("should work on events that were activated", () => {
       const player = new Player();
 
       player.loadEvents(Event.parse(["+k", "=> 4c", "+c"], Command.ChooseIncome));
@@ -54,7 +54,7 @@ describe("Player", () => {
         sector: "s1",
         planet: Planet.Lost,
         player: PlayerEnum.Player2,
-        building: Building.Mine
+        building: Building.Mine,
       });
 
       // tslint:disable-next-line no-unused-expression
@@ -66,11 +66,13 @@ describe("Player", () => {
     it("should order based on type order", () => {
       const player = new Player();
 
-      player.loadEvents(Event.parse([ "+t", "+k", "+c", "+o"], Command.ChooseIncome));
-      const orderedEvents = Reward.toString(Reward.merge([].concat(...player.events[Operator.Income].map(event => event.rewards))), true);
+      player.loadEvents(Event.parse(["+t", "+k", "+c", "+o"], Command.ChooseIncome));
+      const orderedEvents = Reward.toString(
+        Reward.merge([].concat(...player.events[Operator.Income].map((event) => event.rewards))),
+        true
+      );
 
       expect(orderedEvents).to.be.equal("1c,1o,1k,1t");
-
     });
   });
 });

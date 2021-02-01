@@ -19,8 +19,8 @@ const geodens: FactionBoardRaw = {
       }
 
       player.gainRewards([new Reward("3k")], Faction.Geodens);
-    }
-  }
+    },
+  },
 };
 
 export default geodens;

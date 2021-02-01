@@ -1,20 +1,25 @@
 import { expect } from "chai";
 import Engine from "./engine";
 import { AssertionError } from "assert";
-import { Player, Federation, Operator, AdvTechTilePos, Building, Condition, BrainstoneArea, Phase, Command, Faction } from "./enums";
+import {
+  Player,
+  Federation,
+  Operator,
+  AdvTechTilePos,
+  Building,
+  Condition,
+  BrainstoneArea,
+  Phase,
+  Command,
+  Faction,
+} from "./enums";
 
 describe("Engine", () => {
   it("should throw when trying to build on the wrong place", () => {
-    const moves = [
-      "init 2 randomSeed",
-      "p1 faction terrans",
-      "p2 faction xenos",
-      "p1 build m 0x0",
-    ];
+    const moves = ["init 2 randomSeed", "p1 faction terrans", "p2 faction xenos", "p1 build m 0x0"];
 
     expect(() => new Engine(moves)).to.throw();
   });
-
 
   it("should export playerToMove in JSON", () => {
     const moves = parseMoves(`
@@ -135,7 +140,8 @@ describe("Engine", () => {
   });
 
   it("should throw when upgrading without resources", () => {
-    const engine = new Engine(parseMoves(`
+    const engine = new Engine(
+      parseMoves(`
       init 2 randomSeed
       p1 faction terrans
       p2 faction firaks
@@ -149,12 +155,13 @@ describe("Engine", () => {
       p2 build m 3x-2.
       p1 build ts -5x0.
       p2 build ts -1x-1.
-    `));
+    `)
+    );
 
     expect(() => engine.move("p1 build ts -4x2")).to.throw();
   });
 
-  it ("should throw when building out of range", () => {
+  it("should throw when building out of range", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans
@@ -171,7 +178,7 @@ describe("Engine", () => {
     expect(() => engine.move("p1 build -1x0")).to.throw();
   });
 
-  it ("should not spend a qic when building a mine nearby", () => {
+  it("should not spend a qic when building a mine nearby", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans
@@ -216,7 +223,10 @@ describe("Engine", () => {
 
     engine.move("p1 build m -3x1");
 
-    expect(engine.player(Player.Player1).data.qics).to.equal(qicCount, "Building a mine from a gaia former doest NOT need a qic");
+    expect(engine.player(Player.Player1).data.qics).to.equal(
+      qicCount,
+      "Building a mine from a gaia former doest NOT need a qic"
+    );
   });
 
   it("should allow this 4 player game", () => {
@@ -265,24 +275,24 @@ describe("Engine", () => {
     expect(() => new Engine(moves)).to.not.throw();
   });
 
-  it("should handle this full 2 player game", function() {
+  it("should handle this full 2 player game", function () {
     this.timeout(10000);
-    const engine = new Engine(fullGame(), {noFedCheck: true});
+    const engine = new Engine(fullGame(), { noFedCheck: true });
 
     expect(engine.player(Player.Player1).data.victoryPoints).to.equal(130);
     expect(engine.player(Player.Player2).data.victoryPoints).to.equal(124);
   });
 
-  it ("should be able to load/save state", function() {
+  it("should be able to load/save state", function () {
     this.timeout(10000);
     let state: any = null;
-    const baseLine = new Engine([], {noFedCheck: true});
+    const baseLine = new Engine([], { noFedCheck: true });
     const moveList = fullGame();
 
     for (const move of moveList.slice(0, moveList.length - 1)) {
       baseLine.move(move);
       if (!state) {
-        const engine = new Engine([move], {noFedCheck: true});
+        const engine = new Engine([move], { noFedCheck: true });
         state = JSON.parse(JSON.stringify(engine));
       } else {
         const engine = Engine.fromData(state);
@@ -290,21 +300,41 @@ describe("Engine", () => {
         state = JSON.parse(JSON.stringify(engine));
       }
 
-      expect(state.players[Player.Player1].data.knowledge).to.equal(baseLine.players[Player.Player1].data.knowledge, "Error loading move " + move);
-      expect(state.players[Player.Player2].income).to.equal(baseLine.players[Player.Player2].toJSON().income, "Error loading move " + move);
-      expect(state.players[Player.Player2].events[Operator.Income].length).to.equal(baseLine.players[Player.Player2].events[Operator.Income].length, "Error loading move " + move);
-      expect(state.players[Player.Player2].data.ores).to.equal(baseLine.players[Player.Player2].data.ores, "Error loading move " + move);
+      expect(state.players[Player.Player1].data.knowledge).to.equal(
+        baseLine.players[Player.Player1].data.knowledge,
+        "Error loading move " + move
+      );
+      expect(state.players[Player.Player2].income).to.equal(
+        baseLine.players[Player.Player2].toJSON().income,
+        "Error loading move " + move
+      );
+      expect(state.players[Player.Player2].events[Operator.Income].length).to.equal(
+        baseLine.players[Player.Player2].events[Operator.Income].length,
+        "Error loading move " + move
+      );
+      expect(state.players[Player.Player2].data.ores).to.equal(
+        baseLine.players[Player.Player2].data.ores,
+        "Error loading move " + move
+      );
     }
 
     const endEngine = Engine.fromData(state);
-    expect(endEngine.player(Player.Player1).data.victoryPoints).to.equal(baseLine.player(Player.Player1).data.victoryPoints);
-    expect(endEngine.player(Player.Player2).data.victoryPoints).to.equal(baseLine.player(Player.Player2).data.victoryPoints);
+    expect(endEngine.player(Player.Player1).data.victoryPoints).to.equal(
+      baseLine.player(Player.Player1).data.victoryPoints
+    );
+    expect(endEngine.player(Player.Player2).data.victoryPoints).to.equal(
+      baseLine.player(Player.Player2).data.victoryPoints
+    );
 
     const lastMove = moveList.pop();
     endEngine.move(lastMove);
     baseLine.move(lastMove);
-    expect(endEngine.player(Player.Player1).data.victoryPoints).to.equal(baseLine.player(Player.Player1).data.victoryPoints);
-    expect(endEngine.player(Player.Player2).data.victoryPoints).to.equal(baseLine.player(Player.Player2).data.victoryPoints);
+    expect(endEngine.player(Player.Player1).data.victoryPoints).to.equal(
+      baseLine.player(Player.Player1).data.victoryPoints
+    );
+    expect(endEngine.player(Player.Player2).data.victoryPoints).to.equal(
+      baseLine.player(Player.Player2).data.victoryPoints
+    );
   });
 
   it("should be able to load state from an empty game", () => {
@@ -458,7 +488,7 @@ describe("Engine", () => {
     expect(() => new Engine([...moves, "p2 income 1t,1t"])).to.not.throw();
   });
 
-  it ("should add a mine to a federation through a nearby satellite", () => {
+  it("should add a mine to a federation through a nearby satellite", () => {
     const moves = parseMoves(`
       init 2 randomSeed
       p1 faction terrans
@@ -495,11 +525,11 @@ describe("Engine", () => {
     `);
     const engine = new Engine(moves);
     const structure = engine.player(Player.Player1).eventConditionCount(Condition.StructureFed);
-    engine.move('terrans action power2. build m -5x5.');
-    expect(  engine.player(Player.Player1).eventConditionCount(Condition.StructureFed) ).to.be.equal(structure + 1 );
+    engine.move("terrans action power2. build m -5x5.");
+    expect(engine.player(Player.Player1).eventConditionCount(Condition.StructureFed)).to.be.equal(structure + 1);
   });
 
-  it ("should give step vps", () => {
+  it("should give step vps", () => {
     const moves = parseMoves(`
       init 2 SGAMBATA
       p1 faction nevlas
@@ -552,13 +582,13 @@ describe("Engine", () => {
     `);
     const engine = new Engine(moves);
     const vps = engine.player(Player.Player1).data.victoryPoints;
-    engine.move('nevlas action power6. build m -1x3.');
-    expect(  engine.player(Player.Player1).data.victoryPoints ).to.be.equal(vps + 2 );
-    expect(  engine.player(Player.Player1).data.temporaryStep ).to.be.equal(0 );
+    engine.move("nevlas action power6. build m -1x3.");
+    expect(engine.player(Player.Player1).data.victoryPoints).to.be.equal(vps + 2);
+    expect(engine.player(Player.Player1).data.temporaryStep).to.be.equal(0);
   });
 
   describe("autoChargePower", () => {
-    it ("should leech 1pw and not do anything on 2pw", () => {
+    it("should leech 1pw and not do anything on 2pw", () => {
       const moves = parseMoves(`
         init 2 SGAMBATA
         p1 faction nevlas
@@ -581,13 +611,13 @@ describe("Engine", () => {
       expect(engine.moveHistory.slice(-1).pop()).to.equal("terrans charge 1pw");
 
       /* Test with 2pw leech */
-      engine.move('terrans build ts -3x-2.');
+      engine.move("terrans build ts -3x-2.");
       // tslint:disable-next-line no-unused-expression
       expect(engine.autoChargePower()).to.be.false;
       expect(engine.moveHistory.length).to.equal(moves.length + 2);
     });
 
-    it ("should not leech 1pw when brainstone may move", () => {
+    it("should not leech 1pw when brainstone may move", () => {
       const moves = parseMoves(`
         init 2 randomSeed
         p1 faction terrans
@@ -614,7 +644,7 @@ describe("Engine", () => {
       expect(engine.findAvailableCommand(Player.Player2, Command.ChargePower)).to.not.be.undefined;
     });
 
-    it ("should leech 2pw when player's auto charge value is 2", () => {
+    it("should leech 2pw when player's auto charge value is 2", () => {
       const moves = parseMoves(`
         init 2 SGAMBATA
         p1 faction nevlas
@@ -673,7 +703,7 @@ describe("Engine", () => {
 });
 
 describe("auction", () => {
-  it ("should allow auction, everyone is fine wiht the current", () => {
+  it("should allow auction, everyone is fine wiht the current", () => {
     const moves = Engine.parseMoves(`
         init 2 djfjjv4k
         p1 faction geodens
@@ -681,15 +711,13 @@ describe("auction", () => {
         p1 bid geodens 1
         p2 bid itars 1
     `);
-    const engine = new Engine(moves, {auction: true});
+    const engine = new Engine(moves, { auction: true });
 
     expect(engine.players[0].faction).to.equal(Faction.Geodens);
     expect(engine.players[1].faction).to.equal(Faction.Itars);
-
-
   });
 
-  it ("should allow auction, geodens are good", () => {
+  it("should allow auction, geodens are good", () => {
     const moves = Engine.parseMoves(`
         init 2 djfjjv4k
         p1 faction geodens
@@ -701,7 +729,7 @@ describe("auction", () => {
         p1 bid itars 1
     `);
 
-    const engine = new Engine(moves, {auction: true});
+    const engine = new Engine(moves, { auction: true });
 
     expect(engine.players[1].data.bid).to.equal(4);
     expect(engine.players[0].data.bid).to.equal(1);
@@ -709,7 +737,7 @@ describe("auction", () => {
     expect(engine.players[1].faction).to.equal(Faction.Geodens);
   });
 
-  it ("should allow auction, everyone is fine wiht the current", () => {
+  it("should allow auction, everyone is fine wiht the current", () => {
     const moves = Engine.parseMoves(`
         init 2 djfjjv4k
         p1 faction geodens
@@ -718,10 +746,10 @@ describe("auction", () => {
         p2 bid geodens 0
     `);
 
-    expect(() => new Engine(moves, {auction: true})).to.not.throw();
+    expect(() => new Engine(moves, { auction: true })).to.not.throw();
   });
 
-  it ("should throw, wrong bid", () => {
+  it("should throw, wrong bid", () => {
     const moves = Engine.parseMoves(`
         init 2 djfjjv4k
         p1 faction geodens
@@ -730,11 +758,10 @@ describe("auction", () => {
         p2 bid itars 0
     `);
 
-    expect(() => new Engine(moves, {auction: true})).to.throw();
+    expect(() => new Engine(moves, { auction: true })).to.throw();
   });
 
-
-  it ("should allow auction, 3 players", () => {
+  it("should allow auction, 3 players", () => {
     const moves = Engine.parseMoves(`
         init 3 djfjjv4k
         p1 faction geodens
@@ -751,19 +778,18 @@ describe("auction", () => {
         p1 bid itars 1
     `);
 
-    const engine = new Engine(moves, {auction: true});
+    const engine = new Engine(moves, { auction: true });
 
     expect(engine.players[2].data.bid).to.equal(6);
-    expect(engine.players[1].data.bid).to.equal(2); 
-    expect(engine.players[0].data.bid).to.equal(1); 
+    expect(engine.players[1].data.bid).to.equal(2);
+    expect(engine.players[0].data.bid).to.equal(1);
 
     expect(engine.players[0].faction).to.equal(Faction.Itars);
     expect(engine.players[1].faction).to.equal(Faction.Taklons);
     expect(engine.players[2].faction).to.equal(Faction.Geodens);
-
   });
 
-  it ("should throw auction, faction is not in list", () => {
+  it("should throw auction, faction is not in list", () => {
     const moves = Engine.parseMoves(`
         init 2 djfjjv4k
         p1 faction geodens
@@ -772,10 +798,10 @@ describe("auction", () => {
         p2 bid terrans 1
     `);
 
-    expect(() => new Engine(moves, {auction: true})).to.throw();
+    expect(() => new Engine(moves, { auction: true })).to.throw();
   });
 
-  it ("should throw auction, bid is wrong", () => {
+  it("should throw auction, bid is wrong", () => {
     const moves = Engine.parseMoves(`
         init 2 djfjjv4k
         p1 faction geodens
@@ -784,10 +810,10 @@ describe("auction", () => {
         p2 bid itars 1
     `);
 
-    expect(() => new Engine(moves, {auction: true})).to.throw();
+    expect(() => new Engine(moves, { auction: true })).to.throw();
   });
 
-  it ("should throw auction, bid is not in the range", () => {
+  it("should throw auction, bid is not in the range", () => {
     const moves = Engine.parseMoves(`
         init 2 djfjjv4k
         p1 faction geodens
@@ -796,10 +822,10 @@ describe("auction", () => {
         p2 bid itars 12
     `);
 
-    expect(() => new Engine(moves, {auction: true})).to.throw();
+    expect(() => new Engine(moves, { auction: true })).to.throw();
   });
 
-  it ("should support auction and then go to building phase", () => {
+  it("should support auction and then go to building phase", () => {
     const moves = Engine.parseMoves(`
       init 2 randomSeed
       p1 faction terrans
@@ -812,10 +838,10 @@ describe("auction", () => {
       terrans build m -4x2
     `);
 
-    expect(() => new Engine(moves, {auction: true})).to.not.throw();
+    expect(() => new Engine(moves, { auction: true })).to.not.throw();
   });
 
-  it ("should throw because players are bidding in the wrong order", () => {
+  it("should throw because players are bidding in the wrong order", () => {
     const moves = Engine.parseMoves(`
       init 4 djfjjv4k
       p1 faction geodens
@@ -829,11 +855,10 @@ describe("auction", () => {
       p2 bid terrans 3
     `);
 
-    expect(() => new Engine(moves, {auction: true})).to.throw();
+    expect(() => new Engine(moves, { auction: true })).to.throw();
   });
 
-
-  it ("should allow auction, 4 players, right turn order", () => {
+  it("should allow auction, 4 players, right turn order", () => {
     const moves = Engine.parseMoves(`
         init 4 djfjjv4k
         p1 faction geodens
@@ -849,16 +874,15 @@ describe("auction", () => {
         p4 bid taklons 1
     `);
 
-    const engine = new Engine(moves, {auction: true});
+    const engine = new Engine(moves, { auction: true });
 
     expect(engine.players[0].faction).to.equal(Faction.Geodens);
     expect(engine.players[1].faction).to.equal(Faction.Terrans);
     expect(engine.players[2].faction).to.equal(Faction.Itars);
     expect(engine.players[3].faction).to.equal(Faction.Taklons);
-
   });
 
-  it ("should throw , wrong leech order based on auction setup", () => {
+  it("should throw , wrong leech order based on auction setup", () => {
     const moves = Engine.parseMoves(`
       init 3 randomSeed
       p1 faction terrans
@@ -880,8 +904,7 @@ describe("auction", () => {
       ambas charge 1pw
     `);
 
-    expect(() => new Engine(moves, {auction: true})).to.throw();
-    
+    expect(() => new Engine(moves, { auction: true })).to.throw();
   });
 });
 

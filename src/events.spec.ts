@@ -43,7 +43,8 @@ describe("Events", () => {
     expect(event.condition).to.equal(Condition.None);
     expect(event.operator).to.equal(Operator.Activate);
     // tslint:disable-next-line no-unused-expression
-    expect(Reward.match(event.rewards, [new Reward(-1, Resource.Knowledge), new Reward(1, Resource.TemporaryRange)])).to.be.true;
+    expect(Reward.match(event.rewards, [new Reward(-1, Resource.Knowledge), new Reward(1, Resource.TemporaryRange)])).to
+      .be.true;
     expect(event.action().rewards).to.equal("-k,range+1");
   });
 
@@ -58,23 +59,23 @@ describe("Events", () => {
   });
 
   it("should have no condition for o,q", () => {
-    const event = new Event('o,q');
+    const event = new Event("o,q");
 
     expect(event.condition).to.equal(Condition.None);
   });
 
   describe("toString", () => {
-    it ("should render properly for a non-activated event", () => {
+    it("should render properly for a non-activated event", () => {
       expect(new Event("+t").toString()).to.equal("+t");
     });
 
-    it ("should render properly for an activated event", () => {
+    it("should render properly for an activated event", () => {
       const event = new Event("=> 3t");
       event.activated = true;
       expect(event.toString()).to.equal("=> 3t!");
     });
 
-    it ("should render properly for a pick X event", () => {
+    it("should render properly for a pick X event", () => {
       const event = new Event("a 1>> o,k");
       expect(event.toString()).to.equal("a 1>> o,k");
     });

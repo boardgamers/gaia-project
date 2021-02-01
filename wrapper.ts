@@ -1,41 +1,48 @@
-import axios from 'axios';
-import Engine from './index';
+import axios from "axios";
+import Engine from "./index";
 import crypto from "crypto";
-import { EngineOptions } from './src/engine';
-import { Round } from './src/enums';
+import { EngineOptions } from "./src/engine";
+import { Round } from "./src/enums";
 import assert from "assert";
 
-export async function init (nbPlayers: number, expansions: string[], options: EngineOptions & {balancedGeneration: boolean}, seed?: string): Promise<Engine> {
+export async function init(
+  nbPlayers: number,
+  expansions: string[],
+  options: EngineOptions & { balancedGeneration: boolean },
+  seed?: string
+): Promise<Engine> {
   if (!seed) {
-    seed = crypto.randomBytes(8).toString('base64');
+    seed = crypto.randomBytes(8).toString("base64");
   }
 
   let numberSeed: number;
   // If the seed is a number, use it directly, otherwise use a number generated from its hash
-  if ('' + parseInt(seed, 10) === seed) {
+  if ("" + parseInt(seed, 10) === seed) {
     numberSeed = parseInt(seed, 10);
   } else {
     const md5sum = crypto.createHash("md5");
     md5sum.update(seed);
-    numberSeed = ('' + parseInt(seed, 10)) === seed ? parseInt(seed, 10) : parseInt(md5sum.digest("hex").slice(-10), 16);
+    numberSeed = "" + parseInt(seed, 10) === seed ? parseInt(seed, 10) : parseInt(md5sum.digest("hex").slice(-10), 16);
   }
 
   if (expansions.includes("spaceships")) {
     options.spaceShips = true;
   }
 
-  if (options.balancedGeneration || options.layout === 'balanced') {
+  if (options.balancedGeneration || options.layout === "balanced") {
     delete options.balancedGeneration;
 
-    const resp = await axios.post('http://gaia-project.hol.es', {seed: numberSeed, player: nbPlayers}).then(r => r.data);
+    const resp = await axios
+      .post("http://gaia-project.hol.es", { seed: numberSeed, player: nbPlayers })
+      .then((r) => r.data);
 
-    options.map = {sectors: resp.map};
+    options.map = { sectors: resp.map };
 
     // We use different standards for sides A & B of sectors than the online generator
     if (nbPlayers === 2) {
-      options.map.sectors.forEach(val => val.sector = val.sector.replace(/A/, 'B'));
+      options.map.sectors.forEach((val) => (val.sector = val.sector.replace(/A/, "B")));
     } else {
-      options.map.sectors.forEach(val => val.sector = val.sector.replace(/B/, 'A'));
+      options.map.sectors.forEach((val) => (val.sector = val.sector.replace(/B/, "A")));
     }
   }
 
@@ -45,7 +52,7 @@ export async function init (nbPlayers: number, expansions: string[], options: En
   return engine;
 }
 
-export function setPlayerMetaData(engine: Engine, player: number, metaData: {name: string}) {
+export function setPlayerMetaData(engine: Engine, player: number, metaData: { name: string }) {
   engine.players[player].name = metaData.name;
 
   return engine;
@@ -105,23 +112,23 @@ function automove(engine: Engine) {
   } while (modified);
 }
 
-export function ended (engine: Engine) {
+export function ended(engine: Engine) {
   return engine.ended;
 }
 
-export function cancelled (engine: Engine) {
+export function cancelled(engine: Engine) {
   return engine.ended && engine.round < Round.LastRound;
 }
 
-export function scores (engine: Engine) {
-  return engine.players.map(pl => pl.data.victoryPoints);
+export function scores(engine: Engine) {
+  return engine.players.map((pl) => pl.data.victoryPoints);
 }
 
-export function factions (engine: Engine) {
-  return engine.players.map(pl => pl.faction);
+export function factions(engine: Engine) {
+  return engine.players.map((pl) => pl.faction);
 }
 
-export async function replay (engine: Engine) {
+export async function replay(engine: Engine) {
   const oldPlayers = engine.players;
 
   engine = new Engine(engine.moveHistory, engine.options);
@@ -142,7 +149,7 @@ export async function replay (engine: Engine) {
   return engine;
 }
 
-export async function dropPlayer (engine: Engine, player: number) {
+export async function dropPlayer(engine: Engine, player: number) {
   engine = engine instanceof Engine ? engine : Engine.fromData(engine);
 
   engine.players[player].dropped = true;
@@ -156,33 +163,33 @@ export async function dropPlayer (engine: Engine, player: number) {
   return engine;
 }
 
-export function currentPlayer (engine: Engine) {
+export function currentPlayer(engine: Engine) {
   return engine.playerToMove;
 }
 
-export function toSave (engine: Engine) {
+export function toSave(engine: Engine) {
   if (!engine.newTurn || (engine as any).noSave) {
     return undefined;
   }
   return engine;
 }
 
-export function messages (engine: Engine) {
+export function messages(engine: Engine) {
   const messages = (engine as any).messages || [];
   delete (engine as any).messages;
 
   return {
     messages,
-    data: engine
+    data: engine,
   };
 }
 
-export function logLength (engine: Engine) {
+export function logLength(engine: Engine) {
   return engine.moveHistory.length;
 }
 
-export function logSlice (engine: Engine, options?: {player?: number; start?: number; end?: number}) {
-  return {state: engine};
+export function logSlice(engine: Engine, options?: { player?: number; start?: number; end?: number }) {
+  return { state: engine };
 }
 
 export function round(engine: Engine) {

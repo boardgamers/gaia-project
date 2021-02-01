@@ -1,6 +1,6 @@
 import { ScoringTile, FinalTile, Condition } from "../enums";
 
-const roundScorings =  {
+const roundScorings = {
   [ScoringTile.Score1]: ["step >> 2vp"],
   [ScoringTile.Score2]: ["a >> 2vp"],
   [ScoringTile.Score3]: ["m >> 2vp"],
@@ -15,15 +15,15 @@ const roundScorings =  {
   [ScoringTile.Ship2]: ["trade >> 3vp"],
 };
 
-const finalScorings =  {
+const finalScorings = {
   [FinalTile.Structure]: { condition: Condition.Structure, neutralPlayer: 11 },
-  [FinalTile.StructureFed]: { condition:  Condition.StructureFed, neutralPlayer: 10 },
-  [FinalTile.PlanetType]: { condition:  Condition.PlanetType, neutralPlayer: 5 },
+  [FinalTile.StructureFed]: { condition: Condition.StructureFed, neutralPlayer: 10 },
+  [FinalTile.PlanetType]: { condition: Condition.PlanetType, neutralPlayer: 5 },
   [FinalTile.Gaia]: { condition: Condition.Gaia, neutralPlayer: 4 },
   [FinalTile.Sector]: { condition: Condition.Sector, neutralPlayer: 6 },
   [FinalTile.Satellite]: { condition: Condition.Satellite, neutralPlayer: 8 },
   [FinalTile.Culture]: { condition: Condition.Culture, neutralPlayer: 20 },
-  [FinalTile.TradeTokens]: { condition: Condition.Trade, neutralPlayer: 8 }
+  [FinalTile.TradeTokens]: { condition: Condition.Trade, neutralPlayer: 8 },
 };
 
-export {roundScorings, finalScorings};
+export { roundScorings, finalScorings };

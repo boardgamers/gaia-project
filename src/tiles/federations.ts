@@ -1,6 +1,6 @@
 import { Federation } from "../enums";
 
-export default  {
+export default {
   [Federation.Fed1]: "12vp",
   [Federation.Fed2]: "8vp,q",
   [Federation.Fed3]: "8vp,2t",
@@ -8,7 +8,7 @@ export default  {
   [Federation.Fed5]: "7vp,6c",
   [Federation.Fed6]: "6vp,2k",
   [Federation.Gleens]: "o,k,2c",
-  [Federation.Ship]: "adv-ship"
+  [Federation.Ship]: "adv-ship",
 };
 
 export function isGreen(federation: Federation) {

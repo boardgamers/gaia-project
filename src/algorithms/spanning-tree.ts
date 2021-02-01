@@ -1,11 +1,17 @@
 import { inRange, minBy, maxBy, uniq, difference, sortBy } from "lodash";
 import { Grid, Hex } from "hexagrid";
-import shortestPath from './shortest-path';
-import {sumBy} from 'lodash';
-import assert from 'assert';
+import shortestPath from "./shortest-path";
+import { sumBy } from "lodash";
+import assert from "assert";
 
 type algorithms = "exhaustive" | "heuristic";
-export default function spanningTree<T>(destGroups: Hex<T>[][], grid: Grid, maxAdditional, algorithm: algorithms, costOf: (hex: Hex<T>) => number) {
+export default function spanningTree<T>(
+  destGroups: Hex<T>[][],
+  grid: Grid,
+  maxAdditional,
+  algorithm: algorithms,
+  costOf: (hex: Hex<T>) => number
+) {
   // Choose which algorithm to use.
   // By the way, the heuristic always gives the best solution if destGroups.length <= 3 (maybe even with 4?)
   // The breadthwidth algorithm always gives the best solution anyway but is slower
@@ -17,12 +23,17 @@ export default function spanningTree<T>(destGroups: Hex<T>[][], grid: Grid, maxA
   }
 }
 
-function spanningTreeWithHeuristic<T>(destGroups: Hex<T>[][], grid: Grid<Hex<T>>, maxAdditional = -1, costOf = (hex: Hex<any>) => 1): {path: Hex[]; cost: number} | undefined {
+function spanningTreeWithHeuristic<T>(
+  destGroups: Hex<T>[][],
+  grid: Grid<Hex<T>>,
+  maxAdditional = -1,
+  costOf = (hex: Hex<any>) => 1
+): { path: Hex[]; cost: number } | undefined {
   const destHexes: Hex<T>[] = [].concat(...destGroups);
   const destHexesSet = new Set(destHexes);
 
   if (destGroups.length <= 1) {
-    return {path: destHexes, cost: sumBy(destHexes, costOf)};
+    return { path: destHexes, cost: sumBy(destHexes, costOf) };
   }
 
   const destGroupsMap: Map<Hex<T>, Hex<T>[]> = new Map();
@@ -32,14 +43,22 @@ function spanningTreeWithHeuristic<T>(destGroups: Hex<T>[][], grid: Grid<Hex<T>>
     }
   }
 
-  const [minQ, maxQ] = [minBy(destHexes, 'q').q, maxBy(destHexes, 'q').q];
-  const [minR, maxR] = [minBy(destHexes, 'r').r, maxBy(destHexes, 'r').r];
-  const [minS, maxS] = [minBy(destHexes, 's').s, maxBy(destHexes, 's').s];
+  const [minQ, maxQ] = [minBy(destHexes, "q").q, maxBy(destHexes, "q").q];
+  const [minR, maxR] = [minBy(destHexes, "r").r, maxBy(destHexes, "r").r];
+  const [minS, maxS] = [minBy(destHexes, "s").s, maxBy(destHexes, "s").s];
 
   const startingPoints: Array<Hex<any>> = [];
   if (destGroups.length > 2) {
     // We pick all the hexes that are in the middle of the federation buildings, and try to create a network from them
-    startingPoints.push(...[...grid.values()].filter(hex => !destHexesSet.has(hex) && inRange(hex.q, minQ + 1, maxQ) && inRange(hex.r, minR + 1, maxR) && inRange(hex.s, minS + 1, maxS)));
+    startingPoints.push(
+      ...[...grid.values()].filter(
+        (hex) =>
+          !destHexesSet.has(hex) &&
+          inRange(hex.q, minQ + 1, maxQ) &&
+          inRange(hex.r, minR + 1, maxR) &&
+          inRange(hex.s, minS + 1, maxS)
+      )
+    );
   }
   for (const group of destGroups) {
     startingPoints.push(group[0]);
@@ -63,7 +82,7 @@ function spanningTreeWithHeuristic<T>(destGroups: Hex<T>[][], grid: Grid<Hex<T>>
 
     do {
       const hexSet = new Set<Hex<T>>(hexes);
-      const path = shortestPath(hexes, toReach, grid, hex => hexSet.has(hex) ? 0 : costOf(hex));
+      const path = shortestPath(hexes, toReach, grid, (hex) => (hexSet.has(hex) ? 0 : costOf(hex)));
 
       if (!path) {
         hexes = undefined;
@@ -82,7 +101,7 @@ function spanningTreeWithHeuristic<T>(destGroups: Hex<T>[][], grid: Grid<Hex<T>>
   }
 
   if (bestSolution) {
-    return {path: bestSolution, cost: minScore};
+    return { path: bestSolution, cost: minScore };
   }
 }
 

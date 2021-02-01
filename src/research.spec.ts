@@ -1,10 +1,10 @@
-import { expect } from 'chai';
-import Engine from './engine';
-import { Player } from './enums';
+import { expect } from "chai";
+import Engine from "./engine";
+import { Player } from "./enums";
 
 const parseMoves = Engine.parseMoves;
 
-describe('Research', () => {
+describe("Research", () => {
   it("should grant a qic when upgrading navigation", () => {
     const moves = parseMoves(`
       init 2 randomSeed
@@ -68,7 +68,7 @@ describe('Research', () => {
     expect(() => engine.move("p1 up gaia.")).to.throw();
   });
 
-  it("should prevent upgrading to last research track when another player is there", function() {
+  it("should prevent upgrading to last research track when another player is there", function () {
     this.timeout(10000);
 
     const moves = Engine.parseMoves(`
@@ -133,7 +133,7 @@ describe('Research', () => {
 
     const engine = new Engine(moves);
 
-    expect(() => engine.move('lantids up terra.')).to.throw();
+    expect(() => engine.move("lantids up terra.")).to.throw();
   });
 
   it("should give a second leech for lost planet", () => {
@@ -241,7 +241,7 @@ describe('Research', () => {
     expect(() => new Engine(moves)).to.not.throw();
   });
 
-  it ("should upgrade 0 level research fine", function() {
+  it("should upgrade 0 level research fine", function () {
     this.timeout(10000);
     const moves = parseMoves(`
       init 2 playtest-spaceships-2
@@ -354,19 +354,21 @@ describe('Research', () => {
       spaceShips: true,
       advancedRules: true,
       map: {
-        sectors : [
-          {sector : "3", rotation : 5, center : {q : 0, r : 0, s : 0}},
-          {sector : "4", rotation : 5, center : {q : 5, r : -2, s : -3}},
-          {sector : "2", rotation : 1, center : {q : 2, r : 3, s : -5}},
-          {sector : "7B", rotation : 1, center : {q : -3, r : 5, s : -2}},
-          {sector : "1", rotation : 4, center : {q : -5, r : 2, s : 3}},
-          {sector : "5B", rotation : 5, center : {q : -2, r : -3, s : 5}},
-          {sector : "6B", rotation : 0, center : {q : 3, r : -5, s : 2}}
+        sectors: [
+          { sector: "3", rotation: 5, center: { q: 0, r: 0, s: 0 } },
+          { sector: "4", rotation: 5, center: { q: 5, r: -2, s: -3 } },
+          { sector: "2", rotation: 1, center: { q: 2, r: 3, s: -5 } },
+          { sector: "7B", rotation: 1, center: { q: -3, r: 5, s: -2 } },
+          { sector: "1", rotation: 4, center: { q: -5, r: 2, s: 3 } },
+          { sector: "5B", rotation: 5, center: { q: -2, r: -3, s: 5 } },
+          { sector: "6B", rotation: 0, center: { q: 3, r: -5, s: 2 } },
         ],
-        mirror : false
-      }
+        mirror: false,
+      },
     });
 
-    expect(() => engine.move("ambas build ac2 -4x5. tech adv-gaia. cover move. up int. up terra. up sci. up ship. up nav.")).to.not.throw();
+    expect(() =>
+      engine.move("ambas build ac2 -4x5. tech adv-gaia. cover move. up int. up terra. up sci. up ship. up nav.")
+    ).to.not.throw();
   });
 });

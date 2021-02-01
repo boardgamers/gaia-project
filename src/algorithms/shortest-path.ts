@@ -1,15 +1,20 @@
-import {Hex, Grid} from "hexagrid";
+import { Hex, Grid } from "hexagrid";
 import { flatten, difference } from "lodash";
 
-export default function shortestPath<T>(starts: Hex<T>[], dests: Hex<T>[], grid: Grid, costOf = (hex: Hex<T>) => 1): {path: Hex<T>[]; cost: number} {
+export default function shortestPath<T>(
+  starts: Hex<T>[],
+  dests: Hex<T>[],
+  grid: Grid,
+  costOf = (hex: Hex<T>) => 1
+): { path: Hex<T>[]; cost: number } {
   const destSet: Set<Hex<T>> = new Set(dests);
-  const pathTo: Map<Hex<T>, {path: Hex<T>[]; cost: number}> = new Map();
+  const pathTo: Map<Hex<T>, { path: Hex<T>[]; cost: number }> = new Map();
 
   for (const start of starts) {
-    pathTo.set(start, {path: [start], cost: costOf(start)});
+    pathTo.set(start, { path: [start], cost: costOf(start) });
 
     if (destSet.has(start)) {
-      return {path: [start], cost: costOf(start)};
+      return { path: [start], cost: costOf(start) };
     }
   }
 
@@ -17,7 +22,7 @@ export default function shortestPath<T>(starts: Hex<T>[], dests: Hex<T>[], grid:
   let toExpandNext = [];
 
   let minToDest = grid.size + 1;
-  let bestPath: {path: Hex<T>[]; cost: number};
+  let bestPath: { path: Hex<T>[]; cost: number };
   let minDistance = 0;
 
   const distanceToNextDest = (path: Hex<T>[], excl: Hex<T>[]) => {
@@ -29,10 +34,10 @@ export default function shortestPath<T>(starts: Hex<T>[], dests: Hex<T>[], grid:
 
     path = bestPath ? difference(path, bestPath.path.slice(1, -1)) : path;
 
-    return Math.min(...flatten(path.map(x => targets.map(y => grid.distance(x, y)))));
+    return Math.min(...flatten(path.map((x) => targets.map((y) => grid.distance(x, y)))));
   };
 
-  const isBetter = (path: {path: Hex<T>[]; cost: number}) => {
+  const isBetter = (path: { path: Hex<T>[]; cost: number }) => {
     if (path.cost < minToDest) {
       return true;
     }
@@ -60,7 +65,7 @@ export default function shortestPath<T>(starts: Hex<T>[], dests: Hex<T>[], grid:
 
         const extendedPath = {
           cost: curPath.cost + costOf(neighbour),
-          path: [...curPath.path, neighbour]
+          path: [...curPath.path, neighbour],
         };
 
         pathTo.set(neighbour, extendedPath);
@@ -69,7 +74,10 @@ export default function shortestPath<T>(starts: Hex<T>[], dests: Hex<T>[], grid:
         if (destSet.has(neighbour) && isBetter(extendedPath)) {
           minToDest = extendedPath.cost;
           bestPath = extendedPath;
-          minDistance = distanceToNextDest(extendedPath.path.slice(1, -1), [extendedPath.path[0], extendedPath.path[extendedPath.path.length - 1]]);
+          minDistance = distanceToNextDest(extendedPath.path.slice(1, -1), [
+            extendedPath.path[0],
+            extendedPath.path[extendedPath.path.length - 1],
+          ]);
         }
       }
     }

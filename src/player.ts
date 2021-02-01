@@ -1,24 +1,42 @@
-import { Faction, Operator, ResearchField, Planet, Building, Resource, Booster, Condition, Federation, FinalTile, TechTile, AdvTechTile, BrainstoneArea, TechTilePos, AdvTechTilePos, Command, TradeToken} from './enums';
-import PlayerData from './player-data';
-import Event, {EventSource, TechPos} from './events';
-import { factionBoard, FactionBoard } from './faction-boards';
+import {
+  Faction,
+  Operator,
+  ResearchField,
+  Planet,
+  Building,
+  Resource,
+  Booster,
+  Condition,
+  Federation,
+  FinalTile,
+  TechTile,
+  AdvTechTile,
+  BrainstoneArea,
+  TechTilePos,
+  AdvTechTilePos,
+  Command,
+  TradeToken,
+} from "./enums";
+import PlayerData from "./player-data";
+import Event, { EventSource, TechPos } from "./events";
+import { factionBoard, FactionBoard } from "./faction-boards";
 import { uniq, sum, difference, zipWith, merge, countBy, uniqWith } from "lodash";
-import factions from './factions';
-import Reward from './reward';
-import { CubeCoordinates, Hex, Grid } from 'hexagrid';
-import researchTracks, {lastTile, keyNeeded} from './research-tracks';
-import { terraformingStepsRequired } from './planets';
-import boosts from './tiles/boosters';
-import { Player as PlayerEnum } from './enums';
-import { stdBuildingValue } from './buildings';
-import SpaceMap from './map';
-import { GaiaHex } from './gaia-hex';
-import spanningTree from './algorithms/spanning-tree';
-import { FederationInfo, isOutclassedBy } from './federation';
+import factions from "./factions";
+import Reward from "./reward";
+import { CubeCoordinates, Hex, Grid } from "hexagrid";
+import researchTracks, { lastTile, keyNeeded } from "./research-tracks";
+import { terraformingStepsRequired } from "./planets";
+import boosts from "./tiles/boosters";
+import { Player as PlayerEnum } from "./enums";
+import { stdBuildingValue } from "./buildings";
+import SpaceMap from "./map";
+import { GaiaHex } from "./gaia-hex";
+import spanningTree from "./algorithms/spanning-tree";
+import { FederationInfo, isOutclassedBy } from "./federation";
 import federationTiles, { isGreen } from "./tiles/federations";
 import { EventEmitter } from "eventemitter3";
-import { finalScorings } from './tiles/scoring';
-import techs, { isAdvanced } from './tiles/techs';
+import { finalScorings } from "./tiles/scoring";
+import techs, { isAdvanced } from "./tiles/techs";
 import assert from "assert";
 
 const TERRAFORMING_COST = 3;
@@ -44,7 +62,7 @@ export default class Player extends EventEmitter {
     [Operator.Activate]: [],
     [Operator.Pass]: [],
     [Operator.Special]: [],
-    [Operator.AdvShip4]: []
+    [Operator.AdvShip4]: [],
   };
   // To avoid recalculating federations every time
   federationCache: FederationCache;
@@ -57,15 +75,18 @@ export default class Player extends EventEmitter {
 
   constructor(public player: PlayerEnum = PlayerEnum.Player1) {
     super();
-    this.data.on('advance-research', (track, dest) => this.onResearchAdvanced(track, dest));
+    this.data.on("advance-research", (track, dest) => this.onResearchAdvanced(track, dest));
   }
 
   get income() {
-    return Reward.toString(Reward.merge([].concat(...this.events[Operator.Income].map(event => event.rewards))), true);
+    return Reward.toString(
+      Reward.merge([].concat(...this.events[Operator.Income].map((event) => event.rewards))),
+      true
+    );
   }
 
   get actions() {
-    return this.events[Operator.Activate].map(event => event.action());
+    return this.events[Operator.Activate].map((event) => event.action());
   }
 
   progress(finalTile: FinalTile) {
@@ -81,7 +102,7 @@ export default class Player extends EventEmitter {
   }
 
   get ownedPlanetsCount() {
-    return countBy(this.ownedPlanets, 'data.planet');
+    return countBy(this.ownedPlanets, "data.planet");
   }
 
   toJSON() {
@@ -91,17 +112,17 @@ export default class Player extends EventEmitter {
       data: this.data,
       events: this.events,
       name: this.name,
-      dropped: this.dropped
+      dropped: this.dropped,
     } as any;
 
     if (this.federationCache) {
       json.federationCache = {
         availableSatellites: this.federationCache.availableSatellites,
-        federations: this.federationCache.federations.map(fedInfo => ({
+        federations: this.federationCache.federations.map((fedInfo) => ({
           planets: fedInfo.planets,
           satellites: fedInfo.satellites,
-          hexes: fedInfo.hexes.map(h => h.toString())
-        }))
+          hexes: fedInfo.hexes.map((h) => h.toString()),
+        })),
       };
     }
 
@@ -116,7 +137,7 @@ export default class Player extends EventEmitter {
     }
 
     for (const kind of Object.keys(data.events)) {
-      player.events[kind] = data.events[kind].map(ev => new Event(ev));
+      player.events[kind] = data.events[kind].map((ev) => new Event(ev));
     }
 
     player.name = data.name;
@@ -125,7 +146,7 @@ export default class Player extends EventEmitter {
     if (data.federationCache) {
       player.federationCache = data.federationCache;
       for (const fed of player.federationCache.federations) {
-        fed.hexes = (fed.hexes as any as string[]).map(hex => map.getS(hex));
+        fed.hexes = ((fed.hexes as any) as string[]).map((hex) => map.getS(hex));
       }
     }
 
@@ -156,10 +177,14 @@ export default class Player extends EventEmitter {
 
   gainRewards(rewards: Reward[], source: EventSource, toPick = 0) {
     if (toPick) {
-      this.data.toPick = {count: toPick, rewards: [...rewards], source};
+      this.data.toPick = { count: toPick, rewards: [...rewards], source };
       this.emit("pick-rewards");
     } else {
-      this.data.gainRewards(rewards.map(rew => this.factionReward(rew)), false, source);
+      this.data.gainRewards(
+        rewards.map((rew) => this.factionReward(rew)),
+        false,
+        source
+      );
     }
   }
 
@@ -179,17 +204,25 @@ export default class Player extends EventEmitter {
 
     for (let max = 0; ; max += 1) {
       for (const rew of rewards) {
-        if (!this.data.hasResource(new Reward( rew.count * (max + 1), rew.type ))) {
+        if (!this.data.hasResource(new Reward(rew.count * (max + 1), rew.type))) {
           return max;
         }
       }
     }
   }
 
-  canBuild(targetPlanet: Planet, building: Building, {isolated, addedCost, existingBuilding}: {isolated?: boolean; addedCost?: Reward[]; existingBuilding?: Building} = {}): {cost?: Reward[]; possible: boolean; steps?: number} {
+  canBuild(
+    targetPlanet: Planet,
+    building: Building,
+    {
+      isolated,
+      addedCost,
+      existingBuilding,
+    }: { isolated?: boolean; addedCost?: Reward[]; existingBuilding?: Building } = {}
+  ): { cost?: Reward[]; possible: boolean; steps?: number } {
     if (this.data.buildings[building] >= this.maxBuildings(building)) {
       // Too many buildings of the same kind
-      return {possible: false};
+      return { possible: false };
     }
 
     if (!addedCost) {
@@ -197,7 +230,7 @@ export default class Player extends EventEmitter {
     }
 
     if (!this.canPay(addedCost)) {
-      return {possible: false};
+      return { possible: false };
     }
 
     let steps = 0;
@@ -214,30 +247,38 @@ export default class Player extends EventEmitter {
         } else {
           // Already a gaia-former on the planet, so no need to pay a Q.I.C.
         }
-      } else { // Get the number of terraforming steps to pay discounting terraforming track
+      } else {
+        // Get the number of terraforming steps to pay discounting terraforming track
         steps = terraformingStepsRequired(factions[this.faction].planet, targetPlanet);
-        addedCost.push(new Reward((TERRAFORMING_COST - this.data.terraformCostDiscount) * Math.max(steps - this.data.temporaryStep, 0), Resource.Ore));
+        addedCost.push(
+          new Reward(
+            (TERRAFORMING_COST - this.data.terraformCostDiscount) * Math.max(steps - this.data.temporaryStep, 0),
+            Resource.Ore
+          )
+        );
       }
     }
 
     const cost = Reward.merge(this.board.cost(targetPlanet, building, isolated), addedCost);
 
     if (!this.canPay(cost)) {
-      return {possible: false};
+      return { possible: false };
     }
     return {
       possible: true,
       cost,
-      steps
+      steps,
     };
   }
 
   maxBuildings(building: Building) {
-    return building === Building.GaiaFormer ? (this.data.gaiaformers - this.data.gaiaformersInGaia) : this.board.buildings[building].income.length;
+    return building === Building.GaiaFormer
+      ? this.data.gaiaformers - this.data.gaiaformersInGaia
+      : this.board.buildings[building].income.length;
   }
 
   get ownedPlanets(): GaiaHex[] {
-    return this.data.occupied.filter(hex => hex.data.planet !== Planet.Empty && hex.isMainOccupier(this.player));
+    return this.data.occupied.filter((hex) => hex.data.planet !== Planet.Empty && hex.isMainOccupier(this.player));
   }
 
   loadFaction(faction: Faction, expansions: number, skipIncome = false) {
@@ -282,7 +323,11 @@ export default class Player extends EventEmitter {
 
     if (event.operator === Operator.Once) {
       const times = this.eventConditionCount(event.condition);
-      this.gainRewards(event.rewards.map(reward => new Reward(reward.count * times, reward.type)), event.source, event.toPick);
+      this.gainRewards(
+        event.rewards.map((reward) => new Reward(reward.count * times, reward.type)),
+        event.source,
+        event.toPick
+      );
     } else if (event.operator === Operator.AdvShip4) {
       const nShips = this.data.shipLocations.length;
       this.data.shipRange += 4;
@@ -305,11 +350,11 @@ export default class Player extends EventEmitter {
 
   removeEvent(event: Event) {
     // First try same source & same definition
-    let index = this.events[event.operator].findIndex(ev => ev.spec === event.spec && ev.source === event.source);
+    let index = this.events[event.operator].findIndex((ev) => ev.spec === event.spec && ev.source === event.source);
 
     // Then try just same definition
     if (index === -1) {
-      index = this.events[event.operator].findIndex(ev => ev.spec === event.spec);
+      index = this.events[event.operator].findIndex((ev) => ev.spec === event.spec);
     }
 
     if (index !== -1) {
@@ -320,9 +365,11 @@ export default class Player extends EventEmitter {
     }
   }
 
-  removeRoundBoosterEvents( type?: Operator.Income) {
+  removeRoundBoosterEvents(type?: Operator.Income) {
     let eventList = Event.parse(boosts[this.data.tiles.booster], this.data.tiles.booster);
-    eventList = eventList.filter( ev => (type && ev.operator === Operator.Income ) || ( !type && ev.operator !== Operator.Income ));
+    eventList = eventList.filter(
+      (ev) => (type && ev.operator === Operator.Income) || (!type && ev.operator !== Operator.Income)
+    );
 
     for (const event of eventList) {
       this.removeEvent(event);
@@ -343,8 +390,10 @@ export default class Player extends EventEmitter {
     // this is managing Income phase to solve +t and +pw ordering
     // it's assuming that each reward belongs to a different event, which has only that reward
     // in case of multiple matchings pick the first
-    for ( const rew of rewards) {
-      const event =  this.events[Operator.Income].find(ev => !ev.activated && ev.rewards.some(rew2 => Reward.match([rew], [rew2])));
+    for (const rew of rewards) {
+      const event = this.events[Operator.Income].find(
+        (ev) => !ev.activated && ev.rewards.some((rew2) => Reward.match([rew], [rew2]))
+      );
 
       assert(event);
 
@@ -352,7 +401,6 @@ export default class Player extends EventEmitter {
       event.activated = true;
     }
   }
-
 
   /**
    * Second parameter is necessary in case someone advances research mutliple times in one go, we don't
@@ -384,11 +432,10 @@ export default class Player extends EventEmitter {
         this.federationCache = null;
       }
 
-
       if (this.federationCache) {
         assert(wasOccupied, "logic error");
 
-        if (this.buildingValue(hex, {federation: true}) === this.buildingValue(hex, {federation: true, building})) {
+        if (this.buildingValue(hex, { federation: true }) === this.buildingValue(hex, { federation: true, building })) {
           // No need to clear federation cache, when the building value remains the same
         } else if (!hex.belongsToFederationOf(this.player)) {
           this.federationCache = null;
@@ -436,7 +483,7 @@ export default class Player extends EventEmitter {
     // Add to nearby federation
     if (building !== Building.GaiaFormer && !hex.belongsToFederationOf(this.player)) {
       const group: GaiaHex[] = this.buildingGroup(hex, map);
-      const hasFederation = map.grid.neighbours(hex).some(hx => hx.belongsToFederationOf(this.player));
+      const hasFederation = map.grid.neighbours(hex).some((hx) => hx.belongsToFederationOf(this.player));
 
       if (hasFederation) {
         for (const h of group) {
@@ -493,12 +540,12 @@ export default class Player extends EventEmitter {
     this.receivePassIncome();
     // remove the remaing reward of the round booster events
     this.removeRoundBoosterEvents();
-    this.data.tiles.booster =  undefined;
+    this.data.tiles.booster = undefined;
   }
 
   getRoundBooster(roundBooster: Booster) {
     // add the booster to the the player
-    this.data.tiles.booster =  roundBooster;
+    this.data.tiles.booster = roundBooster;
     this.loadEvents(Event.parse(boosts[roundBooster], roundBooster));
   }
 
@@ -507,34 +554,36 @@ export default class Player extends EventEmitter {
     if (advanced) {
       this.data.removeGreenFederation();
     }
-    this.data.tiles.techs.push({tile, pos, enabled: true});
-    this.loadEvents(Event.parse(techs[tile], !advanced ? `tech-${pos}` as TechPos : pos as AdvTechTilePos));
+    this.data.tiles.techs.push({ tile, pos, enabled: true });
+    this.loadEvents(Event.parse(techs[tile], !advanced ? (`tech-${pos}` as TechPos) : (pos as AdvTechTilePos)));
 
     // resets federationCache if Special PA->4pw
-    if ( tile === TechTile.Tech3  ) { this.federationCache = null; }
+    if (tile === TechTile.Tech3) {
+      this.federationCache = null;
+    }
   }
 
   coverTechTile(pos: TechTilePos) {
-    const tile = this.data.tiles.techs.find(tech => tech.pos === pos);
+    const tile = this.data.tiles.techs.find((tech) => tech.pos === pos);
     tile.enabled = false;
     this.removeEvents(Event.parse(techs[tile.tile], `tech-${pos}` as TechPos));
   }
 
-  needIncomeSelection(): { events?: Event[]; needed: boolean; descs: Reward[]} {
+  needIncomeSelection(): { events?: Event[]; needed: boolean; descs: Reward[] } {
     // we need to check if rewards contains Resource.GainToken and Resource.GainPower
     // player has to select the order
-    const allEvents = this.events[Operator.Income].filter( ev => !ev.activated);
+    const allEvents = this.events[Operator.Income].filter((ev) => !ev.activated);
 
-    const gainTokens = allEvents.filter(ev => ev.rewards.some(rw => rw.type === Resource.GainToken));
-    const chargePowers = allEvents.filter(ev => ev.rewards.some(rw => rw.type === Resource.ChargePower));
+    const gainTokens = allEvents.filter((ev) => ev.rewards.some((rw) => rw.type === Resource.GainToken));
+    const chargePowers = allEvents.filter((ev) => ev.rewards.some((rw) => rw.type === Resource.ChargePower));
 
     return {
       events: gainTokens.concat(chargePowers),
       needed: gainTokens.length > 0 && chargePowers.length > 0,
       descs: [
-        ... gainTokens.map(ev => ev.rewards.find(rw => rw.type === Resource.GainToken)),
-        ... chargePowers.map(ev => ev.rewards.find(rw => rw.type === Resource.ChargePower))
-      ]
+        ...gainTokens.map((ev) => ev.rewards.find((rw) => rw.type === Resource.GainToken)),
+        ...chargePowers.map((ev) => ev.rewards.find((rw) => rw.type === Resource.ChargePower)),
+      ],
     };
   }
 
@@ -572,7 +621,7 @@ export default class Player extends EventEmitter {
       if (!event.activated) {
         // Taklons + brainstone need to not activate the event until the reward is gained...
         // This is UGLY. Maybe a better handling of placing ships in income phase would avoid this hack
-        if (!event.rewards.some(rew => rew.type === Resource.ChargePower)) {
+        if (!event.rewards.some((rew) => rew.type === Resource.ChargePower)) {
           event.activated = true; // before next line, in case it trigger events (like placing ship)
         }
         this.gainRewards(event.rewards, event.source);
@@ -591,7 +640,10 @@ export default class Player extends EventEmitter {
     // this is for pass tile income (e.g. rounboosters, adv tiles)
     for (const event of this.events[Operator.Pass]) {
       const times = this.eventConditionCount(event.condition);
-      this.gainRewards(event.rewards.map(reward => new Reward(reward.count * times, reward.type)), event.source);
+      this.gainRewards(
+        event.rewards.map((reward) => new Reward(reward.count * times, reward.type)),
+        event.source
+      );
     }
   }
 
@@ -599,7 +651,10 @@ export default class Player extends EventEmitter {
     // this is for roundboosters, techtiles and adv tile
     for (const event of this.events[Operator.Trigger]) {
       // only new mine trigger event for Lantids in other's planet
-      if (Condition.matchesBuilding(event.condition, building, planet) && (!isAdditionalMine || event.condition === Condition.Mine)) {
+      if (
+        Condition.matchesBuilding(event.condition, building, planet) &&
+        (!isAdditionalMine || event.condition === Condition.Mine)
+      ) {
         this.gainRewards(event.rewards, event.source);
       }
     }
@@ -616,7 +671,10 @@ export default class Player extends EventEmitter {
   receiveTerraformingStepTriggerIncome(stepsReq: number) {
     for (const event of this.events[Operator.Trigger]) {
       if (event.condition === Condition.TerraformStep) {
-        this.gainRewards(event.rewards.map( rw => new Reward(rw.count * stepsReq, rw.type)), event.source);
+        this.gainRewards(
+          event.rewards.map((rw) => new Reward(rw.count * stepsReq, rw.type)),
+          event.source
+        );
       }
     }
   }
@@ -627,10 +685,10 @@ export default class Player extends EventEmitter {
 
   gaiaPhase() {
     /* Move gaia power tokens to regular power areas */
-    this.emit('gaiaPhase-beforeTokenMove');
+    this.emit("gaiaPhase-beforeTokenMove");
 
     this.data.power.area1 += this.data.power.gaia;
-    if (this.data.brainstone === BrainstoneArea.Gaia ) {
+    if (this.data.brainstone === BrainstoneArea.Gaia) {
       this.data.brainstone = BrainstoneArea.Area1;
     }
 
@@ -638,7 +696,7 @@ export default class Player extends EventEmitter {
     this.data.gaiaformersInGaia = 0;
   }
 
-  buildingValue(hex: GaiaHex, options?: {federation?: boolean; building?: Building}) {
+  buildingValue(hex: GaiaHex, options?: { federation?: boolean; building?: Building }) {
     const building = options?.building ?? hex.buildingOf(this.player);
     const forFederation = options?.federation ?? false;
 
@@ -646,7 +704,7 @@ export default class Player extends EventEmitter {
       return 1;
     }
 
-    let baseValue =  stdBuildingValue(building);
+    let baseValue = stdBuildingValue(building);
 
     // Space stations and gaia-formers can't get leech when someone makes a structure nearby
     if (baseValue === 0) {
@@ -657,14 +715,23 @@ export default class Player extends EventEmitter {
       baseValue = 4;
     }
 
-    const addedBescods = this.faction === Faction.Bescods && this.data.buildings[Building.PlanetaryInstitute] === 1  && hex.data.planet === Planet.Titanium ? 1 : 0;
+    const addedBescods =
+      this.faction === Faction.Bescods &&
+      this.data.buildings[Building.PlanetaryInstitute] === 1 &&
+      hex.data.planet === Planet.Titanium
+        ? 1
+        : 0;
 
     return baseValue + addedBescods;
   }
 
   maxLeech(extraPowerToken?: boolean) {
     // considers real chargeable power and victory points
-    return Math.min(this.data.leechPossible, this.data.chargePower(this.data.leechPossible, false) + (extraPowerToken ? 2 : 0), this.data.victoryPoints + 1);
+    return Math.min(
+      this.data.leechPossible,
+      this.data.chargePower(this.data.leechPossible, false) + (extraPowerToken ? 2 : 0),
+      this.data.victoryPoints + 1
+    );
   }
 
   canLeech(): boolean {
@@ -683,7 +750,7 @@ export default class Player extends EventEmitter {
   gainFederationToken(federation: Federation) {
     this.data.tiles.federations.push({
       tile: federation,
-      green: isGreen(federation)
+      green: isGreen(federation),
     });
 
     this.gainRewards(Reward.parse(federationTiles[federation]), Command.FormFederation);
@@ -692,7 +759,11 @@ export default class Player extends EventEmitter {
 
   factionReward(reward: Reward): Reward {
     // this is for Gleens getting ore instead of qics until Academy2
-    if (this.faction === Faction.Gleens && this.data.buildings[Building.Academy2] === 0 && reward.type === Resource.Qic) {
+    if (
+      this.faction === Faction.Gleens &&
+      this.data.buildings[Building.Academy2] === 0 &&
+      reward.type === Resource.Qic
+    ) {
       return new Reward(reward.count, Resource.Ore);
     }
     return reward;
@@ -710,26 +781,61 @@ export default class Player extends EventEmitter {
 
   eventConditionCount(condition: Condition): number {
     switch (condition) {
-      case Condition.None: return 1;
-      case Condition.Mine: return this.data.buildings[Building.Mine] + this.data.lostPlanet;
-      case Condition.TradingStation: return this.data.buildings[Building.TradingStation];
-      case Condition.ResearchLab: return this.data.buildings[Building.ResearchLab];
-      case Condition.PlanetaryInstituteOrAcademy: return this.data.buildings[Building.Academy1] + this.data.buildings[Building.Academy2] + this.data.buildings[Building.PlanetaryInstitute];
-      case Condition.Federation: return this.data.tiles.federations.length;
-      case Condition.Gaia: return this.ownedPlanets.filter(hex => hex.data.planet === Planet.Gaia).length;
-      case Condition.PlanetType: return uniq(this.ownedPlanets.map( hex => hex.data.planet)).length;
-      case Condition.Sector: return uniq(this.data.occupied.filter(hex => hex.colonizedBy(this.player)).map(hex => hex.data.sector)).length;
-      case Condition.Structure: return this.data.occupied.filter(hex => hex.colonizedBy(this.player)).length;
-      case Condition.StructureFed: return this.data.occupied.filter(hex => hex.colonizedBy(this.player) && hex.belongsToFederationOf(this.player)).length;
-      case Condition.Satellite: return this.data.satellites + this.data.buildings[Building.SpaceStation];
-      case Condition.StructureValue: return sum(this.data.occupied.map(hex => this.buildingValue(hex, {federation: true})));
-      case Condition.StructureFedValue: return sum(this.data.occupied.map(hex => hex.belongsToFederationOf(this.player) ? this.buildingValue(hex, {federation: true}) : 0 ));
-      case Condition.Trade: return this.data.tradeTokens + this.data.wildTradeTokens;
+      case Condition.None:
+        return 1;
+      case Condition.Mine:
+        return this.data.buildings[Building.Mine] + this.data.lostPlanet;
+      case Condition.TradingStation:
+        return this.data.buildings[Building.TradingStation];
+      case Condition.ResearchLab:
+        return this.data.buildings[Building.ResearchLab];
+      case Condition.PlanetaryInstituteOrAcademy:
+        return (
+          this.data.buildings[Building.Academy1] +
+          this.data.buildings[Building.Academy2] +
+          this.data.buildings[Building.PlanetaryInstitute]
+        );
+      case Condition.Federation:
+        return this.data.tiles.federations.length;
+      case Condition.Gaia:
+        return this.ownedPlanets.filter((hex) => hex.data.planet === Planet.Gaia).length;
+      case Condition.PlanetType:
+        return uniq(this.ownedPlanets.map((hex) => hex.data.planet)).length;
+      case Condition.Sector:
+        return uniq(this.data.occupied.filter((hex) => hex.colonizedBy(this.player)).map((hex) => hex.data.sector))
+          .length;
+      case Condition.Structure:
+        return this.data.occupied.filter((hex) => hex.colonizedBy(this.player)).length;
+      case Condition.StructureFed:
+        return this.data.occupied.filter(
+          (hex) => hex.colonizedBy(this.player) && hex.belongsToFederationOf(this.player)
+        ).length;
+      case Condition.Satellite:
+        return this.data.satellites + this.data.buildings[Building.SpaceStation];
+      case Condition.StructureValue:
+        return sum(this.data.occupied.map((hex) => this.buildingValue(hex, { federation: true })));
+      case Condition.StructureFedValue:
+        return sum(
+          this.data.occupied.map((hex) =>
+            hex.belongsToFederationOf(this.player) ? this.buildingValue(hex, { federation: true }) : 0
+          )
+        );
+      case Condition.Trade:
+        return this.data.tradeTokens + this.data.wildTradeTokens;
       // Max 8 (for tech tile which gains 1k per planet)
-      case Condition.PlanetsWithTradeToken: return Math.min(this.data.occupied.filter(hex => hex.isMainOccupier(this.player) && hex.colonizedBy(this.player) && hex.hasTradeTokens()).length, 8);
-      case Condition.AdvanceResearch: return sum(Object.values(this.data.research));
-      case Condition.HighestResearchLevel: return Math.max(...Object.values(this.data.research));
-      case Condition.Culture: return this.cultureLevel();
+      case Condition.PlanetsWithTradeToken:
+        return Math.min(
+          this.data.occupied.filter(
+            (hex) => hex.isMainOccupier(this.player) && hex.colonizedBy(this.player) && hex.hasTradeTokens()
+          ).length,
+          8
+        );
+      case Condition.AdvanceResearch:
+        return sum(Object.values(this.data.research));
+      case Condition.HighestResearchLevel:
+        return Math.max(...Object.values(this.data.research));
+      case Condition.Culture:
+        return this.cultureLevel();
     }
 
     return 0;
@@ -737,17 +843,19 @@ export default class Player extends EventEmitter {
 
   cultureLevel() {
     // Buildings including space stations
-    const buildings = sum(this.data.occupied.map(hex => this.buildingValue(hex, {federation: true})));
+    const buildings = sum(this.data.occupied.map((hex) => this.buildingValue(hex, { federation: true })));
     // Two satellites = 1pw
     const satellites = Math.floor(this.data.satellites / 2);
     // Federation tiles
     const federations = this.data.tiles.federations.length * 3;
     // Spaceship income
-    const ships = (Reward.parse(this.income).find(rew => rew.type === Resource.SpaceShip) || new Reward('~')).count;
+    const ships = (Reward.parse(this.income).find((rew) => rew.type === Resource.SpaceShip) || new Reward("~")).count;
     // Gaia formers
     const gaiaFormers = this.data.gaiaformers;
     // Highest level or Adv Tech
-    const advanced = Object.values(this.data.research).filter(val => val === 5).length + this.data.tiles.techs.filter(tech => isAdvanced(tech.pos)).length;
+    const advanced =
+      Object.values(this.data.research).filter((val) => val === 5).length +
+      this.data.tiles.techs.filter((tech) => isAdvanced(tech.pos)).length;
 
     return buildings + satellites + federations + ships + gaiaFormers + advanced;
   }
@@ -758,7 +866,7 @@ export default class Player extends EventEmitter {
 
     if (this.federationCache) {
       if (maxSatellites <= this.federationCache.availableSatellites) {
-        return this.federationCache.federations.filter(fed => fed.satellites <= maxSatellites);
+        return this.federationCache.federations.filter((fed) => fed.satellites <= maxSatellites);
       } else {
         // Only try federations with building combinations not in federationCache.federations
       }
@@ -766,11 +874,13 @@ export default class Player extends EventEmitter {
 
     const excluded = map.excludedHexesForBuildingFederation(this.player, this.faction);
 
-    const hexes = this.data.occupied.filter(hex => !excluded.has(hex));
+    const hexes = this.data.occupied.filter((hex) => !excluded.has(hex));
 
     const buildingGroups = this.buildingGroups(hexes, map);
     const buildingGroupsList = uniq([...buildingGroups.values()]);
-    const values = buildingGroupsList.map(buildings => sum(buildings.map(node => this.buildingValue(node, {federation: true}))));
+    const values = buildingGroupsList.map((buildings) =>
+      sum(buildings.map((node) => this.buildingValue(node, { federation: true })))
+    );
 
     // The current algorithm is not all-knowing, so in some cases we allow player to generate their own federation
     if (values.length >= 6 && maxSatellites >= 8) {
@@ -781,11 +891,15 @@ export default class Player extends EventEmitter {
       }
     }
 
-    let combinations = this.possibleCombinationsForFederations(zipWith(buildingGroupsList, values, (val1, val2) => ({hexes: val1, value: val2})));
+    let combinations = this.possibleCombinationsForFederations(
+      zipWith(buildingGroupsList, values, (val1, val2) => ({ hexes: val1, value: val2 }))
+    );
 
     // Ivits can only expand their first federation
     if (this.faction === Faction.Ivits && this.data.federationCount > 0) {
-      combinations = combinations.filter(combination => combination.some(hexList => hexList[0].belongsToFederationOf(this.player)));
+      combinations = combinations.filter((combination) =>
+        combination.some((hexList) => hexList[0].belongsToFederationOf(this.player))
+      );
     }
 
     // We now have several combinations of buildings that can form federations
@@ -802,19 +916,35 @@ export default class Player extends EventEmitter {
       //
       // Because of this second constraint, we do avoid some valid possibilites.
       // However, those possibilites are explored in another combination
-      const flexibleExcluded: Set<GaiaHex> = new Set([].concat(...this.data.occupied.map(hex => buildingsInDestGroups.has(hex) ? [] : [hex, ...map.grid.neighbours(hex)])));
-      const allHexes = [...map.grid.values()].filter(hex => !excluded.has(hex) && (!flexible || !flexibleExcluded.has(hex)));
-      const workingGrid = new Grid<Hex<{cost: number}>>(...allHexes.map(hex => new Hex(hex.q, hex.r, {cost: occupiedSet.has(hex) ? 0 : 1})));
-      const convertedDestGroups = destGroups.map(destGroup => destGroup.map(hex => workingGrid.get(hex)));
-      let tree = spanningTree(convertedDestGroups, workingGrid, maxSatellites, "heuristic", hex => hex.data.cost);
+      const flexibleExcluded: Set<GaiaHex> = new Set(
+        [].concat(
+          ...this.data.occupied.map((hex) => (buildingsInDestGroups.has(hex) ? [] : [hex, ...map.grid.neighbours(hex)]))
+        )
+      );
+      const allHexes = [...map.grid.values()].filter(
+        (hex) => !excluded.has(hex) && (!flexible || !flexibleExcluded.has(hex))
+      );
+      const workingGrid = new Grid<Hex<{ cost: number }>>(
+        ...allHexes.map((hex) => new Hex(hex.q, hex.r, { cost: occupiedSet.has(hex) ? 0 : 1 }))
+      );
+      const convertedDestGroups = destGroups.map((destGroup) => destGroup.map((hex) => workingGrid.get(hex)));
+      let tree = spanningTree(convertedDestGroups, workingGrid, maxSatellites, "heuristic", (hex) => hex.data.cost);
 
       if (tree && !flexible && flexibleExcluded.size > 0) {
         // In non flexible mode, we still try to suggest federations without extra planets, as long
         // as they don't add additional satellites
-        const allHexes = [...map.grid.values()].filter(hex => !excluded.has(hex) && !flexibleExcluded.has(hex));
-        const workingGrid = new Grid<Hex<{cost: number}>>(...allHexes.map(hex => new Hex(hex.q, hex.r, {cost: occupiedSet.has(hex) ? 0 : 1})));
-        const convertedDestGroups = destGroups.map(destGroup => destGroup.map(hex => workingGrid.get(hex)));
-        const treeWithoutOtherPlanets = spanningTree(convertedDestGroups, workingGrid, maxSatellites, "heuristic", hex => hex.data.cost);
+        const allHexes = [...map.grid.values()].filter((hex) => !excluded.has(hex) && !flexibleExcluded.has(hex));
+        const workingGrid = new Grid<Hex<{ cost: number }>>(
+          ...allHexes.map((hex) => new Hex(hex.q, hex.r, { cost: occupiedSet.has(hex) ? 0 : 1 }))
+        );
+        const convertedDestGroups = destGroups.map((destGroup) => destGroup.map((hex) => workingGrid.get(hex)));
+        const treeWithoutOtherPlanets = spanningTree(
+          convertedDestGroups,
+          workingGrid,
+          maxSatellites,
+          "heuristic",
+          (hex) => hex.data.cost
+        );
 
         if (treeWithoutOtherPlanets && treeWithoutOtherPlanets.cost <= tree.cost) {
           tree = treeWithoutOtherPlanets;
@@ -823,18 +953,29 @@ export default class Player extends EventEmitter {
 
       if (tree) {
         // Convert from regular hex to gaia hex of grid
-        federations.push(this.addAdjacentBuildings(tree.path.map(hex => map.grid.get(hex)), map));
+        federations.push(
+          this.addAdjacentBuildings(
+            tree.path.map((hex) => map.grid.get(hex)),
+            map
+          )
+        );
       }
     }
 
     const uniqFederations = uniqWith(federations, (fed1, fed2) => {
-      const fed1coords = fed1.map(x => x.toString()).sort().join(',');
-      const fed2coords = fed2.map(x => x.toString()).sort().join(',');
+      const fed1coords = fed1
+        .map((x) => x.toString())
+        .sort()
+        .join(",");
+      const fed2coords = fed2
+        .map((x) => x.toString())
+        .sort()
+        .join(",");
 
       return fed1coords === fed2coords;
     });
 
-    const fedsWithInfo: FederationInfo[] = uniqFederations.map(federation => this.federationInfo(federation));
+    const fedsWithInfo: FederationInfo[] = uniqFederations.map((federation) => this.federationInfo(federation));
 
     // Remove federations with one more planet & one more satellite
     // Also remove federations containing another
@@ -848,12 +989,12 @@ export default class Player extends EventEmitter {
       }
     }
 
-    const feds = difference(fedsWithInfo, toRemove).filter(fed => fed.satellites <= maxSatellites);
+    const feds = difference(fedsWithInfo, toRemove).filter((fed) => fed.satellites <= maxSatellites);
 
     this.federationCache = {
       availableSatellites: maxSatellites,
       federations: feds,
-      custom
+      custom,
     };
 
     return feds;
@@ -874,13 +1015,13 @@ export default class Player extends EventEmitter {
 
   federationInfo(federation: GaiaHex[]): FederationInfo {
     // Be careful of Ivits & space stations for nSatellites!
-    const satellites = federation.filter(hex => !hex.occupyingPlayers()?.includes(this.player));
-    const nPlanets = federation.filter(hex => hex.colonizedBy(this.player)).length;
+    const satellites = federation.filter((hex) => !hex.occupyingPlayers()?.includes(this.player));
+    const nPlanets = federation.filter((hex) => hex.colonizedBy(this.player)).length;
 
     return {
       hexes: federation,
       satellites: satellites.length,
-      planets: nPlanets
+      planets: nPlanets,
     };
   }
 
@@ -893,7 +1034,10 @@ export default class Player extends EventEmitter {
       }
       hex.addToFederationOf(this.player);
     }
-    this.payCosts([new Reward(newSatellites, this.faction === Faction.Ivits ? Resource.Qic : Resource.GainToken)], Command.FormFederation);
+    this.payCosts(
+      [new Reward(newSatellites, this.faction === Faction.Ivits ? Resource.Qic : Resource.GainToken)],
+      Command.FormFederation
+    );
     this.data.satellites += newSatellites;
     this.gainFederationToken(token);
     this.data.federationCount += 1;
@@ -901,17 +1045,17 @@ export default class Player extends EventEmitter {
   }
 
   checkAndGetFederationInfo(location: string, map: SpaceMap, flexible: boolean): FederationInfo {
-    const coords = location.split(',').map(loc => map.parse(loc));
+    const coords = location.split(",").map((loc) => map.parse(loc));
 
     for (const coord of coords) {
       assert(map.grid.get(coord), `Coord ${coord.q}x${coord.r} is not part of the map`);
     }
 
-    assert (coords.length <= 30, "The federation is too big, it is impossible to build with only 23 satellites");
+    assert(coords.length <= 30, "The federation is too big, it is impossible to build with only 23 satellites");
 
-    let hexes: GaiaHex[] = uniq(coords.map(coord => map.grid.get(coord)));
+    let hexes: GaiaHex[] = uniq(coords.map((coord) => map.grid.get(coord)));
 
-    assert (hexes.length === coords.length, "There are repeating coordinates in the given federation");
+    assert(hexes.length === coords.length, "There are repeating coordinates in the given federation");
 
     // Extend to nearby buidlings
     hexes = this.addAdjacentBuildings(hexes, map);
@@ -919,44 +1063,67 @@ export default class Player extends EventEmitter {
     // Check if no forbidden square
     const excluded = map.excludedHexesForBuildingFederation(this.player, this.faction);
     for (const hex of hexes) {
-      assert (!excluded.has(hex), `${hex.toString()} can't be part of a new federation`);
+      assert(!excluded.has(hex), `${hex.toString()} can't be part of a new federation`);
     }
 
     // Check if all the buildings are in one group
-    assert(map.grid.groups(hexes).length === 1, 'The hexes of the federation must be adjacent');
+    assert(map.grid.groups(hexes).length === 1, "The hexes of the federation must be adjacent");
 
     // Get the power value of the buildings
-    const powerValue = sum(hexes.map(hex => this.buildingValue(hex, {federation: true})));
-    assert(powerValue >= this.federationCost, "Your buildings need to have a total value of at least " + this.federationCost);
+    const powerValue = sum(hexes.map((hex) => this.buildingValue(hex, { federation: true })));
+    assert(
+      powerValue >= this.federationCost,
+      "Your buildings need to have a total value of at least " + this.federationCost
+    );
 
     const info = this.federationInfo(hexes);
 
     // Check if outclassed by available federations
     const available = this.availableFederations(map, flexible);
-    const outclasser = available.find(fed => isOutclassedBy(info, fed));
+    const outclasser = available.find((fed) => isOutclassedBy(info, fed));
 
-    assert(!outclasser, "Federation is outclassed by other federation at " + (outclasser?.hexes ?? []).join(','));
+    assert(!outclasser, "Federation is outclassed by other federation at " + (outclasser?.hexes ?? []).join(","));
 
     // Check if federation can be built with less satellites
     if (!flexible) {
-      const allHexes = [...map.grid.values()].filter(hex => !excluded.has(hex));
+      const allHexes = [...map.grid.values()].filter((hex) => !excluded.has(hex));
 
       const occupiedSet = new Set(this.data.occupied);
-      const workingGrid = new Grid<Hex<{cost: number}>>(...allHexes.map(hex => new Hex(hex.q, hex.r, {cost: occupiedSet.has(hex) ? 0 : 1})));
-      const allGroups = [...this.buildingGroups(hexes.filter(hx => hx.belongsToFederationOf(this.player) || this.buildingValue(hx, {federation: true}) > 0), map).values()];
+      const workingGrid = new Grid<Hex<{ cost: number }>>(
+        ...allHexes.map((hex) => new Hex(hex.q, hex.r, { cost: occupiedSet.has(hex) ? 0 : 1 }))
+      );
+      const allGroups = [
+        ...this.buildingGroups(
+          hexes.filter(
+            (hx) => hx.belongsToFederationOf(this.player) || this.buildingValue(hx, { federation: true }) > 0
+          ),
+          map
+        ).values(),
+      ];
       const groups: GaiaHex[][] = uniq(allGroups);
-      const convertedDestGroups = groups.map(destGroup => destGroup.map(hex => workingGrid.get(hex)));
+      const convertedDestGroups = groups.map((destGroup) => destGroup.map((hex) => workingGrid.get(hex)));
 
-      const tree = spanningTree(convertedDestGroups, workingGrid, info.satellites, "heuristic", hex => hex.data.cost);
+      const tree = spanningTree(convertedDestGroups, workingGrid, info.satellites, "heuristic", (hex) => hex.data.cost);
 
       if (tree) {
-        const smallFederation = this.addAdjacentBuildings(tree.path.map(hex => map.grid.get(hex)), map);
+        const smallFederation = this.addAdjacentBuildings(
+          tree.path.map((hex) => map.grid.get(hex)),
+          map
+        );
         const info2 = this.federationInfo(smallFederation);
-        assert(info2.satellites >= info.satellites, "The federation can be built with less satellites, for example: " + tree.path.join(","));
+        assert(
+          info2.satellites >= info.satellites,
+          "The federation can be built with less satellites, for example: " + tree.path.join(",")
+        );
       }
     }
 
-    assert (this.faction !== Faction.Ivits || this.data.federationCount === 0 || hexes.some(hex => hex.belongsToFederationOf(this.player)), "Ivits must extend their first federation");
+    assert(
+      this.faction !== Faction.Ivits ||
+        this.data.federationCount === 0 ||
+        hexes.some((hex) => hex.belongsToFederationOf(this.player)),
+      "Ivits must extend their first federation"
+    );
 
     return info;
   }
@@ -971,10 +1138,13 @@ export default class Player extends EventEmitter {
     return 7;
   }
 
-  possibleCombinationsForFederations(nodes: Array<{hexes: GaiaHex[]; value: number}>, toReach = this.federationCost): GaiaHex[][][] {
+  possibleCombinationsForFederations(
+    nodes: Array<{ hexes: GaiaHex[]; value: number }>,
+    toReach = this.federationCost
+  ): GaiaHex[][][] {
     const ret: GaiaHex[][][] = [];
 
-    for (let i = 0; i < nodes.length; i ++) {
+    for (let i = 0; i < nodes.length; i++) {
       if (nodes[i].value === 0) {
         continue;
       }
@@ -1012,10 +1182,13 @@ export default class Player extends EventEmitter {
   buildingGroup(hex: GaiaHex, map: SpaceMap): GaiaHex[] {
     const ret = [];
 
-    const addHex = hx => {
+    const addHex = (hx) => {
       ret.push(hx);
       for (const hx2 of map.grid.neighbours(hx)) {
-        if (!ret.includes(hx2) && (hx2.belongsToFederationOf(this.player) || this.buildingValue(hx2, {federation: true})) > 0) {
+        if (
+          !ret.includes(hx2) &&
+          (hx2.belongsToFederationOf(this.player) || this.buildingValue(hx2, { federation: true })) > 0
+        ) {
           addHex(hx2);
         }
       }
@@ -1026,7 +1199,7 @@ export default class Player extends EventEmitter {
   }
 
   addAdjacentBuildings(hexes: GaiaHex[], map: SpaceMap): GaiaHex[] {
-    return uniq([].concat(...hexes.map(hex => this.buildingGroup(hex, map))));
+    return uniq([].concat(...hexes.map((hex) => this.buildingGroup(hex, map))));
   }
 
   /**

@@ -1,33 +1,37 @@
-import {expect} from "chai";
+import { expect } from "chai";
 import Engine from "./engine";
 import { Command } from "./enums";
 
 describe("Federations", () => {
-  it("should show the 21 options with flexible federation rules", function() {
+  it("should show the 21 options with flexible federation rules", function () {
     this.timeout(10000);
-    const engine = new Engine(game(), {flexibleFederations: true});
+    const engine = new Engine(game(), { flexibleFederations: true });
 
-    expect(engine.findAvailableCommand(engine.playerToMove, Command.FormFederation).data.federations).to.have.length(21);
+    expect(engine.findAvailableCommand(engine.playerToMove, Command.FormFederation).data.federations).to.have.length(
+      21
+    );
   });
 
-  it("should show 9 options with regular federation rules", function() {
+  it("should show 9 options with regular federation rules", function () {
     this.timeout(30000);
     const engine = new Engine(game());
 
     expect(engine.findAvailableCommand(engine.playerToMove, Command.FormFederation).data.federations).to.have.length(9);
 
     // This extra long federation should not work
-    expect(() => engine.move('gleens federation 0x1,0x0,0x-1,-1x-1,-1x-2,-1x-3,-2x-3,-3x-2,-3x-1,-3x0,-1x1,-2x2 fed6.')).to.throw();
+    expect(() =>
+      engine.move("gleens federation 0x1,0x0,0x-1,-1x-1,-1x-2,-1x-3,-2x-3,-3x-2,-3x-1,-3x0,-1x1,-2x2 fed6.")
+    ).to.throw();
   });
 
-  it("should not allow unnecessary mines if there's a PI and AC with 4pw each", function() {
+  it("should not allow unnecessary mines if there's a PI and AC with 4pw each", function () {
     this.timeout(10000);
     const engine = new Engine(game2.moveHistory, game2.options);
 
-    expect(() => engine.move('ambas federation -2x3,-2x2,-1x1,0x0 fed3.')).to.throw();
+    expect(() => engine.move("ambas federation -2x3,-2x2,-1x1,0x0 fed3.")).to.throw();
   });
 
-  it("should force to add a mine to the federation if it means less satellites", function() {
+  it("should force to add a mine to the federation if it means less satellites", function () {
     this.timeout(10000);
 
     const engine = new Engine(game3.moveHistory, game3.options);
@@ -35,18 +39,19 @@ describe("Federations", () => {
     expect(() => engine.move("xenos federation 5B3,5C,5A11,3A5,3B2,3B1 fed1.")).to.not.throw();
   });
 
-  it("should show a federation with only 6 satellites", function() {
+  it("should show a federation with only 6 satellites", function () {
     this.timeout(10000);
 
-    const engine = new Engine(game4.moveHistory, {advancedRules: true, auction: true});
+    const engine = new Engine(game4.moveHistory, { advancedRules: true, auction: true });
 
     engine.generateAvailableCommandsIfNeeded();
 
-    expect(engine.availableCommands.some(command => command.name === Command.FormFederation)).to.be.true;
+    expect(engine.availableCommands.some((command) => command.name === Command.FormFederation)).to.be.true;
   });
 });
 
-const game = () => Engine.parseMoves(`
+const game = () =>
+  Engine.parseMoves(`
 init 4 GaiaRocks
 p1 faction nevlas
 p2 faction hadsch-hallas
@@ -323,8 +328,8 @@ const game2 = {
           center: {
             q: 0,
             r: 0,
-            s: 0
-          }
+            s: 0,
+          },
         },
         {
           sector: "6B",
@@ -332,8 +337,8 @@ const game2 = {
           center: {
             q: 5,
             r: -2,
-            s: -3
-          }
+            s: -3,
+          },
         },
         {
           sector: "2",
@@ -341,8 +346,8 @@ const game2 = {
           center: {
             q: 2,
             r: 3,
-            s: -5
-          }
+            s: -5,
+          },
         },
         {
           sector: "7B",
@@ -350,8 +355,8 @@ const game2 = {
           center: {
             q: -3,
             r: 5,
-            s: -2
-          }
+            s: -2,
+          },
         },
         {
           sector: "4",
@@ -359,8 +364,8 @@ const game2 = {
           center: {
             q: -5,
             r: 2,
-            s: 3
-          }
+            s: 3,
+          },
         },
         {
           sector: "3",
@@ -368,8 +373,8 @@ const game2 = {
           center: {
             q: -2,
             r: -3,
-            s: 5
-          }
+            s: 5,
+          },
         },
         {
           sector: "1",
@@ -377,11 +382,11 @@ const game2 = {
           center: {
             q: 3,
             r: -5,
-            s: 2
-          }
-        }
+            s: 2,
+          },
+        },
       ],
-    }
+    },
   },
 
   moveHistory: [
@@ -472,8 +477,8 @@ const game2 = {
     "ivits federation -1x2,-2x2,-3x1,-3x2,-4x1,-5x1,-5x2,-6x3,0x2,1x2 fed5.",
     "ambas build ac1 -3x4. tech int. up int.",
     "ivits charge 2pw",
-    "ivits spend 1pw for 1c. special 3o."
-  ]
+    "ivits spend 1pw for 1c. special 3o.",
+  ],
 };
 
 const game3 = {
@@ -591,54 +596,54 @@ const game3 = {
     "baltaks up eco.",
     "ambas up sci.",
     "itars build m 5A0.",
-    "xenos charge 1pw"
+    "xenos charge 1pw",
   ],
   options: {
-    "map" : {
-      "sectors" : [
+    map: {
+      sectors: [
         {
-          "sector" : "1",
-          "rotation" : 4
+          sector: "1",
+          rotation: 4,
         },
         {
-          "sector" : "3",
-          "rotation" : 4
+          sector: "3",
+          rotation: 4,
         },
         {
-          "sector" : "10",
-          "rotation" : 5
+          sector: "10",
+          rotation: 5,
         },
         {
-          "sector" : "2",
-          "rotation" : 0
+          sector: "2",
+          rotation: 0,
         },
         {
-          "sector" : "7A",
-          "rotation" : 0
+          sector: "7A",
+          rotation: 0,
         },
         {
-          "sector" : "5A",
-          "rotation" : 0
+          sector: "5A",
+          rotation: 0,
         },
         {
-          "sector" : "6A",
-          "rotation" : 0
+          sector: "6A",
+          rotation: 0,
         },
         {
-          "sector" : "9",
-          "rotation" : 5
+          sector: "9",
+          rotation: 5,
         },
         {
-          "sector" : "4",
-          "rotation" : 4
+          sector: "4",
+          rotation: 4,
         },
         {
-          "sector" : "8",
-          "rotation" : 3
-        }
-      ]
-    }
-  }
+          sector: "8",
+          rotation: 3,
+        },
+      ],
+    },
+  },
 };
 
 const game4 = {
@@ -977,5 +982,5 @@ gleens charge 1pw
 itars spend 2q for 2o. build m 6A1. spend 1o for 1t.
 ivits pass
 firaks spend 4pw for 1k. federation 1A4,1B2,2A0,2A2,2B0,2B1,2B2,2B5 fed6.
-  `)
+  `),
 };

@@ -32,11 +32,15 @@ export function isOutclassedBy(fed: FederationInfo, comparison: FederationInfo) 
   // We check if the federations share the same planets.
   // If so, and fed has more satellites, then fed is invalid
   // because it can be built with less satellites
-  const fedPlanets = fed.hexes.filter(hex => hex.hasPlanet());
-  const compPlanets = comparison.hexes.filter(hex => hex.hasPlanet());
+  const fedPlanets = fed.hexes.filter((hex) => hex.hasPlanet());
+  const compPlanets = comparison.hexes.filter((hex) => hex.hasPlanet());
 
   // Comp buildings included in fed buildings, & one more planet & one more satellite
-  if (fed.planets > comparison.planets && fed.satellites > comparison.satellites && difference(compPlanets, fedPlanets).length === 0) {
+  if (
+    fed.planets > comparison.planets &&
+    fed.satellites > comparison.satellites &&
+    difference(compPlanets, fedPlanets).length === 0
+  ) {
     return true;
   }
 

@@ -1,11 +1,11 @@
 import { expect } from "chai";
 import Engine from "../engine";
-import { Player, Command } from '../enums';
+import { Player, Command } from "../enums";
 
 const parseMoves = Engine.parseMoves;
 
-describe('Ivits', () => {
-  it ("should be able to place a space station and use it as a starting point to build a mine", () => {
+describe("Ivits", () => {
+  it("should be able to place a space station and use it as a starting point to build a mine", () => {
     const moves = parseMoves(`
       init 2 randomSeed2
       p1 faction ivits
@@ -21,10 +21,10 @@ describe('Ivits', () => {
       p1 build m -1x-4
     `);
 
-    expect (() => new Engine(moves)).to.not.throw();
+    expect(() => new Engine(moves)).to.not.throw();
   });
 
-  it ("spacestation is not discounting upgrade cost for others", () => {
+  it("spacestation is not discounting upgrade cost for others", () => {
     const moves = parseMoves(`
       init 2 curious-stay-2150
       p1 faction nevlas
@@ -63,7 +63,7 @@ describe('Ivits', () => {
     expect(engine.player(Player.Player1).data.credits).to.equal(credits - 6);
   });
 
-  it ("should be able to build a federation using a space station and qic", () => {
+  it("should be able to build a federation using a space station and qic", () => {
     const moves = parseMoves(`
       init 2 randomSeed2
       p1 faction ivits
@@ -101,7 +101,7 @@ describe('Ivits', () => {
     expect(engine.player(Player.Player1).data.qics).to.equal(qic - 1 + 1);
   });
 
-  it ("should be able to build a federation using using PA->4pw", () => {
+  it("should be able to build a federation using using PA->4pw", () => {
     const moves = parseMoves(`
       init 2 waiting-fabs-1
       p1 faction baltaks
@@ -202,7 +202,7 @@ describe('Ivits', () => {
   });
 
   it("should have 1q after forming this federation", () => {
-    const engine = new Engine(almostFullGame.slice(0, -1), {advancedRules: true, noFedCheck: true});
+    const engine = new Engine(almostFullGame.slice(0, -1), { advancedRules: true, noFedCheck: true });
 
     engine.options.noFedCheck = false;
 
@@ -212,30 +212,35 @@ describe('Ivits', () => {
   });
 
   it("should place PI last even with auction", () => {
-      const engine = new Engine([
-      "init 3 Pink-visit-2792",
-      "p1 faction ivits",
-      "p2 faction terrans",
-      "p3 faction gleens",
-      "p1 bid ivits 8",
-      "p2 bid ivits 11",
-      "p3 bid terrans 2",
-      "p1 bid gleens 0"
-    ], {auction: true, map: {
-        sectors: [
-          {sector: "9",rotation: 0},
-          {sector: "6A", rotation: 4},
-          {sector: "2", rotation: 5},
-          {sector: "3", rotation: 3},
-          {sector: "1", rotation: 5},
-          {sector: "5A", rotation: 5},
-          {sector: "8", rotation: 5},
-          {sector: "4", rotation: 4},
-          {sector: "7A", rotation: 2},
-          {sector: "10", rotation: 4}
-        ]
+    const engine = new Engine(
+      [
+        "init 3 Pink-visit-2792",
+        "p1 faction ivits",
+        "p2 faction terrans",
+        "p3 faction gleens",
+        "p1 bid ivits 8",
+        "p2 bid ivits 11",
+        "p3 bid terrans 2",
+        "p1 bid gleens 0",
+      ],
+      {
+        auction: true,
+        map: {
+          sectors: [
+            { sector: "9", rotation: 0 },
+            { sector: "6A", rotation: 4 },
+            { sector: "2", rotation: 5 },
+            { sector: "3", rotation: 3 },
+            { sector: "1", rotation: 5 },
+            { sector: "5A", rotation: 5 },
+            { sector: "8", rotation: 5 },
+            { sector: "4", rotation: 4 },
+            { sector: "7A", rotation: 2 },
+            { sector: "10", rotation: 4 },
+          ],
+        },
       }
-    });
+    );
 
     expect(() => engine.move("ivits build PI -6x3")).to.throw();
     expect(() => engine.move("gleens build m -5x7")).to.throw();

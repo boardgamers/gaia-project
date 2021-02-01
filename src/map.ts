@@ -1,39 +1,52 @@
-import {Grid, Hex, CubeCoordinates} from "hexagrid";
+import { Grid, Hex, CubeCoordinates } from "hexagrid";
 import seedrandom from "seedrandom";
 import shuffleSeed from "shuffle-seed";
-import assert from 'assert';
-import { keyBy } from 'lodash';
+import assert from "assert";
+import { keyBy } from "lodash";
 import Sector from "./sector";
 import { Player, Planet, Faction } from "./enums";
 import { GaiaHex, reverseSuffixes } from "./gaia-hex";
 import { EngineOptions } from "./engine";
 
 // Data: from outer ring to inside ring, starting from top
-const s1 = {name: "1", map: "eeemevoeedee,ereees,e".replace(/,/g, "")};
-const s2 = {name: "2", map: "teedemeoeeev,eieese,e".replace(/,/g, "")};
-const s3 = {name: "3", map: "meeteedreeee,eeieeg,e".replace(/,/g, "")};
-const s4 = {name: "4", map: "teeereeeeiee,oeseve,e".replace(/,/g, "")};
-const s5 = {name: "5A", map: "iemoeedveeee,eeeeeg,e".replace(/,/g, "")};
-const s5b = {name: "5B", map: "iemoeeeveeee,eeeeeg,e".replace(/,/g, "")};
-const s6 = {name: "6A", map: "emeedmeeeeee,ereges,e".replace(/,/g, "")};
-const s6b = {name: "6B", map: "emeedmeeeeee,eregee,e".replace(/,/g, "")};
-const s7 = {name: "7A", map: "eseeeeteeeme,oegege,e".replace(/,/g, "")};
-const s7b = {name: "7B", map: "eeeeeeteeeme,gesege,e".replace(/,/g, "")};
-const s8 = {name: "8", map: "remeeeemeeee,ieteve,e".replace(/,/g, "")};
-const s9 = {name: "9", map: "emieeeeeseev,eegete,e".replace(/,/g, "")};
-const s10 = {name: "10", map: "emmeeeeoreee,eegeed,e".replace(/,/g, "")};
+const s1 = { name: "1", map: "eeemevoeedee,ereees,e".replace(/,/g, "") };
+const s2 = { name: "2", map: "teedemeoeeev,eieese,e".replace(/,/g, "") };
+const s3 = { name: "3", map: "meeteedreeee,eeieeg,e".replace(/,/g, "") };
+const s4 = { name: "4", map: "teeereeeeiee,oeseve,e".replace(/,/g, "") };
+const s5 = { name: "5A", map: "iemoeedveeee,eeeeeg,e".replace(/,/g, "") };
+const s5b = { name: "5B", map: "iemoeeeveeee,eeeeeg,e".replace(/,/g, "") };
+const s6 = { name: "6A", map: "emeedmeeeeee,ereges,e".replace(/,/g, "") };
+const s6b = { name: "6B", map: "emeedmeeeeee,eregee,e".replace(/,/g, "") };
+const s7 = { name: "7A", map: "eseeeeteeeme,oegege,e".replace(/,/g, "") };
+const s7b = { name: "7B", map: "eeeeeeteeeme,gesege,e".replace(/,/g, "") };
+const s8 = { name: "8", map: "remeeeemeeee,ieteve,e".replace(/,/g, "") };
+const s9 = { name: "9", map: "emieeeeeseev,eegete,e".replace(/,/g, "") };
+const s10 = { name: "10", map: "emmeeeeoreee,eegeed,e".replace(/,/g, "") };
 
 const sectors = keyBy([s1, s2, s3, s4, s5, s5b, s6, s6b, s7, s7b, s8, s9, s10], "name");
 // Due to legacy issues
 
 const reverseSide = (side: string) => {
-  return side[0] + side.slice(1, 12).split("").reverse().join("") + side[12] + side.slice(13, 18).split("").reverse().join("") + side[18];
+  return (
+    side[0] +
+    side.slice(1, 12).split("").reverse().join("") +
+    side[12] +
+    side.slice(13, 18).split("").reverse().join("") +
+    side[18]
+  );
 };
 
-const rSectors = keyBy([s1, s2, s3, s4, s5, s5b, s6, s6b, s7, s7b, s8, s9, s10].map(s => ({name: s.name, map: reverseSide(s.map)})), "name");
+const rSectors = keyBy(
+  [s1, s2, s3, s4, s5, s5b, s6, s6b, s7, s7b, s8, s9, s10].map((s) => ({ name: s.name, map: reverseSide(s.map) })),
+  "name"
+);
 
-const smallCenters = ["5x-2", "2x3", "3x-5", "0x0", "-3x5", "-2x-3", "-5x2"].map(coord => CubeCoordinates.parse(coord));
-const bigCenters = ["5x-2", "2x3", "-1x8", "3x-5", "0x0", "-3x5", "-6x10", "-2x-3", "-5x2", "-8x7"].map(coord => CubeCoordinates.parse(coord));
+const smallCenters = ["5x-2", "2x3", "3x-5", "0x0", "-3x5", "-2x-3", "-5x2"].map((coord) =>
+  CubeCoordinates.parse(coord)
+);
+const bigCenters = ["5x-2", "2x3", "-1x8", "3x-5", "0x0", "-3x5", "-6x10", "-2x-3", "-5x2", "-8x7"].map((coord) =>
+  CubeCoordinates.parse(coord)
+);
 
 export interface SectorInMapConfiguration {
   sector: string;
@@ -50,19 +63,19 @@ export interface MapConfiguration {
 const smallConfiguration = {
   sectors: [s1, s2, s3, s4, s5b, s6b, s7b],
   nbSectors: 7,
-  centers: [{q: 0, r: 0, s: 0}]
+  centers: [{ q: 0, r: 0, s: 0 }],
 };
 
 const bigConfiguration = {
   sectors: [s1, s2, s3, s4, s5, s6, s7, s8, s9, s10],
   nbSectors: 10,
-  centers: [{q: 0, r: 0, s: 0}]
+  centers: [{ q: 0, r: 0, s: 0 }],
 };
 
 const xConfiguration = {
   sectors: [s1, s2, s3, s4, s5, s6, s7, s8],
   nbSectors: 8,
-  centers: [{q: 0, r: 0, s: 0}]
+  centers: [{ q: 0, r: 0, s: 0 }],
 };
 
 // Centers of the small configuration
@@ -81,7 +94,7 @@ xConfiguration.centers.splice(xConfiguration.centers.length - 1);
 // Big configuration: add 3 more
 for (let i = -1; i <= 1; i++) {
   const hex = new Hex(-6, 10);
-  hex.rotateRight(i, {q: -3, r: 5, s: -2});
+  hex.rotateRight(i, { q: -3, r: 5, s: -2 });
   bigConfiguration.centers.push(hex);
 
   if (i !== 0) {
@@ -93,16 +106,16 @@ export default class SpaceMap {
   rng: seedrandom.prng;
   nbPlayers: number;
   seed: string;
-  layout: EngineOptions['layout'];
+  layout: EngineOptions["layout"];
 
   /**
    * Simple array listing sectors and how they are placed. Allows to reconstruct the map with little data
    */
   placement?: MapConfiguration;
   grid: Grid<GaiaHex>; // hexagrid
-  distanceCache: {[coord: string]: {[coord: string]: number}} = {};
+  distanceCache: { [coord: string]: { [coord: string]: number } } = {};
 
-  constructor(nbPlayers?: number, seed?: string, mirror?: boolean, layout: EngineOptions['layout'] = 'standard') {
+  constructor(nbPlayers?: number, seed?: string, mirror?: boolean, layout: EngineOptions["layout"] = "standard") {
     if (nbPlayers === undefined) {
       return;
     }
@@ -113,7 +126,15 @@ export default class SpaceMap {
     this.layout = layout;
 
     // Keep tests valid even under new map generation rules
-    const germanRules = !["Gianluigi-Buffon", "randomSeed", "12", "9876", "yellow-paint-8951", "green-jeans-8458", "Fastgame01"].includes(seed);
+    const germanRules = ![
+      "Gianluigi-Buffon",
+      "randomSeed",
+      "12",
+      "9876",
+      "yellow-paint-8951",
+      "green-jeans-8458",
+      "Fastgame01",
+    ].includes(seed);
     do {
       this.generate(mirror);
     } while (!this.isValid(germanRules));
@@ -123,10 +144,32 @@ export default class SpaceMap {
     const centers = conf.sectors.length === 7 ? smallCenters : bigCenters;
 
     // Legacy map generation, to keep old tests valid
-    const oldGen = ["Gianluigi-Buffon", "randomSeed", "12", "9876", "yellow-paint-8951", "green-jeans-8458", "Fastgame01", "zadbd", "bosco-marcuzzo3", "Alex-Del-Pieroooooo", "SGAMBATA", "djfjjv4k", "randomSeed2", "randomseed", "polite-food-8474", "green-jeans-8458", "waiting-fabs-1", "curious-stay-2150", "Three", "GaiaRocks", "SalmurOnTheBoard"].includes(this.seed);
+    const oldGen = [
+      "Gianluigi-Buffon",
+      "randomSeed",
+      "12",
+      "9876",
+      "yellow-paint-8951",
+      "green-jeans-8458",
+      "Fastgame01",
+      "zadbd",
+      "bosco-marcuzzo3",
+      "Alex-Del-Pieroooooo",
+      "SGAMBATA",
+      "djfjjv4k",
+      "randomSeed2",
+      "randomseed",
+      "polite-food-8474",
+      "green-jeans-8458",
+      "waiting-fabs-1",
+      "curious-stay-2150",
+      "Three",
+      "GaiaRocks",
+      "SalmurOnTheBoard",
+    ].includes(this.seed);
 
     const [hexagon, ...hexagons] = conf.sectors.map((val: SectorInMapConfiguration, i) => {
-      const def = ((conf.mirror || oldGen) ? rSectors : sectors)[val.sector].map;
+      const def = (conf.mirror || oldGen ? rSectors : sectors)[val.sector].map;
       if (!val.center) {
         val.center = centers[i];
       }
@@ -147,13 +190,22 @@ export default class SpaceMap {
       for (const nb of this.grid.neighbours(hex)) {
         if (germanRules) {
           // German rules only forbid HOME planets from being next to each other, so gaia / transdim planets are ok
-          if (hex.data.planet !== Planet.Transdim && hex.data.planet !== Planet.Empty && hex.data.planet !== Planet.Gaia && hex.data.planet === nb.data.planet) {
+          if (
+            hex.data.planet !== Planet.Transdim &&
+            hex.data.planet !== Planet.Empty &&
+            hex.data.planet !== Planet.Gaia &&
+            hex.data.planet === nb.data.planet
+          ) {
             return false;
           }
         } else {
           // English rules are kept for backwards compatibility as most of the tests are based on them
           // English rules do not allow transdim/gaia planets next to each other, German rules do
-          if (hex.data.sector !== nb.data.sector && hex.data.planet !== Planet.Empty && hex.data.planet === nb.data.planet) {
+          if (
+            hex.data.sector !== nb.data.sector &&
+            hex.data.planet !== Planet.Empty &&
+            hex.data.planet === nb.data.planet
+          ) {
             return false;
           }
         }
@@ -169,24 +221,34 @@ export default class SpaceMap {
     const definitions = this.chooseSides();
     const centers = this.configuration().centers;
 
-    this.placement = {sectors: definitions.map((side, i) => ({sector: side.name, rotation: Math.floor(this.rng() * 6), center: centers[i]})), mirror};
+    this.placement = {
+      sectors: definitions.map((side, i) => ({
+        sector: side.name,
+        rotation: Math.floor(this.rng() * 6),
+        center: centers[i],
+      })),
+      mirror,
+    };
     this.load(this.placement);
   }
 
   rotateSector(center: string, times: number) {
     const coords = this.parse(center);
 
-    assert(this.configuration().centers.some(pt => pt.q === coords.q && pt.r === coords.r), `${center} is not the center of a sector`);
+    assert(
+      this.configuration().centers.some((pt) => pt.q === coords.q && pt.r === coords.r),
+      `${center} is not the center of a sector`
+    );
 
     // Easy way to get coordinates of hexes in a sector
-    const sectorHexes = Hex.hexagon(2, {center: coords});
+    const sectorHexes = Hex.hexagon(2, { center: coords });
 
     for (const hex of sectorHexes) {
       this.grid.get(hex).rotateRight(times, coords);
     }
   }
 
-  chooseSides(): Array<{map: string; name: string}> {
+  chooseSides(): Array<{ map: string; name: string }> {
     const definitions = this.configuration().sectors;
     // Random sort of the chosen sectors, sliced
     return shuffleSeed.shuffle(definitions, this.rng()).slice(0, this.configuration().nbSectors);
@@ -199,13 +261,13 @@ export default class SpaceMap {
   static fromData(data: any) {
     const map = new SpaceMap();
 
-    map.grid = new Grid(...data.map(hex => new GaiaHex(hex.q, hex.r, hex.data)));
+    map.grid = new Grid(...data.map((hex) => new GaiaHex(hex.q, hex.r, hex.data)));
 
     return map;
   }
 
   configuration() {
-    if (this.layout === 'xshape') {
+    if (this.layout === "xshape") {
       return xConfiguration;
     }
     return SpaceMap.configuration(this.nbPlayers);
@@ -231,7 +293,7 @@ export default class SpaceMap {
   }
 
   withinDistance(center: CubeCoordinates, distance: number): GaiaHex[] {
-    const group = GaiaHex.hexagon(distance, {center});
+    const group = GaiaHex.hexagon(distance, { center });
     const ret: GaiaHex[] = [];
 
     for (const hex of group) {
@@ -289,17 +351,17 @@ export default class SpaceMap {
 
     const relative = CubeCoordinates.parse(reverseSuffixes[suffix]);
 
-    let center = this.placement!.sectors!.find(conf => conf.sector.replace(/[AB]/, '') === sector).center!;
+    let center = this.placement!.sectors!.find((conf) => conf.sector.replace(/[AB]/, "") === sector).center!;
 
     if (!center) {
-      const index = this.placement!.sectors!.findIndex(conf => conf.sector.replace(/[AB]/, '') === sector);
+      const index = this.placement!.sectors!.findIndex((conf) => conf.sector.replace(/[AB]/, "") === sector);
       center = (this.placement.sectors.length === 7 ? smallCenters : bigCenters)[index];
     }
 
     return {
       q: center.q + relative.q,
       r: center.r + relative.r,
-      s: center.s + relative.s
+      s: center.s + relative.s,
     };
   }
 
@@ -308,4 +370,4 @@ export default class SpaceMap {
   }
 }
 
-export {smallConfiguration, bigConfiguration};
+export { smallConfiguration, bigConfiguration };

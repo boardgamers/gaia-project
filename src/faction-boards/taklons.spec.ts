@@ -43,8 +43,12 @@ describe("Taklons", () => {
       p1 build ts -4x-1.
     `);
 
-    expect(new Engine([...moves, "p2 charge 1pw. brainstone area2"]).player(Player.Player2).data.brainstone).to.equal(BrainstoneArea.Area2);
-    expect(new Engine([...moves, "p2 charge 1pw. brainstone area1"]).player(Player.Player2).data.brainstone).to.equal(BrainstoneArea.Area1);
+    expect(new Engine([...moves, "p2 charge 1pw. brainstone area2"]).player(Player.Player2).data.brainstone).to.equal(
+      BrainstoneArea.Area2
+    );
+    expect(new Engine([...moves, "p2 charge 1pw. brainstone area1"]).player(Player.Player2).data.brainstone).to.equal(
+      BrainstoneArea.Area1
+    );
     expect(() => new Engine([...moves, "p2 charge 1pw. brainstone area3"])).to.throw();
   });
 

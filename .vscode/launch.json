@@ -1,32 +1,32 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Native typescript",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceRoot}/node_modules/ts-node/dist/bin.js",
-            "args": ["server.ts"],
-            "cwd": "${workspaceRoot}",
-            "protocol": "inspector"
-        },
-        {
-            "name": "Current TS File",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceRoot}/node_modules/ts-node/dist/bin.js",
-            "args": ["${relativeFile}"],
-            "cwd": "${workspaceRoot}",
-            "protocol": "inspector"
-        },
-        {
-            "name": "Current TS Test File",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
-            "args": ["-r", "ts-node/register", "${relativeFile}"],
-            "cwd": "${workspaceRoot}",
-            "protocol": "inspector"
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Native typescript",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceRoot}/node_modules/ts-node/dist/bin.js",
+      "args": ["server.ts"],
+      "cwd": "${workspaceRoot}",
+      "protocol": "inspector"
+    },
+    {
+      "name": "Current TS File",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceRoot}/node_modules/ts-node/dist/bin.js",
+      "args": ["${relativeFile}"],
+      "cwd": "${workspaceRoot}",
+      "protocol": "inspector"
+    },
+    {
+      "name": "Current TS Test File",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+      "args": ["-r", "ts-node/register", "${relativeFile}"],
+      "cwd": "${workspaceRoot}",
+      "protocol": "inspector"
+    }
+  ]
 }

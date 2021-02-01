@@ -1,7 +1,7 @@
-import SpaceMap, {MapConfiguration} from './map';
-import assert from 'assert';
-import { sortBy, uniq, sum, set } from 'lodash';
-import Player from './player';
+import SpaceMap, { MapConfiguration } from "./map";
+import assert from "assert";
+import { sortBy, uniq, sum, set } from "lodash";
+import Player from "./player";
 import shuffleSeed from "shuffle-seed";
 import {
   Faction,
@@ -24,18 +24,18 @@ import {
   FinalTile,
   Phase,
   SubPhase,
-  Expansion
-} from './enums';
-import Event, {EventSource, RoundScoring} from './events';
-import federations from './tiles/federations';
-import {roundScorings, finalScorings} from './tiles/scoring';
-import * as researchTracks from './research-tracks';
-import AvailableCommand, {generate as generateAvailableCommands,} from './available-command';
-import Reward from './reward';
-import {boardActions} from './actions';
-import {stdBuildingValue} from './buildings';
-import {isAdvanced} from './tiles/techs';
-import { range, isEqual } from 'lodash';
+  Expansion,
+} from "./enums";
+import Event, { EventSource, RoundScoring } from "./events";
+import federations from "./tiles/federations";
+import { roundScorings, finalScorings } from "./tiles/scoring";
+import * as researchTracks from "./research-tracks";
+import AvailableCommand, { generate as generateAvailableCommands } from "./available-command";
+import Reward from "./reward";
+import { boardActions } from "./actions";
+import { stdBuildingValue } from "./buildings";
+import { isAdvanced } from "./tiles/techs";
+import { range, isEqual } from "lodash";
 
 // const ISOLATED_DISTANCE = 3;
 const LEECHING_DISTANCE = 2;
@@ -54,7 +54,7 @@ export interface EngineOptions {
   /** auction */
   auction?: boolean;
   /** Layout */
-  layout?: 'standard' | 'balanced' | 'xshape';
+  layout?: "standard" | "balanced" | "xshape";
 }
 
 /**
@@ -73,7 +73,7 @@ export interface LogEntry {
   move?: number;
   player?: PlayerEnum;
   changes?: {
-    [source in EventSource]?: {[resource in Resource]?: number}
+    [source in EventSource]?: { [resource in Resource]?: number };
   };
   // For round changes
   round?: number;
@@ -88,21 +88,29 @@ export default class Engine {
   options: EngineOptions = {};
   tiles: {
     boosters: {
-      [key in Booster]?: boolean
+      [key in Booster]?: boolean;
     };
     techs: {
-      [key in TechTilePos | AdvTechTilePos]?: {tile: TechTile | AdvTechTile; count: number}
+      [key in TechTilePos | AdvTechTilePos]?: {
+        tile: TechTile | AdvTechTile;
+        count: number;
+      };
     };
     scorings: {
       round: ScoringTile[];
       final: FinalTile[];
     };
     federations: {
-      [key in Federation]?: number
+      [key in Federation]?: number;
     };
-  } = {boosters: {}, techs: {}, scorings: {round: null, final: null}, federations: {}};
+  } = {
+    boosters: {},
+    techs: {},
+    scorings: { round: null, final: null },
+    federations: {},
+  };
   boardActions: {
-    [key in BoardAction]?: boolean
+    [key in BoardAction]?: boolean;
   } = {};
 
   terraformingFederation: Federation;
@@ -131,9 +139,17 @@ export default class Engine {
   // used to transit between phases
   tempTurnOrder: PlayerEnum[] = [];
   tempCurrentPlayer: PlayerEnum;
-  leechSources: Array<{player: PlayerEnum; coordinates: string; tradeDelivery?: PlayerEnum}> = [];
+  leechSources: Array<{
+    player: PlayerEnum;
+    coordinates: string;
+    tradeDelivery?: PlayerEnum;
+  }> = [];
   // When ongoing leech, remember the source in case
-  lastLeechSource: {player: PlayerEnum; coordinates: string; tradeDelivery?: PlayerEnum};
+  lastLeechSource: {
+    player: PlayerEnum;
+    coordinates: string;
+    tradeDelivery?: PlayerEnum;
+  };
 
   // All moves
   moveHistory: string[] = [];
@@ -182,7 +198,7 @@ export default class Engine {
       this.newTurn = false;
     }
 
-    assert(this.turnMoves.length === 0, "Unnecessary commands at the end of the turn: " + this.turnMoves.join('. '));
+    assert(this.turnMoves.length === 0, "Unnecessary commands at the end of the turn: " + this.turnMoves.join(". "));
     this.moveHistory.push(move);
   }
 
@@ -220,9 +236,11 @@ export default class Engine {
       this.advancedLog.push({
         player,
         move,
-        changes: amount ? {
-          [source]: {[resource]: amount}
-        } : undefined
+        changes: amount
+          ? {
+              [source]: { [resource]: amount },
+            }
+          : undefined,
       });
     }
   }
@@ -232,22 +250,20 @@ export default class Engine {
   }
 
   generateAvailableCommands(subphase: SubPhase = null, data?: any): AvailableCommand[] {
-    return this.availableCommands = generateAvailableCommands(this, subphase, data);
+    return (this.availableCommands = generateAvailableCommands(this, subphase, data));
   }
 
   findAvailableCommand(player: PlayerEnum, command: Command) {
     this.availableCommands = this.availableCommands || this.generateAvailableCommands();
-    return this.availableCommands.find(
-      availableCommand => {
-        if (availableCommand.name !== command) {
-          return false;
-        }
-        if (availableCommand.player === undefined) {
-          return false;
-        }
-        return availableCommand.player === player;
+    return this.availableCommands.find((availableCommand) => {
+      if (availableCommand.name !== command) {
+        return false;
       }
-    );
+      if (availableCommand.player === undefined) {
+        return false;
+      }
+      return availableCommand.player === player;
+    });
   }
 
   clearAvailableCommands() {
@@ -270,7 +286,10 @@ export default class Engine {
     player.data.on(`gain-${Resource.TemporaryStep}`, () => this.processNextMove(SubPhase.BuildMine));
     player.data.on(`gain-${Resource.TemporaryRange}`, (count: number) => {
       if (this.findAvailableCommand(player.player, Command.MoveShip)) {
-        assert(player.data.qicUsedToBoostShip === 0 && count === 2, "Impossible to gain range more than once during move ship phase");
+        assert(
+          player.data.qicUsedToBoostShip === 0 && count === 2,
+          "Impossible to gain range more than once during move ship phase"
+        );
         player.data.qicUsedToBoostShip += 1;
         this.processNextMove(SubPhase.MoveShip);
       } else {
@@ -280,11 +299,16 @@ export default class Engine {
     player.data.on(`gain-${Resource.RescoreFederation}`, () => this.processNextMove(SubPhase.RescoreFederationTile));
     player.data.on(`gain-${Resource.PISwap}`, () => this.processNextMove(SubPhase.PISwap));
     player.data.on(`gain-${Resource.SpaceStation}`, () => this.processNextMove(SubPhase.SpaceStation));
-    player.data.on(`gain-${Resource.DowngradeLab}`, () => {this.processNextMove(SubPhase.DowngradeLab); this.processNextMove(SubPhase.UpgradeResearch); });
-    player.data.on(`gain-${Resource.UpgradeLowest}`, () => this.processNextMove(SubPhase.UpgradeResearch, {bescods: true}));
+    player.data.on(`gain-${Resource.DowngradeLab}`, () => {
+      this.processNextMove(SubPhase.DowngradeLab);
+      this.processNextMove(SubPhase.UpgradeResearch);
+    });
+    player.data.on(`gain-${Resource.UpgradeLowest}`, () =>
+      this.processNextMove(SubPhase.UpgradeResearch, { bescods: true })
+    );
     player.data.on(`gain-${Resource.UpgradeZero}`, (count: number) => {
       for (let i = 0; i < count; i++) {
-        this.processNextMove(SubPhase.UpgradeResearch, {zero: true});
+        this.processNextMove(SubPhase.UpgradeResearch, { zero: true });
       }
     });
     player.data.on(`gain-${Resource.MoveShips}`, () => {
@@ -305,23 +329,38 @@ export default class Engine {
       player.resetTemporaryVariables();
       this.processNextMove(SubPhase.MoveShip);
     });
-    player.data.on('brainstone', areas => this.processNextMove(SubPhase.BrainStone, areas));
+    player.data.on("brainstone", (areas) => this.processNextMove(SubPhase.BrainStone, areas));
     // Test before upgrading research that it's actually possible. Needed when getting up-int or up-nav in
     // the spaceship expansion
-    player.data.on('beforeResearchUpgrade', field => {
+    player.data.on("beforeResearchUpgrade", (field) => {
       const destTile = player.data.research[field] + 1;
       if (!player.canUpgradeResearch(field)) {
         player.data.canUpgradeResearch = false;
-      } else if (destTile === researchTracks.lastTile(field) && this.players.some(pl => pl.data.research[field] === destTile)) {
+      } else if (
+        destTile === researchTracks.lastTile(field) &&
+        this.players.some((pl) => pl.data.research[field] === destTile)
+      ) {
         player.data.canUpgradeResearch = false;
       }
     });
-    player.on('pick-rewards', () => this.processNextMove(SubPhase.PickRewards));
+    player.on("pick-rewards", () => this.processNextMove(SubPhase.PickRewards));
 
     /* For advanced log */
-    for (const resource of [Resource.VictoryPoint, Resource.ChargePower, Resource.Credit, Resource.Qic, Resource.Knowledge, Resource.Ore, Resource.GainToken]) {
-      player.data.on(`gain-${resource}`, (amount: number, source: EventSource) => this.log(player.player, resource, amount, source));
-      player.data.on(`pay-${resource}`, (amount: number, source: EventSource) => this.log(player.player, resource, -amount, source));
+    for (const resource of [
+      Resource.VictoryPoint,
+      Resource.ChargePower,
+      Resource.Credit,
+      Resource.Qic,
+      Resource.Knowledge,
+      Resource.Ore,
+      Resource.GainToken,
+    ]) {
+      player.data.on(`gain-${resource}`, (amount: number, source: EventSource) =>
+        this.log(player.player, resource, amount, source)
+      );
+      player.data.on(`pay-${resource}`, (amount: number, source: EventSource) =>
+        this.log(player.player, resource, -amount, source)
+      );
     }
   }
 
@@ -330,7 +369,7 @@ export default class Engine {
   }
 
   playersInOrder(): Player[] {
-    return this.turnOrder.map(i => this.players[i]);
+    return this.turnOrder.map((i) => this.players[i]);
   }
 
   /**
@@ -338,14 +377,13 @@ export default class Engine {
    * @param player
    */
   playersInTableOrderFrom(player: PlayerEnum): Player[] {
-
-    const pos = this.turnOrderAfterSetupAuction.findIndex(pl => pl === player);
-    const turn= [...this.turnOrderAfterSetupAuction.slice(pos), ...this.turnOrderAfterSetupAuction.slice(0, pos)];
-    return turn.map(pl => this.players[pl]);
+    const pos = this.turnOrderAfterSetupAuction.findIndex((pl) => pl === player);
+    const turn = [...this.turnOrderAfterSetupAuction.slice(pos), ...this.turnOrderAfterSetupAuction.slice(0, pos)];
+    return turn.map((pl) => this.players[pl]);
   }
 
   get turnOrderAfterSetupAuction(): PlayerEnum[] {
-    return this.setup.map(faction => this.players.findIndex(pl => pl.faction == faction));
+    return this.setup.map((faction) => this.players.findIndex((pl) => pl.faction == faction));
   }
 
   get playerToMove(): PlayerEnum {
@@ -357,14 +395,14 @@ export default class Engine {
   }
 
   numberOfPlayersWithFactions(): number {
-    return this.players.filter(pl => pl.faction).length;
+    return this.players.filter((pl) => pl.faction).length;
   }
 
   getNextPlayer(list: PlayerEnum[] = this.turnOrder) {
     return list[(list.indexOf(this.currentPlayer) + 1) % list.length];
   }
 
-  moveToNextPlayer(list: PlayerEnum[], params: {loop?: boolean} = {loop: true}) {
+  moveToNextPlayer(list: PlayerEnum[], params: { loop?: boolean } = { loop: true }) {
     if (list.length === 0) {
       return false;
     }
@@ -387,10 +425,10 @@ export default class Engine {
     const pl = this.player(toMove);
     const ps = pl.faction || `p${toMove + 1}`;
 
-    if (this.availableCommands.some(cmd => cmd.name === Command.Decline)) {
+    if (this.availableCommands.some((cmd) => cmd.name === Command.Decline)) {
       const cmd = this.findAvailableCommand(this.playerToMove, Command.Decline);
       this.move(`${ps} ${Command.Decline} ${cmd.data.offer}`, false);
-    } else if (this.availableCommands.some(cmd => cmd.name === Command.Pass)) {
+    } else if (this.availableCommands.some((cmd) => cmd.name === Command.Pass)) {
       const cmd = this.findAvailableCommand(this.playerToMove, Command.Pass);
       const boosters = cmd.data.boosters;
 
@@ -399,20 +437,32 @@ export default class Engine {
       } else {
         this.move(`${ps} ${Command.Pass}`, false);
       }
-    } else if (this.availableCommands.some(cmd => cmd.name === Command.ChooseIncome)) {
+    } else if (this.availableCommands.some((cmd) => cmd.name === Command.ChooseIncome)) {
       const cmd = this.findAvailableCommand(this.playerToMove, Command.ChooseIncome);
       this.move(`${ps} ${Command.ChooseIncome} ${cmd.data}`);
-    } else if (this.availableCommands.some(cmd => cmd.name === Command.BrainStone)) {
+    } else if (this.availableCommands.some((cmd) => cmd.name === Command.BrainStone)) {
       const cmd = this.findAvailableCommand(this.playerToMove, Command.BrainStone);
       this.move(`${ps} ${Command.BrainStone} ${cmd.data[0]}`);
-    } else if (this.availableCommands.some(cmd => cmd.name === Command.PlaceShip)) {
+    } else if (this.availableCommands.some((cmd) => cmd.name === Command.PlaceShip)) {
       const cmd = this.findAvailableCommand(this.playerToMove, Command.PlaceShip);
       this.move(`${ps} ${Command.PlaceShip} ${cmd.data.locations[0].coordinates}`);
-    } else if (this.availableCommands.some(cmd => cmd.name === Command.Spend && cmd.data.acts[0].cost.includes(Resource.GainTokenGaiaArea))) {
+    } else if (
+      this.availableCommands.some(
+        (cmd) => cmd.name === Command.Spend && cmd.data.acts[0].cost.includes(Resource.GainTokenGaiaArea)
+      )
+    ) {
       // Terrans spending power in gaia phase to create resources
-      this.move(`${ps} ${Command.Spend} ${pl.data.power.gaia}${Resource.GainTokenGaiaArea} for ${pl.data.power.gaia}${Resource.Credit}`);
+      this.move(
+        `${ps} ${Command.Spend} ${pl.data.power.gaia}${Resource.GainTokenGaiaArea} for ${pl.data.power.gaia}${Resource.Credit}`
+      );
     } else {
-      assert(false, "Can't automove for player " + (this.playerToMove + 1) + ", available command: " + this.availableCommands[0].name);
+      assert(
+        false,
+        "Can't automove for player " +
+          (this.playerToMove + 1) +
+          ", available command: " +
+          this.availableCommands[0].name
+      );
     }
 
     // Again
@@ -447,14 +497,14 @@ export default class Engine {
     // cost associated with it.
     // If this not true, please add an example (or link to) in the comments
     if (this.isLastRound && this.passedPlayers.includes(pl.player)) {
-      if (!offers.some(offer => offer.cost === '~')) {
+      if (!offers.some((offer) => offer.cost === "~")) {
         this.move(`${pl.faction} ${Command.Decline} ${offer}`, false);
         return true;
       }
     }
 
     // Only leech when only one option and cost is nothing
-    if (offers.length > 1 || power > (pl.data.autoChargePower ?? 1) ) {
+    if (offers.length > 1 || power > (pl.data.autoChargePower ?? 1)) {
       return false;
     }
 
@@ -527,9 +577,9 @@ export default class Engine {
     const jsonObj: any = Object.assign({}, this);
 
     Object.entries(Object.getOwnPropertyDescriptors(proto))
-      .filter(([key, descriptor]) => typeof descriptor.get === 'function')
+      .filter(([key, descriptor]) => typeof descriptor.get === "function")
       .map(([key, descriptor]) => {
-        if (descriptor && key[0] !== '_') {
+        if (descriptor && key[0] !== "_") {
           try {
             const val = (this as any)[key];
             jsonObj[key] = val;
@@ -558,7 +608,10 @@ export default class Engine {
   }
 
   static parseMoves(moves: string) {
-    return moves.trim().split("\n").map(move => move.trim());
+    return moves
+      .trim()
+      .split("\n")
+      .map((move) => move.trim());
   }
 
   /**
@@ -567,38 +620,53 @@ export default class Engine {
    * @param move The move string to process. Can contain multiple moves separated by a dot
    * @param params params.processFirst indicates to process the first move. params.split is set to true if leftover commands are allowed
    */
-  loadTurnMoves(move: string, params: {split?: boolean; processFirst?: boolean} = {split: true, processFirst: false}) {
+  loadTurnMoves(
+    move: string,
+    params: { split?: boolean; processFirst?: boolean } = {
+      split: true,
+      processFirst: false,
+    }
+  ) {
     this.oldPhase = this.phase;
 
-    const playerS = move.substr(0, move.indexOf(' '));
+    const playerS = move.substr(0, move.indexOf(" "));
     let player: number;
 
     if (/^p[1-7]$/.test(playerS)) {
       player = +playerS[1] - 1;
     } else {
-      const  pl = this.players.find(_pl => _pl.faction === playerS);
+      const pl = this.players.find((_pl) => _pl.faction === playerS);
 
       if (pl) {
         player = pl.player;
       }
     }
 
-    assert(this.playerToMove === (player as PlayerEnum), "Wrong turn order in move " + move + ", expected player " + (this.playerToMove + 1));
+    assert(
+      this.playerToMove === (player as PlayerEnum),
+      "Wrong turn order in move " + move + ", expected player " + (this.playerToMove + 1)
+    );
     this.processedPlayer = player;
 
-    const split = params.split ?? true ;
+    const split = params.split ?? true;
     const processFirst = params.processFirst ?? true;
 
     if (!split) {
       assert(processFirst);
     }
 
-    this.turnMoves = move.substr(playerS.length).split('.').map(x => x.trim());
+    this.turnMoves = move
+      .substr(playerS.length)
+      .split(".")
+      .map((x) => x.trim());
 
     if (processFirst) {
       this.processNextMove();
 
-      assert(split || this.turnMoves.length === 0, "There is an extra command at the end of the turn: " + this.turnMoves.join('. '));
+      assert(
+        split || this.turnMoves.length === 0,
+        "There is an extra command at the end of the turn: " + this.turnMoves.join(". ")
+      );
     }
   }
 
@@ -608,7 +676,7 @@ export default class Engine {
    */
   executeMove(move: string) {
     try {
-      (this[this.phase])(move);
+      this[this.phase](move);
       this.clearAvailableCommands();
     } catch (err) {
       if (err.availableCommands) {
@@ -623,10 +691,10 @@ export default class Engine {
   }
 
   parseMove(move: string) {
-    const split = move.split(' ');
+    const split = move.split(" ");
     return {
       command: (split[0] || Command.EndTurn) as Command,
-      args: split.slice(1)
+      args: split.slice(1),
     };
   }
 
@@ -638,7 +706,9 @@ export default class Engine {
       }
     }
     if (this.turnMoves.length === 0) {
-      throw Object.assign(new Error('Missing command to end turn'), {availableCommands: this.availableCommands});
+      throw Object.assign(new Error("Missing command to end turn"), {
+        availableCommands: this.availableCommands,
+      });
     }
     const move = this.parseMove(this.turnMoves.shift());
 
@@ -653,7 +723,10 @@ export default class Engine {
   }
 
   checkCommand(command: Command) {
-    assert(this.availableCommand = this.findAvailableCommand(this.playerToMove, command), `Command ${command} is not in the list of available commands: ${this.availableCommands.map(cmd => cmd.name)}`);
+    assert(
+      (this.availableCommand = this.findAvailableCommand(this.playerToMove, command)),
+      `Command ${command} is not in the list of available commands: ${this.availableCommands.map((cmd) => cmd.name)}`
+    );
   }
 
   doFreeActions(subPhase: SubPhase) {
@@ -695,7 +768,7 @@ export default class Engine {
 
     this.player(this.currentPlayer).receiveIncome();
 
-    if (!this.moveToNextPlayer(this.tempTurnOrder, {loop: false})) {
+    if (!this.moveToNextPlayer(this.tempTurnOrder, { loop: false })) {
       this.endIncomePhase();
     } else {
       this.handleNextIncome();
@@ -718,7 +791,7 @@ export default class Engine {
 
     player.gaiaPhase();
 
-    if (!this.moveToNextPlayer(this.tempTurnOrder, {loop: false})) {
+    if (!this.moveToNextPlayer(this.tempTurnOrder, { loop: false })) {
       this.endGaiaPhase();
     } else {
       this.handleNextGaia();
@@ -748,19 +821,19 @@ export default class Engine {
 
   beginSetupFactionPhase() {
     this.changePhase(Phase.SetupFaction);
-    this.turnOrder = this.players.map(pl => pl.player as PlayerEnum);
-    this.moveToNextPlayer(this.turnOrder, {loop: false});
+    this.turnOrder = this.players.map((pl) => pl.player as PlayerEnum);
+    this.moveToNextPlayer(this.turnOrder, { loop: false });
   }
 
   beginSetupAuctionPhase() {
     this.changePhase(Phase.SetupAuction);
-    this.turnOrder = this.players.map(pl => pl.player as PlayerEnum);
+    this.turnOrder = this.players.map((pl) => pl.player as PlayerEnum);
 
-    this.moveToNextPlayer(this.turnOrder, {loop: false});
+    this.moveToNextPlayer(this.turnOrder, { loop: false });
   }
 
   endSetupAuctionPhase() {
-    for ( const pl of this.players ){
+    for (const pl of this.players) {
       if (pl.faction) {
         pl.loadFaction(pl.faction, this.expansions);
       } else {
@@ -774,18 +847,13 @@ export default class Engine {
   beginSetupBuildingPhase() {
     this.changePhase(Phase.SetupBuilding);
 
-    const posIvits = this.players.findIndex(
-      player => player.faction === Faction.Ivits
-    );
+    const posIvits = this.players.findIndex((player) => player.faction === Faction.Ivits);
 
-    const setupTurnOrder = this.turnOrderAfterSetupAuction
-          .filter(i => i !== posIvits);
+    const setupTurnOrder = this.turnOrderAfterSetupAuction.filter((i) => i !== posIvits);
     const reverseSetupTurnOrder = setupTurnOrder.slice().reverse();
     this.turnOrder = setupTurnOrder.concat(reverseSetupTurnOrder);
 
-    const posXenos = this.players.findIndex(
-      player => player.faction === Faction.Xenos
-    );
+    const posXenos = this.players.findIndex((player) => player.faction === Faction.Xenos);
 
     if (posXenos !== -1) {
       this.turnOrder.push(posXenos as PlayerEnum);
@@ -795,24 +863,24 @@ export default class Engine {
       this.turnOrder.push(posIvits as PlayerEnum);
     }
 
-    this.moveToNextPlayer(this.turnOrder, {loop: false});
+    this.moveToNextPlayer(this.turnOrder, { loop: false });
   }
 
   beginSetupBoosterPhase() {
     this.changePhase(Phase.SetupBooster);
     this.turnOrder = this.turnOrderAfterSetupAuction.reverse();
-    this.moveToNextPlayer(this.turnOrder, {loop: false});
+    this.moveToNextPlayer(this.turnOrder, { loop: false });
   }
 
   beginSetupShipPhase() {
     this.changePhase(Phase.SetupShip);
     this.turnOrder = this.turnOrderAfterSetupAuction;
-    this.moveToNextPlayer(this.turnOrder, {loop: false});
+    this.moveToNextPlayer(this.turnOrder, { loop: false });
   }
 
   beginRoundStartPhase() {
     this.round += 1;
-    this.advancedLog.push({round: this.round});
+    this.advancedLog.push({ round: this.round });
     this.turnOrder = this.passedPlayers || this.turnOrderAfterSetupAuction;
     this.passedPlayers = [];
     this.currentPlayer = this.turnOrder[0];
@@ -826,17 +894,17 @@ export default class Engine {
 
   beginIncomePhase() {
     this.changePhase(Phase.RoundIncome);
-    this.advancedLog.push({phase: Phase.RoundIncome});
+    this.advancedLog.push({ phase: Phase.RoundIncome });
     this.tempTurnOrder = [...this.turnOrder];
 
-    this.moveToNextPlayer(this.tempTurnOrder, {loop: false});
+    this.moveToNextPlayer(this.tempTurnOrder, { loop: false });
     this.handleNextIncome();
   }
 
   endIncomePhase() {
     // remove incomes from roundboosters
     for (const player of this.playersInOrder()) {
-      player.removeRoundBoosterEvents( Operator.Income );
+      player.removeRoundBoosterEvents(Operator.Income);
     }
 
     this.beginGaiaPhase();
@@ -844,17 +912,21 @@ export default class Engine {
 
   beginGaiaPhase() {
     this.changePhase(Phase.RoundGaia);
-    this.advancedLog.push({phase: Phase.RoundGaia});
+    this.advancedLog.push({ phase: Phase.RoundGaia });
     this.tempTurnOrder = [...this.turnOrder];
 
     // transform Transdim planets into Gaia if gaiaformed
     for (const hex of this.map.toJSON()) {
-      if (hex.data.planet === Planet.Transdim && hex.data.player !== undefined && hex.data.building === Building.GaiaFormer) {
+      if (
+        hex.data.planet === Planet.Transdim &&
+        hex.data.player !== undefined &&
+        hex.data.building === Building.GaiaFormer
+      ) {
         hex.data.planet = Planet.Gaia;
       }
     }
 
-    this.moveToNextPlayer(this.tempTurnOrder, {loop: false});
+    this.moveToNextPlayer(this.tempTurnOrder, { loop: false });
     this.handleNextGaia();
   }
 
@@ -904,22 +976,25 @@ export default class Engine {
 
   finalScoringPhase() {
     this.changePhase(Phase.EndGame);
-    this.advancedLog.push({phase: Phase.EndGame});
+    this.advancedLog.push({ phase: Phase.EndGame });
     this.currentPlayer = this.tempCurrentPlayer = undefined;
 
-    const allRankings: Array<Array<{player: Player; count: number}>> = [];
+    const allRankings: Array<Array<{ player: Player; count: number }>> = [];
 
     // finalScoring tiles
     for (const tile of this.tiles.scorings.final) {
-      const players = sortBy(this.players, player => player.finalCount(tile)).reverse();
+      const players = sortBy(this.players, (player) => player.finalCount(tile)).reverse();
 
-      const rankings = players.map(pl => ({
+      const rankings = players.map((pl) => ({
         player: pl,
-        count: pl.finalCount(tile)
+        count: pl.finalCount(tile),
       }));
 
       if (this.players.length === 2) {
-        rankings.push({ player: null, count: finalScorings[tile].neutralPlayer });
+        rankings.push({
+          player: null,
+          count: finalScorings[tile].neutralPlayer,
+        });
         rankings.sort((pl1, pl2) => pl2.count - pl1.count);
       }
 
@@ -930,20 +1005,23 @@ export default class Engine {
     for (const player of this.players) {
       // Gain points from final scoring
       allRankings.forEach((rankings, index) => {
-        const ranking = rankings.find(rnk => rnk.player === player);
+        const ranking = rankings.find((rnk) => rnk.player === player);
 
         const count = ranking.count;
         // index of the first player with that score
-        const first = rankings.findIndex(pl => pl.count === count);
+        const first = rankings.findIndex((pl) => pl.count === count);
         // number of other players with the same score
-        const ties = rankings.filter(pl => pl.count === count).length;
+        const ties = rankings.filter((pl) => pl.count === count).length;
 
         // only players that advaced are getting VPs
         // see https://boardgamegeek.com/thread/1929227/0-end-score-0-vp
         if (ranking.player && count > 0) {
           const VPs = [18, 12, 6, 0, 0, 0];
 
-          ranking.player.gainRewards([new Reward(Math.floor(sum(VPs.slice(first, first + ties)) / ties), Resource.VictoryPoint)], `final${index + 1}` as 'final1' | 'final2');
+          ranking.player.gainRewards(
+            [new Reward(Math.floor(sum(VPs.slice(first, first + ties)) / ties), Resource.VictoryPoint)],
+            `final${index + 1}` as "final1" | "final2"
+          );
         }
       });
 
@@ -951,7 +1029,7 @@ export default class Engine {
       player.data.gainFinalVictoryPoints();
 
       //remove bids
-      player.gainRewards([new Reward(Math.max(Math.floor(-1*player.data.bid )), Resource.VictoryPoint)], Command.Bid);
+      player.gainRewards([new Reward(Math.max(Math.floor(-1 * player.data.bid)), Resource.VictoryPoint)], Command.Bid);
     }
   }
 
@@ -999,14 +1077,14 @@ export default class Engine {
 
     if (canLeechPlayers.length > 0) {
       this.changePhase(Phase.RoundLeech);
-      this.tempTurnOrder = canLeechPlayers.map(pl => pl.player);
+      this.tempTurnOrder = canLeechPlayers.map((pl) => pl.player);
       this.tempCurrentPlayer = this.tempTurnOrder.shift();
     } else {
       return this.beginLeechingPhase();
     }
   }
 
-  advanceResearchAreaPhase(player: PlayerEnum, cost: string, field: ResearchField ) {
+  advanceResearchAreaPhase(player: PlayerEnum, cost: string, field: ResearchField) {
     const pl = this.player(player);
 
     if (!pl.canUpgradeResearch(field)) {
@@ -1017,7 +1095,7 @@ export default class Engine {
 
     // If someone is already on last tile
     if (destTile === researchTracks.lastTile(field)) {
-      if (this.players.some(pl2 => pl2.data.research[field] === destTile)) {
+      if (this.players.some((pl2) => pl2.data.research[field] === destTile)) {
         return;
       }
     }
@@ -1045,7 +1123,7 @@ export default class Engine {
   // ******** PHASE COMMAND HANDLING ********
   // ****************************************
   [Phase.SetupInit](move: string) {
-    const split = move.split(' ');
+    const split = move.split(" ");
     const command = split[0] as Command;
 
     assert(command === Command.Init, "The first command of a game needs to be the initialization command");
@@ -1056,15 +1134,15 @@ export default class Engine {
   }
 
   [Phase.SetupBoard](move: string) {
-    this.loadTurnMoves(move, {split: false, processFirst: true});
+    this.loadTurnMoves(move, { split: false, processFirst: true });
 
     this.beginSetupFactionPhase();
   }
 
   [Phase.SetupFaction](move: string) {
-    this.loadTurnMoves(move, {split: false, processFirst: true});
+    this.loadTurnMoves(move, { split: false, processFirst: true });
 
-    if (!this.moveToNextPlayer(this.turnOrder, {loop: false})) {
+    if (!this.moveToNextPlayer(this.turnOrder, { loop: false })) {
       if (this.options.auction) {
         this.beginSetupAuctionPhase();
       } else {
@@ -1075,21 +1153,23 @@ export default class Engine {
   }
 
   [Phase.SetupAuction](move: string) {
-    this.loadTurnMoves(move, {processFirst: true});
+    this.loadTurnMoves(move, { processFirst: true });
 
-    const player = [...range(this.currentPlayer + 1, this.players.length), ...range(0, this.currentPlayer)].find(player => !this.players.some(pl => pl.player === player && pl.faction));
+    const player = [...range(this.currentPlayer + 1, this.players.length), ...range(0, this.currentPlayer)].find(
+      (player) => !this.players.some((pl) => pl.player === player && pl.faction)
+    );
 
     if (player !== undefined) {
-       this.currentPlayer = player;
+      this.currentPlayer = player;
     } else {
-       this.endSetupAuctionPhase();
+      this.endSetupAuctionPhase();
     }
   }
 
   [Phase.SetupBuilding](move: string) {
-    this.loadTurnMoves(move, {split: false, processFirst: true});
+    this.loadTurnMoves(move, { split: false, processFirst: true });
 
-    if (!this.moveToNextPlayer(this.turnOrder, {loop: false})) {
+    if (!this.moveToNextPlayer(this.turnOrder, { loop: false })) {
       if (this.expansions & Expansion.Spaceships) {
         this.beginSetupShipPhase();
       } else {
@@ -1099,23 +1179,23 @@ export default class Engine {
   }
 
   [Phase.SetupShip](move: string) {
-    this.loadTurnMoves(move, {split: false, processFirst: true});
+    this.loadTurnMoves(move, { split: false, processFirst: true });
 
-    if (!this.moveToNextPlayer(this.turnOrder, {loop: false})) {
+    if (!this.moveToNextPlayer(this.turnOrder, { loop: false })) {
       this.beginSetupBoosterPhase();
     }
   }
 
   [Phase.SetupBooster](move: string) {
-    this.loadTurnMoves(move, {split: false, processFirst: true});
+    this.loadTurnMoves(move, { split: false, processFirst: true });
 
-    if (!this.moveToNextPlayer(this.turnOrder, {loop: false})) {
+    if (!this.moveToNextPlayer(this.turnOrder, { loop: false })) {
       this.beginRoundStartPhase();
     }
   }
 
   [Phase.RoundIncome](move: string) {
-    this.loadTurnMoves(move, {processFirst: true});
+    this.loadTurnMoves(move, { processFirst: true });
 
     while (!this.handleNextIncome()) {
       this.generateAvailableCommands();
@@ -1124,7 +1204,7 @@ export default class Engine {
   }
 
   [Phase.RoundGaia](move: string) {
-    this.loadTurnMoves(move, {processFirst: true});
+    this.loadTurnMoves(move, { processFirst: true });
 
     while (!this.handleNextGaia(true)) {
       this.generateAvailableCommands();
@@ -1177,7 +1257,7 @@ export default class Engine {
   }
 
   [Phase.RoundLeech](move: string) {
-    this.loadTurnMoves(move, {split: false, processFirst: true});
+    this.loadTurnMoves(move, { split: false, processFirst: true });
     this.tempCurrentPlayer = this.tempTurnOrder.shift();
 
     // Current leech round ended
@@ -1192,7 +1272,7 @@ export default class Engine {
   // ****************************************
   [Command.Init](players: string, seed: string) {
     const nbPlayers = +players || 2;
-    seed = seed || 'defaultSeed';
+    seed = seed || "defaultSeed";
 
     assert(nbPlayers >= 2 && nbPlayers <= 5, "Invalid number of players");
 
@@ -1211,19 +1291,22 @@ export default class Engine {
 
     // Shuffle tech tiles
     const techtiles = shuffleSeed.shuffle(TechTile.values(this.expansions), this.map.rng());
-    TechTilePos.values(this.expansions).forEach( (pos, i) => {
-      this.tiles.techs[pos] = {tile: techtiles[i], count: 4};
+    TechTilePos.values(this.expansions).forEach((pos, i) => {
+      this.tiles.techs[pos] = { tile: techtiles[i], count: 4 };
     });
-    this.tiles.techs[TechTilePos.BasicShip] = {tile: TechTile.Ship0, count: 0};
+    this.tiles.techs[TechTilePos.BasicShip] = {
+      tile: TechTile.Ship0,
+      count: 0,
+    };
 
     // Choose adv tech tiles as part of the pool
     const advtechtiles = shuffleSeed.shuffle(AdvTechTile.values(this.expansions), this.map.rng());
-    AdvTechTilePos.values(this.expansions).forEach( (pos, i) => {
-      this.tiles.techs[pos] = {tile: advtechtiles[i], count: 1};
+    AdvTechTilePos.values(this.expansions).forEach((pos, i) => {
+      this.tiles.techs[pos] = { tile: advtechtiles[i], count: 1 };
     });
 
     // powerActions
-    BoardAction.values(this.expansions).forEach( (pos: BoardAction) => {
+    BoardAction.values(this.expansions).forEach((pos: BoardAction) => {
       this.boardActions[pos] = true;
     });
 
@@ -1265,7 +1348,7 @@ export default class Engine {
       pairs.push([params[i], params[i + 1]]);
     }
 
-    assert(uniq(pairs.map(pair => pair[0])).length === params.length / 2, "Duplicate rotations are not allowed");
+    assert(uniq(pairs.map((pair) => pair[0])).length === params.length / 2, "Duplicate rotations are not allowed");
 
     for (const pair of pairs) {
       this.map.rotateSector(pair[0], +pair[1]);
@@ -1276,16 +1359,16 @@ export default class Engine {
 
   [Command.ChooseFaction](player: PlayerEnum, faction: string) {
     assert(this.availableCommand.data.includes(faction), `${faction} is not in the available factions`);
-    this.setup.push( faction as Faction );
+    this.setup.push(faction as Faction);
   }
 
   [Command.Bid](player: PlayerEnum, faction: string, bid: number) {
-    const bidsAC  = this.availableCommand.data.bids;
-    const bidAC = bidsAC.find( b => b.faction === faction);
-    assert( bidAC.bid.includes(+bid), 'You have to bid the right amount');
-    assert( bidAC, `${faction} is not in the available factions`);
+    const bidsAC = this.availableCommand.data.bids;
+    const bidAC = bidsAC.find((b) => b.faction === faction);
+    assert(bidAC.bid.includes(+bid), "You have to bid the right amount");
+    assert(bidAC, `${faction} is not in the available factions`);
 
-    const previous = this.players.find(s => s.faction == faction);
+    const previous = this.players.find((s) => s.faction == faction);
     // remove faction from previous owner
     if (previous) {
       previous.faction = undefined;
@@ -1295,7 +1378,11 @@ export default class Engine {
     this.players[player].data.bid = +bid;
   }
 
-  [Command.ChooseRoundBooster](player: PlayerEnum, booster: Booster, fromCommand: Command = Command.ChooseRoundBooster ) {
+  [Command.ChooseRoundBooster](
+    player: PlayerEnum,
+    booster: Booster,
+    fromCommand: Command = Command.ChooseRoundBooster
+  ) {
     const { boosters } = this.availableCommand.data;
 
     assert(boosters.includes(booster), `${booster} is not in the available boosters`);
@@ -1310,15 +1397,15 @@ export default class Engine {
 
     for (const elem of buildings) {
       if (elem.building === building && isEqual(this.map.parse(elem.coordinates), parsed)) {
-        const {q, r} = this.map.parse(location);
-        const hex = this.map.grid.get({q, r});
+        const { q, r } = this.map.parse(location);
+        const hex = this.map.grid.get({ q, r });
         const pl = this.player(player);
 
         pl.build(building, hex, Reward.parse(elem.cost), this.map, elem.steps);
 
         // will trigger a LeechPhase
         if (this.phase === Phase.RoundMove) {
-          this.leechSources.unshift({player, coordinates: location});
+          this.leechSources.unshift({ player, coordinates: location });
         }
 
         return;
@@ -1330,7 +1417,7 @@ export default class Engine {
 
   [Command.UpgradeResearch](player: PlayerEnum, field: ResearchField) {
     const { tracks } = this.availableCommand.data;
-    const track = tracks.find(tr => tr.field === field);
+    const track = tracks.find((tr) => tr.field === field);
 
     assert(track, `Impossible to upgrade research for ${field}`);
 
@@ -1356,12 +1443,15 @@ export default class Engine {
 
     // Handles legacy stuff. To remove when all games with old engine have ended
     if (!leechCommand.offers) {
-      leechCommand.offers = [{offer: leechCommand.offer, cost: leechCommand.cost}];
+      leechCommand.offers = [{ offer: leechCommand.offer, cost: leechCommand.cost }];
     }
 
-    const offer = leechCommand.offers.find(ofr => ofr.offer === income);
+    const offer = leechCommand.offers.find((ofr) => ofr.offer === income);
 
-    assert(offer, `Cannot leech ${income}. Possible leeches: ${leechCommand.offers.map(ofr => ofr.offer).join(' - ')}`);
+    assert(
+      offer,
+      `Cannot leech ${income}. Possible leeches: ${leechCommand.offers.map((ofr) => ofr.offer).join(" - ")}`
+    );
 
     this.player(player).gainRewards(leechRewards, Command.ChargePower);
     this.player(player).payCosts(Reward.parse(offer.cost), Command.ChargePower);
@@ -1377,7 +1467,7 @@ export default class Engine {
 
   [Command.ChooseTechTile](player: PlayerEnum, pos: TechTilePos | AdvTechTilePos) {
     const { tiles } = this.availableCommand.data;
-    const tileAvailable = tiles.find(ta => ta.pos === pos);
+    const tileAvailable = tiles.find((ta) => ta.pos === pos);
 
     assert(tileAvailable !== undefined, `Impossible to get ${pos} tile`);
 
@@ -1391,12 +1481,15 @@ export default class Engine {
     this.tiles.techs[pos].count -= 1;
 
     // AFTER gaining the tech tile (as green federation can be flipped and lock research tracks)
-    this.processNextMove(SubPhase.UpgradeResearch, ResearchField.values(Expansion.All).includes(pos as any as ResearchField) ? {pos} : undefined) ;
+    this.processNextMove(
+      SubPhase.UpgradeResearch,
+      ResearchField.values(Expansion.All).includes((pos as any) as ResearchField) ? { pos } : undefined
+    );
   }
 
   [Command.ChooseCoverTechTile](player: PlayerEnum, tilePos: TechTilePos) {
     const { tiles } = this.availableCommand.data;
-    const tileAvailable = tiles.find(ta => ta.pos === tilePos);
+    const tileAvailable = tiles.find((ta) => ta.pos === tilePos);
 
     assert(tileAvailable !== undefined, `Impossible to cover ${tilePos} tile`);
     // remove tile
@@ -1405,7 +1498,7 @@ export default class Engine {
 
   [Command.Special](player: PlayerEnum, income: string) {
     const { specialacts } = this.availableCommand.data;
-    const actAvailable = specialacts.find(sa => Reward.match(Reward.parse(sa.income), Reward.parse(income)));
+    const actAvailable = specialacts.find((sa) => Reward.match(Reward.parse(sa.income), Reward.parse(income)));
 
     assert(actAvailable !== undefined, `Special action ${income} is not available`);
 
@@ -1431,7 +1524,7 @@ export default class Engine {
     const { spaces } = this.availableCommand.data;
     const parsed = this.map.parse(location);
 
-    const data = spaces.find(space =>  isEqual(this.map.parse(space.coordinates), parsed));
+    const data = spaces.find((space) => isEqual(this.map.parse(space.coordinates), parsed));
 
     assert(data, `Impossible to execute build command at ${location}`);
 
@@ -1440,7 +1533,7 @@ export default class Engine {
 
     this.player(player).build(Building.Mine, hex, Reward.parse(data.cost), this.map, 0);
 
-    this.leechSources.unshift({player, coordinates: location});
+    this.leechSources.unshift({ player, coordinates: location });
   }
 
   [Command.PlaceShip](player: PlayerEnum, location: string) {
@@ -1448,7 +1541,12 @@ export default class Engine {
     const { locations } = this.availableCommand.data;
     const parsed = this.map.parse(location);
 
-    assert(locations.find(loc => isEqual(this.map.parse(loc.coordinates), parsed), `Impossible to place ship at ${location}`));
+    assert(
+      locations.find(
+        (loc) => isEqual(this.map.parse(loc.coordinates), parsed),
+        `Impossible to place ship at ${location}`
+      )
+    );
 
     const hex = this.map.grid.get(parsed);
     pl.placeShip(hex);
@@ -1460,12 +1558,19 @@ export default class Engine {
   }
 
   [Command.DeliverTrade](player: PlayerEnum, location: string) {
-    assert(location === this.availableCommand.data.locations[0].coordinates, "Impossible to deliver trade at " + location);
+    assert(
+      location === this.availableCommand.data.locations[0].coordinates,
+      "Impossible to deliver trade at " + location
+    );
     const destHex = this.map.getS(location);
 
     this.player(player).deliverTrade(destHex);
     // The main occupier of the planet can charge power
-    this.leechSources.push({player, coordinates: location, tradeDelivery: destHex.data.player});
+    this.leechSources.push({
+      player,
+      coordinates: location,
+      tradeDelivery: destHex.data.player,
+    });
   }
 
   [`_${Command.MoveShip}`](player: PlayerEnum, ship: string, dest: string) {
@@ -1474,11 +1579,13 @@ export default class Engine {
     const { ships, range, costs } = this.availableCommand.data;
     const parsedShip = this.map.parse(ship);
 
-    assert(ships.find(loc => isEqual(this.map.parse(loc.coordinates), parsedShip), `There is no movable ship at ${ship}`));
+    assert(
+      ships.find((loc) => isEqual(this.map.parse(loc.coordinates), parsedShip), `There is no movable ship at ${ship}`)
+    );
 
     const distance = this.map.distance(parsedShip, this.map.parse(dest));
 
-    assert(range >= distance, 'The ship cannot move that far');
+    assert(range >= distance, "The ship cannot move that far");
 
     const moveCost = costs[distance] || "~";
     pl.payCosts(Reward.parse(moveCost), Command.MoveShip);
@@ -1488,37 +1595,54 @@ export default class Engine {
     const destHex = this.map.getS(dest);
 
     if (pl.data.availableWildTradeTokens() > 0) {
-      assert (!destHex.hasTradeToken(player) || !destHex.hasWildTradeToken(), `The destination planet already has a trade token for your faction`);
+      assert(
+        !destHex.hasTradeToken(player) || !destHex.hasWildTradeToken(),
+        `The destination planet already has a trade token for your faction`
+      );
     } else {
-      assert (!destHex.hasTradeToken(player), `The destination planet already has a trade token for your faction`);
+      assert(!destHex.hasTradeToken(player), `The destination planet already has a trade token for your faction`);
     }
 
     pl.placeShip(destHex);
 
     if (destHex.hasPlanet()) {
       if (destHex.occupied()) {
-        assert(destHex.hasStructure(), `When moving a ship to an occupied planet, there needs to be a valid building on it`);
+        assert(
+          destHex.hasStructure(),
+          `When moving a ship to an occupied planet, there needs to be a valid building on it`
+        );
         assert(!destHex.isMainOccupier(player), "You can't move a ship to a planet that is occupied by you.");
 
         const canPutTradeToken = pl.data.availableTradeTokens() > 0 && !destHex.hasTradeToken(player);
         const canPutWildTradeToken = pl.data.availableWildTradeTokens() > 0 && !destHex.hasWildTradeToken();
 
-        assert(canPutTradeToken || canPutWildTradeToken, "Impossible to put a trade token on the planet, either you already have a token there or all your tokens are used");
+        assert(
+          canPutTradeToken || canPutWildTradeToken,
+          "Impossible to put a trade token on the planet, either you already have a token there or all your tokens are used"
+        );
 
-        this.processNextMove(SubPhase.DeliverTrade, {locations: [{coordinates: dest}], automatic: true});
+        this.processNextMove(SubPhase.DeliverTrade, {
+          locations: [{ coordinates: dest }],
+          automatic: true,
+        });
       } else {
         const planet = destHex.data.planet;
         const building = planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine;
 
-        const {possible, cost, steps} = pl.canBuild(planet, building);
+        const { possible, cost, steps } = pl.canBuild(planet, building);
         assert(possible, "Impossible to move ship to this empty planet as you cannot build there");
 
-        this.processNextMove(SubPhase.BuildMineOrGaiaFormer, {buildings: [{
-          building,
-          coordinates: dest,
-          cost: Reward.toString(cost),
-          steps
-        }], automatic: true});
+        this.processNextMove(SubPhase.BuildMineOrGaiaFormer, {
+          buildings: [
+            {
+              building,
+              coordinates: dest,
+              cost: Reward.toString(cost),
+              steps,
+            },
+          ],
+          automatic: true,
+        });
       }
 
       pl.removeShip(destHex);
@@ -1535,7 +1659,7 @@ export default class Engine {
   [Command.PickReward](player: PlayerEnum, rewardString: string) {
     const pl = this.player(player);
     const reward = new Reward(rewardString);
-    const index = pl.data.toPick.rewards.findIndex(rw => rw.type === reward.type && rw.count === reward.count);
+    const index = pl.data.toPick.rewards.findIndex((rw) => rw.type === reward.type && rw.count === reward.count);
 
     assert(index !== -1, "Cannot pick " + rewardString);
 
@@ -1556,9 +1680,9 @@ export default class Engine {
     const cost = Reward.merge(Reward.parse(costS));
     const income = Reward.merge(Reward.parse(incomeS));
 
-    assert(!cost.some(r => r.count <= 0) && !income.some(r => r.count <= 0), "Nice try!");
+    assert(!cost.some((r) => r.count <= 0) && !income.some((r) => r.count <= 0), "Nice try!");
     assert(pl.canPay(cost) && cost, `Impossible to pay ${costS}`);
-    assert(_for === 'for', "Expect second part of command to be 'for'");
+    assert(_for === "for", "Expect second part of command to be 'for'");
 
     // tslint:disable-next-line no-shadowed-variable
     const isPossible = (cost: Reward[], income: Reward[]) => {
@@ -1570,8 +1694,8 @@ export default class Engine {
           let newIncome = Reward.merge(income, Reward.negative(Reward.parse(action.income)));
 
           // Convert unused income into cost
-          newCost.push(...Reward.negative(newIncome.filter(rew => rew.count < 0)));
-          newIncome = newIncome.filter(rew => rew.count > 0);
+          newCost.push(...Reward.negative(newIncome.filter((rew) => rew.count < 0)));
+          newIncome = newIncome.filter((rew) => rew.count > 0);
 
           if (newIncome.length === 0 && newCost.length === 0) {
             return true;
@@ -1599,14 +1723,20 @@ export default class Engine {
   }
 
   [Command.BrainStone](player: PlayerEnum, dest: string) {
-    assert(this.availableCommand.data.includes(dest), "Possible brain stone areas: " + this.availableCommand.data.join(", "));
+    assert(
+      this.availableCommand.data.includes(dest),
+      "Possible brain stone areas: " + this.availableCommand.data.join(", ")
+    );
     this.players[player].data.brainstoneDest = dest as any;
   }
 
   [Command.Action](player: PlayerEnum, action: BoardAction) {
-    const { poweracts: acts} = this.availableCommand.data;
+    const { poweracts: acts } = this.availableCommand.data;
 
-    assert(acts.find(act => act.name === action), `${action} is not in the available power actions`);
+    assert(
+      acts.find((act) => act.name === action),
+      `${action} is not in the available power actions`
+    );
 
     const pl = this.player(player);
     this.boardActions[action] = false;
@@ -1617,11 +1747,11 @@ export default class Engine {
 
   [Command.ChooseIncome](player: PlayerEnum, income: string) {
     const incomes = this.availableCommand.data;
-    const incomeRewards = income.split(",") ;
+    const incomeRewards = income.split(",");
     const pl = this.player(player);
 
     for (const incR of incomeRewards) {
-      const eventIdx = incomes.findIndex(rw => Reward.match(Reward.parse(incR), [rw]));
+      const eventIdx = incomes.findIndex((rw) => Reward.match(Reward.parse(incR), [rw]));
       assert(eventIdx > -1, `${incR} is not in the available income`);
       incomes.splice(eventIdx, 1);
     }
@@ -1644,18 +1774,18 @@ export default class Engine {
     const { buildings } = this.availableCommand.data;
     const pl = this.player(player);
 
-    const PIHex =  pl.data.occupied.find( hex => hex.buildingOf(player) === Building.PlanetaryInstitute);
+    const PIHex = pl.data.occupied.find((hex) => hex.buildingOf(player) === Building.PlanetaryInstitute);
     const parsed = this.map.parse(location);
 
     for (const elem of buildings) {
       if (isEqual(this.map.parse(elem.coordinates), parsed)) {
-        const {q, r} = this.map.parse(location);
-        const hex = this.map.grid.get({q, r});
+        const { q, r } = this.map.parse(location);
+        const hex = this.map.grid.get({ q, r });
 
-        if ( hex.buildingOf(player) === Building.Mine ) {
+        if (hex.buildingOf(player) === Building.Mine) {
           hex.data.building = Building.PlanetaryInstitute;
           PIHex.data.building = Building.Mine;
-          pl.federationCache = null ;
+          pl.federationCache = null;
           return;
         }
       }

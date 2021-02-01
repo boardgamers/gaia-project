@@ -1,15 +1,15 @@
-import { expect } from 'chai';
-import Engine from '../engine';
-import {Operator, Player} from '../enums';
+import { expect } from "chai";
+import Engine from "../engine";
+import { Operator, Player } from "../enums";
 
 const parseMoves = Engine.parseMoves;
 
 describe("boosters", () => {
   it("should have the correct number of round boosters depending on the number of players", () => {
-    const engine2 = new Engine(['init 2 randomSeed']);
-    const engine3 = new Engine(['init 3 randomSeed']);
-    const engine4 = new Engine(['init 4 randomSeed']);
-    const engine5 = new Engine(['init 5 randomSeed']);
+    const engine2 = new Engine(["init 2 randomSeed"]);
+    const engine3 = new Engine(["init 3 randomSeed"]);
+    const engine4 = new Engine(["init 4 randomSeed"]);
+    const engine5 = new Engine(["init 5 randomSeed"]);
 
     expect(Object.keys(engine2.tiles.boosters)).to.have.length(5);
     expect(Object.keys(engine3.tiles.boosters)).to.have.length(6);
@@ -90,7 +90,10 @@ describe("boosters", () => {
 
     expect(() => new Engine([...moves, "p1 special step"])).to.not.throw();
     // tslint:disable-next-line no-unused-expression
-    expect(new Engine([...moves, "p1 special step. build m -2x2."]).player(Player.Player1).events[Operator.Activate][0].activated).to.be.true;
+    expect(
+      new Engine([...moves, "p1 special step. build m -2x2."]).player(Player.Player1).events[Operator.Activate][0]
+        .activated
+    ).to.be.true;
 
     // The step special action can't be used to build a gaia-former
     expect(() => new Engine([...moves, "p1 special step. build gf -2x3."])).to.throw();

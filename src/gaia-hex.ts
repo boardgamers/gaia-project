@@ -39,7 +39,7 @@ export class GaiaHex extends Hex<GaiaHexData> {
       // into federations
       return [];
     }
-    return [this.data.player, this.data.additionalMine].filter(x => x !== undefined);
+    return [this.data.player, this.data.additionalMine].filter((x) => x !== undefined);
   }
 
   // Space stations do not count as colonized, gaia-formers do not count as colonized
@@ -130,14 +130,14 @@ export class GaiaHex extends Hex<GaiaHexData> {
 
   // Can probably math this better
   get relativeCoordinates() {
-    const horizontal = {q: -3, r: 5};
-    const vertical = {q: 2, r: 3};
-    const diagonal = {q: 5, r: -2};
+    const horizontal = { q: -3, r: 5 };
+    const vertical = { q: 2, r: 3 };
+    const diagonal = { q: 5, r: -2 };
 
-    const current = {q: this.q, r: this.r};
+    const current = { q: this.q, r: this.r };
 
     let counter = 0;
-    while(counter++ < 10 && magnitude(current.q, current.r) > 2) {
+    while (counter++ < 10 && magnitude(current.q, current.r) > 2) {
       for (const direction of [horizontal, vertical, diagonal]) {
         while (magnitude(current.q - direction.q, current.r - direction.r) < magnitude(current.q, current.r)) {
           current.q -= direction.q;
@@ -158,7 +158,7 @@ export class GaiaHex extends Hex<GaiaHexData> {
     const suffix = suffixes[`${relative.q}x${relative.r}`];
 
     assert(suffix, `Can't find suffix for ${this.q}x${this.r} ${relative.q}x${relative.r}`);
-    return [this.data.sector.replace(/[AB]$/, ''), suffixes[`${relative.q}x${relative.r}`]].join('');
+    return [this.data.sector.replace(/[AB]$/, ""), suffixes[`${relative.q}x${relative.r}`]].join("");
   }
 }
 
@@ -181,13 +181,13 @@ const suffixes = {
   "-1x0": "B3",
   "0x-1": "B4",
   "1x-1": "B5",
-  "0x0": "C"
+  "0x0": "C",
 };
 
-const reverseSuffixes = Object.keys(suffixes).reduce((acc, key) => ({...acc, [suffixes[key]]: key}), {});
+const reverseSuffixes = Object.keys(suffixes).reduce((acc, key) => ({ ...acc, [suffixes[key]]: key }), {});
 
 export { reverseSuffixes };
 
-function magnitude (q: number, r: number) {
-  return Math.max(Math.abs(q), Math.abs(r), Math.abs(-q-r));
+function magnitude(q: number, r: number) {
+  return Math.max(Math.abs(q), Math.abs(r), Math.abs(-q - r));
 }

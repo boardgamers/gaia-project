@@ -3,7 +3,7 @@ import Engine from "../engine";
 
 const parseMoves = Engine.parseMoves;
 
-describe('Hadsch Hallas', () => {
+describe("Hadsch Hallas", () => {
   it("should grant hadsch hallas new free actions after the PI is built", () => {
     const moves = parseMoves(`
       init 2 randomSeed

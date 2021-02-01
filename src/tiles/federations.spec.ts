@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import Engine from "../engine";
-import { Player } from '../enums';
+import { Player } from "../enums";
 
 const parseMoves = Engine.parseMoves;
 
@@ -46,7 +46,10 @@ describe("Federation", () => {
     expect(data.victoryPoints).to.equal(vp + 8 + 5);
     expect(data.power.gaia).to.be.gte(0);
     expect(data.satellites).to.equal(2);
-    expect(data.discardablePowerTokens()).to.be.equal(powerTokens - 2, "The 2 satellites should remove one power token each");
+    expect(data.discardablePowerTokens()).to.be.equal(
+      powerTokens - 2,
+      "The 2 satellites should remove one power token each"
+    );
 
     // Test other federation with the same buildings
     expect(() => new Engine([...moves, "p1 federation -1x2,-2x3,-3x3,-3x4,-4x2,-4x3 fed2"])).to.not.throw();

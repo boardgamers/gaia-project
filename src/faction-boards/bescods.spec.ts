@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import Engine from "../engine";
-import { Player, Federation } from '../enums';
+import { Player, Federation } from "../enums";
 
 const parseMoves = Engine.parseMoves;
 
@@ -26,7 +26,5 @@ describe("Bescods", () => {
 
     const engine1 = new Engine(moves);
     expect(() => engine1.move("p2 special up-lowest. up nav")).to.not.throw();
-
   });
 });
-

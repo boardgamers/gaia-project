@@ -13,10 +13,10 @@ import Firaks from "./firaks";
 import Bescods from "./bescods";
 import Nevlas from "./nevlas";
 import Itars from "./itars";
-import {FactionBoard, FactionBoardRaw} from "./types";
-export {FactionBoard, FactionBoardRaw} from "./types";
+import { FactionBoard, FactionBoardRaw } from "./types";
+export { FactionBoard, FactionBoardRaw } from "./types";
 
-const factionBoards: {[key in Faction]: FactionBoardRaw} = {
+const factionBoards: { [key in Faction]: FactionBoardRaw } = {
   [Faction.Terrans]: Terrans,
   [Faction.Lantids]: Lantids,
   [Faction.Xenos]: Xenos,

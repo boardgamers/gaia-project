@@ -1,6 +1,6 @@
-import { expect } from 'chai';
-import Engine from '../engine';
-import {Player, AdvTechTilePos, TechTilePos, Command} from '../enums';
+import { expect } from "chai";
+import Engine from "../engine";
+import { Player, AdvTechTilePos, TechTilePos, Command } from "../enums";
 
 describe("Tech Tiles", () => {
   it("should prevent picking the same tech tile twice", () => {
@@ -31,7 +31,7 @@ describe("Tech Tiles", () => {
 
     const engine = new Engine(moves);
 
-    expect(() => engine.move('p1 build ac1 -3x4. tech free1')).to.throw();
+    expect(() => engine.move("p1 build ac1 -3x4. tech free1")).to.throw();
   });
 
   it("should allow to upgrade research area after building a RL, pick tech in nav", () => {
@@ -52,13 +52,13 @@ describe("Tech Tiles", () => {
     const engine = new Engine(moves);
 
     /** Spends two green federations: one for the last tile, one for the advanced tech */
-    expect(() => engine.move('p1 build lab -1x2. tech nav. up nav.')).to.not.throw();
+    expect(() => engine.move("p1 build lab -1x2. tech nav. up nav.")).to.not.throw();
     // tslint:disable-next-line no-unused-expression
-    expect(engine.player(Player.Player1).data.tiles.techs.find(tile => tile.pos === TechTilePos.Navigation)).to.not.be.undefined;
+    expect(engine.player(Player.Player1).data.tiles.techs.find((tile) => tile.pos === TechTilePos.Navigation)).to.not.be
+      .undefined;
 
     const engine1 = new Engine(moves);
-    expect(() => engine1.move('p1 build lab -1x2. tech nav. decline.')).to.not.throw();
-
+    expect(() => engine1.move("p1 build lab -1x2. tech nav. decline.")).to.not.throw();
   });
 
   it("should allow to get an advanced tech tiles when conditions are met", () => {
@@ -115,17 +115,17 @@ describe("Tech Tiles", () => {
     const engine = new Engine(moves);
 
     /** Spends two green federations: one for the last tile, one for the advanced tech */
-    expect(() => engine.move('p1 build lab -2x3. tech adv-gaia. cover free1. up gaia.')).to.throw();
+    expect(() => engine.move("p1 build lab -2x3. tech adv-gaia. cover free1. up gaia.")).to.throw();
 
     const engine1 = new Engine(moves);
-    expect(() => engine1.move('p1 build lab -2x3. tech adv-gaia. cover free1. up terra.')).to.not.throw();
+    expect(() => engine1.move("p1 build lab -2x3. tech adv-gaia. cover free1. up terra.")).to.not.throw();
     // tslint:disable-next-line no-unused-expression
-    expect(engine1.player(Player.Player1).data.tiles.techs.find(tile => tile.pos === AdvTechTilePos.GaiaProject)).to.not.be.undefined;
+    expect(engine1.player(Player.Player1).data.tiles.techs.find((tile) => tile.pos === AdvTechTilePos.GaiaProject)).to
+      .not.be.undefined;
     expect(engine1.tiles.techs[AdvTechTilePos.GaiaProject].count).to.equal(0);
 
     const engine2 = new Engine(moves);
-    expect(() => engine2.move('p1 build lab -2x3. tech adv-gaia. cover free1. decline.')).to.not.throw();
-
+    expect(() => engine2.move("p1 build lab -2x3. tech adv-gaia. cover free1. decline.")).to.not.throw();
   });
 
   it("should refuse advanced tech tile when no tech tile to cover", () => {
@@ -211,6 +211,6 @@ describe("Tech Tiles", () => {
 
     const availableCommand = engine.findAvailableCommand(Player.Player1, Command.ChooseTechTile);
     // tslint:disable-next-line no-unused-expression
-    expect(availableCommand.data.tiles.find(tech => tech.pos === AdvTechTilePos.Economy)).to.be.undefined;
+    expect(availableCommand.data.tiles.find((tech) => tech.pos === AdvTechTilePos.Economy)).to.be.undefined;
   });
 });

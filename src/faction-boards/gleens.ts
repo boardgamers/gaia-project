@@ -8,8 +8,8 @@ const gleens: FactionBoardRaw = {
   faction: Faction.Gleens,
   buildings: {
     [Building.PlanetaryInstitute]: {
-      income: [["+4pw", "+o"]]
-    }
+      income: [["+4pw", "+o"]],
+    },
   },
   income: ["3k,4o,15c,up-nav", "+o,k"],
   handlers: {
@@ -18,8 +18,8 @@ const gleens: FactionBoardRaw = {
       if (hex.data.planet === Planet.Gaia) {
         player.gainRewards([new Reward("2vp")], Faction.Gleens);
       }
-    }
-  }
+    },
+  },
 };
 
 export default gleens;

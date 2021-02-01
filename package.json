@@ -22,7 +22,9 @@
     "build": "npm run clean && tsc",
     "clean": "rm -Rf dist",
     "lint": "eslint . --ext .ts",
-    "test": "npm run lint && npm run just-test",
+    "prettier": "npx --yes -- prettier --write .",
+    "prettier-check": "npx --yes -- prettier --check .",
+    "test": "npm run lint && npm run pretier-check && npm run just-test",
     "just-test": "mocha -r ts-node/register src/**/*.spec.ts src/*.spec.ts"
   },
   "contributors": [

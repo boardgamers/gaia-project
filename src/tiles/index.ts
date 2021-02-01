@@ -1,5 +1,5 @@
 import techs from "./techs";
-import {roundScorings, finalScorings} from "./scoring";
+import { roundScorings, finalScorings } from "./scoring";
 import boosters from "./boosters";
 import federations from "./federations";
 
@@ -8,5 +8,5 @@ export default {
   roundScorings,
   finalScorings,
   boosters,
-  federations
+  federations,
 };
