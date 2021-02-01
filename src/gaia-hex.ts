@@ -11,8 +11,6 @@ export interface GaiaHexData {
   player?: Player;
   /** List of players who have a federation occupying this square */
   federations?: Player[];
-  ships?: Player[];
-  tradeTokens?: Array<Player | TradeToken>;
   /** Additional mine of lantids */
   additionalMine?: Player;
 }
@@ -89,42 +87,6 @@ export class GaiaHex extends Hex<GaiaHexData> {
       this.data.federations.push(player);
     } else {
       this.data.federations = [player];
-    }
-  }
-
-  addShip(player: Player) {
-    if (this.data.ships) {
-      this.data.ships.push(player);
-    } else {
-      this.data.ships = [player];
-    }
-  }
-
-  addTradeToken(player: Player | TradeToken.Wild) {
-    if (this.data.tradeTokens) {
-      this.data.tradeTokens.push(player);
-    } else {
-      this.data.tradeTokens = [player];
-    }
-  }
-
-  hasTradeToken(player: Player) {
-    return this.data.tradeTokens && this.data.tradeTokens.includes(player);
-  }
-
-  hasWildTradeToken() {
-    return this.data.tradeTokens && this.data.tradeTokens.includes(TradeToken.Wild);
-  }
-
-  hasTradeTokens() {
-    return this.data.tradeTokens && this.data.tradeTokens.length > 0;
-  }
-
-  removeShip(player: Player) {
-    if (this.data.ships.length === 1) {
-      this.data.ships = undefined;
-    } else {
-      this.data.ships.splice(this.data.ships.indexOf(player), 1);
     }
   }
 

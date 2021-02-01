@@ -36,14 +36,6 @@ export const freeActionsNevlasPI = [
 
 export const freeActionsBaltaks = [{ cost: "1gf", income: "1q" }];
 
-/** Temporarily increase range of all ships */
-export const freeActionsMoveShip = [
-  {
-    cost: "1q",
-    income: "range+2",
-  },
-];
-
 export const boardActions = {
   [BoardAction.Power1]: { cost: "7pw", income: ["3k"] },
   [BoardAction.Power2]: { cost: "5pw", income: ["2step"] },
@@ -55,8 +47,4 @@ export const boardActions = {
   [BoardAction.Qic1]: { cost: "4q", income: ["tech"] },
   [BoardAction.Qic2]: { cost: "3q", income: [">fed"] },
   [BoardAction.Qic3]: { cost: "2q", income: ["3vp", "pt > vp"] },
-  [BoardAction.ShipPower1]: { cost: "5pw", income: ["range+3"] },
-  [BoardAction.ShipPower2]: { cost: "3pw", income: ["q"] },
-  [BoardAction.ShipPower3]: { cost: "3pw", income: ["move-all"] },
-  [BoardAction.ShipQic1]: { cost: "1q", income: ["ship"] },
 };

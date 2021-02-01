@@ -19,12 +19,9 @@ export enum ResearchField {
   GaiaProject = "gaia",
   Economy = "eco",
   Science = "sci",
-  TradingBonus = "trade",
-  TradingVolume = "ship",
 }
 
 export enum Expansion {
-  Spaceships = 1,
   All = 1,
 }
 
@@ -38,10 +35,6 @@ export namespace ResearchField {
       ResearchField.Economy,
       ResearchField.Science,
     ];
-
-    if (expansions & Expansion.Spaceships) {
-      ret.push(ResearchField.TradingBonus, ResearchField.TradingVolume);
-    }
 
     return ret;
   }
@@ -62,12 +55,6 @@ export enum Resource {
   Range = "r",
   GaiaFormer = "gf",
   SpaceStation = "space-station",
-  SpaceShip = "ship",
-  AdvancedSpaceShip = "adv-ship",
-  MoveShips = "move",
-  MoveAllShips = "move-all",
-  SpaceShipRange = "ship-range",
-  SpaceShipMove = "ship-move",
   DowngradeLab = "down-lab",
   UpgradeTerraforming = "up-terra",
   UpgradeNavigation = "up-nav",
@@ -76,8 +63,6 @@ export enum Resource {
   UpgradeEconomy = "up-eco",
   UpgradeScience = "up-sci",
   UpgradeLowest = "up-lowest",
-  UpgradeTradingBonus = "up-trade",
-  UpgradeTradingVolume = "up-ship",
   UpgradeZero = "up-0",
   TechTile = "tech",
   RescoreFederation = "fed",
@@ -101,8 +86,6 @@ export enum Operator {
   Pass = "|",
   /** reserved op for planetary institute and academies becoming 4pw structures */
   Special = "PA->4pw",
-  /** Special annoying adv tech */
-  AdvShip4 = "2ship+4",
 }
 
 export enum Condition {
@@ -114,7 +97,6 @@ export enum Condition {
   ResearchLab = "lab",
   PlanetaryInstituteOrAcademy = "PA",
   Federation = "fed",
-  Trade = "trade",
 
   // count only
   Gaia = "g",
@@ -128,7 +110,6 @@ export enum Condition {
   Culture = "culture",
   ResearchLevels = "a",
   HighestResearchLevel = "L",
-  PlanetsWithTradeToken = "import",
 
   // trigger only
   MineOnGaia = "mg",
@@ -204,14 +185,11 @@ export enum Command {
   Action = "action",
   Special = "special",
   PlaceLostPlanet = "lostPlanet",
-  PlaceShip = "ship",
-  MoveShip = "move",
-  DeliverTrade = "trade",
-  PickReward = "gain",
   FormFederation = "federation",
   EndTurn = "endturn",
   EndTurnConfirmation = "endturnConfirmation",
   PISwap = "swap-PI",
+  PickReward = "pick",
 }
 
 export enum TradeToken {
@@ -248,9 +226,6 @@ export enum Booster {
   Booster8 = "booster8",
   Booster9 = "booster9",
   Booster10 = "booster10",
-  Ship1 = "booster-ship1",
-  Ship2 = "booster-ship2",
-  Ship3 = "booster-ship3",
 }
 
 export namespace Booster {
@@ -260,9 +235,6 @@ export namespace Booster {
         return;
       }
       if (/^booster[0-9]/.test(val)) {
-        return true;
-      }
-      if (expansions & Expansion.Spaceships && val.startsWith("booster-ship")) {
         return true;
       }
     }) as Booster[];
@@ -279,11 +251,6 @@ export enum TechTile {
   Tech7 = "tech7",
   Tech8 = "tech8",
   Tech9 = "tech9",
-  /** This techtile is one every player starts with. Not included in the shuffles */
-  Ship0 = "tech-ship0",
-  Ship1 = "tech-ship1",
-  Ship2 = "tech-ship2",
-  Ship3 = "tech-ship3",
 }
 
 export namespace TechTile {
@@ -293,9 +260,6 @@ export namespace TechTile {
         return;
       }
       if (/^tech[0-9]/.test(val)) {
-        return true;
-      }
-      if (expansions & Expansion.Spaceships && val.startsWith("tech-ship") && val !== TechTile.Ship0) {
         return true;
       }
     }) as TechTile[];
@@ -309,22 +273,15 @@ export enum TechTilePos {
   GaiaProject = "gaia",
   Economy = "eco",
   Science = "sci",
-  TradingBonus = "trade",
-  TradingVolume = "ship",
   Free1 = "free1",
   Free2 = "free2",
   Free3 = "free3",
   Free4 = "free4",
-  BasicShip = "move",
 }
 
 export namespace TechTilePos {
   export function values(expansions = 0): TechTilePos[] {
     const ret = ["terra", "nav", "int", "gaia", "eco", "sci", "free1", "free2", "free3"] as TechTilePos[];
-
-    if (expansions & Expansion.Spaceships) {
-      ret.push(TechTilePos.TradingBonus, TechTilePos.TradingVolume, TechTilePos.Free4);
-    }
 
     return ret;
   }
@@ -346,12 +303,6 @@ export enum AdvTechTile {
   AdvTech13 = "advtech13",
   AdvTech14 = "advtech14",
   AdvTech15 = "advtech15",
-  Ship1 = "advship1",
-  Ship2 = "advship2",
-  Ship3 = "advship3",
-  Ship4 = "advship4",
-  Ship5 = "advship5",
-  Ship6 = "advship6",
 }
 
 export namespace AdvTechTile {
@@ -361,9 +312,6 @@ export namespace AdvTechTile {
         return;
       }
       if (val.startsWith("advtech")) {
-        return true;
-      }
-      if (expansions & Expansion.Spaceships && val.startsWith("advship")) {
         return true;
       }
     }) as AdvTechTile[];
@@ -377,17 +325,11 @@ export enum AdvTechTilePos {
   GaiaProject = "adv-gaia",
   Economy = "adv-eco",
   Science = "adv-sci",
-  TradingBonus = "adv-trade",
-  TradingVolume = "adv-ship",
 }
 
 export namespace AdvTechTilePos {
   export function values(expansions = 0): AdvTechTilePos[] {
     const ret = ["adv-terra", "adv-nav", "adv-int", "adv-gaia", "adv-eco", "adv-sci"] as AdvTechTilePos[];
-
-    if (expansions & Expansion.Spaceships) {
-      ret.push(AdvTechTilePos.TradingBonus, AdvTechTilePos.TradingVolume);
-    }
 
     return ret;
   }
@@ -401,7 +343,6 @@ export enum Federation {
   Fed5 = "fed5",
   Fed6 = "fed6",
   Gleens = "gleens",
-  Ship = "ship",
 }
 
 export namespace Federation {
@@ -421,10 +362,6 @@ export enum BoardAction {
   Qic1 = "qic1",
   Qic2 = "qic2",
   Qic3 = "qic3",
-  ShipPower1 = "power-ship1",
-  ShipPower2 = "power-ship2",
-  ShipPower3 = "power-ship3",
-  ShipQic1 = "qic-ship1",
 }
 
 export namespace BoardAction {
@@ -434,10 +371,6 @@ export namespace BoardAction {
         return;
       }
       if (/^qic[0-9]/.test(val) || /^power[0-9]/.test(val)) {
-        return true;
-      }
-
-      if (expansions & Expansion.Spaceships && val.includes("ship")) {
         return true;
       }
     }) as BoardAction[];
@@ -455,8 +388,6 @@ export enum ScoringTile {
   Score8 = "score8",
   Score9 = "score9",
   Score10 = "score10",
-  Ship1 = "score-ship1",
-  Ship2 = "score-ship2",
 }
 
 export namespace ScoringTile {
@@ -466,9 +397,6 @@ export namespace ScoringTile {
         return;
       }
       if (/^score[0-9]/.test(val)) {
-        return true;
-      }
-      if (expansions & Expansion.Spaceships && val.startsWith("score-ship")) {
         return true;
       }
     }) as ScoringTile[];
@@ -497,10 +425,6 @@ export namespace FinalTile {
       FinalTile.Satellite,
     ];
 
-    if (expansions & Expansion.Spaceships) {
-      ret.push(FinalTile.TradeTokens, FinalTile.Culture);
-    }
-
     return ret;
   }
 }
@@ -519,7 +443,6 @@ export enum Phase {
   SetupAuction = "setupAuction",
   SetupBuilding = "setupBuilding",
   SetupBooster = "setupBooster",
-  SetupShip = "setupShip",
   BeginGame = "beginGame",
   RoundStart = "roundStart",
   RoundIncome = "roundIncome",
@@ -543,10 +466,7 @@ export enum SubPhase {
   BuildMine = "buildMine",
   BuildMineOrGaiaFormer = "buildMineOrGaiaFormer",
   SpaceStation = "spaceStation",
-  PlaceShip = "placeShip",
-  MoveShip = "moveShip",
-  PickRewards = "pickRewards",
-  DeliverTrade = "deliverTrade",
   PISwap = "swap-PI",
   DowngradeLab = "down-lab",
+  PickRewards = "pickRewards",
 }

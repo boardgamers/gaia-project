@@ -62,7 +62,6 @@ export default class Player extends EventEmitter {
     [Operator.Activate]: [],
     [Operator.Pass]: [],
     [Operator.Special]: [],
-    [Operator.AdvShip4]: [],
   };
   // To avoid recalculating federations every time
   federationCache: FederationCache;
@@ -163,10 +162,6 @@ export default class Player extends EventEmitter {
 
   get planet(): Planet {
     return factions.planet(this.faction);
-  }
-
-  get shipMovementRange(): number {
-    return this.data.range + this.data.shipRange + this.data.temporaryRange;
   }
 
   payCosts(costs: Reward[], source: EventSource) {
@@ -328,17 +323,6 @@ export default class Player extends EventEmitter {
         event.source,
         event.toPick
       );
-    } else if (event.operator === Operator.AdvShip4) {
-      const nShips = this.data.shipLocations.length;
-      this.data.shipRange += 4;
-
-      this.gainRewards([new Reward("2ship")], event.source);
-
-      this.data.movableShipLocations = this.data.shipLocations.slice(nShips);
-      this.data.movableShips = this.data.shipLocations.length - nShips;
-
-      this.emit("move-preset-ships");
-      this.data.shipRange -= 4;
     }
   }
 
@@ -504,36 +488,10 @@ export default class Player extends EventEmitter {
     this.emit(`build-${building}`, hex);
   }
 
-  placeShip(hex: GaiaHex) {
-    hex.addShip(this.player);
-    this.data.shipLocations.push(hex.toString());
-  }
-
-  removeShip(hex: GaiaHex) {
-    const idx = this.data.shipLocations.indexOf(hex.toString());
-
-    hex.removeShip(this.player);
-    this.data.shipLocations.splice(idx, 1);
-  }
-
-  deliverTrade(hex: GaiaHex) {
-    if (hex.hasTradeToken(this.player) && this.data.availableWildTradeTokens() > 0 && !hex.hasWildTradeToken()) {
-      hex.addTradeToken(TradeToken.Wild);
-      this.data.wildTradeTokens += 1;
-    } else {
-      hex.addTradeToken(this.player);
-      this.data.tradeTokens += 1;
-    }
-
-    this.receiveTriggerIncome(Condition.Trade);
-  }
-
   resetTemporaryVariables() {
     // reset temporary benefits
     this.data.temporaryRange = 0;
     this.data.temporaryStep = 0;
-    this.data.temporaryShipRange = 0;
-    this.data.qicUsedToBoostShip = 0;
   }
 
   pass() {
@@ -820,16 +778,6 @@ export default class Player extends EventEmitter {
             hex.belongsToFederationOf(this.player) ? this.buildingValue(hex, { federation: true }) : 0
           )
         );
-      case Condition.Trade:
-        return this.data.tradeTokens + this.data.wildTradeTokens;
-      // Max 8 (for tech tile which gains 1k per planet)
-      case Condition.PlanetsWithTradeToken:
-        return Math.min(
-          this.data.occupied.filter(
-            (hex) => hex.isMainOccupier(this.player) && hex.colonizedBy(this.player) && hex.hasTradeTokens()
-          ).length,
-          8
-        );
       case Condition.AdvanceResearch:
         return sum(Object.values(this.data.research));
       case Condition.HighestResearchLevel:
@@ -848,8 +796,6 @@ export default class Player extends EventEmitter {
     const satellites = Math.floor(this.data.satellites / 2);
     // Federation tiles
     const federations = this.data.tiles.federations.length * 3;
-    // Spaceship income
-    const ships = (Reward.parse(this.income).find((rew) => rew.type === Resource.SpaceShip) || new Reward("~")).count;
     // Gaia formers
     const gaiaFormers = this.data.gaiaformers;
     // Highest level or Adv Tech
@@ -857,7 +803,7 @@ export default class Player extends EventEmitter {
       Object.values(this.data.research).filter((val) => val === 5).length +
       this.data.tiles.techs.filter((tech) => isAdvanced(tech.pos)).length;
 
-    return buildings + satellites + federations + ships + gaiaFormers + advanced;
+    return buildings + satellites + federations + gaiaFormers + advanced;
   }
 
   availableFederations(map: SpaceMap, flexible: boolean): FederationInfo[] {

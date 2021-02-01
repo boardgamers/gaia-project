@@ -1,6 +1,6 @@
 import SpaceMap, { MapConfiguration } from "./map";
 import assert from "assert";
-import { sortBy, uniq, sum, set } from "lodash";
+import { sortBy, uniq, sum, set, range, isEqual } from "lodash";
 import Player from "./player";
 import shuffleSeed from "shuffle-seed";
 import {
@@ -35,7 +35,6 @@ import Reward from "./reward";
 import { boardActions } from "./actions";
 import { stdBuildingValue } from "./buildings";
 import { isAdvanced } from "./tiles/techs";
-import { range, isEqual } from "lodash";
 
 // const ISOLATED_DISTANCE = 3;
 const LEECHING_DISTANCE = 2;
@@ -49,8 +48,6 @@ export interface EngineOptions {
   map?: MapConfiguration;
   /** Are the federations flexible (allows you to avoid planets with buildings to form federation even if it's not the shortest route)? */
   flexibleFederations?: boolean;
-  /** Spaceship expansion */
-  spaceShips?: boolean;
   /** auction */
   auction?: boolean;
   /** Layout */
@@ -121,7 +118,7 @@ export default class Engine {
   oldPhase: Phase;
 
   get expansions() {
-    return 0 | (this.options.spaceShips ? Expansion.Spaceships : 0);
+    return 0;
   }
 
   round: number = Round.None;
@@ -275,26 +272,9 @@ export default class Engine {
     this.players.push(player);
 
     player.data.on(`gain-${Resource.TechTile}`, () => this.processNextMove(SubPhase.ChooseTechTile));
-    player.data.on(`gain-${Resource.SpaceShip}`, (count: number) => {
-      player.data.shipsToPlace = count;
-      this.processNextMove(SubPhase.PlaceShip);
-    });
-    player.data.on(`gain-${Resource.AdvancedSpaceShip}`, (count: number) => {
-      player.data.shipsToPlace = count;
-      this.processNextMove(SubPhase.PlaceShip);
-    });
     player.data.on(`gain-${Resource.TemporaryStep}`, () => this.processNextMove(SubPhase.BuildMine));
     player.data.on(`gain-${Resource.TemporaryRange}`, (count: number) => {
-      if (this.findAvailableCommand(player.player, Command.MoveShip)) {
-        assert(
-          player.data.qicUsedToBoostShip === 0 && count === 2,
-          "Impossible to gain range more than once during move ship phase"
-        );
-        player.data.qicUsedToBoostShip += 1;
-        this.processNextMove(SubPhase.MoveShip);
-      } else {
-        this.processNextMove(SubPhase.BuildMineOrGaiaFormer);
-      }
+      this.processNextMove(SubPhase.BuildMineOrGaiaFormer);
     });
     player.data.on(`gain-${Resource.RescoreFederation}`, () => this.processNextMove(SubPhase.RescoreFederationTile));
     player.data.on(`gain-${Resource.PISwap}`, () => this.processNextMove(SubPhase.PISwap));
@@ -310,24 +290,6 @@ export default class Engine {
       for (let i = 0; i < count; i++) {
         this.processNextMove(SubPhase.UpgradeResearch, { zero: true });
       }
-    });
-    player.data.on(`gain-${Resource.MoveShips}`, () => {
-      player.resetTemporaryVariables();
-      player.data.movableShips = player.data.movingShips;
-      player.data.movableShipLocations = [...player.data.shipLocations];
-
-      this.processNextMove(SubPhase.MoveShip);
-    });
-    player.data.on(`gain-${Resource.MoveAllShips}`, () => {
-      player.resetTemporaryVariables();
-      player.data.movableShips = player.data.shipLocations.length;
-      player.data.movableShipLocations = [...player.data.shipLocations];
-
-      this.processNextMove(SubPhase.MoveShip);
-    });
-    player.on(`move-preset-ships`, () => {
-      player.resetTemporaryVariables();
-      this.processNextMove(SubPhase.MoveShip);
     });
     player.data.on("brainstone", (areas) => this.processNextMove(SubPhase.BrainStone, areas));
     // Test before upgrading research that it's actually possible. Needed when getting up-int or up-nav in
@@ -443,9 +405,6 @@ export default class Engine {
     } else if (this.availableCommands.some((cmd) => cmd.name === Command.BrainStone)) {
       const cmd = this.findAvailableCommand(this.playerToMove, Command.BrainStone);
       this.move(`${ps} ${Command.BrainStone} ${cmd.data[0]}`);
-    } else if (this.availableCommands.some((cmd) => cmd.name === Command.PlaceShip)) {
-      const cmd = this.findAvailableCommand(this.playerToMove, Command.PlaceShip);
-      this.move(`${ps} ${Command.PlaceShip} ${cmd.data.locations[0].coordinates}`);
     } else if (
       this.availableCommands.some(
         (cmd) => cmd.name === Command.Spend && cmd.data.acts[0].cost.includes(Resource.GainTokenGaiaArea)
@@ -562,9 +521,6 @@ export default class Engine {
         for (const player of hex.occupyingPlayers()) {
           engine.player(player).data.occupied.push(hex);
         }
-        // for (const player of (hex.data.ships || [])) {
-        //   engine.player(player).data.shipLocations.push(hex);
-        // }
       }
     }
 
@@ -713,7 +669,7 @@ export default class Engine {
     const move = this.parseMove(this.turnMoves.shift());
 
     this.checkCommand(move.command);
-    (this[move.command === Command.MoveShip ? "_move" : move.command] as any)(this.playerToMove, ...move.args);
+    (this[move.command] as any)(this.playerToMove, ...move.args);
 
     return move;
   }
@@ -869,12 +825,6 @@ export default class Engine {
   beginSetupBoosterPhase() {
     this.changePhase(Phase.SetupBooster);
     this.turnOrder = this.turnOrderAfterSetupAuction.reverse();
-    this.moveToNextPlayer(this.turnOrder, { loop: false });
-  }
-
-  beginSetupShipPhase() {
-    this.changePhase(Phase.SetupShip);
-    this.turnOrder = this.turnOrderAfterSetupAuction;
     this.moveToNextPlayer(this.turnOrder, { loop: false });
   }
 
@@ -1113,8 +1063,6 @@ export default class Engine {
       } else if (field === ResearchField.Navigation) {
         // gets LostPlanet
         this.processNextMove(SubPhase.PlaceLostPlanet);
-      } else if (field === ResearchField.TradingVolume) {
-        pl.gainFederationToken(Federation.Ship);
       }
     }
   }
@@ -1167,18 +1115,6 @@ export default class Engine {
   }
 
   [Phase.SetupBuilding](move: string) {
-    this.loadTurnMoves(move, { split: false, processFirst: true });
-
-    if (!this.moveToNextPlayer(this.turnOrder, { loop: false })) {
-      if (this.expansions & Expansion.Spaceships) {
-        this.beginSetupShipPhase();
-      } else {
-        this.beginSetupBoosterPhase();
-      }
-    }
-  }
-
-  [Phase.SetupShip](move: string) {
     this.loadTurnMoves(move, { split: false, processFirst: true });
 
     if (!this.moveToNextPlayer(this.turnOrder, { loop: false })) {
@@ -1294,10 +1230,6 @@ export default class Engine {
     TechTilePos.values(this.expansions).forEach((pos, i) => {
       this.tiles.techs[pos] = { tile: techtiles[i], count: 4 };
     });
-    this.tiles.techs[TechTilePos.BasicShip] = {
-      tile: TechTile.Ship0,
-      count: 0,
-    };
 
     // Choose adv tech tiles as part of the pool
     const advtechtiles = shuffleSeed.shuffle(AdvTechTile.values(this.expansions), this.map.rng());
@@ -1330,13 +1262,6 @@ export default class Engine {
 
     for (let i = 0; i < nbPlayers; i++) {
       this.addPlayer(new Player(i));
-    }
-
-    // With the expansion, each player starts with a tech tile
-    if (this.expansions & Expansion.Spaceships) {
-      for (const player of this.players) {
-        player.gainTechTile(TechTile.Ship0, TechTilePos.BasicShip);
-      }
     }
   }
 
@@ -1534,126 +1459,6 @@ export default class Engine {
     this.player(player).build(Building.Mine, hex, Reward.parse(data.cost), this.map, 0);
 
     this.leechSources.unshift({ player, coordinates: location });
-  }
-
-  [Command.PlaceShip](player: PlayerEnum, location: string) {
-    const pl = this.player(player);
-    const { locations } = this.availableCommand.data;
-    const parsed = this.map.parse(location);
-
-    assert(
-      locations.find(
-        (loc) => isEqual(this.map.parse(loc.coordinates), parsed),
-        `Impossible to place ship at ${location}`
-      )
-    );
-
-    const hex = this.map.grid.get(parsed);
-    pl.placeShip(hex);
-
-    pl.data.shipsToPlace -= 1;
-    if (pl.data.shipsToPlace > 0) {
-      this.processNextMove(SubPhase.PlaceShip);
-    }
-  }
-
-  [Command.DeliverTrade](player: PlayerEnum, location: string) {
-    assert(
-      location === this.availableCommand.data.locations[0].coordinates,
-      "Impossible to deliver trade at " + location
-    );
-    const destHex = this.map.getS(location);
-
-    this.player(player).deliverTrade(destHex);
-    // The main occupier of the planet can charge power
-    this.leechSources.push({
-      player,
-      coordinates: location,
-      tradeDelivery: destHex.data.player,
-    });
-  }
-
-  [`_${Command.MoveShip}`](player: PlayerEnum, ship: string, dest: string) {
-    const pl = this.player(player);
-    // tslint:disable-next-line no-shadowed-variable
-    const { ships, range, costs } = this.availableCommand.data;
-    const parsedShip = this.map.parse(ship);
-
-    assert(
-      ships.find((loc) => isEqual(this.map.parse(loc.coordinates), parsedShip), `There is no movable ship at ${ship}`)
-    );
-
-    const distance = this.map.distance(parsedShip, this.map.parse(dest));
-
-    assert(range >= distance, "The ship cannot move that far");
-
-    const moveCost = costs[distance] || "~";
-    pl.payCosts(Reward.parse(moveCost), Command.MoveShip);
-
-    pl.removeShip(this.map.grid.get(parsedShip));
-
-    const destHex = this.map.getS(dest);
-
-    if (pl.data.availableWildTradeTokens() > 0) {
-      assert(
-        !destHex.hasTradeToken(player) || !destHex.hasWildTradeToken(),
-        `The destination planet already has a trade token for your faction`
-      );
-    } else {
-      assert(!destHex.hasTradeToken(player), `The destination planet already has a trade token for your faction`);
-    }
-
-    pl.placeShip(destHex);
-
-    if (destHex.hasPlanet()) {
-      if (destHex.occupied()) {
-        assert(
-          destHex.hasStructure(),
-          `When moving a ship to an occupied planet, there needs to be a valid building on it`
-        );
-        assert(!destHex.isMainOccupier(player), "You can't move a ship to a planet that is occupied by you.");
-
-        const canPutTradeToken = pl.data.availableTradeTokens() > 0 && !destHex.hasTradeToken(player);
-        const canPutWildTradeToken = pl.data.availableWildTradeTokens() > 0 && !destHex.hasWildTradeToken();
-
-        assert(
-          canPutTradeToken || canPutWildTradeToken,
-          "Impossible to put a trade token on the planet, either you already have a token there or all your tokens are used"
-        );
-
-        this.processNextMove(SubPhase.DeliverTrade, {
-          locations: [{ coordinates: dest }],
-          automatic: true,
-        });
-      } else {
-        const planet = destHex.data.planet;
-        const building = planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine;
-
-        const { possible, cost, steps } = pl.canBuild(planet, building);
-        assert(possible, "Impossible to move ship to this empty planet as you cannot build there");
-
-        this.processNextMove(SubPhase.BuildMineOrGaiaFormer, {
-          buildings: [
-            {
-              building,
-              coordinates: dest,
-              cost: Reward.toString(cost),
-              steps,
-            },
-          ],
-          automatic: true,
-        });
-      }
-
-      pl.removeShip(destHex);
-    }
-
-    pl.data.movableShips -= 1;
-    pl.data.movableShipLocations.splice(pl.data.movableShipLocations.indexOf(ship), 1);
-
-    if (pl.data.movableShips > 0) {
-      this.processNextMove(SubPhase.MoveShip);
-    }
   }
 
   [Command.PickReward](player: PlayerEnum, rewardString: string) {

@@ -20,7 +20,7 @@ import { range, difference } from "lodash";
 import factions from "./factions";
 import { upgradedBuildings } from "./buildings";
 import Reward from "./reward";
-import { boardActions, freeActions, freeActionsTerrans, freeActionsItars, freeActionsMoveShip } from "./actions";
+import { boardActions, freeActions, freeActionsTerrans, freeActionsItars } from "./actions";
 import * as researchTracks from "./research-tracks";
 import { isAdvanced } from "./tiles/techs";
 
@@ -60,8 +60,6 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
       return possibleMineBuildings(engine, player, false);
     case SubPhase.BuildMineOrGaiaFormer:
       return possibleMineBuildings(engine, player, true, data);
-    case SubPhase.DeliverTrade:
-      return [{ name: Command.DeliverTrade, player, data }];
     case SubPhase.SpaceStation:
       return possibleSpaceStations(engine, player);
     case SubPhase.PISwap:
@@ -70,12 +68,6 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
       return possibleLabDowngrades(engine, player);
     case SubPhase.BrainStone:
       return [{ name: Command.BrainStone, player, data }];
-    case SubPhase.PlaceShip:
-      return possibleShips(engine, player);
-    case SubPhase.PickRewards:
-      return [{ name: Command.PickReward, player, data: { rewards: engine.player(player).data.toPick.rewards } }];
-    case SubPhase.MoveShip:
-      return possibleShipMovements(engine, player);
     case SubPhase.BeforeMove: {
       return [
         ...possibleBuildings(engine, player),
@@ -98,8 +90,6 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
       return [{ name: Command.Init }];
     case Phase.SetupBoard:
       return [{ name: Command.RotateSectors, player }];
-    case Phase.SetupShip:
-      return possibleShips(engine, player);
     case Phase.SetupFaction:
       return [
         {
@@ -243,69 +233,6 @@ export function possibleBuildings(engine: Engine, player: Player) {
   return [];
 }
 
-export function possibleShips(engine: Engine, player: Player) {
-  const locations = [];
-  const pl = engine.player(player);
-
-  for (const hex of pl.data.occupied) {
-    if (
-      hex.buildingOf(player) === Building.Mine ||
-      (pl.faction === Faction.Ivits && hex.buildingOf(player) === Building.PlanetaryInstitute)
-    ) {
-      // Lantids need their PI before getting a ship from a shared mine
-      if (!hex.isMainOccupier(player) && !pl.data.hasPlanetaryInstitute()) {
-        continue;
-      }
-      locations.push({ coordinates: hex.toString() });
-    }
-  }
-
-  if (locations.length > 0) {
-    return [
-      {
-        name: Command.PlaceShip,
-        player,
-        data: { locations },
-      },
-    ];
-  } else {
-    pl.data.shipsToPlace = 0;
-  }
-
-  return [];
-}
-
-export function possibleShipMovements(engine: Engine, player: Player) {
-  const pl = engine.player(player);
-
-  if (pl.data.movableShipLocations.length === 0) {
-    return [];
-  }
-
-  const baseRange = pl.shipMovementRange;
-  const maxRange = pl.shipMovementRange + (pl.data.spendablePowerTokens() ? 1 : 0);
-  const costs = {};
-
-  range(baseRange + 1, maxRange + 1).forEach((val) => {
-    costs[val] = new Reward(val - baseRange, Resource.ChargePower).toString();
-  });
-
-  const commands: AvailableCommand[] = [
-    ...possibleFreeActions(engine, player, { moveShips: true }),
-    {
-      name: Command.MoveShip,
-      player,
-      data: {
-        ships: pl.data.movableShipLocations.map((loc) => ({ coordinates: loc })),
-        range: maxRange,
-        costs,
-      },
-    },
-  ];
-
-  return commands;
-}
-
 export function possibleSpaceStations(engine: Engine, player: Player) {
   const map = engine.map;
   const pl = engine.player(player);
@@ -442,7 +369,7 @@ export function possibleBoardActions(engine: Engine, player: Player) {
   return commands;
 }
 
-export function possibleFreeActions(engine: Engine, player: Player, data?: { moveShips: boolean }) {
+export function possibleFreeActions(engine: Engine, player: Player) {
   // free action - spend
   const pl = engine.player(player);
   const acts = [];
@@ -469,20 +396,8 @@ export function possibleFreeActions(engine: Engine, player: Player, data?: { mov
     burnDisabled = true;
   }
 
-  if (data && data.moveShips) {
-    if (pl.data.qicUsedToBoostShip) {
-      pool = [];
-    } else {
-      pool = freeActionsMoveShip;
-    }
-    burnDisabled = true;
-  }
-
   for (const freeAction of pool) {
-    let maxPay = pl.maxPayRange(Reward.parse(freeAction.cost));
-    if (data && data.moveShips) {
-      maxPay = Math.min(maxPay, 1);
-    }
+    const maxPay = pl.maxPayRange(Reward.parse(freeAction.cost));
     if (maxPay > 0) {
       acts.push({
         cost: freeAction.cost,

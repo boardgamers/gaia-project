@@ -22,12 +22,6 @@ describe("Events", () => {
     expect(event.operator).to.equal(Operator.Special);
   });
 
-  it("should load the 2ship+4 event", () => {
-    const event = new Event("2ship+4");
-
-    expect(event.operator).to.equal(Operator.AdvShip4);
-  });
-
   it("should load pass events", () => {
     const event = new Event("ts | 2vp");
 
@@ -46,16 +40,6 @@ describe("Events", () => {
     expect(Reward.match(event.rewards, [new Reward(-1, Resource.Knowledge), new Reward(1, Resource.TemporaryRange)])).to
       .be.true;
     expect(event.action().rewards).to.equal("-k,range+1");
-  });
-
-  it("should load a 'pick X of rewards' event", () => {
-    const event = new Event("trade 2>> 2k,2o,4c,4pw,q");
-
-    expect(event.condition).to.equal(Condition.Trade);
-    expect(event.operator).to.equal(Operator.Trigger);
-    expect(event.toPick).to.equal(2);
-    // tslint:disable-next-line no-unused-expression
-    expect(event.rewards).to.have.length(5);
   });
 
   it("should have no condition for o,q", () => {
