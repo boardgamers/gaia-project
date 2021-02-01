@@ -1,4 +1,4 @@
-import SpaceMap, { MapConfiguration } from './map';
+import SpaceMap, {MapConfiguration} from './map';
 import assert from 'assert';
 import { sortBy, uniq, sum, set } from 'lodash';
 import Player from './player';
@@ -30,13 +30,11 @@ import Event, {EventSource, RoundScoring} from './events';
 import federations from './tiles/federations';
 import {roundScorings, finalScorings} from './tiles/scoring';
 import * as researchTracks from './research-tracks';
-import AvailableCommand, {
-  generate as generateAvailableCommands,
-} from './available-command';
+import AvailableCommand, {generate as generateAvailableCommands,} from './available-command';
 import Reward from './reward';
-import { boardActions } from './actions';
-import { stdBuildingValue } from './buildings';
-import { isAdvanced } from './tiles/techs';
+import {boardActions} from './actions';
+import {stdBuildingValue} from './buildings';
+import {isAdvanced} from './tiles/techs';
 import { range, isEqual } from 'lodash';
 
 // const ISOLATED_DISTANCE = 3;
@@ -442,30 +440,31 @@ export default class Engine {
     const offers = cmd.data.offers;
 
     const pl = this.player(this.playerToMove);
-    // const jsonData = pl.data.toJSON();
+    const offer = offers[0].offer;
+    const power = Reward.parse(offer)[0].count;
 
     // A passed player in last round should always decline a leech if there's a VP
     // cost associated with it.
-    // If this not truth, please add an example (or link to) in the comments
+    // If this not true, please add an example (or link to) in the comments
     if (this.isLastRound && this.passedPlayers.includes(pl.player)) {
       if (!offers.some(offer => offer.cost === '~')) {
-        this.move(`${pl.faction} ${Command.Decline} ${offers[0].offer}`, false);
+        this.move(`${pl.faction} ${Command.Decline} ${offer}`, false);
         return true;
       }
     }
 
     // Only leech when only one option and cost is nothing
-    if (offers.length > 1 || Reward.parse(offers[0].offer)[0].count > (pl.data.autoChargePower || 1) ) {
+    if (offers.length > 1 || power > (pl.data.autoChargePower ?? 1) ) {
       return false;
     }
 
-    // Itars may want to burn power instead
-    if (pl.faction === Faction.Itars && !this.isLastRound) {
+    // Itars may want to burn power instead, but we can safely move to area2
+    if (pl.faction === Faction.Itars && !this.autoChargeItars(pl.data.power.area1, power) && !this.isLastRound) {
       return false;
     }
 
     try {
-      this.move(`${pl.faction} ${Command.ChargePower} ${offers[0].offer}`, false);
+      this.move(`${pl.faction} ${Command.ChargePower} ${offer}`, false);
       return true;
     } catch (err) {
       /* Restore player data to what it was, like if the taklons cause an incomplete move error requiring brainstone destination */
@@ -473,6 +472,10 @@ export default class Engine {
       this.generateAvailableCommands();
       return false;
     }
+  }
+
+  autoChargeItars(area1: number, power: number) {
+    return area1 >= power;
   }
 
   static fromData(data: any) {
