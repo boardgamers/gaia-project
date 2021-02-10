@@ -50,7 +50,7 @@ export default class FactionWheel extends Vue {
   strokeWidth(pos: number) {
     const planet = this.planet(pos);
     if (this.gameData.players.some(p => p.faction && factions[p.faction].planet === planet)) {
-      return "0.2px";
+      return "0.2px; stroke-dasharray:.5 .2";
     }
 
     return "0.05px";

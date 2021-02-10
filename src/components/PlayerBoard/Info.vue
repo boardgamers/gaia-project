@@ -31,6 +31,18 @@
             <text style="text-anchor: middle; dominant-baseline: central; font-size: 5px">-{{data.bid}}</text>
           </g>
         </g>
+        <g transform="translate(16, 1)">
+          <image xlink:href='../../assets/resources/satellite.svg' :height=155/211*22 width=22 x=-11 y=-8 transform="scale(0.07)" />
+          <text :class="['board-text']" transform="translate(1,0) scale(0.7)">{{data.satellites}}</text>
+        </g>
+        <g transform="translate(16, 2.2)">
+          <image xlink:href='../../assets/conditions/sector.svg' :height=155/211*22 width=22 x=-11 y=-8 transform="scale(0.07)" />
+          <text :class="['board-text']" transform="translate(1,0) scale(0.7)">{{sectors}}</text>
+        </g>
+        <g transform="translate(16, 3.6)">
+          <image xlink:href='../../assets/conditions/federation.svg' :height=155/211*22 width=22 x=-11 y=-8 transform="scale(0.08)" />
+          <text :class="['board-text']" transform="translate(1,0) scale(0.7)">{{player.fedValue}}/{{player.structureValue - player.fedValue}}</text>
+        </g>
       </g>
       <g transform="translate(0, 1.5)" v-if="engine.round < 6">
         <text class="board-text" x=0.25>I</text>
@@ -47,8 +59,10 @@
           <text class="board-text" transform="scale(0.7)">+{{income('q')}}</text>
         </g>
       </g>
-      <g transform="translate(0,3.5) scale(0.8)">
-        <text class="board-text" x=0>{{researchOverview}}</text>
+      <g v-for="i in 6" :key="i" :transform="`translate(${i * 2},3.5) scale(1)`">
+        <polygon points="-7.5,3 -3,7.5 3,7.5 7.5,3 7.5,-3 3,-7.5 -3,-7.5 -7.5,-3" transform="scale(0.1)"
+                 :class='["researchTile", researchType(i - 1)]'/>
+        <text class="board-text" transform="scale(0.7)" x="-.35" y="-.1">{{research(i - 1)}}</text>
       </g>
     </g>
   </g>
@@ -56,9 +70,10 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import { Component, Prop } from 'vue-property-decorator';
+import {Component, Prop} from 'vue-property-decorator';
+import {uniq} from 'lodash';
 import Resource from '../Resource.vue';
-import { Building as BuildingEnum, Faction, Reward, Operator, Resource as ResourceEnum, factions, PlayerData, Player } from '@gaia-project/engine';
+import {Faction, factions, Player, PlayerData, ResearchField, Resource as ResourceEnum} from '@gaia-project/engine';
 import VictoryPoint from '../Resources/VictoryPoint.vue';
 
 @Component({
@@ -99,9 +114,17 @@ export default class BuildingGroup extends Vue {
     return parseInt(this.player.income.substr(index));
   }
 
-  get researchOverview (): string {
-    const r = this.data.research;
-    return `Sat: ${this.data.satellites} TF: ${r.terra} Nav: ${r.nav} AI: ${r.int} GP: ${r.gaia} Eco: ${r.eco} Sci: ${r.sci}`;
+  researchType (index: number): ResearchField {
+    return ResearchField.values()[index];
+  }
+
+  research (index: number): number {
+    return this.data.research[this.researchType(index)];
+  }
+
+  get sectors (): number {
+    const number = this.engine.players.indexOf(this.player);
+    return uniq(this.data.occupied.filter((hex) => hex.colonizedBy(number)).map((hex) => hex.data.sector)).length;
   }
 }
 

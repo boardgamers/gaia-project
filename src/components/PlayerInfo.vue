@@ -51,10 +51,6 @@
 
         <SpecialAction v-for="(action, i) in player.actions" :action="['>' + action.rewards]" :disabled="!action.enabled || passed" :key="action.action + '-' + i" y=17.5 width=3.1 height=3.1 :x=3.3*i />
       </svg>
-      <span v-if="player.faction === 'ivits'">
-        Value of structures in federation: {{player.fedValue }}<br />
-        Value of other structures: {{player.structureValue - player.fedValue }}
-      </span>
     </div>
 
     <div class="tiles row no-gutters mt-1">
