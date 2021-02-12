@@ -50,20 +50,20 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
+import {Component, Prop} from "vue-property-decorator";
 import {
-  ResearchField,
-  Player,
-  Federation,
-  Resource as ResourceEnum,
-  researchTracks,
+  Condition,
   Event,
-  Reward,
+  Federation,
   Operator,
   Planet as PlanetEnum,
-  Condition
+  Player,
+  ResearchField,
+  researchTracks,
+  Resource as ResourceEnum,
+  Reward
 } from "@gaia-project/engine";
-import { descriptions } from "../data/research";
+import {descriptions} from "../data/research";
 import Token from "./Token.vue";
 import FederationTile from "./FederationTile.vue";
 import Planet from "./Planet.vue";
@@ -196,6 +196,16 @@ export default class ResearchTile extends Vue {
 @import "../stylesheets/planets.scss";
 
 svg {
+  .research-board .researchTile {
+    &:hover {
+      fill-opacity: 0.5;
+    }
+    &.highlighted {
+      fill-opacity: 0.3;
+      cursor: pointer;
+    }
+  }
+
   .researchTile {
     fill: none;
     stroke: #444;
@@ -220,14 +230,6 @@ svg {
       fill: $rt-int;
     }
 
-    &:hover {
-      fill-opacity: 0.5;
-    }
-
-    &.highlighted {
-      fill-opacity: 0.3;
-      cursor: pointer;
-    }
   }
 
   text {
