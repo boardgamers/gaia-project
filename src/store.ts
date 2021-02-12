@@ -24,6 +24,7 @@ const gaiaViewer = {
       activeButton: null
     } as GameContext,
     preferences: {
+      accessibleSpaceMap: false,
       noFactionFill: false,
       flatBuildings: false
     },

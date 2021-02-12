@@ -59,10 +59,13 @@ svg {
     &.i {stroke: $ice}
     // volcanic
     &.v {stroke: $volcanic}
+    .accessible-space-map &.v {stroke-dasharray:.25; stroke-width: .1;}
     // gaia
-    &.g {stroke: $gaia}
+    &.g {stroke: $gaia }
+    .accessible-space-map &.g {stroke-dasharray:.14; stroke-width: .1;}
     // transdim
     &.m {stroke: $transdim}
+    .accessible-space-map &.m {stroke-dasharray:.14; stroke-width: .1;}
     // lost planet
     &.l {stroke: $lost}
   }
