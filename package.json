@@ -2,7 +2,11 @@
   "name": "@gaia-project/viewer",
   "version": "5.7.2",
   "description": "Functions to visualize the map and boards for gaia project inside html canvas",
-  "author": "coyotte508, rzulian",
+  "contributors": [
+    "coyotte508",
+    "rzulian",
+    "zeitlinger"
+  ],
   "scripts": {
     "serve": "vue-cli-service serve --port 8080",
     "build": "vue-cli-service build",
