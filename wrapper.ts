@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { EngineOptions } from "./src/engine";
 import { Round } from "./src/enums";
 import assert from "assert";
+import { set } from "lodash";
 
 export async function init(
   nbPlayers: number,
@@ -56,7 +57,7 @@ export function setPlayerMetaData(engine: Engine, player: number, metaData: { na
 
 export function setPlayerSettings(engine: Engine, player: number, settings: { autoCharge?: string }) {
   if ("autoCharge" in settings) {
-    engine.players[player].settings.autoChargePower = Number(settings.autoCharge);
+    set(engine.players[player], "settings.autoChargePower", Number(settings.autoCharge));
   }
 }
 
