@@ -59,6 +59,8 @@ export function setPlayerSettings(engine: Engine, player: number, settings: { au
   if ("autoCharge" in settings) {
     set(engine.players[player], "settings.autoChargePower", Number(settings.autoCharge));
   }
+
+  return engine;
 }
 
 export function playerSettings(engine: Engine, player: number) {
