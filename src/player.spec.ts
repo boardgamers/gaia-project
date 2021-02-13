@@ -150,7 +150,7 @@ describe("Player", () => {
       },
     ];
 
-    tests.forEach((test) => {
+    for (const test of tests) {
       it(test.name, () => {
         const player = new Player();
         player.data.power = test.power;
@@ -159,6 +159,6 @@ describe("Player", () => {
 
         expect(player.needIncomeSelection().canFullyChargeDuringIncomePhase).to.equal(test.expected);
       });
-    });
+    }
   });
 });

@@ -22,7 +22,6 @@
     "build": "npm run clean && tsc",
     "clean": "rm -Rf dist",
     "lint": "eslint . --ext .ts",
-    "fix-lint": "eslint . --ext .ts --fix",
     "prettier": "npx --yes -- prettier --write .",
     "prettier-check": "npx --yes -- prettier --check .",
     "test": "npm run lint && npm run prettier-check && npm run just-test",
