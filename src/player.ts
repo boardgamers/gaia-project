@@ -1,33 +1,32 @@
 import {
-  Faction,
-  Operator,
-  ResearchField,
-  Planet,
-  Building,
-  Resource,
+  AdvTechTile,
+  AdvTechTilePos,
   Booster,
+  BrainstoneArea,
+  Building,
+  Command,
   Condition,
+  Faction,
   Federation,
   FinalTile,
+  Operator,
+  Planet,
+  Player as PlayerEnum,
+  ResearchField,
+  Resource,
   TechTile,
-  AdvTechTile,
-  BrainstoneArea,
   TechTilePos,
-  AdvTechTilePos,
-  Command,
-  TradeToken,
 } from "./enums";
 import PlayerData from "./player-data";
 import Event, { EventSource, TechPos } from "./events";
 import { factionBoard, FactionBoard } from "./faction-boards";
-import { uniq, sum, difference, zipWith, merge, countBy, uniqWith } from "lodash";
+import { countBy, difference, merge, sum, uniq, uniqWith, zipWith } from "lodash";
 import factions from "./factions";
 import Reward from "./reward";
-import { CubeCoordinates, Hex, Grid } from "hexagrid";
-import researchTracks, { lastTile, keyNeeded } from "./research-tracks";
+import { Grid, Hex } from "hexagrid";
+import researchTracks, { keyNeeded, lastTile } from "./research-tracks";
 import { terraformingStepsRequired } from "./planets";
 import boosts from "./tiles/boosters";
-import { Player as PlayerEnum } from "./enums";
 import { stdBuildingValue } from "./buildings";
 import SpaceMap from "./map";
 import { GaiaHex } from "./gaia-hex";
@@ -49,6 +48,44 @@ interface FederationCache {
   availableSatellites: number;
   /** Do we allow custom federations even if there are no possible federations detected by the algorithm? */
   custom: boolean;
+}
+
+class IncomeSelection {
+  constructor(
+    private readonly gainTokens: Event[],
+    private readonly chargePowers: Event[],
+    private readonly data: PlayerData
+  ) {}
+
+  get events(): Event[] {
+    return this.gainTokens.concat(this.chargePowers);
+  }
+
+  get needed(): boolean {
+    return this.gainTokens.length > 0 && this.chargePowers.length > 0;
+  }
+
+  get descs(): Reward[] {
+    return [
+      ...this.gainTokens.map((ev) => ev.rewards.find((rw) => rw.type === Resource.GainToken)),
+      ...this.chargePowers.map((ev) => ev.rewards.find((rw) => rw.type === Resource.ChargePower)),
+    ];
+  }
+
+  get canFullyChargeDuringIncomePhase(): boolean {
+    //there's no event emitter in the clone
+    const d = this.data.clone();
+    for (const gainToken of this.gainTokens) {
+      d.gainRewards(gainToken.rewards, true, null);
+    }
+    for (const chargePower of this.chargePowers) {
+      d.gainRewards(chargePower.rewards, true, null);
+    }
+    if (d.brainstone != null && d.brainstone != BrainstoneArea.Area3) {
+      return false;
+    }
+    return d.power.area1 === 0 && d.power.area2 === 0;
+  }
 }
 
 export default class Player extends EventEmitter {
@@ -527,7 +564,7 @@ export default class Player extends EventEmitter {
     this.removeEvents(Event.parse(techs[tile.tile], `tech-${pos}` as TechPos));
   }
 
-  needIncomeSelection(): { events?: Event[]; needed: boolean; descs: Reward[] } {
+  needIncomeSelection(): IncomeSelection {
     // we need to check if rewards contains Resource.GainToken and Resource.GainPower
     // player has to select the order
     const allEvents = this.events[Operator.Income].filter((ev) => !ev.activated);
@@ -535,14 +572,7 @@ export default class Player extends EventEmitter {
     const gainTokens = allEvents.filter((ev) => ev.rewards.some((rw) => rw.type === Resource.GainToken));
     const chargePowers = allEvents.filter((ev) => ev.rewards.some((rw) => rw.type === Resource.ChargePower));
 
-    return {
-      events: gainTokens.concat(chargePowers),
-      needed: gainTokens.length > 0 && chargePowers.length > 0,
-      descs: [
-        ...gainTokens.map((ev) => ev.rewards.find((rw) => rw.type === Resource.GainToken)),
-        ...chargePowers.map((ev) => ev.rewards.find((rw) => rw.type === Resource.ChargePower)),
-      ],
-    };
+    return new IncomeSelection(gainTokens, chargePowers, this.data);
   }
 
   canGaiaTerrans(): boolean {
@@ -595,7 +625,7 @@ export default class Player extends EventEmitter {
   }
 
   receivePassIncome() {
-    // this is for pass tile income (e.g. rounboosters, adv tiles)
+    // this is for pass tile income (e.g. round boosters, adv tiles)
     for (const event of this.events[Operator.Pass]) {
       const times = this.eventConditionCount(event.condition);
       this.gainRewards(

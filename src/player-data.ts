@@ -1,28 +1,32 @@
 import Reward from "./reward";
 import { GaiaHex } from "./gaia-hex";
 import {
-  ResearchField,
-  Building,
-  Booster,
-  TechTile,
   AdvTechTile,
-  Federation,
-  Resource,
-  BrainstoneArea,
-  TechTilePos,
   AdvTechTilePos,
+  Area2AutoChargePolicy,
+  AutoChargePolicy,
+  Booster,
+  BrainstoneArea,
+  Building,
   Command,
   Expansion,
+  Federation,
+  ResearchField,
+  Resource,
+  TechTile,
+  TechTilePos,
 } from "./enums";
 import { EventEmitter } from "eventemitter3";
 import { EventSource } from "./events";
-import { fromPairs, cloneDeep } from "lodash";
-import { lastTile } from "./research-tracks";
+import { cloneDeep, fromPairs } from "lodash";
 
 const MAX_ORE = 15;
 const MAX_CREDIT = 30;
 const MAX_KNOWLEDGE = 15;
-const MAX_TRADE_TOKENS = 15;
+
+export class Power {
+  constructor(public area1: number = 0, public area2: number = 0, public area3: number = 0, public gaia: number = 0) {}
+}
 
 export default class PlayerData extends EventEmitter {
   victoryPoints = 10;
@@ -31,17 +35,7 @@ export default class PlayerData extends EventEmitter {
   ores = 0;
   qics = 0;
   knowledge = 0;
-  power: {
-    area1: number;
-    area2: number;
-    area3: number;
-    gaia: number;
-  } = {
-    area1: 0,
-    area2: 0,
-    area3: 0,
-    gaia: 0,
-  };
+  power: Power = new Power();
   brainstone: BrainstoneArea = null;
 
   buildings: {
@@ -289,18 +283,6 @@ export default class PlayerData extends EventEmitter {
 
   spendablePowerTokens(): number {
     return Math.floor(this.power.area3 * this.tokenModifier) + this.brainstoneValue();
-  }
-
-  leechablePowerTokens(): number {
-    const base = this.power.area1 * 2 + this.power.area2;
-
-    if (this.brainstone === BrainstoneArea.Area1) {
-      return base + 2;
-    } else if (this.brainstone === BrainstoneArea.Area2) {
-      return base + 1;
-    }
-
-    return base;
   }
 
   gaiaPowerTokens(): number {

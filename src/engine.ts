@@ -452,14 +452,9 @@ export default class Engine {
     const offer = offers[0].offer;
     const power = Reward.parse(offer)[0].count;
 
-    // A passed player in last round should always decline a leech if there's a VP
-    // cost associated with it.
-    // If this not true, please add an example (or link to) in the comments
-    if (this.isLastRound && this.passedPlayers.includes(pl.player)) {
-      if (!offers.some((offer) => offer.cost === "~")) {
-        this.move(`${pl.faction} ${Command.Decline} ${offer}`, false);
-        return true;
-      }
+    if (this.shouldDeclineCharge(pl, offers)) {
+      this.move(`${pl.faction} ${Command.Decline} ${offer}`, false);
+      return true;
     }
 
     // Only leech when only one option and cost is nothing
@@ -481,6 +476,19 @@ export default class Engine {
       this.generateAvailableCommands();
       return false;
     }
+  }
+
+  // A passed player should always decline a leech if there's a VP cost associated with it -
+  // if it's either the last round or if the income phase would already move all tokens to area3.
+  // If this not true, please add an example (or link to) in the comments
+  private shouldDeclineCharge(pl: Player, offers) {
+    if (this.passedPlayers.includes(pl.player)) {
+      if (offers.every((offer) => offer.cost !== "~")) {
+        //all offers cost something
+        return this.isLastRound || pl.needIncomeSelection().canFullyChargeDuringIncomePhase;
+      }
+    }
+    return false;
   }
 
   autoChargeItars(area1: number, power: number) {
