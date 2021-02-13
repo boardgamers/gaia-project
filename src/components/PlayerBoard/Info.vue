@@ -47,10 +47,12 @@
             <text style="text-anchor: middle; dominant-baseline: central; font-size: 5px">-{{ data.bid }}</text>
           </g>
         </g>
-        <g transform="translate(16, 1)" v-b-tooltip title="Satellites">
+        <g transform="translate(16, 1)" v-b-tooltip title="Satellites and space stations">
           <image xlink:href='../../assets/resources/satellite.svg' :height=155/211*22 width=22 x=-11 y=-8
           transform="scale(0.07)" />
-          <text :class="['board-text']" transform="translate(1,0) scale(0.7)">{{ data.satellites }}</text>
+          <text :class="['board-text']" transform="translate(1,0) scale(0.7)">{{
+            data.satellites + data.buildings.sp
+          }}</text>
         </g>
         <g transform="translate(16, 2.2)" v-b-tooltip title="Sectors with a colonized planet">
           <image xlink:href='../../assets/conditions/sector.svg' :height=155/211*22 width=22 x=-11 y=-8
@@ -149,7 +151,8 @@ export default class BuildingGroup extends Vue {
   }
 
   get sectors(): number {
-    return uniq(this.data.occupied.filter(hex => hex.colonizedBy(this.player.player)).map(hex => hex.data.sector)).length;
+    return uniq(this.data.occupied.filter(hex => hex.colonizedBy(this.player.player)).map(hex => hex.data.sector))
+      .length;
   }
 }
 </script>
