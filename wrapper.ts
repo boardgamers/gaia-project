@@ -54,6 +54,18 @@ export function setPlayerMetaData(engine: Engine, player: number, metaData: { na
   return engine;
 }
 
+export function setPlayerSettings(engine: Engine, player: number, settings: { autoCharge?: string }) {
+  if ("autoCharge" in settings) {
+    engine.players[player].data.autoChargePower = Number(settings.autoCharge);
+  }
+}
+
+export function playerSettings(engine: Engine, player: number) {
+  return {
+    autoCharge: String(engine.players[player].data.autoChargePower),
+  };
+}
+
 export async function move(engine: Engine, move: string, player: number) {
   if (!move) {
     // Don't save
