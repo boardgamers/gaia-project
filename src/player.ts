@@ -92,6 +92,7 @@ export default class Player extends EventEmitter {
   faction: Faction = null;
   board: FactionBoard = null;
   data: PlayerData = new PlayerData();
+  settings: { autoChargePower: number } = { autoChargePower: 1 };
   events: { [key in Operator]: Event[] } = {
     [Operator.Once]: [],
     [Operator.Income]: [],
@@ -146,6 +147,7 @@ export default class Player extends EventEmitter {
       player: this.player,
       faction: this.faction,
       data: this.data,
+      settings: this.settings,
       events: this.events,
       name: this.name,
       dropped: this.dropped,
@@ -187,6 +189,7 @@ export default class Player extends EventEmitter {
     }
 
     player.loadPlayerData(data.data);
+    player.settings = data.settings ?? player.settings;
 
     return player;
   }

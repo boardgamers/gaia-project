@@ -76,7 +76,6 @@ export default class PlayerData extends EventEmitter {
   leechPossible: number;
   tokenModifier = 1;
   lostPlanet = 0;
-  autoChargePower = 1;
 
   // Internal variables, not meant to be in toJSON():
   followBrainStoneHeuristics = true;
@@ -110,7 +109,6 @@ export default class PlayerData extends EventEmitter {
       buildings: this.buildings,
       federationCount: this.federationCount,
       lostPlanet: this.lostPlanet,
-      autoChargePower: this.autoChargePower,
     };
 
     return ret;

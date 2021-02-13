@@ -663,7 +663,7 @@ describe("Engine", () => {
       const engine = new Engine(moves);
 
       engine.generateAvailableCommandsIfNeeded();
-      engine.player(Player.Player1).data.autoChargePower = 2;
+      engine.player(Player.Player1).settings.autoChargePower = 2;
 
       // tslint:disable-next-line no-unused-expression
       expect(engine.autoChargePower()).to.be.true;

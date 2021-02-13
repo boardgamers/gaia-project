@@ -56,13 +56,13 @@ export function setPlayerMetaData(engine: Engine, player: number, metaData: { na
 
 export function setPlayerSettings(engine: Engine, player: number, settings: { autoCharge?: string }) {
   if ("autoCharge" in settings) {
-    engine.players[player].data.autoChargePower = Number(settings.autoCharge);
+    engine.players[player].settings.autoChargePower = Number(settings.autoCharge);
   }
 }
 
 export function playerSettings(engine: Engine, player: number) {
   return {
-    autoCharge: String(engine.players[player].data.autoChargePower),
+    autoCharge: String(engine.players[player].settings.autoChargePower),
   };
 }
 
