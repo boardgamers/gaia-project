@@ -1,5 +1,5 @@
 import { Hex } from "hexagrid";
-import { Planet, Building, Player, TradeToken } from "./enums";
+import { Planet, Building, Player } from "./enums";
 import { stdBuildingValue } from "./buildings";
 import assert from "assert";
 

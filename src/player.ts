@@ -812,28 +812,9 @@ export default class Player extends EventEmitter {
         return sum(Object.values(this.data.research));
       case Condition.HighestResearchLevel:
         return Math.max(...Object.values(this.data.research));
-      case Condition.Culture:
-        return this.cultureLevel();
     }
 
     return 0;
-  }
-
-  cultureLevel() {
-    // Buildings including space stations
-    const buildings = sum(this.data.occupied.map((hex) => this.buildingValue(hex, { federation: true })));
-    // Two satellites = 1pw
-    const satellites = Math.floor(this.data.satellites / 2);
-    // Federation tiles
-    const federations = this.data.tiles.federations.length * 3;
-    // Gaia formers
-    const gaiaFormers = this.data.gaiaformers;
-    // Highest level or Adv Tech
-    const advanced =
-      Object.values(this.data.research).filter((val) => val === 5).length +
-      this.data.tiles.techs.filter((tech) => isAdvanced(tech.pos)).length;
-
-    return buildings + satellites + federations + gaiaFormers + advanced;
   }
 
   availableFederations(map: SpaceMap, flexible: boolean): FederationInfo[] {

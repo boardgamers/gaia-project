@@ -107,7 +107,6 @@ export enum Condition {
   Satellite = "sat",
   StructureValue = "stvalue",
   StructureFedValue = "stfedvalue",
-  Culture = "culture",
   ResearchLevels = "a",
   HighestResearchLevel = "L",
 
@@ -190,10 +189,6 @@ export enum Command {
   EndTurnConfirmation = "endturnConfirmation",
   PISwap = "swap-PI",
   PickReward = "pick",
-}
-
-export enum TradeToken {
-  Wild = "wild",
 }
 
 export enum Player {
@@ -410,8 +405,6 @@ export enum FinalTile {
   Gaia = "gaia",
   Sector = "sector",
   Satellite = "satellite",
-  TradeTokens = "trade",
-  Culture = "culture",
 }
 
 export namespace FinalTile {

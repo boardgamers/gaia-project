@@ -139,13 +139,11 @@ export default class Engine {
   leechSources: Array<{
     player: PlayerEnum;
     coordinates: string;
-    tradeDelivery?: PlayerEnum;
   }> = [];
   // When ongoing leech, remember the source in case
   lastLeechSource: {
     player: PlayerEnum;
     coordinates: string;
-    tradeDelivery?: PlayerEnum;
   };
 
   // All moves
@@ -998,13 +996,12 @@ export default class Engine {
     }
     const source = this.leechSources.shift();
     const sourceHex = this.map.getS(source.coordinates);
-    const isTrade = source.tradeDelivery !== undefined;
     const canLeechPlayers: Player[] = [];
 
     this.lastLeechSource = source;
 
     // Gaia-formers & space stations don't trigger leech
-    if (!isTrade && stdBuildingValue(sourceHex.buildingOf(source.player)) === 0) {
+    if (stdBuildingValue(sourceHex.buildingOf(source.player)) === 0) {
       return this.beginLeechingPhase(); // next building on the list
     }
     // From rules, this is in clockwise order. We assume the order of players in this.players is the
@@ -1015,20 +1012,16 @@ export default class Engine {
         pl.data.leechPossible = 0;
         continue;
       }
-      if (isTrade && source.tradeDelivery !== pl.player) {
-        pl.data.leechPossible = 0;
-        continue;
-      }
 
       // Exclude the one who made the building from the leech
       let leech = 0;
-      for (const hex of this.map.withinDistance(sourceHex, isTrade ? 0 : LEECHING_DISTANCE)) {
+      for (const hex of this.map.withinDistance(sourceHex, LEECHING_DISTANCE)) {
         leech = Math.max(leech, pl.buildingValue(this.map.grid.get(hex)));
       }
 
       // Do not use maxLeech() here, cuz taklons
       pl.data.leechPossible = leech;
-      if (pl.canLeech() || isTrade) {
+      if (pl.canLeech()) {
         canLeechPlayers.push(pl);
       }
     }

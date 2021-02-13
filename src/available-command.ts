@@ -249,7 +249,7 @@ export function possibleSpaceStations(engine: Engine, player: Player) {
       ...data.occupied.filter((loc) => loc.isRangeStartingPoint(player)).map((loc) => map.distance(hex, loc))
     );
     const qicNeeded = Math.max(Math.ceil((distance - data.range - data.temporaryRange) / QIC_RANGE_UPGRADE), 0);
-    const { possible, cost, steps } = pl.canBuild(pl.planet, Building.SpaceStation, {
+    const { possible, cost } = pl.canBuild(pl.planet, Building.SpaceStation, {
       addedCost: [new Reward(qicNeeded, Resource.Qic)],
     });
 
@@ -628,20 +628,12 @@ export function possibleGaiaFreeActions(engine: Engine, player: Player) {
 export function possibleLeech(engine: Engine, player: Player) {
   const commands = [];
   const pl = engine.player(player);
-  // TODO: Remove first part of test when legacy games are finished.
-  const isTrade = engine.lastLeechSource && engine.lastLeechSource.tradeDelivery === player;
 
   if (pl.data.leechPossible > 0) {
-    const extraPower = pl.faction === Faction.Taklons && pl.data.hasPlanetaryInstitute() && !isTrade;
+    const extraPower = pl.faction === Faction.Taklons && pl.data.hasPlanetaryInstitute();
     const maxLeech = pl.maxLeech();
     const offers: Array<{ offer: string; cost: string }> = [];
 
-    if (isTrade) {
-      offers.push({
-        offer: "1t",
-        cost: "~",
-      });
-    }
     if (extraPower) {
       offers.push(
         {

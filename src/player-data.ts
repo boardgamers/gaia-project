@@ -3,8 +3,6 @@ import { GaiaHex } from "./gaia-hex";
 import {
   AdvTechTile,
   AdvTechTilePos,
-  Area2AutoChargePolicy,
-  AutoChargePolicy,
   Booster,
   BrainstoneArea,
   Building,
