@@ -78,7 +78,7 @@
     <image v-if="kind === 'pw'" xlink:href='../assets/resources/power-charge.svg' :height=133/346*20 width=20 transform="translate(-9.5, -13.5)" />
 
     <!-- <SpaceShip v-else-if="kind=='ship'" class="ship" :scale="14" /> -->
-    <text x="0" y="0" v-if="count != '' && ['o','c','k','pw','t','vp','q','ship','gf'].includes(kind) || count === '+'" :class="{plus: count === '+'}">{{count}}</text>
+    <text x="0" y="0" v-if="count >=0 && ['o','c','k','pw','t','vp','q','ship','gf'].includes(kind) || count === '+'" :class="{plus: count === '+'}">{{count}}</text>
     <text x="0" y="0" v-if="kind=='brainstone'">B</text>
    </g>
 </template>

@@ -57,7 +57,7 @@
           transform="scale(0.07)" />
           <text :class="['board-text']" transform="translate(1,0) scale(0.7)">{{ sectors }}</text>
         </g>
-        <g transform="translate(16, 3.6)" v-b-tooltip title="Power value of buildings in / outside of federations">
+        <g transform="translate(16, 3.6)" v-b-tooltip title="Power value of structures in / outside of federations">
           <image xlink:href='../../assets/conditions/federation.svg' :height=155/211*22 width=22 x=-11 y=-8
           transform="scale(0.08)" />
           <text :class="['board-text']" transform="translate(1,0) scale(0.7)"

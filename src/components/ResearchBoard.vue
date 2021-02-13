@@ -33,7 +33,7 @@
         <use xlink:href="#arrow" x="-8" y="-15" transform="rotate(180)"/>
         <Resource kind="o" :count="3" transform="translate(20, 15)"/>
         <use xlink:href="#arrow" x="33" y="15"/>
-        <Resource kind="t" transform="translate(57, 15)"/>
+        <Resource kind="t" :count="-1" transform="translate(57, 15)"/>
       </g>
     </g>
   </svg>
