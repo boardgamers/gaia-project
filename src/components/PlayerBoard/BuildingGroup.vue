@@ -45,7 +45,7 @@ export default class BuildingGroup extends Vue {
   building: BuildingEnum;
 
   @Prop()
-  faction: Faction;
+  faction!: Faction;
 
   @Prop()
   placed: number;
@@ -120,7 +120,7 @@ export default class BuildingGroup extends Vue {
     return this.faction;
   }
 
-  resources (i: number, tooltip = false): (Reward[] | string[]) {
+  resources (i: number, tooltip = false): Array<string | Reward> {
     if (this.showBuilding(i) && !tooltip) {
       return [];
     }
@@ -137,7 +137,7 @@ export default class BuildingGroup extends Vue {
     }
 
     let incomeAdded = false;
-    return this.board.buildings[building].income[i].flatMap(ev => {
+    const ret = this.board.buildings[building].income[i].map(ev => {
       const rew = ev.rewards.toString();
       const special = ev.operator === Operator.Activate && (rew === "1q" || rew === "4c");
 
@@ -151,7 +151,9 @@ export default class BuildingGroup extends Vue {
         return tooltip ? "Special Action: " + rew : ev.rewards;
       }
       return null;
-    }).filter(r => r != null);
+    });
+    
+    return [].concat(...ret).filter(r => r != null);
   }
 }
 
