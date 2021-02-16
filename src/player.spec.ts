@@ -77,6 +77,49 @@ describe("Player", () => {
     });
   });
 
+  describe("whenTheLostPlanetIsPlaced", () => {
+    it("does nothing if there are no cached federations", () => {
+      const player = new Player();
+      expect(() => player.notifyOfNewPlanet(new GaiaHex())).to.not.throw();
+    });
+
+    it("does nothing if the cached federations are not overlapping the lost planet", () => {
+      const player = new Player();
+      player.federationCache = {
+        availableSatellites: 25,
+        custom: false,
+        federations: [
+          {
+            hexes: [],
+            planets: 0,
+            satellites: 5,
+          },
+        ],
+      };
+      player.notifyOfNewPlanet(new GaiaHex());
+      expect(player.federationCache).to.not.equal(null);
+      expect(player.federationCache.availableSatellites).to.equal(25);
+    });
+
+    it("does clears the cache if a federation has a collision", () => {
+      const player = new Player();
+      const lostPlanet = new GaiaHex();
+      player.federationCache = {
+        availableSatellites: 25,
+        custom: false,
+        federations: [
+          {
+            hexes: [lostPlanet],
+            planets: 0,
+            satellites: 5,
+          },
+        ],
+      };
+      player.notifyOfNewPlanet(lostPlanet);
+      expect(player.federationCache).to.equal(null);
+    });
+  });
+
   describe("canFullyChargeDuringIncomePhase", () => {
     const tests: {
       name: string;

@@ -12,7 +12,9 @@ import {
   Phase,
   Command,
   Faction,
+  Planet,
 } from "./enums";
+import { PlayerEnum } from "..";
 
 describe("Engine", () => {
   it("should throw when trying to build on the wrong place", () => {
@@ -699,6 +701,75 @@ describe("Engine", () => {
       expect(log[4].move).to.be.undefined;
       expect(log[5].phase).to.equal(Phase.RoundGaia);
     });
+  });
+
+  it("should not have a federation on top of the lost planet", () => {
+    const moves = Engine.parseMoves(`
+      init 2 randomSeed2
+      p2 rotate -3x5 1 -8x7 2
+      p1 faction terrans
+      p2 faction xenos
+      terrans build m 3A7
+      xenos build m 2A1
+      xenos build m 3A8
+      terrans build m 8A2
+      xenos build m 6A10
+      xenos booster booster9
+      terrans booster booster1
+      terrans build ts 3A7.
+      xenos charge 1pw
+      xenos build ts 3A8.
+      terrans charge 2pw
+      terrans build lab 3A7. tech free3. up terra.
+      xenos charge 2pw
+      xenos build lab 3A8. tech free3. up nav.
+      terrans charge 2pw
+      terrans build ac1 3A7. tech nav. up nav.
+      xenos charge 1pw
+      xenos action power3.
+      terrans up nav.
+      xenos action qic1. tech free1. up terra.
+      terrans build gf 6A1.
+      xenos build ac1 3A8. tech nav. up nav.
+      terrans charge 2pw
+      terrans spend 1pw for 1c. pass booster3
+      xenos up eco.
+      xenos pass booster1
+      terrans build m 6A1.
+      xenos charge 3pw
+      xenos build m 5A6.
+      terrans build m 6B0.
+      xenos charge 3pw
+      xenos action power4.
+      terrans build gf 2A11.
+      xenos build ts 6A10.
+      terrans charge 1pw
+      terrans spend 1pw for 1c. up int.
+      xenos build lab 6A10. tech free2. up nav.
+      terrans charge 1pw
+      terrans spend 1q for 1o. spend 1q for 1o. build ts 6A1.
+      xenos charge 3pw
+      xenos up nav.
+      terrans pass booster8
+      xenos action power3.
+      xenos build m 6B4.
+      terrans charge 1pw
+      xenos pass booster9
+      terrans build m 2A11.
+      xenos charge 1pw
+      xenos build ts 6B4.
+      terrans charge 1pw
+      terrans up terra.
+      xenos federation 3A8,6A0,6A10,6A11,6B4,6B5 fed4.
+      terrans burn 1. action power3.
+      xenos up nav. lostPlanet 3A6.
+      terrans charge 3pw
+    `);
+    const engine = new Engine(moves, { advancedRules: true, layout: "xshape" });
+    const terrans = engine.player(PlayerEnum.Player1);
+    const federations = terrans.availableFederations(engine.map, false);
+    const hasLostPlanet = federations.some((fed) => fed.hexes.some((hex) => hex.data.planet === Planet.Lost));
+    expect(hasLostPlanet).to.equal(false);
   });
 });
 
