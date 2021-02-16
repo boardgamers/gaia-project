@@ -8,14 +8,14 @@
 import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import { factions, Faction, Planet } from '@gaia-project/engine';
-import {planetClass} from '../graphics/utils';
+import { planetClass } from '../graphics/utils';
 
 @Component
 export default class PlayerToken extends Vue {
   @Prop()
   faction: Faction | 'automa';
 
-  get planetClass()   {
+  get planetClass () {
     return planetClass(this.faction);
   }
 }

@@ -16,7 +16,15 @@ import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import Building from '../Building.vue';
 import Resource from '../Resource.vue';
-import { Building as BuildingEnum, Faction, Reward, FactionBoard, factionBoard, Operator, Resource as ResourceEnum } from '@gaia-project/engine';
+import {
+  Building as BuildingEnum,
+  Faction,
+  FactionBoard,
+  factionBoard,
+  Operator,
+  Resource as ResourceEnum,
+  Reward
+} from '@gaia-project/engine';
 
 @Component({
   components: {
@@ -45,6 +53,9 @@ export default class BuildingGroup extends Vue {
   @Prop({ default: 0 })
   gaia: number;
 
+  @Prop({ default: 0 })
+  discount: number;
+
   @Prop()
   resource: ResourceEnum[];
 
@@ -65,9 +76,11 @@ export default class BuildingGroup extends Vue {
   }
 
   tooltip (i: number) {
-    return "Cost: " + (this.board.buildings[this.building].cost.join(", ") || "~") +
-    (this.board.buildings[this.building].isolatedCost ? "\n Isolated cost: " + (this.board.buildings[this.building].isolatedCost.join(", ") || "~") : "") +
-    "\n Income: " + (this.resources(i, true).join(", ") || "~");
+    const b = this.board.buildings[this.building];
+    const cost = this.discount ? b.cost.map(c => `${c.count - this.discount}${c.type}`).join(", ") : b.cost.join(", ") || "~";
+    const isolatedCost = b.isolatedCost ? "\n Isolated cost: " + (b.isolatedCost.join(", ") || "~") : "";
+    const income = this.building === BuildingEnum.GaiaFormer ? "" : "\n " + (this.resources(i, true).join(", ") || "~");
+    return "Cost: " + cost + isolatedCost + income;
   }
 
   get offset () {
@@ -107,8 +120,8 @@ export default class BuildingGroup extends Vue {
     return this.faction;
   }
 
-  resources (i: number, forced = false): Reward[] {
-    if (this.showBuilding(i) && !forced) {
+  resources (i: number, tooltip = false): (Reward[] | string[]) {
+    if (this.showBuilding(i) && !tooltip) {
       return [];
     }
 
@@ -123,14 +136,22 @@ export default class BuildingGroup extends Vue {
       i = 0;
     }
 
-    return [].concat(...this.board.buildings[building].income[i].filter(ev => {
-      if (ev.operator === Operator.Income) {
-        return true;
-      }
+    let incomeAdded = false;
+    return this.board.buildings[building].income[i].flatMap(ev => {
       const rew = ev.rewards.toString();
+      const special = ev.operator === Operator.Activate && (rew === "1q" || rew === "4c");
 
-      return ev.operator === Operator.Activate && (rew === "1q" || rew === "4c");
-    }).map(ev => ev.rewards));
+      if (ev.operator === Operator.Income) {
+        const income = special || incomeAdded ? "" : "Income: ";
+        incomeAdded = true;
+        return tooltip ? income + ev.rewards.toString() : ev.rewards;
+      }
+
+      if (special) {
+        return tooltip ? "Special Action: " + rew : ev.rewards;
+      }
+      return null;
+    }).filter(r => r != null);
   }
 }
 

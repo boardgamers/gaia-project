@@ -7,7 +7,7 @@ import Game from './components/Game.vue';
 function launchSelfContained (selector = "#app", debug = true) {
   const emitter = launch(selector, debug ? Wrapper : Game);
 
-  let engine = new Engine(["init 2 randomSeed2"], {layout: 'xshape', advancedRules: true});
+  let engine = new Engine(["init 2 randomSeed2"], { layout: 'xshape', advancedRules: true });
   engine.generateAvailableCommandsIfNeeded();
 
   const unsub = emitter.store.subscribeAction(({ payload, type }) => {

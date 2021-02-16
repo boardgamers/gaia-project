@@ -108,12 +108,12 @@ const gaiaViewer = {
     // API COMMUNICATION
     playerClick (context, player: Player) {},
     move (context, move: string) {},
-    replayInfo (context, info: {start: number, end: number, current: number}) {},
+    replayInfo (context, info: {start: number; end: number; current: number}) {},
     // ^ up - down v
     externalData (context, data: Engine) {},
-    replayStart(context) {},
-    replayTo(context, to: number) {},
-    replayEnd(context, data: Engine) {},
+    replayStart (context) {},
+    replayTo (context, to: number) {},
+    replayEnd (context, data: Engine) {},
     // WRAPPER / DEBUG COMMUNICATION
     loadFromJSON (context, data: any) {}
   },

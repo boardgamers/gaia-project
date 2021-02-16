@@ -45,7 +45,7 @@ function launch (selector: string, component: VueConstructor<Vue> = Game) {
   item.addListener("replay:to", (info) => {
     store.dispatch("gaiaViewer/replayTo", info);
     item.emit("replaceLog", (store.state as any).gaiaViewer.data.moveHistory);
-  })
+  });
   item.addListener("replay:end", () => {
     store.dispatch("gaiaViewer/replayEnd");
     replaying = false;

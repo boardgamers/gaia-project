@@ -13,7 +13,7 @@ export function planetColor (planet: Planet): string {
 }
 
 export function planetClass (faction: string): string {
-  switch ( faction as any )  {
+  switch (faction as any) {
     case "wild": return Planet.Transdim;
     case "gaia": return Planet.Gaia;
     case "gen": return "gen";

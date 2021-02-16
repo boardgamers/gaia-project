@@ -153,7 +153,7 @@ export default class Game extends Vue {
     return !!this.$store.state.gaiaViewer.data.map;
   }
 
-  get globalStyles() {
+  get globalStyles () {
     const preferences = this.$store.state.gaiaViewer.preferences;
     const styles = [];
     if (preferences) {

@@ -34,20 +34,20 @@ import Engine, { factions, Planet } from "@gaia-project/engine";
 
 @Component
 export default class FactionWheel extends Vue {
-  get r() {
+  get r () {
     return 3;
   }
 
-  get gameData(): Engine {
+  get gameData (): Engine {
     return this.$store.state.gaiaViewer.data;
   }
 
-  remainingPlanets(planet: string) {
+  remainingPlanets (planet: string) {
     return Array.from(this.gameData.map.grid.values()).filter(hex => !hex.occupied() && hex.data.planet === planet)
       .length;
   }
 
-  strokeWidth(pos: number) {
+  strokeWidth (pos: number) {
     const planet = this.planet(pos);
     if (this.gameData.players.some(p => p.faction && factions[p.faction].planet === planet)) {
       return "0.2px; stroke-dasharray:.5 .2";
@@ -56,7 +56,7 @@ export default class FactionWheel extends Vue {
     return "0.05px";
   }
 
-  planet(pos: number) {
+  planet (pos: number) {
     const list = [
       Planet.Terra,
       Planet.Oxide,
@@ -82,7 +82,7 @@ export default class FactionWheel extends Vue {
     return list[pos];
   }
 
-  planetFill(planet: string) {
+  planetFill (planet: string) {
     if (planet === Planet.Titanium || planet === Planet.Swamp) {
       return "white";
     }

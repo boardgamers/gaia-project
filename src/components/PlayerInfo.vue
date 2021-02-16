@@ -89,6 +89,7 @@
           :faction="player.faction"
           :placed="playerData.buildings.gf"
           :resource="[]"
+          :discount="playerData ? playerData.gaiaFormingDiscount() : 0"
         />
 
         <g transform="translate(1.8, 13.4) scale(0.06)">
@@ -203,62 +204,62 @@ export default class PlayerInfo extends Vue {
   @Prop()
   player: Player;
 
-  get playerData() {
+  get playerData () {
     return this.player ? this.player.data : null;
   }
 
-  playerClick(player: Player) {
+  playerClick (player: Player) {
     this.$store.dispatch("gaiaViewer/playerClick", player);
   }
 
-  get factionColor() {
+  get factionColor () {
     return factionColor(this.player.faction);
   }
 
-  get name() {
+  get name () {
     if (this.player.name) {
       return this.player.name;
     }
     return "Player " + (this.player.player + 1);
   }
 
-  get tooltip() {
+  get tooltip () {
     return factionDesc(this.player.faction);
   }
 
-  get planet() {
+  get planet () {
     return factions[this.player.faction].planet;
   }
 
-  get factionName(): string {
+  get factionName (): string {
     return factions[this.player.faction].name;
   }
 
-  planetFill(planet: string) {
+  planetFill (planet: string) {
     if (planet === Planet.Titanium || planet === Planet.Swamp) {
       return "white";
     }
     return "black";
   }
 
-  planetsWithSteps(steps: number) {
+  planetsWithSteps (steps: number) {
     return planetsWithSteps(this.planet, steps);
   }
 
-  get passed() {
+  get passed () {
     return (this.$store.state.gaiaViewer.data.passedPlayers || []).includes(this.player.player);
   }
 
-  get round() {
+  get round () {
     return this.$store.state.gaiaViewer.data.round;
   }
 
-  get hasPlanets() {
+  get hasPlanets () {
     return this.player.ownedPlanets.length > 0;
   }
 
-  get hasLostPlanet() {
-    return this.player.ownedPlanetsCount.l ?? 0 > 0;
+  get hasLostPlanet () {
+    return (this.player.ownedPlanetsCount.l ?? 0) > 0;
   }
 }
 </script>

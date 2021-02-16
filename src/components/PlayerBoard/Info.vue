@@ -120,19 +120,19 @@ export default class BuildingGroup extends Vue {
   @Prop()
   player: Player;
 
-  get engine() {
+  get engine () {
     return this.$store.state.gaiaViewer.data;
   }
 
-  get factionName(): string {
+  get factionName (): string {
     return factions[this.faction].name;
   }
 
-  get spaceShips(): boolean {
+  get spaceShips (): boolean {
     return this.$store.state.gaiaViewer.data.expansions % 2 === 1;
   }
 
-  income(resource: ResourceEnum) {
+  income (resource: ResourceEnum) {
     const index = this.player.income.search(new RegExp("[0-9]+" + resource));
 
     if (index < 0) {
@@ -142,15 +142,15 @@ export default class BuildingGroup extends Vue {
     return parseInt(this.player.income.substr(index));
   }
 
-  researchType(index: number): ResearchField {
+  researchType (index: number): ResearchField {
     return ResearchField.values()[index];
   }
 
-  research(index: number): number {
+  research (index: number): number {
     return this.data.research[this.researchType(index)];
   }
 
-  get sectors(): number {
+  get sectors (): number {
     return uniq(this.data.occupied.filter(hex => hex.colonizedBy(this.player.player)).map(hex => hex.data.sector))
       .length;
   }
