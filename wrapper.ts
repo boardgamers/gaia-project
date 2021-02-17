@@ -147,18 +147,22 @@ function automove(engine: Engine) {
       [Command.BrainStone, engine.autoBrainstone],
     ]);
 
-    for (const [command, autoMove] of autoMoves) {
-      const availableCommand = this.findAvailableCommand(this.playerToMove, command);
-      if (availableCommand) {
-        const moved = autoMove(availableCommand);
-        if (moved) {
-          afterMove(engine, oldRound);
-          modified = true;
-          oldRound = engine.round;
+    let moved = false;
+    do {
+      moved = false;
+      for (const [command, autoMove] of autoMoves) {
+        const availableCommand = this.findAvailableCommand(this.playerToMove, command);
+        if (availableCommand) {
+          moved = autoMove(availableCommand);
+          if (moved) {
+            afterMove(engine, oldRound);
+            modified = true;
+            oldRound = engine.round;
+            break;
+          }
         }
-        break;
       }
-    }
+    } while (moved);
   } while (modified);
 }
 
