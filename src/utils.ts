@@ -13,6 +13,11 @@ export function merge(target, ...sources) {
 
 /**
  * Returns all combinations of all sizes
+ *
+ * Order of combinations and order of elements within the combinations are not guaranteed
+ *
+ * @example `combinations([1, 2])` will return `[[], [1], [2], [1,2]]` in this order or another
+ *
  */
 export function combinations<T>(t: T[]): T[][] {
   if (t.length == 0) {
