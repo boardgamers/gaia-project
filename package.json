@@ -24,8 +24,7 @@
     "lint": "eslint . --ext .ts",
     "prettier": "npx --yes -- prettier --write .",
     "prettier-check": "npx --yes -- prettier --check .",
-    "test": "npm run lint && npm run prettier-check && npm run just-test",
-    "just-test": "mocha -r ts-node/register src/**/*.spec.ts src/*.spec.ts"
+    "test": "mocha -r ts-node/register src/**/*.spec.ts src/*.spec.ts"
   },
   "contributors": [
     "coyotte508 <coyotte508@gmail.com>",
