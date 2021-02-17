@@ -120,7 +120,7 @@ function afterMove(engine: Engine, oldRound: number) {
   }
 }
 
-function automove(engine: Engine) {
+export function automove(engine: Engine) {
   let modified: boolean;
   do {
     modified = false;
@@ -136,22 +136,22 @@ function automove(engine: Engine) {
 
     oldRound = engine.round;
 
-    if (this.playerToMove === undefined) {
+    if (engine.playerToMove === undefined) {
       return;
     }
-    this.generateAvailableCommandsIfNeeded();
+    engine.generateAvailableCommandsIfNeeded();
 
     const autoMoves = new Map<Command, (AvailableCommand) => boolean>([
-      [Command.ChargePower, engine.autoChargePower],
-      [Command.ChooseIncome, engine.autoIncome],
-      [Command.BrainStone, engine.autoBrainstone],
+      [Command.ChargePower, engine.autoChargePower.bind(engine)],
+      [Command.ChooseIncome, engine.autoIncome.bind(engine)],
+      [Command.BrainStone, engine.autoBrainstone.bind(engine)],
     ]);
 
     let moved = false;
     do {
       moved = false;
-      for (const [command, autoMove] of autoMoves) {
-        const availableCommand = this.findAvailableCommand(this.playerToMove, command);
+      for (const [command, autoMove] of [...autoMoves.entries()]) {
+        const availableCommand = engine.findAvailableCommand(engine.playerToMove, command);
         if (availableCommand) {
           moved = autoMove(availableCommand);
           if (moved) {
