@@ -9,12 +9,12 @@ describe("Utils", () => {
       want: number[][];
     }[] = [
       {
-        name: "empty",
+        name: "should return an array containing an empty array when called with an empty array",
         give: [],
         want: [[]],
       },
       {
-        name: "1,2,3",
+        name: "should return all the combinations of [1,2,3]",
         give: [1, 2, 3],
         want: [[], [1], [2], [2, 1], [3], [3, 1], [3, 2], [3, 2, 1]],
       },
