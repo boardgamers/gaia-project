@@ -25,7 +25,7 @@ describe("Player", () => {
     it("should work", () => {
       const player = new Player();
 
-      player.loadEvents(Event.parse(["+k", "+o", "+c"], Command.ChooseIncome));
+      player.loadEvents(Event.parse(["+k", "+o", "+c"], null));
       player.removeEvent(new Event("+o"));
 
       expect(player.events[Operator.Income]).to.have.lengthOf(2);
@@ -38,7 +38,7 @@ describe("Player", () => {
     it("should work on events that were activated", () => {
       const player = new Player();
 
-      player.loadEvents(Event.parse(["+k", "=> 4c", "+c"], Command.ChooseIncome));
+      player.loadEvents(Event.parse(["+k", "=> 4c", "+c"], null));
       player.events[Operator.Activate][0].activated = true;
       player.removeEvent(new Event("=> 4c"));
 
@@ -67,7 +67,7 @@ describe("Player", () => {
     it("should order based on type order", () => {
       const player = new Player();
 
-      player.loadEvents(Event.parse(["+t", "+k", "+c", "+o"], Command.ChooseIncome));
+      player.loadEvents(Event.parse(["+t", "+k", "+c", "+o"], null));
       const orderedEvents = Reward.toString(
         Reward.merge([].concat(...player.events[Operator.Income].map((event) => event.rewards))),
         true
@@ -118,90 +118,5 @@ describe("Player", () => {
       player.notifyOfNewPlanet(lostPlanet);
       expect(player.federationCache).to.equal(null);
     });
-  });
-
-  describe("canFullyChargeDuringIncomePhase", () => {
-    const tests: {
-      name: string;
-      power: Power;
-      brainstone: BrainstoneArea;
-      events: Event[];
-      expected: boolean;
-    }[] = [
-      {
-        name: "no events - not fully charged",
-        power: new Power(1),
-        brainstone: null,
-        events: [],
-        expected: false,
-      },
-      {
-        name: "no events - not fully charged (brainstone)",
-        power: new Power(),
-        brainstone: BrainstoneArea.Area1,
-        events: [],
-        expected: false,
-      },
-      {
-        name: "no events - fully charged",
-        power: new Power(0, 0, 1),
-        brainstone: null,
-        events: [],
-        expected: true,
-      },
-      {
-        name: "no events - fully charged (brainstone)",
-        power: new Power(),
-        brainstone: BrainstoneArea.Area3,
-        events: [],
-        expected: true,
-      },
-      {
-        name: "no events - no tokens",
-        power: new Power(),
-        brainstone: null,
-        events: [],
-        expected: true,
-      },
-      {
-        name: "events - will charge fully",
-        power: new Power(0, 1, 0),
-        brainstone: null,
-        events: Event.parse(["+3pw", "+1t"], Command.ChooseIncome),
-        expected: true,
-      },
-      {
-        name: "events - will charge fully (brainstone)",
-        power: new Power(),
-        brainstone: BrainstoneArea.Area2,
-        events: Event.parse(["+3pw", "+1t"], Command.ChooseIncome),
-        expected: true,
-      },
-      {
-        name: "events - will not charge fully",
-        power: new Power(0, 1, 0),
-        brainstone: null,
-        events: Event.parse(["+2pw", "+1t"], Command.ChooseIncome),
-        expected: false,
-      },
-      {
-        name: "events - will not charge fully (brainstone)",
-        power: new Power(),
-        brainstone: BrainstoneArea.Area2,
-        events: Event.parse(["+2pw", "+1t"], Command.ChooseIncome),
-        expected: false,
-      },
-    ];
-
-    for (const test of tests) {
-      it(test.name, () => {
-        const player = new Player();
-        player.data.power = test.power;
-        player.data.brainstone = test.brainstone;
-        player.loadEvents(test.events);
-
-        expect(player.needIncomeSelection().canFullyChargeDuringIncomePhase).to.equal(test.expected);
-      });
-    }
   });
 });

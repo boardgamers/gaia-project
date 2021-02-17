@@ -37,6 +37,7 @@ import { EventEmitter } from "eventemitter3";
 import { finalScorings } from "./tiles/scoring";
 import techs, { isAdvanced } from "./tiles/techs";
 import assert from "assert";
+import { IncomeSelection } from "./income";
 
 const TERRAFORMING_COST = 3;
 // 25 satellites total
@@ -50,49 +51,20 @@ interface FederationCache {
   custom: boolean;
 }
 
-class IncomeSelection {
+export class Settings {
   constructor(
-    private readonly gainTokens: Event[],
-    private readonly chargePowers: Event[],
-    private readonly data: PlayerData
+    public autoChargePower: number = 1, // 0 => decline everything that is not free
+    public autoIncome: boolean = false,
+    public autoBrainstone: boolean = false,
+    public itarsAutoChargeToArea3: boolean = false
   ) {}
-
-  get events(): Event[] {
-    return this.gainTokens.concat(this.chargePowers);
-  }
-
-  get needed(): boolean {
-    return this.gainTokens.length > 0 && this.chargePowers.length > 0;
-  }
-
-  get descs(): Reward[] {
-    return [
-      ...this.gainTokens.map((ev) => ev.rewards.find((rw) => rw.type === Resource.GainToken)),
-      ...this.chargePowers.map((ev) => ev.rewards.find((rw) => rw.type === Resource.ChargePower)),
-    ];
-  }
-
-  get canFullyChargeDuringIncomePhase(): boolean {
-    //there's no event emitter in the clone
-    const d = this.data.clone();
-    for (const gainToken of this.gainTokens) {
-      d.gainRewards(gainToken.rewards, true, null);
-    }
-    for (const chargePower of this.chargePowers) {
-      d.gainRewards(chargePower.rewards, true, null);
-    }
-    if (d.brainstone != null && d.brainstone != BrainstoneArea.Area3) {
-      return false;
-    }
-    return d.power.area1 === 0 && d.power.area2 === 0;
-  }
 }
 
 export default class Player extends EventEmitter {
   faction: Faction = null;
   board: FactionBoard = null;
   data: PlayerData = new PlayerData();
-  settings: { autoChargePower: number } = { autoChargePower: 1 };
+  settings: Settings = new Settings();
   events: { [key in Operator]: Event[] } = {
     [Operator.Once]: [],
     [Operator.Income]: [],
@@ -316,7 +288,7 @@ export default class Player extends EventEmitter {
     return this.data.occupied.filter((hex) => hex.data.planet !== Planet.Empty && hex.isMainOccupier(this.player));
   }
 
-  loadFaction(faction: Faction, expansions: number, skipIncome = false) {
+  loadFaction(faction: Faction, expansions = 0, skipIncome = false) {
     this.faction = faction;
     this.board = factionBoard(faction);
 
@@ -567,15 +539,8 @@ export default class Player extends EventEmitter {
     this.removeEvents(Event.parse(techs[tile.tile], `tech-${pos}` as TechPos));
   }
 
-  needIncomeSelection(): IncomeSelection {
-    // we need to check if rewards contains Resource.GainToken and Resource.GainPower
-    // player has to select the order
-    const allEvents = this.events[Operator.Income].filter((ev) => !ev.activated);
-
-    const gainTokens = allEvents.filter((ev) => ev.rewards.some((rw) => rw.type === Resource.GainToken));
-    const chargePowers = allEvents.filter((ev) => ev.rewards.some((rw) => rw.type === Resource.ChargePower));
-
-    return new IncomeSelection(gainTokens, chargePowers, this.data);
+  incomeSelection(): IncomeSelection {
+    return IncomeSelection.create(this.data, this.settings, this.events[Operator.Income]);
   }
 
   canGaiaTerrans(): boolean {
@@ -607,8 +572,8 @@ export default class Player extends EventEmitter {
     return true;
   }
 
-  receiveIncome() {
-    for (const event of this.events[Operator.Income]) {
+  receiveIncome(events: Event[]) {
+    for (const event of events) {
       if (!event.activated) {
         // Taklons + brainstone need to not activate the event until the reward is gained...
         // This is UGLY. Maybe a better handling of placing ships in income phase would avoid this hack
@@ -622,7 +587,7 @@ export default class Player extends EventEmitter {
       }
     }
     // Clean up in a separate phase in case there is an interruption in the first phase
-    for (const event of this.events[Operator.Income]) {
+    for (const event of events) {
       event.activated = false;
     }
   }

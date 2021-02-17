@@ -36,11 +36,4 @@ describe("Itars", () => {
 
     expect(() => new Engine(moves)).to.not.throw();
   });
-
-  it("should autocharge when no power tokens are going to be put in area3", () => {
-    const engine = new Engine();
-    expect(engine.autoChargeItars(2, 2)).to.be.true;
-    expect(engine.autoChargeItars(1, 2)).to.be.false;
-    expect(engine.autoChargeItars(0, 1)).to.be.false;
-  });
 });

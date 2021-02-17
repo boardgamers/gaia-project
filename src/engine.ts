@@ -1,40 +1,42 @@
 import SpaceMap, { MapConfiguration } from "./map";
 import assert from "assert";
-import { sortBy, uniq, sum, set, range, isEqual } from "lodash";
+import { isEqual, range, set, sortBy, sum, uniq } from "lodash";
 import Player from "./player";
 import shuffleSeed from "shuffle-seed";
 import {
-  Faction,
-  Command,
-  Player as PlayerEnum,
-  Building,
-  ResearchField,
-  Planet,
-  Round,
-  Booster,
-  Resource,
-  TechTile,
-  TechTilePos,
   AdvTechTile,
   AdvTechTilePos,
-  Federation,
   BoardAction,
-  Operator,
-  ScoringTile,
-  FinalTile,
-  Phase,
-  SubPhase,
+  Booster,
+  BrainstoneArea,
+  Building,
+  Command,
   Expansion,
+  Faction,
+  Federation,
+  FinalTile,
+  Operator,
+  Phase,
+  Planet,
+  Player as PlayerEnum,
+  ResearchField,
+  Resource,
+  Round,
+  ScoringTile,
+  SubPhase,
+  TechTile,
+  TechTilePos,
 } from "./enums";
 import Event, { EventSource, RoundScoring } from "./events";
 import federations from "./tiles/federations";
-import { roundScorings, finalScorings } from "./tiles/scoring";
+import { finalScorings, roundScorings } from "./tiles/scoring";
 import * as researchTracks from "./research-tracks";
 import AvailableCommand, { generate as generateAvailableCommands } from "./available-command";
 import Reward from "./reward";
 import { boardActions } from "./actions";
 import { stdBuildingValue } from "./buildings";
 import { isAdvanced } from "./tiles/techs";
+import { ChargeDecision, ChargeRequest, decideChargeRequest } from "./auto-charge";
 
 // const ISOLATED_DISTANCE = 3;
 const LEECHING_DISTANCE = 2;
@@ -248,7 +250,7 @@ export default class Engine {
     return (this.availableCommands = generateAvailableCommands(this, subphase, data));
   }
 
-  findAvailableCommand(player: PlayerEnum, command: Command) {
+  findAvailableCommand(player: PlayerEnum, command: Command): AvailableCommand {
     this.availableCommands = this.availableCommands || this.generateAvailableCommands();
     return this.availableCommands.find((availableCommand) => {
       if (availableCommand.name !== command) {
@@ -434,63 +436,63 @@ export default class Engine {
   /**
    * Automatically leech when there's no cost
    */
-  autoChargePower(): boolean {
-    if (this.playerToMove === undefined) {
-      return false;
-    }
-    this.generateAvailableCommandsIfNeeded();
-    const cmd = this.findAvailableCommand(this.playerToMove, Command.ChargePower);
-    if (!cmd) {
-      return false;
-    }
-
+  autoChargePower(cmd: AvailableCommand): boolean {
     const offers = cmd.data.offers;
-
     const pl = this.player(this.playerToMove);
-    const offer = offers[0].offer;
-    const power = Reward.parse(offer)[0].count;
+    const playerHasPassed = this.passedPlayers.includes(pl.player);
+    const request = new ChargeRequest(pl, offers, this.isLastRound, playerHasPassed, pl.incomeSelection());
 
-    if (this.shouldDeclineCharge(pl, offers)) {
-      this.move(`${pl.faction} ${Command.Decline} ${offer}`, false);
-      return true;
-    }
-
-    // Only leech when only one option and cost is nothing
-    if (offers.length > 1 || power > (pl.settings.autoChargePower ?? 1)) {
-      return false;
-    }
-
-    // Itars may want to burn power instead, but we can safely move to area2
-    if (pl.faction === Faction.Itars && !this.autoChargeItars(pl.data.power.area1, power) && !this.isLastRound) {
-      return false;
-    }
-
-    try {
-      this.move(`${pl.faction} ${Command.ChargePower} ${offer}`, false);
-      return true;
-    } catch (err) {
-      /* Restore player data to what it was, like if the taklons cause an incomplete move error requiring brainstone destination */
-      // pl.loadPlayerData(jsonData);
-      this.generateAvailableCommands();
-      return false;
+    const chargeDecision = decideChargeRequest(request);
+    switch (chargeDecision) {
+      case ChargeDecision.Yes:
+        try {
+          const offer = request.maxAllowedOffer;
+          assert(offer, `could not find max offer: ${JSON.stringify([offers, pl.settings])}`);
+          this.move(`${pl.faction} ${Command.ChargePower} ${offer.offer}`, false);
+          return true;
+        } catch (err) {
+          /* Restore player data to what it was, like if the taklons cause an incomplete move error requiring brainstone destination */
+          // pl.loadPlayerData(jsonData);
+          this.generateAvailableCommands();
+          return false;
+        }
+      case ChargeDecision.No:
+        this.move(`${pl.faction} ${Command.Decline} ${offers[0].offer}`, false);
+        return true;
+      case ChargeDecision.Ask:
+        return false;
+      case ChargeDecision.Undecided:
+        assert(false, `Could not decide how to charge power: ${request}`);
+        break;
     }
   }
 
-  // A passed player should always decline a leech if there's a VP cost associated with it -
-  // if it's either the last round or if the income phase would already move all tokens to area3.
-  // If this not true, please add an example (or link to) in the comments
-  private shouldDeclineCharge(pl: Player, offers) {
-    if (this.passedPlayers.includes(pl.player)) {
-      if (offers.every((offer) => offer.cost !== "~")) {
-        //all offers cost something
-        return this.isLastRound || pl.needIncomeSelection().canFullyChargeDuringIncomePhase;
-      }
+  /**
+   * Automatically decide on income if autoIncome is enabled
+   */
+  autoIncome(cmd: AvailableCommand): boolean {
+    const pl = this.player(this.playerToMove);
+
+    if (pl.settings.autoIncome) {
+      this.player(this.currentPlayer).receiveIncome(pl.incomeSelection().autoplayEvents());
+      return true;
     }
     return false;
   }
 
-  autoChargeItars(area1: number, power: number) {
-    return area1 >= power;
+  /**
+   * Automatically decide on broinstone if autoBrainstone is enabled
+   */
+  autoBrainstone(cmd: AvailableCommand): boolean {
+    const pl = this.player(this.playerToMove);
+
+    if (pl.settings.autoBrainstone) {
+      const choices = cmd.data as Array<BrainstoneArea>;
+      const dest = choices.includes(BrainstoneArea.Area3) ? BrainstoneArea.Area3 : BrainstoneArea.Area2;
+      this.move(`${pl.faction} ${Command.BrainStone} ${dest}`, false);
+      return true;
+    }
+    return false;
   }
 
   static fromData(data: any) {
@@ -724,11 +726,12 @@ export default class Engine {
    * Pauses if an action is needed from the player.
    */
   handleNextIncome() {
-    if (this.player(this.currentPlayer).needIncomeSelection().needed) {
+    const pl = this.player(this.currentPlayer);
+    if (pl.incomeSelection().needed) {
       return false;
     }
 
-    this.player(this.currentPlayer).receiveIncome();
+    pl.receiveIncome(pl.events[Operator.Income]);
 
     if (!this.moveToNextPlayer(this.tempTurnOrder, { loop: false })) {
       this.endIncomePhase();

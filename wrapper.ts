@@ -1,5 +1,5 @@
 import axios from "axios";
-import Engine from "./index";
+import Engine, { Command } from "./index";
 import crypto from "crypto";
 import { EngineOptions } from "./src/engine";
 import { Round } from "./src/enums";
@@ -55,9 +55,27 @@ export function setPlayerMetaData(engine: Engine, player: number, metaData: { na
   return engine;
 }
 
-export function setPlayerSettings(engine: Engine, player: number, settings: { autoCharge?: string }) {
+export function setPlayerSettings(
+  engine: Engine,
+  player: number,
+  settings: {
+    autoCharge?: string;
+    autoIncome?: boolean;
+    autoBrainstone?: boolean;
+    itarsAutoChargeToArea3?: boolean;
+  }
+) {
   if ("autoCharge" in settings) {
     set(engine.players[player], "settings.autoChargePower", Number(settings.autoCharge));
+  }
+  if ("autoIncome" in settings) {
+    set(engine.players[player], "settings.autoIncome", settings.autoIncome);
+  }
+  if ("autoBrainstone" in settings) {
+    set(engine.players[player], "settings.autoBrainstone", settings.autoBrainstone);
+  }
+  if ("itarsAutoChargeToArea3" in settings) {
+    set(engine.players[player], "settings.itarsAutoChargeToArea3", settings.itarsAutoChargeToArea3);
   }
 
   return engine;
@@ -66,6 +84,9 @@ export function setPlayerSettings(engine: Engine, player: number, settings: { au
 export function playerSettings(engine: Engine, player: number) {
   return {
     autoCharge: String(engine.players[player].settings?.autoChargePower ?? 1),
+    autoIncome: !!engine.players[player].settings?.autoIncome,
+    autoBrainstone: !!engine.players[player].settings?.autoBrainstone,
+    itarsAutoChargeToArea3: !!engine.players[player].settings?.itarsAutoChargeToArea3,
   };
 }
 
@@ -115,10 +136,28 @@ function automove(engine: Engine) {
 
     oldRound = engine.round;
 
-    while (engine.autoChargePower()) {
-      afterMove(engine, oldRound);
-      modified = true;
-      oldRound = engine.round;
+    if (this.playerToMove === undefined) {
+      return;
+    }
+    this.generateAvailableCommandsIfNeeded();
+
+    const autoMoves = new Map<Command, (AvailableCommand) => boolean>([
+      [Command.ChargePower, engine.autoChargePower],
+      [Command.ChooseIncome, engine.autoIncome],
+      [Command.BrainStone, engine.autoBrainstone],
+    ]);
+
+    for (const [command, autoMove] of autoMoves) {
+      const availableCommand = this.findAvailableCommand(this.playerToMove, command);
+      if (availableCommand) {
+        const moved = autoMove(availableCommand);
+        if (moved) {
+          afterMove(engine, oldRound);
+          modified = true;
+          oldRound = engine.round;
+        }
+        break;
+      }
     }
   } while (modified);
 }

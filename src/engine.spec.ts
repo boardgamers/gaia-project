@@ -1,19 +1,7 @@
 import { expect } from "chai";
 import Engine from "./engine";
 import { AssertionError } from "assert";
-import {
-  Player,
-  Federation,
-  Operator,
-  AdvTechTilePos,
-  Building,
-  Condition,
-  BrainstoneArea,
-  Phase,
-  Command,
-  Faction,
-  Planet,
-} from "./enums";
+import { BrainstoneArea, Command, Condition, Faction, Operator, Phase, Planet, Player } from "./enums";
 import { PlayerEnum } from "..";
 
 describe("Engine", () => {
@@ -606,16 +594,15 @@ describe("Engine", () => {
 
       const engine = new Engine(moves);
 
-      engine.generateAvailableCommandsIfNeeded();
       // tslint:disable-next-line no-unused-expression
-      expect(engine.autoChargePower()).to.be.true;
+      expect(autoCharge(engine)).to.be.true;
       expect(engine.moveHistory.length).to.equal(moves.length + 1);
       expect(engine.moveHistory.slice(-1).pop()).to.equal("terrans charge 1pw");
 
       /* Test with 2pw leech */
       engine.move("terrans build ts -3x-2.");
       // tslint:disable-next-line no-unused-expression
-      expect(engine.autoChargePower()).to.be.false;
+      expect(autoCharge(engine)).to.be.false;
       expect(engine.moveHistory.length).to.equal(moves.length + 2);
     });
 
@@ -636,7 +623,7 @@ describe("Engine", () => {
       const engine = new Engine(moves);
 
       // tslint:disable-next-line no-unused-expression
-      expect(engine.autoChargePower()).to.be.false;
+      expect(autoCharge(engine)).to.be.false;
       expect(engine.moveHistory.length).to.equal(moves.length);
       expect(engine.player(Player.Player2).data.power.area1).to.equal(2);
       expect(engine.player(Player.Player2).data.power.area2).to.equal(4);
@@ -668,7 +655,7 @@ describe("Engine", () => {
       engine.player(Player.Player1).settings.autoChargePower = 2;
 
       // tslint:disable-next-line no-unused-expression
-      expect(engine.autoChargePower()).to.be.true;
+      expect(autoCharge(engine)).to.be.true;
       expect(engine.moveHistory.length).to.equal(moves.length + 1);
       expect(engine.moveHistory.slice(-1).pop()).to.equal("nevlas charge 2pw");
     });
@@ -772,6 +759,14 @@ describe("Engine", () => {
     expect(hasLostPlanet).to.equal(false);
   });
 });
+
+function autoCharge(engine: Engine) {
+  engine.generateAvailableCommandsIfNeeded();
+
+  const availableCommand = engine.findAvailableCommand(engine.playerToMove, Command.ChargePower);
+
+  return engine.autoChargePower(availableCommand);
+}
 
 describe("auction", () => {
   it("should allow auction, everyone is fine wiht the current", () => {

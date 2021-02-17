@@ -78,7 +78,6 @@ export default class PlayerData extends EventEmitter {
   lostPlanet = 0;
 
   // Internal variables, not meant to be in toJSON():
-  followBrainStoneHeuristics = true;
   brainstoneDest: BrainstoneArea | "discard";
   temporaryRange = 0;
   temporaryStep = 0;
@@ -126,14 +125,18 @@ export default class PlayerData extends EventEmitter {
   }
 
   gainRewards(rewards: Reward[], forced = false, source?: EventSource) {
+    let followBrainStoneHeuristics = true;
+
     if (!forced && this.brainstone && rewards.some((rew) => rew.type === Resource.ChargePower)) {
       // We need to do something about the brainstone
       const [cloneHeuristic, cloneNoHeuristic] = [this.clone(), this.clone()];
-      cloneHeuristic.followBrainStoneHeuristics = true;
-      cloneNoHeuristic.followBrainStoneHeuristics = false;
 
-      cloneHeuristic.gainRewards(rewards, true);
-      cloneNoHeuristic.gainRewards(rewards, true);
+      for (const reward of rewards) {
+        cloneHeuristic.gainReward(reward, false, null, true);
+      }
+      for (const reward of rewards) {
+        cloneNoHeuristic.gainReward(reward, false, null, false);
+      }
 
       if (cloneHeuristic.brainstone !== cloneNoHeuristic.brainstone) {
         // The brainstone can end up in two different places.
@@ -142,19 +145,21 @@ export default class PlayerData extends EventEmitter {
           this.emit("brainstone", [cloneHeuristic.brainstone, cloneNoHeuristic.brainstone]);
         }
 
-        this.followBrainStoneHeuristics = this.brainstoneDest === cloneHeuristic.brainstone;
+        // if the player chose the same destination as the heuristic,
+        // we have to activate the heuristic for the following gainReward
+        followBrainStoneHeuristics = this.brainstoneDest === cloneHeuristic.brainstone;
 
         delete this.brainstoneDest;
       }
     }
 
     for (const reward of rewards) {
-      this.gainReward(reward, false, source);
+      this.gainReward(reward, false, source, followBrainStoneHeuristics);
     }
   }
 
   // Not to be called by Player. use gainRewards instead.
-  private gainReward(reward: Reward, pay = false, source?: EventSource) {
+  private gainReward(reward: Reward, pay = false, source?: EventSource, followBrainStoneHeuristics = true) {
     if (reward.isEmpty()) {
       return;
     }
@@ -201,7 +206,7 @@ export default class PlayerData extends EventEmitter {
         this.movePowerToGaia(-count);
         break;
       case Resource.ChargePower:
-        count > 0 ? this.chargePower(count) : this.spendPower(-count);
+        count > 0 ? this.chargePower(count, true, followBrainStoneHeuristics) : this.spendPower(-count);
         break;
       case Resource.Range:
         this.range += count;
@@ -287,11 +292,11 @@ export default class PlayerData extends EventEmitter {
 
   /**
    * Move power tokens from a power area to an upper one, depending on the amount
-   * of power chaged
+   * of power charged
    *
    * @param power Power charged
    */
-  chargePower(power: number, apply = true): number {
+  chargePower(power: number, apply = true, followBrainStoneHeuristics = true): number {
     let brainstoneUsage = 0;
     let brainstonePos = this.brainstone;
 
@@ -301,7 +306,7 @@ export default class PlayerData extends EventEmitter {
     }
 
     if (brainstonePos === BrainstoneArea.Area1) {
-      if (this.followBrainStoneHeuristics || this.power.area1 < power) {
+      if (followBrainStoneHeuristics || this.power.area1 < power) {
         brainstoneUsage += 1;
         power -= 1;
         brainstonePos = BrainstoneArea.Area2;
@@ -312,7 +317,7 @@ export default class PlayerData extends EventEmitter {
     power -= area1ToUp;
 
     if (brainstonePos === BrainstoneArea.Area2 && power > 0) {
-      if (this.followBrainStoneHeuristics || this.power.area2 + area1ToUp < power) {
+      if (followBrainStoneHeuristics || this.power.area2 + area1ToUp < power) {
         brainstoneUsage += 1;
         power -= 1;
         brainstonePos = BrainstoneArea.Area3;
