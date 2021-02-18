@@ -181,8 +181,8 @@ export default class Engine {
     }
   }
 
-  move(_move: string, lastMove = true) {
-    this.newTurn = true;
+  move(_move: string, allowIncomplete = true) {
+    assert(this.newTurn, "Cannot execute a move after executing an incomplete move");
 
     if (this.playerToMove !== undefined) {
       this.log(this.playerToMove, undefined, 0, undefined);
@@ -191,7 +191,7 @@ export default class Engine {
     const move = _move.trim();
 
     if (!this.executeMove(move)) {
-      assert(lastMove, `Move ${move} (line ${this.moveHistory.length + 1}) is not complete!`);
+      assert(allowIncomplete, `Move ${move} (line ${this.moveHistory.length + 1}) is not complete!`);
       this.newTurn = false;
     }
 
@@ -456,6 +456,12 @@ export default class Engine {
 
     if (partialMove) {
       copy().move(partialMove);
+
+      // Recursion end condition
+      if (copy().newTurn) {
+        this.move(partialMove, false);
+        return true;
+      }
     }
 
     for (const [command, handler] of functions) {
@@ -472,13 +478,6 @@ export default class Engine {
       }
 
       const newMove = partialMove ? `${partialMove}. ${movePart}` : `${faction} ${movePart}`;
-      copy().move(`${faction} ${movePart}`);
-
-      // If we find a complete set of move, we execute it on ourselves and not just the copy
-      if (copy().newTurn) {
-        this.move(newMove, false);
-        return true;
-      }
 
       return this.autoMove(newMove);
     }
