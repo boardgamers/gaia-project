@@ -1,5 +1,5 @@
 import axios from "axios";
-import Engine, { Command } from "./index";
+import Engine from "./src/engine";
 import crypto from "crypto";
 import { EngineOptions } from "./src/engine";
 import { Round } from "./src/enums";
