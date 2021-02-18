@@ -1,8 +1,8 @@
 import { expect } from "chai";
 import Engine from "./src/engine";
-import { automove, setPlayerSettings } from "./wrapper";
+import { automove, move, setPlayerSettings } from "./wrapper";
 
-describe("wrapper", () => {
+describe.only("wrapper", () => {
   describe("automove", () => {
     it("should automatically charge 1pw", () => {
       const moves = Engine.parseMoves(`
@@ -57,6 +57,38 @@ describe("wrapper", () => {
       expect(engine.moveHistory.length).to.equal(moves2pw.length + 1);
       expect(engine.moveHistory.slice(-1).pop()).to.equal("terrans decline 2pw");
     });
+
+    it("should be able to automatically charge 2 pw and move brainstone at the same time with correct settings", () => {
+      const engine = new Engine(move2pwAndBrainstone);
+
+      setPlayerSettings(engine, 0, { autoCharge: "2", autoBrainstone: true });
+
+      automove(engine);
+
+      expect(engine.moveHistory.length).to.equal(move2pwAndBrainstone.length + 1);
+      expect(engine.moveHistory.slice(-1)[0]).to.equal("taklons charge 2pw. brainstone area2");
+    });
+
+    it("should NOT be able to automatically charge 2 pw and move brainstone if only autobrainstone is set", () => {
+      const engine = new Engine(move2pwAndBrainstone);
+
+      setPlayerSettings(engine, 0, { autoCharge: "1", autoBrainstone: true });
+
+      automove(engine);
+
+      expect(engine.moveHistory.length).to.equal(move2pwAndBrainstone.length);
+    });
+
+    it("should be able to automatically move the brainstone if the player manually charges power", () => {
+      const engine = new Engine(move2pwAndBrainstone);
+
+      setPlayerSettings(engine, 0, { autoCharge: "1", autoBrainstone: true });
+
+      const newEngine = move(engine, "taklons charge 2pw", 0);
+
+      expect(newEngine.moveHistory.length).to.equal(move2pwAndBrainstone.length + 1);
+      expect(newEngine.moveHistory.slice(-1)[0]).to.equal("taklons charge 2pw. brainstone area2");
+    });
   });
 });
 
@@ -84,4 +116,19 @@ const moves2pw = Engine.parseMoves(`
   p4 charge 1pw
   p2 build ts 1x5.
   p4 charge 1pw
+`);
+
+const move2pwAndBrainstone = Engine.parseMoves(`
+  init 2 Curious-supply-341 
+  p1 faction taklons
+  p2 faction itars
+  taklons build m 1B1
+  itars build m 2B0
+  itars build m 4A11
+  taklons build m 2B3
+  itars booster booster2
+  taklons booster booster7
+  taklons build ts 2B3.
+  itars charge 1pw
+  itars build ts 2B0.
 `);

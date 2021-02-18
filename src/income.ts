@@ -1,5 +1,5 @@
 import Event from "./events";
-import PlayerData from "./player-data";
+import PlayerData, { Power } from "./player-data";
 import Reward from "./reward";
 import { Resource } from "./enums";
 import { Settings } from "./player";
@@ -76,9 +76,9 @@ export function calculateAutoIncome(data: PlayerData, gainTokens: Event[], charg
     minWaste = Math.min(minWaste, s.waste);
   }
 
-  let maxCharge = null;
+  let maxCharge: { waste: number; power: Power; events: Event[] };
   for (const s of possibleSequences.filter((value) => value.waste == minWaste)) {
-    if (maxCharge == null || s.power.area3 > maxCharge.power.area3) {
+    if (!maxCharge || s.power.area3 > maxCharge.power.area3) {
       maxCharge = s;
     }
   }

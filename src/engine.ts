@@ -433,10 +433,63 @@ export default class Engine {
     }
   }
 
+  /** Automatically generate moves based on player settings */
+  autoMove(partialMove?: string): boolean {
+    if (this.playerToMove === undefined) {
+      return false;
+    }
+
+    const toMove = this.playerToMove;
+    const faction = this.player(toMove).faction;
+
+    let _copy: Engine;
+    const copy = () => _copy || (_copy = Engine.fromData(JSON.parse(JSON.stringify(this))));
+    // copy() could be used instead, but this is an optimisation for when we don't need to create a copy
+    // if it doesn't already exist
+    const copyOrThis = () => _copy || this;
+
+    const functions = [
+      [Command.ChargePower, (cmd: AvailableCommand) => copyOrThis().autoChargePower(cmd)],
+      [Command.ChooseIncome, (cmd: AvailableCommand) => copyOrThis().autoIncome(cmd)],
+      [Command.BrainStone, (cmd: AvailableCommand) => copyOrThis().autoBrainstone(cmd)],
+    ] as const;
+
+    if (partialMove) {
+      copy().move(partialMove);
+    }
+
+    for (const [command, handler] of functions) {
+      const availableCommand = copyOrThis().findAvailableCommand(toMove, command);
+
+      if (!availableCommand) {
+        continue;
+      }
+
+      const movePart = handler(availableCommand);
+
+      if (!movePart) {
+        continue;
+      }
+
+      const newMove = partialMove ? `${partialMove}. ${movePart}` : `${faction} ${movePart}`;
+      copy().move(`${faction} ${movePart}`);
+
+      // If we find a complete set of move, we execute it on ourselves and not just the copy
+      if (copy().newTurn) {
+        this.move(newMove, false);
+        return true;
+      }
+
+      return this.autoMove(newMove);
+    }
+
+    return false;
+  }
+
   /**
    * Automatically leech when there's no cost
    */
-  autoChargePower(cmd: AvailableCommand): boolean {
+  autoChargePower(cmd: AvailableCommand): string | false {
     const offers = cmd.data.offers;
     const pl = this.player(this.playerToMove);
     const playerHasPassed = this.passedPlayers.includes(pl.player);
@@ -444,58 +497,58 @@ export default class Engine {
 
     const chargeDecision = decideChargeRequest(request);
     switch (chargeDecision) {
-      case ChargeDecision.Yes:
-        try {
-          const offer = request.maxAllowedOffer;
-          assert(offer, `could not find max offer: ${JSON.stringify([offers, pl.settings])}`);
-          this.move(`${pl.faction} ${Command.ChargePower} ${offer.offer}`, false);
-          return true;
-        } catch (err) {
-          /* Restore player data to what it was, like if the taklons cause an incomplete move error requiring brainstone destination */
-          // pl.loadPlayerData(jsonData);
-          this.generateAvailableCommands();
-          return false;
-        }
+      case ChargeDecision.Yes: {
+        const offer = request.maxAllowedOffer;
+        assert(offer, `could not find max offer: ${JSON.stringify([offers, pl.settings])}`);
+        return `${Command.ChargePower} ${offer.offer}`;
+      }
       case ChargeDecision.No:
-        this.move(`${pl.faction} ${Command.Decline} ${offers[0].offer}`, false);
-        return true;
+        return `${Command.Decline} ${offers[0].offer}`;
       case ChargeDecision.Ask:
         return false;
       case ChargeDecision.Undecided:
         assert(false, `Could not decide how to charge power: ${request}`);
-        break;
     }
   }
 
   /**
    * Automatically decide on income if autoIncome is enabled
    */
-  autoIncome(cmd: AvailableCommand): boolean {
+  autoIncome(cmd: AvailableCommand): string | false {
     const pl = this.player(this.playerToMove);
 
     if (pl.settings.autoIncome) {
-      this.player(this.currentPlayer).receiveIncome(pl.incomeSelection().autoplayEvents());
-      return true;
+      const events = pl.incomeSelection().autoplayEvents();
+      const relevantReward = events[0]?.rewards.find(
+        (rew) => rew.type === Resource.ChargePower || rew.type === Resource.GainToken
+      );
+
+      if (!relevantReward) {
+        // should never happen, as autoIncome is only called if income command is possible
+        return false;
+      }
+
+      // Returns only the first event. As there maybe brainstone commands between events for example
+      return `${Command.ChooseIncome} ${relevantReward}`;
     }
     return false;
   }
 
   /**
-   * Automatically decide on broinstone if autoBrainstone is enabled
+   * Automatically decide on brainstone if autoBrainstone is enabled
    */
-  autoBrainstone(cmd: AvailableCommand): boolean {
+  autoBrainstone(cmd: AvailableCommand): string | false {
     const pl = this.player(this.playerToMove);
 
     if (pl.settings.autoBrainstone) {
       const choices = cmd.data as Array<BrainstoneArea>;
       const dest = choices.includes(BrainstoneArea.Area3) ? BrainstoneArea.Area3 : BrainstoneArea.Area2;
-      this.move(`${pl.faction} ${Command.BrainStone} ${dest}`, false);
-      return true;
+      return `${Command.BrainStone} ${dest}`;
     }
     return false;
   }
 
-  static fromData(data: any) {
+  static fromData(data: Record<string, any>) {
     const engine = new Engine();
 
     if (!data) {
@@ -1558,7 +1611,7 @@ export default class Engine {
   }
 
   [Command.ChooseIncome](player: PlayerEnum, income: string) {
-    const incomes = this.availableCommand.data;
+    const incomes: Reward[] = this.availableCommand.data;
     const incomeRewards = income.split(",");
     const pl = this.player(player);
 

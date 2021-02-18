@@ -332,85 +332,10 @@ describe("Engine", () => {
   });
 
   it("should not count gaiaformers in data.occupied when loading a game from state", () => {
-    const moves = parseMoves(`
-      init 3 12
-      p1 faction nevlas
-      p2 faction baltaks
-      p3 faction gleens
-      nevlas build m 0x1
-      baltaks build m 1x3
-      gleens build m -5x4
-      gleens build m 2x0
-      baltaks build m -2x-2
-      nevlas build m -1x-2
-      gleens booster booster3
-      baltaks booster booster2
-      nevlas booster booster7
-      nevlas spend 1o for 1c. build ts 0x1.
-      gleens charge 1pw
-      baltaks spend 1gf for 1q. up sci.
-      gleens up nav.
-      nevlas build lab 0x1. tech sci. up sci.
-      gleens charge 1pw
-      baltaks build ts -2x-2.
-      nevlas charge 1pw
-      gleens build ts 2x0.
-      nevlas charge 2pw
-      nevlas special 4pw.
-      baltaks build lab -2x-2. tech free2. up eco.
-      nevlas charge 1pw
-      gleens build lab 2x0. tech nav. up nav.
-      nevlas action power3.
-      baltaks build ts 1x3.
-      gleens pass booster8
-      nevlas up sci.
-      baltaks pass booster1
-      nevlas pass booster3
-      gleens build m -4x2.
-      baltaks build lab 1x3. tech sci. up sci.
-      nevlas special 4pw.
-      gleens build m -7x6.
-      baltaks special 4pw.
-      nevlas build ac1 0x1. tech free3. up sci.
-      gleens charge 2pw
-      gleens build m -8x8.
-      baltaks up sci.
-      nevlas up eco.
-      gleens pass booster2
-      baltaks action power3.
-      nevlas pass booster7
-      baltaks build gf 1x2.
-      baltaks pass booster8
-      gleens up nav.
-      nevlas up nav.
-      baltaks build m 1x2.
-      gleens charge 2pw
-      gleens action power4.
-      nevlas action power3.
-      baltaks build ts 1x2.
-      gleens charge 2pw
-      nevlas charge 3pw
-      gleens build ts -8x8.
-      nevlas build ts -1x-2.
-      baltaks charge 2pw
-      baltaks spend 1gf for 1q. pass booster3
-      gleens spend 1pw for 1c. burn 1. spend 1pw for 1c. build PI -8x8.
-      nevlas special 4pw.
-      gleens pass booster8
-      nevlas build m -1x5.
-      baltaks charge 2pw
-      nevlas spend 1pw for 1c. spend 1pw for 1c. build ts -1x5.
-      baltaks charge 2pw
-      nevlas federation -1x-1,-1x-2,-1x0,-1x5,0x0,0x1,0x2,0x3,0x4 fed5.
-      nevlas pass booster2
-      nevlas income 1pw. income 1pw
-      baltaks special 4pw.
-    `);
-
     // This would throw if the gaia former was in data.occupied, since it would
     // be part of the buildings for available federations (adjacent to another building)
     // and part of the excluded hexes at the same time
-    expect(() => Engine.slowMotion(moves)).to.not.throw();
+    expect(() => Engine.slowMotion(slowMotionMoves)).to.not.throw();
   });
 
   it("should throw when two players choose factions on the same planet", () => {
@@ -658,6 +583,18 @@ describe("Engine", () => {
       expect(autoCharge(engine)).to.be.true;
       expect(engine.moveHistory.length).to.equal(moves.length + 1);
       expect(engine.moveHistory.slice(-1).pop()).to.equal("nevlas charge 2pw");
+    });
+  });
+
+  describe("autoIncome", () => {
+    it.only("should work with two 1t events and pw events", () => {
+      const engine = new Engine(slowMotionMoves.slice(0, -2));
+
+      engine.player(0).settings.autoIncome = true;
+      engine.autoMove();
+
+      expect(engine.moveHistory.length).to.equal(slowMotionMoves.length - 1);
+      expect(engine.moveHistory.slice(-1)[0]).to.equal("nevlas income 2t");
     });
   });
 
@@ -929,3 +866,78 @@ function fullGame() {
     geodens pass
   `);
 }
+
+const slowMotionMoves = parseMoves(`
+  init 3 12
+  p1 faction nevlas
+  p2 faction baltaks
+  p3 faction gleens
+  nevlas build m 0x1
+  baltaks build m 1x3
+  gleens build m -5x4
+  gleens build m 2x0
+  baltaks build m -2x-2
+  nevlas build m -1x-2
+  gleens booster booster3
+  baltaks booster booster2
+  nevlas booster booster7
+  nevlas spend 1o for 1c. build ts 0x1.
+  gleens charge 1pw
+  baltaks spend 1gf for 1q. up sci.
+  gleens up nav.
+  nevlas build lab 0x1. tech sci. up sci.
+  gleens charge 1pw
+  baltaks build ts -2x-2.
+  nevlas charge 1pw
+  gleens build ts 2x0.
+  nevlas charge 2pw
+  nevlas special 4pw.
+  baltaks build lab -2x-2. tech free2. up eco.
+  nevlas charge 1pw
+  gleens build lab 2x0. tech nav. up nav.
+  nevlas action power3.
+  baltaks build ts 1x3.
+  gleens pass booster8
+  nevlas up sci.
+  baltaks pass booster1
+  nevlas pass booster3
+  gleens build m -4x2.
+  baltaks build lab 1x3. tech sci. up sci.
+  nevlas special 4pw.
+  gleens build m -7x6.
+  baltaks special 4pw.
+  nevlas build ac1 0x1. tech free3. up sci.
+  gleens charge 2pw
+  gleens build m -8x8.
+  baltaks up sci.
+  nevlas up eco.
+  gleens pass booster2
+  baltaks action power3.
+  nevlas pass booster7
+  baltaks build gf 1x2.
+  baltaks pass booster8
+  gleens up nav.
+  nevlas up nav.
+  baltaks build m 1x2.
+  gleens charge 2pw
+  gleens action power4.
+  nevlas action power3.
+  baltaks build ts 1x2.
+  gleens charge 2pw
+  nevlas charge 3pw
+  gleens build ts -8x8.
+  nevlas build ts -1x-2.
+  baltaks charge 2pw
+  baltaks spend 1gf for 1q. pass booster3
+  gleens spend 1pw for 1c. burn 1. spend 1pw for 1c. build PI -8x8.
+  nevlas special 4pw.
+  gleens pass booster8
+  nevlas build m -1x5.
+  baltaks charge 2pw
+  nevlas spend 1pw for 1c. spend 1pw for 1c. build ts -1x5.
+  baltaks charge 2pw
+  nevlas federation -1x-1,-1x-2,-1x0,-1x5,0x0,0x1,0x2,0x3,0x4 fed5.
+  nevlas pass booster2
+  nevlas income 1pw. income 1pw
+  baltaks special 4pw.
+`);

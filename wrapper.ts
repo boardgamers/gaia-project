@@ -90,7 +90,7 @@ export function playerSettings(engine: Engine, player: number) {
   };
 }
 
-export async function move(engine: Engine, move: string, player: number) {
+export function move(engine: Engine, move: string, player: number) {
   if (!move) {
     // Don't save
     (engine as any).noSave = true;
@@ -102,7 +102,21 @@ export async function move(engine: Engine, move: string, player: number) {
   }
 
   const round = engine.round;
+  const backup = JSON.stringify(engine);
+
   engine.move(move);
+
+  if (!engine.newTurn) {
+    // Try to complete the move for the player, e.g. if the player does not have auto brainstone
+    // but does have auto charge
+
+    const copy = Engine.fromData(JSON.parse(backup));
+
+    if (copy.autoMove(move)) {
+      engine = copy;
+    }
+  }
+
   engine.generateAvailableCommandsIfNeeded();
 
   if (engine.newTurn) {
@@ -136,33 +150,11 @@ export function automove(engine: Engine) {
 
     oldRound = engine.round;
 
-    if (engine.playerToMove === undefined) {
-      return;
+    while (engine.autoMove()) {
+      afterMove(engine, oldRound);
+      modified = true;
+      oldRound = engine.round;
     }
-    engine.generateAvailableCommandsIfNeeded();
-
-    const autoMoves = new Map<Command, (AvailableCommand) => boolean>([
-      [Command.ChargePower, engine.autoChargePower.bind(engine)],
-      [Command.ChooseIncome, engine.autoIncome.bind(engine)],
-      [Command.BrainStone, engine.autoBrainstone.bind(engine)],
-    ]);
-
-    let moved = false;
-    do {
-      moved = false;
-      for (const [command, autoMove] of [...autoMoves.entries()]) {
-        const availableCommand = engine.findAvailableCommand(engine.playerToMove, command);
-        if (availableCommand) {
-          moved = autoMove(availableCommand);
-          if (moved) {
-            afterMove(engine, oldRound);
-            modified = true;
-            oldRound = engine.round;
-            break;
-          }
-        }
-      }
-    } while (moved);
   } while (modified);
 }
 
