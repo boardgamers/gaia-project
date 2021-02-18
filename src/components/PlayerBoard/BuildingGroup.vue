@@ -152,7 +152,7 @@ export default class BuildingGroup extends Vue {
       }
       return null;
     });
-    
+
     return [].concat(...ret).filter(r => r != null);
   }
 }

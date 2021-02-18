@@ -36,7 +36,7 @@ export default class TurnOrder extends Vue {
     if (this.phaseBeforeSetupBuilding) {
       return data.players;
     }
-    if (data.phase === Phase.SetupBuilding || data.phase === Phase.SetupBooster || data.phase === Phase.SetupShip) {
+    if (data.phase === Phase.SetupBuilding || data.phase === Phase.SetupBooster) {
       return data.setup.map(faction => data.players.find(pl => pl.faction === faction));
     }
     return data.turnOrder.map(player => data.players[player]);

@@ -205,7 +205,7 @@ export default class PlayerInfo extends Vue {
   player: Player;
 
   get playerData () {
-    return this.player ? this.player.data : null;
+    return this.player?.data;
   }
 
   playerClick (player: Player) {

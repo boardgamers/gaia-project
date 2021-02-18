@@ -79,7 +79,7 @@
     </template>
     <image v-if="kind === 'pw'" xlink:href='../assets/resources/power-charge.svg' :height=133/346*20 width=20 transform="translate(-9.5, -13.5)" />
     <image v-if="kind === 'pay-pw'" xlink:href='../assets/resources/power-charge.svg' :height=133/346*20 width=20 transform="translate(9.5, -13.5) scale(-1,1) " />
-    <text x="0" y="0" v-if="count >=0 && ['o','c','k','pw','pay-pw','t','bowl-t','tg','vp','q','ship','gf'].includes(kind) || count === '+'" :class="{plus: count === '+'}">{{kind === 't' ? '+' : ''}}{{count}}</text>
+    <text x="0" y="0" v-if="count >=0 && ['o','c','k','pw','pay-pw','t','bowl-t','tg','vp','q','gf'].includes(kind) || count === '+'" :class="{plus: count === '+'}">{{kind === 't' ? '+' : ''}}{{count}}</text>
     <text x="0" y="0" v-if="kind=='brainstone'">B</text>
    </g>
 </template>
@@ -87,9 +87,8 @@
 <script lang="ts">
 import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import { Resource as ResourceEnum, Faction } from '@gaia-project/engine';
+import { Faction } from '@gaia-project/engine';
 import Building from './Building.vue';
-import SpaceShip from './SpaceShip.vue';
 import Qic from './Resources/Qic.vue';
 import VictoryPoint from './Resources/VictoryPoint.vue';
 import Federation from './FederationTile.vue';
@@ -100,7 +99,6 @@ import Token from './Token.vue';
     Building,
     Federation,
     Qic,
-    SpaceShip,
     Token,
     VictoryPoint
   }
@@ -156,7 +154,7 @@ g.resource {
     fill: $gaia
   }
 
-  .ore, .credit, .building.r, .ship {
+  .ore, .credit, .building.r {
     & + text {
       fill: black
     }

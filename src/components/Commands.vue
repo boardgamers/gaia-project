@@ -30,13 +30,27 @@
 <script lang="ts">
 import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import Engine, { AvailableCommand, Command, factions, Building, GaiaHex, Booster, tiles, Event, Federation, Faction, SpaceMap, Expansion, Reward, Resource } from '@gaia-project/engine';
+import Engine, {
+  AvailableCommand,
+  Booster,
+  Building,
+  Command,
+  Event,
+  Expansion,
+  Faction,
+  factions,
+  GaiaHex,
+  Resource,
+  Reward,
+  SpaceMap,
+  tiles
+} from '@gaia-project/engine';
 import MoveButton from './MoveButton.vue';
 import { buildingName } from '../data/building';
-import { GameContext, ButtonData } from '../data';
+import { ButtonData, GameContext } from '../data';
 import { eventDesc } from '../data/event';
 import { factionDesc } from '../data/factions';
-import { BIconDash } from 'bootstrap-vue';
+
 @Component<Commands>({
   watch: {
     availableCommands (this: Commands, val) {
@@ -125,7 +139,7 @@ export default class Commands extends Vue {
   }
 
   get commandName () {
-    return this.command ? this.command.name : null;
+    return this.command?.name;
   }
 
   get chooseFaction () {
@@ -255,36 +269,6 @@ export default class Commands extends Vue {
           break;
         }
 
-        case Command.PlaceShip: {
-          ret.push({
-            label: "Place Ship",
-            command: command.name,
-            hexes: new Map(command.data.locations.map(coord => [this.engine.map.getS(coord.coordinates), coord]))
-          });
-          break;
-        }
-
-        case Command.DeliverTrade: {
-          ret.push({
-            label: "Deliver Trade",
-            command: command.name,
-            hexes: new Map(command.data.locations.map(coord => [this.engine.map.getS(coord.coordinates), coord])),
-            automatic: command.data.automatic
-          });
-          break;
-        }
-
-        case Command.MoveShip: {
-          ret.push({
-            label: "Move Ship",
-            command: command.name,
-            hexes: new Map(command.data.ships.map(coord => [this.engine.map.getS(coord.coordinates), coord])),
-            range: command.data.range,
-            costs: command.data.costs
-          });
-          break;
-        }
-
         case Command.Pass:
         case Command.ChooseRoundBooster: {
           const buttons: ButtonData[] = [];
@@ -397,17 +381,15 @@ export default class Commands extends Vue {
         }
 
         case Command.Spend: {
-          // If only one free action, display it here
-          if (command.data.acts.length === 1 && this.availableCommands.some(cmd => cmd.name === Command.MoveShip)) {
-            const act = command.data.acts[0];
-            ret.push({ label: `Spend ${act.cost} to gain ${act.income}`, command: `${Command.Spend} ${act.cost} for ${act.income}` });
-          } else {
-            ret.push({
-              label: "Free action",
-              command: Command.Spend,
-              buttons: command.data.acts.map(act => ({ label: `Spend ${act.cost} to gain ${act.income}`, command: `${act.cost} for ${act.income}`, times: act.range }))
-            });
-          }
+          ret.push({
+            label: "Free action",
+            command: Command.Spend,
+            buttons: command.data.acts.map(act => ({
+              label: `Spend ${act.cost} to gain ${act.income}`,
+              command: `${act.cost} for ${act.income}`,
+              times: act.range
+            }))
+          });
           break;
         };
 

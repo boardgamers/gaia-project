@@ -48,21 +48,5 @@ export const descriptions = {
     "To start a Gaia project, you must move four power tokens to your Gaia area. Immediately gain one of your Gaiaformers.",
     "To start a Gaia project, you must move three power tokens to your Gaia area. Immediately gain one of your Gaiaformers.",
     "To start a Gaia project, you must move three power tokens to your Gaia area. Immediately gain 4 VP and 1 additional VP for each Gaia Planet with one of your structures on it (you do not gain VP for Gaiaformers on Gaia Planets)."
-  ],
-  [ResearchField.TradingBonus]: [
-    "Each time you deliver a trade, gain two knowledge.",
-    "Each time you deliver a trade, gain two knowledge or three coins.",
-    "Each time you deliver a trade, gain two knowledge or three coins. Gain a tech tile.",
-    "Each time you deliver a trade, gain two knowledge, one ore or three coins.",
-    "Each time you deliver a trade, gain two knowledge, one ore, three coins or a Q.I.C. Gain a tech tile.",
-    "Each time you deliver a trade, gain two of: two knowledge, one ore, three coins, a Q.I.C."
-  ],
-  [ResearchField.TradingVolume]: [
-    "One spacehip income. The move action moves one spaceship moves at current range.",
-    "One spacehip income. The move action moves one spaceship moves at current range + 1.",
-    "Two spaceships income. The move action moves two spaceships at current range + 1.",
-    "Two spaceships income. The move action moves two spaceships at current range + 2.",
-    "Three spaceships income. The move action moves three spaceships at current range + 2. Advance on the navigation or intelligence research track by one level.",
-    "Four spaceships income. The move action moves four spaceships at current range + 3. Gain a special federation token with no vp that gives a 4th ship: Advanced Spaceship that is immmediately placed. You have an additional 5 wild trade tokens available, that can be placed on planets with one or none of your regular trade tokens when delivering trade."
   ]
 };

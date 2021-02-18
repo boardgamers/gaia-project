@@ -128,10 +128,6 @@ export default class BuildingGroup extends Vue {
     return factions[this.faction].name;
   }
 
-  get spaceShips (): boolean {
-    return this.$store.state.gaiaViewer.data.expansions % 2 === 1;
-  }
-
   income (resource: ResourceEnum) {
     const index = this.player.income.search(new RegExp("[0-9]+" + resource));
 

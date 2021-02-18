@@ -86,8 +86,6 @@ import Resource from "./Resource.vue";
       if (this.level === 5) {
         if (this.field === ResearchField.Terraforming) {
           return this.$store.state.gaiaViewer.data.terraformingFederation;
-        } else if (this.field === ResearchField.TradingVolume && this.players.length === 0) {
-          return Federation.Ship;
         }
       }
     },
@@ -172,8 +170,7 @@ export default class ResearchTile extends Vue {
       ])]
     ]);
 
-    const track = extraRewards.get(this.field);
-    const extra = track ? track.get(this.level) : null;
+    const extra = extraRewards.get(this.field)?.get(this.level);
     if (extra) {
       const r = Reward.parse(extra);
       if (this.field === ResearchField.GaiaProject) {
