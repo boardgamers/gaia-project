@@ -3,6 +3,7 @@ import { Grid, Hex } from "hexagrid";
 import shortestPath from "./shortest-path";
 import { sumBy } from "lodash";
 import assert from "assert";
+import minimumPathLength from "./minimum-path-length";
 
 type algorithms = "exhaustive" | "heuristic";
 export default function spanningTree<T>(
@@ -29,6 +30,13 @@ function spanningTreeWithHeuristic<T>(
   maxAdditional = -1,
   costOf = (hex: Hex<any>) => 1
 ): { path: Hex[]; cost: number } | undefined {
+  type DestGroup = Hex<T>[];
+
+  const minCost = minimumPathLength(destGroups);
+  if (maxAdditional > -1 && maxAdditional < minCost) {
+    return;
+  }
+
   const destHexes: Hex<T>[] = [].concat(...destGroups);
   const destHexesSet = new Set(destHexes);
 
@@ -36,7 +44,7 @@ function spanningTreeWithHeuristic<T>(
     return { path: destHexes, cost: sumBy(destHexes, costOf) };
   }
 
-  const destGroupsMap: Map<Hex<T>, Hex<T>[]> = new Map();
+  const destGroupsMap: Map<Hex<T>, DestGroup> = new Map();
   for (const group of destGroups) {
     for (const hex of group) {
       destGroupsMap.set(hex, group);
@@ -47,7 +55,7 @@ function spanningTreeWithHeuristic<T>(
   const [minR, maxR] = [minBy(destHexes, "r").r, maxBy(destHexes, "r").r];
   const [minS, maxS] = [minBy(destHexes, "s").s, maxBy(destHexes, "s").s];
 
-  const startingPoints: Array<Hex<any>> = [];
+  const startingPoints: Array<Hex<T>> = [];
   if (destGroups.length > 2) {
     // We pick all the hexes that are in the middle of the federation buildings, and try to create a network from them
     startingPoints.push(

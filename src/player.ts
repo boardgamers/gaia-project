@@ -938,13 +938,10 @@ export default class Player extends EventEmitter {
   }
 
   get maxSatellites() {
-    // Lost planet consumes one satellite
     const maxNumber = MAX_SATELLITES - this.data.satellites;
 
     if (this.faction === Faction.Ivits) {
-      // for Ivits the federationCache is requesting the already payed satellites
-      // so the requested QICs have to include them
-      return Math.min(this.data.qics + this.data.satellites, maxNumber);
+      return Math.min(this.data.qics, maxNumber);
     } else {
       return Math.min(this.data.discardablePowerTokens(), maxNumber);
     }
@@ -1119,14 +1116,22 @@ export default class Player extends EventEmitter {
   buildingGroup(hex: GaiaHex, map: SpaceMap): GaiaHex[] {
     const ret = [];
 
-    const addHex = (hx) => {
+    const addHex = (hx: GaiaHex) => {
       ret.push(hx);
       for (const hx2 of map.grid.neighbours(hx)) {
-        if (
-          !ret.includes(hx2) &&
-          (hx2.belongsToFederationOf(this.player) || this.buildingValue(hx2, { federation: true })) > 0
-        ) {
-          addHex(hx2);
+        if (!ret.includes(hx2)) {
+          if ((hx2.belongsToFederationOf(this.player) || this.buildingValue(hx2, { federation: true })) > 0) {
+            addHex(hx2);
+          } else if (
+            this.faction === Faction.Ivits &&
+            hx2.belongsToFederationOf(this.player) &&
+            hx.belongsToFederationOf(this.player)
+          ) {
+            // For ivits, if two hexes belong to a federation they are in
+            // the same building group, e.g. even satellites can belong to
+            // a building group
+            addHex(hx2);
+          }
         }
       }
     };
