@@ -2,7 +2,7 @@ import { expect } from "chai";
 import Engine from "./src/engine";
 import { automove, move, setPlayerSettings } from "./wrapper";
 
-describe.only("wrapper", () => {
+describe("wrapper", () => {
   describe("automove", () => {
     it("should automatically charge 1pw", () => {
       const moves = Engine.parseMoves(`

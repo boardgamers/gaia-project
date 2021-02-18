@@ -520,42 +520,14 @@ describe("Engine", () => {
       const engine = new Engine(moves);
 
       // tslint:disable-next-line no-unused-expression
-      expect(autoCharge(engine)).to.be.true;
-      expect(engine.moveHistory.length).to.equal(moves.length + 1);
-      expect(engine.moveHistory.slice(-1).pop()).to.equal("terrans charge 1pw");
+      expect(autoCharge(engine)).to.equal("charge 1pw");
+      engine.move("terrans charge 1pw");
 
       /* Test with 2pw leech */
       engine.move("terrans build ts -3x-2.");
       // tslint:disable-next-line no-unused-expression
       expect(autoCharge(engine)).to.be.false;
       expect(engine.moveHistory.length).to.equal(moves.length + 2);
-    });
-
-    it("should not leech 1pw when brainstone may move", () => {
-      const moves = parseMoves(`
-        init 2 randomSeed
-        p1 faction terrans
-        p2 faction taklons
-        terrans build m -4x-1
-        taklons build m -3x-2
-        taklons build m -6x3
-        terrans build m -4x2
-        taklons booster booster3
-        terrans booster booster4
-        terrans build ts -4x-1.
-      `);
-
-      const engine = new Engine(moves);
-
-      // tslint:disable-next-line no-unused-expression
-      expect(autoCharge(engine)).to.be.false;
-      expect(engine.moveHistory.length).to.equal(moves.length);
-      expect(engine.player(Player.Player2).data.power.area1).to.equal(2);
-      expect(engine.player(Player.Player2).data.power.area2).to.equal(4);
-      expect(engine.player(Player.Player2).data.brainstone).to.equal(BrainstoneArea.Area1);
-      expect(engine.player(Player.Player2).data.leechPossible).to.equal(1);
-      // tslint:disable-next-line no-unused-expression
-      expect(engine.findAvailableCommand(Player.Player2, Command.ChargePower)).to.not.be.undefined;
     });
 
     it("should leech 2pw when player's auto charge value is 2", () => {
@@ -579,15 +551,12 @@ describe("Engine", () => {
       engine.generateAvailableCommandsIfNeeded();
       engine.player(Player.Player1).settings.autoChargePower = 2;
 
-      // tslint:disable-next-line no-unused-expression
-      expect(autoCharge(engine)).to.be.true;
-      expect(engine.moveHistory.length).to.equal(moves.length + 1);
-      expect(engine.moveHistory.slice(-1).pop()).to.equal("nevlas charge 2pw");
+      expect(autoCharge(engine)).to.equal("charge 2pw");
     });
   });
 
   describe("autoIncome", () => {
-    it.only("should work with two 1t events and pw events", () => {
+    it("should work with two 1t events and pw events", () => {
       const engine = new Engine(slowMotionMoves.slice(0, -2));
 
       engine.player(0).settings.autoIncome = true;
