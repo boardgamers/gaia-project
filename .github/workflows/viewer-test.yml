@@ -1,0 +1,25 @@
+name: Viewer - Test
+on:
+  push:
+    paths:
+      - ".github/workflows/viewer-test.yml"
+      - "viewer"
+    branches:
+      - master
+  pull_request:
+    paths:
+      - ".github/workflows/viewer-test.yml"
+      - "viewer"
+
+jobs:
+  test_and_build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "14"
+      - run: cd viewer
+      - run: yarn install
+      - run: yarn test
+      - run: yarn build

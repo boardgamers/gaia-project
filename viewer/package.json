@@ -1,0 +1,84 @@
+{
+  "name": "@gaia-project/viewer",
+  "version": "5.8.0",
+  "description": "Functions to visualize the map and boards for gaia project inside html canvas",
+  "contributors": [
+    "coyotte508",
+    "rzulian",
+    "zeitlinger"
+  ],
+  "scripts": {
+    "serve": "vue-cli-service serve --port 8080",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint",
+    "package": "vue-cli-service build --target lib src/wrapper.ts",
+    "prepublishOnly": "npm run package",
+    "postpublish": "git push --follow-tags",
+    "test": "vue-cli-service lint"
+  },
+  "unpkg": "dist/package/viewer.umd.min.js",
+  "files": [
+    "index.ts",
+    "tsconfig.json",
+    "src",
+    "README.md",
+    "public",
+    "dist/package/viewer.umd.min.js",
+    "dist/package/viewer.css",
+    "dist/package/img"
+  ],
+  "dependencies": {
+    "bootstrap": "^4.4.1",
+    "bootstrap-vue": "^2.12.0",
+    "@engine": "../engine",
+    "lodash": "^4.17.15",
+    "vue": "^2.6.11",
+    "vuex": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/jquery": "^3.3.1",
+    "@types/lodash": "^4.14.168",
+    "@types/node": "^10.5.2",
+    "@typescript-eslint/eslint-plugin": "^2.26.0",
+    "@typescript-eslint/parser": "^2.26.0",
+    "@vue/cli-plugin-eslint": "~4.3.0",
+    "@vue/cli-plugin-typescript": "~4.2.3",
+    "@vue/cli-service": "~4.2.3",
+    "@vue/eslint-config-standard": "^5.1.2",
+    "@vue/eslint-config-typescript": "^5.0.2",
+    "eslint": "^6.7.2",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.0",
+    "eslint-plugin-vue": "^6.2.2",
+    "hexagrid": "^2.1.0",
+    "sass": "^1.32.8",
+    "popper": "^1.0.1",
+    "popper.js": "^1.16.1",
+    "sass-loader": "^8.0.2",
+    "typescript": "^3.8.3",
+    "vue-property-decorator": "^8.4.1",
+    "vue-template-compiler": "^2.6.11",
+    "webpack": "^4.16.1"
+  },
+  "peerDependencies": {
+    "bootstrap-vue": "^2.12.0",
+    "vue": "^2.6.11"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ],
+  "bugs": {
+    "url": "https://github.com/donkeytech/gaia-viewer/issues"
+  },
+  "homepage": "https://github.com/donkeytech/gaia-viewer#readme",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/donkeytech/gaia-viewer.git"
+  },
+  "source": "index.ts"
+}
