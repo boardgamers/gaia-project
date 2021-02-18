@@ -62,10 +62,6 @@ dist
 
 package-lock.json
 
-.vscode/*
-.vscode/settings.json
-.vscode/launch.json
-
 # Folder with save data
 bin
 

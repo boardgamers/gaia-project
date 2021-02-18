@@ -1,4 +1,4 @@
-name: Version and Release
+name: Engine - Version and Release
 
 on:
   workflow_dispatch:
@@ -21,6 +21,7 @@ jobs:
           node-version: ${{ env.node_version }}
           # setting a registry enables the NODE_AUTH_TOKEN env variable where we can set an npm token.  REQUIRED
           registry-url: "https://registry.npmjs.org"
+      - run: cd engine
       - run: yarn install
       - run: git config --global user.name github-actions
       - run: git config --global user.email bot@github.com
