@@ -1,5 +1,13 @@
 name: Gaia Engine
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - ".github/workflows/engine-test.yml"
+      - "engine"
+  pull_request:
+    paths:
+      - ".github/workflows/engine-test.yml"
+      - "engine"
 
 jobs:
   lint_and_test:
