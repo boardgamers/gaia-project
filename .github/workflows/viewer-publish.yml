@@ -10,6 +10,10 @@ on:
 env:
   node_version: 14
 
+defaults:
+  run:
+    working-directory: viewer
+
 jobs:
   version_and_release:
     runs-on: ubuntu-latest
@@ -21,7 +25,6 @@ jobs:
           node-version: ${{ env.node_version }}
           # setting a registry enables the NODE_AUTH_TOKEN env variable where we can set an npm token.  REQUIRED
           registry-url: "https://registry.npmjs.org"
-      - run: cd viewer
       - run: yarn install
       - run: git config --global user.name github-action
       - run: git config --global user.email hello@github.com
@@ -29,6 +32,8 @@ jobs:
       - name: get-npm-version
         id: package-version
         uses: martinbeentjes/npm-get-version-action@master
+        with:
+          path: viewer
       - run: yarn publish . --new-version ${{ steps.package-version.outputs.current-version}}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
