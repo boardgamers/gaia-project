@@ -1,13 +1,17 @@
-name: Gaia Engine
+name: Engine - Test
 on:
   push:
     paths:
       - ".github/workflows/engine-test.yml"
-      - "engine"
+      - "engine/**"
   pull_request:
     paths:
       - ".github/workflows/engine-test.yml"
-      - "engine"
+      - "engine/**"
+
+defaults:
+  run:
+    working-directory: engine
 
 jobs:
   lint_and_test:
@@ -17,7 +21,6 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: "12"
-      - run: cd engine
       - run: yarn install
       - run: yarn build
       - run: yarn lint
