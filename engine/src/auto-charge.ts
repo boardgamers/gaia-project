@@ -132,7 +132,7 @@ function askForItars(r: ChargeRequest): ChargeDecision {
     r.player.faction === Faction.Itars &&
     !r.player.settings.itarsAutoChargeToArea3 &&
     !autoChargeItars(r.player.data.power.area1, r.minCharge) &&
-    !this.isLastRound
+    !r.isLastRound
   ) {
     return ChargeDecision.Ask;
   }
