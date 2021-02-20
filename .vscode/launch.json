@@ -15,7 +15,7 @@
       "type": "node",
       "request": "launch",
       "program": "${workspaceRoot}/engine/node_modules/ts-node/dist/bin.js",
-      "args": ["${relativeFile}"],
+      "args": ["../${relativeFile}"],
       "cwd": "${workspaceRoot}/engine",
       "protocol": "inspector"
     },
@@ -24,7 +24,7 @@
       "type": "node",
       "request": "launch",
       "program": "${workspaceRoot}/engine/node_modules/mocha/bin/_mocha",
-      "args": ["-r", "ts-node/register", "${relativeFile}"],
+      "args": ["-r", "ts-node/register", "../${relativeFile}"],
       "cwd": "${workspaceRoot}/engine",
       "protocol": "inspector"
     }

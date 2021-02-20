@@ -862,7 +862,10 @@ export default class Player extends EventEmitter {
         (hex) => !excluded.has(hex) && (!flexible || !flexibleExcluded.has(hex))
       );
       const workingGrid = new Grid<Hex<{ cost: number }>>(
-        ...allHexes.map((hex) => new Hex(hex.q, hex.r, { cost: occupiedSet.has(hex) ? 0 : 1 }))
+        ...allHexes.map(
+          (hex) =>
+            new Hex(hex.q, hex.r, { cost: occupiedSet.has(hex) || hex.belongsToFederationOf(this.player) ? 0 : 1 })
+        )
       );
       const convertedDestGroups = destGroups.map((destGroup) => destGroup.map((hex) => workingGrid.get(hex)));
       let tree = spanningTree(convertedDestGroups, workingGrid, maxSatellites, "heuristic", (hex) => hex.data.cost);
@@ -872,7 +875,10 @@ export default class Player extends EventEmitter {
         // as they don't add additional satellites
         const allHexes = [...map.grid.values()].filter((hex) => !excluded.has(hex) && !flexibleExcluded.has(hex));
         const workingGrid = new Grid<Hex<{ cost: number }>>(
-          ...allHexes.map((hex) => new Hex(hex.q, hex.r, { cost: occupiedSet.has(hex) ? 0 : 1 }))
+          ...allHexes.map(
+            (hex) =>
+              new Hex(hex.q, hex.r, { cost: occupiedSet.has(hex) || hex.belongsToFederationOf(this.player) ? 0 : 1 })
+          )
         );
         const convertedDestGroups = destGroups.map((destGroup) => destGroup.map((hex) => workingGrid.get(hex)));
         const treeWithoutOtherPlanets = spanningTree(
@@ -926,7 +932,7 @@ export default class Player extends EventEmitter {
       }
     }
 
-    const feds = difference(fedsWithInfo, toRemove).filter((fed) => fed.satellites <= maxSatellites);
+    const feds = difference(fedsWithInfo, toRemove).filter((fed) => fed.newSatellites <= maxSatellites);
 
     this.federationCache = {
       availableSatellites: maxSatellites,
@@ -955,6 +961,7 @@ export default class Player extends EventEmitter {
     return {
       hexes: federation,
       satellites: satellites.length,
+      newSatellites: satellites.filter((sat) => !sat.belongsToFederationOf(this.player)).length,
       planets: nPlanets,
     };
   }
@@ -1024,7 +1031,12 @@ export default class Player extends EventEmitter {
 
       const occupiedSet = new Set(this.data.occupied);
       const workingGrid = new Grid<Hex<{ cost: number }>>(
-        ...allHexes.map((hex) => new Hex(hex.q, hex.r, { cost: occupiedSet.has(hex) ? 0 : 1 }))
+        ...allHexes.map(
+          (hex) =>
+            new Hex(hex.q, hex.r, {
+              cost: occupiedSet.has(hex) || hex.belongsToFederationOf(this.player) ? 0 : 1,
+            })
+        )
       );
       const allGroups = [
         ...this.buildingGroups(
