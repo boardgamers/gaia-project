@@ -1,5 +1,5 @@
 dependencies:
-  '@engine': link:../engine
+  '@gaia-project/engine': link:../engine
   bootstrap: 4.6.0_popper.js@1.16.1
   bootstrap-vue: 2.21.2_vue@2.6.12
   lodash: 4.17.21
@@ -10020,7 +10020,7 @@ packages:
       tarball: https://codeload.github.com/pemrouz/buble/tar.gz/4e639aeeb64712ac95dc30a52750d1ee4432c9c8
     version: 0.18.0
 specifiers:
-  '@engine': workspace:../engine
+  '@gaia-project/engine': workspace:../engine
   '@types/jquery': ^3.3.1
   '@types/lodash': ^4.14.168
   '@types/node': ^10.5.2

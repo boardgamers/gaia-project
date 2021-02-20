@@ -19,7 +19,6 @@
   ],
   "scripts": {
     "prepublishOnly": "npm run test && npm run clean && tsc",
-    "postpublish": "git push --follow-tags",
     "build": "npm run clean && tsc",
     "clean": "rm -Rf dist",
     "lint": "eslint . --ext .ts",
