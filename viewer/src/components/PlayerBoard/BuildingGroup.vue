@@ -125,7 +125,7 @@ export default class BuildingGroup extends Vue {
   tooltip(i: number) {
     const b = this.board.buildings[this.building];
     const cost = this.discount
-      ? b.cost.map(c => `${c.count - this.discount}${c.type}`).join(", ")
+      ? b.cost.map((c) => `${c.count - this.discount}${c.type}`).join(", ")
       : b.cost.join(", ") || "~";
     const isolatedCost = b.isolatedCost ? "\n Isolated cost: " + (b.isolatedCost.join(", ") || "~") : "";
     const income = this.building === BuildingEnum.GaiaFormer ? "" : "\n " + (this.resources(i, true).join(", ") || "~");
@@ -154,10 +154,10 @@ export default class BuildingGroup extends Vue {
 
   get factionIncome(): Reward[] {
     const income: Reward[] = [].concat(
-      ...this.board.income.filter(ev => ev.operator === Operator.Income).map(ev => ev.rewards)
+      ...this.board.income.filter((ev) => ev.operator === Operator.Income).map((ev) => ev.rewards)
     );
 
-    return income.filter(rew => this.resource.includes(rew.type));
+    return income.filter((rew) => this.resource.includes(rew.type));
   }
 
   get flat() {
@@ -192,7 +192,7 @@ export default class BuildingGroup extends Vue {
     }
 
     let incomeAdded = false;
-    const ret = this.board.buildings[building].income[i].map(ev => {
+    const ret = this.board.buildings[building].income[i].map((ev) => {
       const rew = ev.rewards.toString();
       const special = ev.operator === Operator.Activate && (rew === "1q" || rew === "4c");
 
@@ -208,7 +208,7 @@ export default class BuildingGroup extends Vue {
       return null;
     });
 
-    return [].concat(...ret).filter(r => r != null);
+    return [].concat(...ret).filter((r) => r != null);
   }
 }
 </script>

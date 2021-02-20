@@ -28,7 +28,7 @@
       <template v-else>
         <PlayerInfo :player="sessionPlayer" class="col-md-6 order-3" />
         <PlayerInfo
-          v-for="player in orderedPlayers.filter(pl => pl !== sessionPlayer)"
+          v-for="player in orderedPlayers.filter((pl) => pl !== sessionPlayer)"
           :player="player"
           :key="player.player"
           class="col-md-6 order-6"
@@ -177,7 +177,7 @@ export default class Game extends Vue {
     //   turnOrder = turnOrder.slice(turnOrder.indexOf(this.player)).concat(turnOrder.slice(0, turnOrder.indexOf(this.player)));
     // }
 
-    return turnOrder.concat(engine.passedPlayers).map(player => engine.players[player]);
+    return turnOrder.concat(engine.passedPlayers).map((player) => engine.players[player]);
   }
 
   get canPlay() {

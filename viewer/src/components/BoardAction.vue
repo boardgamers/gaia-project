@@ -69,7 +69,7 @@ export default class BoardAction extends Vue {
   get tooltip() {
     const costDesc = "Spend " + this.cost + "\n";
 
-    return costDesc + boardActions[this.action].income.map(x => eventDesc(new Event(x))).join("\n");
+    return costDesc + boardActions[this.action].income.map((x) => eventDesc(new Event(x))).join("\n");
   }
 
   get faded() {
@@ -81,12 +81,12 @@ export default class BoardAction extends Vue {
   }
 
   get rewards() {
-    return boardActions[this.action].income.map(x => new Reward(x));
+    return boardActions[this.action].income.map((x) => new Reward(x));
   }
 
   get income() {
     return [].concat(
-      ...boardActions[this.action].income.map(x => {
+      ...boardActions[this.action].income.map((x) => {
         if (x.includes("+")) {
           return [x.slice(0, x.indexOf("+")), x.slice(x.indexOf("+"))];
         }

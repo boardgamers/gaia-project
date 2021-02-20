@@ -5,11 +5,9 @@
       <g v-for="(player, index) in turnOrder" :key="index" :transform="`translate(${index * 2.5})`">
         <circle :r="1" :style="stroke(player)" :class="['player-token', 'planet-fill', planet(player, index)]" />
         <text
-          :style="
-            `font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(
-              planet(player, index)
-            )}`
-          "
+          :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(
+            planet(player, index)
+          )}`"
         >
           {{ initial(player, index) }}
         </text>
@@ -24,11 +22,9 @@
       >
         <circle :r="1" :style="stroke(player)" :class="['player-token', 'planet-fill', planet(player, index)]" />
         <text
-          :style="
-            `font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(
-              planet(player, index)
-            )}`
-          "
+          :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(
+            planet(player, index)
+          )}`"
         >
           {{ initial(player, index) }}
         </text>
@@ -63,13 +59,13 @@ export default class TurnOrder extends Vue {
       return data.players;
     }
     if (data.phase === Phase.SetupBuilding || data.phase === Phase.SetupBooster) {
-      return data.setup.map(faction => data.players.find(pl => pl.faction === faction));
+      return data.setup.map((faction) => data.players.find((pl) => pl.faction === faction));
     }
-    return data.turnOrder.map(player => data.players[player]);
+    return data.turnOrder.map((player) => data.players[player]);
   }
 
   get passedPlayers(): Player[] {
-    return (this.gameData.passedPlayers ?? []).map(player => this.gameData.players[player]);
+    return (this.gameData.passedPlayers ?? []).map((player) => this.gameData.players[player]);
   }
 
   isCurrentPlayer(pl: Player) {
@@ -129,7 +125,7 @@ export default class TurnOrder extends Vue {
   name(player: Player, index: number) {
     if (this.phaseBeforeSetupBuilding) {
       if (this.gameData.phase === Phase.SetupAuction) {
-        player = this.gameData.players.find(pl => pl.faction === this.gameData.setup[index]);
+        player = this.gameData.players.find((pl) => pl.faction === this.gameData.setup[index]);
       } else {
         return "";
       }

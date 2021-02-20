@@ -5,11 +5,9 @@
       v-for="center in this.sectors"
       :center="center"
       :key="`${center.q}x{center.r}`"
-      :style="
-        `transform: translate(${hexCenter(center).x * 1.01}px, ${hexCenter(center).y * 1.01}px) rotate(${rotation(
-          center
-        ) * 60}deg);`
-      "
+      :style="`transform: translate(${hexCenter(center).x * 1.01}px, ${hexCenter(center).y * 1.01}px) rotate(${
+        rotation(center) * 60
+      }deg);`"
     />
     <FactionWheel transform="translate(-10.5, -8.7) scale(0.5, 0.5)" />
   </svg>

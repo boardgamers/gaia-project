@@ -27,7 +27,15 @@
       <text
         x="-25"
         y="0"
-        style="text-anchor: middle; dominant-baseline: central; font-size: 8px; fill: white !important; letter-spacing: 0px; writing-mode: vertical-rl; text-orientation: upright; "
+        style="
+          text-anchor: middle;
+          dominant-baseline: central;
+          font-size: 8px;
+          fill: white !important;
+          letter-spacing: 0px;
+          writing-mode: vertical-rl;
+          text-orientation: upright;
+        "
         >PASS</text
       >
     </g>
@@ -41,9 +49,9 @@
       :count="res.count"
       :kind="res.type"
       :key="i"
-      :transform="
-        `translate(${centerRewards.length > 1 ? (i - 0.5) * 26 : 0}, 0) scale(${centerRewards.length === 1 ? 2 : 1.5})`
-      "
+      :transform="`translate(${centerRewards.length > 1 ? (i - 0.5) * 26 : 0}, 0) scale(${
+        centerRewards.length === 1 ? 2 : 1.5
+      })`"
     />
     <Resource
       v-for="(res, i) in rightRewards"
@@ -69,7 +77,15 @@
       <Operator :operator="event.operator" :condition="event.condition" transform="translate(2,5) scale(1.2)" />
     </template>
     <text
-      style="font-size: 40px; stroke: black; fill: white; dominant-baseline: central; text-anchor: middle; stroke-width: 1px; font-weight: bold;"
+      style="
+        font-size: 40px;
+        stroke: black;
+        fill: white;
+        dominant-baseline: central;
+        text-anchor: middle;
+        stroke-width: 1px;
+        font-weight: bold;
+      "
       x="-14"
       v-if="event.operator === '+'"
       >+</text

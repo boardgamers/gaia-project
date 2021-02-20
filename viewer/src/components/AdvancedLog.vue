@@ -17,18 +17,18 @@
           <td v-else-if="event.entry.phase === 'roundGaia'" class="phase-change">Gaia phase</td>
           <td v-else-if="event.entry.phase === 'endGame'" class="phase-change">End scoring</td>
           <td v-else>{{ event.move || data.players[event.entry.player].faction }}</td>
-          <td style="width: 1px; white-space: nowrap;">
+          <td style="width: 1px; white-space: nowrap">
             <div
               v-for="(changes, source, i) in event.entry.changes"
               v-html="source === 'undefined' ? '&nbsp;' : source"
               :key="i"
             />
           </td>
-          <td style="width: 1px; white-space: nowrap;">
+          <td style="width: 1px; white-space: nowrap">
             <div v-for="(changes, source, i) in event.entry.changes" :key="i">
               {{
                 Object.keys(changes)
-                  .map(key => `${changes[key]}${key}`)
+                  .map((key) => `${changes[key]}${key}`)
                   .join(", ")
               }}
             </div>

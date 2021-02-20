@@ -73,7 +73,7 @@ import Resource from "./Resource.vue";
   computed: {
     players(): Player[] {
       return this.$store.state.gaiaViewer.data.players.filter(
-        player => player.faction && player.data.research[this.field] === this.level
+        (player) => player.faction && player.data.research[this.field] === this.level
       );
     },
     tooltip() {
@@ -144,7 +144,7 @@ export default class ResearchTile extends Vue {
   }
 
   get resources() {
-    const rewards = Reward.merge(...this.events.slice(0, 1).map(ev => ev.rewards));
+    const rewards = Reward.merge(...this.events.slice(0, 1).map((ev) => ev.rewards));
 
     if (this.events[0] && this.events[0].operator === Operator.Income) {
       rewards.unshift(new Reward("+", ResourceEnum.None));
@@ -191,11 +191,11 @@ export default class ResearchTile extends Vue {
   }
 
   get events() {
-    return researchTracks[this.field][this.level].map(s => new Event(s));
+    return researchTracks[this.field][this.level].map((s) => new Event(s));
   }
 
   get techContent() {
-    return this.events.filter(event => event.condition !== Condition.None);
+    return this.events.filter((event) => event.condition !== Condition.None);
   }
 
   get highlighted(): boolean {

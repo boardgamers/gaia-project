@@ -23,7 +23,7 @@
         filter="url(#shadow-1)"
       />
       <!--<text class="title" x="-25" y="-18">{{title}}</text>-->
-      <TechContent :content="rawContent" style="pointer-events:none;" />
+      <TechContent :content="rawContent" style="pointer-events: none" />
     </g>
   </svg>
 </template>

@@ -87,12 +87,10 @@
         <feColorMatrix
           type="matrix"
           result="A"
-          :values="
-            `${r / x} 0 0 0 0
+          :values="`${r / x} 0 0 0 0
                                                 ${g / x} 0 0 0 0
                                                 ${b / x} 0 0 0 0
-                                                  0    0   0 1 0`
-          "
+                                                  0    0   0 1 0`"
         />
         <feColorMatrix in="A" type="saturate" :values="s" />
       </filter>
@@ -101,12 +99,10 @@
       <filter :id="`color-planet-${planet}`" :key="'pl-' + planet">
         <feColorMatrix
           type="matrix"
-          :values="
-            `${r / (3 * x)} ${r / (3 * x)} ${r / (3 * x)} 0 0
+          :values="`${r / (3 * x)} ${r / (3 * x)} ${r / (3 * x)} 0 0
                                                         ${g / (3 * x)} ${g / (3 * x)} ${g / (3 * x)} 0 0
                                                         ${b / (3 * x)} ${b / (3 * x)} ${b / (3 * x)} 0 0
-                                                          0    0   0 1 0`
-          "
+                                                          0    0   0 1 0`"
         />
       </filter>
     </template>
@@ -136,7 +132,7 @@ function getDarkness(faction: string): number {
 export default class Filters extends Vue {
   get factionData() {
     const factions = ["gen", "gaia", ...Object.values(Faction)];
-    return factions.map(faction => {
+    return factions.map((faction) => {
       /* Gaia faction is used for gaia-colored gaia formers for Baltaks */
       const color = faction === "gaia" ? planetColor(Planet.Gaia) : factionColor(faction as Faction);
       const darkness = getDarkness(faction);
@@ -154,8 +150,8 @@ export default class Filters extends Vue {
   }
 
   get planetData() {
-    const planets = Object.values(Planet).filter(pl => pl !== Planet.Empty);
-    return planets.map(planet => {
+    const planets = Object.values(Planet).filter((pl) => pl !== Planet.Empty);
+    return planets.map((planet) => {
       const color = planetColor(planet);
       const darkness = 1;
 

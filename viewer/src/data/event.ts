@@ -39,7 +39,7 @@ const operators = {
 
 function rewardDesc(rewards: Reward[]) {
   return rewards
-    .map(reward => {
+    .map((reward) => {
       switch (reward.type) {
         case Resource.TechTile:
           return `gain ${reward.count} tech tile${reward.count > 1 ? "s" : ""}`;
@@ -67,5 +67,5 @@ export function eventDesc(event: Event) {
       : conditionsCount[event.condition] && "for each " + conditionsCount[event.condition] + ",";
   const rewardString = event.rewards.length === 0 ? "" : rewardDesc(event.rewards);
 
-  return [operatorString, conditionString, rewardString].filter(x => !!x).join(" ");
+  return [operatorString, conditionString, rewardString].filter((x) => !!x).join(" ");
 }

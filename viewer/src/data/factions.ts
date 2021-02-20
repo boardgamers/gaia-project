@@ -93,7 +93,7 @@ export function planetsWithSteps(planet: Planet, steps: number) {
     list = list.slice(list.lastIndexOf(planet)).concat(list.slice(0, list.indexOf(planet)));
   }
 
-  return list.filter(p => terraformingStepsRequired(planet, p) === steps);
+  return list.filter((p) => terraformingStepsRequired(planet, p) === steps);
 }
 
 export function factionDesc(faction: Faction) {
@@ -103,9 +103,9 @@ export function factionDesc(faction: Faction) {
   const buildingDesc =
     "<ul>" +
     Object.values(Building)
-      .filter(bld => bld !== Building.GaiaFormer && bld !== Building.SpaceStation)
+      .filter((bld) => bld !== Building.GaiaFormer && bld !== Building.SpaceStation)
       .map(
-        bld =>
+        (bld) =>
           "<li><b>" +
           bld +
           "</b> - " +
@@ -116,8 +116,8 @@ export function factionDesc(faction: Faction) {
       )
       .join("\n") +
     "</ul>";
-  const startingIncome = board.income.filter(ev => ev.operator === Operator.Once);
-  const roundIncome = board.income.filter(ev => ev.operator === Operator.Income);
+  const startingIncome = board.income.filter((ev) => ev.operator === Operator.Once);
+  const roundIncome = board.income.filter((ev) => ev.operator === Operator.Income);
 
   return `
   <div class='faction-desc'>
@@ -130,10 +130,10 @@ export function factionDesc(faction: Faction) {
       <b>Steps:</b> 
       ${[0, 1, 2, 3]
         .map(
-          i =>
+          (i) =>
             `<span class="ml-2">${planetsWithSteps(p, i)
               .map(
-                p =>
+                (p) =>
                   `<svg width="15" height="20" viewbox="0 0 15 15" >
           <circle cx="7" cy="6" r="6"  class="player-token planet-fill ${p}" />
         </svg>`
