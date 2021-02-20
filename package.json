@@ -3,6 +3,7 @@
   "scripts": {
     "lint-staged": "lint-staged",
     "postinstall": "husky install",
+    "prettier": "prettier --plugin-search-dir=. --write .",
     "prettier-check": "prettier --plugin-search-dir=. --check ."
   },
   "devDependencies": {

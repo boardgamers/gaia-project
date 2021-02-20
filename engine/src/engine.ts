@@ -109,7 +109,7 @@ export default class Engine {
     federations: {},
   };
   boardActions: {
-    [key in BoardAction]?: boolean;
+    [key in BoardAction]?: PlayerEnum;
   } = {};
 
   terraformingFederation: Federation;
@@ -559,7 +559,6 @@ export default class Engine {
       if (key === "map" || key === "players" || Object.getOwnPropertyDescriptor(Engine.prototype, key)?.get) {
         continue;
       }
-
       engine[key] = data[key];
     }
 
@@ -581,6 +580,15 @@ export default class Engine {
         for (const player of hex.occupyingPlayers()) {
           engine.player(player).data.occupied.push(hex);
         }
+      }
+    }
+
+    // LEGACY CODE
+    // TODO: Remove when games are updated (also remove player !== Player.Player5)
+    for (const key of Object.keys(engine.boardActions)) {
+      const action = engine.boardActions[key];
+      if (typeof action == "boolean") {
+        engine.boardActions[key] = action ? null : PlayerEnum.Player5;
       }
     }
 
@@ -962,7 +970,7 @@ export default class Engine {
     }
     // resets power and qic actions
     BoardAction.values(this.expansions).forEach((pos: BoardAction) => {
-      this.boardActions[pos] = true;
+      this.boardActions[pos] = null;
     });
 
     if (this.isLastRound) {
@@ -1295,7 +1303,7 @@ export default class Engine {
 
     // powerActions
     BoardAction.values(this.expansions).forEach((pos: BoardAction) => {
-      this.boardActions[pos] = true;
+      this.boardActions[pos] = null;
     });
 
     const feds = Federation.values();
@@ -1603,7 +1611,7 @@ export default class Engine {
     );
 
     const pl = this.player(player);
-    this.boardActions[action] = false;
+    this.boardActions[action] = player;
 
     pl.payCosts(Reward.parse(boardActions[action].cost), action);
     pl.loadEvents(Event.parse(boardActions[action].income, action));

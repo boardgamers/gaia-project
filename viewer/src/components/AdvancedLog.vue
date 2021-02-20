@@ -44,7 +44,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Engine, { LogEntry } from "@gaia-project/engine";
+import { LogEntry } from "@gaia-project/engine";
 
 @Component({
   computed: {
