@@ -30,7 +30,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
-import Engine, { factions, Planet } from "@engine";
+import Engine, { factions, Planet } from "@gaia-project/engine";
 
 @Component
 export default class FactionWheel extends Vue {

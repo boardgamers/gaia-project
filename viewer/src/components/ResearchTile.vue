@@ -62,7 +62,7 @@ import {
   researchTracks,
   Resource as ResourceEnum,
   Reward,
-} from "@engine";
+} from "@gaia-project/engine";
 import { descriptions } from "../data/research";
 import Token from "./Token.vue";
 import FederationTile from "./FederationTile.vue";

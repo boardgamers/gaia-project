@@ -8,11 +8,16 @@ Check out [boardgamers.space](https://www.boardgamers.space)!
 
 ## Build and Run
 
+In the parent folder:
+
+```
+pnpm -r install
+```
+
+In the viewer's folder:
+
 ```bash
-# install deps, do this everytime yarn.lock is modified
-yarn install
-# run
-yarn serve
+npm run serve
 ```
 
 And open localhost:8080 in the browser.
@@ -53,7 +58,7 @@ emitter.emit("preferences", { noFactionFill: true });
 emitter.emit("player", { auth: "xxx" });
 emitter.emit("player", { index: 0 });
 // Listen for move actions
-emitter.on("move", (move) => {
+emitter.on("move", move => {
   /* send move to backend and give back result */
 });
 // Signals that a player's name was clicked

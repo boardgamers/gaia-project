@@ -71,7 +71,7 @@ import {
   Operator,
   Resource as ResourceEnum,
   Reward,
-} from "@engine";
+} from "@gaia-project/engine";
 
 @Component({
   components: {

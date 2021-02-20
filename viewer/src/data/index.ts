@@ -1,4 +1,4 @@
-import { TechTilePos, GaiaHex, AdvTechTilePos, Booster, Federation } from "@engine";
+import { TechTilePos, GaiaHex, AdvTechTilePos, Booster, Federation } from "@gaia-project/engine";
 
 export interface ButtonData {
   label?: string;

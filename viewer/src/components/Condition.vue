@@ -65,7 +65,7 @@
 </template>
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
-import { Condition as ConditionEnum, Building as BuildingEnum } from "@engine";
+import { Condition as ConditionEnum, Building as BuildingEnum } from "@gaia-project/engine";
 import Building from "./Building.vue";
 import Federation from "./FederationTile.vue";
 import Planet from "./Planet.vue";

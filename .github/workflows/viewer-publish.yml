@@ -25,7 +25,10 @@ jobs:
           node-version: ${{ env.node_version }}
           # setting a registry enables the NODE_AUTH_TOKEN env variable where we can set an npm token.  REQUIRED
           registry-url: "https://registry.npmjs.org"
-      - run: yarn install
+      - uses: pnpm/action-setup@v1.2.1
+        with:
+          version: 5.17.1
+      - run: cd .. && pnpm -r install
       - run: git config --global user.name github-action
       - run: git config --global user.email hello@github.com
       - run: yarn version --${{ github.event.inputs.newversion }}

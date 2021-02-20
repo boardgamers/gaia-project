@@ -1,4 +1,4 @@
-import { Building } from "@engine";
+import { Building } from "@gaia-project/engine";
 
 export function buildingName(building: Building): string {
   switch (building) {

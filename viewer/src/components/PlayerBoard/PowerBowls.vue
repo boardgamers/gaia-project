@@ -96,7 +96,7 @@ import {
   factions,
   PlayerData,
   Player,
-} from "@engine";
+} from "@gaia-project/engine";
 
 @Component({
   components: {

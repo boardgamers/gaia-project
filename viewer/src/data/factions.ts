@@ -1,4 +1,12 @@
-import { Faction, Operator, Building, Planet, factions, terraformingStepsRequired, factionBoard } from "@engine";
+import {
+  Faction,
+  Operator,
+  Building,
+  Planet,
+  factions,
+  terraformingStepsRequired,
+  factionBoard,
+} from "@gaia-project/engine";
 
 const factionData: { [faction in Faction]: { ability: string; PI: string } } = {
   [Faction.Terrans]: {

@@ -6,9 +6,6 @@
     "moduleResolution": "node",
     "sourceMap": true,
     "outDir": "./dist" /* Redirect output structure to the directory. */,
-    // "paths": {
-    //   "@engine": ["../engine"]
-    // },
     "baseUrl": ".",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,

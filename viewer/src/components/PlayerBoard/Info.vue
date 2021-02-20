@@ -101,7 +101,7 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { uniq } from "lodash";
 import Resource from "../Resource.vue";
-import { Faction, factions, Player, PlayerData, ResearchField, Resource as ResourceEnum } from "@engine";
+import { Faction, factions, Player, PlayerData, ResearchField, Resource as ResourceEnum } from "@gaia-project/engine";
 import VictoryPoint from "../Resources/VictoryPoint.vue";
 
 @Component({

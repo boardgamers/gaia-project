@@ -40,7 +40,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { tiles, Event, BoardAction as BoardActionEnum, boardActions, Reward } from "@engine";
+import { tiles, Event, BoardAction as BoardActionEnum, boardActions, Reward } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
 import Resource from "./Resource.vue";
 import SpecialAction from "./SpecialAction.vue";

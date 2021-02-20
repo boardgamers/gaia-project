@@ -51,7 +51,7 @@ import Engine, {
   EngineOptions,
   Expansion,
   BoardAction as BoardActionEnum,
-} from "@engine";
+} from "@gaia-project/engine";
 import AdvancedLog from "./AdvancedLog.vue";
 import BoardAction from "./BoardAction.vue";
 import Commands from "./Commands.vue";

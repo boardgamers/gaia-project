@@ -60,7 +60,7 @@ import {
   Planet as PlanetEnum,
   SpaceMap as ISpaceMap,
   Faction,
-} from "@engine";
+} from "@gaia-project/engine";
 import { corners } from "../graphics/hex";
 import Planet from "./Planet.vue";
 import Building from "./Building.vue";

@@ -67,7 +67,7 @@ import Engine, {
   Reward,
   SpaceMap,
   tiles,
-} from "@engine";
+} from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
 import { buildingName } from "../data/building";
 import { ButtonData, GameContext } from "../data";

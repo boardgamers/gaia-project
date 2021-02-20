@@ -20,7 +20,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { ResearchField } from "@engine";
+import { ResearchField } from "@gaia-project/engine";
 import ResearchTile from "./ResearchTile.vue";
 import TechTile from "./TechTile.vue";
 

@@ -7,7 +7,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { factions, Faction, Planet } from "@engine";
+import { factions, Faction, Planet } from "@gaia-project/engine";
 import { planetClass } from "../graphics/utils";
 
 @Component

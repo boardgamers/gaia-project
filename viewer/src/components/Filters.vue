@@ -114,7 +114,7 @@
 </template>
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
-import { Faction, Planet } from "@engine";
+import { Faction, Planet } from "@gaia-project/engine";
 import { factionColor, planetColor } from "../graphics/utils";
 
 function getDarkness(faction: string): number {

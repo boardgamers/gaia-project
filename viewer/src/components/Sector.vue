@@ -13,7 +13,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { GaiaHex } from "@engine";
+import { GaiaHex } from "@gaia-project/engine";
 import { hexCenter } from "../graphics/hex";
 import SpaceHex from "./SpaceHex.vue";
 import { CubeCoordinates, Hex } from "hexagrid";

@@ -129,7 +129,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Faction } from "@engine";
+import { Faction } from "@gaia-project/engine";
 import Building from "./Building.vue";
 import Qic from "./Resources/Qic.vue";
 import VictoryPoint from "./Resources/VictoryPoint.vue";

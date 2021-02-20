@@ -29,7 +29,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { tiles, Event, Federation as FederationEnum, PlayerEnum, Reward } from "@engine";
+import { tiles, Event, Federation as FederationEnum, PlayerEnum, Reward } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
 
 @Component

@@ -1,5 +1,5 @@
 import launch from "./launcher";
-import Engine from "@engine";
+import Engine from "@gaia-project/engine";
 
 import Wrapper from "./components/Wrapper.vue";
 import Game from "./components/Game.vue";

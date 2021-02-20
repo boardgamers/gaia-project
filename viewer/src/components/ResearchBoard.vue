@@ -59,7 +59,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { ResearchField, BoardAction as BoardActionEnum } from "@engine";
+import { ResearchField, BoardAction as BoardActionEnum } from "@gaia-project/engine";
 import ResearchTrack from "./ResearchTrack.vue";
 import TechTile from "./TechTile.vue";
 import BoardAction from "./BoardAction.vue";

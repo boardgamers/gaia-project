@@ -11,14 +11,17 @@ Checkout their READMEs:
 
 Check out [boardgamers.space](https://www.boardgamers.space)! Reach out to us if you want to contribute.
 
+## Install
+
+Do `pnpm install -r` in the main folder
+
 ## Test locally
 
-You can run the viewer with:
+After the installation step, you can run the viewer with:
 
 ```
 cd viewer
-yarn install
-yarn serve
+npm run serve
 ```
 
 It will use the engine in its sibling folder

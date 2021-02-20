@@ -41,7 +41,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { GaiaHex, TechTilePos, AdvTechTilePos, Command, SpaceMap } from "@engine";
+import { GaiaHex, TechTilePos, AdvTechTilePos, Command, SpaceMap } from "@gaia-project/engine";
 import { HighlightHexData, ButtonData } from "../data";
 import Booster from "./Booster.vue";
 import TechTile from "./TechTile.vue";

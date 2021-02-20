@@ -1,7 +1,15 @@
 import Vue from "vue";
 import Vuex from "vuex";
 import { GameContext } from "./data";
-import Engine, { GaiaHex, ResearchField, TechTilePos, AdvTechTilePos, Booster, Federation, Player } from "@engine";
+import Engine, {
+  GaiaHex,
+  ResearchField,
+  TechTilePos,
+  AdvTechTilePos,
+  Booster,
+  Federation,
+  Player,
+} from "@gaia-project/engine";
 import { CubeCoordinates } from "hexagrid";
 
 Vue.use(Vuex);

@@ -10,7 +10,7 @@
 import Vue from "vue";
 import planets from "../data/planets";
 import { Component, Prop } from "vue-property-decorator";
-import { Planet as PlanetEnum, factions, Faction } from "@engine";
+import { Planet as PlanetEnum, factions, Faction } from "@gaia-project/engine";
 
 @Component
 export default class Planet extends Vue {

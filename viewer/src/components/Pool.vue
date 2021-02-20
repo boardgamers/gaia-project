@@ -22,7 +22,7 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import Booster from "./Booster.vue";
 import FederationTile from "./FederationTile.vue";
-import { Booster as BoosterEnum, Expansion } from "@engine";
+import { Booster as BoosterEnum, Expansion } from "@gaia-project/engine";
 
 @Component({
   computed: {

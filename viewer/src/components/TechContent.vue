@@ -89,7 +89,7 @@ import {
   Operator as OperatorEnum,
   Condition as ConditionEnum,
   Building as BuildingEnum,
-} from "@engine";
+} from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
 import Resource from "./Resource.vue";
 import Building from "./Building.vue";

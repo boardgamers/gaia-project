@@ -1,4 +1,4 @@
-import { Planet } from "@engine";
+import { Planet } from "@gaia-project/engine";
 
 export default {
   [Planet.Swamp]: { radius: 0.65, color: "#704100", borderColor: "#874d12" },

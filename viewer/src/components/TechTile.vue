@@ -40,7 +40,7 @@ import {
   Operator as OperatorEnum,
   Condition as ConditionEnum,
   Building as BuildingEnum,
-} from "@engine";
+} from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
 import TechContent from "./TechContent.vue";
 
