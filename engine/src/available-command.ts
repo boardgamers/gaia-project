@@ -587,8 +587,7 @@ export function possibleFederations(engine: Engine, player: Player) {
           data: {
             tiles: possibleTiles,
             federations: possibleFeds.map((fed) => ({
-              planets: fed.planets,
-              satellites: fed.satellites,
+              ...fed,
               hexes: fed.hexes
                 .map((hex) => hex.toString())
                 .sort()
