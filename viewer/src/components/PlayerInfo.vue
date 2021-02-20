@@ -113,9 +113,9 @@
             >
               <circle :r="1" style="stroke-width: 0.06px !important" :class="['player-token', 'planet-fill', planet]" />
               <text
-                :style="
-                  `font-size: 1.4px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(planet)}`
-                "
+                :style="`font-size: 1.4px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(
+                  planet
+                )}`"
               >
                 {{ player.ownedPlanetsCount[planet] }}
               </text>

@@ -1,7 +1,7 @@
 <template>
   <g>
-    <circle :r="radius" :class="['planet-fill', planet]" style="pointer-events: none;" />
-    <circle :r="radius" :class="['planet-fill', 'faction-fill', fill]" v-if="faction" style="pointer-events: none;" />
+    <circle :r="radius" :class="['planet-fill', planet]" style="pointer-events: none" />
+    <circle :r="radius" :class="['planet-fill', 'faction-fill', fill]" v-if="faction" style="pointer-events: none" />
     <circle :r="radius" :class="['planet', planet]" />
   </g>
 </template>

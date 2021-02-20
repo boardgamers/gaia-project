@@ -32,7 +32,7 @@ import Token from "./Token.vue";
       const players = this.players;
 
       return players
-        .map(pl => {
+        .map((pl) => {
           const name = pl.faction === "automa" ? "Automa" : factions[pl.faction].name;
           const points = this.progress(pl);
           return `- ${name}: ${points}`;
@@ -68,7 +68,7 @@ export default class FinalScoringTile extends Vue {
   }
 
   get players() {
-    const pls = this.$store.state.gaiaViewer.data.players.filter(player => !!player && player.faction);
+    const pls = this.$store.state.gaiaViewer.data.players.filter((player) => !!player && player.faction);
 
     if (this.$store.state.gaiaViewer.data.players.length === 2) {
       pls.push({ faction: "automa" });

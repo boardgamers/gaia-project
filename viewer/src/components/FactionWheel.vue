@@ -4,10 +4,9 @@
     <g
       v-for="i in [0, 1, 2, 3, 4, 5, 6]"
       :key="i"
-      :transform="
-        `translate(${r * Math.sin(((-180 + i * 51) * Math.PI) / 180)}, ${r *
-          Math.cos(((-180 + i * 51) * Math.PI) / 180)})`
-      "
+      :transform="`translate(${r * Math.sin(((-180 + i * 51) * Math.PI) / 180)}, ${
+        r * Math.cos(((-180 + i * 51) * Math.PI) / 180)
+      })`"
     >
       <circle :r="1" :class="['planet-fill', planet(i)]" :style="`stroke-width: ${strokeWidth(i)}`" />
       <text
@@ -43,13 +42,13 @@ export default class FactionWheel extends Vue {
   }
 
   remainingPlanets(planet: string) {
-    return Array.from(this.gameData.map.grid.values()).filter(hex => !hex.occupied() && hex.data.planet === planet)
+    return Array.from(this.gameData.map.grid.values()).filter((hex) => !hex.occupied() && hex.data.planet === planet)
       .length;
   }
 
   strokeWidth(pos: number) {
     const planet = this.planet(pos);
-    if (this.gameData.players.some(p => p.faction && factions[p.faction].planet === planet)) {
+    if (this.gameData.players.some((p) => p.faction && factions[p.faction].planet === planet)) {
       return "0.2px; stroke-dasharray:.5 .2";
     }
 

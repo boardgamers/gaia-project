@@ -147,7 +147,7 @@ export default class BuildingGroup extends Vue {
   }
 
   get sectors(): number {
-    return uniq(this.data.occupied.filter(hex => hex.colonizedBy(this.player.player)).map(hex => hex.data.sector))
+    return uniq(this.data.occupied.filter((hex) => hex.colonizedBy(this.player.player)).map((hex) => hex.data.sector))
       .length;
   }
 }

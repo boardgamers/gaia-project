@@ -117,7 +117,7 @@
       y="0"
       v-if="
         (count >= 0 && ['o', 'c', 'k', 'pw', 'pay-pw', 't', 'bowl-t', 'tg', 'vp', 'q', 'gf'].includes(kind)) ||
-          count === '+'
+        count === '+'
       "
       :class="{ plus: count === '+' }"
       >{{ kind === "t" ? "+" : "" }}{{ count }}</text

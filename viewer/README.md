@@ -8,11 +8,11 @@ Check out [boardgamers.space](https://www.boardgamers.space)!
 
 ## Build and Run
 
+In the viewer's folder:
+
 ```bash
-# install deps, do this everytime yarn.lock is modified
-yarn install
-# run
-yarn serve
+pnpm install
+npm run serve
 ```
 
 And open localhost:8080 in the browser.

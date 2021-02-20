@@ -246,7 +246,7 @@ export default class Commands extends Vue {
             label: "Rotate sectors",
             command: Command.RotateSectors,
             hexes: new Map<GaiaHex, {}>(
-              this.map.configuration().centers.map(center => [this.engine.map.grid.get(center), {}] as [GaiaHex, {}])
+              this.map.configuration().centers.map((center) => [this.engine.map.grid.get(center), {}] as [GaiaHex, {}])
             ),
             rotation: true,
           });
@@ -255,7 +255,7 @@ export default class Commands extends Vue {
         }
         case Command.Build: {
           for (const building of Object.values(Building)) {
-            const coordinates = command.data.buildings.filter(bld => bld.building === building);
+            const coordinates = command.data.buildings.filter((bld) => bld.building === building);
 
             if (coordinates.length > 0) {
               let label = `Build a ${buildingName(building)}`;
@@ -277,7 +277,7 @@ export default class Commands extends Vue {
                 command: `${Command.Build} ${building}`,
                 automatic: command.data.automatic,
                 hexes: new Map<GaiaHex, { cost?: string }>(
-                  coordinates.map(coord => [this.engine.map.getS(coord.coordinates), coord])
+                  coordinates.map((coord) => [this.engine.map.getS(coord.coordinates), coord])
                 ),
               });
             }
@@ -290,7 +290,7 @@ export default class Commands extends Vue {
           ret.push({
             label: "Swap Planetary Institute",
             command: command.name,
-            hexes: new Map(command.data.buildings.map(coord => [this.engine.map.getS(coord.coordinates), coord])),
+            hexes: new Map(command.data.buildings.map((coord) => [this.engine.map.getS(coord.coordinates), coord])),
           });
           break;
         }
@@ -299,7 +299,7 @@ export default class Commands extends Vue {
           ret.push({
             label: "Place Lost Planet",
             command: command.name,
-            hexes: new Map(command.data.spaces.map(coord => [this.engine.map.getS(coord.coordinates), coord])),
+            hexes: new Map(command.data.spaces.map((coord) => [this.engine.map.getS(coord.coordinates), coord])),
           });
           break;
         }
@@ -322,7 +322,7 @@ export default class Commands extends Vue {
                 label: `Booster ${i + 1}`,
                 booster,
                 needConfirm: true,
-                tooltip: tiles.boosters[booster].map(spec => eventDesc(new Event(spec))).join("\n"),
+                tooltip: tiles.boosters[booster].map((spec) => eventDesc(new Event(spec))).join("\n"),
                 warning,
               });
             }
@@ -366,8 +366,8 @@ export default class Commands extends Vue {
               label: "Advance research",
               command: command.name,
               // track.to contains actual level, to use when implementing research viewer
-              buttons: command.data.tracks.map(track => ({ command: track.field })),
-              researchTiles: command.data.tracks.map(track => track.field + "-" + track.to),
+              buttons: command.data.tracks.map((track) => ({ command: track.field })),
+              researchTiles: command.data.tracks.map((track) => track.field + "-" + track.to),
             });
           }
           break;
@@ -378,8 +378,8 @@ export default class Commands extends Vue {
           ret.push({
             label: command.name === Command.ChooseCoverTechTile ? "Pick tech tile to cover" : "Pick tech tile",
             command: command.name,
-            techs: command.data.tiles.map(tile => tile.pos),
-            buttons: command.data.tiles.map(tile => ({ command: tile.pos, tech: tile.pos })),
+            techs: command.data.tiles.map((tile) => tile.pos),
+            buttons: command.data.tiles.map((tile) => ({ command: tile.pos, tech: tile.pos })),
           });
           break;
         }
@@ -418,7 +418,7 @@ export default class Commands extends Vue {
 
         case Command.BrainStone: {
           ret.push(
-            ...command.data.sort().map(area => ({
+            ...command.data.sort().map((area) => ({
               label: `Brainstone ${area}`,
               command: `${command.name} ${area}`,
             }))
@@ -430,7 +430,7 @@ export default class Commands extends Vue {
           ret.push({
             label: "Free action",
             command: Command.Spend,
-            buttons: command.data.acts.map(act => ({
+            buttons: command.data.acts.map((act) => ({
               label: `Spend ${act.cost} to gain ${act.income}`,
               command: `${act.cost} for ${act.income}`,
               times: act.range,
@@ -443,8 +443,8 @@ export default class Commands extends Vue {
           ret.push({
             label: "Power/Q.I.C Action",
             command: Command.Action,
-            actions: command.data.poweracts.map(act => act.name),
-            buttons: command.data.poweracts.map(act => ({
+            actions: command.data.poweracts.map((act) => act.name),
+            buttons: command.data.poweracts.map((act) => ({
               command: act.name,
               label: `Spend ${act.cost} for ${act.income.join(" / ")}`,
             })),
@@ -456,8 +456,8 @@ export default class Commands extends Vue {
           ret.push({
             label: "Special Action",
             command: Command.Special,
-            actions: command.data.specialacts.map(act => act.income),
-            buttons: command.data.specialacts.map(act => ({ command: act.income })),
+            actions: command.data.specialacts.map((act) => act.income),
+            buttons: command.data.specialacts.map((act) => ({ command: act.income })),
           });
           break;
         }
@@ -466,7 +466,7 @@ export default class Commands extends Vue {
           ret.push({
             label: "Burn power",
             command: Command.BurnPower,
-            buttons: command.data.map(val => ({ command: val })),
+            buttons: command.data.map((val) => ({ command: val })),
           });
           break;
         }
@@ -488,7 +488,7 @@ export default class Commands extends Vue {
 
         case Command.ChooseIncome: {
           ret.push(
-            ...command.data.map(income => ({
+            ...command.data.map((income) => ({
               label: `Income ${income}`,
               command: `${Command.ChooseIncome} ${income}`,
             }))
@@ -498,7 +498,7 @@ export default class Commands extends Vue {
 
         case Command.Bid: {
           ret.push(
-            ...command.data.bids.map(pos => ({
+            ...command.data.bids.map((pos) => ({
               label: `Bid ${pos.bid[0]} for ${pos.faction}`,
               command: `${Command.Bid} ${pos.faction} $times`,
               times: pos.bid,
@@ -509,7 +509,7 @@ export default class Commands extends Vue {
 
         case Command.PickReward: {
           ret.push(
-            ...command.data.rewards.map(reward => ({
+            ...command.data.rewards.map((reward) => ({
               label: `Gain ${reward}`,
               command: `${Command.PickReward} ${reward}`,
             }))
@@ -526,7 +526,7 @@ export default class Commands extends Vue {
           const locationButtons = command.data.federations.map((fed, i) => ({
             command: fed.hexes,
             label: `Location ${i + 1}`,
-            hexes: new Map(fed.hexes.split(",").map(coord => [this.engine.map.getS(coord), { coordinates: coord }])),
+            hexes: new Map(fed.hexes.split(",").map((coord) => [this.engine.map.getS(coord), { coordinates: coord }])),
             hover: true,
             buttons: tilesButtons,
           }));

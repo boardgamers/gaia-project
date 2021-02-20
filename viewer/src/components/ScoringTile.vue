@@ -6,13 +6,11 @@
     <Resource :kind="reward.type" :count="reward.count" transform="translate(63.7, 13.1) scale(1.5)" />
     <Condition
       :condition="event.condition"
-      :transform="
-        `translate(${
-          event.condition === 'step' || event.condition === 'a' || event.condition === 'PA'
-            ? 27 + (event.condition === 'PA' ? 8 : 0)
-            : 34
-        }, ${event.condition === 'step' ? 20 : 22}) scale(1.3)`
-      "
+      :transform="`translate(${
+        event.condition === 'step' || event.condition === 'a' || event.condition === 'PA'
+          ? 27 + (event.condition === 'PA' ? 8 : 0)
+          : 34
+      }, ${event.condition === 'step' ? 20 : 22}) scale(1.3)`"
     />
     <Operator :condition="event.condition" :operator="event.operator" transform="translate(28, 27) scale(1)" />
     <rect x="1" y="1" width="75" height="40" rx="2" ry="2" class="contour" />
@@ -39,7 +37,7 @@ export default class ScoringTile extends Vue {
   @Prop()
   round: number;
 
-  get tile(this: ScoringTile) {
+  get tile() {
     return this.$store.state.gaiaViewer.data.tiles.scorings.round[this.round - 1];
   }
 

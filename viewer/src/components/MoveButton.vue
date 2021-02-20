@@ -90,7 +90,7 @@ export default class MoveButton extends Vue {
   }
 
   subscribeFinal(action: string) {
-    this.subscribe(action, field => this.emitCommand(field, { final: true }));
+    this.subscribe(action, (field) => this.emitCommand(field, { final: true }));
     this.emitCommand(null, { disappear: false });
   }
 
@@ -133,7 +133,7 @@ export default class MoveButton extends Vue {
         this.emitCommand(hex.toString());
       } else {
         this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
-        this.subscribe("hexClick", hex => this.emitCommand(hex.toString()));
+        this.subscribe("hexClick", (hex) => this.emitCommand(hex.toString()));
       }
     } else if (this.button.researchTiles) {
       this.$store.commit("gaiaViewer/highlightResearchTiles", this.button.researchTiles);
@@ -153,7 +153,7 @@ export default class MoveButton extends Vue {
       // If already the active button, end the selection
       if (this.isActiveButton) {
         this.button.command = [...this.$store.state.gaiaViewer.context.highlighted.hexes.keys()]
-          .map(hex => hex.toString())
+          .map((hex) => hex.toString())
           .join(",");
         this.emitCommand();
         return;
@@ -163,7 +163,7 @@ export default class MoveButton extends Vue {
 
       this.customLabel = "Custom location - End selection";
 
-      this.subscribe("hexClick", hex => {
+      this.subscribe("hexClick", (hex) => {
         const highlighted = this.$store.state.gaiaViewer.context.highlighted.hexes;
 
         if (highlighted.has(hex)) {
@@ -173,7 +173,7 @@ export default class MoveButton extends Vue {
         }
 
         const keys: GaiaHex[] = [...highlighted.keys()];
-        this.$store.commit("gaiaViewer/highlightHexes", new Map([...keys.map(key => [key, null])] as any));
+        this.$store.commit("gaiaViewer/highlightHexes", new Map([...keys.map((key) => [key, null])] as any));
       });
     } else if (this.button.modal) {
       this.modalShow = true;
@@ -183,17 +183,17 @@ export default class MoveButton extends Vue {
         for (const rotation of rotations) {
           rotation[1] %= 6;
         }
-        this.emitCommand([].concat(...rotations.filter(r => !!r[1])).join(" "));
+        this.emitCommand([].concat(...rotations.filter((r) => !!r[1])).join(" "));
         return;
       }
 
       this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
-      this.subscribe("hexClick", hex => this.$store.commit("gaiaViewer/rotate", hex));
+      this.subscribe("hexClick", (hex) => this.$store.commit("gaiaViewer/rotate", hex));
       this.customLabel = "Sector rotations finished";
     } else if (this.button.range) {
       console.log("range click");
       this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
-      this.subscribe("hexClick", hex => {
+      this.subscribe("hexClick", (hex) => {
         if (this.startingHex) {
           this.emitCommand(`${this.startingHex} ${hex}`);
           this.startingHex = undefined;
@@ -253,12 +253,12 @@ export default class MoveButton extends Vue {
 
       if (times && typeof times === "number") {
         // the \b is necessary for things like '1t-a3', so the 3 is not caught
-        command = command.replace(/\b[0-9]+/g, x => "" + parseInt(x) * times);
+        command = command.replace(/\b[0-9]+/g, (x) => "" + parseInt(x) * times);
       }
 
       command = command.replace(/\$times\b/g, "" + (times ?? 0));
 
-      commandBody = [command, append].filter(x => !!x);
+      commandBody = [command, append].filter((x) => !!x);
     }
 
     this.$emit("trigger", commandBody.join(" "), this, final);

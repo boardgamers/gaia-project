@@ -27,7 +27,7 @@ import { Booster as BoosterEnum, Expansion } from "@gaia-project/engine";
 @Component({
   computed: {
     boosters() {
-      return BoosterEnum.values(Expansion.All).filter(key => this.$store.state.gaiaViewer.data.tiles.boosters[key]);
+      return BoosterEnum.values(Expansion.All).filter((key) => this.$store.state.gaiaViewer.data.tiles.boosters[key]);
     },
     federations() {
       return Object.entries(this.$store.state.gaiaViewer.data.tiles.federations).filter(([key, value]) => value > 0);
