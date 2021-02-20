@@ -31,12 +31,8 @@ jobs:
       - run: pnpm install
       - run: git config --global user.name github-action
       - run: git config --global user.email hello@github.com
+      - run: yarn config set version-git-message "🔖 (viewer) v%s"
       - run: yarn version --${{ github.event.inputs.newversion }}
-      - name: get-npm-version
-        id: package-version
-        uses: martinbeentjes/npm-get-version-action@master
-        with:
-          path: viewer
-      - run: yarn publish . --new-version ${{ steps.package-version.outputs.current-version}}
+      - run: pnpm publish .
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
