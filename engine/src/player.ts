@@ -129,8 +129,7 @@ export default class Player extends EventEmitter {
       json.federationCache = {
         availableSatellites: this.federationCache.availableSatellites,
         federations: this.federationCache.federations.map((fedInfo) => ({
-          planets: fedInfo.planets,
-          satellites: fedInfo.satellites,
+          ...fedInfo,
           hexes: fedInfo.hexes.map((h) => h.toString()),
         })),
       };
@@ -803,7 +802,7 @@ export default class Player extends EventEmitter {
 
     if (this.federationCache) {
       if (maxSatellites <= this.federationCache.availableSatellites) {
-        return this.federationCache.federations.filter((fed) => fed.satellites <= maxSatellites);
+        return this.federationCache.federations.filter((fed) => fed.newSatellites <= maxSatellites);
       } else {
         // Only try federations with building combinations not in federationCache.federations
       }
