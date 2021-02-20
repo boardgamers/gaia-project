@@ -35,7 +35,7 @@
         />
       </template>
       <Pool class="col-12 order-10 mt-4" />
-      <AdvancedLog class="col-12 order-last mt-4" />
+      <AdvancedLog class="col-12 order-last mt-4" :currentMove="currentMove" />
     </div>
   </div>
 </template>

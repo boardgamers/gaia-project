@@ -82,12 +82,19 @@ import Engine, { LogEntry } from "@engine";
         }
       });
 
+      if (nextLogEntry && this.currentMove) {
+        ret.push({ entry: nextLogEntry, move: this.currentMove });
+      }
+
       ret.reverse();
       return ret;
     },
   },
 })
-export default class AdvancedLog extends Vue {}
+export default class AdvancedLog extends Vue {
+  @Prop()
+  currentMove?: string;
+}
 </script>
 
 <style lang="scss" scoped>
