@@ -5,6 +5,7 @@ export interface FederationInfo {
   hexes: GaiaHex[];
   planets: number;
   satellites: number;
+  newSatellites: number;
 }
 
 /**

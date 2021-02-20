@@ -1,11 +1,10 @@
 import { expect } from "chai";
 import "mocha";
 import Player from "./player";
-import { BrainstoneArea, Building, Command, Faction, Operator, Planet, Player as PlayerEnum, Resource } from "./enums";
+import { Building, Faction, Operator, Planet, Player as PlayerEnum, Resource } from "./enums";
 import Reward from "./reward";
 import Event from "./events";
 import { GaiaHex } from "./gaia-hex";
-import { Power } from "./player-data";
 
 describe("Player", () => {
   describe("canBuild", () => {

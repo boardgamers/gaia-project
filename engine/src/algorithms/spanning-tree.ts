@@ -1,7 +1,6 @@
-import { inRange, minBy, maxBy, uniq, difference, sortBy } from "lodash";
+import { inRange, minBy, maxBy, uniq, difference, sumBy } from "lodash";
 import { Grid, Hex } from "hexagrid";
 import shortestPath from "./shortest-path";
-import { sumBy } from "lodash";
 import assert from "assert";
 import minimumPathLength from "./minimum-path-length";
 
@@ -28,7 +27,7 @@ function spanningTreeWithHeuristic<T>(
   destGroups: Hex<T>[][],
   grid: Grid<Hex<T>>,
   maxAdditional = -1,
-  costOf = (hex: Hex<any>) => 1
+  costOf = (hex: Hex<T>) => 1
 ): { path: Hex[]; cost: number } | undefined {
   type DestGroup = Hex<T>[];
 
@@ -76,7 +75,8 @@ function spanningTreeWithHeuristic<T>(
     if (destGroupsMap.has(hex)) {
       return destGroupsMap.get(hex);
     } else {
-      return [hex];
+      // If it's an empty hex next to buildings, include those buildings
+      return uniq([hex, ...grid.neighbours(hex).map((nb) => destGroupsMap.get(nb) ?? [])].flat(1));
     }
   };
 
@@ -90,7 +90,7 @@ function spanningTreeWithHeuristic<T>(
 
     do {
       const hexSet = new Set<Hex<T>>(hexes);
-      const path = shortestPath(hexes, toReach, grid, (hex) => (hexSet.has(hex) ? 0 : costOf(hex)));
+      const path = shortestPath<T>(hexes, toReach, grid, (hex) => (hexSet.has(hex) ? 0 : costOf(hex)));
 
       if (!path) {
         hexes = undefined;
