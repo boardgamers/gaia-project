@@ -20,6 +20,8 @@ import {
   TechTilePos,
 } from "./enums";
 import factions from "./factions";
+import PlayerObject from "./player";
+import PlayerData from "./player-data";
 import * as researchTracks from "./research-tracks";
 import Reward from "./reward";
 import { isAdvanced } from "./tiles/techs";
@@ -452,6 +454,15 @@ export function possibleLabDowngrades(engine: Engine, player: Player) {
   ] as AvailableCommand[];
 }
 
+export function canResearchField(engine: Engine, player: PlayerObject, field: ResearchField): boolean {
+  const destTile = player.data.research[field] + 1;
+  if (destTile === researchTracks.lastTile(field) && engine.players.some((p) => p.data.research[field] === destTile)) {
+    return false;
+  }
+
+  return player.canUpgradeResearch(field);
+}
+
 export function possibleResearchAreas(engine: Engine, player: Player, cost?: string, data?: any) {
   const commands = [];
   const tracks = [];
@@ -473,25 +484,13 @@ export function possibleResearchAreas(engine: Engine, player: Player, cost?: str
     }
 
     for (const field of avFields) {
-      // end of the track reached
-      const destTile = pl.data.research[field] + 1;
-
-      if (
-        destTile === researchTracks.lastTile(field) &&
-        engine.players.some((pla) => pla.data.research[field] === destTile)
-      ) {
-        continue;
+      if (canResearchField(engine, pl, field)) {
+        tracks.push({
+          field,
+          to: pl.data.research[field] + 1,
+          cost,
+        });
       }
-
-      if (!pl.canUpgradeResearch(field)) {
-        continue;
-      }
-
-      tracks.push({
-        field,
-        to: destTile,
-        cost,
-      });
     }
   }
 
@@ -713,6 +712,22 @@ export function possibleFederationTiles(engine: Engine, player: Player, from: "p
   return commands;
 }
 
+export function canTakeAdvancedTechTile(engine: Engine, data: PlayerData, tilePos: AdvTechTilePos): boolean {
+  if (engine.tiles.techs[tilePos].count <= 0) {
+    return false;
+  }
+  if (!data.hasGreenFederation()) {
+    return false;
+  }
+  if (data.research[tilePos.slice("adv-".length)] < 4) {
+    return false;
+  }
+  if (!data.tiles.techs.some((tech) => tech.enabled && !isAdvanced(tech.pos))) {
+    return false;
+  }
+  return true;
+}
+
 export function possibleTechTiles(engine: Engine, player: Player) {
   const commands = [];
   const tiles = [];
@@ -731,23 +746,12 @@ export function possibleTechTiles(engine: Engine, player: Player) {
   // adv tech tiles where player has lev 4/5, free federation tokens,
   // and available std tech tiles to cover
   for (const tilePos of AdvTechTilePos.values(engine.expansions)) {
-    if (engine.tiles.techs[tilePos].count <= 0) {
-      continue;
+    if (canTakeAdvancedTechTile(engine, data, tilePos)) {
+      tiles.push({
+        tile: engine.tiles.techs[tilePos].tile,
+        pos: tilePos,
+      });
     }
-    if (!data.hasGreenFederation()) {
-      continue;
-    }
-    if (data.research[tilePos.slice("adv-".length)] < 4) {
-      continue;
-    }
-    if (!data.tiles.techs.some((tech) => tech.enabled && !isAdvanced(tech.pos))) {
-      continue;
-    }
-
-    tiles.push({
-      tile: engine.tiles.techs[tilePos].tile,
-      pos: tilePos,
-    });
   }
   if (tiles.length > 0) {
     commands.push({

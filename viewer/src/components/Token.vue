@@ -27,4 +27,15 @@ g .player-token {
   pointer-events: none;
   stroke-width: 3;
 }
+g.warn .player-token {
+  animation: spin-token 10s linear infinite;
+  stroke-width: 5;
+  stroke-dasharray: 10 4;
+}
+
+@keyframes spin-token {
+  100% {
+    transform: rotateZ(360deg);
+  }
+}
 </style>

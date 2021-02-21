@@ -27,10 +27,10 @@
       </g>
       <g
         v-for="player in players"
-        :key="player.player"
-        :transform="`translate(${tokenX(player.player)}, ${tokenY(player.player)}) scale(0.30)`"
+        :key="player.player.player"
+        :transform="`translate(${tokenX(player.player.player)}, ${tokenY(player.player.player)}) scale(0.30)`"
       >
-        <Token :faction="player.faction" filter="url(#drop-shadow-1)" />
+        <Token :faction="player.player.faction" filter="url(#drop-shadow-1)" :class="`${player.class}`" />
       </g>
       <g v-if="this.federation" transform="translate(30, 25) scale(0.6)">
         <FederationTile
@@ -51,13 +51,17 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import {
+import Engine, {
+  AdvTechTilePos,
+  canResearchField,
+  canTakeAdvancedTechTile,
   Condition,
   Event,
   Federation,
   Operator,
   Planet as PlanetEnum,
   Player,
+  PlayerEnum,
   ResearchField,
   researchTracks,
   Resource as ResourceEnum,
@@ -70,36 +74,6 @@ import Planet from "./Planet.vue";
 import Resource from "./Resource.vue";
 
 @Component<ResearchTile>({
-  computed: {
-    players(): Player[] {
-      return this.$store.state.gaiaViewer.data.players.filter(
-        (player) => player.faction && player.data.research[this.field] === this.level
-      );
-    },
-    tooltip() {
-      return `<b>Level ${this.level}:</b> ${descriptions[this.field][this.level]}`;
-    },
-    height() {
-      return this.level === 5 ? 46 : 36;
-    },
-    federation(): Federation {
-      if (this.level === 5) {
-        if (this.field === ResearchField.Terraforming) {
-          return this.$store.state.gaiaViewer.data.terraformingFederation;
-        }
-      }
-    },
-    lostPlanet(): PlanetEnum {
-      if (this.level === 5 && this.field === ResearchField.Navigation) {
-        for (const pl of this.players) {
-          if (pl.data.lostPlanet) {
-            return undefined;
-          }
-        }
-        return PlanetEnum.Lost;
-      }
-    },
-  },
   components: {
     Token,
     FederationTile,
@@ -125,11 +99,11 @@ export default class ResearchTile extends Vue {
     return -6 * (l - 1) + index * 2 * sep - ((res[0].count as any) === "+" ? 2 : 0);
   }
 
-  tokenX(index: number) {
+  tokenX(index: PlayerEnum) {
     return 10 + 13 * (index % 4) + 22 * (index > 3 ? 1 : 0);
   }
 
-  tokenY(index: number) {
+  tokenY(index: PlayerEnum) {
     return 10 + 13 * (index > 3 ? 1 : 0);
   }
 
@@ -201,6 +175,55 @@ export default class ResearchTile extends Vue {
   get highlighted(): boolean {
     return this.$store.state.gaiaViewer.context.highlighted.researchTiles.has(this.field + "-" + this.level);
   }
+
+  tokenClass(player: Player): string {
+    if (this.level < 4) {
+      return "";
+    }
+    const tilePos = ("adv-" + this.field) as AdvTechTilePos;
+    if (canTakeAdvancedTechTile(this.gameData, player.data, tilePos) || canResearchField(this.gameData, player, this.field)) {
+      return "warn";
+    }
+    return "";
+  }
+
+  get players(): Array<{ player: Player; class: string }> {
+    const players = this.gameData.players;
+    return players
+      .filter((player) => player.faction && player.data.research[this.field] === this.level)
+      .map((p) => ({ player: p, class: this.tokenClass(p) }));
+  }
+
+  get tooltip() {
+    return `<b>Level ${this.level}:</b> ${descriptions[this.field][this.level]}`;
+  }
+
+  get height() {
+    return this.level === 5 ? 46 : 36;
+  }
+
+  get federation(): Federation {
+    if (this.level === 5) {
+      if (this.field === ResearchField.Terraforming) {
+        return this.gameData.terraformingFederation;
+      }
+    }
+  }
+
+  get lostPlanet(): PlanetEnum {
+    if (this.level === 5 && this.field === ResearchField.Navigation) {
+      for (const pl of this.players) {
+        if (pl.player.data.lostPlanet) {
+          return undefined;
+        }
+      }
+      return PlanetEnum.Lost;
+    }
+  }
+
+  get gameData(): Engine {
+    return this.$store.state.gaiaViewer.data;
+  }
 }
 </script>
 
@@ -210,6 +233,7 @@ svg {
     &:hover {
       fill-opacity: 0.5;
     }
+
     &.highlighted {
       fill-opacity: 0.3;
       cursor: pointer;
@@ -224,18 +248,23 @@ svg {
     &.eco {
       fill: var(--rt-eco);
     }
+
     &.sci {
       fill: var(--rt-sci);
     }
+
     &.terra {
       fill: var(--rt-terra);
     }
+
     &.nav {
       fill: var(--rt-nav);
     }
+
     &.gaia {
       fill: var(--rt-gaia);
     }
+
     &.int {
       fill: var(--rt-int);
     }
