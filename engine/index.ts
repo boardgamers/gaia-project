@@ -11,6 +11,7 @@ import Reward from "./src/reward";
 import tiles from "./src/tiles";
 
 export { boardActions } from "./src/actions";
+export { canResearchField, canTakeAdvancedTechTile } from "./src/available-command";
 export { EngineOptions, LogEntry } from "./src/engine";
 export {
   AdvTechTile,

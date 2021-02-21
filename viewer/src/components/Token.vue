@@ -27,4 +27,20 @@ g .player-token {
   pointer-events: none;
   stroke-width: 3;
 }
+g.warn .player-token {
+  stroke-width: 5;
+  animation: token 2s linear infinite;
+}
+
+@keyframes token {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.8);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
 </style>
