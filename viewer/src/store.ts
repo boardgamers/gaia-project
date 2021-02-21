@@ -9,7 +9,7 @@ import Engine, {
 } from "@gaia-project/engine";
 import { CubeCoordinates } from "hexagrid";
 import Vue from "vue";
-import Vuex from "vuex";
+import Vuex, { Store } from "vuex";
 import { GameContext } from "./data";
 import { movesToHexes, recentMoves, roundMoves } from "./logic/recent";
 
@@ -146,7 +146,7 @@ const gaiaViewer = {
   },
 };
 
-function makeStore() {
+function makeStore(): Store<{ gaiaViewer: typeof gaiaViewer["state"] }> {
   return new Vuex.Store({
     modules: {
       gaiaViewer,
