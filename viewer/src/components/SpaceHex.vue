@@ -54,7 +54,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import {Component, Prop} from "vue-property-decorator";
+import { Component, Prop } from "vue-property-decorator";
 import {
   Building as BuildingEnum,
   factions,
@@ -62,11 +62,11 @@ import {
   Planet as PlanetEnum,
   SpaceMap as ISpaceMap,
 } from "@gaia-project/engine";
-import {corners} from "../graphics/hex";
+import { corners } from "../graphics/hex";
 import Planet from "./Planet.vue";
 import Building from "./Building.vue";
-import {buildingName} from "../data/building";
-import {planetNames} from "../data/planets";
+import { buildingName } from "../data/building";
+import { planetNames } from "../data/planets";
 
 @Component<SpaceHex>({
   components: {
@@ -147,8 +147,6 @@ export default class SpaceHex extends Vue {
 </script>
 
 <style lang="scss">
-@import "../stylesheets/planets.scss";
-
 svg {
   .spaceHex {
     fill: #172e62;
@@ -173,11 +171,11 @@ svg {
     }
 
     &.current-round:not(.highlighted):not(.toSelect) {
-      fill: $current-round;
+      fill: var(--current-round);
     }
 
     &.recent:not(.highlighted):not(.toSelect) {
-      fill: $recent;
+      fill: var(--recent);
     }
 
     &.toSelect {

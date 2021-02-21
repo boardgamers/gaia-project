@@ -1,0 +1,52 @@
+.gaia-viewer-game,
+.gaia-viewer-modal {
+  --volcanic: #ff9500;
+  --swamp: #704100;
+  --generic: lightgray;
+
+  --terra: #2080f0;
+  --desert: #f2ff00;
+
+  --oxide: #ff160a;
+  --titanium: #808080;
+  --ice: #f8fff5;
+
+  --gaia: #0a0;
+  --transdim: #a64dff;
+  --lost: #004570;
+  --dig: #702506;
+
+  --rt-eco: #ffd700;
+  --rt-sci: #79b9f8;
+  --rt-terra: #856443;
+  --rt-nav: #516372;
+  --rt-gaia: #a5589c;
+  --rt-int: #508344;
+
+  --tech-tile: #e5e5ea;
+  --adv-tech-tile: #6888fa;
+
+  --res-knowledge: #2080f0;
+  --res-qic: green;
+  --res-ore: #ddd;
+  --res-credit: #f2ff00;
+  --res-power: #984ff1;
+  --res-vp: #248a3d;
+
+  --highlighted: #2c4;
+
+  --specialAction: #ff9500;
+
+  --booster-tile: #e5e5ea;
+
+  --systemGray0: #6c6c70;
+  --systemGray1: #8e8e93;
+  --systemGray2: #aeaeb2;
+  --systemGray3: #c7c7cc;
+  --systemGray4: #d1d1d6;
+  --systemGray5: #e5e5ea;
+  --systemGray6: #f2f2f7;
+
+  --recent: gold;
+  --current-round: black;
+}

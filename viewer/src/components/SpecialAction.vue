@@ -71,22 +71,20 @@ export default class SpecialAction extends Vue {
 </script>
 
 <style lang="scss">
-@import "../stylesheets/planets.scss";
-
 g {
   &.specialAction {
     & > polygon {
       stroke: black;
       stroke-width: 0.5;
-      fill: $specialAction;
+      fill: var(--specialAction);
     }
 
     &.board > polygon:not(.planet-fill) {
-      fill: $systemGray6;
+      fill: var(--systemGray6);
     }
 
     &.highlighted > polygon {
-      stroke: $highlighted;
+      stroke: var(--highlighted);
       stroke-width: 1;
       cursor: pointer;
     }

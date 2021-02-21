@@ -205,8 +205,6 @@ export default class ResearchTile extends Vue {
 </script>
 
 <style lang="scss">
-@import "../stylesheets/planets.scss";
-
 svg {
   .research-board .researchTile {
     &:hover {
@@ -224,22 +222,22 @@ svg {
     stroke-width: 1;
 
     &.eco {
-      fill: $rt-eco;
+      fill: var(--rt-eco);
     }
     &.sci {
-      fill: $rt-sci;
+      fill: var(--rt-sci);
     }
     &.terra {
-      fill: $rt-terra;
+      fill: var(--rt-terra);
     }
     &.nav {
-      fill: $rt-nav;
+      fill: var(--rt-nav);
     }
     &.gaia {
-      fill: $rt-gaia;
+      fill: var(--rt-gaia);
     }
     &.int {
-      fill: $rt-int;
+      fill: var(--rt-int);
     }
   }
 

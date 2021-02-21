@@ -80,12 +80,10 @@ export default class Booster extends Vue {
 </script>
 
 <style lang="scss">
-@import "../stylesheets/planets.scss";
-
 svg {
   &.booster {
     .booster-background {
-      fill: $booster-tile;
+      fill: var(--booster-tile);
     }
     .title {
       font-size: 10px;
@@ -99,7 +97,7 @@ svg {
     }
 
     &.highlighted .booster-background {
-      stroke: $highlighted;
+      stroke: var(--highlighted);
       cursor: pointer;
       stroke-width: 2px;
     }

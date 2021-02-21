@@ -598,8 +598,6 @@ export default class Commands extends Vue {
 </script>
 
 <style lang="scss">
-@import "../stylesheets/planets.scss";
-
 i.planet {
   &::before {
     content: "\25cf";
@@ -612,43 +610,43 @@ i.planet {
 
   // terra
   &.r {
-    color: $terra;
+    color: var(--terra);
   }
   // desert
   &.d {
-    color: $desert;
+    color: var(--desert);
   }
   // swamp
   &.s {
-    color: $swamp;
+    color: var(--swamp);
   }
   // oxide
   &.o {
-    color: $oxide;
+    color: var(--oxide);
   }
   // titanium
   &.t {
-    color: $titanium;
+    color: var(--titanium);
   }
   // ice
   &.i {
-    color: $ice;
+    color: var(--ice);
   }
   // volcanic
   &.v {
-    color: $volcanic;
+    color: var(--volcanic);
   }
   // gaia
   &.g {
-    color: $gaia;
+    color: var(--gaia);
   }
   // transdim
   &.m {
-    color: $transdim;
+    color: var(--transdim);
   }
   // lost planet
   &.l {
-    color: $lost;
+    color: var(--lost);
   }
 
   filter: drop-shadow(0px 0px 1px black);

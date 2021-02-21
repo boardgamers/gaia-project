@@ -162,8 +162,6 @@ export default class BuildingGroup extends Vue {
 }
 </script>
 <style lang="scss">
-@import "../../stylesheets/planets.scss";
-
 .power-bowls {
   circle {
     stroke-width: 0.05px;
@@ -175,11 +173,11 @@ export default class BuildingGroup extends Vue {
   }
 
   .power {
-    fill: $res-power;
+    fill: var(--res-power);
   }
 
   .brainstone {
-    fill: $res-power;
+    fill: var(--res-power);
   }
 
   text {

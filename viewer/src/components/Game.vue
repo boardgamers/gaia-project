@@ -1,5 +1,5 @@
 <template>
-  <div :class="`${globalStyles}`">
+  <div :class="classes">
     <div
       :class="['row', 'no-gutters', 'justify-content-center', engine.players.length > 2 ? 'medium-map' : 'small-map']"
       v-if="hasMap"
@@ -61,7 +61,6 @@ import ResearchBoard from "./ResearchBoard.vue";
 import ScoringBoard from "./ScoringBoard.vue";
 import SpaceMap from "./SpaceMap.vue";
 import TurnOrder from "./TurnOrder.vue";
-import { resolve } from "dns";
 
 @Component<Game>({
   created(this: Game) {
@@ -190,18 +189,18 @@ export default class Game extends Vue {
     return !!this.$store.state.gaiaViewer.data.map;
   }
 
-  get globalStyles() {
+  get classes() {
     const preferences = this.$store.state.gaiaViewer.preferences;
-    const styles = [];
+    const classes = ["gaia-viewer-game"];
     if (preferences) {
       if (preferences.noFactionFill) {
-        styles.push("no-faction-fill");
+        classes.push("no-faction-fill");
       }
       if (preferences.accessibleSpaceMap) {
-        styles.push("accessible-space-map");
+        classes.push("accessible-space-map");
       }
     }
-    return styles.join(" ");
+    return classes;
   }
 
   get player() {
@@ -296,6 +295,7 @@ export default class Game extends Vue {
 
 <style lang="scss">
 @import "../stylesheets/frontend.scss";
+@import "../stylesheets/planets.css";
 
 .space-map,
 .scoring-research-board {

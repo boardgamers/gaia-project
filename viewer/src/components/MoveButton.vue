@@ -30,6 +30,7 @@
       size="lg"
       @ok="handleOK"
       @hide="modalCancel"
+      dialog-class="gaia-viewer-modal"
       :title="button.title || button.label || button.command"
       ok-title="OK, I pick this one!"
     >

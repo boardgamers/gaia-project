@@ -95,12 +95,10 @@ export default class Condition extends Vue {
 }
 </script>
 <style lang="scss">
-@import "../stylesheets/planets.scss";
-
 g {
   &.condition {
     &.gaia {
-      fill: $gaia;
+      fill: var(--gaia);
     }
   }
 }

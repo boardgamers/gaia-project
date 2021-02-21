@@ -35,8 +35,6 @@ export default class Planet extends Vue {
 </script>
 
 <style lang="scss">
-@import "../stylesheets/planets.scss";
-
 svg {
   .planet {
     stroke-width: 0.04;
@@ -45,31 +43,31 @@ svg {
 
     // terra
     &.r {
-      stroke: $terra;
+      stroke: var(--terra);
     }
     // desert
     &.d {
-      stroke: $desert;
+      stroke: var(--desert);
     }
     // swamp
     &.s {
-      stroke: $swamp;
+      stroke: var(--swamp);
     }
     // oxide
     &.o {
-      stroke: $oxide;
+      stroke: var(--oxide);
     }
     // titanium
     &.t {
-      stroke: $titanium;
+      stroke: var(--titanium);
     }
     // ice
     &.i {
-      stroke: $ice;
+      stroke: var(--ice);
     }
     // volcanic
     &.v {
-      stroke: $volcanic;
+      stroke: var(--volcanic);
     }
     .accessible-space-map &.v {
       stroke-dasharray: 0.25;
@@ -77,7 +75,7 @@ svg {
     }
     // gaia
     &.g {
-      stroke: $gaia;
+      stroke: var(--gaia);
     }
     .accessible-space-map &.g {
       stroke-dasharray: 0.14;
@@ -85,7 +83,7 @@ svg {
     }
     // transdim
     &.m {
-      stroke: $transdim;
+      stroke: var(--transdim);
     }
     .accessible-space-map &.m {
       stroke-dasharray: 0.14;
@@ -93,7 +91,7 @@ svg {
     }
     // lost planet
     &.l {
-      stroke: $lost;
+      stroke: var(--lost);
     }
   }
 
@@ -104,51 +102,51 @@ svg {
     }
     // terra
     &.r {
-      fill: $terra;
+      fill: var(--terra);
     }
     // desert
     &.d {
-      fill: $desert;
+      fill: var(--desert);
     }
     // swamp
     &.s {
-      fill: $swamp;
+      fill: var(--swamp);
     }
     // oxide
     &.o {
-      fill: $oxide;
+      fill: var(--oxide);
     }
     // titanium
     &.t {
-      fill: $titanium;
+      fill: var(--titanium);
     }
     // ice
     &.i {
-      fill: $ice;
+      fill: var(--ice);
     }
     // volcanic
     &.v {
-      fill: $volcanic;
+      fill: var(--volcanic);
     }
     // gaia
     &.g {
-      fill: $gaia;
+      fill: var(--gaia);
     }
     // transdim
     &.m {
-      fill: $transdim;
+      fill: var(--transdim);
     }
     // lost planet
     &.l {
-      fill: $lost;
+      fill: var(--lost);
     }
     // generic planet
     &.gen {
-      fill: $generic;
+      fill: var(--generic);
     }
     //diggable planet
     &.dig {
-      fill: $dig;
+      fill: var(--dig);
     }
   }
 }

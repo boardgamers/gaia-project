@@ -40,7 +40,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import {Component, Prop} from "vue-property-decorator";
+import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   BoardAction as BoardActionEnum,
   boardActions,
@@ -48,9 +48,9 @@ import Engine, {
   factions,
   Planet,
   PlayerEnum,
-  Reward
+  Reward,
 } from "@gaia-project/engine";
-import {eventDesc} from "../data/event";
+import { eventDesc } from "../data/event";
 import Resource from "./Resource.vue";
 import SpecialAction from "./SpecialAction.vue";
 
@@ -87,7 +87,8 @@ export default class BoardAction extends Vue {
 
   get planet(): Planet {
     const player = this.player();
-    if (player != null && player !== PlayerEnum.Player5) { // Player5 is for converted old games
+    if (player != null && player !== PlayerEnum.Player5) {
+      // Player5 is for converted old games
       return factions.planet(this.$store.state.gaiaViewer.data.player(player).faction);
     }
     return null;
@@ -129,8 +130,6 @@ export default class BoardAction extends Vue {
 </script>
 
 <style lang="scss">
-@import "../stylesheets/planets.scss";
-
 g {
   &.boardAction {
     & > polygon {
@@ -140,13 +139,13 @@ g {
 
     &.qic {
       & > polygon {
-        fill: $res-qic;
+        fill: var(--res-qic);
       }
     }
 
     &.power {
       & > polygon {
-        fill: $res-power;
+        fill: var(--res-power);
       }
     }
 
@@ -159,7 +158,7 @@ g {
     }
 
     &.highlighted > polygon {
-      stroke: $highlighted;
+      stroke: var(--highlighted);
       cursor: pointer;
       stroke-width: 0.08;
     }

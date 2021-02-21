@@ -70,8 +70,6 @@ export default class ScoringTile extends Vue {
 </script>
 
 <style lang="scss">
-@import "../stylesheets/planets.scss";
-
 g {
   &.scoringTile {
     & > rect.contour {
@@ -90,7 +88,7 @@ g {
     }
 
     &.highlighted > rect.contour {
-      stroke: $highlighted;
+      stroke: var(--highlighted);
       stroke-width: 1.5px;
     }
 

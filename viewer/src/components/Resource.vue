@@ -165,8 +165,6 @@ export default class Resource extends Vue {
 </script>
 
 <style lang="scss">
-@import "../stylesheets/planets.scss";
-
 g.resource {
   pointer-events: none;
 
@@ -174,27 +172,27 @@ g.resource {
   .knowledge {
     stroke: #111;
     stroke-width: 0.9px;
-    fill: $res-knowledge;
+    fill: var(--res-knowledge);
   }
 
   .qic {
-    fill: $res-qic;
+    fill: var(--res-qic);
   }
 
   .ore {
-    fill: $res-ore;
+    fill: var(--res-ore);
   }
 
   .credit {
-    fill: $res-credit;
+    fill: var(--res-credit);
   }
 
   .power {
-    fill: $res-power;
+    fill: var(--res-power);
   }
 
   .gaia {
-    fill: $gaia;
+    fill: var(--gaia);
   }
 
   .ore,
