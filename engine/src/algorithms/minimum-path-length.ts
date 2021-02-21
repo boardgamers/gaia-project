@@ -61,7 +61,7 @@ export default function minimumPathLength<T>(groups: Array<Hex<T>[]>): number {
 
           if (
             shortestPaths.get(group1).get(group3) + shortestPaths.get(group2).get(group3) <
-            shortestPaths.get(group1).get(group3)
+            shortestPaths.get(group1).get(group2)
           ) {
             shortestPaths
               .get(group1)
