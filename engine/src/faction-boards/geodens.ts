@@ -1,8 +1,8 @@
 import { FactionBoardRaw } from ".";
-import Player from "../player";
-import { GaiaHex } from "../gaia-hex";
-import Reward from "../reward";
 import { Building, Faction } from "../enums";
+import { GaiaHex } from "../gaia-hex";
+import Player from "../player";
+import Reward from "../reward";
 
 const geodens: FactionBoardRaw = {
   faction: Faction.Geodens,

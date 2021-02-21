@@ -1,7 +1,7 @@
-import Player from "./player";
-import { IncomeSelection } from "./income";
-import { Faction, Resource } from "./enums";
 import { Offer } from "./available-command";
+import { Faction, Resource } from "./enums";
+import { IncomeSelection } from "./income";
+import Player from "./player";
 import Reward from "./reward";
 
 export enum ChargeDecision {

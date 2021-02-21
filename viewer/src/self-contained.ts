@@ -1,8 +1,7 @@
-import launch from "./launcher";
 import Engine from "@gaia-project/engine";
-
-import Wrapper from "./components/Wrapper.vue";
 import Game from "./components/Game.vue";
+import Wrapper from "./components/Wrapper.vue";
+import launch from "./launcher";
 
 function launchSelfContained(selector = "#app", debug = true) {
   const emitter = launch(selector, debug ? Wrapper : Game);

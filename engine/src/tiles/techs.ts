@@ -1,4 +1,4 @@
-import { TechTile, AdvTechTile, Operator, TechTilePos, AdvTechTilePos } from "../enums";
+import { AdvTechTile, AdvTechTilePos, Operator, TechTile, TechTilePos } from "../enums";
 
 export default {
   [TechTile.Tech1]: ["o,q"],

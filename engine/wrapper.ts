@@ -1,10 +1,9 @@
-import axios from "axios";
-import Engine from "./src/engine";
-import crypto from "crypto";
-import { EngineOptions } from "./src/engine";
-import { Round } from "./src/enums";
 import assert from "assert";
+import axios from "axios";
+import crypto from "crypto";
 import { set } from "lodash";
+import Engine, { EngineOptions } from "./src/engine";
+import { Round } from "./src/enums";
 
 export async function init(
   nbPlayers: number,

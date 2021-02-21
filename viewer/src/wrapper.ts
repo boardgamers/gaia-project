@@ -1,11 +1,11 @@
 // Import vue component
-import launch from './launcher';
-import launchSelfContained from './self-contained';
+import launch from "./launcher";
+import launchSelfContained from "./self-contained";
 
 let globalItem: any;
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   globalItem = window;
-} else if (typeof global !== 'undefined') {
+} else if (typeof global !== "undefined") {
   globalItem = global;
 }
 

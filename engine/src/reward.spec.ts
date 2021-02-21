@@ -1,8 +1,7 @@
 import { expect } from "chai";
 import "mocha";
-import Reward from "./reward";
 import { Resource } from "./enums";
-import { AssertionError } from "assert";
+import Reward from "./reward";
 
 describe("Reward", () => {
   it("should construct from strings", () => {

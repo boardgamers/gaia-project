@@ -1,5 +1,5 @@
-import Reward from "./reward";
-import { GaiaHex } from "./gaia-hex";
+import { EventEmitter } from "eventemitter3";
+import { cloneDeep, fromPairs } from "lodash";
 import {
   AdvTechTile,
   AdvTechTilePos,
@@ -14,9 +14,9 @@ import {
   TechTile,
   TechTilePos,
 } from "./enums";
-import { EventEmitter } from "eventemitter3";
 import { EventSource } from "./events";
-import { cloneDeep, fromPairs } from "lodash";
+import { GaiaHex } from "./gaia-hex";
+import Reward from "./reward";
 
 const MAX_ORE = 15;
 const MAX_CREDIT = 30;

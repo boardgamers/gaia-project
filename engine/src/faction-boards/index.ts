@@ -1,19 +1,19 @@
 import { Faction } from "../enums";
-import Terrans from "./terrans";
-import Lantids from "./lantids";
-import Xenos from "./xenos";
-import Gleens from "./gleens";
-import Taklons from "./taklons";
 import Ambas from "./ambas";
-import HadschHallas from "./hadsch-hallas";
-import Ivits from "./ivits";
-import Geodens from "./geodens";
 import BalTaks from "./baltaks";
-import Firaks from "./firaks";
 import Bescods from "./bescods";
-import Nevlas from "./nevlas";
+import Firaks from "./firaks";
+import Geodens from "./geodens";
+import Gleens from "./gleens";
+import HadschHallas from "./hadsch-hallas";
 import Itars from "./itars";
+import Ivits from "./ivits";
+import Lantids from "./lantids";
+import Nevlas from "./nevlas";
+import Taklons from "./taklons";
+import Terrans from "./terrans";
 import { FactionBoard, FactionBoardRaw } from "./types";
+import Xenos from "./xenos";
 export { FactionBoard, FactionBoardRaw } from "./types";
 
 const factionBoards: { [key in Faction]: FactionBoardRaw } = {

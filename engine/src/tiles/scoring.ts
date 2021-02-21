@@ -1,4 +1,4 @@
-import { ScoringTile, FinalTile, Condition } from "../enums";
+import { Condition, FinalTile, ScoringTile } from "../enums";
 
 const roundScorings = {
   [ScoringTile.Score1]: ["step >> 2vp"],

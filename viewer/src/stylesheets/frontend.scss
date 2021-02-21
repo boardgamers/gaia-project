@@ -24,10 +24,9 @@
 // $display6-size: 1.5rem;
 
 @import "~bootstrap/scss/bootstrap.scss";
-@import '~bootstrap-vue';
+@import "~bootstrap-vue";
 
 .tooltip {
-
   .tooltip-inner {
     max-width: 400px;
     text-align: left;
@@ -67,6 +66,6 @@
   }
 }
 
-:focus{
-  outline:none !important;
+:focus {
+  outline: none !important;
 }

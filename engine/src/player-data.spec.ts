@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import "mocha";
+import { BrainstoneArea } from "./enums";
 import PlayerData from "./player-data";
-import { Resource, BrainstoneArea } from "./enums";
 
 describe("PlayerData", () => {
   it("should export to JSON", () => {

@@ -1,6 +1,5 @@
 import { expect } from "chai";
 import Engine from "../engine";
-import { Player } from "../enums";
 
 const parseMoves = Engine.parseMoves;
 

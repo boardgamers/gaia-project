@@ -1,6 +1,7 @@
 <template>
   <g>
-    <image xlink:href="../../assets/buildings/mine.svg" :filter="faction ? `url(#color-${faction})` : ''" width=70 :height=463/400*70 x=-35 y=-35 />
+    <image xlink:href="../../assets/buildings/mine.svg" :filter="faction ? `url(#color-${faction})` : ''" width=70
+    :height=463/400*70 x=-35 y=-35 />
   </g>
 </template>
 <script lang="ts">
@@ -11,5 +12,4 @@ export default class Mine extends Vue {
   @Prop({ default: "" })
   faction: string;
 }
-
 </script>

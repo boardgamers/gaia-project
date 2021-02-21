@@ -27,5 +27,4 @@ jobs:
       - run: pnpm install
       - run: yarn build
       - run: yarn lint
-      - run: yarn prettier-check
       - run: yarn test

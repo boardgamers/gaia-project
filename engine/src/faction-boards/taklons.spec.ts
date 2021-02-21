@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import Engine from "../engine";
-import { Player, BrainstoneArea } from "../enums";
+import { BrainstoneArea, Player } from "../enums";
 
 describe("Taklons", () => {
   it("should allow charge with +t freeIncome", () => {

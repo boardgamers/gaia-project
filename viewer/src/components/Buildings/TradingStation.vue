@@ -1,6 +1,7 @@
 <template>
   <g>
-    <image xlink:href="../../assets/buildings/trading-station.svg" :filter="faction ? `url(#color-${faction})` : ''" :height=667/504*80 width=80 x=-40 y=-50 />
+    <image xlink:href="../../assets/buildings/trading-station.svg" :filter="faction ? `url(#color-${faction})` : ''"
+    :height=667/504*80 width=80 x=-40 y=-50 />
   </g>
 </template>
 <script lang="ts">
@@ -11,5 +12,4 @@ export default class TradingStation extends Vue {
   @Prop({ default: "" })
   faction: string;
 }
-
 </script>

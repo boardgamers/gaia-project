@@ -2,12 +2,17 @@
   <div>
     <Game />
     <b-modal v-model="modalShow" size="lg" @ok="handleOK" title="Load from JSON">
-      <b-textarea v-model="text" rows=6 />
+      <b-textarea v-model="text" rows="6" />
     </b-modal>
-    <b-avatar button style="position: fixed; left: 20px; bottom: 20px; z-index: 100" size=50 @click="modalShow = true">
+    <b-avatar
+      button
+      style="position: fixed; left: 20px; bottom: 20px; z-index: 100"
+      size="50"
+      @click="modalShow = true"
+    >
       LOAD
     </b-avatar>
-    <b-avatar button style="position: fixed; left: 80px; bottom: 20px; z-index: 100" size=50 @click="openExport">
+    <b-avatar button style="position: fixed; left: 80px; bottom: 20px; z-index: 100" size="50" @click="openExport">
       EXPORT
     </b-avatar>
   </div>
@@ -32,7 +37,6 @@ export default class Wrapper extends Vue {
     this.modalShow = true;
   }
 }
-
 </script>
 <style lang="scss">
 .b-avatar-custom {

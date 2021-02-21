@@ -1,10 +1,10 @@
 import { expect } from "chai";
 import "mocha";
-import Player from "./player";
 import { Building, Faction, Operator, Planet, Player as PlayerEnum, Resource } from "./enums";
-import Reward from "./reward";
 import Event from "./events";
 import { GaiaHex } from "./gaia-hex";
+import Player from "./player";
+import Reward from "./reward";
 
 describe("Player", () => {
   describe("canBuild", () => {

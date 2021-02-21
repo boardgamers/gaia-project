@@ -1,4 +1,4 @@
-import { Hex, CubeCoordinates } from "hexagrid";
+import { CubeCoordinates, Hex } from "hexagrid";
 import { flatten } from "lodash";
 
 /**

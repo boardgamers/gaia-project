@@ -1,11 +1,11 @@
-import launch from './launcher';
-import launchSelfContained from './self-contained';
+import launch from "./launcher";
+import launchSelfContained from "./self-contained";
 
 console.log(process.env);
 
 if (process.env.VUE_APP_BGIO) {
   launch("#app");
-} else /* if (process.env.VUE_APP_SelfContained || 1) */ {
+} /* if (process.env.VUE_APP_SelfContained || 1) */ else {
   launchSelfContained();
 } /* else {
   launch("#app");

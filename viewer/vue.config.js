@@ -7,16 +7,16 @@ if (process.argv.includes("lib")) {
     lintOnSave: false,
     outputDir: path.join(__dirname, "dist/package"),
     // css: {extract: false}
-    chainWebpack: config => {
+    chainWebpack: (config) => {
       config.externals({
-        'bootstrap-vue': 'BootstrapVue'
+        "bootstrap-vue": "BootstrapVue",
       });
     },
-    publicPath: `//cdn.jsdelivr.net/npm/@gaia-project/viewer@${package.version}/dist/package/`
+    publicPath: `//cdn.jsdelivr.net/npm/@gaia-project/viewer@${package.version}/dist/package/`,
   };
 } else {
   module.exports = {
     lintOnSave: false,
-    outputDir: path.join(__dirname, "dist/app")
+    outputDir: path.join(__dirname, "dist/app"),
   };
 }

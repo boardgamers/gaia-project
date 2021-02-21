@@ -1,8 +1,8 @@
-import { inRange, minBy, maxBy, uniq, difference, sumBy } from "lodash";
-import { Grid, Hex } from "hexagrid";
-import shortestPath from "./shortest-path";
 import assert from "assert";
+import { Grid, Hex } from "hexagrid";
+import { difference, inRange, maxBy, minBy, sumBy, uniq } from "lodash";
 import minimumPathLength from "./minimum-path-length";
+import shortestPath from "./shortest-path";
 
 type algorithms = "exhaustive" | "heuristic";
 export default function spanningTree<T>(

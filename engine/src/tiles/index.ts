@@ -1,7 +1,7 @@
-import techs from "./techs";
-import { roundScorings, finalScorings } from "./scoring";
 import boosters from "./boosters";
 import federations from "./federations";
+import { finalScorings, roundScorings } from "./scoring";
+import techs from "./techs";
 
 export default {
   techs,

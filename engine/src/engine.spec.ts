@@ -1,8 +1,8 @@
-import { expect } from "chai";
-import Engine from "./engine";
 import { AssertionError } from "assert";
-import { BrainstoneArea, Command, Condition, Faction, Operator, Phase, Planet, Player } from "./enums";
+import { expect } from "chai";
 import { PlayerEnum } from "..";
+import Engine from "./engine";
+import { Command, Condition, Operator, Phase, Planet, Player } from "./enums";
 
 describe("Engine", () => {
   it("should throw when trying to build on the wrong place", () => {

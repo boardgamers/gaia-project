@@ -1,6 +1,7 @@
 <template>
   <g>
-    <image xlink:href="../../assets/buildings/planetary-institute.svg" :filter="faction ? `url(#color-${faction})` : ''" :height=651/678*110 width=110 x=-55 y=-55 />
+    <image xlink:href="../../assets/buildings/planetary-institute.svg" :filter="faction ? `url(#color-${faction})` : ''"
+    :height=651/678*110 width=110 x=-55 y=-55 />
   </g>
 </template>
 <script lang="ts">
@@ -11,5 +12,4 @@ export default class PlanetaryInstitute extends Vue {
   @Prop({ default: "" })
   faction: string;
 }
-
 </script>

@@ -1,3 +1,9 @@
+import assert from "assert";
+import { EventEmitter } from "eventemitter3";
+import { Grid, Hex } from "hexagrid";
+import { countBy, difference, merge, sum, uniq, uniqWith, zipWith } from "lodash";
+import spanningTree from "./algorithms/spanning-tree";
+import { stdBuildingValue } from "./buildings";
 import {
   AdvTechTile,
   AdvTechTilePos,
@@ -17,27 +23,21 @@ import {
   TechTile,
   TechTilePos,
 } from "./enums";
-import PlayerData from "./player-data";
 import Event, { EventSource, TechPos } from "./events";
 import { factionBoard, FactionBoard } from "./faction-boards";
-import { countBy, difference, merge, sum, uniq, uniqWith, zipWith } from "lodash";
 import factions from "./factions";
-import Reward from "./reward";
-import { Grid, Hex } from "hexagrid";
-import researchTracks, { keyNeeded, lastTile } from "./research-tracks";
-import { terraformingStepsRequired } from "./planets";
-import boosts from "./tiles/boosters";
-import { stdBuildingValue } from "./buildings";
-import SpaceMap from "./map";
-import { GaiaHex } from "./gaia-hex";
-import spanningTree from "./algorithms/spanning-tree";
 import { FederationInfo, isOutclassedBy } from "./federation";
+import { GaiaHex } from "./gaia-hex";
+import { IncomeSelection } from "./income";
+import SpaceMap from "./map";
+import { terraformingStepsRequired } from "./planets";
+import PlayerData from "./player-data";
+import researchTracks, { keyNeeded, lastTile } from "./research-tracks";
+import Reward from "./reward";
+import boosts from "./tiles/boosters";
 import federationTiles, { isGreen } from "./tiles/federations";
-import { EventEmitter } from "eventemitter3";
 import { finalScorings } from "./tiles/scoring";
 import techs, { isAdvanced } from "./tiles/techs";
-import assert from "assert";
-import { IncomeSelection } from "./income";
 
 const TERRAFORMING_COST = 3;
 // 25 satellites total

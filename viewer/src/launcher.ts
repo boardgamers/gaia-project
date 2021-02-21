@@ -1,33 +1,32 @@
+import BootstrapVue from "bootstrap-vue";
+import { EventEmitter } from "events";
 import Vue from "vue";
-import { Store } from "vuex";
-import BootstrapVue from 'bootstrap-vue';
-import { EventEmitter } from 'events';
-
-import { makeStore } from './store';
-import Game from './components/Game.vue';
-import Resource from './components/Resource.vue';
-import TechContent from './components/TechContent.vue';
-import Condition from './components/Condition.vue';
 import type { VueConstructor } from "vue/types/umd";
+import { Store } from "vuex";
+import Condition from "./components/Condition.vue";
+import Game from "./components/Game.vue";
+import Resource from "./components/Resource.vue";
+import TechContent from "./components/TechContent.vue";
+import { makeStore } from "./store";
 
 Vue.use(BootstrapVue);
 Vue.component("Condition", Condition);
 Vue.component("TechContent", TechContent);
 Vue.component("Resource", Resource);
 
-function launch (selector: string, component: VueConstructor<Vue> = Game) {
+function launch(selector: string, component: VueConstructor<Vue> = Game) {
   const store = makeStore();
 
   const app = new Vue({
     store,
-    render: (h) => h("div", { class: "container-fluid py-2" }, [h(component)])
+    render: (h) => h("div", { class: "container-fluid py-2" }, [h(component)]),
   }).$mount(selector);
 
-  const item: EventEmitter & {store?: Store<unknown>; app?: Vue} = new EventEmitter();
+  const item: EventEmitter & { store?: Store<unknown>; app?: Vue } = new EventEmitter();
 
   let replaying = false;
 
-  item.addListener("state", data => {
+  item.addListener("state", (data) => {
     store.dispatch("gaiaViewer/externalData", data);
     item.emit("replaceLog", data?.moveHistory);
   });
@@ -36,8 +35,8 @@ function launch (selector: string, component: VueConstructor<Vue> = Game) {
       item.emit("fetchState");
     }
   });
-  item.addListener("preferences", data => store.commit("gaiaViewer/preferences", data));
-  item.addListener("player", data => store.commit("gaiaViewer/player", data));
+  item.addListener("preferences", (data) => store.commit("gaiaViewer/preferences", data));
+  item.addListener("player", (data) => store.commit("gaiaViewer/player", data));
   item.addListener("replay:start", () => {
     store.dispatch("gaiaViewer/replayStart");
     replaying = true;
@@ -51,7 +50,7 @@ function launch (selector: string, component: VueConstructor<Vue> = Game) {
     replaying = false;
     item.emit("fetchState");
   });
-  item.addListener("gamelog", logData => {
+  item.addListener("gamelog", (logData) => {
     if (replaying) {
       //
     } else {
@@ -69,7 +68,11 @@ function launch (selector: string, component: VueConstructor<Vue> = Game) {
     }
 
     if (type === "gaiaViewer/playerClick") {
-      item.emit("player:clicked", { name: payload.name, auth: payload.auth, index: (store as Store<any>).state.gaiaViewer.data?.players?.findIndex(pl => pl === payload) });
+      item.emit("player:clicked", {
+        name: payload.name,
+        auth: payload.auth,
+        index: (store as Store<any>).state.gaiaViewer.data?.players?.findIndex((pl) => pl === payload),
+      });
     }
 
     if (type === "gaiaViewer/replayInfo") {

@@ -1,5 +1,5 @@
-import { GaiaHex } from "./gaia-hex";
 import { difference } from "lodash";
+import { GaiaHex } from "./gaia-hex";
 
 export interface FederationInfo {
   hexes: GaiaHex[];

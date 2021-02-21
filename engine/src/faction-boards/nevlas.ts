@@ -1,7 +1,7 @@
 import { FactionBoardRaw } from ".";
+import { freeActionsNevlas, freeActionsNevlasPI } from "../actions";
 import { Building, Faction } from "../enums";
 import Player from "../player";
-import { freeActionsNevlas, freeActionsNevlasPI } from "../actions";
 
 const nevlas: FactionBoardRaw = {
   faction: Faction.Nevlas,

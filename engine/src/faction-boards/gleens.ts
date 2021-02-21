@@ -1,7 +1,7 @@
 import { FactionBoardRaw } from ".";
-import { Building, Federation, Faction, Planet } from "../enums";
-import Player from "../player";
+import { Building, Faction, Federation, Planet } from "../enums";
 import { GaiaHex } from "../gaia-hex";
+import Player from "../player";
 import Reward from "../reward";
 
 const gleens: FactionBoardRaw = {

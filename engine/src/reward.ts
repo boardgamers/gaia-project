@@ -1,6 +1,6 @@
-import { Resource } from "./enums";
 import assert from "assert";
 import { groupBy } from "lodash";
+import { Resource } from "./enums";
 
 const resources = new Set(Object.values(Resource));
 

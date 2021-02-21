@@ -1,6 +1,6 @@
 import { expect } from "chai";
-import Event from "./events";
 import { Condition, Operator, Resource } from "./enums";
+import Event from "./events";
 import Reward from "./reward";
 
 describe("Events", () => {

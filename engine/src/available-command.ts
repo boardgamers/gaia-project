@@ -1,3 +1,7 @@
+import { difference, range } from "lodash";
+import { boardActions, freeActions, freeActionsItars, freeActionsTerrans } from "./actions";
+import { upgradedBuildings } from "./buildings";
+import Engine from "./engine";
 import {
   AdvTechTilePos,
   BoardAction,
@@ -15,13 +19,9 @@ import {
   SubPhase,
   TechTilePos,
 } from "./enums";
-import Engine from "./engine";
-import { difference, range } from "lodash";
 import factions from "./factions";
-import { upgradedBuildings } from "./buildings";
-import Reward from "./reward";
-import { boardActions, freeActions, freeActionsItars, freeActionsTerrans } from "./actions";
 import * as researchTracks from "./research-tracks";
+import Reward from "./reward";
 import { isAdvanced } from "./tiles/techs";
 
 const ISOLATED_DISTANCE = 3;

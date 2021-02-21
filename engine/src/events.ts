@@ -1,4 +1,4 @@
-import { Condition, Operator, Booster, AdvTechTilePos, Command, ResearchField, BoardAction, Faction } from "./enums";
+import { AdvTechTilePos, BoardAction, Booster, Command, Condition, Faction, Operator, ResearchField } from "./enums";
 import Reward from "./reward";
 
 function findCondition(spec: string): [Condition, string] {

@@ -1,12 +1,12 @@
-import { Grid, Hex, CubeCoordinates } from "hexagrid";
+import assert from "assert";
+import { CubeCoordinates, Grid, Hex } from "hexagrid";
+import { keyBy } from "lodash";
 import seedrandom from "seedrandom";
 import shuffleSeed from "shuffle-seed";
-import assert from "assert";
-import { keyBy } from "lodash";
-import Sector from "./sector";
-import { Player, Planet, Faction } from "./enums";
-import { GaiaHex, reverseSuffixes } from "./gaia-hex";
 import { EngineOptions } from "./engine";
+import { Faction, Planet, Player } from "./enums";
+import { GaiaHex, reverseSuffixes } from "./gaia-hex";
+import Sector from "./sector";
 
 // Data: from outer ring to inside ring, starting from top
 const s1 = { name: "1", map: "eeemevoeedee,ereees,e".replace(/,/g, "") };

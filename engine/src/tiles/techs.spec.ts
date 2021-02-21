@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import Engine from "../engine";
-import { Player, AdvTechTilePos, TechTilePos, Command } from "../enums";
+import { AdvTechTilePos, Command, Player, TechTilePos } from "../enums";
 
 describe("Tech Tiles", () => {
   it("should prevent picking the same tech tile twice", () => {

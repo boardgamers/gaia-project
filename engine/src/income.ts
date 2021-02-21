@@ -1,10 +1,10 @@
+import assert from "assert";
+import { Resource } from "./enums";
 import Event from "./events";
+import { Settings } from "./player";
 import PlayerData, { Power } from "./player-data";
 import Reward from "./reward";
-import { Resource } from "./enums";
-import { Settings } from "./player";
 import { combinations } from "./utils";
-import assert from "assert";
 
 export class IncomeSelection {
   private constructor(

@@ -1,7 +1,7 @@
 import { FactionBoardRaw } from ".";
-import Player from "../player";
 import { freeActionsHadschHallas } from "../actions";
 import { Faction } from "../enums";
+import Player from "../player";
 
 const hadschHallas: FactionBoardRaw = {
   faction: Faction.HadschHallas,

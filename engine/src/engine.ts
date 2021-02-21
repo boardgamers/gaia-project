@@ -1,8 +1,10 @@
-import SpaceMap, { MapConfiguration } from "./map";
 import assert from "assert";
 import { isEqual, range, set, sortBy, sum, uniq } from "lodash";
-import Player from "./player";
 import shuffleSeed from "shuffle-seed";
+import { boardActions } from "./actions";
+import { ChargeDecision, ChargeRequest, decideChargeRequest } from "./auto-charge";
+import AvailableCommand, { generate as generateAvailableCommands } from "./available-command";
+import { stdBuildingValue } from "./buildings";
 import {
   AdvTechTile,
   AdvTechTilePos,
@@ -28,15 +30,13 @@ import {
   TechTilePos,
 } from "./enums";
 import Event, { EventSource, RoundScoring } from "./events";
+import SpaceMap, { MapConfiguration } from "./map";
+import Player from "./player";
+import * as researchTracks from "./research-tracks";
+import Reward from "./reward";
 import federations from "./tiles/federations";
 import { finalScorings, roundScorings } from "./tiles/scoring";
-import * as researchTracks from "./research-tracks";
-import AvailableCommand, { generate as generateAvailableCommands } from "./available-command";
-import Reward from "./reward";
-import { boardActions } from "./actions";
-import { stdBuildingValue } from "./buildings";
 import { isAdvanced } from "./tiles/techs";
-import { ChargeDecision, ChargeRequest, decideChargeRequest } from "./auto-charge";
 
 // const ISOLATED_DISTANCE = 3;
 const LEECHING_DISTANCE = 2;

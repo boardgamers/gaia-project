@@ -1,8 +1,8 @@
+import { expect } from "chai";
+import { BrainstoneArea } from "./enums";
 import Event from "./events";
 import Player from "./player";
-import { expect } from "chai";
 import { Power } from "./player-data";
-import { BrainstoneArea } from "./enums";
 
 describe("IncomeSelection", () => {
   describe("remainingChargesAfterIncome", () => {

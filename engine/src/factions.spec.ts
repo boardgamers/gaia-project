@@ -1,6 +1,6 @@
 import { expect } from "chai";
-import factions from "./factions";
 import { Faction } from "./enums";
+import factions from "./factions";
 
 describe("Factions", () => {
   it("lantids should be opposite terrans", () => {

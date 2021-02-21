@@ -1,5 +1,5 @@
-import { Building, Faction } from "../enums";
 import { FactionBoardRaw } from ".";
+import { Building, Faction } from "../enums";
 
 const lantids: FactionBoardRaw = {
   faction: Faction.Lantids,

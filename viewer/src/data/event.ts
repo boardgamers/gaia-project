@@ -1,4 +1,4 @@
-import { Condition, Event, Operator, Reward, Resource } from "@gaia-project/engine";
+import { Condition, Event, Operator, Resource, Reward } from "@gaia-project/engine";
 
 const conditionsCount = {
   [Condition.Mine]: "mine",

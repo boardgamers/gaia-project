@@ -1,8 +1,8 @@
-import Reward from "../reward";
 import { get, set } from "lodash";
+import { BrainstoneArea, Building, Command, Faction, Planet } from "../enums";
 import Event from "../events";
-import { Building, Planet, BrainstoneArea, Faction, Command } from "../enums";
 import Player from "../player";
+import Reward from "../reward";
 import { merge } from "../utils";
 
 export interface FactionBoardRaw {

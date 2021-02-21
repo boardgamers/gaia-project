@@ -1,5 +1,5 @@
-import { Hex, Grid } from "hexagrid";
-import { flatten, difference } from "lodash";
+import { Grid, Hex } from "hexagrid";
+import { difference, flatten } from "lodash";
 
 export default function shortestPath<T>(
   starts: Hex<T>[],

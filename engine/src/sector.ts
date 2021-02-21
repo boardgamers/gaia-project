@@ -1,6 +1,5 @@
 import { Grid } from "hexagrid";
 import { Planet } from "./enums";
-
 import { GaiaHex } from "./gaia-hex";
 
 export default class Sector {

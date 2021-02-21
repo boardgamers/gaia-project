@@ -1,8 +1,8 @@
-import SpaceMap, { MapConfiguration } from "./map";
-import Engine from "./engine";
-import { Hex } from "hexagrid";
 import { expect } from "chai";
+import { Hex } from "hexagrid";
+import Engine from "./engine";
 import { Planet } from "./enums";
+import SpaceMap, { MapConfiguration } from "./map";
 
 describe("Map", () => {
   it("should have the appropriate number of hexagons", () => {
