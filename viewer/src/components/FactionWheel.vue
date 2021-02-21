@@ -70,7 +70,7 @@ export default class FactionWheel extends Vue {
     if (pos < 7) {
       const data = this.gameData;
       const player = this.$store.state.gaiaViewer.player?.index ?? data.currentPlayer;
-      const faction = data.player(player).faction;
+      const faction = data.player(player)?.faction;
       if (faction != null) {
         // own faction - or current players faction - should be at the top
         const planet = factions[faction].planet;
