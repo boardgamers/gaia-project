@@ -10,10 +10,21 @@ import Engine, {
 import { CubeCoordinates } from "hexagrid";
 import Vue from "vue";
 import Vuex, { Store } from "vuex";
-import { GameContext } from "./data";
+import { ButtonData, GameContext } from "./data";
 import { movesToHexes, recentMoves, roundMoves } from "./logic/recent";
 
 Vue.use(Vuex);
+
+type Preference = "accessibleSpaceMap" | "noFactionFill" | "flatBuildings" | "highlightRecentActions";
+
+export type State = {
+  data: Engine;
+  context: GameContext;
+  preferences: {
+    [key in Preference]: boolean;
+  };
+  player: { index?: number; auth?: string } | null;
+};
 
 const gaiaViewer = {
   namespaced: true,
@@ -31,58 +42,58 @@ const gaiaViewer = {
       rotation: new Map(),
       hexSelection: false,
       activeButton: null,
-    } as GameContext,
+    },
     preferences: {
       accessibleSpaceMap: false,
       noFactionFill: false,
       flatBuildings: false,
       highlightRecentActions: false,
     },
-    player: null as { index?: number; auth?: string } | null,
-  },
+    player: null,
+  } as State,
   mutations: {
-    receiveData(state, data: Engine) {
+    receiveData(state: State, data: Engine) {
       state.data = data;
       state.context.rotation = new Map();
     },
 
-    highlightHexes(state, hexes: Map<GaiaHex, { cost?: string }>) {
+    highlightHexes(state: State, hexes: Map<GaiaHex, { cost?: string }>) {
       state.context.highlighted.hexes = hexes;
     },
 
-    highlightResearchTiles(state, tiles: string[]) {
+    highlightResearchTiles(state: State, tiles: string[]) {
       state.context.highlighted.researchTiles = new Set(tiles);
     },
 
-    highlightTechs(state, techs: Array<TechTilePos | AdvTechTilePos>) {
+    highlightTechs(state: State, techs: Array<TechTilePos | AdvTechTilePos>) {
       state.context.highlighted.techs = new Set(techs);
     },
 
-    highlightBoosters(state, boosters: Booster[]) {
+    highlightBoosters(state: State, boosters: Booster[]) {
       state.context.highlighted.boosters = new Set(boosters);
     },
 
-    highlightActions(state, actions: string[]) {
+    highlightActions(state: State, actions: string[]) {
       state.context.highlighted.actions = new Set(actions);
     },
 
-    highlightFederations(state, federations: Federation[]) {
+    highlightFederations(state: State, federations: Federation[]) {
       state.context.highlighted.federations = new Set(federations);
     },
 
-    selectHexes(state, defaultHexes) {
+    selectHexes(state: State, defaultHexes?: Array<[GaiaHex, { cost?: string }]>) {
       state.context.hexSelection = true;
       state.context.highlighted.hexes = new Map(defaultHexes || []);
     },
 
-    rotate(state, coords: CubeCoordinates) {
+    rotate(state: State, coords: CubeCoordinates) {
       const coordsStr = `${coords.q}x${coords.r}`;
 
       state.context.rotation.set(coordsStr, (state.context.rotation.get(coordsStr) || 0) + 1);
       state.context.rotation = new Map(state.context.rotation.entries());
     },
 
-    clearContext(state) {
+    clearContext(state: State) {
       state.context.highlighted.hexes = new Map();
       state.context.highlighted.researchTiles = new Set();
       state.context.highlighted.techs = new Set();
@@ -94,48 +105,48 @@ const gaiaViewer = {
       state.context.activeButton = null;
     },
 
-    activeButton(state, button) {
+    activeButton(state: State, button: ButtonData | null) {
       state.context.activeButton = button;
     },
 
-    preferences(state, preferences) {
+    preferences(state: State, preferences: { [key in Preference]: boolean }) {
       state.preferences = preferences;
     },
 
-    player(state, data) {
+    player(state: State, data: { index?: number }) {
       state.player = data;
     },
   },
   actions: {
     // No body, used for signalling with store.subscribeAction
-    hexClick(context, hex: GaiaHex) {},
-    researchClick(context, field: ResearchField) {},
-    techClick(context, pos: TechTilePos | AdvTechTilePos) {},
-    boosterClick(context, booster: Booster) {},
-    actionClick(context, action: string) {},
-    federationClick(context, federation: Federation) {},
-    confirmClick(context, action: string) {},
+    hexClick(context: any, hex: GaiaHex) {},
+    researchClick(context: any, field: ResearchField) {},
+    techClick(context: any, pos: TechTilePos | AdvTechTilePos) {},
+    boosterClick(context: any, booster: Booster) {},
+    actionClick(context: any, action: string) {},
+    federationClick(context: any, federation: Federation) {},
+    confirmClick(context: any, action: string) {},
     // API COMMUNICATION
-    playerClick(context, player: Player) {},
-    move(context, move: string) {},
-    replayInfo(context, info: { start: number; end: number; current: number }) {},
+    playerClick(context: any, player: Player) {},
+    move(context: any, move: string) {},
+    replayInfo(context: any, info: { start: number; end: number; current: number }) {},
     // ^ up - down v
-    externalData(context, data: Engine) {},
-    replayStart(context) {},
-    replayTo(context, to: number) {},
-    replayEnd(context, data: Engine) {},
+    externalData(context: any, data: Engine) {},
+    replayStart(context: any) {},
+    replayTo(context: any, to: number) {},
+    replayEnd(context: any, data: Engine) {},
     // WRAPPER / DEBUG COMMUNICATION
-    loadFromJSON(context, data: any) {},
+    loadFromJSON(context: any, data: any) {},
   },
   getters: {
-    currentRoundHexes: (state): GaiaHex[] => {
+    currentRoundHexes: (state: State): GaiaHex[] => {
       if (state.preferences.highlightRecentActions) {
         const data = state.data;
         return movesToHexes(data, roundMoves(data.advancedLog, data.moveHistory));
       }
       return [];
     },
-    recentHexes: (state): GaiaHex[] => {
+    recentHexes: (state: State): GaiaHex[] => {
       if (state.preferences.highlightRecentActions) {
         const data = state.data;
         const player = state.player?.index ?? data.currentPlayer;
@@ -146,7 +157,7 @@ const gaiaViewer = {
   },
 };
 
-function makeStore(): Store<{ gaiaViewer: typeof gaiaViewer["state"] }> {
+function makeStore(): Store<{ gaiaViewer: State }> {
   return new Vuex.Store({
     modules: {
       gaiaViewer,

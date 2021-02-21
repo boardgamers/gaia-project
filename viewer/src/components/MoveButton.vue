@@ -42,8 +42,8 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { GaiaHex, TechTilePos, AdvTechTilePos, Command, SpaceMap } from "@gaia-project/engine";
-import { HighlightHexData, ButtonData } from "../data";
+import { GaiaHex, SpaceMap } from "@gaia-project/engine";
+import { ButtonData } from "../data";
 import Booster from "./Booster.vue";
 import TechTile from "./TechTile.vue";
 
@@ -52,15 +52,12 @@ import TechTile from "./TechTile.vue";
     Booster,
     TechTile,
   },
-  destroyed() {
-    this.unsubscribe();
-  },
 })
 export default class MoveButton extends Vue {
   @Prop()
-  public button: ButtonData;
+  public button!: ButtonData;
 
-  private subscription: () => {} = null;
+  private subscription: () => {} | null = null;
   private modalShow = false;
   private customLabel = "";
   private startingHex = null; // For range command
@@ -99,6 +96,10 @@ export default class MoveButton extends Vue {
     if (this.subscription) {
       this.subscription();
     }
+  }
+
+  destroyed() {
+    this.unsubscribe();
   }
 
   async handleClick() {

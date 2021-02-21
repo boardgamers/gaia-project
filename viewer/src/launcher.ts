@@ -2,7 +2,6 @@ import BootstrapVue from "bootstrap-vue";
 import { EventEmitter } from "events";
 import Vue from "vue";
 import type { VueConstructor } from "vue/types/umd";
-import { Store } from "vuex";
 import Condition from "./components/Condition.vue";
 import Game from "./components/Game.vue";
 import Resource from "./components/Resource.vue";
@@ -22,7 +21,7 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
     render: (h) => h("div", { class: "container-fluid py-2" }, [h(component)]),
   }).$mount(selector);
 
-  const item: EventEmitter & { store?: Store<unknown>; app?: Vue } = new EventEmitter();
+  const item: EventEmitter & { store: typeof store; app: Vue } = Object.assign(new EventEmitter(), { store, app });
 
   let replaying = false;
 
@@ -71,7 +70,7 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
       item.emit("player:clicked", {
         name: payload.name,
         auth: payload.auth,
-        index: (store as Store<any>).state.gaiaViewer.data?.players?.findIndex((pl) => pl === payload),
+        index: store.state.gaiaViewer.data?.players?.findIndex((pl) => pl === payload),
       });
     }
 
@@ -92,9 +91,6 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
     unsub1();
     unsub2();
   });
-
-  item.store = store;
-  item.app = app;
 
   return item;
 }

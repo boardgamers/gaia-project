@@ -8,7 +8,7 @@ export function factionColor(faction: Faction | "gen"): string {
   return planets[factions[faction].planet].color;
 }
 
-export function planetColor(planet: Planet): string {
+export function planetColor(planet: Exclude<Planet, Planet.Empty>): string {
   return planets[planet].color;
 }
 

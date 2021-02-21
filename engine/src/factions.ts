@@ -93,6 +93,6 @@ const factions = {
     }
     return Planet.Lost;
   },
-};
+} as const;
 
 export default factions;

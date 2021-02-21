@@ -230,7 +230,7 @@ export default class Game extends Vue {
     if (data.newTurn) {
       this.currentMove = "";
     } else {
-      this.currentMove = data.moveHistory.pop();
+      this.currentMove = data.moveHistory.pop() ?? "";
     }
 
     setTimeout(() => {

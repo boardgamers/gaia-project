@@ -109,7 +109,7 @@
   </defs>
 </template>
 <script lang="ts">
-import { Vue, Component, Prop, Watch } from "vue-property-decorator";
+import { Vue } from "vue-property-decorator";
 import { Faction, Planet } from "@gaia-project/engine";
 import { factionColor, planetColor } from "../graphics/utils";
 
@@ -150,7 +150,7 @@ export default class Filters extends Vue {
   }
 
   get planetData() {
-    const planets = Object.values(Planet).filter((pl) => pl !== Planet.Empty);
+    const planets = Object.values(Planet).filter((pl) => pl !== Planet.Empty) as Exclude<Planet, Planet.Empty>[];
     return planets.map((planet) => {
       const color = planetColor(planet);
       const darkness = 1;

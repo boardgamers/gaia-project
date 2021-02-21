@@ -45,6 +45,6 @@ export interface GameContext {
 
   rotation: Map<string, number>;
 
-  activeButton: ButtonData;
+  activeButton: ButtonData | null;
   hexSelection: boolean;
 }

@@ -33,10 +33,10 @@ export function recentMoves(player: PlayerEnum, logEntries: LogEntry[], moveHist
     last--;
   }
 
-  const firstMove = findLast(
+  const firstMove = (findLast(
     logEntries.slice(0, last),
-    (logItem) => logItem.player === player && ownTurn(moveHistory[logItem.move])
-  )?.move;
+    (logItem) => logItem.player === player && logItem.move && ownTurn(moveHistory[logItem.move])
+  ) as LogEntry | undefined)?.move;
   return firstMove ? moveHistory.slice(firstMove + 1, lastMove) : [];
 }
 

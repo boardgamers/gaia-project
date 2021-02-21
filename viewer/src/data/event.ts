@@ -63,8 +63,9 @@ export function eventDesc(event: Event) {
   const operatorString = operators[event.operator];
   const conditionString =
     event.operator === Operator.Trigger
-      ? conditionsTrigger[event.condition] + ","
-      : conditionsCount[event.condition] && "for each " + conditionsCount[event.condition] + ",";
+      ? conditionsTrigger[event.condition as keyof typeof conditionsTrigger] + ","
+      : conditionsCount[event.condition as keyof typeof conditionsCount] &&
+        "for each " + conditionsCount[event.condition as keyof typeof conditionsCount] + ",";
   const rewardString = event.rewards.length === 0 ? "" : rewardDesc(event.rewards);
 
   return [operatorString, conditionString, rewardString].filter((x) => !!x).join(" ");
