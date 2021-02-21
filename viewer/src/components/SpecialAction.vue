@@ -1,7 +1,12 @@
 <template>
   <svg viewBox="-25 -25 50 50" width="50" height="50" style="overflow: visible">
     <g :class="['specialAction', { highlighted: isHighlighted, disabled, board }]">
-      <polygon points="-10,4 -4,10 4,10 10,4 10,-4 4,-10 -4,-10 -10,-4" transform="scale(2.4)" @click="onClick" />
+      <polygon
+        points="-10,4 -4,10 4,10 10,4 10,-4 4,-10 -4,-10 -10,-4"
+        transform="scale(2.4)"
+        @click="onClick"
+        :class="`${planet != null ? 'planet-fill ' + planet : ''}`"
+      />
       <!-- <Resource v-for="(reward, i) in rewards" :key=i :count=reward.count :kind=reward.type :transform="`translate(${rewards.length > 1 ? (i - 0.5) * 20  : 0}, ${reward.type === 'pw' ? 4 : 0}), scale(1.5)`" />-->
       <TechContent
         :content="act"
@@ -20,8 +25,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { tiles, Event, Reward } from "@gaia-project/engine";
-import { eventDesc } from "../data/event";
+import { Event, Planet } from "@gaia-project/engine";
 
 @Component
 export default class SpecialAction extends Vue {
@@ -36,6 +40,9 @@ export default class SpecialAction extends Vue {
 
   @Prop()
   action: string[];
+
+  @Prop()
+  planet: Planet;
 
   onClick() {
     if (!this._highlighted) {
@@ -74,7 +81,7 @@ g {
       fill: $specialAction;
     }
 
-    &.board > polygon {
+    &.board > polygon:not(.planet-fill) {
       fill: $systemGray6;
     }
 

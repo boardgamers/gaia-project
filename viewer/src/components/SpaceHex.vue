@@ -12,6 +12,8 @@
         {
           toSelect,
           highlighted: highlightedHexes.has(hex),
+          recent: recent(hex),
+          'current-round': currentRound(hex),
           qic: cost(hex).includes('q'),
           power: cost(hex).includes('pw'),
         },
@@ -52,20 +54,19 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
+import {Component, Prop} from "vue-property-decorator";
 import {
-  GaiaHex,
-  factions,
   Building as BuildingEnum,
+  factions,
+  GaiaHex,
   Planet as PlanetEnum,
   SpaceMap as ISpaceMap,
-  Faction,
 } from "@gaia-project/engine";
-import { corners } from "../graphics/hex";
+import {corners} from "../graphics/hex";
 import Planet from "./Planet.vue";
 import Building from "./Building.vue";
-import { buildingName } from "../data/building";
-import { planetNames } from "../data/planets";
+import {buildingName} from "../data/building";
+import {planetNames} from "../data/planets";
 
 @Component<SpaceHex>({
   components: {
@@ -127,13 +128,27 @@ export default class SpaceHex extends Vue {
     return this.$store.state.gaiaViewer.context.highlighted.hexes;
   }
 
+  recent(hex: GaiaHex): boolean {
+    return this.$store.getters["gaiaViewer/recentHexes"].includes(hex);
+  }
+
+  currentRound(hex: GaiaHex): boolean {
+    return this.$store.getters["gaiaViewer/currentRoundHexes"].includes(hex);
+  }
+
   get toSelect() {
-    return !!this.$store.state.gaiaViewer.context.hexSelection;
+    return !!this.context().hexSelection;
+  }
+
+  private context() {
+    return this.$store.state.gaiaViewer.context;
   }
 }
 </script>
 
 <style lang="scss">
+@import "../stylesheets/planets.scss";
+
 svg {
   .spaceHex {
     fill: #172e62;
@@ -155,6 +170,14 @@ svg {
       &.power {
         fill: #d378d3;
       }
+    }
+
+    &.current-round:not(.highlighted):not(.toSelect) {
+      fill: $current-round;
+    }
+
+    &.recent:not(.highlighted):not(.toSelect) {
+      fill: $recent;
     }
 
     &.toSelect {

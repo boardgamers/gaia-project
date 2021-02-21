@@ -1,6 +1,6 @@
 import { AssertionError } from "assert";
 import { expect } from "chai";
-import { PlayerEnum } from "..";
+import { BoardAction, PlayerEnum } from "..";
 import Engine from "./engine";
 import { Command, Condition, Operator, Phase, Planet, Player } from "./enums";
 
@@ -273,62 +273,91 @@ describe("Engine", () => {
     expect(engine.player(Player.Player2).data.victoryPoints).to.equal(124);
   });
 
-  it("should be able to load/save state", function () {
-    this.timeout(10000);
-    let state: any = null;
-    const baseLine = new Engine([], { noFedCheck: true });
-    const moveList = fullGame();
+  describe("fromData", () => {
+    it("should be able to load/save state", function () {
+      this.timeout(10000);
+      let state: any = null;
+      const baseLine = new Engine([], { noFedCheck: true });
+      const moveList = fullGame();
 
-    for (const move of moveList.slice(0, moveList.length - 1)) {
-      baseLine.move(move);
-      if (!state) {
-        const engine = new Engine([move], { noFedCheck: true });
-        state = JSON.parse(JSON.stringify(engine));
-      } else {
-        const engine = Engine.fromData(state);
-        engine.move(move);
-        state = JSON.parse(JSON.stringify(engine));
+      for (const move of moveList.slice(0, moveList.length - 1)) {
+        baseLine.move(move);
+        if (!state) {
+          const engine = new Engine([move], { noFedCheck: true });
+          state = JSON.parse(JSON.stringify(engine));
+        } else {
+          const engine = Engine.fromData(state);
+          engine.move(move);
+          state = JSON.parse(JSON.stringify(engine));
+        }
+
+        expect(state.players[Player.Player1].data.knowledge).to.equal(
+          baseLine.players[Player.Player1].data.knowledge,
+          "Error loading move " + move
+        );
+        expect(state.players[Player.Player2].income).to.equal(
+          baseLine.players[Player.Player2].toJSON().income,
+          "Error loading move " + move
+        );
+        expect(state.players[Player.Player2].events[Operator.Income].length).to.equal(
+          baseLine.players[Player.Player2].events[Operator.Income].length,
+          "Error loading move " + move
+        );
+        expect(state.players[Player.Player2].data.ores).to.equal(
+          baseLine.players[Player.Player2].data.ores,
+          "Error loading move " + move
+        );
       }
 
-      expect(state.players[Player.Player1].data.knowledge).to.equal(
-        baseLine.players[Player.Player1].data.knowledge,
-        "Error loading move " + move
+      const endEngine = Engine.fromData(state);
+      expect(endEngine.player(Player.Player1).data.victoryPoints).to.equal(
+        baseLine.player(Player.Player1).data.victoryPoints
       );
-      expect(state.players[Player.Player2].income).to.equal(
-        baseLine.players[Player.Player2].toJSON().income,
-        "Error loading move " + move
+      expect(endEngine.player(Player.Player2).data.victoryPoints).to.equal(
+        baseLine.player(Player.Player2).data.victoryPoints
       );
-      expect(state.players[Player.Player2].events[Operator.Income].length).to.equal(
-        baseLine.players[Player.Player2].events[Operator.Income].length,
-        "Error loading move " + move
-      );
-      expect(state.players[Player.Player2].data.ores).to.equal(
-        baseLine.players[Player.Player2].data.ores,
-        "Error loading move " + move
-      );
-    }
 
-    const endEngine = Engine.fromData(state);
-    expect(endEngine.player(Player.Player1).data.victoryPoints).to.equal(
-      baseLine.player(Player.Player1).data.victoryPoints
-    );
-    expect(endEngine.player(Player.Player2).data.victoryPoints).to.equal(
-      baseLine.player(Player.Player2).data.victoryPoints
-    );
+      const lastMove = moveList.pop();
+      endEngine.move(lastMove);
+      baseLine.move(lastMove);
+      expect(endEngine.player(Player.Player1).data.victoryPoints).to.equal(
+        baseLine.player(Player.Player1).data.victoryPoints
+      );
+      expect(endEngine.player(Player.Player2).data.victoryPoints).to.equal(
+        baseLine.player(Player.Player2).data.victoryPoints
+      );
+    });
 
-    const lastMove = moveList.pop();
-    endEngine.move(lastMove);
-    baseLine.move(lastMove);
-    expect(endEngine.player(Player.Player1).data.victoryPoints).to.equal(
-      baseLine.player(Player.Player1).data.victoryPoints
-    );
-    expect(endEngine.player(Player.Player2).data.victoryPoints).to.equal(
-      baseLine.player(Player.Player2).data.victoryPoints
-    );
-  });
+    it("should be able to load state from an empty game", () => {
+      expect(() => Engine.fromData(JSON.parse(JSON.stringify(new Engine())))).to.not.throw();
+    });
 
-  it("should be able to load state from an empty game", () => {
-    expect(() => Engine.fromData(JSON.parse(JSON.stringify(new Engine())))).to.not.throw();
+    describe("transform board actions for older games", () => {
+      const tests: {
+        name: string;
+        give: boolean;
+        want: PlayerEnum;
+      }[] = [
+        {
+          name: "should transform true (old for 'available') to null",
+          give: true,
+          want: null,
+        },
+        {
+          name: "should transform false (old for 'not available') to Player5",
+          give: false,
+          want: Player.Player5,
+        },
+      ];
+
+      for (const test of tests) {
+        it(test.name, () => {
+          const data = JSON.parse(JSON.stringify(new Engine()));
+          data["boardActions"][BoardAction.Power1] = test.give;
+          expect(Engine.fromData(data).boardActions[BoardAction.Power1]).to.equal(test.want);
+        });
+      }
+    });
   });
 
   it("should not count gaiaformers in data.occupied when loading a game from state", () => {

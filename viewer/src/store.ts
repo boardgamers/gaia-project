@@ -11,6 +11,7 @@ import { CubeCoordinates } from "hexagrid";
 import Vue from "vue";
 import Vuex from "vuex";
 import { GameContext } from "./data";
+import { movesToHexes, recentMoves, roundMoves } from "./logic/recent";
 
 Vue.use(Vuex);
 
@@ -35,6 +36,7 @@ const gaiaViewer = {
       accessibleSpaceMap: false,
       noFactionFill: false,
       flatBuildings: false,
+      highlightRecentActions: false,
     },
     player: null as { index?: number; auth?: string } | null,
   },
@@ -125,7 +127,23 @@ const gaiaViewer = {
     // WRAPPER / DEBUG COMMUNICATION
     loadFromJSON(context, data: any) {},
   },
-  getters: {},
+  getters: {
+    currentRoundHexes: (state): GaiaHex[] => {
+      if (state.preferences.highlightRecentActions) {
+        const data = state.data;
+        return movesToHexes(data, roundMoves(data.advancedLog, data.moveHistory));
+      }
+      return [];
+    },
+    recentHexes: (state): GaiaHex[] => {
+      if (state.preferences.highlightRecentActions) {
+        const data = state.data;
+        const player = state.player?.index ?? data.currentPlayer;
+        return movesToHexes(data, recentMoves(player, data.advancedLog, data.moveHistory));
+      }
+      return [];
+    },
+  },
 };
 
 function makeStore() {

@@ -2,6 +2,7 @@
   <g :class="['boardAction', kind, { highlighted }]" v-b-tooltip :title="tooltip">
     <SpecialAction
       :class="{ faded }"
+      :planet="planet"
       :action="boardActions[action].income"
       :highlighted="highlighted"
       :board="true"
@@ -39,9 +40,17 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
-import { tiles, Event, BoardAction as BoardActionEnum, boardActions, Reward } from "@gaia-project/engine";
-import { eventDesc } from "../data/event";
+import {Component, Prop} from "vue-property-decorator";
+import {
+  BoardAction as BoardActionEnum,
+  boardActions,
+  Event,
+  factions,
+  Planet,
+  PlayerEnum,
+  Reward
+} from "@gaia-project/engine";
+import {eventDesc} from "../data/event";
 import Resource from "./Resource.vue";
 import SpecialAction from "./SpecialAction.vue";
 
@@ -73,7 +82,16 @@ export default class BoardAction extends Vue {
   }
 
   get faded() {
-    return !this.$store.state.gaiaViewer.data.boardActions[this.action];
+    return this.planet != null;
+  }
+
+  get planet(): Planet {
+    const data = this.$store.state.gaiaViewer.data;
+    const player = data.boardActions[this.action];
+    if (player != null && player !== PlayerEnum.Player5) { // Player5 is for converted old games
+      return factions.planet(data.player(player).faction);
+    }
+    return null;
   }
 
   get kind() {
