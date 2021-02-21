@@ -41,7 +41,7 @@
 <script lang="ts">
 import Vue from "vue";
 import {Component, Prop} from "vue-property-decorator";
-import {
+import Engine, {
   BoardAction as BoardActionEnum,
   boardActions,
   Event,
@@ -82,16 +82,19 @@ export default class BoardAction extends Vue {
   }
 
   get faded() {
-    return this.planet != null;
+    return this.player() != null;
   }
 
   get planet(): Planet {
-    const data = this.$store.state.gaiaViewer.data;
-    const player = data.boardActions[this.action];
+    const player = this.player();
     if (player != null && player !== PlayerEnum.Player5) { // Player5 is for converted old games
-      return factions.planet(data.player(player).faction);
+      return factions.planet(this.$store.state.gaiaViewer.data.player(player).faction);
     }
     return null;
+  }
+
+  private player() {
+    return this.$store.state.gaiaViewer.data.boardActions[this.action];
   }
 
   get kind() {
