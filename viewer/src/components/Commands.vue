@@ -7,6 +7,9 @@
           {{ [player, ...titles].join(" - ") }}
           <a href="#" v-if="commandChain.length > 0" class="smaller small" @click.prevent="back()">(back)</a>
           <a href="#" v-else-if="canUndo" class="smaller small" @click.prevent="undo()">(undo)</a>
+          <span class="smaller small">{{
+            this.currentMove ? this.currentMove.substring(this.currentMove.indexOf(" ")) : ""
+          }}</span>
         </span>
       </h5>
     </div>
@@ -107,6 +110,9 @@ import { factionDesc } from "../data/factions";
   },
 })
 export default class Commands extends Vue {
+  @Prop()
+  currentMove?: string;
+
   @Prop({ default: "" })
   remainingTime: string;
 

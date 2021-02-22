@@ -20,7 +20,7 @@
     <div class="row mt-2">
       <TurnOrder v-if="!ended && engine.players.length > 0" class="col-md-4 order-4 order-md-1" />
       <div class="col-md-8 order-1 order-md-2">
-        <Commands @command="handleCommand" @undo="undoMove" v-if="canPlay" />
+        <Commands @command="handleCommand" @undo="undoMove" v-if="canPlay" :currentMove="currentMove" />
       </div>
       <template v-if="sessionPlayer === undefined">
         <PlayerInfo v-for="player in orderedPlayers" :player="player" :key="player.player" class="col-md-6 order-6" />
@@ -43,15 +43,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Engine, {
-  Command,
-  Phase,
-  factions,
-  Player,
-  EngineOptions,
-  Expansion,
-  BoardAction as BoardActionEnum,
-} from "@gaia-project/engine";
+import Engine, { BoardAction as BoardActionEnum, Command, EngineOptions, Phase } from "@gaia-project/engine";
 import AdvancedLog from "./AdvancedLog.vue";
 import BoardAction from "./BoardAction.vue";
 import Commands from "./Commands.vue";
