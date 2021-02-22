@@ -1,7 +1,7 @@
 dependencies:
   axios: 0.21.1
   eventemitter3: 3.1.2
-  hexagrid: 2.1.0
+  hexagrid: 2.1.1
   lodash: 4.17.21
   seedrandom: 2.4.3
   shuffle-seed: 1.1.6
@@ -898,10 +898,10 @@ packages:
     hasBin: true
     resolution:
       integrity: sha1-k0EP0hsAlzUVH4howvJx80J+I/0=
-  /hexagrid/2.1.0:
+  /hexagrid/2.1.1:
     dev: false
     resolution:
-      integrity: sha512-ybB21HKP8POrXyGJGuFP2gckDNynATfC0IqSQy7NVyUIs6mXbuSdfrSXfGNDSdilRCjTKG0QP3cQZSTlyZAUvA==
+      integrity: sha512-Hzbz3A3kLGXSXoCPhseIpXIRv/Fw0o70gyCNjr4KVrUDbcYnoUjUdttf+1jz6YnddOu6+tGpEuJgJV3RUr5cdw==
   /hosted-git-info/2.8.8:
     dev: true
     resolution:
@@ -1808,7 +1808,7 @@ specifiers:
   eslint-plugin-promise: ^4.2.1
   eslint-plugin-standard: ^4.0.1
   eventemitter3: ^3.1.0
-  hexagrid: ^2.1.0
+  hexagrid: ^2.1.1
   lodash: ^4.17.15
   mocha: ^5.2.0
   seedrandom: 2.4.3
