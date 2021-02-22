@@ -100,9 +100,11 @@ function applyChargePowers(data: PlayerData, chargePowers: Event[]): number {
   let waste = 0;
   for (const e of chargePowers) {
     for (const reward of e.rewards) {
-      const power = reward.count;
-      const charged = data.chargePower(power);
-      waste += power - charged;
+      if (reward.type == Resource.ChargePower) {
+        const power = reward.count;
+        const charged = data.chargePower(power);
+        waste += power - charged;
+      }
     }
   }
   return waste;
