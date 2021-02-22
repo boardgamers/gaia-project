@@ -77,6 +77,13 @@ describe("IncomeSelection", () => {
         expected: 1,
       },
       {
+        name: "only consider pw rewards",
+        power: new Power(2, 4, 0),
+        brainstone: null,
+        events: Event.parse(["+3c,1o,3pw", "4pw"], null),
+        expected: 1,
+      },
+      {
         name: "events - will not charge fully (brainstone)",
         power: new Power(),
         brainstone: BrainstoneArea.Area2,
