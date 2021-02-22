@@ -349,7 +349,8 @@ export function possibleBoardActions(engine: Engine, player: Player) {
   const commands = [];
 
   let poweracts = BoardAction.values(Expansion.All).filter(
-    (pwract) => !engine.boardActions[pwract] && engine.player(player).canPay(Reward.parse(boardActions[pwract].cost))
+    (pwract) =>
+      engine.boardActions[pwract] === null && engine.player(player).canPay(Reward.parse(boardActions[pwract].cost))
   );
 
   // Prevent using the rescore action if no federation token
