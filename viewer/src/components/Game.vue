@@ -53,6 +53,7 @@ import ResearchBoard from "./ResearchBoard.vue";
 import ScoringBoard from "./ScoringBoard.vue";
 import SpaceMap from "./SpaceMap.vue";
 import TurnOrder from "./TurnOrder.vue";
+import { parseCommands } from "../logic/recent";
 
 @Component<Game>({
   created(this: Game) {
@@ -238,7 +239,7 @@ export default class Game extends Vue {
       return;
     }
 
-    const move = this.parseMove(command);
+    const move = parseCommands(command)[0];
 
     if (move.command === Command.EndTurn) {
       this.addMove(this.currentMove + ".");
@@ -246,7 +247,7 @@ export default class Game extends Vue {
     }
 
     if (this.currentMove && !this.clearCurrentMove) {
-      this.addMove(this.currentMove + `. ${command.slice(move.player.length + 1)}`);
+      this.addMove(this.currentMove + `. ${command.slice(move.faction.length + 1)}`);
     } else {
       this.clearCurrentMove = false;
       this.addMove(command);
@@ -265,22 +266,6 @@ export default class Game extends Vue {
   addMove(command: string) {
     this.$store.commit("gaiaViewer/clearContext");
     this.$store.dispatch("gaiaViewer/move", command);
-  }
-
-  parseMove(command: string): { player: string; command: string; args: string[] } {
-    command = command.trim();
-
-    if (command.includes(".")) {
-      return this.parseMove(command.slice(0, command.indexOf(".")));
-    }
-
-    const split = command.split(" ");
-
-    return {
-      player: split[0],
-      command: split[1],
-      args: split.slice(2),
-    };
   }
 }
 </script>

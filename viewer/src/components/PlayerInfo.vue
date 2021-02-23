@@ -288,6 +288,7 @@ export default class PlayerInfo extends Vue {
     dominant-baseline: mathematical;
     font-size: 1.2px;
 
+    &.current-round,
     &.int,
     &.terra,
     &.nav,

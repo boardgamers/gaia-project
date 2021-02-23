@@ -86,9 +86,9 @@
         <polygon
           points="-7.5,3 -3,7.5 3,7.5 7.5,3 7.5,-3 3,-7.5 -3,-7.5 -7.5,-3"
           transform="scale(0.1)"
-          :class="['researchTile', researchType(i - 1)]"
+          :class="['researchTile', researchClass(i - 1)]"
         />
-        <text :class="['board-text', researchType(i - 1)]" transform="scale(0.7)" x="-.35" y="-.1">{{
+        <text :class="['board-text', researchClass(i - 1)]" transform="scale(0.7)" x="-.35" y="-.1">{{
           research(i - 1)
         }}</text>
       </g>
@@ -103,6 +103,7 @@ import { uniq } from "lodash";
 import Resource from "../Resource.vue";
 import { Faction, factions, Player, PlayerData, ResearchField, Resource as ResourceEnum } from "@gaia-project/engine";
 import VictoryPoint from "../Resources/VictoryPoint.vue";
+import { researchClass } from "../../logic/recent";
 
 @Component({
   components: {
@@ -136,6 +137,18 @@ export default class BuildingGroup extends Vue {
     }
 
     return parseInt(this.player.income.substr(index));
+  }
+
+  researchClass(index: number): string {
+    const field = this.researchType(index);
+    return (
+      researchClass(
+        this.$store.getters["gaiaViewer/recentCommands"],
+        this.$store.getters["gaiaViewer/currentRoundCommands"],
+        field,
+        this.faction
+      ) ?? field
+    );
   }
 
   researchType(index: number): ResearchField {

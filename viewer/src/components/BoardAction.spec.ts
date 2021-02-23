@@ -4,12 +4,19 @@ import { expect } from "chai";
 import { makeStore } from "../store";
 import BoardAction from "./BoardAction.vue";
 
+function makeTestStore() {
+  const store = makeStore();
+  (store as any).getters = {
+    "gaiaViewer/recentCommands": () => [],
+    "gaiaViewer/currentRoundCommands": () => [],
+  };
+  return store;
+}
+
 describe("BoardAction", () => {
   it("should render as faded when given legacy data", async () => {
     const action = BoardActionEnum.Power1;
-    const store = makeStore();
-    // fixme why is this needed
-    delete (store as any).getters;
+    const store = makeTestStore();
     store.state.gaiaViewer.data.boardActions[action] = PlayerEnum.Player5;
     const { container } = render(BoardAction, {
       props: {
@@ -23,9 +30,7 @@ describe("BoardAction", () => {
 
   it("should not render as faded when player is null", async () => {
     const action = BoardActionEnum.Power1;
-    const store = makeStore();
-    // fixme why is this needed
-    delete (store as any).getters;
+    const store = makeTestStore();
     store.state.gaiaViewer.data.boardActions[action] = null;
     const { container } = render(BoardAction, {
       props: {

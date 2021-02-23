@@ -1,6 +1,6 @@
 import { LogEntry, PlayerEnum } from "@gaia-project/engine";
 import { expect } from "chai";
-import { recentMoves } from "./recent";
+import { markBuilding, parseCommands, recentMoves } from "./recent";
 
 describe("Moves", () => {
   describe("recentMoves", () => {
@@ -95,5 +95,65 @@ describe("Moves", () => {
         expect(moves).to.deep.equal(test.want);
       });
     }
+  });
+
+  describe("markBuilding", () => {
+    const tests: {
+      name: string;
+      give: { recent: number; currentRound: number; buildings: number };
+      want: { currentRound: number[]; recent: number[] };
+    }[] = [
+      {
+        name: "less recent & round than buildings",
+        give: { recent: 1, currentRound: 2, buildings: 3 },
+        want: { currentRound: [1, 2], recent: [2] },
+      },
+      {
+        name: "less recent than buildings & round equal to than buildings",
+        give: { recent: 1, currentRound: 3, buildings: 3 },
+        want: { currentRound: [0, 1, 2], recent: [2] },
+      },
+      {
+        name: "less recent than buildings & more round than buildings",
+        give: { recent: 1, currentRound: 4, buildings: 3 },
+        want: { currentRound: [0, 1, 2, 3], recent: [3] },
+      },
+      {
+        name: "less recent than buildings & more round than possible buildings - because some buildings were upgraded",
+        give: { recent: 1, currentRound: 5, buildings: 3 },
+        want: { currentRound: [0, 1, 2, 3], recent: [3] },
+      },
+    ];
+
+    for (const test of tests) {
+      it(test.name, () => {
+        const buildingsNumbers = [0, 1, 2, 3];
+        const possibleBuildings = 4;
+        const currentRound = buildingsNumbers.filter((i) =>
+          markBuilding(i, test.give.currentRound, test.give.buildings, test.give.currentRound, possibleBuildings)
+        );
+        const recent = buildingsNumbers.filter((i) =>
+          markBuilding(i, test.give.currentRound, test.give.buildings, test.give.recent, possibleBuildings)
+        );
+
+        expect(currentRound).to.deep.equal(test.want.currentRound);
+        expect(recent).to.deep.equal(test.want.recent);
+      });
+    }
+  });
+
+  it("should parse commands correctly", () => {
+    expect(parseCommands("taklons charge 1pw. brainstone area1")).to.deep.equal([
+      {
+        args: ["1pw"],
+        command: "charge",
+        faction: "taklons",
+      },
+      {
+        args: ["area1"],
+        command: "brainstone",
+        faction: "taklons",
+      },
+    ]);
   });
 });

@@ -25,7 +25,15 @@
       v-b-tooltip
       :title="tooltip(i)"
     >
-      <circle stroke="black" stroke-width="0.07" fill="white" r="1" :key="i" v-if="!isPI" />
+      <circle
+        stroke="black"
+        stroke-width="0.07"
+        fill="white"
+        r="1"
+        :key="i"
+        v-if="!isPI"
+        :class="{ recent: recentlyBuilt(i), 'current-round': currentRoundBuilt(i) }"
+      />
       <rect
         stroke="black"
         stroke-width="0.07"
@@ -35,12 +43,13 @@
         y="-1"
         height="2"
         :key="i"
+        :class="{ recent: recentlyBuilt(i), 'current-round': currentRoundBuilt(i) }"
         v-else
       />
       <Building
         :building="building"
         class="building-in-group"
-        :faction="buildingFaction(i)"
+        :faction="faction"
         :transform="`translate(${isPI ? 0.5 : 0}, 0) scale(0.15)`"
         v-if="showBuilding(i)"
         :flat="flat"
@@ -65,6 +74,7 @@ import Building from "../Building.vue";
 import Resource from "../Resource.vue";
 import {
   Building as BuildingEnum,
+  Command,
   Faction,
   FactionBoard,
   factionBoard,
@@ -72,6 +82,7 @@ import {
   Resource as ResourceEnum,
   Reward,
 } from "@gaia-project/engine";
+import { CommandObject, markBuilding } from "../../logic/recent";
 
 @Component({
   components: {
@@ -171,8 +182,34 @@ export default class BuildingGroup extends Vue {
     return i >= this.placed + this.gaia;
   }
 
-  buildingFaction(i: number) {
-    return this.faction;
+  recentlyBuilt(i: number): boolean {
+    return this.shouldMarkBuilding(
+      this.$store.getters["gaiaViewer/currentRoundCommands"],
+      this.$store.getters["gaiaViewer/recentCommands"],
+      i
+    );
+  }
+
+  currentRoundBuilt(i: number): boolean {
+    const commands = this.$store.getters["gaiaViewer/currentRoundCommands"];
+    return this.shouldMarkBuilding(commands, commands, i);
+  }
+
+  private shouldMarkBuilding(roundMoves: CommandObject[], moves: CommandObject[], i: number): boolean {
+    let b = this.building;
+    if (this.ac1) {
+      b = BuildingEnum.Academy1;
+    }
+    if (this.ac2 && i == 1) {
+      b = BuildingEnum.Academy2;
+      i--;
+    }
+    const f = this.faction;
+    function countMoves(commands: CommandObject[]) {
+      return commands.filter((c) => c.faction == f && c.command == Command.Build && BuildingEnum[c.args[0]] == b).length;
+    }
+
+    return markBuilding(i, countMoves(roundMoves), this.placed, countMoves(moves), this.nBuildings);
   }
 
   resources(i: number, tooltip = false): Array<string | Reward> {
@@ -218,6 +255,16 @@ export default class BuildingGroup extends Vue {
   .building-group {
     .building-in-group {
       stroke-width: 5px;
+    }
+
+    .current-round {
+      fill: var(--current-round);
+      opacity: 0.7;
+    }
+
+    .recent {
+      fill: var(--recent);
+      opacity: 1;
     }
   }
 }
