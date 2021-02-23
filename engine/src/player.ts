@@ -2,6 +2,7 @@ import assert from "assert";
 import { EventEmitter } from "eventemitter3";
 import { Grid, Hex } from "hexagrid";
 import { countBy, difference, merge, sum, uniq, uniqWith, zipWith } from "lodash";
+import minimumPathLength from "./algorithms/minimum-path-length";
 import spanningTree from "./algorithms/spanning-tree";
 import { stdBuildingValue } from "./buildings";
 import {
@@ -818,15 +819,6 @@ export default class Player extends EventEmitter {
       sum(buildings.map((node) => this.buildingValue(node, { federation: true })))
     );
 
-    // The current algorithm is not all-knowing, so in some cases we allow player to generate their own federation
-    if (values.length >= 6 && maxSatellites >= 8) {
-      const sorted = [...values].sort().slice(0, 6);
-
-      if (sum(sorted) <= this.federationCost && sum(values) >= this.federationCost) {
-        custom = true;
-      }
-    }
-
     let combinations = this.possibleCombinationsForFederations(
       zipWith(buildingGroupsList, values, (val1, val2) => ({ hexes: val1, value: val2 }))
     );
@@ -869,7 +861,7 @@ export default class Player extends EventEmitter {
       const convertedDestGroups = destGroups.map((destGroup) => destGroup.map((hex) => workingGrid.get(hex)));
       let tree = spanningTree(convertedDestGroups, workingGrid, maxSatellites, "heuristic", (hex) => hex.data.cost);
 
-      if (tree && !flexible && flexibleExcluded.size > 0) {
+      if ("path" in tree && !flexible && flexibleExcluded.size > 0) {
         // In non flexible mode, we still try to suggest federations without extra planets, as long
         // as they don't add additional satellites
         const allHexes = [...map.grid.values()].filter((hex) => !excluded.has(hex) && !flexibleExcluded.has(hex));
@@ -888,12 +880,12 @@ export default class Player extends EventEmitter {
           (hex) => hex.data.cost
         );
 
-        if (treeWithoutOtherPlanets && treeWithoutOtherPlanets.cost <= tree.cost) {
+        if ("path" in treeWithoutOtherPlanets && treeWithoutOtherPlanets.cost <= tree.cost) {
           tree = treeWithoutOtherPlanets;
         }
       }
 
-      if (tree) {
+      if ("path" in tree) {
         // Convert from regular hex to gaia hex of grid
         federations.push(
           this.addAdjacentBuildings(
@@ -901,6 +893,10 @@ export default class Player extends EventEmitter {
             map
           )
         );
+      } else if (tree.minCost <= maxSatellites && maxSatellites >= 7 && combination.length >= 4) {
+        // In some cases the heuristic goes wrong, so we still offer the player the possibility to manually
+        // specify the federation
+        custom = true;
       }
     }
 
@@ -936,7 +932,7 @@ export default class Player extends EventEmitter {
     this.federationCache = {
       availableSatellites: maxSatellites,
       federations: feds,
-      custom,
+      custom: custom && feds.length === 0,
     };
 
     return feds;
@@ -1050,7 +1046,7 @@ export default class Player extends EventEmitter {
 
       const tree = spanningTree(convertedDestGroups, workingGrid, info.satellites, "heuristic", (hex) => hex.data.cost);
 
-      if (tree) {
+      if ("path" in tree) {
         const smallFederation = this.addAdjacentBuildings(
           tree.path.map((hex) => map.grid.get(hex)),
           map

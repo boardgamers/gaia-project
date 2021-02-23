@@ -28,12 +28,12 @@ function spanningTreeWithHeuristic<T>(
   grid: Grid<Hex<T>>,
   maxAdditional = -1,
   costOf = (hex: Hex<T>) => 1
-): { path: Hex[]; cost: number } | undefined {
+): { path: Hex[]; cost: number } | { minCost: number } {
   type DestGroup = Hex<T>[];
 
   const minCost = minimumPathLength(destGroups);
   if (maxAdditional > -1 && maxAdditional < minCost) {
-    return;
+    return { minCost };
   }
 
   const destHexes: Hex<T>[] = [].concat(...destGroups);
@@ -111,6 +111,8 @@ function spanningTreeWithHeuristic<T>(
   if (bestSolution) {
     return { path: bestSolution, cost: minScore };
   }
+
+  return { minCost };
 }
 
 // No heuristic, but exhaustive
