@@ -1,10 +1,11 @@
 <template>
-  <g :class="['boardAction', kind, { highlighted }]" v-b-tooltip :title="tooltip">
+  <g :class="['boardAction', kind, { highlighted, recent }]" v-b-tooltip :title="tooltip">
     <SpecialAction
       :class="{ faded }"
       :planet="planet"
       :action="boardActions[action].income"
       :highlighted="highlighted"
+      :recent="recent"
       :board="true"
       x="-20"
       y="-25"
@@ -41,9 +42,10 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Engine, {
+import {
   BoardAction as BoardActionEnum,
   boardActions,
+  Command,
   Event,
   factions,
   Planet,
@@ -71,8 +73,13 @@ export default class BoardAction extends Vue {
     this.$store.dispatch("gaiaViewer/actionClick", this.action);
   }
 
-  get highlighted() {
+  get highlighted(): boolean {
     return this.$store.state.gaiaViewer.context.highlighted.actions.has(this.action);
+  }
+
+  get recent(): boolean {
+    const moves = this.$store.getters["gaiaViewer/recentCommands"];
+    return moves.some((c) => c.command == Command.Action && BoardAction[c.args[0]] === this.action);
   }
 
   get tooltip() {

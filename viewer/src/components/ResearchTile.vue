@@ -72,6 +72,7 @@ import Token from "./Token.vue";
 import FederationTile from "./FederationTile.vue";
 import Planet from "./Planet.vue";
 import Resource from "./Resource.vue";
+import { researchClass } from "../logic/recent";
 
 @Component<ResearchTile>({
   components: {
@@ -177,14 +178,19 @@ export default class ResearchTile extends Vue {
   }
 
   tokenClass(player: Player): string {
-    if (this.level < 4) {
-      return "";
+    const classes = [];
+
+    if (this.level >= 4) {
+      const tilePos = ("adv-" + this.field) as AdvTechTilePos;
+      if (canTakeAdvancedTechTile(this.gameData, player.data, tilePos) || canResearchField(this.gameData, player, this.field)) {
+        classes.push("warn");
+      }
     }
-    const tilePos = ("adv-" + this.field) as AdvTechTilePos;
-    if (canTakeAdvancedTechTile(this.gameData, player.data, tilePos) || canResearchField(this.gameData, player, this.field)) {
-      return "warn";
+    const c = researchClass(this.$store.getters["gaiaViewer/recentCommands"], this.$store.getters["gaiaViewer/currentRoundCommands"], this.field, player.faction);
+    if (c) {
+      classes.push(c);
     }
-    return "";
+    return classes.join(" ");
   }
 
   get players(): Array<{ player: Player; class: string }> {
@@ -244,6 +250,18 @@ svg {
     fill: none;
     stroke: #444;
     stroke-width: 1;
+
+    &.recent {
+      fill: var(--recent);
+      stroke-width: 2;
+    }
+
+    &.current-round {
+      fill: var(--current-round);
+      stroke: var(--current-round);
+      stroke-width: 2;
+      opacity: 0.7;
+    }
 
     &.eco {
       fill: var(--rt-eco);

@@ -2,7 +2,6 @@ import assert from "assert";
 import { EventEmitter } from "eventemitter3";
 import { Grid, Hex } from "hexagrid";
 import { countBy, difference, merge, sum, uniq, uniqWith, zipWith } from "lodash";
-import minimumPathLength from "./algorithms/minimum-path-length";
 import spanningTree from "./algorithms/spanning-tree";
 import { stdBuildingValue } from "./buildings";
 import {

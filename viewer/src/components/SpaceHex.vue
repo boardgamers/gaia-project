@@ -55,7 +55,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import {
+import Engine, {
   Building as BuildingEnum,
   factions,
   GaiaHex,
@@ -67,6 +67,7 @@ import Planet from "./Planet.vue";
 import Building from "./Building.vue";
 import { buildingName } from "../data/building";
 import { planetNames } from "../data/planets";
+import { movesToHexes } from "../logic/recent";
 
 @Component<SpaceHex>({
   components: {
@@ -129,11 +130,15 @@ export default class SpaceHex extends Vue {
   }
 
   recent(hex: GaiaHex): boolean {
-    return this.$store.getters["gaiaViewer/recentHexes"].includes(hex);
+    return movesToHexes(this.gameData, this.$store.getters["gaiaViewer/recentCommands"]).includes(hex);
   }
 
   currentRound(hex: GaiaHex): boolean {
-    return this.$store.getters["gaiaViewer/currentRoundHexes"].includes(hex);
+    return movesToHexes(this.gameData, this.$store.getters["gaiaViewer/currentRoundCommands"]).includes(hex);
+  }
+
+  get gameData(): Engine {
+    return this.$store.state.gaiaViewer.data;
   }
 
   get toSelect() {

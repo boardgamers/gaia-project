@@ -1,6 +1,6 @@
 <template>
   <svg viewBox="-25 -25 50 50" width="50" height="50" style="overflow: visible">
-    <g :class="['specialAction', { highlighted: isHighlighted, disabled, board }]">
+    <g :class="['specialAction', { highlighted: isHighlighted, disabled, board, recent }]">
       <polygon
         points="-10,4 -4,10 4,10 10,4 10,-4 4,-10 -4,-10 -10,-4"
         transform="scale(2.4)"
@@ -38,6 +38,9 @@ export default class SpecialAction extends Vue {
   @Prop({ default: false })
   board: boolean;
 
+  @Prop({ default: false })
+  recent: boolean;
+
   @Prop()
   action: string[];
 
@@ -73,6 +76,11 @@ export default class SpecialAction extends Vue {
 <style lang="scss">
 g {
   &.specialAction {
+    &.recent > polygon {
+      stroke-width: 2;
+      stroke: var(--recent);
+    }
+
     & > polygon {
       stroke: black;
       stroke-width: 0.5;
