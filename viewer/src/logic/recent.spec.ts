@@ -1,64 +1,47 @@
-import { LogEntry, PlayerEnum } from "@gaia-project/engine";
+import Engine, { LogEntry, PlayerEnum } from "@gaia-project/engine";
 import { expect } from "chai";
-import { recentMoves } from "./recent";
+import { recentMoves, roundMoves } from "./recent";
 
 describe("Moves", () => {
-  describe("recentMoves", () => {
+  describe("recentMoves and roundMoves", () => {
     const tests: {
       name: string;
-      give: { moveHistory: string[]; logEntries: LogEntry[] };
-      want: string[];
+      give: { moveHistory: string[] };
+      want: { recentMoves: string[]; roundMoves: string[] };
     }[] = [
       {
         name: "player starts",
         give: {
           moveHistory: [
             "init 2 randomSeed2",
-            "p2 rotate",
             "p1 faction terrans",
             "p2 faction geodens",
             "terrans build m 8A2",
           ],
-          logEntries: [
-            { player: 1, move: 1 },
-            { player: 0, move: 2 },
-            { player: 1, move: 3 },
-            { player: 0 },
-            { player: 1 },
-            { player: 0, move: 4 },
-          ],
         },
-        want: ["terrans build m 8A2"],
+        want: {
+          recentMoves: ["terrans build m 8A2"],
+          roundMoves: ["p2 rotate", "p1 faction terrans", "p2 faction geodens", "terrans build m 8A2"],
+        },
       },
       {
         name: "player is about to place second mine",
         give: {
           moveHistory: [
             "init 2 randomSeed2",
-            "p2 rotate",
             "p1 faction terrans",
             "p2 faction geodens",
             "terrans build m 8A2",
             "geodens build m 1A5",
           ],
-          logEntries: [
-            { player: 1, move: 1 },
-            { player: 0, move: 2 },
-            { player: 1, move: 3 },
-            { player: 0 },
-            { player: 1 },
-            { player: 0, move: 4 },
-            { player: 1, move: 5 },
-          ],
         },
-        want: ["terrans build m 8A2"],
+        want: { recentMoves: ["terrans build m 8A2"], roundMoves: [] },
       },
       {
         name: "ignores charge and brainstone",
         give: {
           moveHistory: [
             "init 2 randomSeed2",
-            "p2 rotate",
             "p1 faction firaks",
             "p2 faction taklons",
             "firaks build m 7A0",
@@ -70,29 +53,20 @@ describe("Moves", () => {
             "firaks build ts 7A0.",
             "taklons charge 1pw. brainstone area1",
           ],
-          logEntries: [
-            { player: 1, move: 1 },
-            { player: 0, move: 2 },
-            { player: 1, move: 3 },
-            { player: 0, move: 4 },
-            { player: 1, move: 5 },
-            { player: 1, move: 6 },
-            { player: 0, move: 7 },
-            { player: 1, move: 8 },
-            { player: 0, move: 9 },
-            { player: 0, move: 10 },
-            { player: 1, move: 11 },
-            { player: 1, move: 12 },
-          ],
         },
-        want: ["firaks booster booster3", "firaks build ts 7A0."],
+        want: { recentMoves: ["firaks booster booster3", "firaks build ts 7A0."], roundMoves: [] },
       },
     ];
 
     for (const test of tests) {
       it(test.name, () => {
-        const moves = recentMoves(PlayerEnum.Player2, test.give.logEntries, test.give.moveHistory);
-        expect(moves).to.deep.equal(test.want);
+        const engine = new Engine();
+        engine.loadMoves(test.give.moveHistory);
+        const recent = recentMoves(PlayerEnum.Player2, engine.advancedLog, engine.moveHistory);
+        expect(recent).to.deep.equal(test.want.recentMoves);
+
+        const round = roundMoves(engine.advancedLog, engine.moveHistory);
+        expect(round).to.deep.equal(test.want.roundMoves);
       });
     }
   });
