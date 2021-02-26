@@ -197,6 +197,7 @@ export enum Player {
   Player3,
   Player4,
   Player5,
+  All,
 }
 
 export enum Round {
@@ -208,6 +209,28 @@ export enum Round {
   Round5 = 5,
   Round6 = 6,
   LastRound = 6,
+}
+
+export enum RoundScoring {
+  Round1 = "round1",
+  Round2 = "round2",
+  Round3 = "round3",
+  Round4 = "round4",
+  Round5 = "round5",
+  Round6 = "round6",
+}
+
+export namespace RoundScoring {
+  export function values(expansions = 0): RoundScoring[] {
+    return (Object.values(RoundScoring) as RoundScoring[]).filter((val: RoundScoring) => {
+      if (typeof val !== "string") {
+        return;
+      }
+      if (/^round[0-9]/.test(val)) {
+        return true;
+      }
+    }) as RoundScoring[];
+  }
 }
 
 export enum Booster {
@@ -261,6 +284,36 @@ export namespace TechTile {
   }
 }
 
+export enum TechPos {
+  Terraforming = "tech-terra",
+  Navigation = "tech-nav",
+  Intelligence = "tech-int",
+  GaiaProject = "tech-gaia",
+  Economy = "tech-eco",
+  Science = "tech-sci",
+  Free1 = "tech-free1",
+  Free2 = "tech-free2",
+  Free3 = "tech-free3",
+}
+
+export namespace TechPos {
+  export function values(expansions = 0): TechPos[] {
+    const ret = [
+      "tech-terra",
+      "tech-nav",
+      "tech-int",
+      "tech-gaia",
+      "tech-eco",
+      "tech-sci",
+      "tech-free1",
+      "tech-free2",
+      "tech-free3",
+    ] as TechPos[];
+
+    return ret;
+  }
+}
+
 export enum TechTilePos {
   Terraforming = "terra",
   Navigation = "nav",
@@ -271,7 +324,6 @@ export enum TechTilePos {
   Free1 = "free1",
   Free2 = "free2",
   Free3 = "free3",
-  Free4 = "free4",
 }
 
 export namespace TechTilePos {

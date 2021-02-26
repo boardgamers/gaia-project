@@ -1,5 +1,9 @@
 <template>
   <div :class="classes">
+    <b-modal id="chart-button" title="Victory Points" size="lg">
+      <Charts />
+    </b-modal>
+
     <div
       :class="['row', 'no-gutters', 'justify-content-center', engine.players.length > 2 ? 'medium-map' : 'small-map']"
       v-if="hasMap"
@@ -53,6 +57,7 @@ import ResearchBoard from "./ResearchBoard.vue";
 import ScoringBoard from "./ScoringBoard.vue";
 import SpaceMap from "./SpaceMap.vue";
 import TurnOrder from "./TurnOrder.vue";
+import Charts from "./Charts.vue";
 import { parseCommands } from "../logic/recent";
 
 @Component<Game>({
@@ -127,6 +132,7 @@ import { parseCommands } from "../logic/recent";
     ScoringBoard,
     SpaceMap,
     TurnOrder,
+    Charts,
   },
 })
 export default class Game extends Vue {

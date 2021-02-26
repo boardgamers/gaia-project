@@ -1,7 +1,8 @@
 import assert from "assert";
-import { isEqual, range, set, sortBy, sum, uniq } from "lodash";
+import { isEqual, range, set, uniq } from "lodash";
 import shuffleSeed from "shuffle-seed";
 import { boardActions } from "./actions";
+import { finalRankings, gainFinalScoringVictoryPoints } from "./algorithms/scoring";
 import { ChargeDecision, ChargeRequest, decideChargeRequest } from "./auto-charge";
 import AvailableCommand, { generate as generateAvailableCommands } from "./available-command";
 import { stdBuildingValue } from "./buildings";
@@ -24,18 +25,19 @@ import {
   ResearchField,
   Resource,
   Round,
+  RoundScoring,
   ScoringTile,
   SubPhase,
   TechTile,
   TechTilePos,
 } from "./enums";
-import Event, { EventSource, RoundScoring } from "./events";
+import Event, { EventSource } from "./events";
 import SpaceMap, { MapConfiguration } from "./map";
 import Player from "./player";
 import * as researchTracks from "./research-tracks";
 import Reward from "./reward";
 import federations from "./tiles/federations";
-import { finalScorings, roundScorings } from "./tiles/scoring";
+import { roundScorings } from "./tiles/scoring";
 import { isAdvanced } from "./tiles/techs";
 
 // const ISOLATED_DISTANCE = 3;
@@ -326,7 +328,7 @@ export default class Engine {
     }
   }
 
-  player(player: number): Player {
+  player(player: PlayerEnum): Player {
     return this.players[player];
   }
 
@@ -997,61 +999,20 @@ export default class Engine {
     this.changePhase(Phase.EndGame);
     this.advancedLog.push({ phase: Phase.EndGame });
     this.currentPlayer = this.tempCurrentPlayer = undefined;
-
-    const allRankings: Array<Array<{ player: Player; count: number }>> = [];
-
-    // finalScoring tiles
-    for (const tile of this.tiles.scorings.final) {
-      const players = sortBy(this.players, (player) => player.finalCount(tile)).reverse();
-
-      const rankings = players.map((pl) => ({
-        player: pl,
-        count: pl.finalCount(tile),
-      }));
-
-      if (this.players.length === 2) {
-        rankings.push({
-          player: null,
-          count: finalScorings[tile].neutralPlayer,
-        });
-        rankings.sort((pl1, pl2) => pl2.count - pl1.count);
-      }
-
-      allRankings.push(rankings);
-    }
+    const allRankings = finalRankings(this.tiles.scorings.final, this.players);
 
     // Group gained points per player
     for (const player of this.players) {
-      // Gain points from final scoring
-      allRankings.forEach((rankings, index) => {
-        const ranking = rankings.find((rnk) => rnk.player === player);
+      gainFinalScoringVictoryPoints(allRankings, player, (r, e) => player.gainRewards(r, e));
 
-        const count = ranking.count;
-        // index of the first player with that score
-        const first = rankings.findIndex((pl) => pl.count === count);
-        // number of other players with the same score
-        const ties = rankings.filter((pl) => pl.count === count).length;
+      player.data.gainResearchVictoryPoints();
 
-        // only players that advaced are getting VPs
-        // see https://boardgamegeek.com/thread/1929227/0-end-score-0-vp
-        if (ranking.player && count > 0) {
-          const VPs = [18, 12, 6, 0, 0, 0];
-
-          ranking.player.gainRewards(
-            [new Reward(Math.floor(sum(VPs.slice(first, first + ties)) / ties), Resource.VictoryPoint)],
-            `final${index + 1}` as "final1" | "final2"
-          );
-        }
-      });
-
-      // research VP and remaining resources
-      player.data.gainFinalVictoryPoints();
+      player.data.finalResourceHandling();
 
       //remove bids
       player.gainRewards([new Reward(Math.max(Math.floor(-1 * player.data.bid)), Resource.VictoryPoint)], Command.Bid);
     }
   }
-
   beginLeechingPhase() {
     if (this.leechSources.length === 0) {
       this.beginRoundMovePhase();

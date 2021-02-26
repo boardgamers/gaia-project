@@ -10,6 +10,7 @@
   "scripts": {
     "serve": "vue-cli-service serve --port 8080",
     "build": "vue-cli-service build",
+    "compile": "tsc",
     "lint": "vue-cli-service lint",
     "package": "vue-cli-service build --target lib src/wrapper.ts",
     "prepublishOnly": "npm run package",
@@ -28,9 +29,12 @@
   ],
   "dependencies": {
     "@gaia-project/engine": "workspace:../engine",
+    "@types/chart.js": "^2.9.31",
     "bootstrap": "^4.4.1",
     "bootstrap-vue": "^2.12.0",
+    "chart.js": "^2.9.4",
     "lodash": "^4.17.15",
+    "moment": "^2.29.1",
     "vue": "^2.6.11",
     "vuex": "^3.0.1"
   },
