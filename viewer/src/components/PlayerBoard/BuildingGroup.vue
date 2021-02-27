@@ -206,7 +206,7 @@ export default class BuildingGroup extends Vue {
     }
     const f = this.faction;
     function countMoves(commands: CommandObject[]) {
-      return commands.filter((c) => c.faction == f && c.command == Command.Build && BuildingEnum[c.args[0]] == b).length;
+      return commands.filter((c) => c.faction == f && c.command == Command.Build && c.args[0] as BuildingEnum === b).length;
     }
 
     return markBuilding(i, countMoves(roundMoves), this.placed, countMoves(moves), this.nBuildings);
