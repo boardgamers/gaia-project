@@ -57,7 +57,6 @@ import ResearchBoard from "./ResearchBoard.vue";
 import ScoringBoard from "./ScoringBoard.vue";
 import SpaceMap from "./SpaceMap.vue";
 import TurnOrder from "./TurnOrder.vue";
-import Charts from "./Charts.vue";
 import { parseCommands } from "../logic/recent";
 
 @Component<Game>({
