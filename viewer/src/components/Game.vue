@@ -132,7 +132,7 @@ import { parseCommands } from "../logic/recent";
     ScoringBoard,
     SpaceMap,
     TurnOrder,
-    Charts,
+    Charts: () => import('./Charts.vue'),
   },
 })
 export default class Game extends Vue {
