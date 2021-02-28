@@ -38,11 +38,7 @@ import Chart from "chart.js";
 })
 export default class Charts extends Vue {
 
-  data() {
-    return {
-      selected: PlayerEnum.All,
-    };
-  }
+  selected = PlayerEnum.All
 
   private chart: Chart;
 
