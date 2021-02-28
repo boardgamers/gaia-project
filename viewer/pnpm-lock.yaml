@@ -1,6 +1,5 @@
 dependencies:
   '@gaia-project/engine': link:../engine
-  '@types/chart.js': 2.9.31
   bootstrap: 4.6.0_popper.js@1.16.1
   bootstrap-vue: 2.21.2_vue@2.6.12
   chart.js: 2.9.4
@@ -12,6 +11,7 @@ devDependencies:
   '@testing-library/dom': 7.29.6
   '@testing-library/vue': 5.6.1_ae554d8947d7e926b014dda25865f517
   '@types/chai': 4.2.15
+  '@types/chart.js': 2.9.31
   '@types/jquery': 3.5.5
   '@types/lodash': 4.14.168
   '@types/mocha': 8.2.1
@@ -270,7 +270,7 @@ packages:
   /@types/chart.js/2.9.31:
     dependencies:
       moment: 2.29.1
-    dev: false
+    dev: true
     resolution:
       integrity: sha512-hzS6phN/kx3jClk3iYqEHNnYIRSi4RZrIGJ8CDLjgatpHoftCezvC44uqB3o3OUm9ftU1m7sHG8+RLyPTlACrA==
   /@types/eslint-visitor-keys/1.0.0:
@@ -6630,7 +6630,6 @@ packages:
     resolution:
       integrity: sha1-IyFYM/HaE/1gbMuAh7RIUty4If0=
   /moment/2.29.1:
-    dev: false
     resolution:
       integrity: sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==
   /move-concurrently/1.0.1:

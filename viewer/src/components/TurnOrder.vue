@@ -26,7 +26,7 @@
 import { Component, Vue } from "vue-property-decorator";
 import Engine, { Player, Phase } from "@gaia-project/engine";
 import PlayerCircle from "./PlayerCircle.vue";
-import { phaseBeforeSetupBuilding } from "../logic/charts";
+import { phaseBeforeSetupBuilding } from "../logic/utils";
 
 @Component({
   components: { PlayerCircle },

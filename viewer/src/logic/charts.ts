@@ -40,15 +40,6 @@ interface DatasetFactory {
   getDataPoints: () => number[];
 }
 
-export function phaseBeforeSetupBuilding(data: Engine): boolean {
-  return (
-    data.phase === Phase.SetupInit ||
-    data.phase === Phase.SetupBoard ||
-    data.phase === Phase.SetupFaction ||
-    data.phase === Phase.SetupAuction
-  );
-}
-
 function simulateIncome(pl: Player, consume: (d: PlayerData) => void): number {
   const clone = pl.data.clone();
   consume(clone);

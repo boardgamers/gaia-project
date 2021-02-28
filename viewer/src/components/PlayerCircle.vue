@@ -10,7 +10,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
 import Engine, { factions, Phase, Planet, Player, PlayerEnum } from "@gaia-project/engine";
-import { phaseBeforeSetupBuilding } from "../logic/charts";
+import { phaseBeforeSetupBuilding } from "../logic/utils";
 
 @Component
 export default class PlayerCircle extends Vue {

@@ -1,19 +1,12 @@
 <template>
   <div class="gaia-viewer-modal">
     <div id="player-selection">
-      <span
-        v-for="index in players"
-        :key="index"
-        @click="
-          $data.selected = index;
-          selectPlayer(index);
-        "
-      >
+      <span v-for="index in players" :key="index" @click=" selectPlayer(index)">
         <svg :x="(index > 3 ? -1 : index) * 2" y="0" width="80" height="80" viewBox="-1.5 -1.5 4 4">
           <PlayerCircle
             :player="index > 3 ? null : gameData.player(index)"
             :index="index"
-            :class="`chart-player ${index === $data.selected ? 'selected' : ''}`"
+            :class="`chart-player ${index === selected ? 'selected' : ''}`"
             translate=""
             chart="true"
           />
@@ -59,6 +52,7 @@ export default class Charts extends Vue {
   }
 
   selectPlayer(player: PlayerEnum) {
+    this.selected = player;
     const numbers = player === PlayerEnum.All ? this.order() : [player];
     const data = this.gameData;
 
