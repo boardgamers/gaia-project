@@ -1003,7 +1003,7 @@ export default class Engine {
 
     // Group gained points per player
     for (const player of this.players) {
-      gainFinalScoringVictoryPoints(allRankings, player, (r, e) => player.gainRewards(r, e));
+      gainFinalScoringVictoryPoints(allRankings, player);
 
       player.data.gainResearchVictoryPoints();
 

@@ -30,11 +30,7 @@ export function finalRankings(finalTiles: FinalTile[], collection: Player[]) {
   return allRankings;
 }
 
-export function gainFinalScoringVictoryPoints(
-  allRankings: FinalScoreRankings,
-  player: Player,
-  consume: (Reward, EventSource) => void
-) {
+export function gainFinalScoringVictoryPoints(allRankings: FinalScoreRankings, player: Player) {
   // Gain points from final scoring
   allRankings.forEach((rankings, index) => {
     const ranking = rankings.find((rnk) => rnk.player === player);
@@ -50,7 +46,7 @@ export function gainFinalScoringVictoryPoints(
     if (ranking.player && count > 0) {
       const VPs = [18, 12, 6, 0, 0, 0];
 
-      consume(
+      player.gainRewards(
         [new Reward(Math.floor(sum(VPs.slice(first, first + ties)) / ties), Resource.VictoryPoint)],
         `final${index + 1}` as "final1" | "final2"
       );

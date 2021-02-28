@@ -12,7 +12,6 @@ import Engine, {
   LogEntry,
   Planet,
   Player,
-  PlayerData,
   PlayerEnum,
   ResearchField,
   Resource,
@@ -40,20 +39,12 @@ interface DatasetFactory {
   getDataPoints: () => number[];
 }
 
-function simulateIncome(pl: Player, consume: (d: PlayerData) => void): number {
-  const clone = pl.data.clone();
+function simulateIncome(pl: Player, consume: (p: Player) => void): number {
+  const json = JSON.parse(JSON.stringify(pl));
+  delete json.federationCache; // otherwise we need to pass the map when loading
+  const clone = Player.fromData(json, null, 0);
   consume(clone);
-  return clone.victoryPoints - pl.data.victoryPoints;
-}
-
-function finalScoring(data: Engine, pl: Player) {
-  const allRankings = finalRankings(data.tiles.scorings.final, data.players);
-
-  return simulateIncome(pl, (d) => gainFinalScoringVictoryPoints(allRankings, pl, (r, e) => d.gainRewards(r, e)));
-}
-
-function resourceVictoryPoints(_: Engine, pl: Player) {
-  return simulateIncome(pl, (d) => d.finalResourceHandling());
+  return clone.data.victoryPoints - pl.data.victoryPoints;
 }
 
 const victoryPointSources: {
@@ -86,8 +77,7 @@ const victoryPointSources: {
     label: "Booster",
     description: "Round Boosters",
     color: "--oxide",
-    projectedEndValue: (e, p) =>
-      simulateIncome(p, (d) => p.receivePassIncome((rewards, source) => d.gainRewards(rewards, true, source))),
+    projectedEndValue: (e, p) => simulateIncome(p, (clone) => clone.receivePassIncome()),
   },
   {
     type: BoardAction.values(),
@@ -118,14 +108,17 @@ const victoryPointSources: {
     label: "Final",
     description: "Final Scoring A + B",
     color: "--rt-sci",
-    projectedEndValue: finalScoring,
+    projectedEndValue: (engine: Engine, pl: Player) =>
+      simulateIncome(pl, (clone) =>
+        gainFinalScoringVictoryPoints(finalRankings(engine.tiles.scorings.final, engine.players), clone)
+      ),
   },
   {
     type: [Command.Spend],
     label: "Resources",
     description: "Points for the remaining resources converted to credits",
     color: "--res-credit",
-    projectedEndValue: resourceVictoryPoints,
+    projectedEndValue: (_: Engine, pl: Player) => simulateIncome(pl, (clone) => clone.data.finalResourceHandling()),
   },
 ];
 
@@ -230,7 +223,7 @@ export function victoryPointDetails(data: Engine, player: PlayerEnum, canvas: HT
     const deltaForEnded = () => {
       if (s.type.includes(Command.UpgradeResearch)) {
         // research was already counted in chart separately
-        return -simulateIncome(pl, (d) => d.gainResearchVictoryPoints());
+        return -simulateIncome(pl, (clone) => clone.data.gainResearchVictoryPoints());
       }
       return 0;
     };

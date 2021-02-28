@@ -511,7 +511,7 @@ export default class Player extends EventEmitter {
   }
 
   pass() {
-    this.receivePassIncome((rewards, source) => this.gainRewards(rewards, source));
+    this.receivePassIncome();
     // remove the remaing reward of the round booster events
     this.removeRoundBoosterEvents();
     this.data.tiles.booster = undefined;
@@ -596,11 +596,11 @@ export default class Player extends EventEmitter {
     }
   }
 
-  receivePassIncome(consume: (rewards: Reward[], source: EventSource) => void) {
+  receivePassIncome() {
     // this is for pass tile income (e.g. round boosters, adv tiles)
     for (const event of this.events[Operator.Pass]) {
       const times = this.eventConditionCount(event.condition);
-      consume(
+      this.gainRewards(
         event.rewards.map((reward) => new Reward(reward.count * times, reward.type)),
         event.source
       );
