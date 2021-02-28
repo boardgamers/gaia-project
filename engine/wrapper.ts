@@ -140,7 +140,7 @@ export function automove(engine: Engine) {
     let oldRound = engine.round;
 
     while (!cancelled(engine) && !ended(engine) && engine.player(engine.playerToMove).dropped) {
-      engine.autoPass();
+      assert(engine.autoMove(undefined, { autoPass: true }), "Autopass not working");
 
       afterMove(engine, oldRound);
       modified = true;
