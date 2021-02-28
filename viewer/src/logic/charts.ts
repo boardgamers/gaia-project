@@ -13,6 +13,7 @@ import Engine, {
   Phase,
   Planet,
   Player,
+  PlayerData,
   PlayerEnum,
   ResearchField,
   Resource,
@@ -48,25 +49,27 @@ export function phaseBeforeSetupBuilding(data: Engine): boolean {
   );
 }
 
-function finalScoring(data: Engine, pl: Player) {
-  const allRankings = finalRankings(data.tiles.scorings.final, data.players);
-
+function simulateIncome(pl: Player, consume: (d: PlayerData) => void): number {
   const clone = pl.data.clone();
-  gainFinalScoringVictoryPoints(allRankings, pl, (r, e) => clone.gainRewards(r, e));
+  consume(clone);
   return clone.victoryPoints - pl.data.victoryPoints;
 }
 
+function finalScoring(data: Engine, pl: Player) {
+  const allRankings = finalRankings(data.tiles.scorings.final, data.players);
+
+  return simulateIncome(pl, (d) => gainFinalScoringVictoryPoints(allRankings, pl, (r, e) => d.gainRewards(r, e)));
+}
+
 function resourceVictoryPoints(_: Engine, pl: Player) {
-  const clone = pl.data.clone();
-  clone.finalResourceHandling();
-  return clone.victoryPoints - pl.data.victoryPoints;
+  return simulateIncome(pl, (d) => d.finalResourceHandling());
 }
 
 const victoryPointSources: {
   type: EventSource[];
   label: string;
   color: string;
-  projectedEndValue?: (Engine, Player) => number;
+  projectedEndValue?: (e: Engine, p: Player) => number;
 }[] = [
   {
     type: [Command.ChargePower],
@@ -77,6 +80,8 @@ const victoryPointSources: {
     type: Booster.values(),
     label: "booster",
     color: "--oxide",
+    projectedEndValue: (e, p) =>
+      simulateIncome(p, (d) => p.receivePassIncome((rewards, source) => d.gainRewards(rewards, true, source))),
   },
   {
     type: TechPos.values(),
@@ -219,10 +224,8 @@ export function victoryPointDetails(data: Engine, player: PlayerEnum, canvas: HT
 
     const deltaForEnded = () => {
       if (s.type.includes(Command.UpgradeResearch)) {
-        //research was already counted in chart separately
-        const clone = pl.data.clone();
-        clone.gainResearchVictoryPoints();
-        return pl.data.victoryPoints - clone.victoryPoints;
+        // research was already counted in chart separately
+        return -simulateIncome(pl, (d) => d.gainResearchVictoryPoints());
       }
       return 0;
     };
