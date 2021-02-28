@@ -1,7 +1,7 @@
 <template>
   <div class="gaia-viewer-modal">
     <div id="player-selection">
-      <span v-for="index in players" :key="index" @click=" selectPlayer(index)">
+      <span v-for="index in players" :key="index" @click="selectPlayer(index)">
         <svg :x="(index > 3 ? -1 : index) * 2" y="0" width="80" height="80" viewBox="-1.5 -1.5 4 4">
           <PlayerCircle
             :player="index > 3 ? null : gameData.player(index)"
@@ -14,13 +14,14 @@
       </span>
     </div>
 
+    <div id="tooltip" />
     <canvas id="graphs" />
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import { makeChart, victoryPointDetails, victoryPointSummary } from "../logic/charts";
+import { chartConfig, victoryPointDetails, victoryPointSummary } from "../logic/charts";
 import PlayerCircle from "./PlayerCircle.vue";
 import Engine, { PlayerEnum } from "@gaia-project/engine";
 import Chart from "chart.js";
@@ -31,7 +32,7 @@ import Chart from "chart.js";
 })
 export default class Charts extends Vue {
 
-  selected = PlayerEnum.All
+  selected = PlayerEnum.All;
 
   private chart: Chart;
 
@@ -64,7 +65,7 @@ export default class Charts extends Vue {
     if (this.chart) {
       this.chart.destroy();
     }
-    this.chart = new Chart(canvas, makeChart(data, factories.filter(f => f != null), player != PlayerEnum.All));
+    this.chart = new Chart(canvas, chartConfig(canvas, data, factories.filter(f => f != null), player != PlayerEnum.All));
   }
 }
 </script>
@@ -84,5 +85,11 @@ export default class Charts extends Vue {
 
 .chart-player > circle {
   stroke-width: 0.06px !important;
+}
+
+#tooltip {
+  background-color: #000;
+  color: #fff;
+  position: absolute;
 }
 </style>

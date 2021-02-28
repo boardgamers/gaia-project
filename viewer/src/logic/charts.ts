@@ -10,7 +10,6 @@ import Engine, {
   finalRankings,
   gainFinalScoringVictoryPoints,
   LogEntry,
-  Phase,
   Planet,
   Player,
   PlayerData,
@@ -20,7 +19,7 @@ import Engine, {
   RoundScoring,
   TechPos,
 } from "@gaia-project/engine";
-import { ChartConfiguration, ChartDataSets, ChartTooltipOptions } from "chart.js";
+import { ChartConfiguration, ChartDataSets, ChartLegendOptions, ChartTooltipOptions } from "chart.js";
 import { planetColor } from "../graphics/utils";
 import { parseCommands } from "./recent";
 
@@ -37,6 +36,7 @@ interface DatasetFactory {
   borderColor: string;
   fill: string | boolean;
   label: string;
+  description?: string;
   getDataPoints: () => number[];
 }
 
@@ -59,61 +59,72 @@ function resourceVictoryPoints(_: Engine, pl: Player) {
 const victoryPointSources: {
   type: EventSource[];
   label: string;
+  description: string;
   color: string;
   projectedEndValue?: (e: Engine, p: Player) => number;
 }[] = [
   {
     type: [Command.ChargePower],
-    label: "charge",
+    label: "Charge",
+    description: "10 starting points - initial bid - points spend for power charges",
     color: "--res-power",
   },
   {
+    type: (TechPos.values() as EventSource[]).concat(Faction.Gleens),
+    label: "Other",
+    description: "Base Tech Tiles, Gleens special",
+    color: "--tech-tile",
+  },
+  {
+    type: RoundScoring.values(),
+    label: "Round",
+    description: "Round Bonus",
+    color: "--rt-gaia",
+  },
+  {
     type: Booster.values(),
-    label: "booster",
+    label: "Booster",
+    description: "Round Boosters",
     color: "--oxide",
     projectedEndValue: (e, p) =>
       simulateIncome(p, (d) => p.receivePassIncome((rewards, source) => d.gainRewards(rewards, true, source))),
   },
   {
-    type: TechPos.values(),
-    label: "tech tile",
-    color: "--tech-tile",
-  },
-  {
-    type: AdvTechTilePos.values(),
-    label: "advanced tech tile",
-    color: "--current-round",
-  },
-  {
-    type: RoundScoring.values(),
-    label: "round",
-    color: "--res-credit",
-  },
-  {
-    type: ([Command.UpgradeResearch] as EventSource[]).concat(ResearchField.values()),
-    label: "research",
-    color: "--res-knowledge",
-  },
-  {
     type: BoardAction.values(),
-    label: "board action",
+    label: "QIC",
+    description: "QIC actions",
     color: "--specialAction",
   },
   {
+    type: ([Command.UpgradeResearch] as EventSource[]).concat(ResearchField.values()),
+    label: "Research",
+    description: "Research in counted in the round where the level is reached",
+    color: "--res-knowledge",
+  },
+  {
+    type: AdvTechTilePos.values(),
+    label: "Adv Tech Tiles",
+    description: "Advanced Tech Tiles",
+    color: "--current-round",
+  },
+  {
     type: [Command.FormFederation],
-    label: "federation",
+    label: "Federation",
+    description: "Re-scoring is counted as QIC action",
     color: "--federation",
   },
   {
     type: ["final1", "final2"],
-    label: "final",
-    color: "--recent",
+    label: "Final",
+    description: "Final Scoring A + B",
+    color: "--rt-sci",
     projectedEndValue: finalScoring,
   },
   {
     type: [Command.Spend],
-    label: "resources",
-    color: "--dig",
+    label: "Resources",
+    description: "Points for the remaining resources converted to credits",
+    color: "--res-credit",
     projectedEndValue: resourceVictoryPoints,
   },
 ];
@@ -178,13 +189,16 @@ export function countResearch(moveHistory: string[], faction: Faction) {
   return (log: LogEntry) => {
     let delta = 0;
     if (log.move != null) {
-      for (const cmd of parseCommands(moveHistory[log.move])) {
-        if (cmd.faction == faction && cmd.command == Command.UpgradeResearch) {
-          const field = cmd.args[0] as ResearchField;
-          const newLevel = (research.get(field) ?? 0) + 1;
-          research.set(field, newLevel);
-          if (newLevel >= 3) {
-            delta += 4;
+      const move = moveHistory[log.move]; // current move isn't added yet
+      if (move != null) {
+        for (const cmd of parseCommands(move)) {
+          if (cmd.faction == faction && cmd.command == Command.UpgradeResearch) {
+            const field = cmd.args[0] as ResearchField;
+            const newLevel = (research.get(field) ?? 0) + 1;
+            research.set(field, newLevel);
+            if (newLevel >= 3) {
+              delta += 4;
+            }
           }
         }
       }
@@ -225,6 +239,7 @@ export function victoryPointDetails(data: Engine, player: PlayerEnum, canvas: HT
       borderColor: color,
       backgroundColor: color,
       label: s.label,
+      description: s.description,
       fill: "-1",
       getDataPoints: () =>
         getDataPoints(
@@ -271,7 +286,12 @@ export function victoryPointSummary(
   };
 }
 
-export function makeChart(data: Engine, datasetFactories: DatasetFactory[], stacked: boolean): ChartConfiguration {
+export function chartConfig(
+  canvas: HTMLCanvasElement,
+  data: Engine,
+  datasetFactories: DatasetFactory[],
+  stacked: boolean
+): ChartConfiguration {
   const datasets: ChartDataSets[] = datasetFactories.map((f) => ({
     borderColor: f.borderColor,
     backgroundColor: f.backgroundColor,
@@ -280,9 +300,9 @@ export function makeChart(data: Engine, datasetFactories: DatasetFactory[], stac
     label: f.label,
   }));
 
-  const labels = ["start", "round 1", "round 2", "round 3", "round 4", "round 5", "round 6"];
+  const labels = ["Start", "Round 1", "Round 2", "Round 3", "Round 4", "Round 5", "Round 6"];
   if (!data.ended) {
-    labels.push("est. final");
+    labels.push("Est. Final");
   }
 
   const tooltipOptions: ChartTooltipOptions = {};
@@ -298,6 +318,26 @@ export function makeChart(data: Engine, datasetFactories: DatasetFactory[], stac
     };
   }
 
+  let hovering = false;
+  const tooltip = document.getElementById("tooltip");
+
+  const legendOptions: ChartLegendOptions = {
+    onHover(event, legendItem) {
+      const description = datasetFactories[legendItem.datasetIndex]?.description;
+      if (hovering || description == null) {
+        return;
+      }
+      hovering = true;
+      tooltip.innerHTML = description;
+      tooltip.style.left = event.offsetX + "px";
+      tooltip.style.top = event.offsetY + 40 + "px";
+    },
+    onLeave() {
+      hovering = false;
+      tooltip.innerHTML = "";
+    },
+  };
+
   return {
     type: "line",
     data: {
@@ -312,6 +352,7 @@ export function makeChart(data: Engine, datasetFactories: DatasetFactory[], stac
           tension: 0.000001,
         },
       },
+      legend: legendOptions,
       scales: {
         yAxes: [
           {

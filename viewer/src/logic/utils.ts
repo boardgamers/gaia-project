@@ -8,4 +8,3 @@ export function phaseBeforeSetupBuilding(data: Engine): boolean {
     data.phase === Phase.SetupAuction
   );
 }
-
