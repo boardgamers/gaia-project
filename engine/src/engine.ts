@@ -378,42 +378,39 @@ export default class Engine {
     return true;
   }
 
-  /** Automatically move as a dropped player */
-  autoPass() {
+  /** Return move a dropped player would make */
+  autoPass(): string | undefined {
     const toMove = this.playerToMove;
 
     assert(toMove !== undefined, "Can't execute a move when no player can move");
 
     const pl = this.player(toMove);
-    const ps = pl.faction || `p${toMove + 1}`;
 
     if (this.availableCommands.some((cmd) => cmd.name === Command.Decline)) {
       const cmd = this.findAvailableCommand(this.playerToMove, Command.Decline);
-      this.move(`${ps} ${Command.Decline} ${cmd.data.offer}`, false);
+      return `${Command.Decline} ${cmd.data.offer}`;
     } else if (this.availableCommands.some((cmd) => cmd.name === Command.Pass)) {
       const cmd = this.findAvailableCommand(this.playerToMove, Command.Pass);
       const boosters = cmd.data.boosters;
 
       if (boosters.length > 0) {
-        this.move(`${ps} ${Command.Pass} ${boosters[0]}`, false);
+        return `${Command.Pass} ${boosters[0]}`;
       } else {
-        this.move(`${ps} ${Command.Pass}`, false);
+        return `${Command.Pass}`;
       }
     } else if (this.availableCommands.some((cmd) => cmd.name === Command.ChooseIncome)) {
       const cmd = this.findAvailableCommand(this.playerToMove, Command.ChooseIncome);
-      this.move(`${ps} ${Command.ChooseIncome} ${cmd.data}`);
+      return `${Command.ChooseIncome} ${cmd.data}`;
     } else if (this.availableCommands.some((cmd) => cmd.name === Command.BrainStone)) {
       const cmd = this.findAvailableCommand(this.playerToMove, Command.BrainStone);
-      this.move(`${ps} ${Command.BrainStone} ${cmd.data[0]}`);
+      return `${Command.BrainStone} ${cmd.data[0]}`;
     } else if (
       this.availableCommands.some(
         (cmd) => cmd.name === Command.Spend && cmd.data.acts[0].cost.includes(Resource.GainTokenGaiaArea)
       )
     ) {
       // Terrans spending power in gaia phase to create resources
-      this.move(
-        `${ps} ${Command.Spend} ${pl.data.power.gaia}${Resource.GainTokenGaiaArea} for ${pl.data.power.gaia}${Resource.Credit}`
-      );
+      return `${Command.Spend} ${pl.data.power.gaia}${Resource.GainTokenGaiaArea} for ${pl.data.power.gaia}${Resource.Credit}`;
     } else {
       assert(
         false,
@@ -423,18 +420,10 @@ export default class Engine {
           this.availableCommands[0].name
       );
     }
-
-    // Again
-    if (!this.availableCommands) {
-      this.generateAvailableCommands();
-    }
-    if (this.playerToMove === toMove) {
-      this.autoPass();
-    }
   }
 
   /** Automatically generate moves based on player settings */
-  autoMove(partialMove?: string): boolean {
+  autoMove(partialMove?: string, options?: { autoPass?: boolean }): boolean {
     if (this.playerToMove === undefined) {
       return false;
     }
@@ -452,6 +441,7 @@ export default class Engine {
       [Command.ChargePower, (cmd: AvailableCommand) => copyOrThis().autoChargePower(cmd)],
       [Command.ChooseIncome, (cmd: AvailableCommand) => copyOrThis().autoIncome(cmd)],
       [Command.BrainStone, (cmd: AvailableCommand) => copyOrThis().autoBrainstone(cmd)],
+      ...(options?.autoPass ? [[undefined, () => copyOrThis().autoPass()] as const] : []),
     ] as const;
 
     if (partialMove) {
@@ -465,13 +455,18 @@ export default class Engine {
     }
 
     for (const [command, handler] of functions) {
-      const availableCommand = copyOrThis().findAvailableCommand(toMove, command);
+      let movePart: string | false;
+      if (command) {
+        const availableCommand = copyOrThis().findAvailableCommand(toMove, command);
 
-      if (!availableCommand) {
-        continue;
+        if (!availableCommand) {
+          continue;
+        }
+
+        movePart = handler(availableCommand);
+      } else {
+        movePart = (handler as () => string)();
       }
-
-      const movePart = handler(availableCommand);
 
       if (!movePart) {
         continue;
@@ -479,7 +474,7 @@ export default class Engine {
 
       const newMove = partialMove ? `${partialMove}. ${movePart}` : `${faction} ${movePart}`;
 
-      return this.autoMove(newMove);
+      return this.autoMove(newMove, options);
     }
 
     return false;

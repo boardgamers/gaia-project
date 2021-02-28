@@ -596,6 +596,87 @@ describe("Engine", () => {
     });
   });
 
+  describe("autoPass", () => {
+    it("should be able to handle complex passing scenario with multiple commands", () => {
+      const engine = new Engine(
+        [
+          "init 3 Green-future-432",
+          "p1 faction xenos",
+          "p2 faction baltaks",
+          "p3 faction taklons",
+          "xenos build m 5A8",
+          "baltaks build m 5A9",
+          "taklons build m 7A3",
+          "taklons build m 4B1",
+          "baltaks build m 8B2",
+          "xenos build m 1A7",
+          "xenos build m 6A6",
+          "taklons booster booster3",
+          "baltaks booster booster1",
+          "xenos booster booster4",
+          "xenos build ts 5A8.",
+          "baltaks charge 1pw",
+          "taklons charge 1pw. brainstone area2",
+          "baltaks build ts 5A9.",
+          "taklons charge 1pw",
+          "xenos charge 2pw",
+          "taklons burn 1. build ts 7A3.",
+          "xenos charge 2pw",
+          "baltaks charge 2pw",
+          "xenos build lab 5A8. tech int. up int.",
+          "baltaks charge 2pw",
+          "taklons charge 2pw",
+          "baltaks build lab 5A9. tech free3. up gaia.",
+          "taklons charge 2pw",
+          "xenos charge 2pw",
+          "taklons action power3.",
+          "xenos action power4.",
+          "baltaks up gaia.",
+          "taklons build lab 7A3. tech free3. up eco.",
+          "xenos charge 2pw",
+          "baltaks charge 2pw",
+          "xenos up int.",
+          "baltaks spend 3pw for 1o. special 4pw.",
+          "taklons special 4pw. brainstone area3. spend 3pw for 1o. brainstone area1.",
+          "xenos action qic1. tech terra. up terra.",
+          "baltaks spend 2gf for 2q. spend 2q for 2o. build ac1 5A9. tech free1. up gaia.",
+          "taklons charge 2pw. brainstone area3",
+          "xenos charge 2pw",
+          "taklons spend 3pw for 1o. brainstone area1. build ac1 7A3. tech eco. up eco.",
+          "xenos charge 2pw",
+          "baltaks charge 3pw",
+          "xenos spend 1q for 1o. build ac1 5A8. tech eco. up eco.",
+          "baltaks charge 1pw",
+          "taklons charge 3pw. brainstone area3",
+          "baltaks action power1.",
+          "taklons spend 3pw for 1o. brainstone area1. spend 1pw for 1c. up eco. brainstone area3. spend 3pw for 1o. brainstone area1.",
+          "xenos spend 3pw for 1o. special step. build m 1B4.",
+          "baltaks build gf 8A3.",
+          "taklons build m 7B5.",
+          "xenos charge 1pw",
+          "xenos pass booster6",
+          "baltaks up sci.",
+          "taklons pass booster4",
+          "baltaks pass booster10",
+          "taklons brainstone area3",
+          "xenos up eco.",
+          "taklons action power3. brainstone area1.",
+          "baltaks special 4pw.",
+          "xenos pass booster1",
+          "taklons pass booster2",
+          "baltaks pass booster3",
+        ],
+        { layout: "xshape" }
+      );
+
+      const length = engine.moveHistory.length;
+      engine.autoMove(undefined, { autoPass: true });
+
+      expect(engine.moveHistory.length).to.equal(length + 1);
+      expect(engine.moveHistory.slice(-1).pop()).to.equal(`taklons income 2t,3pw. brainstone area2`);
+    });
+  });
+
   describe("advanced logs", () => {
     it("pass move should appear before new round move", () => {
       const moves = parseMoves(`
