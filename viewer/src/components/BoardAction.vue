@@ -79,7 +79,7 @@ export default class BoardAction extends Vue {
 
   get recent(): boolean {
     const moves = this.$store.getters["gaiaViewer/recentCommands"];
-    return moves.some((c) => c.command == Command.Action && c.args[0] == this.action);
+    return moves.some((c) => c.command == Command.Action && c.args[0] as BoardActionEnum === this.action);
   }
 
   get tooltip() {
