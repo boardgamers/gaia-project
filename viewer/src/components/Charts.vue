@@ -24,9 +24,19 @@ import { Component, Vue } from "vue-property-decorator";
 import { chartConfig, victoryPointDetails, victoryPointSummary } from "../logic/charts";
 import PlayerCircle from "./PlayerCircle.vue";
 import Engine, { PlayerEnum } from "@gaia-project/engine";
-import { Chart, LineController, LineElement, Title, CategoryScale, Tooltip, Legend, Filler } from "chart.js";
+import {
+  Chart,
+  LineController,
+  LineElement,
+  Title,
+  CategoryScale,
+  Tooltip,
+  Legend,
+  Filler,
+  LinearScale, PointElement,
+} from "chart.js";
 
-Chart.register(LineController, LineElement, Title, CategoryScale, Tooltip, Legend, Filler);
+Chart.register(LineController, LineElement, Title, CategoryScale, Tooltip, Legend, Filler, LinearScale, PointElement);
 
 @Component({
   components: { PlayerCircle },
