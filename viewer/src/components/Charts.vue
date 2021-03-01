@@ -24,14 +24,14 @@ import { Component, Vue } from "vue-property-decorator";
 import { chartConfig, victoryPointDetails, victoryPointSummary } from "../logic/charts";
 import PlayerCircle from "./PlayerCircle.vue";
 import Engine, { PlayerEnum } from "@gaia-project/engine";
-import Chart from "chart.js";
+import { Chart, LineController, LineElement, Title, CategoryScale, Tooltip, Legend, Filler } from "chart.js";
 
+Chart.register(LineController, LineElement, Title, CategoryScale, Tooltip, Legend, Filler);
 
 @Component({
   components: { PlayerCircle },
 })
 export default class Charts extends Vue {
-
   selected = PlayerEnum.All;
 
   private chart: Chart;
@@ -45,7 +45,7 @@ export default class Charts extends Vue {
   }
 
   private order() {
-    return this.gameData.players.map(p => p.player);
+    return this.gameData.players.map((p) => p.player);
   }
 
   mounted() {
@@ -58,14 +58,23 @@ export default class Charts extends Vue {
     const data = this.gameData;
 
     const canvas = document.getElementById("graphs") as HTMLCanvasElement;
-    const factories = numbers.length == 1 ?
-      victoryPointDetails(data, numbers[0], canvas) :
-      numbers.map(n => victoryPointSummary(data, n, canvas));
+    const factories =
+      numbers.length == 1
+        ? victoryPointDetails(data, numbers[0], canvas)
+        : numbers.map((n) => victoryPointSummary(data, n, canvas));
 
     if (this.chart) {
       this.chart.destroy();
     }
-    this.chart = new Chart(canvas, chartConfig(canvas, data, factories.filter(f => f != null), player != PlayerEnum.All));
+    this.chart = new Chart(
+      canvas,
+      chartConfig(
+        canvas,
+        data,
+        factories.filter((f) => f != null),
+        player != PlayerEnum.All
+      )
+    );
   }
 }
 </script>

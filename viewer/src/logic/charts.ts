@@ -18,9 +18,23 @@ import Engine, {
   RoundScoring,
   TechPos,
 } from "@gaia-project/engine";
-import { ChartConfiguration, ChartDataSets, ChartLegendOptions, ChartTooltipOptions } from "chart.js";
+import {
+  ChartConfiguration,
+  ChartDataset,
+  ChartEvent,
+  LegendItem,
+  LegendOptions,
+  TooltipItem,
+  TooltipModel,
+  TooltipOptions,
+} from "chart.js";
+import { sumBy } from "lodash";
 import { planetColor } from "../graphics/utils";
 import { parseCommands } from "./recent";
+
+type DeepPartial<T> = {
+  [P in keyof T]?: DeepPartial<T[P]>;
+};
 
 type EventFilter = (
   player: PlayerEnum,
@@ -33,7 +47,7 @@ type EventFilter = (
 interface DatasetFactory {
   backgroundColor: string;
   borderColor: string;
-  fill: string | boolean;
+  fill: string | false;
   label: string;
   description?: string;
   getDataPoints: () => number[];
@@ -284,11 +298,11 @@ export function chartConfig(
   data: Engine,
   datasetFactories: DatasetFactory[],
   stacked: boolean
-): ChartConfiguration {
-  const datasets: ChartDataSets[] = datasetFactories.map((f) => ({
+): ChartConfiguration<"line"> {
+  const datasets: ChartDataset<"line">[] = datasetFactories.map((f) => ({
     borderColor: f.borderColor,
     backgroundColor: f.backgroundColor,
-    data: f.getDataPoints(),
+    data: f.getDataPoints().map((val, i) => ({ x: i, y: val })),
     fill: f.fill,
     label: f.label,
   }));
@@ -298,15 +312,11 @@ export function chartConfig(
     labels.push("Est. Final");
   }
 
-  const tooltipOptions: ChartTooltipOptions = {};
+  const tooltipOptions: DeepPartial<TooltipOptions<"line">> = {};
   if (stacked) {
     tooltipOptions.callbacks = {
-      afterTitle(item: Chart.ChartTooltipItem[], data: Chart.ChartData): string | string[] {
-        let val = 0;
-        for (const dataset of data.datasets) {
-          val += Number(dataset.data[item[0].index]);
-        }
-        return String(val);
+      afterTitle(this: TooltipModel<"line">, items: TooltipItem<"line">[]): string | string[] {
+        return String(sumBy(items, (item) => +item.formattedValue));
       },
     };
   }
@@ -314,16 +324,16 @@ export function chartConfig(
   let hovering = false;
   const tooltip = document.getElementById("tooltip");
 
-  const legendOptions: ChartLegendOptions = {
-    onHover(event, legendItem) {
+  const legendOptions: DeepPartial<LegendOptions> = {
+    onHover(event: ChartEvent, legendItem: LegendItem) {
       const description = datasetFactories[legendItem.datasetIndex]?.description;
       if (hovering || description == null) {
         return;
       }
       hovering = true;
       tooltip.innerHTML = description;
-      tooltip.style.left = event.offsetX + "px";
-      tooltip.style.top = event.offsetY + 40 + "px";
+      tooltip.style.left = event.x + "px";
+      tooltip.style.top = event.y + 40 + "px";
     },
     onLeave() {
       hovering = false;
@@ -338,20 +348,20 @@ export function chartConfig(
       datasets: datasets,
     },
     options: {
-      tooltips: tooltipOptions,
+      plugins: {
+        tooltip: tooltipOptions,
+        legend: legendOptions,
+      } as any,
       spanGaps: true,
       elements: {
         line: {
           tension: 0.000001,
         },
       },
-      legend: legendOptions,
       scales: {
-        yAxes: [
-          {
-            stacked: stacked,
-          },
-        ],
+        y: {
+          stacked,
+        },
       },
     },
   };
