@@ -31,6 +31,7 @@
         :transform="`translate(${tokenX(player.player.player)}, ${tokenY(player.player.player)}) scale(0.30)`"
       >
         <Token :faction="player.player.faction" filter="url(#drop-shadow-1)" :class="`${player.class}`" />
+        <circle cx="0" cy="0" r="8" :class="['researchTile', player.class]"></circle>
       </g>
       <g v-if="this.federation" transform="translate(30, 25) scale(0.6)">
         <FederationTile
@@ -246,22 +247,27 @@ svg {
     }
   }
 
+  circle.researchTile {
+    display: none;
+    stroke-width: 3;
+  }
+
+  circle.researchTile.recent {
+    display: block;
+    stroke: black;
+    fill: var(--recent);
+  }
+
+  circle.researchTile.current-round {
+    display: block;
+    stroke: transparent;
+    fill: var(--current-round);
+  }
+
   .researchTile {
     fill: none;
     stroke: #444;
     stroke-width: 1;
-
-    &.recent {
-      fill: var(--recent);
-      stroke-width: 2;
-    }
-
-    &.current-round {
-      fill: var(--current-round);
-      stroke: var(--current-round);
-      stroke-width: 2;
-      opacity: 0.7;
-    }
 
     &.eco {
       fill: var(--rt-eco);
