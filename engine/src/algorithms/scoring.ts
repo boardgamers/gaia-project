@@ -4,7 +4,7 @@ import Player from "../player";
 import Reward from "../reward";
 import { finalScorings } from "../tiles/scoring";
 
-export type FinalScoreRankings = Array<Array<{ player: Player; count: number }>>;
+export type FinalScoreRankings = Array<Array<{ player?: Player; count: number }>>;
 
 export function finalRankings(finalTiles: FinalTile[], collection: Player[]) {
   const allRankings: FinalScoreRankings = [];
@@ -33,7 +33,7 @@ export function finalRankings(finalTiles: FinalTile[], collection: Player[]) {
 export function gainFinalScoringVictoryPoints(allRankings: FinalScoreRankings, player: Player) {
   // Gain points from final scoring
   allRankings.forEach((rankings, index) => {
-    const ranking = rankings.find((rnk) => rnk.player === player);
+    const ranking = rankings.find((rnk) => rnk.player?.faction === player?.faction);
 
     const count = ranking.count;
     // index of the first player with that score
