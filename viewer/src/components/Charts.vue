@@ -1,19 +1,30 @@
 <template>
   <div class="gaia-viewer-modal">
-    <div id="player-selection">
-      <span v-for="index in players" :key="index" @click="selectPlayer(index)">
-        <svg :x="(index > 3 ? -1 : index) * 2" y="0" width="80" height="80" viewBox="-1.5 -1.5 4 4">
-          <PlayerCircle
-            :player="index > 3 ? null : gameData.player(index)"
-            :index="index"
-            :class="`chart-player ${index === selected ? 'selected' : ''}`"
-            translate=""
-            chart="true"
+    <div style="flex-direction: row; display: flex">
+      <div @click="toggleType">
+        <svg viewBox="-10 0 90 60" width="70" height="80">
+          <image
+            v-if="lineChart"
+            xlink:href="../assets/resources/bar-chart.svg"
+            transform="translate(1.5, 1) scale(0.1)"
           />
+          <image v-else xlink:href="../assets/resources/line-chart.svg" transform="translate(1.5, 1) scale(0.1)" />
         </svg>
-      </span>
+      </div>
+      <div id="player-selection" v-if="lineChart">
+        <span v-for="index in players" :key="index" @click="selectPlayer(index)">
+          <svg :x="(index > 3 ? -1 : index) * 2" y="0" width="80" height="80" viewBox="-1.5 -1.5 4 4">
+            <PlayerCircle
+              :player="index > 3 ? null : gameData.player(index)"
+              :index="index"
+              :class="`chart-player ${index === selected ? 'selected' : ''}`"
+              translate=""
+              chart="true"
+            />
+          </svg>
+        </span>
+      </div>
     </div>
-
     <div id="tooltip" />
     <canvas id="graphs" />
   </div>
@@ -21,29 +32,32 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import { chartConfig, victoryPointDetails, victoryPointSummary } from "../logic/charts";
+import { chartPlayerOrder, newBarChart, newLineChart } from "../logic/charts";
 import PlayerCircle from "./PlayerCircle.vue";
 import Engine, { PlayerEnum } from "@gaia-project/engine";
 import {
+  BarController,
+  BarElement,
+  CategoryScale,
   Chart,
+  Filler,
+  Legend,
+  LinearScale,
   LineController,
   LineElement,
+  PointElement,
   Title,
-  CategoryScale,
   Tooltip,
-  Legend,
-  Filler,
-  LinearScale, PointElement,
 } from "chart.js";
 
-Chart.register(LineController, LineElement, Title, CategoryScale, Tooltip, Legend, Filler, LinearScale, PointElement);
+Chart.register(LineController, LineElement, Title, CategoryScale, Tooltip, Legend, Filler, LinearScale, PointElement, BarController, BarElement);
 
 @Component({
   components: { PlayerCircle },
 })
 export default class Charts extends Vue {
-  selected = PlayerEnum.All;
-
+  private selected = PlayerEnum.All;
+  private lineChart = false;
   private chart: Chart;
 
   get gameData(): Engine {
@@ -51,40 +65,32 @@ export default class Charts extends Vue {
   }
 
   get players(): PlayerEnum[] {
-    return [PlayerEnum.All].concat(this.order());
-  }
-
-  private order() {
-    return this.gameData.players.map((p) => p.player);
+    return [PlayerEnum.All].concat(chartPlayerOrder(this.gameData));
   }
 
   mounted() {
     this.selectPlayer(PlayerEnum.All);
   }
 
+  toggleType() {
+    this.lineChart = !this.lineChart;
+    this.selectPlayer(this.selected);
+  }
+
   selectPlayer(player: PlayerEnum) {
     this.selected = player;
-    const numbers = player === PlayerEnum.All ? this.order() : [player];
-    const data = this.gameData;
-
-    const canvas = document.getElementById("graphs") as HTMLCanvasElement;
-    const factories =
-      numbers.length == 1
-        ? victoryPointDetails(data, numbers[0], canvas)
-        : numbers.map((n) => victoryPointSummary(data, n, canvas));
 
     if (this.chart) {
       this.chart.destroy();
     }
-    this.chart = new Chart(
-      canvas,
-      chartConfig(
-        canvas,
-        data,
-        factories.filter((f) => f != null),
-        player != PlayerEnum.All
-      )
-    );
+
+    const data = this.gameData;
+    const canvas = document.getElementById("graphs") as HTMLCanvasElement;
+    if (this.lineChart) {
+      this.chart = new Chart(canvas, newLineChart(data, canvas, player));
+    } else {
+      this.chart = new Chart(canvas, newBarChart(data, canvas));
+    }
   }
 }
 </script>

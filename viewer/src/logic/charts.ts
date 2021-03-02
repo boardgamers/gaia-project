@@ -136,6 +136,10 @@ const victoryPointSources: {
   },
 ];
 
+export function chartPlayerOrder(data: Engine) {
+  return data.players.map((p) => p.player);
+}
+
 function getDataPoints(
   data: Engine,
   initialValue: number,
@@ -261,6 +265,15 @@ export function victoryPointDetails(data: Engine, player: PlayerEnum, canvas: HT
   });
 }
 
+function playerColor(pl: Player, invert: boolean) {
+  const planet: Planet = factions[pl.faction].planet;
+  return invert && planet == Planet.Ice ? "black" : planetColor(planet);
+}
+
+function playerLabel(pl: Player) {
+  return factions[pl.faction].name;
+}
+
 export function victoryPointSummary(
   data: Engine,
   player: PlayerEnum,
@@ -272,14 +285,10 @@ export function victoryPointSummary(
   }
 
   const factories = victoryPointDetails(data, player, canvas);
-
-  const planet: Planet = factions[pl.faction].planet;
-  const color = planet == Planet.Ice ? "black" : planetColor(planet);
-
   return {
-    borderColor: color,
+    borderColor: playerColor(pl, true),
     backgroundColor: undefined,
-    label: factions[pl.faction].name,
+    label: playerLabel(pl),
     fill: false,
     getDataPoints: () =>
       factories
@@ -291,6 +300,29 @@ export function victoryPointSummary(
           return prev;
         }),
   };
+}
+
+function newLegendOptions(provider: (index: number) => string) {
+  let hovering = false;
+  const tooltip = document.getElementById("tooltip");
+
+  const legendOptions: DeepPartial<LegendOptions> = {
+    onHover(event: ChartEvent, legendItem: LegendItem) {
+      const description = provider(legendItem.datasetIndex);
+      if (hovering || description == null) {
+        return;
+      }
+      hovering = true;
+      tooltip.innerHTML = description;
+      tooltip.style.left = event.x + "px";
+      tooltip.style.top = event.y + 40 + "px";
+    },
+    onLeave() {
+      hovering = false;
+      tooltip.innerHTML = "";
+    },
+  };
+  return legendOptions;
 }
 
 export function chartConfig(
@@ -321,26 +353,6 @@ export function chartConfig(
     };
   }
 
-  let hovering = false;
-  const tooltip = document.getElementById("tooltip");
-
-  const legendOptions: DeepPartial<LegendOptions> = {
-    onHover(event: ChartEvent, legendItem: LegendItem) {
-      const description = datasetFactories[legendItem.datasetIndex]?.description;
-      if (hovering || description == null) {
-        return;
-      }
-      hovering = true;
-      tooltip.innerHTML = description;
-      tooltip.style.left = event.x + "px";
-      tooltip.style.top = event.y + 40 + "px";
-    },
-    onLeave() {
-      hovering = false;
-      tooltip.innerHTML = "";
-    },
-  };
-
   return {
     type: "line",
     data: {
@@ -350,7 +362,7 @@ export function chartConfig(
     options: {
       plugins: {
         tooltip: tooltipOptions,
-        legend: legendOptions,
+        legend: newLegendOptions((index) => datasetFactories[index]?.description),
       } as any,
       spanGaps: true,
       elements: {
@@ -365,4 +377,68 @@ export function chartConfig(
       },
     },
   };
+}
+
+export function newBarChart(data: Engine, canvas: HTMLCanvasElement): ChartConfiguration<"bar"> {
+  const datasets: ChartDataset<"bar">[] = chartPlayerOrder(data)
+    .filter((pl) => data.player(pl).faction != null)
+    .map((pl) => {
+      // const points = victoryPointDetails(data, pl, canvas).map((f, i) => ({ x: i, y: (f.getDataPoints())[7] }));
+      const points = victoryPointDetails(data, pl, canvas).map((f) => f.getDataPoints()[7]);
+      const player = data.player(pl);
+      return {
+        data: points,
+        label: playerLabel(player),
+        backgroundColor: playerColor(player, false),
+        borderColor: "black",
+        borderWidth: 1,
+      };
+    });
+
+  const tooltipOptions: DeepPartial<TooltipOptions<"bar">> = {
+    callbacks: {
+      afterTitle(this: TooltipModel<"bar">, items: TooltipItem<"bar">[]): string | string[] {
+        const dataIndex = items[0].dataIndex;
+        return ` (${victoryPointSources[dataIndex].description})`;
+      },
+    },
+  };
+
+  return {
+    type: "bar",
+    data: {
+      labels: victoryPointSources.map((s) => s.label),
+      datasets: datasets,
+    },
+    options: {
+      plugins: {
+        tooltip: tooltipOptions,
+      } as any,
+      responsive: true,
+      scales: {
+        xAxes: {
+          // stacked: true,
+        },
+        yAxes: {
+          // stacked: true,
+        },
+      },
+    },
+  };
+}
+
+export function newLineChart(data: Engine, canvas: HTMLCanvasElement, player: PlayerEnum): ChartConfiguration<"line"> {
+  const numbers = player === PlayerEnum.All ? chartPlayerOrder(data) : [player];
+
+  const factories =
+    numbers.length == 1
+      ? victoryPointDetails(data, numbers[0], canvas)
+      : numbers.map((n) => victoryPointSummary(data, n, canvas));
+
+  return chartConfig(
+    canvas,
+    data,
+    factories.filter((f) => f != null),
+    player != PlayerEnum.All
+  );
 }
