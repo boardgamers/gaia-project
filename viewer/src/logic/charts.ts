@@ -61,24 +61,81 @@ function simulateIncome(pl: Player, consume: (p: Player) => void): number {
   return clone.data.victoryPoints - pl.data.victoryPoints;
 }
 
-const victoryPointSources: {
-  type: EventSource[];
+type VictoryPointAggregate = {
+  label: string;
+  description: string;
+  color: string;
+};
+
+const charge: VictoryPointAggregate = {
+  label: "Charge",
+  description: "10 starting points - initial bid - points spend for power charges",
+  color: "--res-power",
+};
+
+const finalScoring: VictoryPointAggregate = {
+  label: "Final",
+  description: "Final Scoring A + B",
+  color: "--rt-sci",
+};
+
+const otherScoring: VictoryPointAggregate = {
+  label: "Other",
+  description: "Base Tech Tiles, Gleens special",
+  color: "--tech-tile",
+};
+
+type VictoryPointType = EventSource | Command.Init;
+
+const aggregateColor = "black"; //this is never displayed, because it's only in the bar chart
+
+type VictoryPointSource = {
+  type: VictoryPointType[];
   label: string;
   description: string;
   color: string;
   projectedEndValue?: (e: Engine, p: Player) => number;
-}[] = [
+  initialValue?: (p: Player) => number;
+  aggregate?: VictoryPointAggregate;
+};
+
+const victoryPointSources: VictoryPointSource[] = [
+  {
+    type: [Command.Init],
+    label: "Initial",
+    description: "10 starting points",
+    color: aggregateColor,
+    aggregate: charge,
+    initialValue: () => 10,
+  },
+  {
+    type: [Command.Bid],
+    label: "Bid",
+    description: "Initial bid",
+    color: aggregateColor,
+    aggregate: charge,
+    initialValue: (p) => -p.data.bid,
+  },
   {
     type: [Command.ChargePower],
     label: "Charge",
-    description: "10 starting points - initial bid - points spend for power charges",
-    color: "--res-power",
+    description: "Points spend for power charges",
+    color: aggregateColor,
+    aggregate: charge,
   },
   {
-    type: (TechPos.values() as EventSource[]).concat(Faction.Gleens),
-    label: "Other",
-    description: "Base Tech Tiles, Gleens special",
-    color: "--tech-tile",
+    type: TechPos.values(),
+    label: "Base Tech",
+    description: "Base Tech Tiles",
+    color: aggregateColor,
+    aggregate: otherScoring,
+  },
+  {
+    type: [Faction.Gleens],
+    label: "Gleens",
+    description: "Gleens special",
+    color: aggregateColor,
+    aggregate: otherScoring,
   },
   {
     type: RoundScoring.values(),
@@ -100,14 +157,14 @@ const victoryPointSources: {
     color: "--specialAction",
   },
   {
-    type: ([Command.UpgradeResearch] as EventSource[]).concat(ResearchField.values()),
+    type: ([Command.UpgradeResearch] as VictoryPointType[]).concat(ResearchField.values()),
     label: "Research",
     description: "Research in counted in the round where the level is reached",
     color: "--res-knowledge",
   },
   {
     type: AdvTechTilePos.values(),
-    label: "Adv Tech Tiles",
+    label: "Advanced Tech",
     description: "Advanced Tech Tiles",
     color: "--current-round",
   },
@@ -118,13 +175,25 @@ const victoryPointSources: {
     color: "--federation",
   },
   {
-    type: ["final1", "final2"],
-    label: "Final",
-    description: "Final Scoring A + B",
-    color: "--rt-sci",
+    type: ["final1"],
+    label: "Final A",
+    description: "Final Scoring A",
+    color: aggregateColor,
+    aggregate: finalScoring,
     projectedEndValue: (engine: Engine, pl: Player) =>
       simulateIncome(pl, (clone) =>
-        gainFinalScoringVictoryPoints(finalRankings(engine.tiles.scorings.final, engine.players), clone)
+        gainFinalScoringVictoryPoints(finalRankings([engine.tiles.scorings.final[0]], engine.players), clone)
+      ),
+  },
+  {
+    type: ["final2"],
+    label: "Final B",
+    description: "Final Scoring B",
+    color: aggregateColor,
+    aggregate: finalScoring,
+    projectedEndValue: (engine: Engine, pl: Player) =>
+      simulateIncome(pl, (clone) =>
+        gainFinalScoringVictoryPoints(finalRankings([engine.tiles.scorings.final[1]], engine.players), clone)
       ),
   },
   {
@@ -218,7 +287,50 @@ export function countResearch(moveHistory: string[], faction: Faction) {
   };
 }
 
-export function victoryPointDetails(data: Engine, player: PlayerEnum, canvas: HTMLCanvasElement): DatasetFactory[] {
+function groupSources(sources: VictoryPointSource[]): VictoryPointSource[] {
+  const res: VictoryPointSource[] = [];
+
+  const groupTypes = new Map<string, VictoryPointSource>();
+
+  for (const source of sources) {
+    const aggregate = source.aggregate;
+    if (aggregate != null) {
+      let group = groupTypes.get(aggregate.label);
+      if (group == null) {
+        group = {
+          type: [],
+          label: aggregate.label,
+          description: aggregate.description,
+          color: aggregate.color,
+          projectedEndValue: (e, p) => 0,
+          initialValue: (p) => 0,
+        };
+        groupTypes.set(aggregate.label, group);
+        res.push(group);
+      }
+      group.type.push(...source.type);
+      if (source.projectedEndValue != null) {
+        const last = group.projectedEndValue;
+        group.projectedEndValue = (e, p) => last(e, p) + source.projectedEndValue(e, p);
+      }
+      if (source.initialValue != null) {
+        const last = group.initialValue;
+        group.initialValue = (p) => last(p) + source.initialValue(p);
+      }
+    } else {
+      res.push(source);
+    }
+  }
+
+  return res;
+}
+
+export function victoryPointDetails(
+  data: Engine,
+  player: PlayerEnum,
+  canvas: HTMLCanvasElement,
+  sources: VictoryPointSource[]
+): DatasetFactory[] {
   const pl = data.player(player);
   if (!pl.faction) {
     return [];
@@ -227,12 +339,13 @@ export function victoryPointDetails(data: Engine, player: PlayerEnum, canvas: HT
 
   const style = window.getComputedStyle(canvas);
 
-  return victoryPointSources.map((s) => {
+  return sources.map((s) => {
     const type = s.type;
-    const values = Object.values(type) as EventSource[];
+    const values = Object.values(type) as VictoryPointType[];
     const color = style.getPropertyValue(s.color);
 
-    const initialValue = s.type.includes(Command.ChargePower) ? 10 - pl.data.bid : 0;
+    const initialValue = s.initialValue != null ? s.initialValue(pl) : 0;
+
     const extractChange = (player, source, resource, round, change) =>
       player == wantPlayer && resource == Resource.VictoryPoint && values.includes(source) ? change : 0;
 
@@ -284,7 +397,7 @@ export function victoryPointSummary(
     return null;
   }
 
-  const factories = victoryPointDetails(data, player, canvas);
+  const factories = victoryPointDetails(data, player, canvas, victoryPointSources);
   return {
     borderColor: playerColor(pl, true),
     backgroundColor: undefined,
@@ -325,7 +438,7 @@ function newLegendOptions(provider: (index: number) => string) {
   return legendOptions;
 }
 
-export function chartConfig(
+export function lineChartConfig(
   canvas: HTMLCanvasElement,
   data: Engine,
   datasetFactories: DatasetFactory[],
@@ -383,8 +496,7 @@ export function newBarChart(data: Engine, canvas: HTMLCanvasElement): ChartConfi
   const datasets: ChartDataset<"bar">[] = chartPlayerOrder(data)
     .filter((pl) => data.player(pl).faction != null)
     .map((pl) => {
-      // const points = victoryPointDetails(data, pl, canvas).map((f, i) => ({ x: i, y: (f.getDataPoints())[7] }));
-      const points = victoryPointDetails(data, pl, canvas).map((f) => f.getDataPoints()[7]);
+      const points = victoryPointDetails(data, pl, canvas, victoryPointSources).map((f) => f.getDataPoints()[7]);
       const player = data.player(pl);
       return {
         data: points,
@@ -415,14 +527,6 @@ export function newBarChart(data: Engine, canvas: HTMLCanvasElement): ChartConfi
         tooltip: tooltipOptions,
       } as any,
       responsive: true,
-      scales: {
-        xAxes: {
-          // stacked: true,
-        },
-        yAxes: {
-          // stacked: true,
-        },
-      },
     },
   };
 }
@@ -432,10 +536,10 @@ export function newLineChart(data: Engine, canvas: HTMLCanvasElement, player: Pl
 
   const factories =
     numbers.length == 1
-      ? victoryPointDetails(data, numbers[0], canvas)
+      ? victoryPointDetails(data, numbers[0], canvas, groupSources(victoryPointSources))
       : numbers.map((n) => victoryPointSummary(data, n, canvas));
 
-  return chartConfig(
+  return lineChartConfig(
     canvas,
     data,
     factories.filter((f) => f != null),
