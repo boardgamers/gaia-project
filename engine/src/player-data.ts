@@ -496,20 +496,18 @@ export default class PlayerData extends EventEmitter {
     // Convert qics into ore
     this.ores += this.qics;
     this.qics = 0;
+
+    // Gain 1 point for any 3 of ore, credits & knowledge.
+    const resources = this.ores + this.credits + this.knowledge;
+    this.gainReward(new Reward(Math.max(Math.floor(resources / 3)), Resource.VictoryPoint), false, Command.Spend);
   }
 
-  gainFinalVictoryPoints() {
+  gainResearchVictoryPoints() {
     // Gain 4 points for research at level 3, 8 points for research at level 4
     // and 12 points for research at level 12
     for (const research of ResearchField.values(Expansion.All)) {
       this.gainReward(new Reward(Math.max(this.research[research] - 2, 0) * 4, Resource.VictoryPoint), false, research);
     }
-
-    // Gain 1 point for any 3 of ore, credits & knowledge.
-    this.finalResourceHandling();
-
-    const resources = this.ores + this.credits + this.knowledge;
-    this.gainReward(new Reward(Math.max(Math.floor(resources / 3)), Resource.VictoryPoint), false, Command.Spend);
   }
 
   removeGreenFederation() {

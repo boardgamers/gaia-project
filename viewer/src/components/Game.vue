@@ -1,5 +1,9 @@
 <template>
   <div :class="classes">
+    <b-modal id="chart-button" title="Victory Points" size="xl">
+      <Charts />
+    </b-modal>
+
     <div
       :class="['row', 'no-gutters', 'justify-content-center', engine.players.length > 2 ? 'medium-map' : 'small-map']"
       v-if="hasMap"
@@ -127,6 +131,7 @@ import { parseCommands } from "../logic/recent";
     ScoringBoard,
     SpaceMap,
     TurnOrder,
+    Charts: () => import('./Charts.vue'),
   },
 })
 export default class Game extends Vue {

@@ -1,4 +1,15 @@
-import { AdvTechTilePos, BoardAction, Booster, Command, Condition, Faction, Operator, ResearchField } from "./enums";
+import {
+  AdvTechTilePos,
+  BoardAction,
+  Booster,
+  Command,
+  Condition,
+  Faction,
+  Operator,
+  ResearchField,
+  RoundScoring,
+  TechPos,
+} from "./enums";
 import Reward from "./reward";
 
 function findCondition(spec: string): [Condition, string] {
@@ -51,17 +62,6 @@ function findOperator(spec: string): [Operator, string, number] {
   return [Operator.Once, spec, 0];
 }
 
-export type RoundScoring = "round1" | "round2" | "round3" | "round4" | "round5" | "round6";
-export type TechPos =
-  | "tech-gaia"
-  | "tech-nav"
-  | "tech-sci"
-  | "tech-eco"
-  | "tech-terra"
-  | "tech-int"
-  | "tech-free1"
-  | "tech-free2"
-  | "tech-free2";
 export type EventSource =
   | Booster
   | TechPos

@@ -10,6 +10,7 @@ if (process.argv.includes("lib")) {
     chainWebpack: (config) => {
       config.externals({
         "bootstrap-vue": "BootstrapVue",
+        "chart.js": "Chart",
       });
     },
     publicPath: `//cdn.jsdelivr.net/npm/@gaia-project/viewer@${package.version}/dist/package/`,

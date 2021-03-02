@@ -1,3 +1,4 @@
+import { finalRankings, gainFinalScoringVictoryPoints } from "./src/algorithms/scoring";
 import AvailableCommand from "./src/available-command";
 import Engine from "./src/engine";
 import Event, { EventSource } from "./src/events";
@@ -33,7 +34,9 @@ export {
   ResearchField,
   Resource,
   Round,
+  RoundScoring,
   ScoringTile,
+  TechPos,
   TechTile,
   TechTilePos,
 } from "./src/enums";
@@ -53,6 +56,8 @@ export {
   researchTracks,
   factionBoards,
   EventSource,
+  gainFinalScoringVictoryPoints,
+  finalRankings,
 };
 
 export default Engine;

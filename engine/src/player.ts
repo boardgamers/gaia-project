@@ -20,10 +20,11 @@ import {
   Player as PlayerEnum,
   ResearchField,
   Resource,
+  TechPos,
   TechTile,
   TechTilePos,
 } from "./enums";
-import Event, { EventSource, TechPos } from "./events";
+import Event, { EventSource } from "./events";
 import { factionBoard, FactionBoard } from "./faction-boards";
 import factions from "./factions";
 import { FederationInfo, isOutclassedBy } from "./federation";
