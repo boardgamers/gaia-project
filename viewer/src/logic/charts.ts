@@ -461,7 +461,8 @@ export function lineChartConfig(
   if (stacked) {
     tooltipOptions.callbacks = {
       afterTitle(this: TooltipModel<"line">, items: TooltipItem<"line">[]): string | string[] {
-        return String(sumBy(items, (item) => +item.formattedValue));
+        const dataIndex = items[0].dataIndex;
+        return String(sumBy(datasets, (s) => s.data[dataIndex].y));
       },
     };
   }
