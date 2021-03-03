@@ -6,7 +6,17 @@ import launch from "./launcher";
 function launchSelfContained(selector = "#app", debug = true) {
   const emitter = launch(selector, debug ? Wrapper : Game);
 
-  let engine = new Engine(["init 2 randomSeed2"], { layout: "xshape", advancedRules: true });
+  let engine = new Engine([
+    "init 3 12",
+    "p1 faction ivits",
+    "p2 faction baltaks",
+    "p3 faction gleens",
+    "baltaks build m 1x3",
+    "gleens build m -5x4",
+    "gleens build m 2x0",
+    "baltaks build m -2x-2",
+    "ivits build PI 7B3",
+  ]);
   engine.generateAvailableCommandsIfNeeded();
 
   const unsub = emitter.store.subscribeAction(({ payload, type }) => {

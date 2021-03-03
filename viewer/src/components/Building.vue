@@ -1,8 +1,7 @@
 <template>
   <g :class="['building']">
-    <component
-      :is="buildingComponent"
-      :faction="faction"
+    <use
+      :xlink:href="`#${buildingId}-${faction || ''}`"
       :filter="outline ? 'url(#shadow-5)' : outlineWhite ? 'url(#white-shadow-5)' : ''"
       v-if="!flat"
     />
@@ -22,38 +21,10 @@
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { Faction, Building as BuildingEnum } from "@gaia-project/engine";
-import Academy from "./Buildings/Academy.vue";
-import GaiaFormer from "./Buildings/GaiaFormer.vue";
-import Mine from "./Buildings/Mine.vue";
-import PlanetaryInstitute from "./Buildings/PlanetaryInstitute.vue";
-import ResearchLab from "./Buildings/ResearchLab.vue";
-import SpaceStation from "./Buildings/SpaceStation.vue";
-import TradingStation from "./Buildings/TradingStation.vue";
 import { corners } from "../graphics/hex";
 import { planetClass } from "../graphics/utils";
 
-const components = {
-  [BuildingEnum.Mine]: "Mine",
-  [BuildingEnum.TradingStation]: "TradingStation",
-  [BuildingEnum.GaiaFormer]: "GaiaFormer",
-  [BuildingEnum.SpaceStation]: "SpaceStation",
-  [BuildingEnum.Academy1]: "Academy",
-  [BuildingEnum.Academy2]: "Academy",
-  [BuildingEnum.PlanetaryInstitute]: "PlanetaryInstitute",
-  [BuildingEnum.ResearchLab]: "ResearchLab",
-};
-
-@Component({
-  components: {
-    Academy,
-    GaiaFormer,
-    Mine,
-    PlanetaryInstitute,
-    ResearchLab,
-    SpaceStation,
-    TradingStation,
-  },
-})
+@Component
 export default class Building extends Vue {
   @Prop()
   faction: Faction;
@@ -70,8 +41,8 @@ export default class Building extends Vue {
   @Prop({ default: false, type: Boolean })
   outlineWhite: boolean;
 
-  get buildingComponent() {
-    return components[this.building];
+  get buildingId() {
+    return this.building === BuildingEnum.Academy1 || this.building === BuildingEnum.Academy2 ? "ac" : this.building;
   }
 
   // FLAT buildings
