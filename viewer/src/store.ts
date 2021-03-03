@@ -1,6 +1,8 @@
 import Engine, {
   AdvTechTilePos,
   Booster,
+  Command,
+  Faction,
   Federation,
   GaiaHex,
   Player,
@@ -11,7 +13,7 @@ import { CubeCoordinates } from "hexagrid";
 import Vue from "vue";
 import Vuex, { Store } from "vuex";
 import { ButtonData, GameContext } from "./data";
-import { CommandObject, parseCommands, recentMoves, roundMoves } from "./logic/recent";
+import { CommandObject, movesToHexes, parseCommands, recentMoves, researchClasses, roundMoves } from "./logic/recent";
 
 Vue.use(Vuex);
 
@@ -153,6 +155,43 @@ const gaiaViewer = {
         return recentMoves(player, data.advancedLog, data.moveHistory).flatMap((m) => parseCommands(m));
       }
       return [];
+    },
+    recentHexes: (state: State, getters): Set<GaiaHex> => {
+      return new Set(movesToHexes(state.data, getters.recentCommands));
+    },
+    currentRoundHexes: (state: State, getters): Set<GaiaHex> => {
+      return new Set(movesToHexes(state.data, getters.currentRoundCommands));
+    },
+    researchClasses: (state: State, getters): Map<Faction, Map<ResearchField, "recent" | "currentRound">> => {
+      return researchClasses(getters.recentCommands, getters.currentRoundCommands);
+    },
+    recentBuildingCommands: (state: State, getters): Map<Faction, CommandObject[]> => {
+      const map = new Map<Faction, CommandObject[]>();
+
+      for (const command of getters.recentCommands as CommandObject[]) {
+        if (command.command === Command.Build) {
+          if (!map.has(command.faction)) {
+            map.set(command.faction, []);
+          }
+          map.get(command.faction).push(command);
+        }
+      }
+
+      return map;
+    },
+    currentRoundBuildingCommands: (state: State, getters): Map<Faction, CommandObject[]> => {
+      const map = new Map<Faction, CommandObject[]>();
+
+      for (const command of getters.currentRoundCommands as CommandObject[]) {
+        if (command.command === Command.Build) {
+          if (!map.has(command.faction)) {
+            map.set(command.faction, []);
+          }
+          map.get(command.faction).push(command);
+        }
+      }
+
+      return map;
     },
   },
 };

@@ -73,7 +73,6 @@ import Token from "./Token.vue";
 import FederationTile from "./FederationTile.vue";
 import Planet from "./Planet.vue";
 import Resource from "./Resource.vue";
-import { researchClass } from "../logic/recent";
 
 @Component<ResearchTile>({
   components: {
@@ -183,11 +182,14 @@ export default class ResearchTile extends Vue {
 
     if (this.level >= 4) {
       const tilePos = ("adv-" + this.field) as AdvTechTilePos;
-      if (canTakeAdvancedTechTile(this.gameData, player.data, tilePos) || canResearchField(this.gameData, player, this.field)) {
+      if (
+        canTakeAdvancedTechTile(this.gameData, player.data, tilePos) ||
+        canResearchField(this.gameData, player, this.field)
+      ) {
         classes.push("warn");
       }
     }
-    const c = researchClass(this.$store.getters["gaiaViewer/recentCommands"], this.$store.getters["gaiaViewer/currentRoundCommands"], this.field, player.faction);
+    const c = this.$store.getters["gaiaViewer/researchClasses"].get(player.faction)?.get(this.field);
     if (c) {
       classes.push(c);
     }
