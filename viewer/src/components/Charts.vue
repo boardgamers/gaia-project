@@ -7,8 +7,14 @@
             v-if="lineChart"
             xlink:href="../assets/resources/bar-chart.svg"
             transform="translate(1.5, 1) scale(0.1)"
+            class="pointer"
           />
-          <image v-else xlink:href="../assets/resources/line-chart.svg" transform="translate(1.5, 1) scale(0.1)" />
+          <image
+            v-else
+            xlink:href="../assets/resources/line-chart.svg"
+            transform="translate(1.5, 1) scale(0.1)"
+            class="pointer"
+          />
         </svg>
       </div>
       <div id="player-selection" v-if="lineChart">
@@ -17,7 +23,7 @@
             <PlayerCircle
               :player="index > 3 ? null : gameData.player(index)"
               :index="index"
-              :class="`chart-player ${index === selected ? 'selected' : ''}`"
+              :class="`chart-player ${index === selected ? 'selected' : ''} pointer`"
               translate=""
               chart="true"
             />
@@ -50,7 +56,19 @@ import {
   Tooltip,
 } from "chart.js";
 
-Chart.register(LineController, LineElement, Title, CategoryScale, Tooltip, Legend, Filler, LinearScale, PointElement, BarController, BarElement);
+Chart.register(
+  LineController,
+  LineElement,
+  Title,
+  CategoryScale,
+  Tooltip,
+  Legend,
+  Filler,
+  LinearScale,
+  PointElement,
+  BarController,
+  BarElement
+);
 
 @Component({
   components: { PlayerCircle },

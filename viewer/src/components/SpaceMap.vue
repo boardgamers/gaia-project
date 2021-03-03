@@ -11,7 +11,7 @@
     />
     <FactionWheel transform="translate(-10.5, -8.7) scale(0.5, 0.5)" />
     <image xlink:href="../assets/resources/line-chart.svg" :height=155/211*22 width="22" x="-11" y="-8"
-    v-b-modal.chart-button role="button" transform="translate(18.5, -10) scale(0.1)" />
+    v-b-modal.chart-button role="button" :transform="`translate(${right - 15}, -10) scale(0.1)`" />
   </svg>
 </template>
 
