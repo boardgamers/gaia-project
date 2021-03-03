@@ -7,9 +7,7 @@
           {{ [player, ...titles].join(" - ") }}
           <a href="#" v-if="commandChain.length > 0" class="smaller small" @click.prevent="back()">(back)</a>
           <a href="#" v-else-if="canUndo" class="smaller small" @click.prevent="undo()">(undo)</a>
-          <span class="smaller small">{{
-            this.currentMove ? this.currentMove.substring(this.currentMove.indexOf(" ")) : ""
-          }}</span>
+          <span class="smaller small">{{ this.currentTurnLog() }}</span>
         </span>
       </h5>
     </div>
@@ -117,6 +115,30 @@ export default class Commands extends Vue {
   remainingTime: string;
 
   updater = 0;
+
+  get gameData(): Engine {
+    return this.$store.state.gaiaViewer.data;
+  }
+
+  currentTurnLog(): string {
+    if (this.currentMove == null) {
+      return "";
+    }
+    return this.currentMove.substring(this.currentMove.indexOf(" ")) + this.currentTurnChanges();
+  }
+
+  private currentTurnChanges(): string {
+    const logEntries = this.gameData.advancedLog;
+    const entry = logEntries[logEntries.length - 1];
+    if (entry != null && entry.changes != null && entry.move != null) {
+      if (this.gameData.moveHistory[entry.move] == null) {
+        const values = Object.values(entry.changes)
+          .flatMap(e => Object.keys(e).map(k => new Reward(e[k], k as Resource)));
+        return ` (${Reward.merge(values).toString()})`;
+      }
+    }
+    return "";
+  }
 
   loadCommands(val: AvailableCommand[]) {
     this.commandTitles = [];

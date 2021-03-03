@@ -192,5 +192,4 @@ export default class BuildingGroup extends Vue {
   stroke-width: 2;
   stroke: var(--current-round);
 }
-
 </style>
