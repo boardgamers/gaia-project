@@ -1,6 +1,7 @@
 import Engine, {
   AdvTechTilePos,
   Booster,
+  Command,
   Faction,
   Federation,
   GaiaHex,
@@ -163,6 +164,34 @@ const gaiaViewer = {
     },
     researchClasses: (state: State, getters): Map<Faction, Map<ResearchField, "recent" | "currentRound">> => {
       return researchClasses(getters.recentCommands, getters.currentRoundCommands);
+    },
+    recentBuildingCommands: (state: State, getters): Map<Faction, CommandObject[]> => {
+      const map = new Map<Faction, CommandObject[]>();
+
+      for (const command of getters.recentCommands as CommandObject[]) {
+        if (command.command === Command.Build) {
+          if (!map.has(command.faction)) {
+            map.set(command.faction, []);
+          }
+          map.get(command.faction).push(command);
+        }
+      }
+
+      return map;
+    },
+    currentRoundBuildingCommands: (state: State, getters): Map<Faction, CommandObject[]> => {
+      const map = new Map<Faction, CommandObject[]>();
+
+      for (const command of getters.currentRoundCommands as CommandObject[]) {
+        if (command.command === Command.Build) {
+          if (!map.has(command.faction)) {
+            map.set(command.faction, []);
+          }
+          map.get(command.faction).push(command);
+        }
+      }
+
+      return map;
     },
   },
 };

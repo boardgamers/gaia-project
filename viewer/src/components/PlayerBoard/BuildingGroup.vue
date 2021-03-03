@@ -184,14 +184,14 @@ export default class BuildingGroup extends Vue {
 
   recentlyBuilt(i: number): boolean {
     return this.shouldMarkBuilding(
-      this.$store.getters["gaiaViewer/currentRoundCommands"],
-      this.$store.getters["gaiaViewer/recentCommands"],
+      this.$store.getters["gaiaViewer/currentRoundBuildingCommands"].get(this.faction) ?? [],
+      this.$store.getters["gaiaViewer/recentBuildingCommands"].get(this.faction) ?? [],
       i
     );
   }
 
   currentRoundBuilt(i: number): boolean {
-    const commands = this.$store.getters["gaiaViewer/currentRoundCommands"];
+    const commands = this.$store.getters["gaiaViewer/currentRoundBuildingCommands"].get(this.faction) ?? [];
     return this.shouldMarkBuilding(commands, commands, i);
   }
 
@@ -204,9 +204,8 @@ export default class BuildingGroup extends Vue {
       b = BuildingEnum.Academy2;
       i--;
     }
-    const f = this.faction;
     function countMoves(commands: CommandObject[]) {
-      return commands.filter((c) => c.faction == f && c.command == Command.Build && c.args[0] as BuildingEnum === b).length;
+      return commands.filter((c) => (c.args[0] as BuildingEnum) === b).length;
     }
 
     return markBuilding(i, countMoves(roundMoves), this.placed, countMoves(moves), this.nBuildings);
