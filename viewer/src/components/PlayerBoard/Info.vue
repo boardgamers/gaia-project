@@ -86,9 +86,9 @@
         <polygon
           points="-7.5,3 -3,7.5 3,7.5 7.5,3 7.5,-3 3,-7.5 -3,-7.5 -7.5,-3"
           transform="scale(0.1)"
-          :class="['researchTile', researchClass(i - 1)]"
+          :class="['board-info', 'researchTile', researchType(i - 1), researchClass(i - 1)]"
         />
-        <text :class="['board-text', researchClass(i - 1)]" transform="scale(0.7)" x="-.35" y="-.1">{{
+        <text :class="['board-text', researchType(i - 1)]" transform="scale(0.7)" x="-.35" y="-.1">{{
           research(i - 1)
         }}</text>
       </g>
@@ -147,7 +147,7 @@ export default class BuildingGroup extends Vue {
         this.$store.getters["gaiaViewer/currentRoundCommands"],
         field,
         this.faction
-      ) ?? field
+      ) ?? ""
     );
   }
 
@@ -182,4 +182,15 @@ export default class BuildingGroup extends Vue {
   font-weight: 600;
   text-anchor: middle;
 }
+
+.board-info.researchTile.recent {
+  stroke-width: 2;
+  stroke: var(--recent);
+}
+
+.board-info.researchTile.current-round {
+  stroke-width: 2;
+  stroke: var(--current-round);
+}
+
 </style>
