@@ -81,18 +81,26 @@ function containsCommand(recentMoves: CommandObject[], field: ResearchField, fac
   return recentMoves.some((c) => c.faction == faction && c.command == Command.UpgradeResearch && c.args[0] == field);
 }
 
-export function researchClass(
+export function researchClasses(
   recent: CommandObject[],
-  round: CommandObject[],
-  field: ResearchField,
-  faction: Faction
-): string | null {
-  if (containsCommand(recent, field, faction)) {
-    return "recent";
+  round: CommandObject[]
+): Map<Faction, Map<ResearchField, "recent" | "currentRound">> {
+  const classes = new Map<Faction, Map<ResearchField, "recent" | "currentRound">>();
+  for (const move of round) {
+    if (move.command === Command.UpgradeResearch) {
+      if (!classes.has(move.faction)) {
+        classes.set(move.faction, new Map());
+      }
+      classes.get(move.faction).set(move.args[0] as ResearchField, "currentRound");
+    }
   }
-  if (containsCommand(round, field, faction)) {
-    return "current-round";
+  for (const move of recent) {
+    if (move.command === Command.UpgradeResearch) {
+      if (!classes.has(move.faction)) {
+        classes.set(move.faction, new Map());
+      }
+      classes.get(move.faction).set(move.args[0] as ResearchField, "recent");
+    }
   }
-
-  return null;
+  return classes;
 }

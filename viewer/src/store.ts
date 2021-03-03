@@ -1,6 +1,7 @@
 import Engine, {
   AdvTechTilePos,
   Booster,
+  Faction,
   Federation,
   GaiaHex,
   Player,
@@ -11,7 +12,7 @@ import { CubeCoordinates } from "hexagrid";
 import Vue from "vue";
 import Vuex, { Store } from "vuex";
 import { ButtonData, GameContext } from "./data";
-import { CommandObject, movesToHexes, parseCommands, recentMoves, roundMoves } from "./logic/recent";
+import { CommandObject, movesToHexes, parseCommands, recentMoves, researchClasses, roundMoves } from "./logic/recent";
 
 Vue.use(Vuex);
 
@@ -159,6 +160,9 @@ const gaiaViewer = {
     },
     currentRoundHexes: (state: State, getters): Set<GaiaHex> => {
       return new Set(movesToHexes(state.data, getters.currentRoundCommands));
+    },
+    researchClasses: (state: State, getters): Map<Faction, Map<ResearchField, "recent" | "currentRound">> => {
+      return researchClasses(getters.recentCommands, getters.currentRoundCommands);
     },
   },
 };

@@ -103,7 +103,6 @@ import { uniq } from "lodash";
 import Resource from "../Resource.vue";
 import { Faction, factions, Player, PlayerData, ResearchField, Resource as ResourceEnum } from "@gaia-project/engine";
 import VictoryPoint from "../Resources/VictoryPoint.vue";
-import { researchClass } from "../../logic/recent";
 
 @Component({
   components: {
@@ -140,14 +139,8 @@ export default class BuildingGroup extends Vue {
   }
 
   researchClass(index: number): string {
-    const field = this.researchType(index);
     return (
-      researchClass(
-        this.$store.getters["gaiaViewer/recentCommands"],
-        this.$store.getters["gaiaViewer/currentRoundCommands"],
-        field,
-        this.faction
-      ) ?? ""
+      this.$store.getters["gaiaViewer/researchClasses"].get(this.player.faction)?.get(this.researchType(index)) ?? ""
     );
   }
 
