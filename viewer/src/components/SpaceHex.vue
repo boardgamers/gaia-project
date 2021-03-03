@@ -5,8 +5,8 @@
       }}{{ hex.data.building ? `&#10;Building: ${buildingName(hex.data.building, hex.data.player)}` : ""
       }}{{ cost(hex) ? `&#10;Cost: ${cost(hex)}` : "" }}
     </title>
-    <polygon
-      :points="hexCorners.map((p) => `${p.x},${p.y}`).join(' ')"
+    <use
+      xlink:href="#space-hex"
       :class="[
         'spaceHex',
         {
@@ -62,7 +62,6 @@ import Engine, {
   Planet as PlanetEnum,
   SpaceMap as ISpaceMap,
 } from "@gaia-project/engine";
-import { corners } from "../graphics/hex";
 import Planet from "./Planet.vue";
 import Building from "./Building.vue";
 import { buildingName } from "../data/building";
@@ -80,10 +79,6 @@ export default class SpaceHex extends Vue {
 
   @Prop()
   isCenter: boolean;
-
-  get hexCorners() {
-    return corners();
-  }
 
   get flat() {
     return this.$store.state.gaiaViewer.preferences.flatBuildings;

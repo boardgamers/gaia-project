@@ -21,7 +21,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Faction, Building as BuildingEnum, Planet, factions } from "@gaia-project/engine";
+import { Faction, Building as BuildingEnum } from "@gaia-project/engine";
 import Academy from "./Buildings/Academy.vue";
 import GaiaFormer from "./Buildings/GaiaFormer.vue";
 import Mine from "./Buildings/Mine.vue";
