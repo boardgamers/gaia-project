@@ -9,6 +9,8 @@ function makeTestStore() {
   (store as any).getters = {
     "gaiaViewer/recentCommands": () => [],
     "gaiaViewer/currentRoundCommands": () => [],
+    "gaiaViewer/recentHexes": () => new Set(),
+    "gaiaViewer/currentRoundHexes": () => new Set(),
   };
   return store;
 }

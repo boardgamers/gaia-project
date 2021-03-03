@@ -67,7 +67,6 @@ import Planet from "./Planet.vue";
 import Building from "./Building.vue";
 import { buildingName } from "../data/building";
 import { planetNames } from "../data/planets";
-import { movesToHexes } from "../logic/recent";
 
 @Component<SpaceHex>({
   components: {
@@ -130,11 +129,11 @@ export default class SpaceHex extends Vue {
   }
 
   recent(hex: GaiaHex): boolean {
-    return movesToHexes(this.gameData, this.$store.getters["gaiaViewer/recentCommands"]).includes(hex);
+    return this.$store.getters["gaiaViewer/recentHexes"].has(hex);
   }
 
   currentRound(hex: GaiaHex): boolean {
-    return movesToHexes(this.gameData, this.$store.getters["gaiaViewer/currentRoundCommands"]).includes(hex);
+    return this.$store.getters["gaiaViewer/currentRoundHexes"].has(hex);
   }
 
   get gameData(): Engine {

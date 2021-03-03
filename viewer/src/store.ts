@@ -11,7 +11,7 @@ import { CubeCoordinates } from "hexagrid";
 import Vue from "vue";
 import Vuex, { Store } from "vuex";
 import { ButtonData, GameContext } from "./data";
-import { CommandObject, parseCommands, recentMoves, roundMoves } from "./logic/recent";
+import { CommandObject, movesToHexes, parseCommands, recentMoves, roundMoves } from "./logic/recent";
 
 Vue.use(Vuex);
 
@@ -153,6 +153,12 @@ const gaiaViewer = {
         return recentMoves(player, data.advancedLog, data.moveHistory).flatMap((m) => parseCommands(m));
       }
       return [];
+    },
+    recentHexes: (state: State, getters): Set<GaiaHex> => {
+      return new Set(movesToHexes(state.data, getters.recentCommands));
+    },
+    currentRoundHexes: (state: State, getters): Set<GaiaHex> => {
+      return new Set(movesToHexes(state.data, getters.currentRoundCommands));
     },
   },
 };
