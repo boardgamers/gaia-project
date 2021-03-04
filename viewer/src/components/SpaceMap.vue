@@ -1,6 +1,6 @@
 <template>
   <svg :viewBox="`-13 -11.5 ${right} 24`">
-    <Filters />
+    <definitions />
     <Sector
       v-for="center in this.sectors"
       :center="center"
@@ -19,22 +19,26 @@
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
 import { GaiaHex, SpaceMap as SpaceMapData } from "@gaia-project/engine";
-import { hexCenter } from "../graphics/hex";
+import { corners, hexCenter } from "../graphics/hex";
 import Sector from "./Sector.vue";
 import { CubeCoordinates } from "hexagrid";
 import FactionWheel from "./FactionWheel.vue";
-import Filters from "./Filters.vue";
+import Definitions from "./definitions/Definitions.vue";
 
 @Component<SpaceMap>({
   components: {
     FactionWheel,
-    Filters,
+    Definitions,
     Sector,
   },
 })
 export default class SpaceMap extends Vue {
   hexCenter(hex: GaiaHex) {
     return hexCenter(hex);
+  }
+
+  get hexCorners() {
+    return corners();
   }
 
   get sectors(): CubeCoordinates[] {

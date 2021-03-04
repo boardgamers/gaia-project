@@ -109,9 +109,9 @@
   </defs>
 </template>
 <script lang="ts">
-import { Vue } from "vue-property-decorator";
+import { Component, Vue } from "vue-property-decorator";
 import { Faction, Planet } from "@gaia-project/engine";
-import { factionColor, planetColor } from "../graphics/utils";
+import { factionColor, planetColor } from "../../graphics/utils";
 
 function getDarkness(faction: string): number {
   switch (faction) {
@@ -129,6 +129,7 @@ function getDarkness(faction: string): number {
   }
 }
 
+@Component
 export default class Filters extends Vue {
   get factionData() {
     const factions = ["gen", "gaia", ...Object.values(Faction)];
