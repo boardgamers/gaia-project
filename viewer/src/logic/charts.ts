@@ -28,7 +28,7 @@ import {
   TooltipModel,
   TooltipOptions,
 } from "chart.js";
-import { sumBy } from "lodash";
+import { sortBy, sum, sumBy } from "lodash";
 import { planetColor } from "../graphics/utils";
 import { parseCommands } from "./recent";
 
@@ -494,19 +494,26 @@ export function lineChartConfig(
 }
 
 export function newBarChart(data: Engine, canvas: HTMLCanvasElement): ChartConfiguration<"bar"> {
-  const datasets: ChartDataset<"bar">[] = chartPlayerOrder(data)
-    .filter((pl) => data.player(pl).faction != null)
-    .map((pl) => {
-      const points = victoryPointDetails(data, pl, canvas, victoryPointSources).map((f) => f.getDataPoints()[7]);
-      const player = data.player(pl);
-      return {
-        data: points,
-        label: playerLabel(player),
-        backgroundColor: playerColor(player, false),
-        borderColor: "black",
-        borderWidth: 1,
-      };
-    });
+  const datasets: ChartDataset<"bar">[] = sortBy(
+    chartPlayerOrder(data)
+      .filter((pl) => data.player(pl).faction != null)
+      .map((pl) => {
+        const points = victoryPointDetails(data, pl, canvas, victoryPointSources).map((f) => f.getDataPoints()[7]);
+        const player = data.player(pl);
+        const total = sum(points);
+        return {
+          data: {
+            data: points,
+            label: `${playerLabel(player)} (${total})`,
+            backgroundColor: playerColor(player, false),
+            borderColor: "black",
+            borderWidth: 1,
+          },
+          points: total,
+        };
+      }),
+    (d) => -d.points
+  ).map((d) => d.data);
 
   const tooltipOptions: DeepPartial<TooltipOptions<"bar">> = {
     callbacks: {
