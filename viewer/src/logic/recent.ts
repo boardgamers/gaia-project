@@ -84,14 +84,14 @@ function containsCommand(recentMoves: CommandObject[], field: ResearchField, fac
 export function researchClasses(
   recent: CommandObject[],
   round: CommandObject[]
-): Map<Faction, Map<ResearchField, "recent" | "currentRound">> {
-  const classes = new Map<Faction, Map<ResearchField, "recent" | "currentRound">>();
+): Map<Faction, Map<ResearchField, "recent" | "current-round">> {
+  const classes = new Map<Faction, Map<ResearchField, "recent" | "current-round">>();
   for (const move of round) {
     if (move.command === Command.UpgradeResearch) {
       if (!classes.has(move.faction)) {
         classes.set(move.faction, new Map());
       }
-      classes.get(move.faction).set(move.args[0] as ResearchField, "currentRound");
+      classes.get(move.faction).set(move.args[0] as ResearchField, "current-round");
     }
   }
   for (const move of recent) {

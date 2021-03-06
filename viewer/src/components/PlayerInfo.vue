@@ -350,7 +350,7 @@ export default class PlayerInfo extends Vue {
     outline: 0;
   }
 
-  .maxResource {
+  .max-resource {
     color: red;
   }
 }
