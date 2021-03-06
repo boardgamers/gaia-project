@@ -8,9 +8,9 @@
     <use
       xlink:href="#space-hex"
       :class="[
-        'spaceHex',
+        'space-hex',
         {
-          toSelect,
+          'to-select': toSelect,
           highlighted: highlightedHexes.has(hex),
           recent: recent(hex),
           'current-round': currentRound(hex),
@@ -46,7 +46,7 @@
     <polygon
       v-for="(player, index) in hex.data.federations || []"
       :points="hexCorners.map((p) => `${p.x * (1 - (index + 0.5) / 8)},${p.y * (1 - (index + 0.5) / 8)}`).join(' ')"
-      :class="['spaceHexFederation', 'planet', planet(player)]"
+      :class="['space-hex-federation', 'planet', planet(player)]"
       :key="`${player}-${index}`"
     />
   </g>
@@ -62,6 +62,7 @@ import Engine, {
   Planet as PlanetEnum,
   SpaceMap as ISpaceMap,
 } from "@gaia-project/engine";
+import { corners } from "../graphics/hex";
 import Planet from "./Planet.vue";
 import Building from "./Building.vue";
 import { buildingName } from "../data/building";
@@ -79,6 +80,10 @@ export default class SpaceHex extends Vue {
 
   @Prop()
   isCenter: boolean;
+
+  get hexCorners() {
+    return corners();
+  }
 
   get flat() {
     return this.$store.state.gaiaViewer.preferences.flatBuildings;
@@ -147,7 +152,7 @@ export default class SpaceHex extends Vue {
 
 <style lang="scss">
 svg {
-  .spaceHex {
+  .space-hex {
     fill: #172e62;
     stroke: #666;
     stroke-width: 0.01;
@@ -169,21 +174,21 @@ svg {
       }
     }
 
-    &.current-round:not(.highlighted):not(.toSelect) {
+    &.current-round:not(.highlighted):not(.to-select) {
       fill: var(--current-round);
     }
 
-    &.recent:not(.highlighted):not(.toSelect) {
+    &.recent:not(.highlighted):not(.to-select) {
       fill: var(--recent);
     }
 
-    &.toSelect {
+    &.to-select {
       cursor: pointer;
       opacity: 0.7;
     }
   }
 
-  .spaceHexFederation {
+  .space-hex-federation {
     stroke-width: 0.1;
     fill: none;
     pointer-events: none;

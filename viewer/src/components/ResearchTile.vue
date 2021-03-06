@@ -3,7 +3,7 @@
     <rect
       x="2"
       y="2"
-      :class="['researchTile', field, { highlighted }]"
+      :class="['research-tile', field, { highlighted }]"
       width="56"
       :height="height"
       rx="5"
@@ -31,7 +31,7 @@
         :transform="`translate(${tokenX(player.player.player)}, ${tokenY(player.player.player)}) scale(0.30)`"
       >
         <Token :faction="player.player.faction" filter="url(#drop-shadow-1)" :class="`${player.class}`" />
-        <circle cx="0" cy="0" r="8" :class="['researchTile', player.class]"></circle>
+        <circle cx="0" cy="0" r="8" :class="['research-tile', player.class]"></circle>
       </g>
       <g v-if="this.federation" transform="translate(30, 25) scale(0.6)">
         <FederationTile
@@ -238,7 +238,7 @@ export default class ResearchTile extends Vue {
 
 <style lang="scss">
 svg {
-  .research-board .researchTile {
+  .research-board .research-tile {
     &:hover {
       fill-opacity: 0.5;
     }
@@ -249,24 +249,24 @@ svg {
     }
   }
 
-  circle.researchTile {
+  circle.research-tile {
     display: none;
     stroke-width: 3;
   }
 
-  circle.researchTile.recent {
+  circle.research-tile.recent {
     display: block;
     stroke: black;
     fill: var(--recent);
   }
 
-  circle.researchTile.current-round {
+  circle.research-tile.current-round {
     display: block;
     stroke: transparent;
     fill: var(--current-round);
   }
 
-  .researchTile {
+  .research-tile {
     fill: none;
     stroke: #444;
     stroke-width: 1;

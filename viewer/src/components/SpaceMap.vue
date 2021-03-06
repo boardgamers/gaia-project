@@ -37,10 +37,6 @@ export default class SpaceMap extends Vue {
     return hexCenter(hex);
   }
 
-  get hexCorners() {
-    return corners();
-  }
-
   get sectors(): CubeCoordinates[] {
     return this.map.configuration().centers;
   }

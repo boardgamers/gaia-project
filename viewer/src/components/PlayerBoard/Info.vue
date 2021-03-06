@@ -22,19 +22,19 @@
         <text class="board-text">R</text>
         <g transform="translate(2.2, 0)">
           <Resource kind="c" :count="data.credits" transform="scale(0.1)" />
-          <text :class="['board-text', { maxResource: data.ores >= 30 }]" transform="translate(1,0) scale(0.7)"
+          <text :class="['board-text', { 'max-resource': data.ores >= 30 }]" transform="translate(1,0) scale(0.7)"
             >/30</text
           >
         </g>
         <g transform="translate(5.5, 0)">
           <Resource kind="o" :count="data.ores" transform="scale(0.1)" />
-          <text :class="['board-text', { maxResource: data.ores >= 15 }]" transform="translate(1,0) scale(0.7)"
+          <text :class="['board-text', { 'max-resource': data.ores >= 15 }]" transform="translate(1,0) scale(0.7)"
             >/15</text
           >
         </g>
         <g transform="translate(9, 0)">
           <Resource kind="k" :count="data.knowledge" transform="scale(0.1)" />
-          <text :class="['board-text', { maxResource: data.knowledge >= 15 }]" transform="translate(1,0) scale(0.7)"
+          <text :class="['board-text', { 'max-resource': data.knowledge >= 15 }]" transform="translate(1,0) scale(0.7)"
             >/15</text
           >
         </g>
@@ -86,7 +86,7 @@
         <polygon
           points="-7.5,3 -3,7.5 3,7.5 7.5,3 7.5,-3 3,-7.5 -3,-7.5 -7.5,-3"
           transform="scale(0.1)"
-          :class="['board-info', 'researchTile', researchType(i - 1), researchClass(i - 1)]"
+          :class="['board-info', 'research-tile', researchType(i - 1), researchClass(i - 1)]"
         />
         <text :class="['board-text', researchType(i - 1)]" transform="scale(0.7)" x="-.35" y="-.1">{{
           research(i - 1)
@@ -159,7 +159,7 @@ export default class BuildingGroup extends Vue {
 }
 </script>
 <style lang="scss">
-.maxResource {
+.max-resource {
   fill: red;
 }
 
@@ -176,12 +176,12 @@ export default class BuildingGroup extends Vue {
   text-anchor: middle;
 }
 
-.board-info.researchTile.recent {
+.board-info.research-tile.recent {
   stroke-width: 2;
   stroke: var(--recent);
 }
 
-.board-info.researchTile.current-round {
+.board-info.research-tile.current-round {
   stroke-width: 2;
   stroke: var(--current-round);
 }

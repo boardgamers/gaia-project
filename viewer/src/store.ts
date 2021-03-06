@@ -46,10 +46,10 @@ const gaiaViewer = {
       activeButton: null,
     },
     preferences: {
-      accessibleSpaceMap: false,
-      noFactionFill: false,
-      flatBuildings: false,
-      highlightRecentActions: false,
+      accessibleSpaceMap: !!process.env.VUE_APP_accessibleSpaceMap,
+      noFactionFill: !!process.env.VUE_APP_noFactionFill,
+      flatBuildings: !!process.env.VUE_APP_flatBuildings,
+      highlightRecentActions: !!process.env.VUE_APP_highlightRecentActions,
     },
     player: null,
   } as State,
@@ -162,7 +162,7 @@ const gaiaViewer = {
     currentRoundHexes: (state: State, getters): Set<GaiaHex> => {
       return new Set(movesToHexes(state.data, getters.currentRoundCommands));
     },
-    researchClasses: (state: State, getters): Map<Faction, Map<ResearchField, "recent" | "currentRound">> => {
+    researchClasses: (state: State, getters): Map<Faction, Map<ResearchField, "recent" | "current-round">> => {
       return researchClasses(getters.recentCommands, getters.currentRoundCommands);
     },
     recentBuildingCommands: (state: State, getters): Map<Faction, CommandObject[]> => {
