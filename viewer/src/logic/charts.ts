@@ -67,10 +67,10 @@ type VictoryPointAggregate = {
   color: string;
 };
 
-const charge: VictoryPointAggregate = {
-  label: "Charge",
-  description: "10 starting points - initial bid - points spend for power charges",
-  color: "--res-power",
+const initial: VictoryPointAggregate = {
+  label: "Initial",
+  description: "10 starting points - initial bid",
+  color: "black",
 };
 
 const finalScoring: VictoryPointAggregate = {
@@ -105,7 +105,7 @@ const victoryPointSources: VictoryPointSource[] = [
     label: "Initial",
     description: "10 starting points",
     color: aggregateColor,
-    aggregate: charge,
+    aggregate: initial,
     initialValue: () => 10,
   },
   {
@@ -113,15 +113,14 @@ const victoryPointSources: VictoryPointSource[] = [
     label: "Bid",
     description: "Initial bid",
     color: aggregateColor,
-    aggregate: charge,
+    aggregate: initial,
     initialValue: (p) => -p.data.bid,
   },
   {
     type: [Command.ChargePower],
     label: "Charge",
     description: "Points spend for power charges",
-    color: aggregateColor,
-    aggregate: charge,
+    color: "--res-power",
   },
   {
     type: TechPos.values(),
