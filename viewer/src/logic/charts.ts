@@ -85,7 +85,7 @@ const otherScoring: VictoryPointAggregate = {
   color: "--tech-tile",
 };
 
-type VictoryPointType = EventSource | Command.Init;
+type VictoryPointType = EventSource | "chart-init" | "chart-bid" | "chart-spend" | "chart-final1" | "chart-final2";
 
 const aggregateColor = "black"; //this is never displayed, because it's only in the bar chart
 
@@ -101,7 +101,7 @@ type VictoryPointSource = {
 
 const victoryPointSources: VictoryPointSource[] = [
   {
-    type: [Command.Init],
+    type: ["chart-init"],
     label: "Initial",
     description: "10 starting points",
     color: aggregateColor,
@@ -109,7 +109,7 @@ const victoryPointSources: VictoryPointSource[] = [
     initialValue: () => 10,
   },
   {
-    type: [Command.Bid],
+    type: ["chart-bid"],
     label: "Bid",
     description: "Initial bid",
     color: aggregateColor,
@@ -148,7 +148,7 @@ const victoryPointSources: VictoryPointSource[] = [
     label: "Booster",
     description: "Round Boosters",
     color: "--oxide",
-    projectedEndValue: (e, p) => simulateIncome(p, (clone) => clone.receivePassIncome()),
+    projectedEndValue: (e, p) => (e.ended ? 0 : simulateIncome(p, (clone) => clone.receivePassIncome())),
   },
   {
     type: BoardAction.values(),
@@ -175,7 +175,7 @@ const victoryPointSources: VictoryPointSource[] = [
     color: "--federation",
   },
   {
-    type: ["final1"],
+    type: ["chart-final1"],
     label: "Final A",
     description: "Final Scoring A",
     color: aggregateColor,
@@ -186,7 +186,7 @@ const victoryPointSources: VictoryPointSource[] = [
       ),
   },
   {
-    type: ["final2"],
+    type: ["chart-final2"],
     label: "Final B",
     description: "Final Scoring B",
     color: aggregateColor,
@@ -197,7 +197,7 @@ const victoryPointSources: VictoryPointSource[] = [
       ),
   },
   {
-    type: [Command.Spend],
+    type: ["chart-spend"],
     label: "Resources",
     description: "Points for the remaining resources converted to credits",
     color: "--res-credit",
@@ -251,7 +251,9 @@ function getDataPoints(
   if (data.ended) {
     counter += deltaForEnded();
     perRoundData[6] = counter;
-  } else if (projectedEndValue != null) {
+  }
+
+  if (projectedEndValue != null) {
     counter += projectedEndValue();
   }
   perRoundData[7] = counter;
@@ -453,7 +455,9 @@ export function lineChartConfig(
   }));
 
   const labels = ["Start", "Round 1", "Round 2", "Round 3", "Round 4", "Round 5", "Round 6"];
-  if (!data.ended) {
+  if (data.ended) {
+    labels.push("Final");
+  } else {
     labels.push("Est. Final");
   }
 
