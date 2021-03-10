@@ -20,7 +20,7 @@ export default class PlayerCircle extends Vue {
   @Prop()
   player: Player;
 
-  @Prop()
+  @Prop({ type: Boolean, default: false })
   chart: boolean;
 
   get gameData(): Engine {
