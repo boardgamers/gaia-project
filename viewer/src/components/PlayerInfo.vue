@@ -169,7 +169,7 @@
         :player="player.player"
       />
     </div>
-    <b-modal :id="player.faction" :title="factionName" size="lg">
+    <b-modal :id="player.faction" :title="factionName" size="lg" dialog-class="gaia-viewer-modal">
       <div v-html="tooltip"></div>
     </b-modal>
   </div>
