@@ -537,7 +537,12 @@ export default class Engine {
     const pl = this.player(this.playerToMove);
 
     if (pl.settings.autoBrainstone) {
-      const choices = cmd.data as Array<BrainstoneArea>;
+      const choices = cmd.data as Array<BrainstoneArea | "discard">;
+
+      if (choices.some((choice) => choice === BrainstoneArea.Gaia || choice === "discard")) {
+        return false;
+      }
+
       const dest = choices.includes(BrainstoneArea.Area3) ? BrainstoneArea.Area3 : BrainstoneArea.Area2;
       return `${Command.BrainStone} ${dest}`;
     }
