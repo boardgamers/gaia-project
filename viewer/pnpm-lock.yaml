@@ -2,7 +2,7 @@ dependencies:
   '@gaia-project/engine': link:../engine
   bootstrap: 4.6.0_popper.js@1.16.1
   bootstrap-vue: 2.21.2_vue@2.6.12
-  chart.js: 3.0.0-beta.12
+  chart.js: 3.0.0-beta.14
   lodash: 4.17.21
   vue: 2.6.12
   vuex: 3.6.2_vue@2.6.12
@@ -2084,10 +2084,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-mT8iDcrh03qDGRRmoA2hmBJnxpllMR+0/0qlzjqZES6NdiWDcZkCNAk4rPFZ9Q85r27unkiNNg8ZOiwZXBHwcA==
-  /chart.js/3.0.0-beta.12:
+  /chart.js/3.0.0-beta.14:
     dev: false
     resolution:
-      integrity: sha512-+VT+7hEfJMhjtpudOkRpafolWM6YcoXXK+1Kgujy9n06Fzd/w//AYyQfRog/b1cQRe11iMx2UA+UdxlsmJjCnA==
+      integrity: sha512-YLPNkWgErPOHz3VllTUnuQh6Bxg5wsuxEBH6lqbScwnV73OzNeqViCMDSyuVJe3qW9wV7YJ8HrGIOaFg/ziEkw==
   /check-error/1.0.2:
     dev: true
     resolution:
@@ -10893,7 +10893,7 @@ specifiers:
   bootstrap: ^4.4.1
   bootstrap-vue: ^2.12.0
   chai: ^4.3.0
-  chart.js: ^3.0.0-beta.12
+  chart.js: ^3.0.0-beta.14
   cross-env: ^7.0.3
   eslint: ^6.7.2
   eslint-plugin-import: ^2.20.2
