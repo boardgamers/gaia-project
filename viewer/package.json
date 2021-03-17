@@ -10,9 +10,10 @@
   "scripts": {
     "serve": "vue-cli-service serve --port 8080",
     "build": "vue-cli-service build",
+    "fix-package": "cross-env TS_NODE_COMPILER_OPTIONS={\\\"module\\\":\\\"commonjs\\\"} ts-node scripts/fix-package-imports.ts",
     "lint": "vue-cli-service lint",
     "package": "vue-cli-service build --target lib src/wrapper.ts",
-    "prepublishOnly": "npm run package",
+    "prepublishOnly": "npm run package && npm run fix-package",
     "test": "vue-cli-service test:unit src/**/*.spec.ts",
     "quick-test": "cross-env TS_NODE_COMPILER_OPTIONS={\\\"module\\\":\\\"commonjs\\\"}  mocha -r ts-node/register src/logic/*.spec.ts src/data/*.spec.ts"
   },
