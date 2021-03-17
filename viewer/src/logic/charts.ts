@@ -490,7 +490,8 @@ export function lineChartConfig(
       },
       scales: {
         y: {
-          stacked,
+          // temporary type hack until chart.js's typing is fixed
+          stacked: (stacked ? "single" : false) as any,
         },
       },
     },
