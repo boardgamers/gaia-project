@@ -28,6 +28,20 @@ export type State = {
   player: { index?: number; auth?: string } | null;
 };
 
+function indexCommands(commands, command: Command) {
+  const map = new Map<Faction, CommandObject[]>();
+  for (const c of commands as CommandObject[]) {
+    if (c.command === command) {
+      if (!map.has(c.faction)) {
+        map.set(c.faction, []);
+      }
+      map.get(c.faction).push(c);
+    }
+  }
+
+  return map;
+}
+
 const gaiaViewer = {
   namespaced: true,
   state: {
@@ -165,34 +179,12 @@ const gaiaViewer = {
     researchClasses: (state: State, getters): Map<Faction, Map<ResearchField, "recent" | "current-round">> => {
       return researchClasses(getters.recentCommands, getters.currentRoundCommands);
     },
-    recentBuildingCommands: (state: State, getters): Map<Faction, CommandObject[]> => {
-      const map = new Map<Faction, CommandObject[]>();
-
-      for (const command of getters.recentCommands as CommandObject[]) {
-        if (command.command === Command.Build) {
-          if (!map.has(command.faction)) {
-            map.set(command.faction, []);
-          }
-          map.get(command.faction).push(command);
-        }
-      }
-
-      return map;
-    },
-    currentRoundBuildingCommands: (state: State, getters): Map<Faction, CommandObject[]> => {
-      const map = new Map<Faction, CommandObject[]>();
-
-      for (const command of getters.currentRoundCommands as CommandObject[]) {
-        if (command.command === Command.Build) {
-          if (!map.has(command.faction)) {
-            map.set(command.faction, []);
-          }
-          map.get(command.faction).push(command);
-        }
-      }
-
-      return map;
-    },
+    recentBuildingCommands: (state: State, getters): Map<Faction, CommandObject[]> =>
+      indexCommands(getters.recentCommands, Command.Build),
+    currentRoundBuildingCommands: (state: State, getters): Map<Faction, CommandObject[]> =>
+      indexCommands(getters.currentRoundCommands, Command.Build),
+    recentActions: (state: State, getters): Map<Faction, CommandObject[]> =>
+      indexCommands(getters.recentCommands, Command.Special),
   },
 };
 

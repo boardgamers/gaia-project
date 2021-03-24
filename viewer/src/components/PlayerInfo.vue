@@ -139,6 +139,7 @@
         <SpecialAction
           v-for="(action, i) in player.actions"
           :action="['>' + action.rewards]"
+          :recent="recentAction(i)"
           :disabled="!action.enabled || passed"
           :key="action.action + '-' + i"
           y="17.5"
@@ -178,7 +179,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Player, factions, Planet } from "@gaia-project/engine";
+import { Command, factions, Planet, Player } from "@gaia-project/engine";
 import { factionColor } from "../graphics/utils";
 import TechTile from "./TechTile.vue";
 import Booster from "./Booster.vue";
@@ -213,7 +214,7 @@ export default class PlayerInfo extends Vue {
   }
 
   get factionColor() {
-    return factionColor(this.player.faction);
+    return factionColor(this.faction);
   }
 
   get name() {
@@ -224,15 +225,25 @@ export default class PlayerInfo extends Vue {
   }
 
   get tooltip() {
-    return factionDesc(this.player.faction);
+    return factionDesc(this.faction);
   }
 
   get planet() {
-    return factions[this.player.faction].planet;
+    return factions[this.faction].planet;
+  }
+
+  get faction() {
+    return this.player.faction;
   }
 
   get factionName(): string {
-    return factions[this.player.faction].name;
+    return factions[this.faction].name;
+  }
+
+  recentAction(i: number): boolean {
+    const action = this.player.actions[i];
+    const commands = this.$store.getters["gaiaViewer/recentActions"].get(this.faction) ?? [];
+    return commands.some((c) => c.args[0] === action.rewards);
   }
 
   planetFill(planet: string) {
