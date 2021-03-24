@@ -1,5 +1,7 @@
 # Gaia Project
 
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/boardgamers/gaia-project)
+
 Mono repo containing the viewer & the engine for Gaia Project
 
 Checkout their READMEs:

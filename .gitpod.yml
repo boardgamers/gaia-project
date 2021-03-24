@@ -1,0 +1,29 @@
+image:
+  file: .gitpod.dockerfile
+
+tasks:
+  - init: pnpm install
+    command: cd viewer && pnpm serve
+
+ports:
+  - port: 8080
+    onOpen: open-preview
+
+github:
+  prebuilds:
+    # enable for the master/default branch (defaults to true)
+    master: true
+    # enable for pull requests coming from this repo (defaults to true)
+    pullRequests: true
+    # enable for pull requests coming from forks (defaults to false)
+    pullRequestsFromForks: true
+    # add a "Review in Gitpod" button as a comment to pull requests (defaults to true)
+    addComment: true
+    # add a "Review in Gitpod" button to pull requests (defaults to false)
+    addBadge: false
+    # add a label once the prebuild is ready to pull requests (defaults to false)
+    addLabel: prebuilt-in-gitpod
+
+vscode:
+  extensions:
+    - octref.vetur@0.32.0:03mwRhlVpWDul4qBChcVUA==

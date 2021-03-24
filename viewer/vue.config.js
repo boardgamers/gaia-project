@@ -18,5 +18,9 @@ if (process.argv.includes("lib")) {
   module.exports = {
     lintOnSave: false,
     outputDir: path.join(__dirname, "dist/app"),
+    devServer: {
+      // For gitpod, it needs to be disabled
+      disableHostCheck: true,
+    },
   };
 }
