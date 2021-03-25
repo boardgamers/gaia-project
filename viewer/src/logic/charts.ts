@@ -46,11 +46,11 @@ type EventFilter = (
 
 interface DatasetFactory {
   backgroundColor: string;
-  borderColor: string;
   fill: string | false;
   label: string;
   description?: string;
   getDataPoints: () => number[];
+  weight: number;
 }
 
 function simulateIncome(pl: Player, consume: (p: Player) => void): number {
@@ -88,6 +88,72 @@ const otherScoring: VictoryPointAggregate = {
 type VictoryPointType = EventSource | "chart-init" | "chart-bid" | "chart-spend" | "chart-final1" | "chart-final2";
 
 const aggregateColor = "black"; //this is never displayed, because it's only in the bar chart
+
+type IncludeRounds = "all" | "except-final" | "last";
+
+export type ResourceKind = Resource | "pay-pw";
+
+export type ResourceSource = {
+  type: ResourceKind;
+  inverseOf?: Resource;
+  label: string;
+  plural: string;
+  color: string;
+  weight: number;
+};
+
+export const resourceSources: ResourceSource[] = [
+  {
+    type: Resource.Credit,
+    label: "Credit",
+    plural: "Credits",
+    color: "--res-credit",
+    weight: 1,
+  },
+  {
+    type: Resource.Ore,
+    label: "Ore",
+    plural: "Ores",
+    color: "--res-ore",
+    weight: 3,
+  },
+  {
+    type: Resource.Knowledge,
+    label: "Knowledge",
+    plural: "Knowledge",
+    color: "--res-knowledge",
+    weight: 4,
+  },
+  {
+    type: Resource.Qic,
+    label: "QIC",
+    plural: "QICs",
+    color: "--res-qic",
+    weight: 4,
+  },
+  {
+    type: Resource.ChargePower,
+    label: "Power Charges",
+    plural: "Power Charges",
+    color: "--res-power",
+    weight: 0,
+  },
+  {
+    type: "pay-pw",
+    inverseOf: Resource.ChargePower,
+    label: "Spent Power",
+    plural: "Spent Power",
+    color: "--lost",
+    weight: 0,
+  },
+  {
+    type: Resource.GainToken,
+    label: "Gained Tokens",
+    plural: "Gained Tokens",
+    color: "--recent",
+    weight: 0,
+  },
+];
 
 type VictoryPointSource = {
   type: VictoryPointType[];
@@ -215,16 +281,20 @@ function getDataPoints(
   extractChange: EventFilter,
   extractLog: (LogEntry) => number,
   projectedEndValue: () => number,
-  deltaForEnded: () => number
+  deltaForEnded: () => number,
+  includeRounds: IncludeRounds
 ): number[] {
-  const perRoundData: number[] = [0, NaN, NaN, NaN, NaN, NaN, NaN, 0];
+  const perRoundData: number[] = [0, NaN, NaN, NaN, NaN, NaN, NaN];
+  if (includeRounds === "all") {
+    perRoundData.push(0);
+  }
 
   let counter = initialValue;
   let round = 0;
 
   perRoundData[round] = counter;
   for (const logItem of data.advancedLog) {
-    if (logItem.round != null) {
+    if (logItem.round != null && includeRounds != "last") {
       round = logItem.round;
     }
 
@@ -256,7 +326,9 @@ function getDataPoints(
   if (projectedEndValue != null) {
     counter += projectedEndValue();
   }
-  perRoundData[7] = counter;
+  if (includeRounds === "all") {
+    perRoundData[7] = counter;
+  }
   return perRoundData;
 }
 
@@ -327,7 +399,7 @@ function groupSources(sources: VictoryPointSource[]): VictoryPointSource[] {
   return res;
 }
 
-export function victoryPointDetails(
+function victoryPointDetails(
   data: Engine,
   player: PlayerEnum,
   canvas: HTMLCanvasElement,
@@ -362,7 +434,6 @@ export function victoryPointDetails(
     };
 
     return {
-      borderColor: color,
       backgroundColor: color,
       label: s.label,
       description: s.description,
@@ -374,8 +445,48 @@ export function victoryPointDetails(
           extractChange,
           extractLog,
           () => (s.projectedEndValue == null ? 0 : s.projectedEndValue(data, pl)),
-          deltaForEnded
+          deltaForEnded,
+          "all"
         ),
+      weight: 1,
+    };
+  });
+}
+
+function resourceDetails(
+  data: Engine,
+  player: PlayerEnum,
+  canvas: HTMLCanvasElement,
+  sources: ResourceSource[],
+  includeRounds: IncludeRounds
+): DatasetFactory[] {
+  const pl = data.player(player);
+  if (!pl.faction) {
+    return [];
+  }
+  const wantPlayer = player;
+
+  const style = window.getComputedStyle(canvas);
+
+  return sources.map((s) => {
+    const color = style.getPropertyValue(s.color);
+
+    const initialValue = 0;
+    const extractChange = (player, source, resource, round, change) =>
+      player == wantPlayer && ((resource == s.type && change > 0) || (resource == s.inverseOf && change < 0))
+        ? Math.abs(change)
+        : 0;
+
+    const extractLog = () => 0;
+    const deltaForEnded = () => 0;
+
+    return {
+      backgroundColor: color,
+      label: s.label,
+      fill: false,
+      getDataPoints: () =>
+        getDataPoints(data, initialValue, extractChange, extractLog, () => 0, deltaForEnded, includeRounds),
+      weight: s.weight,
     };
   });
 }
@@ -389,31 +500,31 @@ function playerLabel(pl: Player) {
   return factions[pl.faction].name;
 }
 
-export function victoryPointSummary(
+function weightedSum(
   data: Engine,
   player: PlayerEnum,
-  canvas: HTMLCanvasElement
+  canvas: HTMLCanvasElement,
+  factories: DatasetFactory[]
 ): DatasetFactory | null {
   const pl = data.player(player);
   if (!pl.faction) {
     return null;
   }
 
-  const factories = victoryPointDetails(data, player, canvas, victoryPointSources);
   return {
-    borderColor: playerColor(pl, true),
-    backgroundColor: undefined,
+    backgroundColor: playerColor(pl, true),
     label: playerLabel(pl),
     fill: false,
     getDataPoints: () =>
       factories
-        .map((f) => f.getDataPoints())
+        .map((f) => f.getDataPoints().map((p) => f.weight * p))
         .reduce((prev: number[], cur: number[]) => {
           for (let i = 0; i < cur.length; i++) {
             prev[i] += cur[i];
           }
           return prev;
         }),
+    weight: 1,
   };
 }
 
@@ -440,25 +551,29 @@ function newLegendOptions(provider: (index: number) => string) {
   return legendOptions;
 }
 
-export function lineChartConfig(
+function lineChartConfig(
+  title: string,
   canvas: HTMLCanvasElement,
   data: Engine,
   datasetFactories: DatasetFactory[],
-  stacked: boolean
+  stacked: boolean,
+  includeRounds: IncludeRounds
 ): ChartConfiguration<"line"> {
   const datasets: ChartDataset<"line">[] = datasetFactories.map((f) => ({
-    borderColor: f.borderColor,
     backgroundColor: f.backgroundColor,
+    borderColor: f.backgroundColor,
     data: f.getDataPoints().map((val, i) => ({ x: i, y: val })),
     fill: f.fill,
     label: f.label,
   }));
 
   const labels = ["Start", "Round 1", "Round 2", "Round 3", "Round 4", "Round 5", "Round 6"];
-  if (data.ended) {
-    labels.push("Final");
-  } else {
-    labels.push("Est. Final");
+  if (includeRounds == "all") {
+    if (data.ended) {
+      labels.push("Final");
+    } else {
+      labels.push("Est. Final");
+    }
   }
 
   const tooltipOptions: DeepPartial<TooltipOptions<"line">> = {};
@@ -479,6 +594,10 @@ export function lineChartConfig(
     },
     options: {
       plugins: {
+        title: {
+          text: title,
+          display: true,
+        },
         tooltip: tooltipOptions,
         legend: newLegendOptions((index) => datasetFactories[index]?.description),
       } as any,
@@ -498,7 +617,7 @@ export function lineChartConfig(
   };
 }
 
-export function newBarChart(data: Engine, canvas: HTMLCanvasElement): ChartConfiguration<"bar"> {
+export function newVictoryPointsBarChart(data: Engine, canvas: HTMLCanvasElement): ChartConfiguration<"bar"> {
   const datasets: ChartDataset<"bar">[] = sortBy(
     chartPlayerOrder(data)
       .filter((pl) => data.player(pl).faction != null)
@@ -538,24 +657,129 @@ export function newBarChart(data: Engine, canvas: HTMLCanvasElement): ChartConfi
     options: {
       plugins: {
         tooltip: tooltipOptions,
+        title: {
+          text: "Victory points of all players",
+          display: true,
+        },
       } as any,
       responsive: true,
     },
   };
 }
 
-export function newLineChart(data: Engine, canvas: HTMLCanvasElement, player: PlayerEnum): ChartConfiguration<"line"> {
+export function newResourcesBarChart(data: Engine, canvas: HTMLCanvasElement): ChartConfiguration<"bar"> {
+  const datasets: ChartDataset<"bar">[] = chartPlayerOrder(data)
+    .filter((pl) => data.player(pl).faction != null)
+    .map((pl) => {
+      const points = resourceDetails(data, pl, canvas, resourceSources, "last").map((f) => f.getDataPoints()[0]);
+      const player = data.player(pl);
+      return {
+        data: points,
+        label: playerLabel(player),
+        backgroundColor: playerColor(player, false),
+        borderColor: "black",
+        borderWidth: 1,
+      };
+    });
+
+  return {
+    type: "bar",
+    data: {
+      labels: resourceSources.map((s) => s.label),
+      datasets: datasets,
+    },
+    options: {
+      plugins: {
+        title: {
+          text: "Resources of all players",
+          display: true,
+        },
+      },
+      responsive: true,
+    },
+  };
+}
+
+export function newVictoryPointsLineChart(
+  data: Engine,
+  canvas: HTMLCanvasElement,
+  player: PlayerEnum
+): ChartConfiguration<"line"> {
   const numbers = player === PlayerEnum.All ? chartPlayerOrder(data) : [player];
 
-  const factories =
-    numbers.length == 1
-      ? victoryPointDetails(data, numbers[0], canvas, groupSources(victoryPointSources))
-      : numbers.map((n) => victoryPointSummary(data, n, canvas));
+  let title: string;
+  let factories: DatasetFactory[];
+  if (numbers.length == 1) {
+    const p = numbers[0];
+    title = `Victory points of ${playerLabel(data.player(p))}`;
+    factories = victoryPointDetails(data, p, canvas, groupSources(victoryPointSources));
+  } else {
+    title = "Victory points of all players";
+    factories = numbers.map((p) =>
+      weightedSum(data, p, canvas, victoryPointDetails(data, p, canvas, victoryPointSources))
+    );
+  }
 
   return lineChartConfig(
+    title,
     canvas,
     data,
     factories.filter((f) => f != null),
-    player != PlayerEnum.All
+    player != PlayerEnum.All,
+    "all"
+  );
+}
+
+export function newResourcesLineChart(
+  data: Engine,
+  canvas: HTMLCanvasElement,
+  kind: PlayerEnum | ResourceKind
+): ChartConfiguration<"line"> {
+  let title: string;
+  let factories: DatasetFactory[];
+  if (typeof kind == "number") {
+    const numbers = kind === PlayerEnum.All ? chartPlayerOrder(data) : [kind as PlayerEnum];
+
+    if (numbers.length == 1) {
+      const player = numbers[0];
+      title = `Resources of ${playerLabel(data.player(player))}`;
+      factories = resourceDetails(data, player, canvas, resourceSources, "except-final");
+    } else {
+      const conversion = resourceSources
+        .filter((s) => s.weight > 0)
+        .map((s) => `${s.label}=${s.weight}`)
+        .join(", ");
+      title = `Resources of all players as if bought with power (${conversion})`;
+      factories = numbers.map((p) =>
+        weightedSum(data, p, canvas, resourceDetails(data, p, canvas, resourceSources, "except-final"))
+      );
+    }
+  } else {
+    const sources = resourceSources.filter((r) => r.type === (kind as Resource));
+
+    title = `${sources[0].plural} of all players`;
+    factories = chartPlayerOrder(data).map((p) => {
+      const pl = data.player(p);
+      if (!pl.faction) {
+        return null;
+      }
+
+      return {
+        backgroundColor: playerColor(pl, true),
+        label: playerLabel(pl),
+        fill: false,
+        getDataPoints: () => resourceDetails(data, p, canvas, sources, "except-final")[0].getDataPoints(),
+        weight: 1,
+      };
+    });
+  }
+
+  return lineChartConfig(
+    title,
+    canvas,
+    data,
+    factories.filter((f) => f != null),
+    false,
+    "except-final"
   );
 }

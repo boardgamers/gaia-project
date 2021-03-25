@@ -1,6 +1,6 @@
 <template>
   <div :class="classes">
-    <b-modal id="chart-button" title="Victory Points" size="xl">
+    <b-modal id="chart-button" title="Victory Points and Resources" size="xl">
       <Charts />
     </b-modal>
 
