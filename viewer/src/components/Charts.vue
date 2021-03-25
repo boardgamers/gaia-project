@@ -3,12 +3,23 @@
     <div class="d-flex" style="justify-content: center">
       <div
         style="width: 70px; height: 80px"
-        @click="goTo('bar')"
+        @click="selectFamily('vp')"
+        :class="['vp-family-icon', 'pointer', { selected: chartFamily === 'vp' }]"
+      />
+      <div
+        style="width: 70px; height: 80px"
+        @click="selectFamily('resources')"
+        :class="['resource-family-icon', 'pointer', { selected: chartFamily === 'resources' }]"
+      />
+      <div class="divider" />
+      <div
+        style="width: 70px; height: 80px"
+        @click="selectKind('bar')"
         :class="['bar-chart-icon', 'pointer', { selected: chartKind === 'bar' }]"
       />
       <div
         style="width: 70px; height: 80px"
-        @click="goTo('line')"
+        @click="selectKind('line')"
         :class="['line-chart-icon', 'pointer', { selected: chartKind === 'line' }]"
       />
       <svg
@@ -18,13 +29,29 @@
         v-for="index in players"
         :key="index"
         class="pointer"
-        @click="goTo(index)"
+        @click="selectKind(index)"
       >
         <PlayerCircle
           :player="gameData.player(index)"
           :index="index"
           :class="['chart-player', { selected: chartKind === index }]"
           chart
+        />
+      </svg>
+      <svg
+        v-for="res in resourceKinds"
+        :key="res"
+        height="80"
+        viewBox="-1.5 -1.5 4 4"
+        width="80"
+        class="pointer"
+        @click="selectKind(res)"
+      >
+        <Resource
+          transform="scale(0.1)"
+          :kind="res"
+          :count="1"
+          :class="['chart-resource', 'pointer', { selected: chartKind === res }]"
         />
       </svg>
     </div>
@@ -35,9 +62,15 @@
 
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
-import { chartPlayerOrder, newBarChart, newLineChart } from "../logic/charts";
+import {
+  chartPlayerOrder,
+  newVictoryPointsBarChart,
+  newVictoryPointsLineChart,
+  newResourcesBarChart,
+  newResourcesLineChart, resourceSources, ResourceKind,
+} from "../logic/charts";
 import PlayerCircle from "./PlayerCircle.vue";
-import Engine, { PlayerEnum } from "@gaia-project/engine";
+import Engine, { PlayerEnum, Resource } from "@gaia-project/engine";
 import {
   BarController,
   BarElement,
@@ -67,12 +100,14 @@ Chart.register(
   BarElement
 );
 
-type ChartKind = "line" | "bar" | PlayerEnum;
+type ChartFamily = "vp" | "resources"
+type ChartKind = "line" | "bar" | PlayerEnum | ResourceKind;
 
 @Component({
   components: { PlayerCircle },
 })
 export default class Charts extends Vue {
+  private chartFamily: ChartFamily = "vp";
   private chartKind: ChartKind = "bar";
   private chart: Chart;
 
@@ -84,14 +119,26 @@ export default class Charts extends Vue {
     return chartPlayerOrder(this.gameData);
   }
 
+  get resourceKinds(): ResourceKind[] {
+    if (this.chartFamily == "vp") {
+      return [];
+    }
+    return resourceSources.map(s => s.type);
+  }
+
   mounted() {
     this.loadChart();
   }
 
-  goTo(kind: ChartKind) {
+  selectFamily(family: ChartFamily) {
+    this.chartFamily = family;
+  }
+
+  selectKind(kind: ChartKind) {
     this.chartKind = kind;
   }
 
+  @Watch("chartFamily")
   @Watch("chartKind")
   loadChart() {
     if (this.chart) {
@@ -100,12 +147,22 @@ export default class Charts extends Vue {
 
     const data = this.gameData;
     const canvas = document.getElementById("graphs") as HTMLCanvasElement;
-    if (this.chartKind === "bar") {
-      this.chart = new Chart(canvas, newBarChart(data, canvas));
-    } else if (this.chartKind === "line") {
-      this.chart = new Chart(canvas, newLineChart(data, canvas, PlayerEnum.All));
+    if (this.chartFamily === "vp") {
+      if (this.chartKind === "bar") {
+        this.chart = new Chart(canvas, newVictoryPointsBarChart(data, canvas));
+      } else if (this.chartKind === "line") {
+        this.chart = new Chart(canvas, newVictoryPointsLineChart(data, canvas, PlayerEnum.All));
+      } else {
+        this.chart = new Chart(canvas, newVictoryPointsLineChart(data, canvas, this.chartKind as PlayerEnum));
+      }
     } else {
-      this.chart = new Chart(canvas, newLineChart(data, canvas, this.chartKind));
+      if (this.chartKind === "bar") {
+        this.chart = new Chart(canvas, newResourcesBarChart(data, canvas));
+      } else if (this.chartKind === "line") {
+        this.chart = new Chart(canvas, newResourcesLineChart(data, canvas, PlayerEnum.All));
+      } else {
+        this.chart = new Chart(canvas, newResourcesLineChart(data, canvas, this.chartKind));
+      }
     }
   }
 }
@@ -120,7 +177,12 @@ export default class Charts extends Vue {
   stroke-width: 0.16px !important;
   stroke: var(--highlighted);
 }
+.chart-resource.selected > text {
+  fill: var(--highlighted) !important;
+}
 
+.vp-family-icon,
+.resource-family-icon,
 .line-chart-icon,
 .bar-chart-icon {
   background-color: black;
@@ -133,6 +195,19 @@ export default class Charts extends Vue {
   &.selected {
     background-color: var(--highlighted);
   }
+}
+
+.vp-family-icon {
+  mask-image: url("../assets/resources/victory-points.svg");
+}
+
+.resource-family-icon {
+  mask-image: url("../assets/resources/qic.svg");
+}
+
+.divider {
+  border-right: 1px solid black;
+  margin: 16px 4px;
 }
 
 .line-chart-icon {
