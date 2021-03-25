@@ -11,6 +11,11 @@
         @click="selectFamily('resources')"
         :class="['resource-family-icon', 'pointer', { selected: chartFamily === 'resources' }]"
       />
+      <div
+        style="width: 70px; height: 80px"
+        @click="selectFamily('buildings')"
+        :class="['building-family-icon', 'pointer', { selected: chartFamily === 'buildings' }]"
+      />
       <div class="divider" />
       <div
         style="width: 70px; height: 80px"
@@ -34,7 +39,7 @@
         <PlayerCircle
           :player="gameData.player(index)"
           :index="index"
-          :class="['chart-player', { selected: chartKind === index }]"
+          :class="['chart-circle', { selected: chartKind === index }]"
           chart
         />
       </svg>
@@ -54,6 +59,24 @@
           :class="['chart-resource', 'pointer', { selected: chartKind === res }]"
         />
       </svg>
+      <svg
+        v-for="building in buildings"
+        :key="building"
+        height="80"
+        viewBox="-1.5 -1.5 4 4"
+        width="80"
+        :class="['pointer', 'chart-circle', { selected: chartKind === building }]"
+        @click="selectKind(building)"
+      >
+        <circle :r="1.2" style="fill: var(--adv-tech-tile)" />
+        <BuildingImage
+          faction="gen"
+          :building="building"
+          :flat="flat"
+          transform="scale(0.18)"
+          :class="['chart-building']"
+        />
+      </svg>
     </div>
     <div id="tooltip" />
     <canvas id="graphs" />
@@ -62,15 +85,19 @@
 
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
+import { chartPlayerOrder } from "../logic/charts";
 import {
-  chartPlayerOrder,
-  newVictoryPointsBarChart,
-  newVictoryPointsLineChart,
-  newResourcesBarChart,
-  newResourcesLineChart, resourceSources, ResourceKind,
-} from "../logic/charts";
+  buildingSources,
+  newSimpleBarChart,
+  newSimpleLineChart,
+  ResourceKind,
+  resourceSources,
+  SimpleSourceFactory,
+} from "../logic/simple-charts";
+import { newVictoryPointsBarChart, newVictoryPointsLineChart } from "../logic/victory-point-charts";
 import PlayerCircle from "./PlayerCircle.vue";
-import Engine, { PlayerEnum, Resource } from "@gaia-project/engine";
+import BuildingImage from "./Building.vue";
+import Engine, { Building, PlayerEnum } from "@gaia-project/engine";
 import {
   BarController,
   BarElement,
@@ -97,14 +124,15 @@ Chart.register(
   LinearScale,
   PointElement,
   BarController,
-  BarElement
+  BarElement,
 );
 
-type ChartFamily = "vp" | "resources"
-type ChartKind = "line" | "bar" | PlayerEnum | ResourceKind;
+type ChartFamily = "vp" | "resources" | "buildings"
+type CommonChartKind = "line" | "bar" | PlayerEnum
+type ChartKind = CommonChartKind | ResourceKind | Building;
 
 @Component({
-  components: { PlayerCircle },
+  components: { PlayerCircle, BuildingImage },
 })
 export default class Charts extends Vue {
   private chartFamily: ChartFamily = "vp";
@@ -120,20 +148,40 @@ export default class Charts extends Vue {
   }
 
   get resourceKinds(): ResourceKind[] {
-    if (this.chartFamily == "vp") {
-      return [];
+    if (this.chartFamily == "resources") {
+      return resourceSources.sources.map(s => s.type);
     }
-    return resourceSources.map(s => s.type);
+    return [];
+  }
+
+  get buildings(): Building[] {
+    if (this.chartFamily == "buildings") {
+      return buildingSources.sources.map(s => s.type);
+    }
+    return [];
+  }
+
+  get flat() {
+    return this.$store.state.gaiaViewer.preferences.flatBuildings;
   }
 
   mounted() {
     this.loadChart();
   }
 
-  selectFamily(family: ChartFamily) {
-    this.chartFamily = family;
+  isCommonKind() {
+    return typeof this.chartKind == "number" || this.chartKind == "bar" || this.chartKind == "line";
   }
 
+  selectFamily(family: ChartFamily) {
+    if (this.chartFamily != family) {
+      if (!this.isCommonKind()) {
+        this.chartKind = "bar";
+      }
+
+      this.chartFamily = family;
+    }
+  }
   selectKind(kind: ChartKind) {
     this.chartKind = kind;
   }
@@ -156,12 +204,22 @@ export default class Charts extends Vue {
         this.chart = new Chart(canvas, newVictoryPointsLineChart(data, canvas, this.chartKind as PlayerEnum));
       }
     } else {
+      let factory: SimpleSourceFactory<any>;
+      switch (this.chartFamily) {
+        case "resources":
+          factory = resourceSources;
+          break;
+        case "buildings":
+          factory = buildingSources;
+          break;
+      }
+
       if (this.chartKind === "bar") {
-        this.chart = new Chart(canvas, newResourcesBarChart(data, canvas));
+        this.chart = new Chart(canvas, newSimpleBarChart(factory, data, canvas));
       } else if (this.chartKind === "line") {
-        this.chart = new Chart(canvas, newResourcesLineChart(data, canvas, PlayerEnum.All));
+        this.chart = new Chart(canvas, newSimpleLineChart(factory, data, canvas, PlayerEnum.All));
       } else {
-        this.chart = new Chart(canvas, newResourcesLineChart(data, canvas, this.chartKind));
+        this.chart = new Chart(canvas, newSimpleLineChart(factory, data, canvas, this.chartKind));
       }
     }
   }
@@ -169,20 +227,23 @@ export default class Charts extends Vue {
 </script>
 
 <style lang="scss">
-.chart-player > circle {
+.chart-circle > circle {
   stroke-width: 0.06px !important;
 }
 
-.chart-player.selected > circle {
+.chart-circle.selected > circle {
   stroke-width: 0.16px !important;
   stroke: var(--highlighted);
 }
+
 .chart-resource.selected > text {
   fill: var(--highlighted) !important;
 }
 
 .vp-family-icon,
 .resource-family-icon,
+.building-family-icon,
+.chart-building,
 .line-chart-icon,
 .bar-chart-icon {
   background-color: black;
@@ -203,6 +264,10 @@ export default class Charts extends Vue {
 
 .resource-family-icon {
   mask-image: url("../assets/resources/qic.svg");
+}
+
+.building-family-icon {
+  mask-image: url("../assets/buildings/mine.svg");
 }
 
 .divider {

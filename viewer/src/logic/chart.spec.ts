@@ -1,6 +1,6 @@
-import { Faction, LogEntry } from "@gaia-project/engine";
+import { Faction, LogEntry, Player } from "@gaia-project/engine";
 import { expect } from "chai";
-import { countResearch } from "./charts";
+import { countResearch } from "./victory-point-charts";
 
 describe("Chart", () => {
   describe("count research", () => {
@@ -21,8 +21,9 @@ describe("Chart", () => {
 
     for (const test of tests) {
       it(test.name, () => {
-        const c = countResearch(test.give.moveHistory, Faction.Terrans);
-        const n = test.give.logEntries.map((e) => c(e));
+        const p = { faction: Faction.Terrans } as Player;
+        const c = countResearch(p);
+        const n = test.give.logEntries.map((e) => c(test.give.moveHistory, e));
 
         expect(n).to.deep.equal(test.want);
       });
