@@ -16,6 +16,11 @@
         @click="selectFamily('buildings')"
         :class="['building-family-icon', 'pointer', { selected: chartFamily === 'buildings' }]"
       />
+      <div
+        style="width: 70px; height: 80px"
+        @click="selectFamily('research')"
+        :class="['research-family-icon', 'pointer', { selected: chartFamily === 'research' }]"
+      />
       <div class="divider" />
       <div
         style="width: 70px; height: 80px"
@@ -77,6 +82,29 @@
           :class="['chart-building']"
         />
       </svg>
+      <svg
+        v-for="researchField in researchFields"
+        :key="researchField"
+        height="80"
+        viewBox="-1.5 -1.5 4 4"
+        width="80"
+        :class="['pointer']"
+        @click="selectKind(researchField)"
+      >
+        <polygon
+          points="-7.5,3 -3,7.5 3,7.5 7.5,3 7.5,-3 3,-7.5 -3,-7.5 -7.5,-3"
+          transform="scale(0.1)"
+          :class="['research-tile', researchField]"
+        />
+        <text
+          :class="['research-text', researchField, { selected: chartKind === researchField }]"
+          transform="scale(0.1)"
+          x="-3"
+          y="3"
+        >
+          1
+        </text>
+      </svg>
     </div>
     <div id="tooltip" />
     <canvas id="graphs" />
@@ -90,6 +118,7 @@ import {
   buildingSources,
   newSimpleBarChart,
   newSimpleLineChart,
+  researchSources,
   ResourceKind,
   resourceSources,
   SimpleChartFamily,
@@ -98,7 +127,7 @@ import {
 import { newVictoryPointsBarChart, newVictoryPointsLineChart } from "../logic/victory-point-charts";
 import PlayerCircle from "./PlayerCircle.vue";
 import BuildingImage from "./Building.vue";
-import Engine, { Building, PlayerEnum } from "@gaia-project/engine";
+import Engine, { Building, PlayerEnum, ResearchField } from "@gaia-project/engine";
 import {
   BarController,
   BarElement,
@@ -161,6 +190,13 @@ export default class Charts extends Vue {
     return [];
   }
 
+  get researchFields(): ResearchField[] {
+    if (this.chartFamily == "research") {
+      return researchSources.sources.map(s => s.type);
+    }
+    return [];
+  }
+
   get flat() {
     return this.$store.state.gaiaViewer.preferences.flatBuildings;
   }
@@ -182,6 +218,7 @@ export default class Charts extends Vue {
       this.chartFamily = family;
     }
   }
+
   selectKind(kind: ChartKind) {
     this.chartKind = kind;
   }
@@ -230,9 +267,22 @@ export default class Charts extends Vue {
   fill: var(--highlighted) !important;
 }
 
+.research-text {
+  &.int,
+  &.terra,
+  &.nav,
+  &.gaia {
+    fill: white;
+  }
+  &.selected {
+    fill: var(--highlighted) !important;
+  }
+}
+
 .vp-family-icon,
 .resource-family-icon,
 .building-family-icon,
+.research-family-icon,
 .chart-building,
 .line-chart-icon,
 .bar-chart-icon {
@@ -258,6 +308,10 @@ export default class Charts extends Vue {
 
 .building-family-icon {
   mask-image: url("../assets/buildings/mine.svg");
+}
+
+.research-family-icon {
+  mask-image: url("../assets/buildings/research-lab.svg");
 }
 
 .divider {

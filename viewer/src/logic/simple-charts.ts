@@ -1,4 +1,4 @@
-import Engine, { Building, Command, LogEntry, Player, PlayerEnum, Resource } from "@gaia-project/engine";
+import Engine, { Building, Command, Player, PlayerEnum, ResearchField, Resource } from "@gaia-project/engine";
 import { ChartConfiguration, ChartDataset } from "chart.js";
 import {
   chartPlayerOrder,
@@ -6,15 +6,17 @@ import {
   EventFilter,
   getDataPoints,
   IncludeRounds,
+  initialResearch,
   lineChartConfig,
   logEntryProcessor,
   playerColor,
   playerLabel,
   weightedSum,
 } from "./charts";
+import { CommandObject } from "./recent";
 
-export type SimpleChartFamily = "resources" | "buildings";
-export type SimpleChartKind = ResourceKind | Building;
+export type SimpleChartFamily = "resources" | "buildings" | "research";
+export type SimpleChartKind = ResourceKind | Building | ResearchField;
 
 export type SimpleSource<Type extends SimpleChartKind> = {
   type: Type;
@@ -29,8 +31,9 @@ export type SimpleSourceFactory<Source extends SimpleSource<any>> = {
   name: string;
   playerSummaryLineChartTitle: (sources: Source[]) => string;
   sources: Source[];
-  extractChange?: (wantPlayer: Player, source: Source) => EventFilter;
-  extractLog?: (wantPlayer: Player, source: Source) => (moveHistory: string[], entry: LogEntry) => number;
+  initialValue?: (player: Player, source: Source) => number;
+  extractChange?: (player: Player, source: Source) => EventFilter;
+  extractLog?: (cmd: CommandObject, source: Source) => number;
 };
 
 export type ResourceKind = Resource | "pay-pw";
@@ -115,16 +118,15 @@ export const buildingSources: SimpleSourceFactory<SimpleSource<Building>> = {
   family: "buildings",
   name: "Buildings",
   playerSummaryLineChartTitle: () => "Power value of all buildings of all players (1-3 base power value)",
-  extractLog: (wantPlayer, source) =>
-    logEntryProcessor(wantPlayer, (cmd) => {
-      if (cmd.command == Command.Build) {
-        const t = cmd.args[0] as Building;
-        if (source.type == t || (source.type == Building.Academy1 && t == Building.Academy2)) {
-          return 1;
-        }
+  extractLog: (cmd, source) => {
+    if (cmd.command == Command.Build) {
+      const t = cmd.args[0] as Building;
+      if (source.type == t || (source.type == Building.Academy1 && t == Building.Academy2)) {
+        return 1;
       }
-      return 0;
-    }),
+    }
+    return 0;
+  },
   sources: [
     {
       type: Building.Mine,
@@ -171,7 +173,40 @@ export const buildingSources: SimpleSourceFactory<SimpleSource<Building>> = {
   ],
 };
 
-const factories = [resourceSources, buildingSources];
+const researchNames = {
+  [ResearchField.Terraforming]: "Terraforming",
+  [ResearchField.Navigation]: "Navigation",
+  [ResearchField.Intelligence]: "Intelligence",
+  [ResearchField.GaiaProject]: "Gaia Project",
+  [ResearchField.Economy]: "Economy",
+  [ResearchField.Science]: "Science",
+};
+
+export const researchSources: SimpleSourceFactory<SimpleSource<ResearchField>> = {
+  family: "research",
+  name: "Research",
+  playerSummaryLineChartTitle: () => "Research steps of all players",
+  initialValue: (player, source) => initialResearch(player).get(source.type) ?? 0,
+  extractLog: (cmd, source) => {
+    if (cmd.command == Command.UpgradeResearch) {
+      if (source.type == (cmd.args[0] as ResearchField)) {
+        return 1;
+      }
+    }
+    return 0;
+  },
+  sources: Object.keys(researchNames).map((field) => {
+    return {
+      type: field as ResearchField,
+      label: researchNames[field],
+      plural: `Research Steps in ${researchNames[field]}`,
+      color: `--rt-${field}`,
+      weight: 1,
+    };
+  }),
+};
+
+const factories = [resourceSources, buildingSources, researchSources];
 
 function simpleChartDetails<Source extends SimpleSource<any>>(
   factory: SimpleSourceFactory<Source>,
@@ -190,9 +225,10 @@ function simpleChartDetails<Source extends SimpleSource<any>>(
   return sources.map((s) => {
     const color = style.getPropertyValue(s.color);
 
-    const initialValue = 0;
+    const initialValue = factory?.initialValue(pl, s) ?? 0;
     const extractChange = factory.extractChange?.(pl, s) ?? (() => 0);
-    const extractLog = factory.extractLog?.(pl, s) ?? (() => 0);
+    const extractLog =
+      factory.extractLog == null ? () => 0 : logEntryProcessor(pl, (cmd) => factory.extractLog(cmd, s));
     const deltaForEnded = () => 0;
 
     return {

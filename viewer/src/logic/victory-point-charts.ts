@@ -5,7 +5,6 @@ import Engine, {
   Command,
   EventSource,
   Faction,
-  factionBoard,
   finalRankings,
   gainFinalScoringVictoryPoints,
   LogEntry,
@@ -23,6 +22,7 @@ import {
   DatasetFactory,
   DeepPartial,
   getDataPoints,
+  initialResearch,
   lineChartConfig,
   logEntryProcessor,
   playerColor,
@@ -183,12 +183,7 @@ const victoryPointSources: VictoryPointSource[] = [
 ];
 
 export function countResearch(player: Player): (moveHistory: string[], log: LogEntry) => number {
-  const research = new Map<ResearchField, number>();
-  factionBoard(player.faction).income[0].rewards.forEach((r) => {
-    if (r.type.startsWith("up-")) {
-      research.set(r.type.slice(3) as ResearchField, 1);
-    }
-  });
+  const research = initialResearch(player);
 
   return logEntryProcessor(player, (cmd) => {
     if (cmd.command == Command.UpgradeResearch) {

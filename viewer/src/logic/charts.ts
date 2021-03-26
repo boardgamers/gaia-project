@@ -1,4 +1,14 @@
-import Engine, { EventSource, factions, LogEntry, Planet, Player, PlayerEnum, Resource } from "@gaia-project/engine";
+import Engine, {
+  EventSource,
+  factionBoard,
+  factions,
+  LogEntry,
+  Planet,
+  Player,
+  PlayerEnum,
+  ResearchField,
+  Resource,
+} from "@gaia-project/engine";
 import {
   ChartConfiguration,
   ChartDataset,
@@ -132,6 +142,16 @@ export function weightedSum(
         }),
     weight: 1,
   };
+}
+
+export function initialResearch(player: Player) {
+  const research = new Map<ResearchField, number>();
+  factionBoard(player.faction).income[0].rewards.forEach((r) => {
+    if (r.type.startsWith("up-")) {
+      research.set(r.type.slice(3) as ResearchField, 1);
+    }
+  });
+  return research;
 }
 
 export function logEntryProcessor(
