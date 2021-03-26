@@ -13,20 +13,24 @@ import {
   weightedSum,
 } from "./charts";
 
-export type SimpleSource<Kind> = {
-  type: Kind;
+export type SimpleChartFamily = "resources" | "buildings";
+export type SimpleChartKind = ResourceKind | Building;
+
+export type SimpleSource<Type extends SimpleChartKind> = {
+  type: Type;
   label: string;
   plural: string;
   color: string;
   weight: number;
 };
 
-export type SimpleSourceFactory<T extends SimpleSource<any>> = {
+export type SimpleSourceFactory<Source extends SimpleSource<any>> = {
+  family: SimpleChartFamily;
   name: string;
-  playerSummaryLineChartTitle: (sources: T[]) => string;
-  sources: T[];
-  extractChange?: (wantPlayer: Player, type: T) => EventFilter;
-  extractLog?: (wantPlayer: Player, type: T) => (moveHistory: string[], entry: LogEntry) => number;
+  playerSummaryLineChartTitle: (sources: Source[]) => string;
+  sources: Source[];
+  extractChange?: (wantPlayer: Player, source: Source) => EventFilter;
+  extractLog?: (wantPlayer: Player, source: Source) => (moveHistory: string[], entry: LogEntry) => number;
 };
 
 export type ResourceKind = Resource | "pay-pw";
@@ -41,14 +45,16 @@ type ResourceSource = {
 };
 
 export const resourceSources: SimpleSourceFactory<ResourceSource> = {
+  family: "resources",
   name: "Resources",
   playerSummaryLineChartTitle: (sources) =>
     `Resources of all players as if bought with power (${sources
       .filter((s) => s.weight > 0)
       .map((s) => `${s.label}=${s.weight}`)
       .join(", ")})`,
-  extractChange: (wantPlayer, type) => (player, source, resource, round, change) =>
-    player == wantPlayer.player && ((resource == type.type && change > 0) || (resource == type.inverseOf && change < 0))
+  extractChange: (wantPlayer, source) => (player, eventSource, resource, round, change) =>
+    player == wantPlayer.player &&
+    ((resource == source.type && change > 0) || (resource == source.inverseOf && change < 0))
       ? Math.abs(change)
       : 0,
   sources: [
@@ -106,13 +112,14 @@ export const resourceSources: SimpleSourceFactory<ResourceSource> = {
 };
 
 export const buildingSources: SimpleSourceFactory<SimpleSource<Building>> = {
+  family: "buildings",
   name: "Buildings",
   playerSummaryLineChartTitle: () => "Power value of all buildings of all players (1-3 base power value)",
-  extractLog: (wantPlayer, type) =>
+  extractLog: (wantPlayer, source) =>
     logEntryProcessor(wantPlayer, (cmd) => {
       if (cmd.command == Command.Build) {
         const t = cmd.args[0] as Building;
-        if (type.type == t || (type.type == Building.Academy1 && t == Building.Academy2)) {
+        if (source.type == t || (source.type == Building.Academy1 && t == Building.Academy2)) {
           return 1;
         }
       }
@@ -164,12 +171,14 @@ export const buildingSources: SimpleSourceFactory<SimpleSource<Building>> = {
   ],
 };
 
-function simpleChartDetails<T extends SimpleSource<any>>(
-  factory: SimpleSourceFactory<T>,
+const factories = [resourceSources, buildingSources];
+
+function simpleChartDetails<Source extends SimpleSource<any>>(
+  factory: SimpleSourceFactory<Source>,
   data: Engine,
   player: PlayerEnum,
   canvas: HTMLCanvasElement,
-  sources: T[],
+  sources: Source[],
   includeRounds: IncludeRounds
 ): DatasetFactory[] {
   const pl = data.player(player);
@@ -197,11 +206,18 @@ function simpleChartDetails<T extends SimpleSource<any>>(
   });
 }
 
-export function newSimpleBarChart<T extends SimpleSource<any>>(
-  factory: SimpleSourceFactory<T>,
+function simpleChartFactory<Type extends SimpleChartKind, Source extends SimpleSource<Type>>(
+  family: SimpleChartFamily
+): SimpleSourceFactory<Source> {
+  return factories.find((f) => f.family == family) as SimpleSourceFactory<Source>;
+}
+
+export function newSimpleBarChart(
+  family: SimpleChartFamily,
   data: Engine,
   canvas: HTMLCanvasElement
 ): ChartConfiguration<"bar"> {
+  const factory = simpleChartFactory(family);
   const sources = factory.sources;
   const datasets: ChartDataset<"bar">[] = chartPlayerOrder(data)
     .filter((pl) => data.player(pl).faction != null)
@@ -235,12 +251,13 @@ export function newSimpleBarChart<T extends SimpleSource<any>>(
   };
 }
 
-export function newSimpleLineChart<Kind, T extends SimpleSource<Kind>>(
-  factory: SimpleSourceFactory<T>,
+export function newSimpleLineChart(
+  family: SimpleChartFamily,
   data: Engine,
   canvas: HTMLCanvasElement,
-  kind: PlayerEnum | Kind
+  kind: PlayerEnum | SimpleChartKind
 ): ChartConfiguration<"line"> {
+  const factory = simpleChartFactory(family);
   const allSources = factory.sources;
   let title: string;
   let factories: DatasetFactory[];
@@ -258,7 +275,7 @@ export function newSimpleLineChart<Kind, T extends SimpleSource<Kind>>(
       );
     }
   } else {
-    const sources = allSources.filter((r) => r.type === (kind as Kind));
+    const sources = allSources.filter((r) => r.type === kind);
 
     title = `${sources[0].plural} of all players`;
     factories = chartPlayerOrder(data).map((p) => {

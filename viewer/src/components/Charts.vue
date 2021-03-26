@@ -92,7 +92,8 @@ import {
   newSimpleLineChart,
   ResourceKind,
   resourceSources,
-  SimpleSourceFactory,
+  SimpleChartFamily,
+  SimpleChartKind,
 } from "../logic/simple-charts";
 import { newVictoryPointsBarChart, newVictoryPointsLineChart } from "../logic/victory-point-charts";
 import PlayerCircle from "./PlayerCircle.vue";
@@ -127,9 +128,8 @@ Chart.register(
   BarElement,
 );
 
-type ChartFamily = "vp" | "resources" | "buildings"
-type CommonChartKind = "line" | "bar" | PlayerEnum
-type ChartKind = CommonChartKind | ResourceKind | Building;
+type ChartFamily = "vp" | SimpleChartFamily;
+type ChartKind = "line" | "bar" | PlayerEnum | SimpleChartKind;
 
 @Component({
   components: { PlayerCircle, BuildingImage },
@@ -204,22 +204,12 @@ export default class Charts extends Vue {
         this.chart = new Chart(canvas, newVictoryPointsLineChart(data, canvas, this.chartKind as PlayerEnum));
       }
     } else {
-      let factory: SimpleSourceFactory<any>;
-      switch (this.chartFamily) {
-        case "resources":
-          factory = resourceSources;
-          break;
-        case "buildings":
-          factory = buildingSources;
-          break;
-      }
-
       if (this.chartKind === "bar") {
-        this.chart = new Chart(canvas, newSimpleBarChart(factory, data, canvas));
+        this.chart = new Chart(canvas, newSimpleBarChart(this.chartFamily, data, canvas));
       } else if (this.chartKind === "line") {
-        this.chart = new Chart(canvas, newSimpleLineChart(factory, data, canvas, PlayerEnum.All));
+        this.chart = new Chart(canvas, newSimpleLineChart(this.chartFamily, data, canvas, PlayerEnum.All));
       } else {
-        this.chart = new Chart(canvas, newSimpleLineChart(factory, data, canvas, this.chartKind));
+        this.chart = new Chart(canvas, newSimpleLineChart(this.chartFamily, data, canvas, this.chartKind));
       }
     }
   }
