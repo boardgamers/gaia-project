@@ -83,7 +83,7 @@ export type SimpleSourceFactory<Source extends SimpleSource<any>> = {
   extractLog?: (cmd: CommandObject, source: Source, data: Engine, player: Player) => number;
 };
 
-export type ResourceKind = Resource | "pay-pw";
+export type ResourceKind = Resource | "pay-pw" | "burn-t";
 
 const researchNames = {
   [ResearchField.Terraforming]: "Terraforming",
@@ -143,6 +143,12 @@ const factories = [
       ((resource == source.type && change > 0) || (resource == source.inverseOf && change < 0))
         ? Math.abs(change)
         : 0,
+    extractLog: (cmd, source) => {
+      if (source.type == "burn-t" && cmd.command == Command.BurnPower) {
+        return Number(cmd.args[0]);
+      }
+      return 0;
+    },
     sources: [
       {
         type: Resource.Credit,
@@ -192,6 +198,13 @@ const factories = [
         label: "Gained Tokens",
         plural: "Gained Tokens",
         color: () => "--recent",
+        weight: 0,
+      },
+      {
+        type: "burn-t",
+        label: "Burned Tokens",
+        plural: "Burned Tokens",
+        color: () => "--current-round",
         weight: 0,
       },
     ],
