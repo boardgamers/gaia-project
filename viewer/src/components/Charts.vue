@@ -1,128 +1,131 @@
 <template>
   <div class="gaia-viewer-modal">
-    <div class="d-flex" style="justify-content: center">
-      <svg
-        v-for="family in families"
-        :key="`family${family.family}`"
-        height="80"
-        viewBox="-1.5 -1.5 4 4"
-        width="80"
-        class="pointer"
-        @click="selectFamily(family.family)"
-      >
-        <Resource
-          transform="scale(0.1)"
-          :kind="family.resourceIcon"
-          :count="family.resourceIconQuantity != null ? family.resourceIconQuantity : 1"
-          :class="['chart-resource', 'pointer', { selected: chartFamily === family.family }]"
-        />
-      </svg>
-      <div class="divider" />
-      <div
-        style="width: 70px; height: 80px"
-        @click="selectKind('bar')"
-        :class="['bar-chart-icon', 'pointer', { selected: chartKind === 'bar' }]"
-      />
-      <div
-        style="width: 70px; height: 80px"
-        @click="selectKind('line')"
-        :class="['line-chart-icon', 'pointer', { selected: chartKind === 'line' }]"
-      />
-      <svg
-        width="80"
-        height="80"
-        viewBox="-1.5 -1.5 4 4"
-        v-for="index in players"
-        :key="index"
-        class="pointer"
-        @click="selectKind(index)"
-      >
-        <PlayerCircle
-          :player="gameData.player(index)"
-          :index="index"
-          :class="['chart-circle', { selected: chartKind === index }]"
-          chart
-        />
-      </svg>
-      <svg
-        v-for="res in resourceKinds"
-        :key="res"
-        height="80"
-        viewBox="-1.5 -1.5 4 4"
-        width="80"
-        class="pointer"
-        @click="selectKind(res)"
-      >
-        <Resource
-          transform="scale(0.1)"
-          :kind="res"
-          :count="1"
-          :class="['chart-resource', 'pointer', { selected: chartKind === res }]"
-        />
-      </svg>
-      <svg
-        v-for="building in buildings"
-        :key="building"
-        height="80"
-        viewBox="-1.5 -1.5 4 4"
-        width="80"
-        :class="['pointer', 'chart-circle', { selected: chartKind === building }]"
-        @click="selectKind(building)"
-      >
-        <circle :r="1.2" style="fill: var(--adv-tech-tile)" />
-        <BuildingImage
-          faction="gen"
-          :building="building"
-          :flat="flat"
-          transform="scale(0.18)"
-          :class="['chart-building']"
-        />
-      </svg>
-      <svg
-        v-for="planet in planets"
-        :key="planet"
-        height="80"
-        viewBox="-1.5 -1.5 4 4"
-        width="80"
-        :class="['pointer', 'chart-circle', { selected: chartKind === planet }]"
-        @click="selectKind(planet)"
-      >
-        <circle :r="1" :class="['player-token', 'planet-fill', planet]" />
-      </svg>
-      <svg
-        v-for="steps in terraformingSteps"
-        :key="steps"
-        height="80"
-        viewBox="-1.5 -1.5 4 4"
-        width="80"
-        :class="['pointer', 'chart-circle', { selected: chartKind === steps }]"
-        @click="selectKind(steps)"
-      >
-        <circle :r="1" :class="['player-token', 'planet-fill', terraformingStepsPlanet(steps)]" />
-      </svg>
-      <svg
-        v-for="researchField in researchFields"
-        :key="researchField"
-        height="80"
-        viewBox="-1.5 -1.5 4 4"
-        width="80"
-        :class="['pointer']"
-        @click="selectKind(researchField)"
-      >
-        <polygon
-          points="-7.5,3 -3,7.5 3,7.5 7.5,3 7.5,-3 3,-7.5 -3,-7.5 -7.5,-3"
-          transform="scale(0.1)"
-          :class="['research-tile', researchField]"
-        />
-        <text
-          :class="['research-text', researchField, { selected: chartKind === researchField }]"
-          transform="scale(0.1)"
-          x="-3"
-          y="3"
+    <div>
+      <div class="d-flex" style="justify-content: center">
+        <svg
+          v-for="family in families"
+          :key="`family${family.family}`"
+          height="40"
+          viewBox="-1.5 -1.5 4 4"
+          width="40"
+          class="pointer"
+          @click="selectFamily(family.family)"
         >
-          1
-        </text>
-      </svg>
+          <Resource
+            transform="scale(0.1)"
+            :kind="family.resourceIcon"
+            :count="family.resourceIconQuantity != null ? family.resourceIconQuantity : 1"
+            :class="['chart-resource', 'pointer', { selected: chartFamily === family.family }]"
+          />
+        </svg>
+      </div>
+      <div class="d-flex" style="justify-content: center">
+        <div
+          style="width: 40px; height: 40px"
+          @click="selectKind('bar')"
+          :class="['bar-chart-icon', 'pointer', { selected: chartKind === 'bar' }]"
+        />
+        <div
+          style="width: 40px; height: 40px"
+          @click="selectKind('line')"
+          :class="['line-chart-icon', 'pointer', { selected: chartKind === 'line' }]"
+        />
+        <svg
+          width="40"
+          height="40"
+          viewBox="-1.5 -1.5 4 4"
+          v-for="index in players"
+          :key="index"
+          class="pointer"
+          @click="selectKind(index)"
+        >
+          <PlayerCircle
+            :player="gameData.player(index)"
+            :index="index"
+            :class="['chart-circle', { selected: chartKind === index }]"
+            chart
+          />
+        </svg>
+        <svg
+          v-for="res in resourceKinds"
+          :key="res"
+          height="40"
+          viewBox="-1.5 -1.5 4 4"
+          width="40"
+          class="pointer"
+          @click="selectKind(res)"
+        >
+          <Resource
+            transform="scale(0.1)"
+            :kind="res"
+            :count="1"
+            :class="['chart-resource', 'pointer', { selected: chartKind === res }]"
+          />
+        </svg>
+        <svg
+          v-for="building in buildings"
+          :key="building"
+          height="40"
+          viewBox="-1.5 -1.5 4 4"
+          width="40"
+          :class="['pointer', 'chart-circle', { selected: chartKind === building }]"
+          @click="selectKind(building)"
+        >
+          <circle :r="1.2" style="fill: var(--adv-tech-tile)" />
+          <BuildingImage
+            faction="gen"
+            :building="building"
+            :flat="flat"
+            transform="scale(0.18)"
+            :class="['chart-building']"
+          />
+        </svg>
+        <svg
+          v-for="planet in planets"
+          :key="planet"
+          height="40"
+          viewBox="-1.5 -1.5 4 4"
+          width="40"
+          :class="['pointer', 'chart-circle', { selected: chartKind === planet }]"
+          @click="selectKind(planet)"
+        >
+          <circle :r="1" :class="['player-token', 'planet-fill', planet]" />
+        </svg>
+        <svg
+          v-for="steps in terraformingSteps"
+          :key="steps"
+          height="40"
+          viewBox="-1.5 -1.5 4 4"
+          width="40"
+          :class="['pointer', 'chart-circle', { selected: chartKind === steps }]"
+          @click="selectKind(steps)"
+        >
+          <circle :r="1" :class="['player-token', 'planet-fill', terraformingStepsPlanet(steps)]" />
+        </svg>
+        <svg
+          v-for="researchField in researchFields"
+          :key="researchField"
+          height="40"
+          viewBox="-1.5 -1.5 4 4"
+          width="40"
+          :class="['pointer']"
+          @click="selectKind(researchField)"
+        >
+          <polygon
+            points="-7.5,3 -3,7.5 3,7.5 7.5,3 7.5,-3 3,-7.5 -3,-7.5 -7.5,-3"
+            transform="scale(0.1)"
+            :class="['research-tile', researchField]"
+          />
+          <text
+            :class="['research-text', researchField, { selected: chartKind === researchField }]"
+            transform="scale(0.1)"
+            x="-3"
+            y="3"
+          >
+            1
+          </text>
+        </svg>
+      </div>
     </div>
     <div id="tooltip" />
     <canvas id="graphs" />
@@ -318,11 +321,6 @@ export default class Charts extends Vue {
   &.selected {
     background-color: var(--highlighted);
   }
-}
-
-.divider {
-  border-right: 1px solid black;
-  margin: 16px 4px;
 }
 
 .line-chart-icon {
