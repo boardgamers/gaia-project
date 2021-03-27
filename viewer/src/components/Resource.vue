@@ -8,7 +8,7 @@
     <rect v-else-if="kind == 'o'" class="ore" width="14" height="14" x="-7" y="-7" />
     <rect v-else-if="kind == 'c'" class="credit" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
     <rect
-      v-else-if="['pw', 'pay-pw', 't', 'bowl-t', 'tg', 'brainstone'].includes(kind)"
+      v-else-if="['pw', 'pay-pw', 't', 'bowl-t', 'burn-t', 'tg', 'brainstone'].includes(kind)"
       :class="kind === 'tg' ? 'gaia' : 'power'"
       width="15"
       height="15"
@@ -116,11 +116,12 @@
       x="0"
       y="0"
       v-if="
-        (count >= 0 && ['o', 'c', 'k', 'pw', 'pay-pw', 't', 'bowl-t', 'tg', 'vp', 'q', 'gf'].includes(kind)) ||
+        (count >= 0 &&
+          ['o', 'c', 'k', 'pw', 'pay-pw', 't', 'bowl-t', 'burn-t', 'tg', 'vp', 'q', 'gf'].includes(kind)) ||
         count === '+'
       "
       :class="{ plus: count === '+' }"
-      >{{ kind === "t" ? "+" : "" }}{{ count }}</text
+      >{{ kind === "t" ? "+" : "" }}{{ kind === "burn-t" ? "-" : "" }}{{ count }}</text
     >
     <text x="0" y="0" v-if="kind == 'brainstone'">B</text>
   </g>
