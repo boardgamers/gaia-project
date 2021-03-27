@@ -231,7 +231,7 @@ const factories = [
               .map((i) => i.count)
           )
         : 0,
-    sources: resourceSources.filter((s) => s.weight > 0),
+    sources: resourceSources.filter((s) => s.weight > 0 || s.type == Resource.GainToken),
   } as SimpleSourceFactory<ResourceSource>,
   {
     family: ChartFamily.buildings,
