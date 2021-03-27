@@ -66,7 +66,7 @@
         <circle v-else r="10" :class="['planet-fill', 'dig']" />
         <image xlink:href='../assets/resources/dig-arrow.svg' :height=325/308*14 width=14 x=-11 y=-4 />
       </g>
-      <g transform="translate(-7,-7)">
+      <g transform="translate(-7,-7)" v-if="count">
         <rect class="ore" width="12" height="12" x="-6" y="-6" />
         <text x="0" y="0">{{ 4 - count }}</text>
       </g>

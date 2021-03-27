@@ -1,25 +1,35 @@
 <template>
   <div class="gaia-viewer-modal">
     <div>
-      <div class="d-flex" style="justify-content: center">
-        <svg
-          v-for="family in families"
-          :key="`family${family.family}`"
-          height="40"
-          viewBox="-1.5 -1.5 4 4"
-          width="40"
-          class="pointer"
-          @click="selectFamily(family.family)"
-        >
-          <Resource
-            transform="scale(0.1)"
-            :kind="family.resourceIcon"
-            :count="family.resourceIconQuantity != null ? family.resourceIconQuantity : 1"
-            :class="['chart-resource', 'pointer', { selected: chartFamily === family.family }]"
+      <div class="d-flex align-items-center chart-top-controls" style="justify-content: center">
+        <template v-for="family in families">
+          <special-action
+            v-if="family.family === 'board-actions'"
+            :action="[]"
+            :key="`family${family.family}`"
+            :class="{ selected: chartFamily === family.family }"
+            width="25"
+            class="pointer mr-2 chart-resource"
+            height="25"
+            @click="selectFamily(family.family)"
           />
-        </svg>
+          <svg
+            v-else
+            :key="`family${family.family}`"
+            viewBox="-2 -2 5 4"
+            width="50"
+            class="pointer"
+            @click="selectFamily(family.family)"
+          >
+            <Resource
+              transform="scale(0.15)"
+              :kind="family.resourceIcon"
+              :class="['chart-resource', { selected: chartFamily === family.family }]"
+            />
+          </svg>
+        </template>
       </div>
-      <div class="d-flex" style="justify-content: center">
+      <div class="d-flex align-items-center" style="justify-content: center">
         <div
           style="width: 40px; height: 40px"
           @click="selectKind('bar')"
@@ -31,8 +41,7 @@
           :class="['line-chart-icon', 'pointer', { selected: chartKind === 'line' }]"
         />
         <svg
-          width="40"
-          height="40"
+          width="50"
           viewBox="-1.5 -1.5 4 4"
           v-for="index in players"
           :key="index"
@@ -49,25 +58,24 @@
         <svg
           v-for="res in resourceKinds"
           :key="res"
-          height="40"
+          height="50"
           viewBox="-1.5 -1.5 4 4"
-          width="40"
+          width="50"
           class="pointer"
           @click="selectKind(res)"
         >
           <Resource
-            transform="scale(0.1)"
+            transform="scale(0.11)"
             :kind="res"
-            :count="1"
             :class="['chart-resource', 'pointer', { selected: chartKind === res }]"
           />
         </svg>
         <svg
           v-for="building in buildings"
           :key="building"
-          height="40"
+          height="50"
           viewBox="-1.5 -1.5 4 4"
-          width="40"
+          width="50"
           :class="['pointer', 'chart-circle', { selected: chartKind === building }]"
           @click="selectKind(building)"
         >
@@ -105,25 +113,17 @@
         <svg
           v-for="researchField in researchFields"
           :key="researchField"
-          height="40"
+          height="50"
           viewBox="-1.5 -1.5 4 4"
-          width="40"
+          width="50"
           :class="['pointer']"
           @click="selectKind(researchField)"
         >
           <polygon
             points="-7.5,3 -3,7.5 3,7.5 7.5,3 7.5,-3 3,-7.5 -3,-7.5 -7.5,-3"
-            transform="scale(0.1)"
-            :class="['research-tile', researchField]"
+            transform="scale(0.11)"
+            :class="['research-tile', researchField, { selected: chartKind === researchField }]"
           />
-          <text
-            :class="['research-text', researchField, { selected: chartKind === researchField }]"
-            transform="scale(0.1)"
-            x="-3"
-            y="3"
-          >
-            1
-          </text>
         </svg>
       </div>
     </div>
@@ -148,6 +148,7 @@ import {
 import { newVictoryPointsBarChart, newVictoryPointsLineChart } from "../logic/victory-point-charts";
 import PlayerCircle from "./PlayerCircle.vue";
 import BuildingImage from "./Building.vue";
+import SpecialAction from "./SpecialAction.vue";
 import Engine, { Building, Planet, PlayerEnum, ResearchField, Resource } from "@gaia-project/engine";
 import {
   BarController,
@@ -175,13 +176,13 @@ Chart.register(
   LinearScale,
   PointElement,
   BarController,
-  BarElement,
+  BarElement
 );
 
 type ChartKind = "line" | "bar" | PlayerEnum | SimpleChartKind;
 
 @Component({
-  components: { PlayerCircle, BuildingImage },
+  components: { PlayerCircle, BuildingImage, SpecialAction },
 })
 export default class Charts extends Vue {
   private chartFamily: ChartFamily = ChartFamily.vp;
@@ -193,8 +194,9 @@ export default class Charts extends Vue {
   }
 
   get families(): SimpleSourceFactory<any>[] {
-    return Object.values(ChartFamily)
-      .map(f => f == ChartFamily.vp ? { family: "vp", resourceIcon: "vp" } as SimpleSourceFactory<any> : simpleChartFactory(f));
+    return Object.values(ChartFamily).map((f) =>
+      f == ChartFamily.vp ? ({ family: "vp", resourceIcon: "vp" } as SimpleSourceFactory<any>) : simpleChartFactory(f)
+    );
   }
 
   get players(): PlayerEnum[] {
@@ -291,21 +293,13 @@ export default class Charts extends Vue {
   stroke: var(--highlighted);
 }
 
-.chart-resource.selected text {
-  fill: var(--highlighted) !important;
+.research-tile.selected {
+  stroke-width: 0.86px !important;
+  stroke: var(--highlighted);
 }
 
-.research-text {
-  &.int,
-  &.terra,
-  &.nav,
-  &.gaia {
-    fill: white;
-  }
-
-  &.selected {
-    fill: var(--highlighted) !important;
-  }
+.chart-resource.selected {
+  filter: drop-shadow(0px 0px 4px rgba(var(--highlighted-rgb), 1));
 }
 
 .chart-building,
