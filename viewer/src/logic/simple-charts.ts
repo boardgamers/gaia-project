@@ -310,11 +310,10 @@ const factories = [
     family: ChartFamily.terraforming,
     name: "Terraforming Steps",
     playerSummaryLineChartTitle: () => "Terraforming Steps of all players (Gaia planets and gaia formers excluded)",
-    extractLog: planetCounter((type, player) => planetsForSteps(TerraformingSteps[type], player.planet)),
-    sources: Object.keys(TerraformingSteps).map((t) => {
-      const steps = TerraformingSteps[t];
+    extractLog: planetCounter((type, player) => planetsForSteps(type, player.planet)),
+    sources: Object.values(TerraformingSteps).map((steps) => {
       return {
-        type: t,
+        type: steps,
         label: steps,
         plural: steps,
         color: (player) => planetColor(planetsForSteps(steps, player.planet)[0], true),

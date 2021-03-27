@@ -208,7 +208,7 @@ export default class Charts extends Vue {
   }
 
   terraformingStepsPlanet(steps: TerraformingSteps): Planet {
-    return planetsForSteps(TerraformingSteps[steps], this.gameData.player(this.players[0]).planet)[0];
+    return planetsForSteps(steps, this.gameData.player(this.players[0]).planet)[0];
   }
 
   get flat() {
