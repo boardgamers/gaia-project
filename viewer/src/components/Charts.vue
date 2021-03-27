@@ -13,7 +13,7 @@
         <Resource
           transform="scale(0.1)"
           :kind="family.resourceIcon"
-          :count="1"
+          :count="family.resourceIconQuantity != null ? family.resourceIconQuantity : 1"
           :class="['chart-resource', 'pointer', { selected: chartFamily === family.family }]"
         />
       </svg>

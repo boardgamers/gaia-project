@@ -1,4 +1,6 @@
 import Engine, {
+  BoardAction,
+  boardActions,
   Building,
   Command,
   Faction,
@@ -65,7 +67,7 @@ export function planetsForSteps(type: TerraformingSteps, planet: Planet) {
   }
 }
 
-export type SimpleChartKind = Resource | Building | ResearchField | Planet | TerraformingSteps;
+export type SimpleChartKind = Resource | Building | ResearchField | Planet | TerraformingSteps | BoardAction;
 
 export type SimpleSource<Type extends SimpleChartKind> = {
   type: Type;
@@ -78,6 +80,7 @@ export type SimpleSource<Type extends SimpleChartKind> = {
 export type SimpleSourceFactory<Source extends SimpleSource<any>> = {
   family: ChartFamily;
   resourceIcon: Resource;
+  resourceIconQuantity?: number;
   name: string;
   playerSummaryLineChartTitle: (sources: Source[]) => string;
   sources: Source[];
@@ -219,7 +222,7 @@ const factories = [
     name: "Free actions",
     resourceIcon: Resource.PayPower,
     playerSummaryLineChartTitle: (sources) => {
-      return `Power, credits, and gaia formers spend on free actions of all players (${conversionTable})`;
+      return `Power, credits, ore, and gaia formers spend on free actions of all players (${conversionTable})`;
     },
     extractLog: (cmd, source) =>
       cmd.command == Command.Spend
@@ -231,6 +234,23 @@ const factories = [
         : 0,
     sources: resourceSources.filter((s) => s.weight > 0 || s.type == Resource.GainToken),
   } as SimpleSourceFactory<ResourceSource>,
+  {
+    family: ChartFamily.boardActions,
+    name: "Board actions",
+    resourceIcon: Resource.PayPower,
+    resourceIconQuantity: 4,
+    playerSummaryLineChartTitle: (sources) => {
+      return `Board actions taken by all players`;
+    },
+    extractLog: (cmd, source) => (cmd.command == Command.Action && cmd.args[0] == source.type ? 1 : 0),
+    sources: BoardAction.values().map((action) => ({
+      type: action,
+      label: boardActions[action].name,
+      plural: boardActions[action].name,
+      color: () => boardActions[action].color,
+      weight: 1,
+    })),
+  } as SimpleSourceFactory<SimpleSource<BoardAction>>,
   {
     family: ChartFamily.buildings,
     name: "Buildings",
@@ -335,17 +355,16 @@ const factories = [
     family: ChartFamily.terraforming,
     name: "Terraforming Steps",
     resourceIcon: Resource.TerraformCostDiscount,
+    resourceIconQuantity: 3,
     playerSummaryLineChartTitle: () => "Terraforming Steps of all players (Gaia planets and gaia formers excluded)",
     extractLog: planetCounter((type, player) => planetsForSteps(type, player.planet)),
-    sources: Object.values(TerraformingSteps).map((steps) => {
-      return {
-        type: steps,
-        label: steps,
-        plural: steps,
-        color: (player) => planetColor(planetsForSteps(steps, player.planet)[0], true),
-        weight: terraformingSteps(steps),
-      };
-    }),
+    sources: Object.values(TerraformingSteps).map((steps) => ({
+      type: steps,
+      label: steps,
+      plural: steps,
+      color: (player) => planetColor(planetsForSteps(steps, player.planet)[0], true),
+      weight: terraformingSteps(steps),
+    })),
   } as SimpleSourceFactory<SimpleSource<TerraformingSteps>>,
 ];
 
