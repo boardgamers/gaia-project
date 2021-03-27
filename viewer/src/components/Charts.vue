@@ -180,7 +180,7 @@ export default class Charts extends Vue {
   }
 
   get families(): ChartFamily[] {
-    return Object.keys(ChartFamily).map(f => f as ChartFamily);
+    return Object.values(ChartFamily);
   }
 
   get players(): PlayerEnum[] {
@@ -188,7 +188,7 @@ export default class Charts extends Vue {
   }
 
   get resourceKinds(): ResourceKind[] {
-    return simpleChartTypes(this.chartFamily, ChartFamily.resources);
+    return simpleChartTypes(this.chartFamily, ChartFamily.resources, ChartFamily.freeActions);
   }
 
   get buildings(): Building[] {
@@ -315,6 +315,10 @@ export default class Charts extends Vue {
 
 .resources-family-icon {
   mask-image: url("../assets/resources/qic.svg");
+}
+
+.free-actions-family-icon {
+  mask-image: url("../assets/buildings/trading-station.svg");
 }
 
 .buildings-family-icon {

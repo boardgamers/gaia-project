@@ -7,8 +7,10 @@ import Engine, {
   PlayerEnum,
   ResearchField,
   Resource,
+  Reward,
 } from "@gaia-project/engine";
 import { ChartConfiguration, ChartDataset } from "chart.js";
+import { sum } from "lodash";
 import { planetsWithSteps } from "../data/factions";
 import { planetNames } from "../data/planets";
 import {
@@ -29,7 +31,7 @@ import {
 import { CommandObject } from "./recent";
 
 export enum TerraformingSteps {
-  Step0 = "home world",
+  Step0 = "Home world",
   Step1 = "1 step",
   Step2 = "2 steps",
   Step3 = "3 steps",
@@ -129,86 +131,105 @@ function planetCounter<T extends SimpleChartKind>(
   };
 }
 
+type ResourceSource = SimpleSource<ResourceKind> & { inverseOf?: Resource };
+
+const resourceSources: ResourceSource[] = [
+  {
+    type: Resource.Credit,
+    label: "Credit",
+    plural: "Credits",
+    color: () => "--res-credit",
+    weight: 1,
+  },
+  {
+    type: Resource.Ore,
+    label: "Ore",
+    plural: "Ores",
+    color: () => "--res-ore",
+    weight: 3,
+  },
+  {
+    type: Resource.Knowledge,
+    label: "Knowledge",
+    plural: "Knowledge",
+    color: () => "--res-knowledge",
+    weight: 4,
+  },
+  {
+    type: Resource.Qic,
+    label: "QIC",
+    plural: "QICs",
+    color: () => "--res-qic",
+    weight: 4,
+  },
+  {
+    type: Resource.ChargePower,
+    label: "Power Charges",
+    plural: "Power Charges",
+    color: () => "--res-power",
+    weight: 0,
+  },
+  {
+    type: "pay-pw",
+    inverseOf: Resource.ChargePower,
+    label: "Spent Power",
+    plural: "Spent Power",
+    color: () => "--lost",
+    weight: 0,
+  },
+  {
+    type: Resource.GainToken,
+    label: "Gained Tokens",
+    plural: "Gained Tokens",
+    color: () => "--recent",
+    weight: 0,
+  },
+  {
+    type: "burn-t",
+    label: "Burned Tokens",
+    plural: "Burned Tokens",
+    color: () => "--current-round",
+    weight: 0,
+  },
+];
+
+const conversionTable = resourceSources
+  .filter((s) => s.weight > 0)
+  .map((s) => `${s.label}=${s.weight}`)
+  .join(", ");
+
 const factories = [
   {
     family: ChartFamily.resources,
     name: "Resources",
-    playerSummaryLineChartTitle: (sources) =>
-      `Resources of all players as if bought with power (${sources
-        .filter((s) => s.weight > 0)
-        .map((s) => `${s.label}=${s.weight}`)
-        .join(", ")})`,
+    playerSummaryLineChartTitle: (sources) => {
+      return `Resources of all players as if bought with power (${conversionTable})`;
+    },
     extractChange: (wantPlayer, source) => (player, eventSource, resource, round, change) =>
       player == wantPlayer.player &&
       ((resource == source.type && change > 0) || (resource == source.inverseOf && change < 0))
         ? Math.abs(change)
         : 0,
-    extractLog: (cmd, source) => {
-      if (source.type == "burn-t" && cmd.command == Command.BurnPower) {
-        return Number(cmd.args[0]);
-      }
-      return 0;
+    extractLog: (cmd, source) =>
+      source.type == "burn-t" && cmd.command == Command.BurnPower ? Number(cmd.args[0]) : 0,
+    sources: resourceSources,
+  } as SimpleSourceFactory<ResourceSource>,
+  {
+    family: ChartFamily.freeActions,
+    name: "Free actions",
+    playerSummaryLineChartTitle: (sources) => {
+      return `Power, credits, and gaia formers spend on free actions of all players (${conversionTable})`;
     },
-    sources: [
-      {
-        type: Resource.Credit,
-        label: "Credit",
-        plural: "Credits",
-        color: () => "--res-credit",
-        weight: 1,
-      },
-      {
-        type: Resource.Ore,
-        label: "Ore",
-        plural: "Ores",
-        color: () => "--res-ore",
-        weight: 3,
-      },
-      {
-        type: Resource.Knowledge,
-        label: "Knowledge",
-        plural: "Knowledge",
-        color: () => "--res-knowledge",
-        weight: 4,
-      },
-      {
-        type: Resource.Qic,
-        label: "QIC",
-        plural: "QICs",
-        color: () => "--res-qic",
-        weight: 4,
-      },
-      {
-        type: Resource.ChargePower,
-        label: "Power Charges",
-        plural: "Power Charges",
-        color: () => "--res-power",
-        weight: 0,
-      },
-      {
-        type: "pay-pw",
-        inverseOf: Resource.ChargePower,
-        label: "Spent Power",
-        plural: "Spent Power",
-        color: () => "--lost",
-        weight: 0,
-      },
-      {
-        type: Resource.GainToken,
-        label: "Gained Tokens",
-        plural: "Gained Tokens",
-        color: () => "--recent",
-        weight: 0,
-      },
-      {
-        type: "burn-t",
-        label: "Burned Tokens",
-        plural: "Burned Tokens",
-        color: () => "--current-round",
-        weight: 0,
-      },
-    ],
-  } as SimpleSourceFactory<SimpleSource<ResourceKind> & { inverseOf?: Resource }>,
+    extractLog: (cmd, source) =>
+      cmd.command == Command.Spend
+        ? sum(
+            Reward.merge(Reward.parse(cmd.args[2]))
+              .filter((i) => i.type == source.type)
+              .map((i) => i.count)
+          )
+        : 0,
+    sources: resourceSources.filter((s) => s.weight > 0),
+  } as SimpleSourceFactory<ResourceSource>,
   {
     family: ChartFamily.buildings,
     name: "Buildings",
@@ -366,12 +387,9 @@ function simpleChartFactory<Type extends SimpleChartKind, Source extends SimpleS
 
 export function simpleChartTypes<Type extends SimpleChartKind, Source extends SimpleSource<Type>>(
   current: ChartFamily,
-  want: ChartFamily
+  ...want: ChartFamily[]
 ): Type[] {
-  if (current == want) {
-    return simpleChartFactory<Type, Source>(want).sources.map((s) => s.type);
-  }
-  return [];
+  return want.includes(current) ? simpleChartFactory<Type, Source>(current).sources.map((s) => s.type) : [];
 }
 
 export function newSimpleBarChart(
