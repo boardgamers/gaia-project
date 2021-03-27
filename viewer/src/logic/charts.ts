@@ -20,8 +20,17 @@ import {
   TooltipOptions,
 } from "chart.js";
 import { sumBy } from "lodash";
-import { planetColor } from "../graphics/utils";
+import { planetColor as plainPlanetColor } from "../graphics/utils";
 import { CommandObject, parseCommands } from "./recent";
+
+export enum ChartFamily {
+  vp = "vp",
+  resources = "resources",
+  buildings = "buildings",
+  research = "research",
+  planets = "planets",
+  terraforming = "terraforming",
+}
 
 export type DeepPartial<T> = {
   [P in keyof T]?: DeepPartial<T[P]>;
@@ -107,9 +116,12 @@ export function getDataPoints(
   return perRoundData;
 }
 
+export function planetColor(planet: Planet, invert: boolean) {
+  return invert && planet == Planet.Ice ? "black" : plainPlanetColor(planet as Exclude<Planet, Planet.Empty>);
+}
+
 export function playerColor(pl: Player, invert: boolean) {
-  const planet: Planet = factions[pl.faction].planet;
-  return invert && planet == Planet.Ice ? "black" : planetColor(planet);
+  return planetColor(factions[pl.faction].planet, invert);
 }
 
 export function playerLabel(pl: Player) {
