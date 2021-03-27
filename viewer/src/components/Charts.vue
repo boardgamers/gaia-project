@@ -145,7 +145,7 @@ import {
 import { newVictoryPointsBarChart, newVictoryPointsLineChart } from "../logic/victory-point-charts";
 import PlayerCircle from "./PlayerCircle.vue";
 import BuildingImage from "./Building.vue";
-import Engine, { Building, Planet, PlayerEnum, ResearchField } from "@gaia-project/engine";
+import Engine, { Building, Planet, PlayerEnum, ResearchField, Resource } from "@gaia-project/engine";
 import {
   BarController,
   BarElement,
@@ -191,7 +191,7 @@ export default class Charts extends Vue {
 
   get families(): SimpleSourceFactory<any>[] {
     return Object.values(ChartFamily)
-      .map(f => f == ChartFamily.vp ? { family: "vp", resourceIcon: "vp" } : simpleChartFactory(f));
+      .map(f => f == ChartFamily.vp ? { family: "vp", resourceIcon: "vp" } as SimpleSourceFactory<any> : simpleChartFactory(f));
   }
 
   get players(): PlayerEnum[] {
