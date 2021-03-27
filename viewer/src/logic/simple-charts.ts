@@ -77,6 +77,7 @@ export type SimpleSource<Type extends SimpleChartKind> = {
 
 export type SimpleSourceFactory<Source extends SimpleSource<any>> = {
   family: ChartFamily;
+  resourceIcon: Resource | "pay-pw" | "planet";
   name: string;
   playerSummaryLineChartTitle: (sources: Source[]) => string;
   sources: Source[];
@@ -202,6 +203,7 @@ const factories = [
   {
     family: ChartFamily.resources,
     name: "Resources",
+    resourceIcon: Resource.Qic,
     playerSummaryLineChartTitle: (sources) => {
       return `Resources of all players as if bought with power (${conversionTable})`;
     },
@@ -217,6 +219,7 @@ const factories = [
   {
     family: ChartFamily.freeActions,
     name: "Free actions",
+    resourceIcon: "pay-pw",
     playerSummaryLineChartTitle: (sources) => {
       return `Power, credits, and gaia formers spend on free actions of all players (${conversionTable})`;
     },
@@ -233,6 +236,7 @@ const factories = [
   {
     family: ChartFamily.buildings,
     name: "Buildings",
+    resourceIcon: Resource.GaiaFormer,
     playerSummaryLineChartTitle: () => "Power value of all buildings of all players (1-3 base power value)",
     extractLog: (cmd, source) => {
       if (cmd.command == Command.Build) {
@@ -291,6 +295,7 @@ const factories = [
   {
     family: ChartFamily.research,
     name: "Research",
+    resourceIcon: Resource.Knowledge,
     playerSummaryLineChartTitle: () => "Research steps of all players",
     initialValue: (player, source) => initialResearch(player).get(source.type) ?? 0,
     extractLog: (cmd, source) => {
@@ -314,6 +319,7 @@ const factories = [
   {
     family: ChartFamily.planets,
     name: "Planets",
+    resourceIcon: "planet",
     playerSummaryLineChartTitle: () => "Planets of all players",
     extractLog: planetCounter((t) => [t]),
     sources: Object.keys(planetNames).map((t) => {
@@ -330,6 +336,7 @@ const factories = [
   {
     family: ChartFamily.terraforming,
     name: "Terraforming Steps",
+    resourceIcon: Resource.TerraformCostDiscount,
     playerSummaryLineChartTitle: () => "Terraforming Steps of all players (Gaia planets and gaia formers excluded)",
     extractLog: planetCounter((type, player) => planetsForSteps(type, player.planet)),
     sources: Object.values(TerraformingSteps).map((steps) => {
@@ -379,7 +386,7 @@ function simpleChartDetails<Source extends SimpleSource<any>>(
   });
 }
 
-function simpleChartFactory<Type extends SimpleChartKind, Source extends SimpleSource<Type>>(
+export function simpleChartFactory<Type extends SimpleChartKind, Source extends SimpleSource<Type>>(
   family: ChartFamily
 ): SimpleSourceFactory<Source> {
   return factories.find((f) => f.family == family) as SimpleSourceFactory<Source>;

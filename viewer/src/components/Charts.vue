@@ -1,13 +1,22 @@
 <template>
   <div class="gaia-viewer-modal">
     <div class="d-flex" style="justify-content: center">
-      <div
+      <svg
         v-for="family in families"
-        :key="`family${family}`"
-        style="width: 70px; height: 80px"
-        @click="selectFamily(family)"
-        :class="[`${family}-family-icon`, 'family-icon', 'pointer', { selected: chartFamily === family }]"
-      />
+        :key="`family${family.family}`"
+        height="80"
+        viewBox="-1.5 -1.5 4 4"
+        width="80"
+        class="pointer"
+        @click="selectFamily(family.family)"
+      >
+        <Resource
+          transform="scale(0.1)"
+          :kind="family.resourceIcon"
+          :count="1"
+          :class="['chart-resource', 'pointer', { selected: chartFamily === family.family }]"
+        />
+      </svg>
       <div class="divider" />
       <div
         style="width: 70px; height: 80px"
@@ -127,9 +136,9 @@ import {
   newSimpleBarChart,
   newSimpleLineChart,
   planetsForSteps,
-  ResourceKind,
+  ResourceKind, simpleChartFactory,
   SimpleChartKind,
-  simpleChartTypes,
+  simpleChartTypes, SimpleSourceFactory,
   TerraformingSteps,
 } from "../logic/simple-charts";
 import { newVictoryPointsBarChart, newVictoryPointsLineChart } from "../logic/victory-point-charts";
@@ -179,8 +188,9 @@ export default class Charts extends Vue {
     return this.$store.state.gaiaViewer.data;
   }
 
-  get families(): ChartFamily[] {
-    return Object.values(ChartFamily);
+  get families(): SimpleSourceFactory<any>[] {
+    return Object.values(ChartFamily)
+      .map(f => f == ChartFamily.vp ? { family: "vp", resourceIcon: "vp" } : simpleChartFactory(f));
   }
 
   get players(): PlayerEnum[] {
@@ -277,7 +287,7 @@ export default class Charts extends Vue {
   stroke: var(--highlighted);
 }
 
-.chart-resource.selected > text {
+.chart-resource.selected text {
   fill: var(--highlighted) !important;
 }
 
@@ -288,12 +298,12 @@ export default class Charts extends Vue {
   &.gaia {
     fill: white;
   }
+
   &.selected {
     fill: var(--highlighted) !important;
   }
 }
 
-.family-icon,
 .chart-building,
 .line-chart-icon,
 .bar-chart-icon {
@@ -307,34 +317,6 @@ export default class Charts extends Vue {
   &.selected {
     background-color: var(--highlighted);
   }
-}
-
-.vp-family-icon {
-  mask-image: url("../assets/resources/victory-points.svg");
-}
-
-.resources-family-icon {
-  mask-image: url("../assets/resources/qic.svg");
-}
-
-.free-actions-family-icon {
-  mask-image: url("../assets/buildings/trading-station.svg");
-}
-
-.buildings-family-icon {
-  mask-image: url("../assets/buildings/mine.svg");
-}
-
-.research-family-icon {
-  mask-image: url("../assets/buildings/research-lab.svg");
-}
-
-.planets-family-icon {
-  mask-image: url("../assets/conditions/planet.svg");
-}
-
-.terraforming-family-icon {
-  mask-image: url("../assets/resources/dig-arrow.svg");
 }
 
 .divider {
