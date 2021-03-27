@@ -2,24 +2,11 @@
   <div class="gaia-viewer-modal">
     <div class="d-flex" style="justify-content: center">
       <div
+        v-for="family in families"
+        :key="`family${family}`"
         style="width: 70px; height: 80px"
-        @click="selectFamily('vp')"
-        :class="['vp-family-icon', 'pointer', { selected: chartFamily === 'vp' }]"
-      />
-      <div
-        style="width: 70px; height: 80px"
-        @click="selectFamily('resources')"
-        :class="['resource-family-icon', 'pointer', { selected: chartFamily === 'resources' }]"
-      />
-      <div
-        style="width: 70px; height: 80px"
-        @click="selectFamily('buildings')"
-        :class="['building-family-icon', 'pointer', { selected: chartFamily === 'buildings' }]"
-      />
-      <div
-        style="width: 70px; height: 80px"
-        @click="selectFamily('research')"
-        :class="['research-family-icon', 'pointer', { selected: chartFamily === 'research' }]"
+        @click="selectFamily(family)"
+        :class="[`${family}-family-icon`, 'family-icon', 'pointer', { selected: chartFamily === family }]"
       />
       <div class="divider" />
       <div
@@ -83,6 +70,28 @@
         />
       </svg>
       <svg
+        v-for="planet in planets"
+        :key="planet"
+        height="80"
+        viewBox="-1.5 -1.5 4 4"
+        width="80"
+        :class="['pointer', 'chart-circle', { selected: chartKind === planet }]"
+        @click="selectKind(planet)"
+      >
+        <circle :r="1" :class="['player-token', 'planet-fill', planet]" />
+      </svg>
+      <svg
+        v-for="steps in terraformingSteps"
+        :key="steps"
+        height="80"
+        viewBox="-1.5 -1.5 4 4"
+        width="80"
+        :class="['pointer', 'chart-circle', { selected: chartKind === steps }]"
+        @click="selectKind(steps)"
+      >
+        <circle :r="1" :class="['player-token', 'planet-fill', terraformingStepsPlanet(steps)]" />
+      </svg>
+      <svg
         v-for="researchField in researchFields"
         :key="researchField"
         height="80"
@@ -113,21 +122,20 @@
 
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
-import { chartPlayerOrder } from "../logic/charts";
+import { ChartFamily, chartPlayerOrder } from "../logic/charts";
 import {
-  buildingSources,
   newSimpleBarChart,
   newSimpleLineChart,
-  researchSources,
+  planetsForSteps,
   ResourceKind,
-  resourceSources,
-  SimpleChartFamily,
   SimpleChartKind,
+  simpleChartTypes,
+  TerraformingSteps,
 } from "../logic/simple-charts";
 import { newVictoryPointsBarChart, newVictoryPointsLineChart } from "../logic/victory-point-charts";
 import PlayerCircle from "./PlayerCircle.vue";
 import BuildingImage from "./Building.vue";
-import Engine, { Building, PlayerEnum, ResearchField } from "@gaia-project/engine";
+import Engine, { Building, Planet, PlayerEnum, ResearchField } from "@gaia-project/engine";
 import {
   BarController,
   BarElement,
@@ -157,14 +165,13 @@ Chart.register(
   BarElement,
 );
 
-type ChartFamily = "vp" | SimpleChartFamily;
 type ChartKind = "line" | "bar" | PlayerEnum | SimpleChartKind;
 
 @Component({
   components: { PlayerCircle, BuildingImage },
 })
 export default class Charts extends Vue {
-  private chartFamily: ChartFamily = "vp";
+  private chartFamily: ChartFamily = ChartFamily.vp;
   private chartKind: ChartKind = "bar";
   private chart: Chart;
 
@@ -172,29 +179,36 @@ export default class Charts extends Vue {
     return this.$store.state.gaiaViewer.data;
   }
 
+  get families(): ChartFamily[] {
+    return Object.keys(ChartFamily).map(f => f as ChartFamily);
+  }
+
   get players(): PlayerEnum[] {
     return chartPlayerOrder(this.gameData);
   }
 
   get resourceKinds(): ResourceKind[] {
-    if (this.chartFamily == "resources") {
-      return resourceSources.sources.map(s => s.type);
-    }
-    return [];
+    return simpleChartTypes(this.chartFamily, ChartFamily.resources);
   }
 
   get buildings(): Building[] {
-    if (this.chartFamily == "buildings") {
-      return buildingSources.sources.map(s => s.type);
-    }
-    return [];
+    return simpleChartTypes(this.chartFamily, ChartFamily.buildings);
   }
 
   get researchFields(): ResearchField[] {
-    if (this.chartFamily == "research") {
-      return researchSources.sources.map(s => s.type);
-    }
-    return [];
+    return simpleChartTypes(this.chartFamily, ChartFamily.research);
+  }
+
+  get planets(): Planet[] {
+    return simpleChartTypes(this.chartFamily, ChartFamily.planets);
+  }
+
+  get terraformingSteps(): TerraformingSteps[] {
+    return simpleChartTypes(this.chartFamily, ChartFamily.terraforming);
+  }
+
+  terraformingStepsPlanet(steps: TerraformingSteps): Planet {
+    return planetsForSteps(TerraformingSteps[steps], this.gameData.player(this.players[0]).planet)[0];
   }
 
   get flat() {
@@ -232,7 +246,7 @@ export default class Charts extends Vue {
 
     const data = this.gameData;
     const canvas = document.getElementById("graphs") as HTMLCanvasElement;
-    if (this.chartFamily === "vp") {
+    if (this.chartFamily === ChartFamily.vp) {
       if (this.chartKind === "bar") {
         this.chart = new Chart(canvas, newVictoryPointsBarChart(data, canvas));
       } else if (this.chartKind === "line") {
@@ -279,10 +293,7 @@ export default class Charts extends Vue {
   }
 }
 
-.vp-family-icon,
-.resource-family-icon,
-.building-family-icon,
-.research-family-icon,
+.family-icon,
 .chart-building,
 .line-chart-icon,
 .bar-chart-icon {
@@ -302,16 +313,24 @@ export default class Charts extends Vue {
   mask-image: url("../assets/resources/victory-points.svg");
 }
 
-.resource-family-icon {
+.resources-family-icon {
   mask-image: url("../assets/resources/qic.svg");
 }
 
-.building-family-icon {
+.buildings-family-icon {
   mask-image: url("../assets/buildings/mine.svg");
 }
 
 .research-family-icon {
   mask-image: url("../assets/buildings/research-lab.svg");
+}
+
+.planets-family-icon {
+  mask-image: url("../assets/conditions/planet.svg");
+}
+
+.terraforming-family-icon {
+  mask-image: url("../assets/resources/dig-arrow.svg");
 }
 
 .divider {
