@@ -1,6 +1,7 @@
 {
   "license": "MIT",
   "scripts": {
+    "commit-msg-check": "node scripts/check-commit-msg.js",
     "lint-staged": "lint-staged",
     "postinstall": "husky install",
     "prettier": "prettier --plugin-search-dir=. --write .",
