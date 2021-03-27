@@ -136,9 +136,10 @@ import {
   newSimpleBarChart,
   newSimpleLineChart,
   planetsForSteps,
-  ResourceKind, simpleChartFactory,
+  simpleChartFactory,
   SimpleChartKind,
-  simpleChartTypes, SimpleSourceFactory,
+  simpleChartTypes,
+  SimpleSourceFactory,
   TerraformingSteps,
 } from "../logic/simple-charts";
 import { newVictoryPointsBarChart, newVictoryPointsLineChart } from "../logic/victory-point-charts";
@@ -197,7 +198,7 @@ export default class Charts extends Vue {
     return chartPlayerOrder(this.gameData);
   }
 
-  get resourceKinds(): ResourceKind[] {
+  get resourceKinds(): Resource[] {
     return simpleChartTypes(this.chartFamily, ChartFamily.resources, ChartFamily.freeActions);
   }
 

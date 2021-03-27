@@ -65,7 +65,7 @@ export function planetsForSteps(type: TerraformingSteps, planet: Planet) {
   }
 }
 
-export type SimpleChartKind = ResourceKind | Building | ResearchField | Planet | TerraformingSteps;
+export type SimpleChartKind = Resource | Building | ResearchField | Planet | TerraformingSteps;
 
 export type SimpleSource<Type extends SimpleChartKind> = {
   type: Type;
@@ -77,7 +77,7 @@ export type SimpleSource<Type extends SimpleChartKind> = {
 
 export type SimpleSourceFactory<Source extends SimpleSource<any>> = {
   family: ChartFamily;
-  resourceIcon: Resource | "pay-pw" | "planet";
+  resourceIcon: Resource;
   name: string;
   playerSummaryLineChartTitle: (sources: Source[]) => string;
   sources: Source[];
@@ -85,8 +85,6 @@ export type SimpleSourceFactory<Source extends SimpleSource<any>> = {
   extractChange?: (player: Player, source: Source) => EventFilter;
   extractLog?: (cmd: CommandObject, source: Source, data: Engine, player: Player) => number;
 };
-
-export type ResourceKind = Resource | "pay-pw" | "burn-t";
 
 const researchNames = {
   [ResearchField.Terraforming]: "Terraforming",
@@ -132,7 +130,7 @@ function planetCounter<T extends SimpleChartKind>(
   };
 }
 
-type ResourceSource = SimpleSource<ResourceKind> & { inverseOf?: Resource };
+type ResourceSource = SimpleSource<Resource> & { inverseOf?: Resource };
 
 const resourceSources: ResourceSource[] = [
   {
@@ -171,7 +169,7 @@ const resourceSources: ResourceSource[] = [
     weight: 0,
   },
   {
-    type: "pay-pw",
+    type: Resource.PayPower,
     inverseOf: Resource.ChargePower,
     label: "Spent Power",
     plural: "Spent Power",
@@ -186,7 +184,7 @@ const resourceSources: ResourceSource[] = [
     weight: 0,
   },
   {
-    type: "burn-t",
+    type: Resource.BurnToken,
     label: "Burned Tokens",
     plural: "Burned Tokens",
     color: () => "--current-round",
@@ -213,13 +211,13 @@ const factories = [
         ? Math.abs(change)
         : 0,
     extractLog: (cmd, source) =>
-      source.type == "burn-t" && cmd.command == Command.BurnPower ? Number(cmd.args[0]) : 0,
+      source.type == Resource.BurnToken && cmd.command == Command.BurnPower ? Number(cmd.args[0]) : 0,
     sources: resourceSources,
   } as SimpleSourceFactory<ResourceSource>,
   {
     family: ChartFamily.freeActions,
     name: "Free actions",
-    resourceIcon: "pay-pw",
+    resourceIcon: Resource.PayPower,
     playerSummaryLineChartTitle: (sources) => {
       return `Power, credits, and gaia formers spend on free actions of all players (${conversionTable})`;
     },
@@ -319,7 +317,7 @@ const factories = [
   {
     family: ChartFamily.planets,
     name: "Planets",
-    resourceIcon: "planet",
+    resourceIcon: Resource.Planet,
     playerSummaryLineChartTitle: () => "Planets of all players",
     extractLog: planetCounter((t) => [t]),
     sources: Object.keys(planetNames).map((t) => {
