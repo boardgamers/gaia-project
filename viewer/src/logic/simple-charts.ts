@@ -1,6 +1,5 @@
 import Engine, {
   BoardAction,
-  boardActions,
   Building,
   Command,
   Faction,
@@ -13,6 +12,7 @@ import Engine, {
 } from "@gaia-project/engine";
 import { ChartConfiguration, ChartDataset } from "chart.js";
 import { sum } from "lodash";
+import { boardActionNames } from "../data/board-actions";
 import { planetsWithSteps } from "../data/factions";
 import { planetNames } from "../data/planets";
 import {
@@ -245,9 +245,9 @@ const factories = [
     extractLog: (cmd, source) => (cmd.command == Command.Action && cmd.args[0] == source.type ? 1 : 0),
     sources: BoardAction.values().map((action) => ({
       type: action,
-      label: boardActions[action].name,
-      plural: boardActions[action].name,
-      color: () => boardActions[action].color,
+      label: boardActionNames[action].name,
+      plural: boardActionNames[action].name,
+      color: () => boardActionNames[action].color,
       weight: 1,
     })),
   } as SimpleSourceFactory<SimpleSource<BoardAction>>,

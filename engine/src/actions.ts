@@ -37,14 +37,14 @@ export const freeActionsNevlasPI = [
 export const freeActionsBaltaks = [{ cost: "1gf", income: "1q" }];
 
 export const boardActions = {
-  [BoardAction.Power1]: { name: "3 knowledge", cost: "7pw", income: ["3k"], color: "--recent" },
-  [BoardAction.Power2]: { name: "2 steps", cost: "5pw", income: ["2step"], color: "--current-round" },
-  [BoardAction.Power3]: { name: "2 ore", cost: "4pw", income: ["2o"], color: "--res-ore" },
-  [BoardAction.Power4]: { name: "7 credits", cost: "4pw", income: ["7c"], color: "--res-credit" },
-  [BoardAction.Power5]: { name: "2 knowledge", cost: "4pw", income: ["2k"], color: "--res-knowledge" },
-  [BoardAction.Power6]: { name: "1 step", cost: "3pw", income: ["1step"], color: "--dig" },
-  [BoardAction.Power7]: { name: "2 tokens", cost: "3pw", income: ["2t"], color: "--res-power" },
-  [BoardAction.Qic1]: { name: "Tech tile", cost: "4q", income: ["tech"], color: "--tech-tile" },
-  [BoardAction.Qic2]: { name: "Re-score federation", cost: "3q", income: [">fed"], color: "--federation" },
-  [BoardAction.Qic3]: { name: "VP for planet types", cost: "2q", income: ["3vp", "pt > vp"], color: "--res-vp" },
+  [BoardAction.Power1]: { cost: "7pw", income: ["3k"] },
+  [BoardAction.Power2]: { cost: "5pw", income: ["2step"] },
+  [BoardAction.Power3]: { cost: "4pw", income: ["2o"] },
+  [BoardAction.Power4]: { cost: "4pw", income: ["7c"] },
+  [BoardAction.Power5]: { cost: "4pw", income: ["2k"] },
+  [BoardAction.Power6]: { cost: "3pw", income: ["1step"] },
+  [BoardAction.Power7]: { cost: "3pw", income: ["2t"] },
+  [BoardAction.Qic1]: { cost: "4q", income: ["tech"] },
+  [BoardAction.Qic2]: { cost: "3q", income: [">fed"] },
+  [BoardAction.Qic3]: { cost: "2q", income: ["3vp", "pt > vp"] },
 };
