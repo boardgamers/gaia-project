@@ -66,13 +66,14 @@
         <circle v-else r="10" :class="['planet-fill', 'dig']" />
         <image xlink:href='../assets/resources/dig-arrow.svg' :height=325/308*14 width=14 x=-11 y=-4 />
       </g>
-      <g transform="translate(-7,-7)">
+      <g transform="translate(-7,-7)" v-if="count">
         <rect class="ore" width="12" height="12" x="-6" y="-6" />
         <text x="0" y="0">{{ 4 - count }}</text>
       </g>
     </template>
     <image v-else-if="kind === 'tech'" xlink:href='../assets/resources/tech.svg' :height=155/211*22 width=22 x=-11 y=-8
-    />
+    /> <image v-else-if="kind === 'planet'" xlink:href='../assets/conditions/planet.svg' :height=155/211*22 width=22
+    x=-11 y=-8 />
     <Federation v-else-if="kind === 'fed'" width="22" x="-11" y="-26.5" :used="true" />
     <template v-else-if="kind === 'range'">
       <image xlink:href="../assets/resources/flat-hex.svg" :height=162/328*20 width=15 y=-9 x=-2 /> <image
@@ -117,7 +118,7 @@
       y="0"
       v-if="
         (count >= 0 &&
-          ['o', 'c', 'k', 'pw', 'pay-pw', 't', 'bowl-t', 'burn-t', 'tg', 'vp', 'q', 'gf'].includes(kind)) ||
+          ['o', 'c', 'k', 'pw', 'pay-pw', 't', 'bowl-t', 'burn-t', 'tg', 'vp', 'q', 'gf', 'planet'].includes(kind)) ||
         count === '+'
       "
       :class="{ plus: count === '+' }"

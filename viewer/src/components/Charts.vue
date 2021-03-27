@@ -1,119 +1,131 @@
 <template>
   <div class="gaia-viewer-modal">
-    <div class="d-flex" style="justify-content: center">
-      <div
-        v-for="family in families"
-        :key="`family${family}`"
-        style="width: 70px; height: 80px"
-        @click="selectFamily(family)"
-        :class="[`${family}-family-icon`, 'family-icon', 'pointer', { selected: chartFamily === family }]"
-      />
-      <div class="divider" />
-      <div
-        style="width: 70px; height: 80px"
-        @click="selectKind('bar')"
-        :class="['bar-chart-icon', 'pointer', { selected: chartKind === 'bar' }]"
-      />
-      <div
-        style="width: 70px; height: 80px"
-        @click="selectKind('line')"
-        :class="['line-chart-icon', 'pointer', { selected: chartKind === 'line' }]"
-      />
-      <svg
-        width="80"
-        height="80"
-        viewBox="-1.5 -1.5 4 4"
-        v-for="index in players"
-        :key="index"
-        class="pointer"
-        @click="selectKind(index)"
-      >
-        <PlayerCircle
-          :player="gameData.player(index)"
-          :index="index"
-          :class="['chart-circle', { selected: chartKind === index }]"
-          chart
+    <div>
+      <div class="d-flex align-items-center chart-top-controls" style="justify-content: center">
+        <template v-for="family in families">
+          <special-action
+            v-if="family.family === 'board-actions'"
+            :action="[]"
+            :key="`family${family.family}`"
+            :class="{ selected: chartFamily === family.family }"
+            width="25"
+            class="pointer mr-2 chart-resource"
+            height="25"
+            @click="selectFamily(family.family)"
+          />
+          <svg
+            v-else
+            :key="`family${family.family}`"
+            viewBox="-2 -2 5 4"
+            width="50"
+            class="pointer"
+            @click="selectFamily(family.family)"
+          >
+            <Resource
+              transform="scale(0.15)"
+              :kind="family.resourceIcon"
+              :class="['chart-resource', { selected: chartFamily === family.family }]"
+            />
+          </svg>
+        </template>
+      </div>
+      <div class="d-flex align-items-center" style="justify-content: center">
+        <div
+          style="width: 40px; height: 40px"
+          @click="selectKind('bar')"
+          :class="['bar-chart-icon', 'pointer', { selected: chartKind === 'bar' }]"
         />
-      </svg>
-      <svg
-        v-for="res in resourceKinds"
-        :key="res"
-        height="80"
-        viewBox="-1.5 -1.5 4 4"
-        width="80"
-        class="pointer"
-        @click="selectKind(res)"
-      >
-        <Resource
-          transform="scale(0.1)"
-          :kind="res"
-          :count="1"
-          :class="['chart-resource', 'pointer', { selected: chartKind === res }]"
+        <div
+          style="width: 40px; height: 40px"
+          @click="selectKind('line')"
+          :class="['line-chart-icon', 'pointer', { selected: chartKind === 'line' }]"
         />
-      </svg>
-      <svg
-        v-for="building in buildings"
-        :key="building"
-        height="80"
-        viewBox="-1.5 -1.5 4 4"
-        width="80"
-        :class="['pointer', 'chart-circle', { selected: chartKind === building }]"
-        @click="selectKind(building)"
-      >
-        <circle :r="1.2" style="fill: var(--adv-tech-tile)" />
-        <BuildingImage
-          faction="gen"
-          :building="building"
-          :flat="flat"
-          transform="scale(0.18)"
-          :class="['chart-building']"
-        />
-      </svg>
-      <svg
-        v-for="planet in planets"
-        :key="planet"
-        height="80"
-        viewBox="-1.5 -1.5 4 4"
-        width="80"
-        :class="['pointer', 'chart-circle', { selected: chartKind === planet }]"
-        @click="selectKind(planet)"
-      >
-        <circle :r="1" :class="['player-token', 'planet-fill', planet]" />
-      </svg>
-      <svg
-        v-for="steps in terraformingSteps"
-        :key="steps"
-        height="80"
-        viewBox="-1.5 -1.5 4 4"
-        width="80"
-        :class="['pointer', 'chart-circle', { selected: chartKind === steps }]"
-        @click="selectKind(steps)"
-      >
-        <circle :r="1" :class="['player-token', 'planet-fill', terraformingStepsPlanet(steps)]" />
-      </svg>
-      <svg
-        v-for="researchField in researchFields"
-        :key="researchField"
-        height="80"
-        viewBox="-1.5 -1.5 4 4"
-        width="80"
-        :class="['pointer']"
-        @click="selectKind(researchField)"
-      >
-        <polygon
-          points="-7.5,3 -3,7.5 3,7.5 7.5,3 7.5,-3 3,-7.5 -3,-7.5 -7.5,-3"
-          transform="scale(0.1)"
-          :class="['research-tile', researchField]"
-        />
-        <text
-          :class="['research-text', researchField, { selected: chartKind === researchField }]"
-          transform="scale(0.1)"
-          x="-3"
-          y="3"
+        <svg
+          width="50"
+          viewBox="-1.5 -1.5 4 4"
+          v-for="index in players"
+          :key="index"
+          class="pointer"
+          @click="selectKind(index)"
         >
-          1
-        </text>
-      </svg>
+          <PlayerCircle
+            :player="gameData.player(index)"
+            :index="index"
+            :class="['chart-circle', { selected: chartKind === index }]"
+            chart
+          />
+        </svg>
+        <svg
+          v-for="res in resourceKinds"
+          :key="res"
+          height="50"
+          viewBox="-1.5 -1.5 4 4"
+          width="50"
+          class="pointer"
+          @click="selectKind(res)"
+        >
+          <Resource
+            transform="scale(0.11)"
+            :kind="res"
+            :class="['chart-resource', 'pointer', { selected: chartKind === res }]"
+          />
+        </svg>
+        <svg
+          v-for="building in buildings"
+          :key="building"
+          height="50"
+          viewBox="-1.5 -1.5 4 4"
+          width="50"
+          :class="['pointer', 'chart-circle', { selected: chartKind === building }]"
+          @click="selectKind(building)"
+        >
+          <circle :r="1.2" style="fill: var(--adv-tech-tile)" />
+          <BuildingImage
+            faction="gen"
+            :building="building"
+            :flat="flat"
+            transform="scale(0.18)"
+            :class="['chart-building']"
+          />
+        </svg>
+        <svg
+          v-for="planet in planets"
+          :key="planet"
+          height="40"
+          viewBox="-1.5 -1.5 4 4"
+          width="40"
+          :class="['pointer', 'chart-circle', { selected: chartKind === planet }]"
+          @click="selectKind(planet)"
+        >
+          <circle :r="1" :class="['player-token', 'planet-fill', planet]" />
+        </svg>
+        <svg
+          v-for="steps in terraformingSteps"
+          :key="steps"
+          height="40"
+          viewBox="-1.5 -1.5 4 4"
+          width="40"
+          :class="['pointer', 'chart-circle', { selected: chartKind === steps }]"
+          @click="selectKind(steps)"
+        >
+          <circle :r="1" :class="['player-token', 'planet-fill', terraformingStepsPlanet(steps)]" />
+        </svg>
+        <svg
+          v-for="researchField in researchFields"
+          :key="researchField"
+          height="50"
+          viewBox="-1.5 -1.5 4 4"
+          width="50"
+          :class="['pointer']"
+          @click="selectKind(researchField)"
+        >
+          <polygon
+            points="-7.5,3 -3,7.5 3,7.5 7.5,3 7.5,-3 3,-7.5 -3,-7.5 -7.5,-3"
+            transform="scale(0.11)"
+            :class="['research-tile', researchField, { selected: chartKind === researchField }]"
+          />
+        </svg>
+      </div>
     </div>
     <div id="tooltip" />
     <canvas id="graphs" />
@@ -127,15 +139,17 @@ import {
   newSimpleBarChart,
   newSimpleLineChart,
   planetsForSteps,
-  ResourceKind,
+  simpleChartFactory,
   SimpleChartKind,
   simpleChartTypes,
+  SimpleSourceFactory,
   TerraformingSteps,
 } from "../logic/simple-charts";
 import { newVictoryPointsBarChart, newVictoryPointsLineChart } from "../logic/victory-point-charts";
 import PlayerCircle from "./PlayerCircle.vue";
 import BuildingImage from "./Building.vue";
-import Engine, { Building, Planet, PlayerEnum, ResearchField } from "@gaia-project/engine";
+import SpecialAction from "./SpecialAction.vue";
+import Engine, { Building, Planet, PlayerEnum, ResearchField, Resource } from "@gaia-project/engine";
 import {
   BarController,
   BarElement,
@@ -162,13 +176,13 @@ Chart.register(
   LinearScale,
   PointElement,
   BarController,
-  BarElement,
+  BarElement
 );
 
 type ChartKind = "line" | "bar" | PlayerEnum | SimpleChartKind;
 
 @Component({
-  components: { PlayerCircle, BuildingImage },
+  components: { PlayerCircle, BuildingImage, SpecialAction },
 })
 export default class Charts extends Vue {
   private chartFamily: ChartFamily = ChartFamily.vp;
@@ -179,16 +193,18 @@ export default class Charts extends Vue {
     return this.$store.state.gaiaViewer.data;
   }
 
-  get families(): ChartFamily[] {
-    return Object.keys(ChartFamily).map(f => f as ChartFamily);
+  get families(): SimpleSourceFactory<any>[] {
+    return Object.values(ChartFamily).map((f) =>
+      f == ChartFamily.vp ? ({ family: "vp", resourceIcon: "vp" } as SimpleSourceFactory<any>) : simpleChartFactory(f)
+    );
   }
 
   get players(): PlayerEnum[] {
     return chartPlayerOrder(this.gameData);
   }
 
-  get resourceKinds(): ResourceKind[] {
-    return simpleChartTypes(this.chartFamily, ChartFamily.resources);
+  get resourceKinds(): Resource[] {
+    return simpleChartTypes(this.chartFamily, ChartFamily.resources, ChartFamily.freeActions);
   }
 
   get buildings(): Building[] {
@@ -208,7 +224,7 @@ export default class Charts extends Vue {
   }
 
   terraformingStepsPlanet(steps: TerraformingSteps): Planet {
-    return planetsForSteps(TerraformingSteps[steps], this.gameData.player(this.players[0]).planet)[0];
+    return planetsForSteps(steps, this.gameData.player(this.players[0]).planet)[0];
   }
 
   get flat() {
@@ -277,23 +293,15 @@ export default class Charts extends Vue {
   stroke: var(--highlighted);
 }
 
-.chart-resource.selected > text {
-  fill: var(--highlighted) !important;
+.research-tile.selected {
+  stroke-width: 0.86px !important;
+  stroke: var(--highlighted);
 }
 
-.research-text {
-  &.int,
-  &.terra,
-  &.nav,
-  &.gaia {
-    fill: white;
-  }
-  &.selected {
-    fill: var(--highlighted) !important;
-  }
+.chart-resource.selected {
+  filter: drop-shadow(0px 0px 4px rgba(var(--highlighted-rgb), 1));
 }
 
-.family-icon,
 .chart-building,
 .line-chart-icon,
 .bar-chart-icon {
@@ -307,35 +315,6 @@ export default class Charts extends Vue {
   &.selected {
     background-color: var(--highlighted);
   }
-}
-
-.vp-family-icon {
-  mask-image: url("../assets/resources/victory-points.svg");
-}
-
-.resources-family-icon {
-  mask-image: url("../assets/resources/qic.svg");
-}
-
-.buildings-family-icon {
-  mask-image: url("../assets/buildings/mine.svg");
-}
-
-.research-family-icon {
-  mask-image: url("../assets/buildings/research-lab.svg");
-}
-
-.planets-family-icon {
-  mask-image: url("../assets/conditions/planet.svg");
-}
-
-.terraforming-family-icon {
-  mask-image: url("../assets/resources/dig-arrow.svg");
-}
-
-.divider {
-  border-right: 1px solid black;
-  margin: 16px 4px;
 }
 
 .line-chart-icon {

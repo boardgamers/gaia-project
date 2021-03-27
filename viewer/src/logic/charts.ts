@@ -26,6 +26,8 @@ import { CommandObject, parseCommands } from "./recent";
 export enum ChartFamily {
   vp = "vp",
   resources = "resources",
+  freeActions = "free-actions",
+  boardActions = "board-actions",
   buildings = "buildings",
   research = "research",
   planets = "planets",
