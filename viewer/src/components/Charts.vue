@@ -259,7 +259,7 @@ export default class Charts extends Vue {
     return types
       .map(a => {
         const style = window.getComputedStyle(this.canvas());
-        return ({ action: a, color: style.getPropertyValue(boardActionNames[a].color) });
+        return ({ action: a as BoardAction, color: style.getPropertyValue(boardActionNames[a].color) });
       });
   }
 

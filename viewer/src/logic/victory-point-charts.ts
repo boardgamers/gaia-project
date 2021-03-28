@@ -125,7 +125,8 @@ const victoryPointSources: VictoryPointSource[] = [
     label: "Booster",
     description: "Round Boosters",
     color: "--oxide",
-    projectedEndValue: (e, p) => (e.ended ? 0 : simulateIncome(p, (clone) => clone.receivePassIncome())),
+    projectedEndValue: (e, p) =>
+      e.isLastRound && e.passedPlayers.includes(p.player) ? 0 : simulateIncome(p, (clone) => clone.receivePassIncome()),
   },
   {
     type: BoardAction.values(),
