@@ -69,7 +69,7 @@
           />
         </svg>
         <svg
-          v-for="res in resourceKinds"
+          v-for="res in resources"
           :key="res"
           height="50"
           viewBox="-1.5 -1.5 4 4"
@@ -111,6 +111,17 @@
           @click="selectKind(planet)"
         >
           <circle :r="1" :class="['player-token', 'planet-fill', planet]" />
+        </svg>
+        <svg
+          v-for="action in boardActions"
+          :key="action.action"
+          height="40"
+          viewBox="-1.5 -1.5 4 4"
+          width="40"
+          :class="['pointer', 'chart-circle', { selected: chartKind === action.action }]"
+          @click="selectKind(action.action)"
+        >
+          <circle :r="1" :style="{ fill: action.color }" />
         </svg>
         <svg
           v-for="steps in terraformingSteps"
@@ -174,7 +185,7 @@ import { newVictoryPointsBarChart, newVictoryPointsLineChart } from "../logic/vi
 import PlayerCircle from "./PlayerCircle.vue";
 import BuildingImage from "./Building.vue";
 import SpecialAction from "./SpecialAction.vue";
-import Engine, { Building, Planet, PlayerEnum, ResearchField, Resource } from "@gaia-project/engine";
+import Engine, { BoardAction, Building, Planet, PlayerEnum, ResearchField, Resource } from "@gaia-project/engine";
 import {
   BarController,
   BarElement,
@@ -190,6 +201,7 @@ import {
   Title,
   Tooltip,
 } from "chart.js";
+import { boardActionNames } from "../data/board-actions";
 
 Chart.register(
   LineController,
@@ -238,8 +250,17 @@ export default class Charts extends Vue {
     return chartPlayerOrder(this.gameData);
   }
 
-  get resourceKinds(): Resource[] {
+  get resources(): Resource[] {
     return simpleChartTypes(this.chartFamily, ChartFamily.resources, ChartFamily.freeActions);
+  }
+
+  get boardActions(): { color: string; action: BoardAction }[] {
+    const types = simpleChartTypes(this.chartFamily, ChartFamily.boardActions);
+    return types
+      .map(a => {
+        const style = window.getComputedStyle(this.canvas());
+        return ({ action: a, color: style.getPropertyValue(boardActionNames[a].color) });
+      });
   }
 
   get buildings(): Building[] {
@@ -301,7 +322,7 @@ export default class Charts extends Vue {
     }
 
     const data = this.gameData;
-    const canvas = document.getElementById("graphs") as HTMLCanvasElement;
+    const canvas = this.canvas();
     if (this.chartFamily === ChartFamily.vp) {
       if (this.chartKind === "bar") {
         this.newChart(canvas, newVictoryPointsBarChart(data, canvas));
@@ -319,6 +340,10 @@ export default class Charts extends Vue {
         this.newChart(canvas, newSimpleLineChart(this.chartFamily, data, canvas, this.chartKind));
       }
     }
+  }
+
+  private canvas(): HTMLCanvasElement {
+    return document.getElementById("graphs") as HTMLCanvasElement;
   }
 
   private newChart(canvas: HTMLCanvasElement, config: ChartConfiguration<any>) {
