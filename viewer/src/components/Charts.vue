@@ -1,33 +1,46 @@
 <template>
   <div class="gaia-viewer-modal">
     <div>
-      <div class="d-flex align-items-center chart-top-controls" style="justify-content: center">
-        <template v-for="family in families">
-          <special-action
-            v-if="family.family === 'board-actions'"
-            :action="[]"
-            :key="`family${family.family}`"
-            :class="{ selected: chartFamily === family.family }"
-            width="25"
-            class="pointer mr-2 chart-resource"
-            height="25"
-            @click="selectFamily(family.family)"
-          />
-          <svg
-            v-else
-            :key="`family${family.family}`"
-            viewBox="-2 -2 5 4"
-            width="50"
-            class="pointer"
-            @click="selectFamily(family.family)"
-          >
-            <Resource
-              transform="scale(0.15)"
-              :kind="family.resourceIcon"
-              :class="['chart-resource', { selected: chartFamily === family.family }]"
+      <div class="d-flex" style="justify-content: center">
+        <div
+          style="width: 40px; height: 40px"
+          @click="selectDisplay('chart')"
+          :class="['bar-chart-icon', 'pointer', { selected: chartDisplay === 'chart' }]"
+        />
+        <div
+          style="width: 40px; height: 40px"
+          @click="selectDisplay('table')"
+          :class="['table-icon', 'pointer', { selected: chartDisplay === 'table' }]"
+        />
+        <div class="divider" />
+        <div class="d-flex align-items-center chart-top-controls" style="justify-content: center">
+          <template v-for="family in families">
+            <special-action
+              v-if="family.family === 'board-actions'"
+              :action="[]"
+              :key="`family${family.family}`"
+              :class="{ selected: chartFamily === family.family }"
+              width="25"
+              class="pointer mr-2 chart-resource"
+              height="25"
+              @click="selectFamily(family.family)"
             />
-          </svg>
-        </template>
+            <svg
+              v-else
+              :key="`family${family.family}`"
+              viewBox="-2 -2 5 4"
+              width="50"
+              class="pointer"
+              @click="selectFamily(family.family)"
+            >
+              <Resource
+                transform="scale(0.15)"
+                :kind="family.resourceIcon"
+                :class="['chart-resource', { selected: chartFamily === family.family }]"
+              />
+            </svg>
+          </template>
+        </div>
       </div>
       <div class="d-flex align-items-center" style="justify-content: center">
         <div
@@ -128,7 +141,19 @@
       </div>
     </div>
     <div id="tooltip" />
-    <canvas id="graphs" />
+    <canvas id="graphs" v-show="chartDisplay === 'chart'" />
+    <b-table
+      striped
+      bordered
+      small
+      responsive="true"
+      hover
+      v-if="chartDisplay === 'table'"
+      :items="tableItems(tableData)"
+      :fields="tableHeader(tableData)"
+      :caption="tableData.options.plugins.title.text"
+    >
+    </b-table>
   </div>
 </template>
 
@@ -155,6 +180,7 @@ import {
   BarElement,
   CategoryScale,
   Chart,
+  ChartConfiguration,
   Filler,
   Legend,
   LinearScale,
@@ -179,15 +205,24 @@ Chart.register(
   BarElement
 );
 
+type ChartDisplay = "table" | "chart";
 type ChartKind = "line" | "bar" | PlayerEnum | SimpleChartKind;
+
+const rowHeader = {
+  key: "Name",
+  isRowHeader: true,
+  sortable: true,
+};
 
 @Component({
   components: { PlayerCircle, BuildingImage, SpecialAction },
 })
 export default class Charts extends Vue {
+  private chartDisplay: ChartDisplay = "chart";
   private chartFamily: ChartFamily = ChartFamily.vp;
   private chartKind: ChartKind = "bar";
   private chart: Chart;
+  private tableData: ChartConfiguration<any>;
 
   get gameData(): Engine {
     return this.$store.state.gaiaViewer.data;
@@ -239,6 +274,10 @@ export default class Charts extends Vue {
     return typeof this.chartKind == "number" || this.chartKind == "bar" || this.chartKind == "line";
   }
 
+  selectDisplay(display: ChartDisplay) {
+    this.chartDisplay = display;
+  }
+
   selectFamily(family: ChartFamily) {
     if (this.chartFamily != family) {
       if (!this.isCommonKind()) {
@@ -253,6 +292,7 @@ export default class Charts extends Vue {
     this.chartKind = kind;
   }
 
+  @Watch("chartDisplay")
   @Watch("chartFamily")
   @Watch("chartKind")
   loadChart() {
@@ -264,21 +304,55 @@ export default class Charts extends Vue {
     const canvas = document.getElementById("graphs") as HTMLCanvasElement;
     if (this.chartFamily === ChartFamily.vp) {
       if (this.chartKind === "bar") {
-        this.chart = new Chart(canvas, newVictoryPointsBarChart(data, canvas));
+        this.newChart(canvas, newVictoryPointsBarChart(data, canvas));
       } else if (this.chartKind === "line") {
-        this.chart = new Chart(canvas, newVictoryPointsLineChart(data, canvas, PlayerEnum.All));
+        this.newChart(canvas, newVictoryPointsLineChart(data, canvas, PlayerEnum.All));
       } else {
-        this.chart = new Chart(canvas, newVictoryPointsLineChart(data, canvas, this.chartKind as PlayerEnum));
+        this.newChart(canvas, newVictoryPointsLineChart(data, canvas, this.chartKind as PlayerEnum));
       }
     } else {
       if (this.chartKind === "bar") {
-        this.chart = new Chart(canvas, newSimpleBarChart(this.chartFamily, data, canvas));
+        this.newChart(canvas, newSimpleBarChart(this.chartFamily, data, canvas));
       } else if (this.chartKind === "line") {
-        this.chart = new Chart(canvas, newSimpleLineChart(this.chartFamily, data, canvas, PlayerEnum.All));
+        this.newChart(canvas, newSimpleLineChart(this.chartFamily, data, canvas, PlayerEnum.All));
       } else {
-        this.chart = new Chart(canvas, newSimpleLineChart(this.chartFamily, data, canvas, this.chartKind));
+        this.newChart(canvas, newSimpleLineChart(this.chartFamily, data, canvas, this.chartKind));
       }
     }
+  }
+
+  private newChart(canvas: HTMLCanvasElement, config: ChartConfiguration<any>) {
+    if (this.chartDisplay == "chart") {
+      this.chart = new Chart(canvas, config);
+    } else {
+      this.tableData = config;
+    }
+  }
+
+  tableHeader(data: ChartConfiguration<any>): any[] {
+    return [rowHeader as any].concat(...data.data.datasets.map(s => ({ key: s.label, sortable: true })));
+  }
+
+  tableItems(data: ChartConfiguration<any>): any[] {
+    const rows = (data.data.datasets[0].data as number[]).map(() => ({}));
+    (data.data.labels).forEach((s, index) => {
+      rows[index][rowHeader.key] = s;
+    });
+
+    function cell(value: any) {
+      const val = (typeof value == "number") ? value : value.y;
+      if (isNaN(val)) {
+        return "";
+      }
+      return val;
+    }
+
+    for (const s of data.data.datasets) {
+      (s.data as number[]).forEach((value, index) => {
+        rows[index][s.label] = cell(value);
+      });
+    }
+    return rows;
   }
 }
 </script>
@@ -303,6 +377,7 @@ export default class Charts extends Vue {
 }
 
 .chart-building,
+.table-icon,
 .line-chart-icon,
 .bar-chart-icon {
   background-color: black;
@@ -317,6 +392,10 @@ export default class Charts extends Vue {
   }
 }
 
+.table-icon {
+  mask-image: url("../assets/resources/table.svg");
+}
+
 .line-chart-icon {
   mask-image: url("../assets/resources/line-chart.svg");
 }
@@ -325,9 +404,20 @@ export default class Charts extends Vue {
   mask-image: url("../assets/resources/bar-chart.svg");
 }
 
+.divider {
+  border-right: 2px solid black;
+  margin: 16px 4px;
+}
+
 #tooltip {
   background-color: #000;
   color: #fff;
   position: absolute;
+}
+
+.table.b-table > caption {
+  caption-side: top;
+  text-align: center;
+  font-weight: bold;
 }
 </style>
