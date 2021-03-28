@@ -28,6 +28,7 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
   item.addListener("state", (data) => {
     store.dispatch("gaiaViewer/externalData", data);
     item.emit("replaceLog", data?.moveHistory);
+    app.$nextTick().then(() => item.emit("ready"));
   });
   item.addListener("state:updated", () => {
     if (!replaying) {
