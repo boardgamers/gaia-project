@@ -113,15 +113,15 @@
           <circle :r="1" :class="['player-token', 'planet-fill', planet]" />
         </svg>
         <svg
-          v-for="action in boardActions"
-          :key="action.action"
+          v-for="k in genericKinds"
+          :key="k.kind"
           height="40"
           viewBox="-1.5 -1.5 4 4"
           width="40"
-          :class="['pointer', 'chart-circle', { selected: chartKind === action.action }]"
-          @click="selectKind(action.action)"
+          :class="['pointer', 'chart-circle', { selected: chartKind === k.kind }]"
+          @click="selectKind(k.kind)"
         >
-          <circle :r="1" :style="{ fill: action.color }" />
+          <circle :r="1" :style="{ fill: k.color }" />
         </svg>
         <svg
           v-for="steps in terraformingSteps"
@@ -169,23 +169,19 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
-import { ChartFamily, chartPlayerOrder } from "../logic/charts";
+import {Component, Vue, Watch} from "vue-property-decorator";
+import {ChartFamily, chartPlayerOrder} from "../logic/charts";
 import {
-  newSimpleBarChart,
-  newSimpleLineChart,
   planetsForSteps,
-  simpleChartFactory,
-  SimpleChartKind,
   simpleChartTypes,
+  simpleSourceFactory,
   SimpleSourceFactory,
   TerraformingSteps,
 } from "../logic/simple-charts";
-import { newVictoryPointsBarChart, newVictoryPointsLineChart } from "../logic/victory-point-charts";
 import PlayerCircle from "./PlayerCircle.vue";
 import BuildingImage from "./Building.vue";
 import SpecialAction from "./SpecialAction.vue";
-import Engine, { BoardAction, Building, Planet, PlayerEnum, ResearchField, Resource } from "@gaia-project/engine";
+import Engine, {Building, Planet, PlayerEnum, ResearchField, Resource} from "@gaia-project/engine";
 import {
   BarController,
   BarElement,
@@ -201,7 +197,7 @@ import {
   Title,
   Tooltip,
 } from "chart.js";
-import { boardActionNames } from "../data/board-actions";
+import {ChartKind, genericKinds, newBarChart, newLineChart, TableMeta} from "../logic/chart-factory";
 
 Chart.register(
   LineController,
@@ -218,16 +214,20 @@ Chart.register(
 );
 
 type ChartDisplay = "table" | "chart";
-type ChartKind = "line" | "bar" | PlayerEnum | SimpleChartKind;
 
-const rowHeader = {
+const nameColumn = {
   key: "Name",
   isRowHeader: true,
   sortable: true,
 };
 
+const weightColumn = {
+  key: "Weight",
+  sortable: true,
+};
+
 @Component({
-  components: { PlayerCircle, BuildingImage, SpecialAction },
+  components: {PlayerCircle, BuildingImage, SpecialAction},
 })
 export default class Charts extends Vue {
   private chartDisplay: ChartDisplay = "chart";
@@ -235,6 +235,7 @@ export default class Charts extends Vue {
   private chartKind: ChartKind = "bar";
   private chart: Chart;
   private tableData: ChartConfiguration<any>;
+  private tableMeta?: TableMeta;
 
   get gameData(): Engine {
     return this.$store.state.gaiaViewer.data;
@@ -242,7 +243,7 @@ export default class Charts extends Vue {
 
   get families(): SimpleSourceFactory<any>[] {
     return Object.values(ChartFamily).map((f) =>
-      f == ChartFamily.vp ? ({ family: "vp", resourceIcon: "vp" } as SimpleSourceFactory<any>) : simpleChartFactory(f)
+      f == ChartFamily.vp ? ({family: "vp", resourceIcon: "vp"} as SimpleSourceFactory<any>) : simpleSourceFactory(f)
     );
   }
 
@@ -254,13 +255,8 @@ export default class Charts extends Vue {
     return simpleChartTypes(this.chartFamily, ChartFamily.resources, ChartFamily.freeActions);
   }
 
-  get boardActions(): { color: string; action: BoardAction }[] {
-    const types = simpleChartTypes(this.chartFamily, ChartFamily.boardActions);
-    return types
-      .map(a => {
-        const style = window.getComputedStyle(this.canvas());
-        return ({ action: a as BoardAction, color: style.getPropertyValue(boardActionNames[a].color) });
-      });
+  get genericKinds(): { color: string; kind: ChartKind }[] {
+    return genericKinds(this.gameData, this.chartFamily);
   }
 
   get buildings(): Building[] {
@@ -317,28 +313,16 @@ export default class Charts extends Vue {
   @Watch("chartFamily")
   @Watch("chartKind")
   loadChart() {
-    if (this.chart) {
-      this.chart.destroy();
-    }
-
     const data = this.gameData;
     const canvas = this.canvas();
-    if (this.chartFamily === ChartFamily.vp) {
-      if (this.chartKind === "bar") {
-        this.newChart(canvas, newVictoryPointsBarChart(data, canvas));
-      } else if (this.chartKind === "line") {
-        this.newChart(canvas, newVictoryPointsLineChart(data, canvas, PlayerEnum.All));
-      } else {
-        this.newChart(canvas, newVictoryPointsLineChart(data, canvas, this.chartKind as PlayerEnum));
-      }
+
+    if (this.chartKind === "bar") {
+      const config = newBarChart(this.chartFamily, data, canvas);
+      this.newChart(canvas, config.chart, config.table);
+    } else if (this.chartKind === "line") {
+      this.newChart(canvas, newLineChart(this.chartFamily, data, canvas, PlayerEnum.All));
     } else {
-      if (this.chartKind === "bar") {
-        this.newChart(canvas, newSimpleBarChart(this.chartFamily, data, canvas));
-      } else if (this.chartKind === "line") {
-        this.newChart(canvas, newSimpleLineChart(this.chartFamily, data, canvas, PlayerEnum.All));
-      } else {
-        this.newChart(canvas, newSimpleLineChart(this.chartFamily, data, canvas, this.chartKind));
-      }
+      this.newChart(canvas, newLineChart(this.chartFamily, data, canvas, this.chartKind));
     }
   }
 
@@ -346,23 +330,50 @@ export default class Charts extends Vue {
     return document.getElementById("graphs") as HTMLCanvasElement;
   }
 
-  private newChart(canvas: HTMLCanvasElement, config: ChartConfiguration<any>) {
+  private newChart(canvas: HTMLCanvasElement, config: ChartConfiguration<any>, tableMeta?: TableMeta) {
     if (this.chartDisplay == "chart") {
+      if (this.chart) {
+        this.chart.destroy();
+      }
       this.chart = new Chart(canvas, config);
     } else {
       this.tableData = config;
+      this.tableMeta = tableMeta;
     }
   }
 
   tableHeader(data: ChartConfiguration<any>): any[] {
-    return [rowHeader as any].concat(...data.data.datasets.map(s => ({ key: s.label, sortable: true })));
+    const headers = [nameColumn as any];
+    const weights = this.tableMeta?.weights;
+    if (weights != null) {
+      headers.push(weightColumn);
+    }
+    const meta = this.tableMeta?.datasetMeta;
+
+    headers.push(...data.data.datasets.map(s => ({
+      key: s.label,
+      sortable: true,
+      label: meta?.[s.label],
+    })));
+    return headers;
   }
 
   tableItems(data: ChartConfiguration<any>): any[] {
-    const rows = (data.data.datasets[0].data as number[]).map(() => ({}));
+    const datasets = data.data.datasets;
+    const totals = {};
+    const weightedTotals = {};
+    const rows = (datasets[0].data as number[]).map(() => ({}));
     (data.data.labels).forEach((s, index) => {
-      rows[index][rowHeader.key] = s;
+      rows[index][nameColumn.key] = s;
     });
+    const weights = this.tableMeta?.weights;
+    if (weights != null) {
+      weights.forEach((s, index) => {
+        rows[index][weightColumn.key] = s;
+      });
+    }
+    totals[nameColumn.key] = "Total";
+    weightedTotals[nameColumn.key] = "Weighted Total";
 
     function cell(value: any) {
       const val = (typeof value == "number") ? value : value.y;
@@ -372,10 +383,23 @@ export default class Charts extends Vue {
       return val;
     }
 
-    for (const s of data.data.datasets) {
+    for (const s of datasets) {
       (s.data as number[]).forEach((value, index) => {
         rows[index][s.label] = cell(value);
       });
+      const meta = this.tableMeta?.datasetMeta?.[s.label];
+      if (meta?.total != null) {
+        totals[s.label] = meta.total;
+      }
+      if (meta?.weightedTotal != null) {
+        weightedTotals[s.label] = meta.weightedTotal;
+      }
+    }
+    if (Object.values(totals).length > 1) {
+      rows.push(totals);
+    }
+    if (Object.values(weightedTotals).length > 1) {
+      rows.push(weightedTotals);
     }
     return rows;
   }

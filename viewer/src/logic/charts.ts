@@ -20,8 +20,9 @@ import {
   TooltipOptions,
 } from "chart.js";
 import { sumBy } from "lodash";
-import { planetColor as plainPlanetColor } from "../graphics/utils";
 import { CommandObject, parseCommands } from "./recent";
+
+export type ChartColor = string | ((player: Player) => string);
 
 export enum ChartFamily {
   vp = "vp",
@@ -47,7 +48,7 @@ export type EventFilter = (
 ) => number;
 
 export interface DatasetFactory {
-  backgroundColor: string;
+  backgroundColor: ColorVar;
   fill: string | false;
   label: string;
   description?: string;
@@ -57,7 +58,7 @@ export interface DatasetFactory {
 
 export type IncludeRounds = "all" | "except-final" | "last";
 
-export function chartPlayerOrder(data: Engine) {
+export function chartPlayerOrder(data: Engine): PlayerEnum[] {
   return data.players.map((p) => p.player);
 }
 
@@ -114,28 +115,54 @@ export function getDataPoints(
   }
   if (includeRounds === "all") {
     perRoundData[7] = counter;
+  } else if (includeRounds === "last") {
+    perRoundData[0] = counter;
   }
+
   return perRoundData;
 }
 
-export function planetColor(planet: Planet, invert: boolean) {
-  return invert && planet == Planet.Ice ? "black" : plainPlanetColor(planet as Exclude<Planet, Planet.Empty>);
+export class ColorVar {
+  color: string;
+
+  constructor(color: string) {
+    if (!color.startsWith("--")) {
+      throw `${color} does not start with --`;
+    }
+    this.color = color;
+  }
+
+  asVar() {
+    return `var(${this.color})`;
+  }
+
+  lookup(canvas: HTMLCanvasElement) {
+    return window.getComputedStyle(canvas).getPropertyValue(this.color);
+  }
 }
 
-export function playerColor(pl: Player, invert: boolean) {
-  return planetColor(factions[pl.faction].planet, invert);
+export function resolveColor(color: ChartColor, player: Player) {
+  return typeof color == "string" ? color : color(player);
+}
+
+export function planetColor(planet: Planet, invert: boolean): string {
+  return invert && planet == Planet.Ice
+    ? "--current-round"
+    : "--" +
+        Object.keys(Planet)
+          .find((k) => Planet[k] == planet)
+          .toLowerCase();
+}
+
+export function playerColor(pl: Player, invert: boolean): ColorVar {
+  return new ColorVar(planetColor(factions[pl.faction].planet, invert));
 }
 
 export function playerLabel(pl: Player) {
   return factions[pl.faction].name;
 }
 
-export function weightedSum(
-  data: Engine,
-  player: PlayerEnum,
-  canvas: HTMLCanvasElement,
-  factories: DatasetFactory[]
-): DatasetFactory | null {
+export function weightedSum(data: Engine, player: PlayerEnum, factories: DatasetFactory[]): DatasetFactory | null {
   const pl = data.player(player);
   if (!pl.faction) {
     return null;
@@ -221,16 +248,19 @@ export function lineChartConfig(
   stacked: boolean,
   includeRounds: IncludeRounds
 ): ChartConfiguration<"line"> {
-  const datasets: ChartDataset<"line">[] = datasetFactories.map((f) => ({
-    backgroundColor: f.backgroundColor,
-    borderColor: f.backgroundColor,
-    data: f.getDataPoints().map((val, i) => ({ x: i, y: val })),
-    fill: f.fill,
-    label: f.label,
-  }));
+  const datasets: ChartDataset<"line">[] = datasetFactories.map((f) => {
+    const color = f.backgroundColor.lookup(canvas);
+    return {
+      backgroundColor: color,
+      borderColor: color,
+      data: f.getDataPoints().map((val, i) => ({ x: i, y: val })),
+      fill: f.fill,
+      label: f.label,
+    };
+  });
 
   const labels = ["Start", "Round 1", "Round 2", "Round 3", "Round 4", "Round 5", "Round 6"];
-  if (includeRounds == "all") {
+  if (includeRounds === "all") {
     if (data.ended) {
       labels.push("Final");
     } else {
