@@ -36,6 +36,7 @@ export enum TerraformingSteps {
   Step3 = "3 steps",
   GaiaFormer = "Gaia Former",
   Gaia = "Gaia Planet (settled directly)",
+  Lantids = "Lantids guest mine",
 }
 
 function terraformingSteps(steps: TerraformingSteps): number {
@@ -51,12 +52,14 @@ function terraformingSteps(steps: TerraformingSteps): number {
   }
 }
 
-export function planetsForSteps(type: TerraformingSteps, planet: Planet) {
+export function planetsForSteps(type: TerraformingSteps, planet: Planet): Planet[] {
   switch (type) {
     case TerraformingSteps.Gaia:
       return [Planet.Gaia];
     case TerraformingSteps.GaiaFormer:
       return [Planet.Transdim];
+    case TerraformingSteps.Lantids:
+      return [Planet.Lost];
     case TerraformingSteps.Step0:
       return [planet];
     default:
@@ -100,6 +103,7 @@ function planetCounter<T extends SimpleChartKind>(
   getPlanets: (type: T, player: Player) => Planet[]
 ): (cmd: CommandObject, source: SimpleSource<T>, data: Engine, player: Player) => number {
   const transdim = new Set<string>();
+  const owners: { [key: string]: PlayerEnum } = {};
 
   return (cmd, source, data: Engine, player: Player) => {
     if (cmd.command == Command.Build) {
@@ -108,6 +112,13 @@ function planetCounter<T extends SimpleChartKind>(
       const { q, r } = data.map.parse(location);
       const hex = data.map.grid.get({ q, r });
       const planet = hex.data.planet;
+
+      const owner = owners[location];
+      if (owner == null) {
+        owners[location] = player.player;
+      } else if (owner != player.player && player.faction == Faction.Lantids) {
+        return source.type == TerraformingSteps.Lantids ? 1 : 0;
+      }
 
       const want = getPlanets(source.type, player);
 
