@@ -409,10 +409,3 @@ export function simpleSourceFactory<Type extends SimpleChartKind, Source extends
 ): SimpleSourceFactory<Source> {
   return factories.find((f) => f.family == family) as SimpleSourceFactory<Source>;
 }
-
-export function simpleChartTypes<Type extends SimpleChartKind, Source extends SimpleSource<Type>>(
-  current: ChartFamily,
-  ...want: ChartFamily[]
-): Type[] {
-  return want.includes(current) ? simpleSourceFactory<Type, Source>(current).sources.map((s) => s.type) : [];
-}
