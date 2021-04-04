@@ -79,7 +79,7 @@ export function tableItems(
   config.data.labels.forEach(
     (s, index) =>
       (rows[index][nameColumn.key] =
-        colors == null ? s : rowHeaderCell(style, cellStyle(canvas, colors[index]), s as string))
+        colors == null ? dataCell(s) : rowHeaderCell(style, cellStyle(canvas, colors[index]), s as string))
   );
   const weights = tableMeta?.weights;
   if (weights != null) {
