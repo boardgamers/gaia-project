@@ -68,7 +68,7 @@ export type ChartFactory<Type extends ChartKind, Source extends ChartSource<Type
   playerSummaryTitle(family: ChartFamily): string;
   kindBreakdownTitle(family: ChartFamily, source: Source): string;
   includeRounds: IncludeRounds;
-  stacked(player: PlayerEnum | ChartKind);
+  stacked(kind: ChartKind);
   showWeightedTotal(family: ChartFamily): boolean;
   barChartTooltip?: DeepPartial<TooltipOptions<"bar">>;
 };
@@ -147,8 +147,8 @@ const vpChartFactory: ChartFactory<VictoryPointType, ChartSource<VictoryPointTyp
   kindBreakdownTitle(family: ChartFamily, source: ChartSource<VictoryPointType>): string {
     return `${victoryPointSource(source).label} of all players`;
   },
-  stacked(player: PlayerEnum) {
-    return player != PlayerEnum.All;
+  stacked(kind: ChartKind) {
+    return Object.values(PlayerEnum).includes(kind) && kind != PlayerEnum.All;
   },
   showWeightedTotal(): boolean {
     return false;
@@ -216,7 +216,7 @@ export function newLineChart(
   family: ChartFamily,
   data: Engine,
   canvas: HTMLCanvasElement,
-  kind: PlayerEnum | ChartKind
+  kind: ChartKind
 ): ChartConfiguration<"line"> {
   const f = chartFactory(family);
 
