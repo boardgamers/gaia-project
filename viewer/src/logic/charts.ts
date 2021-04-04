@@ -9,8 +9,8 @@ import Engine, {
   ResearchField,
   Resource,
 } from "@gaia-project/engine";
+import { ChartStyleDisplay } from "./chart-factory";
 import { CommandObject, parseCommands } from "./recent";
-import {ChartStyleDisplay} from "./chart-factory";
 
 export type ChartColor = string | ((player: Player) => string);
 

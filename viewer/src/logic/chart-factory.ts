@@ -13,12 +13,14 @@ import { sortBy, sum, sumBy } from "lodash";
 import {
   ChartColor,
   ChartFamily,
-  chartPlayerOrder, ColorVar,
+  chartPlayerOrder,
+  ColorVar,
   DatasetFactory,
   DeepPartial,
   IncludeRounds,
   playerColor,
-  playerLabel, resolveColor,
+  playerLabel,
+  resolveColor,
   weightedSum,
 } from "./charts";
 import { simpleChartDetails, SimpleChartKind, SimpleSource, simpleSourceFactory } from "./simple-charts";

@@ -17,7 +17,6 @@ import { planetNames } from "../data/planets";
 import {
   ChartColor,
   ChartFamily,
-  ColorVar,
   DatasetFactory,
   EventFilter,
   getDataPoints,

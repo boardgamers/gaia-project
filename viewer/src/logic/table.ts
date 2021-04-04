@@ -1,6 +1,6 @@
-import {ChartConfiguration} from "chart.js";
-import {ChartStyleDisplay, TableMeta} from "./chart-factory";
-import {ColorVar} from "./charts";
+import { ChartConfiguration } from "chart.js";
+import { ChartStyleDisplay, TableMeta } from "./chart-factory";
+import { ColorVar } from "./charts";
 
 const nameColumn = {
   key: "Name",
@@ -10,16 +10,21 @@ const nameColumn = {
 
 const weightKey = "Weight";
 
-type CellStyle = { color: string, backgroundColor: string };
+type CellStyle = { color: string; backgroundColor: string };
 
 function cellStyle(canvas: HTMLCanvasElement, backgroundColor: ColorVar): CellStyle {
   return {
     backgroundColor: backgroundColor.lookup(canvas),
-    color: new ColorVar(backgroundColor.color + "-text").lookup(canvas) ?? "black"
+    color: new ColorVar(backgroundColor.color + "-text").lookup(canvas) ?? "black",
   };
 }
 
-export function tableHeader(canvas: HTMLCanvasElement, style: ChartStyleDisplay, config: ChartConfiguration<any>, tableMeta?: TableMeta): any[] {
+export function tableHeader(
+  canvas: HTMLCanvasElement,
+  style: ChartStyleDisplay,
+  config: ChartConfiguration<any>,
+  tableMeta?: TableMeta
+): any[] {
   const meta = tableMeta?.datasetMeta;
 
   const compact = style.compact;
@@ -60,14 +65,22 @@ function dataCell(label: any) {
   return `<span>${label}</span>`;
 }
 
-export function tableItems(canvas: HTMLCanvasElement, style: ChartStyleDisplay, config: ChartConfiguration<any>, tableMeta?: TableMeta): any[] {
+export function tableItems(
+  canvas: HTMLCanvasElement,
+  style: ChartStyleDisplay,
+  config: ChartConfiguration<any>,
+  tableMeta?: TableMeta
+): any[] {
   const datasets = config.data.datasets;
   const totals = {};
   const weightedTotals = {};
   const rows = (datasets[0].data as number[]).map(() => ({}));
   const colors = tableMeta?.colors;
-  config.data.labels.forEach((s, index) =>
-    rows[index][nameColumn.key] = colors == null ? s : rowHeaderCell(style, cellStyle(canvas, colors[index]), s as string));
+  config.data.labels.forEach(
+    (s, index) =>
+      (rows[index][nameColumn.key] =
+        colors == null ? s : rowHeaderCell(style, cellStyle(canvas, colors[index]), s as string))
+  );
   const weights = tableMeta?.weights;
   if (weights != null) {
     weights.forEach((s, index) => {

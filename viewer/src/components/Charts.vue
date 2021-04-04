@@ -3,26 +3,25 @@
     <div class="d-flex" style="justify-content: center">
       <b-dropdown size="sm" class="mr-2 mb-2" text="Style">
         <b-dropdown-item v-for="(s, i) in chartStyles" :key="`style${i}`" @click="selectStyle(s)"
-        >{{ s.label }}
+          >{{ s.label }}
         </b-dropdown-item>
       </b-dropdown>
       <b-dropdown size="sm" class="mr-2 mb-2" text="What">
         <b-dropdown-item v-for="i in families" :key="`family${i.name}`" @click="selectFamily(i.family)"
-        >{{ i.name }}
+          >{{ i.name }}
         </b-dropdown-item>
       </b-dropdown>
       <b-dropdown size="sm" class="mr-2 mb-2" right text="Details">
         <template v-for="(group, index) in kinds">
-          <b-dropdown-divider v-if="index > 0"/>
-          <b-dropdown-item v-for="(g, i) in group" :key="`kind${index}${i}`" @click="selectKind(g.kind)">{{
-              g.label
-            }}
+          <b-dropdown-divider v-if="index > 0" />
+          <b-dropdown-item v-for="(g, i) in group" :key="`kind${index}${i}`" @click="selectKind(g.kind)"
+            >{{ g.label }}
           </b-dropdown-item>
         </template>
       </b-dropdown>
     </div>
-    <div id="tooltip"/>
-    <canvas id="graphs" v-show="chartStyle.type === 'chart'"/>
+    <div id="tooltip" />
+    <canvas id="graphs" v-show="chartStyle.type === 'chart'" />
     <!-- :key is necessary to force update -->
     <b-table
       :key="chartStyle.type + chartFamily + chartKind"
@@ -199,7 +198,6 @@ export default class Charts extends Vue {
 </script>
 
 <style lang="scss">
-
 @media (min-width: 992px) {
   .modal-xl {
     max-width: 1500px;
@@ -247,9 +245,8 @@ export default class Charts extends Vue {
 }
 
 div.compact > .table-sm th > span > span,
-div.compact > .table-sm th > div
-{
-  padding: 0
+div.compact > .table-sm th > div {
+  padding: 0;
 }
 
 .table-sm td {
