@@ -13,12 +13,12 @@ import { sortBy, sum, sumBy } from "lodash";
 import {
   ChartColor,
   ChartFamily,
-  chartPlayerOrder,
+  chartPlayerOrder, ColorVar,
   DatasetFactory,
   DeepPartial,
   IncludeRounds,
   playerColor,
-  playerLabel,
+  playerLabel, resolveColor,
   weightedSum,
 } from "./charts";
 import { simpleChartDetails, SimpleChartKind, SimpleSource, simpleSourceFactory } from "./simple-charts";
@@ -39,7 +39,7 @@ export type ChartStyleDisplay = {
 };
 
 export type DatasetMeta = { [key: string]: { label: string; total: number; weightedTotal: number } };
-export type TableMeta = { weights?: number[]; datasetMeta: DatasetMeta };
+export type TableMeta = { weights?: number[]; colors?: ColorVar[]; datasetMeta: DatasetMeta };
 export type BarChartConfig = { chart: ChartConfiguration<"bar">; table: TableMeta };
 
 export type ChartKind = "line" | "bar" | PlayerEnum | SimpleChartKind | VictoryPointType;
@@ -336,8 +336,9 @@ export function newBarChart(
   const datasetMeta: DatasetMeta = {};
 
   const sources = f.sources(family);
+  const players = chartPlayerOrder(data);
   const datasets: ChartDataset<"bar">[] = sortBy(
-    chartPlayerOrder(data)
+    players
       .filter((pl) => data.player(pl).faction != null)
       .map((pl) => {
         const details = f.newDetails(data, pl, sources, "last", family, false);
@@ -369,9 +370,11 @@ export function newBarChart(
     (d) => -d.points
   ).map((d) => d.data);
 
+  const player = data.player(players[0]);
   return {
     table: {
       weights: showWeightedTotal ? sources.map((s) => s.weight) : null,
+      colors: sources.map((s) => resolveColor(s.color, player)),
       datasetMeta: datasetMeta,
     },
     chart: {

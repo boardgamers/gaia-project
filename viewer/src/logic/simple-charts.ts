@@ -394,7 +394,7 @@ export function simpleChartDetails<Source extends SimpleSource<any>>(
     const deltaForEnded = () => 0;
 
     return {
-      backgroundColor: new ColorVar(resolveColor(s.color, pl)),
+      backgroundColor: resolveColor(s.color, pl),
       label: s.label,
       fill: false,
       getDataPoints: () =>

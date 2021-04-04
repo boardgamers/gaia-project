@@ -3,25 +3,26 @@
     <div class="d-flex" style="justify-content: center">
       <b-dropdown size="sm" class="mr-2 mb-2" text="Style">
         <b-dropdown-item v-for="(s, i) in chartStyles" :key="`style${i}`" @click="selectStyle(s)"
-          >{{ s.label }}
+        >{{ s.label }}
         </b-dropdown-item>
       </b-dropdown>
       <b-dropdown size="sm" class="mr-2 mb-2" text="What">
         <b-dropdown-item v-for="i in families" :key="`family${i.name}`" @click="selectFamily(i.family)"
-          >{{ i.name }}
+        >{{ i.name }}
         </b-dropdown-item>
       </b-dropdown>
       <b-dropdown size="sm" class="mr-2 mb-2" right text="Details">
         <template v-for="(group, index) in kinds">
-          <b-dropdown-divider v-if="index > 0" />
+          <b-dropdown-divider v-if="index > 0"/>
           <b-dropdown-item v-for="(g, i) in group" :key="`kind${index}${i}`" @click="selectKind(g.kind)">{{
-            g.label
-          }}</b-dropdown-item>
+              g.label
+            }}
+          </b-dropdown-item>
         </template>
       </b-dropdown>
     </div>
-    <div id="tooltip" />
-    <canvas id="graphs" v-show="chartStyle.type === 'chart'" />
+    <div id="tooltip"/>
+    <canvas id="graphs" v-show="chartStyle.type === 'chart'"/>
     <!-- :key is necessary to force update -->
     <b-table
       :key="chartStyle.type + chartFamily + chartKind"
@@ -30,11 +31,16 @@
       small
       responsive="true"
       hover
+      :class="{ compact: chartStyle.compact }"
       v-if="chartStyle.type === 'table'"
       :items="table.items"
       :fields="table.header"
       :caption="table.title"
-    />
+    >
+      <template #cell()="data">
+        <span v-html="data.value"></span>
+      </template>
+    </b-table>
   </div>
 </template>
 
@@ -113,7 +119,10 @@ export default class Charts extends Vue {
 
   get families(): SimpleSourceFactory<any>[] {
     return Object.values(ChartFamily).map((f) =>
-      f == ChartFamily.vp ? ({family: "vp", name: "Victory Points"} as SimpleSourceFactory<any>) : simpleSourceFactory(f)
+      f == ChartFamily.vp ? ({
+        family: "vp",
+        name: "Victory Points"
+      } as SimpleSourceFactory<any>) : simpleSourceFactory(f)
     );
   }
 
@@ -182,7 +191,7 @@ export default class Charts extends Vue {
       this.table = {
         title: config.options.plugins.title.text,
         header: tableHeader(canvas, this.chartStyle, config, tableMeta),
-        items: tableItems(this.chartStyle, config, tableMeta)
+        items: tableItems(canvas, this.chartStyle, config, tableMeta)
       };
     }
   }
@@ -218,5 +227,27 @@ export default class Charts extends Vue {
   caption-side: top;
   text-align: center;
   font-weight: bold;
+}
+
+.table-sm th {
+  padding: 0;
+}
+
+.table-sm th > span > span,
+.table-sm th > div {
+  padding: 0.3rem;
+  display: block;
+}
+
+div.compact > .table-sm th > span > span,
+div.compact > .table-sm th > div
+{
+  padding: 0
+}
+
+.table-sm td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0 0.3rem 0 0.3rem;
 }
 </style>

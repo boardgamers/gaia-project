@@ -10,6 +10,15 @@ const nameColumn = {
 
 const weightKey = "Weight";
 
+type CellStyle = { color: string, backgroundColor: string };
+
+function cellStyle(canvas: HTMLCanvasElement, backgroundColor: ColorVar): CellStyle {
+  return {
+    backgroundColor: backgroundColor.lookup(canvas),
+    color: new ColorVar(backgroundColor.color + "-text").lookup(canvas) ?? "black"
+  };
+}
+
 export function tableHeader(canvas: HTMLCanvasElement, style: ChartStyleDisplay, config: ChartConfiguration<any>, tableMeta?: TableMeta): any[] {
   const meta = tableMeta?.datasetMeta;
 
@@ -33,39 +42,42 @@ export function tableHeader(canvas: HTMLCanvasElement, style: ChartStyleDisplay,
   }
 
   headers.push(
-    ...config.data.datasets.map((s) => {
-      return ({
-        thStyle: {
-          backgroundColor: new ColorVar(s.backgroundColor).lookup(canvas),
-          color: new ColorVar(s.backgroundColor + "-text").lookup(canvas) ?? "black"
-        },
-        key: s.label,
-        sortable: true,
-        label: cropLabel(meta?.[s.label]?.label ?? s.label),
-      });
-    })
+    ...config.data.datasets.map((s) => ({
+      thStyle: cellStyle(canvas, new ColorVar(s.backgroundColor)),
+      key: s.label,
+      sortable: true,
+      label: cropLabel(meta?.[s.label]?.label ?? s.label),
+    }))
   );
   return headers;
 }
 
-export function tableItems(style: ChartStyleDisplay, config: ChartConfiguration<any>, tableMeta?: TableMeta): any[] {
+function rowHeaderCell(display: ChartStyleDisplay, s: CellStyle, label: string) {
+  return `<span style="background-color: ${s.backgroundColor}; color: ${s.color}">${label}</span>`;
+}
+
+function dataCell(label: any) {
+  return `<span>${label}</span>`;
+}
+
+export function tableItems(canvas: HTMLCanvasElement, style: ChartStyleDisplay, config: ChartConfiguration<any>, tableMeta?: TableMeta): any[] {
   const datasets = config.data.datasets;
   const totals = {};
   const weightedTotals = {};
   const rows = (datasets[0].data as number[]).map(() => ({}));
-  config.data.labels.forEach((s, index) => {
-    rows[index][nameColumn.key] = s;
-  });
+  const colors = tableMeta?.colors;
+  config.data.labels.forEach((s, index) =>
+    rows[index][nameColumn.key] = colors == null ? s : rowHeaderCell(style, cellStyle(canvas, colors[index]), s as string));
   const weights = tableMeta?.weights;
   if (weights != null) {
     weights.forEach((s, index) => {
-      rows[index][weightKey] = s;
+      rows[index][weightKey] = dataCell(s);
     });
   }
-  totals[nameColumn.key] = "Total";
-  weightedTotals[nameColumn.key] = "Weighted Total";
+  totals[nameColumn.key] = dataCell("Total");
+  weightedTotals[nameColumn.key] = dataCell("Weighted Total");
 
-  function cell(value: any) {
+  function cell(value: any): any {
     const val = typeof value == "number" ? value : value.y;
     if (isNaN(val)) {
       return "";
@@ -75,14 +87,14 @@ export function tableItems(style: ChartStyleDisplay, config: ChartConfiguration<
 
   for (const s of datasets) {
     (s.data as number[]).forEach((value, index) => {
-      rows[index][s.label] = cell(value);
+      rows[index][s.label] = dataCell(cell(value));
     });
     const meta = tableMeta?.datasetMeta?.[s.label];
     if (meta?.total != null) {
-      totals[s.label] = meta.total;
+      totals[s.label] = dataCell(meta.total);
     }
     if (meta?.weightedTotal != null) {
-      weightedTotals[s.label] = meta.weightedTotal;
+      weightedTotals[s.label] = dataCell(meta.weightedTotal);
     }
   }
   if (Object.values(totals).length > 1) {

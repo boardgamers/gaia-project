@@ -138,8 +138,8 @@ export class ColorVar {
   }
 }
 
-export function resolveColor(color: ChartColor, player: Player) {
-  return typeof color == "string" ? color : color(player);
+export function resolveColor(color: ChartColor, player: Player): ColorVar {
+  return new ColorVar(typeof color == "string" ? color : color(player));
 }
 
 export function planetColor(planet: Planet, invert: boolean): string {
