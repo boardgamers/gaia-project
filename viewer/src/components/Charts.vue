@@ -13,7 +13,7 @@
       </b-dropdown>
       <b-dropdown size="sm" class="mr-2 mb-2" right text="Details">
         <template v-for="(group, index) in kinds">
-          <b-dropdown-divider v-if="index > 0" :key="`divider${index}`"/>
+          <b-dropdown-divider v-if="index > 0" :key="`divider${index}`" />
           <b-dropdown-item v-for="(g, i) in group" :key="`kind${index}${i}`" @click="selectKind(g.kind)"
             >{{ g.label }}
           </b-dropdown-item>
