@@ -199,6 +199,13 @@ export default class Charts extends Vue {
 </script>
 
 <style lang="scss">
+
+@media (min-width: 992px) {
+  .modal-xl {
+    max-width: 1500px;
+  }
+}
+
 .chart-circle > circle {
   stroke-width: 0.06px !important;
 }
