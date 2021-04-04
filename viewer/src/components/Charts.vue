@@ -13,7 +13,7 @@
       </b-dropdown>
       <b-dropdown size="sm" class="mr-2 mb-2" right text="Details">
         <template v-for="(group, index) in kinds">
-          <b-dropdown-divider v-if="index > 0" />
+          <b-dropdown-divider v-if="index > 0" :key="`divider${index}`"/>
           <b-dropdown-item v-for="(g, i) in group" :key="`kind${index}${i}`" @click="selectKind(g.kind)"
             >{{ g.label }}
           </b-dropdown-item>
@@ -164,7 +164,7 @@ export default class Charts extends Vue {
   @Watch("chartKind")
   loadChart() {
     const data = this.gameData;
-    const canvas = this.canvas();
+    const canvas = Charts.canvas();
 
     if (this.chartKind === "bar") {
       const config = newBarChart(this.chartStyle, this.chartFamily, data, canvas);
@@ -176,7 +176,7 @@ export default class Charts extends Vue {
     }
   }
 
-  private canvas(): HTMLCanvasElement {
+  private static canvas(): HTMLCanvasElement {
     return document.getElementById("graphs") as HTMLCanvasElement;
   }
 
