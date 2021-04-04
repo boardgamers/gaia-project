@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { set } from "lodash";
 import Engine, { EngineOptions } from "./src/engine";
 import { Round } from "./src/enums";
+import { AutoCharge } from "./src/player";
 
 export async function init(
   nbPlayers: number,
@@ -65,7 +66,7 @@ export function setPlayerSettings(
   }
 ) {
   if ("autoCharge" in settings) {
-    set(engine.players[player], "settings.autoChargePower", Number(settings.autoCharge));
+    set(engine.players[player], "settings.autoChargePower", new AutoCharge(settings.autoCharge));
   }
   if ("autoIncome" in settings) {
     set(engine.players[player], "settings.autoIncome", settings.autoIncome);
@@ -82,7 +83,7 @@ export function setPlayerSettings(
 
 export function playerSettings(engine: Engine, player: number) {
   return {
-    autoCharge: String(engine.players[player].settings?.autoChargePower ?? 1),
+    autoCharge: String(engine.players[player].settings?.autoChargePower?.value() ?? 1),
     autoIncome: !!engine.players[player].settings?.autoIncome,
     autoBrainstone: !!engine.players[player].settings?.autoBrainstone,
     itarsAutoChargeToArea3: !!engine.players[player].settings?.itarsAutoChargeToArea3,

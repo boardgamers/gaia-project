@@ -52,9 +52,48 @@ interface FederationCache {
   custom: boolean;
 }
 
+export enum AutoChargeMode {
+  autoChargeUpToAmount,
+  alwaysAsk,
+  declineIfNotFree,
+}
+
+export class AutoCharge {
+  static alwaysAsk = "ask";
+  static declineIfNotFree = "decline-cost";
+  mode: AutoChargeMode;
+  amount: number;
+
+  constructor(value: string) {
+    if (value == AutoCharge.alwaysAsk) {
+      this.mode = AutoChargeMode.alwaysAsk;
+    } else if (value == "0" || value == AutoCharge.declineIfNotFree) {
+      //0 is legacy value
+      this.mode = AutoChargeMode.declineIfNotFree;
+      this.amount = 1;
+    } else {
+      this.mode = AutoChargeMode.autoChargeUpToAmount;
+      this.amount = Number(value);
+    }
+  }
+
+  value(): string {
+    switch (this.mode) {
+      case AutoChargeMode.alwaysAsk:
+        return AutoCharge.alwaysAsk;
+      case AutoChargeMode.declineIfNotFree:
+        return AutoCharge.declineIfNotFree;
+      default:
+        return String(this.amount);
+    }
+  }
+}
+
+const defaultAutoCharge = new AutoCharge("1");
+
 export class Settings {
   constructor(
-    public autoChargePower: number = 1, // 0 => decline everything that is not free
+    public autoChargePower: AutoCharge = defaultAutoCharge,
     public autoIncome: boolean = false,
     public autoBrainstone: boolean = false,
     public itarsAutoChargeToArea3: boolean = false
