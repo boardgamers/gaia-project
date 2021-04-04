@@ -287,7 +287,7 @@ export function newLineChart(
     tooltipOptions.callbacks = {
       afterTitle(this: TooltipModel<"line">, items: TooltipItem<"line">[]): string | string[] {
         const dataIndex = items[0].dataIndex;
-        return String(sumBy(datasets, (s) => s.data[dataIndex].y));
+        return String(sumBy(datasets, (s) => (s.data[dataIndex] as any).y));
       },
     };
   }
