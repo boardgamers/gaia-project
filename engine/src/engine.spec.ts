@@ -3,6 +3,7 @@ import { expect } from "chai";
 import { BoardAction, PlayerEnum } from "..";
 import Engine from "./engine";
 import { Command, Condition, Operator, Phase, Planet, Player } from "./enums";
+import {AutoCharge} from "./player";
 
 describe("Engine", () => {
   it("should throw when trying to build on the wrong place", () => {
@@ -578,7 +579,7 @@ describe("Engine", () => {
       const engine = new Engine(moves);
 
       engine.generateAvailableCommandsIfNeeded();
-      engine.player(Player.Player1).settings.autoChargePower = 2;
+      engine.player(Player.Player1).settings.autoChargePower = new AutoCharge("2");
 
       expect(autoCharge(engine)).to.equal("charge 2pw");
     });
