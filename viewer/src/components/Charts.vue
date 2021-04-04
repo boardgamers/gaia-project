@@ -1,187 +1,56 @@
 <template>
   <div class="gaia-viewer-modal">
-    <div>
-      <div class="d-flex" style="justify-content: center">
-        <div
-          style="width: 40px; height: 40px"
-          @click="selectDisplay('chart')"
-          :class="['bar-chart-icon', 'pointer', { selected: chartDisplay === 'chart' }]"
-        />
-        <div
-          style="width: 40px; height: 40px"
-          @click="selectDisplay('table')"
-          :class="['table-icon', 'pointer', { selected: chartDisplay === 'table' }]"
-        />
-        <div class="divider" />
-        <div class="d-flex align-items-center chart-top-controls" style="justify-content: center">
-          <template v-for="family in families">
-            <special-action
-              v-if="family.family === 'board-actions'"
-              :action="[]"
-              :key="`family${family.family}`"
-              :class="{ selected: chartFamily === family.family }"
-              width="25"
-              class="pointer mr-2 chart-resource"
-              height="25"
-              @click="selectFamily(family.family)"
-            />
-            <svg
-              v-else
-              :key="`family${family.family}`"
-              viewBox="-2 -2 5 4"
-              width="50"
-              class="pointer"
-              @click="selectFamily(family.family)"
-            >
-              <Resource
-                transform="scale(0.15)"
-                :kind="family.resourceIcon"
-                :class="['chart-resource', { selected: chartFamily === family.family }]"
-              />
-            </svg>
-          </template>
-        </div>
-      </div>
-      <div class="d-flex align-items-center" style="justify-content: center">
-        <div
-          style="width: 40px; height: 40px"
-          @click="selectKind('bar')"
-          :class="['bar-chart-icon', 'pointer', { selected: chartKind === 'bar' }]"
-        />
-        <div
-          style="width: 40px; height: 40px"
-          @click="selectKind('line')"
-          :class="['line-chart-icon', 'pointer', { selected: chartKind === 'line' }]"
-        />
-        <svg
-          width="50"
-          viewBox="-1.5 -1.5 4 4"
-          v-for="index in players"
-          :key="index"
-          class="pointer"
-          @click="selectKind(index)"
-        >
-          <PlayerCircle
-            :player="gameData.player(index)"
-            :index="index"
-            :class="['chart-circle', { selected: chartKind === index }]"
-            chart
-          />
-        </svg>
-        <svg
-          v-for="res in resources"
-          :key="res"
-          height="50"
-          viewBox="-1.5 -1.5 4 4"
-          width="50"
-          class="pointer"
-          @click="selectKind(res)"
-        >
-          <Resource
-            transform="scale(0.11)"
-            :kind="res"
-            :class="['chart-resource', 'pointer', { selected: chartKind === res }]"
-          />
-        </svg>
-        <svg
-          v-for="building in buildings"
-          :key="building"
-          height="50"
-          viewBox="-1.5 -1.5 4 4"
-          width="50"
-          :class="['pointer', 'chart-circle', { selected: chartKind === building }]"
-          @click="selectKind(building)"
-        >
-          <circle :r="1.2" style="fill: var(--adv-tech-tile)" />
-          <BuildingImage
-            faction="gen"
-            :building="building"
-            :flat="flat"
-            transform="scale(0.18)"
-            :class="['chart-building']"
-          />
-        </svg>
-        <svg
-          v-for="planet in planets"
-          :key="planet"
-          height="40"
-          viewBox="-1.5 -1.5 4 4"
-          width="40"
-          :class="['pointer', 'chart-circle', { selected: chartKind === planet }]"
-          @click="selectKind(planet)"
-        >
-          <circle :r="1" :class="['player-token', 'planet-fill', planet]" />
-        </svg>
-        <svg
-          v-for="k in genericKinds"
-          :key="k.kind"
-          height="40"
-          viewBox="-1.5 -1.5 4 4"
-          width="40"
-          :class="['pointer', 'chart-circle', { selected: chartKind === k.kind }]"
-          @click="selectKind(k.kind)"
-        >
-          <circle :r="1" :style="{ fill: k.color }" />
-        </svg>
-        <svg
-          v-for="steps in terraformingSteps"
-          :key="steps"
-          height="40"
-          viewBox="-1.5 -1.5 4 4"
-          width="40"
-          :class="['pointer', 'chart-circle', { selected: chartKind === steps }]"
-          @click="selectKind(steps)"
-        >
-          <circle :r="1" :class="['player-token', 'planet-fill', terraformingStepsPlanet(steps)]" />
-        </svg>
-        <svg
-          v-for="researchField in researchFields"
-          :key="researchField"
-          height="50"
-          viewBox="-1.5 -1.5 4 4"
-          width="50"
-          :class="['pointer']"
-          @click="selectKind(researchField)"
-        >
-          <polygon
-            points="-7.5,3 -3,7.5 3,7.5 7.5,3 7.5,-3 3,-7.5 -3,-7.5 -7.5,-3"
-            transform="scale(0.11)"
-            :class="['research-tile', researchField, { selected: chartKind === researchField }]"
-          />
-        </svg>
-      </div>
+    <div class="d-flex" style="justify-content: center">
+      <b-dropdown size="sm" class="mr-2 mb-2" text="Style">
+        <b-dropdown-item v-for="(s, i) in chartStyles" :key="`style${i}`" @click="selectStyle(s)"
+          >{{ s.label }}
+        </b-dropdown-item>
+      </b-dropdown>
+      <b-dropdown size="sm" class="mr-2 mb-2" text="What">
+        <b-dropdown-item v-for="i in families" :key="`family${i.name}`" @click="selectFamily(i.family)"
+          >{{ i.name }}
+        </b-dropdown-item>
+      </b-dropdown>
+      <b-dropdown size="sm" class="mr-2 mb-2" right text="Details">
+        <template v-for="(group, index) in kinds">
+          <b-dropdown-divider v-if="index > 0" :key="`divider${index}`" />
+          <b-dropdown-item v-for="(g, i) in group" :key="`kind${index}${i}`" @click="selectKind(g.kind)"
+            >{{ g.label }}
+          </b-dropdown-item>
+        </template>
+      </b-dropdown>
     </div>
     <div id="tooltip" />
-    <canvas id="graphs" v-show="chartDisplay === 'chart'" />
+    <canvas id="graphs" v-show="chartStyle.type === 'chart'" />
+    <!-- :key is necessary to force update -->
     <b-table
+      :key="chartStyle.type + chartFamily + chartKind"
       striped
       bordered
       small
       responsive="true"
       hover
-      v-if="chartDisplay === 'table'"
-      :items="tableItems(tableData)"
-      :fields="tableHeader(tableData)"
-      :caption="tableData.options.plugins.title.text"
+      :class="{ compact: chartStyle.compact }"
+      v-if="chartStyle.type === 'table'"
+      :items="table.items"
+      :fields="table.header"
+      :caption="table.title"
     >
+      <template #cell()="data">
+        <span v-html="data.value"></span>
+      </template>
     </b-table>
   </div>
 </template>
 
 <script lang="ts">
 import {Component, Vue, Watch} from "vue-property-decorator";
-import {ChartFamily, chartPlayerOrder} from "../logic/charts";
-import {
-  planetsForSteps,
-  simpleChartTypes,
-  simpleSourceFactory,
-  SimpleSourceFactory,
-  TerraformingSteps,
-} from "../logic/simple-charts";
+import {ChartFamily} from "../logic/charts";
+import {simpleSourceFactory, SimpleSourceFactory,} from "../logic/simple-charts";
 import PlayerCircle from "./PlayerCircle.vue";
 import BuildingImage from "./Building.vue";
 import SpecialAction from "./SpecialAction.vue";
-import Engine, {Building, Planet, PlayerEnum, ResearchField, Resource} from "@gaia-project/engine";
+import Engine, {PlayerEnum} from "@gaia-project/engine";
 import {
   BarController,
   BarElement,
@@ -197,7 +66,16 @@ import {
   Title,
   Tooltip,
 } from "chart.js";
-import {ChartKind, genericKinds, newBarChart, newLineChart, TableMeta} from "../logic/chart-factory";
+import {
+  ChartKind,
+  ChartKindDisplay,
+  ChartStyleDisplay,
+  kinds,
+  newBarChart,
+  newLineChart,
+  TableMeta
+} from "../logic/chart-factory";
+import {tableHeader, tableItems} from "../logic/table";
 
 Chart.register(
   LineController,
@@ -213,70 +91,42 @@ Chart.register(
   BarElement
 );
 
-type ChartDisplay = "table" | "chart";
-
-const nameColumn = {
-  key: "Name",
-  isRowHeader: true,
-  sortable: true,
-};
-
-const weightColumn = {
-  key: "Weight",
-  sortable: true,
-};
+type Table = { title: string; header: any[]; items: any[] }
 
 @Component({
   components: {PlayerCircle, BuildingImage, SpecialAction},
 })
 export default class Charts extends Vue {
-  private chartDisplay: ChartDisplay = "chart";
+  private chartStyle: ChartStyleDisplay = this.chartStyles[0];
   private chartFamily: ChartFamily = ChartFamily.vp;
   private chartKind: ChartKind = "bar";
   private chart: Chart;
-  private tableData: ChartConfiguration<any>;
-  private tableMeta?: TableMeta;
+  private table: Table;
 
   get gameData(): Engine {
     return this.$store.state.gaiaViewer.data;
   }
 
+  get chartStyles(): ChartStyleDisplay[] {
+    return [
+      {type: "chart", label: "Chart", compact: false},
+      {type: "table", label: "Table", compact: false},
+      {type: "chart", label: "Compact Chart", compact: true},
+      {type: "table", label: "Compact Table", compact: true},
+    ];
+  }
+
   get families(): SimpleSourceFactory<any>[] {
     return Object.values(ChartFamily).map((f) =>
-      f == ChartFamily.vp ? ({family: "vp", resourceIcon: "vp"} as SimpleSourceFactory<any>) : simpleSourceFactory(f)
+      f == ChartFamily.vp ? ({
+        family: "vp",
+        name: "Victory Points"
+      } as SimpleSourceFactory<any>) : simpleSourceFactory(f)
     );
   }
 
-  get players(): PlayerEnum[] {
-    return chartPlayerOrder(this.gameData);
-  }
-
-  get resources(): Resource[] {
-    return simpleChartTypes(this.chartFamily, ChartFamily.resources, ChartFamily.freeActions);
-  }
-
-  get genericKinds(): { color: string; kind: ChartKind }[] {
-    return genericKinds(this.gameData, this.chartFamily);
-  }
-
-  get buildings(): Building[] {
-    return simpleChartTypes(this.chartFamily, ChartFamily.buildings);
-  }
-
-  get researchFields(): ResearchField[] {
-    return simpleChartTypes(this.chartFamily, ChartFamily.research);
-  }
-
-  get planets(): Planet[] {
-    return simpleChartTypes(this.chartFamily, ChartFamily.planets);
-  }
-
-  get terraformingSteps(): TerraformingSteps[] {
-    return simpleChartTypes(this.chartFamily, ChartFamily.terraforming);
-  }
-
-  terraformingStepsPlanet(steps: TerraformingSteps): Planet {
-    return planetsForSteps(steps, this.gameData.player(this.players[0]).planet)[0];
+  get kinds(): ChartKindDisplay[][] {
+    return kinds(this.gameData, this.chartFamily);
   }
 
   get flat() {
@@ -291,8 +141,8 @@ export default class Charts extends Vue {
     return typeof this.chartKind == "number" || this.chartKind == "bar" || this.chartKind == "line";
   }
 
-  selectDisplay(display: ChartDisplay) {
-    this.chartDisplay = display;
+  selectStyle(display: ChartStyleDisplay) {
+    this.chartStyle = display;
   }
 
   selectFamily(family: ChartFamily) {
@@ -309,104 +159,51 @@ export default class Charts extends Vue {
     this.chartKind = kind;
   }
 
-  @Watch("chartDisplay")
+  @Watch("chartStyle")
   @Watch("chartFamily")
   @Watch("chartKind")
   loadChart() {
     const data = this.gameData;
-    const canvas = this.canvas();
+    const canvas = Charts.canvas();
 
     if (this.chartKind === "bar") {
-      const config = newBarChart(this.chartFamily, data, canvas);
+      const config = newBarChart(this.chartStyle, this.chartFamily, data, canvas);
       this.newChart(canvas, config.chart, config.table);
     } else if (this.chartKind === "line") {
-      this.newChart(canvas, newLineChart(this.chartFamily, data, canvas, PlayerEnum.All));
+      this.newChart(canvas, newLineChart(this.chartStyle, this.chartFamily, data, canvas, PlayerEnum.All));
     } else {
-      this.newChart(canvas, newLineChart(this.chartFamily, data, canvas, this.chartKind));
+      this.newChart(canvas, newLineChart(this.chartStyle, this.chartFamily, data, canvas, this.chartKind));
     }
   }
 
-  private canvas(): HTMLCanvasElement {
+  private static canvas(): HTMLCanvasElement {
     return document.getElementById("graphs") as HTMLCanvasElement;
   }
 
   private newChart(canvas: HTMLCanvasElement, config: ChartConfiguration<any>, tableMeta?: TableMeta) {
-    if (this.chartDisplay == "chart") {
+    if (this.chartStyle.type == "chart") {
       if (this.chart) {
         this.chart.destroy();
       }
       this.chart = new Chart(canvas, config);
     } else {
-      this.tableData = config;
-      this.tableMeta = tableMeta;
+      this.table = {
+        title: config.options.plugins.title.text,
+        header: tableHeader(canvas, this.chartStyle, config, tableMeta),
+        items: tableItems(canvas, this.chartStyle, config, tableMeta)
+      };
     }
-  }
-
-  tableHeader(data: ChartConfiguration<any>): any[] {
-    const headers = [nameColumn as any];
-    const weights = this.tableMeta?.weights;
-    if (weights != null) {
-      headers.push(weightColumn);
-    }
-    const meta = this.tableMeta?.datasetMeta;
-
-    headers.push(...data.data.datasets.map(s => ({
-      key: s.label,
-      sortable: true,
-      label: meta?.[s.label],
-    })));
-    return headers;
-  }
-
-  tableItems(data: ChartConfiguration<any>): any[] {
-    const datasets = data.data.datasets;
-    const totals = {};
-    const weightedTotals = {};
-    const rows = (datasets[0].data as number[]).map(() => ({}));
-    (data.data.labels).forEach((s, index) => {
-      rows[index][nameColumn.key] = s;
-    });
-    const weights = this.tableMeta?.weights;
-    if (weights != null) {
-      weights.forEach((s, index) => {
-        rows[index][weightColumn.key] = s;
-      });
-    }
-    totals[nameColumn.key] = "Total";
-    weightedTotals[nameColumn.key] = "Weighted Total";
-
-    function cell(value: any) {
-      const val = (typeof value == "number") ? value : value.y;
-      if (isNaN(val)) {
-        return "";
-      }
-      return val;
-    }
-
-    for (const s of datasets) {
-      (s.data as number[]).forEach((value, index) => {
-        rows[index][s.label] = cell(value);
-      });
-      const meta = this.tableMeta?.datasetMeta?.[s.label];
-      if (meta?.total != null) {
-        totals[s.label] = meta.total;
-      }
-      if (meta?.weightedTotal != null) {
-        weightedTotals[s.label] = meta.weightedTotal;
-      }
-    }
-    if (Object.values(totals).length > 1) {
-      rows.push(totals);
-    }
-    if (Object.values(weightedTotals).length > 1) {
-      rows.push(weightedTotals);
-    }
-    return rows;
   }
 }
 </script>
 
 <style lang="scss">
+@media (min-width: 992px) {
+  .modal-xl {
+    max-width: 1500px;
+  }
+}
+
 .chart-circle > circle {
   stroke-width: 0.06px !important;
 }
@@ -425,39 +222,6 @@ export default class Charts extends Vue {
   filter: drop-shadow(0px 0px 4px rgba(var(--highlighted-rgb), 1));
 }
 
-.chart-building,
-.table-icon,
-.line-chart-icon,
-.bar-chart-icon {
-  background-color: black;
-  mask-size: 50% 50%;
-  mask-repeat: no-repeat;
-  mask-position: center;
-
-  transition: background-color 0.2s ease;
-
-  &.selected {
-    background-color: var(--highlighted);
-  }
-}
-
-.table-icon {
-  mask-image: url("../assets/resources/table.svg");
-}
-
-.line-chart-icon {
-  mask-image: url("../assets/resources/line-chart.svg");
-}
-
-.bar-chart-icon {
-  mask-image: url("../assets/resources/bar-chart.svg");
-}
-
-.divider {
-  border-right: 2px solid black;
-  margin: 16px 4px;
-}
-
 #tooltip {
   background-color: #000;
   color: #fff;
@@ -467,6 +231,31 @@ export default class Charts extends Vue {
 .table.b-table > caption {
   caption-side: top;
   text-align: center;
+  font-weight: bold;
+}
+
+.table-sm th {
+  padding: 0;
+}
+
+.table-sm th > span > span,
+.table-sm th > div {
+  padding: 0.3rem;
+  display: block;
+}
+
+div.compact > .table-sm th > span > span,
+div.compact > .table-sm th > div {
+  padding: 0;
+}
+
+.table-sm td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0 0.3rem 0 0.3rem;
+}
+
+.table-sm td span.totals {
   font-weight: bold;
 }
 </style>

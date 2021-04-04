@@ -8,7 +8,7 @@
     <rect v-else-if="kind == 'o'" class="ore" width="14" height="14" x="-7" y="-7" />
     <rect v-else-if="kind == 'c'" class="credit" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
     <rect
-      v-else-if="['pw', 'pay-pw', 't', 'bowl-t', 'burn-t', 'tg', 'brainstone'].includes(kind)"
+      v-else-if="['pw', 'pay-pw', 't', 'bowl-t', 'tg', 'brainstone'].includes(kind)"
       :class="kind === 'tg' ? 'gaia' : 'power'"
       width="15"
       height="15"
@@ -66,14 +66,13 @@
         <circle v-else r="10" :class="['planet-fill', 'dig']" />
         <image xlink:href='../assets/resources/dig-arrow.svg' :height=325/308*14 width=14 x=-11 y=-4 />
       </g>
-      <g transform="translate(-7,-7)" v-if="count">
+      <g transform="translate(-7,-7)">
         <rect class="ore" width="12" height="12" x="-6" y="-6" />
         <text x="0" y="0">{{ 4 - count }}</text>
       </g>
     </template>
     <image v-else-if="kind === 'tech'" xlink:href='../assets/resources/tech.svg' :height=155/211*22 width=22 x=-11 y=-8
-    /> <image v-else-if="kind === 'planet'" xlink:href='../assets/conditions/planet.svg' :height=155/211*22 width=22
-    x=-11 y=-8 />
+    />
     <Federation v-else-if="kind === 'fed'" width="22" x="-11" y="-26.5" :used="true" />
     <template v-else-if="kind === 'range'">
       <image xlink:href="../assets/resources/flat-hex.svg" :height=162/328*20 width=15 y=-9 x=-2 /> <image
@@ -117,12 +116,11 @@
       x="0"
       y="0"
       v-if="
-        (count >= 0 &&
-          ['o', 'c', 'k', 'pw', 'pay-pw', 't', 'bowl-t', 'burn-t', 'tg', 'vp', 'q', 'gf', 'planet'].includes(kind)) ||
+        (count >= 0 && ['o', 'c', 'k', 'pw', 'pay-pw', 't', 'bowl-t', 'tg', 'vp', 'q', 'gf'].includes(kind)) ||
         count === '+'
       "
       :class="{ plus: count === '+' }"
-      >{{ kind === "t" ? "+" : "" }}{{ kind === "burn-t" ? "-" : "" }}{{ count }}</text
+      >{{ kind === "t" ? "+" : "" }}{{ count }}</text
     >
     <text x="0" y="0" v-if="kind == 'brainstone'">B</text>
   </g>

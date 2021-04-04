@@ -17,7 +17,6 @@ import { planetNames } from "../data/planets";
 import {
   ChartColor,
   ChartFamily,
-  ColorVar,
   DatasetFactory,
   EventFilter,
   getDataPoints,
@@ -394,7 +393,7 @@ export function simpleChartDetails<Source extends SimpleSource<any>>(
     const deltaForEnded = () => 0;
 
     return {
-      backgroundColor: new ColorVar(resolveColor(s.color, pl)),
+      backgroundColor: resolveColor(s.color, pl),
       label: s.label,
       fill: false,
       getDataPoints: () =>
@@ -408,11 +407,4 @@ export function simpleSourceFactory<Type extends SimpleChartKind, Source extends
   family: ChartFamily
 ): SimpleSourceFactory<Source> {
   return factories.find((f) => f.family == family) as SimpleSourceFactory<Source>;
-}
-
-export function simpleChartTypes<Type extends SimpleChartKind, Source extends SimpleSource<Type>>(
-  current: ChartFamily,
-  ...want: ChartFamily[]
-): Type[] {
-  return want.includes(current) ? simpleSourceFactory<Type, Source>(current).sources.map((s) => s.type) : [];
 }

@@ -9,17 +9,7 @@ import Engine, {
   ResearchField,
   Resource,
 } from "@gaia-project/engine";
-import {
-  ChartConfiguration,
-  ChartDataset,
-  ChartEvent,
-  LegendItem,
-  LegendOptions,
-  TooltipItem,
-  TooltipModel,
-  TooltipOptions,
-} from "chart.js";
-import { sumBy } from "lodash";
+import { ChartStyleDisplay } from "./chart-factory";
 import { CommandObject, parseCommands } from "./recent";
 
 export type ChartColor = string | ((player: Player) => string);
@@ -136,13 +126,20 @@ export class ColorVar {
     return `var(${this.color})`;
   }
 
-  lookup(canvas: HTMLCanvasElement) {
+  lookupForChart(style: ChartStyleDisplay, canvas: HTMLCanvasElement): string {
+    if (style.type == "chart") {
+      return this.lookup(canvas);
+    }
+    return this.color;
+  }
+
+  lookup(canvas: HTMLCanvasElement): string | null {
     return window.getComputedStyle(canvas).getPropertyValue(this.color);
   }
 }
 
-export function resolveColor(color: ChartColor, player: Player) {
-  return typeof color == "string" ? color : color(player);
+export function resolveColor(color: ChartColor, player: Player): ColorVar {
+  return new ColorVar(typeof color == "string" ? color : color(player));
 }
 
 export function planetColor(planet: Planet, invert: boolean): string {
@@ -214,97 +211,5 @@ export function logEntryProcessor(
     }
 
     return res;
-  };
-}
-
-function newLegendOptions(provider: (index: number) => string) {
-  let hovering = false;
-  const tooltip = document.getElementById("tooltip");
-
-  const legendOptions: DeepPartial<LegendOptions> = {
-    onHover(event: ChartEvent, legendItem: LegendItem) {
-      const description = provider(legendItem.datasetIndex);
-      if (hovering || description == null) {
-        return;
-      }
-      hovering = true;
-      tooltip.innerHTML = description;
-      tooltip.style.left = event.x + "px";
-      tooltip.style.top = event.y + 40 + "px";
-    },
-    onLeave() {
-      hovering = false;
-      tooltip.innerHTML = "";
-    },
-  };
-  return legendOptions;
-}
-
-export function lineChartConfig(
-  title: string,
-  canvas: HTMLCanvasElement,
-  data: Engine,
-  datasetFactories: DatasetFactory[],
-  stacked: boolean,
-  includeRounds: IncludeRounds
-): ChartConfiguration<"line"> {
-  const datasets: ChartDataset<"line">[] = datasetFactories.map((f) => {
-    const color = f.backgroundColor.lookup(canvas);
-    return {
-      backgroundColor: color,
-      borderColor: color,
-      data: f.getDataPoints().map((val, i) => ({ x: i, y: val })),
-      fill: f.fill,
-      label: f.label,
-    };
-  });
-
-  const labels = ["Start", "Round 1", "Round 2", "Round 3", "Round 4", "Round 5", "Round 6"];
-  if (includeRounds === "all") {
-    if (data.ended) {
-      labels.push("Final");
-    } else {
-      labels.push("Est. Final");
-    }
-  }
-
-  const tooltipOptions: DeepPartial<TooltipOptions<"line">> = {};
-  if (stacked) {
-    tooltipOptions.callbacks = {
-      afterTitle(this: TooltipModel<"line">, items: TooltipItem<"line">[]): string | string[] {
-        const dataIndex = items[0].dataIndex;
-        return String(sumBy(datasets, (s) => s.data[dataIndex].y));
-      },
-    };
-  }
-
-  return {
-    type: "line",
-    data: {
-      labels: labels,
-      datasets: datasets,
-    },
-    options: {
-      plugins: {
-        title: {
-          text: title,
-          display: true,
-        },
-        tooltip: tooltipOptions,
-        legend: newLegendOptions((index) => datasetFactories[index]?.description),
-      } as any,
-      spanGaps: true,
-      elements: {
-        line: {
-          tension: 0.000001,
-        },
-      },
-      scales: {
-        y: {
-          // temporary type hack until chart.js's typing is fixed
-          stacked: (stacked ? "single" : false) as any,
-        },
-      },
-    },
   };
 }
