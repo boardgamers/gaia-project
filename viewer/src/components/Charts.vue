@@ -254,4 +254,8 @@ div.compact > .table-sm th > div {
   vertical-align: middle;
   padding: 0 0.3rem 0 0.3rem;
 }
+
+.table-sm td span.totals {
+  font-weight: bold;
+}
 </style>

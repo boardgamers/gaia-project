@@ -65,6 +65,10 @@ function dataCell(label: any) {
   return `<span>${label}</span>`;
 }
 
+function totalsCell(label: any) {
+  return `<span class="totals">${label}</span>`;
+}
+
 export function tableItems(
   canvas: HTMLCanvasElement,
   style: ChartStyleDisplay,
@@ -104,10 +108,10 @@ export function tableItems(
     });
     const meta = tableMeta?.datasetMeta?.[s.label];
     if (meta?.total != null) {
-      totals[s.label] = dataCell(meta.total);
+      totals[s.label] = totalsCell(meta.total);
     }
     if (meta?.weightedTotal != null) {
-      weightedTotals[s.label] = dataCell(meta.weightedTotal);
+      weightedTotals[s.label] = totalsCell(meta.weightedTotal);
     }
   }
   if (Object.values(totals).length > 1) {
