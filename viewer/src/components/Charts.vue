@@ -28,7 +28,7 @@
       small
       responsive="true"
       hover
-      :class="{ compact: chartStyle.compact }"
+      :class="{ compact: chartStyle.compact, 'chart-table': true }"
       v-if="chartStyle.type === 'table'"
       :items="table.items"
       :fields="table.header"
@@ -222,34 +222,34 @@ export default class Charts extends Vue {
   position: absolute;
 }
 
-.table.b-table > caption {
+.chart-table .table.b-table > caption {
   caption-side: top;
   text-align: center;
   font-weight: bold;
 }
 
-.table-sm th {
+.chart-table th {
   padding: 0;
 }
 
-.table-sm th > span > span,
-.table-sm th > div {
+.chart-table th > span > span,
+.chart-table th > div {
   padding: 0.3rem;
   display: block;
 }
 
-div.compact > .table-sm th > span > span,
-div.compact > .table-sm th > div {
+.chart-table.compact th > span > span,
+.chart-table.compact th > div {
   padding: 0;
 }
 
-.table-sm td {
+.chart-table td {
   text-align: right;
   vertical-align: middle;
   padding: 0 0.3rem 0 0.3rem;
 }
 
-.table-sm td span.totals {
+.chart-table td span.totals {
   font-weight: bold;
 }
 </style>
