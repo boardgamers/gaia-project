@@ -13,6 +13,8 @@ import Engine, {
   ResearchField,
   Resource,
   Reward,
+  TechTile,
+  TechTilePos,
 } from "@gaia-project/engine";
 import { sum } from "lodash";
 import { boardActionNames } from "../data/board-actions";
@@ -21,6 +23,7 @@ import { planetsWithSteps } from "../data/factions";
 import { federationColors } from "../data/federations";
 import { planetNames } from "../data/planets";
 import { researchNames } from "../data/research";
+import { baseTechTileNames } from "../data/tech-tiles";
 import {
   ChartColor,
   ChartFamily,
@@ -425,6 +428,29 @@ const factories = [
         weight: 1,
       }),
   } as SimpleSourceFactory<SimpleSource<Federation>>,
+  {
+    name: "Base Tech Tiles",
+    showWeightedTotal: false,
+    playerSummaryLineChartTitle: () => "Base Tech tiles of all players",
+    extractLog: (cmd, source, data) => {
+      if (cmd.command == Command.ChooseTechTile) {
+        const pos = cmd.args[0] as TechTilePos;
+        const tile = data.tiles.techs[pos].tile;
+
+        if (tile == source.type) {
+          return 1;
+        }
+      }
+      return 0;
+    },
+    sources: TechTile.values().map((t) => ({
+      type: t,
+      label: baseTechTileNames[t].name,
+      plural: baseTechTileNames[t].name,
+      color: baseTechTileNames[t].color,
+      weight: 1,
+    })),
+  } as SimpleSourceFactory<SimpleSource<TechTile>>,
 ];
 
 export function simpleChartDetails<Source extends SimpleSource<any>>(
