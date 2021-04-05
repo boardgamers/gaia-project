@@ -7,9 +7,7 @@
         </b-dropdown-item>
       </b-dropdown>
       <b-dropdown size="sm" class="mr-2 mb-2" text="What">
-        <b-dropdown-item v-for="i in families" :key="`family${i.name}`" @click="selectFamily(i.family)"
-          >{{ i.name }}
-        </b-dropdown-item>
+        <b-dropdown-item v-for="i in families" :key="`family${i}`" @click="selectFamily(i)">{{ i }} </b-dropdown-item>
       </b-dropdown>
       <b-dropdown size="sm" class="mr-2 mb-2" right text="Details">
         <template v-for="(group, index) in kinds">
@@ -45,8 +43,8 @@
 
 <script lang="ts">
 import {Component, Vue, Watch} from "vue-property-decorator";
-import {ChartFamily} from "../logic/charts";
-import {simpleSourceFactory, SimpleSourceFactory,} from "../logic/simple-charts";
+import {ChartFamily, vpChartFamily} from "../logic/charts";
+import {simpleSourceFactory, SimpleSourceFactory, simpleSourceFamilies,} from "../logic/simple-charts";
 import PlayerCircle from "./PlayerCircle.vue";
 import BuildingImage from "./Building.vue";
 import SpecialAction from "./SpecialAction.vue";
@@ -67,10 +65,11 @@ import {
   Tooltip,
 } from "chart.js";
 import {
+  barChartKind,
   ChartKind,
   ChartKindDisplay,
   ChartStyleDisplay,
-  kinds,
+  kinds, lineChartKind,
   newBarChart,
   newLineChart,
   TableMeta
@@ -98,8 +97,8 @@ type Table = { title: string; header: any[]; items: any[] }
 })
 export default class Charts extends Vue {
   private chartStyle: ChartStyleDisplay = this.chartStyles[0];
-  private chartFamily: ChartFamily = ChartFamily.vp;
-  private chartKind: ChartKind = "bar";
+  private chartFamily: ChartFamily = vpChartFamily;
+  private chartKind: ChartKind = barChartKind;
   private chart: Chart;
   private table: Table;
 
@@ -116,13 +115,8 @@ export default class Charts extends Vue {
     ];
   }
 
-  get families(): SimpleSourceFactory<any>[] {
-    return Object.values(ChartFamily).map((f) =>
-      f == ChartFamily.vp ? ({
-        family: "vp",
-        name: "Victory Points"
-      } as SimpleSourceFactory<any>) : simpleSourceFactory(f)
-    );
+  get families(): ChartFamily[] {
+    return [vpChartFamily].concat(...simpleSourceFamilies());
   }
 
   get kinds(): ChartKindDisplay[][] {
@@ -138,7 +132,7 @@ export default class Charts extends Vue {
   }
 
   isCommonKind() {
-    return typeof this.chartKind == "number" || this.chartKind == "bar" || this.chartKind == "line";
+    return typeof this.chartKind == "number" || this.chartKind == barChartKind || this.chartKind == lineChartKind;
   }
 
   selectStyle(display: ChartStyleDisplay) {
@@ -148,7 +142,7 @@ export default class Charts extends Vue {
   selectFamily(family: ChartFamily) {
     if (this.chartFamily != family) {
       if (!this.isCommonKind()) {
-        this.chartKind = "bar";
+        this.chartKind = barChartKind;
       }
 
       this.chartFamily = family;
@@ -166,10 +160,10 @@ export default class Charts extends Vue {
     const data = this.gameData;
     const canvas = Charts.canvas();
 
-    if (this.chartKind === "bar") {
+    if (this.chartKind === barChartKind) {
       const config = newBarChart(this.chartStyle, this.chartFamily, data, canvas);
       this.newChart(canvas, config.chart, config.table);
-    } else if (this.chartKind === "line") {
+    } else if (this.chartKind === lineChartKind) {
       this.newChart(canvas, newLineChart(this.chartStyle, this.chartFamily, data, canvas, PlayerEnum.All));
     } else {
       this.newChart(canvas, newLineChart(this.chartStyle, this.chartFamily, data, canvas, this.chartKind));

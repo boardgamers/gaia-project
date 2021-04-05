@@ -1,5 +1,6 @@
 import Engine, {
   BoardAction,
+  Booster,
   Building,
   Command,
   Faction,
@@ -12,6 +13,7 @@ import Engine, {
 } from "@gaia-project/engine";
 import { sum } from "lodash";
 import { boardActionNames } from "../data/board-actions";
+import { boosterNames } from "../data/boosters";
 import { planetsWithSteps } from "../data/factions";
 import { planetNames } from "../data/planets";
 import {
@@ -66,9 +68,7 @@ export function planetsForSteps(type: TerraformingSteps, planet: Planet): Planet
   }
 }
 
-export type SimpleChartKind = Resource | Building | ResearchField | Planet | TerraformingSteps | BoardAction;
-
-export type SimpleSource<Type extends SimpleChartKind> = {
+export type SimpleSource<Type> = {
   type: Type;
   label: string;
   plural: string;
@@ -77,10 +77,7 @@ export type SimpleSource<Type extends SimpleChartKind> = {
 };
 
 export type SimpleSourceFactory<Source extends SimpleSource<any>> = {
-  family: ChartFamily;
-  resourceIcon: Resource;
-  resourceIconQuantity?: number;
-  name: string;
+  name: ChartFamily;
   playerSummaryLineChartTitle: (sources: Source[]) => string;
   sources: Source[];
   showWeightedTotal: boolean;
@@ -98,7 +95,8 @@ const researchNames = {
   [ResearchField.Science]: "Science",
 };
 
-function planetCounter<T extends SimpleChartKind>(
+function planetCounter<T>(
+  isLantidsGuestMine: (s: SimpleSource<T>) => boolean,
   getPlanets: (type: T, player: Player) => Planet[]
 ): (cmd: CommandObject, source: SimpleSource<T>, data: Engine, player: Player) => number {
   const transdim = new Set<string>();
@@ -116,7 +114,7 @@ function planetCounter<T extends SimpleChartKind>(
       if (owner == null) {
         owners[location] = player.player;
       } else if (owner != player.player && player.faction == Faction.Lantids) {
-        return source.type == TerraformingSteps.Lantids ? 1 : 0;
+        return isLantidsGuestMine ? 1 : 0;
       }
 
       const want = getPlanets(source.type, player);
@@ -141,7 +139,7 @@ function planetCounter<T extends SimpleChartKind>(
   };
 }
 
-type ResourceSource = SimpleSource<Resource> & { inverseOf?: Resource };
+type ResourceSource = SimpleSource<Resource | "pay-pw" | "burn-token"> & { inverseOf?: Resource };
 
 const resourceSources: ResourceSource[] = [
   {
@@ -180,7 +178,7 @@ const resourceSources: ResourceSource[] = [
     weight: 0,
   },
   {
-    type: Resource.PayPower,
+    type: "pay-pw",
     inverseOf: Resource.ChargePower,
     label: "Spent Power",
     plural: "Spent Power",
@@ -195,7 +193,7 @@ const resourceSources: ResourceSource[] = [
     weight: 0,
   },
   {
-    type: Resource.BurnToken,
+    type: "burn-token",
     label: "Burned Tokens",
     plural: "Burned Tokens",
     color: "--current-round",
@@ -207,9 +205,7 @@ const freeActionSources = resourceSources.filter((s) => s.weight > 0 || s.type =
 
 const factories = [
   {
-    family: ChartFamily.resources,
     name: "Resources",
-    resourceIcon: Resource.Qic,
     playerSummaryLineChartTitle: () => "Resources of all players as if bought with power",
     showWeightedTotal: true,
     extractChange: (wantPlayer, source) => (player, eventSource, resource, round, change) =>
@@ -218,13 +214,11 @@ const factories = [
         ? Math.abs(change)
         : 0,
     extractLog: (cmd, source) =>
-      source.type == Resource.BurnToken && cmd.command == Command.BurnPower ? Number(cmd.args[0]) : 0,
+      source.type == "burn-token" && cmd.command == Command.BurnPower ? Number(cmd.args[0]) : 0,
     sources: resourceSources,
   } as SimpleSourceFactory<ResourceSource>,
   {
-    family: ChartFamily.freeActions,
     name: "Free actions",
-    resourceIcon: Resource.PayPower,
     playerSummaryLineChartTitle: () => "Power, credits, ore, and gaia formers spend on free actions of all players",
     showWeightedTotal: true,
     extractLog: (cmd, source) =>
@@ -238,10 +232,7 @@ const factories = [
     sources: freeActionSources,
   } as SimpleSourceFactory<ResourceSource>,
   {
-    family: ChartFamily.boardActions,
     name: "Board actions",
-    resourceIcon: Resource.PayPower,
-    resourceIconQuantity: 4,
     playerSummaryLineChartTitle: () => `Board actions taken by all players`,
     showWeightedTotal: false,
     extractLog: (cmd, source) => (cmd.command == Command.Action && cmd.args[0] == source.type ? 1 : 0),
@@ -254,9 +245,7 @@ const factories = [
     })),
   } as SimpleSourceFactory<SimpleSource<BoardAction>>,
   {
-    family: ChartFamily.buildings,
     name: "Buildings",
-    resourceIcon: Resource.GaiaFormer,
     playerSummaryLineChartTitle: () => "Power value of all buildings of all players (1-3 base power value)",
     showWeightedTotal: true,
     extractLog: (cmd, source) => {
@@ -314,20 +303,12 @@ const factories = [
     ],
   } as SimpleSourceFactory<SimpleSource<Building>>,
   {
-    family: ChartFamily.research,
     name: "Research",
-    resourceIcon: Resource.Knowledge,
     playerSummaryLineChartTitle: () => "Research steps of all players",
     showWeightedTotal: false,
     initialValue: (player, source) => initialResearch(player).get(source.type) ?? 0,
-    extractLog: (cmd, source) => {
-      if (cmd.command == Command.UpgradeResearch) {
-        if (source.type == (cmd.args[0] as ResearchField)) {
-          return 1;
-        }
-      }
-      return 0;
-    },
+    extractLog: (cmd, source) =>
+      cmd.command == Command.UpgradeResearch && source.type == (cmd.args[0] as ResearchField) ? 1 : 0,
     sources: Object.keys(researchNames).map((field) => {
       return {
         type: field as ResearchField,
@@ -339,12 +320,13 @@ const factories = [
     }),
   } as SimpleSourceFactory<SimpleSource<ResearchField>>,
   {
-    family: ChartFamily.planets,
     name: "Planets",
-    resourceIcon: Resource.Planet,
     playerSummaryLineChartTitle: () => "Planets of all players",
     showWeightedTotal: false,
-    extractLog: planetCounter((t) => [t]),
+    extractLog: planetCounter(
+      () => false,
+      (t) => [t]
+    ),
     sources: Object.keys(planetNames).map((t) => {
       const planet = t as Planet;
       return {
@@ -357,13 +339,13 @@ const factories = [
     }),
   } as SimpleSourceFactory<SimpleSource<Planet>>,
   {
-    family: ChartFamily.terraforming,
     name: "Terraforming Steps",
     showWeightedTotal: true,
-    resourceIcon: Resource.TerraformCostDiscount,
-    resourceIconQuantity: 3,
     playerSummaryLineChartTitle: () => "Terraforming Steps of all players (Gaia planets and gaia formers excluded)",
-    extractLog: planetCounter((type, player) => planetsForSteps(type, player.planet)),
+    extractLog: planetCounter(
+      (source) => source.type == TerraformingSteps.Lantids,
+      (type, player) => planetsForSteps(type, player.planet)
+    ),
     sources: Object.values(TerraformingSteps).map((steps) => ({
       type: steps,
       label: steps,
@@ -372,6 +354,23 @@ const factories = [
       weight: terraformingSteps(steps),
     })),
   } as SimpleSourceFactory<SimpleSource<TerraformingSteps>>,
+  {
+    name: "Boosters",
+    showWeightedTotal: false,
+    playerSummaryLineChartTitle: () => "Boosters taken by all players",
+    extractLog: (cmd, source) =>
+      (cmd.command == Command.Pass || cmd.command == Command.ChooseRoundBooster) &&
+      source.type == (cmd.args[0] as Booster)
+        ? 1
+        : 0,
+    sources: Booster.values().map((b) => ({
+      type: b,
+      label: boosterNames[b].name,
+      plural: boosterNames[b].name,
+      color: boosterNames[b].color,
+      weight: 1,
+    })),
+  } as SimpleSourceFactory<SimpleSource<Booster>>,
 ];
 
 export function simpleChartDetails<Source extends SimpleSource<any>>(
@@ -403,8 +402,12 @@ export function simpleChartDetails<Source extends SimpleSource<any>>(
   });
 }
 
-export function simpleSourceFactory<Type extends SimpleChartKind, Source extends SimpleSource<Type>>(
+export function simpleSourceFactory<Source extends SimpleSource<any>>(
   family: ChartFamily
 ): SimpleSourceFactory<Source> {
-  return factories.find((f) => f.family == family) as SimpleSourceFactory<Source>;
+  return factories.find((f) => f.name == family) as SimpleSourceFactory<Source>;
+}
+
+export function simpleSourceFamilies(): ChartFamily[] {
+  return factories.map((f) => f.name);
 }

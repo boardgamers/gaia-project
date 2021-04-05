@@ -14,16 +14,8 @@ import { CommandObject, parseCommands } from "./recent";
 
 export type ChartColor = string | ((player: Player) => string);
 
-export enum ChartFamily {
-  vp = "vp",
-  resources = "resources",
-  freeActions = "free-actions",
-  boardActions = "board-actions",
-  buildings = "buildings",
-  research = "research",
-  planets = "planets",
-  terraforming = "terraforming",
-}
+export type ChartFamily = string;
+export const vpChartFamily: ChartFamily = "Victory Points";
 
 export type DeepPartial<T> = {
   [P in keyof T]?: DeepPartial<T[P]>;
