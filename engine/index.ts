@@ -10,6 +10,7 @@ import PlayerData from "./src/player-data";
 import researchTracks from "./src/research-tracks";
 import Reward from "./src/reward";
 import tiles from "./src/tiles";
+import federations from "./src/tiles/federations";
 
 export { boardActions } from "./src/actions";
 export { canResearchField, canTakeAdvancedTechTile } from "./src/available-command";
@@ -58,6 +59,7 @@ export {
   EventSource,
   gainFinalScoringVictoryPoints,
   finalRankings,
+  federations,
 };
 
 export default Engine;
