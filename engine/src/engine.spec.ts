@@ -3,7 +3,6 @@ import { expect } from "chai";
 import { BoardAction, PlayerEnum } from "..";
 import Engine from "./engine";
 import { Command, Condition, Operator, Phase, Planet, Player } from "./enums";
-import { AutoCharge } from "./player";
 
 describe("Engine", () => {
   it("should throw when trying to build on the wrong place", () => {

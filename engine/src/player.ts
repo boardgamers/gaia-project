@@ -54,7 +54,7 @@ interface FederationCache {
 
 export type AutoCharge = "ask" | "decline-cost" | 1 | 2 | 3 | 4 | 5;
 
-const defaultAutoCharge = 1;
+export const defaultAutoCharge = 1;
 
 export class Settings {
   constructor(
