@@ -48,7 +48,7 @@ describe("wrapper", () => {
     it("should automatically decline 2pw when the setting is set to 0", () => {
       const engine = new Engine(moves2pw.slice(0, 5));
 
-      setPlayerSettings(engine, 0, { autoCharge: "0" });
+      setPlayerSettings(engine, 0, { autoCharge: "decline-cost" });
 
       engine.loadMoves(moves2pw.slice(5));
 
@@ -119,7 +119,7 @@ const moves2pw = Engine.parseMoves(`
 `);
 
 const move2pwAndBrainstone = Engine.parseMoves(`
-  init 2 Curious-supply-341 
+  init 2 Curious-supply-341
   p1 faction taklons
   p2 faction itars
   taklons build m 1B1
