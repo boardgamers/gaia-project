@@ -43,8 +43,9 @@
 </template>
 <script lang="ts">
 import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
-import { LogEntry } from "@gaia-project/engine";
+import {createReplace} from "../data/log";
+import {Component, Prop} from "vue-property-decorator";
+import {LogEntry} from "@gaia-project/engine";
 
 @Component({
   computed: {
@@ -52,6 +53,8 @@ import { LogEntry } from "@gaia-project/engine";
       return this.$store.state.gaiaViewer.data;
     },
     history(): Array<{ move: string; entry: LogEntry }> {
+      const replace = createReplace(this.data);
+
       const ret = [];
       let advancedLogIndex = 0;
       let nextLogEntry = this.data.advancedLog[advancedLogIndex];
@@ -60,15 +63,21 @@ import { LogEntry } from "@gaia-project/engine";
         advancedLogIndex += 1;
         nextLogEntry = this.data.advancedLog[advancedLogIndex];
       };
+      const replaceMove = (s: string) => {
+        for (const e of replace) {
+          s = s.replace(e.from, e.to);
+        }
+        return s;
+      };
 
       this.data.moveHistory.forEach((move, i) => {
         while (nextLogEntry && (nextLogEntry.move === undefined || nextLogEntry.move < i)) {
           if (nextLogEntry.player === undefined || !!nextLogEntry.changes) {
-            ret.push({ entry: nextLogEntry });
+            ret.push({entry: nextLogEntry});
           }
           bumpLog();
         }
-        const entry = { move, entry: {} as LogEntry };
+        const entry = {move: replaceMove(move), entry: {} as LogEntry};
         if (nextLogEntry && nextLogEntry.move === i) {
           entry.entry = nextLogEntry;
           bumpLog();
@@ -76,14 +85,14 @@ import { LogEntry } from "@gaia-project/engine";
         ret.push(entry);
         while (nextLogEntry && nextLogEntry.move === undefined) {
           if (nextLogEntry.player === undefined || !!nextLogEntry.changes) {
-            ret.push({ entry: nextLogEntry });
+            ret.push({entry: nextLogEntry});
           }
           bumpLog();
         }
       });
 
       if (nextLogEntry && this.currentMove) {
-        ret.push({ entry: nextLogEntry, move: this.currentMove });
+        ret.push({entry: nextLogEntry, move: replaceMove(this.currentMove)});
       }
 
       ret.reverse();
