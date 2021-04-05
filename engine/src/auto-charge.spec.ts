@@ -21,7 +21,7 @@ describe("AutoCharge", () => {
   describe("askOrDeclineBasedOnCost", () => {
     const tests: {
       name: string;
-      give: { power: number; autoCharge: number };
+      give: { power: number; autoCharge: AutoCharge };
       want: ChargeDecision;
     }[] = [
       {
@@ -54,7 +54,7 @@ describe("AutoCharge", () => {
     for (const test of tests) {
       it(test.name, () => {
         const number = test.give.power;
-        const decision = askOrDeclineBasedOnCost(number, number, new AutoCharge(String(test.give.autoCharge)));
+        const decision = askOrDeclineBasedOnCost(number, number, test.give.autoCharge);
         expect(decision).to.equal(test.want);
       });
     }
@@ -68,27 +68,27 @@ describe("AutoCharge", () => {
     }[] = [
       {
         name: "always ask",
-        give: { power: 1, autoCharge: new AutoCharge(AutoCharge.alwaysAsk) },
+        give: { power: 1, autoCharge: "ask" },
         want: ChargeDecision.Ask,
       },
       {
         name: "decline if not free - is free",
-        give: { power: 1, autoCharge: new AutoCharge(AutoCharge.declineIfNotFree) },
+        give: { power: 1, autoCharge: "decline-cost" },
         want: ChargeDecision.Yes,
       },
       {
         name: "decline if not free - not free",
-        give: { power: 2, autoCharge: new AutoCharge(AutoCharge.declineIfNotFree) },
+        give: { power: 2, autoCharge: "decline-cost" },
         want: ChargeDecision.No,
       },
       {
         name: "auto charge 1 - charge",
-        give: { power: 1, autoCharge: new AutoCharge("1") },
+        give: { power: 1, autoCharge: 1 },
         want: ChargeDecision.Yes,
       },
       {
         name: "auto charge 1 - ask",
-        give: { power: 2, autoCharge: new AutoCharge("1") },
+        give: { power: 2, autoCharge: 1 },
         want: ChargeDecision.Ask,
       },
     ];
@@ -118,27 +118,27 @@ describe("AutoCharge", () => {
     }[] = [
       {
         name: "manual brainstone",
-        give: { earlyLeechValue: 2, lateLeechValue: 3, autoBrainstone: false, autoCharge: new AutoCharge("100") },
+        give: { earlyLeechValue: 2, lateLeechValue: 3, autoBrainstone: false, autoCharge: 5 },
         want: { decision: ChargeDecision.Ask, offer: null },
       },
       {
         name: "auto brainstone - not limited by auto charge - take max leech",
-        give: { earlyLeechValue: 2, lateLeechValue: 3, autoBrainstone: true, autoCharge: new AutoCharge("100") },
+        give: { earlyLeechValue: 2, lateLeechValue: 3, autoBrainstone: true, autoCharge: 5 },
         want: { decision: ChargeDecision.Yes, offer: "1t,3pw" },
       },
       {
         name: "auto brainstone - not limited by auto charge - both charge same amount - take charge first",
-        give: { earlyLeechValue: 2, lateLeechValue: 2, autoBrainstone: true, autoCharge: new AutoCharge("100") },
+        give: { earlyLeechValue: 2, lateLeechValue: 2, autoBrainstone: true, autoCharge: 5 },
         want: { decision: ChargeDecision.Yes, offer: "2pw,1t" },
       },
       {
         name: "auto brainstone - one option leeches more than max - ask",
-        give: { earlyLeechValue: 2, lateLeechValue: 3, autoBrainstone: true, autoCharge: new AutoCharge("2") },
+        give: { earlyLeechValue: 2, lateLeechValue: 3, autoBrainstone: true, autoCharge: 2 },
         want: { decision: ChargeDecision.Ask, offer: null },
       },
       {
         name: "auto brainstone - both options leeches more than max - ask",
-        give: { earlyLeechValue: 4, lateLeechValue: 3, autoBrainstone: true, autoCharge: new AutoCharge("2") },
+        give: { earlyLeechValue: 4, lateLeechValue: 3, autoBrainstone: true, autoCharge: 2 },
         want: { decision: ChargeDecision.Ask, offer: null },
       },
       {
@@ -147,7 +147,7 @@ describe("AutoCharge", () => {
           earlyLeechValue: 1,
           lateLeechValue: 3,
           autoBrainstone: true,
-          autoCharge: new AutoCharge(AutoCharge.declineIfNotFree),
+          autoCharge: "decline-cost",
         },
         want: { decision: ChargeDecision.Yes, offer: "1pw,1t" },
       },
@@ -157,7 +157,7 @@ describe("AutoCharge", () => {
           earlyLeechValue: 2,
           lateLeechValue: 3,
           autoBrainstone: true,
-          autoCharge: new AutoCharge(AutoCharge.declineIfNotFree),
+          autoCharge: "decline-cost",
         },
         want: { decision: ChargeDecision.No, offer: null },
       },

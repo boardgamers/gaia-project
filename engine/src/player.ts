@@ -52,44 +52,9 @@ interface FederationCache {
   custom: boolean;
 }
 
-export enum AutoChargeMode {
-  autoChargeUpToAmount,
-  alwaysAsk,
-  declineIfNotFree,
-}
+export type AutoCharge = "ask" | "decline-cost" | 1 | 2 | 3 | 4 | 5;
 
-export class AutoCharge {
-  static alwaysAsk = "ask";
-  static declineIfNotFree = "decline-cost";
-  mode: AutoChargeMode;
-  amount: number;
-
-  constructor(value: string) {
-    if (value == AutoCharge.alwaysAsk) {
-      this.mode = AutoChargeMode.alwaysAsk;
-    } else if (value == "0" || value == AutoCharge.declineIfNotFree) {
-      //0 is legacy value
-      this.mode = AutoChargeMode.declineIfNotFree;
-      this.amount = 1;
-    } else {
-      this.mode = AutoChargeMode.autoChargeUpToAmount;
-      this.amount = Number(value);
-    }
-  }
-
-  value(): string {
-    switch (this.mode) {
-      case AutoChargeMode.alwaysAsk:
-        return AutoCharge.alwaysAsk;
-      case AutoChargeMode.declineIfNotFree:
-        return AutoCharge.declineIfNotFree;
-      default:
-        return String(this.amount);
-    }
-  }
-}
-
-const defaultAutoCharge = new AutoCharge("1");
+const defaultAutoCharge = 1;
 
 export class Settings {
   constructor(
@@ -201,6 +166,10 @@ export default class Player extends EventEmitter {
 
     player.loadPlayerData(data.data);
     player.settings = data.settings ?? player.settings;
+    // Legacy value
+    if ((player.settings.autoChargePower as AutoCharge | 0) === 0) {
+      player.settings.autoChargePower = "decline-cost";
+    }
 
     return player;
   }

@@ -1,7 +1,7 @@
 import { Offer } from "./available-command";
 import { Faction, Resource } from "./enums";
 import { IncomeSelection } from "./income";
-import Player, { AutoCharge, AutoChargeMode } from "./player";
+import Player, { AutoCharge } from "./player";
 import Reward from "./reward";
 
 export enum ChargeDecision {
@@ -12,7 +12,7 @@ export enum ChargeDecision {
 }
 
 export class ChargeRequest {
-  public readonly mode: AutoChargeMode;
+  public readonly autoCharge: AutoCharge;
   public readonly minCharge: number;
   public readonly maxCharge: number;
   public readonly maxAllowedOffer: Offer;
@@ -24,15 +24,15 @@ export class ChargeRequest {
     public readonly playerHasPassed: boolean,
     public readonly incomeSelection: IncomeSelection
   ) {
-    const autoChargePower = player.settings.autoChargePower;
-    this.mode = autoChargePower.mode;
-    if (this.mode == AutoChargeMode.alwaysAsk) {
+    const autoCharge = player.settings.autoChargePower;
+    this.autoCharge = autoCharge;
+    if (autoCharge == "ask") {
       return;
     }
     let minCharge = 100;
     let maxCharge = 0;
 
-    const limit = Math.max(autoChargePower.amount, 1);
+    const limit = autoCharge == "decline-cost" ? 1 : autoCharge;
     let allowedMax = 0;
     let maxAllowedOffer: Offer = null;
 
@@ -76,7 +76,7 @@ const chargeRules: ((ChargeRequest) => ChargeDecision)[] = [
 ];
 
 export function decideChargeRequest(r: ChargeRequest): ChargeDecision {
-  if (r.mode == AutoChargeMode.alwaysAsk) {
+  if (r.autoCharge == "ask") {
     return ChargeDecision.Ask;
   }
   for (const chargeRule of chargeRules) {
@@ -121,14 +121,14 @@ function askForMultipleTaklonsOffers(offers: Offer[], autoBrainstone: boolean): 
 }
 
 export function askOrDeclineBasedOnCost(minCharge: number, maxCharge: number, autoCharge: AutoCharge) {
-  if (autoCharge.mode == AutoChargeMode.declineIfNotFree) {
+  if (autoCharge == "decline-cost") {
     if (minCharge > 1) {
       return ChargeDecision.No;
     }
     return ChargeDecision.Undecided;
   }
 
-  if (maxCharge > autoCharge.amount) {
+  if (maxCharge > Number(autoCharge)) {
     return ChargeDecision.Ask;
   }
   return ChargeDecision.Undecided;

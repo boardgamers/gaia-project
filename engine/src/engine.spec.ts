@@ -579,7 +579,7 @@ describe("Engine", () => {
       const engine = new Engine(moves);
 
       engine.generateAvailableCommandsIfNeeded();
-      engine.player(Player.Player1).settings.autoChargePower = new AutoCharge("2");
+      engine.player(Player.Player1).settings.autoChargePower = 2;
 
       expect(autoCharge(engine)).to.equal("charge 2pw");
     });
