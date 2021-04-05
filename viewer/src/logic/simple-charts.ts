@@ -114,7 +114,7 @@ function planetCounter<T>(
       if (owner == null) {
         owners[location] = player.player;
       } else if (owner != player.player && player.faction == Faction.Lantids) {
-        return isLantidsGuestMine ? 1 : 0;
+        return isLantidsGuestMine(source) ? 1 : 0;
       }
 
       const want = getPlanets(source.type, player);
@@ -324,19 +324,27 @@ const factories = [
     playerSummaryLineChartTitle: () => "Planets of all players",
     showWeightedTotal: false,
     extractLog: planetCounter(
-      () => false,
+      (source) => source.type == Planet.Empty,
       (t) => [t]
     ),
-    sources: Object.keys(planetNames).map((t) => {
-      const planet = t as Planet;
-      return {
-        type: planet,
-        label: planetNames[planet],
-        plural: `${planetNames[planet]} planets`,
-        color: planetColor(planet, true),
+    sources: Object.keys(planetNames)
+      .map((t) => {
+        const planet = t as Planet;
+        return {
+          type: planet,
+          label: planetNames[planet],
+          plural: `${planetNames[planet]} planets`,
+          color: planetColor(planet, true),
+          weight: 1,
+        };
+      })
+      .concat({
+        type: Planet.Empty,
+        label: "Lantids guest mine",
+        plural: "Lantids guest mines",
+        color: "--recent",
         weight: 1,
-      };
-    }),
+      }),
   } as SimpleSourceFactory<SimpleSource<Planet>>,
   {
     name: "Terraforming Steps",
