@@ -44,10 +44,32 @@ export function chartPlayerOrder(data: Engine): PlayerEnum[] {
   return data.players.map((p) => p.player);
 }
 
+export function extractChanges(player: PlayerEnum, extractChange: EventFilter): (entry: LogEntry) => number {
+  return (logItem) => {
+    if (player != logItem.player) {
+      return 0;
+    }
+    let counter = 0;
+    for (const source in logItem.changes) {
+      const change = logItem.changes[source];
+      for (const resource in change) {
+        counter += extractChange(
+          logItem.player,
+          source as EventSource,
+          resource as Resource,
+          logItem.round,
+          change[resource]
+        );
+      }
+    }
+    return counter;
+  };
+}
+
 export function getDataPoints(
   data: Engine,
   initialValue: number,
-  extractChange: EventFilter,
+  extractChange: (entry: LogEntry) => number,
   extractLog: (moveHistory: string[], entry: LogEntry) => number,
   projectedEndValue: () => number,
   deltaForEnded: () => number,
@@ -69,20 +91,8 @@ export function getDataPoints(
 
     counter += extractLog(data.moveHistory, logItem);
 
-    const changes = logItem.changes;
-    if (changes) {
-      for (const source in changes) {
-        const change = changes[source];
-        for (const resource in change) {
-          counter += extractChange(
-            logItem.player,
-            source as EventSource,
-            resource as Resource,
-            round,
-            change[resource]
-          );
-        }
-      }
+    if (logItem.changes) {
+      counter += extractChange(logItem);
     }
     perRoundData[round] = counter;
   }
@@ -112,10 +122,6 @@ export class ColorVar {
       throw `${color} does not start with --`;
     }
     this.color = color;
-  }
-
-  asVar() {
-    return `var(${this.color})`;
   }
 
   lookupForChart(style: ChartStyleDisplay, canvas: HTMLCanvasElement): string {

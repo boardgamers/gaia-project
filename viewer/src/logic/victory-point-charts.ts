@@ -15,7 +15,15 @@ import Engine, {
   RoundScoring,
   TechPos,
 } from "@gaia-project/engine";
-import { ColorVar, DatasetFactory, getDataPoints, IncludeRounds, initialResearch, logEntryProcessor } from "./charts";
+import {
+  ColorVar,
+  DatasetFactory,
+  extractChanges,
+  getDataPoints,
+  IncludeRounds,
+  initialResearch,
+  logEntryProcessor,
+} from "./charts";
 
 function simulateIncome(pl: Player, consume: (p: Player) => void): number {
   const json = JSON.parse(JSON.stringify(pl));
@@ -246,8 +254,9 @@ export function victoryPointDetails(
 
     const initialValue = s.initialValue != null ? s.initialValue(pl) : 0;
 
-    const extractChange = (player, source, resource, round, change) =>
-      player == wantPlayer && resource == Resource.VictoryPoint && values.includes(source) ? change : 0;
+    const extractChange = extractChanges(wantPlayer, (player, source, resource, round, change) =>
+      resource == Resource.VictoryPoint && values.includes(source) ? change : 0
+    );
 
     const extractLog = s.types.includes(Command.UpgradeResearch) ? countResearch(pl) : () => 0;
 

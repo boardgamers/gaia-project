@@ -4,6 +4,9 @@ import Engine, {
   Building,
   Command,
   Faction,
+  Federation,
+  federations,
+  LogEntry,
   Planet,
   Player,
   PlayerEnum,
@@ -15,12 +18,14 @@ import { sum } from "lodash";
 import { boardActionNames } from "../data/board-actions";
 import { boosterNames } from "../data/boosters";
 import { planetsWithSteps } from "../data/factions";
+import { federationColors } from "../data/federations";
 import { planetNames } from "../data/planets";
+import { researchNames } from "../data/research";
 import {
   ChartColor,
   ChartFamily,
   DatasetFactory,
-  EventFilter,
+  extractChanges,
   getDataPoints,
   IncludeRounds,
   initialResearch,
@@ -82,18 +87,13 @@ export type SimpleSourceFactory<Source extends SimpleSource<any>> = {
   sources: Source[];
   showWeightedTotal: boolean;
   initialValue?: (player: Player, source: Source) => number;
-  extractChange?: (player: Player, source: Source) => EventFilter;
+  extractChange?: (player: Player, source: Source) => (entry: LogEntry) => number;
   extractLog?: (cmd: CommandObject, source: Source, data: Engine, player: Player) => number;
 };
 
-const researchNames = {
-  [ResearchField.Terraforming]: "Terraforming",
-  [ResearchField.Navigation]: "Navigation",
-  [ResearchField.Intelligence]: "Intelligence",
-  [ResearchField.GaiaProject]: "Gaia Project",
-  [ResearchField.Economy]: "Economy",
-  [ResearchField.Science]: "Science",
-};
+function commandCounter<T>(...want: Command[]): (cmd: CommandObject, source: SimpleSource<T>) => number {
+  return (cmd, source) => (want.includes(cmd.command) && (cmd.args[0] as any) == source.type ? 1 : 0);
+}
 
 function planetCounter<T>(
   isLantidsGuestMine: (s: SimpleSource<T>) => boolean,
@@ -203,16 +203,36 @@ const resourceSources: ResourceSource[] = [
 
 const freeActionSources = resourceSources.filter((s) => s.weight > 0 || s.type == Resource.GainToken);
 
+function federationName(logEntry: LogEntry): string | null {
+  const f = logEntry.changes[Command.FormFederation];
+  if (f == null) {
+    return null;
+  }
+
+  const name = Object.keys(f)
+    .filter((r) => r != Resource.GainToken)
+    .map((r) => f[r] + r)
+    .join(",");
+  switch (name) {
+    case "8vp":
+      return "8vp,2t";
+    case "8vp,1q":
+      return "8vp,q";
+    case "1o,1k,2c":
+      return "Gleens";
+  }
+  return name;
+}
+
 const factories = [
   {
     name: "Resources",
     playerSummaryLineChartTitle: () => "Resources of all players as if bought with power",
     showWeightedTotal: true,
-    extractChange: (wantPlayer, source) => (player, eventSource, resource, round, change) =>
-      player == wantPlayer.player &&
-      ((resource == source.type && change > 0) || (resource == source.inverseOf && change < 0))
-        ? Math.abs(change)
-        : 0,
+    extractChange: (wantPlayer, source) =>
+      extractChanges(wantPlayer.player, (player, eventSource, resource, round, change) =>
+        (resource == source.type && change > 0) || (resource == source.inverseOf && change < 0) ? Math.abs(change) : 0
+      ),
     extractLog: (cmd, source) =>
       source.type == "burn-token" && cmd.command == Command.BurnPower ? Number(cmd.args[0]) : 0,
     sources: resourceSources,
@@ -235,7 +255,7 @@ const factories = [
     name: "Board actions",
     playerSummaryLineChartTitle: () => `Board actions taken by all players`,
     showWeightedTotal: false,
-    extractLog: (cmd, source) => (cmd.command == Command.Action && cmd.args[0] == source.type ? 1 : 0),
+    extractLog: commandCounter(Command.Action),
     sources: BoardAction.values().map((action) => ({
       type: action,
       label: boardActionNames[action].name,
@@ -307,8 +327,7 @@ const factories = [
     playerSummaryLineChartTitle: () => "Research steps of all players",
     showWeightedTotal: false,
     initialValue: (player, source) => initialResearch(player).get(source.type) ?? 0,
-    extractLog: (cmd, source) =>
-      cmd.command == Command.UpgradeResearch && source.type == (cmd.args[0] as ResearchField) ? 1 : 0,
+    extractLog: commandCounter(Command.UpgradeResearch),
     sources: Object.keys(researchNames).map((field) => {
       return {
         type: field as ResearchField,
@@ -366,11 +385,7 @@ const factories = [
     name: "Boosters",
     showWeightedTotal: false,
     playerSummaryLineChartTitle: () => "Boosters taken by all players",
-    extractLog: (cmd, source) =>
-      (cmd.command == Command.Pass || cmd.command == Command.ChooseRoundBooster) &&
-      source.type == (cmd.args[0] as Booster)
-        ? 1
-        : 0,
+    extractLog: commandCounter(Command.Pass, Command.ChooseRoundBooster),
     sources: Booster.values().map((b) => ({
       type: b,
       label: boosterNames[b].name,
@@ -379,6 +394,28 @@ const factories = [
       weight: 1,
     })),
   } as SimpleSourceFactory<SimpleSource<Booster>>,
+  {
+    name: "Federations",
+    showWeightedTotal: false,
+    playerSummaryLineChartTitle: () => "Federations of all players",
+    extractChange: (wantPlayer, source) => (logItem: LogEntry) =>
+      logItem.player == wantPlayer.player && federationName(logItem) == source.label ? 1 : 0,
+    sources: Federation.values()
+      .map((f) => ({
+        type: f,
+        label: federations[f],
+        plural: federations[f],
+        color: federationColors[f],
+        weight: 1,
+      }))
+      .concat({
+        type: Federation.Gleens,
+        label: "Gleens",
+        plural: "Gleens",
+        color: "--desert",
+        weight: 1,
+      }),
+  } as SimpleSourceFactory<SimpleSource<Federation>>,
 ];
 
 export function simpleChartDetails<Source extends SimpleSource<any>>(

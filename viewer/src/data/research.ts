@@ -1,5 +1,14 @@
 import { ResearchField } from "@gaia-project/engine";
 
+export const researchNames = {
+  [ResearchField.Terraforming]: "Terraforming",
+  [ResearchField.Navigation]: "Navigation",
+  [ResearchField.Intelligence]: "Intelligence",
+  [ResearchField.GaiaProject]: "Gaia Project",
+  [ResearchField.Economy]: "Economy",
+  [ResearchField.Science]: "Science",
+};
+
 export const descriptions = {
   [ResearchField.Economy]: [
     "This level has no effect.",
