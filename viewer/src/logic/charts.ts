@@ -141,12 +141,19 @@ export function resolveColor(color: ChartColor, player: Player): ColorVar {
 }
 
 export function planetColor(planet: Planet, invert: boolean): string {
-  return invert && planet == Planet.Ice
-    ? "--current-round"
-    : "--" +
-        Object.keys(Planet)
-          .find((k) => Planet[k] == planet)
-          .toLowerCase();
+  if (invert && planet == Planet.Ice) {
+    return "--current-round";
+  } else if (planet == Planet.Empty) {
+    //for lantids guest mine
+    return "--recent";
+  } else {
+    return (
+      "--" +
+      Object.keys(Planet)
+        .find((k) => Planet[k] == planet)
+        .toLowerCase()
+    );
+  }
 }
 
 export function playerColor(pl: Player, invert: boolean): ColorVar {

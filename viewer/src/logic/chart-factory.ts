@@ -357,7 +357,7 @@ export function newBarChart(
         const d: ChartDataset<"bar"> = {
           data: points,
           label: key,
-          backgroundColor: playerColor(player, false).lookupForChart(style, canvas),
+          backgroundColor: playerColor(player, style.type == "table").lookupForChart(style, canvas),
           borderColor: "black",
           borderWidth: 1,
         };

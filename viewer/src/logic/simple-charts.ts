@@ -43,6 +43,7 @@ export enum TerraformingSteps {
   GaiaFormer = "Gaia Former",
   Gaia = "Gaia Planet (settled directly)",
   Lantids = "Lantids guest mine",
+  LostMine = "Lost Planet",
 }
 
 function terraformingSteps(steps: TerraformingSteps): number {
@@ -65,6 +66,8 @@ export function planetsForSteps(type: TerraformingSteps, planet: Planet): Planet
     case TerraformingSteps.GaiaFormer:
       return [Planet.Transdim];
     case TerraformingSteps.Lantids:
+      return [Planet.Empty];
+    case TerraformingSteps.LostMine:
       return [Planet.Lost];
     case TerraformingSteps.Step0:
       return [planet];
@@ -97,12 +100,16 @@ function commandCounter<T>(...want: Command[]): (cmd: CommandObject, source: Sim
 
 function planetCounter<T>(
   isLantidsGuestMine: (s: SimpleSource<T>) => boolean,
+  isLostPlanet: (s: SimpleSource<T>) => boolean,
   getPlanets: (type: T, player: Player) => Planet[]
 ): (cmd: CommandObject, source: SimpleSource<T>, data: Engine, player: Player) => number {
   const transdim = new Set<string>();
   const owners: { [key: string]: PlayerEnum } = {};
 
   return (cmd, source, data: Engine, player: Player) => {
+    if (cmd.command == Command.PlaceLostPlanet && isLostPlanet(source)) {
+      return 1;
+    }
     if (cmd.command == Command.Build) {
       const building = cmd.args[0] as Building;
       const location = cmd.args[1];
@@ -344,6 +351,7 @@ const factories = [
     showWeightedTotal: false,
     extractLog: planetCounter(
       (source) => source.type == Planet.Empty,
+      (source) => source.type == Planet.Lost,
       (t) => [t]
     ),
     sources: Object.keys(planetNames)
@@ -371,6 +379,7 @@ const factories = [
     playerSummaryLineChartTitle: () => "Terraforming Steps of all players (Gaia planets and gaia formers excluded)",
     extractLog: planetCounter(
       (source) => source.type == TerraformingSteps.Lantids,
+      (source) => source.type == TerraformingSteps.LostMine,
       (type, player) => planetsForSteps(type, player.planet)
     ),
     sources: Object.values(TerraformingSteps).map((steps) => ({
