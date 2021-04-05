@@ -12,7 +12,8 @@ describe("Advanced log details", () => {
   });
   it("tech should be replaced (twice)", () => {
     expect(replaceMove(data, "baltaks build lab 4B1. tech terra. tech terra")).to.equal(
-      "baltaks build lab 4B1. tech terra (o,q). tech terra (o,q)");
+      "baltaks build lab 4B1. tech terra (o,q). tech terra (o,q)"
+    );
   });
   it("advanced tech should be replaced", () => {
     expect(replaceMove(data, "baltaks build lab 4B1. tech adv-gaia")).to.equal(
