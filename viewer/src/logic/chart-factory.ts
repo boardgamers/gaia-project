@@ -21,16 +21,11 @@ import {
   playerColor,
   playerLabel,
   resolveColor,
+  vpChartFamily,
   weightedSum,
 } from "./charts";
-import { simpleChartDetails, SimpleChartKind, SimpleSource, simpleSourceFactory } from "./simple-charts";
-import {
-  groupSources,
-  victoryPointDetails,
-  VictoryPointSource,
-  victoryPointSources,
-  VictoryPointType,
-} from "./victory-point-charts";
+import { simpleChartDetails, SimpleSource, simpleSourceFactory } from "./simple-charts";
+import { groupSources, victoryPointDetails, VictoryPointSource, victoryPointSources } from "./victory-point-charts";
 
 export type ChartStyle = "table" | "chart";
 
@@ -44,18 +39,20 @@ export type DatasetMeta = { [key: string]: { label: string; total: number; weigh
 export type TableMeta = { weights?: number[]; colors?: ColorVar[]; datasetMeta: DatasetMeta };
 export type BarChartConfig = { chart: ChartConfiguration<"bar">; table: TableMeta };
 
-export type ChartKind = "line" | "bar" | PlayerEnum | SimpleChartKind | VictoryPointType;
+export type ChartKind = string | PlayerEnum;
+export const barChartKind: ChartKind = "bar";
+export const lineChartKind: ChartKind = "line";
 
 export type ChartKindDisplay = { label: string; kind: ChartKind };
 
-export type ChartSource<Type extends ChartKind> = {
-  type: Type;
+export type ChartSource = {
+  type: ChartKind;
   label: string;
   color: ChartColor;
   weight: number;
 };
 
-export type ChartFactory<Type extends ChartKind, Source extends ChartSource<Type>> = {
+export type ChartFactory<Source extends ChartSource> = {
   canHandle(family: ChartFamily): boolean;
   sources(family: ChartFamily): Source[];
   newDetails(
@@ -75,23 +72,23 @@ export type ChartFactory<Type extends ChartKind, Source extends ChartSource<Type
   barChartTooltip?: DeepPartial<TooltipOptions<"bar">>;
 };
 
-export function victoryPointSource(source: ChartSource<VictoryPointType>): VictoryPointSource {
+export function victoryPointSource(source: ChartSource): VictoryPointSource {
   return victoryPointSources.find((s) => s.types[0] == source.type);
 }
 
-const simpleChartFactory: ChartFactory<SimpleChartKind, SimpleSource<SimpleChartKind>> = {
+const simpleChartFactory: ChartFactory<SimpleSource<any>> = {
   includeRounds: "except-final",
 
   canHandle(family: ChartFamily): boolean {
-    return family != ChartFamily.vp;
+    return family != vpChartFamily;
   },
-  sources(family: ChartFamily): SimpleSource<SimpleChartKind>[] {
+  sources(family: ChartFamily): SimpleSource<any>[] {
     return simpleSourceFactory(family).sources;
   },
   newDetails(
     data: Engine,
     player: PlayerEnum,
-    sources: SimpleSource<SimpleChartKind>[],
+    sources: SimpleSource<any>[],
     includeRounds: IncludeRounds,
     family: ChartFamily
   ) {
@@ -104,7 +101,7 @@ const simpleChartFactory: ChartFactory<SimpleChartKind, SimpleSource<SimpleChart
     const sourceFactory = simpleSourceFactory(family);
     return sourceFactory.playerSummaryLineChartTitle(sourceFactory.sources);
   },
-  kindBreakdownTitle(family: ChartFamily, source: SimpleSource<SimpleChartKind>): string {
+  kindBreakdownTitle(family: ChartFamily, source: SimpleSource<any>): string {
     return `${source.plural} of all players`;
   },
   stacked() {
@@ -115,12 +112,12 @@ const simpleChartFactory: ChartFactory<SimpleChartKind, SimpleSource<SimpleChart
   },
 };
 
-const vpChartFactory: ChartFactory<VictoryPointType, ChartSource<VictoryPointType>> = {
+const vpChartFactory: ChartFactory<ChartSource> = {
   includeRounds: "all",
   canHandle(family: ChartFamily): boolean {
-    return family == ChartFamily.vp;
+    return family == vpChartFamily;
   },
-  sources(): ChartSource<VictoryPointType>[] {
+  sources(): ChartSource[] {
     return victoryPointSources.map((s) => ({
       type: s.types[0],
       label: s.label,
@@ -131,7 +128,7 @@ const vpChartFactory: ChartFactory<VictoryPointType, ChartSource<VictoryPointTyp
   newDetails(
     data: Engine,
     player: PlayerEnum,
-    sources: ChartSource<VictoryPointType>[],
+    sources: ChartSource[],
     includeRounds: IncludeRounds,
     family: ChartFamily,
     groupDatasets: boolean
@@ -146,7 +143,7 @@ const vpChartFactory: ChartFactory<VictoryPointType, ChartSource<VictoryPointTyp
   playerSummaryTitle(): string {
     return "Victory points of all players";
   },
-  kindBreakdownTitle(family: ChartFamily, source: ChartSource<VictoryPointType>): string {
+  kindBreakdownTitle(family: ChartFamily, source: ChartSource): string {
     return `${victoryPointSource(source).label} of all players`;
   },
   stacked(kind: ChartKind) {
@@ -165,9 +162,9 @@ const vpChartFactory: ChartFactory<VictoryPointType, ChartSource<VictoryPointTyp
   },
 };
 
-const chartFactories: ChartFactory<any, any>[] = [simpleChartFactory, vpChartFactory];
+const chartFactories: ChartFactory<any>[] = [simpleChartFactory, vpChartFactory];
 
-function chartFactory(family: ChartFamily): ChartFactory<any, any> {
+function chartFactory(family: ChartFamily): ChartFactory<any> {
   return chartFactories.find((f) => f.canHandle(family));
 }
 
@@ -410,11 +407,11 @@ export function kinds(data: Engine, family: ChartFamily): ChartKindDisplay[][] {
 
   const general: ChartKindDisplay[] = [
     {
-      kind: "bar",
+      kind: barChartKind,
       label: "Overview",
     },
     {
-      kind: "line",
+      kind: lineChartKind,
       label: "Over Time",
     },
   ];
