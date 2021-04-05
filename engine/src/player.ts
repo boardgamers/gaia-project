@@ -52,9 +52,13 @@ interface FederationCache {
   custom: boolean;
 }
 
+export type AutoCharge = "ask" | "decline-cost" | 1 | 2 | 3 | 4 | 5;
+
+export const defaultAutoCharge = 1;
+
 export class Settings {
   constructor(
-    public autoChargePower: number = 1, // 0 => decline everything that is not free
+    public autoChargePower: AutoCharge = defaultAutoCharge,
     public autoIncome: boolean = false,
     public autoBrainstone: boolean = false,
     public itarsAutoChargeToArea3: boolean = false
@@ -162,6 +166,10 @@ export default class Player extends EventEmitter {
 
     player.loadPlayerData(data.data);
     player.settings = data.settings ?? player.settings;
+    // Legacy value
+    if ((player.settings.autoChargePower as AutoCharge | 0) === 0) {
+      player.settings.autoChargePower = "decline-cost";
+    }
 
     return player;
   }
