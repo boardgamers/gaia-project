@@ -1055,14 +1055,12 @@ export default class Player extends EventEmitter {
       const tree = spanningTree(convertedDestGroups, workingGrid, info.satellites, "heuristic", (hex) => hex.data.cost);
 
       if ("path" in tree) {
-        const smallFederation = this.addAdjacentBuildings(
-          tree.path.map((hex) => map.grid.get(hex)),
-          map
-        );
+        const path = tree.path.map((hex) => map.grid.get(hex));
+        const smallFederation = this.addAdjacentBuildings(path, map);
         const info2 = this.federationInfo(smallFederation);
         assert(
           info2.satellites >= info.satellites,
-          "The federation can be built with less satellites, for example: " + tree.path.join(",")
+          "The federation can be built with less satellites, for example: " + path.join(",")
         );
       }
     }
