@@ -1,0 +1,66 @@
+{
+  "tableMeta": {
+    "weights": null,
+    "colors": [
+      {
+        "color": "--rt-terra"
+      },
+      {
+        "color": "--rt-nav"
+      },
+      {
+        "color": "--rt-int"
+      },
+      {
+        "color": "--rt-gaia"
+      },
+      {
+        "color": "--rt-eco"
+      },
+      {
+        "color": "--rt-sci"
+      }
+    ],
+    "datasetMeta": {
+      "Itars (4)": {
+        "label": "Itars",
+        "total": 4,
+        "weightedTotal": null
+      },
+      "Geoden (2)": {
+        "label": "Geoden",
+        "total": 2,
+        "weightedTotal": null
+      },
+      "Taklons (3)": {
+        "label": "Taklons",
+        "total": 3,
+        "weightedTotal": null
+      },
+      "Lantids (2)": {
+        "label": "Lantids",
+        "total": 2,
+        "weightedTotal": null
+      }
+    }
+  },
+  "labels": ["Terraforming", "Navigation", "Intelligence", "Gaia Project", "Economy", "Science"],
+  "datasets": [
+    {
+      "label": "Itars (4)",
+      "data": [1, 1, 0, 1, 0, 1]
+    },
+    {
+      "label": "Taklons (3)",
+      "data": [0, 1, 0, 0, 2, 0]
+    },
+    {
+      "label": "Geoden (2)",
+      "data": [2, 0, 0, 0, 0, 0]
+    },
+    {
+      "label": "Lantids (2)",
+      "data": [0, 0, 0, 0, 2, 0]
+    }
+  ]
+}

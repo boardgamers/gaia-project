@@ -1,0 +1,105 @@
+{
+  "tableMeta": {
+    "weights": null,
+    "colors": [
+      {
+        "color": "--gaia"
+      },
+      {
+        "color": "--volcanic"
+      },
+      {
+        "color": "--res-power"
+      },
+      {
+        "color": "--tech-tile"
+      },
+      {
+        "color": "--desert"
+      },
+      {
+        "color": "--rt-gaia"
+      },
+      {
+        "color": "--oxide"
+      },
+      {
+        "color": "--specialAction"
+      },
+      {
+        "color": "--res-knowledge"
+      },
+      {
+        "color": "--current-round"
+      },
+      {
+        "color": "--federation"
+      },
+      {
+        "color": "--rt-sci"
+      },
+      {
+        "color": "--dig"
+      },
+      {
+        "color": "--res-credit"
+      }
+    ],
+    "datasetMeta": {
+      "Itars (19)": {
+        "label": "Itars",
+        "total": 19,
+        "weightedTotal": null
+      },
+      "Geoden (57)": {
+        "label": "Geoden",
+        "total": 57,
+        "weightedTotal": null
+      },
+      "Taklons (19)": {
+        "label": "Taklons",
+        "total": 19,
+        "weightedTotal": null
+      },
+      "Lantids (16)": {
+        "label": "Lantids",
+        "total": 16,
+        "weightedTotal": null
+      }
+    }
+  },
+  "labels": [
+    "Initial",
+    "Bid",
+    "Charge",
+    "Base Tech",
+    "Gleens",
+    "Round",
+    "Booster",
+    "QIC",
+    "Research",
+    "Advanced Tech",
+    "Federation",
+    "Final A",
+    "Final B",
+    "Resources"
+  ],
+  "datasets": [
+    {
+      "label": "Geoden (57)",
+      "data": [10, 0, -12, 0, 0, 10, 0, 0, 0, 0, 6, 18, 18, 7]
+    },
+    {
+      "label": "Itars (19)",
+      "data": [10, 0, -2, 0, 0, 5, 1, 0, 0, 0, 0, 0, 0, 5]
+    },
+    {
+      "label": "Taklons (19)",
+      "data": [10, 0, -9, 0, 0, 5, 4, 0, 0, 0, 0, 0, 0, 9]
+    },
+    {
+      "label": "Lantids (16)",
+      "data": [10, 0, -5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 6]
+    }
+  ]
+}

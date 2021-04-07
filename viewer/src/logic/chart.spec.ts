@@ -1,5 +1,9 @@
-import { Faction, LogEntry, Player } from "@gaia-project/engine";
+import Engine, { Faction, LogEntry, Player } from "@gaia-project/engine";
 import { expect } from "chai";
+// Here we import the File System module of node
+import fs from "fs";
+import { families, newBarChart } from "./chart-factory";
+import { ChartFamily } from "./charts";
 import { countResearch } from "./victory-point-charts";
 
 describe("Chart", () => {
@@ -28,5 +32,34 @@ describe("Chart", () => {
         expect(n).to.deep.equal(test.want);
       });
     }
+  });
+
+  describe("chart data", () => {
+    const base = "src/logic/chartTests/";
+    fs.readdirSync(base).map((testCaseName) => {
+      describe(testCaseName, () => {
+        const testCaseDir = base + testCaseName;
+        const testCase = JSON.parse(fs.readFileSync(testCaseDir + "/test-case.json").toString());
+
+        const engine = new Engine(testCase.moveHistory, testCase.options);
+
+        const allFamilies = testCase.families.flatMap((f) => (f == "all" ? families() : [f as ChartFamily]));
+        for (const family of allFamilies) {
+          it(family, () => {
+            const path = `${testCaseDir}/${family.replace(" ", "-").toLowerCase()}.json`;
+            const config = newBarChart({ type: "table", label: "Table", compact: false }, family, engine, null);
+            const actual = {
+              tableMeta: config.table,
+              labels: config.chart.data.labels,
+              datasets: config.chart.data.datasets.map((s) => ({ label: s.label, data: s.data })),
+            };
+            expect(actual).to.deep.equal(
+              JSON.parse(fs.readFileSync(path).toString()),
+              `${path}:\n${JSON.stringify(actual)}\n`
+            );
+          });
+        }
+      });
+    });
   });
 });
