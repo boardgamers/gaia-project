@@ -138,18 +138,18 @@ export function factionDesc(faction: Faction) {
     <span style="white-space: nowrap; line-height: 1em">
       <b>Steps:</b>
       ${[0, 1, 2, 3]
-    .map(
-      (i) =>
-        `<span class="ml-2">${planetsWithSteps(p, i)
-          .map(
-            (p) =>
-              `<svg width="15" height="20" viewbox="0 0 15 15" >
+        .map(
+          (i) =>
+            `<span class="ml-2">${planetsWithSteps(p, i)
+              .map(
+                (p) =>
+                  `<svg width="15" height="20" viewbox="0 0 15 15" >
           <circle cx="7" cy="6" r="6"  class="player-token planet-fill ${p}" />
         </svg>`
-          )
-          .join("")} ${i}</span>`
-    )
-    .join("")}
+              )
+              .join("")} ${i}</span>`
+        )
+        .join("")}
     </span>
   </div>
   `;
