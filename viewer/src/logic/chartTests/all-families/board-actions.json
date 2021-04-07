@@ -1,0 +1,89 @@
+{
+  "tableMeta": {
+    "weights": null,
+    "colors": [
+      {
+        "color": "--recent"
+      },
+      {
+        "color": "--current-round"
+      },
+      {
+        "color": "--res-ore"
+      },
+      {
+        "color": "--res-credit"
+      },
+      {
+        "color": "--res-knowledge"
+      },
+      {
+        "color": "--dig"
+      },
+      {
+        "color": "--res-power"
+      },
+      {
+        "color": "--tech-tile"
+      },
+      {
+        "color": "--federation"
+      },
+      {
+        "color": "--res-vp"
+      }
+    ],
+    "datasetMeta": {
+      "Itars (1)": {
+        "label": "Itars",
+        "total": 1,
+        "weightedTotal": null
+      },
+      "Geoden (2)": {
+        "label": "Geoden",
+        "total": 2,
+        "weightedTotal": null
+      },
+      "Taklons (3)": {
+        "label": "Taklons",
+        "total": 3,
+        "weightedTotal": null
+      },
+      "Lantids (1)": {
+        "label": "Lantids",
+        "total": 1,
+        "weightedTotal": null
+      }
+    }
+  },
+  "labels": [
+    "3 knowledge",
+    "2 steps",
+    "2 ore",
+    "7 credits",
+    "2 knowledge",
+    "1 step",
+    "2 tokens",
+    "Tech tile",
+    "Re-score federation",
+    "VP for planet types"
+  ],
+  "datasets": [
+    {
+      "label": "Taklons (3)",
+      "data": [0, 0, 0, 2, 0, 1, 0, 0, 0, 0]
+    },
+    {
+      "label": "Geoden (2)",
+      "data": [0, 0, 1, 0, 1, 0, 0, 0, 0, 0]
+    },
+    {
+      "label": "Itars (1)",
+      "data": [0, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "label": "Lantids (1)",
+      "data": [0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "tableMeta": {
+    "weights": [1, 2, 2, 3, 3, 0],
+    "colors": [
+      {
+        "color": "--res-ore"
+      },
+      {
+        "color": "--res-credit"
+      },
+      {
+        "color": "--res-knowledge"
+      },
+      {
+        "color": "--current-round"
+      },
+      {
+        "color": "--rt-terra"
+      },
+      {
+        "color": "--rt-gaia"
+      }
+    ],
+    "datasetMeta": {
+      "Itars (9)": {
+        "label": "Itars",
+        "total": 5,
+        "weightedTotal": 9
+      },
+      "Geoden (13)": {
+        "label": "Geoden",
+        "total": 8,
+        "weightedTotal": 13
+      },
+      "Taklons (10)": {
+        "label": "Taklons",
+        "total": 6,
+        "weightedTotal": 10
+      },
+      "Lantids (10)": {
+        "label": "Lantids",
+        "total": 7,
+        "weightedTotal": 10
+      }
+    }
+  },
+  "labels": ["Mine", "Trading Station", "Research Lab", "Planetary Institute", "Academy", "Gaia Former"],
+  "datasets": [
+    {
+      "label": "Geoden (13)",
+      "data": [4, 3, 0, 1, 0, 0]
+    },
+    {
+      "label": "Lantids (10)",
+      "data": [5, 1, 0, 1, 0, 0]
+    },
+    {
+      "label": "Taklons (10)",
+      "data": [3, 1, 1, 0, 1, 0]
+    },
+    {
+      "label": "Itars (9)",
+      "data": [2, 1, 1, 0, 1, 0]
+    }
+  ]
+}

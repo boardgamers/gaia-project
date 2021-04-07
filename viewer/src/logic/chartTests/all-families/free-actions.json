@@ -1,0 +1,63 @@
+{
+  "tableMeta": {
+    "weights": [1, 3, 4, 4, 0],
+    "colors": [
+      {
+        "color": "--res-credit"
+      },
+      {
+        "color": "--res-ore"
+      },
+      {
+        "color": "--res-knowledge"
+      },
+      {
+        "color": "--res-qic"
+      },
+      {
+        "color": "--recent"
+      }
+    ],
+    "datasetMeta": {
+      "Itars (0)": {
+        "label": "Itars",
+        "total": 0,
+        "weightedTotal": 0
+      },
+      "Geoden (5)": {
+        "label": "Geoden",
+        "total": 3,
+        "weightedTotal": 5
+      },
+      "Taklons (15)": {
+        "label": "Taklons",
+        "total": 5,
+        "weightedTotal": 15
+      },
+      "Lantids (7)": {
+        "label": "Lantids",
+        "total": 3,
+        "weightedTotal": 7
+      }
+    }
+  },
+  "labels": ["Credit", "Ore", "Knowledge", "QIC", "Gained Tokens"],
+  "datasets": [
+    {
+      "label": "Taklons (15)",
+      "data": [0, 5, 0, 0, 0]
+    },
+    {
+      "label": "Geoden (5)",
+      "data": [2, 1, 0, 0, 0]
+    },
+    {
+      "label": "Lantids (7)",
+      "data": [1, 2, 0, 0, 0]
+    },
+    {
+      "label": "Itars (0)",
+      "data": [0, 0, 0, 0, 0]
+    }
+  ]
+}

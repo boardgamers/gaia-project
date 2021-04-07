@@ -1,0 +1,93 @@
+{
+  "tableMeta": {
+    "weights": null,
+    "colors": [
+      {
+        "color": "--swamp"
+      },
+      {
+        "color": "--desert"
+      },
+      {
+        "color": "--terra"
+      },
+      {
+        "color": "--volcanic"
+      },
+      {
+        "color": "--oxide"
+      },
+      {
+        "color": "--titanium"
+      },
+      {
+        "color": "--current-round"
+      },
+      {
+        "color": "--gaia"
+      },
+      {
+        "color": "--transdim"
+      },
+      {
+        "color": "--lost"
+      },
+      {
+        "color": "--recent"
+      }
+    ],
+    "datasetMeta": {
+      "Itars (2)": {
+        "label": "Itars",
+        "total": 2,
+        "weightedTotal": null
+      },
+      "Geoden (4)": {
+        "label": "Geoden",
+        "total": 4,
+        "weightedTotal": null
+      },
+      "Taklons (3)": {
+        "label": "Taklons",
+        "total": 3,
+        "weightedTotal": null
+      },
+      "Lantids (5)": {
+        "label": "Lantids",
+        "total": 5,
+        "weightedTotal": null
+      }
+    }
+  },
+  "labels": [
+    "Swamp",
+    "Desert",
+    "Terra",
+    "Volcanic",
+    "Oxide",
+    "Titanium",
+    "Ice",
+    "Gaia",
+    "Transdim",
+    "Lost planet",
+    "Lantids guest mine"
+  ],
+  "datasets": [
+    {
+      "label": "Lantids (5)",
+      "data": [0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 3]
+    },
+    {
+      "label": "Geoden (4)",
+      "data": [0, 1, 0, 3, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "label": "Taklons (3)",
+      "data": [2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
+    },
+    {
+      "label": "Itars (2)",
+      "data": [0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0]
+    }
+  ]
+}

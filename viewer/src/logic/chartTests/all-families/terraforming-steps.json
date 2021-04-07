@@ -1,0 +1,81 @@
+{
+  "tableMeta": {
+    "weights": [0, 1, 2, 3, 0, 0, 0, 0],
+    "colors": [
+      {
+        "color": "--current-round"
+      },
+      {
+        "color": "--terra"
+      },
+      {
+        "color": "--oxide"
+      },
+      {
+        "color": "--volcanic"
+      },
+      {
+        "color": "--transdim"
+      },
+      {
+        "color": "--gaia"
+      },
+      {
+        "color": "--recent"
+      },
+      {
+        "color": "--lost"
+      }
+    ],
+    "datasetMeta": {
+      "Itars (0)": {
+        "label": "Itars",
+        "total": 2,
+        "weightedTotal": 0
+      },
+      "Geoden (1)": {
+        "label": "Geoden",
+        "total": 4,
+        "weightedTotal": 1
+      },
+      "Taklons (1)": {
+        "label": "Taklons",
+        "total": 3,
+        "weightedTotal": 1
+      },
+      "Lantids (0)": {
+        "label": "Lantids",
+        "total": 5,
+        "weightedTotal": 0
+      }
+    }
+  },
+  "labels": [
+    "Home world",
+    "1 step",
+    "2 steps",
+    "3 steps",
+    "Gaia Former",
+    "Gaia Planet (settled directly)",
+    "Lantids guest mine",
+    "Lost Planet"
+  ],
+  "datasets": [
+    {
+      "label": "Lantids (0)",
+      "data": [2, 0, 0, 0, 0, 0, 3, 0]
+    },
+    {
+      "label": "Geoden (1)",
+      "data": [3, 1, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "label": "Taklons (1)",
+      "data": [2, 1, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "label": "Itars (0)",
+      "data": [2, 0, 0, 0, 0, 0, 0, 0]
+    }
+  ]
+}

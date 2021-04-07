@@ -1,0 +1,85 @@
+{
+  "tableMeta": {
+    "weights": null,
+    "colors": [
+      {
+        "color": "--qic"
+      },
+      {
+        "color": "--dig"
+      },
+      {
+        "color": "--recent"
+      },
+      {
+        "color": "--res-vp"
+      },
+      {
+        "color": "--ore"
+      },
+      {
+        "color": "--res-knowledge"
+      },
+      {
+        "color": "--gaia"
+      },
+      {
+        "color": "--res-credit"
+      },
+      {
+        "color": "--res-power"
+      }
+    ],
+    "datasetMeta": {
+      "Itars (2)": {
+        "label": "Itars",
+        "total": 2,
+        "weightedTotal": null
+      },
+      "Geoden (0)": {
+        "label": "Geoden",
+        "total": 0,
+        "weightedTotal": null
+      },
+      "Taklons (2)": {
+        "label": "Taklons",
+        "total": 2,
+        "weightedTotal": null
+      },
+      "Lantids (0)": {
+        "label": "Lantids",
+        "total": 0,
+        "weightedTotal": null
+      }
+    }
+  },
+  "labels": [
+    "o,q",
+    "k for planet types",
+    "power value 4 for PI / academy",
+    "7 VP",
+    "1o,1pw income",
+    "1k,1c income",
+    "3 VP / build mine on gaia",
+    "4c income",
+    "4pw special action"
+  ],
+  "datasets": [
+    {
+      "label": "Itars (2)",
+      "data": [0, 0, 0, 0, 0, 1, 0, 1, 0]
+    },
+    {
+      "label": "Taklons (2)",
+      "data": [0, 0, 0, 0, 0, 1, 0, 0, 1]
+    },
+    {
+      "label": "Geoden (0)",
+      "data": [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "label": "Lantids (0)",
+      "data": [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    }
+  ]
+}

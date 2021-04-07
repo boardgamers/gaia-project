@@ -1,0 +1,89 @@
+{
+  "tableMeta": {
+    "weights": null,
+    "colors": [
+      {
+        "color": "--ice"
+      },
+      {
+        "color": "--swamp"
+      },
+      {
+        "color": "--res-qic"
+      },
+      {
+        "color": "--dig"
+      },
+      {
+        "color": "--rt-nav"
+      },
+      {
+        "color": "--res-ore"
+      },
+      {
+        "color": "--res-credit"
+      },
+      {
+        "color": "--res-knowledge"
+      },
+      {
+        "color": "--recent"
+      },
+      {
+        "color": "--rt-gaia"
+      }
+    ],
+    "datasetMeta": {
+      "Itars (2)": {
+        "label": "Itars",
+        "total": 2,
+        "weightedTotal": null
+      },
+      "Geoden (2)": {
+        "label": "Geoden",
+        "total": 2,
+        "weightedTotal": null
+      },
+      "Taklons (2)": {
+        "label": "Taklons",
+        "total": 2,
+        "weightedTotal": null
+      },
+      "Lantids (2)": {
+        "label": "Lantids",
+        "total": 2,
+        "weightedTotal": null
+      }
+    }
+  },
+  "labels": [
+    "1k, 1o",
+    "1o, 2 tokens",
+    "q, 2c",
+    "2c, 1 step",
+    "2pw, range+3",
+    "1o, 1 VP / mine",
+    "1o, 2 VP / ts",
+    "1k, 3 VP / lab",
+    "4pw, 4 VP / PI or academy",
+    "4c, 1 VP / gaia planet"
+  ],
+  "datasets": [
+    {
+      "label": "Itars (2)",
+      "data": [0, 1, 0, 0, 0, 1, 0, 0, 0, 0]
+    },
+    {
+      "label": "Geoden (2)",
+      "data": [0, 0, 1, 1, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "label": "Taklons (2)",
+      "data": [0, 1, 0, 0, 0, 0, 0, 0, 1, 0]
+    },
+    {
+      "label": "Lantids (2)",
+      "data": [0, 0, 1, 0, 0, 0, 0, 0, 0, 1]
+    }
+  ]
+}

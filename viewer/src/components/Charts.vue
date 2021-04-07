@@ -44,7 +44,6 @@
 <script lang="ts">
 import {Component, Vue, Watch} from "vue-property-decorator";
 import {ChartFamily, vpChartFamily} from "../logic/charts";
-import {simpleSourceFactory, SimpleSourceFactory, simpleSourceFamilies,} from "../logic/simple-charts";
 import PlayerCircle from "./PlayerCircle.vue";
 import BuildingImage from "./Building.vue";
 import SpecialAction from "./SpecialAction.vue";
@@ -69,7 +68,9 @@ import {
   ChartKind,
   ChartKindDisplay,
   ChartStyleDisplay,
-  kinds, lineChartKind,
+  families,
+  kinds,
+  lineChartKind,
   newBarChart,
   newLineChart,
   TableMeta
@@ -116,7 +117,7 @@ export default class Charts extends Vue {
   }
 
   get families(): ChartFamily[] {
-    return [vpChartFamily].concat(...simpleSourceFamilies());
+    return families();
   }
 
   get kinds(): ChartKindDisplay[][] {

@@ -24,7 +24,7 @@ import {
   vpChartFamily,
   weightedSum,
 } from "./charts";
-import { simpleChartDetails, SimpleSource, simpleSourceFactory } from "./simple-charts";
+import { simpleChartDetails, SimpleSource, simpleSourceFactory, simpleSourceFamilies } from "./simple-charts";
 import { groupSources, victoryPointDetails, VictoryPointSource, victoryPointSources } from "./victory-point-charts";
 
 export type ChartStyle = "table" | "chart";
@@ -400,6 +400,10 @@ export function newBarChart(
       },
     },
   };
+}
+
+export function families(): ChartFamily[] {
+  return [vpChartFamily].concat(...simpleSourceFamilies());
 }
 
 export function kinds(data: Engine, family: ChartFamily): ChartKindDisplay[][] {

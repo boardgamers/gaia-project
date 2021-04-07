@@ -1,0 +1,69 @@
+{
+  "tableMeta": {
+    "weights": null,
+    "colors": [
+      {
+        "color": "--res-vp"
+      },
+      {
+        "color": "--res-qic"
+      },
+      {
+        "color": "--res-power"
+      },
+      {
+        "color": "--res-ore"
+      },
+      {
+        "color": "--res-credit"
+      },
+      {
+        "color": "--res-knowledge"
+      },
+      {
+        "color": "--desert"
+      }
+    ],
+    "datasetMeta": {
+      "Itars (0)": {
+        "label": "Itars",
+        "total": 0,
+        "weightedTotal": null
+      },
+      "Geoden (1)": {
+        "label": "Geoden",
+        "total": 1,
+        "weightedTotal": null
+      },
+      "Taklons (0)": {
+        "label": "Taklons",
+        "total": 0,
+        "weightedTotal": null
+      },
+      "Lantids (0)": {
+        "label": "Lantids",
+        "total": 0,
+        "weightedTotal": null
+      }
+    }
+  },
+  "labels": ["12vp", "8vp,q", "8vp,2t", "7vp,2o", "7vp,6c", "6vp,2k", "Gleens"],
+  "datasets": [
+    {
+      "label": "Geoden (1)",
+      "data": [0, 0, 0, 0, 0, 1, 0]
+    },
+    {
+      "label": "Itars (0)",
+      "data": [0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "label": "Taklons (0)",
+      "data": [0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "label": "Lantids (0)",
+      "data": [0, 0, 0, 0, 0, 0, 0]
+    }
+  ]
+}
