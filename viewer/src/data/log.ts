@@ -11,7 +11,7 @@ export function replaceMove(data: Engine, move: string): string {
     if (match.startsWith("booster")) {
       return addDetails(match, boosterNames[match].name);
     } else {
-      const tech = match.substr(5);
+      const tech = match.substr("tech ".length);
       const tile = data.tiles.techs[tech].tile;
       return addDetails(match, tech.startsWith("adv") ? advancedTechTileNames[tile] : baseTechTileNames[tile].name);
     }
