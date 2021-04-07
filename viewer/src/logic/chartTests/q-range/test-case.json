@@ -1,0 +1,121 @@
+{
+  "families": ["Free actions"],
+  "options": {
+    "map": {
+      "sectors": [
+        {
+          "sector": "3",
+          "rotation": 3,
+          "center": {
+            "q": 0,
+            "r": 0,
+            "s": 0
+          }
+        },
+        {
+          "sector": "5A",
+          "rotation": 4,
+          "center": {
+            "q": 5,
+            "r": -2,
+            "s": -3
+          }
+        },
+        {
+          "sector": "8",
+          "rotation": 1,
+          "center": {
+            "q": 2,
+            "r": 3,
+            "s": -5
+          }
+        },
+        {
+          "sector": "9",
+          "rotation": 1,
+          "center": {
+            "q": -3,
+            "r": 5,
+            "s": -2
+          }
+        },
+        {
+          "sector": "6A",
+          "rotation": 3,
+          "center": {
+            "q": -5,
+            "r": 2,
+            "s": 3
+          }
+        },
+        {
+          "sector": "4",
+          "rotation": 5,
+          "center": {
+            "q": -2,
+            "r": -3,
+            "s": 5
+          }
+        },
+        {
+          "sector": "2",
+          "rotation": 0,
+          "center": {
+            "q": 3,
+            "r": -5,
+            "s": 2
+          }
+        },
+        {
+          "sector": "10",
+          "rotation": 2,
+          "center": {
+            "q": -1,
+            "r": 8,
+            "s": -7
+          }
+        },
+        {
+          "sector": "1",
+          "rotation": 0,
+          "center": {
+            "q": -6,
+            "r": 10,
+            "s": -4
+          }
+        },
+        {
+          "sector": "7A",
+          "rotation": 3,
+          "center": {
+            "q": -8,
+            "r": 7,
+            "s": 1
+          }
+        }
+      ],
+      "mirror": false
+    }
+  },
+  "moveHistory": [
+    "init 3 12",
+    "p1 faction ivits",
+    "p2 faction baltaks",
+    "p3 faction gleens",
+    "baltaks build m 1x3",
+    "gleens build m -5x4",
+    "gleens build m 2x0",
+    "baltaks build m -2x-2",
+    "ivits build PI 7B3",
+    "gleens booster booster1",
+    "baltaks booster booster2",
+    "ivits booster booster3",
+    "ivits income 4pw",
+    "ivits build m 7B1. spend 1q for 1o. spend 1o for 1t.",
+    "baltaks pass booster8",
+    "gleens up nav.",
+    "ivits pass booster7",
+    "gleens build m 7B5.",
+    "ivits charge 3pw"
+  ]
+}

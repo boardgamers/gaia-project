@@ -2,7 +2,7 @@
   "compilerOptions": {
     /* Basic Options */
     "target": "es2019",
-    "module": "ESNext",
+    "module": "CommonJS",
     "moduleResolution": "node",
     "sourceMap": true,
     "outDir": "./dist" /* Redirect output structure to the directory. */,

@@ -199,7 +199,7 @@ export function initialResearch(player: Player) {
 
 export function logEntryProcessor(
   player: Player,
-  processor: (cmd: CommandObject) => number
+  processor: (cmd: CommandObject, log: LogEntry) => number
 ): (moveHistory: string[], log: LogEntry) => number {
   return (moveHistory: string[], log: LogEntry): number => {
     let res = 0;
@@ -209,7 +209,7 @@ export function logEntryProcessor(
       if (move != null) {
         for (const cmd of parseCommands(move)) {
           if (cmd.faction == player.faction) {
-            res += processor(cmd);
+            res += processor(cmd, log);
           }
         }
       }
