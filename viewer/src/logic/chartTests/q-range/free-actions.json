@@ -22,44 +22,35 @@
       }
     ],
     "datasetMeta": {
-      "Itars (0)": {
-        "label": "Itars",
+      "Ivits (3)": {
+        "label": "Ivits",
+        "total": 3,
+        "weightedTotal": 3
+      },
+      "Bal T'aks (0)": {
+        "label": "Bal T'aks",
         "total": 0,
         "weightedTotal": 0
       },
-      "Geoden (5)": {
-        "label": "Geoden",
-        "total": 4,
-        "weightedTotal": 5
-      },
-      "Taklons (15)": {
-        "label": "Taklons",
-        "total": 6,
-        "weightedTotal": 15
-      },
-      "Lantids (7)": {
-        "label": "Lantids",
-        "total": 3,
-        "weightedTotal": 7
+      "Gleens (0)": {
+        "label": "Gleens",
+        "total": 0,
+        "weightedTotal": 0
       }
     }
   },
   "labels": ["Credit", "Ore", "Knowledge", "QIC", "Gained Tokens", "Range +2"],
   "datasets": [
     {
-      "label": "Taklons (15)",
-      "data": [0, 5, 0, 0, 0, 1]
+      "label": "Ivits (3)",
+      "data": [0, 1, 0, 0, 1, 1]
     },
     {
-      "label": "Geoden (5)",
-      "data": [2, 1, 0, 0, 0, 1]
+      "label": "Bal T'aks (0)",
+      "data": [0, 0, 0, 0, 0, 0]
     },
     {
-      "label": "Lantids (7)",
-      "data": [1, 2, 0, 0, 0, 0]
-    },
-    {
-      "label": "Itars (0)",
+      "label": "Gleens (0)",
       "data": [0, 0, 0, 0, 0, 0]
     }
   ]
