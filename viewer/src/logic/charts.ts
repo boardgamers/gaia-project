@@ -135,7 +135,7 @@ export class ColorVar {
     return this.color;
   }
 
-  lookup(canvas: HTMLCanvasElement): string | null {
+  lookup(canvas: HTMLElement): string | null {
     return window.getComputedStyle(canvas).getPropertyValue(this.color);
   }
 }

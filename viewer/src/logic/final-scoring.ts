@@ -10,16 +10,27 @@ import {
   stdBuildingValue,
 } from "@gaia-project/engine";
 import { Grid } from "hexagrid";
-import { ExtractLog, ExtractLogArg, planetCounter } from "./charts";
+import { ColorVar, ExtractLog, ExtractLogArg, planetCounter } from "./charts";
 import { SimpleSource } from "./simple-charts";
+import { cellStyle, rowHeaderCell } from "./table";
 
 type FinalScoringExtractLog = ExtractLog<SimpleSource<FinalTile>>;
 
-export type FinalScoringSource = {
-  extractLog: FinalScoringExtractLog;
+type FinalScoringContributor =
+  | "Regular Building"
+  | "Lost Planet"
+  | "Satellite"
+  | "Space Station"
+  | "Lantids Guest Mine"
+  | "Gaia Former";
+
+export type FinalScoringTableRow = {
+  contributors: FinalScoringContributor[];
   name: string;
   color: string;
 };
+
+export type FinalScoringSource = FinalScoringTableRow & { extractLog: FinalScoringExtractLog };
 
 const structureFed: FinalScoringExtractLog = (wantPlayer) => {
   let map = null;
@@ -135,9 +146,19 @@ const sectors: FinalScoringExtractLog = (wantPlayer) => {
   )(wantPlayer);
 };
 
+export const finalScoringContributorColors: { [key in FinalScoringContributor]: string } = {
+  "Regular Building": "--res-ore",
+  "Lantids Guest Mine": "--recent",
+  "Lost Planet": "--lost",
+  Satellite: "--current-round",
+  "Space Station": "--oxide",
+  "Gaia Former": "--rt-gaia",
+};
+
 export const finalScoringSources: { [key in FinalTile]: FinalScoringSource } = {
   [FinalTile.Gaia]: {
     name: "Gaia planets",
+    contributors: ["Regular Building"],
     color: "--rt-gaia",
     extractLog: planetCounter(
       () => false,
@@ -147,23 +168,27 @@ export const finalScoringSources: { [key in FinalTile]: FinalScoringSource } = {
     ),
   },
   [FinalTile.PlanetType]: {
+    contributors: ["Regular Building", "Lost Planet"],
     name: "Planet Types",
     color: "--rt-terra",
     extractLog: planetTypes,
   },
   [FinalTile.Sector]: {
+    contributors: ["Regular Building", "Lost Planet", "Lantids Guest Mine"],
     name: "Sectors",
     color: "--tech-tile",
     extractLog: sectors,
   },
   [FinalTile.Satellite]: {
+    contributors: ["Satellite", "Space Station"],
     name: "Satellites",
     color: "--current-round",
     extractLog: satellites,
   },
   [FinalTile.Structure]: {
+    contributors: ["Regular Building", "Lost Planet", "Lantids Guest Mine"],
     name: "Structures",
-    color: "--terra",
+    color: "--recent",
     extractLog: planetCounter(
       () => true,
       () => true,
@@ -172,6 +197,7 @@ export const finalScoringSources: { [key in FinalTile]: FinalScoringSource } = {
     ),
   },
   [FinalTile.StructureFed]: {
+    contributors: ["Regular Building", "Lost Planet", "Lantids Guest Mine"],
     name: "Structures in federations",
     color: "--federation",
     extractLog: structureFed,
@@ -185,3 +211,41 @@ export const finalScoringExtractLog: ExtractLog<SimpleSource<FinalTile>> = (p) =
   }
   return (e) => map.get(e.source.type)(e);
 };
+
+const finalScoringTableRows: FinalScoringTableRow[] = Object.keys(finalScoringSources)
+  .map((s) => finalScoringSources[s] as FinalScoringTableRow)
+  .concat(
+    {
+      name: "(Starting Point for navigation)",
+      color: "--rt-nav",
+      contributors: ["Regular Building", "Lost Planet", "Lantids Guest Mine", "Space Station"],
+    },
+    {
+      name: "(Power value for federations)",
+      color: "--res-power",
+      contributors: ["Regular Building", "Lost Planet", "Space Station", "Lantids Guest Mine"],
+    }
+  );
+
+export function finalScoringFields(canvas: HTMLElement): any[] {
+  return [{ key: "Name", sortable: true, isRowHeader: true } as { key: string }].concat(
+    ...Object.keys(finalScoringContributorColors).map((c) => {
+      return {
+        key: c,
+        sortable: true,
+        thStyle: cellStyle(canvas as HTMLCanvasElement, new ColorVar(finalScoringContributorColors[c])),
+      };
+    })
+  );
+}
+
+export function finalScoringItems(canvas: HTMLElement): any[] {
+  return finalScoringTableRows.map((r) => {
+    const row = { Name: rowHeaderCell(cellStyle(canvas, new ColorVar(r.color)), r.name) };
+
+    for (const contributor of r.contributors) {
+      row[contributor] = true;
+    }
+    return row;
+  });
+}
