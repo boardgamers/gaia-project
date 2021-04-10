@@ -44,17 +44,19 @@ import {finalScoringFields, finalScoringItems} from "../logic/final-scoring";
 @Component({
   components: {Game},
   computed: {
-    finalScoringFields() {
-      return finalScoringFields(document.getElementById("root"));
-    },
-    finalScoringItems(): any[] {
-      return finalScoringItems(document.getElementById("root"));
-    }
   }
 })
 export default class Wrapper extends Vue {
   modalShow = false;
   text = "";
+  private finalScoringFields: any[] = null
+  private finalScoringItems: any[] = null
+
+  mounted() {
+    const element = document.getElementById("root");
+    this.finalScoringFields = finalScoringFields(element);
+    this.finalScoringItems = finalScoringItems(element);
+  }
 
   handleOK() {
     this.$store.dispatch("gaiaViewer/loadFromJSON", JSON.parse(this.text));
