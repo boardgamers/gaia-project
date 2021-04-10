@@ -46,7 +46,7 @@ describe("Chart", () => {
         const allFamilies = testCase.families.flatMap((f) => (f == "all" ? families() : [f as ChartFamily]));
         for (const family of allFamilies) {
           it(family, () => {
-            const path = `${testCaseDir}/${family.replace(" ", "-").toLowerCase()}.json`;
+            const path = `${testCaseDir}/${family.replace(/ /g, "-").toLowerCase()}.json`;
             const config = newBarChart({ type: "table", label: "Table", compact: false }, family, engine, null);
             const actual = {
               tableMeta: config.table,

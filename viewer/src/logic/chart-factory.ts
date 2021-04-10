@@ -99,7 +99,7 @@ const simpleChartFactory: ChartFactory<SimpleSource<any>> = {
   },
   playerSummaryTitle(family: ChartFamily): string {
     const sourceFactory = simpleSourceFactory(family);
-    return sourceFactory.playerSummaryLineChartTitle(sourceFactory.sources);
+    return sourceFactory.playerSummaryLineChartTitle;
   },
   kindBreakdownTitle(family: ChartFamily, source: SimpleSource<any>): string {
     return `${source.plural} of all players`;

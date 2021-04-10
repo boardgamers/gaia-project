@@ -185,8 +185,8 @@ export const victoryPointSources: VictoryPointSource[] = [
 export function countResearch(player: Player): (moveHistory: string[], log: LogEntry) => number {
   const research = initialResearch(player);
 
-  return logEntryProcessor(player, (cmd) => {
-    if (cmd.command == Command.UpgradeResearch) {
+  return logEntryProcessor((cmd) => {
+    if (cmd.faction == player.faction && cmd.command == Command.UpgradeResearch) {
       const field = cmd.args[0] as ResearchField;
       const newLevel = (research.get(field) ?? 0) + 1;
       research.set(field, newLevel);

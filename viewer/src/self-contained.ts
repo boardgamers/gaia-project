@@ -9,12 +9,12 @@ function launchSelfContained(selector = "#app", debug = true) {
   let engine = new Engine([
     "init 3 12",
     "p1 faction ivits",
-    "p2 faction baltaks",
+    "p2 faction lantids",
     "p3 faction gleens",
-    "baltaks build m 1x3",
-    "gleens build m -5x4",
-    "gleens build m 2x0",
-    "baltaks build m -2x-2",
+    "lantids build m 3A11",
+    "gleens build m 6A2",
+    "gleens build m 3A0",
+    "lantids build m 6B2",
     "ivits build PI 7B3",
   ]);
   engine.generateAvailableCommandsIfNeeded();

@@ -1,10 +1,11 @@
 import { finalRankings, gainFinalScoringVictoryPoints } from "./src/algorithms/scoring";
 import AvailableCommand from "./src/available-command";
+import { stdBuildingValue } from "./src/buildings";
 import Engine from "./src/engine";
 import Event, { EventSource } from "./src/events";
 import factionBoards from "./src/faction-boards";
 import factions from "./src/factions";
-import SpaceMap from "./src/map";
+import SpaceMap, { parseLocation } from "./src/map";
 import Player from "./src/player";
 import PlayerData from "./src/player-data";
 import researchTracks from "./src/research-tracks";
@@ -59,7 +60,9 @@ export {
   EventSource,
   gainFinalScoringVictoryPoints,
   finalRankings,
+  parseLocation,
   federations,
+  stdBuildingValue,
 };
 
 export default Engine;

@@ -12,7 +12,7 @@ const weightKey = "Weight";
 
 type CellStyle = { color: string; backgroundColor: string };
 
-function cellStyle(canvas: HTMLCanvasElement, backgroundColor: ColorVar): CellStyle {
+export function cellStyle(canvas: HTMLElement, backgroundColor: ColorVar): CellStyle {
   return {
     backgroundColor: backgroundColor.lookup(canvas),
     color: new ColorVar(backgroundColor.color + "-text").lookup(canvas) ?? "black",
@@ -57,7 +57,7 @@ export function tableHeader(
   return headers;
 }
 
-function rowHeaderCell(display: ChartStyleDisplay, s: CellStyle, label: string) {
+export function rowHeaderCell(s: CellStyle, label: string) {
   return `<span style="background-color: ${s.backgroundColor}; color: ${s.color}">${label}</span>`;
 }
 
@@ -69,12 +69,7 @@ function totalsCell(label: any) {
   return `<span class="totals">${label}</span>`;
 }
 
-export function tableItems(
-  canvas: HTMLCanvasElement,
-  style: ChartStyleDisplay,
-  config: ChartConfiguration<any>,
-  tableMeta?: TableMeta
-): any[] {
+export function tableItems(canvas: HTMLCanvasElement, config: ChartConfiguration<any>, tableMeta?: TableMeta): any[] {
   const datasets = config.data.datasets;
   const totals = {};
   const weightedTotals = {};
@@ -83,7 +78,7 @@ export function tableItems(
   config.data.labels.forEach(
     (s, index) =>
       (rows[index][nameColumn.key] =
-        colors == null ? dataCell(s) : rowHeaderCell(style, cellStyle(canvas, colors[index]), s as string))
+        colors == null ? dataCell(s) : rowHeaderCell(cellStyle(canvas, colors[index]), s as string))
   );
   const weights = tableMeta?.weights;
   if (weights != null) {

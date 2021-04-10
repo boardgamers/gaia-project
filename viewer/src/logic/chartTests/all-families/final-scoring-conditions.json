@@ -1,0 +1,66 @@
+{
+  "tableMeta": {
+    "weights": null,
+    "colors": [
+      {
+        "color": "--rt-gaia"
+      },
+      {
+        "color": "--rt-terra"
+      },
+      {
+        "color": "--tech-tile"
+      },
+      {
+        "color": "--current-round"
+      },
+      {
+        "color": "--recent"
+      },
+      {
+        "color": "--federation"
+      }
+    ],
+    "datasetMeta": {
+      "Itars (5)": {
+        "label": "Itars",
+        "total": 5,
+        "weightedTotal": null
+      },
+      "Geoden (14)": {
+        "label": "Geoden",
+        "total": 14,
+        "weightedTotal": null
+      },
+      "Taklons (7)": {
+        "label": "Taklons",
+        "total": 7,
+        "weightedTotal": null
+      },
+      "Lantids (8)": {
+        "label": "Lantids",
+        "total": 8,
+        "weightedTotal": null
+      }
+    }
+  },
+  "labels": ["Gaia planets", "Planet Types", "Sectors", "Satellites", "Structures", "Structures in federations"],
+  "datasets": [
+    {
+      "label": "Geoden (14)",
+      "data": [0, 2, 3, 2, 4, 3]
+    },
+    {
+      "label": "Lantids (8)",
+      "data": [0, 0, 3, 0, 5, 0]
+    },
+    {
+      "label": "Taklons (7)",
+      "data": [0, 2, 2, 0, 3, 0]
+    },
+    {
+      "label": "Itars (5)",
+      "data": [0, 1, 2, 0, 2, 0]
+    }
+  ]
+}

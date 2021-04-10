@@ -185,7 +185,7 @@ export default class Charts extends Vue {
       this.table = {
         title: config.options.plugins.title.text,
         header: tableHeader(canvas, this.chartStyle, config, tableMeta),
-        items: tableItems(canvas, this.chartStyle, config, tableMeta)
+        items: tableItems(canvas, config, tableMeta)
       };
     }
   }

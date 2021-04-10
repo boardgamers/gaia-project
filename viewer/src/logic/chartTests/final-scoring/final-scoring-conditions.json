@@ -1,0 +1,66 @@
+{
+  "tableMeta": {
+    "weights": null,
+    "colors": [
+      {
+        "color": "--rt-gaia"
+      },
+      {
+        "color": "--rt-terra"
+      },
+      {
+        "color": "--tech-tile"
+      },
+      {
+        "color": "--current-round"
+      },
+      {
+        "color": "--recent"
+      },
+      {
+        "color": "--federation"
+      }
+    ],
+    "datasetMeta": {
+      "Gleens (43)": {
+        "label": "Gleens",
+        "total": 43,
+        "weightedTotal": null
+      },
+      "Terrans (55)": {
+        "label": "Terrans",
+        "total": 55,
+        "weightedTotal": null
+      },
+      "Itars (49)": {
+        "label": "Itars",
+        "total": 49,
+        "weightedTotal": null
+      },
+      "Ivits (38)": {
+        "label": "Ivits",
+        "total": 38,
+        "weightedTotal": null
+      }
+    }
+  },
+  "labels": ["Gaia planets", "Planet Types", "Sectors", "Satellites", "Structures", "Structures in federations"],
+  "datasets": [
+    {
+      "label": "Terrans (55)",
+      "data": [7, 4, 6, 10, 14, 14]
+    },
+    {
+      "label": "Itars (49)",
+      "data": [3, 7, 5, 5, 15, 14]
+    },
+    {
+      "label": "Gleens (43)",
+      "data": [5, 5, 7, 7, 13, 6]
+    },
+    {
+      "label": "Ivits (38)",
+      "data": [2, 4, 4, 10, 9, 9]
+    }
+  ]
+}

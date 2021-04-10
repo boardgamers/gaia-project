@@ -6,6 +6,7 @@ import Engine, {
   Faction,
   Federation,
   federations,
+  FinalTile,
   LogEntry,
   Planet,
   Player,
@@ -29,14 +30,18 @@ import {
   ChartFamily,
   DatasetFactory,
   extractChanges,
+  ExtractLog,
+  ExtractLogArg,
   getDataPoints,
   IncludeRounds,
   initialResearch,
   logEntryProcessor,
   planetColor,
+  planetCounter,
   resolveColor,
+  statelessExtractLog,
 } from "./charts";
-import { CommandObject } from "./recent";
+import { finalScoringExtractLog, finalScoringSources } from "./final-scoring";
 
 export enum TerraformingSteps {
   Step0 = "Home world",
@@ -89,76 +94,27 @@ export type SimpleSource<Type> = {
 
 export type SimpleSourceFactory<Source extends SimpleSource<any>> = {
   name: ChartFamily;
-  playerSummaryLineChartTitle: (sources: Source[]) => string;
+  playerSummaryLineChartTitle: string;
   sources: Source[];
   showWeightedTotal: boolean;
   initialValue?: (player: Player, source: Source) => number;
   extractChange?: (player: Player, source: Source) => (entry: LogEntry) => number;
-  extractLog?: (cmd: CommandObject, source: Source, data: Engine, player: Player, log: LogEntry) => number;
+  extractLog?: ExtractLog<Source>;
 };
 
-function commandCounter<T>(...want: Command[]): (cmd: CommandObject, source: SimpleSource<T>) => number {
-  return (cmd, source) => (want.includes(cmd.command) && (cmd.args[0] as any) == source.type ? 1 : 0);
+function commandCounter<T>(...want: Command[]): ExtractLog<SimpleSource<T>> {
+  return statelessExtractLog((e) => (want.includes(e.cmd.command) && (e.cmd.args[0] as any) == e.source.type ? 1 : 0));
 }
 
-function extractLogMux<T>(
-  mux: {
-    [key in Command]?: (
-      cmd: CommandObject,
-      source: SimpleSource<T>,
-      data: Engine,
-      player: Player,
-      log: LogEntry
-    ) => number;
-  }
-): (cmd: CommandObject, source: SimpleSource<T>, data: Engine, player: Player, log: LogEntry) => number {
-  return (cmd, source, data, player, log) => mux[cmd.command]?.(cmd, source, data, player, log) ?? 0;
-}
-
-function planetCounter<T>(
-  isLantidsGuestMine: (s: SimpleSource<T>) => boolean,
-  isLostPlanet: (s: SimpleSource<T>) => boolean,
-  includePlanet: (planet: Planet, type: T, player: Player) => boolean,
-  value: (cmd: CommandObject, log: LogEntry, planet: Planet) => number = () => 1
-): (cmd: CommandObject, source: SimpleSource<T>, data: Engine, player: Player, log: LogEntry) => number {
-  const transdim = new Set<string>();
-  const owners: { [key: string]: PlayerEnum } = {};
-
-  return (cmd, source, data: Engine, player: Player, log: LogEntry) => {
-    if (cmd.command == Command.PlaceLostPlanet && isLostPlanet(source)) {
-      return 1;
+function extractLogMux<T>(mux: { [key in Command]?: ExtractLog<SimpleSource<T>> }): ExtractLog<SimpleSource<T>> {
+  return (p) => {
+    const map = new Map<Command, (a: ExtractLogArg<SimpleSource<T>>) => number>();
+    for (const key of Object.keys(mux)) {
+      map.set(key as Command, mux[key as Command](p));
     }
-    if (cmd.command == Command.Build) {
-      const building = cmd.args[0] as Building;
-      const location = cmd.args[1];
-      const { q, r } = data.map.parse(location);
-      const hex = data.map.grid.get({ q, r });
-      const planet = hex.data.planet;
-
-      const owner = owners[location];
-      if (owner == null) {
-        owners[location] = player.player;
-      } else if (owner != player.player && player.faction == Faction.Lantids) {
-        return isLantidsGuestMine(source) ? 1 : 0;
-      }
-
-      if (building == Building.GaiaFormer) {
-        transdim.add(location);
-
-        if (includePlanet(Planet.Transdim, source.type, player)) {
-          return value(cmd, log, planet);
-        }
-      }
-
-      if (
-        includePlanet(planet, source.type, player) &&
-        (building == Building.Mine || (building == Building.PlanetaryInstitute && player.faction == Faction.Ivits)) &&
-        !transdim.has(location)
-      ) {
-        return value(cmd, log, planet);
-      }
-    }
-    return 0;
+    return (e) => {
+      return map.get(e.cmd.command)?.(e) ?? 0;
+    };
   };
 }
 
@@ -258,32 +214,35 @@ function federationName(logEntry: LogEntry): string | null {
 const factories = [
   {
     name: "Resources",
-    playerSummaryLineChartTitle: () => "Resources of all players as if bought with power",
+    playerSummaryLineChartTitle: "Resources of all players as if bought with power",
     showWeightedTotal: true,
     extractChange: (wantPlayer, source) =>
       extractChanges(wantPlayer.player, (player, eventSource, resource, round, change) =>
         (resource == source.type && change > 0) || (resource == source.inverseOf && change < 0) ? Math.abs(change) : 0
       ),
-    extractLog: (cmd, source) =>
-      source.type == "burn-token" && cmd.command == Command.BurnPower ? Number(cmd.args[0]) : 0,
+    extractLog: statelessExtractLog((e) =>
+      e.source.type == "burn-token" && e.cmd.command == Command.BurnPower ? Number(e.cmd.args[0]) : 0
+    ),
     sources: resourceSources,
   } as SimpleSourceFactory<ResourceSource>,
   {
     name: "Free actions",
-    playerSummaryLineChartTitle: () =>
+    playerSummaryLineChartTitle:
       "Resources bought with free actions by all players (paid with power, credits, ore, QIC, and gaia formers)",
     showWeightedTotal: true,
     extractLog: extractLogMux({
-      [Command.Spend]: (cmd: CommandObject, source: ResourceSource) =>
+      [Command.Spend]: statelessExtractLog<ResourceSource>((e) =>
         sum(
-          Reward.merge(Reward.parse(cmd.args[2]))
-            .filter((i) => i.type == source.type)
+          Reward.merge(Reward.parse(e.cmd.args[2]))
+            .filter((i) => i.type == e.source.type)
             .map((i) => i.count)
-        ),
+        )
+      ),
       [Command.Build]: planetCounter(
         () => false,
         () => false,
         (p, t) => t == "range",
+        true,
         (cmd, log, planet) =>
           -(log.changes?.[Command.Build]?.[Resource.Qic] ?? 0) -
           (planet == Planet.Gaia && cmd.faction != Faction.Gleens ? 1 : 0)
@@ -293,7 +252,7 @@ const factories = [
   } as SimpleSourceFactory<ResourceSource | SimpleSource<"range">>,
   {
     name: "Board actions",
-    playerSummaryLineChartTitle: () => `Board actions taken by all players`,
+    playerSummaryLineChartTitle: `Board actions taken by all players`,
     showWeightedTotal: false,
     extractLog: commandCounter(Command.Action),
     sources: BoardAction.values().map((action) => ({
@@ -306,17 +265,17 @@ const factories = [
   } as SimpleSourceFactory<SimpleSource<BoardAction>>,
   {
     name: "Buildings",
-    playerSummaryLineChartTitle: () => "Power value of all buildings of all players (1-3 base power value)",
+    playerSummaryLineChartTitle: "Power value of all buildings of all players (1-3 base power value)",
     showWeightedTotal: true,
-    extractLog: (cmd, source) => {
-      if (cmd.command == Command.Build) {
-        const t = cmd.args[0] as Building;
-        if (source.type == t || (source.type == Building.Academy1 && t == Building.Academy2)) {
+    extractLog: statelessExtractLog((e) => {
+      if (e.cmd.command == Command.Build) {
+        const t = e.cmd.args[0] as Building;
+        if (e.source.type == t || (e.source.type == Building.Academy1 && t == Building.Academy2)) {
           return 1;
         }
       }
       return 0;
-    },
+    }),
     sources: [
       {
         type: Building.Mine,
@@ -364,7 +323,7 @@ const factories = [
   } as SimpleSourceFactory<SimpleSource<Building>>,
   {
     name: "Research",
-    playerSummaryLineChartTitle: () => "Research steps of all players",
+    playerSummaryLineChartTitle: "Research steps of all players",
     showWeightedTotal: false,
     initialValue: (player, source) => initialResearch(player).get(source.type) ?? 0,
     extractLog: commandCounter(Command.UpgradeResearch),
@@ -380,7 +339,7 @@ const factories = [
   } as SimpleSourceFactory<SimpleSource<ResearchField>>,
   {
     name: "Planets",
-    playerSummaryLineChartTitle: () => "Planets of all players",
+    playerSummaryLineChartTitle: "Planets of all players",
     showWeightedTotal: false,
     extractLog: planetCounter(
       (source) => source.type == Planet.Empty,
@@ -409,7 +368,7 @@ const factories = [
   {
     name: "Terraforming Steps",
     showWeightedTotal: true,
-    playerSummaryLineChartTitle: () => "Terraforming Steps of all players (Gaia planets and gaia formers excluded)",
+    playerSummaryLineChartTitle: "Terraforming Steps of all players (Gaia planets and gaia formers excluded)",
     extractLog: planetCounter(
       (source) => source.type == TerraformingSteps.Lantids,
       (source) => source.type == TerraformingSteps.LostMine,
@@ -426,7 +385,7 @@ const factories = [
   {
     name: "Boosters",
     showWeightedTotal: false,
-    playerSummaryLineChartTitle: () => "Boosters taken by all players",
+    playerSummaryLineChartTitle: "Boosters taken by all players",
     extractLog: commandCounter(Command.Pass, Command.ChooseRoundBooster),
     sources: Booster.values().map((b) => ({
       type: b,
@@ -439,7 +398,7 @@ const factories = [
   {
     name: "Federations",
     showWeightedTotal: false,
-    playerSummaryLineChartTitle: () => "Federations of all players",
+    playerSummaryLineChartTitle: "Federations of all players",
     extractChange: (wantPlayer, source) => (logItem: LogEntry) =>
       logItem.player == wantPlayer.player && federationName(logItem) == source.label ? 1 : 0,
     sources: Federation.values()
@@ -461,18 +420,18 @@ const factories = [
   {
     name: "Base Tech Tiles",
     showWeightedTotal: false,
-    playerSummaryLineChartTitle: () => "Base Tech tiles of all players",
-    extractLog: (cmd, source, data) => {
-      if (cmd.command == Command.ChooseTechTile) {
-        const pos = cmd.args[0] as TechTilePos;
-        const tile = data.tiles.techs[pos].tile;
+    playerSummaryLineChartTitle: "Base Tech tiles of all players",
+    extractLog: statelessExtractLog((e) => {
+      if (e.cmd.command == Command.ChooseTechTile) {
+        const pos = e.cmd.args[0] as TechTilePos;
+        const tile = e.data.tiles.techs[pos].tile;
 
-        if (tile == source.type) {
+        if (tile == e.source.type) {
           return 1;
         }
       }
       return 0;
-    },
+    }),
     sources: TechTile.values().map((t) => ({
       type: t,
       label: baseTechTileNames[t].name,
@@ -481,7 +440,21 @@ const factories = [
       weight: 1,
     })),
   } as SimpleSourceFactory<SimpleSource<TechTile>>,
+  {
+    name: "Final Scoring Conditions",
+    showWeightedTotal: false,
+    playerSummaryLineChartTitle: "All final Scoring Conditions of all players (not only the active ones)",
+    extractLog: finalScoringExtractLog,
+    sources: Object.keys(finalScoringSources).map((tile) => ({
+      type: tile,
+      label: finalScoringSources[tile].name,
+      plural: finalScoringSources[tile].name,
+      color: finalScoringSources[tile].color,
+      weight: 1,
+    })),
+  } as SimpleSourceFactory<SimpleSource<FinalTile>>,
 ];
+
 export function simpleChartDetails<Source extends SimpleSource<any>>(
   factory: SimpleSourceFactory<Source>,
   data: Engine,
@@ -493,13 +466,24 @@ export function simpleChartDetails<Source extends SimpleSource<any>>(
   if (!pl.faction) {
     return [];
   }
+
+  function newExtractLog(s: Source) {
+    const e = factory.extractLog(pl);
+
+    return logEntryProcessor((cmd, log) =>
+      e({
+        cmd: cmd,
+        source: s,
+        data: data,
+        log: log,
+      })
+    );
+  }
+
   return sources.map((s) => {
     const initialValue = factory.initialValue?.(pl, s) ?? 0;
     const extractChange = factory.extractChange?.(pl, s) ?? (() => 0);
-    const extractLog =
-      factory.extractLog == null
-        ? () => 0
-        : logEntryProcessor(pl, (cmd, log) => factory.extractLog(cmd, s, data, pl, log));
+    const extractLog = factory.extractLog == null ? () => 0 : newExtractLog(s);
     const deltaForEnded = () => 0;
 
     return {
