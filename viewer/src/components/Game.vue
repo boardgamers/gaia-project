@@ -3,6 +3,25 @@
     <b-modal id="chart-button" title="Victory Points, Resources, and more" size="xl">
       <Charts />
     </b-modal>
+    <b-modal id="final-scoring" size="lg" title="Final Scoring" dialog-class="gaia-viewer-modal">
+      <b-table
+        striped
+        bordered
+        small
+        responsive="true"
+        hover
+        :items="finalScoringItems"
+        :fields="finalScoringFields"
+        class="final-store-table"
+      >
+        <template #cell(Name)="data">
+          <span v-html="data.value"></span>
+        </template>
+        <template #cell()="data">
+          <b-checkbox :checked="data.value" disabled />
+        </template>
+      </b-table>
+    </b-modal>
 
     <div
       :class="['row', 'no-gutters', 'justify-content-center', engine.players.length > 2 ? 'medium-map' : 'small-map']"
@@ -58,6 +77,7 @@ import ScoringBoard from "./ScoringBoard.vue";
 import SpaceMap from "./SpaceMap.vue";
 import TurnOrder from "./TurnOrder.vue";
 import { parseCommands } from "../logic/recent";
+import {finalScoringFields, finalScoringItems} from "../logic/final-scoring";
 
 @Component<Game>({
   created(this: Game) {
@@ -135,6 +155,8 @@ import { parseCommands } from "../logic/recent";
   },
 })
 export default class Game extends Vue {
+  private finalScoringFields: any[] = null
+  private finalScoringItems: any[] = null
   public currentMove = "";
   clearCurrentMove = false;
   // When joining a game
@@ -144,6 +166,12 @@ export default class Game extends Vue {
 
   @Prop()
   options: EngineOptions;
+
+  mounted() {
+    const element = document.getElementById("root");
+    this.finalScoringFields = finalScoringFields(element);
+    this.finalScoringItems = finalScoringItems(element);
+  }
 
   get engine(): Engine {
     return this.$store.state.gaiaViewer.data;
@@ -298,5 +326,10 @@ export default class Game extends Vue {
   .medium-map {
     flex-wrap: wrap;
   }
+}
+
+.final-store-table th > span > span,
+.final-store-table th > div {
+  display: block;
 }
 </style>
