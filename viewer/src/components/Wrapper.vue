@@ -43,8 +43,6 @@ import {finalScoringFields, finalScoringItems} from "../logic/final-scoring";
 
 @Component({
   components: {Game},
-  computed: {
-  }
 })
 export default class Wrapper extends Vue {
   modalShow = false;
