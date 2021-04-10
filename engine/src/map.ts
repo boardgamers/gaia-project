@@ -102,6 +102,13 @@ for (let i = -1; i <= 1; i++) {
   }
 }
 
+export function parseLocation(coords: string): { suffix: string; sector: string } {
+  const match = /^([0-9]{1,2})([ABC][0-9]{0,2})$/.exec(coords);
+  assert(match, "Malformed coordinate: " + coords);
+  const [_, sector, suffix] = match;
+  return { sector, suffix };
+}
+
 export default class SpaceMap {
   rng: seedrandom.prng;
   nbPlayers: number;
@@ -345,9 +352,7 @@ export default class SpaceMap {
       return CubeCoordinates.parse(coords);
     }
     assert(this.placement, "Needs sector info to parse sector coordinates");
-    const match = /^([0-9]{1,2})([ABC][0-9]{0,2})$/.exec(coords);
-    assert(match, "Malformed coordinate: " + coords);
-    const [_, sector, suffix] = match;
+    const { sector, suffix } = parseLocation(coords);
 
     const relative = CubeCoordinates.parse(reverseSuffixes[suffix]);
 

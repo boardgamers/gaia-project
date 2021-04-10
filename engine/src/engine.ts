@@ -1599,7 +1599,7 @@ export default class Engine {
     assert(fedInfo, `Impossible to form federation at ${hexes}`);
     assert(this.availableCommand.data.tiles.includes(federation), `Impossible to form federation ${federation}`);
 
-    pl.formFederation(fedInfo, federation);
+    pl.formFederation(fedInfo.hexes, federation);
     this.tiles.federations[federation] -= 1;
   }
 

@@ -487,18 +487,7 @@ export default class Player extends EventEmitter {
       hex.data.building = building;
       hex.data.player = this.player;
     }
-
-    // Add to nearby federation
-    if (building !== Building.GaiaFormer && !hex.belongsToFederationOf(this.player)) {
-      const group: GaiaHex[] = this.buildingGroup(hex, map);
-      const hasFederation = map.grid.neighbours(hex).some((hx) => hx.belongsToFederationOf(this.player));
-
-      if (hasFederation) {
-        for (const h of group) {
-          h.addToFederationOf(this.player);
-        }
-      }
-    }
+    this.addBuildingToNearbyFederation(building, hex, map);
 
     // get triggered income for new building
     this.receiveBuildingTriggerIncome(building, hex.data.planet, isAdditionalMine);
@@ -510,6 +499,23 @@ export default class Player extends EventEmitter {
 
     // Faction-specific code on building
     this.emit(`build-${building}`, hex);
+  }
+
+  addBuildingToNearbyFederation(building: Building, hex: GaiaHex, map: SpaceMap): GaiaHex[] {
+    const added = [];
+    if (building !== Building.GaiaFormer && !hex.belongsToFederationOf(this.player)) {
+      const group: GaiaHex[] = this.buildingGroup(hex, map);
+      const hasFederation = map.grid.neighbours(hex).some((hx) => hx.belongsToFederationOf(this.player));
+
+      if (hasFederation) {
+        for (const h of group) {
+          if (h.addToFederationOf(this.player)) {
+            added.push(h);
+          }
+        }
+      }
+    }
+    return added;
   }
 
   resetTemporaryVariables() {
@@ -969,9 +975,9 @@ export default class Player extends EventEmitter {
     };
   }
 
-  formFederation(info: FederationInfo, token: Federation) {
+  formFederation(hexes: GaiaHex[], token: Federation) {
     let newSatellites = 0;
-    for (const hex of info.hexes) {
+    for (const hex of hexes) {
       // Second test is for ivits
       if (hex.buildingOf(this.player) === undefined && !hex.belongsToFederationOf(this.player)) {
         newSatellites += 1;
@@ -989,20 +995,7 @@ export default class Player extends EventEmitter {
   }
 
   checkAndGetFederationInfo(location: string, map: SpaceMap, flexible: boolean): FederationInfo {
-    const coords = location.split(",").map((loc) => map.parse(loc));
-
-    for (const coord of coords) {
-      assert(map.grid.get(coord), `Coord ${coord.q}x${coord.r} is not part of the map`);
-    }
-
-    assert(coords.length <= 30, "The federation is too big, it is impossible to build with only 23 satellites");
-
-    let hexes: GaiaHex[] = uniq(coords.map((coord) => map.grid.get(coord)));
-
-    assert(hexes.length === coords.length, "There are repeating coordinates in the given federation");
-
-    // Extend to nearby buidlings
-    hexes = this.addAdjacentBuildings(hexes, map);
+    const hexes = this.hexesForFederationLocation(location, map);
 
     // Check if no forbidden square
     const excluded = map.excludedHexesForBuildingFederation(this.player, this.faction);
@@ -1073,6 +1066,23 @@ export default class Player extends EventEmitter {
     );
 
     return info;
+  }
+
+  hexesForFederationLocation(location: string, map: SpaceMap) {
+    const coords = location.split(",").map((loc) => map.parse(loc));
+
+    for (const coord of coords) {
+      assert(map.grid.get(coord), `Coord ${coord.q}x${coord.r} is not part of the map`);
+    }
+
+    assert(coords.length <= 30, "The federation is too big, it is impossible to build with only 23 satellites");
+
+    const hexes: GaiaHex[] = uniq(coords.map((coord) => map.grid.get(coord)));
+
+    assert(hexes.length === coords.length, "There are repeating coordinates in the given federation");
+
+    // Extend to nearby buidlings
+    return this.addAdjacentBuildings(hexes, map);
   }
 
   get federationCost(): number {

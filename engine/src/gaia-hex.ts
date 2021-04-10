@@ -79,15 +79,16 @@ export class GaiaHex extends Hex<GaiaHexData> {
     return this.data.federations && this.data.federations.includes(player);
   }
 
-  addToFederationOf(player: Player) {
+  addToFederationOf(player: Player): boolean {
     if (this.belongsToFederationOf(player)) {
-      return;
+      return false;
     }
     if (this.data.federations) {
       this.data.federations.push(player);
     } else {
       this.data.federations = [player];
     }
+    return true;
   }
 
   // Can probably math this better
