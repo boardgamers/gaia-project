@@ -192,7 +192,7 @@ export default class Engine {
 
     const move = _move.trim();
     let moveToShow = move;
-    if (move.split(" ")[1] == Command.Pass) {
+    if (move.includes(" " + Command.Pass + " ")) {
       moveToShow = move + " returning " + this.player(this.playerToMove).data.tiles.booster;
     }
 
