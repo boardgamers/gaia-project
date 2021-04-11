@@ -11,7 +11,11 @@
         <tr class="major-event" v-if="gameData.phase === 'endGame'">
           <td colspan="3">Game Ended</td>
         </tr>
-        <tr v-for="(event, i) in history" :key="history.length - i" :style="`background-color: ${event.color}`">
+        <tr
+          v-for="(event, i) in history"
+          :key="history.length - i"
+          :style="`background-color: ${event.color}; color: ${event.textColor}`"
+        >
           <td>{{ event.round }}.{{ event.turn }}</td>
           <td v-if="event.entry.round" class="major-event">Round {{ event.entry.round }}</td>
           <td v-else-if="event.entry.phase === 'roundIncome'" class="phase-change">Income phase</td>
@@ -48,13 +52,13 @@ import Vue from "vue";
 import {replaceMove} from "../data/log";
 import {Component, Prop} from "vue-property-decorator";
 import Engine, {Faction, LogEntry} from "@gaia-project/engine";
-import {factionLogColors, lightFactionLogColors} from "../graphics/utils";
+import {factionLogColors, factionLogTextColors, lightFactionLogColors} from "../graphics/utils";
 import {ownTurn} from "../logic/recent";
 
 
 type ShowLog = "all" | "recent";
 
-type HistoryEntry = { move?: string; entry: LogEntry; round: number; turn: number; color: string };
+type HistoryEntry = { move?: string; entry: LogEntry; round: number; turn: number; color: string; textColor: string };
 
 @Component
 export default class AdvancedLog extends Vue {
@@ -92,7 +96,6 @@ export default class AdvancedLog extends Vue {
     };
 
     const newEntry = (move: string = null, entry: LogEntry = nextLogEntry) => {
-      let color: string = null;
       let faction: Faction = null;
       let own = false;
       if (entry.player != null) {
@@ -102,7 +105,8 @@ export default class AdvancedLog extends Vue {
         faction = command[0] as Faction;
         own = ownTurn(move);
       }
-      color = own ? factionLogColors[faction] : lightFactionLogColors[faction];
+      const color = faction == null ? "white" : own ? factionLogColors[faction] : lightFactionLogColors[faction];
+      const textColor = faction == null || !own ? "black" : factionLogTextColors[faction];
       if (own && faction != null) {
         if (turnFactions.includes(faction)) {
           turn++;
@@ -111,7 +115,7 @@ export default class AdvancedLog extends Vue {
         turnFactions.push(faction);
       }
 
-      return ({move: move, round: round, turn: turn, entry: entry, color: color});
+      return ({move: move, round: round, turn: turn, entry: entry, color: color, textColor: textColor});
     };
 
     function addEntry(entry: HistoryEntry) {

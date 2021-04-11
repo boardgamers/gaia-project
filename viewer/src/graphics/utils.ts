@@ -30,7 +30,7 @@ export function planetClass(faction: string): string {
   }
 }
 
-export function lightenDarkenColor(col, amt) {
+export function lightenDarkenColor(col: string, amt: number) {
   let usePound = false;
 
   if (col[0] == "#") {
@@ -58,10 +58,22 @@ export function lightenDarkenColor(col, amt) {
   return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16);
 }
 
-export const factionLogColors = Object.fromEntries(
-  Object.entries(factions).map(([f, c]) => [f, lightenDarkenColor(planets[c.planet].color, 90)])
-);
+function newPlanetColors(amt: number) {
+  return Object.fromEntries(
+    Object.entries(factions).map(([f, c]) => {
+      const planet = c.planet;
+      const color = planet == Planet.Ice ? "#000000" : planets[planet].color;
+      return [f, amt == 0 ? color : lightenDarkenColor(color, amt)];
+    })
+  );
+}
 
-export const lightFactionLogColors = Object.fromEntries(
-  Object.entries(factions).map(([f, c]) => [f, lightenDarkenColor(planets[c.planet].color, 190)])
+export const factionLogTextColors = Object.fromEntries(
+  Object.entries(factions).map(([f, c]) => {
+    const planet = c.planet;
+    const color = planet == Planet.Ice || planet == Planet.Swamp || planet == Planet.Titanium ? "white" : "black";
+    return [f, color];
+  })
 );
+export const factionLogColors = newPlanetColors(0);
+export const lightFactionLogColors = newPlanetColors(190);
