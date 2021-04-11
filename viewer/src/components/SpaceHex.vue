@@ -67,6 +67,7 @@ import Planet from "./Planet.vue";
 import Building from "./Building.vue";
 import { buildingName } from "../data/building";
 import { planetNames } from "../data/planets";
+import {factionPlanet} from "@gaia-project/engine/src/factions";
 
 @Component<SpaceHex>({
   components: {
@@ -113,7 +114,7 @@ export default class SpaceHex extends Vue {
   }
 
   planet(player) {
-    return factions.planet(this.faction(player));
+    return factionPlanet(this.faction(player));
   }
 
   buildingName(building: BuildingEnum, player) {

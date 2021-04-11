@@ -11,6 +11,7 @@ import Vue from "vue";
 import planets from "../data/planets";
 import { Component, Prop } from "vue-property-decorator";
 import { Planet as PlanetEnum, factions, Faction } from "@gaia-project/engine";
+import {factionPlanet} from "@gaia-project/engine/src/factions";
 
 @Component
 export default class Planet extends Vue {
@@ -27,7 +28,7 @@ export default class Planet extends Vue {
   get fill() {
     // Comment for planet staying planets!
     if (this.faction) {
-      return factions.planet(this.faction);
+      return factionPlanet(this.faction);
     }
     return this.planet;
   }

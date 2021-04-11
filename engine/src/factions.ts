@@ -1,7 +1,7 @@
 import { Faction, Planet } from "./enums";
-import Boards from "./faction-boards";
+import Boards, { FactionBoardRaw } from "./faction-boards";
 
-const factions = {
+const factions: { [key in Faction]: { name: string; planet: Planet; board: FactionBoardRaw } } = {
   [Faction.Terrans]: {
     name: "Terrans",
     planet: Planet.Terra,
@@ -72,27 +72,27 @@ const factions = {
     planet: Planet.Ice,
     board: Boards[Faction.Itars],
   },
-
-  opposite(faction: Faction): Faction {
-    if (!Object.values(Faction).includes(faction)) {
-      return null;
-    }
-
-    for (const fct of Object.values(Faction)) {
-      if (fct !== faction && factions[fct].planet === factions[faction].planet) {
-        return fct;
-      }
-    }
-  },
-
-  planet(faction: Faction): Planet {
-    const fact = factions[faction];
-
-    if (fact) {
-      return fact.planet;
-    }
-    return Planet.Lost;
-  },
 } as const;
+
+export function oppositeFaction(faction: Faction): Faction {
+  if (!Object.values(Faction).includes(faction)) {
+    return null;
+  }
+
+  for (const fct of Object.values(Faction)) {
+    if (fct !== faction && factions[fct].planet === factions[faction].planet) {
+      return fct;
+    }
+  }
+}
+
+export function factionPlanet(faction: Faction): Planet {
+  const fact = factions[faction];
+
+  if (fact) {
+    return fact.planet;
+  }
+  return Planet.Lost;
+}
 
 export default factions;

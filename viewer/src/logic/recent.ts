@@ -33,7 +33,7 @@ export function movesToHexes(data: Engine, moves: CommandObject[]): GaiaHex[] {
   });
 }
 
-function ownTurn(move: string): boolean {
+export function ownTurn(move: string): boolean {
   if (move == null) {
     return false;
   }
