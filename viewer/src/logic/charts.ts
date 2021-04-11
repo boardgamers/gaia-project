@@ -93,7 +93,8 @@ export function getDataPoints(
       round = logItem.round;
     }
 
-    counter += extractLog(data.moveHistory, logItem);
+    const log = extractLog(data.moveHistory, logItem);
+    counter += log;
 
     if (logItem.changes) {
       counter += extractChange(logItem);
@@ -276,7 +277,7 @@ export function planetCounter<T>(
             transdim.add(location);
 
             if (includeRegularPlanet(Planet.Transdim, source.type, want)) {
-              return value(cmd, e.log, planet, location);
+              return value(cmd, e.log, Planet.Transdim, location);
             }
           }
 
