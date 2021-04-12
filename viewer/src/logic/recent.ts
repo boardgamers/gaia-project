@@ -33,7 +33,7 @@ export function movesToHexes(data: Engine, moves: CommandObject[]): GaiaHex[] {
   });
 }
 
-function ownTurn(move: string): boolean {
+export function ownTurn(move: string): boolean {
   if (move == null) {
     return false;
   }
@@ -41,7 +41,9 @@ function ownTurn(move: string): boolean {
   return !outOfTurn.some((command) => move.includes(command));
 }
 
-export function recentMoves(player: PlayerEnum, logEntries: LogEntry[], moveHistory: string[]) {
+export type RecentMoves = { index: number; moves: string[] };
+
+export function recentMoves(player: PlayerEnum, logEntries: LogEntry[], moveHistory: string[]): RecentMoves {
   let last = logEntries.length;
   let lastMove = moveHistory.length;
   while (last > 0 && logEntries[last - 1].player === player) {
@@ -52,11 +54,14 @@ export function recentMoves(player: PlayerEnum, logEntries: LogEntry[], moveHist
     last--;
   }
 
-  const firstMove = (findLast(
+  const firstEntry = findLast(
     logEntries.slice(0, last),
     (logItem) => logItem.player === player && logItem.move && ownTurn(moveHistory[logItem.move])
-  ) as LogEntry | undefined)?.move;
-  return firstMove ? moveHistory.slice(firstMove + 1, lastMove) : [];
+  ) as LogEntry | undefined;
+  const firstMove = firstEntry?.move;
+  return firstMove
+    ? { index: logEntries.indexOf(firstEntry), moves: moveHistory.slice(firstMove, lastMove) }
+    : { index: 0, moves: [] };
 }
 
 export function roundMoves(logEntries: LogEntry[], moveHistory: string[]) {
@@ -75,10 +80,6 @@ export function markBuilding(
   const max = Math.max(Math.min(currentRound, possibleBuildings), buildings);
 
   return i >= max - builtForType && i < max;
-}
-
-function containsCommand(recentMoves: CommandObject[], field: ResearchField, faction: Faction) {
-  return recentMoves.some((c) => c.faction == faction && c.command == Command.UpgradeResearch && c.args[0] == field);
 }
 
 export function researchClasses(

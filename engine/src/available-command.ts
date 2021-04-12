@@ -19,7 +19,7 @@ import {
   SubPhase,
   TechTilePos,
 } from "./enums";
-import factions from "./factions";
+import { oppositeFaction } from "./factions";
 import PlayerObject from "./player";
 import PlayerData from "./player-data";
 import * as researchTracks from "./research-tracks";
@@ -104,7 +104,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
           data: difference(
             Object.values(Faction),
             engine.setup.map((f) => f),
-            engine.setup.map((f) => factions.opposite(f))
+            engine.setup.map((f) => oppositeFaction(f))
           ),
         },
       ];

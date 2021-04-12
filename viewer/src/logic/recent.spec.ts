@@ -1,13 +1,13 @@
 import { LogEntry, PlayerEnum } from "@gaia-project/engine";
 import { expect } from "chai";
-import { markBuilding, parseCommands, recentMoves } from "./recent";
+import { markBuilding, parseCommands, RecentMoves, recentMoves } from "./recent";
 
 describe("Moves", () => {
   describe("recentMoves", () => {
     const tests: {
       name: string;
       give: { moveHistory: string[]; logEntries: LogEntry[] };
-      want: string[];
+      want: RecentMoves;
     }[] = [
       {
         name: "player starts",
@@ -28,7 +28,10 @@ describe("Moves", () => {
             { player: 0, move: 4 },
           ],
         },
-        want: ["terrans build m 8A2"],
+        want: {
+          index: 2,
+          moves: ["p2 faction geodens", "terrans build m 8A2"],
+        },
       },
       {
         name: "player is about to place second mine",
@@ -51,7 +54,10 @@ describe("Moves", () => {
             { player: 1, move: 5 },
           ],
         },
-        want: ["terrans build m 8A2"],
+        want: {
+          index: 2,
+          moves: ["p2 faction geodens", "terrans build m 8A2"],
+        },
       },
       {
         name: "ignores charge and brainstone",
@@ -85,14 +91,17 @@ describe("Moves", () => {
             { player: 1, move: 12 },
           ],
         },
-        want: ["firaks booster booster3", "firaks build ts 7A0."],
+        want: {
+          index: 7,
+          moves: ["taklons booster booster1", "firaks booster booster3", "firaks build ts 7A0."],
+        },
       },
     ];
 
     for (const test of tests) {
       it(test.name, () => {
         const moves = recentMoves(PlayerEnum.Player2, test.give.logEntries, test.give.moveHistory);
-        expect(moves).to.deep.equal(test.want);
+        expect(moves).to.deep.equal(test.want, JSON.stringify(moves));
       });
     }
   });

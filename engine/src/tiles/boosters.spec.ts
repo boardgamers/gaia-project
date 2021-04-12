@@ -63,7 +63,7 @@ describe("boosters", () => {
       p1 build m -4x0.
       p2 build ts -5x5.
       p1 charge 1pw
-      p1 pass booster4
+      p1 pass booster4 returning booster3
     `);
 
     const engine = new Engine(moves);

@@ -55,6 +55,7 @@ import {
 import { eventDesc } from "../data/event";
 import Resource from "./Resource.vue";
 import SpecialAction from "./SpecialAction.vue";
+import {factionPlanet} from "@gaia-project/engine/src/factions";
 
 @Component<BoardAction>({
   components: {
@@ -96,7 +97,7 @@ export default class BoardAction extends Vue {
     const player = this.player();
     if (player != null && player !== PlayerEnum.Player5) {
       // Player5 is for converted old games
-      return factions.planet(this.$store.state.gaiaViewer.data.player(player).faction);
+      return factionPlanet(this.$store.state.gaiaViewer.data.player(player).faction);
     }
     return null;
   }

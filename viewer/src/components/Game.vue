@@ -45,6 +45,9 @@
       <div class="col-md-8 order-1 order-md-2">
         <Commands @command="handleCommand" @undo="undoMove" v-if="canPlay" :currentMove="currentMove" />
       </div>
+    </div>
+    <AdvancedLog class="col-12 order-last mt-4" :currentMove="currentMove" v-if="logPlacement === 'top'" />
+    <div class="row mt-2">
       <template v-if="sessionPlayer === undefined">
         <PlayerInfo v-for="player in orderedPlayers" :player="player" :key="player.player" class="col-md-6 order-6" />
       </template>
@@ -58,7 +61,7 @@
         />
       </template>
       <Pool class="col-12 order-10 mt-4" />
-      <AdvancedLog class="col-12 order-last mt-4" :currentMove="currentMove" />
+      <AdvancedLog class="col-12 order-last mt-4" :currentMove="currentMove" v-if="logPlacement !== 'top'" />
     </div>
   </div>
 </template>
@@ -78,6 +81,7 @@ import SpaceMap from "./SpaceMap.vue";
 import TurnOrder from "./TurnOrder.vue";
 import { parseCommands } from "../logic/recent";
 import {finalScoringFields, finalScoringItems} from "../logic/final-scoring";
+import {LogPlacement} from "../data";
 
 @Component<Game>({
   created(this: Game) {
@@ -179,6 +183,10 @@ export default class Game extends Vue {
 
   get expansions() {
     return this.$store.state.gaiaViewer.data.expansions;
+  }
+
+  get logPlacement(): LogPlacement {
+    return this.$store.state.gaiaViewer.preferences.logPlacement;
   }
 
   get actions(): BoardActionEnum[] {

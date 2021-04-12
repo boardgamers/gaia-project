@@ -191,6 +191,10 @@ export default class Engine {
     }
 
     const move = _move.trim();
+    let moveToShow = move;
+    if (move.includes(" " + Command.Pass + " ")) {
+      moveToShow = move + " returning " + this.player(this.playerToMove).data.tiles.booster;
+    }
 
     if (!this.executeMove(move)) {
       assert(allowIncomplete, `Move ${move} (line ${this.moveHistory.length + 1}) is not complete!`);
@@ -198,7 +202,7 @@ export default class Engine {
     }
 
     assert(this.turnMoves.length === 0, "Unnecessary commands at the end of the turn: " + this.turnMoves.join(". "));
-    this.moveHistory.push(move);
+    this.moveHistory.push(moveToShow);
   }
 
   log(player: PlayerEnum, resource: Resource, amount: number, source: EventSource) {
@@ -1013,6 +1017,7 @@ export default class Engine {
       player.gainRewards([new Reward(Math.max(Math.floor(-1 * player.data.bid)), Resource.VictoryPoint)], Command.Bid);
     }
   }
+
   beginLeechingPhase() {
     if (this.leechSources.length === 0) {
       this.beginRoundMovePhase();

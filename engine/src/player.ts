@@ -26,7 +26,7 @@ import {
 } from "./enums";
 import Event, { EventSource } from "./events";
 import { factionBoard, FactionBoard } from "./faction-boards";
-import factions from "./factions";
+import factions, { factionPlanet } from "./factions";
 import { FederationInfo, isOutclassedBy } from "./federation";
 import { GaiaHex } from "./gaia-hex";
 import { IncomeSelection } from "./income";
@@ -181,7 +181,7 @@ export default class Player extends EventEmitter {
   }
 
   get planet(): Planet {
-    return factions.planet(this.faction);
+    return factionPlanet(this.faction);
   }
 
   payCosts(costs: Reward[], source: EventSource) {

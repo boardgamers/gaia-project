@@ -32,6 +32,7 @@ export interface ButtonData {
 
 export type MapData = GaiaHex[];
 export type HighlightHexData = Map<GaiaHex, { cost?: string }>;
+export type LogPlacement = "top" | "bottom" | "off";
 
 export interface GameContext {
   highlighted: {
@@ -47,4 +48,6 @@ export interface GameContext {
 
   activeButton: ButtonData | null;
   hexSelection: boolean;
+
+  logPlacement: LogPlacement;
 }

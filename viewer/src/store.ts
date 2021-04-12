@@ -13,17 +13,25 @@ import { CubeCoordinates } from "hexagrid";
 import Vue from "vue";
 import Vuex, { Store } from "vuex";
 import { ButtonData, GameContext } from "./data";
-import { CommandObject, movesToHexes, parseCommands, recentMoves, researchClasses, roundMoves } from "./logic/recent";
+import {
+  CommandObject,
+  movesToHexes,
+  parseCommands,
+  RecentMoves,
+  recentMoves,
+  researchClasses,
+  roundMoves,
+} from "./logic/recent";
 
 Vue.use(Vuex);
 
-type Preference = "accessibleSpaceMap" | "noFactionFill" | "flatBuildings" | "highlightRecentActions";
+type Preference = "accessibleSpaceMap" | "noFactionFill" | "flatBuildings" | "highlightRecentActions" | "logPlacement";
 
 export type State = {
   data: Engine;
   context: GameContext;
   preferences: {
-    [key in Preference]: boolean;
+    [key in Preference]: boolean | string;
   };
   player: { index?: number; auth?: string } | null;
 };
@@ -64,6 +72,7 @@ const gaiaViewer = {
       noFactionFill: !!process.env.VUE_APP_noFactionFill,
       flatBuildings: !!process.env.VUE_APP_flatBuildings,
       highlightRecentActions: !!process.env.VUE_APP_highlightRecentActions,
+      logPlacement: process.env.VUE_APP_logPlacement ?? "bottom",
     },
     player: null,
   } as State,
@@ -155,6 +164,12 @@ const gaiaViewer = {
     loadFromJSON(context: any, data: any) {},
   },
   getters: {
+    recentMoves: (state: State): RecentMoves => {
+      // don't check for state.preferences.highlightRecentActions, this is also used in advanced log
+      const data = state.data;
+      const player = state.player?.index ?? data.currentPlayer;
+      return recentMoves(player, data.advancedLog, data.moveHistory);
+    },
     currentRoundCommands: (state: State): CommandObject[] => {
       if (state.preferences.highlightRecentActions) {
         const data = state.data;
@@ -162,11 +177,9 @@ const gaiaViewer = {
       }
       return [];
     },
-    recentCommands: (state: State): CommandObject[] => {
+    recentCommands: (state: State, getters): CommandObject[] => {
       if (state.preferences.highlightRecentActions) {
-        const data = state.data;
-        const player = state.player?.index ?? data.currentPlayer;
-        return recentMoves(player, data.advancedLog, data.moveHistory).flatMap((m) => parseCommands(m));
+        return getters.recentMoves.moves.flatMap((m) => parseCommands(m));
       }
       return [];
     },
