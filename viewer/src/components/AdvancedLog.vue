@@ -8,7 +8,7 @@
       <b-form-radio-group :checked="placement" @change="setPlacement">
         <b-form-radio value="top">Top</b-form-radio>
         <b-form-radio value="bottom">Bottom</b-form-radio>
-        <b-form-radio value="off">Don't show</b-form-radio>
+        <b-form-radio value="off">Don't show log</b-form-radio>
       </b-form-radio-group>
     </div>
     <table class="table table-hover table-striped table-sm" v-if="placement !== 'off'">
@@ -132,7 +132,7 @@ export default class AdvancedLog extends Vue {
     };
 
     function addEntry(entry: HistoryEntry) {
-      if (advancedLogIndex >= offset) {
+      if (advancedLogIndex > offset) {
         ret.push(entry);
       }
     }
