@@ -192,13 +192,27 @@ export default class Engine {
 
     const move = _move.trim();
     let moveToShow = move;
+    let oldPower: number[] = null;
     if (move.includes(" " + Command.Pass + " ")) {
       moveToShow = move + " returning " + this.player(this.playerToMove).data.tiles.booster;
+    } else if (move.includes(" " + Building.GaiaFormer + " ") && !move.includes("using")) {
+      oldPower = Object.values(this.player(this.playerToMove).data.power);
     }
 
     if (!this.executeMove(move)) {
       assert(allowIncomplete, `Move ${move} (line ${this.moveHistory.length + 1}) is not complete!`);
       this.newTurn = false;
+    }
+    if (oldPower != null) {
+      moveToShow +=
+        " using " +
+        Object.entries(this.player(this.playerToMove).data.power)
+          .map(([area, amt], index) => {
+            const spent = oldPower[index] - amt;
+            return spent > 0 ? area + ": " + spent : "";
+          })
+          .filter((s) => s.length > 0)
+          .join(", ");
     }
 
     assert(this.turnMoves.length === 0, "Unnecessary commands at the end of the turn: " + this.turnMoves.join(". "));

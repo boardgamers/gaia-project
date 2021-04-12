@@ -201,7 +201,7 @@ describe("Engine", () => {
       p1 build m -1x2
       p2 booster booster3
       p1 booster booster4
-      p1 build gf -3x1.
+      p1 build gf -3x1 using area1: 4, area2: 2.
       p2 pass booster7
       p1 pass booster3
       p2 pass booster4
