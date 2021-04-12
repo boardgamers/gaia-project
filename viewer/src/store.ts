@@ -25,13 +25,13 @@ import {
 
 Vue.use(Vuex);
 
-type Preference = "accessibleSpaceMap" | "noFactionFill" | "flatBuildings" | "highlightRecentActions";
+type Preference = "accessibleSpaceMap" | "noFactionFill" | "flatBuildings" | "highlightRecentActions" | "logPlacement";
 
 export type State = {
   data: Engine;
   context: GameContext;
   preferences: {
-    [key in Preference]: boolean;
+    [key in Preference]: boolean | string;
   };
   player: { index?: number; auth?: string } | null;
 };
@@ -72,6 +72,7 @@ const gaiaViewer = {
       noFactionFill: !!process.env.VUE_APP_noFactionFill,
       flatBuildings: !!process.env.VUE_APP_flatBuildings,
       highlightRecentActions: !!process.env.VUE_APP_highlightRecentActions,
+      logPlacement: process.env.VUE_APP_logPlacement ?? "bottom",
     },
     player: null,
   } as State,

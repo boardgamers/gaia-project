@@ -5,8 +5,13 @@
         <b-form-radio value="recent">Recent</b-form-radio>
         <b-form-radio value="all">Everything</b-form-radio>
       </b-form-radio-group>
+      <b-form-radio-group :checked="placement" @change="setPlacement">
+        <b-form-radio value="top">Top</b-form-radio>
+        <b-form-radio value="bottom">Bottom</b-form-radio>
+        <b-form-radio value="off">Don't show</b-form-radio>
+      </b-form-radio-group>
     </div>
-    <table class="table table-hover table-striped table-sm">
+    <table class="table table-hover table-striped table-sm" v-if="placement !== 'off'">
       <tbody>
         <tr class="major-event" v-if="gameData.phase === 'endGame'">
           <td colspan="3">Game Ended</td>
@@ -54,7 +59,7 @@ import {Component, Prop} from "vue-property-decorator";
 import Engine, {Faction, LogEntry} from "@gaia-project/engine";
 import {factionLogColors, factionLogTextColors, lightFactionLogColors} from "../graphics/utils";
 import {ownTurn} from "../logic/recent";
-
+import {LogPlacement} from "../data";
 
 type ShowLog = "all" | "recent";
 
@@ -69,6 +74,14 @@ export default class AdvancedLog extends Vue {
 
   setScope(scope: ShowLog) {
     this.scope = scope;
+  }
+
+  get placement(): LogPlacement {
+    return this.$store.state.gaiaViewer.preferences.logPlacement;
+  }
+
+  setPlacement(placement: LogPlacement) {
+    this.$store.state.gaiaViewer.preferences.logPlacement = placement;
   }
 
   get gameData(): Engine {
