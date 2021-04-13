@@ -1,8 +1,9 @@
 import { AssertionError } from "assert";
 import { expect } from "chai";
-import { BoardAction, PlayerEnum } from "..";
-import Engine from "./engine";
+import { BoardAction, Booster, PlayerEnum } from "..";
+import Engine, { createMoveToShow } from "./engine";
 import { Command, Condition, Operator, Phase, Planet, Player } from "./enums";
+import PlayerData from "./player-data";
 
 describe("Engine", () => {
   it("should throw when trying to build on the wrong place", () => {
@@ -201,7 +202,7 @@ describe("Engine", () => {
       p1 build m -1x2
       p2 booster booster3
       p1 booster booster4
-      p1 build gf -3x1.
+      p1 build gf -3x1 using area1: 4, area2: 2.
       p2 pass booster7
       p1 pass booster3
       p2 pass booster4
@@ -703,6 +704,31 @@ describe("Engine", () => {
       // tslint:disable-next-line no-unused-expression
       expect(log[4].move).to.be.undefined;
       expect(log[5].phase).to.equal(Phase.RoundGaia);
+    });
+
+    it("should show returned booster", () => {
+      const d = new PlayerData();
+      d.tiles.booster = Booster.Booster3;
+      const m = createMoveToShow("xenos pass booster1", d, () => {});
+      expect(m).to.equal("xenos pass booster1 returning booster3");
+    });
+
+    it("should show turns put to gaia area", () => {
+      const d = new PlayerData();
+      d.power.area1 = 2;
+      d.power.area2 = 6;
+      d.power.area3 = 4;
+      const m = createMoveToShow("terrans build gf 6A1", d, () => {
+        d.power.area1 = 0;
+        d.power.area2 = 2;
+      });
+      expect(m).to.equal("terrans build gf 6A1 using area1: 2, area2: 4");
+    });
+
+    it("should now show turns put to gaia area twice", () => {
+      const d = new PlayerData();
+      const m = createMoveToShow("terrans build gf 6A1 using area1: 2, area2: 4. spend 1pw for 1c", d, () => {});
+      expect(m).to.equal("terrans build gf 6A1 using area1: 2, area2: 4. spend 1pw for 1c");
     });
   });
 

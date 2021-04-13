@@ -93,8 +93,7 @@ export function getDataPoints(
       round = logItem.round;
     }
 
-    const log = extractLog(data.moveHistory, logItem);
-    counter += log;
+    counter += extractLog(data.moveHistory, logItem);
 
     if (logItem.changes) {
       counter += extractChange(logItem);
