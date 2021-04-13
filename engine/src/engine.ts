@@ -83,7 +83,7 @@ export interface LogEntry {
   phase?: Phase.RoundIncome | Phase.RoundGaia | Phase.EndGame;
 }
 
-const passRegex = new RegExp(`\\b${Command.Pass}\\b(\\S+)?$`);
+const passRegex = new RegExp(`\\b${Command.Pass} (\\S+)?$`);
 const gaiaFormerRegex = new RegExp(`\\b${Building.GaiaFormer} \\S+$`);
 
 export function createMoveToShow(move: string, p: PlayerData, executeMove: () => void): string {
