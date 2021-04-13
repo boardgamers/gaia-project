@@ -34,6 +34,7 @@ import {
 import Event, { EventSource } from "./events";
 import SpaceMap, { MapConfiguration } from "./map";
 import Player from "./player";
+import PlayerData from "./player-data";
 import * as researchTracks from "./research-tracks";
 import Reward from "./reward";
 import federations from "./tiles/federations";
@@ -80,6 +81,35 @@ export interface LogEntry {
   round?: number;
   // For phase change
   phase?: Phase.RoundIncome | Phase.RoundGaia | Phase.EndGame;
+}
+
+const passRegex = new RegExp(`\\b${Command.Pass}\\b(\\S+)?$`);
+const gaiaFormerRegex = new RegExp(`\\b${Building.GaiaFormer} \\S+$`);
+
+export function createMoveToShow(move: string, p: PlayerData, executeMove: () => void): string {
+  let moveToShow = move;
+  let oldPower: number[] = null;
+
+  if (passRegex.test(move)) {
+    moveToShow = move + " returning " + p.tiles.booster;
+  } else if (gaiaFormerRegex.test(move)) {
+    oldPower = Object.values(p.power);
+  }
+
+  executeMove();
+
+  if (oldPower) {
+    moveToShow +=
+      " using " +
+      Object.entries(p.power)
+        .map(([area, amt], index) => {
+          const spent = oldPower[index] - amt;
+          return spent > 0 ? area + ": " + spent : "";
+        })
+        .filter((s) => s.length > 0)
+        .join(", ");
+  }
+  return moveToShow;
 }
 
 export default class Engine {
@@ -191,29 +221,12 @@ export default class Engine {
     }
 
     const move = _move.trim();
-    let moveToShow = move;
-    let oldPower: number[] = null;
-    if (move.includes(" " + Command.Pass + " ")) {
-      moveToShow = move + " returning " + this.player(this.playerToMove).data.tiles.booster;
-    } else if (move.includes(" " + Building.GaiaFormer + " ") && !move.includes("using")) {
-      oldPower = Object.values(this.player(this.playerToMove).data.power);
-    }
-
-    if (!this.executeMove(move)) {
-      assert(allowIncomplete, `Move ${move} (line ${this.moveHistory.length + 1}) is not complete!`);
-      this.newTurn = false;
-    }
-    if (oldPower != null) {
-      moveToShow +=
-        " using " +
-        Object.entries(this.player(this.playerToMove).data.power)
-          .map(([area, amt], index) => {
-            const spent = oldPower[index] - amt;
-            return spent > 0 ? area + ": " + spent : "";
-          })
-          .filter((s) => s.length > 0)
-          .join(", ");
-    }
+    const moveToShow = createMoveToShow(move, this.player(this.playerToMove).data, () => {
+      if (!this.executeMove(move)) {
+        assert(allowIncomplete, `Move ${move} (line ${this.moveHistory.length + 1}) is not complete!`);
+        this.newTurn = false;
+      }
+    });
 
     assert(this.turnMoves.length === 0, "Unnecessary commands at the end of the turn: " + this.turnMoves.join(". "));
     this.moveHistory.push(moveToShow);
