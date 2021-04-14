@@ -1,5 +1,5 @@
 {
-  "families": ["Free actions"],
+  "families": ["Free actions", "Federations"],
   "options": {
     "auction": true,
     "layout": "standard"

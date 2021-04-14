@@ -190,27 +190,6 @@ const freeActionSources = resourceSources
     weight: 0,
   });
 
-function federationName(logEntry: LogEntry): string | null {
-  const f = logEntry.changes[Command.FormFederation];
-  if (f == null) {
-    return null;
-  }
-
-  const name = Object.keys(f)
-    .filter((r) => r != Resource.GainToken)
-    .map((r) => f[r] + r)
-    .join(",");
-  switch (name) {
-    case "8vp":
-      return "8vp,2t";
-    case "8vp,1q":
-      return "8vp,q";
-    case "1o,1k,2c":
-      return "Gleens";
-  }
-  return name;
-}
-
 const factories = [
   {
     name: "Resources",
@@ -399,8 +378,25 @@ const factories = [
     name: "Federations",
     showWeightedTotal: false,
     playerSummaryLineChartTitle: "Federations of all players",
-    extractChange: (wantPlayer, source) => (logItem: LogEntry) =>
-      logItem.player == wantPlayer.player && federationName(logItem) == source.label ? 1 : 0,
+    extractLog: statelessExtractLog((e) => {
+      const type = e.source.type;
+      if (e.cmd.command == Command.FormFederation) {
+        return (e.cmd.args[1] as Federation) == type ? 1 : 0;
+      }
+      if (e.allCommands[0] === e.cmd && !e.allCommands.find((c) => c.command == Command.FormFederation)) {
+        //only take the federation from changes once, i.e. when seeing the first command
+        const c = e.log.changes?.[Command.FormFederation];
+        if (c != null) {
+          const want = Object.entries(c)
+            .map(([r, a]) => (a > 1 ? a : "") + r)
+            .join(",");
+          if (Object.entries(federations).find(([fed, res]) => res == want)[0] == type) {
+            return 1;
+          }
+        }
+      }
+      return 0;
+    }),
     sources: Federation.values()
       .map((f) => ({
         type: f,
@@ -470,9 +466,10 @@ export function simpleChartDetails<Source extends SimpleSource<any>>(
   function newExtractLog(s: Source) {
     const e = factory.extractLog(pl);
 
-    return logEntryProcessor((cmd, log) =>
+    return logEntryProcessor((cmd, log, allCommands) =>
       e({
         cmd: cmd,
+        allCommands: allCommands,
         source: s,
         data: data,
         log: log,
