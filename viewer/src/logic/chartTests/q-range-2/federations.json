@@ -1,0 +1,69 @@
+{
+  "tableMeta": {
+    "weights": null,
+    "colors": [
+      {
+        "color": "--res-vp"
+      },
+      {
+        "color": "--res-qic"
+      },
+      {
+        "color": "--res-power"
+      },
+      {
+        "color": "--res-ore"
+      },
+      {
+        "color": "--res-credit"
+      },
+      {
+        "color": "--res-knowledge"
+      },
+      {
+        "color": "--desert"
+      }
+    ],
+    "datasetMeta": {
+      "Ivits (4)": {
+        "label": "Ivits",
+        "total": 4,
+        "weightedTotal": null
+      },
+      "Terrans (1)": {
+        "label": "Terrans",
+        "total": 1,
+        "weightedTotal": null
+      },
+      "Taklons (4)": {
+        "label": "Taklons",
+        "total": 4,
+        "weightedTotal": null
+      },
+      "Xenos (2)": {
+        "label": "Xenos",
+        "total": 2,
+        "weightedTotal": null
+      }
+    }
+  },
+  "labels": ["12vp", "8vp,q", "8vp,2t", "7vp,2o", "7vp,6c", "6vp,2k", "Gleens"],
+  "datasets": [
+    {
+      "label": "Ivits (4)",
+      "data": [0, 0, 0, 1, 1, 2, 0]
+    },
+    {
+      "label": "Taklons (4)",
+      "data": [1, 1, 0, 2, 0, 0, 0]
+    },
+    {
+      "label": "Xenos (2)",
+      "data": [0, 0, 0, 0, 2, 0, 0]
+    },
+    {
+      "label": "Terrans (1)",
+      "data": [0, 1, 0, 0, 0, 0, 0]
+    }
+  ]
+}

@@ -202,7 +202,7 @@ export function initialResearch(player: Player) {
 }
 
 export function logEntryProcessor(
-  processor: (cmd: CommandObject, log: LogEntry) => number
+  processor: (cmd: CommandObject, log: LogEntry, allCommands: CommandObject[]) => number
 ): (moveHistory: string[], log: LogEntry) => number {
   return (moveHistory: string[], log: LogEntry): number => {
     let res = 0;
@@ -210,8 +210,9 @@ export function logEntryProcessor(
     if (log.move != null) {
       const move = moveHistory[log.move]; // current move isn't added yet
       if (move != null) {
-        for (const cmd of parseCommands(move)) {
-          res += processor(cmd, log);
+        const commands = parseCommands(move);
+        for (const cmd of commands) {
+          res += processor(cmd, log, commands);
         }
       }
     }
@@ -224,6 +225,7 @@ export type ExtractLog<Source> = (p: Player) => (a: ExtractLogArg<Source>) => nu
 
 export type ExtractLogArg<Source> = {
   cmd: CommandObject;
+  allCommands: CommandObject[];
   source: Source;
   data: Engine;
   log: LogEntry;

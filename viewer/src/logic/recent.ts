@@ -11,6 +11,7 @@ export function parseCommands(move: string): CommandObject[] {
   return move
     .slice(factionIndex)
     .split(".")
+    .filter((c) => c.length > 0)
     .map((c) => {
       const split = c.trim().split(" ");
 
