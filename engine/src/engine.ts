@@ -55,7 +55,7 @@ export interface EngineOptions {
   /** Are the federations flexible (allows you to avoid planets with buildings to form federation even if it's not the shortest route)? */
   flexibleFederations?: boolean;
   /** auction */
-  auction?: boolean;
+  auction?: boolean | "advanced";
   /** Layout */
   layout?: "standard" | "balanced" | "xshape";
 }
@@ -1154,8 +1154,12 @@ export default class Engine {
   [Phase.SetupFaction](move: string) {
     this.loadTurnMoves(move, { split: false, processFirst: true });
 
+    if(this.options.auction === "advanced") {
+      this.moveToNextPlayerWithoutAChosenFactionOrEndTheChoosingOfFactions();
+      return;
+    }
     if (!this.moveToNextPlayer(this.turnOrder, { loop: false })) {
-      if (this.options.auction) {
+      if (this.options.auction === true) {
         this.beginSetupAuctionPhase();
       } else {
         this.endSetupAuctionPhase();
@@ -1166,7 +1170,10 @@ export default class Engine {
 
   [Phase.SetupAuction](move: string) {
     this.loadTurnMoves(move, { processFirst: true });
+    this.moveToNextPlayerWithoutAChosenFactionOrEndTheChoosingOfFactions();
+  }
 
+  private moveToNextPlayerWithoutAChosenFactionOrEndTheChoosingOfFactions() {
     const player = [...range(this.currentPlayer + 1, this.players.length), ...range(0, this.currentPlayer)].find(
       (player) => !this.players.some((pl) => pl.player === player && pl.faction)
     );
@@ -1349,14 +1356,21 @@ export default class Engine {
   [Command.ChooseFaction](player: PlayerEnum, faction: string) {
     assert(this.availableCommand.data.includes(faction), `${faction} is not in the available factions`);
     this.setup.push(faction as Faction);
+    if(this.options.auction === "advanced") {
+      this.executeBid(player, faction, 0);
+    }
   }
 
   [Command.Bid](player: PlayerEnum, faction: string, bid: number) {
+    debugger;
     const bidsAC = this.availableCommand.data.bids;
     const bidAC = bidsAC.find((b) => b.faction === faction);
     assert(bidAC.bid.includes(+bid), "You have to bid the right amount");
     assert(bidAC, `${faction} is not in the available factions`);
+    this.executeBid(player, faction, bid);    
+  }
 
+  private executeBid(player: PlayerEnum, faction: string, bid: number) {
     const previous = this.players.find((s) => s.faction == faction);
     // remove faction from previous owner
     if (previous) {
