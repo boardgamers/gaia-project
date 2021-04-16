@@ -132,8 +132,9 @@ export default class Commands extends Vue {
     const entry = logEntries[logEntries.length - 1];
     if (entry != null && entry.changes != null && entry.move != null) {
       if (this.gameData.moveHistory[entry.move] == null) {
-        const values = Object.values(entry.changes)
-          .flatMap(e => Object.keys(e).map(k => new Reward(e[k], k as Resource)));
+        const values = Object.values(entry.changes).flatMap((e) =>
+          Object.keys(e).map((k) => new Reward(e[k], k as Resource))
+        );
         return ` (${Reward.merge(values).toString()})`;
       }
     }
@@ -171,8 +172,8 @@ export default class Commands extends Vue {
     return this.availableCommands ? this.availableCommands[0] : null;
   }
 
-  get factionsToChoose() : AvailableCommand {
-    return this.availableCommands.find(c => c.name === Command.ChooseFaction) ?? null;
+  get factionsToChoose(): AvailableCommand {
+    return this.availableCommands.find((c) => c.name === Command.ChooseFaction) ?? null;
   }
 
   get player(): string {
@@ -214,7 +215,6 @@ export default class Commands extends Vue {
   }
 
   handleCommand(command: string, source: MoveButton, final: boolean) {
-    debugger;
     console.log("handle command", command);
 
     // Some users seem to have a bug with repeating commands on mobile, like clicking the income button twice
@@ -272,7 +272,7 @@ export default class Commands extends Vue {
 
   get buttons(): ButtonData[] {
     const ret: ButtonData[] = [];
-    for (const command of this.availableCommands.filter(c => c.name != Command.ChooseFaction)) {
+    for (const command of this.availableCommands.filter((c) => c.name != Command.ChooseFaction)) {
       switch (command.name) {
         case Command.RotateSectors: {
           ret.push({
