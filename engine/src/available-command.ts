@@ -787,15 +787,10 @@ function chooseFactionOrBid(engine: Engine, player: Player) {
       engine.setup.map((f) => oppositeFaction(f))
     ),
   };
-  if(engine.options.auction) {
-    return [
-      ...possibleBids(engine, player),
-      chooseFaction
-    ]
+  if (engine.options.auction) {
+    return [...possibleBids(engine, player), chooseFaction];
   }
-  return [
-    chooseFaction,
-  ];
+  return [chooseFaction];
 }
 
 function possibleBids(engine: Engine, player: Player) {

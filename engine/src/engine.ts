@@ -1340,7 +1340,7 @@ export default class Engine {
     const bidAC = bidsAC.find((b) => b.faction === faction);
     assert(bidAC.bid.includes(+bid), "You have to bid the right amount");
     assert(bidAC, `${faction} is not in the available factions`);
-    this.executeBid(player, faction, bid);    
+    this.executeBid(player, faction, bid);
   }
 
   private executeBid(player: PlayerEnum, faction: string, bid: number) {

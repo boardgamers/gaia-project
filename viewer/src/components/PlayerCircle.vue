@@ -11,7 +11,7 @@
 import { Component, Prop, Vue } from "vue-property-decorator";
 import Engine, { factions, Phase, Planet, Player, PlayerEnum } from "@gaia-project/engine";
 import { phaseBeforeSetupBuilding } from "../logic/utils";
-import {factionPlanet} from "@gaia-project/engine/src/factions";
+import { factionPlanet } from "@gaia-project/engine/src/factions";
 
 @Component
 export default class PlayerCircle extends Vue {
@@ -63,7 +63,7 @@ export default class PlayerCircle extends Vue {
     if (phaseBeforeSetupBuilding(this.gameData)) {
       return this.gameData.setup[this.index] ? factionPlanet(this.gameData.setup[this.index]) : Planet.Lost;
     }
-    
+
     if (this.player?.faction) {
       return factionPlanet(this.player.faction);
     }
