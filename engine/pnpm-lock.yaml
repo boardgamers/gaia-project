@@ -6,6 +6,7 @@ specifiers:
   '@types/mocha': ^2.2.48
   '@types/node': ^14.0.14
   '@types/seedrandom': ^2.4.27
+  '@types/semver-compare': ^1.0.1
   '@typescript-eslint/eslint-plugin': ^2.31.0
   '@typescript-eslint/parser': ^2.31.0
   axios: ^0.21.1
@@ -20,6 +21,7 @@ specifiers:
   lodash: ^4.17.15
   mocha: ^5.2.0
   seedrandom: 2.4.3
+  semver-compare: 1.0.0
   shuffle-seed: 1.1.6
   ts-node: ^5.0.1
   typescript: ^3.8.3
@@ -30,6 +32,7 @@ dependencies:
   hexagrid: 2.1.1
   lodash: 4.17.21
   seedrandom: 2.4.3
+  semver-compare: 1.0.0
   shuffle-seed: 1.1.6
 
 devDependencies:
@@ -38,6 +41,7 @@ devDependencies:
   '@types/mocha': 2.2.48
   '@types/node': 14.14.31
   '@types/seedrandom': 2.4.28
+  '@types/semver-compare': 1.0.1
   '@typescript-eslint/eslint-plugin': 2.34.0_4df26d2b9b7591cbda305132c8f490f3
   '@typescript-eslint/parser': 2.34.0_eslint@6.8.0+typescript@3.9.9
   chai: 4.3.0
@@ -100,6 +104,10 @@ packages:
 
   /@types/seedrandom/2.4.28:
     resolution: {integrity: sha512-SMA+fUwULwK7sd/ZJicUztiPs8F1yCPwF3O23Z9uQ32ME5Ha0NmDK9+QTsYE4O2tHXChzXomSWWeIhCnoN1LqA==}
+    dev: true
+
+  /@types/semver-compare/1.0.1:
+    resolution: {integrity: sha512-wx2LQVvKlEkhXp/HoKIZ/aSL+TvfJdKco8i0xJS3aR877mg4qBHzNT6+B5a61vewZHo79EdZavskGnRXEC2H6A==}
     dev: true
 
   /@typescript-eslint/eslint-plugin/2.34.0_4df26d2b9b7591cbda305132c8f490f3:
@@ -1388,6 +1396,10 @@ packages:
 
   /seedrandom/2.4.3:
     resolution: {integrity: sha1-JDhQTa0zkXMUv/GKxNeU8W1qrsw=}
+    dev: false
+
+  /semver-compare/1.0.0:
+    resolution: {integrity: sha1-De4hahyUGrN+nvsXiPavxf9VN/w=}
     dev: false
 
   /semver/5.7.1:
