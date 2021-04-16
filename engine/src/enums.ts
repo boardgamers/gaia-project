@@ -485,7 +485,6 @@ export enum Phase {
   SetupInit = "setupInit",
   SetupBoard = "setupBoard",
   SetupFaction = "setupFaction",
-  SetupAuction = "setupAuction",
   SetupBuilding = "setupBuilding",
   SetupBooster = "setupBooster",
   BeginGame = "beginGame",

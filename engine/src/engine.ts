@@ -890,13 +890,6 @@ export default class Engine {
     this.moveToNextPlayer(this.turnOrder, { loop: false });
   }
 
-  beginSetupAuctionPhase() {
-    this.changePhase(Phase.SetupAuction);
-    this.turnOrder = this.players.map((pl) => pl.player as PlayerEnum);
-
-    this.moveToNextPlayer(this.turnOrder, { loop: false });
-  }
-
   endSetupFactionPhase() {
     for (const pl of this.players) {
       if (pl.faction) {
@@ -1153,15 +1146,7 @@ export default class Engine {
 
   [Phase.SetupFaction](move: string) {
     this.loadTurnMoves(move, { split: false, processFirst: true });
-
-    if(this.options.auction) {
-      this.moveToNextPlayerWithoutAChosenFaction();
-      return;
-    }
-    if (!this.moveToNextPlayer(this.turnOrder, { loop: false })) {
-      this.endSetupFactionPhase();
-      return;
-    }
+    this.moveToNextPlayerWithoutAChosenFaction();
   }
 
   private moveToNextPlayerWithoutAChosenFaction() {
