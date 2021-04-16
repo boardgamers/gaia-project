@@ -1165,14 +1165,18 @@ export default class Engine {
 
   [Phase.SetupFaction](move: string) {
     this.loadTurnMoves(move, { split: false, processFirst: true });
-    if (this.isOnLegacyAuction()) {
-      // legacy: finish selecting all factions before bidding.
-      if (!this.moveToNextPlayer(this.turnOrder, { loop: false })) {
-        this.beginSetupAuctionPhase();
-      }
+    if (this.isVersionOrLater("5.0.0")) {
+      this.moveToNextPlayerWithoutAChosenFaction();
       return;
     }
-    this.moveToNextPlayerWithoutAChosenFaction();
+    // legacy: finish selecting all factions before bidding.
+    if (!this.moveToNextPlayer(this.turnOrder, { loop: false })) {
+      if (this.options.auction) {
+        this.beginSetupAuctionPhase();
+      } else {
+        this.endSetupFactionPhase();
+      }
+    }
   }
 
   [Phase.SetupAuction](move: string) {

@@ -207,3 +207,16 @@ describe("legacy auction", () => {
     expect(() => new Engine(moves, { auction: true }, "4.6.10")).to.throw();
   });
 });
+
+describe("legacy engine", () => {
+  it("should move to building after picking factions", () => {
+    const moves = Engine.parseMoves(`
+      init 2 randomSeed
+      p1 faction terrans
+      p2 faction geodens
+      terrans build m -4x2
+    `);
+
+    expect(() => new Engine(moves, { auction: false }, "4.6.10")).to.not.throw();
+  });
+});
