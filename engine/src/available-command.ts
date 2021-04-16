@@ -814,7 +814,7 @@ function chooseFactionOrBid(engine: Engine, player: Player) {
       engine.setup.map((f) => oppositeFaction(f))
     ),
   };
-  if(engine.options.auction === "advanced") {
+  if(engine.options.auction) {
     return [
       ...possibleBids(engine, player),
       chooseFaction

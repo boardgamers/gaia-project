@@ -55,7 +55,7 @@ export interface EngineOptions {
   /** Are the federations flexible (allows you to avoid planets with buildings to form federation even if it's not the shortest route)? */
   flexibleFederations?: boolean;
   /** auction */
-  auction?: boolean | "advanced";
+  auction?: boolean;
   /** Layout */
   layout?: "standard" | "balanced" | "xshape";
 }
@@ -897,7 +897,7 @@ export default class Engine {
     this.moveToNextPlayer(this.turnOrder, { loop: false });
   }
 
-  endSetupAuctionPhase() {
+  endSetupFactionPhase() {
     for (const pl of this.players) {
       if (pl.faction) {
         pl.loadFaction(pl.faction, this.expansions);
@@ -1154,26 +1154,17 @@ export default class Engine {
   [Phase.SetupFaction](move: string) {
     this.loadTurnMoves(move, { split: false, processFirst: true });
 
-    if(this.options.auction === "advanced") {
-      this.moveToNextPlayerWithoutAChosenFactionOrEndTheChoosingOfFactions();
+    if(this.options.auction) {
+      this.moveToNextPlayerWithoutAChosenFaction();
       return;
     }
     if (!this.moveToNextPlayer(this.turnOrder, { loop: false })) {
-      if (this.options.auction === true) {
-        this.beginSetupAuctionPhase();
-      } else {
-        this.endSetupAuctionPhase();
-      }
+      this.endSetupFactionPhase();
       return;
     }
   }
 
-  [Phase.SetupAuction](move: string) {
-    this.loadTurnMoves(move, { processFirst: true });
-    this.moveToNextPlayerWithoutAChosenFactionOrEndTheChoosingOfFactions();
-  }
-
-  private moveToNextPlayerWithoutAChosenFactionOrEndTheChoosingOfFactions() {
+  private moveToNextPlayerWithoutAChosenFaction() {
     const player = [...range(this.currentPlayer + 1, this.players.length), ...range(0, this.currentPlayer)].find(
       (player) => !this.players.some((pl) => pl.player === player && pl.faction)
     );
@@ -1181,7 +1172,7 @@ export default class Engine {
     if (player !== undefined) {
       this.currentPlayer = player;
     } else {
-      this.endSetupAuctionPhase();
+      this.endSetupFactionPhase();
     }
   }
 
@@ -1356,13 +1347,10 @@ export default class Engine {
   [Command.ChooseFaction](player: PlayerEnum, faction: string) {
     assert(this.availableCommand.data.includes(faction), `${faction} is not in the available factions`);
     this.setup.push(faction as Faction);
-    if(this.options.auction === "advanced") {
-      this.executeBid(player, faction, 0);
-    }
+    this.executeBid(player, faction, 0);
   }
 
   [Command.Bid](player: PlayerEnum, faction: string, bid: number) {
-    debugger;
     const bidsAC = this.availableCommand.data.bids;
     const bidAC = bidsAC.find((b) => b.faction === faction);
     assert(bidAC.bid.includes(+bid), "You have to bid the right amount");
