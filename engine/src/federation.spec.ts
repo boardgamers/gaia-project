@@ -654,10 +654,6 @@ p1 faction firaks
 p2 faction gleens
 p3 faction ivits
 p4 faction itars
-p1 bid firaks 0
-p2 bid gleens 0
-p3 bid ivits 0
-p4 bid itars 0
 firaks build m 4A4
 gleens build m 10B1
 itars build m 8B3
