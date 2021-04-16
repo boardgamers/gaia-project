@@ -1,6 +1,7 @@
 import assert from "assert";
 import { isEqual, range, set, uniq } from "lodash";
 import shuffleSeed from "shuffle-seed";
+import { version } from "../package.json";
 import { boardActions } from "./actions";
 import { finalRankings, gainFinalScoringVictoryPoints } from "./algorithms/scoring";
 import { ChargeDecision, ChargeRequest, decideChargeRequest } from "./auto-charge";
@@ -150,6 +151,7 @@ export default class Engine {
   phase: Phase = Phase.SetupInit;
   subPhase: SubPhase = SubPhase.BeforeMove;
   oldPhase: Phase;
+  version = version;
 
   get expansions() {
     return 0;
@@ -586,6 +588,7 @@ export default class Engine {
 
   static fromData(data: Record<string, any>) {
     const engine = new Engine();
+    delete engine.version;
 
     if (!data) {
       return engine;

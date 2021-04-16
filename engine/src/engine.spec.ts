@@ -1,6 +1,7 @@
 import { AssertionError } from "assert";
 import { expect } from "chai";
 import { BoardAction, Booster, PlayerEnum } from "..";
+import { version } from "../package.json";
 import Engine, { createMoveToShow } from "./engine";
 import { Command, Condition, Operator, Phase, Planet, Player } from "./enums";
 import PlayerData from "./player-data";
@@ -308,6 +309,7 @@ describe("Engine", () => {
           baseLine.players[Player.Player2].data.ores,
           "Error loading move " + move
         );
+        expect(state.version).to.equal(version);
       }
 
       const endEngine = Engine.fromData(state);
@@ -331,6 +333,15 @@ describe("Engine", () => {
 
     it("should be able to load state from an empty game", () => {
       expect(() => Engine.fromData(JSON.parse(JSON.stringify(new Engine())))).to.not.throw();
+    });
+
+    it("should keep version info", () => {
+      expect(Engine.fromData(null).version).to.be.undefined;
+      expect(Engine.fromData(JSON.parse(JSON.stringify(new Engine()))).version).to.equal(version);
+
+      const engine = new Engine();
+      engine.version = "1.0.0";
+      expect(Engine.fromData(JSON.parse(JSON.stringify(engine))).version).to.equal("1.0.0");
     });
 
     describe("transform board actions for older games", () => {
