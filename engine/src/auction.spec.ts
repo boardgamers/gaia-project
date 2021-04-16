@@ -2,8 +2,6 @@ import { expect } from "chai";
 import Engine from "./engine";
 import { Faction } from "./enums";
 
-import { generate as generateAvailableCommands } from "./available-command"
-
 describe("auction", () => {
   it("should conclude if everyone picks a faction", () => {
     const moves = Engine.parseMoves(`
