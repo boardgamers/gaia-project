@@ -33,7 +33,7 @@
           {{ button.label || button.command }}
         </MoveButton>
       </div>
-      <div v-if="chooseFaction">
+      <div v-if="isChoosingFaction">
         <MoveButton
           v-for="faction in factionsToChoose.data"
           :button="{
@@ -172,7 +172,7 @@ export default class Commands extends Vue {
   }
 
   get factionsToChoose() : AvailableCommand {
-    return this.chooseFaction ? this.availableCommands.find(c => c.name === Command.ChooseFaction) : null;
+    return this.availableCommands.find(c => c.name === Command.ChooseFaction) ?? null;
   }
 
   get player(): string {
@@ -197,8 +197,8 @@ export default class Commands extends Vue {
     return this.command?.name;
   }
 
-  get chooseFaction() {
-    return this.availableCommands?.some(c => c.name === Command.ChooseFaction);
+  get isChoosingFaction() {
+    return !!this.factionsToChoose;
   }
 
   get titles() {
