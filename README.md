@@ -27,3 +27,9 @@ npm run serve
 ```
 
 It will use the engine in its sibling folder
+
+## Commit messages
+
+We try to follow the [gitmoji](https://gitmoji.dev/) initiative. Extensions are available on VS Code & IntelliJ.
+
+The format of a commit message is: `<gitmoji> (all|engine|viewer) Commit message`
