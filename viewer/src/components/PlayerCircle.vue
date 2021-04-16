@@ -97,7 +97,7 @@ export default class PlayerCircle extends Vue {
       // legacy: this can be heavily simplified
       const isInNewAuction =
         this.gameData.options.auction &&
-        this.gameData.isVersionOrLater("5.0.0") &&
+        !this.gameData.isOnLegacyAuction() &&
         this.gameData.phase === Phase.SetupFaction;
       const isInLegacyAuction = this.gameData.isOnLegacyAuction() && this.gameData.phase === Phase.SetupAuction;
 

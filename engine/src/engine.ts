@@ -1,5 +1,6 @@
 import assert from "assert";
 import { isEqual, range, set, uniq } from "lodash";
+import semVerCompare from "semver-compare";
 import shuffleSeed from "shuffle-seed";
 import { version } from "../package.json";
 import { boardActions } from "./actions";
@@ -210,11 +211,11 @@ export default class Engine {
 
   isVersionOrLater(version: string) {
     if (!this.version) return false;
-    return this.version >= version;
+    return semVerCompare(this.version, version) !== -1;
   }
 
   isOnLegacyAuction() {
-    return this.options.auction && !this.isVersionOrLater("5.0.0");
+    return this.options.auction && !this.isVersionOrLater("4.7.0");
   }
 
   loadMoves(_moves: string[]) {
@@ -1165,7 +1166,7 @@ export default class Engine {
 
   [Phase.SetupFaction](move: string) {
     this.loadTurnMoves(move, { split: false, processFirst: true });
-    if (this.isVersionOrLater("5.0.0")) {
+    if (this.isVersionOrLater("4.7.0")) {
       this.moveToNextPlayerWithoutAChosenFaction();
       return;
     }
@@ -1367,7 +1368,7 @@ export default class Engine {
   [Command.ChooseFaction](player: PlayerEnum, faction: string) {
     assert(this.availableCommand.data.includes(faction), `${faction} is not in the available factions`);
     this.setup.push(faction as Faction);
-    if (this.isVersionOrLater("5.0.0")) {
+    if (!this.isOnLegacyAuction()) {
       // legacy: In older games bidding and choosing was seperate.
       this.executeBid(player, faction, 0);
     }
