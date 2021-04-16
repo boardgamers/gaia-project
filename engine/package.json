@@ -45,6 +45,7 @@
     "@types/node": "^14.0.14",
     "@types/seedrandom": "^2.4.27",
     "@types/semver-compare": "^1.0.1",
+    "@types/shuffle-seed": "^1.1.0",
     "@typescript-eslint/eslint-plugin": "^2.31.0",
     "@typescript-eslint/parser": "^2.31.0",
     "chai": "^4.1.2",

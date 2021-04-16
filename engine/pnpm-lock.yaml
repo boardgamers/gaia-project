@@ -7,6 +7,7 @@ specifiers:
   '@types/node': ^14.0.14
   '@types/seedrandom': ^2.4.27
   '@types/semver-compare': ^1.0.1
+  '@types/shuffle-seed': ^1.1.0
   '@typescript-eslint/eslint-plugin': ^2.31.0
   '@typescript-eslint/parser': ^2.31.0
   axios: ^0.21.1
@@ -42,6 +43,7 @@ devDependencies:
   '@types/node': 14.14.31
   '@types/seedrandom': 2.4.28
   '@types/semver-compare': 1.0.1
+  '@types/shuffle-seed': 1.1.0
   '@typescript-eslint/eslint-plugin': 2.34.0_4df26d2b9b7591cbda305132c8f490f3
   '@typescript-eslint/parser': 2.34.0_eslint@6.8.0+typescript@3.9.9
   chai: 4.3.0
@@ -108,6 +110,10 @@ packages:
 
   /@types/semver-compare/1.0.1:
     resolution: {integrity: sha512-wx2LQVvKlEkhXp/HoKIZ/aSL+TvfJdKco8i0xJS3aR877mg4qBHzNT6+B5a61vewZHo79EdZavskGnRXEC2H6A==}
+    dev: true
+
+  /@types/shuffle-seed/1.1.0:
+    resolution: {integrity: sha512-h6UW72XuE07bSDVTkNjMMapFj6ERJmvf+RajssOoEIVhuU53/+zyCSBjBrSpDJSzVYjGr4CYxW3ABrY0C6s8qA==}
     dev: true
 
   /@typescript-eslint/eslint-plugin/2.34.0_4df26d2b9b7591cbda305132c8f490f3:
