@@ -94,10 +94,15 @@ export default class PlayerCircle extends Vue {
     let player = this.player;
 
     if (phaseBeforeSetupBuilding(this.gameData)) {
-      if (this.gameData.options.auction && this.gameData.phase === Phase.SetupFaction) {
+      // legacy: this can be heavily simplified
+      const isInNewAuction =
+        this.gameData.options.auction &&
+        this.gameData.isVersionOrLater("5.0.0") &&
+        this.gameData.phase === Phase.SetupFaction;
+      const isInLegacyAuction = this.gameData.isOnLegacyAuction() && this.gameData.phase === Phase.SetupAuction;
+
+      if (isInLegacyAuction || isInNewAuction) {
         player = this.gameData.players.find((pl) => pl.faction === this.gameData.setup[this.index]);
-      } else {
-        return "";
       }
     }
 
