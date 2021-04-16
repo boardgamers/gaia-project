@@ -6,7 +6,7 @@ import launch from "./launcher";
 function launchSelfContained(selector = "#app", debug = true) {
   const emitter = launch(selector, debug ? Wrapper : Game);
 
-  let engine = new Engine(["init 3 12"], {auction: "advanced"});
+  let engine = new Engine(["init 3 12"]);
   engine.generateAvailableCommandsIfNeeded();
 
   const unsub = emitter.store.subscribeAction(({ payload, type }) => {
