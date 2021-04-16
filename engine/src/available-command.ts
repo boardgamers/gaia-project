@@ -98,6 +98,8 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
       return [{ name: Command.RotateSectors, player }];
     case Phase.SetupFaction:
       return chooseFactionOrBid(engine, player);
+    case Phase.SetupAuction:
+      return possibleBids(engine, player);
     case Phase.SetupBuilding: {
       const planet = engine.player(player).planet;
       const buildings = [];
@@ -787,6 +789,9 @@ function chooseFactionOrBid(engine: Engine, player: Player) {
       engine.setup.map((f) => oppositeFaction(f))
     ),
   };
+  if (engine.isOnLegacyAuction()) {
+    return [chooseFaction];
+  }
   if (engine.options.auction) {
     return [...possibleBids(engine, player), chooseFaction];
   }

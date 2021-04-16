@@ -191,9 +191,12 @@ export default class Engine {
   // Tells the UI if the new move should be on the same line or not
   newTurn = true;
 
-  constructor(moves: string[] = [], options: EngineOptions = {}) {
+  constructor(moves: string[] = [], options: EngineOptions = {}, engineVersion?: string) {
     this.options = options;
     this.sanitizeOptions();
+    if (engineVersion) {
+      this.version = engineVersion;
+    }
     this.loadMoves(moves);
   }
 
@@ -203,6 +206,15 @@ export default class Engine {
     //   this.options.map.sectors = get(this.options, "map.map");
     //   set(this.options, "map.map", undefined);
     // }
+  }
+
+  isVersionOrLater(version: string) {
+    if (!this.version) return false;
+    return this.version >= version;
+  }
+
+  isOnLegacyAuction() {
+    return this.options.auction && !this.isVersionOrLater("5.0.0");
   }
 
   loadMoves(_moves: string[]) {
@@ -890,6 +902,13 @@ export default class Engine {
     this.moveToNextPlayer(this.turnOrder, { loop: false });
   }
 
+  beginSetupAuctionPhase() {
+    // legacy: used for old auctions.
+    this.changePhase(Phase.SetupAuction);
+    this.turnOrder = this.players.map((pl) => pl.player as PlayerEnum);
+    this.moveToNextPlayer(this.turnOrder, { loop: false });
+  }
+
   endSetupFactionPhase() {
     for (const pl of this.players) {
       if (pl.faction) {
@@ -1146,6 +1165,18 @@ export default class Engine {
 
   [Phase.SetupFaction](move: string) {
     this.loadTurnMoves(move, { split: false, processFirst: true });
+    if (this.isOnLegacyAuction()) {
+      // legacy: finish selecting all factions before bidding.
+      if (!this.moveToNextPlayer(this.turnOrder, { loop: false })) {
+        this.beginSetupAuctionPhase();
+      }
+      return;
+    }
+    this.moveToNextPlayerWithoutAChosenFaction();
+  }
+
+  [Phase.SetupAuction](move: string) {
+    this.loadTurnMoves(move, { processFirst: true });
     this.moveToNextPlayerWithoutAChosenFaction();
   }
 
@@ -1332,7 +1363,10 @@ export default class Engine {
   [Command.ChooseFaction](player: PlayerEnum, faction: string) {
     assert(this.availableCommand.data.includes(faction), `${faction} is not in the available factions`);
     this.setup.push(faction as Faction);
-    this.executeBid(player, faction, 0);
+    if (this.isVersionOrLater("5.0.0")) {
+      // legacy: In older games bidding and choosing was seperate.
+      this.executeBid(player, faction, 0);
+    }
   }
 
   [Command.Bid](player: PlayerEnum, faction: string, bid: number) {
