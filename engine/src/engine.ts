@@ -61,6 +61,10 @@ export interface EngineOptions {
   layout?: "standard" | "balanced" | "xshape";
 }
 
+export type LogEntryChanges = {
+  [source in EventSource]?: { [resource in Resource]?: number };
+};
+
 /**
  * Example:
  *
@@ -76,9 +80,7 @@ export interface EngineOptions {
 export interface LogEntry {
   move?: number;
   player?: PlayerEnum;
-  changes?: {
-    [source in EventSource]?: { [resource in Resource]?: number };
-  };
+  changes?: LogEntryChanges;
   // For round changes
   round?: number;
   // For phase change

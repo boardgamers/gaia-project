@@ -1,6 +1,15 @@
-import Engine, { AdvTechTilePos, Faction, LogEntry, TechTilePos } from "@gaia-project/engine";
+import Engine, {
+  AdvTechTilePos,
+  Command,
+  Faction,
+  LogEntry,
+  LogEntryChanges,
+  Phase,
+  PlayerEnum,
+  TechTilePos,
+} from "@gaia-project/engine";
 import { factionLogColors, factionLogTextColors, lightFactionLogColors } from "../graphics/utils";
-import { ownTurn } from "../logic/recent";
+import { ownTurn, parseCommands } from "../logic/recent";
 import { boosterNames } from "./boosters";
 import { advancedTechTileNames, baseTechTileNames } from "./tech-tiles";
 
@@ -46,7 +55,7 @@ type Change = { source: string; changes: string };
 
 export type HistoryEntry = {
   move?: string;
-  entry: LogEntry;
+  phase?: Phase;
   changes: Change[];
   round: number;
   turn: number;
@@ -54,59 +63,77 @@ export type HistoryEntry = {
   textColor: string;
 };
 
-function makeChanges(entry: LogEntry, data: Engine) {
-  const changes: Change[] =
-    entry.changes == null
-      ? []
-      : Object.entries(entry.changes).flatMap(([source, changes]) => {
-          const changeString =
-            changes == null
-              ? ""
-              : Object.keys(changes)
-                  .map((key) => `${changes[key]}${key}`)
-                  .join(", ");
+function makeChanges(data: Engine, entryChanges?: LogEntryChanges) {
+  return entryChanges == null
+    ? []
+    : Object.entries(entryChanges).flatMap(([source, changes]) => {
+        const changeString =
+          changes == null
+            ? ""
+            : Object.keys(changes)
+                .map((key) => `${changes[key]}${key}`)
+                .join(", ");
 
-          if (source === "undefined") {
-            return [{ source: "&nbsp;", changes: changeString }];
-          }
+        if (source === "undefined") {
+          return [{ source: "&nbsp;", changes: changeString }];
+        }
 
-          return replaceChange(data, source).map((s, i) => ({ source: s, changes: i == 0 ? changeString : "&nbsp;" }));
-        });
-  return changes;
+        return replaceChange(data, source).map((s, i) => ({ source: s, changes: i == 0 ? changeString : "&nbsp;" }));
+      });
 }
 
+type HistoryState = {
+  round: number;
+  phase: Phase;
+  turn: number;
+  turnFactions: string[];
+};
+
 function makeEntry(
-  move: string,
-  entry: LogEntry,
   data: Engine,
-  turnFactions: Faction[],
-  turn: number,
-  round: number
+  state: HistoryState,
+  newPhase?: Phase,
+  move?: string,
+  player?: PlayerEnum,
+  changes?: LogEntryChanges
 ): HistoryEntry {
   let faction: Faction = null;
+  let turnFaction: string = null;
   let own = false;
-  if (entry.player != null) {
-    faction = data.players[entry.player].faction;
-  } else if (move != null) {
+  if (move != null) {
     const command = move.split(" ", 3);
-    faction = command[0] as Faction;
+    if (command[1] == Command.ChooseFaction) {
+      faction = command[2] as Faction;
+      turnFaction = command[0];
+    } else if (command[1] == Command.Bid) {
+      turnFaction = command[0];
+    } else {
+      faction = command[0] as Faction;
+      turnFaction = faction;
+    }
     own = ownTurn(move);
+  } else {
+    if (player != null) {
+      faction = data.players[player].faction;
+      turnFaction = faction;
+    }
+    move = faction;
   }
   const color = faction == null ? "white" : own ? factionLogColors[faction] : lightFactionLogColors[faction];
   const textColor = faction == null || !own ? "var(--res-power)" : factionLogTextColors[faction];
-  if (own && faction != null) {
-    if (turnFactions.includes(faction)) {
-      turn++;
-      turnFactions = [];
+  if (own && turnFaction != null) {
+    if (state.turnFactions.includes(turnFaction)) {
+      state.turn++;
+      state.turnFactions = [];
     }
-    turnFactions.push(faction);
+    state.turnFactions.push(turnFaction);
   }
   return {
     move: move,
-    round: round,
-    turn: turn,
-    entry: entry,
-    changes: makeChanges(entry, data),
+    phase: newPhase,
+    round: state.round,
+    turn: state.turn,
+    changes: makeChanges(data, changes),
     color: color,
     textColor: textColor,
   };
@@ -116,24 +143,36 @@ export function makeHistory(data: Engine, offset: number, currentMove: string): 
   const advancedLog = data.advancedLog;
 
   const ret = [];
-  let round = 0;
-  let turn = 1;
-  let turnFactions: Faction[] = [];
+  const state: HistoryState = {
+    round: 0,
+    phase: Phase.BeginGame,
+    turn: 0,
+    turnFactions: [],
+  };
   let advancedLogIndex = 0;
   let nextLogEntry = advancedLog[advancedLogIndex];
+
+  const newPhase = (newPhase: Phase, newTurn: number) => {
+    state.phase = newPhase;
+    state.turn = newTurn;
+    state.turnFactions = [];
+  };
 
   const bumpLog = () => {
     advancedLogIndex += 1;
     nextLogEntry = advancedLog[advancedLogIndex];
     if (nextLogEntry?.round) {
-      round = nextLogEntry.round;
-      turn = 1;
-      turnFactions = [];
+      state.round = nextLogEntry.round;
+      newPhase(Phase.RoundStart, 0);
+    } else if (nextLogEntry?.phase) {
+      newPhase(nextLogEntry?.phase, 0);
     }
   };
 
-  const newEntry = (move: string = null, entry: LogEntry = nextLogEntry): HistoryEntry =>
-    makeEntry(move, entry, data, turnFactions, turn, round);
+  const newEntry = (move: string = null, entry: LogEntry = nextLogEntry): HistoryEntry => {
+    const newPhase = entry.round ? Phase.RoundStart : entry.phase;
+    return makeEntry(data, state, newPhase, move, entry.player, entry.changes);
+  };
 
   function addEntry(entry: HistoryEntry) {
     if (advancedLogIndex > offset) {
@@ -142,6 +181,15 @@ export function makeHistory(data: Engine, offset: number, currentMove: string): 
   }
 
   data.moveHistory.forEach((move, i) => {
+    if (state.phase == Phase.RoundGaia) {
+      const commands = parseCommands(move);
+      if (commands.some((c) => c.command != Command.Spend)) {
+        newPhase(Phase.RoundMove, 1);
+        addEntry(makeEntry(data, state, Phase.RoundMove));
+        bumpLog();
+      }
+    }
+
     while (nextLogEntry && (nextLogEntry.move === undefined || nextLogEntry.move < i)) {
       if (nextLogEntry.player === undefined || !!nextLogEntry.changes) {
         addEntry(newEntry());
@@ -150,8 +198,7 @@ export function makeHistory(data: Engine, offset: number, currentMove: string): 
     }
     const entry = newEntry(replaceMove(data, move), {} as LogEntry);
     if (nextLogEntry && nextLogEntry.move === i) {
-      entry.entry = nextLogEntry;
-      entry.changes = makeChanges(nextLogEntry, data);
+      entry.changes = makeChanges(data, nextLogEntry.changes);
       bumpLog();
     }
     addEntry(entry);

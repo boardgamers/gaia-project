@@ -171,6 +171,9 @@ const gaiaViewer = {
       // don't check for state.preferences.highlightRecentActions, this is also used in advanced log
       const data = state.data;
       const player = state.player?.index ?? data.currentPlayer;
+      if (!player) {
+        return { index: -1, moves: [] };
+      }
       return recentMoves(player, data.advancedLog, data.moveHistory);
     },
     currentRoundCommands: (state: State): CommandObject[] => {
