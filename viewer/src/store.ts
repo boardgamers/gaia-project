@@ -135,7 +135,10 @@ const gaiaViewer = {
     },
 
     preferences(state: State, preferences: { [key in Preference]: boolean }) {
-      state.preferences = preferences;
+      state.preferences = {
+        ...state.preferences,
+        ...preferences,
+      };
     },
 
     player(state: State, data: { index?: number }) {
