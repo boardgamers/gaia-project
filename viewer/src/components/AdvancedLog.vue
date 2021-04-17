@@ -22,11 +22,12 @@
           :style="`background-color: ${event.color}; color: ${event.textColor}`"
         >
           <td>{{ event.round }}.{{ event.turn }}</td>
-          <td v-if="event.entry.round" class="major-event">Round {{ event.entry.round }}</td>
-          <td v-else-if="event.entry.phase === 'roundIncome'" class="phase-change">Income phase</td>
-          <td v-else-if="event.entry.phase === 'roundGaia'" class="phase-change">Gaia phase</td>
-          <td v-else-if="event.entry.phase === 'endGame'" class="phase-change">End scoring</td>
-          <td v-else>{{ event.move || gameData.players[event.entry.player].faction }}</td>
+          <td v-if="event.phase === 'roundStart'" class="major-event">Round {{ event.round }}</td>
+          <td v-else-if="event.phase === 'roundIncome'" class="phase-change">Income phase</td>
+          <td v-else-if="event.phase === 'roundGaia'" class="phase-change">Gaia phase</td>
+          <td v-else-if="event.phase === 'roundMove'" class="phase-change">Move phase</td>
+          <td v-else-if="event.phase === 'endGame'" class="phase-change">End scoring</td>
+          <td v-else>{{ event.move }}</td>
           <td style="width: 1px; white-space: nowrap">
             <div v-for="(change, i) in event.changes" v-html="change.source" :key="i" />
           </td>
@@ -77,6 +78,9 @@ export default class AdvancedLog extends Vue {
 
   get history(): HistoryEntry[] {
     const offset = this.scope == "recent" ? this.$store.getters["gaiaViewer/recentMoves"].index : 0;
+    if (offset < 0) {
+      return []; //no player active
+    }
 
     return makeHistory(this.gameData, offset, this.currentMove);
   }

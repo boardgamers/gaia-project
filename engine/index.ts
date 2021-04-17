@@ -15,7 +15,7 @@ import federations from "./src/tiles/federations";
 
 export { boardActions } from "./src/actions";
 export { canResearchField, canTakeAdvancedTechTile } from "./src/available-command";
-export { EngineOptions, LogEntry } from "./src/engine";
+export { EngineOptions, LogEntry, LogEntryChanges } from "./src/engine";
 export {
   AdvTechTile,
   AdvTechTilePos,
