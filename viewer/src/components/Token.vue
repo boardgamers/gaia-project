@@ -29,7 +29,8 @@ g .player-token {
 }
 
 g.warn .player-token {
-  animation: warn 10s linear infinite;
+  /* apparently really slow on some browsers - safari? */
+  // animation: warn 10s linear infinite;
   stroke-width: 5;
   stroke-dasharray: 10 4;
 }
