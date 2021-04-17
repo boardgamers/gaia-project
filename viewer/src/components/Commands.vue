@@ -20,20 +20,6 @@
           :key="i"
         ></MoveButton>
       </div>
-      <div v-else-if="chooseFaction">
-        <MoveButton
-          v-for="faction in command.data"
-          :button="{
-            command: `${command.name} ${faction}`,
-            modal: tooltip(faction),
-            title: factions[faction].name,
-            label: `${factions[faction].name} <i class='planet ${factions[faction].planet}'></i>`,
-          }"
-          @trigger="handleCommand"
-          :key="faction"
-        />
-        <MoveButton :button="randomFactionButton" @cancel="updateRandomFaction" @trigger="handleCommand" />
-      </div>
       <div v-else>
         <MoveButton
           v-for="(button, i) in buttons"
@@ -46,6 +32,20 @@
         >
           {{ button.label || button.command }}
         </MoveButton>
+      </div>
+      <div v-if="isChoosingFaction">
+        <MoveButton
+          v-for="faction in factionsToChoose.data"
+          :button="{
+            command: `${factionsToChoose.name} ${faction}`,
+            modal: tooltip(faction),
+            title: factions[faction].name,
+            label: `${factions[faction].name} <i class='planet ${factions[faction].planet}'></i>`,
+          }"
+          @trigger="handleCommand"
+          :key="faction"
+        />
+        <MoveButton :button="randomFactionButton" @cancel="updateRandomFaction" @trigger="handleCommand" />
       </div>
     </div>
   </div>
@@ -92,7 +92,7 @@ import { factionDesc } from "../data/factions";
     },
     randomFactionButton() {
       this.updater = this.updater + 1;
-      const command = this.command;
+      const command = this.factionsToChoose;
       const faction = command.data[Math.floor(Math.random() * command.data.length)];
 
       return {
@@ -132,8 +132,9 @@ export default class Commands extends Vue {
     const entry = logEntries[logEntries.length - 1];
     if (entry != null && entry.changes != null && entry.move != null) {
       if (this.gameData.moveHistory[entry.move] == null) {
-        const values = Object.values(entry.changes)
-          .flatMap(e => Object.keys(e).map(k => new Reward(e[k], k as Resource)));
+        const values = Object.values(entry.changes).flatMap((e) =>
+          Object.keys(e).map((k) => new Reward(e[k], k as Resource))
+        );
         return ` (${Reward.merge(values).toString()})`;
       }
     }
@@ -171,6 +172,10 @@ export default class Commands extends Vue {
     return this.availableCommands ? this.availableCommands[0] : null;
   }
 
+  get factionsToChoose(): AvailableCommand {
+    return this.availableCommands.find((c) => c.name === Command.ChooseFaction) ?? null;
+  }
+
   get player(): string {
     if (this.engine.players[this.command.player].faction) {
       return factions[this.engine.players[this.command.player].faction].name;
@@ -193,8 +198,8 @@ export default class Commands extends Vue {
     return this.command?.name;
   }
 
-  get chooseFaction() {
-    return this.commandName === Command.ChooseFaction;
+  get isChoosingFaction() {
+    return !!this.factionsToChoose;
   }
 
   get titles() {
@@ -267,7 +272,7 @@ export default class Commands extends Vue {
 
   get buttons(): ButtonData[] {
     const ret: ButtonData[] = [];
-    for (const command of this.availableCommands) {
+    for (const command of this.availableCommands.filter((c) => c.name != Command.ChooseFaction)) {
       switch (command.name) {
         case Command.RotateSectors: {
           ret.push({

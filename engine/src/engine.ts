@@ -1,5 +1,6 @@
 import assert from "assert";
 import { isEqual, range, set, uniq } from "lodash";
+import semVerCompare from "semver-compare";
 import shuffleSeed from "shuffle-seed";
 import { version } from "../package.json";
 import { boardActions } from "./actions";
@@ -191,9 +192,12 @@ export default class Engine {
   // Tells the UI if the new move should be on the same line or not
   newTurn = true;
 
-  constructor(moves: string[] = [], options: EngineOptions = {}) {
+  constructor(moves: string[] = [], options: EngineOptions = {}, engineVersion?: string) {
     this.options = options;
     this.sanitizeOptions();
+    if (engineVersion) {
+      this.version = engineVersion;
+    }
     this.loadMoves(moves);
   }
 
@@ -203,6 +207,15 @@ export default class Engine {
     //   this.options.map.sectors = get(this.options, "map.map");
     //   set(this.options, "map.map", undefined);
     // }
+  }
+
+  isVersionOrLater(version: string) {
+    if (!this.version) return false;
+    return semVerCompare(this.version, version) !== -1;
+  }
+
+  isOnLegacyAuction() {
+    return this.options.auction && !this.isVersionOrLater("4.7.0");
   }
 
   loadMoves(_moves: string[]) {
@@ -891,13 +904,13 @@ export default class Engine {
   }
 
   beginSetupAuctionPhase() {
+    // legacy: used for old auctions.
     this.changePhase(Phase.SetupAuction);
     this.turnOrder = this.players.map((pl) => pl.player as PlayerEnum);
-
     this.moveToNextPlayer(this.turnOrder, { loop: false });
   }
 
-  endSetupAuctionPhase() {
+  endSetupFactionPhase() {
     for (const pl of this.players) {
       if (pl.faction) {
         pl.loadFaction(pl.faction, this.expansions);
@@ -1153,20 +1166,26 @@ export default class Engine {
 
   [Phase.SetupFaction](move: string) {
     this.loadTurnMoves(move, { split: false, processFirst: true });
-
+    if (this.isVersionOrLater("4.7.0")) {
+      this.moveToNextPlayerWithoutAChosenFaction();
+      return;
+    }
+    // legacy: finish selecting all factions before bidding.
     if (!this.moveToNextPlayer(this.turnOrder, { loop: false })) {
       if (this.options.auction) {
         this.beginSetupAuctionPhase();
       } else {
-        this.endSetupAuctionPhase();
+        this.endSetupFactionPhase();
       }
-      return;
     }
   }
 
   [Phase.SetupAuction](move: string) {
     this.loadTurnMoves(move, { processFirst: true });
+    this.moveToNextPlayerWithoutAChosenFaction();
+  }
 
+  private moveToNextPlayerWithoutAChosenFaction() {
     const player = [...range(this.currentPlayer + 1, this.players.length), ...range(0, this.currentPlayer)].find(
       (player) => !this.players.some((pl) => pl.player === player && pl.faction)
     );
@@ -1174,7 +1193,7 @@ export default class Engine {
     if (player !== undefined) {
       this.currentPlayer = player;
     } else {
-      this.endSetupAuctionPhase();
+      this.endSetupFactionPhase();
     }
   }
 
@@ -1349,6 +1368,10 @@ export default class Engine {
   [Command.ChooseFaction](player: PlayerEnum, faction: string) {
     assert(this.availableCommand.data.includes(faction), `${faction} is not in the available factions`);
     this.setup.push(faction as Faction);
+    if (!this.isOnLegacyAuction()) {
+      // legacy: In older games bidding and choosing was seperate.
+      this.executeBid(player, faction, 0);
+    }
   }
 
   [Command.Bid](player: PlayerEnum, faction: string, bid: number) {
@@ -1356,7 +1379,10 @@ export default class Engine {
     const bidAC = bidsAC.find((b) => b.faction === faction);
     assert(bidAC.bid.includes(+bid), "You have to bid the right amount");
     assert(bidAC, `${faction} is not in the available factions`);
+    this.executeBid(player, faction, bid);
+  }
 
+  private executeBid(player: PlayerEnum, faction: string, bid: number) {
     const previous = this.players.find((s) => s.faction == faction);
     // remove faction from previous owner
     if (previous) {

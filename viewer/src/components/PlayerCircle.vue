@@ -11,7 +11,7 @@
 import { Component, Prop, Vue } from "vue-property-decorator";
 import Engine, { factions, Phase, Planet, Player, PlayerEnum } from "@gaia-project/engine";
 import { phaseBeforeSetupBuilding } from "../logic/utils";
-import {factionPlanet} from "@gaia-project/engine/src/factions";
+import { factionPlanet } from "@gaia-project/engine/src/factions";
 
 @Component
 export default class PlayerCircle extends Vue {
@@ -60,8 +60,8 @@ export default class PlayerCircle extends Vue {
       return Planet.Lost;
     }
 
-    if (phaseBeforeSetupBuilding(this.gameData) && this.gameData.setup[this.index]) {
-      return factionPlanet(this.gameData.setup[this.index]);
+    if (phaseBeforeSetupBuilding(this.gameData)) {
+      return this.gameData.setup[this.index] ? factionPlanet(this.gameData.setup[this.index]) : Planet.Lost;
     }
 
     if (this.player?.faction) {
@@ -76,8 +76,8 @@ export default class PlayerCircle extends Vue {
       return "A";
     }
 
-    if (phaseBeforeSetupBuilding(this.gameData) && this.gameData.setup[this.index]) {
-      return this.gameData.setup[this.index][0].toUpperCase();
+    if (phaseBeforeSetupBuilding(this.gameData)) {
+      return this.gameData.setup[this.index] ? this.gameData.setup[this.index][0].toUpperCase() : "?";
     }
 
     if (this.player?.faction) {
@@ -94,10 +94,15 @@ export default class PlayerCircle extends Vue {
     let player = this.player;
 
     if (phaseBeforeSetupBuilding(this.gameData)) {
-      if (this.gameData.phase === Phase.SetupAuction) {
+      // legacy: this can be heavily simplified
+      const isInNewAuction =
+        this.gameData.options.auction &&
+        !this.gameData.isOnLegacyAuction() &&
+        this.gameData.phase === Phase.SetupFaction;
+      const isInLegacyAuction = this.gameData.isOnLegacyAuction() && this.gameData.phase === Phase.SetupAuction;
+
+      if (isInLegacyAuction || isInNewAuction) {
         player = this.gameData.players.find((pl) => pl.faction === this.gameData.setup[this.index]);
-      } else {
-        return "";
       }
     }
 

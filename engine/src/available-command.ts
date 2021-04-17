@@ -97,17 +97,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
     case Phase.SetupBoard:
       return [{ name: Command.RotateSectors, player }];
     case Phase.SetupFaction:
-      return [
-        {
-          name: Command.ChooseFaction,
-          player,
-          data: difference(
-            Object.values(Faction),
-            engine.setup.map((f) => f),
-            engine.setup.map((f) => oppositeFaction(f))
-          ),
-        },
-      ];
+      return chooseFactionOrBid(engine, player);
     case Phase.SetupAuction:
       return possibleBids(engine, player);
     case Phase.SetupBuilding: {
@@ -789,7 +779,26 @@ export function possiblePISwaps(engine: Engine, player: Player) {
   return commands;
 }
 
-export function possibleBids(engine: Engine, player: Player) {
+function chooseFactionOrBid(engine: Engine, player: Player) {
+  const chooseFaction = {
+    name: Command.ChooseFaction,
+    player,
+    data: difference(
+      Object.values(Faction),
+      engine.setup.map((f) => f),
+      engine.setup.map((f) => oppositeFaction(f))
+    ),
+  };
+  if (engine.isOnLegacyAuction()) {
+    return [chooseFaction];
+  }
+  if (engine.options.auction) {
+    return [...possibleBids(engine, player), chooseFaction];
+  }
+  return [chooseFaction];
+}
+
+function possibleBids(engine: Engine, player: Player) {
   const commands = [];
   const bids = [];
 
