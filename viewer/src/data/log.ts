@@ -9,7 +9,7 @@ import Engine, {
   TechTilePos,
 } from "@gaia-project/engine";
 import { factionLogColors, factionLogTextColors, lightFactionLogColors } from "../graphics/utils";
-import { ownTurn, parsedMove, ParsedMove } from "../logic/recent";
+import { MovesSlice, ownTurn, parsedMove, ParsedMove } from "../logic/recent";
 import { boosterNames } from "./boosters";
 import { advancedTechTileNames, baseTechTileNames } from "./tech-tiles";
 
@@ -85,6 +85,8 @@ function makeChanges(data: Engine, entryChanges?: LogEntryChanges) {
       });
 }
 
+export type LogScope = "all" | "recent";
+
 type HistoryState = {
   round: number;
   phase: Phase;
@@ -151,9 +153,10 @@ function makeEntry(
   return res;
 }
 
-export function makeHistory(data: Engine, moves: ParsedMove[], currentMove?: string): HistoryEntry[] {
+export function makeHistory(data: Engine, recent: MovesSlice, scope: LogScope, currentMove?: string): HistoryEntry[] {
   const advancedLog = data.advancedLog;
 
+  const offset = scope == "recent" ? recent.index : 0;
   const ret = [];
   const state: HistoryState = {
     round: 0,
@@ -187,10 +190,12 @@ export function makeHistory(data: Engine, moves: ParsedMove[], currentMove?: str
   };
 
   function addEntry(entry: HistoryEntry) {
-    ret.push(entry);
+    if (advancedLogIndex >= offset) {
+      ret.push(entry);
+    }
   }
 
-  moves.forEach((parsedMove, i) => {
+  recent.allMoves.forEach((parsedMove, i) => {
     const commands = parsedMove.commands;
     if (state.phase == Phase.RoundGaia) {
       if (commands.some((c) => c.command != Command.Spend)) {

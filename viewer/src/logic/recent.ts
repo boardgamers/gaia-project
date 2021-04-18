@@ -5,6 +5,8 @@ export type CommandObject = { faction: Faction; command: Command; args: string[]
 
 export type ParsedMove = { move: string; commands: CommandObject[] };
 
+export type MovesSlice = { index: number; moves: ParsedMove[]; allMoves: ParsedMove[] };
+
 export function parseCommands(move: string): CommandObject[] {
   move = move.trim();
   const factionIndex = move.indexOf(" ");
@@ -50,7 +52,7 @@ export function parseMoves(moveHistory: string[]): ParsedMove[] {
   return moveHistory.map((move) => parsedMove(move));
 }
 
-export function recentMoves(player: PlayerEnum, logEntries: LogEntry[], moveHistory: string[]): ParsedMove[] {
+export function recentMoves(player: PlayerEnum, logEntries: LogEntry[], moveHistory: string[]): MovesSlice {
   let last = logEntries.length;
   let lastMove = moveHistory.length;
   while (last > 0 && logEntries[last - 1].player === player) {
@@ -68,7 +70,9 @@ export function recentMoves(player: PlayerEnum, logEntries: LogEntry[], moveHist
     (logItem) => logItem.player === player && logItem.move && ownTurn(moves[logItem.move])
   ) as LogEntry | undefined;
   const firstMove = firstEntry?.move;
-  return firstMove != null ? moves.slice(firstMove, lastMove) : [];
+  return firstMove
+    ? { index: logEntries.indexOf(firstEntry), moves: moves.slice(firstMove, lastMove), allMoves: moves }
+    : { index: 0, moves: [], allMoves: moves };
 }
 
 export function roundMoves(logEntries: LogEntry[], moveHistory: string[]) {
