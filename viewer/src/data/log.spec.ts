@@ -1,8 +1,9 @@
 import Engine, { AdvTechTile, AdvTechTilePos, TechTile, TechTilePos } from "@gaia-project/engine";
+import { Player } from "@gaia-project/engine/src/enums";
 import { expect } from "chai";
-import { parsedMove, parseMoves } from "../logic/recent";
+import { parsedMove, recentMoves } from "../logic/recent";
 import { runJsonTests } from "../logic/utils";
-import { makeHistory, replaceChange, replaceMove } from "./log";
+import { LogScope, makeHistory, replaceChange, replaceMove } from "./log";
 
 describe("Advanced log details", () => {
   const data = new Engine();
@@ -39,8 +40,9 @@ describe("Advanced log details", () => {
   describe("history", () => {
     runJsonTests({
       baseDir: "src/data/logTests",
-      subTests: () => ["log"],
-      createActualOutput: (data) => makeHistory(data, parseMoves(data.moveHistory)),
+      subTests: () => ["all", "recent"],
+      createActualOutput: (data, scope) =>
+        makeHistory(data, recentMoves(Player.Player1, data.advancedLog, data.moveHistory), scope as LogScope),
     });
   });
 });

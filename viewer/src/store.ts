@@ -15,9 +15,10 @@ import Vuex, { Store } from "vuex";
 import { ButtonData, GameContext } from "./data";
 import {
   CommandObject,
+  MovesSlice,
   movesToHexes,
   parseCommands,
-  ParsedMove,
+  parseMoves,
   recentMoves,
   researchClasses,
   roundMoves,
@@ -167,12 +168,12 @@ const gaiaViewer = {
     loadFromJSON(context: any, data: any) {},
   },
   getters: {
-    recentMoves: (state: State): ParsedMove[] => {
+    recentMoves: (state: State): MovesSlice => {
       // don't check for state.preferences.highlightRecentActions, this is also used in advanced log
       const data = state.data;
       const player = state.player?.index ?? data.currentPlayer;
       if (player == undefined) {
-        return [];
+        return { index: 0, moves: [], allMoves: parseMoves(data.moveHistory) };
       }
       return recentMoves(player, data.advancedLog, data.moveHistory);
     },
@@ -185,7 +186,7 @@ const gaiaViewer = {
     },
     recentCommands: (state: State, getters): CommandObject[] => {
       if (state.preferences.highlightRecentActions) {
-        return getters.recentMoves.flatMap((m) => m.commands);
+        return getters.recentMoves.moves.flatMap((m) => m.commands);
       }
       return [];
     },

@@ -92,7 +92,7 @@ describe("Moves", () => {
     for (const test of tests) {
       it(test.name, () => {
         const moves = recentMoves(PlayerEnum.Player2, test.give.logEntries, test.give.moveHistory);
-        expect(moves).to.deep.equal(
+        expect(moves.moves).to.deep.equal(
           test.want.map((m) => parsedMove(m)),
           JSON.stringify(moves)
         );

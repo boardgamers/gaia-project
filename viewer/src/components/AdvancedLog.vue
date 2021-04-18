@@ -48,20 +48,16 @@ import Vue from "vue";
 import {Component, Prop} from "vue-property-decorator";
 import Engine from "@gaia-project/engine";
 import {LogPlacement} from "../data";
-import {HistoryEntry, makeHistory} from "../data/log";
-import {parseMoves} from "../logic/recent";
-
-type ShowLog = "all" | "recent";
-
+import {HistoryEntry, LogScope, makeHistory} from "../data/log";
 
 @Component
 export default class AdvancedLog extends Vue {
-  private scope: ShowLog = "recent"
+  private scope: LogScope = "recent"
 
   @Prop()
   currentMove?: string;
 
-  setScope(scope: ShowLog) {
+  setScope(scope: LogScope) {
     this.scope = scope;
   }
 
@@ -78,11 +74,7 @@ export default class AdvancedLog extends Vue {
   }
 
   get history(): HistoryEntry[] {
-    if (this.scope == "recent") {
-      return makeHistory(this.gameData, this.$store.getters["gaiaViewer/recentMoves"], this.currentMove);
-    } else {
-      return makeHistory(this.gameData, parseMoves(this.gameData.moveHistory), this.currentMove);
-    }
+    return makeHistory(this.gameData, this.$store.getters["gaiaViewer/recentMoves"], this.scope, this.currentMove);
   }
 };
 </script>

@@ -1,0 +1,138 @@
+[
+  {
+    "move": "geodens charge 1pw",
+    "round": 6,
+    "turn": 1,
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
+    "color": "#ffffbe",
+    "textColor": "var(--res-power)"
+  },
+  {
+    "move": "taklons spend 4pw for 1q. build m 7B4.",
+    "round": 6,
+    "turn": 1,
+    "changes": [
+      {
+        "source": "spend",
+        "changes": "-4pw, 1q"
+      },
+      {
+        "source": "build",
+        "changes": "-2c, -1o, -1q"
+      },
+      {
+        "source": "round6",
+        "changes": "4vp"
+      }
+    ],
+    "color": "#704100",
+    "textColor": "white"
+  },
+  {
+    "move": "lantids spend 3pw for 1o. up eco.",
+    "round": 6,
+    "turn": 1,
+    "changes": [
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      },
+      {
+        "source": "up",
+        "changes": "-4k"
+      },
+      {
+        "source": "eco",
+        "changes": "6c, 3o, 6pw"
+      }
+    ],
+    "color": "#2080f0",
+    "textColor": "black"
+  },
+  {
+    "move": "itars charge 1pw",
+    "round": 6,
+    "turn": 1,
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
+    "color": "#bebebe",
+    "textColor": "var(--res-power)"
+  },
+  {
+    "move": "taklons charge 1t,1pw",
+    "round": 6,
+    "turn": 1,
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1t, 1pw"
+      }
+    ],
+    "color": "#ffffbe",
+    "textColor": "var(--res-power)"
+  },
+  {
+    "move": "geodens build m 7B2.",
+    "round": 6,
+    "turn": 1,
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-2c, -1o, -1q"
+      },
+      {
+        "source": "round6",
+        "changes": "4vp"
+      }
+    ],
+    "color": "#FF9500",
+    "textColor": "black"
+  },
+  {
+    "move": "itars spend 4tg for tech. tech int (k for planet types). up int. spend 4tg for tech. tech adv-int (4 VP / ts). cover int. up sci",
+    "round": 6,
+    "turn": 1,
+    "changes": [
+      {
+        "source": "tech-int",
+        "changes": "4k"
+      },
+      {
+        "source": "(k for planet types)",
+        "changes": "&nbsp;"
+      },
+      {
+        "source": "int",
+        "changes": "2q"
+      },
+      {
+        "source": "adv-int",
+        "changes": "16vp"
+      },
+      {
+        "source": "(4 VP / ts)",
+        "changes": "&nbsp;"
+      }
+    ],
+    "color": "#000000",
+    "textColor": "white"
+  },
+  {
+    "move": null,
+    "round": 6,
+    "turn": 1,
+    "changes": [],
+    "color": "white",
+    "textColor": "var(--res-power)",
+    "phase": "roundMove"
+  }
+]
