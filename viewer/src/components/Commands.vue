@@ -191,7 +191,7 @@ export default class Commands extends Vue {
   }
 
   get init() {
-    return (!this.command && this.engine.moveHistory.length === 0) || this.command.name === Command.Init;
+    return (!this.command && this.engine.moveHistory.length === 0) || this.command?.name === Command.Init;
   }
 
   get commandName() {
