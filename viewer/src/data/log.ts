@@ -9,7 +9,7 @@ import Engine, {
   TechTilePos,
 } from "@gaia-project/engine";
 import { factionLogColors, factionLogTextColors, lightFactionLogColors } from "../graphics/utils";
-import { ownTurn, parseCommands } from "../logic/recent";
+import { ownTurn, parsedMove, ParsedMove } from "../logic/recent";
 import { boosterNames } from "./boosters";
 import { advancedTechTileNames, baseTechTileNames } from "./tech-tiles";
 
@@ -18,19 +18,22 @@ function replaceTech(data: Engine, pos: TechTilePos | AdvTechTilePos) {
   return pos.startsWith("adv") ? advancedTechTileNames[tile] : baseTechTileNames[tile].name;
 }
 
-export function replaceMove(data: Engine, move: string): string {
+export function replaceMove(data: Engine, move: ParsedMove): ParsedMove {
   function addDetails(s: string, details: string): string {
     return `${s} (${details})`;
   }
 
-  return move.replace(/\btech [a-z0-9-]+|booster[0-9]+/g, (match) => {
-    if (match.startsWith("booster")) {
-      return addDetails(match, boosterNames[match].name);
-    } else {
-      const pos = match.substr("tech ".length) as TechTilePos | AdvTechTilePos;
-      return addDetails(match, replaceTech(data, pos));
-    }
-  });
+  return {
+    commands: move.commands,
+    move: move.move.replace(/\btech [a-z0-9-]+|booster[0-9]+/g, (match) => {
+      if (match.startsWith("booster")) {
+        return addDetails(match, boosterNames[match].name);
+      } else {
+        const pos = match.substr("tech ".length) as TechTilePos | AdvTechTilePos;
+        return addDetails(match, replaceTech(data, pos));
+      }
+    }),
+  };
 }
 
 export function replaceChange(data: Engine, move: string): string[] {
@@ -93,25 +96,29 @@ function makeEntry(
   data: Engine,
   state: HistoryState,
   newPhase?: Phase,
-  move?: string,
+  parsedMove?: ParsedMove,
   player?: PlayerEnum,
   changes?: LogEntryChanges
 ): HistoryEntry {
   let faction: Faction = null;
   let turnFaction: string = null;
   let own = false;
-  if (move != null) {
-    const command = move.split(" ", 3);
-    if (command[1] == Command.ChooseFaction) {
-      faction = command[2] as Faction;
-      turnFaction = command[0];
-    } else if (command[1] == Command.Bid) {
-      turnFaction = command[0];
+  let move = parsedMove?.move;
+  if (parsedMove != null) {
+    const cmd = parsedMove.commands[0];
+    const command = cmd.command;
+    if ((cmd.faction as string) == Command.Init) {
+      // nothing
+    } else if (command == Command.ChooseFaction) {
+      faction = cmd.args[0] as Faction;
+      turnFaction = cmd.faction;
+    } else if (command == Command.Bid || command == Command.RotateSectors) {
+      turnFaction = cmd.faction;
     } else {
-      faction = command[0] as Faction;
+      faction = cmd.faction;
       turnFaction = faction;
     }
-    own = ownTurn(move);
+    own = ownTurn(parsedMove);
   } else {
     if (player != null) {
       faction = data.players[player].faction;
@@ -120,7 +127,7 @@ function makeEntry(
     move = faction;
   }
   const color = faction == null ? "white" : own ? factionLogColors[faction] : lightFactionLogColors[faction];
-  const textColor = faction == null || !own ? "var(--res-power)" : factionLogTextColors[faction];
+  const textColor = own ? (faction != null ? factionLogTextColors[faction] : "black") : "var(--res-power)";
   if (own && turnFaction != null) {
     if (state.turnFactions.includes(turnFaction)) {
       state.turn++;
@@ -128,18 +135,23 @@ function makeEntry(
     }
     state.turnFactions.push(turnFaction);
   }
-  return {
+  const res: HistoryEntry = {
     move: move,
-    phase: newPhase,
     round: state.round,
     turn: state.turn,
     changes: makeChanges(data, changes),
     color: color,
     textColor: textColor,
   };
+  if (newPhase != undefined) {
+    //to avoid confusing data in unit tests
+    res.phase = newPhase;
+  }
+
+  return res;
 }
 
-export function makeHistory(data: Engine, offset: number, currentMove: string): HistoryEntry[] {
+export function makeHistory(data: Engine, moves: ParsedMove[], currentMove?: string): HistoryEntry[] {
   const advancedLog = data.advancedLog;
 
   const ret = [];
@@ -169,24 +181,21 @@ export function makeHistory(data: Engine, offset: number, currentMove: string): 
     }
   };
 
-  const newEntry = (move: string = null, entry: LogEntry = nextLogEntry): HistoryEntry => {
+  const newEntry = (move: ParsedMove = null, entry: LogEntry = nextLogEntry): HistoryEntry => {
     const newPhase = entry.round ? Phase.RoundStart : entry.phase;
     return makeEntry(data, state, newPhase, move, entry.player, entry.changes);
   };
 
   function addEntry(entry: HistoryEntry) {
-    if (advancedLogIndex > offset) {
-      ret.push(entry);
-    }
+    ret.push(entry);
   }
 
-  data.moveHistory.forEach((move, i) => {
+  moves.forEach((parsedMove, i) => {
+    const commands = parsedMove.commands;
     if (state.phase == Phase.RoundGaia) {
-      const commands = parseCommands(move);
       if (commands.some((c) => c.command != Command.Spend)) {
         newPhase(Phase.RoundMove, 1);
         addEntry(makeEntry(data, state, Phase.RoundMove));
-        bumpLog();
       }
     }
 
@@ -196,7 +205,7 @@ export function makeHistory(data: Engine, offset: number, currentMove: string): 
       }
       bumpLog();
     }
-    const entry = newEntry(replaceMove(data, move), {} as LogEntry);
+    const entry = newEntry(replaceMove(data, parsedMove), {} as LogEntry);
     if (nextLogEntry && nextLogEntry.move === i) {
       entry.changes = makeChanges(data, nextLogEntry.changes);
       bumpLog();
@@ -211,7 +220,7 @@ export function makeHistory(data: Engine, offset: number, currentMove: string): 
   });
 
   if (nextLogEntry && currentMove) {
-    addEntry(newEntry(replaceMove(data, currentMove)));
+    addEntry(newEntry(replaceMove(data, parsedMove(currentMove))));
   }
 
   ret.reverse();
