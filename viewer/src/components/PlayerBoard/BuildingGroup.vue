@@ -72,27 +72,23 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import Building from "../Building.vue";
 import Resource from "../Resource.vue";
-import {
+import Engine, {
   Building as BuildingEnum,
   Command,
   Faction,
   FactionBoard,
   factionBoard,
-  Operator,
+  Operator, Player,
   Resource as ResourceEnum,
   Reward,
 } from "@gaia-project/engine";
 import { CommandObject, markBuilding } from "../../logic/recent";
+import {FactionVariant, FactionCustomization} from "@gaia-project/engine/src/engine";
 
 @Component({
   components: {
     Building,
     Resource,
-  },
-  watch: {
-    faction(newVal) {
-      this.board = factionBoard(newVal);
-    },
   },
 })
 export default class BuildingGroup extends Vue {
@@ -103,7 +99,7 @@ export default class BuildingGroup extends Vue {
   building: BuildingEnum;
 
   @Prop()
-  faction!: Faction;
+  player!: Player;
 
   @Prop()
   placed: number;
@@ -123,7 +119,11 @@ export default class BuildingGroup extends Vue {
   @Prop({ default: false })
   ac2: boolean;
 
-  board: FactionBoard = factionBoard(this.faction || Faction.Terrans);
+  board: FactionBoard = factionBoard(this.faction, this.player.factionVariant);
+
+  get faction() {
+    return this.player.faction;
+  }
 
   get buildingList() {
     return [0, 1, 2, 3, 4, 5, 6, 7].slice(0, this.nBuildings);
@@ -134,7 +134,7 @@ export default class BuildingGroup extends Vue {
   }
 
   tooltip(i: number) {
-    const b = this.board.buildings[this.building];
+    const b = this.player.board.buildings[this.building];
     const cost = this.discount
       ? b.cost.map((c) => `${c.count - this.discount}${c.type}`).join(", ")
       : b.cost.join(", ") || "~";
@@ -165,7 +165,7 @@ export default class BuildingGroup extends Vue {
 
   get factionIncome(): Reward[] {
     const income: Reward[] = [].concat(
-      ...this.board.income.filter((ev) => ev.operator === Operator.Income).map((ev) => ev.rewards)
+      ...this.player.board.income.filter((ev) => ev.operator === Operator.Income).map((ev) => ev.rewards)
     );
 
     return income.filter((rew) => this.resource.includes(rew.type));
@@ -228,7 +228,7 @@ export default class BuildingGroup extends Vue {
     }
 
     let incomeAdded = false;
-    const ret = this.board.buildings[building].income[i].map((ev) => {
+    const ret = this.player.board.buildings[building].income[i].map((ev) => {
       const rew = ev.rewards.toString();
       const special = ev.operator === Operator.Activate && (rew === "1q" || rew === "4c");
 

@@ -17,7 +17,7 @@
             :transform="player.faction !== 'bescods' ? 'translate(2.2, 10)' : 'translate(12, 10)'"
             :nBuildings="1"
             building="PI"
-            :faction="player.faction"
+            :player="player"
             :placed="playerData.buildings.PI"
             :resource="['pw', 't']"
           />
@@ -25,7 +25,7 @@
             :transform="player.faction === 'bescods' ? 'translate(2.2, 10)' : 'translate(12, 10)'"
             :nBuildings="2"
             building="ac1"
-            :faction="player.faction"
+            :player="player"
             :placed="0"
             :ac1="playerData.buildings.ac1"
             :ac2="playerData.buildings.ac2"
@@ -35,7 +35,7 @@
             transform="translate(0, 13)"
             :nBuildings="4"
             building="ts"
-            :faction="player.faction"
+            :player="player"
             :placed="playerData.buildings.ts"
             :resource="['c']"
           />
@@ -43,7 +43,7 @@
             transform="translate(11, 13)"
             :nBuildings="3"
             building="lab"
-            :faction="player.faction"
+            :player="player"
             :placed="playerData.buildings.lab"
             :resource="['k']"
           />
@@ -51,7 +51,7 @@
             transform="translate(0, 16)"
             :nBuildings="8"
             building="m"
-            :faction="player.faction"
+            :player="player"
             :placed="playerData.buildings.m"
             :resource="['o']"
           />
@@ -86,7 +86,7 @@
           :nBuildings="playerData.gaiaformers"
           building="gf"
           :gaia="playerData.gaiaformersInGaia"
-          :faction="player.faction"
+          :player="player"
           :placed="playerData.buildings.gf"
           :resource="[]"
           :discount="playerData ? playerData.gaiaFormingDiscount() : 0"
@@ -179,7 +179,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Command, factions, Planet, Player } from "@gaia-project/engine";
+import Engine, { Command, factions, Planet, Player } from "@gaia-project/engine";
 import { factionColor } from "../graphics/utils";
 import TechTile from "./TechTile.vue";
 import Booster from "./Booster.vue";
@@ -224,8 +224,12 @@ export default class PlayerInfo extends Vue {
     return "Player " + (this.player.player + 1);
   }
 
+  get gameData(): Engine {
+    return this.$store.state.gaiaViewer.data;
+  }
+
   get tooltip() {
-    return factionDesc(this.faction);
+    return factionDesc(this.faction, this.player.factionVariant);
   }
 
   get planet() {

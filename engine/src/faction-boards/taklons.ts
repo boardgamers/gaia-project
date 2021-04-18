@@ -1,6 +1,11 @@
 import { BrainstoneArea, Faction } from "../enums";
+import { FactionBoardVariants } from "./types";
 
-export default {
-  faction: Faction.Taklons,
-  brainstone: BrainstoneArea.Area1,
+const taklons: FactionBoardVariants = {
+  standard: {
+    faction: Faction.Taklons,
+    brainstone: BrainstoneArea.Area1,
+  },
 };
+
+export default taklons;

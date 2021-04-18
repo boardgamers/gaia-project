@@ -4,6 +4,7 @@ import { Grid, Hex } from "hexagrid";
 import { countBy, difference, merge, sum, uniq, uniqWith, zipWith } from "lodash";
 import spanningTree from "./algorithms/spanning-tree";
 import { stdBuildingValue } from "./buildings";
+import { FactionCustomization } from "./engine";
 import {
   AdvTechTile,
   AdvTechTilePos,
@@ -16,6 +17,7 @@ import {
   Federation,
   FinalTile,
   Operator,
+  Phase,
   Planet,
   Player as PlayerEnum,
   ResearchField,
@@ -25,7 +27,7 @@ import {
   TechTilePos,
 } from "./enums";
 import Event, { EventSource } from "./events";
-import { factionBoard, FactionBoard } from "./faction-boards";
+import { factionBoard, FactionBoard, FactionBoardRaw, factionVariantBoard } from "./faction-boards";
 import factions, { factionPlanet } from "./factions";
 import { FederationInfo, isOutclassedBy } from "./federation";
 import { GaiaHex } from "./gaia-hex";
@@ -67,6 +69,7 @@ export class Settings {
 
 export default class Player extends EventEmitter {
   faction: Faction = null;
+  factionVariant: FactionBoardRaw = null;
   board: FactionBoard = null;
   data: PlayerData = new PlayerData();
   settings: Settings = new Settings();
@@ -143,11 +146,11 @@ export default class Player extends EventEmitter {
     return json;
   }
 
-  static fromData(data: any, map: SpaceMap, expansions: number) {
+  static fromData(data: any, map: SpaceMap, customization: FactionCustomization, expansions: number) {
     const player = new Player(data.player);
 
     if (data.faction) {
-      player.loadFaction(data.faction, expansions, true);
+      player.loadFaction(data.faction, customization, expansions, true);
     }
 
     for (const kind of Object.keys(data.events)) {
@@ -196,7 +199,7 @@ export default class Player extends EventEmitter {
       this.emit("pick-rewards");
     } else {
       this.data.gainRewards(
-        rewards.map((rew) => this.factionReward(rew)),
+        rewards.map((rew) => this.factionReward(rew, source)),
         false,
         source
       );
@@ -296,9 +299,10 @@ export default class Player extends EventEmitter {
     return this.data.occupied.filter((hex) => hex.data.planet !== Planet.Empty && hex.isMainOccupier(this.player));
   }
 
-  loadFaction(faction: Faction, expansions = 0, skipIncome = false) {
+  loadFaction(faction: Faction, customization: FactionCustomization, expansions = 0, skipIncome = false) {
     this.faction = faction;
-    this.board = factionBoard(faction);
+    this.factionVariant = this.factionVariant ?? factionVariantBoard(customization, faction);
+    this.board = factionBoard(faction, this.factionVariant);
 
     if (!skipIncome) {
       this.loadTechs(expansions);
@@ -731,9 +735,10 @@ export default class Player extends EventEmitter {
     this.receiveTriggerIncome(Condition.Federation);
   }
 
-  factionReward(reward: Reward): Reward {
+  factionReward(reward: Reward, source: EventSource): Reward {
     // this is for Gleens getting ore instead of qics until Academy2
     if (
+      source != Phase.BeginGame &&
       this.faction === Faction.Gleens &&
       this.data.buildings[Building.Academy2] === 0 &&
       reward.type === Resource.Qic

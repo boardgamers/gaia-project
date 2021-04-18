@@ -70,6 +70,7 @@ export function recentMoves(player: PlayerEnum, logEntries: LogEntry[], moveHist
     (logItem) => logItem.player === player && logItem.move && ownTurn(moves[logItem.move])
   ) as LogEntry | undefined;
   const firstMove = firstEntry?.move;
+
   return firstMove
     ? { index: logEntries.indexOf(firstEntry), moves: moves.slice(firstMove, lastMove), allMoves: moves }
     : { index: 0, moves: [], allMoves: moves };

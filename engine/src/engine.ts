@@ -46,6 +46,13 @@ import { isAdvanced } from "./tiles/techs";
 // const ISOLATED_DISTANCE = 3;
 const LEECHING_DISTANCE = 2;
 
+export type FactionVariant = "standard" | "more-balanced"; // https://boardgamegeek.com/thread/2324994/more-balanced-factions
+
+export type FactionCustomization = {
+  variant: FactionVariant;
+  players: number;
+};
+
 export interface EngineOptions {
   /** Allow last player to rotate sector BEFORE faction selection */
   advancedRules?: boolean;
@@ -57,6 +64,8 @@ export interface EngineOptions {
   flexibleFederations?: boolean;
   /** auction */
   auction?: boolean;
+  /**  **/
+  factionVariant?: FactionVariant;
   /** Layout */
   layout?: "standard" | "balanced" | "xshape";
 }
@@ -205,10 +214,20 @@ export default class Engine {
 
   /** Fix old options passed. To remove when legacy data is no more in database */
   sanitizeOptions() {
+    if (this.options.factionVariant === undefined) {
+      this.options.factionVariant = "standard";
+    }
     // if (get(this.options, "map.map")) {
     //   this.options.map.sectors = get(this.options, "map.map");
     //   set(this.options, "map.map", undefined);
     // }
+  }
+
+  get factionCustomization(): FactionCustomization {
+    return {
+      variant: this.options.factionVariant,
+      players: this.players.length,
+    };
   }
 
   isVersionOrLater(version: string) {
@@ -627,7 +646,7 @@ export default class Engine {
     }
 
     for (const player of data.players) {
-      engine.addPlayer(Player.fromData(player, engine.map, engine.expansions));
+      engine.addPlayer(Player.fromData(player, engine.map, engine.factionCustomization, engine.expansions));
     }
 
     if (data.map) {
@@ -915,9 +934,9 @@ export default class Engine {
   endSetupFactionPhase() {
     for (const pl of this.players) {
       if (pl.faction) {
-        pl.loadFaction(pl.faction, this.expansions);
+        pl.loadFaction(pl.faction, this.factionCustomization, this.expansions);
       } else {
-        pl.loadFaction(this.setup[pl.player as PlayerEnum], this.expansions);
+        pl.loadFaction(this.setup[pl.player as PlayerEnum], this.factionCustomization, this.expansions);
       }
     }
 
@@ -940,7 +959,13 @@ export default class Engine {
     }
 
     if (posIvits !== -1) {
-      this.turnOrder.push(posIvits as PlayerEnum);
+      if (this.players.length == 2 && this.factionCustomization.variant == "more-balanced") {
+        const last = this.turnOrder.pop();
+        this.turnOrder.push(posIvits as PlayerEnum);
+        this.turnOrder.push(last);
+      } else {
+        this.turnOrder.push(posIvits as PlayerEnum);
+      }
     }
 
     this.moveToNextPlayer(this.turnOrder, { loop: false });
