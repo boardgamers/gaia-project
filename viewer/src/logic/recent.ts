@@ -3,6 +3,8 @@ import { findLast, findLastIndex } from "lodash";
 
 export type CommandObject = { faction: Faction; command: Command; args: string[] };
 
+export type ParsedMove = { move: string; commands: CommandObject[] };
+
 export function parseCommands(move: string): CommandObject[] {
   move = move.trim();
   const factionIndex = move.indexOf(" ");
@@ -34,17 +36,21 @@ export function movesToHexes(data: Engine, moves: CommandObject[]): GaiaHex[] {
   });
 }
 
-export function ownTurn(move: string): boolean {
-  if (move == null) {
-    return false;
-  }
-  const outOfTurn = [Command.ChargePower, Command.BrainStone, Command.ChooseIncome, Command.Decline];
-  return !outOfTurn.some((command) => move.includes(command));
+const outOfTurn = [Command.ChargePower, Command.BrainStone, Command.ChooseIncome, Command.Decline];
+
+export function ownTurn(move: ParsedMove): boolean {
+  return move.commands.some((c) => !outOfTurn.includes(c.command));
 }
 
-export type RecentMoves = { index: number; moves: string[] };
+export function parsedMove(move: string): ParsedMove {
+  return { move: move, commands: parseCommands(move) };
+}
 
-export function recentMoves(player: PlayerEnum, logEntries: LogEntry[], moveHistory: string[]): RecentMoves {
+export function parseMoves(moveHistory: string[]): ParsedMove[] {
+  return moveHistory.map((move) => parsedMove(move));
+}
+
+export function recentMoves(player: PlayerEnum, logEntries: LogEntry[], moveHistory: string[]): ParsedMove[] {
   let last = logEntries.length;
   let lastMove = moveHistory.length;
   while (last > 0 && logEntries[last - 1].player === player) {
@@ -55,14 +61,14 @@ export function recentMoves(player: PlayerEnum, logEntries: LogEntry[], moveHist
     last--;
   }
 
+  const moves = parseMoves(moveHistory);
+
   const firstEntry = findLast(
     logEntries.slice(0, last),
-    (logItem) => logItem.player === player && logItem.move && ownTurn(moveHistory[logItem.move])
+    (logItem) => logItem.player === player && logItem.move && ownTurn(moves[logItem.move])
   ) as LogEntry | undefined;
   const firstMove = firstEntry?.move;
-  return firstMove
-    ? { index: logEntries.indexOf(firstEntry), moves: moveHistory.slice(firstMove, lastMove) }
-    : { index: 0, moves: [] };
+  return firstMove != null ? moves.slice(firstMove, lastMove) : [];
 }
 
 export function roundMoves(logEntries: LogEntry[], moveHistory: string[]) {

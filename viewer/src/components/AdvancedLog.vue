@@ -49,6 +49,7 @@ import {Component, Prop} from "vue-property-decorator";
 import Engine from "@gaia-project/engine";
 import {LogPlacement} from "../data";
 import {HistoryEntry, makeHistory} from "../data/log";
+import {parseMoves} from "../logic/recent";
 
 type ShowLog = "all" | "recent";
 
@@ -77,12 +78,11 @@ export default class AdvancedLog extends Vue {
   }
 
   get history(): HistoryEntry[] {
-    const offset = this.scope == "recent" ? this.$store.getters["gaiaViewer/recentMoves"].index : 0;
-    if (offset < 0) {
-      return []; //no player active
+    if (this.scope == "recent") {
+      return makeHistory(this.gameData, this.$store.getters["gaiaViewer/recentMoves"], this.currentMove);
+    } else {
+      return makeHistory(this.gameData, parseMoves(this.gameData.moveHistory), this.currentMove);
     }
-
-    return makeHistory(this.gameData, offset, this.currentMove);
   }
 };
 </script>

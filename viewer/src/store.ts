@@ -17,7 +17,7 @@ import {
   CommandObject,
   movesToHexes,
   parseCommands,
-  RecentMoves,
+  ParsedMove,
   recentMoves,
   researchClasses,
   roundMoves,
@@ -167,12 +167,12 @@ const gaiaViewer = {
     loadFromJSON(context: any, data: any) {},
   },
   getters: {
-    recentMoves: (state: State): RecentMoves => {
+    recentMoves: (state: State): ParsedMove[] => {
       // don't check for state.preferences.highlightRecentActions, this is also used in advanced log
       const data = state.data;
       const player = state.player?.index ?? data.currentPlayer;
-      if (!player) {
-        return { index: -1, moves: [] };
+      if (player == undefined) {
+        return [];
       }
       return recentMoves(player, data.advancedLog, data.moveHistory);
     },
@@ -185,7 +185,7 @@ const gaiaViewer = {
     },
     recentCommands: (state: State, getters): CommandObject[] => {
       if (state.preferences.highlightRecentActions) {
-        return getters.recentMoves.moves.flatMap((m) => parseCommands(m));
+        return getters.recentMoves.flatMap((m) => m.commands);
       }
       return [];
     },
