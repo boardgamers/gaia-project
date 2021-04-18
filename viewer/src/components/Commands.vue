@@ -74,6 +74,8 @@ import { buildingName } from "../data/building";
 import { ButtonData, GameContext } from "../data";
 import { eventDesc } from "../data/event";
 import { factionDesc } from "../data/factions";
+import {FactionCustomization} from "@gaia-project/engine/src/engine";
+import {factionVariantBoard} from "@gaia-project/engine/src/faction-boards";
 
 @Component<Commands>({
   watch: {
@@ -83,7 +85,7 @@ import { factionDesc } from "../data/factions";
   },
   methods: {
     tooltip(faction: Faction) {
-      return factionDesc(faction);
+      return factionDesc(faction, factionVariantBoard(this.factionCustomization, faction));
     },
   },
   computed: {
@@ -118,6 +120,10 @@ export default class Commands extends Vue {
 
   get gameData(): Engine {
     return this.$store.state.gaiaViewer.data;
+  }
+
+  get factionCustomization(): FactionCustomization {
+    return this.gameData.factionCustomization;
   }
 
   currentTurnLog(): string {

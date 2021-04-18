@@ -128,21 +128,21 @@
   },
   {
     "move": null,
-    "phase": "roundMove",
     "round": 6,
     "turn": 1,
     "changes": [],
     "color": "white",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "phase": "roundMove"
   },
   {
     "move": null,
-    "phase": "roundGaia",
     "round": 6,
     "turn": 0,
     "changes": [],
     "color": "white",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "phase": "roundGaia"
   },
   {
     "move": "itars income 1t. income 1t",
@@ -150,8 +150,12 @@
     "turn": 0,
     "changes": [
       {
+        "source": "beginGame",
+        "changes": "1o, 1k, 1t"
+      },
+      {
         "source": "income",
-        "changes": "7o, 4k, 2t, 4pw, 16c"
+        "changes": "1t, 3k, 4pw, 16c, 6o"
       },
       {
         "source": "tech-free2",
@@ -200,7 +204,11 @@
     "changes": [
       {
         "source": "income",
-        "changes": "1t, 5o, 4k, 4pw, 7c"
+        "changes": "1t, 3k, 4pw, 4o, 7c"
+      },
+      {
+        "source": "beginGame",
+        "changes": "1o, 1k"
       },
       {
         "source": "tech-free2",
@@ -244,8 +252,12 @@
     "turn": 0,
     "changes": [
       {
+        "source": "beginGame",
+        "changes": "1o, 1k"
+      },
+      {
         "source": "income",
-        "changes": "5o, 4k, 4pw, 16c"
+        "changes": "4pw, 16c, 4o, 3k"
       },
       {
         "source": "eco",
@@ -274,7 +286,11 @@
     "changes": [
       {
         "source": "income",
-        "changes": "4pw, 3o, 3k, 1t, 7c"
+        "changes": "4pw, 1t, 7c, 2k, 2o"
+      },
+      {
+        "source": "beginGame",
+        "changes": "1o, 1k"
       },
       {
         "source": "booster10",
@@ -290,21 +306,21 @@
   },
   {
     "move": null,
-    "phase": "roundIncome",
     "round": 6,
     "turn": 0,
     "changes": [],
     "color": "white",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "phase": "roundIncome"
   },
   {
     "move": null,
-    "phase": "roundStart",
     "round": 6,
     "turn": 0,
     "changes": [],
     "color": "white",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "phase": "roundStart"
   },
   {
     "move": "itars pass booster7 (1o, 2 VP / ts) returning booster2 (1o, 2 tokens)",
@@ -1420,21 +1436,21 @@
   },
   {
     "move": null,
-    "phase": "roundMove",
     "round": 5,
     "turn": 1,
     "changes": [],
     "color": "white",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "phase": "roundMove"
   },
   {
     "move": null,
-    "phase": "roundGaia",
     "round": 5,
     "turn": 0,
     "changes": [],
     "color": "white",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "phase": "roundGaia"
   },
   {
     "move": "taklons income 1t",
@@ -1443,7 +1459,11 @@
     "changes": [
       {
         "source": "income",
-        "changes": "1t, 3o, 4k, 4pw"
+        "changes": "1t, 3k, 2o, 4pw"
+      },
+      {
+        "source": "beginGame",
+        "changes": "1o, 1k"
       },
       {
         "source": "tech-free2",
@@ -1495,8 +1515,12 @@
         "changes": "&nbsp;"
       },
       {
+        "source": "beginGame",
+        "changes": "1o, 1k, 1t"
+      },
+      {
         "source": "income",
-        "changes": "7o, 4k, 2t, 4pw, 3c"
+        "changes": "4pw, 3k, 1t, 6o, 3c"
       },
       {
         "source": "tech-gaia",
@@ -1537,7 +1561,11 @@
     "changes": [
       {
         "source": "income",
-        "changes": "4pw, 3o, 3k, 1t, 3c"
+        "changes": "4pw, 1t, 3c, 2k, 2o"
+      },
+      {
+        "source": "beginGame",
+        "changes": "1o, 1k"
       },
       {
         "source": "booster6",
@@ -1557,8 +1585,12 @@
     "turn": 0,
     "changes": [
       {
+        "source": "beginGame",
+        "changes": "1o, 1k"
+      },
+      {
         "source": "income",
-        "changes": "7o, 3k, 4pw, 7c"
+        "changes": "4pw, 6o, 7c, 2k"
       },
       {
         "source": "eco",
@@ -1582,21 +1614,21 @@
   },
   {
     "move": null,
-    "phase": "roundIncome",
     "round": 5,
     "turn": 0,
     "changes": [],
     "color": "white",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "phase": "roundIncome"
   },
   {
     "move": null,
-    "phase": "roundStart",
     "round": 5,
     "turn": 0,
     "changes": [],
     "color": "white",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "phase": "roundStart"
   },
   {
     "move": "taklons spend 2pw for 2c. pass booster3 (q, 2c) returning booster9 (4pw, 4 VP / PI or academy)",
@@ -2403,21 +2435,21 @@
   },
   {
     "move": null,
-    "phase": "roundMove",
     "round": 4,
     "turn": 1,
     "changes": [],
     "color": "white",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "phase": "roundMove"
   },
   {
     "move": null,
-    "phase": "roundGaia",
     "round": 4,
     "turn": 0,
     "changes": [],
     "color": "white",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "phase": "roundGaia"
   },
   {
     "move": "taklons brainstone area3",
@@ -2462,8 +2494,12 @@
     "turn": 0,
     "changes": [
       {
+        "source": "beginGame",
+        "changes": "1o, 1k"
+      },
+      {
         "source": "income",
-        "changes": "1o, 3k"
+        "changes": "2k"
       },
       {
         "source": "tech-free2",
@@ -2483,8 +2519,12 @@
     "turn": 0,
     "changes": [
       {
+        "source": "beginGame",
+        "changes": "1o, 1k, 1t"
+      },
+      {
         "source": "income",
-        "changes": "3o, 4k, 2t, 4pw, 3c"
+        "changes": "1t, 3k, 4pw, 2o, 3c"
       },
       {
         "source": "tech-free2",
@@ -2540,8 +2580,12 @@
         "changes": "&nbsp;"
       },
       {
+        "source": "beginGame",
+        "changes": "1o, 1k"
+      },
+      {
         "source": "income",
-        "changes": "4o, 2k, 4pw, 7c"
+        "changes": "4pw, 1k, 3o, 7c"
       },
       {
         "source": "eco",
@@ -2562,7 +2606,11 @@
     "changes": [
       {
         "source": "income",
-        "changes": "4pw, 2o, 3k, 1t, 3c"
+        "changes": "4pw, 1t, 3c, 2k, 1o"
+      },
+      {
+        "source": "beginGame",
+        "changes": "1o, 1k"
       },
       {
         "source": "booster10",
@@ -2578,21 +2626,21 @@
   },
   {
     "move": null,
-    "phase": "roundIncome",
     "round": 4,
     "turn": 0,
     "changes": [],
     "color": "white",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "phase": "roundIncome"
   },
   {
     "move": null,
-    "phase": "roundStart",
     "round": 4,
     "turn": 0,
     "changes": [],
     "color": "white",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "phase": "roundStart"
   },
   {
     "move": "taklons spend 2pw for 2c. pass booster9 (4pw, 4 VP / PI or academy) returning booster6 (1o, 1 VP / mine)",
@@ -3270,21 +3318,21 @@
   },
   {
     "move": null,
-    "phase": "roundMove",
     "round": 3,
     "turn": 1,
     "changes": [],
     "color": "white",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "phase": "roundMove"
   },
   {
     "move": null,
-    "phase": "roundGaia",
     "round": 3,
     "turn": 0,
     "changes": [],
     "color": "white",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "phase": "roundGaia"
   },
   {
     "move": "taklons brainstone area3",
@@ -3317,8 +3365,12 @@
     "turn": 0,
     "changes": [
       {
+        "source": "beginGame",
+        "changes": "1o, 1k"
+      },
+      {
         "source": "income",
-        "changes": "2o, 3k"
+        "changes": "2k, 1o"
       },
       {
         "source": "tech-free2",
@@ -3338,8 +3390,12 @@
     "turn": 0,
     "changes": [
       {
+        "source": "beginGame",
+        "changes": "1o, 1k"
+      },
+      {
         "source": "income",
-        "changes": "4o, 2k, 4pw"
+        "changes": "4pw, 3o, 1k"
       },
       {
         "source": "eco",
@@ -3364,7 +3420,11 @@
     "changes": [
       {
         "source": "income",
-        "changes": "1t, 3o, 2k, 4pw, 3c"
+        "changes": "1t, 4pw, 2o, 3c, 1k"
+      },
+      {
+        "source": "beginGame",
+        "changes": "1o, 1k"
       },
       {
         "source": "booster4",
@@ -3384,8 +3444,12 @@
     "turn": 0,
     "changes": [
       {
+        "source": "beginGame",
+        "changes": "1o, 1k, 1t"
+      },
+      {
         "source": "income",
-        "changes": "1o, 4k, 2t, 4pw"
+        "changes": "1t, 3k, 4pw"
       },
       {
         "source": "tech-free2",
@@ -3421,21 +3485,21 @@
   },
   {
     "move": null,
-    "phase": "roundIncome",
     "round": 3,
     "turn": 0,
     "changes": [],
     "color": "white",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "phase": "roundIncome"
   },
   {
     "move": null,
-    "phase": "roundStart",
     "round": 3,
     "turn": 0,
     "changes": [],
     "color": "white",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "phase": "roundStart"
   },
   {
     "move": "taklons pass booster6 (1o, 1 VP / mine) returning booster2 (1o, 2 tokens)",
@@ -4110,21 +4174,21 @@
   },
   {
     "move": null,
-    "phase": "roundMove",
     "round": 2,
     "turn": 1,
     "changes": [],
     "color": "white",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "phase": "roundMove"
   },
   {
     "move": null,
-    "phase": "roundGaia",
     "round": 2,
     "turn": 0,
     "changes": [],
     "color": "white",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "phase": "roundGaia"
   },
   {
     "move": "geodens income 1t",
@@ -4133,7 +4197,11 @@
     "changes": [
       {
         "source": "income",
-        "changes": "1t, 2o, 1k, 4pw, 7c"
+        "changes": "1t, 4pw, 1o, 7c"
+      },
+      {
+        "source": "beginGame",
+        "changes": "1o, 1k"
       },
       {
         "source": "booster3",
@@ -4153,8 +4221,12 @@
     "turn": 0,
     "changes": [
       {
+        "source": "beginGame",
+        "changes": "1o, 1k"
+      },
+      {
         "source": "income",
-        "changes": "4o, 1k, 4pw"
+        "changes": "3o, 4pw"
       },
       {
         "source": "eco",
@@ -4182,8 +4254,12 @@
         "changes": "2c, 1o, 2pw"
       },
       {
+        "source": "beginGame",
+        "changes": "1o, 1k"
+      },
+      {
         "source": "income",
-        "changes": "3o, 3k"
+        "changes": "2o, 2k"
       },
       {
         "source": "tech-free2",
@@ -4211,8 +4287,12 @@
     "turn": 0,
     "changes": [
       {
+        "source": "beginGame",
+        "changes": "1o, 1k, 1t"
+      },
+      {
         "source": "income",
-        "changes": "2o, 4k, 1t"
+        "changes": "1o, 3k"
       },
       {
         "source": "tech-free2",
@@ -4248,21 +4328,21 @@
   },
   {
     "move": null,
-    "phase": "roundIncome",
     "round": 2,
     "turn": 0,
     "changes": [],
     "color": "white",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "phase": "roundIncome"
   },
   {
     "move": null,
-    "phase": "roundStart",
     "round": 2,
     "turn": 0,
     "changes": [],
     "color": "white",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "phase": "roundStart"
   },
   {
     "move": "geodens pass booster3 (q, 2c) returning booster4 (2c, 1 step)",
@@ -5188,21 +5268,21 @@
   },
   {
     "move": null,
-    "phase": "roundMove",
     "round": 1,
     "turn": 1,
     "changes": [],
     "color": "white",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "phase": "roundMove"
   },
   {
     "move": null,
-    "phase": "roundGaia",
     "round": 1,
     "turn": 0,
     "changes": [],
     "color": "white",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "phase": "roundGaia"
   },
   {
     "move": "lantids",
@@ -5210,8 +5290,12 @@
     "turn": 0,
     "changes": [
       {
+        "source": "beginGame",
+        "changes": "1o, 1k"
+      },
+      {
         "source": "income",
-        "changes": "3o, 1k"
+        "changes": "2o"
       },
       {
         "source": "booster3",
@@ -5248,8 +5332,12 @@
     "turn": 0,
     "changes": [
       {
+        "source": "beginGame",
+        "changes": "1o, 1k"
+      },
+      {
         "source": "income",
-        "changes": "3o, 1k"
+        "changes": "2o"
       }
     ],
     "color": "#ffffbe",
@@ -5261,8 +5349,12 @@
     "turn": 0,
     "changes": [
       {
+        "source": "beginGame",
+        "changes": "1o, 1k"
+      },
+      {
         "source": "income",
-        "changes": "3o, 1k"
+        "changes": "2o"
       },
       {
         "source": "booster4",
@@ -5282,8 +5374,12 @@
     "turn": 0,
     "changes": [
       {
+        "source": "beginGame",
+        "changes": "1o, 1k, 1t"
+      },
+      {
         "source": "income",
-        "changes": "3o, 1k, 1t"
+        "changes": "2o"
       },
       {
         "source": "booster2",
@@ -5299,21 +5395,21 @@
   },
   {
     "move": null,
-    "phase": "roundIncome",
     "round": 1,
     "turn": 0,
     "changes": [],
     "color": "white",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "phase": "roundIncome"
   },
   {
     "move": null,
-    "phase": "roundStart",
     "round": 1,
     "turn": 0,
     "changes": [],
     "color": "white",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "phase": "roundStart"
   },
   {
     "move": "itars booster booster2 (1o, 2 tokens)",
@@ -5417,7 +5513,7 @@
     "turn": 1,
     "changes": [
       {
-        "source": "income",
+        "source": "beginGame",
         "changes": "3k, 4o, 13c, 1q"
       }
     ],
@@ -5430,7 +5526,7 @@
     "turn": 1,
     "changes": [
       {
-        "source": "income",
+        "source": "beginGame",
         "changes": "3k, 4o, 15c, 1q"
       }
     ],
@@ -5443,7 +5539,7 @@
     "turn": 1,
     "changes": [
       {
-        "source": "income",
+        "source": "beginGame",
         "changes": "3k, 4o, 15c, 1q"
       },
       {
@@ -5460,7 +5556,7 @@
     "turn": 1,
     "changes": [
       {
-        "source": "income",
+        "source": "beginGame",
         "changes": "3k, 5o, 15c, 1q"
       }
     ],
@@ -5500,19 +5596,19 @@
     "textColor": "white"
   },
   {
-    "changes": [],
-    "color": "white",
     "move": "p4 rotate 5x-2 4 -6x10 2 -8x7 3 -2x-3 3 3x-5 1",
     "round": 0,
-    "textColor": "black",
-    "turn": 0
-  },
-  {
+    "turn": 0,
     "changes": [],
     "color": "white",
+    "textColor": "black"
+  },
+  {
     "move": "init 4 TOS-1",
     "round": 0,
-    "textColor": "black",
-    "turn": 0
+    "turn": 0,
+    "changes": [],
+    "color": "white",
+    "textColor": "black"
   }
 ]

@@ -7,6 +7,7 @@ import {
   Planet,
   terraformingStepsRequired,
 } from "@gaia-project/engine";
+import { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
 
 const factionData: { [faction in Faction]: { ability: string; PI: string } } = {
   [Faction.Terrans]: {
@@ -104,8 +105,8 @@ export function planetsWithSteps(planet: Planet, steps: number) {
   return list.filter((p) => terraformingStepsRequired(planet, p) === steps);
 }
 
-export function factionDesc(faction: Faction) {
-  const board = factionBoard(faction);
+export function factionDesc(faction: Faction, variant?: FactionBoardRaw) {
+  const board = factionBoard(faction, variant);
   const p = factions[faction].planet;
 
   const buildingDesc =

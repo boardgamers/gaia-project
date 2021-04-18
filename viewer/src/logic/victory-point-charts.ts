@@ -28,7 +28,7 @@ import {
 function simulateIncome(pl: Player, consume: (p: Player) => void): number {
   const json = JSON.parse(JSON.stringify(pl));
   delete json.federationCache; // otherwise we need to pass the map when loading
-  const clone = Player.fromData(json, null, 0);
+  const clone = Player.fromData(json, null, null, 0);
   consume(clone);
   return clone.data.victoryPoints - pl.data.victoryPoints;
 }

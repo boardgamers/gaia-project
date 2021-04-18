@@ -6,6 +6,7 @@ import {
   Condition,
   Faction,
   Operator,
+  Phase,
   ResearchField,
   RoundScoring,
   TechPos,
@@ -74,6 +75,7 @@ export type EventSource =
   | ResearchField
   | BoardAction
   | Command.ChooseIncome
+  | Phase.BeginGame
   | Command.Build
   | Command.ChooseFederationTile
   | Command.FormFederation

@@ -1,5 +1,6 @@
 import { get, set } from "lodash";
-import { BrainstoneArea, Building, Command, Faction, Planet } from "../enums";
+import { FactionVariant } from "../engine";
+import { BrainstoneArea, Building, Command, Faction, Phase, Planet } from "../enums";
 import Event from "../events";
 import Player from "../player";
 import Reward from "../reward";
@@ -22,6 +23,11 @@ export interface FactionBoardRaw {
   brainstone?: BrainstoneArea;
   handlers?: { [event: string]: (player: Player, ...args: any[]) => any };
 }
+
+export type FactionBoardVariants = {
+  standard: FactionBoardRaw;
+  variants?: { type: FactionVariant; players?: number; board: FactionBoardRaw }[];
+};
 
 const defaultBoard: FactionBoardRaw = {
   buildings: {
@@ -88,8 +94,8 @@ export class FactionBoard {
   brainstone: BrainstoneArea;
   handlers?: { [event: string]: (player: Player, ...args: any[]) => any };
 
-  constructor(input: FactionBoardRaw) {
-    Object.assign(this, merge({}, defaultBoard, input));
+  constructor(input: FactionBoardVariants, variant?: FactionBoardRaw) {
+    Object.assign(this, merge({}, defaultBoard, input.standard, variant ?? {}));
 
     const buildings = Object.values(Building);
     const toRewards = [`${Building.TradingStation}.isolatedCost`].concat(buildings.map((bld) => `${bld}.cost`));
@@ -98,7 +104,7 @@ export class FactionBoard {
     for (const toRew of toRewards) {
       set(this.buildings, toRew, Reward.parse(get(this.buildings, toRew)));
     }
-    this.income = Event.parse(this.income as any, Command.ChooseIncome);
+    this.income = Event.parse(this.income as any, Phase.BeginGame);
     for (const toInc of toIncome) {
       set(
         this.buildings,

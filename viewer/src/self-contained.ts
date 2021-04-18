@@ -1,4 +1,4 @@
-import Engine from "@gaia-project/engine";
+import Engine, { FactionVariant } from "@gaia-project/engine";
 import Game from "./components/Game.vue";
 import Wrapper from "./components/Wrapper.vue";
 import launch from "./launcher";
@@ -6,7 +6,15 @@ import launch from "./launcher";
 function launchSelfContained(selector = "#app", debug = true) {
   const emitter = launch(selector, debug ? Wrapper : Game);
 
-  let engine = new Engine(["init 3 12"], { auction: true }, "5.6.10");
+  const players = process.env.VUE_APP_players ?? 3;
+  let engine = new Engine(
+    [`init ${players} 12`],
+    {
+      auction: !!process.env.VUE_APP_auction,
+      factionVariant: (process.env.VUE_APP_factionVariant ?? "standard") as FactionVariant,
+    },
+    "5.6.10"
+  );
   engine.generateAvailableCommandsIfNeeded();
 
   const unsub = emitter.store.subscribeAction(({ payload, type }) => {

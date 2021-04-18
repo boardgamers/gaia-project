@@ -1,3 +1,4 @@
+import { FactionCustomization } from "../engine";
 import { Faction } from "../enums";
 import Ambas from "./ambas";
 import BalTaks from "./baltaks";
@@ -12,11 +13,11 @@ import Lantids from "./lantids";
 import Nevlas from "./nevlas";
 import Taklons from "./taklons";
 import Terrans from "./terrans";
-import { FactionBoard, FactionBoardRaw } from "./types";
+import { FactionBoard, FactionBoardRaw, FactionBoardVariants } from "./types";
 import Xenos from "./xenos";
 export { FactionBoard, FactionBoardRaw } from "./types";
 
-const factionBoards: { [key in Faction]: FactionBoardRaw } = {
+const factionBoards: { [key in Faction]: FactionBoardVariants } = {
   [Faction.Terrans]: Terrans,
   [Faction.Lantids]: Lantids,
   [Faction.Xenos]: Xenos,
@@ -33,8 +34,29 @@ const factionBoards: { [key in Faction]: FactionBoardRaw } = {
   [Faction.Itars]: Itars,
 };
 
-export default factionBoards;
+export function factionVariantBoard(customization: FactionCustomization, faction: Faction): FactionBoardRaw | null {
+  if (customization == null) {
+    //not present in cloning
+    return null;
+  }
 
-export function factionBoard(faction: Faction) {
-  return new FactionBoard(factionBoards[faction]);
+  const variants = factionBoards[faction].variants;
+  if (customization.variant == "standard" || variants == null) {
+    return null;
+  }
+
+  const byPlayerCount = variants.find((v) => v.type == customization.variant && v.players == customization.players);
+  if (byPlayerCount != null) {
+    return byPlayerCount.board;
+  }
+
+  const byType = variants.find((v) => v.type == customization.variant);
+  if (byType != null) {
+    return byType.board;
+  }
+  return null;
+}
+
+export function factionBoard(faction: Faction, variant?: FactionBoardRaw): FactionBoard {
+  return new FactionBoard(factionBoards[faction], variant);
 }

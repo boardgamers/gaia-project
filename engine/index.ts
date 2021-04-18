@@ -3,7 +3,6 @@ import AvailableCommand from "./src/available-command";
 import { stdBuildingValue } from "./src/buildings";
 import Engine from "./src/engine";
 import Event, { EventSource } from "./src/events";
-import factionBoards from "./src/faction-boards";
 import factions from "./src/factions";
 import SpaceMap, { parseLocation } from "./src/map";
 import Player from "./src/player";
@@ -15,7 +14,7 @@ import federations from "./src/tiles/federations";
 
 export { boardActions } from "./src/actions";
 export { canResearchField, canTakeAdvancedTechTile } from "./src/available-command";
-export { EngineOptions, LogEntry, LogEntryChanges } from "./src/engine";
+export { EngineOptions, FactionVariant, LogEntry, LogEntryChanges } from "./src/engine";
 export {
   AdvTechTile,
   AdvTechTilePos,
@@ -56,7 +55,6 @@ export {
   Reward,
   SpaceMap,
   researchTracks,
-  factionBoards,
   EventSource,
   gainFinalScoringVictoryPoints,
   finalRankings,
