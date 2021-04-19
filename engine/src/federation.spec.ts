@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import Engine from "./engine";
+import Engine, { AuctionVariant } from "./engine";
 import { Command } from "./enums";
 
 describe("Federations", () => {
@@ -42,7 +42,7 @@ describe("Federations", () => {
   it("should show a federation with only 6 satellites", function () {
     this.timeout(10000);
 
-    const engine = new Engine(game4.moveHistory, { advancedRules: true, auction: true });
+    const engine = new Engine(game4.moveHistory, { advancedRules: true, auction: AuctionVariant.BidWhileChoosing });
 
     engine.generateAvailableCommandsIfNeeded();
 

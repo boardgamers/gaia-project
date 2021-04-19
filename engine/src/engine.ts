@@ -46,6 +46,12 @@ import { isAdvanced } from "./tiles/techs";
 // const ISOLATED_DISTANCE = 3;
 const LEECHING_DISTANCE = 2;
 
+export enum AuctionVariant {
+  /** Finish choosing all factions first, then start an auction phase */
+  ChooseBid = "choose-bid",
+  /** Bid on factions while not all factions are chosen */
+  BidWhileChoosing = "bid-while-choosing",
+}
 export type FactionVariant = "standard" | "more-balanced"; // https://boardgamegeek.com/thread/2324994/more-balanced-factions
 
 export type FactionCustomization = {
@@ -63,7 +69,7 @@ export interface EngineOptions {
   /** Are the federations flexible (allows you to avoid planets with buildings to form federation even if it's not the shortest route)? */
   flexibleFederations?: boolean;
   /** auction */
-  auction?: boolean;
+  auction?: AuctionVariant;
   /**  **/
   factionVariant?: FactionVariant;
   /** Layout */
@@ -214,10 +220,10 @@ export default class Engine {
 
   constructor(moves: string[] = [], options: EngineOptions = {}, engineVersion?: string) {
     this.options = options;
-    this.sanitizeOptions();
     if (engineVersion) {
       this.version = engineVersion;
     }
+    this.sanitizeOptions();
     this.loadMoves(moves);
   }
 
@@ -225,6 +231,13 @@ export default class Engine {
   sanitizeOptions() {
     if (this.options.factionVariant === undefined) {
       this.options.factionVariant = "standard";
+    }
+    if (this.options.auction && !this.isVersionOrLater("4.8.0")) {
+      if (this.isVersionOrLater("4.7.0")) {
+        this.options.auction = AuctionVariant.BidWhileChoosing;
+      } else {
+        this.options.auction = AuctionVariant.ChooseBid;
+      }
     }
     // if (get(this.options, "map.map")) {
     //   this.options.map.sectors = get(this.options, "map.map");
@@ -242,10 +255,6 @@ export default class Engine {
   isVersionOrLater(version: string) {
     if (!this.version) return false;
     return semVerCompare(this.version, version) !== -1;
-  }
-
-  isOnLegacyAuction() {
-    return this.options.auction && !this.isVersionOrLater("4.7.0");
   }
 
   loadMoves(_moves: string[]) {
@@ -934,7 +943,6 @@ export default class Engine {
   }
 
   beginSetupAuctionPhase() {
-    // legacy: used for old auctions.
     this.changePhase(Phase.SetupAuction);
     this.turnOrder = this.players.map((pl) => pl.player as PlayerEnum);
     this.moveToNextPlayer(this.turnOrder, { loop: false });
@@ -1202,11 +1210,11 @@ export default class Engine {
 
   [Phase.SetupFaction](move: string) {
     this.loadTurnMoves(move, { split: false, processFirst: true });
-    if (this.isVersionOrLater("4.7.0")) {
+    // Legacy: there might be a few games that ended up in the 4.7.0 <= version < 4.8.0 state.
+    if (this.isVersionOrLater("4.7.0") && this.options.auction !== AuctionVariant.ChooseBid) {
       this.moveToNextPlayerWithoutAChosenFaction();
       return;
     }
-    // legacy: finish selecting all factions before bidding.
     if (!this.moveToNextPlayer(this.turnOrder, { loop: false })) {
       if (this.options.auction) {
         this.beginSetupAuctionPhase();
@@ -1404,8 +1412,7 @@ export default class Engine {
   [Command.ChooseFaction](player: PlayerEnum, faction: string) {
     assert(this.availableCommand.data.includes(faction), `${faction} is not in the available factions`);
     this.setup.push(faction as Faction);
-    if (!this.isOnLegacyAuction()) {
-      // legacy: In older games bidding and choosing was seperate.
+    if (this.options.auction !== AuctionVariant.ChooseBid) {
       this.executeBid(player, faction, 0);
     }
   }

@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import Engine from "../engine";
+import Engine, { AuctionVariant } from "../engine";
 import { Command, Player } from "../enums";
 
 const parseMoves = Engine.parseMoves;
@@ -224,7 +224,7 @@ describe("Ivits", () => {
         "p1 faction gleens",
       ],
       {
-        auction: true,
+        auction: AuctionVariant.BidWhileChoosing,
         map: {
           sectors: [
             { sector: "9", rotation: 0 },

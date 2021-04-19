@@ -1,15 +1,15 @@
 import { expect } from "chai";
-import Engine from "./engine";
+import Engine, { AuctionVariant } from "./engine";
 import { Faction } from "./enums";
 
-describe("auction", () => {
+describe("auction bid-while-choosing", () => {
   it("should conclude if everyone picks a faction", () => {
     const moves = Engine.parseMoves(`
         init 2 djfjjv4k
         p1 faction geodens
         p2 faction itars
     `);
-    const engine = new Engine(moves, { auction: true });
+    const engine = new Engine(moves, { auction: AuctionVariant.BidWhileChoosing });
 
     expect(engine.players[0].faction).to.equal(Faction.Geodens);
     expect(engine.players[1].faction).to.equal(Faction.Itars);
@@ -25,7 +25,7 @@ describe("auction", () => {
         p1 faction itars
     `);
 
-    const engine = new Engine(moves, { auction: true });
+    const engine = new Engine(moves, { auction: AuctionVariant.BidWhileChoosing });
 
     expect(engine.players[1].data.bid).to.equal(4);
     expect(engine.players[0].data.bid).to.equal(0);
@@ -40,7 +40,7 @@ describe("auction", () => {
         p2 bid itars 0
     `);
 
-    expect(() => new Engine(moves, { auction: true })).to.throw();
+    expect(() => new Engine(moves, { auction: AuctionVariant.BidWhileChoosing })).to.throw();
   });
 
   it("should allow auction, 3 players", () => {
@@ -59,7 +59,7 @@ describe("auction", () => {
         p2 faction itars
     `);
 
-    const engine = new Engine(moves, { auction: true });
+    const engine = new Engine(moves, { auction: AuctionVariant.BidWhileChoosing });
 
     expect(engine.players[2].data.bid).to.equal(6);
     expect(engine.players[1].data.bid).to.equal(0);
@@ -77,7 +77,7 @@ describe("auction", () => {
         p2 bid terrans 1
     `);
 
-    expect(() => new Engine(moves, { auction: true })).to.throw();
+    expect(() => new Engine(moves, { auction: AuctionVariant.BidWhileChoosing })).to.throw();
   });
 
   it("should throw auction, bid is wrong", () => {
@@ -88,7 +88,7 @@ describe("auction", () => {
         p1 bid itars 1
     `);
 
-    expect(() => new Engine(moves, { auction: true })).to.throw();
+    expect(() => new Engine(moves, { auction: AuctionVariant.BidWhileChoosing })).to.throw();
   });
 
   it("should throw auction, bid is not in the range", () => {
@@ -99,7 +99,7 @@ describe("auction", () => {
         p1 bid itars 12
     `);
 
-    expect(() => new Engine(moves, { auction: true })).to.throw();
+    expect(() => new Engine(moves, { auction: AuctionVariant.BidWhileChoosing })).to.throw();
   });
 
   it("should support auction and then go to building phase", () => {
@@ -113,7 +113,7 @@ describe("auction", () => {
       terrans build m -4x2
     `);
 
-    expect(() => new Engine(moves, { auction: true })).to.not.throw();
+    expect(() => new Engine(moves, { auction: AuctionVariant.BidWhileChoosing })).to.not.throw();
   });
 
   it("should throw because players are bidding in the wrong order", () => {
@@ -124,7 +124,7 @@ describe("auction", () => {
       p4 bid geodens 2
     `);
 
-    expect(() => new Engine(moves, { auction: true })).to.throw();
+    expect(() => new Engine(moves, { auction: AuctionVariant.BidWhileChoosing })).to.throw();
   });
 
   it("should allow auction, 4 players, right turn order", () => {
@@ -140,7 +140,7 @@ describe("auction", () => {
         p1 faction geodens
     `);
 
-    const engine = new Engine(moves, { auction: true });
+    const engine = new Engine(moves, { auction: AuctionVariant.BidWhileChoosing });
 
     expect(engine.players[0].faction).to.equal(Faction.Geodens);
     expect(engine.players[1].faction).to.equal(Faction.Terrans);
@@ -167,7 +167,7 @@ describe("auction", () => {
       terrans build ts -1x-4.
     `);
 
-    expect(() => new Engine(moves, { auction: true })).to.not.throw();
+    expect(() => new Engine(moves, { auction: AuctionVariant.BidWhileChoosing })).to.not.throw();
   });
 
   it("should throw , wrong leech order based on auction setup", () => {
@@ -190,6 +190,6 @@ describe("auction", () => {
       ambas charge 1pw
     `);
 
-    expect(() => new Engine(moves, { auction: true })).to.throw();
+    expect(() => new Engine(moves, { auction: AuctionVariant.BidWhileChoosing })).to.throw();
   });
 });

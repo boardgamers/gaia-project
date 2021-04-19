@@ -1,9 +1,9 @@
 import { expect } from "chai";
 import { generate } from "./available-command";
-import Engine from "./engine";
+import Engine, { AuctionVariant } from "./engine";
 import { Faction } from "./enums";
 
-describe("legacy auction", () => {
+describe("auction choose-bid", () => {
   it("should allow auction, everyone is fine wiht the current", () => {
     const moves = Engine.parseMoves(`
         init 2 djfjjv4k
@@ -12,7 +12,7 @@ describe("legacy auction", () => {
         p1 bid geodens 1
         p2 bid itars 1
     `);
-    const engine = new Engine(moves, { auction: true }, "4.6.10");
+    const engine = new Engine(moves, { auction: AuctionVariant.ChooseBid });
 
     expect(engine.players[0].faction).to.equal(Faction.Geodens);
     expect(engine.players[1].faction).to.equal(Faction.Itars);
@@ -30,7 +30,7 @@ describe("legacy auction", () => {
         p1 bid itars 1
     `);
 
-    const engine = new Engine(moves, { auction: true }, "4.6.10");
+    const engine = new Engine(moves, { auction: AuctionVariant.ChooseBid });
 
     expect(engine.players[1].data.bid).to.equal(4);
     expect(engine.players[0].data.bid).to.equal(1);
@@ -47,7 +47,7 @@ describe("legacy auction", () => {
         p2 bid geodens 0
     `);
 
-    expect(() => new Engine(moves, { auction: true }, "4.6.10")).to.not.throw();
+    expect(() => new Engine(moves, { auction: AuctionVariant.ChooseBid })).to.not.throw();
   });
 
   it("should throw, wrong bid", () => {
@@ -59,7 +59,7 @@ describe("legacy auction", () => {
         p2 bid itars 0
     `);
 
-    expect(() => new Engine(moves, { auction: true }, "4.6.10")).to.throw();
+    expect(() => new Engine(moves, { auction: AuctionVariant.ChooseBid })).to.throw();
   });
 
   it("should allow auction, 3 players", () => {
@@ -79,7 +79,7 @@ describe("legacy auction", () => {
         p1 bid itars 1
     `);
 
-    const engine = new Engine(moves, { auction: true }, "4.6.10");
+    const engine = new Engine(moves, { auction: AuctionVariant.ChooseBid });
 
     expect(engine.players[2].data.bid).to.equal(6);
     expect(engine.players[1].data.bid).to.equal(2);
@@ -99,7 +99,7 @@ describe("legacy auction", () => {
         p2 bid terrans 1
     `);
 
-    expect(() => new Engine(moves, { auction: true }, "4.6.10")).to.throw();
+    expect(() => new Engine(moves, { auction: AuctionVariant.ChooseBid })).to.throw();
   });
 
   it("should throw auction, bid is wrong", () => {
@@ -111,7 +111,7 @@ describe("legacy auction", () => {
         p2 bid itars 1
     `);
 
-    expect(() => new Engine(moves, { auction: true }, "4.6.10")).to.throw();
+    expect(() => new Engine(moves, { auction: AuctionVariant.ChooseBid })).to.throw();
   });
 
   it("should throw auction, bid is not in the range", () => {
@@ -123,7 +123,7 @@ describe("legacy auction", () => {
         p2 bid itars 12
     `);
 
-    expect(() => new Engine(moves, { auction: true }, "4.6.10")).to.throw();
+    expect(() => new Engine(moves, { auction: AuctionVariant.ChooseBid })).to.throw();
   });
 
   it("should support auction and then go to building phase", () => {
@@ -139,7 +139,7 @@ describe("legacy auction", () => {
       terrans build m -4x2
     `);
 
-    expect(() => new Engine(moves, { auction: true }, "4.6.10")).to.not.throw();
+    expect(() => new Engine(moves, { auction: AuctionVariant.ChooseBid })).to.not.throw();
   });
 
   it("should throw because players are bidding in the wrong order", () => {
@@ -156,7 +156,7 @@ describe("legacy auction", () => {
       p2 bid terrans 3
     `);
 
-    expect(() => new Engine(moves, { auction: true }, "4.6.10")).to.throw();
+    expect(() => new Engine(moves, { auction: AuctionVariant.ChooseBid })).to.throw();
   });
 
   it("should allow auction, 4 players, right turn order", () => {
@@ -175,7 +175,7 @@ describe("legacy auction", () => {
         p4 bid taklons 1
     `);
 
-    const engine = new Engine(moves, { auction: true }, "4.6.10");
+    const engine = new Engine(moves, { auction: AuctionVariant.ChooseBid });
 
     expect(engine.players[0].faction).to.equal(Faction.Geodens);
     expect(engine.players[1].faction).to.equal(Faction.Terrans);
@@ -205,10 +205,11 @@ describe("legacy auction", () => {
       ambas charge 1pw
     `);
 
-    expect(() => new Engine(moves, { auction: true }, "4.6.10")).to.throw();
+    expect(() => new Engine(moves, { auction: AuctionVariant.ChooseBid })).to.throw();
   });
 });
 
+// LEGACY: ensure backwards compatibility
 describe("legacy engine", () => {
   it("should move to building after picking factions", () => {
     const moves = Engine.parseMoves(`

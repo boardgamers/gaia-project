@@ -1,7 +1,7 @@
 import { difference, range } from "lodash";
 import { boardActions, freeActions, freeActionsItars, freeActionsTerrans } from "./actions";
 import { upgradedBuildings } from "./buildings";
-import Engine from "./engine";
+import Engine, { AuctionVariant } from "./engine";
 import {
   AdvTechTilePos,
   BoardAction,
@@ -789,10 +789,7 @@ function chooseFactionOrBid(engine: Engine, player: Player) {
       engine.setup.map((f) => oppositeFaction(f))
     ),
   };
-  if (engine.isOnLegacyAuction()) {
-    return [chooseFaction];
-  }
-  if (engine.options.auction) {
+  if (engine.options.auction === AuctionVariant.BidWhileChoosing) {
     return [...possibleBids(engine, player), chooseFaction];
   }
   return [chooseFaction];
