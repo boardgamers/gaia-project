@@ -384,13 +384,14 @@ export default class Commands extends Vue {
           break;
         }
 
-        case Command.ChooseTechTile: {
+        case Command.ChooseTechTile:
+        case Command.SpyTech: {
           ret.push({
             label: "Pick tech tile",
             shortcuts: ["p"],
             command: command.name,
             techs: command.data.tiles.map((tile) => tile.pos),
-            buttons: command.data.tiles.map((tile) => ({ command: tile.pos, tech: tile.pos })),
+            buttons: command.data.tiles.map((tile) => ({ command: tile.pos, tech: tile.pos, player: tile.player })),
           });
           break;
         }

@@ -105,6 +105,13 @@ const factionData: { [faction in Faction]: { name: string; ability: string; PI: 
       "The power value of your structures on gray planets (your home type) is increased by one (in addition to any other effects that increase their power value).",
     shortcut: "c",
   },
+  [Faction.Darloks]: {
+    ability: `Once per round, as an action, you can temporarily spy (copy) an opponent's basic tech tile. You will gain the resources, income and action of the tech tile like you would normally. Upon spying on a new tile in a later round, you no longer get the income or action from the tile you previously spied on.
+    You cannot spy on tiles which you own (either yourself or through spying) and you cannot gain the tile through normal ways which you hae currently copied. If the player who is being spied on covers the tile with an advanced tech, you lose the tile.
+    Once in the whole game, you can pay 5 knowledge to join another player on level 5 of a research track. You will get the resources, victory points and the lost planet like you would normally. When advancing on terra using this ability, you can choose the federation you want to receive. You still need to flip a federation token.`,
+    PI:
+      "Immediately upon building the PI, you can spy on an advanced tech tile. You will immediately gain the benefits of this tile for the rest of the game. You need an unflipped federation token in order to spy on an advanced tech.",
+  },
   [Faction.Nevlas]: {
     name: "Nevlas",
     ability:

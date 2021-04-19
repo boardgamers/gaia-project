@@ -25,6 +25,10 @@
       <!--<text class="title" x="-25" y="-18">{{title}}</text>-->
       <TechContent :content="rawContent" style="pointer-events: none" />
     </g>
+
+    <g v-if="isBorrowed" :transform="`scale(15) translate(1.15,1.15)`">
+      <PlayerCircle :index="originalOwner" :player="originalOwnerObject" style="opacity: 0.7" />
+    </g>
   </svg>
 </template>
 
@@ -44,10 +48,12 @@ import {
 import { eventDesc } from "../data/event";
 import TechContent from "./TechContent.vue";
 import { ButtonData } from "../data";
+import PlayerCircle from "./PlayerCircle.vue";
 
 @Component({
   components: {
     TechContent,
+    PlayerCircle,
   },
 })
 export default class TechTile extends Vue {
@@ -58,6 +64,13 @@ export default class TechTile extends Vue {
   player: PlayerEnum;
 
   @Prop()
+  originalOwner?: PlayerEnum;
+
+  get originalOwnerObject() {
+    return this.$store.state.gaiaViewer.data.player(this.originalOwner);
+  }
+
+  @Prop()
   countOverride?: number;
 
   @Prop()
@@ -65,6 +78,7 @@ export default class TechTile extends Vue {
 
   onClick() {
     if (this.highlighted) {
+      const payload = this.originalOwner ? `${this.originalOwnerObject.faction} ${this.pos}` : this.pos;
       this.$store.dispatch("gaiaViewer/techClick", { command: this.pos } as ButtonData);
     }
   }
@@ -110,6 +124,10 @@ export default class TechTile extends Vue {
 
   get isAdvanced() {
     return this.pos.startsWith("adv-");
+  }
+
+  get isBorrowed() {
+    return !!this.originalOwner;
   }
 
   get tooltip() {

@@ -169,6 +169,7 @@
         :key="tech.pos"
         :pos="tech.pos"
         :player="player.player"
+        :originalOwner="tech.owner"
       />
     </div>
     <b-modal :id="player.faction" :title="factionName" size="lg" dialog-class="gaia-viewer-modal">
