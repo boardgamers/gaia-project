@@ -2,7 +2,7 @@ import { AssertionError } from "assert";
 import { expect } from "chai";
 import { BoardAction, Booster, PlayerEnum } from "..";
 import { version } from "../package.json";
-import Engine, { createMoveToShow } from "./engine";
+import Engine, { AuctionVariant, createMoveToShow } from "./engine";
 import { Command, Condition, Operator, Phase, Planet, Player } from "./enums";
 import PlayerData from "./player-data";
 
@@ -748,6 +748,31 @@ describe("Engine", () => {
           expect(replace(s)).to.equal(want); //repeated replace should not do anything
         });
       }
+    });
+  });
+
+  describe("sanitizeOptions", () => {
+    it("should not touch a non-auction game", () => {
+      const engine = new Engine([], { auction: undefined }, "1.0.0");
+      expect(engine.options.auction).to.equal(undefined);
+    });
+
+    it("should translate an old auction game to AuctionVariant.ChooseBid", () => {
+      const engine = new Engine([], { auction: true } as any, "1.0.0");
+      expect(engine.options.auction).to.equal(AuctionVariant.ChooseBid);
+    });
+
+    it("should translate an new auction game to AuctionVariant.BidWhileChoosing", () => {
+      const engine = new Engine([], { auction: true } as any, "4.7.1");
+      expect(engine.options.auction).to.equal(AuctionVariant.BidWhileChoosing);
+    });
+
+    it("should not touch later options", () => {
+      const engine = new Engine([], { auction: AuctionVariant.BidWhileChoosing }, "4.8.0");
+      expect(engine.options.auction).to.equal(AuctionVariant.BidWhileChoosing);
+
+      const engine2 = new Engine([], { auction: AuctionVariant.ChooseBid }, "4.8.0");
+      expect(engine2.options.auction).to.equal(AuctionVariant.ChooseBid);
     });
   });
 
