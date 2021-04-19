@@ -1,6 +1,6 @@
 import { get, set } from "lodash";
 import { FactionVariant } from "../engine";
-import { BrainstoneArea, Building, Command, Faction, Phase, Planet } from "../enums";
+import { BrainstoneArea, Building, Command, Faction, Operator, Phase, Planet } from "../enums";
 import Event from "../events";
 import Player from "../player";
 import Reward from "../reward";
@@ -104,7 +104,10 @@ export class FactionBoard {
     for (const toRew of toRewards) {
       set(this.buildings, toRew, Reward.parse(get(this.buildings, toRew)));
     }
-    this.income = Event.parse(this.income as any, Phase.BeginGame);
+    this.income = Event.parse(this.income as any, null);
+    for (const event of this.income) {
+      event.source = event.operator === Operator.Once ? Phase.BeginGame : Command.ChooseIncome;
+    }
     for (const toInc of toIncome) {
       set(
         this.buildings,

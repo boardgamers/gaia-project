@@ -36,9 +36,9 @@ export function replaceMove(data: Engine, move: ParsedMove): ParsedMove {
   };
 }
 
-export function replaceChange(data: Engine, move: string): string[] {
-  function addDetails(s: string, details: string): string[] {
-    return [s, `(${details})`];
+export function replaceChange(data: Engine, move: string): string {
+  function addDetails(s: string, details: string): string {
+    return `${s} (${details})`;
   }
 
   if (move.match(/\btech-[a-z0-9-]+|adv-[a-z]+|booster[0-9]+/g)) {
@@ -51,7 +51,7 @@ export function replaceChange(data: Engine, move: string): string[] {
       return addDetails(move, replaceTech(data, move as AdvTechTilePos));
     }
   }
-  return [move];
+  return move;
 }
 
 type Change = { source: string; changes: string };
@@ -66,10 +66,10 @@ export type HistoryEntry = {
   textColor: string;
 };
 
-function makeChanges(data: Engine, entryChanges?: LogEntryChanges) {
+function makeChanges(data: Engine, entryChanges?: LogEntryChanges): Change[] {
   return entryChanges == null
     ? []
-    : Object.entries(entryChanges).flatMap(([source, changes]) => {
+    : Object.entries(entryChanges).map(([source, changes]) => {
         const changeString =
           changes == null
             ? ""
@@ -77,11 +77,9 @@ function makeChanges(data: Engine, entryChanges?: LogEntryChanges) {
                 .map((key) => `${changes[key]}${key}`)
                 .join(", ");
 
-        if (source === "undefined") {
-          return [{ source: "&nbsp;", changes: changeString }];
-        }
-
-        return replaceChange(data, source).map((s, i) => ({ source: s, changes: i == 0 ? changeString : "&nbsp;" }));
+        return source === "undefined"
+          ? { source: "", changes: changeString }
+          : { source: replaceChange(data, source), changes: changeString };
       });
 }
 

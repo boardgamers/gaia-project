@@ -16,25 +16,28 @@
         <tr class="major-event" v-if="gameData.phase === 'endGame'">
           <td colspan="3">Game Ended</td>
         </tr>
-        <tr
-          v-for="(event, i) in history"
-          :key="history.length - i"
-          :style="`background-color: ${event.color}; color: ${event.textColor}`"
-        >
-          <td>{{ event.round }}.{{ event.turn }}</td>
-          <td v-if="event.phase === 'roundStart'" class="major-event">Round {{ event.round }}</td>
-          <td v-else-if="event.phase === 'roundIncome'" class="phase-change">Income phase</td>
-          <td v-else-if="event.phase === 'roundGaia'" class="phase-change">Gaia phase</td>
-          <td v-else-if="event.phase === 'roundMove'" class="phase-change">Move phase</td>
-          <td v-else-if="event.phase === 'endGame'" class="phase-change">End scoring</td>
-          <td v-else>{{ event.move }}</td>
-          <td style="width: 1px; white-space: nowrap">
-            <div v-for="(change, i) in event.changes" v-html="change.source" :key="i" />
-          </td>
-          <td style="width: 1px; white-space: nowrap">
-            <div v-for="(change, i) in event.changes" v-html="change.changes" :key="i" />
-          </td>
-        </tr>
+        <template v-for="(event, i) in history">
+          <tr :key="history.length - i" :style="`background-color: ${event.color}; color: ${event.textColor}`">
+            <td :rowspan="rowSpan(event)">{{ event.round }}.{{ event.turn }}</td>
+            <td v-if="event.phase === 'roundStart'" class="major-event">Round {{ event.round }}</td>
+            <td v-else-if="event.phase === 'roundIncome'" class="phase-change">Income phase</td>
+            <td v-else-if="event.phase === 'roundGaia'" class="phase-change">Gaia phase</td>
+            <td v-else-if="event.phase === 'roundMove'" class="phase-change">Move phase</td>
+            <td v-else-if="event.phase === 'endGame'" class="phase-change">End scoring</td>
+            <td v-else :rowspan="rowSpan(event)">{{ event.move }}</td>
+            <td v-if="event.changes.length === 0" />
+            <td v-if="event.changes.length === 0" />
+          </tr>
+          <tr
+            v-for="(change, j) in event.changes"
+            :key="`change${i}-${j}`"
+            :class="j === 0 ? 'first-change' : 'changes'"
+            :style="`background-color: ${event.color}; color: ${event.textColor}`"
+          >
+            <td>{{ change.source }}</td>
+            <td>{{ change.changes }}</td>
+          </tr>
+        </template>
         <tr class="major-event">
           <td colspan="3" v-if="scope === 'recent'">Click "Everything" to expand</td>
           <td colspan="3" v-else>Game Started</td>
@@ -76,15 +79,29 @@ export default class AdvancedLog extends Vue {
   get history(): HistoryEntry[] {
     return makeHistory(this.gameData, this.$store.getters["gaiaViewer/recentMoves"], this.scope, this.currentMove);
   }
+
+  rowSpan(entry: HistoryEntry): number {
+    if (entry.changes.length > 0) {
+      return entry.changes.length + 1;
+    }
+    return 1;
+  }
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .major-event {
   font-weight: bold;
 }
 
 .phase-change {
   font-style: italic;
+}
+
+tr.first-change > td {
+  border-bottom: none !important;
+}
+tr.changes > td {
+  border-top: none !important;
 }
 </style>

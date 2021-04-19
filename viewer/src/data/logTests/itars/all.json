@@ -34,7 +34,7 @@
     "textColor": "white"
   },
   {
-    "move": "lantids spend 3pw for 1o. up eco.",
+    "move": "lantids spend 3pw for 1o. up eco (4 ⇒ 5).",
     "round": 6,
     "turn": 1,
     "changes": [
@@ -98,29 +98,21 @@
     "textColor": "black"
   },
   {
-    "move": "itars spend 4tg for tech. tech int (k for planet types). up int. spend 4tg for tech. tech adv-int (4 VP / ts). cover int. up sci",
+    "move": "itars spend 4tg for tech. tech int (k for planet types). up int (3 ⇒ 4). spend 4tg for tech. tech adv-int (4 VP / ts). cover int. up sci (1 ⇒ 2)",
     "round": 6,
     "turn": 1,
     "changes": [
       {
-        "source": "tech-int",
+        "source": "tech-int (k for planet types)",
         "changes": "4k"
-      },
-      {
-        "source": "(k for planet types)",
-        "changes": "&nbsp;"
       },
       {
         "source": "int",
         "changes": "2q"
       },
       {
-        "source": "adv-int",
+        "source": "adv-int (4 VP / ts)",
         "changes": "16vp"
-      },
-      {
-        "source": "(4 VP / ts)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#000000",
@@ -150,48 +142,28 @@
     "turn": 0,
     "changes": [
       {
-        "source": "beginGame",
-        "changes": "1o, 1k, 1t"
-      },
-      {
         "source": "income",
-        "changes": "1t, 3k, 4pw, 16c, 6o"
+        "changes": "7o, 4k, 2t, 4pw, 16c"
       },
       {
-        "source": "tech-free2",
+        "source": "tech-free2 (1k,1c income)",
         "changes": "1k, 1c"
       },
       {
-        "source": "(1k,1c income)",
-        "changes": "&nbsp;"
-      },
-      {
-        "source": "tech-sci",
+        "source": "tech-sci (4c income)",
         "changes": "4c"
-      },
-      {
-        "source": "(4c income)",
-        "changes": "&nbsp;"
       },
       {
         "source": "sci",
         "changes": "1k"
       },
       {
-        "source": "tech-gaia",
+        "source": "tech-gaia (1o,1pw income)",
         "changes": "1o, 1pw"
       },
       {
-        "source": "(1o,1pw income)",
-        "changes": "&nbsp;"
-      },
-      {
-        "source": "booster7",
+        "source": "booster7 (1o, 2 VP / ts)",
         "changes": "1o"
-      },
-      {
-        "source": "(1o, 2 VP / ts)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#bebebe",
@@ -204,43 +176,27 @@
     "changes": [
       {
         "source": "income",
-        "changes": "1t, 3k, 4pw, 4o, 7c"
+        "changes": "1t, 5o, 4k, 4pw, 7c"
       },
       {
-        "source": "beginGame",
-        "changes": "1o, 1k"
-      },
-      {
-        "source": "tech-free2",
+        "source": "tech-free2 (1k,1c income)",
         "changes": "1k, 1c"
-      },
-      {
-        "source": "(1k,1c income)",
-        "changes": "&nbsp;"
       },
       {
         "source": "eco",
         "changes": "4c, 2o, 4pw"
       },
       {
-        "source": "tech-sci",
+        "source": "tech-sci (4c income)",
         "changes": "4c"
-      },
-      {
-        "source": "(4c income)",
-        "changes": "&nbsp;"
       },
       {
         "source": "sci",
         "changes": "4k"
       },
       {
-        "source": "booster6",
+        "source": "booster6 (1o, 1 VP / mine)",
         "changes": "1o"
-      },
-      {
-        "source": "(1o, 1 VP / mine)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#ffffbe",
@@ -252,12 +208,8 @@
     "turn": 0,
     "changes": [
       {
-        "source": "beginGame",
-        "changes": "1o, 1k"
-      },
-      {
         "source": "income",
-        "changes": "4pw, 16c, 4o, 3k"
+        "changes": "5o, 4k, 4pw, 16c"
       },
       {
         "source": "eco",
@@ -268,12 +220,8 @@
         "changes": "2k"
       },
       {
-        "source": "booster9",
+        "source": "booster9 (4pw, 4 VP / PI or academy)",
         "changes": "4pw"
-      },
-      {
-        "source": "(4pw, 4 VP / PI or academy)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#deffff",
@@ -286,19 +234,11 @@
     "changes": [
       {
         "source": "income",
-        "changes": "4pw, 1t, 7c, 2k, 2o"
+        "changes": "4pw, 3o, 3k, 1t, 7c"
       },
       {
-        "source": "beginGame",
-        "changes": "1o, 1k"
-      },
-      {
-        "source": "booster10",
+        "source": "booster10 (4c, 1 VP / gaia planet)",
         "changes": "4c"
-      },
-      {
-        "source": "(4c, 1 VP / gaia planet)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#ffffbe",
@@ -323,7 +263,7 @@
     "phase": "roundStart"
   },
   {
-    "move": "itars pass booster7 (1o, 2 VP / ts) returning booster2 (1o, 2 tokens)",
+    "move": "itars pass booster7 (1o, 2 VP / ts) returning booster7 (1o, 2 VP / ts)",
     "round": 5,
     "turn": 19,
     "changes": [],
@@ -331,7 +271,7 @@
     "textColor": "white"
   },
   {
-    "move": "taklons spend 1pw for 1c. pass booster6 (1o, 1 VP / mine) returning booster3 (q, 2c)",
+    "move": "taklons spend 1pw for 1c. pass booster6 (1o, 1 VP / mine) returning booster6 (1o, 1 VP / mine)",
     "round": 5,
     "turn": 18,
     "changes": [
@@ -344,7 +284,7 @@
     "textColor": "white"
   },
   {
-    "move": "itars spend 1pw for 1c. spend 1q for 1o. spend 1o for 1t. build gf 6A5. using area2: 1, area3: 1",
+    "move": "itars spend 1pw for 1c. spend 1q for 1o. spend 1o for 1t. build gf 6A5 using area2: 1, area3: 1.",
     "round": 5,
     "turn": 18,
     "changes": [
@@ -425,7 +365,7 @@
     "textColor": "white"
   },
   {
-    "move": "itars spend 1o for 1t. up int.",
+    "move": "itars spend 1o for 1t. up int (2 ⇒ 3).",
     "round": 5,
     "turn": 16,
     "changes": [
@@ -467,12 +407,8 @@
         "changes": "3vp"
       },
       {
-        "source": "adv-nav",
+        "source": "adv-nav (3 VP when building ts)",
         "changes": "3vp"
-      },
-      {
-        "source": "(3 VP when building ts)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#704100",
@@ -509,7 +445,7 @@
     "textColor": "white"
   },
   {
-    "move": "itars build gf 3A6. using area1: 3",
+    "move": "itars build gf 3A6 using area1: 3.",
     "round": 5,
     "turn": 14,
     "changes": [],
@@ -517,7 +453,7 @@
     "textColor": "white"
   },
   {
-    "move": "taklons burn 1. spend 4pw for 1q. brainstone area1. action qic1. tech adv-nav (3 VP when building ts). cover free1. up int.",
+    "move": "taklons burn 1. spend 4pw for 1q. brainstone area1. action qic1. tech adv-nav (3 VP when building ts). cover free1. up int (0 ⇒ 1).",
     "round": 5,
     "turn": 13,
     "changes": [
@@ -534,12 +470,8 @@
         "changes": "1q"
       },
       {
-        "source": "adv-eco",
+        "source": "adv-eco (2 VP when researching)",
         "changes": "2vp"
-      },
-      {
-        "source": "(2 VP when researching)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#704100",
@@ -623,7 +555,7 @@
     "textColor": "white"
   },
   {
-    "move": "itars up int.",
+    "move": "itars up int (1 ⇒ 2).",
     "round": 5,
     "turn": 12,
     "changes": [
@@ -674,7 +606,7 @@
     "textColor": "white"
   },
   {
-    "move": "itars up int.",
+    "move": "itars up int (0 ⇒ 1).",
     "round": 5,
     "turn": 11,
     "changes": [
@@ -691,7 +623,7 @@
     "textColor": "white"
   },
   {
-    "move": "lantids spend 3pw for 1o. spend 1o for 1t. pass booster9 (4pw, 4 VP / PI or academy) returning booster7 (1o, 2 VP / ts)",
+    "move": "lantids spend 3pw for 1o. spend 1o for 1t. pass booster9 (4pw, 4 VP / PI or academy) returning booster9 (4pw, 4 VP / PI or academy)",
     "round": 5,
     "turn": 10,
     "changes": [
@@ -700,19 +632,15 @@
         "changes": "-3pw, 0o, 1t"
       },
       {
-        "source": "booster7",
+        "source": "booster7 (1o, 2 VP / ts)",
         "changes": "8vp"
-      },
-      {
-        "source": "(1o, 2 VP / ts)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#2080f0",
     "textColor": "black"
   },
   {
-    "move": "taklons up nav.",
+    "move": "taklons up nav (3 ⇒ 4).",
     "round": 5,
     "turn": 10,
     "changes": [
@@ -721,12 +649,8 @@
         "changes": "-4k"
       },
       {
-        "source": "adv-eco",
+        "source": "adv-eco (2 VP when researching)",
         "changes": "2vp"
-      },
-      {
-        "source": "(2 VP when researching)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#704100",
@@ -758,7 +682,7 @@
     "textColor": "white"
   },
   {
-    "move": "lantids up sci.",
+    "move": "lantids up sci (1 ⇒ 2).",
     "round": 5,
     "turn": 9,
     "changes": [
@@ -771,7 +695,7 @@
     "textColor": "black"
   },
   {
-    "move": "taklons up nav. spend 4pw for 1q. brainstone area1.",
+    "move": "taklons up nav (2 ⇒ 3). spend 4pw for 1q. brainstone area1.",
     "round": 5,
     "turn": 9,
     "changes": [
@@ -784,12 +708,8 @@
         "changes": "1q, 3pw"
       },
       {
-        "source": "adv-eco",
+        "source": "adv-eco (2 VP when researching)",
         "changes": "2vp"
-      },
-      {
-        "source": "(2 VP when researching)",
-        "changes": "&nbsp;"
       },
       {
         "source": "spend",
@@ -860,7 +780,7 @@
     "textColor": "white"
   },
   {
-    "move": "itars build gf 8A11. using area1: 3",
+    "move": "itars build gf 8A11 using area1: 3.",
     "round": 5,
     "turn": 8,
     "changes": [],
@@ -941,7 +861,7 @@
     "textColor": "var(--res-power)"
   },
   {
-    "move": "lantids build lab 6B3. tech int (k for planet types). up int.",
+    "move": "lantids build lab 6B3. tech int (k for planet types). up int (3 ⇒ 4).",
     "round": 5,
     "turn": 6,
     "changes": [
@@ -950,12 +870,8 @@
         "changes": "-5c, -3o"
       },
       {
-        "source": "tech-int",
+        "source": "tech-int (k for planet types)",
         "changes": "3k"
-      },
-      {
-        "source": "(k for planet types)",
-        "changes": "&nbsp;"
       },
       {
         "source": "int",
@@ -1086,7 +1002,7 @@
     "textColor": "black"
   },
   {
-    "move": "taklons up nav.",
+    "move": "taklons up nav (1 ⇒ 2).",
     "round": 5,
     "turn": 5,
     "changes": [
@@ -1095,12 +1011,8 @@
         "changes": "-4k"
       },
       {
-        "source": "adv-eco",
+        "source": "adv-eco (2 VP when researching)",
         "changes": "2vp"
-      },
-      {
-        "source": "(2 VP when researching)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#704100",
@@ -1120,25 +1032,17 @@
     "textColor": "white"
   },
   {
-    "move": "geodens pass booster10 (4c, 1 VP / gaia planet) returning booster6 (1o, 1 VP / mine)",
+    "move": "geodens pass booster10 (4c, 1 VP / gaia planet) returning booster10 (4c, 1 VP / gaia planet)",
     "round": 5,
     "turn": 4,
     "changes": [
       {
-        "source": "adv-terra",
+        "source": "adv-terra (3 VP / federation when passing)",
         "changes": "6vp"
       },
       {
-        "source": "(3 VP / federation when passing)",
-        "changes": "&nbsp;"
-      },
-      {
-        "source": "booster6",
+        "source": "booster6 (1o, 1 VP / mine)",
         "changes": "3vp"
-      },
-      {
-        "source": "(1o, 1 VP / mine)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#FF9500",
@@ -1176,12 +1080,8 @@
     "turn": 4,
     "changes": [
       {
-        "source": "adv-gaia",
+        "source": "adv-gaia (3k special action)",
         "changes": "3k"
-      },
-      {
-        "source": "(3k special action)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#000000",
@@ -1270,12 +1170,8 @@
     "turn": 3,
     "changes": [
       {
-        "source": "tech-nav",
+        "source": "tech-nav (4pw special action)",
         "changes": "4pw"
-      },
-      {
-        "source": "(4pw special action)",
-        "changes": "&nbsp;"
       },
       {
         "source": "spend",
@@ -1299,7 +1195,7 @@
     "textColor": "white"
   },
   {
-    "move": "geodens up int.",
+    "move": "geodens up int (0 ⇒ 1).",
     "round": 5,
     "turn": 2,
     "changes": [
@@ -1364,12 +1260,8 @@
     "turn": 2,
     "changes": [
       {
-        "source": "tech-nav",
+        "source": "tech-nav (4pw special action)",
         "changes": "4pw"
-      },
-      {
-        "source": "(4pw special action)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#000000",
@@ -1406,7 +1298,7 @@
     "textColor": "black"
   },
   {
-    "move": "lantids spend 2pw for 2c. up int.",
+    "move": "lantids spend 2pw for 2c. up int (2 ⇒ 3).",
     "round": 5,
     "turn": 1,
     "changes": [
@@ -1427,7 +1319,7 @@
     "textColor": "black"
   },
   {
-    "move": "itars spend 4tg for tech. tech nav (4pw special action). up nav",
+    "move": "itars spend 4tg for tech. tech nav (4pw special action). up nav (3 ⇒ 4)",
     "round": 5,
     "turn": 1,
     "changes": [],
@@ -1459,43 +1351,27 @@
     "changes": [
       {
         "source": "income",
-        "changes": "1t, 3k, 2o, 4pw"
+        "changes": "1t, 3o, 4k, 4pw"
       },
       {
-        "source": "beginGame",
-        "changes": "1o, 1k"
-      },
-      {
-        "source": "tech-free2",
+        "source": "tech-free2 (1k,1c income)",
         "changes": "1k, 1c"
-      },
-      {
-        "source": "(1k,1c income)",
-        "changes": "&nbsp;"
       },
       {
         "source": "eco",
         "changes": "4c, 2o, 4pw"
       },
       {
-        "source": "tech-sci",
+        "source": "tech-sci (4c income)",
         "changes": "4c"
-      },
-      {
-        "source": "(4c income)",
-        "changes": "&nbsp;"
       },
       {
         "source": "sci",
         "changes": "4k"
       },
       {
-        "source": "booster3",
+        "source": "booster3 (q, 2c)",
         "changes": "1q, 2c"
-      },
-      {
-        "source": "(q, 2c)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#ffffbe",
@@ -1507,44 +1383,24 @@
     "turn": 0,
     "changes": [
       {
-        "source": "booster2",
+        "source": "booster2 (1o, 2 tokens)",
         "changes": "2t, 1o"
       },
       {
-        "source": "(1o, 2 tokens)",
-        "changes": "&nbsp;"
-      },
-      {
-        "source": "beginGame",
-        "changes": "1o, 1k, 1t"
-      },
-      {
         "source": "income",
-        "changes": "4pw, 3k, 1t, 6o, 3c"
+        "changes": "7o, 4k, 2t, 4pw, 3c"
       },
       {
-        "source": "tech-gaia",
+        "source": "tech-gaia (1o,1pw income)",
         "changes": "1o, 1pw"
       },
       {
-        "source": "(1o,1pw income)",
-        "changes": "&nbsp;"
-      },
-      {
-        "source": "tech-free2",
+        "source": "tech-free2 (1k,1c income)",
         "changes": "1k, 1c"
       },
       {
-        "source": "(1k,1c income)",
-        "changes": "&nbsp;"
-      },
-      {
-        "source": "tech-sci",
+        "source": "tech-sci (4c income)",
         "changes": "4c"
-      },
-      {
-        "source": "(4c income)",
-        "changes": "&nbsp;"
       },
       {
         "source": "sci",
@@ -1561,19 +1417,11 @@
     "changes": [
       {
         "source": "income",
-        "changes": "4pw, 1t, 3c, 2k, 2o"
+        "changes": "4pw, 3o, 3k, 1t, 3c"
       },
       {
-        "source": "beginGame",
-        "changes": "1o, 1k"
-      },
-      {
-        "source": "booster6",
+        "source": "booster6 (1o, 1 VP / mine)",
         "changes": "1o"
-      },
-      {
-        "source": "(1o, 1 VP / mine)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#ffffbe",
@@ -1585,12 +1433,8 @@
     "turn": 0,
     "changes": [
       {
-        "source": "beginGame",
-        "changes": "1o, 1k"
-      },
-      {
         "source": "income",
-        "changes": "4pw, 6o, 7c, 2k"
+        "changes": "7o, 3k, 4pw, 7c"
       },
       {
         "source": "eco",
@@ -1601,12 +1445,8 @@
         "changes": "1k"
       },
       {
-        "source": "booster7",
+        "source": "booster7 (1o, 2 VP / ts)",
         "changes": "1o"
-      },
-      {
-        "source": "(1o, 2 VP / ts)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#deffff",
@@ -1631,7 +1471,7 @@
     "phase": "roundStart"
   },
   {
-    "move": "taklons spend 2pw for 2c. pass booster3 (q, 2c) returning booster9 (4pw, 4 VP / PI or academy)",
+    "move": "taklons spend 2pw for 2c. pass booster3 (q, 2c) returning booster3 (q, 2c)",
     "round": 4,
     "turn": 13,
     "changes": [
@@ -1640,19 +1480,15 @@
         "changes": "-2pw, 2c"
       },
       {
-        "source": "booster9",
+        "source": "booster9 (4pw, 4 VP / PI or academy)",
         "changes": "12vp"
-      },
-      {
-        "source": "(4pw, 4 VP / PI or academy)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#704100",
     "textColor": "white"
   },
   {
-    "move": "itars pass booster2 (1o, 2 tokens) returning booster4 (2c, 1 step)",
+    "move": "itars pass booster2 (1o, 2 tokens) returning booster2 (1o, 2 tokens)",
     "round": 4,
     "turn": 13,
     "changes": [],
@@ -1665,12 +1501,8 @@
     "turn": 12,
     "changes": [
       {
-        "source": "tech-nav",
+        "source": "tech-nav (4pw special action)",
         "changes": "4pw"
-      },
-      {
-        "source": "(4pw special action)",
-        "changes": "&nbsp;"
       },
       {
         "source": "spend",
@@ -1681,7 +1513,7 @@
     "textColor": "white"
   },
   {
-    "move": "itars build gf 6A9. using area1: 2, area2: 1",
+    "move": "itars build gf 6A9 using area1: 2, area2: 1.",
     "round": 4,
     "turn": 12,
     "changes": [],
@@ -1813,7 +1645,7 @@
     "textColor": "white"
   },
   {
-    "move": "itars spend 3pw for 1o. up terra.",
+    "move": "itars spend 3pw for 1o. up terra (3 ⇒ 4).",
     "round": 4,
     "turn": 8,
     "changes": [
@@ -1834,25 +1666,17 @@
     "textColor": "white"
   },
   {
-    "move": "geodens pass booster6 (1o, 1 VP / mine) returning booster10 (4c, 1 VP / gaia planet)",
+    "move": "geodens pass booster6 (1o, 1 VP / mine) returning booster6 (1o, 1 VP / mine)",
     "round": 4,
     "turn": 7,
     "changes": [
       {
-        "source": "adv-terra",
+        "source": "adv-terra (3 VP / federation when passing)",
         "changes": "6vp"
       },
       {
-        "source": "(3 VP / federation when passing)",
-        "changes": "&nbsp;"
-      },
-      {
-        "source": "booster10",
+        "source": "booster10 (4c, 1 VP / gaia planet)",
         "changes": "1vp"
-      },
-      {
-        "source": "(4c, 1 VP / gaia planet)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#FF9500",
@@ -1898,7 +1722,7 @@
     "textColor": "white"
   },
   {
-    "move": "itars spend 1o for 1t. up terra.",
+    "move": "itars spend 1o for 1t. up terra (2 ⇒ 3).",
     "round": 4,
     "turn": 7,
     "changes": [
@@ -1919,7 +1743,7 @@
     "textColor": "white"
   },
   {
-    "move": "lantids pass booster7 (1o, 2 VP / ts) returning booster2 (1o, 2 tokens)",
+    "move": "lantids pass booster7 (1o, 2 VP / ts) returning booster7 (1o, 2 VP / ts)",
     "round": 4,
     "turn": 6,
     "changes": [],
@@ -1927,7 +1751,7 @@
     "textColor": "black"
   },
   {
-    "move": "geodens up nav.",
+    "move": "geodens up nav (3 ⇒ 4).",
     "round": 4,
     "turn": 6,
     "changes": [
@@ -1984,12 +1808,8 @@
     "turn": 6,
     "changes": [
       {
-        "source": "adv-gaia",
+        "source": "adv-gaia (3k special action)",
         "changes": "3k"
-      },
-      {
-        "source": "(3k special action)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#000000",
@@ -2022,7 +1842,7 @@
         "changes": "-2c, -1o"
       },
       {
-        "source": "&nbsp;",
+        "source": "",
         "changes": "2k"
       }
     ],
@@ -2055,7 +1875,7 @@
     "textColor": "black"
   },
   {
-    "move": "taklons up terra. spend 3pw for 1o. brainstone area1.",
+    "move": "taklons up terra (2 ⇒ 3). spend 3pw for 1o. brainstone area1.",
     "round": 4,
     "turn": 5,
     "changes": [
@@ -2068,12 +1888,8 @@
         "changes": "3pw"
       },
       {
-        "source": "adv-eco",
+        "source": "adv-eco (2 VP when researching)",
         "changes": "2vp"
-      },
-      {
-        "source": "(2 VP when researching)",
-        "changes": "&nbsp;"
       },
       {
         "source": "spend",
@@ -2084,7 +1900,7 @@
     "textColor": "white"
   },
   {
-    "move": "itars build gf 9A5. using area1: 3",
+    "move": "itars build gf 9A5 using area1: 3.",
     "round": 4,
     "turn": 5,
     "changes": [],
@@ -2131,7 +1947,7 @@
     "textColor": "black"
   },
   {
-    "move": "geodens up nav.",
+    "move": "geodens up nav (2 ⇒ 3).",
     "round": 4,
     "turn": 4,
     "changes": [
@@ -2148,7 +1964,7 @@
     "textColor": "black"
   },
   {
-    "move": "taklons up terra.",
+    "move": "taklons up terra (1 ⇒ 2).",
     "round": 4,
     "turn": 4,
     "changes": [
@@ -2157,12 +1973,8 @@
         "changes": "-4k"
       },
       {
-        "source": "adv-eco",
+        "source": "adv-eco (2 VP when researching)",
         "changes": "2vp"
-      },
-      {
-        "source": "(2 VP when researching)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#704100",
@@ -2186,7 +1998,7 @@
     "textColor": "white"
   },
   {
-    "move": "lantids up int.",
+    "move": "lantids up int (1 ⇒ 2).",
     "round": 4,
     "turn": 3,
     "changes": [
@@ -2293,7 +2105,7 @@
     "textColor": "var(--res-power)"
   },
   {
-    "move": "lantids build ac1 8A4. tech free3 (o,q). up int.",
+    "move": "lantids build ac1 8A4. tech free3 (o,q). up int (0 ⇒ 1).",
     "round": 4,
     "turn": 2,
     "changes": [
@@ -2302,12 +2114,8 @@
         "changes": "-6c, -6o"
       },
       {
-        "source": "tech-free3",
+        "source": "tech-free3 (o,q)",
         "changes": "1o, 1q"
-      },
-      {
-        "source": "(o,q)",
-        "changes": "&nbsp;"
       },
       {
         "source": "int",
@@ -2318,7 +2126,7 @@
     "textColor": "black"
   },
   {
-    "move": "geodens up nav.",
+    "move": "geodens up nav (1 ⇒ 2).",
     "round": 4,
     "turn": 2,
     "changes": [
@@ -2417,17 +2225,13 @@
     "textColor": "black"
   },
   {
-    "move": "itars spend 4tg for tech. tech free3 (o,q). up gaia. spend 4tg for tech. tech adv-gaia (3k special action). cover free3. up terra",
+    "move": "itars spend 4tg for tech. tech free3 (o,q). up gaia (3 ⇒ 4). spend 4tg for tech. tech adv-gaia (3k special action). cover free3. up terra (1 ⇒ 2)",
     "round": 4,
     "turn": 1,
     "changes": [
       {
-        "source": "tech-free3",
+        "source": "tech-free3 (o,q)",
         "changes": "1o, 1q"
-      },
-      {
-        "source": "(o,q)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#000000",
@@ -2465,24 +2269,16 @@
         "changes": "1k, 2o"
       },
       {
-        "source": "tech-sci",
+        "source": "tech-sci (4c income)",
         "changes": "4c"
-      },
-      {
-        "source": "(4c income)",
-        "changes": "&nbsp;"
       },
       {
         "source": "sci",
         "changes": "4k"
       },
       {
-        "source": "booster9",
+        "source": "booster9 (4pw, 4 VP / PI or academy)",
         "changes": "4pw"
-      },
-      {
-        "source": "(4pw, 4 VP / PI or academy)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#ffffbe",
@@ -2494,20 +2290,12 @@
     "turn": 0,
     "changes": [
       {
-        "source": "beginGame",
-        "changes": "1o, 1k"
-      },
-      {
         "source": "income",
-        "changes": "2k"
+        "changes": "1o, 3k"
       },
       {
-        "source": "tech-free2",
+        "source": "tech-free2 (1k,1c income)",
         "changes": "1k, 1c"
-      },
-      {
-        "source": "(1k,1c income)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#ffffbe",
@@ -2519,48 +2307,28 @@
     "turn": 0,
     "changes": [
       {
-        "source": "beginGame",
-        "changes": "1o, 1k, 1t"
-      },
-      {
         "source": "income",
-        "changes": "1t, 3k, 4pw, 2o, 3c"
+        "changes": "3o, 4k, 2t, 4pw, 3c"
       },
       {
-        "source": "tech-free2",
+        "source": "tech-free2 (1k,1c income)",
         "changes": "1k, 1c"
       },
       {
-        "source": "(1k,1c income)",
-        "changes": "&nbsp;"
-      },
-      {
-        "source": "tech-sci",
+        "source": "tech-sci (4c income)",
         "changes": "4c"
-      },
-      {
-        "source": "(4c income)",
-        "changes": "&nbsp;"
       },
       {
         "source": "sci",
         "changes": "1k"
       },
       {
-        "source": "tech-gaia",
+        "source": "tech-gaia (1o,1pw income)",
         "changes": "1o, 1pw"
       },
       {
-        "source": "(1o,1pw income)",
-        "changes": "&nbsp;"
-      },
-      {
-        "source": "booster4",
+        "source": "booster4 (2c, 1 step)",
         "changes": "2c"
-      },
-      {
-        "source": "(2c, 1 step)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#bebebe",
@@ -2572,20 +2340,12 @@
     "turn": 0,
     "changes": [
       {
-        "source": "booster2",
+        "source": "booster2 (1o, 2 tokens)",
         "changes": "2t, 1o"
       },
       {
-        "source": "(1o, 2 tokens)",
-        "changes": "&nbsp;"
-      },
-      {
-        "source": "beginGame",
-        "changes": "1o, 1k"
-      },
-      {
         "source": "income",
-        "changes": "4pw, 1k, 3o, 7c"
+        "changes": "4o, 2k, 4pw, 7c"
       },
       {
         "source": "eco",
@@ -2606,19 +2366,11 @@
     "changes": [
       {
         "source": "income",
-        "changes": "4pw, 1t, 3c, 2k, 1o"
+        "changes": "4pw, 2o, 3k, 1t, 3c"
       },
       {
-        "source": "beginGame",
-        "changes": "1o, 1k"
-      },
-      {
-        "source": "booster10",
+        "source": "booster10 (4c, 1 VP / gaia planet)",
         "changes": "4c"
-      },
-      {
-        "source": "(4c, 1 VP / gaia planet)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#ffffbe",
@@ -2643,7 +2395,7 @@
     "phase": "roundStart"
   },
   {
-    "move": "taklons spend 2pw for 2c. pass booster9 (4pw, 4 VP / PI or academy) returning booster6 (1o, 1 VP / mine)",
+    "move": "taklons spend 2pw for 2c. pass booster9 (4pw, 4 VP / PI or academy) returning booster9 (4pw, 4 VP / PI or academy)",
     "round": 3,
     "turn": 12,
     "changes": [
@@ -2652,36 +2404,28 @@
         "changes": "-2pw, 2c"
       },
       {
-        "source": "booster6",
+        "source": "booster6 (1o, 1 VP / mine)",
         "changes": "2vp"
-      },
-      {
-        "source": "(1o, 1 VP / mine)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#704100",
     "textColor": "white"
   },
   {
-    "move": "itars pass booster4 (2c, 1 step) returning booster9 (4pw, 4 VP / PI or academy)",
+    "move": "itars pass booster4 (2c, 1 step) returning booster4 (2c, 1 step)",
     "round": 3,
     "turn": 12,
     "changes": [
       {
-        "source": "booster9",
+        "source": "booster9 (4pw, 4 VP / PI or academy)",
         "changes": "8vp"
-      },
-      {
-        "source": "(4pw, 4 VP / PI or academy)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#000000",
     "textColor": "white"
   },
   {
-    "move": "taklons up sci.",
+    "move": "taklons up sci (3 ⇒ 4).",
     "round": 3,
     "turn": 11,
     "changes": [
@@ -2690,12 +2434,8 @@
         "changes": "-4k"
       },
       {
-        "source": "adv-eco",
+        "source": "adv-eco (2 VP when researching)",
         "changes": "2vp"
-      },
-      {
-        "source": "(2 VP when researching)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#704100",
@@ -2758,7 +2498,7 @@
     "textColor": "white"
   },
   {
-    "move": "taklons up terra.",
+    "move": "taklons up terra (0 ⇒ 1).",
     "round": 3,
     "turn": 9,
     "changes": [
@@ -2771,19 +2511,15 @@
         "changes": "2o"
       },
       {
-        "source": "adv-eco",
+        "source": "adv-eco (2 VP when researching)",
         "changes": "2vp"
-      },
-      {
-        "source": "(2 VP when researching)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#704100",
     "textColor": "white"
   },
   {
-    "move": "itars up nav.",
+    "move": "itars up nav (2 ⇒ 3).",
     "round": 3,
     "turn": 9,
     "changes": [
@@ -2843,12 +2579,8 @@
     "turn": 7,
     "changes": [
       {
-        "source": "tech-nav",
+        "source": "tech-nav (4pw special action)",
         "changes": "4pw"
-      },
-      {
-        "source": "(4pw special action)",
-        "changes": "&nbsp;"
       },
       {
         "source": "spend",
@@ -2859,7 +2591,7 @@
     "textColor": "white"
   },
   {
-    "move": "lantids pass booster2 (1o, 2 tokens) returning booster3 (q, 2c)",
+    "move": "lantids pass booster2 (1o, 2 tokens) returning booster2 (1o, 2 tokens)",
     "round": 3,
     "turn": 7,
     "changes": [],
@@ -2867,7 +2599,7 @@
     "textColor": "black"
   },
   {
-    "move": "itars build gf 2A1. burn 2. spend 2pw for 2c.",
+    "move": "itars build gf 2A1 using area1: 2, area2: 4. burn 2. spend 2pw for 2c.",
     "round": 3,
     "turn": 7,
     "changes": [
@@ -2893,7 +2625,7 @@
     "textColor": "var(--res-power)"
   },
   {
-    "move": "taklons build lab 1B3. tech sci (4c income). up sci. brainstone area3. spend 4pw for 1q.",
+    "move": "taklons build lab 1B3. tech sci (4c income). up sci (2 ⇒ 3). brainstone area3. spend 4pw for 1q.",
     "round": 3,
     "turn": 6,
     "changes": [
@@ -2906,12 +2638,8 @@
         "changes": "3pw"
       },
       {
-        "source": "adv-eco",
+        "source": "adv-eco (2 VP when researching)",
         "changes": "2vp"
-      },
-      {
-        "source": "(2 VP when researching)",
-        "changes": "&nbsp;"
       },
       {
         "source": "spend",
@@ -2922,7 +2650,7 @@
     "textColor": "white"
   },
   {
-    "move": "lantids up sci.",
+    "move": "lantids up sci (0 ⇒ 1).",
     "round": 3,
     "turn": 6,
     "changes": [
@@ -2996,7 +2724,7 @@
         "changes": "-2c, -1o"
       },
       {
-        "source": "&nbsp;",
+        "source": "",
         "changes": "2k"
       }
     ],
@@ -3064,17 +2792,13 @@
     "textColor": "black"
   },
   {
-    "move": "geodens pass booster10 (4c, 1 VP / gaia planet) returning booster4 (2c, 1 step)",
+    "move": "geodens pass booster10 (4c, 1 VP / gaia planet) returning booster10 (4c, 1 VP / gaia planet)",
     "round": 3,
     "turn": 4,
     "changes": [
       {
-        "source": "adv-terra",
+        "source": "adv-terra (3 VP / federation when passing)",
         "changes": "6vp"
-      },
-      {
-        "source": "(3 VP / federation when passing)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#FF9500",
@@ -3193,7 +2917,7 @@
     "textColor": "var(--res-power)"
   },
   {
-    "move": "geodens spend 3pw for 1o. build lab 1A1. tech adv-terra (3 VP / federation when passing). cover terra. up nav.",
+    "move": "geodens spend 3pw for 1o. build lab 1A1. tech adv-terra (3 VP / federation when passing). cover terra. up nav (0 ⇒ 1).",
     "round": 3,
     "turn": 3,
     "changes": [
@@ -3214,7 +2938,7 @@
     "textColor": "black"
   },
   {
-    "move": "itars up nav.",
+    "move": "itars up nav (1 ⇒ 2).",
     "round": 3,
     "turn": 3,
     "changes": [
@@ -3304,7 +3028,7 @@
     "textColor": "white"
   },
   {
-    "move": "itars spend 4tg for tech. tech free1 (power value 4 for PI / academy). up gaia. spend 4tg for tech. tech gaia (1o,1pw income). up gaia",
+    "move": "itars spend 4tg for tech. tech free1 (power value 4 for PI / academy). up gaia (2 ⇒ 3). spend 4tg for tech. tech gaia (1o,1pw income). up gaia (2 ⇒ 3)",
     "round": 3,
     "turn": 1,
     "changes": [
@@ -3348,12 +3072,8 @@
         "changes": "2k"
       },
       {
-        "source": "booster6",
+        "source": "booster6 (1o, 1 VP / mine)",
         "changes": "1o"
-      },
-      {
-        "source": "(1o, 1 VP / mine)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#ffffbe",
@@ -3365,20 +3085,12 @@
     "turn": 0,
     "changes": [
       {
-        "source": "beginGame",
-        "changes": "1o, 1k"
-      },
-      {
         "source": "income",
-        "changes": "2k, 1o"
+        "changes": "2o, 3k"
       },
       {
-        "source": "tech-free2",
+        "source": "tech-free2 (1k,1c income)",
         "changes": "1k, 1c"
-      },
-      {
-        "source": "(1k,1c income)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#ffffbe",
@@ -3390,24 +3102,16 @@
     "turn": 0,
     "changes": [
       {
-        "source": "beginGame",
-        "changes": "1o, 1k"
-      },
-      {
         "source": "income",
-        "changes": "4pw, 3o, 1k"
+        "changes": "4o, 2k, 4pw"
       },
       {
         "source": "eco",
         "changes": "4c, 2o, 4pw"
       },
       {
-        "source": "booster3",
+        "source": "booster3 (q, 2c)",
         "changes": "1q, 2c"
-      },
-      {
-        "source": "(q, 2c)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#deffff",
@@ -3420,19 +3124,11 @@
     "changes": [
       {
         "source": "income",
-        "changes": "1t, 4pw, 2o, 3c, 1k"
+        "changes": "1t, 3o, 2k, 4pw, 3c"
       },
       {
-        "source": "beginGame",
-        "changes": "1o, 1k"
-      },
-      {
-        "source": "booster4",
+        "source": "booster4 (2c, 1 step)",
         "changes": "2c"
-      },
-      {
-        "source": "(2c, 1 step)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#ffffbe",
@@ -3444,40 +3140,24 @@
     "turn": 0,
     "changes": [
       {
-        "source": "beginGame",
-        "changes": "1o, 1k, 1t"
-      },
-      {
         "source": "income",
-        "changes": "1t, 3k, 4pw"
+        "changes": "1o, 4k, 2t, 4pw"
       },
       {
-        "source": "tech-free2",
+        "source": "tech-free2 (1k,1c income)",
         "changes": "1k, 1c"
       },
       {
-        "source": "(1k,1c income)",
-        "changes": "&nbsp;"
-      },
-      {
-        "source": "tech-sci",
+        "source": "tech-sci (4c income)",
         "changes": "4c"
-      },
-      {
-        "source": "(4c income)",
-        "changes": "&nbsp;"
       },
       {
         "source": "sci",
         "changes": "1k"
       },
       {
-        "source": "booster9",
+        "source": "booster9 (4pw, 4 VP / PI or academy)",
         "changes": "4pw"
-      },
-      {
-        "source": "(4pw, 4 VP / PI or academy)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#bebebe",
@@ -3502,7 +3182,7 @@
     "phase": "roundStart"
   },
   {
-    "move": "taklons pass booster6 (1o, 1 VP / mine) returning booster2 (1o, 2 tokens)",
+    "move": "taklons pass booster6 (1o, 1 VP / mine) returning booster6 (1o, 1 VP / mine)",
     "round": 2,
     "turn": 10,
     "changes": [],
@@ -3510,7 +3190,7 @@
     "textColor": "white"
   },
   {
-    "move": "taklons action qic1. tech adv-eco (2 VP when researching). cover free3. up sci.",
+    "move": "taklons action qic1. tech adv-eco (2 VP when researching). cover free3. up sci (1 ⇒ 2).",
     "round": 2,
     "turn": 9,
     "changes": [
@@ -3519,12 +3199,8 @@
         "changes": "-4q"
       },
       {
-        "source": "adv-eco",
+        "source": "adv-eco (2 VP when researching)",
         "changes": "2vp"
-      },
-      {
-        "source": "(2 VP when researching)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#704100",
@@ -3548,7 +3224,7 @@
     "textColor": "white"
   },
   {
-    "move": "lantids spend 2pw for 2c. pass booster3 (q, 2c) returning booster10 (4c, 1 VP / gaia planet)",
+    "move": "lantids spend 2pw for 2c. pass booster3 (q, 2c) returning booster3 (q, 2c)",
     "round": 2,
     "turn": 7,
     "changes": [
@@ -3574,7 +3250,7 @@
     "textColor": "white"
   },
   {
-    "move": "geodens spend 1pw for 1c. pass booster4 (2c, 1 step) returning booster3 (q, 2c)",
+    "move": "geodens spend 1pw for 1c. pass booster4 (2c, 1 step) returning booster4 (2c, 1 step)",
     "round": 2,
     "turn": 6,
     "changes": [
@@ -3656,7 +3332,7 @@
     "textColor": "var(--res-power)"
   },
   {
-    "move": "taklons spend 3pw for 1o. build ac2 4A8. tech free1 (power value 4 for PI / academy). up sci.",
+    "move": "taklons spend 3pw for 1o. build ac2 4A8. tech free1 (power value 4 for PI / academy). up sci (0 ⇒ 1).",
     "round": 2,
     "turn": 6,
     "changes": [
@@ -3673,7 +3349,7 @@
     "textColor": "white"
   },
   {
-    "move": "itars spend 3pw for 1o. pass booster9 (4pw, 4 VP / PI or academy) returning booster6 (1o, 1 VP / mine)",
+    "move": "itars spend 3pw for 1o. pass booster9 (4pw, 4 VP / PI or academy) returning booster9 (4pw, 4 VP / PI or academy)",
     "round": 2,
     "turn": 6,
     "changes": [
@@ -3746,7 +3422,7 @@
     "textColor": "var(--res-power)"
   },
   {
-    "move": "taklons spend 3pw for 1o. brainstone area1. build lab 4A8. tech free3 (o,q). up eco.",
+    "move": "taklons spend 3pw for 1o. brainstone area1. build lab 4A8. tech free3 (o,q). up eco (3 ⇒ 4).",
     "round": 2,
     "turn": 5,
     "changes": [
@@ -3759,12 +3435,8 @@
         "changes": "-5c, -3o"
       },
       {
-        "source": "tech-free3",
+        "source": "tech-free3 (o,q)",
         "changes": "1o, 1q"
-      },
-      {
-        "source": "(o,q)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#704100",
@@ -3814,7 +3486,7 @@
     "textColor": "var(--res-power)"
   },
   {
-    "move": "geodens build lab 5A6. tech terra (7 VP). up terra.",
+    "move": "geodens build lab 5A6. tech terra (7 VP). up terra (4 ⇒ 5).",
     "round": 2,
     "turn": 4,
     "changes": [
@@ -3823,12 +3495,8 @@
         "changes": "-5c, -3o"
       },
       {
-        "source": "tech-terra",
+        "source": "tech-terra (7 VP)",
         "changes": "7vp"
-      },
-      {
-        "source": "(7 VP)",
-        "changes": "&nbsp;"
       },
       {
         "source": "federation",
@@ -3869,7 +3537,7 @@
     "textColor": "var(--res-power)"
   },
   {
-    "move": "lantids spend 1pw for 1c. build lab 8A4. tech free1 (power value 4 for PI / academy). up eco.",
+    "move": "lantids spend 1pw for 1c. build lab 8A4. tech free1 (power value 4 for PI / academy). up eco (3 ⇒ 4).",
     "round": 2,
     "turn": 4,
     "changes": [
@@ -3886,7 +3554,7 @@
     "textColor": "black"
   },
   {
-    "move": "taklons up eco. brainstone area3. spend 3pw for 1o. brainstone area1.",
+    "move": "taklons up eco (2 ⇒ 3). brainstone area3. spend 3pw for 1o. brainstone area1.",
     "round": 2,
     "turn": 4,
     "changes": [
@@ -3937,7 +3605,7 @@
     "textColor": "white"
   },
   {
-    "move": "geodens up terra.",
+    "move": "geodens up terra (3 ⇒ 4).",
     "round": 2,
     "turn": 3,
     "changes": [
@@ -3954,7 +3622,7 @@
     "textColor": "black"
   },
   {
-    "move": "lantids up eco.",
+    "move": "lantids up eco (2 ⇒ 3).",
     "round": 2,
     "turn": 3,
     "changes": [
@@ -4014,7 +3682,7 @@
     "textColor": "white"
   },
   {
-    "move": "itars build gf 8A6. using area1: 6",
+    "move": "itars build gf 8A6 using area1: 6.",
     "round": 2,
     "turn": 3,
     "changes": [
@@ -4027,7 +3695,7 @@
     "textColor": "white"
   },
   {
-    "move": "geodens up terra.",
+    "move": "geodens up terra (2 ⇒ 3).",
     "round": 2,
     "turn": 2,
     "changes": [
@@ -4088,12 +3756,8 @@
     "turn": 2,
     "changes": [
       {
-        "source": "tech-nav",
+        "source": "tech-nav (4pw special action)",
         "changes": "4pw"
-      },
-      {
-        "source": "(4pw special action)",
-        "changes": "&nbsp;"
       },
       {
         "source": "spend",
@@ -4104,7 +3768,7 @@
     "textColor": "white"
   },
   {
-    "move": "itars up gaia.",
+    "move": "itars up gaia (0 ⇒ 1).",
     "round": 2,
     "turn": 2,
     "changes": [
@@ -4197,19 +3861,11 @@
     "changes": [
       {
         "source": "income",
-        "changes": "1t, 4pw, 1o, 7c"
+        "changes": "1t, 2o, 1k, 4pw, 7c"
       },
       {
-        "source": "beginGame",
-        "changes": "1o, 1k"
-      },
-      {
-        "source": "booster3",
+        "source": "booster3 (q, 2c)",
         "changes": "1q, 2c"
-      },
-      {
-        "source": "(q, 2c)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#ffffbe",
@@ -4221,24 +3877,16 @@
     "turn": 0,
     "changes": [
       {
-        "source": "beginGame",
-        "changes": "1o, 1k"
-      },
-      {
         "source": "income",
-        "changes": "3o, 4pw"
+        "changes": "4o, 1k, 4pw"
       },
       {
         "source": "eco",
         "changes": "2c, 1o, 2pw"
       },
       {
-        "source": "booster10",
+        "source": "booster10 (4c, 1 VP / gaia planet)",
         "changes": "4c"
-      },
-      {
-        "source": "(4c, 1 VP / gaia planet)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#deffff",
@@ -4254,28 +3902,16 @@
         "changes": "2c, 1o, 2pw"
       },
       {
-        "source": "beginGame",
-        "changes": "1o, 1k"
-      },
-      {
         "source": "income",
-        "changes": "2o, 2k"
+        "changes": "3o, 3k"
       },
       {
-        "source": "tech-free2",
+        "source": "tech-free2 (1k,1c income)",
         "changes": "1k, 1c"
       },
       {
-        "source": "(1k,1c income)",
-        "changes": "&nbsp;"
-      },
-      {
-        "source": "booster2",
+        "source": "booster2 (1o, 2 tokens)",
         "changes": "1o, 2t"
-      },
-      {
-        "source": "(1o, 2 tokens)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#ffffbe",
@@ -4287,40 +3923,24 @@
     "turn": 0,
     "changes": [
       {
-        "source": "beginGame",
-        "changes": "1o, 1k, 1t"
-      },
-      {
         "source": "income",
-        "changes": "1o, 3k"
+        "changes": "2o, 4k, 1t"
       },
       {
-        "source": "tech-free2",
+        "source": "tech-free2 (1k,1c income)",
         "changes": "1k, 1c"
       },
       {
-        "source": "(1k,1c income)",
-        "changes": "&nbsp;"
-      },
-      {
-        "source": "tech-sci",
+        "source": "tech-sci (4c income)",
         "changes": "4c"
-      },
-      {
-        "source": "(4c income)",
-        "changes": "&nbsp;"
       },
       {
         "source": "sci",
         "changes": "1k"
       },
       {
-        "source": "booster6",
+        "source": "booster6 (1o, 1 VP / mine)",
         "changes": "1o"
-      },
-      {
-        "source": "(1o, 1 VP / mine)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#bebebe",
@@ -4345,7 +3965,7 @@
     "phase": "roundStart"
   },
   {
-    "move": "geodens pass booster3 (q, 2c) returning booster4 (2c, 1 step)",
+    "move": "geodens pass booster3 (q, 2c) returning booster3 (q, 2c)",
     "round": 1,
     "turn": 10,
     "changes": [],
@@ -4409,7 +4029,7 @@
     "textColor": "black"
   },
   {
-    "move": "lantids pass booster10 (4c, 1 VP / gaia planet) returning booster3 (q, 2c)",
+    "move": "lantids pass booster10 (4c, 1 VP / gaia planet) returning booster10 (4c, 1 VP / gaia planet)",
     "round": 1,
     "turn": 8,
     "changes": [],
@@ -4417,24 +4037,20 @@
     "textColor": "black"
   },
   {
-    "move": "taklons pass booster2 (1o, 2 tokens) returning booster9 (4pw, 4 VP / PI or academy)",
+    "move": "taklons pass booster2 (1o, 2 tokens) returning booster2 (1o, 2 tokens)",
     "round": 1,
     "turn": 8,
     "changes": [
       {
-        "source": "booster9",
+        "source": "booster9 (4pw, 4 VP / PI or academy)",
         "changes": "4vp"
-      },
-      {
-        "source": "(4pw, 4 VP / PI or academy)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#704100",
     "textColor": "white"
   },
   {
-    "move": "geodens up terra.",
+    "move": "geodens up terra (1 ⇒ 2).",
     "round": 1,
     "turn": 8,
     "changes": [
@@ -4447,7 +4063,7 @@
     "textColor": "black"
   },
   {
-    "move": "lantids up eco.",
+    "move": "lantids up eco (1 ⇒ 2).",
     "round": 1,
     "turn": 7,
     "changes": [
@@ -4460,7 +4076,7 @@
     "textColor": "black"
   },
   {
-    "move": "taklons up eco.",
+    "move": "taklons up eco (1 ⇒ 2).",
     "round": 1,
     "turn": 7,
     "changes": [
@@ -4525,7 +4141,7 @@
         "changes": "-2c, -1o"
       },
       {
-        "source": "&nbsp;",
+        "source": "",
         "changes": "2k"
       }
     ],
@@ -4667,7 +4283,7 @@
         "changes": "-2c, -1o, -1q"
       },
       {
-        "source": "&nbsp;",
+        "source": "",
         "changes": "2k"
       }
     ],
@@ -4701,7 +4317,7 @@
     "textColor": "var(--res-power)"
   },
   {
-    "move": "taklons spend 3pw for 1o. brainstone area1. build ac1 4B0. tech free2 (1k,1c income). up eco.",
+    "move": "taklons spend 3pw for 1o. brainstone area1. build ac1 4B0. tech free2 (1k,1c income). up eco (0 ⇒ 1).",
     "round": 1,
     "turn": 5,
     "changes": [
@@ -4735,7 +4351,7 @@
     "textColor": "black"
   },
   {
-    "move": "itars burn 2. pass booster6 (1o, 1 VP / mine) returning booster2 (1o, 2 tokens)",
+    "move": "itars burn 2. pass booster6 (1o, 1 VP / mine) returning booster6 (1o, 1 VP / mine)",
     "round": 1,
     "turn": 5,
     "changes": [],
@@ -4778,7 +4394,7 @@
         "changes": "-2c, -1o"
       },
       {
-        "source": "&nbsp;",
+        "source": "",
         "changes": "2k"
       }
     ],
@@ -4791,12 +4407,8 @@
     "turn": 4,
     "changes": [
       {
-        "source": "tech-nav",
+        "source": "tech-nav (4pw special action)",
         "changes": "4pw"
-      },
-      {
-        "source": "(4pw special action)",
-        "changes": "&nbsp;"
       },
       {
         "source": "spend",
@@ -4824,7 +4436,7 @@
     "textColor": "black"
   },
   {
-    "move": "itars up nav.",
+    "move": "itars up nav (0 ⇒ 1).",
     "round": 1,
     "turn": 4,
     "changes": [
@@ -4841,7 +4453,7 @@
     "textColor": "white"
   },
   {
-    "move": "lantids spend 3pw for 1o. up eco.",
+    "move": "lantids spend 3pw for 1o. up eco (0 ⇒ 1).",
     "round": 1,
     "turn": 3,
     "changes": [
@@ -4940,7 +4552,7 @@
     "textColor": "var(--res-power)"
   },
   {
-    "move": "itars build ac1 8B2. tech sci (4c income). up sci.",
+    "move": "itars build ac1 8B2. tech sci (4c income). up sci (0 ⇒ 1).",
     "round": 1,
     "turn": 3,
     "changes": [
@@ -5030,7 +4642,7 @@
     "textColor": "var(--res-power)"
   },
   {
-    "move": "taklons spend 3pw for 1o. build lab 4B0. tech nav (4pw special action). up nav.",
+    "move": "taklons spend 3pw for 1o. build lab 4B0. tech nav (4pw special action). up nav (0 ⇒ 1).",
     "round": 1,
     "turn": 2,
     "changes": [
@@ -5090,7 +4702,7 @@
     "textColor": "var(--res-power)"
   },
   {
-    "move": "itars build lab 8B2. tech free2 (1k,1c income). up terra.",
+    "move": "itars build lab 8B2. tech free2 (1k,1c income). up terra (0 ⇒ 1).",
     "round": 1,
     "turn": 2,
     "changes": [
@@ -5290,20 +4902,12 @@
     "turn": 0,
     "changes": [
       {
-        "source": "beginGame",
-        "changes": "1o, 1k"
-      },
-      {
         "source": "income",
-        "changes": "2o"
+        "changes": "3o, 1k"
       },
       {
-        "source": "booster3",
+        "source": "booster3 (q, 2c)",
         "changes": "1q, 2c"
-      },
-      {
-        "source": "(q, 2c)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#deffff",
@@ -5315,12 +4919,8 @@
     "turn": 0,
     "changes": [
       {
-        "source": "booster9",
+        "source": "booster9 (4pw, 4 VP / PI or academy)",
         "changes": "4pw"
-      },
-      {
-        "source": "(4pw, 4 VP / PI or academy)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#ffffbe",
@@ -5332,12 +4932,8 @@
     "turn": 0,
     "changes": [
       {
-        "source": "beginGame",
-        "changes": "1o, 1k"
-      },
-      {
         "source": "income",
-        "changes": "2o"
+        "changes": "3o, 1k"
       }
     ],
     "color": "#ffffbe",
@@ -5349,20 +4945,12 @@
     "turn": 0,
     "changes": [
       {
-        "source": "beginGame",
-        "changes": "1o, 1k"
-      },
-      {
         "source": "income",
-        "changes": "2o"
+        "changes": "3o, 1k"
       },
       {
-        "source": "booster4",
+        "source": "booster4 (2c, 1 step)",
         "changes": "2c"
-      },
-      {
-        "source": "(2c, 1 step)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#ffffbe",
@@ -5374,20 +4962,12 @@
     "turn": 0,
     "changes": [
       {
-        "source": "beginGame",
-        "changes": "1o, 1k, 1t"
-      },
-      {
         "source": "income",
-        "changes": "2o"
+        "changes": "3o, 1k, 1t"
       },
       {
-        "source": "booster2",
+        "source": "booster2 (1o, 2 tokens)",
         "changes": "1o, 2t"
-      },
-      {
-        "source": "(1o, 2 tokens)",
-        "changes": "&nbsp;"
       }
     ],
     "color": "#bebebe",

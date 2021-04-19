@@ -717,29 +717,37 @@ describe("Engine", () => {
       expect(log[5].phase).to.equal(Phase.RoundGaia);
     });
 
-    it("should show returned booster", () => {
-      const d = new PlayerData();
-      d.tiles.booster = Booster.Booster3;
-      const m = createMoveToShow("xenos pass booster1", d, () => {});
-      expect(m).to.equal("xenos pass booster1 returning booster3");
-    });
+    describe("createMoveToShow", () => {
+      const tests = {
+        "xenos pass booster1": "xenos pass booster1 returning booster3",
+        "lantids up nav": "lantids up nav (2 ⇒ 3)",
+        "lantids up nav. lantids up terra.": "lantids up nav (2 ⇒ 3). lantids up terra (4 ⇒ 5).",
+        "terrans build gf 6A1": "terrans build gf 6A1 using area1: 2, area2: 4",
+      };
 
-    it("should show turns put to gaia area", () => {
-      const d = new PlayerData();
-      d.power.area1 = 2;
-      d.power.area2 = 6;
-      d.power.area3 = 4;
-      const m = createMoveToShow("terrans build gf 6A1", d, () => {
-        d.power.area1 = 0;
-        d.power.area2 = 2;
-      });
-      expect(m).to.equal("terrans build gf 6A1 using area1: 2, area2: 4");
-    });
+      const replace = (give: string) => {
+        const d = new PlayerData();
+        d.tiles.booster = Booster.Booster3;
+        d.research.nav = 2;
+        d.research.terra = 4;
+        d.power.area1 = 2;
+        d.power.area2 = 6;
+        d.power.area3 = 4;
+        return createMoveToShow(give, d, () => {
+          d.research.nav = 3;
+          d.research.terra = 5;
+          d.power.area1 = 0;
+          d.power.area2 = 2;
+        });
+      };
 
-    it("should now show turns put to gaia area twice", () => {
-      const d = new PlayerData();
-      const m = createMoveToShow("terrans build gf 6A1 using area1: 2, area2: 4. spend 1pw for 1c", d, () => {});
-      expect(m).to.equal("terrans build gf 6A1 using area1: 2, area2: 4. spend 1pw for 1c");
+      for (const [give, want] of Object.entries(tests)) {
+        it(give, () => {
+          const s = replace(give);
+          expect(s).to.equal(want);
+          expect(replace(s)).to.equal(want); //repeated replace should not do anything
+        });
+      }
     });
   });
 
