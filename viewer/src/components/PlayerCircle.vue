@@ -12,6 +12,7 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 import Engine, { factions, Phase, Planet, Player, PlayerEnum } from "@gaia-project/engine";
 import { phaseBeforeSetupBuilding } from "../logic/utils";
 import { factionPlanet } from "@gaia-project/engine/src/factions";
+import { AuctionVariant } from "@gaia-project/engine/src/engine";
 
 @Component
 export default class PlayerCircle extends Vue {
@@ -94,14 +95,11 @@ export default class PlayerCircle extends Vue {
     let player = this.player;
 
     if (phaseBeforeSetupBuilding(this.gameData)) {
-      // legacy: this can be heavily simplified
-      const isInNewAuction =
-        this.gameData.options.auction &&
-        !this.gameData.isOnLegacyAuction() &&
-        this.gameData.phase === Phase.SetupFaction;
-      const isInLegacyAuction = this.gameData.isOnLegacyAuction() && this.gameData.phase === Phase.SetupAuction;
+      const isBiddingWhileChoosingFactions =
+        this.gameData.options.auction === AuctionVariant.BidWhileChoosing && this.gameData.phase === Phase.SetupFaction;
+      const isInAuctionPhase = this.gameData.phase === Phase.SetupAuction;
 
-      if (isInLegacyAuction || isInNewAuction) {
+      if (isInAuctionPhase || isBiddingWhileChoosingFactions) {
         player = this.gameData.players.find((pl) => pl.faction === this.gameData.setup[this.index]);
       }
     }

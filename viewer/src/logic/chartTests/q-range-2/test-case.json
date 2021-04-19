@@ -1,7 +1,7 @@
 {
   "families": ["Free actions", "Federations"],
   "options": {
-    "auction": true,
+    "auction": "bid-while-choosing",
     "layout": "standard"
   },
   "moveHistory": [

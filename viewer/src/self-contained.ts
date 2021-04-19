@@ -1,4 +1,5 @@
 import Engine, { FactionVariant } from "@gaia-project/engine";
+import { AuctionVariant } from "@gaia-project/engine/src/engine";
 import Game from "./components/Game.vue";
 import Wrapper from "./components/Wrapper.vue";
 import launch from "./launcher";
@@ -10,7 +11,7 @@ function launchSelfContained(selector = "#app", debug = true) {
   let engine = new Engine(
     [`init ${players} 12`],
     {
-      auction: !!process.env.VUE_APP_auction,
+      auction: (process.env.VUE_APP_auction ?? undefined) as AuctionVariant,
       factionVariant: (process.env.VUE_APP_factionVariant ?? "standard") as FactionVariant,
     },
     "5.6.10"
