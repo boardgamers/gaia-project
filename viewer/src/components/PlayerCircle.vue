@@ -9,10 +9,8 @@
 </template>
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import Engine, { factions, Phase, Planet, Player, PlayerEnum } from "@gaia-project/engine";
+import Engine, { factionPlanet, AuctionVariant, Phase, Planet, Player, PlayerEnum } from "@gaia-project/engine";
 import { phaseBeforeSetupBuilding } from "../logic/utils";
-import { factionPlanet } from "@gaia-project/engine/src/factions";
-import { AuctionVariant } from "@gaia-project/engine/src/engine";
 
 @Component
 export default class PlayerCircle extends Vue {

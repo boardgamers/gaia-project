@@ -14,7 +14,7 @@ import federations from "./src/tiles/federations";
 
 export { boardActions } from "./src/actions";
 export { canResearchField, canTakeAdvancedTechTile } from "./src/available-command";
-export { EngineOptions, FactionVariant, LogEntry, LogEntryChanges } from "./src/engine";
+export { EngineOptions, AuctionVariant, FactionVariant, LogEntry, LogEntryChanges } from "./src/engine";
 export {
   AdvTechTile,
   AdvTechTilePos,
@@ -41,6 +41,7 @@ export {
   TechTile,
   TechTilePos,
 } from "./src/enums";
+export { factionPlanet } from "./src/factions";
 export { FactionBoard, factionBoard } from "./src/faction-boards";
 export { GaiaHex, GaiaHexData } from "./src/gaia-hex";
 export { planetNames, terraformingStepsRequired } from "./src/planets";
