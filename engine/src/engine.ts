@@ -96,32 +96,41 @@ export interface LogEntry {
   phase?: Phase.RoundIncome | Phase.RoundGaia | Phase.EndGame;
 }
 
-const passRegex = new RegExp(`\\b${Command.Pass} (\\S+)?$`);
-const gaiaFormerRegex = new RegExp(`\\b${Building.GaiaFormer} \\S+$`);
+const replaceRegex = new RegExp(
+  `\\b((${Command.Pass}|${Building.GaiaFormer}|${Command.UpgradeResearch}) ?([^. ]+)?)(\\.|$)`,
+  "g"
+);
 
 export function createMoveToShow(move: string, p: PlayerData, executeMove: () => void): string {
-  let moveToShow = move;
-  let oldPower: number[] = null;
-
-  if (passRegex.test(move)) {
-    moveToShow = move + " returning " + p.tiles.booster;
-  } else if (gaiaFormerRegex.test(move)) {
-    oldPower = Object.values(p.power);
-  }
+  const oldPower: number[] = move.includes(Building.GaiaFormer) ? Object.values(p.power) : [];
 
   executeMove();
 
-  if (oldPower) {
-    moveToShow +=
-      " using " +
-      Object.entries(p.power)
-        .map(([area, amt], index) => {
-          const spent = oldPower[index] - amt;
-          return spent > 0 ? area + ": " + spent : "";
-        })
-        .filter((s) => s.length > 0)
-        .join(", ");
-  }
+  const moveToShow = move.replace(replaceRegex, (match, p1, p2, p3, p4) => {
+    switch (p2) {
+      case Command.Pass:
+        return p1 + " returning " + p.tiles.booster + p4;
+      case Building.GaiaFormer:
+        return (
+          p1 +
+          " using " +
+          Object.entries(p.power)
+            .map(([area, amt], index) => {
+              const spent = oldPower[index] - amt;
+              return spent > 0 ? area + ": " + spent : "";
+            })
+            .filter((s) => s.length > 0)
+            .join(", ") +
+          p4
+        );
+      case Command.UpgradeResearch: {
+        const level = p.research[p3];
+        return `${p1} (${level - 1} ⇒ ${level})${p4}`;
+      }
+    }
+    return match;
+  });
+
   return moveToShow;
 }
 

@@ -30,10 +30,10 @@ describe("Advanced log details", () => {
 
   describe("changes", () => {
     it("tech should be replaced", () => {
-      expect(replaceChange(data, "tech-terra")).to.deep.equal(["tech-terra", "(o,q)"]);
+      expect(replaceChange(data, "tech-terra")).to.deep.equal("tech-terra (o,q)");
     });
     it("advanced tech should be replaced", () => {
-      expect(replaceChange(data, "adv-gaia")).to.deep.equal(["adv-gaia", "(2 VP / mine)"]);
+      expect(replaceChange(data, "adv-gaia")).to.deep.equal("adv-gaia (2 VP / mine)");
     });
   });
 
