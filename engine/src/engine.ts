@@ -232,7 +232,7 @@ export default class Engine {
     if (this.options.factionVariant === undefined) {
       this.options.factionVariant = "standard";
     }
-    if (this.options.auction && !this.isVersionOrLater("4.8.0")) {
+    if ((this.options.auction as any) === true) {
       if (this.isVersionOrLater("4.7.0")) {
         this.options.auction = AuctionVariant.BidWhileChoosing;
       } else {
