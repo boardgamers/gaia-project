@@ -110,28 +110,28 @@ const replaceRegex = new RegExp(
 export function createMoveToShow(move: string, p: PlayerData, executeMove: () => void): string {
   const oldPower: number[] = move.includes(Building.GaiaFormer) ? Object.values(p.power) : [];
 
+  const formerBooster = p.tiles.booster;
+
   executeMove();
 
-  const moveToShow = move.replace(replaceRegex, (match, p1, p2, p3, p4) => {
-    switch (p2) {
+  const moveToShow = move.replace(replaceRegex, (match, moveWithoutEnding, command, commandArgument, moveEnding) => {
+    switch (command) {
       case Command.Pass:
-        return p1 + " returning " + p.tiles.booster + p4;
-      case Building.GaiaFormer:
-        return (
-          p1 +
-          " using " +
-          Object.entries(p.power)
-            .map(([area, amt], index) => {
-              const spent = oldPower[index] - amt;
-              return spent > 0 ? area + ": " + spent : "";
-            })
-            .filter((s) => s.length > 0)
-            .join(", ") +
-          p4
-        );
+        return `${moveWithoutEnding} returning ${formerBooster}${moveEnding}`;
+      case Building.GaiaFormer: {
+        const powerUsage = Object.entries(p.power)
+          .map(([area, amt], index) => {
+            const spent = oldPower[index] - amt;
+            return spent > 0 ? area + ": " + spent : "";
+          })
+          .filter((s) => s.length > 0)
+          .join(", ");
+
+        return `${moveWithoutEnding} using ${powerUsage}${moveEnding}`;
+      }
       case Command.UpgradeResearch: {
-        const level = p.research[p3];
-        return `${p1} (${level - 1} ⇒ ${level})${p4}`;
+        const level = p.research[commandArgument];
+        return `${moveWithoutEnding} (${level - 1} ⇒ ${level})${moveEnding}`;
       }
     }
     return match;
