@@ -1020,6 +1020,8 @@ export default class Player extends EventEmitter {
 
     const info = this.federationInfo(hexes);
 
+    assert(info.newSatellites <= this.maxSatellites, "Federation requires too many satellites");
+
     // Check if outclassed by available federations
     const available = this.availableFederations(map, flexible);
     const outclasser = available.find((fed) => isOutclassedBy(info, fed));
