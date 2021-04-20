@@ -519,7 +519,7 @@ export default class Engine {
     }
 
     const toMove = this.playerToMove;
-    const faction = this.player(toMove).faction;
+    const factionOrPlayer = this.player(toMove).faction ?? `p${toMove + 1}`;
 
     let _copy: Engine;
     const copy = () => _copy || (_copy = Engine.fromData(JSON.parse(JSON.stringify(this))));
@@ -528,6 +528,7 @@ export default class Engine {
     const copyOrThis = () => _copy || this;
 
     const functions = [
+      [Command.ChooseFaction, (cmd: AvailableCommand) => copyOrThis().autoChooseFaction(cmd)],
       [Command.ChargePower, (cmd: AvailableCommand) => copyOrThis().autoChargePower(cmd)],
       [Command.ChooseIncome, (cmd: AvailableCommand) => copyOrThis().autoIncome(cmd)],
       [Command.BrainStone, (cmd: AvailableCommand) => copyOrThis().autoBrainstone(cmd)],
@@ -562,9 +563,25 @@ export default class Engine {
         continue;
       }
 
-      const newMove = partialMove ? `${partialMove}. ${movePart}` : `${faction} ${movePart}`;
+      const newMove = partialMove ? `${partialMove}. ${movePart}` : `${factionOrPlayer} ${movePart}`;
 
       return this.autoMove(newMove, options);
+    }
+
+    return false;
+  }
+
+  /** Automatically choose faction when there's only one faction available */
+  autoChooseFaction(cmd: AvailableCommand): string | false {
+    if (this.availableCommands.length > 1) {
+      // There can be a bid command too
+      return false;
+    }
+
+    const factions: Faction[] = cmd.data;
+
+    if (factions.length === 1) {
+      return `${Command.ChooseFaction} ${factions[0]}`;
     }
 
     return false;
