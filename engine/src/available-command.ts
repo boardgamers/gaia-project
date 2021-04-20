@@ -779,15 +779,30 @@ export function possiblePISwaps(engine: Engine, player: Player) {
   return commands;
 }
 
+export function remainingFactions(engine: Engine) {
+  if (engine.randomFactions) {
+    if (engine.options.auction) {
+      // In auction the player can pick from the pool of random factions
+      return difference(engine.randomFactions, engine.setup);
+    } else {
+      // Otherwise, they are limited to one specific faction
+      return [engine.randomFactions[engine.setup.length]];
+    }
+  } else {
+    // Standard
+    return difference(
+      Object.values(Faction),
+      engine.setup.map((f) => f),
+      engine.setup.map((f) => oppositeFaction(f))
+    );
+  }
+}
+
 function chooseFactionOrBid(engine: Engine, player: Player) {
   const chooseFaction = {
     name: Command.ChooseFaction,
     player,
-    data: difference(
-      Object.values(Faction),
-      engine.setup.map((f) => f),
-      engine.setup.map((f) => oppositeFaction(f))
-    ),
+    data: remainingFactions(engine),
   };
   if (engine.options.auction === AuctionVariant.BidWhileChoosing) {
     return [...possibleBids(engine, player), chooseFaction];

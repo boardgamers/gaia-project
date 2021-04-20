@@ -6,7 +6,7 @@ import { version } from "../package.json";
 import { boardActions } from "./actions";
 import { finalRankings, gainFinalScoringVictoryPoints } from "./algorithms/scoring";
 import { ChargeDecision, ChargeRequest, decideChargeRequest } from "./auto-charge";
-import AvailableCommand, { generate as generateAvailableCommands } from "./available-command";
+import AvailableCommand, { generate as generateAvailableCommands, remainingFactions } from "./available-command";
 import { stdBuildingValue } from "./buildings";
 import {
   AdvTechTile,
@@ -74,6 +74,8 @@ export interface EngineOptions {
   factionVariant?: FactionVariant;
   /** Layout */
   layout?: "standard" | "balanced" | "xshape";
+  /* Force players to have random factions */
+  randomFactions?: boolean;
 }
 
 export type LogEntryChanges = {
@@ -178,6 +180,7 @@ export default class Engine {
   phase: Phase = Phase.SetupInit;
   subPhase: SubPhase = SubPhase.BeforeMove;
   oldPhase: Phase;
+  randomFactions?: Faction[];
   version = version;
 
   get expansions() {
@@ -239,10 +242,6 @@ export default class Engine {
         this.options.auction = AuctionVariant.ChooseBid;
       }
     }
-    // if (get(this.options, "map.map")) {
-    //   this.options.map.sectors = get(this.options, "map.map");
-    //   set(this.options, "map.map", undefined);
-    // }
   }
 
   get factionCustomization(): FactionCustomization {
@@ -1389,6 +1388,17 @@ export default class Engine {
 
     for (let i = 0; i < nbPlayers; i++) {
       this.addPlayer(new Player(i));
+    }
+
+    if (this.options.randomFactions) {
+      const randomFactions = [];
+
+      for (const _ of this.players) {
+        const possible = remainingFactions({ ...this, setup: randomFactions });
+
+        randomFactions.push(possible[Math.floor(possible.length * this.map.rng())]);
+      }
+      this.randomFactions = randomFactions;
     }
   }
 
