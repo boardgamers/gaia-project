@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { PlayerEnum } from ".";
 import Engine from "./src/engine";
 import { automove, move, setPlayerSettings } from "./wrapper";
 
@@ -88,6 +89,29 @@ describe("wrapper", () => {
 
       expect(newEngine.moveHistory.length).to.equal(move2pwAndBrainstone.length + 1);
       expect(newEngine.moveHistory.slice(-1)[0]).to.equal("taklons charge 2pw. brainstone area2");
+    });
+  });
+
+  describe("move completion", () => {
+    it("should add booster info to move history", () => {
+      const moves = Engine.parseMoves(`
+        init 2 randomSeed
+        p1 faction terrans
+        p2 faction nevlas
+        terrans build m -1x2
+        nevlas build m -1x0
+        nevlas build m 0x-4
+        terrans build m -4x-1
+        nevlas booster booster7
+        terrans booster booster3
+      `);
+
+      const engine = new Engine(moves);
+
+      const newEngine = move(engine, "terrans up gaia", PlayerEnum.Player1);
+
+      expect(newEngine.moveHistory.length).to.equal(moves.length + 1);
+      expect(newEngine.moveHistory.slice(-1).pop()).to.equal("terrans up gaia (1 ⇒ 2)");
     });
   });
 });
