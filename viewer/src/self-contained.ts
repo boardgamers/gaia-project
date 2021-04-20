@@ -8,11 +8,13 @@ function launchSelfContained(selector = "#app", debug = true) {
   const emitter = launch(selector, debug ? Wrapper : Game);
 
   const players = process.env.VUE_APP_players ?? 3;
+  const seed = process.env.VUE_APP_seed ?? "12";
   let engine = new Engine(
-    [`init ${players} 12`],
+    [`init ${players} ${seed}`],
     {
       auction: (process.env.VUE_APP_auction ?? undefined) as AuctionVariant,
       factionVariant: (process.env.VUE_APP_factionVariant ?? "standard") as FactionVariant,
+      randomFactions: !!process.env.VUE_APP_randomFactions,
     },
     "5.6.10"
   );

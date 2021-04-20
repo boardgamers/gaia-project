@@ -45,7 +45,12 @@
           @trigger="handleCommand"
           :key="faction"
         />
-        <MoveButton :button="randomFactionButton" @cancel="updateRandomFaction" @trigger="handleCommand" />
+        <MoveButton
+          v-if="!gameData.randomFactions"
+          :button="randomFactionButton"
+          @cancel="updateRandomFaction"
+          @trigger="handleCommand"
+        />
       </div>
     </div>
   </div>
@@ -74,8 +79,8 @@ import { buildingName } from "../data/building";
 import { ButtonData, GameContext } from "../data";
 import { eventDesc } from "../data/event";
 import { factionDesc } from "../data/factions";
-import {FactionCustomization} from "@gaia-project/engine/src/engine";
-import {factionVariantBoard} from "@gaia-project/engine/src/faction-boards";
+import { FactionCustomization } from "@gaia-project/engine/src/engine";
+import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
 
 @Component<Commands>({
   watch: {
