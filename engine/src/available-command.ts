@@ -781,12 +781,12 @@ export function possiblePISwaps(engine: Engine, player: Player) {
 
 export function remainingFactions(engine: Engine) {
   if (engine.randomFactions) {
-    if (engine.options.auction) {
+    if (engine.options.auction && engine.options.auction !== AuctionVariant.ChooseBid) {
       // In auction the player can pick from the pool of random factions
       return difference(engine.randomFactions, engine.setup);
     } else {
       // Otherwise, they are limited to one specific faction
-      return [engine.randomFactions[engine.setup.length]];
+      return engine.randomFactions.length > engine.setup.length ? [engine.randomFactions[engine.setup.length]] : [];
     }
   } else {
     // Standard

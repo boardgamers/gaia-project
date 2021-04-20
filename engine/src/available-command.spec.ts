@@ -41,19 +41,31 @@ describe("Available commands", () => {
       });
 
       describe("when auction is enabled", () => {
-        it("should offer factions from a randomly selected pool", () => {
-          const engine = new Engine([`init 3 12`], { randomFactions: true, auction: AuctionVariant.ChooseBid });
+        it("should offer factions from a randomly selected pool (bid-while-choosing)", () => {
+          const engine = new Engine([`init 3 12`], { randomFactions: true, auction: AuctionVariant.BidWhileChoosing });
           expect(remainingFactions(engine)).to.have.members([Faction.Bescods, Faction.Gleens, Faction.BalTaks]);
 
           engine.setup.push(Faction.Gleens);
-
           expect(remainingFactions(engine)).to.have.members([Faction.Bescods, Faction.BalTaks]);
 
           engine.setup.push(Faction.BalTaks);
-
           expect(remainingFactions(engine)).to.eql([Faction.Bescods]);
 
           engine.setup.push(Faction.Bescods);
+          expect(remainingFactions(engine)).to.eql([]);
+        });
+
+        it("should give one faction at a time (choose-bid)", () => {
+          const engine = new Engine([`init 3 12`], { randomFactions: true, auction: AuctionVariant.ChooseBid });
+          expect(remainingFactions(engine)).to.eql([Faction.Bescods]);
+
+          engine.setup.push(Faction.Bescods);
+          expect(remainingFactions(engine)).to.eql([Faction.Gleens]);
+
+          engine.setup.push(Faction.Gleens);
+          expect(remainingFactions(engine)).to.eql([Faction.BalTaks]);
+
+          engine.setup.push(Faction.BalTaks);
           expect(remainingFactions(engine)).to.eql([]);
         });
       });

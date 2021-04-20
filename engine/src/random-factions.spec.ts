@@ -11,9 +11,9 @@ describe("Random factions", () => {
   });
 
   describe("when in an auction", () => {
-    it("should only allow player to select from a random pool", () => {
+    it("should only allow players to select from a random pool", () => {
       const engine = (...moves: string[]) =>
-        new Engine(["init 3 12", ...moves], { randomFactions: true, auction: AuctionVariant.ChooseBid });
+        new Engine(["init 3 12", ...moves], { randomFactions: true, auction: AuctionVariant.BidWhileChoosing });
 
       expect(() => engine("p1 faction itars")).to.throw();
       expect(() => engine("p1 faction firaks")).to.throw();
