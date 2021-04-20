@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import {
   askOrDeclineBasedOnCost,
+  askOrDeclineForPassedPlayer,
   autoChargeItars,
   ChargeDecision,
   ChargeRequest,
@@ -8,6 +9,7 @@ import {
 } from "./auto-charge";
 import { getTaklonsExtraLeechOffers, Offer } from "./available-command";
 import { Resource } from "./enums";
+import { IncomeSelection } from "./income";
 import Player, { AutoCharge } from "./player";
 import Reward from "./reward";
 
@@ -58,6 +60,38 @@ describe("AutoCharge", () => {
         expect(decision).to.equal(test.want);
       });
     }
+  });
+
+  describe("askOrDeclineForPassedPlayer", () => {
+    describe("when passed & no remaining charges after income", () => {
+      const baseRequest: ChargeRequest = {
+        playerHasPassed: true,
+        autoCharge: 3,
+        incomeSelection: {
+          remainingChargesAfterIncome: 0,
+        } as IncomeSelection,
+        minCharge: 1,
+        isLastRound: false,
+      } as ChargeRequest;
+
+      it("should not decline if taklons can gain a power token", () => {
+        expect(
+          askOrDeclineForPassedPlayer({
+            ...baseRequest,
+            offers: [
+              { cost: "1vp", offer: "2pw,1t" },
+              { cost: "1vp", offer: "1t,2pw" },
+            ],
+          })
+        ).to.equal(ChargeDecision.NoAutomaticYes);
+      });
+
+      it("should decline otherwise", () => {
+        expect(askOrDeclineForPassedPlayer({ ...baseRequest, offers: [{ cost: "1vp", offer: "2pw" }] })).to.equal(
+          ChargeDecision.No
+        );
+      });
+    });
   });
 
   describe("decideChargeRequest", () => {
