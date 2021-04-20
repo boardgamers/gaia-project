@@ -15,7 +15,9 @@
     "index.d.ts",
     "index.ts",
     "tsconfig.json",
-    "wrapper.ts"
+    "wrapper.ts",
+    "index.js",
+    "wrapper.js"
   ],
   "scripts": {
     "prepublishOnly": "npm run test && npm run clean && tsc",
