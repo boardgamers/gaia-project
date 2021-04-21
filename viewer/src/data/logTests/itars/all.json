@@ -263,7 +263,7 @@
     "phase": "roundStart"
   },
   {
-    "move": "itars pass booster7 (1o, 2 VP / ts) returning booster7 (1o, 2 VP / ts)",
+    "move": "itars pass booster7 (1o, 2 VP / ts) returning booster2 (1o, 2 tokens)",
     "round": 5,
     "turn": 19,
     "changes": [],
@@ -271,7 +271,7 @@
     "textColor": "white"
   },
   {
-    "move": "taklons spend 1pw for 1c. pass booster6 (1o, 1 VP / mine) returning booster6 (1o, 1 VP / mine)",
+    "move": "taklons spend 1pw for 1c. pass booster6 (1o, 1 VP / mine) returning booster3 (q, 2c)",
     "round": 5,
     "turn": 18,
     "changes": [
@@ -623,7 +623,7 @@
     "textColor": "white"
   },
   {
-    "move": "lantids spend 3pw for 1o. spend 1o for 1t. pass booster9 (4pw, 4 VP / PI or academy) returning booster9 (4pw, 4 VP / PI or academy)",
+    "move": "lantids spend 3pw for 1o. spend 1o for 1t. pass booster9 (4pw, 4 VP / PI or academy) returning booster7 (1o, 2 VP / ts)",
     "round": 5,
     "turn": 10,
     "changes": [
@@ -1032,7 +1032,7 @@
     "textColor": "white"
   },
   {
-    "move": "geodens pass booster10 (4c, 1 VP / gaia planet) returning booster10 (4c, 1 VP / gaia planet)",
+    "move": "geodens pass booster10 (4c, 1 VP / gaia planet) returning booster6 (1o, 1 VP / mine)",
     "round": 5,
     "turn": 4,
     "changes": [
@@ -1471,7 +1471,7 @@
     "phase": "roundStart"
   },
   {
-    "move": "taklons spend 2pw for 2c. pass booster3 (q, 2c) returning booster3 (q, 2c)",
+    "move": "taklons spend 2pw for 2c. pass booster3 (q, 2c) returning booster9 (4pw, 4 VP / PI or academy)",
     "round": 4,
     "turn": 13,
     "changes": [
@@ -1488,7 +1488,7 @@
     "textColor": "white"
   },
   {
-    "move": "itars pass booster2 (1o, 2 tokens) returning booster2 (1o, 2 tokens)",
+    "move": "itars pass booster2 (1o, 2 tokens) returning booster4 (2c, 1 step)",
     "round": 4,
     "turn": 13,
     "changes": [],
@@ -1666,7 +1666,7 @@
     "textColor": "white"
   },
   {
-    "move": "geodens pass booster6 (1o, 1 VP / mine) returning booster6 (1o, 1 VP / mine)",
+    "move": "geodens pass booster6 (1o, 1 VP / mine) returning booster10 (4c, 1 VP / gaia planet)",
     "round": 4,
     "turn": 7,
     "changes": [
@@ -1743,7 +1743,7 @@
     "textColor": "white"
   },
   {
-    "move": "lantids pass booster7 (1o, 2 VP / ts) returning booster7 (1o, 2 VP / ts)",
+    "move": "lantids pass booster7 (1o, 2 VP / ts) returning booster2 (1o, 2 tokens)",
     "round": 4,
     "turn": 6,
     "changes": [],
@@ -2395,7 +2395,7 @@
     "phase": "roundStart"
   },
   {
-    "move": "taklons spend 2pw for 2c. pass booster9 (4pw, 4 VP / PI or academy) returning booster9 (4pw, 4 VP / PI or academy)",
+    "move": "taklons spend 2pw for 2c. pass booster9 (4pw, 4 VP / PI or academy) returning booster6 (1o, 1 VP / mine)",
     "round": 3,
     "turn": 12,
     "changes": [
@@ -2412,7 +2412,7 @@
     "textColor": "white"
   },
   {
-    "move": "itars pass booster4 (2c, 1 step) returning booster4 (2c, 1 step)",
+    "move": "itars pass booster4 (2c, 1 step) returning booster9 (4pw, 4 VP / PI or academy)",
     "round": 3,
     "turn": 12,
     "changes": [
@@ -2591,7 +2591,7 @@
     "textColor": "white"
   },
   {
-    "move": "lantids pass booster2 (1o, 2 tokens) returning booster2 (1o, 2 tokens)",
+    "move": "lantids pass booster2 (1o, 2 tokens) returning booster3 (q, 2c)",
     "round": 3,
     "turn": 7,
     "changes": [],
@@ -2792,7 +2792,7 @@
     "textColor": "black"
   },
   {
-    "move": "geodens pass booster10 (4c, 1 VP / gaia planet) returning booster10 (4c, 1 VP / gaia planet)",
+    "move": "geodens pass booster10 (4c, 1 VP / gaia planet) returning booster4 (2c, 1 step)",
     "round": 3,
     "turn": 4,
     "changes": [
@@ -3182,7 +3182,7 @@
     "phase": "roundStart"
   },
   {
-    "move": "taklons pass booster6 (1o, 1 VP / mine) returning booster6 (1o, 1 VP / mine)",
+    "move": "taklons pass booster6 (1o, 1 VP / mine) returning booster2 (1o, 2 tokens)",
     "round": 2,
     "turn": 10,
     "changes": [],
@@ -3224,7 +3224,7 @@
     "textColor": "white"
   },
   {
-    "move": "lantids spend 2pw for 2c. pass booster3 (q, 2c) returning booster3 (q, 2c)",
+    "move": "lantids spend 2pw for 2c. pass booster3 (q, 2c) returning booster10 (4c, 1 VP / gaia planet)",
     "round": 2,
     "turn": 7,
     "changes": [
@@ -3250,7 +3250,7 @@
     "textColor": "white"
   },
   {
-    "move": "geodens spend 1pw for 1c. pass booster4 (2c, 1 step) returning booster4 (2c, 1 step)",
+    "move": "geodens spend 1pw for 1c. pass booster4 (2c, 1 step) returning booster3 (q, 2c)",
     "round": 2,
     "turn": 6,
     "changes": [
@@ -3349,7 +3349,7 @@
     "textColor": "white"
   },
   {
-    "move": "itars spend 3pw for 1o. pass booster9 (4pw, 4 VP / PI or academy) returning booster9 (4pw, 4 VP / PI or academy)",
+    "move": "itars spend 3pw for 1o. pass booster9 (4pw, 4 VP / PI or academy) returning booster6 (1o, 1 VP / mine)",
     "round": 2,
     "turn": 6,
     "changes": [
@@ -3965,7 +3965,7 @@
     "phase": "roundStart"
   },
   {
-    "move": "geodens pass booster3 (q, 2c) returning booster3 (q, 2c)",
+    "move": "geodens pass booster3 (q, 2c) returning booster4 (2c, 1 step)",
     "round": 1,
     "turn": 10,
     "changes": [],
@@ -4029,7 +4029,7 @@
     "textColor": "black"
   },
   {
-    "move": "lantids pass booster10 (4c, 1 VP / gaia planet) returning booster10 (4c, 1 VP / gaia planet)",
+    "move": "lantids pass booster10 (4c, 1 VP / gaia planet) returning booster3 (q, 2c)",
     "round": 1,
     "turn": 8,
     "changes": [],
@@ -4037,7 +4037,7 @@
     "textColor": "black"
   },
   {
-    "move": "taklons pass booster2 (1o, 2 tokens) returning booster2 (1o, 2 tokens)",
+    "move": "taklons pass booster2 (1o, 2 tokens) returning booster9 (4pw, 4 VP / PI or academy)",
     "round": 1,
     "turn": 8,
     "changes": [
@@ -4351,7 +4351,7 @@
     "textColor": "black"
   },
   {
-    "move": "itars burn 2. pass booster6 (1o, 1 VP / mine) returning booster6 (1o, 1 VP / mine)",
+    "move": "itars burn 2. pass booster6 (1o, 1 VP / mine) returning booster2 (1o, 2 tokens)",
     "round": 1,
     "turn": 5,
     "changes": [],

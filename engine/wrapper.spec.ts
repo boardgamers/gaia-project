@@ -93,7 +93,7 @@ describe("wrapper", () => {
   });
 
   describe("move completion", () => {
-    it("should add booster info to move history", () => {
+    it("should add research info to move history", () => {
       const moves = Engine.parseMoves(`
         init 2 randomSeed
         p1 faction terrans
@@ -112,6 +112,27 @@ describe("wrapper", () => {
 
       expect(newEngine.moveHistory.length).to.equal(moves.length + 1);
       expect(newEngine.moveHistory.slice(-1).pop()).to.equal("terrans up gaia (1 ⇒ 2)");
+    });
+
+    it("should add returned booster to move history", () => {
+      const moves = Engine.parseMoves(`
+        init 2 randomSeed
+        p1 faction terrans
+        p2 faction nevlas
+        terrans build m -1x2
+        nevlas build m -1x0
+        nevlas build m 0x-4
+        terrans build m -4x-1
+        nevlas booster booster7
+        terrans booster booster3
+      `);
+
+      const engine = new Engine(moves);
+
+      const newEngine = move(engine, "terrans pass booster4", PlayerEnum.Player1);
+
+      expect(newEngine.moveHistory.length).to.equal(moves.length + 1);
+      expect(newEngine.moveHistory.slice(-1).pop()).to.equal("terrans pass booster4 returning booster3");
     });
   });
 });
