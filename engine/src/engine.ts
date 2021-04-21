@@ -6,7 +6,7 @@ import { version } from "../package.json";
 import { boardActions } from "./actions";
 import { finalRankings, gainFinalScoringVictoryPoints } from "./algorithms/scoring";
 import { ChargeDecision, ChargeRequest, decideChargeRequest } from "./auto-charge";
-import AvailableCommand, { generate as generateAvailableCommands } from "./available-command";
+import AvailableCommand, { generate as generateAvailableCommands, remainingFactions } from "./available-command";
 import { stdBuildingValue } from "./buildings";
 import {
   AdvTechTile,
@@ -74,6 +74,8 @@ export interface EngineOptions {
   factionVariant?: FactionVariant;
   /** Layout */
   layout?: "standard" | "balanced" | "xshape";
+  /* Force players to have random factions */
+  randomFactions?: boolean;
 }
 
 export type LogEntryChanges = {
@@ -178,6 +180,7 @@ export default class Engine {
   phase: Phase = Phase.SetupInit;
   subPhase: SubPhase = SubPhase.BeforeMove;
   oldPhase: Phase;
+  randomFactions?: Faction[];
   version = version;
 
   get expansions() {
@@ -239,10 +242,6 @@ export default class Engine {
         this.options.auction = AuctionVariant.ChooseBid;
       }
     }
-    // if (get(this.options, "map.map")) {
-    //   this.options.map.sectors = get(this.options, "map.map");
-    //   set(this.options, "map.map", undefined);
-    // }
   }
 
   get factionCustomization(): FactionCustomization {
@@ -520,7 +519,7 @@ export default class Engine {
     }
 
     const toMove = this.playerToMove;
-    const faction = this.player(toMove).faction;
+    const factionOrPlayer = this.player(toMove).faction ?? `p${toMove + 1}`;
 
     let _copy: Engine;
     const copy = () => _copy || (_copy = Engine.fromData(JSON.parse(JSON.stringify(this))));
@@ -529,6 +528,7 @@ export default class Engine {
     const copyOrThis = () => _copy || this;
 
     const functions = [
+      [Command.ChooseFaction, (cmd: AvailableCommand) => copyOrThis().autoChooseFaction(cmd)],
       [Command.ChargePower, (cmd: AvailableCommand) => copyOrThis().autoChargePower(cmd)],
       [Command.ChooseIncome, (cmd: AvailableCommand) => copyOrThis().autoIncome(cmd)],
       [Command.BrainStone, (cmd: AvailableCommand) => copyOrThis().autoBrainstone(cmd)],
@@ -563,9 +563,25 @@ export default class Engine {
         continue;
       }
 
-      const newMove = partialMove ? `${partialMove}. ${movePart}` : `${faction} ${movePart}`;
+      const newMove = partialMove ? `${partialMove}. ${movePart}` : `${factionOrPlayer} ${movePart}`;
 
       return this.autoMove(newMove, options);
+    }
+
+    return false;
+  }
+
+  /** Automatically choose faction when there's only one faction available */
+  autoChooseFaction(cmd: AvailableCommand): string | false {
+    if (this.availableCommands.length > 1) {
+      // There can be a bid command too
+      return false;
+    }
+
+    const factions: Faction[] = cmd.data;
+
+    if (factions.length === 1) {
+      return `${Command.ChooseFaction} ${factions[0]}`;
     }
 
     return false;
@@ -1389,6 +1405,17 @@ export default class Engine {
 
     for (let i = 0; i < nbPlayers; i++) {
       this.addPlayer(new Player(i));
+    }
+
+    if (this.options.randomFactions) {
+      const randomFactions = [];
+
+      for (const _ of this.players) {
+        const possible = remainingFactions({ ...this, setup: randomFactions });
+
+        randomFactions.push(possible[Math.floor(possible.length * this.map.rng())]);
+      }
+      this.randomFactions = randomFactions;
     }
   }
 

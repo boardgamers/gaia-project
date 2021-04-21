@@ -608,6 +608,46 @@ describe("Engine", () => {
     });
   });
 
+  describe("autoChooseFaction", () => {
+    it("should do nothing if random factions are unset", () => {
+      const engine = new Engine(["init 3 12"]);
+      engine.autoMove();
+
+      expect(engine.moveHistory.length).to.equal(1);
+    });
+
+    it("should choose factions if random factions are set (no auction)", () => {
+      const engine = new Engine(["init 3 12"], { randomFactions: true });
+      while (engine.autoMove());
+
+      expect(engine.moveHistory).to.eql(["init 3 12", "p1 faction bescods", "p2 faction gleens", "p3 faction baltaks"]);
+    });
+
+    it("should choose factions if random factions are set (choose-bid auction)", () => {
+      const engine = new Engine(["init 3 12"], { randomFactions: true, auction: AuctionVariant.ChooseBid });
+      while (engine.autoMove());
+
+      expect(engine.moveHistory).to.eql(["init 3 12", "p1 faction bescods", "p2 faction gleens", "p3 faction baltaks"]);
+    });
+
+    it("should not choose factions if random factions are set (bid-while-choosing auction)", () => {
+      const engine = new Engine(["init 3 12"], { randomFactions: true, auction: AuctionVariant.BidWhileChoosing });
+      engine.autoMove();
+
+      expect(engine.moveHistory).to.eql(["init 3 12"]);
+    });
+
+    it("should not choose factions even when only one remaining (bid-while-choosing auction)", () => {
+      const engine = new Engine(["init 3 12", "p1 faction bescods", "p2 faction gleens"], {
+        randomFactions: true,
+        auction: AuctionVariant.BidWhileChoosing,
+      });
+      engine.autoMove();
+
+      expect(engine.moveHistory).to.have.lengthOf(3);
+    });
+  });
+
   describe("autoPass", () => {
     it("should be able to handle complex passing scenario with multiple commands", () => {
       const engine = new Engine(
