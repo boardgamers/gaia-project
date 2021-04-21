@@ -5,15 +5,18 @@ import Player, { AutoCharge } from "./player";
 import Reward from "./reward";
 
 export enum ChargeDecision {
-  Yes,
-  No,
-  Ask,
-  Undecided,
+  Yes = "yes",
+  No = "no",
+  Ask = "ask",
+  Undecided = "undecided",
+  NoAutomaticYes = "no-automatic-yes",
 }
 
 export class ChargeRequest {
   public readonly autoCharge: AutoCharge;
+  /** Minimum charge executed by the offers */
   public readonly minCharge: number;
+  /** Maximum charge executed by the offers */
   public readonly maxCharge: number;
   public readonly maxAllowedOffer: Offer;
 
@@ -79,31 +82,37 @@ export function decideChargeRequest(r: ChargeRequest): ChargeDecision {
   if (r.autoCharge == "ask") {
     return ChargeDecision.Ask;
   }
+  let noYes = false;
   for (const chargeRule of chargeRules) {
     const decision = chargeRule(r);
-    if (decision != ChargeDecision.Undecided) {
+    if (decision === ChargeDecision.NoAutomaticYes) {
+      noYes = true;
+    } else if (decision === ChargeDecision.Yes && noYes) {
+      continue;
+    } else if (decision != ChargeDecision.Undecided) {
       return decision;
     }
   }
-  return ChargeDecision.Undecided;
+  return ChargeDecision.Ask;
 }
 
 // A passed player should always decline a leech if there's a VP cost associated with it -
 // if it's either the last round or if the income phase would already move all tokens to area3.
 // If this not true, please add an example (or link to) in the comments
-function askOrDeclineForPassedPlayer(r: ChargeRequest): ChargeDecision {
+export function askOrDeclineForPassedPlayer(r: ChargeRequest): ChargeDecision {
   const noOfferIsFree = r.offers.every((offer) => offer.cost !== "~");
 
   if (r.playerHasPassed && noOfferIsFree) {
     const remaining = r.incomeSelection.remainingChargesAfterIncome;
     if (r.isLastRound) {
       return ChargeDecision.No;
-    } else if (remaining <= 0) {
-      //all charges are wasted
+    } else if (remaining <= 0 && r.offers.length < 2) {
+      // All charges are wasted and only one offer
+      // As we still need to ask if multiple offers (Taklons + token gain)
       return ChargeDecision.No;
     } else if (remaining < r.minCharge) {
       //some charges are wasted
-      return ChargeDecision.Ask;
+      return ChargeDecision.NoAutomaticYes;
     }
   }
   return ChargeDecision.Undecided;
