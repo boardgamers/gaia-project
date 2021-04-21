@@ -61,7 +61,7 @@
         />
       </template>
       <Pool class="col-12 order-10 mt-4" />
-      <AdvancedLog class="col-12 order-last mt-4" :currentMove="currentMove" v-if="logPlacement !== 'top'" />
+      <AdvancedLog class="col-12 order-last mt-4" :currentMove="currentMove" v-if="logPlacement === 'bottom'" />
     </div>
   </div>
 </template>

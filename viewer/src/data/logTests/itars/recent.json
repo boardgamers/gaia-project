@@ -1,8 +1,7 @@
 [
   {
-    "move": "geodens charge 1pw",
     "round": 6,
-    "turn": 1,
+    "turn": 2,
     "changes": [
       {
         "source": "charge",
@@ -10,12 +9,12 @@
       }
     ],
     "color": "#ffffbe",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "move": "geodens charge 1pw"
   },
   {
-    "move": "taklons spend 4pw for 1q. build m 7B4.",
     "round": 6,
-    "turn": 1,
+    "turn": 2,
     "changes": [
       {
         "source": "spend",
@@ -31,12 +30,12 @@
       }
     ],
     "color": "#704100",
-    "textColor": "white"
+    "textColor": "white",
+    "move": "taklons spend 4pw for 1q. build m 7B4."
   },
   {
-    "move": "lantids spend 3pw for 1o. up eco (4 ⇒ 5).",
     "round": 6,
-    "turn": 1,
+    "turn": 2,
     "changes": [
       {
         "source": "spend",
@@ -52,12 +51,12 @@
       }
     ],
     "color": "#2080f0",
-    "textColor": "black"
+    "textColor": "black",
+    "move": "lantids spend 3pw for 1o. up eco (4 ⇒ 5)."
   },
   {
-    "move": "itars charge 1pw",
     "round": 6,
-    "turn": 1,
+    "turn": 2,
     "changes": [
       {
         "source": "charge",
@@ -65,12 +64,12 @@
       }
     ],
     "color": "#bebebe",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "move": "itars charge 1pw"
   },
   {
-    "move": "taklons charge 1t,1pw",
     "round": 6,
-    "turn": 1,
+    "turn": 2,
     "changes": [
       {
         "source": "charge",
@@ -78,12 +77,12 @@
       }
     ],
     "color": "#ffffbe",
-    "textColor": "var(--res-power)"
+    "textColor": "var(--res-power)",
+    "move": "taklons charge 1t,1pw"
   },
   {
-    "move": "geodens build m 7B2.",
     "round": 6,
-    "turn": 1,
+    "turn": 2,
     "changes": [
       {
         "source": "build",
@@ -95,10 +94,18 @@
       }
     ],
     "color": "#FF9500",
-    "textColor": "black"
+    "textColor": "black",
+    "move": "geodens build m 7B2."
   },
   {
-    "move": "itars spend 4tg for tech. tech int (k for planet types). up int (3 ⇒ 4). spend 4tg for tech. tech adv-int (4 VP / ts). cover int. up sci (1 ⇒ 2)",
+    "round": 6,
+    "turn": 2,
+    "changes": [],
+    "color": "white",
+    "textColor": "var(--res-power)",
+    "phase": "roundMove"
+  },
+  {
     "round": 6,
     "turn": 1,
     "changes": [
@@ -116,15 +123,15 @@
       }
     ],
     "color": "#000000",
-    "textColor": "white"
+    "textColor": "white",
+    "move": "itars spend 4tg for tech. tech int (k for planet types). up int (3 ⇒ 4). spend 4tg for tech. tech adv-int (4 VP / ts). cover int. up sci (1 ⇒ 2)"
   },
   {
-    "move": null,
-    "round": 6,
-    "turn": 1,
+    "round": 0,
+    "turn": 0,
     "changes": [],
     "color": "white",
     "textColor": "var(--res-power)",
-    "phase": "roundMove"
+    "phase": "moves-skipped"
   }
 ]
