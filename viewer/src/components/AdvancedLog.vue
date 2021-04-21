@@ -5,21 +5,22 @@
         <b-form-radio value="recent">Recent</b-form-radio>
         <b-form-radio value="all">Everything</b-form-radio>
       </b-form-radio-group>
-      <b-form-radio-group :checked="placement" @change="setPlacement">
-        <b-form-radio value="top">Top</b-form-radio>
-        <b-form-radio value="bottom">Bottom</b-form-radio>
-        <b-form-radio value="off">Don't show log</b-form-radio>
-      </b-form-radio-group>
     </div>
-    <table class="table table-hover table-striped table-sm" v-if="placement !== 'off'">
+    <table class="table table-hover table-striped table-sm">
       <tbody>
         <tr class="major-event" v-if="gameData.phase === 'endGame'">
-          <td colspan="3">Game Ended</td>
+          <td colspan="4">Game Ended</td>
         </tr>
         <template v-for="(event, i) in history">
           <tr :key="history.length - i" :style="`background-color: ${event.color}; color: ${event.textColor}`">
-            <td :rowspan="rowSpan(event)">{{ event.round }}.{{ event.turn }}</td>
-            <td v-if="event.phase === 'roundStart'" class="major-event">Round {{ event.round }}</td>
+            <td v-if="!['setupInit', 'moves-skipped', 'roundStart'].includes(event.phase)" :rowspan="rowSpan(event)">
+              {{ event.round }}.{{ event.turn }}
+            </td>
+            <td v-if="event.phase === 'roundStart'" colspan="2" class="major-event">Round {{ event.round }}</td>
+            <td v-else-if="event.phase === 'setupInit'" colspan="2" class="major-event">Game Started</td>
+            <td v-else-if="event.phase === 'moves-skipped'" colspan="2" class="major-event">
+              Change preferences to expand
+            </td>
             <td v-else-if="event.phase === 'roundIncome'" class="phase-change">Income phase</td>
             <td v-else-if="event.phase === 'roundGaia'" class="phase-change">Gaia phase</td>
             <td v-else-if="event.phase === 'roundMove'" class="phase-change">Move phase</td>
@@ -38,10 +39,6 @@
             <td>{{ change.changes }}</td>
           </tr>
         </template>
-        <tr class="major-event">
-          <td colspan="3" v-if="scope === 'recent'">Click "Everything" to expand</td>
-          <td colspan="3" v-else>Game Started</td>
-        </tr>
       </tbody>
     </table>
   </div>
@@ -50,8 +47,9 @@
 import Vue from "vue";
 import {Component, Prop} from "vue-property-decorator";
 import Engine from "@gaia-project/engine";
-import {LogPlacement} from "../data";
-import {HistoryEntry, LogScope, makeHistory} from "../data/log";
+import {HistoryEntry, makeHistory} from "../data/log";
+
+type LogScope = "recent" | "all"
 
 @Component
 export default class AdvancedLog extends Vue {
@@ -64,20 +62,12 @@ export default class AdvancedLog extends Vue {
     this.scope = scope;
   }
 
-  get placement(): LogPlacement {
-    return this.$store.state.gaiaViewer.preferences.logPlacement;
-  }
-
-  setPlacement(placement: LogPlacement) {
-    this.$store.state.gaiaViewer.preferences.logPlacement = placement;
-  }
-
   get gameData(): Engine {
     return this.$store.state.gaiaViewer.data;
   }
 
   get history(): HistoryEntry[] {
-    return makeHistory(this.gameData, this.$store.getters["gaiaViewer/recentMoves"], this.scope, this.currentMove);
+    return makeHistory(this.gameData, this.$store.getters["gaiaViewer/recentMoves"], this.scope == "recent", this.currentMove);
   }
 
   rowSpan(entry: HistoryEntry): number {
@@ -92,6 +82,7 @@ export default class AdvancedLog extends Vue {
 <style lang="scss">
 .major-event {
   font-weight: bold;
+  color: black;
 }
 
 .phase-change {
@@ -101,6 +92,7 @@ export default class AdvancedLog extends Vue {
 tr.first-change > td {
   border-bottom: none !important;
 }
+
 tr.changes > td {
   border-top: none !important;
 }

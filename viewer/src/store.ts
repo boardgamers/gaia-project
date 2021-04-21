@@ -173,7 +173,7 @@ const gaiaViewer = {
       const data = state.data;
       const player = state.player?.index ?? data.currentPlayer;
       if (player == undefined) {
-        return { index: 0, moves: [], allMoves: parseMoves(data.moveHistory) };
+        return { index: -1, moves: [], allMoves: parseMoves(data.moveHistory) };
       }
       return recentMoves(player, data.advancedLog, data.moveHistory);
     },

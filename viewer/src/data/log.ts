@@ -6,10 +6,11 @@ import Engine, {
   LogEntryChanges,
   Phase,
   PlayerEnum,
+  Resource,
   TechTilePos,
 } from "@gaia-project/engine";
 import { factionLogColors, factionLogTextColors, lightFactionLogColors } from "../graphics/utils";
-import { MovesSlice, ownTurn, parsedMove, ParsedMove } from "../logic/recent";
+import { CommandObject, MovesSlice, ownTurn, parsedMove, ParsedMove } from "../logic/recent";
 import { boosterNames } from "./boosters";
 import { advancedTechTileNames, baseTechTileNames } from "./tech-tiles";
 
@@ -56,9 +57,11 @@ export function replaceChange(data: Engine, move: string): string {
 
 type Change = { source: string; changes: string };
 
+export type HistoryPhase = Phase | "moves-skipped";
+
 export type HistoryEntry = {
   move?: string;
-  phase?: Phase;
+  phase?: HistoryPhase;
   changes: Change[];
   round: number;
   turn: number;
@@ -83,8 +86,6 @@ function makeChanges(data: Engine, entryChanges?: LogEntryChanges): Change[] {
       });
 }
 
-export type LogScope = "all" | "recent";
-
 type HistoryState = {
   round: number;
   phase: Phase;
@@ -95,7 +96,7 @@ type HistoryState = {
 function makeEntry(
   data: Engine,
   state: HistoryState,
-  newPhase?: Phase,
+  newPhase?: HistoryPhase,
   parsedMove?: ParsedMove,
   player?: PlayerEnum,
   changes?: LogEntryChanges
@@ -111,7 +112,7 @@ function makeEntry(
       // nothing
     } else if (command == Command.ChooseFaction) {
       faction = cmd.args[0] as Faction;
-      turnFaction = cmd.faction;
+      turnFaction = faction;
     } else if (command == Command.Bid || command == Command.RotateSectors) {
       turnFaction = cmd.faction;
     } else {
@@ -129,56 +130,75 @@ function makeEntry(
   const color = faction == null ? "white" : own ? factionLogColors[faction] : lightFactionLogColors[faction];
   const textColor = own ? (faction != null ? factionLogTextColors[faction] : "black") : "var(--res-power)";
   if (own && turnFaction != null) {
-    if (state.turnFactions.includes(turnFaction)) {
+    if (state.turnFactions.includes(turnFaction) || state.turn == 0) {
       state.turn++;
       state.turnFactions = [];
     }
     state.turnFactions.push(turnFaction);
   }
   const res: HistoryEntry = {
-    move: move,
     round: state.round,
     turn: state.turn,
     changes: makeChanges(data, changes),
     color: color,
     textColor: textColor,
   };
+  //to avoid confusing data in unit tests
   if (newPhase != undefined) {
-    //to avoid confusing data in unit tests
     res.phase = newPhase;
+  }
+  if (move != undefined) {
+    res.move = move;
   }
 
   return res;
 }
 
-export function makeHistory(data: Engine, recent: MovesSlice, scope: LogScope, currentMove?: string): HistoryEntry[] {
+export function isGaiaMove(commands: CommandObject[]): boolean {
+  return commands.some((c) => c.command == Command.Spend && c.args[0].endsWith(Resource.GainTokenGaiaArea));
+}
+
+export function makeHistory(
+  data: Engine,
+  recent: MovesSlice,
+  onlyRecent: boolean,
+  currentMove?: string
+): HistoryEntry[] {
   const advancedLog = data.advancedLog;
 
-  const offset = scope == "recent" ? recent.index : 0;
+  let append = !onlyRecent || recent.index < 0;
   const ret = [];
+  function addEntry(entry: HistoryEntry) {
+    if (append) {
+      ret.push(entry);
+    }
+  }
+
   const state: HistoryState = {
     round: 0,
     phase: Phase.BeginGame,
     turn: 0,
     turnFactions: [],
   };
-  let advancedLogIndex = 0;
-  let nextLogEntry = advancedLog[advancedLogIndex];
-
-  const newPhase = (newPhase: Phase, newTurn: number) => {
+  const newPhase = (newPhase: Phase, turn: number) => {
     state.phase = newPhase;
-    state.turn = newTurn;
+    state.turn = turn;
     state.turnFactions = [];
   };
+
+  let advancedLogIndex = -1;
+  let nextLogEntry: LogEntry = null;
 
   const bumpLog = () => {
     advancedLogIndex += 1;
     nextLogEntry = advancedLog[advancedLogIndex];
-    if (nextLogEntry?.round) {
+    if (advancedLogIndex == 0) {
+      ret.push(makeEntry(data, state, recent.index > 0 && onlyRecent ? "moves-skipped" : Phase.SetupInit));
+    } else if (nextLogEntry?.round) {
       state.round = nextLogEntry.round;
       newPhase(Phase.RoundStart, 0);
     } else if (nextLogEntry?.phase) {
-      newPhase(nextLogEntry?.phase, 0);
+      newPhase(nextLogEntry?.phase, state.turn);
     }
   };
 
@@ -187,17 +207,17 @@ export function makeHistory(data: Engine, recent: MovesSlice, scope: LogScope, c
     return makeEntry(data, state, newPhase, move, entry.player, entry.changes);
   };
 
-  function addEntry(entry: HistoryEntry) {
-    if (advancedLogIndex >= offset) {
-      ret.push(entry);
-    }
-  }
+  bumpLog();
 
   recent.allMoves.forEach((parsedMove, i) => {
+    if (onlyRecent && i == recent.index) {
+      append = true;
+    }
+
     const commands = parsedMove.commands;
     if (state.phase == Phase.RoundGaia) {
-      if (commands.some((c) => c.command != Command.Spend)) {
-        newPhase(Phase.RoundMove, 1);
+      if (!isGaiaMove(commands)) {
+        newPhase(Phase.RoundMove, state.turn + 1);
         addEntry(makeEntry(data, state, Phase.RoundMove));
       }
     }
