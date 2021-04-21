@@ -377,17 +377,10 @@ export function possibleFreeActions(engine: Engine, player: Player) {
 
   engine.player(player).emit("freeActionChoice", pool);
 
-  // freeActions for Terrans / Itars during gaiaPhase
-  if (engine.phase === Phase.RoundGaia && (pl.canGaiaTerrans() || pl.canGaiaItars())) {
+  // freeActions for Terrans during gaiaPhase
+  if (engine.phase === Phase.RoundGaia && pl.canGaiaTerrans()) {
     if (pl.canGaiaTerrans()) {
       pool = freeActionsTerrans;
-    } else if (pl.canGaiaItars()) {
-      pool = freeActionsItars;
-      commands.push({
-        name: Command.Decline,
-        player,
-        data: { offers: [new Offer(Resource.TechTile, new Reward(4, Resource.GainTokenGaiaArea).toString())] },
-      });
     }
 
     burnDisabled = true;
@@ -612,8 +605,24 @@ export function possibleGaiaFreeActions(engine: Engine, player: Player) {
   const commands = [];
   const pl = engine.player(player);
 
-  if (pl.canGaiaTerrans() || pl.canGaiaItars()) {
+  if (pl.canGaiaTerrans()) {
     commands.push(...possibleFreeActions(engine, player));
+  } else if (pl.canGaiaItars()) {
+    if (possibleTechTiles(engine, player).length > 0) {
+      commands.push({
+        name: Command.Spend,
+        player,
+        data: {
+          acts: freeActionsItars,
+        },
+      });
+    }
+
+    commands.push({
+      name: Command.Decline,
+      player,
+      data: { offers: [new Offer(Resource.TechTile, new Reward(4, Resource.GainTokenGaiaArea).toString())] },
+    });
   }
   return commands;
 }
