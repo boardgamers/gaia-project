@@ -369,25 +369,32 @@ export function possibleBoardActions(engine: Engine, player: Player) {
 export function possibleFreeActions(engine: Engine, player: Player) {
   // free action - spend
   const pl = engine.player(player);
-  const acts = [];
   const commands: AvailableCommand[] = [];
-  let burnDisabled = false;
 
-  let pool = [...freeActions];
-
+  const pool = [...freeActions];
   engine.player(player).emit("freeActionChoice", pool);
 
-  // freeActions for Terrans during gaiaPhase
-  if (engine.phase === Phase.RoundGaia && pl.canGaiaTerrans()) {
-    if (pl.canGaiaTerrans()) {
-      pool = freeActionsTerrans;
-    }
-
-    burnDisabled = true;
+  const spendCommand = transformToSpendCommand(pool, pl);
+  if (spendCommand) {
+    commands.push(spendCommand);
   }
 
-  for (const freeAction of pool) {
-    const maxPay = pl.maxPayRange(Reward.parse(freeAction.cost));
+  // free action - burn
+  if (pl.data.burnablePower() > 0) {
+    commands.push({
+      name: Command.BurnPower,
+      player,
+      data: range(1, pl.data.burnablePower() + 1),
+    });
+  }
+
+  return commands;
+}
+
+function transformToSpendCommand(actions: { cost: string; income: string }[], player: PlayerObject) {
+  const acts = [];
+  for (const freeAction of actions) {
+    const maxPay = player.maxPayRange(Reward.parse(freeAction.cost));
     if (maxPay > 0) {
       acts.push({
         cost: freeAction.cost,
@@ -398,19 +405,9 @@ export function possibleFreeActions(engine: Engine, player: Player) {
   }
 
   if (acts.length > 0) {
-    commands.push({ name: Command.Spend, player, data: { acts } });
+    return { name: Command.Spend, player: player.player, data: { acts } };
   }
-
-  // free action - burn
-  if (!burnDisabled && engine.player(player).data.burnablePower() > 0) {
-    commands.push({
-      name: Command.BurnPower,
-      player,
-      data: range(1, engine.player(player).data.burnablePower() + 1),
-    });
-  }
-
-  return commands;
+  return null;
 }
 
 export function possibleLabDowngrades(engine: Engine, player: Player) {
@@ -606,7 +603,7 @@ export function possibleGaiaFreeActions(engine: Engine, player: Player) {
   const pl = engine.player(player);
 
   if (pl.canGaiaTerrans()) {
-    commands.push(...possibleFreeActions(engine, player));
+    commands.push(transformToSpendCommand(freeActionsTerrans, pl));
   } else if (pl.canGaiaItars()) {
     if (possibleTechTiles(engine, player).length > 0) {
       commands.push({
