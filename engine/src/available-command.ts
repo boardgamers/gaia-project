@@ -1,7 +1,7 @@
-import { difference, range } from "lodash";
-import { boardActions, freeActions, freeActionsItars, freeActionsTerrans } from "./actions";
-import { upgradedBuildings } from "./buildings";
-import Engine, { AuctionVariant } from "./engine";
+import {difference, range} from "lodash";
+import {boardActions, freeActions, freeActionsItars, freeActionsTerrans} from "./actions";
+import {upgradedBuildings} from "./buildings";
+import Engine, {AuctionVariant} from "./engine";
 import {
   AdvTechTilePos,
   BoardAction,
@@ -19,12 +19,14 @@ import {
   SubPhase,
   TechTilePos,
 } from "./enums";
-import { oppositeFaction } from "./factions";
+import {oppositeFaction} from "./factions";
 import PlayerObject from "./player";
 import PlayerData from "./player-data";
 import * as researchTracks from "./research-tracks";
 import Reward from "./reward";
-import { isAdvanced } from "./tiles/techs";
+import {isAdvanced} from "./tiles/techs";
+import SpaceMap from "./map";
+import {GaiaHex} from "./gaia-hex";
 
 const ISOLATED_DISTANCE = 3;
 const UPGRADE_RESEARCH_COST = "4k";
@@ -129,6 +131,27 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
   return [];
 }
 
+function addPossibleNewPlanet(data: PlayerData, map: SpaceMap, hex: GaiaHex, pl: PlayerObject, planet: Planet,
+                              building: Building, buildings: any[]) {
+  const distance = Math.min(
+    ...data.occupied.filter((loc) => loc.isRangeStartingPoint(pl.player)).map((loc) => map.distance(hex, loc))
+  );
+  const qicNeeded = Math.max(Math.ceil((distance - data.range - data.temporaryRange) / QIC_RANGE_UPGRADE), 0);
+
+  const {possible, cost, steps} = pl.canBuild(planet, building, {
+    addedCost: [new Reward(qicNeeded, Resource.Qic)],
+  });
+
+  if (possible) {
+    buildings.push({
+      building,
+      coordinates: hex.toString(),
+      cost: Reward.toString(cost),
+      steps,
+    });
+  }
+}
+
 export function possibleBuildings(engine: Engine, player: Player) {
   const map = engine.map;
   const pl = engine.player(player);
@@ -193,26 +216,11 @@ export function possibleBuildings(engine: Engine, player: Player) {
     } else if (pl.canOccupy(hex)) {
       // planet without building
       // Check if the range is enough to access the planet
-      const distance = Math.min(
-        ...data.occupied.filter((loc) => loc.isRangeStartingPoint(player)).map((loc) => map.distance(hex, loc))
-      );
-      const qicNeeded = Math.max(Math.ceil((distance - data.range - data.temporaryRange) / QIC_RANGE_UPGRADE), 0);
 
-      const building = hex.data.planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine;
       // No need for terra forming if already occupied by another faction
       const planet = hex.occupied() ? pl.planet : hex.data.planet;
-      const { possible, cost, steps } = pl.canBuild(planet, building, {
-        addedCost: [new Reward(qicNeeded, Resource.Qic)],
-      });
-
-      if (possible) {
-        buildings.push({
-          building,
-          coordinates: hex.toString(),
-          cost: Reward.toString(cost),
-          steps,
-        });
-      }
+      const building = hex.data.planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine;
+      addPossibleNewPlanet(data, map, hex, pl, planet, building, buildings);
     }
   } // end for hex
 
@@ -241,21 +249,8 @@ export function possibleSpaceStations(engine: Engine, player: Player) {
       continue;
     }
 
-    const distance = Math.min(
-      ...data.occupied.filter((loc) => loc.isRangeStartingPoint(player)).map((loc) => map.distance(hex, loc))
-    );
-    const qicNeeded = Math.max(Math.ceil((distance - data.range - data.temporaryRange) / QIC_RANGE_UPGRADE), 0);
-    const { possible, cost } = pl.canBuild(pl.planet, Building.SpaceStation, {
-      addedCost: [new Reward(qicNeeded, Resource.Qic)],
-    });
-
-    if (possible) {
-      buildings.push({
-        building: Building.SpaceStation,
-        coordinates: hex.toString(),
-        cost: Reward.toString(cost),
-      });
-    }
+    const building = Building.SpaceStation;
+    addPossibleNewPlanet(data, map, hex, pl, pl.planet, building, buildings)
   }
 
   if (buildings.length > 0) {
