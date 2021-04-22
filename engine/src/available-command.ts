@@ -1,6 +1,7 @@
 import { difference, range } from "lodash";
 import { boardActions, freeActions, freeActionsItars, freeActionsTerrans } from "./actions";
 import { upgradedBuildings } from "./buildings";
+import { qicForDistance } from "./cost";
 import Engine, { AuctionVariant } from "./engine";
 import {
   AdvTechTilePos,
@@ -30,7 +31,6 @@ import { isAdvanced } from "./tiles/techs";
 
 const ISOLATED_DISTANCE = 3;
 const UPGRADE_RESEARCH_COST = "4k";
-const QIC_RANGE_UPGRADE = 2;
 
 export class Offer {
   constructor(readonly offer: string, readonly cost: string) {}
@@ -131,19 +131,6 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
   return [];
 }
 
-export function qicForDistance(distance: number, data: PlayerData): [number, boolean] {
-  function qic(temporaryRange: number) {
-    return Math.max(Math.ceil((distance - data.range - temporaryRange) / QIC_RANGE_UPGRADE), 0);
-  }
-
-  const qicNeeded = qic(data.temporaryRange);
-  if (data.temporaryRange > 0 && qic(0) == qicNeeded) {
-    // there's no reason to activate the booster and not use it
-    return [0, false];
-  }
-  return [qicNeeded, true];
-}
-
 function addPossibleNewPlanet(
   data: PlayerData,
   map: SpaceMap,
@@ -156,8 +143,8 @@ function addPossibleNewPlanet(
   const distance = Math.min(
     ...data.occupied.filter((loc) => loc.isRangeStartingPoint(pl.player)).map((loc) => map.distance(hex, loc))
   );
-  const [qicNeeded, qicPossible] = qicForDistance(distance, data);
-  if (!qicPossible) {
+  const qicNeeded = qicForDistance(distance, data);
+  if (qicNeeded == null) {
     return;
   }
 
@@ -532,7 +519,7 @@ export function possibleSpaceLostPlanet(engine: Engine, player: Player) {
       continue;
     }
     const distance = Math.min(...data.occupied.map((loc) => engine.map.distance(hex, loc)));
-    const qicNeeded = Math.max(Math.ceil((distance - data.range) / QIC_RANGE_UPGRADE), 0);
+    const qicNeeded = qicForDistance(distance, data);
 
     if (qicNeeded > data.qics) {
       continue;
