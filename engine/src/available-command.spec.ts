@@ -1,7 +1,9 @@
 import { expect } from "chai";
-import { remainingFactions } from "./available-command";
+import { possibleBoardActions, remainingFactions } from "./available-command";
 import Engine, { AuctionVariant } from "./engine";
-import { Faction } from "./enums";
+import { BoardAction, Faction } from "./enums";
+import Player from "./player";
+import PlayerData from "./player-data";
 
 describe("Available commands", () => {
   describe("remainingFactions", () => {
@@ -69,6 +71,28 @@ describe("Available commands", () => {
           expect(remainingFactions(engine)).to.eql([]);
         });
       });
+    });
+  });
+
+  describe("Board actions", () => {
+    it("should not allow board action if all resources woould be wasted", () => {
+      const actions = {};
+      BoardAction.values().forEach((pos: BoardAction) => {
+        actions[pos] = null;
+      });
+
+      const d = new PlayerData();
+      d.knowledge = 14;
+      d.power.area3 = 9;
+      const player = { data: d } as Player;
+
+      function possible() {
+        return possibleBoardActions(actions, player)[0].data.poweracts.map((a) => a.name);
+      }
+
+      expect(possible()).to.include("power1");
+      d.knowledge = 15;
+      expect(possible()).to.not.include("power1");
     });
   });
 });

@@ -2,7 +2,7 @@ import { difference, range } from "lodash";
 import { boardActions, freeActions, freeActionsItars, freeActionsTerrans } from "./actions";
 import { upgradedBuildings } from "./buildings";
 import { qicForDistance } from "./cost";
-import Engine, { AuctionVariant } from "./engine";
+import Engine, { AuctionVariant, BoardActions } from "./engine";
 import {
   AdvTechTilePos,
   BoardAction,
@@ -24,7 +24,7 @@ import { oppositeFaction } from "./factions";
 import { GaiaHex } from "./gaia-hex";
 import SpaceMap from "./map";
 import PlayerObject from "./player";
-import PlayerData from "./player-data";
+import PlayerData, { resourceLimits } from "./player-data";
 import * as researchTracks from "./research-tracks";
 import Reward from "./reward";
 import { isAdvanced } from "./tiles/techs";
@@ -81,7 +81,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
         ...possibleBuildings(engine, player),
         ...possibleFederations(engine, player),
         ...possibleResearchAreas(engine, player, UPGRADE_RESEARCH_COST),
-        ...possibleBoardActions(engine, player),
+        ...possibleBoardActions(engine.boardActions, engine.player(player)),
         ...possibleSpecialActions(engine, player),
         ...possibleFreeActions(engine, player),
         ...possibleRoundBoosters(engine, player),
@@ -321,7 +321,7 @@ export function possibleSpecialActions(engine: Engine, player: Player) {
         continue;
       }
       // If the action decreases rewards, the player must have them
-      if (!pl.canPay(Reward.negative(event.rewards.filter((rw) => rw.count < 0)))) {
+      if (!pl.data.canPay(Reward.negative(event.rewards.filter((rw) => rw.count < 0)))) {
         continue;
       }
       specialacts.push({
@@ -342,22 +342,32 @@ export function possibleSpecialActions(engine: Engine, player: Player) {
   return commands;
 }
 
-export function possibleBoardActions(engine: Engine, player: Player) {
-  const commands = [];
+export function possibleBoardActions(actions: BoardActions, p: PlayerObject): AvailableCommand[] {
+  const commands: AvailableCommand[] = [];
+
+  // not allowed if everything is lost - see https://github.com/boardgamers/gaia-project/issues/76
+  const canGain = (reward: Reward) => {
+    const type = reward.type;
+    const limit = resourceLimits[type];
+    return limit == null || p.data.getResources(type) < limit;
+  };
 
   let poweracts = BoardAction.values(Expansion.All).filter(
     (pwract) =>
-      engine.boardActions[pwract] === null && engine.player(player).canPay(Reward.parse(boardActions[pwract].cost))
+      actions[pwract] === null &&
+      p.data.canPay(Reward.parse(boardActions[pwract].cost)) &&
+      canGain(Reward.parse(boardActions[pwract].income[0])[0])
   );
 
   // Prevent using the rescore action if no federation token
-  if (engine.player(player).data.tiles.federations.length === 0) {
+  if (p.data.tiles.federations.length === 0) {
     poweracts = poweracts.filter((act) => act !== BoardAction.Qic2);
   }
+
   if (poweracts.length > 0) {
     commands.push({
       name: Command.Action,
-      player,
+      player: p.player,
       data: {
         poweracts: poweracts.map((act) => ({
           name: act,
@@ -464,7 +474,7 @@ export function possibleResearchAreas(engine: Engine, player: Player, cost?: str
   const pl = engine.player(player);
   const fields = ResearchField.values(engine.expansions);
 
-  if (pl.canPay(Reward.parse(cost))) {
+  if (pl.data.canPay(Reward.parse(cost))) {
     let avFields: ResearchField[] = fields;
 
     if (data) {

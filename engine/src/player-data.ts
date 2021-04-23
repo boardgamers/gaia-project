@@ -22,6 +22,12 @@ const MAX_ORE = 15;
 const MAX_CREDIT = 30;
 const MAX_KNOWLEDGE = 15;
 
+export const resourceLimits = {
+  [Resource.Ore]: MAX_ORE,
+  [Resource.Credit]: MAX_CREDIT,
+  [Resource.Knowledge]: MAX_KNOWLEDGE,
+};
+
 export class Power {
   constructor(public area1: number = 0, public area2: number = 0, public area3: number = 0, public gaia: number = 0) {}
 }
@@ -244,34 +250,48 @@ export default class PlayerData extends EventEmitter {
     }
   }
 
-  hasResource(reward: Reward) {
-    switch (reward.type) {
+  hasResource(reward: Reward): boolean {
+    const type = reward.type;
+    return type == Resource.None || this.getResources(type) >= reward.count;
+  }
+
+  getResources(type: Resource): number {
+    switch (type) {
       case Resource.Ore:
-        return this.ores >= reward.count;
+        return this.ores;
       case Resource.Credit:
-        return this.credits >= reward.count;
+        return this.credits;
       case Resource.Knowledge:
-        return this.knowledge >= reward.count;
+        return this.knowledge;
       case Resource.VictoryPoint:
-        return this.victoryPoints >= reward.count;
+        return this.victoryPoints;
       case Resource.Qic:
-        return this.qics >= reward.count;
-      case Resource.None:
-        return true;
+        return this.qics;
       case Resource.MoveTokenToGaiaArea:
       case Resource.GainToken:
-        return this.discardablePowerTokens() >= reward.count;
+        return this.discardablePowerTokens();
       case Resource.GainTokenGaiaArea:
-        return this.gaiaPowerTokens() >= reward.count;
+        return this.gaiaPowerTokens();
       case Resource.ChargePower:
-        return this.spendablePowerTokens() >= reward.count;
+        return this.spendablePowerTokens();
       case Resource.TokenArea3:
-        return this.power.area3 >= reward.count;
+        return this.power.area3;
       case Resource.GaiaFormer:
-        return this.gaiaformers - this.gaiaformersInGaia - this.buildings[Building.GaiaFormer] >= reward.count;
+        return this.gaiaformers - this.gaiaformersInGaia - this.buildings[Building.GaiaFormer];
     }
 
-    return false;
+    return 0;
+  }
+
+  canPay(reward: Reward[]): boolean {
+    const rewards = Reward.merge(reward);
+
+    for (const rew of rewards) {
+      if (!this.hasResource(rew)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   hasPlanetaryInstitute(): boolean {

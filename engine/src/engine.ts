@@ -142,6 +142,10 @@ export function createMoveToShow(move: string, p: PlayerData, executeMove: () =>
   return moveToShow;
 }
 
+export type BoardActions = {
+  [key in BoardAction]?: PlayerEnum;
+};
+
 export default class Engine {
   map: SpaceMap;
   players: Player[] = [];
@@ -170,9 +174,7 @@ export default class Engine {
     scorings: { round: null, final: null },
     federations: {},
   };
-  boardActions: {
-    [key in BoardAction]?: PlayerEnum;
-  } = {};
+  boardActions: BoardActions = {};
 
   terraformingFederation: Federation;
   availableCommands: AvailableCommand[] = [];
@@ -832,7 +834,6 @@ export default class Engine {
       this.generateAvailableCommands(subphase, data);
       if (this.availableCommands.length === 0) {
         if (required) {
-          console.log("reached dead end");
           // not allowed - see https://github.com/boardgamers/gaia-project/issues/76
           this.availableCommands = [{ name: Command.DeadEnd, player: this.currentPlayer, data: subphase }];
         } else {
@@ -1655,7 +1656,7 @@ export default class Engine {
     const income = Reward.merge(Reward.parse(incomeS));
 
     assert(!cost.some((r) => r.count <= 0) && !income.some((r) => r.count <= 0), "Nice try!");
-    assert(pl.canPay(cost) && cost, `Impossible to pay ${costS}`);
+    assert(pl.data.canPay(cost) && cost, `Impossible to pay ${costS}`);
     assert(_for === "for", "Expect second part of command to be 'for'");
 
     // tslint:disable-next-line no-shadowed-variable

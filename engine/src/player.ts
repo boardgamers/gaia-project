@@ -206,17 +206,6 @@ export default class Player extends EventEmitter {
     }
   }
 
-  canPay(reward: Reward[]): boolean {
-    const rewards = Reward.merge(reward);
-
-    for (const rew of rewards) {
-      if (!this.data.hasResource(rew)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
   maxPayRange(reward: Reward[]): number {
     const rewards = Reward.merge(reward);
 
@@ -247,7 +236,7 @@ export default class Player extends EventEmitter {
       addedCost = [];
     }
 
-    if (!this.canPay(addedCost)) {
+    if (!this.data.canPay(addedCost)) {
       return { possible: false };
     }
 
@@ -278,7 +267,7 @@ export default class Player extends EventEmitter {
 
     const cost = Reward.merge(this.board.cost(targetPlanet, building, isolated), addedCost);
 
-    if (!this.canPay(cost)) {
+    if (!this.data.canPay(cost)) {
       return { possible: false };
     }
     return {
