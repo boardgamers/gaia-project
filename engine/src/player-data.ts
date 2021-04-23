@@ -170,7 +170,7 @@ export default class PlayerData extends EventEmitter {
       count = -count;
     }
 
-    if (resource.startsWith("up-") && resource !== Resource.UpgradeLowest && resource !== Resource.UpgradeZero) {
+    if (resource.startsWith("up-") && resource !== Resource.UpgradeLowest) {
       const field = resource.slice("up-".length) as ResearchField;
       this.canUpgradeResearch = true;
       this.emit("beforeResearchUpgrade", field);

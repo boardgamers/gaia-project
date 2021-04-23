@@ -58,7 +58,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
+import {Component, Prop} from "vue-property-decorator";
 import Engine, {
   AvailableCommand,
   Booster,
@@ -72,15 +72,16 @@ import Engine, {
   Resource,
   Reward,
   SpaceMap,
+  SubPhase,
   tiles,
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
-import { buildingName } from "../data/building";
-import { ButtonData, GameContext } from "../data";
-import { eventDesc } from "../data/event";
-import { factionDesc } from "../data/factions";
-import { FactionCustomization } from "@gaia-project/engine/src/engine";
-import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
+import {buildingName} from "../data/building";
+import {ButtonData, GameContext} from "../data";
+import {eventDesc} from "../data/event";
+import {factionDesc} from "../data/factions";
+import {FactionCustomization} from "@gaia-project/engine/src/engine";
+import {factionVariantBoard} from "@gaia-project/engine/src/faction-boards";
 
 @Component<Commands>({
   watch: {
@@ -118,7 +119,7 @@ export default class Commands extends Vue {
   @Prop()
   currentMove?: string;
 
-  @Prop({ default: "" })
+  @Prop({default: ""})
   remainingTime: string;
 
   updater = 0;
@@ -410,7 +411,7 @@ export default class Commands extends Vue {
               label: "Advance research",
               command: command.name,
               // track.to contains actual level, to use when implementing research viewer
-              buttons: command.data.tracks.map((track) => ({ command: track.field })),
+              buttons: command.data.tracks.map((track) => ({command: track.field})),
               researchTiles: command.data.tracks.map((track) => track.field + "-" + track.to),
             });
           }
@@ -423,7 +424,7 @@ export default class Commands extends Vue {
             label: command.name === Command.ChooseCoverTechTile ? "Pick tech tile to cover" : "Pick tech tile",
             command: command.name,
             techs: command.data.tiles.map((tile) => tile.pos),
-            buttons: command.data.tiles.map((tile) => ({ command: tile.pos, tech: tile.pos })),
+            buttons: command.data.tiles.map((tile) => ({command: tile.pos, tech: tile.pos})),
           });
           break;
         }
@@ -501,7 +502,7 @@ export default class Commands extends Vue {
             label: "Special Action",
             command: Command.Special,
             actions: command.data.specialacts.map((act) => act.income),
-            buttons: command.data.specialacts.map((act) => ({ command: act.income })),
+            buttons: command.data.specialacts.map((act) => ({command: act.income})),
           });
           break;
         }
@@ -510,7 +511,7 @@ export default class Commands extends Vue {
           ret.push({
             label: "Burn power",
             command: Command.BurnPower,
-            buttons: command.data.map((val) => ({ command: val })),
+            buttons: command.data.map((val) => ({command: val})),
           });
           break;
         }
@@ -529,6 +530,35 @@ export default class Commands extends Vue {
           });
           break;
         }
+
+        case Command.DeadEnd:
+          let reason = "";
+          switch (command.data as SubPhase) {
+            case SubPhase.ChooseTechTile:
+              reason = "No tech tile left";
+              break;
+            case SubPhase.BuildMineOrGaiaFormer:
+              reason = "Cannot build mine or gaia former";
+              break;
+            case SubPhase.BuildMine:
+              reason = "Cannot build mine";
+              break;
+            case SubPhase.PISwap:
+              reason = "Cannot swap planetary institute";
+              break;
+            case SubPhase.DowngradeLab:
+              reason = "Cannot downgrade lab";
+              break;
+            case SubPhase.UpgradeResearch:
+              reason = "Cannot upgrade research";
+              break;
+          }
+          ret.push({
+            command: Command.DeadEnd,
+            label: reason,
+            disabled: true,
+          });
+          break;
 
         case Command.ChooseIncome: {
           ret.push(
@@ -570,7 +600,7 @@ export default class Commands extends Vue {
           const locationButtons = command.data.federations.map((fed, i) => ({
             command: fed.hexes,
             label: `Location ${i + 1}`,
-            hexes: new Map(fed.hexes.split(",").map((coord) => [this.engine.map.getS(coord), { coordinates: coord }])),
+            hexes: new Map(fed.hexes.split(",").map((coord) => [this.engine.map.getS(coord), {coordinates: coord}])),
             hover: true,
             buttons: tilesButtons,
           }));
@@ -656,44 +686,54 @@ i.planet {
   &.r {
     color: var(--terra);
   }
+
   // desert
   &.d {
     color: var(--desert);
   }
+
   // swamp
   &.s {
     color: var(--swamp);
   }
+
   // oxide
   &.o {
     color: var(--oxide);
   }
+
   // titanium
   &.t {
     color: var(--titanium);
   }
+
   // ice
   &.i {
     color: var(--ice);
   }
+
   // volcanic
   &.v {
     color: var(--volcanic);
   }
+
   // gaia
   &.g {
     color: var(--gaia);
   }
+
   // transdim
   &.m {
     color: var(--transdim);
   }
+
   // lost planet
   &.l {
     color: var(--lost);
   }
 
   filter: drop-shadow(0px 0px 1px black);
+
   .player-info & {
     filter: drop-shadow(0px 0px 1px black);
 

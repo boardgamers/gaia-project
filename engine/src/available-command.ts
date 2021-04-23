@@ -473,8 +473,6 @@ export function possibleResearchAreas(engine: Engine, player: Player, cost?: str
         avFields = fields.filter((field) => pl.data.research[field] === minArea);
       } else if (data.pos) {
         avFields = [data.pos];
-      } else if (data.zero) {
-        avFields = fields.filter((field) => pl.data.research[field] === 0);
       }
     }
 

@@ -120,4 +120,25 @@ describe("boosters", () => {
     expect(() => new Engine([...moves, "p1 special range+3. build m -4x-1"])).to.not.throw();
     expect(() => new Engine([...moves, "p1 special range+3. build gf 0x4"])).to.not.throw();
   });
+
+  it("should not allow range booster to be used when building is impossible", () => {
+    const moves = parseMoves(`
+      init 2 661
+      p1 faction ivits
+      p2 faction firaks
+      firaks build m 4A0
+      ivits build PI 2A3
+      firaks build m 3A3
+      firaks booster booster4
+      ivits booster booster5
+      ivits income 1t
+      ivits build m 2A7.
+      firaks pass booster9 returning booster4
+      ivits spend 1o for 1t. special range+3.
+    `);
+
+    expect(() => new Engine([...moves], { factionVariant: "more-balanced" })).to.throw(
+      "Command endturn is not in the list of available commands: deadEnd, last command: firaks pass booster9 returning booster4, index: 11"
+    );
+  });
 });
