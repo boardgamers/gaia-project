@@ -772,7 +772,7 @@ firaks special down-lab. build ts 7B5. up eco.
 gleens charge 3pw
 gleens special q.
 ivits special space-station. build sp 5B2.
-itars special step. build m 5A4.
+itars build m 5A4.
 firaks charge 1pw
 ivits charge 1pw
 firaks special 4pw.
