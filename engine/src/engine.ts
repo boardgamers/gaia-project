@@ -886,7 +886,8 @@ export default class Engine {
 
   get currentRoundScoringEvents() {
     const roundScoringTile = this.tiles.scorings.round[this.round - 1];
-    return Event.parse(roundScorings[roundScoringTile], `round${this.round}` as RoundScoring);
+    const roundScoring = roundScorings[roundScoringTile];
+    return roundScoring == null ? null : Event.parse(roundScoring, `round${this.round}` as RoundScoring);
   }
 
   /**
