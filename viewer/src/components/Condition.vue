@@ -97,6 +97,7 @@ export default class Condition extends Vue {
 <style lang="scss">
 g {
   &.condition {
+    pointer-events: none;
     &.gaia {
       fill: var(--gaia);
     }

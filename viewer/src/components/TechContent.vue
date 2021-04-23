@@ -97,16 +97,11 @@
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import {
-  tiles,
-  PlayerEnum,
   Event,
-  TechTilePos,
-  AdvTechTilePos,
   Operator as OperatorEnum,
   Condition as ConditionEnum,
   Building as BuildingEnum,
 } from "@gaia-project/engine";
-import { eventDesc } from "../data/event";
 import Resource from "./Resource.vue";
 import Building from "./Building.vue";
 import Condition from "./Condition.vue";
