@@ -16,7 +16,7 @@
       :kind="cornerReward.type"
       transform="translate(19, -19), scale(1.35)"
     />
-    <g v-if="event.operator === '|'">
+    <g v-if="event.operator === '|'" style="pointer-events: none">
       <polygon
         points="-30,-28 -20,-28 -20,28 -30,28"
         fill="#F8031D"
@@ -85,6 +85,7 @@
         text-anchor: middle;
         stroke-width: 1px;
         font-weight: bold;
+        pointer-events: none;
       "
       x="-14"
       v-if="event.operator === '+'"
