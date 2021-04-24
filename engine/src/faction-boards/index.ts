@@ -50,7 +50,7 @@ export function factionVariantBoard(customization: FactionCustomization, faction
     return byPlayerCount.board;
   }
 
-  const byType = variants.find((v) => v.type == customization.variant);
+  const byType = variants.find((v) => v.type == customization.variant && !("players" in v));
   if (byType != null) {
     return byType.board;
   }
