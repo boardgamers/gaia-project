@@ -58,7 +58,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import {Component, Prop} from "vue-property-decorator";
+import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   AvailableCommand,
   Booster,
@@ -76,12 +76,12 @@ import Engine, {
   tiles,
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
-import {buildingName} from "../data/building";
-import {ButtonData, GameContext} from "../data";
-import {eventDesc} from "../data/event";
-import {factionDesc} from "../data/factions";
-import {FactionCustomization} from "@gaia-project/engine/src/engine";
-import {factionVariantBoard} from "@gaia-project/engine/src/faction-boards";
+import { buildingName } from "../data/building";
+import { ButtonData, GameContext } from "../data";
+import { eventDesc } from "../data/event";
+import { factionDesc } from "../data/factions";
+import { FactionCustomization } from "@gaia-project/engine/src/engine";
+import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
 
 @Component<Commands>({
   watch: {

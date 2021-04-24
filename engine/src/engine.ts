@@ -363,7 +363,9 @@ export default class Engine {
   addPlayer(player: Player) {
     this.players.push(player);
 
-    player.data.on(`gain-${Resource.TechTile}`, () => this.processNextMove(SubPhase.ChooseTechTile, null, true));
+    player.data.on(`gain-${Resource.TechTile}`, (count, source) =>
+      this.processNextMove(SubPhase.ChooseTechTile, null, source == BoardAction.Qic1)
+    );
     player.data.on(`gain-${Resource.TemporaryStep}`, () => this.processNextMove(SubPhase.BuildMine, null, true));
     player.data.on(`gain-${Resource.TemporaryRange}`, (count: number) => {
       this.processNextMove(SubPhase.BuildMineOrGaiaFormer, null, true);
