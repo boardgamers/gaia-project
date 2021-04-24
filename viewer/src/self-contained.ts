@@ -9,8 +9,9 @@ function launchSelfContained(selector = "#app", debug = true) {
 
   const players = process.env.VUE_APP_players ?? 3;
   const seed = process.env.VUE_APP_seed ?? "12";
+  const moves = process.env.VUE_APP_moves ? JSON.parse(process.env.VUE_APP_moves) : [];
   let engine = new Engine(
-    [`init ${players} ${seed}`],
+    [`init ${players} ${seed}`, ...moves],
     {
       auction: (process.env.VUE_APP_auction ?? undefined) as AuctionVariant,
       factionVariant: (process.env.VUE_APP_factionVariant ?? "standard") as FactionVariant,
