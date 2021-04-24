@@ -131,6 +131,7 @@ export default class Player extends EventEmitter {
       events: this.events,
       name: this.name,
       dropped: this.dropped,
+      factionVariant: this.factionVariant,
     } as any;
 
     if (this.federationCache) {
@@ -148,6 +149,7 @@ export default class Player extends EventEmitter {
 
   static fromData(data: any, map: SpaceMap, customization: FactionCustomization, expansions: number) {
     const player = new Player(data.player);
+    player.factionVariant = data.factionVariant;
 
     if (data.faction) {
       player.loadFaction(data.faction, customization, expansions, true);
