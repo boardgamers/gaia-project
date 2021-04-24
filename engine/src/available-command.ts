@@ -356,7 +356,7 @@ export function possibleBoardActions(actions: BoardActions, p: PlayerObject): Av
     (pwract) =>
       actions[pwract] === null &&
       p.data.canPay(Reward.parse(boardActions[pwract].cost)) &&
-      canGain(Reward.parse(boardActions[pwract].income[0])[0])
+      boardActions[pwract].income.some(income => Reward.parse(income).some(reward => canGain(reward)))
   );
 
   // Prevent using the rescore action if no federation token
