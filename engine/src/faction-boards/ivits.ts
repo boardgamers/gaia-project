@@ -17,7 +17,7 @@ const ivits: FactionBoardVariants = {
       type: "more-balanced",
       players: 2,
       board: {
-        income: ["3k,4o,15c,q", "+o,k"],
+        income: ["3k,4o,15c", "+o,k,q"],
         //PI is placed earlier, see beginSetupBuildingPhase
       },
     },
