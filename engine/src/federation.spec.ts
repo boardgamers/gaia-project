@@ -772,7 +772,7 @@ firaks special down-lab. build ts 7B5. up eco.
 gleens charge 3pw
 gleens special q.
 ivits special space-station. build sp 5B2.
-itars special step. build m 5A4.
+itars build m 5A4.
 firaks charge 1pw
 ivits charge 1pw
 firaks special 4pw.
@@ -1265,11 +1265,10 @@ const game5 = [
   "hadsch-hallas federation 10A11,10A10,4A2,4C,4B1,4B3 fed3.",
   "itars build m 2B3.",
   "terrans charge 1pw",
-  "hadsch-hallas special range+3.",
-  "itars pass booster7",
-  "hadsch-hallas pass booster9",
+  "hadsch-hallas pass booster7",
+  "itars pass booster5",
   "terrans income 4pw",
   "baltaks income 4pw",
-  "itars income 1t. income 1t",
   "hadsch-hallas income 4pw. income 1t",
+  "itars income 1t. income 1t",
 ];

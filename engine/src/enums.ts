@@ -63,7 +63,6 @@ export enum Resource {
   UpgradeEconomy = "up-eco",
   UpgradeScience = "up-sci",
   UpgradeLowest = "up-lowest",
-  UpgradeZero = "up-0",
   TechTile = "tech",
   RescoreFederation = "fed",
   TemporaryStep = "step",
@@ -189,6 +188,7 @@ export enum Command {
   EndTurnConfirmation = "endturnConfirmation",
   PISwap = "swap-PI",
   PickReward = "pick",
+  DeadEnd = "deadEnd", // this command cannot be executed - it just signals that you have to undo
 }
 
 export enum Player {

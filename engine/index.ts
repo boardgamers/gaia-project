@@ -37,6 +37,7 @@ export {
   Round,
   RoundScoring,
   ScoringTile,
+  SubPhase,
   TechPos,
   TechTile,
   TechTilePos,

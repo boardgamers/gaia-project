@@ -5,6 +5,7 @@
     <b-btn
       v-else-if="!button.times"
       :variant="button.warning ? 'warning' : 'secondary'"
+      :disabled="button.disabled"
       class="mr-2 mb-2 move-button"
       @click="handleClick"
       @mouseenter="hover"

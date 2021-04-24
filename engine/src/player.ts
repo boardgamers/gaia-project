@@ -4,6 +4,7 @@ import { Grid, Hex } from "hexagrid";
 import { countBy, difference, merge, sum, uniq, uniqWith, zipWith } from "lodash";
 import spanningTree from "./algorithms/spanning-tree";
 import { stdBuildingValue } from "./buildings";
+import { terraformingCost } from "./cost";
 import { FactionCustomization } from "./engine";
 import {
   AdvTechTile,
@@ -42,7 +43,6 @@ import federationTiles, { isGreen } from "./tiles/federations";
 import { finalScorings } from "./tiles/scoring";
 import techs, { isAdvanced } from "./tiles/techs";
 
-const TERRAFORMING_COST = 3;
 // 25 satellites total
 // The 2 used on the final scoring board and 1 used in the player order can be replaced by other markers
 const MAX_SATELLITES = 25;
@@ -206,17 +206,6 @@ export default class Player extends EventEmitter {
     }
   }
 
-  canPay(reward: Reward[]): boolean {
-    const rewards = Reward.merge(reward);
-
-    for (const rew of rewards) {
-      if (!this.data.hasResource(rew)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
   maxPayRange(reward: Reward[]): number {
     const rewards = Reward.merge(reward);
 
@@ -247,7 +236,7 @@ export default class Player extends EventEmitter {
       addedCost = [];
     }
 
-    if (!this.canPay(addedCost)) {
+    if (!this.data.canPay(addedCost)) {
       return { possible: false };
     }
 
@@ -268,18 +257,17 @@ export default class Player extends EventEmitter {
       } else {
         // Get the number of terraforming steps to pay discounting terraforming track
         steps = terraformingStepsRequired(factions[this.faction].planet, targetPlanet);
-        addedCost.push(
-          new Reward(
-            (TERRAFORMING_COST - this.data.terraformCostDiscount) * Math.max(steps - this.data.temporaryStep, 0),
-            Resource.Ore
-          )
-        );
+        const reward = terraformingCost(this.data, steps);
+        if (reward == null) {
+          return { possible: false };
+        }
+        addedCost.push(reward);
       }
     }
 
     const cost = Reward.merge(this.board.cost(targetPlanet, building, isolated), addedCost);
 
-    if (!this.canPay(cost)) {
+    if (!this.data.canPay(cost)) {
       return { possible: false };
     }
     return {

@@ -19,7 +19,7 @@
             <td v-if="event.phase === 'roundStart'" colspan="2" class="major-event">Round {{ event.round }}</td>
             <td v-else-if="event.phase === 'setupInit'" colspan="2" class="major-event">Game Started</td>
             <td v-else-if="event.phase === 'moves-skipped'" colspan="2" class="major-event">
-              Change preferences to expand
+              Click "Everything" to expand
             </td>
             <td v-else-if="event.phase === 'roundIncome'" class="phase-change">Income phase</td>
             <td v-else-if="event.phase === 'roundGaia'" class="phase-change">Gaia phase</td>

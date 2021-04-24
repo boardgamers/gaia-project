@@ -142,6 +142,10 @@ export function createMoveToShow(move: string, p: PlayerData, executeMove: () =>
   return moveToShow;
 }
 
+export type BoardActions = {
+  [key in BoardAction]?: PlayerEnum;
+};
+
 export default class Engine {
   map: SpaceMap;
   players: Player[] = [];
@@ -170,9 +174,7 @@ export default class Engine {
     scorings: { round: null, final: null },
     federations: {},
   };
-  boardActions: {
-    [key in BoardAction]?: PlayerEnum;
-  } = {};
+  boardActions: BoardActions = {};
 
   terraformingFederation: Federation;
   availableCommands: AvailableCommand[] = [];
@@ -361,26 +363,25 @@ export default class Engine {
   addPlayer(player: Player) {
     this.players.push(player);
 
-    player.data.on(`gain-${Resource.TechTile}`, () => this.processNextMove(SubPhase.ChooseTechTile));
-    player.data.on(`gain-${Resource.TemporaryStep}`, () => this.processNextMove(SubPhase.BuildMine));
+    player.data.on(`gain-${Resource.TechTile}`, (count, source) =>
+      this.processNextMove(SubPhase.ChooseTechTile, null, source == BoardAction.Qic1)
+    );
+    player.data.on(`gain-${Resource.TemporaryStep}`, () => this.processNextMove(SubPhase.BuildMine, null, true));
     player.data.on(`gain-${Resource.TemporaryRange}`, (count: number) => {
-      this.processNextMove(SubPhase.BuildMineOrGaiaFormer);
+      this.processNextMove(SubPhase.BuildMineOrGaiaFormer, null, true);
     });
-    player.data.on(`gain-${Resource.RescoreFederation}`, () => this.processNextMove(SubPhase.RescoreFederationTile));
-    player.data.on(`gain-${Resource.PISwap}`, () => this.processNextMove(SubPhase.PISwap));
-    player.data.on(`gain-${Resource.SpaceStation}`, () => this.processNextMove(SubPhase.SpaceStation));
+    player.data.on(`gain-${Resource.RescoreFederation}`, () =>
+      this.processNextMove(SubPhase.RescoreFederationTile, null, true)
+    );
+    player.data.on(`gain-${Resource.PISwap}`, () => this.processNextMove(SubPhase.PISwap, null, true));
+    player.data.on(`gain-${Resource.SpaceStation}`, () => this.processNextMove(SubPhase.SpaceStation, null, true));
     player.data.on(`gain-${Resource.DowngradeLab}`, () => {
-      this.processNextMove(SubPhase.DowngradeLab);
-      this.processNextMove(SubPhase.UpgradeResearch);
+      this.processNextMove(SubPhase.DowngradeLab, null, true);
+      this.processNextMove(SubPhase.UpgradeResearch, null, false);
     });
     player.data.on(`gain-${Resource.UpgradeLowest}`, () =>
-      this.processNextMove(SubPhase.UpgradeResearch, { bescods: true })
+      this.processNextMove(SubPhase.UpgradeResearch, { bescods: true }, true)
     );
-    player.data.on(`gain-${Resource.UpgradeZero}`, (count: number) => {
-      for (let i = 0; i < count; i++) {
-        this.processNextMove(SubPhase.UpgradeResearch, { zero: true });
-      }
-    });
     player.data.on("brainstone", (areas) => this.processNextMove(SubPhase.BrainStone, areas));
     // Test before upgrading research that it's actually possible. Needed when getting up-int or up-nav in
     // the spaceship expansion
@@ -830,11 +831,16 @@ export default class Engine {
     };
   }
 
-  processNextMove(subphase?: SubPhase, data?: any) {
+  processNextMove(subphase?: SubPhase, data?: any, required = false) {
     if (subphase) {
       this.generateAvailableCommands(subphase, data);
       if (this.availableCommands.length === 0) {
-        return;
+        if (required) {
+          // not allowed - see https://github.com/boardgamers/gaia-project/issues/76
+          this.availableCommands = [{ name: Command.DeadEnd, player: this.currentPlayer, data: subphase }];
+        } else {
+          return;
+        }
       }
     }
     if (this.turnMoves.length === 0) {
@@ -857,7 +863,9 @@ export default class Engine {
   checkCommand(command: Command) {
     assert(
       (this.availableCommand = this.findAvailableCommand(this.playerToMove, command)),
-      `Command ${command} is not in the list of available commands: ${this.availableCommands.map((cmd) => cmd.name)}`
+      `Command ${command} is not in the list of available commands: ${this.availableCommands.map(
+        (cmd) => cmd.name
+      )}, last command: ${this.moveHistory[this.moveHistory.length - 1]}, index: ${this.moveHistory.length}`
     );
   }
 
@@ -886,7 +894,8 @@ export default class Engine {
 
   get currentRoundScoringEvents() {
     const roundScoringTile = this.tiles.scorings.round[this.round - 1];
-    return Event.parse(roundScorings[roundScoringTile], `round${this.round}` as RoundScoring);
+    const roundScoring = roundScorings[roundScoringTile];
+    return roundScoring == null ? null : Event.parse(roundScoring, `round${this.round}` as RoundScoring);
   }
 
   /**
@@ -1649,7 +1658,7 @@ export default class Engine {
     const income = Reward.merge(Reward.parse(incomeS));
 
     assert(!cost.some((r) => r.count <= 0) && !income.some((r) => r.count <= 0), "Nice try!");
-    assert(pl.canPay(cost) && cost, `Impossible to pay ${costS}`);
+    assert(pl.data.canPay(cost) && cost, `Impossible to pay ${costS}`);
     assert(_for === "for", "Expect second part of command to be 'for'");
 
     // tslint:disable-next-line no-shadowed-variable
