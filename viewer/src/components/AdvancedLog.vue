@@ -12,8 +12,15 @@
           <td colspan="4">Game Ended</td>
         </tr>
         <template v-for="(event, i) in history">
-          <tr :key="history.length - i" :style="`background-color: ${event.color}; color: ${event.textColor}`">
-            <td v-if="!['setupInit', 'moves-skipped', 'roundStart'].includes(event.phase)" :rowspan="rowSpan(event)">
+          <tr
+            v-for="j in rowSpan(event)"
+            :key="`${i}-${j}`"
+            :style="`background-color: ${event.color}; color: ${event.textColor}`"
+          >
+            <td
+              v-if="j === 1 && !['setupInit', 'moves-skipped', 'roundStart'].includes(event.phase)"
+              :rowspan="rowSpan(event)"
+            >
               {{ event.round }}.{{ event.turn }}
             </td>
             <td v-if="event.phase === 'roundStart'" colspan="2" class="major-event">Round {{ event.round }}</td>
@@ -25,18 +32,15 @@
             <td v-else-if="event.phase === 'roundGaia'" class="phase-change">Gaia phase</td>
             <td v-else-if="event.phase === 'roundMove'" class="phase-change">Move phase</td>
             <td v-else-if="event.phase === 'endGame'" class="phase-change">End scoring</td>
-            <td v-else :rowspan="rowSpan(event)">{{ event.move }}</td>
-            <td v-if="event.changes.length === 0" />
-            <td v-if="event.changes.length === 0" />
-          </tr>
-          <tr
-            v-for="(change, j) in event.changes"
-            :key="`change${i}-${j}`"
-            :class="j === 0 ? 'first-change' : 'changes'"
-            :style="`background-color: ${event.color}; color: ${event.textColor}`"
-          >
-            <td>{{ change.source }}</td>
-            <td>{{ change.changes }}</td>
+            <td v-else-if="j === 1" :rowspan="rowSpan(event)">{{ event.move }}</td>
+            <td v-if="event.changes.length > 0" :class="j === 1 ? 'first-change' : 'changes'">
+              {{ event.changes[j - 1].source }}
+            </td>
+            <td v-else />
+            <td v-if="event.changes.length > 0" :class="j === 1 ? 'first-change' : 'changes'">
+              {{ event.changes[j - 1].changes }}
+            </td>
+            <td v-else />
           </tr>
         </template>
       </tbody>
@@ -71,10 +75,7 @@ export default class AdvancedLog extends Vue {
   }
 
   rowSpan(entry: HistoryEntry): number {
-    if (entry.changes.length > 0) {
-      return entry.changes.length + 1;
-    }
-    return 1;
+    return entry.changes.length > 0 ? entry.changes.length : 1;
   }
 };
 </script>
@@ -89,11 +90,11 @@ export default class AdvancedLog extends Vue {
   font-style: italic;
 }
 
-tr.first-change > td {
+.first-change {
   border-bottom: none !important;
 }
 
-tr.changes > td {
+.changes {
   border-top: none !important;
 }
 </style>
