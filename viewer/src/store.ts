@@ -1,6 +1,5 @@
 import Engine, {
   AdvTechTilePos,
-  Booster,
   Command,
   Faction,
   Federation,
@@ -96,10 +95,6 @@ const gaiaViewer = {
       state.context.highlighted.techs = new Set(techs);
     },
 
-    highlightBoosters(state: State, boosters: Booster[]) {
-      state.context.highlighted.boosters = new Set(boosters);
-    },
-
     highlightActions(state: State, actions: string[]) {
       state.context.highlighted.actions = new Set(actions);
     },
@@ -124,7 +119,6 @@ const gaiaViewer = {
       state.context.highlighted.hexes = new Map();
       state.context.highlighted.researchTiles = new Set();
       state.context.highlighted.techs = new Set();
-      state.context.highlighted.boosters = new Set();
       state.context.highlighted.actions = new Set();
       state.context.highlighted.federations = new Set();
       // state.context.rotation = new Map();
@@ -152,7 +146,6 @@ const gaiaViewer = {
     hexClick(context: any, hex: GaiaHex, highlight?: HighlightHex) {},
     researchClick(context: any, field: ResearchField) {},
     techClick(context: any, pos: TechTilePos | AdvTechTilePos) {},
-    boosterClick(context: any, booster: Booster) {},
     actionClick(context: any, action: string) {},
     federationClick(context: any, federation: Federation) {},
     confirmClick(context: any, action: string) {},
