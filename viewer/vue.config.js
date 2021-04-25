@@ -11,6 +11,10 @@ if (process.argv.includes("lib")) {
       config.externals({
         "bootstrap-vue": "BootstrapVue",
       });
+      config.module
+        .rule("ts")
+        .use("ts-loader")
+        .tap((options) => ({ ...options, configFile: "tsconfig.build.json" }));
     },
     publicPath: `//cdn.jsdelivr.net/npm/@gaia-project/viewer@${package.version}/dist/package/`,
   };

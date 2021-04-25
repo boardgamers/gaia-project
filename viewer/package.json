@@ -10,12 +10,12 @@
   "scripts": {
     "serve": "vue-cli-service serve --port 8080",
     "build": "vue-cli-service build",
-    "fix-package": "cross-env TS_NODE_COMPILER_OPTIONS={\\\"module\\\":\\\"commonjs\\\"} ts-node scripts/fix-package-imports.ts",
+    "fix-package": "ts-node scripts/fix-package-imports.ts",
     "lint": "vue-cli-service lint",
     "package": "vue-cli-service build --target lib src/wrapper.ts",
     "prepublishOnly": "npm run package && npm run fix-package",
     "test": "vue-cli-service test:unit src/**/*.spec.ts",
-    "quick-test": "cross-env TS_NODE_COMPILER_OPTIONS={\\\"module\\\":\\\"commonjs\\\"}  mocha -r ts-node/register src/logic/*.spec.ts src/data/*.spec.ts"
+    "quick-test": "mocha -r ts-node/register src/logic/*.spec.ts src/data/*.spec.ts"
   },
   "unpkg": "dist/package/viewer.umd.min.js",
   "files": [
@@ -58,7 +58,6 @@
     "@vue/eslint-config-typescript": "^5.0.2",
     "@vue/test-utils": "^1.1.3",
     "chai": "^4.3.0",
-    "cross-env": "^7.0.3",
     "eslint": "^6.7.2",
     "eslint-plugin-import": "^2.20.2",
     "eslint-plugin-node": "^11.1.0",

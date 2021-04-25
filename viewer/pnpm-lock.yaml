@@ -22,7 +22,6 @@ specifiers:
   bootstrap-vue: ^2.12.0
   chai: ^4.3.0
   chart.js: ^3.0.1
-  cross-env: ^7.0.3
   eslint: ^6.7.2
   eslint-plugin-import: ^2.20.2
   eslint-plugin-node: ^11.1.0
@@ -75,7 +74,6 @@ devDependencies:
   '@vue/eslint-config-typescript': 5.1.0_f8b8c2e71389849a7113a6c8d1602ca4
   '@vue/test-utils': 1.1.3_ae554d8947d7e926b014dda25865f517
   chai: 4.3.0
-  cross-env: 7.0.3
   eslint: 6.8.0
   eslint-plugin-import: 2.22.1_eslint@6.8.0
   eslint-plugin-node: 11.1.0_eslint@6.8.0
@@ -2598,14 +2596,6 @@ packages:
 
   /create-require/1.1.1:
     resolution: {integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==}
-    dev: true
-
-  /cross-env/7.0.3:
-    resolution: {integrity: sha512-+/HKd6EgcQCJGh2PSjZuUitQBQynKor4wrFbRg4DtAgS1aWO+gU52xpH7M9ScGgXSYmAVS9bIJ8EzuaGw0oNAw==}
-    engines: {node: '>=10.14', npm: '>=6', yarn: '>=1'}
-    hasBin: true
-    dependencies:
-      cross-spawn: 7.0.3
     dev: true
 
   /cross-spawn/5.1.0:
