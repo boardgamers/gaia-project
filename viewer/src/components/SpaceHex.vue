@@ -99,7 +99,7 @@ export default class SpaceHex extends Vue {
 
   warning(hex: GaiaHex): string {
     const warnings = this.highlightedHexes.get(hex)?.warnings;
-    return warnings != null && warnings.length > 0 ? warnings?.map(w => buildWarnings[w].text).join(", ") : null;
+    return warnings?.length > 0 ? warnings?.map(w => buildWarnings[w].text).join(", ") : null;
   }
 
   cost(hex: GaiaHex) {
