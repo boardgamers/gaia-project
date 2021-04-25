@@ -554,7 +554,7 @@ export function possibleSpaceLostPlanet(engine: Engine, player: Player) {
     spaces.push({
       coordinates: hex.toString(),
       cost: qicNeeded > 0 ? new Reward(qicNeeded, Resource.Qic).toString() : "~",
-      warnings: warnings,
+      warnings,
     });
   }
 
