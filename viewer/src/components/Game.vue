@@ -306,7 +306,6 @@ export default class Game extends Vue {
     } else {
       this.currentMoveWarnings.delete(command);
     }
-    console.log("add warning " + command + " " + warnings);
 
     if (this.currentMove && !this.clearCurrentMove) {
       this.addMove(this.currentMove + `. ${command.slice(move.faction.length + 1)}`);

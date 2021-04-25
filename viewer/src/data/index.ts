@@ -1,5 +1,7 @@
 import { AdvTechTilePos, Booster, Federation, GaiaHex, HighlightHex, TechTilePos } from "@gaia-project/engine";
 
+export type ButtonWarning = { title?: string; body: string[] };
+
 export interface ButtonData {
   label?: string;
   command: string;
@@ -22,7 +24,7 @@ export interface ButtonData {
   // Rotate sectors command?
   rotation?: boolean;
   needConfirm?: boolean;
-  warning?: string;
+  warning?: ButtonWarning;
 
   buttons?: ButtonData[];
   hide?: boolean;

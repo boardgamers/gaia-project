@@ -114,9 +114,12 @@ export default class MoveButton extends Vue {
       console.log("click on hidden button, ignoring");
       return;
     }
-    if (this.button.warning) {
+    const warning = this.button.warning;
+    if (warning) {
       try {
-        const ret = await this.$bvModal.msgBoxConfirm(this.button.warning);
+        const c = this.$createElement;
+        const message = warning.body.map(w => c("ul", [c("li", [w])]));
+        const ret = await this.$bvModal.msgBoxConfirm(message, {title: warning.title, headerClass: "danger"});
 
         if (!ret) {
           return;
@@ -301,5 +304,8 @@ export default class MoveButton extends Vue {
 <style lang="scss">
 .move-button {
   display: inline-block;
+}
+.danger {
+  background-color: var(--danger);
 }
 </style>

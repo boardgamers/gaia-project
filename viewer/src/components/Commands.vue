@@ -80,14 +80,14 @@ import Engine, {
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
 import {buildingName} from "../data/building";
-import { ButtonData, GameContext } from "../data";
+import { ButtonData, ButtonWarning, GameContext } from "../data";
 import {eventDesc} from "../data/event";
 import {factionDesc} from "../data/factions";
 import {FactionCustomization} from "@gaia-project/engine/src/engine";
 import {factionVariantBoard} from "@gaia-project/engine/src/faction-boards";
 import {AvailableBuilding} from "@gaia-project/engine/src/available-command";
 import { buildWarnings } from "../data/warnings";
-import { hexMap } from "../logic/commands";
+import { hexMap, passWarning } from "../logic/commands";
 
 @Component<Commands>({
   watch: {
@@ -364,13 +364,7 @@ export default class Commands extends Vue {
         case Command.Pass:
         case Command.ChooseRoundBooster: {
           const buttons: ButtonData[] = [];
-
-          const warning =
-            this.engine.round > 0 &&
-            this.engine.players[this.command.player].data.hasResource(new Reward(1, Resource.GaiaFormer)) &&
-            this.engine.players[this.command.player].faction === Faction.BalTaks
-              ? "Are you sure you want to pass with gaiaformers not yet converted?"
-              : undefined;
+          const warning = passWarning(this.engine, this.command);
 
           Booster.values(Expansion.All).forEach((booster, i) => {
             if (command.data.boosters.includes(booster)) {
@@ -380,7 +374,7 @@ export default class Commands extends Vue {
                 booster,
                 needConfirm: true,
                 tooltip: tiles.boosters[booster].map((spec) => eventDesc(new Event(spec))).join("\n"),
-                warning,
+                warning: warning,
               });
             }
           });
@@ -397,7 +391,7 @@ export default class Commands extends Vue {
                   label: `Confirm Pass`,
                 },
               ],
-              warning,
+              warning: warning,
             });
           } else {
             ret.push({
@@ -405,7 +399,7 @@ export default class Commands extends Vue {
               command: command.name,
               buttons,
               boosters: command.data.boosters,
-              warning,
+              warning: warning,
             });
           }
 
@@ -459,8 +453,8 @@ export default class Commands extends Vue {
             ret.push({
               label: `Decline ${command.data.offers[0].offer}`,
               command: `${Command.Decline} ${command.data.offers[0].offer}`,
-              warning:
-                command.data.offers[0].offer === "tech" ? "Are you sure you want to decline a tech tile?" : undefined,
+              warning: command.data.offers[0].offer === "tech" ?
+                { body: ["Are you sure you want to decline a tech tile?"] } : undefined,
             });
           } else {
             // LEGACY CODE
