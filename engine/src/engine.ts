@@ -118,9 +118,11 @@ export function createMoveToShow(move: string, p: PlayerData, executeMove: () =>
 
   const formerBooster = p.tiles.booster;
 
-  executeMove();
-
-  p.off("move-tokens", listener);
+  try {
+    executeMove();
+  } finally {
+    p.off("move-tokens", listener);
+  }
 
   return move.replace(replaceRegex, (match, moveWithoutEnding, command, commandArgument, moveEnding) => {
     if (moveToGaia != null) {

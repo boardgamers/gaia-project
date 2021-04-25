@@ -399,31 +399,31 @@ export default class PlayerData extends EventEmitter {
   }
 
   discardPower(power: number) {
-    this.moveTokens(power, null);
+    this.discardTokens(power, null);
   }
 
   movePowerToGaia(power: number) {
-    const event = this.moveTokens(power, BrainstoneArea.Gaia);
+    const event = this.discardTokens(power, BrainstoneArea.Gaia);
     this.power.gaia += event.area1 + event.area2 + event.area3;
   }
 
-  private moveTokens(power: number, brainstoneArea: BrainstoneArea | null) {
-    const brainstoneEvent = brainstoneArea ?? "discard";
+  private discardTokens(power: number, targetArea: BrainstoneArea | null): MoveTokens {
+    const brainstoneEvent = targetArea ?? "discard";
 
     let movedBrainstone = 0;
     if (this.brainstone && this.brainstone !== BrainstoneArea.Gaia) {
       if (this.discardablePowerTokens() === power) {
-        this.brainstone = brainstoneArea;
+        this.brainstone = targetArea;
         power -= 1;
         movedBrainstone = 1;
-      } else if (brainstoneArea != null || this.tokensBelowArea(this.brainstone) < power) {
+      } else if (targetArea != null || this.tokensBelowArea(this.brainstone) < power) {
         // don't offer to discard unless necessary
         if (this.brainstoneDest === undefined) {
           this.emit("brainstone", [this.brainstone, brainstoneEvent]);
         }
 
         if (this.brainstoneDest === brainstoneEvent) {
-          this.brainstone = brainstoneArea;
+          this.brainstone = targetArea;
           power -= 1;
           movedBrainstone = 1;
         }

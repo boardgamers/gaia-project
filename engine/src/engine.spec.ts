@@ -474,7 +474,7 @@ describe("Engine", () => {
       p2 burn 3. spend 3pw for 1o. pass booster5
       p1 build m -2x3. spend 2pw for 2c.
       p1 build ts -4x2.
-      terrans federation -4x4,-4x3,-4x2,-3x4,-2x3,-1x2 fed4.
+      terrans federation -4x4,-4x3,-4x2,-3x4,-2x3,-1x2 fed4 using area1: 5.
       terrans pass booster7
       terrans income 4pw
       bescods pass booster4
