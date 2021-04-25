@@ -1,6 +1,6 @@
 import { AdvTechTilePos, Booster, Federation, GaiaHex, HighlightHex, TechTilePos } from "@gaia-project/engine";
 
-export type ButtonWarning = { title?: string; body: string[] };
+export type ButtonWarning = { title?: string; body: string[]; okButton?: { label: string; action: () => void } };
 
 export interface ButtonData {
   label?: string;
@@ -28,7 +28,6 @@ export interface ButtonData {
 
   buttons?: ButtonData[];
   hide?: boolean;
-  disabled?: boolean;
   booster?: Booster;
   tech?: TechTilePos | AdvTechTilePos;
 }

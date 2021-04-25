@@ -5,7 +5,6 @@
     <b-btn
       v-else-if="!button.times"
       :variant="button.warning ? 'warning' : 'secondary'"
-      :disabled="button.disabled"
       class="mr-2 mb-2 move-button"
       @click="handleClick"
       @mouseenter="hover"
@@ -118,10 +117,21 @@ export default class MoveButton extends Vue {
     if (warning) {
       try {
         const c = this.$createElement;
-        const message = warning.body.map(w => c("ul", [c("li", [w])]));
-        const ret = await this.$bvModal.msgBoxConfirm(message, { title: warning.title, headerClass: "danger" });
+        const message = warning.body.length == 1 ? warning.body[0] :
+          warning.body.map(w => c("ul", [c("li", [w])]));
+        const okClicked = await this.$bvModal.msgBoxConfirm(message, {
+          title: warning.title,
+          headerClass: "warning",
+          okTitle: warning.okButton?.label,
+        });
 
-        if (!ret) {
+        if (okClicked) {
+          const action = warning.okButton?.action;
+          if (action) {
+            action();
+            return;
+          }
+        } else {
           return;
         }
       } catch (err) {
@@ -306,7 +316,7 @@ export default class MoveButton extends Vue {
   display: inline-block;
 }
 
-.danger {
+.warning {
   background-color: var(--warning);
 }
 </style>

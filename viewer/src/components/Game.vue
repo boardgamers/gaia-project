@@ -301,7 +301,7 @@ export default class Game extends Vue {
       return;
     }
 
-    if (warnings != null && warnings.length > 0) {
+    if (warnings?.length > 0) {
       this.currentMoveWarnings.set(command, warnings);
     } else {
       this.currentMoveWarnings.delete(command);

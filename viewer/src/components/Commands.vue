@@ -1,6 +1,6 @@
 <template>
   <div id="move">
-    <b-alert v-for="(w, i) in warnings" :key="i" show variant="danger">
+    <b-alert v-for="(w, i) in warnings" :key="i" show variant="warning">
       <a href="#" class="alert-link">{{ w }}</a>
     </b-alert>
     <div id="move-title">
@@ -129,7 +129,7 @@ export default class Commands extends Vue {
   @Prop()
   currentMoveWarnings?: BuildWarning[];
 
-  @Prop({default: ""})
+  @Prop({ default: "" })
   remainingTime: string;
 
   updater = 0;
@@ -418,7 +418,7 @@ export default class Commands extends Vue {
               label: "Advance research",
               command: command.name,
               // track.to contains actual level, to use when implementing research viewer
-              buttons: command.data.tracks.map((track) => ({command: track.field})),
+              buttons: command.data.tracks.map((track) => ({ command: track.field })),
               researchTiles: command.data.tracks.map((track) => track.field + "-" + track.to),
             });
           }
@@ -431,7 +431,7 @@ export default class Commands extends Vue {
             label: command.name === Command.ChooseCoverTechTile ? "Pick tech tile to cover" : "Pick tech tile",
             command: command.name,
             techs: command.data.tiles.map((tile) => tile.pos),
-            buttons: command.data.tiles.map((tile) => ({command: tile.pos, tech: tile.pos})),
+            buttons: command.data.tiles.map((tile) => ({ command: tile.pos, tech: tile.pos })),
           });
           break;
         }
@@ -509,7 +509,7 @@ export default class Commands extends Vue {
             label: "Special Action",
             command: Command.Special,
             actions: command.data.specialacts.map((act) => act.income),
-            buttons: command.data.specialacts.map((act) => ({command: act.income})),
+            buttons: command.data.specialacts.map((act) => ({ command: act.income })),
           });
           break;
         }
@@ -518,7 +518,7 @@ export default class Commands extends Vue {
           ret.push({
             label: "Burn power",
             command: Command.BurnPower,
-            buttons: command.data.map((val) => ({command: val})),
+            buttons: command.data.map((val) => ({ command: val })),
           });
           break;
         }
@@ -563,7 +563,18 @@ export default class Commands extends Vue {
           ret.push({
             command: Command.DeadEnd,
             label: reason,
-            disabled: true,
+            warning: {
+              title: "Dead end reached",
+              body: [
+                "You've reached a required move that is not possible to execute."
+              ],
+              okButton: {
+                label: "Undo",
+                action: () => {
+                  this.undo();
+                }
+              }
+            }
           });
           break;
 
@@ -607,7 +618,7 @@ export default class Commands extends Vue {
           const locationButtons: ButtonData[] = command.data.federations.map((fed, i) => ({
             command: fed.hexes,
             label: `Location ${i + 1}`,
-            hexes: new Map(fed.hexes.split(",").map((coord) => [this.engine.map.getS(coord), {coordinates: coord}])),
+            hexes: new Map(fed.hexes.split(",").map((coord) => [this.engine.map.getS(coord), { coordinates: coord }])),
             hover: true,
             buttons: tilesButtons,
             warning: buttonWarning(fed.warning != null ? buildWarnings[fed.warning].text : null)
