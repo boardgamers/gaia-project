@@ -1,6 +1,12 @@
 <template>
   <div class="move-button">
-    <Booster v-if="button.booster" class="mb-1 mr-1" @click="handleClick" :booster="button.booster" />
+    <Booster
+      v-if="button.booster"
+      class="mb-1 mr-1"
+      @click.native="handleClick"
+      :booster="button.booster"
+      highlighted
+    />
     <TechTile v-else-if="button.tech" class="mb-1 mr-1" @click="handleClick" :pos="button.tech" :count-override="1" />
     <b-btn
       v-else-if="!button.times"
@@ -163,14 +169,11 @@ export default class MoveButton extends Vue {
     } else if (this.button.techs) {
       this.$store.commit("gaiaViewer/highlightTechs", this.button.techs);
       this.subscribeFinal("techClick");
-    } else if (this.button.boosters) {
-      this.$store.commit("gaiaViewer/highlightBoosters", this.button.boosters);
-      this.subscribeFinal("boosterClick");
     } else if (this.button.actions) {
       this.$store.commit("gaiaViewer/highlightActions", this.button.actions);
       this.subscribeFinal("actionClick");
     } else if (this.button.needConfirm) {
-      this.subscribeFinal("needConfirmClick");
+      this.emitCommand(null, { disappear: false });
     } else if (this.button.selectHexes) {
       // If already the active button, end the selection
       if (this.isActiveButton) {

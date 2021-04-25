@@ -3,7 +3,6 @@
     :class="['booster', { highlighted, disabled }]"
     v-b-tooltip
     :title="tooltip"
-    @click="onClick"
     width="60"
     height="120"
     viewBox="-32 -62 64 124"
@@ -67,15 +66,8 @@ export default class Booster extends Vue {
   @Prop()
   disabled: boolean;
 
-  onClick() {
-    if (this.highlighted) {
-      this.$store.dispatch("gaiaViewer/boosterClick", this.booster);
-    }
-  }
-
-  get highlighted() {
-    return this.$store.state.gaiaViewer.context.highlighted.boosters.has(this.booster);
-  }
+  @Prop({ default: false, type: Boolean })
+  highlighted: boolean;
 }
 </script>
 
