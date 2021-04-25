@@ -61,11 +61,12 @@
 
 <script lang="ts">
 import Vue from "vue";
-import {Component, Prop} from "vue-property-decorator";
+import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   AvailableCommand,
   Booster,
-  Building, BuildWarning,
+  Building,
+  BuildWarning,
   Command,
   Event,
   Expansion,
@@ -79,15 +80,15 @@ import Engine, {
   tiles,
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
-import {buildingName} from "../data/building";
-import { ButtonData, ButtonWarning, GameContext } from "../data";
-import {eventDesc} from "../data/event";
-import {factionDesc} from "../data/factions";
-import {FactionCustomization} from "@gaia-project/engine/src/engine";
-import {factionVariantBoard} from "@gaia-project/engine/src/faction-boards";
-import {AvailableBuilding} from "@gaia-project/engine/src/available-command";
+import { buildingName } from "../data/building";
+import { ButtonData, GameContext } from "../data";
+import { eventDesc } from "../data/event";
+import { factionDesc } from "../data/factions";
+import { FactionCustomization } from "@gaia-project/engine/src/engine";
+import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
+import { AvailableBuilding } from "@gaia-project/engine/src/available-command";
 import { buildWarnings } from "../data/warnings";
-import { hexMap, passWarning } from "../logic/commands";
+import { buttonWarning, hexMap, passWarning } from "../logic/commands";
 
 @Component<Commands>({
   watch: {
@@ -453,8 +454,8 @@ export default class Commands extends Vue {
             ret.push({
               label: `Decline ${command.data.offers[0].offer}`,
               command: `${Command.Decline} ${command.data.offers[0].offer}`,
-              warning: command.data.offers[0].offer === "tech" ?
-                { body: ["Are you sure you want to decline a tech tile?"] } : undefined,
+              warning: buttonWarning(command.data.offers[0].offer === "tech" ?
+                "Are you sure you want to decline a tech tile?" : undefined),
             });
           } else {
             // LEGACY CODE
@@ -598,18 +599,19 @@ export default class Commands extends Vue {
         }
 
         case Command.FormFederation: {
-          const tilesButtons = command.data.tiles.map((fed, i) => ({
+          const tilesButtons: ButtonData[] = command.data.tiles.map((fed, i) => ({
             command: fed,
             label: `Federation ${i + 1}: ${tiles.federations[fed]}`,
-          }));
+          } as ButtonData));
 
-          const locationButtons = command.data.federations.map((fed, i) => ({
+          const locationButtons: ButtonData[] = command.data.federations.map((fed, i) => ({
             command: fed.hexes,
             label: `Location ${i + 1}`,
             hexes: new Map(fed.hexes.split(",").map((coord) => [this.engine.map.getS(coord), {coordinates: coord}])),
             hover: true,
             buttons: tilesButtons,
-          }));
+            warning: buttonWarning(fed.warning != null ? buildWarnings[fed.warning].text : null)
+          } as ButtonData));
 
           locationButtons.push({
             label: "Custom location",

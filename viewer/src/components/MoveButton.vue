@@ -306,6 +306,6 @@ export default class MoveButton extends Vue {
   display: inline-block;
 }
 .danger {
-  background-color: var(--danger);
+  background-color: var(--warning);
 }
 </style>

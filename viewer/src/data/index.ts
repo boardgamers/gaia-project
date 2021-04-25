@@ -4,7 +4,7 @@ export type ButtonWarning = { title?: string; body: string[] };
 
 export interface ButtonData {
   label?: string;
-  command: string;
+  command?: string;
   tooltip?: string;
   // Simple label
   title?: string;

@@ -14,6 +14,10 @@ export function hexMap(engine: Engine, coordinates: AvailableHex[]): HighlightHe
   );
 }
 
+export function buttonWarning(message?: string): ButtonWarning | null {
+  return message == null ? null : { title: "Are you sure?", body: [message] };
+}
+
 export function passWarning(engine: Engine, command: AvailableCommand): ButtonWarning | null {
   const warnings: string[] = [];
   if (engine.round > 0) {

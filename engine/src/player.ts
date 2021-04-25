@@ -72,7 +72,8 @@ export type BuildWarning =
   | "range-booster-not-used"
   | "step-action-partially-wasted"
   | "expensive-terraforming"
-  | "gaia-forming-with-charged-tokens";
+  | "gaia-forming-with-charged-tokens"
+  | "federation-with-charged-tokens";
 
 export type BuildCheck = { cost?: Reward[]; possible: boolean; steps?: number; warnings?: BuildWarning[] };
 
@@ -1004,11 +1005,16 @@ export default class Player extends EventEmitter {
     const satellites = federation.filter((hex) => !hex.occupyingPlayers()?.includes(this.player));
     const nPlanets = federation.filter((hex) => hex.colonizedBy(this.player)).length;
 
+    const newSatellites = satellites.filter((sat) => !sat.belongsToFederationOf(this.player)).length;
     return {
       hexes: federation,
       satellites: satellites.length,
-      newSatellites: satellites.filter((sat) => !sat.belongsToFederationOf(this.player)).length,
+      newSatellites: newSatellites,
       planets: nPlanets,
+      warning:
+        this.faction != Faction.Ivits && newSatellites > this.data.power.area1
+          ? "federation-with-charged-tokens"
+          : null,
     };
   }
 
