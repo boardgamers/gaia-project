@@ -114,10 +114,10 @@ export function createMoveToShow(move: string, p: PlayerData, executeMove: () =>
   let moveToGaia: MoveTokens = null;
 
   const listener = (event: MoveTokens, source: EventSource) => (moveToGaia = event);
-  p.on("move-tokens", listener);
 
   const formerBooster = p.tiles.booster;
 
+  p.on("move-tokens", listener);
   try {
     executeMove();
   } finally {
