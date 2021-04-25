@@ -46,6 +46,8 @@ export async function init(
   const engine = new Engine([`init ${nbPlayers} ${seed}`], options);
   engine.generateAvailableCommandsIfNeeded();
 
+  automove(engine);
+
   return engine;
 }
 
