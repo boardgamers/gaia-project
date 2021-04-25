@@ -32,7 +32,9 @@
             <td v-else-if="event.phase === 'roundGaia'" class="phase-change">Gaia phase</td>
             <td v-else-if="event.phase === 'roundMove'" class="phase-change">Move phase</td>
             <td v-else-if="event.phase === 'endGame'" class="phase-change">End scoring</td>
-            <td v-else-if="j === 1" :rowspan="rowSpan(event)">{{ event.move }}</td>
+            <td v-else-if="j === 1" :rowspan="rowSpan(event)" class="move">
+              <div>{{ event.move }}</div>
+            </td>
             <td v-if="event.changes.length > 0" :class="j === 1 ? 'first-change' : 'changes'">
               {{ event.changes[j - 1].source }}
             </td>
@@ -80,7 +82,7 @@ export default class AdvancedLog extends Vue {
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .major-event {
   font-weight: bold;
   color: black;
@@ -88,6 +90,10 @@ export default class AdvancedLog extends Vue {
 
 .phase-change {
   font-style: italic;
+}
+
+.move {
+  word-break: break-word;
 }
 
 .first-change {

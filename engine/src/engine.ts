@@ -36,7 +36,7 @@ import {
 import Event, { EventSource } from "./events";
 import SpaceMap, { MapConfiguration } from "./map";
 import Player from "./player";
-import PlayerData from "./player-data";
+import PlayerData, { MoveTokens } from "./player-data";
 import * as researchTracks from "./research-tracks";
 import Reward from "./reward";
 import federations from "./tiles/federations";
@@ -52,6 +52,7 @@ export enum AuctionVariant {
   /** Bid on factions while not all factions are chosen */
   BidWhileChoosing = "bid-while-choosing",
 }
+
 export type FactionVariant = "standard" | "more-balanced"; // https://boardgamegeek.com/thread/2324994/more-balanced-factions
 
 export type FactionCustomization = {
@@ -105,32 +106,39 @@ export interface LogEntry {
 }
 
 const replaceRegex = new RegExp(
-  `\\b((${Command.Pass}|${Building.GaiaFormer}|${Command.UpgradeResearch}) ?([^. ]+)?)(\\.|$)`,
+  `\\b((${Command.Pass}|${Building.GaiaFormer}|${Command.FormFederation} [^ ]+|${Command.UpgradeResearch}) ?([^. ]+)?)(\\.|$)`,
   "g"
 );
 
 export function createMoveToShow(move: string, p: PlayerData, executeMove: () => void): string {
-  const oldPower: number[] = move.includes(Building.GaiaFormer) ? Object.values(p.power) : [];
+  let moveToGaia: MoveTokens = null;
+
+  const listener = (event: MoveTokens, source: EventSource) => (moveToGaia = event);
+  p.on("move-tokens", listener);
 
   const formerBooster = p.tiles.booster;
 
-  executeMove();
+  try {
+    executeMove();
+  } finally {
+    p.off("move-tokens", listener);
+  }
 
-  const moveToShow = move.replace(replaceRegex, (match, moveWithoutEnding, command, commandArgument, moveEnding) => {
+  return move.replace(replaceRegex, (match, moveWithoutEnding, command, commandArgument, moveEnding) => {
+    if (moveToGaia != null) {
+      const powerUsage = Object.entries(moveToGaia)
+        .map(([area, amt], index) => {
+          return amt > 0 ? area + ": " + amt : "";
+        })
+        .filter((s) => s.length > 0)
+        .join(", ");
+
+      return `${moveWithoutEnding} using ${powerUsage}${moveEnding}`;
+    }
+
     switch (command) {
       case Command.Pass:
         return `${moveWithoutEnding} returning ${formerBooster}${moveEnding}`;
-      case Building.GaiaFormer: {
-        const powerUsage = Object.entries(p.power)
-          .map(([area, amt], index) => {
-            const spent = oldPower[index] - amt;
-            return spent > 0 ? area + ": " + spent : "";
-          })
-          .filter((s) => s.length > 0)
-          .join(", ");
-
-        return `${moveWithoutEnding} using ${powerUsage}${moveEnding}`;
-      }
       case Command.UpgradeResearch: {
         const level = p.research[commandArgument];
         return `${moveWithoutEnding} (${level - 1} ⇒ ${level})${moveEnding}`;
@@ -138,8 +146,6 @@ export function createMoveToShow(move: string, p: PlayerData, executeMove: () =>
     }
     return match;
   });
-
-  return moveToShow;
 }
 
 export type BoardActions = {
