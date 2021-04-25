@@ -1,10 +1,10 @@
 import { AssertionError } from "assert";
 import { expect } from "chai";
-import { BoardAction, Booster, PlayerEnum } from "..";
+import { BoardAction, Booster, Building, PlayerEnum } from "..";
 import { version } from "../package.json";
 import Engine, { AuctionVariant, createMoveToShow } from "./engine";
 import { Command, Condition, Operator, Phase, Planet, Player } from "./enums";
-import PlayerData from "./player-data";
+import PlayerData, { MoveTokens } from "./player-data";
 
 describe("Engine", () => {
   it("should throw when trying to build on the wrong place", () => {
@@ -762,7 +762,7 @@ describe("Engine", () => {
         "xenos pass booster1": "xenos pass booster1 returning booster3",
         "lantids up nav": "lantids up nav (2 ⇒ 3)",
         "lantids up nav. lantids up terra.": "lantids up nav (2 ⇒ 3). lantids up terra (4 ⇒ 5).",
-        "terrans build gf 6A1": "terrans build gf 6A1 using area1: 2, area2: 4",
+        "terrans build gf 6A1": "terrans build gf 6A1 using area1: 1, area2: 2, area3: 3, brainstone: 1",
       };
 
       const replace = (give: string) => {
@@ -770,14 +770,12 @@ describe("Engine", () => {
         d.tiles.booster = Booster.Booster3;
         d.research.nav = 2;
         d.research.terra = 4;
-        d.power.area1 = 2;
-        d.power.area2 = 6;
-        d.power.area3 = 4;
         return createMoveToShow(give, d, () => {
+          if (give.includes(Building.GaiaFormer)) {
+            d.emit("move-tokens", { area1: 1, area2: 2, area3: 3, brainstone: 1 } as MoveTokens);
+          }
           d.research.nav = 3;
           d.research.terra = 5;
-          d.power.area1 = 0;
-          d.power.area2 = 2;
         });
       };
 

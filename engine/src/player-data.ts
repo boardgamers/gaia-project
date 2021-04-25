@@ -32,6 +32,8 @@ export class Power {
   constructor(public area1: number = 0, public area2: number = 0, public area3: number = 0, public gaia: number = 0) {}
 }
 
+export type MoveTokens = Power & { brainstone: number };
+
 export default class PlayerData extends EventEmitter {
   victoryPoints = 10;
   bid = 0;
@@ -397,46 +399,33 @@ export default class PlayerData extends EventEmitter {
   }
 
   discardPower(power: number) {
-    if (this.brainstone && this.brainstone !== BrainstoneArea.Gaia) {
-      if (this.discardablePowerTokens() === power) {
-        this.brainstone = null;
-        power -= 1;
-      } else if (this.tokensBelowArea(this.brainstone) < power) {
-        if (this.brainstoneDest === undefined) {
-          this.emit("brainstone", [this.brainstone, "discard"]);
-        }
-
-        if (this.brainstoneDest === "discard") {
-          this.brainstone = null;
-          power -= 1;
-        }
-
-        delete this.brainstoneDest;
-      }
-    }
-
-    const area1ToGaia = Math.min(power, this.power.area1);
-    const area2ToGaia = Math.min(power - area1ToGaia, this.power.area2);
-    const area3ToGaia = Math.min(power - area1ToGaia - area2ToGaia, this.power.area3);
-
-    this.power.area1 -= area1ToGaia;
-    this.power.area2 -= area2ToGaia;
-    this.power.area3 -= area3ToGaia;
+    this.moveTokens(power, null);
   }
 
   movePowerToGaia(power: number) {
+    const event = this.moveTokens(power, BrainstoneArea.Gaia);
+    this.power.gaia += event.area1 + event.area2 + event.area3;
+  }
+
+  private moveTokens(power: number, brainstoneArea: BrainstoneArea | null) {
+    const brainstoneEvent = brainstoneArea ?? "discard";
+
+    let movedBrainstone = 0;
     if (this.brainstone && this.brainstone !== BrainstoneArea.Gaia) {
       if (this.discardablePowerTokens() === power) {
-        this.brainstone = BrainstoneArea.Gaia;
+        this.brainstone = brainstoneArea;
         power -= 1;
-      } else {
+        movedBrainstone = 1;
+      } else if (brainstoneArea != null || this.tokensBelowArea(this.brainstone) < power) {
+        // don't offer to discard unless necessary
         if (this.brainstoneDest === undefined) {
-          this.emit("brainstone", [this.brainstone, BrainstoneArea.Gaia]);
+          this.emit("brainstone", [this.brainstone, brainstoneEvent]);
         }
 
-        if (this.brainstoneDest === BrainstoneArea.Gaia) {
-          this.brainstone = BrainstoneArea.Gaia;
+        if (this.brainstoneDest === brainstoneEvent) {
+          this.brainstone = brainstoneArea;
           power -= 1;
+          movedBrainstone = 1;
         }
 
         delete this.brainstoneDest;
@@ -450,7 +439,16 @@ export default class PlayerData extends EventEmitter {
     this.power.area1 -= area1ToGaia;
     this.power.area2 -= area2ToGaia;
     this.power.area3 -= area3ToGaia;
-    this.power.gaia += area1ToGaia + area2ToGaia + area3ToGaia;
+
+    const event: MoveTokens = {
+      area1: area1ToGaia,
+      area2: area2ToGaia,
+      area3: area3ToGaia,
+      gaia: 0,
+      brainstone: movedBrainstone,
+    };
+    this.emit("move-tokens", event);
+    return event;
   }
 
   chargeGaiaPower(power: number) {
