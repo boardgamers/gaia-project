@@ -314,7 +314,7 @@ export default class Player extends EventEmitter {
       possible: true,
       cost,
       steps,
-      warnings: warnings,
+      warnings,
     };
   }
 
