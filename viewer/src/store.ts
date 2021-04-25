@@ -5,6 +5,7 @@ import Engine, {
   Faction,
   Federation,
   GaiaHex,
+  HighlightHex,
   Player,
   ResearchField,
   TechTilePos,
@@ -12,7 +13,7 @@ import Engine, {
 import { CubeCoordinates } from "hexagrid";
 import Vue from "vue";
 import Vuex, { Store } from "vuex";
-import { ButtonData, GameContext } from "./data";
+import { ButtonData, GameContext, HighlightHexData } from "./data";
 import {
   CommandObject,
   MovesSlice,
@@ -83,7 +84,7 @@ const gaiaViewer = {
       state.context.rotation = new Map();
     },
 
-    highlightHexes(state: State, hexes: Map<GaiaHex, { cost?: string }>) {
+    highlightHexes(state: State, hexes: HighlightHexData) {
       state.context.highlighted.hexes = hexes;
     },
 
@@ -107,7 +108,7 @@ const gaiaViewer = {
       state.context.highlighted.federations = new Set(federations);
     },
 
-    selectHexes(state: State, defaultHexes?: Array<[GaiaHex, { cost?: string }]>) {
+    selectHexes(state: State, defaultHexes?: Array<[GaiaHex, HighlightHex]>) {
       state.context.hexSelection = true;
       state.context.highlighted.hexes = new Map(defaultHexes || []);
     },
@@ -148,7 +149,7 @@ const gaiaViewer = {
   },
   actions: {
     // No body, used for signalling with store.subscribeAction
-    hexClick(context: any, hex: GaiaHex) {},
+    hexClick(context: any, hex: GaiaHex, highlight?: HighlightHex) {},
     researchClick(context: any, field: ResearchField) {},
     techClick(context: any, pos: TechTilePos | AdvTechTilePos) {},
     boosterClick(context: any, booster: Booster) {},

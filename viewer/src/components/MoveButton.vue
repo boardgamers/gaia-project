@@ -43,7 +43,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { GaiaHex, SpaceMap } from "@gaia-project/engine";
+import { BuildWarning, GaiaHex, SpaceMap, HighlightHex } from "@gaia-project/engine";
 import { ButtonData } from "../data";
 import Booster from "./Booster.vue";
 import TechTile from "./TechTile.vue";
@@ -85,6 +85,12 @@ export default class MoveButton extends Vue {
       console.log(type, payload);
 
       callback(payload);
+    });
+  }
+
+  subscribeHexClick(callback: (hex: GaiaHex, highlight: HighlightHex) => void) {
+    this.subscribe("hexClick", payload => {
+      callback(payload.hex, payload.highlight);
     });
   }
 
@@ -136,7 +142,7 @@ export default class MoveButton extends Vue {
         this.emitCommand(hex.toString());
       } else {
         this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
-        this.subscribe("hexClick", (hex) => this.emitCommand(hex.toString()));
+        this.subscribeHexClick((hex, highlight) => this.emitCommand(hex.toString(), { warnings: highlight.warnings }));
       }
     } else if (this.button.researchTiles) {
       this.$store.commit("gaiaViewer/highlightResearchTiles", this.button.researchTiles);
@@ -166,7 +172,7 @@ export default class MoveButton extends Vue {
 
       this.customLabel = "Custom location - End selection";
 
-      this.subscribe("hexClick", (hex) => {
+      this.subscribeHexClick((hex) => {
         const highlighted = this.$store.state.gaiaViewer.context.highlighted.hexes;
 
         if (highlighted.has(hex)) {
@@ -191,12 +197,12 @@ export default class MoveButton extends Vue {
       }
 
       this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
-      this.subscribe("hexClick", (hex) => this.$store.commit("gaiaViewer/rotate", hex));
+      this.subscribeHexClick((hex) => this.$store.commit("gaiaViewer/rotate", hex));
       this.customLabel = "Sector rotations finished";
     } else if (this.button.range) {
       console.log("range click");
       this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
-      this.subscribe("hexClick", (hex) => {
+      this.subscribeHexClick((hex) => {
         if (this.startingHex) {
           this.emitCommand(`${this.startingHex} ${hex}`);
           this.startingHex = undefined;
@@ -205,13 +211,13 @@ export default class MoveButton extends Vue {
         this.startingHex = hex;
 
         const map: SpaceMap = this.$store.state.gaiaViewer.data.map;
-        const { range, costs } = this.button;
+        const {range, costs} = this.button;
 
         const highlighted = new Map();
 
         const withinDistance = map.withinDistance(hex, range);
         for (const target of withinDistance) {
-          highlighted.set(target, { cost: costs?.[map.distance(hex, target)] ?? "~" });
+          highlighted.set(target, {cost: costs?.[map.distance(hex, target)] ?? "~"});
         }
 
         this.$store.commit("gaiaViewer/highlightHexes", highlighted);
@@ -233,11 +239,11 @@ export default class MoveButton extends Vue {
     this.emitCommand();
   }
 
-  emitCommand(append?: string, params?: { disappear?: boolean; final?: boolean; times?: number }) {
+  emitCommand(append?: string, params?: { disappear?: boolean; final?: boolean; times?: number; warnings?: BuildWarning[] }) {
     console.log("emit command", this.button.command, append);
 
     params = Object.assign({}, { disappear: true, final: false, times: 1 }, params);
-    const { disappear, final, times } = params;
+    const { disappear, final, times, warnings } = params;
 
     if (disappear) {
       this.unsubscribe();
@@ -264,7 +270,7 @@ export default class MoveButton extends Vue {
       commandBody = [command, append].filter((x) => !!x);
     }
 
-    this.$emit("trigger", commandBody.join(" "), this, final);
+    this.$emit("trigger", commandBody.join(" "), this, final, warnings);
   }
 
   hover() {

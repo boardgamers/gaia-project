@@ -1,4 +1,4 @@
-import { AdvTechTilePos, Booster, Federation, GaiaHex, TechTilePos } from "@gaia-project/engine";
+import { AdvTechTilePos, Booster, Federation, GaiaHex, HighlightHex, TechTilePos } from "@gaia-project/engine";
 
 export interface ButtonData {
   label?: string;
@@ -32,7 +32,7 @@ export interface ButtonData {
 }
 
 export type MapData = GaiaHex[];
-export type HighlightHexData = Map<GaiaHex, { cost?: string }>;
+export type HighlightHexData = Map<GaiaHex, HighlightHex>;
 export type LogPlacement = "top" | "bottom" | "off";
 
 export interface GameContext {

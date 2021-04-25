@@ -1,5 +1,8 @@
 <template>
   <div id="move">
+    <b-alert v-for="(w, i) in warnings" :key="i" show variant="danger">
+      <a href="#" class="alert-link">{{ w }}</a>
+    </b-alert>
     <div id="move-title">
       <h5>
         <span v-if="init">Pick the number of players</span>
@@ -58,11 +61,11 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
+import {Component, Prop} from "vue-property-decorator";
 import Engine, {
   AvailableCommand,
   Booster,
-  Building,
+  Building, BuildWarning,
   Command,
   Event,
   Expansion,
@@ -76,12 +79,15 @@ import Engine, {
   tiles,
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
-import { buildingName } from "../data/building";
+import {buildingName} from "../data/building";
 import { ButtonData, GameContext } from "../data";
-import { eventDesc } from "../data/event";
-import { factionDesc } from "../data/factions";
-import { FactionCustomization } from "@gaia-project/engine/src/engine";
-import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
+import {eventDesc} from "../data/event";
+import {factionDesc} from "../data/factions";
+import {FactionCustomization} from "@gaia-project/engine/src/engine";
+import {factionVariantBoard} from "@gaia-project/engine/src/faction-boards";
+import {AvailableBuilding} from "@gaia-project/engine/src/available-command";
+import { buildWarnings } from "../data/warnings";
+import { hexMap } from "../logic/commands";
 
 @Component<Commands>({
   watch: {
@@ -118,6 +124,9 @@ import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
 export default class Commands extends Vue {
   @Prop()
   currentMove?: string;
+
+  @Prop()
+  currentMoveWarnings?: BuildWarning[];
 
   @Prop({default: ""})
   remainingTime: string;
@@ -218,6 +227,10 @@ export default class Commands extends Vue {
     return this.commandTitles.length === 0 ? ["Your turn"] : this.commandTitles;
   }
 
+  get warnings(): string[] {
+    return this.currentMoveWarnings?.map(w => buildWarnings[w].text) ?? [];
+  }
+
   get factions() {
     return factions;
   }
@@ -226,7 +239,7 @@ export default class Commands extends Vue {
     this.updater += 1;
   }
 
-  handleCommand(command: string, source: MoveButton, final: boolean) {
+  handleCommand(command: string, source: MoveButton, final: boolean, warnings?: BuildWarning[]) {
     console.log("handle command", command);
 
     // Some users seem to have a bug with repeating commands on mobile, like clicking the income button twice
@@ -258,7 +271,7 @@ export default class Commands extends Vue {
     if (this.init) {
       this.$emit("command", command);
     } else {
-      this.$emit("command", `${this.playerSlug} ${[...this.commandChain, command].join(" ")}`);
+      this.$emit("command", `${this.playerSlug} ${[...this.commandChain, command].join(" ")}`, warnings);
     }
   }
 
@@ -299,8 +312,9 @@ export default class Commands extends Vue {
           break;
         }
         case Command.Build: {
+          const buildings = command.data.buildings as AvailableBuilding[];
           for (const building of Object.values(Building)) {
-            const coordinates = command.data.buildings.filter((bld) => bld.building === building);
+            const coordinates = buildings.filter((bld) => bld.building === building);
 
             if (coordinates.length > 0) {
               let label = `Build a ${buildingName(building)}`;
@@ -321,9 +335,7 @@ export default class Commands extends Vue {
                 label,
                 command: `${Command.Build} ${building}`,
                 automatic: command.data.automatic,
-                hexes: new Map<GaiaHex, { cost?: string }>(
-                  coordinates.map((coord) => [this.engine.map.getS(coord.coordinates), coord])
-                ),
+                hexes: hexMap(this.engine, coordinates),
               });
             }
           }
@@ -335,7 +347,7 @@ export default class Commands extends Vue {
           ret.push({
             label: "Swap Planetary Institute",
             command: command.name,
-            hexes: new Map(command.data.buildings.map((coord) => [this.engine.map.getS(coord.coordinates), coord])),
+            hexes: hexMap(this.engine, command.data.buildings),
           });
           break;
         }
@@ -344,7 +356,7 @@ export default class Commands extends Vue {
           ret.push({
             label: "Place Lost Planet",
             command: command.name,
-            hexes: new Map(command.data.spaces.map((coord) => [this.engine.map.getS(coord.coordinates), coord])),
+            hexes: hexMap(this.engine, command.data.spaces),
           });
           break;
         }
