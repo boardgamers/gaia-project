@@ -71,7 +71,8 @@ export type BuildWarning =
   | "step-booster-not-used"
   | "range-booster-not-used"
   | "step-action-partially-wasted"
-  | "expensive-terraforming";
+  | "expensive-terraforming"
+  | "gaia-forming-with-charged-tokens";
 
 export type BuildCheck = { cost?: Reward[]; possible: boolean; steps?: number; warnings?: BuildWarning[] };
 
@@ -299,6 +300,11 @@ export default class Player extends EventEmitter {
     }
 
     const cost = Reward.merge(this.board.cost(targetPlanet, building, isolated), addedCost);
+
+    const toGaia = cost.find((r) => r.type == Resource.MoveTokenToGaiaArea);
+    if (toGaia != null && toGaia.count > this.data.power.area1) {
+      warnings.push("gaia-forming-with-charged-tokens");
+    }
 
     if (!this.data.canPay(cost)) {
       return { possible: false };

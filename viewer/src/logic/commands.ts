@@ -14,17 +14,18 @@ export function hexMap(engine: Engine, coordinates: AvailableHex[]): HighlightHe
   );
 }
 
-export function passWarning(engine: Engine, command: AvailableCommand): ButtonWarning {
+export function passWarning(engine: Engine, command: AvailableCommand): ButtonWarning | null {
   const warnings: string[] = [];
+  if (engine.round > 0) {
+    const p = engine.players[command.player];
+    if (p.data.hasResource(new Reward(1, Resource.GaiaFormer)) && p.faction === Faction.BalTaks) {
+      warnings.push("Gaiaformers are not yet converted.");
+    }
 
-  const p = engine.players[command.player];
-  if (engine.round > 0 && p.data.hasResource(new Reward(1, Resource.GaiaFormer)) && p.faction === Faction.BalTaks) {
-    warnings.push("Gaiaformers are not yet converted.");
+    for (const e of p.events[Operator.Activate].filter((e) => !e.activated)) {
+      warnings.push(`Special action is not yet used: ${e.spec.split(Operator.Activate)[1]}`);
+    }
   }
 
-  for (const e of p.events[Operator.Activate].filter((e) => !e.activated)) {
-    warnings.push(`Special action is not yet used: ${e.spec.split(Operator.Activate)[1]}`);
-  }
-
-  return { title: "Are you sure you want to pass?", body: warnings };
+  return warnings.length == 0 ? null : { title: "Are you sure you want to pass?", body: warnings };
 }
