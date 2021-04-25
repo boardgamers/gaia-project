@@ -75,6 +75,25 @@ export type VictoryPointSource = {
   aggregate?: VictoryPointAggregate;
 };
 
+function passIncomeProjection(sources: EventSource[]): (e: Engine, p: Player) => number {
+  return (e, p) => {
+    if (e.isLastRound && e.passedPlayers.includes(p.player)) {
+      return 0;
+    }
+    let points = 0;
+    for (const e of p.passIncomeEvents()) {
+      if (sources.includes(e.source)) {
+        for (const reward of e.rewards) {
+          if (reward.type == Resource.VictoryPoint) {
+            points += reward.count;
+          }
+        }
+      }
+    }
+    return points;
+  };
+}
+
 export const victoryPointSources: VictoryPointSource[] = [
   {
     types: ["chart-init"],
@@ -124,8 +143,7 @@ export const victoryPointSources: VictoryPointSource[] = [
     label: "Booster",
     description: "Round Boosters",
     color: "--oxide",
-    projectedEndValue: (e, p) =>
-      e.isLastRound && e.passedPlayers.includes(p.player) ? 0 : simulateIncome(p, (clone) => clone.receivePassIncome()),
+    projectedEndValue: passIncomeProjection(Booster.values()),
   },
   {
     types: BoardAction.values(),
@@ -144,6 +162,7 @@ export const victoryPointSources: VictoryPointSource[] = [
     label: "Advanced Tech",
     description: "Advanced Tech Tiles",
     color: "--current-round",
+    projectedEndValue: passIncomeProjection(AdvTechTilePos.values()),
   },
   {
     types: [Command.FormFederation],
