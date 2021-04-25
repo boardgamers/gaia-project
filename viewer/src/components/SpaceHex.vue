@@ -21,8 +21,8 @@
       ]"
       @click="hexClick(hex)"
     />
-    <text class="sector-name" v-if="isCenter"
-      >{{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
+    <text class="sector-name" v-if="isCenter">
+      {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
     </text>
     <Planet v-if="hex.data.planet !== 'e'" :planet="hex.data.planet" :faction="faction(hex.data.player)" />
     <Building
@@ -111,7 +111,7 @@ export default class SpaceHex extends Vue {
   hexClick(hex: GaiaHex) {
     const h = this.highlightedHexes.get(hex);
     if (h != null || this.toSelect) {
-      this.$store.dispatch("gaiaViewer/hexClick", {hex: hex, highlight: h});
+      this.$store.dispatch("gaiaViewer/hexClick", { hex: hex, highlight: h });
     }
   }
 

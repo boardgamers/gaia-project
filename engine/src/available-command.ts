@@ -546,11 +546,6 @@ export function possibleSpaceLostPlanet(engine: Engine, player: Player) {
       continue;
     }
 
-    const warnings: BuildWarning[] = [];
-    if (qicNeeded > 0 && p.hasActiveBooster(Resource.TemporaryRange)) {
-      warnings.push("range-booster-not-used");
-    }
-
     spaces.push({
       coordinates: hex.toString(),
       cost: qicNeeded > 0 ? new Reward(qicNeeded, Resource.Qic).toString() : "~",

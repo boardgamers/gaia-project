@@ -43,7 +43,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { BuildWarning, GaiaHex, SpaceMap, HighlightHex } from "@gaia-project/engine";
+import { BuildWarning, GaiaHex, HighlightHex, SpaceMap } from "@gaia-project/engine";
 import { ButtonData } from "../data";
 import Booster from "./Booster.vue";
 import TechTile from "./TechTile.vue";
@@ -119,7 +119,7 @@ export default class MoveButton extends Vue {
       try {
         const c = this.$createElement;
         const message = warning.body.map(w => c("ul", [c("li", [w])]));
-        const ret = await this.$bvModal.msgBoxConfirm(message, {title: warning.title, headerClass: "danger"});
+        const ret = await this.$bvModal.msgBoxConfirm(message, { title: warning.title, headerClass: "danger" });
 
         if (!ret) {
           return;
@@ -214,13 +214,13 @@ export default class MoveButton extends Vue {
         this.startingHex = hex;
 
         const map: SpaceMap = this.$store.state.gaiaViewer.data.map;
-        const {range, costs} = this.button;
+        const { range, costs } = this.button;
 
         const highlighted = new Map();
 
         const withinDistance = map.withinDistance(hex, range);
         for (const target of withinDistance) {
-          highlighted.set(target, {cost: costs?.[map.distance(hex, target)] ?? "~"});
+          highlighted.set(target, { cost: costs?.[map.distance(hex, target)] ?? "~" });
         }
 
         this.$store.commit("gaiaViewer/highlightHexes", highlighted);
@@ -305,6 +305,7 @@ export default class MoveButton extends Vue {
 .move-button {
   display: inline-block;
 }
+
 .danger {
   background-color: var(--warning);
 }

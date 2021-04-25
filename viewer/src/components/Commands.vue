@@ -375,7 +375,7 @@ export default class Commands extends Vue {
                 booster,
                 needConfirm: true,
                 tooltip: tiles.boosters[booster].map((spec) => eventDesc(new Event(spec))).join("\n"),
-                warning: warning,
+                warning,
               });
             }
           });
@@ -392,7 +392,7 @@ export default class Commands extends Vue {
                   label: `Confirm Pass`,
                 },
               ],
-              warning: warning,
+              warning,
             });
           } else {
             ret.push({
@@ -400,7 +400,7 @@ export default class Commands extends Vue {
               command: command.name,
               buttons,
               boosters: command.data.boosters,
-              warning: warning,
+              warning,
             });
           }
 
