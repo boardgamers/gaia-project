@@ -49,7 +49,7 @@
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { BuildWarning, GaiaHex, HighlightHex, SpaceMap } from "@gaia-project/engine";
-import { ButtonData } from "../data";
+import { ButtonData, HighlightHexData } from "../data";
 import Booster from "./Booster.vue";
 import TechTile from "./TechTile.vue";
 
@@ -161,7 +161,13 @@ export default class MoveButton extends Vue {
         this.emitCommand(hex.toString());
       } else {
         this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
-        this.subscribeHexClick((hex, highlight) => this.emitCommand(hex.toString(), { warnings: highlight.warnings }));
+        this.subscribeHexClick((hex, highlight) => {
+          if (this.button.needConfirm) {
+            this.$store.commit("gaiaViewer/highlightHexes", new Map<GaiaHex, HighlightHex>([[hex, {}]]));
+          }
+
+          this.emitCommand(hex.toString(), { warnings: highlight.warnings });
+        });
       }
     } else if (this.button.researchTiles) {
       this.$store.commit("gaiaViewer/highlightResearchTiles", this.button.researchTiles);
@@ -255,8 +261,15 @@ export default class MoveButton extends Vue {
     this.emitCommand();
   }
 
-  emitCommand(append?: string, params?: { disappear?: boolean; final?: boolean; times?: number; warnings?: BuildWarning[] }) {
+  emitCommand(
+    append?: string,
+    params?: { disappear?: boolean; final?: boolean; times?: number; warnings?: BuildWarning[] }
+  ) {
     console.log("emit command", this.button.command, append);
+
+    if (this.button.needConfirm && append) {
+      this.button.buttons[0].command = append;
+    }
 
     params = Object.assign({}, { disappear: true, final: false, times: 1 }, params);
     const { disappear, final, times, warnings } = params;

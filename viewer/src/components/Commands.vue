@@ -75,6 +75,7 @@ import Engine, {
   GaiaHex,
   Resource,
   Reward,
+  Round,
   SpaceMap,
   SubPhase,
   tiles,
@@ -89,6 +90,7 @@ import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
 import { AvailableBuilding } from "@gaia-project/engine/src/available-command";
 import { buildWarnings } from "../data/warnings";
 import { buttonWarning, endTurnWarning, hexMap, passWarning } from "../logic/commands";
+import { boosterNames } from "../data/boosters";
 
 @Component<Commands>({
   watch: {
@@ -253,7 +255,7 @@ export default class Commands extends Vue {
       return;
     }
 
-    if (source.button.buttons && source.button.buttons.length > 0 && !final) {
+    if (source.button.buttons?.length > 0 && !final) {
       this.commandTitles.push(source.button.label);
       this.commandChain.push(source.button.command);
       this.buttonChain.push(source.button);
@@ -316,6 +318,8 @@ export default class Commands extends Vue {
           const buildings = command.data.buildings as AvailableBuilding[];
           for (const building of Object.values(Building)) {
             const coordinates = buildings.filter((bld) => bld.building === building);
+            const buttons =
+              this.engine.round === Round.None ? [{ command: "", label: `Confirm ${buildingName(building)}` }] : null;
 
             if (coordinates.length > 0) {
               let label = `Build a ${buildingName(building)}`;
@@ -337,6 +341,8 @@ export default class Commands extends Vue {
                 command: `${Command.Build} ${building}`,
                 automatic: command.data.automatic,
                 hexes: hexMap(this.engine, coordinates),
+                buttons,
+                needConfirm: buttons?.length > 0,
               });
             }
           }

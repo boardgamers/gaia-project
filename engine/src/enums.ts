@@ -173,7 +173,6 @@ export enum Command {
   ChooseIncome = "income",
   Build = "build",
   Pass = "pass",
-  PassConfirmation = "pass",
   UpgradeResearch = "up",
   ChargePower = "charge",
   Decline = "decline",
@@ -185,7 +184,6 @@ export enum Command {
   PlaceLostPlanet = "lostPlanet",
   FormFederation = "federation",
   EndTurn = "endturn",
-  EndTurnConfirmation = "endturnConfirmation",
   PISwap = "swap-PI",
   PickReward = "pick",
   DeadEnd = "deadEnd", // this command cannot be executed - it just signals that you have to undo
