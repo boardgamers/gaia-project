@@ -287,7 +287,7 @@ export default class Player extends EventEmitter {
           return { possible: false };
         }
 
-        if (steps > 0 && this.hasActiveBooster(Resource.TemporaryStep)) {
+        if (steps > 0 && this.hasActiveBooster(Resource.TemporaryStep) && this.data.temporaryStep == 0) {
           warnings.push("step-booster-not-used");
         }
         if (reward.count > 0 && this.data.terraformCostDiscount < 2) {
