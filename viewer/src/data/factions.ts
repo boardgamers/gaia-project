@@ -1,4 +1,5 @@
 import {
+  BrainstoneArea,
   Building,
   Faction,
   factionBoard,
@@ -133,7 +134,9 @@ export function factionDesc(faction: Faction, variant?: FactionBoardRaw) {
     <b>Ability: </b> ${factionData[faction].ability} </br>
     <b>Planetary Institute: </b> ${factionData[faction].PI}<br/>
     <b>Buildings:</b> ${buildingDesc.replace(/,,/g, ",~,").replace(/,/g, ", ")}
-    <b>Starting Power:</b> area 1: ${board.power.area1}, area 2: ${board.power.area2} </br>
+    <b>Starting Power:</b> area 1: ${board.power.area1}${
+    board.brainstone == BrainstoneArea.Area1 ? ", brainstone" : ""
+  }, area 2: ${board.power.area2} </br>
     <b>Starting Income:</b> ${startingIncome.toString().replace(/,/g, ", ")} </br>
     <b>Round Income:</b> ${roundIncome} </br>
     <span style="white-space: nowrap; line-height: 1em">
