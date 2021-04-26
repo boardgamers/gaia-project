@@ -1,11 +1,13 @@
 import { difference } from "lodash";
 import { GaiaHex } from "./gaia-hex";
+import { BuildWarning } from "./player";
 
 export interface FederationInfo {
   hexes: GaiaHex[];
   planets: number;
   satellites: number;
   newSatellites: number;
+  warning?: BuildWarning;
 }
 
 /**

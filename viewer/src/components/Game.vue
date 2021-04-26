@@ -43,7 +43,13 @@
     <div class="row mt-2">
       <TurnOrder v-if="!ended && engine.players.length > 0" class="col-md-4 order-4 order-md-1" />
       <div class="col-md-8 order-1 order-md-2">
-        <Commands @command="handleCommand" @undo="undoMove" v-if="canPlay" :currentMove="currentMove" />
+        <Commands
+          @command="handleCommand"
+          @undo="undoMove"
+          v-if="canPlay"
+          :currentMove="currentMove"
+          :currentMoveWarnings="Array.from(currentMoveWarnings.values()).flat()"
+        />
       </div>
     </div>
     <AdvancedLog class="col-12 order-last mt-4" :currentMove="currentMove" v-if="logPlacement === 'top'" />
@@ -69,7 +75,13 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Engine, { BoardAction as BoardActionEnum, Command, EngineOptions, Phase } from "@gaia-project/engine";
+import Engine, {
+  BoardAction as BoardActionEnum,
+  BuildWarning,
+  Command,
+  EngineOptions,
+  Phase
+} from "@gaia-project/engine";
 import AdvancedLog from "./AdvancedLog.vue";
 import BoardAction from "./BoardAction.vue";
 import Commands from "./Commands.vue";
@@ -162,6 +174,7 @@ export default class Game extends Vue {
   private finalScoringFields: any[] = null
   private finalScoringItems: any[] = null
   public currentMove = "";
+  public currentMoveWarnings: Map<string, BuildWarning[]> = new Map<string, BuildWarning[]>();
   clearCurrentMove = false;
   // When joining a game
   name = "";
@@ -263,6 +276,7 @@ export default class Game extends Vue {
 
     if (data.newTurn) {
       this.currentMove = "";
+      this.currentMoveWarnings.clear();
     } else {
       this.currentMove = data.moveHistory.pop() ?? "";
     }
@@ -274,7 +288,7 @@ export default class Game extends Vue {
     });
   }
 
-  handleCommand(command: string) {
+  handleCommand(command: string, warnings?: BuildWarning[]) {
     if (command.startsWith(Command.Init) || this.engine.round <= 0) {
       this.addMove(command);
       return;
@@ -285,6 +299,12 @@ export default class Game extends Vue {
     if (move.command === Command.EndTurn) {
       this.addMove(this.currentMove + ".");
       return;
+    }
+
+    if (warnings?.length > 0) {
+      this.currentMoveWarnings.set(command, warnings);
+    } else {
+      this.currentMoveWarnings.delete(command);
     }
 
     if (this.currentMove && !this.clearCurrentMove) {
@@ -301,7 +321,16 @@ export default class Game extends Vue {
     } else {
       this.currentMove = "";
     }
+    this.removeWarnings();
     this.addMove(this.currentMove);
+  }
+
+  private removeWarnings() {
+    for (const key of this.currentMoveWarnings.keys()) {
+      if (!this.currentMove.includes(key)) {
+        this.currentMoveWarnings.delete(key);
+      }
+    }
   }
 
   addMove(command: string) {

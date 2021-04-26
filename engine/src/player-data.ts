@@ -399,15 +399,14 @@ export default class PlayerData extends EventEmitter {
   }
 
   discardPower(power: number) {
-    this.discardTokens(power, null);
+    this.moveTokens(power, null);
   }
 
   movePowerToGaia(power: number) {
-    const event = this.discardTokens(power, BrainstoneArea.Gaia);
-    this.power.gaia += event.area1 + event.area2 + event.area3;
+    this.moveTokens(power, BrainstoneArea.Gaia);
   }
 
-  private discardTokens(power: number, targetArea: BrainstoneArea | null): MoveTokens {
+  private moveTokens(power: number, targetArea: BrainstoneArea.Gaia | null) {
     const brainstoneEvent = targetArea ?? "discard";
 
     let movedBrainstone = 0;
@@ -439,6 +438,9 @@ export default class PlayerData extends EventEmitter {
     this.power.area1 -= area1ToGaia;
     this.power.area2 -= area2ToGaia;
     this.power.area3 -= area3ToGaia;
+    if (targetArea == BrainstoneArea.Gaia) {
+      this.power.gaia += area1ToGaia + area2ToGaia + area3ToGaia;
+    }
 
     const event: MoveTokens = {
       area1: area1ToGaia,
@@ -448,7 +450,6 @@ export default class PlayerData extends EventEmitter {
       brainstone: movedBrainstone,
     };
     this.emit("move-tokens", event);
-    return event;
   }
 
   chargeGaiaPower(power: number) {

@@ -23,7 +23,7 @@ import {
 import { oppositeFaction } from "./factions";
 import { GaiaHex } from "./gaia-hex";
 import SpaceMap from "./map";
-import PlayerObject from "./player";
+import PlayerObject, { BuildCheck, BuildWarning } from "./player";
 import PlayerData, { resourceLimits } from "./player-data";
 import * as researchTracks from "./research-tracks";
 import Reward from "./reward";
@@ -43,6 +43,19 @@ interface AvailableCommand {
 }
 
 export default AvailableCommand;
+
+export type HighlightHex = { cost?: string; warnings?: BuildWarning[] };
+export type AvailableHex = HighlightHex & { coordinates: string };
+
+export type AvailableBuilding = {
+  coordinates: string;
+  building: Building;
+  cost: string;
+  warnings?: BuildWarning[];
+  upgrade?: boolean;
+  downgrade?: boolean;
+  steps?: number;
+};
 
 export function generate(engine: Engine, subPhase: SubPhase = null, data?: any): AvailableCommand[] {
   const player = engine.playerToMove;
@@ -131,6 +144,22 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
   return [];
 }
 
+function newAvailableBuilding(
+  building: Building,
+  hex: GaiaHex,
+  canBuild: BuildCheck,
+  upgrade: boolean
+): AvailableBuilding {
+  return {
+    building,
+    coordinates: hex.toString(),
+    cost: Reward.toString(canBuild.cost),
+    warnings: canBuild.warnings,
+    steps: canBuild.steps,
+    upgrade: upgrade,
+  };
+}
+
 function addPossibleNewPlanet(
   data: PlayerData,
   map: SpaceMap,
@@ -138,7 +167,7 @@ function addPossibleNewPlanet(
   pl: PlayerObject,
   planet: Planet,
   building: Building,
-  buildings: any[]
+  buildings: AvailableBuilding[]
 ) {
   const distance = Math.min(
     ...data.occupied.filter((loc) => loc.isRangeStartingPoint(pl.player)).map((loc) => map.distance(hex, loc))
@@ -148,17 +177,12 @@ function addPossibleNewPlanet(
     return;
   }
 
-  const { possible, cost, steps } = pl.canBuild(planet, building, {
+  const check = pl.canBuild(planet, building, {
     addedCost: [new Reward(qicNeeded, Resource.Qic)],
   });
 
-  if (possible) {
-    buildings.push({
-      building,
-      coordinates: hex.toString(),
-      cost: Reward.toString(cost),
-      steps,
-    });
+  if (check.possible) {
+    buildings.push(newAvailableBuilding(building, hex, check, false));
   }
 }
 
@@ -166,7 +190,7 @@ export function possibleBuildings(engine: Engine, player: Player) {
   const map = engine.map;
   const pl = engine.player(player);
   const { data } = pl;
-  const buildings = [];
+  const buildings: AvailableBuilding[] = [];
 
   for (const hex of engine.map.toJSON()) {
     // upgrade existing player's building
@@ -211,16 +235,11 @@ export function possibleBuildings(engine: Engine, player: Player) {
       const upgraded = upgradedBuildings(building, engine.player(player).faction);
 
       for (const upgrade of upgraded) {
-        const { cost, possible } = engine
+        const check = engine
           .player(player)
           .canBuild(hex.data.planet, upgrade, { isolated, existingBuilding: building });
-        if (possible) {
-          buildings.push({
-            building: upgrade,
-            cost: Reward.toString(cost),
-            coordinates: hex.toString(),
-            upgrade: true,
-          });
+        if (check.possible) {
+          buildings.push(newAvailableBuilding(upgrade, hex, check, true));
         }
       }
     } else if (pl.canOccupy(hex)) {
@@ -438,12 +457,15 @@ export function possibleLabDowngrades(engine: Engine, player: Player) {
       name: Command.Build,
       player,
       data: {
-        buildings: spots.map((hex) => ({
-          building: Building.TradingStation,
-          coordinates: hex.toString(),
-          cost: "~",
-          downgrade: true,
-        })),
+        buildings: spots.map(
+          (hex) =>
+            ({
+              building: Building.TradingStation,
+              coordinates: hex.toString(),
+              cost: "~",
+              downgrade: true,
+            } as AvailableBuilding)
+        ),
       },
     },
   ] as AvailableCommand[];
@@ -508,8 +530,9 @@ export function possibleResearchAreas(engine: Engine, player: Player, cost?: str
 
 export function possibleSpaceLostPlanet(engine: Engine, player: Player) {
   const commands = [];
-  const data = engine.player(player).data;
-  const spaces = [];
+  const p = engine.player(player);
+  const data = p.data;
+  const spaces: AvailableHex[] = [];
 
   for (const hex of engine.map.toJSON()) {
     // exclude existing planets, satellites and space stations
@@ -524,7 +547,6 @@ export function possibleSpaceLostPlanet(engine: Engine, player: Player) {
     }
 
     spaces.push({
-      building: Building.Mine,
       coordinates: hex.toString(),
       cost: qicNeeded > 0 ? new Reward(qicNeeded, Resource.Qic).toString() : "~",
     });

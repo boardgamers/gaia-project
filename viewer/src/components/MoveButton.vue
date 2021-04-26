@@ -5,7 +5,6 @@
     <b-btn
       v-else-if="!button.times"
       :variant="button.warning ? 'warning' : 'secondary'"
-      :disabled="button.disabled"
       class="mr-2 mb-2 move-button"
       @click="handleClick"
       @mouseenter="hover"
@@ -43,7 +42,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { GaiaHex, SpaceMap } from "@gaia-project/engine";
+import { BuildWarning, GaiaHex, HighlightHex, SpaceMap } from "@gaia-project/engine";
 import { ButtonData } from "../data";
 import Booster from "./Booster.vue";
 import TechTile from "./TechTile.vue";
@@ -88,6 +87,12 @@ export default class MoveButton extends Vue {
     });
   }
 
+  subscribeHexClick(callback: (hex: GaiaHex, highlight: HighlightHex) => void) {
+    this.subscribe("hexClick", payload => {
+      callback(payload.hex, payload.highlight);
+    });
+  }
+
   subscribeFinal(action: string) {
     this.subscribe(action, (field) => this.emitCommand(field, { final: true }));
     this.emitCommand(null, { disappear: false });
@@ -108,11 +113,25 @@ export default class MoveButton extends Vue {
       console.log("click on hidden button, ignoring");
       return;
     }
-    if (this.button.warning) {
+    const warning = this.button.warning;
+    if (warning) {
       try {
-        const ret = await this.$bvModal.msgBoxConfirm(this.button.warning);
+        const c = this.$createElement;
+        const message = warning.body.length == 1 ? warning.body[0] :
+          warning.body.map(w => c("ul", [c("li", [w])]));
+        const okClicked = await this.$bvModal.msgBoxConfirm(message, {
+          title: warning.title,
+          headerClass: "warning",
+          okTitle: warning.okButton?.label,
+        });
 
-        if (!ret) {
+        if (okClicked) {
+          const action = warning.okButton?.action;
+          if (action) {
+            action();
+            return;
+          }
+        } else {
           return;
         }
       } catch (err) {
@@ -136,7 +155,7 @@ export default class MoveButton extends Vue {
         this.emitCommand(hex.toString());
       } else {
         this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
-        this.subscribe("hexClick", (hex) => this.emitCommand(hex.toString()));
+        this.subscribeHexClick((hex, highlight) => this.emitCommand(hex.toString(), { warnings: highlight.warnings }));
       }
     } else if (this.button.researchTiles) {
       this.$store.commit("gaiaViewer/highlightResearchTiles", this.button.researchTiles);
@@ -166,7 +185,7 @@ export default class MoveButton extends Vue {
 
       this.customLabel = "Custom location - End selection";
 
-      this.subscribe("hexClick", (hex) => {
+      this.subscribeHexClick((hex) => {
         const highlighted = this.$store.state.gaiaViewer.context.highlighted.hexes;
 
         if (highlighted.has(hex)) {
@@ -191,12 +210,12 @@ export default class MoveButton extends Vue {
       }
 
       this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
-      this.subscribe("hexClick", (hex) => this.$store.commit("gaiaViewer/rotate", hex));
+      this.subscribeHexClick((hex) => this.$store.commit("gaiaViewer/rotate", hex));
       this.customLabel = "Sector rotations finished";
     } else if (this.button.range) {
       console.log("range click");
       this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
-      this.subscribe("hexClick", (hex) => {
+      this.subscribeHexClick((hex) => {
         if (this.startingHex) {
           this.emitCommand(`${this.startingHex} ${hex}`);
           this.startingHex = undefined;
@@ -233,11 +252,11 @@ export default class MoveButton extends Vue {
     this.emitCommand();
   }
 
-  emitCommand(append?: string, params?: { disappear?: boolean; final?: boolean; times?: number }) {
+  emitCommand(append?: string, params?: { disappear?: boolean; final?: boolean; times?: number; warnings?: BuildWarning[] }) {
     console.log("emit command", this.button.command, append);
 
     params = Object.assign({}, { disappear: true, final: false, times: 1 }, params);
-    const { disappear, final, times } = params;
+    const { disappear, final, times, warnings } = params;
 
     if (disappear) {
       this.unsubscribe();
@@ -264,7 +283,7 @@ export default class MoveButton extends Vue {
       commandBody = [command, append].filter((x) => !!x);
     }
 
-    this.$emit("trigger", commandBody.join(" "), this, final);
+    this.$emit("trigger", commandBody.join(" "), this, final, warnings);
   }
 
   hover() {
@@ -295,5 +314,9 @@ export default class MoveButton extends Vue {
 <style lang="scss">
 .move-button {
   display: inline-block;
+}
+
+.warning {
+  background-color: var(--warning);
 }
 </style>

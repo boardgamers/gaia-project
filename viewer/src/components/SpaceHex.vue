@@ -3,7 +3,7 @@
     <title>
       Coordinates: {{ hex }}{{ hex.data.planet !== "e" ? `&#10;Planet: ${planetName(hex.data.planet)}` : ""
       }}{{ hex.data.building ? `&#10;Building: ${buildingName(hex.data.building, hex.data.player)}` : ""
-      }}{{ cost(hex) ? `&#10;Cost: ${cost(hex)}` : "" }}
+      }}{{ cost(hex) ? `&#10;Cost: ${cost(hex)}` : "" }}{{ warning(hex) ? `&#10;Warning: ${warning(hex)}` : "" }}
     </title>
     <use
       xlink:href="#space-hex"
@@ -16,13 +16,14 @@
           'current-round': currentRound(hex),
           qic: cost(hex).includes('q'),
           power: cost(hex).includes('pw'),
+          warn: warning(hex) != null,
         },
       ]"
       @click="hexClick(hex)"
     />
-    <text class="sector-name" v-if="isCenter">{{
-      hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector)
-    }}</text>
+    <text class="sector-name" v-if="isCenter">
+      {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
+    </text>
     <Planet v-if="hex.data.planet !== 'e'" :planet="hex.data.planet" :faction="faction(hex.data.player)" />
     <Building
       style="stroke-width: 10"
@@ -67,7 +68,9 @@ import Planet from "./Planet.vue";
 import Building from "./Building.vue";
 import { buildingName } from "../data/building";
 import { planetNames } from "../data/planets";
-import {factionPlanet} from "@gaia-project/engine/src/factions";
+import { factionPlanet } from "@gaia-project/engine/src/factions";
+import { HighlightHexData } from "../data";
+import { buildWarnings } from "../data/warnings";
 
 @Component<SpaceHex>({
   components: {
@@ -94,6 +97,11 @@ export default class SpaceHex extends Vue {
     return this.$store.state.gaiaViewer.data.map;
   }
 
+  warning(hex: GaiaHex): string {
+    const warnings = this.highlightedHexes.get(hex)?.warnings;
+    return warnings?.length > 0 ? warnings?.map(w => buildWarnings[w].text).join(", ") : null;
+  }
+
   cost(hex: GaiaHex) {
     const data = this.highlightedHexes.get(hex);
 
@@ -101,8 +109,9 @@ export default class SpaceHex extends Vue {
   }
 
   hexClick(hex: GaiaHex) {
-    if (this.highlightedHexes.has(hex) || this.toSelect) {
-      this.$store.dispatch("gaiaViewer/hexClick", hex);
+    const h = this.highlightedHexes.get(hex);
+    if (h != null || this.toSelect) {
+      this.$store.dispatch("gaiaViewer/hexClick", { hex: hex, highlight: h });
     }
   }
 
@@ -125,7 +134,7 @@ export default class SpaceHex extends Vue {
     return planetNames[planet];
   }
 
-  get highlightedHexes(): Map<GaiaHex, any> {
+  get highlightedHexes(): HighlightHexData {
     return this.$store.state.gaiaViewer.context.highlighted.hexes;
   }
 
@@ -165,6 +174,10 @@ svg {
     &.highlighted {
       fill: white;
       cursor: pointer;
+
+      &.warn {
+        fill: red !important;
+      }
 
       &.qic {
         fill: lightGreen;

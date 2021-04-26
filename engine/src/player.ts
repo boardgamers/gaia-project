@@ -67,6 +67,16 @@ export class Settings {
   ) {}
 }
 
+export type BuildWarning =
+  | "step-booster-not-used"
+  | "range-booster-not-used"
+  | "step-action-partially-wasted"
+  | "expensive-terraforming"
+  | "gaia-forming-with-charged-tokens"
+  | "federation-with-charged-tokens";
+
+export type BuildCheck = { cost?: Reward[]; possible: boolean; steps?: number; warnings?: BuildWarning[] };
+
 export default class Player extends EventEmitter {
   faction: Faction = null;
   factionVariant: FactionBoardRaw = null;
@@ -220,6 +230,10 @@ export default class Player extends EventEmitter {
     }
   }
 
+  hasActiveBooster(type: Resource): boolean {
+    return this.events[Operator.Activate].some((e) => !e.activated && e.rewards.some((r) => r.type == type));
+  }
+
   canBuild(
     targetPlanet: Planet,
     building: Building,
@@ -228,7 +242,7 @@ export default class Player extends EventEmitter {
       addedCost,
       existingBuilding,
     }: { isolated?: boolean; addedCost?: Reward[]; existingBuilding?: Building } = {}
-  ): { cost?: Reward[]; possible: boolean; steps?: number } {
+  ): BuildCheck {
     if (this.data.buildings[building] >= this.maxBuildings(building)) {
       // Too many buildings of the same kind
       return { possible: false };
@@ -240,6 +254,14 @@ export default class Player extends EventEmitter {
 
     if (!this.data.canPay(addedCost)) {
       return { possible: false };
+    }
+
+    const warnings: BuildWarning[] = [];
+    if (
+      addedCost.some((c) => c.type == Resource.Qic && c.count > 0) &&
+      this.hasActiveBooster(Resource.TemporaryRange)
+    ) {
+      warnings.push("range-booster-not-used");
     }
 
     let steps = 0;
@@ -260,14 +282,30 @@ export default class Player extends EventEmitter {
         // Get the number of terraforming steps to pay discounting terraforming track
         steps = terraformingStepsRequired(factions[this.faction].planet, targetPlanet);
         const reward = terraformingCost(this.data, steps);
+
         if (reward == null) {
           return { possible: false };
+        }
+
+        if (steps > 0 && this.hasActiveBooster(Resource.TemporaryStep)) {
+          warnings.push("step-booster-not-used");
+        }
+        if (reward.count > 0 && this.data.terraformCostDiscount < 2) {
+          warnings.push("expensive-terraforming");
+        }
+        if (this.data.temporaryStep > steps) {
+          warnings.push("step-action-partially-wasted");
         }
         addedCost.push(reward);
       }
     }
 
     const cost = Reward.merge(this.board.cost(targetPlanet, building, isolated), addedCost);
+
+    const toGaia = cost.find((r) => r.type == Resource.MoveTokenToGaiaArea);
+    if (toGaia != null && toGaia.count > this.data.power.area1) {
+      warnings.push("gaia-forming-with-charged-tokens");
+    }
 
     if (!this.data.canPay(cost)) {
       return { possible: false };
@@ -276,6 +314,7 @@ export default class Player extends EventEmitter {
       possible: true,
       cost,
       steps,
+      warnings,
     };
   }
 
@@ -966,11 +1005,16 @@ export default class Player extends EventEmitter {
     const satellites = federation.filter((hex) => !hex.occupyingPlayers()?.includes(this.player));
     const nPlanets = federation.filter((hex) => hex.colonizedBy(this.player)).length;
 
+    const newSatellites = satellites.filter((sat) => !sat.belongsToFederationOf(this.player)).length;
     return {
       hexes: federation,
       satellites: satellites.length,
-      newSatellites: satellites.filter((sat) => !sat.belongsToFederationOf(this.player)).length,
+      newSatellites: newSatellites,
       planets: nPlanets,
+      warning:
+        this.faction != Faction.Ivits && newSatellites > this.data.power.area1
+          ? "federation-with-charged-tokens"
+          : null,
     };
   }
 

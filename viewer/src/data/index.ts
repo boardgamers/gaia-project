@@ -1,8 +1,10 @@
-import { AdvTechTilePos, Booster, Federation, GaiaHex, TechTilePos } from "@gaia-project/engine";
+import { AdvTechTilePos, Booster, Federation, GaiaHex, HighlightHex, TechTilePos } from "@gaia-project/engine";
+
+export type ButtonWarning = { title?: string; body: string[]; okButton?: { label: string; action: () => void } };
 
 export interface ButtonData {
   label?: string;
-  command: string;
+  command?: string;
   tooltip?: string;
   // Simple label
   title?: string;
@@ -22,17 +24,16 @@ export interface ButtonData {
   // Rotate sectors command?
   rotation?: boolean;
   needConfirm?: boolean;
-  warning?: string;
+  warning?: ButtonWarning;
 
   buttons?: ButtonData[];
   hide?: boolean;
-  disabled?: boolean;
   booster?: Booster;
   tech?: TechTilePos | AdvTechTilePos;
 }
 
 export type MapData = GaiaHex[];
-export type HighlightHexData = Map<GaiaHex, { cost?: string }>;
+export type HighlightHexData = Map<GaiaHex, HighlightHex>;
 export type LogPlacement = "top" | "bottom" | "off";
 
 export interface GameContext {
