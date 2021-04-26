@@ -131,14 +131,13 @@ describe("boosters", () => {
       firaks build m 3A3
       firaks booster booster4
       ivits booster booster5
-      ivits income 1t
       ivits build m 2A7.
       firaks pass booster9 returning booster4
       ivits spend 1o for 1t. special range+3.
     `);
 
     expect(() => new Engine([...moves], { factionVariant: "more-balanced" })).to.throw(
-      "Command endturn is not in the list of available commands: deadEnd, last command: firaks pass booster9 returning booster4, index: 11"
+      "Command endturn is not in the list of available commands: deadEnd, last command: firaks pass booster9 returning booster4, index: 10"
     );
   });
 });
