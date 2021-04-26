@@ -53,7 +53,7 @@ export enum AuctionVariant {
   BidWhileChoosing = "bid-while-choosing",
 }
 
-export type FactionVariant = "standard" | "more-balanced"; // https://boardgamegeek.com/thread/2324994/more-balanced-factions
+export type FactionVariant = "standard" | "more-balanced"; // https://boardgamegeek.com/thread/2324994/article/36509533#36509533
 
 export type FactionCustomization = {
   variant: FactionVariant;
@@ -1013,9 +1013,9 @@ export default class Engine {
 
     if (posIvits !== -1) {
       if (this.players.length == 2 && this.factionCustomization.variant == "more-balanced") {
-        const last = this.turnOrder.pop();
-        this.turnOrder.push(posIvits as PlayerEnum);
-        this.turnOrder.push(last);
+        const first = this.turnOrder.shift();
+        this.turnOrder.unshift(posIvits as PlayerEnum);
+        this.turnOrder.unshift(first);
       } else {
         this.turnOrder.push(posIvits as PlayerEnum);
       }
@@ -1641,6 +1641,7 @@ export default class Engine {
 
     this.player(player).build(Building.Mine, hex, Reward.parse(data.cost), this.map, 0);
 
+    // will trigger a LeechPhase
     this.leechSources.unshift({ player, coordinates: location });
   }
 
