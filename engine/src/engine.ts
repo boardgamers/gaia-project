@@ -686,8 +686,13 @@ export default class Engine {
       engine.map.placement = engine.options.map;
     }
 
+    //players are not added to engine yet
+    const customization = {
+      variant: engine.options.factionVariant,
+      players: data.players.length,
+    };
     for (const player of data.players) {
-      engine.addPlayer(Player.fromData(player, engine.map, engine.factionCustomization, engine.expansions));
+      engine.addPlayer(Player.fromData(player, engine.map, customization, engine.expansions));
     }
 
     if (data.map) {
