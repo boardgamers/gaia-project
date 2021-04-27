@@ -181,7 +181,23 @@ function addPossibleNewPlanet(
     addedCost: [new Reward(qicNeeded, Resource.Qic)],
   });
 
-  if (check.possible) {
+  if (check != null) {
+    switch (pl.faction) {
+      case Faction.Lantids:
+        if (hex.occupied() && building == Building.Mine) {
+          if (
+            pl.data.occupied.filter((hex) => hex.data.additionalMine !== undefined).length ==
+            pl.maxBuildings(Building.Mine) - 1
+          ) {
+            check.warnings.push("lantids-deadlock");
+          }
+          if (pl.data.buildings[Building.PlanetaryInstitute] === 0) {
+            check.warnings.push("lantids-build-without-PI");
+          }
+        }
+
+        break;
+    }
     buildings.push(newAvailableBuilding(building, hex, check, false));
   }
 }
@@ -238,7 +254,7 @@ export function possibleBuildings(engine: Engine, player: Player) {
         const check = engine
           .player(player)
           .canBuild(hex.data.planet, upgrade, { isolated, existingBuilding: building });
-        if (check.possible) {
+        if (check != null) {
           buildings.push(newAvailableBuilding(upgrade, hex, check, true));
         }
       }
