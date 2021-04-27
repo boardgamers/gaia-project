@@ -10,16 +10,9 @@ const geodens: FactionBoardVariants = {
     income: ["3k,4o,15c,q,up-terra", "+o,k"],
     handlers: {
       [`build-${Building.Mine}`]: (player: Player, hex: GaiaHex) => {
-        if (!player.data.hasPlanetaryInstitute()) {
-          return;
+        if (player.data.hasPlanetaryInstitute() && player.data.isNewPlanetType(hex)) {
+          player.gainRewards([new Reward("3k")], Faction.Geodens);
         }
-        for (const hex2 of player.data.occupied) {
-          if (hex !== hex2 && hex2.data.planet === hex.data.planet) {
-            return;
-          }
-        }
-
-        player.gainRewards([new Reward("3k")], Faction.Geodens);
       },
     },
   },

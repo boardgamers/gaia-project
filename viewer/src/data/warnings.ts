@@ -9,4 +9,7 @@ export const buildWarnings: { [key in BuildWarning]: { text: string } } = {
   "federation-with-charged-tokens": { text: "Form federation with tokens that are not in area 1." },
   "lantids-deadlock": { text: "Once you have only guest mines, you cannot upgrade to trading stations any more." },
   "lantids-build-without-PI": { text: "Building guest mines with the planetary institute would give 2 knowledge." },
+  "geodens-build-without-PI": {
+    text: "Building on a new planet type with the planetary institute would give 3 knowledge.",
+  },
 };

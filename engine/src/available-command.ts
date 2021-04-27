@@ -183,6 +183,11 @@ function addPossibleNewPlanet(
 
   if (check != null) {
     switch (pl.faction) {
+      case Faction.Geodens:
+        if (building == Building.Mine && !pl.data.hasPlanetaryInstitute() && pl.data.isNewPlanetType(hex)) {
+          check.warnings.push("geodens-build-without-PI");
+        }
+        break;
       case Faction.Lantids:
         if (hex.occupied() && building == Building.Mine) {
           if (
@@ -191,7 +196,7 @@ function addPossibleNewPlanet(
           ) {
             check.warnings.push("lantids-deadlock");
           }
-          if (pl.data.buildings[Building.PlanetaryInstitute] === 0) {
+          if (!pl.data.hasPlanetaryInstitute()) {
             check.warnings.push("lantids-build-without-PI");
           }
         }

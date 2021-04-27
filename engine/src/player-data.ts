@@ -538,4 +538,13 @@ export default class PlayerData extends EventEmitter {
       }
     });
   }
+
+  isNewPlanetType(hex: GaiaHex): boolean {
+    for (const hex2 of this.occupied) {
+      if (hex !== hex2 && hex2.data.planet === hex.data.planet) {
+        return false;
+      }
+    }
+    return true;
+  }
 }
