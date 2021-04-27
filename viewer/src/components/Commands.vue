@@ -88,7 +88,7 @@ import { FactionCustomization } from "@gaia-project/engine/src/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
 import { AvailableBuilding } from "@gaia-project/engine/src/available-command";
 import { buildWarnings } from "../data/warnings";
-import { buttonWarning, hexMap, passWarning } from "../logic/commands";
+import { buttonWarning, endTurnWarning, hexMap, passWarning } from "../logic/commands";
 
 @Component<Commands>({
   watch: {
@@ -534,6 +534,7 @@ export default class Commands extends Vue {
                 label: `Confirm End Turn`,
               },
             ],
+            warning: endTurnWarning(this.engine, command)
           });
           break;
         }
