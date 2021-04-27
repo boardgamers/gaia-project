@@ -75,7 +75,8 @@ export type BuildWarning =
   | "gaia-forming-with-charged-tokens"
   | "federation-with-charged-tokens"
   | "lantids-deadlock"
-  | "lantids-build-without-PI";
+  | "lantids-build-without-PI"
+  | "geodens-build-without-PI";
 
 export type BuildCheck = { cost: Reward[]; steps: number; warnings: BuildWarning[] };
 
@@ -728,9 +729,7 @@ export default class Player extends EventEmitter {
     }
 
     const addedBescods =
-      this.faction === Faction.Bescods &&
-      this.data.buildings[Building.PlanetaryInstitute] === 1 &&
-      hex.data.planet === Planet.Titanium
+      this.faction === Faction.Bescods && this.data.hasPlanetaryInstitute() && hex.data.planet === Planet.Titanium
         ? 1
         : 0;
 
