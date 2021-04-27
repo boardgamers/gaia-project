@@ -9,7 +9,7 @@
       @click="handleClick"
       @mouseenter="hover"
       @mouseleave="leave"
-      :title="button.tooltip"
+      :title="tooltip"
       v-b-tooltip.html
       v-html="customLabel || button.label || button.command"
     >
@@ -284,6 +284,10 @@ export default class MoveButton extends Vue {
     }
 
     this.$emit("trigger", commandBody.join(" "), this, final, warnings);
+  }
+
+  get tooltip(): string | null {
+    return this.button.tooltip ?? this.button.warning?.body?.join(', ');
   }
 
   hover() {
