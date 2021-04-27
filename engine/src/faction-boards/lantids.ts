@@ -21,7 +21,7 @@ const lantids: FactionBoardVariants = {
       board: {
         income: ["3k,4o,15c,q", "+o,k"],
         power: {
-          area1: 2,
+          area1: 4,
           area2: 2,
         },
       },

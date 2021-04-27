@@ -21,7 +21,7 @@ const itars: FactionBoardVariants = {
     {
       type: "more-balanced",
       board: {
-        income: ["3k,4o,15c,q", "+o,k"],
+        income: ["3k,5o,15c,q", "+o,k"],
         buildings: {
           [Building.Academy1]: {
             income: [["+2k", "tech"]],
