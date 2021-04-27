@@ -73,9 +73,11 @@ export type BuildWarning =
   | "step-action-partially-wasted"
   | "expensive-terraforming"
   | "gaia-forming-with-charged-tokens"
-  | "federation-with-charged-tokens";
+  | "federation-with-charged-tokens"
+  | "lantids-deadlock"
+  | "lantids-build-without-PI";
 
-export type BuildCheck = { cost?: Reward[]; possible: boolean; steps?: number; warnings?: BuildWarning[] };
+export type BuildCheck = { cost: Reward[]; steps: number; warnings: BuildWarning[] };
 
 export default class Player extends EventEmitter {
   faction: Faction = null;
@@ -242,10 +244,10 @@ export default class Player extends EventEmitter {
       addedCost,
       existingBuilding,
     }: { isolated?: boolean; addedCost?: Reward[]; existingBuilding?: Building } = {}
-  ): BuildCheck {
+  ): BuildCheck | null {
     if (this.data.buildings[building] >= this.maxBuildings(building)) {
       // Too many buildings of the same kind
-      return { possible: false };
+      return null;
     }
 
     if (!addedCost) {
@@ -253,7 +255,7 @@ export default class Player extends EventEmitter {
     }
 
     if (!this.data.canPay(addedCost)) {
-      return { possible: false };
+      return null;
     }
 
     const warnings: BuildWarning[] = [];
@@ -284,7 +286,7 @@ export default class Player extends EventEmitter {
         const reward = terraformingCost(this.data, steps);
 
         if (reward == null) {
-          return { possible: false };
+          return null;
         }
 
         if (steps > 0 && this.hasActiveBooster(Resource.TemporaryStep) && this.data.temporaryStep == 0) {
@@ -308,10 +310,9 @@ export default class Player extends EventEmitter {
     }
 
     if (!this.data.canPay(cost)) {
-      return { possible: false };
+      return null;
     }
     return {
-      possible: true,
       cost,
       steps,
       warnings,
