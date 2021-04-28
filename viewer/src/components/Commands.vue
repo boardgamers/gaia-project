@@ -44,6 +44,7 @@
             modal: tooltip(faction),
             title: factions[faction].name,
             label: `${factions[faction].name} <i class='planet ${factions[faction].planet}'></i>`,
+            shortcuts: [factionShortcut(faction)],
           }"
           @trigger="handleCommand"
           :key="faction"
@@ -65,6 +66,7 @@ import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   AvailableCommand,
   Booster,
+  BrainstoneArea,
   Building,
   BuildWarning,
   Command,
@@ -81,10 +83,10 @@ import Engine, {
   tiles,
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
-import { buildingName } from "../data/building";
+import { buildingName, buildingShortcut } from "../data/building";
 import { ButtonData, GameContext } from "../data";
 import { eventDesc } from "../data/event";
-import { factionDesc } from "../data/factions";
+import { factionDesc, factionShortcut } from "../data/factions";
 import { FactionCustomization } from "@gaia-project/engine/src/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
 import { AvailableBuilding } from "@gaia-project/engine/src/available-command";
@@ -115,6 +117,7 @@ import { boosterNames } from "../data/boosters";
       return {
         command: `${command.name} ${faction}`,
         label: "Random",
+        shortcuts: ["r"],
         modal: this.tooltip(faction),
         title: factions[faction].name,
       };
@@ -238,6 +241,10 @@ export default class Commands extends Vue {
     return factions;
   }
 
+  factionShortcut(faction: Faction) {
+    return factionShortcut(faction);
+  }
+
   updateRandomFaction() {
     this.updater += 1;
   }
@@ -306,6 +313,7 @@ export default class Commands extends Vue {
           ret.push({
             label: "Rotate sectors",
             command: Command.RotateSectors,
+            shortcuts: ["r"],
             hexes: new Map<GaiaHex, {}>(
               this.map.configuration().centers.map((center) => [this.engine.map.grid.get(center), {}] as [GaiaHex, {}])
             ),
@@ -319,7 +327,10 @@ export default class Commands extends Vue {
           for (const building of Object.values(Building)) {
             const coordinates = buildings.filter((bld) => bld.building === building);
             const buttons =
-              this.engine.round === Round.None ? [{ command: "", label: `Confirm ${buildingName(building)}` }] : null;
+              this.engine.round === Round.None ? [{
+                command: "",
+                label: `Confirm ${buildingName(building)}`,
+              } as ButtonData] : null;
 
             if (coordinates.length > 0) {
               let label = `Build a ${buildingName(building)}`;
@@ -338,6 +349,7 @@ export default class Commands extends Vue {
 
               ret.push({
                 label,
+                shortcuts: [buildingShortcut(building)],
                 command: `${Command.Build} ${building}`,
                 automatic: command.data.automatic,
                 hexes: hexMap(this.engine, coordinates),
@@ -353,6 +365,7 @@ export default class Commands extends Vue {
         case Command.PISwap: {
           ret.push({
             label: "Swap Planetary Institute",
+            shortcuts: ["w"],
             command: command.name,
             hexes: hexMap(this.engine, command.data.buildings),
           });
@@ -362,6 +375,7 @@ export default class Commands extends Vue {
         case Command.PlaceLostPlanet: {
           ret.push({
             label: "Place Lost Planet",
+            shortcuts: ["l"],
             command: command.name,
             hexes: hexMap(this.engine, command.data.spaces),
           });
@@ -395,6 +409,7 @@ export default class Commands extends Vue {
           if (command.data.boosters.length === 0) {
             ret.push({
               label: "Pass",
+              shortcuts: ["p"],
               command: Command.Pass,
               needConfirm: true,
               buttons: [
@@ -408,6 +423,7 @@ export default class Commands extends Vue {
           } else {
             ret.push({
               label: command.name === Command.Pass ? "Pass" : "Pick booster",
+              shortcuts: ["p"],
               command: command.name,
               buttons,
               boosters: command.data.boosters,
@@ -422,14 +438,19 @@ export default class Commands extends Vue {
           if (command.data.tracks.length === 1) {
             ret.push({
               label: "Advance " + command.data.tracks[0].field,
-              command: `${Command.UpgradeResearch} ${command.data.tracks[0].field}`,
+              shortcuts: ["a"],
+              command: `${Command.UpgradeResearch} ${command.data.tracks[0].field}`
             });
           } else {
             ret.push({
               label: "Advance research",
+              shortcuts: ["a"],
               command: command.name,
               // track.to contains actual level, to use when implementing research viewer
-              buttons: command.data.tracks.map((track) => ({ command: track.field })),
+              buttons: command.data.tracks.map((track) => ({
+                command: track.field,
+                shortcuts: [track.field.substring(0, 1)]
+              })),
               researchTiles: command.data.tracks.map((track) => track.field + "-" + track.to),
             });
           }
@@ -440,6 +461,7 @@ export default class Commands extends Vue {
         case Command.ChooseCoverTechTile: {
           ret.push({
             label: command.name === Command.ChooseCoverTechTile ? "Pick tech tile to cover" : "Pick tech tile",
+            shortcuts: ["p"],
             command: command.name,
             techs: command.data.tiles.map((tile) => tile.pos),
             buttons: command.data.tiles.map((tile) => ({ command: tile.pos, tech: tile.pos })),
@@ -464,6 +486,7 @@ export default class Commands extends Vue {
           if (command.data.offers) {
             ret.push({
               label: `Decline ${command.data.offers[0].offer}`,
+              shortcuts: ["d"],
               command: `${Command.Decline} ${command.data.offers[0].offer}`,
               warning: buttonWarning(command.data.offers[0].offer === "tech" ?
                 "Are you sure you want to decline a tech tile?" : undefined),
@@ -484,6 +507,7 @@ export default class Commands extends Vue {
             ...command.data.sort().map((area) => ({
               label: `Brainstone ${area}`,
               command: `${command.name} ${area}`,
+              shortcuts: [area == BrainstoneArea.Gaia ? "g" : area.substring("area".length, area.length)]
             }))
           );
           break;
@@ -492,6 +516,7 @@ export default class Commands extends Vue {
         case Command.Spend: {
           ret.push({
             label: "Free action",
+            shortcuts: ["f"],
             command: Command.Spend,
             buttons: command.data.acts.map((act) => ({
               label: `Spend ${act.cost} to gain ${act.income}`,
@@ -505,6 +530,7 @@ export default class Commands extends Vue {
         case Command.Action: {
           ret.push({
             label: "Power/Q.I.C Action",
+            shortcuts: ["q"],
             command: Command.Action,
             actions: command.data.poweracts.map((act) => act.name),
             buttons: command.data.poweracts.map((act) => ({
@@ -518,6 +544,7 @@ export default class Commands extends Vue {
         case Command.Special: {
           ret.push({
             label: "Special Action",
+            shortcuts: ["s"],
             command: Command.Special,
             actions: command.data.specialacts.map((act) => act.income),
             buttons: command.data.specialacts.map((act) => ({ command: act.income })),
@@ -528,8 +555,9 @@ export default class Commands extends Vue {
         case Command.BurnPower: {
           ret.push({
             label: "Burn power",
+            shortcuts: ["b"],
             command: Command.BurnPower,
-            buttons: command.data.map((val) => ({ command: val })),
+            buttons: command.data.map((val) => ({ command: String(val) })),
           });
           break;
         }
@@ -537,6 +565,7 @@ export default class Commands extends Vue {
         case Command.EndTurn: {
           ret.push({
             label: "End Turn",
+            shortcuts: ["e"],
             command: Command.EndTurn,
             needConfirm: true,
             buttons: [
@@ -644,6 +673,7 @@ export default class Commands extends Vue {
 
           ret.push({
             label: "Form federation",
+            shortcuts: ["f"],
             command: Command.FormFederation,
             buttons: locationButtons,
           });
@@ -674,6 +704,27 @@ export default class Commands extends Vue {
       ret.push(...this.customButtons);
     }
 
+    let shortcut = 1;
+
+    const shown = ret.filter(b => !b.hide);
+    for (const b of shown) {
+      if (b.shortcuts == undefined) {
+        b.shortcuts = [];
+      }
+      if (b.shortcuts.length == 0) {
+        b.shortcuts.push(String(shortcut));
+      }
+      shortcut++;
+    }
+
+    if (shown.length == 1) {
+      const b = shown[0];
+      b.shortcuts = ["Enter"];
+      if (b.label) {
+        b.shortcuts.unshift(b.label.substring(0, 1).toLowerCase());
+      }
+    }
+
     return ret;
   }
 
@@ -694,6 +745,26 @@ export default class Commands extends Vue {
       this.customButtons = [];
     }
   }
+
+  destroyed() {
+    window.removeEventListener("keydown", this.keyListener);
+  }
+
+  mounted() {
+    this.keyListener = (e) => {
+      // console.log(e.key);
+      if (e.key == "Escape") {
+        if (this.commandChain.length > 0) {
+          this.back();
+        } else if (!this.$store.state.gaiaViewer.data.newTurn) {
+          this.undo();
+        }
+      }
+    };
+    window.addEventListener("keydown", this.keyListener);
+  }
+
+  private keyListener = null;
 
   private commandTitles: string[] = [];
   private customButtons: ButtonData[] = [];
