@@ -763,6 +763,7 @@ describe("Engine", () => {
         "lantids up nav": "lantids up nav (2 ⇒ 3)",
         "lantids up nav. lantids up terra.": "lantids up nav (2 ⇒ 3). lantids up terra (4 ⇒ 5).",
         "terrans build gf 6A1": "terrans build gf 6A1 using area1: 1, area2: 2, area3: 3, brainstone: 1",
+        "decline up": "decline up",
       };
 
       const replace = (give: string) => {

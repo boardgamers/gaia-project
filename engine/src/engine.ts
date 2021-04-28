@@ -141,6 +141,10 @@ export function createMoveToShow(move: string, p: PlayerData, executeMove: () =>
         return `${moveWithoutEnding} returning ${formerBooster}${moveEnding}`;
       case Command.UpgradeResearch: {
         const level = p.research[commandArgument];
+        if (!level) {
+          //decline up
+          return match;
+        }
         return `${moveWithoutEnding} (${level - 1} ⇒ ${level})${moveEnding}`;
       }
     }
