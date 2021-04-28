@@ -30,6 +30,7 @@ export interface ButtonData {
   hide?: boolean;
   booster?: Booster;
   tech?: TechTilePos | AdvTechTilePos;
+  shortcuts?: string[];
 }
 
 export type MapData = GaiaHex[];

@@ -17,17 +17,13 @@
       @mouseleave="leave"
       :title="tooltip"
       v-b-tooltip.html
-      v-html="customLabel || button.label || button.command"
+      v-html="htmlLabel"
     >
     </b-btn>
-    <b-dropdown
-      class="mr-2 mb-2 move-button"
-      v-else
-      split
-      right
-      :text="customLabel || button.label || button.command"
-      @click="handleRangeClick(button.times[0])"
-    >
+    <b-dropdown class="mr-2 mb-2 move-button" v-else split right @click="handleRangeClick(button.times[0])">
+      <template #button-content>
+        <div v-html="htmlLabel"></div>
+      </template>
       <b-dropdown-item v-for="i in button.times" :key="i" @click="handleRangeClick(i)">{{ i }}</b-dropdown-item>
     </b-dropdown>
     <b-modal
@@ -49,7 +45,7 @@
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { BuildWarning, GaiaHex, HighlightHex, SpaceMap } from "@gaia-project/engine";
-import { ButtonData, HighlightHexData } from "../data";
+import { ButtonData, ButtonWarning } from "../data";
 import Booster from "./Booster.vue";
 import TechTile from "./TechTile.vue";
 
@@ -67,6 +63,23 @@ export default class MoveButton extends Vue {
   private modalShow = false;
   private customLabel = "";
   private startingHex = null; // For range command
+
+  private keyListener = null;
+
+  get htmlLabel(): string {
+    const l = this.customLabel || this.button.label || this.button.command;
+    const s = this.button.shortcuts;
+    if (l && s?.length > 0) {
+      const p = l.startsWith("Upgrade to") ? "Upgrade to".length : 0;
+      const i = l.toLowerCase().indexOf(s[0], p);
+      if (i >= 0 && !l.startsWith("Spend") && !l.startsWith("Charge")) {
+        return `${l.substring(0, i)}<u>${l.substring(i, i + 1)}</u>${l.substring(i + 1)}`;
+      } else {
+        return `<u>${s[0]}</u>: ${l}`;
+      }
+    }
+    return l;
+  }
 
   modalCancel(arg: string) {
     this.$emit("cancel");
@@ -111,7 +124,20 @@ export default class MoveButton extends Vue {
   }
 
   destroyed() {
+    window.removeEventListener("keydown", this.keyListener);
     this.unsubscribe();
+  }
+
+  mounted() {
+    this.keyListener = (e) => {
+      if (e.key == "Enter" && this.button.modal && this.modalShow) {
+        this.handleOK();
+      }
+      if (this.button.shortcuts?.includes(e.key)) {
+        this.handleClick();
+      }
+    };
+    window.addEventListener("keydown", this.keyListener);
   }
 
   async handleClick() {
@@ -136,9 +162,9 @@ export default class MoveButton extends Vue {
           if (action) {
             action();
             return;
-          }
+        }
         } else {
-          return;
+        return;
         }
       } catch (err) {
         console.error(err);
