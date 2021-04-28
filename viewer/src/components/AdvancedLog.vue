@@ -5,6 +5,7 @@
         <b-form-radio value="recent">Recent</b-form-radio>
         <b-form-radio value="all">Everything</b-form-radio>
       </b-form-radio-group>
+      <b-checkbox :checked="hideLog" @change="toggleLog">Hide log until next turn</b-checkbox>
     </div>
     <table class="table table-hover table-striped table-sm">
       <tbody>
@@ -64,6 +65,13 @@ export default class AdvancedLog extends Vue {
   @Prop()
   currentMove?: string;
 
+  @Prop()
+  hideLog?: boolean;
+
+  toggleLog() {
+    this.$emit("update:hideLog", !this.hideLog);
+  }
+
   setScope(scope: LogScope) {
     this.scope = scope;
   }
@@ -73,7 +81,14 @@ export default class AdvancedLog extends Vue {
   }
 
   get history(): HistoryEntry[] {
-    return makeHistory(this.gameData, this.$store.getters["gaiaViewer/recentMoves"], this.scope == "recent", this.currentMove);
+    if (this.hideLog) return [];
+
+    return makeHistory(
+      this.gameData,
+      this.$store.getters["gaiaViewer/recentMoves"],
+      this.scope == "recent",
+      this.currentMove
+    );
   }
 
   rowSpan(entry: HistoryEntry): number {
