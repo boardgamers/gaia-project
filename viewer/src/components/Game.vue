@@ -52,7 +52,12 @@
         />
       </div>
     </div>
-    <AdvancedLog class="col-12 order-last mt-4" :currentMove="currentMove" v-if="logPlacement === 'top'" />
+    <AdvancedLog
+      class="col-12 order-last mt-4"
+      :currentMove="currentMove"
+      :hideLog.sync="hideLog"
+      v-if="logPlacement === 'top'"
+    />
     <div class="row mt-2">
       <template v-if="sessionPlayer === undefined">
         <PlayerInfo v-for="player in orderedPlayers" :player="player" :key="player.player" class="col-md-6 order-6" />
@@ -67,7 +72,12 @@
         />
       </template>
       <Pool class="col-12 order-10 mt-4" />
-      <AdvancedLog class="col-12 order-last mt-4" :currentMove="currentMove" v-if="logPlacement === 'bottom'" />
+      <AdvancedLog
+        class="col-12 order-last mt-4"
+        :currentMove="currentMove"
+        :hideLog.sync="hideLog"
+        v-if="logPlacement === 'bottom'"
+      />
     </div>
   </div>
 </template>
@@ -174,6 +184,7 @@ export default class Game extends Vue {
   private finalScoringFields: any[] = null
   private finalScoringItems: any[] = null
   public currentMove = "";
+  public hideLog = false;
   public currentMoveWarnings: Map<string, BuildWarning[]> = new Map<string, BuildWarning[]>();
   clearCurrentMove = false;
   // When joining a game
@@ -276,6 +287,7 @@ export default class Game extends Vue {
 
     if (data.newTurn) {
       this.currentMove = "";
+      this.hideLog = false;
       this.currentMoveWarnings.clear();
     } else {
       this.currentMove = data.moveHistory.pop() ?? "";
