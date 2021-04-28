@@ -262,7 +262,8 @@ export default class Player extends EventEmitter {
     const warnings: BuildWarning[] = [];
     if (
       addedCost.some((c) => c.type == Resource.Qic && c.count > 0) &&
-      this.hasActiveBooster(Resource.TemporaryRange)
+      this.hasActiveBooster(Resource.TemporaryRange) &&
+      this.data.temporaryStep == 0
     ) {
       warnings.push("range-booster-not-used");
     }
