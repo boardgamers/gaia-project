@@ -92,6 +92,7 @@ import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
 import { AvailableBuilding } from "@gaia-project/engine/src/available-command";
 import { buildWarnings } from "../data/warnings";
 import {
+  buildButtons,
   advanceResearchWarning,
   buttonWarning,
   endTurnWarning, finalizeShortcuts,
@@ -332,42 +333,7 @@ export default class Commands extends Vue {
           break;
         }
         case Command.Build: {
-          const buildings = command.data.buildings as AvailableBuilding[];
-          for (const building of Object.values(Building)) {
-            const coordinates = buildings.filter((bld) => bld.building === building);
-            const buttons =
-              this.engine.round === Round.None ? [{
-                command: "",
-                label: `Confirm ${buildingName(building)}`,
-              } as ButtonData] : null;
-
-            if (coordinates.length > 0) {
-              let label = `Build a ${buildingName(building)}`;
-
-              if (coordinates[0].upgrade) {
-                label = `Upgrade to ${buildingName(building)}`;
-              } else if (coordinates[0].downgrade) {
-                label = `Downgrade to ${buildingName(building)}`;
-              } else if (
-                coordinates[0].cost === "~" ||
-                building === Building.SpaceStation ||
-                building === Building.GaiaFormer
-              ) {
-                label = `Place a ${buildingName(building)}`;
-              }
-
-              ret.push({
-                label,
-                shortcuts: [buildingShortcut(building)],
-                command: `${Command.Build} ${building}`,
-                automatic: command.data.automatic,
-                hexes: hexMap(this.engine, coordinates),
-                buttons,
-                needConfirm: buttons?.length > 0,
-              });
-            }
-          }
-
+          ret.push(...buildButtons(this.engine, command));
           break;
         }
 
@@ -384,7 +350,6 @@ export default class Commands extends Vue {
         case Command.PlaceLostPlanet: {
           ret.push({
             label: "Place Lost Planet",
-            shortcuts: ["l"],
             command: command.name,
             hexes: hexMap(this.engine, command.data.spaces),
           });
@@ -446,15 +411,15 @@ export default class Commands extends Vue {
         case Command.UpgradeResearch: {
           if (command.data.tracks.length === 1) {
             ret.push({
-              label: "Advance " + researchNames[command.data.tracks[0].field],
-              shortcuts: ["a"],
+              label: "Research " + researchNames[command.data.tracks[0].field],
+              shortcuts: ["r"],
               command: `${Command.UpgradeResearch} ${command.data.tracks[0].field}`,
               warning: advanceResearchWarning(this.engine.players[this.command.player], command.data.tracks[0].field)
             });
           } else {
             ret.push({
-              label: "Advance research",
-              shortcuts: ["a"],
+              label: "Research",
+              shortcuts: ["r"],
               command: command.name,
               // track.to contains actual level, to use when implementing research viewer
               buttons: command.data.tracks.map((track) => ({
