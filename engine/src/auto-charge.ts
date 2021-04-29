@@ -29,13 +29,13 @@ export class ChargeRequest {
   ) {
     const autoCharge = player.settings.autoChargePower;
     this.autoCharge = autoCharge;
-    if (autoCharge == "ask") {
+    if (autoCharge === "ask") {
       return;
     }
     let minCharge = 100;
     let maxCharge = 0;
 
-    const limit = autoCharge == "decline-cost" ? 1 : autoCharge;
+    const limit = autoCharge === "decline-cost" ? 1 : autoCharge;
     let allowedMax = 0;
     let maxAllowedOffer: Offer = null;
 
@@ -44,7 +44,7 @@ export class ChargeRequest {
       for (let i = 0; i < rewards.length; i++) {
         const reward = rewards[i];
 
-        if (reward.type == Resource.ChargePower) {
+        if (reward.type === Resource.ChargePower) {
           const charge = reward.count;
           if (charge < minCharge) {
             minCharge = charge;
@@ -56,7 +56,7 @@ export class ChargeRequest {
             if (charge > allowedMax) {
               maxAllowedOffer = offer;
               allowedMax = charge;
-            } else if (charge == allowedMax && i == 0) {
+            } else if (charge === allowedMax && i === 0) {
               //prefer to charge first if 2 offers have the same charge
               maxAllowedOffer = offer;
             }
@@ -79,7 +79,7 @@ const chargeRules: ((ChargeRequest) => ChargeDecision)[] = [
 ];
 
 export function decideChargeRequest(r: ChargeRequest): ChargeDecision {
-  if (r.autoCharge == "ask") {
+  if (r.autoCharge === "ask") {
     return ChargeDecision.Ask;
   }
   let noYes = false;
@@ -89,7 +89,7 @@ export function decideChargeRequest(r: ChargeRequest): ChargeDecision {
       noYes = true;
     } else if (decision === ChargeDecision.Yes && noYes) {
       continue;
-    } else if (decision != ChargeDecision.Undecided) {
+    } else if (decision !== ChargeDecision.Undecided) {
       return decision;
     }
   }
@@ -119,7 +119,7 @@ export function askOrDeclineForPassedPlayer(r: ChargeRequest): ChargeDecision {
 }
 
 function askForMultipleTaklonsOffers(offers: Offer[], autoBrainstone: boolean): ChargeDecision {
-  if (offers.length == 2 && autoBrainstone) {
+  if (offers.length === 2 && autoBrainstone) {
     //may still decline based on cost
     return ChargeDecision.Undecided;
   }
@@ -130,7 +130,7 @@ function askForMultipleTaklonsOffers(offers: Offer[], autoBrainstone: boolean): 
 }
 
 export function askOrDeclineBasedOnCost(minCharge: number, maxCharge: number, autoCharge: AutoCharge) {
-  if (autoCharge == "decline-cost") {
+  if (autoCharge === "decline-cost") {
     if (minCharge > 1) {
       return ChargeDecision.No;
     }

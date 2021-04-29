@@ -80,7 +80,7 @@ export function calculateAutoIncome(data: PlayerData, gainTokens: Event[], charg
   }
 
   let maxCharge: { waste: number; power: Power; events: Event[] };
-  for (const s of possibleSequences.filter((value) => value.waste == minWaste)) {
+  for (const s of possibleSequences.filter((value) => value.waste === minWaste)) {
     if (!maxCharge || s.power.area3 > maxCharge.power.area3) {
       maxCharge = s;
     }
@@ -103,7 +103,7 @@ export function applyChargePowers(data: PlayerData, chargePowers: Event[]): numb
   let waste = 0;
   for (const e of chargePowers) {
     for (const reward of e.rewards) {
-      if (reward.type == Resource.ChargePower) {
+      if (reward.type === Resource.ChargePower) {
         const power = reward.count;
         const charged = data.chargePower(power);
         waste += power - charged;

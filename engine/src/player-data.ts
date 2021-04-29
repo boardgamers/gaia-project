@@ -254,7 +254,7 @@ export default class PlayerData extends EventEmitter {
 
   hasResource(reward: Reward): boolean {
     const type = reward.type;
-    return type == Resource.None || this.getResources(type) >= reward.count;
+    return type === Resource.None || this.getResources(type) >= reward.count;
   }
 
   getResources(type: Resource): number {
@@ -415,7 +415,7 @@ export default class PlayerData extends EventEmitter {
         this.brainstone = targetArea;
         power -= 1;
         movedBrainstone = 1;
-      } else if (targetArea != null || this.tokensBelowArea(this.brainstone) < power) {
+      } else if (targetArea || this.tokensBelowArea(this.brainstone) < power) {
         // don't offer to discard unless necessary
         if (this.brainstoneDest === undefined) {
           this.emit("brainstone", [this.brainstone, brainstoneEvent]);
@@ -438,7 +438,7 @@ export default class PlayerData extends EventEmitter {
     this.power.area1 -= area1ToGaia;
     this.power.area2 -= area2ToGaia;
     this.power.area3 -= area3ToGaia;
-    if (targetArea == BrainstoneArea.Gaia) {
+    if (targetArea === BrainstoneArea.Gaia) {
       this.power.gaia += area1ToGaia + area2ToGaia + area3ToGaia;
     }
 

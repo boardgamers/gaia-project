@@ -125,7 +125,7 @@ export function createMoveToShow(move: string, p: PlayerData, executeMove: () =>
   }
 
   return move.replace(replaceRegex, (match, moveWithoutEnding, command, commandArgument, moveEnding) => {
-    if (moveToGaia != null) {
+    if (moveToGaia) {
       const powerUsage = Object.entries(moveToGaia)
         .map(([area, amt], index) => {
           return amt > 0 ? area + ": " + amt : "";
@@ -374,7 +374,7 @@ export default class Engine {
     this.players.push(player);
 
     player.data.on(`gain-${Resource.TechTile}`, (count, source) =>
-      this.processNextMove(SubPhase.ChooseTechTile, null, source == BoardAction.Qic1)
+      this.processNextMove(SubPhase.ChooseTechTile, null, source === BoardAction.Qic1)
     );
     player.data.on(`gain-${Resource.TemporaryStep}`, () => this.processNextMove(SubPhase.BuildMine, null, true));
     player.data.on(`gain-${Resource.TemporaryRange}`, (count: number) => {
@@ -446,7 +446,7 @@ export default class Engine {
   }
 
   get turnOrderAfterSetupAuction(): PlayerEnum[] {
-    return this.setup.map((faction) => this.players.findIndex((pl) => pl.faction == faction));
+    return this.setup.map((faction) => this.players.findIndex((pl) => pl.faction === faction));
   }
 
   get playerToMove(): PlayerEnum {
@@ -711,7 +711,7 @@ export default class Engine {
     // TODO: Remove when games are updated (also remove player !== Player.Player5)
     for (const key of Object.keys(engine.boardActions)) {
       const action = engine.boardActions[key];
-      if (typeof action == "boolean") {
+      if (typeof action === "boolean") {
         engine.boardActions[key] = action ? null : PlayerEnum.Player5;
       }
     }
@@ -910,7 +910,7 @@ export default class Engine {
   get currentRoundScoringEvents() {
     const roundScoringTile = this.tiles.scorings.round[this.round - 1];
     const roundScoring = roundScorings[roundScoringTile];
-    return roundScoring == null ? null : Event.parse(roundScoring, `round${this.round}` as RoundScoring);
+    return roundScoring && Event.parse(roundScoring, `round${this.round}` as RoundScoring);
   }
 
   /**
@@ -1016,7 +1016,7 @@ export default class Engine {
     }
 
     if (posIvits !== -1) {
-      if (this.players.length == 2 && this.factionCustomization.variant == "more-balanced") {
+      if (this.players.length === 2 && this.factionCustomization.variant === "more-balanced") {
         const first = this.turnOrder.shift();
         this.turnOrder.unshift(posIvits as PlayerEnum);
         this.turnOrder.unshift(first);
@@ -1477,7 +1477,7 @@ export default class Engine {
   }
 
   private executeBid(player: PlayerEnum, faction: string, bid: number) {
-    const previous = this.players.find((s) => s.faction == faction);
+    const previous = this.players.find((s) => s.faction === faction);
     // remove faction from previous owner
     if (previous) {
       previous.faction = undefined;

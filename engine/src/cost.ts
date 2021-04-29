@@ -10,7 +10,7 @@ export function terraformingCost(d: PlayerData, steps: number): Reward | null {
     (TERRAFORMING_COST - d.terraformCostDiscount) * Math.max(steps - temporaryStep, 0);
 
   const cost = oreNeeded(d.temporaryStep);
-  if (d.temporaryStep > 0 && oreNeeded(0) == cost) {
+  if (d.temporaryStep > 0 && oreNeeded(0) === cost) {
     // not allowed - see https://github.com/boardgamers/gaia-project/issues/76
     // OR there's no reason to activate the booster and not use it
     return null;
@@ -24,7 +24,7 @@ export function qicForDistance(distance: number, data: PlayerData): number | nul
   }
 
   const qicNeeded = qic(data.temporaryRange);
-  if (data.temporaryRange > 0 && qic(0) == qicNeeded) {
+  if (data.temporaryRange > 0 && qic(0) === qicNeeded) {
     // there's no reason to activate the booster and not use it
     return null;
   }

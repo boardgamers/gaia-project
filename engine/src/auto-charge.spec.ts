@@ -209,7 +209,7 @@ describe("AutoCharge", () => {
         const request = new ChargeRequest(player, offers, false, false, null);
         const decision = decideChargeRequest(request);
         expect(decision).to.equal(test.want.decision);
-        if (test.want.decision == ChargeDecision.Yes) {
+        if (test.want.decision === ChargeDecision.Yes) {
           expect(request.maxAllowedOffer.offer).to.deep.equal(test.want.offer);
         }
       });

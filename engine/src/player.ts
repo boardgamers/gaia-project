@@ -235,7 +235,7 @@ export default class Player extends EventEmitter {
   }
 
   hasActiveBooster(type: Resource): boolean {
-    return this.events[Operator.Activate].some((e) => !e.activated && e.rewards.some((r) => r.type == type));
+    return this.events[Operator.Activate].some((e) => !e.activated && e.rewards.some((r) => r.type === type));
   }
 
   canBuild(
@@ -262,9 +262,9 @@ export default class Player extends EventEmitter {
 
     const warnings: BuildWarning[] = [];
     if (
-      addedCost.some((c) => c.type == Resource.Qic && c.count > 0) &&
+      addedCost.some((c) => c.type === Resource.Qic && c.count > 0) &&
       this.hasActiveBooster(Resource.TemporaryRange) &&
-      this.data.temporaryStep == 0
+      this.data.temporaryStep === 0
     ) {
       warnings.push("range-booster-not-used");
     }
@@ -288,11 +288,11 @@ export default class Player extends EventEmitter {
         steps = terraformingStepsRequired(factions[this.faction].planet, targetPlanet);
         const reward = terraformingCost(this.data, steps);
 
-        if (reward == null) {
+        if (reward === null) {
           return null;
         }
 
-        if (steps > 0 && this.hasActiveBooster(Resource.TemporaryStep) && this.data.temporaryStep == 0) {
+        if (steps > 0 && this.hasActiveBooster(Resource.TemporaryStep) && this.data.temporaryStep === 0) {
           warnings.push("step-booster-not-used");
         }
         if (reward.count > 0 && this.data.terraformCostDiscount < 2) {
@@ -306,16 +306,16 @@ export default class Player extends EventEmitter {
     }
 
     const cost = Reward.merge(this.board.cost(targetPlanet, building, isolated), addedCost);
-    const creditCost = (r: Reward[]) => r.filter((r) => r.type == Resource.Credit)[0].count;
+    const creditCost = (r: Reward[]) => r.filter((r) => r.type === Resource.Credit)[0].count;
     if (
-      building == Building.TradingStation &&
-      creditCost(cost) == creditCost(this.board.buildings[Building.TradingStation].isolatedCost)
+      building === Building.TradingStation &&
+      creditCost(cost) === creditCost(this.board.buildings[Building.TradingStation].isolatedCost)
     ) {
       warnings.push("expensive-trade-station");
     }
 
-    const toGaia = cost.find((r) => r.type == Resource.MoveTokenToGaiaArea);
-    if (toGaia != null && toGaia.count > this.data.power.area1) {
+    const toGaia = cost.find((r) => r.type === Resource.MoveTokenToGaiaArea);
+    if (toGaia?.count > this.data.power.area1) {
       warnings.push("gaia-forming-with-charged-tokens");
     }
 
@@ -780,7 +780,7 @@ export default class Player extends EventEmitter {
   factionReward(reward: Reward, source: EventSource): Reward {
     // this is for Gleens getting ore instead of qics until Academy2
     if (
-      source != Phase.BeginGame &&
+      source !== Phase.BeginGame &&
       this.faction === Faction.Gleens &&
       this.data.buildings[Building.Academy2] === 0 &&
       reward.type === Resource.Qic
@@ -852,7 +852,7 @@ export default class Player extends EventEmitter {
 
   notifyOfNewPlanet(hexOfPlanet: GaiaHex) {
     if (this.federationCache) {
-      if (this.federationCache.federations.some((fed) => fed.hexes.some((hex) => hex == hexOfPlanet))) {
+      if (this.federationCache.federations.some((fed) => fed.hexes.some((hex) => hex === hexOfPlanet))) {
         this.federationCache = null;
       }
     }
@@ -1021,7 +1021,7 @@ export default class Player extends EventEmitter {
       newSatellites: newSatellites,
       planets: nPlanets,
       warning:
-        this.faction != Faction.Ivits && newSatellites > this.data.power.area1
+        this.faction !== Faction.Ivits && newSatellites > this.data.power.area1
           ? "federation-with-charged-tokens"
           : null,
     };

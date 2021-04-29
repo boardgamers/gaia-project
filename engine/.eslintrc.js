@@ -27,5 +27,6 @@ module.exports = {
     "no-inner-declarations": "off",
     "no-return-assign": "off",
     "no-fallthrough": "off",
+    eqeqeq: ["error", "always"],
   },
 };

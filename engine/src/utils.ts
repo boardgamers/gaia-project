@@ -20,7 +20,7 @@ export function merge(target, ...sources) {
  *
  */
 export function combinations<T>(t: T[]): T[][] {
-  if (t.length == 0) {
+  if (t.length === 0) {
     return [[]];
   }
   return combinations(t.slice(1)).flatMap((value) => [value, value.concat(t[0])]);

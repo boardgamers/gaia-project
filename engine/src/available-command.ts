@@ -173,7 +173,7 @@ function addPossibleNewPlanet(
     ...data.occupied.filter((loc) => loc.isRangeStartingPoint(pl.player)).map((loc) => map.distance(hex, loc))
   );
   const qicNeeded = qicForDistance(distance, data);
-  if (qicNeeded == null) {
+  if (qicNeeded === null) {
     return;
   }
 
@@ -181,17 +181,17 @@ function addPossibleNewPlanet(
     addedCost: [new Reward(qicNeeded, Resource.Qic)],
   });
 
-  if (check != null) {
+  if (check) {
     switch (pl.faction) {
       case Faction.Geodens:
-        if (building == Building.Mine && !pl.data.hasPlanetaryInstitute() && pl.data.isNewPlanetType(hex)) {
+        if (building === Building.Mine && !pl.data.hasPlanetaryInstitute() && pl.data.isNewPlanetType(hex)) {
           check.warnings.push("geodens-build-without-PI");
         }
         break;
       case Faction.Lantids:
-        if (hex.occupied() && building == Building.Mine) {
+        if (hex.occupied() && building === Building.Mine) {
           if (
-            pl.data.occupied.filter((hex) => hex.data.additionalMine !== undefined).length ==
+            pl.data.occupied.filter((hex) => hex.data.additionalMine !== undefined).length ===
             pl.maxBuildings(Building.Mine) - 1
           ) {
             check.warnings.push("lantids-deadlock");
@@ -259,7 +259,7 @@ export function possibleBuildings(engine: Engine, player: Player) {
         const check = engine
           .player(player)
           .canBuild(hex.data.planet, upgrade, { isolated, existingBuilding: building });
-        if (check != null) {
+        if (check) {
           buildings.push(newAvailableBuilding(upgrade, hex, check, true));
         }
       }
@@ -388,8 +388,12 @@ export function possibleBoardActions(actions: BoardActions, p: PlayerObject): Av
   // not allowed if everything is lost - see https://github.com/boardgamers/gaia-project/issues/76
   const canGain = (reward: Reward) => {
     const type = reward.type;
-    const limit = resourceLimits[type];
-    return limit == null || p.data.getResources(type) < limit;
+
+    if (!(type in resourceLimits)) {
+      return true;
+    }
+
+    return p.data.getResources(type) < resourceLimits[type];
   };
 
   let poweracts = BoardAction.values(Expansion.All).filter(
@@ -877,8 +881,8 @@ function possibleBids(engine: Engine, player: Player) {
   const bids = [];
 
   for (const faction of engine.setup) {
-    const bid = engine.players.find((pl) => pl.faction == faction)
-      ? engine.players.find((pl) => pl.faction == faction).data.bid
+    const bid = engine.players.find((pl) => pl.faction === faction)
+      ? engine.players.find((pl) => pl.faction === faction).data.bid
       : -1;
     bids.push({
       faction,
