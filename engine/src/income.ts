@@ -14,10 +14,13 @@ export class IncomeSelection {
     readonly remainingChargesAfterIncome: number
   ) {}
 
-  static create(data: PlayerData, settings: Settings, events: Event[]): IncomeSelection {
+  static create(data: PlayerData, settings: Settings, events: Event[], additionalEvents?: Event[]): IncomeSelection {
     // we need to check if rewards contains Resource.GainToken and Resource.GainPower
     // player has to select the order
     const notActivated = events.filter((ev) => !ev.activated);
+    if (additionalEvents) {
+      notActivated.push(...additionalEvents);
+    }
 
     const gainTokens = notActivated.filter((ev) => ev.rewards.some((rw) => rw.type === Resource.GainToken));
     const chargePowers = notActivated.filter((ev) => ev.rewards.some((rw) => rw.type === Resource.ChargePower));

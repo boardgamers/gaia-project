@@ -16,7 +16,7 @@ const factionData: { [faction in Faction]: { ability: string; PI: string; shortc
       "During the Gaia phase, move the power tokens in your Gaia area to area II of your power cycle instead of to area I.",
     PI:
       "During the Gaia phase, when you move power tokens from your Gaia area to area II of your power cycle, you may gain resources as if you were spending that much power to take free actions.",
-    shortcut: "t",
+    shortcut: "r",
   },
   [Faction.Lantids]: {
     ability:
@@ -71,13 +71,13 @@ const factionData: { [faction in Faction]: { ability: string; PI: string; shortc
     ability: "-",
     PI:
       "The first time you build a mine on each planet type, gain 3 knowledge. (You do not gain knowledge for planet types you colonized before upgrading to your planetary institute.)",
-    shortcut: "g",
+    shortcut: "o",
   },
   [Faction.BalTaks]: {
     ability: `You cannot advance in the “Navigation” research area, even if you take the tech tile below the “Navigation” research area. If you do take that tech tile, no advancement occurs.
     As a free action, you can move a Gaiaformer from a Gaiaformer space on your faction board to your Gaia area to gain one Q.I.C. Gaiaformers in your Gaia area are not available until the next Gaia phase. In the next Gaia phase, move any Gaiaformer in your Gaia area back to its Gaiaformer space.`,
     PI: "You can now advance in the “Navigation” research area.",
-    shortcut: "b",
+    shortcut: "'",
   },
   [Faction.Firaks]: {
     ability: "-",
@@ -91,7 +91,7 @@ const factionData: { [faction in Faction]: { ability: string; PI: string; shortc
     the tied tokens to advance. To advance to level 5 this way, you must still flip a federation token as normal. Remember, only one player can reach level 5 of each research area.`,
     PI:
       "The power value of your structures on gray planets (your home type) is increased by one (in addition to any other effects that increase their power value).",
-    shortcut: "s",
+    shortcut: "c",
   },
   [Faction.Nevlas]: {
     ability:
@@ -104,7 +104,7 @@ const factionData: { [faction in Faction]: { ability: string; PI: string; shortc
     ability:
       "Each time you discard a power token from area II of your power cycle to move another power token to area III, place the discarded power token in your Gaia area instead of returning it to the supply.",
     PI: `During the Gaia phase, you can discard 4 power tokens from your Gaia area to immediately gain a tech tile. You may do this as many times as you can afford to.`,
-    shortcut: "i",
+    shortcut: "s",
   },
 };
 

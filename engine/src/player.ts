@@ -601,8 +601,8 @@ export default class Player extends EventEmitter {
     this.removeEvents(Event.parse(techs[tile.tile], `tech-${pos}` as TechPos));
   }
 
-  incomeSelection(): IncomeSelection {
-    return IncomeSelection.create(this.data, this.settings, this.events[Operator.Income]);
+  incomeSelection(additionalEvents?: Event[]): IncomeSelection {
+    return IncomeSelection.create(this.data, this.settings, this.events[Operator.Income], additionalEvents);
   }
 
   canGaiaTerrans(): boolean {
