@@ -35,23 +35,23 @@ const factionBoards: { [key in Faction]: FactionBoardVariants } = {
 };
 
 export function factionVariantBoard(customization: FactionCustomization, faction: Faction): FactionBoardRaw | null {
-  if (customization == null) {
+  if (!customization) {
     //not present in cloning
     return null;
   }
 
   const variants = factionBoards[faction].variants;
-  if (customization.variant == "standard" || variants == null) {
+  if (customization.variant === "standard" || !variants) {
     return null;
   }
 
-  const byPlayerCount = variants.find((v) => v.type == customization.variant && v.players == customization.players);
-  if (byPlayerCount != null) {
+  const byPlayerCount = variants.find((v) => v.type === customization.variant && v.players === customization.players);
+  if (byPlayerCount) {
     return byPlayerCount.board;
   }
 
-  const byType = variants.find((v) => v.type == customization.variant && !("players" in v));
-  if (byType != null) {
+  const byType = variants.find((v) => v.type === customization.variant && !("players" in v));
+  if (byType) {
     return byType.board;
   }
   return null;
