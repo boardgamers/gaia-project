@@ -1,9 +1,11 @@
 import Engine, {
   applyChargePowers,
+  Booster,
   BrainstoneArea,
   Building,
   Command,
   Event,
+  Expansion,
   Faction,
   GaiaHex,
   HighlightHex,
@@ -14,10 +16,13 @@ import Engine, {
   Resource,
   Reward,
   Round,
+  tiles,
 } from "@gaia-project/engine";
 import AvailableCommand, { AvailableBuilding, AvailableHex } from "@gaia-project/engine/src/available-command";
 import { ButtonData, ButtonWarning, HighlightHexData } from "../data";
+import { boosterNames } from "../data/boosters";
 import { buildingName, buildingShortcut } from "../data/building";
+import { eventDesc } from "../data/event";
 
 export const forceNumericShortcut = (label: string) => ["Spend", "Charge", "Income"].find((b) => label.startsWith(b));
 
@@ -45,7 +50,7 @@ export function endTurnWarning(engine: Engine, command: AvailableCommand): Butto
     } as ButtonWarning);
 
   const p = engine.players[command.player];
-  if (p.faction == Faction.Taklons) {
+  if (p.faction == Faction.Taklons && !engine.isLastRound) {
     const brainstoneArea = p.data.brainstone;
     switch (brainstoneArea) {
       case BrainstoneArea.Area2:
@@ -60,7 +65,32 @@ export function endTurnWarning(engine: Engine, command: AvailableCommand): Butto
   return null;
 }
 
-export function passWarning(engine: Engine, command: AvailableCommand): ButtonWarning | null {
+function passWarningButton(warnings: string[]): ButtonWarning {
+  return { title: "Are you sure you want to pass?", body: warnings };
+}
+
+function incomeWarning(player: Player, additionalEvents: Event[]) {
+  const incomeSelection = player.incomeSelection(additionalEvents);
+  if (incomeSelection.remainingChargesAfterIncome < 0) {
+    return passWarningButton([
+      `${-incomeSelection.remainingChargesAfterIncome} power charges will be wasted during income phase.`,
+    ]);
+  }
+  return null;
+}
+
+export function chargeWarning(engine: Engine, player: Player, offer: string): ButtonWarning | null {
+  return incomeWarning(player, [new Event(offer)]);
+}
+
+export function boosterWarning(engine: Engine, player: Player, booster: Booster): ButtonWarning | null {
+  return incomeWarning(
+    player,
+    tiles.boosters[booster].map((spec) => new Event(spec))
+  );
+}
+
+export function passWarning(engine: Engine, player: Player, command: AvailableCommand): ButtonWarning | null {
   const warnings: string[] = [];
   const endTurn = endTurnWarning(engine, command);
   if (endTurn != null) {
@@ -77,7 +107,7 @@ export function passWarning(engine: Engine, command: AvailableCommand): ButtonWa
     switch (p.faction) {
       case Faction.Itars:
         const burnablePower = p.data.burnablePower();
-        if (burnablePower > 0) {
+        if (burnablePower > 0 && !engine.isLastRound) {
           warnings.push(`Power tokens in area 2 not burned: ${burnablePower}`);
         }
         break;
@@ -89,7 +119,7 @@ export function passWarning(engine: Engine, command: AvailableCommand): ButtonWa
     }
   }
 
-  return warnings.length == 0 ? null : { title: "Are you sure you want to pass?", body: warnings };
+  return warnings.length == 0 ? null : passWarningButton(warnings);
 }
 
 function rewardWarnings(player: Player, r: Reward): string[] {
@@ -220,6 +250,58 @@ export function buildButtons(engine: Engine, command: AvailableCommand): ButtonD
         needConfirm: buttons?.length > 0,
       });
     }
+  }
+  return ret;
+}
+
+export function passButtons(engine: Engine, player: Player, command: AvailableCommand): ButtonData[] {
+  const ret: ButtonData[] = [];
+  const buttons: ButtonData[] = [];
+  const warning = passWarning(engine, player, command);
+
+  Booster.values(Expansion.All).forEach((booster, i) => {
+    if (command.data.boosters.includes(booster)) {
+      buttons.push({
+        command: booster,
+        label: `Booster ${i + 1}`,
+        booster,
+        needConfirm: true,
+        buttons: [
+          {
+            command: "",
+            label: `Confirm Booster ${boosterNames[booster].name}`,
+            warning: boosterWarning(engine, player, booster),
+          },
+        ],
+        tooltip: tiles.boosters[booster].map((spec) => eventDesc(new Event(spec))).join("\n"),
+      });
+    }
+  });
+
+  // need a Pass confirmation if it's the last round, where Command = Pass but no Boosters
+  if (command.data.boosters.length === 0) {
+    ret.push({
+      label: "Pass",
+      shortcuts: ["p"],
+      command: Command.Pass,
+      needConfirm: true,
+      buttons: [
+        {
+          command: "",
+          label: `Confirm Pass`,
+        },
+      ],
+      warning,
+    });
+  } else {
+    ret.push({
+      label: command.name === Command.Pass ? "Pass" : "Pick booster",
+      shortcuts: ["p"],
+      command: command.name,
+      buttons,
+      boosters: command.data.boosters,
+      warning,
+    });
   }
   return ret;
 }

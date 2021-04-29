@@ -7,7 +7,7 @@
       <h5>
         <span v-if="init">Pick the number of players</span>
         <span v-else>
-          {{ [player, ...titles].join(" - ") }}
+          {{ [playerName, ...titles].join(" - ") }}
           <a href="#" v-if="commandChain.length > 0" class="smaller small" @click.prevent="back()">(back)</a>
           <a href="#" v-else-if="canUndo" class="smaller small" @click.prevent="undo()">(undo)</a>
           <span class="smaller small">{{ this.currentTurnLog() }}</span>
@@ -98,7 +98,7 @@ import {
   endTurnWarning, finalizeShortcuts,
   forceNumericShortcut,
   hexMap,
-  passWarning, specialActionWarning
+  passWarning, specialActionWarning, passButtons, chargeWarning
 } from "../logic/commands";
 import { boosterNames } from "../data/boosters";
 import { researchNames } from "../data/research";
@@ -213,14 +213,18 @@ export default class Commands extends Vue {
     return this.availableCommands.find((c) => c.name === Command.ChooseFaction) ?? null;
   }
 
-  get player(): string {
-    if (this.engine.players[this.command.player].faction) {
-      return factions[this.engine.players[this.command.player].faction].name;
+  get playerName(): string {
+    if (this.player.faction) {
+      return factions[this.player.faction].name;
     }
-    if (this.engine.players[this.command.player].name) {
-      return this.engine.players[this.command.player].name;
+    if (this.player.name) {
+      return this.player.name;
     }
     return "Player " + (this.command.player + 1);
+  }
+
+  get player() {
+    return this.engine.players[this.command.player];
   }
 
   get playerSlug(): string {
@@ -358,53 +362,7 @@ export default class Commands extends Vue {
 
         case Command.Pass:
         case Command.ChooseRoundBooster: {
-          const buttons: ButtonData[] = [];
-          const warning = passWarning(this.engine, this.command);
-
-          Booster.values(Expansion.All).forEach((booster, i) => {
-            if (command.data.boosters.includes(booster)) {
-              buttons.push({
-                command: booster,
-                label: `Booster ${i + 1}`,
-                booster,
-                needConfirm: true,
-                buttons: [
-                  {
-                    command: "",
-                    label: `Confirm Booster ${boosterNames[booster].name}`,
-                  },
-                ],
-                tooltip: tiles.boosters[booster].map((spec) => eventDesc(new Event(spec))).join("\n"),
-              });
-            }
-          });
-
-          // need a Pass confirmation if it's the last round, where Command = PAss but no Boosters
-          if (command.data.boosters.length === 0) {
-            ret.push({
-              label: "Pass",
-              shortcuts: ["p"],
-              command: Command.Pass,
-              needConfirm: true,
-              buttons: [
-                {
-                  command: "",
-                  label: `Confirm Pass`,
-                },
-              ],
-              warning,
-            });
-          } else {
-            ret.push({
-              label: command.name === Command.Pass ? "Pass" : "Pick booster",
-              shortcuts: ["p"],
-              command: command.name,
-              buttons,
-              boosters: command.data.boosters,
-              warning,
-            });
-          }
-
+          ret.push(...passButtons(this.engine, this.player, command));
           break;
         }
 
@@ -414,7 +372,7 @@ export default class Commands extends Vue {
               label: "Research " + researchNames[command.data.tracks[0].field],
               shortcuts: ["r"],
               command: `${Command.UpgradeResearch} ${command.data.tracks[0].field}`,
-              warning: advanceResearchWarning(this.engine.players[this.command.player], command.data.tracks[0].field)
+              warning: advanceResearchWarning(this.player, command.data.tracks[0].field)
             });
           } else {
             ret.push({
@@ -426,7 +384,7 @@ export default class Commands extends Vue {
                 command: track.field,
                 label: researchNames[track.field],
                 shortcuts: [track.field.substring(0, 1)],
-                warning: advanceResearchWarning(this.engine.players[this.command.player], track.field)
+                warning: advanceResearchWarning(this.player, track.field)
               })),
               researchTiles: command.data.tracks.map((track) => track.field + "-" + track.to),
             });
@@ -453,6 +411,7 @@ export default class Commands extends Vue {
             ret.push({
               label: offer.cost && offer.cost !== "~" ? `${action} ${leech} for ${offer.cost}` : `${action} ${leech}`,
               command: `${Command.ChargePower} ${leech}`,
+              warning: chargeWarning(this.engine, this.player, leech)
             });
           }
 
@@ -526,7 +485,7 @@ export default class Commands extends Vue {
             actions: command.data.specialacts.map((act) => act.income),
             buttons: command.data.specialacts.map((act) => ({
               command: act.income,
-              warning: specialActionWarning(this.engine.players[this.command.player], act.income)
+              warning: specialActionWarning(this.player, act.income)
             })),
           });
           break;
@@ -537,7 +496,7 @@ export default class Commands extends Vue {
             label: "Burn power",
             shortcuts: ["b"],
             command: Command.BurnPower,
-            buttons: command.data.map((val) => ({ command: String(val) })),
+            buttons: command.data.map((val) => ({ command: val, label: String(val) })),
           });
           break;
         }
