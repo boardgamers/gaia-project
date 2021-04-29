@@ -12,4 +12,5 @@ export const buildWarnings: { [key in BuildWarning]: { text: string } } = {
   "geodens-build-without-PI": {
     text: "Building on a new planet type with the planetary institute would give 3 knowledge.",
   },
+  "expensive-trade-station": { text: "Trade station for 6c instead of 3c." },
 };

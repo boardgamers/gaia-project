@@ -45,9 +45,10 @@
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { BuildWarning, GaiaHex, HighlightHex, SpaceMap } from "@gaia-project/engine";
-import { ButtonData, ButtonWarning } from "../data";
+import { ButtonData } from "../data";
 import Booster from "./Booster.vue";
 import TechTile from "./TechTile.vue";
+import { forceNumericShortcut } from "../logic/commands";
 
 @Component({
   components: {
@@ -70,12 +71,17 @@ export default class MoveButton extends Vue {
     const l = this.customLabel || this.button.label || this.button.command;
     const s = this.button.shortcuts;
     if (l && s?.length > 0) {
+      const shortcut = s[0];
+      if (shortcut == "Enter") {
+        return l;
+      }
       const p = l.startsWith("Upgrade to") ? "Upgrade to".length : 0;
-      const i = l.toLowerCase().indexOf(s[0], p);
-      if (i >= 0 && !l.startsWith("Spend") && !l.startsWith("Charge")) {
+      const i = l.toLowerCase().indexOf(shortcut, p);
+
+      if (i >= 0 && !forceNumericShortcut(l)) {
         return `${l.substring(0, i)}<u>${l.substring(i, i + 1)}</u>${l.substring(i + 1)}`;
       } else {
-        return `<u>${s[0]}</u>: ${l}`;
+        return `<u>${shortcut}</u>: ${l}`;
       }
     }
     return l;

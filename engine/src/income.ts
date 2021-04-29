@@ -96,7 +96,7 @@ function applyGainTokens(data: PlayerData, gainTokens: Event[]) {
  *
  * @return the amount of power wasted
  */
-function applyChargePowers(data: PlayerData, chargePowers: Event[]): number {
+export function applyChargePowers(data: PlayerData, chargePowers: Event[]): number {
   let waste = 0;
   for (const e of chargePowers) {
     for (const reward of e.rewards) {

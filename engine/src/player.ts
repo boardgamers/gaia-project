@@ -76,7 +76,8 @@ export type BuildWarning =
   | "federation-with-charged-tokens"
   | "lantids-deadlock"
   | "lantids-build-without-PI"
-  | "geodens-build-without-PI";
+  | "geodens-build-without-PI"
+  | "expensive-trade-station";
 
 export type BuildCheck = { cost: Reward[]; steps: number; warnings: BuildWarning[] };
 
@@ -305,6 +306,13 @@ export default class Player extends EventEmitter {
     }
 
     const cost = Reward.merge(this.board.cost(targetPlanet, building, isolated), addedCost);
+    const creditCost = (r: Reward[]) => r.filter((r) => r.type == Resource.Credit)[0].count;
+    if (
+      building == Building.TradingStation &&
+      creditCost(cost) == creditCost(this.board.buildings[Building.TradingStation].isolatedCost)
+    ) {
+      warnings.push("expensive-trade-station");
+    }
 
     const toGaia = cost.find((r) => r.type == Resource.MoveTokenToGaiaArea);
     if (toGaia != null && toGaia.count > this.data.power.area1) {
