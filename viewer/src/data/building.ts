@@ -26,13 +26,12 @@ export function buildingShortcut(building: Building): string {
     case Building.Mine:
       return "m";
     case Building.Academy1:
-      return "1";
     case Building.Academy2:
-      return "2";
+      return "a";
     case Building.TradingStation:
       return "t";
     case Building.ResearchLab:
-      return "r";
+      return "l";
     case Building.PlanetaryInstitute:
       return "i";
     case Building.GaiaFormer:

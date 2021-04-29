@@ -1,6 +1,8 @@
 import Engine, {
   applyChargePowers,
   BrainstoneArea,
+  Building,
+  Command,
   Event,
   Faction,
   GaiaHex,
@@ -11,9 +13,11 @@ import Engine, {
   researchTracks,
   Resource,
   Reward,
+  Round,
 } from "@gaia-project/engine";
-import AvailableCommand, { AvailableHex } from "@gaia-project/engine/src/available-command";
+import AvailableCommand, { AvailableBuilding, AvailableHex } from "@gaia-project/engine/src/available-command";
 import { ButtonData, ButtonWarning, HighlightHexData } from "../data";
+import { buildingName, buildingShortcut } from "../data/building";
 
 export const forceNumericShortcut = (label: string) => ["Spend", "Charge", "Income"].find((b) => label.startsWith(b));
 
@@ -152,4 +156,70 @@ export function finalizeShortcuts(ret: ButtonData[]) {
     }
     b.shortcuts.push("Enter");
   }
+}
+
+export function buildButtons(engine: Engine, command: AvailableCommand): ButtonData[] {
+  const ret: ButtonData[] = [];
+  let academySelection: ButtonData[] = null;
+
+  for (const building of Object.values(Building)) {
+    const coordinates = (command.data.buildings as AvailableBuilding[]).filter((bld) => bld.building === building);
+    if (coordinates.length == 0) {
+      continue;
+    }
+
+    let label = `Build a ${buildingName(building)}`;
+
+    if (coordinates[0].upgrade) {
+      label = `Upgrade to ${buildingName(building)}`;
+    } else if (coordinates[0].downgrade) {
+      label = `Downgrade to ${buildingName(building)}`;
+    } else if (coordinates[0].cost === "~" || building === Building.SpaceStation || building === Building.GaiaFormer) {
+      label = `Place a ${buildingName(building)}`;
+    }
+
+    if (building == Building.Academy1 || building == Building.Academy2) {
+      const buttons: ButtonData[] = [
+        {
+          label,
+          command: building,
+          hexes: hexMap(engine, coordinates),
+        },
+      ];
+
+      if (academySelection != null) {
+        academySelection.push(...buttons);
+        continue;
+      }
+      academySelection = buttons;
+
+      ret.push({
+        label: "Upgrade to Academy",
+        shortcuts: [buildingShortcut(building)],
+        command: Command.Build,
+        buttons,
+      });
+    } else {
+      const buttons: ButtonData[] =
+        engine.round === Round.None
+          ? [
+              {
+                command: "",
+                label: `Confirm ${buildingName(building)}`,
+              } as ButtonData,
+            ]
+          : undefined;
+
+      ret.push({
+        label,
+        shortcuts: [buildingShortcut(building)],
+        command: `${Command.Build} ${building}`,
+        automatic: command.data.automatic,
+        hexes: hexMap(engine, coordinates),
+        buttons,
+        needConfirm: buttons?.length > 0,
+      });
+    }
+  }
+  return ret;
 }
