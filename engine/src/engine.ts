@@ -990,11 +990,10 @@ export default class Engine {
 
   endSetupFactionPhase() {
     for (const pl of this.players) {
-      if (pl.faction) {
-        pl.loadFaction(pl.faction, this.factionCustomization, this.expansions);
-      } else {
-        pl.loadFaction(this.setup[pl.player as PlayerEnum], this.factionCustomization, this.expansions);
+      if (!pl.faction) {
+        pl.faction = this.setup[pl.player as PlayerEnum];
       }
+      pl.loadFaction(this.factionCustomization, this.expansions);
     }
 
     this.beginSetupBuildingPhase();
