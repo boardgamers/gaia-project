@@ -163,10 +163,11 @@ export default class Player extends EventEmitter {
 
   static fromData(data: any, map: SpaceMap, customization: FactionCustomization, expansions: number) {
     const player = new Player(data.player);
-    player.factionVariant = data.factionVariant;
 
+    player.faction = data.faction;
     if (data.faction) {
-      player.loadFaction(data.faction, customization, expansions, true);
+      player.factionVariant = data.factionVariant;
+      player.loadFaction(customization, expansions, true);
     }
 
     for (const kind of Object.keys(data.events)) {
@@ -339,10 +340,9 @@ export default class Player extends EventEmitter {
     return this.data.occupied.filter((hex) => hex.data.planet !== Planet.Empty && hex.isMainOccupier(this.player));
   }
 
-  loadFaction(faction: Faction, customization: FactionCustomization, expansions = 0, skipIncome = false) {
-    this.faction = faction;
-    this.factionVariant = this.factionVariant ?? factionVariantBoard(customization, faction);
-    this.board = factionBoard(faction, this.factionVariant);
+  loadFaction(customization: FactionCustomization, expansions = 0, skipIncome = false) {
+    this.factionVariant = this.factionVariant ?? factionVariantBoard(customization, this.faction);
+    this.board = factionBoard(this.faction, this.factionVariant);
 
     if (!skipIncome) {
       this.loadTechs(expansions);

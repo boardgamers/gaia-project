@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { BoardAction, Booster, Building, PlayerEnum } from "..";
 import { version } from "../package.json";
 import Engine, { AuctionVariant, createMoveToShow } from "./engine";
-import { Command, Condition, Operator, Phase, Planet, Player } from "./enums";
+import { Command, Condition, Faction, Operator, Phase, Planet, Player } from "./enums";
 import PlayerData, { MoveTokens } from "./player-data";
 
 describe("Engine", () => {
@@ -369,6 +369,22 @@ describe("Engine", () => {
           expect(Engine.fromData(data).boardActions[BoardAction.Power1]).to.equal(test.want);
         });
       }
+    });
+
+    it("should not cause factions to get messed up", () => {
+      const moves = parseMoves(`
+        init 3 Swift-farm-7018
+        p1 faction lantids
+        p2 faction gleens
+        p3 faction bescods
+        p1 bid lantids 0
+        p2 bid gleens 0
+        p3 bid gleens 1
+        p2 bid bescods 0
+      `);
+      const engine = Engine.slowMotion(moves, { auction: AuctionVariant.ChooseBid, factionVariant: "more-balanced" });
+      expect(engine.player(PlayerEnum.Player2).faction).to.equal(Faction.Bescods);
+      expect(engine.player(PlayerEnum.Player2).data.research.nav).to.equal(0);
     });
   });
 
