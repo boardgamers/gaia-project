@@ -91,8 +91,17 @@ import { FactionCustomization } from "@gaia-project/engine/src/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
 import { AvailableBuilding } from "@gaia-project/engine/src/available-command";
 import { buildWarnings } from "../data/warnings";
-import { buttonWarning, endTurnWarning, hexMap, passWarning } from "../logic/commands";
+import {
+  advanceResearchWarning,
+  buttonWarning,
+  endTurnWarning, finalizeShortcuts,
+  forceNumericShortcut,
+  hexMap,
+  passWarning, specialActionWarning
+} from "../logic/commands";
 import { boosterNames } from "../data/boosters";
+import { researchNames } from "../data/research";
+
 
 @Component<Commands>({
   watch: {
@@ -437,9 +446,10 @@ export default class Commands extends Vue {
         case Command.UpgradeResearch: {
           if (command.data.tracks.length === 1) {
             ret.push({
-              label: "Advance " + command.data.tracks[0].field,
+              label: "Advance " + researchNames[command.data.tracks[0].field],
               shortcuts: ["a"],
-              command: `${Command.UpgradeResearch} ${command.data.tracks[0].field}`
+              command: `${Command.UpgradeResearch} ${command.data.tracks[0].field}`,
+              warning: advanceResearchWarning(this.engine.players[this.command.player], command.data.tracks[0].field)
             });
           } else {
             ret.push({
@@ -449,7 +459,9 @@ export default class Commands extends Vue {
               // track.to contains actual level, to use when implementing research viewer
               buttons: command.data.tracks.map((track) => ({
                 command: track.field,
-                shortcuts: [track.field.substring(0, 1)]
+                label: researchNames[track.field],
+                shortcuts: [track.field.substring(0, 1)],
+                warning: advanceResearchWarning(this.engine.players[this.command.player], track.field)
               })),
               researchTiles: command.data.tracks.map((track) => track.field + "-" + track.to),
             });
@@ -547,7 +559,10 @@ export default class Commands extends Vue {
             shortcuts: ["s"],
             command: Command.Special,
             actions: command.data.specialacts.map((act) => act.income),
-            buttons: command.data.specialacts.map((act) => ({ command: act.income })),
+            buttons: command.data.specialacts.map((act) => ({
+              command: act.income,
+              warning: specialActionWarning(this.engine.players[this.command.player], act.income)
+            })),
           });
           break;
         }
@@ -703,28 +718,7 @@ export default class Commands extends Vue {
 
       ret.push(...this.customButtons);
     }
-
-    let shortcut = 1;
-
-    const shown = ret.filter(b => !b.hide);
-    for (const b of shown) {
-      if (b.shortcuts == undefined) {
-        b.shortcuts = [];
-      }
-      if (b.shortcuts.length == 0) {
-        b.shortcuts.push(String(shortcut));
-      }
-      shortcut++;
-    }
-
-    if (shown.length == 1) {
-      const b = shown[0];
-      b.shortcuts = ["Enter"];
-      if (b.label) {
-        b.shortcuts.unshift(b.label.substring(0, 1).toLowerCase());
-      }
-    }
-
+    finalizeShortcuts(ret);
     return ret;
   }
 

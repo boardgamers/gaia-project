@@ -45,6 +45,7 @@ export {
 export { FactionBoard, factionBoard } from "./src/faction-boards";
 export { factionPlanet } from "./src/factions";
 export { GaiaHex, GaiaHexData } from "./src/gaia-hex";
+export { applyChargePowers } from "./src/income";
 export { planetNames, terraformingStepsRequired } from "./src/planets";
 export { finalScorings, roundScorings } from "./src/tiles/scoring";
 export {
