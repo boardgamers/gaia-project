@@ -2,6 +2,8 @@ import { AdvTechTilePos, Booster, Federation, GaiaHex, HighlightHex, TechTilePos
 
 export type ButtonWarning = { title?: string; body: string[]; okButton?: { label: string; action: () => void } };
 
+export type ModalButtonData = { content: string; canActivate: () => boolean; show: (boolean) => void };
+
 export interface ButtonData {
   label?: string;
   command?: string;
@@ -9,7 +11,7 @@ export interface ButtonData {
   // Simple label
   title?: string;
   times?: number[];
-  modal?: string;
+  modal?: ModalButtonData;
   hexes?: HighlightHexData;
   automatic?: boolean; // Should the user have to click on the hex or is it automatic?
   hover?: boolean;

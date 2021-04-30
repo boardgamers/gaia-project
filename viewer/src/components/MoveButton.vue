@@ -36,7 +36,7 @@
       :title="button.title || button.label || button.command"
       ok-title="OK, I pick this one!"
     >
-      <div v-html="button.modal"></div>
+      <div v-html="button.modal.content"></div>
     </b-modal>
   </div>
 </template>
@@ -88,6 +88,7 @@ export default class MoveButton extends Vue {
   }
 
   modalCancel(arg: string) {
+    this.button.modal.show(false);
     this.$emit("cancel");
   }
 
@@ -136,8 +137,13 @@ export default class MoveButton extends Vue {
 
   mounted() {
     this.keyListener = (e) => {
-      if (e.key == "Enter" && this.button.modal && this.modalShow) {
-        this.handleOK();
+      if (this.button.modal) {
+        if (!this.button.modal.canActivate()) {
+          return false;
+        }
+        if (e.key == "Enter" && this.modalShow) {
+          this.handleOK();
+        }
       }
       if (this.button.shortcuts?.includes(e.key)) {
         this.handleClick();
@@ -240,6 +246,7 @@ export default class MoveButton extends Vue {
       });
     } else if (this.button.modal) {
       this.modalShow = true;
+      this.button.modal.show(true);
     } else if (this.button.rotation) {
       if (this.isActiveButton) {
         const rotations = [...this.$store.state.gaiaViewer.context.rotation.entries()];
@@ -290,6 +297,7 @@ export default class MoveButton extends Vue {
   }
 
   handleOK() {
+    this.button.modal.show(false);
     this.emitCommand();
   }
 
