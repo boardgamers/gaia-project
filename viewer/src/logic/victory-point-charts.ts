@@ -25,10 +25,10 @@ import {
   logEntryProcessor,
 } from "./charts";
 
-function simulateIncome(pl: Player, consume: (p: Player) => void): number {
+function simulateIncome(pl: Player, consume: (p: Player) => void, engineVersion: string): number {
   const json = JSON.parse(JSON.stringify(pl));
   delete json.federationCache; // otherwise we need to pass the map when loading
-  const clone = Player.fromData(json, null, null, 0, null);
+  const clone = Player.fromData(json, null, null, 0, engineVersion);
   consume(clone);
   return clone.data.victoryPoints - pl.data.victoryPoints;
 }
@@ -177,8 +177,11 @@ export const victoryPointSources: VictoryPointSource[] = [
     color: "--rt-sci",
     aggregate: finalScoring,
     projectedEndValue: (engine: Engine, pl: Player) =>
-      simulateIncome(pl, (clone) =>
-        gainFinalScoringVictoryPoints(finalRankings([engine.tiles.scorings.final[0]], engine.players), clone)
+      simulateIncome(
+        pl,
+        (clone) =>
+          gainFinalScoringVictoryPoints(finalRankings([engine.tiles.scorings.final[0]], engine.players), clone),
+        engine.version
       ),
   },
   {
@@ -188,8 +191,11 @@ export const victoryPointSources: VictoryPointSource[] = [
     color: "--dig",
     aggregate: finalScoring,
     projectedEndValue: (engine: Engine, pl: Player) =>
-      simulateIncome(pl, (clone) =>
-        gainFinalScoringVictoryPoints(finalRankings([engine.tiles.scorings.final[1]], engine.players), clone)
+      simulateIncome(
+        pl,
+        (clone) =>
+          gainFinalScoringVictoryPoints(finalRankings([engine.tiles.scorings.final[1]], engine.players), clone),
+        engine.version
       ),
   },
   {
@@ -197,7 +203,8 @@ export const victoryPointSources: VictoryPointSource[] = [
     label: "Resources",
     description: "Points for the remaining resources converted to credits",
     color: "--res-credit",
-    projectedEndValue: (_: Engine, pl: Player) => simulateIncome(pl, (clone) => clone.data.finalResourceHandling()),
+    projectedEndValue: (e: Engine, pl: Player) =>
+      simulateIncome(pl, (clone) => clone.data.finalResourceHandling(), e.version),
   },
 ];
 
@@ -282,7 +289,7 @@ export function victoryPointDetails(
     const deltaForEnded = () => {
       if (s.types.includes(Command.UpgradeResearch)) {
         // research was already counted in chart separately
-        return -simulateIncome(pl, (clone) => clone.data.gainResearchVictoryPoints());
+        return -simulateIncome(pl, (clone) => clone.data.gainResearchVictoryPoints(), data.version);
       }
       return 0;
     };
