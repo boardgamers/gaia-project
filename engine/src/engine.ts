@@ -1,6 +1,5 @@
 import assert from "assert";
 import { isEqual, range, set, uniq } from "lodash";
-import semVerCompare from "semver-compare";
 import shuffleSeed from "shuffle-seed";
 import { version } from "../package.json";
 import { boardActions } from "./actions";
@@ -42,6 +41,7 @@ import Reward from "./reward";
 import federations from "./tiles/federations";
 import { roundScorings } from "./tiles/scoring";
 import { isAdvanced } from "./tiles/techs";
+import { isVersionOrLater } from "./utils";
 
 // const ISOLATED_DISTANCE = 3;
 const LEECHING_DISTANCE = 2;
@@ -264,8 +264,7 @@ export default class Engine {
   }
 
   isVersionOrLater(version: string) {
-    if (!this.version) return false;
-    return semVerCompare(this.version, version) !== -1;
+    return isVersionOrLater(this.version, version);
   }
 
   loadMoves(_moves: string[]) {
@@ -696,7 +695,7 @@ export default class Engine {
       players: data.players.length,
     };
     for (const player of data.players) {
-      engine.addPlayer(Player.fromData(player, engine.map, customization, engine.expansions));
+      engine.addPlayer(Player.fromData(player, engine.map, customization, engine.expansions, engine.version));
     }
 
     if (data.map) {
@@ -740,11 +739,11 @@ export default class Engine {
     return jsonObj;
   }
 
-  static slowMotion([first, ...moves]: string[], options: EngineOptions = {}): Engine {
+  static slowMotion([first, ...moves]: string[], options: EngineOptions = {}, version: string = null): Engine {
     if (!first) {
-      return new Engine([], options);
+      return new Engine([], options, version);
     }
-    let state = JSON.parse(JSON.stringify(new Engine([first], options)));
+    let state = JSON.parse(JSON.stringify(new Engine([first], options, version)));
 
     for (const move of moves) {
       const tempEngine = Engine.fromData(state);
