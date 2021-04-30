@@ -14,7 +14,14 @@ import federations from "./src/tiles/federations";
 
 export { boardActions } from "./src/actions";
 export { AvailableHex, canResearchField, canTakeAdvancedTechTile, HighlightHex } from "./src/available-command";
-export { AuctionVariant, EngineOptions, FactionVariant, LogEntry, LogEntryChanges } from "./src/engine";
+export {
+  AuctionVariant,
+  EngineOptions,
+  FactionCustomization,
+  FactionVariant,
+  LogEntry,
+  LogEntryChanges,
+} from "./src/engine";
 export {
   AdvTechTile,
   AdvTechTilePos,
@@ -42,7 +49,7 @@ export {
   TechTile,
   TechTilePos,
 } from "./src/enums";
-export { FactionBoard, factionBoard } from "./src/faction-boards";
+export { FactionBoard, factionBoard, factionVariantBoard } from "./src/faction-boards";
 export { factionPlanet } from "./src/factions";
 export { GaiaHex, GaiaHexData } from "./src/gaia-hex";
 export { applyChargePowers } from "./src/income";

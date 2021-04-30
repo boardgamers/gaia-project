@@ -72,9 +72,11 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import Building from "../Building.vue";
 import Resource from "../Resource.vue";
-import {
+import Engine, {
   Building as BuildingEnum,
   factionBoard,
+  FactionCustomization,
+  factionVariantBoard,
   Operator,
   Player,
   Resource as ResourceEnum,
@@ -117,7 +119,12 @@ export default class BuildingGroup extends Vue {
   ac2: boolean;
 
   get board() {
-    return this.player.board ?? factionBoard(this.faction, this.player.factionVariant);
+    if (this.player.board) {
+      return this.player.board;
+    }
+    const engine = this.$store.state.gaiaViewer.data as Engine;
+    const factionVariant = factionVariantBoard(engine.factionCustomization, this.faction);
+    return factionBoard(this.faction, factionVariant);
   }
 
   get faction() {
