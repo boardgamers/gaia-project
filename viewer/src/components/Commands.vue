@@ -41,7 +41,7 @@
           v-for="faction in factionsToChoose.data"
           :button="{
             command: `${factionsToChoose.name} ${faction}`,
-            modal: tooltip(faction),
+            modal: modalDialog(tooltip(faction)),
             title: factions[faction].name,
             label: `${factions[faction].name} <i class='planet ${factions[faction].planet}'></i>`,
             shortcuts: [factionShortcut(faction)],
@@ -65,44 +65,38 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   AvailableCommand,
-  Booster,
   BrainstoneArea,
-  Building,
   BuildWarning,
   Command,
-  Event,
-  Expansion,
   Faction,
   factions,
   GaiaHex,
   Resource,
   Reward,
-  Round,
   SpaceMap,
   SubPhase,
   tiles,
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
-import { buildingName, buildingShortcut } from "../data/building";
-import { ButtonData, GameContext } from "../data";
-import { eventDesc } from "../data/event";
+import { ButtonData, GameContext, ModalButtonData } from "../data";
 import { factionDesc, factionShortcut } from "../data/factions";
 import { FactionCustomization } from "@gaia-project/engine/src/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
-import { AvailableBuilding } from "@gaia-project/engine/src/available-command";
 import { buildWarnings } from "../data/warnings";
 import {
-  buildButtons,
   advanceResearchWarning,
+  buildButtons,
   buttonWarning,
-  endTurnWarning, finalizeShortcuts,
-  forceNumericShortcut,
+  chargeWarning,
+  endTurnWarning,
+  finalizeShortcuts,
   hexMap,
-  passWarning, specialActionWarning, passButtons, chargeWarning
+  passButtons,
+  specialActionWarning
 } from "../logic/commands";
-import { boosterNames } from "../data/boosters";
 import { researchNames } from "../data/research";
 
+let show = false;
 
 @Component<Commands>({
   watch: {
@@ -114,6 +108,18 @@ import { researchNames } from "../data/research";
     tooltip(faction: Faction) {
       return factionDesc(faction, factionVariantBoard(this.factionCustomization, faction));
     },
+
+    modalDialog(msg: string): ModalButtonData {
+      return {
+        content: msg,
+        show(s: boolean) {
+          show = s;
+        },
+        canActivate() {
+          return !show;
+        }
+      };
+    }
   },
   computed: {
     canUndo() {
@@ -128,7 +134,7 @@ import { researchNames } from "../data/research";
         command: `${command.name} ${faction}`,
         label: "Random",
         shortcuts: ["r"],
-        modal: this.tooltip(faction),
+        modal: this.modalDialog(this.tooltip(faction)),
         title: factions[faction].name,
       };
     },
