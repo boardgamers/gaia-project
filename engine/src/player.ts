@@ -42,6 +42,7 @@ import boosts from "./tiles/boosters";
 import federationTiles, { isGreen } from "./tiles/federations";
 import { finalScorings } from "./tiles/scoring";
 import techs, { isAdvanced } from "./tiles/techs";
+import { isVersionOrLater } from "./utils";
 
 // 25 satellites total
 // The 2 used on the final scoring board and 1 used in the player order can be replaced by other markers
@@ -146,6 +147,7 @@ export default class Player extends EventEmitter {
       name: this.name,
       dropped: this.dropped,
       factionVariant: this.factionVariant,
+      factionLoaded: !!this.board,
     } as any;
 
     if (this.federationCache) {
@@ -161,11 +163,11 @@ export default class Player extends EventEmitter {
     return json;
   }
 
-  static fromData(data: any, map: SpaceMap, customization: FactionCustomization, expansions: number) {
+  static fromData(data: any, map: SpaceMap, customization: FactionCustomization, expansions: number, version: string) {
     const player = new Player(data.player);
 
     player.faction = data.faction;
-    if (data.faction) {
+    if (data.faction && (data.factionLoaded || !isVersionOrLater(version, "4.8.4"))) {
       player.factionVariant = data.factionVariant;
       player.loadFaction(customization, expansions, true);
     }

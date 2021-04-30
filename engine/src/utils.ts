@@ -1,4 +1,5 @@
 import { mergeWith } from "lodash";
+import semVerCompare from "semver-compare";
 
 function customizer(objValue, srcValue) {
   if (Array.isArray(objValue)) {
@@ -24,4 +25,9 @@ export function combinations<T>(t: T[]): T[][] {
     return [[]];
   }
   return combinations(t.slice(1)).flatMap((value) => [value, value.concat(t[0])]);
+}
+
+export function isVersionOrLater(actualVersion: string, requiredVersion: string) {
+  if (!actualVersion) return false;
+  return semVerCompare(actualVersion, requiredVersion) !== -1;
 }

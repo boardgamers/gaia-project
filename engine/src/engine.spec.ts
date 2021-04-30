@@ -382,7 +382,11 @@ describe("Engine", () => {
         p3 bid gleens 1
         p2 bid bescods 0
       `);
-      const engine = Engine.slowMotion(moves, { auction: AuctionVariant.ChooseBid, factionVariant: "more-balanced" });
+      const engine = Engine.slowMotion(
+        moves,
+        { auction: AuctionVariant.ChooseBid, factionVariant: "more-balanced" },
+        "4.8.4"
+      );
       expect(engine.player(PlayerEnum.Player2).faction).to.equal(Faction.Bescods);
       expect(engine.player(PlayerEnum.Player2).data.research.nav).to.equal(0);
     });
