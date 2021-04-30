@@ -72,18 +72,15 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import Building from "../Building.vue";
 import Resource from "../Resource.vue";
-import Engine, {
+import {
   Building as BuildingEnum,
-  Command,
-  Faction,
-  FactionBoard,
   factionBoard,
-  Operator, Player,
+  Operator,
+  Player,
   Resource as ResourceEnum,
   Reward,
 } from "@gaia-project/engine";
 import { CommandObject, markBuilding } from "../../logic/recent";
-import {FactionVariant, FactionCustomization} from "@gaia-project/engine/src/engine";
 
 @Component({
   components: {
@@ -119,7 +116,9 @@ export default class BuildingGroup extends Vue {
   @Prop({ default: false })
   ac2: boolean;
 
-  board: FactionBoard = factionBoard(this.faction, this.player.factionVariant);
+  get board() {
+    return this.player.board ?? factionBoard(this.faction, this.player.factionVariant);
+  }
 
   get faction() {
     return this.player.faction;
@@ -134,7 +133,7 @@ export default class BuildingGroup extends Vue {
   }
 
   tooltip(i: number) {
-    const b = this.player.board.buildings[this.building];
+    const b = this.board.buildings[this.building];
     const cost = this.discount
       ? b.cost.map((c) => `${c.count - this.discount}${c.type}`).join(", ")
       : b.cost.join(", ") || "~";
@@ -165,7 +164,7 @@ export default class BuildingGroup extends Vue {
 
   get factionIncome(): Reward[] {
     const income: Reward[] = [].concat(
-      ...this.player.board.income.filter((ev) => ev.operator === Operator.Income).map((ev) => ev.rewards)
+      ...this.board.income.filter((ev) => ev.operator === Operator.Income).map((ev) => ev.rewards)
     );
 
     return income.filter((rew) => this.resource.includes(rew.type));
@@ -228,7 +227,7 @@ export default class BuildingGroup extends Vue {
     }
 
     let incomeAdded = false;
-    const ret = this.player.board.buildings[building].income[i].map((ev) => {
+    const ret = this.board.buildings[building].income[i].map((ev) => {
       const rew = ev.rewards.toString();
       const special = ev.operator === Operator.Activate && (rew === "1q" || rew === "4c");
 
