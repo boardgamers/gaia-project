@@ -137,13 +137,11 @@ export default class MoveButton extends Vue {
 
   mounted() {
     this.keyListener = (e) => {
-      if (this.button.modal) {
-        if (!this.button.modal.canActivate()) {
-          return false;
-        }
-        if (e.key == "Enter" && this.modalShow) {
-          this.handleOK();
-        }
+      if (e.key == "Enter" && this.modalShow) {
+        this.handleOK();
+      }
+      if (this.button.modal && !this.button.modal.canActivate()) {
+        return false;
       }
       if (this.button.shortcuts?.includes(e.key)) {
         this.handleClick();
