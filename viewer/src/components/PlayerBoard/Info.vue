@@ -67,7 +67,7 @@
           >
         </g>
       </g>
-      <g transform="translate(0, 1.5)" v-if="engine.round < 6">
+      <g transform="translate(0, 1.5)" v-if="!engine.isLastRound">
         <text class="board-text" x="0.25">I</text>
         <g transform="translate(2.2, 0)" v-if="income('c') > 0">
           <text class="board-text" transform="scale(0.7)">+{{ income("c") }}</text>
@@ -110,7 +110,7 @@ import VictoryPoint from "../Resources/VictoryPoint.vue";
     VictoryPoint,
   },
 })
-export default class BuildingGroup extends Vue {
+export default class PlayerBoardInfo extends Vue {
   @Prop()
   faction: Faction;
 
