@@ -43,7 +43,7 @@
         :kind="'brainstone'"
         :transform="`translate(${power('area1') > 0 ? 0.9 : 0}, 0) scale(0.11)`"
       />
-      <text y="1.7" transform="scale(0.7)" v-if="income('t')">+{{ income("t") }}</text>
+      <text y="1.7" transform="scale(0.7)" v-if="!engine.isLastRound && income('t')">+{{ income("t") }}</text>
       <text class="label" x="-2.6">I</text>
     </g>
     <g :transform="`translate(${-r * spacing}, ${-2 * r * sin60 * spacing})`">
@@ -78,7 +78,9 @@
 
       <text class="label" y="2.6" x="0">III</text>
     </g>
-    <text class="label" transform="translate(-3.5, 0) scale(0.75)" v-if="income('pw')">+{{ income("pw") }}</text>
+    <text class="label" transform="translate(-3.5, 0) scale(0.75)" v-if="!engine.isLastRound && income('pw')"
+      >+{{ income("pw") }}</text
+    >
   </g>
 </template>
 
@@ -87,16 +89,7 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import Resource from "../Resource.vue";
 import Building from "../Building.vue";
-import {
-  Faction,
-  Reward,
-  FactionBoard,
-  Operator,
-  Resource as ResourceEnum,
-  factions,
-  PlayerData,
-  Player,
-} from "@gaia-project/engine";
+import Engine, { Faction, Resource as ResourceEnum, PlayerData, Player } from "@gaia-project/engine";
 
 @Component({
   components: {
@@ -128,6 +121,10 @@ export default class BuildingGroup extends Vue {
 
   get isTerran() {
     return this.faction === Faction.Terrans;
+  }
+
+  get engine(): Engine {
+    return this.$store.state.gaiaViewer.data;
   }
 
   xPos(area: string) {
