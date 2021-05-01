@@ -92,7 +92,7 @@ import {
   finalizeShortcuts,
   hexMap,
   passButtons,
-  specialActionWarning
+  specialActionWarning,
 } from "../logic/commands";
 import { researchNames } from "../data/research";
 
@@ -117,9 +117,9 @@ let show = false;
         },
         canActivate() {
           return !show;
-        }
+        },
       };
-    }
+    },
   },
   computed: {
     canUndo() {
@@ -197,14 +197,13 @@ export default class Commands extends Vue {
       }
     }
 
-    // Seems to cause problems on mobile
-    // If there's only one button, save the player the hassle and click it
-    // setTimeout(() => {
-    //   if ($(".move-button.shown").length === 1)  {
-    //     const ref = $(".move-button.shown").attr("data-ref");
-    //     (this.$refs[ref][0] as MoveButton).handleClick();
-    //   }
-    // });
+    this.scrollToCommands();
+  }
+
+  scrollToCommands() {
+    document
+      .querySelector("#move-buttons")
+      ?.scrollIntoView?.({ behavior: "smooth", block: "nearest", inline: "nearest" });
   }
 
   get availableCommands(): AvailableCommand[] {
@@ -254,7 +253,7 @@ export default class Commands extends Vue {
   }
 
   get warnings(): string[] {
-    return this.currentMoveWarnings?.map(w => buildWarnings[w].text) ?? [];
+    return this.currentMoveWarnings?.map((w) => buildWarnings[w].text) ?? [];
   }
 
   get factions() {
@@ -288,13 +287,8 @@ export default class Commands extends Vue {
       this.buttonChain.push(source.button);
       this.customButtons = source.button.buttons;
 
-      // Seems to cause problems on mobile
-      // setTimeout(() => {
-      //   if ($(".move-button.shown").length <= 1)  {
-      //     const ref = $(".move-button.shown").attr("data-ref");
-      //     (this.$refs[ref][0] as MoveButton).handleClick();
-      //   }
-      // });
+      // Useful when placing initial mines on mobile, and needing to confirm
+      this.scrollToCommands();
 
       return;
     }
@@ -378,7 +372,7 @@ export default class Commands extends Vue {
               label: "Research " + researchNames[command.data.tracks[0].field],
               shortcuts: ["r"],
               command: `${Command.UpgradeResearch} ${command.data.tracks[0].field}`,
-              warning: advanceResearchWarning(this.player, command.data.tracks[0].field)
+              warning: advanceResearchWarning(this.player, command.data.tracks[0].field),
             });
           } else {
             ret.push({
@@ -390,7 +384,7 @@ export default class Commands extends Vue {
                 command: track.field,
                 label: researchNames[track.field],
                 shortcuts: [track.field.substring(0, 1)],
-                warning: advanceResearchWarning(this.player, track.field)
+                warning: advanceResearchWarning(this.player, track.field),
               })),
               researchTiles: command.data.tracks.map((track) => track.field + "-" + track.to),
             });
@@ -417,7 +411,7 @@ export default class Commands extends Vue {
             ret.push({
               label: offer.cost && offer.cost !== "~" ? `${action} ${leech} for ${offer.cost}` : `${action} ${leech}`,
               command: `${Command.ChargePower} ${leech}`,
-              warning: chargeWarning(this.engine, this.player, leech)
+              warning: chargeWarning(this.engine, this.player, leech),
             });
           }
 
@@ -430,8 +424,9 @@ export default class Commands extends Vue {
               label: `Decline ${command.data.offers[0].offer}`,
               shortcuts: ["d"],
               command: `${Command.Decline} ${command.data.offers[0].offer}`,
-              warning: buttonWarning(command.data.offers[0].offer === "tech" ?
-                "Are you sure you want to decline a tech tile?" : undefined),
+              warning: buttonWarning(
+                command.data.offers[0].offer === "tech" ? "Are you sure you want to decline a tech tile?" : undefined
+              ),
             });
           } else {
             // LEGACY CODE
@@ -449,7 +444,7 @@ export default class Commands extends Vue {
             ...command.data.sort().map((area) => ({
               label: `Brainstone ${area}`,
               command: `${command.name} ${area}`,
-              shortcuts: [area == BrainstoneArea.Gaia ? "g" : area.substring("area".length, area.length)]
+              shortcuts: [area == BrainstoneArea.Gaia ? "g" : area.substring("area".length, area.length)],
             }))
           );
           break;
@@ -491,7 +486,7 @@ export default class Commands extends Vue {
             actions: command.data.specialacts.map((act) => act.income),
             buttons: command.data.specialacts.map((act) => ({
               command: act.income,
-              warning: specialActionWarning(this.player, act.income)
+              warning: specialActionWarning(this.player, act.income),
             })),
           });
           break;
@@ -519,7 +514,7 @@ export default class Commands extends Vue {
                 label: `Confirm End Turn`,
               },
             ],
-            warning: endTurnWarning(this.engine, command)
+            warning: endTurnWarning(this.engine, command),
           });
           break;
         }
@@ -551,16 +546,14 @@ export default class Commands extends Vue {
             label: reason,
             warning: {
               title: "Dead end reached",
-              body: [
-                "You've reached a required move that is not possible to execute."
-              ],
+              body: ["You've reached a required move that is not possible to execute."],
               okButton: {
                 label: "Undo",
                 action: () => {
                   this.undo();
-                }
-              }
-            }
+                },
+              },
+            },
           });
           break;
 
@@ -596,19 +589,27 @@ export default class Commands extends Vue {
         }
 
         case Command.FormFederation: {
-          const tilesButtons: ButtonData[] = command.data.tiles.map((fed, i) => ({
-            command: fed,
-            label: `Federation ${i + 1}: ${tiles.federations[fed]}`,
-          } as ButtonData));
+          const tilesButtons: ButtonData[] = command.data.tiles.map(
+            (fed, i) =>
+              ({
+                command: fed,
+                label: `Federation ${i + 1}: ${tiles.federations[fed]}`,
+              } as ButtonData)
+          );
 
-          const locationButtons: ButtonData[] = command.data.federations.map((fed, i) => ({
-            command: fed.hexes,
-            label: `Location ${i + 1}`,
-            hexes: new Map(fed.hexes.split(",").map((coord) => [this.engine.map.getS(coord), { coordinates: coord }])),
-            hover: true,
-            buttons: tilesButtons,
-            warning: buttonWarning(fed.warning != null ? buildWarnings[fed.warning].text : null)
-          } as ButtonData));
+          const locationButtons: ButtonData[] = command.data.federations.map(
+            (fed, i) =>
+              ({
+                command: fed.hexes,
+                label: `Location ${i + 1}`,
+                hexes: new Map(
+                  fed.hexes.split(",").map((coord) => [this.engine.map.getS(coord), { coordinates: coord }])
+                ),
+                hover: true,
+                buttons: tilesButtons,
+                warning: buttonWarning(fed.warning != null ? buildWarnings[fed.warning].text : null),
+              } as ButtonData)
+          );
 
           locationButtons.push({
             label: "Custom location",
