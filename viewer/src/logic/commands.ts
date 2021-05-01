@@ -11,6 +11,7 @@ import Engine, {
   Event,
   Expansion,
   Faction,
+  freeActionConversions,
   GaiaHex,
   HighlightHex,
   Operator,
@@ -21,12 +22,34 @@ import Engine, {
   Round,
   tiles,
 } from "@gaia-project/engine";
+import AvailableCommand, {
+  AvailableBoardActionData,
+  AvailableBuilding,
+  AvailableFreeActionData,
+  AvailableHex,
+} from "@gaia-project/engine";
+import { max, range, sortBy } from "lodash";
 import { ButtonData, ButtonWarning, HighlightHexData } from "../data";
+import { boardActionNames, freeActionShortcuts } from "../data/actions";
 import { boosterNames } from "../data/boosters";
 import { buildingName, buildingShortcut } from "../data/building";
 import { eventDesc } from "../data/event";
+import { resourceNames } from "../data/resources";
 
-export const forceNumericShortcut = (label: string) => ["Spend", "Charge", "Income"].find((b) => label.startsWith(b));
+export const forceNumericShortcut = (label: string) => ["Charge", "Income"].find((b) => label.startsWith(b));
+
+export function withShortcut(label: string, shortcut: string, skip: string) {
+  const found = label.indexOf(skip);
+  const skipIndex = found < 0 ? 0 : found + skip.length;
+
+  const i = label.toLowerCase().indexOf(shortcut, skipIndex);
+
+  if (i >= 0 && !forceNumericShortcut(label)) {
+    return `${label.substring(0, i)}<u>${label.substring(i, i + 1)}</u>${label.substring(i + 1)}`;
+  } else {
+    return `<u>${shortcut}</u>: ${label}`;
+  }
+}
 
 export function hexMap(engine: Engine, coordinates: AvailableHex[]): HighlightHexData {
   return new Map<GaiaHex, HighlightHex>(
@@ -306,4 +329,108 @@ export function passButtons(engine: Engine, player: Player, command: AvailableCo
     });
   }
   return ret;
+}
+
+function translateResources(rewards: Reward[]): string {
+  return rewards
+    .map((r) => {
+      const s = resourceNames.find((s) => s.type == r.type);
+      return r.count + " " + (r.count == 1 ? s.label : s.plural);
+    })
+    .join(" and ");
+}
+
+function conversionLabel(cost: Reward[], income: Reward[]) {
+  return `${translateResources(cost)} ⇒ ${translateResources(income).replace(
+    "4 Victory Points",
+    "3 VP + 1 VP / Planet Type"
+  )}`;
+}
+
+function resourceSymbol(type: Resource) {
+  switch (type) {
+    case Resource.ChargePower:
+      return Resource.PayPower;
+    case Resource.TokenArea3:
+      return Resource.BowlToken;
+    default:
+      return type;
+  }
+}
+
+function newConversion(cost: Reward[], income: Reward[]) {
+  return {
+    from: cost.map((r) => new Reward(r.count, resourceSymbol(r.type))),
+    to: income.map((r) => new Reward(r.count, resourceSymbol(r.type))),
+  };
+}
+
+export function boardActionButton(data: AvailableBoardActionData): ButtonData {
+  return {
+    label: "Power/Q.I.C Action",
+    shortcuts: ["q"],
+    command: Command.Action,
+    actions: data.poweracts.map((act) => act.name),
+    buttons: data.poweracts.map((act) => {
+      const cost = Reward.parse(act.cost);
+      const income = Reward.merge(Event.parse(act.income, null).flatMap((e) => e.rewards));
+
+      const shortcut = boardActionNames[act.name].shortcut;
+      return {
+        label: withShortcut(conversionLabel(cost, income), shortcut, "Power Charges"),
+        conversion: newConversion(cost, income),
+        shortcuts: [shortcut],
+        command: act.name,
+      };
+    }),
+  };
+}
+
+export function freeActionButton(data: AvailableFreeActionData): ButtonData[] {
+  return data.acts.map((act) => {
+    const conversion = freeActionConversions[act.action];
+
+    const cost = Reward.parse(conversion.cost);
+    const income = Reward.parse(conversion.income);
+
+    return {
+      label: conversionLabel(cost, income),
+      conversion: newConversion(cost, income),
+      shortcuts: [freeActionShortcuts[act.action]],
+      command: `${Command.Spend} ${conversion.cost} for ${conversion.income}`,
+      times: act.range,
+    };
+  });
+}
+
+export function burnButton(player: Player, command: AvailableCommand) {
+  return {
+    label: "Burn Power",
+    shortcuts: ["b"],
+    command: `${Command.BurnPower} 1`,
+    conversion: {
+      from: [new Reward(2, Resource.BowlToken)],
+      to: [
+        new Reward(1, player.faction == Faction.Itars ? Resource.GainTokenGaiaArea : Resource.BurnToken),
+        new Reward(1, Resource.ChargePower),
+      ],
+    },
+    times: range(1, max(command.data as number[]) + 1),
+  };
+}
+
+export function freeAndBurnButton(buttons: ButtonData[]): ButtonData {
+  const labels = [];
+  if (buttons.some((b) => b.command.startsWith(Command.Spend))) {
+    labels.push("Free action");
+  }
+  if (buttons.some((b) => b.command.startsWith(Command.BurnPower))) {
+    labels.push("Burn power");
+  }
+  buttons = sortBy(buttons, (b) => b.conversion.from[0].type);
+  return {
+    label: labels.join(" / "),
+    shortcuts: ["a"],
+    buttons: buttons,
+  };
 }

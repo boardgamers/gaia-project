@@ -9,7 +9,7 @@
     />
     <TechTile v-else-if="button.tech" class="mb-1 mr-1" @click="handleClick" :pos="button.tech" :count-override="1" />
     <b-btn
-      v-else-if="!button.times"
+      v-else-if="button.times === undefined"
       :variant="button.warning ? 'warning' : 'secondary'"
       class="mr-2 mb-2 move-button"
       @click="handleClick"
@@ -17,12 +17,14 @@
       @mouseleave="leave"
       :title="tooltip"
       v-b-tooltip.html
-      v-html="htmlLabel"
     >
+      <template>
+        <ButtonContent :button="button" :customLabel="customLabel" />
+      </template>
     </b-btn>
     <b-dropdown class="mr-2 mb-2 move-button" v-else split right @click="handleRangeClick(button.times[0])">
       <template #button-content>
-        <div v-html="htmlLabel"></div>
+        <ButtonContent :button="button" :customLabel="customLabel" />
       </template>
       <b-dropdown-item v-for="i in button.times" :key="i" @click="handleRangeClick(i)">{{ i }}</b-dropdown-item>
     </b-dropdown>
@@ -48,12 +50,13 @@ import { BuildWarning, GaiaHex, HighlightHex, SpaceMap } from "@gaia-project/eng
 import { ButtonData } from "../data";
 import Booster from "./Booster.vue";
 import TechTile from "./TechTile.vue";
-import { forceNumericShortcut } from "../logic/commands";
+import ButtonContent from "./Resources/ButtonContent.vue";
 
 @Component({
   components: {
     Booster,
     TechTile,
+    ButtonContent
   },
 })
 export default class MoveButton extends Vue {
@@ -66,26 +69,7 @@ export default class MoveButton extends Vue {
   private startingHex = null; // For range command
 
   private keyListener = null;
-
-  get htmlLabel(): string {
-    const l = this.customLabel || this.button.label || this.button.command;
-    const s = this.button.shortcuts;
-    if (l && s?.length > 0) {
-      const shortcut = s[0];
-      if (shortcut == "Enter") {
-        return l;
-      }
-      const p = l.startsWith("Upgrade to") ? "Upgrade to".length : 0;
-      const i = l.toLowerCase().indexOf(shortcut, p);
-
-      if (i >= 0 && !forceNumericShortcut(l)) {
-        return `${l.substring(0, i)}<u>${l.substring(i, i + 1)}</u>${l.substring(i + 1)}`;
-      } else {
-        return `<u>${shortcut}</u>: ${l}`;
-      }
-    }
-    return l;
-  }
+  private rangePreselect: number = null;
 
   modalCancel(arg: string) {
     this.button.modal.show(false);
@@ -144,7 +128,13 @@ export default class MoveButton extends Vue {
         return false;
       }
       if (this.button.shortcuts?.includes(e.key)) {
-        this.handleClick();
+        if (this.rangePreselect) {
+          this.handleRangeClick(this.rangePreselect ?? this.button.times[0]);
+        } else {
+          this.handleClick();
+        }
+      } else if (this.button.times && isFinite(Number(e.key))) {
+        this.rangePreselect = Number(e.key);
       }
     };
     window.addEventListener("keydown", this.keyListener);
@@ -172,9 +162,9 @@ export default class MoveButton extends Vue {
           if (action) {
             action();
             return;
-        }
+          }
         } else {
-        return;
+          return;
         }
       } catch (err) {
         console.error(err);
@@ -371,7 +361,7 @@ export default class MoveButton extends Vue {
 
 <style lang="scss">
 .move-button {
-  display: inline-block;
+  display: flex;
 }
 
 .warning {

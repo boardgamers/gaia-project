@@ -1,4 +1,4 @@
-import { freeActionsNevlas, freeActionsNevlasPI } from "../actions";
+import { ConversionPool, FreeAction, freeActionsNevlas, freeActionsNevlasPI } from "../actions";
 import { Building, Faction } from "../enums";
 import Player from "../player";
 import { FactionBoardVariants } from "./types";
@@ -21,10 +21,11 @@ const nevlas: FactionBoardVariants = {
     income: ["2k,4o,15c,q,up-sci", "+o,k"],
     handlers: {
       [`build-${Building.PlanetaryInstitute}`]: (player: Player) => (player.data.tokenModifier = 2),
-      freeActionChoice: (player: Player, pool: any[]) => {
-        pool.push(...freeActionsNevlas);
+      freeActionChoice: (player: Player, pool: ConversionPool) => {
+        pool.push(freeActionsNevlas);
         if (player.data.hasPlanetaryInstitute()) {
-          pool.push(...freeActionsNevlasPI);
+          pool.push(freeActionsNevlasPI);
+          pool.actions.splice(pool.actions.indexOf(FreeAction.PowerToCredit), 1);
         }
       },
     },

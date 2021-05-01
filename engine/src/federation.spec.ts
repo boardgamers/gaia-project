@@ -231,7 +231,7 @@ bescods income 2t
 nevlas income 2t. income 2pw. income 4pw
 gleens build m -3x0.
 bescods action power3.
-nevlas spend 1pw for 1c. up nav.
+nevlas spend 2pw for 2c. up nav.
 hadsch-hallas action power6. build m 4x0.
 bescods charge 3pw
 nevlas charge 1pw

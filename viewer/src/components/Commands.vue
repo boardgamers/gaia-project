@@ -15,7 +15,7 @@
       </h5>
     </div>
     <div id="move-buttons">
-      <div v-if="init">
+      <div v-if="init" class="d-flex flex-wrap align-content-stretch">
         <MoveButton
           v-for="i in [2, 3, 4]"
           :button="{ command: `init ${i} randomSeed`, label: `${i} players` }"
@@ -23,7 +23,7 @@
           :key="i"
         ></MoveButton>
       </div>
-      <div v-else>
+      <div v-else class="d-flex flex-wrap align-content-stretch">
         <MoveButton
           v-for="(button, i) in buttons"
           :class="{ 'd-none': button.hide, shown: !button.hide }"
@@ -36,7 +36,7 @@
           {{ button.label || button.command }}
         </MoveButton>
       </div>
-      <div v-if="isChoosingFaction">
+      <div v-if="isChoosingFaction" class="d-flex flex-wrap align-content-stretch">
         <MoveButton
           v-for="faction in factionsToChoose.data"
           :button="{
@@ -84,18 +84,21 @@ import { FactionCustomization } from "@gaia-project/engine/src/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
 import { buildWarnings } from "../data/warnings";
 import {
-  advanceResearchWarning,
-  buildButtons,
+  advanceResearchWarning, boardActionButton,
+  buildButtons, burnButton,
   buttonWarning,
   chargeWarning,
   endTurnWarning,
   finalizeShortcuts,
+  freeActionButton,
+  freeAndBurnButton,
   hexMap,
   passButtons,
   specialActionWarning
 } from "../logic/commands";
 import { researchNames } from "../data/research";
 import { AvailableResearchData } from "@gaia-project/engine";
+import { max, range } from "lodash";
 
 let show = false;
 
@@ -327,6 +330,7 @@ export default class Commands extends Vue {
   }
 
   get buttons(): ButtonData[] {
+    const freeAndBurn: ButtonData[] = [];
     const ret: ButtonData[] = [];
     for (const command of this.availableCommands.filter((c) => c.name != Command.ChooseFaction)) {
       switch (command.name) {
@@ -458,30 +462,16 @@ export default class Commands extends Vue {
         }
 
         case Command.Spend: {
-          ret.push({
-            label: "Free action",
-            shortcuts: ["a"],
-            command: Command.Spend,
-            buttons: command.data.acts.map((act) => ({
-              label: `Spend ${act.cost} to gain ${act.income}`,
-              command: `${act.cost} for ${act.income}`,
-              times: act.range,
-            })),
-          });
+          freeAndBurn.push(...freeActionButton(command.data));
+          break;
+        }
+        case Command.BurnPower: {
+          freeAndBurn.push(burnButton(this.player, command));
           break;
         }
 
         case Command.Action: {
-          ret.push({
-            label: "Power/Q.I.C Action",
-            shortcuts: ["q"],
-            command: Command.Action,
-            actions: command.data.poweracts.map((act) => act.name),
-            buttons: command.data.poweracts.map((act) => ({
-              command: act.name,
-              label: `Spend ${act.cost} for ${act.income.join(" / ")}`,
-            })),
-          });
+          ret.push(boardActionButton(command.data));
           break;
         }
 
@@ -495,16 +485,6 @@ export default class Commands extends Vue {
               command: act.income,
               warning: specialActionWarning(this.player, act.income)
             })),
-          });
-          break;
-        }
-
-        case Command.BurnPower: {
-          ret.push({
-            label: "Burn power",
-            shortcuts: ["b"],
-            command: Command.BurnPower,
-            buttons: command.data.map((val) => ({ command: val, label: String(val) })),
           });
           break;
         }
@@ -641,6 +621,12 @@ export default class Commands extends Vue {
           break;
         }
       }
+    }
+
+    if (freeAndBurn.length > 0) {
+      const pass = ret.pop();
+      ret.push(freeAndBurnButton(freeAndBurn));
+      ret.push(pass);
     }
 
     if (this.customButtons.length > 0) {

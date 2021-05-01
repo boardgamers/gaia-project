@@ -2,10 +2,16 @@ import assert from "assert";
 import { isEqual, range, set, uniq } from "lodash";
 import shuffleSeed from "shuffle-seed";
 import { version } from "../package.json";
-import { boardActions } from "./actions";
+import { boardActions, FreeAction, freeActionConversions } from "./actions";
 import { finalRankings, gainFinalScoringVictoryPoints } from "./algorithms/scoring";
 import { ChargeDecision, ChargeRequest, decideChargeRequest } from "./auto-charge";
-import AvailableCommand, { generate as generateAvailableCommands, Offer, remainingFactions } from "./available-command";
+import AvailableCommand, {
+  AvailableBoardActionData,
+  AvailableFreeActionData,
+  generate as generateAvailableCommands,
+  Offer,
+  remainingFactions,
+} from "./available-command";
 import { stdBuildingValue } from "./buildings";
 import {
   AdvTechTile,
@@ -506,7 +512,9 @@ export default class Engine {
       return `${Command.BrainStone} ${cmd.data[0]}`;
     } else if (
       this.availableCommands.some(
-        (cmd) => cmd.name === Command.Spend && cmd.data.acts[0].cost.includes(Resource.GainTokenGaiaArea)
+        (cmd) =>
+          cmd.name === Command.Spend &&
+          (cmd.data as AvailableFreeActionData).acts.some((a) => a.action === FreeAction.GaiaTokenToCredit)
       )
     ) {
       // Terrans spending power in gaia phase to create resources
@@ -879,8 +887,12 @@ export default class Engine {
       (this.availableCommand = this.findAvailableCommand(this.playerToMove, command)),
       `Command ${command} is not in the list of available commands: ${this.availableCommands.map(
         (cmd) => cmd.name
-      )}, last command: ${this.moveHistory[this.moveHistory.length - 1]}, index: ${this.moveHistory.length}`
+      )}, ${this.assertContext()}`
     );
+  }
+
+  private assertContext(): string {
+    return `last command: ${this.moveHistory[this.moveHistory.length - 1]}, index: ${this.moveHistory.length}`;
   }
 
   doFreeActions(subPhase: SubPhase) {
@@ -1670,7 +1682,8 @@ export default class Engine {
   }
 
   [Command.Spend](player: PlayerEnum, costS: string, _for: "for", incomeS: string) {
-    const { acts: actions } = this.availableCommand.data;
+    const command = this.availableCommand;
+    const data: AvailableFreeActionData = command.data;
 
     const pl = this.player(player);
     const cost = Reward.merge(Reward.parse(costS));
@@ -1682,12 +1695,13 @@ export default class Engine {
 
     // tslint:disable-next-line no-shadowed-variable
     const isPossible = (cost: Reward[], income: Reward[]) => {
-      for (const action of actions) {
-        const actionCost = Reward.parse(action.cost);
+      for (const action of data.acts) {
+        const conversion = freeActionConversions[action.action];
+        const actionCost = Reward.parse(conversion.cost);
         if (Reward.includes(cost, actionCost)) {
           // Remove income & cost of action
           const newCost = Reward.merge(cost, Reward.negative(actionCost));
-          let newIncome = Reward.merge(income, Reward.negative(Reward.parse(action.income)));
+          let newIncome = Reward.merge(income, Reward.negative(Reward.parse(conversion.income)));
 
           // Convert unused income into cost
           newCost.push(...Reward.negative(newIncome.filter((rew) => rew.count < 0)));
@@ -1705,7 +1719,7 @@ export default class Engine {
       return false;
     };
 
-    assert(isPossible(cost, income), `spend ${cost} for ${income} is not allowed`);
+    assert(isPossible(cost, income), `spend ${cost} for ${income} is not allowed: ${this.assertContext()}`);
 
     pl.payCosts(cost, Command.Spend);
     pl.gainRewards(income, Command.Spend);
@@ -1727,10 +1741,10 @@ export default class Engine {
   }
 
   [Command.Action](player: PlayerEnum, action: BoardAction) {
-    const { poweracts: acts } = this.availableCommand.data;
+    const data: AvailableBoardActionData = this.availableCommand.data;
 
     assert(
-      acts.find((act) => act.name === action),
+      data.poweracts.find((act) => act.name === action),
       `${action} is not in the available power actions`
     );
 

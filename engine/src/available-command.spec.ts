@@ -1,5 +1,6 @@
 import { expect } from "chai";
-import { possibleBoardActions, remainingFactions } from "./available-command";
+import { PlayerEnum } from "../index";
+import { possibleBoardActions, possibleFreeActions, remainingFactions } from "./available-command";
 import Engine, { AuctionVariant } from "./engine";
 import { BoardAction, Faction } from "./enums";
 import Player from "./player";
@@ -71,6 +72,16 @@ describe("Available commands", () => {
           expect(remainingFactions(engine)).to.eql([]);
         });
       });
+    });
+  });
+
+  describe("Free actions", () => {
+    it("should return only 1 free action with 1pw", () => {
+      const player = new Player(PlayerEnum.Player1);
+      player.data.power.area3 = 1;
+
+      const actions = possibleFreeActions(player);
+      expect(actions).to.have.length(1);
     });
   });
 

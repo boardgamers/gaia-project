@@ -18,12 +18,13 @@ import Engine, {
   TechTilePos,
 } from "@gaia-project/engine";
 import { sum } from "lodash";
-import { boardActionNames } from "../data/board-actions";
+import { boardActionNames } from "../data/actions";
 import { boosterNames } from "../data/boosters";
 import { planetsWithSteps } from "../data/factions";
 import { federationColors } from "../data/federations";
 import { planetNames } from "../data/planets";
 import { researchNames } from "../data/research";
+import { resourceNames } from "../data/resources";
 import { baseTechTileNames } from "../data/tech-tiles";
 import {
   ChartColor,
@@ -118,67 +119,63 @@ function extractLogMux<T>(mux: { [key in Command]?: ExtractLog<SimpleSource<T>> 
   };
 }
 
-type ResourceSource = SimpleSource<Resource | "pay-pw" | "burn-token" | "range"> & { inverseOf?: Resource };
+type ResourceSource = SimpleSource<Resource | "range"> & { inverseOf?: Resource };
 
-const resourceSources: ResourceSource[] = [
+const resourceWeights: { type: Resource; color: string; weight: number; inverseOf?: Resource }[] = [
   {
     type: Resource.Credit,
-    label: "Credit",
-    plural: "Credits",
     color: "--res-credit",
     weight: 1,
   },
   {
     type: Resource.Ore,
-    label: "Ore",
-    plural: "Ores",
     color: "--res-ore",
     weight: 3,
   },
   {
     type: Resource.Knowledge,
-    label: "Knowledge",
-    plural: "Knowledge",
     color: "--res-knowledge",
     weight: 4,
   },
   {
     type: Resource.Qic,
-    label: "QIC",
-    plural: "QICs",
     color: "--res-qic",
     weight: 4,
   },
   {
     type: Resource.ChargePower,
-    label: "Power Charges",
-    plural: "Power Charges",
     color: "--res-power",
     weight: 0,
   },
   {
-    type: "pay-pw",
+    type: Resource.PayPower,
     inverseOf: Resource.ChargePower,
-    label: "Spent Power",
-    plural: "Spent Power",
     color: "--lost",
     weight: 0,
   },
   {
     type: Resource.GainToken,
-    label: "Gained Tokens",
-    plural: "Gained Tokens",
     color: "--recent",
     weight: 0,
   },
   {
-    type: "burn-token",
-    label: "Burned Tokens",
-    plural: "Burned Tokens",
+    type: Resource.BurnToken,
     color: "--current-round",
     weight: 0,
   },
 ];
+
+export const resourceSources: ResourceSource[] = resourceWeights.map((w) => {
+  const n = resourceNames.find((n) => n.type == w.type);
+  return {
+    type: w.type,
+    weight: w.weight,
+    color: w.color,
+    inverseOf: w.inverseOf,
+    label: n.plural, //we can actually remove plural as a field
+    plural: n.plural,
+  };
+});
 
 const freeActionSources = resourceSources
   .filter((s) => s.weight > 0 || s.type == Resource.GainToken)
@@ -200,7 +197,7 @@ const factories = [
         (resource == source.type && change > 0) || (resource == source.inverseOf && change < 0) ? Math.abs(change) : 0
       ),
     extractLog: statelessExtractLog((e) =>
-      e.source.type == "burn-token" && e.cmd.command == Command.BurnPower ? Number(e.cmd.args[0]) : 0
+      e.source.type == Resource.BurnToken && e.cmd.command == Command.BurnPower ? Number(e.cmd.args[0]) : 0
     ),
     sources: resourceSources,
   } as SimpleSourceFactory<ResourceSource>,
@@ -485,7 +482,7 @@ export function simpleChartDetails<Source extends SimpleSource<any>>(
 
     return {
       backgroundColor: resolveColor(s.color, pl),
-      label: s.label,
+      label: s.plural,
       fill: false,
       getDataPoints: () =>
         getDataPoints(data, initialValue, extractChange, extractLog, () => 0, deltaForEnded, includeRounds),
