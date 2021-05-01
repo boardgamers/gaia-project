@@ -7,6 +7,7 @@ import Engine, {
   Event,
   Expansion,
   Faction,
+  freeActionConversions,
   GaiaHex,
   HighlightHex,
   Operator,
@@ -18,11 +19,18 @@ import Engine, {
   Round,
   tiles,
 } from "@gaia-project/engine";
-import AvailableCommand, { AvailableBuilding, AvailableHex } from "@gaia-project/engine/src/available-command";
+import AvailableCommand, {
+  AvailableBuilding,
+  AvailableFreeActionData,
+  AvailableHex,
+} from "@gaia-project/engine/src/available-command";
+import { sortBy } from "lodash";
 import { ButtonData, ButtonWarning, HighlightHexData } from "../data";
+import { freeActionShortcuts } from "../data/actions";
 import { boosterNames } from "../data/boosters";
 import { buildingName, buildingShortcut } from "../data/building";
 import { eventDesc } from "../data/event";
+import { resourceSources } from "./simple-charts";
 
 export const forceNumericShortcut = (label: string) => ["Spend", "Charge", "Income"].find((b) => label.startsWith(b));
 
@@ -304,4 +312,49 @@ export function passButtons(engine: Engine, player: Player, command: AvailableCo
     });
   }
   return ret;
+}
+
+function translateResources(rewards: Reward[]) {
+  return rewards
+    .map((r) => {
+      const s = resourceSources.find((s) => s.type == r.type);
+      return r.count + " " + (r.count == 1 ? s.label : s.plural);
+    })
+    .join(" and ");
+}
+
+export function freeActionButton(data: AvailableFreeActionData): ButtonData[] {
+  return data.acts.map((act) => {
+    const conversion = freeActionConversions[act.action];
+
+    const cost = Reward.parse(conversion.cost);
+    const income = Reward.parse(conversion.income);
+
+    return {
+      label: `${translateResources(cost)} ⇒ ${translateResources(income)}`,
+      shortcuts: [freeActionShortcuts[act.action]],
+      conversion: {
+        from: cost.map((r) => new Reward(r.count, r.type == Resource.ChargePower ? Resource.PayPower : r.type)),
+        to: income,
+      },
+      command: `${Command.Spend} ${conversion.cost} for ${conversion.income}`,
+      times: act.range,
+    };
+  });
+}
+
+export function freeAndBurnButton(buttons: ButtonData[]): ButtonData {
+  const labels = [];
+  if (buttons.some((b) => b.command.startsWith(Command.Spend))) {
+    labels.push("Free action");
+  }
+  if (buttons.some((b) => b.command.startsWith(Command.BurnPower))) {
+    labels.push("Burn power");
+  }
+  buttons = sortBy(buttons, (b) => b.conversion.from[0].type);
+  return {
+    label: labels.join(" / "),
+    shortcuts: ["f"],
+    buttons: buttons,
+  };
 }

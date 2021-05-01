@@ -381,7 +381,7 @@ export function newBarChart(
       data: {
         labels: cropLabels(
           style,
-          sources.map((s) => s.label)
+          sources.map((s) => s.plural)
         ),
         datasets: datasets,
       },

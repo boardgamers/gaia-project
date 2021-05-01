@@ -23,7 +23,7 @@
           :key="i"
         ></MoveButton>
       </div>
-      <div v-else>
+      <div v-else class="d-flex flex-wrap align-content-stretch">
         <MoveButton
           v-for="(button, i) in buttons"
           :class="{ 'd-none': button.hide, shown: !button.hide }"
@@ -90,11 +90,14 @@ import {
   chargeWarning,
   endTurnWarning,
   finalizeShortcuts,
+  freeActionButton,
+  freeAndBurnButton,
   hexMap,
   passButtons,
   specialActionWarning
 } from "../logic/commands";
 import { researchNames } from "../data/research";
+import { max, range } from "lodash";
 
 let show = false;
 
@@ -326,6 +329,7 @@ export default class Commands extends Vue {
   }
 
   get buttons(): ButtonData[] {
+    const freeAndBurn: ButtonData[] = [];
     const ret: ButtonData[] = [];
     for (const command of this.availableCommands.filter((c) => c.name != Command.ChooseFaction)) {
       switch (command.name) {
@@ -456,15 +460,22 @@ export default class Commands extends Vue {
         }
 
         case Command.Spend: {
-          ret.push({
-            label: "Free action",
-            shortcuts: ["f"],
-            command: Command.Spend,
-            buttons: command.data.acts.map((act) => ({
-              label: `Spend ${act.cost} to gain ${act.income}`,
-              command: `${act.cost} for ${act.income}`,
-              times: act.range,
-            })),
+          freeAndBurn.push(...freeActionButton(command.data));
+          break;
+        }
+        case Command.BurnPower: {
+          freeAndBurn.push({
+            label: "Burn Power",
+            shortcuts: ["b"],
+            command: `${Command.BurnPower} 1`,
+            conversion: {
+              from: [new Reward(2, Resource.BowlToken)],
+              to: [
+                new Reward(1, Resource.BurnToken),
+                new Reward(1, Resource.ChargePower)
+              ]
+            },
+            times: range(1, max(command.data as number[]) + 1),
           });
           break;
         }
@@ -493,16 +504,6 @@ export default class Commands extends Vue {
               command: act.income,
               warning: specialActionWarning(this.player, act.income)
             })),
-          });
-          break;
-        }
-
-        case Command.BurnPower: {
-          ret.push({
-            label: "Burn power",
-            shortcuts: ["b"],
-            command: Command.BurnPower,
-            buttons: command.data.map((val) => ({ command: val, label: String(val) })),
           });
           break;
         }
@@ -639,6 +640,12 @@ export default class Commands extends Vue {
           break;
         }
       }
+    }
+
+    if (freeAndBurn.length > 0) {
+      const pass = ret.pop();
+      ret.push(freeAndBurnButton(freeAndBurn));
+      ret.push(pass);
     }
 
     if (this.customButtons.length > 0) {

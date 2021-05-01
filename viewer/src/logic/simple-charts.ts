@@ -18,7 +18,7 @@ import Engine, {
   TechTilePos,
 } from "@gaia-project/engine";
 import { sum } from "lodash";
-import { boardActionNames } from "../data/board-actions";
+import { boardActionNames } from "../data/actions";
 import { boosterNames } from "../data/boosters";
 import { planetsWithSteps } from "../data/factions";
 import { federationColors } from "../data/federations";
@@ -118,9 +118,9 @@ function extractLogMux<T>(mux: { [key in Command]?: ExtractLog<SimpleSource<T>> 
   };
 }
 
-type ResourceSource = SimpleSource<Resource | "pay-pw" | "burn-token" | "range"> & { inverseOf?: Resource };
+type ResourceSource = SimpleSource<Resource | "range"> & { inverseOf?: Resource };
 
-const resourceSources: ResourceSource[] = [
+export const resourceSources: ResourceSource[] = [
   {
     type: Resource.Credit,
     label: "Credit",
@@ -151,13 +151,13 @@ const resourceSources: ResourceSource[] = [
   },
   {
     type: Resource.ChargePower,
-    label: "Power Charges",
+    label: "Power Charge",
     plural: "Power Charges",
     color: "--res-power",
     weight: 0,
   },
   {
-    type: "pay-pw",
+    type: Resource.PayPower,
     inverseOf: Resource.ChargePower,
     label: "Spent Power",
     plural: "Spent Power",
@@ -166,14 +166,14 @@ const resourceSources: ResourceSource[] = [
   },
   {
     type: Resource.GainToken,
-    label: "Gained Tokens",
+    label: "Gained Token",
     plural: "Gained Tokens",
     color: "--recent",
     weight: 0,
   },
   {
-    type: "burn-token",
-    label: "Burned Tokens",
+    type: Resource.BurnToken,
+    label: "Burned Token",
     plural: "Burned Tokens",
     color: "--current-round",
     weight: 0,
@@ -200,7 +200,7 @@ const factories = [
         (resource == source.type && change > 0) || (resource == source.inverseOf && change < 0) ? Math.abs(change) : 0
       ),
     extractLog: statelessExtractLog((e) =>
-      e.source.type == "burn-token" && e.cmd.command == Command.BurnPower ? Number(e.cmd.args[0]) : 0
+      e.source.type == Resource.BurnToken && e.cmd.command == Command.BurnPower ? Number(e.cmd.args[0]) : 0
     ),
     sources: resourceSources,
   } as SimpleSourceFactory<ResourceSource>,
@@ -485,7 +485,7 @@ export function simpleChartDetails<Source extends SimpleSource<any>>(
 
     return {
       backgroundColor: resolveColor(s.color, pl),
-      label: s.label,
+      label: s.plural,
       fill: false,
       getDataPoints: () =>
         getDataPoints(data, initialValue, extractChange, extractLog, () => 0, deltaForEnded, includeRounds),

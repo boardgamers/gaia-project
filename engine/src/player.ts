@@ -225,11 +225,11 @@ export default class Player extends EventEmitter {
     }
   }
 
-  maxPayRange(reward: Reward[]): number {
-    const rewards = Reward.merge(reward);
+  maxPayRange(cost: Reward[]): number {
+    const costs = Reward.merge(cost);
 
     for (let max = 0; ; max += 1) {
-      for (const rew of rewards) {
+      for (const rew of costs) {
         if (!this.data.hasResource(new Reward(rew.count * (max + 1), rew.type))) {
           return max;
         }

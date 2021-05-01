@@ -12,8 +12,14 @@ import Reward from "./src/reward";
 import tiles from "./src/tiles";
 import federations from "./src/tiles/federations";
 
-export { boardActions } from "./src/actions";
-export { AvailableHex, canResearchField, canTakeAdvancedTechTile, HighlightHex } from "./src/available-command";
+export { boardActions, FreeAction, freeActionConversions, ResourceConversion } from "./src/actions";
+export {
+  AvailableFreeAction,
+  AvailableHex,
+  canResearchField,
+  canTakeAdvancedTechTile,
+  HighlightHex,
+} from "./src/available-command";
 export {
   AuctionVariant,
   EngineOptions,
