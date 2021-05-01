@@ -4,6 +4,8 @@ export type ButtonWarning = { title?: string; body: string[]; okButton?: { label
 
 export type ModalButtonData = { content: string; canActivate: () => boolean; show: (boolean) => void };
 
+export type StickyButton = { open: boolean };
+
 export interface ButtonData {
   label?: string;
   command?: string;
@@ -13,6 +15,7 @@ export interface ButtonData {
   times?: number[];
   conversion?: { from: Reward[]; to: Reward[] };
   modal?: ModalButtonData;
+  sticky?: StickyButton;
   hexes?: HighlightHexData;
   automatic?: boolean; // Should the user have to click on the hex or is it automatic?
   hover?: boolean;

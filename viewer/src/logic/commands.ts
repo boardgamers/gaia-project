@@ -352,8 +352,14 @@ export function freeAndBurnButton(buttons: ButtonData[]): ButtonData {
     labels.push("Burn power");
   }
   buttons = sortBy(buttons, (b) => b.conversion.from[0].type);
+  buttons.push({
+    label: "Done",
+    shortcuts: ["d"],
+    sticky: { open: false }
+  });
   return {
     label: labels.join(" / "),
+    sticky: { open: true },
     shortcuts: ["f"],
     buttons: buttons,
   };

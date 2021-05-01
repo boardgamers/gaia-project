@@ -273,6 +273,11 @@ export default class Commands extends Vue {
   }
 
   handleCommand(command: string, source: MoveButton, final: boolean, warnings?: BuildWarning[]) {
+    const button = source.button;
+    this.handleButton(command, button, final, warnings);
+  }
+
+  private handleButton(command: string, button: ButtonData, final: boolean, warnings: BuildWarning[]) {
     console.log("handle command", command);
 
     // Some users seem to have a bug with repeating commands on mobile, like clicking the income button twice
@@ -285,11 +290,15 @@ export default class Commands extends Vue {
       return;
     }
 
-    if (source.button.buttons?.length > 0 && !final) {
-      this.commandTitles.push(source.button.label);
-      this.commandChain.push(source.button.command);
-      this.buttonChain.push(source.button);
-      this.customButtons = source.button.buttons;
+    if (button.buttons?.length > 0 && !final) {
+      this.commandTitles.push(button.label);
+      this.commandChain.push(button.command);
+      this.buttonChain.push(button);
+      this.customButtons = button.buttons;
+      if (button.sticky) {
+        console.log("set sticky to " + button.sticky.open);
+        this.stickyButton = button.sticky.open ? button.label : null;
+      }
 
       // Seems to cause problems on mobile
       // setTimeout(() => {
@@ -656,6 +665,13 @@ export default class Commands extends Vue {
       ret.push(...this.customButtons);
     }
     finalizeShortcuts(ret);
+
+    if (this.stickyButton) {
+      console.log("sticky found: " + this.stickyButton);
+      const sticky = ret.find(b => b.label == this.stickyButton);
+      this.handleButton(null, sticky, false, null);
+    }
+
     return ret;
   }
 
@@ -701,6 +717,7 @@ export default class Commands extends Vue {
   private customButtons: ButtonData[] = [];
   private commandChain: string[] = [];
   private buttonChain: ButtonData[] = [];
+  private stickyButton: string | null;
 }
 </script>
 
