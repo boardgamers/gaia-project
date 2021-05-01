@@ -263,11 +263,13 @@ export default class Player extends EventEmitter {
       return null;
     }
 
+    const buildActionUsed = this.data.temporaryStep > 0 || this.data.temporaryRange > 0
+
     const warnings: BuildWarning[] = [];
     if (
       addedCost.some((c) => c.type === Resource.Qic && c.count > 0) &&
       this.hasActiveBooster(Resource.TemporaryRange) &&
-      this.data.temporaryStep === 0
+      !buildActionUsed
     ) {
       warnings.push("range-booster-not-used");
     }
@@ -295,7 +297,7 @@ export default class Player extends EventEmitter {
           return null;
         }
 
-        if (steps > 0 && this.hasActiveBooster(Resource.TemporaryStep) && this.data.temporaryStep === 0) {
+        if (steps > 0 && this.hasActiveBooster(Resource.TemporaryStep) && !buildActionUsed) {
           warnings.push("step-booster-not-used");
         }
         if (reward.count > 0 && this.data.terraformCostDiscount < 2) {
