@@ -458,7 +458,7 @@ export default class Commands extends Vue {
         case Command.Spend: {
           ret.push({
             label: "Free action",
-            shortcuts: ["f"],
+            shortcuts: ["a"],
             command: Command.Spend,
             buttons: command.data.acts.map((act) => ({
               label: `Spend ${act.cost} to gain ${act.income}`,

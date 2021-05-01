@@ -80,7 +80,7 @@ function incomeWarning(player: Player, additionalEvents: Event[]) {
 }
 
 export function chargeWarning(engine: Engine, player: Player, offer: string): ButtonWarning | null {
-  return incomeWarning(player, [new Event(offer)]);
+  return engine.passedPlayers.includes(player.player) ? incomeWarning(player, [new Event(offer)]) : null;
 }
 
 export function boosterWarning(engine: Engine, player: Player, booster: Booster): ButtonWarning | null {

@@ -263,7 +263,7 @@ export default class Player extends EventEmitter {
       return null;
     }
 
-    const buildActionUsed = this.data.temporaryStep > 0 || this.data.temporaryRange > 0
+    const buildActionUsed = this.data.temporaryStep > 0 || this.data.temporaryRange > 0;
 
     const warnings: BuildWarning[] = [];
     if (
