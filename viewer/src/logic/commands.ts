@@ -1,5 +1,9 @@
 import Engine, {
   applyChargePowers,
+  AvailableBuilding,
+  AvailableCommand,
+  AvailableHex,
+  AvailableResearchTrack,
   Booster,
   BrainstoneArea,
   Building,
@@ -11,14 +15,12 @@ import Engine, {
   HighlightHex,
   Operator,
   Player,
-  ResearchField,
   researchTracks,
   Resource,
   Reward,
   Round,
   tiles,
 } from "@gaia-project/engine";
-import AvailableCommand, { AvailableBuilding, AvailableHex } from "@gaia-project/engine/src/available-command";
 import { ButtonData, ButtonWarning, HighlightHexData } from "../data";
 import { boosterNames } from "../data/boosters";
 import { buildingName, buildingShortcut } from "../data/building";
@@ -150,14 +152,14 @@ export function specialActionWarning(player: Player, income: string): ButtonWarn
   return resourceWasteWarning(rewardWarnings(player, new Reward(income)));
 }
 
-export function advanceResearchWarning(player: Player, field: ResearchField): ButtonWarning | null {
-  const level = player.data.research[field];
-  const events = researchTracks[field][level + 1].map((s) => new Event(s));
-  const warnings = events
-    .filter((e) => e.operator == Operator.Once)
-    .flatMap((e) => e.rewards)
-    .flatMap((r) => rewardWarnings(player, r));
-  return resourceWasteWarning(warnings);
+export function advanceResearchWarning(player: Player, track: AvailableResearchTrack): ButtonWarning | null {
+  const events = researchTracks[track.field][track.to].map((s) => new Event(s));
+
+  let rewards = events.filter((e) => e.operator == Operator.Once).flatMap((e) => e.rewards);
+  if (track.cost) {
+    rewards = Reward.merge(rewards, Reward.negative(Reward.parse(track.cost)));
+  }
+  return resourceWasteWarning(rewards.flatMap((r) => rewardWarnings(player, r)));
 }
 
 export function finalizeShortcuts(ret: ButtonData[]) {

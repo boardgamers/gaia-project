@@ -95,6 +95,7 @@ import {
   specialActionWarning
 } from "../logic/commands";
 import { researchNames } from "../data/research";
+import { AvailableResearchData } from "@gaia-project/engine";
 
 let show = false;
 
@@ -373,12 +374,13 @@ export default class Commands extends Vue {
         }
 
         case Command.UpgradeResearch: {
-          if (command.data.tracks.length === 1) {
+          const { tracks }: AvailableResearchData = command.data;
+          if (tracks.length === 1) {
             ret.push({
-              label: "Research " + researchNames[command.data.tracks[0].field],
+              label: "Research " + researchNames[tracks[0].field],
               shortcuts: ["r"],
-              command: `${Command.UpgradeResearch} ${command.data.tracks[0].field}`,
-              warning: advanceResearchWarning(this.player, command.data.tracks[0].field)
+              command: `${Command.UpgradeResearch} ${tracks[0].field}`,
+              warning: advanceResearchWarning(this.player, tracks[0])
             });
           } else {
             ret.push({
@@ -386,13 +388,13 @@ export default class Commands extends Vue {
               shortcuts: ["r"],
               command: command.name,
               // track.to contains actual level, to use when implementing research viewer
-              buttons: command.data.tracks.map((track) => ({
+              buttons: tracks.map((track) => ({
                 command: track.field,
                 label: researchNames[track.field],
                 shortcuts: [track.field.substring(0, 1)],
-                warning: advanceResearchWarning(this.player, track.field)
+                warning: advanceResearchWarning(this.player, track)
               })),
-              researchTiles: command.data.tracks.map((track) => track.field + "-" + track.to),
+              researchTiles: tracks.map((track) => track.field + "-" + track.to),
             });
           }
           break;
