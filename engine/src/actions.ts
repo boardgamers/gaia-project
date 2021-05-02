@@ -1,5 +1,5 @@
-import { BoardAction } from "./enums";
 import { AvailableFreeAction, freeActionData } from "./available-command";
+import { BoardAction } from "./enums";
 import Player from "./player";
 
 // QIC to extend range is already included in the distance calculation

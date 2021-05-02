@@ -2,8 +2,8 @@
   <div class="d-flex" style="justify-content: center; align-items: center">
     <svg
       v-if="button.conversion"
-      :viewBox="`-6 -10 ${(button.conversion.from.length + button.conversion.to.length) * 18} 16`"
-      :width="(button.conversion.from.length + button.conversion.to.length) * 18 + 40"
+      :viewBox="`2 -13 ${(button.conversion.from.length + button.conversion.to.length) * 8} 20`"
+      :width="(button.conversion.from.length + button.conversion.to.length) * 28 + 7"
       height="30"
     >
       <Resource
@@ -11,18 +11,19 @@
         :key="i"
         :kind="r.type"
         :count="Number(r.count)"
-        :transform="`translate(${i * 12}, -2) scale(.7)`"
+        :transform="`translate(${i * 12 - 4}, -2) scale(.7)`"
       />
-      <use xlink:href="#arrow" x="5" y="0" transform="translate(0, -2)" />
+      <use xlink:href="#arrow" x="5" y="0" transform="translate(-4, -2)" />
       <Resource
         v-for="(r, i) in button.conversion.to"
         :key="i + 20"
         :kind="r.type"
         :count="Number(r.count)"
-        :transform="`translate(${(i + button.conversion.from.length + 1) * 12}, -2) scale(.7)`"
+        :transform="`translate(${(i + button.conversion.from.length + 1) * 12 - 4}, -2) scale(.7)`"
       />
     </svg>
     <div v-html="htmlLabel"></div>
+    <span class="sr-only">{{ button.tooltip }}</span>
   </div>
 </template>
 
@@ -52,7 +53,5 @@ export default class ButtonContent extends Vue {
     }
     return l;
   }
-
-
 }
 </script>

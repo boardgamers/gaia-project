@@ -11,7 +11,7 @@
     <b-btn
       v-else-if="button.times === undefined"
       :variant="button.warning ? 'warning' : 'secondary'"
-      class="mr-2 mb-2 move-button"
+      :class="['mr-2', 'mb-2', 'move-button', { 'symbol-button': button.conversion }]"
       @click="handleClick"
       @mouseenter="hover"
       @mouseleave="leave"
@@ -22,7 +22,15 @@
         <ButtonContent :button="button" :customLabel="customLabel" />
       </template>
     </b-btn>
-    <b-dropdown class="mr-2 mb-2 move-button" v-else split right @click="handleRangeClick(button.times[0])">
+    <b-dropdown
+      :class="['mr-2', 'mb-2', 'move-button', { 'symbol-button': button.conversion }]"
+      v-else
+      split
+      right
+      :title="tooltip"
+      v-b-tooltip.html
+      @click="handleRangeClick(button.times[0])"
+    >
       <template #button-content>
         <ButtonContent :button="button" :customLabel="customLabel" />
       </template>
@@ -331,7 +339,12 @@ export default class MoveButton extends Vue {
   }
 
   get tooltip(): string | null {
-    return this.button.tooltip ?? this.button.warning?.body?.join(', ');
+    const warn = this.button.warning?.body?.join(', ');
+    const tooltip = this.button.tooltip;
+    if (tooltip && warn) {
+      return tooltip + " " + warn;
+    }
+    return tooltip ?? warn;
   }
 
   hover() {
@@ -366,5 +379,9 @@ export default class MoveButton extends Vue {
 
 .warning {
   background-color: var(--warning);
+}
+
+.symbol-button > button {
+  padding: 0.275rem 0.35rem 0.275rem 0.15rem;
 }
 </style>

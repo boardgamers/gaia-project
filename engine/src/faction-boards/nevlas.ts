@@ -26,8 +26,10 @@ const nevlas: FactionBoardVariants = {
         if (player.data.hasPlanetaryInstitute()) {
           pool.push(freeActionsNevlasPI, player);
           for (const action of pool.actions) {
-            if (action.action === FreeAction.PowerToCredit
-              || (action.action === FreeAction.PowerToOre && player.data.power.area3 >= 3)) {
+            if (
+              action.action === FreeAction.PowerToCredit ||
+              (action.action === FreeAction.PowerToOre && player.data.power.area3 >= 3)
+            ) {
               action.hide = true;
             }
           }

@@ -14,11 +14,14 @@ import federations from "./src/tiles/federations";
 
 export { boardActions, FreeAction, freeActionConversions, ResourceConversion } from "./src/actions";
 export {
-  AvailableFreeAction,
-  AvailableHex,
+  AvailableBoardActionData,
   AvailableBuilding,
+  AvailableFreeAction,
+  AvailableFreeActionData,
+  AvailableHex,
   AvailableResearchData,
   AvailableResearchTrack,
+  BrainstoneActionData,
   canResearchField,
   canTakeAdvancedTechTile,
   HighlightHex,

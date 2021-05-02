@@ -9,7 +9,7 @@ describe("commands", () => {
       action: FreeAction.PowerToOreAndCredit,
     };
 
-    const button = freeActionButton({ acts: [avail] }, { data: {tokenModifier: 2} } as Player);
+    const button = freeActionButton({ acts: [avail] }, { data: { tokenModifier: 2 } } as Player);
     expect(button).to.deep.equal([
       {
         command: "spend 4pw for 1o,1c",
@@ -31,9 +31,10 @@ describe("commands", () => {
             },
           ],
         },
-        label: "4 Power Charges ⇒ 1 Ore and 1 Cred<u>i</u>t",
+        label: "<u></u>",
         shortcuts: ["i"],
         times: undefined,
+        tooltip: "4 Power Charges ⇒ 1 Ore and 1 Cred<u>i</u>t",
       },
     ] as ButtonData[]);
   });

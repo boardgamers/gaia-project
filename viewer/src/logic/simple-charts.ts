@@ -88,7 +88,6 @@ export function planetsForSteps(type: TerraformingSteps, planet: Planet): Planet
 export type SimpleSource<Type> = {
   type: Type;
   label: string;
-  plural: string;
   color: ChartColor;
   weight: number;
 };
@@ -172,8 +171,7 @@ export const resourceSources: ResourceSource[] = resourceWeights.map((w) => {
     weight: w.weight,
     color: w.color,
     inverseOf: w.inverseOf,
-    label: n.plural, //we can actually remove plural as a field
-    plural: n.plural,
+    label: n.plural,
   };
 });
 
@@ -182,7 +180,6 @@ const freeActionSources = resourceSources
   .concat({
     type: "range",
     label: "Range +2",
-    plural: "Range +2",
     color: "--rt-nav",
     weight: 0,
   });
@@ -234,7 +231,6 @@ const factories = [
     sources: BoardAction.values().map((action) => ({
       type: action,
       label: boardActionNames[action].name,
-      plural: boardActionNames[action].name,
       color: boardActionNames[action].color,
       weight: 1,
     })),
@@ -256,42 +252,36 @@ const factories = [
       {
         type: Building.Mine,
         label: "Mine",
-        plural: "Mines",
         color: "--res-ore",
         weight: 1,
       },
       {
         type: Building.TradingStation,
         label: "Trading Station",
-        plural: "Trading Stations",
         color: "--res-credit",
         weight: 2,
       },
       {
         type: Building.ResearchLab,
         label: "Research Lab",
-        plural: "Research Labs",
         color: "--res-knowledge",
         weight: 2,
       },
       {
         type: Building.PlanetaryInstitute,
         label: "Planetary Institute",
-        plural: "Planetary Institutes",
         color: "--current-round",
         weight: 3,
       },
       {
         type: Building.Academy1,
         label: "Academy",
-        plural: "Academies",
         color: "--rt-terra",
         weight: 3,
       },
       {
         type: Building.GaiaFormer,
         label: "Gaia Former",
-        plural: "Gaia Formers",
         color: "--rt-gaia",
         weight: 0,
       },
@@ -307,7 +297,6 @@ const factories = [
       return {
         type: field as ResearchField,
         label: researchNames[field],
-        plural: `Research Steps in ${researchNames[field]}`,
         color: `--rt-${field}`,
         weight: 1,
       };
@@ -327,8 +316,7 @@ const factories = [
         const planet = t as Planet;
         return {
           type: planet,
-          label: planetNames[planet],
-          plural: `${planetNames[planet]} planets`,
+          label: `${planetNames[planet]}`,
           color: planetColor(planet, true),
           weight: 1,
         };
@@ -336,7 +324,6 @@ const factories = [
       .concat({
         type: Planet.Empty,
         label: "Lantids guest mine",
-        plural: "Lantids guest mines",
         color: "--recent",
         weight: 1,
       }),
@@ -353,7 +340,6 @@ const factories = [
     sources: Object.values(TerraformingSteps).map((steps) => ({
       type: steps,
       label: steps,
-      plural: steps,
       color: (player) => planetColor(planetsForSteps(steps, player.planet)[0], true),
       weight: terraformingSteps(steps),
     })),
@@ -366,7 +352,6 @@ const factories = [
     sources: Booster.values().map((b) => ({
       type: b,
       label: boosterNames[b].name,
-      plural: boosterNames[b].name,
       color: boosterNames[b].color,
       weight: 1,
     })),
@@ -398,14 +383,12 @@ const factories = [
       .map((f) => ({
         type: f,
         label: federations[f],
-        plural: federations[f],
         color: federationColors[f],
         weight: 1,
       }))
       .concat({
         type: Federation.Gleens,
         label: "Gleens",
-        plural: "Gleens",
         color: "--desert",
         weight: 1,
       }),
@@ -428,7 +411,6 @@ const factories = [
     sources: TechTile.values().map((t) => ({
       type: t,
       label: baseTechTileNames[t].name,
-      plural: baseTechTileNames[t].name,
       color: baseTechTileNames[t].color,
       weight: 1,
     })),
@@ -441,7 +423,6 @@ const factories = [
     sources: Object.keys(finalScoringSources).map((tile) => ({
       type: tile,
       label: finalScoringSources[tile].name,
-      plural: finalScoringSources[tile].name,
       color: finalScoringSources[tile].color,
       weight: 1,
     })),
@@ -482,7 +463,7 @@ export function simpleChartDetails<Source extends SimpleSource<any>>(
 
     return {
       backgroundColor: resolveColor(s.color, pl),
-      label: s.plural,
+      label: s.label,
       fill: false,
       getDataPoints: () =>
         getDataPoints(data, initialValue, extractChange, extractLog, () => 0, deltaForEnded, includeRounds),

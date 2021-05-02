@@ -82,4 +82,9 @@ export const resourceNames: ResourceName[] = [
     label: "Re-score federation",
     plural: "Re-score federation",
   },
+  {
+    type: Resource.BowlToken,
+    label: "Token in area 2",
+    plural: "Token in area 2",
+  },
 ];
