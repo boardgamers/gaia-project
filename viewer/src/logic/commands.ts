@@ -205,11 +205,12 @@ export function finalizeShortcuts(ret: ButtonData[]) {
   if (shown.length == 1) {
     const b = shown[0];
     b.shortcuts = [];
-    if (b.label) {
-      if (forceNumericShortcut(b.label)) {
+    const label = b.label ?? b.command;
+    if (label) {
+      if (forceNumericShortcut(label)) {
         b.shortcuts.push("1");
       } else {
-        b.shortcuts.push(b.label.substring(0, 1).toLowerCase());
+        b.shortcuts.push(label.substring(0, 1).toLowerCase());
       }
     }
     b.shortcuts.push("Enter");
