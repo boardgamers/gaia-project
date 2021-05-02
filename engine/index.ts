@@ -13,7 +13,15 @@ import tiles from "./src/tiles";
 import federations from "./src/tiles/federations";
 
 export { boardActions } from "./src/actions";
-export { AvailableHex, canResearchField, canTakeAdvancedTechTile, HighlightHex } from "./src/available-command";
+export {
+  AvailableBuilding,
+  AvailableHex,
+  AvailableResearchData,
+  AvailableResearchTrack,
+  canResearchField,
+  canTakeAdvancedTechTile,
+  HighlightHex,
+} from "./src/available-command";
 export {
   AuctionVariant,
   EngineOptions,

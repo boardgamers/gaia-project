@@ -30,7 +30,7 @@ import Reward from "./reward";
 import { isAdvanced } from "./tiles/techs";
 
 const ISOLATED_DISTANCE = 3;
-const UPGRADE_RESEARCH_COST = "4k";
+export const UPGRADE_RESEARCH_COST = "4k";
 
 export class Offer {
   constructor(readonly offer: string, readonly cost: string) {}
@@ -56,6 +56,9 @@ export type AvailableBuilding = {
   downgrade?: boolean;
   steps?: number;
 };
+
+export type AvailableResearchTrack = { cost: string; field: ResearchField; to: number };
+export type AvailableResearchData = { tracks: AvailableResearchTrack[] };
 
 export function generate(engine: Engine, subPhase: SubPhase = null, data?: any): AvailableCommand[] {
   const player = engine.playerToMove;
@@ -507,7 +510,7 @@ export function canResearchField(engine: Engine, player: PlayerObject, field: Re
 
 export function possibleResearchAreas(engine: Engine, player: Player, cost?: string, data?: any) {
   const commands = [];
-  const tracks = [];
+  const tracks: AvailableResearchTrack[] = [];
   const pl = engine.player(player);
   const fields = ResearchField.values(engine.expansions);
 
@@ -538,7 +541,7 @@ export function possibleResearchAreas(engine: Engine, player: Player, cost?: str
     commands.push({
       name: Command.UpgradeResearch,
       player,
-      data: { tracks },
+      data: { tracks } as AvailableResearchData,
     });
   }
 
