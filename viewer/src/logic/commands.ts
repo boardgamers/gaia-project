@@ -27,6 +27,7 @@ import AvailableCommand, {
   AvailableBuilding,
   AvailableFreeActionData,
   AvailableHex,
+  BrainstoneActionData,
 } from "@gaia-project/engine";
 import { max, range, sortBy } from "lodash";
 import { ButtonData, ButtonWarning, HighlightHexData } from "../data";
@@ -35,6 +36,7 @@ import { boosterNames } from "../data/boosters";
 import { buildingName, buildingShortcut } from "../data/building";
 import { eventDesc } from "../data/event";
 import { resourceNames } from "../data/resources";
+import { moveWarnings } from "../data/warnings";
 
 export const forceNumericShortcut = (label: string) => ["Charge", "Income"].find((b) => label.startsWith(b));
 
@@ -433,4 +435,17 @@ export function freeAndBurnButton(buttons: ButtonData[]): ButtonData {
     shortcuts: ["a"],
     buttons: buttons,
   };
+}
+
+export function brainstoneButtons(data: BrainstoneActionData): ButtonData[] {
+  console.log(data);
+  return data.choices.sort().map((d) => {
+    const area = d.area;
+    return {
+      label: `Brainstone ${area}`,
+      warning: buttonWarning(moveWarnings[d.warning]?.text),
+      command: `${Command.BrainStone} ${area}`,
+      shortcuts: [area == BrainstoneArea.Gaia ? "g" : area.substring("area".length, area.length)],
+    };
+  });
 }

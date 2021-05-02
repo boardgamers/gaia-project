@@ -32,13 +32,19 @@ import { oppositeFaction } from "./factions";
 import { GaiaHex } from "./gaia-hex";
 import SpaceMap from "./map";
 import PlayerObject, { BuildCheck, BuildWarning } from "./player";
-import PlayerData, { resourceLimits } from "./player-data";
+import PlayerData, { BrainstoneDest, resourceLimits } from "./player-data";
 import * as researchTracks from "./research-tracks";
 import Reward from "./reward";
 import { isAdvanced } from "./tiles/techs";
 
 const ISOLATED_DISTANCE = 3;
 export const UPGRADE_RESEARCH_COST = "4k";
+
+export type BrainstoneWarning = "brainstone-charges-wasted";
+
+export type BrainstoneActionData = {
+  choices: { area: BrainstoneDest; warning?: BrainstoneWarning }[];
+};
 
 export type AvailableFreeAction = {
   action: FreeAction;

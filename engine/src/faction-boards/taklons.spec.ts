@@ -52,6 +52,54 @@ describe("Taklons", () => {
     expect(() => new Engine([...moves, "p2 charge 1pw. brainstone area3"])).to.throw();
   });
 
+  describe("choices when spending power", () => {
+    const moves = Engine.parseMoves(`
+      init 2 661
+      p1 faction taklons
+      p2 faction terrans
+      taklons build m 1B5
+      terrans build m 1B1
+      terrans build m 6B1
+      taklons build m 4B2
+      terrans booster booster1
+      taklons booster booster9
+      taklons brainstone area3
+    `);
+
+    it("should warn when wasting power charges", () => {
+      expect(new Engine([...moves, "taklons spend 2pw for 2c"]).availableCommands[0].data).to.deep.equal({
+        choices: [
+          {
+            area: "area1",
+            warning: "brainstone-charges-wasted",
+          },
+        ],
+      });
+    });
+    it("should ask about brainstone without warning", () => {
+      const e = new Engine([...moves, "taklons burn 3. spend 3pw for 3c"]);
+      expect(e.player(Player.Player1).data.brainstone).to.equal(BrainstoneArea.Area3);
+      expect(e.availableCommands[0].data).to.deep.equal({
+        choices: [
+          { area: BrainstoneArea.Area1, warning: undefined },
+          { area: BrainstoneArea.Area3, warning: undefined },
+        ],
+      });
+    });
+
+    it("should use brainstone if needed", () => {
+      const engine = new Engine([...moves, "taklons burn 2. spend 4pw for 4c"]);
+      expect(engine.moveHistory.pop()).to.deep.equal("taklons burn 2. spend 4pw for 4c");
+      expect(engine.player(Player.Player1).data.brainstone).to.equal(BrainstoneArea.Area1);
+    });
+
+    it("should not use brainstone if less than 3 power", () => {
+      const engine = new Engine([...moves, "taklons burn 2. spend 1pw for 1c"]);
+      expect(engine.moveHistory.pop()).to.deep.equal("taklons burn 2. spend 1pw for 1c");
+      expect(engine.player(Player.Player1).data.brainstone).to.equal(BrainstoneArea.Area3);
+    });
+  });
+
   it("should not cause problems when deciding brainstone destination in income phase", () => {
     const moves = Engine.parseMoves(`
       init 3 9876

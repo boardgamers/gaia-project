@@ -8,6 +8,7 @@ import { ChargeDecision, ChargeRequest, decideChargeRequest } from "./auto-charg
 import AvailableCommand, {
   AvailableBoardActionData,
   AvailableFreeActionData,
+  BrainstoneActionData,
   generate as generateAvailableCommands,
   Offer,
   remainingFactions,
@@ -41,7 +42,7 @@ import {
 import Event, { EventSource } from "./events";
 import SpaceMap, { MapConfiguration } from "./map";
 import Player from "./player";
-import PlayerData, { MoveTokens } from "./player-data";
+import PlayerData, { BrainstoneDest, MoveTokens } from "./player-data";
 import * as researchTracks from "./research-tracks";
 import Reward from "./reward";
 import federations from "./tiles/federations";
@@ -397,7 +398,7 @@ export default class Engine {
     player.data.on(`gain-${Resource.UpgradeLowest}`, () =>
       this.processNextMove(SubPhase.UpgradeResearch, { bescods: true }, true)
     );
-    player.data.on("brainstone", (areas) => this.processNextMove(SubPhase.BrainStone, areas));
+    player.data.on("brainstone", (data: BrainstoneActionData) => this.processNextMove(SubPhase.BrainStone, data));
     // Test before upgrading research that it's actually possible. Needed when getting up-int or up-nav in
     // the spaceship expansion
     player.data.on("beforeResearchUpgrade", (field) => {
@@ -509,7 +510,7 @@ export default class Engine {
       return `${Command.ChooseIncome} ${cmd.data}`;
     } else if (this.availableCommands.some((cmd) => cmd.name === Command.BrainStone)) {
       const cmd = this.findAvailableCommand(this.playerToMove, Command.BrainStone);
-      return `${Command.BrainStone} ${cmd.data[0]}`;
+      return `${Command.BrainStone} ${(cmd.data as BrainstoneActionData).choices[0].area}`;
     } else if (
       this.availableCommands.some(
         (cmd) =>
@@ -660,7 +661,7 @@ export default class Engine {
     const pl = this.player(this.playerToMove);
 
     if (pl.settings.autoBrainstone) {
-      const choices = cmd.data as Array<BrainstoneArea | "discard">;
+      const choices = (cmd.data as BrainstoneActionData).choices.map((c) => c.area);
 
       if (choices.some((choice) => choice === BrainstoneArea.Gaia || choice === "discard")) {
         return false;
@@ -799,7 +800,7 @@ export default class Engine {
 
     assert(
       this.playerToMove === (player as PlayerEnum),
-      "Wrong turn order in move " + move + ", expected player " + (this.playerToMove + 1)
+      "Wrong turn order in move " + move + ", expected player " + (this.playerToMove + 1) + this.assertContext()
     );
     this.processedPlayer = player;
 
@@ -885,14 +886,13 @@ export default class Engine {
   checkCommand(command: Command) {
     assert(
       (this.availableCommand = this.findAvailableCommand(this.playerToMove, command)),
-      `Command ${command} is not in the list of available commands: ${this.availableCommands.map(
-        (cmd) => cmd.name
-      )}, ${this.assertContext()}`
+      `Command ${command} is not in the list of available commands: ${this.assertContext()}`
     );
   }
 
   private assertContext(): string {
-    return `last command: ${this.moveHistory[this.moveHistory.length - 1]}, index: ${this.moveHistory.length}`;
+    return `last command: ${this.moveHistory[this.moveHistory.length - 1]}, index: ${this.moveHistory.length},
+    available: ${JSON.stringify(this.generateAvailableCommandsIfNeeded())}`;
   }
 
   doFreeActions(subPhase: SubPhase) {
@@ -1732,12 +1732,11 @@ export default class Engine {
     this.players[player].data.burnPower(+cost);
   }
 
-  [Command.BrainStone](player: PlayerEnum, dest: string) {
-    assert(
-      this.availableCommand.data.includes(dest),
-      "Possible brain stone areas: " + this.availableCommand.data.join(", ")
-    );
-    this.players[player].data.brainstoneDest = dest as any;
+  [Command.BrainStone](player: PlayerEnum, dest: BrainstoneDest) {
+    const data = this.availableCommand.data as BrainstoneActionData;
+    const areas = data.choices.map((a) => a.area);
+    assert(areas.includes(dest), "Possible brain stone areas: " + areas.join(", "));
+    this.players[player].data.brainstoneDest = dest;
   }
 
   [Command.Action](player: PlayerEnum, action: BoardAction) {

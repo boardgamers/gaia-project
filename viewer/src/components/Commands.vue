@@ -82,9 +82,9 @@ import { ButtonData, GameContext, ModalButtonData } from "../data";
 import { factionDesc, factionShortcut } from "../data/factions";
 import { FactionCustomization } from "@gaia-project/engine/src/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
-import { buildWarnings } from "../data/warnings";
+import { moveWarnings } from "../data/warnings";
 import {
-  advanceResearchWarning, boardActionButton,
+  advanceResearchWarning, boardActionButton, brainstoneButtons,
   buildButtons, burnButton,
   buttonWarning,
   chargeWarning,
@@ -258,7 +258,7 @@ export default class Commands extends Vue {
   }
 
   get warnings(): string[] {
-    return this.currentMoveWarnings?.map(w => buildWarnings[w].text) ?? [];
+    return this.currentMoveWarnings?.map(w => moveWarnings[w].text) ?? [];
   }
 
   get factions() {
@@ -451,16 +451,9 @@ export default class Commands extends Vue {
         }
 
         case Command.BrainStone: {
-          ret.push(
-            ...command.data.sort().map((area) => ({
-              label: `Brainstone ${area}`,
-              command: `${command.name} ${area}`,
-              shortcuts: [area == BrainstoneArea.Gaia ? "g" : area.substring("area".length, area.length)]
-            }))
-          );
+          ret.push(...brainstoneButtons(command.data));
           break;
         }
-
         case Command.Spend: {
           freeAndBurn.push(...freeActionButton(command.data));
           break;
@@ -469,7 +462,6 @@ export default class Commands extends Vue {
           freeAndBurn.push(burnButton(this.player, command));
           break;
         }
-
         case Command.Action: {
           ret.push(boardActionButton(command.data));
           break;
@@ -589,7 +581,7 @@ export default class Commands extends Vue {
             hexes: new Map(fed.hexes.split(",").map((coord) => [this.engine.map.getS(coord), { coordinates: coord }])),
             hover: true,
             buttons: tilesButtons,
-            warning: buttonWarning(fed.warning != null ? buildWarnings[fed.warning].text : null)
+            warning: buttonWarning(fed.warning != null ? moveWarnings[fed.warning].text : null)
           } as ButtonData));
 
           locationButtons.push({

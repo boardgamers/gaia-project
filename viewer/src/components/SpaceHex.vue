@@ -70,7 +70,7 @@ import { buildingName } from "../data/building";
 import { planetNames } from "../data/planets";
 import { factionPlanet } from "@gaia-project/engine/src/factions";
 import { HighlightHexData } from "../data";
-import { buildWarnings } from "../data/warnings";
+import { moveWarnings } from "../data/warnings";
 
 @Component<SpaceHex>({
   components: {
@@ -99,7 +99,7 @@ export default class SpaceHex extends Vue {
 
   warning(hex: GaiaHex): string {
     const warnings = this.highlightedHexes.get(hex)?.warnings;
-    return warnings?.length > 0 ? warnings?.map(w => buildWarnings[w].text).join(", ") : null;
+    return warnings?.length > 0 ? warnings?.map(w => moveWarnings[w].text).join(", ") : null;
   }
 
   cost(hex: GaiaHex) {
