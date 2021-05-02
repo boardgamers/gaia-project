@@ -40,9 +40,14 @@ import { moveWarnings } from "../data/warnings";
 
 export const forceNumericShortcut = (label: string) => ["Charge", "Income"].find((b) => label.startsWith(b));
 
-export function withShortcut(label: string, shortcut: string, skip: string) {
-  const found = label.indexOf(skip);
-  const skipIndex = found < 0 ? 0 : found + skip.length;
+export function withShortcut(label: string, shortcut: string, skip: string[]) {
+  let skipIndex = 0;
+  for (const s of skip) {
+    const found = label.indexOf(s);
+    if (found > 0) {
+      skipIndex = found + s.length;
+    }
+  }
 
   const i = label.toLowerCase().indexOf(shortcut, skipIndex);
 
@@ -360,14 +365,27 @@ function resourceSymbol(type: Resource) {
   }
 }
 
-function newConversion(cost: Reward[], income: Reward[]) {
+function newConversion(cost: Reward[], income: Reward[], player: Player) {
   return {
-    from: cost.map((r) => new Reward(r.count, resourceSymbol(r.type))),
+    from: cost.map((r) => new Reward(
+      r.type == Resource.ChargePower ? Math.ceil(r.count / player.data.tokenModifier) : r.count,
+      resourceSymbol(r.type)
+    )),
     to: income.map((r) => new Reward(r.count, resourceSymbol(r.type))),
   };
 }
 
-export function boardActionButton(data: AvailableBoardActionData): ButtonData {
+function conversionCommand(cost: Reward[], income: Reward[], player: Player, shortcut: string, skipShortcut: string[], command: string, times?: number[]) {
+  return {
+    label: withShortcut(conversionLabel(cost, income), shortcut, skipShortcut),
+    conversion: newConversion(cost, income, player),
+    shortcuts: [shortcut],
+    command: command,
+    times: times,
+  };
+}
+
+export function boardActionButton(data: AvailableBoardActionData, player: Player): ButtonData {
   return {
     label: "Power/Q.I.C Action",
     shortcuts: ["q"],
@@ -378,30 +396,29 @@ export function boardActionButton(data: AvailableBoardActionData): ButtonData {
       const income = Reward.merge(Event.parse(act.income, null).flatMap((e) => e.rewards));
 
       const shortcut = boardActionNames[act.name].shortcut;
-      return {
-        label: withShortcut(conversionLabel(cost, income), shortcut, "Power Charges"),
-        conversion: newConversion(cost, income),
-        shortcuts: [shortcut],
-        command: act.name,
-      };
-    }),
+      return conversionCommand(
+        cost,
+        income,
+        player,
+        shortcut,
+        ["Power Charges", "Terraforming"],
+        act.name);
+    })
   };
 }
 
-export function freeActionButton(data: AvailableFreeActionData): ButtonData[] {
-  return data.acts.map((act) => {
+export function freeActionButton(data: AvailableFreeActionData, player: Player): ButtonData[] {
+  return data.acts.filter(a => !a.hide).map((act) => {
     const conversion = freeActionConversions[act.action];
 
-    const cost = Reward.parse(conversion.cost);
-    const income = Reward.parse(conversion.income);
-
-    return {
-      label: conversionLabel(cost, income),
-      conversion: newConversion(cost, income),
-      shortcuts: [freeActionShortcuts[act.action]],
-      command: `${Command.Spend} ${conversion.cost} for ${conversion.income}`,
-      times: act.range,
-    };
+    return conversionCommand(
+      Reward.parse(conversion.cost),
+      Reward.parse(conversion.income),
+      player,
+      freeActionShortcuts[act.action],
+      [],
+      `${Command.Spend} ${conversion.cost} for ${conversion.income}`,
+      act.range);
   });
 }
 

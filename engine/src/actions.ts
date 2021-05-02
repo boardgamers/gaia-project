@@ -1,4 +1,6 @@
 import { BoardAction } from "./enums";
+import { AvailableFreeAction, freeActionData } from "./available-command";
+import Player from "./player";
 
 // QIC to extend range is already included in the distance calculation
 
@@ -43,14 +45,14 @@ export type ResourceConversion = { cost: string; income: string };
 export type ConversionTable = { [key in FreeAction]?: ResourceConversion };
 
 export class ConversionPool {
-  public actions: FreeAction[] = [];
+  public actions: AvailableFreeAction[] = [];
 
-  constructor(table: ConversionTable) {
-    this.push(table);
+  constructor(table: ConversionTable, player: Player) {
+    this.push(table, player);
   }
 
-  push(table: ConversionTable) {
-    this.actions.push(...(Object.keys(table).map((k) => Number(k)) as FreeAction[]));
+  push(table: ConversionTable, player: Player) {
+    this.actions.push(...freeActionData(Object.keys(table).map((k) => Number(k)) as FreeAction[], player));
   }
 }
 

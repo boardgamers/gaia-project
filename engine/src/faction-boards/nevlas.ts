@@ -22,10 +22,15 @@ const nevlas: FactionBoardVariants = {
     handlers: {
       [`build-${Building.PlanetaryInstitute}`]: (player: Player) => (player.data.tokenModifier = 2),
       freeActionChoice: (player: Player, pool: ConversionPool) => {
-        pool.push(freeActionsNevlas);
+        pool.push(freeActionsNevlas, player);
         if (player.data.hasPlanetaryInstitute()) {
-          pool.push(freeActionsNevlasPI);
-          pool.actions.splice(pool.actions.indexOf(FreeAction.PowerToCredit), 1);
+          pool.push(freeActionsNevlasPI, player);
+          for (const action of pool.actions) {
+            if (action.action === FreeAction.PowerToCredit
+              || (action.action === FreeAction.PowerToOre && player.data.power.area3 >= 3)) {
+              action.hide = true;
+            }
+          }
         }
       },
     },

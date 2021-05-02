@@ -49,6 +49,7 @@ export type BrainstoneActionData = {
 export type AvailableFreeAction = {
   action: FreeAction;
   range?: number[];
+  hide?: boolean;
 };
 
 export type AvailableFreeActionData = {
@@ -467,7 +468,7 @@ export function possibleFreeActions(pl: PlayerObject) {
   // free action - spend
   const commands: AvailableCommand[] = [];
 
-  const pool = new ConversionPool(freeActions);
+  const pool = new ConversionPool(freeActions, pl);
   pl.emit("freeActionChoice", pool);
 
   const spendCommand = transformToSpendCommand(pool, pl);
@@ -487,9 +488,9 @@ export function possibleFreeActions(pl: PlayerObject) {
   return commands;
 }
 
-function transformToSpendCommand(actions: ConversionPool, player: PlayerObject) {
+export function freeActionData(availableFreeActions: FreeAction[], player: PlayerObject): AvailableFreeAction[] {
   const acts: AvailableFreeAction[] = [];
-  for (const freeAction of actions.actions) {
+  for (const freeAction of availableFreeActions) {
     const maxPay = player.maxPayRange(Reward.parse(freeActionConversions[freeAction].cost));
     if (maxPay > 0) {
       acts.push({
@@ -498,9 +499,12 @@ function transformToSpendCommand(actions: ConversionPool, player: PlayerObject) 
       });
     }
   }
+  return acts;
+}
 
-  if (acts.length > 0) {
-    const data: AvailableFreeActionData = { acts: acts };
+export function transformToSpendCommand(actions: ConversionPool, player: PlayerObject) {
+  if (actions.actions.length > 0) {
+    const data: AvailableFreeActionData = { acts: actions.actions };
     return { name: Command.Spend, player: player.player, data: data };
   }
   return null;
@@ -700,10 +704,10 @@ export function possibleGaiaFreeActions(engine: Engine, player: Player) {
   const pl = engine.player(player);
 
   if (pl.canGaiaTerrans()) {
-    commands.push(transformToSpendCommand(new ConversionPool(freeActionsTerrans), pl));
+    commands.push(transformToSpendCommand(new ConversionPool(freeActionsTerrans, pl), pl));
   } else if (pl.canGaiaItars()) {
     if (possibleTechTiles(engine, player).length > 0) {
-      commands.push(transformToSpendCommand(new ConversionPool(freeActionsItars), pl));
+      commands.push(transformToSpendCommand(new ConversionPool(freeActionsItars, pl), pl));
     }
 
     commands.push({

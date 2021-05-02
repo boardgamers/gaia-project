@@ -455,7 +455,7 @@ export default class Commands extends Vue {
           break;
         }
         case Command.Spend: {
-          freeAndBurn.push(...freeActionButton(command.data));
+          freeAndBurn.push(...freeActionButton(command.data, this.player));
           break;
         }
         case Command.BurnPower: {
@@ -463,7 +463,7 @@ export default class Commands extends Vue {
           break;
         }
         case Command.Action: {
-          ret.push(boardActionButton(command.data));
+          ret.push(boardActionButton(command.data, this.player));
           break;
         }
 

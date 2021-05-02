@@ -10,7 +10,7 @@ const hadschHallas: FactionBoardVariants = {
     handlers: {
       freeActionChoice: (player: Player, pool: ConversionPool) => {
         if (player.data.hasPlanetaryInstitute()) {
-          pool.push(freeActionsHadschHallas);
+          pool.push(freeActionsHadschHallas, player);
         }
       },
     },

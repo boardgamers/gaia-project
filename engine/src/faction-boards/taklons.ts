@@ -8,7 +8,7 @@ const taklons: FactionBoardVariants = {
     faction: Faction.Taklons,
     brainstone: BrainstoneArea.Area1,
     handlers: {
-      freeActionChoice: (player: Player, pool: ConversionPool) => pool.push(freeActionsTaklons),
+      freeActionChoice: (player: Player, pool: ConversionPool) => pool.push(freeActionsTaklons, player),
     },
   },
 };

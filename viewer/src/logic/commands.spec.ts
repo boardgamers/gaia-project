@@ -1,4 +1,4 @@
-import { AvailableFreeAction, FreeAction } from "@gaia-project/engine";
+import { AvailableFreeAction, FreeAction, Player } from "@gaia-project/engine";
 import { expect } from "chai";
 import { ButtonData } from "../data";
 import { freeActionButton, withShortcut } from "./commands";
@@ -8,14 +8,15 @@ describe("commands", () => {
     const avail: AvailableFreeAction = {
       action: FreeAction.PowerToOreAndCredit,
     };
-    const button = freeActionButton({ acts: [avail] });
+
+    const button = freeActionButton({ acts: [avail] }, { data: {tokenModifier: 2} } as Player);
     expect(button).to.deep.equal([
       {
         command: "spend 4pw for 1o,1c",
         conversion: {
           from: [
             {
-              count: 4,
+              count: 2,
               type: "pay-pw",
             },
           ],
@@ -30,7 +31,7 @@ describe("commands", () => {
             },
           ],
         },
-        label: "4 Power Charges ⇒ 1 Ore and 1 Credit",
+        label: "4 Power Charges ⇒ 1 Ore and 1 Cred<u>i</u>t",
         shortcuts: ["i"],
         times: undefined,
       },
@@ -38,7 +39,7 @@ describe("commands", () => {
   });
 
   it("should add shortcut underline", () => {
-    const s = withShortcut("5 Power Charges => 2 Terraforming steps", "e", "Power Charges");
-    expect(s).to.equal("5 Power Charges => 2 T<u>e</u>rraforming steps");
+    const s = withShortcut("5 Power Charges => 2 Terraforming steps", "e", ["Power Charges", "Terraforming"]);
+    expect(s).to.equal("5 Power Charges => 2 Terraforming st<u>e</u>ps");
   });
 });

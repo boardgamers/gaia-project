@@ -17,7 +17,7 @@ const baltaks: FactionBoardVariants = {
       area2: 2,
     },
     handlers: {
-      freeActionChoice: (player: Player, pool: ConversionPool) => pool.push(freeActionsBaltaks),
+      freeActionChoice: (player: Player, pool: ConversionPool) => pool.push(freeActionsBaltaks, player),
     },
   },
 };

@@ -48,7 +48,7 @@ export default class ButtonContent extends Vue {
       if (shortcut == "Enter" || l.includes("<u>")) {
         return l;
       }
-      return withShortcut(l, shortcut, "Upgrade to");
+      return withShortcut(l, shortcut, ["Upgrade to"]);
     }
     return l;
   }
