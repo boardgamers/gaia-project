@@ -1,4 +1,5 @@
 import { ConversionPool, FreeAction, freeActionsNevlas, freeActionsNevlasPI } from "../actions";
+import { conversionToFreeAction } from "../available-command";
 import { Building, Faction } from "../enums";
 import Player from "../player";
 import { FactionBoardVariants } from "./types";
@@ -26,10 +27,8 @@ const nevlas: FactionBoardVariants = {
         if (player.data.hasPlanetaryInstitute()) {
           pool.push(freeActionsNevlasPI, player);
           for (const action of pool.actions) {
-            if (
-              action.action === FreeAction.PowerToCredit ||
-              (action.action === FreeAction.PowerToOre && player.data.power.area3 >= 3)
-            ) {
+            const a = conversionToFreeAction(action);
+            if (a === FreeAction.PowerToCredit || a === FreeAction.PowerToOre) {
               action.hide = true;
             }
           }

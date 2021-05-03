@@ -47,7 +47,8 @@ export type BrainstoneActionData = {
 };
 
 export type AvailableFreeAction = {
-  action: FreeAction;
+  cost: string;
+  income: string;
   range?: number[];
   hide?: boolean;
 };
@@ -93,6 +94,12 @@ export type AvailableBuilding = {
 
 export type AvailableResearchTrack = { cost: string; field: ResearchField; to: number };
 export type AvailableResearchData = { tracks: AvailableResearchTrack[] };
+
+export function conversionToFreeAction(act: AvailableFreeAction): FreeAction | null {
+  const entry = Object.entries(freeActionConversions).find(([k, v]) => v.cost === act.cost && v.income === act.income);
+  // a new engine might add a conversion that the viewer doesn't know about yet
+  return entry !== null ? Number(entry[0]) : null;
+}
 
 export function generate(engine: Engine, subPhase: SubPhase = null, data?: any): AvailableCommand[] {
   const player = engine.playerToMove;
@@ -491,10 +498,12 @@ export function possibleFreeActions(pl: PlayerObject) {
 export function freeActionData(availableFreeActions: FreeAction[], player: PlayerObject): AvailableFreeAction[] {
   const acts: AvailableFreeAction[] = [];
   for (const freeAction of availableFreeActions) {
-    const maxPay = player.maxPayRange(Reward.parse(freeActionConversions[freeAction].cost));
+    const conversion = freeActionConversions[freeAction];
+    const maxPay = player.maxPayRange(Reward.parse(conversion.cost));
     if (maxPay > 0) {
       acts.push({
-        action: freeAction,
+        cost: conversion.cost,
+        income: conversion.income,
         range: maxPay > 1 ? range(1, maxPay + 1) : undefined,
       });
     }

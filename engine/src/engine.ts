@@ -2,7 +2,7 @@ import assert from "assert";
 import { isEqual, range, set, uniq } from "lodash";
 import shuffleSeed from "shuffle-seed";
 import { version } from "../package.json";
-import { boardActions, FreeAction, freeActionConversions } from "./actions";
+import { boardActions } from "./actions";
 import { finalRankings, gainFinalScoringVictoryPoints } from "./algorithms/scoring";
 import { ChargeDecision, ChargeRequest, decideChargeRequest } from "./auto-charge";
 import AvailableCommand, {
@@ -515,7 +515,7 @@ export default class Engine {
       this.availableCommands.some(
         (cmd) =>
           cmd.name === Command.Spend &&
-          (cmd.data as AvailableFreeActionData).acts.some((a) => a.action === FreeAction.GaiaTokenToCredit)
+          (cmd.data as AvailableFreeActionData).acts[0].cost.includes(Resource.GainTokenGaiaArea)
       )
     ) {
       // Terrans spending power in gaia phase to create resources
@@ -1696,12 +1696,11 @@ export default class Engine {
     // tslint:disable-next-line no-shadowed-variable
     const isPossible = (cost: Reward[], income: Reward[]) => {
       for (const action of data.acts) {
-        const conversion = freeActionConversions[action.action];
-        const actionCost = Reward.parse(conversion.cost);
+        const actionCost = Reward.parse(action.cost);
         if (Reward.includes(cost, actionCost)) {
           // Remove income & cost of action
           const newCost = Reward.merge(cost, Reward.negative(actionCost));
-          let newIncome = Reward.merge(income, Reward.negative(Reward.parse(conversion.income)));
+          let newIncome = Reward.merge(income, Reward.negative(Reward.parse(action.income)));
 
           // Convert unused income into cost
           newCost.push(...Reward.negative(newIncome.filter((rew) => rew.count < 0)));

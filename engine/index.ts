@@ -24,6 +24,7 @@ export {
   BrainstoneActionData,
   canResearchField,
   canTakeAdvancedTechTile,
+  conversionToFreeAction,
   HighlightHex,
 } from "./src/available-command";
 export {

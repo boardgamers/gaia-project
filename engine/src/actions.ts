@@ -31,14 +31,14 @@ export enum FreeAction {
   //Nevlas
   PowerToGaiaForKnowledge,
   PowerToOreAndCredit,
-  PowerToDoubleCredit,
+  PowerTo2Credit,
   PowerTo2Ore,
 
   //Baltaks
   GaiaFormerToQic,
 
   //Taklons
-  PowerToTripleCredit,
+  PowerTo3Credit,
 }
 
 export type ResourceConversion = { cost: string; income: string };
@@ -87,7 +87,7 @@ export const freeActionsNevlas: ConversionTable = {
 };
 
 export const freeActionsNevlasPI: ConversionTable = {
-  [FreeAction.PowerToDoubleCredit]: { cost: "2pw", income: "2c" }, // this is for convenience
+  [FreeAction.PowerTo2Credit]: { cost: "2pw", income: "2c" }, // this is for convenience
   [FreeAction.PowerToOreAndCredit]: { cost: "4pw", income: "1o,1c" },
   [FreeAction.PowerTo2Ore]: { cost: "6pw", income: "2o" },
 };
@@ -95,7 +95,7 @@ export const freeActionsNevlasPI: ConversionTable = {
 export const freeActionsBaltaks: ConversionTable = { [FreeAction.GaiaFormerToQic]: { cost: "1gf", income: "1q" } };
 
 // this is for convenience
-export const freeActionsTaklons: ConversionTable = { [FreeAction.PowerToTripleCredit]: { cost: "3pw", income: "3c" } };
+export const freeActionsTaklons: ConversionTable = { [FreeAction.PowerTo3Credit]: { cost: "3pw", income: "3c" } };
 
 export const freeActionConversions: ConversionTable = Object.assign(
   {},

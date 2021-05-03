@@ -40,12 +40,12 @@ export const freeActionShortcuts: { [key in FreeAction]: string } = {
   //Nevlas
   [FreeAction.PowerToGaiaForKnowledge]: "w",
   [FreeAction.PowerToOreAndCredit]: "i",
-  [FreeAction.PowerToDoubleCredit]: "c", // replaces normal PowerToCredit, thus same shortcut
+  [FreeAction.PowerTo2Credit]: "c", // replaces normal PowerToCredit, thus same shortcut
   [FreeAction.PowerTo2Ore]: "e",
 
   //Baltaks
   [FreeAction.GaiaFormerToQic]: "i",
 
   //Taklons
-  [FreeAction.PowerToTripleCredit]: "t",
+  [FreeAction.PowerTo3Credit]: "t",
 };

@@ -11,10 +11,10 @@ import Engine, {
   BrainstoneArea,
   Building,
   Command,
+  conversionToFreeAction,
   Event,
   Expansion,
   Faction,
-  freeActionConversions,
   GaiaHex,
   HighlightHex,
   Operator,
@@ -37,6 +37,10 @@ import { moveWarnings } from "../data/warnings";
 export const forceNumericShortcut = (label: string) => ["Charge", "Income"].find((b) => label.startsWith(b));
 
 export function withShortcut(label: string, shortcut: string, skip: string[]) {
+  if (!shortcut) {
+    return label;
+  }
+
   let skipIndex = 0;
   for (const s of skip) {
     const found = label.indexOf(s);
@@ -388,7 +392,7 @@ function conversionCommand(
     tooltip: withShortcut(conversionLabel(cost, income), shortcut, skipShortcut),
     label: "<u></u>",
     conversion: newConversion(cost, income, player),
-    shortcuts: [shortcut],
+    shortcuts: shortcut != null ? [shortcut] : [],
     command: command,
     times: times,
   };
@@ -409,20 +413,18 @@ export function boardActionButton(data: AvailableBoardActionData, player: Player
     }),
   };
 }
-
+2;
 export function freeActionButton(data: AvailableFreeActionData, player: Player): ButtonData[] {
   return data.acts
     .filter((a) => !a.hide)
     .map((act) => {
-      const conversion = freeActionConversions[act.action];
-
       return conversionCommand(
-        Reward.parse(conversion.cost),
-        Reward.parse(conversion.income),
+        Reward.parse(act.cost),
+        Reward.parse(act.income),
         player,
-        freeActionShortcuts[act.action],
+        freeActionShortcuts[conversionToFreeAction(act)],
         [],
-        `${Command.Spend} ${conversion.cost} for ${conversion.income}`,
+        `${Command.Spend} ${act.cost} for ${act.income}`,
         act.range
       );
     });

@@ -1,13 +1,11 @@
-import { AvailableFreeAction, FreeAction, Player } from "@gaia-project/engine";
+import { AvailableFreeAction, FreeAction, freeActionConversions, Player } from "@gaia-project/engine";
 import { expect } from "chai";
 import { ButtonData } from "../data";
 import { freeActionButton, withShortcut } from "./commands";
 
 describe("commands", () => {
   it("should assign shortcut for free action", () => {
-    const avail: AvailableFreeAction = {
-      action: FreeAction.PowerToOreAndCredit,
-    };
+    const avail: AvailableFreeAction = freeActionConversions[FreeAction.PowerToOreAndCredit];
 
     const button = freeActionButton({ acts: [avail] }, { data: { tokenModifier: 2 } } as Player);
     expect(button).to.deep.equal([
