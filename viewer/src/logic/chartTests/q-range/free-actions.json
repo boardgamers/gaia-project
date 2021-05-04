@@ -39,7 +39,7 @@
       }
     }
   },
-  "labels": ["Credit", "Ore", "Knowledge", "QIC", "Gained Tokens", "Range +2"],
+  "labels": ["Credits", "Ores", "Knowledge", "QICs", "Gained Tokens", "Range +2"],
   "datasets": [
     {
       "label": "Ivits (3)",

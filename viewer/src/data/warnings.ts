@@ -1,6 +1,7 @@
 import { BuildWarning } from "@gaia-project/engine";
+import { BrainstoneWarning } from "@gaia-project/engine/src/available-command";
 
-export const buildWarnings: { [key in BuildWarning]: { text: string } } = {
+export const moveWarnings: { [key in BuildWarning | BrainstoneWarning]: { text: string } } = {
   "step-booster-not-used": { text: "Step booster is not used." },
   "range-booster-not-used": { text: "Range booster is not used." },
   "expensive-terraforming": { text: "Terraforming using more than 1 ore per step." },
@@ -13,4 +14,7 @@ export const buildWarnings: { [key in BuildWarning]: { text: string } } = {
     text: "Building on a new planet type with the planetary institute would give 3 knowledge.",
   },
   "expensive-trade-station": { text: "Trade station for 6c instead of 3c." },
+  "brainstone-charges-wasted": {
+    text: "Some of the 3 brainstone charges are wasted. Convert 3 power charges to 3 credit at once.",
+  },
 };

@@ -18,12 +18,13 @@ import Engine, {
   TechTilePos,
 } from "@gaia-project/engine";
 import { sum } from "lodash";
-import { boardActionNames } from "../data/board-actions";
+import { boardActionNames } from "../data/actions";
 import { boosterNames } from "../data/boosters";
 import { planetsWithSteps } from "../data/factions";
 import { federationColors } from "../data/federations";
 import { planetNames } from "../data/planets";
 import { researchNames } from "../data/research";
+import { resourceNames } from "../data/resources";
 import { baseTechTileNames } from "../data/tech-tiles";
 import {
   ChartColor,
@@ -87,7 +88,6 @@ export function planetsForSteps(type: TerraformingSteps, planet: Planet): Planet
 export type SimpleSource<Type> = {
   type: Type;
   label: string;
-  plural: string;
   color: ChartColor;
   weight: number;
 };
@@ -118,74 +118,68 @@ function extractLogMux<T>(mux: { [key in Command]?: ExtractLog<SimpleSource<T>> 
   };
 }
 
-type ResourceSource = SimpleSource<Resource | "pay-pw" | "burn-token" | "range"> & { inverseOf?: Resource };
+type ResourceSource = SimpleSource<Resource | "range"> & { inverseOf?: Resource };
 
-const resourceSources: ResourceSource[] = [
+const resourceWeights: { type: Resource; color: string; weight: number; inverseOf?: Resource }[] = [
   {
     type: Resource.Credit,
-    label: "Credit",
-    plural: "Credits",
     color: "--res-credit",
     weight: 1,
   },
   {
     type: Resource.Ore,
-    label: "Ore",
-    plural: "Ores",
     color: "--res-ore",
     weight: 3,
   },
   {
     type: Resource.Knowledge,
-    label: "Knowledge",
-    plural: "Knowledge",
     color: "--res-knowledge",
     weight: 4,
   },
   {
     type: Resource.Qic,
-    label: "QIC",
-    plural: "QICs",
     color: "--res-qic",
     weight: 4,
   },
   {
     type: Resource.ChargePower,
-    label: "Power Charges",
-    plural: "Power Charges",
     color: "--res-power",
     weight: 0,
   },
   {
-    type: "pay-pw",
+    type: Resource.PayPower,
     inverseOf: Resource.ChargePower,
-    label: "Spent Power",
-    plural: "Spent Power",
     color: "--lost",
     weight: 0,
   },
   {
     type: Resource.GainToken,
-    label: "Gained Tokens",
-    plural: "Gained Tokens",
     color: "--recent",
     weight: 0,
   },
   {
-    type: "burn-token",
-    label: "Burned Tokens",
-    plural: "Burned Tokens",
+    type: Resource.BurnToken,
     color: "--current-round",
     weight: 0,
   },
 ];
+
+export const resourceSources: ResourceSource[] = resourceWeights.map((w) => {
+  const n = resourceNames.find((n) => n.type == w.type);
+  return {
+    type: w.type,
+    weight: w.weight,
+    color: w.color,
+    inverseOf: w.inverseOf,
+    label: n.plural,
+  };
+});
 
 const freeActionSources = resourceSources
   .filter((s) => s.weight > 0 || s.type == Resource.GainToken)
   .concat({
     type: "range",
     label: "Range +2",
-    plural: "Range +2",
     color: "--rt-nav",
     weight: 0,
   });
@@ -200,7 +194,7 @@ const factories = [
         (resource == source.type && change > 0) || (resource == source.inverseOf && change < 0) ? Math.abs(change) : 0
       ),
     extractLog: statelessExtractLog((e) =>
-      e.source.type == "burn-token" && e.cmd.command == Command.BurnPower ? Number(e.cmd.args[0]) : 0
+      e.source.type == Resource.BurnToken && e.cmd.command == Command.BurnPower ? Number(e.cmd.args[0]) : 0
     ),
     sources: resourceSources,
   } as SimpleSourceFactory<ResourceSource>,
@@ -237,7 +231,6 @@ const factories = [
     sources: BoardAction.values().map((action) => ({
       type: action,
       label: boardActionNames[action].name,
-      plural: boardActionNames[action].name,
       color: boardActionNames[action].color,
       weight: 1,
     })),
@@ -259,42 +252,36 @@ const factories = [
       {
         type: Building.Mine,
         label: "Mine",
-        plural: "Mines",
         color: "--res-ore",
         weight: 1,
       },
       {
         type: Building.TradingStation,
         label: "Trading Station",
-        plural: "Trading Stations",
         color: "--res-credit",
         weight: 2,
       },
       {
         type: Building.ResearchLab,
         label: "Research Lab",
-        plural: "Research Labs",
         color: "--res-knowledge",
         weight: 2,
       },
       {
         type: Building.PlanetaryInstitute,
         label: "Planetary Institute",
-        plural: "Planetary Institutes",
         color: "--current-round",
         weight: 3,
       },
       {
         type: Building.Academy1,
         label: "Academy",
-        plural: "Academies",
         color: "--rt-terra",
         weight: 3,
       },
       {
         type: Building.GaiaFormer,
         label: "Gaia Former",
-        plural: "Gaia Formers",
         color: "--rt-gaia",
         weight: 0,
       },
@@ -310,7 +297,6 @@ const factories = [
       return {
         type: field as ResearchField,
         label: researchNames[field],
-        plural: `Research Steps in ${researchNames[field]}`,
         color: `--rt-${field}`,
         weight: 1,
       };
@@ -330,8 +316,7 @@ const factories = [
         const planet = t as Planet;
         return {
           type: planet,
-          label: planetNames[planet],
-          plural: `${planetNames[planet]} planets`,
+          label: `${planetNames[planet]}`,
           color: planetColor(planet, true),
           weight: 1,
         };
@@ -339,7 +324,6 @@ const factories = [
       .concat({
         type: Planet.Empty,
         label: "Lantids guest mine",
-        plural: "Lantids guest mines",
         color: "--recent",
         weight: 1,
       }),
@@ -356,7 +340,6 @@ const factories = [
     sources: Object.values(TerraformingSteps).map((steps) => ({
       type: steps,
       label: steps,
-      plural: steps,
       color: (player) => planetColor(planetsForSteps(steps, player.planet)[0], true),
       weight: terraformingSteps(steps),
     })),
@@ -369,7 +352,6 @@ const factories = [
     sources: Booster.values().map((b) => ({
       type: b,
       label: boosterNames[b].name,
-      plural: boosterNames[b].name,
       color: boosterNames[b].color,
       weight: 1,
     })),
@@ -401,14 +383,12 @@ const factories = [
       .map((f) => ({
         type: f,
         label: federations[f],
-        plural: federations[f],
         color: federationColors[f],
         weight: 1,
       }))
       .concat({
         type: Federation.Gleens,
         label: "Gleens",
-        plural: "Gleens",
         color: "--desert",
         weight: 1,
       }),
@@ -431,7 +411,6 @@ const factories = [
     sources: TechTile.values().map((t) => ({
       type: t,
       label: baseTechTileNames[t].name,
-      plural: baseTechTileNames[t].name,
       color: baseTechTileNames[t].color,
       weight: 1,
     })),
@@ -444,7 +423,6 @@ const factories = [
     sources: Object.keys(finalScoringSources).map((tile) => ({
       type: tile,
       label: finalScoringSources[tile].name,
-      plural: finalScoringSources[tile].name,
       color: finalScoringSources[tile].color,
       weight: 1,
     })),

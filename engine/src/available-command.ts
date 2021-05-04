@@ -1,5 +1,13 @@
 import { difference, range } from "lodash";
-import { boardActions, freeActions, freeActionsItars, freeActionsTerrans } from "./actions";
+import {
+  boardActions,
+  ConversionPool,
+  FreeAction,
+  freeActionConversions,
+  freeActions,
+  freeActionsItars,
+  freeActionsTerrans,
+} from "./actions";
 import { upgradedBuildings } from "./buildings";
 import { qicForDistance } from "./cost";
 import Engine, { AuctionVariant, BoardActions } from "./engine";
@@ -24,13 +32,40 @@ import { oppositeFaction } from "./factions";
 import { GaiaHex } from "./gaia-hex";
 import SpaceMap from "./map";
 import PlayerObject, { BuildCheck, BuildWarning } from "./player";
-import PlayerData, { resourceLimits } from "./player-data";
+import PlayerData, { BrainstoneDest, resourceLimits } from "./player-data";
 import * as researchTracks from "./research-tracks";
 import Reward from "./reward";
 import { isAdvanced } from "./tiles/techs";
 
 const ISOLATED_DISTANCE = 3;
 export const UPGRADE_RESEARCH_COST = "4k";
+
+export type BrainstoneWarning = "brainstone-charges-wasted";
+
+export type BrainstoneActionData = {
+  choices: { area: BrainstoneDest; warning?: BrainstoneWarning }[];
+};
+
+export type AvailableFreeAction = {
+  cost: string;
+  income: string;
+  range?: number[];
+  hide?: boolean;
+};
+
+export type AvailableFreeActionData = {
+  acts: AvailableFreeAction[];
+};
+
+export type AvailableBoardAction = {
+  name: BoardAction;
+  cost: string;
+  income: string[];
+};
+
+export type AvailableBoardActionData = {
+  poweracts: AvailableBoardAction[];
+};
 
 export class Offer {
   constructor(readonly offer: string, readonly cost: string) {}
@@ -59,6 +94,12 @@ export type AvailableBuilding = {
 
 export type AvailableResearchTrack = { cost: string; field: ResearchField; to: number };
 export type AvailableResearchData = { tracks: AvailableResearchTrack[] };
+
+export function conversionToFreeAction(act: AvailableFreeAction): FreeAction | null {
+  const entry = Object.entries(freeActionConversions).find(([k, v]) => v.cost === act.cost && v.income === act.income);
+  // a new engine might add a conversion that the viewer doesn't know about yet
+  return entry !== null ? Number(entry[0]) : null;
+}
 
 export function generate(engine: Engine, subPhase: SubPhase = null, data?: any): AvailableCommand[] {
   const player = engine.playerToMove;
@@ -99,12 +140,12 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
         ...possibleResearchAreas(engine, player, UPGRADE_RESEARCH_COST),
         ...possibleBoardActions(engine.boardActions, engine.player(player)),
         ...possibleSpecialActions(engine, player),
-        ...possibleFreeActions(engine, player),
+        ...possibleFreeActions(engine.player(player)),
         ...possibleRoundBoosters(engine, player),
       ];
     }
     case SubPhase.AfterMove:
-      return [...possibleFreeActions(engine, player), { name: Command.EndTurn, player }];
+      return [...possibleFreeActions(engine.player(player)), { name: Command.EndTurn, player }];
     default:
       break;
   }
@@ -412,29 +453,30 @@ export function possibleBoardActions(actions: BoardActions, p: PlayerObject): Av
   }
 
   if (poweracts.length > 0) {
+    const data = {
+      poweracts: poweracts.map((act) => ({
+        name: act,
+        cost: boardActions[act].cost,
+        income: boardActions[act].income,
+      })),
+    } as AvailableBoardActionData;
+
     commands.push({
       name: Command.Action,
       player: p.player,
-      data: {
-        poweracts: poweracts.map((act) => ({
-          name: act,
-          cost: boardActions[act].cost,
-          income: boardActions[act].income,
-        })),
-      },
+      data: data,
     });
   }
 
   return commands;
 }
 
-export function possibleFreeActions(engine: Engine, player: Player) {
+export function possibleFreeActions(pl: PlayerObject) {
   // free action - spend
-  const pl = engine.player(player);
   const commands: AvailableCommand[] = [];
 
-  const pool = [...freeActions];
-  engine.player(player).emit("freeActionChoice", pool);
+  const pool = new ConversionPool(freeActions, pl);
+  pl.emit("freeActionChoice", pool);
 
   const spendCommand = transformToSpendCommand(pool, pl);
   if (spendCommand) {
@@ -445,7 +487,7 @@ export function possibleFreeActions(engine: Engine, player: Player) {
   if (pl.data.burnablePower() > 0) {
     commands.push({
       name: Command.BurnPower,
-      player,
+      player: pl.player,
       data: range(1, pl.data.burnablePower() + 1),
     });
   }
@@ -453,21 +495,26 @@ export function possibleFreeActions(engine: Engine, player: Player) {
   return commands;
 }
 
-function transformToSpendCommand(actions: { cost: string; income: string }[], player: PlayerObject) {
-  const acts = [];
-  for (const freeAction of actions) {
-    const maxPay = player.maxPayRange(Reward.parse(freeAction.cost));
+export function freeActionData(availableFreeActions: FreeAction[], player: PlayerObject): AvailableFreeAction[] {
+  const acts: AvailableFreeAction[] = [];
+  for (const freeAction of availableFreeActions) {
+    const conversion = freeActionConversions[freeAction];
+    const maxPay = player.maxPayRange(Reward.parse(conversion.cost));
     if (maxPay > 0) {
       acts.push({
-        cost: freeAction.cost,
-        income: freeAction.income,
+        cost: conversion.cost,
+        income: conversion.income,
         range: maxPay > 1 ? range(1, maxPay + 1) : undefined,
       });
     }
   }
+  return acts;
+}
 
-  if (acts.length > 0) {
-    return { name: Command.Spend, player: player.player, data: { acts } };
+export function transformToSpendCommand(actions: ConversionPool, player: PlayerObject) {
+  if (actions.actions.length > 0) {
+    const data: AvailableFreeActionData = { acts: actions.actions };
+    return { name: Command.Spend, player: player.player, data: data };
   }
   return null;
 }
@@ -666,16 +713,10 @@ export function possibleGaiaFreeActions(engine: Engine, player: Player) {
   const pl = engine.player(player);
 
   if (pl.canGaiaTerrans()) {
-    commands.push(transformToSpendCommand(freeActionsTerrans, pl));
+    commands.push(transformToSpendCommand(new ConversionPool(freeActionsTerrans, pl), pl));
   } else if (pl.canGaiaItars()) {
     if (possibleTechTiles(engine, player).length > 0) {
-      commands.push({
-        name: Command.Spend,
-        player,
-        data: {
-          acts: freeActionsItars,
-        },
-      });
+      commands.push(transformToSpendCommand(new ConversionPool(freeActionsItars, pl), pl));
     }
 
     commands.push({

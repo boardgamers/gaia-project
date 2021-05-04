@@ -1,5 +1,6 @@
 import { EventEmitter } from "eventemitter3";
 import { cloneDeep, fromPairs } from "lodash";
+import { BrainstoneActionData, BrainstoneWarning } from "./available-command";
 import {
   AdvTechTile,
   AdvTechTilePos,
@@ -34,6 +35,7 @@ export class Power {
 
 export type MoveTokens = Power & { brainstone: number };
 
+export type BrainstoneDest = BrainstoneArea | "discard";
 export default class PlayerData extends EventEmitter {
   victoryPoints = 10;
   bid = 0;
@@ -86,7 +88,7 @@ export default class PlayerData extends EventEmitter {
   lostPlanet = 0;
 
   // Internal variables, not meant to be in toJSON():
-  brainstoneDest: BrainstoneArea | "discard";
+  brainstoneDest: BrainstoneDest;
   temporaryRange = 0;
   temporaryStep = 0;
   canUpgradeResearch = true;
@@ -132,6 +134,16 @@ export default class PlayerData extends EventEmitter {
     this.gainReward(cost, true, source);
   }
 
+  private emitBrainstoneEvent(choices: BrainstoneDest[], area1Warning?: BrainstoneWarning) {
+    const d: BrainstoneActionData = {
+      choices: choices.map((a) => ({
+        area: a,
+        warning: a === BrainstoneArea.Area1 ? area1Warning : undefined,
+      })),
+    };
+    this.emit("brainstone", d);
+  }
+
   gainRewards(rewards: Reward[], forced = false, source?: EventSource) {
     let followBrainStoneHeuristics = true;
 
@@ -150,7 +162,7 @@ export default class PlayerData extends EventEmitter {
         // The brainstone can end up in two different places.
         if (this.brainstoneDest === undefined) {
           // Interrupt by asking player where to put the brainstone
-          this.emit("brainstone", [cloneHeuristic.brainstone, cloneNoHeuristic.brainstone]);
+          this.emitBrainstoneEvent([cloneHeuristic.brainstone, cloneNoHeuristic.brainstone]);
         }
 
         // if the player chose the same destination as the heuristic,
@@ -360,19 +372,39 @@ export default class PlayerData extends EventEmitter {
   }
 
   spendPower(power: number) {
-    if (this.brainstone === BrainstoneArea.Area3 && (power >= 3 || this.power.area3 < power)) {
+    if (this.brainstone === BrainstoneArea.Area3) {
       let useBrainStone = true;
+      const warning: BrainstoneWarning = power < 3 ? "brainstone-charges-wasted" : undefined;
       // Choose whether to spend the brainstone power or not
-      if (this.power.area3 >= power) {
+      const needBrainstone = this.power.area3 < power;
+
+      let choices: BrainstoneDest[] = [];
+
+      if (needBrainstone) {
+        if (warning) {
+          // choice is for warning only
+          choices = [BrainstoneArea.Area1];
+        } else {
+          // simply use it
+          useBrainStone = true;
+        }
+      } else {
+        if (warning) {
+          // simply not use it
+          useBrainStone = false;
+        } else {
+          // ask
+          choices = [BrainstoneArea.Area1, BrainstoneArea.Area3];
+        }
+      }
+
+      if (choices.length > 0) {
         if (this.brainstoneDest === undefined) {
           // Interrupt by asking player where to put the brainstone
-          this.emit("brainstone", [BrainstoneArea.Area3, BrainstoneArea.Area1]);
+          this.emitBrainstoneEvent(choices, warning);
         }
 
-        if (this.brainstoneDest === BrainstoneArea.Area3) {
-          useBrainStone = false;
-        }
-
+        useBrainStone = this.brainstoneDest === BrainstoneArea.Area1;
         delete this.brainstoneDest;
       }
 
@@ -418,7 +450,7 @@ export default class PlayerData extends EventEmitter {
       } else if (targetArea || this.tokensBelowArea(this.brainstone) < power) {
         // don't offer to discard unless necessary
         if (this.brainstoneDest === undefined) {
-          this.emit("brainstone", [this.brainstone, brainstoneEvent]);
+          this.emitBrainstoneEvent([this.brainstone, brainstoneEvent]);
         }
 
         if (this.brainstoneDest === brainstoneEvent) {

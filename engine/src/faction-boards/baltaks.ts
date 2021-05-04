@@ -1,4 +1,4 @@
-import { freeActionsBaltaks } from "../actions";
+import { ConversionPool, freeActionsBaltaks } from "../actions";
 import { Building, Faction } from "../enums";
 import Player from "../player";
 import { FactionBoardVariants } from "./types";
@@ -17,7 +17,7 @@ const baltaks: FactionBoardVariants = {
       area2: 2,
     },
     handlers: {
-      freeActionChoice: (player: Player, pool: any[]) => pool.push(...freeActionsBaltaks),
+      freeActionChoice: (player: Player, pool: ConversionPool) => pool.push(freeActionsBaltaks, player),
     },
   },
 };

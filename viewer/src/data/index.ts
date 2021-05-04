@@ -1,4 +1,4 @@
-import { AdvTechTilePos, Booster, Federation, GaiaHex, HighlightHex, TechTilePos } from "@gaia-project/engine";
+import { AdvTechTilePos, Booster, Federation, GaiaHex, HighlightHex, Reward, TechTilePos } from "@gaia-project/engine";
 
 export type ButtonWarning = { title?: string; body: string[]; okButton?: { label: string; action: () => void } };
 
@@ -11,6 +11,7 @@ export interface ButtonData {
   // Simple label
   title?: string;
   times?: number[];
+  conversion?: { from: Reward[]; to: Reward[] };
   modal?: ModalButtonData;
   hexes?: HighlightHexData;
   automatic?: boolean; // Should the user have to click on the hex or is it automatic?

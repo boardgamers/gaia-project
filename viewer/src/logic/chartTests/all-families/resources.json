@@ -50,7 +50,7 @@
       }
     }
   },
-  "labels": ["Credit", "Ore", "Knowledge", "QIC", "Power Charges", "Spent Power", "Gained Tokens", "Burned Tokens"],
+  "labels": ["Credits", "Ores", "Knowledge", "QICs", "Power Charges", "Spent Power", "Gained Tokens", "Burned Tokens"],
   "datasets": [
     {
       "label": "Taklons (123)",

@@ -12,14 +12,19 @@ import Reward from "./src/reward";
 import tiles from "./src/tiles";
 import federations from "./src/tiles/federations";
 
-export { boardActions } from "./src/actions";
+export { boardActions, FreeAction, freeActionConversions, ResourceConversion } from "./src/actions";
 export {
+  AvailableBoardActionData,
   AvailableBuilding,
+  AvailableFreeAction,
+  AvailableFreeActionData,
   AvailableHex,
   AvailableResearchData,
   AvailableResearchTrack,
+  BrainstoneActionData,
   canResearchField,
   canTakeAdvancedTechTile,
+  conversionToFreeAction,
   HighlightHex,
 } from "./src/available-command";
 export {

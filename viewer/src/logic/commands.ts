@@ -1,13 +1,17 @@
 import Engine, {
   applyChargePowers,
+  AvailableBoardActionData,
   AvailableBuilding,
   AvailableCommand,
+  AvailableFreeActionData,
   AvailableHex,
   AvailableResearchTrack,
   Booster,
+  BrainstoneActionData,
   BrainstoneArea,
   Building,
   Command,
+  conversionToFreeAction,
   Event,
   Expansion,
   Faction,
@@ -21,12 +25,38 @@ import Engine, {
   Round,
   tiles,
 } from "@gaia-project/engine";
+import { max, range, sortBy } from "lodash";
 import { ButtonData, ButtonWarning, HighlightHexData } from "../data";
+import { boardActionNames, freeActionShortcuts } from "../data/actions";
 import { boosterNames } from "../data/boosters";
 import { buildingName, buildingShortcut } from "../data/building";
 import { eventDesc } from "../data/event";
+import { resourceNames } from "../data/resources";
+import { moveWarnings } from "../data/warnings";
 
-export const forceNumericShortcut = (label: string) => ["Spend", "Charge", "Income"].find((b) => label.startsWith(b));
+export const forceNumericShortcut = (label: string) => ["Charge", "Income"].find((b) => label.startsWith(b));
+
+export function withShortcut(label: string, shortcut: string, skip: string[]) {
+  if (!shortcut) {
+    return label;
+  }
+
+  let skipIndex = 0;
+  for (const s of skip) {
+    const found = label.indexOf(s);
+    if (found > 0) {
+      skipIndex = found + s.length;
+    }
+  }
+
+  const i = label.toLowerCase().indexOf(shortcut, skipIndex);
+
+  if (i >= 0 && !forceNumericShortcut(label)) {
+    return `${label.substring(0, i)}<u>${label.substring(i, i + 1)}</u>${label.substring(i + 1)}`;
+  } else {
+    return `<u>${shortcut}</u>: ${label}`;
+  }
+}
 
 export function hexMap(engine: Engine, coordinates: AvailableHex[]): HighlightHexData {
   return new Map<GaiaHex, HighlightHex>(
@@ -179,11 +209,12 @@ export function finalizeShortcuts(ret: ButtonData[]) {
   if (shown.length == 1) {
     const b = shown[0];
     b.shortcuts = [];
-    if (b.label) {
-      if (forceNumericShortcut(b.label)) {
+    const label = b.label ?? b.command;
+    if (label) {
+      if (forceNumericShortcut(label)) {
         b.shortcuts.push("1");
       } else {
-        b.shortcuts.push(b.label.substring(0, 1).toLowerCase());
+        b.shortcuts.push(label.substring(0, 1).toLowerCase());
       }
     }
     b.shortcuts.push("Enter");
@@ -306,4 +337,139 @@ export function passButtons(engine: Engine, player: Player, command: AvailableCo
     });
   }
   return ret;
+}
+
+function translateResources(rewards: Reward[]): string {
+  return rewards
+    .map((r) => {
+      const s = resourceNames.find((s) => s.type == r.type);
+      return r.count + " " + (r.count == 1 ? s.label : s.plural);
+    })
+    .join(" and ");
+}
+
+function conversionLabel(cost: Reward[], income: Reward[]) {
+  return `${translateResources(cost)} ⇒ ${translateResources(income).replace(
+    "4 Victory Points",
+    "3 VP + 1 VP / Planet Type"
+  )}`;
+}
+
+function resourceSymbol(type: Resource) {
+  switch (type) {
+    case Resource.ChargePower:
+      return Resource.PayPower;
+    case Resource.TokenArea3:
+      return Resource.BowlToken;
+    default:
+      return type;
+  }
+}
+
+function newConversion(cost: Reward[], income: Reward[], player: Player) {
+  return {
+    from: cost.map(
+      (r) =>
+        new Reward(
+          r.type == Resource.ChargePower ? Math.ceil(r.count / player.data.tokenModifier) : r.count,
+          resourceSymbol(r.type)
+        )
+    ),
+    to: income.map((r) => new Reward(r.count, r.type)),
+  };
+}
+
+function conversionCommand(
+  cost: Reward[],
+  income: Reward[],
+  player: Player,
+  shortcut: string,
+  skipShortcut: string[],
+  command: string,
+  times?: number[]
+): ButtonData {
+  return {
+    tooltip: withShortcut(conversionLabel(cost, income), shortcut, skipShortcut),
+    label: "<u></u>",
+    conversion: newConversion(cost, income, player),
+    shortcuts: shortcut != null ? [shortcut] : [],
+    command: command,
+    times: times,
+  };
+}
+
+export function boardActionButton(data: AvailableBoardActionData, player: Player): ButtonData {
+  return {
+    label: "Power/Q.I.C Action",
+    shortcuts: ["q"],
+    command: Command.Action,
+    actions: data.poweracts.map((act) => act.name),
+    buttons: data.poweracts.map((act) => {
+      const cost = Reward.parse(act.cost);
+      const income = Reward.merge(Event.parse(act.income, null).flatMap((e) => e.rewards));
+
+      const shortcut = boardActionNames[act.name].shortcut;
+      return conversionCommand(cost, income, player, shortcut, ["Power Charges", "Terraforming"], act.name);
+    }),
+  };
+}
+2;
+export function freeActionButton(data: AvailableFreeActionData, player: Player): ButtonData[] {
+  return data.acts
+    .filter((a) => !a.hide)
+    .map((act) => {
+      return conversionCommand(
+        Reward.parse(act.cost),
+        Reward.parse(act.income),
+        player,
+        freeActionShortcuts[conversionToFreeAction(act)],
+        [],
+        `${Command.Spend} ${act.cost} for ${act.income}`,
+        act.range
+      );
+    });
+}
+
+export function burnButton(player: Player, command: AvailableCommand) {
+  return conversionCommand(
+    [new Reward(2, Resource.BowlToken)],
+    [
+      new Reward(1, player.faction == Faction.Itars ? Resource.GainTokenGaiaArea : Resource.BurnToken),
+      new Reward(1, Resource.ChargePower),
+    ],
+    player,
+    "b",
+    [],
+    `${Command.BurnPower} 1`,
+    range(1, max(command.data as number[]) + 1)
+  );
+}
+
+export function freeAndBurnButton(buttons: ButtonData[]): ButtonData {
+  const labels = [];
+  if (buttons.some((b) => b.command.startsWith(Command.Spend))) {
+    labels.push("Free action");
+  }
+  if (buttons.some((b) => b.command.startsWith(Command.BurnPower))) {
+    labels.push("Burn power");
+  }
+  buttons = sortBy(buttons, (b) => b.conversion.from[0].type);
+  return {
+    label: labels.join(" / "),
+    shortcuts: ["a"],
+    buttons: buttons,
+  };
+}
+
+export function brainstoneButtons(data: BrainstoneActionData): ButtonData[] {
+  console.log(data);
+  return data.choices.sort().map((d) => {
+    const area = d.area;
+    return {
+      label: `Brainstone ${area}`,
+      warning: buttonWarning(moveWarnings[d.warning]?.text),
+      command: `${Command.BrainStone} ${area}`,
+      shortcuts: [area == BrainstoneArea.Gaia ? "g" : area.substring("area".length, area.length)],
+    };
+  });
 }
