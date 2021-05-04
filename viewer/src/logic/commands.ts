@@ -3,6 +3,7 @@ import Engine, {
   AvailableBoardActionData,
   AvailableBuilding,
   AvailableCommand,
+  AvailableFreeAction,
   AvailableFreeActionData,
   AvailableHex,
   AvailableResearchTrack,
@@ -25,14 +26,25 @@ import Engine, {
   Round,
   tiles,
 } from "@gaia-project/engine";
-import { max, range, sortBy } from "lodash";
+import { max, minBy, range, sortBy } from "lodash";
 import { ButtonData, ButtonWarning, HighlightHexData } from "../data";
-import { boardActionNames, freeActionShortcuts } from "../data/actions";
+import {
+  boardActionNames,
+  FastConversion,
+  FastConversionButton,
+  FastConversionEvent,
+  freeActionShortcuts,
+} from "../data/actions";
 import { boosterNames } from "../data/boosters";
 import { buildingName, buildingShortcut } from "../data/building";
 import { eventDesc } from "../data/event";
 import { resourceNames } from "../data/resources";
 import { moveWarnings } from "../data/warnings";
+
+export type AvailableConversions = {
+  free?: AvailableFreeActionData;
+  burn?: number[];
+};
 
 export const forceNumericShortcut = (label: string) => ["Charge", "Income"].find((b) => label.startsWith(b));
 
@@ -83,8 +95,7 @@ export function endTurnWarning(engine: Engine, command: AvailableCommand): Butto
 
   const p = engine.players[command.player];
   if (p.faction == Faction.Taklons && !engine.isLastRound) {
-    const brainstoneArea = p.data.brainstone;
-    switch (brainstoneArea) {
+    switch (p.data.brainstone) {
       case PowerArea.Area2:
         if (p.data.burnablePower() > 0) {
           return warning("Brainstone in area 2 not moved to area 3 using burn.");
@@ -413,24 +424,64 @@ export function boardActionButton(data: AvailableBoardActionData, player: Player
     }),
   };
 }
-2;
-export function freeActionButton(data: AvailableFreeActionData, player: Player): ButtonData[] {
-  return data.acts
-    .filter((a) => !a.hide)
-    .map((act) => {
-      return conversionCommand(
-        Reward.parse(act.cost),
-        Reward.parse(act.income),
-        player,
-        freeActionShortcuts[conversionToFreeAction(act)],
-        [],
-        `${Command.Spend} ${act.cost} for ${act.income}`,
-        act.range
-      );
-    });
+
+export function spendCommand(act: AvailableFreeAction) {
+  return `${Command.Spend} ${act.cost} for ${act.income}`;
 }
 
-export function burnButton(player: Player, command: AvailableCommand) {
+function fastConversionPossible(action: AvailableFreeAction, conversion: FastConversion, player: Player): boolean {
+  return !action.hide && (!conversion.filter || conversion.filter(player));
+}
+
+export type FastConversionTooltips = { [key in FastConversionButton]?: string };
+
+function freeActionPriority(a: AvailableFreeAction) {
+  return freeActionShortcuts[conversionToFreeAction(a)].fast.priority ?? 0;
+}
+
+export function freeActionButton(
+  data: AvailableFreeActionData,
+  player: Player
+): { buttons: ButtonData[]; tooltips: FastConversionTooltips } {
+  function newButton(act: AvailableFreeAction) {
+    return conversionCommand(
+      Reward.parse(act.cost),
+      Reward.parse(act.income),
+      player,
+      freeActionShortcuts[conversionToFreeAction(act)]?.shortcut,
+      [],
+      spendCommand(act),
+      act.range
+    );
+  }
+
+  const buttons = data.acts.filter((a) => !a.hide).map((act) => newButton(act));
+
+  const fast: AvailableFreeAction[] = data.acts
+    .filter((a) => !a.hide)
+    .flatMap((act) => {
+      const action = conversionToFreeAction(act);
+      if (action != null) {
+        const shortcut = freeActionShortcuts[action];
+        if (fastConversionPossible(act, shortcut.fast, player)) {
+          return act;
+        }
+      }
+      return [];
+    });
+
+  const tooltips: FastConversionTooltips = {};
+  for (const a of sortBy(fast, (a) => freeActionPriority(a))) {
+    const button = freeActionShortcuts[conversionToFreeAction(a)].fast.button;
+    const last = tooltips[button];
+    const tooltip = newButton(a).tooltip;
+    tooltips[button] = last ? last + ", " + tooltip : tooltip;
+  }
+
+  return { tooltips, buttons };
+}
+
+export function burnButton(player: Player, availableRange?: number[]) {
   return conversionCommand(
     [new Reward(2, Resource.BowlToken)],
     [
@@ -441,28 +492,62 @@ export function burnButton(player: Player, command: AvailableCommand) {
     "b",
     [],
     `${Command.BurnPower} 1`,
-    range(1, max(command.data as number[]) + 1)
+    availableRange?.length > 1 ? range(1, max(availableRange) + 1) : undefined
   );
 }
 
-export function freeAndBurnButton(buttons: ButtonData[]): ButtonData {
+const fastBurnButton = PowerArea.Area3;
+
+export function fastConversionClick(
+  event: FastConversionEvent,
+  conversions: AvailableConversions,
+  player: Player
+): string | null {
+  if (event.button == fastBurnButton && conversions.burn) {
+    return `${Command.BurnPower} 1`;
+  }
+
+  const possible: AvailableFreeAction[] = conversions.free.acts.filter((a) => {
+    const c = freeActionShortcuts[conversionToFreeAction(a)]?.fast;
+    return c.button == event.button && fastConversionPossible(a, c, player);
+  });
+  if (possible.length > 0) {
+    const action: AvailableFreeAction = minBy(possible, (a) => freeActionPriority(a));
+    return spendCommand(action);
+  }
+  return null;
+}
+
+export function freeAndBurnButton(
+  conversions: AvailableConversions,
+  player: Player
+): { button: ButtonData; tooltips: FastConversionTooltips } {
   const labels = [];
-  if (buttons.some((b) => b.command.startsWith(Command.Spend))) {
+  const buttons: ButtonData[] = [];
+  let tooltips: FastConversionTooltips = {};
+  if (conversions.free) {
     labels.push("Free action");
+    const b = freeActionButton(conversions.free, player);
+    buttons.push(...b.buttons);
+    tooltips = b.tooltips;
   }
-  if (buttons.some((b) => b.command.startsWith(Command.BurnPower))) {
+  if (conversions.burn) {
     labels.push("Burn power");
+    buttons.push(burnButton(player, conversions.burn));
+    tooltips[fastBurnButton] = "Burn power";
   }
-  buttons = sortBy(buttons, (b) => b.conversion.from[0].type);
+
   return {
-    label: labels.join(" / "),
-    shortcuts: ["a"],
-    buttons: buttons,
+    button: {
+      label: labels.join(" / "),
+      shortcuts: ["a"],
+      buttons: sortBy(buttons, (b) => b.conversion.from[0].type),
+    },
+    tooltips,
   };
 }
 
 export function brainstoneButtons(data: BrainstoneActionData): ButtonData[] {
-  console.log(data);
   return data.choices.sort().map((d) => {
     const area = d.area;
     return {

@@ -1,4 +1,4 @@
-import { BoardAction, FreeAction } from "@gaia-project/engine";
+import { BoardAction, FreeAction, PowerArea, Resource } from "@gaia-project/engine";
 
 export const boardActionNames: { [key in BoardAction]: { name: string; color: string; shortcut: string } } = {
   [BoardAction.Power1]: { name: "3 knowledge", color: "--recent", shortcut: "n" },
@@ -13,39 +13,59 @@ export const boardActionNames: { [key in BoardAction]: { name: string; color: st
   [BoardAction.Qic3]: { name: "VP for planet types", color: "--res-vp", shortcut: "v" },
 };
 
-export const freeActionShortcuts: { [key in FreeAction]: string } = {
-  [FreeAction.PowerToQic]: "q",
-  [FreeAction.PowerToKnowledge]: "k",
-  [FreeAction.PowerToOre]: "o",
-  [FreeAction.PowerToCredit]: "c",
-  [FreeAction.QicToOre]: "r",
-  [FreeAction.OreToToken]: "g",
-  [FreeAction.KnowledgeToCredit]: "n",
-  [FreeAction.OreToCredit]: "d",
+export type FastConversionButton = Resource.Qic | Resource.Knowledge | Resource.Ore | Resource.Credit | PowerArea;
+
+export type FastConversionEvent = {
+  button: FastConversionButton;
+};
+
+export type FastConversion = FastConversionEvent & {
+  priority?: number;
+  filter?: (Player) => boolean;
+};
+
+export const freeActionShortcuts: { [key in FreeAction]: { shortcut: string; fast: FastConversion } } = {
+  [FreeAction.PowerToQic]: { shortcut: "q", fast: { button: Resource.Qic } },
+  [FreeAction.PowerToKnowledge]: { shortcut: "k", fast: { button: Resource.Knowledge } },
+  [FreeAction.PowerToOre]: { shortcut: "o", fast: { button: Resource.Ore } },
+  [FreeAction.PowerToCredit]: { shortcut: "c", fast: { button: Resource.Credit } },
+  [FreeAction.QicToOre]: { shortcut: "r", fast: { button: Resource.Ore, priority: 10 } },
+  [FreeAction.OreToToken]: { shortcut: "g", fast: { button: PowerArea.Area1 } },
+  [FreeAction.KnowledgeToCredit]: { shortcut: "n", fast: { button: Resource.Credit, priority: 11 } },
+  [FreeAction.OreToCredit]: { shortcut: "d", fast: { button: Resource.Credit, priority: 10 } },
 
   //HadschHallas
-  [FreeAction.CreditToQic]: "i",
-  [FreeAction.CreditToOre]: "e",
-  [FreeAction.CreditToKnowledge]: "w",
+  [FreeAction.CreditToQic]: { shortcut: "i", fast: { button: Resource.Qic, priority: 1 } },
+  [FreeAction.CreditToOre]: { shortcut: "e", fast: { button: Resource.Ore, priority: 1 } },
+  [FreeAction.CreditToKnowledge]: { shortcut: "w", fast: { button: Resource.Knowledge, priority: 1 } },
 
   //Terrans
-  [FreeAction.GaiaTokenToQic]: "q",
-  [FreeAction.GaiaTokenToKnowledge]: "k",
-  [FreeAction.GaiaTokenToOre]: "o",
-  [FreeAction.GaiaTokenToCredit]: "c",
+  [FreeAction.GaiaTokenToQic]: { shortcut: "q", fast: { button: Resource.Qic } },
+  [FreeAction.GaiaTokenToKnowledge]: { shortcut: "k", fast: { button: Resource.Knowledge } },
+  [FreeAction.GaiaTokenToOre]: { shortcut: "o", fast: { button: Resource.Ore } },
+  [FreeAction.GaiaTokenToCredit]: { shortcut: "c", fast: { button: Resource.Credit } },
 
   //Itars
-  [FreeAction.GaiaTokenToTech]: "t",
+  [FreeAction.GaiaTokenToTech]: { shortcut: "t", fast: { button: PowerArea.Gaia } },
 
   //Nevlas
-  [FreeAction.PowerToGaiaForKnowledge]: "w",
-  [FreeAction.PowerToOreAndCredit]: "i",
-  [FreeAction.PowerTo2Credit]: "c", // replaces normal PowerToCredit, thus same shortcut
-  [FreeAction.PowerTo2Ore]: "e",
+  [FreeAction.PowerToGaiaForKnowledge]: { shortcut: "w", fast: { button: PowerArea.Gaia } },
+  [FreeAction.PowerToOreAndCredit]: { shortcut: "i", fast: { button: Resource.Ore, priority: 1 } },
+  // replaces normal PowerToCredit, thus same shortcut
+  [FreeAction.PowerTo2Credit]: { shortcut: "c", fast: { button: Resource.Credit, priority: -1 } },
+  // replaces normal PowerToCredit, thus same shortcut
+  [FreeAction.PowerTo2Ore]: { shortcut: "o", fast: { button: Resource.Ore, priority: -1 } },
 
   //Baltaks
-  [FreeAction.GaiaFormerToQic]: "i",
+  [FreeAction.GaiaFormerToQic]: { shortcut: "i", fast: { button: PowerArea.Gaia } },
 
   //Taklons
-  [FreeAction.PowerTo3Credit]: "t",
+  [FreeAction.PowerTo3Credit]: {
+    shortcut: "t",
+    fast: {
+      button: Resource.Credit,
+      priority: -1,
+      filter: (player) => player.data.brainstone == PowerArea.Area3,
+    },
+  },
 };

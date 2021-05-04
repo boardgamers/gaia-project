@@ -65,7 +65,7 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   AvailableCommand,
-  PowerArea,
+  AvailableResearchData,
   BuildWarning,
   Command,
   Faction,
@@ -84,21 +84,22 @@ import { FactionCustomization } from "@gaia-project/engine/src/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
 import { moveWarnings } from "../data/warnings";
 import {
-  advanceResearchWarning, boardActionButton, brainstoneButtons,
-  buildButtons, burnButton,
+  advanceResearchWarning,
+  AvailableConversions,
+  boardActionButton,
+  brainstoneButtons,
+  buildButtons,
   buttonWarning,
   chargeWarning,
   endTurnWarning,
+  fastConversionClick,
   finalizeShortcuts,
-  freeActionButton,
   freeAndBurnButton,
   hexMap,
   passButtons,
   specialActionWarning
 } from "../logic/commands";
 import { researchNames } from "../data/research";
-import { AvailableResearchData } from "@gaia-project/engine";
-import { max, range } from "lodash";
 
 let show = false;
 
@@ -158,6 +159,8 @@ export default class Commands extends Vue {
   remainingTime: string;
 
   updater = 0;
+
+  subscriptions: { [key in Command]?: () => void } = {};
 
   get gameData(): Engine {
     return this.$store.state.gaiaViewer.data;
@@ -273,8 +276,9 @@ export default class Commands extends Vue {
     this.updater += 1;
   }
 
-  handleCommand(command: string, source: MoveButton, final: boolean, warnings?: BuildWarning[]) {
+  handleCommand(command: string, source?: MoveButton, final?: boolean, warnings?: BuildWarning[]) {
     console.log("handle command", command);
+    this.unsubscribe();
 
     // Some users seem to have a bug with repeating commands on mobile, like clicking the income button twice
     if (
@@ -286,7 +290,7 @@ export default class Commands extends Vue {
       return;
     }
 
-    if (source.button.buttons?.length > 0 && !final) {
+    if (source?.button.buttons?.length > 0 && !final) {
       this.commandTitles.push(source.button.label);
       this.commandChain.push(source.button.command);
       this.buttonChain.push(source.button);
@@ -330,7 +334,7 @@ export default class Commands extends Vue {
   }
 
   get buttons(): ButtonData[] {
-    const freeAndBurn: ButtonData[] = [];
+    const conversions: AvailableConversions = {};
     const ret: ButtonData[] = [];
     for (const command of this.availableCommands.filter((c) => c.name != Command.ChooseFaction)) {
       switch (command.name) {
@@ -455,11 +459,11 @@ export default class Commands extends Vue {
           break;
         }
         case Command.Spend: {
-          freeAndBurn.push(...freeActionButton(command.data, this.player));
+          conversions.free = command.data;
           break;
         }
         case Command.BurnPower: {
-          freeAndBurn.push(burnButton(this.player, command));
+          conversions.burn = command.data;
           break;
         }
         case Command.Action: {
@@ -615,12 +619,27 @@ export default class Commands extends Vue {
       }
     }
 
-    if (freeAndBurn.length > 0) {
+    if (conversions.free || conversions.burn) {
+      this.subscriptions[Command.Spend]?.();
+      this.subscriptions[Command.Spend] = this.$store.subscribeAction(({ type, payload }) => {
+        if (type === "gaiaViewer/fastConversionClick") {
+          const command = fastConversionClick(payload, conversions, this.player);
+          if (command) {
+            this.handleCommand(command);
+          }
+        }
+      });
+
       const pass = ret.pop();
-      ret.push(freeAndBurnButton(freeAndBurn));
+      const d = freeAndBurnButton(conversions, this.player);
+      ret.push(d.button);
       if (pass) {
         ret.push(pass);
       }
+
+      this.$store.commit("gaiaViewer/fastConversionTooltips", d.tooltips);
+      // tooltips may have become unavailable - and they should be hidden
+      this.$root.$emit('bv::hide::tooltip');
     }
 
     if (this.customButtons.length > 0) {
@@ -654,6 +673,14 @@ export default class Commands extends Vue {
 
   destroyed() {
     window.removeEventListener("keydown", this.keyListener);
+    this.unsubscribe();
+  }
+
+  private unsubscribe() {
+    for (const s of Object.values(this.subscriptions)) {
+      s();
+    }
+    this.subscriptions = {};
   }
 
   mounted() {

@@ -10,77 +10,24 @@
     />
     <circle :r="2 * r * spacing" fill="none" />
     <g>
-      <circle :r="r" fill="#00aa00" />
-      <Resource
-        v-if="power('gaia') > 0"
-        :kind="'bowl-t'"
-        :count="power('gaia')"
-        :transform="`translate(${xPos('gaia')}, ${yPos('gaia')}) scale(0.11)`"
-      />
-      <Resource
-        v-if="brainstone('gaia') == 1"
-        :kind="'brainstone'"
-        :transform="`translate(${power('gaia') > 0 ? 0.9 : 0}, ${yPos('gaia')}) scale(0.11)`"
-      />
-      <Resource
-        v-if="data.gaiaformersInGaia > 0"
-        :kind="'gf'"
-        :count="data.gaiaformersInGaia"
-        :faction="faction"
-        :transform="`translate(0, 0.7) scale(0.09)`"
-      />
+      <PowerBowl :player="player" area="gaia" class="gaia-bowl" gaia="true" />
     </g>
     <g :transform="`translate(${-r * spacing}, ${2 * r * sin60 * spacing})`">
-      <circle :r="r" class="power-bowl" />
-      <Resource
-        v-if="power('area1') > 0"
-        :kind="'bowl-t'"
-        :count="power('area1')"
-        :transform="`translate(${xPos('area1')}, 0) scale(0.11)`"
-      />
-      <Resource
-        v-if="brainstone('area1') == 1"
-        :kind="'brainstone'"
-        :transform="`translate(${power('area1') > 0 ? 0.9 : 0}, 0) scale(0.11)`"
-      />
+      <PowerBowl :player="player" area="area1" class="power-bowl" />
       <text y="1.7" transform="scale(0.7)" v-if="!engine.isLastRound && income('t')">+{{ income("t") }}</text>
       <text class="label" x="-2.6">I</text>
     </g>
     <g :transform="`translate(${-r * spacing}, ${-2 * r * sin60 * spacing})`">
-      <circle :r="r" class="power-bowl" />
-      <Resource
-        v-if="power('area2') > 0"
-        :kind="'bowl-t'"
-        :count="power('area2')"
-        :transform="`translate(${xPos('area2')}, 0) scale(0.11)`"
-      />
-      <Resource
-        v-if="brainstone('area2') == 1"
-        :kind="'brainstone'"
-        :transform="`translate(${power('area2') > 0 ? 0.9 : 0}, 0) scale(0.11)`"
-      />
-
+      <PowerBowl :player="player" area="area2" class="power-bowl" />
       <text class="label" x="-2.6">II</text>
     </g>
     <g :transform="`translate(${2 * r * spacing}, 0)`">
-      <circle :r="r" class="power-bowl" />
-      <Resource
-        v-if="power('area3') > 0"
-        :kind="'bowl-t'"
-        :count="power('area3')"
-        :transform="`translate(${xPos('area3')}, 0) scale(0.11)`"
-      />
-      <Resource
-        v-if="brainstone('area3') == 1"
-        :kind="'brainstone'"
-        :transform="`translate(${power('area3') > 0 ? 0.9 : 0}, 0) scale(0.11)`"
-      />
-
+      <PowerBowl :player="player" area="area3" class="power-bowl" />
       <text class="label" y="2.6" x="0">III</text>
     </g>
     <text class="label" transform="translate(-3.5, 0) scale(0.75)" v-if="!engine.isLastRound && income('pw')"
-      >+{{ income("pw") }}</text
-    >
+      >+{{ income("pw") }}
+    </text>
   </g>
 </template>
 
@@ -88,24 +35,27 @@
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import Resource from "../Resource.vue";
-import Building from "../Building.vue";
-import Engine, { Faction, Resource as ResourceEnum, PlayerData, Player } from "@gaia-project/engine";
+import Engine, { Faction, Player, Resource as ResourceEnum, } from "@gaia-project/engine";
+import PowerBowl from "./PowerBowl.vue";
 
-@Component({
+@Component<PowerBowls>({
   components: {
     Resource,
-    Building,
+    PowerBowl
   },
 })
-export default class BuildingGroup extends Vue {
-  @Prop()
-  faction: Faction;
-
-  @Prop()
-  data: PlayerData;
+export default class PowerBowls extends Vue {
 
   @Prop()
   player: Player;
+
+  get engine(): Engine {
+    return this.$store.state.gaiaViewer.data;
+  }
+
+  get isTerran() {
+    return this.player.faction === Faction.Terrans;
+  }
 
   get r() {
     return 2;
@@ -119,30 +69,6 @@ export default class BuildingGroup extends Vue {
     return 0.86602540378;
   }
 
-  get isTerran() {
-    return this.faction === Faction.Terrans;
-  }
-
-  get engine(): Engine {
-    return this.$store.state.gaiaViewer.data;
-  }
-
-  xPos(area: string) {
-    return this.brainstone(area) ? -0.9 : 0;
-  }
-
-  yPos(area: string) {
-    return this.data.gaiaformersInGaia > 0 ? -0.5 : 0;
-  }
-
-  power(area: string) {
-    return this.data.power[area];
-  }
-
-  brainstone(area: string) {
-    return this.data.brainstone === area;
-  }
-
   income(resource: ResourceEnum) {
     const index = this.player.income.search(new RegExp("[0-9]+" + resource));
 
@@ -153,9 +79,6 @@ export default class BuildingGroup extends Vue {
     return parseInt(this.player.income.substr(index));
   }
 
-  get flat() {
-    return this.$store.state.gaiaViewer.preferences.flatBuildings;
-  }
 }
 </script>
 <style lang="scss">
@@ -165,7 +88,11 @@ export default class BuildingGroup extends Vue {
     stroke: black;
   }
 
-  .power-bowl {
+  .gaia-bowl circle {
+    fill: #00aa00;
+  }
+
+  .power-bowl circle {
     fill: purple;
   }
 
