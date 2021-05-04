@@ -13,6 +13,8 @@ import { CubeCoordinates } from "hexagrid";
 import Vue from "vue";
 import Vuex, { Store } from "vuex";
 import { ButtonData, GameContext, HighlightHexData } from "./data";
+import { FastConversionEvent } from "./data/actions";
+import { FastConversionTooltips } from "./logic/commands";
 import {
   CommandObject,
   MovesSlice,
@@ -67,6 +69,7 @@ const gaiaViewer = {
       rotation: new Map(),
       hexSelection: false,
       activeButton: null,
+      fastConversionTooltips: {} as FastConversionTooltips,
     },
     preferences: {
       accessibleSpaceMap: !!process.env.VUE_APP_accessibleSpaceMap,
@@ -124,10 +127,15 @@ const gaiaViewer = {
       // state.context.rotation = new Map();
       state.context.hexSelection = false;
       state.context.activeButton = null;
+      state.context.fastConversionTooltips = {};
     },
 
     activeButton(state: State, button: ButtonData | null) {
       state.context.activeButton = button;
+    },
+
+    fastConversionTooltips(state: State, tooltips: FastConversionTooltips) {
+      state.context.fastConversionTooltips = tooltips;
     },
 
     preferences(state: State, preferences: { [key in Preference]: boolean }) {
@@ -146,6 +154,7 @@ const gaiaViewer = {
     hexClick(context: any, hex: GaiaHex, highlight?: HighlightHex) {},
     researchClick(context: any, field: ResearchField) {},
     techClick(context: any, pos: TechTilePos | AdvTechTilePos) {},
+    fastConversionClick(context: any, event: FastConversionEvent) {},
     actionClick(context: any, action: string) {},
     federationClick(context: any, federation: Federation) {},
     confirmClick(context: any, action: string) {},

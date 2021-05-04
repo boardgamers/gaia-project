@@ -11,6 +11,7 @@
           :player="player"
           :faction="player.faction"
           :data="playerData"
+          @undo="undo"
         />
         <g transform="translate(4, 0)">
           <BuildingGroup
@@ -102,7 +103,7 @@
             :disabled="passed"
           />
         </g>
-        <PowerBowls transform="translate(30,14.5)" :faction="player.faction" :data="playerData" :player="player" />
+        <PowerBowls transform="translate(30,14.5)" :player="player" />
 
         <g transform="translate(29.3, 4.7) scale(0.9) translate(0, 1)">
           <g v-for="i in [0, 1, 2, 3]" :key="i" :transform="`translate(${(i - 2) * 3.8}, 0)`">
@@ -269,8 +270,8 @@ export default class PlayerInfo extends Vue {
     return this.$store.state.gaiaViewer.data.round;
   }
 
-  get hasPlanets() {
-    return this.player.ownedPlanets.length > 0;
+  undo() {
+    this.$emit("undo");
   }
 
   get hasLostPlanet() {
@@ -300,6 +301,7 @@ export default class PlayerInfo extends Vue {
   margin-right: auto;
 
   .board-text {
+    pointer-events: none;
     dominant-baseline: mathematical;
     font-size: 1.2px;
 

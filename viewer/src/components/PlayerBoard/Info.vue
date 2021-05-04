@@ -39,7 +39,12 @@
           >
         </g>
         <Resource kind="q" :count="data.qics" :center-left="true" transform="translate(12.5,0) scale(0.1)" />
-        <g transform="translate(15, -3) scale(0.2)">
+        <g v-if="canUndo" transform="translate(16.5,-1) scale(0.18)">
+          <Resource class="undo-button" kind="pay-pw" />
+          <text class="undo-text" x="0" y="2">undo</text>
+          <circle class="undo-button" r="7" @click="undo" />
+        </g>
+        <g transform="translate(15, -3) scale(0.2)" v-else>
           <VictoryPoint width="15" height="15" />
           <text class="vp-text" x="7" y="10">{{ data.victoryPoints }}</text>
           <g transform="translate(13.5,2)" v-if="data.bid">
@@ -49,23 +54,35 @@
         </g>
         <g transform="translate(16, 1)" v-b-tooltip title="Satellites and space stations">
           <image xlink:href='../../assets/resources/satellite.svg' :height=155/211*22 width=22 x=-11 y=-8
-          transform="scale(0.07)" />
+          transform="scale(0.07)"/>
           <text :class="['board-text']" transform="translate(1,0) scale(0.7)">{{
             data.satellites + data.buildings.sp
           }}</text>
         </g>
         <g transform="translate(16, 2.2)" v-b-tooltip title="Sectors with a colonized planet">
           <image xlink:href='../../assets/conditions/sector.svg' :height=155/211*22 width=22 x=-11 y=-8
-          transform="scale(0.07)" />
+          transform="scale(0.07)"/>
           <text :class="['board-text']" transform="translate(1,0) scale(0.7)">{{ sectors }}</text>
         </g>
         <g transform="translate(16, 3.6)" v-b-tooltip title="Power value of structures in / outside of federations">
           <image xlink:href='../../assets/conditions/federation.svg' :height=155/211*22 width=22 x=-11 y=-8
-          transform="scale(0.08)" />
+          transform="scale(0.08)"/>
           <text :class="['board-text']" transform="translate(1,0) scale(0.7)"
             >{{ player.fedValue }}/{{ player.structureValue - player.fedValue }}</text
           >
         </g>
+        <circle
+          r="1.7"
+          v-for="(r, i) in ['c', 'o', 'k', 'q']"
+          :key="i"
+          :transform="`translate(${i * 3.5 + 2},0)`"
+          style="opacity: 0"
+          @click="convert(r)"
+          v-b-tooltip.hover.html
+          :disabled="!convertTooltip(r)"
+          :style="convertTooltip(r) ? 'cursor: pointer' : ''"
+          :title="convertTooltip(r)"
+        />
       </g>
       <g transform="translate(0, 1.5)" v-if="!engine.isLastRound">
         <text class="board-text" x="0.25">I</text>
@@ -103,6 +120,7 @@ import { uniq } from "lodash";
 import Resource from "../Resource.vue";
 import { Faction, factions, Player, PlayerData, ResearchField, Resource as ResourceEnum } from "@gaia-project/engine";
 import VictoryPoint from "../Resources/VictoryPoint.vue";
+import { FastConversionEvent } from "../../data/actions";
 
 @Component({
   components: {
@@ -124,8 +142,26 @@ export default class PlayerBoardInfo extends Vue {
     return this.$store.state.gaiaViewer.data;
   }
 
+  get canUndo() {
+    return !this.$store.state.gaiaViewer.data.newTurn && this.engine.currentPlayer == this.player.player;
+  }
+
+  undo() {
+    this.$emit("undo");
+  }
+
   get factionName(): string {
     return factions[this.faction].name;
+  }
+
+  convert(resource: ResourceEnum) {
+    this.$store.dispatch("gaiaViewer/fastConversionClick", { button: resource } as FastConversionEvent);
+  }
+
+  convertTooltip(resource: ResourceEnum): string | null {
+    if (this.engine.currentPlayer == this.player.player) {
+      return this.$store.state.gaiaViewer.context.fastConversionTooltips[resource];
+    }
   }
 
   income(resource: ResourceEnum) {
@@ -171,6 +207,19 @@ export default class PlayerBoardInfo extends Vue {
 
 .vp-text {
   font-size: 7px;
+  fill: white;
+  font-weight: 600;
+  text-anchor: middle;
+}
+
+.undo-button {
+  cursor: pointer;
+  opacity: 0;
+}
+
+.undo-text {
+  pointer-events: none;
+  font-size: 5.5px;
   fill: white;
   font-weight: 600;
   text-anchor: middle;

@@ -1,4 +1,5 @@
 import { AdvTechTilePos, Booster, Federation, GaiaHex, HighlightHex, Reward, TechTilePos } from "@gaia-project/engine";
+import { FastConversionTooltips } from "../logic/commands";
 
 export type ButtonWarning = { title?: string; body: string[]; okButton?: { label: string; action: () => void } };
 
@@ -53,6 +54,7 @@ export interface GameContext {
   rotation: Map<string, number>;
 
   activeButton: ButtonData | null;
+  fastConversionTooltips: FastConversionTooltips;
   hexSelection: boolean;
 
   logPlacement: LogPlacement;

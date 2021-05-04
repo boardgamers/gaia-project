@@ -60,15 +60,22 @@
     />
     <div class="row mt-2">
       <template v-if="sessionPlayer === undefined">
-        <PlayerInfo v-for="player in orderedPlayers" :player="player" :key="player.player" class="col-md-6 order-6" />
+        <PlayerInfo
+          v-for="player in orderedPlayers"
+          :player="player"
+          :key="player.player"
+          class="col-md-6 order-6"
+          @undo="undoMove"
+        />
       </template>
       <template v-else>
-        <PlayerInfo :player="sessionPlayer" class="col-md-6 order-3" />
+        <PlayerInfo :player="sessionPlayer" class="col-md-6 order-3" @undo="undoMove" />
         <PlayerInfo
           v-for="player in orderedPlayers.filter((pl) => pl !== sessionPlayer)"
           :player="player"
           :key="player.player"
           class="col-md-6 order-6"
+          @undo="undoMove"
         />
       </template>
       <Pool class="col-12 order-10 mt-4" />
