@@ -65,7 +65,7 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   AvailableCommand,
-  BrainstoneArea,
+  PowerArea,
   BuildWarning,
   Command,
   Faction,

@@ -1,11 +1,11 @@
 import {
-  BrainstoneArea,
   Building,
   Faction,
   factionBoard,
   factions,
   Operator,
   Planet,
+  PowerArea,
   terraformingStepsRequired,
 } from "@gaia-project/engine";
 import { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
@@ -153,7 +153,7 @@ export function factionDesc(faction: Faction, variant?: FactionBoardRaw) {
     <b>Planetary Institute: </b> ${factionData[faction].PI}<br/>
     <b>Buildings:</b> ${buildingDesc.replace(/,,/g, ",~,").replace(/,/g, ", ")}
     <b>Starting Power:</b> area 1: ${board.power.area1}${
-    board.brainstone == BrainstoneArea.Area1 ? ", brainstone" : ""
+    board.brainstone == PowerArea.Area1 ? ", brainstone" : ""
   }, area 2: ${board.power.area2} </br>
     <b>Starting Income:</b> ${startingIncome.toString().replace(/,/g, ", ")} </br>
     <b>Round Income:</b> ${roundIncome} </br>

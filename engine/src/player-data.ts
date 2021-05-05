@@ -5,11 +5,11 @@ import {
   AdvTechTile,
   AdvTechTilePos,
   Booster,
-  BrainstoneArea,
   Building,
   Command,
   Expansion,
   Federation,
+  PowerArea,
   ResearchField,
   Resource,
   TechTile,
@@ -35,7 +35,7 @@ export class Power {
 
 export type MoveTokens = Power & { brainstone: number };
 
-export type BrainstoneDest = BrainstoneArea | "discard";
+export type BrainstoneDest = PowerArea | "discard";
 export default class PlayerData extends EventEmitter {
   victoryPoints = 10;
   bid = 0;
@@ -44,7 +44,7 @@ export default class PlayerData extends EventEmitter {
   qics = 0;
   knowledge = 0;
   power: Power = new Power();
-  brainstone: BrainstoneArea = null;
+  brainstone: PowerArea = null;
 
   buildings: {
     [key in Building]: number;
@@ -138,7 +138,7 @@ export default class PlayerData extends EventEmitter {
     const d: BrainstoneActionData = {
       choices: choices.map((a) => ({
         area: a,
-        warning: a === BrainstoneArea.Area1 ? area1Warning : undefined,
+        warning: a === PowerArea.Area1 ? area1Warning : undefined,
       })),
     };
     this.emit("brainstone", d);
@@ -321,7 +321,7 @@ export default class PlayerData extends EventEmitter {
   }
 
   gaiaPowerTokens(): number {
-    return this.power.gaia + (this.brainstone === BrainstoneArea.Gaia ? 1 : 0);
+    return this.power.gaia + (this.brainstone === PowerArea.Gaia ? 1 : 0);
   }
 
   /**
@@ -339,22 +339,22 @@ export default class PlayerData extends EventEmitter {
       return 0;
     }
 
-    if (brainstonePos === BrainstoneArea.Area1) {
+    if (brainstonePos === PowerArea.Area1) {
       if (followBrainStoneHeuristics || this.power.area1 < power) {
         brainstoneUsage += 1;
         power -= 1;
-        brainstonePos = BrainstoneArea.Area2;
+        brainstonePos = PowerArea.Area2;
       }
     }
 
     const area1ToUp = Math.min(power, this.power.area1);
     power -= area1ToUp;
 
-    if (brainstonePos === BrainstoneArea.Area2 && power > 0) {
+    if (brainstonePos === PowerArea.Area2 && power > 0) {
       if (followBrainStoneHeuristics || this.power.area2 + area1ToUp < power) {
         brainstoneUsage += 1;
         power -= 1;
-        brainstonePos = BrainstoneArea.Area3;
+        brainstonePos = PowerArea.Area3;
       }
     }
 
@@ -372,7 +372,7 @@ export default class PlayerData extends EventEmitter {
   }
 
   spendPower(power: number) {
-    if (this.brainstone === BrainstoneArea.Area3) {
+    if (this.brainstone === PowerArea.Area3) {
       let useBrainStone = true;
       const warning: BrainstoneWarning = power < 3 ? "brainstone-charges-wasted" : undefined;
       // Choose whether to spend the brainstone power or not
@@ -383,7 +383,7 @@ export default class PlayerData extends EventEmitter {
       if (needBrainstone) {
         if (warning) {
           // choice is for warning only
-          choices = [BrainstoneArea.Area1];
+          choices = [PowerArea.Area1];
         } else {
           // simply use it
           useBrainStone = true;
@@ -394,7 +394,7 @@ export default class PlayerData extends EventEmitter {
           useBrainStone = false;
         } else {
           // ask
-          choices = [BrainstoneArea.Area1, BrainstoneArea.Area3];
+          choices = [PowerArea.Area1, PowerArea.Area3];
         }
       }
 
@@ -404,12 +404,12 @@ export default class PlayerData extends EventEmitter {
           this.emitBrainstoneEvent(choices, warning);
         }
 
-        useBrainStone = this.brainstoneDest === BrainstoneArea.Area1;
+        useBrainStone = this.brainstoneDest === PowerArea.Area1;
         delete this.brainstoneDest;
       }
 
       if (useBrainStone) {
-        this.brainstone = BrainstoneArea.Area1;
+        this.brainstone = PowerArea.Area1;
         power = Math.max(power - 3, 0);
       }
     }
@@ -417,14 +417,14 @@ export default class PlayerData extends EventEmitter {
     this.power.area1 += Math.ceil(power / this.tokenModifier);
   }
 
-  tokensBelowArea(area: BrainstoneArea) {
+  tokensBelowArea(area: PowerArea) {
     let power = 0;
     switch (area) {
-      case BrainstoneArea.Area3:
+      case PowerArea.Area3:
         power += this.power.area3;
-      case BrainstoneArea.Area2:
+      case PowerArea.Area2:
         power += this.power.area2;
-      case BrainstoneArea.Area1:
+      case PowerArea.Area1:
         power += this.power.area1;
     }
     return power;
@@ -435,14 +435,14 @@ export default class PlayerData extends EventEmitter {
   }
 
   movePowerToGaia(power: number) {
-    this.moveTokens(power, BrainstoneArea.Gaia);
+    this.moveTokens(power, PowerArea.Gaia);
   }
 
-  private moveTokens(power: number, targetArea: BrainstoneArea.Gaia | null) {
+  private moveTokens(power: number, targetArea: PowerArea.Gaia | null) {
     const brainstoneEvent = targetArea ?? "discard";
 
     let movedBrainstone = 0;
-    if (this.brainstone && this.brainstone !== BrainstoneArea.Gaia) {
+    if (this.brainstone && this.brainstone !== PowerArea.Gaia) {
       if (this.discardablePowerTokens() === power) {
         this.brainstone = targetArea;
         power -= 1;
@@ -470,7 +470,7 @@ export default class PlayerData extends EventEmitter {
     this.power.area1 -= area1ToGaia;
     this.power.area2 -= area2ToGaia;
     this.power.area3 -= area3ToGaia;
-    if (targetArea === BrainstoneArea.Gaia) {
+    if (targetArea === PowerArea.Gaia) {
       this.power.gaia += area1ToGaia + area2ToGaia + area3ToGaia;
     }
 
@@ -494,12 +494,12 @@ export default class PlayerData extends EventEmitter {
   }
 
   burnablePower() {
-    return Math.floor((this.power.area2 + (this.brainstone === BrainstoneArea.Area2 ? 1 : 0)) / 2);
+    return Math.floor((this.power.area2 + (this.brainstone === PowerArea.Area2 ? 1 : 0)) / 2);
   }
 
   burnPower(power: number) {
-    if (this.brainstone === BrainstoneArea.Area2 && power > 0) {
-      this.brainstone = BrainstoneArea.Area3;
+    if (this.brainstone === PowerArea.Area2 && power > 0) {
+      this.brainstone = PowerArea.Area3;
       power -= 1;
       this.power.area2 -= 1;
     }
@@ -516,11 +516,11 @@ export default class PlayerData extends EventEmitter {
   }
 
   brainstoneInPlay() {
-    return this.brainstone && this.brainstone !== BrainstoneArea.Gaia;
+    return this.brainstone && this.brainstone !== PowerArea.Gaia;
   }
 
   brainstoneValue() {
-    return this.brainstone === BrainstoneArea.Area3 ? 3 : 0;
+    return this.brainstone === PowerArea.Area3 ? 3 : 0;
   }
 
   hasGreenFederation() {

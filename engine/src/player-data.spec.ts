@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import "mocha";
-import { BrainstoneArea } from "./enums";
+import { PowerArea } from "./enums";
 import PlayerData from "./player-data";
 
 describe("PlayerData", () => {
@@ -30,7 +30,7 @@ describe("PlayerData", () => {
       const data = new PlayerData();
       data.power.area1 = 4;
       data.power.area2 = 1;
-      data.brainstone = BrainstoneArea.Area2;
+      data.brainstone = PowerArea.Area2;
 
       data.discardPower(6);
 
@@ -60,14 +60,14 @@ describe("PlayerData", () => {
       const data = new PlayerData();
       data.power.area1 = 2;
       data.power.area2 = 1;
-      data.brainstone = BrainstoneArea.Area2;
+      data.brainstone = PowerArea.Area2;
 
       const charged = data.chargePower(5);
 
       expect(data.power.area1).to.equal(0);
       expect(data.power.area2).to.equal(1);
       expect(data.power.area3).to.equal(2);
-      expect(data.brainstone).to.equal(BrainstoneArea.Area3);
+      expect(data.brainstone).to.equal(PowerArea.Area3);
       expect(charged).to.equal(5);
     });
   });

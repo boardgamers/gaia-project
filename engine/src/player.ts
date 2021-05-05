@@ -10,7 +10,6 @@ import {
   AdvTechTile,
   AdvTechTilePos,
   Booster,
-  BrainstoneArea,
   Building,
   Command,
   Condition,
@@ -21,6 +20,7 @@ import {
   Phase,
   Planet,
   Player as PlayerEnum,
+  PowerArea,
   ResearchField,
   Resource,
   TechPos,
@@ -714,8 +714,8 @@ export default class Player extends EventEmitter {
     this.emit("gaiaPhase-beforeTokenMove");
 
     this.data.power.area1 += this.data.power.gaia;
-    if (this.data.brainstone === BrainstoneArea.Gaia) {
-      this.data.brainstone = BrainstoneArea.Area1;
+    if (this.data.brainstone === PowerArea.Gaia) {
+      this.data.brainstone = PowerArea.Area1;
     }
 
     this.data.power.gaia = 0;

@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { BrainstoneArea } from "./enums";
+import { PowerArea } from "./enums";
 import Event from "./events";
 import Player from "./player";
 import { Power } from "./player-data";
@@ -9,7 +9,7 @@ describe("IncomeSelection", () => {
     const tests: {
       name: string;
       power: Power;
-      brainstone: BrainstoneArea;
+      brainstone: PowerArea;
       events: Event[];
       expected: number;
     }[] = [
@@ -23,7 +23,7 @@ describe("IncomeSelection", () => {
       {
         name: "no events - not fully charged (brainstone)",
         power: new Power(),
-        brainstone: BrainstoneArea.Area1,
+        brainstone: PowerArea.Area1,
         events: [],
         expected: 2,
       },
@@ -37,7 +37,7 @@ describe("IncomeSelection", () => {
       {
         name: "no events - fully charged (brainstone)",
         power: new Power(),
-        brainstone: BrainstoneArea.Area3,
+        brainstone: PowerArea.Area3,
         events: [],
         expected: 0,
       },
@@ -65,7 +65,7 @@ describe("IncomeSelection", () => {
       {
         name: "events - will charge fully (brainstone)",
         power: new Power(),
-        brainstone: BrainstoneArea.Area2,
+        brainstone: PowerArea.Area2,
         events: Event.parse(["+3pw", "+1t"], null),
         expected: 0,
       },
@@ -86,7 +86,7 @@ describe("IncomeSelection", () => {
       {
         name: "events - will not charge fully (brainstone)",
         power: new Power(),
-        brainstone: BrainstoneArea.Area2,
+        brainstone: PowerArea.Area2,
         events: Event.parse(["+2pw", "+1t"], null),
         expected: 1,
       },
