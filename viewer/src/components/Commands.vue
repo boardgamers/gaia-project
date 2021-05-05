@@ -618,7 +618,9 @@ export default class Commands extends Vue {
     if (freeAndBurn.length > 0) {
       const pass = ret.pop();
       ret.push(freeAndBurnButton(freeAndBurn));
-      ret.push(pass);
+      if (pass) {
+        ret.push(pass);
+      }
     }
 
     if (this.customButtons.length > 0) {
