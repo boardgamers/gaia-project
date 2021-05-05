@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import Engine from "../engine";
-import { BrainstoneArea, Player } from "../enums";
+import { Player, PowerArea } from "../enums";
 
 describe("Taklons", () => {
   it("should allow charge with +t freeIncome", () => {
@@ -44,10 +44,10 @@ describe("Taklons", () => {
     `);
 
     expect(new Engine([...moves, "p2 charge 1pw. brainstone area2"]).player(Player.Player2).data.brainstone).to.equal(
-      BrainstoneArea.Area2
+      PowerArea.Area2
     );
     expect(new Engine([...moves, "p2 charge 1pw. brainstone area1"]).player(Player.Player2).data.brainstone).to.equal(
-      BrainstoneArea.Area1
+      PowerArea.Area1
     );
     expect(() => new Engine([...moves, "p2 charge 1pw. brainstone area3"])).to.throw();
   });
@@ -78,11 +78,11 @@ describe("Taklons", () => {
     });
     it("should ask about brainstone without warning", () => {
       const e = new Engine([...moves, "taklons burn 3. spend 3pw for 3c"]);
-      expect(e.player(Player.Player1).data.brainstone).to.equal(BrainstoneArea.Area3);
+      expect(e.player(Player.Player1).data.brainstone).to.equal(PowerArea.Area3);
       expect(e.availableCommands[0].data).to.deep.equal({
         choices: [
-          { area: BrainstoneArea.Area1, warning: undefined },
-          { area: BrainstoneArea.Area3, warning: undefined },
+          { area: PowerArea.Area1, warning: undefined },
+          { area: PowerArea.Area3, warning: undefined },
         ],
       });
     });
@@ -90,13 +90,13 @@ describe("Taklons", () => {
     it("should use brainstone if needed", () => {
       const engine = new Engine([...moves, "taklons burn 2. spend 4pw for 4c"]);
       expect(engine.moveHistory.pop()).to.deep.equal("taklons burn 2. spend 4pw for 4c");
-      expect(engine.player(Player.Player1).data.brainstone).to.equal(BrainstoneArea.Area1);
+      expect(engine.player(Player.Player1).data.brainstone).to.equal(PowerArea.Area1);
     });
 
     it("should not use brainstone if less than 3 power", () => {
       const engine = new Engine([...moves, "taklons burn 2. spend 1pw for 1c"]);
       expect(engine.moveHistory.pop()).to.deep.equal("taklons burn 2. spend 1pw for 1c");
-      expect(engine.player(Player.Player1).data.brainstone).to.equal(BrainstoneArea.Area3);
+      expect(engine.player(Player.Player1).data.brainstone).to.equal(PowerArea.Area3);
     });
   });
 
@@ -143,13 +143,13 @@ describe("Taklons", () => {
     const engine1 = new Engine([...moves, "p2 build gf -5x6. brainstone gaia"]);
     expect(engine1.player(Player.Player2).data.power.area1).to.equal(0);
     expect(engine1.player(Player.Player2).data.power.area2).to.equal(1);
-    expect(engine1.player(Player.Player2).data.brainstone).to.equal(BrainstoneArea.Gaia);
+    expect(engine1.player(Player.Player2).data.brainstone).to.equal(PowerArea.Gaia);
     expect(engine1.player(Player.Player2).data.power.gaia).to.equal(5);
 
     const engine2 = new Engine([...moves, "p2 build gf -5x6. brainstone area2"]);
     expect(engine2.player(Player.Player2).data.power.area1).to.equal(0);
     expect(engine2.player(Player.Player2).data.power.area2).to.equal(0);
-    expect(engine2.player(Player.Player2).data.brainstone).to.equal(BrainstoneArea.Area2);
+    expect(engine2.player(Player.Player2).data.brainstone).to.equal(PowerArea.Area2);
     expect(engine2.player(Player.Player2).data.power.gaia).to.equal(6);
   });
 

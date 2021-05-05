@@ -8,7 +8,6 @@ import Engine, {
   AvailableResearchTrack,
   Booster,
   BrainstoneActionData,
-  BrainstoneArea,
   Building,
   Command,
   conversionToFreeAction,
@@ -19,6 +18,7 @@ import Engine, {
   HighlightHex,
   Operator,
   Player,
+  PowerArea,
   researchTracks,
   Resource,
   Reward,
@@ -85,12 +85,12 @@ export function endTurnWarning(engine: Engine, command: AvailableCommand): Butto
   if (p.faction == Faction.Taklons && !engine.isLastRound) {
     const brainstoneArea = p.data.brainstone;
     switch (brainstoneArea) {
-      case BrainstoneArea.Area2:
+      case PowerArea.Area2:
         if (p.data.burnablePower() > 0) {
           return warning("Brainstone in area 2 not moved to area 3 using burn.");
         }
         break;
-      case BrainstoneArea.Area3:
+      case PowerArea.Area3:
         return warning("Brainstone in area 3 not used as free action.");
     }
   }
@@ -469,7 +469,7 @@ export function brainstoneButtons(data: BrainstoneActionData): ButtonData[] {
       label: `Brainstone ${area}`,
       warning: buttonWarning(moveWarnings[d.warning]?.text),
       command: `${Command.BrainStone} ${area}`,
-      shortcuts: [area == BrainstoneArea.Gaia ? "g" : area.substring("area".length, area.length)],
+      shortcuts: [area == PowerArea.Gaia ? "g" : area.substring("area".length, area.length)],
     };
   });
 }

@@ -19,7 +19,6 @@ import {
   AdvTechTilePos,
   BoardAction,
   Booster,
-  BrainstoneArea,
   Building,
   Command,
   Expansion,
@@ -30,6 +29,7 @@ import {
   Phase,
   Planet,
   Player as PlayerEnum,
+  PowerArea,
   ResearchField,
   Resource,
   Round,
@@ -663,11 +663,11 @@ export default class Engine {
     if (pl.settings.autoBrainstone) {
       const choices = (cmd.data as BrainstoneActionData).choices.map((c) => c.area);
 
-      if (choices.some((choice) => choice === BrainstoneArea.Gaia || choice === "discard")) {
+      if (choices.some((choice) => choice === PowerArea.Gaia || choice === "discard")) {
         return false;
       }
 
-      const dest = choices.includes(BrainstoneArea.Area3) ? BrainstoneArea.Area3 : BrainstoneArea.Area2;
+      const dest = choices.includes(PowerArea.Area3) ? PowerArea.Area3 : PowerArea.Area2;
       return `${Command.BrainStone} ${dest}`;
     }
     return false;

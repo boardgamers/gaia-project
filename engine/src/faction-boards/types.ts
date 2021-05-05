@@ -1,6 +1,6 @@
 import { get, set } from "lodash";
 import { FactionVariant } from "../engine";
-import { BrainstoneArea, Building, Command, Faction, Operator, Phase, Planet } from "../enums";
+import { Building, Command, Faction, Operator, Phase, Planet, PowerArea } from "../enums";
 import Event from "../events";
 import Player from "../player";
 import Reward from "../reward";
@@ -20,7 +20,7 @@ export interface FactionBoardRaw {
     area1?: number;
     area2?: number;
   };
-  brainstone?: BrainstoneArea;
+  brainstone?: PowerArea;
   handlers?: { [event: string]: (player: Player, ...args: any[]) => any };
 }
 
@@ -91,7 +91,7 @@ export class FactionBoard {
     area1: number;
     area2: number;
   };
-  brainstone: BrainstoneArea;
+  brainstone: PowerArea;
   handlers?: { [event: string]: (player: Player, ...args: any[]) => any };
 
   constructor(input: FactionBoardVariants, variant?: FactionBoardRaw) {
