@@ -408,10 +408,19 @@ export default class Commands extends Vue {
           break;
         }
 
-        case Command.ChooseTechTile:
+        case Command.ChooseTechTile: {
+          ret.push({
+            label: "Pick tech tile",
+            shortcuts: ["p"],
+            command: command.name,
+            techs: command.data.tiles.map((tile) => tile.pos),
+            buttons: command.data.tiles.map((tile) => ({ command: tile.pos, tech: tile.pos })),
+          });
+          break;
+        }
         case Command.ChooseCoverTechTile: {
           ret.push({
-            label: command.name === Command.ChooseCoverTechTile ? "Pick tech tile to cover" : "Pick tech tile",
+            label: "Pick tech tile to cover",
             shortcuts: ["p"],
             command: command.name,
             techs: command.data.tiles.map((tile) => tile.pos),
@@ -444,11 +453,12 @@ export default class Commands extends Vue {
                 "Are you sure you want to decline a tech tile?" : undefined),
             });
           } else {
+            const legacy = command.data as any;
             // LEGACY CODE
             // TODO: Remove when games are updated
             ret.push({
-              label: `Decline ${command.data.offer}`,
-              command: `${Command.Decline} ${command.data.offer}`,
+              label: `Decline ${legacy.offer}`,
+              command: `${Command.Decline} ${legacy.offer}`,
             });
           }
           break;
@@ -558,16 +568,6 @@ export default class Commands extends Vue {
               label: `Bid ${pos.bid[0]} for ${pos.faction}`,
               command: `${Command.Bid} ${pos.faction} $times`,
               times: pos.bid,
-            }))
-          );
-          break;
-        }
-
-        case Command.PickReward: {
-          ret.push(
-            ...command.data.rewards.map((reward) => ({
-              label: `Gain ${reward}`,
-              command: `${Command.PickReward} ${reward}`,
             }))
           );
           break;

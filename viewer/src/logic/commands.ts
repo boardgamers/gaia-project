@@ -1,7 +1,6 @@
 import Engine, {
   applyChargePowers,
   AvailableBoardActionData,
-  AvailableBuilding,
   AvailableCommand,
   AvailableFreeAction,
   AvailableFreeActionData,
@@ -234,12 +233,12 @@ export function finalizeShortcuts(ret: ButtonData[]) {
   }
 }
 
-export function buildButtons(engine: Engine, command: AvailableCommand): ButtonData[] {
+export function buildButtons(engine: Engine, command: AvailableCommand<Command.Build>): ButtonData[] {
   const ret: ButtonData[] = [];
   let academySelection: ButtonData[] = null;
 
   for (const building of Object.values(Building)) {
-    const coordinates = (command.data.buildings as AvailableBuilding[]).filter((bld) => bld.building === building);
+    const coordinates = command.data.buildings.filter((bld) => bld.building === building);
     if (coordinates.length == 0) {
       continue;
     }
@@ -291,7 +290,6 @@ export function buildButtons(engine: Engine, command: AvailableCommand): ButtonD
         label,
         shortcuts: [buildingShortcut(building)],
         command: `${Command.Build} ${building}`,
-        automatic: command.data.automatic,
         hexes: hexMap(engine, coordinates),
         buttons,
         needConfirm: buttons?.length > 0,
@@ -301,7 +299,11 @@ export function buildButtons(engine: Engine, command: AvailableCommand): ButtonD
   return ret;
 }
 
-export function passButtons(engine: Engine, player: Player, command: AvailableCommand): ButtonData[] {
+export function passButtons(
+  engine: Engine,
+  player: Player,
+  command: AvailableCommand<Command.Pass | Command.ChooseRoundBooster>
+): ButtonData[] {
   const ret: ButtonData[] = [];
   const buttons: ButtonData[] = [];
   const warning = passWarning(engine, player, command);

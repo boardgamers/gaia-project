@@ -15,7 +15,6 @@ export interface ButtonData {
   conversion?: { from: Reward[]; to: Reward[] };
   modal?: ModalButtonData;
   hexes?: HighlightHexData;
-  automatic?: boolean; // Should the user have to click on the hex or is it automatic?
   hover?: boolean;
   researchTiles?: string[];
   techs?: Array<TechTilePos | AdvTechTilePos>;
