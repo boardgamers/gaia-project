@@ -1,11 +1,8 @@
 <template>
   <div v-if="gameData.phase !== 'setupInit'">
     <div class="d-flex" style="justify-content: center">
-      <b-form-radio-group checked="recent" @change="setScope">
-        <b-form-radio value="recent">Recent</b-form-radio>
-        <b-form-radio value="all">Everything</b-form-radio>
-      </b-form-radio-group>
-      <b-checkbox :checked="hideLog" @change="toggleLog">Hide log until next turn</b-checkbox>
+      <b-checkbox :checked="scope == 'all'" @change="toggleScope">Show ever<u>y</u>thing</b-checkbox>
+      <b-checkbox :checked="hideLog" @change="toggleLog"><u>H</u>ide log until next turn</b-checkbox>
     </div>
     <table class="table table-hover table-striped table-sm">
       <tbody>
@@ -27,7 +24,7 @@
             <td v-if="event.phase === 'roundStart'" colspan="2" class="major-event">Round {{ event.round }}</td>
             <td v-else-if="event.phase === 'setupInit'" colspan="2" class="major-event">Game Started</td>
             <td v-else-if="event.phase === 'moves-skipped'" colspan="2" class="major-event">
-              Click "Everything" to expand
+              Click "Show everything" to expand
             </td>
             <td v-else-if="event.phase === 'roundIncome'" class="phase-change">Income phase</td>
             <td v-else-if="event.phase === 'roundGaia'" class="phase-change">Gaia phase</td>
@@ -52,15 +49,16 @@
 </template>
 <script lang="ts">
 import Vue from "vue";
-import {Component, Prop} from "vue-property-decorator";
+import { Component, Prop } from "vue-property-decorator";
 import Engine from "@gaia-project/engine";
-import {HistoryEntry, makeHistory} from "../data/log";
+import { HistoryEntry, makeHistory } from "../data/log";
 
 type LogScope = "recent" | "all"
 
 @Component
 export default class AdvancedLog extends Vue {
   private scope: LogScope = "recent"
+  private keyListener = null;
 
   @Prop()
   currentMove?: string;
@@ -68,12 +66,30 @@ export default class AdvancedLog extends Vue {
   @Prop()
   hideLog?: boolean;
 
+  destroyed() {
+    window.removeEventListener("keydown", this.keyListener);
+  }
+
+  mounted() {
+    this.keyListener = (e) => {
+      switch (e.key) {
+        case "h":
+          this.toggleLog();
+          break;
+        case "y":
+          this.toggleScope();
+          break;
+      }
+    };
+    window.addEventListener("keydown", this.keyListener);
+  }
+
   toggleLog() {
     this.$emit("update:hideLog", !this.hideLog);
   }
 
-  setScope(scope: LogScope) {
-    this.scope = scope;
+  toggleScope() {
+    this.scope = this.scope == "all" ? "recent" : "all";
   }
 
   get gameData(): Engine {
@@ -117,5 +133,10 @@ export default class AdvancedLog extends Vue {
 
 .changes {
   border-top: none !important;
+}
+
+.custom-checkbox {
+  margin-right: 1em;
+  margin-left: 1em;
 }
 </style>
