@@ -1024,10 +1024,6 @@ export default class Player extends EventEmitter {
       satellites: satellites.length,
       newSatellites: newSatellites,
       planets: nPlanets,
-      warning:
-        this.faction !== Faction.Ivits && newSatellites > this.data.power.area1
-          ? "federation-with-charged-tokens"
-          : null,
     };
   }
 
