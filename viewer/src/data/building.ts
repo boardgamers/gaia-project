@@ -3,21 +3,21 @@ import { Building } from "@gaia-project/engine";
 export function buildingName(building: Building): string {
   switch (building) {
     case Building.Mine:
-      return "mine";
+      return "Mine";
     case Building.Academy1:
-      return "QIC academy";
+      return "QIC Academy";
     case Building.Academy2:
-      return "knowledge academy";
+      return "Knowledge Academy";
     case Building.TradingStation:
-      return "trading station";
+      return "Trading Station";
     case Building.ResearchLab:
-      return "research lab";
+      return "Research Lab";
     case Building.PlanetaryInstitute:
-      return "planetary institute";
+      return "Planetary Institute";
     case Building.GaiaFormer:
-      return "gaia-former";
+      return "Gaia Former";
     case Building.SpaceStation:
-      return "space station";
+      return "Space Station";
   }
 }
 
@@ -27,7 +27,7 @@ export function buildingShortcut(building: Building): string {
       return "m";
     case Building.Academy1:
     case Building.Academy2:
-      return "a";
+      return "c";
     case Building.TradingStation:
       return "t";
     case Building.ResearchLab:
