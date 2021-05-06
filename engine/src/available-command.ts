@@ -668,9 +668,10 @@ export function possibleFederations(engine: Engine, player: Player) {
         },
       });
     } else {
-      const possibleFeds = engine.player(player).availableFederations(engine.map, engine.options.flexibleFederations);
+      const p = engine.player(player);
+      const possibleFeds = p.availableFederations(engine.map, engine.options.flexibleFederations);
 
-      if (possibleFeds.length > 0 || engine.player(player).federationCache.custom) {
+      if (possibleFeds.length > 0 || p.federationCache.custom) {
         commands.push({
           name: Command.FormFederation,
           player,
@@ -682,6 +683,10 @@ export function possibleFederations(engine: Engine, player: Player) {
                 .map((hex) => hex.toString())
                 .sort()
                 .join(","),
+              warning:
+                p.faction !== Faction.Ivits && fed.newSatellites > p.data.power.area1
+                  ? "federation-with-charged-tokens"
+                  : null,
             })),
           },
         });
