@@ -21,9 +21,9 @@
             >
               {{ event.round }}.{{ event.turn }}
             </td>
-            <td v-if="event.phase === 'roundStart'" colspan="2" class="major-event">Round {{ event.round }}</td>
-            <td v-else-if="event.phase === 'setupInit'" colspan="2" class="major-event">Game Started</td>
-            <td v-else-if="event.phase === 'moves-skipped'" colspan="2" class="major-event">
+            <td v-if="event.phase === 'roundStart'" colspan="4" class="major-event">Round {{ event.round }}</td>
+            <td v-else-if="event.phase === 'setupInit'" colspan="4" class="major-event">Game Started</td>
+            <td v-else-if="event.phase === 'moves-skipped'" colspan="4" class="major-event">
               Click "Show everything" to expand
             </td>
             <td v-else-if="event.phase === 'roundIncome'" class="phase-change">Income phase</td>

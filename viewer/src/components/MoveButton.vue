@@ -190,19 +190,14 @@ export default class MoveButton extends Vue {
       !this.button.rotation &&
       !this.button.range
     ) {
-      if (this.button.automatic && this.button.hexes.size === 1) {
-        const hex = this.button.hexes.keys().next().value;
-        this.emitCommand(hex.toString());
-      } else {
-        this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
-        this.subscribeHexClick((hex, highlight) => {
-          if (this.button.needConfirm) {
-            this.$store.commit("gaiaViewer/highlightHexes", new Map<GaiaHex, HighlightHex>([[hex, {}]]));
-          }
+      this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
+      this.subscribeHexClick((hex, highlight) => {
+        if (this.button.needConfirm) {
+          this.$store.commit("gaiaViewer/highlightHexes", new Map<GaiaHex, HighlightHex>([[hex, {}]]));
+        }
 
-          this.emitCommand(hex.toString(), { warnings: highlight.warnings });
-        });
-      }
+        this.emitCommand(hex.toString(), { warnings: highlight.warnings });
+      });
     } else if (this.button.researchTiles) {
       this.$store.commit("gaiaViewer/highlightResearchTiles", this.button.researchTiles);
       this.subscribeFinal("researchClick");

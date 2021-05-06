@@ -209,7 +209,10 @@ describe("Tech Tiles", () => {
     const engine = new Engine(moves);
     engine.move("hadsch-hallas build lab 2x-4", true);
 
-    const availableCommand = engine.findAvailableCommand(Player.Player1, Command.ChooseTechTile);
+    const availableCommand = engine.findAvailableCommand<Command.ChooseTechTile>(
+      Player.Player1,
+      Command.ChooseTechTile
+    );
     // tslint:disable-next-line no-unused-expression
     expect(availableCommand.data.tiles.find((tech) => tech.pos === AdvTechTilePos.Economy)).to.be.undefined;
   });

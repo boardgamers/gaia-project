@@ -12,6 +12,7 @@ import { upgradedBuildings } from "./buildings";
 import { qicForDistance } from "./cost";
 import Engine, { AuctionVariant, BoardActions } from "./engine";
 import {
+  AdvTechTile,
   AdvTechTilePos,
   BoardAction,
   Booster,
@@ -19,6 +20,7 @@ import {
   Command,
   Expansion,
   Faction,
+  Federation,
   Operator,
   Phase,
   Planet,
@@ -26,6 +28,7 @@ import {
   ResearchField,
   Resource,
   SubPhase,
+  TechTile,
   TechTilePos,
 } from "./enums";
 import { oppositeFaction } from "./factions";
@@ -71,11 +74,77 @@ export class Offer {
   constructor(readonly offer: string, readonly cost: string) {}
 }
 
-interface AvailableCommand {
-  name: Command;
-  data?: any;
-  player?: number;
+type BaseCommandData<Command extends string> = { [key in Command]?: any };
+
+type AvailableCommands<
+  Command extends string,
+  AvailableCommandData extends BaseCommandData<Command>,
+  PlayerId = number
+> = {
+  [command in Command]: _AvailableCommand<Command, AvailableCommandData, command, PlayerId>;
+};
+
+type __AvailableCommand<
+  Command extends string,
+  AvailableCommandData extends BaseCommandData<Command>,
+  PlayerId = number
+> = AvailableCommands<Command, AvailableCommandData, PlayerId>[Command];
+
+type _CommandHelper<
+  Command extends string,
+  CommandData extends BaseCommandData<Command>,
+  move extends Command
+> = move extends keyof CommandData ? CommandData[move] : never;
+
+type _AvailableCommand<
+  Command extends string,
+  AvailableCommandData extends BaseCommandData<Command>,
+  command extends Command,
+  PlayerId = number
+> = _CommandHelper<Command, AvailableCommandData, command> extends never
+  ? { name: command; player: PlayerId }
+  : { name: command; player: PlayerId; data: _CommandHelper<Command, AvailableCommandData, command> };
+
+type _MoveNameWithData<Command extends string, AvailableCommandData extends BaseCommandData<Command>> = {
+  [command in Command]: _CommandHelper<Command, AvailableCommandData, command> extends never ? never : command;
+};
+
+type PossibleBid = { faction: Faction; bid: number[] };
+
+type TechTileWithPos = { tile: TechTile; pos: TechTilePos };
+type AdvTechTileWithPos = { tile: AdvTechTile; pos: AdvTechTilePos };
+type ChooseTechTile = TechTileWithPos | AdvTechTileWithPos;
+
+type AvailableBuildCommandData = { buildings: AvailableBuilding[] };
+
+interface CommandData {
+  [Command.Action]: AvailableBoardActionData;
+  [Command.Bid]: { bids: PossibleBid[] };
+  [Command.BrainStone]: BrainstoneActionData;
+  [Command.Build]: AvailableBuildCommandData;
+  [Command.BurnPower]: number[];
+  [Command.ChargePower]: { offers: Offer[] };
+  [Command.ChooseCoverTechTile]: { tiles: TechTileWithPos[] };
+  [Command.ChooseFaction]: Faction[];
+  [Command.ChooseFederationTile]: { tiles: Federation[]; rescore: boolean };
+  [Command.ChooseIncome]: Reward[];
+  [Command.ChooseRoundBooster]: { boosters: Booster[] };
+  [Command.ChooseTechTile]: { tiles: ChooseTechTile[] };
+  [Command.DeadEnd]: SubPhase; // for debugging
+  [Command.Decline]: { offers: Offer[] };
+  [Command.EndTurn]: never;
+  [Command.FormFederation]: { tiles: Federation[]; federations: { hexes: string; warning?: string }[] };
+  [Command.Init]: never;
+  [Command.Pass]: { boosters: Booster[] };
+  [Command.PISwap]: AvailableBuildCommandData;
+  [Command.PlaceLostPlanet]: { spaces: AvailableHex[] };
+  [Command.RotateSectors]: never;
+  [Command.Special]: { specialacts: { income: string; spec: string }[] };
+  [Command.Spend]: AvailableFreeActionData;
+  [Command.UpgradeResearch]: AvailableResearchData;
 }
+
+type AvailableCommand<C extends Command = Command> = __AvailableCommand<C, CommandData>;
 
 export default AvailableCommand;
 
@@ -152,7 +221,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
 
   switch (engine.phase) {
     case Phase.SetupInit:
-      return [{ name: Command.Init }];
+      return [{ name: Command.Init } as AvailableCommand]; //doesn't have player
     case Phase.SetupBoard:
       return [{ name: Command.RotateSectors, player }];
     case Phase.SetupFaction:
@@ -251,7 +320,7 @@ function addPossibleNewPlanet(
   }
 }
 
-export function possibleBuildings(engine: Engine, player: Player) {
+export function possibleBuildings(engine: Engine, player: Player): AvailableCommand<Command.Build>[] {
   const map = engine.map;
   const pl = engine.player(player);
   const { data } = pl;
@@ -331,7 +400,7 @@ export function possibleBuildings(engine: Engine, player: Player) {
   return [];
 }
 
-export function possibleSpaceStations(engine: Engine, player: Player) {
+export function possibleSpaceStations(engine: Engine, player: Player): AvailableCommand<Command.Build>[] {
   const map = engine.map;
   const pl = engine.player(player);
   const { data } = pl;
@@ -358,10 +427,10 @@ export function possibleMineBuildings(
   engine: Engine,
   player: Player,
   acceptGaiaFormer: boolean,
-  data?: { buildings?: [{ building: Building; coordinates: string; cost: string; steps?: number }] }
-) {
+  data?: { buildings?: AvailableBuilding[] }
+): AvailableCommand<Command.Build>[] {
   if (data && data.buildings) {
-    return [{ name: Command.Build, player, data }];
+    return [{ name: Command.Build, player, data: data as AvailableBuildCommandData }];
   }
 
   const commands = [];
@@ -471,9 +540,9 @@ export function possibleBoardActions(actions: BoardActions, p: PlayerObject): Av
   return commands;
 }
 
-export function possibleFreeActions(pl: PlayerObject) {
+export function possibleFreeActions(pl: PlayerObject): AvailableCommand<Command.Spend | Command.BurnPower>[] {
   // free action - spend
-  const commands: AvailableCommand[] = [];
+  const commands: AvailableCommand<Command.Spend | Command.BurnPower>[] = [];
 
   const pool = new ConversionPool(freeActions, pl);
   pl.emit("freeActionChoice", pool);
@@ -511,15 +580,23 @@ export function freeActionData(availableFreeActions: FreeAction[], player: Playe
   return acts;
 }
 
-export function transformToSpendCommand(actions: ConversionPool, player: PlayerObject) {
+export function transformToSpendCommand(
+  actions: ConversionPool,
+  player: PlayerObject
+): AvailableCommand<Command.Spend> {
   if (actions.actions.length > 0) {
-    const data: AvailableFreeActionData = { acts: actions.actions };
-    return { name: Command.Spend, player: player.player, data: data };
+    return {
+      name: Command.Spend,
+      player: player.player,
+      data: {
+        acts: actions.actions,
+      },
+    };
   }
   return null;
 }
 
-export function possibleLabDowngrades(engine: Engine, player: Player) {
+export function possibleLabDowngrades(engine: Engine, player: Player): AvailableCommand<Command.Build>[] {
   const pl = engine.player(player);
   const spots = pl.data.occupied.filter((hex) => hex.buildingOf(player) === Building.ResearchLab);
 
@@ -532,18 +609,15 @@ export function possibleLabDowngrades(engine: Engine, player: Player) {
       name: Command.Build,
       player,
       data: {
-        buildings: spots.map(
-          (hex) =>
-            ({
-              building: Building.TradingStation,
-              coordinates: hex.toString(),
-              cost: "~",
-              downgrade: true,
-            } as AvailableBuilding)
-        ),
+        buildings: spots.map((hex) => ({
+          building: Building.TradingStation,
+          coordinates: hex.toString(),
+          cost: "~",
+          downgrade: true,
+        })),
       },
     },
-  ] as AvailableCommand[];
+  ];
 }
 
 export function canResearchField(engine: Engine, player: PlayerObject, field: ResearchField): boolean {
@@ -799,9 +873,11 @@ export function possibleCoverTechTiles(engine: Engine, player: Player) {
 }
 
 export function possibleFederationTiles(engine: Engine, player: Player, from: "pool" | "player") {
-  const commands = [];
+  const commands: AvailableCommand<Command.ChooseFederationTile>[] = [];
 
-  const possibleTiles = Object.keys(engine.tiles.federations).filter((key) => engine.tiles.federations[key] > 0);
+  const possibleTiles: Federation[] = Object.keys(engine.tiles.federations)
+    .filter((key) => engine.tiles.federations[key] > 0)
+    .map((f) => f as Federation);
   const playerTiles = engine.player(player).data.tiles.federations.map((fed) => fed.tile);
 
   commands.push({
@@ -913,8 +989,8 @@ export function remainingFactions(engine: Engine) {
   }
 }
 
-function chooseFactionOrBid(engine: Engine, player: Player) {
-  const chooseFaction = {
+function chooseFactionOrBid(engine: Engine, player: Player): AvailableCommand<Command.Bid | Command.ChooseFaction>[] {
+  const chooseFaction: AvailableCommand<Command.Bid | Command.ChooseFaction> = {
     name: Command.ChooseFaction,
     player,
     data: remainingFactions(engine),
@@ -925,9 +1001,9 @@ function chooseFactionOrBid(engine: Engine, player: Player) {
   return [chooseFaction];
 }
 
-function possibleBids(engine: Engine, player: Player) {
-  const commands = [];
-  const bids = [];
+function possibleBids(engine: Engine, player: Player): AvailableCommand<Command.Bid>[] {
+  const commands: AvailableCommand<Command.Bid>[] = [];
+  const bids: PossibleBid[] = [];
 
   for (const faction of engine.setup) {
     const bid = engine.players.find((pl) => pl.faction === faction)

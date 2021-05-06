@@ -6,7 +6,6 @@ import { boardActions } from "./actions";
 import { finalRankings, gainFinalScoringVictoryPoints } from "./algorithms/scoring";
 import { ChargeDecision, ChargeRequest, decideChargeRequest } from "./auto-charge";
 import AvailableCommand, {
-  AvailableBoardActionData,
   AvailableFreeActionData,
   BrainstoneActionData,
   generate as generateAvailableCommands,
@@ -358,7 +357,7 @@ export default class Engine {
     return (this.availableCommands = generateAvailableCommands(this, subphase, data));
   }
 
-  findAvailableCommand(player: PlayerEnum, command: Command): AvailableCommand {
+  findAvailableCommand<C extends Command>(player: PlayerEnum, command: C): AvailableCommand<C> | null {
     this.availableCommands = this.availableCommands || this.generateAvailableCommands();
     return this.availableCommands.find((availableCommand) => {
       if (availableCommand.name !== command) {
@@ -368,7 +367,7 @@ export default class Engine {
         return false;
       }
       return availableCommand.player === player;
-    });
+    }) as AvailableCommand<C>;
   }
 
   clearAvailableCommands() {
@@ -495,7 +494,7 @@ export default class Engine {
 
     if (this.availableCommands.some((cmd) => cmd.name === Command.Decline)) {
       const cmd = this.findAvailableCommand(this.playerToMove, Command.Decline);
-      return `${Command.Decline} ${cmd.data.offer}`;
+      return `${Command.Decline} ${cmd.data.offers[0].offer}`;
     } else if (this.availableCommands.some((cmd) => cmd.name === Command.Pass)) {
       const cmd = this.findAvailableCommand(this.playerToMove, Command.Pass);
       const boosters = cmd.data.boosters;
@@ -510,7 +509,7 @@ export default class Engine {
       return `${Command.ChooseIncome} ${cmd.data}`;
     } else if (this.availableCommands.some((cmd) => cmd.name === Command.BrainStone)) {
       const cmd = this.findAvailableCommand(this.playerToMove, Command.BrainStone);
-      return `${Command.BrainStone} ${(cmd.data as BrainstoneActionData).choices[0].area}`;
+      return `${Command.BrainStone} ${cmd.data.choices[0].area}`;
     } else if (
       this.availableCommands.some(
         (cmd) =>
@@ -547,10 +546,22 @@ export default class Engine {
     const copyOrThis = () => _copy || this;
 
     const functions = [
-      [Command.ChooseFaction, (cmd: AvailableCommand) => copyOrThis().autoChooseFaction(cmd)],
-      [Command.ChargePower, (cmd: AvailableCommand) => copyOrThis().autoChargePower(cmd)],
-      [Command.ChooseIncome, (cmd: AvailableCommand) => copyOrThis().autoIncome(cmd)],
-      [Command.BrainStone, (cmd: AvailableCommand) => copyOrThis().autoBrainstone(cmd)],
+      [
+        Command.ChooseFaction,
+        (cmd: AvailableCommand) => copyOrThis().autoChooseFaction(cmd as AvailableCommand<Command.ChooseFaction>),
+      ],
+      [
+        Command.ChargePower,
+        (cmd: AvailableCommand) => copyOrThis().autoChargePower(cmd as AvailableCommand<Command.ChargePower>),
+      ],
+      [
+        Command.ChooseIncome,
+        (cmd: AvailableCommand) => copyOrThis().autoIncome(cmd as AvailableCommand<Command.ChooseIncome>),
+      ],
+      [
+        Command.BrainStone,
+        (cmd: AvailableCommand) => copyOrThis().autoBrainstone(cmd as AvailableCommand<Command.BrainStone>),
+      ],
       ...(options?.autoPass ? [[undefined, () => copyOrThis().autoPass()] as const] : []),
     ] as const;
 
@@ -591,7 +602,7 @@ export default class Engine {
   }
 
   /** Automatically choose faction when there's only one faction available */
-  autoChooseFaction(cmd: AvailableCommand): string | false {
+  autoChooseFaction(cmd: AvailableCommand<Command.ChooseFaction>): string | false {
     if (this.availableCommands.length > 1) {
       // There can be a bid command too
       return false;
@@ -609,7 +620,7 @@ export default class Engine {
   /**
    * Automatically leech when there's no cost
    */
-  autoChargePower(cmd: AvailableCommand): string | false {
+  autoChargePower(cmd: AvailableCommand<Command.ChargePower>): string | false {
     const offers = cmd.data.offers;
     const pl = this.player(this.playerToMove);
     const playerHasPassed = this.passedPlayers.includes(pl.player);
@@ -657,11 +668,11 @@ export default class Engine {
   /**
    * Automatically decide on brainstone if autoBrainstone is enabled
    */
-  autoBrainstone(cmd: AvailableCommand): string | false {
+  autoBrainstone(cmd: AvailableCommand<Command.BrainStone>): string | false {
     const pl = this.player(this.playerToMove);
 
     if (pl.settings.autoBrainstone) {
-      const choices = (cmd.data as BrainstoneActionData).choices.map((c) => c.area);
+      const choices = cmd.data.choices.map((c) => c.area);
 
       if (choices.some((choice) => choice === PowerArea.Gaia || choice === "discard")) {
         return false;
@@ -1470,8 +1481,11 @@ export default class Engine {
     assert(this.map.isValid(), "Map is invalid with two planets for the same type being near each other");
   }
 
-  [Command.ChooseFaction](player: PlayerEnum, faction: string) {
-    assert(this.availableCommand.data.includes(faction), `${faction} is not in the available factions`);
+  [Command.ChooseFaction](player: PlayerEnum, faction: Faction) {
+    assert(
+      this.avCommand<Command.ChooseFaction>().data.includes(faction),
+      `${faction} is not in the available factions`
+    );
     this.setup.push(faction as Faction);
     if (this.options.auction !== AuctionVariant.ChooseBid) {
       this.executeBid(player, faction, 0);
@@ -1479,7 +1493,7 @@ export default class Engine {
   }
 
   [Command.Bid](player: PlayerEnum, faction: string, bid: number) {
-    const bidsAC = this.availableCommand.data.bids;
+    const bidsAC = this.avCommand<Command.Bid>().data.bids;
     const bidAC = bidsAC.find((b) => b.faction === faction);
     assert(bidAC.bid.includes(+bid), "You have to bid the right amount");
     assert(bidAC, `${faction} is not in the available factions`);
@@ -1502,7 +1516,7 @@ export default class Engine {
     booster: Booster,
     fromCommand: Command = Command.ChooseRoundBooster
   ) {
-    const { boosters } = this.availableCommand.data;
+    const { boosters } = this.avCommand<Command.ChooseRoundBooster>().data;
 
     assert(boosters.includes(booster), `${booster} is not in the available boosters`);
 
@@ -1511,7 +1525,7 @@ export default class Engine {
   }
 
   [Command.Build](player: PlayerEnum, building: Building, location: string) {
-    const { buildings } = this.availableCommand.data;
+    const { buildings } = this.avCommand<Command.Build>().data;
     const parsed = this.map.parse(location);
 
     for (const elem of buildings) {
@@ -1535,7 +1549,7 @@ export default class Engine {
   }
 
   [Command.UpgradeResearch](player: PlayerEnum, field: ResearchField) {
-    const { tracks } = this.availableCommand.data;
+    const { tracks } = this.avCommand<Command.UpgradeResearch>().data;
     const track = tracks.find((tr) => tr.field === field);
 
     assert(track, `Impossible to upgrade research for ${field}`);
@@ -1556,16 +1570,17 @@ export default class Engine {
   }
 
   [Command.ChargePower](player: PlayerEnum, income: string) {
-    const leechCommand = this.availableCommand.data;
+    const leechCommand = this.avCommand<Command.ChargePower>().data;
     // leech rewards are including +t, if needed and in the right sequence
     const leechRewards = Reward.parse(income);
 
     // Handles legacy stuff. To remove when all games with old engine have ended
     if (!leechCommand.offers) {
+      const legacy = leechCommand as any;
       leechCommand.offers = [
         {
-          offer: leechCommand.offer,
-          cost: leechCommand.cost,
+          offer: legacy.offer,
+          cost: legacy.cost,
         } as Offer,
       ];
     }
@@ -1590,7 +1605,7 @@ export default class Engine {
   }
 
   [Command.ChooseTechTile](player: PlayerEnum, pos: TechTilePos | AdvTechTilePos) {
-    const { tiles } = this.availableCommand.data;
+    const { tiles } = this.avCommand<Command.ChooseTechTile>().data;
     const tileAvailable = tiles.find((ta) => ta.pos === pos);
 
     assert(tileAvailable !== undefined, `Impossible to get ${pos} tile`);
@@ -1612,7 +1627,7 @@ export default class Engine {
   }
 
   [Command.ChooseCoverTechTile](player: PlayerEnum, tilePos: TechTilePos) {
-    const { tiles } = this.availableCommand.data;
+    const { tiles } = this.avCommand<Command.ChooseCoverTechTile>().data;
     const tileAvailable = tiles.find((ta) => ta.pos === tilePos);
 
     assert(tileAvailable !== undefined, `Impossible to cover ${tilePos} tile`);
@@ -1621,7 +1636,7 @@ export default class Engine {
   }
 
   [Command.Special](player: PlayerEnum, income: string) {
-    const { specialacts } = this.availableCommand.data;
+    const { specialacts } = this.avCommand<Command.Special>().data;
     const actAvailable = specialacts.find((sa) => Reward.match(Reward.parse(sa.income), Reward.parse(income)));
 
     assert(actAvailable !== undefined, `Special action ${income} is not available`);
@@ -1632,7 +1647,7 @@ export default class Engine {
   }
 
   [Command.ChooseFederationTile](player: PlayerEnum, federation: Federation) {
-    const { tiles, rescore } = this.availableCommand.data;
+    const { tiles, rescore } = this.avCommand<Command.ChooseFederationTile>().data;
 
     assert(tiles.indexOf(federation) !== -1, `Federation ${federation} is not availabe`);
 
@@ -1645,7 +1660,7 @@ export default class Engine {
   }
 
   [Command.PlaceLostPlanet](player: PlayerEnum, location: string) {
-    const { spaces } = this.availableCommand.data;
+    const { spaces } = this.avCommand<Command.PlaceLostPlanet>().data;
     const parsed = this.map.parse(location);
 
     const data = spaces.find((space) => isEqual(this.map.parse(space.coordinates), parsed));
@@ -1664,27 +1679,8 @@ export default class Engine {
     this.leechSources.unshift({ player, coordinates: location });
   }
 
-  [Command.PickReward](player: PlayerEnum, rewardString: string) {
-    const pl = this.player(player);
-    const reward = new Reward(rewardString);
-    const index = pl.data.toPick.rewards.findIndex((rw) => rw.type === reward.type && rw.count === reward.count);
-
-    assert(index !== -1, "Cannot pick " + rewardString);
-
-    pl.gainRewards([reward], pl.data.toPick.source);
-    pl.data.toPick.count -= 1;
-    pl.data.toPick.rewards.splice(index, 1);
-
-    // Pick remaining reward
-    if (pl.data.toPick.count > 0) {
-      this.processNextMove(SubPhase.PickRewards);
-    }
-  }
-
   [Command.Spend](player: PlayerEnum, costS: string, _for: "for", incomeS: string) {
-    const command = this.availableCommand;
-    const data: AvailableFreeActionData = command.data;
-
+    const command = this.avCommand<Command.Spend>();
     const pl = this.player(player);
     const cost = Reward.merge(Reward.parse(costS));
     const income = Reward.merge(Reward.parse(incomeS));
@@ -1695,7 +1691,7 @@ export default class Engine {
 
     // tslint:disable-next-line no-shadowed-variable
     const isPossible = (cost: Reward[], income: Reward[]) => {
-      for (const action of data.acts) {
+      for (const action of command.data.acts) {
         const actionCost = Reward.parse(action.cost);
         if (Reward.includes(cost, actionCost)) {
           // Remove income & cost of action
@@ -1725,21 +1721,20 @@ export default class Engine {
   }
 
   [Command.BurnPower](player: PlayerEnum, cost: string) {
-    const burn = this.availableCommand.data;
+    const burn = this.avCommand<Command.BurnPower>().data;
     assert(burn.includes(+cost), `Impossible to burn ${cost} power`);
 
     this.players[player].data.burnPower(+cost);
   }
 
   [Command.BrainStone](player: PlayerEnum, dest: BrainstoneDest) {
-    const data = this.availableCommand.data as BrainstoneActionData;
-    const areas = data.choices.map((a) => a.area);
+    const areas = this.avCommand<Command.BrainStone>().data.choices.map((a) => a.area);
     assert(areas.includes(dest), "Possible brain stone areas: " + areas.join(", "));
     this.players[player].data.brainstoneDest = dest;
   }
 
   [Command.Action](player: PlayerEnum, action: BoardAction) {
-    const data: AvailableBoardActionData = this.availableCommand.data;
+    const data = this.avCommand<Command.Action>().data;
 
     assert(
       data.poweracts.find((act) => act.name === action),
@@ -1754,7 +1749,7 @@ export default class Engine {
   }
 
   [Command.ChooseIncome](player: PlayerEnum, income: string) {
-    const incomes: Reward[] = this.availableCommand.data;
+    const incomes = this.avCommand<Command.ChooseIncome>().data;
     const incomeRewards = income.split(",");
     const pl = this.player(player);
 
@@ -1772,14 +1767,17 @@ export default class Engine {
     const fedInfo = pl.checkAndGetFederationInfo(hexes, this.map, this.options.flexibleFederations);
 
     assert(fedInfo, `Impossible to form federation at ${hexes}`);
-    assert(this.availableCommand.data.tiles.includes(federation), `Impossible to form federation ${federation}`);
+    assert(
+      this.avCommand<Command.FormFederation>().data.tiles.includes(federation),
+      `Impossible to form federation ${federation}`
+    );
 
     pl.formFederation(fedInfo.hexes, federation);
     this.tiles.federations[federation] -= 1;
   }
 
   [Command.PISwap](player: PlayerEnum, location: string) {
-    const { buildings } = this.availableCommand.data;
+    const { buildings } = this.avCommand<Command.PISwap>().data;
     const pl = this.player(player);
 
     const PIHex = pl.data.occupied.find((hex) => hex.buildingOf(player) === Building.PlanetaryInstitute);
@@ -1800,5 +1798,9 @@ export default class Engine {
     }
 
     assert(false, `Impossible to execute PI swap command at ${location}`);
+  }
+
+  private avCommand<C extends Command>(): AvailableCommand<C> {
+    return this.availableCommand as AvailableCommand<C>;
   }
 }
