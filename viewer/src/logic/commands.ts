@@ -56,7 +56,7 @@ export function withShortcut(label: string, shortcut: string, skip: string[]) {
   let skipIndex = 0;
   for (const s of skip) {
     const found = label.indexOf(s);
-    if (found > 0) {
+    if (found >= 0) {
       skipIndex = found + s.length;
     }
   }
@@ -219,7 +219,9 @@ export function finalizeShortcuts(ret: ButtonData[]) {
 
   if (shown.length == 1) {
     const b = shown[0];
-    b.shortcuts = [];
+    if (isFinite(Number(b.shortcuts[0]))) {
+      b.shortcuts = [];
+    }
     const label = b.label ?? b.command;
     if (label) {
       if (forceNumericShortcut(label)) {
@@ -257,6 +259,7 @@ export function buildButtons(engine: Engine, command: AvailableCommand): ButtonD
         {
           label,
           command: building,
+          shortcuts: [building == Building.Academy1 ? "k" : "q"],
           hexes: hexMap(engine, coordinates),
         },
       ];

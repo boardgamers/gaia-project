@@ -685,7 +685,6 @@ export default class Commands extends Vue {
 
   mounted() {
     this.keyListener = (e) => {
-      // console.log(e.key);
       if (e.key == "Escape") {
         if (this.commandChain.length > 0) {
           this.back();

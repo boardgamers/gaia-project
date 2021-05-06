@@ -53,7 +53,7 @@ const factionData: { [faction in Faction]: { ability: string; PI: string; shortc
   [Faction.HadschHallas]: {
     ability: "-",
     PI: "You can spend credits instead of power to take free actions that allow you to gain resources.",
-    shortcut: "h",
+    shortcut: "d",
   },
   [Faction.Ivits]: {
     ability: `During setup, do not place mines. Instead, after all other players have placed mines (including the Xenos’ third mine), place your planetary institute on any red planet.
