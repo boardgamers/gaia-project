@@ -1,4 +1,4 @@
-import { Building } from "@gaia-project/engine";
+import { AvailableBuilding, Building } from "@gaia-project/engine";
 
 export function buildingName(building: Building): string {
   switch (building) {
@@ -21,8 +21,14 @@ export function buildingName(building: Building): string {
   }
 }
 
-export function buildingShortcut(building: Building): string {
-  switch (building) {
+export function buildingShortcut(building: AvailableBuilding): string {
+  if (building.downgrade) {
+    return "d";
+  }
+  if (building.upgrade && building.building == Building.Mine) {
+    return "u";
+  }
+  switch (building.building) {
     case Building.Mine:
       return "m";
     case Building.Academy1:

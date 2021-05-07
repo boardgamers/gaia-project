@@ -1,6 +1,7 @@
 import Engine, {
   applyChargePowers,
   AvailableBoardActionData,
+  AvailableBuilding,
   AvailableCommand,
   AvailableFreeAction,
   AvailableFreeActionData,
@@ -47,13 +48,13 @@ export type AvailableConversions = {
 
 export const forceNumericShortcut = (label: string) => ["Charge", "Income"].find((b) => label.startsWith(b));
 
-export function withShortcut(label: string, shortcut: string, skip: string[]) {
+export function withShortcut(label: string, shortcut: string, skip?: string[]) {
   if (!shortcut) {
     return label;
   }
 
   let skipIndex = 0;
-  for (const s of skip) {
+  for (const s of skip ?? []) {
     const found = label.indexOf(s);
     if (found >= 0) {
       skipIndex = found + s.length;
@@ -237,21 +238,44 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
   const ret: ButtonData[] = [];
   let academySelection: ButtonData[] = null;
 
-  for (const building of Object.values(Building)) {
-    const coordinates = command.data.buildings.filter((bld) => bld.building === building);
-    if (coordinates.length == 0) {
-      continue;
+  const m = new Map<string, AvailableBuilding[]>();
+  for (const bld of command.data.buildings) {
+    const building = bld.building;
+    const shortcut = buildingShortcut(bld);
+
+    let label = withShortcut(`Build a ${buildingName(building)}`, shortcut);
+
+    if (bld.upgrade) {
+      if (building == Building.Mine) {
+        label = withShortcut("Upgrade Gaia Former to Mine", shortcut);
+      } else {
+        label = withShortcut(`Upgrade to ${buildingName(building)}`, shortcut, ["Upgrade to"]);
+      }
+    } else if (bld.downgrade) {
+      label = withShortcut(`Downgrade to ${buildingName(building)}`, shortcut);
+    } else if (bld.cost === "~" || building === Building.SpaceStation || building === Building.GaiaFormer) {
+      label = withShortcut(`Place a ${buildingName(building)}`, shortcut);
     }
 
-    let label = `Build a ${buildingName(building)}`;
+    const old = m.get(label) ?? [];
+    old.push(bld);
+    m.set(label, old);
+  }
 
-    if (coordinates[0].upgrade) {
-      label = `Upgrade to ${buildingName(building)}`;
-    } else if (coordinates[0].downgrade) {
-      label = `Downgrade to ${buildingName(building)}`;
-    } else if (coordinates[0].cost === "~" || building === Building.SpaceStation || building === Building.GaiaFormer) {
-      label = `Place a ${buildingName(building)}`;
+  for (const [label, buildings] of m) {
+    let warning: ButtonWarning = null;
+    if (buildings.every((b) => b.warnings?.length > 0)) {
+      const common = buildings[0].warnings
+        .filter((w) => buildings.every((b) => b.warnings.includes(w)))
+        .map((w) => moveWarnings[w].text);
+      warning = {
+        title: "Every possible building location has a warning",
+        body: common.length > 0 ? common : ["Different warnings"],
+      };
     }
+
+    const building = buildings[0].building;
+    const shortcut = buildingShortcut(buildings[0]);
 
     if (building == Building.Academy1 || building == Building.Academy2) {
       const buttons: ButtonData[] = [
@@ -259,7 +283,7 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
           label,
           command: building,
           shortcuts: [building == Building.Academy1 ? "k" : "q"],
-          hexes: hexMap(engine, coordinates),
+          hexes: hexMap(engine, buildings),
         },
       ];
 
@@ -271,9 +295,10 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
 
       ret.push({
         label: "Upgrade to Academy",
-        shortcuts: [buildingShortcut(building)],
+        shortcuts: [shortcut],
         command: Command.Build,
         buttons,
+        warning,
       });
     } else {
       const buttons: ButtonData[] =
@@ -288,10 +313,11 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
 
       ret.push({
         label,
-        shortcuts: [buildingShortcut(building)],
+        shortcuts: [shortcut],
         command: `${Command.Build} ${building}`,
-        hexes: hexMap(engine, coordinates),
+        hexes: hexMap(engine, buildings),
         buttons,
+        warning,
         needConfirm: buttons?.length > 0,
       });
     }
