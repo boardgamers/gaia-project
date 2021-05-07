@@ -5,9 +5,9 @@ export function buildingName(building: Building): string {
     case Building.Mine:
       return "Mine";
     case Building.Academy1:
-      return "QIC Academy";
-    case Building.Academy2:
       return "Knowledge Academy";
+    case Building.Academy2:
+      return "QIC Academy";
     case Building.TradingStation:
       return "Trading Station";
     case Building.ResearchLab:
