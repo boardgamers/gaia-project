@@ -151,11 +151,9 @@ export default AvailableCommand;
 export type HighlightHex = { cost?: string; warnings?: BuildWarning[] };
 export type AvailableHex = HighlightHex & { coordinates: string };
 
-export type AvailableBuilding = {
-  coordinates: string;
+export type AvailableBuilding = AvailableHex & {
   building: Building;
-  cost: string;
-  warnings?: BuildWarning[];
+  cost: string; // overrides optional cost in HighlightHex
   upgrade?: boolean;
   downgrade?: boolean;
   steps?: number;
