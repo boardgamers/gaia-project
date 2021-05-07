@@ -97,9 +97,14 @@ describe("AutoCharge", () => {
   describe("decideChargeRequest", () => {
     const tests: {
       name: string;
-      give: { power: number; autoCharge: AutoCharge };
+      give: { power: number; autoCharge: AutoCharge; lastRound?: boolean; playerHasPassed?: boolean };
       want: ChargeDecision;
     }[] = [
+      {
+        name: "passed player who always wants to decide",
+        give: { power: 1, autoCharge: "ask", playerHasPassed: true, lastRound: true },
+        want: ChargeDecision.Yes,
+      },
       {
         name: "always ask",
         give: { power: 1, autoCharge: "ask" },
@@ -137,7 +142,7 @@ describe("AutoCharge", () => {
           new Reward(test.give.power - 1, Resource.VictoryPoint).toString()
         );
 
-        const request = new ChargeRequest(player, [offer], false, false, null);
+        const request = new ChargeRequest(player, [offer], test.give.lastRound, test.give.playerHasPassed, null);
         const decision = decideChargeRequest(request);
         expect(decision).to.equal(test.want);
       });
@@ -147,7 +152,14 @@ describe("AutoCharge", () => {
   describe("decideChargeRequest for taklons special leech", () => {
     const tests: {
       name: string;
-      give: { earlyLeechValue: number; lateLeechValue: number; autoBrainstone: boolean; autoCharge: AutoCharge };
+      give: {
+        earlyLeechValue: number;
+        lateLeechValue: number;
+        autoCharge: AutoCharge;
+        autoBrainstone?: boolean;
+        lastRound?: boolean;
+        playerHasPassed?: boolean;
+      };
       want: { decision: ChargeDecision; offer: string };
     }[] = [
       {
@@ -186,12 +198,34 @@ describe("AutoCharge", () => {
         want: { decision: ChargeDecision.Yes, offer: "1pw,1t" },
       },
       {
-        name: "auto brainstone - decline-cost - one option is free - take it",
+        name: "auto brainstone - decline-cost - no option is free - decline",
         give: {
           earlyLeechValue: 2,
           lateLeechValue: 3,
           autoBrainstone: true,
           autoCharge: "decline-cost",
+        },
+        want: { decision: ChargeDecision.No, offer: null },
+      },
+      {
+        name: "last round passed - ask - one option is free - take it",
+        give: {
+          earlyLeechValue: 1,
+          lateLeechValue: 3,
+          autoCharge: "ask",
+          playerHasPassed: true,
+          lastRound: true,
+        },
+        want: { decision: ChargeDecision.Yes, offer: "1pw,1t" },
+      },
+      {
+        name: "last round passed - ask - no option is free - decline",
+        give: {
+          earlyLeechValue: 2,
+          lateLeechValue: 3,
+          autoCharge: "ask",
+          playerHasPassed: true,
+          lastRound: true,
         },
         want: { decision: ChargeDecision.No, offer: null },
       },
@@ -206,7 +240,7 @@ describe("AutoCharge", () => {
         player.settings.autoChargePower = test.give.autoCharge;
         player.settings.autoBrainstone = test.give.autoBrainstone;
 
-        const request = new ChargeRequest(player, offers, false, false, null);
+        const request = new ChargeRequest(player, offers, give.lastRound, give.playerHasPassed, null);
         const decision = decideChargeRequest(request);
         expect(decision).to.equal(test.want.decision);
         if (test.want.decision === ChargeDecision.Yes) {

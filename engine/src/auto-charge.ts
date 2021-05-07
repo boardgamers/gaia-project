@@ -13,7 +13,6 @@ export enum ChargeDecision {
 }
 
 export class ChargeRequest {
-  public readonly autoCharge: AutoCharge;
   /** Minimum charge executed by the offers */
   public readonly minCharge: number;
   /** Maximum charge executed by the offers */
@@ -28,14 +27,10 @@ export class ChargeRequest {
     public readonly incomeSelection: IncomeSelection
   ) {
     const autoCharge = player.settings.autoChargePower;
-    this.autoCharge = autoCharge;
-    if (autoCharge === "ask") {
-      return;
-    }
     let minCharge = 100;
     let maxCharge = 0;
 
-    const limit = autoCharge === "decline-cost" ? 1 : autoCharge;
+    const limit = autoCharge === "decline-cost" || autoCharge === "ask" ? 1 : autoCharge;
     let allowedMax = 0;
     let maxAllowedOffer: Offer = null;
 
@@ -79,16 +74,13 @@ const chargeRules: ((ChargeRequest) => ChargeDecision)[] = [
 ];
 
 export function decideChargeRequest(r: ChargeRequest): ChargeDecision {
-  if (r.autoCharge === "ask") {
-    return ChargeDecision.Ask;
-  }
   let noYes = false;
   for (const chargeRule of chargeRules) {
     const decision = chargeRule(r);
     if (decision === ChargeDecision.NoAutomaticYes) {
       noYes = true;
     } else if (decision === ChargeDecision.Yes && noYes) {
-      continue;
+      // nothing
     } else if (decision !== ChargeDecision.Undecided) {
       return decision;
     }
@@ -102,17 +94,20 @@ export function decideChargeRequest(r: ChargeRequest): ChargeDecision {
 export function askOrDeclineForPassedPlayer(r: ChargeRequest): ChargeDecision {
   const noOfferIsFree = r.offers.every((offer) => offer.cost !== "~");
 
-  if (r.playerHasPassed && noOfferIsFree) {
-    const remaining = r.incomeSelection.remainingChargesAfterIncome;
+  if (r.playerHasPassed) {
     if (r.isLastRound) {
-      return ChargeDecision.No;
-    } else if (remaining <= 0 && r.offers.length < 2) {
-      // All charges are wasted and only one offer
-      // As we still need to ask if multiple offers (Taklons + token gain)
-      return ChargeDecision.No;
-    } else if (remaining < r.minCharge) {
-      //some charges are wasted
-      return ChargeDecision.NoAutomaticYes;
+      return noOfferIsFree ? ChargeDecision.No : ChargeDecision.Yes;
+    }
+    if (noOfferIsFree) {
+      const remaining = r.incomeSelection.remainingChargesAfterIncome;
+      if (remaining <= 0 && r.offers.length < 2) {
+        // All charges are wasted and only one offer
+        // As we still need to ask if multiple offers (Taklons + token gain)
+        return ChargeDecision.No;
+      } else if (remaining < r.minCharge) {
+        //some charges are wasted
+        return ChargeDecision.NoAutomaticYes;
+      }
     }
   }
   return ChargeDecision.Undecided;
@@ -130,6 +125,9 @@ function askForMultipleTaklonsOffers(offers: Offer[], autoBrainstone: boolean): 
 }
 
 export function askOrDeclineBasedOnCost(minCharge: number, maxCharge: number, autoCharge: AutoCharge) {
+  if (autoCharge === "ask") {
+    return ChargeDecision.Ask;
+  }
   if (autoCharge === "decline-cost") {
     if (minCharge > 1) {
       return ChargeDecision.No;

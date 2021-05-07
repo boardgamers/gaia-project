@@ -280,7 +280,7 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
     if (building == Building.Academy1 || building == Building.Academy2) {
       const buttons: ButtonData[] = [
         {
-          label,
+          label: buildingName(building),
           command: building,
           shortcuts: [building == Building.Academy1 ? "k" : "q"],
           hexes: hexMap(engine, buildings),
