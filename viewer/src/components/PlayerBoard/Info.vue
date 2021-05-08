@@ -12,7 +12,7 @@
       stroke-width="0.07"
     />
     <g transform="translate(0, 0.5)">
-      <text class="board-text">
+      <text class="faction-name">
         <tspan class="faction-name" v-b-modal="faction" role="button">{{ factionName }}</tspan>
       </text>
     </g>

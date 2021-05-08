@@ -363,6 +363,8 @@ export default class PlayerInfo extends Vue {
   }
 
   .faction-name {
+    font-size: 1.2px;
+    dominant-baseline: mathematical;
     cursor: pointer;
     outline: 0;
   }

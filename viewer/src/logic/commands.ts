@@ -262,7 +262,13 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
     m.set(label, old);
   }
 
-  for (const [label, buildings] of m) {
+  const sort = Object.values(Building);
+  const sorted = sortBy(
+    Array.from(m.entries()),
+    ([l, b]) => sort.indexOf(b[0].building) * 2 + (b[0].upgrade || b[0].downgrade ? 1 : 0)
+  );
+
+  for (const [label, buildings] of sorted) {
     let warning: ButtonWarning = null;
     if (buildings.every((b) => b.warnings?.length > 0)) {
       const common = buildings[0].warnings
