@@ -3,7 +3,7 @@
     <SpecialAction
       :class="{ faded }"
       :planet="planet"
-      :action="boardActions[action].income"
+      :action="{ events: boardActions[action].income }"
       :highlighted="highlighted"
       :recent="recent"
       :board="true"

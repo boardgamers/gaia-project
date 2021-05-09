@@ -10,6 +10,7 @@ import Engine, {
   BoardAction,
   boardActions,
   Booster,
+  boosters,
   BrainstoneActionData,
   Building,
   Command,
@@ -26,10 +27,9 @@ import Engine, {
   Resource,
   Reward,
   Round,
-  tiles,
 } from "@gaia-project/engine";
 import { max, minBy, range, sortBy } from "lodash";
-import { ButtonData, ButtonWarning, HighlightHexData } from "../data";
+import { ButtonData, ButtonWarning, HighlightHexData, SpecialActionInfo } from "../data";
 import {
   boardActionNames,
   FastConversion,
@@ -131,7 +131,7 @@ export function chargeWarning(engine: Engine, player: Player, offer: string): Bu
 export function boosterWarning(engine: Engine, player: Player, booster: Booster): ButtonWarning | null {
   return incomeWarning(
     player,
-    tiles.boosters[booster].map((spec) => new Event(spec))
+    boosters[booster].map((spec) => new Event(spec))
   );
 }
 
@@ -358,7 +358,7 @@ export function passButtons(
             warning: boosterWarning(engine, player, booster),
           },
         ],
-        tooltip: tiles.boosters[booster].map((spec) => eventDesc(new Event(spec))).join("\n"),
+        tooltip: boosters[booster].map((spec) => eventDesc(new Event(spec))).join("\n"),
       });
     }
   });
@@ -454,11 +454,10 @@ function conversionButton(
 
 export function boardActionButton(action: BoardAction, player: Player | null) {
   const b = boardActions[action];
-  const cost = Reward.parse(b.cost);
-  const income = Reward.merge(Event.parse(b.income, null).flatMap((e) => e.rewards));
+  const income = Reward.merge(b.income.flatMap((i) => i.rewards));
 
   const shortcut = boardActionNames[action].shortcut;
-  return conversionButton(cost, income, player, shortcut, ["Power Charges", "Terraforming"], action, action);
+  return conversionButton(b.cost, income, player, shortcut, ["Power Charges", "Terraforming"], action, action);
 }
 
 export function boardActionsButton(data: AvailableBoardActionData, player: Player): ButtonData {
@@ -468,6 +467,24 @@ export function boardActionsButton(data: AvailableBoardActionData, player: Playe
     command: Command.Action,
     boardActions: data.poweracts.map((act) => act.name),
     buttons: data.poweracts.map((act) => boardActionButton(act.name, player)),
+  };
+}
+
+function specialActionInfo(act: { income: string; spec: string }): SpecialActionInfo {
+  return { events: [new Event(">" + act.income)] };
+}
+
+export function specialActionsButton(command: AvailableCommand<Command.Special>): ButtonData {
+  return {
+    label: "Special Action",
+    shortcuts: ["s"],
+    command: Command.Special,
+    specialActions: command.data.specialacts.map((act) => specialActionInfo(act)),
+    buttons: command.data.specialacts.map((act) => ({
+      command: act.income,
+      specialAction: specialActionInfo(act),
+      warning: specialActionWarning(this.player, act.income),
+    })),
   };
 }
 

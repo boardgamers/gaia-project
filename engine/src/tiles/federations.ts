@@ -1,6 +1,6 @@
 import { Federation } from "../enums";
 
-export default {
+export const federations = {
   [Federation.Fed1]: "12vp",
   [Federation.Fed2]: "8vp,q",
   [Federation.Fed3]: "8vp,2t",

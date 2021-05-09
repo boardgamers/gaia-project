@@ -1,5 +1,4 @@
-import { FactionCustomization } from "../engine";
-import { Faction } from "../enums";
+import { Faction, FactionCustomization } from "../enums";
 import Ambas from "./ambas";
 import BalTaks from "./baltaks";
 import Bescods from "./bescods";

@@ -13,7 +13,7 @@
     <SpecialAction
       v-else-if="button.specialAction"
       class="mb-1 mr-1"
-      :action="[button.specialAction]"
+      :action="button.specialAction"
       :shortcut="button.shortcuts[0]"
     />
     <TechTile v-else-if="button.tech" class="mb-1 mr-1" @click="handleClick" :pos="button.tech" :count-override="1" />
@@ -64,7 +64,7 @@
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { BuildWarning, GaiaHex, HighlightHex, SpaceMap } from "@gaia-project/engine";
-import { ButtonData } from "../data";
+import { ButtonData, SpecialActionInfo } from "../data";
 import Booster from "./Booster.vue";
 import TechTile from "./TechTile.vue";
 import ButtonContent from "./Resources/ButtonContent.vue";
@@ -234,7 +234,8 @@ export default class MoveButton extends Vue {
       this.subscribeFinal("techClick");
     } else if (this.button.specialActions) {
       this.$store.commit("gaiaViewer/highlightSpecialActions", this.button.specialActions);
-      this.subscribeFinal("specialActionClick");
+      this.subscribe("specialActionClick", (info: SpecialActionInfo) => this.emitCommand(info.events[0].action().rewards[0].toString(), { final: true }));
+      this.emitCommand(null, { disappear: false });
     } else if (this.button.boardActions) {
       this.$store.commit("gaiaViewer/highlightBoardActions", this.button.boardActions);
       this.subscribeFinal("boardActionClick");

@@ -21,7 +21,7 @@
         />
         <TechContent
           v-if="techContent.length > 0"
-          :content="techContent[0].toString()"
+          :event="techContent[0]"
           :transform="`translate(${2 + 56 / 2}, ${height - 10}) scale(0.55)`"
         />
       </g>
@@ -165,11 +165,11 @@ export default class ResearchTile extends Vue {
     return rewards;
   }
 
-  get events() {
+  get events(): Event[] {
     return researchTracks[this.field][this.level].map((s) => new Event(s));
   }
 
-  get techContent() {
+  get techContent(): Event[] {
     return this.events.filter((event) => event.condition !== Condition.None);
   }
 

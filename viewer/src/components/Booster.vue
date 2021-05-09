@@ -22,37 +22,37 @@
     />
     <line x1="-29" x2="29" y1="-8" y2="-8" stroke="#aaa" stroke-width="2" />
     <TechContent :content="event1" transform="translate(0, -33)" />
-    <TechContent :content="event2" :transform="`translate(0, ${30 - (event2.startsWith('+') ? 4 : 0)})`" />
+    <TechContent :content="event2" :transform="`translate(0, ${30 - (event2.toString().startsWith('+') ? 4 : 0)})`" />
   </svg>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { tiles, Event } from "@gaia-project/engine";
+import { Event, boosters } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
 import TechContent from "./TechContent.vue";
 
 @Component<Booster>({
   computed: {
-    tileObject() {
-      return tiles.boosters[this.booster];
+    tileObject(): Event[] {
+      return boosters[this.booster];
     },
 
-    event1() {
+    event1(): Event {
       return this.tileObject[0];
     },
 
-    event2() {
+    event2(): Event {
       return this.tileObject[1];
     },
 
-    title() {
+    title(): Booster {
       return this.booster;
     },
 
     tooltip() {
-      return `- ${eventDesc(new Event(this.event1))}\n- ${eventDesc(new Event(this.event2))}`;
+      return `- ${eventDesc(this.event1)}\n- ${eventDesc(this.event2)}`;
     },
   },
   components: {

@@ -2,8 +2,8 @@ import assert from "assert";
 import axios from "axios";
 import crypto from "crypto";
 import { set } from "lodash";
-import Engine, { EngineOptions } from "./src/engine";
-import { Round } from "./src/enums";
+import Engine from "./src/engine";
+import { EngineOptions, Round } from "./src/enums";
 import { defaultAutoCharge } from "./src/player";
 
 export async function init(

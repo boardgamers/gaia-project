@@ -1,5 +1,4 @@
-import { Faction, factions, Planet } from "@gaia-project/engine";
-import { factionPlanet } from "@gaia-project/engine/src/factions";
+import { Faction, factions, Planet, factionPlanet } from "@gaia-project/engine";
 import planets from "../data/planets";
 
 export function factionColor(faction: Faction | "gen"): string {

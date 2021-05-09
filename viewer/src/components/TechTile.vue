@@ -23,7 +23,7 @@
         filter="url(#shadow-1)"
       />
       <!--<text class="title" x="-25" y="-18">{{title}}</text>-->
-      <TechContent :content="rawContent" style="pointer-events: none" />
+      <TechContent :event="event" style="pointer-events: none" />
     </g>
   </svg>
 </template>
@@ -32,14 +32,10 @@
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import {
-  tiles,
   PlayerEnum,
   Event,
   TechTilePos,
-  AdvTechTilePos,
-  Operator as OperatorEnum,
-  Condition as ConditionEnum,
-  Building as BuildingEnum,
+  AdvTechTilePos, techs,
 } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
 import TechContent from "./TechContent.vue";
@@ -80,10 +76,6 @@ export default class TechTile extends Vue {
     return this.tileObject.tile;
   }
 
-  get event() {
-    return new Event(this.rawContent);
-  }
-
   get count() {
     if (this.countOverride !== undefined) {
       return this.countOverride;
@@ -94,8 +86,11 @@ export default class TechTile extends Vue {
     return this.tileObject.count;
   }
 
-  get rawContent() {
-    return tiles.techs[this.tile][0];
+  get event(): Event {
+    console.log(techs);
+    const tech = techs[this.tile];
+    console.log("t", tech);
+    return tech[0];
   }
 
   get title() {

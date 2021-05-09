@@ -1,6 +1,5 @@
 import { get, set } from "lodash";
-import { FactionVariant } from "../engine";
-import { Building, Command, Faction, Operator, Phase, Planet, PowerArea } from "../enums";
+import { Building, Command, Faction, FactionVariant, Operator, Phase, Planet, PowerArea } from "../enums";
 import Event from "../events";
 import Player from "../player";
 import Reward from "../reward";

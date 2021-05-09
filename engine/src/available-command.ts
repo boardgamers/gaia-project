@@ -2,19 +2,14 @@ import { difference, range } from "lodash";
 import {
   boardActions,
   ConversionPool,
-  FreeAction,
   freeActionConversions,
-  freeActions,
-  freeActionsItars,
-  freeActionsTerrans,
 } from "./actions";
 import { upgradedBuildings } from "./buildings";
 import { qicForDistance } from "./cost";
-import Engine, { AuctionVariant, BoardActions } from "./engine";
 import {
   AdvTechTile,
-  AdvTechTilePos,
-  BoardAction,
+  AdvTechTilePos, AuctionVariant,
+  BoardAction, BoardActions,
   Booster,
   Building,
   Command,
@@ -30,6 +25,7 @@ import {
   SubPhase,
   TechTile,
   TechTilePos,
+  FreeAction, freeActions, freeActionsTerrans, freeActionsItars
 } from "./enums";
 import { oppositeFaction } from "./factions";
 import { GaiaHex } from "./gaia-hex";
@@ -39,6 +35,7 @@ import PlayerData, { BrainstoneDest, resourceLimits } from "./player-data";
 import * as researchTracks from "./research-tracks";
 import Reward from "./reward";
 import { isAdvanced } from "./tiles/techs";
+import Engine from "./engine";
 
 const ISOLATED_DISTANCE = 3;
 export const UPGRADE_RESEARCH_COST = "4k";
@@ -454,7 +451,7 @@ export function possibleMineBuildings(
   return commands;
 }
 
-export function possibleSpecialActions(engine: Engine, player: Player) {
+export function possibleSpecialActions(engine: Engine, player: Player): AvailableCommand<Command.Special>[] {
   const commands = [];
   const specialacts = [];
   const pl = engine.player(player);
@@ -510,8 +507,8 @@ export function possibleBoardActions(actions: BoardActions, p: PlayerObject): Av
   let poweracts = BoardAction.values(Expansion.All).filter(
     (pwract) =>
       actions[pwract] === null &&
-      p.data.canPay(Reward.parse(boardActions[pwract].cost)) &&
-      boardActions[pwract].income.some((income) => Reward.parse(income).some((reward) => canGain(reward)))
+      p.data.canPay(boardActions[pwract].cost) &&
+      boardActions[pwract].income.some((income) => income.rewards.some((reward) => canGain(reward)))
   );
 
   // Prevent using the rescore action if no federation token
@@ -523,8 +520,8 @@ export function possibleBoardActions(actions: BoardActions, p: PlayerObject): Av
     const data = {
       poweracts: poweracts.map((act) => ({
         name: act,
-        cost: boardActions[act].cost,
-        income: boardActions[act].income,
+        cost: boardActions[act].cost.toString(),
+        income: boardActions[act].income.map((i) => i.toString()),
       })),
     } as AvailableBoardActionData;
 

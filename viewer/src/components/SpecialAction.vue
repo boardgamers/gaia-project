@@ -13,10 +13,12 @@
       />
       <!-- <Resource v-for="(reward, i) in rewards" :key=i :count=reward.count :kind=reward.type :transform="`translate(${rewards.length > 1 ? (i - 0.5) * 20  : 0}, ${reward.type === 'pw' ? 4 : 0}), scale(1.5)`" />-->
       <TechContent
-        :content="(board ? '' : '>') + act"
-        v-for="(act, i) in action"
+        :event="event"
+        v-for="(event, i) in action.events"
         :key="i"
-        :transform="`translate(0, ${(i - (action.length - 1) / 2) * 24}) scale(${action.length === 1 ? 0.8 : 0.55})`"
+        :transform="`translate(0, ${(i - (action.events.length - 1) / 2) * 24}) scale(${
+          action.events.length === 1 ? 0.8 : 0.55
+        })`"
       />
     </g>
     <g v-if="disabled">
@@ -29,8 +31,9 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Event, Planet } from "@gaia-project/engine";
+import { Event, Planet, Reward } from "@gaia-project/engine";
 import { translateResources, withShortcut } from "../logic/commands";
+import { SpecialActionInfo } from "../data";
 
 @Component
 export default class SpecialAction extends Vue {
@@ -47,7 +50,7 @@ export default class SpecialAction extends Vue {
   recent: boolean;
 
   @Prop()
-  action: string[];
+  action: SpecialActionInfo;
 
   @Prop()
   shortcut?: string;
@@ -60,21 +63,21 @@ export default class SpecialAction extends Vue {
       this.$emit("click");
       return;
     }
-    this.$store.dispatch("gaiaViewer/specialActionClick", this.action.join(","));
+    this.$store.dispatch("gaiaViewer/specialActionClick", this.action);
   }
 
   get tooltip() {
     return this.board ? undefined : withShortcut(translateResources(this.rewards), this.shortcut);
   }
 
-  get rewards() {
-    return new Event('>' + this.action[0]).rewards;
+  get rewards(): Reward[] {
+    return this.action.events[0].rewards;
   }
 
   /** When the action content is highlighted - not the parent component */
   get _highlighted() {
-    const actions = this.$store.state.gaiaViewer.context.highlighted.specialActions;
-    return actions.has(this.action.join(",")) || actions.has(this.action.join(",").replace(/>/g, ""));
+    return false; //todo
+    // return this.$store.state.gaiaViewer.context.highlighted.specialActions.has(this.action);
   }
 
   get isHighlighted() {

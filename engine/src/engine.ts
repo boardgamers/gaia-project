@@ -15,13 +15,13 @@ import AvailableCommand, {
 import { stdBuildingValue } from "./buildings";
 import {
   AdvTechTile,
-  AdvTechTilePos,
-  BoardAction,
+  AdvTechTilePos, AuctionVariant,
+  BoardAction, BoardActions,
   Booster,
   Building,
-  Command,
+  Command, EngineOptions,
   Expansion,
-  Faction,
+  Faction, FactionCustomization,
   Federation,
   FinalTile,
   Operator,
@@ -37,53 +37,21 @@ import {
   SubPhase,
   TechTile,
   TechTilePos,
+  EventSource
 } from "./enums";
-import Event, { EventSource } from "./events";
-import SpaceMap, { MapConfiguration } from "./map";
+import Event from "./events";
+import SpaceMap from "./map";
 import Player from "./player";
 import PlayerData, { BrainstoneDest, MoveTokens } from "./player-data";
 import * as researchTracks from "./research-tracks";
 import Reward from "./reward";
-import federations from "./tiles/federations";
+import { federations } from "./tiles/federations";
 import { roundScorings } from "./tiles/scoring";
 import { isAdvanced } from "./tiles/techs";
 import { isVersionOrLater } from "./utils";
 
 // const ISOLATED_DISTANCE = 3;
 const LEECHING_DISTANCE = 2;
-
-export enum AuctionVariant {
-  /** Finish choosing all factions first, then start an auction phase */
-  ChooseBid = "choose-bid",
-  /** Bid on factions while not all factions are chosen */
-  BidWhileChoosing = "bid-while-choosing",
-}
-
-export type FactionVariant = "standard" | "more-balanced"; // https://boardgamegeek.com/thread/2324994/article/36509533#36509533
-
-export type FactionCustomization = {
-  variant: FactionVariant;
-  players: number;
-};
-
-export interface EngineOptions {
-  /** Allow last player to rotate sector BEFORE faction selection */
-  advancedRules?: boolean;
-  /** disable Federation check for available commands */
-  noFedCheck?: boolean;
-  /** Custom map given */
-  map?: MapConfiguration;
-  /** Are the federations flexible (allows you to avoid planets with buildings to form federation even if it's not the shortest route)? */
-  flexibleFederations?: boolean;
-  /** auction */
-  auction?: AuctionVariant;
-  /**  **/
-  factionVariant?: FactionVariant;
-  /** Layout */
-  layout?: "standard" | "balanced" | "xshape";
-  /* Force players to have random factions */
-  randomFactions?: boolean;
-}
 
 export type LogEntryChanges = {
   [source in EventSource]?: { [resource in Resource]?: number };
@@ -157,10 +125,6 @@ export function createMoveToShow(move: string, p: PlayerData, executeMove: () =>
     return match;
   });
 }
-
-export type BoardActions = {
-  [key in BoardAction]?: PlayerEnum;
-};
 
 export default class Engine {
   map: SpaceMap;
@@ -1744,8 +1708,8 @@ export default class Engine {
     const pl = this.player(player);
     this.boardActions[action] = player;
 
-    pl.payCosts(Reward.parse(boardActions[action].cost), action);
-    pl.loadEvents(Event.parse(boardActions[action].income, action));
+    pl.payCosts(boardActions[action].cost, action);
+    pl.loadEvents(boardActions[action].income);
   }
 
   [Command.ChooseIncome](player: PlayerEnum, income: string) {

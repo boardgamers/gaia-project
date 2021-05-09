@@ -1,4 +1,4 @@
-import { Faction, LogEntry, Player } from "@gaia-project/engine";
+import { boosters, Faction, LogEntry, Player, techs } from "@gaia-project/engine";
 import { expect } from "chai";
 // Here we import the File System module of node
 import { families, newBarChart } from "./chart-factory";
@@ -48,4 +48,10 @@ describe("Chart", () => {
       },
     });
   });
+
+  it("sdf", () => {
+    // todo
+    console.log("te", boosters);
+  });
+
 });

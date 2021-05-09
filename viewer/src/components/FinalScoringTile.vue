@@ -28,7 +28,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { tiles, Event, factions, FinalTile, Phase, Player, finalScorings, Faction } from "@gaia-project/engine";
+import { Event, factions, FinalTile, Phase, Player, finalScorings, Faction } from "@gaia-project/engine";
 import Token from "./Token.vue";
 
 @Component<FinalScoringTile>({

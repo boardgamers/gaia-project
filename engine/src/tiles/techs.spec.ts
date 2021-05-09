@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import Engine from "../engine";
 import { AdvTechTilePos, Command, Player, TechTilePos } from "../enums";
+import { techs } from "./techs";
 
 describe("Tech Tiles", () => {
   it("should prevent picking the same tech tile twice", () => {
@@ -215,5 +216,9 @@ describe("Tech Tiles", () => {
     );
     // tslint:disable-next-line no-unused-expression
     expect(availableCommand.data.tiles.find((tech) => tech.pos === AdvTechTilePos.Economy)).to.be.undefined;
+  });
+
+  it("sdf", () => {
+    console.log("te", techs);
   });
 });

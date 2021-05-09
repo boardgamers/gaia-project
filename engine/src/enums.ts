@@ -1,3 +1,5 @@
+import { CubeCoordinates } from "hexagrid";
+
 export enum Planet {
   Empty = "e",
   Terra = "r",
@@ -516,3 +518,154 @@ export enum SubPhase {
   DowngradeLab = "down-lab",
   PickRewards = "pickRewards",
 }
+
+export type BoardActions = {
+  [key in BoardAction]?: Player;
+};
+
+export enum AuctionVariant {
+  /** Finish choosing all factions first, then start an auction phase */
+  ChooseBid = "choose-bid",
+  /** Bid on factions while not all factions are chosen */
+  BidWhileChoosing = "bid-while-choosing",
+}
+
+export type FactionVariant = "standard" | "more-balanced"; // https://boardgamegeek.com/thread/2324994/article/36509533#36509533
+
+export type FactionCustomization = {
+  variant: FactionVariant;
+  players: number;
+};
+
+export interface SectorInMapConfiguration {
+  sector: string;
+  rotation: number;
+  center?: CubeCoordinates;
+}
+
+export interface MapConfiguration {
+  sectors?: SectorInMapConfiguration[];
+  // Are sector tiles mirrored?
+  mirror?: boolean;
+}
+
+export interface EngineOptions {
+  /** Allow last player to rotate sector BEFORE faction selection */
+  advancedRules?: boolean;
+  /** disable Federation check for available commands */
+  noFedCheck?: boolean;
+  /** Custom map given */
+  map?: MapConfiguration;
+  /** Are the federations flexible (allows you to avoid planets with buildings to form federation even if it's not the shortest route)? */
+  flexibleFederations?: boolean;
+  /** auction */
+  auction?: AuctionVariant;
+  /**  **/
+  factionVariant?: FactionVariant;
+  /** Layout */
+  layout?: "standard" | "balanced" | "xshape";
+  /* Force players to have random factions */
+  randomFactions?: boolean;
+}
+
+export type EventSource =
+  | Booster
+  | TechPos
+  | AdvTechTilePos
+  | Command.ChargePower
+  | Command.Spend
+  | "final1"
+  | "final2"
+  | RoundScoring
+  | ResearchField
+  | BoardAction
+  | Command.ChooseIncome
+  | Phase.BeginGame
+  | Command.Build
+  | Command.ChooseFederationTile
+  | Command.FormFederation
+  | Command.UpgradeResearch
+  | Faction
+  | Command.Bid;
+
+export enum FreeAction {
+  PowerToQic,
+  PowerToKnowledge,
+  PowerToOre,
+  PowerToCredit,
+  QicToOre,
+  OreToToken,
+  KnowledgeToCredit,
+  OreToCredit,
+
+  //HadschHallas
+  CreditToQic,
+  CreditToOre,
+  CreditToKnowledge,
+
+  //Terrans
+  GaiaTokenToQic,
+  GaiaTokenToKnowledge,
+  GaiaTokenToOre,
+  GaiaTokenToCredit,
+
+  //Itars
+  GaiaTokenToTech,
+
+  //Nevlas
+  PowerToGaiaForKnowledge,
+  PowerToOreAndCredit,
+  PowerTo2Credit,
+  PowerTo2Ore,
+
+  //Baltaks
+  GaiaFormerToQic,
+
+  //Taklons
+  PowerTo3Credit,
+}
+
+
+export type ResourceConversion = { cost: string; income: string };
+export type ConversionTable = { [key in FreeAction]?: ResourceConversion };
+
+export const freeActions: ConversionTable = {
+  [FreeAction.PowerToQic]: { cost: "4pw", income: "1q" },
+  [FreeAction.PowerToOre]: { cost: "3pw", income: "1o" },
+  [FreeAction.QicToOre]: { cost: "1q", income: "1o" },
+  [FreeAction.PowerToKnowledge]: { cost: "4pw", income: "1k" },
+  [FreeAction.PowerToCredit]: { cost: "1pw", income: "1c" },
+  [FreeAction.KnowledgeToCredit]: { cost: "1k", income: "1c" },
+  [FreeAction.OreToCredit]: { cost: "1o", income: "1c" },
+  [FreeAction.OreToToken]: { cost: "1o", income: "1t" },
+};
+
+export const freeActionsHadschHallas: ConversionTable = {
+  [FreeAction.CreditToQic]: { cost: "4c", income: "1q" },
+  [FreeAction.CreditToOre]: { cost: "3c", income: "1o" },
+  [FreeAction.CreditToKnowledge]: { cost: "4c", income: "1k" },
+};
+
+export const freeActionsTerrans: ConversionTable = {
+  [FreeAction.GaiaTokenToQic]: { cost: "4tg", income: "1q" },
+  [FreeAction.GaiaTokenToOre]: { cost: "3tg", income: "1o" },
+  [FreeAction.GaiaTokenToKnowledge]: { cost: "4tg", income: "1k" },
+  [FreeAction.GaiaTokenToCredit]: { cost: "1tg", income: "1c" },
+};
+
+export const freeActionsItars: ConversionTable = { [FreeAction.GaiaTokenToTech]: { cost: "4tg", income: "tech" } };
+
+export const freeActionsNevlas: ConversionTable = {
+  [FreeAction.PowerToGaiaForKnowledge]: { cost: "1t-a3", income: "1k" },
+};
+
+export const freeActionsNevlasPI: ConversionTable = {
+  [FreeAction.PowerTo2Credit]: { cost: "2pw", income: "2c" }, // this is for convenience
+  [FreeAction.PowerToOreAndCredit]: { cost: "4pw", income: "1o,1c" },
+  [FreeAction.PowerTo2Ore]: { cost: "6pw", income: "2o" },
+};
+
+export const freeActionsBaltaks: ConversionTable = { [FreeAction.GaiaFormerToQic]: { cost: "1gf", income: "1q" } };
+
+// this is for convenience
+export const freeActionsTaklons: ConversionTable = { [FreeAction.PowerTo3Credit]: { cost: "3pw", income: "3c" } };

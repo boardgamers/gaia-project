@@ -1,5 +1,5 @@
-import { ConversionPool, freeActionsTaklons } from "../actions";
-import { Faction, PowerArea } from "../enums";
+import { ConversionPool } from "../actions";
+import { Faction, freeActionsTaklons, PowerArea } from "../enums";
 import Player from "../player";
 import { FactionBoardVariants } from "./types";
 

@@ -2,6 +2,7 @@ import {
   AdvTechTilePos,
   BoardAction,
   Booster,
+  Event,
   Federation,
   GaiaHex,
   HighlightHex,
@@ -14,7 +15,7 @@ export type ButtonWarning = { title?: string; body: string[]; okButton?: { label
 
 export type ModalButtonData = { content: string; canActivate: () => boolean; show: (boolean) => void };
 
-export type SpecialActionIncome = string;
+export type SpecialActionInfo = { events: Event[] };
 
 export interface ButtonData {
   label?: string;
@@ -32,7 +33,7 @@ export interface ButtonData {
   boosters?: Booster[];
   selectHexes?: boolean;
   boardActions?: BoardAction[];
-  specialActions?: SpecialActionIncome[];
+  specialActions?: SpecialActionInfo[];
   federations?: Federation[];
   range?: number;
   costs?: { [range: number]: string };
@@ -47,7 +48,7 @@ export interface ButtonData {
   booster?: Booster;
   tech?: TechTilePos | AdvTechTilePos;
   boardAction?: BoardAction;
-  specialAction?: SpecialActionIncome;
+  specialAction?: SpecialActionInfo;
   shortcuts?: string[];
 }
 
@@ -62,7 +63,7 @@ export interface GameContext {
     techs: Set<TechTilePos | AdvTechTilePos>;
     boosters: Set<Booster>;
     boardActions: Set<BoardAction>;
-    specialActions: Set<SpecialActionIncome>;
+    specialActions: Set<SpecialActionInfo>;
     federations: Set<Federation>;
   };
 

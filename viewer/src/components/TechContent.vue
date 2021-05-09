@@ -1,7 +1,9 @@
 <template>
   <g>
-    <text :class="['content', { smaller: content.length >= 10 }]" x="-25" y="0" v-if="showText">{{ content }}</text>
-    <SpecialAction v-if="isAction" :action="[content.split('=>')[1].trim()]" y="-20" width="40" height="40" x="-20" />
+    <text :class="['content', { smaller: event.spec.length >= 10 }]" x="-25" y="0" v-if="showText">{{
+      event.spec
+    }}</text>
+    <SpecialAction v-if="isAction" :action="{ events: [event] }" y="-20" width="40" height="40" x="-20" />
     <Condition :condition="condition" v-if="condition === 'a'" transform="scale(1.5)" />
     <Resource
       v-if="cornerReward"
@@ -113,11 +115,7 @@ import SpecialAction from "./SpecialAction.vue";
 })
 export default class TechContent extends Vue {
   @Prop()
-  content!: string;
-
-  get event() {
-    return new Event(this.content);
-  }
+  event!: Event;
 
   get cornerReward() {
     if (

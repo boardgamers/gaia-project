@@ -20,7 +20,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { tiles, Event, Phase } from "@gaia-project/engine";
+import { Event, Phase, roundScorings } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
 import Condition from "./Condition.vue";
 import Resource from "./Resource.vue";
@@ -50,7 +50,7 @@ export default class ScoringTile extends Vue {
   }
 
   get content() {
-    return tiles.roundScorings[this.tile][0];
+    return roundScorings[this.tile][0];
   }
 
   get tooltip() {

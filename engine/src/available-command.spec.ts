@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { PlayerEnum } from "../index";
+import { PlayerEnum, techs } from "../index";
 import { possibleBoardActions, possibleFreeActions, remainingFactions } from "./available-command";
 import Engine, { AuctionVariant } from "./engine";
 import { BoardAction, Faction } from "./enums";
@@ -106,4 +106,9 @@ describe("Available commands", () => {
       expect(possible()).to.not.include("power1");
     });
   });
+
+  it("sdf", () => {
+      // todo
+      console.log("te", techs);
+    });
 });

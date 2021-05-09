@@ -7,8 +7,8 @@ import {
   Planet,
   PowerArea,
   terraformingStepsRequired,
+  FactionBoardRaw
 } from "@gaia-project/engine";
-import { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
 
 const factionData: { [faction in Faction]: { ability: string; PI: string; shortcut: string } } = {
   [Faction.Terrans]: {

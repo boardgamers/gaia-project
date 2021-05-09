@@ -5,7 +5,6 @@ import { countBy, difference, merge, sum, uniq, uniqWith, zipWith } from "lodash
 import spanningTree from "./algorithms/spanning-tree";
 import { stdBuildingValue } from "./buildings";
 import { terraformingCost } from "./cost";
-import { FactionCustomization } from "./engine";
 import {
   AdvTechTile,
   AdvTechTilePos,
@@ -13,7 +12,7 @@ import {
   Building,
   Command,
   Condition,
-  Faction,
+  Faction, FactionCustomization,
   Federation,
   FinalTile,
   Operator,
@@ -26,8 +25,9 @@ import {
   TechPos,
   TechTile,
   TechTilePos,
+  EventSource
 } from "./enums";
-import Event, { EventSource } from "./events";
+import Event from "./events";
 import { factionBoard, FactionBoard, FactionBoardRaw, factionVariantBoard } from "./faction-boards";
 import factions, { factionPlanet } from "./factions";
 import { FederationInfo, isOutclassedBy } from "./federation";
@@ -38,10 +38,10 @@ import { terraformingStepsRequired } from "./planets";
 import PlayerData from "./player-data";
 import researchTracks, { keyNeeded, lastTile } from "./research-tracks";
 import Reward from "./reward";
-import boosts from "./tiles/boosters";
-import federationTiles, { isGreen } from "./tiles/federations";
+import { boosters } from "./tiles/boosters";
+import { federations, isGreen } from "./tiles/federations";
 import { finalScorings } from "./tiles/scoring";
-import techs, { isAdvanced } from "./tiles/techs";
+import { isAdvanced, techs } from "./tiles/techs";
 import { isVersionOrLater } from "./utils";
 
 // 25 satellites total
@@ -118,8 +118,8 @@ export default class Player extends EventEmitter {
     );
   }
 
-  get actions() {
-    return this.events[Operator.Activate].map((event) => event.action());
+  get actions(): Event[] {
+    return this.events[Operator.Activate];
   }
 
   progress(finalTile: FinalTile) {
@@ -419,7 +419,7 @@ export default class Player extends EventEmitter {
   }
 
   removeRoundBoosterEvents(type?: Operator.Income) {
-    let eventList = Event.parse(boosts[this.data.tiles.booster], this.data.tiles.booster);
+    let eventList = boosters[this.data.tiles.booster];
     eventList = eventList.filter(
       (ev) => (type && ev.operator === Operator.Income) || (!type && ev.operator !== Operator.Income)
     );
@@ -583,7 +583,7 @@ export default class Player extends EventEmitter {
   getRoundBooster(roundBooster: Booster) {
     // add the booster to the the player
     this.data.tiles.booster = roundBooster;
-    this.loadEvents(Event.parse(boosts[roundBooster], roundBooster));
+    this.loadEvents(boosters[roundBooster]);
   }
 
   gainTechTile(tile: TechTile | AdvTechTile, pos: TechTilePos | AdvTechTilePos) {
@@ -592,7 +592,7 @@ export default class Player extends EventEmitter {
       this.data.removeGreenFederation();
     }
     this.data.tiles.techs.push({ tile, pos, enabled: true });
-    this.loadEvents(Event.parse(techs[tile], !advanced ? (`tech-${pos}` as TechPos) : (pos as AdvTechTilePos)));
+    this.loadEvents(Event.withSource(techs[tile], !advanced ? (`tech-${pos}` as TechPos) : (pos as AdvTechTilePos)));
 
     // resets federationCache if Special PA->4pw
     if (tile === TechTile.Tech3) {
@@ -603,7 +603,7 @@ export default class Player extends EventEmitter {
   coverTechTile(pos: TechTilePos) {
     const tile = this.data.tiles.techs.find((tech) => tech.pos === pos);
     tile.enabled = false;
-    this.removeEvents(Event.parse(techs[tile.tile], `tech-${pos}` as TechPos));
+    this.removeEvents(Event.withSource(techs[tile.tile], `tech-${pos}` as TechPos));
   }
 
   incomeSelection(additionalEvents?: Event[]): IncomeSelection {
@@ -778,7 +778,7 @@ export default class Player extends EventEmitter {
       green: isGreen(federation),
     });
 
-    this.gainRewards(Reward.parse(federationTiles[federation]), Command.FormFederation);
+    this.gainRewards(Reward.parse(federations[federation]), Command.FormFederation);
     this.receiveTriggerIncome(Condition.Federation);
   }
 

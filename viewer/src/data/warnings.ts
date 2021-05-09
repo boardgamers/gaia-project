@@ -1,5 +1,4 @@
-import { BuildWarning } from "@gaia-project/engine";
-import { BrainstoneWarning } from "@gaia-project/engine/src/available-command";
+import { BrainstoneWarning, BuildWarning } from "@gaia-project/engine";
 
 export const moveWarnings: { [key in BuildWarning | BrainstoneWarning]: { text: string } } = {
   "step-booster-not-used": { text: "Step booster is not used." },

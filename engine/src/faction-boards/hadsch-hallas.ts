@@ -1,5 +1,5 @@
-import { ConversionPool, freeActionsHadschHallas } from "../actions";
-import { Faction } from "../enums";
+import { ConversionPool } from "../actions";
+import { Faction, freeActionsHadschHallas } from "../enums";
 import Player from "../player";
 import { FactionBoardVariants } from "./types";
 

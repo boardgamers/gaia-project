@@ -1,5 +1,4 @@
-import Engine, { FactionVariant } from "@gaia-project/engine";
-import { AuctionVariant } from "@gaia-project/engine/src/engine";
+import Engine, { AuctionVariant, FactionVariant } from "@gaia-project/engine";
 import Game from "./components/Game.vue";
 import Wrapper from "./components/Wrapper.vue";
 import launch from "./launcher";

@@ -3,8 +3,7 @@ import { CubeCoordinates, Grid, Hex } from "hexagrid";
 import { keyBy } from "lodash";
 import seedrandom from "seedrandom";
 import shuffleSeed from "shuffle-seed";
-import { EngineOptions } from "./engine";
-import { Faction, Planet, Player } from "./enums";
+import { EngineOptions, Faction, MapConfiguration, Planet, Player, SectorInMapConfiguration } from "./enums";
 import { GaiaHex, reverseSuffixes } from "./gaia-hex";
 import Sector from "./sector";
 
@@ -47,18 +46,6 @@ const smallCenters = ["5x-2", "2x3", "3x-5", "0x0", "-3x5", "-2x-3", "-5x2"].map
 const bigCenters = ["5x-2", "2x3", "-1x8", "3x-5", "0x0", "-3x5", "-6x10", "-2x-3", "-5x2", "-8x7"].map((coord) =>
   CubeCoordinates.parse(coord)
 );
-
-export interface SectorInMapConfiguration {
-  sector: string;
-  rotation: number;
-  center?: CubeCoordinates;
-}
-
-export interface MapConfiguration {
-  sectors?: SectorInMapConfiguration[];
-  // Are sector tiles mirrored?
-  mirror?: boolean;
-}
 
 const smallConfiguration = {
   sectors: [s1, s2, s3, s4, s5b, s6b, s7b],

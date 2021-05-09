@@ -94,7 +94,7 @@ export default class PlayerCircle extends Vue {
 
     if (phaseBeforeSetupBuilding(this.gameData)) {
       const isBiddingWhileChoosingFactions =
-        this.gameData.options.auction === AuctionVariant.BidWhileChoosing && this.gameData.phase === Phase.SetupFaction;
+        this.gameData.options.auction === "bid-while-choosing" && this.gameData.phase === Phase.SetupFaction;
       const isInAuctionPhase = this.gameData.phase === Phase.SetupAuction;
 
       if (isInAuctionPhase || isBiddingWhileChoosingFactions) {

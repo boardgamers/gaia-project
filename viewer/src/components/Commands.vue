@@ -67,19 +67,18 @@ import Engine, {
   BuildWarning,
   Command,
   Faction,
-  factions,
+  factions, federations,
   GaiaHex,
   Resource,
   Reward,
   SpaceMap,
   SubPhase,
-  tiles,
+  FactionCustomization,
+  factionVariantBoard
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
 import { ButtonData, GameContext, ModalButtonData } from "../data";
 import { factionDesc, factionShortcut } from "../data/factions";
-import { FactionCustomization } from "@gaia-project/engine/src/engine";
-import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
 import { moveWarnings } from "../data/warnings";
 import {
   advanceResearchWarning,
@@ -94,7 +93,7 @@ import {
   finalizeShortcuts,
   freeAndBurnButton,
   hexMap,
-  passButtons,
+  passButtons, specialActionsButton,
   specialActionWarning
 } from "../logic/commands";
 import { researchNames } from "../data/research";
@@ -475,17 +474,7 @@ export default class Commands extends Vue {
         }
 
         case Command.Special: {
-          ret.push({
-            label: "Special Action",
-            shortcuts: ["s"],
-            command: Command.Special,
-            specialActions: command.data.specialacts.map((act) => act.income),
-            buttons: command.data.specialacts.map((act) => ({
-              command: act.income,
-              specialAction: act.income,
-              warning: specialActionWarning(this.player, act.income)
-            })),
-          });
+          ret.push(specialActionsButton(command));
           break;
         }
 
@@ -570,7 +559,7 @@ export default class Commands extends Vue {
         case Command.FormFederation: {
           const tilesButtons: ButtonData[] = command.data.tiles.map((fed, i) => ({
             command: fed,
-            label: `Federation ${i + 1}: ${tiles.federations[fed]}`,
+            label: `Federation ${i + 1}: ${federations[fed]}`,
           } as ButtonData));
 
           const locationButtons: ButtonData[] = command.data.federations.map((fed, i) => ({
@@ -600,7 +589,7 @@ export default class Commands extends Vue {
         case Command.ChooseFederationTile: {
           const tilesButtons = command.data.tiles.map((fed, i) => ({
             command: fed,
-            label: `Federation ${i + 1}: ${tiles.federations[fed]}`,
+            label: `Federation ${i + 1}: ${federations[fed]}`,
           }));
 
           ret.push({

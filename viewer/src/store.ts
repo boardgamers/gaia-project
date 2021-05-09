@@ -13,7 +13,7 @@ import Engine, {
 import { CubeCoordinates } from "hexagrid";
 import Vue from "vue";
 import Vuex, { Store } from "vuex";
-import { ButtonData, GameContext, HighlightHexData, SpecialActionIncome } from "./data";
+import { ButtonData, GameContext, HighlightHexData, SpecialActionInfo } from "./data";
 import { FastConversionEvent } from "./data/actions";
 import { FastConversionTooltips } from "./logic/commands";
 import {
@@ -105,7 +105,7 @@ const gaiaViewer = {
       state.context.highlighted.boardActions = new Set(actions);
     },
 
-    highlightSpecialActions(state: State, actions: SpecialActionIncome[]) {
+    highlightSpecialActions(state: State, actions: SpecialActionInfo[]) {
       state.context.highlighted.specialActions = new Set(actions);
     },
 
@@ -168,7 +168,7 @@ const gaiaViewer = {
     researchClick(context: any, field: ResearchField) {},
     techClick(context: any, pos: TechTilePos | AdvTechTilePos) {},
     fastConversionClick(context: any, event: FastConversionEvent) {},
-    specialActionClick(context: any, action: SpecialActionIncome) {},
+    specialActionClick(context: any, action: SpecialActionInfo) {},
     boardActionClick(context: any, action: BoardAction) {},
     federationClick(context: any, federation: Federation) {},
     confirmClick(context: any, action: string) {},

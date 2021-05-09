@@ -1,5 +1,5 @@
-import { ConversionPool, freeActionsBaltaks } from "../actions";
-import { Building, Faction } from "../enums";
+import { ConversionPool } from "../actions";
+import { Building, Faction, freeActionsBaltaks } from "../enums";
 import Player from "../player";
 import { FactionBoardVariants } from "./types";
 

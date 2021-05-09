@@ -14,8 +14,8 @@ import {
   Resource,
   TechTile,
   TechTilePos,
+  EventSource
 } from "./enums";
-import { EventSource } from "./events";
 import { GaiaHex } from "./gaia-hex";
 import Reward from "./reward";
 
