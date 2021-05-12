@@ -23,27 +23,23 @@
         <g transform="translate(2.2, 0)">
           <Resource kind="c" :count="data.credits" transform="scale(0.1)" />
           <text :class="['board-text', { 'max-resource': data.ores >= 30 }]" transform="translate(1,0) scale(0.7)"
-            >/30</text
-          >
+            >/30
+          </text>
         </g>
         <g transform="translate(5.5, 0)">
           <Resource kind="o" :count="data.ores" transform="scale(0.1)" />
           <text :class="['board-text', { 'max-resource': data.ores >= 15 }]" transform="translate(1,0) scale(0.7)"
-            >/15</text
-          >
+            >/15
+          </text>
         </g>
         <g transform="translate(9, 0)">
           <Resource kind="k" :count="data.knowledge" transform="scale(0.1)" />
           <text :class="['board-text', { 'max-resource': data.knowledge >= 15 }]" transform="translate(1,0) scale(0.7)"
-            >/15</text
-          >
+            >/15
+          </text>
         </g>
         <Resource kind="q" :count="data.qics" :center-left="true" transform="translate(12.5,0) scale(0.1)" />
-        <g v-if="canUndo" transform="translate(16.5,-1) scale(0.18)">
-          <Resource class="undo-button" kind="pay-pw" />
-          <text class="undo-text" x="0" y="2">undo</text>
-          <circle class="undo-button" r="7" @click="undo" />
-        </g>
+        <Undo v-if="canUndo" transform="translate(-5.1,-15.7) scale(.08)" />
         <g transform="translate(15, -3) scale(0.2)" v-else>
           <VictoryPoint width="15" height="15" />
           <text class="vp-text" x="7" y="10">{{ data.victoryPoints }}</text>
@@ -55,9 +51,9 @@
         <g transform="translate(16, 1)" v-b-tooltip title="Satellites and space stations">
           <image xlink:href='../../assets/resources/satellite.svg' :height=155/211*22 width=22 x=-11 y=-8
           transform="scale(0.07)"/>
-          <text :class="['board-text']" transform="translate(1,0) scale(0.7)">{{
-            data.satellites + data.buildings.sp
-          }}</text>
+          <text :class="['board-text']" transform="translate(1,0) scale(0.7)"
+            >{{ data.satellites + data.buildings.sp }}
+          </text>
         </g>
         <g transform="translate(16, 2.2)" v-b-tooltip title="Sectors with a colonized planet">
           <image xlink:href='../../assets/conditions/sector.svg' :height=155/211*22 width=22 x=-11 y=-8
@@ -68,8 +64,8 @@
           <image xlink:href='../../assets/conditions/federation.svg' :height=155/211*22 width=22 x=-11 y=-8
           transform="scale(0.08)"/>
           <text :class="['board-text']" transform="translate(1,0) scale(0.7)"
-            >{{ player.fedValue }}/{{ player.structureValue - player.fedValue }}</text
-          >
+            >{{ player.fedValue }}/{{ player.structureValue - player.fedValue }}
+          </text>
         </g>
         <circle
           r="1.7"
@@ -105,9 +101,9 @@
           transform="scale(0.1)"
           :class="['board-info', 'research-tile', researchType(i - 1), researchClass(i - 1)]"
         />
-        <text :class="['board-text', researchType(i - 1)]" transform="scale(0.7)" x="-.35" y="-.1">{{
-          research(i - 1)
-        }}</text>
+        <text :class="['board-text', researchType(i - 1)]" transform="scale(0.7)" x="-.35" y="-.1"
+          >{{ research(i - 1) }}
+        </text>
       </g>
     </g>
   </g>
@@ -118,6 +114,7 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { uniq } from "lodash";
 import Resource from "../Resource.vue";
+import Undo from "../Resources/Undo.vue";
 import { Faction, factions, Player, PlayerData, ResearchField, Resource as ResourceEnum } from "@gaia-project/engine";
 import VictoryPoint from "../Resources/VictoryPoint.vue";
 import { FastConversionEvent } from "../../data/actions";
@@ -126,6 +123,7 @@ import { FastConversionEvent } from "../../data/actions";
   components: {
     Resource,
     VictoryPoint,
+    Undo
   },
 })
 export default class PlayerBoardInfo extends Vue {
@@ -143,11 +141,7 @@ export default class PlayerBoardInfo extends Vue {
   }
 
   get canUndo() {
-    return !this.$store.state.gaiaViewer.data.newTurn && this.engine.currentPlayer == this.player.player;
-  }
-
-  undo() {
-    this.$emit("undo");
+    return this.$store.getters["gaiaViewer/canUndo"] && this.engine.currentPlayer == this.player.player;
   }
 
   get factionName(): string {
@@ -207,19 +201,6 @@ export default class PlayerBoardInfo extends Vue {
 
 .vp-text {
   font-size: 7px;
-  fill: white;
-  font-weight: 600;
-  text-anchor: middle;
-}
-
-.undo-button {
-  cursor: pointer;
-  opacity: 0;
-}
-
-.undo-text {
-  pointer-events: none;
-  font-size: 5.5px;
   fill: white;
   font-weight: 600;
   text-anchor: middle;
