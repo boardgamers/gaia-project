@@ -23,20 +23,20 @@
         <g transform="translate(2.2, 0)">
           <Resource kind="c" :count="data.credits" transform="scale(0.1)" />
           <text :class="['board-text', { 'max-resource': data.ores >= 30 }]" transform="translate(1,0) scale(0.7)"
-            >/30</text
-          >
+            >/30
+          </text>
         </g>
         <g transform="translate(5.5, 0)">
           <Resource kind="o" :count="data.ores" transform="scale(0.1)" />
           <text :class="['board-text', { 'max-resource': data.ores >= 15 }]" transform="translate(1,0) scale(0.7)"
-            >/15</text
-          >
+            >/15
+          </text>
         </g>
         <g transform="translate(9, 0)">
           <Resource kind="k" :count="data.knowledge" transform="scale(0.1)" />
           <text :class="['board-text', { 'max-resource': data.knowledge >= 15 }]" transform="translate(1,0) scale(0.7)"
-            >/15</text
-          >
+            >/15
+          </text>
         </g>
         <Resource kind="q" :count="data.qics" :center-left="true" transform="translate(12.5,0) scale(0.1)" />
         <g v-if="canUndo" transform="translate(16.5,-1) scale(0.18)">
@@ -55,9 +55,9 @@
         <g transform="translate(16, 1)" v-b-tooltip title="Satellites and space stations">
           <image xlink:href='../../assets/resources/satellite.svg' :height=155/211*22 width=22 x=-11 y=-8
           transform="scale(0.07)"/>
-          <text :class="['board-text']" transform="translate(1,0) scale(0.7)">{{
-            data.satellites + data.buildings.sp
-          }}</text>
+          <text :class="['board-text']" transform="translate(1,0) scale(0.7)"
+            >{{ data.satellites + data.buildings.sp }}
+          </text>
         </g>
         <g transform="translate(16, 2.2)" v-b-tooltip title="Sectors with a colonized planet">
           <image xlink:href='../../assets/conditions/sector.svg' :height=155/211*22 width=22 x=-11 y=-8
@@ -68,8 +68,8 @@
           <image xlink:href='../../assets/conditions/federation.svg' :height=155/211*22 width=22 x=-11 y=-8
           transform="scale(0.08)"/>
           <text :class="['board-text']" transform="translate(1,0) scale(0.7)"
-            >{{ player.fedValue }}/{{ player.structureValue - player.fedValue }}</text
-          >
+            >{{ player.fedValue }}/{{ player.structureValue - player.fedValue }}
+          </text>
         </g>
         <circle
           r="1.7"
@@ -105,9 +105,9 @@
           transform="scale(0.1)"
           :class="['board-info', 'research-tile', researchType(i - 1), researchClass(i - 1)]"
         />
-        <text :class="['board-text', researchType(i - 1)]" transform="scale(0.7)" x="-.35" y="-.1">{{
-          research(i - 1)
-        }}</text>
+        <text :class="['board-text', researchType(i - 1)]" transform="scale(0.7)" x="-.35" y="-.1"
+          >{{ research(i - 1) }}
+        </text>
       </g>
     </g>
   </g>
@@ -143,11 +143,11 @@ export default class PlayerBoardInfo extends Vue {
   }
 
   get canUndo() {
-    return !this.$store.state.gaiaViewer.data.newTurn && this.engine.currentPlayer == this.player.player;
+    return this.$store.getters["gaiaViewer/canUndo"] && this.engine.currentPlayer == this.player.player;
   }
 
   undo() {
-    this.$emit("undo");
+    this.$store.dispatch("gaiaViewer/undo");
   }
 
   get factionName(): string {

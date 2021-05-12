@@ -11,7 +11,6 @@
           :player="player"
           :faction="player.faction"
           :data="playerData"
-          @undo="undo"
         />
         <g transform="translate(4, 0)">
           <BuildingGroup
@@ -268,10 +267,6 @@ export default class PlayerInfo extends Vue {
 
   get round() {
     return this.$store.state.gaiaViewer.data.round;
-  }
-
-  undo() {
-    this.$emit("undo");
   }
 
   get hasLostPlanet() {

@@ -7,9 +7,7 @@
       <h5>
         <span v-if="init">Pick the number of players</span>
         <span v-else>
-          {{ [playerName, ...titles].join(" - ") }}
-          <a href="#" v-if="commandChain.length > 0" class="smaller small" @click.prevent="back()">(back)</a>
-          <a href="#" v-else-if="canUndo" class="smaller small" @click.prevent="undo()">(undo)</a>
+          <span v-html="[playerName, ...titles].join(' - ')" />
           <span class="smaller small">{{ this.currentTurnLog() }}</span>
         </span>
       </h5>
@@ -127,9 +125,6 @@ let show = false;
     }
   },
   computed: {
-    canUndo() {
-      return !this.$store.state.gaiaViewer.data.newTurn;
-    },
     randomFactionButton() {
       this.updater = this.updater + 1;
       const command = this.factionsToChoose;
@@ -157,10 +152,6 @@ export default class Commands extends Vue {
 
   @Prop({ default: "" })
   remainingTime: string;
-
-  updater = 0;
-
-  subscriptions: { [key in Command]?: () => void } = {};
 
   get gameData(): Engine {
     return this.$store.state.gaiaViewer.data;
@@ -280,6 +271,11 @@ export default class Commands extends Vue {
     console.log("handle command", command);
     this.unsubscribe();
 
+    if (source?.button?.undo) {
+      this.undo();
+      return;
+    }
+
     // Some users seem to have a bug with repeating commands on mobile, like clicking the income button twice
     if (
       this.commandChain.length > 0 &&
@@ -295,6 +291,7 @@ export default class Commands extends Vue {
       this.commandChain.push(source.button.command);
       this.buttonChain.push(source.button);
       this.customButtons = source.button.buttons;
+      this.$store.commit("gaiaViewer/setCommandChain", true);
 
       // Seems to cause problems on mobile
       // setTimeout(() => {
@@ -311,10 +308,6 @@ export default class Commands extends Vue {
     } else {
       this.$emit("command", `${this.playerSlug} ${[...this.commandChain, command].join(" ")}`, warnings);
     }
-  }
-
-  undo() {
-    this.$emit("undo");
   }
 
   title(title: string) {
@@ -649,11 +642,30 @@ export default class Commands extends Vue {
 
       ret.push(...this.customButtons);
     }
+
     finalizeShortcuts(ret);
+
+    if (this.$store.getters["gaiaViewer/canUndo"]) {
+      ret.push({
+        label: "Undo",
+        tooltip: "Undo last command (<u>Esc</u> keyboard shortcut)",
+        undo: true,
+      });
+    }
+
     return ret;
   }
 
+  undo() {
+    this.$store.dispatch("gaiaViewer/undo");
+  }
+
   back() {
+    if (this.commandChain.length == 0) {
+      // was a command undo
+      return;
+    }
+
     this.$store.commit("gaiaViewer/clearContext");
     this.commandChain.pop();
     this.commandTitles.pop();
@@ -668,12 +680,14 @@ export default class Commands extends Vue {
       }
     } else {
       this.customButtons = [];
+      this.$store.commit("gaiaViewer/setCommandChain", false);
     }
   }
 
   destroyed() {
     window.removeEventListener("keydown", this.keyListener);
     this.unsubscribe();
+    this.undoListener();
   }
 
   private unsubscribe() {
@@ -685,19 +699,22 @@ export default class Commands extends Vue {
 
   mounted() {
     this.keyListener = (e) => {
-      if (e.key == "Escape") {
-        if (this.commandChain.length > 0) {
-          this.back();
-        } else if (!this.$store.state.gaiaViewer.data.newTurn) {
-          this.undo();
-        }
+      if (e.key == "Escape" && this.$store.getters["gaiaViewer/canUndo"]) {
+        this.undo();
       }
     };
     window.addEventListener("keydown", this.keyListener);
+    this.undoListener = this.$store.subscribeAction(({ type, payload }) => {
+      if (type === "gaiaViewer/undo") {
+        this.back();
+      }
+    });
   }
 
+  private updater = 0;
+  private subscriptions: { [key in Command]?: () => void } = {};
+  private undoListener = null;
   private keyListener = null;
-
   private commandTitles: string[] = [];
   private customButtons: ButtonData[] = [];
   private commandChain: string[] = [];

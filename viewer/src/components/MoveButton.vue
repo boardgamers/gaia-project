@@ -11,7 +11,7 @@
     <b-btn
       v-else-if="button.times === undefined"
       :variant="button.warning ? 'warning' : 'secondary'"
-      :class="['mr-2', 'mb-2', 'move-button', { 'symbol-button': button.conversion }]"
+      :class="['mr-2', 'mb-2', 'move-button', { 'symbol-button': button.conversion, undo: button.undo }]"
       @click="handleClick"
       @mouseenter="hover"
       @mouseleave="leave"
@@ -387,5 +387,9 @@ export default class MoveButton extends Vue {
 
 .symbol-button > button {
   padding: 0.275rem 0.35rem 0.275rem 0.15rem;
+}
+
+.undo {
+  align-self: center;
 }
 </style>

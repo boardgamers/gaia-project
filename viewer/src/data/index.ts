@@ -31,6 +31,7 @@ export interface ButtonData {
 
   buttons?: ButtonData[];
   hide?: boolean;
+  undo?: boolean;
   booster?: Booster;
   tech?: TechTilePos | AdvTechTilePos;
   shortcuts?: string[];
@@ -55,6 +56,7 @@ export interface GameContext {
   activeButton: ButtonData | null;
   fastConversionTooltips: FastConversionTooltips;
   hexSelection: boolean;
+  hasCommandChain: boolean;
 
   logPlacement: LogPlacement;
 }

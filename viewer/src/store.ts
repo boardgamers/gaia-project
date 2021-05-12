@@ -69,6 +69,7 @@ const gaiaViewer = {
       rotation: new Map(),
       hexSelection: false,
       activeButton: null,
+      hasCommandChain: false,
       fastConversionTooltips: {} as FastConversionTooltips,
     },
     preferences: {
@@ -128,10 +129,15 @@ const gaiaViewer = {
       state.context.hexSelection = false;
       state.context.activeButton = null;
       state.context.fastConversionTooltips = {};
+      state.context.hasCommandChain = false;
     },
 
     activeButton(state: State, button: ButtonData | null) {
       state.context.activeButton = button;
+    },
+
+    setCommandChain(state: State, hasChain: boolean) {
+      state.context.hasCommandChain = hasChain;
     },
 
     fastConversionTooltips(state: State, tooltips: FastConversionTooltips) {
@@ -169,6 +175,7 @@ const gaiaViewer = {
     replayEnd(context: any, data: Engine) {},
     // WRAPPER / DEBUG COMMUNICATION
     loadFromJSON(context: any, data: any) {},
+    undo(context: any) {},
   },
   getters: {
     recentMoves: (state: State): MovesSlice => {
@@ -208,6 +215,7 @@ const gaiaViewer = {
       indexCommands(getters.currentRoundCommands, Command.Build),
     recentActions: (state: State, getters): Map<Faction, CommandObject[]> =>
       indexCommands(getters.recentCommands, Command.Special),
+    canUndo: (state: State): boolean => state.context.hasCommandChain || !state.data.newTurn,
   },
 };
 

@@ -45,7 +45,6 @@
       <div class="col-md-8 order-1 order-md-2">
         <Commands
           @command="handleCommand"
-          @undo="undoMove"
           v-if="canPlay"
           :currentMove="currentMove"
           :currentMoveWarnings="Array.from(currentMoveWarnings.values()).flat()"
@@ -60,22 +59,15 @@
     />
     <div class="row mt-2">
       <template v-if="sessionPlayer === undefined">
-        <PlayerInfo
-          v-for="player in orderedPlayers"
-          :player="player"
-          :key="player.player"
-          class="col-md-6 order-6"
-          @undo="undoMove"
-        />
+        <PlayerInfo v-for="player in orderedPlayers" :player="player" :key="player.player" class="col-md-6 order-6" />
       </template>
       <template v-else>
-        <PlayerInfo :player="sessionPlayer" class="col-md-6 order-3" @undo="undoMove" />
+        <PlayerInfo :player="sessionPlayer" class="col-md-6 order-3" />
         <PlayerInfo
           v-for="player in orderedPlayers.filter((pl) => pl !== sessionPlayer)"
           :player="player"
           :key="player.player"
           class="col-md-6 order-6"
-          @undo="undoMove"
         />
       </template>
       <Pool class="col-12 order-10 mt-4" />
@@ -190,6 +182,7 @@ import {LogPlacement} from "../data";
 export default class Game extends Vue {
   private finalScoringFields: any[] = null
   private finalScoringItems: any[] = null
+  private undoListener = null;
   public currentMove = "";
   public hideLog = false;
   public currentMoveWarnings: Map<string, BuildWarning[]> = new Map<string, BuildWarning[]>();
@@ -206,6 +199,15 @@ export default class Game extends Vue {
     const element = document.getElementById("root");
     this.finalScoringFields = finalScoringFields(element);
     this.finalScoringItems = finalScoringItems(element);
+    this.undoListener = this.$store.subscribeAction(({ type, payload }) => {
+      if (type === "gaiaViewer/undo") {
+        this.undoMove();
+      }
+    });
+  }
+
+  destroyed() {
+    this.undoListener();
   }
 
   get engine(): Engine {
@@ -335,6 +337,11 @@ export default class Game extends Vue {
   }
 
   undoMove() {
+    if (this.$store.state.gaiaViewer.data.newTurn) {
+      // was "back", not undo
+      return;
+    }
+
     if (this.currentMove.includes(".")) {
       this.currentMove = this.currentMove.slice(0, this.currentMove.lastIndexOf("."));
     } else {
