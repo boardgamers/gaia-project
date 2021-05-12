@@ -127,7 +127,8 @@ export default class SpaceHex extends Vue {
   }
 
   buildingName(building: BuildingEnum, player) {
-    return `${buildingName(building)} (${factions[this.faction(player)].name})`;
+    let f = factions[this.faction(player)];
+    return `${buildingName(building, f)} (${f.name})`;
   }
 
   planetName(planet: PlanetEnum) {

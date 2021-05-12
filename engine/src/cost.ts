@@ -26,7 +26,7 @@ export type QicNeeded = { amount: number; distance: number; warning?: BuildWarni
 export function qicForDistance(map: SpaceMap, hex: GaiaHex, pl: PlayerObject): QicNeeded {
   const distance = (acceptGaiaFormer: boolean) => {
     const hexes = acceptGaiaFormer
-      ? Array.from(map.grid.values()).filter((loc) => loc.data.player == pl.player)
+      ? Array.from(map.grid.values()).filter((loc) => loc.data.player === pl.player)
       : pl.data.occupied.filter((loc) => acceptGaiaFormer || loc.isRangeStartingPoint(pl.player));
     return Math.min(...hexes.map((loc) => map.distance(hex, loc)));
   };

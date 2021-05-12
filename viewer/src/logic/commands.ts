@@ -239,22 +239,24 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
   let academySelection: ButtonData[] = null;
 
   const m = new Map<string, AvailableBuilding[]>();
+  const faction = engine.player(command.player).faction;
   for (const bld of command.data.buildings) {
     const building = bld.building;
     const shortcut = buildingShortcut(bld);
 
-    let label = withShortcut(`Build a ${buildingName(building)}`, shortcut);
+    const name = buildingName(building, faction);
+    let label = withShortcut(`Build a ${name}`, shortcut);
 
     if (bld.upgrade) {
       if (building == Building.Mine) {
         label = withShortcut("Upgrade Gaia Former to Mine", shortcut);
       } else {
-        label = withShortcut(`Upgrade to ${buildingName(building)}`, shortcut, ["Upgrade to"]);
+        label = withShortcut(`Upgrade to ${name}`, shortcut, ["Upgrade to"]);
       }
     } else if (bld.downgrade) {
-      label = withShortcut(`Downgrade to ${buildingName(building)}`, shortcut);
+      label = withShortcut(`Downgrade to ${name}`, shortcut);
     } else if (bld.cost === "~" || building === Building.SpaceStation || building === Building.GaiaFormer) {
-      label = withShortcut(`Place a ${buildingName(building)}`, shortcut);
+      label = withShortcut(`Place a ${name}`, shortcut);
     }
 
     const old = m.get(label) ?? [];
@@ -286,9 +288,9 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
     if (building == Building.Academy1 || building == Building.Academy2) {
       const buttons: ButtonData[] = [
         {
-          label: buildingName(building),
+          label: buildingName(building, faction),
           command: building,
-          shortcuts: [building == Building.Academy1 ? "k" : "q"],
+          shortcuts: [building == Building.Academy1 ? "k" : faction == Faction.BalTaks ? "c" : "q"],
           hexes: hexMap(engine, buildings),
         },
       ];
@@ -312,7 +314,7 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
           ? [
               {
                 command: "",
-                label: `Confirm ${buildingName(building)}`,
+                label: `Confirm ${buildingName(building, faction)}`,
               } as ButtonData,
             ]
           : undefined;

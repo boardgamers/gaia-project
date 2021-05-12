@@ -1,13 +1,13 @@
-import { AvailableBuilding, Building } from "@gaia-project/engine";
+import { AvailableBuilding, Building, Faction } from "@gaia-project/engine";
 
-export function buildingName(building: Building): string {
+export function buildingName(building: Building, faction: Faction): string {
   switch (building) {
     case Building.Mine:
       return "Mine";
     case Building.Academy1:
       return "Knowledge Academy";
     case Building.Academy2:
-      return "QIC Academy";
+      return faction == Faction.BalTaks ? "Credit Academy" : "QIC Academy";
     case Building.TradingStation:
       return "Trading Station";
     case Building.ResearchLab:
