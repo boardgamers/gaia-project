@@ -124,7 +124,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars spend 4tg for tech. tech int (k for planet types). up int (3 ⇒ 4). spend 4tg for tech. tech adv-int (4 VP / ts). cover int. up sci (1 ⇒ 2)"
+    "move": "itars spend 4tg for tech. tech int (k for planet types). up int (3 ⇒ 4). spend 4tg for tech. tech adv-int (4 VP / ts). cover int (k for planet types). up sci (1 ⇒ 2)"
   },
   {
     "round": 0,

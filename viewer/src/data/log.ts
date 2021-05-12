@@ -2,6 +2,7 @@ import Engine, {
   AdvTechTilePos,
   Command,
   Faction,
+  federations,
   LogEntry,
   LogEntryChanges,
   Phase,
@@ -26,9 +27,14 @@ export function replaceMove(data: Engine, move: ParsedMove): ParsedMove {
 
   return {
     commands: move.commands,
-    move: move.move.replace(/\btech [a-z0-9-]+|booster[0-9]+/g, (match) => {
+    move: move.move.replace(/\b(tech|cover) [a-z0-9-]+|fed[0-9]+|booster[0-9]+/g, (match) => {
       if (match.startsWith("booster")) {
         return addDetails(match, boosterNames[match].name);
+      } else if (match.startsWith("fed")) {
+        return addDetails(match, federations[match]);
+      } else if (match.startsWith("cover")) {
+        const pos = match.substr("cover ".length) as TechTilePos;
+        return addDetails(match, replaceTech(data, pos));
       } else {
         const pos = match.substr("tech ".length) as TechTilePos | AdvTechTilePos;
         return addDetails(match, replaceTech(data, pos));
@@ -168,6 +174,7 @@ export function makeHistory(
 
   let append = !onlyRecent || recent.index < 0;
   const ret = [];
+
   function addEntry(entry: HistoryEntry) {
     if (append) {
       ret.push(entry);

@@ -11,6 +11,14 @@ describe("Advanced log details", () => {
   data.tiles.techs[AdvTechTilePos.GaiaProject] = { tile: AdvTechTile.AdvTech4, count: 1 };
 
   describe("moves", () => {
+    it("federation tile", () => {
+      expect(replaceMove(data, parsedMove("ivits spend 4pw for 1q. action qic2. fedtile fed4.")).move).to.equal(
+        "ivits spend 4pw for 1q. action qic2. fedtile fed4 (7vp,2o)."
+      );
+      expect(replaceMove(data, parsedMove("taklons federation 1A4,9A9,9B4,9C fed4.")).move).to.equal(
+        "taklons federation 1A4,9A9,9B4,9C fed4 (7vp,2o)."
+      );
+    });
     it("booster should be replaced", () => {
       expect(replaceMove(data, parsedMove("gleens pass booster7")).move).to.equal(
         "gleens pass booster7 (1o, 2 VP / ts)"
@@ -22,18 +30,21 @@ describe("Advanced log details", () => {
       );
     });
     it("advanced tech should be replaced", () => {
-      expect(replaceMove(data, parsedMove("baltaks build lab 4B1. tech adv-gaia")).move).to.equal(
-        "baltaks build lab 4B1. tech adv-gaia (2 VP / mine)"
+      expect(replaceMove(data, parsedMove("baltaks build lab 4B1. tech adv-gaia. cover terra")).move).to.equal(
+        "baltaks build lab 4B1. tech adv-gaia (2 VP / mine). cover terra (o,q)"
       );
     });
   });
 
   describe("changes", () => {
+    it("booster should be replaced", () => {
+      expect(replaceChange(data, "booster7")).to.equal("booster7 (1o, 2 VP / ts)");
+    });
     it("tech should be replaced", () => {
-      expect(replaceChange(data, "tech-terra")).to.deep.equal("tech-terra (o,q)");
+      expect(replaceChange(data, "tech-terra")).to.equal("tech-terra (o,q)");
     });
     it("advanced tech should be replaced", () => {
-      expect(replaceChange(data, "adv-gaia")).to.deep.equal("adv-gaia (2 VP / mine)");
+      expect(replaceChange(data, "adv-gaia")).to.equal("adv-gaia (2 VP / mine)");
     });
   });
 
