@@ -78,7 +78,8 @@ export type BuildWarning =
   | "lantids-deadlock"
   | "lantids-build-without-PI"
   | "geodens-build-without-PI"
-  | "expensive-trade-station";
+  | "expensive-trade-station"
+  | "gaia-former-would-extend-range";
 
 export type BuildCheck = { cost: Reward[]; steps: number; warnings: BuildWarning[] };
 

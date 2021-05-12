@@ -272,7 +272,6 @@ function newAvailableBuilding(
 }
 
 function addPossibleNewPlanet(
-  data: PlayerData,
   map: SpaceMap,
   hex: GaiaHex,
   pl: PlayerObject,
@@ -280,16 +279,13 @@ function addPossibleNewPlanet(
   building: Building,
   buildings: AvailableBuilding[]
 ) {
-  const distance = Math.min(
-    ...data.occupied.filter((loc) => loc.isRangeStartingPoint(pl.player)).map((loc) => map.distance(hex, loc))
-  );
-  const qicNeeded = qicForDistance(distance, data);
+  const qicNeeded = qicForDistance(map, hex, pl);
   if (qicNeeded === null) {
     return;
   }
 
   const check = pl.canBuild(planet, building, {
-    addedCost: [new Reward(qicNeeded, Resource.Qic)],
+    addedCost: [new Reward(qicNeeded.amount, Resource.Qic)],
   });
 
   if (check) {
@@ -314,7 +310,11 @@ function addPossibleNewPlanet(
 
         break;
     }
-    buildings.push(newAvailableBuilding(building, hex, check, false));
+    const availableBuilding = newAvailableBuilding(building, hex, check, false);
+    if (qicNeeded.warning) {
+      availableBuilding.warnings.push(qicNeeded.warning);
+    }
+    buildings.push(availableBuilding);
   }
 }
 
@@ -381,7 +381,7 @@ export function possibleBuildings(engine: Engine, player: Player): AvailableComm
       // No need for terra forming if already occupied by another faction
       const planet = hex.occupied() ? pl.planet : hex.data.planet;
       const building = hex.data.planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine;
-      addPossibleNewPlanet(data, map, hex, pl, planet, building, buildings);
+      addPossibleNewPlanet(map, hex, pl, planet, building, buildings);
     }
   } // end for hex
 
@@ -411,7 +411,7 @@ export function possibleSpaceStations(engine: Engine, player: Player): Available
     }
 
     const building = Building.SpaceStation;
-    addPossibleNewPlanet(data, map, hex, pl, pl.planet, building, buildings);
+    addPossibleNewPlanet(map, hex, pl, pl.planet, building, buildings);
   }
 
   if (buildings.length > 0) {
@@ -686,16 +686,16 @@ export function possibleSpaceLostPlanet(engine: Engine, player: Player) {
     if (hex.data.planet !== Planet.Empty || hex.data.federations || hex.data.building) {
       continue;
     }
-    const distance = Math.min(...data.occupied.map((loc) => engine.map.distance(hex, loc)));
-    const qicNeeded = qicForDistance(distance, data);
+    const qicNeeded = qicForDistance(engine.map, hex, p);
 
-    if (qicNeeded > data.qics) {
+    if (qicNeeded.amount > data.qics) {
       continue;
     }
 
     spaces.push({
       coordinates: hex.toString(),
-      cost: qicNeeded > 0 ? new Reward(qicNeeded, Resource.Qic).toString() : "~",
+      cost: qicNeeded.amount > 0 ? new Reward(qicNeeded.amount, Resource.Qic).toString() : "~",
+      warnings: qicNeeded.warning ? [qicNeeded.warning] : null,
     });
   }
 
