@@ -7,6 +7,8 @@ import Engine, {
   AvailableFreeActionData,
   AvailableHex,
   AvailableResearchTrack,
+  BoardAction,
+  boardActions,
   Booster,
   BrainstoneActionData,
   Building,
@@ -389,7 +391,7 @@ export function passButtons(
   return ret;
 }
 
-function translateResources(rewards: Reward[]): string {
+export function translateResources(rewards: Reward[]): string {
   return rewards
     .map((r) => {
       const s = resourceNames.find((s) => s.type == r.type);
@@ -398,7 +400,7 @@ function translateResources(rewards: Reward[]): string {
     .join(" and ");
 }
 
-function conversionLabel(cost: Reward[], income: Reward[]) {
+export function conversionLabel(cost: Reward[], income: Reward[]) {
   return `${translateResources(cost)} ⇒ ${translateResources(income).replace(
     "4 Victory Points",
     "3 VP + 1 VP / Planet Type"
@@ -416,12 +418,12 @@ function resourceSymbol(type: Resource) {
   }
 }
 
-function newConversion(cost: Reward[], income: Reward[], player: Player) {
+function newConversion(cost: Reward[], income: Reward[], player?: Player) {
   return {
     from: cost.map(
       (r) =>
         new Reward(
-          r.type == Resource.ChargePower ? Math.ceil(r.count / player.data.tokenModifier) : r.count,
+          r.type == Resource.ChargePower ? Math.ceil(r.count / player?.data?.tokenModifier ?? 1) : r.count,
           resourceSymbol(r.type)
         )
     ),
@@ -429,13 +431,14 @@ function newConversion(cost: Reward[], income: Reward[], player: Player) {
   };
 }
 
-function conversionCommand(
+function conversionButton(
   cost: Reward[],
   income: Reward[],
-  player: Player,
+  player: Player | null,
   shortcut: string,
   skipShortcut: string[],
   command: string,
+  boardAction?: BoardAction,
   times?: number[]
 ): ButtonData {
   return {
@@ -443,24 +446,28 @@ function conversionCommand(
     label: "<u></u>",
     conversion: newConversion(cost, income, player),
     shortcuts: shortcut != null ? [shortcut] : [],
-    command: command,
-    times: times,
+    command,
+    times,
+    boardAction,
   };
 }
 
-export function boardActionButton(data: AvailableBoardActionData, player: Player): ButtonData {
+export function boardActionButton(action: BoardAction, player: Player | null) {
+  const b = boardActions[action];
+  const cost = Reward.parse(b.cost);
+  const income = Reward.merge(Event.parse(b.income, null).flatMap((e) => e.rewards));
+
+  const shortcut = boardActionNames[action].shortcut;
+  return conversionButton(cost, income, player, shortcut, ["Power Charges", "Terraforming"], action, action);
+}
+
+export function boardActionsButton(data: AvailableBoardActionData, player: Player): ButtonData {
   return {
     label: "Power/Q.I.C Action",
     shortcuts: ["q"],
     command: Command.Action,
-    actions: data.poweracts.map((act) => act.name),
-    buttons: data.poweracts.map((act) => {
-      const cost = Reward.parse(act.cost);
-      const income = Reward.merge(Event.parse(act.income, null).flatMap((e) => e.rewards));
-
-      const shortcut = boardActionNames[act.name].shortcut;
-      return conversionCommand(cost, income, player, shortcut, ["Power Charges", "Terraforming"], act.name);
-    }),
+    boardActions: data.poweracts.map((act) => act.name),
+    buttons: data.poweracts.map((act) => boardActionButton(act.name, player)),
   };
 }
 
@@ -483,13 +490,14 @@ export function freeActionButton(
   player: Player
 ): { buttons: ButtonData[]; tooltips: FastConversionTooltips } {
   function newButton(act: AvailableFreeAction) {
-    return conversionCommand(
+    return conversionButton(
       Reward.parse(act.cost),
       Reward.parse(act.income),
       player,
       freeActionShortcuts[conversionToFreeAction(act)]?.shortcut,
       [],
       spendCommand(act),
+      null,
       act.range
     );
   }
@@ -521,7 +529,7 @@ export function freeActionButton(
 }
 
 export function burnButton(player: Player, availableRange?: number[]) {
-  return conversionCommand(
+  return conversionButton(
     [new Reward(2, Resource.BowlToken)],
     [
       new Reward(1, player.faction == Faction.Itars ? Resource.GainTokenGaiaArea : Resource.BurnToken),
@@ -531,6 +539,7 @@ export function burnButton(player: Player, availableRange?: number[]) {
     "b",
     [],
     `${Command.BurnPower} 1`,
+    null,
     availableRange?.length > 1 ? range(1, max(availableRange) + 1) : undefined
   );
 }

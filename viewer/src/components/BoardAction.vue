@@ -1,5 +1,5 @@
 <template>
-  <g :class="['boardAction', kind, { highlighted, recent }]" v-b-tooltip :title="tooltip">
+  <g :class="['boardAction', kind, { highlighted, recent }]" v-b-tooltip.html :title="button.tooltip">
     <SpecialAction
       :class="{ faded }"
       :planet="planet"
@@ -42,20 +42,18 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import {
+import Engine, {
   BoardAction as BoardActionEnum,
   boardActions,
   Command,
-  Event,
-  factions,
   Planet,
   PlayerEnum,
   Reward,
 } from "@gaia-project/engine";
-import { eventDesc } from "../data/event";
 import Resource from "./Resource.vue";
 import SpecialAction from "./SpecialAction.vue";
-import {factionPlanet} from "@gaia-project/engine/src/factions";
+import { factionPlanet } from "@gaia-project/engine/src/factions";
+import { boardActionButton } from "../logic/commands";
 
 @Component<BoardAction>({
   components: {
@@ -71,11 +69,11 @@ export default class BoardAction extends Vue {
     if (!this.highlighted) {
       return;
     }
-    this.$store.dispatch("gaiaViewer/actionClick", this.action);
+    this.$store.dispatch("gaiaViewer/boardActionClick", this.action);
   }
 
   get highlighted(): boolean {
-    return this.$store.state.gaiaViewer.context.highlighted.actions.has(this.action);
+    return this.$store.state.gaiaViewer.context.highlighted.boardActions.has(this.action);
   }
 
   get recent(): boolean {
@@ -83,10 +81,9 @@ export default class BoardAction extends Vue {
     return moves.some((c) => c.command == Command.Action && c.args[0] as BoardActionEnum === this.action);
   }
 
-  get tooltip() {
-    const costDesc = "Spend " + this.cost + "\n";
-
-    return costDesc + boardActions[this.action].income.map((x) => eventDesc(new Event(x))).join("\n");
+  get button() {
+    const player = this.$store.state.gaiaViewer.player?.index ?? this.gameData.currentPlayer;
+    return boardActionButton(this.action, this.gameData.player(player));
   }
 
   get faded() {
@@ -97,40 +94,25 @@ export default class BoardAction extends Vue {
     const player = this.player();
     if (player != null && player !== PlayerEnum.Player5) {
       // Player5 is for converted old games
-      return factionPlanet(this.$store.state.gaiaViewer.data.player(player).faction);
+      return factionPlanet(this.gameData.player(player).faction);
     }
     return null;
   }
 
   private player() {
-    return this.$store.state.gaiaViewer.data.boardActions[this.action];
+    return this.gameData.boardActions[this.action];
   }
 
   get kind() {
     return this.action[0] === "p" ? "power" : "qic";
   }
 
-  get rewards() {
-    return boardActions[this.action].income.map((x) => new Reward(x));
-  }
-
-  get income() {
-    return [].concat(
-      ...boardActions[this.action].income.map((x) => {
-        if (x.includes("+")) {
-          return [x.slice(0, x.indexOf("+")), x.slice(x.indexOf("+"))];
-        }
-        return x.split("-");
-      })
-    );
-  }
-
-  get cost() {
-    return boardActions[this.action].cost;
+  get gameData(): Engine {
+    return this.$store.state.gaiaViewer.data;
   }
 
   get costNumber() {
-    return new Reward(this.cost).count;
+    return this.button.conversion.from[0].count;
   }
 
   boardActions = boardActions;

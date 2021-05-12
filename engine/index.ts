@@ -14,6 +14,7 @@ import federations from "./src/tiles/federations";
 
 export { boardActions, FreeAction, freeActionConversions, ResourceConversion } from "./src/actions";
 export {
+  AvailableBoardAction,
   AvailableBoardActionData,
   AvailableBuilding,
   AvailableFreeAction,

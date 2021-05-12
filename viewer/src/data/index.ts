@@ -1,9 +1,20 @@
-import { AdvTechTilePos, Booster, Federation, GaiaHex, HighlightHex, Reward, TechTilePos } from "@gaia-project/engine";
+import {
+  AdvTechTilePos,
+  BoardAction,
+  Booster,
+  Federation,
+  GaiaHex,
+  HighlightHex,
+  Reward,
+  TechTilePos,
+} from "@gaia-project/engine";
 import { FastConversionTooltips } from "../logic/commands";
 
 export type ButtonWarning = { title?: string; body: string[]; okButton?: { label: string; action: () => void } };
 
 export type ModalButtonData = { content: string; canActivate: () => boolean; show: (boolean) => void };
+
+export type SpecialActionIncome = string;
 
 export interface ButtonData {
   label?: string;
@@ -20,7 +31,8 @@ export interface ButtonData {
   techs?: Array<TechTilePos | AdvTechTilePos>;
   boosters?: Booster[];
   selectHexes?: boolean;
-  actions?: string[];
+  boardActions?: BoardAction[];
+  specialActions?: SpecialActionIncome[];
   federations?: Federation[];
   range?: number;
   costs?: { [range: number]: string };
@@ -34,6 +46,8 @@ export interface ButtonData {
   undo?: boolean;
   booster?: Booster;
   tech?: TechTilePos | AdvTechTilePos;
+  boardAction?: BoardAction;
+  specialAction?: SpecialActionIncome;
   shortcuts?: string[];
 }
 
@@ -47,7 +61,8 @@ export interface GameContext {
     researchTiles: Set<string>;
     techs: Set<TechTilePos | AdvTechTilePos>;
     boosters: Set<Booster>;
-    actions: Set<string>;
+    boardActions: Set<BoardAction>;
+    specialActions: Set<SpecialActionIncome>;
     federations: Set<Federation>;
   };
 

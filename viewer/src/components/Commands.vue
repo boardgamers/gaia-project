@@ -84,7 +84,7 @@ import { moveWarnings } from "../data/warnings";
 import {
   advanceResearchWarning,
   AvailableConversions,
-  boardActionButton,
+  boardActionsButton,
   brainstoneButtons,
   buildButtons,
   buttonWarning,
@@ -470,7 +470,7 @@ export default class Commands extends Vue {
           break;
         }
         case Command.Action: {
-          ret.push(boardActionButton(command.data, this.player));
+          ret.push(boardActionsButton(command.data, this.player));
           break;
         }
 
@@ -479,9 +479,10 @@ export default class Commands extends Vue {
             label: "Special Action",
             shortcuts: ["s"],
             command: Command.Special,
-            actions: command.data.specialacts.map((act) => act.income),
+            specialActions: command.data.specialacts.map((act) => act.income),
             buttons: command.data.specialacts.map((act) => ({
               command: act.income,
+              specialAction: act.income,
               warning: specialActionWarning(this.player, act.income)
             })),
           });
@@ -685,9 +686,7 @@ export default class Commands extends Vue {
   }
 
   destroyed() {
-    window.removeEventListener("keydown", this.keyListener);
     this.unsubscribe();
-    this.undoListener();
   }
 
   private unsubscribe() {
@@ -698,23 +697,27 @@ export default class Commands extends Vue {
   }
 
   mounted() {
-    this.keyListener = (e) => {
+    const keyListener = (e) => {
       if (e.key == "Escape" && this.$store.getters["gaiaViewer/canUndo"]) {
         this.undo();
       }
     };
-    window.addEventListener("keydown", this.keyListener);
-    this.undoListener = this.$store.subscribeAction(({ type, payload }) => {
+    window.addEventListener("keydown", keyListener);
+
+    const undoListener = this.$store.subscribeAction(({ type, payload }) => {
       if (type === "gaiaViewer/undo") {
         this.back();
       }
+    });
+
+    this.$on("hook:beforeDestroy", () => {
+      window.removeEventListener("keydown", keyListener);
+      undoListener();
     });
   }
 
   private updater = 0;
   private subscriptions: { [key in Command]?: () => void } = {};
-  private undoListener = null;
-  private keyListener = null;
   private commandTitles: string[] = [];
   private customButtons: ButtonData[] = [];
   private commandChain: string[] = [];

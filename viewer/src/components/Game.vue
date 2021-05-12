@@ -182,7 +182,6 @@ import {LogPlacement} from "../data";
 export default class Game extends Vue {
   private finalScoringFields: any[] = null
   private finalScoringItems: any[] = null
-  private undoListener = null;
   public currentMove = "";
   public hideLog = false;
   public currentMoveWarnings: Map<string, BuildWarning[]> = new Map<string, BuildWarning[]>();
@@ -199,15 +198,12 @@ export default class Game extends Vue {
     const element = document.getElementById("root");
     this.finalScoringFields = finalScoringFields(element);
     this.finalScoringItems = finalScoringItems(element);
-    this.undoListener = this.$store.subscribeAction(({ type, payload }) => {
+    const undoListener = this.$store.subscribeAction(({ type, payload }) => {
       if (type === "gaiaViewer/undo") {
         this.undoMove();
       }
     });
-  }
-
-  destroyed() {
-    this.undoListener();
+    this.$on("hook:beforeDestroy", () => undoListener());
   }
 
   get engine(): Engine {

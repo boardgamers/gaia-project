@@ -1,6 +1,10 @@
 <template>
   <svg viewBox="-25 -25 50 50" width="50" height="50" style="overflow: visible">
-    <g :class="['specialAction', { highlighted: isHighlighted, disabled, board, recent }]">
+    <g
+      :class="['specialAction', { highlighted: isHighlighted, disabled, board, recent }]"
+      v-b-tooltip.html
+      :title="tooltip"
+    >
       <polygon
         points="-10,4 -4,10 4,10 10,4 10,-4 4,-10 -4,-10 -10,-4"
         transform="scale(2.4)"
@@ -9,7 +13,7 @@
       />
       <!-- <Resource v-for="(reward, i) in rewards" :key=i :count=reward.count :kind=reward.type :transform="`translate(${rewards.length > 1 ? (i - 0.5) * 20  : 0}, ${reward.type === 'pw' ? 4 : 0}), scale(1.5)`" />-->
       <TechContent
-        :content="act"
+        :content="(board ? '' : '>') + act"
         v-for="(act, i) in action"
         :key="i"
         :transform="`translate(0, ${(i - (action.length - 1) / 2) * 24}) scale(${action.length === 1 ? 0.8 : 0.55})`"
@@ -26,6 +30,7 @@
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { Event, Planet } from "@gaia-project/engine";
+import { translateResources, withShortcut } from "../logic/commands";
 
 @Component
 export default class SpecialAction extends Vue {
@@ -45,6 +50,9 @@ export default class SpecialAction extends Vue {
   action: string[];
 
   @Prop()
+  shortcut?: string;
+
+  @Prop()
   planet: Planet;
 
   onClick() {
@@ -52,19 +60,21 @@ export default class SpecialAction extends Vue {
       this.$emit("click");
       return;
     }
-    this.$store.dispatch("gaiaViewer/actionClick", this.action.join(","));
+    this.$store.dispatch("gaiaViewer/specialActionClick", this.action.join(","));
+  }
+
+  get tooltip() {
+    return this.board ? undefined : withShortcut(translateResources(this.rewards), this.shortcut);
   }
 
   get rewards() {
-    return new Event(this.action[0]).rewards;
+    return new Event('>' + this.action[0]).rewards;
   }
 
   /** When the action content is highlighted - not the parent component */
   get _highlighted() {
-    return (
-      this.$store.state.gaiaViewer.context.highlighted.actions.has(this.action.join(",")) ||
-      this.$store.state.gaiaViewer.context.highlighted.actions.has(this.action.join(",").replace(/>/g, ""))
-    );
+    const actions = this.$store.state.gaiaViewer.context.highlighted.specialActions;
+    return actions.has(this.action.join(",")) || actions.has(this.action.join(",").replace(/>/g, ""));
   }
 
   get isHighlighted() {

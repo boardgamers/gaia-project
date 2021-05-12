@@ -1,5 +1,6 @@
 import Engine, {
   AdvTechTilePos,
+  BoardAction,
   Command,
   Faction,
   Federation,
@@ -12,7 +13,7 @@ import Engine, {
 import { CubeCoordinates } from "hexagrid";
 import Vue from "vue";
 import Vuex, { Store } from "vuex";
-import { ButtonData, GameContext, HighlightHexData } from "./data";
+import { ButtonData, GameContext, HighlightHexData, SpecialActionIncome } from "./data";
 import { FastConversionEvent } from "./data/actions";
 import { FastConversionTooltips } from "./logic/commands";
 import {
@@ -63,7 +64,8 @@ const gaiaViewer = {
         researchTiles: new Set(),
         techs: new Set(),
         boosters: new Set(),
-        actions: new Set(),
+        boardActions: new Set(),
+        specialActions: new Set(),
         federations: new Set(),
       },
       rotation: new Map(),
@@ -99,8 +101,12 @@ const gaiaViewer = {
       state.context.highlighted.techs = new Set(techs);
     },
 
-    highlightActions(state: State, actions: string[]) {
-      state.context.highlighted.actions = new Set(actions);
+    highlightBoardActions(state: State, actions: BoardAction[]) {
+      state.context.highlighted.boardActions = new Set(actions);
+    },
+
+    highlightSpecialActions(state: State, actions: SpecialActionIncome[]) {
+      state.context.highlighted.specialActions = new Set(actions);
     },
 
     highlightFederations(state: State, federations: Federation[]) {
@@ -123,7 +129,8 @@ const gaiaViewer = {
       state.context.highlighted.hexes = new Map();
       state.context.highlighted.researchTiles = new Set();
       state.context.highlighted.techs = new Set();
-      state.context.highlighted.actions = new Set();
+      state.context.highlighted.boardActions = new Set();
+      state.context.highlighted.specialActions = new Set();
       state.context.highlighted.federations = new Set();
       // state.context.rotation = new Map();
       state.context.hexSelection = false;
@@ -161,7 +168,8 @@ const gaiaViewer = {
     researchClick(context: any, field: ResearchField) {},
     techClick(context: any, pos: TechTilePos | AdvTechTilePos) {},
     fastConversionClick(context: any, event: FastConversionEvent) {},
-    actionClick(context: any, action: string) {},
+    specialActionClick(context: any, action: SpecialActionIncome) {},
+    boardActionClick(context: any, action: BoardAction) {},
     federationClick(context: any, federation: Federation) {},
     confirmClick(context: any, action: string) {},
     // API COMMUNICATION

@@ -7,6 +7,15 @@
       :booster="button.booster"
       highlighted
     />
+    <svg v-else-if="button.boardAction" width="80" height="80" viewBox="-32 -32 64 64">
+      <BoardAction @click="handleClick" :action="button.boardAction" />
+    </svg>
+    <SpecialAction
+      v-else-if="button.specialAction"
+      class="mb-1 mr-1"
+      :action="[button.specialAction]"
+      :shortcut="button.shortcuts[0]"
+    />
     <TechTile v-else-if="button.tech" class="mb-1 mr-1" @click="handleClick" :pos="button.tech" :count-override="1" />
     <b-btn
       v-else-if="button.times === undefined"
@@ -59,12 +68,16 @@ import { ButtonData } from "../data";
 import Booster from "./Booster.vue";
 import TechTile from "./TechTile.vue";
 import ButtonContent from "./Resources/ButtonContent.vue";
+import BoardAction from "./BoardAction.vue";
+import SpecialAction from "./SpecialAction.vue";
 
 @Component({
   components: {
     Booster,
     TechTile,
-    ButtonContent
+    ButtonContent,
+    BoardAction,
+    SpecialAction
   },
 })
 export default class MoveButton extends Vue {
@@ -76,7 +89,6 @@ export default class MoveButton extends Vue {
   private customLabel = "";
   private startingHex = null; // For range command
 
-  private keyListener = null;
   private rangePreselect: number = null;
 
   modalCancel(arg: string) {
@@ -123,27 +135,33 @@ export default class MoveButton extends Vue {
   }
 
   destroyed() {
-    window.removeEventListener("keydown", this.keyListener);
     this.unsubscribe();
   }
 
   mounted() {
-    this.keyListener = (e) => {
-      if (this.button.modal && !this.button.modal.canActivate()) {
-        return false;
+    const keyListener = (e) => {
+      if (this.modalShow) {
+        if (!this.button.modal.canActivate()) {
+          return false;
+        }
+        if (e.key == "Enter") {
+          this.handleOK();
+          return false;
+        }
       }
+
       const primary = document.getElementsByClassName("btn btn-primary");
       if (e.key == "Enter") {
         if (primary.length > 0) {
           (primary[0] as HTMLElement).click();
-        } else if (this.modalShow) {
-          this.handleOK();
+          return;
         }
       }
       if (primary.length > 0) {
-        //modal dialog is up
+        // we're showing a modal dialog
         return false;
       }
+
       if (this.button.shortcuts?.includes(e.key)) {
         if (this.rangePreselect) {
           this.handleRangeClick(this.rangePreselect ?? this.button.times[0]);
@@ -154,7 +172,8 @@ export default class MoveButton extends Vue {
         this.rangePreselect = Number(e.key);
       }
     };
-    window.addEventListener("keydown", this.keyListener);
+    window.addEventListener("keydown", keyListener);
+    this.$on("hook:beforeDestroy", () => window.removeEventListener("keydown", keyListener));
   }
 
   async handleClick() {
@@ -213,9 +232,12 @@ export default class MoveButton extends Vue {
     } else if (this.button.techs) {
       this.$store.commit("gaiaViewer/highlightTechs", this.button.techs);
       this.subscribeFinal("techClick");
-    } else if (this.button.actions) {
-      this.$store.commit("gaiaViewer/highlightActions", this.button.actions);
-      this.subscribeFinal("actionClick");
+    } else if (this.button.specialActions) {
+      this.$store.commit("gaiaViewer/highlightSpecialActions", this.button.specialActions);
+      this.subscribeFinal("specialActionClick");
+    } else if (this.button.boardActions) {
+      this.$store.commit("gaiaViewer/highlightBoardActions", this.button.boardActions);
+      this.subscribeFinal("boardActionClick");
     } else if (this.button.needConfirm) {
       this.emitCommand(null, { disappear: false });
     } else if (this.button.selectHexes) {
@@ -391,5 +413,6 @@ export default class MoveButton extends Vue {
 
 .undo {
   align-self: center;
+  margin-left: 1em;
 }
 </style>

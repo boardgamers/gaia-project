@@ -138,10 +138,10 @@
 
         <SpecialAction
           v-for="(action, i) in player.actions"
-          :action="['>' + action.rewards]"
+          :action="[action.rewards]"
           :recent="recentAction(i)"
           :disabled="!action.enabled || passed"
-          :key="action.action + '-' + i"
+          :key="action.rewards + '-' + i"
           y="17.5"
           width="3.1"
           height="3.1"
