@@ -124,7 +124,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars spend 4tg for tech. tech int (k for planet types). up int (3 ⇒ 4). spend 4tg for tech. tech adv-int (4 VP / ts). cover int. up sci (1 ⇒ 2)"
+    "move": "itars spend 4tg for tech. tech int (k for planet types). up int (3 ⇒ 4). spend 4tg for tech. tech adv-int (4 VP / ts). cover int (k for planet types). up sci (1 ⇒ 2)"
   },
   {
     "round": 6,
@@ -307,7 +307,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons spend 4pw for 1q. federation 2A11,2A3,2B0,2B1,2B2,8A5,8A8,8B3,8B4,9A0 fed2 using area1: 5."
+    "move": "taklons spend 4pw for 1q. federation 2A11,2A3,2B0,2B1,2B2,8A5,8A8,8B3,8B4,9A0 fed2 (8vp,q) using area1: 5."
   },
   {
     "round": 5,
@@ -425,7 +425,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars federation 4A5,6A11,6A9,6B5 fed6 using area1: 1. spend 1pw for 1c."
+    "move": "itars federation 4A5,6A11,6A9,6B5 fed6 (6vp,2k) using area1: 1. spend 1pw for 1c."
   },
   {
     "round": 5,
@@ -471,7 +471,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons burn 1. spend 4pw for 1q. brainstone area1. action qic1. tech adv-nav (3 VP when building ts). cover free1. up int (0 ⇒ 1)."
+    "move": "taklons burn 1. spend 4pw for 1q. brainstone area1. action qic1. tech adv-nav (3 VP when building ts). cover free1 (power value 4 for PI / academy). up int (0 ⇒ 1)."
   },
   {
     "round": 5,
@@ -798,7 +798,7 @@
     ],
     "color": "#2080f0",
     "textColor": "black",
-    "move": "lantids spend 1pw for 1c. action qic2. fedtile fed2."
+    "move": "lantids spend 1pw for 1c. action qic2. fedtile fed2 (8vp,q)."
   },
   {
     "round": 5,
@@ -1055,7 +1055,7 @@
     ],
     "color": "#2080f0",
     "textColor": "black",
-    "move": "lantids federation 4A8,4B4,8A4 fed2."
+    "move": "lantids federation 4A8,4B4,8A4 fed2 (8vp,q)."
   },
   {
     "round": 5,
@@ -1574,7 +1574,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons spend 3pw for 1o. federation 1A5,1A6,1B3,6A2,6B1 fed4 using area1: 2."
+    "move": "taklons spend 3pw for 1o. federation 1A5,1A6,1B3,6A2,6B1 fed4 (7vp,2o) using area1: 2."
   },
   {
     "round": 4,
@@ -2235,7 +2235,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars spend 4tg for tech. tech free3 (o,q). up gaia (3 ⇒ 4). spend 4tg for tech. tech adv-gaia (3k special action). cover free3. up terra (1 ⇒ 2)"
+    "move": "itars spend 4tg for tech. tech free3 (o,q). up gaia (3 ⇒ 4). spend 4tg for tech. tech adv-gaia (3k special action). cover free3 (o,q). up terra (1 ⇒ 2)"
   },
   {
     "round": 4,
@@ -2483,7 +2483,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars burn 2. spend 2pw for 2c. federation 2A10,2B5,8A6,8B2,8B3 fed4 using area1: 2."
+    "move": "itars burn 2. spend 2pw for 2c. federation 2A10,2B5,8A6,8B2,8B3 fed4 (7vp,2o) using area1: 2."
   },
   {
     "round": 3,
@@ -2923,7 +2923,7 @@
     ],
     "color": "#FF9500",
     "textColor": "black",
-    "move": "geodens spend 3pw for 1o. build lab 1A1. tech adv-terra (3 VP / federation when passing). cover terra. up nav (0 ⇒ 1)."
+    "move": "geodens spend 3pw for 1o. build lab 1A1. tech adv-terra (3 VP / federation when passing). cover terra (7 VP). up nav (0 ⇒ 1)."
   },
   {
     "round": 3,
@@ -3188,7 +3188,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons action qic1. tech adv-eco (2 VP when researching). cover free3. up sci (1 ⇒ 2)."
+    "move": "taklons action qic1. tech adv-eco (2 VP when researching). cover free3 (o,q). up sci (1 ⇒ 2)."
   },
   {
     "round": 2,
@@ -3205,7 +3205,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons federation 4A8,4A9,4B0,4B5 fed2 using area1: 2."
+    "move": "taklons federation 4A8,4A9,4B0,4B5 fed2 (8vp,q) using area1: 2."
   },
   {
     "round": 2,
@@ -3377,7 +3377,7 @@
     ],
     "color": "#2080f0",
     "textColor": "black",
-    "move": "lantids spend 1pw for 1c. federation 4A0,4A1,4B0,5A6,5A7 fed4 using area1: 1."
+    "move": "lantids spend 1pw for 1c. federation 4A0,4A1,4B0,5A6,5A7 fed4 (7vp,2o) using area1: 1."
   },
   {
     "round": 2,
@@ -3779,7 +3779,7 @@
     ],
     "color": "#FF9500",
     "textColor": "black",
-    "move": "geodens federation 5A7,5A6,4A1,4B1,4B2 fed6 using area1: 2."
+    "move": "geodens federation 5A7,5A6,4A1,4B1,4B2 fed6 (6vp,2k) using area1: 2."
   },
   {
     "round": 2,
