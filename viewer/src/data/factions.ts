@@ -16,7 +16,7 @@ const factionData: { [faction in Faction]: { ability: string; PI: string; shortc
       "During the Gaia phase, move the power tokens in your Gaia area to area II of your power cycle instead of to area I.",
     PI:
       "During the Gaia phase, when you move power tokens from your Gaia area to area II of your power cycle, you may gain resources as if you were spending that much power to take free actions.",
-    shortcut: "r",
+    shortcut: "t",
   },
   [Faction.Lantids]: {
     ability:
