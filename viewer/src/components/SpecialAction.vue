@@ -1,17 +1,19 @@
 <template>
   <svg viewBox="-25 -25 50 50" width="50" height="50" style="overflow: visible">
     <g
-      :class="['specialAction', { highlighted: isHighlighted, disabled, board, recent }]"
+      :class="[
+        'specialAction',
+        { highlighted: isHighlighted, disabled, board, recent, warning: button && button.warning },
+      ]"
       v-b-tooltip.html
-      :title="tooltip"
+      :title="button ? button.tooltip : null"
     >
       <polygon
         points="-10,4 -4,10 4,10 10,4 10,-4 4,-10 -4,-10 -10,-4"
         transform="scale(2.4)"
         @click="onClick"
-        :class="`${planet != null ? 'planet-fill ' + planet : ''}`"
+        :class="`${planet != null ? 'planet-fill ' + planet : ''} special-action`"
       />
-      <!-- <Resource v-for="(reward, i) in rewards" :key=i :count=reward.count :kind=reward.type :transform="`translate(${rewards.length > 1 ? (i - 0.5) * 20  : 0}, ${reward.type === 'pw' ? 4 : 0}), scale(1.5)`" />-->
       <TechContent
         :content="(board ? '' : '>') + act"
         v-for="(act, i) in action"
@@ -29,8 +31,9 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Event, Planet } from "@gaia-project/engine";
-import { translateResources, withShortcut } from "../logic/commands";
+import Engine, { Planet, Player } from "@gaia-project/engine";
+import { specialActionButton } from "../logic/commands";
+import { ButtonData } from "../data";
 
 @Component
 export default class SpecialAction extends Vue {
@@ -50,31 +53,39 @@ export default class SpecialAction extends Vue {
   action: string[];
 
   @Prop()
-  shortcut?: string;
+  planet: Planet;
 
   @Prop()
-  planet: Planet;
+  player: Player | null;
 
   onClick() {
     if (!this._highlighted) {
       this.$emit("click");
       return;
     }
-    this.$store.dispatch("gaiaViewer/specialActionClick", this.action.join(","));
+    this.$store.dispatch("gaiaViewer/specialActionClick", this.button);
   }
 
-  get tooltip() {
-    return this.board ? undefined : withShortcut(translateResources(this.rewards), this.shortcut);
+  get income() {
+    return this.action.join(",");
   }
 
-  get rewards() {
-    return new Event('>' + this.action[0]).rewards;
+  get gameData(): Engine {
+    return this.$store.state.gaiaViewer.data;
+  }
+
+  get button(): ButtonData | null {
+    if (this.board) {
+      return null;
+    }
+    const player = this.$store.state.gaiaViewer.player?.index ?? this.gameData.currentPlayer;
+    return specialActionButton(this.income, this.gameData.player(player));
   }
 
   /** When the action content is highlighted - not the parent component */
   get _highlighted() {
     const actions = this.$store.state.gaiaViewer.context.highlighted.specialActions;
-    return actions.has(this.action.join(",")) || actions.has(this.action.join(",").replace(/>/g, ""));
+    return actions.has(this.income) || actions.has(this.income.replace(/>/g, ""));
   }
 
   get isHighlighted() {
@@ -105,6 +116,10 @@ g {
       stroke: var(--highlighted);
       stroke-width: 1;
       cursor: pointer;
+    }
+
+    &.warning > .special-action {
+      fill: var(--warning);
     }
 
     &.disabled {

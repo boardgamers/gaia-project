@@ -6,6 +6,7 @@ import Engine, {
   AvailableFreeAction,
   AvailableFreeActionData,
   AvailableHex,
+  AvailableResearchData,
   AvailableResearchTrack,
   BoardAction,
   boardActions,
@@ -26,8 +27,10 @@ import Engine, {
   Resource,
   Reward,
   Round,
+  SubPhase,
   tiles,
 } from "@gaia-project/engine";
+import assert from "assert";
 import { max, minBy, range, sortBy } from "lodash";
 import { ButtonData, ButtonWarning, HighlightHexData } from "../data";
 import {
@@ -40,6 +43,7 @@ import {
 import { boosterNames } from "../data/boosters";
 import { buildingName, buildingShortcut } from "../data/building";
 import { eventDesc } from "../data/event";
+import { researchNames } from "../data/research";
 import { resourceNames } from "../data/resources";
 import { moveWarnings } from "../data/warnings";
 
@@ -50,8 +54,8 @@ export type AvailableConversions = {
 
 export const forceNumericShortcut = (label: string) => ["Charge", "Income"].find((b) => label.startsWith(b));
 
-export function withShortcut(label: string, shortcut: string, skip?: string[]) {
-  if (!shortcut) {
+export function withShortcut(label: string | null, shortcut: string | null, skip?: string[]): string | null {
+  if (!label || !shortcut || label.includes("<u>")) {
     return label;
   }
 
@@ -70,6 +74,15 @@ export function withShortcut(label: string, shortcut: string, skip?: string[]) {
   } else {
     return `<u>${shortcut}</u>: ${label}`;
   }
+}
+
+function tooltipWithShortcut(tooltip: string | null, warn: ButtonWarning | null, shortcut?: string, skip?: string[]) {
+  const warnings = warn?.body?.join(", ");
+
+  if (tooltip && warn) {
+    return withShortcut(tooltip, shortcut, skip) + " - " + warnings;
+  }
+  return withShortcut(tooltip, shortcut, skip) ?? warnings;
 }
 
 export function hexMap(engine: Engine, coordinates: AvailableHex[]): HighlightHexData {
@@ -167,48 +180,71 @@ export function passWarning(engine: Engine, player: Player, command: AvailableCo
   return warnings.length == 0 ? null : passWarningButton(warnings);
 }
 
-function rewardWarnings(player: Player, r: Reward): string[] {
+function rewardWarnings(player: Player, rewards: Reward[]): string[] {
   const data = player.data.clone();
-  let waste = 0;
-  if (r.type === Resource.ChargePower) {
-    waste = applyChargePowers(data, [new Event(r.toString())]);
-  } else {
-    data.gainRewards([r]);
-    const resources = player.data.getResources(r.type);
-    if (resources == 0) {
-      //this resource cannot be gained
-      return [];
+  return rewards.flatMap((r) => {
+    let waste = 0;
+    if (r.type === Resource.ChargePower) {
+      waste = applyChargePowers(data, [new Event(r.toString())]);
+    } else {
+      data.gainRewards([r]);
+      const resources = player.data.getResources(r.type);
+      if (resources == 0) {
+        //this resource cannot be gained
+        return [];
+      }
+      waste = resources + r.count - data.getResources(r.type);
     }
-    waste = resources + r.count - data.getResources(r.type);
-  }
-  if (waste > 0) {
-    return [`${waste}${r.type} will be wasted`];
-  }
-  return [];
+    if (waste > 0) {
+      return [`${waste}${r.type} will be wasted`];
+    }
+    return [];
+  });
 }
 
-function resourceWasteWarning(warnings: string[]) {
+function resourceWasteWarning(warnings: string[]): ButtonWarning | null {
   return warnings.length == 0 ? null : { title: "Resources will be wasted - are you sure?", body: warnings };
 }
 
 export function specialActionWarning(player: Player, income: string): ButtonWarning | null {
-  return resourceWasteWarning(rewardWarnings(player, new Reward(income)));
+  return resourceWasteWarning(rewardWarnings(player, [new Reward(income)]));
 }
 
-export function advanceResearchWarning(player: Player, track: AvailableResearchTrack): ButtonWarning | null {
+function advanceResearchWarning(player: Player, track: AvailableResearchTrack): ButtonWarning | null {
   const events = researchTracks[track.field][track.to].map((s) => new Event(s));
 
   let rewards = events.filter((e) => e.operator == Operator.Once).flatMap((e) => e.rewards);
   if (track.cost) {
     rewards = Reward.merge(rewards, Reward.negative(Reward.parse(track.cost)));
   }
-  return resourceWasteWarning(rewards.flatMap((r) => rewardWarnings(player, r)));
+  return resourceWasteWarning(rewardWarnings(player, rewards));
 }
 
-export function finalizeShortcuts(ret: ButtonData[]) {
+function symbolButton(button: ButtonData, skipShortcut?: string[]): ButtonData {
+  button.tooltip = tooltipWithShortcut(
+    button.label,
+    button.warning,
+    button.shortcuts ? button.shortcuts[0] : null,
+    skipShortcut
+  );
+  button.label = "<u></u>"; //to prevent fallback to command
+  return button;
+}
+
+function textButton(button: ButtonData, skipShortcut?: string[]): ButtonData {
+  button.tooltip = tooltipWithShortcut(null, button.warning);
+  return button;
+}
+
+export function finalizeShortcuts(buttons: ButtonData[]) {
+  for (const button of buttons) {
+    if (button.buttons) {
+      finalizeShortcuts(button.buttons);
+    }
+  }
   let shortcut = 1;
 
-  const shown = ret.filter((b) => !b.hide);
+  const shown = buttons.filter((b) => !b.hide);
   for (const b of shown) {
     if (b.shortcuts == undefined) {
       b.shortcuts = [];
@@ -281,7 +317,7 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
       warning = {
         title: "Every possible building location has a warning",
         body: common.length > 0 ? common : ["Different warnings"],
-      };
+      } as ButtonWarning;
     }
 
     const building = buildings[0].building;
@@ -289,12 +325,12 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
 
     if (building == Building.Academy1 || building == Building.Academy2) {
       const buttons: ButtonData[] = [
-        {
+        textButton({
           label: buildingName(building, faction),
           command: building,
           shortcuts: [building == Building.Academy1 ? "k" : faction == Faction.BalTaks ? "c" : "q"],
           hexes: hexMap(engine, buildings),
-        },
+        }),
       ];
 
       if (academySelection != null) {
@@ -303,13 +339,15 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
       }
       academySelection = buttons;
 
-      ret.push({
-        label: "Upgrade to Academy",
-        shortcuts: [shortcut],
-        command: Command.Build,
-        buttons,
-        warning,
-      });
+      ret.push(
+        textButton({
+          label: "Upgrade to Academy",
+          shortcuts: [shortcut],
+          command: Command.Build,
+          buttons,
+          warning,
+        })
+      );
     } else {
       const buttons: ButtonData[] =
         engine.round === Round.None
@@ -321,15 +359,17 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
             ]
           : undefined;
 
-      ret.push({
-        label,
-        shortcuts: [shortcut],
-        command: `${Command.Build} ${building}`,
-        hexes: hexMap(engine, buildings),
-        buttons,
-        warning,
-        needConfirm: buttons?.length > 0,
-      });
+      ret.push(
+        textButton({
+          label,
+          shortcuts: [shortcut],
+          command: `${Command.Build} ${building}`,
+          hexes: hexMap(engine, buildings),
+          buttons,
+          warning,
+          needConfirm: buttons?.length > 0,
+        })
+      );
     }
   }
   return ret;
@@ -346,47 +386,52 @@ export function passButtons(
 
   Booster.values(Expansion.All).forEach((booster, i) => {
     if (command.data.boosters.includes(booster)) {
-      buttons.push({
-        command: booster,
-        label: `Booster ${i + 1}`,
-        booster,
-        needConfirm: true,
-        buttons: [
-          {
-            command: "",
-            label: `Confirm Booster ${boosterNames[booster].name}`,
-            warning: boosterWarning(engine, player, booster),
-          },
-        ],
-        tooltip: tiles.boosters[booster].map((spec) => eventDesc(new Event(spec))).join("\n"),
-      });
+      buttons.push(
+        symbolButton({
+          label: tiles.boosters[booster].map((spec) => eventDesc(new Event(spec))).join("\n"),
+          command: booster,
+          booster,
+          needConfirm: true,
+          buttons: [
+            textButton({
+              command: "",
+              label: `Confirm Booster ${boosterNames[booster].name}`,
+              warning: boosterWarning(engine, player, booster),
+            }),
+          ],
+        })
+      );
     }
   });
 
   // need a Pass confirmation if it's the last round, where Command = Pass but no Boosters
   if (command.data.boosters.length === 0) {
-    ret.push({
-      label: "Pass",
-      shortcuts: ["p"],
-      command: Command.Pass,
-      needConfirm: true,
-      buttons: [
-        {
-          command: "",
-          label: `Confirm Pass`,
-        },
-      ],
-      warning,
-    });
+    ret.push(
+      textButton({
+        label: "Pass",
+        shortcuts: ["p"],
+        command: Command.Pass,
+        needConfirm: true,
+        buttons: [
+          textButton({
+            command: "",
+            label: `Confirm Pass`,
+          }),
+        ],
+        warning,
+      })
+    );
   } else {
-    ret.push({
-      label: command.name === Command.Pass ? "Pass" : "Pick booster",
-      shortcuts: ["p"],
-      command: command.name,
-      buttons,
-      boosters: command.data.boosters,
-      warning,
-    });
+    ret.push(
+      textButton({
+        label: command.name === Command.Pass ? "Pass" : "Pick booster",
+        shortcuts: ["p"],
+        command: command.name,
+        buttons,
+        boosters: command.data.boosters,
+        warning,
+      })
+    );
   }
   return ret;
 }
@@ -395,6 +440,7 @@ export function translateResources(rewards: Reward[]): string {
   return rewards
     .map((r) => {
       const s = resourceNames.find((s) => s.type == r.type);
+      assert(s, "no resource name for " + r.type);
       return r.count + " " + (r.count == 1 ? s.label : s.plural);
     })
     .join(" and ");
@@ -441,15 +487,18 @@ function conversionButton(
   boardAction?: BoardAction,
   times?: number[]
 ): ButtonData {
-  return {
-    tooltip: withShortcut(conversionLabel(cost, income), shortcut, skipShortcut),
-    label: "<u></u>",
-    conversion: newConversion(cost, income, player),
-    shortcuts: shortcut != null ? [shortcut] : [],
-    command,
-    times,
-    boardAction,
-  };
+  return symbolButton(
+    {
+      label: conversionLabel(cost, income),
+      conversion: newConversion(cost, income, player),
+      shortcuts: shortcut != null ? [shortcut] : [],
+      command,
+      warning: player ? resourceWasteWarning(rewardWarnings(player, income)) : null,
+      times,
+      boardAction,
+    },
+    skipShortcut
+  );
 }
 
 export function boardActionButton(action: BoardAction, player: Player | null) {
@@ -468,6 +517,27 @@ export function boardActionsButton(data: AvailableBoardActionData, player: Playe
     command: Command.Action,
     boardActions: data.poweracts.map((act) => act.name),
     buttons: data.poweracts.map((act) => boardActionButton(act.name, player)),
+  };
+}
+
+export function specialActionButton(income: string, player: Player): ButtonData {
+  const rewards = Reward.parse(income);
+  return symbolButton({
+    label: translateResources(rewards),
+    command: income,
+    specialAction: income,
+    warning: specialActionWarning(player, income),
+    shortcuts: [resourceNames.find((r) => r.type === rewards[0].type).shortcut],
+  });
+}
+
+export function specialActionsButton(command: AvailableCommand<Command.Special>, player: Player) {
+  return {
+    label: "Special Action",
+    shortcuts: ["s"],
+    command: Command.Special,
+    specialActions: command.data.specialacts.map((act) => act.income),
+    buttons: command.data.specialacts.map((act) => specialActionButton(act.income, player)),
   };
 }
 
@@ -598,11 +668,155 @@ export function freeAndBurnButton(
 export function brainstoneButtons(data: BrainstoneActionData): ButtonData[] {
   return data.choices.sort().map((d) => {
     const area = d.area;
-    return {
+    return textButton({
       label: `Brainstone ${area}`,
       warning: buttonWarning(moveWarnings[d.warning]?.text),
       command: `${Command.BrainStone} ${area}`,
       shortcuts: [area == PowerArea.Gaia ? "g" : area.substring("area".length, area.length)],
-    };
+    });
+  });
+}
+
+export function researchButtons(command: AvailableCommand<Command.UpgradeResearch>, player: Player): ButtonData[] {
+  const ret: ButtonData[] = [];
+
+  const { tracks }: AvailableResearchData = command.data;
+  if (tracks.length === 1) {
+    ret.push(
+      textButton({
+        label: "Research " + researchNames[tracks[0].field],
+        shortcuts: ["r"],
+        command: `${Command.UpgradeResearch} ${tracks[0].field}`,
+        warning: advanceResearchWarning(player, tracks[0]),
+      })
+    );
+  } else {
+    ret.push({
+      label: "Research",
+      shortcuts: ["r"],
+      command: command.name,
+      // track.to contains actual level, to use when implementing research viewer
+      buttons: tracks.map((track) =>
+        textButton({
+          command: track.field,
+          label: researchNames[track.field],
+          shortcuts: [track.field.substring(0, 1)],
+          warning: advanceResearchWarning(player, track),
+        })
+      ),
+      researchTiles: tracks.map((track) => track.field + "-" + track.to),
+    });
+  }
+
+  return ret;
+}
+
+export function chargePowerButtons(
+  command: AvailableCommand<Command.ChargePower>,
+  engine: Engine,
+  player: Player
+): ButtonData[] {
+  const ret: ButtonData[] = [];
+
+  for (const offer of command.data.offers) {
+    const leech = offer.offer;
+    const action = leech.includes("pw") ? "Charge" : "Gain";
+    ret.push(
+      textButton({
+        label: offer.cost && offer.cost !== "~" ? `${action} ${leech} for ${offer.cost}` : `${action} ${leech}`,
+        command: `${Command.ChargePower} ${leech}`,
+        warning: chargeWarning(engine, player, leech),
+      })
+    );
+  }
+  return ret;
+}
+
+export function endTurnButton(command: AvailableCommand<Command.EndTurn>, engine: Engine): ButtonData {
+  return textButton({
+    label: "End Turn",
+    shortcuts: ["e"],
+    command: Command.EndTurn,
+    needConfirm: true,
+    buttons: [
+      textButton({
+        command: Command.EndTurn,
+        label: `Confirm End Turn`,
+      }),
+    ],
+    warning: endTurnWarning(engine, command),
+  });
+}
+
+export function deadEndButton(command: AvailableCommand<Command.DeadEnd>, undo: () => void): ButtonData {
+  let reason = "";
+  switch (command.data as SubPhase) {
+    case SubPhase.ChooseTechTile:
+      reason = "No tech tile left";
+      break;
+    case SubPhase.BuildMineOrGaiaFormer:
+      reason = "Cannot build mine or gaia former";
+      break;
+    case SubPhase.BuildMine:
+      reason = "Cannot build mine";
+      break;
+    case SubPhase.PISwap:
+      reason = "Cannot swap planetary institute";
+      break;
+    case SubPhase.DowngradeLab:
+      reason = "Cannot downgrade lab";
+      break;
+    case SubPhase.UpgradeResearch:
+      reason = "Cannot upgrade research";
+      break;
+  }
+  return textButton({
+    command: Command.DeadEnd,
+    label: reason,
+    warning: {
+      title: "Dead end reached",
+      body: ["You've reached a required move that is not possible to execute."],
+      okButton: {
+        label: "Undo",
+        action: () => {
+          undo();
+        },
+      },
+    },
+  });
+}
+
+export function federationButton(command: AvailableCommand<Command.FormFederation>, engine: Engine): ButtonData {
+  const tilesButtons: ButtonData[] = command.data.tiles.map((fed, i) =>
+    textButton({
+      command: fed,
+      label: `Federation ${i + 1}: ${tiles.federations[fed]}`,
+    })
+  );
+
+  const locationButtons: ButtonData[] = command.data.federations.map((fed, i) =>
+    textButton({
+      command: fed.hexes,
+      label: `Location ${i + 1}`,
+      hexes: new Map(
+        fed.hexes.split(",").map((coord) => [engine.map.getS(coord), { coordinates: coord }])
+      ) as HighlightHexData,
+      hover: true,
+      buttons: tilesButtons,
+      warning: buttonWarning(fed.warning != null ? moveWarnings[fed.warning].text : null),
+    })
+  );
+
+  locationButtons.push({
+    label: "Custom location",
+    selectHexes: true,
+    buttons: tilesButtons,
+  });
+
+  return textButton({
+    label: "Form federation",
+    shortcuts: ["f"],
+    command: Command.FormFederation,
+    buttons: locationButtons,
   });
 }

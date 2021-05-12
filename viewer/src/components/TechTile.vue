@@ -43,6 +43,7 @@ import {
 } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
 import TechContent from "./TechContent.vue";
+import { ButtonData } from "../data";
 
 @Component({
   components: {
@@ -64,7 +65,7 @@ export default class TechTile extends Vue {
 
   onClick() {
     if (this.highlighted) {
-      this.$store.dispatch("gaiaViewer/techClick", this.pos);
+      this.$store.dispatch("gaiaViewer/techClick", { command: this.pos } as ButtonData);
     }
   }
 

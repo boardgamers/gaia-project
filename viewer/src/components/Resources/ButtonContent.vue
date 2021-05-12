@@ -53,5 +53,6 @@ export default class ButtonContent extends Vue {
     }
     return l;
   }
+
 }
 </script>

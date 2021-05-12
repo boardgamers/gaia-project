@@ -7,20 +7,14 @@
       :booster="button.booster"
       highlighted
     />
-    <BoardAction
-      v-else-if="button.boardAction"
-      @click="handleClick"
-      :action="button.boardAction"
-      class="mb-1 mr-1"
-      transform="scale(1.3)"
-    />
+    <BoardAction v-else-if="button.boardAction" :action="button.boardAction" class="mb-1 mr-1" transform="scale(1.3)" />
     <SpecialAction
       v-else-if="button.specialAction"
       class="mb-1 mr-1"
       :action="[button.specialAction]"
-      :shortcut="button.shortcuts[0]"
+      :player="player"
     />
-    <TechTile v-else-if="button.tech" class="mb-1 mr-1" @click="handleClick" :pos="button.tech" :count-override="1" />
+    <TechTile v-else-if="button.tech" class="mb-1 mr-1" :pos="button.tech" :count-override="1" />
     <b-btn
       v-else-if="button.times === undefined"
       :variant="button.warning ? 'warning' : 'secondary'"
@@ -28,7 +22,7 @@
       @click="handleClick"
       @mouseenter="hover"
       @mouseleave="leave"
-      :title="tooltip"
+      :title="button.tooltip"
       v-b-tooltip.html
     >
       <template>
@@ -36,11 +30,12 @@
       </template>
     </b-btn>
     <b-dropdown
+      :variant="button.warning ? 'warning' : 'secondary'"
       :class="['mr-2', 'mb-2', 'move-button', { 'symbol-button': button.conversion }]"
       v-else
       split
       right
-      :title="tooltip"
+      :title="button.tooltip"
       v-b-tooltip.html
       @click="handleRangeClick(button.times[0])"
     >
@@ -67,13 +62,15 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { BuildWarning, GaiaHex, HighlightHex, SpaceMap } from "@gaia-project/engine";
+import { BuildWarning, GaiaHex, HighlightHex, Player, SpaceMap } from "@gaia-project/engine";
 import { ButtonData } from "../data";
 import Booster from "./Booster.vue";
 import TechTile from "./TechTile.vue";
 import ButtonContent from "./Resources/ButtonContent.vue";
 import BoardAction from "./BoardAction.vue";
 import SpecialAction from "./SpecialAction.vue";
+
+type EmitCommandParams = { disappear?: boolean; times?: number; warnings?: BuildWarning[] };
 
 @Component({
   components: {
@@ -128,7 +125,9 @@ export default class MoveButton extends Vue {
   }
 
   subscribeFinal(action: string) {
-    this.subscribe(action, (field) => this.emitCommand(field, { final: true }));
+    this.subscribe(action, (button) => {
+      this.handleButtonClick(button);
+    });
     this.emitCommand(null, { disappear: false });
   }
 
@@ -180,12 +179,16 @@ export default class MoveButton extends Vue {
     this.$on("hook:beforeDestroy", () => window.removeEventListener("keydown", keyListener));
   }
 
-  async handleClick() {
-    if (this.button.hide) {
+  async handleClick(button?: ButtonData, params?: EmitCommandParams) {
+    await this.handleButtonClick(this.button, null);
+  }
+
+  async handleButtonClick(button: ButtonData, params?: EmitCommandParams) {
+    if (button.hide) {
       console.log("click on hidden button, ignoring");
       return;
     }
-    const warning = this.button.warning;
+    const warning = button.warning;
     if (warning) {
       try {
         const c = this.$createElement;
@@ -216,45 +219,45 @@ export default class MoveButton extends Vue {
       this.$store.commit("gaiaViewer/clearContext");
     }
     if (
-      this.button.hexes &&
-      !this.button.selectHexes &&
-      !this.button.hover &&
-      !this.button.rotation &&
-      !this.button.range
+      button.hexes &&
+      !button.selectHexes &&
+      !button.hover &&
+      !button.rotation &&
+      !button.range
     ) {
-      this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
+      this.$store.commit("gaiaViewer/highlightHexes", button.hexes);
       this.subscribeHexClick((hex, highlight) => {
-        if (this.button.needConfirm) {
+        if (button.needConfirm) {
           this.$store.commit("gaiaViewer/highlightHexes", new Map<GaiaHex, HighlightHex>([[hex, {}]]));
         }
 
         this.emitCommand(hex.toString(), { warnings: highlight.warnings });
       });
-    } else if (this.button.researchTiles) {
-      this.$store.commit("gaiaViewer/highlightResearchTiles", this.button.researchTiles);
+    } else if (button.researchTiles) {
+      this.$store.commit("gaiaViewer/highlightResearchTiles", button.researchTiles);
       this.subscribeFinal("researchClick");
-    } else if (this.button.techs) {
-      this.$store.commit("gaiaViewer/highlightTechs", this.button.techs);
+    } else if (button.techs) {
+      this.$store.commit("gaiaViewer/highlightTechs", button.techs);
       this.subscribeFinal("techClick");
-    } else if (this.button.specialActions) {
-      this.$store.commit("gaiaViewer/highlightSpecialActions", this.button.specialActions);
+    } else if (button.specialActions) {
+      this.$store.commit("gaiaViewer/highlightSpecialActions", button.specialActions);
       this.subscribeFinal("specialActionClick");
-    } else if (this.button.boardActions) {
-      this.$store.commit("gaiaViewer/highlightBoardActions", this.button.boardActions);
+    } else if (button.boardActions) {
+      this.$store.commit("gaiaViewer/highlightBoardActions", button.boardActions);
       this.subscribeFinal("boardActionClick");
-    } else if (this.button.needConfirm) {
-      this.emitCommand(null, { disappear: false });
-    } else if (this.button.selectHexes) {
+    } else if (button.needConfirm) {
+      this.emitButtonCommand(button, null, { disappear: false });
+    } else if (button.selectHexes) {
       // If already the active button, end the selection
       if (this.isActiveButton) {
-        this.button.command = [...this.$store.state.gaiaViewer.context.highlighted.hexes.keys()]
+        button.command = [...this.$store.state.gaiaViewer.context.highlighted.hexes.keys()]
           .map((hex) => hex.toString())
           .join(",");
-        this.emitCommand();
+        this.emitButtonCommand(button);
         return;
       }
 
-      this.$store.commit("gaiaViewer/selectHexes", this.button.hexes);
+      this.$store.commit("gaiaViewer/selectHexes", button.hexes);
 
       this.customLabel = "Custom location - End selection";
 
@@ -270,25 +273,25 @@ export default class MoveButton extends Vue {
         const keys: GaiaHex[] = [...highlighted.keys()];
         this.$store.commit("gaiaViewer/highlightHexes", new Map([...keys.map((key) => [key, null])] as any));
       });
-    } else if (this.button.modal) {
+    } else if (button.modal) {
       this.modalShow = true;
-      this.button.modal.show(true);
-    } else if (this.button.rotation) {
+      button.modal.show(true);
+    } else if (button.rotation) {
       if (this.isActiveButton) {
         const rotations = [...this.$store.state.gaiaViewer.context.rotation.entries()];
         for (const rotation of rotations) {
           rotation[1] %= 6;
         }
-        this.emitCommand([].concat(...rotations.filter((r) => !!r[1])).join(" "));
+        this.emitButtonCommand(button, [].concat(...rotations.filter((r) => !!r[1])).join(" "));
         return;
       }
 
-      this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
+      this.$store.commit("gaiaViewer/highlightHexes", button.hexes);
       this.subscribeHexClick((hex) => this.$store.commit("gaiaViewer/rotate", hex));
       this.customLabel = "Sector rotations finished";
-    } else if (this.button.range) {
+    } else if (button.range) {
       console.log("range click");
-      this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
+      this.$store.commit("gaiaViewer/highlightHexes", button.hexes);
       this.subscribeHexClick((hex) => {
         if (this.startingHex) {
           this.emitCommand(`${this.startingHex} ${hex}`);
@@ -298,7 +301,7 @@ export default class MoveButton extends Vue {
         this.startingHex = hex;
 
         const map: SpaceMap = this.$store.state.gaiaViewer.data.map;
-        const { range, costs } = this.button;
+        const { range, costs } = button;
 
         const highlighted = new Map();
 
@@ -311,10 +314,10 @@ export default class MoveButton extends Vue {
       });
     } else {
       // Keep hexes highlighted for next command (federation tile)
-      if (this.button.hexes && this.button.hover) {
-        this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
+      if (button.hexes && button.hover) {
+        this.$store.commit("gaiaViewer/highlightHexes", button.hexes);
       }
-      this.emitCommand();
+      this.emitButtonCommand(button, null, params);
     }
   }
 
@@ -329,16 +332,24 @@ export default class MoveButton extends Vue {
 
   emitCommand(
     append?: string,
-    params?: { disappear?: boolean; final?: boolean; times?: number; warnings?: BuildWarning[] },
+    params?: EmitCommandParams,
   ) {
-    console.log("emit command", this.button.command, append);
+    this.emitButtonCommand(this.button, append, params);
+  }
 
-    if (this.button.needConfirm && append) {
-      this.button.buttons[0].command = append;
+  emitButtonCommand(
+    button: ButtonData,
+    append?: string,
+    params?: EmitCommandParams,
+  ) {
+    console.log("emit command", button.command, append, params);
+
+    if (button.needConfirm && append) {
+      button.buttons[0].command = append;
     }
 
-    params = Object.assign({}, { disappear: true, final: false, times: 1 }, params);
-    const { disappear, final, times, warnings } = params;
+    params = Object.assign({}, { disappear: true, times: 1 }, params);
+    const { disappear, times, warnings } = params;
 
     if (disappear) {
       this.unsubscribe();
@@ -348,33 +359,25 @@ export default class MoveButton extends Vue {
 
     let commandBody: string[] = [];
 
-    if (final) {
-      commandBody = append ? [append] : [];
-    } else {
-      // Parse numbers, ie the command is executed X times, multiply
-      // each number by X instead of repeating the command X times.
-      let command = (this.button.command || "") + "";
+    // Parse numbers, ie the command is executed X times, multiply
+    // each number by X instead of repeating the command X times.
+    let command = (button.command || "") + "";
 
-      if (times && typeof times === "number") {
-        // the \b is necessary for things like '1t-a3', so the 3 is not caught
-        command = command.replace(/\b[0-9]+/g, (x) => "" + parseInt(x) * times);
-      }
-
-      command = command.replace(/\$times\b/g, "" + (times ?? 0));
-
-      commandBody = [command, append].filter((x) => !!x);
+    if (times && typeof times === "number") {
+      // the \b is necessary for things like '1t-a3', so the 3 is not caught
+      command = command.replace(/\b[0-9]+/g, (x) => "" + parseInt(x) * times);
     }
 
-    this.$emit("trigger", commandBody.join(" "), this, final, warnings);
+    command = command.replace(/\$times\b/g, "" + (times ?? 0));
+
+    commandBody = [command, append].filter((x) => !!x);
+
+    this.$emit("trigger", commandBody.join(" "), button, warnings);
   }
 
-  get tooltip(): string | null {
-    const warn = this.button.warning?.body?.join(", ");
-    const tooltip = this.button.tooltip;
-    if (tooltip && warn) {
-      return tooltip + " " + warn;
-    }
-    return tooltip ?? warn;
+  get player(): Player {
+    const engine = this.$store.state.gaiaViewer.data;
+    return engine.player(engine.currentPlayer);
   }
 
   hover() {

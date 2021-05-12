@@ -2,7 +2,7 @@
   <svg width="56" height="56" viewBox="-28 -28 56 56" style="overflow: visible">
     <g
       :transform="transform"
-      :class="['boardAction', kind, { highlighted, recent }]"
+      :class="['boardAction', kind, { highlighted, recent, warning: button.warning }]"
       v-b-tooltip.html
       :title="button.tooltip"
     >
@@ -64,10 +64,11 @@ import { boardActionButton } from "../logic/commands";
 @Component<BoardAction>({
   components: {
     Resource,
-    SpecialAction,
+    SpecialAction
   },
 })
 export default class BoardAction extends Vue {
+
   @Prop()
   action: BoardActionEnum;
 
@@ -78,7 +79,7 @@ export default class BoardAction extends Vue {
     if (!this.highlighted) {
       return;
     }
-    this.$store.dispatch("gaiaViewer/boardActionClick", this.action);
+    this.$store.dispatch("gaiaViewer/boardActionClick", this.button);
   }
 
   get highlighted(): boolean {
@@ -160,6 +161,10 @@ g {
       stroke: var(--highlighted);
       cursor: pointer;
       stroke-width: 0.08;
+    }
+
+    &.warning .special-action {
+      fill: var(--warning) !important;
     }
   }
 

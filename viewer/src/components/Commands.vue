@@ -64,7 +64,6 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   AvailableCommand,
-  AvailableResearchData,
   BuildWarning,
   Command,
   Faction,
@@ -83,22 +82,21 @@ import { FactionCustomization } from "@gaia-project/engine/src/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
 import { moveWarnings } from "../data/warnings";
 import {
-  advanceResearchWarning,
   AvailableConversions,
   boardActionsButton,
   brainstoneButtons,
   buildButtons,
   buttonWarning,
-  chargeWarning,
-  endTurnWarning,
-  fastConversionClick,
+  chargePowerButtons, deadEndButton,
+  endTurnButton,
+  fastConversionClick, federationButton,
   finalizeShortcuts,
   freeAndBurnButton,
   hexMap,
   passButtons,
-  specialActionWarning
+  researchButtons,
+  specialActionsButton,
 } from "../logic/commands";
-import { researchNames } from "../data/research";
 import Undo from "./Resources/Undo.vue";
 
 let show = false;
@@ -270,14 +268,9 @@ export default class Commands extends Vue {
     this.updater += 1;
   }
 
-  handleCommand(command: string, source?: MoveButton, final?: boolean, warnings?: BuildWarning[]) {
+  handleCommand(command: string, source?: ButtonData, warnings?: BuildWarning[]) {
     console.log("handle command", command);
     this.unsubscribe();
-
-    if (source?.button?.undo) {
-      this.undo();
-      return;
-    }
 
     // Some users seem to have a bug with repeating commands on mobile, like clicking the income button twice
     if (
@@ -289,11 +282,11 @@ export default class Commands extends Vue {
       return;
     }
 
-    if (source?.button.buttons?.length > 0 && !final) {
-      this.commandTitles.push(source.button.label);
-      this.commandChain.push(source.button.command);
-      this.buttonChain.push(source.button);
-      this.customButtons = source.button.buttons;
+    if (source?.buttons?.length > 0) {
+      this.commandTitles.push(source.label);
+      this.commandChain.push(source.command);
+      this.buttonChain.push(source);
+      this.customButtons = source.buttons;
       this.$store.commit("gaiaViewer/setCommandChain", true);
 
       // Seems to cause problems on mobile
@@ -378,29 +371,7 @@ export default class Commands extends Vue {
         }
 
         case Command.UpgradeResearch: {
-          const { tracks }: AvailableResearchData = command.data;
-          if (tracks.length === 1) {
-            ret.push({
-              label: "Research " + researchNames[tracks[0].field],
-              shortcuts: ["r"],
-              command: `${Command.UpgradeResearch} ${tracks[0].field}`,
-              warning: advanceResearchWarning(this.player, tracks[0])
-            });
-          } else {
-            ret.push({
-              label: "Research",
-              shortcuts: ["r"],
-              command: command.name,
-              // track.to contains actual level, to use when implementing research viewer
-              buttons: tracks.map((track) => ({
-                command: track.field,
-                label: researchNames[track.field],
-                shortcuts: [track.field.substring(0, 1)],
-                warning: advanceResearchWarning(this.player, track)
-              })),
-              researchTiles: tracks.map((track) => track.field + "-" + track.to),
-            });
-          }
+          ret.push(...researchButtons(command, this.player));
           break;
         }
 
@@ -426,16 +397,7 @@ export default class Commands extends Vue {
         }
 
         case Command.ChargePower: {
-          for (const offer of command.data.offers) {
-            const leech = offer.offer;
-            const action = leech.includes("pw") ? "Charge" : "Gain";
-            ret.push({
-              label: offer.cost && offer.cost !== "~" ? `${action} ${leech} for ${offer.cost}` : `${action} ${leech}`,
-              command: `${Command.ChargePower} ${leech}`,
-              warning: chargeWarning(this.engine, this.player, leech)
-            });
-          }
-
+          ret.push(...chargePowerButtons(command, this.engine, this.player));
           break;
         }
 
@@ -478,75 +440,17 @@ export default class Commands extends Vue {
         }
 
         case Command.Special: {
-          ret.push({
-            label: "Special Action",
-            shortcuts: ["s"],
-            command: Command.Special,
-            specialActions: command.data.specialacts.map((act) => act.income),
-            buttons: command.data.specialacts.map((act) => ({
-              command: act.income,
-              specialAction: act.income,
-              warning: specialActionWarning(this.player, act.income)
-            })),
-          });
+          ret.push(specialActionsButton(command, this.player));
           break;
         }
 
         case Command.EndTurn: {
-          ret.push({
-            label: "End Turn",
-            shortcuts: ["e"],
-            command: Command.EndTurn,
-            needConfirm: true,
-            buttons: [
-              {
-                command: Command.EndTurn,
-                label: `Confirm End Turn`,
-              },
-            ],
-            warning: endTurnWarning(this.engine, command)
-          });
+          ret.push(endTurnButton(command, this.engine));
           break;
         }
 
         case Command.DeadEnd:
-          let reason = "";
-          switch (command.data as SubPhase) {
-            case SubPhase.ChooseTechTile:
-              reason = "No tech tile left";
-              break;
-            case SubPhase.BuildMineOrGaiaFormer:
-              reason = "Cannot build mine or gaia former";
-              break;
-            case SubPhase.BuildMine:
-              reason = "Cannot build mine";
-              break;
-            case SubPhase.PISwap:
-              reason = "Cannot swap planetary institute";
-              break;
-            case SubPhase.DowngradeLab:
-              reason = "Cannot downgrade lab";
-              break;
-            case SubPhase.UpgradeResearch:
-              reason = "Cannot upgrade research";
-              break;
-          }
-          ret.push({
-            command: Command.DeadEnd,
-            label: reason,
-            warning: {
-              title: "Dead end reached",
-              body: [
-                "You've reached a required move that is not possible to execute."
-              ],
-              okButton: {
-                label: "Undo",
-                action: () => {
-                  this.undo();
-                }
-              }
-            }
-          });
+          ret.push(deadEndButton(command, this.undo));
           break;
 
         case Command.ChooseIncome: {
@@ -571,32 +475,7 @@ export default class Commands extends Vue {
         }
 
         case Command.FormFederation: {
-          const tilesButtons: ButtonData[] = command.data.tiles.map((fed, i) => ({
-            command: fed,
-            label: `Federation ${i + 1}: ${tiles.federations[fed]}`,
-          } as ButtonData));
-
-          const locationButtons: ButtonData[] = command.data.federations.map((fed, i) => ({
-            command: fed.hexes,
-            label: `Location ${i + 1}`,
-            hexes: new Map(fed.hexes.split(",").map((coord) => [this.engine.map.getS(coord), { coordinates: coord }])),
-            hover: true,
-            buttons: tilesButtons,
-            warning: buttonWarning(fed.warning != null ? moveWarnings[fed.warning].text : null)
-          } as ButtonData));
-
-          locationButtons.push({
-            label: "Custom location",
-            selectHexes: true,
-            buttons: tilesButtons,
-          });
-
-          ret.push({
-            label: "Form federation",
-            shortcuts: ["f"],
-            command: Command.FormFederation,
-            buttons: locationButtons,
-          });
+          ret.push(federationButton(command, this.engine));
           break;
         }
 
