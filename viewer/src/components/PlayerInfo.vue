@@ -11,7 +11,6 @@
           :player="player"
           :faction="player.faction"
           :data="playerData"
-          @undo="undo"
         />
         <g transform="translate(4, 0)">
           <BuildingGroup
@@ -139,10 +138,10 @@
 
         <SpecialAction
           v-for="(action, i) in player.actions"
-          :action="['>' + action.rewards]"
+          :action="[action.rewards]"
           :recent="recentAction(i)"
           :disabled="!action.enabled || passed"
-          :key="action.action + '-' + i"
+          :key="action.rewards + '-' + i"
           y="17.5"
           width="3.1"
           height="3.1"
@@ -268,10 +267,6 @@ export default class PlayerInfo extends Vue {
 
   get round() {
     return this.$store.state.gaiaViewer.data.round;
-  }
-
-  undo() {
-    this.$emit("undo");
   }
 
   get hasLostPlanet() {

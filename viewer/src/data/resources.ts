@@ -79,12 +79,22 @@ export const resourceNames: ResourceName[] = [
   },
   {
     type: Resource.RescoreFederation,
-    label: "Re-score federation",
-    plural: "Re-score federation",
+    label: "Re-score Federation",
+    plural: "Re-score Federation",
   },
   {
     type: Resource.BowlToken,
-    label: "Token in area 2",
-    plural: "Token in area 2",
+    label: "Token in Area 2",
+    plural: "Token in Area 2",
+  },
+  {
+    type: Resource.SpaceStation,
+    label: "Space Station",
+    plural: "Space Station",
+  },
+  {
+    type: Resource.TemporaryRange,
+    label: "Temporary Range",
+    plural: "Temporary Range",
   },
 ];

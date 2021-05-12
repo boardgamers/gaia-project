@@ -11,6 +11,7 @@ describe("commands", () => {
       buttons: [
         {
           command: "spend 4pw for 1o,1c",
+          boardAction: null,
           conversion: {
             from: [
               {

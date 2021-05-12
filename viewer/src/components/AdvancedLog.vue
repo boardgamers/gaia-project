@@ -58,7 +58,6 @@ type LogScope = "recent" | "all"
 @Component
 export default class AdvancedLog extends Vue {
   private scope: LogScope = "recent"
-  private keyListener = null;
 
   @Prop()
   currentMove?: string;
@@ -66,12 +65,8 @@ export default class AdvancedLog extends Vue {
   @Prop()
   hideLog?: boolean;
 
-  destroyed() {
-    window.removeEventListener("keydown", this.keyListener);
-  }
-
   mounted() {
-    this.keyListener = (e) => {
+    const keyListener = (e) => {
       switch (e.key) {
         case "h":
           this.toggleLog();
@@ -81,7 +76,8 @@ export default class AdvancedLog extends Vue {
           break;
       }
     };
-    window.addEventListener("keydown", this.keyListener);
+    window.addEventListener("keydown", keyListener);
+    this.$on("hook:beforeDestroy", () => window.removeEventListener("keydown", keyListener));
   }
 
   toggleLog() {
