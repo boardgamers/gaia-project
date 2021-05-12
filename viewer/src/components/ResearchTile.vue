@@ -73,6 +73,7 @@ import Token from "./Token.vue";
 import FederationTile from "./FederationTile.vue";
 import Planet from "./Planet.vue";
 import Resource from "./Resource.vue";
+import { ButtonData } from "../data";
 
 @Component<ResearchTile>({
   components: {
@@ -110,7 +111,7 @@ export default class ResearchTile extends Vue {
 
   onClick() {
     if (this.highlighted) {
-      this.$store.dispatch("gaiaViewer/researchClick", this.field);
+      this.$store.dispatch("gaiaViewer/researchClick", { command: this.field } as ButtonData);
     }
   }
 

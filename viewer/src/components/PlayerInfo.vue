@@ -139,6 +139,7 @@
         <SpecialAction
           v-for="(action, i) in player.actions"
           :action="[action.rewards]"
+          :player="player"
           :recent="recentAction(i)"
           :disabled="!action.enabled || passed"
           :key="action.rewards + '-' + i"

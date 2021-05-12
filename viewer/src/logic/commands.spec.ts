@@ -1,4 +1,4 @@
-import { AvailableFreeAction, FreeAction, freeActionConversions, Player } from "@gaia-project/engine";
+import { AvailableFreeAction, FreeAction, freeActionConversions, Player, PlayerData } from "@gaia-project/engine";
 import { expect } from "chai";
 import { freeActionButton, withShortcut } from "./commands";
 
@@ -6,7 +6,9 @@ describe("commands", () => {
   it("should assign shortcut for free action", () => {
     const avail: AvailableFreeAction = freeActionConversions[FreeAction.PowerToOreAndCredit];
 
-    const button = freeActionButton({ acts: [avail] }, { data: { tokenModifier: 2 } } as Player);
+    let playerData = new PlayerData();
+    playerData.tokenModifier = 2;
+    const button = freeActionButton({ acts: [avail] }, { data: playerData } as Player);
     expect(button).to.deep.equal({
       buttons: [
         {
@@ -34,6 +36,7 @@ describe("commands", () => {
           shortcuts: ["i"],
           times: undefined,
           tooltip: "4 Power Charges ⇒ 1 Ore and 1 Cred<u>i</u>t",
+          warning: null,
         },
       ],
       tooltips: {

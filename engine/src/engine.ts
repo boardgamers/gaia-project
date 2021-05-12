@@ -432,7 +432,7 @@ export default class Engine {
     }
   }
 
-  player(player: PlayerEnum): Player {
+  player(player: PlayerEnum): Player | null {
     return this.players[player];
   }
 
