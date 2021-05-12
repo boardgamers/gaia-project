@@ -14,6 +14,7 @@ export const moveWarnings: { [key in BuildWarning | BrainstoneWarning]: { text: 
     text: "Building on a new planet type with the planetary institute would give 3 knowledge.",
   },
   "expensive-trade-station": { text: "Trade station for 6c instead of 3c." },
+  "gaia-former-would-extend-range": { text: "Upgrade a gaia former first to save QICs for range." },
   "brainstone-charges-wasted": {
     text: "Some of the 3 brainstone charges are wasted. Convert 3 power charges to 3 credit at once.",
   },

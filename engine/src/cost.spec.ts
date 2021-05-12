@@ -1,6 +1,9 @@
 import { expect } from "chai";
-import { qicForDistance, terraformingCost } from "./cost";
-import { Resource } from "./enums";
+import { PlayerEnum } from "../index";
+import { qicForDistance, QicNeeded, terraformingCost } from "./cost";
+import { Building, Resource } from "./enums";
+import SpaceMap from "./map";
+import Player from "./player";
 import PlayerData from "./player-data";
 import Reward from "./reward";
 
@@ -8,42 +11,128 @@ describe("cost", () => {
   describe("QIC needed", () => {
     const tests: {
       name: string;
-      give: { distance: number; range: number; temporaryRange: number };
-      want: { qic: number | null };
+      give: { location: string; range: number; temporaryRange: number };
+      want: QicNeeded;
     }[] = [
       {
         name: "in distance",
-        give: { distance: 1, range: 1, temporaryRange: 0 },
-        want: { qic: 0 },
+        give: { location: "6A1", range: 1, temporaryRange: 0 },
+        want: { distance: 1, amount: 0, warning: null },
       },
       {
-        name: "need 2 q",
-        give: { distance: 5, range: 1, temporaryRange: 0 },
-        want: { qic: 2 },
+        name: "need 2 q, gaia former would save 1",
+        give: { location: "5A2", range: 1, temporaryRange: 0 },
+        want: { distance: 5, amount: 2, warning: "gaia-former-would-extend-range" },
       },
       {
         name: "need 1 q with temp range",
-        give: { distance: 6, range: 1, temporaryRange: 3 },
-        want: { qic: 1 },
+        give: { location: "7B5", range: 1, temporaryRange: 3 },
+        want: { distance: 6, amount: 1, warning: null },
       },
       {
         name: "temp range partially needed",
-        give: { distance: 2, range: 1, temporaryRange: 3 },
-        want: { qic: 0 },
+        give: { location: "6B3", range: 1, temporaryRange: 3 },
+        want: { distance: 2, amount: 0, warning: null },
       },
       {
         name: "temp range not needed",
-        give: { distance: 1, range: 1, temporaryRange: 3 },
-        want: { qic: null },
+        give: { location: "6A1", range: 1, temporaryRange: 3 },
+        want: null,
       },
     ];
 
     for (const test of tests) {
       it(test.name, () => {
+        const m = new SpaceMap();
+
+        m.load(
+          JSON.parse(`
+            {
+      "sectors": [
+        {
+          "sector": "6B",
+          "rotation": 0,
+          "center": {
+            "q": 0,
+            "r": 0,
+            "s": 0
+          }
+        },
+        {
+          "sector": "3",
+          "rotation": 0,
+          "center": {
+            "q": 5,
+            "r": -2,
+            "s": -3
+          }
+        },
+        {
+          "sector": "1",
+          "rotation": 0,
+          "center": {
+            "q": 2,
+            "r": 3,
+            "s": -5
+          }
+        },
+        {
+          "sector": "4",
+          "rotation": 0,
+          "center": {
+            "q": -3,
+            "r": 5,
+            "s": -2
+          }
+        },
+        {
+          "sector": "5B",
+          "rotation": 1,
+          "center": {
+            "q": -5,
+            "r": 2,
+            "s": 3
+          }
+        },
+        {
+          "sector": "7B",
+          "rotation": 3,
+          "center": {
+            "q": -2,
+            "r": -3,
+            "s": 5
+          }
+        },
+        {
+          "sector": "2",
+          "rotation": 4,
+          "center": {
+            "q": 3,
+            "r": -5,
+            "s": 2
+          }
+        }
+      ],
+      "mirror": false
+    }
+        `)
+        );
+
+        const home = m.getS("6B1");
+        home.data.player = PlayerEnum.Player1;
+        home.data.building = Building.Mine;
+        const gf = m.getS("6A5");
+        gf.data.player = PlayerEnum.Player1;
+        gf.data.building = Building.GaiaFormer;
+
         const g = test.give;
-        const p = { range: g.range, temporaryRange: g.temporaryRange } as PlayerData;
-        const qic = qicForDistance(g.distance, p);
-        expect(qic).to.equal(test.want.qic);
+        const p = {
+          data: { range: g.range, temporaryRange: g.temporaryRange, occupied: [home, gf] },
+          player: PlayerEnum.Player1,
+        } as Player;
+
+        const qic = qicForDistance(m, m.getS(g.location), p);
+        expect(qic).to.deep.equal(test.want);
       });
     }
   });

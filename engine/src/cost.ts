@@ -1,4 +1,7 @@
 import { Resource } from "./enums";
+import { GaiaHex } from "./gaia-hex";
+import SpaceMap from "./map";
+import PlayerObject, { BuildWarning } from "./player";
 import PlayerData from "./player-data";
 import Reward from "./reward";
 
@@ -18,15 +21,30 @@ export function terraformingCost(d: PlayerData, steps: number): Reward | null {
   return new Reward(cost, Resource.Ore);
 }
 
-export function qicForDistance(distance: number, data: PlayerData): number | null {
-  function qic(temporaryRange: number) {
-    return Math.max(Math.ceil((distance - data.range - temporaryRange) / QIC_RANGE_UPGRADE), 0);
+export type QicNeeded = { amount: number; distance: number; warning?: BuildWarning } | null;
+
+export function qicForDistance(map: SpaceMap, hex: GaiaHex, pl: PlayerObject): QicNeeded {
+  const distance = (acceptGaiaFormer: boolean) => {
+    const hexes = acceptGaiaFormer
+      ? Array.from(map.grid.values()).filter((loc) => loc.data.player == pl.player)
+      : pl.data.occupied.filter((loc) => acceptGaiaFormer || loc.isRangeStartingPoint(pl.player));
+    return Math.min(...hexes.map((loc) => map.distance(hex, loc)));
+  };
+
+  function qic(temporaryRange: number, distance: number): number {
+    return Math.max(Math.ceil((distance - pl.data.range - temporaryRange) / QIC_RANGE_UPGRADE), 0);
   }
 
-  const qicNeeded = qic(data.temporaryRange);
-  if (data.temporaryRange > 0 && qic(0) === qicNeeded) {
+  const d = distance(false);
+  const qicNeeded = qic(pl.data.temporaryRange, d);
+  if (pl.data.temporaryRange > 0 && qic(0, distance(false)) === qicNeeded) {
     // there's no reason to activate the booster and not use it
     return null;
   }
-  return qicNeeded;
+  const qicWithGaiaFormer = qic(pl.data.temporaryRange, distance(this));
+  return {
+    amount: qicNeeded,
+    distance: d,
+    warning: qicWithGaiaFormer < qicNeeded ? "gaia-former-would-extend-range" : null,
+  };
 }
