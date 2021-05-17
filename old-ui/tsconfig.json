@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    /* Basic Options */
+    "target": "es2019",
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "outDir": "./dist" /* Redirect output structure to the directory. */,
+    // "paths": {
+    //   "@/*": [
+    //     "src/*"
+    //   ]
+    // },
+    "baseUrl": ".",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.vue", "src/*.ts"],
+  "exclude": ["node_modules"]
+}

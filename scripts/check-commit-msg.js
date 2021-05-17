@@ -78,9 +78,9 @@ try {
   const gitmoji = gitmojis.find((gm) => msg.startsWith(gm));
   assert(gitmoji, "Commit message should start with gitmoji");
   assert(msg[gitmoji.length] === " ", "Space should follow gitmoji");
-  assert(/^[^ ]* \((all|viewer|engine)\)/.test(msg), "Commit scope should be 'all', 'engine' or 'viewer'");
+  assert(/^[^ ]* \((all|viewer|engine|old-ui)\)/.test(msg), "Commit scope should be 'all', 'engine' or 'viewer'");
   assert(
-    /^[^ ]* \((all|viewer|engine)\) [A-Z]/.test(msg),
+    /^[^ ]* \((all|viewer|engine|old-ui)\) [A-Z]/.test(msg),
     "Commit subject should start with a space and an uppercase letter"
   );
 } catch (err) {

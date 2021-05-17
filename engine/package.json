@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "index.ts",
   "source": "index.ts",
-  "repository": "git@github.com:donkeytech/gaia-engine.git",
+  "repository": "git@github.com:boardgamers-mono/gaia-project.git",
   "publishConfig": {
     "access": "public"
   },

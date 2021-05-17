@@ -1,0 +1,39 @@
+name: Old UI - Version and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      newversion:
+        description: "Semantic Version Bump Type (major minor patch)"
+        default: patch
+
+env:
+  node_version: 14
+
+defaults:
+  run:
+    working-directory: old-ui
+
+jobs:
+  version_and_release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ env.node_version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ env.node_version }}
+          # setting a registry enables the NODE_AUTH_TOKEN env variable where we can set an npm token.  REQUIRED
+          registry-url: "https://registry.npmjs.org"
+      - uses: pnpm/action-setup@v1.2.1
+        with:
+          version: 5.17.1
+      - run: pnpm install
+      - run: git config --global user.name github-actions
+      - run: git config --global user.email bot@github.com
+      - run: yarn config set version-git-message "🔖 (old-ui) v%s"
+      - run: yarn version --${{ github.event.inputs.newversion }}
+      - run: pnpm publish .
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - run: git push --follow-tags

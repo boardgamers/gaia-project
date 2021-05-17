@@ -1,0 +1,69 @@
+{
+  "name": "@gaia-project/old-ui",
+  "version": "1.0.0",
+  "scripts": {
+    "serve": "vue-cli-service serve --port 8080",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint",
+    "package": "vue-cli-service build --target lib src/wrapper.ts",
+    "prepublishOnly": "npm run package",
+    "test": "vue-cli-service lint"
+  },
+  "repository": "git@github.com:boardgamers-mono/gaia-project.git",
+  "publishConfig": {
+    "access": "public"
+  },
+  "unpkg": "dist/package/viewer.umd.min.js",
+  "files": [
+    "index.ts",
+    "tsconfig.json",
+    "src",
+    "README.md",
+    "public",
+    "dist/package/viewer.umd.min.js",
+    "dist/package/viewer.css"
+  ],
+  "dependencies": {
+    "@gaia-project/engine": "workspace:../engine",
+    "bootstrap": "^4.4.1",
+    "bootstrap-vue": "^2.12.0",
+    "vue": "^2.6.11",
+    "vuex": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/jquery": "^3.3.1",
+    "@types/node": "^10.5.2",
+    "@typescript-eslint/eslint-plugin": "^2.26.0",
+    "@typescript-eslint/parser": "^2.26.0",
+    "@vue/cli-plugin-eslint": "~4.5.13",
+    "@vue/cli-plugin-typescript": "~4.2.3",
+    "@vue/cli-service": "~4.2.3",
+    "@vue/eslint-config-standard": "^5.1.2",
+    "@vue/eslint-config-typescript": "^5.0.2",
+    "eslint": "^7.26.0",
+    "eslint-plugin-import": "^2.23.2",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^5.1.0",
+    "eslint-plugin-vue": "^7.9.0",
+    "hexagrid": "^2.0.1",
+    "popper": "^1.0.1",
+    "popper.js": "^1.16.1",
+    "sass": "^1.32.8",
+    "sass-loader": "^8.0.2",
+    "typescript": "^4.2.4",
+    "vue-property-decorator": "^8.4.1",
+    "vue-template-compiler": "^2.6.11",
+    "webpack": "^4.16.1"
+  },
+  "peerDependencies": {
+    "bootstrap-vue": "^2.12.0",
+    "vue": "^2.6.11"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ],
+  "license": "MIT",
+  "source": "index.ts"
+}

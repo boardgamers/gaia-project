@@ -1,0 +1,32 @@
+name: Old UI - Test
+on:
+  push:
+    paths:
+      - ".github/workflows/old-ui-test.yml"
+      - "viewer/**"
+    branches:
+      - master
+  pull_request:
+    paths:
+      - ".github/workflows/old-ui-test.yml"
+      - "viewer/**"
+
+defaults:
+  run:
+    working-directory: old-ui
+
+jobs:
+  test_and_build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "14"
+      - uses: pnpm/action-setup@v1.2.1
+        with:
+          version: 5.17.1
+      - run: pnpm install
+      - run: pnpm lint
+      # - run: pnpm test
+      - run: pnpm build
