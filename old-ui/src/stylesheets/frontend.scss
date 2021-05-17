@@ -1,0 +1,60 @@
+// @import "~font-awesome/css/font-awesome.css";
+
+// // Bootstrap settings
+// $font-family-sans-serif: $thin-font;
+// $body-bg: $color-base;
+// $body-color: $color-text;
+// $link-color: $color-text;
+// $navbar-dark-active-color: $color-primary;
+// $list-group-bg: $color-list-item;
+// $primary: $color-primary;
+// $secondary: $color-text;
+// $dark: $color-dark;
+// $dropdown-bg: $color-list-item;
+// $border-radius: 2px;
+// $dropdown-divider-bg: $color-divider;
+// $dropdown-link-color: $color-text-faded;
+// $dropdown-link-hover-color: $color-text;
+// $dropdown-link-hover-bg: transparent;
+
+// $display2-size: 4.5rem;
+// $display3-size: 3.5rem;
+// $display4-size: 2.5rem;
+// $display5-size: 2rem;
+// $display6-size: 1.5rem;
+
+@import "~bootstrap/scss/bootstrap.scss";
+@import "~bootstrap-vue";
+
+.tooltip {
+  .tooltip-inner {
+    max-width: 400px;
+    text-align: left;
+  }
+}
+
+.notransition {
+  transition: none !important;
+}
+
+.tooltip#tooltip-canvas {
+  opacity: 1;
+  display: none;
+
+  &.tooltip-show {
+    display: block;
+  }
+
+  // Center-vertically
+  .arrow {
+    top: 0;
+    bottom: 0;
+    margin-top: auto;
+    margin-bottom: auto;
+  }
+
+  .tooltip-inner {
+    max-width: 400px;
+    text-align: left;
+  }
+}

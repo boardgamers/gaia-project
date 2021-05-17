@@ -7,6 +7,10 @@
     "rzulian",
     "zeitlinger"
   ],
+  "repository": "git@github.com:boardgamers-mono/gaia-project.git",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "serve": "vue-cli-service serve --port 8080",
     "build": "vue-cli-service build",
@@ -87,14 +91,6 @@
     "last 2 versions",
     "not dead"
   ],
-  "bugs": {
-    "url": "https://github.com/donkeytech/gaia-viewer/issues"
-  },
-  "homepage": "https://github.com/donkeytech/gaia-viewer#readme",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/donkeytech/gaia-viewer.git"
-  },
   "source": "index.ts"
 }
