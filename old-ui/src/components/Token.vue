@@ -5,14 +5,14 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { Component, Prop } from 'vue-property-decorator';
-import { factions, Faction, Planet } from '@gaia-project/engine';
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
+import { factions, Faction, Planet, factionPlanet } from "@gaia-project/engine";
 
 @Component
 export default class PlayerToken extends Vue {
   @Prop()
-  faction: Faction | 'automa';
+  faction: Faction | "automa";
 
   @Prop()
   scale: number;
@@ -20,11 +20,11 @@ export default class PlayerToken extends Vue {
   @Prop()
   planet: Planet;
 
-  get renderPlanet (): Planet {
+  get renderPlanet(): Planet {
     if (this.planet) {
       return this.planet;
     }
-    return this.faction === 'automa' ? Planet.Lost : factions.planet(this.faction);
+    return this.faction === "automa" ? Planet.Lost : factionPlanet(this.faction);
   }
 }
 </script>
