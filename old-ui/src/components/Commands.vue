@@ -370,24 +370,15 @@ export default class Commands extends Vue {
           break;
         }
         case Command.Decline: {
-          if (command.data.offers) {
-            ret.push({
-              label: `Decline ${command.data.offers[0].offer}`,
-              command: `${Command.Decline} ${command.data.offers[0].offer}`,
-            });
-          } else {
-            // LEGACY CODE
-            // TODO: Remove when games are updated
-            ret.push({
-              label: `Decline ${command.data.offer}`,
-              command: `${Command.Decline} ${command.data.offer}`,
-            });
-          }
+          ret.push({
+            label: `Decline ${command.data.offers[0].offer}`,
+            command: `${Command.Decline} ${command.data.offers[0].offer}`,
+          });
           break;
         }
         case Command.BrainStone: {
           ret.push(
-            ...command.data.sort().map((area) => ({
+            ...command.data.choices.sort().map(({ area }) => ({
               label: `Brainstone ${area}`,
               command: `${command.name} ${area}`,
             }))
