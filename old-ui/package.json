@@ -13,15 +13,15 @@
   "publishConfig": {
     "access": "public"
   },
-  "unpkg": "dist/package/viewer.umd.min.js",
+  "unpkg": "dist/package/old-ui.umd.min.js",
   "files": [
     "index.ts",
     "tsconfig.json",
     "src",
     "README.md",
     "public",
-    "dist/package/viewer.umd.min.js",
-    "dist/package/viewer.css"
+    "dist/package/old-ui.umd.min.js",
+    "dist/package/old-ui.css"
   ],
   "dependencies": {
     "@gaia-project/engine": "workspace:../engine",

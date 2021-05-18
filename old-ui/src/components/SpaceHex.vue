@@ -47,20 +47,27 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { Component, Prop } from 'vue-property-decorator';
-import { GaiaHex, factions, Building as BuildingEnum, Planet as PlanetEnum, SpaceMap as ISpaceMap } from '@gaia-project/engine';
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
+import {
+  GaiaHex,
+  factions,
+  Building as BuildingEnum,
+  Planet as PlanetEnum,
+  SpaceMap as ISpaceMap,
+  factionPlanet,
+} from "@gaia-project/engine";
 import { corners } from "../graphics/hex";
-import Planet from './Planet.vue';
-import Building from './Building.vue';
-import { buildingName } from '../data/building';
-import { planetNames } from '../data/planets';
+import Planet from "./Planet.vue";
+import Building from "./Building.vue";
+import { buildingName } from "../data/building";
+import { planetNames } from "../data/planets";
 
 @Component<SpaceHex>({
   components: {
     Planet,
     Building,
-  }
+  },
 })
 export default class SpaceHex extends Vue {
   @Prop()
@@ -69,66 +76,66 @@ export default class SpaceHex extends Vue {
   @Prop()
   isCenter: boolean;
 
-  get hexCorners () {
+  get hexCorners() {
     return corners();
   }
 
-  get map (): ISpaceMap {
+  get map(): ISpaceMap {
     return this.$store.state.gaiaViewer.data.map;
   }
 
-  cost (hex: GaiaHex) {
+  cost(hex: GaiaHex) {
     const data = this.highlightedHexes.get(hex);
 
-    return (data && data.cost && data.cost !== "~") ? data.cost.replace(/,/g, ', ') : '';
+    return data && data.cost && data.cost !== "~" ? data.cost.replace(/,/g, ", ") : "";
   }
 
-  hexClick (hex: GaiaHex) {
+  hexClick(hex: GaiaHex) {
     if (this.highlightedHexes.has(hex) || this.toSelect) {
-      this.$store.dispatch('gaiaViewer/hexClick', hex);
+      this.$store.dispatch("gaiaViewer/hexClick", hex);
     }
   }
 
-  faction (player) {
+  faction(player) {
     if (player === undefined || player === "wild") {
       return player; // Wild will get recognized as purple, for trade tokens. A bit of a hack
     }
     return this.$store.state.gaiaViewer.data.players[player].faction;
   }
 
-  planet (player) {
-    return factions.planet(this.faction(player));
+  planet(player) {
+    return factionPlanet(this.faction(player));
   }
 
-  buildingName (building: BuildingEnum) {
+  buildingName(building: BuildingEnum) {
     return buildingName(building);
   }
 
-  planetName (planet: PlanetEnum) {
+  planetName(planet: PlanetEnum) {
     return planetNames[planet];
   }
 
-  get highlightedHexes (): Map<GaiaHex, any> {
+  get highlightedHexes(): Map<GaiaHex, any> {
     return this.$store.state.gaiaViewer.context.highlighted.hexes;
   }
 
-  get toSelect () {
+  get toSelect() {
     return !!this.$store.state.gaiaViewer.context.hexSelection;
   }
 
-  shipX (index) {
+  shipX(index) {
     return SpaceHex.shipXs[index % 7];
   }
 
-  shipY (index) {
+  shipY(index) {
     return SpaceHex.shipYs[index % 7];
   }
 
-  tradeX (index) {
+  tradeX(index) {
     return SpaceHex.tradeXs[index];
   }
 
-  tradeY (index) {
+  tradeY(index) {
     return SpaceHex.tradeYs[index];
   }
 

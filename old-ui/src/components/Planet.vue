@@ -7,10 +7,10 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import Vue from "vue";
 import planets from "../data/planets";
-import { Component, Prop } from 'vue-property-decorator';
-import { Planet as PlanetEnum, factions, Faction } from '@gaia-project/engine';
+import { Component, Prop } from "vue-property-decorator";
+import { Planet as PlanetEnum, factions, Faction, factionPlanet } from "@gaia-project/engine";
 
 @Component
 export default class Planet extends Vue {
@@ -20,14 +20,14 @@ export default class Planet extends Vue {
   @Prop()
   faction: Faction;
 
-  get radius () {
+  get radius() {
     return planets[this.planet].radius;
   }
 
-  get fill () {
+  get fill() {
     // Comment for planet staying planets!
     if (this.faction) {
-      return factions.planet(this.faction);
+      return factionPlanet(this.faction);
     }
     return this.planet;
   }

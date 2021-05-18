@@ -35,39 +35,47 @@
 </template>
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
-import Engine, { factions, Player, Planet, Phase } from "@gaia-project/engine";
+import Engine, { factions, Player, Planet, Phase, factionPlanet } from "@gaia-project/engine";
 
 @Component
 export default class TurnOrder extends Vue {
-  get gameData (): Engine {
+  get gameData(): Engine {
     return this.$store.state.gaiaViewer.data;
   }
 
-  get phaseBeforeSetupBuilding (): boolean {
+  get phaseBeforeSetupBuilding(): boolean {
     const data = this.gameData;
-    return (data.phase === Phase.SetupInit || data.phase === Phase.SetupBoard || data.phase === Phase.SetupFaction || data.phase === Phase.SetupAuction);
+    return (
+      data.phase === Phase.SetupInit ||
+      data.phase === Phase.SetupBoard ||
+      data.phase === Phase.SetupFaction ||
+      data.phase === Phase.SetupAuction
+    );
   }
 
-  get turnOrder (): Player[] {
+  get turnOrder(): Player[] {
     const data = this.gameData;
     if (this.phaseBeforeSetupBuilding) {
       return data.players;
     }
     if (data.phase === Phase.SetupBuilding || data.phase === Phase.SetupBooster) {
-      return data.setup.map(faction => data.players.find(pl => pl.faction === faction));
+      return data.setup.map((faction) => data.players.find((pl) => pl.faction === faction));
     }
-    return data.turnOrder.map(player => data.players[player]);
+    return data.turnOrder.map((player) => data.players[player]);
   }
 
-  get passedPlayers (): Player[] {
-    return (this.gameData.passedPlayers ?? []).map(player => this.gameData.players[player]);
+  get passedPlayers(): Player[] {
+    return (this.gameData.passedPlayers ?? []).map((player) => this.gameData.players[player]);
   }
 
-  isCurrentPlayer (pl: Player) {
-    return this.gameData.players[this.gameData.availableCommands?.[0]?.player] === pl && !(this.gameData.phase === Phase.SetupAuction);
+  isCurrentPlayer(pl: Player) {
+    return (
+      this.gameData.players[this.gameData.availableCommands?.[0]?.player] === pl &&
+      !(this.gameData.phase === Phase.SetupAuction)
+    );
   }
 
-  stroke (pl: Player) {
+  stroke(pl: Player) {
     if (this.gameData.players[this.gameData.currentPlayer] === pl) {
       if (this.gameData.players[this.gameData.playerToMove] === pl) {
         return "stroke-width: 0.16px !important; stroke: #2c4";
@@ -83,24 +91,26 @@ export default class TurnOrder extends Vue {
     return "stroke-width: 0.06px !important";
   }
 
-  planetFill (planet: string) {
+  planetFill(planet: string) {
     if (planet === Planet.Titanium || planet === Planet.Swamp) {
       return "white";
     }
     return "black";
   }
 
-  planet (player: Player, index: number) {
+  planet(player: Player, index: number) {
     if (this.phaseBeforeSetupBuilding && this.gameData.setup[index]) {
-      return factions.planet(this.gameData.setup[index]);
+      return factionPlanet(this.gameData.setup[index]);
     }
 
-    if (player.faction) { return factions.planet(player.faction); };
+    if (player.faction) {
+      return factionPlanet(player.faction);
+    }
 
     return Planet.Lost;
   }
 
-  initial (player: Player, index: number) {
+  initial(player: Player, index: number) {
     if (this.phaseBeforeSetupBuilding && this.gameData.setup[index]) {
       return this.gameData.setup[index][0].toUpperCase();
     }
@@ -112,10 +122,10 @@ export default class TurnOrder extends Vue {
     return "?";
   }
 
-  name (player: Player, index: number) {
+  name(player: Player, index: number) {
     if (this.phaseBeforeSetupBuilding) {
       if (this.gameData.phase === Phase.SetupAuction) {
-        player = this.gameData.players.find(pl => pl.faction === this.gameData.setup[index]);
+        player = this.gameData.players.find((pl) => pl.faction === this.gameData.setup[index]);
       } else {
         return "";
       }
@@ -126,7 +136,7 @@ export default class TurnOrder extends Vue {
         return player.name.substring(0, 3);
       } else {
         return "P" + (player.player + 1);
-      };
+      }
     }
 
     return "?";
