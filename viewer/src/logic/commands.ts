@@ -96,7 +96,7 @@ export function endTurnWarning(engine: Engine, command: AvailableCommand): Butto
     } as ButtonWarning);
 
   const p = engine.players[command.player];
-  if (p.faction == Faction.Taklons && !engine.isLastRound) {
+  if (p.faction == Faction.Taklons) {
     switch (p.data.brainstone) {
       case PowerArea.Area2:
         if (p.data.burnablePower() > 0) {
