@@ -2,14 +2,13 @@ import { AdvTechTilePos, Booster, Federation, GaiaHex, TechTilePos } from "@gaia
 
 export interface ButtonData {
   label?: string;
-  command: string;
+  command?: string | number;
   tooltip?: string;
   // Simple label
   title?: string;
   times?: number[];
   modal?: string;
   hexes?: HighlightHexData;
-  automatic?: boolean; // Should the user have to click on the hex or is it automatic?
   hover?: boolean;
   researchTiles?: string[];
   techs?: Array<TechTilePos | AdvTechTilePos>;

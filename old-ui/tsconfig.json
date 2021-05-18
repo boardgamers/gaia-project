@@ -6,15 +6,11 @@
     "moduleResolution": "node",
     "sourceMap": true,
     "outDir": "./dist" /* Redirect output structure to the directory. */,
-    // "paths": {
-    //   "@/*": [
-    //     "src/*"
-    //   ]
-    // },
     "baseUrl": ".",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true
   },
   "include": ["src/**/*.ts", "src/**/*.vue", "src/*.ts"],
   "exclude": ["node_modules"]

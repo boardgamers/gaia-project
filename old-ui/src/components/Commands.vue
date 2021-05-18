@@ -68,7 +68,7 @@ import Engine, {
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
 import { buildingName } from "../data/building";
-import { GameContext, ButtonData } from "../data";
+import { GameContext, ButtonData, HighlightHexData } from "../data";
 import { eventDesc } from "../data/event";
 import { factionDesc } from "../data/factions";
 
@@ -269,7 +269,6 @@ export default class Commands extends Vue {
               ret.push({
                 label,
                 command: `${Command.Build} ${building}`,
-                automatic: command.data.automatic,
                 hexes: new Map<GaiaHex, { cost?: string }>(
                   coordinates.map((coord) => [this.engine.map.getS(coord.coordinates), coord])
                 ),
@@ -459,24 +458,17 @@ export default class Commands extends Vue {
           );
           break;
         }
-        case Command.PickReward: {
-          ret.push(
-            ...command.data.rewards.map((reward) => ({
-              label: `Gain ${reward}`,
-              command: `${Command.PickReward} ${reward}`,
-            }))
-          );
-          break;
-        }
         case Command.FormFederation: {
           const tilesButtons = command.data.tiles.map((fed, i) => ({
             command: fed,
             label: `Federation ${i + 1}: ${tiles.federations[fed]}`,
           }));
-          const locationButtons = command.data.federations.map((fed, i) => ({
+          const locationButtons: ButtonData[] = command.data.federations.map((fed, i) => ({
             command: fed.hexes,
             label: `Location ${i + 1}`,
-            hexes: new Map(fed.hexes.split(",").map((coord) => [this.engine.map.getS(coord), { coordinates: coord }])),
+            hexes: new Map(
+              fed.hexes.split(",").map((coord) => [this.engine.map.getS(coord), { coordinates: coord }])
+            ) as HighlightHexData,
             hover: true,
             buttons: tilesButtons,
           }));
@@ -538,7 +530,7 @@ export default class Commands extends Vue {
 
   private commandTitles: string[] = [];
   private customButtons: ButtonData[] = [];
-  private commandChain: string[] = [];
+  private commandChain: Array<string | number> = [];
   private buttonChain: ButtonData[] = [];
 }
 </script>

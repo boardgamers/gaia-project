@@ -25,7 +25,8 @@ specifiers:
   sass-loader: ^8.0.2
   typescript: ^4.2.4
   vue: ^2.6.11
-  vue-property-decorator: ^8.4.1
+  vue-class-component: ^7.2.6
+  vue-property-decorator: ^9.1.2
   vue-template-compiler: ^2.6.11
   vuex: ^3.0.1
   webpack: ^4.16.1
@@ -58,7 +59,8 @@ devDependencies:
   sass: 1.32.13
   sass-loader: 8.0.2_sass@1.32.13+webpack@4.46.0
   typescript: 4.2.4
-  vue-property-decorator: 8.5.1_vue@2.6.12
+  vue-class-component: 7.2.6_vue@2.6.12
+  vue-property-decorator: 9.1.2_2dc4252c5371093c9ebcca71536ac4e9
   vue-template-compiler: 2.6.12
   webpack: 4.46.0
 
@@ -9143,10 +9145,11 @@ packages:
       webpack: 4.46.0
     dev: true
 
-  /vue-property-decorator/8.5.1_vue@2.6.12:
-    resolution: {integrity: sha512-O6OUN2OMsYTGPvgFtXeBU3jPnX5ffQ9V4I1WfxFQ6dqz6cOUbR3Usou7kgFpfiXDvV7dJQSFcJ5yUPgOtPPm1Q==}
+  /vue-property-decorator/9.1.2_2dc4252c5371093c9ebcca71536ac4e9:
+    resolution: {integrity: sha512-xYA8MkZynPBGd/w5QFJ2d/NM0z/YeegMqYTphy7NJQXbZcuU6FC6AOdUAcy4SXP+YnkerC6AfH+ldg7PDk9ESQ==}
     peerDependencies:
       vue: '*'
+      vue-class-component: '*'
     dependencies:
       vue: 2.6.12
       vue-class-component: 7.2.6_vue@2.6.12
