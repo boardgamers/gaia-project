@@ -85,6 +85,16 @@ function tooltipWithShortcut(tooltip: string | null, warn: ButtonWarning | null,
   return withShortcut(tooltip, shortcut, skip) ?? warnings;
 }
 
+function translateResources(rewards: Reward[]): string {
+  return rewards
+    .map((r) => {
+      const s = resourceNames.find((s) => s.type == r.type);
+      assert(s, "no resource name for " + r.type);
+      return r.count + " " + (r.count == 1 ? s.label : s.plural);
+    })
+    .join(" and ");
+}
+
 export function hexMap(engine: Engine, coordinates: AvailableHex[]): HighlightHexData {
   return new Map<GaiaHex, HighlightHex>(
     coordinates.map((coord) => [
@@ -101,7 +111,7 @@ export function buttonWarning(message?: string): ButtonWarning | null {
   return message && { title: "Are you sure?", body: [message] };
 }
 
-export function endTurnWarning(engine: Engine, command: AvailableCommand): ButtonWarning | null {
+function endTurnWarning(engine: Engine, command: AvailableCommand): ButtonWarning | null {
   const warning = (msg: string) =>
     ({
       title: "Are you sure you want to end the turn?",
@@ -137,18 +147,18 @@ function incomeWarning(player: Player, additionalEvents: Event[]) {
   return null;
 }
 
-export function chargeWarning(engine: Engine, player: Player, offer: string): ButtonWarning | null {
+function chargeWarning(engine: Engine, player: Player, offer: string): ButtonWarning | null {
   return engine.passedPlayers.includes(player.player) ? incomeWarning(player, [new Event(offer)]) : null;
 }
 
-export function boosterWarning(engine: Engine, player: Player, booster: Booster): ButtonWarning | null {
+function boosterWarning(engine: Engine, player: Player, booster: Booster): ButtonWarning | null {
   return incomeWarning(
     player,
     tiles.boosters[booster].map((spec) => new Event(spec))
   );
 }
 
-export function passWarning(engine: Engine, player: Player, command: AvailableCommand): ButtonWarning | null {
+function passWarning(engine: Engine, player: Player, command: AvailableCommand): ButtonWarning | null {
   const warnings: string[] = [];
   const endTurn = endTurnWarning(engine, command);
   if (endTurn != null) {
@@ -159,7 +169,7 @@ export function passWarning(engine: Engine, player: Player, command: AvailableCo
     const p = engine.players[command.player];
 
     for (const e of p.events[Operator.Activate].filter((e) => !e.activated)) {
-      warnings.push(`Special action is not yet used: ${e.spec.split(Operator.Activate)[1]}`);
+      warnings.push(`Special action is not yet used: ${translateResources(e.rewards)}`);
     }
 
     switch (p.faction) {
@@ -206,7 +216,7 @@ function resourceWasteWarning(warnings: string[]): ButtonWarning | null {
   return warnings.length == 0 ? null : { title: "Resources will be wasted - are you sure?", body: warnings };
 }
 
-export function specialActionWarning(player: Player, income: string): ButtonWarning | null {
+function specialActionWarning(player: Player, income: string): ButtonWarning | null {
   return resourceWasteWarning(rewardWarnings(player, [new Reward(income)]));
 }
 
@@ -436,17 +446,7 @@ export function passButtons(
   return ret;
 }
 
-export function translateResources(rewards: Reward[]): string {
-  return rewards
-    .map((r) => {
-      const s = resourceNames.find((s) => s.type == r.type);
-      assert(s, "no resource name for " + r.type);
-      return r.count + " " + (r.count == 1 ? s.label : s.plural);
-    })
-    .join(" and ");
-}
-
-export function conversionLabel(cost: Reward[], income: Reward[]) {
+function conversionLabel(cost: Reward[], income: Reward[]) {
   return `${translateResources(cost)} ⇒ ${translateResources(income).replace(
     "4 Victory Points",
     "3 VP + 1 VP / Planet Type"

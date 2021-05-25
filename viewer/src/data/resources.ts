@@ -128,4 +128,10 @@ export const resourceNames: ResourceName[] = [
     plural: "Swap the Planetary institute with a mine",
     shortcut: "s",
   },
+  {
+    type: Resource.DowngradeLab,
+    label: "Downgrade Research Lab",
+    plural: "Downgrade Research Lab",
+    shortcut: "d",
+  },
 ];
