@@ -43,7 +43,6 @@ export interface ButtonData {
 
   buttons?: ButtonData[];
   hide?: boolean;
-  undo?: boolean;
   booster?: Booster;
   tech?: TechTilePos | AdvTechTilePos;
   boardAction?: BoardAction;
