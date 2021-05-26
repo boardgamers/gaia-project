@@ -95,7 +95,7 @@ import {
   hexMap,
   passButtons,
   researchButtons,
-  specialActionsButton,
+  specialActionsButton, UndoPropagation,
 } from "../logic/commands";
 import Undo from "./Resources/Undo.vue";
 
@@ -535,14 +535,15 @@ export default class Commands extends Vue {
   }
 
   undo() {
-    this.$store.dispatch("gaiaViewer/undo");
+    this.$store.dispatch("gaiaViewer/undo", { undoPerformed: false } as UndoPropagation);
   }
 
-  back() {
+  back(p: UndoPropagation) {
     if (this.commandChain.length == 0) {
       // was a command undo
       return;
     }
+    p.undoPerformed = true;
 
     this.$store.commit("gaiaViewer/clearContext");
     this.commandChain.pop();
@@ -583,7 +584,7 @@ export default class Commands extends Vue {
 
     const undoListener = this.$store.subscribeAction(({ type, payload }) => {
       if (type === "gaiaViewer/undo") {
-        this.back();
+        this.back(payload as UndoPropagation);
       }
     });
 

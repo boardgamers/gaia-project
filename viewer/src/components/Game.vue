@@ -89,7 +89,7 @@ import Engine, {
   BuildWarning,
   Command,
   EngineOptions,
-  Phase
+  Phase,
 } from "@gaia-project/engine";
 import AdvancedLog from "./AdvancedLog.vue";
 import BoardAction from "./BoardAction.vue";
@@ -101,8 +101,9 @@ import ScoringBoard from "./ScoringBoard.vue";
 import SpaceMap from "./SpaceMap.vue";
 import TurnOrder from "./TurnOrder.vue";
 import { parseCommands } from "../logic/recent";
-import {finalScoringFields, finalScoringItems} from "../logic/final-scoring";
-import {LogPlacement} from "../data";
+import { finalScoringFields, finalScoringItems } from "../logic/final-scoring";
+import { LogPlacement } from "../data";
+import { UndoPropagation } from "../logic/commands";
 
 @Component<Game>({
   created(this: Game) {
@@ -200,7 +201,9 @@ export default class Game extends Vue {
     this.finalScoringItems = finalScoringItems(element);
     const undoListener = this.$store.subscribeAction(({ type, payload }) => {
       if (type === "gaiaViewer/undo") {
-        this.undoMove();
+        if (!(payload as UndoPropagation).undoPerformed) {
+          this.undoMove();
+        }
       }
     });
     this.$on("hook:beforeDestroy", () => undoListener());
@@ -333,7 +336,7 @@ export default class Game extends Vue {
   }
 
   undoMove() {
-    if (this.$store.state.gaiaViewer.data.newTurn) {
+    if (this.$store.state.gaiaViewer.context.hasCommandChain) {
       // was "back", not undo
       return;
     }

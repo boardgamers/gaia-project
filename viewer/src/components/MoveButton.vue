@@ -18,7 +18,7 @@
     <b-btn
       v-else-if="button.times === undefined"
       :variant="button.warning ? 'warning' : 'secondary'"
-      :class="['mr-2', 'mb-2', 'move-button', { 'symbol-button': button.conversion, undo: button.undo }]"
+      :class="['mr-2', 'mb-2', 'move-button', { 'symbol-button': button.conversion }]"
       @click="handleClick"
       @mouseenter="hover"
       @mouseleave="leave"

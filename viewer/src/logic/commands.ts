@@ -47,6 +47,10 @@ import { researchNames } from "../data/research";
 import { resourceNames } from "../data/resources";
 import { moveWarnings } from "../data/warnings";
 
+export type UndoPropagation = {
+  undoPerformed: boolean;
+};
+
 export type AvailableConversions = {
   free?: AvailableFreeActionData;
   burn?: number[];
