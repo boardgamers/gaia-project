@@ -188,6 +188,7 @@ export default class Commands extends Vue {
     this.customButtons = [];
     this.commandChain = [];
     this.buttonChain = [];
+    this.$store.commit("gaiaViewer/setCommandChain", false);
 
     for (const command of val) {
       if (command.name === Command.ChooseFaction) {
@@ -475,7 +476,7 @@ export default class Commands extends Vue {
         }
 
         case Command.FormFederation: {
-          ret.push(federationButton(command, this.engine));
+          ret.push(federationButton(command, this.engine, this.$store, this.handleCommand));
           break;
         }
 

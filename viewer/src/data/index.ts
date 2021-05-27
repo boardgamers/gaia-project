@@ -31,6 +31,7 @@ export interface ButtonData {
   techs?: Array<TechTilePos | AdvTechTilePos>;
   boosters?: Booster[];
   selectHexes?: boolean;
+  handler?: () => void;
   boardActions?: BoardAction[];
   specialActions?: SpecialActionIncome[];
   federations?: Federation[];

@@ -273,6 +273,8 @@ export default class MoveButton extends Vue {
         const keys: GaiaHex[] = [...highlighted.keys()];
         this.$store.commit("gaiaViewer/highlightHexes", new Map([...keys.map((key) => [key, null])] as any));
       });
+    } else if (button.handler) {
+      button.handler();
     } else if (button.modal) {
       this.modalShow = true;
       button.modal.show(true);

@@ -136,7 +136,6 @@ const gaiaViewer = {
       state.context.hexSelection = false;
       state.context.activeButton = null;
       state.context.fastConversionTooltips = {};
-      state.context.hasCommandChain = false;
     },
 
     activeButton(state: State, button: ButtonData | null) {

@@ -32,6 +32,7 @@ import Engine, {
 } from "@gaia-project/engine";
 import assert from "assert";
 import { max, minBy, range, sortBy } from "lodash";
+import { Store } from "vuex";
 import { ButtonData, ButtonWarning, HighlightHexData } from "../data";
 import {
   boardActionNames,
@@ -790,7 +791,12 @@ export function deadEndButton(command: AvailableCommand<Command.DeadEnd>, undo: 
   });
 }
 
-export function federationButton(command: AvailableCommand<Command.FormFederation>, engine: Engine): ButtonData {
+export function federationButton(
+  command: AvailableCommand<Command.FormFederation>,
+  engine: Engine,
+  store: Store<any>,
+  handleCommand: (command: string, source?: ButtonData) => void
+): ButtonData {
   const tilesButtons: ButtonData[] = command.data.tiles.map((fed, i) =>
     textButton({
       command: fed,
@@ -811,11 +817,45 @@ export function federationButton(command: AvailableCommand<Command.FormFederatio
     })
   );
 
+  const n = locationButtons.length;
+  let index: number = null;
+  const cycle = (update: number) => () => {
+    index = index == null ? 0 : (((index + update) % n) + n) % n;
+
+    store.commit("gaiaViewer/highlightHexes", locationButtons[index].hexes);
+  };
+
   locationButtons.push({
     label: "Custom location",
+    shortcuts: ["c"],
     selectHexes: true,
     buttons: tilesButtons,
   });
+
+  locationButtons.push(
+    textButton({
+      label: "Previous",
+      shortcuts: ["p"],
+      handler: cycle(-1),
+    })
+  );
+  locationButtons.push(
+    textButton({
+      label: "OK",
+      shortcuts: ["o"],
+      handler: () => {
+        const button = locationButtons[index];
+        handleCommand(button.command, button);
+      },
+    })
+  );
+  locationButtons.push(
+    textButton({
+      label: "Next",
+      shortcuts: ["n"],
+      handler: cycle(1),
+    })
+  );
 
   return textButton({
     label: "Form federation",
