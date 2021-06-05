@@ -86,8 +86,7 @@ import {
   boardActionsButton,
   brainstoneButtons,
   buildButtons,
-  buttonWarning,
-  chargePowerButtons, deadEndButton,
+  chargePowerButtons, deadEndButton, declineButton,
   endTurnButton,
   fastConversionClick, federationButton,
   finalizeShortcuts,
@@ -403,23 +402,7 @@ export default class Commands extends Vue {
         }
 
         case Command.Decline: {
-          if (command.data.offers) {
-            ret.push({
-              label: `Decline ${command.data.offers[0].offer}`,
-              shortcuts: ["d"],
-              command: `${Command.Decline} ${command.data.offers[0].offer}`,
-              warning: buttonWarning(command.data.offers[0].offer === "tech" ?
-                "Are you sure you want to decline a tech tile?" : undefined),
-            });
-          } else {
-            const legacy = command.data as any;
-            // LEGACY CODE
-            // TODO: Remove when games are updated
-            ret.push({
-              label: `Decline ${legacy.offer}`,
-              command: `${Command.Decline} ${legacy.offer}`,
-            });
-          }
+          ret.push(declineButton(command));
           break;
         }
 
@@ -492,8 +475,8 @@ export default class Commands extends Vue {
             buttons: tilesButtons,
           });
           break;
-        }
       }
+    }
     }
 
     if (conversions.free || conversions.burn) {
