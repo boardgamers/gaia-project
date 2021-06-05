@@ -864,3 +864,32 @@ export function federationButton(
     buttons: locationButtons,
   });
 }
+
+export function declineButton(command: AvailableCommand<Command.Decline>): ButtonData {
+  if (command.data.offers) {
+    const offer = command.data.offers[0].offer;
+    let message = undefined;
+    switch (offer) {
+      case Command.ChooseTechTile:
+        message = "Are you sure you want to decline a tech tile?";
+        break;
+      case Command.UpgradeResearch:
+        message = "Are you sure you want to decline a free research step?";
+        break;
+    }
+    return textButton({
+      label: `Decline ${offer}`,
+      shortcuts: ["d"],
+      command: `${Command.Decline} ${offer}`,
+      warning: buttonWarning(message),
+    });
+  } else {
+    const legacy = command.data as any;
+    // LEGACY CODE
+    // TODO: Remove when games are updated
+    return textButton({
+      label: `Decline ${legacy.offer}`,
+      command: `${Command.Decline} ${legacy.offer}`,
+    });
+  }
+}
