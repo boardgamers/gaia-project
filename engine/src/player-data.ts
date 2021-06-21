@@ -1,6 +1,7 @@
 import { EventEmitter } from "eventemitter3";
 import { cloneDeep, fromPairs } from "lodash";
 import { BrainstoneActionData, BrainstoneWarning } from "./available-command";
+import { PlayerEnum } from "..";
 import {
   AdvTechTile,
   AdvTechTilePos,
@@ -70,7 +71,12 @@ export default class PlayerData extends EventEmitter {
 
   tiles: {
     booster: Booster;
-    techs: Array<{ tile: TechTile | AdvTechTile; pos: TechTilePos | AdvTechTilePos; enabled: boolean }>;
+    techs: Array<{
+      tile: TechTile | AdvTechTile;
+      pos: TechTilePos | AdvTechTilePos;
+      enabled: boolean;
+      owner?: PlayerEnum;
+    }>;
     federations: Array<{ tile: Federation; green: boolean }>;
   } = {
     booster: null,

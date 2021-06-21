@@ -3,6 +3,7 @@ import { PlayerEnum } from "../index";
 import { choosableFactions, possibleBoardActions, possibleFreeActions } from "./available-command";
 import Engine, { AuctionVariant } from "./engine";
 import { BoardAction, Faction } from "./enums";
+import { baseFactions } from "./factions";
 import Player from "./player";
 import PlayerData from "./player-data";
 
@@ -25,7 +26,7 @@ describe("Available commands", () => {
 
       expect(factions).to.not.include(Faction.Gleens);
       expect(factions).to.not.include(Faction.Xenos);
-      expect(factions).to.have.length(Object.values(Faction).length - 2);
+      expect(factions).to.have.length(12);
     });
 
     describe("when randomFactions is enabled", () => {
@@ -86,7 +87,7 @@ describe("Available commands", () => {
   });
 
   describe("Board actions", () => {
-    it("should not allow board action if all resources woould be wasted", () => {
+    it("should not allow board action if all resources would be wasted", () => {
       const actions = {};
       BoardAction.values().forEach((pos: BoardAction) => {
         actions[pos] = null;

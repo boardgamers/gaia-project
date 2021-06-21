@@ -1,7 +1,9 @@
 import { difference } from "lodash";
-import { Faction, Planet } from "./enums";
+import { Expansion, Faction, Planet } from "./enums";
 
-const factions: { [key in Faction]: { planet: Planet } } = {
+type FactionList = { [key: string]: { planet: Planet } };
+
+export const baseFactions: FactionList = {
   [Faction.Terrans]: {
     planet: Planet.Terra,
   },
@@ -46,29 +48,48 @@ const factions: { [key in Faction]: { planet: Planet } } = {
   },
 } as const;
 
-function oppositeFaction(faction: Faction): Faction {
-  if (!Object.values(Faction).includes(faction)) {
+const mooFactions: FactionList = {
+  [Faction.Darloks]: {
+    planet: Planet.Titanium,
+  },
+};
+
+const allFactions = { ...baseFactions, ...mooFactions };
+
+function factionsInPlay(expansions: Expansion): FactionList {
+  if (expansions === Expansion.MasterOfOrion) {
+    return allFactions;
+  }
+  return baseFactions;
+}
+
+function names(factions: FactionList) {
+  return Object.keys(factions) as Faction[];
+}
+
+function oppositeFaction(faction: Faction, expansions: Expansion): Faction[] {
+  const availableFactions = factionsInPlay(expansions);
+  const factionNames = names(availableFactions);
+
+  if (!factionNames.includes(faction)) {
     return null;
   }
 
-  for (const fct of Object.values(Faction)) {
-    if (fct !== faction && factions[fct].planet === factions[faction].planet) {
-      return fct;
-    }
-  }
+  return factionNames.filter(
+    (fct: Faction) => fct !== faction && availableFactions[fct].planet === availableFactions[faction].planet
+  );
 }
 
-export function remainingFactions(chosenFactions: Faction[]) {
+export function remainingFactions(chosenFactions: Faction[], expansions: Expansion): Faction[] {
   return difference(
-    Object.values(Faction),
-    chosenFactions.map((f) => f),
-    chosenFactions.map((f) => oppositeFaction(f))
+    names(factionsInPlay(expansions)),
+    chosenFactions,
+    chosenFactions.flatMap((f) => oppositeFaction(f, expansions))
   );
 }
 
 export function factionPlanet(faction: Faction): Planet {
-  const fact = factions[faction];
-
+  const fact = allFactions[faction];
   if (fact) {
     return fact.planet;
   }

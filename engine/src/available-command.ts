@@ -1,4 +1,5 @@
 import { difference, range } from "lodash";
+import { PlayerEnum } from "..";
 import {
   boardActions,
   ConversionPool,
@@ -114,6 +115,7 @@ type PossibleBid = { faction: Faction; bid: number[] };
 type TechTileWithPos = { tile: TechTile; pos: TechTilePos };
 type AdvTechTileWithPos = { tile: AdvTechTile; pos: AdvTechTilePos };
 type ChooseTechTile = TechTileWithPos | AdvTechTileWithPos;
+type ChooseSpyTechTile = { tile: TechTile; pos: TechTilePos; player: PlayerEnum };
 
 type AvailableBuildCommandData = { buildings: AvailableBuilding[] };
 
@@ -141,6 +143,7 @@ interface CommandData {
   [Command.RotateSectors]: never;
   [Command.Special]: { specialacts: { income: string; spec: string }[] };
   [Command.Spend]: AvailableFreeActionData;
+  [Command.SpyTech]: {tiles: ChooseSpyTechTile[]};
   [Command.UpgradeResearch]: AvailableResearchData;
 }
 
@@ -198,6 +201,8 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
       return possiblePISwaps(engine, player);
     case SubPhase.DowngradeLab:
       return possibleLabDowngrades(engine, player);
+    case SubPhase.SpyTech:
+      return possibleTechsToSpy(engine, player);
     case SubPhase.BrainStone:
       return [{ name: Command.BrainStone, player, data }];
     case SubPhase.BeforeMove: {
@@ -476,6 +481,11 @@ export function possibleSpecialActions(engine: Engine, player: Player) {
       if (!pl.data.canPay(Reward.negative(event.rewards.filter((rw) => rw.count < 0)))) {
         continue;
       }
+      if (event.rewards[0].type === Resource.SpyTech) {
+        const otherTechs = engine.players.filter((p) => p !== pl).flatMap((p) => p.data.tiles.techs);
+        const hasTechThatIDont = otherTechs.some((t) => !pl.hasTechTile(t.pos));
+        if (!hasTechThatIDont) continue;
+      }
       specialacts.push({
         income: event.action().rewards, // Reward.toString(event.rewards),
         spec: event.spec,
@@ -617,6 +627,30 @@ export function possibleLabDowngrades(engine: Engine, player: Player): Available
       },
     },
   ];
+}
+
+export function possibleTechsToSpy(engine: Engine, player: Player) {
+  const pl = engine.player(player);
+  const otherPlayers = engine.players.filter((p) => p !== pl);
+  const theirTechs = otherPlayers.flatMap((p) =>
+    p.data.tiles.techs.map((t) => {
+      return { pos: t.pos, tile: engine.tiles.techs[t.pos].tile, player: p.player };
+    })
+  );
+
+  const techsToSpy = theirTechs.filter((t) => !pl.hasTechTile(t.pos));
+
+  if (!techsToSpy) {
+    return [];
+  }
+
+  return [
+    {
+      name: Command.SpyTech,
+      player,
+      data: { tiles: techsToSpy },
+    },
+  ] as AvailableCommand[];
 }
 
 export function canResearchField(engine: Engine, player: PlayerObject, field: ResearchField): boolean {
@@ -992,7 +1026,7 @@ export function choosableFactions(engine: Engine) {
     }
   } else {
     // Standard
-    return remainingFactions(engine.setup);
+    return remainingFactions(engine.setup, engine.expansions);
   }
 }
 

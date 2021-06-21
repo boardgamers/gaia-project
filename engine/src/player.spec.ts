@@ -22,6 +22,7 @@ describe("Player", () => {
       });
 
       // tslint:disable-next-line no-unused-expression
+      console.log(cost);
       expect(Reward.match(Reward.parse("2c,o,q"), cost)).to.be.true;
     });
   });

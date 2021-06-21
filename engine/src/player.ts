@@ -596,11 +596,40 @@ export default class Player extends EventEmitter {
     if (advanced) {
       this.data.removeGreenFederation();
     }
-    this.data.tiles.techs.push({ tile, pos, enabled: true });
-    this.loadEvents(Event.parse(techs[tile], !advanced ? (`tech-${pos}` as TechPos) : (pos as AdvTechTilePos)));
+    this.addTechTile({ tile, pos, enabled: true });
+  }
+
+  private addTechTile(tech: {
+    tile: TechTile | AdvTechTile;
+    pos: TechTilePos | AdvTechTilePos;
+    enabled: true;
+    owner?: PlayerEnum;
+  }) {
+    this.data.tiles.techs.push(tech);
+    this.loadEvents(
+      Event.parse(
+        techs[tech.tile],
+        !isAdvanced(tech.pos) ? (`tech-${tech.pos}` as TechPos) : (tech.pos as AdvTechTilePos)
+      )
+    );
 
     // resets federationCache if Special PA->4pw
-    if (tile === TechTile.Tech3) {
+    if (tech.tile === TechTile.Tech3) {
+      this.federationCache = null;
+    }
+  }
+
+  private removeTechTile(tech: { tile: TechTile | AdvTechTile; pos: TechTilePos | AdvTechTilePos }) {
+    this.data.tiles.techs = this.data.tiles.techs.filter((t) => t !== tech);
+    this.removeEvents(
+      Event.parse(
+        techs[tech.tile],
+        !isAdvanced(tech.pos) ? (`tech-${tech.pos}` as TechPos) : (tech.pos as AdvTechTilePos)
+      )
+    );
+
+    // resets federationCache if Special PA->4pw
+    if (tech.tile === TechTile.Tech3) {
       this.federationCache = null;
     }
   }
@@ -609,6 +638,17 @@ export default class Player extends EventEmitter {
     const tile = this.data.tiles.techs.find((tech) => tech.pos === pos);
     tile.enabled = false;
     this.removeEvents(Event.parse(techs[tile.tile], `tech-${pos}` as TechPos));
+  }
+
+  hasTechTile(tile: TechTilePos | AdvTechTilePos) {
+    return this.data.tiles.techs.some((t) => t.pos === tile);
+  }
+
+  spyTechTile(player: Player, pos: TechTilePos) {
+    const previouslySpiedTile = this.data.tiles.techs.find((t) => !!t.owner);
+    if (previouslySpiedTile) this.removeTechTile(previouslySpiedTile);
+    const tech = player.data.tiles.techs.find((t) => t.pos === pos);
+    this.addTechTile({ tile: tech.tile, pos: tech.pos, enabled: true, owner: player.player });
   }
 
   incomeSelection(additionalEvents?: Event[]): IncomeSelection {

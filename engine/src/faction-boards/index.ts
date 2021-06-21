@@ -3,6 +3,7 @@ import { Faction } from "../enums";
 import Ambas from "./ambas";
 import BalTaks from "./baltaks";
 import Bescods from "./bescods";
+import Darloks from "./darloks";
 import Firaks from "./firaks";
 import Geodens from "./geodens";
 import Gleens from "./gleens";
@@ -30,6 +31,7 @@ const factionBoards: { [key in Faction]: FactionBoardVariants } = {
   [Faction.BalTaks]: BalTaks,
   [Faction.Firaks]: Firaks,
   [Faction.Bescods]: Bescods,
+  [Faction.Darloks]: Darloks,
   [Faction.Nevlas]: Nevlas,
   [Faction.Itars]: Itars,
 };

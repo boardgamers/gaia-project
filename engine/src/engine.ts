@@ -83,6 +83,8 @@ export interface EngineOptions {
   layout?: "standard" | "balanced" | "xshape";
   /* Force players to have random factions */
   randomFactions?: boolean;
+  /* What expansion are we playing? */
+  expansion?: Expansion;
 }
 
 export type LogEntryChanges = {
@@ -202,7 +204,7 @@ export default class Engine {
   version = version;
 
   get expansions() {
-    return 0;
+    return this.options?.expansion;
   }
 
   round: number = Round.None;
@@ -394,6 +396,7 @@ export default class Engine {
       this.processNextMove(SubPhase.DowngradeLab, null, true);
       this.processNextMove(SubPhase.UpgradeResearch, null, false);
     });
+    player.data.on(`gain-${Resource.SpyTech}`, () => this.processNextMove(SubPhase.SpyTech));
     player.data.on(`gain-${Resource.UpgradeLowest}`, () =>
       this.processNextMove(SubPhase.UpgradeResearch, { bescods: true }, true)
     );
@@ -781,6 +784,20 @@ export default class Engine {
       .map((move) => move.trim());
   }
 
+  private findPlayer(reference: string) {
+    if (/^p[1-7]$/.test(reference)) {
+      return +reference[1] - 1;
+    } else {
+      const pl = this.players.find((_pl) => _pl.faction === reference);
+
+      if (pl) {
+        return pl.player;
+      }
+    }
+
+    assert(false, `Could not find player ${reference}`);
+  }
+
   /**
    * Load turn moves.
    *
@@ -797,17 +814,7 @@ export default class Engine {
     this.oldPhase = this.phase;
 
     const playerS = move.substr(0, move.indexOf(" "));
-    let player: number;
-
-    if (/^p[1-7]$/.test(playerS)) {
-      player = +playerS[1] - 1;
-    } else {
-      const pl = this.players.find((_pl) => _pl.faction === playerS);
-
-      if (pl) {
-        player = pl.player;
-      }
-    }
+    const player = this.findPlayer(playerS);
 
     assert(
       this.playerToMove === (player as PlayerEnum),
@@ -1456,7 +1463,7 @@ export default class Engine {
       const randomFactions = [];
 
       for (const _ of this.players) {
-        const possible = remainingFactions(randomFactions);
+        const possible = remainingFactions(randomFactions, this.options.expansion);
 
         randomFactions.push(possible[Math.floor(possible.length * this.map.rng())]);
       }
@@ -1798,6 +1805,17 @@ export default class Engine {
     }
 
     assert(false, `Impossible to execute PI swap command at ${location}`);
+  }
+
+  [Command.SpyTech](player: PlayerEnum, playerToSpy: string, tile: TechTilePos) {
+    const pl = this.player(player);
+    const plToSpy = this.player(this.findPlayer(playerToSpy));
+
+    assert(pl !== plToSpy, "Cannot spy on your own tech");
+    assert(!pl.hasTechTile(tile), `Cannot spy on ${tile} because they own it already`);
+    assert(plToSpy.hasTechTile(tile), `Tile ${tile} is not owned by ${plToSpy.faction}`);
+
+    pl.spyTechTile(plToSpy, tile);
   }
 
   private avCommand<C extends Command>(): AvailableCommand<C> {
