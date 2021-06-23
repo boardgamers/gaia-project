@@ -277,14 +277,15 @@ function addPossibleNewPlanet(
   pl: PlayerObject,
   planet: Planet,
   building: Building,
-  buildings: AvailableBuilding[]
+  buildings: AvailableBuilding[],
+  lastRound: boolean
 ) {
   const qicNeeded = qicForDistance(map, hex, pl);
   if (qicNeeded === null) {
     return;
   }
 
-  const check = pl.canBuild(planet, building, {
+  const check = pl.canBuild(planet, building, lastRound, {
     addedCost: [new Reward(qicNeeded.amount, Resource.Qic)],
   });
 
@@ -369,7 +370,7 @@ export function possibleBuildings(engine: Engine, player: Player): AvailableComm
       for (const upgrade of upgraded) {
         const check = engine
           .player(player)
-          .canBuild(hex.data.planet, upgrade, { isolated, existingBuilding: building });
+          .canBuild(hex.data.planet, upgrade, engine.isLastRound, { isolated, existingBuilding: building });
         if (check) {
           buildings.push(newAvailableBuilding(upgrade, hex, check, true));
         }
@@ -381,7 +382,7 @@ export function possibleBuildings(engine: Engine, player: Player): AvailableComm
       // No need for terra forming if already occupied by another faction
       const planet = hex.occupied() ? pl.planet : hex.data.planet;
       const building = hex.data.planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine;
-      addPossibleNewPlanet(map, hex, pl, planet, building, buildings);
+      addPossibleNewPlanet(map, hex, pl, planet, building, buildings, engine.isLastRound);
     }
   } // end for hex
 
@@ -411,7 +412,7 @@ export function possibleSpaceStations(engine: Engine, player: Player): Available
     }
 
     const building = Building.SpaceStation;
-    addPossibleNewPlanet(map, hex, pl, pl.planet, building, buildings);
+    addPossibleNewPlanet(map, hex, pl, pl.planet, building, buildings, engine.isLastRound);
   }
 
   if (buildings.length > 0) {

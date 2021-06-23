@@ -21,7 +21,7 @@ import { sum } from "lodash";
 import { boardActionNames } from "../data/actions";
 import { boosterNames } from "../data/boosters";
 import { planetsWithSteps } from "../data/factions";
-import { federationColors } from "../data/federations";
+import { federationData } from "../data/federations";
 import { planetNames } from "../data/planets";
 import { researchNames } from "../data/research";
 import { resourceNames } from "../data/resources";
@@ -383,7 +383,7 @@ const factories = [
       .map((f) => ({
         type: f,
         label: federations[f],
-        color: federationColors[f],
+        color: federationData[f].color,
         weight: 1,
       }))
       .concat({

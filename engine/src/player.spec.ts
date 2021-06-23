@@ -17,7 +17,9 @@ describe("Player", () => {
       player.faction = Faction.Terrans;
       player.loadFaction(standard);
 
-      const { cost } = player.canBuild(Planet.Terra, Building.Mine, { addedCost: [new Reward(1, Resource.Qic)] });
+      const { cost } = player.canBuild(Planet.Terra, Building.Mine, false, {
+        addedCost: [new Reward(1, Resource.Qic)],
+      });
 
       // tslint:disable-next-line no-unused-expression
       expect(Reward.match(Reward.parse("2c,o,q"), cost)).to.be.true;
