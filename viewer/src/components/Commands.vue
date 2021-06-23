@@ -88,7 +88,7 @@ import {
   buildButtons,
   chargePowerButtons, deadEndButton, declineButton,
   endTurnButton,
-  fastConversionClick, federationButton,
+  fastConversionClick, federationButton, federationTypeButtons,
   finalizeShortcuts,
   freeAndBurnButton,
   hexMap,
@@ -459,20 +459,15 @@ export default class Commands extends Vue {
         }
 
         case Command.FormFederation: {
-          ret.push(federationButton(command, this.engine, this.$store, this.handleCommand));
+          ret.push(federationButton(command, this.engine, this.$store, this.handleCommand, this.player));
           break;
         }
 
         case Command.ChooseFederationTile: {
-          const tilesButtons = command.data.tiles.map((fed, i) => ({
-            command: fed,
-            label: `Federation ${i + 1}: ${tiles.federations[fed]}`,
-          }));
-
           ret.push({
             label: "Rescore federation",
             command: Command.ChooseFederationTile,
-            buttons: tilesButtons,
+            buttons: federationTypeButtons(command.data.tiles, this.player),
           });
           break;
       }

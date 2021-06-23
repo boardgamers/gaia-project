@@ -79,7 +79,8 @@ export type BuildWarning =
   | "lantids-build-without-PI"
   | "geodens-build-without-PI"
   | "expensive-trade-station"
-  | "gaia-former-would-extend-range";
+  | "gaia-former-would-extend-range"
+  | "gaia-former-last-round";
 
 export type BuildCheck = { cost: Reward[]; steps: number; warnings: BuildWarning[] };
 
@@ -245,6 +246,7 @@ export default class Player extends EventEmitter {
   canBuild(
     targetPlanet: Planet,
     building: Building,
+    lastRound: boolean,
     {
       isolated,
       addedCost,
@@ -323,6 +325,9 @@ export default class Player extends EventEmitter {
     const toGaia = cost.find((r) => r.type === Resource.MoveTokenToGaiaArea);
     if (toGaia?.count > this.data.power.area1) {
       warnings.push("gaia-forming-with-charged-tokens");
+    }
+    if (building === Building.GaiaFormer && lastRound) {
+      warnings.push("gaia-former-last-round");
     }
 
     if (!this.data.canPay(cost)) {

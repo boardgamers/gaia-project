@@ -18,6 +18,7 @@ import Engine, {
   Event,
   Expansion,
   Faction,
+  Federation,
   GaiaHex,
   HighlightHex,
   Operator,
@@ -44,6 +45,7 @@ import {
 import { boosterNames } from "../data/boosters";
 import { buildingName, buildingShortcut } from "../data/building";
 import { eventDesc } from "../data/event";
+import { federationData } from "../data/federations";
 import { researchNames } from "../data/research";
 import { resourceNames } from "../data/resources";
 import { moveWarnings } from "../data/warnings";
@@ -138,6 +140,28 @@ function endTurnWarning(engine: Engine, command: AvailableCommand): ButtonWarnin
   return null;
 }
 
+function rewardWarnings(player: Player, rewards: Reward[]): string[] {
+  const data = player.data.clone();
+  return rewards.flatMap((r) => {
+    let waste = 0;
+    if (r.type === Resource.ChargePower) {
+      waste = applyChargePowers(data, [new Event(r.toString())]);
+    } else {
+      data.gainRewards([r]);
+      const resources = player.data.getResources(r.type);
+      if (resources == 0) {
+        //this resource cannot be gained
+        return [];
+      }
+      waste = resources + r.count - data.getResources(r.type);
+    }
+    if (waste > 0) {
+      return [`${waste}${r.type} will be wasted.`];
+    }
+    return [];
+  });
+}
+
 function passWarningButton(warnings: string[]): ButtonWarning {
   return { title: "Are you sure you want to pass?", body: warnings };
 }
@@ -157,10 +181,30 @@ function chargeWarning(engine: Engine, player: Player, offer: string): ButtonWar
 }
 
 function boosterWarning(engine: Engine, player: Player, booster: Booster): ButtonWarning | null {
-  return incomeWarning(
-    player,
-    tiles.boosters[booster].map((spec) => new Event(spec))
-  );
+  const warnings: string[] = [];
+
+  const additionalEvents = tiles.boosters[booster].map((spec) => new Event(spec));
+
+  const charge = incomeWarning(player, additionalEvents);
+  if (charge) {
+    warnings.push(...charge.body);
+  }
+
+  const incomeEvents = player.events[Operator.Income];
+  const notActivated = incomeEvents.filter((ev) => !ev.activated);
+  if (additionalEvents) {
+    notActivated.push(...additionalEvents);
+  }
+  const reward = rewardWarnings(player, Reward.merge(...notActivated.map((e) => e.rewards)));
+  if (reward) {
+    warnings.push(...reward.map((w) => w.substring(0, w.length - 1) + " during income phase."));
+  }
+
+  if (warnings.length > 0) {
+    return passWarningButton(warnings);
+  }
+
+  return null;
 }
 
 function passWarning(engine: Engine, player: Player, command: AvailableCommand): ButtonWarning | null {
@@ -174,14 +218,14 @@ function passWarning(engine: Engine, player: Player, command: AvailableCommand):
     const p = engine.players[command.player];
 
     for (const e of p.events[Operator.Activate].filter((e) => !e.activated)) {
-      warnings.push(`Special action is not yet used: ${translateResources(e.rewards)}`);
+      warnings.push(`Special action is not yet used: ${translateResources(e.rewards)}.`);
     }
 
     switch (p.faction) {
       case Faction.Itars:
         const burnablePower = p.data.burnablePower();
         if (burnablePower > 0 && !engine.isLastRound) {
-          warnings.push(`Power tokens in area 2 not burned: ${burnablePower}`);
+          warnings.push(`Power tokens in area 2 not burned: ${burnablePower}.`);
         }
         break;
       case Faction.BalTaks:
@@ -193,28 +237,6 @@ function passWarning(engine: Engine, player: Player, command: AvailableCommand):
   }
 
   return warnings.length == 0 ? null : passWarningButton(warnings);
-}
-
-function rewardWarnings(player: Player, rewards: Reward[]): string[] {
-  const data = player.data.clone();
-  return rewards.flatMap((r) => {
-    let waste = 0;
-    if (r.type === Resource.ChargePower) {
-      waste = applyChargePowers(data, [new Event(r.toString())]);
-    } else {
-      data.gainRewards([r]);
-      const resources = player.data.getResources(r.type);
-      if (resources == 0) {
-        //this resource cannot be gained
-        return [];
-      }
-      waste = resources + r.count - data.getResources(r.type);
-    }
-    if (waste > 0) {
-      return [`${waste}${r.type} will be wasted`];
-    }
-    return [];
-  });
 }
 
 function resourceWasteWarning(warnings: string[]): ButtonWarning | null {
@@ -246,7 +268,7 @@ function symbolButton(button: ButtonData, skipShortcut?: string[]): ButtonData {
   return button;
 }
 
-function textButton(button: ButtonData, skipShortcut?: string[]): ButtonData {
+function textButton(button: ButtonData): ButtonData {
   button.tooltip = tooltipWithShortcut(null, button.warning);
   return button;
 }
@@ -331,7 +353,7 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
         .map((w) => moveWarnings[w].text);
       warning = {
         title: "Every possible building location has a warning",
-        body: common.length > 0 ? common : ["Different warnings"],
+        body: common.length > 0 ? common : ["Different warnings."],
       } as ButtonWarning;
     }
 
@@ -791,18 +813,26 @@ export function deadEndButton(command: AvailableCommand<Command.DeadEnd>, undo: 
   });
 }
 
+export function federationTypeButtons(federations: Federation[], player: Player) {
+  return federations.map((fed, i) => {
+    const federation = tiles.federations[fed];
+    return textButton({
+      command: fed,
+      label: `Federation ${i + 1}: ${federation}`,
+      shortcuts: [federationData[fed].shortcut],
+      warning: resourceWasteWarning(rewardWarnings(player, Reward.parse(federation))),
+    });
+  });
+}
+
 export function federationButton(
   command: AvailableCommand<Command.FormFederation>,
   engine: Engine,
   store: Store<any>,
-  handleCommand: (command: string, source?: ButtonData) => void
+  handleCommand: (command: string, source?: ButtonData) => void,
+  player: Player
 ): ButtonData {
-  const tilesButtons: ButtonData[] = command.data.tiles.map((fed, i) =>
-    textButton({
-      command: fed,
-      label: `Federation ${i + 1}: ${tiles.federations[fed]}`,
-    })
-  );
+  const tilesButtons: ButtonData[] = federationTypeButtons(command.data.tiles, player);
 
   const locationButtons: ButtonData[] = command.data.federations.map((fed, i) =>
     textButton({
