@@ -29,7 +29,7 @@ import {
 } from "./enums";
 import Event, { EventSource } from "./events";
 import { factionBoard, FactionBoard, FactionBoardRaw, factionVariantBoard } from "./faction-boards";
-import factions, { factionPlanet } from "./factions";
+import { factionPlanet } from "./factions";
 import { FederationInfo, isOutclassedBy } from "./federation";
 import { GaiaHex } from "./gaia-hex";
 import { IncomeSelection } from "./income";
@@ -293,7 +293,7 @@ export default class Player extends EventEmitter {
         }
       } else {
         // Get the number of terraforming steps to pay discounting terraforming track
-        steps = terraformingStepsRequired(factions[this.faction].planet, targetPlanet);
+        steps = terraformingStepsRequired(factionPlanet(this.faction), targetPlanet);
         const reward = terraformingCost(this.data, steps);
 
         if (reward === null) {

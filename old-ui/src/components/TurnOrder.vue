@@ -35,7 +35,7 @@
 </template>
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
-import Engine, { factions, Player, Planet, Phase, factionPlanet } from "@gaia-project/engine";
+import Engine, { Player, Planet, Phase, factionPlanet } from "@gaia-project/engine";
 
 @Component
 export default class TurnOrder extends Vue {

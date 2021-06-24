@@ -38,33 +38,37 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { Component, Prop } from 'vue-property-decorator';
-import Engine, { Command, Phase, factions, Player, EngineOptions, Expansion } from '@gaia-project/engine';
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
+import Engine, { Command, Phase, Player, EngineOptions, Expansion } from "@gaia-project/engine";
 
-import AdvancedLog from './AdvancedLog.vue';
-import Commands from './Commands.vue';
-import Pool from './Pool.vue';
-import PlayerInfo from './PlayerInfo.vue';
-import ResearchBoard from './ResearchBoard.vue';
-import ScoringBoard from './ScoringBoard.vue';
-import SpaceMap from './SpaceMap.vue';
-import TurnOrder from './TurnOrder.vue';
-import { resolve } from 'dns';
+import AdvancedLog from "./AdvancedLog.vue";
+import Commands from "./Commands.vue";
+import Pool from "./Pool.vue";
+import PlayerInfo from "./PlayerInfo.vue";
+import ResearchBoard from "./ResearchBoard.vue";
+import ScoringBoard from "./ScoringBoard.vue";
+import SpaceMap from "./SpaceMap.vue";
+import TurnOrder from "./TurnOrder.vue";
+import { resolve } from "dns";
 
 @Component<Game>({
-  created (this: Game) {
+  created(this: Game) {
     const unsub = this.$store.subscribeAction(({ type, payload }) => {
       if (type === "gaiaViewer/externalData") {
         this.handleData(Engine.fromData(payload));
         return;
       }
       if (type === "gaiaViewer/replayStart") {
-        this.$store.dispatch("gaiaViewer/replayInfo", { start: 1, end: this.engine.moveHistory.length, current: this.engine.moveHistory.length });
+        this.$store.dispatch("gaiaViewer/replayInfo", {
+          start: 1,
+          end: this.engine.moveHistory.length,
+          current: this.engine.moveHistory.length,
+        });
 
         this.replayData = {
           current: this.engine.moveHistory.length,
-          backup: JSON.parse(JSON.stringify(this.engine))
+          backup: JSON.parse(JSON.stringify(this.engine)),
         };
         return;
       }
@@ -80,13 +84,22 @@ import { resolve } from 'dns';
 
         this.replayData.current = dest;
 
-        this.$store.dispatch("gaiaViewer/replayInfo", { start: 1, end: this.replayData.backup.moveHistory.length, current: dest });
+        this.$store.dispatch("gaiaViewer/replayInfo", {
+          start: 1,
+          end: this.replayData.backup.moveHistory.length,
+          current: dest,
+        });
 
         if (dest === current) {
           return;
         }
         if (dest < current) {
-          this.handleData(new Engine(this.replayData.backup.moveHistory.slice(0, dest), { ...this.replayData.backup.options, noFedCheck: true }));
+          this.handleData(
+            new Engine(this.replayData.backup.moveHistory.slice(0, dest), {
+              ...this.replayData.backup.options,
+              noFedCheck: true,
+            })
+          );
           return;
         }
 
@@ -109,8 +122,8 @@ import { resolve } from 'dns';
     ResearchBoard,
     ScoringBoard,
     SpaceMap,
-    TurnOrder
-  }
+    TurnOrder,
+  },
 })
 export default class Game extends Vue {
   public currentMove = "";
@@ -118,24 +131,24 @@ export default class Game extends Vue {
   // When joining a game
   name = "";
 
-  replayData: {current: number; backup: Engine} = null;
+  replayData: { current: number; backup: Engine } = null;
 
   @Prop()
   options: EngineOptions;
 
-  get engine (): Engine {
+  get engine(): Engine {
     return this.$store.state.gaiaViewer.data;
   }
 
-  get ended () {
+  get ended() {
     return this.engine.phase === Phase.EndGame;
   }
 
-  get scoringX () {
+  get scoringX() {
     return this.engine.expansions ? 505 : 385;
   }
 
-  get orderedPlayers () {
+  get orderedPlayers() {
     const engine = this.engine;
 
     if (!engine.round || !engine.turnOrder) {
@@ -148,22 +161,24 @@ export default class Game extends Vue {
     //   turnOrder = turnOrder.slice(turnOrder.indexOf(this.player)).concat(turnOrder.slice(0, turnOrder.indexOf(this.player)));
     // }
 
-    return turnOrder.concat(engine.passedPlayers).map(player => engine.players[player]);
+    return turnOrder.concat(engine.passedPlayers).map((player) => engine.players[player]);
   }
 
-  get canPlay () {
-    return !this.ended && (!this.$store.state.gaiaViewer.player || this.sessionPlayer === this.engine.players[this.player]);
+  get canPlay() {
+    return (
+      !this.ended && (!this.$store.state.gaiaViewer.player || this.sessionPlayer === this.engine.players[this.player])
+    );
   }
 
-  get hasMap () {
+  get hasMap() {
     return !!this.$store.state.gaiaViewer.data.map;
   }
 
-  get player () {
+  get player() {
     return this.engine.availableCommands?.[0]?.player;
   }
 
-  get sessionPlayer () {
+  get sessionPlayer() {
     const player = this.$store.state.gaiaViewer.player;
     if (player) {
       if (player.index !== undefined) {
@@ -172,14 +187,14 @@ export default class Game extends Vue {
     }
   }
 
-  handleData (data: Engine, keepMoveHistory?: boolean) {
+  handleData(data: Engine, keepMoveHistory?: boolean) {
     console.log("handle data", keepMoveHistory);
 
-    for (const sector of document.getElementsByClassName('sector') as any as Element[]) {
+    for (const sector of (document.getElementsByClassName("sector") as any) as Element[]) {
       sector.classList.add("notransition");
     }
 
-    this.$store.commit('gaiaViewer/receiveData', data);
+    this.$store.commit("gaiaViewer/receiveData", data);
 
     this.clearCurrentMove = false;
 
@@ -190,13 +205,13 @@ export default class Game extends Vue {
     }
 
     setTimeout(() => {
-      for (const sector of document.getElementsByClassName('sector') as any as Element[]) {
+      for (const sector of (document.getElementsByClassName("sector") as any) as Element[]) {
         sector.classList.remove("notransition");
       }
     });
   }
 
-  handleCommand (command: string) {
+  handleCommand(command: string) {
     if (command.startsWith(Command.Init) || this.engine.round <= 0) {
       this.addMove(command);
       return;
@@ -217,7 +232,7 @@ export default class Game extends Vue {
     }
   }
 
-  undoMove () {
+  undoMove() {
     if (this.currentMove.includes(".")) {
       this.currentMove = this.currentMove.slice(0, this.currentMove.lastIndexOf("."));
     } else {
@@ -226,24 +241,24 @@ export default class Game extends Vue {
     this.addMove(this.currentMove);
   }
 
-  addMove (command: string) {
+  addMove(command: string) {
     this.$store.commit("gaiaViewer/clearContext");
     this.$store.dispatch("gaiaViewer/move", command);
   }
 
-  parseMove (command: string): {player: string; command: string; args: string[]} {
+  parseMove(command: string): { player: string; command: string; args: string[] } {
     command = command.trim();
 
-    if (command.includes('.')) {
-      return this.parseMove(command.slice(0, command.indexOf('.')));
+    if (command.includes(".")) {
+      return this.parseMove(command.slice(0, command.indexOf(".")));
     }
 
-    const split = command.split(' ');
+    const split = command.split(" ");
 
     return {
       player: split[0],
       command: split[1],
-      args: split.slice(2)
+      args: split.slice(2),
     };
   }
 }

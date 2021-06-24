@@ -58,7 +58,7 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   Building as BuildingEnum,
-  factions,
+  factionPlanet,
   GaiaHex,
   Planet as PlanetEnum,
   SpaceMap as ISpaceMap,
@@ -68,9 +68,9 @@ import Planet from "./Planet.vue";
 import Building from "./Building.vue";
 import { buildingName } from "../data/building";
 import { planetNames } from "../data/planets";
-import { factionPlanet } from "@gaia-project/engine/src/factions";
 import { HighlightHexData } from "../data";
 import { moveWarnings } from "../data/warnings";
+import { factionName } from "../data/factions";
 
 @Component<SpaceHex>({
   components: {
@@ -99,7 +99,7 @@ export default class SpaceHex extends Vue {
 
   warning(hex: GaiaHex): string {
     const warnings = this.highlightedHexes.get(hex)?.warnings;
-    return warnings?.length > 0 ? warnings?.map(w => moveWarnings[w].text).join(", ") : null;
+    return warnings?.length > 0 ? warnings?.map((w) => moveWarnings[w].text).join(", ") : null;
   }
 
   cost(hex: GaiaHex) {
@@ -127,8 +127,8 @@ export default class SpaceHex extends Vue {
   }
 
   buildingName(building: BuildingEnum, player) {
-    let f = factions[this.faction(player)];
-    return `${buildingName(building, f)} (${f.name})`;
+    const name = factionName(this.faction(player));
+    return `${buildingName(building, this.faction(player))} (${name})`;
   }
 
   planetName(planet: PlanetEnum) {

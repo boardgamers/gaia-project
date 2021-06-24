@@ -1,11 +1,11 @@
 import { expect } from "chai";
 import Engine from "./engine";
 import { Faction, Player as PlayerEnum } from "./enums";
-import { oppositeFaction } from "./factions";
+import { remainingFactions } from "./factions";
 
 describe("Factions", () => {
-  it("lantids should be opposite terrans", () => {
-    expect(oppositeFaction(Faction.Terrans)).to.equal(Faction.Lantids);
+  it("lantids and terrans can not be chosen together", () => {
+    expect(remainingFactions([Faction.Terrans])).to.not.contain(Faction.Lantids);
   });
 
   describe("balanced variant", () => {

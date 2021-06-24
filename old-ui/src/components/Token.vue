@@ -7,7 +7,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { factions, Faction, Planet, factionPlanet } from "@gaia-project/engine";
+import { Faction, Planet, factionPlanet } from "@gaia-project/engine";
 
 @Component
 export default class PlayerToken extends Vue {

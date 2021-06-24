@@ -53,27 +53,26 @@ import Engine, {
   BoardAction as BoardActionEnum,
   boardActions,
   Command,
+  factionPlanet,
   Planet,
   PlayerEnum,
 } from "@gaia-project/engine";
 import Resource from "./Resource.vue";
 import SpecialAction from "./SpecialAction.vue";
-import { factionPlanet } from "@gaia-project/engine/src/factions";
 import { boardActionButton } from "../logic/commands";
 
 @Component<BoardAction>({
   components: {
     Resource,
-    SpecialAction
+    SpecialAction,
   },
 })
 export default class BoardAction extends Vue {
-
   @Prop()
   action: BoardActionEnum;
 
   @Prop()
-  transform: string
+  transform: string;
 
   onClick() {
     if (!this.highlighted) {
@@ -88,7 +87,7 @@ export default class BoardAction extends Vue {
 
   get recent(): boolean {
     const moves = this.$store.getters["gaiaViewer/recentCommands"];
-    return moves.some((c) => c.command == Command.Action && c.args[0] as BoardActionEnum === this.action);
+    return moves.some((c) => c.command == Command.Action && (c.args[0] as BoardActionEnum) === this.action);
   }
 
   get button() {

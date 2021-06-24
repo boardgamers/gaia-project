@@ -4,7 +4,7 @@ import Engine, {
   EventSource,
   Faction,
   factionBoard,
-  factions,
+  factionPlanet,
   LogEntry,
   Planet,
   Player,
@@ -12,6 +12,7 @@ import Engine, {
   ResearchField,
   Resource,
 } from "@gaia-project/engine";
+import { factionName } from "../data/factions";
 import { ChartStyleDisplay } from "./chart-factory";
 import { CommandObject, parseCommands } from "./recent";
 import { SimpleSource } from "./simple-charts";
@@ -161,11 +162,11 @@ export function planetColor(planet: Planet, invert: boolean): string {
 }
 
 export function playerColor(pl: Player, invert: boolean): ColorVar {
-  return new ColorVar(planetColor(factions[pl.faction].planet, invert));
+  return new ColorVar(planetColor(factionPlanet(pl.faction), invert));
 }
 
 export function playerLabel(pl: Player) {
-  return factions[pl.faction].name;
+  return factionName(pl.faction);
 }
 
 export function weightedSum(data: Engine, player: PlayerEnum, factories: DatasetFactory[]): DatasetFactory | null {

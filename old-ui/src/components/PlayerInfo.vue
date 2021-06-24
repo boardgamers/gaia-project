@@ -139,18 +139,18 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { Component, Prop } from 'vue-property-decorator';
-import { Player, factions, tiles, PlayerData, Planet, Federation, terraformingStepsRequired, Building, Condition } from '@gaia-project/engine';
-import { factionColor } from '../graphics/utils';
-import TechTile from './TechTile.vue';
-import Booster from './Booster.vue';
-import SpecialAction from './SpecialAction.vue';
-import FederationTile from './FederationTile.vue';
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
+import { Player, Planet, factionPlanet } from "@gaia-project/engine";
+import { factionColor } from "../graphics/utils";
+import TechTile from "./TechTile.vue";
+import Booster from "./Booster.vue";
+import SpecialAction from "./SpecialAction.vue";
+import FederationTile from "./FederationTile.vue";
 import BuildingGroup from "./PlayerBoard/BuildingGroup.vue";
 import PlayerBoardInfo from "./PlayerBoard/Info.vue";
-import PowerBowls from './PlayerBoard/PowerBowls.vue';
-import { factionDesc, planetsWithSteps } from '../data/factions';
+import PowerBowls from "./PlayerBoard/PowerBowls.vue";
+import { factionDesc, planetsWithSteps } from "../data/factions";
 
 @Component({
   components: {
@@ -160,64 +160,64 @@ import { factionDesc, planetsWithSteps } from '../data/factions';
     FederationTile,
     BuildingGroup,
     PowerBowls,
-    PlayerBoardInfo
-  }
+    PlayerBoardInfo,
+  },
 })
 export default class PlayerInfo extends Vue {
   @Prop()
   player: Player;
 
-  get playerData () {
+  get playerData() {
     return this.player ? this.player.data : null;
   }
 
-  playerClick (player: Player) {
+  playerClick(player: Player) {
     this.$store.dispatch("gaiaViewer/playerClick", player);
   }
 
-  get factionColor () {
+  get factionColor() {
     return factionColor(this.player.faction);
   }
 
-  get name () {
+  get name() {
     if (this.player.name) {
       return this.player.name;
     }
     return "Player " + (this.player.player + 1);
   }
 
-  get tooltip () {
+  get tooltip() {
     return factionDesc(this.player.faction);
   }
 
-  get planet () {
-    return factions[this.player.faction].planet;
+  get planet() {
+    return factionPlanet(this.player.faction);
   }
 
-  get factionName (): string {
-    return factions[this.player.faction].name;
+  get factionName(): string {
+    return factionPlanet(this.player.faction);
   }
 
-  planetFill (planet: string) {
+  planetFill(planet: string) {
     if (planet === Planet.Titanium || planet === Planet.Swamp) {
       return "white";
     }
     return "black";
   }
 
-  planetsWithSteps (steps: number) {
+  planetsWithSteps(steps: number) {
     return planetsWithSteps(this.planet, steps);
   }
 
-  get passed () {
+  get passed() {
     return (this.$store.state.gaiaViewer.data.passedPlayers || []).includes(this.player.player);
   }
 
-  get round () {
+  get round() {
     return this.$store.state.gaiaViewer.data.round;
   }
 
-  get hasPlanets () {
+  get hasPlanets() {
     return this.player.ownedPlanets.length > 0;
   }
 }

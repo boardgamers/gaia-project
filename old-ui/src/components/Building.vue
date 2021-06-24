@@ -17,7 +17,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { factions, Faction, Building as BuildingEnum, Planet, factionPlanet } from "@gaia-project/engine";
+import { Faction, Building as BuildingEnum, Planet, factionPlanet } from "@gaia-project/engine";
 import { corners } from "../graphics/hex";
 import Token from "./Token.vue";
 

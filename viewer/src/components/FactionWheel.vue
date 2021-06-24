@@ -29,7 +29,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
-import Engine, { factions, Planet } from "@gaia-project/engine";
+import Engine, { factionPlanet, Planet } from "@gaia-project/engine";
 
 @Component
 export default class FactionWheel extends Vue {
@@ -48,7 +48,7 @@ export default class FactionWheel extends Vue {
 
   strokeWidth(pos: number) {
     const planet = this.planet(pos);
-    if (this.gameData.players.some((p) => p.faction && factions[p.faction].planet === planet)) {
+    if (this.gameData.players.some((p) => p.faction && factionPlanet(p.faction) === planet)) {
       return "0.2px; stroke-dasharray:.5 .2";
     }
 
@@ -73,7 +73,7 @@ export default class FactionWheel extends Vue {
       const faction = data.player(player)?.faction;
       if (faction != null) {
         // own faction - or current players faction - should be at the top
-        const planet = factions[faction].planet;
+        const planet = factionPlanet(faction);
         const offset = list.indexOf(planet);
         return list[(pos + offset) % 7];
       }

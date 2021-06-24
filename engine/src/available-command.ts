@@ -31,7 +31,7 @@ import {
   TechTile,
   TechTilePos,
 } from "./enums";
-import { oppositeFaction } from "./factions";
+import { remainingFactions } from "./factions";
 import { GaiaHex } from "./gaia-hex";
 import SpaceMap from "./map";
 import PlayerObject, { BuildCheck, BuildWarning } from "./player";
@@ -969,7 +969,19 @@ export function possiblePISwaps(engine: Engine, player: Player) {
   return commands;
 }
 
-export function remainingFactions(engine: Engine) {
+function chooseFactionOrBid(engine: Engine, player: Player): AvailableCommand<Command.Bid | Command.ChooseFaction>[] {
+  const chooseFaction: AvailableCommand<Command.Bid | Command.ChooseFaction> = {
+    name: Command.ChooseFaction,
+    player,
+    data: choosableFactions(engine),
+  };
+  if (engine.options.auction === AuctionVariant.BidWhileChoosing) {
+    return [...possibleBids(engine, player), chooseFaction];
+  }
+  return [chooseFaction];
+}
+
+export function choosableFactions(engine: Engine) {
   if (engine.randomFactions) {
     if (engine.options.auction && engine.options.auction !== AuctionVariant.ChooseBid) {
       // In auction the player can pick from the pool of random factions
@@ -980,24 +992,8 @@ export function remainingFactions(engine: Engine) {
     }
   } else {
     // Standard
-    return difference(
-      Object.values(Faction),
-      engine.setup.map((f) => f),
-      engine.setup.map((f) => oppositeFaction(f))
-    );
+    return remainingFactions(engine.setup);
   }
-}
-
-function chooseFactionOrBid(engine: Engine, player: Player): AvailableCommand<Command.Bid | Command.ChooseFaction>[] {
-  const chooseFaction: AvailableCommand<Command.Bid | Command.ChooseFaction> = {
-    name: Command.ChooseFaction,
-    player,
-    data: remainingFactions(engine),
-  };
-  if (engine.options.auction === AuctionVariant.BidWhileChoosing) {
-    return [...possibleBids(engine, player), chooseFaction];
-  }
-  return [chooseFaction];
 }
 
 function possibleBids(engine: Engine, player: Player): AvailableCommand<Command.Bid>[] {

@@ -115,15 +115,16 @@ import { Component, Prop } from "vue-property-decorator";
 import { uniq } from "lodash";
 import Resource from "../Resource.vue";
 import Undo from "../Resources/Undo.vue";
-import { Faction, factions, Player, PlayerData, ResearchField, Resource as ResourceEnum } from "@gaia-project/engine";
+import { Faction, Player, PlayerData, ResearchField, Resource as ResourceEnum } from "@gaia-project/engine";
 import VictoryPoint from "../Resources/VictoryPoint.vue";
 import { FastConversionEvent } from "../../data/actions";
+import { factionName } from "../../data/factions";
 
 @Component({
   components: {
     Resource,
     VictoryPoint,
-    Undo
+    Undo,
   },
 })
 export default class PlayerBoardInfo extends Vue {
@@ -145,7 +146,7 @@ export default class PlayerBoardInfo extends Vue {
   }
 
   get factionName(): string {
-    return factions[this.faction].name;
+    return factionName(this.faction);
   }
 
   convert(resource: ResourceEnum) {

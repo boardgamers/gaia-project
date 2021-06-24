@@ -1,4 +1,4 @@
-import Engine, { factions, Player, PlayerEnum } from "@gaia-project/engine";
+import Engine, { Player, PlayerEnum } from "@gaia-project/engine";
 import {
   ChartConfiguration,
   ChartDataset,
@@ -10,6 +10,7 @@ import {
   TooltipOptions,
 } from "chart.js";
 import { sortBy, sum, sumBy } from "lodash";
+import { factionName } from "../data/factions";
 import {
   ChartColor,
   ChartFamily,
@@ -421,7 +422,7 @@ export function kinds(data: Engine, family: ChartFamily): ChartKindDisplay[][] {
   ];
   const playerDetails: ChartKindDisplay[] = players.map((p) => ({
     kind: p,
-    label: factions[data.player(p).faction].name,
+    label: factionName(data.player(p).faction),
   }));
   const kinds: ChartKindDisplay[] = chartFactory(family)
     .sources(family)
