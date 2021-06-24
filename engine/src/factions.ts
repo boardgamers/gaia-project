@@ -1,65 +1,52 @@
+import { difference } from "lodash";
 import { Faction, Planet } from "./enums";
 
-const factions: { [key in Faction]: { name: string; planet: Planet } } = {
+const factions: { [key in Faction]: { planet: Planet } } = {
   [Faction.Terrans]: {
-    name: "Terrans",
     planet: Planet.Terra,
   },
   [Faction.Lantids]: {
-    name: "Lantids",
     planet: Planet.Terra,
   },
   [Faction.Xenos]: {
-    name: "Xenos",
     planet: Planet.Desert,
   },
   [Faction.Gleens]: {
-    name: "Gleens",
     planet: Planet.Desert,
   },
   [Faction.Taklons]: {
-    name: "Taklons",
     planet: Planet.Swamp,
   },
   [Faction.Ambas]: {
-    name: "Ambas",
     planet: Planet.Swamp,
   },
   [Faction.HadschHallas]: {
-    name: "Hadsch Hallas",
     planet: Planet.Oxide,
   },
   [Faction.Ivits]: {
-    name: "Ivits",
     planet: Planet.Oxide,
   },
   [Faction.Geodens]: {
-    name: "Geoden",
     planet: Planet.Volcanic,
   },
   [Faction.BalTaks]: {
-    name: "Bal T'aks",
     planet: Planet.Volcanic,
   },
   [Faction.Firaks]: {
-    name: "Firaks",
     planet: Planet.Titanium,
   },
   [Faction.Bescods]: {
-    name: "Bescods",
     planet: Planet.Titanium,
   },
   [Faction.Nevlas]: {
-    name: "Nevlas",
     planet: Planet.Ice,
   },
   [Faction.Itars]: {
-    name: "Itars",
     planet: Planet.Ice,
   },
 } as const;
 
-export function oppositeFaction(faction: Faction): Faction {
+function oppositeFaction(faction: Faction): Faction {
   if (!Object.values(Faction).includes(faction)) {
     return null;
   }
@@ -71,6 +58,14 @@ export function oppositeFaction(faction: Faction): Faction {
   }
 }
 
+export function remainingFactions(chosenFactions: Faction[]) {
+  return difference(
+    Object.values(Faction),
+    chosenFactions.map((f) => f),
+    chosenFactions.map((f) => oppositeFaction(f))
+  );
+}
+
 export function factionPlanet(faction: Faction): Planet {
   const fact = factions[faction];
 
@@ -79,5 +74,3 @@ export function factionPlanet(faction: Faction): Planet {
   }
   return Planet.Lost;
 }
-
-export default factions;

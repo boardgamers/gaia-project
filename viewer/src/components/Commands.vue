@@ -41,8 +41,8 @@
           :button="{
             command: `${factionsToChoose.name} ${faction}`,
             modal: modalDialog(tooltip(faction)),
-            title: factions[faction].name,
-            label: `${factions[faction].name} <i class='planet ${factions[faction].planet}'></i>`,
+            title: factionName(faction),
+            label: `${factionName(faction)} <i class='planet ${factionPlanet(faction)}'></i>`,
             shortcuts: [factionShortcut(faction)],
           }"
           @trigger="handleCommand"
@@ -67,7 +67,7 @@ import Engine, {
   BuildWarning,
   Command,
   Faction,
-  factions,
+  factionPlanet,
   GaiaHex,
   Resource,
   Reward,
@@ -77,7 +77,7 @@ import Engine, {
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
 import { ButtonData, GameContext, ModalButtonData } from "../data";
-import { factionDesc, factionShortcut } from "../data/factions";
+import { factionDesc, factionName, factionShortcut } from "../data/factions";
 import { FactionCustomization } from "@gaia-project/engine/src/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
 import { moveWarnings } from "../data/warnings";
@@ -86,15 +86,20 @@ import {
   boardActionsButton,
   brainstoneButtons,
   buildButtons,
-  chargePowerButtons, deadEndButton, declineButton,
+  chargePowerButtons,
+  deadEndButton,
+  declineButton,
   endTurnButton,
-  fastConversionClick, federationButton, federationTypeButtons,
+  fastConversionClick,
+  federationButton,
+  federationTypeButtons,
   finalizeShortcuts,
   freeAndBurnButton,
   hexMap,
   passButtons,
   researchButtons,
-  specialActionsButton, UndoPropagation,
+  specialActionsButton,
+  UndoPropagation,
 } from "../logic/commands";
 import Undo from "./Resources/Undo.vue";
 
@@ -119,9 +124,9 @@ let show = false;
         },
         canActivate() {
           return !show;
-        }
+        },
       };
-    }
+    },
   },
   computed: {
     randomFactionButton() {
@@ -134,7 +139,7 @@ let show = false;
         label: "Random",
         shortcuts: ["r"],
         modal: this.modalDialog(this.tooltip(faction)),
-        title: factions[faction].name,
+        title: factionName(faction),
       };
     },
   },
@@ -220,7 +225,7 @@ export default class Commands extends Vue {
 
   get playerName(): string {
     if (this.player.faction) {
-      return factions[this.player.faction].name;
+      return factionName(this.player.faction);
     }
     if (this.player.name) {
       return this.player.name;
@@ -253,11 +258,15 @@ export default class Commands extends Vue {
   }
 
   get warnings(): string[] {
-    return this.currentMoveWarnings?.map(w => moveWarnings[w].text) ?? [];
+    return this.currentMoveWarnings?.map((w) => moveWarnings[w].text) ?? [];
   }
 
-  get factions() {
-    return factions;
+  factionName(faction: Faction) {
+    return factionName(faction);
+  }
+
+  factionPlanet(faction: Faction) {
+    return factionPlanet(faction);
   }
 
   factionShortcut(faction: Faction) {
@@ -470,8 +479,8 @@ export default class Commands extends Vue {
             buttons: federationTypeButtons(command.data.tiles, this.player),
           });
           break;
+        }
       }
-    }
     }
 
     if (conversions.free || conversions.burn) {
@@ -494,7 +503,7 @@ export default class Commands extends Vue {
 
       this.$store.commit("gaiaViewer/fastConversionTooltips", d.tooltips);
       // tooltips may have become unavailable - and they should be hidden
-      this.$root.$emit('bv::hide::tooltip');
+      this.$root.$emit("bv::hide::tooltip");
     }
 
     if (this.customButtons.length > 0) {

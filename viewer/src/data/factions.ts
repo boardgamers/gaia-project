@@ -2,7 +2,7 @@ import {
   Building,
   Faction,
   factionBoard,
-  factions,
+  factionPlanet,
   Operator,
   Planet,
   PowerArea,
@@ -10,8 +10,9 @@ import {
 } from "@gaia-project/engine";
 import { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
 
-const factionData: { [faction in Faction]: { ability: string; PI: string; shortcut: string } } = {
+const factionData: { [faction in Faction]: { name: string; ability: string; PI: string; shortcut: string } } = {
   [Faction.Terrans]: {
+    name: "Terrans",
     ability:
       "During the Gaia phase, move the power tokens in your Gaia area to area II of your power cycle instead of to area I.",
     PI:
@@ -19,18 +20,21 @@ const factionData: { [faction in Faction]: { ability: string; PI: string; shortc
     shortcut: "t",
   },
   [Faction.Lantids]: {
+    name: "Lantids",
     ability:
       "When you take the Build a Mine action, you may build a mine on a planet colonized by an opponent (including the Lost Planet). Place your mine next to the opponent’s structure. You do not have to pay for terraforming, but you must still pay the mine’s cost. This mine counts as a normal mine in all ways except the following: this mine cannot be upgraded, and it does not count for any effects that relate to how many planet types or Gaia planets you have colonized.",
     PI: "Each time you build a mine on a planet colonized by an opponent, gain two knowledge.",
     shortcut: "l",
   },
   [Faction.Xenos]: {
+    name: "Xenos",
     ability: "You place a third starting mine after all other starting mines have been placed.",
     PI:
       "You can form federations with a total power value of six instead of seven. You gain one Q.I.C. as income instead of one power token.",
     shortcut: "x",
   },
   [Faction.Gleens]: {
+    name: "Gleens",
     ability:
       "If you would ever gain Q.I.C., gain that much ore instead; once you have upgraded to the second academy, this effect no longer applies. To make a Gaia Planet habitable, pay one ore instead of one Q.I.C. Each time you build a mine on a Gaia Planet, gain two additional VP.",
     PI:
@@ -38,6 +42,7 @@ const factionData: { [faction in Faction]: { ability: string; PI: string; shortc
     shortcut: "e",
   },
   [Faction.Taklons]: {
+    name: "Taklons",
     ability:
       "The Brainstone counts as one power token (when starting a Gaia Project, building satellites, etc.), but you can spend it as if it were three power.",
     PI:
@@ -45,17 +50,20 @@ const factionData: { [faction in Faction]: { ability: string; PI: string; shortc
     shortcut: "k",
   },
   [Faction.Ambas]: {
+    name: "Ambas",
     ability: "-",
     PI:
       "Once per round, as an action, you can swap your planetary institute with one of your mines on the game board (this can help you form a new federation). This has no impact on existing federations, even if their power value becomes less than seven. The swap does not count as a build or upgrade action; no VP or power can be gained from it.",
     shortcut: "a",
   },
   [Faction.HadschHallas]: {
+    name: "Hadsch Hallas",
     ability: "-",
     PI: "You can spend credits instead of power to take free actions that allow you to gain resources.",
     shortcut: "d",
   },
   [Faction.Ivits]: {
+    name: "Ivits",
     ability: `During setup, do not place mines. Instead, after all other players have placed mines (including the Xenos’ third mine), place your planetary institute on any red planet.
     You can have only one federation during the whole game, but unlike other factions, you will be able to grow that federation to gain new federation tokens. After you have formed a federation,
     to take the “Form a Federation” action again, you must connect planets to that federation instead of forming a new federation. The power values of the structures on those planets must bring the total power value of that federation to at least to 7X, where X is the number of federation tokens you own plus one (not including the federation token from level 5 of “Terraforming”). All other rules for forming a federation apply, including building satellites and gaining federation tokens. To build a satellite during this action, you must spend one Q.I.C. instead of discarding one power.`,
@@ -68,24 +76,28 @@ const factionData: { [faction in Faction]: { ability: string; PI: string; shortc
     shortcut: "v",
   },
   [Faction.Geodens]: {
+    name: "Geoden",
     ability: "-",
     PI:
       "The first time you build a mine on each planet type, gain 3 knowledge. (You do not gain knowledge for planet types you colonized before upgrading to your planetary institute.)",
     shortcut: "o",
   },
   [Faction.BalTaks]: {
+    name: "Bal T'aks",
     ability: `You cannot advance in the “Navigation” research area, even if you take the tech tile below the “Navigation” research area. If you do take that tech tile, no advancement occurs.
     As a free action, you can move a Gaiaformer from a Gaiaformer space on your faction board to your Gaia area to gain one Q.I.C. Gaiaformers in your Gaia area are not available until the next Gaia phase. In the next Gaia phase, move any Gaiaformer in your Gaia area back to its Gaiaformer space.`,
     PI: "You can now advance in the “Navigation” research area.",
     shortcut: "'",
   },
   [Faction.Firaks]: {
+    name: "Firaks",
     ability: "-",
     PI:
       "As an action, you can “downgrade” a research lab into a trading station and immediately advance one level in a research area of your choice. This counts as an “Upgrade to a Trading Station” action. You can later upgrade the trading station back into a research lab using the normal rules (including gaining a new tech tile).",
     shortcut: "f",
   },
   [Faction.Bescods]: {
+    name: "Bescods",
     ability: `The positions of your planetary institute and academies are swapped on your faction board, as is the income you gain for trading stations and research labs. As with the other factions, upgrading to an academy or a research lab allows you to gain a tech tile.
     Once per round, as an action, you can advance your lowest-level token in a research area (without paying knowledge). If multiple of your tokens are tied for the lowest level, choose which of
     the tied tokens to advance. To advance to level 5 this way, you must still flip a federation token as normal. Remember, only one player can reach level 5 of each research area.`,
@@ -94,6 +106,7 @@ const factionData: { [faction in Faction]: { ability: string; PI: string; shortc
     shortcut: "c",
   },
   [Faction.Nevlas]: {
+    name: "Nevlas",
     ability:
       "As a free action, you can move one power token from area III of your power cycle to your Gaia area to gain one knowledge (these power tokens follow the normal Gaia phase rules). This does not count as spending power.",
     PI:
@@ -101,6 +114,7 @@ const factionData: { [faction in Faction]: { ability: string; PI: string; shortc
     shortcut: "n",
   },
   [Faction.Itars]: {
+    name: "Itars",
     ability:
       "Each time you discard a power token from area II of your power cycle to move another power token to area III, place the discarded power token in your Gaia area instead of returning it to the supply.",
     PI: `During the Gaia phase, you can discard 4 power tokens from your Gaia area to immediately gain a tech tile. You may do this as many times as you can afford to.`,
@@ -126,7 +140,7 @@ export function factionShortcut(faction: Faction): string {
 
 export function factionDesc(faction: Faction, variant?: FactionBoardRaw) {
   const board = factionBoard(faction, variant);
-  const p = factions[faction].planet;
+  const p = factionPlanet(faction);
 
   const buildingDesc =
     "<ul>" +
@@ -175,4 +189,8 @@ export function factionDesc(faction: Faction, variant?: FactionBoardRaw) {
     </span>
   </div>
   `;
+}
+
+export function factionName(faction: Faction) {
+  return factionData[faction].name;
 }

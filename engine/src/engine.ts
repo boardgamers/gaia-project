@@ -10,7 +10,6 @@ import AvailableCommand, {
   BrainstoneActionData,
   generate as generateAvailableCommands,
   Offer,
-  remainingFactions,
 } from "./available-command";
 import { stdBuildingValue } from "./buildings";
 import {
@@ -39,6 +38,7 @@ import {
   TechTilePos,
 } from "./enums";
 import Event, { EventSource } from "./events";
+import { remainingFactions } from "./factions";
 import SpaceMap, { MapConfiguration } from "./map";
 import Player from "./player";
 import PlayerData, { BrainstoneDest, MoveTokens } from "./player-data";
@@ -1456,7 +1456,7 @@ export default class Engine {
       const randomFactions = [];
 
       for (const _ of this.players) {
-        const possible = remainingFactions({ ...this, setup: randomFactions });
+        const possible = remainingFactions(randomFactions);
 
         randomFactions.push(possible[Math.floor(possible.length * this.map.rng())]);
       }

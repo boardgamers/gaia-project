@@ -25,8 +25,8 @@
           :button="{
             command: `${command.name} ${faction}`,
             modal: tooltip(faction),
-            title: factions[faction].name,
-            label: `${factions[faction].name} <i class='planet ${factions[faction].planet}'></i>`,
+            title: factionName(faction),
+            label: `${factionName(faction)} <i class='planet ${factionPlanet(faction)}'></i>`,
           }"
           @trigger="handleCommand"
           :key="faction"
@@ -56,7 +56,6 @@ import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   AvailableCommand,
   Command,
-  factions,
   Building,
   GaiaHex,
   Booster,
@@ -65,12 +64,13 @@ import Engine, {
   Faction,
   SpaceMap,
   Expansion,
+  factionPlanet,
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
 import { buildingName } from "../data/building";
 import { GameContext, ButtonData, HighlightHexData } from "../data";
 import { eventDesc } from "../data/event";
-import { factionDesc } from "../data/factions";
+import { factionDesc, factionName } from "../data/factions";
 
 @Component<Commands>({
   watch: {
@@ -96,7 +96,7 @@ import { factionDesc } from "../data/factions";
         command: `${command.name} ${faction}`,
         label: "Random",
         modal: this.tooltip(faction),
-        title: factions[faction].name,
+        title: factionName(faction),
       };
     },
   },
@@ -143,7 +143,7 @@ export default class Commands extends Vue {
 
   get player(): string {
     if (this.engine.players[this.command.player].faction) {
-      return factions[this.engine.players[this.command.player].faction].name;
+      return factionName(this.engine.players[this.command.player].faction);
     }
     if (this.engine.players[this.command.player].name) {
       return this.engine.players[this.command.player].name;
@@ -171,8 +171,12 @@ export default class Commands extends Vue {
     return this.commandTitles.length === 0 ? ["Your turn"] : this.commandTitles;
   }
 
-  get factions() {
-    return factions;
+  factionName(faction: Faction) {
+    return factionName(faction);
+  }
+
+  factionPlanet(faction: Faction) {
+    return factionPlanet(faction);
   }
 
   updateRandomFaction() {

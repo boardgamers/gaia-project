@@ -85,15 +85,24 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { Component, Prop } from 'vue-property-decorator';
-import Resource from '../Resource.vue';
-import { Building as BuildingEnum, Faction, Reward, Operator, Resource as ResourceEnum, factions, PlayerData, Player } from '@gaia-project/engine';
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
+import Resource from "../Resource.vue";
+import {
+  Building as BuildingEnum,
+  Faction,
+  Reward,
+  Operator,
+  Resource as ResourceEnum,
+  PlayerData,
+  Player,
+} from "@gaia-project/engine";
+import { factionName } from "../../data/factions";
 
 @Component({
   components: {
-    Resource
-  }
+    Resource,
+  },
 })
 export default class BuildingGroup extends Vue {
   @Prop()
@@ -105,12 +114,12 @@ export default class BuildingGroup extends Vue {
   @Prop()
   player: Player;
 
-  get factionName (): string {
-    return factions[this.faction].name;
+  get factionName(): string {
+    return factionName(this.faction);
   }
 
-  income (resource: ResourceEnum) {
-    const index = this.player.income.search(new RegExp('[0-9]+' + resource));
+  income(resource: ResourceEnum) {
+    const index = this.player.income.search(new RegExp("[0-9]+" + resource));
 
     if (index < 0) {
       return 0;

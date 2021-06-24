@@ -28,8 +28,9 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { tiles, Event, factions, FinalTile, Phase, Player, finalScorings, Faction } from "@gaia-project/engine";
+import { Phase, Player, finalScorings, Faction } from "@gaia-project/engine";
 import Token from "./Token.vue";
+import { factionName } from "../data/factions";
 
 @Component<FinalScoringTile>({
   computed: {
@@ -39,7 +40,7 @@ import Token from "./Token.vue";
 
       return players
         .map((pl) => {
-          const name = pl.faction === "automa" ? "Automa" : factions[pl.faction].name;
+          const name = pl.faction === "automa" ? "Automa" : factionName(pl.faction);
           const points = this.progress(pl);
           return `- ${name}: ${points}`;
         })

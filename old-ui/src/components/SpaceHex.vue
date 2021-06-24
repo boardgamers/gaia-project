@@ -51,7 +51,6 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import {
   GaiaHex,
-  factions,
   Building as BuildingEnum,
   Planet as PlanetEnum,
   SpaceMap as ISpaceMap,

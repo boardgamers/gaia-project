@@ -180,7 +180,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Engine, { Command, factions, Planet, Player } from "@gaia-project/engine";
+import Engine, { factionPlanet, Planet, Player } from "@gaia-project/engine";
 import { factionColor } from "../graphics/utils";
 import TechTile from "./TechTile.vue";
 import Booster from "./Booster.vue";
@@ -189,7 +189,7 @@ import FederationTile from "./FederationTile.vue";
 import BuildingGroup from "./PlayerBoard/BuildingGroup.vue";
 import PlayerBoardInfo from "./PlayerBoard/Info.vue";
 import PowerBowls from "./PlayerBoard/PowerBowls.vue";
-import { factionDesc, planetsWithSteps } from "../data/factions";
+import { factionDesc, factionName, planetsWithSteps } from "../data/factions";
 
 @Component({
   components: {
@@ -234,7 +234,7 @@ export default class PlayerInfo extends Vue {
   }
 
   get planet() {
-    return factions[this.faction].planet;
+    return factionPlanet(this.faction);
   }
 
   get faction() {
@@ -242,7 +242,7 @@ export default class PlayerInfo extends Vue {
   }
 
   get factionName(): string {
-    return factions[this.faction].name;
+    return factionName(this.faction);
   }
 
   recentAction(i: number): boolean {

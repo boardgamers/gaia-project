@@ -3,7 +3,6 @@ import AvailableCommand from "./src/available-command";
 import { stdBuildingValue } from "./src/buildings";
 import Engine from "./src/engine";
 import Event, { EventSource } from "./src/events";
-import factions from "./src/factions";
 import SpaceMap, { parseLocation } from "./src/map";
 import Player, { BuildWarning } from "./src/player";
 import PlayerData from "./src/player-data";
@@ -74,7 +73,6 @@ export {
   Player,
   PlayerData,
   Event,
-  factions,
   AvailableCommand,
   tiles,
   Reward,

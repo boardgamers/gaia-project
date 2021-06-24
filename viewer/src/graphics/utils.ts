@@ -1,12 +1,11 @@
-import { Faction, factions, Planet } from "@gaia-project/engine";
-import { factionPlanet } from "@gaia-project/engine/src/factions";
+import { Faction, factionPlanet, Planet } from "@gaia-project/engine";
 import planets from "../data/planets";
 
 export function factionColor(faction: Faction | "gen"): string {
   if (faction === "gen") {
     return "#d3d3d3";
   }
-  return planets[factions[faction].planet].color;
+  return planets[factionPlanet(faction)].color;
 }
 
 export function planetColor(planet: Exclude<Planet, Planet.Empty>): string {
@@ -60,19 +59,19 @@ export function lightenDarkenColor(col: string, amt: number) {
 
 function newPlanetColors(amt: number) {
   return Object.fromEntries(
-    Object.entries(factions).map(([f, c]) => {
-      const planet = c.planet;
+    Object.values(Faction).map((faction) => {
+      const planet = factionPlanet(faction);
       const color = planet == Planet.Ice ? "#000000" : planets[planet].color;
-      return [f, amt == 0 ? color : lightenDarkenColor(color, amt)];
+      return [faction, amt == 0 ? color : lightenDarkenColor(color, amt)];
     })
   );
 }
 
 export const factionLogTextColors = Object.fromEntries(
-  Object.entries(factions).map(([f, c]) => {
-    const planet = c.planet;
+  Object.values(Faction).map((faction) => {
+    const planet = factionPlanet(faction);
     const color = planet == Planet.Ice || planet == Planet.Swamp || planet == Planet.Titanium ? "white" : "black";
-    return [f, color];
+    return [faction, color];
   })
 );
 export const factionLogColors = newPlanetColors(0);
