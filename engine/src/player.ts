@@ -35,7 +35,7 @@ import { GaiaHex } from "./gaia-hex";
 import { IncomeSelection } from "./income";
 import SpaceMap from "./map";
 import { terraformingStepsRequired } from "./planets";
-import PlayerData from "./player-data";
+import PlayerData, { isBorrowed } from "./player-data";
 import researchTracks, { keyNeeded, lastTile } from "./research-tracks";
 import Reward from "./reward";
 import boosts from "./tiles/boosters";
@@ -645,7 +645,7 @@ export default class Player extends EventEmitter {
   }
 
   spyTechTile(player: Player, pos: TechTilePos) {
-    const previouslySpiedTile = this.data.tiles.techs.find((t) => !!t.owner);
+    const previouslySpiedTile = this.data.tiles.techs.find((t) => isBorrowed(t));
     if (previouslySpiedTile) this.removeTechTile(previouslySpiedTile);
     const tech = player.data.tiles.techs.find((t) => t.pos === pos);
     this.addTechTile({ tile: tech.tile, pos: tech.pos, enabled: true, owner: player.player });

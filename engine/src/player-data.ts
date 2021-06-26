@@ -36,6 +36,17 @@ export class Power {
 
 export type MoveTokens = Power & { brainstone: number };
 
+type PlayerTechTile = {
+  tile: TechTile | AdvTechTile;
+  pos: TechTilePos | AdvTechTilePos;
+  enabled: boolean;
+  owner?: PlayerEnum;
+};
+
+export function isBorrowed(tech: PlayerTechTile) {
+  return tech.owner !== undefined;
+}
+
 export type BrainstoneDest = PowerArea | "discard";
 export default class PlayerData extends EventEmitter {
   victoryPoints = 10;
@@ -71,12 +82,7 @@ export default class PlayerData extends EventEmitter {
 
   tiles: {
     booster: Booster;
-    techs: Array<{
-      tile: TechTile | AdvTechTile;
-      pos: TechTilePos | AdvTechTilePos;
-      enabled: boolean;
-      owner?: PlayerEnum;
-    }>;
+    techs: Array<PlayerTechTile>;
     federations: Array<{ tile: Federation; green: boolean }>;
   } = {
     booster: null,

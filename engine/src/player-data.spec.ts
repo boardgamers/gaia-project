@@ -1,7 +1,8 @@
 import { expect } from "chai";
 import "mocha";
-import { PowerArea } from "./enums";
-import PlayerData from "./player-data";
+import { PlayerEnum } from "..";
+import { PowerArea, TechTile, TechTilePos } from "./enums";
+import PlayerData, { isBorrowed } from "./player-data";
 
 describe("PlayerData", () => {
   it("should export to JSON", () => {
@@ -70,5 +71,32 @@ describe("PlayerData", () => {
       expect(data.brainstone).to.equal(PowerArea.Area3);
       expect(charged).to.equal(5);
     });
+  });
+});
+
+describe("isBorrowed", () => {
+  it("should return false for a tech tile without original owner", () => {
+    const borrowed = isBorrowed({ tile: TechTile.Tech1, enabled: true, pos: TechTilePos.Economy });
+    expect(borrowed).to.equal(false);
+  });
+
+  it("should return true for a tech tile with original owner", () => {
+    const borrowed = isBorrowed({
+      tile: TechTile.Tech1,
+      enabled: true,
+      pos: TechTilePos.Economy,
+      owner: PlayerEnum.Player3,
+    });
+    expect(borrowed).to.equal(true);
+  });
+
+  it("should return false for a tech tile even if it's owned by player 0", () => {
+    const borrowed = isBorrowed({
+      tile: TechTile.Tech1,
+      enabled: true,
+      pos: TechTilePos.Economy,
+      owner: PlayerEnum.Player1,
+    });
+    expect(borrowed).to.equal(true);
   });
 });

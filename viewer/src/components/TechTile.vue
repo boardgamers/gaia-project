@@ -35,16 +35,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import {
-  tiles,
-  PlayerEnum,
-  Event,
-  TechTilePos,
-  AdvTechTilePos,
-  Operator as OperatorEnum,
-  Condition as ConditionEnum,
-  Building as BuildingEnum,
-} from "@gaia-project/engine";
+import { tiles, PlayerEnum, Event, TechTilePos, AdvTechTilePos } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
 import TechContent from "./TechContent.vue";
 import { ButtonData } from "../data";
@@ -78,8 +69,8 @@ export default class TechTile extends Vue {
 
   onClick() {
     if (this.highlighted) {
-      const payload = this.originalOwner ? `${this.originalOwnerObject.faction} ${this.pos}` : this.pos;
-      this.$store.dispatch("gaiaViewer/techClick", { command: this.pos } as ButtonData);
+      const payload = this.originalOwner !== undefined ? `${this.originalOwnerObject.faction} ${this.pos}` : this.pos;
+      this.$store.dispatch("gaiaViewer/techClick", { command: payload } as ButtonData);
     }
   }
 
@@ -127,7 +118,7 @@ export default class TechTile extends Vue {
   }
 
   get isBorrowed() {
-    return !!this.originalOwner;
+    return this.originalOwner !== undefined;
   }
 
   get tooltip() {

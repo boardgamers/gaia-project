@@ -126,7 +126,7 @@ export default class MoveButton extends Vue {
   }
 
   subscribeHexClick(callback: (hex: GaiaHex, highlight: HighlightHex) => void) {
-    this.subscribe("hexClick", payload => {
+    this.subscribe("hexClick", (payload) => {
       callback(payload.hex, payload.highlight);
     });
   }
@@ -199,8 +199,7 @@ export default class MoveButton extends Vue {
     if (warning) {
       try {
         const c = this.$createElement;
-        const message = warning.body.length == 1 ? warning.body[0] :
-          warning.body.map(w => c("ul", [c("li", [w])]));
+        const message = warning.body.length == 1 ? warning.body[0] : warning.body.map((w) => c("ul", [c("li", [w])]));
         const okClicked = await this.$bvModal.msgBoxConfirm(message, {
           title: warning.title,
           headerClass: "warning",
@@ -225,17 +224,14 @@ export default class MoveButton extends Vue {
     if (!this.isActiveButton) {
       this.$store.commit("gaiaViewer/clearContext");
     }
-    if (
-      button.hexes &&
-      !button.selectHexes &&
-      !button.hover &&
-      !button.rotation &&
-      !button.range
-    ) {
+    if (button.hexes && !button.selectHexes && !button.hover && !button.rotation && !button.range) {
       this.$store.commit("gaiaViewer/highlightHexes", button.hexes);
       this.subscribeHexClick((hex, highlight) => {
         if (button.needConfirm) {
-          this.$store.commit("gaiaViewer/highlightHexes", new Map<GaiaHex, HighlightHex>([[hex, {}]]));
+          this.$store.commit(
+            "gaiaViewer/highlightHexes",
+            new Map<GaiaHex, HighlightHex>([[hex, {}]])
+          );
         }
 
         this.emitCommand(hex.toString(), { warnings: highlight.warnings });
@@ -339,18 +335,11 @@ export default class MoveButton extends Vue {
     this.emitCommand();
   }
 
-  emitCommand(
-    append?: string,
-    params?: EmitCommandParams,
-  ) {
+  emitCommand(append?: string, params?: EmitCommandParams) {
     this.emitButtonCommand(this.button, append, params);
   }
 
-  emitButtonCommand(
-    button: ButtonData,
-    append?: string,
-    params?: EmitCommandParams,
-  ) {
+  emitButtonCommand(button: ButtonData, append?: string, params?: EmitCommandParams) {
     console.log("emit command", button.command, append, params);
 
     if (button.needConfirm && append) {
