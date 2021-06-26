@@ -2,15 +2,21 @@ import { expect } from "chai";
 import { PlayerEnum } from "../index";
 import { choosableFactions, possibleBoardActions, possibleFreeActions } from "./available-command";
 import Engine, { AuctionVariant } from "./engine";
-import { BoardAction, Faction } from "./enums";
+import { BoardAction, Expansion, Faction } from "./enums";
 import { baseFactions } from "./factions";
 import Player from "./player";
 import PlayerData from "./player-data";
 
 describe("Available commands", () => {
   describe("choosableFactions", () => {
-    it("should show all factions at the beginning", () => {
+    it("should show base factions at the beginning", () => {
       const engine = new Engine();
+
+      expect(choosableFactions(engine)).to.have.members(Object.values(Faction).slice(0, 14));
+    });
+
+    it("should show all factions when playing with expansions", () => {
+      const engine = new Engine([], { expansion: Expansion.MasterOfOrion });
 
       expect(choosableFactions(engine)).to.have.members(Object.values(Faction));
     });

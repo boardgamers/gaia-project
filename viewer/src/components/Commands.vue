@@ -72,7 +72,6 @@ import Engine, {
   Resource,
   Reward,
   SpaceMap,
-  SubPhase,
   tiles,
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
@@ -384,7 +383,16 @@ export default class Commands extends Vue {
           break;
         }
 
-        case Command.ChooseTechTile:
+        case Command.ChooseTechTile: {
+          ret.push({
+            label: "Pick tech tile",
+            shortcuts: ["p"],
+            command: command.name,
+            techs: command.data.tiles.map((tile) => tile.pos),
+            buttons: command.data.tiles.map((tile) => ({ command: tile.pos, tech: tile.pos })),
+          });
+          break;
+        }
         case Command.SpyTech: {
           ret.push({
             label: "Pick tech tile",

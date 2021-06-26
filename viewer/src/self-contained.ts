@@ -16,6 +16,7 @@ function launchSelfContained(selector = "#app", debug = true) {
       auction: (process.env.VUE_APP_auction ?? undefined) as AuctionVariant,
       factionVariant: (process.env.VUE_APP_factionVariant ?? "standard") as FactionVariant,
       randomFactions: !!process.env.VUE_APP_randomFactions,
+      expansion: +(process.env.VUE_APP_expansions ?? "0"),
     },
     "5.6.10"
   );

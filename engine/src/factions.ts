@@ -3,24 +3,12 @@ import { Expansion, Faction, Planet } from "./enums";
 
 type FactionList = { [key: string]: { planet: Planet } };
 
-export const baseFactions: FactionList = {
+const baseFactions: FactionList = {
   [Faction.Terrans]: {
     planet: Planet.Terra,
   },
   [Faction.Lantids]: {
     planet: Planet.Terra,
-  },
-  [Faction.Xenos]: {
-    planet: Planet.Desert,
-  },
-  [Faction.Gleens]: {
-    planet: Planet.Desert,
-  },
-  [Faction.Taklons]: {
-    planet: Planet.Swamp,
-  },
-  [Faction.Ambas]: {
-    planet: Planet.Swamp,
   },
   [Faction.HadschHallas]: {
     planet: Planet.Oxide,
@@ -33,6 +21,18 @@ export const baseFactions: FactionList = {
   },
   [Faction.BalTaks]: {
     planet: Planet.Volcanic,
+  },
+  [Faction.Xenos]: {
+    planet: Planet.Desert,
+  },
+  [Faction.Gleens]: {
+    planet: Planet.Desert,
+  },
+  [Faction.Taklons]: {
+    planet: Planet.Swamp,
+  },
+  [Faction.Ambas]: {
+    planet: Planet.Swamp,
   },
   [Faction.Firaks]: {
     planet: Planet.Titanium,

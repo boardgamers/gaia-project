@@ -134,4 +134,10 @@ export const resourceNames: ResourceName[] = [
     plural: "Downgrade Research Lab",
     shortcut: "d",
   },
+  {
+    type: Resource.SpyTech,
+    label: "Spy tech tile",
+    plural: "Spy tech tile",
+    shortcut: "y",
+  },
 ];

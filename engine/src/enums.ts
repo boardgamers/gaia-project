@@ -164,9 +164,9 @@ export enum Faction {
   Ambas = "ambas",
   Firaks = "firaks",
   Bescods = "bescods",
-  Darloks = "darloks",
   Nevlas = "nevlas",
   Itars = "itars",
+  Darloks = "darloks",
 }
 
 export enum Command {
