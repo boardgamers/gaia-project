@@ -5,7 +5,7 @@ import Engine from "./src/engine";
 import Event, { EventSource } from "./src/events";
 import SpaceMap, { parseLocation } from "./src/map";
 import Player, { BuildWarning } from "./src/player";
-import PlayerData from "./src/player-data";
+import PlayerData, { Power } from "./src/player-data";
 import researchTracks from "./src/research-tracks";
 import Reward from "./src/reward";
 import tiles from "./src/tiles";
@@ -84,6 +84,7 @@ export {
   parseLocation,
   federations,
   stdBuildingValue,
+  Power,
 };
 
 export default Engine;

@@ -166,7 +166,7 @@ function passWarningButton(warnings: string[]): ButtonWarning {
   return { title: "Are you sure you want to pass?", body: warnings };
 }
 
-function incomeWarning(player: Player, additionalEvents: Event[]) {
+function chargeIncomeWarning(player: Player, additionalEvents: Event[]) {
   const incomeSelection = player.incomeSelection(additionalEvents);
   if (incomeSelection.remainingChargesAfterIncome < 0) {
     return passWarningButton([
@@ -177,15 +177,15 @@ function incomeWarning(player: Player, additionalEvents: Event[]) {
 }
 
 function chargeWarning(engine: Engine, player: Player, offer: string): ButtonWarning | null {
-  return engine.passedPlayers.includes(player.player) ? incomeWarning(player, [new Event(offer)]) : null;
+  return engine.passedPlayers.includes(player.player) ? chargeIncomeWarning(player, [new Event(offer)]) : null;
 }
 
-function boosterWarning(engine: Engine, player: Player, booster: Booster): ButtonWarning | null {
+export function boosterWarning(player: Player, booster: Booster): ButtonWarning | null {
   const warnings: string[] = [];
 
   const additionalEvents = tiles.boosters[booster].map((spec) => new Event(spec));
 
-  const charge = incomeWarning(player, additionalEvents);
+  const charge = chargeIncomeWarning(player, additionalEvents);
   if (charge) {
     warnings.push(...charge.body);
   }
@@ -195,9 +195,11 @@ function boosterWarning(engine: Engine, player: Player, booster: Booster): Butto
   if (additionalEvents) {
     notActivated.push(...additionalEvents);
   }
-  const reward = rewardWarnings(player, Reward.merge(...notActivated.map((e) => e.rewards)));
-  if (reward) {
-    warnings.push(...reward.map((w) => w.substring(0, w.length - 1) + " during income phase."));
+  const rewards = Reward.merge(...notActivated.map((e) => e.rewards)).filter((r) => r.type != Resource.ChargePower);
+
+  const rewardWarning = rewardWarnings(player, rewards);
+  if (rewardWarning?.length > 0) {
+    warnings.push(...rewardWarning.map((w) => w.substring(0, w.length - 1) + " during income phase."));
   }
 
   if (warnings.length > 0) {
@@ -433,7 +435,7 @@ export function passButtons(
             textButton({
               command: "",
               label: `Confirm Booster ${boosterNames[booster].name}`,
-              warning: boosterWarning(engine, player, booster),
+              warning: boosterWarning(player, booster),
             }),
           ],
         })
