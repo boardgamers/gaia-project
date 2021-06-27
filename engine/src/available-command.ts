@@ -143,7 +143,7 @@ interface CommandData {
   [Command.RotateSectors]: never;
   [Command.Special]: { specialacts: { income: string; spec: string }[] };
   [Command.Spend]: AvailableFreeActionData;
-  [Command.SpyTech]: {tiles: ChooseSpyTechTile[]};
+  [Command.SpyTech]: { tiles: ChooseSpyTechTile[] };
   [Command.UpgradeResearch]: AvailableResearchData;
 }
 
@@ -482,9 +482,8 @@ export function possibleSpecialActions(engine: Engine, player: Player) {
         continue;
       }
       if (event.rewards[0].type === Resource.SpyTech) {
-        const otherTechs = engine.players.filter((p) => p !== pl).flatMap((p) => p.data.tiles.techs);
-        const hasTechThatIDont = otherTechs.some((t) => !pl.hasTechTile(t.pos));
-        if (!hasTechThatIDont) continue;
+        const command = possibleTechsToSpy(engine, player)[0] as AvailableCommand<Command.SpyTech>;
+        if(!command.data.tiles.length) continue;
       }
       specialacts.push({
         income: event.action().rewards, // Reward.toString(event.rewards),
@@ -638,11 +637,7 @@ export function possibleTechsToSpy(engine: Engine, player: Player) {
     })
   );
 
-  const techsToSpy = theirTechs.filter((t) => !pl.hasTechTile(t.pos));
-
-  if (!techsToSpy) {
-    return [];
-  }
+  const techsToSpy = theirTechs.filter((t) => !isAdvanced(t.pos) && !pl.hasTechTile(t.pos));
 
   return [
     {

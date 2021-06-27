@@ -1,9 +1,8 @@
 import { expect } from "chai";
-import { iteratee } from "lodash";
 import { PlayerEnum } from "../..";
-import { generate, generate as generatePossibleMoves, possibleSpecialActions } from "../available-command";
+import AvailableCommand, { generate, possibleSpecialActions, possibleTechsToSpy, possibleTechTiles } from "../available-command";
 import Engine from "../engine";
-import { Command, Expansion, Resource, SubPhase, TechTilePos } from "../enums";
+import { AdvTechTilePos, Command, Expansion, Resource, SubPhase, TechTilePos } from "../enums";
 import { isBorrowed } from "../player-data";
 
 describe("Darloks", () => {
@@ -174,5 +173,75 @@ describe("Darloks", () => {
     const spiedTechs = techs.filter((t) => isBorrowed(t));
     expect(spiedTechs.length).to.equal(1);
     expect(spiedTechs[0].pos).to.equal("nav");
+  });
+
+  describe("when someone gains an advanced tile", () => {
+    const moves = [
+      "init 2 661",
+      "p1 faction ivits",
+      "p2 faction darloks",
+      "darloks build m 4A0",
+      "ivits build PI 1A6",
+      "darloks build m 7A0",
+      "darloks booster booster5",
+      "ivits booster booster9",
+      "ivits action power3.",
+      "darloks build ts 4A0.",
+      "ivits charge 3pw",
+      "ivits special space-station. build sp 4A11.",
+      "darloks build lab 4A0. tech free2. up nav (0 ⇒ 1).",
+      "ivits charge 3pw",
+      "ivits build m 4B0.",
+      "darloks charge 2pw",
+      "darloks special range+3. build m 6B3.",
+      "ivits build ts 4B0.",
+      "darloks charge 2pw",
+      "darloks up nav (1 ⇒ 2).",
+      "ivits build lab 4B0. tech free1. up sci (0 ⇒ 1).",
+      "darloks charge 2pw",
+      "darloks action power2. build m 6B1.",
+      "ivits charge 2pw",
+      "ivits action power5.",
+      "darloks special spy-tech. spy-tech ivits free1.",
+      "ivits federation 1A6,4A11,4B0 fed6.",
+      "darloks pass booster3 returning booster5",
+      "ivits up sci (1 ⇒ 2).",
+      "ivits up sci (2 ⇒ 3).",
+      "ivits burn 1. action power6. build m 1A5.",
+      "darloks charge 2pw",
+      "ivits pass booster1 returning booster9",
+      "darloks build ts 6B1.",
+      "ivits charge 4pw",
+      "ivits up sci (3 ⇒ 4).",
+      "darloks pass booster4 returning booster3",
+      "ivits build ts 1A5.",
+      "darloks charge 2pw",
+      "ivits  spend 2q for 2o.  spend 1k for 1c.  spend 4pw for 4c. build lab 1A5. tech adv-sci. cover free1. up terra (0 ⇒ 1).",
+      "darloks charge 2pw",
+      "ivits pass booster3 returning booster1",
+    ];
+    const engine = new Engine(moves, { expansion: Expansion.MasterOfOrion, factionVariant: "more-balanced" });
+
+    it("and covers the spied tile, it should be disabled", () => {
+      const p2 = engine.players[1];
+      const techs = p2.data.tiles.techs;
+      const spiedTechs = techs.filter((t) => isBorrowed(t));
+      expect(spiedTechs.length).to.equal(1);
+      expect(spiedTechs[0].enabled).to.equal(false);
+    });
+
+    it("and covers the spied tile, the same tile cannot be gained when building a lab", () => {
+      const p2 = engine.players[1];
+      const techs = possibleTechTiles(engine, p2.player);
+      expect(techs.map(t => t.pos)).to.not.contain(TechTilePos.Free1);
+    });
+
+    it("the advanced tile cannot be spied upon", () => {
+      const p2 = engine.players[1];
+      const techs = possibleTechsToSpy(engine, p2.player)[0] as AvailableCommand<Command.SpyTech>;
+      expect(techs.data.tiles.length).to.equal(0);
+      const specialActions = possibleSpecialActions(engine, p2.player)[0].data.specialacts;
+      expect(specialActions.map(sa => sa.name)).to.not.contain(Command.SpyTech);
+    });
   });
 });

@@ -1640,6 +1640,7 @@ export default class Engine {
     assert(tileAvailable !== undefined, `Impossible to cover ${tilePos} tile`);
     // remove tile
     this.player(player).coverTechTile(tileAvailable.pos);
+    this.players.forEach(p => p.emit("techTileCovered", tilePos, player))
   }
 
   [Command.Special](player: PlayerEnum, income: string) {

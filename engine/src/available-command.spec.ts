@@ -3,7 +3,6 @@ import { PlayerEnum } from "../index";
 import { choosableFactions, possibleBoardActions, possibleFreeActions } from "./available-command";
 import Engine, { AuctionVariant } from "./engine";
 import { BoardAction, Expansion, Faction } from "./enums";
-import { baseFactions } from "./factions";
 import Player from "./player";
 import PlayerData from "./player-data";
 
