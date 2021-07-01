@@ -1,8 +1,15 @@
 import { expect } from "chai";
+import { iteratee } from "lodash";
 import { PlayerEnum } from "../..";
-import AvailableCommand, { generate, possibleSpecialActions, possibleTechsToSpy, possibleTechTiles } from "../available-command";
+import AvailableCommand, {
+  generate,
+  possibleAdvancedTechsToSpy,
+  possibleSpecialActions,
+  possibleTechsToSpy,
+  possibleTechTiles,
+} from "../available-command";
 import Engine from "../engine";
-import { AdvTechTilePos, Command, Expansion, Resource, SubPhase, TechTilePos } from "../enums";
+import { AdvTechTile, AdvTechTilePos, Command, Expansion, Resource, SubPhase, TechTilePos } from "../enums";
 import { isBorrowed } from "../player-data";
 
 describe("Darloks", () => {
@@ -24,7 +31,7 @@ describe("Darloks", () => {
     expect(specialActions.length).to.equal(0);
   });
 
-  it("should be able to spy on a tech tile if another player grabbed one", () => {
+  describe("if another player takes a normal tech tile", () => {
     const moves = Engine.parseMoves(`
     init 2 randomSeed
     p1 faction terrans
@@ -40,10 +47,26 @@ describe("Darloks", () => {
     p1 build lab -4x2. tech gaia. up gaia.
     `);
     const engine = new Engine(moves, { expansion: Expansion.MasterOfOrion });
-    const specialActions = possibleSpecialActions(engine, engine.currentPlayer);
-    expect(specialActions.length).to.equal(1);
-    const spyTech = specialActions[0].data.specialacts[0];
-    expect(spyTech.income).to.equal(Resource.SpyTech);
+
+    it("Darloks can spy on the tech", () => {
+      const specialActions = possibleSpecialActions(engine, engine.currentPlayer);
+      expect(specialActions.length).to.equal(1);
+      const spyTech = specialActions[0].data.specialacts[0];
+      expect(spyTech.income).to.equal(Resource.SpyTech);
+    });
+
+    it("Darloks cannot use their PI ability to spy on simple techs", () => {
+      const techs = possibleAdvancedTechsToSpy(
+        engine,
+        engine.currentPlayer
+      )[0] as AvailableCommand<Command.SpyAdvancedTech>;
+      expect(techs.data.tiles.length).to.equal(0);
+    });
+
+    it("Darloks can decline the advanced tech if they build their PI", () => {
+      const decline = possibleAdvancedTechsToSpy(engine, engine.currentPlayer)[1];
+      expect(decline.name).to.equal(Command.Decline);
+    });
   });
 
   it("should be not able to spy on a tech tile if they already have the same one", () => {
@@ -233,7 +256,7 @@ describe("Darloks", () => {
     it("and covers the spied tile, the same tile cannot be gained when building a lab", () => {
       const p2 = engine.players[1];
       const techs = possibleTechTiles(engine, p2.player);
-      expect(techs.map(t => t.pos)).to.not.contain(TechTilePos.Free1);
+      expect(techs.map((t) => t.pos)).to.not.contain(TechTilePos.Free1);
     });
 
     it("the advanced tile cannot be spied upon", () => {
@@ -241,7 +264,51 @@ describe("Darloks", () => {
       const techs = possibleTechsToSpy(engine, p2.player)[0] as AvailableCommand<Command.SpyTech>;
       expect(techs.data.tiles.length).to.equal(0);
       const specialActions = possibleSpecialActions(engine, p2.player)[0].data.specialacts;
-      expect(specialActions.map(sa => sa.name)).to.not.contain(Command.SpyTech);
+      expect(specialActions.map((sa) => sa.name)).to.not.contain(Command.SpyTech);
+
+      const newEngine = Engine.fromData(JSON.parse(JSON.stringify(engine)));
+      expect(() => newEngine.move("darloks special spy-tech. spy-tech ivits adv-sci.")).to.throw();
+    });
+
+    it("the advanced tile cannot be spied with the advanced tech because the Darloks have no green federation", () => {
+      const p2 = engine.players[1];
+      const techs = possibleAdvancedTechsToSpy(engine, p2.player)[0] as AvailableCommand<Command.SpyAdvancedTech>;
+      expect(techs.data.tiles.length).to.equal(0);
+    });
+
+    it("and the Darloks build their PI, they can decline the advanced tech", () => {
+      const p2 = engine.players[1];
+      const newEngine = Engine.fromData(JSON.parse(JSON.stringify(engine)));
+      expect(() => newEngine.move("darloks build PI 6B1. decline spy-advanced-tech.")).to.not.throw();
+    });
+
+    it("and the Darloks have a green federation, the advanced tech is spy-able", () => {
+      const p2 = engine.players[1];
+      const newEngine = Engine.fromData(JSON.parse(JSON.stringify(engine)));
+      newEngine.move("darloks special step. build m 4A9.");
+      newEngine.move("ivits charge 3pw");
+      newEngine.move("ivits up nav (0 ⇒ 1).");
+      newEngine.move("darloks federation 4A0,4A10,4A11,4A9,6A3,6A7,6B1,6B2,6B3,7A0,7A1 fed4 using area2: 4, area3: 2.");
+      const techs = possibleAdvancedTechsToSpy(newEngine, p2.player)[0] as AvailableCommand<Command.SpyAdvancedTech>;
+      expect(techs.data.tiles.length).to.equal(1);
+      expect(techs.data.tiles[0].tile).to.equal(AdvTechTile.AdvTech12);
+      expect(techs.data.tiles[0].pos).to.equal(AdvTechTilePos.Science);
+      expect(techs.data.tiles[0].player).to.equal(PlayerEnum.Player1);
+    });
+
+    it("the Darloks can spy on it", () => {
+      const newEngine = Engine.fromData(JSON.parse(JSON.stringify(engine)));
+      newEngine.move("darloks special step. build m 4A9.");
+      newEngine.move("ivits charge 3pw");
+      newEngine.move("ivits up nav (0 ⇒ 1).");
+      newEngine.move("darloks federation 4A0,4A10,4A11,4A9,6A3,6A7,6B1,6B2,6B3,7A0,7A1 fed4 using area2: 4, area3: 2.");
+      newEngine.move("ivits up nav (1 ⇒ 2).");
+      newEngine.move("darloks build PI 6B1. spy-advanced-tech ivits adv-sci.");
+      const p2 = newEngine.players[1];
+      expect(p2.data.tiles.techs.length).to.equal(3);
+      expect(p2.data.tiles.techs[2].tile).to.equal(AdvTechTile.AdvTech12);
+      expect(p2.data.tiles.techs[2].pos).to.equal(AdvTechTilePos.Science);
+      expect(p2.data.tiles.techs[2].owner).to.equal(PlayerEnum.Player1);
     });
   });
 });

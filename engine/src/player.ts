@@ -651,6 +651,11 @@ export default class Player extends EventEmitter {
     this.addTechTile({ tile: tech.tile, pos: tech.pos, enabled: true, owner: player.player });
   }
 
+  spyAdvancedTechTile(player: Player, pos: AdvTechTilePos) {
+    const tech = player.data.tiles.techs.find((t) => t.pos === pos);
+    this.addTechTile({ tile: tech.tile, pos: tech.pos, enabled: true, owner: player.player });
+  }
+
   incomeSelection(additionalEvents?: Event[]): IncomeSelection {
     return IncomeSelection.create(this.data, this.settings, this.events[Operator.Income], additionalEvents);
   }

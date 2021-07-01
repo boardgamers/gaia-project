@@ -116,6 +116,7 @@ type TechTileWithPos = { tile: TechTile; pos: TechTilePos };
 type AdvTechTileWithPos = { tile: AdvTechTile; pos: AdvTechTilePos };
 type ChooseTechTile = TechTileWithPos | AdvTechTileWithPos;
 type ChooseSpyTechTile = { tile: TechTile; pos: TechTilePos; player: PlayerEnum };
+type ChooseSpyAdvTechTile = { tile: AdvTechTile; pos: AdvTechTilePos; player: PlayerEnum };
 
 type AvailableBuildCommandData = { buildings: AvailableBuilding[] };
 
@@ -143,6 +144,7 @@ interface CommandData {
   [Command.RotateSectors]: never;
   [Command.Special]: { specialacts: { income: string; spec: string }[] };
   [Command.Spend]: AvailableFreeActionData;
+  [Command.SpyAdvancedTech]: { tiles: ChooseSpyAdvTechTile[] };
   [Command.SpyTech]: { tiles: ChooseSpyTechTile[] };
   [Command.UpgradeResearch]: AvailableResearchData;
 }
@@ -203,6 +205,8 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
       return possibleLabDowngrades(engine, player);
     case SubPhase.SpyTech:
       return possibleTechsToSpy(engine, player);
+    case SubPhase.SpyAdvancedTech:
+      return possibleAdvancedTechsToSpy(engine, player);
     case SubPhase.BrainStone:
       return [{ name: Command.BrainStone, player, data }];
     case SubPhase.BeforeMove: {
@@ -483,7 +487,7 @@ export function possibleSpecialActions(engine: Engine, player: Player) {
       }
       if (event.rewards[0].type === Resource.SpyTech) {
         const command = possibleTechsToSpy(engine, player)[0] as AvailableCommand<Command.SpyTech>;
-        if(!command.data.tiles.length) continue;
+        if (!command.data.tiles.length) continue;
       }
       specialacts.push({
         income: event.action().rewards, // Reward.toString(event.rewards),
@@ -646,6 +650,47 @@ export function possibleTechsToSpy(engine: Engine, player: Player) {
       data: { tiles: techsToSpy },
     },
   ] as AvailableCommand[];
+}
+
+export function possibleAdvancedTechsToSpy(engine: Engine, player: Player) {
+  let tiles: ChooseSpyAdvTechTile[];
+  const pl = engine.player(player);
+  if (pl.data.hasGreenFederation()) {
+    const otherPlayers = engine.players.filter((p) => p !== pl);
+    tiles = otherPlayers.flatMap((p) =>
+      p.data.tiles.techs
+        .filter((t) => isAdvanced(t.pos))
+        .map((t) => {
+          return {
+            pos: t.pos as AdvTechTilePos,
+            tile: engine.tiles.techs[t.pos].tile as AdvTechTile,
+            player: p.player,
+          };
+        })
+    );
+  } else {
+    tiles = [];
+  }
+
+  const commands = [
+    {
+      name: Command.SpyAdvancedTech,
+      player,
+      data: { tiles },
+    },
+  ] as AvailableCommand[];
+
+  if (tiles.length === 0) {
+    commands.push({
+      name: Command.Decline,
+      player,
+      data: {
+        offers: [new Offer(Command.SpyAdvancedTech, "")],
+      },
+    });
+  }
+
+  return commands;
 }
 
 export function canResearchField(engine: Engine, player: PlayerObject, field: ResearchField): boolean {

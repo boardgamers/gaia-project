@@ -397,6 +397,7 @@ export default class Engine {
       this.processNextMove(SubPhase.UpgradeResearch, null, false);
     });
     player.data.on(`gain-${Resource.SpyTech}`, () => this.processNextMove(SubPhase.SpyTech));
+    player.data.on(`gain-${Resource.SpyAdvancedTech}`, () => this.processNextMove(SubPhase.SpyAdvancedTech));
     player.data.on(`gain-${Resource.UpgradeLowest}`, () =>
       this.processNextMove(SubPhase.UpgradeResearch, { bescods: true }, true)
     );
@@ -1640,7 +1641,7 @@ export default class Engine {
     assert(tileAvailable !== undefined, `Impossible to cover ${tilePos} tile`);
     // remove tile
     this.player(player).coverTechTile(tileAvailable.pos);
-    this.players.forEach(p => p.emit("techTileCovered", tilePos, player))
+    this.players.forEach((p) => p.emit("techTileCovered", tilePos, player));
   }
 
   [Command.Special](player: PlayerEnum, income: string) {
@@ -1817,6 +1818,15 @@ export default class Engine {
     assert(plToSpy.hasTechTile(tile), `Tile ${tile} is not owned by ${plToSpy.faction}`);
 
     pl.spyTechTile(plToSpy, tile);
+  }
+
+  [Command.SpyAdvancedTech](player: PlayerEnum, playerToSpy: string, tile: AdvTechTilePos) {
+    const pl = this.player(player);
+    const plToSpy = this.player(this.findPlayer(playerToSpy));
+
+    assert(pl !== plToSpy, "Cannot spy on your own tech");
+
+    pl.spyAdvancedTechTile(plToSpy, tile);
   }
 
   private avCommand<C extends Command>(): AvailableCommand<C> {

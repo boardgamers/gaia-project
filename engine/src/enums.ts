@@ -523,4 +523,5 @@ export enum SubPhase {
   DowngradeLab = "down-lab",
   PickRewards = "pickRewards",
   SpyTech = "spy-tech",
+  SpyAdvancedTech = "spy-advanced-tech",
 }
