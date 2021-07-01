@@ -682,10 +682,6 @@ export default class Player extends EventEmitter {
       return false;
     }
 
-    if (this.faction === Faction.BalTaks && !this.data.hasPlanetaryInstitute() && field === ResearchField.Navigation) {
-      return false;
-    }
-
     return true;
   }
 

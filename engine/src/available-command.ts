@@ -711,13 +711,8 @@ export function possibleResearchAreas(engine: Engine, player: Player, cost?: str
   if (pl.data.canPay(Reward.parse(cost))) {
     let avFields: ResearchField[] = fields;
 
-    if (data) {
-      if (data.bescods) {
-        const minArea = Math.min(...fields.map((field) => pl.data.research[field]));
-        avFields = fields.filter((field) => pl.data.research[field] === minArea);
-      } else if (data.pos) {
-        avFields = [data.pos];
-      }
+    if (data?.pos) {
+      avFields = [data.pos];
     }
 
     for (const field of avFields) {
@@ -730,6 +725,8 @@ export function possibleResearchAreas(engine: Engine, player: Player, cost?: str
       }
     }
   }
+
+  pl.emit("modifyResearchAreas", tracks, engine, cost, data);
 
   if (tracks.length > 0) {
     commands.push({
