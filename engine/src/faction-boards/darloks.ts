@@ -1,7 +1,11 @@
-import { PlayerEnum } from "../..";
-import { Building, Command, Faction, TechTilePos } from "../enums";
+import { AvailableResearchTrack, UPGRADE_RESEARCH_COST } from "../available-command";
+import Engine from "../engine";
+import { Building, Command, Faction, ResearchField, TechTilePos } from "../enums";
 import Player from "../player";
+import { Player as PlayerEnum } from "../enums";
+import { lastTile } from "../research-tracks";
 import { FactionBoardVariants } from "./types";
+import Reward from "../reward";
 
 const darloks: FactionBoardVariants = {
   standard: {
@@ -14,12 +18,35 @@ const darloks: FactionBoardVariants = {
     income: ["3k,4o,15c,q", "+o,k", `=> ${Command.SpyTech}`],
     handlers: {
       techTileCovered: (thisPlayer: Player, tile: TechTilePos, coveringPlayer: PlayerEnum) => {
-        const spiedTile = thisPlayer.data.tiles.techs.find(tt => tt.pos === tile && tt.owner === coveringPlayer);
-        if(spiedTile) {
+        const spiedTile = thisPlayer.data.tiles.techs.find((tt) => tt.pos === tile && tt.owner === coveringPlayer);
+        if (spiedTile) {
           thisPlayer.coverTechTile(tile);
         }
       },
-    }
+      modifyResearchAreas: (
+        thisPlayer: Player,
+        tracks: AvailableResearchTrack[],
+        engine: Engine,
+        cost: string,
+        data?: any
+      ) => {
+        const STEALTHY_COST = "5k";
+        if (
+          cost === UPGRADE_RESEARCH_COST &&
+          thisPlayer.data.hasGreenFederation() &&
+          thisPlayer.data.canPay(Reward.parse(STEALTHY_COST))
+        ) {
+          const finalFields = ResearchField.values(engine.options.expansion).filter(
+            (field) => thisPlayer.data.research[field] + 1 === lastTile(field)
+          );
+          tracks.push(
+            ...finalFields.map((field) => {
+              return { field, to: lastTile(field), cost: STEALTHY_COST };
+            })
+          );
+        }
+      },
+    },
   },
 };
 

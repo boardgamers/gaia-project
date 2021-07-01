@@ -4,12 +4,23 @@ import { PlayerEnum } from "../..";
 import AvailableCommand, {
   generate,
   possibleAdvancedTechsToSpy,
+  possibleResearchAreas,
   possibleSpecialActions,
   possibleTechsToSpy,
   possibleTechTiles,
+  UPGRADE_RESEARCH_COST,
 } from "../available-command";
 import Engine from "../engine";
-import { AdvTechTile, AdvTechTilePos, Command, Expansion, Resource, SubPhase, TechTilePos } from "../enums";
+import {
+  AdvTechTile,
+  AdvTechTilePos,
+  Command,
+  Expansion,
+  ResearchField,
+  Resource,
+  SubPhase,
+  TechTilePos,
+} from "../enums";
 import { isBorrowed } from "../player-data";
 
 describe("Darloks", () => {
@@ -309,6 +320,118 @@ describe("Darloks", () => {
       expect(p2.data.tiles.techs[2].tile).to.equal(AdvTechTile.AdvTech12);
       expect(p2.data.tiles.techs[2].pos).to.equal(AdvTechTilePos.Science);
       expect(p2.data.tiles.techs[2].owner).to.equal(PlayerEnum.Player1);
+    });
+  });
+
+  describe("when someone is on the top of a track", () => {
+    const moves = [
+      "init 2 println-hello-world",
+      "p1 faction darloks",
+      "p2 faction nevlas",
+      "darloks build m 2A6",
+      "nevlas build m 2B4",
+      "nevlas build m 3B2",
+      "darloks build m 3A3",
+      "nevlas booster booster8",
+      "darloks booster booster5",
+      "darloks build ts 2A6.",
+      "nevlas charge 1pw",
+      "nevlas build ts 2B4.",
+      "darloks charge 2pw",
+      "darloks build lab 2A6. tech free1. up sci (0 ⇒ 1).",
+      "nevlas charge 2pw",
+      "nevlas build PI 2B4.",
+      "darloks charge 2pw",
+      "darloks special range+3. build m 7A2.",
+      "nevlas up sci (1 ⇒ 2).",
+      "darloks action power3.",
+      "nevlas burn 1. action power5.",
+      "darloks up sci (1 ⇒ 2).",
+      "nevlas burn 1. spend 1t-a3 for 1k. up sci (2 ⇒ 3).",
+      "darloks special 4pw.",
+      "nevlas pass booster4 returning booster8",
+      "darloks build ts 3A3.",
+      "nevlas decline 1pw",
+      "darloks pass booster3 returning booster5",
+      "nevlas income 1t",
+      "nevlas action power3.",
+      "darloks special 4pw.",
+      "nevlas special step. build m 3A7.",
+      "darloks build m 7B4.",
+      "nevlas build ts 3B2.",
+      "darloks charge 2pw",
+      "darloks action power7.",
+      "nevlas up sci (3 ⇒ 4).",
+      "darloks up sci (2 ⇒ 3).",
+      "nevlas spend 2pw for 2c. spend 2pw for 2c. build ts 3A7.",
+      "darloks spend 1pw for 1c. build ts 7B4.",
+      "nevlas federation 2A2,2A3,2B2,2B3,2B4,3A7,3B2,3B3 fed4 using area1: 5.",
+      "darloks pass booster6 returning booster3",
+      "nevlas pass booster3 returning booster4",
+      "nevlas income 1t",
+      "darloks build lab 7B4. tech free2. up sci (3 ⇒ 4).",
+      "nevlas up sci (4 ⇒ 5).",
+      "darloks special 4pw.",
+      "nevlas spend 2pw for 2c. pass booster8 returning booster3",
+      "darloks action power7.",
+    ];
+    const engine = new Engine(moves, { expansion: Expansion.MasterOfOrion, factionVariant: "more-balanced" });
+
+    it("and the Darloks don't have a flippable federation, they can't join", () => {
+      const p1 = engine.players[0];
+      const command = possibleResearchAreas(
+        engine,
+        p1.player,
+        UPGRADE_RESEARCH_COST
+      )[0] as AvailableCommand<Command.UpgradeResearch>;
+      const researchAreas = command.data.tracks;
+      expect(researchAreas.map((a) => a.field)).to.not.contain(ResearchField.Science);
+    });
+
+    it("and the Darloks have a flippable federation, they can join", () => {
+      const newEngine = Engine.fromData(JSON.parse(JSON.stringify(engine)));
+      newEngine.move(
+        "darloks federation 2A3,2A6,2B2,2B3,3A3,3A4,7A0,7A1,7A2,7A9,7B1,7B4,7C fed4 using area1: 5, area2: 4."
+      );
+      const p1 = newEngine.players[0];
+      const command = possibleResearchAreas(
+        newEngine,
+        p1.player,
+        UPGRADE_RESEARCH_COST
+      )[0] as AvailableCommand<Command.UpgradeResearch>;
+      const researchAreas = command.data.tracks;
+      expect(researchAreas.map((a) => a.field)).to.contain(ResearchField.Science);
+      expect(researchAreas.find((a) => a.field === ResearchField.Science).cost).to.equal("5k");
+    });
+
+    it("and the Darloks have a flippable federation but only 4k, they can't join", () => {
+      const newEngine = Engine.fromData(JSON.parse(JSON.stringify(engine)));
+      newEngine.move(
+        "darloks federation 2A3,2A6,2B2,2B3,3A3,3A4,7A0,7A1,7A2,7A9,7B1,7B4,7C fed4 using area1: 5, area2: 4. spend 1k for 1c."
+      );
+      const p1 = newEngine.players[0];
+      const command = possibleResearchAreas(
+        newEngine,
+        p1.player,
+        UPGRADE_RESEARCH_COST
+      )[0] as AvailableCommand<Command.UpgradeResearch>;
+      const researchAreas = command.data.tracks;
+      expect(researchAreas.map((a) => a.field)).to.not.contain(ResearchField.Science);
+    });
+
+    it("and the Darloks have a flippable federation, they can't get advance to the top when taking a tech tile", () => {
+      const newEngine = Engine.fromData(JSON.parse(JSON.stringify(engine)));
+      newEngine.move(
+        "darloks federation 2A3,2A6,2B2,2B3,3A3,3A4,7A0,7A1,7A2,7A9,7B1,7B4,7C fed4 using area1: 5, area2: 4."
+      );
+      const p1 = newEngine.players[0];
+      const command = possibleResearchAreas(
+        newEngine,
+        p1.player,
+        "" // Free upgrade research due to a tech tile.
+      )[0] as AvailableCommand<Command.UpgradeResearch>;
+      const researchAreas = command.data.tracks;
+      expect(researchAreas.map((a) => a.field)).to.not.contain(ResearchField.Science);
     });
   });
 });
