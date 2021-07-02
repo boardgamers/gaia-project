@@ -637,11 +637,16 @@ export function possibleTechsToSpy(engine: Engine, player: Player) {
   const otherPlayers = engine.players.filter((p) => p !== pl);
   const theirTechs = otherPlayers.flatMap((p) =>
     p.data.tiles.techs.map((t) => {
-      return { pos: t.pos, tile: engine.tiles.techs[t.pos].tile, player: p.player };
+      return {
+        pos: t.pos,
+        tile: engine.tiles.techs[t.pos].tile,
+        enabled: t.enabled,
+        player: p.player,
+      };
     })
   );
 
-  const techsToSpy = theirTechs.filter((t) => !isAdvanced(t.pos) && !pl.hasTechTile(t.pos));
+  const techsToSpy = theirTechs.filter((t) => t.enabled && !isAdvanced(t.pos) && !pl.hasTechTile(t.pos));
 
   return [
     {
