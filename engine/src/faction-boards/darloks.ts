@@ -31,13 +31,17 @@ const darloks: FactionBoardVariants = {
         data?: any
       ) => {
         const STEALTHY_COST = "5k";
+        const hasAlreadyJoinedSomeone = ResearchField.values(engine.options.expansion).some(
+          (field) => engine.players.filter((p) => p.data.research[field] === lastTile(field)).length == 2
+        );
         if (
           cost === UPGRADE_RESEARCH_COST &&
           thisPlayer.data.hasGreenFederation() &&
-          thisPlayer.data.canPay(Reward.parse(STEALTHY_COST))
+          thisPlayer.data.canPay(Reward.parse(STEALTHY_COST)) &&
+          !hasAlreadyJoinedSomeone
         ) {
           const finalFields = ResearchField.values(engine.options.expansion).filter(
-            (field) => thisPlayer.data.research[field] + 1 === lastTile(field)
+            (field) => thisPlayer.data.research[field] + 1 === lastTile(field) && !tracks.some((t) => t.field === field)
           );
           tracks.push(
             ...finalFields.map((field) => {

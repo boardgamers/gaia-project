@@ -16,6 +16,7 @@ import {
   AdvTechTilePos,
   Command,
   Expansion,
+  Federation,
   ResearchField,
   Resource,
   SubPhase,
@@ -404,6 +405,18 @@ describe("Darloks", () => {
       expect(researchAreas.find((a) => a.field === ResearchField.Science).cost).to.equal("5k");
     });
 
+    it("and the Darloks have a flippable federation, they will join", () => {
+      const newEngine = Engine.fromData(JSON.parse(JSON.stringify(engine)));
+      newEngine.move(
+        "darloks federation 2A3,2A6,2B2,2B3,3A3,3A4,7A0,7A1,7A2,7A9,7B1,7B4,7C fed4 using area1: 5, area2: 4."
+      );
+      newEngine.move("darloks up sci (4 ⇒ 5).");
+      const p1 = newEngine.players[0];
+      expect(p1.data.research[ResearchField.Science]).to.equal(5);
+      expect(p1.data.knowledge).to.equal(9);
+      expect(p1.data.hasGreenFederation()).to.equal(false);
+    });
+
     it("and the Darloks have a flippable federation but only 4k, they can't join", () => {
       const newEngine = Engine.fromData(JSON.parse(JSON.stringify(engine)));
       newEngine.move(
@@ -433,5 +446,316 @@ describe("Darloks", () => {
       const researchAreas = command.data.tracks;
       expect(researchAreas.map((a) => a.field)).to.not.contain(ResearchField.Science);
     });
+  });
+
+  describe("when advancing to the last step", () => {
+    const moves = [
+      "init 2 debugger",
+      "p1 faction geodens",
+      "p2 faction darloks",
+      "geodens build m 1A5",
+      "darloks build m 2A10",
+      "darloks build m 7A0",
+      "geodens build m 4B0",
+      "darloks booster booster9",
+      "geodens booster booster3",
+      "geodens build m 2A9.",
+      "darloks charge 1pw",
+      "darloks burn 1. action power3.",
+      "geodens build ts 2A9.",
+      "darloks charge 1pw",
+      "darloks build ts 2A10.",
+      "geodens charge 2pw",
+      "geodens build PI 2A9.",
+      "darloks charge 2pw",
+      "darloks build lab 2A10. tech nav. up nav (0 ⇒ 1).",
+      "geodens charge 3pw",
+      "geodens action power6. build m 1A6.",
+      "darloks up terra (0 ⇒ 1).",
+      "geodens up nav (0 ⇒ 1).",
+      "darloks build ac1 2A10. tech free1. up nav (1 ⇒ 2).",
+      "geodens charge 3pw",
+      "geodens build m 7B1.",
+      "darloks charge 1pw",
+      "darloks pass booster5 returning booster9",
+      "geodens up nav (1 ⇒ 2).",
+      "geodens pass booster9 returning booster3",
+      "geodens income 1t",
+      "darloks special range+3. build m 7B3.",
+      "geodens action power4.",
+      "darloks up terra (1 ⇒ 2).",
+      "geodens build ts 7B1.",
+      "darloks charge 1pw",
+      "darloks  spend 4pw for 4c. build ts 7B3.",
+      "geodens charge 2pw",
+      "geodens burn 1. action power3.",
+      "darloks pass booster3 returning booster5",
+      "geodens build lab 7B1. tech free3. up terra (1 ⇒ 2).",
+      "darloks charge 2pw",
+      "geodens  spend 1k for 1c. build m 5A9.",
+      "geodens federation 1A4,1A5,1A6,2A9,5A10,5A9 fed6 using area1: 2.",
+      "geodens up terra (2 ⇒ 3).",
+      "geodens pass booster1 returning booster9",
+      "geodens income 4pw",
+      "darloks build m 4A4.",
+      "geodens  spend 3pw for 3c. build m 1B1.",
+      "darloks charge 3pw",
+      "darloks up terra (2 ⇒ 3).",
+      "geodens up terra (3 ⇒ 4).",
+      "darloks action power3.",
+      "geodens spend 1o for 1c. build m 1B5.",
+      "darloks build m 2B0.",
+      "geodens charge 4pw",
+      "geodens up nav (2 ⇒ 3).",
+      "darloks build m 2B3.",
+      "geodens charge 2pw",
+      "geodens action power5.",
+      "darloks special spy-tech. spy-tech geodens free3.",
+      "geodens pass booster9 returning booster1",
+      "darloks federation 2A10,2A11,2B0,2B3,2C,4A4,4A5 fed5 using area1: 3.",
+      "darloks pass booster1 returning booster3",
+      "geodens income 4pw. income 4pw",
+      "geodens action power4.",
+      "darloks build lab 7B3. tech terra. up terra (3 ⇒ 4).",
+      "geodens charge 2pw",
+      "geodens build m 1A9.",
+      "darloks charge 1pw",
+    ];
+
+    const engine = new Engine(moves, { expansion: Expansion.MasterOfOrion });
+
+    it("the research is not offered twice", () => {
+      const p1 = engine.players[1];
+      const command = possibleResearchAreas(
+        engine,
+        p1.player,
+        UPGRADE_RESEARCH_COST
+      )[0] as AvailableCommand<Command.UpgradeResearch>;
+      const researchAreas = command.data.tracks;
+      expect(researchAreas.filter((a) => a.field === ResearchField.Terraforming).length).to.equal(1);
+      expect(researchAreas.find((a) => a.field === ResearchField.Terraforming).cost).to.equal(UPGRADE_RESEARCH_COST);
+    });
+
+    it("if the Darloks join someone on Terra, they gain the federation tile they chose", () => {
+      const newEngine = Engine.fromData(JSON.parse(JSON.stringify(engine)));
+      newEngine.move("darloks build m 5A2.");
+      newEngine.move("geodens up terra (4 ⇒ 5).");
+      newEngine.move("darloks up terra (4 ⇒ 5). fedtile fed1.");
+      const p1 = newEngine.players[1];
+      expect(p1.data.tiles.federations.map((fed) => fed.tile)).to.contain(Federation.Fed1);
+    });
+  });
+
+  it("The Darloks can only join someone else one time", () => {
+    const moves = [
+      "init 2 debugger",
+      "p1 faction geodens",
+      "p2 faction darloks",
+      "geodens build m 1A5",
+      "darloks build m 2A10",
+      "darloks build m 7A0",
+      "geodens build m 4B0",
+      "darloks booster booster9",
+      "geodens booster booster3",
+      "geodens build m 2A9.",
+      "darloks charge 1pw",
+      "darloks burn 1. action power3.",
+      "geodens build ts 2A9.",
+      "darloks charge 1pw",
+      "darloks build ts 2A10.",
+      "geodens charge 2pw",
+      "geodens build PI 2A9.",
+      "darloks charge 2pw",
+      "darloks build lab 2A10. tech nav. up nav (0 ⇒ 1).",
+      "geodens charge 3pw",
+      "geodens action power6. build m 1A6.",
+      "darloks up terra (0 ⇒ 1).",
+      "geodens up nav (0 ⇒ 1).",
+      "darloks build ac1 2A10. tech free1. up nav (1 ⇒ 2).",
+      "geodens charge 3pw",
+      "geodens build m 7B1.",
+      "darloks charge 1pw",
+      "darloks pass booster5 returning booster9",
+      "geodens up nav (1 ⇒ 2).",
+      "geodens pass booster9 returning booster3",
+      "geodens income 1t",
+      "darloks special range+3. build m 7B3.",
+      "geodens action power4.",
+      "darloks up terra (1 ⇒ 2).",
+      "geodens build ts 7B1.",
+      "darloks charge 1pw",
+      "darloks  spend 4pw for 4c. build ts 7B3.",
+      "geodens charge 2pw",
+      "geodens burn 1. action power3.",
+      "darloks pass booster3 returning booster5",
+      "geodens build lab 7B1. tech free3. up terra (1 ⇒ 2).",
+      "darloks charge 2pw",
+      "geodens  spend 1k for 1c. build m 5A9.",
+      "geodens federation 1A4,1A5,1A6,2A9,5A10,5A9 fed6 using area1: 2.",
+      "geodens up terra (2 ⇒ 3).",
+      "geodens pass booster1 returning booster9",
+      "geodens income 4pw",
+      "darloks build m 4A4.",
+      "geodens  spend 3pw for 3c. build m 1B1.",
+      "darloks charge 3pw",
+      "darloks up terra (2 ⇒ 3).",
+      "geodens up terra (3 ⇒ 4).",
+      "darloks action power3.",
+      "geodens spend 1o for 1c. build m 1B5.",
+      "darloks build m 2B0.",
+      "geodens charge 4pw",
+      "geodens up nav (2 ⇒ 3).",
+      "darloks build m 2B3.",
+      "geodens charge 2pw",
+      "geodens action power5.",
+      "darloks special spy-tech. spy-tech geodens free3.",
+      "geodens pass booster9 returning booster1",
+      "darloks federation 2A10,2A11,2B0,2B3,2C,4A4,4A5 fed5 using area1: 3.",
+      "darloks pass booster1 returning booster3",
+      "geodens income 4pw. income 4pw",
+      "geodens action power4.",
+      "darloks build lab 7B3. tech terra. up terra (3 ⇒ 4).",
+      "geodens charge 2pw",
+      "geodens build m 1A9.",
+      "darloks charge 1pw",
+      "darloks build m 7B5.",
+      "geodens charge 2pw",
+      "geodens up terra (4 ⇒ 5).",
+      "darloks up terra (4 ⇒ 5). fedtile fed5.",
+      "geodens build ts 1B1.",
+      "darloks build m 6B3.",
+      "geodens spend 1q for 1o. burn 1. burn 1. spend 1pw for 1c. spend 1pw for 1c. spend 1pw for 1c. build lab 1B1. tech gaia. up gaia (0 ⇒ 1).",
+      "darloks special spy-tech. spy-tech geodens gaia.",
+      "geodens up nav (3 ⇒ 4).",
+      "darloks spend 1pw for 1c. spend 1pw for 1c. up nav (2 ⇒ 3).",
+      "geodens up nav (4 ⇒ 5). lostPlanet 1B0.",
+      "darloks pass booster3 returning booster1",
+      "geodens up gaia (1 ⇒ 2).",
+      "geodens build gf 1A3 using area1: 6.",
+      "geodens federation 1A8,1A9,1B0,1B1,1B5,7A1,7B1 fed5 using area1: 2.",
+      "geodens pass booster1 returning booster9",
+      "geodens income 1t",
+      "darloks build ac2 7B3. tech free2. up nav (3 ⇒ 4).",
+      "geodens charge 2pw",
+      "geodens build m 1A3.",
+    ];
+
+    const engine = new Engine(moves, { expansion: Expansion.MasterOfOrion });
+    const darloks = engine.players[1];
+    const command = possibleResearchAreas(
+      engine,
+      darloks.player,
+      UPGRADE_RESEARCH_COST
+    )[0] as AvailableCommand<Command.UpgradeResearch>;
+    const researchAreas = command.data.tracks;
+    expect(researchAreas.map((area) => area.field)).to.not.contain(ResearchField.Navigation);
+  });
+
+  it("when Darloks are up solo, they can still join someone", () => {
+    const moves = [
+      "init 2 debugger",
+      "p1 faction geodens",
+      "p2 faction darloks",
+      "geodens build m 1A5",
+      "darloks build m 2A10",
+      "darloks build m 7A0",
+      "geodens build m 4B0",
+      "darloks booster booster9",
+      "geodens booster booster3",
+      "geodens build m 2A9.",
+      "darloks charge 1pw",
+      "darloks burn 1. action power3.",
+      "geodens build ts 2A9.",
+      "darloks charge 1pw",
+      "darloks build ts 2A10.",
+      "geodens charge 2pw",
+      "geodens build PI 2A9.",
+      "darloks charge 2pw",
+      "darloks build lab 2A10. tech nav. up nav (0 ⇒ 1).",
+      "geodens charge 3pw",
+      "geodens action power6. build m 1A6.",
+      "darloks up terra (0 ⇒ 1).",
+      "geodens up nav (0 ⇒ 1).",
+      "darloks build ac1 2A10. tech free1. up nav (1 ⇒ 2).",
+      "geodens charge 3pw",
+      "geodens build m 7B1.",
+      "darloks charge 1pw",
+      "darloks pass booster5 returning booster9",
+      "geodens up nav (1 ⇒ 2).",
+      "geodens pass booster9 returning booster3",
+      "geodens income 1t",
+      "darloks special range+3. build m 7B3.",
+      "geodens action power4.",
+      "darloks up terra (1 ⇒ 2).",
+      "geodens build ts 7B1.",
+      "darloks charge 1pw",
+      "darloks  spend 4pw for 4c. build ts 7B3.",
+      "geodens charge 2pw",
+      "geodens burn 1. action power3.",
+      "darloks pass booster3 returning booster5",
+      "geodens build lab 7B1. tech free3. up terra (1 ⇒ 2).",
+      "darloks charge 2pw",
+      "geodens  spend 1k for 1c. build m 5A9.",
+      "geodens federation 1A4,1A5,1A6,2A9,5A10,5A9 fed6 using area1: 2.",
+      "geodens up terra (2 ⇒ 3).",
+      "geodens pass booster1 returning booster9",
+      "geodens income 4pw",
+      "darloks build m 4A4.",
+      "geodens  spend 3pw for 3c. build m 1B1.",
+      "darloks charge 3pw",
+      "darloks up terra (2 ⇒ 3).",
+      "geodens up terra (3 ⇒ 4).",
+      "darloks action power3.",
+      "geodens spend 1o for 1c. build m 1B5.",
+      "darloks build m 2B0.",
+      "geodens charge 4pw",
+      "geodens up nav (2 ⇒ 3).",
+      "darloks build m 2B3.",
+      "geodens charge 2pw",
+      "geodens action power5.",
+      "darloks special spy-tech. spy-tech geodens free3.",
+      "geodens pass booster9 returning booster1",
+      "darloks federation 2A10,2A11,2B0,2B3,2C,4A4,4A5 fed5 using area1: 3.",
+      "darloks pass booster1 returning booster3",
+      "geodens income 4pw. income 4pw",
+      "geodens action power4.",
+      "darloks build lab 7B3. tech terra. up terra (3 ⇒ 4).",
+      "geodens charge 2pw",
+      "geodens build m 1A9.",
+      "darloks charge 1pw",
+      "darloks up terra (4 ⇒ 5).",
+      "geodens build ts 1A9.",
+      "darloks charge 1pw",
+      "darloks build m 7B5.",
+      "geodens charge 2pw",
+      "geodens burn 1. burn 1. spend 1pw for 1c. spend 1pw for 1c. spend 1pw for 1c. spend 1q for 1o. build lab 1A9. tech gaia. up gaia (0 ⇒ 1).",
+      "darloks charge 1pw",
+      "darloks special spy-tech. spy-tech geodens gaia.",
+      "geodens up nav (3 ⇒ 4).",
+      "darloks up nav (2 ⇒ 3).",
+      "geodens up gaia (1 ⇒ 2).",
+      "darloks action power5.",
+      "geodens build gf 1A3 using area1: 6.",
+      "darloks pass booster3 returning booster1",
+      "geodens up nav (4 ⇒ 5). lostPlanet 1A8.",
+      "darloks charge 1pw",
+      "geodens pass booster1 returning booster9",
+      "geodens income 1t",
+      "darloks up nav (3 ⇒ 4).",
+      "geodens pass booster8 returning booster1",
+      "darloks special spy-tech. spy-tech geodens free3.",
+      "darloks build ac2 7B3. tech gaia. up gaia (0 ⇒ 1).",
+      "geodens decline 2pw",
+    ];
+
+    const engine = new Engine(moves, { expansion: Expansion.MasterOfOrion });
+    const darloks = engine.players[1];
+    const command = possibleResearchAreas(
+      engine,
+      darloks.player,
+      UPGRADE_RESEARCH_COST
+    )[0] as AvailableCommand<Command.UpgradeResearch>;
+    const researchAreas = command.data.tracks;
+    expect(researchAreas.map((area) => area.field)).to.contain(ResearchField.Navigation);
   });
 });
