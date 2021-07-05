@@ -203,12 +203,7 @@ export default class PlayerData extends EventEmitter {
     }
 
     if (resource.startsWith("up-") && resource !== Resource.UpgradeLowest) {
-      const field = resource.slice("up-".length) as ResearchField;
-      this.canUpgradeResearch = true;
-      // this.emit("beforeResearchUpgrade", field);
-      if (this.canUpgradeResearch) {
-        this.advanceResearch(resource.slice("up-".length) as ResearchField, count);
-      }
+      this.advanceResearch(resource.slice("up-".length) as ResearchField, count);
       return;
     }
 
