@@ -24,6 +24,7 @@ import Engine, {
   Operator,
   Player,
   PowerArea,
+  ResearchField,
   researchTracks,
   Resource,
   Reward,
@@ -706,6 +707,15 @@ export function brainstoneButtons(data: BrainstoneActionData): ButtonData[] {
   });
 }
 
+const ResearchOrder = {
+  [ResearchField.Terraforming]: 1,
+  [ResearchField.Navigation]: 2,
+  [ResearchField.Intelligence]: 3,
+  [ResearchField.GaiaProject]: 4,
+  [ResearchField.Economy]: 5,
+  [ResearchField.Science]: 6,
+};
+
 export function researchButtons(command: AvailableCommand<Command.UpgradeResearch>, player: Player): ButtonData[] {
   const ret: ButtonData[] = [];
 
@@ -725,14 +735,16 @@ export function researchButtons(command: AvailableCommand<Command.UpgradeResearc
       shortcuts: ["r"],
       command: command.name,
       // track.to contains actual level, to use when implementing research viewer
-      buttons: tracks.map((track) =>
-        textButton({
-          command: track.field,
-          label: researchNames[track.field],
-          shortcuts: [track.field.substring(0, 1)],
-          warning: advanceResearchWarning(player, track),
-        })
-      ),
+      buttons: tracks
+        .sort((a, b) => ResearchOrder[a.field] - ResearchOrder[b.field])
+        .map((track) =>
+          textButton({
+            command: track.field,
+            label: researchNames[track.field],
+            shortcuts: [track.field.substring(0, 1)],
+            warning: advanceResearchWarning(player, track),
+          })
+        ),
       researchTiles: tracks.map((track) => track.field + "-" + track.to),
     });
   }
