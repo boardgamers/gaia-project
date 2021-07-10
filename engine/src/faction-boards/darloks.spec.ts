@@ -397,6 +397,45 @@ describe("Darloks", () => {
     });
   });
 
+  it("a covered tech tile cannot be spied upon", () => {
+    const moves = [
+      "init 2 debugger",
+      "p1 faction xenos",
+      "p2 faction darloks",
+      "xenos build m 1A9",
+      "darloks build m 7A0",
+      "darloks build m 4A4",
+      "xenos build m 2A1",
+      "xenos build m 6A8",
+      "darloks booster booster5",
+      "xenos booster booster3",
+      "xenos build ts 1A9.",
+      "darloks charge 1pw",
+      "darloks build ts 7A0.",
+      "xenos charge 2pw",
+      "xenos build lab 1A9. tech int. up int (1 ⇒ 2).",
+      "darloks charge 2pw",
+      "darloks build lab 7A0. tech nav. up nav (0 ⇒ 1).",
+      "xenos charge 2pw",
+      "xenos up int (2 ⇒ 3).",
+      "darloks pass booster8 returning booster5",
+      "xenos action power3.",
+      "xenos spend 1q for 1o. build ac2 1A9. tech free3. up int (3 ⇒ 4).",
+      "darloks charge 2pw",
+      "xenos special q.",
+      "xenos spend 1q for 1o. build m 7B1.",
+      "darloks charge 1pw",
+      "xenos spend 1pw for 1c. spend 1q for 1o. build m 6B5.",
+      "xenos federation 1A8,1A9,6A4,6A8,6B2,6B4,6B5,6C,7A1,7B1 fed2 using area1: 5, area2: 1.",
+      "xenos action qic1. tech adv-int. cover int. up terra (0 ⇒ 1).",
+      "xenos pass booster1 returning booster3",
+    ];
+    const engine = new Engine(moves, { expansion: Expansion.MasterOfOrion });
+    const techs = possibleTechsToSpy(engine, PlayerEnum.Player2)[0] as AvailableCommand<Command.SpyTech>;
+    console.log(techs.data.tiles.map((t) => t.pos));
+    expect(techs.data.tiles.map((t) => t.pos)).to.not.contain(TechTilePos.Intelligence);
+  });
+
   describe("when someone is on the top of a track", () => {
     const moves = [
       "init 2 println-hello-world",
