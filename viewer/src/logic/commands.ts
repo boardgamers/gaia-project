@@ -919,6 +919,9 @@ export function declineButton(command: AvailableCommand<Command.Decline>): Butto
     case Command.UpgradeResearch:
       message = "Are you sure you want to decline a free research step?";
       break;
+    case Command.SpyAdvancedTech:
+      message = "Are you sure you want to build your PI without spying on an advanced tech tile from another player?";
+      break;
   }
   return textButton({
     label: `Decline ${offer}`,
