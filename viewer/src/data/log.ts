@@ -27,13 +27,17 @@ export function replaceMove(data: Engine, move: ParsedMove): ParsedMove {
 
   return {
     commands: move.commands,
-    move: move.move.replace(/\b(tech|cover) [a-z0-9-]+|fed[0-9]+|booster[0-9]+/g, (match) => {
+    move: move.move.replace(/\b(spy-tech|tech|cover) ([a-z0-9]+ )?[a-z0-9-]+|fed[0-9]+|booster[0-9]+/g, (match) => {
       if (match.startsWith("booster")) {
         return addDetails(match, boosterNames[match].name);
       } else if (match.startsWith("fed")) {
         return addDetails(match, federations[match]);
       } else if (match.startsWith("cover")) {
         const pos = match.substr("cover ".length) as TechTilePos;
+        return addDetails(match, replaceTech(data, pos));
+      } else if (match.startsWith("spy-tech")) {
+        const playerAndTech = match.substr("spy-tech ".length);
+        const pos = playerAndTech.substr(playerAndTech.indexOf(" ") + 1) as TechTilePos;
         return addDetails(match, replaceTech(data, pos));
       } else {
         const pos = match.substr("tech ".length) as TechTilePos | AdvTechTilePos;
