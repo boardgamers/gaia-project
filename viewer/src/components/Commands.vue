@@ -393,6 +393,7 @@ export default class Commands extends Vue {
           });
           break;
         }
+        case Command.SpyAdvancedTech:
         case Command.SpyTech: {
           ret.push({
             label: "Pick tech tile",
