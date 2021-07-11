@@ -42,6 +42,23 @@
       <Building faction="firaks" building="ts" transform="translate(7.5, 0) scale(-1.5,1.5)" :flat="flat" />
       <image xlink:href="../assets/resources/arrow-charge.svg" width=15 :height=133/346*15 x=-7.5 y=-14 />
     </g>
+    <g v-else-if="kind == 'spy-tech'" transform="scale(-1,1)">
+      <svg :class="['techTile', 'free1']">
+        <rect
+          x="-8.5"
+          y="-9.5"
+          width="18"
+          height="17.5"
+          rx="2"
+          ry="2"
+          stroke="black"
+          stroke-width="1"
+          class="tech-border"
+        />
+        <circle r="4" stroke="black" stroke-width="3" fill="none" cx="-2.5" cy="2" />
+        <line x1="-9" y1="9" x2="-3.8" y2="3.8" stroke="black" stroke-width="2.8" />
+      </svg>
+    </g>
     <Building
       v-else-if="kind == 'space-station'"
       building="sp"
