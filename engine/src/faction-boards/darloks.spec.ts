@@ -4,6 +4,7 @@ import { PlayerEnum } from "../..";
 import AvailableCommand, {
   generate,
   possibleAdvancedTechsToSpy,
+  possibleCoverTechTiles,
   possibleResearchAreas,
   possibleSpecialActions,
   possibleTechsToSpy,
@@ -432,8 +433,93 @@ describe("Darloks", () => {
     ];
     const engine = new Engine(moves, { expansion: Expansion.MasterOfOrion });
     const techs = possibleTechsToSpy(engine, PlayerEnum.Player2)[0] as AvailableCommand<Command.SpyTech>;
-    console.log(techs.data.tiles.map((t) => t.pos));
     expect(techs.data.tiles.map((t) => t.pos)).to.not.contain(TechTilePos.Intelligence);
+  });
+
+  it("a spied tech tile cannot be covered", () => {
+    const moves = [
+      "init 2 debugger",
+      "p1 faction darloks",
+      "p2 faction xenos",
+      "darloks build m 4A4",
+      "xenos build m 2A1",
+      "xenos build m 1A9",
+      "darloks build m 7A0",
+      "xenos build m 6A8",
+      "xenos booster booster3",
+      "darloks booster booster5",
+      "darloks build ts 7A0.",
+      "xenos charge 1pw",
+      "xenos build ts 1A9.",
+      "darloks charge 2pw",
+      "darloks special range+3. build m 3A7.",
+      "xenos build lab 1A9. tech terra. up terra (0 ⇒ 1).",
+      "darloks charge 2pw",
+      "darloks action power3.",
+      "xenos up nav (0 ⇒ 1).",
+      "darloks build lab 7A0. tech free1. up terra (0 ⇒ 1).",
+      "xenos charge 2pw",
+      "xenos action qic1. tech int. up int (1 ⇒ 2).",
+      "darloks special spy-tech. spy-tech xenos int.",
+      "xenos burn 1. burn 1. spend 3pw for 1o. build ac1 1A9. tech nav. up nav (1 ⇒ 2).",
+      "darloks charge 2pw",
+      "darloks burn 1. spend 1pw for 1c. build ac1 7A0. tech nav. up nav (0 ⇒ 1).",
+      "xenos charge 3pw",
+      "xenos pass booster9 returning booster3",
+      "darloks up nav (1 ⇒ 2).",
+      "darloks pass booster3 returning booster5",
+      "xenos build m 7B1.",
+      "darloks charge 3pw",
+      "darloks build m 7B3.",
+      "xenos action power5.",
+      "darloks up nav (2 ⇒ 3).",
+      "xenos up int (2 ⇒ 3).",
+      "darloks action power4.",
+      "xenos build m 6B5.",
+      "darloks build m 3B1.",
+      "xenos build ts 7B1.",
+      "darloks charge 3pw",
+      "darloks special spy-tech. spy-tech xenos terra.",
+      "xenos pass booster1 returning booster9",
+      "darloks build ts 4A4.",
+      "xenos charge 1pw",
+      "darloks pass booster9 returning booster3",
+      "xenos build PI 7B1.",
+      "darloks charge 1pw",
+      "darloks action power3.",
+      "xenos up nav (2 ⇒ 3).",
+      "darloks build lab 4A4. tech free3. up terra (1 ⇒ 2).",
+      "xenos action power4.",
+      "darloks special spy-tech. spy-tech xenos int.",
+      "xenos build m 5B0.",
+      "darloks spend 1q for 1o. spend 1q for 1o. build ac2 4A4. tech terra. up terra (2 ⇒ 3).",
+      "xenos charge 1pw",
+      "xenos pass booster3 returning booster1",
+      "darloks up terra (3 ⇒ 4).",
+      "darloks special q.",
+      "darloks pass booster5 returning booster9",
+      "xenos up int (3 ⇒ 4).",
+      "darloks build ts 7B3.",
+      "xenos charge 2pw",
+      "xenos action power6. build m 5A9.",
+      "darloks special range+3. build m 2A10.",
+      "xenos action qic1. tech free3. up nav (3 ⇒ 4).",
+      "darloks burn 1. action power4.",
+      "xenos federation 5A9,5B0,5B5,7A3,7B1 fed4 using area1: 2.",
+      "darloks build m 7B5.",
+      "xenos charge 2pw",
+      "xenos build ts 2A1.",
+      "darloks decline 4pw",
+      "darloks federation 7A0,7A11,7B3,7B5,7C fed4 using area1: 2.",
+      "xenos build lab 2A1. tech adv-int. cover free3. up terra (1 ⇒ 2).",
+      "darloks decline 4pw",
+    ];
+    const engine = new Engine(moves, { expansion: Expansion.MasterOfOrion });
+    const coverCommand = possibleCoverTechTiles(
+      engine,
+      engine.currentPlayer
+    )[0] as AvailableCommand<Command.ChooseCoverTechTile>;
+    expect(coverCommand.data.tiles.map((t) => t.pos)).to.not.contain(TechTilePos.Intelligence);
   });
 
   describe("when someone is on the top of a track", () => {

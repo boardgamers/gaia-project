@@ -36,7 +36,7 @@ import { remainingFactions } from "./factions";
 import { GaiaHex } from "./gaia-hex";
 import SpaceMap from "./map";
 import PlayerObject, { BuildCheck, BuildWarning } from "./player";
-import PlayerData, { BrainstoneDest, resourceLimits } from "./player-data";
+import PlayerData, { BrainstoneDest, isBorrowed, resourceLimits } from "./player-data";
 import * as researchTracks from "./research-tracks";
 import Reward from "./reward";
 import { isAdvanced } from "./tiles/techs";
@@ -937,7 +937,9 @@ export function getTaklonsExtraLeechOffers(earlyLeechValue: number, lateLeechVal
 export function possibleCoverTechTiles(engine: Engine, player: Player) {
   const commands = [];
 
-  const tiles = engine.player(player).data.tiles.techs.filter((tl) => tl.enabled && !isAdvanced(tl.pos));
+  const tiles = engine
+    .player(player)
+    .data.tiles.techs.filter((tl) => tl.enabled && !isBorrowed(tl) && !isAdvanced(tl.pos));
   commands.push({
     name: Command.ChooseCoverTechTile,
     player,
