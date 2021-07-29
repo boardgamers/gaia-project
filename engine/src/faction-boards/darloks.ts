@@ -1,11 +1,10 @@
 import { AvailableResearchTrack, UPGRADE_RESEARCH_COST } from "../available-command";
 import Engine from "../engine";
-import { Building, Command, Faction, ResearchField, TechTilePos } from "../enums";
+import { Building, Command, Faction, Player as PlayerEnum, ResearchField, TechTilePos } from "../enums";
 import Player from "../player";
-import { Player as PlayerEnum } from "../enums";
 import { lastTile } from "../research-tracks";
-import { FactionBoardVariants } from "./types";
 import Reward from "../reward";
+import { FactionBoardVariants } from "./types";
 
 const darloks: FactionBoardVariants = {
   standard: {

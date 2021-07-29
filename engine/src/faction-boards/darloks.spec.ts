@@ -1,5 +1,4 @@
 import { expect } from "chai";
-import { iteratee } from "lodash";
 import { PlayerEnum } from "../..";
 import AvailableCommand, {
   generate,
