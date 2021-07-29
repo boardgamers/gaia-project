@@ -24,6 +24,10 @@ import {
 } from "../enums";
 import { isBorrowed } from "../player-data";
 
+function cannotSpyOnAdvancedTile(commands: AvailableCommand<Command>[]) {
+  return commands.length === 1 && commands[0].name === Command.Decline;
+}
+
 describe("Darloks", () => {
   it("should not be able to spy on a tech tile if no one has one", () => {
     const moves = Engine.parseMoves(`
@@ -68,15 +72,12 @@ describe("Darloks", () => {
     });
 
     it("Darloks cannot use their PI ability to spy on simple techs", () => {
-      const techs = possibleAdvancedTechsToSpy(
-        engine,
-        engine.currentPlayer
-      )[0] as AvailableCommand<Command.SpyAdvancedTech>;
-      expect(techs.data.tiles.length).to.equal(0);
+      const commands = possibleAdvancedTechsToSpy(engine, engine.currentPlayer);
+      expect(cannotSpyOnAdvancedTile(commands)).to.equal(true);
     });
 
     it("Darloks can decline the advanced tech if they build their PI", () => {
-      const decline = possibleAdvancedTechsToSpy(engine, engine.currentPlayer)[1];
+      const decline = possibleAdvancedTechsToSpy(engine, engine.currentPlayer)[0];
       expect(decline.name).to.equal(Command.Decline);
     });
   });
@@ -357,8 +358,8 @@ describe("Darloks", () => {
 
     it("the advanced tile cannot be spied with the advanced tech because the Darloks have no green federation", () => {
       const p2 = engine.players[1];
-      const techs = possibleAdvancedTechsToSpy(engine, p2.player)[0] as AvailableCommand<Command.SpyAdvancedTech>;
-      expect(techs.data.tiles.length).to.equal(0);
+      const commands = possibleAdvancedTechsToSpy(engine, p2.player);
+      expect(cannotSpyOnAdvancedTile(commands)).to.equal(true);
     });
 
     it("and the Darloks build their PI, they can decline the advanced tech", () => {

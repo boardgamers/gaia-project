@@ -677,13 +677,7 @@ export function possibleAdvancedTechsToSpy(engine: Engine, player: Player) {
     tiles = [];
   }
 
-  const commands = [
-    {
-      name: Command.SpyAdvancedTech,
-      player,
-      data: { tiles },
-    },
-  ] as AvailableCommand[];
+  const commands = [] as AvailableCommand[];
 
   if (tiles.length === 0) {
     commands.push({
@@ -692,6 +686,12 @@ export function possibleAdvancedTechsToSpy(engine: Engine, player: Player) {
       data: {
         offers: [new Offer(Command.SpyAdvancedTech, "")],
       },
+    });
+  } else {
+    commands.push({
+      name: Command.SpyAdvancedTech,
+      player,
+      data: { tiles },
     });
   }
 
