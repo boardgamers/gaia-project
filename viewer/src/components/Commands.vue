@@ -72,7 +72,6 @@ import Engine, {
   Resource,
   Reward,
   SpaceMap,
-  tiles,
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
 import { ButtonData, GameContext, ModalButtonData } from "../data";
@@ -393,14 +392,16 @@ export default class Commands extends Vue {
           });
           break;
         }
+
         case Command.SpyAdvancedTech:
         case Command.SpyTech: {
+          const tiles = command.data.tiles as typeof command.data.tiles[number][];
           ret.push({
             label: "Pick tech tile",
             shortcuts: ["p"],
             command: command.name,
-            techs: command.data.tiles.map((tile) => tile.pos),
-            buttons: command.data.tiles.map((tile) => ({ command: tile.pos, tech: tile.pos, player: tile.player })),
+            techs: tiles.map((tile) => tile.pos),
+            buttons: tiles.map((tile) => ({ command: tile.pos, tech: tile.pos, player: tile.player })),
           });
           break;
         }
