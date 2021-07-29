@@ -31,7 +31,7 @@ const darloks: FactionBoardVariants = {
       ) => {
         const STEALTHY_COST = "5k";
         const hasAlreadyJoinedSomeone = ResearchField.values(engine.options.expansion).some(
-          (field) => engine.players.filter((p) => p.data.research[field] === lastTile(field)).length == 2
+          (field) => engine.players.filter((p) => p.data.research[field] === lastTile(field)).length === 2
         );
         if (
           cost === UPGRADE_RESEARCH_COST &&
