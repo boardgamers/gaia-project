@@ -20,6 +20,14 @@ const baltaks: FactionBoardVariants = {
       freeActionChoice: (player: Player, pool: ConversionPool) => pool.push(freeActionsBaltaks, player),
     },
   },
+  variants: [
+    {
+      type: "beta",
+      board: {
+        income: ["3k,4o,15c,up-gaia,up-int", "+o,k"],
+      },
+    },
+  ],
 };
 
 export default baltaks;

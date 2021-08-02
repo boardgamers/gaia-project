@@ -59,7 +59,10 @@ export enum AuctionVariant {
   BidWhileChoosing = "bid-while-choosing",
 }
 
-export type FactionVariant = "standard" | "more-balanced"; // https://boardgamegeek.com/thread/2324994/article/36509533#36509533
+export type FactionVariant =
+  "standard" |
+  "more-balanced" | // https://boardgamegeek.com/thread/2324994/article/36509533#36509533
+  "beta"; // https://docs.google.com/document/d/1BKTUb7kByOgBp1cW65KipZINT0InjGo0xxc3cZTs1Js/edit#
 
 export type FactionCustomization = {
   variant: FactionVariant;

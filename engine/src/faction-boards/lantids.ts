@@ -26,6 +26,12 @@ const lantids: FactionBoardVariants = {
         },
       },
     },
+    {
+      type: "beta",
+      board: {
+        income: ["3k,4o,13c,q,up-eco,up-eco", "+o,k"],
+      },
+    },
   ],
 };
 
