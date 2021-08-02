@@ -60,9 +60,9 @@ export enum AuctionVariant {
 }
 
 export type FactionVariant =
-  "standard" |
-  "more-balanced" | // https://boardgamegeek.com/thread/2324994/article/36509533#36509533
-  "beta"; // https://docs.google.com/document/d/1BKTUb7kByOgBp1cW65KipZINT0InjGo0xxc3cZTs1Js/edit#
+  | "standard"
+  | "more-balanced" // https://boardgamegeek.com/thread/2324994/article/36509533#36509533
+  | "beta"; // https://docs.google.com/document/d/1BKTUb7kByOgBp1cW65KipZINT0InjGo0xxc3cZTs1Js/edit#
 
 export type FactionCustomization = {
   variant: FactionVariant;
@@ -1419,7 +1419,7 @@ export default class Engine {
     // Shuffle tech tiles
     const techtiles = shuffleSeed.shuffle(TechTile.values(this.expansions), this.map.rng());
     TechTilePos.values(this.expansions).forEach((pos, i) => {
-      this.tiles.techs[pos] = { tile: techtiles[i], count: 4 };
+      this.tiles.techs[pos] = { tile: techtiles[i], count: nbPlayers };
     });
 
     // Choose adv tech tiles as part of the pool
