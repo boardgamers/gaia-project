@@ -28,6 +28,12 @@ const bescods: FactionBoardVariants = {
         income: ["2k,4o,15c,q", "+o", "=> up-lowest"],
       },
     },
+    {
+      type: "beta",
+      board: {
+        income: ["k,4o,15c,q,up-sci", "+o", "=> up-lowest"],
+      },
+    },
   ],
 };
 

@@ -16,6 +16,14 @@ const geodens: FactionBoardVariants = {
       },
     },
   },
+  variants: [
+    {
+      type: "beta",
+      board: {
+        income: ["3k,4o,15c,q,up-terra,up-terra", "+o,k"],
+      },
+    },
+  ],
 };
 
 export default geodens;
