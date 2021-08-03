@@ -41,7 +41,7 @@ import Event, { EventSource } from "./events";
 import { remainingFactions } from "./factions";
 import SpaceMap, { MapConfiguration } from "./map";
 import Player from "./player";
-import PlayerData, { BrainstoneDest, MoveTokens } from "./player-data";
+import PlayerData, { BrainstoneDest, MoveTokens, powerLogString } from "./player-data";
 import * as researchTracks from "./research-tracks";
 import Reward from "./reward";
 import federations from "./tiles/federations";
@@ -122,7 +122,9 @@ const replaceRegex = new RegExp(
 export function createMoveToShow(move: string, p: PlayerData, executeMove: () => void): string {
   let moveToGaia: MoveTokens = null;
 
-  const listener = (event: MoveTokens, source: EventSource) => (moveToGaia = event);
+  const oldPower = powerLogString(p.power, p.brainstone);
+
+  const listener = (event: MoveTokens) => (moveToGaia = event);
 
   const formerBooster = p.tiles.booster;
 
@@ -133,32 +135,44 @@ export function createMoveToShow(move: string, p: PlayerData, executeMove: () =>
     p.off("move-tokens", listener);
   }
 
-  return move.replace(replaceRegex, (match, moveWithoutEnding, command, commandArgument, moveEnding) => {
-    if (moveToGaia) {
-      const powerUsage = Object.entries(moveToGaia)
-        .map(([area, amt], index) => {
-          return amt > 0 ? area + ": " + amt : "";
-        })
-        .filter((s) => s.length > 0)
-        .join(", ");
+  const addDetails = () => {
+    return move.replace(replaceRegex, (match, moveWithoutEnding, command, commandArgument, moveEnding) => {
+      if (moveToGaia) {
+        const powerUsage = Object.entries(moveToGaia)
+          .map(([area, amt]) => {
+            return amt > 0 ? area + ": " + amt : "";
+          })
+          .filter((s) => s.length > 0)
+          .join(", ");
 
-      return `${moveWithoutEnding} using ${powerUsage}${moveEnding}`;
-    }
-
-    switch (command) {
-      case Command.Pass:
-        return `${moveWithoutEnding} returning ${formerBooster}${moveEnding}`;
-      case Command.UpgradeResearch: {
-        const level = p.research[commandArgument];
-        if (!level) {
-          //decline up
-          return match;
-        }
-        return `${moveWithoutEnding} (${level - 1} ⇒ ${level})${moveEnding}`;
+        return `${moveWithoutEnding} using ${powerUsage}${moveEnding}`;
       }
-    }
-    return match;
-  });
+
+      switch (command) {
+        case Command.Pass:
+          return `${moveWithoutEnding} returning ${formerBooster}${moveEnding}`;
+        case Command.UpgradeResearch: {
+          const level = p.research[commandArgument];
+          if (!level) {
+            //decline up
+            return match;
+          }
+          return `${moveWithoutEnding} (${level - 1} ⇒ ${level})${moveEnding}`;
+        }
+      }
+      return match;
+    });
+  };
+
+  const withDetails = addDetails();
+
+  const newPower = powerLogString(p.power, p.brainstone);
+
+  if (oldPower !== newPower) {
+    return `${withDetails} (${oldPower} ⇒ ${newPower})`;
+  }
+
+  return withDetails;
 }
 
 export type BoardActions = {

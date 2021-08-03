@@ -10,7 +10,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens charge 1pw"
+    "move": "geodens charge 1pw (1/7/1/0 ⇒ 0/8/1/0)"
   },
   {
     "round": 6,
@@ -31,7 +31,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons spend 4pw for 1q. build m 7B4."
+    "move": "taklons spend 4pw for 1q. build m 7B4. (0/1/3,B/0 ⇒ 1,B/1/2/0)"
   },
   {
     "round": 6,
@@ -65,7 +65,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars charge 1pw"
+    "move": "itars charge 1pw (1/0/2/0 ⇒ 0/1/2/0)"
   },
   {
     "round": 6,
@@ -78,7 +78,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons charge 1t,1pw"
+    "move": "taklons charge 1t,1pw (0/0/3,B/0 ⇒ 0/1/3,B/0)"
   },
   {
     "round": 6,
@@ -124,7 +124,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars spend 4tg for tech. tech int (k for planet types). up int (3 ⇒ 4). spend 4tg for tech. tech adv-int (4 VP / ts). cover int (k for planet types). up sci (1 ⇒ 2)"
+    "move": "itars spend 4tg for tech. tech int (k for planet types). up int (3 ⇒ 4). spend 4tg for tech. tech adv-int (4 VP / ts). cover int (k for planet types). up sci (1 ⇒ 2) (0/0/2/9 ⇒ 1/0/2/0)"
   },
   {
     "round": 6,
@@ -165,7 +165,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars income 1t. income 1t"
+    "move": "itars income 1t. income 1t (0/0/0/9 ⇒ 0/0/2/9)"
   },
   {
     "round": 6,
@@ -198,7 +198,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons income 1t"
+    "move": "taklons income 1t (2,B/0/0/0 ⇒ 0/0/3,B/0)"
   },
   {
     "round": 6,
@@ -240,7 +240,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens income 4pw"
+    "move": "geodens income 4pw (3/5/0/0 ⇒ 1/7/1/0)"
   },
   {
     "round": 6,
@@ -277,7 +277,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons spend 1pw for 1c. pass booster6 (1o, 1 VP / mine) returning booster3 (q, 2c)"
+    "move": "taklons spend 1pw for 1c. pass booster6 (1o, 1 VP / mine) returning booster3 (q, 2c) (1,B/0/1/0 ⇒ 2,B/0/0/0)"
   },
   {
     "round": 5,
@@ -290,7 +290,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars spend 1pw for 1c. spend 1q for 1o. spend 1o for 1t. build gf 6A5 using area1: 2, area2: 1."
+    "move": "itars spend 1pw for 1c. spend 1q for 1o. spend 1o for 1t. build gf 6A5 using area1: 2, area2: 1. (0/1/1/6 ⇒ 0/0/0/9)"
   },
   {
     "round": 5,
@@ -307,7 +307,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons spend 4pw for 1q. federation 2A11,2A3,2B0,2B1,2B2,8A5,8A8,8B3,8B4,9A0 fed2 (8vp,q) using area1: 5."
+    "move": "taklons spend 4pw for 1q. federation 2A11,2A3,2B0,2B1,2B2,8A5,8A8,8B3,8B4,9A0 fed2 (8vp,q) using area1: 5. (2,B/0/5/0 ⇒ 1,B/0/1/0)"
   },
   {
     "round": 5,
@@ -345,7 +345,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens charge 1pw"
+    "move": "geodens charge 1pw (4/4/0/0 ⇒ 3/5/0/0)"
   },
   {
     "round": 5,
@@ -379,7 +379,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars spend 1o for 1t. up int (2 ⇒ 3)."
+    "move": "itars spend 1o for 1t. up int (2 ⇒ 3). (1/0/0/6 ⇒ 0/1/1/6)"
   },
   {
     "round": 5,
@@ -425,7 +425,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars federation 4A5,6A11,6A9,6B5 fed6 (6vp,2k) using area1: 1. spend 1pw for 1c."
+    "move": "itars federation 4A5,6A11,6A9,6B5 fed6 (6vp,2k) using area1: 1. spend 1pw for 1c. (1/0/1/6 ⇒ 1/0/0/6)"
   },
   {
     "round": 5,
@@ -446,7 +446,7 @@
     "changes": [],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars build gf 3A6 using area1: 3."
+    "move": "itars build gf 3A6 using area1: 3. (4/0/1/3 ⇒ 1/0/1/6)"
   },
   {
     "round": 5,
@@ -471,7 +471,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons burn 1. spend 4pw for 1q. brainstone area1. action qic1. tech adv-nav (3 VP when building ts). cover free1 (power value 4 for PI / academy). up int (0 ⇒ 1)."
+    "move": "taklons burn 1. spend 4pw for 1q. brainstone area1. action qic1. tech adv-nav (3 VP when building ts). cover free1 (power value 4 for PI / academy). up int (0 ⇒ 1). (1/1,B/6/0 ⇒ 2,B/0/5/0)"
   },
   {
     "round": 5,
@@ -492,7 +492,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons charge 2pw,1t"
+    "move": "taklons charge 2pw,1t (1,B/0/6/0 ⇒ 1/1,B/6/0)"
   },
   {
     "round": 5,
@@ -509,7 +509,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars build m 6A9. spend 4pw for 1q."
+    "move": "itars build m 6A9. spend 4pw for 1q. (0/0/5/3 ⇒ 4/0/1/3)"
   },
   {
     "round": 5,
@@ -522,7 +522,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens charge 1pw"
+    "move": "geodens charge 1pw (5/3/0/0 ⇒ 4/4/0/0)"
   },
   {
     "round": 5,
@@ -535,7 +535,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars charge 1pw"
+    "move": "itars charge 1pw (0/1/4/3 ⇒ 0/0/5/3)"
   },
   {
     "round": 5,
@@ -578,7 +578,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars charge 4pw"
+    "move": "itars charge 4pw (1/3/1/3 ⇒ 0/1/4/3)"
   },
   {
     "round": 5,
@@ -633,7 +633,7 @@
     ],
     "color": "#2080f0",
     "textColor": "black",
-    "move": "lantids spend 3pw for 1o. spend 1o for 1t. pass booster9 (4pw, 4 VP / PI or academy) returning booster7 (1o, 2 VP / ts)"
+    "move": "lantids spend 3pw for 1o. spend 1o for 1t. pass booster9 (4pw, 4 VP / PI or academy) returning booster7 (1o, 2 VP / ts) (2/0/3/0 ⇒ 6/0/0/0)"
   },
   {
     "round": 5,
@@ -713,7 +713,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons up nav (2 ⇒ 3). spend 4pw for 1q. brainstone area1."
+    "move": "taklons up nav (2 ⇒ 3). spend 4pw for 1q. brainstone area1. (0,B/0/7/0 ⇒ 1,B/0/6/0)"
   },
   {
     "round": 5,
@@ -739,7 +739,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars charge 1pw"
+    "move": "itars charge 1pw (2/2/1/3 ⇒ 1/3/1/3)"
   },
   {
     "round": 5,
@@ -760,7 +760,7 @@
     ],
     "color": "#2080f0",
     "textColor": "black",
-    "move": "lantids spend 1pw for 1c. build ts 3B2."
+    "move": "lantids spend 1pw for 1c. build ts 3B2. (1/0/4/0 ⇒ 2/0/3/0)"
   },
   {
     "round": 5,
@@ -781,7 +781,7 @@
     "changes": [],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars build gf 8A11 using area1: 3."
+    "move": "itars build gf 8A11 using area1: 3. (5/2/1/0 ⇒ 2/2/1/3)"
   },
   {
     "round": 5,
@@ -798,7 +798,7 @@
     ],
     "color": "#2080f0",
     "textColor": "black",
-    "move": "lantids spend 1pw for 1c. action qic2. fedtile fed2 (8vp,q)."
+    "move": "lantids spend 1pw for 1c. action qic2. fedtile fed2 (8vp,q). (0/0/5/0 ⇒ 1/0/4/0)"
   },
   {
     "round": 5,
@@ -815,7 +815,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons spend 3pw for 1o. brainstone area1. special q."
+    "move": "taklons spend 3pw for 1o. brainstone area1. special q. (0/0/7,B/0 ⇒ 0,B/0/7/0)"
   },
   {
     "round": 5,
@@ -828,7 +828,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars action power7."
+    "move": "itars action power7. (0/2/4/0 ⇒ 5/2/1/0)"
   },
   {
     "round": 5,
@@ -841,7 +841,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons charge 1t,4pw"
+    "move": "taklons charge 1t,4pw (0,B/0/6/0 ⇒ 0/0/7,B/0)"
   },
   {
     "round": 5,
@@ -854,7 +854,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars charge 2pw"
+    "move": "itars charge 2pw (0/4/2/0 ⇒ 0/2/4/0)"
   },
   {
     "round": 5,
@@ -888,7 +888,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars charge 1pw"
+    "move": "itars charge 1pw (0/5/1/0 ⇒ 0/4/2/0)"
   },
   {
     "round": 5,
@@ -909,7 +909,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons spend 3pw for 1o. brainstone area1. build ts 2B2."
+    "move": "taklons spend 3pw for 1o. brainstone area1. build ts 2B2. (0/0/6,B/0 ⇒ 0,B/0/6/0)"
   },
   {
     "round": 5,
@@ -922,7 +922,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 2pw"
+    "move": "lantids charge 2pw (1/0/4/0 ⇒ 0/0/5/0)"
   },
   {
     "round": 5,
@@ -935,7 +935,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons charge 1t,4pw"
+    "move": "taklons charge 1t,4pw (1/0/4,B/0 ⇒ 0/0/6,B/0)"
   },
   {
     "round": 5,
@@ -965,7 +965,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons charge 4pw,1t"
+    "move": "taklons charge 4pw,1t (1,B/0/3/0 ⇒ 1/0/4,B/0)"
   },
   {
     "round": 5,
@@ -978,7 +978,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars charge 1pw"
+    "move": "itars charge 1pw (0/6/0/0 ⇒ 0/5/1/0)"
   },
   {
     "round": 5,
@@ -1068,7 +1068,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons action power5. brainstone area1."
+    "move": "taklons action power5. brainstone area1. (0/0/4,B/0 ⇒ 1,B/0/3/0)"
   },
   {
     "round": 5,
@@ -1102,7 +1102,7 @@
     ],
     "color": "#FF9500",
     "textColor": "black",
-    "move": "geodens burn 1. action power2. build m 5A0."
+    "move": "geodens burn 1. action power2. build m 5A0. (0/5/4/0 ⇒ 5/3/0/0)"
   },
   {
     "round": 5,
@@ -1115,7 +1115,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons charge 1t,4pw"
+    "move": "taklons charge 1t,4pw (0,B/0/3/0 ⇒ 0/0/4,B/0)"
   },
   {
     "round": 5,
@@ -1128,7 +1128,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens charge 2pw"
+    "move": "geodens charge 2pw (1/5/3/0 ⇒ 0/5/4/0)"
   },
   {
     "round": 5,
@@ -1141,7 +1141,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars charge 4pw"
+    "move": "itars charge 4pw (4/2/0/0 ⇒ 0/6/0/0)"
   },
   {
     "round": 5,
@@ -1175,7 +1175,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons special 4pw. spend 3pw for 1o. brainstone area1."
+    "move": "taklons special 4pw. spend 3pw for 1o. brainstone area1. (1,B/0/2/0 ⇒ 0,B/0/3/0)"
   },
   {
     "round": 5,
@@ -1188,7 +1188,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars action power4."
+    "move": "itars action power4. (0/2/4/0 ⇒ 4/2/0/0)"
   },
   {
     "round": 5,
@@ -1218,7 +1218,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars charge 1pw"
+    "move": "itars charge 1pw (0/3/3/0 ⇒ 0/2/4/0)"
   },
   {
     "round": 5,
@@ -1235,7 +1235,7 @@
     ],
     "color": "#2080f0",
     "textColor": "black",
-    "move": "lantids build m 3B2. spend 1pw for 1c."
+    "move": "lantids build m 3B2. spend 1pw for 1c. (0/0/5/0 ⇒ 1/0/4/0)"
   },
   {
     "round": 5,
@@ -1248,7 +1248,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons action power3."
+    "move": "taklons action power3. (0/0/3,B/0 ⇒ 1,B/0/2/0)"
   },
   {
     "round": 5,
@@ -1261,7 +1261,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars special 4pw."
+    "move": "itars special 4pw. (3/1/2/0 ⇒ 0/3/3/0)"
   },
   {
     "round": 5,
@@ -1274,7 +1274,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 1pw"
+    "move": "lantids charge 1pw (0/1/4/0 ⇒ 0/0/5/0)"
   },
   {
     "round": 5,
@@ -1312,7 +1312,7 @@
     ],
     "color": "#2080f0",
     "textColor": "black",
-    "move": "lantids spend 2pw for 2c. up int (2 ⇒ 3)."
+    "move": "lantids spend 2pw for 2c. up int (2 ⇒ 3). (0/0/5/0 ⇒ 0/1/4/0)"
   },
   {
     "round": 5,
@@ -1328,7 +1328,7 @@
     "changes": [],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars spend 4tg for tech. tech nav (4pw special action). up nav (3 ⇒ 4)"
+    "move": "itars spend 4tg for tech. tech nav (4pw special action). up nav (3 ⇒ 4) (1/1/2/6 ⇒ 3/1/2/0)"
   },
   {
     "round": 5,
@@ -1369,7 +1369,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons income 1t"
+    "move": "taklons income 1t (2,B/0/0/0 ⇒ 0/0/3,B/0)"
   },
   {
     "round": 5,
@@ -1402,7 +1402,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars income 2t. income 1t. income 4pw. income 1pw"
+    "move": "itars income 2t. income 1t. income 4pw. income 1pw (0/0/0/6 ⇒ 1/1/2/6)"
   },
   {
     "round": 5,
@@ -1419,7 +1419,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens income 4pw"
+    "move": "geodens income 4pw (1/7/0/0 ⇒ 1/5/3/0)"
   },
   {
     "round": 5,
@@ -1477,7 +1477,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons spend 2pw for 2c. pass booster3 (q, 2c) returning booster9 (4pw, 4 VP / PI or academy)"
+    "move": "taklons spend 2pw for 2c. pass booster3 (q, 2c) returning booster9 (4pw, 4 VP / PI or academy) (0,B/0/2/0 ⇒ 2,B/0/0/0)"
   },
   {
     "round": 4,
@@ -1502,7 +1502,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons special 4pw. spend 3pw for 1o."
+    "move": "taklons special 4pw. spend 3pw for 1o. (1,B/0/1/0 ⇒ 0,B/0/2/0)"
   },
   {
     "round": 4,
@@ -1510,7 +1510,7 @@
     "changes": [],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars build gf 6A9 using area1: 2, area2: 1."
+    "move": "itars build gf 6A9 using area1: 2, area2: 1. (2/1/0/3 ⇒ 0/0/0/6)"
   },
   {
     "round": 4,
@@ -1523,7 +1523,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars charge 1pw"
+    "move": "itars charge 1pw (3/0/0/3 ⇒ 2/1/0/3)"
   },
   {
     "round": 4,
@@ -1574,7 +1574,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons spend 3pw for 1o. federation 1A5,1A6,1B3,6A2,6B1 fed4 (7vp,2o) using area1: 2."
+    "move": "taklons spend 3pw for 1o. federation 1A5,1A6,1B3,6A2,6B1 fed4 (7vp,2o) using area1: 2. (0,B/0/4/0 ⇒ 1,B/0/1/0)"
   },
   {
     "round": 4,
@@ -1655,7 +1655,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars spend 3pw for 1o. up terra (3 ⇒ 4)."
+    "move": "itars spend 3pw for 1o. up terra (3 ⇒ 4). (0/0/3/3 ⇒ 3/0/0/3)"
   },
   {
     "round": 4,
@@ -1685,7 +1685,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars charge 1pw"
+    "move": "itars charge 1pw (0/1/2/3 ⇒ 0/0/3/3)"
   },
   {
     "round": 4,
@@ -1698,7 +1698,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 1pw"
+    "move": "lantids charge 1pw (0/2/3/0 ⇒ 0/1/4/0)"
   },
   {
     "round": 4,
@@ -1732,7 +1732,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars spend 1o for 1t. up terra (2 ⇒ 3)."
+    "move": "itars spend 1o for 1t. up terra (2 ⇒ 3). (0/2/0/3 ⇒ 0/1/2/3)"
   },
   {
     "round": 4,
@@ -1766,7 +1766,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars charge 1pw"
+    "move": "itars charge 1pw (1/1/0/3 ⇒ 0/2/0/3)"
   },
   {
     "round": 4,
@@ -1779,7 +1779,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 1pw"
+    "move": "lantids charge 1pw (1/1/3/0 ⇒ 0/2/3/0)"
   },
   {
     "round": 4,
@@ -1818,7 +1818,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens charge 2pw"
+    "move": "geodens charge 2pw (3/5/0/0 ⇒ 1/7/0/0)"
   },
   {
     "round": 4,
@@ -1839,7 +1839,7 @@
     ],
     "color": "#2080f0",
     "textColor": "black",
-    "move": "lantids spend 1pw for 1c. build m 1A1."
+    "move": "lantids spend 1pw for 1c. build m 1A1. (0/1/4/0 ⇒ 1/1/3/0)"
   },
   {
     "round": 4,
@@ -1864,7 +1864,7 @@
     ],
     "color": "#FF9500",
     "textColor": "black",
-    "move": "geodens burn 1. spend 3pw for 1o. build m 5A3."
+    "move": "geodens burn 1. spend 3pw for 1o. build m 5A3. (0/7/2/0 ⇒ 3/5/0/0)"
   },
   {
     "round": 4,
@@ -1889,7 +1889,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons up terra (2 ⇒ 3). spend 3pw for 1o. brainstone area1."
+    "move": "taklons up terra (2 ⇒ 3). spend 3pw for 1o. brainstone area1. (1/0,B/3/0 ⇒ 0,B/0/4/0)"
   },
   {
     "round": 4,
@@ -1897,7 +1897,7 @@
     "changes": [],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars build gf 9A5 using area1: 3."
+    "move": "itars build gf 9A5 using area1: 3. (4/1/0/0 ⇒ 1/1/0/3)"
   },
   {
     "round": 4,
@@ -1910,7 +1910,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons charge 1pw. brainstone area2"
+    "move": "taklons charge 1pw. brainstone area2 (1,B/0/3/0 ⇒ 1/0,B/3/0)"
   },
   {
     "round": 4,
@@ -1923,7 +1923,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars charge 1pw"
+    "move": "itars charge 1pw (5/0/0/0 ⇒ 4/1/0/0)"
   },
   {
     "round": 4,
@@ -1953,7 +1953,7 @@
     ],
     "color": "#FF9500",
     "textColor": "black",
-    "move": "geodens up nav (2 ⇒ 3)."
+    "move": "geodens up nav (2 ⇒ 3). (3/4/2/0 ⇒ 0/7/2/0)"
   },
   {
     "round": 4,
@@ -2017,7 +2017,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 1pw"
+    "move": "lantids charge 1pw (0/2/3/0 ⇒ 0/1/4/0)"
   },
   {
     "round": 4,
@@ -2047,7 +2047,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons action power4. brainstone area1."
+    "move": "taklons action power4. brainstone area1. (0/0/4,B/0 ⇒ 1,B/0/3/0)"
   },
   {
     "round": 4,
@@ -2060,7 +2060,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 4pw"
+    "move": "lantids charge 4pw (3/0/2/0 ⇒ 0/2/3/0)"
   },
   {
     "round": 4,
@@ -2086,7 +2086,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons charge 4pw"
+    "move": "taklons charge 4pw (1,B/0/3/0 ⇒ 0/0/4,B/0)"
   },
   {
     "round": 4,
@@ -2141,7 +2141,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons action power3. brainstone area1."
+    "move": "taklons action power3. brainstone area1. (0/0/4,B/0 ⇒ 1,B/0/3/0)"
   },
   {
     "round": 4,
@@ -2154,7 +2154,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars action power7."
+    "move": "itars action power7. (0/0/3/0 ⇒ 5/0/0/0)"
   },
   {
     "round": 4,
@@ -2167,7 +2167,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens charge 2pw"
+    "move": "geodens charge 2pw (5/2/2/0 ⇒ 3/4/2/0)"
   },
   {
     "round": 4,
@@ -2180,7 +2180,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars charge 2pw"
+    "move": "itars charge 2pw (1/0/2/0 ⇒ 0/0/3/0)"
   },
   {
     "round": 4,
@@ -2201,7 +2201,7 @@
     ],
     "color": "#2080f0",
     "textColor": "black",
-    "move": "lantids action power6. build m 4B4."
+    "move": "lantids action power6. build m 4B4. (0/0/5/0 ⇒ 3/0/2/0)"
   },
   {
     "round": 4,
@@ -2214,7 +2214,7 @@
     ],
     "color": "#FF9500",
     "textColor": "black",
-    "move": "geodens action power5."
+    "move": "geodens action power5. (1/2/6/0 ⇒ 5/2/2/0)"
   },
   {
     "round": 4,
@@ -2235,7 +2235,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars spend 4tg for tech. tech free3 (o,q). up gaia (3 ⇒ 4). spend 4tg for tech. tech adv-gaia (3k special action). cover free3 (o,q). up terra (1 ⇒ 2)"
+    "move": "itars spend 4tg for tech. tech free3 (o,q). up gaia (3 ⇒ 4). spend 4tg for tech. tech adv-gaia (3k special action). cover free3 (o,q). up terra (1 ⇒ 2) (0/0/2/9 ⇒ 1/0/2/0)"
   },
   {
     "round": 4,
@@ -2272,7 +2272,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons brainstone area3"
+    "move": "taklons brainstone area3 (2/2,B/0/0 ⇒ 0/0/4,B/0)"
   },
   {
     "round": 4,
@@ -2322,7 +2322,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars income 1t. income 1t"
+    "move": "itars income 1t. income 1t (0/0/0/9 ⇒ 0/0/2/9)"
   },
   {
     "round": 4,
@@ -2347,7 +2347,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids income 2t"
+    "move": "lantids income 2t (0/3/0/0 ⇒ 0/0/5/0)"
   },
   {
     "round": 4,
@@ -2364,7 +2364,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens income 4pw"
+    "move": "geodens income 4pw (0/6/2/0 ⇒ 1/2/6/0)"
   },
   {
     "round": 4,
@@ -2397,7 +2397,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons spend 2pw for 2c. pass booster9 (4pw, 4 VP / PI or academy) returning booster6 (1o, 1 VP / mine)"
+    "move": "taklons spend 2pw for 2c. pass booster9 (4pw, 4 VP / PI or academy) returning booster6 (1o, 1 VP / mine) (0/2,B/2/0 ⇒ 2/2,B/0/0)"
   },
   {
     "round": 3,
@@ -2440,7 +2440,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons charge 1pw"
+    "move": "taklons charge 1pw (0,B/2/2/0 ⇒ 0/2,B/2/0)"
   },
   {
     "round": 3,
@@ -2483,7 +2483,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars burn 2. spend 2pw for 2c. federation 2A10,2B5,8A6,8B2,8B3 fed4 (7vp,2o) using area1: 2."
+    "move": "itars burn 2. spend 2pw for 2c. federation 2A10,2B5,8A6,8B2,8B3 fed4 (7vp,2o) using area1: 2. (0/4/0/7 ⇒ 0/0/0/9)"
   },
   {
     "round": 3,
@@ -2521,7 +2521,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars up nav (2 ⇒ 3)."
+    "move": "itars up nav (2 ⇒ 3). (3/1/0/7 ⇒ 0/4/0/7)"
   },
   {
     "round": 3,
@@ -2576,7 +2576,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons special 4pw. brainstone area3. spend 3pw for 1o."
+    "move": "taklons special 4pw. brainstone area3. spend 3pw for 1o. (1,B/2/1/0 ⇒ 0,B/2/2/0)"
   },
   {
     "round": 3,
@@ -2597,7 +2597,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars build gf 2A1 using area1: 4. burn 2. spend 2pw for 2c."
+    "move": "itars build gf 2A1 using area1: 4. burn 2. spend 2pw for 2c. (5/5/0/1 ⇒ 3/1/0/7)"
   },
   {
     "round": 3,
@@ -2610,7 +2610,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 2pw"
+    "move": "lantids charge 2pw (2/1/0/0 ⇒ 0/3/0/0)"
   },
   {
     "round": 3,
@@ -2635,7 +2635,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons build lab 1B3. tech sci (4c income). up sci (2 ⇒ 3). brainstone area3. spend 4pw for 1q."
+    "move": "taklons build lab 1B3. tech sci (4c income). up sci (2 ⇒ 3). brainstone area3. spend 4pw for 1q. (1,B/1/2/0 ⇒ 1,B/2/1/0)"
   },
   {
     "round": 3,
@@ -2661,7 +2661,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars burn 1. action power7."
+    "move": "itars burn 1. action power7. (0/7/2/0 ⇒ 5/5/0/1)"
   },
   {
     "round": 3,
@@ -2674,7 +2674,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons action power4."
+    "move": "taklons action power4. (0/1/3,B/0 ⇒ 1,B/1/2/0)"
   },
   {
     "round": 3,
@@ -2687,7 +2687,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons charge 4pw. brainstone area3"
+    "move": "taklons charge 4pw. brainstone area3 (1/2,B/1/0 ⇒ 0/1/3,B/0)"
   },
   {
     "round": 3,
@@ -2700,7 +2700,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars charge 4pw"
+    "move": "itars charge 4pw (4/3/2/0 ⇒ 0/7/2/0)"
   },
   {
     "round": 3,
@@ -2756,7 +2756,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens charge 2pw"
+    "move": "geodens charge 2pw (2/4/2/0 ⇒ 0/6/2/0)"
   },
   {
     "round": 3,
@@ -2777,7 +2777,7 @@
     ],
     "color": "#2080f0",
     "textColor": "black",
-    "move": "lantids build ts 1A2. spend 2pw for 2c."
+    "move": "lantids build ts 1A2. spend 2pw for 2c. (0/1/2/0 ⇒ 2/1/0/0)"
   },
   {
     "round": 3,
@@ -2803,7 +2803,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 2pw"
+    "move": "lantids charge 2pw (0/3/0/0 ⇒ 0/1/2/0)"
   },
   {
     "round": 3,
@@ -2829,7 +2829,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 2pw"
+    "move": "lantids charge 2pw (2/1/0/0 ⇒ 0/3/0/0)"
   },
   {
     "round": 3,
@@ -2859,7 +2859,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons charge 1pw. brainstone area2"
+    "move": "taklons charge 1pw. brainstone area2 (1,B/2/1/0 ⇒ 1/2,B/1/0)"
   },
   {
     "round": 3,
@@ -2872,7 +2872,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens charge 2pw"
+    "move": "geodens charge 2pw (4/2/2/0 ⇒ 2/4/2/0)"
   },
   {
     "round": 3,
@@ -2902,7 +2902,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 1pw"
+    "move": "lantids charge 1pw (3/0/0/0 ⇒ 2/1/0/0)"
   },
   {
     "round": 3,
@@ -2923,7 +2923,7 @@
     ],
     "color": "#FF9500",
     "textColor": "black",
-    "move": "geodens spend 3pw for 1o. build lab 1A1. tech adv-terra (3 VP / federation when passing). cover terra (7 VP). up nav (0 ⇒ 1)."
+    "move": "geodens spend 3pw for 1o. build lab 1A1. tech adv-terra (3 VP / federation when passing). cover terra (7 VP). up nav (0 ⇒ 1). (1/2/5/0 ⇒ 4/2/2/0)"
   },
   {
     "round": 3,
@@ -2949,7 +2949,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons action power5."
+    "move": "taklons action power5. (0/2/2,B/0 ⇒ 1,B/2/1/0)"
   },
   {
     "round": 3,
@@ -2962,7 +2962,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens charge 2pw"
+    "move": "geodens charge 2pw (3/0/5/0 ⇒ 1/2/5/0)"
   },
   {
     "round": 3,
@@ -2979,7 +2979,7 @@
     ],
     "color": "#2080f0",
     "textColor": "black",
-    "move": "lantids action power6. build m 1A2."
+    "move": "lantids action power6. build m 1A2. (0/0/3/0 ⇒ 3/0/0/0)"
   },
   {
     "round": 3,
@@ -3000,7 +3000,7 @@
     ],
     "color": "#FF9500",
     "textColor": "black",
-    "move": "geodens spend 3pw for 1o. build ts 1A1."
+    "move": "geodens spend 3pw for 1o. build ts 1A1. (0/0/8/0 ⇒ 3/0/5/0)"
   },
   {
     "round": 3,
@@ -3013,7 +3013,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars action power3."
+    "move": "itars action power3. (0/3/6/0 ⇒ 4/3/2/0)"
   },
   {
     "round": 3,
@@ -3034,7 +3034,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars spend 4tg for tech. tech free1 (power value 4 for PI / academy). up gaia (2 ⇒ 3). spend 4tg for tech. tech gaia (1o,1pw income). up gaia (2 ⇒ 3)"
+    "move": "itars spend 4tg for tech. tech free1 (power value 4 for PI / academy). up gaia (2 ⇒ 3). spend 4tg for tech. tech gaia (1o,1pw income). up gaia (2 ⇒ 3) (0/0/6/8 ⇒ 0/3/6/0)"
   },
   {
     "round": 3,
@@ -3063,7 +3063,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons brainstone area3"
+    "move": "taklons brainstone area3 (1/3,B/0/0 ⇒ 0/2/2,B/0)"
   },
   {
     "round": 3,
@@ -3118,7 +3118,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens income 1t"
+    "move": "geodens income 1t (1/0/6/0 ⇒ 0/0/8/0)"
   },
   {
     "round": 3,
@@ -3147,7 +3147,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars income 1t. income 1t"
+    "move": "itars income 1t. income 1t (0/4/0/8 ⇒ 0/0/6/8)"
   },
   {
     "round": 3,
@@ -3205,7 +3205,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons federation 4A8,4A9,4B0,4B5 fed2 (8vp,q) using area1: 2."
+    "move": "taklons federation 4A8,4A9,4B0,4B5 fed2 (8vp,q) using area1: 2. (3/3,B/0/0 ⇒ 1/3,B/0/0)"
   },
   {
     "round": 2,
@@ -3218,7 +3218,7 @@
     ],
     "color": "#2080f0",
     "textColor": "black",
-    "move": "lantids spend 2pw for 2c. pass booster3 (q, 2c) returning booster10 (4c, 1 VP / gaia planet)"
+    "move": "lantids spend 2pw for 2c. pass booster3 (q, 2c) returning booster10 (4c, 1 VP / gaia planet) (1/0/2/0 ⇒ 3/0/0/0)"
   },
   {
     "round": 2,
@@ -3244,7 +3244,7 @@
     ],
     "color": "#FF9500",
     "textColor": "black",
-    "move": "geodens spend 1pw for 1c. pass booster4 (2c, 1 step) returning booster3 (q, 2c)"
+    "move": "geodens spend 1pw for 1c. pass booster4 (2c, 1 step) returning booster3 (q, 2c) (0/0/7/0 ⇒ 1/0/6/0)"
   },
   {
     "round": 2,
@@ -3257,7 +3257,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons charge 1pw. brainstone area2"
+    "move": "taklons charge 1pw. brainstone area2 (3,B/3/0/0 ⇒ 3/3,B/0/0)"
   },
   {
     "round": 2,
@@ -3270,7 +3270,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens charge 2pw"
+    "move": "geodens charge 2pw (0/2/5/0 ⇒ 0/0/7/0)"
   },
   {
     "round": 2,
@@ -3287,7 +3287,7 @@
     ],
     "color": "#2080f0",
     "textColor": "black",
-    "move": "lantids spend 1pw for 1c. build m 1B5."
+    "move": "lantids spend 1pw for 1c. build m 1B5. (0/0/3/0 ⇒ 1/0/2/0)"
   },
   {
     "round": 2,
@@ -3300,7 +3300,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars charge 3pw"
+    "move": "itars charge 3pw (3/1/0/8 ⇒ 0/4/0/8)"
   },
   {
     "round": 2,
@@ -3313,7 +3313,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 2pw"
+    "move": "lantids charge 2pw (0/2/1/0 ⇒ 0/0/3/0)"
   },
   {
     "round": 2,
@@ -3330,7 +3330,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons spend 3pw for 1o. build ac2 4A8. tech free1 (power value 4 for PI / academy). up sci (0 ⇒ 1)."
+    "move": "taklons spend 3pw for 1o. build ac2 4A8. tech free1 (power value 4 for PI / academy). up sci (0 ⇒ 1). (0,B/3/3/0 ⇒ 3,B/3/0/0)"
   },
   {
     "round": 2,
@@ -3343,7 +3343,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars spend 3pw for 1o. pass booster9 (4pw, 4 VP / PI or academy) returning booster6 (1o, 1 VP / mine)"
+    "move": "itars spend 3pw for 1o. pass booster9 (4pw, 4 VP / PI or academy) returning booster6 (1o, 1 VP / mine) (0/1/3/8 ⇒ 3/1/0/8)"
   },
   {
     "round": 2,
@@ -3377,7 +3377,7 @@
     ],
     "color": "#2080f0",
     "textColor": "black",
-    "move": "lantids spend 1pw for 1c. federation 4A0,4A1,4B0,5A6,5A7 fed4 (7vp,2o) using area1: 1."
+    "move": "lantids spend 1pw for 1c. federation 4A0,4A1,4B0,5A6,5A7 fed4 (7vp,2o) using area1: 1. (0/2/2/0 ⇒ 0/2/1/0)"
   },
   {
     "round": 2,
@@ -3390,7 +3390,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars charge 3pw"
+    "move": "itars charge 3pw (2/0/2/8 ⇒ 0/1/3/8)"
   },
   {
     "round": 2,
@@ -3403,7 +3403,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 2pw"
+    "move": "lantids charge 2pw (0/4/0/0 ⇒ 0/2/2/0)"
   },
   {
     "round": 2,
@@ -3424,7 +3424,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons spend 3pw for 1o. brainstone area1. build lab 4A8. tech free3 (o,q). up eco (3 ⇒ 4)."
+    "move": "taklons spend 3pw for 1o. brainstone area1. build lab 4A8. tech free3 (o,q). up eco (3 ⇒ 4). (0/3/3,B/0 ⇒ 0,B/3/3/0)"
   },
   {
     "round": 2,
@@ -3437,7 +3437,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens charge 2pw"
+    "move": "geodens charge 2pw (2/0/5/0 ⇒ 0/2/5/0)"
   },
   {
     "round": 2,
@@ -3454,7 +3454,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars spend 1q for 1o. spend 2pw for 2c. build PI 4A5."
+    "move": "itars spend 1q for 1o. spend 2pw for 2c. build PI 4A5. (0/0/4/8 ⇒ 2/0/2/8)"
   },
   {
     "round": 2,
@@ -3467,7 +3467,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 1pw"
+    "move": "lantids charge 1pw (1/3/0/0 ⇒ 0/4/0/0)"
   },
   {
     "round": 2,
@@ -3492,7 +3492,7 @@
     ],
     "color": "#FF9500",
     "textColor": "black",
-    "move": "geodens build lab 5A6. tech terra (7 VP). up terra (4 ⇒ 5)."
+    "move": "geodens build lab 5A6. tech terra (7 VP). up terra (4 ⇒ 5). (0/0/5/0 ⇒ 2/0/5/0)"
   },
   {
     "round": 2,
@@ -3505,7 +3505,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons charge 2pw. brainstone area3"
+    "move": "taklons charge 2pw. brainstone area3 (0,B/3/3/0 ⇒ 0/3/3,B/0)"
   },
   {
     "round": 2,
@@ -3518,7 +3518,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars charge 3pw"
+    "move": "itars charge 3pw (1/1/2/8 ⇒ 0/0/4/8)"
   },
   {
     "round": 2,
@@ -3535,7 +3535,7 @@
     ],
     "color": "#2080f0",
     "textColor": "black",
-    "move": "lantids spend 1pw for 1c. build lab 8A4. tech free1 (power value 4 for PI / academy). up eco (3 ⇒ 4)."
+    "move": "lantids spend 1pw for 1c. build lab 8A4. tech free1 (power value 4 for PI / academy). up eco (3 ⇒ 4). (0/3/1/0 ⇒ 1/3/0/0)"
   },
   {
     "round": 2,
@@ -3556,7 +3556,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons up eco (2 ⇒ 3). brainstone area3. spend 3pw for 1o. brainstone area1."
+    "move": "taklons up eco (2 ⇒ 3). brainstone area3. spend 3pw for 1o. brainstone area1. (0,B/4/2/0 ⇒ 0,B/3/3/0)"
   },
   {
     "round": 2,
@@ -3569,7 +3569,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens charge 2pw"
+    "move": "geodens charge 2pw (0/2/3/0 ⇒ 0/0/5/0)"
   },
   {
     "round": 2,
@@ -3586,7 +3586,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars spend 1pw for 1c. build ts 4A5."
+    "move": "itars spend 1pw for 1c. build ts 4A5. (0/1/3/8 ⇒ 1/1/2/8)"
   },
   {
     "round": 2,
@@ -3620,7 +3620,7 @@
     ],
     "color": "#2080f0",
     "textColor": "black",
-    "move": "lantids up eco (2 ⇒ 3)."
+    "move": "lantids up eco (2 ⇒ 3). (2/2/0/0 ⇒ 0/3/1/0)"
   },
   {
     "round": 2,
@@ -3633,7 +3633,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars charge 3pw"
+    "move": "itars charge 3pw (0/4/0/8 ⇒ 0/1/3/8)"
   },
   {
     "round": 2,
@@ -3646,7 +3646,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 2pw"
+    "move": "lantids charge 2pw (4/0/0/0 ⇒ 2/2/0/0)"
   },
   {
     "round": 2,
@@ -3663,7 +3663,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons burn 1. spend 3pw for 1o. build ts 4A8."
+    "move": "taklons burn 1. spend 3pw for 1o. build ts 4A8. (0/5,B/2/0 ⇒ 0,B/4/2/0)"
   },
   {
     "round": 2,
@@ -3676,7 +3676,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars build gf 8A6 using area1: 6."
+    "move": "itars build gf 8A6 using area1: 6. (6/4/0/2 ⇒ 0/4/0/8)"
   },
   {
     "round": 2,
@@ -3693,7 +3693,7 @@
     ],
     "color": "#FF9500",
     "textColor": "black",
-    "move": "geodens up terra (2 ⇒ 3)."
+    "move": "geodens up terra (2 ⇒ 3). (0/5/0/0 ⇒ 0/2/3/0)"
   },
   {
     "round": 2,
@@ -3706,7 +3706,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons charge 1pw"
+    "move": "taklons charge 1pw (0,B/5/2/0 ⇒ 0/5,B/2/0)"
   },
   {
     "round": 2,
@@ -3719,7 +3719,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars charge 3pw"
+    "move": "itars charge 3pw (9/1/0/2 ⇒ 6/4/0/2)"
   },
   {
     "round": 2,
@@ -3749,7 +3749,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons special 4pw. burn 1. spend 3pw for 1o."
+    "move": "taklons special 4pw. burn 1. spend 3pw for 1o. (3,B/3/2/0 ⇒ 0,B/5/2/0)"
   },
   {
     "round": 2,
@@ -3779,7 +3779,7 @@
     ],
     "color": "#FF9500",
     "textColor": "black",
-    "move": "geodens federation 5A7,5A6,4A1,4B1,4B2 fed6 (6vp,2k) using area1: 2."
+    "move": "geodens federation 5A7,5A6,4A1,4B1,4B2 fed6 (6vp,2k) using area1: 2. (2/5/0/0 ⇒ 0/5/0/0)"
   },
   {
     "round": 2,
@@ -3792,7 +3792,7 @@
     ],
     "color": "#2080f0",
     "textColor": "black",
-    "move": "lantids action power5."
+    "move": "lantids action power5. (0/0/4/0 ⇒ 4/0/0/0)"
   },
   {
     "round": 2,
@@ -3805,7 +3805,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons action power4."
+    "move": "taklons action power4. (2/3/3,B/0 ⇒ 3,B/3/2/0)"
   },
   {
     "round": 2,
@@ -3818,7 +3818,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars burn 2. action power3."
+    "move": "itars burn 2. action power3. (5/5/2/0 ⇒ 9/1/0/2)"
   },
   {
     "round": 2,
@@ -3851,7 +3851,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens income 1t"
+    "move": "geodens income 1t (5/1/0/0 ⇒ 2/5/0/0)"
   },
   {
     "round": 2,
@@ -3897,7 +3897,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons income 2pw. brainstone area3"
+    "move": "taklons income 2pw. brainstone area3 (1/2,B/3/0 ⇒ 2/3/3,B/0)"
   },
   {
     "round": 2,
@@ -3963,7 +3963,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars charge 1pw"
+    "move": "itars charge 1pw (3/4/2/2 ⇒ 2/5/2/2)"
   },
   {
     "round": 1,
@@ -3976,7 +3976,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 1pw"
+    "move": "lantids charge 1pw (2/2/0/0 ⇒ 1/3/0/0)"
   },
   {
     "round": 1,
@@ -3989,7 +3989,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons charge 3pw. brainstone area2"
+    "move": "taklons charge 3pw. brainstone area2 (3,B/0/3/0 ⇒ 1/2,B/3/0)"
   },
   {
     "round": 1,
@@ -4006,7 +4006,7 @@
     ],
     "color": "#FF9500",
     "textColor": "black",
-    "move": "geodens spend 3pw for 1o. spend 2pw for 2c. build ts 4B2."
+    "move": "geodens spend 3pw for 1o. spend 2pw for 2c. build ts 4B2. (0/1/5/0 ⇒ 5/1/0/0)"
   },
   {
     "round": 1,
@@ -4079,7 +4079,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 1pw"
+    "move": "lantids charge 1pw (3/1/0/0 ⇒ 2/2/0/0)"
   },
   {
     "round": 1,
@@ -4105,7 +4105,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens charge 3pw"
+    "move": "geodens charge 3pw (0/4/2/0 ⇒ 0/1/5/0)"
   },
   {
     "round": 1,
@@ -4126,7 +4126,7 @@
     ],
     "color": "#2080f0",
     "textColor": "black",
-    "move": "lantids spend 3pw for 1o. build m 5A6."
+    "move": "lantids spend 3pw for 1o. build m 5A6. (0/1/3/0 ⇒ 3/1/0/0)"
   },
   {
     "round": 1,
@@ -4139,7 +4139,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars charge 3pw"
+    "move": "itars charge 3pw (6/1/2/2 ⇒ 3/4/2/2)"
   },
   {
     "round": 1,
@@ -4152,7 +4152,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 1pw"
+    "move": "lantids charge 1pw (0/2/2/0 ⇒ 0/1/3/0)"
   },
   {
     "round": 1,
@@ -4173,7 +4173,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons spend 3pw for 1o. brainstone area1. action power6. build m 4A8."
+    "move": "taklons spend 3pw for 1o. brainstone area1. action power6. build m 4A8. (0/0/6,B/0 ⇒ 3,B/0/3/0)"
   },
   {
     "round": 1,
@@ -4186,7 +4186,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars charge 1pw"
+    "move": "itars charge 1pw (7/0/2/2 ⇒ 6/1/2/2)"
   },
   {
     "round": 1,
@@ -4199,7 +4199,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 1pw"
+    "move": "lantids charge 1pw (0/3/1/0 ⇒ 0/2/2/0)"
   },
   {
     "round": 1,
@@ -4212,7 +4212,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons charge 2pw"
+    "move": "taklons charge 2pw (0/2/4,B/0 ⇒ 0/0/6,B/0)"
   },
   {
     "round": 1,
@@ -4238,7 +4238,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons charge 3pw. brainstone area3"
+    "move": "taklons charge 3pw. brainstone area3 (0,B/3/3/0 ⇒ 0/2/4,B/0)"
   },
   {
     "round": 1,
@@ -4251,7 +4251,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens charge 3pw"
+    "move": "geodens charge 3pw (1/5/0/0 ⇒ 0/4/2/0)"
   },
   {
     "round": 1,
@@ -4281,7 +4281,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens charge 3pw"
+    "move": "geodens charge 3pw (4/2/0/0 ⇒ 1/5/0/0)"
   },
   {
     "round": 1,
@@ -4294,7 +4294,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 3pw"
+    "move": "lantids charge 3pw (3/0/1/0 ⇒ 0/3/1/0)"
   },
   {
     "round": 1,
@@ -4315,7 +4315,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons spend 3pw for 1o. brainstone area1. build ac1 4B0. tech free2 (1k,1c income). up eco (0 ⇒ 1)."
+    "move": "taklons spend 3pw for 1o. brainstone area1. build ac1 4B0. tech free2 (1k,1c income). up eco (0 ⇒ 1). (0/3/3,B/0 ⇒ 0,B/3/3/0)"
   },
   {
     "round": 1,
@@ -4328,7 +4328,7 @@
     ],
     "color": "#FF9500",
     "textColor": "black",
-    "move": "geodens action power5."
+    "move": "geodens action power5. (0/2/4/0 ⇒ 4/2/0/0)"
   },
   {
     "round": 1,
@@ -4336,7 +4336,7 @@
     "changes": [],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars burn 2. pass booster6 (1o, 1 VP / mine) returning booster2 (1o, 2 tokens)"
+    "move": "itars burn 2. pass booster6 (1o, 1 VP / mine) returning booster2 (1o, 2 tokens) (7/4/0/0 ⇒ 7/0/2/2)"
   },
   {
     "round": 1,
@@ -4349,7 +4349,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons charge 2pw. brainstone area3"
+    "move": "taklons charge 2pw. brainstone area3 (0,B/3/3/0 ⇒ 0/3/3,B/0)"
   },
   {
     "round": 1,
@@ -4362,7 +4362,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens charge 3pw"
+    "move": "geodens charge 3pw (0/5/1/0 ⇒ 0/2/4/0)"
   },
   {
     "round": 1,
@@ -4396,7 +4396,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons special 4pw. brainstone area3. spend 3pw for 1o. brainstone area1."
+    "move": "taklons special 4pw. brainstone area3. spend 3pw for 1o. brainstone area1. (1,B/3/2/0 ⇒ 0,B/3/3/0)"
   },
   {
     "round": 1,
@@ -4447,7 +4447,7 @@
     ],
     "color": "#2080f0",
     "textColor": "black",
-    "move": "lantids spend 3pw for 1o. up eco (0 ⇒ 1)."
+    "move": "lantids spend 3pw for 1o. up eco (0 ⇒ 1). (0/0/4/0 ⇒ 3/0/1/0)"
   },
   {
     "round": 1,
@@ -4460,7 +4460,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons action power4."
+    "move": "taklons action power4. (0/3/3,B/0 ⇒ 1,B/3/2/0)"
   },
   {
     "round": 1,
@@ -4473,7 +4473,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 3pw"
+    "move": "lantids charge 3pw (0/3/1/0 ⇒ 0/0/4/0)"
   },
   {
     "round": 1,
@@ -4486,7 +4486,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons charge 2pw"
+    "move": "taklons charge 2pw (0/5/1,B/0 ⇒ 0/3/3,B/0)"
   },
   {
     "round": 1,
@@ -4516,7 +4516,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 1pw"
+    "move": "lantids charge 1pw (1/2/1/0 ⇒ 0/3/1/0)"
   },
   {
     "round": 1,
@@ -4529,7 +4529,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens charge 1pw"
+    "move": "geodens charge 1pw (0/6/0/0 ⇒ 0/5/1/0)"
   },
   {
     "round": 1,
@@ -4559,7 +4559,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons charge 2pw. brainstone area3"
+    "move": "taklons charge 2pw. brainstone area3 (0,B/5/1/0 ⇒ 0/5/1,B/0)"
   },
   {
     "round": 1,
@@ -4572,7 +4572,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens charge 2pw"
+    "move": "geodens charge 2pw (2/4/0/0 ⇒ 0/6/0/0)"
   },
   {
     "round": 1,
@@ -4593,7 +4593,7 @@
     ],
     "color": "#2080f0",
     "textColor": "black",
-    "move": "lantids spend 1pw for 1c. build PI 4A0."
+    "move": "lantids spend 1pw for 1c. build PI 4A0. (0/2/2/0 ⇒ 1/2/1/0)"
   },
   {
     "round": 1,
@@ -4606,7 +4606,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens charge 2pw"
+    "move": "geodens charge 2pw (4/2/0/0 ⇒ 2/4/0/0)"
   },
   {
     "round": 1,
@@ -4619,7 +4619,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 2pw"
+    "move": "lantids charge 2pw (0/4/0/0 ⇒ 0/2/2/0)"
   },
   {
     "round": 1,
@@ -4640,7 +4640,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons spend 3pw for 1o. build lab 4B0. tech nav (4pw special action). up nav (0 ⇒ 1)."
+    "move": "taklons spend 3pw for 1o. build lab 4B0. tech nav (4pw special action). up nav (0 ⇒ 1). (0/5/1,B/0 ⇒ 0,B/5/1/0)"
   },
   {
     "round": 1,
@@ -4653,7 +4653,7 @@
     ],
     "color": "#FF9500",
     "textColor": "black",
-    "move": "geodens action power3."
+    "move": "geodens action power3. (0/2/4/0 ⇒ 4/2/0/0)"
   },
   {
     "round": 1,
@@ -4666,7 +4666,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 1pw"
+    "move": "lantids charge 1pw (1/3/0/0 ⇒ 0/4/0/0)"
   },
   {
     "round": 1,
@@ -4679,7 +4679,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens charge 1pw"
+    "move": "geodens charge 1pw (0/3/3/0 ⇒ 0/2/4/0)"
   },
   {
     "round": 1,
@@ -4709,7 +4709,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons charge 2pw. brainstone area3"
+    "move": "taklons charge 2pw. brainstone area3 (0,B/5/1/0 ⇒ 0/5/1,B/0)"
   },
   {
     "round": 1,
@@ -4722,7 +4722,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens charge 2pw"
+    "move": "geodens charge 2pw (0/5/1/0 ⇒ 0/3/3/0)"
   },
   {
     "round": 1,
@@ -4748,7 +4748,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens charge 2pw"
+    "move": "geodens charge 2pw (1/5/0/0 ⇒ 0/5/1/0)"
   },
   {
     "round": 1,
@@ -4761,7 +4761,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 1pw"
+    "move": "lantids charge 1pw (2/2/0/0 ⇒ 1/3/0/0)"
   },
   {
     "round": 1,
@@ -4778,7 +4778,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons spend 3pw for 1o. build ts 4B0."
+    "move": "taklons spend 3pw for 1o. build ts 4B0. (0/5/1,B/0 ⇒ 0,B/5/1/0)"
   },
   {
     "round": 1,
@@ -4791,7 +4791,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 1pw"
+    "move": "lantids charge 1pw (3/1/0/0 ⇒ 2/2/0/0)"
   },
   {
     "round": 1,
@@ -4804,7 +4804,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons charge 1pw"
+    "move": "taklons charge 1pw (0/6/0,B/0 ⇒ 0/5/1,B/0)"
   },
   {
     "round": 1,
@@ -4830,7 +4830,7 @@
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
-    "move": "lantids charge 1pw"
+    "move": "lantids charge 1pw (4/0/0/0 ⇒ 3/1/0/0)"
   },
   {
     "round": 1,
@@ -4843,7 +4843,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens charge 1pw"
+    "move": "geodens charge 1pw (2/4/0/0 ⇒ 1/5/0/0)"
   },
   {
     "round": 1,
@@ -4902,7 +4902,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons brainstone area3"
+    "move": "taklons brainstone area3 (2,B/4/0/0 ⇒ 0/6/0,B/0)"
   },
   {
     "round": 1,
@@ -4973,7 +4973,7 @@
     "changes": [],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars booster booster2 (1o, 2 tokens)"
+    "move": "itars booster booster2 (1o, 2 tokens) (4/4/0/0 ⇒ 7/4/0/0)"
   },
   {
     "round": 0,
@@ -5125,7 +5125,7 @@
     "changes": [],
     "color": "#2080f0",
     "textColor": "black",
-    "move": "p4 faction lantids"
+    "move": "p4 faction lantids (0/0/0/0 ⇒ 4/0/0/0)"
   },
   {
     "round": 0,

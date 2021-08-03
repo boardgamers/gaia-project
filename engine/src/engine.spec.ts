@@ -624,7 +624,7 @@ describe("Engine", () => {
       engine.autoMove();
 
       expect(engine.moveHistory.length).to.equal(slowMotionMoves.length - 1);
-      expect(engine.moveHistory.slice(-1)[0]).to.equal("nevlas income 2t");
+      expect(engine.moveHistory.slice(-1)[0]).to.equal("nevlas income 2t (0/0/0/0 ⇒ 0/2/0/0)");
     });
   });
 
@@ -640,7 +640,12 @@ describe("Engine", () => {
       const engine = new Engine(["init 3 12"], { randomFactions: true });
       while (engine.autoMove());
 
-      expect(engine.moveHistory).to.eql(["init 3 12", "p1 faction bescods", "p2 faction gleens", "p3 faction baltaks"]);
+      expect(engine.moveHistory).to.eql([
+        "init 3 12",
+        "p1 faction bescods",
+        "p2 faction gleens",
+        "p3 faction baltaks (0/0/0/0 ⇒ 2/2/0/0)",
+      ]);
     });
 
     it("should choose factions if random factions are set (choose-bid auction)", () => {
@@ -745,7 +750,9 @@ describe("Engine", () => {
       engine.autoMove(undefined, { autoPass: true });
 
       expect(engine.moveHistory.length).to.equal(length + 1);
-      expect(engine.moveHistory.slice(-1).pop()).to.equal(`taklons income 2t,3pw. brainstone area2`);
+      expect(engine.moveHistory.slice(-1).pop()).to.equal(
+        `taklons income 2t,3pw. brainstone area2 (1,B/1/3/0 ⇒ 1/3,B/3/0)`
+      );
     });
   });
 

@@ -24,7 +24,7 @@ describe("wrapper", () => {
       automove(engine);
 
       expect(engine.moveHistory.length).to.equal(moves.length + 1);
-      expect(engine.moveHistory.slice(-1).pop()).to.equal("nevlas charge 1pw");
+      expect(engine.moveHistory.slice(-1).pop()).to.equal("nevlas charge 1pw (2/4/0/0 ⇒ 1/5/0/0)");
     });
 
     it("should not automatically charge 2pw", () => {
@@ -43,7 +43,7 @@ describe("wrapper", () => {
       automove(engine);
 
       expect(engine.moveHistory.length).to.equal(moves2pw.length + 1);
-      expect(engine.moveHistory.slice(-1).pop()).to.equal("terrans charge 2pw");
+      expect(engine.moveHistory.slice(-1).pop()).to.equal("terrans charge 2pw (4/4/0/0 ⇒ 2/6/0/0)");
     });
 
     it("should automatically decline 2pw when the setting is set to 0", () => {
@@ -67,7 +67,7 @@ describe("wrapper", () => {
       automove(engine);
 
       expect(engine.moveHistory.length).to.equal(move2pwAndBrainstone.length + 1);
-      expect(engine.moveHistory.slice(-1)[0]).to.equal("taklons charge 2pw. brainstone area2");
+      expect(engine.moveHistory.slice(-1)[0]).to.equal("taklons charge 2pw. brainstone area2 (2,B/4/0/0 ⇒ 1/5,B/0/0)");
     });
 
     it("should NOT be able to automatically charge 2 pw and move brainstone if only autobrainstone is set", () => {
@@ -88,7 +88,9 @@ describe("wrapper", () => {
       const newEngine = move(engine, "taklons charge 2pw", 0);
 
       expect(newEngine.moveHistory.length).to.equal(move2pwAndBrainstone.length + 1);
-      expect(newEngine.moveHistory.slice(-1)[0]).to.equal("taklons charge 2pw. brainstone area2");
+      expect(newEngine.moveHistory.slice(-1)[0]).to.equal(
+        "taklons charge 2pw. brainstone area2 (2,B/4/0/0 ⇒ 1/5,B/0/0)"
+      );
     });
   });
 
@@ -111,7 +113,7 @@ describe("wrapper", () => {
       const newEngine = move(engine, "terrans up gaia", PlayerEnum.Player1);
 
       expect(newEngine.moveHistory.length).to.equal(moves.length + 1);
-      expect(newEngine.moveHistory.slice(-1).pop()).to.equal("terrans up gaia (1 ⇒ 2)");
+      expect(newEngine.moveHistory.slice(-1).pop()).to.equal("terrans up gaia (1 ⇒ 2) (4/4/0/0 ⇒ 7/4/0/0)");
     });
 
     it("should add returned booster to move history", () => {
