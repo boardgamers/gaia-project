@@ -15,7 +15,7 @@ export function terraformingCost(d: PlayerData, steps: number): Reward | null {
   const cost = oreNeeded(d.temporaryStep);
   if (d.temporaryStep > 0 && oreNeeded(0) === cost) {
     // not allowed - see https://github.com/boardgamers/gaia-project/issues/76
-    // OR there's no reason to activate the booster and not use it
+    // OR (for booster) there's no reason to activate the booster and not use it
     return null;
   }
   return new Reward(cost, Resource.Ore);
