@@ -89,13 +89,13 @@ describe("Taklons", () => {
 
     it("should use brainstone if needed", () => {
       const engine = new Engine([...moves, "taklons burn 2. spend 4pw for 4c"]);
-      expect(engine.moveHistory.pop()).to.deep.equal("taklons burn 2. spend 4pw for 4c");
+      expect(engine.moveHistory.pop()).to.deep.equal("taklons burn 2. spend 4pw for 4c (0/6/0,B/0 ⇒ 1,B/2/1/0)");
       expect(engine.player(Player.Player1).data.brainstone).to.equal(PowerArea.Area1);
     });
 
     it("should not use brainstone if less than 3 power", () => {
       const engine = new Engine([...moves, "taklons burn 2. spend 1pw for 1c"]);
-      expect(engine.moveHistory.pop()).to.deep.equal("taklons burn 2. spend 1pw for 1c");
+      expect(engine.moveHistory.pop()).to.deep.equal("taklons burn 2. spend 1pw for 1c (0/6/0,B/0 ⇒ 1/2/1,B/0)");
       expect(engine.player(Player.Player1).data.brainstone).to.equal(PowerArea.Area3);
     });
   });

@@ -10,7 +10,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "geodens charge 1pw"
+    "move": "geodens charge 1pw (1/7/1/0 ⇒ 0/8/1/0)"
   },
   {
     "round": 6,
@@ -31,7 +31,7 @@
     ],
     "color": "#704100",
     "textColor": "white",
-    "move": "taklons spend 4pw for 1q. build m 7B4."
+    "move": "taklons spend 4pw for 1q. build m 7B4. (0/1/3,B/0 ⇒ 1,B/1/2/0)"
   },
   {
     "round": 6,
@@ -65,7 +65,7 @@
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
-    "move": "itars charge 1pw"
+    "move": "itars charge 1pw (1/0/2/0 ⇒ 0/1/2/0)"
   },
   {
     "round": 6,
@@ -78,7 +78,7 @@
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
-    "move": "taklons charge 1t,1pw"
+    "move": "taklons charge 1t,1pw (0/0/3,B/0 ⇒ 0/1/3,B/0)"
   },
   {
     "round": 6,
@@ -124,7 +124,7 @@
     ],
     "color": "#000000",
     "textColor": "white",
-    "move": "itars spend 4tg for tech. tech int (k for planet types). up int (3 ⇒ 4). spend 4tg for tech. tech adv-int (4 VP / ts). cover int (k for planet types). up sci (1 ⇒ 2)"
+    "move": "itars spend 4tg for tech. tech int (k for planet types). up int (3 ⇒ 4). spend 4tg for tech. tech adv-int (4 VP / ts). cover int (k for planet types). up sci (1 ⇒ 2) (0/0/2/9 ⇒ 1/0/2/0)"
   },
   {
     "round": 0,

@@ -33,6 +33,19 @@ export class Power {
   constructor(public area1: number = 0, public area2: number = 0, public area3: number = 0, public gaia: number = 0) {}
 }
 
+export function powerLogString(power: Power, brainstoneArea: PowerArea): string {
+  const areaString = (area: PowerArea, tokens: number): string => {
+    return tokens.toString() + (area === brainstoneArea ? ",B" : "");
+  };
+  const result: string[] = [
+    areaString(PowerArea.Area1, power.area1),
+    areaString(PowerArea.Area2, power.area2),
+    areaString(PowerArea.Area3, power.area3),
+    areaString(PowerArea.Gaia, power.gaia),
+  ];
+  return result.join("/");
+}
+
 export type MoveTokens = Power & { brainstone: number };
 
 export type BrainstoneDest = PowerArea | "discard";
