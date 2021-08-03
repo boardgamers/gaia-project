@@ -285,6 +285,12 @@ export default class Player extends EventEmitter {
     } else if (building === Building.Mine) {
       // habitability costs
       if (targetPlanet === Planet.Gaia) {
+        if (this.data.temporaryStep > 0) {
+          // not allowed - see https://github.com/boardgamers/gaia-project/issues/76
+          // OR (for booster) there's no reason to activate the booster and not use it
+          return null;
+        }
+
         if (!existingBuilding) {
           // different cost for Gleens
           addedCost.push(this.gaiaFormingCost());
