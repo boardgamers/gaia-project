@@ -8,7 +8,7 @@ function launchSelfContained(selector = "#app", debug = true) {
   const emitter = launch(selector, debug ? Wrapper : Game);
 
   const players = process.env.VUE_APP_players ?? 3;
-  const seed = process.env.VUE_APP_seed ?? "12";
+  const seed = process.env.VUE_APP_seed ?? Math.floor(Math.random() * 10000);
   const moves = process.env.VUE_APP_moves ? JSON.parse(process.env.VUE_APP_moves) : [];
   let engine = new Engine(
     [`init ${players} ${seed}`, ...moves],
