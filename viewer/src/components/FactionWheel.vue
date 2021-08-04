@@ -1,5 +1,10 @@
 <template>
   <g>
+    <path
+      :transform="`scale(0.16) translate(-8,-8)`"
+      d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"
+    />
+    <circle class="rules-button" r="1.6" v-b-modal="'rules'" />
     <circle :r="r" fill="none" />
     <g
       v-for="i in [0, 1, 2, 3, 4, 5, 6]"
@@ -29,6 +34,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
+import { planetFill } from "../graphics/utils";
 import Engine, { factionPlanet, Planet } from "@gaia-project/engine";
 
 @Component
@@ -82,10 +88,7 @@ export default class FactionWheel extends Vue {
   }
 
   planetFill(planet: string) {
-    if (planet === Planet.Titanium || planet === Planet.Swamp) {
-      return "white";
-    }
-    return "black";
+    return planetFill(planet);
   }
 }
 </script>
@@ -93,5 +96,10 @@ export default class FactionWheel extends Vue {
 circle {
   stroke-width: 0.05px;
   stroke: black;
+}
+
+.rules-button {
+  cursor: pointer;
+  opacity: 0;
 }
 </style>

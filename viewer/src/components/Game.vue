@@ -3,25 +3,7 @@
     <b-modal id="chart-button" title="Victory Points, Resources, and more" size="xl">
       <Charts />
     </b-modal>
-    <b-modal id="final-scoring" size="lg" title="Final Scoring" dialog-class="gaia-viewer-modal">
-      <b-table
-        striped
-        bordered
-        small
-        responsive="true"
-        hover
-        :items="finalScoringItems"
-        :fields="finalScoringFields"
-        class="final-store-table"
-      >
-        <template #cell(Name)="data">
-          <span v-html="data.value"></span>
-        </template>
-        <template #cell()="data">
-          <b-checkbox :checked="data.value" disabled />
-        </template>
-      </b-table>
-    </b-modal>
+    <Rules id="rules" />
 
     <div
       :class="['row', 'no-gutters', 'justify-content-center', engine.players.length > 2 ? 'medium-map' : 'small-map']"
@@ -95,6 +77,7 @@ import AdvancedLog from "./AdvancedLog.vue";
 import BoardAction from "./BoardAction.vue";
 import Commands from "./Commands.vue";
 import Pool from "./Pool.vue";
+import Rules from "./Rules.vue";
 import PlayerInfo from "./PlayerInfo.vue";
 import ResearchBoard from "./ResearchBoard.vue";
 import ScoringBoard from "./ScoringBoard.vue";
@@ -177,12 +160,11 @@ import { UndoPropagation } from "../logic/commands";
     ScoringBoard,
     SpaceMap,
     TurnOrder,
+    Rules,
     Charts: () => import('./Charts.vue'),
   },
 })
 export default class Game extends Vue {
-  private finalScoringFields: any[] = null
-  private finalScoringItems: any[] = null
   public currentMove = "";
   public hideLog = false;
   public currentMoveWarnings: Map<string, BuildWarning[]> = new Map<string, BuildWarning[]>();
@@ -196,9 +178,6 @@ export default class Game extends Vue {
   options: EngineOptions;
 
   mounted() {
-    const element = document.getElementById("root");
-    this.finalScoringFields = finalScoringFields(element);
-    this.finalScoringItems = finalScoringItems(element);
     const undoListener = this.$store.subscribeAction(({ type, payload }) => {
       if (type === "gaiaViewer/undo") {
         if (!(payload as UndoPropagation).undoPerformed) {

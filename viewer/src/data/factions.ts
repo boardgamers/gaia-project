@@ -9,6 +9,7 @@ import {
   terraformingStepsRequired,
 } from "@gaia-project/engine";
 import { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
+import { factionColor, planetFill } from "../graphics/utils";
 
 const factionData: { [faction in Faction]: { name: string; ability: string; PI: string; shortcut: string } } = {
   [Faction.Terrans]: {
@@ -162,7 +163,9 @@ export function factionDesc(faction: Faction, variant?: FactionBoardRaw) {
   const roundIncome = board.income.filter((ev) => ev.operator === Operator.Income);
 
   return `
-  <div class='faction-desc'>
+  <div class='faction-desc' style='background-color: ${factionColor(faction)}; color: ${planetFill(
+    factionPlanet(faction)
+  )}; padding: 1rem'>
     <b>Ability: </b> ${factionData[faction].ability} </br>
     <b>Planetary Institute: </b> ${factionData[faction].PI}<br/>
     <b>Buildings:</b> ${buildingDesc.replace(/,,/g, ",~,").replace(/,/g, ", ")}

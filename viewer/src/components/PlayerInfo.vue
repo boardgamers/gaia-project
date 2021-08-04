@@ -171,9 +171,7 @@
         :player="player.player"
       />
     </div>
-    <b-modal :id="player.faction" :title="factionName" size="lg" dialog-class="gaia-viewer-modal">
-      <div v-html="tooltip"></div>
-    </b-modal>
+    <Rules :id="player.faction" :type="player.faction" />
   </div>
 </template>
 
@@ -189,7 +187,8 @@ import FederationTile from "./FederationTile.vue";
 import BuildingGroup from "./PlayerBoard/BuildingGroup.vue";
 import PlayerBoardInfo from "./PlayerBoard/Info.vue";
 import PowerBowls from "./PlayerBoard/PowerBowls.vue";
-import { factionDesc, factionName, planetsWithSteps } from "../data/factions";
+import Rules from "./Rules.vue";
+import { factionName, planetsWithSteps } from "../data/factions";
 
 @Component({
   components: {
@@ -200,6 +199,7 @@ import { factionDesc, factionName, planetsWithSteps } from "../data/factions";
     BuildingGroup,
     PowerBowls,
     PlayerBoardInfo,
+    Rules,
   },
 })
 export default class PlayerInfo extends Vue {
@@ -227,10 +227,6 @@ export default class PlayerInfo extends Vue {
 
   get gameData(): Engine {
     return this.$store.state.gaiaViewer.data;
-  }
-
-  get tooltip() {
-    return factionDesc(this.faction, this.player.factionVariant);
   }
 
   get planet() {
