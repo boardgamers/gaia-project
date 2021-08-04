@@ -69,6 +69,8 @@ export type FactionCustomization = {
   players: number;
 };
 
+export type Layout = "standard" | "balanced" | "xshape";
+
 export interface EngineOptions {
   /** Allow last player to rotate sector BEFORE faction selection */
   advancedRules?: boolean;
@@ -83,7 +85,7 @@ export interface EngineOptions {
   /**  **/
   factionVariant?: FactionVariant;
   /** Layout */
-  layout?: "standard" | "balanced" | "xshape";
+  layout?: Layout;
   /* Force players to have random factions */
   randomFactions?: boolean;
 }
