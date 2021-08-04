@@ -121,7 +121,9 @@ const replaceRegex = new RegExp(
   "g"
 );
 
-const powerRegex = new RegExp(" \\((\\d+/\\d+/\\d+/\\d+) ⇒ \\d+/\\d+/\\d+/\\d+\\)");
+const powerRegex = new RegExp(
+  " \\((\\d+(,B)?/\\d+(,B)?/\\d+(,B)?/\\d+(,B)?) ⇒ \\d+(,B)?/\\d+(,B)?/\\d+(,B)?/\\d+(,B)?\\)"
+);
 
 export function createMoveToShow(move: string, p: PlayerData, executeMove: () => void): string {
   let moveToGaia: MoveTokens = null;
