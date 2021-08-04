@@ -1,11 +1,5 @@
 <template>
-  <g
-    :class="['finalScoringTile', { highlighted }]"
-    v-b-tooltip
-    :title="tooltip"
-    v-b-modal="'final-scoring'"
-    role="button"
-  >
+  <g :class="['finalScoringTile', { highlighted }]" v-b-tooltip :title="tooltip" v-b-modal="'rules'" role="button">
     <rect x="1" y="1" width="75" height="55" />
     <text class="title" x="5" y="12">{{ content }}</text>
     <Token

@@ -12,6 +12,13 @@ export function planetColor(planet: Exclude<Planet, Planet.Empty>): string {
   return planets[planet].color;
 }
 
+export function planetFill(planet: string) {
+  if (planet === Planet.Titanium || planet === Planet.Swamp) {
+    return "white";
+  }
+  return "black";
+}
+
 export function planetClass(faction: string): string {
   switch (faction as any) {
     case "wild":
