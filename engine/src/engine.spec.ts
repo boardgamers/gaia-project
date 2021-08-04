@@ -792,7 +792,7 @@ describe("Engine", () => {
         "terrans build gf 6A1": "terrans build gf 6A1 using area1: 1, area2: 2, area3: 3, brainstone: 1",
         "decline up": "decline up",
         "charge 1pw": "charge 1pw (0/0/0/0 ⇒ 0/0/0/1)",
-        "charge 1pw (0/0/0/0 ⇒ 0/0/0/1). spend 1pw for 1c": "charge 1pw. spend 1pw for 1c (0/0/0/0 ⇒ 1/0/0/1)",
+        "charge 1pw (0,B/0/0/0 ⇒ 0/0/0/1). spend 1pw for 1c": "charge 1pw. spend 1pw for 1c (0,B/0/0/0 ⇒ 1/0/0/1)",
       };
 
       const replace = (give: string) => {
