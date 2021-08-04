@@ -121,7 +121,7 @@ const replaceRegex = new RegExp(
   "g"
 );
 
-const powerRegex = new RegExp("\\d+/\\d+/\\d+/\\d+");
+const powerRegex = new RegExp(" \\((\\d+/\\d+/\\d+/\\d+) ⇒ \\d+/\\d+/\\d+/\\d+\\)");
 
 export function createMoveToShow(move: string, p: PlayerData, executeMove: () => void): string {
   let moveToGaia: MoveTokens = null;
@@ -172,7 +172,11 @@ export function createMoveToShow(move: string, p: PlayerData, executeMove: () =>
 
   const newPower = powerLogString(p.power, p.brainstone);
 
-  if (oldPower !== newPower && !powerRegex.test(withDetails)) {
+  if (oldPower !== newPower) {
+    const lastOldPower = powerRegex.exec(withDetails);
+    if (lastOldPower) {
+      return `${withDetails.replace(lastOldPower[0], "")} (${lastOldPower[1]} ⇒ ${newPower})`;
+    }
     return `${withDetails} (${oldPower} ⇒ ${newPower})`;
   }
 
