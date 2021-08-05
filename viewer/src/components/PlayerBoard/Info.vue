@@ -13,7 +13,7 @@
     />
     <g transform="translate(0, 0.5)">
       <text class="faction-name">
-        <tspan class="faction-name" v-b-modal="faction" role="button">{{ factionName }}</tspan>
+        <tspan class="faction-name" v-b-modal.modal-center="faction" role="button">{{ factionName }}</tspan>
       </text>
     </g>
     <!-- Resources / Income -->
