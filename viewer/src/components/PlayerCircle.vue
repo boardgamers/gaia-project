@@ -15,7 +15,7 @@ import { phaseBeforeSetupBuilding } from "../logic/utils";
 @Component
 export default class PlayerCircle extends Vue {
   @Prop()
-  index: PlayerEnum;
+  index: PlayerEnum | null;
 
   @Prop()
   player: Player;
@@ -55,11 +55,7 @@ export default class PlayerCircle extends Vue {
   }
 
   planet() {
-    if (this.index === PlayerEnum.All) {
-      return Planet.Lost;
-    }
-
-    if (phaseBeforeSetupBuilding(this.gameData)) {
+    if (this.phaseBeforeSetupBuilding()) {
       return this.gameData.setup[this.index] ? factionPlanet(this.gameData.setup[this.index]) : Planet.Lost;
     }
 
@@ -71,11 +67,7 @@ export default class PlayerCircle extends Vue {
   }
 
   initial() {
-    if (this.index === PlayerEnum.All) {
-      return "A";
-    }
-
-    if (phaseBeforeSetupBuilding(this.gameData)) {
+    if (this.phaseBeforeSetupBuilding()) {
       return this.gameData.setup[this.index] ? this.gameData.setup[this.index][0].toUpperCase() : "?";
     }
 
@@ -86,13 +78,14 @@ export default class PlayerCircle extends Vue {
     return "?";
   }
 
+  private phaseBeforeSetupBuilding() {
+    return this.index != null && phaseBeforeSetupBuilding(this.gameData);
+  }
+
   name() {
-    if (this.index === PlayerEnum.All) {
-      return "All";
-    }
     let player = this.player;
 
-    if (phaseBeforeSetupBuilding(this.gameData)) {
+    if (this.phaseBeforeSetupBuilding()) {
       const isBiddingWhileChoosingFactions =
         this.gameData.options.auction === AuctionVariant.BidWhileChoosing && this.gameData.phase === Phase.SetupFaction;
       const isInAuctionPhase = this.gameData.phase === Phase.SetupAuction;
