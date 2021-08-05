@@ -7,7 +7,6 @@
         :key="index"
         :player="player"
         :index="index"
-        :on-click="() => {}"
         :transform="`translate(${index * 2.5})`"
       />
       <PlayerCircle
@@ -15,7 +14,6 @@
         :key="'p-' + index"
         :player="player"
         :index="index"
-        :on-click="() => {}"
         :transform="`translate(${(index + 1 + turnOrder.length) * 2.5})`"
         style="opacity: 0.5"
       />

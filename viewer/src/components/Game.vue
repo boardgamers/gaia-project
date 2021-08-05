@@ -31,6 +31,12 @@
           :currentMove="currentMove"
           :currentMoveWarnings="Array.from(currentMoveWarnings.values()).flat()"
         />
+        <div v-else-if="!this.ended">
+          <h5>Current player</h5>
+          <svg viewBox="-1.2 -1.2 34 34">
+            <PlayerCircle :player="this.engine.players[this.player]" />
+          </svg>
+        </div>
       </div>
     </div>
     <AdvancedLog
@@ -78,13 +84,13 @@ import BoardAction from "./BoardAction.vue";
 import Commands from "./Commands.vue";
 import Pool from "./Pool.vue";
 import Rules from "./Rules.vue";
+import PlayerCircle from "./PlayerCircle.vue";
 import PlayerInfo from "./PlayerInfo.vue";
 import ResearchBoard from "./ResearchBoard.vue";
 import ScoringBoard from "./ScoringBoard.vue";
 import SpaceMap from "./SpaceMap.vue";
 import TurnOrder from "./TurnOrder.vue";
 import { parseCommands } from "../logic/recent";
-import { finalScoringFields, finalScoringItems } from "../logic/final-scoring";
 import { LogPlacement } from "../data";
 import { UndoPropagation } from "../logic/commands";
 
@@ -134,7 +140,7 @@ import { UndoPropagation } from "../logic/commands";
             new Engine(this.replayData.backup.moveHistory.slice(0, dest), {
               ...this.replayData.backup.options,
               noFedCheck: true,
-            })
+            }),
           );
           return;
         }
@@ -154,6 +160,7 @@ import { UndoPropagation } from "../logic/commands";
     AdvancedLog,
     BoardAction,
     Commands,
+    PlayerCircle,
     PlayerInfo,
     Pool,
     ResearchBoard,
@@ -161,7 +168,7 @@ import { UndoPropagation } from "../logic/commands";
     SpaceMap,
     TurnOrder,
     Rules,
-    Charts: () => import('./Charts.vue'),
+    Charts: () => import("./Charts.vue"),
   },
 })
 export default class Game extends Vue {
