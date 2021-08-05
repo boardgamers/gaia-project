@@ -31,10 +31,10 @@
           :currentMove="currentMove"
           :currentMoveWarnings="Array.from(currentMoveWarnings.values()).flat()"
         />
-        <div v-else-if="!this.ended">
+        <div v-else-if="player && !ended">
           <h5>Current player</h5>
           <svg viewBox="-1.2 -1.2 34 34">
-            <PlayerCircle :player="this.engine.players[this.player]" />
+            <PlayerCircle :player="engine.players[player]" />
           </svg>
         </div>
       </div>
