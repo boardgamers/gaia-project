@@ -31,9 +31,9 @@
           :currentMove="currentMove"
           :currentMoveWarnings="Array.from(currentMoveWarnings.values()).flat()"
         />
-        <div v-else-if="player && !ended">
+        <div v-else-if="player != null && !ended" class="current-player">
           <h5>Current player</h5>
-          <svg viewBox="-1.2 -1.2 34 34">
+          <svg viewBox="-1.2 -1.2 2.5 4.5">
             <PlayerCircle :player="engine.players[player]" />
           </svg>
         </div>
@@ -233,7 +233,7 @@ export default class Game extends Vue {
 
   get canPlay() {
     return (
-      !this.ended && (!this.$store.state.gaiaViewer.player || this.sessionPlayer === this.engine.players[this.player])
+      !this.ended && (this.sessionPlayer === this.engine.players[this.player])
     );
   }
 
@@ -379,5 +379,10 @@ export default class Game extends Vue {
 .final-store-table th > span > span,
 .final-store-table th > div {
   display: block;
+}
+.current-player {
+  & > svg {
+    max-width: 50px;
+  }
 }
 </style>
