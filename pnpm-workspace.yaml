@@ -2,3 +2,4 @@ packages:
   - "viewer"
   - "engine"
   - "old-ui"
+  - "batch"
