@@ -911,6 +911,11 @@ export default class Engine {
     }
     const move = this.parseMove(this.turnMoves.shift());
 
+    if (move.args.length === 2 && move.args[0] === "⇒") {
+      // power log - should have been solved differently, but it's already in log files
+      return;
+    }
+
     this.checkCommand(move.command);
     (this[move.command] as any)(this.playerToMove, ...move.args);
 

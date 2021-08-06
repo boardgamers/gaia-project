@@ -784,6 +784,31 @@ describe("Engine", () => {
       expect(log[5].phase).to.equal(Phase.RoundGaia);
     });
 
+    it("should parse move with power log", () => {
+      const moves = parseMoves(`
+      init 4 Beta-2
+      p1 faction terrans
+      p2 faction ambas
+      p3 faction hadsch-hallas
+      p4 faction gleens
+      terrans build m 4A2
+      ambas build m 1B5
+      hadsch-hallas build m 10A11
+      gleens build m 10B1
+      gleens build m 3A4
+      hadsch-hallas build m 2A11
+      ambas build m 7A3
+      terrans build m 3A5
+      gleens booster booster6
+      hadsch-hallas booster booster9
+      ambas booster booster4
+      terrans booster booster2 (4/6/0/0 ⇒ 0/4/0/6)
+      terrans build gf 6A7 using area1: 4 area2: 2. (4/6/0/0 ⇒ 0/4/0/6)
+      `);
+
+      expect(() => new Engine([...moves])).to.not.throw();
+    });
+
     describe("createMoveToShow", () => {
       const tests = {
         "xenos pass booster1": "xenos pass booster1 returning booster3",
