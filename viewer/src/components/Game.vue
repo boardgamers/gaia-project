@@ -233,7 +233,7 @@ export default class Game extends Vue {
 
   get canPlay() {
     return (
-      !this.ended && (this.sessionPlayer === this.engine.players[this.player])
+      !this.ended && (!this.$store.state.gaiaViewer.player || this.sessionPlayer === this.engine.players[this.player])
     );
   }
 
@@ -376,10 +376,6 @@ export default class Game extends Vue {
   }
 }
 
-.final-store-table th > span > span,
-.final-store-table th > div {
-  display: block;
-}
 .current-player {
   & > svg {
     max-width: 50px;

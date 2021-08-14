@@ -151,4 +151,12 @@ export default class Rules extends Vue {
 footer.rules .btn-secondary {
   display: none !important;
 }
+.final-store-table th {
+  padding: 0 !important;
+}
+.final-store-table th > span,
+.final-store-table th > span > span,
+.final-store-table th > div {
+  display: block;
+}
 </style>
