@@ -222,8 +222,18 @@ const finalScoringTableRows: FinalScoringTableRow[] = Object.keys(finalScoringSo
     },
     {
       name: "(Power value for federations)",
-      color: "--res-power",
+      color: "--res-knowledge",
       contributors: ["Regular Building", "Lost Planet", "Space Station", "Lantids Guest Mine"],
+    },
+    {
+      name: "(Other players can charge power)",
+      color: "--res-power",
+      contributors: ["Regular Building", "Lost Planet", "Lantids Guest Mine"],
+    },
+    {
+      name: "(Counts as mine for boosters, round scoring, advanced tech)",
+      color: "--res-power",
+      contributors: ["Regular Building", "Lost Planet", "Lantids Guest Mine"],
     }
   );
 
