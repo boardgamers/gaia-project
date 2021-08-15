@@ -119,9 +119,10 @@ const gaiaViewer = {
     },
 
     rotate(state: State, coords: CubeCoordinates) {
-      const coordsStr = `${coords.q}x${coords.r}`;
-
-      state.context.rotation.set(coordsStr, (state.context.rotation.get(coordsStr) || 0) + 1);
+      const map = state.data.map;
+      const center = map.configuration().centers.find((center) => map.distance(center, coords) <= 2);
+      const key = CubeCoordinates.toString(center);
+      state.context.rotation.set(key, (state.context.rotation.get(key) || 0) + 1);
       state.context.rotation = new Map(state.context.rotation.entries());
     },
 

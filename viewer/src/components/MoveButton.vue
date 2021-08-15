@@ -288,7 +288,7 @@ export default class MoveButton extends Vue {
         return;
       }
 
-      this.$store.commit("gaiaViewer/highlightHexes", button.hexes);
+      this.$store.commit("gaiaViewer/selectHexes");
       this.subscribeHexClick((hex) => this.$store.commit("gaiaViewer/rotate", hex));
       this.customLabel = "Sector rotations finished";
     } else if (button.range) {

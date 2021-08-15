@@ -10,16 +10,13 @@ function launchSelfContained(selector = "#app", debug = true) {
   const players = process.env.VUE_APP_players ?? 3;
   const seed = process.env.VUE_APP_seed ?? Math.floor(Math.random() * 10000);
   const moves = process.env.VUE_APP_moves ? JSON.parse(process.env.VUE_APP_moves) : [];
-  let engine = new Engine(
-    [`init ${players} ${seed}`, ...moves],
-    {
-      layout: (process.env.VUE_APP_layout ?? undefined) as Layout,
-      auction: (process.env.VUE_APP_auction ?? undefined) as AuctionVariant,
-      factionVariant: (process.env.VUE_APP_factionVariant ?? "standard") as FactionVariant,
-      randomFactions: !!process.env.VUE_APP_randomFactions,
-    },
-    "5.6.10"
-  );
+  let engine = new Engine([`init ${players} ${seed}`, ...moves], {
+    layout: (process.env.VUE_APP_layout ?? undefined) as Layout,
+    auction: (process.env.VUE_APP_auction ?? undefined) as AuctionVariant,
+    factionVariant: (process.env.VUE_APP_factionVariant ?? "standard") as FactionVariant,
+    randomFactions: !!process.env.VUE_APP_randomFactions,
+    advancedRules: !!process.env.VUE_APP_rotateSectors,
+  });
   engine.generateAvailableCommandsIfNeeded();
 
   const unsub = emitter.store.subscribeAction(({ payload, type }) => {
