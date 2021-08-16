@@ -495,13 +495,14 @@ function resourceSymbol(type: Resource) {
 
 function newConversion(cost: Reward[], income: Reward[], player?: Player) {
   return {
-    from: cost.map(
-      (r) =>
-        new Reward(
-          r.type == Resource.ChargePower ? Math.ceil(r.count / player?.data?.tokenModifier ?? 1) : r.count,
-          resourceSymbol(r.type)
-        )
-    ),
+    from: cost.map((r) => {
+      return new Reward(
+        r.type == Resource.ChargePower
+          ? Math.ceil(r.count / (player != null ? player?.data?.tokenModifier : 1))
+          : r.count,
+        resourceSymbol(r.type)
+      );
+    }),
     to: income.map((r) => new Reward(r.count, r.type)),
   };
 }
@@ -549,13 +550,13 @@ export function boardActionsButton(data: AvailableBoardActionData, player: Playe
   };
 }
 
-export function specialActionButton(income: string, player: Player): ButtonData {
+export function specialActionButton(income: string, player: Player | null): ButtonData {
   const rewards = Reward.parse(income);
   return symbolButton({
     label: translateResources(rewards),
     command: income,
     specialAction: income,
-    warning: specialActionWarning(player, income),
+    warning: player ? specialActionWarning(player, income) : null,
     shortcuts: [resourceNames.find((r) => r.type === rewards[0].type).shortcut],
   });
 }
