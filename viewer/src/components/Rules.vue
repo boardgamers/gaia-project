@@ -56,6 +56,11 @@
           <li><a href="https://www.boardgamers.space/page/elo">How Elo works</a></li>
         </ul>
         <h4>Recent changes</h4>
+        <h5>2021-08-17</h5>
+        <ul>
+          <li>Make replay more permissive (this should fix replay in some older games)</li>
+          <li>Improve sector rotation (can click anywhere in the sector, center stays visible)</li>
+        </ul>
         <h5>2021-08-06</h5>
         <ul>
           <li>This page - a summary of links to rules and all factions.</li>
