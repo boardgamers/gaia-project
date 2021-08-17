@@ -180,10 +180,10 @@ export function factions(engine: Engine) {
   return engine.players.map((pl) => pl.faction);
 }
 
-export async function replay(engine: Engine) {
+export async function replay(engine: Engine): Promise<Engine> {
   const oldPlayers = engine.players;
 
-  engine = new Engine(engine.moveHistory, engine.options);
+  engine = new Engine(engine.moveHistory, engine.options, engine.version ?? "1.0.0", true); //fall back to unknown version
 
   assert(engine.newTurn, "Last move of the game is incomplete");
 

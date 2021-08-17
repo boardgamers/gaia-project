@@ -131,7 +131,7 @@ describe("cost", () => {
           player: PlayerEnum.Player1,
         } as Player;
 
-        const qic = qicForDistance(m, m.getS(g.location), p);
+        const qic = qicForDistance(m, m.getS(g.location), p, false);
         expect(qic).to.deep.equal(test.want);
       });
     }
@@ -179,7 +179,7 @@ describe("cost", () => {
       it(test.name, () => {
         const g = test.give;
         const p = { temporaryStep: g.temporaryStep, terraformCostDiscount: g.discount } as PlayerData;
-        const cost = terraformingCost(p, g.steps);
+        const cost = terraformingCost(p, g.steps, false);
         expect(cost).to.deep.equal(test.want.cost);
       });
     }

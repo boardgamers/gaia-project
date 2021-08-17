@@ -165,7 +165,7 @@ const vpChartFactory: ChartFactory<ChartSource> = {
 
 const chartFactories: ChartFactory<any>[] = [simpleChartFactory, vpChartFactory];
 
-function chartFactory(family: ChartFamily): ChartFactory<any> {
+export function chartFactory(family: ChartFamily): ChartFactory<any> {
   return chartFactories.find((f) => f.canHandle(family));
 }
 

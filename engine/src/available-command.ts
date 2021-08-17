@@ -205,7 +205,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
         ...possibleBuildings(engine, player),
         ...possibleFederations(engine, player),
         ...possibleResearchAreas(engine, player, UPGRADE_RESEARCH_COST),
-        ...possibleBoardActions(engine.boardActions, engine.player(player)),
+        ...possibleBoardActions(engine.boardActions, engine.player(player), engine.replay),
         ...possibleSpecialActions(engine, player),
         ...possibleFreeActions(engine.player(player)),
         ...possibleRoundBoosters(engine, player),
@@ -278,14 +278,15 @@ function addPossibleNewPlanet(
   planet: Planet,
   building: Building,
   buildings: AvailableBuilding[],
-  lastRound: boolean
+  lastRound: boolean,
+  replay: boolean
 ) {
-  const qicNeeded = qicForDistance(map, hex, pl);
+  const qicNeeded = qicForDistance(map, hex, pl, replay);
   if (qicNeeded === null) {
     return;
   }
 
-  const check = pl.canBuild(planet, building, lastRound, {
+  const check = pl.canBuild(planet, building, lastRound, replay, {
     addedCost: [new Reward(qicNeeded.amount, Resource.Qic)],
   });
 
@@ -368,9 +369,10 @@ export function possibleBuildings(engine: Engine, player: Player): AvailableComm
       const upgraded = upgradedBuildings(building, engine.player(player).faction);
 
       for (const upgrade of upgraded) {
-        const check = engine
-          .player(player)
-          .canBuild(hex.data.planet, upgrade, engine.isLastRound, { isolated, existingBuilding: building });
+        const check = engine.player(player).canBuild(hex.data.planet, upgrade, engine.isLastRound, engine.replay, {
+          isolated,
+          existingBuilding: building,
+        });
         if (check) {
           buildings.push(newAvailableBuilding(upgrade, hex, check, true));
         }
@@ -382,7 +384,7 @@ export function possibleBuildings(engine: Engine, player: Player): AvailableComm
       // No need for terra forming if already occupied by another faction
       const planet = hex.occupied() ? pl.planet : hex.data.planet;
       const building = hex.data.planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine;
-      addPossibleNewPlanet(map, hex, pl, planet, building, buildings, engine.isLastRound);
+      addPossibleNewPlanet(map, hex, pl, planet, building, buildings, engine.isLastRound, engine.replay);
     }
   } // end for hex
 
@@ -412,7 +414,7 @@ export function possibleSpaceStations(engine: Engine, player: Player): Available
     }
 
     const building = Building.SpaceStation;
-    addPossibleNewPlanet(map, hex, pl, pl.planet, building, buildings, engine.isLastRound);
+    addPossibleNewPlanet(map, hex, pl, pl.planet, building, buildings, engine.isLastRound, engine.replay);
   }
 
   if (buildings.length > 0) {
@@ -494,7 +496,7 @@ export function possibleSpecialActions(engine: Engine, player: Player) {
   return commands;
 }
 
-export function possibleBoardActions(actions: BoardActions, p: PlayerObject): AvailableCommand[] {
+export function possibleBoardActions(actions: BoardActions, p: PlayerObject, replay: boolean): AvailableCommand[] {
   const commands: AvailableCommand[] = [];
 
   // not allowed if everything is lost - see https://github.com/boardgamers/gaia-project/issues/76
@@ -512,7 +514,7 @@ export function possibleBoardActions(actions: BoardActions, p: PlayerObject): Av
     (pwract) =>
       actions[pwract] === null &&
       p.data.canPay(Reward.parse(boardActions[pwract].cost)) &&
-      boardActions[pwract].income.some((income) => Reward.parse(income).some((reward) => canGain(reward)))
+      boardActions[pwract].income.some((income) => Reward.parse(income).some((reward) => replay || canGain(reward)))
   );
 
   // Prevent using the rescore action if no federation token
@@ -687,7 +689,7 @@ export function possibleSpaceLostPlanet(engine: Engine, player: Player) {
     if (hex.data.planet !== Planet.Empty || hex.data.federations || hex.data.building) {
       continue;
     }
-    const qicNeeded = qicForDistance(engine.map, hex, p);
+    const qicNeeded = qicForDistance(engine.map, hex, p, engine.replay);
 
     if (qicNeeded.amount > data.qics) {
       continue;

@@ -137,8 +137,7 @@ describe("boosters", () => {
     `);
 
     expect(() => new Engine([...moves], { factionVariant: "more-balanced" })).to.throw(
-      "Command endturn is not in the list of available commands: last command: firaks pass booster9 returning booster4, index: 10,\n" +
-        '    available: [{"name":"deadEnd","player":0,"data":"buildMineOrGaiaFormer"}]'
+      "Command endturn is not in the list of available commands"
     );
   });
 });

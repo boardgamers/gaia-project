@@ -17,7 +17,7 @@ describe("Player", () => {
       player.faction = Faction.Terrans;
       player.loadFaction(standard);
 
-      const { cost } = player.canBuild(Planet.Terra, Building.Mine, false, {
+      const { cost } = player.canBuild(Planet.Terra, Building.Mine, false, false, {
         addedCost: [new Reward(1, Resource.Qic)],
       });
 

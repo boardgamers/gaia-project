@@ -247,6 +247,7 @@ export default class Player extends EventEmitter {
     targetPlanet: Planet,
     building: Building,
     lastRound: boolean,
+    replay: boolean,
     {
       isolated,
       addedCost,
@@ -285,7 +286,7 @@ export default class Player extends EventEmitter {
     } else if (building === Building.Mine) {
       // habitability costs
       if (targetPlanet === Planet.Gaia) {
-        if (this.data.temporaryStep > 0) {
+        if (this.data.temporaryStep > 0 && !replay) {
           // not allowed - see https://github.com/boardgamers/gaia-project/issues/76
           // OR (for booster) there's no reason to activate the booster and not use it
           return null;
@@ -300,7 +301,7 @@ export default class Player extends EventEmitter {
       } else {
         // Get the number of terraforming steps to pay discounting terraforming track
         steps = terraformingStepsRequired(factionPlanet(this.faction), targetPlanet);
-        const reward = terraformingCost(this.data, steps);
+        const reward = terraformingCost(this.data, steps, replay);
 
         if (reward === null) {
           return null;
@@ -1058,7 +1059,7 @@ export default class Player extends EventEmitter {
     this.federationCache = null;
   }
 
-  checkAndGetFederationInfo(location: string, map: SpaceMap, flexible: boolean): FederationInfo {
+  checkAndGetFederationInfo(location: string, map: SpaceMap, flexible: boolean, replay: boolean): FederationInfo {
     const hexes = this.hexesForFederationLocation(location, map);
 
     // Check if no forbidden square
@@ -1079,13 +1080,17 @@ export default class Player extends EventEmitter {
 
     const info = this.federationInfo(hexes);
 
-    assert(info.newSatellites <= this.maxSatellites, "Federation requires too many satellites");
+    if (!replay) {
+      assert(info.newSatellites <= this.maxSatellites, "Federation requires too many satellites");
+    }
 
     // Check if outclassed by available federations
     const available = this.availableFederations(map, flexible);
     const outclasser = available.find((fed) => isOutclassedBy(info, fed));
 
-    assert(!outclasser, "Federation is outclassed by other federation at " + (outclasser?.hexes ?? []).join(","));
+    if (!replay) {
+      assert(!outclasser, "Federation is outclassed by other federation at " + (outclasser?.hexes ?? []).join(","));
+    }
 
     // Check if federation can be built with less satellites
     if (!flexible) {

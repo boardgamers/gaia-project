@@ -98,7 +98,7 @@ describe("Available commands", () => {
       const player = { data: d } as Player;
 
       function possible() {
-        return possibleBoardActions(actions, player)[0].data.poweracts.map((a) => a.name);
+        return possibleBoardActions(actions, player, false)[0].data.poweracts.map((a) => a.name);
       }
 
       expect(possible()).to.include("power1");
