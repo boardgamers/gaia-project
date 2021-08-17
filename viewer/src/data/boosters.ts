@@ -1,7 +1,7 @@
 import { Booster } from "@gaia-project/engine";
 
 export const boosterNames = {
-  [Booster.Booster1]: { name: "1k, 1o", color: "--ice" },
+  [Booster.Booster1]: { name: "1k, 1o", color: "--titanium" },
   [Booster.Booster2]: { name: "1o, 2 tokens", color: "--swamp" },
   [Booster.Booster3]: { name: "q, 2c", color: "--res-qic" },
   [Booster.Booster4]: { name: "2c, 1 step", color: "--dig" },
