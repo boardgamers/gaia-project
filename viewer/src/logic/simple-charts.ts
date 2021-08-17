@@ -1,4 +1,6 @@
 import Engine, {
+  AdvTechTile,
+  AdvTechTilePos,
   BoardAction,
   Booster,
   Building,
@@ -25,7 +27,7 @@ import { federationData } from "../data/federations";
 import { planetNames } from "../data/planets";
 import { researchNames } from "../data/research";
 import { resourceNames } from "../data/resources";
-import { baseTechTileNames } from "../data/tech-tiles";
+import { advancedTechTileNames, baseTechTileNames } from "../data/tech-tiles";
 import {
   ChartColor,
   ChartFamily,
@@ -183,6 +185,18 @@ const freeActionSources = resourceSources
     color: "--rt-nav",
     weight: 0,
   });
+
+const techTileExtractLog: ExtractLog<SimpleSource<TechTile | AdvTechTile>> = statelessExtractLog((e) => {
+  if (e.cmd.command == Command.ChooseTechTile) {
+    const pos = e.cmd.args[0] as TechTilePos | AdvTechTilePos;
+    const tile = e.data.tiles.techs[pos].tile;
+
+    if (tile == e.source.type) {
+      return 1;
+    }
+  }
+  return 0;
+});
 
 const factories = [
   {
@@ -397,17 +411,7 @@ const factories = [
     name: "Base Tech Tiles",
     showWeightedTotal: false,
     playerSummaryLineChartTitle: "Base Tech tiles of all players",
-    extractLog: statelessExtractLog((e) => {
-      if (e.cmd.command == Command.ChooseTechTile) {
-        const pos = e.cmd.args[0] as TechTilePos;
-        const tile = e.data.tiles.techs[pos].tile;
-
-        if (tile == e.source.type) {
-          return 1;
-        }
-      }
-      return 0;
-    }),
+    extractLog: techTileExtractLog,
     sources: TechTile.values().map((t) => ({
       type: t,
       label: baseTechTileNames[t].name,
@@ -415,6 +419,18 @@ const factories = [
       weight: 1,
     })),
   } as SimpleSourceFactory<SimpleSource<TechTile>>,
+  {
+    name: "Advanced Tech Tiles",
+    showWeightedTotal: false,
+    playerSummaryLineChartTitle: "Advanced Tech tiles of all players",
+    extractLog: techTileExtractLog,
+    sources: AdvTechTile.values().map((t) => ({
+      type: t,
+      label: advancedTechTileNames[t],
+      color: "--tech-tile",
+      weight: 1,
+    })),
+  } as SimpleSourceFactory<SimpleSource<AdvTechTile>>,
   {
     name: "Final Scoring Conditions",
     showWeightedTotal: false,

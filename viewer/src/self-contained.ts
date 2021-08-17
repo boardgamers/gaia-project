@@ -22,7 +22,7 @@ function launchSelfContained(selector = "#app", debug = true) {
   const unsub = emitter.store.subscribeAction(({ payload, type }) => {
     if (type === "gaiaViewer/loadFromJSON") {
       const egData: Engine = payload;
-      engine = new Engine(egData.moveHistory, egData.options);
+      engine = new Engine(egData.moveHistory, egData.options, null, true);
       engine.generateAvailableCommandsIfNeeded();
       emitter.emit("state", JSON.parse(JSON.stringify(engine)));
     }

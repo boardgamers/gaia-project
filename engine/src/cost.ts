@@ -8,12 +8,12 @@ import Reward from "./reward";
 const TERRAFORMING_COST = 3;
 const QIC_RANGE_UPGRADE = 2;
 
-export function terraformingCost(d: PlayerData, steps: number): Reward | null {
+export function terraformingCost(d: PlayerData, steps: number, replay: boolean): Reward | null {
   const oreNeeded = (temporaryStep: number) =>
     (TERRAFORMING_COST - d.terraformCostDiscount) * Math.max(steps - temporaryStep, 0);
 
   const cost = oreNeeded(d.temporaryStep);
-  if (d.temporaryStep > 0 && oreNeeded(0) === cost) {
+  if (!replay && d.temporaryStep > 0 && oreNeeded(0) === cost) {
     // not allowed - see https://github.com/boardgamers/gaia-project/issues/76
     // OR (for booster) there's no reason to activate the booster and not use it
     return null;
@@ -23,7 +23,7 @@ export function terraformingCost(d: PlayerData, steps: number): Reward | null {
 
 export type QicNeeded = { amount: number; distance: number; warning?: BuildWarning } | null;
 
-export function qicForDistance(map: SpaceMap, hex: GaiaHex, pl: PlayerObject): QicNeeded {
+export function qicForDistance(map: SpaceMap, hex: GaiaHex, pl: PlayerObject, replay: boolean): QicNeeded {
   const distance = (acceptGaiaFormer: boolean) => {
     const hexes = acceptGaiaFormer
       ? Array.from(map.grid.values()).filter((loc) => loc.data.player === pl.player)
@@ -37,7 +37,7 @@ export function qicForDistance(map: SpaceMap, hex: GaiaHex, pl: PlayerObject): Q
 
   const d = distance(false);
   const qicNeeded = qic(pl.data.temporaryRange, d);
-  if (pl.data.temporaryRange > 0 && qic(0, distance(false)) === qicNeeded) {
+  if (!replay && pl.data.temporaryRange > 0 && qic(0, distance(false)) === qicNeeded) {
     // there's no reason to activate the booster and not use it
     return null;
   }

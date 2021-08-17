@@ -227,6 +227,8 @@ export default class Engine {
   oldPhase: Phase;
   randomFactions?: Faction[];
   version = version;
+  replayVersion: string;
+  replay: boolean; // be more permissive during replay
 
   get expansions() {
     return 0;
@@ -266,13 +268,19 @@ export default class Engine {
   // Tells the UI if the new move should be on the same line or not
   newTurn = true;
 
-  constructor(moves: string[] = [], options: EngineOptions = {}, engineVersion?: string) {
+  constructor(moves: string[] = [], options: EngineOptions = {}, engineVersion?: string, replay = false) {
     this.options = options;
     if (engineVersion) {
       this.version = engineVersion;
     }
+    this.replay = replay;
+    if (replay) {
+      this.options.noFedCheck = true;
+      this.options.flexibleFederations = true;
+    }
     this.sanitizeOptions();
     this.loadMoves(moves);
+    this.options = options;
   }
 
   /** Fix old options passed. To remove when legacy data is no more in database */
@@ -311,12 +319,23 @@ export default class Engine {
   }
 
   move(_move: string, allowIncomplete = true) {
-    assert(this.newTurn, "Cannot execute a move after executing an incomplete move");
+    if (this.replay) {
+      this.newTurn = true;
+    } else {
+      assert(this.newTurn, "Cannot execute a move after executing an incomplete move");
+    }
 
     const execute = () => {
-      if (!this.executeMove(move)) {
-        assert(allowIncomplete, `Move ${move} (line ${this.moveHistory.length + 1}) is not complete!`);
-        this.newTurn = false;
+      try {
+        if (!this.executeMove(move)) {
+          if (!this.replay) {
+            assert(allowIncomplete, `Move ${move} (line ${this.moveHistory.length + 1}) is not complete!`);
+          }
+          this.newTurn = false;
+        }
+      } catch (e) {
+        console.log(this.assertContext());
+        throw e;
       }
     };
 
@@ -329,7 +348,9 @@ export default class Engine {
       execute();
     }
 
-    assert(this.turnMoves.length === 0, "Unnecessary commands at the end of the turn: " + this.turnMoves.join(". "));
+    if (!this.replay) {
+      assert(this.turnMoves.length === 0, "Unnecessary commands at the end of the turn: " + this.turnMoves.join(". "));
+    }
     this.moveHistory.push(moveToShow);
   }
 
@@ -711,7 +732,7 @@ export default class Engine {
     return false;
   }
 
-  static fromData(data: Record<string, any>) {
+  static fromData(data: Record<string, any>): Engine {
     const engine = new Engine();
     delete engine.version;
 
@@ -836,10 +857,12 @@ export default class Engine {
       }
     }
 
-    assert(
-      this.playerToMove === (player as PlayerEnum),
-      "Wrong turn order in move " + move + ", expected player " + (this.playerToMove + 1) + this.assertContext()
-    );
+    if (!this.replay) {
+      assert(
+        this.playerToMove === (player as PlayerEnum),
+        "Wrong turn order in move " + move + ", expected player " + (this.playerToMove + 1)
+      );
+    }
     this.processedPlayer = player;
 
     const split = params.split ?? true;
@@ -896,7 +919,7 @@ export default class Engine {
     if (subphase) {
       this.generateAvailableCommands(subphase, data);
       if (this.availableCommands.length === 0) {
-        if (required) {
+        if (required && !this.replay) {
           // not allowed - see https://github.com/boardgamers/gaia-project/issues/76
           this.availableCommands = [{ name: Command.DeadEnd, player: this.currentPlayer, data: subphase }];
         } else {
@@ -927,10 +950,10 @@ export default class Engine {
   }
 
   checkCommand(command: Command) {
-    assert(
-      (this.availableCommand = this.findAvailableCommand(this.playerToMove, command)),
-      `Command ${command} is not in the list of available commands: ${this.assertContext()}`
-    );
+    this.availableCommand = this.findAvailableCommand(this.playerToMove, command);
+    if (!this.availableCommand && !this.replay) {
+      assert(this.availableCommand, `Command ${command} is not in the list of available commands`);
+    }
   }
 
   private assertContext(): string {
@@ -1525,10 +1548,12 @@ export default class Engine {
   }
 
   [Command.Bid](player: PlayerEnum, faction: string, bid: number) {
-    const bidsAC = this.avCommand<Command.Bid>().data.bids;
-    const bidAC = bidsAC.find((b) => b.faction === faction);
-    assert(bidAC.bid.includes(+bid), "You have to bid the right amount");
-    assert(bidAC, `${faction} is not in the available factions`);
+    if (!this.replay) {
+      const bidsAC = this.avCommand<Command.Bid>().data.bids;
+      const bidAC = bidsAC.find((b) => b.faction === faction);
+      assert(bidAC, `${faction} is not in the available factions`);
+      assert(bidAC.bid.includes(+bid), "You have to bid the right amount");
+    }
     this.executeBid(player, faction, bid);
   }
 
@@ -1746,7 +1771,7 @@ export default class Engine {
       return false;
     };
 
-    assert(isPossible(cost, income), `spend ${cost} for ${income} is not allowed: ${this.assertContext()}`);
+    assert(isPossible(cost, income), `spend ${cost} for ${income} is not allowed`);
 
     pl.payCosts(cost, Command.Spend);
     pl.gainRewards(income, Command.Spend);
@@ -1796,7 +1821,7 @@ export default class Engine {
   [Command.FormFederation](player: PlayerEnum, hexes: string, federation: Federation) {
     const pl = this.player(player);
 
-    const fedInfo = pl.checkAndGetFederationInfo(hexes, this.map, this.options.flexibleFederations);
+    const fedInfo = pl.checkAndGetFederationInfo(hexes, this.map, this.options.flexibleFederations, this.replay);
 
     assert(fedInfo, `Impossible to form federation at ${hexes}`);
     assert(

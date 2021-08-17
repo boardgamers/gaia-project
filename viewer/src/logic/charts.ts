@@ -71,6 +71,17 @@ export function extractChanges(player: PlayerEnum, extractChange: EventFilter): 
   };
 }
 
+function lastIndex(includeRounds: IncludeRounds): number {
+  switch (includeRounds) {
+    case "last":
+      return 0;
+    case "except-final":
+      return 6;
+    case "all":
+      return 7;
+  }
+}
+
 export function getDataPoints(
   data: Engine,
   initialValue: number,
@@ -110,12 +121,8 @@ export function getDataPoints(
   if (projectedEndValue != null) {
     counter += projectedEndValue();
   }
-  if (includeRounds === "all") {
-    perRoundData[7] = counter;
-  } else if (includeRounds === "last") {
-    perRoundData[0] = counter;
-  }
 
+  perRoundData[lastIndex(includeRounds)] = counter;
   return perRoundData;
 }
 
@@ -194,7 +201,8 @@ export function weightedSum(data: Engine, player: PlayerEnum, factories: Dataset
 
 export function initialResearch(player: Player) {
   const research = new Map<ResearchField, number>();
-  factionBoard(player.faction, player.factionVariant).income[0].rewards.forEach((r) => {
+  const board = player.board ?? factionBoard(player.faction, player.factionVariant);
+  board.income[0].rewards.forEach((r) => {
     if (r.type.startsWith("up-")) {
       research.set(r.type.slice(3) as ResearchField, 1);
     }

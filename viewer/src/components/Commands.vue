@@ -68,7 +68,7 @@ import Engine, {
   Command,
   Faction,
   factionPlanet,
-  GaiaHex,
+  GaiaHex, Player,
   Resource,
   Reward,
   SpaceMap,
@@ -220,21 +220,25 @@ export default class Commands extends Vue {
   }
 
   get factionsToChoose(): AvailableCommand {
-    return this.availableCommands.find((c) => c.name === Command.ChooseFaction) ?? null;
+    return this.availableCommands?.find((c) => c.name === Command.ChooseFaction) ?? null;
   }
 
   get playerName(): string {
-    if (this.player.faction) {
-      return factionName(this.player.faction);
+    const pl = this.player;
+    if (!pl) {
+      return "?";
     }
-    if (this.player.name) {
-      return this.player.name;
+    if (pl.faction) {
+      return factionName(pl.faction);
+    }
+    if (pl.name) {
+      return pl.name;
     }
     return "Player " + (this.command.player + 1);
   }
 
-  get player() {
-    return this.engine.players[this.command.player];
+  get player(): Player {
+    return this.engine.players[this.command?.player];
   }
 
   get playerSlug(): string {
@@ -332,9 +336,15 @@ export default class Commands extends Vue {
   }
 
   get buttons(): ButtonData[] {
+    const commands = this.availableCommands;
+    if (!commands) {
+      return [];
+    }
+
     const conversions: AvailableConversions = {};
     const ret: ButtonData[] = [];
-    for (const command of this.availableCommands.filter((c) => c.name != Command.ChooseFaction)) {
+
+    for (const command of commands.filter((c) => c.name != Command.ChooseFaction)) {
       switch (command.name) {
         case Command.RotateSectors: {
           ret.push({
