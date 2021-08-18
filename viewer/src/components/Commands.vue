@@ -113,7 +113,7 @@ let show = false;
   },
   methods: {
     tooltip(faction: Faction) {
-      return factionDesc(faction, factionVariantBoard(this.factionCustomization, faction));
+      return factionDesc(faction, factionVariantBoard(this.factionCustomization, faction)?.board);
     },
 
     modalDialog(msg: string): ModalButtonData {

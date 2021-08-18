@@ -123,7 +123,7 @@ export default class BuildingGroup extends Vue {
       return this.player.board;
     }
     const engine = this.$store.state.gaiaViewer.data as Engine;
-    const factionVariant = factionVariantBoard(engine.factionCustomization, this.faction);
+    const factionVariant = factionVariantBoard(engine.factionCustomization, this.faction)?.board;
     return factionBoard(this.faction, factionVariant);
   }
 

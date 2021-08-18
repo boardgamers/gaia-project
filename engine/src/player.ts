@@ -87,6 +87,7 @@ export type BuildCheck = { cost: Reward[]; steps: number; warnings: BuildWarning
 export default class Player extends EventEmitter {
   faction: Faction = null;
   factionVariant: FactionBoardRaw = null;
+  factionVariantVersion: number = null;
   board: FactionBoard = null;
   data: PlayerData = new PlayerData();
   settings: Settings = new Settings();
@@ -358,7 +359,11 @@ export default class Player extends EventEmitter {
   }
 
   loadFaction(customization: FactionCustomization, expansions = 0, skipIncome = false) {
-    this.factionVariant = this.factionVariant ?? factionVariantBoard(customization, this.faction);
+    if (!this.factionVariant) {
+      const b = factionVariantBoard(customization, this.faction);
+      this.factionVariant = b?.board;
+      this.factionVariantVersion = b?.version;
+    }
     this.board = factionBoard(this.faction, this.factionVariant);
 
     if (!skipIncome) {
