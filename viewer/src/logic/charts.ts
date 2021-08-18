@@ -199,12 +199,13 @@ export function weightedSum(data: Engine, player: PlayerEnum, factories: Dataset
   };
 }
 
-export function initialResearch(player: Player) {
+export function initialResearch(player: Player): Map<ResearchField, number> {
   const research = new Map<ResearchField, number>();
   const board = player.board ?? factionBoard(player.faction, player.factionVariant);
   board.income[0].rewards.forEach((r) => {
     if (r.type.startsWith("up-")) {
-      research.set(r.type.slice(3) as ResearchField, 1);
+      const key = r.type.slice(3) as ResearchField;
+      research.set(key, (research.get(key) ?? 0) + 1);
     }
   });
   return research;

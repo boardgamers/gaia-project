@@ -1,12 +1,25 @@
-import { Faction, LogEntry, Player } from "@gaia-project/engine";
+import { Faction, LogEntry, Player, ResearchField, Reward } from "@gaia-project/engine";
 import { expect } from "chai";
 // Here we import the File System module of node
 import { families, newBarChart } from "./chart-factory";
-import { ChartFamily } from "./charts";
+import { ChartFamily, initialResearch } from "./charts";
 import { runJsonTests } from "./utils";
 import { countResearch } from "./victory-point-charts";
 
 describe("Chart", () => {
+  describe("initial research", () => {
+    const p = {
+      board: {
+        income: [
+          {
+            rewards: Reward.parse("up-nav,up-nav"),
+          },
+        ],
+      },
+    } as Player;
+    expect(initialResearch(p).get(ResearchField.Navigation)).to.equal(2);
+  });
+
   describe("count research", () => {
     const tests: {
       name: string;
