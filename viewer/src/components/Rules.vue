@@ -146,7 +146,7 @@ export default class Rules extends Vue {
     const faction = this.rule as Faction;
 
     const player = this.gameData.players.find((p) => p.faction == faction);
-    const variant = player?.factionVariant ?? factionVariantBoard(this.gameData.factionCustomization, faction);
+    const variant = player?.factionVariant ?? factionVariantBoard(this.gameData.factionCustomization, faction)?.board;
     return factionDesc(faction, variant);
   }
 }

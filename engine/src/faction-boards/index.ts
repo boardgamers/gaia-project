@@ -13,8 +13,9 @@ import Lantids from "./lantids";
 import Nevlas from "./nevlas";
 import Taklons from "./taklons";
 import Terrans from "./terrans";
-import { FactionBoard, FactionBoardRaw, FactionBoardVariants } from "./types";
+import { FactionBoard, FactionBoardRaw, FactionBoardVariant, FactionBoardVariants } from "./types";
 import Xenos from "./xenos";
+
 export { FactionBoard, FactionBoardRaw } from "./types";
 
 const factionBoards: { [key in Faction]: FactionBoardVariants } = {
@@ -34,7 +35,7 @@ const factionBoards: { [key in Faction]: FactionBoardVariants } = {
   [Faction.Itars]: Itars,
 };
 
-export function factionVariantBoard(customization: FactionCustomization, faction: Faction): FactionBoardRaw | null {
+export function factionVariantBoard(customization: FactionCustomization, faction: Faction): FactionBoardVariant | null {
   if (!customization) {
     //not present in cloning
     return null;
@@ -47,12 +48,12 @@ export function factionVariantBoard(customization: FactionCustomization, faction
 
   const byPlayerCount = variants.find((v) => v.type === customization.variant && v.players === customization.players);
   if (byPlayerCount) {
-    return byPlayerCount.board;
+    return byPlayerCount;
   }
 
   const byType = variants.find((v) => v.type === customization.variant && !("players" in v));
   if (byType) {
-    return byType.board;
+    return byType;
   }
   return null;
 }

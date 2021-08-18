@@ -24,8 +24,9 @@ const firaks: FactionBoardVariants = {
     },
     {
       type: "beta",
+      version: 2,
       board: {
-        income: ["2k,3o,15c,q,up-sci", "+o,2k"],
+        income: ["2k,3o,15c,q,up-eco", "+o,2k"],
       },
     },
   ],

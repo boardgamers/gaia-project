@@ -24,9 +24,11 @@ export interface FactionBoardRaw {
   handlers?: { [event: string]: (player: Player, ...args: any[]) => any };
 }
 
+export type FactionBoardVariant = { type: FactionVariant; players?: number; board: FactionBoardRaw; version?: number };
+
 export type FactionBoardVariants = {
   standard: FactionBoardRaw;
-  variants?: { type: FactionVariant; players?: number; board: FactionBoardRaw }[];
+  variants?: FactionBoardVariant[];
 };
 
 const defaultBoard: FactionBoardRaw = {

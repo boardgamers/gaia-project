@@ -31,8 +31,9 @@ const gleens: FactionBoardVariants = {
     },
     {
       type: "beta",
+      version: 2,
       board: {
-        income: ["3k,4o,15c,up-nav,up-nav", "+o,k"],
+        income: ["3k,4o,15c,up-nav,up-nav,up-nav", "+o,k"],
       },
     },
   ],
