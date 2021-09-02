@@ -12,6 +12,7 @@ import Engine, {
   PlayerEnum,
   ResearchField,
   Resource,
+  Round,
   RoundScoring,
   TechPos,
 } from "@gaia-project/engine";
@@ -19,6 +20,7 @@ import {
   ColorVar,
   DatasetFactory,
   extractChanges,
+  finalScoringRound,
   getDataPoints,
   IncludeRounds,
   initialResearch,
@@ -70,15 +72,18 @@ export type VictoryPointSource = {
   label: string;
   description: string;
   color: string;
-  projectedEndValue?: (e: Engine, p: Player) => number;
+  projectedRoundValues?: (e: Engine, p: Player) => Map<number, number>;
   initialValue?: (p: Player) => number;
   aggregate?: VictoryPointAggregate;
 };
 
-function passIncomeProjection(sources: EventSource[]): (e: Engine, p: Player) => number {
+function passIncomeProjection(
+  sources: EventSource[],
+  eachRound: boolean
+): (e: Engine, p: Player) => Map<number, number> | null {
   return (e, p) => {
     if (e.isLastRound && e.passedPlayers.includes(p.player)) {
-      return 0;
+      return null;
     }
     let points = 0;
     for (const e of p.passIncomeEvents()) {
@@ -90,7 +95,25 @@ function passIncomeProjection(sources: EventSource[]): (e: Engine, p: Player) =>
         }
       }
     }
-    return points;
+
+    const map = new Map<number, number>();
+    const last = eachRound ? Round.LastRound : e.round;
+    for (let round = e.round; round <= last; round++) {
+      map.set(round, points);
+    }
+    return map;
+  };
+}
+
+function finalScoringProjection(finalTile: number): (engine: Engine, pl: Player) => Map<any, number> {
+  return (engine: Engine, pl: Player) => {
+    const points = simulateIncome(
+      pl,
+      (clone) =>
+        gainFinalScoringVictoryPoints(finalRankings([engine.tiles.scorings.final[finalTile]], engine.players), clone),
+      engine.version
+    );
+    return new Map([[finalScoringRound, points]]);
   };
 }
 
@@ -143,7 +166,7 @@ export const victoryPointSources: VictoryPointSource[] = [
     label: "Booster",
     description: "Round Boosters",
     color: "--oxide",
-    projectedEndValue: passIncomeProjection(Booster.values()),
+    projectedRoundValues: passIncomeProjection(Booster.values(), false),
   },
   {
     types: BoardAction.values(),
@@ -162,7 +185,7 @@ export const victoryPointSources: VictoryPointSource[] = [
     label: "Advanced Tech",
     description: "Advanced Tech Tiles",
     color: "--current-round",
-    projectedEndValue: passIncomeProjection(AdvTechTilePos.values()),
+    projectedRoundValues: passIncomeProjection(AdvTechTilePos.values(), true),
   },
   {
     types: [Command.FormFederation],
@@ -176,13 +199,7 @@ export const victoryPointSources: VictoryPointSource[] = [
     description: "Final Scoring A",
     color: "--rt-sci",
     aggregate: finalScoring,
-    projectedEndValue: (engine: Engine, pl: Player) =>
-      simulateIncome(
-        pl,
-        (clone) =>
-          gainFinalScoringVictoryPoints(finalRankings([engine.tiles.scorings.final[0]], engine.players), clone),
-        engine.version
-      ),
+    projectedRoundValues: finalScoringProjection(0),
   },
   {
     types: ["chart-final2"],
@@ -190,21 +207,15 @@ export const victoryPointSources: VictoryPointSource[] = [
     description: "Final Scoring B",
     color: "--dig",
     aggregate: finalScoring,
-    projectedEndValue: (engine: Engine, pl: Player) =>
-      simulateIncome(
-        pl,
-        (clone) =>
-          gainFinalScoringVictoryPoints(finalRankings([engine.tiles.scorings.final[1]], engine.players), clone),
-        engine.version
-      ),
+    projectedRoundValues: finalScoringProjection(1),
   },
   {
     types: ["chart-spend"],
     label: "Resources",
     description: "Points for the remaining resources converted to credits",
     color: "--res-credit",
-    projectedEndValue: (e: Engine, pl: Player) =>
-      simulateIncome(pl, (clone) => clone.data.finalResourceHandling(), e.version),
+    projectedRoundValues: (e: Engine, pl: Player) =>
+      new Map([[finalScoringRound, simulateIncome(pl, (clone) => clone.data.finalResourceHandling(), e.version)]]),
   },
 ];
 
@@ -239,16 +250,22 @@ export function groupSources(sources: VictoryPointSource[]): VictoryPointSource[
           label: aggregate.label,
           description: aggregate.description,
           color: aggregate.color,
-          projectedEndValue: () => 0,
+          projectedRoundValues: () => new Map<number, number>(),
           initialValue: () => 0,
         };
         groupTypes.set(aggregate.label, group);
         res.push(group);
       }
       group.types.push(...source.types);
-      if (source.projectedEndValue != null) {
-        const last = group.projectedEndValue;
-        group.projectedEndValue = (e, p) => last(e, p) + source.projectedEndValue(e, p);
+      if (source.projectedRoundValues != null) {
+        const last = group.projectedRoundValues;
+        group.projectedRoundValues = (e, p) => {
+          const map = source.projectedRoundValues(e, p);
+          last(e, p).forEach((value, key) => {
+            map.set(key, value);
+          });
+          return map;
+        };
       }
       if (source.initialValue != null) {
         const last = group.initialValue;
@@ -305,7 +322,7 @@ export function victoryPointDetails(
           initialValue,
           extractChange,
           extractLog,
-          () => (s.projectedEndValue == null ? 0 : s.projectedEndValue(data, pl)),
+          s.projectedRoundValues == null || data.ended ? null : s.projectedRoundValues(data, pl),
           deltaForEnded,
           includeRounds
         ),

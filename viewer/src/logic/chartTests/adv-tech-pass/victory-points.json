@@ -46,9 +46,9 @@
       }
     ],
     "datasetMeta": {
-      "Bal T'aks (91)": {
+      "Bal T'aks (109)": {
         "label": "Bal T'aks",
-        "total": 91,
+        "total": 109,
         "weightedTotal": null
       },
       "Ivits (68)": {
@@ -81,8 +81,8 @@
   ],
   "datasets": [
     {
-      "label": "Bal T'aks (91)",
-      "data": [10, 0, -3, 0, 0, 12, 6, 0, 16, 15, 7, 18, 9, 1]
+      "label": "Bal T'aks (109)",
+      "data": [10, 0, -3, 0, 0, 12, 6, 0, 16, 33, 7, 18, 9, 1]
     },
     {
       "label": "Ivits (68)",

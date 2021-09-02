@@ -11,6 +11,7 @@ import Engine, {
   PlayerEnum,
   ResearchField,
   Resource,
+  Round,
 } from "@gaia-project/engine";
 import { factionName } from "../data/factions";
 import { ChartStyleDisplay } from "./chart-factory";
@@ -21,6 +22,8 @@ export type ChartColor = string | ((player: Player) => string);
 
 export type ChartFamily = string;
 export const vpChartFamily: ChartFamily = "Victory Points";
+
+export const finalScoringRound = Round.LastRound + 1;
 
 export type DeepPartial<T> = {
   [P in keyof T]?: DeepPartial<T[P]>;
@@ -76,9 +79,9 @@ function lastIndex(includeRounds: IncludeRounds): number {
     case "last":
       return 0;
     case "except-final":
-      return 6;
+      return Round.LastRound;
     case "all":
-      return 7;
+      return finalScoringRound;
   }
 }
 
@@ -87,7 +90,7 @@ export function getDataPoints(
   initialValue: number,
   extractChange: (entry: LogEntry) => number,
   extractLog: (moveHistory: string[], entry: LogEntry) => number,
-  projectedEndValue: () => number,
+  projectedRoundValues: Map<number, number> | null,
   deltaForEnded: () => number,
   includeRounds: IncludeRounds
 ): number[] {
@@ -97,12 +100,22 @@ export function getDataPoints(
   }
 
   let counter = initialValue;
+  const onRound = (round: number) => {
+    if (projectedRoundValues != null) {
+      counter += projectedRoundValues.get(round) ?? 0;
+    }
+  };
+
   let round = 0;
+  onRound(0);
 
   perRoundData[round] = counter;
   for (const logItem of data.advancedLog) {
-    if (logItem.round != null && includeRounds != "last") {
-      round = logItem.round;
+    if (logItem.round != null) {
+      if (includeRounds != "last") {
+        round = logItem.round;
+      }
+      onRound(logItem.round);
     }
 
     counter += extractLog(data.moveHistory, logItem);
@@ -113,16 +126,22 @@ export function getDataPoints(
     perRoundData[round] = counter;
   }
 
+  const lastRound = lastIndex(includeRounds);
+
   if (data.ended) {
     counter += deltaForEnded();
-    perRoundData[6] = counter;
+    perRoundData[round] = counter;
+  } else {
+    for (let i = data.round + 1; i <= finalScoringRound; i++) {
+      if (i <= lastRound) {
+        round = i;
+      }
+      onRound(i);
+      perRoundData[round] = counter;
+    }
   }
 
-  if (projectedEndValue != null) {
-    counter += projectedEndValue();
-  }
-
-  perRoundData[lastIndex(includeRounds)] = counter;
+  perRoundData[lastRound] = counter;
   return perRoundData;
 }
 
