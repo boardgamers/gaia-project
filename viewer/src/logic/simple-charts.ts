@@ -482,7 +482,7 @@ export function simpleChartDetails<Source extends SimpleSource<any>>(
       label: s.label,
       fill: false,
       getDataPoints: () =>
-        getDataPoints(data, initialValue, extractChange, extractLog, () => 0, deltaForEnded, includeRounds),
+        getDataPoints(data, initialValue, extractChange, extractLog, null, deltaForEnded, includeRounds),
       weight: s.weight,
     };
   });

@@ -56,6 +56,10 @@
           <li><a href="https://www.boardgamers.space/page/elo">How Elo works</a></li>
         </ul>
         <h4>Recent changes</h4>
+        <h5>2021-09-02</h5>
+        <ul>
+          <li>Project the points of pass advanced tech tiles (e.g. 3 VP/lab when passing) for all remaining rounds.</li>
+        </ul>
         <h5>2021-08-17</h5>
         <ul>
           <li>Make replay more permissive (this should fix replay in some older games)</li>
