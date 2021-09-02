@@ -82,7 +82,8 @@ function passIncomeProjection(
   eachRound: boolean
 ): (e: Engine, p: Player) => Map<number, number> | null {
   return (e, p) => {
-    if (e.isLastRound && e.passedPlayers.includes(p.player)) {
+    const hasPassed = e.passedPlayers.includes(p.player);
+    if (e.isLastRound && hasPassed) {
       return null;
     }
     let points = 0;
@@ -97,9 +98,11 @@ function passIncomeProjection(
     }
 
     const map = new Map<number, number>();
-    const last = eachRound ? Round.LastRound : e.round;
-    for (let round = e.round; round <= last; round++) {
+    for (let round = e.round + (hasPassed ? 1 : 0); round <= Round.LastRound; round++) {
       map.set(round, points);
+      if (!eachRound) {
+        break;
+      }
     }
     return map;
   };
