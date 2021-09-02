@@ -1,4 +1,4 @@
-import { difference, range } from "lodash";
+import { difference, range, uniq } from "lodash";
 import {
   boardActions,
   ConversionPool,
@@ -879,7 +879,7 @@ export function possibleFederationTiles(engine: Engine, player: Player, from: "p
   const possibleTiles: Federation[] = Object.keys(engine.tiles.federations)
     .filter((key) => engine.tiles.federations[key] > 0)
     .map((f) => f as Federation);
-  const playerTiles = engine.player(player).data.tiles.federations.map((fed) => fed.tile);
+  const playerTiles = uniq(engine.player(player).data.tiles.federations.map((fed) => fed.tile));
 
   commands.push({
     name: Command.ChooseFederationTile,
