@@ -2,8 +2,8 @@ import { Building, Faction } from "../enums";
 import { FactionBoardVariants } from "./types";
 
 const ambas: FactionBoardVariants = {
+  faction: Faction.Ambas,
   standard: {
-    faction: Faction.Ambas,
     buildings: {
       [Building.PlanetaryInstitute]: {
         income: [["+4pw", "+2t", "=> swap-PI"]],

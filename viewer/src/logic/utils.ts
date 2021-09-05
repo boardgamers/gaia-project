@@ -1,4 +1,5 @@
-import Engine, { Phase } from "@gaia-project/engine";
+import Engine, { Faction, Phase } from "@gaia-project/engine";
+import { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards/types";
 import { expect } from "chai";
 import fs from "fs";
 
@@ -24,7 +25,15 @@ export function runJsonTests(tester: JsonTester) {
       const testCaseDir = base + testCaseName;
       const testCase = JSON.parse(fs.readFileSync(testCaseDir + "/test-case.json").toString());
 
-      const engine = new Engine(testCase.moveHistory, testCase.options);
+      const boards = testCase.variantBoards
+        ? new Map(
+            Object.entries(testCase.variantBoards).map((value) => [
+              value[0] as Faction,
+              { board: value[1] as FactionBoardRaw },
+            ])
+          )
+        : null;
+      const engine = new Engine(testCase.moveHistory, testCase.options, null, false, boards);
 
       for (const subTest of tester.subTests(testCase)) {
         it(subTest, () => {

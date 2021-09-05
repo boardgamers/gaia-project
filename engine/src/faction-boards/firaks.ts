@@ -2,8 +2,8 @@ import { Building, Faction } from "../enums";
 import { FactionBoardVariants } from "./types";
 
 const firaks: FactionBoardVariants = {
+  faction: Faction.Firaks,
   standard: {
-    faction: Faction.Firaks,
     buildings: {
       [Building.PlanetaryInstitute]: {
         income: [["+4pw", "+t", "=> down-lab"]],

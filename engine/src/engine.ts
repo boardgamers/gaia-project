@@ -38,6 +38,8 @@ import {
   TechTilePos,
 } from "./enums";
 import Event, { EventSource } from "./events";
+import { factionVariantBoard } from "./faction-boards";
+import { FactionBoardVariant } from "./faction-boards/types";
 import { remainingFactions } from "./factions";
 import SpaceMap, { MapConfiguration } from "./map";
 import Player from "./player";
@@ -229,6 +231,7 @@ export default class Engine {
   version = version;
   replayVersion: string;
   replay: boolean; // be more permissive during replay
+  variantBoards?: Map<Faction, FactionBoardVariant>;
 
   get expansions() {
     return 0;
@@ -268,7 +271,13 @@ export default class Engine {
   // Tells the UI if the new move should be on the same line or not
   newTurn = true;
 
-  constructor(moves: string[] = [], options: EngineOptions = {}, engineVersion?: string, replay = false) {
+  constructor(
+    moves: string[] = [],
+    options: EngineOptions = {},
+    engineVersion?: string,
+    replay?: boolean,
+    variantBoards?: Map<Faction, FactionBoardVariant>
+  ) {
     this.options = options;
     if (engineVersion) {
       this.version = engineVersion;
@@ -278,6 +287,7 @@ export default class Engine {
       this.options.noFedCheck = true;
       this.options.flexibleFederations = true;
     }
+    this.variantBoards = variantBoards;
     this.sanitizeOptions();
     this.loadMoves(moves);
     this.options = options;
@@ -763,7 +773,15 @@ export default class Engine {
       players: data.players.length,
     };
     for (const player of data.players) {
-      engine.addPlayer(Player.fromData(player, engine.map, customization, engine.expansions, engine.version));
+      engine.addPlayer(
+        Player.fromData(
+          player,
+          engine.map,
+          player.faction ? factionVariantBoard(customization, player.faction) : null,
+          engine.expansions,
+          engine.version
+        )
+      );
     }
 
     if (data.map) {
@@ -1070,7 +1088,9 @@ export default class Engine {
       if (!pl.faction) {
         pl.faction = this.setup[pl.player as PlayerEnum];
       }
-      pl.loadFaction(this.factionCustomization, this.expansions);
+      const faction = pl.faction;
+      const board = this.variantBoards?.get(faction) ?? factionVariantBoard(this.factionCustomization, faction);
+      pl.loadFaction(board, this.expansions);
     }
 
     this.beginSetupBuildingPhase();

@@ -75,7 +75,6 @@ import Resource from "../Resource.vue";
 import Engine, {
   Building as BuildingEnum,
   factionBoard,
-  FactionCustomization,
   factionVariantBoard,
   Operator,
   Player,

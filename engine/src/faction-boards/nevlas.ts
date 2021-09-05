@@ -5,8 +5,8 @@ import Player from "../player";
 import { FactionBoardVariants } from "./types";
 
 const nevlas: FactionBoardVariants = {
+  faction: Faction.Nevlas,
   standard: {
-    faction: Faction.Nevlas,
     buildings: {
       [Building.TradingStation]: {
         income: [["+3c"], ["+4c"], ["+4c"], ["+5c"]],
