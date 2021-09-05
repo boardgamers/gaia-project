@@ -2,8 +2,8 @@ import { Building, Faction } from "../enums";
 import { FactionBoardVariants } from "./types";
 
 const bescods: FactionBoardVariants = {
+  faction: Faction.Bescods,
   standard: {
-    faction: Faction.Bescods,
     buildings: {
       [Building.TradingStation]: {
         income: [["+k"], ["+k"], ["+k"], ["+k"]],

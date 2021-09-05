@@ -5,8 +5,8 @@ import Reward from "../reward";
 import { FactionBoardVariants } from "./types";
 
 const geodens: FactionBoardVariants = {
+  faction: Faction.Geodens,
   standard: {
-    faction: Faction.Geodens,
     income: ["3k,4o,15c,q,up-terra", "+o,k"],
     handlers: {
       [`build-${Building.Mine}`]: (player: Player, hex: GaiaHex) => {

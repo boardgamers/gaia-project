@@ -2,8 +2,8 @@ import { Building, Faction } from "../enums";
 import { FactionBoardVariants } from "./types";
 
 const ivits: FactionBoardVariants = {
+  faction: Faction.Ivits,
   standard: {
-    faction: Faction.Ivits,
     buildings: {
       [Building.PlanetaryInstitute]: {
         cost: "~",

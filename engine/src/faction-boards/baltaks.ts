@@ -4,8 +4,8 @@ import Player from "../player";
 import { FactionBoardVariants } from "./types";
 
 const baltaks: FactionBoardVariants = {
+  faction: Faction.BalTaks,
   standard: {
-    faction: Faction.BalTaks,
     buildings: {
       [Building.Academy2]: {
         cost: "6c,6o",

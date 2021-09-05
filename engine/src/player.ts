@@ -5,7 +5,6 @@ import { countBy, difference, merge, sum, uniq, uniqWith, zipWith } from "lodash
 import spanningTree from "./algorithms/spanning-tree";
 import { stdBuildingValue } from "./buildings";
 import { terraformingCost } from "./cost";
-import { FactionCustomization } from "./engine";
 import {
   AdvTechTile,
   AdvTechTilePos,
@@ -28,7 +27,8 @@ import {
   TechTilePos,
 } from "./enums";
 import Event, { EventSource } from "./events";
-import { factionBoard, FactionBoard, FactionBoardRaw, factionVariantBoard } from "./faction-boards";
+import { factionBoard, FactionBoard, FactionBoardRaw } from "./faction-boards";
+import { FactionBoardVariant } from "./faction-boards/types";
 import { factionPlanet } from "./factions";
 import { FederationInfo, isOutclassedBy } from "./federation";
 import { GaiaHex } from "./gaia-hex";
@@ -150,6 +150,7 @@ export default class Player extends EventEmitter {
       name: this.name,
       dropped: this.dropped,
       factionVariant: this.factionVariant,
+      factionVariantVersion: this.factionVariantVersion,
       factionLoaded: !!this.board,
     } as any;
 
@@ -166,13 +167,14 @@ export default class Player extends EventEmitter {
     return json;
   }
 
-  static fromData(data: any, map: SpaceMap, customization: FactionCustomization, expansions: number, version: string) {
+  static fromData(data: any, map: SpaceMap, board: FactionBoardVariant | null, expansions: number, version: string) {
     const player = new Player(data.player);
 
     player.faction = data.faction;
     if (data.faction && (data.factionLoaded || !isVersionOrLater(version, "4.8.4"))) {
       player.factionVariant = data.factionVariant;
-      player.loadFaction(customization, expansions, true);
+      player.factionVariantVersion = data.factionVariantVersion;
+      player.loadFaction(board, expansions, true);
     }
 
     for (const kind of Object.keys(data.events)) {
@@ -358,11 +360,10 @@ export default class Player extends EventEmitter {
     return this.data.occupied.filter((hex) => hex.data.planet !== Planet.Empty && hex.isMainOccupier(this.player));
   }
 
-  loadFaction(customization: FactionCustomization, expansions = 0, skipIncome = false) {
+  loadFaction(board: FactionBoardVariant | null, expansions = 0, skipIncome = false) {
     if (!this.factionVariant) {
-      const b = factionVariantBoard(customization, this.faction);
-      this.factionVariant = b?.board;
-      this.factionVariantVersion = b?.version;
+      this.factionVariant = board?.board;
+      this.factionVariantVersion = board?.version;
     }
     this.board = factionBoard(this.faction, this.factionVariant);
 

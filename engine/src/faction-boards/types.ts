@@ -7,7 +7,6 @@ import Reward from "../reward";
 import { merge } from "../utils";
 
 export interface FactionBoardRaw {
-  faction?: Faction;
   income?: string[];
   buildings?: {
     [building in Building]?: {
@@ -24,11 +23,11 @@ export interface FactionBoardRaw {
   handlers?: { [event: string]: (player: Player, ...args: any[]) => any };
 }
 
-export type FactionBoardVariant = { type: FactionVariant; players?: number; board: FactionBoardRaw; version?: number };
-
+export type FactionBoardVariant = { board: FactionBoardRaw; version?: number };
 export type FactionBoardVariants = {
+  faction: Faction;
   standard: FactionBoardRaw;
-  variants?: FactionBoardVariant[];
+  variants?: (FactionBoardVariant & { type: FactionVariant; players?: number })[];
 };
 
 const defaultBoard: FactionBoardRaw = {

@@ -4,8 +4,8 @@ import Player from "../player";
 import { FactionBoardVariants } from "./types";
 
 const taklons: FactionBoardVariants = {
+  faction: Faction.Taklons,
   standard: {
-    faction: Faction.Taklons,
     brainstone: PowerArea.Area1,
     handlers: {
       freeActionChoice: (player: Player, pool: ConversionPool) => pool.push(freeActionsTaklons, player),

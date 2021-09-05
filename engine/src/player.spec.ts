@@ -1,13 +1,10 @@
 import { expect } from "chai";
 import "mocha";
-import { FactionCustomization } from "./engine";
 import { Building, Faction, Operator, Planet, Player as PlayerEnum, Resource } from "./enums";
 import Event from "./events";
 import { GaiaHex } from "./gaia-hex";
 import Player from "./player";
 import Reward from "./reward";
-
-const standard: FactionCustomization = { players: 2, variant: "standard" };
 
 describe("Player", () => {
   describe("canBuild", () => {
@@ -15,7 +12,7 @@ describe("Player", () => {
       const player = new Player(PlayerEnum.Player1);
 
       player.faction = Faction.Terrans;
-      player.loadFaction(standard);
+      player.loadFaction(null);
 
       const { cost } = player.canBuild(Planet.Terra, Building.Mine, false, false, {
         addedCost: [new Reward(1, Resource.Qic)],
@@ -56,7 +53,7 @@ describe("Player", () => {
       const player = new Player();
 
       player.faction = Faction.Lantids;
-      player.loadFaction(standard);
+      player.loadFaction(null);
       const hex = new GaiaHex(0, 0, {
         sector: "s1",
         planet: Planet.Lost,

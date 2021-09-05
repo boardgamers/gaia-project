@@ -5,8 +5,8 @@ import Reward from "../reward";
 import { FactionBoardVariants } from "./types";
 
 const gleens: FactionBoardVariants = {
+  faction: Faction.Gleens,
   standard: {
-    faction: Faction.Gleens,
     buildings: {
       [Building.PlanetaryInstitute]: {
         income: [["+4pw", "+o"]],

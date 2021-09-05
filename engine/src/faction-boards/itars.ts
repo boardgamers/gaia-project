@@ -2,8 +2,8 @@ import { Building, Faction } from "../enums";
 import { FactionBoardVariants } from "./types";
 
 const itars: FactionBoardVariants = {
+  faction: Faction.Itars,
   standard: {
-    faction: Faction.Itars,
     buildings: {
       [Building.Academy1]: {
         income: [["+3k", "tech"]],
