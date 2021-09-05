@@ -2,8 +2,8 @@ import { Building, Faction } from "../enums";
 import { FactionBoardVariants } from "./types";
 
 const xenos: FactionBoardVariants = {
+  faction: Faction.Xenos,
   standard: {
-    faction: Faction.Xenos,
     buildings: {
       [Building.PlanetaryInstitute]: {
         income: [["+4pw", "+q"]],

@@ -1,5 +1,6 @@
 import Engine, { FactionVariant } from "@gaia-project/engine";
 import { AuctionVariant, Layout } from "@gaia-project/engine/src/engine";
+import { variantBoards } from "@gaia-project/engine/wrapper";
 import Game from "./components/Game.vue";
 import Wrapper from "./components/Wrapper.vue";
 import launch from "./launcher";
@@ -22,7 +23,7 @@ function launchSelfContained(selector = "#app", debug = true) {
   const unsub = emitter.store.subscribeAction(({ payload, type }) => {
     if (type === "gaiaViewer/loadFromJSON") {
       const egData: Engine = payload;
-      engine = new Engine(egData.moveHistory, egData.options, null, true);
+      engine = new Engine(egData.moveHistory, egData.options, null, true, variantBoards(egData)); //loaded faction variants
       engine.generateAvailableCommandsIfNeeded();
       emitter.emit("state", JSON.parse(JSON.stringify(engine)));
     }

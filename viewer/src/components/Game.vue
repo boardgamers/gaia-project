@@ -93,6 +93,7 @@ import TurnOrder from "./TurnOrder.vue";
 import { parseCommands } from "../logic/recent";
 import { LogPlacement } from "../data";
 import { UndoPropagation } from "../logic/commands";
+import { variantBoards } from "@gaia-project/engine/wrapper";
 
 @Component<Game>({
   created(this: Game) {
@@ -126,9 +127,10 @@ import { UndoPropagation } from "../logic/commands";
 
         this.replayData.current = dest;
 
+        const backup = this.replayData.backup;
         this.$store.dispatch("gaiaViewer/replayInfo", {
           start: 1,
-          end: this.replayData.backup.moveHistory.length,
+          end: backup.moveHistory.length,
           current: dest,
         });
 
@@ -137,15 +139,12 @@ import { UndoPropagation } from "../logic/commands";
         }
         if (dest < current) {
           this.handleData(
-            new Engine(this.replayData.backup.moveHistory.slice(0, dest), {
-              ...this.replayData.backup.options,
-              noFedCheck: true,
-            }),
+            new Engine(backup.moveHistory.slice(0, dest), backup.options, null, true, variantBoards(backup)),
           );
           return;
         }
 
-        for (const move of this.replayData.backup.moveHistory.slice(current, dest)) {
+        for (const move of backup.moveHistory.slice(current, dest)) {
           this.engine.move(move);
         }
         this.handleData(Engine.fromData(JSON.parse(JSON.stringify(this.engine))));

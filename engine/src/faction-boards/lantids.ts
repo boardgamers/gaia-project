@@ -2,8 +2,8 @@ import { Building, Faction } from "../enums";
 import { FactionBoardVariants } from "./types";
 
 const lantids: FactionBoardVariants = {
+  faction: Faction.Lantids,
   standard: {
-    faction: Faction.Lantids,
     buildings: {
       [Building.PlanetaryInstitute]: {
         income: [["+4pw"]],
