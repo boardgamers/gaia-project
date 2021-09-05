@@ -4,7 +4,7 @@ import { stdBuildingValue } from "./src/buildings";
 import Engine from "./src/engine";
 import Event, { EventSource } from "./src/events";
 import SpaceMap, { parseLocation } from "./src/map";
-import Player, { BuildWarning } from "./src/player";
+import Player, { BuildWarning, MAX_SATELLITES } from "./src/player";
 import PlayerData, { Power } from "./src/player-data";
 import researchTracks from "./src/research-tracks";
 import Reward from "./src/reward";
@@ -85,6 +85,7 @@ export {
   federations,
   stdBuildingValue,
   Power,
+  MAX_SATELLITES,
 };
 
 export default Engine;
