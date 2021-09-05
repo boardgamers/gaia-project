@@ -48,23 +48,27 @@
             <text style="text-anchor: middle; dominant-baseline: central; font-size: 5px">-{{ data.bid }}</text>
           </g>
         </g>
-        <g transform="translate(16, 1)" v-b-tooltip title="Satellites and space stations">
-          <image xlink:href='../../assets/resources/satellite.svg' :height=155/211*22 width=22 x=-11 y=-8
-          transform="scale(0.07)"/>
+        <g transform="translate(15.5, 1)" v-b-tooltip title="Satellites and space stations, satellites left ">
+          <image xlink:href="../../assets/resources/satellite.svg" :height=155/211*22 width="22" x="-11" y="-8"
+          transform="scale(0.07)" />
           <text :class="['board-text']" transform="translate(1,0) scale(0.7)"
-            >{{ data.satellites + data.buildings.sp }}
+            >{{ data.satellites + data.buildings.sp }}, {{ satellitesLeft }}
           </text>
         </g>
-        <g transform="translate(16, 2.2)" v-b-tooltip title="Sectors with a colonized planet">
-          <image xlink:href='../../assets/conditions/sector.svg' :height=155/211*22 width=22 x=-11 y=-8
-          transform="scale(0.07)"/>
+        <g transform="translate(15.5, 2.2)" v-b-tooltip title="Sectors with a colonized planet">
+          <image xlink:href="../../assets/conditions/sector.svg" :height=155/211*22 width="22" x="-11" y="-8"
+          transform="scale(0.07)" />
           <text :class="['board-text']" transform="translate(1,0) scale(0.7)">{{ sectors }}</text>
         </g>
-        <g transform="translate(16, 3.6)" v-b-tooltip title="Power value of structures in / outside of federations">
-          <image xlink:href='../../assets/conditions/federation.svg' :height=155/211*22 width=22 x=-11 y=-8
-          transform="scale(0.08)"/>
+        <g
+          transform="translate(15.5, 3.6)"
+          v-b-tooltip
+          title="Power value of structures in federations, outside of federations"
+        >
+          <image xlink:href="../../assets/conditions/federation.svg" :height=155/211*22 width="22" x="-11" y="-8"
+          transform="scale(0.08)" />
           <text :class="['board-text']" transform="translate(1,0) scale(0.7)"
-            >{{ player.fedValue }}/{{ player.structureValue - player.fedValue }}
+            >{{ player.fedValue }}, {{ player.structureValue - player.fedValue }}
           </text>
         </g>
         <circle
@@ -115,7 +119,14 @@ import { Component, Prop } from "vue-property-decorator";
 import { uniq } from "lodash";
 import Resource from "../Resource.vue";
 import Undo from "../Resources/Undo.vue";
-import { Faction, Player, PlayerData, ResearchField, Resource as ResourceEnum } from "@gaia-project/engine";
+import {
+  Faction,
+  MAX_SATELLITES,
+  Player,
+  PlayerData,
+  ResearchField,
+  Resource as ResourceEnum,
+} from "@gaia-project/engine";
 import VictoryPoint from "../Resources/VictoryPoint.vue";
 import { FastConversionEvent } from "../../data/actions";
 import { factionName } from "../../data/factions";
@@ -186,6 +197,10 @@ export default class PlayerBoardInfo extends Vue {
   get sectors(): number {
     return uniq(this.data.occupied.filter((hex) => hex.colonizedBy(this.player.player)).map((hex) => hex.data.sector))
       .length;
+  }
+
+  get satellitesLeft(): number {
+    return MAX_SATELLITES - this.data.satellites;
   }
 }
 </script>

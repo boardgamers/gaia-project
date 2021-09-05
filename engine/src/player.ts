@@ -46,7 +46,7 @@ import { isVersionOrLater } from "./utils";
 
 // 25 satellites total
 // The 2 used on the final scoring board and 1 used in the player order can be replaced by other markers
-const MAX_SATELLITES = 25;
+export const MAX_SATELLITES = 25;
 
 interface FederationCache {
   federations: FederationInfo[];
