@@ -90,7 +90,7 @@ export function getDataPoints(
   initialValue: number,
   extractChange: (entry: LogEntry) => number,
   extractLog: (moveHistory: string[], entry: LogEntry) => number,
-  projectedRoundValues: Map<number, number> | null,
+  roundValues: Map<number, number> | null,
   deltaForEnded: () => number,
   includeRounds: IncludeRounds
 ): number[] {
@@ -101,8 +101,8 @@ export function getDataPoints(
 
   let counter = initialValue;
   const onRound = (round: number) => {
-    if (projectedRoundValues != null) {
-      counter += projectedRoundValues.get(round) ?? 0;
+    if (roundValues != null) {
+      counter += roundValues.get(round) ?? 0;
     }
   };
 
@@ -131,14 +131,13 @@ export function getDataPoints(
   if (data.ended) {
     counter += deltaForEnded();
     perRoundData[round] = counter;
-  } else {
-    for (let i = data.round + 1; i <= finalScoringRound; i++) {
-      if (i <= lastRound) {
-        round = i;
-      }
-      onRound(i);
-      perRoundData[round] = counter;
+  }
+  for (let i = data.round + 1; i <= finalScoringRound; i++) {
+    if (i <= lastRound) {
+      round = i;
     }
+    onRound(i);
+    perRoundData[round] = counter;
   }
 
   perRoundData[lastRound] = counter;

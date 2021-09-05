@@ -72,7 +72,7 @@ export type VictoryPointSource = {
   label: string;
   description: string;
   color: string;
-  projectedRoundValues?: (e: Engine, p: Player) => Map<number, number>;
+  roundValues?: (e: Engine, p: Player) => Map<number, number>;
   initialValue?: (p: Player) => number;
   aggregate?: VictoryPointAggregate;
 };
@@ -169,7 +169,7 @@ export const victoryPointSources: VictoryPointSource[] = [
     label: "Booster",
     description: "Round Boosters",
     color: "--oxide",
-    projectedRoundValues: passIncomeProjection(Booster.values(), false),
+    roundValues: passIncomeProjection(Booster.values(), false),
   },
   {
     types: BoardAction.values(),
@@ -188,7 +188,7 @@ export const victoryPointSources: VictoryPointSource[] = [
     label: "Advanced Tech",
     description: "Advanced Tech Tiles",
     color: "--current-round",
-    projectedRoundValues: passIncomeProjection(AdvTechTilePos.values(), true),
+    roundValues: passIncomeProjection(AdvTechTilePos.values(), true),
   },
   {
     types: [Command.FormFederation],
@@ -202,7 +202,7 @@ export const victoryPointSources: VictoryPointSource[] = [
     description: "Final Scoring A",
     color: "--rt-sci",
     aggregate: finalScoring,
-    projectedRoundValues: finalScoringProjection(0),
+    roundValues: finalScoringProjection(0),
   },
   {
     types: ["chart-final2"],
@@ -210,14 +210,14 @@ export const victoryPointSources: VictoryPointSource[] = [
     description: "Final Scoring B",
     color: "--dig",
     aggregate: finalScoring,
-    projectedRoundValues: finalScoringProjection(1),
+    roundValues: finalScoringProjection(1),
   },
   {
     types: ["chart-spend"],
     label: "Resources",
     description: "Points for the remaining resources converted to credits",
     color: "--res-credit",
-    projectedRoundValues: (e: Engine, pl: Player) =>
+    roundValues: (e: Engine, pl: Player) =>
       new Map([[finalScoringRound, simulateIncome(pl, (clone) => clone.data.finalResourceHandling(), e.version)]]),
   },
 ];
@@ -253,17 +253,17 @@ export function groupSources(sources: VictoryPointSource[]): VictoryPointSource[
           label: aggregate.label,
           description: aggregate.description,
           color: aggregate.color,
-          projectedRoundValues: () => new Map<number, number>(),
+          roundValues: () => new Map<number, number>(),
           initialValue: () => 0,
         };
         groupTypes.set(aggregate.label, group);
         res.push(group);
       }
       group.types.push(...source.types);
-      if (source.projectedRoundValues != null) {
-        const last = group.projectedRoundValues;
-        group.projectedRoundValues = (e, p) => {
-          const map = source.projectedRoundValues(e, p);
+      if (source.roundValues != null) {
+        const last = group.roundValues;
+        group.roundValues = (e, p) => {
+          const map = source.roundValues(e, p);
           last(e, p).forEach((value, key) => {
             map.set(key, value);
           });
@@ -325,7 +325,7 @@ export function victoryPointDetails(
           initialValue,
           extractChange,
           extractLog,
-          s.projectedRoundValues == null || data.ended ? null : s.projectedRoundValues(data, pl),
+          s.roundValues == null ? null : s.roundValues(data, pl),
           deltaForEnded,
           includeRounds
         ),
