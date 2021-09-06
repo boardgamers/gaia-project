@@ -39,7 +39,7 @@
         stroke-width="0.07"
         fill="white"
         :x="-2.2 + offset"
-        width="4"
+        :width="2 * incomeTypes"
         y="-1"
         height="2"
         :key="i"
@@ -75,7 +75,6 @@ import Resource from "../Resource.vue";
 import Engine, {
   Building as BuildingEnum,
   factionBoard,
-  FactionCustomization,
   factionVariantBoard,
   Operator,
   Player,
@@ -162,11 +161,21 @@ export default class BuildingGroup extends Vue {
   }
 
   get width() {
+    let minWidth = 2;
+    if (this.building === BuildingEnum.GaiaFormer) {
+      minWidth = 3;
+    } else if (this.building === BuildingEnum.PlanetaryInstitute) {
+      minWidth = this.incomeTypes;
+    }
     return (
-      Math.max(this.nBuildings, this.building === BuildingEnum.GaiaFormer ? 3 : 2) * this.buildingSpacing +
+      Math.max(this.nBuildings, minWidth) * this.buildingSpacing +
       this.offset +
       this.paddingRight
     );
+  }
+
+  get incomeTypes() {
+    return Math.max(2, this.board.buildings[this.building].income[0].length);
   }
 
   get factionIncome(): Reward[] {
