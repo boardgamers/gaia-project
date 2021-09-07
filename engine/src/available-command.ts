@@ -733,7 +733,7 @@ export function possibleFederations(engine: Engine, player: Player) {
   const possibleTiles = Object.keys(engine.tiles.federations).filter((key) => engine.tiles.federations[key] > 0);
 
   if (possibleTiles.length > 0) {
-    if (engine.options.noFedCheck) {
+    if (engine.options.noFedCheck || engine.replay) {
       commands.push({
         name: Command.FormFederation,
         player,
