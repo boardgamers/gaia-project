@@ -277,10 +277,6 @@ export default class Engine {
       this.version = engineVersion;
     }
     this.replay = replay;
-    if (replay) {
-      this.options.noFedCheck = true;
-      this.options.flexibleFederations = true;
-    }
     if (this.options.factionVariantVersion === undefined) {
       this.options.factionVariantVersion = latestVariantVersion(this.options.factionVariant);
     }
@@ -852,13 +848,7 @@ export default class Engine {
     engine.loadMoves(oldHistory.slice(1));
     assert(engine.newTurn, "Last move of the game is incomplete");
 
-    if (!keepReplayMode) {
-      engine.replay = false;
-      engine.options.noFedCheck = this.options.noFedCheck;
-      engine.options.flexibleFederations = this.options.flexibleFederations;
-
-      // todo: maybe delete federation cache?
-    }
+    engine.replay = keepReplayMode;
 
     engine.generateAvailableCommandsIfNeeded();
 

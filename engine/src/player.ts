@@ -1114,17 +1114,17 @@ export default class Player extends EventEmitter {
 
     const info = this.federationInfo(hexes);
 
-    if (!replay) {
-      assert(info.newSatellites <= this.maxSatellites, "Federation requires too many satellites");
+    if (replay) {
+      return info;
     }
+
+    assert(info.newSatellites <= this.maxSatellites, "Federation requires too many satellites");
 
     // Check if outclassed by available federations
     const available = this.availableFederations(map, flexible);
     const outclasser = available.find((fed) => isOutclassedBy(info, fed));
 
-    if (!replay) {
-      assert(!outclasser, "Federation is outclassed by other federation at " + (outclasser?.hexes ?? []).join(","));
-    }
+    assert(!outclasser, "Federation is outclassed by other federation at " + (outclasser?.hexes ?? []).join(","));
 
     // Check if federation can be built with less satellites
     if (!flexible) {
