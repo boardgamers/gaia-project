@@ -131,6 +131,9 @@ export default class Charts extends Vue {
   }
 
   mounted() {
+    if (window.innerWidth < 500) {
+      this.chartStyle = this.chartStyles[3];
+    }
     this.loadChart();
   }
 
