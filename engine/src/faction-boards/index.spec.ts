@@ -17,12 +17,12 @@ describe("Faction boards", () => {
           },
         },
       };
-      expect(serializeFactionVariant(sampleFaction).handlers.freeActionChoice.replaceAll(" ", "")).to.deep.equal(
+      expect(serializeFactionVariant(sampleFaction).handlers.freeActionChoice.replace(/ /g, "")).to.deep.equal(
         `(player, pool) => {
         if (player.data.hasPlanetaryInstitute()) {
           pool.push(["some free action"], player);
         }
-      }`.replaceAll(" ", "")
+      }`.replace(/ /g, "")
       );
     });
   });
