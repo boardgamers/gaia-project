@@ -26,6 +26,7 @@ const ivits: FactionBoardVariants = {
           },
         },
       },
+      version: 0,
     },
   ],
 };

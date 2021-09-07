@@ -27,7 +27,7 @@ export type FactionBoardVariant = { board: FactionBoardRaw; version?: number };
 export type FactionBoardVariants = {
   faction: Faction;
   standard: FactionBoardRaw;
-  variants?: (FactionBoardVariant & { type: FactionVariant; players?: number })[];
+  variants?: (FactionBoardVariant & { type: FactionVariant; players?: number; version: number })[];
 };
 
 const defaultBoard: FactionBoardRaw = {

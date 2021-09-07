@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import Engine from "./engine";
-import { Faction, Player as PlayerEnum } from "./enums";
+import { Faction, Player as PlayerEnum, ResearchField } from "./enums";
 import { remainingFactions } from "./factions";
 
 describe("Factions", () => {
@@ -61,6 +61,25 @@ describe("Factions", () => {
 
       const engine = new Engine(moves, { factionVariant: "more-balanced" });
       expect(engine.player(PlayerEnum.Player1).data.qics).to.equal(0);
+    });
+  });
+
+  describe("Specific faction variant", () => {
+    it("Gleens should have 2 nav when variant version is set to 1 and variant to 'beta'", () => {
+      const engine = new Engine(["init 4 Beta-2"], {
+        layout: "standard",
+        factionVariant: "beta",
+        factionVariantVersion: 1,
+      });
+
+      engine.loadMoves([
+        "p1 faction gleens",
+        "p2 faction terrans",
+        "p3 faction hadsch-hallas",
+        "p4 faction ambas (0/0/0/0 ⇒ 2/4/0/0)",
+      ]);
+
+      expect(engine.player(PlayerEnum.Player1).data.research[ResearchField.Navigation]).to.equal(2);
     });
   });
 });

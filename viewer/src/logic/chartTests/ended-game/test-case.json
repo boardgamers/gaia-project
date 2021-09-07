@@ -2,18 +2,8 @@
   "families": ["Victory Points"],
   "options": {
     "layout": "standard",
-    "factionVariant": "beta"
-  },
-  "variantBoards": {
-    "gleens": {
-      "income": ["3k,4o,15c,up-nav,up-nav", "+o,k"]
-    },
-    "terrans": {
-      "income": ["3k,4o,15c,q,up-gaia,up-nav", "+o,k"]
-    },
-    "hadsch-hallas": {
-      "income": ["3k,4o,15c,q,up-eco,up-eco", "+o,k,3c"]
-    }
+    "factionVariant": "beta",
+    "factionVariantVersion": 1
   },
   "moveHistory": [
     "init 4 Beta-2",

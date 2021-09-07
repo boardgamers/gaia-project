@@ -24,7 +24,8 @@
     "build": "npm run clean && tsc",
     "clean": "rm -Rf dist",
     "lint": "eslint . --ext .ts",
-    "test": "mocha -r ts-node/register src/**/*.spec.ts src/*.spec.ts *.spec.ts"
+    "test": "mocha -r ts-node/register src/**/*.spec.ts src/*.spec.ts *.spec.ts",
+    "test-single": "mocha -r ts-node/register"
   },
   "contributors": [
     "coyotte508 <coyotte508@gmail.com>",

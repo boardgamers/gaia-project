@@ -21,6 +21,7 @@ const hadschHallas: FactionBoardVariants = {
       board: {
         income: ["3k,4o,15c,q,up-eco,up-eco", "+o,k,3c"],
       },
+      version: 0,
     },
   ],
 };

@@ -21,6 +21,7 @@ const firaks: FactionBoardVariants = {
           area2: 2,
         },
       },
+      version: 0,
     },
     {
       type: "beta",
