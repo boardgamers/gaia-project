@@ -14,7 +14,7 @@ describe("commands", () => {
   it("should assign shortcut for free action", () => {
     const avail: AvailableFreeAction = freeActionConversions[FreeAction.PowerToOreAndCredit];
 
-    let playerData = new PlayerData();
+    const playerData = new PlayerData();
     playerData.tokenModifier = 2;
     const button = freeActionButton({ acts: [avail] }, { data: playerData } as Player);
     expect(button).to.deep.equal({

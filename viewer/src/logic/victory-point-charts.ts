@@ -1,4 +1,5 @@
 import Engine, {
+  AdvTechTile,
   AdvTechTilePos,
   BoardAction,
   Booster,
@@ -16,6 +17,7 @@ import Engine, {
   RoundScoring,
   TechPos,
 } from "@gaia-project/engine";
+import { advancedTechTileNames } from "../data/tech-tiles";
 import {
   ColorVar,
   DatasetFactory,
@@ -65,7 +67,8 @@ export type VictoryPointType =
   | "chart-bid"
   | "chart-spend"
   | "chart-final1"
-  | "chart-final2";
+  | "chart-final2"
+  | AdvTechTile;
 
 export type VictoryPointSource = {
   types: VictoryPointType[];
@@ -82,7 +85,7 @@ function passIncomeProjection(
   eachRound: boolean
 ): (e: Engine, p: Player) => Map<number, number> | null {
   return (e, p) => {
-    const hasPassed = e.passedPlayers.includes(p.player);
+    const hasPassed = e.passedPlayers?.includes(p.player) ?? false;
     if (e.isLastRound && hasPassed) {
       return null;
     }
@@ -221,6 +224,21 @@ export const victoryPointSources: VictoryPointSource[] = [
       new Map([[finalScoringRound, simulateIncome(pl, (clone) => clone.data.finalResourceHandling(), e.version)]]),
   },
 ];
+
+function advancedTechTileTypes(e: Engine, tile: AdvTechTile) {
+  return Object.entries(e.tiles.techs)
+    .filter((entry) => entry[1].tile == tile)
+    .map((entry) => entry[0] as AdvTechTilePos);
+}
+
+export const advancedTechTileSources = (data: Engine): VictoryPointSource[] =>
+  AdvTechTile.values().map((tile) => ({
+    types: advancedTechTileTypes(data, tile),
+    label: advancedTechTileNames[tile],
+    description: "Advanced Tech Tiles",
+    color: "--tech-tile",
+    roundValues: passIncomeProjection(advancedTechTileTypes(data, tile), true),
+  }));
 
 export function countResearch(player: Player): (moveHistory: string[], log: LogEntry) => number {
   const research = initialResearch(player);
