@@ -68,12 +68,9 @@ import {
   ChartKind,
   ChartKindDisplay,
   ChartStyleDisplay,
-  families,
-  kinds,
   lineChartKind,
-  newBarChart,
-  newLineChart,
-  TableMeta
+  TableMeta,
+  ChartSetup,
 } from "../logic/chart-factory";
 import {tableHeader, tableItems} from "../logic/table";
 
@@ -102,6 +99,7 @@ export default class Charts extends Vue {
   private chartKind: ChartKind = barChartKind;
   private chart: Chart;
   private table: Table;
+  private setup: ChartSetup;
 
   get gameData(): Engine {
     return this.$store.state.gaiaViewer.data;
@@ -117,15 +115,19 @@ export default class Charts extends Vue {
   }
 
   get families(): ChartFamily[] {
-    return families();
+    return this.setup.families;
   }
 
   get kinds(): ChartKindDisplay[][] {
-    return kinds(this.gameData, this.chartFamily);
+    return this.setup.kinds(this.gameData, this.chartFamily);
   }
 
   get flat() {
     return this.$store.state.gaiaViewer.preferences.flatBuildings;
+  }
+
+  created() {
+    this.setup = new ChartSetup(this.gameData);
   }
 
   mounted() {
@@ -162,12 +164,12 @@ export default class Charts extends Vue {
     const canvas = Charts.canvas();
 
     if (this.chartKind === barChartKind) {
-      const config = newBarChart(this.chartStyle, this.chartFamily, data, canvas);
+      const config = this.setup.newBarChart(this.chartStyle, this.chartFamily, data, canvas);
       this.newChart(canvas, config.chart, config.table);
     } else if (this.chartKind === lineChartKind) {
-      this.newChart(canvas, newLineChart(this.chartStyle, this.chartFamily, data, canvas, PlayerEnum.All));
+      this.newChart(canvas, this.setup.newLineChart(this.chartStyle, this.chartFamily, data, canvas, PlayerEnum.All));
     } else {
-      this.newChart(canvas, newLineChart(this.chartStyle, this.chartFamily, data, canvas, this.chartKind));
+      this.newChart(canvas, this.setup.newLineChart(this.chartStyle, this.chartFamily, data, canvas, this.chartKind));
     }
   }
 

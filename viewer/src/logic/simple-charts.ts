@@ -27,7 +27,7 @@ import { federationData } from "../data/federations";
 import { planetNames } from "../data/planets";
 import { researchNames } from "../data/research";
 import { resourceNames } from "../data/resources";
-import { advancedTechTileNames, baseTechTileNames } from "../data/tech-tiles";
+import { baseTechTileNames } from "../data/tech-tiles";
 import {
   ChartColor,
   ChartFamily,
@@ -419,18 +419,6 @@ const factories = [
       weight: 1,
     })),
   } as SimpleSourceFactory<SimpleSource<TechTile>>,
-  {
-    name: "Advanced Tech Tiles",
-    showWeightedTotal: false,
-    playerSummaryLineChartTitle: "Advanced Tech tiles of all players",
-    extractLog: techTileExtractLog,
-    sources: AdvTechTile.values().map((t) => ({
-      type: t,
-      label: advancedTechTileNames[t],
-      color: "--tech-tile",
-      weight: 1,
-    })),
-  } as SimpleSourceFactory<SimpleSource<AdvTechTile>>,
   {
     name: "Final Scoring Conditions",
     showWeightedTotal: false,

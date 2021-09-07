@@ -21,7 +21,8 @@ import { SimpleSource } from "./simple-charts";
 export type ChartColor = string | ((player: Player) => string);
 
 export type ChartFamily = string;
-export const vpChartFamily: ChartFamily = "Victory Points";
+
+export const vpChartFamily = "Victory Points";
 
 export const finalScoringRound = Round.LastRound + 1;
 

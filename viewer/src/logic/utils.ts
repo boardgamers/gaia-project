@@ -13,7 +13,7 @@ export function phaseBeforeSetupBuilding(data: Engine): boolean {
 
 export type JsonTester = {
   baseDir: string;
-  subTests: (testCase: any) => string[];
+  subTests: (testCase: any, engine: Engine) => string[];
   createActualOutput: (data: Engine, subTest: string) => any;
 };
 
@@ -26,7 +26,7 @@ export function runJsonTests(tester: JsonTester) {
 
       const engine = new Engine(testCase.moveHistory, testCase.options);
 
-      for (const subTest of tester.subTests(testCase)) {
+      for (const subTest of tester.subTests(testCase, engine)) {
         it(subTest, () => {
           const path = `${testCaseDir}/${subTest.replace(/ /g, "-").toLowerCase()}.json`;
           const actual = tester.createActualOutput(engine, subTest);

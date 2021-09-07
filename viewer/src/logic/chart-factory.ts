@@ -26,7 +26,13 @@ import {
   weightedSum,
 } from "./charts";
 import { simpleChartDetails, SimpleSource, simpleSourceFactory, simpleSourceFamilies } from "./simple-charts";
-import { groupSources, victoryPointDetails, VictoryPointSource, victoryPointSources } from "./victory-point-charts";
+import {
+  advancedTechTileSources,
+  groupSources,
+  victoryPointDetails,
+  VictoryPointSource,
+  victoryPointSources,
+} from "./victory-point-charts";
 
 export type ChartStyle = "table" | "chart";
 
@@ -54,7 +60,6 @@ export type ChartSource = {
 };
 
 export type ChartFactory<Source extends ChartSource> = {
-  canHandle(family: ChartFamily): boolean;
   sources(family: ChartFamily): Source[];
   newDetails(
     data: Engine,
@@ -73,16 +78,13 @@ export type ChartFactory<Source extends ChartSource> = {
   barChartTooltip?: DeepPartial<TooltipOptions<"bar">>;
 };
 
-export function victoryPointSource(source: ChartSource): VictoryPointSource {
-  return victoryPointSources.find((s) => s.types[0] == source.type);
+function victoryPointSource(source: ChartSource, sources: VictoryPointSource[]): VictoryPointSource {
+  return sources.find((s) => s.types[0] == source.type);
 }
 
 const simpleChartFactory: ChartFactory<SimpleSource<any>> = {
   includeRounds: "except-final",
 
-  canHandle(family: ChartFamily): boolean {
-    return family != vpChartFamily;
-  },
   sources(family: ChartFamily): SimpleSource<any>[] {
     return simpleSourceFactory(family).sources;
   },
@@ -113,13 +115,10 @@ const simpleChartFactory: ChartFactory<SimpleSource<any>> = {
   },
 };
 
-const vpChartFactory: ChartFactory<ChartSource> = {
+const vpChartFactory = (allSources: VictoryPointSource[]): ChartFactory<ChartSource> => ({
   includeRounds: "all",
-  canHandle(family: ChartFamily): boolean {
-    return family == vpChartFamily;
-  },
   sources(): ChartSource[] {
-    return victoryPointSources.map((s) => ({
+    return allSources.map((s) => ({
       type: s.types[0],
       label: s.label,
       color: s.color,
@@ -134,7 +133,7 @@ const vpChartFactory: ChartFactory<ChartSource> = {
     family: ChartFamily,
     groupDatasets: boolean
   ) {
-    const vpSources = sources.map((s) => victoryPointSource(s));
+    const vpSources = sources.map((s) => victoryPointSource(s, allSources));
     const grouped = groupDatasets ? groupSources(vpSources) : vpSources;
     return victoryPointDetails(data, player, grouped, includeRounds);
   },
@@ -145,7 +144,7 @@ const vpChartFactory: ChartFactory<ChartSource> = {
     return "Victory points of all players";
   },
   kindBreakdownTitle(family: ChartFamily, source: ChartSource): string {
-    return `${victoryPointSource(source).label} of all players`;
+    return `${victoryPointSource(source, allSources).label} of all players`;
   },
   stacked(kind: ChartKind) {
     return Object.values(PlayerEnum).includes(kind) && kind != PlayerEnum.All;
@@ -157,17 +156,11 @@ const vpChartFactory: ChartFactory<ChartSource> = {
     callbacks: {
       afterTitle(this: TooltipModel<"bar">, items: TooltipItem<"bar">[]): string | string[] {
         const dataIndex = items[0].dataIndex;
-        return ` (${victoryPointSources[dataIndex].description})`;
+        return ` (${allSources[dataIndex].description})`;
       },
     },
   },
-};
-
-const chartFactories: ChartFactory<any>[] = [simpleChartFactory, vpChartFactory];
-
-export function chartFactory(family: ChartFamily): ChartFactory<any> {
-  return chartFactories.find((f) => f.canHandle(family));
-}
+});
 
 function cropLabels(style: ChartStyleDisplay, labels: string[]): string[] {
   if (style.type == "chart" && style.compact) {
@@ -211,225 +204,238 @@ function xScaleOptions(style: ChartStyleDisplay) {
   return null;
 }
 
-export function newLineChart(
-  style: ChartStyleDisplay,
-  family: ChartFamily,
-  data: Engine,
-  canvas: HTMLCanvasElement,
-  kind: ChartKind
-): ChartConfiguration<"line"> {
-  const f = chartFactory(family);
+export class ChartSetup {
+  factories: Map<ChartFamily, ChartFactory<any>>;
+  families: ChartFamily[];
 
-  let title: string;
-  let factories: DatasetFactory[];
+  constructor(data: Engine) {
+    this.factories = new Map<ChartFamily, ChartFactory<any>>(
+      ([
+        [vpChartFamily, vpChartFactory(victoryPointSources)],
+        ["Advanced Tech Tiles", vpChartFactory(advancedTechTileSources(data))],
+      ] as [ChartFamily, ChartFactory<any>][]).concat(
+        simpleSourceFamilies().map((value) => [value, simpleChartFactory] as [ChartFamily, ChartFactory<any>])
+      )
+    );
 
-  const allSources = f.sources(family);
-  const includeRounds = f.includeRounds;
-  if (typeof kind == "number") {
-    const numbers = kind === PlayerEnum.All ? chartPlayerOrder(data) : [kind as PlayerEnum];
+    this.families = Array.from(this.factories.keys()).sort();
+  }
 
-    if (numbers.length == 1) {
-      const p = numbers[0];
-      title = f.singlePlayerSummaryTitle(data.player(p), family);
-      factories = f.newDetails(data, p, allSources, includeRounds, family, style.type == "chart");
-    } else {
-      title = f.playerSummaryTitle(family);
-      factories = numbers.map((p) =>
-        weightedSum(data, p, f.newDetails(data, p, allSources, includeRounds, family, false))
-      );
-    }
-  } else {
-    const sources = allSources.filter((r) => r.type === kind);
+  chartFactory(family: ChartFamily): ChartFactory<any> {
+    return this.factories.get(family);
+  }
 
-    const source = sources[0];
-    title = f.kindBreakdownTitle(family, source);
-    factories = chartPlayerOrder(data).map((p) => {
-      const pl = data.player(p);
-      if (!pl.faction) {
-        return null;
+  newLineChart(
+    style: ChartStyleDisplay,
+    family: ChartFamily,
+    data: Engine,
+    canvas: HTMLCanvasElement,
+    kind: ChartKind
+  ): ChartConfiguration<"line"> {
+    const f = this.chartFactory(family);
+
+    let title: string;
+    let factories: DatasetFactory[];
+
+    const allSources = f.sources(family);
+    const includeRounds = f.includeRounds;
+    if (typeof kind == "number") {
+      const numbers = kind === PlayerEnum.All ? chartPlayerOrder(data) : [kind as PlayerEnum];
+
+      if (numbers.length == 1) {
+        const p = numbers[0];
+        title = f.singlePlayerSummaryTitle(data.player(p), family);
+        factories = f.newDetails(data, p, allSources, includeRounds, family, style.type == "chart");
+      } else {
+        title = f.playerSummaryTitle(family);
+        factories = numbers.map((p) =>
+          weightedSum(data, p, f.newDetails(data, p, allSources, includeRounds, family, false))
+        );
       }
+    } else {
+      const sources = allSources.filter((r) => r.type === kind);
 
+      const source = sources[0];
+      title = f.kindBreakdownTitle(family, source);
+      factories = chartPlayerOrder(data).map((p) => {
+        const pl = data.player(p);
+        if (!pl.faction) {
+          return null;
+        }
+
+        return {
+          backgroundColor: playerColor(pl, true),
+          label: playerLabel(pl),
+          fill: false,
+          getDataPoints: () => f.newDetails(data, p, sources, includeRounds, family, false)[0].getDataPoints(),
+          weight: 1,
+        };
+      });
+    }
+
+    const datasetFactories = factories.filter((f) => f != null);
+    const stacked = f.stacked(kind);
+
+    const datasets: ChartDataset<"line">[] = datasetFactories.map((f) => {
+      const color = f.backgroundColor.lookupForChart(style, canvas);
       return {
-        backgroundColor: playerColor(pl, true),
-        label: playerLabel(pl),
-        fill: false,
-        getDataPoints: () => f.newDetails(data, p, sources, includeRounds, family, false)[0].getDataPoints(),
-        weight: 1,
+        backgroundColor: color,
+        borderColor: color,
+        data: f.getDataPoints().map((val, i) => ({ x: i, y: val })),
+        fill: f.fill,
+        label: f.label,
       };
     });
-  }
 
-  const datasetFactories = factories.filter((f) => f != null);
-  const stacked = f.stacked(kind);
-
-  const datasets: ChartDataset<"line">[] = datasetFactories.map((f) => {
-    const color = f.backgroundColor.lookupForChart(style, canvas);
-    return {
-      backgroundColor: color,
-      borderColor: color,
-      data: f.getDataPoints().map((val, i) => ({ x: i, y: val })),
-      fill: f.fill,
-      label: f.label,
-    };
-  });
-
-  const labels = ["Start", "Round 1", "Round 2", "Round 3", "Round 4", "Round 5", "Round 6"];
-  if (includeRounds === "all") {
-    if (data.ended) {
-      labels.push("Final");
-    } else {
-      labels.push("Est. Final");
+    const labels = ["Start", "Round 1", "Round 2", "Round 3", "Round 4", "Round 5", "Round 6"];
+    if (includeRounds === "all") {
+      if (data.ended) {
+        labels.push("Final");
+      } else {
+        labels.push("Est. Final");
+      }
     }
-  }
 
-  const tooltipOptions: DeepPartial<TooltipOptions<"line">> = {};
-  if (stacked) {
-    tooltipOptions.callbacks = {
-      afterTitle(this: TooltipModel<"line">, items: TooltipItem<"line">[]): string | string[] {
-        const dataIndex = items[0].dataIndex;
-        return String(sumBy(datasets, (s) => (s.data[dataIndex] as any).y));
-      },
-    };
-  }
-
-  return {
-    type: "line",
-    data: {
-      labels: cropLabels(style, labels),
-      datasets: datasets,
-    },
-    options: {
-      plugins: {
-        title: {
-          text: title,
-          display: true,
+    const tooltipOptions: DeepPartial<TooltipOptions<"line">> = {};
+    if (stacked) {
+      tooltipOptions.callbacks = {
+        afterTitle(this: TooltipModel<"line">, items: TooltipItem<"line">[]): string | string[] {
+          const dataIndex = items[0].dataIndex;
+          return String(sumBy(datasets, (s) => (s.data[dataIndex] as any).y));
         },
-        tooltip: tooltipOptions,
-        legend: newLegendOptions((index) => datasetFactories[index]?.description),
-      } as any,
-      spanGaps: true,
-      elements: {
-        line: {
-          tension: 0.000001,
-        },
-      },
-      scales: {
-        x: xScaleOptions(style),
-        y: {
-          // temporary type hack until chart.js's typing is fixed
-          stacked: (stacked ? "single" : false) as any,
-        },
-      },
-    },
-  };
-}
+      };
+    }
 
-export function newBarChart(
-  style: ChartStyleDisplay,
-  family: ChartFamily,
-  data: Engine,
-  canvas: HTMLCanvasElement
-): BarChartConfig {
-  const f = chartFactory(family);
-  const showWeightedTotal = f.showWeightedTotal(family);
-
-  const datasetMeta: DatasetMeta = {};
-
-  const sources = f.sources(family);
-  const players = chartPlayerOrder(data);
-  const datasets: ChartDataset<"bar">[] = sortBy(
-    players
-      .filter((pl) => data.player(pl).faction != null)
-      .map((pl) => {
-        const details = f.newDetails(data, pl, sources, "last", family, false);
-        const points = details.map((f) => f.getDataPoints()[0]);
-
-        const total = sum(points);
-        const weighted = showWeightedTotal ? weightedSum(data, pl, details).getDataPoints()[0] : null;
-
-        const player = data.player(pl);
-        const label = playerLabel(player);
-        const key = `${label} (${weighted ?? total})`;
-        datasetMeta[key] = {
-          label: label,
-          total: total,
-          weightedTotal: weighted,
-        };
-        const d: ChartDataset<"bar"> = {
-          data: points,
-          label: key,
-          backgroundColor: playerColor(player, style.type == "table").lookupForChart(style, canvas),
-          borderColor: "black",
-          borderWidth: 1,
-        };
-        return {
-          data: d,
-          points: total,
-        };
-      }),
-    (d) => -d.points
-  ).map((d) => d.data);
-
-  const player = data.player(players[0]);
-  return {
-    table: {
-      weights: showWeightedTotal ? sources.map((s) => s.weight) : null,
-      colors: sources.map((s) => resolveColor(s.color, player)),
-      datasetMeta: datasetMeta,
-    },
-    chart: {
-      type: "bar",
+    return {
+      type: "line",
       data: {
-        labels: cropLabels(
-          style,
-          sources.map((s) => s.label)
-        ),
+        labels: cropLabels(style, labels),
         datasets: datasets,
       },
       options: {
         plugins: {
-          tooltip: f.barChartTooltip,
           title: {
-            text: f.playerSummaryTitle(family),
+            text: title,
             display: true,
           },
+          tooltip: tooltipOptions,
+          legend: newLegendOptions((index) => datasetFactories[index]?.description),
         } as any,
-        responsive: true,
+        spanGaps: true,
+        elements: {
+          line: {
+            tension: 0.000001,
+          },
+        },
         scales: {
           x: xScaleOptions(style),
+          y: {
+            // temporary type hack until chart.js's typing is fixed
+            stacked: (stacked ? "single" : false) as any,
+          },
         },
       },
-    },
-  };
-}
+    };
+  }
 
-export function families(): ChartFamily[] {
-  return [vpChartFamily].concat(...simpleSourceFamilies());
-}
+  newBarChart(style: ChartStyleDisplay, family: ChartFamily, data: Engine, canvas: HTMLCanvasElement): BarChartConfig {
+    const f = this.chartFactory(family);
+    const showWeightedTotal = f.showWeightedTotal(family);
 
-export function kinds(data: Engine, family: ChartFamily): ChartKindDisplay[][] {
-  const players = chartPlayerOrder(data);
+    const datasetMeta: DatasetMeta = {};
 
-  const general: ChartKindDisplay[] = [
-    {
-      kind: barChartKind,
-      label: "Overview",
-    },
-    {
-      kind: lineChartKind,
-      label: "Over Time",
-    },
-  ];
-  const playerDetails: ChartKindDisplay[] = players.map((p) => ({
-    kind: p,
-    label: factionName(data.player(p).faction),
-  }));
-  const kinds: ChartKindDisplay[] = chartFactory(family)
-    .sources(family)
-    .map((s) => ({
-      kind: s.type,
-      label: s.label,
+    const sources = f.sources(family);
+    const players = chartPlayerOrder(data);
+    const datasets: ChartDataset<"bar">[] = sortBy(
+      players
+        .filter((pl) => data.player(pl).faction != null)
+        .map((pl) => {
+          const details = f.newDetails(data, pl, sources, "last", family, false);
+          const points = details.map((f) => f.getDataPoints()[0]);
+
+          const total = sum(points);
+          const weighted = showWeightedTotal ? weightedSum(data, pl, details).getDataPoints()[0] : null;
+
+          const player = data.player(pl);
+          const label = playerLabel(player);
+          const key = `${label} (${weighted ?? total})`;
+          datasetMeta[key] = {
+            label: label,
+            total: total,
+            weightedTotal: weighted,
+          };
+          const d: ChartDataset<"bar"> = {
+            data: points,
+            label: key,
+            backgroundColor: playerColor(player, style.type == "table").lookupForChart(style, canvas),
+            borderColor: "black",
+            borderWidth: 1,
+          };
+          return {
+            data: d,
+            points: total,
+          };
+        }),
+      (d) => -d.points
+    ).map((d) => d.data);
+
+    const player = data.player(players[0]);
+    return {
+      table: {
+        weights: showWeightedTotal ? sources.map((s) => s.weight) : null,
+        colors: sources.map((s) => resolveColor(s.color, player)),
+        datasetMeta: datasetMeta,
+      },
+      chart: {
+        type: "bar",
+        data: {
+          labels: cropLabels(
+            style,
+            sources.map((s) => s.label)
+          ),
+          datasets: datasets,
+        },
+        options: {
+          plugins: {
+            tooltip: f.barChartTooltip,
+            title: {
+              text: f.playerSummaryTitle(family),
+              display: true,
+            },
+          } as any,
+          responsive: true,
+          scales: {
+            x: xScaleOptions(style),
+          },
+        },
+      },
+    };
+  }
+
+  kinds(data: Engine, family: ChartFamily): ChartKindDisplay[][] {
+    const players = chartPlayerOrder(data);
+
+    const general: ChartKindDisplay[] = [
+      {
+        kind: barChartKind,
+        label: "Overview",
+      },
+      {
+        kind: lineChartKind,
+        label: "Over Time",
+      },
+    ];
+    const playerDetails: ChartKindDisplay[] = players.map((p) => ({
+      kind: p,
+      label: factionName(data.player(p).faction),
     }));
+    const kinds: ChartKindDisplay[] = this.chartFactory(family)
+      .sources(family)
+      .map((s) => ({
+        kind: s.type,
+        label: s.label,
+      }));
 
-  return [general, playerDetails, kinds];
+    return [general, playerDetails, kinds];
+  }
 }

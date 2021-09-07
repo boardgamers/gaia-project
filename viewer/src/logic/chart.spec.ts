@@ -1,7 +1,7 @@
-import { Faction, LogEntry, Player, ResearchField, Reward } from "@gaia-project/engine";
+import Engine, { Faction, LogEntry, Player, ResearchField, Reward } from "@gaia-project/engine";
 import { expect } from "chai";
+import { ChartSetup } from "./chart-factory";
 // Here we import the File System module of node
-import { families, newBarChart } from "./chart-factory";
 import { ChartFamily, initialResearch } from "./charts";
 import { runJsonTests } from "./utils";
 import { countResearch } from "./victory-point-charts";
@@ -50,9 +50,15 @@ describe("Chart", () => {
   describe("chart data", () => {
     runJsonTests({
       baseDir: "src/logic/chartTests",
-      subTests: (testCase) => testCase.families.flatMap((f) => (f == "all" ? families() : [f as ChartFamily])),
+      subTests: (testCase: any, engine: Engine) =>
+        testCase.families.flatMap((f) => (f == "all" ? new ChartSetup(engine).families : [f as ChartFamily])),
       createActualOutput: (engine, family) => {
-        const config = newBarChart({ type: "table", label: "Table", compact: false }, family, engine, null);
+        const config = new ChartSetup(engine).newBarChart(
+          { type: "table", label: "Table", compact: false },
+          family,
+          engine,
+          null
+        );
         return {
           tableMeta: config.table,
           labels: config.chart.data.labels,
