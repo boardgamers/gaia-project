@@ -26,6 +26,7 @@ const baltaks: FactionBoardVariants = {
       board: {
         income: ["3k,4o,15c,up-gaia,up-int", "+o,k"],
       },
+      version: 0,
     },
   ],
 };

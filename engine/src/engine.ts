@@ -38,7 +38,7 @@ import {
   TechTilePos,
 } from "./enums";
 import Event, { EventSource } from "./events";
-import { factionVariantBoard } from "./faction-boards";
+import { factionVariantBoard, latestVariantVersion } from "./faction-boards";
 import { FactionBoardVariant } from "./faction-boards/types";
 import { remainingFactions } from "./factions";
 import SpaceMap, { MapConfiguration } from "./map";
@@ -69,6 +69,7 @@ export type FactionVariant =
 export type FactionCustomization = {
   variant: FactionVariant;
   players: number;
+  version: number;
 };
 
 export type Layout = "standard" | "balanced" | "xshape";
@@ -86,6 +87,7 @@ export interface EngineOptions {
   auction?: AuctionVariant;
   /**  **/
   factionVariant?: FactionVariant;
+  factionVariantVersion?: number;
   /** Layout */
   layout?: Layout;
   /* Force players to have random factions */
@@ -191,6 +193,8 @@ export type BoardActions = {
   [key in BoardAction]?: PlayerEnum;
 };
 
+export type VariantBoards = Partial<Record<Faction, FactionBoardVariant>>;
+
 export default class Engine {
   map: SpaceMap;
   players: Player[] = [];
@@ -231,7 +235,6 @@ export default class Engine {
   version = version;
   replayVersion: string;
   replay: boolean; // be more permissive during replay
-  variantBoards?: Map<Faction, FactionBoardVariant>;
 
   get expansions() {
     return 0;
@@ -271,13 +274,7 @@ export default class Engine {
   // Tells the UI if the new move should be on the same line or not
   newTurn = true;
 
-  constructor(
-    moves: string[] = [],
-    options: EngineOptions = {},
-    engineVersion?: string,
-    replay?: boolean,
-    variantBoards?: Map<Faction, FactionBoardVariant>
-  ) {
+  constructor(moves: string[] = [], options: EngineOptions = {}, engineVersion?: string, replay?: boolean) {
     this.options = options;
     if (engineVersion) {
       this.version = engineVersion;
@@ -287,14 +284,16 @@ export default class Engine {
       this.options.noFedCheck = true;
       this.options.flexibleFederations = true;
     }
-    this.variantBoards = variantBoards;
+    if (this.options.factionVariantVersion === undefined) {
+      this.options.factionVariantVersion = latestVariantVersion(this.options.factionVariant);
+    }
     this.sanitizeOptions();
     this.loadMoves(moves);
     this.options = options;
   }
 
   /** Fix old options passed. To remove when legacy data is no more in database */
-  sanitizeOptions() {
+  sanitizeOptions(players?: Player[]) {
     if (this.options.factionVariant === undefined) {
       this.options.factionVariant = "standard";
     }
@@ -305,11 +304,19 @@ export default class Engine {
         this.options.auction = AuctionVariant.ChooseBid;
       }
     }
+    if (players && this.options.factionVariantVersion === undefined) {
+      const versions = (players as Array<Player & { factionVariantVersion?: number }>)
+        .filter((p) => p.factionVariantVersion !== undefined && p.factionVariantVersion !== null)
+        .map((p) => p.factionVariantVersion);
+
+      this.options.factionVariantVersion = Math.max(...versions, 0);
+    }
   }
 
   get factionCustomization(): FactionCustomization {
     return {
       variant: this.options.factionVariant,
+      version: this.options.factionVariantVersion,
       players: this.players.length,
     };
   }
@@ -758,7 +765,7 @@ export default class Engine {
       engine[key] = data[key];
     }
 
-    engine.sanitizeOptions();
+    engine.sanitizeOptions(data.players);
 
     if (data.map) {
       engine.map = SpaceMap.fromData(data.map);
@@ -771,13 +778,14 @@ export default class Engine {
     const customization = {
       variant: engine.options.factionVariant,
       players: data.players.length,
+      version: engine.options.factionVariantVersion,
     };
     for (const player of data.players) {
       engine.addPlayer(
         Player.fromData(
           player,
           engine.map,
-          player.faction ? factionVariantBoard(customization, player.faction) : null,
+          player.faction && factionVariantBoard(customization, player.faction),
           engine.expansions,
           engine.version
         )
@@ -823,6 +831,33 @@ export default class Engine {
       });
 
     return jsonObj;
+  }
+
+  replayedTo(move = Infinity) {
+    const oldHistory = this.moveHistory.slice(0, move);
+    const oldPlayers = this.players;
+    const engine = new Engine(oldHistory.slice(0, 1), this.options, this.version ?? "1.0.0", true);
+
+    for (let i = 0; i < oldPlayers.length && i < engine.players.length; i++) {
+      engine.players[i].name = oldPlayers[i].name;
+      engine.players[i].dropped = oldPlayers[i].dropped;
+      if ((oldPlayers[i] as any).factionVariant && !oldPlayers[i].variant) {
+        // LEGACY
+        engine.players[i].variant = {
+          board: (oldPlayers[i] as any).factionVariant,
+          version: (oldPlayers[i] as any).factionVersion,
+        };
+      } else {
+        engine.players[i].variant = oldPlayers[i].variant;
+      }
+    }
+
+    engine.loadMoves(oldHistory.slice(1));
+    assert(engine.newTurn, "Last move of the game is incomplete");
+
+    engine.generateAvailableCommandsIfNeeded();
+
+    return engine;
   }
 
   static slowMotion([first, ...moves]: string[], options: EngineOptions = {}, version: string = null): Engine {
@@ -1089,7 +1124,7 @@ export default class Engine {
         pl.faction = this.setup[pl.player as PlayerEnum];
       }
       const faction = pl.faction;
-      const board = this.variantBoards?.get(faction) ?? factionVariantBoard(this.factionCustomization, faction);
+      const board = pl.variant ?? factionVariantBoard(this.factionCustomization, faction);
       pl.loadFaction(board, this.expansions);
     }
 
@@ -1604,12 +1639,12 @@ export default class Engine {
   [Command.Build](player: PlayerEnum, building: Building, location: string) {
     const { buildings } = this.avCommand<Command.Build>().data;
     const parsed = this.map.parse(location);
+    const pl = this.player(player);
 
     for (const elem of buildings) {
       if (elem.building === building && isEqual(this.map.parse(elem.coordinates), parsed)) {
         const { q, r } = this.map.parse(location);
         const hex = this.map.grid.get({ q, r });
-        const pl = this.player(player);
 
         pl.build(building, hex, Reward.parse(elem.cost), this.map, elem.steps);
 
@@ -1622,7 +1657,10 @@ export default class Engine {
       }
     }
 
-    assert(false, `Impossible to execute build command at ${location}`);
+    assert(
+      false,
+      `Impossible to execute build command at ${location}, available: ${buildings.map((b) => b.coordinates)}`
+    );
   }
 
   [Command.UpgradeResearch](player: PlayerEnum, field: ResearchField) {
@@ -1742,7 +1780,7 @@ export default class Engine {
 
     const data = spaces.find((space) => isEqual(this.map.parse(space.coordinates), parsed));
 
-    assert(data, `Impossible to execute build command at ${location}`);
+    assert(data, `Impossible to place lost planet at ${location}`);
 
     const hex = this.map.getS(location);
     hex.data.planet = Planet.Lost;

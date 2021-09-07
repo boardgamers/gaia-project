@@ -8,7 +8,7 @@
         <span v-if="init">Pick the number of players</span>
         <span v-else>
           <span v-html="[playerName, ...titles].join(' - ')" />
-          <span class="smaller small">{{ this.currentTurnLog() }}</span>
+          <span class="smaller small">{{ currentTurnLog }}</span>
           <Undo v-if="canUndo" />
         </span>
       </h5>
@@ -68,12 +68,11 @@ import Engine, {
   Command,
   Faction,
   factionPlanet,
-  GaiaHex, Player,
+  GaiaHex,
+  Player,
   Resource,
   Reward,
   SpaceMap,
-  SubPhase,
-  tiles,
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
 import { ButtonData, GameContext, ModalButtonData } from "../data";
@@ -108,7 +107,9 @@ let show = false;
 @Component<Commands>({
   watch: {
     availableCommands(this: Commands, val) {
-      this.loadCommands(val);
+      if (val) {
+        this.loadCommands(val);
+      }
     },
   },
   methods: {
@@ -166,7 +167,7 @@ export default class Commands extends Vue {
     return this.gameData.factionCustomization;
   }
 
-  currentTurnLog(): string {
+  get currentTurnLog(): string {
     if (this.currentMove == null) {
       return "";
     }

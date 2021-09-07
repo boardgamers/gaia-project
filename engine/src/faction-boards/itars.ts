@@ -32,6 +32,7 @@ const itars: FactionBoardVariants = {
           },
         },
       },
+      version: 0,
     },
   ],
 };

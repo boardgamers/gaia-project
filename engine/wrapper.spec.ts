@@ -1,7 +1,8 @@
 import { expect } from "chai";
 import { PlayerEnum } from ".";
+import Beta2 from "./fixtures/Beta-2.json";
 import Engine from "./src/engine";
-import { automove, move, setPlayerSettings } from "./wrapper";
+import { automove, move, replay, setPlayerSettings } from "./wrapper";
 
 describe("wrapper", () => {
   describe("automove", () => {
@@ -135,6 +136,12 @@ describe("wrapper", () => {
 
       expect(newEngine.moveHistory.length).to.equal(moves.length + 1);
       expect(newEngine.moveHistory.slice(-1).pop()).to.equal("terrans pass booster4 returning booster3");
+    });
+  });
+
+  describe("replay", () => {
+    it("should replay a game with beta variants", () => {
+      expect(() => replay(Engine.fromData(Beta2))).to.not.throw();
     });
   });
 });

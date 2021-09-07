@@ -219,7 +219,7 @@ export function weightedSum(data: Engine, player: PlayerEnum, factories: Dataset
 
 export function initialResearch(player: Player): Map<ResearchField, number> {
   const research = new Map<ResearchField, number>();
-  const board = player.board ?? factionBoard(player.faction, player.factionVariant);
+  const board = player.board ?? factionBoard(player.faction, player.variant?.board);
   board.income[0].rewards.forEach((r) => {
     if (r.type.startsWith("up-")) {
       const key = r.type.slice(3) as ResearchField;

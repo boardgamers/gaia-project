@@ -27,7 +27,13 @@ import {
   TechTilePos,
 } from "./enums";
 import Event, { EventSource } from "./events";
-import { factionBoard, FactionBoard, FactionBoardRaw } from "./faction-boards";
+import {
+  deserializeFactionVariant,
+  factionBoard,
+  FactionBoard,
+  FactionBoardRaw,
+  serializeFactionVariant,
+} from "./faction-boards";
 import { FactionBoardVariant } from "./faction-boards/types";
 import { factionPlanet } from "./factions";
 import { FederationInfo, isOutclassedBy } from "./federation";
@@ -86,8 +92,10 @@ export type BuildCheck = { cost: Reward[]; steps: number; warnings: BuildWarning
 
 export default class Player extends EventEmitter {
   faction: Faction = null;
-  factionVariant: FactionBoardRaw = null;
-  factionVariantVersion: number = null;
+  variant: {
+    board: FactionBoardRaw;
+    version: number;
+  } = null;
   board: FactionBoard = null;
   data: PlayerData = new PlayerData();
   settings: Settings = new Settings();
@@ -149,8 +157,10 @@ export default class Player extends EventEmitter {
       events: this.events,
       name: this.name,
       dropped: this.dropped,
-      factionVariant: this.factionVariant,
-      factionVariantVersion: this.factionVariantVersion,
+      variant: this.variant && {
+        board: serializeFactionVariant(this.variant.board),
+        version: this.variant.version,
+      },
       factionLoaded: !!this.board,
     } as any;
 
@@ -167,13 +177,30 @@ export default class Player extends EventEmitter {
     return json;
   }
 
+  /**
+   * @param board LEGACY Only useful for old games, now loaded directly from data.variant
+   */
   static fromData(data: any, map: SpaceMap, board: FactionBoardVariant | null, expansions: number, version: string) {
     const player = new Player(data.player);
 
     player.faction = data.faction;
+
+    if (data.variant || data.factionVariant) {
+      // Legacy
+      if (data.factionVariant) {
+        player.variant = {
+          board: deserializeFactionVariant(data.factionVariant),
+          version: data.factionVariantVersion,
+        };
+      } else {
+        // Not Legacy
+        player.variant = data.variant;
+        deserializeFactionVariant(player.variant.board);
+      }
+      board = player.variant;
+    }
+
     if (data.faction && (data.factionLoaded || !isVersionOrLater(version, "4.8.4"))) {
-      player.factionVariant = data.factionVariant;
-      player.factionVariantVersion = data.factionVariantVersion;
       player.loadFaction(board, expansions, true);
     }
 
@@ -361,11 +388,12 @@ export default class Player extends EventEmitter {
   }
 
   loadFaction(board: FactionBoardVariant | null, expansions = 0, skipIncome = false) {
-    if (!this.factionVariant) {
-      this.factionVariant = board?.board;
-      this.factionVariantVersion = board?.version;
-    }
-    this.board = factionBoard(this.faction, this.factionVariant);
+    this.variant = {
+      board: board?.board,
+      version: board?.version,
+    };
+
+    this.board = factionBoard(this.faction, this.variant.board);
 
     if (!skipIncome) {
       this.loadTechs(expansions);

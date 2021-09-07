@@ -3,8 +3,7 @@ import axios from "axios";
 import crypto from "crypto";
 import { set } from "lodash";
 import Engine, { EngineOptions } from "./src/engine";
-import { Faction, Round } from "./src/enums";
-import { FactionBoardVariant } from "./src/faction-boards/types";
+import { Round } from "./src/enums";
 import { defaultAutoCharge } from "./src/player";
 
 export async function init(
@@ -181,32 +180,12 @@ export function factions(engine: Engine) {
   return engine.players.map((pl) => pl.faction);
 }
 
-export function variantBoards(engine: Engine): Map<Faction, FactionBoardVariant> {
-  return new Map(
-    engine.players.map((p) => {
-      return [
-        p.faction,
-        {
-          board: p.factionVariant,
-          version: p.factionVariantVersion,
-        } as FactionBoardVariant,
-      ];
-    })
-  );
-}
-
 export async function replay(engine: Engine): Promise<Engine> {
-  const oldPlayers = engine.players;
-  engine = new Engine(engine.moveHistory, engine.options, engine.version ?? "1.0.0", true, variantBoards(engine));
-
-  assert(engine.newTurn, "Last move of the game is incomplete");
-
-  for (let i = 0; i < oldPlayers.length && i < engine.players.length; i++) {
-    engine.players[i].name = oldPlayers[i].name;
-    engine.players[i].dropped = oldPlayers[i].dropped;
+  if (!(engine instanceof Engine)) {
+    engine = Engine.fromData(engine);
   }
 
-  engine.generateAvailableCommandsIfNeeded();
+  engine = engine.replayedTo();
 
   automove(engine);
 
