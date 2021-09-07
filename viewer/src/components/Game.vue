@@ -137,7 +137,7 @@ import { UndoPropagation } from "../logic/commands";
           return;
         }
         if (dest < current) {
-          this.handleData(Engine.fromData(JSON.parse(JSON.stringify(backup))).replayedTo(dest));
+          this.handleData(Engine.fromData(JSON.parse(JSON.stringify(backup))).replayedTo(dest, true));
           return;
         }
 

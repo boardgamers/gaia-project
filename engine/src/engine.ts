@@ -830,7 +830,7 @@ export default class Engine {
     return jsonObj;
   }
 
-  replayedTo(move = Infinity) {
+  replayedTo(move = Infinity, keepReplayMode = false) {
     const oldHistory = this.moveHistory.slice(0, move);
     const oldPlayers = this.players;
     const engine = new Engine(oldHistory.slice(0, 1), this.options, this.version ?? "1.0.0", true);
@@ -851,6 +851,14 @@ export default class Engine {
 
     engine.loadMoves(oldHistory.slice(1));
     assert(engine.newTurn, "Last move of the game is incomplete");
+
+    if (!keepReplayMode) {
+      engine.replay = false;
+      engine.options.noFedCheck = this.options.noFedCheck;
+      engine.options.flexibleFederations = this.options.flexibleFederations;
+
+      // todo: maybe delete federation cache?
+    }
 
     engine.generateAvailableCommandsIfNeeded();
 
