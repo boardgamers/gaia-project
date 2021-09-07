@@ -21,12 +21,14 @@ const xenos: FactionBoardVariants = {
           },
         },
       },
+      version: 0,
     },
     {
       type: "beta",
       board: {
         income: ["3k,4o,15c,q,up-int,up-int", "+o,k"],
       },
+      version: 0,
     },
   ],
 };

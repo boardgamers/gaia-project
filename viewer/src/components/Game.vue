@@ -93,7 +93,6 @@ import TurnOrder from "./TurnOrder.vue";
 import { parseCommands } from "../logic/recent";
 import { LogPlacement } from "../data";
 import { UndoPropagation } from "../logic/commands";
-import { variantBoards } from "@gaia-project/engine/wrapper";
 
 @Component<Game>({
   created(this: Game) {
@@ -138,9 +137,7 @@ import { variantBoards } from "@gaia-project/engine/wrapper";
           return;
         }
         if (dest < current) {
-          this.handleData(
-            new Engine(backup.moveHistory.slice(0, dest), backup.options, null, true, variantBoards(backup)),
-          );
+          this.handleData(Engine.fromData(JSON.parse(JSON.stringify(backup))).replayedTo(dest));
           return;
         }
 

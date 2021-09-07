@@ -97,12 +97,10 @@ import Engine, { Faction, factionPlanet, factionVariantBoard } from "@gaia-proje
 import { finalScoringFields, finalScoringItems } from "../logic/final-scoring";
 import { factionColor, planetFill } from "../graphics/utils";
 
-
 type Rule = Faction | "rules" | "scoring";
 
 @Component
 export default class Rules extends Vue {
-
   @Prop()
   id: string;
 
@@ -150,7 +148,7 @@ export default class Rules extends Vue {
     const faction = this.rule as Faction;
 
     const player = this.gameData.players.find((p) => p.faction == faction);
-    const variant = player?.factionVariant ?? factionVariantBoard(this.gameData.factionCustomization, faction)?.board;
+    const variant = player?.variant?.board ?? factionVariantBoard(this.gameData.factionCustomization, faction)?.board;
     return factionDesc(faction, variant);
   }
 }

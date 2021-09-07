@@ -1,0 +1,7610 @@
+{
+  "players": [
+    {
+      "player": 0,
+      "faction": "gleens",
+      "data": {
+        "victoryPoints": 151,
+        "bid": 0,
+        "credits": 1,
+        "ores": 0,
+        "qics": 0,
+        "knowledge": 2,
+        "power": {
+          "area1": 0,
+          "area2": 0,
+          "area3": 0,
+          "gaia": 0
+        },
+        "research": {
+          "terra": 1,
+          "nav": 5,
+          "int": 4,
+          "gaia": 4,
+          "eco": 0,
+          "sci": 0
+        },
+        "range": 4,
+        "gaiaformers": 3,
+        "gaiaformersInGaia": 0,
+        "terraformCostDiscount": 0,
+        "tiles": {
+          "booster": null,
+          "techs": [
+            {
+              "tile": "tech1",
+              "pos": "free1",
+              "enabled": false
+            },
+            {
+              "tile": "tech4",
+              "pos": "nav",
+              "enabled": false
+            },
+            {
+              "tile": "tech3",
+              "pos": "gaia",
+              "enabled": true
+            },
+            {
+              "tile": "advtech10",
+              "pos": "adv-nav",
+              "enabled": true
+            },
+            {
+              "tile": "advtech12",
+              "pos": "adv-int",
+              "enabled": true
+            },
+            {
+              "tile": "tech2",
+              "pos": "terra",
+              "enabled": true
+            }
+          ],
+          "federations": [
+            {
+              "tile": "gleens",
+              "green": false
+            },
+            {
+              "tile": "fed4",
+              "green": false
+            },
+            {
+              "tile": "fed6",
+              "green": false
+            },
+            {
+              "tile": "fed1",
+              "green": false
+            }
+          ]
+        },
+        "satellites": 13,
+        "brainstone": null,
+        "leechPossible": 1,
+        "tokenModifier": 1,
+        "buildings": {
+          "m": 4,
+          "ts": 1,
+          "lab": 2,
+          "PI": 1,
+          "ac1": 1,
+          "ac2": 1,
+          "gf": 0,
+          "sp": 0
+        },
+        "federationCount": 3,
+        "lostPlanet": 1
+      },
+      "settings": {
+        "autoChargePower": 1,
+        "autoIncome": false,
+        "autoBrainstone": false,
+        "itarsAutoChargeToArea3": false
+      },
+      "events": {
+        ">": [
+          {
+            "spec": "3k,4o,15c,up-nav,up-nav",
+            "source": "beginGame"
+          },
+          {
+            "spec": "2o",
+            "source": "power3"
+          },
+          {
+            "spec": "7c",
+            "source": "power4"
+          },
+          {
+            "spec": "1step",
+            "source": "power6"
+          },
+          {
+            "spec": "7c",
+            "source": "power4"
+          },
+          {
+            "spec": "r",
+            "source": "nav"
+          },
+          {
+            "spec": "7c",
+            "source": "power4"
+          },
+          {
+            "spec": "tech",
+            "source": "income"
+          },
+          {
+            "spec": "tech",
+            "source": "income"
+          },
+          {
+            "spec": "s > 2vp",
+            "source": "adv-nav"
+          },
+          {
+            "spec": "2q",
+            "source": "int"
+          },
+          {
+            "spec": "tech",
+            "source": "income"
+          },
+          {
+            "spec": "fed > 5vp",
+            "source": "adv-int"
+          },
+          {
+            "spec": "tech",
+            "source": "income"
+          },
+          {
+            "spec": "pt > k",
+            "source": "tech-terra"
+          },
+          {
+            "spec": "2o",
+            "source": "terra"
+          },
+          {
+            "spec": ">gf",
+            "source": "gaia"
+          }
+        ],
+        "+": [
+          {
+            "spec": "+o,k",
+            "source": "income"
+          },
+          {
+            "spec": "+4pw",
+            "source": "income"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
+            "spec": "+2k",
+            "source": "income"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
+            "spec": "+k",
+            "source": "income"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
+            "spec": "+3c",
+            "source": "income"
+          },
+          {
+            "spec": "+k",
+            "source": "income"
+          }
+        ],
+        ">>": [],
+        "=>": [
+          {
+            "spec": "=>q",
+            "source": "income"
+          }
+        ],
+        "|": [],
+        "PA->4pw": [
+          {
+            "spec": "PA->4pw",
+            "source": "tech-gaia"
+          }
+        ]
+      },
+      "name": "Babbuc49",
+      "factionVariant": {
+        "income": ["3k,4o,15c,up-nav,up-nav", "+o,k"]
+      },
+      "factionLoaded": true,
+      "federationCache": {
+        "availableSatellites": 0,
+        "federations": []
+      }
+    },
+    {
+      "player": 1,
+      "faction": "terrans",
+      "data": {
+        "victoryPoints": 135,
+        "bid": 0,
+        "credits": 4,
+        "ores": 2,
+        "qics": 0,
+        "knowledge": 0,
+        "power": {
+          "area1": 6,
+          "area2": 1,
+          "area3": 0,
+          "gaia": 0
+        },
+        "research": {
+          "terra": 1,
+          "nav": 3,
+          "int": 4,
+          "gaia": 4,
+          "eco": 0,
+          "sci": 5
+        },
+        "range": 2,
+        "gaiaformers": 3,
+        "gaiaformersInGaia": 0,
+        "terraformCostDiscount": 0,
+        "tiles": {
+          "booster": null,
+          "techs": [
+            {
+              "tile": "tech1",
+              "pos": "free1",
+              "enabled": false
+            },
+            {
+              "tile": "tech9",
+              "pos": "int",
+              "enabled": true
+            },
+            {
+              "tile": "tech7",
+              "pos": "free3",
+              "enabled": true
+            },
+            {
+              "tile": "advtech1",
+              "pos": "adv-gaia",
+              "enabled": true
+            },
+            {
+              "tile": "tech3",
+              "pos": "gaia",
+              "enabled": true
+            },
+            {
+              "tile": "tech4",
+              "pos": "nav",
+              "enabled": true
+            }
+          ],
+          "federations": [
+            {
+              "tile": "fed5",
+              "green": false
+            },
+            {
+              "tile": "fed1",
+              "green": false
+            },
+            {
+              "tile": "fed2",
+              "green": false
+            }
+          ]
+        },
+        "satellites": 6,
+        "brainstone": null,
+        "leechPossible": 0,
+        "tokenModifier": 1,
+        "buildings": {
+          "m": 8,
+          "ts": 0,
+          "lab": 2,
+          "PI": 1,
+          "ac1": 1,
+          "ac2": 1,
+          "gf": 0,
+          "sp": 0
+        },
+        "federationCount": 3,
+        "lostPlanet": 0
+      },
+      "settings": {
+        "autoChargePower": 2,
+        "autoIncome": true,
+        "autoBrainstone": false,
+        "itarsAutoChargeToArea3": false
+      },
+      "events": {
+        ">": [
+          {
+            "spec": "3k,4o,15c,q,up-gaia,up-nav",
+            "source": "beginGame"
+          },
+          {
+            "spec": "2o",
+            "source": "terra"
+          },
+          {
+            "spec": "2o",
+            "source": "power3"
+          },
+          {
+            "spec": "2o",
+            "source": "power3"
+          },
+          {
+            "spec": "2o",
+            "source": "power3"
+          },
+          {
+            "spec": "2t",
+            "source": "power7"
+          },
+          {
+            "spec": "tech",
+            "source": "income"
+          },
+          {
+            "spec": ">gf",
+            "source": "gaia"
+          },
+          {
+            "spec": "tech",
+            "source": "income"
+          },
+          {
+            "spec": "7c",
+            "source": "power4"
+          },
+          {
+            "spec": "2o",
+            "source": "power3"
+          },
+          {
+            "spec": "1step",
+            "source": "power6"
+          },
+          {
+            "spec": ">fed",
+            "source": "qic2"
+          },
+          {
+            "spec": "tech",
+            "source": "income"
+          },
+          {
+            "spec": "9k",
+            "source": "sci"
+          },
+          {
+            "spec": "2q",
+            "source": "int"
+          },
+          {
+            "spec": "tech",
+            "source": "income"
+          },
+          {
+            "spec": "7vp",
+            "source": "tech-nav"
+          },
+          {
+            "spec": "q",
+            "source": "nav"
+          },
+          {
+            "spec": "3pw",
+            "source": "nav"
+          }
+        ],
+        "+": [
+          {
+            "spec": "+o,k",
+            "source": "income"
+          },
+          {
+            "spec": "+2k",
+            "source": "income"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
+            "spec": "+4pw",
+            "source": "income"
+          },
+          {
+            "spec": "+t",
+            "source": "income"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
+            "spec": "+k",
+            "source": "income"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
+            "spec": "+k",
+            "source": "income"
+          }
+        ],
+        ">>": [
+          {
+            "spec": "mg >> 3vp",
+            "source": "tech-free3"
+          }
+        ],
+        "=>": [
+          {
+            "spec": "=> 4pw",
+            "source": "tech-int"
+          },
+          {
+            "spec": "=>q",
+            "source": "income"
+          }
+        ],
+        "|": [
+          {
+            "spec": "fed | 3vp",
+            "source": "adv-gaia"
+          }
+        ],
+        "PA->4pw": [
+          {
+            "spec": "PA->4pw",
+            "source": "tech-gaia"
+          }
+        ]
+      },
+      "name": "Spock",
+      "factionVariant": {
+        "income": ["3k,4o,15c,q,up-gaia,up-nav", "+o,k"]
+      },
+      "factionLoaded": true,
+      "federationCache": {
+        "availableSatellites": 8,
+        "federations": []
+      }
+    },
+    {
+      "player": 2,
+      "faction": "hadsch-hallas",
+      "data": {
+        "victoryPoints": 213,
+        "bid": 0,
+        "credits": 1,
+        "ores": 9,
+        "qics": 0,
+        "knowledge": 0,
+        "power": {
+          "area1": 2,
+          "area2": 1,
+          "area3": 0,
+          "gaia": 0
+        },
+        "research": {
+          "terra": 4,
+          "nav": 4,
+          "int": 0,
+          "gaia": 5,
+          "eco": 5,
+          "sci": 0
+        },
+        "range": 3,
+        "gaiaformers": 3,
+        "gaiaformersInGaia": 0,
+        "terraformCostDiscount": 2,
+        "tiles": {
+          "techs": [
+            {
+              "tile": "tech1",
+              "pos": "free1",
+              "enabled": false
+            },
+            {
+              "tile": "tech6",
+              "pos": "eco",
+              "enabled": true
+            },
+            {
+              "tile": "tech3",
+              "pos": "gaia",
+              "enabled": true
+            },
+            {
+              "tile": "tech7",
+              "pos": "free3",
+              "enabled": true
+            },
+            {
+              "tile": "advtech6",
+              "pos": "adv-eco",
+              "enabled": true
+            },
+            {
+              "tile": "tech4",
+              "pos": "nav",
+              "enabled": true
+            },
+            {
+              "tile": "tech2",
+              "pos": "terra",
+              "enabled": true
+            }
+          ],
+          "federations": [
+            {
+              "tile": "fed5",
+              "green": false
+            },
+            {
+              "tile": "fed6",
+              "green": false
+            },
+            {
+              "tile": "fed3",
+              "green": false
+            },
+            {
+              "tile": "fed6",
+              "green": true
+            }
+          ]
+        },
+        "satellites": 9,
+        "brainstone": null,
+        "leechPossible": 4,
+        "tokenModifier": 1,
+        "buildings": {
+          "m": 8,
+          "ts": 1,
+          "lab": 3,
+          "PI": 1,
+          "ac1": 1,
+          "ac2": 1,
+          "gf": 0,
+          "sp": 0
+        },
+        "federationCount": 4,
+        "lostPlanet": 0
+      },
+      "settings": {
+        "autoChargePower": 1,
+        "autoIncome": true,
+        "autoBrainstone": false,
+        "itarsAutoChargeToArea3": false
+      },
+      "events": {
+        ">": [
+          {
+            "spec": "3k,4o,15c,q,up-eco,up-eco",
+            "source": "beginGame"
+          },
+          {
+            "spec": "1step",
+            "source": "power6"
+          },
+          {
+            "spec": "2k",
+            "source": "power5"
+          },
+          {
+            "spec": "1step",
+            "source": "power6"
+          },
+          {
+            "spec": "tech",
+            "source": "income"
+          },
+          {
+            "spec": "2t",
+            "source": "power7"
+          },
+          {
+            "spec": "tech",
+            "source": "income"
+          },
+          {
+            "spec": "3vp",
+            "source": "qic3"
+          },
+          {
+            "spec": "pt > vp",
+            "source": "qic3"
+          },
+          {
+            "spec": "3vp",
+            "source": "qic3"
+          },
+          {
+            "spec": "pt > vp",
+            "source": "qic3"
+          },
+          {
+            "spec": "4vp",
+            "source": "gaia"
+          },
+          {
+            "spec": "g > vp",
+            "source": "gaia"
+          },
+          {
+            "spec": "6c,3o,6pw",
+            "source": "eco"
+          },
+          {
+            "spec": "2k",
+            "source": "power5"
+          },
+          {
+            "spec": "tech",
+            "source": "income"
+          },
+          {
+            "spec": "s > o",
+            "source": "adv-eco"
+          },
+          {
+            "spec": "tech",
+            "source": "income"
+          },
+          {
+            "spec": "7vp",
+            "source": "tech-nav"
+          },
+          {
+            "spec": "r",
+            "source": "nav"
+          },
+          {
+            "spec": "tech",
+            "source": "income"
+          },
+          {
+            "spec": "pt > k",
+            "source": "tech-terra"
+          },
+          {
+            "spec": "2o",
+            "source": "terra"
+          }
+        ],
+        "+": [
+          {
+            "spec": "+o,k,3c",
+            "source": "income"
+          },
+          {
+            "spec": "+2k",
+            "source": "income"
+          },
+          {
+            "spec": "+k,c",
+            "source": "tech-eco"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
+            "spec": "+3c",
+            "source": "income"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
+            "spec": "+4pw",
+            "source": "income"
+          },
+          {
+            "spec": "+t",
+            "source": "income"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
+            "spec": "+k",
+            "source": "income"
+          },
+          {
+            "spec": "+k",
+            "source": "income"
+          },
+          {
+            "spec": "+k",
+            "source": "income"
+          }
+        ],
+        ">>": [
+          {
+            "spec": "mg >> 3vp",
+            "source": "tech-free3"
+          }
+        ],
+        "=>": [
+          {
+            "spec": "=>q",
+            "source": "income"
+          }
+        ],
+        "|": [],
+        "PA->4pw": [
+          {
+            "spec": "PA->4pw",
+            "source": "tech-gaia"
+          }
+        ]
+      },
+      "name": "Felfor",
+      "factionVariant": {
+        "income": ["3k,4o,15c,q,up-eco,up-eco", "+o,k,3c"]
+      },
+      "factionLoaded": true,
+      "federationCache": {
+        "availableSatellites": 4,
+        "federations": []
+      }
+    },
+    {
+      "player": 3,
+      "faction": "ambas",
+      "data": {
+        "victoryPoints": 138,
+        "bid": 0,
+        "credits": 5,
+        "ores": 1,
+        "qics": 0,
+        "knowledge": 0,
+        "power": {
+          "area1": 0,
+          "area2": 0,
+          "area3": 0,
+          "gaia": 0
+        },
+        "research": {
+          "terra": 5,
+          "nav": 4,
+          "int": 5,
+          "gaia": 0,
+          "eco": 0,
+          "sci": 0
+        },
+        "range": 3,
+        "gaiaformers": 0,
+        "gaiaformersInGaia": 0,
+        "terraformCostDiscount": 2,
+        "tiles": {
+          "booster": null,
+          "techs": [
+            {
+              "tile": "tech5",
+              "pos": "free2",
+              "enabled": true
+            },
+            {
+              "tile": "tech2",
+              "pos": "terra",
+              "enabled": true
+            },
+            {
+              "tile": "tech1",
+              "pos": "free1",
+              "enabled": false
+            },
+            {
+              "tile": "advtech2",
+              "pos": "adv-terra",
+              "enabled": true
+            },
+            {
+              "tile": "tech9",
+              "pos": "int",
+              "enabled": true
+            },
+            {
+              "tile": "tech7",
+              "pos": "free3",
+              "enabled": true
+            }
+          ],
+          "federations": [
+            {
+              "tile": "fed5",
+              "green": false
+            },
+            {
+              "tile": "fed2",
+              "green": false
+            },
+            {
+              "tile": "fed1",
+              "green": false
+            },
+            {
+              "tile": "fed2",
+              "green": false
+            }
+          ]
+        },
+        "satellites": 9,
+        "brainstone": null,
+        "leechPossible": 2,
+        "tokenModifier": 1,
+        "buildings": {
+          "m": 8,
+          "ts": 1,
+          "lab": 1,
+          "PI": 1,
+          "ac1": 1,
+          "ac2": 1,
+          "gf": 0,
+          "sp": 0
+        },
+        "federationCount": 3,
+        "lostPlanet": 0
+      },
+      "settings": {
+        "autoChargePower": "decline-cost",
+        "autoIncome": true,
+        "autoBrainstone": false,
+        "itarsAutoChargeToArea3": false
+      },
+      "events": {
+        ">": [
+          {
+            "spec": "3k,4o,15c,q,up-nav",
+            "source": "beginGame"
+          },
+          {
+            "spec": "2k",
+            "source": "power5"
+          },
+          {
+            "spec": "7c",
+            "source": "power4"
+          },
+          {
+            "spec": "r",
+            "source": "nav"
+          },
+          {
+            "spec": "2k",
+            "source": "power5"
+          },
+          {
+            "spec": "pt > k",
+            "source": "tech-terra"
+          },
+          {
+            "spec": "tech",
+            "source": "income"
+          },
+          {
+            "spec": ">fed",
+            "source": "qic2"
+          },
+          {
+            "spec": "tech",
+            "source": "income"
+          },
+          {
+            "spec": "7c",
+            "source": "power4"
+          },
+          {
+            "spec": "tech",
+            "source": "income"
+          },
+          {
+            "spec": "tech",
+            "source": "qic1"
+          },
+          {
+            "spec": "4q",
+            "source": "int"
+          }
+        ],
+        "+": [
+          {
+            "spec": "+2o,k",
+            "source": "income"
+          },
+          {
+            "spec": "+o,pw",
+            "source": "tech-free2"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
+            "spec": "+4pw",
+            "source": "income"
+          },
+          {
+            "spec": "+2t",
+            "source": "income"
+          },
+          {
+            "spec": "+k",
+            "source": "income"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
+            "spec": "+2k",
+            "source": "income"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
+            "spec": "+3c",
+            "source": "income"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          }
+        ],
+        ">>": [
+          {
+            "spec": "a >> 2vp",
+            "source": "adv-terra"
+          },
+          {
+            "spec": "mg >> 3vp",
+            "source": "tech-free3"
+          }
+        ],
+        "=>": [
+          {
+            "spec": "=> swap-PI",
+            "source": "income"
+          },
+          {
+            "spec": "=>q",
+            "source": "income"
+          },
+          {
+            "spec": "=> 4pw",
+            "source": "tech-int"
+          }
+        ],
+        "|": [],
+        "PA->4pw": []
+      },
+      "name": "firexed",
+      "factionLoaded": true,
+      "federationCache": {
+        "availableSatellites": 0,
+        "federations": []
+      }
+    }
+  ],
+  "setup": ["gleens", "terrans", "hadsch-hallas", "ambas"],
+  "options": {
+    "layout": "standard",
+    "factionVariant": "beta",
+    "map": {
+      "sectors": [
+        {
+          "sector": "10",
+          "rotation": 2,
+          "center": {
+            "q": 0,
+            "r": 0,
+            "s": 0
+          }
+        },
+        {
+          "sector": "9",
+          "rotation": 0,
+          "center": {
+            "q": 5,
+            "r": -2,
+            "s": -3
+          }
+        },
+        {
+          "sector": "3",
+          "rotation": 5,
+          "center": {
+            "q": 2,
+            "r": 3,
+            "s": -5
+          }
+        },
+        {
+          "sector": "1",
+          "rotation": 0,
+          "center": {
+            "q": -3,
+            "r": 5,
+            "s": -2
+          }
+        },
+        {
+          "sector": "2",
+          "rotation": 2,
+          "center": {
+            "q": -5,
+            "r": 2,
+            "s": 3
+          }
+        },
+        {
+          "sector": "4",
+          "rotation": 5,
+          "center": {
+            "q": -2,
+            "r": -3,
+            "s": 5
+          }
+        },
+        {
+          "sector": "7A",
+          "rotation": 1,
+          "center": {
+            "q": 3,
+            "r": -5,
+            "s": 2
+          }
+        },
+        {
+          "sector": "6A",
+          "rotation": 1,
+          "center": {
+            "q": -1,
+            "r": 8,
+            "s": -7
+          }
+        },
+        {
+          "sector": "5A",
+          "rotation": 5,
+          "center": {
+            "q": -6,
+            "r": 10,
+            "s": -4
+          }
+        },
+        {
+          "sector": "8",
+          "rotation": 4,
+          "center": {
+            "q": -8,
+            "r": 7,
+            "s": 1
+          }
+        }
+      ],
+      "mirror": false
+    }
+  },
+  "tiles": {
+    "boosters": {
+      "booster2": true,
+      "booster6": true,
+      "booster7": true,
+      "booster4": true,
+      "booster10": true,
+      "booster9": true,
+      "booster8": true
+    },
+    "techs": {
+      "terra": {
+        "tile": "tech2",
+        "count": 1
+      },
+      "nav": {
+        "tile": "tech4",
+        "count": 1
+      },
+      "int": {
+        "tile": "tech9",
+        "count": 2
+      },
+      "gaia": {
+        "tile": "tech3",
+        "count": 1
+      },
+      "eco": {
+        "tile": "tech6",
+        "count": 3
+      },
+      "sci": {
+        "tile": "tech8",
+        "count": 4
+      },
+      "free1": {
+        "tile": "tech1",
+        "count": 0
+      },
+      "free2": {
+        "tile": "tech5",
+        "count": 3
+      },
+      "free3": {
+        "tile": "tech7",
+        "count": 1
+      },
+      "adv-terra": {
+        "tile": "advtech2",
+        "count": 0
+      },
+      "adv-nav": {
+        "tile": "advtech10",
+        "count": 0
+      },
+      "adv-int": {
+        "tile": "advtech12",
+        "count": 0
+      },
+      "adv-gaia": {
+        "tile": "advtech1",
+        "count": 0
+      },
+      "adv-eco": {
+        "tile": "advtech6",
+        "count": 0
+      },
+      "adv-sci": {
+        "tile": "advtech3",
+        "count": 1
+      }
+    },
+    "scorings": {
+      "round": ["score9", "score4", "score2", "score10", "score6", "score7"],
+      "final": ["sector", "gaia"]
+    },
+    "federations": {
+      "fed1": 0,
+      "fed2": 0,
+      "fed3": 2,
+      "fed4": 2,
+      "fed5": 0,
+      "fed6": 0
+    }
+  },
+  "boardActions": {
+    "power1": null,
+    "power2": null,
+    "power3": null,
+    "power4": null,
+    "power5": null,
+    "power6": null,
+    "power7": null,
+    "qic1": null,
+    "qic2": null,
+    "qic3": null
+  },
+  "availableCommands": [],
+  "phase": "endGame",
+  "subPhase": "beforeMove",
+  "round": 6,
+  "turnOrder": [],
+  "tempTurnOrder": [],
+  "leechSources": [],
+  "moveHistory": [
+    "init 4 Beta-2",
+    "p1 faction gleens",
+    "p2 faction terrans",
+    "p3 faction hadsch-hallas",
+    "p4 faction ambas (0/0/0/0 ⇒ 2/4/0/0)",
+    "gleens build m 10B1",
+    "terrans build m 4A2",
+    "hadsch-hallas build m 10A11",
+    "ambas build m 1B5",
+    "ambas build m 7A3",
+    "hadsch-hallas build m 2A11",
+    "terrans build m 3A5",
+    "gleens build m 3A4",
+    "ambas booster booster4",
+    "hadsch-hallas booster booster9",
+    "terrans booster booster2",
+    "gleens booster booster6",
+    "gleens build m 10B4.",
+    "terrans charge 1pw (6/4/0/0 ⇒ 5/5/0/0)",
+    "hadsch-hallas charge 1pw (0/2/4/0 ⇒ 0/1/5/0)",
+    "ambas charge 1pw (2/4/0/0 ⇒ 1/5/0/0)",
+    "terrans build m 6B4.",
+    "gleens charge 1pw (2/4/0/0 ⇒ 1/5/0/0)",
+    "hadsch-hallas build ts 10A11.",
+    "ambas charge 1pw (1/5/0/0 ⇒ 0/6/0/0)",
+    "gleens charge 1pw (1/5/0/0 ⇒ 0/6/0/0)",
+    "ambas special step. build m 1A9.",
+    "gleens charge 1pw (0/6/0/0 ⇒ 0/5/1/0)",
+    "gleens build ts 10B4.",
+    "terrans charge 1pw (5/5/0/0 ⇒ 4/6/0/0)",
+    "hadsch-hallas charge 1pw (0/1/5/0 ⇒ 0/0/6/0)",
+    "ambas charge 1pw (0/6/0/0 ⇒ 0/5/1/0)",
+    "terrans build gf 6A7 using area1: 4, area2: 2. (4/6/0/0 ⇒ 0/4/0/6)",
+    "hadsch-hallas action power6. build m 10A0. (0/0/6/0 ⇒ 3/0/3/0)",
+    "gleens charge 1pw (0/5/1/0 ⇒ 0/4/2/0)",
+    "ambas build ts 7A3.",
+    "gleens charge 2pw (0/4/2/0 ⇒ 0/2/4/0)",
+    "hadsch-hallas charge 2pw (3/0/3/0 ⇒ 1/2/3/0)",
+    "gleens action power3. (0/2/4/0 ⇒ 4/2/0/0)",
+    "terrans build ts 4A2.",
+    "hadsch-hallas charge 1pw (1/2/3/0 ⇒ 0/3/3/0)",
+    "gleens charge 2pw (4/2/0/0 ⇒ 2/4/0/0)",
+    "hadsch-hallas build lab 10A11. tech free1. up nav (0 ⇒ 1).",
+    "ambas charge 2pw (0/5/1/0 ⇒ 0/3/3/0)",
+    "gleens charge 2pw (2/4/0/0 ⇒ 0/6/0/0)",
+    "ambas up nav (1 ⇒ 2).",
+    "gleens build lab 10B4. tech free1. up nav (2 ⇒ 3). (0/6/0/0 ⇒ 0/3/3/0)",
+    "terrans charge 2pw (0/4/0/6 ⇒ 0/2/2/6)",
+    "hadsch-hallas charge 2pw (0/3/3/0 ⇒ 0/1/5/0)",
+    "ambas charge 2pw (0/3/3/0 ⇒ 0/1/5/0)",
+    "terrans up sci (0 ⇒ 1).",
+    "hadsch-hallas up nav (1 ⇒ 2).",
+    "ambas action power5. (0/1/5/0 ⇒ 4/1/1/0)",
+    "gleens  burn 1. action power4. (0/3/3/0 ⇒ 4/1/0/0)",
+    "terrans build lab 4A2. tech free1. up terra (0 ⇒ 1).",
+    "hadsch-hallas charge 1pw (0/1/5/0 ⇒ 0/0/6/0)",
+    "gleens charge 2pw (4/1/0/0 ⇒ 2/3/0/0)",
+    "hadsch-hallas build m 7B1.",
+    "ambas charge 2pw (4/1/1/0 ⇒ 2/3/1/0)",
+    "ambas build m 7B3.",
+    "gleens up nav (3 ⇒ 4).",
+    "terrans spend 1pw for 1c. spend 1q for 1o. build ac1 4A2. tech int. up int (0 ⇒ 1). (0/2/2/6 ⇒ 1/2/1/6)",
+    "gleens charge 2pw (2/3/0/0 ⇒ 0/5/0/0)",
+    "hadsch-hallas build m 3B4.",
+    "terrans charge 1pw (1/2/1/6 ⇒ 0/3/1/6)",
+    "ambas build m 7B5.",
+    "gleens build m 6A6.",
+    "terrans charge 1pw (0/3/1/6 ⇒ 0/2/2/6)",
+    "terrans spend 1pw for 1c. special 4pw. spend 1pw for 1c. spend 1pw for 1c. (0/2/2/6 ⇒ 2/0/2/6)",
+    "hadsch-hallas build m 9B2.",
+    "ambas build lab 7A3. tech free2. up nav (2 ⇒ 3). (2/3/1/0 ⇒ 0/4/2/0)",
+    "gleens charge 2pw (0/5/0/0 ⇒ 0/3/2/0)",
+    "gleens build m 5B4.",
+    "terrans pass booster10 returning booster2",
+    "hadsch-hallas  spend 4pw for 1q. pass booster2 returning booster9 (0/0/6/0 ⇒ 4/0/2/0)",
+    "ambas pass booster8 returning booster4",
+    "gleens build m 5A4.",
+    "gleens  spend 1pw for 1c. pass booster9 returning booster6 (0/3/2/0 ⇒ 1/3/1/0)",
+    "hadsch-hallas income 2pw (4/0/2/0 ⇒ 4/2/2/0)",
+    "terrans special 4pw. (2/6/2/0 ⇒ 0/6/4/0)",
+    "hadsch-hallas build m 1A6.",
+    "ambas  burn 1. action power4. (0/3/3/0 ⇒ 4/1/0/0)",
+    "gleens action power6. build m 1A5. (0/1/4/0 ⇒ 3/1/1/0)",
+    "hadsch-hallas charge 1pw (4/2/2/0 ⇒ 3/3/2/0)",
+    "terrans action power3. (0/6/4/0 ⇒ 4/6/0/0)",
+    "hadsch-hallas build ac1 10A11. tech eco. up eco (2 ⇒ 3). (3/3/2/0 ⇒ 0/6/2/0)",
+    "ambas charge 2pw (4/1/0/0 ⇒ 2/3/0/0)",
+    "gleens decline 2pw",
+    "ambas up nav (3 ⇒ 4).",
+    "gleens build ts 6A6.",
+    "terrans charge 1pw (4/6/0/0 ⇒ 3/7/0/0)",
+    "terrans build m 6A7.",
+    "gleens charge 2pw (3/1/1/0 ⇒ 1/3/1/0)",
+    "hadsch-hallas  burn 2. action power5. (0/6/2/0 ⇒ 4/2/0/0)",
+    "ambas build m 4B1.",
+    "terrans charge 3pw (3/7/0/0 ⇒ 0/10/0/0)",
+    "gleens  spend 1pw for 1c.  spend 1o for 1c.  spend 1k for 1c.  burn 1.  spend 1pw for 1c. build PI 6A6. (1/3/1/0 ⇒ 3/1/0/0)",
+    "terrans charge 1pw (0/10/0/0 ⇒ 0/9/1/0)",
+    "terrans up nav (1 ⇒ 2).",
+    "hadsch-hallas up eco (3 ⇒ 4).",
+    "ambas build m 2B0.",
+    "hadsch-hallas charge 1pw (4/2/0/0 ⇒ 3/3/0/0)",
+    "gleens pass booster4 returning booster9",
+    "terrans build m 1B1.",
+    "ambas charge 1pw (2/3/0/0 ⇒ 1/4/0/0)",
+    "gleens charge 3pw (3/1/0/0 ⇒ 0/4/0/0)",
+    "hadsch-hallas pass booster9 returning booster2",
+    "ambas pass booster6 returning booster8",
+    "terrans build ts 6A7.",
+    "gleens decline 3pw",
+    "terrans burn 1.  spend 2pw for 2c. build m 6B2. (0/9/1/0 ⇒ 2/7/0/0)",
+    "gleens decline 3pw",
+    "terrans build gf 6A3 using area1: 2, area2: 4. (2/7/0/0 ⇒ 0/3/0/6)",
+    "terrans pass booster7 returning booster10 (0/3/0/6 ⇒ 0/9/0/0)",
+    "gleens action power4. (0/0/4/0 ⇒ 4/0/0/0)",
+    "hadsch-hallas action power6. build m 2A3. (0/1/5/0 ⇒ 3/1/2/0)",
+    "ambas charge 1pw (0/5/0/0 ⇒ 0/4/1/0)",
+    "ambas build m 9A8.",
+    "hadsch-hallas charge 1pw (3/1/2/0 ⇒ 2/2/2/0)",
+    "terrans special 4pw. (0/9/0/0 ⇒ 0/5/4/0)",
+    "gleens build ac1 10B4. tech nav. up nav (4 ⇒ 5). lostPlanet 7A4.",
+    "terrans charge 3pw (0/5/4/0 ⇒ 0/2/7/0)",
+    "hadsch-hallas charge 3pw (2/2/2/0 ⇒ 0/3/3/0)",
+    "ambas charge 2pw (0/4/1/0 ⇒ 0/2/3/0)",
+    "hadsch-hallas charge 1pw (0/3/3/0 ⇒ 0/2/4/0)",
+    "ambas charge 2pw (0/2/3/0 ⇒ 0/0/5/0)",
+    "hadsch-hallas  spend 1pw for 1c. up nav (2 ⇒ 3). (0/2/4/0 ⇒ 0/1/5/0)",
+    "ambas action power5. (0/0/5/0 ⇒ 4/0/1/0)",
+    "terrans action power3. (0/2/7/0 ⇒ 4/2/3/0)",
+    "gleens special step. build m 4B3.",
+    "ambas charge 1pw (4/0/1/0 ⇒ 3/1/1/0)",
+    "hadsch-hallas build m 4B5.",
+    "ambas charge 1pw (3/1/1/0 ⇒ 2/2/1/0)",
+    "gleens charge 1pw (4/0/0/0 ⇒ 3/1/0/0)",
+    "ambas build m 9B4.",
+    "hadsch-hallas charge 1pw (0/1/5/0 ⇒ 0/0/6/0)",
+    "terrans build m 6A3.",
+    "gleens pass booster10 returning booster4",
+    "hadsch-hallas build ts 2A3.",
+    "ambas charge 1pw (2/2/1/0 ⇒ 1/3/1/0)",
+    "ambas up terra (0 ⇒ 1).",
+    "terrans spend 1pw for 1c. spend 1pw for 1c. build gf 1A3 using area1: 6. (4/2/3/0 ⇒ 0/2/1/6)",
+    "hadsch-hallas  spend 2pw for 2c. build lab 2A3. tech gaia. up gaia (0 ⇒ 1). (0/0/6/0 ⇒ 2/0/4/0)",
+    "ambas charge 1pw (1/3/1/0 ⇒ 0/4/1/0)",
+    "ambas  spend 1pw for 1c. build ts 9B4. (0/4/1/0 ⇒ 1/4/0/0)",
+    "hadsch-hallas charge 1pw (2/0/4/0 ⇒ 1/1/4/0)",
+    "terrans build ts 6B2.",
+    "gleens charge 3pw (3/1/0/0 ⇒ 0/4/0/0)",
+    "hadsch-hallas action power7. (1/1/4/0 ⇒ 6/1/1/0)",
+    "ambas  spend 3o for 3c. build ts 1B5.",
+    "terrans charge 1pw (0/2/1/6 ⇒ 0/1/2/6)",
+    "terrans up gaia (1 ⇒ 2). (0/1/2/6 ⇒ 3/1/2/6)",
+    "hadsch-hallas build gf 8A10 using area1: 6. (6/1/1/0 ⇒ 0/1/1/6)",
+    "ambas pass booster8 returning booster6",
+    "terrans federation 1A0,3A5,6A3,6A7,6A8,6B2,6B3,6B4 fed5 using area1: 3. spend 1pw for 1c. (3/1/2/6 ⇒ 1/1/1/6)",
+    "hadsch-hallas pass booster6 returning booster9",
+    "terrans build PI 6B2.",
+    "gleens decline 3pw",
+    "terrans spend 1pw for 1c. pass booster9 returning booster7 (1/1/1/6 ⇒ 2/1/0/6)",
+    "terrans income 1t (2/1/0/6 ⇒ 0/0/4/6)",
+    "terrans  spend 6tg for 6c (0/0/4/6 ⇒ 0/6/4/0)",
+    "gleens action power4. (0/0/4/0 ⇒ 4/0/0/0)",
+    "ambas up terra (1 ⇒ 2).",
+    "hadsch-hallas build ac2 2A3. tech free3. up gaia (1 ⇒ 2). (6/0/2/0 ⇒ 9/0/2/0)",
+    "ambas charge 1pw (0/5/0/0 ⇒ 0/4/1/0)",
+    "terrans special 4pw. (0/6/4/0 ⇒ 0/2/8/0)",
+    "gleens build m 2A7.",
+    "ambas build lab 1B5. tech terra. up terra (2 ⇒ 3). (0/4/1/0 ⇒ 0/1/4/0)",
+    "terrans charge 1pw (0/2/8/0 ⇒ 0/1/9/0)",
+    "hadsch-hallas up gaia (2 ⇒ 3). (9/0/2/0 ⇒ 6/3/2/0)",
+    "terrans action power3. (0/1/9/0 ⇒ 4/1/5/0)",
+    "gleens build ts 10B1.",
+    "hadsch-hallas decline 4pw",
+    "ambas charge 1pw (0/1/4/0 ⇒ 0/0/5/0)",
+    "ambas up terra (3 ⇒ 4).  spend 1pw for 1c. (0/0/5/0 ⇒ 1/0/4/0)",
+    "hadsch-hallas build gf 10A6 using area1: 4. (6/3/2/0 ⇒ 2/3/2/4)",
+    "terrans action power7. (4/1/5/0 ⇒ 9/1/2/0)",
+    "gleens build lab 10B1. tech gaia. up gaia (0 ⇒ 1).",
+    "hadsch-hallas charge 4pw (2/3/2/4 ⇒ 0/3/4/4)",
+    "ambas charge 1pw (1/0/4/0 ⇒ 0/1/4/0)",
+    "ambas  spend 3pw for 3c. build PI 9B4. (0/1/4/0 ⇒ 3/1/1/0)",
+    "hadsch-hallas charge 1pw (0/3/4/4 ⇒ 0/2/5/4)",
+    "hadsch-hallas  spend 1pw for 1c. build ts 10A0. (0/2/5/4 ⇒ 1/2/4/4)",
+    "gleens charge 2pw (4/0/0/0 ⇒ 2/2/0/0)",
+    "terrans up gaia (2 ⇒ 3). (9/1/2/0 ⇒ 6/4/2/0)",
+    "gleens federation 10A9,10B1,10B4,10C,7A4 fed4 using area1: 2. (2/2/0/0 ⇒ 0/2/0/0)",
+    "ambas federation 7A1,7A2,7A3,7B0,7B5,9A8,9B4 fed5 using area1: 3. (3/1/1/0 ⇒ 0/1/1/0)",
+    "hadsch-hallas federation 10A0,10A11,3A8,3B4 fed5 using area1: 1. (1/2/4/4 ⇒ 0/2/4/4)",
+    "terrans build gf 2A9 using area1: 4. (6/4/2/0 ⇒ 2/4/2/4)",
+    "gleens up gaia (1 ⇒ 2). (0/2/0/0 ⇒ 3/2/0/0)",
+    "ambas special swap-PI. swap-PI 1A9.",
+    "hadsch-hallas  spend 4pw for 1k. build ts 1A6. (0/2/4/4 ⇒ 4/2/0/4)",
+    "gleens charge 1pw (3/2/0/0 ⇒ 2/3/0/0)",
+    "terrans build ts 1B1.",
+    "ambas charge 1pw (0/1/1/0 ⇒ 0/0/2/0)",
+    "gleens decline 4pw",
+    "gleens  spend 1o for 1t. build gf 8A3 using area1: 3, area2: 3. (2/3/0/0 ⇒ 0/0/0/6)",
+    "ambas build ts 2B0.  spend 1pw for 1c. (0/0/2/0 ⇒ 1/0/1/0)",
+    "hadsch-hallas decline 4pw",
+    "hadsch-hallas build m 8A10.",
+    "terrans build m 1A3.",
+    "gleens build ts 5B4.",
+    "terrans charge 1pw (2/4/2/4 ⇒ 1/5/2/4)",
+    "ambas  spend 1pw for 1c. build lab 2B0. tech free1. up terra (4 ⇒ 5). (1/0/1/0 ⇒ 2/0/0/0)",
+    "hadsch-hallas decline 4pw",
+    "hadsch-hallas federation 2A3,8A10,1A6 fed6.",
+    "terrans spend 1pw for 1c. spend 1pw for 1c. build gf 5A0 using area1: 3, area2: 1. (1/5/2/4 ⇒ 0/4/0/8)",
+    "gleens pass booster2 returning booster10",
+    "ambas pass booster10 returning booster8",
+    "hadsch-hallas up gaia (3 ⇒ 4).",
+    "terrans build lab 1B1. tech free3. up gaia (3 ⇒ 4).",
+    "ambas charge 2pw (2/0/0/0 ⇒ 0/2/0/0)",
+    "hadsch-hallas build gf 10A5 using area1: 3. (4/2/0/4 ⇒ 1/2/0/7)",
+    "terrans pass booster8 returning booster9",
+    "hadsch-hallas build gf 3A10 using area1: 1, area2: 2. (1/2/0/7 ⇒ 0/0/0/10)",
+    "hadsch-hallas special q.",
+    "hadsch-hallas pass booster9 returning booster6",
+    "gleens income 2t (0/0/0/6 ⇒ 0/0/2/6)",
+    "ambas income 2t (0/2/0/0 ⇒ 0/1/3/0)",
+    "terrans income 4pw (0/4/0/8 ⇒ 1/0/4/8)",
+    "terrans  spend 3tg for 1o.  spend 5tg for 5c (1/0/4/8 ⇒ 1/8/4/0)",
+    "gleens  spend 1pw for 1c. build lab 5B4. tech adv-nav. cover free1. up int (0 ⇒ 1). (6/0/2/0 ⇒ 7/0/1/0)",
+    "terrans charge 1pw (1/8/4/0 ⇒ 0/9/4/0)",
+    "ambas up int (0 ⇒ 1).",
+    "terrans build lab 6A7. tech adv-gaia. cover free1. up sci (1 ⇒ 2).",
+    "gleens decline 4pw",
+    "hadsch-hallas build m 3A10.",
+    "gleens federation 5A11,5A4,5B2,5B4,5B5,5C,6A6 fed6 using area1: 4. (7/0/1/0 ⇒ 3/0/1/0)",
+    "ambas action qic2. fedtile fed5.",
+    "terrans special 4pw. (0/9/4/0 ⇒ 0/5/8/0)",
+    "hadsch-hallas build gf 9A1 using area1: 3. (10/0/0/0 ⇒ 7/0/0/3)",
+    "gleens up int (1 ⇒ 2).",
+    "ambas build m 4A10.",
+    "hadsch-hallas charge 1pw (7/0/0/3 ⇒ 6/1/0/3)",
+    "terrans action power4. (0/5/8/0 ⇒ 4/5/4/0)",
+    "hadsch-hallas build m 10A6.",
+    "ambas charge 1pw (0/1/3/0 ⇒ 0/0/4/0)",
+    "gleens charge 4pw (3/0/1/0 ⇒ 0/2/2/0)",
+    "terrans charge 3pw (4/5/4/0 ⇒ 1/8/4/0)",
+    "gleens  spend 1pw for 1c. up int (2 ⇒ 3). (0/2/2/0 ⇒ 0/1/3/0)",
+    "ambas  spend 3pw for 3c. federation 10A4,1A9,1B5,2A0,2B0 fed1 using area1: 2. (0/0/4/0 ⇒ 1/0/1/0)",
+    "terrans action power3. (1/8/4/0 ⇒ 5/8/0/0)",
+    "hadsch-hallas build gf 7A0 using area1: 3. (6/1/0/3 ⇒ 3/1/0/6)",
+    "gleens  spend 1pw for 1c. build m 8A3. (0/1/3/0 ⇒ 1/1/2/0)",
+    "ambas  spend 1pw for 1c.  spend 1o for 1c. pass booster6 returning booster10 (1/0/1/0 ⇒ 2/0/0/0)",
+    "terrans  burn 3. action power6. build m 5A10. (5/8/0/0 ⇒ 8/2/0/0)",
+    "gleens charge 3pw (1/1/2/0 ⇒ 0/0/4/0)",
+    "hadsch-hallas build ts 2A11.",
+    "ambas charge 2pw (2/0/0/0 ⇒ 0/2/0/0)",
+    "terrans charge 3pw (8/2/0/0 ⇒ 5/5/0/0)",
+    "gleens  spend 3pw for 3c. build ts 3A4. (0/0/4/0 ⇒ 3/0/1/0)",
+    "terrans charge 2pw (5/5/0/0 ⇒ 3/7/0/0)",
+    "terrans up sci (2 ⇒ 3). (3/7/0/0 ⇒ 0/10/0/0)",
+    "hadsch-hallas special q.",
+    "gleens  spend 1pw for 1c.  spend 2o for 2c. build ts 1A5. (3/0/1/0 ⇒ 4/0/0/0)",
+    "terrans charge 2pw (0/10/0/0 ⇒ 0/8/2/0)",
+    "hadsch-hallas decline 2pw",
+    "terrans build m 2A9.",
+    "hadsch-hallas decline 2pw",
+    "ambas decline 2pw",
+    "gleens charge 1pw (4/0/0/0 ⇒ 3/1/0/0)",
+    "hadsch-hallas build m 10A5.",
+    "ambas decline 2pw",
+    "gleens decline 4pw",
+    "terrans charge 3pw (0/8/2/0 ⇒ 0/5/5/0)",
+    "gleens pass booster10 returning booster2",
+    "terrans build m 5A0.",
+    "gleens decline 4pw",
+    "hadsch-hallas build ts 10A6.",
+    "ambas decline 2pw",
+    "gleens decline 4pw",
+    "terrans charge 3pw (0/5/5/0 ⇒ 0/2/8/0)",
+    "terrans pass booster4 returning booster8",
+    "hadsch-hallas action qic3.",
+    "hadsch-hallas pass booster8 returning booster9",
+    "ambas income 2t (0/2/0/0 ⇒ 0/1/3/0)",
+    "terrans income 1t (0/2/8/0 ⇒ 0/0/11/0)",
+    "ambas build ac2 1B5. tech adv-terra. cover free1. up int (1 ⇒ 2).",
+    "gleens up int (3 ⇒ 4).",
+    "terrans special step. build m 2B3. spend 4pw for 1q. (0/0/11/0 ⇒ 4/0/7/0)",
+    "hadsch-hallas decline 4pw",
+    "ambas charge 1pw (0/1/3/0 ⇒ 0/0/4/0)",
+    "gleens charge 1pw (0/3/1/0 ⇒ 0/2/2/0)",
+    "hadsch-hallas build PI 2A11.",
+    "terrans charge 3pw (4/0/7/0 ⇒ 1/3/7/0)",
+    "ambas special q.",
+    "gleens  spend 1pw for 1c. build lab 3A4. tech adv-int. cover nav. up gaia (2 ⇒ 3). (0/2/2/0 ⇒ 0/1/3/0)",
+    "terrans charge 2pw (1/3/7/0 ⇒ 0/3/8/0)",
+    "terrans spend 4pw for 1q. action qic2. fedtile fed5. (0/3/8/0 ⇒ 4/3/4/0)",
+    "hadsch-hallas  spend 8c for 2q. action qic3.",
+    "ambas action power4. (0/0/4/0 ⇒ 4/0/0/0)",
+    "gleens  spend 3pw for 1o. build ac2 3A4. tech terra. up terra (0 ⇒ 1). (0/1/3/0 ⇒ 3/1/0/0)",
+    "terrans charge 2pw (4/3/4/0 ⇒ 2/5/4/0)",
+    "terrans build ac2 1B1. tech gaia. decline up.",
+    "ambas charge 3pw (4/0/0/0 ⇒ 1/3/0/0)",
+    "gleens decline 4pw",
+    "hadsch-hallas build m 9A1.",
+    "ambas up int (2 ⇒ 3). (1/3/0/0 ⇒ 0/2/2/0)",
+    "gleens special q.",
+    "terrans federation 1A3,1B1,5A0,5A10,5A11 fed1 using area1: 1. (2/5/4/0 ⇒ 1/5/4/0)",
+    "hadsch-hallas build ts 9B2.",
+    "ambas charge 1pw (0/2/2/0 ⇒ 0/1/3/0)",
+    "ambas build ac1 7A3. tech int. up int (3 ⇒ 4).",
+    "gleens decline 4pw",
+    "hadsch-hallas decline 4pw",
+    "gleens  spend 1q for 1o.  spend 3o for 3t. federation 1A0,1A5,1B0,1B2,1C,3A4,8A0,8A1,8A2,8A3 fed1 using area1: 6, area2: 1. (3/1/0/0 ⇒ 0/0/0/0)",
+    "terrans special 4pw. (1/5/4/0 ⇒ 0/3/7/0)",
+    "hadsch-hallas build m 7A0.",
+    "ambas charge 1pw (0/1/3/0 ⇒ 0/0/4/0)",
+    "ambas  spend 1pw for 1c. build m 7A8. (0/0/4/0 ⇒ 1/0/3/0)",
+    "gleens up gaia (3 ⇒ 4).",
+    "terrans special q.",
+    "hadsch-hallas up gaia (4 ⇒ 5).",
+    "ambas special swap-PI. swap-PI 4A10.",
+    "gleens pass returning booster10",
+    "terrans up sci (3 ⇒ 4).",
+    "hadsch-hallas federation 3A10,4A11,4B5,7A0,7A1,7A5,7B1,7B2,9A1,9A3,9A7,9B1,9B2,9B3 fed3 using area1: 6, area2: 2. (6/3/1/0 ⇒ 2/1/1/0)",
+    "ambas  spend 1q for 1o. build ts 7B3.",
+    "hadsch-hallas charge 1pw (2/1/1/0 ⇒ 1/2/1/0)",
+    "terrans  spend 1q for 1o. build ts 2B3.",
+    "hadsch-hallas decline 4pw",
+    "ambas decline 2pw",
+    "hadsch-hallas  spend 1pw for 1c. up eco (4 ⇒ 5). (1/2/1/0 ⇒ 0/0/4/0)",
+    "ambas  spend 1pw for 1c. special 4pw (1/0/3/0 ⇒ 0/0/4/0).  spend 1pw for 1c.",
+    "terrans  spend 2pw for 2c. federation 2A10,2A9,2B3,2B4,4A2 fed2 using area1: 2. (0/3/7/0 ⇒ 0/3/5/0)",
+    "hadsch-hallas action power5. (0/0/4/0 ⇒ 4/0/0/0)",
+    "ambas  spend 3pw for 3c. federation 4A10,4A11,4B0,4B1,7A5,7A7,7A8,7B3 fed2 using area1: 4. (1/0/3/0 ⇒ 0/0/0/0)",
+    "terrans up sci (4 ⇒ 5).",
+    "hadsch-hallas federation 10A5,10A6,2A11 fed6.",
+    "ambas action qic1. tech free3. up int (4 ⇒ 5).",
+    "terrans up int (1 ⇒ 2).",
+    "hadsch-hallas build lab 10A0. tech adv-eco. cover free1. up terra (0 ⇒ 1).",
+    "ambas  spend 3q for 3o. build m 3A1.",
+    "terrans up int (2 ⇒ 3). (0/3/5/0 ⇒ 0/0/8/0)",
+    "hadsch-hallas build lab 1A6. tech nav. up nav (3 ⇒ 4).",
+    "ambas build m 6B0.",
+    "terrans  spend 1q for 1o. build m 8A8.",
+    "hadsch-hallas decline 4pw",
+    "hadsch-hallas  spend 1k for 1c. build lab 9B2. tech terra. up terra (1 ⇒ 2).",
+    "ambas pass returning booster6",
+    "terrans spend 4pw for 1k. up int (3 ⇒ 4). (0/0/8/0 ⇒ 4/0/4/0)",
+    "hadsch-hallas up terra (2 ⇒ 3). (4/0/0/0 ⇒ 1/3/0/0)",
+    "terrans spend 1pw for 1c.  spend 3q for 3o. build lab 2B3. tech nav. up nav (2 ⇒ 3). (4/0/4/0 ⇒ 2/3/3/0)",
+    "hadsch-hallas decline 4pw",
+    "hadsch-hallas up terra (3 ⇒ 4).",
+    "terrans pass returning booster4",
+    "hadsch-hallas special q.",
+    "hadsch-hallas pass returning booster8 (1/3/0/0 ⇒ 2/1/0/0)"
+  ],
+  "advancedLog": [
+    {
+      "player": 0,
+      "move": 1
+    },
+    {
+      "player": 1,
+      "move": 2
+    },
+    {
+      "player": 2,
+      "move": 3
+    },
+    {
+      "player": 3,
+      "move": 4
+    },
+    {
+      "player": 0,
+      "changes": {
+        "beginGame": {
+          "k": 3,
+          "o": 4,
+          "c": 15
+        },
+        "nav": {
+          "o": 1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "changes": {
+        "beginGame": {
+          "k": 3,
+          "o": 4,
+          "c": 15,
+          "q": 1
+        },
+        "nav": {
+          "q": 1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "changes": {
+        "beginGame": {
+          "k": 3,
+          "o": 4,
+          "c": 15,
+          "q": 1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "changes": {
+        "beginGame": {
+          "k": 3,
+          "o": 4,
+          "c": 15,
+          "q": 1
+        },
+        "nav": {
+          "q": 1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 5
+    },
+    {
+      "player": 1,
+      "move": 6
+    },
+    {
+      "player": 2,
+      "move": 7
+    },
+    {
+      "player": 3,
+      "move": 8
+    },
+    {
+      "player": 3,
+      "move": 9
+    },
+    {
+      "player": 2,
+      "move": 10
+    },
+    {
+      "player": 1,
+      "move": 11
+    },
+    {
+      "player": 0,
+      "move": 12
+    },
+    {
+      "player": 3,
+      "move": 13
+    },
+    {
+      "player": 2,
+      "move": 14
+    },
+    {
+      "player": 1,
+      "move": 15
+    },
+    {
+      "player": 0,
+      "move": 16
+    },
+    {
+      "round": 1
+    },
+    {
+      "phase": "roundIncome"
+    },
+    {
+      "player": 0,
+      "changes": {
+        "income": {
+          "o": 3,
+          "k": 1
+        },
+        "booster6": {
+          "o": 1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "changes": {
+        "income": {
+          "o": 3,
+          "k": 1
+        },
+        "booster2": {
+          "o": 1,
+          "t": 2
+        }
+      }
+    },
+    {
+      "player": 2,
+      "changes": {
+        "eco": {
+          "c": 2,
+          "o": 1,
+          "pw": 2
+        },
+        "income": {
+          "o": 3,
+          "k": 1,
+          "c": 3
+        },
+        "booster9": {
+          "pw": 4
+        }
+      }
+    },
+    {
+      "player": 3,
+      "changes": {
+        "income": {
+          "o": 4,
+          "k": 1
+        },
+        "booster4": {
+          "c": 2
+        }
+      }
+    },
+    {
+      "phase": "roundGaia"
+    },
+    {
+      "player": 0,
+      "move": 17,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -2
+        },
+        "round1": {
+          "vp": 3
+        },
+        "gleens": {
+          "vp": 2
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 18,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 19,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 20,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 21,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1,
+          "q": -2
+        },
+        "round1": {
+          "vp": 3
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 22,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 23,
+      "changes": {
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 24,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 25,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 26,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 27,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 28,
+      "changes": {
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 29,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 30,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 31,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 32
+    },
+    {
+      "player": 2,
+      "move": 33,
+      "changes": {
+        "power6": {
+          "pw": -3
+        },
+        "build": {
+          "c": -2,
+          "o": -1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 34,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 35,
+      "changes": {
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 36,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 37,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 38,
+      "changes": {
+        "power3": {
+          "pw": -4,
+          "o": 2
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 39,
+      "changes": {
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 40,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 41,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 42,
+      "changes": {
+        "build": {
+          "c": -5,
+          "o": -3
+        },
+        "tech-free1": {
+          "o": 1,
+          "q": 1
+        },
+        "nav": {
+          "q": 1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 43,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 44,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 45,
+      "changes": {
+        "up": {
+          "k": -4
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 46,
+      "changes": {
+        "build": {
+          "c": -5,
+          "o": -3
+        },
+        "tech-free1": {
+          "o": 2
+        },
+        "nav": {
+          "o": 1,
+          "pw": 3
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 47,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 48,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 49,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 50,
+      "changes": {
+        "up": {
+          "k": -4
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 51,
+      "changes": {
+        "up": {
+          "k": -4
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 52,
+      "changes": {
+        "power5": {
+          "pw": -4,
+          "k": 2
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 53,
+      "changes": {
+        "power4": {
+          "pw": -4,
+          "c": 7
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 54,
+      "changes": {
+        "build": {
+          "c": -5,
+          "o": -3
+        },
+        "tech-free1": {
+          "o": 1,
+          "q": 1
+        },
+        "terra": {
+          "o": 2
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 55,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 56,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 57,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1,
+          "q": -1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 58,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 59,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1,
+          "q": -1
+        },
+        "round1": {
+          "vp": 3
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 60,
+      "changes": {
+        "up": {
+          "k": -4
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 61,
+      "changes": {
+        "spend": {
+          "pw": -1,
+          "c": 1,
+          "q": -1,
+          "o": 1
+        },
+        "build": {
+          "c": -6,
+          "o": -6
+        },
+        "int": {
+          "q": 1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 62,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 63,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1,
+          "q": -1
+        },
+        "round1": {
+          "vp": 3
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 64,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 65,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1,
+          "q": -1
+        },
+        "round1": {
+          "vp": 3
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 66,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 67,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 68,
+      "changes": {
+        "spend": {
+          "pw": -3,
+          "c": 3
+        },
+        "tech-int": {
+          "pw": 4
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 69,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1,
+          "q": -1
+        },
+        "round1": {
+          "vp": 3
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 70,
+      "changes": {
+        "build": {
+          "c": -5,
+          "o": -3
+        },
+        "nav": {
+          "q": 1,
+          "pw": 3
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 71,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 72,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -2
+        },
+        "round1": {
+          "vp": 3
+        },
+        "gleens": {
+          "vp": 2
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 73
+    },
+    {
+      "player": 2,
+      "move": 74,
+      "changes": {
+        "spend": {
+          "pw": -4,
+          "q": 1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 75
+    },
+    {
+      "player": 0,
+      "move": 76,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 77,
+      "changes": {
+        "spend": {
+          "pw": -1,
+          "c": 1
+        },
+        "booster6": {
+          "vp": 5
+        }
+      }
+    },
+    {
+      "round": 2
+    },
+    {
+      "phase": "roundIncome"
+    },
+    {
+      "player": 1,
+      "changes": {
+        "income": {
+          "o": 3,
+          "k": 3
+        },
+        "sci": {
+          "k": 1
+        },
+        "booster10": {
+          "c": 4
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 78,
+      "changes": {
+        "eco": {
+          "c": 2,
+          "o": 1,
+          "pw": 2
+        },
+        "income": {
+          "o": 5,
+          "k": 2,
+          "c": 3
+        },
+        "booster2": {
+          "o": 1,
+          "t": 2
+        }
+      }
+    },
+    {
+      "player": 3,
+      "changes": {
+        "income": {
+          "o": 5,
+          "k": 2
+        },
+        "tech-free2": {
+          "o": 1,
+          "pw": 1
+        },
+        "booster8": {
+          "k": 1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "changes": {
+        "income": {
+          "o": 5,
+          "k": 2
+        },
+        "booster9": {
+          "pw": 4
+        }
+      }
+    },
+    {
+      "phase": "roundGaia"
+    },
+    {
+      "player": 1,
+      "move": 79,
+      "changes": {
+        "tech-int": {
+          "pw": 4
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 80,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1,
+          "q": -1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 81,
+      "changes": {
+        "power4": {
+          "pw": -4,
+          "c": 7
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 82,
+      "changes": {
+        "power6": {
+          "pw": -3
+        },
+        "build": {
+          "c": -2,
+          "o": -1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 83,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 84,
+      "changes": {
+        "power3": {
+          "pw": -4,
+          "o": 2
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 85,
+      "changes": {
+        "build": {
+          "c": -6,
+          "o": -6
+        },
+        "eco": {
+          "pw": 3
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 86,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 87
+    },
+    {
+      "player": 3,
+      "move": 88,
+      "changes": {
+        "up": {
+          "k": -4
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 89,
+      "changes": {
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 90,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 91,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 92,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 93,
+      "changes": {
+        "power5": {
+          "pw": -4,
+          "k": 2
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 94,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1,
+          "q": -1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 95,
+      "changes": {
+        "charge": {
+          "pw": 3,
+          "vp": -2
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 96,
+      "changes": {
+        "spend": {
+          "pw": -2,
+          "c": 4,
+          "o": -1,
+          "k": -1
+        },
+        "build": {
+          "c": -6,
+          "o": -4
+        },
+        "federation": {
+          "o": 1,
+          "k": 1,
+          "c": 2
+        },
+        "round2": {
+          "vp": 5
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 97,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 98,
+      "changes": {
+        "up": {
+          "k": -4
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 99,
+      "changes": {
+        "up": {
+          "k": -4
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 100,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 101,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 102,
+      "changes": {
+        "booster9": {
+          "vp": 4
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 103,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 104,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 105,
+      "changes": {
+        "charge": {
+          "pw": 3,
+          "vp": -2
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 106
+    },
+    {
+      "player": 3,
+      "move": 107,
+      "changes": {
+        "booster8": {
+          "vp": 3
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 108,
+      "changes": {
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 109
+    },
+    {
+      "player": 1,
+      "move": 110,
+      "changes": {
+        "spend": {
+          "pw": -2,
+          "c": 2
+        },
+        "build": {
+          "c": -2,
+          "o": -1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 111
+    },
+    {
+      "player": 1,
+      "move": 112
+    },
+    {
+      "player": 1,
+      "move": 113,
+      "changes": {
+        "booster10": {
+          "vp": 2
+        }
+      }
+    },
+    {
+      "round": 3
+    },
+    {
+      "phase": "roundIncome"
+    },
+    {
+      "player": 0,
+      "changes": {
+        "income": {
+          "o": 6,
+          "k": 2,
+          "pw": 4
+        },
+        "booster4": {
+          "c": 2
+        }
+      }
+    },
+    {
+      "player": 2,
+      "changes": {
+        "income": {
+          "o": 6,
+          "k": 3,
+          "c": 3
+        },
+        "tech-eco": {
+          "k": 1,
+          "c": 1
+        },
+        "eco": {
+          "c": 4,
+          "o": 2,
+          "pw": 4
+        },
+        "booster9": {
+          "pw": 4
+        }
+      }
+    },
+    {
+      "player": 3,
+      "changes": {
+        "income": {
+          "o": 7,
+          "k": 2
+        },
+        "tech-free2": {
+          "o": 1,
+          "pw": 1
+        },
+        "booster6": {
+          "o": 1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "changes": {
+        "income": {
+          "o": 4,
+          "k": 3,
+          "c": 3
+        },
+        "sci": {
+          "k": 1
+        },
+        "booster7": {
+          "o": 1
+        }
+      }
+    },
+    {
+      "phase": "roundGaia"
+    },
+    {
+      "player": 0,
+      "move": 114,
+      "changes": {
+        "power4": {
+          "pw": -4,
+          "c": 7
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 115,
+      "changes": {
+        "power6": {
+          "pw": -3
+        },
+        "build": {
+          "c": -2,
+          "o": -1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 116,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 117,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 118,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 119,
+      "changes": {
+        "tech-int": {
+          "pw": 4
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 120,
+      "changes": {
+        "build": {
+          "c": -6,
+          "o": -6
+        },
+        "tech-nav": {
+          "vp": 7
+        },
+        "round3": {
+          "vp": 2
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 121,
+      "changes": {
+        "charge": {
+          "pw": 3,
+          "vp": -2
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 122,
+      "changes": {
+        "charge": {
+          "pw": 3,
+          "vp": -2
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 123,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 124,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 125,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 126,
+      "changes": {
+        "spend": {
+          "pw": -1,
+          "c": 1
+        },
+        "up": {
+          "k": -4
+        },
+        "nav": {
+          "q": 1,
+          "pw": 3
+        },
+        "round3": {
+          "vp": 2
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 127,
+      "changes": {
+        "power5": {
+          "pw": -4,
+          "k": 2
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 128,
+      "changes": {
+        "power3": {
+          "pw": -4,
+          "o": 2
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 129,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 130,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 131,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1,
+          "q": -1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 132,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 133,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 134,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -4
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 135,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 136,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 137
+    },
+    {
+      "player": 2,
+      "move": 138,
+      "changes": {
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 139,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 140,
+      "changes": {
+        "up": {
+          "k": -4
+        },
+        "terra": {
+          "o": 2
+        },
+        "round3": {
+          "vp": 2
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 141,
+      "changes": {
+        "spend": {
+          "pw": -2,
+          "c": 2
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 142,
+      "changes": {
+        "spend": {
+          "pw": -2,
+          "c": 2
+        },
+        "build": {
+          "c": -5,
+          "o": -3
+        },
+        "round3": {
+          "vp": 2
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 143,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 144,
+      "changes": {
+        "spend": {
+          "pw": -1,
+          "c": 1
+        },
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 145,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 146,
+      "changes": {
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 147,
+      "changes": {
+        "charge": {
+          "pw": 3,
+          "vp": -2
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 148,
+      "changes": {
+        "power7": {
+          "pw": -3,
+          "t": 2
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 149,
+      "changes": {
+        "spend": {
+          "o": -3,
+          "c": 3
+        },
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 150,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 151,
+      "changes": {
+        "up": {
+          "k": -4
+        },
+        "gaia": {
+          "t": 3
+        },
+        "round3": {
+          "vp": 2
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 152
+    },
+    {
+      "player": 3,
+      "move": 153,
+      "changes": {
+        "booster6": {
+          "vp": 6
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 154,
+      "changes": {
+        "federation": {
+          "t": -3,
+          "vp": 7,
+          "c": 6
+        },
+        "spend": {
+          "pw": -1,
+          "c": 1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 155,
+      "changes": {
+        "booster9": {
+          "vp": 4
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 156,
+      "changes": {
+        "build": {
+          "c": -6,
+          "o": -4
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 157
+    },
+    {
+      "player": 1,
+      "move": 158,
+      "changes": {
+        "spend": {
+          "pw": -1,
+          "c": 1
+        },
+        "booster7": {
+          "vp": 2
+        }
+      }
+    },
+    {
+      "round": 4
+    },
+    {
+      "phase": "roundIncome"
+    },
+    {
+      "player": 0,
+      "changes": {
+        "income": {
+          "o": 7,
+          "k": 3,
+          "pw": 4
+        },
+        "booster10": {
+          "c": 4
+        }
+      }
+    },
+    {
+      "player": 3,
+      "changes": {
+        "income": {
+          "o": 7,
+          "k": 2,
+          "c": 7
+        },
+        "tech-free2": {
+          "o": 1,
+          "pw": 1
+        },
+        "booster8": {
+          "k": 1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "changes": {
+        "income": {
+          "o": 7,
+          "k": 4,
+          "c": 3
+        },
+        "tech-eco": {
+          "k": 1,
+          "c": 1
+        },
+        "eco": {
+          "c": 4,
+          "o": 2,
+          "pw": 4
+        },
+        "booster6": {
+          "o": 1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 159,
+      "changes": {
+        "income": {
+          "t": 1,
+          "o": 4,
+          "k": 3,
+          "c": 3,
+          "pw": 4
+        },
+        "sci": {
+          "k": 1
+        },
+        "booster9": {
+          "pw": 4
+        }
+      }
+    },
+    {
+      "phase": "roundGaia"
+    },
+    {
+      "player": 1,
+      "move": 160,
+      "changes": {
+        "spend": {
+          "c": 6
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 161,
+      "changes": {
+        "power4": {
+          "pw": -4,
+          "c": 7
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 162,
+      "changes": {
+        "up": {
+          "k": -4
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 163,
+      "changes": {
+        "build": {
+          "c": -6,
+          "o": -6
+        },
+        "gaia": {
+          "t": 3
+        },
+        "round4": {
+          "vp": 5
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 164,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 165,
+      "changes": {
+        "tech-int": {
+          "pw": 4
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 166,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 167,
+      "changes": {
+        "build": {
+          "c": -5,
+          "o": -3
+        },
+        "tech-terra": {
+          "k": 4
+        },
+        "terra": {
+          "pw": 3
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 168,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 169,
+      "changes": {
+        "up": {
+          "k": -4
+        },
+        "gaia": {
+          "pw": 3
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 170,
+      "changes": {
+        "power3": {
+          "pw": -4,
+          "o": 2
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 171,
+      "changes": {
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 172
+    },
+    {
+      "player": 3,
+      "move": 173,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 174,
+      "changes": {
+        "up": {
+          "k": -4
+        },
+        "terra": {
+          "o": 2
+        },
+        "spend": {
+          "pw": -1,
+          "c": 1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 175
+    },
+    {
+      "player": 1,
+      "move": 176,
+      "changes": {
+        "power7": {
+          "pw": -3,
+          "t": 2
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 177,
+      "changes": {
+        "build": {
+          "c": -5,
+          "o": -3
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 178,
+      "changes": {
+        "charge": {
+          "pw": 4,
+          "vp": -3
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 179,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 180,
+      "changes": {
+        "spend": {
+          "pw": -3,
+          "c": 3
+        },
+        "build": {
+          "c": -6,
+          "o": -4
+        },
+        "round4": {
+          "vp": 5
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 181,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 182,
+      "changes": {
+        "spend": {
+          "pw": -1,
+          "c": 1
+        },
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 183,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 184,
+      "changes": {
+        "up": {
+          "k": -4
+        },
+        "gaia": {
+          "pw": 3
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 185,
+      "changes": {
+        "federation": {
+          "t": -2,
+          "vp": 7,
+          "o": 2
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 186,
+      "changes": {
+        "federation": {
+          "t": -3,
+          "vp": 7,
+          "c": 6
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 187,
+      "changes": {
+        "federation": {
+          "t": -1,
+          "vp": 7,
+          "c": 6
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 188
+    },
+    {
+      "player": 0,
+      "move": 189,
+      "changes": {
+        "up": {
+          "k": -4
+        },
+        "gaia": {
+          "t": 3
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 190
+    },
+    {
+      "player": 2,
+      "move": 191,
+      "changes": {
+        "spend": {
+          "pw": -4,
+          "k": 1
+        },
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 192,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 193,
+      "changes": {
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 194,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 195
+    },
+    {
+      "player": 0,
+      "move": 196,
+      "changes": {
+        "spend": {
+          "o": -1,
+          "t": 1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 197,
+      "changes": {
+        "build": {
+          "c": -3,
+          "o": -2
+        },
+        "spend": {
+          "pw": -1,
+          "c": 1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 198
+    },
+    {
+      "player": 2,
+      "move": 199,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1
+        },
+        "tech-free3": {
+          "vp": 3
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 200,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 201,
+      "changes": {
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 202,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 203,
+      "changes": {
+        "spend": {
+          "pw": -1,
+          "c": 1
+        },
+        "build": {
+          "c": -5,
+          "o": -3
+        },
+        "tech-free1": {
+          "o": 1,
+          "q": 1
+        },
+        "federation": {
+          "vp": 8,
+          "q": 1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 204
+    },
+    {
+      "player": 2,
+      "move": 205,
+      "changes": {
+        "federation": {
+          "vp": 6,
+          "k": 2
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 206,
+      "changes": {
+        "spend": {
+          "pw": -2,
+          "c": 2
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 207,
+      "changes": {
+        "booster10": {
+          "vp": 2
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 208,
+      "changes": {
+        "booster8": {
+          "vp": 9
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 209,
+      "changes": {
+        "up": {
+          "k": -4
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 210,
+      "changes": {
+        "build": {
+          "c": -5,
+          "o": -3
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 211,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 212
+    },
+    {
+      "player": 1,
+      "move": 213,
+      "changes": {
+        "booster9": {
+          "vp": 8
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 214
+    },
+    {
+      "player": 2,
+      "move": 215,
+      "changes": {
+        "income": {
+          "q": 1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 216,
+      "changes": {
+        "booster6": {
+          "vp": 6
+        }
+      }
+    },
+    {
+      "round": 5
+    },
+    {
+      "phase": "roundIncome"
+    },
+    {
+      "player": 0,
+      "move": 217,
+      "changes": {
+        "booster2": {
+          "t": 2,
+          "o": 1
+        },
+        "income": {
+          "o": 6,
+          "k": 4,
+          "pw": 4,
+          "c": 3
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 218,
+      "changes": {
+        "income": {
+          "t": 2,
+          "o": 6,
+          "k": 4,
+          "pw": 4
+        },
+        "tech-free2": {
+          "o": 1,
+          "pw": 1
+        },
+        "booster10": {
+          "c": 4
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 219,
+      "changes": {
+        "income": {
+          "pw": 4,
+          "o": 4,
+          "k": 4,
+          "c": 3,
+          "t": 1
+        },
+        "sci": {
+          "k": 1
+        },
+        "booster8": {
+          "k": 1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "changes": {
+        "income": {
+          "o": 6,
+          "k": 3,
+          "c": 10
+        },
+        "tech-eco": {
+          "k": 1,
+          "c": 1
+        },
+        "eco": {
+          "c": 4,
+          "o": 2,
+          "pw": 4
+        },
+        "booster9": {
+          "pw": 4
+        }
+      }
+    },
+    {
+      "phase": "roundGaia"
+    },
+    {
+      "player": 1,
+      "move": 220,
+      "changes": {
+        "spend": {
+          "o": 1,
+          "c": 5
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 221,
+      "changes": {
+        "spend": {
+          "pw": -1,
+          "c": 1
+        },
+        "build": {
+          "c": -5,
+          "o": -3
+        },
+        "adv-nav": {
+          "vp": 16
+        },
+        "int": {
+          "o": 1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 222,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 223,
+      "changes": {
+        "up": {
+          "k": -4
+        },
+        "int": {
+          "q": 1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 224,
+      "changes": {
+        "build": {
+          "c": -5,
+          "o": -3
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 225
+    },
+    {
+      "player": 2,
+      "move": 226,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1
+        },
+        "tech-free3": {
+          "vp": 3
+        },
+        "round5": {
+          "vp": 4
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 227,
+      "changes": {
+        "federation": {
+          "t": -4,
+          "vp": 6,
+          "k": 2
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 228,
+      "changes": {
+        "qic2": {
+          "q": -3,
+          "vp": 7,
+          "c": 6
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 229,
+      "changes": {
+        "tech-int": {
+          "pw": 4
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 230
+    },
+    {
+      "player": 0,
+      "move": 231,
+      "changes": {
+        "up": {
+          "k": -4
+        },
+        "int": {
+          "o": 1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 232,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 233,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 234,
+      "changes": {
+        "power4": {
+          "pw": -4,
+          "c": 7
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 235,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1
+        },
+        "tech-free3": {
+          "vp": 3
+        },
+        "round5": {
+          "vp": 4
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 236,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 237,
+      "changes": {
+        "charge": {
+          "pw": 4,
+          "vp": -3
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 238,
+      "changes": {
+        "charge": {
+          "pw": 3,
+          "vp": -2
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 239,
+      "changes": {
+        "spend": {
+          "pw": -1,
+          "c": 1
+        },
+        "up": {
+          "k": -4
+        },
+        "int": {
+          "o": 2,
+          "pw": 3
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 240,
+      "changes": {
+        "spend": {
+          "pw": -3,
+          "c": 3
+        },
+        "federation": {
+          "t": -2,
+          "vp": 12
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 241,
+      "changes": {
+        "power3": {
+          "pw": -4,
+          "o": 2
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 242
+    },
+    {
+      "player": 0,
+      "move": 243,
+      "changes": {
+        "spend": {
+          "pw": -1,
+          "c": 1
+        },
+        "build": {
+          "c": -2,
+          "o": -1
+        },
+        "round5": {
+          "vp": 4
+        },
+        "gleens": {
+          "vp": 2
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 244,
+      "changes": {
+        "spend": {
+          "pw": -1,
+          "c": 2,
+          "o": -1
+        },
+        "booster10": {
+          "vp": 2
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 245,
+      "changes": {
+        "power6": {
+          "pw": -3
+        },
+        "build": {
+          "c": -2,
+          "o": -1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 246,
+      "changes": {
+        "charge": {
+          "pw": 3,
+          "vp": -2
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 247,
+      "changes": {
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 248,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 249,
+      "changes": {
+        "charge": {
+          "pw": 3,
+          "vp": -2
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 250,
+      "changes": {
+        "spend": {
+          "pw": -3,
+          "c": 3
+        },
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 251,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 252,
+      "changes": {
+        "up": {
+          "k": -4
+        },
+        "sci": {
+          "pw": 3
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 253,
+      "changes": {
+        "income": {
+          "q": 1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 254,
+      "changes": {
+        "spend": {
+          "pw": -1,
+          "c": 3,
+          "o": -2
+        },
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 255,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 256
+    },
+    {
+      "player": 1,
+      "move": 257,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1
+        },
+        "tech-free3": {
+          "vp": 3
+        },
+        "round5": {
+          "vp": 4
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 258
+    },
+    {
+      "player": 3,
+      "move": 259
+    },
+    {
+      "player": 0,
+      "move": 260,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 261,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1
+        },
+        "tech-free3": {
+          "vp": 3
+        },
+        "round5": {
+          "vp": 4
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 262
+    },
+    {
+      "player": 0,
+      "move": 263
+    },
+    {
+      "player": 1,
+      "move": 264,
+      "changes": {
+        "charge": {
+          "pw": 3,
+          "vp": -2
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 265
+    },
+    {
+      "player": 1,
+      "move": 266,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1
+        },
+        "tech-free3": {
+          "vp": 3
+        },
+        "round5": {
+          "vp": 4
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 267
+    },
+    {
+      "player": 2,
+      "move": 268,
+      "changes": {
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 269
+    },
+    {
+      "player": 0,
+      "move": 270
+    },
+    {
+      "player": 1,
+      "move": 271,
+      "changes": {
+        "charge": {
+          "pw": 3,
+          "vp": -2
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 272,
+      "changes": {
+        "booster8": {
+          "vp": 6
+        },
+        "adv-gaia": {
+          "vp": 3
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 273,
+      "changes": {
+        "qic3": {
+          "q": -2,
+          "vp": 7
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 274,
+      "changes": {
+        "booster9": {
+          "vp": 8
+        }
+      }
+    },
+    {
+      "round": 6
+    },
+    {
+      "phase": "roundIncome"
+    },
+    {
+      "player": 3,
+      "move": 275,
+      "changes": {
+        "income": {
+          "t": 2,
+          "o": 7,
+          "k": 4,
+          "pw": 4
+        },
+        "tech-free2": {
+          "o": 1,
+          "pw": 1
+        },
+        "booster6": {
+          "o": 1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "changes": {
+        "income": {
+          "o": 5,
+          "k": 5,
+          "pw": 4,
+          "c": 7
+        },
+        "booster10": {
+          "c": 4
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 276,
+      "changes": {
+        "income": {
+          "t": 1,
+          "o": 7,
+          "k": 5,
+          "pw": 4
+        },
+        "sci": {
+          "k": 3
+        },
+        "booster4": {
+          "c": 2
+        }
+      }
+    },
+    {
+      "player": 2,
+      "changes": {
+        "income": {
+          "o": 7,
+          "k": 3,
+          "c": 19
+        },
+        "tech-eco": {
+          "k": 1,
+          "c": 1
+        },
+        "eco": {
+          "c": 4,
+          "o": 2,
+          "pw": 4
+        },
+        "booster8": {
+          "k": 1
+        }
+      }
+    },
+    {
+      "phase": "roundGaia"
+    },
+    {
+      "player": 3,
+      "move": 277,
+      "changes": {
+        "build": {
+          "c": -6,
+          "o": -6
+        },
+        "int": {
+          "q": 1
+        },
+        "adv-terra": {
+          "vp": 2
+        },
+        "round6": {
+          "vp": 5
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 278,
+      "changes": {
+        "up": {
+          "k": -4
+        },
+        "int": {
+          "o": 2
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 279,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1
+        },
+        "spend": {
+          "pw": -4,
+          "q": 1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 280
+    },
+    {
+      "player": 3,
+      "move": 281,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 282,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 283,
+      "changes": {
+        "build": {
+          "c": -6,
+          "o": -4
+        },
+        "round6": {
+          "vp": 5
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 284,
+      "changes": {
+        "charge": {
+          "pw": 3,
+          "vp": -2
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 285,
+      "changes": {
+        "income": {
+          "q": 1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 286,
+      "changes": {
+        "spend": {
+          "pw": -1,
+          "c": 1
+        },
+        "build": {
+          "c": -5,
+          "o": -3
+        },
+        "adv-int": {
+          "vp": 15
+        },
+        "gaia": {
+          "pw": 3
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 287,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 288,
+      "changes": {
+        "spend": {
+          "pw": -4,
+          "q": 1
+        },
+        "qic2": {
+          "q": -3,
+          "vp": 7,
+          "c": 6
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 289,
+      "changes": {
+        "spend": {
+          "c": -8,
+          "q": 2
+        },
+        "qic3": {
+          "q": -2,
+          "vp": 7
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 290,
+      "changes": {
+        "power4": {
+          "pw": -4,
+          "c": 7
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 291,
+      "changes": {
+        "spend": {
+          "pw": -3,
+          "o": 1
+        },
+        "build": {
+          "c": -6,
+          "o": -6
+        },
+        "tech-terra": {
+          "k": 4
+        },
+        "terra": {
+          "o": 2
+        },
+        "round6": {
+          "vp": 5
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 292,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 293,
+      "changes": {
+        "build": {
+          "c": -6,
+          "o": -6
+        },
+        "round6": {
+          "vp": 5
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 294,
+      "changes": {
+        "charge": {
+          "pw": 3,
+          "vp": -2
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 295
+    },
+    {
+      "player": 2,
+      "move": 296,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1
+        },
+        "tech-free3": {
+          "vp": 3
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 297,
+      "changes": {
+        "up": {
+          "k": -4
+        },
+        "int": {
+          "q": 2,
+          "pw": 3
+        },
+        "adv-terra": {
+          "vp": 2
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 298,
+      "changes": {
+        "income": {
+          "q": 1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 299,
+      "changes": {
+        "federation": {
+          "t": -1,
+          "vp": 12
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 300,
+      "changes": {
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 301,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 302,
+      "changes": {
+        "build": {
+          "c": -6,
+          "o": -6
+        },
+        "int": {
+          "q": 2
+        },
+        "adv-terra": {
+          "vp": 2
+        },
+        "round6": {
+          "vp": 5
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 303
+    },
+    {
+      "player": 2,
+      "move": 304
+    },
+    {
+      "player": 0,
+      "move": 305,
+      "changes": {
+        "spend": {
+          "q": -1,
+          "o": -2,
+          "t": 3
+        },
+        "federation": {
+          "t": -7,
+          "vp": 12
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 306,
+      "changes": {
+        "tech-int": {
+          "pw": 4
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 307,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1
+        },
+        "tech-free3": {
+          "vp": 3
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 308,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 309,
+      "changes": {
+        "spend": {
+          "pw": -1,
+          "c": 1
+        },
+        "build": {
+          "c": -2,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 310,
+      "changes": {
+        "up": {
+          "k": -4
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 311,
+      "changes": {
+        "income": {
+          "q": 1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 312,
+      "changes": {
+        "up": {
+          "k": -4
+        },
+        "gaia": {
+          "vp": 12
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 313
+    },
+    {
+      "player": 0,
+      "move": 314,
+      "changes": {
+        "booster10": {
+          "vp": 3
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 315,
+      "changes": {
+        "up": {
+          "k": -4
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 316,
+      "changes": {
+        "federation": {
+          "t": -6,
+          "vp": 8
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 317,
+      "changes": {
+        "spend": {
+          "q": -1,
+          "o": 1
+        },
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 318,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 319,
+      "changes": {
+        "spend": {
+          "q": -1,
+          "o": 1
+        },
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 320
+    },
+    {
+      "player": 3,
+      "move": 321
+    },
+    {
+      "player": 2,
+      "move": 322,
+      "changes": {
+        "spend": {
+          "pw": -1,
+          "c": 1
+        },
+        "up": {
+          "k": -4
+        },
+        "eco": {
+          "c": 6,
+          "o": 3,
+          "pw": 6
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 323,
+      "changes": {
+        "spend": {
+          "pw": -2,
+          "c": 2
+        },
+        "tech-int": {
+          "pw": 4
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 324,
+      "changes": {
+        "spend": {
+          "pw": -2,
+          "c": 2
+        },
+        "federation": {
+          "t": -2,
+          "vp": 8,
+          "q": 1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 325,
+      "changes": {
+        "power5": {
+          "pw": -4,
+          "k": 2
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 326,
+      "changes": {
+        "spend": {
+          "pw": -3,
+          "c": 3
+        },
+        "federation": {
+          "t": -4,
+          "vp": 8,
+          "q": 1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 327,
+      "changes": {
+        "up": {
+          "k": -4
+        },
+        "sci": {
+          "k": 9
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 328,
+      "changes": {
+        "federation": {
+          "vp": 6,
+          "k": 2
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 329,
+      "changes": {
+        "qic1": {
+          "q": -4
+        },
+        "int": {
+          "q": 4
+        },
+        "adv-terra": {
+          "vp": 2
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 330,
+      "changes": {
+        "up": {
+          "k": -4
+        },
+        "int": {
+          "q": 1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 331,
+      "changes": {
+        "build": {
+          "c": -5,
+          "o": -3
+        },
+        "adv-eco": {
+          "o": 8
+        },
+        "terra": {
+          "o": 2
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 332,
+      "changes": {
+        "spend": {
+          "q": -3,
+          "o": 3
+        },
+        "build": {
+          "c": -2,
+          "o": -2,
+          "q": -1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 333,
+      "changes": {
+        "up": {
+          "k": -4
+        },
+        "int": {
+          "q": 2,
+          "pw": 3
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 334,
+      "changes": {
+        "build": {
+          "c": -5,
+          "o": -3
+        },
+        "tech-nav": {
+          "vp": 7
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 335,
+      "changes": {
+        "build": {
+          "c": -2,
+          "o": -1,
+          "q": -1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 336,
+      "changes": {
+        "spend": {
+          "q": -1,
+          "o": 1
+        },
+        "build": {
+          "c": -2,
+          "o": -1,
+          "q": -1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 337
+    },
+    {
+      "player": 2,
+      "move": 338,
+      "changes": {
+        "spend": {
+          "k": -1,
+          "c": 1
+        },
+        "build": {
+          "c": -5,
+          "o": -3
+        },
+        "tech-terra": {
+          "k": 4
+        }
+      }
+    },
+    {
+      "player": 3,
+      "move": 339,
+      "changes": {
+        "booster6": {
+          "vp": 8
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 340,
+      "changes": {
+        "spend": {
+          "pw": -4,
+          "k": 1
+        },
+        "up": {
+          "k": -4
+        },
+        "int": {
+          "q": 2
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 341,
+      "changes": {
+        "up": {
+          "k": -4
+        },
+        "terra": {
+          "pw": 3
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 342,
+      "changes": {
+        "spend": {
+          "pw": -1,
+          "c": 1,
+          "q": -3,
+          "o": 3
+        },
+        "build": {
+          "c": -5,
+          "o": -3
+        },
+        "tech-nav": {
+          "vp": 7
+        },
+        "nav": {
+          "q": 1,
+          "pw": 3
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 343
+    },
+    {
+      "player": 2,
+      "move": 344,
+      "changes": {
+        "up": {
+          "k": -4
+        },
+        "terra": {
+          "o": 2
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 345,
+      "changes": {
+        "adv-gaia": {
+          "vp": 9
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 346,
+      "changes": {
+        "income": {
+          "q": 1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 347,
+      "changes": {
+        "booster8": {
+          "vp": 9
+        }
+      }
+    },
+    {
+      "phase": "endGame"
+    },
+    {
+      "player": 0,
+      "changes": {
+        "final1": {
+          "vp": 18
+        },
+        "final2": {
+          "vp": 6
+        },
+        "nav": {
+          "vp": 12
+        },
+        "int": {
+          "vp": 8
+        },
+        "gaia": {
+          "vp": 8
+        },
+        "spend": {
+          "vp": 1
+        }
+      }
+    },
+    {
+      "player": 1,
+      "changes": {
+        "final1": {
+          "vp": 3
+        },
+        "final2": {
+          "vp": 12
+        },
+        "nav": {
+          "vp": 4
+        },
+        "int": {
+          "vp": 8
+        },
+        "gaia": {
+          "vp": 8
+        },
+        "sci": {
+          "vp": 12
+        },
+        "spend": {
+          "vp": 2
+        }
+      }
+    },
+    {
+      "player": 2,
+      "changes": {
+        "final1": {
+          "vp": 12
+        },
+        "final2": {
+          "vp": 18
+        },
+        "terra": {
+          "vp": 8
+        },
+        "nav": {
+          "vp": 8
+        },
+        "gaia": {
+          "vp": 12
+        },
+        "eco": {
+          "vp": 12
+        },
+        "spend": {
+          "vp": 3
+        }
+      }
+    },
+    {
+      "player": 3,
+      "changes": {
+        "final1": {
+          "vp": 3
+        },
+        "terra": {
+          "vp": 12
+        },
+        "nav": {
+          "vp": 8
+        },
+        "int": {
+          "vp": 12
+        },
+        "spend": {
+          "vp": 2
+        }
+      }
+    }
+  ],
+  "turnMoves": [],
+  "newTurn": true,
+  "replay": false,
+  "version": "4.8.12",
+  "availableCommand": null,
+  "oldPhase": "roundMove",
+  "processedPlayer": 2,
+  "passedPlayers": [0, 3, 1, 2],
+  "lastLeechSource": {
+    "player": 1,
+    "coordinates": "2B3"
+  },
+  "map": [
+    {
+      "q": -2,
+      "r": 2,
+      "s": 0,
+      "data": {
+        "planet": "e",
+        "sector": "10",
+        "federations": [3]
+      }
+    },
+    {
+      "q": -2,
+      "r": 1,
+      "s": 1,
+      "data": {
+        "planet": "g",
+        "sector": "10",
+        "building": "m",
+        "player": 2,
+        "federations": [2]
+      }
+    },
+    {
+      "q": -2,
+      "r": 0,
+      "s": 2,
+      "data": {
+        "planet": "g",
+        "sector": "10",
+        "building": "ts",
+        "player": 2,
+        "federations": [2]
+      }
+    },
+    {
+      "q": -1,
+      "r": -1,
+      "s": 2,
+      "data": {
+        "planet": "e",
+        "sector": "10"
+      }
+    },
+    {
+      "q": 0,
+      "r": -2,
+      "s": 2,
+      "data": {
+        "planet": "e",
+        "sector": "10"
+      }
+    },
+    {
+      "q": 1,
+      "r": -2,
+      "s": 1,
+      "data": {
+        "planet": "e",
+        "sector": "10",
+        "federations": [0]
+      }
+    },
+    {
+      "q": 2,
+      "r": -2,
+      "s": 0,
+      "data": {
+        "planet": "e",
+        "sector": "10"
+      }
+    },
+    {
+      "q": 2,
+      "r": -1,
+      "s": -1,
+      "data": {
+        "planet": "o",
+        "sector": "10",
+        "building": "ac1",
+        "player": 2,
+        "federations": [2]
+      }
+    },
+    {
+      "q": 2,
+      "r": 0,
+      "s": -2,
+      "data": {
+        "planet": "r",
+        "sector": "10",
+        "building": "lab",
+        "player": 2,
+        "federations": [2]
+      }
+    },
+    {
+      "q": 1,
+      "r": 1,
+      "s": -2,
+      "data": {
+        "planet": "e",
+        "sector": "10"
+      }
+    },
+    {
+      "q": 0,
+      "r": 2,
+      "s": -2,
+      "data": {
+        "planet": "e",
+        "sector": "10"
+      }
+    },
+    {
+      "q": -1,
+      "r": 2,
+      "s": -1,
+      "data": {
+        "planet": "e",
+        "sector": "10"
+      }
+    },
+    {
+      "q": -1,
+      "r": 1,
+      "s": 0,
+      "data": {
+        "planet": "e",
+        "sector": "10"
+      }
+    },
+    {
+      "q": -1,
+      "r": 0,
+      "s": 1,
+      "data": {
+        "planet": "e",
+        "sector": "10"
+      }
+    },
+    {
+      "q": 0,
+      "r": -1,
+      "s": 1,
+      "data": {
+        "planet": "g",
+        "sector": "10",
+        "building": "ac1",
+        "player": 0,
+        "federations": [0]
+      }
+    },
+    {
+      "q": 1,
+      "r": -1,
+      "s": 0,
+      "data": {
+        "planet": "e",
+        "sector": "10"
+      }
+    },
+    {
+      "q": 1,
+      "r": 0,
+      "s": -1,
+      "data": {
+        "planet": "e",
+        "sector": "10"
+      }
+    },
+    {
+      "q": 0,
+      "r": 1,
+      "s": -1,
+      "data": {
+        "planet": "d",
+        "sector": "10",
+        "building": "lab",
+        "player": 0,
+        "federations": [0]
+      }
+    },
+    {
+      "q": 0,
+      "r": 0,
+      "s": 0,
+      "data": {
+        "planet": "e",
+        "sector": "10",
+        "federations": [0]
+      }
+    },
+    {
+      "q": 7,
+      "r": -2,
+      "s": -5,
+      "data": {
+        "planet": "e",
+        "sector": "9"
+      }
+    },
+    {
+      "q": 6,
+      "r": -1,
+      "s": -5,
+      "data": {
+        "planet": "g",
+        "sector": "9",
+        "building": "m",
+        "player": 2,
+        "federations": [2]
+      }
+    },
+    {
+      "q": 5,
+      "r": 0,
+      "s": -5,
+      "data": {
+        "planet": "i",
+        "sector": "9"
+      }
+    },
+    {
+      "q": 4,
+      "r": 0,
+      "s": -4,
+      "data": {
+        "planet": "e",
+        "sector": "9",
+        "federations": [2]
+      }
+    },
+    {
+      "q": 3,
+      "r": 0,
+      "s": -3,
+      "data": {
+        "planet": "e",
+        "sector": "9"
+      }
+    },
+    {
+      "q": 3,
+      "r": -1,
+      "s": -2,
+      "data": {
+        "planet": "e",
+        "sector": "9"
+      }
+    },
+    {
+      "q": 3,
+      "r": -2,
+      "s": -1,
+      "data": {
+        "planet": "e",
+        "sector": "9"
+      }
+    },
+    {
+      "q": 4,
+      "r": -3,
+      "s": -1,
+      "data": {
+        "planet": "e",
+        "sector": "9",
+        "federations": [2]
+      }
+    },
+    {
+      "q": 5,
+      "r": -4,
+      "s": -1,
+      "data": {
+        "planet": "s",
+        "sector": "9",
+        "building": "m",
+        "player": 3,
+        "federations": [3]
+      }
+    },
+    {
+      "q": 6,
+      "r": -4,
+      "s": -2,
+      "data": {
+        "planet": "e",
+        "sector": "9"
+      }
+    },
+    {
+      "q": 7,
+      "r": -4,
+      "s": -3,
+      "data": {
+        "planet": "e",
+        "sector": "9"
+      }
+    },
+    {
+      "q": 7,
+      "r": -3,
+      "s": -4,
+      "data": {
+        "planet": "v",
+        "sector": "9"
+      }
+    },
+    {
+      "q": 6,
+      "r": -2,
+      "s": -4,
+      "data": {
+        "planet": "e",
+        "sector": "9"
+      }
+    },
+    {
+      "q": 5,
+      "r": -1,
+      "s": -4,
+      "data": {
+        "planet": "e",
+        "sector": "9",
+        "federations": [2]
+      }
+    },
+    {
+      "q": 4,
+      "r": -1,
+      "s": -3,
+      "data": {
+        "planet": "g",
+        "sector": "9",
+        "building": "lab",
+        "player": 2,
+        "federations": [2]
+      }
+    },
+    {
+      "q": 4,
+      "r": -2,
+      "s": -2,
+      "data": {
+        "planet": "e",
+        "sector": "9",
+        "federations": [2]
+      }
+    },
+    {
+      "q": 5,
+      "r": -3,
+      "s": -2,
+      "data": {
+        "planet": "t",
+        "sector": "9",
+        "building": "m",
+        "player": 3,
+        "federations": [3]
+      }
+    },
+    {
+      "q": 6,
+      "r": -3,
+      "s": -3,
+      "data": {
+        "planet": "e",
+        "sector": "9"
+      }
+    },
+    {
+      "q": 5,
+      "r": -2,
+      "s": -3,
+      "data": {
+        "planet": "e",
+        "sector": "9"
+      }
+    },
+    {
+      "q": 4,
+      "r": 1,
+      "s": -5,
+      "data": {
+        "planet": "g",
+        "sector": "3",
+        "building": "m",
+        "player": 2,
+        "federations": [2]
+      }
+    },
+    {
+      "q": 4,
+      "r": 2,
+      "s": -6,
+      "data": {
+        "planet": "e",
+        "sector": "3"
+      }
+    },
+    {
+      "q": 4,
+      "r": 3,
+      "s": -7,
+      "data": {
+        "planet": "e",
+        "sector": "3"
+      }
+    },
+    {
+      "q": 3,
+      "r": 4,
+      "s": -7,
+      "data": {
+        "planet": "t",
+        "sector": "3",
+        "building": "m",
+        "player": 3
+      }
+    },
+    {
+      "q": 2,
+      "r": 5,
+      "s": -7,
+      "data": {
+        "planet": "e",
+        "sector": "3"
+      }
+    },
+    {
+      "q": 1,
+      "r": 5,
+      "s": -6,
+      "data": {
+        "planet": "e",
+        "sector": "3"
+      }
+    },
+    {
+      "q": 0,
+      "r": 5,
+      "s": -5,
+      "data": {
+        "planet": "d",
+        "sector": "3",
+        "building": "ac2",
+        "player": 0,
+        "federations": [0]
+      }
+    },
+    {
+      "q": 0,
+      "r": 4,
+      "s": -4,
+      "data": {
+        "planet": "r",
+        "sector": "3",
+        "building": "m",
+        "player": 1,
+        "federations": [1]
+      }
+    },
+    {
+      "q": 0,
+      "r": 3,
+      "s": -3,
+      "data": {
+        "planet": "e",
+        "sector": "3"
+      }
+    },
+    {
+      "q": 1,
+      "r": 2,
+      "s": -3,
+      "data": {
+        "planet": "e",
+        "sector": "3"
+      }
+    },
+    {
+      "q": 2,
+      "r": 1,
+      "s": -3,
+      "data": {
+        "planet": "e",
+        "sector": "3",
+        "federations": [2]
+      }
+    },
+    {
+      "q": 3,
+      "r": 1,
+      "s": -4,
+      "data": {
+        "planet": "e",
+        "sector": "3"
+      }
+    },
+    {
+      "q": 3,
+      "r": 2,
+      "s": -5,
+      "data": {
+        "planet": "e",
+        "sector": "3"
+      }
+    },
+    {
+      "q": 3,
+      "r": 3,
+      "s": -6,
+      "data": {
+        "planet": "e",
+        "sector": "3"
+      }
+    },
+    {
+      "q": 2,
+      "r": 4,
+      "s": -6,
+      "data": {
+        "planet": "i",
+        "sector": "3"
+      }
+    },
+    {
+      "q": 1,
+      "r": 4,
+      "s": -5,
+      "data": {
+        "planet": "e",
+        "sector": "3"
+      }
+    },
+    {
+      "q": 1,
+      "r": 3,
+      "s": -4,
+      "data": {
+        "planet": "e",
+        "sector": "3"
+      }
+    },
+    {
+      "q": 2,
+      "r": 2,
+      "s": -4,
+      "data": {
+        "planet": "g",
+        "sector": "3",
+        "building": "m",
+        "player": 2,
+        "federations": [2]
+      }
+    },
+    {
+      "q": 2,
+      "r": 3,
+      "s": -5,
+      "data": {
+        "planet": "e",
+        "sector": "3"
+      }
+    },
+    {
+      "q": -1,
+      "r": 5,
+      "s": -4,
+      "data": {
+        "planet": "e",
+        "sector": "1",
+        "federations": [1, 0]
+      }
+    },
+    {
+      "q": -2,
+      "r": 6,
+      "s": -4,
+      "data": {
+        "planet": "e",
+        "sector": "1"
+      }
+    },
+    {
+      "q": -3,
+      "r": 7,
+      "s": -4,
+      "data": {
+        "planet": "e",
+        "sector": "1"
+      }
+    },
+    {
+      "q": -4,
+      "r": 7,
+      "s": -3,
+      "data": {
+        "planet": "g",
+        "sector": "1",
+        "building": "m",
+        "player": 1,
+        "federations": [1]
+      }
+    },
+    {
+      "q": -5,
+      "r": 7,
+      "s": -2,
+      "data": {
+        "planet": "e",
+        "sector": "1"
+      }
+    },
+    {
+      "q": -5,
+      "r": 6,
+      "s": -1,
+      "data": {
+        "planet": "v",
+        "sector": "1",
+        "building": "ts",
+        "player": 0,
+        "federations": [0]
+      }
+    },
+    {
+      "q": -5,
+      "r": 5,
+      "s": 0,
+      "data": {
+        "planet": "o",
+        "sector": "1",
+        "building": "lab",
+        "player": 2,
+        "federations": [2]
+      }
+    },
+    {
+      "q": -4,
+      "r": 4,
+      "s": 0,
+      "data": {
+        "planet": "e",
+        "sector": "1"
+      }
+    },
+    {
+      "q": -3,
+      "r": 3,
+      "s": 0,
+      "data": {
+        "planet": "e",
+        "sector": "1"
+      }
+    },
+    {
+      "q": -2,
+      "r": 3,
+      "s": -1,
+      "data": {
+        "planet": "d",
+        "sector": "1",
+        "building": "m",
+        "player": 3,
+        "federations": [3]
+      }
+    },
+    {
+      "q": -1,
+      "r": 3,
+      "s": -2,
+      "data": {
+        "planet": "e",
+        "sector": "1"
+      }
+    },
+    {
+      "q": -1,
+      "r": 4,
+      "s": -3,
+      "data": {
+        "planet": "e",
+        "sector": "1"
+      }
+    },
+    {
+      "q": -2,
+      "r": 5,
+      "s": -3,
+      "data": {
+        "planet": "e",
+        "sector": "1",
+        "federations": [0]
+      }
+    },
+    {
+      "q": -3,
+      "r": 6,
+      "s": -3,
+      "data": {
+        "planet": "r",
+        "sector": "1",
+        "building": "ac2",
+        "player": 1,
+        "federations": [1]
+      }
+    },
+    {
+      "q": -4,
+      "r": 6,
+      "s": -2,
+      "data": {
+        "planet": "e",
+        "sector": "1",
+        "federations": [0]
+      }
+    },
+    {
+      "q": -4,
+      "r": 5,
+      "s": -1,
+      "data": {
+        "planet": "e",
+        "sector": "1"
+      }
+    },
+    {
+      "q": -3,
+      "r": 4,
+      "s": -1,
+      "data": {
+        "planet": "e",
+        "sector": "1"
+      }
+    },
+    {
+      "q": -2,
+      "r": 4,
+      "s": -2,
+      "data": {
+        "planet": "s",
+        "sector": "1",
+        "building": "ac2",
+        "player": 3,
+        "federations": [3]
+      }
+    },
+    {
+      "q": -3,
+      "r": 5,
+      "s": -2,
+      "data": {
+        "planet": "e",
+        "sector": "1",
+        "federations": [0]
+      }
+    },
+    {
+      "q": -7,
+      "r": 4,
+      "s": 3,
+      "data": {
+        "planet": "t",
+        "sector": "2"
+      }
+    },
+    {
+      "q": -7,
+      "r": 3,
+      "s": 4,
+      "data": {
+        "planet": "e",
+        "sector": "2"
+      }
+    },
+    {
+      "q": -7,
+      "r": 2,
+      "s": 5,
+      "data": {
+        "planet": "e",
+        "sector": "2"
+      }
+    },
+    {
+      "q": -6,
+      "r": 1,
+      "s": 5,
+      "data": {
+        "planet": "d",
+        "sector": "2",
+        "building": "m",
+        "player": 0
+      }
+    },
+    {
+      "q": -5,
+      "r": 0,
+      "s": 5,
+      "data": {
+        "planet": "e",
+        "sector": "2"
+      }
+    },
+    {
+      "q": -4,
+      "r": 0,
+      "s": 4,
+      "data": {
+        "planet": "g",
+        "sector": "2",
+        "building": "m",
+        "player": 1,
+        "federations": [1]
+      }
+    },
+    {
+      "q": -3,
+      "r": 0,
+      "s": 3,
+      "data": {
+        "planet": "e",
+        "sector": "2",
+        "federations": [1]
+      }
+    },
+    {
+      "q": -3,
+      "r": 1,
+      "s": 2,
+      "data": {
+        "planet": "o",
+        "sector": "2",
+        "building": "PI",
+        "player": 2,
+        "federations": [2]
+      }
+    },
+    {
+      "q": -3,
+      "r": 2,
+      "s": 1,
+      "data": {
+        "planet": "e",
+        "sector": "2",
+        "federations": [3]
+      }
+    },
+    {
+      "q": -4,
+      "r": 3,
+      "s": 1,
+      "data": {
+        "planet": "e",
+        "sector": "2"
+      }
+    },
+    {
+      "q": -5,
+      "r": 4,
+      "s": 1,
+      "data": {
+        "planet": "e",
+        "sector": "2"
+      }
+    },
+    {
+      "q": -6,
+      "r": 4,
+      "s": 2,
+      "data": {
+        "planet": "v",
+        "sector": "2",
+        "building": "ac2",
+        "player": 2,
+        "federations": [2]
+      }
+    },
+    {
+      "q": -6,
+      "r": 3,
+      "s": 3,
+      "data": {
+        "planet": "e",
+        "sector": "2"
+      }
+    },
+    {
+      "q": -6,
+      "r": 2,
+      "s": 4,
+      "data": {
+        "planet": "i",
+        "sector": "2",
+        "building": "lab",
+        "player": 1,
+        "federations": [1]
+      }
+    },
+    {
+      "q": -5,
+      "r": 1,
+      "s": 4,
+      "data": {
+        "planet": "e",
+        "sector": "2",
+        "federations": [1]
+      }
+    },
+    {
+      "q": -4,
+      "r": 1,
+      "s": 3,
+      "data": {
+        "planet": "e",
+        "sector": "2"
+      }
+    },
+    {
+      "q": -4,
+      "r": 2,
+      "s": 2,
+      "data": {
+        "planet": "s",
+        "sector": "2",
+        "building": "lab",
+        "player": 3,
+        "federations": [3]
+      }
+    },
+    {
+      "q": -5,
+      "r": 3,
+      "s": 2,
+      "data": {
+        "planet": "e",
+        "sector": "2"
+      }
+    },
+    {
+      "q": -5,
+      "r": 2,
+      "s": 3,
+      "data": {
+        "planet": "e",
+        "sector": "2"
+      }
+    },
+    {
+      "q": 0,
+      "r": -5,
+      "s": 5,
+      "data": {
+        "planet": "t",
+        "sector": "4",
+        "building": "PI",
+        "player": 3,
+        "federations": [3]
+      }
+    },
+    {
+      "q": 0,
+      "r": -4,
+      "s": 4,
+      "data": {
+        "planet": "e",
+        "sector": "4",
+        "federations": [2, 3]
+      }
+    },
+    {
+      "q": 0,
+      "r": -3,
+      "s": 3,
+      "data": {
+        "planet": "e",
+        "sector": "4"
+      }
+    },
+    {
+      "q": -1,
+      "r": -2,
+      "s": 3,
+      "data": {
+        "planet": "e",
+        "sector": "4"
+      }
+    },
+    {
+      "q": -2,
+      "r": -1,
+      "s": 3,
+      "data": {
+        "planet": "r",
+        "sector": "4",
+        "building": "ac1",
+        "player": 1,
+        "federations": [1]
+      }
+    },
+    {
+      "q": -3,
+      "r": -1,
+      "s": 4,
+      "data": {
+        "planet": "e",
+        "sector": "4"
+      }
+    },
+    {
+      "q": -4,
+      "r": -1,
+      "s": 5,
+      "data": {
+        "planet": "e",
+        "sector": "4"
+      }
+    },
+    {
+      "q": -4,
+      "r": -2,
+      "s": 6,
+      "data": {
+        "planet": "e",
+        "sector": "4"
+      }
+    },
+    {
+      "q": -4,
+      "r": -3,
+      "s": 7,
+      "data": {
+        "planet": "e",
+        "sector": "4"
+      }
+    },
+    {
+      "q": -3,
+      "r": -4,
+      "s": 7,
+      "data": {
+        "planet": "i",
+        "sector": "4"
+      }
+    },
+    {
+      "q": -2,
+      "r": -5,
+      "s": 7,
+      "data": {
+        "planet": "e",
+        "sector": "4"
+      }
+    },
+    {
+      "q": -1,
+      "r": -5,
+      "s": 6,
+      "data": {
+        "planet": "e",
+        "sector": "4"
+      }
+    },
+    {
+      "q": -1,
+      "r": -4,
+      "s": 5,
+      "data": {
+        "planet": "o",
+        "sector": "4",
+        "building": "m",
+        "player": 2,
+        "federations": [2]
+      }
+    },
+    {
+      "q": -1,
+      "r": -3,
+      "s": 4,
+      "data": {
+        "planet": "e",
+        "sector": "4",
+        "federations": [3]
+      }
+    },
+    {
+      "q": -2,
+      "r": -2,
+      "s": 4,
+      "data": {
+        "planet": "s",
+        "sector": "4",
+        "building": "m",
+        "player": 3,
+        "federations": [3]
+      }
+    },
+    {
+      "q": -3,
+      "r": -2,
+      "s": 5,
+      "data": {
+        "planet": "e",
+        "sector": "4"
+      }
+    },
+    {
+      "q": -3,
+      "r": -3,
+      "s": 6,
+      "data": {
+        "planet": "v",
+        "sector": "4",
+        "building": "m",
+        "player": 0
+      }
+    },
+    {
+      "q": -2,
+      "r": -4,
+      "s": 6,
+      "data": {
+        "planet": "e",
+        "sector": "4"
+      }
+    },
+    {
+      "q": -2,
+      "r": -3,
+      "s": 5,
+      "data": {
+        "planet": "e",
+        "sector": "4"
+      }
+    },
+    {
+      "q": 3,
+      "r": -3,
+      "s": 0,
+      "data": {
+        "planet": "e",
+        "sector": "7A",
+        "federations": [3]
+      }
+    },
+    {
+      "q": 2,
+      "r": -3,
+      "s": 1,
+      "data": {
+        "planet": "s",
+        "sector": "7A",
+        "building": "ac1",
+        "player": 3,
+        "federations": [3]
+      }
+    },
+    {
+      "q": 1,
+      "r": -3,
+      "s": 2,
+      "data": {
+        "planet": "l",
+        "sector": "7A",
+        "building": "m",
+        "player": 0,
+        "federations": [0]
+      }
+    },
+    {
+      "q": 1,
+      "r": -4,
+      "s": 3,
+      "data": {
+        "planet": "e",
+        "sector": "7A",
+        "federations": [2, 3]
+      }
+    },
+    {
+      "q": 1,
+      "r": -5,
+      "s": 4,
+      "data": {
+        "planet": "e",
+        "sector": "7A"
+      }
+    },
+    {
+      "q": 2,
+      "r": -6,
+      "s": 4,
+      "data": {
+        "planet": "e",
+        "sector": "7A",
+        "federations": [3]
+      }
+    },
+    {
+      "q": 3,
+      "r": -7,
+      "s": 4,
+      "data": {
+        "planet": "t",
+        "sector": "7A",
+        "building": "m",
+        "player": 3,
+        "federations": [3]
+      }
+    },
+    {
+      "q": 4,
+      "r": -7,
+      "s": 3,
+      "data": {
+        "planet": "e",
+        "sector": "7A"
+      }
+    },
+    {
+      "q": 5,
+      "r": -7,
+      "s": 2,
+      "data": {
+        "planet": "e",
+        "sector": "7A"
+      }
+    },
+    {
+      "q": 5,
+      "r": -6,
+      "s": 1,
+      "data": {
+        "planet": "e",
+        "sector": "7A"
+      }
+    },
+    {
+      "q": 5,
+      "r": -5,
+      "s": 0,
+      "data": {
+        "planet": "g",
+        "sector": "7A",
+        "building": "m",
+        "player": 2,
+        "federations": [2]
+      }
+    },
+    {
+      "q": 4,
+      "r": -4,
+      "s": 0,
+      "data": {
+        "planet": "e",
+        "sector": "7A",
+        "federations": [3, 2]
+      }
+    },
+    {
+      "q": 3,
+      "r": -4,
+      "s": 1,
+      "data": {
+        "planet": "o",
+        "sector": "7A",
+        "building": "m",
+        "player": 2,
+        "federations": [2]
+      }
+    },
+    {
+      "q": 2,
+      "r": -4,
+      "s": 2,
+      "data": {
+        "planet": "e",
+        "sector": "7A",
+        "federations": [2]
+      }
+    },
+    {
+      "q": 2,
+      "r": -5,
+      "s": 3,
+      "data": {
+        "planet": "g",
+        "sector": "7A",
+        "building": "ts",
+        "player": 3,
+        "federations": [3]
+      }
+    },
+    {
+      "q": 3,
+      "r": -6,
+      "s": 3,
+      "data": {
+        "planet": "e",
+        "sector": "7A"
+      }
+    },
+    {
+      "q": 4,
+      "r": -6,
+      "s": 2,
+      "data": {
+        "planet": "g",
+        "sector": "7A",
+        "building": "m",
+        "player": 3,
+        "federations": [3]
+      }
+    },
+    {
+      "q": 4,
+      "r": -5,
+      "s": 1,
+      "data": {
+        "planet": "e",
+        "sector": "7A",
+        "federations": [3]
+      }
+    },
+    {
+      "q": 3,
+      "r": -5,
+      "s": 2,
+      "data": {
+        "planet": "e",
+        "sector": "7A"
+      }
+    },
+    {
+      "q": -1,
+      "r": 10,
+      "s": -9,
+      "data": {
+        "planet": "e",
+        "sector": "6A"
+      }
+    },
+    {
+      "q": -2,
+      "r": 10,
+      "s": -8,
+      "data": {
+        "planet": "g",
+        "sector": "6A",
+        "building": "m",
+        "player": 1,
+        "federations": [1]
+      }
+    },
+    {
+      "q": -3,
+      "r": 10,
+      "s": -7,
+      "data": {
+        "planet": "e",
+        "sector": "6A"
+      }
+    },
+    {
+      "q": -3,
+      "r": 9,
+      "s": -6,
+      "data": {
+        "planet": "e",
+        "sector": "6A"
+      }
+    },
+    {
+      "q": -3,
+      "r": 8,
+      "s": -5,
+      "data": {
+        "planet": "d",
+        "sector": "6A",
+        "building": "PI",
+        "player": 0,
+        "federations": [0]
+      }
+    },
+    {
+      "q": -2,
+      "r": 7,
+      "s": -5,
+      "data": {
+        "planet": "g",
+        "sector": "6A",
+        "building": "lab",
+        "player": 1,
+        "federations": [1]
+      }
+    },
+    {
+      "q": -1,
+      "r": 6,
+      "s": -5,
+      "data": {
+        "planet": "e",
+        "sector": "6A",
+        "federations": [1]
+      }
+    },
+    {
+      "q": 0,
+      "r": 6,
+      "s": -6,
+      "data": {
+        "planet": "e",
+        "sector": "6A"
+      }
+    },
+    {
+      "q": 1,
+      "r": 6,
+      "s": -7,
+      "data": {
+        "planet": "e",
+        "sector": "6A"
+      }
+    },
+    {
+      "q": 1,
+      "r": 7,
+      "s": -8,
+      "data": {
+        "planet": "e",
+        "sector": "6A"
+      }
+    },
+    {
+      "q": 1,
+      "r": 8,
+      "s": -9,
+      "data": {
+        "planet": "e",
+        "sector": "6A"
+      }
+    },
+    {
+      "q": 0,
+      "r": 9,
+      "s": -9,
+      "data": {
+        "planet": "e",
+        "sector": "6A"
+      }
+    },
+    {
+      "q": -1,
+      "r": 9,
+      "s": -8,
+      "data": {
+        "planet": "e",
+        "sector": "6A"
+      }
+    },
+    {
+      "q": -2,
+      "r": 9,
+      "s": -7,
+      "data": {
+        "planet": "r",
+        "sector": "6A",
+        "building": "PI",
+        "player": 1,
+        "federations": [1]
+      }
+    },
+    {
+      "q": -2,
+      "r": 8,
+      "s": -6,
+      "data": {
+        "planet": "e",
+        "sector": "6A",
+        "federations": [1]
+      }
+    },
+    {
+      "q": -1,
+      "r": 7,
+      "s": -6,
+      "data": {
+        "planet": "g",
+        "sector": "6A",
+        "building": "m",
+        "player": 1,
+        "federations": [1]
+      }
+    },
+    {
+      "q": 0,
+      "r": 7,
+      "s": -7,
+      "data": {
+        "planet": "e",
+        "sector": "6A"
+      }
+    },
+    {
+      "q": 0,
+      "r": 8,
+      "s": -8,
+      "data": {
+        "planet": "s",
+        "sector": "6A",
+        "building": "m",
+        "player": 3
+      }
+    },
+    {
+      "q": -1,
+      "r": 8,
+      "s": -7,
+      "data": {
+        "planet": "e",
+        "sector": "6A"
+      }
+    },
+    {
+      "q": -4,
+      "r": 8,
+      "s": -4,
+      "data": {
+        "planet": "i",
+        "sector": "5A",
+        "building": "m",
+        "player": 1,
+        "federations": [1]
+      }
+    },
+    {
+      "q": -4,
+      "r": 9,
+      "s": -5,
+      "data": {
+        "planet": "e",
+        "sector": "5A",
+        "federations": [0, 1]
+      }
+    },
+    {
+      "q": -4,
+      "r": 10,
+      "s": -6,
+      "data": {
+        "planet": "g",
+        "sector": "5A",
+        "building": "m",
+        "player": 1,
+        "federations": [1]
+      }
+    },
+    {
+      "q": -5,
+      "r": 11,
+      "s": -6,
+      "data": {
+        "planet": "o",
+        "sector": "5A"
+      }
+    },
+    {
+      "q": -6,
+      "r": 12,
+      "s": -6,
+      "data": {
+        "planet": "e",
+        "sector": "5A"
+      }
+    },
+    {
+      "q": -7,
+      "r": 12,
+      "s": -5,
+      "data": {
+        "planet": "e",
+        "sector": "5A"
+      }
+    },
+    {
+      "q": -8,
+      "r": 12,
+      "s": -4,
+      "data": {
+        "planet": "d",
+        "sector": "5A",
+        "building": "m",
+        "player": 0,
+        "federations": [0]
+      }
+    },
+    {
+      "q": -8,
+      "r": 11,
+      "s": -3,
+      "data": {
+        "planet": "v",
+        "sector": "5A"
+      }
+    },
+    {
+      "q": -8,
+      "r": 10,
+      "s": -2,
+      "data": {
+        "planet": "e",
+        "sector": "5A"
+      }
+    },
+    {
+      "q": -7,
+      "r": 9,
+      "s": -2,
+      "data": {
+        "planet": "e",
+        "sector": "5A"
+      }
+    },
+    {
+      "q": -6,
+      "r": 8,
+      "s": -2,
+      "data": {
+        "planet": "e",
+        "sector": "5A"
+      }
+    },
+    {
+      "q": -5,
+      "r": 8,
+      "s": -3,
+      "data": {
+        "planet": "e",
+        "sector": "5A"
+      }
+    },
+    {
+      "q": -5,
+      "r": 9,
+      "s": -4,
+      "data": {
+        "planet": "e",
+        "sector": "5A",
+        "federations": [0]
+      }
+    },
+    {
+      "q": -5,
+      "r": 10,
+      "s": -5,
+      "data": {
+        "planet": "e",
+        "sector": "5A"
+      }
+    },
+    {
+      "q": -6,
+      "r": 11,
+      "s": -5,
+      "data": {
+        "planet": "e",
+        "sector": "5A"
+      }
+    },
+    {
+      "q": -7,
+      "r": 11,
+      "s": -4,
+      "data": {
+        "planet": "e",
+        "sector": "5A",
+        "federations": [0]
+      }
+    },
+    {
+      "q": -7,
+      "r": 10,
+      "s": -3,
+      "data": {
+        "planet": "e",
+        "sector": "5A"
+      }
+    },
+    {
+      "q": -6,
+      "r": 9,
+      "s": -3,
+      "data": {
+        "planet": "g",
+        "sector": "5A",
+        "building": "lab",
+        "player": 0,
+        "federations": [0]
+      }
+    },
+    {
+      "q": -6,
+      "r": 10,
+      "s": -4,
+      "data": {
+        "planet": "e",
+        "sector": "5A",
+        "federations": [0]
+      }
+    },
+    {
+      "q": -8,
+      "r": 5,
+      "s": 3,
+      "data": {
+        "planet": "r",
+        "sector": "8",
+        "building": "m",
+        "player": 1
+      }
+    },
+    {
+      "q": -7,
+      "r": 5,
+      "s": 2,
+      "data": {
+        "planet": "e",
+        "sector": "8"
+      }
+    },
+    {
+      "q": -6,
+      "r": 5,
+      "s": 1,
+      "data": {
+        "planet": "g",
+        "sector": "8",
+        "building": "m",
+        "player": 2,
+        "federations": [2]
+      }
+    },
+    {
+      "q": -6,
+      "r": 6,
+      "s": 0,
+      "data": {
+        "planet": "e",
+        "sector": "8"
+      }
+    },
+    {
+      "q": -6,
+      "r": 7,
+      "s": -1,
+      "data": {
+        "planet": "e",
+        "sector": "8",
+        "federations": [0]
+      }
+    },
+    {
+      "q": -7,
+      "r": 8,
+      "s": -1,
+      "data": {
+        "planet": "e",
+        "sector": "8",
+        "federations": [0]
+      }
+    },
+    {
+      "q": -8,
+      "r": 9,
+      "s": -1,
+      "data": {
+        "planet": "e",
+        "sector": "8",
+        "federations": [0]
+      }
+    },
+    {
+      "q": -9,
+      "r": 9,
+      "s": 0,
+      "data": {
+        "planet": "g",
+        "sector": "8",
+        "building": "m",
+        "player": 0,
+        "federations": [0]
+      }
+    },
+    {
+      "q": -10,
+      "r": 9,
+      "s": 1,
+      "data": {
+        "planet": "e",
+        "sector": "8"
+      }
+    },
+    {
+      "q": -10,
+      "r": 8,
+      "s": 2,
+      "data": {
+        "planet": "e",
+        "sector": "8"
+      }
+    },
+    {
+      "q": -10,
+      "r": 7,
+      "s": 3,
+      "data": {
+        "planet": "e",
+        "sector": "8"
+      }
+    },
+    {
+      "q": -9,
+      "r": 6,
+      "s": 3,
+      "data": {
+        "planet": "e",
+        "sector": "8"
+      }
+    },
+    {
+      "q": -8,
+      "r": 6,
+      "s": 2,
+      "data": {
+        "planet": "i",
+        "sector": "8"
+      }
+    },
+    {
+      "q": -7,
+      "r": 6,
+      "s": 1,
+      "data": {
+        "planet": "e",
+        "sector": "8"
+      }
+    },
+    {
+      "q": -7,
+      "r": 7,
+      "s": 0,
+      "data": {
+        "planet": "t",
+        "sector": "8"
+      }
+    },
+    {
+      "q": -8,
+      "r": 8,
+      "s": 0,
+      "data": {
+        "planet": "e",
+        "sector": "8"
+      }
+    },
+    {
+      "q": -9,
+      "r": 8,
+      "s": 1,
+      "data": {
+        "planet": "v",
+        "sector": "8"
+      }
+    },
+    {
+      "q": -9,
+      "r": 7,
+      "s": 2,
+      "data": {
+        "planet": "e",
+        "sector": "8"
+      }
+    },
+    {
+      "q": -8,
+      "r": 7,
+      "s": 1,
+      "data": {
+        "planet": "e",
+        "sector": "8"
+      }
+    }
+  ],
+  "expansions": 0,
+  "factionCustomization": {
+    "variant": "beta",
+    "players": 4
+  },
+  "turnOrderAfterSetupAuction": [0, 1, 2, 3],
+  "currentRoundScoringEvents": [
+    {
+      "spec": "PA >> 5vp",
+      "source": "round6"
+    }
+  ],
+  "ended": true,
+  "isLastRound": true
+}

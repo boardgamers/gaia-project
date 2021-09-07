@@ -1,4 +1,5 @@
-import { FactionCustomization } from "../engine";
+import { maxBy } from "lodash";
+import { FactionCustomization, FactionVariant } from "../engine";
 import { Faction } from "../enums";
 import Ambas from "./ambas";
 import BalTaks from "./baltaks";
@@ -46,18 +47,60 @@ export function factionVariantBoard(customization: FactionCustomization, faction
     return null;
   }
 
-  const byPlayerCount = variants.find((v) => v.type === customization.variant && v.players === customization.players);
-  if (byPlayerCount) {
-    return byPlayerCount;
+  const matchVariant = (v: { type: FactionVariant; version: number }) =>
+    v.type === customization.variant && v.version <= customization.version;
+
+  const byPlayerCount = variants.filter((v) => matchVariant(v) && v.players === customization.players);
+  if (byPlayerCount.length) {
+    return maxBy(byPlayerCount, "version");
   }
 
-  const byType = variants.find((v) => v.type === customization.variant && !("players" in v));
-  if (byType) {
-    return byType;
+  const byType = variants.filter((v) => matchVariant(v) && !("players" in v));
+  if (byType.length) {
+    return maxBy(byType, "version");
   }
   return null;
 }
 
+export function latestVariantVersion(variant: FactionVariant) {
+  return Math.max(
+    ...Object.values(factionBoards)
+      .flatMap((x) => x.variants?.filter((x) => x.type === variant))
+      .filter(Boolean)
+      .map((x) => x.version ?? 0),
+    0
+  );
+}
+
 export function factionBoard(faction: Faction, variant?: FactionBoardRaw): FactionBoard {
   return new FactionBoard(factionBoards[faction], variant);
+}
+
+export function serializeFactionVariant(variant?: FactionBoardRaw) {
+  if (!variant) {
+    return variant;
+  }
+
+  const data = JSON.parse(JSON.stringify(variant));
+
+  if (variant?.handlers) {
+    for (const [event, handler] of Object.entries(variant.handlers)) {
+      data.handlers[event] = handler.toString().replace(/\r/g, "") as any;
+    }
+  }
+
+  return data;
+}
+
+export function deserializeFactionVariant(variant?: FactionBoardRaw) {
+  if (!variant?.handlers) {
+    return variant;
+  }
+
+  for (const [event, handler] of Object.entries(variant.handlers)) {
+    if (typeof handler === "string") {
+      variant.handlers[event] = (0, eval)(handler);
+    }
+  }
+  return variant;
 }
