@@ -185,7 +185,7 @@ export async function replay(engine: Engine): Promise<Engine> {
     engine = Engine.fromData(engine);
   }
 
-  engine = engine.replayedTo();
+  engine = engine.replayedTo(Infinity, false);
 
   automove(engine);
 
