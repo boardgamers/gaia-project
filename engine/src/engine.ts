@@ -39,7 +39,6 @@ import {
 } from "./enums";
 import Event, { EventSource } from "./events";
 import { factionVariantBoard, latestVariantVersion } from "./faction-boards";
-import { FactionBoardVariant } from "./faction-boards/types";
 import { remainingFactions } from "./factions";
 import SpaceMap, { MapConfiguration } from "./map";
 import Player from "./player";
@@ -192,8 +191,6 @@ export function createMoveToShow(move: string, p: PlayerData, executeMove: () =>
 export type BoardActions = {
   [key in BoardAction]?: PlayerEnum;
 };
-
-export type VariantBoards = Partial<Record<Faction, FactionBoardVariant>>;
 
 export default class Engine {
   map: SpaceMap;
