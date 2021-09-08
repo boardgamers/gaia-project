@@ -34,7 +34,7 @@ import Engine, {
 import assert from "assert";
 import { max, minBy, range, sortBy } from "lodash";
 import { Store } from "vuex";
-import { ButtonData, ButtonWarning, HighlightHexData } from "../data";
+import { ButtonData, ButtonWarning, HexSelection, HighlightHexData } from "../data";
 import {
   boardActionNames,
   FastConversion,
@@ -102,16 +102,19 @@ function translateResources(rewards: Reward[]): string {
     .join(" and ");
 }
 
-export function hexMap(engine: Engine, coordinates: AvailableHex[]): HighlightHexData {
-  return new Map<GaiaHex, HighlightHex>(
-    coordinates.map((coord) => [
-      engine.map.getS(coord.coordinates),
-      {
-        cost: coord.cost,
-        warnings: coord.warnings,
-      },
-    ])
-  );
+export function hexMap(engine: Engine, coordinates: AvailableHex[], light: boolean): HexSelection {
+  return {
+    light: light,
+    hexes: new Map<GaiaHex, HighlightHex>(
+      coordinates.map((coord) => [
+        engine.map.getS(coord.coordinates),
+        {
+          cost: coord.cost,
+          warnings: coord.warnings,
+        },
+      ])
+    ),
+  };
 }
 
 export function buttonWarning(message?: string): ButtonWarning | null {
@@ -368,7 +371,7 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
           label: buildingName(building, faction),
           command: building,
           shortcuts: [building == Building.Academy1 ? "k" : faction == Faction.BalTaks ? "c" : "q"],
-          hexes: hexMap(engine, buildings),
+          hexes: hexMap(engine, buildings, false),
         }),
       ];
 
@@ -403,7 +406,7 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
           label,
           shortcuts: [shortcut],
           command: `${Command.Build} ${building}`,
-          hexes: hexMap(engine, buildings),
+          hexes: hexMap(engine, buildings, false),
           buttons,
           warning,
           needConfirm: buttons?.length > 0,
@@ -841,9 +844,11 @@ export function federationButton(
     textButton({
       command: fed.hexes,
       label: `Location ${i + 1}`,
-      hexes: new Map(
-        fed.hexes.split(",").map((coord) => [engine.map.getS(coord), { coordinates: coord }])
-      ) as HighlightHexData,
+      hexes: {
+        hexes: new Map(
+          fed.hexes.split(",").map((coord) => [engine.map.getS(coord), { coordinates: coord }])
+        ) as HighlightHexData,
+      },
       hover: true,
       buttons: tilesButtons,
       warning: buttonWarning(fed.warning != null ? moveWarnings[fed.warning].text : null),
