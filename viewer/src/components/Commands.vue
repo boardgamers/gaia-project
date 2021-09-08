@@ -351,9 +351,12 @@ export default class Commands extends Vue {
             label: "Rotate sectors",
             command: Command.RotateSectors,
             shortcuts: ["r"],
-            hexes: new Map<GaiaHex, {}>(
-              this.map.configuration().centers.map((center) => [this.engine.map.grid.get(center), {}] as [GaiaHex, {}])
-            ),
+            hexes: {
+              light: true,
+              selectAnyHex: true,
+              hexes: new Map<GaiaHex, {}>(
+                this.map.configuration().centers.map((center) => [this.engine.map.grid.get(center), {}] as [GaiaHex, {}])),
+            },
             rotation: true,
           });
 
@@ -369,7 +372,7 @@ export default class Commands extends Vue {
             label: "Swap Planetary Institute",
             shortcuts: ["w"],
             command: command.name,
-            hexes: hexMap(this.engine, command.data.buildings),
+            hexes: hexMap(this.engine, command.data.buildings, false),
           });
           break;
         }
@@ -378,7 +381,7 @@ export default class Commands extends Vue {
           ret.push({
             label: "Place Lost Planet",
             command: command.name,
-            hexes: hexMap(this.engine, command.data.spaces),
+            hexes: hexMap(this.engine, command.data.spaces, true),
           });
           break;
         }
@@ -461,7 +464,7 @@ export default class Commands extends Vue {
             ...command.data.map((income) => ({
               label: `Income ${income}`,
               command: `${Command.ChooseIncome} ${income}`,
-            }))
+            })),
           );
           break;
         }
@@ -472,7 +475,7 @@ export default class Commands extends Vue {
               label: `Bid ${pos.bid[0]} for ${pos.faction}`,
               command: `${Command.Bid} ${pos.faction} $times`,
               times: pos.bid,
-            }))
+            })),
           );
           break;
         }
