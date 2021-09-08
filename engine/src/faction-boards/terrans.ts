@@ -19,9 +19,16 @@ const terrans: FactionBoardVariants = {
   variants: [
     {
       type: "beta",
-      version: 1,
+      version: 0,
       board: {
         income: ["3k,4o,15c,q,up-gaia,up-nav", "+o,k"],
+      },
+    },
+    {
+      type: "beta",
+      version: 2,
+      board: {
+        income: ["3k,4o,15c,q,up-gaia", "+o,k"], //vanilla
       },
     },
   ],
