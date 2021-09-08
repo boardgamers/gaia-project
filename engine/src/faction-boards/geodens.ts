@@ -19,6 +19,13 @@ const geodens: FactionBoardVariants = {
   variants: [
     {
       type: "beta",
+      version: 0,
+      board: {
+        income: ["3k,4o,15c,q,up-terra,up-terra", "+o,k"],
+      },
+    },
+    {
+      type: "beta",
       version: 2,
       board: {
         income: ["5k,4o,15c,q,up-terra,up-terra", "+o,k"],
