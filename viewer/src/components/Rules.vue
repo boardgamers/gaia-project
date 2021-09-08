@@ -56,6 +56,15 @@
           <li><a href="https://www.boardgamers.space/page/elo">How Elo works</a></li>
         </ul>
         <h4>Recent changes</h4>
+        <h5>2021-09-08</h5>
+        <ul>
+          <li>Fix replay of games with "beta" variant.</li>
+          <li>Improve selection of lost planet (translucent background).</li>
+          <li>Improve selection of ice planets (black on white).</li>
+          <li>Charts: Use compact table by default on smaller devices.</li>
+          <li>Improve display of Xenos PI in "balanced" variant (needs more space).</li>
+          <li>Show the number of remaining satellites on the player board.</li>
+        </ul>
         <h5>2021-09-02</h5>
         <ul>
           <li>Project the points of pass advanced tech tiles (e.g. 3 VP/lab when passing) for all remaining rounds.</li>
