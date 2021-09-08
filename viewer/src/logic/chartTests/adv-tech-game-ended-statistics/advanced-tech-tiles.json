@@ -1,0 +1,60 @@
+{
+  "tableMeta": {
+    "weights": null,
+    "colors": [
+      {
+        "color": "--tech-tile"
+      },
+      {
+        "color": "--tech-tile"
+      },
+      {
+        "color": "--tech-tile"
+      },
+      {
+        "color": "--tech-tile"
+      }
+    ],
+    "datasetMeta": {
+      "Terrans (0)": {
+        "label": "Terrans",
+        "total": 0,
+        "weightedTotal": null
+      },
+      "Nevlas (1)": {
+        "label": "Nevlas",
+        "total": 1,
+        "weightedTotal": null
+      },
+      "Xenos (1)": {
+        "label": "Xenos",
+        "total": 1,
+        "weightedTotal": null
+      },
+      "Hadsch Hallas (0)": {
+        "label": "Hadsch Hallas",
+        "total": 0,
+        "weightedTotal": null
+      }
+    }
+  },
+  "labels": ["q,5c special action", "1 ore / sector", "3o special action", "3k special action"],
+  "datasets": [
+    {
+      "label": "Nevlas (1)",
+      "data": [0, 0, 1, 0]
+    },
+    {
+      "label": "Xenos (1)",
+      "data": [0, 0, 0, 1]
+    },
+    {
+      "label": "Terrans (0)",
+      "data": [0, 0, 0, 0]
+    },
+    {
+      "label": "Hadsch Hallas (0)",
+      "data": [0, 0, 0, 0]
+    }
+  ]
+}

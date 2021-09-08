@@ -27,7 +27,7 @@ import { federationData } from "../data/federations";
 import { planetNames } from "../data/planets";
 import { researchNames } from "../data/research";
 import { resourceNames } from "../data/resources";
-import { baseTechTileNames } from "../data/tech-tiles";
+import { advancedTechTileNames, baseTechTileNames } from "../data/tech-tiles";
 import {
   ChartColor,
   ChartFamily,
@@ -198,7 +198,9 @@ const techTileExtractLog: ExtractLog<SimpleSource<TechTile | AdvTechTile>> = sta
   return 0;
 });
 
-const factories = [
+export const simpleSourceFactories = (
+  advTechTiles: Map<AdvTechTile, string>
+): SimpleSourceFactory<SimpleSource<any>>[] => [
   {
     name: "Resources",
     playerSummaryLineChartTitle: "Resources of all players as if bought with power",
@@ -420,6 +422,18 @@ const factories = [
     })),
   } as SimpleSourceFactory<SimpleSource<TechTile>>,
   {
+    name: "Advanced Tech Tiles",
+    showWeightedTotal: false,
+    playerSummaryLineChartTitle: "Advanced Tech tiles of all players",
+    extractLog: techTileExtractLog,
+    sources: Array.from(advTechTiles.entries()).map(([tile, color]) => ({
+      type: tile,
+      label: advancedTechTileNames[tile],
+      color: color,
+      weight: 1,
+    })),
+  } as SimpleSourceFactory<SimpleSource<AdvTechTile>>,
+  {
     name: "Final Scoring Conditions",
     showWeightedTotal: false,
     playerSummaryLineChartTitle: "All final Scoring Conditions of all players (not only the active ones)",
@@ -474,14 +488,4 @@ export function simpleChartDetails<Source extends SimpleSource<any>>(
       weight: s.weight,
     };
   });
-}
-
-export function simpleSourceFactory<Source extends SimpleSource<any>>(
-  family: ChartFamily
-): SimpleSourceFactory<Source> {
-  return factories.find((f) => f.name == family) as SimpleSourceFactory<Source>;
-}
-
-export function simpleSourceFamilies(): ChartFamily[] {
-  return factories.map((f) => f.name);
 }

@@ -14,7 +14,7 @@ export function phaseBeforeSetupBuilding(data: Engine): boolean {
 export type JsonTester = {
   baseDir: string;
   subTests: (testCase: any, engine: Engine) => string[];
-  createActualOutput: (data: Engine, subTest: string) => any;
+  createActualOutput: (data: Engine, subTest: string, testCase: any) => any;
 };
 
 export function runJsonTests(tester: JsonTester) {
@@ -29,7 +29,7 @@ export function runJsonTests(tester: JsonTester) {
       for (const subTest of tester.subTests(testCase, engine)) {
         it(subTest, () => {
           const path = `${testCaseDir}/${subTest.replace(/ /g, "-").toLowerCase()}.json`;
-          const actual = tester.createActualOutput(engine, subTest);
+          const actual = tester.createActualOutput(engine, subTest, testCase);
           expect(actual).to.deep.equal(
             JSON.parse(fs.readFileSync(path).toString()),
             `${path}:\n${JSON.stringify(actual)}\n`
