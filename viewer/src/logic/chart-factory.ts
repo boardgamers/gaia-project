@@ -1,4 +1,4 @@
-import Engine, { Player, PlayerEnum } from "@gaia-project/engine";
+import Engine, { AdvTechTile, AdvTechTilePos, Event, Player, PlayerEnum, Resource, tiles } from "@gaia-project/engine";
 import {
   ChartConfiguration,
   ChartDataset,
@@ -25,9 +25,9 @@ import {
   vpChartFamily,
   weightedSum,
 } from "./charts";
-import { simpleChartDetails, SimpleSource, simpleSourceFactory, simpleSourceFamilies } from "./simple-charts";
+import { simpleChartDetails, SimpleSource, simpleSourceFactories, SimpleSourceFactory } from "./simple-charts";
 import {
-  advancedTechTileSources,
+  advancedTechTileSource,
   groupSources,
   victoryPointDetails,
   VictoryPointSource,
@@ -82,7 +82,9 @@ function victoryPointSource(source: ChartSource, sources: VictoryPointSource[]):
   return sources.find((s) => s.types[0] == source.type);
 }
 
-const simpleChartFactory: ChartFactory<SimpleSource<any>> = {
+const simpleChartFactory = (
+  simpleSourceFactory: <Source extends SimpleSource<any>>(family: ChartFamily) => SimpleSourceFactory<Source>
+): ChartFactory<SimpleSource<any>> => ({
   includeRounds: "except-final",
 
   sources(family: ChartFamily): SimpleSource<any>[] {
@@ -113,9 +115,9 @@ const simpleChartFactory: ChartFactory<SimpleSource<any>> = {
   showWeightedTotal(family: ChartFamily): boolean {
     return simpleSourceFactory(family).showWeightedTotal;
   },
-};
+});
 
-const vpChartFactory = (allSources: VictoryPointSource[]): ChartFactory<ChartSource> => ({
+const vpChartFactory = (title: string, allSources: VictoryPointSource[]): ChartFactory<ChartSource> => ({
   includeRounds: "all",
   sources(): ChartSource[] {
     return allSources.map((s) => ({
@@ -138,10 +140,10 @@ const vpChartFactory = (allSources: VictoryPointSource[]): ChartFactory<ChartSou
     return victoryPointDetails(data, player, grouped, includeRounds);
   },
   singlePlayerSummaryTitle(player: Player): string {
-    return `Victory points of ${playerLabel(player)}`;
+    return `${title} of ${playerLabel(player)}`;
   },
   playerSummaryTitle(): string {
-    return "Victory points of all players";
+    return `${title} of all players`;
   },
   kindBreakdownTitle(family: ChartFamily, source: ChartSource): string {
     return `${victoryPointSource(source, allSources).label} of all players`;
@@ -205,24 +207,48 @@ function xScaleOptions(style: ChartStyleDisplay) {
 }
 
 export class ChartSetup {
-  factories: Map<ChartFamily, ChartFactory<any>>;
+  chartFactories: Map<ChartFamily, ChartFactory<any>>;
   families: ChartFamily[];
 
-  constructor(data: Engine) {
-    this.factories = new Map<ChartFamily, ChartFactory<any>>(
+  constructor(data: Engine, statistics = false) {
+    const scoringTechTile: (tile: AdvTechTile) => boolean = (tile: AdvTechTile) =>
+      new Event(tiles.techs[tile][0]).rewards.some((r) => r.type == Resource.VictoryPoint);
+    const currentAdvTechTiles: Map<AdvTechTile, string> = new Map(
+      AdvTechTilePos.values().map((tile) => [data.tiles.techs[tile].tile as AdvTechTile, tile.replace("adv", "--rt")])
+    );
+    const singleColor = (tiles: AdvTechTile[]) => new Map(tiles.map((v) => [v, "--tech-tile"]));
+    const vpAdvTechTiles = statistics ? singleColor(AdvTechTile.values().filter(scoringTechTile)) : currentAdvTechTiles;
+    const nonVpAdvTechTiles = statistics
+      ? singleColor(AdvTechTile.values().filter((t) => !scoringTechTile(t)))
+      : currentAdvTechTiles;
+
+    const sourceFactories = simpleSourceFactories(nonVpAdvTechTiles);
+
+    function simpleSourceFactory<Source extends SimpleSource<any>>(family: ChartFamily): SimpleSourceFactory<Source> {
+      return sourceFactories.find((f) => f.name == family) as SimpleSourceFactory<Source>;
+    }
+
+    const scf = simpleChartFactory(simpleSourceFactory);
+    this.chartFactories = new Map<ChartFamily, ChartFactory<any>>(
       ([
-        [vpChartFamily, vpChartFactory(victoryPointSources)],
-        ["Advanced Tech Tiles", vpChartFactory(advancedTechTileSources(data))],
+        [vpChartFamily, vpChartFactory("Victory Points", victoryPointSources)],
+        [
+          "Advanced Tech Tiles (Victory Points)",
+          vpChartFactory(
+            "Victory Points from Advanced Tech Tiles",
+            Array.from(vpAdvTechTiles.entries()).map(([tile, color]) => advancedTechTileSource(data, tile, color))
+          ),
+        ],
       ] as [ChartFamily, ChartFactory<any>][]).concat(
-        simpleSourceFamilies().map((value) => [value, simpleChartFactory] as [ChartFamily, ChartFactory<any>])
+        sourceFactories.map((value) => [value.name, scf] as [ChartFamily, ChartFactory<any>])
       )
     );
 
-    this.families = Array.from(this.factories.keys()).sort();
+    this.families = Array.from(this.chartFactories.keys()).sort();
   }
 
   chartFactory(family: ChartFamily): ChartFactory<any> {
-    return this.factories.get(family);
+    return this.chartFactories.get(family);
   }
 
   newLineChart(

@@ -22,51 +22,51 @@
       }
     ],
     "datasetMeta": {
-      "Itars (0)": {
-        "label": "Itars",
+      "Terrans (0)": {
+        "label": "Terrans",
         "total": 0,
         "weightedTotal": null
       },
-      "Geoden (0)": {
-        "label": "Geoden",
-        "total": 0,
+      "Nevlas (21)": {
+        "label": "Nevlas",
+        "total": 21,
         "weightedTotal": null
       },
-      "Taklons (0)": {
-        "label": "Taklons",
-        "total": 0,
+      "Xenos (27)": {
+        "label": "Xenos",
+        "total": 27,
         "weightedTotal": null
       },
-      "Lantids (0)": {
-        "label": "Lantids",
-        "total": 0,
+      "Hadsch Hallas (12)": {
+        "label": "Hadsch Hallas",
+        "total": 12,
         "weightedTotal": null
       }
     }
   },
   "labels": [
-    "3 VP / federation when passing",
-    "3 VP when building ts",
-    "4 VP / ts",
     "3k special action",
-    "2 VP when researching",
-    "2 VP / sector"
+    "3 VP / federation when passing",
+    "1 ore / sector",
+    "3 VP when building a mine",
+    "2 VP / sector",
+    "3o special action"
   ],
   "datasets": [
     {
-      "label": "Itars (0)",
-      "data": [0, 0, 0, 0, 0, 0]
+      "label": "Xenos (27)",
+      "data": [0, 27, 0, 0, 0, 0]
     },
     {
-      "label": "Geoden (0)",
-      "data": [0, 0, 0, 0, 0, 0]
+      "label": "Nevlas (21)",
+      "data": [0, 0, 0, 21, 0, 0]
     },
     {
-      "label": "Taklons (0)",
-      "data": [0, 0, 0, 0, 0, 0]
+      "label": "Hadsch Hallas (12)",
+      "data": [0, 0, 0, 0, 12, 0]
     },
     {
-      "label": "Lantids (0)",
+      "label": "Terrans (0)",
       "data": [0, 0, 0, 0, 0, 0]
     }
   ]

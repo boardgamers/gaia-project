@@ -52,8 +52,8 @@ describe("Chart", () => {
       baseDir: "src/logic/chartTests",
       subTests: (testCase: any, engine: Engine) =>
         testCase.families.flatMap((f) => (f == "all" ? new ChartSetup(engine).families : [f as ChartFamily])),
-      createActualOutput: (engine, family) => {
-        const config = new ChartSetup(engine).newBarChart(
+      createActualOutput: (engine, family, testCase: any) => {
+        const config = new ChartSetup(engine, testCase.statistics).newBarChart(
           { type: "table", label: "Table", compact: false },
           family,
           engine,

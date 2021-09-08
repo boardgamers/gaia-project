@@ -231,14 +231,13 @@ function advancedTechTileTypes(e: Engine, tile: AdvTechTile) {
     .map((entry) => entry[0] as AdvTechTilePos);
 }
 
-export const advancedTechTileSources = (data: Engine): VictoryPointSource[] =>
-  AdvTechTile.values().map((tile) => ({
-    types: advancedTechTileTypes(data, tile),
-    label: advancedTechTileNames[tile],
-    description: "Advanced Tech Tiles",
-    color: "--tech-tile",
-    roundValues: passIncomeProjection(advancedTechTileTypes(data, tile), true),
-  }));
+export const advancedTechTileSource = (data: Engine, tile: AdvTechTile, color: string): VictoryPointSource => ({
+  types: advancedTechTileTypes(data, tile),
+  label: advancedTechTileNames[tile],
+  description: "Advanced Tech Tiles",
+  color: color,
+  roundValues: passIncomeProjection(advancedTechTileTypes(data, tile), true),
+});
 
 export function countResearch(player: Player): (moveHistory: string[], log: LogEntry) => number {
   const research = initialResearch(player);

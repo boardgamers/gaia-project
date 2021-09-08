@@ -34,34 +34,27 @@
       },
       {
         "color": "--tech-tile"
-      },
-      {
-        "color": "--tech-tile"
-      },
-      {
-        "color": "--tech-tile"
-      },
-      {
-        "color": "--tech-tile"
-      },
-      {
-        "color": "--tech-tile"
       }
     ],
     "datasetMeta": {
-      "Bal T'aks (33)": {
-        "label": "Bal T'aks",
-        "total": 33,
-        "weightedTotal": null
-      },
-      "Ivits (0)": {
-        "label": "Ivits",
+      "Terrans (0)": {
+        "label": "Terrans",
         "total": 0,
         "weightedTotal": null
       },
-      "Gleens (0)": {
-        "label": "Gleens",
-        "total": 0,
+      "Nevlas (21)": {
+        "label": "Nevlas",
+        "total": 21,
+        "weightedTotal": null
+      },
+      "Xenos (27)": {
+        "label": "Xenos",
+        "total": 27,
+        "weightedTotal": null
+      },
+      "Hadsch Hallas (12)": {
+        "label": "Hadsch Hallas",
+        "total": 12,
         "weightedTotal": null
       }
     }
@@ -69,32 +62,32 @@
   "labels": [
     "3 VP / federation when passing",
     "2 VP when researching",
-    "q,5c special action",
     "2 VP / mine",
     "3 VP / lab when passing",
-    "1 ore / sector",
     "1 VP / planet type when passing",
     "2 VP / gaia planet",
     "4 VP / ts",
     "2 VP / sector",
-    "3o special action",
     "5 VP / federation",
-    "3k special action",
     "3 VP when building a mine",
     "3 VP when building ts"
   ],
   "datasets": [
     {
-      "label": "Bal T'aks (33)",
-      "data": [0, 0, 0, 0, 33, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      "label": "Xenos (27)",
+      "data": [27, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     },
     {
-      "label": "Ivits (0)",
-      "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      "label": "Nevlas (21)",
+      "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 21, 0]
     },
     {
-      "label": "Gleens (0)",
-      "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      "label": "Hadsch Hallas (12)",
+      "data": [0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0]
+    },
+    {
+      "label": "Terrans (0)",
+      "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     }
   ]
 }

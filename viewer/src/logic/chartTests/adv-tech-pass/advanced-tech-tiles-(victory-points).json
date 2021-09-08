@@ -22,51 +22,42 @@
       }
     ],
     "datasetMeta": {
-      "Itars (0)": {
-        "label": "Itars",
+      "Bal T'aks (33)": {
+        "label": "Bal T'aks",
+        "total": 33,
+        "weightedTotal": null
+      },
+      "Ivits (0)": {
+        "label": "Ivits",
         "total": 0,
         "weightedTotal": null
       },
-      "Geoden (0)": {
-        "label": "Geoden",
-        "total": 0,
-        "weightedTotal": null
-      },
-      "Taklons (0)": {
-        "label": "Taklons",
-        "total": 0,
-        "weightedTotal": null
-      },
-      "Lantids (0)": {
-        "label": "Lantids",
+      "Gleens (0)": {
+        "label": "Gleens",
         "total": 0,
         "weightedTotal": null
       }
     }
   },
   "labels": [
-    "3 VP / federation when passing",
-    "3 VP when building ts",
+    "q,5c special action",
+    "1 ore / sector",
+    "1 VP / planet type when passing",
+    "3 VP / lab when passing",
     "4 VP / ts",
-    "3k special action",
-    "2 VP when researching",
-    "2 VP / sector"
+    "2 VP / gaia planet"
   ],
   "datasets": [
     {
-      "label": "Itars (0)",
+      "label": "Bal T'aks (33)",
+      "data": [0, 0, 0, 33, 0, 0]
+    },
+    {
+      "label": "Ivits (0)",
       "data": [0, 0, 0, 0, 0, 0]
     },
     {
-      "label": "Geoden (0)",
-      "data": [0, 0, 0, 0, 0, 0]
-    },
-    {
-      "label": "Taklons (0)",
-      "data": [0, 0, 0, 0, 0, 0]
-    },
-    {
-      "label": "Lantids (0)",
+      "label": "Gleens (0)",
       "data": [0, 0, 0, 0, 0, 0]
     }
   ]
