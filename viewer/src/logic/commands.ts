@@ -34,7 +34,7 @@ import Engine, {
 import assert from "assert";
 import { max, minBy, range, sortBy } from "lodash";
 import { Store } from "vuex";
-import { ButtonData, ButtonWarning, HighlightHexData } from "../data";
+import { ButtonData, ButtonWarning, HexSelection, HighlightHexData } from "../data";
 import {
   boardActionNames,
   FastConversion,
@@ -102,16 +102,19 @@ function translateResources(rewards: Reward[]): string {
     .join(" and ");
 }
 
-export function hexMap(engine: Engine, coordinates: AvailableHex[]): HighlightHexData {
-  return new Map<GaiaHex, HighlightHex>(
-    coordinates.map((coord) => [
-      engine.map.getS(coord.coordinates),
-      {
-        cost: coord.cost,
-        warnings: coord.warnings,
-      },
-    ])
-  );
+export function hexMap(engine: Engine, coordinates: AvailableHex[], selectedLight: boolean): HexSelection {
+  return {
+    selectedLight,
+    hexes: new Map<GaiaHex, HighlightHex>(
+      coordinates.map((coord) => [
+        engine.map.getS(coord.coordinates),
+        {
+          cost: coord.cost,
+          warnings: coord.warnings,
+        },
+      ])
+    ),
+  };
 }
 
 export function buttonWarning(message?: string): ButtonWarning | null {
@@ -368,7 +371,7 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
           label: buildingName(building, faction),
           command: building,
           shortcuts: [building == Building.Academy1 ? "k" : faction == Faction.BalTaks ? "c" : "q"],
-          hexes: hexMap(engine, buildings),
+          hexes: hexMap(engine, buildings, false),
         }),
       ];
 
@@ -403,7 +406,7 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
           label,
           shortcuts: [shortcut],
           command: `${Command.Build} ${building}`,
-          hexes: hexMap(engine, buildings),
+          hexes: hexMap(engine, buildings, false),
           buttons,
           warning,
           needConfirm: buttons?.length > 0,
@@ -828,6 +831,14 @@ export function federationTypeButtons(federations: Federation[], player: Player)
   });
 }
 
+export function customHexSelection(hexes: HighlightHexData): HexSelection {
+  return {
+    hexes: hexes,
+    selectAnyHex: true,
+    backgroundLight: true,
+  };
+}
+
 export function federationButton(
   command: AvailableCommand<Command.FormFederation>,
   engine: Engine,
@@ -835,17 +846,19 @@ export function federationButton(
   handleCommand: (command: string, source?: ButtonData) => void,
   player: Player
 ): ButtonData {
-  const tilesButtons: ButtonData[] = federationTypeButtons(command.data.tiles, player);
+  const fedTypeButtons: ButtonData[] = federationTypeButtons(command.data.tiles, player);
 
   const locationButtons: ButtonData[] = command.data.federations.map((fed, i) =>
     textButton({
       command: fed.hexes,
       label: `Location ${i + 1}`,
-      hexes: new Map(
-        fed.hexes.split(",").map((coord) => [engine.map.getS(coord), { coordinates: coord }])
-      ) as HighlightHexData,
-      hover: true,
-      buttons: tilesButtons,
+      hexes: {
+        hexes: new Map(
+          fed.hexes.split(",").map((coord) => [engine.map.getS(coord), { coordinates: coord }])
+        ) as HighlightHexData,
+        hover: true,
+      },
+      buttons: fedTypeButtons,
       warning: buttonWarning(fed.warning != null ? moveWarnings[fed.warning].text : null),
     })
   );
@@ -861,8 +874,13 @@ export function federationButton(
   locationButtons.push({
     label: "Custom location",
     shortcuts: ["c"],
-    selectHexes: true,
-    buttons: tilesButtons,
+    buttons: [
+      textButton({
+        label: "Select planets and empty space to be included in the federation",
+        hexes: customHexSelection(new Map<GaiaHex, HighlightHex>()),
+        buttons: fedTypeButtons,
+      }),
+    ],
   });
 
   locationButtons.push(
@@ -882,11 +900,12 @@ export function federationButton(
       },
     })
   );
+  const next = cycle(1);
   locationButtons.push(
     textButton({
       label: "Next",
       shortcuts: ["n"],
-      handler: cycle(1),
+      handler: next,
     })
   );
 
@@ -895,6 +914,7 @@ export function federationButton(
     shortcuts: ["f"],
     command: Command.FormFederation,
     buttons: locationButtons,
+    onShow: () => next(),
   });
 }
 

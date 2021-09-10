@@ -18,7 +18,7 @@
     <b-btn
       v-else-if="button.times === undefined"
       :variant="button.warning ? 'warning' : 'secondary'"
-      :class="['mr-2', 'mb-2', 'move-button', { 'symbol-button': button.conversion }]"
+      :class="['mr-2', 'mb-2', 'move-button', { 'symbol-button': button.conversion, active: this.isActiveButton }]"
       @click="handleClick"
       @mouseenter="hover"
       @mouseleave="leave"
@@ -51,7 +51,7 @@
       @ok="handleOK"
       @hide="modalCancel"
       dialog-class="gaia-viewer-modal"
-      :title="button.title || button.label || button.command"
+      :title="button.modal.title"
       ok-title="OK, I pick this one!"
     >
       <div v-html="button.modal.content"></div>
@@ -63,12 +63,13 @@
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { BuildWarning, GaiaHex, HighlightHex, Player, SpaceMap } from "@gaia-project/engine";
-import { ButtonData } from "../data";
+import { ButtonData, HexSelection } from "../data";
 import Booster from "./Booster.vue";
 import TechTile from "./TechTile.vue";
 import ButtonContent from "./Resources/ButtonContent.vue";
 import BoardAction from "./BoardAction.vue";
 import SpecialAction from "./SpecialAction.vue";
+import { customHexSelection } from "../logic/commands";
 
 type EmitCommandParams = { disappear?: boolean; times?: number; warnings?: BuildWarning[] };
 
@@ -143,6 +144,10 @@ export default class MoveButton extends Vue {
 
   mounted() {
     const keyListener = (e) => {
+      if (this.button.hide) {
+        return;
+      }
+
       if (this.modalShow) {
         if (!this.button.modal.canActivate()) {
           return false;
@@ -179,7 +184,7 @@ export default class MoveButton extends Vue {
     this.$on("hook:beforeDestroy", () => window.removeEventListener("keydown", keyListener));
   }
 
-  async handleClick(button?: ButtonData, params?: EmitCommandParams) {
+  async handleClick() {
     await this.handleButtonClick(this.button, null);
   }
 
@@ -214,26 +219,17 @@ export default class MoveButton extends Vue {
         return;
       }
     }
-    // Remove highglights caused by another button
+
+    // Remove highlights caused by another button
     if (!this.isActiveButton) {
       this.$store.commit("gaiaViewer/clearContext");
     }
-    if (
-      button.hexes &&
-      !button.selectHexes &&
-      !button.hover &&
-      !button.rotation &&
-      !button.range
-    ) {
-      this.$store.commit("gaiaViewer/highlightHexes", button.hexes);
-      this.subscribeHexClick((hex, highlight) => {
-        if (button.needConfirm) {
-          this.$store.commit("gaiaViewer/highlightHexes", new Map<GaiaHex, HighlightHex>([[hex, {}]]));
-        }
 
-        this.emitCommand(hex.toString(), { warnings: highlight.warnings });
-      });
-    } else if (button.researchTiles) {
+    if (button.hexes && !this.isActiveButton) {
+      this.highlightHexes(button.hexes);
+    }
+
+    if (button.researchTiles) {
       this.$store.commit("gaiaViewer/highlightResearchTiles", button.researchTiles);
       this.subscribeFinal("researchClick");
     } else if (button.techs) {
@@ -245,82 +241,76 @@ export default class MoveButton extends Vue {
     } else if (button.boardActions) {
       this.$store.commit("gaiaViewer/highlightBoardActions", button.boardActions);
       this.subscribeFinal("boardActionClick");
-    } else if (button.needConfirm) {
-      this.emitButtonCommand(button, null, { disappear: false });
-    } else if (button.selectHexes) {
-      // If already the active button, end the selection
-      if (this.isActiveButton) {
-        button.command = [...this.$store.state.gaiaViewer.context.highlighted.hexes.keys()]
-          .map((hex) => hex.toString())
-          .join(",");
-        this.emitButtonCommand(button);
-        return;
-      }
-
-      this.$store.commit("gaiaViewer/selectHexes", button.hexes);
-
-      this.customLabel = "Custom location - End selection";
-
-      this.subscribeHexClick((hex) => {
-        const highlighted = this.$store.state.gaiaViewer.context.highlighted.hexes;
-
-        if (highlighted.has(hex)) {
-          highlighted.delete(hex);
-        } else {
-          highlighted.set(hex, null);
+    } else if (button.hexes?.selectAnyHex) {
+      if (button.rotation) {
+        if (this.isActiveButton) {
+          const rotations = [...this.$store.state.gaiaViewer.context.rotation.entries()];
+          for (const rotation of rotations) {
+            rotation[1] %= 6;
+          }
+          this.emitButtonCommand(button, [].concat(...rotations.filter((r) => !!r[1])).join(" "));
+          return;
         }
 
-        const keys: GaiaHex[] = [...highlighted.keys()];
-        this.$store.commit("gaiaViewer/highlightHexes", new Map([...keys.map((key) => [key, null])] as any));
-      });
+        this.subscribeHexClick((hex) => this.$store.commit("gaiaViewer/rotate", hex));
+        this.customLabel = "Sector rotations finished";
+      } else {
+        this.selectAnyButton(button);
+      }
     } else if (button.handler) {
       button.handler();
     } else if (button.modal) {
       this.modalShow = true;
       button.modal.show(true);
-    } else if (button.rotation) {
-      if (this.isActiveButton) {
-        const rotations = [...this.$store.state.gaiaViewer.context.rotation.entries()];
-        for (const rotation of rotations) {
-          rotation[1] %= 6;
-        }
-        this.emitButtonCommand(button, [].concat(...rotations.filter((r) => !!r[1])).join(" "));
+    } else {
+      if (button.hexes) {
+        //generic hex selection, that's why it's last
+        this.subscribeHexClick((hex, highlight) => {
+          if (button.needConfirm) {
+            this.highlightHexes({ hexes: new Map<GaiaHex, HighlightHex>([[hex, {}]]) });
+          }
+
+          this.emitCommand(hex.toString(), { warnings: highlight.warnings });
+        });
         return;
       }
 
-      this.$store.commit("gaiaViewer/selectHexes");
-      this.subscribeHexClick((hex) => this.$store.commit("gaiaViewer/rotate", hex));
-      this.customLabel = "Sector rotations finished";
-    } else if (button.range) {
-      console.log("range click");
-      this.$store.commit("gaiaViewer/highlightHexes", button.hexes);
-      this.subscribeHexClick((hex) => {
-        if (this.startingHex) {
-          this.emitCommand(`${this.startingHex} ${hex}`);
-          this.startingHex = undefined;
-          return;
-        }
-        this.startingHex = hex;
-
-        const map: SpaceMap = this.$store.state.gaiaViewer.data.map;
-        const { range, costs } = button;
-
-        const highlighted = new Map();
-
-        const withinDistance = map.withinDistance(hex, range);
-        for (const target of withinDistance) {
-          highlighted.set(target, { cost: costs?.[map.distance(hex, target)] ?? "~" });
-        }
-
-        this.$store.commit("gaiaViewer/highlightHexes", highlighted);
-      });
-    } else {
-      // Keep hexes highlighted for next command (federation tile)
-      if (button.hexes && button.hover) {
-        this.$store.commit("gaiaViewer/highlightHexes", button.hexes);
+      if (button.needConfirm) {
+        this.emitButtonCommand(button, null, { disappear: false });
+      } else {
+        this.emitButtonCommand(button, null, params);
       }
-      this.emitButtonCommand(button, null, params);
     }
+  }
+
+  private selectAnyButton(button: ButtonData) {
+    // If already the active button, end the selection
+    if (this.isActiveButton) {
+      button.command = [...this.$store.state.gaiaViewer.context.highlighted.hexes.hexes.keys()]
+        .map((hex) => hex.toString())
+        .join(",");
+      this.emitButtonCommand(button);
+      return;
+    }
+
+    this.customLabel = button.label + " - End selection";
+
+    this.subscribeHexClick((hex) => {
+      const highlighted = this.$store.state.gaiaViewer.context.highlighted.hexes.hexes;
+
+      if (highlighted.has(hex)) {
+        highlighted.delete(hex);
+      } else {
+        highlighted.set(hex, null);
+      }
+
+      const keys: GaiaHex[] = [...highlighted.keys()];
+      this.highlightHexes(customHexSelection(new Map([...keys.map((key) => [key, null])] as any)));
+    });
+  }
+
+  private highlightHexes(selection: HexSelection) {
+    this.$store.commit("gaiaViewer/highlightHexes", selection);
   }
 
   handleRangeClick(times: number) {
@@ -383,15 +373,15 @@ export default class MoveButton extends Vue {
   }
 
   hover() {
-    if (!this.button.hover || this.$store.state.gaiaViewer.context.activeButton !== null) {
+    if (!this.button.hexes?.hover || this.$store.state.gaiaViewer.context.activeButton !== null) {
       return;
     }
 
-    this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
+    this.highlightHexes(this.button.hexes);
   }
 
   leave() {
-    if (!this.button.hover || this.$store.state.gaiaViewer.context.activeButton !== null) {
+    if (!this.button.hexes?.hover || this.$store.state.gaiaViewer.context.activeButton !== null) {
       return;
     }
 
@@ -410,6 +400,11 @@ export default class MoveButton extends Vue {
 <style lang="scss">
 .move-button {
   display: flex;
+}
+
+.active {
+  background-color: var(--primary) !important;
+  color: white !important;
 }
 
 .warning {

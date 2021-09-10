@@ -40,8 +40,7 @@
           v-for="faction in factionsToChoose.data"
           :button="{
             command: `${factionsToChoose.name} ${faction}`,
-            modal: modalDialog(tooltip(faction)),
-            title: factionName(faction),
+            modal: modalDialog(factionName(faction), tooltip(faction)),
             label: `${factionName(faction)} <i class='planet ${factionPlanet(faction)}'></i>`,
             shortcuts: [factionShortcut(faction)],
           }"
@@ -68,7 +67,6 @@ import Engine, {
   Command,
   Faction,
   factionPlanet,
-  GaiaHex,
   Player,
   Resource,
   Reward,
@@ -117,8 +115,9 @@ let show = false;
       return factionDesc(faction, factionVariantBoard(this.factionCustomization, faction)?.board);
     },
 
-    modalDialog(msg: string): ModalButtonData {
+    modalDialog(title: string, msg: string): ModalButtonData {
       return {
+        title: title,
         content: msg,
         show(s: boolean) {
           show = s;
@@ -139,8 +138,7 @@ let show = false;
         command: `${command.name} ${faction}`,
         label: "Random",
         shortcuts: ["r"],
-        modal: this.modalDialog(this.tooltip(faction)),
-        title: factionName(faction),
+        modal: this.modalDialog(factionName(faction), this.tooltip(faction)),
       };
     },
   },
@@ -201,15 +199,6 @@ export default class Commands extends Vue {
         return;
       }
     }
-
-    // Seems to cause problems on mobile
-    // If there's only one button, save the player the hassle and click it
-    // setTimeout(() => {
-    //   if ($(".move-button.shown").length === 1)  {
-    //     const ref = $(".move-button.shown").attr("data-ref");
-    //     (this.$refs[ref][0] as MoveButton).handleClick();
-    //   }
-    // });
   }
 
   get availableCommands(): AvailableCommand[] {
@@ -283,7 +272,7 @@ export default class Commands extends Vue {
   }
 
   handleCommand(command: string, source?: ButtonData, warnings?: BuildWarning[]) {
-    console.log("handle command", command);
+    console.log("handle command", command, source);
     this.unsubscribe();
 
     // Some users seem to have a bug with repeating commands on mobile, like clicking the income button twice
@@ -303,20 +292,16 @@ export default class Commands extends Vue {
       this.customButtons = source.buttons;
       this.$store.commit("gaiaViewer/setCommandChain", true);
 
-      // Seems to cause problems on mobile
-      // setTimeout(() => {
-      //   if ($(".move-button.shown").length <= 1)  {
-      //     const ref = $(".move-button.shown").attr("data-ref");
-      //     (this.$refs[ref][0] as MoveButton).handleClick();
-      //   }
-      // });
+      if (source.onShow) {
+        source.onShow();
+      }
 
       return;
     }
     if (this.init) {
       this.$emit("command", command);
     } else {
-      this.$emit("command", `${this.playerSlug} ${[...this.commandChain, command].join(" ")}`, warnings);
+      this.$emit("command", `${this.playerSlug} ${[...this.commandChain.filter(c => c), command].join(" ")}`, warnings);
     }
   }
 
@@ -352,10 +337,8 @@ export default class Commands extends Vue {
             label: "Rotate sectors",
             command: Command.RotateSectors,
             shortcuts: ["r"],
-            hexes: new Map<GaiaHex, {}>(
-              this.map.configuration().centers.map((center) => [this.engine.map.grid.get(center), {}] as [GaiaHex, {}])
-            ),
             rotation: true,
+            hexes: { hexes: new Map(), backgroundLight: true, selectAnyHex: true }
           });
 
           break;
@@ -370,7 +353,7 @@ export default class Commands extends Vue {
             label: "Swap Planetary Institute",
             shortcuts: ["w"],
             command: command.name,
-            hexes: hexMap(this.engine, command.data.buildings),
+            hexes: hexMap(this.engine, command.data.buildings, false),
           });
           break;
         }
@@ -379,7 +362,7 @@ export default class Commands extends Vue {
           ret.push({
             label: "Place Lost Planet",
             command: command.name,
-            hexes: hexMap(this.engine, command.data.spaces),
+            hexes: hexMap(this.engine, command.data.spaces, true),
           });
           break;
         }
@@ -462,7 +445,7 @@ export default class Commands extends Vue {
             ...command.data.map((income) => ({
               label: `Income ${income}`,
               command: `${Command.ChooseIncome} ${income}`,
-            }))
+            })),
           );
           break;
         }
@@ -473,7 +456,7 @@ export default class Commands extends Vue {
               label: `Bid ${pos.bid[0]} for ${pos.faction}`,
               command: `${Command.Bid} ${pos.faction} $times`,
               times: pos.bid,
-            }))
+            })),
           );
           break;
         }
