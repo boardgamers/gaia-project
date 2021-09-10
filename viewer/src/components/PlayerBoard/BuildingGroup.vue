@@ -175,7 +175,7 @@ export default class BuildingGroup extends Vue {
   }
 
   get incomeTypes() {
-    return Math.max(2, this.board.buildings[this.building].income[0].length);
+    return Math.max(2, this.board.buildings[this.building].income[0].filter(e => e.operator == Operator.Income).length);
   }
 
   get factionIncome(): Reward[] {
