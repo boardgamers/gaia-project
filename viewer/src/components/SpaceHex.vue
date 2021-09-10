@@ -10,7 +10,7 @@
       :class="[
         'space-hex',
         {
-          light: light,
+          'to-select': toSelect,
           highlighted: highlightedHexes.has(hex),
           recent: recent(hex),
           'current-round': currentRound(hex),
@@ -24,12 +24,7 @@
     <text class="sector-name" v-if="isCenter">
       {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
     </text>
-    <Planet
-      v-if="hex.data.planet !== 'e'"
-      :planet="hex.data.planet"
-      :faction="faction(hex.data.player)"
-      :highlighted="highlightedHexes.has(hex)"
-    />
+    <Planet v-if="hex.data.planet !== 'e'" :planet="hex.data.planet" :faction="faction(hex.data.player)" />
     <Building
       style="stroke-width: 10"
       v-if="hex.data.building"
@@ -115,7 +110,7 @@ export default class SpaceHex extends Vue {
 
   hexClick(hex: GaiaHex) {
     const h = this.highlightedHexes.get(hex);
-    if (h != null || this.selectAnyHex) {
+    if (h != null || this.toSelect) {
       this.$store.dispatch("gaiaViewer/hexClick", { hex: hex, highlight: h });
     }
   }
@@ -141,7 +136,7 @@ export default class SpaceHex extends Vue {
   }
 
   get highlightedHexes(): HighlightHexData {
-    return this.$store.state.gaiaViewer.context.highlighted.hexes.hexes;
+    return this.$store.state.gaiaViewer.context.highlighted.hexes;
   }
 
   recent(hex: GaiaHex): boolean {
@@ -156,12 +151,8 @@ export default class SpaceHex extends Vue {
     return this.$store.state.gaiaViewer.data;
   }
 
-  get light() {
-    return !!this.context().highlighted.hexes.light;
-  }
-
-  get selectAnyHex() {
-    return !!this.context().highlighted.hexes.selectAnyHex;
+  get toSelect() {
+    return !!this.context().hexSelection;
   }
 
   private context() {
@@ -182,6 +173,7 @@ svg {
     }
 
     &.highlighted {
+      fill: white;
       cursor: pointer;
 
       &.warn {
@@ -197,19 +189,15 @@ svg {
       }
     }
 
-    &.highlighted:not(.light) {
-      fill: white;
-    }
-
-    &.current-round:not(.highlighted):not(.light) {
+    &.current-round:not(.highlighted):not(.to-select) {
       fill: var(--current-round);
     }
 
-    &.recent:not(.highlighted):not(.light) {
+    &.recent:not(.highlighted):not(.to-select) {
       fill: var(--recent);
     }
 
-    &.light {
+    &.to-select {
       cursor: pointer;
       opacity: 0.7;
     }

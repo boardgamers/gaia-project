@@ -19,7 +19,7 @@
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
 import Engine, { GaiaHex, SpaceMap as SpaceMapData } from "@gaia-project/engine";
-import { hexCenter } from "../graphics/hex";
+import { corners, hexCenter } from "../graphics/hex";
 import Sector from "./Sector.vue";
 import { CubeCoordinates } from "hexagrid";
 import FactionWheel from "./FactionWheel.vue";

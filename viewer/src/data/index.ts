@@ -25,7 +25,7 @@ export interface ButtonData {
   times?: number[];
   conversion?: { from: Reward[]; to: Reward[] };
   modal?: ModalButtonData;
-  hexes?: HexSelection;
+  hexes?: HighlightHexData;
   hover?: boolean;
   researchTiles?: string[];
   techs?: Array<TechTilePos | AdvTechTilePos>;
@@ -51,13 +51,13 @@ export interface ButtonData {
   shortcuts?: string[];
 }
 
+export type MapData = GaiaHex[];
 export type HighlightHexData = Map<GaiaHex, HighlightHex>;
-export type HexSelection = { hexes: HighlightHexData; light?: boolean; selectAnyHex?: boolean };
 export type LogPlacement = "top" | "bottom" | "off";
 
 export interface GameContext {
   highlighted: {
-    hexes: HexSelection;
+    hexes: HighlightHexData;
     researchTiles: Set<string>;
     techs: Set<TechTilePos | AdvTechTilePos>;
     boosters: Set<Booster>;
@@ -70,6 +70,7 @@ export interface GameContext {
 
   activeButton: ButtonData | null;
   fastConversionTooltips: FastConversionTooltips;
+  hexSelection: boolean;
   hasCommandChain: boolean;
 
   logPlacement: LogPlacement;
