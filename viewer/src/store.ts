@@ -13,7 +13,7 @@ import Engine, {
 import { CubeCoordinates } from "hexagrid";
 import Vue from "vue";
 import Vuex, { Store } from "vuex";
-import { ButtonData, GameContext, HighlightHexData, SpecialActionIncome } from "./data";
+import { ButtonData, GameContext, HexSelection, SpecialActionIncome } from "./data";
 import { FastConversionEvent } from "./data/actions";
 import { FastConversionTooltips } from "./logic/commands";
 import {
@@ -60,7 +60,7 @@ const gaiaViewer = {
     data: new Engine(),
     context: {
       highlighted: {
-        hexes: new Map(),
+        hexes: { hexes: new Map() } as HexSelection,
         researchTiles: new Set(),
         techs: new Set(),
         boosters: new Set(),
@@ -69,7 +69,6 @@ const gaiaViewer = {
         federations: new Set(),
       },
       rotation: new Map(),
-      hexSelection: false,
       activeButton: null,
       hasCommandChain: false,
       fastConversionTooltips: {} as FastConversionTooltips,
@@ -89,8 +88,8 @@ const gaiaViewer = {
       state.context.rotation = new Map();
     },
 
-    highlightHexes(state: State, hexes: HighlightHexData) {
-      state.context.highlighted.hexes = hexes;
+    highlightHexes(state: State, selection: HexSelection) {
+      state.context.highlighted.hexes = selection;
     },
 
     highlightResearchTiles(state: State, tiles: string[]) {
@@ -113,11 +112,6 @@ const gaiaViewer = {
       state.context.highlighted.federations = new Set(federations);
     },
 
-    selectHexes(state: State, defaultHexes?: Array<[GaiaHex, HighlightHex]>) {
-      state.context.hexSelection = true;
-      state.context.highlighted.hexes = new Map(defaultHexes || []);
-    },
-
     rotate(state: State, coords: CubeCoordinates) {
       const map = state.data.map;
       const center = map.configuration().centers.find((center) => map.distance(center, coords) <= 2);
@@ -127,14 +121,12 @@ const gaiaViewer = {
     },
 
     clearContext(state: State) {
-      state.context.highlighted.hexes = new Map();
+      state.context.highlighted.hexes = { hexes: new Map() } as HexSelection;
       state.context.highlighted.researchTiles = new Set();
       state.context.highlighted.techs = new Set();
       state.context.highlighted.boardActions = new Set();
       state.context.highlighted.specialActions = new Set();
       state.context.highlighted.federations = new Set();
-      // state.context.rotation = new Map();
-      state.context.hexSelection = false;
       state.context.activeButton = null;
       state.context.fastConversionTooltips = {};
     },

@@ -10,7 +10,8 @@
       :class="[
         'space-hex',
         {
-          'to-select': toSelect,
+          backgroundLight,
+          selectedLight,
           highlighted: highlightedHexes.has(hex),
           recent: recent(hex),
           'current-round': currentRound(hex),
@@ -24,7 +25,12 @@
     <text class="sector-name" v-if="isCenter">
       {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
     </text>
-    <Planet v-if="hex.data.planet !== 'e'" :planet="hex.data.planet" :faction="faction(hex.data.player)" />
+    <Planet
+      v-if="hex.data.planet !== 'e'"
+      :planet="hex.data.planet"
+      :faction="faction(hex.data.player)"
+      :classes="planetClasses(hex)"
+    />
     <Building
       style="stroke-width: 10"
       v-if="hex.data.building"
@@ -102,6 +108,18 @@ export default class SpaceHex extends Vue {
     return warnings?.length > 0 ? warnings?.map((w) => moveWarnings[w].text).join(", ") : null;
   }
 
+  planetClasses(hex: GaiaHex): string[] {
+    const ret = [];
+    const highlightHex = this.highlightedHexes.get(hex);
+    if (highlightHex?.warnings?.length > 0) {
+      ret.push("warn");
+    }
+    if (highlightHex) {
+      ret.push("highlighted");
+    }
+    return ret;
+  }
+
   cost(hex: GaiaHex) {
     const data = this.highlightedHexes.get(hex);
 
@@ -110,7 +128,7 @@ export default class SpaceHex extends Vue {
 
   hexClick(hex: GaiaHex) {
     const h = this.highlightedHexes.get(hex);
-    if (h != null || this.toSelect) {
+    if (h != null || this.selectAnyHex) {
       this.$store.dispatch("gaiaViewer/hexClick", { hex: hex, highlight: h });
     }
   }
@@ -136,7 +154,7 @@ export default class SpaceHex extends Vue {
   }
 
   get highlightedHexes(): HighlightHexData {
-    return this.$store.state.gaiaViewer.context.highlighted.hexes;
+    return this.$store.state.gaiaViewer.context.highlighted.hexes.hexes;
   }
 
   recent(hex: GaiaHex): boolean {
@@ -151,8 +169,16 @@ export default class SpaceHex extends Vue {
     return this.$store.state.gaiaViewer.data;
   }
 
-  get toSelect() {
-    return !!this.context().hexSelection;
+  get backgroundLight() {
+    return !!this.context().highlighted.hexes.backgroundLight;
+  }
+
+  get selectedLight() {
+    return !!this.context().highlighted.hexes.selectedLight;
+  }
+
+  get selectAnyHex() {
+    return !!this.context().highlighted.hexes.selectAnyHex;
   }
 
   private context() {
@@ -173,8 +199,11 @@ svg {
     }
 
     &.highlighted {
-      fill: white;
       cursor: pointer;
+
+      &.selectedLight {
+        opacity: 0.7;
+      }
 
       &.warn {
         fill: red !important;
@@ -189,15 +218,19 @@ svg {
       }
     }
 
-    &.current-round:not(.highlighted):not(.to-select) {
+    &.highlighted:not(.selectedLight) {
+      fill: white;
+    }
+
+    &.current-round:not(.highlighted):not(.selectedLight) {
       fill: var(--current-round);
     }
 
-    &.recent:not(.highlighted):not(.to-select) {
+    &.recent:not(.highlighted):not(.selectedLight) {
       fill: var(--recent);
     }
 
-    &.to-select {
+    &.backgroundLight {
       cursor: pointer;
       opacity: 0.7;
     }
