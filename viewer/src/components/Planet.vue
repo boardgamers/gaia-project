@@ -1,10 +1,6 @@
 <template>
   <g>
-    <circle
-      :r="radius"
-      :class="['planet-fill', planet, highlighted ? 'highlighted' : '']"
-      style="pointer-events: none"
-    />
+    <circle :r="radius" :class="['planet-fill', planet]" style="pointer-events: none" />
     <circle :r="radius" :class="['planet-fill', 'faction-fill', fill]" v-if="faction" style="pointer-events: none" />
     <circle :r="radius" :class="['planet', planet]" />
   </g>
@@ -23,9 +19,6 @@ export default class Planet extends Vue {
 
   @Prop()
   faction: Faction;
-
-  @Prop()
-  highlighted: boolean
 
   get radius() {
     return planets[this.planet].radius;
@@ -130,9 +123,6 @@ svg {
     // ice
     &.i {
       fill: var(--ice);
-      &.highlighted {
-        fill: var(--ice-inverted);
-      }
     }
     // volcanic
     &.v {

@@ -63,7 +63,7 @@
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { BuildWarning, GaiaHex, HighlightHex, Player, SpaceMap } from "@gaia-project/engine";
-import { ButtonData, HexSelection } from "../data";
+import { ButtonData } from "../data";
 import Booster from "./Booster.vue";
 import TechTile from "./TechTile.vue";
 import ButtonContent from "./Resources/ButtonContent.vue";
@@ -250,19 +250,19 @@ export default class MoveButton extends Vue {
     } else if (button.selectHexes) {
       // If already the active button, end the selection
       if (this.isActiveButton) {
-        button.command = [...this.$store.state.gaiaViewer.context.highlighted.hexes.hexes.keys()]
+        button.command = [...this.$store.state.gaiaViewer.context.highlighted.hexes.keys()]
           .map((hex) => hex.toString())
           .join(",");
         this.emitButtonCommand(button);
         return;
       }
 
-      this.$store.commit("gaiaViewer/highlightHexes", button.hexes);
+      this.$store.commit("gaiaViewer/selectHexes", button.hexes);
 
       this.customLabel = "Custom location - End selection";
 
       this.subscribeHexClick((hex) => {
-        const highlighted = this.$store.state.gaiaViewer.context.highlighted.hexes.hexes;
+        const highlighted = this.$store.state.gaiaViewer.context.highlighted.hexes;
 
         if (highlighted.has(hex)) {
           highlighted.delete(hex);
@@ -288,11 +288,7 @@ export default class MoveButton extends Vue {
         return;
       }
 
-      this.$store.commit("gaiaViewer/highlightHexes", {
-        hexes: new Map(),
-        light: true,
-        selectAnyHex: true
-      } as HexSelection);
+      this.$store.commit("gaiaViewer/selectHexes");
       this.subscribeHexClick((hex) => this.$store.commit("gaiaViewer/rotate", hex));
       this.customLabel = "Sector rotations finished";
     } else if (button.range) {
