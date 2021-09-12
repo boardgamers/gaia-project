@@ -200,26 +200,27 @@ svg {
 
     &.highlighted {
       cursor: pointer;
-
-      &.selectedLight {
-        opacity: 0.7;
-      }
-
-      &.warn {
-        fill: red !important;
-      }
-
-      &.qic {
-        fill: lightGreen;
-      }
-
-      &.power {
-        fill: #d378d3;
-      }
     }
 
     &.highlighted:not(.selectedLight) {
       fill: white;
+    }
+
+    &.selectedLight {
+      opacity: 0.7;
+    }
+
+    &.backgroundLight {
+      cursor: pointer;
+      opacity: 0.7;
+    }
+
+    &.warn {
+      fill: red !important;
+    }
+
+    &.qic {
+      fill: lightGreen;
     }
 
     &.current-round:not(.highlighted):not(.selectedLight) {
@@ -228,11 +229,6 @@ svg {
 
     &.recent:not(.highlighted):not(.selectedLight) {
       fill: var(--recent);
-    }
-
-    &.backgroundLight {
-      cursor: pointer;
-      opacity: 0.7;
     }
   }
 
