@@ -257,8 +257,8 @@ export default class MoveButton extends Vue {
       } else {
         this.selectAnyButton(button);
       }
-    } else if (button.handler) {
-      button.handler();
+    } else if (button.onClick) {
+      button.onClick();
     } else if (button.modal) {
       this.modalShow = true;
       button.modal.show(true);

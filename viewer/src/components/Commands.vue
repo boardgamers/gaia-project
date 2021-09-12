@@ -272,7 +272,7 @@ export default class Commands extends Vue {
   }
 
   handleCommand(command: string, source?: ButtonData, warnings?: BuildWarning[]) {
-    console.log("handle command", command, source);
+    console.log("handle command", command);
     this.unsubscribe();
 
     // Some users seem to have a bug with repeating commands on mobile, like clicking the income button twice

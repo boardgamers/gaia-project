@@ -887,14 +887,14 @@ export function federationButton(
     textButton({
       label: "Previous",
       shortcuts: ["p"],
-      handler: cycle(-1),
+      onClick: cycle(-1),
     })
   );
   locationButtons.push(
     textButton({
       label: "OK",
       shortcuts: ["o"],
-      handler: () => {
+      onClick: () => {
         const button = locationButtons[index];
         handleCommand(button.command, button);
       },
@@ -905,7 +905,7 @@ export function federationButton(
     textButton({
       label: "Next",
       shortcuts: ["n"],
-      handler: next,
+      onClick: next,
     })
   );
 

@@ -27,7 +27,7 @@ export interface ButtonData {
   researchTiles?: string[];
   techs?: Array<TechTilePos | AdvTechTilePos>;
   boosters?: Booster[];
-  handler?: () => void;
+  onClick?: () => void;
   onShow?: () => void;
   boardActions?: BoardAction[];
   specialActions?: SpecialActionIncome[];
