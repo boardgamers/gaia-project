@@ -63,6 +63,7 @@
           <li>Auto-select the first federation.</li>
           <li>Use sub-dialog for custom federation.</li>
           <li>Highlight the active button in blue (e.g. when clicking on "Build mine").</li>
+          <li>Charts: Separate academy 1 and 2 for buildings.</li>
         </ul>
         <h5>2021-09-08</h5>
         <ul>

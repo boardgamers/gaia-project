@@ -258,7 +258,7 @@ export const simpleSourceFactories = (
     extractLog: statelessExtractLog((e) => {
       if (e.cmd.command == Command.Build) {
         const t = e.cmd.args[0] as Building;
-        if (e.source.type == t || (e.source.type == Building.Academy1 && t == Building.Academy2)) {
+        if (e.source.type == t) {
           return 1;
         }
       }
@@ -291,8 +291,14 @@ export const simpleSourceFactories = (
       },
       {
         type: Building.Academy1,
-        label: "Academy",
+        label: "Academy 1",
         color: "--rt-terra",
+        weight: 3,
+      },
+      {
+        type: Building.Academy2,
+        label: "Academy 2",
+        color: "--res-qic",
         weight: 3,
       },
       {
