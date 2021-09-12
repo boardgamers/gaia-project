@@ -204,6 +204,10 @@ svg {
 
     &.highlighted:not(.selectedLight) {
       fill: white;
+
+      &.qic {
+        fill: lightGreen;
+      }
     }
 
     &.selectedLight {
