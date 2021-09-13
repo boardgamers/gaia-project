@@ -60,7 +60,7 @@ const gaiaViewer = {
     data: new Engine(),
     context: {
       highlighted: {
-        hexes: { hexes: new Map() } as HexSelection,
+        hexes: null,
         researchTiles: new Set(),
         techs: new Set(),
         boosters: new Set(),
@@ -121,7 +121,7 @@ const gaiaViewer = {
     },
 
     clearContext(state: State) {
-      state.context.highlighted.hexes = { hexes: new Map() } as HexSelection;
+      state.context.highlighted.hexes = null;
       state.context.highlighted.researchTiles = new Set();
       state.context.highlighted.techs = new Set();
       state.context.highlighted.boardActions = new Set();
@@ -190,7 +190,9 @@ const gaiaViewer = {
     currentRoundCommands: (state: State): CommandObject[] => {
       if (state.preferences.highlightRecentActions) {
         const data = state.data;
-        return roundMoves(data.advancedLog, data.moveHistory).flatMap((m) => parseCommands(m));
+        const commandObjects = roundMoves(data.advancedLog, data.moveHistory).flatMap((m) => parseCommands(m));
+        console.log("cur", commandObjects);
+        return commandObjects;
       }
       return [];
     },
