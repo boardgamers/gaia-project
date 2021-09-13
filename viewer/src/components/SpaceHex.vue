@@ -5,23 +5,7 @@
       }}{{ hex.data.building ? `&#10;Building: ${buildingName(hex.data.building, hex.data.player)}` : ""
       }}{{ cost(hex) ? `&#10;Cost: ${cost(hex)}` : "" }}{{ warning(hex) ? `&#10;Warning: ${warning(hex)}` : "" }}
     </title>
-    <use
-      xlink:href="#space-hex"
-      :class="[
-        'space-hex',
-        {
-          backgroundLight,
-          selectedLight,
-          highlighted: highlightedHexes.has(hex),
-          recent: recent(hex),
-          'current-round': currentRound(hex),
-          qic: cost(hex).includes('q'),
-          power: cost(hex).includes('pw'),
-          warn: warning(hex) != null,
-        },
-      ]"
-      @click="hexClick(hex)"
-    />
+    <use xlink:href="#space-hex" :class="polygonClasses(hex)" @click="hexClick(hex)" />
     <text class="sector-name" v-if="isCenter">
       {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
     </text>
@@ -74,7 +58,7 @@ import Planet from "./Planet.vue";
 import Building from "./Building.vue";
 import { buildingName } from "../data/building";
 import { planetNames } from "../data/planets";
-import { HighlightHexData } from "../data";
+import { HexSelection, HighlightHexData } from "../data";
 import { moveWarnings } from "../data/warnings";
 import { factionName } from "../data/factions";
 
@@ -104,13 +88,46 @@ export default class SpaceHex extends Vue {
   }
 
   warning(hex: GaiaHex): string {
-    const warnings = this.highlightedHexes.get(hex)?.warnings;
+    const warnings = this.highlightedHexes?.get(hex)?.warnings;
     return warnings?.length > 0 ? warnings?.map((w) => moveWarnings[w].text).join(", ") : null;
+  }
+
+  polygonClasses(hex: GaiaHex): string[] {
+    const ret = ["space-hex"];
+
+    const selection = this.selection;
+    if (selection) {
+      if (selection.hexes.has(hex)) {
+        ret.push("highlighted");
+
+        if (this.warning(hex)) {
+          ret.push("warn");
+        } else if (this.cost(hex).includes("q")) {
+          ret.push("qic");
+        } else if (selection.selectedLight) {
+          ret.push("light");
+        } else {
+          ret.push("bold");
+        }
+      } else if (selection.backgroundLight) {
+        ret.push("light");
+      }
+    } else {
+      if (this.recent(hex)) {
+        ret.push("recent");
+      } else if (this.currentRound(hex)) {
+        ret.push("current-round");
+      }
+    }
+
+    console.log("cl", ret.toString());
+
+    return ret;
   }
 
   planetClasses(hex: GaiaHex): string[] {
     const ret = [];
-    const highlightHex = this.highlightedHexes.get(hex);
+    const highlightHex = this.highlightedHexes?.get(hex);
     if (highlightHex?.warnings?.length > 0) {
       ret.push("warn");
     }
@@ -121,13 +138,13 @@ export default class SpaceHex extends Vue {
   }
 
   cost(hex: GaiaHex) {
-    const data = this.highlightedHexes.get(hex);
+    const data = this.highlightedHexes?.get(hex);
 
     return data && data.cost && data.cost !== "~" ? data.cost.replace(/,/g, ", ") : "";
   }
 
   hexClick(hex: GaiaHex) {
-    const h = this.highlightedHexes.get(hex);
+    const h = this.highlightedHexes?.get(hex);
     if (h != null || this.selectAnyHex) {
       this.$store.dispatch("gaiaViewer/hexClick", { hex: hex, highlight: h });
     }
@@ -153,8 +170,8 @@ export default class SpaceHex extends Vue {
     return planetNames[planet];
   }
 
-  get highlightedHexes(): HighlightHexData {
-    return this.$store.state.gaiaViewer.context.highlighted.hexes.hexes;
+  get highlightedHexes(): HighlightHexData | null {
+    return this.selection?.hexes;
   }
 
   recent(hex: GaiaHex): boolean {
@@ -162,23 +179,21 @@ export default class SpaceHex extends Vue {
   }
 
   currentRound(hex: GaiaHex): boolean {
-    return this.$store.getters["gaiaViewer/currentRoundHexes"].has(hex);
+    const any = this.$store.getters["gaiaViewer/currentRoundHexes"];
+    console.log("he", any);
+    return any.has(hex);
   }
 
   get gameData(): Engine {
     return this.$store.state.gaiaViewer.data;
   }
 
-  get backgroundLight() {
-    return !!this.context().highlighted.hexes.backgroundLight;
-  }
-
-  get selectedLight() {
-    return !!this.context().highlighted.hexes.selectedLight;
+  get selection(): HexSelection  | null {
+    return this.context().highlighted.hexes;
   }
 
   get selectAnyHex() {
-    return !!this.context().highlighted.hexes.selectAnyHex;
+    return !!this.selection?.selectAnyHex;
   }
 
   private context() {
@@ -194,44 +209,31 @@ svg {
     stroke: #666;
     stroke-width: 0.01;
 
-    &:hover {
-      fill-opacity: 0.5;
-    }
-
     &.highlighted {
       cursor: pointer;
     }
 
-    &.highlighted:not(.selectedLight) {
+    &.bold {
       fill: white;
-
-      &.qic {
-        fill: lightGreen;
-      }
     }
 
-    &.selectedLight {
-      opacity: 0.7;
-    }
-
-    &.backgroundLight {
-      cursor: pointer;
+    &.light {
       opacity: 0.7;
     }
 
     &.warn {
-      fill: red !important;
+      fill: red;
     }
 
     &.qic {
       fill: lightGreen;
     }
 
-    &.current-round:not(.highlighted):not(.selectedLight) {
+    &.current-round {
       fill: var(--current-round);
     }
 
-    &.recent:not(.highlighted):not(.selectedLight) {
+    &.recent {
       fill: var(--recent);
     }
   }
