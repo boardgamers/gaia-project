@@ -29,6 +29,7 @@ export interface ButtonData {
   boosters?: Booster[];
   onClick?: () => void;
   onShow?: () => void;
+  onCreate?: (ui: any) => void; //ui is a MoveButton
   boardActions?: BoardAction[];
   specialActions?: SpecialActionIncome[];
   federations?: Federation[];

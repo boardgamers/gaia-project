@@ -190,9 +190,7 @@ const gaiaViewer = {
     currentRoundCommands: (state: State): CommandObject[] => {
       if (state.preferences.highlightRecentActions) {
         const data = state.data;
-        const commandObjects = roundMoves(data.advancedLog, data.moveHistory).flatMap((m) => parseCommands(m));
-        console.log("cur", commandObjects);
-        return commandObjects;
+        return roundMoves(data.advancedLog, data.moveHistory).flatMap((m) => parseCommands(m));
       }
       return [];
     },
