@@ -120,8 +120,6 @@ export default class SpaceHex extends Vue {
       }
     }
 
-    console.log("cl", ret.toString());
-
     return ret;
   }
 
@@ -179,9 +177,7 @@ export default class SpaceHex extends Vue {
   }
 
   currentRound(hex: GaiaHex): boolean {
-    const any = this.$store.getters["gaiaViewer/currentRoundHexes"];
-    console.log("he", any);
-    return any.has(hex);
+    return this.$store.getters["gaiaViewer/currentRoundHexes"].has(hex);
   }
 
   get gameData(): Engine {

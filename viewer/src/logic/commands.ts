@@ -34,6 +34,7 @@ import Engine, {
 import assert from "assert";
 import { max, minBy, range, sortBy } from "lodash";
 import { Store } from "vuex";
+import MoveButton from "../components/MoveButton.vue";
 import { ButtonData, ButtonWarning, HexSelection, HighlightHexData } from "../data";
 import {
   boardActionNames,
@@ -865,10 +866,31 @@ export function federationButton(
 
   const n = locationButtons.length;
   let index: number = null;
+
+  let okUi: MoveButton = null;
+  const okButton = textButton({
+    label: "OK",
+    shortcuts: ["o", "Enter"],
+    onCreate: (ui: MoveButton) => {
+      okUi = ui;
+    },
+    onClick: () => {
+      const button = locationButtons[index];
+      store.commit("gaiaViewer/highlightHexes", button.hexes); //to keep the selection
+      handleCommand(button.command, button);
+    },
+  });
+
   const cycle = (update: number) => () => {
     index = index == null ? 0 : (((index + update) % n) + n) % n;
 
-    store.commit("gaiaViewer/highlightHexes", locationButtons[index].hexes);
+    const button = locationButtons[index];
+    okButton.warning = button.warning;
+    if (okUi) {
+      okUi.button = okButton;
+      okUi.key = String(index); //forces re-render
+    }
+    store.commit("gaiaViewer/highlightHexes", button.hexes);
   };
 
   locationButtons.push({
@@ -890,16 +912,9 @@ export function federationButton(
       onClick: cycle(-1),
     })
   );
-  locationButtons.push(
-    textButton({
-      label: "OK",
-      shortcuts: ["o"],
-      onClick: () => {
-        const button = locationButtons[index];
-        handleCommand(button.command, button);
-      },
-    })
-  );
+
+  locationButtons.push(okButton);
+
   const next = cycle(1);
   locationButtons.push(
     textButton({

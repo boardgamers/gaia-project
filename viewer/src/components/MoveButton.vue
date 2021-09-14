@@ -1,5 +1,5 @@
 <template>
-  <div class="move-button">
+  <div class="move-button" :key="key">
     <Booster
       v-if="button.booster"
       class="mb-1 mr-1"
@@ -62,7 +62,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { BuildWarning, GaiaHex, HighlightHex, Player, SpaceMap } from "@gaia-project/engine";
+import { BuildWarning, GaiaHex, HighlightHex, Player } from "@gaia-project/engine";
 import { ButtonData, HexSelection } from "../data";
 import Booster from "./Booster.vue";
 import TechTile from "./TechTile.vue";
@@ -86,10 +86,11 @@ export default class MoveButton extends Vue {
   @Prop()
   public button!: ButtonData;
 
+  public key = "key" //only to for re-render
+
   private subscription: () => {} | null = null;
   private modalShow = false;
   private customLabel = "";
-  private startingHex = null; // For range command
 
   private rangePreselect: number = null;
 
@@ -182,6 +183,10 @@ export default class MoveButton extends Vue {
     };
     window.addEventListener("keydown", keyListener);
     this.$on("hook:beforeDestroy", () => window.removeEventListener("keydown", keyListener));
+
+    if (this.button.onCreate) {
+      this.button.onCreate(this);
+    }
   }
 
   async handleClick() {
@@ -223,10 +228,10 @@ export default class MoveButton extends Vue {
     // Remove highlights caused by another button
     if (!this.isActiveButton) {
       this.$store.commit("gaiaViewer/clearContext");
-    }
 
-    if (button.hexes && !this.isActiveButton) {
-      this.highlightHexes(button.hexes);
+      if (button.hexes) {
+        this.highlightHexes(button.hexes);
+      }
     }
 
     if (button.researchTiles) {
@@ -257,6 +262,8 @@ export default class MoveButton extends Vue {
       } else {
         this.selectAnyButton(button);
       }
+    } else if (button.hexes?.hover) {
+      this.emitButtonCommand(button, null, params);
     } else if (button.onClick) {
       button.onClick();
     } else if (button.modal) {
