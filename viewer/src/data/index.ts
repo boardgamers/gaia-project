@@ -8,6 +8,7 @@ import {
   Reward,
   TechTilePos,
 } from "@gaia-project/engine";
+import MoveButton from "../components/MoveButton.vue";
 import { FastConversionTooltips } from "../logic/commands";
 
 export type ButtonWarning = { title?: string; body: string[]; okButton?: { label: string; action: () => void } };
@@ -24,12 +25,10 @@ export interface ButtonData {
   conversion?: { from: Reward[]; to: Reward[] };
   modal?: ModalButtonData;
   hexes?: HexSelection;
-  researchTiles?: string[];
-  techs?: Array<TechTilePos | AdvTechTilePos>;
   boosters?: Booster[];
   onClick?: () => void;
   onShow?: () => void;
-  onCreate?: (ui: any) => void; //ui is a MoveButton
+  onCreate?: (ui: MoveButton) => void;
   boardActions?: BoardAction[];
   specialActions?: SpecialActionIncome[];
   federations?: Federation[];

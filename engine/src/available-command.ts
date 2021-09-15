@@ -113,7 +113,7 @@ type PossibleBid = { faction: Faction; bid: number[] };
 
 type TechTileWithPos = { tile: TechTile; pos: TechTilePos };
 type AdvTechTileWithPos = { tile: AdvTechTile; pos: AdvTechTilePos };
-type ChooseTechTile = TechTileWithPos | AdvTechTileWithPos;
+export type ChooseTechTile = TechTileWithPos | AdvTechTileWithPos;
 
 type AvailableBuildCommandData = { buildings: AvailableBuilding[] };
 

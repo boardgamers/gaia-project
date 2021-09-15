@@ -6,13 +6,13 @@ import Engine, {
   AvailableFreeAction,
   AvailableFreeActionData,
   AvailableHex,
-  AvailableResearchData,
   AvailableResearchTrack,
   BoardAction,
   boardActions,
   Booster,
   BrainstoneActionData,
   Building,
+  ChooseTechTile,
   Command,
   conversionToFreeAction,
   Event,
@@ -91,6 +91,17 @@ function tooltipWithShortcut(tooltip: string | null, warn: ButtonWarning | null,
     return withShortcut(tooltip, shortcut, skip) + " - " + warnings;
   }
   return withShortcut(tooltip, shortcut, skip) ?? warnings;
+}
+
+export function activateOnShow(button: ButtonData): ButtonData {
+  let b: MoveButton = null;
+  button.onCreate = (ui) => (b = ui);
+  const last = button.onShow;
+  button.onShow = () => {
+    last?.();
+    b.handleClick();
+  };
+  return button;
 }
 
 function translateResources(rewards: Reward[]): string {
@@ -465,16 +476,15 @@ export function passButtons(
       })
     );
   } else {
-    ret.push(
-      textButton({
-        label: command.name === Command.Pass ? "Pass" : "Pick booster",
-        shortcuts: ["p"],
-        command: command.name,
-        buttons,
-        boosters: command.data.boosters,
-        warning,
-      })
-    );
+    const button = textButton({
+      label: command.name === Command.Pass ? "Pass" : "Pick booster",
+      shortcuts: ["p"],
+      command: command.name,
+      buttons,
+      boosters: command.data.boosters,
+      warning,
+    });
+    ret.push(command.name === Command.ChooseRoundBooster ? activateOnShow(button) : button);
   }
   return ret;
 }
@@ -711,37 +721,48 @@ export function brainstoneButtons(data: BrainstoneActionData): ButtonData[] {
   });
 }
 
-export function researchButtons(command: AvailableCommand<Command.UpgradeResearch>, player: Player): ButtonData[] {
-  const ret: ButtonData[] = [];
+export function researchButtons(
+  command: AvailableCommand<Command.UpgradeResearch>,
+  player: Player,
+  nested: boolean
+): ButtonData[] {
+  const tracks = command.data.tracks;
+  const ret: ButtonData[] = tracks.map((track) =>
+    textButton({
+      command: `${command.name} ${track.field}`,
+      label: researchNames[track.field],
+      shortcuts: [track.field.substring(0, 1)],
+      warning: advanceResearchWarning(player, track),
+    })
+  );
 
-  const { tracks }: AvailableResearchData = command.data;
-  if (tracks.length === 1) {
-    ret.push(
-      textButton({
-        label: "Research " + researchNames[tracks[0].field],
-        shortcuts: ["r"],
-        command: `${Command.UpgradeResearch} ${tracks[0].field}`,
-        warning: advanceResearchWarning(player, tracks[0]),
-      })
+  ret[0].onCreate = (ui) => {
+    ui.$store.commit(
+      "gaiaViewer/highlightResearchTiles",
+      tracks.map((track) => track.field + "-" + track.to)
     );
-  } else {
-    ret.push({
-      label: "Research",
-      shortcuts: ["r"],
-      command: command.name,
-      // track.to contains actual level, to use when implementing research viewer
-      buttons: tracks.map((track) =>
-        textButton({
-          command: track.field,
-          label: researchNames[track.field],
-          shortcuts: [track.field.substring(0, 1)],
-          warning: advanceResearchWarning(player, track),
-        })
-      ),
-      researchTiles: tracks.map((track) => track.field + "-" + track.to),
-    });
-  }
 
+    ui.subscribe(
+      "researchClick",
+      (button) => {
+        ui.handleButtonClick({
+          //here we have to prepend the command again, because it comes from ResearchTile.vue, which is only the position
+          command: `${command.name} ${button.command}`,
+        });
+      },
+      false
+    );
+  };
+
+  if (nested) {
+    return [
+      textButton({
+        label: "Research",
+        shortcuts: ["r"],
+        buttons: ret,
+      }),
+    ];
+  }
   return ret;
 }
 
@@ -871,7 +892,7 @@ export function federationButton(
   const okButton = textButton({
     label: "OK",
     shortcuts: ["o", "Enter"],
-    onCreate: (ui: MoveButton) => {
+    onCreate: (ui) => {
       okUi = ui;
     },
     onClick: () => {
@@ -950,4 +971,23 @@ export function declineButton(command: AvailableCommand<Command.Decline>): Butto
     command: `${Command.Decline} ${offer}`,
     warning: buttonWarning(message),
   });
+}
+
+export function techTiles(command: Command, tiles: ChooseTechTile[]): ButtonData[] {
+  const ret: ButtonData[] = tiles.map((tile) => ({ command: `${command} ${tile.pos}`, tech: tile.pos }));
+
+  ret[0].onCreate = (ui) => {
+    ui.$store.commit(
+      "gaiaViewer/highlightTechs",
+      tiles.map((tile) => tile.pos)
+    );
+    ui.subscribe("techClick", (button) => {
+      ui.handleButtonClick({
+        //here we have to prepend the command again, because it comes from TechTile.vue, which is only the position
+        command: `${command} ${button.command}`,
+      });
+    });
+  };
+
+  return ret;
 }

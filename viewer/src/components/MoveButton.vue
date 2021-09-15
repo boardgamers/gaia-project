@@ -86,7 +86,7 @@ export default class MoveButton extends Vue {
   @Prop()
   public button!: ButtonData;
 
-  public key = "key" //only to for re-render
+  public key = "key" //only to force re-render
 
   private subscription: () => {} | null = null;
   private modalShow = false;
@@ -99,11 +99,13 @@ export default class MoveButton extends Vue {
     this.$emit("cancel");
   }
 
-  subscribe(action: string, callback: any) {
+  subscribe(action: string, callback: any, activateButton = true) {
     action = "gaiaViewer/" + action;
 
     this.unsubscribe();
-    this.$store.commit("gaiaViewer/activeButton", this.button);
+    if (activateButton) {
+      this.$store.commit("gaiaViewer/activeButton", this.button);
+    }
 
     this.subscription = (this.$store as any).subscribeAction(({ type, payload }) => {
       if (type !== action) {
@@ -126,10 +128,14 @@ export default class MoveButton extends Vue {
     });
   }
 
-  subscribeFinal(action: string) {
+  subscribeButtonClick(action: string) {
     this.subscribe(action, (button) => {
       this.handleButtonClick(button);
     });
+  }
+
+  subscribeFinal(action: string) {
+    this.subscribeButtonClick(action);
     this.emitCommand(null, { disappear: false });
   }
 
@@ -183,9 +189,14 @@ export default class MoveButton extends Vue {
     };
     window.addEventListener("keydown", keyListener);
     this.$on("hook:beforeDestroy", () => window.removeEventListener("keydown", keyListener));
+  }
 
+  updated() {
     if (this.button.onCreate) {
       this.button.onCreate(this);
+    }
+    if (!this.button.hide && this.button.onShow) {
+      this.button.onShow();
     }
   }
 
@@ -234,13 +245,7 @@ export default class MoveButton extends Vue {
       }
     }
 
-    if (button.researchTiles) {
-      this.$store.commit("gaiaViewer/highlightResearchTiles", button.researchTiles);
-      this.subscribeFinal("researchClick");
-    } else if (button.techs) {
-      this.$store.commit("gaiaViewer/highlightTechs", button.techs);
-      this.subscribeFinal("techClick");
-    } else if (button.specialActions) {
+    if (button.specialActions) {
       this.$store.commit("gaiaViewer/highlightSpecialActions", button.specialActions);
       this.subscribeFinal("specialActionClick");
     } else if (button.boardActions) {
