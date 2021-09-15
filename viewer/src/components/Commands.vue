@@ -79,6 +79,7 @@ import { FactionCustomization } from "@gaia-project/engine/src/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
 import { moveWarnings } from "../data/warnings";
 import {
+  activateOnShow,
   AvailableConversions,
   boardActionsButton,
   brainstoneButtons,
@@ -96,11 +97,19 @@ import {
   passButtons,
   researchButtons,
   specialActionsButton,
+  techTiles,
   UndoPropagation,
 } from "../logic/commands";
 import Undo from "./Resources/Undo.vue";
 
 let show = false;
+
+const titles = {
+  [Command.ChooseFaction]: "Choose your faction",
+  [Command.ChooseTechTile]: "Pick tech tile",
+  [Command.ChooseCoverTechTile]: "Pick tech tile to cover",
+  [Command.UpgradeResearch]: "Research",
+};
 
 @Component<Commands>({
   watch: {
@@ -186,17 +195,20 @@ export default class Commands extends Vue {
     return "";
   }
 
-  loadCommands(val: AvailableCommand[]) {
+  loadCommands(commands: AvailableCommand[]) {
     this.commandTitles = [];
     this.customButtons = [];
     this.commandChain = [];
     this.buttonChain = [];
     this.$store.commit("gaiaViewer/setCommandChain", false);
 
-    for (const command of val) {
-      if (command.name === Command.ChooseFaction) {
-        this.title("Choose your faction");
-        return;
+    if (!this.hasPass(commands)) {
+      for (const command of commands) {
+        const t = titles[command.name];
+        if (t) {
+          this.title(t);
+          return;
+        }
       }
     }
   }
@@ -374,28 +386,13 @@ export default class Commands extends Vue {
         }
 
         case Command.UpgradeResearch: {
-          ret.push(...researchButtons(command, this.player));
+          ret.push(...researchButtons(command, this.player, this.hasPass(commands)));
           break;
         }
 
-        case Command.ChooseTechTile: {
-          ret.push({
-            label: "Pick tech tile",
-            shortcuts: ["p"],
-            command: command.name,
-            techs: command.data.tiles.map((tile) => tile.pos),
-            buttons: command.data.tiles.map((tile) => ({ command: tile.pos, tech: tile.pos })),
-          });
-          break;
-        }
+        case Command.ChooseTechTile:
         case Command.ChooseCoverTechTile: {
-          ret.push({
-            label: "Pick tech tile to cover",
-            shortcuts: ["p"],
-            command: command.name,
-            techs: command.data.tiles.map((tile) => tile.pos),
-            buttons: command.data.tiles.map((tile) => ({ command: tile.pos, tech: tile.pos })),
-          });
+          ret.push(...techTiles(command.name, command.data.tiles));
           break;
         }
 
@@ -509,7 +506,18 @@ export default class Commands extends Vue {
     }
 
     finalizeShortcuts(ret);
+
+    if (ret.length == 1) {
+      const button = ret[0];
+      if (button.hexes && !button.hexes.selectAnyHex && !button.warning) {
+        activateOnShow(button);
+      }
+    }
     return ret;
+  }
+
+  private hasPass(commands: AvailableCommand[]) {
+    return commands.some(c => c.name === Command.Pass);
   }
 
   get canUndo() {
