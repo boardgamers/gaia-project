@@ -61,7 +61,8 @@
           <li>Show the warning of the currently selected federation.</li>
           <li>Don't show recent buildings when placing a building.</li>
           <li>Avoid unnecessary sub-dialogs for "Pick tech tile", "Pick tech tile to cover", "Research".</li>
-          <li>Automatically activate if it's a single button: "Pick Booster", any building</li>
+          <li>Automatically activate if it's a single button: "Pick Booster" and for any building.</li>
+          <li>Explain remaining satellites when forming a federation.</li>
         </ul>
         <h5>2021-09-12</h5>
         <ul>
