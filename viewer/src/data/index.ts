@@ -19,6 +19,7 @@ export type SpecialActionIncome = string;
 
 export interface ButtonData {
   label?: string;
+  longLabel?: string;
   command?: string;
   tooltip?: string;
   times?: number[];
@@ -27,6 +28,7 @@ export interface ButtonData {
   hexes?: HexSelection;
   boosters?: Booster[];
   onClick?: () => void;
+  onOpen?: () => void;
   onShow?: () => void;
   onCreate?: (ui: MoveButton) => void;
   boardActions?: BoardAction[];

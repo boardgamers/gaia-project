@@ -21,6 +21,7 @@ import Engine, {
   Federation,
   GaiaHex,
   HighlightHex,
+  MAX_SATELLITES,
   Operator,
   Player,
   PowerArea,
@@ -907,6 +908,7 @@ export function federationButton(
 
     const button = locationButtons[index];
     okButton.warning = button.warning;
+    okButton.tooltip = tooltipWithShortcut(null, button.warning);
     if (okUi) {
       okUi.button = okButton;
       okUi.key = String(index); //forces re-render
@@ -945,12 +947,16 @@ export function federationButton(
     })
   );
 
+  const sat = player.faction === Faction.Ivits ? "QICs" : "power tokens";
   return textButton({
     label: "Form federation",
+    longLabel: `Form federation (${player.maxSatellites} ${sat} can be used as satellites, ${
+      MAX_SATELLITES - player.data.satellites
+    } satellites are left)`,
     shortcuts: ["f"],
     command: Command.FormFederation,
     buttons: locationButtons,
-    onShow: () => next(),
+    onOpen: () => next(),
   });
 }
 

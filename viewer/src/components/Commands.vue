@@ -298,15 +298,14 @@ export default class Commands extends Vue {
     }
 
     if (source?.buttons?.length > 0) {
-      this.commandTitles.push(source.label);
+      this.commandTitles.push(source.longLabel ?? source.label);
       this.commandChain.push(source.command);
       this.buttonChain.push(source);
       this.customButtons = source.buttons;
       this.$store.commit("gaiaViewer/setCommandChain", true);
 
-      if (source.onShow) {
-        source.onShow();
-      }
+      source.onShow?.();
+      source.onOpen?.();
 
       return;
     }
