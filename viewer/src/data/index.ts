@@ -30,7 +30,7 @@ export interface ButtonData {
   onClick?: () => void;
   onOpen?: () => void;
   onShow?: () => void;
-  onCreate?: (ui: MoveButton) => void;
+  onCreate?: (ui: MoveButton) => void; //may be called multiple times!
   boardActions?: BoardAction[];
   specialActions?: SpecialActionIncome[];
   federations?: Federation[];
