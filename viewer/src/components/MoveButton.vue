@@ -191,12 +191,16 @@ export default class MoveButton extends Vue {
     this.$on("hook:beforeDestroy", () => window.removeEventListener("keydown", keyListener));
   }
 
+  created() {
+    this.button.onCreate?.(this);
+  }
+
   updated() {
-    if (this.button.onCreate) {
-      this.button.onCreate(this);
-    }
-    if (!this.button.hide && this.button.onShow) {
-      this.button.onShow();
+    //when a MoveButton is re-used, create is not called
+    this.button.onCreate?.(this);
+
+    if (!this.button.hide) {
+      this.button.onShow?.();
     }
   }
 
