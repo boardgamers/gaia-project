@@ -56,6 +56,11 @@
           <li><a href="https://www.boardgamers.space/page/elo">How Elo works</a></li>
         </ul>
         <h4>Recent changes</h4>
+        <h5>2021-09-18</h5>
+        <ul>
+          <li>Charts: Power charges include burn.</li>
+          <li>Charts: New Power Charges chart.</li>
+        </ul>
         <h5>2021-09-15</h5>
         <ul>
           <li>Show the warning of the currently selected federation.</li>
