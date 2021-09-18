@@ -62,14 +62,14 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { BuildWarning, GaiaHex, HighlightHex, Player } from "@gaia-project/engine";
+import { AdvTechTilePos, BuildWarning, GaiaHex, HighlightHex, Player, TechTilePos } from "@gaia-project/engine";
 import { ButtonData, HexSelection } from "../data";
 import Booster from "./Booster.vue";
 import TechTile from "./TechTile.vue";
 import ButtonContent from "./Resources/ButtonContent.vue";
 import BoardAction from "./BoardAction.vue";
 import SpecialAction from "./SpecialAction.vue";
-import { customHexSelection } from "../logic/commands";
+import { customHexSelection, MoveButtonController } from "../logic/commands";
 
 type EmitCommandParams = { disappear?: boolean; times?: number; warnings?: BuildWarning[] };
 
@@ -82,7 +82,7 @@ type EmitCommandParams = { disappear?: boolean; times?: number; warnings?: Build
     SpecialAction,
   },
 })
-export default class MoveButton extends Vue {
+export default class MoveButton extends Vue implements MoveButtonController {
   @Prop()
   public button!: ButtonData;
 
@@ -93,6 +93,19 @@ export default class MoveButton extends Vue {
   private customLabel = "";
 
   private rangePreselect: number = null;
+
+  highlightResearchTiles(tiles: string[]) {
+    this.$store.commit("gaiaViewer/highlightResearchTiles", tiles);
+  }
+
+  highlightTechs(techs: Array<TechTilePos | AdvTechTilePos>) {
+    this.$store.commit("gaiaViewer/highlightTechs", techs);
+  }
+
+  setButton(b: ButtonData, key: string) {
+    this.button = b;
+    this.key = key; //forces re-render
+  }
 
   modalCancel(arg: string) {
     this.button.modal.show(false);
@@ -128,10 +141,8 @@ export default class MoveButton extends Vue {
     });
   }
 
-  subscribeButtonClick(action: string) {
-    this.subscribe(action, (button) => {
-      this.handleButtonClick(button);
-    });
+  subscribeButtonClick(action: string, transform = (button: ButtonData) => button, activateButton = true) {
+    this.subscribe(action, (button) => {this.handleButtonClick(transform(button));}, activateButton);
   }
 
   subscribeFinal(action: string) {

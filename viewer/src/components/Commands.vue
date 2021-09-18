@@ -70,37 +70,17 @@ import Engine, {
   Player,
   Resource,
   Reward,
-  SpaceMap,
+  SpaceMap
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
-import { ButtonData, GameContext, ModalButtonData } from "../data";
+import { ButtonData, GameContext, HexSelection, ModalButtonData } from "../data";
 import { factionDesc, factionName, factionShortcut } from "../data/factions";
 import { FactionCustomization } from "@gaia-project/engine/src/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
 import { moveWarnings } from "../data/warnings";
-import {
-  activateOnShow,
-  AvailableConversions,
-  boardActionsButton,
-  brainstoneButtons,
-  buildButtons,
-  chargePowerButtons,
-  deadEndButton,
-  declineButton,
-  endTurnButton,
-  fastConversionClick,
-  federationButton,
-  federationTypeButtons,
-  finalizeShortcuts,
-  freeAndBurnButton,
-  hexMap,
-  passButtons,
-  researchButtons,
-  specialActionsButton,
-  techTiles,
-  UndoPropagation,
-} from "../logic/commands";
+import { commandButtons, CommandController, FastConversionTooltips, hasPass, UndoPropagation } from "../logic/commands";
 import Undo from "./Resources/Undo.vue";
+import { ActionPayload, SubscribeActionOptions, SubscribeOptions } from "vuex";
 
 let show = false;
 
@@ -156,7 +136,7 @@ const titles = {
     Undo,
   },
 })
-export default class Commands extends Vue {
+export default class Commands extends Vue implements CommandController {
   @Prop()
   currentMove?: string;
 
@@ -202,7 +182,7 @@ export default class Commands extends Vue {
     this.buttonChain = [];
     this.$store.commit("gaiaViewer/setCommandChain", false);
 
-    if (!this.hasPass(commands)) {
+    if (!hasPass(commands)) {
       for (const command of commands) {
         const t = titles[command.name];
         if (t) {
@@ -337,186 +317,7 @@ export default class Commands extends Vue {
     if (!commands) {
       return [];
     }
-
-    const conversions: AvailableConversions = {};
-    const ret: ButtonData[] = [];
-
-    for (const command of commands.filter((c) => c.name != Command.ChooseFaction)) {
-      switch (command.name) {
-        case Command.RotateSectors: {
-          ret.push({
-            label: "Rotate sectors",
-            command: Command.RotateSectors,
-            shortcuts: ["r"],
-            rotation: true,
-            hexes: { hexes: new Map(), backgroundLight: true, selectAnyHex: true }
-          });
-
-          break;
-        }
-        case Command.Build: {
-          ret.push(...buildButtons(this.engine, command));
-          break;
-        }
-
-        case Command.PISwap: {
-          ret.push({
-            label: "Swap Planetary Institute",
-            shortcuts: ["w"],
-            command: command.name,
-            hexes: hexMap(this.engine, command.data.buildings, false),
-          });
-          break;
-        }
-
-        case Command.PlaceLostPlanet: {
-          ret.push({
-            label: "Place Lost Planet",
-            command: command.name,
-            hexes: hexMap(this.engine, command.data.spaces, true),
-          });
-          break;
-        }
-
-        case Command.Pass:
-        case Command.ChooseRoundBooster: {
-          ret.push(...passButtons(this.engine, this.player, command));
-          break;
-        }
-
-        case Command.UpgradeResearch: {
-          ret.push(...researchButtons(command, this.player, this.hasPass(commands)));
-          break;
-        }
-
-        case Command.ChooseTechTile:
-        case Command.ChooseCoverTechTile: {
-          ret.push(...techTiles(command.name, command.data.tiles));
-          break;
-        }
-
-        case Command.ChargePower: {
-          ret.push(...chargePowerButtons(command, this.engine, this.player));
-          break;
-        }
-
-        case Command.Decline: {
-          ret.push(declineButton(command));
-          break;
-        }
-
-        case Command.BrainStone: {
-          ret.push(...brainstoneButtons(command.data));
-          break;
-        }
-        case Command.Spend: {
-          conversions.free = command.data;
-          break;
-        }
-        case Command.BurnPower: {
-          conversions.burn = command.data;
-          break;
-        }
-        case Command.Action: {
-          ret.push(boardActionsButton(command.data, this.player));
-          break;
-        }
-
-        case Command.Special: {
-          ret.push(specialActionsButton(command, this.player));
-          break;
-        }
-
-        case Command.EndTurn: {
-          ret.push(endTurnButton(command, this.engine));
-          break;
-        }
-
-        case Command.DeadEnd:
-          ret.push(deadEndButton(command, this.undo));
-          break;
-
-        case Command.ChooseIncome: {
-          ret.push(
-            ...command.data.map((income) => ({
-              label: `Income ${income}`,
-              command: `${Command.ChooseIncome} ${income}`,
-            })),
-          );
-          break;
-        }
-
-        case Command.Bid: {
-          ret.push(
-            ...command.data.bids.map((pos) => ({
-              label: `Bid ${pos.bid[0]} for ${pos.faction}`,
-              command: `${Command.Bid} ${pos.faction} $times`,
-              times: pos.bid,
-            })),
-          );
-          break;
-        }
-
-        case Command.FormFederation: {
-          ret.push(federationButton(command, this.engine, this.$store, this.handleCommand, this.player));
-          break;
-        }
-
-        case Command.ChooseFederationTile: {
-          ret.push({
-            label: "Rescore federation",
-            command: Command.ChooseFederationTile,
-            buttons: federationTypeButtons(command.data.tiles, this.player),
-          });
-          break;
-        }
-      }
-    }
-
-    if (conversions.free || conversions.burn) {
-      this.subscriptions[Command.Spend]?.();
-      this.subscriptions[Command.Spend] = this.$store.subscribeAction(({ type, payload }) => {
-        if (type === "gaiaViewer/fastConversionClick") {
-          const command = fastConversionClick(payload, conversions, this.player);
-          if (command) {
-            this.handleCommand(command);
-          }
-        }
-      });
-
-      const pass = ret.pop();
-      const d = freeAndBurnButton(conversions, this.player);
-      ret.push(d.button);
-      if (pass) {
-        ret.push(pass);
-      }
-
-      this.$store.commit("gaiaViewer/fastConversionTooltips", d.tooltips);
-      // tooltips may have become unavailable - and they should be hidden
-      this.$root.$emit("bv::hide::tooltip");
-    }
-
-    if (this.customButtons.length > 0) {
-      for (const button of ret) {
-        button.hide = true;
-      }
-
-      ret.push(...this.customButtons);
-    }
-
-    finalizeShortcuts(ret);
-
-    if (ret.length == 1) {
-      const button = ret[0];
-      if (button.hexes && !button.hexes.selectAnyHex && !button.warning) {
-        activateOnShow(button);
-      }
-    }
-    return ret;
-  }
-
-  private hasPass(commands: AvailableCommand[]) {
-    return commands.some(c => c.name === Command.Pass);
+    return commandButtons(commands, this.engine, this.player, this);
   }
 
   get canUndo() {
@@ -583,10 +384,26 @@ export default class Commands extends Vue {
     });
   }
 
+  disableTooltips() {
+    this.$root.$emit("bv::hide::tooltip");
+  }
+
+  highlightHexes(selection: HexSelection) {
+    this.$store.commit("gaiaViewer/highlightHexes", selection);
+  }
+
+  setFastConversionTooltips(tooltips: FastConversionTooltips) {
+    this.$store.commit("gaiaViewer/fastConversionTooltips", tooltips);
+  }
+
+  subscribeAction<P extends ActionPayload>(fn: SubscribeActionOptions<P, any>, options?: SubscribeOptions): () => void {
+    return this.$store.subscribeAction(fn, options);
+  }
+
   private updater = 0;
-  private subscriptions: { [key in Command]?: () => void } = {};
+  public subscriptions: { [key in Command]?: () => void } = {};
   private commandTitles: string[] = [];
-  private customButtons: ButtonData[] = [];
+  public customButtons: ButtonData[] = [];
   private commandChain: string[] = [];
   private buttonChain: ButtonData[] = [];
 }

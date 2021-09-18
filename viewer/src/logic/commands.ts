@@ -1,4 +1,5 @@
 import Engine, {
+  AdvTechTilePos,
   applyChargePowers,
   AvailableBoardActionData,
   AvailableBuilding,
@@ -30,12 +31,12 @@ import Engine, {
   Reward,
   Round,
   SubPhase,
+  TechTilePos,
   tiles,
 } from "@gaia-project/engine";
 import assert from "assert";
 import { max, minBy, range, sortBy } from "lodash";
-import { Store } from "vuex";
-import MoveButton from "../components/MoveButton.vue";
+import { ActionPayload, SubscribeActionOptions, SubscribeOptions } from "vuex";
 import { ButtonData, ButtonWarning, HexSelection, HighlightHexData } from "../data";
 import {
   boardActionNames,
@@ -60,6 +61,25 @@ export type AvailableConversions = {
   free?: AvailableFreeActionData;
   burn?: number[];
 };
+
+export interface CommandController {
+  readonly customButtons: ButtonData[];
+  readonly subscriptions: { [key in Command]?: () => void };
+  undo();
+  handleCommand(command: string, source?: ButtonData);
+  disableTooltips();
+  highlightHexes(selection: HexSelection);
+  subscribeAction<P extends ActionPayload>(fn: SubscribeActionOptions<P, any>, options?: SubscribeOptions): () => void;
+  setFastConversionTooltips(tooltips: FastConversionTooltips);
+}
+
+export interface MoveButtonController {
+  handleClick();
+  highlightResearchTiles(tiles: string[]);
+  highlightTechs(techs: Array<TechTilePos | AdvTechTilePos>);
+  subscribeButtonClick(action: string, transform?: (button: ButtonData) => ButtonData, activateButton?: boolean);
+  setButton(button: ButtonData, key: string);
+}
 
 export const forceNumericShortcut = (label: string) => ["Charge", "Income"].find((b) => label.startsWith(b));
 
@@ -95,12 +115,12 @@ function tooltipWithShortcut(tooltip: string | null, warn: ButtonWarning | null,
 }
 
 export function activateOnShow(button: ButtonData): ButtonData {
-  let b: MoveButton = null;
-  button.onCreate = (ui) => (b = ui);
+  let controller: MoveButtonController = null;
+  button.onCreate = (c) => (controller = c);
   const last = button.onShow;
   button.onShow = () => {
     last?.();
-    b.handleClick();
+    controller.handleClick();
   };
   return button;
 }
@@ -360,7 +380,7 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
   const sort = Object.values(Building);
   const sorted = sortBy(
     Array.from(m.entries()),
-    ([l, b]) => sort.indexOf(b[0].building) * 2 + (b[0].upgrade || b[0].downgrade ? 1 : 0)
+    ([, b]) => sort.indexOf(b[0].building) * 2 + (b[0].upgrade || b[0].downgrade ? 1 : 0)
   );
 
   for (const [label, buildings] of sorted) {
@@ -439,7 +459,7 @@ export function passButtons(
   const buttons: ButtonData[] = [];
   const warning = passWarning(engine, player, command);
 
-  Booster.values(Expansion.All).forEach((booster, i) => {
+  Booster.values(Expansion.All).forEach((booster) => {
     if (command.data.boosters.includes(booster)) {
       buttons.push(
         symbolButton({
@@ -737,20 +757,13 @@ export function researchButtons(
     })
   );
 
-  ret[0].onCreate = (ui) => {
-    ui.$store.commit(
-      "gaiaViewer/highlightResearchTiles",
-      tracks.map((track) => track.field + "-" + track.to)
-    );
+  ret[0].onCreate = (controller) => {
+    controller.highlightResearchTiles(tracks.map((track) => track.field + "-" + track.to));
 
-    ui.subscribe(
+    //here we have to prepend the command again, because it comes from ResearchTile.vue, which is only the position
+    controller.subscribeButtonClick(
       "researchClick",
-      (button) => {
-        ui.handleButtonClick({
-          //here we have to prepend the command again, because it comes from ResearchTile.vue, which is only the position
-          command: `${command.name} ${button.command}`,
-        });
-      },
+      (button) => ({ command: `${command.name} ${button.command}` }),
       false
     );
   };
@@ -865,7 +878,7 @@ export function customHexSelection(hexes: HighlightHexData): HexSelection {
 export function federationButton(
   command: AvailableCommand<Command.FormFederation>,
   engine: Engine,
-  store: Store<any>,
+  highlightHexes: (selection: HexSelection) => void,
   handleCommand: (command: string, source?: ButtonData) => void,
   player: Player
 ): ButtonData {
@@ -889,17 +902,16 @@ export function federationButton(
   const n = locationButtons.length;
   let index: number = null;
 
-  let okUi: MoveButton = null;
+  let controller: MoveButtonController = null;
   const okButton = textButton({
     label: "OK",
     shortcuts: ["o", "Enter"],
-    onCreate: (ui) => {
-      okUi = ui;
+    onCreate: (c) => {
+      controller = c;
     },
     onClick: () => {
       const button = locationButtons[index];
-      store.commit("gaiaViewer/highlightHexes", button.hexes); //to keep the selection
-      handleCommand(button.command, button);
+      handleCommand(button.command, button); //to keep the selection
     },
   });
 
@@ -909,11 +921,10 @@ export function federationButton(
     const button = locationButtons[index];
     okButton.warning = button.warning;
     okButton.tooltip = tooltipWithShortcut(null, button.warning);
-    if (okUi) {
-      okUi.button = okButton;
-      okUi.key = String(index); //forces re-render
+    if (controller) {
+      controller.setButton(okButton, String(index));
     }
-    store.commit("gaiaViewer/highlightHexes", button.hexes);
+    highlightHexes(button.hexes);
   };
 
   locationButtons.push({
@@ -982,18 +993,193 @@ export function declineButton(command: AvailableCommand<Command.Decline>): Butto
 export function techTiles(command: Command, tiles: ChooseTechTile[]): ButtonData[] {
   const ret: ButtonData[] = tiles.map((tile) => ({ command: `${command} ${tile.pos}`, tech: tile.pos }));
 
-  ret[0].onCreate = (ui) => {
-    ui.$store.commit(
-      "gaiaViewer/highlightTechs",
-      tiles.map((tile) => tile.pos)
-    );
-    ui.subscribe("techClick", (button) => {
-      ui.handleButtonClick({
-        //here we have to prepend the command again, because it comes from TechTile.vue, which is only the position
-        command: `${command} ${button.command}`,
-      });
-    });
+  ret[0].onCreate = (controller) => {
+    controller.highlightTechs(tiles.map((tile) => tile.pos));
+    //here we have to prepend the command again, because it comes from TechTile.vue, which is only the position
+    controller.subscribeButtonClick("techClick", (button) => ({ command: `${command} ${button.command}` }));
   };
+  return ret;
+}
 
+export function hasPass(commands: AvailableCommand[]) {
+  return commands.some((c) => c.name === Command.Pass);
+}
+
+function commandButton(
+  command: AvailableCommand,
+  engine: Engine,
+  player: Player,
+  commands: AvailableCommand[],
+  conversions: AvailableConversions,
+  controller: CommandController
+): ButtonData[] {
+  switch (command.name) {
+    case Command.RotateSectors: {
+      return [
+        {
+          label: "Rotate sectors",
+          command: Command.RotateSectors,
+          shortcuts: ["r"],
+          rotation: true,
+          hexes: { hexes: new Map(), backgroundLight: true, selectAnyHex: true },
+        },
+      ];
+    }
+    case Command.Build: {
+      return buildButtons(engine, command);
+    }
+
+    case Command.PISwap: {
+      return [
+        {
+          label: "Swap Planetary Institute",
+          shortcuts: ["w"],
+          command: command.name,
+          hexes: hexMap(engine, command.data.buildings, false),
+        },
+      ];
+    }
+
+    case Command.PlaceLostPlanet: {
+      return [
+        {
+          label: "Place Lost Planet",
+          command: command.name,
+          hexes: hexMap(engine, command.data.spaces, true),
+        },
+      ];
+    }
+
+    case Command.Pass:
+    case Command.ChooseRoundBooster: {
+      return passButtons(engine, player, command);
+    }
+
+    case Command.UpgradeResearch: {
+      return researchButtons(command, player, hasPass(commands));
+    }
+
+    case Command.ChooseTechTile:
+    case Command.ChooseCoverTechTile: {
+      return techTiles(command.name, command.data.tiles);
+    }
+
+    case Command.ChargePower: {
+      return chargePowerButtons(command, engine, player);
+    }
+
+    case Command.Decline: {
+      return [declineButton(command)];
+    }
+
+    case Command.BrainStone: {
+      return brainstoneButtons(command.data);
+    }
+    case Command.Spend: {
+      conversions.free = command.data;
+      return [];
+    }
+    case Command.BurnPower: {
+      conversions.burn = command.data;
+      return [];
+    }
+    case Command.Action: {
+      return [boardActionsButton(command.data, player)];
+    }
+
+    case Command.Special: {
+      return [specialActionsButton(command, player)];
+    }
+
+    case Command.EndTurn: {
+      return [endTurnButton(command, engine)];
+    }
+
+    case Command.DeadEnd:
+      return [deadEndButton(command, controller.undo)];
+
+    case Command.ChooseIncome: {
+      return command.data.map((income) => ({
+        label: `Income ${income}`,
+        command: `${Command.ChooseIncome} ${income}`,
+      }));
+    }
+
+    case Command.Bid: {
+      return command.data.bids.map((pos) => ({
+        label: `Bid ${pos.bid[0]} for ${pos.faction}`,
+        command: `${Command.Bid} ${pos.faction} $times`,
+        times: pos.bid,
+      }));
+    }
+
+    case Command.FormFederation: {
+      return [federationButton(command, engine, controller.highlightHexes, controller.handleCommand, player)];
+    }
+
+    case Command.ChooseFederationTile: {
+      return [
+        {
+          label: "Rescore federation",
+          command: Command.ChooseFederationTile,
+          buttons: federationTypeButtons(command.data.tiles, player),
+        },
+      ];
+    }
+  }
+}
+
+export function commandButtons(
+  commands: AvailableCommand[],
+  engine: Engine,
+  player: Player,
+  controller: CommandController
+) {
+  const conversions: AvailableConversions = {};
+  const ret: ButtonData[] = [];
+
+  for (const command of commands.filter((c) => c.name != Command.ChooseFaction)) {
+    ret.push(...commandButton(command, engine, player, commands, conversions, controller));
+  }
+
+  if (conversions.free || conversions.burn) {
+    controller.subscriptions[Command.Spend]?.();
+    controller.subscriptions[Command.Spend] = controller.subscribeAction(({ type, payload }) => {
+      if (type === "gaiaViewer/fastConversionClick") {
+        const command = fastConversionClick(payload, conversions, player);
+        if (command) {
+          controller.handleCommand(command);
+        }
+      }
+    });
+
+    const pass = ret.pop();
+    const d = freeAndBurnButton(conversions, player);
+    ret.push(d.button);
+    if (pass) {
+      ret.push(pass);
+    }
+
+    controller.setFastConversionTooltips(d.tooltips);
+    // tooltips may have become unavailable - and they should be hidden
+    controller.disableTooltips();
+  }
+
+  if (controller.customButtons.length > 0) {
+    for (const button of ret) {
+      button.hide = true;
+    }
+
+    ret.push(...controller.customButtons);
+  }
+
+  finalizeShortcuts(ret);
+
+  if (ret.length == 1) {
+    const button = ret[0];
+    if (button.hexes && !button.hexes.selectAnyHex && !button.warning) {
+      activateOnShow(button);
+    }
+  }
   return ret;
 }
