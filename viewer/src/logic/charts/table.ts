@@ -1,6 +1,6 @@
 import { ChartConfiguration } from "chart.js";
-import { ChartStyleDisplay, TableMeta } from "./chart-factory";
 import { ColorVar } from "./charts";
+import { ChartStyleDisplay, TableMeta } from "./chart-factory";
 
 const nameColumn = {
   key: "Name",

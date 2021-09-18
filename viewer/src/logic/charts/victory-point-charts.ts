@@ -17,7 +17,7 @@ import Engine, {
   RoundScoring,
   TechPos,
 } from "@gaia-project/engine";
-import { advancedTechTileNames } from "../data/tech-tiles";
+import { advancedTechTileNames } from "../../data/tech-tiles";
 import {
   ColorVar,
   DatasetFactory,
@@ -26,8 +26,8 @@ import {
   getDataPoints,
   IncludeRounds,
   initialResearch,
-  logEntryProcessor,
 } from "./charts";
+import { logEntryProcessor } from "./simple-charts";
 
 function simulateIncome(pl: Player, consume: (p: Player) => void, engineVersion: string): number {
   const json = JSON.parse(JSON.stringify(pl));

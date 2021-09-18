@@ -10,7 +10,7 @@ import {
   TooltipOptions,
 } from "chart.js";
 import { sortBy, sum, sumBy } from "lodash";
-import { factionName } from "../data/factions";
+import { factionName } from "../../data/factions";
 import {
   ChartColor,
   ChartFamily,
@@ -25,7 +25,7 @@ import {
   vpChartFamily,
   weightedSum,
 } from "./charts";
-import { simpleChartDetails, SimpleSource, simpleSourceFactories, SimpleSourceFactory } from "./simple-charts";
+import { simpleChartFactoryEntries } from "./simple-sources";
 import {
   advancedTechTileSource,
   groupSources,
@@ -81,41 +81,6 @@ export type ChartFactory<Source extends ChartSource> = {
 function victoryPointSource(source: ChartSource, sources: VictoryPointSource[]): VictoryPointSource {
   return sources.find((s) => s.types[0] == source.type);
 }
-
-const simpleChartFactory = (
-  simpleSourceFactory: <Source extends SimpleSource<any>>(family: ChartFamily) => SimpleSourceFactory<Source>
-): ChartFactory<SimpleSource<any>> => ({
-  includeRounds: "except-final",
-
-  sources(family: ChartFamily): SimpleSource<any>[] {
-    return simpleSourceFactory(family).sources;
-  },
-  newDetails(
-    data: Engine,
-    player: PlayerEnum,
-    sources: SimpleSource<any>[],
-    includeRounds: IncludeRounds,
-    family: ChartFamily
-  ) {
-    return simpleChartDetails(simpleSourceFactory(family), data, player, sources, includeRounds);
-  },
-  singlePlayerSummaryTitle(player: Player, family: ChartFamily): string {
-    return `${simpleSourceFactory(family).name} of ${playerLabel(player)}`;
-  },
-  playerSummaryTitle(family: ChartFamily): string {
-    const sourceFactory = simpleSourceFactory(family);
-    return sourceFactory.playerSummaryLineChartTitle;
-  },
-  kindBreakdownTitle(family: ChartFamily, source: SimpleSource<any>): string {
-    return `${source.label} of all players`;
-  },
-  stacked() {
-    return false;
-  },
-  showWeightedTotal(family: ChartFamily): boolean {
-    return simpleSourceFactory(family).showWeightedTotal;
-  },
-});
 
 const vpChartFactory = (title: string, allSources: VictoryPointSource[]): ChartFactory<ChartSource> => ({
   includeRounds: "all",
@@ -222,13 +187,6 @@ export class ChartSetup {
       ? singleColor(AdvTechTile.values().filter((t) => !scoringTechTile(t)))
       : currentAdvTechTiles;
 
-    const sourceFactories = simpleSourceFactories(nonVpAdvTechTiles);
-
-    function simpleSourceFactory<Source extends SimpleSource<any>>(family: ChartFamily): SimpleSourceFactory<Source> {
-      return sourceFactories.find((f) => f.name == family) as SimpleSourceFactory<Source>;
-    }
-
-    const scf = simpleChartFactory(simpleSourceFactory);
     this.chartFactories = new Map<ChartFamily, ChartFactory<any>>(
       ([
         [vpChartFamily, vpChartFactory("Victory Points", victoryPointSources)],
@@ -239,9 +197,7 @@ export class ChartSetup {
             Array.from(vpAdvTechTiles.entries()).map(([tile, color]) => advancedTechTileSource(data, tile, color))
           ),
         ],
-      ] as [ChartFamily, ChartFactory<any>][]).concat(
-        sourceFactories.map((value) => [value.name, scf] as [ChartFamily, ChartFactory<any>])
-      )
+      ] as [ChartFamily, ChartFactory<any>][]).concat(simpleChartFactoryEntries(nonVpAdvTechTiles))
     );
 
     this.families = Array.from(this.chartFactories.keys()).sort();

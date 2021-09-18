@@ -1,9 +1,9 @@
 import Engine, { Faction, LogEntry, Player, ResearchField, Reward } from "@gaia-project/engine";
 import { expect } from "chai";
+import { runJsonTests } from "../utils";
 import { ChartSetup } from "./chart-factory";
 // Here we import the File System module of node
 import { ChartFamily, initialResearch } from "./charts";
-import { runJsonTests } from "./utils";
 import { countResearch } from "./victory-point-charts";
 
 describe("Chart", () => {
