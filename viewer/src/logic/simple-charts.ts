@@ -44,6 +44,7 @@ import {
   resolveColor,
   statelessExtractLog,
 } from "./charts";
+import { powerCharges } from "./charts/charge";
 import { finalScoringExtractLog, finalScoringSources } from "./final-scoring";
 
 export enum TerraformingSteps {
@@ -210,10 +211,14 @@ export const simpleSourceFactories = (
         (resource == source.type && change > 0) || (resource == source.inverseOf && change < 0) ? Math.abs(change) : 0
       ),
     extractLog: statelessExtractLog((e) =>
-      e.source.type == Resource.BurnToken && e.cmd.command == Command.BurnPower ? Number(e.cmd.args[0]) : 0
+      (e.source.type == Resource.BurnToken || e.source.type == Resource.ChargePower) &&
+      e.cmd.command == Command.BurnPower
+        ? Number(e.cmd.args[0])
+        : 0
     ),
     sources: resourceSources,
   } as SimpleSourceFactory<ResourceSource>,
+  powerCharges,
   {
     name: "Free actions",
     playerSummaryLineChartTitle:
@@ -394,7 +399,7 @@ export const simpleSourceFactories = (
           const want = Object.entries(c)
             .map(([r, a]) => (a > 1 ? a : "") + r)
             .join(",");
-          if (Object.entries(federations).find(([fed, res]) => res == want)[0] == type) {
+          if (Object.entries(federations).find(([, res]) => res == want)[0] == type) {
             return 1;
           }
         }
