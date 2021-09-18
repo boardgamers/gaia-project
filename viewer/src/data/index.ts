@@ -8,8 +8,7 @@ import {
   Reward,
   TechTilePos,
 } from "@gaia-project/engine";
-import MoveButton from "../components/MoveButton.vue";
-import { FastConversionTooltips } from "../logic/commands";
+import { FastConversionTooltips, MoveButtonController } from "../logic/commands";
 
 export type ButtonWarning = { title?: string; body: string[]; okButton?: { label: string; action: () => void } };
 
@@ -30,7 +29,7 @@ export interface ButtonData {
   onClick?: () => void;
   onOpen?: () => void;
   onShow?: () => void;
-  onCreate?: (ui: MoveButton) => void; //may be called multiple times!
+  onCreate?: (controller: MoveButtonController) => void; //may be called multiple times!
   boardActions?: BoardAction[];
   specialActions?: SpecialActionIncome[];
   federations?: Federation[];
