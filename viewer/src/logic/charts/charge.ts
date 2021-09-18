@@ -1,7 +1,7 @@
 import { Booster, Command, EventSource, ResearchField, Resource, TechPos } from "@gaia-project/engine";
 import assert from "assert";
-import { extractChanges, statelessExtractLog } from "../charts";
-import { SimpleSource, SimpleSourceFactory } from "../simple-charts";
+import { extractChanges } from "./charts";
+import { SimpleSource, SimpleSourceFactory, statelessExtractLog } from "./simple-charts";
 
 enum PowerChargeSource {
   burn,
@@ -81,7 +81,7 @@ const extractPowerCharge = (eventSource: EventSource, source: PowerChargeSource,
   assert(false, "no source found: " + eventSource);
 };
 
-export const powerCharges: SimpleSourceFactory<SimpleSource<PowerChargeSource>> = {
+export const powerChargeSourceFactory: SimpleSourceFactory<SimpleSource<PowerChargeSource>> = {
   name: "Power Charges",
   playerSummaryLineChartTitle: "Power Charges of all players",
   showWeightedTotal: false,

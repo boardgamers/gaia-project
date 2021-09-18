@@ -10,13 +10,11 @@ import {
   stdBuildingValue,
 } from "@gaia-project/engine";
 import { Grid } from "hexagrid";
-import { ColorVar, ExtractLog, ExtractLogArg, planetCounter } from "./charts";
-import { SimpleSource } from "./simple-charts";
-import { cellStyle, rowHeaderCell } from "./table";
+import { ExtractLog, ExtractLogArg, planetCounter, SimpleSource, SimpleSourceFactory } from "./simple-charts";
 
 type FinalScoringExtractLog = ExtractLog<SimpleSource<FinalTile>>;
 
-type FinalScoringContributor =
+export type FinalScoringContributor =
   | "Regular Building"
   | "Lost Planet"
   | "Satellite"
@@ -30,7 +28,7 @@ export type FinalScoringTableRow = {
   color: string;
 };
 
-export type FinalScoringSource = FinalScoringTableRow & { extractLog: FinalScoringExtractLog };
+type FinalScoringSource = FinalScoringTableRow & { extractLog: FinalScoringExtractLog };
 
 const structureFed: FinalScoringExtractLog = (wantPlayer) => {
   let map = null;
@@ -146,15 +144,6 @@ const sectors: FinalScoringExtractLog = (wantPlayer) => {
   )(wantPlayer);
 };
 
-export const finalScoringContributorColors: { [key in FinalScoringContributor]: string } = {
-  "Regular Building": "--res-ore",
-  "Lantids Guest Mine": "--recent",
-  "Lost Planet": "--lost",
-  Satellite: "--current-round",
-  "Space Station": "--oxide",
-  "Gaia Former": "--rt-gaia",
-};
-
 export const finalScoringSources: { [key in FinalTile]: FinalScoringSource } = {
   [FinalTile.Gaia]: {
     name: "Gaia planets",
@@ -212,50 +201,15 @@ export const finalScoringExtractLog: ExtractLog<SimpleSource<FinalTile>> = (p) =
   return (e) => map.get(e.source.type)(e);
 };
 
-const finalScoringTableRows: FinalScoringTableRow[] = Object.keys(finalScoringSources)
-  .map((s) => finalScoringSources[s] as FinalScoringTableRow)
-  .concat(
-    {
-      name: "(Starting Point for navigation)",
-      color: "--rt-nav",
-      contributors: ["Regular Building", "Lost Planet", "Lantids Guest Mine", "Space Station"],
-    },
-    {
-      name: "(Power value for federations)",
-      color: "--res-knowledge",
-      contributors: ["Regular Building", "Lost Planet", "Space Station", "Lantids Guest Mine"],
-    },
-    {
-      name: "(Other players can charge power)",
-      color: "--res-power",
-      contributors: ["Regular Building", "Lost Planet", "Lantids Guest Mine"],
-    },
-    {
-      name: "(Counts as mine for boosters, round scoring, advanced tech)",
-      color: "--res-power",
-      contributors: ["Regular Building", "Lost Planet", "Lantids Guest Mine"],
-    }
-  );
-
-export function finalScoringFields(canvas: HTMLElement): any[] {
-  return [{ key: "Name", sortable: true, isRowHeader: true } as { key: string }].concat(
-    ...Object.keys(finalScoringContributorColors).map((c) => {
-      return {
-        key: c,
-        sortable: true,
-        thStyle: cellStyle(canvas as HTMLCanvasElement, new ColorVar(finalScoringContributorColors[c])),
-      };
-    })
-  );
-}
-
-export function finalScoringItems(canvas: HTMLElement): any[] {
-  return finalScoringTableRows.map((r) => {
-    const row = { Name: rowHeaderCell(cellStyle(canvas, new ColorVar(r.color)), r.name) };
-
-    for (const contributor of r.contributors) {
-      row[contributor] = true;
-    }
-    return row;
-  });
-}
+export const finalScoringSourceFactory: SimpleSourceFactory<SimpleSource<FinalTile>> = {
+  name: "Final Scoring Conditions",
+  showWeightedTotal: false,
+  playerSummaryLineChartTitle: "All final Scoring Conditions of all players (not only the active ones)",
+  extractLog: finalScoringExtractLog,
+  sources: Object.keys(finalScoringSources).map((tile) => ({
+    type: tile as FinalTile,
+    label: finalScoringSources[tile].name,
+    color: finalScoringSources[tile].color,
+    weight: 1,
+  })),
+};

@@ -43,7 +43,7 @@
 
 <script lang="ts">
 import {Component, Vue, Watch} from "vue-property-decorator";
-import {ChartFamily, vpChartFamily} from "../logic/charts";
+import {ChartFamily, vpChartFamily} from "../logic/charts/charts";
 import PlayerCircle from "./PlayerCircle.vue";
 import BuildingImage from "./Building.vue";
 import SpecialAction from "./SpecialAction.vue";
@@ -71,8 +71,8 @@ import {
   lineChartKind,
   TableMeta,
   ChartSetup,
-} from "../logic/chart-factory";
-import {tableHeader, tableItems} from "../logic/table";
+} from "../logic/charts/chart-factory";
+import {tableHeader, tableItems} from "../logic/charts/table";
 
 Chart.register(
   LineController,

@@ -127,7 +127,7 @@ import { factionDesc, factionName } from "../data/factions";
 
 import { Component, Prop, Vue } from "vue-property-decorator";
 import Engine, { Faction, factionPlanet, factionVariantBoard } from "@gaia-project/engine";
-import { finalScoringFields, finalScoringItems } from "../logic/final-scoring";
+import { finalScoringFields, finalScoringItems } from "../logic/final-scoring-rules";
 import { factionColor, planetFill } from "../graphics/utils";
 
 type Rule = Faction | "rules" | "scoring";
