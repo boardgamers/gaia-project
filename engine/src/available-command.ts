@@ -117,6 +117,8 @@ export type ChooseTechTile = TechTileWithPos | AdvTechTileWithPos;
 
 type AvailableBuildCommandData = { buildings: AvailableBuilding[] };
 
+export type AvailableFederation = { hexes: string; warning?: string };
+
 interface CommandData {
   [Command.Action]: AvailableBoardActionData;
   [Command.Bid]: { bids: PossibleBid[] };
@@ -133,7 +135,7 @@ interface CommandData {
   [Command.DeadEnd]: SubPhase; // for debugging
   [Command.Decline]: { offers: Offer[] };
   [Command.EndTurn]: never;
-  [Command.FormFederation]: { tiles: Federation[]; federations: { hexes: string; warning?: string }[] };
+  [Command.FormFederation]: { tiles: Federation[]; federations: AvailableFederation[] };
   [Command.Init]: never;
   [Command.Pass]: { boosters: Booster[] };
   [Command.PISwap]: AvailableBuildCommandData;

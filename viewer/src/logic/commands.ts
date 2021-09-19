@@ -32,7 +32,7 @@ import Engine, {
   Round,
   SubPhase,
   TechTilePos,
-  tiles,
+  tiles
 } from "@gaia-project/engine";
 import assert from "assert";
 import { max, minBy, range, sortBy } from "lodash";
@@ -43,7 +43,7 @@ import {
   FastConversion,
   FastConversionButton,
   FastConversionEvent,
-  freeActionShortcuts,
+  freeActionShortcuts
 } from "../data/actions";
 import { boosterNames } from "../data/boosters";
 import { buildingName, buildingShortcut } from "../data/building";
@@ -52,6 +52,8 @@ import { federationData } from "../data/federations";
 import { researchNames } from "../data/research";
 import { resourceNames } from "../data/resources";
 import { moveWarnings } from "../data/warnings";
+import { FederationInfo } from "@gaia-project/engine/src/federation";
+import { AvailableFederation } from "@gaia-project/engine/src/available-command";
 
 export type UndoPropagation = {
   undoPerformed: boolean;
@@ -875,6 +877,14 @@ export function customHexSelection(hexes: HighlightHexData): HexSelection {
   };
 }
 
+function federationButtonDetails(withDetails: boolean, satelliteName: string, info) {
+  const powerValue = withDetails ? " power value" : "";
+  const satellites = withDetails ? " " + satelliteName : "";
+  const sep = withDetails ? " / " : "/";
+
+  return `(${info.powerValue}${powerValue}${sep}${info.newSatellites}${satellites})`;
+}
+
 export function federationButton(
   command: AvailableCommand<Command.FormFederation>,
   engine: Engine,
@@ -884,20 +894,30 @@ export function federationButton(
 ): ButtonData {
   const fedTypeButtons: ButtonData[] = federationTypeButtons(command.data.tiles, player);
 
-  const locationButtons: ButtonData[] = command.data.federations.map((fed, i) =>
-    textButton({
+  const entries: [FederationInfo, AvailableFederation][] = command.data.federations
+    .map(fed => [player.federationInfo(player.hexesForFederationLocation(fed.hexes, engine.map)), fed]);
+
+  const sorted: [FederationInfo, AvailableFederation][] =
+    sortBy(entries, (e) => 100 * e[0].powerValue + e[0].newSatellites);
+
+  const sat = player.faction === Faction.Ivits ? "QICs" : "power tokens";
+
+  const locationButtons: ButtonData[] = sorted.map((e, i) => {
+    const info = e[0];
+    const fed = e[1];
+    return textButton({
       command: fed.hexes,
-      label: `Location ${i + 1}`,
+      label: `Location ${i + 1} ${federationButtonDetails(i == 0, sat, info)}`,
       hexes: {
         hexes: new Map(
-          fed.hexes.split(",").map((coord) => [engine.map.getS(coord), { coordinates: coord }])
+          fed.hexes.split(",").map((coord) => [engine.map.getS(coord), { coordinates: coord }])  //what is 'coordinates' for?
         ) as HighlightHexData,
-        hover: true,
+        hover: true
       },
       buttons: fedTypeButtons,
-      warning: buttonWarning(fed.warning != null ? moveWarnings[fed.warning].text : null),
-    })
-  );
+      warning: buttonWarning(fed.warning != null ? moveWarnings[fed.warning].text : null)
+    });
+  });
 
   const n = locationButtons.length;
   let index: number = null;
@@ -919,6 +939,7 @@ export function federationButton(
     index = index == null ? 0 : (((index + update) % n) + n) % n;
 
     const button = locationButtons[index];
+    okButton.label = `OK ${index + 1} ${federationButtonDetails(true, sat, sorted[index][0])}`;
     okButton.warning = button.warning;
     okButton.tooltip = tooltipWithShortcut(null, button.warning);
     if (controller) {
@@ -958,7 +979,6 @@ export function federationButton(
     })
   );
 
-  const sat = player.faction === Faction.Ivits ? "QICs" : "power tokens";
   return textButton({
     label: "Form federation",
     longLabel: `Form federation (${player.maxSatellites} ${sat} can be used as satellites, ${
