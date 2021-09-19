@@ -6,6 +6,7 @@ export interface FederationInfo {
   planets: number;
   satellites: number;
   newSatellites: number;
+  powerValue: number;
 }
 
 /**

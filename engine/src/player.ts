@@ -1060,17 +1060,21 @@ export default class Player extends EventEmitter {
     }
   }
 
-  federationInfo(federation: GaiaHex[]): FederationInfo {
+  federationInfo(hexes: GaiaHex[]): FederationInfo {
     // Be careful of Ivits & space stations for nSatellites!
-    const satellites = federation.filter((hex) => !hex.occupyingPlayers()?.includes(this.player));
-    const nPlanets = federation.filter((hex) => hex.colonizedBy(this.player)).length;
+    const satellites = hexes.filter((hex) => !hex.occupyingPlayers()?.includes(this.player));
+    const nPlanets = hexes.filter((hex) => hex.colonizedBy(this.player)).length;
+
+    // Get the power value of the buildings
+    const powerValue = sum(hexes.map((hex) => this.buildingValue(hex, { federation: true })));
 
     const newSatellites = satellites.filter((sat) => !sat.belongsToFederationOf(this.player)).length;
     return {
-      hexes: federation,
+      hexes: hexes,
       satellites: satellites.length,
       newSatellites: newSatellites,
       planets: nPlanets,
+      powerValue: powerValue,
     };
   }
 
@@ -1105,14 +1109,11 @@ export default class Player extends EventEmitter {
     // Check if all the buildings are in one group
     assert(map.grid.groups(hexes).length === 1, "The hexes of the federation must be adjacent");
 
-    // Get the power value of the buildings
-    const powerValue = sum(hexes.map((hex) => this.buildingValue(hex, { federation: true })));
+    const info = this.federationInfo(hexes);
     assert(
-      powerValue >= this.federationCost,
+      info.powerValue >= this.federationCost,
       "Your buildings need to have a total value of at least " + this.federationCost
     );
-
-    const info = this.federationInfo(hexes);
 
     if (replay) {
       return info;
@@ -1173,7 +1174,7 @@ export default class Player extends EventEmitter {
     return info;
   }
 
-  hexesForFederationLocation(location: string, map: SpaceMap) {
+  hexesForFederationLocation(location: string, map: SpaceMap): GaiaHex[] {
     const coords = location.split(",").map((loc) => map.parse(loc));
 
     for (const coord of coords) {
@@ -1186,7 +1187,7 @@ export default class Player extends EventEmitter {
 
     assert(hexes.length === coords.length, "There are repeating coordinates in the given federation");
 
-    // Extend to nearby buidlings
+    // Extend to nearby buildings
     return this.addAdjacentBuildings(hexes, map);
   }
 
