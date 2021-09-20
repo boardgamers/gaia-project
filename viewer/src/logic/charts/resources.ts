@@ -13,6 +13,7 @@ import {
   statelessExtractLog,
 } from "./simple-charts";
 
+const range = "range";
 type ResourceSource = SimpleSource<Resource | "range"> & { inverseOf?: Resource };
 
 const resourceWeights: { type: Resource; color: string; weight: number; inverseOf?: Resource }[] = [
@@ -73,9 +74,15 @@ export const resourceSources: ResourceSource[] = resourceWeights.map((w) => {
 const freeActionSources = resourceSources
   .filter((s) => s.weight > 0 || s.type == Resource.GainToken)
   .concat({
-    type: "range",
+    type: range,
     label: "Range +2",
     color: "--rt-nav",
+    weight: 0,
+  })
+  .concat({
+    type: Resource.TechTile,
+    label: "Tech Tile (Itars)",
+    color: "--tech-tile",
     weight: 0,
   });
 
@@ -111,7 +118,7 @@ export const freeActionSourceFactory: SimpleSourceFactory<ResourceSource | Simpl
     [Command.Build]: planetCounter(
       () => false,
       () => false,
-      (p, t) => t == "range",
+      (p, t) => t == range,
       true,
       (cmd, log, planet) =>
         -(log.changes?.[Command.Build]?.[Resource.Qic] ?? 0) -

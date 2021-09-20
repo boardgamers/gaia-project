@@ -58,9 +58,10 @@
         <h4>Recent changes</h4>
         <h5>2021-09-20</h5>
         <ul>
+          <li>Charts: New Power Charges chart.</li>
           <li>Charts: Power charges include burn.</li>
           <li>Charts: Show name of final scoring condition instead of Final (A/B).</li>
-          <li>Charts: New Power Charges chart.</li>
+          <li>Charts: Show "Tech Tiles (Itars)" in Free Actions</li>
           <li>
             Show more details when forming a federation: power value of federation, new satellites needed, currently
             selected federation button.
