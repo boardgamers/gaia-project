@@ -32,8 +32,10 @@ import Engine, {
   Round,
   SubPhase,
   TechTilePos,
-  tiles
+  tiles,
 } from "@gaia-project/engine";
+import { AvailableFederation } from "@gaia-project/engine/src/available-command";
+import { FederationInfo } from "@gaia-project/engine/src/federation";
 import assert from "assert";
 import { max, minBy, range, sortBy } from "lodash";
 import { ActionPayload, SubscribeActionOptions, SubscribeOptions } from "vuex";
@@ -43,7 +45,7 @@ import {
   FastConversion,
   FastConversionButton,
   FastConversionEvent,
-  freeActionShortcuts
+  freeActionShortcuts,
 } from "../data/actions";
 import { boosterNames } from "../data/boosters";
 import { buildingName, buildingShortcut } from "../data/building";
@@ -52,8 +54,6 @@ import { federationData } from "../data/federations";
 import { researchNames } from "../data/research";
 import { resourceNames } from "../data/resources";
 import { moveWarnings } from "../data/warnings";
-import { FederationInfo } from "@gaia-project/engine/src/federation";
-import { AvailableFederation } from "@gaia-project/engine/src/available-command";
 
 export type UndoPropagation = {
   undoPerformed: boolean;
@@ -81,6 +81,7 @@ export interface MoveButtonController {
   highlightTechs(techs: Array<TechTilePos | AdvTechTilePos>);
   subscribeButtonClick(action: string, transform?: (button: ButtonData) => ButtonData, activateButton?: boolean);
   setButton(button: ButtonData, key: string);
+  activate(button: ButtonData | null);
 }
 
 export const forceNumericShortcut = (label: string) => ["Charge", "Income"].find((b) => label.startsWith(b));
@@ -877,10 +878,10 @@ export function customHexSelection(hexes: HighlightHexData): HexSelection {
   };
 }
 
-function federationButtonDetails(withDetails: boolean, satelliteName: string, info) {
-  const powerValue = withDetails ? " power value" : "";
-  const satellites = withDetails ? " " + satelliteName : "";
-  const sep = withDetails ? " / " : "/";
+function federationButtonDetails(long: boolean, satelliteName: string, info) {
+  const powerValue = long ? " power value" : "";
+  const satellites = long ? " " + satelliteName : "";
+  const sep = long ? " / " : "/";
 
   return `(${info.powerValue}${powerValue}${sep}${info.newSatellites}${satellites})`;
 }
@@ -888,21 +889,53 @@ function federationButtonDetails(withDetails: boolean, satelliteName: string, in
 export function federationButton(
   command: AvailableCommand<Command.FormFederation>,
   engine: Engine,
-  highlightHexes: (selection: HexSelection) => void,
-  handleCommand: (command: string, source?: ButtonData) => void,
+  commandController: CommandController,
   player: Player
 ): ButtonData {
   const fedTypeButtons: ButtonData[] = federationTypeButtons(command.data.tiles, player);
 
-  const entries: [FederationInfo, AvailableFederation][] = command.data.federations
-    .map(fed => [player.federationInfo(player.hexesForFederationLocation(fed.hexes, engine.map)), fed]);
+  const entries: [FederationInfo, AvailableFederation][] = command.data.federations.map((fed) => [
+    player.federationInfo(player.hexesForFederationLocation(fed.hexes, engine.map)),
+    fed,
+  ]);
 
-  const sorted: [FederationInfo, AvailableFederation][] =
-    sortBy(entries, (e) => 100 * e[0].powerValue + e[0].newSatellites);
+  const sorted: [FederationInfo, AvailableFederation][] = sortBy(
+    entries,
+    (e) => 100 * e[0].powerValue + e[0].newSatellites
+  );
 
   const sat = player.faction === Faction.Ivits ? "QICs" : "power tokens";
 
-  const locationButtons: ButtonData[] = sorted.map((e, i) => {
+  let index: number = null;
+  let okController: MoveButtonController = null;
+  let fast = false;
+  let locationButtons: ButtonData[] = null;
+
+  const okButton = textButton({
+    label: "OK",
+    shortcuts: ["o", "Enter"],
+    onCreate: (c) => {
+      okController = c;
+    },
+    onClick: () => {
+      const button = locationButtons[index];
+      commandController.handleCommand(button.command, button); //to keep the selection
+    },
+  });
+
+  function selectButton(index: number) {
+    const button = locationButtons[index];
+    okButton.label = `OK ${index + 1} ${federationButtonDetails(true, sat, sorted[index][0])}`;
+    okButton.warning = button.warning;
+    okButton.tooltip = tooltipWithShortcut(null, button.warning);
+    if (okController) {
+      okController.setButton(okButton, String(index));
+      okController.activate(button);
+    }
+    commandController.highlightHexes(button.hexes);
+  }
+
+  locationButtons = sorted.map((e, i) => {
     const info = e[0];
     const fed = e[1];
     return textButton({
@@ -910,42 +943,39 @@ export function federationButton(
       label: `Location ${i + 1} ${federationButtonDetails(i == 0, sat, info)}`,
       hexes: {
         hexes: new Map(
-          fed.hexes.split(",").map((coord) => [engine.map.getS(coord), { coordinates: coord }])  //what is 'coordinates' for?
+          fed.hexes.split(",").map((coord) => [engine.map.getS(coord), { coordinates: coord }]) //what is 'coordinates' for?
         ) as HighlightHexData,
-        hover: true
+        // hover: true
       },
       buttons: fedTypeButtons,
-      warning: buttonWarning(fed.warning != null ? moveWarnings[fed.warning].text : null)
+      warning: buttonWarning(fed.warning != null ? moveWarnings[fed.warning].text : null),
+      onClick: () => {
+        const button = locationButtons[i];
+        if (fast) {
+          commandController.handleCommand(button.command, button); //to keep the selection
+        } else {
+          selectButton(i);
+        }
+      },
+      hover: {
+        enter: () => {
+          fast = true;
+          commandController.highlightHexes(locationButtons[i].hexes);
+        },
+        leave: () => {
+          commandController.highlightHexes(null);
+          commandController.disableTooltips();
+        },
+      },
     });
   });
 
   const n = locationButtons.length;
-  let index: number = null;
-
-  let controller: MoveButtonController = null;
-  const okButton = textButton({
-    label: "OK",
-    shortcuts: ["o", "Enter"],
-    onCreate: (c) => {
-      controller = c;
-    },
-    onClick: () => {
-      const button = locationButtons[index];
-      handleCommand(button.command, button); //to keep the selection
-    },
-  });
 
   const cycle = (update: number) => () => {
     index = index == null ? 0 : (((index + update) % n) + n) % n;
 
-    const button = locationButtons[index];
-    okButton.label = `OK ${index + 1} ${federationButtonDetails(true, sat, sorted[index][0])}`;
-    okButton.warning = button.warning;
-    okButton.tooltip = tooltipWithShortcut(null, button.warning);
-    if (controller) {
-      controller.setButton(okButton, String(index));
-    }
-    highlightHexes(button.hexes);
+    selectButton(index);
   };
 
   locationButtons.push({
@@ -1134,7 +1164,7 @@ function commandButton(
     }
 
     case Command.FormFederation: {
-      return [federationButton(command, engine, controller.highlightHexes, controller.handleCommand, player)];
+      return [federationButton(command, engine, controller, player)];
     }
 
     case Command.ChooseFederationTile: {

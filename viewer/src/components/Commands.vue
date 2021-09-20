@@ -388,7 +388,7 @@ export default class Commands extends Vue implements CommandController {
     this.$root.$emit("bv::hide::tooltip");
   }
 
-  highlightHexes(selection: HexSelection) {
+  highlightHexes(selection: HexSelection | null) {
     this.$store.commit("gaiaViewer/highlightHexes", selection);
   }
 

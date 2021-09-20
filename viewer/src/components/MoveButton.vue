@@ -117,7 +117,7 @@ export default class MoveButton extends Vue implements MoveButtonController {
 
     this.unsubscribe();
     if (activateButton) {
-      this.$store.commit("gaiaViewer/activeButton", this.button);
+      this.activate(this.button);
     }
 
     this.subscription = (this.$store as any).subscribeAction(({ type, payload }) => {
@@ -133,6 +133,10 @@ export default class MoveButton extends Vue implements MoveButtonController {
 
       callback(payload);
     });
+  }
+
+  activate(buttonData: ButtonData | null) {
+    this.$store.commit("gaiaViewer/activeButton", buttonData);
   }
 
   subscribeHexClick(callback: (hex: GaiaHex, highlight: HighlightHex) => void) {
@@ -282,8 +286,6 @@ export default class MoveButton extends Vue implements MoveButtonController {
       } else {
         this.selectAnyButton(button);
       }
-    } else if (button.hexes?.hover) {
-      this.emitButtonCommand(button, null, params);
     } else if (button.onClick) {
       button.onClick();
     } else if (button.modal) {
@@ -372,8 +374,7 @@ export default class MoveButton extends Vue implements MoveButtonController {
 
     if (disappear) {
       this.unsubscribe();
-
-      this.$store.commit("gaiaViewer/activeButton", null);
+      this.activate(null)
     }
 
     let commandBody: string[] = [];
@@ -400,19 +401,11 @@ export default class MoveButton extends Vue implements MoveButtonController {
   }
 
   hover() {
-    if (!this.button.hexes?.hover || this.$store.state.gaiaViewer.context.activeButton !== null) {
-      return;
-    }
-
-    this.highlightHexes(this.button.hexes);
+    this.button.hover?.enter();
   }
 
   leave() {
-    if (!this.button.hexes?.hover || this.$store.state.gaiaViewer.context.activeButton !== null) {
-      return;
-    }
-
-    this.$store.commit("gaiaViewer/clearContext");
+    this.button.hover?.leave();
   }
 
   get isActiveButton() {
