@@ -27,6 +27,7 @@ import {
   IncludeRounds,
   initialResearch,
 } from "./charts";
+import { finalScoringSources } from "./final-scoring";
 import { logEntryProcessor } from "./simple-charts";
 
 function simulateIncome(pl: Player, consume: (p: Player) => void, engineVersion: string): number {
@@ -123,7 +124,7 @@ function finalScoringProjection(finalTile: number): (engine: Engine, pl: Player)
   };
 }
 
-export const victoryPointSources: VictoryPointSource[] = [
+export const victoryPointSources = (engine: Engine): VictoryPointSource[] => [
   {
     types: ["chart-init"],
     label: "Initial",
@@ -201,7 +202,7 @@ export const victoryPointSources: VictoryPointSource[] = [
   },
   {
     types: ["chart-final1"],
-    label: "Final A",
+    label: finalScoringSources[engine.tiles.scorings.final[0]].name,
     description: "Final Scoring A",
     color: "--rt-sci",
     aggregate: finalScoring,
@@ -209,7 +210,7 @@ export const victoryPointSources: VictoryPointSource[] = [
   },
   {
     types: ["chart-final2"],
-    label: "Final B",
+    label: finalScoringSources[engine.tiles.scorings.final[1]].name,
     description: "Final Scoring B",
     color: "--dig",
     aggregate: finalScoring,
