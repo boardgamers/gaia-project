@@ -990,24 +990,27 @@ export function federationButton(
     ],
   });
 
-  locationButtons.push(
-    textButton({
-      label: "Previous",
-      shortcuts: ["p"],
-      onClick: cycle(-1),
-    })
-  );
+  let next = () => {};
+  if (n > 0) {
+    locationButtons.push(
+      textButton({
+        label: "Previous",
+        shortcuts: ["p"],
+        onClick: cycle(-1),
+      })
+    );
 
-  locationButtons.push(okButton);
+    locationButtons.push(okButton);
 
-  const next = cycle(1);
-  locationButtons.push(
-    textButton({
-      label: "Next",
-      shortcuts: ["n"],
-      onClick: next,
-    })
-  );
+    next = cycle(1);
+    locationButtons.push(
+      textButton({
+        label: "Next",
+        shortcuts: ["n"],
+        onClick: next,
+      })
+    );
+  }
 
   return textButton({
     label: "Form federation",
