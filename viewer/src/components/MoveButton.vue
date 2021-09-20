@@ -86,11 +86,12 @@ export default class MoveButton extends Vue implements MoveButtonController {
   @Prop()
   public button!: ButtonData;
 
-  public key = "key" //only to force re-render
+  public key = "key"; //only to force re-render
 
   private subscription: () => {} | null = null;
   private modalShow = false;
   private customLabel = "";
+  private handlingClick = false;
 
   private rangePreselect: number = null;
 
@@ -140,13 +141,19 @@ export default class MoveButton extends Vue implements MoveButtonController {
   }
 
   subscribeHexClick(callback: (hex: GaiaHex, highlight: HighlightHex) => void) {
-    this.subscribe("hexClick", payload => {
+    this.subscribe("hexClick", (payload) => {
       callback(payload.hex, payload.highlight);
     });
   }
 
   subscribeButtonClick(action: string, transform = (button: ButtonData) => button, activateButton = true) {
-    this.subscribe(action, (button) => {this.handleButtonClick(transform(button));}, activateButton);
+    this.subscribe(
+      action,
+      (button) => {
+        this.handleButtonClick(transform(button));
+      },
+      activateButton
+    );
   }
 
   subscribeFinal(action: string) {
@@ -224,91 +231,99 @@ export default class MoveButton extends Vue implements MoveButtonController {
   }
 
   async handleButtonClick(button: ButtonData, params?: EmitCommandParams) {
+    if (this.handlingClick) {
+      console.log("simultaneous button click, ignoring");
+      return;
+    }
     if (button.hide) {
       console.log("click on hidden button, ignoring");
       return;
     }
-    const warning = button.warning;
-    if (warning) {
-      try {
-        const c = this.$createElement;
-        const message = warning.body.length == 1 ? warning.body[0] :
-          warning.body.map(w => c("ul", [c("li", [w])]));
-        const okClicked = await this.$bvModal.msgBoxConfirm(message, {
-          title: warning.title,
-          headerClass: "warning",
-          okTitle: warning.okButton?.label,
-        });
+    try {
+      this.handlingClick = true;
+      const warning = button.warning;
+      if (warning) {
+        try {
+          const c = this.$createElement;
+          const message = warning.body.length == 1 ? warning.body[0] : warning.body.map((w) => c("ul", [c("li", [w])]));
+          const okClicked = await this.$bvModal.msgBoxConfirm(message, {
+            title: warning.title,
+            headerClass: "warning",
+            okTitle: warning.okButton?.label,
+          });
 
-        if (okClicked) {
-          const action = warning.okButton?.action;
-          if (action) {
-            action();
+          if (okClicked) {
+            const action = warning.okButton?.action;
+            if (action) {
+              action();
+              return;
+            }
+          } else {
             return;
           }
+        } catch (err) {
+          console.error(err);
+          return;
+        }
+      }
+
+      // Remove highlights caused by another button
+      if (!this.isActiveButton) {
+        this.$store.commit("gaiaViewer/clearContext");
+
+        if (button.hexes) {
+          this.highlightHexes(button.hexes);
+        }
+      }
+
+      if (button.specialActions) {
+        this.$store.commit("gaiaViewer/highlightSpecialActions", button.specialActions);
+        this.subscribeFinal("specialActionClick");
+      } else if (button.boardActions) {
+        this.$store.commit("gaiaViewer/highlightBoardActions", button.boardActions);
+        this.subscribeFinal("boardActionClick");
+      } else if (button.hexes?.selectAnyHex) {
+        if (button.rotation) {
+          if (this.isActiveButton) {
+            const rotations = [...this.$store.state.gaiaViewer.context.rotation.entries()];
+            for (const rotation of rotations) {
+              rotation[1] %= 6;
+            }
+            this.emitButtonCommand(button, [].concat(...rotations.filter((r) => !!r[1])).join(" "));
+            return;
+          }
+
+          this.subscribeHexClick((hex) => this.$store.commit("gaiaViewer/rotate", hex));
+          this.customLabel = "Sector rotations finished";
         } else {
-          return;
+          this.selectAnyButton(button);
         }
-      } catch (err) {
-        console.error(err);
-        return;
-      }
-    }
+      } else if (button.onClick) {
+        button.onClick();
+      } else if (button.modal) {
+        this.modalShow = true;
+        button.modal.show(true);
+      } else {
+        if (button.hexes) {
+          //generic hex selection, that's why it's last
+          this.subscribeHexClick((hex, highlight) => {
+            if (button.needConfirm) {
+              this.highlightHexes({ hexes: new Map<GaiaHex, HighlightHex>([[hex, {}]]) });
+            }
 
-    // Remove highlights caused by another button
-    if (!this.isActiveButton) {
-      this.$store.commit("gaiaViewer/clearContext");
-
-      if (button.hexes) {
-        this.highlightHexes(button.hexes);
-      }
-    }
-
-    if (button.specialActions) {
-      this.$store.commit("gaiaViewer/highlightSpecialActions", button.specialActions);
-      this.subscribeFinal("specialActionClick");
-    } else if (button.boardActions) {
-      this.$store.commit("gaiaViewer/highlightBoardActions", button.boardActions);
-      this.subscribeFinal("boardActionClick");
-    } else if (button.hexes?.selectAnyHex) {
-      if (button.rotation) {
-        if (this.isActiveButton) {
-          const rotations = [...this.$store.state.gaiaViewer.context.rotation.entries()];
-          for (const rotation of rotations) {
-            rotation[1] %= 6;
-          }
-          this.emitButtonCommand(button, [].concat(...rotations.filter((r) => !!r[1])).join(" "));
+            this.emitCommand(hex.toString(), { warnings: highlight.warnings });
+          });
           return;
         }
 
-        this.subscribeHexClick((hex) => this.$store.commit("gaiaViewer/rotate", hex));
-        this.customLabel = "Sector rotations finished";
-      } else {
-        this.selectAnyButton(button);
+        if (button.needConfirm) {
+          this.emitButtonCommand(button, null, { disappear: false });
+        } else {
+          this.emitButtonCommand(button, null, params);
+        }
       }
-    } else if (button.onClick) {
-      button.onClick();
-    } else if (button.modal) {
-      this.modalShow = true;
-      button.modal.show(true);
-    } else {
-      if (button.hexes) {
-        //generic hex selection, that's why it's last
-        this.subscribeHexClick((hex, highlight) => {
-          if (button.needConfirm) {
-            this.highlightHexes({ hexes: new Map<GaiaHex, HighlightHex>([[hex, {}]]) });
-          }
-
-          this.emitCommand(hex.toString(), { warnings: highlight.warnings });
-        });
-        return;
-      }
-
-      if (button.needConfirm) {
-        this.emitButtonCommand(button, null, { disappear: false });
-      } else {
-        this.emitButtonCommand(button, null, params);
-      }
+    } finally {
+      this.handlingClick = false;
     }
   }
 
@@ -351,18 +366,11 @@ export default class MoveButton extends Vue implements MoveButtonController {
     this.emitCommand();
   }
 
-  emitCommand(
-    append?: string,
-    params?: EmitCommandParams,
-  ) {
+  emitCommand(append?: string, params?: EmitCommandParams) {
     this.emitButtonCommand(this.button, append, params);
   }
 
-  emitButtonCommand(
-    button: ButtonData,
-    append?: string,
-    params?: EmitCommandParams,
-  ) {
+  emitButtonCommand(button: ButtonData, append?: string, params?: EmitCommandParams) {
     console.log("emit command", button.command, append, params);
 
     if (button.needConfirm && append) {
@@ -374,7 +382,7 @@ export default class MoveButton extends Vue implements MoveButtonController {
 
     if (disappear) {
       this.unsubscribe();
-      this.activate(null)
+      this.activate(null);
     }
 
     let commandBody: string[] = [];
