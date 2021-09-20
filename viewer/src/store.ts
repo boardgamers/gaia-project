@@ -3,7 +3,6 @@ import Engine, {
   BoardAction,
   Command,
   Faction,
-  Federation,
   GaiaHex,
   HighlightHex,
   Player,
@@ -66,7 +65,6 @@ const gaiaViewer = {
         boosters: new Set(),
         boardActions: new Set(),
         specialActions: new Set(),
-        federations: new Set(),
       },
       rotation: new Map(),
       activeButton: null,
@@ -108,10 +106,6 @@ const gaiaViewer = {
       state.context.highlighted.specialActions = new Set(actions);
     },
 
-    highlightFederations(state: State, federations: Federation[]) {
-      state.context.highlighted.federations = new Set(federations);
-    },
-
     rotate(state: State, coords: CubeCoordinates) {
       const map = state.data.map;
       const center = map.configuration().centers.find((center) => map.distance(center, coords) <= 2);
@@ -126,7 +120,6 @@ const gaiaViewer = {
       state.context.highlighted.techs = new Set();
       state.context.highlighted.boardActions = new Set();
       state.context.highlighted.specialActions = new Set();
-      state.context.highlighted.federations = new Set();
       state.context.activeButton = null;
       state.context.fastConversionTooltips = {};
     },
@@ -162,8 +155,6 @@ const gaiaViewer = {
     fastConversionClick(context: any, event: FastConversionEvent) {},
     specialActionClick(context: any, action: SpecialActionIncome) {},
     boardActionClick(context: any, action: BoardAction) {},
-    federationClick(context: any, federation: Federation) {},
-    confirmClick(context: any, action: string) {},
     // API COMMUNICATION
     playerClick(context: any, player: Player) {},
     move(context: any, move: string) {},

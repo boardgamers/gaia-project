@@ -56,10 +56,14 @@
           <li><a href="https://www.boardgamers.space/page/elo">How Elo works</a></li>
         </ul>
         <h4>Recent changes</h4>
-        <h5>2021-09-18</h5>
+        <h5>2021-09-20</h5>
         <ul>
           <li>Charts: Power charges include burn.</li>
           <li>Charts: New Power Charges chart.</li>
+          <li>
+            Show more details when forming a federation: power value of federation, new satellites needed, currently
+            selected federation button.
+          </li>
         </ul>
         <h5>2021-09-15</h5>
         <ul>

@@ -1,6 +1,6 @@
 <template>
   <svg viewBox="-25 -25 50 50" width="50" height="50" style="overflow: visible">
-    <g :class="['federationTile', { highlighted, disabled }]">
+    <g :class="['federationTile', { disabled }]">
       <image xlink:href="../assets/conditions/federation.svg" :height=739/636*50 v-if="!disabled" style="color: #247B0A"
       width=50 x=-25 y=-25 @click="onClick" :filter=filter /> <image
       xlink:href="../assets/conditions/federation-used.svg" v-if="disabled" :height=739/636*50 style="color: #247B0A"
@@ -51,17 +51,6 @@ export default class FederationTile extends Vue {
   get disabled() {
     return this.used || this.federation === FederationEnum.Fed1;
   }
-
-  onClick() {
-    if (!this.highlighted) {
-      return;
-    }
-    this.$store.dispatch("gaiaViewer/federationClick", this.federation);
-  }
-
-  get highlighted() {
-    return this.$store.state.gaiaViewer.context.highlighted.federations.has(this.federation);
-  }
 }
 </script>
 
@@ -79,12 +68,6 @@ g {
       dominant-baseline: middle;
       font-size: 12px;
       pointer-events: none;
-    }
-
-    &.highlighted polygon {
-      stroke: var(--highlighted);
-      cursor: pointer;
-      stroke-width: 0.04;
     }
   }
 }

@@ -30,6 +30,7 @@ export interface ButtonData {
   onOpen?: () => void;
   onShow?: () => void;
   onCreate?: (controller: MoveButtonController) => void; //may be called multiple times!
+  hover?: { enter: () => void; leave: () => void };
   boardActions?: BoardAction[];
   specialActions?: SpecialActionIncome[];
   federations?: Federation[];
@@ -53,7 +54,6 @@ export type HexSelection = {
   selectedLight?: boolean;
   backgroundLight?: boolean;
   selectAnyHex?: boolean;
-  hover?: boolean;
 };
 export type LogPlacement = "top" | "bottom" | "off";
 
@@ -65,7 +65,6 @@ export interface GameContext {
     boosters: Set<Booster>;
     boardActions: Set<BoardAction>;
     specialActions: Set<SpecialActionIncome>;
-    federations: Set<Federation>;
   };
 
   rotation: Map<string, number>;
