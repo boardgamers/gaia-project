@@ -189,7 +189,7 @@ export class ChartSetup {
 
     this.chartFactories = new Map<ChartFamily, ChartFactory<any>>(
       ([
-        [vpChartFamily, vpChartFactory("Victory Points", victoryPointSources)],
+        [vpChartFamily, vpChartFactory("Victory Points", victoryPointSources(data))],
         [
           "Advanced Tech Tiles (Victory Points)",
           vpChartFactory(
