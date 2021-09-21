@@ -25,7 +25,7 @@
       <div v-else class="d-flex flex-wrap align-content-stretch">
         <MoveButton
           v-for="(button, i) in buttons"
-          :class="{ 'd-none': button.hide, shown: !button.hide }"
+          :class="{ 'd-none': button.hide, shown: !button.hide, disabled: button.disabled }"
           :ref="`button-${i}`"
           :data-ref="`button-${i}`"
           @trigger="handleCommand"
