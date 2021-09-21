@@ -121,6 +121,7 @@ export function activateOnShow(button: ButtonData): ButtonData {
   let controller: MoveButtonController = null;
   button.onCreate = (c) => (controller = c);
   const last = button.onShow;
+  button.disabled = true;
   button.onShow = () => {
     last?.();
     controller.handleClick();
