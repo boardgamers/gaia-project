@@ -73,6 +73,7 @@ export interface CommandController {
   highlightHexes(selection: HexSelection);
   subscribeAction<P extends ActionPayload>(fn: SubscribeActionOptions<P, any>, options?: SubscribeOptions): () => void;
   setFastConversionTooltips(tooltips: FastConversionTooltips);
+  supportsHover(): boolean;
 }
 
 export interface MoveButtonController {
@@ -909,7 +910,7 @@ export function federationButton(
 
   let index: number = null;
   let okController: MoveButtonController = null;
-  let fast = false;
+  const canHover = commandController.supportsHover();
   let locationButtons: ButtonData[] = null;
 
   const okButton = textButton({
@@ -952,7 +953,7 @@ export function federationButton(
       warning: buttonWarning(fed.warning != null ? moveWarnings[fed.warning].text : null),
       onClick: () => {
         const button = locationButtons[i];
-        if (fast) {
+        if (canHover) {
           commandController.handleCommand(button.command, button); //to keep the selection
         } else {
           selectButton(i);
@@ -960,7 +961,6 @@ export function federationButton(
       },
       hover: {
         enter: () => {
-          fast = true;
           commandController.highlightHexes(locationButtons[i].hexes);
         },
         leave: () => {

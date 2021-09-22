@@ -400,6 +400,10 @@ export default class Commands extends Vue implements CommandController {
     return this.$store.subscribeAction(fn, options);
   }
 
+  supportsHover(): boolean {
+    return window.matchMedia("(hover: hover)").matches;
+  }
+
   private updater = 0;
   public subscriptions: { [key in Command]?: () => void } = {};
   private commandTitles: string[] = [];

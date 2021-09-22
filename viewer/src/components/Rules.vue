@@ -56,6 +56,13 @@
           <li><a href="https://www.boardgamers.space/page/elo">How Elo works</a></li>
         </ul>
         <h4>Recent changes</h4>
+        <h5>2021-09-22</h5>
+        <ul>
+          <li>
+            Select, but not click federation location on devices that don't support hover (you need to click OK to
+            select the location).
+          </li>
+        </ul>
         <h5>2021-09-20</h5>
         <ul>
           <li>Charts: New Power Charges chart.</li>
@@ -197,9 +204,11 @@ export default class Rules extends Vue {
 footer.rules .btn-secondary {
   display: none !important;
 }
+
 .final-store-table th {
   padding: 0 !important;
 }
+
 .final-store-table th > span,
 .final-store-table th > span > span,
 .final-store-table th > div {
