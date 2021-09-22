@@ -1,4 +1,13 @@
-import Engine, { AdvTechTile, AdvTechTilePos, Event, Player, PlayerEnum, Resource, tiles } from "@gaia-project/engine";
+import Engine, {
+  AdvTechTile,
+  AdvTechTilePos,
+  Booster,
+  Event,
+  Player,
+  PlayerEnum,
+  Resource,
+  tiles,
+} from "@gaia-project/engine";
 import {
   ChartConfiguration,
   ChartDataset,
@@ -28,6 +37,7 @@ import {
 import { simpleChartFactoryEntries } from "./simple-sources";
 import {
   advancedTechTileSource,
+  boosterSource,
   groupSources,
   victoryPointDetails,
   VictoryPointSource,
@@ -181,11 +191,17 @@ export class ChartSetup {
     const currentAdvTechTiles: Map<AdvTechTile, string> = new Map(
       AdvTechTilePos.values().map((tile) => [data.tiles.techs[tile].tile as AdvTechTile, tile.replace("adv", "--rt")])
     );
-    const singleColor = (tiles: AdvTechTile[]) => new Map(tiles.map((v) => [v, "--tech-tile"]));
-    const vpAdvTechTiles = statistics ? singleColor(AdvTechTile.values().filter(scoringTechTile)) : currentAdvTechTiles;
+    const singleColorTechTile = (tiles: AdvTechTile[]) => new Map(tiles.map((v) => [v, "--tech-tile"]));
+    const vpAdvTechTiles = statistics ? singleColorTechTile(AdvTechTile.values().filter(scoringTechTile)) : currentAdvTechTiles;
     const nonVpAdvTechTiles = statistics
-      ? singleColor(AdvTechTile.values().filter((t) => !scoringTechTile(t)))
+      ? singleColorTechTile(AdvTechTile.values().filter((t) => !scoringTechTile(t)))
       : currentAdvTechTiles;
+
+    const scoringBooster: (booster: Booster) => boolean = (booster: Booster) =>
+      new Event(tiles.boosters[booster][1]).rewards.some((r) => r.type == Resource.VictoryPoint);
+    const currentBoosters = Booster.values().filter(b => data.tiles.boosters[b] != null);
+    const vpBoosters = statistics ? Booster.values().filter(scoringBooster) : currentBoosters;
+    const nonVpBoosters = statistics ? Booster.values().filter((t) => !scoringBooster(t)) : currentBoosters;
 
     this.chartFactories = new Map<ChartFamily, ChartFactory<any>>(
       ([
@@ -197,7 +213,11 @@ export class ChartSetup {
             Array.from(vpAdvTechTiles.entries()).map(([tile, color]) => advancedTechTileSource(data, tile, color))
           ),
         ],
-      ] as [ChartFamily, ChartFactory<any>][]).concat(simpleChartFactoryEntries(nonVpAdvTechTiles))
+        [
+          "Boosters (Victory Points)",
+          vpChartFactory("Victory Points from Boosters", vpBoosters.map((b) => boosterSource(data, b))),
+        ],
+      ] as [ChartFamily, ChartFactory<any>][]).concat(simpleChartFactoryEntries(nonVpAdvTechTiles, nonVpBoosters))
     );
 
     this.families = Array.from(this.chartFactories.keys()).sort();

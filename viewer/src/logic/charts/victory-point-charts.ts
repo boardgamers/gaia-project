@@ -29,6 +29,7 @@ import {
 } from "./charts";
 import { finalScoringSources } from "./final-scoring";
 import { logEntryProcessor } from "./simple-charts";
+import { boosterNames } from "../../data/boosters";
 
 function simulateIncome(pl: Player, consume: (p: Player) => void, engineVersion: string): number {
   const json = JSON.parse(JSON.stringify(pl));
@@ -226,7 +227,7 @@ export const victoryPointSources = (engine: Engine): VictoryPointSource[] => [
   },
 ];
 
-function advancedTechTileTypes(e: Engine, tile: AdvTechTile) {
+function advancedTechTileTypes(e: Engine, tile: AdvTechTile): AdvTechTilePos[] {
   return Object.entries(e.tiles.techs)
     .filter((entry) => entry[1].tile == tile)
     .map((entry) => entry[0] as AdvTechTilePos);
@@ -234,10 +235,18 @@ function advancedTechTileTypes(e: Engine, tile: AdvTechTile) {
 
 export const advancedTechTileSource = (data: Engine, tile: AdvTechTile, color: string): VictoryPointSource => ({
   types: advancedTechTileTypes(data, tile),
-  label: advancedTechTileNames[tile],
   description: "Advanced Tech Tiles",
+  label: advancedTechTileNames[tile],
   color: color,
   roundValues: passIncomeProjection(advancedTechTileTypes(data, tile), true),
+});
+
+export const boosterSource = (data: Engine, booster: Booster): VictoryPointSource => ({
+  types: [booster],
+  description: "Boosters",
+  label: boosterNames[booster].name,
+  color: boosterNames[booster].color,
+  roundValues: passIncomeProjection([booster], false),
 });
 
 export function countResearch(player: Player): (moveHistory: string[], log: LogEntry) => number {

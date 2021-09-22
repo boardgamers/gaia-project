@@ -141,15 +141,15 @@ export const boardActionSourceFactory: SimpleSourceFactory<SimpleSource<BoardAct
   })),
 };
 
-export const boosterSourceFactory: SimpleSourceFactory<SimpleSource<Booster>> = {
+export const boosterSourceFactory = (boosters: Booster[]): SimpleSourceFactory<SimpleSource<Booster>> => ({
   name: "Boosters",
   showWeightedTotal: false,
   playerSummaryLineChartTitle: "Boosters taken by all players",
   extractLog: commandCounter(Command.Pass, Command.ChooseRoundBooster),
-  sources: Booster.values().map((b) => ({
+  sources: boosters.map((b) => ({
     type: b,
     label: boosterNames[b].name,
     color: boosterNames[b].color,
     weight: 1,
   })),
-};
+});

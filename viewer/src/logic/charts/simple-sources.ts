@@ -1,4 +1,4 @@
-import Engine, { AdvTechTile, Player, PlayerEnum } from "@gaia-project/engine";
+import Engine, { AdvTechTile, Booster, Player, PlayerEnum } from "@gaia-project/engine";
 import { buildingsSourceFactory } from "./buildings";
 import { powerChargeSourceFactory } from "./charge";
 import { ChartFactory } from "./chart-factory";
@@ -16,9 +16,8 @@ import { logEntryProcessor, SimpleSource, SimpleSourceFactory } from "./simple-c
 import { advancedTechSourceFactory, baseTechSourceFactory, researchSourceFactory } from "./tech";
 import { terraformingStepsSourceFactory } from "./terraforming";
 
-export const simpleSourceFactories = (
-  advTechTiles: Map<AdvTechTile, string>
-): SimpleSourceFactory<SimpleSource<any>>[] => {
+export const simpleSourceFactories = (advTechTiles: Map<AdvTechTile, string>,
+                                      boosters: Booster[]): SimpleSourceFactory<SimpleSource<any>>[] => {
   return [
     resourceSourceFactory,
     powerChargeSourceFactory,
@@ -28,7 +27,7 @@ export const simpleSourceFactories = (
     researchSourceFactory,
     planetsSourceFactory,
     terraformingStepsSourceFactory,
-    boosterSourceFactory,
+    boosterSourceFactory(boosters),
     federationsSourceFactory,
     baseTechSourceFactory,
     advancedTechSourceFactory(advTechTiles),
@@ -114,8 +113,8 @@ export const simpleChartFactory = (
   },
 });
 
-export const simpleChartFactoryEntries = (nonVpAdvTechTiles: Map<AdvTechTile, string>) => {
-  const sourceFactories = simpleSourceFactories(nonVpAdvTechTiles);
+export const simpleChartFactoryEntries = (nonVpAdvTechTiles: Map<AdvTechTile, string>, boosters: Booster[]) => {
+  const sourceFactories = simpleSourceFactories(nonVpAdvTechTiles, boosters);
 
   function simpleSourceFactory<Source extends SimpleSource<any>>(family: ChartFamily): SimpleSourceFactory<Source> {
     return sourceFactories.find((f) => f.name == family) as SimpleSourceFactory<Source>;

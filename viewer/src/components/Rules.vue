@@ -62,6 +62,7 @@
             Select, but not click federation location on devices that don't support hover (you need to click OK to
             select the location).
           </li>
+          <li>Charts: New chart "Boosters (Victory Points)".</li>
         </ul>
         <h5>2021-09-20</h5>
         <ul>
