@@ -75,7 +75,7 @@ export type VictoryPointType =
 export type VictoryPointSource = {
   types: VictoryPointType[];
   label: string;
-  description: string;
+  description?: string;
   color: string;
   roundValues?: (e: Engine, p: Player) => Map<number, number>;
   initialValue?: (p: Player) => number;
@@ -235,7 +235,6 @@ function advancedTechTileTypes(e: Engine, tile: AdvTechTile): AdvTechTilePos[] {
 
 export const advancedTechTileSource = (data: Engine, tile: AdvTechTile, color: string): VictoryPointSource => ({
   types: advancedTechTileTypes(data, tile),
-  description: "Advanced Tech Tiles",
   label: advancedTechTileNames[tile],
   color: color,
   roundValues: passIncomeProjection(advancedTechTileTypes(data, tile), true),
@@ -243,7 +242,6 @@ export const advancedTechTileSource = (data: Engine, tile: AdvTechTile, color: s
 
 export const boosterSource = (data: Engine, booster: Booster): VictoryPointSource => ({
   types: [booster],
-  description: "Boosters",
   label: boosterNames[booster].name,
   color: boosterNames[booster].color,
   roundValues: passIncomeProjection([booster], false),
