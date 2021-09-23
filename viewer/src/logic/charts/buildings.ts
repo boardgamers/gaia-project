@@ -1,7 +1,8 @@
 import { Building, Command } from "@gaia-project/engine";
-import { SimpleSource, SimpleSourceFactory, statelessExtractLog } from "./simple-charts";
+import { ChartSource } from "./charts";
+import { SimpleSourceFactory, statelessExtractLog } from "./simple-charts";
 
-export const buildingsSourceFactory: SimpleSourceFactory<SimpleSource<Building>> = {
+export const buildingsSourceFactory: SimpleSourceFactory<ChartSource<Building>> = {
   name: "Buildings",
   playerSummaryLineChartTitle: "Power value of all buildings of all players (1-3 base power value)",
   showWeightedTotal: true,

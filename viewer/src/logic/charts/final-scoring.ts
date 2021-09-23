@@ -10,9 +10,10 @@ import {
   stdBuildingValue,
 } from "@gaia-project/engine";
 import { Grid } from "hexagrid";
-import { ExtractLog, ExtractLogArg, planetCounter, SimpleSource, SimpleSourceFactory } from "./simple-charts";
+import { ChartSource } from "./charts";
+import { ExtractLog, ExtractLogArg, planetCounter, SimpleSourceFactory } from "./simple-charts";
 
-type FinalScoringExtractLog = ExtractLog<SimpleSource<FinalTile>>;
+type FinalScoringExtractLog = ExtractLog<ChartSource<FinalTile>>;
 
 export type FinalScoringContributor =
   | "Regular Building"
@@ -193,15 +194,15 @@ export const finalScoringSources: { [key in FinalTile]: FinalScoringSource } = {
   },
 };
 
-export const finalScoringExtractLog: ExtractLog<SimpleSource<FinalTile>> = (p) => {
-  const map = new Map<FinalTile, (a: ExtractLogArg<SimpleSource<FinalTile>>) => number>();
+export const finalScoringExtractLog: ExtractLog<ChartSource<FinalTile>> = (p) => {
+  const map = new Map<FinalTile, (a: ExtractLogArg<ChartSource<FinalTile>>) => number>();
   for (const key of Object.keys(finalScoringSources)) {
     map.set(key as FinalTile, finalScoringSources[key as FinalTile].extractLog(p));
   }
   return (e) => map.get(e.source.type)(e);
 };
 
-export const finalScoringSourceFactory: SimpleSourceFactory<SimpleSource<FinalTile>> = {
+export const finalScoringSourceFactory: SimpleSourceFactory<ChartSource<FinalTile>> = {
   name: "Final Scoring Conditions",
   showWeightedTotal: false,
   playerSummaryLineChartTitle: "All final Scoring Conditions of all players (not only the active ones)",

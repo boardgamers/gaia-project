@@ -1,19 +1,19 @@
 import { Booster, Command, EventSource, ResearchField, Resource, TechPos } from "@gaia-project/engine";
 import assert from "assert";
-import { extractChanges } from "./charts";
-import { SimpleSource, SimpleSourceFactory, statelessExtractLog } from "./simple-charts";
+import { ChartSource, extractChanges } from "./charts";
+import { SimpleSourceFactory, statelessExtractLog } from "./simple-charts";
 
 enum PowerChargeSource {
-  burn,
-  freeLeech,
-  paidLeech,
-  income,
-  tech,
-  booster,
-  research,
+  burn = "burn",
+  freeLeech = "freeLeech",
+  paidLeech = "paidLeech",
+  income = "income",
+  tech = "tech",
+  booster = "booster",
+  research = "research",
 }
 
-const powerChargeSources: SimpleSource<PowerChargeSource>[] = [
+const powerChargeSources: ChartSource<PowerChargeSource>[] = [
   {
     type: PowerChargeSource.burn,
     label: "Burn",
@@ -81,7 +81,7 @@ const extractPowerCharge = (eventSource: EventSource, source: PowerChargeSource,
   assert(false, "no source found: " + eventSource);
 };
 
-export const powerChargeSourceFactory: SimpleSourceFactory<SimpleSource<PowerChargeSource>> = {
+export const powerChargeSourceFactory: SimpleSourceFactory<ChartSource<PowerChargeSource>> = {
   name: "Power Charges",
   playerSummaryLineChartTitle: "Power Charges of all players",
   showWeightedTotal: false,

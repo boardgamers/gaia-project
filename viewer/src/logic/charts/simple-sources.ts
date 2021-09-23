@@ -2,7 +2,15 @@ import Engine, { AdvTechTile, Booster, Player, PlayerEnum } from "@gaia-project/
 import { buildingsSourceFactory } from "./buildings";
 import { powerChargeSourceFactory } from "./charge";
 import { ChartFactory } from "./chart-factory";
-import { ChartFamily, DatasetFactory, getDataPoints, IncludeRounds, playerLabel, resolveColor } from "./charts";
+import {
+  ChartFamily,
+  ChartSource,
+  DatasetFactory,
+  getDataPoints,
+  IncludeRounds,
+  playerLabel,
+  resolveColor,
+} from "./charts";
 import { federationsSourceFactory } from "./federations";
 import { finalScoringSourceFactory } from "./final-scoring";
 import { planetsSourceFactory } from "./plantets";
@@ -12,12 +20,14 @@ import {
   freeActionSourceFactory,
   resourceSourceFactory,
 } from "./resources";
-import { logEntryProcessor, SimpleSource, SimpleSourceFactory } from "./simple-charts";
+import { logEntryProcessor, SimpleSourceFactory } from "./simple-charts";
 import { advancedTechSourceFactory, baseTechSourceFactory, researchSourceFactory } from "./tech";
 import { terraformingStepsSourceFactory } from "./terraforming";
 
-export const simpleSourceFactories = (advTechTiles: Map<AdvTechTile, string>,
-                                      boosters: Booster[]): SimpleSourceFactory<SimpleSource<any>>[] => {
+export const simpleSourceFactories = (
+  advTechTiles: Map<AdvTechTile, string>,
+  boosters: Booster[]
+): SimpleSourceFactory<ChartSource<any>>[] => {
   return [
     resourceSourceFactory,
     powerChargeSourceFactory,
@@ -35,7 +45,7 @@ export const simpleSourceFactories = (advTechTiles: Map<AdvTechTile, string>,
   ];
 };
 
-function simpleChartDetails<Source extends SimpleSource<any>>(
+function simpleChartDetails<Source extends ChartSource<any>>(
   factory: SimpleSourceFactory<Source>,
   data: Engine,
   player: PlayerEnum,
@@ -70,6 +80,7 @@ function simpleChartDetails<Source extends SimpleSource<any>>(
     return {
       backgroundColor: resolveColor(s.color, pl),
       label: s.label,
+      description: "",
       fill: false,
       getDataPoints: () =>
         getDataPoints(data, initialValue, extractChange, extractLog, null, deltaForEnded, includeRounds),
@@ -79,17 +90,17 @@ function simpleChartDetails<Source extends SimpleSource<any>>(
 }
 
 export const simpleChartFactory = (
-  simpleSourceFactory: <Source extends SimpleSource<any>>(family: ChartFamily) => SimpleSourceFactory<Source>
-): ChartFactory<SimpleSource<any>> => ({
+  simpleSourceFactory: <Source extends ChartSource<any>>(family: ChartFamily) => SimpleSourceFactory<Source>
+): ChartFactory<ChartSource<any>> => ({
   includeRounds: "except-final",
 
-  sources(family: ChartFamily): SimpleSource<any>[] {
+  sources(family: ChartFamily): ChartSource<any>[] {
     return simpleSourceFactory(family).sources;
   },
   newDetails(
     data: Engine,
     player: PlayerEnum,
-    sources: SimpleSource<any>[],
+    sources: ChartSource<any>[],
     includeRounds: IncludeRounds,
     family: ChartFamily
   ) {
@@ -102,7 +113,7 @@ export const simpleChartFactory = (
     const sourceFactory = simpleSourceFactory(family);
     return sourceFactory.playerSummaryLineChartTitle;
   },
-  kindBreakdownTitle(family: ChartFamily, source: SimpleSource<any>): string {
+  kindBreakdownTitle(family: ChartFamily, source: ChartSource<any>): string {
     return `${source.label} of all players`;
   },
   stacked() {
@@ -116,7 +127,7 @@ export const simpleChartFactory = (
 export const simpleChartFactoryEntries = (nonVpAdvTechTiles: Map<AdvTechTile, string>, boosters: Booster[]) => {
   const sourceFactories = simpleSourceFactories(nonVpAdvTechTiles, boosters);
 
-  function simpleSourceFactory<Source extends SimpleSource<any>>(family: ChartFamily): SimpleSourceFactory<Source> {
+  function simpleSourceFactory<Source extends ChartSource<any>>(family: ChartFamily): SimpleSourceFactory<Source> {
     return sourceFactories.find((f) => f.name == family) as SimpleSourceFactory<Source>;
   }
 

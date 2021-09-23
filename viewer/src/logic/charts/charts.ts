@@ -11,7 +11,15 @@ import Engine, {
   Round,
 } from "@gaia-project/engine";
 import { factionName } from "../../data/factions";
-import { ChartStyleDisplay } from "./chart-factory";
+import { ChartKind } from "./chart-factory";
+
+export type ChartStyle = "table" | "chart";
+
+export type ChartStyleDisplay = {
+  type: ChartStyle;
+  compact: boolean;
+  label: string;
+};
 
 export type ChartColor = string | ((player: Player) => string);
 
@@ -20,6 +28,14 @@ export type ChartFamily = string;
 export const vpChartFamily = "Victory Points";
 
 export const finalScoringRound = Round.LastRound + 1;
+
+export class ChartSource<Type extends ChartKind> {
+  type: Type;
+  label: string;
+  description?: string;
+  color: ChartColor;
+  weight: number;
+}
 
 export type DeepPartial<T> = {
   [P in keyof T]?: DeepPartial<T[P]>;

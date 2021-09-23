@@ -3,18 +3,17 @@ import { sum } from "lodash";
 import { boardActionNames } from "../../data/actions";
 import { boosterNames } from "../../data/boosters";
 import { resourceNames } from "../../data/resources";
-import { extractChanges } from "./charts";
+import { ChartSource, extractChanges } from "./charts";
 import {
   commandCounter,
   extractLogMux,
   planetCounter,
-  SimpleSource,
   SimpleSourceFactory,
   statelessExtractLog,
 } from "./simple-charts";
 
 const range = "range";
-type ResourceSource = SimpleSource<Resource | "range"> & { inverseOf?: Resource };
+type ResourceSource = ChartSource<Resource | "range"> & { inverseOf?: Resource };
 
 const resourceWeights: { type: Resource; color: string; weight: number; inverseOf?: Resource }[] = [
   {
@@ -102,7 +101,7 @@ export const resourceSourceFactory: SimpleSourceFactory<ResourceSource> = {
   sources: resourceSources,
 };
 
-export const freeActionSourceFactory: SimpleSourceFactory<ResourceSource | SimpleSource<"range">> = {
+export const freeActionSourceFactory: SimpleSourceFactory<ResourceSource | ChartSource<"range">> = {
   name: "Free actions",
   playerSummaryLineChartTitle:
     "Resources bought with free actions by all players (paid with power, credits, ore, QIC, and gaia formers)",
@@ -128,7 +127,7 @@ export const freeActionSourceFactory: SimpleSourceFactory<ResourceSource | Simpl
   sources: freeActionSources,
 };
 
-export const boardActionSourceFactory: SimpleSourceFactory<SimpleSource<BoardAction>> = {
+export const boardActionSourceFactory: SimpleSourceFactory<ChartSource<BoardAction>> = {
   name: "Board actions",
   playerSummaryLineChartTitle: `Board actions taken by all players`,
   showWeightedTotal: false,
@@ -141,7 +140,7 @@ export const boardActionSourceFactory: SimpleSourceFactory<SimpleSource<BoardAct
   })),
 };
 
-export const boosterSourceFactory = (boosters: Booster[]): SimpleSourceFactory<SimpleSource<Booster>> => ({
+export const boosterSourceFactory = (boosters: Booster[]): SimpleSourceFactory<ChartSource<Booster>> => ({
   name: "Boosters",
   showWeightedTotal: false,
   playerSummaryLineChartTitle: "Boosters taken by all players",
