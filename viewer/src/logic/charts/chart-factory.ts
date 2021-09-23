@@ -132,8 +132,8 @@ const vpChartFactory = (title: string, allSources: VictoryPointSource[]): ChartF
   barChartTooltip: {
     callbacks: {
       afterTitle(this: TooltipModel<"bar">, items: TooltipItem<"bar">[]): string | string[] {
-        const dataIndex = items[0].dataIndex;
-        return ` (${allSources[dataIndex].description})`;
+        const description = allSources[items[0].dataIndex].description;
+        return description ? ` (${description})` : null;
       },
     },
   },
