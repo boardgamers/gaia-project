@@ -21,9 +21,10 @@ import {
 import { sortBy, sum, sumBy } from "lodash";
 import { factionName } from "../../data/factions";
 import {
-  ChartColor,
   ChartFamily,
   chartPlayerOrder,
+  ChartSource,
+  ChartStyleDisplay,
   ColorVar,
   DatasetFactory,
   DeepPartial,
@@ -44,14 +45,6 @@ import {
   victoryPointSources,
 } from "./victory-point-charts";
 
-export type ChartStyle = "table" | "chart";
-
-export type ChartStyleDisplay = {
-  type: ChartStyle;
-  compact: boolean;
-  label: string;
-};
-
 export type DatasetMeta = { [key: string]: { label: string; total: number; weightedTotal: number } };
 export type TableMeta = { weights?: number[]; colors?: ColorVar[]; datasetMeta: DatasetMeta };
 export type BarChartConfig = { chart: ChartConfiguration<"bar">; table: TableMeta };
@@ -62,14 +55,7 @@ export const lineChartKind: ChartKind = "line";
 
 export type ChartKindDisplay = { label: string; kind: ChartKind };
 
-export type ChartSource = {
-  type: ChartKind;
-  label: string;
-  color: ChartColor;
-  weight: number;
-};
-
-export type ChartFactory<Source extends ChartSource> = {
+export type ChartFactory<Source extends ChartSource<any>> = {
   sources(family: ChartFamily): Source[];
   newDetails(
     data: Engine,
@@ -85,19 +71,19 @@ export type ChartFactory<Source extends ChartSource> = {
   includeRounds: IncludeRounds;
   stacked(kind: ChartKind);
   showWeightedTotal(family: ChartFamily): boolean;
-  barChartTooltip?: DeepPartial<TooltipOptions<"bar">>;
 };
 
-function victoryPointSource(source: ChartSource, sources: VictoryPointSource[]): VictoryPointSource {
+function victoryPointSource(source: ChartSource<any>, sources: VictoryPointSource[]): VictoryPointSource {
   return sources.find((s) => s.types[0] == source.type);
 }
 
-const vpChartFactory = (title: string, allSources: VictoryPointSource[]): ChartFactory<ChartSource> => ({
+const vpChartFactory = (title: string, allSources: VictoryPointSource[]): ChartFactory<ChartSource<any>> => ({
   includeRounds: "all",
-  sources(): ChartSource[] {
+  sources(): ChartSource<any>[] {
     return allSources.map((s) => ({
       type: s.types[0],
       label: s.label,
+      description: s.description,
       color: s.color,
       weight: 1,
     }));
@@ -105,7 +91,7 @@ const vpChartFactory = (title: string, allSources: VictoryPointSource[]): ChartF
   newDetails(
     data: Engine,
     player: PlayerEnum,
-    sources: ChartSource[],
+    sources: ChartSource<any>[],
     includeRounds: IncludeRounds,
     family: ChartFamily,
     groupDatasets: boolean
@@ -120,7 +106,7 @@ const vpChartFactory = (title: string, allSources: VictoryPointSource[]): ChartF
   playerSummaryTitle(): string {
     return `${title} of all players`;
   },
-  kindBreakdownTitle(family: ChartFamily, source: ChartSource): string {
+  kindBreakdownTitle(family: ChartFamily, source: ChartSource<any>): string {
     return `${victoryPointSource(source, allSources).label} of all players`;
   },
   stacked(kind: ChartKind) {
@@ -128,14 +114,6 @@ const vpChartFactory = (title: string, allSources: VictoryPointSource[]): ChartF
   },
   showWeightedTotal(): boolean {
     return false;
-  },
-  barChartTooltip: {
-    callbacks: {
-      afterTitle(this: TooltipModel<"bar">, items: TooltipItem<"bar">[]): string | string[] {
-        const description = allSources[items[0].dataIndex].description;
-        return description ? ` (${description})` : null;
-      },
-    },
   },
 });
 
@@ -192,14 +170,16 @@ export class ChartSetup {
       AdvTechTilePos.values().map((tile) => [data.tiles.techs[tile].tile as AdvTechTile, tile.replace("adv", "--rt")])
     );
     const singleColorTechTile = (tiles: AdvTechTile[]) => new Map(tiles.map((v) => [v, "--tech-tile"]));
-    const vpAdvTechTiles = statistics ? singleColorTechTile(AdvTechTile.values().filter(scoringTechTile)) : currentAdvTechTiles;
+    const vpAdvTechTiles = statistics
+      ? singleColorTechTile(AdvTechTile.values().filter(scoringTechTile))
+      : currentAdvTechTiles;
     const nonVpAdvTechTiles = statistics
       ? singleColorTechTile(AdvTechTile.values().filter((t) => !scoringTechTile(t)))
       : currentAdvTechTiles;
 
     const scoringBooster: (booster: Booster) => boolean = (booster: Booster) =>
       new Event(tiles.boosters[booster][1]).rewards.some((r) => r.type == Resource.VictoryPoint);
-    const currentBoosters = Booster.values().filter(b => data.tiles.boosters[b] != null);
+    const currentBoosters = Booster.values().filter((b) => data.tiles.boosters[b] != null);
     const vpBoosters = statistics ? Booster.values().filter(scoringBooster) : currentBoosters;
     const nonVpBoosters = statistics ? Booster.values().filter((t) => !scoringBooster(t)) : currentBoosters;
 
@@ -215,7 +195,10 @@ export class ChartSetup {
         ],
         [
           "Boosters (Victory Points)",
-          vpChartFactory("Victory Points from Boosters", vpBoosters.map((b) => boosterSource(data, b))),
+          vpChartFactory(
+            "Victory Points from Boosters",
+            vpBoosters.map((b) => boosterSource(data, b))
+          ),
         ],
       ] as [ChartFamily, ChartFactory<any>][]).concat(simpleChartFactoryEntries(nonVpAdvTechTiles, nonVpBoosters))
     );
@@ -346,7 +329,7 @@ export class ChartSetup {
 
     const datasetMeta: DatasetMeta = {};
 
-    const sources = f.sources(family);
+    const sources: ChartSource<any>[] = f.sources(family);
     const players = chartPlayerOrder(data);
     const datasets: ChartDataset<"bar">[] = sortBy(
       players
@@ -399,7 +382,14 @@ export class ChartSetup {
         },
         options: {
           plugins: {
-            tooltip: f.barChartTooltip,
+            tooltip: {
+              callbacks: {
+                afterTitle(this: TooltipModel<"bar">, items: TooltipItem<"bar">[]): string | string[] {
+                  const description = sources[items[0].dataIndex].description;
+                  return description ? ` (${description})` : null;
+                },
+              },
+            },
             title: {
               text: f.playerSummaryTitle(family),
               display: true,

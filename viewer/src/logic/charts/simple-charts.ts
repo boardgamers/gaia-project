@@ -1,15 +1,9 @@
 import Engine, { Building, Command, Faction, LogEntry, Planet, Player } from "@gaia-project/engine";
 import { CommandObject, parseCommands } from "../recent";
-import { ChartColor, ChartFamily } from "./charts";
+import { ChartKind } from "./chart-factory";
+import { ChartFamily, ChartSource } from "./charts";
 
-export type SimpleSource<Type> = {
-  type: Type;
-  label: string;
-  color: ChartColor;
-  weight: number;
-};
-
-export type SimpleSourceFactory<Source extends SimpleSource<any>> = {
+export type SimpleSourceFactory<Source extends ChartSource<any>> = {
   name: ChartFamily;
   playerSummaryLineChartTitle: string;
   sources: Source[];
@@ -53,9 +47,11 @@ export function statelessExtractLog<Source>(e: (a: ExtractLogArg<Source>) => num
   return (p) => (a) => (a.cmd.faction == p.faction ? e(a) : 0);
 }
 
-export function extractLogMux<T>(mux: { [key in Command]?: ExtractLog<SimpleSource<T>> }): ExtractLog<SimpleSource<T>> {
+export function extractLogMux<T extends ChartKind>(
+  mux: { [key in Command]?: ExtractLog<ChartSource<T>> }
+): ExtractLog<ChartSource<T>> {
   return (p) => {
-    const map = new Map<Command, (a: ExtractLogArg<SimpleSource<T>>) => number>();
+    const map = new Map<Command, (a: ExtractLogArg<ChartSource<T>>) => number>();
     for (const key of Object.keys(mux)) {
       map.set(key as Command, mux[key as Command](p));
     }
@@ -65,17 +61,17 @@ export function extractLogMux<T>(mux: { [key in Command]?: ExtractLog<SimpleSour
   };
 }
 
-export function commandCounter<T>(...want: Command[]): ExtractLog<SimpleSource<T>> {
+export function commandCounter<T extends ChartKind>(...want: Command[]): ExtractLog<ChartSource<T>> {
   return statelessExtractLog((e) => (want.includes(e.cmd.command) && (e.cmd.args[0] as any) == e.source.type ? 1 : 0));
 }
 
-export function planetCounter<T>(
-  includeLantidsGuestMine: (s: SimpleSource<T>) => boolean,
-  includeLostPlanet: (s: SimpleSource<T>) => boolean,
+export function planetCounter<T extends ChartKind>(
+  includeLantidsGuestMine: (s: ChartSource<T>) => boolean,
+  includeLostPlanet: (s: ChartSource<T>) => boolean,
   includeRegularPlanet: (planet: Planet, type: T, player: Player) => boolean,
   countTransdim = true,
   value: (cmd: CommandObject, log: LogEntry, planet: Planet, location: string) => number = () => 1
-): ExtractLog<SimpleSource<T>> {
+): ExtractLog<ChartSource<T>> {
   const transdim = new Set<string>();
   const owners: { [key: string]: Faction } = {};
 

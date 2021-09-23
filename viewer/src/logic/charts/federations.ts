@@ -1,8 +1,9 @@
 import { Command, Federation, federations } from "@gaia-project/engine";
 import { federationData } from "../../data/federations";
-import { SimpleSource, SimpleSourceFactory, statelessExtractLog } from "./simple-charts";
+import { ChartSource } from "./charts";
+import { SimpleSourceFactory, statelessExtractLog } from "./simple-charts";
 
-export const federationsSourceFactory: SimpleSourceFactory<SimpleSource<Federation>> = {
+export const federationsSourceFactory: SimpleSourceFactory<ChartSource<Federation>> = {
   name: "Federations",
   showWeightedTotal: false,
   playerSummaryLineChartTitle: "Federations of all players",

@@ -1,9 +1,9 @@
 import { Planet } from "@gaia-project/engine";
 import { planetNames } from "../../data/planets";
-import { planetColor } from "./charts";
-import { planetCounter, SimpleSource, SimpleSourceFactory } from "./simple-charts";
+import { ChartSource, planetColor } from "./charts";
+import { planetCounter, SimpleSourceFactory } from "./simple-charts";
 
-export const planetsSourceFactory: SimpleSourceFactory<SimpleSource<Planet>> = {
+export const planetsSourceFactory: SimpleSourceFactory<ChartSource<Planet>> = {
   name: "Planets",
   playerSummaryLineChartTitle: "Planets of all players",
   showWeightedTotal: false,

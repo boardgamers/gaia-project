@@ -1,10 +1,10 @@
 import { AdvTechTile, AdvTechTilePos, Command, ResearchField, TechTile, TechTilePos } from "@gaia-project/engine";
 import { researchNames } from "../../data/research";
 import { advancedTechTileNames, baseTechTileNames } from "../../data/tech-tiles";
-import { initialResearch } from "./charts";
-import { commandCounter, ExtractLog, SimpleSource, SimpleSourceFactory, statelessExtractLog } from "./simple-charts";
+import { ChartSource, initialResearch } from "./charts";
+import { commandCounter, ExtractLog, SimpleSourceFactory, statelessExtractLog } from "./simple-charts";
 
-const techTileExtractLog: ExtractLog<SimpleSource<TechTile | AdvTechTile>> = statelessExtractLog((e) => {
+const techTileExtractLog: ExtractLog<ChartSource<TechTile | AdvTechTile>> = statelessExtractLog((e) => {
   if (e.cmd.command == Command.ChooseTechTile) {
     const pos = e.cmd.args[0] as TechTilePos | AdvTechTilePos;
     const tile = e.data.tiles.techs[pos].tile;
@@ -16,7 +16,7 @@ const techTileExtractLog: ExtractLog<SimpleSource<TechTile | AdvTechTile>> = sta
   return 0;
 });
 
-export const baseTechSourceFactory: SimpleSourceFactory<SimpleSource<TechTile>> = {
+export const baseTechSourceFactory: SimpleSourceFactory<ChartSource<TechTile>> = {
   name: "Base Tech Tiles",
   showWeightedTotal: false,
   playerSummaryLineChartTitle: "Base Tech tiles of all players",
@@ -31,7 +31,7 @@ export const baseTechSourceFactory: SimpleSourceFactory<SimpleSource<TechTile>> 
 
 export const advancedTechSourceFactory = (
   advTechTiles: Map<AdvTechTile, string>
-): SimpleSourceFactory<SimpleSource<AdvTechTile>> => ({
+): SimpleSourceFactory<ChartSource<AdvTechTile>> => ({
   name: "Advanced Tech Tiles",
   showWeightedTotal: false,
   playerSummaryLineChartTitle: "Advanced Tech tiles of all players",
@@ -44,7 +44,7 @@ export const advancedTechSourceFactory = (
   })),
 });
 
-export const researchSourceFactory: SimpleSourceFactory<SimpleSource<ResearchField>> = {
+export const researchSourceFactory: SimpleSourceFactory<ChartSource<ResearchField>> = {
   name: "Research",
   playerSummaryLineChartTitle: "Research steps of all players",
   showWeightedTotal: false,
