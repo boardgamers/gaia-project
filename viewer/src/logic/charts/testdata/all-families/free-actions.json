@@ -1,6 +1,6 @@
 {
   "tableMeta": {
-    "weights": [1, 3, 4, 4, 0, 0],
+    "weights": [1, 3, 4, 4, 0, 0, 0],
     "colors": [
       {
         "color": "--res-credit"
@@ -19,6 +19,9 @@
       },
       {
         "color": "--rt-nav"
+      },
+      {
+        "color": "--tech-tile"
       }
     ],
     "datasetMeta": {
@@ -44,23 +47,23 @@
       }
     }
   },
-  "labels": ["Credits", "Ores", "Knowledge", "QICs", "Gained Tokens", "Range +2"],
+  "labels": ["Credits", "Ores", "Knowledge", "QICs", "Gained Tokens", "Range +2", "Tech Tile (Itars)"],
   "datasets": [
     {
       "label": "Taklons (15)",
-      "data": [0, 5, 0, 0, 0, 1]
+      "data": [0, 5, 0, 0, 0, 1, 0]
     },
     {
       "label": "Geoden (5)",
-      "data": [2, 1, 0, 0, 0, 1]
+      "data": [2, 1, 0, 0, 0, 1, 0]
     },
     {
       "label": "Lantids (7)",
-      "data": [1, 2, 0, 0, 0, 0]
+      "data": [1, 2, 0, 0, 0, 0, 0]
     },
     {
       "label": "Itars (0)",
-      "data": [0, 0, 0, 0, 0, 0]
+      "data": [0, 0, 0, 0, 0, 0, 0]
     }
   ]
 }

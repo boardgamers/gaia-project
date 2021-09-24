@@ -1,6 +1,6 @@
 {
   "tableMeta": {
-    "weights": [1, 3, 4, 4, 0, 0],
+    "weights": [1, 3, 4, 4, 0, 0, 0],
     "colors": [
       {
         "color": "--res-credit"
@@ -19,6 +19,9 @@
       },
       {
         "color": "--rt-nav"
+      },
+      {
+        "color": "--tech-tile"
       }
     ],
     "datasetMeta": {
@@ -44,23 +47,23 @@
       }
     }
   },
-  "labels": ["Credits", "Ores", "Knowledge", "QICs", "Gained Tokens", "Range +2"],
+  "labels": ["Credits", "Ores", "Knowledge", "QICs", "Gained Tokens", "Range +2", "Tech Tile (Itars)"],
   "datasets": [
     {
       "label": "Terrans (41)",
-      "data": [20, 3, 0, 3, 0, 5]
+      "data": [20, 3, 0, 3, 0, 5, 0]
     },
     {
       "label": "Taklons (50)",
-      "data": [15, 9, 0, 2, 0, 4]
+      "data": [15, 9, 0, 2, 0, 4, 0]
     },
     {
       "label": "Ivits (12)",
-      "data": [5, 1, 0, 1, 1, 2]
+      "data": [5, 1, 0, 1, 1, 2, 0]
     },
     {
       "label": "Xenos (3)",
-      "data": [0, 1, 0, 0, 0, 0]
+      "data": [0, 1, 0, 0, 0, 0, 0]
     }
   ]
 }

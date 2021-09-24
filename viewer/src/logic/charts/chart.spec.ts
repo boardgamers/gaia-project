@@ -49,7 +49,7 @@ describe("Chart", () => {
 
   describe("chart data", () => {
     runJsonTests({
-      baseDir: "src/logic/chartTests",
+      baseDir: "src/logic/charts/testdata",
       subTests: (testCase: any, engine: Engine) =>
         testCase.families.flatMap((f) => (f == "all" ? new ChartSetup(engine).families : [f as ChartFamily])),
       createActualOutput: (engine, family, testCase: any) => {
