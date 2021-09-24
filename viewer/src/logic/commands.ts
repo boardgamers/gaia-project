@@ -159,18 +159,17 @@ export function buttonWarning(message?: string): ButtonWarning | null {
   return message && { title: "Are you sure?", body: [message] };
 }
 
-function endTurnWarning(engine: Engine, command: AvailableCommand): ButtonWarning | null {
+function endTurnWarning(player: Player, command: AvailableCommand): ButtonWarning | null {
   const warning = (msg: string) =>
     ({
       title: "Are you sure you want to end the turn?",
       body: [msg],
     } as ButtonWarning);
 
-  const p = engine.players[command.player];
-  if (p.faction == Faction.Taklons) {
-    switch (p.data.brainstone) {
+  if (player.faction == Faction.Taklons) {
+    switch (player.data.brainstone) {
       case PowerArea.Area2:
-        if (p.data.burnablePower() > 0) {
+        if (player.data.burnablePower() > 0) {
           return warning("Brainstone in area 2 not moved to area 3 using burn.");
         }
         break;
@@ -252,27 +251,24 @@ export function boosterWarning(player: Player, booster: Booster): ButtonWarning 
 
 function passWarning(engine: Engine, player: Player, command: AvailableCommand): ButtonWarning | null {
   const warnings: string[] = [];
-  const endTurn = endTurnWarning(engine, command);
+  const endTurn = endTurnWarning(player, command);
   if (endTurn != null) {
     warnings.push(...endTurn.body);
   }
-
   if (engine.round > 0) {
-    const p = engine.players[command.player];
-
-    for (const e of p.events[Operator.Activate].filter((e) => !e.activated)) {
+    for (const e of player.events[Operator.Activate].filter((e) => !e.activated)) {
       warnings.push(`Special action is not yet used: ${translateResources(e.rewards)}.`);
     }
 
-    switch (p.faction) {
+    switch (player.faction) {
       case Faction.Itars:
-        const burnablePower = p.data.burnablePower();
+        const burnablePower = player.data.burnablePower();
         if (burnablePower > 0 && !engine.isLastRound) {
           warnings.push(`Power tokens in area 2 not burned: ${burnablePower}.`);
         }
         break;
       case Faction.BalTaks:
-        if (p.data.hasResource(new Reward(1, Resource.GaiaFormer))) {
+        if (player.data.hasResource(new Reward(1, Resource.GaiaFormer))) {
           warnings.push("Gaiaformers are not yet converted.");
         }
         break;
@@ -806,7 +802,7 @@ export function chargePowerButtons(
   return ret;
 }
 
-export function endTurnButton(command: AvailableCommand<Command.EndTurn>, engine: Engine): ButtonData {
+export function endTurnButton(command: AvailableCommand<Command.EndTurn>, player: Player): ButtonData {
   return textButton({
     label: "End Turn",
     shortcuts: ["e"],
@@ -818,7 +814,7 @@ export function endTurnButton(command: AvailableCommand<Command.EndTurn>, engine
         label: `Confirm End Turn`,
       }),
     ],
-    warning: endTurnWarning(engine, command),
+    warning: endTurnWarning(player, command),
   });
 }
 
@@ -1146,7 +1142,7 @@ function commandButton(
     }
 
     case Command.EndTurn: {
-      return [endTurnButton(command, engine)];
+      return [endTurnButton(command, player)];
     }
 
     case Command.DeadEnd:
