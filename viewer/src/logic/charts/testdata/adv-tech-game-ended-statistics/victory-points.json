@@ -46,19 +46,24 @@
       }
     ],
     "datasetMeta": {
-      "Bal T'aks (109)": {
-        "label": "Bal T'aks",
-        "total": 109,
+      "Terrans (165)": {
+        "label": "Terrans",
+        "total": 165,
         "weightedTotal": null
       },
-      "Ivits (68)": {
-        "label": "Ivits",
-        "total": 68,
+      "Nevlas (164)": {
+        "label": "Nevlas",
+        "total": 164,
         "weightedTotal": null
       },
-      "Gleens (54)": {
-        "label": "Gleens",
-        "total": 54,
+      "Xenos (182)": {
+        "label": "Xenos",
+        "total": 182,
+        "weightedTotal": null
+      },
+      "Hadsch Hallas (108)": {
+        "label": "Hadsch Hallas",
+        "total": 108,
         "weightedTotal": null
       }
     }
@@ -81,16 +86,20 @@
   ],
   "datasets": [
     {
-      "label": "Bal T'aks (109)",
-      "data": [10, 0, -3, 0, 0, 12, 6, 0, 16, 33, 7, 18, 9, 1]
+      "label": "Xenos (182)",
+      "data": [10, 0, -25, 7, 0, 29, 14, 14, 48, 27, 34, 18, 6, 0]
     },
     {
-      "label": "Ivits (68)",
-      "data": [10, 0, -12, 0, 0, 7, 7, 0, 4, 0, 15, 12, 18, 7]
+      "label": "Terrans (165)",
+      "data": [10, 0, -22, 24, 0, 32, 17, 0, 39, 0, 34, 12, 18, 1]
     },
     {
-      "label": "Gleens (54)",
-      "data": [10, 0, -4, 0, 12, 8, 0, 0, 8, 0, 0, 0, 9, 11]
+      "label": "Nevlas (164)",
+      "data": [10, 0, -24, 7, 0, 32, 22, 8, 52, 21, 23, 0, 12, 1]
+    },
+    {
+      "label": "Hadsch Hallas (108)",
+      "data": [10, 0, -16, 7, 0, 19, 4, 18, 16, 12, 31, 6, 0, 1]
     }
   ]
 }

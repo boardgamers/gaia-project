@@ -3,9 +3,6 @@
     "weights": null,
     "colors": [
       {
-        "color": "--titanium"
-      },
-      {
         "color": "--swamp"
       },
       {
@@ -15,16 +12,10 @@
         "color": "--dig"
       },
       {
-        "color": "--rt-nav"
-      },
-      {
         "color": "--res-ore"
       },
       {
         "color": "--res-credit"
-      },
-      {
-        "color": "--res-knowledge"
       },
       {
         "color": "--recent"
@@ -34,56 +25,53 @@
       }
     ],
     "datasetMeta": {
-      "Itars (2)": {
+      "Itars (1)": {
         "label": "Itars",
-        "total": 2,
+        "total": 1,
         "weightedTotal": null
       },
-      "Geoden (2)": {
+      "Geoden (0)": {
         "label": "Geoden",
-        "total": 2,
+        "total": 0,
         "weightedTotal": null
       },
-      "Taklons (2)": {
+      "Taklons (4)": {
         "label": "Taklons",
-        "total": 2,
+        "total": 4,
         "weightedTotal": null
       },
-      "Lantids (2)": {
+      "Lantids (0)": {
         "label": "Lantids",
-        "total": 2,
+        "total": 0,
         "weightedTotal": null
       }
     }
   },
   "labels": [
-    "1k, 1o",
     "1o, 2 tokens",
     "q, 2c",
     "2c, 1 step",
-    "2pw, range+3",
     "1o, 1 VP / mine",
     "1o, 2 VP / ts",
-    "1k, 3 VP / lab",
     "4pw, 4 VP / PI or academy",
     "4c, 1 VP / gaia planet"
   ],
   "datasets": [
     {
-      "label": "Itars (2)",
-      "data": [0, 1, 0, 0, 0, 1, 0, 0, 0, 0]
+      "label": "Taklons (4)",
+      "data": [0, 0, 0, 0, 0, 4, 0]
     },
     {
-      "label": "Geoden (2)",
-      "data": [0, 0, 1, 1, 0, 0, 0, 0, 0, 0]
+      "label": "Itars (1)",
+      "data": [0, 0, 0, 1, 0, 0, 0]
     },
     {
-      "label": "Taklons (2)",
-      "data": [0, 1, 0, 0, 0, 0, 0, 0, 1, 0]
+      "label": "Geoden (0)",
+      "data": [0, 0, 0, 0, 0, 0, 0]
     },
     {
-      "label": "Lantids (2)",
-      "data": [0, 0, 1, 0, 0, 0, 0, 0, 0, 1]
+      "label": "Lantids (0)",
+      "data": [0, 0, 0, 0, 0, 0, 0]
     }
   ]
 }

@@ -46,24 +46,19 @@
       }
     ],
     "datasetMeta": {
-      "Gleens (151)": {
+      "Bal T'aks (109)": {
+        "label": "Bal T'aks",
+        "total": 109,
+        "weightedTotal": null
+      },
+      "Ivits (68)": {
+        "label": "Ivits",
+        "total": 68,
+        "weightedTotal": null
+      },
+      "Gleens (54)": {
         "label": "Gleens",
-        "total": 151,
-        "weightedTotal": null
-      },
-      "Terrans (135)": {
-        "label": "Terrans",
-        "total": 135,
-        "weightedTotal": null
-      },
-      "Hadsch Hallas (213)": {
-        "label": "Hadsch Hallas",
-        "total": 213,
-        "weightedTotal": null
-      },
-      "Ambas (138)": {
-        "label": "Ambas",
-        "total": 138,
+        "total": 54,
         "weightedTotal": null
       }
     }
@@ -80,26 +75,22 @@
     "Research",
     "Advanced Tech",
     "Federation",
-    "Final A",
-    "Final B",
+    "Satellites",
+    "Planet Types",
     "Resources"
   ],
   "datasets": [
     {
-      "label": "Hadsch Hallas (213)",
-      "data": [10, 0, -7, 25, 0, 32, 27, 14, 52, 0, 27, 12, 18, 3]
+      "label": "Bal T'aks (109)",
+      "data": [10, 0, -3, 0, 0, 12, 6, 0, 16, 33, 7, 18, 9, 1]
     },
     {
-      "label": "Gleens (151)",
-      "data": [10, 0, -17, 7, 6, 22, 14, 0, 28, 31, 25, 18, 6, 1]
+      "label": "Ivits (68)",
+      "data": [10, 0, -12, 0, 0, 7, 7, 0, 4, 0, 15, 12, 18, 7]
     },
     {
-      "label": "Ambas (138)",
-      "data": [10, 0, -10, 0, 0, 23, 28, 7, 32, 8, 35, 3, 0, 2]
-    },
-    {
-      "label": "Terrans (135)",
-      "data": [10, 0, -19, 13, 0, 18, 18, 7, 32, 12, 27, 3, 12, 2]
+      "label": "Gleens (54)",
+      "data": [10, 0, -4, 0, 12, 8, 0, 0, 8, 0, 0, 0, 9, 11]
     }
   ]
 }

@@ -35,6 +35,7 @@ import {
   vpChartFamily,
   weightedSum,
 } from "./charts";
+import { finalScoringSources } from "./final-scoring";
 import { simpleChartFactoryEntries } from "./simple-sources";
 import {
   advancedTechTileSource,
@@ -181,11 +182,15 @@ export class ChartSetup {
       new Event(tiles.boosters[booster][1]).rewards.some((r) => r.type == Resource.VictoryPoint);
     const currentBoosters = Booster.values().filter((b) => data.tiles.boosters[b] != null);
     const vpBoosters = statistics ? Booster.values().filter(scoringBooster) : currentBoosters;
-    const nonVpBoosters = statistics ? Booster.values().filter((t) => !scoringBooster(t)) : currentBoosters;
+    const allBoosters = statistics ? Booster.values() : currentBoosters;
 
+    const finalTileName = (tile) =>
+      statistics
+        ? `Final ${String.fromCharCode(65 + tile)}`
+        : finalScoringSources[data.tiles.scorings.final[tile]].name;
     this.chartFactories = new Map<ChartFamily, ChartFactory<any>>(
       ([
-        [vpChartFamily, vpChartFactory("Victory Points", victoryPointSources(data))],
+        [vpChartFamily, vpChartFactory("Victory Points", victoryPointSources(finalTileName))],
         [
           "Advanced Tech Tiles (Victory Points)",
           vpChartFactory(
@@ -200,7 +205,7 @@ export class ChartSetup {
             vpBoosters.map((b) => boosterSource(data, b))
           ),
         ],
-      ] as [ChartFamily, ChartFactory<any>][]).concat(simpleChartFactoryEntries(nonVpAdvTechTiles, nonVpBoosters))
+      ] as [ChartFamily, ChartFactory<any>][]).concat(simpleChartFactoryEntries(nonVpAdvTechTiles, allBoosters))
     );
 
     this.families = Array.from(this.chartFactories.keys()).sort();

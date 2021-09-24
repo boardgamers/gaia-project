@@ -1,0 +1,96 @@
+{
+  "tableMeta": {
+    "weights": null,
+    "colors": [
+      {
+        "color": "--gaia"
+      },
+      {
+        "color": "--volcanic"
+      },
+      {
+        "color": "--res-power"
+      },
+      {
+        "color": "--tech-tile"
+      },
+      {
+        "color": "--desert"
+      },
+      {
+        "color": "--rt-gaia"
+      },
+      {
+        "color": "--oxide"
+      },
+      {
+        "color": "--specialAction"
+      },
+      {
+        "color": "--res-knowledge"
+      },
+      {
+        "color": "--current-round"
+      },
+      {
+        "color": "--federation"
+      },
+      {
+        "color": "--rt-sci"
+      },
+      {
+        "color": "--dig"
+      },
+      {
+        "color": "--res-credit"
+      }
+    ],
+    "datasetMeta": {
+      "Bal T'aks (109)": {
+        "label": "Bal T'aks",
+        "total": 109,
+        "weightedTotal": null
+      },
+      "Ivits (68)": {
+        "label": "Ivits",
+        "total": 68,
+        "weightedTotal": null
+      },
+      "Gleens (49)": {
+        "label": "Gleens",
+        "total": 49,
+        "weightedTotal": null
+      }
+    }
+  },
+  "labels": [
+    "Initial",
+    "Bid",
+    "Charge",
+    "Base Tech",
+    "Gleens",
+    "Round",
+    "Booster",
+    "QIC",
+    "Research",
+    "Advanced Tech",
+    "Federation",
+    "Satellites",
+    "Planet Types",
+    "Resources"
+  ],
+  "datasets": [
+    {
+      "label": "Bal T'aks (109)",
+      "data": [10, 0, -3, 0, 0, 12, 6, 0, 16, 33, 7, 18, 9, 1]
+    },
+    {
+      "label": "Ivits (68)",
+      "data": [10, 0, -12, 0, 0, 7, 7, 0, 4, 0, 15, 12, 18, 7]
+    },
+    {
+      "label": "Gleens (49)",
+      "data": [10, 0, -4, 0, 12, 8, 0, 0, 8, 0, 0, 0, 9, 6]
+    }
+  ]
+}
