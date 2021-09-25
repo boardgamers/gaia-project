@@ -576,7 +576,7 @@ export default class Player extends EventEmitter {
     if (isAdditionalMine) {
       hex.data.additionalMine = this.player;
       if (this.data.hasPlanetaryInstitute()) {
-        this.data.gainRewards([new Reward("2k")]);
+        this.gainRewards([new Reward("2k")], Faction.Lantids);
       }
     } else {
       hex.data.building = building;
