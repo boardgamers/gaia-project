@@ -239,9 +239,7 @@ export default class Player extends EventEmitter {
   }
 
   payCosts(costs: Reward[], source: EventSource) {
-    for (const cost of costs) {
-      this.data.payCost(cost, source);
-    }
+    this.data.payCosts(costs, source);
   }
 
   gainRewards(rewards: Reward[], source: EventSource, toPick = 0) {
@@ -399,10 +397,7 @@ export default class Player extends EventEmitter {
       this.loadTechs(expansions);
       this.loadEvents(this.board.income);
     }
-
-    this.data.power.area1 = this.board.power.area1;
-    this.data.power.area2 = this.board.power.area2;
-    this.data.brainstone = this.board.brainstone;
+    this.data.loadPower(this.board);
 
     // Load faction specific code changes
     for (const eventName of Object.keys(this.board.handlers)) {

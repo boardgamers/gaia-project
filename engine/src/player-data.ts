@@ -16,6 +16,7 @@ import {
   TechTilePos,
 } from "./enums";
 import { EventSource } from "./events";
+import { FactionBoard } from "./faction-boards";
 import { GaiaHex } from "./gaia-hex";
 import Reward from "./reward";
 
@@ -136,6 +137,12 @@ export default class PlayerData extends EventEmitter {
     return ret;
   }
 
+  loadPower(board: FactionBoard) {
+    this.power.area1 = board.power.area1;
+    this.power.area2 = board.power.area2;
+    this.brainstone = board.brainstone;
+  }
+
   /**
    * Creates a copy of the current player data, except its event emitter is not linked to anything
    */
@@ -143,8 +150,10 @@ export default class PlayerData extends EventEmitter {
     return Object.assign(new PlayerData(), cloneDeep(this.toJSON()));
   }
 
-  payCost(cost: Reward, source: EventSource) {
-    this.gainReward(cost, true, source);
+  payCosts(costs: Reward[], source?: EventSource) {
+    for (const cost of costs) {
+      this.gainReward(cost, true, source);
+    }
   }
 
   private emitBrainstoneEvent(choices: BrainstoneDest[], area1Warning?: BrainstoneWarning) {

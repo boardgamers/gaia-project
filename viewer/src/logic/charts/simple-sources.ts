@@ -1,4 +1,4 @@
-import Engine, { AdvTechTile, Booster, Player, PlayerEnum } from "@gaia-project/engine";
+import Engine, { AdvTechTile, Booster, LogEntry, Player, PlayerEnum } from "@gaia-project/engine";
 import { buildingsSourceFactory } from "./buildings";
 import { powerChargeSourceFactory } from "./charge";
 import { ChartFactory } from "./chart-factory";
@@ -20,7 +20,7 @@ import {
   freeActionSourceFactory,
   resourceSourceFactory,
 } from "./resources";
-import { logEntryProcessor, SimpleSourceFactory } from "./simple-charts";
+import { ExtractLog, logEntryProcessor, SimpleSourceFactory } from "./simple-charts";
 import { advancedTechSourceFactory, baseTechSourceFactory, researchSourceFactory } from "./tech";
 import { terraformingStepsSourceFactory } from "./terraforming";
 
@@ -57,13 +57,20 @@ function simpleChartDetails<Source extends ChartSource<any>>(
     return [];
   }
 
-  function newExtractLog(s: Source) {
-    const e = factory.extractLog(pl);
+  function makeExtractLog(
+    s: Source,
+    extract: ExtractLog<Source> | null
+  ): (moveHistory: string[], log: LogEntry) => number {
+    if (!extract) {
+      return () => 0;
+    }
+    const processor = extract.processor(pl, s);
 
-    return logEntryProcessor((cmd, log, allCommands) =>
-      e({
+    return logEntryProcessor((cmd, log, allCommands, cmdIndex) =>
+      processor({
         cmd: cmd,
         allCommands: allCommands,
+        cmdIndex: cmdIndex,
         source: s,
         data: data,
         log: log,
@@ -74,7 +81,7 @@ function simpleChartDetails<Source extends ChartSource<any>>(
   return sources.map((s) => {
     const initialValue = factory.initialValue?.(pl, s) ?? 0;
     const extractChange = factory.extractChange?.(pl, s) ?? (() => 0);
-    const extractLog = factory.extractLog == null ? () => 0 : newExtractLog(s);
+    const extractLog = makeExtractLog(s, factory.extractLog);
     const deltaForEnded = () => 0;
 
     return {

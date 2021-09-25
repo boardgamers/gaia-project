@@ -2,9 +2,9 @@ import { AdvTechTile, AdvTechTilePos, Command, ResearchField, TechTile, TechTile
 import { researchNames } from "../../data/research";
 import { advancedTechTileNames, baseTechTileNames } from "../../data/tech-tiles";
 import { ChartSource, initialResearch } from "./charts";
-import { commandCounter, ExtractLog, SimpleSourceFactory, statelessExtractLog } from "./simple-charts";
+import { commandCounter, ExtractLog, SimpleSourceFactory } from "./simple-charts";
 
-const techTileExtractLog: ExtractLog<ChartSource<TechTile | AdvTechTile>> = statelessExtractLog((e) => {
+const techTileExtractLog: ExtractLog<ChartSource<TechTile | AdvTechTile>> = ExtractLog.stateless((e) => {
   if (e.cmd.command == Command.ChooseTechTile) {
     const pos = e.cmd.args[0] as TechTilePos | AdvTechTilePos;
     const tile = e.data.tiles.techs[pos].tile;

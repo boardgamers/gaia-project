@@ -250,7 +250,7 @@ export function countResearch(player: Player): (moveHistory: string[], log: LogE
   const research = initialResearch(player);
 
   return logEntryProcessor((cmd) => {
-    if (cmd.faction == player.faction && cmd.command == Command.UpgradeResearch) {
+    if (cmd && cmd.faction == player.faction && cmd.command == Command.UpgradeResearch) {
       const field = cmd.args[0] as ResearchField;
       const newLevel = (research.get(field) ?? 0) + 1;
       research.set(field, newLevel);

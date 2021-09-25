@@ -31,25 +31,15 @@
       }
     ],
     "datasetMeta": {
-      "Itars (116)": {
-        "label": "Itars",
-        "total": 69,
-        "weightedTotal": 116
+      "Nevlas (64)": {
+        "label": "Nevlas",
+        "total": 48,
+        "weightedTotal": 64
       },
-      "Geoden (126)": {
-        "label": "Geoden",
-        "total": 97,
-        "weightedTotal": 126
-      },
-      "Taklons (123)": {
-        "label": "Taklons",
-        "total": 118,
-        "weightedTotal": 123
-      },
-      "Lantids (124)": {
-        "label": "Lantids",
-        "total": 85,
-        "weightedTotal": 124
+      "Terrans (69)": {
+        "label": "Terrans",
+        "total": 50,
+        "weightedTotal": 69
       }
     }
   },
@@ -66,20 +56,12 @@
   ],
   "datasets": [
     {
-      "label": "Taklons (123)",
-      "data": [32, 17, 8, 2, 27, 26, 2, 0, 4]
+      "label": "Terrans (69)",
+      "data": [22, 9, 4, 1, 10, 4, 0, 0, 0]
     },
     {
-      "label": "Geoden (126)",
-      "data": [28, 14, 12, 2, 27, 13, 1, 0, 0]
-    },
-    {
-      "label": "Lantids (124)",
-      "data": [22, 14, 13, 2, 23, 11, 0, 0, 0]
-    },
-    {
-      "label": "Itars (116)",
-      "data": [20, 16, 10, 2, 9, 4, 4, 4, 0]
+      "label": "Nevlas (64)",
+      "data": [15, 7, 6, 1, 7, 7, 2, 0, 3]
     }
   ]
 }

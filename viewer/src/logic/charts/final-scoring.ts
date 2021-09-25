@@ -11,7 +11,7 @@ import {
 } from "@gaia-project/engine";
 import { Grid } from "hexagrid";
 import { ChartSource } from "./charts";
-import { ExtractLog, ExtractLogArg, planetCounter, SimpleSourceFactory } from "./simple-charts";
+import { ExtractLog, planetCounter, SimpleSourceFactory } from "./simple-charts";
 
 type FinalScoringExtractLog = ExtractLog<ChartSource<FinalTile>>;
 
@@ -23,15 +23,17 @@ export type FinalScoringContributor =
   | "Lantids Guest Mine"
   | "Gaia Former";
 
-export type FinalScoringTableRow = {
+export class FinalScoringTableRow {
   contributors: FinalScoringContributor[];
   name: string;
   color: string;
-};
+}
 
-type FinalScoringSource = FinalScoringTableRow & { extractLog: FinalScoringExtractLog };
+class FinalScoringSource extends FinalScoringTableRow {
+  extractLog: FinalScoringExtractLog;
+}
 
-const structureFed: FinalScoringExtractLog = (wantPlayer) => {
+const structureFed: FinalScoringExtractLog = ExtractLog.new((wantPlayer) => {
   let map = null;
 
   function hasBuildingValue(h: GaiaHex) {
@@ -77,9 +79,9 @@ const structureFed: FinalScoringExtractLog = (wantPlayer) => {
     }
     return 0;
   };
-};
+});
 
-const satellites: FinalScoringExtractLog = (wantPlayer) => {
+const satellites: FinalScoringExtractLog = ExtractLog.new((wantPlayer) => {
   let last = 0;
 
   function subtractLast(s: number) {
@@ -106,9 +108,9 @@ const satellites: FinalScoringExtractLog = (wantPlayer) => {
     }
     return 0;
   };
-};
+});
 
-const planetTypes: FinalScoringExtractLog = (wantPlayer) => {
+const planetTypes: FinalScoringExtractLog = ExtractLog.wrapper(() => {
   const settled = new Set<string>();
 
   return planetCounter(
@@ -123,10 +125,10 @@ const planetTypes: FinalScoringExtractLog = (wantPlayer) => {
       settled.add(planet);
       return 1;
     }
-  )(wantPlayer);
-};
+  );
+});
 
-const sectors: FinalScoringExtractLog = (wantPlayer) => {
+const sectors: FinalScoringExtractLog = ExtractLog.wrapper(() => {
   const sectors = new Set<string>();
 
   return planetCounter(
@@ -142,8 +144,8 @@ const sectors: FinalScoringExtractLog = (wantPlayer) => {
       sectors.add(l.sector);
       return 1;
     }
-  )(wantPlayer);
-};
+  );
+});
 
 export const finalScoringSources: { [key in FinalTile]: FinalScoringSource } = {
   [FinalTile.Gaia]: {
@@ -194,13 +196,9 @@ export const finalScoringSources: { [key in FinalTile]: FinalScoringSource } = {
   },
 };
 
-export const finalScoringExtractLog: ExtractLog<ChartSource<FinalTile>> = (p) => {
-  const map = new Map<FinalTile, (a: ExtractLogArg<ChartSource<FinalTile>>) => number>();
-  for (const key of Object.keys(finalScoringSources)) {
-    map.set(key as FinalTile, finalScoringSources[key as FinalTile].extractLog(p));
-  }
-  return (e) => map.get(e.source.type)(e);
-};
+export const finalScoringExtractLog: ExtractLog<ChartSource<FinalTile>> = ExtractLog.wrapper(
+  (p, s) => Object.entries(finalScoringSources).find(([tile, extractLog]) => tile == s.type)[1].extractLog
+);
 
 export const finalScoringSourceFactory: SimpleSourceFactory<ChartSource<FinalTile>> = {
   name: "Final Scoring Conditions",

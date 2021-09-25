@@ -1,0 +1,31 @@
+{
+  "families": ["Resources"],
+  "options": {
+    "layout": "standard"
+  },
+  "moveHistory": [
+    "init 2 SGAMBATA",
+    "p1 faction nevlas",
+    "p2 faction terrans",
+    "nevlas build m -4x0",
+    "terrans build m -3x-2",
+    "terrans build m 1x-1",
+    "nevlas build m 3x3",
+    "terrans booster booster9",
+    "nevlas booster booster5",
+    "nevlas build ts -4x0.",
+    "terrans charge 1pw",
+    "terrans build ts -3x-2.",
+    "nevlas charge 2pw",
+    "nevlas build PI -4x0.",
+    "terrans charge 2pw",
+    "terrans build PI -3x-2.",
+    "nevlas charge 3pw",
+    "nevlas special range+3. build m -1x-3.",
+    "terrans charge 3pw",
+    "terrans up terra.",
+    "nevlas action power5.",
+    "terrans action power4.",
+    "nevlas action power7."
+  ]
+}

@@ -1,5 +1,6 @@
 import Engine, {
   EventSource,
+  FactionBoard,
   factionBoard,
   factionPlanet,
   LogEntry,
@@ -229,10 +230,13 @@ export function weightedSum(data: Engine, player: PlayerEnum, factories: Dataset
   };
 }
 
+export function chartPlayerBoard(player: Player): FactionBoard {
+  return player.board ?? factionBoard(player.faction, player.variant?.board);
+}
+
 export function initialResearch(player: Player): Map<ResearchField, number> {
   const research = new Map<ResearchField, number>();
-  const board = player.board ?? factionBoard(player.faction, player.variant?.board);
-  board.income[0].rewards.forEach((r) => {
+  chartPlayerBoard(player).income[0].rewards.forEach((r) => {
     if (r.type.startsWith("up-")) {
       const key = r.type.slice(3) as ResearchField;
       research.set(key, (research.get(key) ?? 0) + 1);

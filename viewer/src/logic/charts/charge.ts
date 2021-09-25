@@ -1,7 +1,7 @@
 import { Booster, Command, EventSource, ResearchField, Resource, TechPos } from "@gaia-project/engine";
 import assert from "assert";
 import { ChartSource, extractChanges } from "./charts";
-import { SimpleSourceFactory, statelessExtractLog } from "./simple-charts";
+import { ExtractLog, SimpleSourceFactory } from "./simple-charts";
 
 enum PowerChargeSource {
   burn = "burn",
@@ -90,7 +90,7 @@ export const powerChargeSourceFactory: SimpleSourceFactory<ChartSource<PowerChar
     extractChanges(wantPlayer.player, (player, eventSource, resource, round, change) =>
       resource == Resource.ChargePower && change > 0 ? extractPowerCharge(eventSource, source.type, change) : 0
     ),
-  extractLog: statelessExtractLog((e) =>
+  extractLog: ExtractLog.stateless((e) =>
     e.source.type == PowerChargeSource.burn && e.cmd.command == Command.BurnPower ? Number(e.cmd.args[0]) : 0
   ),
   sources: powerChargeSources,

@@ -56,6 +56,10 @@
           <li><a href="https://www.boardgamers.space/page/elo">How Elo works</a></li>
         </ul>
         <h4>Recent changes</h4>
+        <h5>2021-09-25</h5>
+        <ul>
+          <li>Charts: new "Power Leverage" type in Resources.</li>
+        </ul>
         <h5>2021-09-22</h5>
         <ul>
           <li>
