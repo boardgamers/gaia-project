@@ -1,13 +1,13 @@
 import { Command, Federation, federations } from "@gaia-project/engine";
 import { federationData } from "../../data/federations";
 import { ChartSource } from "./charts";
-import { SimpleSourceFactory, statelessExtractLog } from "./simple-charts";
+import { ExtractLog, SimpleSourceFactory } from "./simple-charts";
 
 export const federationsSourceFactory: SimpleSourceFactory<ChartSource<Federation>> = {
   name: "Federations",
   showWeightedTotal: false,
   playerSummaryLineChartTitle: "Federations of all players",
-  extractLog: statelessExtractLog((e) => {
+  extractLog: ExtractLog.stateless((e) => {
     const type = e.source.type;
     if (e.cmd.command == Command.FormFederation) {
       return (e.cmd.args[1] as Federation) == type ? 1 : 0;

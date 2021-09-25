@@ -10,14 +10,23 @@
       <b-btn variant="info" size="sm" @click="startReplay" v-if="!replayData">Replay</b-btn>
       <div v-else class="d-flex align-items-center">
         <b-btn size="sm" class="mr-1" @click="replayTo(replayData.start)">⏮️</b-btn>
-        <b-btn size="sm" class="mx-1" @click="replayTo(Math.max(replayData.start, replayData.current - 1))"> ⏪ </b-btn>
+        <b-btn
+          size="sm"
+          class="mx-1"
+          accesskey="["
+          @click="replayTo(Math.max(replayData.start, replayData.current - 1))"
+        >
+          ⏪
+        </b-btn>
         <span
           class="mx-1 text-center"
           style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap; flex-grow: 1"
         >
           {{ replayData.current }} / {{ replayData.end }}
         </span>
-        <b-btn size="sm" class="mx-1" @click="replayTo(Math.min(replayData.end, replayData.current + 1))"> ⏩</b-btn>
+        <b-btn size="sm" class="mx-1" accesskey="]" @click="replayTo(Math.min(replayData.end, replayData.current + 1))">
+          ⏩</b-btn
+        >
         <b-btn size="sm" class="mx-1" @click="replayTo(replayData.end)">⏭️</b-btn>
         <b-btn size="sm" class="ml-1" @click="endReplay">⏹️</b-btn>
       </div>

@@ -1,12 +1,12 @@
 import { Building, Command } from "@gaia-project/engine";
 import { ChartSource } from "./charts";
-import { SimpleSourceFactory, statelessExtractLog } from "./simple-charts";
+import { ExtractLog, SimpleSourceFactory } from "./simple-charts";
 
 export const buildingsSourceFactory: SimpleSourceFactory<ChartSource<Building>> = {
   name: "Buildings",
   playerSummaryLineChartTitle: "Power value of all buildings of all players (1-3 base power value)",
   showWeightedTotal: true,
-  extractLog: statelessExtractLog((e) => {
+  extractLog: ExtractLog.stateless((e) => {
     if (e.cmd.command == Command.Build) {
       const t = e.cmd.args[0] as Building;
       if (e.source.type == t) {

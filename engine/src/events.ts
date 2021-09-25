@@ -77,7 +77,6 @@ export type EventSource =
   | Command.ChooseIncome
   | Phase.BeginGame
   | Command.Build
-  | Command.ChooseFederationTile
   | Command.FormFederation
   | Command.UpgradeResearch
   | Faction
