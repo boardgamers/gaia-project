@@ -17,6 +17,7 @@ import Engine, {
   RoundScoring,
   TechPos,
 } from "@gaia-project/engine";
+import { sum } from "lodash";
 import { boosterNames } from "../../data/boosters";
 import { advancedTechTileNames } from "../../data/tech-tiles";
 import {
@@ -250,12 +251,17 @@ export function countResearch(player: Player): (moveHistory: string[], log: LogE
   const research = initialResearch(player);
 
   return logEntryProcessor((cmd) => {
-    if (cmd && cmd.faction == player.faction && cmd.command == Command.UpgradeResearch) {
-      const field = cmd.args[0] as ResearchField;
-      const newLevel = (research.get(field) ?? 0) + 1;
-      research.set(field, newLevel);
-      if (newLevel >= 3) {
-        return 4;
+    if (cmd) {
+      if (cmd.faction == player.faction && cmd.command == Command.UpgradeResearch) {
+        const field = cmd.args[0] as ResearchField;
+        const newLevel = (research.get(field) ?? 0) + 1;
+        research.set(field, newLevel);
+        if (newLevel >= 3) {
+          return 4;
+        }
+      } else if (cmd.command == Command.ChooseFaction && cmd.args[0] == player.faction) {
+        console.log("cf", research);
+        return sum(Array.from(research.values()).map((level) => Math.max(0, (level - 2) * 4)));
       }
     }
     return 0;

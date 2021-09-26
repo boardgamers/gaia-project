@@ -1,0 +1,105 @@
+{
+  "tableMeta": {
+    "weights": null,
+    "colors": [
+      {
+        "color": "--gaia"
+      },
+      {
+        "color": "--volcanic"
+      },
+      {
+        "color": "--res-power"
+      },
+      {
+        "color": "--tech-tile"
+      },
+      {
+        "color": "--desert"
+      },
+      {
+        "color": "--rt-gaia"
+      },
+      {
+        "color": "--oxide"
+      },
+      {
+        "color": "--specialAction"
+      },
+      {
+        "color": "--res-knowledge"
+      },
+      {
+        "color": "--current-round"
+      },
+      {
+        "color": "--federation"
+      },
+      {
+        "color": "--rt-sci"
+      },
+      {
+        "color": "--dig"
+      },
+      {
+        "color": "--res-credit"
+      }
+    ],
+    "datasetMeta": {
+      "Gleens (22)": {
+        "label": "Gleens",
+        "total": 22,
+        "weightedTotal": null
+      },
+      "Terrans (18)": {
+        "label": "Terrans",
+        "total": 18,
+        "weightedTotal": null
+      },
+      "Hadsch Hallas (18)": {
+        "label": "Hadsch Hallas",
+        "total": 18,
+        "weightedTotal": null
+      },
+      "Ambas (18)": {
+        "label": "Ambas",
+        "total": 18,
+        "weightedTotal": null
+      }
+    }
+  },
+  "labels": [
+    "Initial",
+    "Bid",
+    "Charge",
+    "Base Tech",
+    "Gleens",
+    "Round",
+    "Booster",
+    "QIC",
+    "Research",
+    "Advanced Tech",
+    "Federation",
+    "Sectors",
+    "Gaia planets",
+    "Resources"
+  ],
+  "datasets": [
+    {
+      "label": "Gleens (22)",
+      "data": [10, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 8]
+    },
+    {
+      "label": "Terrans (18)",
+      "data": [10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8]
+    },
+    {
+      "label": "Hadsch Hallas (18)",
+      "data": [10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8]
+    },
+    {
+      "label": "Ambas (18)",
+      "data": [10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8]
+    }
+  ]
+}
