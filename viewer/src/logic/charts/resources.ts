@@ -112,12 +112,42 @@ const freeActionSources = (resourceSources as FreeActionSource[])
     weight: 0,
   });
 
+export class BrainstoneSimulator {
+  private allCommands: CommandObject[];
+  private data: PlayerData;
+  private index = 0;
+
+  constructor(data: PlayerData) {
+    this.data = data;
+    data.on("brainstone", () => {
+      this.data.brainstoneDest = this.nextDest();
+    });
+  }
+
+  nextDest(): BrainstoneDest {
+    for (; this.index < this.allCommands.length; this.index++) {
+      const command = this.allCommands[this.index];
+      if (command.command == Command.BrainStone) {
+        this.index++;
+        return command.args[0] as BrainstoneDest;
+      }
+    }
+    return undefined;
+  }
+
+  setTurnCommands(allCommands: CommandObject[]) {
+    this.allCommands = allCommands;
+    this.index = 0;
+  }
+}
+
 const resourceCounter = (
   processor: (a: ExtractLogArg<ResourceSource>, data: PlayerData, callback: () => void) => number
 ): ExtractLog<ResourceSource> =>
   ExtractLog.new((want) => {
     const data = new PlayerData();
     data.loadPower(chartPlayerBoard(want));
+    const brainstoneSimulator = new BrainstoneSimulator(data);
 
     const commandEventSource = (c: CommandObject): EventSource[] => {
       switch (c.command) {
@@ -154,11 +184,7 @@ const resourceCounter = (
           if (a.cmdIndex == 0) {
             changes = {};
             Object.assign(changes, a.log.changes); //copy, so we can delete keys
-          }
-
-          const nextCommand = a.allCommands.length > a.cmdIndex + 1 ? a.allCommands[a.cmdIndex + 1] : null;
-          if (nextCommand?.command == Command.BrainStone) {
-            data.brainstoneDest = nextCommand.args[0] as BrainstoneDest;
+            brainstoneSimulator.setTurnCommands(a.allCommands ?? []);
           }
 
           const cmd = a.cmd;
