@@ -243,7 +243,7 @@ export default class MoveButton extends Vue implements MoveButtonController {
     try {
       this.handlingClick = true;
       const warning = button.warning;
-      if (warning) {
+      if (warning && !this.isActiveButton) {
         try {
           const c = this.$createElement;
           const message = warning.body.length == 1 ? warning.body[0] : warning.body.map((w) => c("ul", [c("li", [w])]));
@@ -307,13 +307,18 @@ export default class MoveButton extends Vue implements MoveButtonController {
       } else {
         if (button.hexes) {
           //generic hex selection, that's why it's last
-          this.subscribeHexClick((hex, highlight) => {
-            if (button.needConfirm) {
-              this.highlightHexes({ hexes: new Map<GaiaHex, HighlightHex>([[hex, {}]]) });
-            }
+          if (this.isActiveButton) {
+            this.activate(null);
+            this.highlightHexes(null);
+          } else {
+            this.subscribeHexClick((hex, highlight) => {
+              if (button.needConfirm) {
+                this.highlightHexes({ hexes: new Map<GaiaHex, HighlightHex>([[hex, {}]]) });
+              }
 
-            this.emitCommand(hex.toString(), { warnings: highlight.warnings });
-          });
+              this.emitCommand(hex.toString(), { warnings: highlight.warnings });
+            });
+          }
           return;
         }
 
