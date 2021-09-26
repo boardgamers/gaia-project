@@ -126,10 +126,6 @@ export default class MoveButton extends Vue implements MoveButtonController {
         return;
       }
 
-      if (!this.isActiveButton) {
-        return;
-      }
-
       console.log(type, payload);
 
       callback(payload);
