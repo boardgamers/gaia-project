@@ -1,0 +1,15 @@
+{
+  "families": ["Victory Points"],
+  "options": {
+    "layout": "standard",
+    "factionVariant": "beta",
+    "factionVariantVersion": 2
+  },
+  "moveHistory": [
+    "init 4 Beta-2",
+    "p1 faction gleens",
+    "p2 faction terrans",
+    "p3 faction hadsch-hallas",
+    "p4 faction ambas (0/0/0/0 ⇒ 2/4/0/0)"
+  ]
+}
