@@ -31,25 +31,25 @@
       }
     ],
     "datasetMeta": {
-      "Itars (116)": {
-        "label": "Itars",
-        "total": 69,
-        "weightedTotal": 116
+      "Hadsch Hallas (67)": {
+        "label": "Hadsch Hallas",
+        "total": 40,
+        "weightedTotal": 67
       },
-      "Geoden (126)": {
-        "label": "Geoden",
-        "total": 97,
-        "weightedTotal": 126
+      "Bal T'aks (54)": {
+        "label": "Bal T'aks",
+        "total": 29,
+        "weightedTotal": 54
       },
-      "Taklons (123)": {
+      "Firaks (60)": {
+        "label": "Firaks",
+        "total": 29,
+        "weightedTotal": 60
+      },
+      "Taklons (62)": {
         "label": "Taklons",
-        "total": 128,
-        "weightedTotal": 123
-      },
-      "Lantids (124)": {
-        "label": "Lantids",
-        "total": 85,
-        "weightedTotal": 124
+        "total": 41,
+        "weightedTotal": 62
       }
     }
   },
@@ -66,20 +66,20 @@
   ],
   "datasets": [
     {
-      "label": "Taklons (123)",
-      "data": [32, 17, 8, 2, 27, 26, 2, 0, 14]
+      "label": "Taklons (62)",
+      "data": [15, 9, 4, 1, 6, 4, 0, 0, 2]
     },
     {
-      "label": "Geoden (126)",
-      "data": [28, 14, 12, 2, 27, 13, 1, 0, 0]
+      "label": "Hadsch Hallas (67)",
+      "data": [22, 7, 4, 2, 5, 0, 0, 0, 0]
     },
     {
-      "label": "Lantids (124)",
-      "data": [22, 14, 13, 2, 23, 11, 0, 0, 0]
+      "label": "Bal T'aks (54)",
+      "data": [17, 7, 4, 0, 1, 0, 0, 0, 0]
     },
     {
-      "label": "Itars (116)",
-      "data": [20, 16, 10, 2, 9, 4, 4, 4, 0]
+      "label": "Firaks (60)",
+      "data": [15, 7, 5, 1, 1, 0, 0, 0, 0]
     }
   ]
 }
