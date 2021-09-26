@@ -284,7 +284,10 @@ export default class Commands extends Vue implements CommandController {
       this.customButtons = source.buttons;
       this.$store.commit("gaiaViewer/setCommandChain", true);
 
-      source.onShow?.();
+      if (!source.onShowTriggered) {
+        source.onShowTriggered = true;
+        source.onShow?.();
+      }
       source.onOpen?.();
 
       return;

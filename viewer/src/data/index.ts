@@ -29,6 +29,7 @@ export interface ButtonData {
   onClick?: () => void;
   onOpen?: () => void;
   onShow?: () => void;
+  onShowTriggered?: boolean;
   onCreate?: (controller: MoveButtonController) => void; //may be called multiple times!
   hover?: { enter: () => void; leave: () => void };
   boardActions?: BoardAction[];

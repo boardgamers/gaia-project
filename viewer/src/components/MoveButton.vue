@@ -221,7 +221,8 @@ export default class MoveButton extends Vue implements MoveButtonController {
     //when a MoveButton is re-used, create is not called
     this.button.onCreate?.(this);
 
-    if (!this.button.hide) {
+    if (!this.button.hide && !this.button.onShowTriggered) {
+      this.button.onShowTriggered = true;
       this.button.onShow?.();
     }
   }
