@@ -1,5 +1,4 @@
 import assert from "assert";
-import axios from "axios";
 import crypto from "crypto";
 import { set } from "lodash";
 import Engine, { EngineOptions } from "./src/engine";
@@ -9,7 +8,7 @@ import { defaultAutoCharge } from "./src/player";
 export async function init(
   nbPlayers: number,
   expansions: string[],
-  options: EngineOptions & { balancedGeneration: boolean },
+  options: EngineOptions,
   seed?: string
 ): Promise<Engine> {
   if (!seed) {
@@ -24,23 +23,6 @@ export async function init(
     const md5sum = crypto.createHash("md5");
     md5sum.update(seed);
     numberSeed = "" + parseInt(seed, 10) === seed ? parseInt(seed, 10) : parseInt(md5sum.digest("hex").slice(-10), 16);
-  }
-
-  if (options.balancedGeneration || options.layout === "balanced") {
-    delete options.balancedGeneration;
-
-    const resp = await axios
-      .post("http://gaia-project.hol.es", { seed: numberSeed, player: nbPlayers })
-      .then((r) => r.data);
-
-    options.map = { sectors: resp.map };
-
-    // We use different standards for sides A & B of sectors than the online generator
-    if (nbPlayers === 2) {
-      options.map.sectors.forEach((val) => (val.sector = val.sector.replace(/A/, "B")));
-    } else {
-      options.map.sectors.forEach((val) => (val.sector = val.sector.replace(/B/, "A")));
-    }
   }
 
   const engine = new Engine([`init ${nbPlayers} ${seed}`], options);
@@ -180,12 +162,12 @@ export function factions(engine: Engine) {
   return engine.players.map((pl) => pl.faction);
 }
 
-export async function replay(engine: Engine): Promise<Engine> {
+export async function replay(engine: Engine, { to = Infinity } = { to: Infinity }): Promise<Engine> {
   if (!(engine instanceof Engine)) {
     engine = Engine.fromData(engine);
   }
 
-  engine = engine.replayedTo(Infinity, false);
+  engine = engine.replayedTo(to, false);
 
   automove(engine);
 
