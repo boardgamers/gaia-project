@@ -153,7 +153,7 @@ export default class MoveButton extends Vue implements MoveButtonController {
   }
 
   subscribeFinal(action: string) {
-    this.subscribeButtonClick(action);
+    this.subscribeButtonClick(action, b => b, false);
     this.emitCommand(null, { disappear: false });
   }
 
