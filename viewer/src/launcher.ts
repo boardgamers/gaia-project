@@ -1,7 +1,5 @@
-import type Engine from "@gaia-project/engine";
 import BootstrapVue from "bootstrap-vue";
 import { EventEmitter } from "events";
-import { isEqual } from "lodash";
 import Vue from "vue";
 import type { VueConstructor } from "vue/types/umd";
 import Condition from "./components/Condition.vue";
@@ -27,12 +25,7 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
 
   let replaying = false;
 
-  item.addListener("state", (data: Engine) => {
-    if (!store.state.gaiaViewer.data.newTurn && isEqual(store.state.gaiaViewer.data.moveHistory, data.moveHistory)) {
-      // We're in the middle of a move, and someone else likely updated their settings,
-      // we don't want to reset the move
-      return;
-    }
+  item.addListener("state", (data) => {
     store.dispatch("gaiaViewer/externalData", data);
     item.emit("replaceLog", data?.moveHistory);
     app.$nextTick().then(() => item.emit("ready"));
