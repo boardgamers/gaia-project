@@ -1,5 +1,4 @@
 import { Booster, Command, EventSource, ResearchField, Resource, TechPos } from "@gaia-project/engine";
-import assert from "assert";
 import { ChartSource, extractChanges } from "./charts";
 import { ExtractLog, SimpleSourceFactory } from "./simple-charts";
 
@@ -65,7 +64,12 @@ const powerChargeSourceMap = new Map<EventSource, PowerChargeSource>([
   ...new Map(ResearchField.values().map((f) => [f, PowerChargeSource.research])),
 ]);
 
-const extractPowerCharge = (eventSource: EventSource, source: PowerChargeSource, charge: number): number => {
+const extractPowerCharge = (
+  eventSource: EventSource,
+  source: PowerChargeSource,
+  charge: number,
+  logIndex: number
+): number => {
   const s = powerChargeSourceMap.get(eventSource);
   if (s) {
     return s == source ? charge : 0;
@@ -78,7 +82,8 @@ const extractPowerCharge = (eventSource: EventSource, source: PowerChargeSource,
     }
     return 0;
   }
-  assert(false, "no source found: " + eventSource);
+  console.error("no source found", logIndex, eventSource);
+  return 0;
 };
 
 export const powerChargeSourceFactory: SimpleSourceFactory<ChartSource<PowerChargeSource>> = {
@@ -87,8 +92,10 @@ export const powerChargeSourceFactory: SimpleSourceFactory<ChartSource<PowerChar
   showWeightedTotal: false,
   // extractLog: statelessExtractLog(extractPowerCharge),
   extractChange: (wantPlayer, source) =>
-    extractChanges(wantPlayer.player, (player, eventSource, resource, round, change) =>
-      resource == Resource.ChargePower && change > 0 ? extractPowerCharge(eventSource, source.type, change) : 0
+    extractChanges(wantPlayer.player, (player, eventSource, resource, round, change, logIndex) =>
+      resource == Resource.ChargePower && change > 0
+        ? extractPowerCharge(eventSource, source.type, change, logIndex)
+        : 0
     ),
   extractLog: ExtractLog.stateless((e) =>
     e.source.type == PowerChargeSource.burn && e.cmd.command == Command.BurnPower ? Number(e.cmd.args[0]) : 0
