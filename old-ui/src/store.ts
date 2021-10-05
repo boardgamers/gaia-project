@@ -15,7 +15,6 @@ import { GameContext } from "./data";
 Vue.use(Vuex);
 
 const gaiaViewer = {
-  namespaced: true,
   state: {
     data: new Engine(),
     context: {
@@ -127,11 +126,7 @@ const gaiaViewer = {
 };
 
 function makeStore() {
-  return new Vuex.Store({
-    modules: {
-      gaiaViewer,
-    },
-  });
+  return new Vuex.Store(gaiaViewer);
 }
 
 export default makeStore();

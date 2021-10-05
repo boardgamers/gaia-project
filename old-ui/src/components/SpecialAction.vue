@@ -16,17 +16,17 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { Component, Prop } from 'vue-property-decorator';
-import { tiles, Event } from '@gaia-project/engine';
-import { eventDesc } from '../data/event';
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
+import { tiles, Event } from "@gaia-project/engine";
+import { eventDesc } from "../data/event";
 
 @Component<SpecialAction>({
   computed: {
-    income () {
-      return this.action.includes(',') ? this.action.split(',') : this.action.split('-');
-    }
-  }
+    income() {
+      return this.action.includes(",") ? this.action.split(",") : this.action.split("-");
+    },
+  },
 })
 export default class SpecialAction extends Vue {
   @Prop()
@@ -35,15 +35,15 @@ export default class SpecialAction extends Vue {
   @Prop()
   action: string;
 
-  onClick () {
+  onClick() {
     if (!this.highlighted) {
       return;
     }
-    this.$store.dispatch("gaiaViewer/actionClick", this.action);
+    this.$store.dispatch("actionClick", this.action);
   }
 
-  get highlighted () {
-    return this.$store.state.gaiaViewer.context.highlighted.actions.has(this.action);
+  get highlighted() {
+    return this.$store.state.context.highlighted.actions.has(this.action);
   }
 }
 </script>

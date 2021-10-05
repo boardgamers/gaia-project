@@ -1195,7 +1195,7 @@ export function commandButtons(
   if (conversions.free || conversions.burn) {
     controller.subscriptions[Command.Spend]?.();
     controller.subscriptions[Command.Spend] = controller.subscribeAction(({ type, payload }) => {
-      if (type === "gaiaViewer/fastConversionClick") {
+      if (type === "fastConversionClick") {
         const command = fastConversionClick(payload, conversions, player);
         if (command) {
           controller.handleCommand(command);

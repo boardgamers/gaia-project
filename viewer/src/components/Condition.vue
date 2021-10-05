@@ -90,7 +90,7 @@ export default class Condition extends Vue {
   }
 
   get flat() {
-    return this.$store.state.gaiaViewer.preferences.flatBuildings;
+    return this.$store.state.preferences.flatBuildings;
   }
 }
 </script>

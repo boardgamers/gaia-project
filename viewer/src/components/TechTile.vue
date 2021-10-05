@@ -65,16 +65,16 @@ export default class TechTile extends Vue {
 
   onClick() {
     if (this.highlighted) {
-      this.$store.dispatch("gaiaViewer/techClick", { command: this.pos } as ButtonData);
+      this.$store.dispatch("techClick", { command: this.pos } as ButtonData);
     }
   }
 
   get highlighted() {
-    return this.$store.state.gaiaViewer.context.highlighted.techs.has(this.pos);
+    return this.$store.state.context.highlighted.techs.has(this.pos);
   }
 
   get tileObject() {
-    return this.$store.state.gaiaViewer.data.tiles.techs[this.pos];
+    return this.$store.state.data.tiles.techs[this.pos];
   }
 
   get tile() {
@@ -101,7 +101,7 @@ export default class TechTile extends Vue {
 
   get title() {
     // Only show count if there are more players than tech tiles available
-    if (this.count > 1 && this.$store.state.gaiaViewer.data.players.length > 4) {
+    if (this.count > 1 && this.$store.state.data.players.length > 4) {
       return `${this.pos} (${this.count})`;
     }
 

@@ -42,12 +42,12 @@
 </template>
 
 <script lang="ts">
-import {Component, Vue, Watch} from "vue-property-decorator";
+import { Component, Vue, Watch } from "vue-property-decorator";
 import { ChartFamily, ChartStyleDisplay, vpChartFamily } from "../logic/charts/charts";
 import PlayerCircle from "./PlayerCircle.vue";
 import BuildingImage from "./Building.vue";
 import SpecialAction from "./SpecialAction.vue";
-import Engine, {PlayerEnum} from "@gaia-project/engine";
+import Engine, { PlayerEnum } from "@gaia-project/engine";
 import {
   BarController,
   BarElement,
@@ -71,7 +71,7 @@ import {
   TableMeta,
   ChartSetup,
 } from "../logic/charts/chart-factory";
-import {tableHeader, tableItems} from "../logic/charts/table";
+import { tableHeader, tableItems } from "../logic/charts/table";
 
 Chart.register(
   LineController,
@@ -87,10 +87,10 @@ Chart.register(
   BarElement
 );
 
-type Table = { title: string; header: any[]; items: any[] }
+type Table = { title: string; header: any[]; items: any[] };
 
 @Component({
-  components: {PlayerCircle, BuildingImage, SpecialAction},
+  components: { PlayerCircle, BuildingImage, SpecialAction },
 })
 export default class Charts extends Vue {
   private chartStyle: ChartStyleDisplay = this.chartStyles[0];
@@ -101,15 +101,15 @@ export default class Charts extends Vue {
   private setup: ChartSetup;
 
   get gameData(): Engine {
-    return this.$store.state.gaiaViewer.data;
+    return this.$store.state.data;
   }
 
   get chartStyles(): ChartStyleDisplay[] {
     return [
-      {type: "chart", label: "Chart", compact: false},
-      {type: "table", label: "Table", compact: false},
-      {type: "chart", label: "Compact Chart", compact: true},
-      {type: "table", label: "Compact Table", compact: true},
+      { type: "chart", label: "Chart", compact: false },
+      { type: "table", label: "Table", compact: false },
+      { type: "chart", label: "Compact Chart", compact: true },
+      { type: "table", label: "Compact Table", compact: true },
     ];
   }
 
@@ -122,7 +122,7 @@ export default class Charts extends Vue {
   }
 
   get flat() {
-    return this.$store.state.gaiaViewer.preferences.flatBuildings;
+    return this.$store.state.preferences.flatBuildings;
   }
 
   created() {
@@ -189,7 +189,7 @@ export default class Charts extends Vue {
       this.table = {
         title: config.options.plugins.title.text,
         header: tableHeader(canvas, this.chartStyle, config, tableMeta),
-        items: tableItems(canvas, config, tableMeta)
+        items: tableItems(canvas, config, tableMeta),
       };
     }
   }

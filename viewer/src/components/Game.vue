@@ -97,12 +97,12 @@ import { UndoPropagation } from "../logic/commands";
 @Component<Game>({
   created(this: Game) {
     const unsub = this.$store.subscribeAction(({ type, payload }) => {
-      if (type === "gaiaViewer/externalData") {
+      if (type === "externalData") {
         this.handleData(Engine.fromData(payload));
         return;
       }
-      if (type === "gaiaViewer/replayStart") {
-        this.$store.dispatch("gaiaViewer/replayInfo", {
+      if (type === "replayStart") {
+        this.$store.dispatch("replayInfo", {
           start: 1,
           end: this.engine.moveHistory.length,
           current: this.engine.moveHistory.length,
@@ -114,20 +114,20 @@ import { UndoPropagation } from "../logic/commands";
         };
         return;
       }
-      if (type === "gaiaViewer/replayEnd") {
+      if (type === "replayEnd") {
         const restore = payload || this.replayData?.backup;
         this.replayData = null;
         this.handleData(Engine.fromData(restore));
         return;
       }
-      if (type === "gaiaViewer/replayTo") {
+      if (type === "replayTo") {
         const dest: number = payload;
         const current = this.replayData.current;
 
         this.replayData.current = dest;
 
         const backup = this.replayData.backup;
-        this.$store.dispatch("gaiaViewer/replayInfo", {
+        this.$store.dispatch("replayInfo", {
           start: 1,
           end: backup.moveHistory.length,
           current: dest,
@@ -182,7 +182,7 @@ export default class Game extends Vue {
 
   mounted() {
     const undoListener = this.$store.subscribeAction(({ type, payload }) => {
-      if (type === "gaiaViewer/undo") {
+      if (type === "undo") {
         if (!(payload as UndoPropagation).undoPerformed) {
           this.undoMove();
         }
@@ -192,15 +192,15 @@ export default class Game extends Vue {
   }
 
   get engine(): Engine {
-    return this.$store.state.gaiaViewer.data;
+    return this.$store.state.data;
   }
 
   get expansions() {
-    return this.$store.state.gaiaViewer.data.expansions;
+    return this.$store.state.data.expansions;
   }
 
   get logPlacement(): LogPlacement {
-    return this.$store.state.gaiaViewer.preferences.logPlacement;
+    return this.$store.state.preferences.logPlacement;
   }
 
   get actions(): BoardActionEnum[] {
@@ -228,17 +228,15 @@ export default class Game extends Vue {
   }
 
   get canPlay() {
-    return (
-      !this.ended && (!this.$store.state.gaiaViewer.player || this.sessionPlayer === this.engine.players[this.player])
-    );
+    return !this.ended && (!this.$store.state.player || this.sessionPlayer === this.engine.players[this.player]);
   }
 
   get hasMap() {
-    return !!this.$store.state.gaiaViewer.data.map;
+    return !!this.$store.state.data.map;
   }
 
   get classes() {
-    const preferences = this.$store.state.gaiaViewer.preferences;
+    const preferences = this.$store.state.preferences;
     const classes = ["gaia-viewer-game"];
     if (preferences) {
       if (preferences.noFactionFill) {
@@ -256,7 +254,7 @@ export default class Game extends Vue {
   }
 
   get sessionPlayer() {
-    const player = this.$store.state.gaiaViewer.player;
+    const player = this.$store.state.player;
     if (player) {
       if (player.index !== undefined) {
         return this.engine.players[player.index];
@@ -271,7 +269,7 @@ export default class Game extends Vue {
       sector.classList.add("notransition");
     }
 
-    this.$store.commit("gaiaViewer/receiveData", data);
+    this.$store.commit("receiveData", data);
 
     this.clearCurrentMove = false;
 
@@ -318,7 +316,7 @@ export default class Game extends Vue {
   }
 
   undoMove() {
-    if (this.$store.state.gaiaViewer.context.hasCommandChain) {
+    if (this.$store.state.context.hasCommandChain) {
       // was "back", not undo
       return;
     }
@@ -341,8 +339,8 @@ export default class Game extends Vue {
   }
 
   addMove(command: string) {
-    this.$store.commit("gaiaViewer/clearContext");
-    this.$store.dispatch("gaiaViewer/move", command);
+    this.$store.commit("clearContext");
+    this.$store.dispatch("move", command);
   }
 }
 </script>

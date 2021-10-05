@@ -211,7 +211,7 @@ export default class PlayerInfo extends Vue {
   }
 
   playerClick(player: Player) {
-    this.$store.dispatch("gaiaViewer/playerClick", player);
+    this.$store.dispatch("playerClick", player);
   }
 
   get factionColor() {
@@ -226,7 +226,7 @@ export default class PlayerInfo extends Vue {
   }
 
   get gameData(): Engine {
-    return this.$store.state.gaiaViewer.data;
+    return this.$store.state.data;
   }
 
   get planet() {
@@ -243,7 +243,7 @@ export default class PlayerInfo extends Vue {
 
   recentAction(i: number): boolean {
     const action = this.player.actions[i];
-    const commands = this.$store.getters["gaiaViewer/recentActions"].get(this.faction) ?? [];
+    const commands = this.$store.getters.recentActions.get(this.faction) ?? [];
     return commands.some((c) => c.args[0] === action.rewards);
   }
 
@@ -259,11 +259,11 @@ export default class PlayerInfo extends Vue {
   }
 
   get passed() {
-    return (this.$store.state.gaiaViewer.data.passedPlayers || []).includes(this.player.player);
+    return (this.$store.state.data.passedPlayers || []).includes(this.player.player);
   }
 
   get round() {
-    return this.$store.state.gaiaViewer.data.round;
+    return this.$store.state.data.round;
   }
 
   get hasLostPlanet() {

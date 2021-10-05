@@ -7,7 +7,7 @@
       :key="field"
     />
     <text y="198" x="180" style="font-size: 12px; text-anchor: middle">Charge 3 power</text>
-    <g v-if="$store.state.gaiaViewer.data.tiles && $store.state.gaiaViewer.data.tiles.techs['gaia']">
+    <g v-if="$store.state.data.tiles && $store.state.data.tiles.techs['gaia']">
       <g transform="translate(30, 410) scale(0.95)">
         <TechTile pos="free1" x="-30" y="-30" />
       </g>
@@ -70,7 +70,7 @@ import BoardAction from "./BoardAction.vue";
       return ResearchField.values(this.expansions);
     },
     expansions() {
-      return this.$store.state.gaiaViewer.data.expansions;
+      return this.$store.state.data.expansions;
     },
     viewWidth() {
       return this.fields.length * 60;

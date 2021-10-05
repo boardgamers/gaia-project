@@ -38,7 +38,7 @@ export default class ScoringTile extends Vue {
   round: number;
 
   get tile() {
-    return this.$store.state.gaiaViewer.data.tiles.scorings.round[this.round - 1];
+    return this.$store.state.data.tiles.scorings.round[this.round - 1];
   }
 
   get event() {
@@ -58,13 +58,11 @@ export default class ScoringTile extends Vue {
   }
 
   get highlighted() {
-    return this.$store.state.gaiaViewer.data.round === this.round && !this.faded;
+    return this.$store.state.data.round === this.round && !this.faded;
   }
 
   get faded() {
-    return (
-      this.$store.state.gaiaViewer.data.round > this.round || this.$store.state.gaiaViewer.data.phase === Phase.EndGame
-    );
+    return this.$store.state.data.round > this.round || this.$store.state.data.phase === Phase.EndGame;
   }
 }
 </script>

@@ -85,7 +85,7 @@ import { factionDesc, factionName } from "../data/factions";
   },
   computed: {
     canUndo() {
-      return !this.$store.state.gaiaViewer.data.newTurn;
+      return !this.$store.state.data.newTurn;
     },
     randomFactionButton() {
       this.updater = this.updater + 1;
@@ -152,7 +152,7 @@ export default class Commands extends Vue {
   }
 
   get playerSlug(): string {
-    return this.$store.state.gaiaViewer.data.players[this.command.player].faction || `p${this.command.player + 1}`;
+    return this.$store.state.data.players[this.command.player].faction || `p${this.command.player + 1}`;
   }
 
   get init() {
@@ -228,11 +228,11 @@ export default class Commands extends Vue {
   }
 
   get context(): GameContext {
-    return this.$store.state.gaiaViewer.context;
+    return this.$store.state.context;
   }
 
   get engine(): Engine {
-    return this.$store.state.gaiaViewer.data;
+    return this.$store.state.data;
   }
 
   get map(): SpaceMap {
@@ -515,7 +515,7 @@ export default class Commands extends Vue {
   }
 
   back() {
-    this.$store.commit("gaiaViewer/clearContext");
+    this.$store.commit("clearContext");
     this.commandChain.pop();
     this.commandTitles.pop();
     this.buttonChain.pop();

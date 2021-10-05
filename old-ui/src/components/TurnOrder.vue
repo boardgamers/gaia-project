@@ -40,7 +40,7 @@ import Engine, { Player, Planet, Phase, factionPlanet } from "@gaia-project/engi
 @Component
 export default class TurnOrder extends Vue {
   get gameData(): Engine {
-    return this.$store.state.gaiaViewer.data;
+    return this.$store.state.data;
   }
 
   get phaseBeforeSetupBuilding(): boolean {

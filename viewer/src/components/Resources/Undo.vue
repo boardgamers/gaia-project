@@ -16,12 +16,12 @@ import { UndoPropagation } from "../../logic/commands";
 @Component
 export default class Undo extends Vue {
   @Prop()
-  transform: string
+  transform: string;
 
   undo() {
-    this.$store.dispatch("gaiaViewer/undo", { undoPerformed: false } as UndoPropagation);
+    this.$store.dispatch("undo", { undoPerformed: false } as UndoPropagation);
   }
-};
+}
 </script>
 <style lang="scss" scoped>
 .undo-button {

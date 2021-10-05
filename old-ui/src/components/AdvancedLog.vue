@@ -42,17 +42,16 @@
   </div>
 </template>
 <script lang="ts">
-
-import Vue from 'vue';
-import { Component, Prop } from 'vue-property-decorator';
-import Engine, { LogEntry } from '@gaia-project/engine';
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
+import Engine, { LogEntry } from "@gaia-project/engine";
 
 @Component({
   computed: {
-    data () {
-      return this.$store.state.gaiaViewer.data;
+    data() {
+      return this.$store.state.data;
     },
-    history (): Array<{move: string; entry: LogEntry}> {
+    history(): Array<{ move: string; entry: LogEntry }> {
       const ret = [];
       let advancedLogIndex = 0;
       let nextLogEntry = this.data.advancedLog[advancedLogIndex];
@@ -85,11 +84,10 @@ import Engine, { LogEntry } from '@gaia-project/engine';
 
       ret.reverse();
       return ret;
-    }
-  }
+    },
+  },
 })
-export default class AdvancedLog extends Vue {
-}
+export default class AdvancedLog extends Vue {}
 </script>
 
 <style lang="scss" scoped>

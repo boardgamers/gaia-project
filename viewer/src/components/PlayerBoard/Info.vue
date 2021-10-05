@@ -149,11 +149,11 @@ export default class PlayerBoardInfo extends Vue {
   player: Player;
 
   get engine() {
-    return this.$store.state.gaiaViewer.data;
+    return this.$store.state.data;
   }
 
   get canUndo() {
-    return this.$store.getters["gaiaViewer/canUndo"] && this.engine.currentPlayer == this.player.player;
+    return this.$store.getters.canUndo && this.engine.currentPlayer == this.player.player;
   }
 
   get factionName(): string {
@@ -161,12 +161,12 @@ export default class PlayerBoardInfo extends Vue {
   }
 
   convert(resource: ResourceEnum) {
-    this.$store.dispatch("gaiaViewer/fastConversionClick", { button: resource } as FastConversionEvent);
+    this.$store.dispatch("fastConversionClick", { button: resource } as FastConversionEvent);
   }
 
   convertTooltip(resource: ResourceEnum): string | null {
     if (this.engine.currentPlayer == this.player.player) {
-      return this.$store.state.gaiaViewer.context.fastConversionTooltips[resource];
+      return this.$store.state.context.fastConversionTooltips[resource];
     }
   }
 
@@ -181,9 +181,7 @@ export default class PlayerBoardInfo extends Vue {
   }
 
   researchClass(index: number): string {
-    return (
-      this.$store.getters["gaiaViewer/researchClasses"].get(this.player.faction)?.get(this.researchType(index)) ?? ""
-    );
+    return this.$store.getters.researchClasses.get(this.player.faction)?.get(this.researchType(index)) ?? "";
   }
 
   researchType(index: number): ResearchField {

@@ -64,10 +64,10 @@ export default class MoveButton extends Vue {
   }
 
   subscribe(action: string, callback: any) {
-    action = "gaiaViewer/" + action;
+    action = "" + action;
 
     this.unsubscribe();
-    this.$store.commit("gaiaViewer/activeButton", this.button);
+    this.$store.commit("activeButton", this.button);
 
     this.subscription = (this.$store as any).subscribeAction(({ type, payload }) => {
       if (type !== action) {
@@ -100,7 +100,7 @@ export default class MoveButton extends Vue {
     }
     // Remove highglights caused by another button
     if (!this.isActiveButton) {
-      this.$store.commit("gaiaViewer/clearContext");
+      this.$store.commit("clearContext");
     }
     if (
       this.button.hexes &&
@@ -109,38 +109,38 @@ export default class MoveButton extends Vue {
       !this.button.rotation &&
       !this.button.range
     ) {
-      this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
+      this.$store.commit("highlightHexes", this.button.hexes);
       this.subscribe("hexClick", (hex) => this.emitCommand(hex.toString()));
     } else if (this.button.researchTiles) {
-      this.$store.commit("gaiaViewer/highlightResearchTiles", this.button.researchTiles);
+      this.$store.commit("highlightResearchTiles", this.button.researchTiles);
       this.subscribeFinal("researchClick");
     } else if (this.button.techs) {
-      this.$store.commit("gaiaViewer/highlightTechs", this.button.techs);
+      this.$store.commit("highlightTechs", this.button.techs);
       this.subscribeFinal("techClick");
     } else if (this.button.boosters) {
-      this.$store.commit("gaiaViewer/highlightBoosters", this.button.boosters);
+      this.$store.commit("highlightBoosters", this.button.boosters);
       this.subscribeFinal("boosterClick");
     } else if (this.button.actions) {
-      this.$store.commit("gaiaViewer/highlightActions", this.button.actions);
+      this.$store.commit("highlightActions", this.button.actions);
       this.subscribeFinal("actionClick");
     } else if (this.button.needConfirm) {
       this.subscribeFinal("needConfirmClick");
     } else if (this.button.selectHexes) {
       // If already the active button, end the selection
       if (this.isActiveButton) {
-        this.button.command = [...this.$store.state.gaiaViewer.context.highlighted.hexes.keys()]
+        this.button.command = [...this.$store.state.context.highlighted.hexes.keys()]
           .map((hex) => hex.toString())
           .join(",");
         this.emitCommand();
         return;
       }
 
-      this.$store.commit("gaiaViewer/selectHexes", this.button.hexes);
+      this.$store.commit("selectHexes", this.button.hexes);
 
       this.customLabel = "Custom location - End selection";
 
       this.subscribe("hexClick", (hex) => {
-        const highlighted = this.$store.state.gaiaViewer.context.highlighted.hexes;
+        const highlighted = this.$store.state.context.highlighted.hexes;
 
         if (highlighted.has(hex)) {
           highlighted.delete(hex);
@@ -149,13 +149,13 @@ export default class MoveButton extends Vue {
         }
 
         const keys: GaiaHex[] = [...highlighted.keys()];
-        this.$store.commit("gaiaViewer/highlightHexes", new Map([...keys.map((key) => [key, null])] as any));
+        this.$store.commit("highlightHexes", new Map([...keys.map((key) => [key, null])] as any));
       });
     } else if (this.button.modal) {
       this.modalShow = true;
     } else if (this.button.rotation) {
       if (this.isActiveButton) {
-        const rotations = [...this.$store.state.gaiaViewer.context.rotation.entries()];
+        const rotations = [...this.$store.state.context.rotation.entries()];
         for (const rotation of rotations) {
           rotation[1] %= 6;
         }
@@ -163,12 +163,12 @@ export default class MoveButton extends Vue {
         return;
       }
 
-      this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
-      this.subscribe("hexClick", (hex) => this.$store.commit("gaiaViewer/rotate", hex));
+      this.$store.commit("highlightHexes", this.button.hexes);
+      this.subscribe("hexClick", (hex) => this.$store.commit("rotate", hex));
       this.customLabel = "Sector rotations finished";
     } else if (this.button.range) {
       console.log("range click");
-      this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
+      this.$store.commit("highlightHexes", this.button.hexes);
       this.subscribe("hexClick", (hex) => {
         if (this.startingHex) {
           this.emitCommand(`${this.startingHex} ${hex}`);
@@ -177,7 +177,7 @@ export default class MoveButton extends Vue {
         }
         this.startingHex = hex;
 
-        const map: SpaceMap = this.$store.state.gaiaViewer.data.map;
+        const map: SpaceMap = this.$store.state.data.map;
         const { range, costs } = this.button;
 
         const highlighted = new Map();
@@ -187,12 +187,12 @@ export default class MoveButton extends Vue {
           highlighted.set(target, { cost: costs?.[map.distance(hex, target)] ?? "~" });
         }
 
-        this.$store.commit("gaiaViewer/highlightHexes", highlighted);
+        this.$store.commit("highlightHexes", highlighted);
       });
     } else {
       // Keep hexes highlighted for next command (federation tile)
       if (this.button.hexes && this.button.hover) {
-        this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
+        this.$store.commit("highlightHexes", this.button.hexes);
       }
       this.emitCommand();
     }
@@ -215,7 +215,7 @@ export default class MoveButton extends Vue {
     if (disappear) {
       this.unsubscribe();
 
-      this.$store.commit("gaiaViewer/activeButton", null);
+      this.$store.commit("activeButton", null);
     }
 
     let commandBody: string[] = [];
@@ -241,26 +241,23 @@ export default class MoveButton extends Vue {
   }
 
   hover() {
-    if (!this.button.hover || this.$store.state.gaiaViewer.context.activeButton !== null) {
+    if (!this.button.hover || this.$store.state.context.activeButton !== null) {
       return;
     }
 
-    this.$store.commit("gaiaViewer/highlightHexes", this.button.hexes);
+    this.$store.commit("highlightHexes", this.button.hexes);
   }
 
   leave() {
-    if (!this.button.hover || this.$store.state.gaiaViewer.context.activeButton !== null) {
+    if (!this.button.hover || this.$store.state.context.activeButton !== null) {
       return;
     }
 
-    this.$store.commit("gaiaViewer/clearContext");
+    this.$store.commit("clearContext");
   }
 
   get isActiveButton() {
-    return (
-      this.$store.state.gaiaViewer.context.activeButton &&
-      this.$store.state.gaiaViewer.context.activeButton.label === this.button.label
-    );
+    return this.$store.state.context.activeButton && this.$store.state.context.activeButton.label === this.button.label;
   }
 }
 </script>

@@ -11,41 +11,41 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { Component, Prop } from 'vue-property-decorator';
-import { MapData, HighlightHexData } from '../data';
-import { GaiaHex, GaiaHexData } from '@gaia-project/engine';
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
+import { MapData, HighlightHexData } from "../data";
+import { GaiaHex, GaiaHexData } from "@gaia-project/engine";
 import { hexCenter } from "../graphics/hex";
-import SpaceHex from './SpaceHex.vue';
-import { CubeCoordinates, Hex } from 'hexagrid';
+import SpaceHex from "./SpaceHex.vue";
+import { CubeCoordinates, Hex } from "hexagrid";
 
 @Component<Sector>({
   components: {
-    SpaceHex
-  }
+    SpaceHex,
+  },
 })
 export default class Sector extends Vue {
   @Prop()
   center: CubeCoordinates;
 
-  centerOffset (hex: GaiaHex) {
+  centerOffset(hex: GaiaHex) {
     return hexCenter({
       q: hex.q - this.center.q,
-      r: hex.r - this.center.r
+      r: hex.r - this.center.r,
     });
   }
 
-  isCenter (hex: GaiaHex) {
+  isCenter(hex: GaiaHex) {
     return hex.q === this.center.q && hex.r === this.center.r;
   }
 
-  get map () {
-    return this.$store.state.gaiaViewer.data.map;
+  get map() {
+    return this.$store.state.data.map;
   }
 
-  get sector (): GaiaHex[] {
+  get sector(): GaiaHex[] {
     const coords = Hex.hexagon(2, { center: this.center });
-    const ret = coords.map(coord => this.map.grid.get(coord));
+    const ret = coords.map((coord) => this.map.grid.get(coord));
 
     return ret;
   }

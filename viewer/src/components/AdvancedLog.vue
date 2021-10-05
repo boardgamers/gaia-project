@@ -53,11 +53,11 @@ import { Component, Prop } from "vue-property-decorator";
 import Engine from "@gaia-project/engine";
 import { HistoryEntry, makeHistory } from "../data/log";
 
-type LogScope = "recent" | "all"
+type LogScope = "recent" | "all";
 
 @Component
 export default class AdvancedLog extends Vue {
-  private scope: LogScope = "recent"
+  private scope: LogScope = "recent";
 
   @Prop()
   currentMove?: string;
@@ -89,24 +89,19 @@ export default class AdvancedLog extends Vue {
   }
 
   get gameData(): Engine {
-    return this.$store.state.gaiaViewer.data;
+    return this.$store.state.data;
   }
 
   get history(): HistoryEntry[] {
     if (this.hideLog) return [];
 
-    return makeHistory(
-      this.gameData,
-      this.$store.getters["gaiaViewer/recentMoves"],
-      this.scope == "recent",
-      this.currentMove
-    );
+    return makeHistory(this.gameData, this.$store.getters.recentMoves, this.scope == "recent", this.currentMove);
   }
 
   rowSpan(entry: HistoryEntry): number {
     return entry.changes.length > 0 ? entry.changes.length : 1;
   }
-};
+}
 </script>
 
 <style lang="scss" scoped>

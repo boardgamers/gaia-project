@@ -161,7 +161,7 @@ export default class Resource extends Vue {
   faction: Faction;
 
   get flat() {
-    return this.$store.state.gaiaViewer.preferences.flatBuildings;
+    return this.$store.state.preferences.flatBuildings;
   }
 }
 </script>

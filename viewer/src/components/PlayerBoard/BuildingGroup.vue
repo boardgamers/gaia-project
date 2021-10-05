@@ -121,7 +121,7 @@ export default class BuildingGroup extends Vue {
     if (this.player.board) {
       return this.player.board;
     }
-    const engine = this.$store.state.gaiaViewer.data as Engine;
+    const engine = this.$store.state.data as Engine;
     const factionVariant = factionVariantBoard(engine.factionCustomization, this.faction)?.board;
     return factionBoard(this.faction, factionVariant);
   }
@@ -167,15 +167,14 @@ export default class BuildingGroup extends Vue {
     } else if (this.building === BuildingEnum.PlanetaryInstitute) {
       minWidth = this.incomeTypes;
     }
-    return (
-      Math.max(this.nBuildings, minWidth) * this.buildingSpacing +
-      this.offset +
-      this.paddingRight
-    );
+    return Math.max(this.nBuildings, minWidth) * this.buildingSpacing + this.offset + this.paddingRight;
   }
 
   get incomeTypes() {
-    return Math.max(2, this.board.buildings[this.building].income[0].filter(e => e.operator == Operator.Income).length);
+    return Math.max(
+      2,
+      this.board.buildings[this.building].income[0].filter((e) => e.operator == Operator.Income).length
+    );
   }
 
   get factionIncome(): Reward[] {
@@ -187,7 +186,7 @@ export default class BuildingGroup extends Vue {
   }
 
   get flat() {
-    return this.$store.state.gaiaViewer.preferences.flatBuildings;
+    return this.$store.state.preferences.flatBuildings;
   }
 
   showBuilding(i: number) {
@@ -199,14 +198,14 @@ export default class BuildingGroup extends Vue {
 
   recentlyBuilt(i: number): boolean {
     return this.shouldMarkBuilding(
-      this.$store.getters["gaiaViewer/currentRoundBuildingCommands"].get(this.faction) ?? [],
-      this.$store.getters["gaiaViewer/recentBuildingCommands"].get(this.faction) ?? [],
+      this.$store.getters.currentRoundBuildingCommands.get(this.faction) ?? [],
+      this.$store.getters.recentBuildingCommands.get(this.faction) ?? [],
       i
     );
   }
 
   currentRoundBuilt(i: number): boolean {
-    const commands = this.$store.getters["gaiaViewer/currentRoundBuildingCommands"].get(this.faction) ?? [];
+    const commands = this.$store.getters.currentRoundBuildingCommands.get(this.faction) ?? [];
     return this.shouldMarkBuilding(commands, commands, i);
   }
 

@@ -44,7 +44,7 @@ import { Vue, Component } from "vue-property-decorator";
 @Component
 export default class Buildings extends Vue {
   get factions() {
-    return [...this.$store.state.gaiaViewer.data.players.map((p) => p.faction).filter((f) => !!f), "gen"];
+    return [...this.$store.state.data.players.map((p) => p.faction).filter((f) => !!f), "gen"];
   }
 }
 </script>
