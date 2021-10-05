@@ -42,15 +42,15 @@ export default class SpaceMap extends Vue {
   }
 
   rotation(center: CubeCoordinates) {
-    return this.$store.state.gaiaViewer.context.rotation.get(`${center.q}x${center.r}`) || 0;
+    return this.$store.state.context.rotation.get(`${center.q}x${center.r}`) || 0;
   }
 
   get engine(): Engine {
-    return this.$store.state.gaiaViewer.data;
+    return this.$store.state.data;
   }
 
   get showCharts(): boolean {
-    return !this.engine.players.some(p => !p.faction);
+    return !this.engine.players.some((p) => !p.faction);
   }
 
   get map(): SpaceMapData {

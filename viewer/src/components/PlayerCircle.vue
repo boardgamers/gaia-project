@@ -24,7 +24,7 @@ export default class PlayerCircle extends Vue {
   chart: boolean;
 
   get gameData(): Engine {
-    return this.$store.state.gaiaViewer.data;
+    return this.$store.state.data;
   }
 
   stroke() {

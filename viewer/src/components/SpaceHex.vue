@@ -80,11 +80,11 @@ export default class SpaceHex extends Vue {
   }
 
   get flat() {
-    return this.$store.state.gaiaViewer.preferences.flatBuildings;
+    return this.$store.state.preferences.flatBuildings;
   }
 
   get map(): ISpaceMap {
-    return this.$store.state.gaiaViewer.data.map;
+    return this.$store.state.data.map;
   }
 
   warning(hex: GaiaHex): string {
@@ -144,7 +144,7 @@ export default class SpaceHex extends Vue {
   hexClick(hex: GaiaHex) {
     const h = this.highlightedHexes?.get(hex);
     if (h != null || this.selectAnyHex) {
-      this.$store.dispatch("gaiaViewer/hexClick", { hex: hex, highlight: h });
+      this.$store.dispatch("hexClick", { hex: hex, highlight: h });
     }
   }
 
@@ -152,7 +152,7 @@ export default class SpaceHex extends Vue {
     if (player === undefined || player === "wild") {
       return player; // Wild will get recognized as purple, for trade tokens. A bit of a hack
     }
-    return this.$store.state.gaiaViewer.data.players[player].faction;
+    return this.$store.state.data.players[player].faction;
   }
 
   planet(player) {
@@ -173,18 +173,18 @@ export default class SpaceHex extends Vue {
   }
 
   recent(hex: GaiaHex): boolean {
-    return this.$store.getters["gaiaViewer/recentHexes"].has(hex);
+    return this.$store.getters.recentHexes.has(hex);
   }
 
   currentRound(hex: GaiaHex): boolean {
-    return this.$store.getters["gaiaViewer/currentRoundHexes"].has(hex);
+    return this.$store.getters.currentRoundHexes.has(hex);
   }
 
   get gameData(): Engine {
-    return this.$store.state.gaiaViewer.data;
+    return this.$store.state.data;
   }
 
-  get selection(): HexSelection  | null {
+  get selection(): HexSelection | null {
     return this.context().highlighted.hexes;
   }
 
@@ -193,7 +193,7 @@ export default class SpaceHex extends Vue {
   }
 
   private context() {
-    return this.$store.state.gaiaViewer.context;
+    return this.$store.state.context;
   }
 }
 </script>

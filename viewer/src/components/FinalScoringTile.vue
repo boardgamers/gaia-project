@@ -42,7 +42,7 @@ import { factionName } from "../data/factions";
     },
 
     highlighted() {
-      return this.$store.state.gaiaViewer.data.phase === Phase.EndGame;
+      return this.$store.state.data.phase === Phase.EndGame;
     },
   },
 
@@ -61,7 +61,7 @@ export default class FinalScoringTile extends Vue {
   }
 
   get tile() {
-    return this.$store.state.gaiaViewer.data.tiles.scorings.final[this.index];
+    return this.$store.state.data.tiles.scorings.final[this.index];
   }
 
   get content() {
@@ -69,9 +69,9 @@ export default class FinalScoringTile extends Vue {
   }
 
   get players() {
-    const pls = this.$store.state.gaiaViewer.data.players.filter((player) => !!player && player.faction);
+    const pls = this.$store.state.data.players.filter((player) => !!player && player.faction);
 
-    if (this.$store.state.gaiaViewer.data.players.length === 2) {
+    if (this.$store.state.data.players.length === 2) {
       pls.push({ faction: "automa" });
     }
 

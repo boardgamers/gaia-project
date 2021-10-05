@@ -63,7 +63,7 @@ export default class SpecialAction extends Vue {
       this.$emit("click");
       return;
     }
-    this.$store.dispatch("gaiaViewer/specialActionClick", this.button);
+    this.$store.dispatch("specialActionClick", this.button);
   }
 
   get income() {
@@ -71,20 +71,20 @@ export default class SpecialAction extends Vue {
   }
 
   get gameData(): Engine {
-    return this.$store.state.gaiaViewer.data;
+    return this.$store.state.data;
   }
 
   get button(): ButtonData | null {
     if (this.board) {
       return null;
     }
-    const player = this.$store.state.gaiaViewer.player?.index ?? this.gameData.currentPlayer;
+    const player = this.$store.state.player?.index ?? this.gameData.currentPlayer;
     return specialActionButton(this.income, this.gameData.player(player));
   }
 
   /** When the action content is highlighted - not the parent component */
   get _highlighted() {
-    const actions = this.$store.state.gaiaViewer.context.highlighted.specialActions;
+    const actions = this.$store.state.context.highlighted.specialActions;
     return actions.has(this.income) || actions.has(this.income.replace(/>/g, ""));
   }
 

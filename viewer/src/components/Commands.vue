@@ -70,7 +70,7 @@ import Engine, {
   Player,
   Resource,
   Reward,
-  SpaceMap
+  SpaceMap,
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
 import { ButtonData, GameContext, HexSelection, ModalButtonData } from "../data";
@@ -147,7 +147,7 @@ export default class Commands extends Vue implements CommandController {
   remainingTime: string;
 
   get gameData(): Engine {
-    return this.$store.state.gaiaViewer.data;
+    return this.$store.state.data;
   }
 
   get factionCustomization(): FactionCustomization {
@@ -180,7 +180,7 @@ export default class Commands extends Vue implements CommandController {
     this.customButtons = [];
     this.commandChain = [];
     this.buttonChain = [];
-    this.$store.commit("gaiaViewer/setCommandChain", false);
+    this.$store.commit("setCommandChain", false);
 
     if (!hasPass(commands)) {
       for (const command of commands) {
@@ -224,7 +224,7 @@ export default class Commands extends Vue implements CommandController {
   }
 
   get playerSlug(): string {
-    return this.$store.state.gaiaViewer.data.players[this.command.player].faction || `p${this.command.player + 1}`;
+    return this.$store.state.data.players[this.command.player].faction || `p${this.command.player + 1}`;
   }
 
   get init() {
@@ -282,7 +282,7 @@ export default class Commands extends Vue implements CommandController {
       this.commandChain.push(source.command);
       this.buttonChain.push(source);
       this.customButtons = source.buttons;
-      this.$store.commit("gaiaViewer/setCommandChain", true);
+      this.$store.commit("setCommandChain", true);
 
       if (!source.onShowTriggered) {
         source.onShowTriggered = true;
@@ -295,7 +295,11 @@ export default class Commands extends Vue implements CommandController {
     if (this.init) {
       this.$emit("command", command);
     } else {
-      this.$emit("command", `${this.playerSlug} ${[...this.commandChain.filter(c => c), command].join(" ")}`, warnings);
+      this.$emit(
+        "command",
+        `${this.playerSlug} ${[...this.commandChain.filter((c) => c), command].join(" ")}`,
+        warnings
+      );
     }
   }
 
@@ -304,11 +308,11 @@ export default class Commands extends Vue implements CommandController {
   }
 
   get context(): GameContext {
-    return this.$store.state.gaiaViewer.context;
+    return this.$store.state.context;
   }
 
   get engine(): Engine {
-    return this.$store.state.gaiaViewer.data;
+    return this.$store.state.data;
   }
 
   get map(): SpaceMap {
@@ -324,11 +328,11 @@ export default class Commands extends Vue implements CommandController {
   }
 
   get canUndo() {
-    return this.$store.getters["gaiaViewer/canUndo"];
+    return this.$store.getters.canUndo;
   }
 
   undo() {
-    this.$store.dispatch("gaiaViewer/undo", { undoPerformed: false } as UndoPropagation);
+    this.$store.dispatch("undo", { undoPerformed: false } as UndoPropagation);
   }
 
   back(p: UndoPropagation) {
@@ -338,7 +342,7 @@ export default class Commands extends Vue implements CommandController {
     }
     p.undoPerformed = true;
 
-    this.$store.commit("gaiaViewer/clearContext");
+    this.$store.commit("clearContext");
     this.commandChain.pop();
     this.commandTitles.pop();
     this.buttonChain.pop();
@@ -352,7 +356,7 @@ export default class Commands extends Vue implements CommandController {
       }
     } else {
       this.customButtons = [];
-      this.$store.commit("gaiaViewer/setCommandChain", false);
+      this.$store.commit("setCommandChain", false);
     }
   }
 
@@ -376,7 +380,7 @@ export default class Commands extends Vue implements CommandController {
     window.addEventListener("keydown", keyListener);
 
     const undoListener = this.$store.subscribeAction(({ type, payload }) => {
-      if (type === "gaiaViewer/undo") {
+      if (type === "undo") {
         this.back(payload as UndoPropagation);
       }
     });
@@ -392,11 +396,11 @@ export default class Commands extends Vue implements CommandController {
   }
 
   highlightHexes(selection: HexSelection | null) {
-    this.$store.commit("gaiaViewer/highlightHexes", selection);
+    this.$store.commit("highlightHexes", selection);
   }
 
   setFastConversionTooltips(tooltips: FastConversionTooltips) {
-    this.$store.commit("gaiaViewer/fastConversionTooltips", tooltips);
+    this.$store.commit("fastConversionTooltips", tooltips);
   }
 
   subscribeAction<P extends ActionPayload>(fn: SubscribeActionOptions<P, any>, options?: SubscribeOptions): () => void {

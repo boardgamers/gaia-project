@@ -96,11 +96,11 @@ export default class MoveButton extends Vue implements MoveButtonController {
   private rangePreselect: number = null;
 
   highlightResearchTiles(tiles: string[]) {
-    this.$store.commit("gaiaViewer/highlightResearchTiles", tiles);
+    this.$store.commit("highlightResearchTiles", tiles);
   }
 
   highlightTechs(techs: Array<TechTilePos | AdvTechTilePos>) {
-    this.$store.commit("gaiaViewer/highlightTechs", techs);
+    this.$store.commit("highlightTechs", techs);
   }
 
   setButton(b: ButtonData, key: string) {
@@ -114,7 +114,7 @@ export default class MoveButton extends Vue implements MoveButtonController {
   }
 
   subscribe(action: string, callback: any, activateButton = true) {
-    action = "gaiaViewer/" + action;
+    action = "" + action;
 
     this.unsubscribe();
     if (activateButton) {
@@ -133,7 +133,7 @@ export default class MoveButton extends Vue implements MoveButtonController {
   }
 
   activate(buttonData: ButtonData | null) {
-    this.$store.commit("gaiaViewer/activeButton", buttonData);
+    this.$store.commit("activeButton", buttonData);
   }
 
   subscribeHexClick(callback: (hex: GaiaHex, highlight: HighlightHex) => void) {
@@ -153,7 +153,7 @@ export default class MoveButton extends Vue implements MoveButtonController {
   }
 
   subscribeFinal(action: string) {
-    this.subscribeButtonClick(action, b => b, false);
+    this.subscribeButtonClick(action, (b) => b, false);
     this.emitCommand(null, { disappear: false });
   }
 
@@ -266,7 +266,7 @@ export default class MoveButton extends Vue implements MoveButtonController {
 
       // Remove highlights caused by another button
       if (!this.isActiveButton) {
-        this.$store.commit("gaiaViewer/clearContext");
+        this.$store.commit("clearContext");
 
         if (button.hexes) {
           this.highlightHexes(button.hexes);
@@ -274,15 +274,15 @@ export default class MoveButton extends Vue implements MoveButtonController {
       }
 
       if (button.specialActions) {
-        this.$store.commit("gaiaViewer/highlightSpecialActions", button.specialActions);
+        this.$store.commit("highlightSpecialActions", button.specialActions);
         this.subscribeFinal("specialActionClick");
       } else if (button.boardActions) {
-        this.$store.commit("gaiaViewer/highlightBoardActions", button.boardActions);
+        this.$store.commit("highlightBoardActions", button.boardActions);
         this.subscribeFinal("boardActionClick");
       } else if (button.hexes?.selectAnyHex) {
         if (button.rotation) {
           if (this.isActiveButton) {
-            const rotations = [...this.$store.state.gaiaViewer.context.rotation.entries()];
+            const rotations = [...this.$store.state.context.rotation.entries()];
             for (const rotation of rotations) {
               rotation[1] %= 6;
             }
@@ -290,7 +290,7 @@ export default class MoveButton extends Vue implements MoveButtonController {
             return;
           }
 
-          this.subscribeHexClick((hex) => this.$store.commit("gaiaViewer/rotate", hex));
+          this.subscribeHexClick((hex) => this.$store.commit("rotate", hex));
           this.customLabel = "Sector rotations finished";
         } else {
           this.selectAnyButton(button);
@@ -332,7 +332,7 @@ export default class MoveButton extends Vue implements MoveButtonController {
   private selectAnyButton(button: ButtonData) {
     // If already the active button, end the selection
     if (this.isActiveButton) {
-      button.command = [...this.$store.state.gaiaViewer.context.highlighted.hexes.hexes.keys()]
+      button.command = [...this.$store.state.context.highlighted.hexes.hexes.keys()]
         .map((hex) => hex.toString())
         .join(",");
       this.emitButtonCommand(button);
@@ -342,7 +342,7 @@ export default class MoveButton extends Vue implements MoveButtonController {
     this.customLabel = button.label + " - End selection";
 
     this.subscribeHexClick((hex) => {
-      const highlighted = this.$store.state.gaiaViewer.context.highlighted.hexes.hexes;
+      const highlighted = this.$store.state.context.highlighted.hexes.hexes;
 
       if (highlighted.has(hex)) {
         highlighted.delete(hex);
@@ -356,7 +356,7 @@ export default class MoveButton extends Vue implements MoveButtonController {
   }
 
   private highlightHexes(selection: HexSelection) {
-    this.$store.commit("gaiaViewer/highlightHexes", selection);
+    this.$store.commit("highlightHexes", selection);
   }
 
   handleRangeClick(times: number) {
@@ -406,7 +406,7 @@ export default class MoveButton extends Vue implements MoveButtonController {
   }
 
   get player(): Player {
-    const engine = this.$store.state.gaiaViewer.data;
+    const engine = this.$store.state.data;
     return engine.player(engine.currentPlayer);
   }
 
@@ -419,10 +419,7 @@ export default class MoveButton extends Vue implements MoveButtonController {
   }
 
   get isActiveButton() {
-    return (
-      this.$store.state.gaiaViewer.context.activeButton &&
-      this.$store.state.gaiaViewer.context.activeButton.label === this.button.label
-    );
+    return this.$store.state.context.activeButton && this.$store.state.context.activeButton.label === this.button.label;
   }
 }
 </script>

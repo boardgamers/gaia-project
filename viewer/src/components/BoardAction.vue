@@ -78,20 +78,20 @@ export default class BoardAction extends Vue {
     if (!this.highlighted) {
       return;
     }
-    this.$store.dispatch("gaiaViewer/boardActionClick", this.button);
+    this.$store.dispatch("boardActionClick", this.button);
   }
 
   get highlighted(): boolean {
-    return this.$store.state.gaiaViewer.context.highlighted.boardActions.has(this.action);
+    return this.$store.state.context.highlighted.boardActions.has(this.action);
   }
 
   get recent(): boolean {
-    const moves = this.$store.getters["gaiaViewer/recentCommands"];
+    const moves = this.$store.getters.recentCommands;
     return moves.some((c) => c.command == Command.Action && (c.args[0] as BoardActionEnum) === this.action);
   }
 
   get button() {
-    const player = this.$store.state.gaiaViewer.player?.index ?? this.gameData.currentPlayer;
+    const player = this.$store.state.player?.index ?? this.gameData.currentPlayer;
     return boardActionButton(this.action, this.gameData.player(player));
   }
 
@@ -117,7 +117,7 @@ export default class BoardAction extends Vue {
   }
 
   get gameData(): Engine {
-    return this.$store.state.gaiaViewer.data;
+    return this.$store.state.data;
   }
 
   get costNumber() {

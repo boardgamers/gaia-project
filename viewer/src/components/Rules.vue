@@ -164,7 +164,7 @@ export default class Rules extends Vue {
   private finalScoringItems: any[] = null;
 
   get gameData(): Engine {
-    return this.$store.state.gaiaViewer.data;
+    return this.$store.state.data;
   }
 
   mounted() {

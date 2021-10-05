@@ -46,30 +46,30 @@ export default class Wrapper extends Vue {
   replayData: { stard: number; end: number; current: number } | null = null;
 
   handleOK() {
-    this.$store.dispatch("gaiaViewer/loadFromJSON", JSON.parse(this.text));
+    this.$store.dispatch("loadFromJSON", JSON.parse(this.text));
   }
 
   openExport() {
-    this.text = JSON.stringify(this.$store.state.gaiaViewer.data);
+    this.text = JSON.stringify(this.$store.state.data);
     this.modalShow = true;
   }
 
   startReplay() {
-    this.$store.dispatch("gaiaViewer/replayStart");
+    this.$store.dispatch("replayStart");
   }
 
   replayTo(dest: number) {
-    this.$store.dispatch("gaiaViewer/replayTo", dest);
+    this.$store.dispatch("replayTo", dest);
   }
 
   endReplay() {
-    this.$store.dispatch("gaiaViewer/replayEnd");
+    this.$store.dispatch("replayEnd");
     this.replayData = null;
   }
 
   mounted() {
     const unsub = this.$store.subscribeAction(({ type, payload }) => {
-      if (type === "gaiaViewer/replayInfo") {
+      if (type === "replayInfo") {
         this.replayData = payload;
       }
     });

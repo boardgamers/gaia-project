@@ -11,7 +11,7 @@ import Engine, {
 } from "@gaia-project/engine";
 import { CubeCoordinates } from "hexagrid";
 import Vue from "vue";
-import Vuex, { Store } from "vuex";
+import Vuex from "vuex";
 import { ButtonData, GameContext, HexSelection, SpecialActionIncome } from "./data";
 import { FastConversionEvent } from "./data/actions";
 import { FastConversionTooltips } from "./logic/commands";
@@ -54,7 +54,6 @@ function indexCommands(commands, command: Command) {
 }
 
 const gaiaViewer = {
-  namespaced: true,
   state: {
     data: new Engine(),
     context: {
@@ -210,12 +209,8 @@ const gaiaViewer = {
   },
 };
 
-function makeStore(): Store<{ gaiaViewer: State }> {
-  return new Vuex.Store({
-    modules: {
-      gaiaViewer,
-    },
-  });
+function makeStore() {
+  return new Vuex.Store(gaiaViewer);
 }
 
 export default makeStore();

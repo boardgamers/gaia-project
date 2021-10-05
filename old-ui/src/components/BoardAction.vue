@@ -19,40 +19,42 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { Component, Prop } from 'vue-property-decorator';
-import { tiles, Event, BoardAction as BoardActionEnum, boardActions } from '@gaia-project/engine';
-import { eventDesc } from '../data/event';
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
+import { tiles, Event, BoardAction as BoardActionEnum, boardActions } from "@gaia-project/engine";
+import { eventDesc } from "../data/event";
 
 @Component<BoardAction>({
   computed: {
-    tooltip () {
+    tooltip() {
       const costDesc = "Spend " + this.cost + "\n";
 
-      return costDesc + boardActions[this.action].income.map(x => eventDesc(new Event(x))).join('\n');
+      return costDesc + boardActions[this.action].income.map((x) => eventDesc(new Event(x))).join("\n");
     },
 
-    faded () {
-      return this.$store.state.gaiaViewer.data.boardActions[this.action] !== null;
+    faded() {
+      return this.$store.state.data.boardActions[this.action] !== null;
     },
 
-    kind () {
-      return this.action[0] === 'p' ? 'power' : 'qic';
+    kind() {
+      return this.action[0] === "p" ? "power" : "qic";
     },
 
-    income () {
-      return [].concat(...boardActions[this.action].income.map(x => {
-        if (x.includes('+')) {
-          return [x.slice(0, x.indexOf('+')), x.slice(x.indexOf('+'))];
-        }
-        return x.split('-');
-      }));
+    income() {
+      return [].concat(
+        ...boardActions[this.action].income.map((x) => {
+          if (x.includes("+")) {
+            return [x.slice(0, x.indexOf("+")), x.slice(x.indexOf("+"))];
+          }
+          return x.split("-");
+        })
+      );
     },
 
-    cost () {
+    cost() {
       return boardActions[this.action].cost;
-    }
-  }
+    },
+  },
 })
 export default class BoardAction extends Vue {
   @Prop()
@@ -61,15 +63,15 @@ export default class BoardAction extends Vue {
   @Prop()
   action: BoardActionEnum;
 
-  onClick () {
+  onClick() {
     if (!this.highlighted) {
       return;
     }
-    this.$store.dispatch("gaiaViewer/actionClick", this.action);
+    this.$store.dispatch("actionClick", this.action);
   }
 
-  get highlighted () {
-    return this.$store.state.gaiaViewer.context.highlighted.actions.has(this.action);
+  get highlighted() {
+    return this.$store.state.context.highlighted.actions.has(this.action);
   }
 }
 </script>

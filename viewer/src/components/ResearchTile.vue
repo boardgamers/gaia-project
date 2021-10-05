@@ -111,7 +111,7 @@ export default class ResearchTile extends Vue {
 
   onClick() {
     if (this.highlighted) {
-      this.$store.dispatch("gaiaViewer/researchClick", { command: this.field } as ButtonData);
+      this.$store.dispatch("researchClick", { command: this.field } as ButtonData);
     }
   }
 
@@ -175,7 +175,7 @@ export default class ResearchTile extends Vue {
   }
 
   get highlighted(): boolean {
-    return this.$store.state.gaiaViewer.context.highlighted.researchTiles.has(this.field + "-" + this.level);
+    return this.$store.state.context.highlighted.researchTiles.has(this.field + "-" + this.level);
   }
 
   tokenClass(player: Player): string {
@@ -190,7 +190,7 @@ export default class ResearchTile extends Vue {
         classes.push("warn");
       }
     }
-    const c = this.$store.getters["gaiaViewer/researchClasses"].get(player.faction)?.get(this.field);
+    const c = this.$store.getters.researchClasses.get(player.faction)?.get(this.field);
     if (c) {
       classes.push(c);
     }
@@ -232,7 +232,7 @@ export default class ResearchTile extends Vue {
   }
 
   get gameData(): Engine {
-    return this.$store.state.gaiaViewer.data;
+    return this.$store.state.data;
   }
 }
 </script>

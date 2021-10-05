@@ -39,7 +39,7 @@ export default class Sector extends Vue {
   }
 
   get map() {
-    return this.$store.state.gaiaViewer.data.map;
+    return this.$store.state.data.map;
   }
 
   get sector(): GaiaHex[] {

@@ -22,18 +22,18 @@ import { Vue, Prop, Watch, Component } from "vue-property-decorator";
 import Game from "./Game.vue";
 
 @Component({
-  components: { Game }
+  components: { Game },
 })
 export default class Wrapper extends Vue {
   modalShow = false;
   text = "";
 
-  handleOK () {
-    this.$store.dispatch("gaiaViewer/loadFromJSON", JSON.parse(this.text));
+  handleOK() {
+    this.$store.dispatch("loadFromJSON", JSON.parse(this.text));
   }
 
-  openExport () {
-    this.text = JSON.stringify(this.$store.state.gaiaViewer.data);
+  openExport() {
+    this.text = JSON.stringify(this.$store.state.data);
     this.modalShow = true;
   }
 }

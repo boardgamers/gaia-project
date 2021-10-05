@@ -31,7 +31,7 @@ import { phaseBeforeSetupBuilding } from "../logic/utils";
 })
 export default class TurnOrder extends Vue {
   get gameData(): Engine {
-    return this.$store.state.gaiaViewer.data;
+    return this.$store.state.data;
   }
 
   get turnOrder(): Player[] {

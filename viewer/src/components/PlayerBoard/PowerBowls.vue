@@ -35,22 +35,21 @@
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import Resource from "../Resource.vue";
-import Engine, { Faction, Player, Resource as ResourceEnum, } from "@gaia-project/engine";
+import Engine, { Faction, Player, Resource as ResourceEnum } from "@gaia-project/engine";
 import PowerBowl from "./PowerBowl.vue";
 
 @Component<PowerBowls>({
   components: {
     Resource,
-    PowerBowl
+    PowerBowl,
   },
 })
 export default class PowerBowls extends Vue {
-
   @Prop()
   player: Player;
 
   get engine(): Engine {
-    return this.$store.state.gaiaViewer.data;
+    return this.$store.state.data;
   }
 
   get isTerran() {
@@ -78,7 +77,6 @@ export default class PowerBowls extends Vue {
 
     return parseInt(this.player.income.substr(index));
   }
-
 }
 </script>
 <style lang="scss">

@@ -2,7 +2,7 @@
   <svg :viewBox="`0 0 ${viewWidth} 440`" :height="height" :width="width">
     <ResearchTrack v-for="(field, index) in fields" :field="field" :x="index * 60" :key="field" />
     <text y="186" x="130" style="font-size: 14px">Charge 3 power</text>
-    <g v-if="$store.state.gaiaViewer.data.tiles && $store.state.gaiaViewer.data.tiles.techs['gaia']">
+    <g v-if="$store.state.data.tiles && $store.state.data.tiles.techs['gaia']">
       <TechTile pos="free1" x="70" y="360" />
       <TechTile pos="free2" x="150" y="360" />
       <TechTile pos="free3" x="230" y="360" />
@@ -19,40 +19,40 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { Component, Prop } from 'vue-property-decorator';
-import { ResearchField, BoardAction as BoardActionEnum } from '@gaia-project/engine';
-import ResearchTrack from './ResearchTrack.vue';
-import TechTile from './TechTile.vue';
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
+import { ResearchField, BoardAction as BoardActionEnum } from "@gaia-project/engine";
+import ResearchTrack from "./ResearchTrack.vue";
+import TechTile from "./TechTile.vue";
 import BoardAction from "./BoardAction.vue";
 
 @Component({
   computed: {
-    fields (): ResearchField[] {
+    fields(): ResearchField[] {
       return ResearchField.values(this.expansions);
     },
-    actions (): BoardActionEnum[] {
+    actions(): BoardActionEnum[] {
       return BoardActionEnum.values(this.expansions);
     },
-    expansions () {
-      return this.$store.state.gaiaViewer.data.expansions;
+    expansions() {
+      return this.$store.state.data.expansions;
     },
-    viewWidth () {
+    viewWidth() {
       return this.fields.length * 60;
     },
-    width () {
-      return this.height / 440 * this.viewWidth;
-    }
+    width() {
+      return (this.height / 440) * this.viewWidth;
+    },
   },
   components: {
     ResearchTrack,
     TechTile,
-    BoardAction
-  }
+    BoardAction,
+  },
 })
 export default class ResearchBoard extends Vue {
   @Prop({ default: 450 })
-  height: number
+  height: number;
 }
 </script>
 

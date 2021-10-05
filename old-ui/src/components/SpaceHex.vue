@@ -80,7 +80,7 @@ export default class SpaceHex extends Vue {
   }
 
   get map(): ISpaceMap {
-    return this.$store.state.gaiaViewer.data.map;
+    return this.$store.state.data.map;
   }
 
   cost(hex: GaiaHex) {
@@ -91,7 +91,7 @@ export default class SpaceHex extends Vue {
 
   hexClick(hex: GaiaHex) {
     if (this.highlightedHexes.has(hex) || this.toSelect) {
-      this.$store.dispatch("gaiaViewer/hexClick", hex);
+      this.$store.dispatch("hexClick", hex);
     }
   }
 
@@ -99,7 +99,7 @@ export default class SpaceHex extends Vue {
     if (player === undefined || player === "wild") {
       return player; // Wild will get recognized as purple, for trade tokens. A bit of a hack
     }
-    return this.$store.state.gaiaViewer.data.players[player].faction;
+    return this.$store.state.data.players[player].faction;
   }
 
   planet(player) {
@@ -115,11 +115,11 @@ export default class SpaceHex extends Vue {
   }
 
   get highlightedHexes(): Map<GaiaHex, any> {
-    return this.$store.state.gaiaViewer.context.highlighted.hexes;
+    return this.$store.state.context.highlighted.hexes;
   }
 
   get toSelect() {
-    return !!this.$store.state.gaiaViewer.context.hexSelection;
+    return !!this.$store.state.context.hexSelection;
   }
 
   shipX(index) {

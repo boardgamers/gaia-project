@@ -1,7 +1,7 @@
 <template>
   <div
     :class="{
-      ['no-faction-fill']: $store.state.gaiaViewer.preferences && $store.state.gaiaViewer.preferences.noFactionFill,
+      ['no-faction-fill']: $store.state.preferences && $store.state.preferences.noFactionFill,
     }"
   >
     <div
@@ -55,12 +55,12 @@ import { resolve } from "dns";
 @Component<Game>({
   created(this: Game) {
     const unsub = this.$store.subscribeAction(({ type, payload }) => {
-      if (type === "gaiaViewer/externalData") {
+      if (type === "externalData") {
         this.handleData(Engine.fromData(payload));
         return;
       }
-      if (type === "gaiaViewer/replayStart") {
-        this.$store.dispatch("gaiaViewer/replayInfo", {
+      if (type === "replayStart") {
+        this.$store.dispatch("replayInfo", {
           start: 1,
           end: this.engine.moveHistory.length,
           current: this.engine.moveHistory.length,
@@ -72,19 +72,19 @@ import { resolve } from "dns";
         };
         return;
       }
-      if (type === "gaiaViewer/replayEnd") {
+      if (type === "replayEnd") {
         const restore = payload || this.replayData?.backup;
         this.replayData = null;
         this.handleData(Engine.fromData(restore));
         return;
       }
-      if (type === "gaiaViewer/replayTo") {
+      if (type === "replayTo") {
         const dest: number = payload;
         const current = this.replayData.current;
 
         this.replayData.current = dest;
 
-        this.$store.dispatch("gaiaViewer/replayInfo", {
+        this.$store.dispatch("replayInfo", {
           start: 1,
           end: this.replayData.backup.moveHistory.length,
           current: dest,
@@ -137,7 +137,7 @@ export default class Game extends Vue {
   options: EngineOptions;
 
   get engine(): Engine {
-    return this.$store.state.gaiaViewer.data;
+    return this.$store.state.data;
   }
 
   get ended() {
@@ -165,13 +165,11 @@ export default class Game extends Vue {
   }
 
   get canPlay() {
-    return (
-      !this.ended && (!this.$store.state.gaiaViewer.player || this.sessionPlayer === this.engine.players[this.player])
-    );
+    return !this.ended && (!this.$store.state.player || this.sessionPlayer === this.engine.players[this.player]);
   }
 
   get hasMap() {
-    return !!this.$store.state.gaiaViewer.data.map;
+    return !!this.$store.state.data.map;
   }
 
   get player() {
@@ -179,7 +177,7 @@ export default class Game extends Vue {
   }
 
   get sessionPlayer() {
-    const player = this.$store.state.gaiaViewer.player;
+    const player = this.$store.state.player;
     if (player) {
       if (player.index !== undefined) {
         return this.engine.players[player.index];
@@ -194,7 +192,7 @@ export default class Game extends Vue {
       sector.classList.add("notransition");
     }
 
-    this.$store.commit("gaiaViewer/receiveData", data);
+    this.$store.commit("receiveData", data);
 
     this.clearCurrentMove = false;
 
@@ -242,8 +240,8 @@ export default class Game extends Vue {
   }
 
   addMove(command: string) {
-    this.$store.commit("gaiaViewer/clearContext");
-    this.$store.dispatch("gaiaViewer/move", command);
+    this.$store.commit("clearContext");
+    this.$store.dispatch("move", command);
   }
 
   parseMove(command: string): { player: string; command: string; args: string[] } {

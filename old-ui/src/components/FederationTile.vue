@@ -20,22 +20,22 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { Component, Prop } from 'vue-property-decorator';
-import { tiles, Event, Federation as FederationEnum, PlayerEnum } from '@gaia-project/engine';
-import { eventDesc } from '../data/event';
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
+import { tiles, Event, Federation as FederationEnum, PlayerEnum } from "@gaia-project/engine";
+import { eventDesc } from "../data/event";
 
 @Component<FederationTile>({
   computed: {
-    income () {
+    income() {
       const [first, ...others] = tiles.federations[this.federation].split(",");
       return others.length > 0 ? [first, others.join(", ")] : first.split("-");
     },
 
-    disabled () {
+    disabled() {
       return this.used || this.federation === FederationEnum.Fed1;
-    }
-  }
+    },
+  },
 })
 export default class FederationTile extends Vue {
   @Prop()
@@ -47,15 +47,15 @@ export default class FederationTile extends Vue {
   @Prop()
   numTiles: number;
 
-  onClick () {
+  onClick() {
     if (!this.highlighted) {
       return;
     }
-    this.$store.dispatch("gaiaViewer/federationClick", this.federation);
+    this.$store.dispatch("federationClick", this.federation);
   }
 
-  get highlighted () {
-    return this.$store.state.gaiaViewer.context.highlighted.federations.has(this.federation);
+  get highlighted() {
+    return this.$store.state.context.highlighted.federations.has(this.federation);
   }
 }
 </script>

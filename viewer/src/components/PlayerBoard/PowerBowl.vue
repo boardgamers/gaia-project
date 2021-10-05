@@ -27,7 +27,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Engine, { Player, PowerArea, } from "@gaia-project/engine";
+import Engine, { Player, PowerArea } from "@gaia-project/engine";
 import { FastConversionEvent } from "../../data/actions";
 
 @Component
@@ -43,18 +43,18 @@ export default class PowerBowl extends Vue {
   }
 
   convert() {
-    this.$store.dispatch("gaiaViewer/fastConversionClick", { button: this.area as PowerArea } as FastConversionEvent);
+    this.$store.dispatch("fastConversionClick", { button: this.area as PowerArea } as FastConversionEvent);
   }
 
   get convertTooltip(): string {
     if (this.engine.currentPlayer == this.player.player) {
-      return this.$store.state.gaiaViewer.context.fastConversionTooltips[this.area];
+      return this.$store.state.context.fastConversionTooltips[this.area];
     }
     return null;
   }
 
   get engine(): Engine {
-    return this.$store.state.gaiaViewer.data;
+    return this.$store.state.data;
   }
 
   get xPos() {

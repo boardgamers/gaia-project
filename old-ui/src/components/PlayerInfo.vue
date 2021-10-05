@@ -172,7 +172,7 @@ export default class PlayerInfo extends Vue {
   }
 
   playerClick(player: Player) {
-    this.$store.dispatch("gaiaViewer/playerClick", player);
+    this.$store.dispatch("playerClick", player);
   }
 
   get factionColor() {
@@ -210,11 +210,11 @@ export default class PlayerInfo extends Vue {
   }
 
   get passed() {
-    return (this.$store.state.gaiaViewer.data.passedPlayers || []).includes(this.player.player);
+    return (this.$store.state.data.passedPlayers || []).includes(this.player.player);
   }
 
   get round() {
-    return this.$store.state.gaiaViewer.data.round;
+    return this.$store.state.data.round;
   }
 
   get hasPlanets() {
