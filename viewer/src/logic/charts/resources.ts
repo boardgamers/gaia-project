@@ -1,36 +1,20 @@
-import {
-  BoardAction,
-  Booster,
-  Building,
-  Command,
-  EventSource,
-  Faction,
-  LogEntryChanges,
-  Planet,
-  PlayerData,
-  PowerArea,
-  Resource,
-  Reward,
-  TechPos,
-} from "@gaia-project/engine";
-import { BrainstoneDest } from "@gaia-project/engine/src/player-data";
+import { BoardAction, Booster, Command, Faction, Planet, Resource, Reward } from "@gaia-project/engine";
 import { sum } from "lodash";
 import { boardActionNames } from "../../data/actions";
 import { boosterNames } from "../../data/boosters";
 import { resourceNames } from "../../data/resources";
-import { CommandObject } from "../recent";
 import { ChartKind } from "./chart-factory";
-import { chartPlayerBoard, ChartSource, extractChanges } from "./charts";
-import { commandCounter, ExtractLog, ExtractLogArg, planetCounter, SimpleSourceFactory } from "./simple-charts";
+import { ChartSource, extractChanges } from "./charts";
+import { commandCounter, ExtractLog, planetCounter, SimpleSourceFactory } from "./simple-charts";
+import { extractPowerLeverage, powerLeverageSource } from "./power-leverage";
 
 const range = "range";
-const powerLeverage = "powerLeverage";
 
 class BaseResourceSource<T extends ChartKind> extends ChartSource<T> {
   inverseOf?: Resource;
 }
 
-type ResourceSource = BaseResourceSource<Resource | "powerLeverage">;
+export type ResourceSource = BaseResourceSource<Resource | "powerLeverage">;
 type FreeActionSource = BaseResourceSource<Resource | "range">;
 
 type ResourceWeight = { type: Resource; color: string; weight: number; inverseOf?: Resource };
@@ -89,13 +73,7 @@ export const resourceSources: ResourceSource[] = resourceWeights
       label: n.plural,
     } as ResourceSource;
   })
-  .concat({
-    type: powerLeverage,
-    label: "Power Leverage",
-    description: "Additional spend power due to Brainstone or Nevla tokens with Planetary Institute",
-    weight: 0,
-    color: "--tech-tile",
-  });
+  .concat(powerLeverageSource);
 
 const freeActionSources = (resourceSources as FreeActionSource[])
   .filter((s) => s.weight > 0 || s.type == Resource.GainToken)
@@ -111,168 +89,6 @@ const freeActionSources = (resourceSources as FreeActionSource[])
     color: "--tech-tile",
     weight: 0,
   });
-
-export class BrainstoneSimulator {
-  private allCommands: CommandObject[];
-  private data: PlayerData;
-  private index = 0;
-
-  constructor(data: PlayerData) {
-    this.data = data;
-    data.on("brainstone", () => {
-      this.data.brainstoneDest = this.nextDest();
-    });
-  }
-
-  nextDest(): BrainstoneDest {
-    for (; this.index < this.allCommands.length; this.index++) {
-      const command = this.allCommands[this.index];
-      if (command.command == Command.BrainStone) {
-        this.index++;
-        return command.args[0] as BrainstoneDest;
-      }
-    }
-    return undefined;
-  }
-
-  setTurnCommands(allCommands: CommandObject[]) {
-    this.allCommands = allCommands;
-    this.index = 0;
-  }
-}
-
-const resourceCounter = (
-  processor: (a: ExtractLogArg<ResourceSource>, data: PlayerData, callback: () => void) => number
-): ExtractLog<ResourceSource> =>
-  ExtractLog.new((want) => {
-    const data = new PlayerData();
-    data.loadPower(chartPlayerBoard(want));
-    const brainstoneSimulator = new BrainstoneSimulator(data);
-
-    const commandEventSource = (c: CommandObject): EventSource[] => {
-      switch (c.command) {
-        case Command.Action:
-        case Command.ChooseTechTile:
-          return [c.args[0] as EventSource];
-        case Command.UpgradeResearch:
-          return [c.command as EventSource, c.args[0] as EventSource];
-        case Command.Build:
-          return [c.command as EventSource, Faction.Gleens, Faction.Geodens, Faction.Lantids, Command.FormFederation];
-      }
-      return [c.command as EventSource];
-    };
-
-    let changes: LogEntryChanges = null;
-    let processedChanges: Reward[] = [];
-
-    const gainRewards = (rewards: { [resource in Resource]?: number }) => {
-      for (const type in rewards) {
-        const count = rewards[type];
-
-        const processed = processedChanges.find((p) => p.type == type && p.count == count);
-        if (processed) {
-          processedChanges.splice(processedChanges.indexOf(processed), 1);
-        } else {
-          data.gainRewards([new Reward(count, type as Resource)]);
-        }
-      }
-    };
-
-    return (a) => {
-      if (a.log.player == want.player) {
-        return processor(a, data, () => {
-          if (a.cmdIndex == 0) {
-            changes = {};
-            Object.assign(changes, a.log.changes); //copy, so we can delete keys
-            brainstoneSimulator.setTurnCommands(a.allCommands ?? []);
-          }
-
-          const cmd = a.cmd;
-          if (cmd) {
-            const args = cmd.args;
-            switch (cmd.command) {
-              case Command.Spend:
-                data.payCosts(Reward.parse(args[0]));
-                data.gainRewards(Reward.parse(args[2]));
-                delete changes.spend;
-                break;
-              case Command.Special:
-                if (args[0] == "4pw") {
-                  data.gainRewards(Reward.parse("4pw"));
-                  for (const pos of TechPos.values()) {
-                    delete changes[pos];
-                  }
-                }
-                break;
-              case Command.BurnPower:
-                data.burnPower(Number(args[0]));
-                break;
-              case Command.ChooseIncome:
-                const r = Reward.parse(args[0]);
-                data.gainRewards(r);
-                processedChanges.push(...r);
-                break;
-              default:
-                if (changes) {
-                  for (const eventSource of commandEventSource(cmd)) {
-                    const change = changes[eventSource];
-                    if (change) {
-                      gainRewards(change);
-                      delete changes[eventSource];
-                    }
-                  }
-                }
-            }
-          }
-
-          if (!cmd || a.cmdIndex == a.allCommands.length - 1) {
-            for (const s in changes) {
-              gainRewards(changes[s]);
-            }
-            changes = null;
-            processedChanges = [];
-          }
-        });
-      } else {
-        return 0;
-      }
-    };
-  }, true);
-
-const powerLeverageExtractLog: ExtractLog<ResourceSource> = ExtractLog.wrapper((want, source) => {
-  if (source.type == powerLeverage) {
-    switch (want.faction) {
-      case Faction.Taklons:
-        return resourceCounter((a, data, callback) => {
-          const old = data.brainstone;
-          callback();
-          if (old == PowerArea.Area3 && data.brainstone == PowerArea.Area1) {
-            return 2;
-          }
-          return 0;
-        });
-      case Faction.Nevlas:
-        let pi = false;
-        return resourceCounter((a, data, callback) => {
-          if (a.cmd?.command == Command.Build && a.cmd.args[0] == Building.PlanetaryInstitute) {
-            pi = true;
-          }
-
-          const area1 = data.power.area1;
-          const area3 = data.power.area3;
-
-          callback();
-
-          if (pi && data.power.area3 < area3 && data.power.area1 > area1) {
-            return Math.floor((area3 - data.power.area3) / 2);
-          }
-
-          return 0;
-        });
-    }
-  }
-  return ExtractLog.new(() => () => 0);
-});
 
 export const resourceSourceFactory: SimpleSourceFactory<ResourceSource> = {
   name: "Resources",
@@ -290,7 +106,7 @@ export const resourceSourceFactory: SimpleSourceFactory<ResourceSource> = {
       ),
     },
     {
-      extractLog: powerLeverageExtractLog,
+      extractLog: extractPowerLeverage,
     },
   ]),
   sources: resourceSources,

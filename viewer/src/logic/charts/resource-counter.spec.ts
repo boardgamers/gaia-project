@@ -3,9 +3,9 @@ import { BrainstoneDest } from "@gaia-project/engine/src/player-data";
 import { expect } from "chai";
 import { parseCommands } from "../recent";
 // Here we import the File System module of node
-import { BrainstoneSimulator } from "./resources";
+import { BrainstoneSimulator } from "./resource-counter";
 
-describe("Chart Resources", () => {
+describe("Resource Counter", () => {
   describe("brainstone simulator", () => {
     const tests: {
       name: string;
