@@ -10,7 +10,7 @@ export type SimpleSourceFactory<Source extends ChartSource<any>> = {
   sources: Source[];
   showWeightedTotal: boolean;
   initialValue?: (player: Player, source: Source) => number;
-  extractChange?: (player: Player, source: Source) => (entry: LogEntry) => number;
+  extractChange?: (player: Player, source: Source) => (entry: LogEntry, logIndex: number) => number;
   extractLog?: ExtractLog<Source>;
 };
 

@@ -260,7 +260,6 @@ export function countResearch(player: Player): (moveHistory: string[], log: LogE
           return 4;
         }
       } else if (cmd.command == Command.ChooseFaction && cmd.args[0] == player.faction) {
-        console.log("cf", research);
         return sum(Array.from(research.values()).map((level) => Math.max(0, (level - 2) * 4)));
       }
     }

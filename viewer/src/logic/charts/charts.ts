@@ -47,7 +47,8 @@ export type EventFilter = (
   source: EventSource,
   resource: Resource,
   round: number,
-  change: number
+  change: number,
+  move?: number
 ) => number;
 
 export interface DatasetFactory {
@@ -65,8 +66,11 @@ export function chartPlayerOrder(data: Engine): PlayerEnum[] {
   return data.players.map((p) => p.player);
 }
 
-export function extractChanges(player: PlayerEnum, extractChange: EventFilter): (entry: LogEntry) => number {
-  return (logItem) => {
+export function extractChanges(
+  player: PlayerEnum,
+  extractChange: EventFilter
+): (entry: LogEntry, logIndex: number) => number {
+  return (logItem, logIndex) => {
     if (player != logItem.player) {
       return 0;
     }
@@ -79,7 +83,8 @@ export function extractChanges(player: PlayerEnum, extractChange: EventFilter): 
           source as EventSource,
           resource as Resource,
           logItem.round,
-          change[resource]
+          change[resource],
+          logIndex
         );
       }
     }
@@ -101,7 +106,7 @@ function lastIndex(includeRounds: IncludeRounds): number {
 export function getDataPoints(
   data: Engine,
   initialValue: number,
-  extractChange: (entry: LogEntry) => number,
+  extractChange: (entry: LogEntry, logIndex: number) => number,
   extractLog: (moveHistory: string[], entry: LogEntry) => number,
   roundValues: Map<number, number> | null,
   deltaForEnded: () => number,
@@ -123,7 +128,7 @@ export function getDataPoints(
   onRound(0);
 
   perRoundData[round] = counter;
-  for (const logItem of data.advancedLog) {
+  data.advancedLog.forEach((logItem, logIndex) => {
     if (logItem.round != null) {
       if (includeRounds != "last") {
         round = logItem.round;
@@ -134,10 +139,10 @@ export function getDataPoints(
     counter += extractLog(data.moveHistory, logItem);
 
     if (logItem.changes) {
-      counter += extractChange(logItem);
+      counter += extractChange(logItem, logIndex);
     }
     perRoundData[round] = counter;
-  }
+  });
 
   const lastRound = lastIndex(includeRounds);
 
