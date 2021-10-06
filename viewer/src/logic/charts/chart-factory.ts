@@ -36,7 +36,7 @@ import {
   weightedSum,
 } from "./charts";
 import { finalScoringSources } from "./final-scoring";
-import { simpleChartFactoryEntries } from "./simple-sources";
+import { createSimpleSourceFactories, simpleChartFactoryEntries } from "./simple-sources";
 import {
   advancedTechTileSource,
   boosterSource,
@@ -160,6 +160,31 @@ function xScaleOptions(style: ChartStyleDisplay) {
   return null;
 }
 
+function vpChartFactoryEntries(
+  finalTileName: (tile) => string,
+  advTechTiles: Map<AdvTechTile, string>,
+  data: Engine,
+  boosters: Booster[]
+): [ChartFamily, ChartFactory<any>][] {
+  return [
+    [vpChartFamily, vpChartFactory("Victory Points", victoryPointSources(finalTileName))],
+    [
+      "Advanced Tech Tiles (Victory Points)",
+      vpChartFactory(
+        "Victory Points from Advanced Tech Tiles",
+        Array.from(advTechTiles.entries()).map(([tile, color]) => advancedTechTileSource(data, tile, color))
+      ),
+    ],
+    [
+      "Boosters (Victory Points)",
+      vpChartFactory(
+        "Victory Points from Boosters",
+        boosters.map((b) => boosterSource(data, b))
+      ),
+    ],
+  ];
+}
+
 export class ChartSetup {
   chartFactories: Map<ChartFamily, ChartFactory<any>>;
   families: ChartFamily[];
@@ -184,28 +209,16 @@ export class ChartSetup {
     const vpBoosters = statistics ? Booster.values().filter(scoringBooster) : currentBoosters;
     const allBoosters = statistics ? Booster.values() : currentBoosters;
 
+    const finalTiles = data.tiles.scorings.final;
     const finalTileName = (tile) =>
-      statistics
-        ? `Final ${String.fromCharCode(65 + tile)}`
-        : finalScoringSources[data.tiles.scorings.final[tile]].name;
+      statistics ? `Final ${String.fromCharCode(65 + tile)}` : finalScoringSources[finalTiles[tile]].name;
+
     this.chartFactories = new Map<ChartFamily, ChartFactory<any>>(
-      ([
-        [vpChartFamily, vpChartFactory("Victory Points", victoryPointSources(finalTileName))],
-        [
-          "Advanced Tech Tiles (Victory Points)",
-          vpChartFactory(
-            "Victory Points from Advanced Tech Tiles",
-            Array.from(vpAdvTechTiles.entries()).map(([tile, color]) => advancedTechTileSource(data, tile, color))
-          ),
-        ],
-        [
-          "Boosters (Victory Points)",
-          vpChartFactory(
-            "Victory Points from Boosters",
-            vpBoosters.map((b) => boosterSource(data, b))
-          ),
-        ],
-      ] as [ChartFamily, ChartFactory<any>][]).concat(simpleChartFactoryEntries(nonVpAdvTechTiles, allBoosters))
+      vpChartFactoryEntries(finalTileName, vpAdvTechTiles, data, vpBoosters).concat(
+        simpleChartFactoryEntries(
+          createSimpleSourceFactories(nonVpAdvTechTiles, allBoosters, statistics ? [] : finalTiles)
+        )
+      )
     );
 
     this.families = Array.from(this.chartFactories.keys()).sort();
