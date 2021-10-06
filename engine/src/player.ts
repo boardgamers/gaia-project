@@ -764,7 +764,15 @@ export default class Player extends EventEmitter {
     this.data.gaiaformersInGaia = 0;
   }
 
-  buildingValue(hex: GaiaHex, options?: { federation?: boolean; building?: Building }) {
+  buildingValue(
+    hex: GaiaHex,
+    options?: {
+      federation?: boolean;
+      building?: Building;
+      hasPlanetaryInstitute?: boolean;
+      hasSpecialOperator?: boolean;
+    }
+  ) {
     const building = options?.building ?? hex.buildingOf(this.player);
     const forFederation = options?.federation ?? false;
 
@@ -779,25 +787,20 @@ export default class Player extends EventEmitter {
       return 0;
     }
 
-    if (baseValue === 3 && this.events[Operator.Special].length > 0) {
+    const hasSpecialOperator = options?.hasSpecialOperator ?? this.events[Operator.Special].length > 0;
+    if (baseValue === 3 && hasSpecialOperator) {
       baseValue = 4;
     }
 
+    const hasPlanetaryInstitute = options?.hasPlanetaryInstitute ?? this.data.hasPlanetaryInstitute();
     const addedBescods =
-      this.faction === Faction.Bescods && this.data.hasPlanetaryInstitute() && hex.data.planet === Planet.Titanium
-        ? 1
-        : 0;
+      this.faction === Faction.Bescods && hasPlanetaryInstitute && hex.data.planet === Planet.Titanium ? 1 : 0;
 
     return baseValue + addedBescods;
   }
 
-  maxLeech(extraPowerToken?: boolean) {
-    // considers real chargeable power and victory points
-    return Math.min(
-      this.data.leechPossible,
-      this.data.chargePower(this.data.leechPossible, false) + (extraPowerToken ? 2 : 0),
-      this.data.victoryPoints + 1
-    );
+  maxLeech(extraPowerToken?: boolean): number {
+    return this.data.maxLeech(this.data.leechPossible, extraPowerToken).value;
   }
 
   canLeech(): boolean {

@@ -50,6 +50,7 @@ export function powerLogString(power: Power, brainstoneArea: PowerArea): string 
 export type MoveTokens = Power & { brainstone: number };
 
 export type BrainstoneDest = PowerArea | "discard";
+export type MaxLeech = { value: number; victoryPoints: number; charge: number };
 export default class PlayerData extends EventEmitter {
   victoryPoints = 10;
   bid = 0;
@@ -344,6 +345,14 @@ export default class PlayerData extends EventEmitter {
 
   gaiaPowerTokens(): number {
     return this.power.gaia + (this.brainstone === PowerArea.Gaia ? 1 : 0);
+  }
+
+  maxLeech(leechPossible: number, extraPowerToken?: boolean): MaxLeech {
+    // considers real chargeable power and victory points
+    const charge = this.chargePower(leechPossible, false) + (extraPowerToken ? 2 : 0);
+    const victoryPoints = this.victoryPoints + 1;
+    const value = Math.min(leechPossible, charge, victoryPoints);
+    return { value, victoryPoints, charge };
   }
 
   /**

@@ -40,6 +40,7 @@ import {
 import Event, { EventSource } from "./events";
 import { factionVariantBoard, latestVariantVersion } from "./faction-boards";
 import { remainingFactions } from "./factions";
+import { GaiaHex } from "./gaia-hex";
 import SpaceMap, { MapConfiguration } from "./map";
 import Player from "./player";
 import PlayerData, { BrainstoneDest, MoveTokens, powerLogString } from "./player-data";
@@ -1298,15 +1299,8 @@ export default class Engine {
         pl.data.leechPossible = 0;
         continue;
       }
-
-      // Exclude the one who made the building from the leech
-      let leech = 0;
-      for (const hex of this.map.withinDistance(sourceHex, LEECHING_DISTANCE)) {
-        leech = Math.max(leech, pl.buildingValue(this.map.grid.get(hex)));
-      }
-
-      // Do not use maxLeech() here, cuz taklons
-      pl.data.leechPossible = leech;
+      // Do not use PlayerData.maxLeech() here, cuz taklons
+      pl.data.leechPossible = this.leechPossible(sourceHex, (hex) => pl.buildingValue(this.map.grid.get(hex)));
       if (pl.canLeech()) {
         canLeechPlayers.push(pl);
       }
@@ -1319,6 +1313,14 @@ export default class Engine {
     } else {
       return this.beginLeechingPhase();
     }
+  }
+
+  leechPossible(sourceHex: GaiaHex, buildingValue: (GaiaHex) => number) {
+    let leech = 0;
+    for (const hex of this.map.withinDistance(sourceHex, LEECHING_DISTANCE)) {
+      leech = Math.max(leech, buildingValue(hex));
+    }
+    return leech;
   }
 
   advanceResearchAreaPhase(player: PlayerEnum, cost: string, field: ResearchField) {

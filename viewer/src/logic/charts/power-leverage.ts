@@ -1,14 +1,14 @@
-import { ExtractLog } from "./simple-charts";
-import { Building, Command, Faction, Player, PowerArea } from "@gaia-project/engine";
-import { ResourceSource } from "./resources";
+import { Building, Command, Faction, PowerArea } from "@gaia-project/engine";
 import { resourceCounter } from "./resource-counter";
+import { ResourceSource } from "./resources";
+import { ExtractLog } from "./simple-charts";
 
 const powerLeverage = "powerLeverage";
 
 export const powerLeverageSource: ResourceSource = {
   type: powerLeverage,
   label: "Power Leverage",
-  description: "Additional spend power due to Brainstone or Nevlas tokens with Planetary Institute",
+  description: "Additional spent power due to Brainstone (2 per use) or Nevlas tokens with Planetary Institute",
   weight: 0,
   color: "--tech-tile",
 };
@@ -59,6 +59,5 @@ export const extractPowerLeverage = ExtractLog.wrapper<ResourceSource>((want, so
         return nevlasPowerLeverage();
     }
   }
-  return ExtractLog.new(() => () => 0);
+  return ExtractLog.noop();
 });
-

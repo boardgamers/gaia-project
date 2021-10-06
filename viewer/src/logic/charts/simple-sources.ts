@@ -1,6 +1,6 @@
 import Engine, { AdvTechTile, Booster, LogEntry, Player, PlayerEnum } from "@gaia-project/engine";
 import { buildingsSourceFactory } from "./buildings";
-import { powerChargeSourceFactory } from "./charge";
+import { leechSourceFactory, powerChargeSourceFactory } from "./charge";
 import { ChartFactory } from "./chart-factory";
 import {
   ChartFamily,
@@ -31,6 +31,7 @@ export const simpleSourceFactories = (
   return [
     resourceSourceFactory,
     powerChargeSourceFactory,
+    leechSourceFactory,
     freeActionSourceFactory,
     boardActionSourceFactory,
     buildingsSourceFactory,

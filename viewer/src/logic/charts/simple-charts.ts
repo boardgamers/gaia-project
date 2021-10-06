@@ -4,13 +4,18 @@ import { CommandObject, parseCommands } from "../recent";
 import { ChartKind } from "./chart-factory";
 import { ChartFamily, ChartSource } from "./charts";
 
+export type ExtractChange<Source extends ChartSource<any>> = (
+  player: Player,
+  source: Source
+) => (entry: LogEntry, logIndex: number) => number;
+
 export type SimpleSourceFactory<Source extends ChartSource<any>> = {
   name: ChartFamily;
   playerSummaryLineChartTitle: string;
   sources: Source[];
   showWeightedTotal: boolean;
   initialValue?: (player: Player, source: Source) => number;
-  extractChange?: (player: Player, source: Source) => (entry: LogEntry, logIndex: number) => number;
+  extractChange?: ExtractChange<Source>;
   extractLog?: ExtractLog<Source>;
 };
 
@@ -56,6 +61,10 @@ export class ExtractLog<Source> {
         return a.cmd ? f(a) : 0;
       };
     });
+  }
+
+  static noop<Source>(): ExtractLog<Source> {
+    return this.new(() => () => 0);
   }
 
   static wrapper<Source>(supplier: (p: Player, s: Source) => ExtractLog<Source>): ExtractLog<Source> {

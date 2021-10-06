@@ -1,0 +1,81 @@
+{
+  "tableMeta": {
+    "weights": [1, 1, 1, 1, 1, 0, 0, 0],
+    "colors": [
+      {
+        "color": "--rt-terra"
+      },
+      {
+        "color": "--rt-nav"
+      },
+      {
+        "color": "--rt-int"
+      },
+      {
+        "color": "--rt-gaia"
+      },
+      {
+        "color": "--rt-eco"
+      },
+      {
+        "color": "--lost"
+      },
+      {
+        "color": "--rt-sci"
+      },
+      {
+        "color": "--tech-tile"
+      }
+    ],
+    "datasetMeta": {
+      "Itars (5)": {
+        "label": "Itars",
+        "total": 5,
+        "weightedTotal": 5
+      },
+      "Geoden (23)": {
+        "label": "Geoden",
+        "total": 23,
+        "weightedTotal": 23
+      },
+      "Taklons (17)": {
+        "label": "Taklons",
+        "total": 17,
+        "weightedTotal": 17
+      },
+      "Lantids (17)": {
+        "label": "Lantids",
+        "total": 17,
+        "weightedTotal": 17
+      }
+    }
+  },
+  "labels": [
+    "Leech 1 (free)",
+    "Leech 2 (1 VP)",
+    "Leech 3 (2 VP)",
+    "Leech 4 (3 VP)",
+    "Leech 5 (4 VP)",
+    "Declined Leech",
+    "Missed Leech (lack of VP)",
+    "Missed Leech (lack of tokens)"
+  ],
+  "datasets": [
+    {
+      "label": "Geoden (23)",
+      "data": [3, 8, 12, 0, 0, 0, 0, 0]
+    },
+    {
+      "label": "Taklons (17)",
+      "data": [1, 10, 6, 0, 0, 0, 0, 0]
+    },
+    {
+      "label": "Lantids (17)",
+      "data": [9, 2, 6, 0, 0, 0, 0, 0]
+    },
+    {
+      "label": "Itars (5)",
+      "data": [2, 0, 3, 0, 0, 0, 0, 0]
+    }
+  ]
+}
