@@ -200,15 +200,15 @@ export const finalScoringExtractLog: ExtractLog<ChartSource<FinalTile>> = Extrac
   (p, s) => Object.entries(finalScoringSources).find(([tile, extractLog]) => tile == s.type)[1].extractLog
 );
 
-export const finalScoringSourceFactory: SimpleSourceFactory<ChartSource<FinalTile>> = {
+export const finalScoringSourceFactory = (finalTiles: FinalTile[]): SimpleSourceFactory<ChartSource<FinalTile>> => ({
   name: "Final Scoring Conditions",
   showWeightedTotal: false,
   playerSummaryLineChartTitle: "All final Scoring Conditions of all players (not only the active ones)",
   extractLog: finalScoringExtractLog,
   sources: Object.keys(finalScoringSources).map((tile) => ({
     type: tile as FinalTile,
-    label: finalScoringSources[tile].name,
+    label: finalScoringSources[tile].name + (finalTiles.includes(tile as FinalTile) ? " (active)" : ""),
     color: finalScoringSources[tile].color,
     weight: 1,
   })),
-};
+});

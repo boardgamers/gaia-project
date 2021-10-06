@@ -44,7 +44,14 @@
       }
     }
   },
-  "labels": ["Gaia planets", "Planet Types", "Sectors", "Satellites", "Structures", "Structures in federations"],
+  "labels": [
+    "Gaia planets",
+    "Planet Types",
+    "Sectors",
+    "Satellites (active)",
+    "Structures",
+    "Structures in federations (active)"
+  ],
   "datasets": [
     {
       "label": "Geoden (14)",
