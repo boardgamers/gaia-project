@@ -216,7 +216,11 @@ export function logLength(engine: Engine) {
 }
 
 export function logSlice(engine: Engine, options?: { player?: number; start?: number; end?: number }) {
-  return { state: engine };
+  return {
+    state: engine, // to remove later
+    log: engine.moveHistory.slice(options?.start, options?.end),
+    availableMoves: engine.availableCommands, // todo: if end !== undefined, get the available moves from back then?
+  };
 }
 
 export function round(engine: Engine) {
