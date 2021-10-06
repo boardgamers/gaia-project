@@ -3,7 +3,8 @@ import {
   Command,
   EventSource,
   Faction,
-  LogEntryChanges, Player,
+  LogEntryChanges,
+  Player,
   PlayerData,
   Resource,
   Reward,
@@ -141,4 +142,3 @@ export const resourceCounter = (
         }
       });
   }, true);
-

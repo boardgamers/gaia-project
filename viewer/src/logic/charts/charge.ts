@@ -1,6 +1,20 @@
-import { Booster, Command, EventSource, ResearchField, Resource, TechPos } from "@gaia-project/engine";
+import {
+  Booster,
+  Building,
+  Command,
+  EventSource,
+  Faction,
+  GaiaHex,
+  MaxLeech,
+  ResearchField,
+  Resource,
+  Reward,
+  TechPos,
+  TechTile,
+} from "@gaia-project/engine";
 import { ChartSource, extractChanges } from "./charts";
-import { ExtractLog, SimpleSourceFactory } from "./simple-charts";
+import { resourceCounter } from "./resource-counter";
+import { ExtractChange, ExtractLog, ExtractLogArg, SimpleSourceFactory } from "./simple-charts";
 
 enum PowerChargeSource {
   burn = "burn",
@@ -10,6 +24,17 @@ enum PowerChargeSource {
   tech = "tech",
   booster = "booster",
   research = "research",
+}
+
+enum LeechSource {
+  leech1 = "leech1",
+  leech2 = "leech2",
+  leech3 = "leech3",
+  leech4 = "leech4",
+  leech5 = "leech5",
+  Declined = "declined",
+  MissedVp = "missedVp",
+  MissedCharge = "missedCharge",
 }
 
 const powerChargeSources: ChartSource<PowerChargeSource>[] = [
@@ -57,6 +82,57 @@ const powerChargeSources: ChartSource<PowerChargeSource>[] = [
   },
 ];
 
+const leechSources: ChartSource<LeechSource>[] = [
+  {
+    type: LeechSource.leech1,
+    label: "Leech 1 (free)",
+    color: "--rt-terra",
+    weight: 1,
+  },
+  {
+    type: LeechSource.leech2,
+    label: "Leech 2 (1 VP)",
+    color: "--rt-nav",
+    weight: 1,
+  },
+  {
+    type: LeechSource.leech3,
+    label: "Leech 3 (2 VP)",
+    color: "--rt-int",
+    weight: 1,
+  },
+  {
+    type: LeechSource.leech4,
+    label: "Leech 4 (3 VP)",
+    color: "--rt-gaia",
+    weight: 1,
+  },
+  {
+    type: LeechSource.leech5,
+    label: "Leech 5 (4 VP)",
+    color: "--rt-eco",
+    weight: 1,
+  },
+  {
+    type: LeechSource.Declined,
+    label: "Declined Leech",
+    color: "--lost",
+    weight: 0,
+  },
+  {
+    type: LeechSource.MissedVp,
+    label: "Missed Leech (lack of VP)",
+    color: "--rt-sci",
+    weight: 0,
+  },
+  {
+    type: LeechSource.MissedCharge,
+    label: "Missed Leech (lack of tokens)",
+    color: "--tech-tile",
+    weight: 0,
+  },
+];
+
 const powerChargeSourceMap = new Map<EventSource, PowerChargeSource>([
   [Command.ChooseIncome, PowerChargeSource.income],
   ...new Map(TechPos.values().map((p) => [p, PowerChargeSource.tech])),
@@ -64,12 +140,14 @@ const powerChargeSourceMap = new Map<EventSource, PowerChargeSource>([
   ...new Map(ResearchField.values().map((f) => [f, PowerChargeSource.research])),
 ]);
 
-const extractPowerCharge = (
+type GetPowerChargeDetails<Source> = (
   eventSource: EventSource,
-  source: PowerChargeSource,
+  source: Source,
   charge: number,
   logIndex: number
-): number => {
+) => number;
+
+const extractPowerCharge: GetPowerChargeDetails<PowerChargeSource> = (eventSource, source, charge, logIndex) => {
   const s = powerChargeSourceMap.get(eventSource);
   if (s) {
     return s == source ? charge : 0;
@@ -86,19 +164,105 @@ const extractPowerCharge = (
   return 0;
 };
 
+const extractLeech: GetPowerChargeDetails<LeechSource> = (eventSource, source, charge) => {
+  if (eventSource == Command.ChargePower) {
+    const have = leechSources[charge - 1].type;
+    if (have == source) {
+      return charge;
+    }
+    return 0;
+  }
+  return 0;
+};
+
+function isSpecialOperator(a: ExtractLogArg<any>) {
+  return a.data.tiles.techs[a.cmd.args[0]].tile == TechTile.Tech3;
+}
+
+export function leechOpportunities(wantSource: (maxLeech: MaxLeech) => number): ExtractLog<ChartSource<LeechSource>> {
+  let hasPlanetaryInstitute = false;
+  let hasSpecialOperator = false;
+  const buildings: Map<GaiaHex, Building> = new Map<GaiaHex, Building>();
+  return resourceCounter((want, a, data, callback) => {
+    callback();
+
+    if (a.cmd?.command == Command.Build) {
+      const building = a.cmd.args[0] as Building;
+      const location = a.cmd.args[1];
+      const map = a.data.map;
+      const { q, r } = map.parse(location);
+      const hex = map.grid.get({ q, r });
+
+      if (building == Building.PlanetaryInstitute) {
+        hasPlanetaryInstitute = true;
+      }
+
+      if (a.log.player == want.player) {
+        buildings.set(hex, building);
+      } else {
+        //check for missed leech
+        const leechPossible = a.data.leechPossible(hex, (h) =>
+          want.buildingValue(map.grid.get(h), {
+            building: buildings.get(h),
+            hasPlanetaryInstitute,
+            hasSpecialOperator,
+          })
+        );
+        const maxLeech = data.maxLeech(leechPossible, want.faction == Faction.Taklons && hasPlanetaryInstitute);
+        return Math.max(0, leechPossible - wantSource(maxLeech));
+      }
+    }
+
+    if (a.log.player == want.player) {
+      if (a.cmd?.command == Command.ChooseTechTile && isSpecialOperator(a)) {
+        hasSpecialOperator = true;
+      }
+      if (a.cmd?.command == Command.ChooseCoverTechTile && isSpecialOperator(a)) {
+        hasSpecialOperator = false;
+      }
+    }
+
+    return 0;
+  });
+}
+
+function powerChargeDetails(get: GetPowerChargeDetails<PowerChargeSource | LeechSource>): ExtractChange<any> {
+  return (wantPlayer, source) =>
+    extractChanges(wantPlayer.player, (player, eventSource, resource, round, change, logIndex) =>
+      resource == Resource.ChargePower && change > 0 ? get(eventSource, source.type, change, logIndex) : 0
+    );
+}
+
 export const powerChargeSourceFactory: SimpleSourceFactory<ChartSource<PowerChargeSource>> = {
   name: "Power Charges",
   playerSummaryLineChartTitle: "Power Charges of all players",
   showWeightedTotal: false,
-  // extractLog: statelessExtractLog(extractPowerCharge),
-  extractChange: (wantPlayer, source) =>
-    extractChanges(wantPlayer.player, (player, eventSource, resource, round, change, logIndex) =>
-      resource == Resource.ChargePower && change > 0
-        ? extractPowerCharge(eventSource, source.type, change, logIndex)
-        : 0
-    ),
+  extractChange: powerChargeDetails(extractPowerCharge),
   extractLog: ExtractLog.stateless((e) =>
     e.source.type == PowerChargeSource.burn && e.cmd.command == Command.BurnPower ? Number(e.cmd.args[0]) : 0
   ),
   sources: powerChargeSources,
+};
+
+export const leechSourceFactory: SimpleSourceFactory<ChartSource<LeechSource>> = {
+  name: "Power Leech",
+  playerSummaryLineChartTitle: "Power Leech of all players",
+  showWeightedTotal: true,
+  extractChange: powerChargeDetails(extractLeech),
+  extractLog: ExtractLog.wrapper((p, s) => {
+    switch (s.type) {
+      case LeechSource.MissedVp:
+        return leechOpportunities((maxLeech) => maxLeech.victoryPoints);
+      case LeechSource.MissedCharge:
+        return leechOpportunities((maxLeech) => maxLeech.charge);
+      case LeechSource.Declined:
+        return ExtractLog.stateless((a) =>
+          a.cmd?.command == Command.Decline
+            ? Reward.parse(a.cmd.args[0]).find((r) => r.type == Resource.ChargePower).count
+            : 0
+        );
+    }
+    return ExtractLog.noop();
+  }),
+  sources: leechSources,
 };

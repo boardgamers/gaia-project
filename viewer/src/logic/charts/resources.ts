@@ -5,8 +5,8 @@ import { boosterNames } from "../../data/boosters";
 import { resourceNames } from "../../data/resources";
 import { ChartKind } from "./chart-factory";
 import { ChartSource, extractChanges } from "./charts";
-import { commandCounter, ExtractLog, planetCounter, SimpleSourceFactory } from "./simple-charts";
 import { extractPowerLeverage, powerLeverageSource } from "./power-leverage";
+import { commandCounter, ExtractLog, planetCounter, SimpleSourceFactory } from "./simple-charts";
 
 const range = "range";
 

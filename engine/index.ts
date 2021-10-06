@@ -5,7 +5,7 @@ import Engine from "./src/engine";
 import Event, { EventSource } from "./src/events";
 import SpaceMap, { parseLocation } from "./src/map";
 import Player, { BuildWarning, MAX_SATELLITES } from "./src/player";
-import PlayerData, { BrainstoneDest, Power } from "./src/player-data";
+import PlayerData, { BrainstoneDest, MaxLeech, Power } from "./src/player-data";
 import researchTracks from "./src/research-tracks";
 import Reward from "./src/reward";
 import tiles from "./src/tiles";
@@ -71,6 +71,7 @@ export { planetNames, terraformingStepsRequired } from "./src/planets";
 export { finalScorings, roundScorings } from "./src/tiles/scoring";
 export {
   BrainstoneDest,
+  MaxLeech,
   BuildWarning,
   Player,
   PlayerData,

@@ -1,0 +1,81 @@
+{
+  "tableMeta": {
+    "weights": [1, 1, 1, 1, 1, 0, 0, 0],
+    "colors": [
+      {
+        "color": "--rt-terra"
+      },
+      {
+        "color": "--rt-nav"
+      },
+      {
+        "color": "--rt-int"
+      },
+      {
+        "color": "--rt-gaia"
+      },
+      {
+        "color": "--rt-eco"
+      },
+      {
+        "color": "--lost"
+      },
+      {
+        "color": "--rt-sci"
+      },
+      {
+        "color": "--tech-tile"
+      }
+    ],
+    "datasetMeta": {
+      "Gleens (29)": {
+        "label": "Gleens",
+        "total": 48,
+        "weightedTotal": 29
+      },
+      "Bal T'aks (23)": {
+        "label": "Bal T'aks",
+        "total": 43,
+        "weightedTotal": 23
+      },
+      "Bescods (44)": {
+        "label": "Bescods",
+        "total": 74,
+        "weightedTotal": 44
+      },
+      "Itars (36)": {
+        "label": "Itars",
+        "total": 56,
+        "weightedTotal": 36
+      }
+    }
+  },
+  "labels": [
+    "Leech 1 (free)",
+    "Leech 2 (1 VP)",
+    "Leech 3 (2 VP)",
+    "Leech 4 (3 VP)",
+    "Leech 5 (4 VP)",
+    "Declined Leech",
+    "Missed Leech (lack of VP)",
+    "Missed Leech (lack of tokens)"
+  ],
+  "datasets": [
+    {
+      "label": "Bescods (44)",
+      "data": [12, 26, 6, 0, 0, 24, 0, 6]
+    },
+    {
+      "label": "Itars (36)",
+      "data": [21, 6, 9, 0, 0, 20, 0, 0]
+    },
+    {
+      "label": "Gleens (29)",
+      "data": [4, 22, 3, 0, 0, 19, 0, 0]
+    },
+    {
+      "label": "Bal T'aks (23)",
+      "data": [7, 16, 0, 0, 0, 7, 0, 13]
+    }
+  ]
+}
