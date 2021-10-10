@@ -1000,7 +1000,10 @@ export default class Player extends EventEmitter {
             map
           )
         );
-      } else if (tree.minCost <= maxSatellites && maxSatellites >= 7 && combination.length >= 4) {
+      } else if (
+        tree.minCost <= maxSatellites &&
+        ((maxSatellites >= 7 && combination.length >= 4) || this.faction === Faction.Ivits)
+      ) {
         // In some cases the heuristic goes wrong, so we still offer the player the possibility to manually
         // specify the federation
         custom = true;
