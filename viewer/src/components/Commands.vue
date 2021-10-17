@@ -88,6 +88,7 @@ const titles = {
   [Command.ChooseFaction]: "Choose your faction",
   [Command.ChooseTechTile]: "Pick tech tile",
   [Command.ChooseCoverTechTile]: "Pick tech tile to cover",
+  [Command.ChooseFederationTile]: "Re-score federation",
   [Command.UpgradeResearch]: "Research",
 };
 
