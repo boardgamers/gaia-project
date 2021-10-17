@@ -44,6 +44,13 @@ type ExtractLogArgProcessor<Source> = (a: ExtractLogArg<Source>) => number;
 
 type ExtractLogFunction<Source> = (p: Player, s: Source) => ExtractLogArgProcessor<Source>;
 
+export type ExtractLogEntry<T extends ChartKind> = {
+  extractLog: ExtractLog<ChartSource<T>>;
+  commandFilter?: Command[];
+  sourceTypeFilter?: any[];
+  factionFilter?: Faction[];
+};
+
 export class ExtractLog<Source> {
   private readonly fn: ExtractLogFunction<Source>;
 
@@ -75,14 +82,14 @@ export class ExtractLog<Source> {
     return ExtractLog.new((p) => (a) => (a.cmd.faction == p.faction ? e(a) : 0));
   }
 
-  static mux<T extends ChartKind>(
-    entries: { extractLog: ExtractLog<ChartSource<T>>; commandFilter?: Command[] }[]
-  ): ExtractLog<ChartSource<T>> {
+  static mux<T extends ChartKind>(entries: ExtractLogEntry<T>[]): ExtractLog<ChartSource<T>> {
     return ExtractLog.wrapper((p, s) => {
-      const logs = entries.map((e) => ({
-        extractLog: e.extractLog.processor(p, s),
-        commandFilter: e.commandFilter,
-      }));
+      const logs = entries
+        .filter((e) => this.matches(e, s, p))
+        .map((e) => ({
+          extractLog: e.extractLog.processor(p, s),
+          commandFilter: e.commandFilter,
+        }));
 
       return ExtractLog.new<ChartSource<T>>(
         () => (a) => {
@@ -95,6 +102,13 @@ export class ExtractLog<Source> {
         true
       );
     });
+  }
+
+  private static matches<T extends ChartKind>(e: ExtractLogEntry<T>, s: ChartSource<T>, p: Player): boolean {
+    return (
+      (!e.sourceTypeFilter || e.sourceTypeFilter.includes(s.type)) &&
+      (!e.factionFilter || e.factionFilter.includes(p.faction))
+    );
   }
 
   processor(p: Player, s: Source): ExtractLogArgProcessor<Source> {

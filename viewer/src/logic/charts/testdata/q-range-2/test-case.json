@@ -1,5 +1,5 @@
 {
-  "families": ["Free actions", "Federations"],
+  "families": ["Free actions", "Federations", "Power Charges"],
   "options": {
     "auction": "bid-while-choosing",
     "layout": "standard"

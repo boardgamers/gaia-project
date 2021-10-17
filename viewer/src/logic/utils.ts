@@ -17,26 +17,30 @@ export type JsonTester = {
   createActualOutput: (data: Engine, subTest: string, testCase: any) => any;
 };
 
-export function runJsonTests(tester: JsonTester) {
-  const base = tester.baseDir + "/";
+export function runMoveHistoryTests(base: string, engineTest: (testCaseDir: string, testCase: any) => void) {
   fs.readdirSync(base).map((testCaseName) => {
     describe(testCaseName, () => {
       const testCaseDir = base + testCaseName;
       const testCase = JSON.parse(fs.readFileSync(testCaseDir + "/test-case.json").toString());
 
       console.log(testCaseName);
-      const engine = new Engine(testCase.moveHistory, testCase.options, null, false);
-
-      for (const subTest of tester.subTests(testCase, engine)) {
-        it(subTest, () => {
-          const path = `${testCaseDir}/${subTest.replace(/ /g, "-").toLowerCase()}.json`;
-          const actual = tester.createActualOutput(engine, subTest, testCase);
-          expect(actual).to.deep.equal(
-            JSON.parse(fs.readFileSync(path).toString()),
-            `${path}:\n${JSON.stringify(actual)}\n`
-          );
-        });
-      }
+      engineTest(testCaseDir, testCase);
     });
+  });
+}
+
+export function runJsonTests(tester: JsonTester) {
+  runMoveHistoryTests(tester.baseDir + "/", (testCaseDir: string, testCase: any) => {
+    const engine = new Engine(testCase.moveHistory, testCase.options, null, false);
+    for (const subTest of tester.subTests(testCase, engine)) {
+      it(subTest, () => {
+        const path = `${testCaseDir}/${subTest.replace(/ /g, "-").toLowerCase()}.json`;
+        const actual = tester.createActualOutput(engine, subTest, testCase);
+        expect(actual).to.deep.equal(
+          JSON.parse(fs.readFileSync(path).toString()),
+          `${path}:\n${JSON.stringify(actual)}\n`
+        );
+      });
+    }
   });
 }

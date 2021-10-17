@@ -1,15 +1,20 @@
 import {
   BrainstoneDest,
+  Building,
   Command,
   EventSource,
   Faction,
   LogEntryChanges,
+  Phase,
   Player,
   PlayerData,
   Resource,
   Reward,
   TechPos,
 } from "@gaia-project/engine";
+import { MoveTokens } from "@gaia-project/engine/src/player-data";
+import { sum } from "lodash";
+import { isGaiaMove } from "../../data/log";
 import { CommandObject } from "../recent";
 import { chartPlayerBoard } from "./charts";
 import { ExtractLog, ExtractLogArg } from "./simple-charts";
@@ -43,6 +48,25 @@ export class BrainstoneSimulator {
   }
 }
 
+export function parsePowerUsage(command: CommandObject): MoveTokens | null {
+  let offset = command.args.indexOf("using");
+  if (offset < 0) {
+    return null;
+  }
+  offset++;
+  const res = {
+    area1: 0,
+    area2: 0,
+    area3: 0,
+  } as MoveTokens;
+  const args = command.args;
+  const areas = (args.length - offset) / 2;
+  for (let i = 0; i < areas; i++) {
+    res[args[2 * i + offset].replace(":", "")] = Number(args[2 * i + offset + 1].replace(",", ""));
+  }
+  return res;
+}
+
 const commandEventSource = (c: CommandObject): EventSource[] => {
   switch (c.command) {
     case Command.Action:
@@ -56,32 +80,87 @@ const commandEventSource = (c: CommandObject): EventSource[] => {
   return [c.command as EventSource];
 };
 
+export function isLastChange(a: ExtractLogArg<any>) {
+  return !a.cmd || a.cmdIndex == a.allCommands.length - 1;
+}
+
+export function flattenChanges(changes: LogEntryChanges, source: EventSource): LogEntryChanges {
+  const values: Reward[] = Object.values(changes).flatMap((map) =>
+    Object.keys(map).map((k) => new Reward(map[k], k as Resource))
+  );
+  const c = {};
+  for (const r of Reward.merge(values)) {
+    c[r.type] = r.count;
+  }
+  return { [source]: c };
+}
+
 export const resourceCounter = (
-  processor: (want: Player, a: ExtractLogArg<any>, data: PlayerData, callback: () => void) => number
+  processor: (want: Player, a: ExtractLogArg<any>, data: PlayerData, simulateResources: () => void) => number
 ): ExtractLog<any> =>
   ExtractLog.new((want) => {
-    const data = new PlayerData();
-    data.loadPower(chartPlayerBoard(want));
-    const brainstoneSimulator = new BrainstoneSimulator(data);
+    const simulationPlayer = new Player();
+    const data = simulationPlayer.data;
+
+    const brainstoneSimulator = want.faction == Faction.Taklons ? new BrainstoneSimulator(data) : null;
 
     let changes: LogEntryChanges = null;
-    let processedChanges: Reward[] = [];
+    let processedChanges: Map<EventSource, Reward[]> = null;
 
-    const gainRewards = (rewards: { [resource in Resource]?: number }) => {
+    function addProcessedChange(change: Reward[], source: EventSource) {
+      if (processedChanges == null) {
+        processedChanges = new Map<EventSource, Reward[]>();
+      }
+      const last = processedChanges.get(source);
+      if (last) {
+        change = Reward.merge(last, change);
+      }
+      processedChanges.set(source, change);
+    }
+
+    const gainRewards = (source: EventSource, rewards: { [resource in Resource]?: number }) => {
+      const processed = processedChanges?.get(source);
       for (const type in rewards) {
-        const count = rewards[type];
+        let count = rewards[type];
 
-        const processed = processedChanges.find((p) => p.type == type && p.count == count);
-        if (processed) {
-          processedChanges.splice(processedChanges.indexOf(processed), 1);
-        } else {
-          data.gainRewards([new Reward(count, type as Resource)]);
+        const p = processed?.find((p) => p.type == type);
+        if (p) {
+          count -= p.count;
+        }
+
+        data.gainRewards([new Reward(count, type as Resource)]);
+      }
+    };
+
+    const payPowerUsage = (cmd: CommandObject, data: PlayerData, type: Resource, source?: EventSource) => {
+      const powerUsage = parsePowerUsage(cmd);
+      if (powerUsage) {
+        const r = [new Reward(-sum(Object.values(powerUsage)), type)];
+        data.gainRewards(r);
+        if (source) {
+          addProcessedChange(r, source);
         }
       }
     };
 
-    function consumeChanges(cmd: CommandObject) {
+    const consumeChanges = (cmd: CommandObject) => {
       const args = cmd.args;
+      //gain on top of changes
+      switch (cmd.command) {
+        case Command.Build:
+          const building = cmd.args[0] as Building;
+          if (building == Building.GaiaFormer) {
+            payPowerUsage(cmd, data, Resource.MoveTokenToGaiaArea);
+          } else if (building == Building.PlanetaryInstitute && want.faction == Faction.Nevlas) {
+            data.tokenModifier = 2;
+          }
+          break;
+        case Command.FormFederation:
+          payPowerUsage(cmd, data, Resource.GainToken, Command.FormFederation);
+          break;
+      }
+
+      //gain or use changes
       switch (cmd.command) {
         case Command.Spend:
           data.payCosts(Reward.parse(args[0]));
@@ -102,30 +181,43 @@ export const resourceCounter = (
         case Command.ChooseIncome:
           const r = Reward.parse(args[0]);
           data.gainRewards(r);
-          processedChanges.push(...r);
+          addProcessedChange(r, Command.ChooseIncome);
+          //all event sources might be reduced by this command
+          changes = flattenChanges(changes, Command.ChooseIncome);
           break;
         default:
           if (changes) {
             for (const eventSource of commandEventSource(cmd)) {
               const change = changes[eventSource];
               if (change) {
-                gainRewards(change);
+                gainRewards(eventSource, change);
                 delete changes[eventSource];
               }
             }
           }
       }
-    }
+    };
 
-    return (a) =>
+    let gaiaPhase = false;
+
+    const process = (a: ExtractLogArg<any>) =>
       processor(want, a, data, () => {
+        if (a.log.phase == Phase.RoundGaia) {
+          gaiaPhase = true;
+          return false;
+        }
+        if (gaiaPhase && !isGaiaMove(a.allCommands)) {
+          gaiaPhase = false;
+          simulationPlayer.gaiaPhase();
+        }
+
         if (a.log.player != want.player) {
           return;
         }
         if (a.cmdIndex == 0) {
           changes = {};
           Object.assign(changes, a.log.changes); //copy, so we can delete keys
-          brainstoneSimulator.setTurnCommands(a.allCommands ?? []);
+          brainstoneSimulator?.setTurnCommands(a.allCommands ?? []);
         }
 
         const cmd = a.cmd;
@@ -133,12 +225,18 @@ export const resourceCounter = (
           consumeChanges(cmd);
         }
 
-        if (!cmd || a.cmdIndex == a.allCommands.length - 1) {
+        if (isLastChange(a)) {
           for (const s in changes) {
-            gainRewards(changes[s]);
+            gainRewards(s as EventSource, changes[s]);
           }
           changes = null;
-          processedChanges = [];
+          processedChanges = null;
         }
+        return;
       });
+
+    const board = chartPlayerBoard(want);
+    simulationPlayer.loadBoard(board, 0, true);
+
+    return (a) => process(a);
   }, true);

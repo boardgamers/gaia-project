@@ -33,7 +33,7 @@
     "datasetMeta": {
       "Itars (116)": {
         "label": "Itars",
-        "total": 69,
+        "total": 65,
         "weightedTotal": 116
       },
       "Geoden (126)": {
@@ -79,7 +79,7 @@
     },
     {
       "label": "Itars (116)",
-      "data": [20, 16, 10, 2, 9, 4, 4, 4, 0]
+      "data": [20, 16, 10, 2, 5, 4, 4, 4, 0]
     }
   ]
 }

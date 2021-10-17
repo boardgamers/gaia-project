@@ -391,8 +391,11 @@ export default class Player extends EventEmitter {
       version: board?.version,
     };
 
-    this.board = factionBoard(this.faction, this.variant.board);
+    this.loadBoard(factionBoard(this.faction, this.variant.board), expansions, skipIncome);
+  }
 
+  loadBoard(board: FactionBoard, expansions = 0, skipIncome = false) {
+    this.board = board;
     if (!skipIncome) {
       this.loadTechs(expansions);
       this.loadEvents(this.board.income);
