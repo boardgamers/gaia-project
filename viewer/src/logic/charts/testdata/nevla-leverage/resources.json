@@ -33,7 +33,7 @@
     "datasetMeta": {
       "Nevlas (64)": {
         "label": "Nevlas",
-        "total": 48,
+        "total": 47,
         "weightedTotal": 64
       },
       "Terrans (69)": {
@@ -61,7 +61,7 @@
     },
     {
       "label": "Nevlas (64)",
-      "data": [15, 7, 6, 1, 7, 7, 2, 0, 3]
+      "data": [15, 7, 6, 1, 7, 7, 2, 0, 2]
     }
   ]
 }

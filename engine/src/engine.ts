@@ -396,7 +396,7 @@ export default class Engine {
       }
     } else {
       // Add new entry
-      this.advancedLog.push({
+      this.addAdvancedLog({
         player,
         move,
         changes: amount
@@ -406,6 +406,10 @@ export default class Engine {
           : undefined,
       });
     }
+  }
+
+  protected addAdvancedLog(entry: LogEntry) {
+    this.advancedLog.push(entry);
   }
 
   generateAvailableCommandsIfNeeded(subphase: SubPhase = null, data?: any): AvailableCommand[] {
@@ -1163,7 +1167,7 @@ export default class Engine {
 
   beginRoundStartPhase() {
     this.round += 1;
-    this.advancedLog.push({ round: this.round });
+    this.addAdvancedLog({ round: this.round });
     this.turnOrder = this.passedPlayers || this.turnOrderAfterSetupAuction;
     this.passedPlayers = [];
     this.currentPlayer = this.turnOrder[0];
@@ -1177,7 +1181,7 @@ export default class Engine {
 
   beginIncomePhase() {
     this.changePhase(Phase.RoundIncome);
-    this.advancedLog.push({ phase: Phase.RoundIncome });
+    this.addAdvancedLog({ phase: Phase.RoundIncome });
     this.tempTurnOrder = [...this.turnOrder];
 
     this.moveToNextPlayer(this.tempTurnOrder, { loop: false });
@@ -1195,7 +1199,7 @@ export default class Engine {
 
   beginGaiaPhase() {
     this.changePhase(Phase.RoundGaia);
-    this.advancedLog.push({ phase: Phase.RoundGaia });
+    this.addAdvancedLog({ phase: Phase.RoundGaia });
     this.tempTurnOrder = [...this.turnOrder];
 
     // transform Transdim planets into Gaia if gaiaformed
@@ -1259,7 +1263,7 @@ export default class Engine {
 
   finalScoringPhase() {
     this.changePhase(Phase.EndGame);
-    this.advancedLog.push({ phase: Phase.EndGame });
+    this.addAdvancedLog({ phase: Phase.EndGame });
     this.currentPlayer = this.tempCurrentPlayer = undefined;
     const allRankings = finalRankings(this.tiles.scorings.final, this.players);
 

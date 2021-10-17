@@ -28,24 +28,24 @@
       }
     ],
     "datasetMeta": {
-      "Itars (5)": {
-        "label": "Itars",
-        "total": 5,
+      "Ivits (71)": {
+        "label": "Ivits",
+        "total": 71,
         "weightedTotal": null
       },
-      "Geoden (27)": {
-        "label": "Geoden",
-        "total": 27,
+      "Terrans (99)": {
+        "label": "Terrans",
+        "total": 99,
         "weightedTotal": null
       },
-      "Taklons (27)": {
+      "Taklons (73)": {
         "label": "Taklons",
-        "total": 27,
+        "total": 73,
         "weightedTotal": null
       },
-      "Lantids (23)": {
-        "label": "Lantids",
-        "total": 23,
+      "Xenos (54)": {
+        "label": "Xenos",
+        "total": 54,
         "weightedTotal": null
       }
     }
@@ -53,20 +53,20 @@
   "labels": ["Free Leech", "Paid Leech", "Income", "Tech Tile", "Booster", "Research", "Terrans", "Ues Charged Tokens"],
   "datasets": [
     {
-      "label": "Geoden (27)",
-      "data": [11, 12, 4, 0, 0, 0, 0, 0]
+      "label": "Terrans (99)",
+      "data": [23, 12, 20, 8, 4, 6, 30, -4]
     },
     {
-      "label": "Taklons (27)",
-      "data": [8, 9, 0, 4, 4, 2, 0, 0]
+      "label": "Taklons (73)",
+      "data": [17, 13, 4, 20, 6, 13, 0, 0]
     },
     {
-      "label": "Lantids (23)",
-      "data": [12, 5, 4, 0, 0, 2, 0, 0]
+      "label": "Ivits (71)",
+      "data": [19, 19, 24, 0, 6, 6, 0, -3]
     },
     {
-      "label": "Itars (5)",
-      "data": [3, 2, 0, 0, 0, 0, 0, 0]
+      "label": "Xenos (54)",
+      "data": [25, 12, 8, 0, 8, 3, 0, -2]
     }
   ]
 }

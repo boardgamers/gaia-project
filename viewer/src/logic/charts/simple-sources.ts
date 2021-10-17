@@ -70,12 +70,12 @@ function simpleChartDetails<Source extends ChartSource<any>>(
 
     return logEntryProcessor((cmd, log, allCommands, cmdIndex) =>
       processor({
-        cmd: cmd,
-        allCommands: allCommands,
-        cmdIndex: cmdIndex,
+        cmd,
+        allCommands,
+        cmdIndex,
         source: s,
-        data: data,
-        log: log,
+        data,
+        log,
       })
     );
   }

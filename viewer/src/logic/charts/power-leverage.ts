@@ -1,9 +1,9 @@
-import { Building, Command, Faction, PowerArea } from "@gaia-project/engine";
+import { Building, Command, PowerArea } from "@gaia-project/engine";
 import { resourceCounter } from "./resource-counter";
 import { ResourceSource } from "./resources";
 import { ExtractLog } from "./simple-charts";
 
-const powerLeverage = "powerLeverage";
+export const powerLeverage = "powerLeverage";
 
 export const powerLeverageSource: ResourceSource = {
   type: powerLeverage,
@@ -13,23 +13,21 @@ export const powerLeverageSource: ResourceSource = {
   color: "--tech-tile",
 };
 
-function taklonsPowerLeverage(): ExtractLog<ResourceSource> {
-  return resourceCounter((want, a, data, callback) => {
-    if (a.log.player != want.player) {
-      return 0;
-    }
-    const old = data.brainstone;
-    callback();
-    if (old == PowerArea.Area3 && data.brainstone == PowerArea.Area1) {
-      return 2;
-    }
+export const taklonsPowerLeverage = resourceCounter((want, a, data, simulateResources) => {
+  if (a.log.player != want.player) {
     return 0;
-  });
-}
+  }
+  const old = data.brainstone;
+  simulateResources();
+  if (old == PowerArea.Area3 && data.brainstone == PowerArea.Area1) {
+    return 2;
+  }
+  return 0;
+});
 
-function nevlasPowerLeverage(): ExtractLog<ResourceSource> {
+export const nevlasPowerLeverage = (): ExtractLog<ResourceSource> => {
   let pi = false;
-  return resourceCounter((want, a, data, callback) => {
+  return resourceCounter((want, a, data, simulateResources) => {
     if (a.log.player != want.player) {
       return 0;
     }
@@ -40,7 +38,7 @@ function nevlasPowerLeverage(): ExtractLog<ResourceSource> {
     const area1 = data.power.area1;
     const area3 = data.power.area3;
 
-    callback();
+    simulateResources();
 
     if (pi && data.power.area3 < area3 && data.power.area1 > area1) {
       return Math.floor((area3 - data.power.area3) / 2);
@@ -48,16 +46,4 @@ function nevlasPowerLeverage(): ExtractLog<ResourceSource> {
 
     return 0;
   });
-}
-
-export const extractPowerLeverage = ExtractLog.wrapper<ResourceSource>((want, source) => {
-  if (source.type == powerLeverage) {
-    switch (want.faction) {
-      case Faction.Taklons:
-        return taklonsPowerLeverage();
-      case Faction.Nevlas:
-        return nevlasPowerLeverage();
-    }
-  }
-  return ExtractLog.noop();
-});
+};

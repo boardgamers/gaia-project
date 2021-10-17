@@ -6,6 +6,7 @@ import {
   Faction,
   GaiaHex,
   MaxLeech,
+  Phase,
   ResearchField,
   Resource,
   Reward,
@@ -13,17 +14,18 @@ import {
   TechTile,
 } from "@gaia-project/engine";
 import { ChartSource, extractChanges } from "./charts";
-import { resourceCounter } from "./resource-counter";
-import { ExtractChange, ExtractLog, ExtractLogArg, SimpleSourceFactory } from "./simple-charts";
+import { parsePowerUsage, resourceCounter } from "./resource-counter";
+import { ExtractChange, ExtractLog, ExtractLogArg, ExtractLogEntry, SimpleSourceFactory } from "./simple-charts";
 
 enum PowerChargeSource {
-  burn = "burn",
   freeLeech = "freeLeech",
   paidLeech = "paidLeech",
   income = "income",
   tech = "tech",
   booster = "booster",
   research = "research",
+  terrans = "terrans",
+  useChargedTokens = "useChargedTokens",
 }
 
 enum LeechSource {
@@ -38,12 +40,6 @@ enum LeechSource {
 }
 
 const powerChargeSources: ChartSource<PowerChargeSource>[] = [
-  {
-    type: PowerChargeSource.burn,
-    label: "Burn",
-    color: "--dig",
-    weight: 1,
-  },
   {
     type: PowerChargeSource.freeLeech,
     label: "Free Leech",
@@ -78,6 +74,19 @@ const powerChargeSources: ChartSource<PowerChargeSource>[] = [
     type: PowerChargeSource.research,
     label: "Research",
     color: "--rt-sci",
+    weight: 1,
+  },
+  {
+    type: PowerChargeSource.terrans,
+    label: "Terrans",
+    color: "--terra",
+    weight: 1,
+  },
+  {
+    type: PowerChargeSource.useChargedTokens,
+    label: "Ues Charged Tokens",
+    description: "Use tokens in area2 or area3 for gaia forming or forming federations",
+    color: "--current-round",
     weight: 1,
   },
 ];
@@ -183,8 +192,8 @@ export function leechOpportunities(wantSource: (maxLeech: MaxLeech) => number): 
   let hasPlanetaryInstitute = false;
   let hasSpecialOperator = false;
   const buildings: Map<GaiaHex, Building> = new Map<GaiaHex, Building>();
-  return resourceCounter((want, a, data, callback) => {
-    callback();
+  return resourceCounter((want, a, data, simulateResources) => {
+    simulateResources();
 
     if (a.cmd?.command == Command.Build) {
       const building = a.cmd.args[0] as Building;
@@ -233,14 +242,40 @@ function powerChargeDetails(get: GetPowerChargeDetails<PowerChargeSource | Leech
     );
 }
 
+export const terranChargeExtractLog: (sourceType: any) => ExtractLogEntry<any> = (sourceType: any) => ({
+  factionFilter: [Faction.Terrans],
+  sourceTypeFilter: [sourceType],
+  extractLog: resourceCounter((want, a, data, simulateResources) => {
+    simulateResources();
+
+    return a.log.phase == Phase.RoundGaia ? data.power.gaia : 0;
+  }),
+});
+
+export const useChargedTokensExtractLog: (sourceType: any) => ExtractLogEntry<any> = (sourceType: any) => ({
+  sourceTypeFilter: [sourceType],
+  extractLog: resourceCounter((want, a, data, simulateResources) => {
+    simulateResources();
+
+    if (a.cmd && want.player == a.log.player) {
+      const usage = parsePowerUsage(a.cmd);
+      if (usage) {
+        return -usage.area2 - 2 * usage.area3;
+      }
+    }
+    return 0;
+  }),
+});
+
 export const powerChargeSourceFactory: SimpleSourceFactory<ChartSource<PowerChargeSource>> = {
   name: "Power Charges",
   playerSummaryLineChartTitle: "Power Charges of all players",
   showWeightedTotal: false,
   extractChange: powerChargeDetails(extractPowerCharge),
-  extractLog: ExtractLog.stateless((e) =>
-    e.source.type == PowerChargeSource.burn && e.cmd.command == Command.BurnPower ? Number(e.cmd.args[0]) : 0
-  ),
+  extractLog: ExtractLog.mux([
+    terranChargeExtractLog(PowerChargeSource.terrans),
+    useChargedTokensExtractLog(PowerChargeSource.useChargedTokens),
+  ]),
   sources: powerChargeSources,
 };
 

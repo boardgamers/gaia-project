@@ -3,9 +3,10 @@ import { sum } from "lodash";
 import { boardActionNames } from "../../data/actions";
 import { boosterNames } from "../../data/boosters";
 import { resourceNames } from "../../data/resources";
+import { terranChargeExtractLog, useChargedTokensExtractLog } from "./charge";
 import { ChartKind } from "./chart-factory";
 import { ChartSource, extractChanges } from "./charts";
-import { extractPowerLeverage, powerLeverageSource } from "./power-leverage";
+import { nevlasPowerLeverage, powerLeverage, powerLeverageSource, taklonsPowerLeverage } from "./power-leverage";
 import { commandCounter, ExtractLog, planetCounter, SimpleSourceFactory } from "./simple-charts";
 
 const range = "range";
@@ -100,13 +101,21 @@ export const resourceSourceFactory: SimpleSourceFactory<ResourceSource> = {
     ),
   extractLog: ExtractLog.mux([
     {
+      sourceTypeFilter: [Resource.BurnToken],
       commandFilter: [Command.BurnPower],
-      extractLog: ExtractLog.stateless((e) =>
-        e.source.type == Resource.BurnToken || e.source.type == Resource.ChargePower ? Number(e.cmd.args[0]) : 0
-      ),
+      extractLog: ExtractLog.stateless((e) => Number(e.cmd.args[0])),
+    },
+    terranChargeExtractLog(Resource.ChargePower),
+    useChargedTokensExtractLog(Resource.ChargePower),
+    {
+      factionFilter: [Faction.Taklons],
+      sourceTypeFilter: [powerLeverage],
+      extractLog: taklonsPowerLeverage,
     },
     {
-      extractLog: extractPowerLeverage,
+      factionFilter: [Faction.Nevlas],
+      sourceTypeFilter: [powerLeverage],
+      extractLog: nevlasPowerLeverage(),
     },
   ]),
   sources: resourceSources,
