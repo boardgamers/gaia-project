@@ -856,11 +856,11 @@ export function deadEndButton(command: AvailableCommand<Command.DeadEnd>, undo: 
   });
 }
 
-export function federationTypeButtons(federations: Federation[], player: Player) {
+export function federationTypeButtons(federations: Federation[], player: Player, prefix = "") {
   return federations.map((fed, i) => {
     const federation = tiles.federations[fed];
     return textButton({
-      command: fed,
+      command: prefix + fed,
       label: `Federation ${i + 1}: ${federation}`,
       shortcuts: [federationData[fed].shortcut],
       warning: resourceWasteWarning(rewardWarnings(player, Reward.parse(federation))),
@@ -1168,13 +1168,7 @@ function commandButton(
     }
 
     case Command.ChooseFederationTile: {
-      return [
-        {
-          label: "Rescore federation",
-          command: Command.ChooseFederationTile,
-          buttons: federationTypeButtons(command.data.tiles, player),
-        },
-      ];
+      return federationTypeButtons(command.data.tiles, player, Command.ChooseFederationTile + " ");
     }
   }
 }
