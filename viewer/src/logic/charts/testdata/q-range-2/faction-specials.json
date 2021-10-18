@@ -1,0 +1,69 @@
+{
+  "tableMeta": {
+    "weights": null,
+    "colors": [
+      {
+        "color": "--oxide"
+      },
+      {
+        "color": "--swamp"
+      },
+      {
+        "color": "--swamp"
+      },
+      {
+        "color": "--terra"
+      },
+      {
+        "color": "--terra"
+      }
+    ],
+    "datasetMeta": {
+      "Ivits (12)": {
+        "label": "Ivits",
+        "total": 12,
+        "weightedTotal": null
+      },
+      "Terrans (60)": {
+        "label": "Terrans",
+        "total": 60,
+        "weightedTotal": null
+      },
+      "Taklons (21)": {
+        "label": "Taklons",
+        "total": 21,
+        "weightedTotal": null
+      },
+      "Xenos (8)": {
+        "label": "Xenos",
+        "total": 8,
+        "weightedTotal": null
+      }
+    }
+  },
+  "labels": [
+    "Ivits, Xenos: Federation Discount",
+    "Taklons: Brainstone",
+    "Taklons: Tokens from PI",
+    "Terrans: Resources from PI",
+    "Terrans: Tokens moved to Area 2"
+  ],
+  "datasets": [
+    {
+      "label": "Terrans (60)",
+      "data": [0, 0, 0, 30, 30]
+    },
+    {
+      "label": "Taklons (21)",
+      "data": [0, 18, 3, 0, 0]
+    },
+    {
+      "label": "Ivits (12)",
+      "data": [12, 0, 0, 0, 0]
+    },
+    {
+      "label": "Xenos (8)",
+      "data": [8, 0, 0, 0, 0]
+    }
+  ]
+}

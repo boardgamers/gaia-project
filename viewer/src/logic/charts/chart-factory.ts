@@ -3,6 +3,7 @@ import Engine, {
   AdvTechTilePos,
   Booster,
   Event,
+  Faction,
   Player,
   PlayerEnum,
   Resource,
@@ -213,10 +214,12 @@ export class ChartSetup {
     const finalTileName = (tile) =>
       statistics ? `Final ${String.fromCharCode(65 + tile)}` : finalScoringSources[finalTiles[tile]].name;
 
+    const factions: Faction[] = statistics ? Object.values(Faction) : data.players.map((p) => p.faction);
+
     this.chartFactories = new Map<ChartFamily, ChartFactory<any>>(
       vpChartFactoryEntries(finalTileName, vpAdvTechTiles, data, vpBoosters).concat(
         simpleChartFactoryEntries(
-          createSimpleSourceFactories(nonVpAdvTechTiles, allBoosters, statistics ? [] : finalTiles)
+          createSimpleSourceFactories(nonVpAdvTechTiles, allBoosters, statistics ? [] : finalTiles, factions)
         )
       )
     );

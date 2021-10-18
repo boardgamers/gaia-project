@@ -35,17 +35,17 @@
       },
       "Bal T'aks (23)": {
         "label": "Bal T'aks",
-        "total": 48,
+        "total": 63,
         "weightedTotal": 23
       },
       "Bescods (44)": {
         "label": "Bescods",
-        "total": 73,
+        "total": 89,
         "weightedTotal": 44
       },
       "Itars (36)": {
         "label": "Itars",
-        "total": 60,
+        "total": 83,
         "weightedTotal": 36
       }
     }
@@ -63,19 +63,19 @@
   "datasets": [
     {
       "label": "Bescods (44)",
-      "data": [12, 26, 6, 0, 0, 24, 0, 5]
+      "data": [12, 26, 6, 0, 0, 24, 3, 18]
+    },
+    {
+      "label": "Itars (36)",
+      "data": [21, 6, 9, 0, 0, 20, 0, 27]
+    },
+    {
+      "label": "Bal T'aks (23)",
+      "data": [7, 16, 0, 0, 0, 7, 0, 33]
     },
     {
       "label": "Gleens (29)",
       "data": [4, 22, 3, 0, 0, 19, 0, 13]
-    },
-    {
-      "label": "Itars (36)",
-      "data": [21, 6, 9, 0, 0, 20, 0, 4]
-    },
-    {
-      "label": "Bal T'aks (23)",
-      "data": [7, 16, 0, 0, 0, 7, 0, 18]
     }
   ]
 }

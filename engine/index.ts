@@ -65,6 +65,7 @@ export {
 } from "./src/enums";
 export { FactionBoard, factionBoard, factionVariantBoard } from "./src/faction-boards";
 export { factionPlanet } from "./src/factions";
+export { federationCost, parseFederationLocation } from "./src/federation";
 export { GaiaHex, GaiaHexData } from "./src/gaia-hex";
 export { applyChargePowers } from "./src/income";
 export { planetNames, terraformingStepsRequired } from "./src/planets";

@@ -1,5 +1,8 @@
-import { difference } from "lodash";
+import assert from "assert";
+import { difference, uniq } from "lodash";
+import { Faction } from "./enums";
 import { GaiaHex } from "./gaia-hex";
+import SpaceMap from "./map";
 
 export interface FederationInfo {
   hexes: GaiaHex[];
@@ -55,4 +58,29 @@ export function isOutclassedBy(fed: FederationInfo, comparison: FederationInfo) 
 
   // Not outclassed
   return false;
+}
+
+export function federationCost(faction: Faction, hasPlanetaryInstitute: boolean, federationCount: number) {
+  if (faction === Faction.Xenos && hasPlanetaryInstitute) {
+    return 6;
+  }
+  if (faction === Faction.Ivits) {
+    return 7 * (1 + federationCount);
+  }
+  return 7;
+}
+
+export function parseFederationLocation(location: string, map: SpaceMap) {
+  const coords = location.split(",").map((loc) => map.parse(loc));
+
+  for (const coord of coords) {
+    assert(map.grid.get(coord), `Coord ${coord.q}x${coord.r} is not part of the map`);
+  }
+
+  assert(coords.length <= 30, "The federation is too big, it is impossible to build with only 23 satellites");
+
+  const hexes: GaiaHex[] = uniq(coords.map((coord) => map.grid.get(coord)));
+
+  assert(hexes.length === coords.length, "There are repeating coordinates in the given federation");
+  return hexes;
 }

@@ -52,6 +52,7 @@ describe("Advanced log details", () => {
     runJsonTests({
       baseDir: "src/data/logTests",
       subTests: () => ["all", "recent"],
+      replay: false,
       createActualOutput: (data, scope) =>
         makeHistory(data, recentMoves(Player.Player1, data.advancedLog, data.moveHistory), scope === "recent"),
     });
