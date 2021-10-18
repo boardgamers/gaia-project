@@ -1,4 +1,4 @@
-import Engine, { AdvTechTile, Booster, FinalTile, LogEntry, Player, PlayerEnum } from "@gaia-project/engine";
+import Engine, { AdvTechTile, Booster, Faction, FinalTile, LogEntry, Player, PlayerEnum } from "@gaia-project/engine";
 import { buildingsSourceFactory } from "./buildings";
 import { leechSourceFactory, powerChargeSourceFactory } from "./charge";
 import { ChartFactory } from "./chart-factory";
@@ -11,6 +11,7 @@ import {
   playerLabel,
   resolveColor,
 } from "./charts";
+import { factionSourceFactory } from "./factions";
 import { federationsSourceFactory } from "./federations";
 import { finalScoringSourceFactory } from "./final-scoring";
 import { planetsSourceFactory } from "./plantets";
@@ -27,12 +28,14 @@ import { terraformingStepsSourceFactory } from "./terraforming";
 export const createSimpleSourceFactories = (
   advTechTiles: Map<AdvTechTile, string>,
   boosters: Booster[],
-  finalTiles: FinalTile[]
+  finalTiles: FinalTile[],
+  factions: Faction[]
 ): SimpleSourceFactory<ChartSource<any>>[] => {
   return [
     resourceSourceFactory,
     powerChargeSourceFactory,
     leechSourceFactory,
+    factionSourceFactory(factions),
     freeActionSourceFactory,
     boardActionSourceFactory,
     buildingsSourceFactory,

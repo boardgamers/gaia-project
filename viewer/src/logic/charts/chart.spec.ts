@@ -50,8 +50,11 @@ describe("Chart", () => {
   describe("chart data", () => {
     runJsonTests({
       baseDir: "src/logic/charts/testdata",
-      subTests: (testCase: any, engine: Engine) =>
-        testCase.families.flatMap((f) => (f == "all" ? new ChartSetup(engine).families : [f as ChartFamily])),
+      subTests: (testCase: any) =>
+        testCase.families.flatMap((f) =>
+          f == "all" ? new ChartSetup(new Engine(["init 2 foo"])).families : [f as ChartFamily]
+        ),
+      replay: true,
       createActualOutput: (engine, family, testCase: any) => {
         const config = new ChartSetup(engine, testCase.statistics).newBarChart(
           { type: "table", label: "Table", compact: false },

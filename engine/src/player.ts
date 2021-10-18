@@ -36,7 +36,7 @@ import {
 } from "./faction-boards";
 import { FactionBoardVariant } from "./faction-boards/types";
 import { factionPlanet } from "./factions";
-import { FederationInfo, isOutclassedBy } from "./federation";
+import { federationCost, FederationInfo, isOutclassedBy, parseFederationLocation } from "./federation";
 import { GaiaHex } from "./gaia-hex";
 import { IncomeSelection } from "./income";
 import SpaceMap from "./map";
@@ -1179,30 +1179,14 @@ export default class Player extends EventEmitter {
   }
 
   hexesForFederationLocation(location: string, map: SpaceMap): GaiaHex[] {
-    const coords = location.split(",").map((loc) => map.parse(loc));
-
-    for (const coord of coords) {
-      assert(map.grid.get(coord), `Coord ${coord.q}x${coord.r} is not part of the map`);
-    }
-
-    assert(coords.length <= 30, "The federation is too big, it is impossible to build with only 23 satellites");
-
-    const hexes: GaiaHex[] = uniq(coords.map((coord) => map.grid.get(coord)));
-
-    assert(hexes.length === coords.length, "There are repeating coordinates in the given federation");
+    const hexes = parseFederationLocation(location, map);
 
     // Extend to nearby buildings
     return this.addAdjacentBuildings(hexes, map);
   }
 
   get federationCost(): number {
-    if (this.faction === Faction.Xenos && this.data.hasPlanetaryInstitute()) {
-      return 6;
-    }
-    if (this.faction === Faction.Ivits) {
-      return 7 * (1 + this.data.federationCount);
-    }
-    return 7;
+    return federationCost(this.faction, this.data.hasPlanetaryInstitute(), this.data.federationCount);
   }
 
   possibleCombinationsForFederations(

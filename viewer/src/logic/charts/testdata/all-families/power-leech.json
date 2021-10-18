@@ -45,7 +45,7 @@
       },
       "Lantids (17)": {
         "label": "Lantids",
-        "total": 17,
+        "total": 18,
         "weightedTotal": 17
       }
     }
@@ -66,12 +66,12 @@
       "data": [3, 8, 12, 0, 0, 0, 0, 0]
     },
     {
-      "label": "Taklons (17)",
-      "data": [1, 10, 6, 0, 0, 0, 0, 0]
+      "label": "Lantids (17)",
+      "data": [9, 2, 6, 0, 0, 0, 0, 1]
     },
     {
-      "label": "Lantids (17)",
-      "data": [9, 2, 6, 0, 0, 0, 0, 0]
+      "label": "Taklons (17)",
+      "data": [1, 10, 6, 0, 0, 0, 0, 0]
     },
     {
       "label": "Itars (5)",

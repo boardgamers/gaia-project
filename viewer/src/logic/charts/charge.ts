@@ -1,21 +1,20 @@
 import {
   Booster,
-  Building,
   Command,
   EventSource,
   Faction,
-  GaiaHex,
   MaxLeech,
   Phase,
   ResearchField,
   Resource,
   Reward,
   TechPos,
-  TechTile,
 } from "@gaia-project/engine";
+import { getMapHex } from "../utils";
 import { ChartSource, extractChanges } from "./charts";
+import { BuildingPowerValueCounter } from "./federations";
 import { parsePowerUsage, resourceCounter } from "./resource-counter";
-import { ExtractChange, ExtractLog, ExtractLogArg, ExtractLogEntry, SimpleSourceFactory } from "./simple-charts";
+import { ExtractChange, ExtractLog, ExtractLogEntry, SimpleSourceFactory } from "./simple-charts";
 
 enum PowerChargeSource {
   freeLeech = "freeLeech",
@@ -184,50 +183,25 @@ const extractLeech: GetPowerChargeDetails<LeechSource> = (eventSource, source, c
   return 0;
 };
 
-function isSpecialOperator(a: ExtractLogArg<any>) {
-  return a.data.tiles.techs[a.cmd.args[0]].tile == TechTile.Tech3;
-}
-
 export function leechOpportunities(wantSource: (maxLeech: MaxLeech) => number): ExtractLog<ChartSource<LeechSource>> {
-  let hasPlanetaryInstitute = false;
-  let hasSpecialOperator = false;
-  const buildings: Map<GaiaHex, Building> = new Map<GaiaHex, Building>();
+  const counter = new BuildingPowerValueCounter(false);
+
   return resourceCounter((want, a, data, simulateResources) => {
     simulateResources();
 
-    if (a.cmd?.command == Command.Build) {
-      const building = a.cmd.args[0] as Building;
-      const location = a.cmd.args[1];
-      const map = a.data.map;
-      const { q, r } = map.parse(location);
-      const hex = map.grid.get({ q, r });
-
-      if (building == Building.PlanetaryInstitute) {
-        hasPlanetaryInstitute = true;
-      }
-
-      if (a.log.player == want.player) {
-        buildings.set(hex, building);
-      } else {
-        //check for missed leech
-        const leechPossible = a.data.leechPossible(hex, (h) =>
-          want.buildingValue(map.grid.get(h), {
-            building: buildings.get(h),
-            hasPlanetaryInstitute,
-            hasSpecialOperator,
-          })
-        );
-        const maxLeech = data.maxLeech(leechPossible, want.faction == Faction.Taklons && hasPlanetaryInstitute);
-        return Math.max(0, leechPossible - wantSource(maxLeech));
-      }
+    if (a.log.player == want.player && a.cmd) {
+      counter.playerCommand(a.cmd, a.data);
     }
 
-    if (a.log.player == want.player) {
-      if (a.cmd?.command == Command.ChooseTechTile && isSpecialOperator(a)) {
-        hasSpecialOperator = true;
-      }
-      if (a.cmd?.command == Command.ChooseCoverTechTile && isSpecialOperator(a)) {
-        hasSpecialOperator = false;
+    if (a.cmd?.command == Command.Build) {
+      if (a.log.player != want.player) {
+        //check for missed leech
+        const map = a.data.map;
+        const leechPossible = a.data.leechPossible(getMapHex(map, a.cmd.args[1]), (h) =>
+          counter.buildingValue(h, map, want)
+        );
+        const maxLeech = data.maxLeech(leechPossible, want.faction == Faction.Taklons && counter.hasPlanetaryInstitute);
+        return Math.max(0, leechPossible - wantSource(maxLeech));
       }
     }
 
@@ -284,20 +258,23 @@ export const leechSourceFactory: SimpleSourceFactory<ChartSource<LeechSource>> =
   playerSummaryLineChartTitle: "Power Leech of all players",
   showWeightedTotal: true,
   extractChange: powerChargeDetails(extractLeech),
-  extractLog: ExtractLog.wrapper((p, s) => {
-    switch (s.type) {
-      case LeechSource.MissedVp:
-        return leechOpportunities((maxLeech) => maxLeech.victoryPoints);
-      case LeechSource.MissedCharge:
-        return leechOpportunities((maxLeech) => maxLeech.charge);
-      case LeechSource.Declined:
-        return ExtractLog.stateless((a) =>
-          a.cmd?.command == Command.Decline
-            ? Reward.parse(a.cmd.args[0]).find((r) => r.type == Resource.ChargePower).count
-            : 0
-        );
-    }
-    return ExtractLog.noop();
-  }),
+  extractLog: ExtractLog.mux([
+    {
+      sourceTypeFilter: [LeechSource.MissedVp],
+      extractLog: leechOpportunities((maxLeech) => maxLeech.victoryPoints),
+    },
+    {
+      sourceTypeFilter: [LeechSource.MissedCharge],
+      extractLog: leechOpportunities((maxLeech) => maxLeech.charge),
+    },
+    {
+      sourceTypeFilter: [LeechSource.Declined],
+      extractLog: ExtractLog.stateless((a) =>
+        a.cmd?.command == Command.Decline
+          ? Reward.parse(a.cmd.args[0]).find((r) => r.type == Resource.ChargePower).count
+          : 0
+      ),
+    },
+  ]),
   sources: leechSources,
 };

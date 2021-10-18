@@ -13,19 +13,20 @@ export const powerLeverageSource: ResourceSource = {
   color: "--tech-tile",
 };
 
-export const taklonsPowerLeverage = resourceCounter((want, a, data, simulateResources) => {
-  if (a.log.player != want.player) {
+export const taklonsPowerLeverage: (factor: number) => ExtractLog<any> = (factor: number) =>
+  resourceCounter((want, a, data, simulateResources) => {
+    if (a.log.player != want.player) {
+      return 0;
+    }
+    const old = data.brainstone;
+    simulateResources();
+    if (old == PowerArea.Area3 && data.brainstone == PowerArea.Area1) {
+      return factor;
+    }
     return 0;
-  }
-  const old = data.brainstone;
-  simulateResources();
-  if (old == PowerArea.Area3 && data.brainstone == PowerArea.Area1) {
-    return 2;
-  }
-  return 0;
-});
+  });
 
-export const nevlasPowerLeverage = (): ExtractLog<ResourceSource> => {
+export const nevlasPowerLeverage = (): ExtractLog<any> => {
   let pi = false;
   return resourceCounter((want, a, data, simulateResources) => {
     if (a.log.player != want.player) {
@@ -41,7 +42,7 @@ export const nevlasPowerLeverage = (): ExtractLog<ResourceSource> => {
     simulateResources();
 
     if (pi && data.power.area3 < area3 && data.power.area1 > area1) {
-      return Math.floor((area3 - data.power.area3) / 2);
+      return area3 - data.power.area3;
     }
 
     return 0;

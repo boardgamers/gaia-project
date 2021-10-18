@@ -2,7 +2,7 @@ import { AdvTechTile, AdvTechTilePos, Command, ResearchField, TechTile, TechTile
 import { researchNames } from "../../data/research";
 import { advancedTechTileNames, baseTechTileNames } from "../../data/tech-tiles";
 import { ChartSource, initialResearch } from "./charts";
-import { commandCounter, ExtractLog, SimpleSourceFactory } from "./simple-charts";
+import { commandCounterArg0EqualsSource, ExtractLog, SimpleSourceFactory } from "./simple-charts";
 
 const techTileExtractLog: ExtractLog<ChartSource<TechTile | AdvTechTile>> = ExtractLog.stateless((e) => {
   if (e.cmd.command == Command.ChooseTechTile) {
@@ -49,7 +49,7 @@ export const researchSourceFactory: SimpleSourceFactory<ChartSource<ResearchFiel
   playerSummaryLineChartTitle: "Research steps of all players",
   showWeightedTotal: false,
   initialValue: (player, source) => initialResearch(player).get(source.type) ?? 0,
-  extractLog: commandCounter(Command.UpgradeResearch),
+  extractLog: commandCounterArg0EqualsSource(Command.UpgradeResearch),
   sources: Object.keys(researchNames).map((field) => {
     return {
       type: field as ResearchField,

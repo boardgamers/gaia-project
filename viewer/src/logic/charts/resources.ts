@@ -7,7 +7,7 @@ import { terranChargeExtractLog, useChargedTokensExtractLog } from "./charge";
 import { ChartKind } from "./chart-factory";
 import { ChartSource, extractChanges } from "./charts";
 import { nevlasPowerLeverage, powerLeverage, powerLeverageSource, taklonsPowerLeverage } from "./power-leverage";
-import { commandCounter, ExtractLog, planetCounter, SimpleSourceFactory } from "./simple-charts";
+import { commandCounterArg0EqualsSource, ExtractLog, planetCounter, SimpleSourceFactory } from "./simple-charts";
 
 const range = "range";
 
@@ -110,7 +110,7 @@ export const resourceSourceFactory: SimpleSourceFactory<ResourceSource> = {
     {
       factionFilter: [Faction.Taklons],
       sourceTypeFilter: [powerLeverage],
-      extractLog: taklonsPowerLeverage,
+      extractLog: taklonsPowerLeverage(2),
     },
     {
       factionFilter: [Faction.Nevlas],
@@ -157,7 +157,7 @@ export const boardActionSourceFactory: SimpleSourceFactory<ChartSource<BoardActi
   name: "Board actions",
   playerSummaryLineChartTitle: `Board actions taken by all players`,
   showWeightedTotal: false,
-  extractLog: commandCounter(Command.Action),
+  extractLog: commandCounterArg0EqualsSource(Command.Action),
   sources: BoardAction.values().map((action) => ({
     type: action,
     label: boardActionNames[action].name,
@@ -170,7 +170,7 @@ export const boosterSourceFactory = (boosters: Booster[]): SimpleSourceFactory<C
   name: "Boosters",
   showWeightedTotal: false,
   playerSummaryLineChartTitle: "Boosters taken by all players",
-  extractLog: commandCounter(Command.Pass, Command.ChooseRoundBooster),
+  extractLog: commandCounterArg0EqualsSource(Command.Pass, Command.ChooseRoundBooster),
   sources: boosters.map((b) => ({
     type: b,
     label: boosterNames[b].name,

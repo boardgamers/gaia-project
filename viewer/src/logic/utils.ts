@@ -13,8 +13,9 @@ export function phaseBeforeSetupBuilding(data: Engine): boolean {
 
 export type JsonTester = {
   baseDir: string;
-  subTests: (testCase: any, engine: Engine) => string[];
+  subTests: (testCase: any) => string[];
   createActualOutput: (data: Engine, subTest: string, testCase: any) => any;
+  replay: boolean;
 };
 
 export function runMoveHistoryTests(base: string, engineTest: (testCaseDir: string, testCase: any) => void) {
@@ -31,10 +32,13 @@ export function runMoveHistoryTests(base: string, engineTest: (testCaseDir: stri
 
 export function runJsonTests(tester: JsonTester) {
   runMoveHistoryTests(tester.baseDir + "/", (testCaseDir: string, testCase: any) => {
-    const engine = new Engine(testCase.moveHistory, testCase.options, null, false);
-    for (const subTest of tester.subTests(testCase, engine)) {
+    let engine: Engine = null;
+    for (const subTest of tester.subTests(testCase)) {
       it(subTest, () => {
         const path = `${testCaseDir}/${subTest.replace(/ /g, "-").toLowerCase()}.json`;
+        if (engine == null) {
+          engine = new Engine(testCase.moveHistory, testCase.options, null, tester.replay);
+        }
         const actual = tester.createActualOutput(engine, subTest, testCase);
         expect(actual).to.deep.equal(
           JSON.parse(fs.readFileSync(path).toString()),
@@ -43,4 +47,9 @@ export function runJsonTests(tester: JsonTester) {
       });
     }
   });
+}
+
+export function getMapHex(map, location: string) {
+  const { q, r } = map.parse(location);
+  return map.grid.get({ q, r });
 }

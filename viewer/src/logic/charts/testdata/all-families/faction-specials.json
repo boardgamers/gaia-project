@@ -1,0 +1,65 @@
+{
+  "tableMeta": {
+    "weights": null,
+    "colors": [
+      {
+        "color": "--volcanic"
+      },
+      {
+        "color": "--ice"
+      },
+      {
+        "color": "--swamp"
+      },
+      {
+        "color": "--swamp"
+      }
+    ],
+    "datasetMeta": {
+      "Itars (0)": {
+        "label": "Itars",
+        "total": 0,
+        "weightedTotal": null
+      },
+      "Geoden (3)": {
+        "label": "Geoden",
+        "total": 3,
+        "weightedTotal": null
+      },
+      "Taklons (7)": {
+        "label": "Taklons",
+        "total": 7,
+        "weightedTotal": null
+      },
+      "Lantids (6)": {
+        "label": "Lantids",
+        "total": 6,
+        "weightedTotal": null
+      }
+    }
+  },
+  "labels": [
+    "Geoden, Lantids: Special Knowledge",
+    "Itars: Tech Tiles",
+    "Taklons: Brainstone",
+    "Taklons: Tokens from PI"
+  ],
+  "datasets": [
+    {
+      "label": "Taklons (7)",
+      "data": [0, 0, 7, 0]
+    },
+    {
+      "label": "Lantids (6)",
+      "data": [6, 0, 0, 0]
+    },
+    {
+      "label": "Geoden (3)",
+      "data": [3, 0, 0, 0]
+    },
+    {
+      "label": "Itars (0)",
+      "data": [0, 0, 0, 0]
+    }
+  ]
+}
