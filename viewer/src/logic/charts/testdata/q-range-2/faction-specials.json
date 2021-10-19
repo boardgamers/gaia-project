@@ -19,9 +19,9 @@
       }
     ],
     "datasetMeta": {
-      "Ivits (12)": {
+      "Ivits (5)": {
         "label": "Ivits",
-        "total": 12,
+        "total": 5,
         "weightedTotal": null
       },
       "Terrans (60)": {
@@ -58,12 +58,12 @@
       "data": [0, 18, 3, 0, 0]
     },
     {
-      "label": "Ivits (12)",
-      "data": [12, 0, 0, 0, 0]
-    },
-    {
       "label": "Xenos (8)",
       "data": [8, 0, 0, 0, 0]
+    },
+    {
+      "label": "Ivits (5)",
+      "data": [5, 0, 0, 0, 0]
     }
   ]
 }
