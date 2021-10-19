@@ -1,5 +1,7 @@
 import { Building, Command, Faction, factionPlanet, Planet, planetNames, Resource, Reward } from "@gaia-project/engine";
+import { orderBy } from "lodash";
 import { factionName } from "../../data/factions";
+import { deltaCounter } from "../utils";
 import { terranChargeExtractLog } from "./charge";
 import { ChartSource } from "./charts";
 import { federationDiscount, GetFederationBonusArg } from "./federations";
@@ -24,7 +26,7 @@ type FactionSpecialEntries = {
 type FactionSpecial = XOR<FactionSpecialEntries, FactionSpecialEntry & { label: string }>;
 
 function spentResources(resource: Resource) {
-  return ExtractLog.stateless((a) =>
+  return ExtractLog.filterPlayer((a) =>
     a.cmd?.command == Command.Spend && a.cmd.args[0].endsWith(resource) ? Reward.parse(a.cmd.args[0])[0].count : 0
   );
 }
@@ -60,7 +62,13 @@ const specials: FactionSpecial[] = [
       {
         faction: Faction.Ivits,
         description: "Power value saved for forming federations due to space stations",
-        extractLog: federationDiscount((a) => a.spaceStations),
+        extractLog: ExtractLog.wrapper((p) => {
+          const counter = deltaCounter(0);
+          return federationDiscount(
+            (a) => a.spaceStations,
+            (value) => counter(value)
+          );
+        }),
       },
       {
         faction: Faction.Xenos,
@@ -85,12 +93,12 @@ const specials: FactionSpecial[] = [
       {
         faction: Faction.Geodens,
         description: "Knowledge from Guest Mines",
-        extractLog: ExtractLog.statelessChanges((a) => a.log.changes?.geodens?.k ?? 0),
+        extractLog: ExtractLog.filterPlayerChanges((a) => a.log.changes?.geodens?.k ?? 0),
       },
       {
         faction: Faction.Lantids,
         description: "Knowledge from building a mine on a new planet type",
-        extractLog: ExtractLog.statelessChanges((a) => a.log.changes?.lantids?.k ?? 0),
+        extractLog: ExtractLog.filterPlayerChanges((a) => a.log.changes?.lantids?.k ?? 0),
       },
       {
         faction: Faction.Nevlas,
@@ -118,7 +126,7 @@ const specials: FactionSpecial[] = [
     faction: Faction.Gleens,
     label: "Special VPs",
     description: "Knowledge from building mines on gaia planets",
-    extractLog: ExtractLog.statelessChanges((a) => a.log.changes?.gleens?.vp ?? 0),
+    extractLog: ExtractLog.filterPlayerChanges((a) => a.log.changes?.gleens?.vp ?? 0),
   },
   {
     faction: Faction.HadschHallas,
@@ -130,7 +138,7 @@ const specials: FactionSpecial[] = [
     faction: Faction.Itars,
     label: "Tech Tiles",
     description: "Tech tiles taken in gaia phase",
-    extractLog: ExtractLog.stateless((a) => (a.cmd.args[0] == "4tg" ? 1 : 0)),
+    extractLog: ExtractLog.filterPlayer((a) => (a.cmd.args[0] == "4tg" ? 1 : 0)),
   },
   {
     faction: Faction.Nevlas,
@@ -148,7 +156,7 @@ const specials: FactionSpecial[] = [
     faction: Faction.Taklons,
     label: "Tokens from PI",
     description: "Power tokens gained from charging when the PI is built",
-    extractLog: ExtractLog.statelessChanges((a) => a.log.changes?.charge?.t ?? 0),
+    extractLog: ExtractLog.filterPlayerChanges((a) => a.log.changes?.charge?.t ?? 0),
   },
   {
     faction: Faction.Terrans,
@@ -194,12 +202,15 @@ export const factionSourceFactory = (factions: Faction[]): SimpleSourceFactory<C
         }))
       )
     ),
-    sources: entries.map((s) => ({
-      type: s.label,
-      label: `${s.entries.map((e) => factionName(e.faction)).join(", ")}: ${s.label}`,
-      description: s.entries.map((e) => `${factionName(e.faction)}: ${e.description}`).join(", "),
-      color: `--${planetNames[factionPlanet(s.entries[0].faction)]}`,
-      weight: 1,
-    })),
+    sources: orderBy(
+      entries.map((s) => ({
+        type: s.label,
+        label: `${s.entries.map((e) => factionName(e.faction)).join(", ")}: ${s.label}`,
+        description: s.entries.map((e) => `${factionName(e.faction)}: ${e.description}`).join(", "),
+        color: `--${planetNames[factionPlanet(s.entries[0].faction)]}`,
+        weight: 1,
+      })),
+      "label"
+    ),
   };
 };

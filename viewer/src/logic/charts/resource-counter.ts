@@ -239,4 +239,4 @@ export const resourceCounter = (
     simulationPlayer.loadBoard(board, 0, true);
 
     return (a) => process(a);
-  }, true);
+  });

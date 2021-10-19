@@ -1,7 +1,6 @@
 import Engine, {
   Building,
   Command,
-  Faction,
   Federation,
   federationCost,
   federations,
@@ -79,18 +78,16 @@ export type GetFederationBonusArg = {
   spaceStations: number;
 };
 
-export const federationDiscount = (getBonus: (arg: GetFederationBonusArg) => number): ExtractLog<ChartSource<any>> =>
-  ExtractLog.new((p, s) => {
+export const federationDiscount = (
+  getBonus: (arg: GetFederationBonusArg) => number,
+  scorer = (value: number) => value
+): ExtractLog<ChartSource<any>> =>
+  ExtractLog.wrapper((p, s) => {
     const counter = new BuildingPowerValueCounter(true);
     let federationCount = 0;
     let spaceStations = 0;
-    let last = 0;
 
-    return (a) => {
-      if (a.log.player != p.player) {
-        return 0;
-      }
-
+    return ExtractLog.filterPlayer((a) => {
       counter.playerCommand(a.cmd, a.data);
 
       if (a.cmd.command === Command.Special && a.cmd.args[0] == Resource.SpaceStation) {
@@ -105,24 +102,18 @@ export const federationDiscount = (getBonus: (arg: GetFederationBonusArg) => num
         federationCount++;
 
         const bonus = getBonus({ cost, powerValue, counter, hexes, player, spaceStations });
-        let value = Math.max(0, bonus + cost - powerValue);
-        if (p.faction == Faction.Ivits) {
-          const l = last;
-          last = value;
-          value -= l;
-        }
-        return value;
+        return scorer(Math.max(0, bonus + cost - powerValue));
       }
 
       return 0;
-    };
+    });
   });
 
 export const federationsSourceFactory: SimpleSourceFactory<ChartSource<Federation>> = {
   name: "Federations",
   showWeightedTotal: false,
   playerSummaryLineChartTitle: "Federations of all players",
-  extractLog: ExtractLog.stateless((e) => {
+  extractLog: ExtractLog.filterPlayer((e) => {
     const type = e.source.type;
     if (e.cmd.command == Command.FormFederation) {
       return (e.cmd.args[1] as Federation) == type ? 1 : 0;

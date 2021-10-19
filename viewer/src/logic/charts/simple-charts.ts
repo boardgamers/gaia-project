@@ -58,28 +58,20 @@ export class ExtractLog<Source> {
     this.fn = fn;
   }
 
-  static new<Source>(fn: ExtractLogFunction<Source>, processEmptyCommands = false): ExtractLog<Source> {
-    if (processEmptyCommands) {
-      return new ExtractLog<Source>(fn);
-    }
-    return new ExtractLog<Source>((p, s) => {
-      const f = fn(p, s);
-      return (a) => {
-        return a.cmd ? f(a) : 0;
-      };
-    });
+  static new<Source>(fn: ExtractLogFunction<Source>): ExtractLog<Source> {
+    return new ExtractLog<Source>(fn);
   }
 
   static wrapper<Source>(supplier: (p: Player, s: Source) => ExtractLog<Source>): ExtractLog<Source> {
-    return ExtractLog.new((p, s) => supplier(p, s).processor(p, s), true);
+    return ExtractLog.new((p, s) => supplier(p, s).processor(p, s));
   }
 
-  static stateless<Source>(e: (a: ExtractLogArg<Source>) => number): ExtractLog<Source> {
-    return ExtractLog.new((p) => (a) => (a.cmd.faction == p.faction ? e(a) : 0));
+  static filterPlayer<Source>(e: (a: ExtractLogArg<Source>) => number): ExtractLog<Source> {
+    return ExtractLog.new((p) => (a) => (a.cmd && a.cmd.faction == p.faction ? e(a) : 0));
   }
 
-  static statelessChanges<Source>(e: (a: ExtractLogArg<Source>) => number): ExtractLog<Source> {
-    return ExtractLog.stateless((a) => (a.cmdIndex == 0 ? e(a) : 0));
+  static filterPlayerChanges<Source>(e: (a: ExtractLogArg<Source>) => number): ExtractLog<Source> {
+    return ExtractLog.filterPlayer((a) => (a.cmdIndex == 0 ? e(a) : 0));
   }
 
   static mux<T extends ChartKind>(entries: ExtractLogEntry<T>[]): ExtractLog<ChartSource<T>> {
@@ -94,22 +86,20 @@ export class ExtractLog<Source> {
           factionFilter: e.factionFilter,
         }));
 
-      return ExtractLog.new<ChartSource<T>>(
-        () => (a) => {
-          return sum(
-            logs
-              .filter(
-                (e) =>
-                  (!e.commandFilter || (a.cmd && e.commandFilter.includes(a.cmd.command))) &&
-                  (!a.log.player || this.matchesFaction(e.factionFilter, a.data.player(a.log.player)))
-              )
-              .map((e) => e.extractLog(a))
-          );
-        },
-        true
-      );
+      return ExtractLog.new<ChartSource<T>>(() => (a) => {
+        return sum(
+          logs
+            .filter(
+              (e) =>
+                (!e.commandFilter || (a.cmd && e.commandFilter.includes(a.cmd.command))) &&
+                (!a.log.player || this.matchesFaction(e.factionFilter, a.data.player(a.log.player)))
+            )
+            .map((e) => e.extractLog(a))
+        );
+      });
     });
   }
+
   private static matchesFaction<T extends ChartKind>(filter: Faction[] | null, p: Player) {
     return !filter || (p && filter.includes(p.faction));
   }
@@ -133,11 +123,13 @@ export function commandCounter<T extends ChartKind>(
   arg0: string,
   scorer: (a: ExtractLogArg<any>) => number = () => 1
 ): ExtractLog<ChartSource<T>> {
-  return ExtractLog.stateless((a) => (command == a.cmd.command && a.cmd.args[0] == arg0 ? scorer(a) : 0));
+  return ExtractLog.filterPlayer((a) => (command == a.cmd.command && a.cmd.args[0] == arg0 ? scorer(a) : 0));
 }
 
 export function commandCounterArg0EqualsSource<T extends ChartKind>(...want: Command[]): ExtractLog<ChartSource<T>> {
-  return ExtractLog.stateless((a) => (want.includes(a.cmd.command) && (a.cmd.args[0] as any) == a.source.type ? 1 : 0));
+  return ExtractLog.filterPlayer((a) =>
+    want.includes(a.cmd.command) && (a.cmd.args[0] as any) == a.source.type ? 1 : 0
+  );
 }
 
 export function planetCounter<T extends ChartKind>(
@@ -153,6 +145,9 @@ export function planetCounter<T extends ChartKind>(
   return ExtractLog.new((want) => {
     return (e) => {
       const cmd = e.cmd;
+      if (!cmd) {
+        return 0;
+      }
       const data = e.data;
       const source = e.source;
       switch (cmd.command) {

@@ -103,7 +103,7 @@ export const resourceSourceFactory: SimpleSourceFactory<ResourceSource> = {
     {
       sourceTypeFilter: [Resource.BurnToken],
       commandFilter: [Command.BurnPower],
-      extractLog: ExtractLog.stateless((e) => Number(e.cmd.args[0])),
+      extractLog: ExtractLog.filterPlayer((e) => Number(e.cmd.args[0])),
     },
     terranChargeExtractLog(Resource.ChargePower),
     useChargedTokensExtractLog(Resource.ChargePower),
@@ -129,7 +129,7 @@ export const freeActionSourceFactory: SimpleSourceFactory<FreeActionSource> = {
   extractLog: ExtractLog.mux([
     {
       commandFilter: [Command.Spend],
-      extractLog: ExtractLog.stateless((e) =>
+      extractLog: ExtractLog.filterPlayer((e) =>
         sum(
           Reward.merge(Reward.parse(e.cmd.args[2]))
             .filter((i) => i.type == e.source.type)
