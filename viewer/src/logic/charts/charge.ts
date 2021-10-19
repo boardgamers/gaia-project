@@ -269,7 +269,7 @@ export const leechSourceFactory: SimpleSourceFactory<ChartSource<LeechSource>> =
     },
     {
       sourceTypeFilter: [LeechSource.Declined],
-      extractLog: ExtractLog.stateless((a) =>
+      extractLog: ExtractLog.filterPlayer((a) =>
         a.cmd?.command == Command.Decline
           ? Reward.parse(a.cmd.args[0]).find((r) => r.type == Resource.ChargePower).count
           : 0

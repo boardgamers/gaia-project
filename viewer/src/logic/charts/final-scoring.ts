@@ -34,7 +34,7 @@ class FinalScoringSource extends FinalScoringTableRow {
   extractLog: FinalScoringExtractLog;
 }
 
-const structureFed: FinalScoringExtractLog = ExtractLog.new((wantPlayer) => {
+const structureFed: FinalScoringExtractLog = ExtractLog.wrapper((wantPlayer) => {
   let map = null;
 
   function hasBuildingValue(h: GaiaHex) {
@@ -50,10 +50,7 @@ const structureFed: FinalScoringExtractLog = ExtractLog.new((wantPlayer) => {
     return wantPlayer.addBuildingToNearbyFederation(building, hex, map).filter((h) => hasBuildingValue(h)).length;
   }
 
-  return (e) => {
-    if (e.cmd.faction != wantPlayer.faction) {
-      return 0;
-    }
+  return ExtractLog.filterPlayer((e) => {
     if (map == null) {
       map = new SpaceMap();
       map.grid = new Grid<GaiaHex>();
@@ -78,10 +75,10 @@ const structureFed: FinalScoringExtractLog = ExtractLog.new((wantPlayer) => {
         return addBuilding(e.cmd.args[0], Building.Mine);
     }
     return 0;
-  };
+  });
 });
 
-const satellites: FinalScoringExtractLog = ExtractLog.new((wantPlayer) => {
+const satellites: FinalScoringExtractLog = ExtractLog.wrapper((wantPlayer) => {
   let last = 0;
 
   function subtractLast(s: number) {
@@ -93,11 +90,7 @@ const satellites: FinalScoringExtractLog = ExtractLog.new((wantPlayer) => {
     return result;
   }
 
-  return (e) => {
-    if (e.cmd.faction != wantPlayer.faction) {
-      return 0;
-    }
-
+  return ExtractLog.filterPlayer((e) => {
     switch (e.cmd.command) {
       case Command.FormFederation:
         const hexes = wantPlayer.hexesForFederationLocation(e.cmd.args[0], e.data.map);
@@ -107,7 +100,7 @@ const satellites: FinalScoringExtractLog = ExtractLog.new((wantPlayer) => {
         return building == Building.SpaceStation ? 1 : 0;
     }
     return 0;
-  };
+  });
 });
 
 const planetTypes: FinalScoringExtractLog = ExtractLog.wrapper(() => {

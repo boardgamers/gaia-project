@@ -4,7 +4,7 @@ import { advancedTechTileNames, baseTechTileNames } from "../../data/tech-tiles"
 import { ChartSource, initialResearch } from "./charts";
 import { commandCounterArg0EqualsSource, ExtractLog, SimpleSourceFactory } from "./simple-charts";
 
-const techTileExtractLog: ExtractLog<ChartSource<TechTile | AdvTechTile>> = ExtractLog.stateless((e) => {
+const techTileExtractLog: ExtractLog<ChartSource<TechTile | AdvTechTile>> = ExtractLog.filterPlayer((e) => {
   if (e.cmd.command == Command.ChooseTechTile) {
     const pos = e.cmd.args[0] as TechTilePos | AdvTechTilePos;
     const tile = e.data.tiles.techs[pos].tile;

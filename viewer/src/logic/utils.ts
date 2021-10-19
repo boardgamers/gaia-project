@@ -53,3 +53,13 @@ export function getMapHex(map, location: string) {
   const { q, r } = map.parse(location);
   return map.grid.get({ q, r });
 }
+
+export const deltaCounter: (initial: number) => (val: number) => number = (initial: number) => {
+  let last = 0;
+
+  return (val: number) => {
+    const ret = val - last;
+    last = val;
+    return ret;
+  };
+};

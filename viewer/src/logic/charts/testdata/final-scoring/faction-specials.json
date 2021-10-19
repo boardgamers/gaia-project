@@ -3,9 +3,6 @@
     "weights": null,
     "colors": [
       {
-        "color": "--oxide"
-      },
-      {
         "color": "--desert"
       },
       {
@@ -13,6 +10,9 @@
       },
       {
         "color": "--ice"
+      },
+      {
+        "color": "--oxide"
       },
       {
         "color": "--terra"
@@ -45,10 +45,10 @@
     }
   },
   "labels": [
-    "Ivits: Federation Discount",
     "Gleens: Gaia Planet (settled directly)",
     "Gleens: Special VPs",
     "Itars: Tech Tiles",
+    "Ivits: Federation Discount",
     "Terrans: Resources from PI",
     "Terrans: Tokens moved to Area 2"
   ],
@@ -59,15 +59,15 @@
     },
     {
       "label": "Gleens (16)",
-      "data": [0, 6, 10, 0, 0, 0]
+      "data": [6, 10, 0, 0, 0, 0]
     },
     {
       "label": "Itars (7)",
-      "data": [0, 0, 0, 7, 0, 0]
+      "data": [0, 0, 7, 0, 0, 0]
     },
     {
       "label": "Ivits (6)",
-      "data": [6, 0, 0, 0, 0, 0]
+      "data": [0, 0, 0, 6, 0, 0]
     }
   ]
 }

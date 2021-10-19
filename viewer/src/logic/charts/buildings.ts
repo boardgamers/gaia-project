@@ -6,7 +6,7 @@ export const buildingsSourceFactory: SimpleSourceFactory<ChartSource<Building>> 
   name: "Buildings",
   playerSummaryLineChartTitle: "Power value of all buildings of all players (1-3 base power value)",
   showWeightedTotal: true,
-  extractLog: ExtractLog.stateless((e) => {
+  extractLog: ExtractLog.filterPlayer((e) => {
     if (e.cmd.command == Command.Build) {
       const t = e.cmd.args[0] as Building;
       if (e.source.type == t) {
