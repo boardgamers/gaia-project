@@ -1,0 +1,73 @@
+{
+  "tableMeta": {
+    "weights": null,
+    "colors": [
+      {
+        "color": "--oxide"
+      },
+      {
+        "color": "--desert"
+      },
+      {
+        "color": "--desert"
+      },
+      {
+        "color": "--ice"
+      },
+      {
+        "color": "--terra"
+      },
+      {
+        "color": "--terra"
+      }
+    ],
+    "datasetMeta": {
+      "Gleens (16)": {
+        "label": "Gleens",
+        "total": 16,
+        "weightedTotal": null
+      },
+      "Terrans (60)": {
+        "label": "Terrans",
+        "total": 60,
+        "weightedTotal": null
+      },
+      "Itars (7)": {
+        "label": "Itars",
+        "total": 7,
+        "weightedTotal": null
+      },
+      "Ivits (6)": {
+        "label": "Ivits",
+        "total": 6,
+        "weightedTotal": null
+      }
+    }
+  },
+  "labels": [
+    "Ivits: Federation Discount",
+    "Gleens: Gaia Planet (settled directly)",
+    "Gleens: Special VPs",
+    "Itars: Tech Tiles",
+    "Terrans: Resources from PI",
+    "Terrans: Tokens moved to Area 2"
+  ],
+  "datasets": [
+    {
+      "label": "Terrans (60)",
+      "data": [0, 0, 0, 0, 30, 30]
+    },
+    {
+      "label": "Gleens (16)",
+      "data": [0, 6, 10, 0, 0, 0]
+    },
+    {
+      "label": "Itars (7)",
+      "data": [0, 0, 0, 7, 0, 0]
+    },
+    {
+      "label": "Ivits (6)",
+      "data": [6, 0, 0, 0, 0, 0]
+    }
+  ]
+}
