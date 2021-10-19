@@ -130,7 +130,7 @@ const specials: FactionSpecial[] = [
     faction: Faction.Itars,
     label: "Tech Tiles",
     description: "Tech tiles taken in gaia phase",
-    extractLog: ExtractLog.statelessChanges((a) => (a.cmd.args[0] == "4tg" ? 1 : 0)),
+    extractLog: ExtractLog.stateless((a) => (a.cmd.args[0] == "4tg" ? 1 : 0)),
   },
   {
     faction: Faction.Nevlas,
