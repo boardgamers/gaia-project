@@ -44,7 +44,7 @@
           <li>
             <a
               href="https://images.zmangames.com/filer_public/ce/89/ce890bfd-227e-4249-a52a-976bc5f20d19/en_gaia_rulebook_lo.pdf"
-            >Rules for the base game</a
+              >Rules for the base game</a
             >
           </li>
           <li><a href="https://www.boardgamers.space/page/gaia-project/auction">Rules for auction</a></li>
@@ -60,10 +60,12 @@
         <ul>
           <li>Charts: new "Power Leech" chart.</li>
           <li>Charts: new "Faction Specials" chart.</li>
-          <li>Charts: Terran special abilities is counted as charge, using tokens in area2 or area3 reduces charge, burn
+          <li>
+            Charts: Terran special abilities is counted as charge, using tokens in area2 or area3 reduces charge, burn
             doesn't count as charge at all.
           </li>
           <li>Show first letter of faction in faction wheel.</li>
+          <li>Show power value and lantids guest mine in space map tooltip.</li>
         </ul>
         <h5>2021-09-25</h5>
         <ul>

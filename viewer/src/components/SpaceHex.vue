@@ -1,10 +1,6 @@
 <template>
   <g :id="`${hex}`">
-    <title>
-      Coordinates: {{ hex }}{{ hex.data.planet !== "e" ? `&#10;Planet: ${planetName(hex.data.planet)}` : ""
-      }}{{ hex.data.building ? `&#10;Building: ${buildingName(hex.data.building, hex.data.player)}` : ""
-      }}{{ cost(hex) ? `&#10;Cost: ${cost(hex)}` : "" }}{{ warning(hex) ? `&#10;Warning: ${warning(hex)}` : "" }}
-    </title>
+    <title v-text="tooltip" />
     <use xlink:href="#space-hex" :class="polygonClasses(hex)" @click="hexClick(hex)" />
     <text class="sector-name" v-if="isCenter">
       {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
@@ -47,10 +43,11 @@
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import Engine, {
-  Building as BuildingEnum,
+  Faction,
   factionPlanet,
   GaiaHex,
   Planet as PlanetEnum,
+  Player,
   SpaceMap as ISpaceMap,
 } from "@gaia-project/engine";
 import { corners } from "../graphics/hex";
@@ -148,24 +145,16 @@ export default class SpaceHex extends Vue {
     }
   }
 
-  faction(player) {
-    if (player === undefined || player === "wild") {
-      return player; // Wild will get recognized as purple, for trade tokens. A bit of a hack
-    }
-    return this.$store.state.data.players[player].faction;
+  faction(player): Faction {
+    return player != null ? this.player(player).faction : null;
   }
 
-  planet(player) {
+  player(player): Player {
+    return this.$store.state.data.players[player];
+  }
+
+  planet(player): PlanetEnum {
     return factionPlanet(this.faction(player));
-  }
-
-  buildingName(building: BuildingEnum, player) {
-    const name = factionName(this.faction(player));
-    return `${buildingName(building, this.faction(player))} (${name})`;
-  }
-
-  planetName(planet: PlanetEnum) {
-    return planetNames[planet];
   }
 
   get highlightedHexes(): HighlightHexData | null {
@@ -194,6 +183,41 @@ export default class SpaceHex extends Vue {
 
   private context() {
     return this.$store.state.context;
+  }
+
+  get tooltip(): string {
+    const hex = this.hex;
+    const data = hex.data;
+    const planet = data.planet !== "e" ? `Planet: ${planetNames[data.planet]}` : null;
+    const c = this.cost(hex);
+    const cost = c ? `Cost: ${c}` : null;
+
+    const buildingLabel = (player: Player) => {
+      const value = player.buildingValue(hex);
+      const fedValue = player.buildingValue(hex, {federation: true});
+      let powerValue = `Power Value: ${value}`;
+      if (value != fedValue) {
+        powerValue += ` (For Federations: ${fedValue})`;
+      }
+
+      const faction = player.faction;
+      return `Building: ${buildingName(hex.buildingOf(player.player), faction)} (${(factionName(faction))}, ${powerValue})`;
+    };
+
+    let building = null;
+    let guestBuilding = null;
+    if (data.building) {
+      building = buildingLabel(this.player(data.player));
+      if (data.additionalMine != null) {
+        guestBuilding = buildingLabel(this.player(data.additionalMine));
+      }
+    }
+    const w = this.warning(hex);
+    const warning = w ? `Warning: ${w}` : null;
+    const coord = `Coordinates: ${hex}`;
+    return [
+      coord, planet, building, guestBuilding, cost, warning,
+    ].filter(s => s).join(" ");
   }
 }
 </script>
