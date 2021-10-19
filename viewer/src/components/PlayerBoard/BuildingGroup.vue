@@ -139,13 +139,14 @@ export default class BuildingGroup extends Vue {
   }
 
   tooltip(i: number) {
-    const b = this.board.buildings[this.building];
+    const building = this.building;
+    const b = this.board.buildings[building];
     const cost = this.discount
       ? b.cost.map((c) => `${c.count - this.discount}${c.type}`).join(", ")
       : b.cost.join(", ") || "~";
     const isolatedCost = b.isolatedCost ? "\n Isolated cost: " + (b.isolatedCost.join(", ") || "~") : "";
-    const income = this.building === BuildingEnum.GaiaFormer ? "" : "\n " + (this.resources(i, true).join(", ") || "~");
-    return "Cost: " + cost + isolatedCost + income;
+    const income = building === BuildingEnum.GaiaFormer ? "" : "\n " + (this.resources(i, true).join(", ") || "~");
+    return `Cost: ${cost}${isolatedCost}${income} Power Value: ${this.player.buildingValue(null, {building})}`;
   }
 
   get offset() {

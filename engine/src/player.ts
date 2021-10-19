@@ -768,7 +768,7 @@ export default class Player extends EventEmitter {
   }
 
   buildingValue(
-    hex: GaiaHex,
+    hex?: GaiaHex,
     options?: {
       federation?: boolean;
       building?: Building;
@@ -797,7 +797,7 @@ export default class Player extends EventEmitter {
 
     const hasPlanetaryInstitute = options?.hasPlanetaryInstitute ?? this.data.hasPlanetaryInstitute();
     const addedBescods =
-      this.faction === Faction.Bescods && hasPlanetaryInstitute && hex.data.planet === Planet.Titanium ? 1 : 0;
+      this.faction === Faction.Bescods && hasPlanetaryInstitute && hex?.data?.planet === Planet.Titanium ? 1 : 0;
 
     return baseValue + addedBescods;
   }
