@@ -1,6 +1,7 @@
 import Engine, {
   Building,
   Command,
+  Faction,
   Federation,
   federationCost,
   federations,
@@ -83,8 +84,13 @@ export const federationDiscount = (getBonus: (arg: GetFederationBonusArg) => num
     const counter = new BuildingPowerValueCounter(true);
     let federationCount = 0;
     let spaceStations = 0;
+    let last = 0;
 
     return (a) => {
+      if (a.log.player != p.player) {
+        return 0;
+      }
+
       counter.playerCommand(a.cmd, a.data);
 
       if (a.cmd.command === Command.Special && a.cmd.args[0] == Resource.SpaceStation) {
@@ -98,7 +104,14 @@ export const federationDiscount = (getBonus: (arg: GetFederationBonusArg) => num
         const powerValue = sum(hexes.map((h) => counter.buildingValue(h, map, player)));
         federationCount++;
 
-        return Math.max(0, getBonus({ cost, powerValue, counter, hexes, player, spaceStations }) + cost - powerValue);
+        const bonus = getBonus({ cost, powerValue, counter, hexes, player, spaceStations });
+        let value = Math.max(0, bonus + cost - powerValue);
+        if (p.faction == Faction.Ivits) {
+          const l = last;
+          last = value;
+          value -= l;
+        }
+        return value;
       }
 
       return 0;
