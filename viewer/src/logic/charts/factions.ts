@@ -98,7 +98,11 @@ const specials: FactionSpecial[] = [
       {
         faction: Faction.Lantids,
         description: "Knowledge from building a mine on a new planet type",
-        extractLog: ExtractLog.filterPlayerChanges((a) => a.log.changes?.lantids?.k ?? 0),
+        extractLog: ExtractLog.filterPlayerChanges((a) => {
+          const changes = a.log.changes as any;
+          //old games have null for lantids special knowledge
+          return changes?.lantids?.k ?? changes?.undefined?.k ?? 0;
+        }),
       },
       {
         faction: Faction.Nevlas,
