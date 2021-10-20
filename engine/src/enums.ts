@@ -127,6 +127,7 @@ export enum Condition {
   Satellite = "sat",
   StructureValue = "stvalue",
   StructureFedValue = "stfedvalue",
+  Culture = "culture",
   ResearchLevels = "a",
   HighestResearchLevel = "L",
   PlanetsWithTradeToken = "import",
@@ -535,6 +536,8 @@ export enum FinalTile {
   Gaia = "gaia",
   Sector = "sector",
   Satellite = "satellite",
+  TradeTokens = "trade",
+  Culture = "culture",
 }
 
 export namespace FinalTile {

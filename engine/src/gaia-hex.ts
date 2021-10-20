@@ -1,7 +1,7 @@
 import assert from "assert";
 import { Hex } from "hexagrid";
-import { stdBuildingValue } from "./buildings";
 import { Building, Planet, Player, TradeToken } from "./enums";
+import { stdBuildingValue } from "./buildings";
 
 export interface GaiaHexData {
   planet: Planet;

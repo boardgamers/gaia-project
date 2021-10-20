@@ -1,6 +1,5 @@
 import assert from "assert";
 import { isEqual, range, set, uniq } from "lodash";
-import { sortBy, uniq, sum, set } from "lodash";
 import Player from "./player";
 import shuffleSeed from "shuffle-seed";
 import { version } from "../package.json";
@@ -44,7 +43,6 @@ import { factionVariantBoard, latestVariantVersion } from "./faction-boards";
 import { remainingFactions } from "./factions";
 import { GaiaHex } from "./gaia-hex";
 import SpaceMap, { MapConfiguration } from "./map";
-import Player from "./player";
 import PlayerData, { BrainstoneDest, MoveTokens, powerLogString } from "./player-data";
 import * as researchTracks from "./research-tracks";
 import Reward from "./reward";
@@ -52,7 +50,6 @@ import federations from "./tiles/federations";
 import { roundScorings } from "./tiles/scoring";
 import { isAdvanced } from "./tiles/techs";
 import { isVersionOrLater } from "./utils";
-import { range, isEqual } from "lodash";
 
 // const ISOLATED_DISTANCE = 3;
 const LEECHING_DISTANCE = 2;
@@ -127,11 +124,11 @@ export interface LogEntry {
 
 const replaceRegex = new RegExp(
   `\\b((${Command.Pass}|${Building.GaiaFormer}|${Command.FormFederation} [^ ]+|${Command.UpgradeResearch}) ?([^. ]+)?)(\\.|$)`,
-  "g"
+  "g",
 );
 
 const powerRegex = new RegExp(
-  " \\((\\d+(,B)?/\\d+(,B)?/\\d+(,B)?/\\d+(,B)?) ⇒ \\d+(,B)?/\\d+(,B)?/\\d+(,B)?/\\d+(,B)?\\)"
+  " \\((\\d+(,B)?/\\d+(,B)?/\\d+(,B)?/\\d+(,B)?) ⇒ \\d+(,B)?/\\d+(,B)?/\\d+(,B)?/\\d+(,B)?\\)",
 );
 
 export function createMoveToShow(move: string, p: PlayerData, executeMove: () => void): string {
@@ -261,11 +258,13 @@ export default class Engine {
   leechSources: Array<{
     player: PlayerEnum;
     coordinates: string;
+    tradeDelivery?: PlayerEnum;
   }> = [];
   // When ongoing leech, remember the source in case
   lastLeechSource: {
     player: PlayerEnum;
     coordinates: string;
+    tradeDelivery?: PlayerEnum;
   };
 
   // All moves
@@ -406,8 +405,8 @@ export default class Engine {
         move,
         changes: amount
           ? {
-              [source]: { [resource]: amount },
-            }
+            [source]: { [resource]: amount },
+          }
           : undefined,
       });
     }
@@ -447,7 +446,7 @@ export default class Engine {
     this.players.push(player);
 
     player.data.on(`gain-${Resource.TechTile}`, (count, source) =>
-      this.processNextMove(SubPhase.ChooseTechTile, null, source === BoardAction.Qic1)
+      this.processNextMove(SubPhase.ChooseTechTile, null, source === BoardAction.Qic1),
     );
     player.data.on(`gain-${Resource.SpaceShip}`, (count: number) => {
       player.data.shipsToPlace = count;
@@ -462,7 +461,7 @@ export default class Engine {
       if (this.findAvailableCommand(player.player, Command.MoveShip)) {
         assert(
           player.data.qicUsedToBoostShip === 0 && count === 2,
-          "Impossible to gain range more than once during move ship phase"
+          "Impossible to gain range more than once during move ship phase",
         );
         player.data.qicUsedToBoostShip += 1;
         this.processNextMove(SubPhase.MoveShip);
@@ -471,7 +470,7 @@ export default class Engine {
       }
     });
     player.data.on(`gain-${Resource.RescoreFederation}`, () =>
-      this.processNextMove(SubPhase.RescoreFederationTile, null, true)
+      this.processNextMove(SubPhase.RescoreFederationTile, null, true),
     );
     player.data.on(`gain-${Resource.PISwap}`, () => this.processNextMove(SubPhase.PISwap, null, true));
     player.data.on(`gain-${Resource.SpaceStation}`, () => this.processNextMove(SubPhase.SpaceStation, null, true));
@@ -480,7 +479,7 @@ export default class Engine {
       this.processNextMove(SubPhase.UpgradeResearch, null, false);
     });
     player.data.on(`gain-${Resource.UpgradeLowest}`, () =>
-      this.processNextMove(SubPhase.UpgradeResearch, { bescods: true }, true)
+      this.processNextMove(SubPhase.UpgradeResearch, { bescods: true }, true),
     );
     player.data.on(`gain-${Resource.MoveShips}`, () => {
       player.resetTemporaryVariables();
@@ -527,10 +526,10 @@ export default class Engine {
       Resource.GainToken,
     ]) {
       player.data.on(`gain-${resource}`, (amount: number, source: EventSource) =>
-        this.log(player.player, resource, amount, source)
+        this.log(player.player, resource, amount, source),
       );
       player.data.on(`pay-${resource}`, (amount: number, source: EventSource) =>
-        this.log(player.player, resource, -amount, source)
+        this.log(player.player, resource, -amount, source),
       );
     }
   }
@@ -620,7 +619,7 @@ export default class Engine {
       this.availableCommands.some(
         (cmd) =>
           cmd.name === Command.Spend &&
-          (cmd.data as AvailableFreeActionData).acts[0].cost.includes(Resource.GainTokenGaiaArea)
+          (cmd.data as AvailableFreeActionData).acts[0].cost.includes(Resource.GainTokenGaiaArea),
       )
     ) {
       // Terrans spending power in gaia phase to create resources
@@ -629,9 +628,9 @@ export default class Engine {
       assert(
         false,
         "Can't automove for player " +
-          (this.playerToMove + 1) +
-          ", available command: " +
-          this.availableCommands[0].name
+        (this.playerToMove + 1) +
+        ", available command: " +
+        this.availableCommands[0].name,
       );
     }
   }
@@ -757,7 +756,7 @@ export default class Engine {
     if (pl.settings.autoIncome) {
       const events = pl.incomeSelection().autoplayEvents();
       const relevantReward = events[0]?.rewards.find(
-        (rew) => rew.type === Resource.ChargePower || rew.type === Resource.GainToken
+        (rew) => rew.type === Resource.ChargePower || rew.type === Resource.GainToken,
       );
 
       if (!relevantReward) {
@@ -828,8 +827,8 @@ export default class Engine {
           engine.map,
           player.faction && factionVariantBoard(customization, player.faction),
           engine.expansions,
-          engine.version
-        )
+          engine.version,
+        ),
       );
     }
 
@@ -939,7 +938,7 @@ export default class Engine {
     params: { split?: boolean; processFirst?: boolean } = {
       split: true,
       processFirst: false,
-    }
+    },
   ) {
     this.oldPhase = this.phase;
 
@@ -959,7 +958,7 @@ export default class Engine {
     if (!this.replay) {
       assert(
         this.playerToMove === (player as PlayerEnum),
-        "Wrong turn order in move " + move + ", expected player " + (this.playerToMove + 1)
+        "Wrong turn order in move " + move + ", expected player " + (this.playerToMove + 1),
       );
     }
     this.processedPlayer = player;
@@ -981,7 +980,7 @@ export default class Engine {
 
       assert(
         split || this.turnMoves.length === 0,
-        "There is an extra command at the end of the turn: " + this.turnMoves.join(". ")
+        "There is an extra command at the end of the turn: " + this.turnMoves.join(". "),
       );
     }
   }
@@ -1339,12 +1338,13 @@ export default class Engine {
     }
     const source = this.leechSources.shift();
     const sourceHex = this.map.getS(source.coordinates);
+    const isTrade = source.tradeDelivery !== undefined;
     const canLeechPlayers: Player[] = [];
 
     this.lastLeechSource = source;
 
     // Gaia-formers & space stations don't trigger leech
-    if (stdBuildingValue(sourceHex.buildingOf(source.player)) === 0) {
+    if (!isTrade && stdBuildingValue(sourceHex.buildingOf(source.player)) === 0) {
       return this.beginLeechingPhase(); // next building on the list
     }
     // From rules, this is in clockwise order. We assume the order of players in this.players is the
@@ -1359,6 +1359,10 @@ export default class Engine {
       pl.data.leechPossible = this.leechPossible(sourceHex, (hex) => pl.buildingValue(this.map.grid.get(hex)));
       if (pl.canLeech()) {
         canLeechPlayers.push(pl);
+      }
+      if (isTrade && source.tradeDelivery !== pl.player) {
+        pl.data.leechPossible = 0;
+        continue;
       }
     }
 
@@ -1457,7 +1461,7 @@ export default class Engine {
 
   private moveToNextPlayerWithoutAChosenFaction() {
     const player = [...range(this.currentPlayer + 1, this.players.length), ...range(0, this.currentPlayer)].find(
-      (player) => !this.players.some((pl) => pl.player === player && pl.faction)
+      (player) => !this.players.some((pl) => pl.player === player && pl.faction),
     );
 
     if (player !== undefined) {
@@ -1671,7 +1675,7 @@ export default class Engine {
   [Command.ChooseFaction](player: PlayerEnum, faction: Faction) {
     assert(
       this.avCommand<Command.ChooseFaction>().data.includes(faction),
-      `${faction} is not in the available factions`
+      `${faction} is not in the available factions`,
     );
     this.setup.push(faction as Faction);
     if (this.options.auction !== AuctionVariant.ChooseBid) {
@@ -1703,7 +1707,7 @@ export default class Engine {
   [Command.ChooseRoundBooster](
     player: PlayerEnum,
     booster: Booster,
-    fromCommand: Command = Command.ChooseRoundBooster
+    fromCommand: Command = Command.ChooseRoundBooster,
   ) {
     const { boosters } = this.avCommand<Command.ChooseRoundBooster>().data;
 
@@ -1736,7 +1740,7 @@ export default class Engine {
 
     assert(
       false,
-      `Impossible to execute build command at ${location}, available: ${buildings.map((b) => b.coordinates)}`
+      `Impossible to execute build command at ${location}, available: ${buildings.map((b) => b.coordinates)}`,
     );
   }
 
@@ -1781,7 +1785,7 @@ export default class Engine {
 
     assert(
       offer,
-      `Cannot leech ${income}. Possible leeches: ${leechCommand.offers.map((ofr) => ofr.offer).join(" - ")}`
+      `Cannot leech ${income}. Possible leeches: ${leechCommand.offers.map((ofr) => ofr.offer).join(" - ")}`,
     );
 
     this.player(player).gainRewards(leechRewards, Command.ChargePower);
@@ -1814,7 +1818,7 @@ export default class Engine {
     // AFTER gaining the tech tile (as green federation can be flipped and lock research tracks)
     this.processNextMove(
       SubPhase.UpgradeResearch,
-      ResearchField.values(Expansion.All).includes((pos as any) as ResearchField) ? { pos } : undefined
+      ResearchField.values(Expansion.All).includes((pos as any) as ResearchField) ? { pos } : undefined,
     );
   }
 
@@ -1879,8 +1883,8 @@ export default class Engine {
     assert(
       locations.find(
         (loc) => isEqual(this.map.parse(loc.coordinates), parsed),
-        `Impossible to place ship at ${location}`
-      )
+        `Impossible to place ship at ${location}`,
+      ),
     );
 
     const hex = this.map.grid.get(parsed);
@@ -1892,21 +1896,21 @@ export default class Engine {
     }
   }
 
-  [Command.DeliverTrade](player: PlayerEnum, location: string) {
-    assert(
-      location === this.availableCommand.data.locations[0].coordinates,
-      "Impossible to deliver trade at " + location
-    );
-    const destHex = this.map.getS(location);
-
-    this.player(player).deliverTrade(destHex);
-    // The main occupier of the planet can charge power
-    this.leechSources.push({
-      player,
-      coordinates: location,
-      tradeDelivery: destHex.data.player,
-    });
-  }
+  // [Command.DeliverTrade](player: PlayerEnum, location: string) {
+  //   assert(
+  //     location === this.availableCommand.data.locations[0].coordinates,
+  //     "Impossible to deliver trade at " + location,
+  //   );
+  //   const destHex = this.map.getS(location);
+  //
+  //   this.player(player).deliverTrade(destHex);
+  //   // The main occupier of the planet can charge power
+  //   this.leechSources.push({
+  //     player,
+  //     coordinates: location,
+  //     tradeDelivery: destHex.data.player,
+  //   });
+  // }
 
   [`_${Command.MoveShip}`](player: PlayerEnum, ship: string, dest: string) {
     const pl = this.player(player);
@@ -1915,7 +1919,7 @@ export default class Engine {
     const parsedShip = this.map.parse(ship);
 
     assert(
-      ships.find((loc) => isEqual(this.map.parse(loc.coordinates), parsedShip), `There is no movable ship at ${ship}`)
+      ships.find((loc) => isEqual(this.map.parse(loc.coordinates), parsedShip), `There is no movable ship at ${ship}`),
     );
 
     const distance = this.map.distance(parsedShip, this.map.parse(dest));
@@ -1932,7 +1936,7 @@ export default class Engine {
     if (pl.data.availableWildTradeTokens() > 0) {
       assert(
         !destHex.hasTradeToken(player) || !destHex.hasWildTradeToken(),
-        `The destination planet already has a trade token for your faction`
+        `The destination planet already has a trade token for your faction`,
       );
     } else {
       assert(!destHex.hasTradeToken(player), `The destination planet already has a trade token for your faction`);
@@ -1944,7 +1948,7 @@ export default class Engine {
       if (destHex.occupied()) {
         assert(
           destHex.hasStructure(),
-          `When moving a ship to an occupied planet, there needs to be a valid building on it`
+          `When moving a ship to an occupied planet, there needs to be a valid building on it`,
         );
         assert(!destHex.isMainOccupier(player), "You can't move a ship to a planet that is occupied by you.");
 
@@ -1953,7 +1957,7 @@ export default class Engine {
 
         assert(
           canPutTradeToken || canPutWildTradeToken,
-          "Impossible to put a trade token on the planet, either you already have a token there or all your tokens are used"
+          "Impossible to put a trade token on the planet, either you already have a token there or all your tokens are used",
         );
 
         this.processNextMove(SubPhase.DeliverTrade, {
@@ -2067,7 +2071,7 @@ export default class Engine {
 
     assert(
       data.poweracts.find((act) => act.name === action),
-      `${action} is not in the available power actions`
+      `${action} is not in the available power actions`,
     );
 
     const pl = this.player(player);
@@ -2098,7 +2102,7 @@ export default class Engine {
     assert(fedInfo, `Impossible to form federation at ${hexes}`);
     assert(
       this.avCommand<Command.FormFederation>().data.tiles.includes(federation),
-      `Impossible to form federation ${federation}`
+      `Impossible to form federation ${federation}`,
     );
 
     pl.formFederation(fedInfo.hexes, federation);
