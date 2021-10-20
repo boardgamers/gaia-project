@@ -25,6 +25,10 @@ export async function init(
     numberSeed = "" + parseInt(seed, 10) === seed ? parseInt(seed, 10) : parseInt(md5sum.digest("hex").slice(-10), 16);
   }
 
+  if (expansions.includes("spaceships")) {
+    options.spaceShips = true;
+  }
+
   const engine = new Engine([`init ${nbPlayers} ${seed}`], options);
   engine.generateAvailableCommandsIfNeeded();
 
