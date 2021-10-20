@@ -49,12 +49,13 @@ const specials: FactionSpecial[] = [
     entries: [
       {
         faction: Faction.Ambas,
-        description: "Power value saved for forming federations after the PI has been swapped",
+        description: "Power value saved for forming federations after the Planetary Institute has been swapped",
         extractLog: federationDiscount(ambasFederationBonus),
       },
       {
         faction: Faction.Bescods,
-        description: "Power value saved for forming federations with PI built and using titanium planets",
+        description:
+          "Power value saved for forming federations with the Planetary Institute built and using titanium planets",
         extractLog: federationDiscount((a) =>
           a.counter.hasPlanetaryInstitute ? a.hexes.filter((h) => h.data.planet == Planet.Titanium).length : 0
         ),
@@ -72,7 +73,7 @@ const specials: FactionSpecial[] = [
       },
       {
         faction: Faction.Xenos,
-        description: "Power value saved for forming federations with PI built",
+        description: "Power value saved for forming federations with the Planetary Institute built",
         extractLog: federationDiscount((a) => 7 - a.cost),
       },
     ],
@@ -129,13 +130,13 @@ const specials: FactionSpecial[] = [
   {
     faction: Faction.Gleens,
     label: "Special VPs",
-    description: "Knowledge from building mines on gaia planets",
+    description: "Victory points from building mines on gaia planets",
     extractLog: ExtractLog.filterPlayerChanges((a) => a.log.changes?.gleens?.vp ?? 0),
   },
   {
     faction: Faction.HadschHallas,
     label: "PI Resources",
-    description: "Credits spent for resources in the PI",
+    description: "Credits spent for resources in the Planetary Institute",
     extractLog: spentResources(Resource.Credit),
   },
   {
@@ -147,7 +148,7 @@ const specials: FactionSpecial[] = [
   {
     faction: Faction.Nevlas,
     label: "Powerful Power Tokens",
-    description: "How often power tokens was spend for 2 power (with PI)",
+    description: "How often power tokens was spend for 2 power (with Planetary Institute)",
     extractLog: nevlasPowerLeverage(),
   },
   {
@@ -159,13 +160,13 @@ const specials: FactionSpecial[] = [
   {
     faction: Faction.Taklons,
     label: "Tokens from PI",
-    description: "Power tokens gained from charging when the PI is built",
+    description: "Power tokens gained from charging when the Planetary Institute is built",
     extractLog: ExtractLog.filterPlayerChanges((a) => a.log.changes?.charge?.t ?? 0),
   },
   {
     faction: Faction.Terrans,
     label: "Resources from PI",
-    description: "Power value of resources gained from PI",
+    description: "Power value of resources gained from the Planetary Institute",
     extractLog: spentResources(Resource.GainTokenGaiaArea),
   },
   {
@@ -210,7 +211,9 @@ export const factionSourceFactory = (factions: Faction[]): SimpleSourceFactory<C
       entries.map((s) => ({
         type: s.label,
         label: `${s.entries.map((e) => factionName(e.faction)).join(", ")}: ${s.label}`,
-        description: s.entries.map((e) => `${factionName(e.faction)}: ${e.description}`).join(", "),
+        description: s.entries
+          .map((e) => (s.entries.length > 1 ? factionName(e.faction) + ": " : "") + e.description)
+          .join(", "),
         color: `--${planetNames[factionPlanet(s.entries[0].faction)]}`,
         weight: 1,
       })),
