@@ -30,6 +30,18 @@ Vue.use(Vuex);
 
 type Preference = "accessibleSpaceMap" | "noFactionFill" | "flatBuildings" | "highlightRecentActions" | "logPlacement";
 
+export enum LoadFromJsonType {
+  load = "load",
+  strictReplay = "strictReplay",
+  permissiveReplay = "permissiveReplay",
+}
+
+export type LoadFromJson = {
+  engineData: Engine;
+  type: LoadFromJsonType;
+  stopMove?: string;
+};
+
 export type State = {
   data: Engine;
   context: GameContext;
@@ -164,7 +176,7 @@ const gaiaViewer = {
     replayTo(context: any, to: number) {},
     replayEnd(context: any, data: Engine) {},
     // WRAPPER / DEBUG COMMUNICATION
-    loadFromJSON(context: any, data: any) {},
+    loadFromJSON(context: any, data: LoadFromJson) {},
     undo(context: any) {},
   },
   getters: {

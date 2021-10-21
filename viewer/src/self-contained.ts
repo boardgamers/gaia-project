@@ -3,6 +3,7 @@ import { AuctionVariant, Layout } from "@gaia-project/engine/src/engine";
 import Game from "./components/Game.vue";
 import Wrapper from "./components/Wrapper.vue";
 import launch from "./launcher";
+import { LoadFromJson, LoadFromJsonType } from "./store";
 
 function launchSelfContained(selector = "#app", debug = true) {
   const emitter = launch(selector, debug ? Wrapper : Game);
@@ -21,8 +22,43 @@ function launchSelfContained(selector = "#app", debug = true) {
 
   const unsub = emitter.store.subscribeAction(({ payload, type }) => {
     if (type === "loadFromJSON") {
-      const egData: Engine = payload;
-      engine = egData.players ? Engine.fromData(egData) : new Engine(egData.moveHistory, egData.options, null);
+      const p: LoadFromJson = payload;
+
+      console.log("load from JSON", p);
+      const egData = p.engineData;
+      let moveHistory = egData.moveHistory;
+      let type = p.type;
+      if (p.stopMove) {
+        let index = Number(p.stopMove);
+        if (Number.isNaN(index)) {
+          index = moveHistory.indexOf(p.stopMove);
+        } else {
+          if (index < 0) {
+            console.error("stop move not found", p.stopMove);
+          } else {
+            console.log("index", index);
+            moveHistory = moveHistory.slice(0, index);
+            console.log("index", index, moveHistory.length);
+          }
+        }
+        if (type == LoadFromJsonType.load) {
+          console.error("cannot use load with stop move", type);
+          type = LoadFromJsonType.permissiveReplay;
+        }
+      }
+      switch (type) {
+        case LoadFromJsonType.load:
+          engine = Engine.fromData(egData);
+          break;
+        case LoadFromJsonType.strictReplay:
+          engine = new Engine(moveHistory, egData.options, null);
+          break;
+        case LoadFromJsonType.permissiveReplay:
+          engine = new Engine(moveHistory, egData.options, null, true);
+          break;
+        default:
+          console.error("unknown replay type", type);
+      }
       engine.generateAvailableCommandsIfNeeded();
       emitter.emit("state", JSON.parse(JSON.stringify(engine)));
     }
