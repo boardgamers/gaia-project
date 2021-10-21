@@ -2,6 +2,24 @@
   <div>
     <Game />
     <b-modal v-model="modalShow" size="lg" @ok="handleOK" title="Load from JSON">
+      <b-container fluid>
+        <b-row class="my-1">
+          <b-col sm="3">Type</b-col>
+          <b-col sm="9">
+            <b-form-group>
+              <b-form-radio v-model="loadType" value="load">Load</b-form-radio>
+              <b-form-radio v-model="loadType" value="strictReplay">Strict Replay</b-form-radio>
+              <b-form-radio v-model="loadType" value="permissiveReplay">Permissive Replay</b-form-radio>
+            </b-form-group>
+          </b-col>
+        </b-row>
+        <b-row class="my-1">
+          <b-col sm="3">Stop Move</b-col>
+          <b-col sm="9">
+            <b-form-input v-model="stopMove" />
+          </b-col>
+        </b-row>
+      </b-container>
       <b-textarea v-model="text" rows="6" />
     </b-modal>
     <div class="d-flex align-content-stretch">
@@ -25,8 +43,8 @@
           {{ replayData.current }} / {{ replayData.end }}
         </span>
         <b-btn size="sm" class="mx-1" accesskey="]" @click="replayTo(Math.min(replayData.end, replayData.current + 1))">
-          ⏩</b-btn
-        >
+          ⏩
+        </b-btn>
         <b-btn size="sm" class="mx-1" @click="replayTo(replayData.end)">⏭️</b-btn>
         <b-btn size="sm" class="ml-1" @click="endReplay">⏹️</b-btn>
       </div>
@@ -36,17 +54,24 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import Game from "./Game.vue";
+import { LoadFromJson, LoadFromJsonType } from "../store";
 
 @Component({
   components: { Game },
 })
 export default class Wrapper extends Vue {
   modalShow = false;
+  loadType = LoadFromJsonType.load;
+  stopMove = "";
   text = "";
   replayData: { stard: number; end: number; current: number } | null = null;
 
   handleOK() {
-    this.$store.dispatch("loadFromJSON", JSON.parse(this.text));
+    this.$store.dispatch("loadFromJSON", {
+      engineData: JSON.parse(this.text),
+      type: this.loadType,
+      stopMove: this.stopMove
+    } as LoadFromJson);
   }
 
   openExport() {
