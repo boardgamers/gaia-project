@@ -2,7 +2,7 @@ import Engine, { AdvTechTile, AdvTechTilePos, TechTile, TechTilePos } from "@gai
 import { Player } from "@gaia-project/engine/src/enums";
 import { expect } from "chai";
 import { parseCommands, parsedMove, recentMoves } from "../logic/recent";
-import { runJsonTests } from "../logic/utils";
+import { runJsonTests } from "../logic/test-utils";
 import { isGaiaMove, makeHistory, replaceChange, replaceMove } from "./log";
 
 describe("Advanced log details", () => {
