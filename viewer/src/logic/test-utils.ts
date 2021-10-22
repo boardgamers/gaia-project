@@ -1,6 +1,6 @@
 import Engine from "@gaia-project/engine";
-import fs from "fs";
 import { expect } from "chai";
+import fs from "fs";
 
 export type JsonTester = {
   baseDir: string;
@@ -39,4 +39,3 @@ export function runJsonTests(tester: JsonTester) {
     }
   });
 }
-

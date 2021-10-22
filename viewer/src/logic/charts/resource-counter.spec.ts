@@ -11,6 +11,7 @@ import Engine, {
 import { expect } from "chai";
 import { isGaiaMove } from "../../data/log";
 import { parseCommands } from "../recent";
+import { runMoveHistoryTests } from "../test-utils";
 import {
   BrainstoneSimulator,
   flattenChanges,
@@ -19,7 +20,6 @@ import {
   resourceCounter,
 } from "./resource-counter";
 import { logEntryProcessor } from "./simple-charts";
-import { runMoveHistoryTests } from "../test-utils";
 
 function runResourceCounterTest(testCase: any, wantPlayer: PlayerEnum) {
   const wantProps = new Map<number, string>();

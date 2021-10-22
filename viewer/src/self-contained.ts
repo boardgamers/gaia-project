@@ -25,24 +25,27 @@ function launchSelfContained(selector = "#app", debug = true) {
       const p: LoadFromJson = payload;
 
       console.log("load from JSON", p);
-      const egData = p.engineData;
+      let egData = p.engineData;
+      if ("cancelled" in egData) {
+        egData = (egData as any).data;
+      }
       let moveHistory = egData.moveHistory;
       let type = p.type;
       if (p.stopMove) {
         let index = Number(p.stopMove);
         if (Number.isNaN(index)) {
           index = moveHistory.indexOf(p.stopMove);
-        } else {
-          if (index < 0) {
-            console.error("stop move not found", p.stopMove);
-          } else {
-            console.log("index", index);
-            moveHistory = moveHistory.slice(0, index);
-            console.log("index", index, moveHistory.length);
-          }
         }
+
+        if (index < 0) {
+          console.error("stop move not found", p.stopMove);
+        } else {
+          moveHistory = moveHistory.slice(0, index);
+          console.log("loading game from index", index);
+        }
+
         if (type == LoadFromJsonType.load) {
-          console.error("cannot use load with stop move", type);
+          console.error("cannot use load with stop move - using permissive replay instead", type);
           type = LoadFromJsonType.permissiveReplay;
         }
       }
