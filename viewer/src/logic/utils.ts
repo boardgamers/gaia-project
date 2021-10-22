@@ -1,6 +1,4 @@
 import Engine, { Phase } from "@gaia-project/engine";
-import { expect } from "chai";
-import fs from "fs";
 
 export function phaseBeforeSetupBuilding(data: Engine): boolean {
   return (
