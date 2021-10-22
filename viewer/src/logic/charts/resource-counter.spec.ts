@@ -11,7 +11,6 @@ import Engine, {
 import { expect } from "chai";
 import { isGaiaMove } from "../../data/log";
 import { parseCommands } from "../recent";
-import { runMoveHistoryTests } from "../utils";
 import {
   BrainstoneSimulator,
   flattenChanges,
@@ -20,6 +19,7 @@ import {
   resourceCounter,
 } from "./resource-counter";
 import { logEntryProcessor } from "./simple-charts";
+import { runMoveHistoryTests } from "../test-utils";
 
 function runResourceCounterTest(testCase: any, wantPlayer: PlayerEnum) {
   const wantProps = new Map<number, string>();
@@ -155,7 +155,6 @@ describe("Resource Counter", () => {
     expect(c).to.deep.equal({ income: { [Resource.Credit]: 5 } });
   });
 
-  // is too slow
   describe("compare resource simulator to engine", () => {
     runMoveHistoryTests("src/logic/charts/testdata/", (testCaseDir, testCase) => {
       const players = Number(testCase.moveHistory[0].split(" ")[1]);
