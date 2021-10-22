@@ -42,6 +42,7 @@ export {
   BoardAction,
   Booster,
   Building,
+  isShip,
   Command,
   Condition,
   Expansion,

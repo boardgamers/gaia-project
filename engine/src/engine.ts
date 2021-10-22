@@ -614,7 +614,7 @@ export default class Engine {
       return `${Command.BrainStone} ${cmd.data.choices[0].area}`;
     } else if (this.availableCommands.some((cmd) => cmd.name === Command.PlaceShip)) {
       const cmd = this.findAvailableCommand(this.playerToMove, Command.PlaceShip);
-      this.move(`${ps} ${Command.PlaceShip} ${cmd.data.locations[0].coordinates}`);
+      // this.move(`${ps} ${Command.PlaceShip} ${cmd.data.locations[0].coordinates}`);
     } else if (
       this.availableCommands.some(
         (cmd) =>
@@ -1412,9 +1412,10 @@ export default class Engine {
       } else if (field === ResearchField.Navigation) {
         // gets LostPlanet
         this.processNextMove(SubPhase.PlaceLostPlanet);
-      } else if (field === ResearchField.TradingVolume) {
-        pl.gainFederationToken(Federation.Ship);
       }
+      // else if (field === ResearchField.TradingVolume) {
+      //   pl.gainFederationToken(Federation.Ship);
+      // }
     }
   }
 
@@ -1877,7 +1878,7 @@ export default class Engine {
 
   [Command.PlaceShip](player: PlayerEnum, location: string) {
     const pl = this.player(player);
-    const { locations } = this.availableCommand.data;
+    const { locations } = {locations: null}; // this.availableCommand.data;
     const parsed = this.map.parse(location);
 
     assert(
@@ -1915,7 +1916,7 @@ export default class Engine {
   [`_${Command.MoveShip}`](player: PlayerEnum, ship: string, dest: string) {
     const pl = this.player(player);
     // tslint:disable-next-line no-shadowed-variable
-    const { ships, range, costs } = this.availableCommand.data;
+    const { ships, range, costs } = { ships: null, range: null, costs: null } ;//this.availableCommand.data;
     const parsedShip = this.map.parse(ship);
 
     assert(
@@ -1968,16 +1969,16 @@ export default class Engine {
         const planet = destHex.data.planet;
         const building = planet === Planet.Transdim ? Building.GaiaFormer : Building.Mine;
 
-        const { possible, cost, steps } = pl.canBuild(planet, building);
-        assert(possible, "Impossible to move ship to this empty planet as you cannot build there");
+        const check = pl.canBuild(planet, building, this.isLastRound, this.replay);
+        assert(check, "Impossible to move ship to this empty planet as you cannot build there");
 
         this.processNextMove(SubPhase.BuildMineOrGaiaFormer, {
           buildings: [
             {
               building,
               coordinates: dest,
-              cost: Reward.toString(cost),
-              steps,
+              cost: Reward.toString(check.cost),
+              // check.steps,
             },
           ],
           automatic: true,

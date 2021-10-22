@@ -127,7 +127,7 @@ export enum Condition {
   Satellite = "sat",
   StructureValue = "stvalue",
   StructureFedValue = "stfedvalue",
-  Culture = "culture",
+  // Culture = "culture",
   ResearchLevels = "a",
   HighestResearchLevel = "L",
   PlanetsWithTradeToken = "import",
@@ -165,6 +165,11 @@ export enum Building {
   Academy2 = "ac2",
   GaiaFormer = "gf",
   SpaceStation = "sp",
+  ColonyShip = "colonyShip"
+}
+
+export function isShip(b: Building) {
+  return b === Building.ColonyShip;
 }
 
 export enum Faction {
@@ -455,7 +460,7 @@ export enum Federation {
   Fed5 = "fed5",
   Fed6 = "fed6",
   Gleens = "gleens",
-  Ship = "ship",
+  // Ship = "ship",
 }
 
 export namespace Federation {
@@ -475,10 +480,10 @@ export enum BoardAction {
   Qic1 = "qic1",
   Qic2 = "qic2",
   Qic3 = "qic3",
-  ShipPower1 = "power-ship1",
-  ShipPower2 = "power-ship2",
-  ShipPower3 = "power-ship3",
-  ShipQic1 = "qic-ship1",
+  // ShipPower1 = "power-ship1",
+  // ShipPower2 = "power-ship2",
+  // ShipPower3 = "power-ship3",
+  // ShipQic1 = "qic-ship1",
 }
 
 export namespace BoardAction {
@@ -536,8 +541,8 @@ export enum FinalTile {
   Gaia = "gaia",
   Sector = "sector",
   Satellite = "satellite",
-  TradeTokens = "trade",
-  Culture = "culture",
+  // TradeTokens = "trade",
+  // Culture = "culture",
 }
 
 export namespace FinalTile {
@@ -552,7 +557,7 @@ export namespace FinalTile {
     ];
 
     if (expansions & Expansion.Spaceships) {
-      ret.push(FinalTile.TradeTokens, FinalTile.Culture);
+      // ret.push(FinalTile.TradeTokens, FinalTile.Culture);
     }
 
     return ret;

@@ -69,6 +69,10 @@ const defaultBoard: FactionBoardRaw = {
       cost: "~",
       income: [[], [], [], [], [], []],
     },
+    [Building.ColonyShip]: {
+      cost: "4c,3o",
+      income: [[], [], []],
+    },
   },
   income: ["3k,4o,15c,q", "+o,k"],
   power: {

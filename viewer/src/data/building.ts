@@ -18,6 +18,8 @@ export function buildingName(building: Building, faction: Faction): string {
       return "Gaia Former";
     case Building.SpaceStation:
       return "Space Station";
+    case Building.ColonyShip:
+      return "Colony Ship";
   }
 }
 
@@ -44,5 +46,7 @@ export function buildingShortcut(building: AvailableBuilding): string {
       return "g";
     case Building.SpaceStation:
       return "s";
+    case Building.ColonyShip:
+      return "1";
   }
 }

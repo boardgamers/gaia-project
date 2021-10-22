@@ -1,10 +1,10 @@
 <template>
   <div class="player-info no-gutters" v-if="player && player.faction">
     <span @click="playerClick(player)" :class="['player-name', { dropped: player.dropped }]" role="button">{{
-      name
-    }}</span>
+        name
+      }}</span>
     <div class="board mt-2">
-      <svg viewBox="-0.2 -0.5 38.5 21.4" class="player-board" :style="`background-color: ${factionColor}`">
+      <svg viewBox="-0.2 -0.5 38.5 26.2" class="player-board" :style="`background-color: ${factionColor}`">
         <rect x="-1" y="-1" width="50" height="50" fill="#ffffff44"></rect>
         <PlayerBoardInfo
           transform="translate(0.5, 0.5)"
@@ -12,7 +12,7 @@
           :faction="player.faction"
           :data="playerData"
         />
-        <g transform="translate(4, 0)">
+        <g transform="translate(4.4, 0)">
           <BuildingGroup
             :transform="player.faction !== 'bescods' ? 'translate(2.2, 10)' : 'translate(12, 10)'"
             :nBuildings="1"
@@ -102,6 +102,67 @@
             :disabled="passed"
           />
         </g>
+
+        <g transform="translate(0, 18.5) scale(0.8)">
+          <BuildingGroup
+            transform="translate(0, 0)"
+            :nBuildings="3"
+            building="colonyShip"
+            :player="player"
+            :placed="playerData.buildings.colonyShip"
+            :resource="[]"
+          />
+          <BuildingGroup
+            transform="translate(7.5, 0)"
+            :nBuildings="3"
+            building="colonyShip"
+            :player="player"
+            :placed="playerData.buildings.colonyShip"
+            :resource="[]"
+          />
+          <BuildingGroup
+            transform="translate(15, 0)"
+            :nBuildings="3"
+            building="colonyShip"
+            :player="player"
+            :placed="playerData.buildings.colonyShip"
+            :resource="[]"
+          />
+          <BuildingGroup
+            transform="translate(22.5, 0)"
+            :nBuildings="3"
+            building="colonyShip"
+            :player="player"
+            :placed="playerData.buildings.colonyShip"
+            :resource="[]"
+          />
+
+          <BuildingGroup
+            transform="translate(0, 3)"
+            :nBuildings="3"
+            building="colonyShip"
+            :player="player"
+            :placed="playerData.buildings.colonyShip"
+            :resource="[]"
+          />
+          <BuildingGroup
+            transform="translate(7.5, 3)"
+            :nBuildings="3"
+            building="colonyShip"
+            :player="player"
+            :placed="playerData.buildings.colonyShip"
+            :resource="[]"
+          />
+          <BuildingGroup
+            transform="translate(15, 3)"
+            :nBuildings="3"
+            building="colonyShip"
+            :player="player"
+            :placed="playerData.buildings.colonyShip"
+            :resource="[]"
+          />
+        </g>
+
         <PowerBowls transform="translate(30,14.5)" :player="player" />
 
         <g transform="translate(29.3, 4.7) scale(0.9) translate(0, 1)">
@@ -143,7 +204,7 @@
           :recent="recentAction(i)"
           :disabled="!action.enabled || passed"
           :key="action.rewards + '-' + i"
-          y="17.5"
+          y="22.3"
           width="3.1"
           height="3.1"
           :x="3.3 * i"

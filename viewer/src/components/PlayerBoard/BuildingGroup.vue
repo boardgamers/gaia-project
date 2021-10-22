@@ -22,7 +22,7 @@
       v-for="i in buildingList"
       :transform="`translate(${(i + 0.5) * buildingSpacing + offset}, 0)`"
       :key="i"
-      v-b-tooltip
+      v-b-tooltip.html
       :title="tooltip(i)"
     >
       <circle
@@ -75,13 +75,14 @@ import Resource from "../Resource.vue";
 import Engine, {
   Building as BuildingEnum,
   factionBoard,
-  factionVariantBoard,
+  factionVariantBoard, isShip,
   Operator,
   Player,
   Resource as ResourceEnum,
   Reward,
 } from "@gaia-project/engine";
 import { CommandObject, markBuilding } from "../../logic/recent";
+import { buildingName } from "../../data/building";
 
 @Component({
   components: {
@@ -144,13 +145,17 @@ export default class BuildingGroup extends Vue {
     const cost = this.discount
       ? b.cost.map((c) => `${c.count - this.discount}${c.type}`).join(", ")
       : b.cost.join(", ") || "~";
-    const isolatedCost = b.isolatedCost ? "\n Isolated cost: " + (b.isolatedCost.join(", ") || "~") : "";
-    const income = building === BuildingEnum.GaiaFormer ? "" : "\n " + (this.resources(i, true).join(", ") || "~");
-    return `Cost: ${cost}${isolatedCost}${income} Power Value: ${this.player.buildingValue(null, {building})}`;
+    const isolatedCost = b.isolatedCost ? " Isolated cost: " + (b.isolatedCost.join(", ") || "~") : "";
+    const income = building === BuildingEnum.GaiaFormer || isShip(building) ? "" : " " + (this.resources(i, true).join(", ") || "~");
+    const rows = [
+      buildingName(building, this.faction),
+    ];
+    return `${buildingName(building, this.faction)} <br/> Cost: ${cost}${isolatedCost}${income}<br/>Power Value: ${this.player.buildingValue(null, {building})}`;
+    return rows.join("<br/>")
   }
 
   get offset() {
-    return this.building === BuildingEnum.GaiaFormer ? 0.2 : 1.4;
+    return this.resource.length == 0 ? 0.2 : 1.4;
   }
 
   get buildingSpacing() {

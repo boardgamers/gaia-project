@@ -33,6 +33,7 @@ import Engine, {
   SubPhase,
   TechTilePos,
   tiles,
+  isShip,
 } from "@gaia-project/engine";
 import { AvailableFederation } from "@gaia-project/engine/src/available-command";
 import { FederationInfo } from "@gaia-project/engine/src/federation";
@@ -369,7 +370,7 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
       }
     } else if (bld.downgrade) {
       label = withShortcut(`Downgrade to ${name}`, shortcut);
-    } else if (bld.cost === "~" || building === Building.SpaceStation || building === Building.GaiaFormer) {
+    } else if (bld.cost === "~" || building === Building.SpaceStation || building === Building.GaiaFormer || isShip(building)) {
       label = withShortcut(`Place a ${name}`, shortcut);
     }
 

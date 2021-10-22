@@ -4,8 +4,8 @@ import { BrainstoneActionData, BrainstoneWarning } from "./available-command";
 import {
   AdvTechTile,
   AdvTechTilePos,
-  Area2AutoChargePolicy,
-  AutoChargePolicy,
+  // Area2AutoChargePolicy,
+  // AutoChargePolicy,
   Booster,
   Building,
   Command,
