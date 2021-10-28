@@ -1,11 +1,10 @@
 <template>
-  <g :class="['building']">
-    <use
-      :xlink:href="`#${buildingId}-${faction || ''}`"
-      :filter="outline ? 'url(#shadow-5)' : outlineWhite ? 'url(#white-shadow-5)' : ''"
-      v-if="!flat"
-    />
-    <g :class="['planet-fill', planetClass]" v-else>
+  <g v-if="isShip">
+    <Planet :planet="planetClass" transform="scale(7)" />
+    <text transform="translate(-2, -.7) scale(5)" class="board-text" style="font-weight: bolder">{{ shipLetter }}</text>
+  </g>
+  <g v-else :class="['building']">
+    <g :class="['planet-fill', planetClass]" v-if="flat">
       <rect v-if="mine" x="-20" y="-20" width="40" height="40" />
       <rect v-else-if="planetaryInstitute" x="-37.5" y="-37.5" width="75" height="75" />
       <polygon v-else-if="gaiaFormer" :points="hexCorners" />
@@ -14,17 +13,28 @@
       <polygon v-else-if="tradingStation" points="-20,-20 0,-38 20,-20 20,20 -20,20" transform="translate(0, 0.08)" />
       <circle v-else-if="spaceStation" r="20" />
     </g>
+    <use
+      :xlink:href="`#${buildingId}-${faction || ''}`"
+      :filter="outline ? 'url(#shadow-5)' : outlineWhite ? 'url(#white-shadow-5)' : ''"
+      v-else
+    />
   </g>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Faction, Building as BuildingEnum } from "@gaia-project/engine";
+import { Building as BuildingEnum, Expansion, Faction, isShip } from "@gaia-project/engine";
 import { corners } from "../graphics/hex";
 import { planetClass } from "../graphics/utils";
+import Planet from "./Planet.vue";
+import { shipLetter } from "../data/building";
 
-@Component
+@Component<Building>({
+  components: {
+    Planet,
+  },
+})
 export default class Building extends Vue {
   @Prop()
   faction: Faction;
@@ -69,23 +79,37 @@ export default class Building extends Vue {
   get mine() {
     return this.building === BuildingEnum.Mine;
   }
+
   get tradingStation() {
     return this.building === BuildingEnum.TradingStation;
   }
+
   get planetaryInstitute() {
     return this.building === BuildingEnum.PlanetaryInstitute;
   }
+
   get lab() {
     return this.building === BuildingEnum.ResearchLab;
   }
+
   get academy() {
     return this.building === BuildingEnum.Academy1 || this.building === BuildingEnum.Academy2;
   }
+
   get gaiaFormer() {
     return this.building === BuildingEnum.GaiaFormer;
   }
+
   get spaceStation() {
     return this.building === BuildingEnum.SpaceStation;
+  }
+
+  get isShip() {
+    return isShip(this.building);
+  }
+
+  get shipLetter() {
+    return shipLetter(this.building);
   }
 }
 </script>

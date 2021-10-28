@@ -146,12 +146,14 @@ export default class BuildingGroup extends Vue {
       ? b.cost.map((c) => `${c.count - this.discount}${c.type}`).join(", ")
       : b.cost.join(", ") || "~";
     const isolatedCost = b.isolatedCost ? " Isolated cost: " + (b.isolatedCost.join(", ") || "~") : "";
-    const income = building === BuildingEnum.GaiaFormer || isShip(building) ? "" : " " + (this.resources(i, true).join(", ") || "~");
+    const income = building === BuildingEnum.GaiaFormer || isShip(building) ? null : (this.resources(i, true).join(", ") || "~");
     const rows = [
       buildingName(building, this.faction),
+      `Cost: ${cost}${isolatedCost}`,
+      income,
+      `Power Value: ${this.player.buildingValue(null, {building})}`
     ];
-    return `${buildingName(building, this.faction)} <br/> Cost: ${cost}${isolatedCost}${income}<br/>Power Value: ${this.player.buildingValue(null, {building})}`;
-    return rows.join("<br/>")
+    return rows.filter(r => r).join("<br/>");
   }
 
   get offset() {

@@ -17,6 +17,7 @@ function launchSelfContained(selector = "#app", debug = true) {
     factionVariant: (process.env.VUE_APP_factionVariant ?? "standard") as FactionVariant,
     randomFactions: !!process.env.VUE_APP_randomFactions,
     advancedRules: !!process.env.VUE_APP_rotateSectors,
+    spaceShips: !!process.env.VUE_APP_spaceShips,
   });
   engine.generateAvailableCommandsIfNeeded();
 

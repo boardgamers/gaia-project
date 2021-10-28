@@ -136,10 +136,10 @@ export default class MoveButton extends Vue implements MoveButtonController {
     this.$store.commit("activeButton", buttonData);
   }
 
-  subscribeHexClick(callback: (hex: GaiaHex, highlight: HighlightHex) => void) {
+  subscribeHexClick(callback: (hex: GaiaHex, highlight: HighlightHex) => void, activateButton = true) {
     this.subscribe("hexClick", (payload) => {
       callback(payload.hex, payload.highlight);
-    });
+    }, activateButton);
   }
 
   subscribeButtonClick(action: string, transform = (button: ButtonData) => button, activateButton = true) {
@@ -148,7 +148,7 @@ export default class MoveButton extends Vue implements MoveButtonController {
       (button) => {
         this.handleButtonClick(transform(button));
       },
-      activateButton
+      activateButton,
     );
   }
 
@@ -301,23 +301,6 @@ export default class MoveButton extends Vue implements MoveButtonController {
         this.modalShow = true;
         button.modal.show(true);
       } else {
-        if (button.hexes) {
-          //generic hex selection, that's why it's last
-          if (this.isActiveButton) {
-            this.activate(null);
-            this.highlightHexes(null);
-          } else {
-            this.subscribeHexClick((hex, highlight) => {
-              if (button.needConfirm) {
-                this.highlightHexes({ hexes: new Map<GaiaHex, HighlightHex>([[hex, {}]]) });
-              }
-
-              this.emitCommand(hex.toString(), { warnings: highlight.warnings });
-            });
-          }
-          return;
-        }
-
         if (button.needConfirm) {
           this.emitButtonCommand(button, null, { disappear: false });
         } else {
@@ -355,7 +338,7 @@ export default class MoveButton extends Vue implements MoveButtonController {
     });
   }
 
-  private highlightHexes(selection: HexSelection) {
+  highlightHexes(selection: HexSelection) {
     this.$store.commit("highlightHexes", selection);
   }
 
@@ -365,6 +348,10 @@ export default class MoveButton extends Vue implements MoveButtonController {
 
   handleOK() {
     this.button.modal.show(false);
+    this.emitCommand();
+  }
+
+  executeCommand() {
     this.emitCommand();
   }
 

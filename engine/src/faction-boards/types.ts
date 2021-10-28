@@ -1,6 +1,6 @@
 import { get, set } from "lodash";
 import { FactionVariant } from "../engine";
-import { Building, Command, Faction, Operator, Phase, Planet, PowerArea } from "../enums";
+import { Building, Command, Faction, Operator, Phase, PowerArea } from "../enums";
 import Event from "../events";
 import Player from "../player";
 import Reward from "../reward";
@@ -61,6 +61,7 @@ const defaultBoard: FactionBoardRaw = {
       cost: "6c,4o",
       income: [["+4pw", "+t"]],
     },
+
     [Building.GaiaFormer]: {
       cost: "6t->tg",
       income: [[], [], []],
@@ -69,7 +70,34 @@ const defaultBoard: FactionBoardRaw = {
       cost: "~",
       income: [[], [], [], [], [], []],
     },
+
+    //todo fix costs
     [Building.ColonyShip]: {
+      cost: "4c,3o",
+      income: [[], [], []],
+    },
+    [Building.ConstructionShip]: {
+      cost: "4c,3o",
+      income: [[], [], []],
+    },
+    [Building.ResearchShip]: {
+      cost: "4c,3o",
+      income: [[], [], []],
+    },
+    [Building.TradeShip]: {
+      cost: "4c,3o",
+      income: [[], [], []],
+    },
+
+    [Building.Scout]: {
+      cost: "4c,3o",
+      income: [[], [], []],
+    },
+    [Building.Frigate]: {
+      cost: "4c,3o",
+      income: [[], [], []],
+    },
+    [Building.BattleShip]: {
       cost: "4c,3o",
       income: [[], [], []],
     },
@@ -122,7 +150,7 @@ export class FactionBoard {
     }
   }
 
-  cost(targetPlanet: Planet, building: Building, isolated = true): Reward[] {
+  cost(building: Building, isolated = true): Reward[] {
     if (building === Building.TradingStation && isolated) {
       return this.buildings[building].isolatedCost;
     }

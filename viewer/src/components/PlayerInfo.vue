@@ -1,10 +1,10 @@
 <template>
   <div class="player-info no-gutters" v-if="player && player.faction">
     <span @click="playerClick(player)" :class="['player-name', { dropped: player.dropped }]" role="button">{{
-        name
-      }}</span>
+      name
+    }}</span>
     <div class="board mt-2">
-      <svg viewBox="-0.2 -0.5 38.5 26.2" class="player-board" :style="`background-color: ${factionColor}`">
+      <svg :viewBox="`-0.2 -0.5 38.5 ${height}`" class="player-board" :style="`background-color: ${factionColor}`">
         <rect x="-1" y="-1" width="50" height="50" fill="#ffffff44"></rect>
         <PlayerBoardInfo
           transform="translate(0.5, 0.5)"
@@ -103,7 +103,7 @@
           />
         </g>
 
-        <g transform="translate(0, 18.5) scale(0.8)">
+        <g transform="translate(0, 18.5) scale(0.8)" v-if="hasShips">
           <BuildingGroup
             transform="translate(0, 0)"
             :nBuildings="3"
@@ -115,50 +115,50 @@
           <BuildingGroup
             transform="translate(7.5, 0)"
             :nBuildings="3"
-            building="colonyShip"
+            building="constructionShip"
             :player="player"
-            :placed="playerData.buildings.colonyShip"
+            :placed="playerData.buildings.constructionShip"
             :resource="[]"
           />
           <BuildingGroup
             transform="translate(15, 0)"
             :nBuildings="3"
-            building="colonyShip"
+            building="researchShip"
             :player="player"
-            :placed="playerData.buildings.colonyShip"
+            :placed="playerData.buildings.researchShip"
             :resource="[]"
           />
           <BuildingGroup
             transform="translate(22.5, 0)"
             :nBuildings="3"
-            building="colonyShip"
+            building="tradeShip"
             :player="player"
-            :placed="playerData.buildings.colonyShip"
+            :placed="playerData.buildings.tradeShip"
             :resource="[]"
           />
 
           <BuildingGroup
             transform="translate(0, 3)"
             :nBuildings="3"
-            building="colonyShip"
+            building="scout"
             :player="player"
-            :placed="playerData.buildings.colonyShip"
+            :placed="playerData.buildings.scout"
             :resource="[]"
           />
           <BuildingGroup
             transform="translate(7.5, 3)"
             :nBuildings="3"
-            building="colonyShip"
+            building="frigate"
             :player="player"
-            :placed="playerData.buildings.colonyShip"
+            :placed="playerData.buildings.frigate"
             :resource="[]"
           />
           <BuildingGroup
             transform="translate(15, 3)"
             :nBuildings="3"
-            building="colonyShip"
+            building="battleShip"
             :player="player"
-            :placed="playerData.buildings.colonyShip"
+            :placed="playerData.buildings.battleShip"
             :resource="[]"
           />
         </g>
@@ -204,7 +204,7 @@
           :recent="recentAction(i)"
           :disabled="!action.enabled || passed"
           :key="action.rewards + '-' + i"
-          y="22.3"
+          :y="height - 4"
           width="3.1"
           height="3.1"
           :x="3.3 * i"
@@ -239,7 +239,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Engine, { factionPlanet, Planet, Player } from "@gaia-project/engine";
+import Engine, { Expansion, factionPlanet, Planet, Player } from "@gaia-project/engine";
 import { factionColor } from "../graphics/utils";
 import TechTile from "./TechTile.vue";
 import Booster from "./Booster.vue";
@@ -330,6 +330,14 @@ export default class PlayerInfo extends Vue {
   get hasLostPlanet() {
     return (this.player.ownedPlanetsCount.l ?? 0) > 0;
   }
+
+  get hasShips() {
+    return this.$store.state.data.expansions == Expansion.Spaceships;
+  }
+
+  get height() {
+    return this.hasShips ? "26.2" : "21.4";
+  }
 }
 </script>
 
@@ -353,20 +361,6 @@ export default class PlayerInfo extends Vue {
   // margin-left: auto;
   margin-right: auto;
 
-  .board-text {
-    pointer-events: none;
-    dominant-baseline: mathematical;
-    font-size: 1.2px;
-
-    &.current-round,
-    &.int,
-    &.terra,
-    &.nav,
-    &.gaia {
-      fill: white;
-    }
-  }
-
   // &::after {
   //   position: absolute;
   //   content: " ";
@@ -377,6 +371,22 @@ export default class PlayerInfo extends Vue {
   &.bescods::after,
   &.firaks::after {
     background: rgba(white, 0.7);
+  }
+}
+
+.board-text {
+  pointer-events: none;
+  dominant-baseline: mathematical;
+  font-size: 1.2px;
+  text-align: center;
+  stroke-width: 0.07;
+
+  &.current-round,
+  &.int,
+  &.terra,
+  &.nav,
+  &.gaia {
+    fill: white;
   }
 }
 

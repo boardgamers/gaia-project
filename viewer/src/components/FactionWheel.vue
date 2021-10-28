@@ -6,7 +6,7 @@
     />
     <circle class="rules-button" r="1.6" v-b-modal="'rules'" />
     <circle :r="r" fill="none" />
-    <g v-for="i in planetPositions" :key="i" :transform="transform(r, i)">
+    <g v-for="i in planetPositions" :key="i" :transform="translate(r, i)">
       <circle :r="1" :class="['planet-fill', planet(i)]" :style="`stroke-width: ${strokeWidth(i)}`" />
       <text
         :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(planet(i))}`"
@@ -14,7 +14,7 @@
         {{ remainingPlanets(planet(i)) }}
       </text>
     </g>
-    <g v-for="i in planetPositions" :key="`I${i}`" :transform="transform(1.4, i)">
+    <g v-for="i in planetPositions" :key="`I${i}`" :transform="translate(1.4, i)">
       <text style="font-size: 0.75pt; text-anchor: middle; dominant-baseline: central; pointer-events: none">
         {{ factionInitial(planet(i)) }}
       </text>
@@ -35,6 +35,7 @@ import Vue from "vue";
 import { Component } from "vue-property-decorator";
 import { planetFill } from "../graphics/utils";
 import Engine, { factionPlanet, Planet } from "@gaia-project/engine";
+import { radiusTranslate } from "../logic/utils";
 
 const planets = [
   Planet.Terra,
@@ -58,10 +59,8 @@ export default class FactionWheel extends Vue {
     return [0, 1, 2, 3, 4, 5, 6];
   }
 
-  transform(radius: number, index: number) {
-    return `translate(${radius * Math.sin(((-180 + index * 51) * Math.PI) / 180)}, ${
-      radius * Math.cos(((-180 + index * 51) * Math.PI) / 180)
-    })`;
+  translate(radius: number, index: number) {
+    return radiusTranslate(radius, index, 7);
   }
 
   get gameData(): Engine {

@@ -4,6 +4,7 @@ import Engine, {
   AvailableBoardActionData,
   AvailableBuilding,
   AvailableCommand,
+  AvailableFederation,
   AvailableFreeAction,
   AvailableFreeActionData,
   AvailableHex,
@@ -20,8 +21,10 @@ import Engine, {
   Expansion,
   Faction,
   Federation,
+  FederationInfo,
   GaiaHex,
   HighlightHex,
+  isShip,
   MAX_SATELLITES,
   Operator,
   Player,
@@ -33,12 +36,9 @@ import Engine, {
   SubPhase,
   TechTilePos,
   tiles,
-  isShip,
 } from "@gaia-project/engine";
-import { AvailableFederation } from "@gaia-project/engine/src/available-command";
-import { FederationInfo } from "@gaia-project/engine/src/federation";
 import assert from "assert";
-import { max, minBy, range, sortBy } from "lodash";
+import { max, minBy, range, sortBy, sortedUniq } from "lodash";
 import { ActionPayload, SubscribeActionOptions, SubscribeOptions } from "vuex";
 import { ButtonData, ButtonWarning, HexSelection, HighlightHexData } from "../data";
 import {
@@ -49,7 +49,7 @@ import {
   freeActionShortcuts,
 } from "../data/actions";
 import { boosterNames } from "../data/boosters";
-import { buildingName, buildingShortcut } from "../data/building";
+import { buildingName, buildingShortcut, shipLetter } from "../data/building";
 import { eventDesc } from "../data/event";
 import { federationData } from "../data/federations";
 import { researchNames } from "../data/research";
@@ -68,25 +68,79 @@ export type AvailableConversions = {
 export interface CommandController {
   readonly customButtons: ButtonData[];
   readonly subscriptions: { [key in Command]?: () => void };
+
   undo();
+
   handleCommand(command: string, source?: ButtonData);
+
   disableTooltips();
+
   highlightHexes(selection: HexSelection);
+
   subscribeAction<P extends ActionPayload>(fn: SubscribeActionOptions<P, any>, options?: SubscribeOptions): () => void;
+
   setFastConversionTooltips(tooltips: FastConversionTooltips);
+
   supportsHover(): boolean;
 }
 
 export interface MoveButtonController {
   handleClick();
+
   highlightResearchTiles(tiles: string[]);
+
   highlightTechs(techs: Array<TechTilePos | AdvTechTilePos>);
+
   subscribeButtonClick(action: string, transform?: (button: ButtonData) => ButtonData, activateButton?: boolean);
+
   setButton(button: ButtonData, key: string);
+
   activate(button: ButtonData | null);
+
+  subscribeHexClick(callback: (hex: GaiaHex, highlight: HighlightHex) => void, activateButton: boolean);
+
+  highlightHexes(selection: HexSelection);
+
+  executeCommand(): void;
+}
+
+function addOnCreate(button: ButtonData, action: (controller: MoveButtonController) => void) {
+  const next = button.onCreate;
+  button.onCreate = (c) => {
+    next?.(c);
+    action(c);
+  };
+}
+
+function addOnClick(button: ButtonData, action: (controller: MoveButtonController) => void) {
+  let controller: MoveButtonController = null;
+  addOnCreate(button, (c) => {
+    controller = c;
+  });
+  const next = button.onClick;
+  button.onClick = () => {
+    next?.();
+    action(controller);
+  };
+}
+
+function addOnShow(button: ButtonData, action: (c: MoveButtonController) => void) {
+  let controller: MoveButtonController = null;
+  addOnCreate(button, (c) => {
+    controller = c;
+  });
+  const next = button.onShow;
+  button.onShow = () => {
+    next?.();
+    action(controller);
+  };
 }
 
 export const forceNumericShortcut = (label: string) => ["Charge", "Income"].find((b) => label.startsWith(b));
+
+function prependShortcut(shortcut: string, label: string) {
+  return `<u>${shortcut}</u>: ${label}`;
+}
 
 export function withShortcut(label: string | null, shortcut: string | null, skip?: string[]): string | null {
   if (!label || !shortcut || label.includes("<u>")) {
@@ -106,7 +160,7 @@ export function withShortcut(label: string | null, shortcut: string | null, skip
   if (i >= 0 && !forceNumericShortcut(label)) {
     return `${label.substring(0, i)}<u>${label.substring(i, i + 1)}</u>${label.substring(i + 1)}`;
   } else {
-    return `<u>${shortcut}</u>: ${label}`;
+    return prependShortcut(shortcut, label);
   }
 }
 
@@ -120,14 +174,8 @@ function tooltipWithShortcut(tooltip: string | null, warn: ButtonWarning | null,
 }
 
 export function activateOnShow(button: ButtonData): ButtonData {
-  let controller: MoveButtonController = null;
-  button.onCreate = (c) => (controller = c);
-  const last = button.onShow;
   button.disabled = true;
-  button.onShow = () => {
-    last?.();
-    controller.handleClick();
-  };
+  addOnShow(button, (c) => c.handleClick());
   return button;
 }
 
@@ -313,6 +361,39 @@ function textButton(button: ButtonData): ButtonData {
   return button;
 }
 
+function hexSelectionButton(data: ButtonData, newLocationButton = (hex: GaiaHex) => textButton({})): ButtonData {
+  const button = textButton(data);
+
+  assert(button.hexes, "hexes missing");
+  assert(!button.buttons, "buttons already exists");
+
+  let i = 1;
+
+  button.buttons = Array.from(button.hexes.hexes.keys()).map((hex) => {
+    const b = newLocationButton(hex);
+    b.command = hex.toString();
+    const shortcut = String(i);
+    b.label = prependShortcut(shortcut, hex.toString());
+    b.shortcuts = [shortcut];
+    i++;
+    addOnShow(b, (c) => {
+      c.subscribeHexClick((h) => {
+        if (h == hex) {
+          c.handleClick();
+        }
+      }, false);
+    });
+    addOnClick(b, (c) => {
+      c.executeCommand();
+      if (button.needConfirm) {
+        c.highlightHexes({ hexes: new Map<GaiaHex, HighlightHex>([[hex, {}]]) });
+      }
+    });
+    return b;
+  });
+  return button;
+}
+
 export function finalizeShortcuts(buttons: ButtonData[]) {
   for (const button of buttons) {
     if (button.buttons) {
@@ -349,6 +430,19 @@ export function finalizeShortcuts(buttons: ButtonData[]) {
   }
 }
 
+function commonHexWarning(buildings): ButtonWarning | null {
+  if (buildings.every((b) => b.warnings?.length > 0)) {
+    const common = buildings[0].warnings
+      .filter((w) => buildings.every((b) => b.warnings.includes(w)))
+      .map((w) => moveWarnings[w].text);
+    return {
+      title: "Every possible building location has a warning",
+      body: common.length > 0 ? common : ["Different warnings."],
+    } as ButtonWarning;
+  }
+  return null;
+}
+
 export function buildButtons(engine: Engine, command: AvailableCommand<Command.Build>): ButtonData[] {
   const ret: ButtonData[] = [];
   let academySelection: ButtonData[] = null;
@@ -370,7 +464,12 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
       }
     } else if (bld.downgrade) {
       label = withShortcut(`Downgrade to ${name}`, shortcut);
-    } else if (bld.cost === "~" || building === Building.SpaceStation || building === Building.GaiaFormer || isShip(building)) {
+    } else if (
+      bld.cost === "~" ||
+      building === Building.SpaceStation ||
+      building === Building.GaiaFormer ||
+      isShip(building)
+    ) {
       label = withShortcut(`Place a ${name}`, shortcut);
     }
 
@@ -385,17 +484,10 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
     ([, b]) => sort.indexOf(b[0].building) * 2 + (b[0].upgrade || b[0].downgrade ? 1 : 0)
   );
 
-  for (const [label, buildings] of sorted) {
-    let warning: ButtonWarning = null;
-    if (buildings.every((b) => b.warnings?.length > 0)) {
-      const common = buildings[0].warnings
-        .filter((w) => buildings.every((b) => b.warnings.includes(w)))
-        .map((w) => moveWarnings[w].text);
-      warning = {
-        title: "Every possible building location has a warning",
-        body: common.length > 0 ? common : ["Different warnings."],
-      } as ButtonWarning;
-    }
+  for (const s of sorted) {
+    const label = s[0] as string;
+    const buildings = s[1] as AvailableBuilding[];
+    const commonWarning = commonHexWarning(buildings);
 
     const building = buildings[0].building;
     const shortcut = buildingShortcut(buildings[0]);
@@ -422,7 +514,7 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
           shortcuts: [shortcut],
           command: Command.Build,
           buttons,
-          warning,
+          warning: commonWarning,
         })
       );
     } else {
@@ -437,19 +529,57 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
           : undefined;
 
       ret.push(
-        textButton({
-          label,
-          shortcuts: [shortcut],
-          command: `${Command.Build} ${building}`,
-          hexes: hexMap(engine, buildings, false),
-          buttons,
-          warning,
-          needConfirm: buttons?.length > 0,
-        })
+        hexSelectionButton(
+          {
+            label,
+            shortcuts: [shortcut],
+            command: `${Command.Build} ${building}`,
+            hexes: hexMap(engine, buildings, false),
+            warning: commonWarning,
+            needConfirm: buttons?.length > 0,
+          },
+          (hex) => textButton({ buttons })
+        )
       );
     }
   }
   return ret;
+}
+
+export function moveShipButton(
+  engine: Engine,
+  command: AvailableCommand<Command.MoveShip>,
+  commandController: CommandController
+): ButtonData {
+  const faction = engine.player(command.player).faction;
+
+  return textButton({
+    label: "Move Ship",
+    shortcuts: ["o"],
+    command: Command.MoveShip,
+    buttons: sortedUniq(command.data.map((e) => e.ship)).map((ship) =>
+      hexSelectionButton(
+        {
+          label: buildingName(ship, faction),
+          command: ship,
+          shortcuts: [shipLetter(ship).toLowerCase()],
+          hexes: hexMap(
+            engine,
+            command.data.filter((e) => e.ship === ship).map((l) => ({ coordinates: l.source } as AvailableHex)),
+            false
+          ),
+        },
+        (hex) =>
+          hexSelectionButton({
+            hexes: hexMap(
+              engine,
+              command.data.find((d) => d.ship == ship && d.source == hex.toString()).targets,
+              false
+            ),
+          })
+      )
+    ),
+  });
 }
 
 export function passButtons(
@@ -1076,8 +1206,13 @@ function commandButton(
         },
       ];
     }
+
     case Command.Build: {
       return buildButtons(engine, command);
+    }
+
+    case Command.MoveShip: {
+      return [moveShipButton(engine, command, controller)];
     }
 
     case Command.PISwap: {
@@ -1226,5 +1361,6 @@ export function commandButtons(
       activateOnShow(button);
     }
   }
+
   return ret;
 }

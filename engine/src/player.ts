@@ -22,9 +22,10 @@ import {
   PowerArea,
   ResearchField,
   Resource,
+  Ship,
   TechPos,
   TechTile,
-  TechTilePos, TradeToken,
+  TechTilePos,
 } from "./enums";
 import Event, { EventSource } from "./events";
 import {
@@ -106,7 +107,7 @@ export default class Player extends EventEmitter {
     [Operator.Activate]: [],
     [Operator.Pass]: [],
     [Operator.Special]: [],
-    [Operator.AdvShip4]: [],
+    // [Operator.AdvShip4]: [],
   };
   // To avoid recalculating federations every time
   federationCache: FederationCache;
@@ -239,10 +240,6 @@ export default class Player extends EventEmitter {
     return factionPlanet(this.faction);
   }
 
-  get shipMovementRange(): number {
-    return this.data.range + this.data.shipRange + this.data.temporaryRange;
-  }
-
   payCosts(costs: Reward[], source: EventSource) {
     this.data.payCosts(costs, source);
   }
@@ -277,7 +274,7 @@ export default class Player extends EventEmitter {
   }
 
   canBuild(
-    targetPlanet: Planet,
+    targetPlanet: Planet | null,
     building: Building,
     lastRound: boolean,
     replay: boolean,
@@ -353,7 +350,7 @@ export default class Player extends EventEmitter {
       }
     }
 
-    const cost = Reward.merge(this.board.cost(targetPlanet, building, isolated), addedCost);
+    const cost = Reward.merge(this.board.cost(building, isolated), addedCost);
     const creditCost = (r: Reward[]) => r.filter((r) => r.type === Resource.Credit)[0].count;
     if (
       building === Building.TradingStation &&
@@ -441,18 +438,19 @@ export default class Player extends EventEmitter {
         event.source,
         event.toPick
       );
-    } else if (event.operator === Operator.AdvShip4) {
-      const nShips = this.data.shipLocations.length;
-      this.data.shipRange += 4;
-
-      this.gainRewards([new Reward("2ship")], event.source);
-
-      this.data.movableShipLocations = this.data.shipLocations.slice(nShips);
-      this.data.movableShips = this.data.shipLocations.length - nShips;
-
-      this.emit("move-preset-ships");
-      this.data.shipRange -= 4;
     }
+    // else if (event.operator === Operator.AdvShip4) {
+    //   const nShips = this.data.shipLocations.length;
+    //   this.data.shipRange += 4;
+    //
+    //   this.gainRewards([new Reward("2ship")], event.source);
+    //
+    //   this.data.movableShipLocations = this.data.shipLocations.slice(nShips);
+    //   this.data.movableShips = this.data.shipLocations.length - nShips;
+    //
+    //   this.emit("move-preset-ships");
+    //   this.data.shipRange -= 4;
+    // }
   }
 
   removeEvents(events: Event[]) {
@@ -627,36 +625,37 @@ export default class Player extends EventEmitter {
     return added;
   }
 
-  placeShip(hex: GaiaHex) {
-    hex.addShip(this.player);
-    this.data.shipLocations.push(hex.toString());
+  placeShip(ship: Building, hex: GaiaHex) {
+    hex.addShip(ship, this.player);
+    this.data.ships.push({ type: ship, location: hex.toString(), moved: false });
   }
 
-  removeShip(hex: GaiaHex) {
-    const idx = this.data.shipLocations.indexOf(hex.toString());
-
-    hex.removeShip(this.player);
-    this.data.shipLocations.splice(idx, 1);
+  findShip(ship: Building, location: string): Ship | null {
+    return this.data.ships.find((s) => s.location === location && s.type === ship);
   }
 
-  deliverTrade(hex: GaiaHex) {
-    if (hex.hasTradeToken(this.player) && this.data.availableWildTradeTokens() > 0 && !hex.hasWildTradeToken()) {
-      hex.addTradeToken(TradeToken.Wild);
-      this.data.wildTradeTokens += 1;
-    } else {
-      hex.addTradeToken(this.player);
-      this.data.tradeTokens += 1;
-    }
-
-    this.receiveTriggerIncome(Condition.Trade);
+  removeShip(ship: Ship, map: SpaceMap) {
+    map.getS(ship.location).removeShip(ship.type, this.player);
+    const l = this.data.ships;
+    l.splice(l.indexOf(ship), 1);
   }
+
+  // deliverTrade(hex: GaiaHex) {
+  //   if (hex.hasTradeToken(this.player) && this.data.availableWildTradeTokens() > 0 && !hex.hasWildTradeToken()) {
+  //     hex.addTradeToken(TradeToken.Wild);
+  //     this.data.wildTradeTokens += 1;
+  //   } else {
+  //     hex.addTradeToken(this.player);
+  //     this.data.tradeTokens += 1;
+  //   }
+  //
+  //   this.receiveTriggerIncome(Condition.Trade);
+  // }
 
   resetTemporaryVariables() {
     // reset temporary benefits
     this.data.temporaryRange = 0;
     this.data.temporaryStep = 0;
-    this.data.temporaryShipRange = 0;
-    this.data.qicUsedToBoostShip = 0;
   }
 
   pass() {
@@ -935,16 +934,16 @@ export default class Player extends EventEmitter {
             hex.belongsToFederationOf(this.player) ? this.buildingValue(hex, { federation: true }) : 0
           )
         );
-      case Condition.Trade:
-        return this.data.tradeTokens + this.data.wildTradeTokens;
+      // case Condition.Trade:
+      //   return this.data.tradeTokens + this.data.wildTradeTokens;
       // Max 8 (for tech tile which gains 1k per planet)
-      case Condition.PlanetsWithTradeToken:
-        return Math.min(
-          this.data.occupied.filter(
-            (hex) => hex.isMainOccupier(this.player) && hex.colonizedBy(this.player) && hex.hasTradeTokens()
-          ).length,
-          8
-        );
+      // case Condition.PlanetsWithTradeToken:
+      //   return Math.min(
+      //     this.data.occupied.filter(
+      //       (hex) => hex.isMainOccupier(this.player) && hex.colonizedBy(this.player) && hex.hasTradeTokens()
+      //     ).length,
+      //     8
+      //   );
       case Condition.AdvanceResearch:
         return sum(Object.values(this.data.research));
       case Condition.HighestResearchLevel:

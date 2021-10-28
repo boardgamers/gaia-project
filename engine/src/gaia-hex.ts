@@ -1,7 +1,9 @@
 import assert from "assert";
 import { Hex } from "hexagrid";
-import { Building, Planet, Player, TradeToken } from "./enums";
 import { stdBuildingValue } from "./buildings";
+import { Building, Planet, Player, TradeToken } from "./enums";
+
+type PlayerShip = { player: Player; ship: Building };
 
 export interface GaiaHexData {
   planet: Planet;
@@ -11,7 +13,7 @@ export interface GaiaHexData {
   player?: Player;
   /** List of players who have a federation occupying this square */
   federations?: Player[];
-  ships?: Player[];
+  ships?: PlayerShip[];
   tradeTokens?: Array<Player | TradeToken>;
   /** Additional mine of lantids */
   additionalMine?: Player;
@@ -93,12 +95,21 @@ export class GaiaHex extends Hex<GaiaHexData> {
     return true;
   }
 
-  addShip(player: Player) {
+  addShip(ship: Building, player: Player) {
+    const s = this.playerShip(ship, player);
     if (this.data.ships) {
-      this.data.ships.push(player);
+      this.data.ships.push(s);
     } else {
-      this.data.ships = [player];
+      this.data.ships = [s];
     }
+  }
+
+  ships() {
+    return this.data.ships ?? [];
+  }
+
+  private playerShip(ship: Building, player: Player) {
+    return { ship, player } as PlayerShip;
   }
 
   addTradeToken(player: Player | TradeToken.Wild) {
@@ -121,11 +132,11 @@ export class GaiaHex extends Hex<GaiaHexData> {
     return this.data.tradeTokens && this.data.tradeTokens.length > 0;
   }
 
-  removeShip(player: Player) {
+  removeShip(ship: Building, player: Player) {
     if (this.data.ships.length === 1) {
       this.data.ships = undefined;
     } else {
-      this.data.ships.splice(this.data.ships.indexOf(player), 1);
+      this.data.ships.splice(this.data.ships.indexOf(this.playerShip(ship, player)), 1);
     }
   }
 

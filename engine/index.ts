@@ -16,9 +16,11 @@ export {
   AvailableBoardAction,
   AvailableBoardActionData,
   AvailableBuilding,
+  AvailableFederation,
   AvailableFreeAction,
   AvailableFreeActionData,
   AvailableHex,
+  AvailableMoveShipData,
   AvailableResearchData,
   AvailableResearchTrack,
   BrainstoneActionData,
@@ -27,6 +29,7 @@ export {
   ChooseTechTile,
   conversionToFreeAction,
   HighlightHex,
+  MAX_SHIPS_PER_HEX,
 } from "./src/available-command";
 export {
   AuctionVariant,
@@ -42,13 +45,13 @@ export {
   BoardAction,
   Booster,
   Building,
-  isShip,
   Command,
   Condition,
   Expansion,
   Faction,
   Federation,
   FinalTile,
+  isShip,
   Operator,
   Phase,
   Planet,
@@ -66,7 +69,7 @@ export {
 } from "./src/enums";
 export { FactionBoard, factionBoard, factionVariantBoard } from "./src/faction-boards";
 export { factionPlanet } from "./src/factions";
-export { federationCost, parseFederationLocation } from "./src/federation";
+export { federationCost, FederationInfo, parseFederationLocation } from "./src/federation";
 export { GaiaHex, GaiaHexData } from "./src/gaia-hex";
 export { applyChargePowers } from "./src/income";
 export { planetNames, terraformingStepsRequired } from "./src/planets";

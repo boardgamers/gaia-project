@@ -43,7 +43,9 @@ svg {
     stroke-width: 0.04;
     fill: none;
     pointer-events: none;
+  }
 
+  &.space-map .planet {
     // terra
     &.r {
       stroke: var(--terra);
@@ -119,9 +121,7 @@ svg {
       stroke: var(--lost);
     }
   }
-
-  .planet-fill,
-  .planet-stroke {
+  .planet-fill {
     .no-faction-fill &.faction-fill {
       display: none;
     }

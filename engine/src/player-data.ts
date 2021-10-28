@@ -14,6 +14,7 @@ import {
   PowerArea,
   ResearchField,
   Resource,
+  Ship,
   TechTile,
   TechTilePos,
 } from "./enums";
@@ -64,10 +65,6 @@ export default class PlayerData extends EventEmitter {
   knowledge = 0;
   power: Power = new Power();
   brainstone: PowerArea = null;
-
-  get ships() {
-    return this.shipLocations.length;
-  }
   tradeTokens = 0;
   wildTradeTokens = 0;
 
@@ -85,11 +82,11 @@ export default class PlayerData extends EventEmitter {
     gaia: 0,
     eco: 0,
     sci: 0,
-    trade: 0,
-    ship: 0,
+    // trade: 0,
+    // ship: 0,
   };
   range = 1;
-  shipRange = 0;
+  shipRange = 2;
   movingShips = 1;
   /** Total number of gaiaformers gained (including those on the board & the gaia area) */
   gaiaformers = 0;
@@ -112,23 +109,17 @@ export default class PlayerData extends EventEmitter {
 
   /** Hexes occupied by buildings with value (not gaia formers), refs match the map hexes with a simple equality test */
   occupied: GaiaHex[] = [];
-  shipLocations: string[] = [];
+  ships: Ship[] = [];
   leechPossible: number;
   tokenModifier = 1;
   lostPlanet = 0;
-  advancedShips = 0;
-  // When placing ships. Not internal (because of income command on site)
-  shipsToPlace = 0;
   autoChargePower = 1;
 
   // Internal variables, not meant to be in toJSON():
   brainstoneDest: BrainstoneDest;
   temporaryRange = 0;
-  temporaryShipRange = 0; // unused for now, using temporaryRange instead
   temporaryStep = 0;
-  qicUsedToBoostShip = 0;
-  movableShips = 0;
-  movableShipLocations: string[] = [];
+  // qicUsedToBoostShip = 0;
   canUpgradeResearch = true;
   turns = 0;
   // when picking rewards
@@ -156,13 +147,11 @@ export default class PlayerData extends EventEmitter {
       buildings: this.buildings,
       federationCount: this.federationCount,
       lostPlanet: this.lostPlanet,
-      shipLocations: this.shipLocations,
+      ships: this.ships,
       shipRange: this.shipRange,
-      shipsToPlace: this.shipsToPlace,
       movingShips: this.movingShips,
       tradeTokens: this.tradeTokens,
       wildTradeTokens: this.wildTradeTokens,
-      advancedShips: this.advancedShips,
       autoChargePower: this.autoChargePower,
     };
 
@@ -264,9 +253,9 @@ export default class PlayerData extends EventEmitter {
       case Resource.Knowledge:
         this.knowledge = Math.min(MAX_KNOWLEDGE, this.knowledge + count);
         break;
-      case Resource.SpaceShip:
-        count = Math.min(count, MAX_SHIP + this.advancedShips - this.ships);
-        break;
+      // case Resource.SpaceShip:
+      //   count = Math.min(count, MAX_SHIP + this.advancedShips - this.ships);
+      //   break;
       case Resource.VictoryPoint:
         this.victoryPoints += count;
         break;
@@ -292,11 +281,11 @@ export default class PlayerData extends EventEmitter {
         this.temporaryRange += count;
         break;
       case Resource.SpaceShipRange:
-        this.shipRange += 1;
+        this.shipRange += count;
         break;
-      case Resource.SpaceShipMove:
-        this.movingShips += 1;
-        break;
+      // case Resource.SpaceShipMove:
+      //   this.movingShips += 1;
+      //   break;
       case Resource.GaiaFormer:
         count > 0 ? (this.gaiaformers += count) : (this.gaiaformersInGaia -= count);
         break;
@@ -312,9 +301,9 @@ export default class PlayerData extends EventEmitter {
           this.power.gaia -= count;
         }
         break;
-      case Resource.AdvancedSpaceShip:
-        this.advancedShips += count;
-        break;
+      // case Resource.AdvancedSpaceShip:
+      //   this.advancedShips += count;
+      //   break;
       case Resource.Turn:
         this.turns += count;
         break;

@@ -30,6 +30,15 @@
       :flat="flat"
       outline
     />
+    <Building
+      v-for="(s, i) in hex.data.ships"
+      :key="i"
+      :building="s.ship"
+      :faction="faction(s.player)"
+      outline
+      :flat="flat"
+      :transform="`scale(0.05) ${shipTranslate(i)}`"
+    />
     <polygon
       v-for="(player, index) in hex.data.federations || []"
       :points="hexCorners.map((p) => `${p.x * (1 - (index + 0.5) / 8)},${p.y * (1 - (index + 0.5) / 8)}`).join(' ')"
@@ -45,7 +54,7 @@ import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   Faction,
   factionPlanet,
-  GaiaHex,
+  GaiaHex, MAX_SHIPS_PER_HEX,
   Planet as PlanetEnum,
   Player,
   SpaceMap as ISpaceMap,
@@ -58,6 +67,7 @@ import { planetNames } from "../data/planets";
 import { HexSelection, HighlightHexData } from "../data";
 import { moveWarnings } from "../data/warnings";
 import { factionName } from "../data/factions";
+import { radiusTranslate } from "../logic/utils";
 
 @Component<SpaceHex>({
   components: {
@@ -71,6 +81,10 @@ export default class SpaceHex extends Vue {
 
   @Prop()
   isCenter: boolean;
+
+  shipTranslate(index: number): string {
+    return radiusTranslate(9, index, MAX_SHIPS_PER_HEX);
+  }
 
   get hexCorners() {
     return corners();
@@ -201,23 +215,29 @@ export default class SpaceHex extends Vue {
       }
 
       const faction = player.faction;
-      return `Building: ${buildingName(hex.buildingOf(player.player), faction)} (${(factionName(faction))}, ${powerValue})`;
+      return `Building: ${buildingName(hex.buildingOf(player.player), faction)} (${factionName(faction)}, ${powerValue})`;
     };
 
     let building = null;
     let guestBuilding = null;
+    let ships: string[] = [];
     if (data.building) {
       building = buildingLabel(this.player(data.player));
       if (data.additionalMine != null) {
         guestBuilding = buildingLabel(this.player(data.additionalMine));
       }
+    } else if (data.ships) {
+      ships = data.ships.map(s => {
+        const faction = this.player(s.player).faction;
+        return (`${buildingName(s.ship, faction)} (${factionName(faction)})`);
+      });
     }
     const w = this.warning(hex);
     const warning = w ? `Warning: ${w}` : null;
     const coord = `Coordinates: ${hex}`;
     return [
       coord, planet, building, guestBuilding, cost, warning,
-    ].filter(s => s).join(" ");
+    ].filter(s => s).concat(ships).join(" ");
   }
 }
 </script>

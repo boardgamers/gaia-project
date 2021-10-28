@@ -80,7 +80,7 @@ export type EventSource =
   | Command.FormFederation
   | Command.UpgradeResearch
   | Faction
-  | Command.MoveShip
+  // | Command.MoveShip
   | Command.Bid;
 
 export default class Event {
@@ -108,7 +108,12 @@ export default class Event {
     }
     let remaining: string;
 
-    if ([Operator.Special, Operator.AdvShip4].includes(this.spec as Operator)) {
+    if (
+      [
+        Operator.Special,
+        // , Operator.AdvShip4
+      ].includes(this.spec as Operator)
+    ) {
       this.condition = Condition.None;
       this.rewards = [];
       this.operator = spec as Operator;

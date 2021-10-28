@@ -10,7 +10,6 @@ import {
   Reward,
   TechPos,
 } from "@gaia-project/engine";
-import { getMapHex } from "../utils";
 import { ChartSource, extractChanges } from "./charts";
 import { BuildingPowerValueCounter } from "./federations";
 import { parsePowerUsage, resourceCounter } from "./resource-counter";
@@ -197,9 +196,7 @@ export function leechOpportunities(wantSource: (maxLeech: MaxLeech) => number): 
       if (a.log.player != want.player) {
         //check for missed leech
         const map = a.data.map;
-        const leechPossible = a.data.leechPossible(getMapHex(map, a.cmd.args[1]), (h) =>
-          counter.buildingValue(h, map, want)
-        );
+        const leechPossible = a.data.leechPossible(map.getS(a.cmd.args[1]), (h) => counter.buildingValue(h, map, want));
         const maxLeech = data.maxLeech(leechPossible, want.faction == Faction.Taklons && counter.hasPlanetaryInstitute);
         return Math.max(0, leechPossible - wantSource(maxLeech));
       }

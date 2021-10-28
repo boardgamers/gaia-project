@@ -1,4 +1,4 @@
-import { AvailableBuilding, Building, Faction } from "@gaia-project/engine";
+import { AvailableBuilding, Building, Building as BuildingEnum, Faction } from "@gaia-project/engine";
 
 export function buildingName(building: Building, faction: Faction): string {
   switch (building) {
@@ -20,6 +20,18 @@ export function buildingName(building: Building, faction: Faction): string {
       return "Space Station";
     case Building.ColonyShip:
       return "Colony Ship";
+    case Building.ConstructionShip:
+      return "Construction Ship";
+    case Building.ResearchShip:
+      return "Research Ship";
+    case Building.TradeShip:
+      return "Trade Ship";
+    case Building.Scout:
+      return "Scout";
+    case Building.Frigate:
+      return "Frigate";
+    case Building.BattleShip:
+      return "Battle Ship";
   }
 }
 
@@ -48,5 +60,36 @@ export function buildingShortcut(building: AvailableBuilding): string {
       return "s";
     case Building.ColonyShip:
       return "1";
+    case Building.ConstructionShip:
+      return "2";
+    case Building.ResearchShip:
+      return "3";
+    case Building.TradeShip:
+      return "4";
+    case Building.Scout:
+      return "5";
+    case Building.Frigate:
+      return "6";
+    case Building.BattleShip:
+      return "7";
+  }
+}
+
+export function shipLetter(building: BuildingEnum): string {
+  switch (building) {
+    case BuildingEnum.ColonyShip:
+      return "L";
+    case BuildingEnum.TradeShip:
+      return "T";
+    case BuildingEnum.ConstructionShip:
+      return "C";
+    case BuildingEnum.ResearchShip:
+      return "R";
+    case BuildingEnum.Scout:
+      return "S";
+    case BuildingEnum.Frigate:
+      return "F";
+    case BuildingEnum.BattleShip:
+      return "B";
   }
 }

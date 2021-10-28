@@ -19,8 +19,8 @@ export enum ResearchField {
   GaiaProject = "gaia",
   Economy = "eco",
   Science = "sci",
-  TradingBonus = "trade",
-  TradingVolume = "ship",
+  // TradingBonus = "trade",
+  // TradingVolume = "ship",
 }
 
 export enum Expansion {
@@ -40,7 +40,7 @@ export namespace ResearchField {
     ];
 
     if (expansions & Expansion.Spaceships) {
-      ret.push(ResearchField.TradingBonus, ResearchField.TradingVolume);
+      // ret.push(ResearchField.TradingBonus, ResearchField.TradingVolume);
     }
 
     return ret;
@@ -65,12 +65,12 @@ export enum Resource {
   Range = "r",
   GaiaFormer = "gf",
   SpaceStation = "space-station",
-  SpaceShip = "ship",
-  AdvancedSpaceShip = "adv-ship",
-  MoveShips = "move",
-  MoveAllShips = "move-all",
+  // SpaceShip = "ship",
+  // AdvancedSpaceShip = "adv-ship",
+  // MoveShips = "move",
+  // MoveAllShips = "move-all",
   SpaceShipRange = "ship-range",
-  SpaceShipMove = "ship-move",
+  // SpaceShipMove = "ship-move",
   DowngradeLab = "down-lab",
   UpgradeTerraforming = "up-terra",
   UpgradeNavigation = "up-nav",
@@ -79,8 +79,8 @@ export enum Resource {
   UpgradeEconomy = "up-eco",
   UpgradeScience = "up-sci",
   UpgradeLowest = "up-lowest",
-  UpgradeTradingBonus = "up-trade",
-  UpgradeTradingVolume = "up-ship",
+  // UpgradeTradingBonus = "up-trade",
+  // UpgradeTradingVolume = "up-ship",
   TechTile = "tech",
   RescoreFederation = "fed",
   TemporaryStep = "step",
@@ -104,7 +104,7 @@ export enum Operator {
   /** reserved op for planetary institute and academies becoming 4pw structures */
   Special = "PA->4pw",
   /** Special annoying adv tech */
-  AdvShip4 = "2ship+4",
+  // AdvShip4 = "2ship+4",
 }
 
 export enum Condition {
@@ -116,7 +116,7 @@ export enum Condition {
   ResearchLab = "lab",
   PlanetaryInstituteOrAcademy = "PA",
   Federation = "fed",
-  Trade = "trade",
+  // Trade = "trade",
 
   // count only
   Gaia = "g",
@@ -130,7 +130,7 @@ export enum Condition {
   // Culture = "culture",
   ResearchLevels = "a",
   HighestResearchLevel = "L",
-  PlanetsWithTradeToken = "import",
+  // PlanetsWithTradeToken = "import",
 
   // trigger only
   MineOnGaia = "mg",
@@ -165,11 +165,35 @@ export enum Building {
   Academy2 = "ac2",
   GaiaFormer = "gf",
   SpaceStation = "sp",
-  ColonyShip = "colonyShip"
+
+  ColonyShip = "colonyShip",
+  TradeShip = "tradeShip",
+  ConstructionShip = "constructionShip",
+  ResearchShip = "researchShip",
+
+  Scout = "scout",
+  Frigate = "frigate",
+  BattleShip = "battleShip",
 }
 
+export type Ship = {
+  type: Building;
+  location: string;
+  moved: boolean;
+};
+
 export function isShip(b: Building) {
-  return b === Building.ColonyShip;
+  switch (b) {
+    case Building.ColonyShip:
+    case Building.TradeShip:
+    case Building.ConstructionShip:
+    case Building.ResearchShip:
+    case Building.Scout:
+    case Building.Frigate:
+    case Building.BattleShip:
+      return true;
+  }
+  return false;
 }
 
 export enum Faction {
@@ -204,7 +228,7 @@ export enum Command {
   ChooseTechTile = "tech",
   DeadEnd = "deadEnd", // this command cannot be executed - it just signals that you have to undo
   Decline = "decline",
-  DeliverTrade = "trade",
+  // DeliverTrade = "trade",
   EndTurn = "endturn",
   FormFederation = "federation",
   Init = "init",
@@ -213,7 +237,6 @@ export enum Command {
   Pass = "pass",
   PickReward = "pick",
   PlaceLostPlanet = "lostPlanet",
-  PlaceShip = "ship",
   RotateSectors = "rotate",
   Special = "special",
   Spend = "spend",
@@ -277,9 +300,9 @@ export enum Booster {
   Booster8 = "booster8",
   Booster9 = "booster9",
   Booster10 = "booster10",
-  Ship1 = "booster-ship1",
-  Ship2 = "booster-ship2",
-  Ship3 = "booster-ship3",
+  // Ship1 = "booster-ship1",
+  // Ship2 = "booster-ship2",
+  // Ship3 = "booster-ship3",
 }
 
 export namespace Booster {
@@ -309,10 +332,10 @@ export enum TechTile {
   Tech8 = "tech8",
   Tech9 = "tech9",
   /** This techtile is one every player starts with. Not included in the shuffles */
-  Ship0 = "tech-ship0",
-  Ship1 = "tech-ship1",
-  Ship2 = "tech-ship2",
-  Ship3 = "tech-ship3",
+  // Ship0 = "tech-ship0",
+  // Ship1 = "tech-ship1",
+  // Ship2 = "tech-ship2",
+  // Ship3 = "tech-ship3",
 }
 
 export namespace TechTile {
@@ -324,9 +347,9 @@ export namespace TechTile {
       if (/^tech[0-9]/.test(val)) {
         return true;
       }
-      if (expansions & Expansion.Spaceships && val.startsWith("tech-ship") && val !== TechTile.Ship0) {
-        return true;
-      }
+      // if (expansions & Expansion.Spaceships && val.startsWith("tech-ship") && val !== TechTile.Ship0) {
+      //   return true;
+      // }
     }) as TechTile[];
   }
 }
@@ -368,13 +391,13 @@ export enum TechTilePos {
   GaiaProject = "gaia",
   Economy = "eco",
   Science = "sci",
-  TradingBonus = "trade",
-  TradingVolume = "ship",
+  // TradingBonus = "trade",
+  // TradingVolume = "ship",
   Free1 = "free1",
   Free2 = "free2",
   Free3 = "free3",
-  Free4 = "free4",
-  BasicShip = "move",
+  // Free4 = "free4",
+  // BasicShip = "move",
 }
 
 export namespace TechTilePos {
@@ -382,7 +405,7 @@ export namespace TechTilePos {
     const ret = ["terra", "nav", "int", "gaia", "eco", "sci", "free1", "free2", "free3"] as TechTilePos[];
 
     if (expansions & Expansion.Spaceships) {
-      ret.push(TechTilePos.TradingBonus, TechTilePos.TradingVolume, TechTilePos.Free4);
+      // ret.push(TechTilePos.TradingBonus, TechTilePos.TradingVolume, TechTilePos.Free4);
     }
 
     return ret;
@@ -405,12 +428,12 @@ export enum AdvTechTile {
   AdvTech13 = "advtech13",
   AdvTech14 = "advtech14",
   AdvTech15 = "advtech15",
-  Ship1 = "advship1",
-  Ship2 = "advship2",
-  Ship3 = "advship3",
-  Ship4 = "advship4",
-  Ship5 = "advship5",
-  Ship6 = "advship6",
+  // Ship1 = "advship1",
+  // Ship2 = "advship2",
+  // Ship3 = "advship3",
+  // Ship4 = "advship4",
+  // Ship5 = "advship5",
+  // Ship6 = "advship6",
 }
 
 export namespace AdvTechTile {
@@ -436,8 +459,8 @@ export enum AdvTechTilePos {
   GaiaProject = "adv-gaia",
   Economy = "adv-eco",
   Science = "adv-sci",
-  TradingBonus = "adv-trade",
-  TradingVolume = "adv-ship",
+  // TradingBonus = "adv-trade",
+  // TradingVolume = "adv-ship",
 }
 
 export namespace AdvTechTilePos {
@@ -445,7 +468,7 @@ export namespace AdvTechTilePos {
     const ret = ["adv-terra", "adv-nav", "adv-int", "adv-gaia", "adv-eco", "adv-sci"] as AdvTechTilePos[];
 
     if (expansions & Expansion.Spaceships) {
-      ret.push(AdvTechTilePos.TradingBonus, AdvTechTilePos.TradingVolume);
+      // ret.push(AdvTechTilePos.TradingBonus, AdvTechTilePos.TradingVolume);
     }
 
     return ret;
@@ -578,7 +601,7 @@ export enum Phase {
   SetupAuction = "setupAuction",
   SetupBuilding = "setupBuilding",
   SetupBooster = "setupBooster",
-  SetupShip = "setupShip",
+  // SetupShip = "setupShip",
   BeginGame = "beginGame",
   RoundStart = "roundStart",
   RoundIncome = "roundIncome",
@@ -602,10 +625,10 @@ export enum SubPhase {
   BuildMine = "buildMine",
   BuildMineOrGaiaFormer = "buildMineOrGaiaFormer",
   SpaceStation = "spaceStation",
-  PlaceShip = "placeShip",
-  MoveShip = "moveShip",
+  // PlaceShip = "placeShip",
+  // MoveShip = "moveShip",
   PickRewards = "pickRewards",
-  DeliverTrade = "deliverTrade",
+  // DeliverTrade = "deliverTrade",
   PISwap = "swap-PI",
   DowngradeLab = "down-lab",
 }
