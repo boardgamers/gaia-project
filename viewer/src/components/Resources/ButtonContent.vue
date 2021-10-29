@@ -31,7 +31,7 @@
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { ButtonData } from "../../data";
-import { withShortcut } from "../../logic/commands";
+import { withShortcut } from "../../logic/buttons/utils";
 
 @Component
 export default class ButtonContent extends Vue {

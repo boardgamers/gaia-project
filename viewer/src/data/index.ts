@@ -8,7 +8,7 @@ import {
   Reward,
   TechTilePos,
 } from "@gaia-project/engine";
-import { FastConversionTooltips, MoveButtonController } from "../logic/commands";
+import { FastConversionTooltips, MoveButtonController } from "../logic/buttons/types";
 
 export type ButtonWarning = { title?: string; body: string[]; okButton?: { label: string; action: () => void } };
 

@@ -14,7 +14,6 @@ import Vue from "vue";
 import Vuex from "vuex";
 import { ButtonData, GameContext, HexSelection, SpecialActionIncome } from "./data";
 import { FastConversionEvent } from "./data/actions";
-import { FastConversionTooltips } from "./logic/commands";
 import {
   CommandObject,
   MovesSlice,
@@ -25,6 +24,7 @@ import {
   researchClasses,
   roundMoves,
 } from "./logic/recent";
+import { FastConversionTooltips } from "./logic/buttons/types";
 
 Vue.use(Vuex);
 

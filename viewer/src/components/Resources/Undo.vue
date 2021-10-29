@@ -11,7 +11,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { UndoPropagation } from "../../logic/commands";
+import { UndoPropagation } from "../../logic/buttons/types";
 
 @Component
 export default class Undo extends Vue {

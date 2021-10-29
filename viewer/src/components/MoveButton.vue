@@ -69,7 +69,8 @@ import TechTile from "./TechTile.vue";
 import ButtonContent from "./Resources/ButtonContent.vue";
 import BoardAction from "./BoardAction.vue";
 import SpecialAction from "./SpecialAction.vue";
-import { customHexSelection, MoveButtonController } from "../logic/commands";
+import { customHexSelection } from "../logic/buttons/utils";
+import { MoveButtonController } from "../logic/buttons/types";
 
 type EmitCommandParams = { disappear?: boolean; times?: number; warnings?: BuildWarning[] };
 

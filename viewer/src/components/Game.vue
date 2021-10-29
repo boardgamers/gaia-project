@@ -92,7 +92,7 @@ import SpaceMap from "./SpaceMap.vue";
 import TurnOrder from "./TurnOrder.vue";
 import { parseCommands } from "../logic/recent";
 import { LogPlacement } from "../data";
-import { UndoPropagation } from "../logic/commands";
+import { UndoPropagation } from "../logic/buttons/types";
 
 @Component<Game>({
   created(this: Game) {

@@ -78,9 +78,11 @@ import { factionDesc, factionName, factionShortcut } from "../data/factions";
 import { FactionCustomization } from "@gaia-project/engine/src/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
 import { moveWarnings } from "../data/warnings";
-import { commandButtons, CommandController, FastConversionTooltips, hasPass, UndoPropagation } from "../logic/commands";
 import Undo from "./Resources/Undo.vue";
 import { ActionPayload, SubscribeActionOptions, SubscribeOptions } from "vuex";
+import { CommandController, FastConversionTooltips, UndoPropagation } from "../logic/buttons/types";
+import { hasPass } from "../logic/buttons/utils";
+import { commandButtons } from "../logic/buttons/commands";
 
 let show = false;
 

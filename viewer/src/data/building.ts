@@ -1,4 +1,4 @@
-import { AvailableBuilding, Building, Building as BuildingEnum, Faction } from "@gaia-project/engine";
+import { AvailableBuilding, Building, Building as BuildingEnum, Faction, isShip } from "@gaia-project/engine";
 
 export function buildingName(building: Building, faction: Faction): string {
   switch (building) {
@@ -35,46 +35,6 @@ export function buildingName(building: Building, faction: Faction): string {
   }
 }
 
-export function buildingShortcut(building: AvailableBuilding): string {
-  if (building.downgrade) {
-    return "d";
-  }
-  if (building.upgrade && building.building == Building.Mine) {
-    return "u";
-  }
-  switch (building.building) {
-    case Building.Mine:
-      return "m";
-    case Building.Academy1:
-    case Building.Academy2:
-      return "c";
-    case Building.TradingStation:
-      return "t";
-    case Building.ResearchLab:
-      return "l";
-    case Building.PlanetaryInstitute:
-      return "i";
-    case Building.GaiaFormer:
-      return "g";
-    case Building.SpaceStation:
-      return "s";
-    case Building.ColonyShip:
-      return "1";
-    case Building.ConstructionShip:
-      return "2";
-    case Building.ResearchShip:
-      return "3";
-    case Building.TradeShip:
-      return "4";
-    case Building.Scout:
-      return "5";
-    case Building.Frigate:
-      return "6";
-    case Building.BattleShip:
-      return "7";
-  }
-}
-
 export function shipLetter(building: BuildingEnum): string {
   switch (building) {
     case BuildingEnum.ColonyShip:
@@ -91,5 +51,36 @@ export function shipLetter(building: BuildingEnum): string {
       return "F";
     case BuildingEnum.BattleShip:
       return "B";
+  }
+}
+
+export function buildingShortcut(b: AvailableBuilding, faction: Faction): string {
+  if (b.downgrade) {
+    return "d";
+  }
+  const building = b.building;
+  if (b.upgrade && building == Building.Mine) {
+    return "u";
+  }
+  if (isShip(building)) {
+    return shipLetter(building).toLowerCase();
+  }
+  switch (building) {
+    case Building.Mine:
+      return "m";
+    case Building.Academy1:
+      return "k";
+    case Building.Academy2:
+      return faction == Faction.BalTaks ? "c" : "q";
+    case Building.TradingStation:
+      return "t";
+    case Building.ResearchLab:
+      return "l";
+    case Building.PlanetaryInstitute:
+      return "i";
+    case Building.GaiaFormer:
+      return "g";
+    case Building.SpaceStation:
+      return "s";
   }
 }
