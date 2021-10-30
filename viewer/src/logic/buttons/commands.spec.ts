@@ -9,8 +9,8 @@ import {
 } from "@gaia-project/engine";
 import { expect } from "chai";
 import { freeActionButton } from "./conversion";
-import { withShortcut } from "./utils";
 import { boosterWarning } from "./pass";
+import { withShortcut } from "./utils";
 
 describe("commands", () => {
   it("should assign shortcut for free action", () => {

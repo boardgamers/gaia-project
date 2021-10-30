@@ -1,17 +1,16 @@
 import Engine, { AvailableCommand, Command, Player } from "@gaia-project/engine";
 import { ButtonData } from "../../data";
+import { boardActionsButton, specialActionsButton } from "./actions";
+import { buildButtons, moveShipButton } from "./buildings";
+import { fastConversionClick, freeAndBurnButton } from "./conversion";
+import { deadEndButton } from "./dead-end";
+import { declineButton } from "./decline";
+import { federationButton, federationTypeButtons } from "./federation";
+import { endTurnButton, passButtons } from "./pass";
+import { brainstoneButtons, chargePowerButtons } from "./power";
+import { researchButtons, techTiles } from "./research";
 import { AvailableConversions, CommandController } from "./types";
 import { activateOnShow, finalizeShortcuts, hasPass, hexMap } from "./utils";
-import { buildButtons, moveShipButton } from "./buildings";
-import { endTurnButton, passButtons } from "./pass";
-import { researchButtons, techTiles } from "./research";
-import { brainstoneButtons, chargePowerButtons } from "./power";
-import { declineButton } from "./decline";
-import { boardActionsButton, specialActionsButton } from "./actions";
-import { deadEndButton } from "./dead-end";
-import { federationButton, federationTypeButtons } from "./federation";
-import { fastConversionClick, freeAndBurnButton } from "./conversion";
-
 
 function commandButton(
   command: AvailableCommand,

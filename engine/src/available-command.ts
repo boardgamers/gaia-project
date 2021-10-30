@@ -27,7 +27,8 @@ import {
   Planet,
   Player,
   ResearchField,
-  Resource, Ship,
+  Resource,
+  Ship,
   SubPhase,
   TechTile,
   TechTilePos,
@@ -331,7 +332,7 @@ function addPossibleNewPlanet(
 }
 
 export function shipsInHex(location: string, data): Ship[] {
-  return data.players.flatMap(p => p.data.ships).filter(s => s.location === location);
+  return data.players.flatMap((p) => p.data.ships).filter((s) => s.location === location);
 }
 
 function possibleShips(pl: PlayerObject, engine: Engine, map: SpaceMap, hex: GaiaHex) {
@@ -436,7 +437,7 @@ function shipTargets(
   hex: string,
   range: number,
   targets: AvailableHex[],
-  engine: Engine,
+  engine: Engine
 ): AvailableHex[] {
   if (hex === source || shipsInHex(hex, engine).length < MAX_SHIPS_PER_HEX) {
     targets.push({ coordinates: hex });

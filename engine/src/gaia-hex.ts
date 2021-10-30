@@ -1,7 +1,7 @@
 import assert from "assert";
 import { Hex } from "hexagrid";
 import { stdBuildingValue } from "./buildings";
-import { Building, Planet, Player, TradeToken } from "./enums";
+import { Building, Planet, Player } from "./enums";
 
 type PlayerShip = { player: Player; ship: Building; moved: boolean };
 

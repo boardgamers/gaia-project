@@ -1,7 +1,7 @@
-import { ButtonData, ButtonWarning, HexSelection, HighlightHexData } from "../../data";
 import Engine, { AvailableCommand, AvailableHex, Command, GaiaHex, HighlightHex, Reward } from "@gaia-project/engine";
-import { resourceNames } from "../../data/resources";
 import assert from "assert";
+import { ButtonData, ButtonWarning, HexSelection, HighlightHexData } from "../../data";
+import { resourceNames } from "../../data/resources";
 import { MoveButtonController } from "./types";
 
 export function addOnCreate(button: ButtonData, action: (controller: MoveButtonController) => void) {
@@ -70,7 +70,12 @@ export function withShortcut(label: string | null, shortcut: string | null, skip
   }
 }
 
-export function tooltipWithShortcut(tooltip: string | null, warn: ButtonWarning | null, shortcut?: string, skip?: string[]) {
+export function tooltipWithShortcut(
+  tooltip: string | null,
+  warn: ButtonWarning | null,
+  shortcut?: string,
+  skip?: string[]
+) {
   const warnings = warn?.body?.join(", ");
 
   if (tooltip && warn) {
@@ -164,7 +169,8 @@ export function finalizeShortcuts(buttons: ButtonData[]) {
     if (b.shortcuts.length == 0) {
       const assigned = b.label?.includes("<u>") ? b.label.substr(b.label.indexOf("<u>") + 3, 1).toLowerCase() : null;
 
-      if (assigned && assigned != "<") { //to avoid <u></u>
+      if (assigned && assigned != "<") {
+        //to avoid <u></u>
         b.shortcuts.push(assigned);
       } else {
         b.shortcuts.push(String(shortcut));
@@ -189,6 +195,3 @@ export function customHexSelection(hexes: HighlightHexData): HexSelection {
 export function hasPass(commands: AvailableCommand[]) {
   return commands.some((c) => c.name === Command.Pass);
 }
-
-
-

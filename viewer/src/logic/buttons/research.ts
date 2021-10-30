@@ -1,15 +1,17 @@
 import {
   AvailableCommand,
-  AvailableResearchTrack, ChooseTechTile,
+  AvailableResearchTrack,
+  ChooseTechTile,
   Command,
   Event,
   Operator,
   Player,
-  researchTracks, Reward,
+  researchTracks,
+  Reward,
 } from "@gaia-project/engine";
 import { ButtonData, ButtonWarning } from "../../data";
-import { textButton } from "./utils";
 import { researchNames } from "../../data/research";
+import { textButton } from "./utils";
 import { resourceWasteWarning, rewardWarnings } from "./warnings";
 
 function advanceResearchWarning(player: Player, track: AvailableResearchTrack): ButtonWarning | null {
@@ -70,4 +72,3 @@ export function techTiles(command: Command, tiles: ChooseTechTile[]): ButtonData
   };
   return ret;
 }
-

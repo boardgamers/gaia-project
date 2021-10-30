@@ -3,15 +3,19 @@ import Engine, {
   Booster,
   Command,
   Event,
-  Expansion, Faction,
+  Expansion,
+  Faction,
   Operator,
-  Player, PowerArea, Resource, Reward,
+  Player,
+  PowerArea,
+  Resource,
+  Reward,
   tiles,
 } from "@gaia-project/engine";
 import { ButtonData, ButtonWarning } from "../../data";
+import { boosterNames } from "../../data/boosters";
 import { eventDesc } from "../../data/event";
 import { activateOnShow, symbolButton, textButton, translateResources } from "./utils";
-import { boosterNames } from "../../data/boosters";
 import { chargeIncomeWarning, passWarningButton, rewardWarnings } from "./warnings";
 
 export function endTurnWarning(player: Player): ButtonWarning | null {
@@ -168,4 +172,3 @@ export function endTurnButton(command: AvailableCommand<Command.EndTurn>, player
     warning: endTurnWarning(player),
   });
 }
-

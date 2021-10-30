@@ -1,5 +1,5 @@
-import { ButtonWarning } from "../../data";
 import { applyChargePowers, Event, Player, Resource, Reward } from "@gaia-project/engine";
+import { ButtonWarning } from "../../data";
 
 export function buttonWarnings(messages?: string[]): ButtonWarning | null {
   return messages?.length > 0 && { title: "Are you sure?", body: messages };
@@ -48,5 +48,3 @@ export function chargeIncomeWarning(player: Player, additionalEvents: Event[]) {
 export function resourceWasteWarning(warnings: string[]): ButtonWarning | null {
   return warnings.length == 0 ? null : { title: "Resources will be wasted - are you sure?", body: warnings };
 }
-
-

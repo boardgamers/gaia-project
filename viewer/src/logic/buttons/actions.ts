@@ -1,5 +1,6 @@
 import {
-  AvailableBoardActionData, AvailableCommand,
+  AvailableBoardActionData,
+  AvailableCommand,
   BoardAction,
   boardActions,
   Command,
@@ -7,12 +8,12 @@ import {
   Player,
   Reward,
 } from "@gaia-project/engine";
-import { boardActionNames } from "../../data/actions";
 import { ButtonData, ButtonWarning } from "../../data";
+import { boardActionNames } from "../../data/actions";
 import { resourceNames } from "../../data/resources";
+import { conversionButton } from "./conversion";
 import { symbolButton, translateResources } from "./utils";
 import { resourceWasteWarning, rewardWarnings } from "./warnings";
-import { conversionButton } from "./conversion";
 
 export function boardActionButton(action: BoardAction, player: Player | null) {
   const b = boardActions[action];

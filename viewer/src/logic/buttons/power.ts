@@ -7,9 +7,9 @@ import Engine, {
   PowerArea,
 } from "@gaia-project/engine";
 import { ButtonData, ButtonWarning } from "../../data";
+import { moveWarnings } from "../../data/warnings";
 import { textButton } from "./utils";
 import { buttonWarning, chargeIncomeWarning } from "./warnings";
-import { moveWarnings } from "../../data/warnings";
 
 function chargeWarning(engine: Engine, player: Player, offer: string): ButtonWarning | null {
   return engine.passedPlayers.includes(player.player) ? chargeIncomeWarning(player, [new Event(offer)]) : null;
@@ -47,4 +47,3 @@ export function chargePowerButtons(
   }
   return ret;
 }
-

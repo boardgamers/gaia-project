@@ -1,17 +1,22 @@
 import Engine, {
-  AvailableCommand, AvailableFederation,
-  Command, Faction,
+  AvailableCommand,
+  AvailableFederation,
+  Command,
+  Faction,
   Federation,
-  FederationInfo, GaiaHex, HighlightHex, MAX_SATELLITES,
+  FederationInfo,
+  GaiaHex,
+  HighlightHex,
+  MAX_SATELLITES,
   Player,
   Reward,
   tiles,
 } from "@gaia-project/engine";
-import { federationData } from "../../data/federations";
-import { CommandController, MoveButtonController } from "./types";
-import { ButtonData, HighlightHexData } from "../../data";
 import { sortBy } from "lodash";
+import { ButtonData, HighlightHexData } from "../../data";
+import { federationData } from "../../data/federations";
 import { moveWarnings } from "../../data/warnings";
+import { CommandController, MoveButtonController } from "./types";
 import { customHexSelection, textButton, tooltipWithShortcut } from "./utils";
 import { buttonWarning, resourceWasteWarning, rewardWarnings } from "./warnings";
 
@@ -171,4 +176,3 @@ export function federationButton(
     onOpen: () => next(),
   });
 }
-

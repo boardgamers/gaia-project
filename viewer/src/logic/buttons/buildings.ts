@@ -1,5 +1,3 @@
-import { ButtonData, ButtonWarning } from "../../data";
-import { moveWarnings } from "../../data/warnings";
 import Engine, {
   AvailableBuilding,
   AvailableCommand,
@@ -12,11 +10,13 @@ import Engine, {
   isShip,
   Round,
 } from "@gaia-project/engine";
-import { buildingName, buildingShortcut, shipLetter } from "../../data/building";
-import { sortBy, sortedUniq } from "lodash";
-import { addOnClick, addOnShow, hexMap, prependShortcut, textButton, tooltipWithShortcut, withShortcut } from "./utils";
 import assert from "assert";
+import { sortBy, sortedUniq } from "lodash";
+import { ButtonData, ButtonWarning } from "../../data";
+import { buildingName, buildingShortcut, shipLetter } from "../../data/building";
+import { moveWarnings } from "../../data/warnings";
 import { CommandController } from "./types";
+import { addOnClick, addOnShow, hexMap, prependShortcut, textButton, tooltipWithShortcut, withShortcut } from "./utils";
 import { buttonWarnings } from "./warnings";
 
 function commonHexWarning(buildings): ButtonWarning | null {
@@ -49,7 +49,7 @@ function hexSelectionButton(data: ButtonData, newLocationButton = (hex: GaiaHex)
     b.shortcuts = [shortcut];
     i++;
 
-    b.warning = buttonWarnings(hexes.get(hex).warnings?.map(w => moveWarnings[w].text));
+    b.warning = buttonWarnings(hexes.get(hex).warnings?.map((w) => moveWarnings[w].text));
     b.tooltip = tooltipWithShortcut(null, b.warning);
 
     addOnShow(b, false, (c) => {
@@ -106,8 +106,15 @@ function buildingLabel(bld: AvailableBuilding, faction: Faction) {
   return label;
 }
 
-function buildingButton(label: string, shortcut: string, command: string, engine: Engine,
-                        buildings: AvailableBuilding[], commonWarning: ButtonWarning, confirm: ButtonData[]) {
+function buildingButton(
+  label: string,
+  shortcut: string,
+  command: string,
+  engine: Engine,
+  buildings: AvailableBuilding[],
+  commonWarning: ButtonWarning,
+  confirm: ButtonData[]
+) {
   return hexSelectionButton(
     {
       label,
@@ -117,7 +124,7 @@ function buildingButton(label: string, shortcut: string, command: string, engine
       warning: commonWarning,
       needConfirm: confirm?.length > 0,
     },
-    (hex) => textButton({ buttons: confirm }),
+    (hex) => textButton({ buttons: confirm })
   );
 }
 
@@ -164,9 +171,9 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
         );
       }
 
-      buttons.push(buildingButton(
-        buildingName(building, faction), shortcut, building, engine, buildings, commonWarning, []
-      ));
+      buttons.push(
+        buildingButton(buildingName(building, faction), shortcut, building, engine, buildings, commonWarning, [])
+      );
 
       menus.set(menu, buttons);
     } else {
@@ -180,7 +187,9 @@ export function buildButtons(engine: Engine, command: AvailableCommand<Command.B
             ]
           : undefined;
 
-      ret.push(buildingButton(label, shortcut, `${Command.Build} ${building}`, engine, buildings, commonWarning, confirm));
+      ret.push(
+        buildingButton(label, shortcut, `${Command.Build} ${building}`, engine, buildings, commonWarning, confirm)
+      );
     }
   }
   return ret;
@@ -221,4 +230,3 @@ export function moveShipButton(
     ),
   });
 }
-

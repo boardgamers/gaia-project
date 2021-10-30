@@ -6,8 +6,8 @@ import {
   HighlightHex,
   TechTilePos,
 } from "@gaia-project/engine";
-import { ButtonData, HexSelection } from "../../data";
 import { ActionPayload, SubscribeActionOptions, SubscribeOptions } from "vuex";
+import { ButtonData, HexSelection } from "../../data";
 import { FastConversionButton } from "../../data/actions";
 
 export type FastConversionTooltips = { [key in FastConversionButton]?: string };
@@ -59,4 +59,3 @@ export interface MoveButtonController {
 
   executeCommand(): void;
 }
-

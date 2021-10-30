@@ -1,17 +1,20 @@
 import {
-  AvailableFreeAction, AvailableFreeActionData,
+  AvailableFreeAction,
+  AvailableFreeActionData,
   BoardAction,
   Command,
-  conversionToFreeAction, Faction,
-  Player, PowerArea,
+  conversionToFreeAction,
+  Faction,
+  Player,
+  PowerArea,
   Resource,
   Reward,
 } from "@gaia-project/engine";
-import { ButtonData } from "../../data";
-import { symbolButton, translateResources } from "./utils";
-import { FastConversion, FastConversionButton, FastConversionEvent, freeActionShortcuts } from "../../data/actions";
 import { max, minBy, range, sortBy } from "lodash";
+import { ButtonData } from "../../data";
+import { FastConversion, FastConversionEvent, freeActionShortcuts } from "../../data/actions";
 import { AvailableConversions, FastConversionTooltips } from "./types";
+import { symbolButton, translateResources } from "./utils";
 import { resourceWasteWarning, rewardWarnings } from "./warnings";
 
 function conversionLabel(cost: Reward[], income: Reward[]) {

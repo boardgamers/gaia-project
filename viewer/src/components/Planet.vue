@@ -45,7 +45,6 @@ svg {
     pointer-events: none;
   }
 
-
   .accessible-space-map &.space-map .ship .planet.v {
     stroke-dasharray: 0.4;
     stroke-width: 0.3;
