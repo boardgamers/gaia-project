@@ -31,13 +31,14 @@
       outline
     />
     <Building
-      v-for="(s, i) in hex.data.ships"
+      v-for="(s, i) in ships"
       :key="i"
-      :building="s.ship"
+      :building="s.type"
+      :ship-moved="s.moved"
       :faction="faction(s.player)"
       outline
       :flat="flat"
-      :transform="`scale(0.05) ${shipTranslate(i)}`"
+      :transform="shipTransform(i)"
     />
     <polygon
       v-for="(player, index) in hex.data.federations || []"
@@ -54,7 +55,8 @@ import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   Faction,
   factionPlanet,
-  GaiaHex, MAX_SHIPS_PER_HEX,
+  GaiaHex,
+  MAX_SHIPS_PER_HEX,
   Planet as PlanetEnum,
   Player,
   SpaceMap as ISpaceMap,
@@ -68,6 +70,8 @@ import { HexSelection, HighlightHexData } from "../data";
 import { moveWarnings } from "../data/warnings";
 import { factionName } from "../data/factions";
 import { radiusTranslate } from "../logic/utils";
+import { Ship } from "@gaia-project/engine/src/enums";
+import { shipsInHex } from "@gaia-project/engine/src/available-command";
 
 @Component<SpaceHex>({
   components: {
@@ -82,8 +86,11 @@ export default class SpaceHex extends Vue {
   @Prop()
   isCenter: boolean;
 
-  shipTranslate(index: number): string {
-    return radiusTranslate(9, index, MAX_SHIPS_PER_HEX);
+  shipTransform(index: number): string {
+    if (this.ships.length == 1) {
+      return "scale(0.1)";
+    }
+    return `scale(0.05) ${radiusTranslate(9, index, MAX_SHIPS_PER_HEX)}`;
   }
 
   get hexCorners() {
@@ -96,6 +103,10 @@ export default class SpaceHex extends Vue {
 
   get map(): ISpaceMap {
     return this.$store.state.data.map;
+  }
+
+  get ships(): Ship[] {
+    return shipsInHex(this.hex.toString(), this.$store.state.data);
   }
 
   warning(hex: GaiaHex): string {
@@ -226,10 +237,10 @@ export default class SpaceHex extends Vue {
       if (data.additionalMine != null) {
         guestBuilding = buildingLabel(this.player(data.additionalMine));
       }
-    } else if (data.ships) {
-      ships = data.ships.map(s => {
+    } else if (this.ships) {
+      ships = this.ships.map(s => {
         const faction = this.player(s.player).faction;
-        return (`${buildingName(s.ship, faction)} (${factionName(faction)})`);
+        return (`${buildingName(s.type, faction)} (${factionName(faction)})`);
       });
     }
     const w = this.warning(hex);

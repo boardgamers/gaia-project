@@ -178,6 +178,7 @@ export enum Building {
 
 export type Ship = {
   type: Building;
+  player: Player;
   location: string;
   moved: boolean;
 };
@@ -537,8 +538,8 @@ export enum ScoringTile {
   Score8 = "score8",
   Score9 = "score9",
   Score10 = "score10",
-  Ship1 = "score-ship1",
-  Ship2 = "score-ship2",
+  // Ship1 = "score-ship1",
+  // Ship2 = "score-ship2",
 }
 
 export namespace ScoringTile {

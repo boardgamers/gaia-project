@@ -1,5 +1,6 @@
 <template>
-  <g v-if="isShip">
+  <g v-if="isShip" class="ship">
+    <circle v-if="shipMoved" r="7" />
     <Planet :planet="planetClass" transform="scale(7)" />
     <text transform="translate(-2, -.7) scale(5)" class="board-text" style="font-weight: bolder">{{ shipLetter }}</text>
   </g>
@@ -41,6 +42,9 @@ export default class Building extends Vue {
 
   @Prop({ default: false, type: Boolean })
   flat: boolean;
+
+  @Prop()
+  shipMoved: boolean;
 
   @Prop()
   building: BuildingEnum;
@@ -128,6 +132,11 @@ svg {
 
   .additionalMine {
     stroke-width: 5;
+  }
+
+  .ship > circle {
+    fill: white;
+    pointer-events: none;
   }
 }
 </style>

@@ -24,7 +24,7 @@ export function addOnClick(button: ButtonData, action: (controller: MoveButtonCo
   };
 }
 
-export function addOnShow(button: ButtonData, action: (c: MoveButtonController) => void) {
+export function addOnShow(button: ButtonData, onlyOnce: boolean, action: (c: MoveButtonController) => void) {
   let controller: MoveButtonController = null;
   addOnCreate(button, (c) => {
     controller = c;
@@ -32,6 +32,12 @@ export function addOnShow(button: ButtonData, action: (c: MoveButtonController) 
   const next = button.onShow;
   button.onShow = () => {
     next?.();
+    if (onlyOnce) {
+      if (button.onShowTriggered) {
+        return;
+      }
+      button.onShowTriggered = true;
+    }
     action(controller);
   };
 }
@@ -75,7 +81,7 @@ export function tooltipWithShortcut(tooltip: string | null, warn: ButtonWarning 
 
 export function activateOnShow(button: ButtonData): ButtonData {
   button.disabled = true;
-  addOnShow(button, (c) => c.handleClick());
+  addOnShow(button, true, (c) => c.handleClick());
   return button;
 }
 
@@ -120,6 +126,28 @@ export function textButton(button: ButtonData): ButtonData {
   return button;
 }
 
+function addSingleButtonShortcut(b: ButtonData) {
+  if (b.shortcuts.includes("Enter")) {
+    //already processed
+    return;
+  }
+
+  const label = b.label ?? b.command;
+  if (label && !label.includes("<u>")) {
+    if (isFinite(Number(b.shortcuts[0]))) {
+      //remove any numeric shortcuts
+      b.shortcuts = [];
+    }
+
+    if (forceNumericShortcut(label)) {
+      b.shortcuts.push("1");
+    } else {
+      b.shortcuts.push(label.substring(0, 1).toLowerCase());
+    }
+  }
+  b.shortcuts.push("Enter");
+}
+
 export function finalizeShortcuts(buttons: ButtonData[]) {
   for (const button of buttons) {
     if (button.buttons) {
@@ -146,19 +174,7 @@ export function finalizeShortcuts(buttons: ButtonData[]) {
   }
 
   if (shown.length == 1) {
-    const b = shown[0];
-    if (isFinite(Number(b.shortcuts[0]))) {
-      b.shortcuts = [];
-    }
-    const label = b.label ?? b.command;
-    if (label) {
-      if (forceNumericShortcut(label)) {
-        b.shortcuts.push("1");
-      } else {
-        b.shortcuts.push(label.substring(0, 1).toLowerCase());
-      }
-    }
-    b.shortcuts.push("Enter");
+    addSingleButtonShortcut(shown[0]);
   }
 }
 

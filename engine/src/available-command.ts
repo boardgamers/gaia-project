@@ -27,7 +27,7 @@ import {
   Planet,
   Player,
   ResearchField,
-  Resource,
+  Resource, Ship,
   SubPhase,
   TechTile,
   TechTilePos,
@@ -330,13 +330,17 @@ function addPossibleNewPlanet(
   }
 }
 
+export function shipsInHex(location: string, data): Ship[] {
+  return data.players.flatMap(p => p.data.ships).filter(s => s.location === location);
+}
+
 function possibleShips(pl: PlayerObject, engine: Engine, map: SpaceMap, hex: GaiaHex) {
   const buildings: AvailableBuilding[] = [];
   for (const ship of Object.values(Building).filter((b) => isShip(b))) {
     const check = pl.canBuild(null, ship, engine.isLastRound, engine.replay);
     if (check) {
       for (const h of map.withinDistance(hex, 1)) {
-        if (!h.hasPlanet() && h.ships().length < MAX_SHIPS_PER_HEX) {
+        if (!h.hasPlanet() && shipsInHex(h.toString(), engine).length < MAX_SHIPS_PER_HEX) {
           buildings.push(newAvailableBuilding(ship, h, check, false));
         }
       }
@@ -432,16 +436,19 @@ function shipTargets(
   hex: string,
   range: number,
   targets: AvailableHex[],
-  map: SpaceMap
+  engine: Engine,
 ): AvailableHex[] {
+  if (hex === source || shipsInHex(hex, engine).length < MAX_SHIPS_PER_HEX) {
+    targets.push({ coordinates: hex });
+  }
   if (range === 0) {
     return targets;
   }
+  const map = engine.map;
   for (const h of map.withinDistance(map.getS(hex), 1)) {
     const c = h.toString();
     if (!h.hasPlanet() && c !== source && !targets.find((t) => t.coordinates === c)) {
-      targets.push({ coordinates: c });
-      shipTargets(source, c, range - 1, targets, map);
+      shipTargets(source, c, range - 1, targets, engine);
     }
   }
   return targets;
@@ -463,7 +470,7 @@ export function possibleShipMovements(engine: Engine, player: Player): Available
       data: ships.map((s) => ({
         ship: s.type,
         source: s.location,
-        targets: shipTargets(s.location, s.location, shipRange, [], engine.map),
+        targets: shipTargets(s.location, s.location, shipRange, [], engine),
       })),
     },
   ];

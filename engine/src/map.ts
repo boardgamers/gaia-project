@@ -370,7 +370,7 @@ export default class SpaceMap {
     };
   }
 
-  getS(coords: string) {
+  getS(coords: string): GaiaHex {
     return this.grid.get(this.parse(coords));
   }
 }

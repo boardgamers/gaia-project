@@ -626,16 +626,14 @@ export default class Player extends EventEmitter {
   }
 
   placeShip(ship: Building, hex: GaiaHex) {
-    hex.addShip(ship, this.player);
-    this.data.ships.push({ type: ship, location: hex.toString(), moved: false });
+    this.data.ships.push({ type: ship, location: hex.toString(), moved: false, player: this.player });
   }
 
   findShip(ship: Building, location: string): Ship | null {
     return this.data.ships.find((s) => s.location === location && s.type === ship);
   }
 
-  removeShip(ship: Ship, map: SpaceMap) {
-    map.getS(ship.location).removeShip(ship.type, this.player);
+  removeShip(ship: Ship, map: SpaceMap, moved: boolean) {
     const l = this.data.ships;
     l.splice(l.indexOf(ship), 1);
   }

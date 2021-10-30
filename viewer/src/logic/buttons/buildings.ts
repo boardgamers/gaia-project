@@ -52,7 +52,7 @@ function hexSelectionButton(data: ButtonData, newLocationButton = (hex: GaiaHex)
     b.warning = buttonWarnings(hexes.get(hex).warnings?.map(w => moveWarnings[w].text));
     b.tooltip = tooltipWithShortcut(null, b.warning);
 
-    addOnShow(b, (c) => {
+    addOnShow(b, false, (c) => {
       c.subscribeHexClick((h) => {
         if (h == hex) {
           c.handleClick();

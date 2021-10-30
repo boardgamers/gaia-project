@@ -1913,8 +1913,6 @@ export default class Engine {
 
     ship.moved = true;
     ship.location = dest;
-    this.map.getS(source).removeShip(shipType, player);
-    this.map.getS(dest).addShip(shipType, player);
   }
 
   [Command.PickReward](player: PlayerEnum, rewardString: string) {

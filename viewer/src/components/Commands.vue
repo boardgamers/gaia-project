@@ -287,10 +287,7 @@ export default class Commands extends Vue implements CommandController {
       this.customButtons = source.buttons;
       this.$store.commit("setCommandChain", true);
 
-      if (!source.onShowTriggered) {
-        source.onShowTriggered = true;
-        source.onShow?.();
-      }
+      source.onShow?.();
       source.onOpen?.();
 
       return;
