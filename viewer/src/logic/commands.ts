@@ -54,6 +54,7 @@ import { federationData } from "../data/federations";
 import { researchNames } from "../data/research";
 import { resourceNames } from "../data/resources";
 import { moveWarnings } from "../data/warnings";
+import { setupButton } from "./buttons/setup";
 
 export type UndoPropagation = {
   undoPerformed: boolean;
@@ -296,7 +297,7 @@ function advanceResearchWarning(player: Player, track: AvailableResearchTrack): 
   return resourceWasteWarning(rewardWarnings(player, rewards));
 }
 
-function symbolButton(button: ButtonData, skipShortcut?: string[]): ButtonData {
+export function symbolButton(button: ButtonData, skipShortcut?: string[]): ButtonData {
   button.tooltip = tooltipWithShortcut(
     button.label,
     button.warning,
@@ -307,7 +308,7 @@ function symbolButton(button: ButtonData, skipShortcut?: string[]): ButtonData {
   return button;
 }
 
-function textButton(button: ButtonData): ButtonData {
+export function textButton(button: ButtonData): ButtonData {
   button.tooltip = tooltipWithShortcut(null, button.warning);
   return button;
 }
@@ -1041,7 +1042,7 @@ export function declineButton(command: AvailableCommand<Command.Decline>): Butto
 }
 
 export function techTiles(command: Command, tiles: ChooseTechTile[]): ButtonData[] {
-  const ret: ButtonData[] = tiles.map((tile) => ({ command: `${command} ${tile.pos}`, tech: tile.pos }));
+  const ret: ButtonData[] = tiles.map((tile) => ({ command: `${command} ${tile.pos}`, tech: { pos: tile.pos } }));
 
   ret[0].onCreate = (controller) => {
     controller.highlightTechs(tiles.map((tile) => tile.pos));
@@ -1074,6 +1075,9 @@ function commandButton(
           hexes: { hexes: new Map(), backgroundLight: true, selectAnyHex: true },
         },
       ];
+    }
+    case Command.Setup: {
+      return [setupButton(command.data)];
     }
     case Command.Build: {
       return buildButtons(engine, command);

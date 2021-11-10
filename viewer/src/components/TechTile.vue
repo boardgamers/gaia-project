@@ -1,7 +1,7 @@
 <template>
   <svg
     :class="['techTile', pos, { highlighted, covered, advanced: isAdvanced }]"
-    v-show="this.count"
+    v-if="this.count"
     v-b-tooltip
     :title="tooltip"
     @click="onClick"
@@ -40,6 +40,7 @@ import {
   Operator as OperatorEnum,
   Condition as ConditionEnum,
   Building as BuildingEnum,
+  AdvTechTile,
 } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
 import TechContent from "./TechContent.vue";
@@ -61,16 +62,24 @@ export default class TechTile extends Vue {
   countOverride?: number;
 
   @Prop()
+  tileOverride: TechTile | AdvTechTile;
+
+  @Prop()
+  commandOverride: string;
+
+  @Prop()
   covered: boolean;
 
   onClick() {
-    if (this.highlighted) {
+    if (this.commandOverride) {
+      this.$store.dispatch("techClick", { command: this.commandOverride } as ButtonData);
+    } else if (this.highlighted) {
       this.$store.dispatch("techClick", { command: this.pos } as ButtonData);
     }
   }
 
   get highlighted() {
-    return this.$store.state.context.highlighted.techs.has(this.pos);
+    return this.$store.state.context.highlighted.techs.has(this.pos) || this.commandOverride;
   }
 
   get tileObject() {
@@ -78,7 +87,7 @@ export default class TechTile extends Vue {
   }
 
   get tile() {
-    return this.tileObject.tile;
+    return this.tileOverride ?? this.tileObject.tile;
   }
 
   get event() {
@@ -92,24 +101,15 @@ export default class TechTile extends Vue {
     if (this.player !== undefined) {
       return 1;
     }
-    return this.tileObject.count;
+    return this.tileObject?.count;
   }
 
   get rawContent() {
     return tiles.techs[this.tile][0];
   }
 
-  get title() {
-    // Only show count if there are more players than tech tiles available
-    if (this.count > 1 && this.$store.state.data.players.length > 4) {
-      return `${this.pos} (${this.count})`;
-    }
-
-    return this.pos;
-  }
-
   get isAdvanced() {
-    return this.pos.startsWith("adv-");
+    return this.tile.startsWith("adv");
   }
 
   get tooltip() {
