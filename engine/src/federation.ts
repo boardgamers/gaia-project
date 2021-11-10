@@ -77,8 +77,6 @@ export function parseFederationLocation(location: string, map: SpaceMap) {
     assert(map.grid.get(coord), `Coord ${coord.q}x${coord.r} is not part of the map`);
   }
 
-  assert(coords.length <= 30, "The federation is too big, it is impossible to build with only 23 satellites");
-
   const hexes: GaiaHex[] = uniq(coords.map((coord) => map.grid.get(coord)));
 
   assert(hexes.length === coords.length, "There are repeating coordinates in the given federation");

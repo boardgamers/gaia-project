@@ -1181,6 +1181,11 @@ export default class Player extends EventEmitter {
   hexesForFederationLocation(location: string, map: SpaceMap): GaiaHex[] {
     const hexes = parseFederationLocation(location, map);
 
+    if (this.faction !== Faction.Ivits) {
+      const max = MAX_SATELLITES + this.federationCost;
+      assert(hexes.length <= max, `The federation is too big, it is impossible to build with only ${max} satellites`);
+    }
+
     // Extend to nearby buildings
     return this.addAdjacentBuildings(hexes, map);
   }
