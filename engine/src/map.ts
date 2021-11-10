@@ -109,6 +109,7 @@ export function parseLocation(coords: string): { suffix: string; sector: string 
   return { sector, suffix };
 }
 
+export type MapTile = { map: string; name: string };
 export default class SpaceMap {
   rng: seedrandom.prng;
   nbPlayers: number;
@@ -143,7 +144,8 @@ export default class SpaceMap {
       "Fastgame01",
     ].includes(seed);
     do {
-      this.generate(mirror);
+      //random tiles in loop to keep compatability with the old tests
+      this.generate(this.randomTiles(), () => Math.floor(this.rng() * 6), mirror);
     } while (!this.isValid(germanRules));
   }
 
@@ -185,7 +187,7 @@ export default class SpaceMap {
       return Sector.create(def, val.sector, center).rotateRight(val.rotation, center);
     });
 
-    this.grid = hexagon.merge(...hexagons);
+    this.grid = hexagon ? hexagon.merge(...hexagons) : new Grid();
     this.placement = conf;
   }
 
@@ -224,14 +226,13 @@ export default class SpaceMap {
   /**
    * Generate the map
    */
-  generate(mirror = false) {
-    const definitions = this.chooseSides();
+  generate(tiles: MapTile[], rotation: () => number, mirror = false) {
     const centers = this.configuration().centers;
 
     this.placement = {
-      sectors: definitions.map((side, i) => ({
+      sectors: tiles.map((side, i) => ({
         sector: side.name,
-        rotation: Math.floor(this.rng() * 6),
+        rotation: rotation(),
         center: centers[i],
       })),
       mirror,
@@ -255,7 +256,7 @@ export default class SpaceMap {
     }
   }
 
-  chooseSides(): Array<{ map: string; name: string }> {
+  randomTiles(): MapTile[] {
     const definitions = this.configuration().sectors;
     // Random sort of the chosen sectors, sliced
     return shuffleSeed.shuffle(definitions, this.rng()).slice(0, this.configuration().nbSectors);

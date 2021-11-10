@@ -14,7 +14,14 @@
       :action="[button.specialAction]"
       :player="player"
     />
-    <TechTile v-else-if="button.tech" class="mb-1 mr-1" :pos="button.tech" :count-override="1" />
+    <TechTile
+      v-else-if="button.tech"
+      class="mb-1 mr-1"
+      :pos="button.tech.pos"
+      :tile-override="button.tech.tile"
+      :command-override="button.tech.commandOverride"
+      :count-override="1"
+    />
     <b-btn
       v-else-if="button.times === undefined"
       :variant="button.warning ? 'warning' : 'secondary'"

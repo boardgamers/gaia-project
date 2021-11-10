@@ -38,6 +38,7 @@ import PlayerObject, { BuildCheck, BuildWarning } from "./player";
 import PlayerData, { BrainstoneDest, resourceLimits } from "./player-data";
 import * as researchTracks from "./research-tracks";
 import Reward from "./reward";
+import { AvailableSetupOption, possibleSetupBoardActions } from "./setup";
 import { isAdvanced } from "./tiles/techs";
 
 const ISOLATED_DISTANCE = 3;
@@ -141,6 +142,7 @@ interface CommandData {
   [Command.PISwap]: AvailableBuildCommandData;
   [Command.PlaceLostPlanet]: { spaces: AvailableHex[] };
   [Command.RotateSectors]: never;
+  [Command.Setup]: AvailableSetupOption;
   [Command.Special]: { specialacts: { income: string; spec: string }[] };
   [Command.Spend]: AvailableFreeActionData;
   [Command.UpgradeResearch]: AvailableResearchData;
@@ -223,7 +225,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
     case Phase.SetupInit:
       return [{ name: Command.Init } as AvailableCommand]; //doesn't have player
     case Phase.SetupBoard:
-      return [{ name: Command.RotateSectors, player }];
+      return possibleSetupBoardActions(engine, player);
     case Phase.SetupFaction:
       return chooseFactionOrBid(engine, player);
     case Phase.SetupAuction:

@@ -119,7 +119,7 @@ function makeEntry(
     } else if (command == Command.ChooseFaction) {
       faction = cmd.args[0] as Faction;
       turnFaction = faction;
-    } else if (command == Command.Bid || command == Command.RotateSectors) {
+    } else if (command == Command.Bid || command == Command.RotateSectors || command == Command.Setup) {
       turnFaction = cmd.faction;
     } else {
       faction = cmd.faction;

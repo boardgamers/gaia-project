@@ -46,6 +46,14 @@ import Player from "./player";
 import PlayerData, { BrainstoneDest, MoveTokens, powerLogString } from "./player-data";
 import * as researchTracks from "./research-tracks";
 import Reward from "./reward";
+import {
+  applySetupOption,
+  initCustomSetup,
+  possibleSetupBoardActions,
+  SetupOption,
+  SetupPosition,
+  SetupType,
+} from "./setup";
 import federations from "./tiles/federations";
 import { roundScorings } from "./tiles/scoring";
 import { isAdvanced } from "./tiles/techs";
@@ -77,6 +85,8 @@ export type Layout = "standard" | "balanced" | "xshape";
 export interface EngineOptions {
   /** Allow last player to rotate sector BEFORE faction selection */
   advancedRules?: boolean;
+  /** Allow last player the entire board */
+  customBoardSetup?: boolean;
   /** disable Federation check for available commands */
   noFedCheck?: boolean;
   /** Custom map given */
@@ -1096,13 +1106,17 @@ export default class Engine {
 
   beginSetupBoardPhase() {
     this.changePhase(Phase.SetupBoard);
-    // The last player is the one to rotate the sectors
-    this.currentPlayer = this.players.slice(-1).pop().player;
 
-    if (!this.options.advancedRules) {
-      // No sector rotation
+    if (this.options.customBoardSetup) {
+      initCustomSetup(this);
+
+      // The first player (host) does board setup and rotation
+      this.currentPlayer = this.players[0].player;
+    } else if (this.options.advancedRules) {
+      // The last player is the one to rotate the sectors
+      this.currentPlayer = this.players.slice(-1).pop().player;
+    } else {
       this.beginSetupFactionPhase();
-      return;
     }
   }
 
@@ -1377,7 +1391,9 @@ export default class Engine {
   [Phase.SetupBoard](move: string) {
     this.loadTurnMoves(move, { split: false, processFirst: true });
 
-    this.beginSetupFactionPhase();
+    if (possibleSetupBoardActions(this, this.currentPlayer).length === 0 || move.includes(Command.RotateSectors)) {
+      this.beginSetupFactionPhase();
+    }
   }
 
   [Phase.SetupFaction](move: string) {
@@ -1573,6 +1589,10 @@ export default class Engine {
       }
       this.randomFactions = randomFactions;
     }
+  }
+
+  [Command.Setup](player: PlayerEnum, type: SetupType, position: SetupPosition, _to: "to", option: SetupOption) {
+    applySetupOption(this, type, position, option);
   }
 
   [Command.RotateSectors](player: PlayerEnum, ...params: string[]) {

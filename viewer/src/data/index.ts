@@ -1,4 +1,5 @@
 import {
+  AdvTechTile,
   AdvTechTilePos,
   BoardAction,
   Booster,
@@ -6,6 +7,7 @@ import {
   GaiaHex,
   HighlightHex,
   Reward,
+  TechTile,
   TechTilePos,
 } from "@gaia-project/engine";
 import { FastConversionTooltips, MoveButtonController } from "../logic/commands";
@@ -44,7 +46,7 @@ export interface ButtonData {
   hide?: boolean;
   disabled?: boolean;
   booster?: Booster;
-  tech?: TechTilePos | AdvTechTilePos;
+  tech?: { pos?: TechTilePos | AdvTechTilePos; tile?: TechTile | AdvTechTile; commandOverride?: string };
   boardAction?: BoardAction;
   specialAction?: SpecialActionIncome;
   shortcuts?: string[];

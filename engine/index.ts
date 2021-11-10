@@ -69,6 +69,7 @@ export { federationCost, parseFederationLocation } from "./src/federation";
 export { GaiaHex, GaiaHexData } from "./src/gaia-hex";
 export { applyChargePowers } from "./src/income";
 export { planetNames, terraformingStepsRequired } from "./src/planets";
+export { AvailableSetupOption, SetupType } from "./src/setup";
 export { finalScorings, roundScorings } from "./src/tiles/scoring";
 export {
   BrainstoneDest,

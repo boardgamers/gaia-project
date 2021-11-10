@@ -188,6 +188,7 @@ export enum Command {
   PlaceLostPlanet = "lostPlanet",
   RotateSectors = "rotate",
   Special = "special",
+  Setup = "set",
   Spend = "spend",
   UpgradeResearch = "up",
 }
