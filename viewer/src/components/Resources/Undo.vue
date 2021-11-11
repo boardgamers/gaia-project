@@ -11,7 +11,6 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { UndoPropagation } from "../../logic/commands";
 
 @Component
 export default class Undo extends Vue {
@@ -19,7 +18,7 @@ export default class Undo extends Vue {
   transform: string;
 
   undo() {
-    this.$store.dispatch("undo", { undoPerformed: false } as UndoPropagation);
+    this.$store.dispatch("undo");
   }
 }
 </script>

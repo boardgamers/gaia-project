@@ -10,7 +10,6 @@ import {
   stdBuildingValue,
 } from "@gaia-project/engine";
 import { Grid } from "hexagrid";
-import { getMapHex } from "../utils";
 import { ChartSource } from "./charts";
 import { ExtractLog, planetCounter, SimpleSourceFactory } from "./simple-charts";
 
@@ -42,7 +41,7 @@ const structureFed: FinalScoringExtractLog = ExtractLog.wrapper((wantPlayer) => 
   }
 
   function addBuilding(location: string, building: Building): number {
-    const hex = getMapHex(map, location);
+    const hex = map.getS(location);
 
     hex.data.building = building;
     hex.data.player = wantPlayer;

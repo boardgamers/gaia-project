@@ -14,7 +14,7 @@ import Vue from "vue";
 import Vuex from "vuex";
 import { ButtonData, GameContext, HexSelection, SpecialActionIncome } from "./data";
 import { FastConversionEvent } from "./data/actions";
-import { FastConversionTooltips } from "./logic/commands";
+import { ExecuteBack, FastConversionTooltips } from "./logic/buttons/types";
 import {
   CommandObject,
   MovesSlice,
@@ -28,7 +28,13 @@ import {
 
 Vue.use(Vuex);
 
-type Preference = "accessibleSpaceMap" | "noFactionFill" | "flatBuildings" | "highlightRecentActions" | "logPlacement";
+type Preference =
+  | "accessibleSpaceMap"
+  | "noFactionFill"
+  | "flatBuildings"
+  | "highlightRecentActions"
+  | "logPlacement"
+  | "autoClick";
 
 export enum LoadFromJsonType {
   load = "load",
@@ -81,6 +87,7 @@ const gaiaViewer = {
       rotation: new Map(),
       activeButton: null,
       hasCommandChain: false,
+      autoClick: [],
       fastConversionTooltips: {} as FastConversionTooltips,
     },
     preferences: {
@@ -88,6 +95,7 @@ const gaiaViewer = {
       noFactionFill: !!process.env.VUE_APP_noFactionFill,
       flatBuildings: !!process.env.VUE_APP_flatBuildings,
       highlightRecentActions: !!process.env.VUE_APP_highlightRecentActions,
+      autoClick: process.env.VUE_APP_autoClick ?? "smart",
       logPlacement: process.env.VUE_APP_logPlacement ?? "bottom",
     },
     player: null,
@@ -149,6 +157,10 @@ const gaiaViewer = {
       state.context.hasCommandChain = hasChain;
     },
 
+    setAutoClick(state: State, autoClick: boolean[][]) {
+      state.context.autoClick = autoClick;
+    },
+
     fastConversionTooltips(state: State, tooltips: FastConversionTooltips) {
       state.context.fastConversionTooltips = tooltips;
     },
@@ -183,6 +195,7 @@ const gaiaViewer = {
     replayEnd(context: any, data: Engine) {},
     // WRAPPER / DEBUG COMMUNICATION
     loadFromJSON(context: any, data: LoadFromJson) {},
+    back(context: any, arg: ExecuteBack) {},
     undo(context: any) {},
   },
   getters: {
@@ -224,6 +237,7 @@ const gaiaViewer = {
     recentActions: (state: State, getters): Map<Faction, CommandObject[]> =>
       indexCommands(getters.recentCommands, Command.Special),
     canUndo: (state: State): boolean => state.context.hasCommandChain || !state.data.newTurn,
+    autoClick: (state: State): boolean[][] => state.context.autoClick,
   },
 };
 

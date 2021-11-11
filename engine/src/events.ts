@@ -37,7 +37,7 @@ function findCondition(spec: string): [Condition, string] {
   return [Condition.None, spec];
 }
 
-function findOperator(spec: string): [Operator, string, number] {
+function findOperator(spec: string): [Operator, string] {
   let operatorMatch = /^(.+?)(\b| )/.exec(spec);
 
   if (!operatorMatch) {
@@ -49,18 +49,11 @@ function findOperator(spec: string): [Operator, string, number] {
   for (const op of Object.values(Operator) as Operator[]) {
     if (operatorString === op) {
       const remaining = spec.substr(operatorString.length).trimLeft();
-      return [op, remaining, 0];
+      return [op, remaining];
     }
   }
 
-  // If there's one space in the string, that means that the second part HAS to be a condition
-  if (spec.split(" ").length === 2) {
-    const [operator, remaining] = spec.split(" ");
-    const toPick = parseInt(operator, 10);
-    return [operator.slice(("" + toPick).length) as Operator, remaining, toPick];
-  }
-
-  return [Operator.Once, spec, 0];
+  return [Operator.Once, spec];
 }
 
 export type EventSource =
@@ -88,8 +81,6 @@ export default class Event {
   operator: Operator;
   source: EventSource;
   rewards: Reward[];
-  /** Number of rewards to pick. Default to ALL */
-  toPick = 0;
   activated = false;
 
   constructor(spec: string | { spec: string; source: EventSource }, source?: EventSource) {
@@ -113,7 +104,7 @@ export default class Event {
       this.operator = spec as Operator;
     } else {
       [this.condition, remaining] = findCondition(this.spec);
-      [this.operator, remaining, this.toPick] = findOperator(remaining);
+      [this.operator, remaining] = findOperator(remaining);
       this.rewards = Reward.parse(remaining);
     }
 

@@ -14,7 +14,6 @@ import SpaceMap from "@gaia-project/engine/src/map";
 import { sum } from "lodash";
 import { federationData } from "../../data/federations";
 import { CommandObject } from "../recent";
-import { getMapHex } from "../utils";
 import { ChartSource } from "./charts";
 import { ExtractLog, SimpleSourceFactory } from "./simple-charts";
 
@@ -37,7 +36,7 @@ export class BuildingPowerValueCounter {
   playerCommand(cmd: CommandObject, data: Engine) {
     if (cmd.command == Command.Build) {
       const building = cmd.args[0] as Building;
-      const hex = getMapHex(data.map, cmd.args[1]);
+      const hex = data.map.getS(cmd.args[1]);
       this.buildings.set(hex, building);
       if (building == Building.PlanetaryInstitute) {
         this.hasPlanetaryInstitute = true;
@@ -46,7 +45,7 @@ export class BuildingPowerValueCounter {
       }
     }
     if (cmd.command == Command.PISwap) {
-      const hex = getMapHex(data.map, cmd.args[0]);
+      const hex = data.map.getS(cmd.args[0]);
       this.buildings.set(this.planetaryInstituteLocation, Building.Mine);
       this.buildings.set(hex, Building.PlanetaryInstitute);
       this.planetaryInstituteLocation = hex;

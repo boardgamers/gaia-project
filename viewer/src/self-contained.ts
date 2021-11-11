@@ -18,6 +18,7 @@ function launchSelfContained(selector = "#app", debug = true) {
     randomFactions: !!process.env.VUE_APP_randomFactions,
     advancedRules: !!process.env.VUE_APP_rotateSectors,
     customBoardSetup: !!process.env.VUE_APP_customBoardSetup,
+    frontiers: !!process.env.VUE_APP_frontiers,
   });
   engine.generateAvailableCommandsIfNeeded();
 

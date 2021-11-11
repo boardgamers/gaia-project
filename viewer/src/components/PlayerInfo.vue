@@ -4,15 +4,16 @@
       name
     }}</span>
     <div class="board mt-2">
-      <svg viewBox="-0.2 -0.5 38.5 21.4" class="player-board" :style="`background-color: ${factionColor}`">
+      <svg :viewBox="`-0.2 -0.5 38.5 ${height}`" class="player-board" :style="`background-color: ${factionColor}`">
         <rect x="-1" y="-1" width="50" height="50" fill="#ffffff44"></rect>
         <PlayerBoardInfo
           transform="translate(0.5, 0.5)"
           :player="player"
           :faction="player.faction"
           :data="playerData"
+          :height="height"
         />
-        <g transform="translate(4, 0)">
+        <g transform="translate(4.4, 0)">
           <BuildingGroup
             :transform="player.faction !== 'bescods' ? 'translate(2.2, 10)' : 'translate(12, 10)'"
             :nBuildings="1"
@@ -30,6 +31,15 @@
             :ac1="playerData.buildings.ac1"
             :ac2="playerData.buildings.ac2"
             :resource="['q']"
+          />
+          <BuildingGroup
+            v-if="hasShips"
+            transform="translate(21, 10.7) scale(1.65)"
+            :nBuildings="3"
+            building="colony"
+            :player="player"
+            :placed="playerData.buildings.colony"
+            :resource="[]"
           />
           <BuildingGroup
             transform="translate(0, 13)"
@@ -102,7 +112,23 @@
             :disabled="passed"
           />
         </g>
-        <PowerBowls transform="translate(30,14.5)" :player="player" />
+
+        <g transform="translate(0, 18.5) scale(0.7)" v-if="hasShips">
+          <BuildingGroup
+            v-for="s in Object.keys(shipPositions)"
+            :key="s"
+            :transform="shipPositions[s]"
+            :nBuildings="3"
+            :destroyed="playerData.destroyedShips[s]"
+            :deployed="playerData.deployedShips[s]"
+            :building="s"
+            :player="player"
+            :placed="playerData.buildings[s]"
+            :resource="[]"
+          />
+        </g>
+
+        <PowerBowls :transform="`translate(30,${height - 7})`" :player="player" />
 
         <g transform="translate(29.3, 4.7) scale(0.9) translate(0, 1)">
           <g v-for="i in [0, 1, 2, 3]" :key="i" :transform="`translate(${(i - 2) * 3.8}, 0)`">
@@ -143,7 +169,7 @@
           :recent="recentAction(i)"
           :disabled="!action.enabled || passed"
           :key="action.rewards + '-' + i"
-          y="17.5"
+          :y="height - 4"
           width="3.1"
           height="3.1"
           :x="3.3 * i"
@@ -178,7 +204,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Engine, { factionPlanet, Planet, Player } from "@gaia-project/engine";
+import Engine, { Building, Expansion, factionPlanet, Planet, Player } from "@gaia-project/engine";
 import { factionColor } from "../graphics/utils";
 import TechTile from "./TechTile.vue";
 import Booster from "./Booster.vue";
@@ -269,6 +295,26 @@ export default class PlayerInfo extends Vue {
   get hasLostPlanet() {
     return (this.player.ownedPlanetsCount.l ?? 0) > 0;
   }
+
+  get hasShips() {
+    return this.$store.state.data.expansions == Expansion.Frontiers;
+  }
+
+  get height() {
+    return this.hasShips ? "26.2" : "21.4";
+  }
+
+  get shipPositions() {
+    return {
+      [Building.ColonyShip]: "translate(0, 0)",
+      [Building.ConstructionShip]: "translate(8.5, 0)",
+      [Building.ResearchShip]: "translate(17, 0)",
+      [Building.TradeShip]: "translate(25.5, 0)",
+      [Building.Scout]: "translate(0, 3)",
+      [Building.Frigate]: "translate(8.5, 3)",
+      [Building.BattleShip]: "translate(17, 3)",
+    };
+  }
 }
 </script>
 
@@ -292,20 +338,6 @@ export default class PlayerInfo extends Vue {
   // margin-left: auto;
   margin-right: auto;
 
-  .board-text {
-    pointer-events: none;
-    dominant-baseline: mathematical;
-    font-size: 1.2px;
-
-    &.current-round,
-    &.int,
-    &.terra,
-    &.nav,
-    &.gaia {
-      fill: white;
-    }
-  }
-
   // &::after {
   //   position: absolute;
   //   content: " ";
@@ -316,6 +348,22 @@ export default class PlayerInfo extends Vue {
   &.bescods::after,
   &.firaks::after {
     background: rgba(white, 0.7);
+  }
+}
+
+.board-text {
+  pointer-events: none;
+  dominant-baseline: mathematical;
+  font-size: 1.2px;
+  text-align: center;
+  stroke-width: 0.07;
+
+  &.current-round,
+  &.int,
+  &.terra,
+  &.nav,
+  &.gaia {
+    fill: white;
   }
 }
 

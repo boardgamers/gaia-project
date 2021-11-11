@@ -3,13 +3,13 @@
     <Booster
       v-if="button.booster"
       class="mb-1 mr-1"
-      @click.native="handleClick"
+      @click.native="controller.handleButtonClick(button)"
       :booster="button.booster"
       highlighted
     />
     <BoardAction v-else-if="button.boardAction" :action="button.boardAction" class="mb-1 mr-1" transform="scale(1.3)" />
     <SpecialAction
-      v-else-if="button.specialAction"
+      v-else-if="button.specialAction && !button.autoClick"
       class="mb-1 mr-1"
       :action="[button.specialAction]"
       :player="player"
@@ -25,15 +25,15 @@
     <b-btn
       v-else-if="button.times === undefined"
       :variant="button.warning ? 'warning' : 'secondary'"
-      :class="['mr-2', 'mb-2', 'move-button', { 'symbol-button': button.conversion, active: this.isActiveButton }]"
-      @click="handleClick"
+      :class="['mr-2', 'mb-2', 'move-button', { 'symbol-button': button.conversion, active }]"
+      @click="controller.handleButtonClick(button)"
       @mouseenter="hover"
       @mouseleave="leave"
       :title="button.tooltip"
       v-b-tooltip.html
     >
       <template>
-        <ButtonContent :button="button" :customLabel="customLabel" />
+        <ButtonContent :button="button" />
       </template>
     </b-btn>
     <b-dropdown
@@ -47,7 +47,7 @@
       @click="handleRangeClick(button.times[0])"
     >
       <template #button-content>
-        <ButtonContent :button="button" :customLabel="customLabel" />
+        <ButtonContent :button="button" />
       </template>
       <b-dropdown-item v-for="i in button.times" :key="i" @click="handleRangeClick(i)">{{ i }}</b-dropdown-item>
     </b-dropdown>
@@ -69,16 +69,15 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { AdvTechTilePos, BuildWarning, GaiaHex, HighlightHex, Player, TechTilePos } from "@gaia-project/engine";
-import { ButtonData, HexSelection } from "../data";
+import { Player } from "@gaia-project/engine";
+import { ButtonData } from "../data";
 import Booster from "./Booster.vue";
 import TechTile from "./TechTile.vue";
 import ButtonContent from "./Resources/ButtonContent.vue";
 import BoardAction from "./BoardAction.vue";
 import SpecialAction from "./SpecialAction.vue";
-import { customHexSelection, MoveButtonController } from "../logic/commands";
-
-type EmitCommandParams = { disappear?: boolean; times?: number; warnings?: BuildWarning[] };
+import { CommandController, MoveButtonController } from "../logic/buttons/types";
+import { callOnShow } from "../logic/buttons/utils";
 
 @Component({
   components: {
@@ -93,95 +92,24 @@ export default class MoveButton extends Vue implements MoveButtonController {
   @Prop()
   public button!: ButtonData;
 
-  public key = "key"; //only to force re-render
+  @Prop()
+  public controller: CommandController;
 
-  private subscription: () => {} | null = null;
   private modalShow = false;
-  private customLabel = "";
-  private handlingClick = false;
+
+  public key = "key"; //only to force re-render
 
   private rangePreselect: number = null;
 
-  highlightResearchTiles(tiles: string[]) {
-    this.$store.commit("highlightResearchTiles", tiles);
-  }
-
-  highlightTechs(techs: Array<TechTilePos | AdvTechTilePos>) {
-    this.$store.commit("highlightTechs", techs);
-  }
-
-  setButton(b: ButtonData, key: string) {
-    this.button = b;
-    this.key = key; //forces re-render
-  }
-
-  modalCancel(arg: string) {
-    this.button.modal.show(false);
-    this.$emit("cancel");
-  }
-
-  subscribe(action: string, callback: any, activateButton = true) {
-    action = "" + action;
-
-    this.unsubscribe();
-    if (activateButton) {
-      this.activate(this.button);
-    }
-
-    this.subscription = (this.$store as any).subscribeAction(({ type, payload }) => {
-      if (type !== action) {
-        return;
-      }
-
-      console.log(type, payload);
-
-      callback(payload);
-    });
-  }
-
-  activate(buttonData: ButtonData | null) {
-    this.$store.commit("activeButton", buttonData);
-  }
-
-  subscribeHexClick(callback: (hex: GaiaHex, highlight: HighlightHex) => void) {
-    this.subscribe("hexClick", (payload) => {
-      callback(payload.hex, payload.highlight);
-    });
-  }
-
-  subscribeButtonClick(action: string, transform = (button: ButtonData) => button, activateButton = true) {
-    this.subscribe(
-      action,
-      (button) => {
-        this.handleButtonClick(transform(button));
-      },
-      activateButton
-    );
-  }
-
-  subscribeFinal(action: string) {
-    this.subscribeButtonClick(action, (b) => b, false);
-    this.emitCommand(null, { disappear: false });
-  }
-
-  unsubscribe() {
-    if (this.subscription) {
-      this.subscription();
-    }
-  }
-
-  destroyed() {
-    this.unsubscribe();
-  }
-
   mounted() {
     const keyListener = (e) => {
-      if (this.button.hide) {
+      const b = this.button;
+      if (b.hide) {
         return;
       }
 
       if (this.modalShow) {
-        if (!this.button.modal.canActivate()) {
+        if (!b.modal.canActivate()) {
           return false;
         }
         if (e.key == "Enter") {
@@ -202,13 +130,13 @@ export default class MoveButton extends Vue implements MoveButtonController {
         return false;
       }
 
-      if (this.button.shortcuts?.includes(e.key)) {
+      if (b.shortcuts?.includes(e.key)) {
         if (this.rangePreselect) {
-          this.handleRangeClick(this.rangePreselect ?? this.button.times[0]);
+          this.handleRangeClick(this.rangePreselect ?? b.times[0]);
         } else {
-          this.handleClick();
+          this.controller.handleButtonClick(b);
         }
-      } else if (this.button.times && isFinite(Number(e.key))) {
+      } else if (b.times && isFinite(Number(e.key))) {
         this.rangePreselect = Number(e.key);
       }
     };
@@ -216,205 +144,44 @@ export default class MoveButton extends Vue implements MoveButtonController {
     this.$on("hook:beforeDestroy", () => window.removeEventListener("keydown", keyListener));
   }
 
-  created() {
-    this.button.onCreate?.(this);
-  }
-
   updated() {
-    //when a MoveButton is re-used, create is not called
-    this.button.onCreate?.(this);
+    this.button.buttonController = this;
 
-    if (!this.button.hide && !this.button.onShowTriggered) {
-      this.button.onShowTriggered = true;
-      this.button.onShow?.();
+    if (!this.button.hide) {
+      callOnShow(this.button);
     }
   }
-
-  async handleClick() {
-    await this.handleButtonClick(this.button, null);
+  modalCancel(arg: string) {
+    this.button.modal.show(false);
+    this.$emit("cancel");
   }
 
-  async handleButtonClick(button: ButtonData, params?: EmitCommandParams) {
-    if (this.handlingClick) {
-      console.log("simultaneous button click, ignoring");
-      return;
-    }
-    if (button.hide) {
-      console.log("click on hidden button, ignoring");
-      return;
-    }
-    try {
-      this.handlingClick = true;
-      const warning = button.warning;
-      if (warning && !this.isActiveButton) {
-        try {
-          const c = this.$createElement;
-          const message = warning.body.length == 1 ? warning.body[0] : warning.body.map((w) => c("ul", [c("li", [w])]));
-          const okClicked = await this.$bvModal.msgBoxConfirm(message, {
-            title: warning.title,
-            headerClass: "warning",
-            okTitle: warning.okButton?.label,
-          });
-
-          if (okClicked) {
-            const action = warning.okButton?.action;
-            if (action) {
-              action();
-              return;
-            }
-          } else {
-            return;
-          }
-        } catch (err) {
-          console.error(err);
-          return;
-        }
-      }
-
-      // Remove highlights caused by another button
-      if (!this.isActiveButton) {
-        this.$store.commit("clearContext");
-
-        if (button.hexes) {
-          this.highlightHexes(button.hexes);
-        }
-      }
-
-      if (button.specialActions) {
-        this.$store.commit("highlightSpecialActions", button.specialActions);
-        this.subscribeFinal("specialActionClick");
-      } else if (button.boardActions) {
-        this.$store.commit("highlightBoardActions", button.boardActions);
-        this.subscribeFinal("boardActionClick");
-      } else if (button.hexes?.selectAnyHex) {
-        if (button.rotation) {
-          if (this.isActiveButton) {
-            const rotations = [...this.$store.state.context.rotation.entries()];
-            for (const rotation of rotations) {
-              rotation[1] %= 6;
-            }
-            this.emitButtonCommand(button, [].concat(...rotations.filter((r) => !!r[1])).join(" "));
-            return;
-          }
-
-          this.subscribeHexClick((hex) => this.$store.commit("rotate", hex));
-          this.customLabel = "Sector rotations finished";
-        } else {
-          this.selectAnyButton(button);
-        }
-      } else if (button.onClick) {
-        button.onClick();
-      } else if (button.modal) {
-        this.modalShow = true;
-        button.modal.show(true);
-      } else {
-        if (button.hexes) {
-          //generic hex selection, that's why it's last
-          if (this.isActiveButton) {
-            this.activate(null);
-            this.highlightHexes(null);
-          } else {
-            this.subscribeHexClick((hex, highlight) => {
-              if (button.needConfirm) {
-                this.highlightHexes({ hexes: new Map<GaiaHex, HighlightHex>([[hex, {}]]) });
-              }
-
-              this.emitCommand(hex.toString(), { warnings: highlight.warnings });
-            });
-          }
-          return;
-        }
-
-        if (button.needConfirm) {
-          this.emitButtonCommand(button, null, { disappear: false });
-        } else {
-          this.emitButtonCommand(button, null, params);
-        }
-      }
-    } finally {
-      this.handlingClick = false;
-    }
+  setButton(b: ButtonData, key: string) {
+    this.button = b;
+    this.key = key; //forces re-render
   }
 
-  private selectAnyButton(button: ButtonData) {
-    // If already the active button, end the selection
-    if (this.isActiveButton) {
-      button.command = [...this.$store.state.context.highlighted.hexes.hexes.keys()]
-        .map((hex) => hex.toString())
-        .join(",");
-      this.emitButtonCommand(button);
-      return;
-    }
-
-    this.customLabel = button.label + " - End selection";
-
-    this.subscribeHexClick((hex) => {
-      const highlighted = this.$store.state.context.highlighted.hexes.hexes;
-
-      if (highlighted.has(hex)) {
-        highlighted.delete(hex);
-      } else {
-        highlighted.set(hex, null);
-      }
-
-      const keys: GaiaHex[] = [...highlighted.keys()];
-      this.highlightHexes(customHexSelection(new Map([...keys.map((key) => [key, null])] as any)));
-    });
-  }
-
-  private highlightHexes(selection: HexSelection) {
-    this.$store.commit("highlightHexes", selection);
-  }
-
-  handleRangeClick(times: number) {
-    this.emitCommand(null, { times });
+  setModalShow(value: boolean) {
+    this.modalShow = value;
   }
 
   handleOK() {
-    this.button.modal.show(false);
-    this.emitCommand();
+    const b = this.button;
+    b.modal.show(false);
+    this.controller.emitButtonCommand(b);
   }
 
-  emitCommand(append?: string, params?: EmitCommandParams) {
-    this.emitButtonCommand(this.button, append, params);
-  }
-
-  emitButtonCommand(button: ButtonData, append?: string, params?: EmitCommandParams) {
-    console.log("emit command", button.command, append, params);
-
-    if (button.needConfirm && append) {
-      button.buttons[0].command = append;
-    }
-
-    params = Object.assign({}, { disappear: true, times: 1 }, params);
-    const { disappear, times, warnings } = params;
-
-    if (disappear) {
-      this.unsubscribe();
-      this.activate(null);
-    }
-
-    let commandBody: string[] = [];
-
-    // Parse numbers, ie the command is executed X times, multiply
-    // each number by X instead of repeating the command X times.
-    let command = (button.command || "") + "";
-
-    if (times && typeof times === "number") {
-      // the \b is necessary for things like '1t-a3', so the 3 is not caught
-      command = command.replace(/\b[0-9]+/g, (x) => "" + parseInt(x) * times);
-    }
-
-    command = command.replace(/\$times\b/g, "" + (times ?? 0));
-
-    commandBody = [command, append].filter((x) => !!x);
-
-    this.$emit("trigger", commandBody.join(" "), button, warnings);
+  handleRangeClick(times: number) {
+    this.controller.emitButtonCommand(this.button, null, { times });
   }
 
   get player(): Player {
     const engine = this.$store.state.data;
     return engine.player(engine.currentPlayer);
+  }
+
+  get active() {
+    return this.controller.isActiveButton(this.button);
   }
 
   hover() {
@@ -425,9 +192,6 @@ export default class MoveButton extends Vue implements MoveButtonController {
     this.button.hover?.leave();
   }
 
-  get isActiveButton() {
-    return this.$store.state.context.activeButton && this.$store.state.context.activeButton.label === this.button.label;
-  }
 }
 </script>
 

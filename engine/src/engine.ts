@@ -5,10 +5,12 @@ import { boardActions } from "./actions";
 import { finalRankings, gainFinalScoringVictoryPoints } from "./algorithms/scoring";
 import { ChargeDecision, ChargeRequest, decideChargeRequest } from "./auto-charge";
 import AvailableCommand, {
+  AvailableBuilding,
   AvailableFreeActionData,
   BrainstoneActionData,
   generate as generateAvailableCommands,
   Offer,
+  ShipAction,
 } from "./available-command";
 import { stdBuildingValue } from "./buildings";
 import {
@@ -22,6 +24,7 @@ import {
   Faction,
   Federation,
   FinalTile,
+  isShip,
   Operator,
   Phase,
   Planet,
@@ -59,7 +62,6 @@ import { roundScorings } from "./tiles/scoring";
 import { isAdvanced } from "./tiles/techs";
 import { isVersionOrLater } from "./utils";
 
-// const ISOLATED_DISTANCE = 3;
 const LEECHING_DISTANCE = 2;
 
 export enum AuctionVariant {
@@ -93,6 +95,8 @@ export interface EngineOptions {
   map?: MapConfiguration;
   /** Are the federations flexible (allows you to avoid planets with buildings to form federation even if it's not the shortest route)? */
   flexibleFederations?: boolean;
+  /** Frontiers expansion */
+  frontiers?: boolean;
   /** auction */
   auction?: AuctionVariant;
   /**  **/
@@ -246,8 +250,8 @@ export default class Engine {
   replayVersion: string;
   replay: boolean; // be more permissive during replay
 
-  get expansions() {
-    return 0;
+  get expansions(): Expansion {
+    return 0 | (this.options.frontiers ? Expansion.Frontiers : 0);
   }
 
   round: number = Round.None;
@@ -486,7 +490,6 @@ export default class Engine {
         player.data.canUpgradeResearch = false;
       }
     });
-    player.on("pick-rewards", () => this.processNextMove(SubPhase.PickRewards));
 
     /* For advanced log */
     for (const resource of [
@@ -1005,7 +1008,7 @@ export default class Engine {
     }
 
     this.checkCommand(move.command);
-    (this[move.command] as any)(this.playerToMove, ...move.args);
+    (this[move.command === Command.MoveShip ? "_move" : move.command] as any)(this.playerToMove, ...move.args);
 
     return move;
   }
@@ -1190,6 +1193,9 @@ export default class Engine {
 
     for (const player of this.playersInOrder()) {
       player.loadEvents(this.currentRoundScoringEvents);
+      player.data.ships?.forEach((s) => {
+        s.moved = false;
+      });
     }
 
     this.beginIncomePhase();
@@ -1635,16 +1641,7 @@ export default class Engine {
 
     for (const elem of buildings) {
       if (elem.building === building && isEqual(this.map.parse(elem.coordinates), parsed)) {
-        const { q, r } = this.map.parse(location);
-        const hex = this.map.grid.get({ q, r });
-
-        pl.build(building, hex, Reward.parse(elem.cost), this.map, elem.steps);
-
-        // will trigger a LeechPhase
-        if (this.phase === Phase.RoundMove) {
-          this.leechSources.unshift({ player, coordinates: location });
-        }
-
+        this.placeBuilding(pl, elem);
         return;
       }
     }
@@ -1653,6 +1650,16 @@ export default class Engine {
       false,
       `Impossible to execute build command at ${location}, available: ${buildings.map((b) => b.coordinates)}`
     );
+  }
+
+  private placeBuilding(pl: Player, building: AvailableBuilding) {
+    const hex = this.map.getS(building.coordinates);
+    pl.build(building.building, hex, Reward.parse(building.cost), this.map, building.steps);
+
+    // will trigger a LeechPhase
+    if ((this.phase === Phase.RoundMove || this.phase === Phase.RoundShip) && !isShip(building.building)) {
+      this.leechSources.unshift({ player: pl.player, coordinates: building.coordinates });
+    }
   }
 
   [Command.UpgradeResearch](player: PlayerEnum, field: ResearchField) {
@@ -1786,6 +1793,50 @@ export default class Engine {
     this.leechSources.unshift({ player, coordinates: location });
   }
 
+  [`_${Command.MoveShip}`](
+    player: PlayerEnum,
+    shipType: Building,
+    source: string,
+    dest: string,
+    actionType?: ShipAction,
+    actionLocation?: string
+  ) {
+    const pl = this.player(player);
+
+    const data = this.avCommand<Command.MoveShip>().data;
+
+    const shipCommand = data.find((s) => s.ship === shipType && s.source === source);
+    assert(shipCommand, `There is no ship ${shipType} at ${source}`);
+
+    const target = shipCommand.targets.find((t) => t.location.coordinates === dest);
+    assert(target, `The ship ${shipType} doesn't have the range to move from ${source} to ${dest}`);
+
+    const ship = pl.findUnmovedShip(shipType, source);
+    assert(ship, `No ${shipType} at ${source} (or has already moved)`);
+
+    ship.moved = true;
+    ship.location = dest;
+
+    const actions = target.actions;
+
+    if (actionType) {
+      const action = actions?.find((a) => a.type === actionType);
+
+      assert(action, `action ${actionType} not possible for ship ${shipType} at ship location ${dest}`);
+      assert(actionLocation, "no action location provided");
+
+      const location = action.locations.find((l) => l.coordinates === actionLocation);
+      assert(location, `action ${actionType} not possible for ship ${shipType} at action location ${actionLocation}`);
+
+      switch (actionType) {
+        case ShipAction.BuildColony:
+          this.placeBuilding(pl, location);
+          pl.removeShip(ship, false);
+          break;
+      }
+    }
+  }
+
   [Command.Spend](player: PlayerEnum, costS: string, _for: "for", incomeS: string) {
     const command = this.avCommand<Command.Spend>();
     const pl = this.player(player);
@@ -1892,8 +1943,7 @@ export default class Engine {
 
     for (const elem of buildings) {
       if (isEqual(this.map.parse(elem.coordinates), parsed)) {
-        const { q, r } = this.map.parse(location);
-        const hex = this.map.grid.get({ q, r });
+        const hex = this.map.getS(location);
 
         if (hex.buildingOf(player) === Building.Mine) {
           hex.data.building = Building.PlanetaryInstitute;

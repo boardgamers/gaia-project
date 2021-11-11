@@ -39,7 +39,7 @@
           </text>
         </g>
         <Resource kind="q" :count="data.qics" :center-left="true" transform="translate(12.5,0) scale(0.1)" />
-        <Undo v-if="canUndo" transform="translate(6.1,-10.9) scale(.08)" />
+        <Undo v-if="canUndo" :transform="`translate(6.1,${height - 32.3}) scale(.08)`" />
         <g transform="translate(15, -3) scale(0.2)">
           <VictoryPoint width="15" height="15" />
           <text class="vp-text" x="7" y="10">{{ data.victoryPoints }}</text>
@@ -144,6 +144,9 @@ export default class PlayerBoardInfo extends Vue {
 
   @Prop()
   data: PlayerData;
+
+  @Prop()
+  height: number;
 
   @Prop()
   player: Player;

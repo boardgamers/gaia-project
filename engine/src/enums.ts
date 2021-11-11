@@ -22,7 +22,9 @@ export enum ResearchField {
 }
 
 export enum Expansion {
-  All = 1,
+  // 1 was the old spaceships expansion
+  Frontiers = 2,
+  All = 2,
 }
 
 export namespace ResearchField {
@@ -145,6 +147,39 @@ export enum Building {
   Academy2 = "ac2",
   GaiaFormer = "gf",
   SpaceStation = "sp",
+
+  //frontiers
+  Colony = "colony",
+
+  ColonyShip = "colonyShip",
+  TradeShip = "tradeShip",
+  ConstructionShip = "constructionShip",
+  ResearchShip = "researchShip",
+
+  Scout = "scout",
+  Frigate = "frigate",
+  BattleShip = "battleShip",
+}
+
+export type Ship = {
+  type: Building;
+  player: Player;
+  location: string;
+  moved: boolean;
+};
+
+export function isShip(b: Building) {
+  switch (b) {
+    case Building.ColonyShip:
+    case Building.TradeShip:
+    case Building.ConstructionShip:
+    case Building.ResearchShip:
+    case Building.Scout:
+    case Building.Frigate:
+    case Building.BattleShip:
+      return true;
+  }
+  return false;
 }
 
 export enum Faction {
@@ -182,9 +217,9 @@ export enum Command {
   EndTurn = "endturn",
   FormFederation = "federation",
   Init = "init",
-  Pass = "pass",
-  PickReward = "pick",
+  MoveShip = "move",
   PISwap = "swap-PI",
+  Pass = "pass",
   PlaceLostPlanet = "lostPlanet",
   RotateSectors = "rotate",
   Special = "special",
@@ -494,6 +529,7 @@ export enum Phase {
   RoundStart = "roundStart",
   RoundIncome = "roundIncome",
   RoundGaia = "roundGaia",
+  RoundShip = "roundShip",
   RoundMove = "roundMove",
   RoundLeech = "roundLeech",
   RoundFinish = "roundFinish",
@@ -515,5 +551,4 @@ export enum SubPhase {
   SpaceStation = "spaceStation",
   PISwap = "swap-PI",
   DowngradeLab = "down-lab",
-  PickRewards = "pickRewards",
 }

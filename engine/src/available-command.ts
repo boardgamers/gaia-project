@@ -8,7 +8,7 @@ import {
   freeActionsItars,
   freeActionsTerrans,
 } from "./actions";
-import { upgradedBuildings } from "./buildings";
+import { stdBuildingValue, upgradedBuildings } from "./buildings";
 import { qicForDistance } from "./cost";
 import Engine, { AuctionVariant, BoardActions } from "./engine";
 import {
@@ -21,12 +21,14 @@ import {
   Expansion,
   Faction,
   Federation,
+  isShip,
   Operator,
   Phase,
   Planet,
   Player,
   ResearchField,
   Resource,
+  Ship,
   SubPhase,
   TechTile,
   TechTilePos,
@@ -43,6 +45,8 @@ import { isAdvanced } from "./tiles/techs";
 
 const ISOLATED_DISTANCE = 3;
 export const UPGRADE_RESEARCH_COST = "4k";
+export const MAX_SHIPS_PER_HEX = 3;
+const SHIP_ACTION_RANGE = 1;
 
 export type BrainstoneWarning = "brainstone-charges-wasted";
 
@@ -120,6 +124,16 @@ type AvailableBuildCommandData = { buildings: AvailableBuilding[] };
 
 export type AvailableFederation = { hexes: string; warning?: string };
 
+export enum ShipAction {
+  BuildColony = "buildColony",
+}
+
+export type AvailableShipAction = { type: ShipAction; locations: AvailableBuilding[] };
+
+export type AvailableShipTarget = { location: AvailableHex; actions: AvailableShipAction[] };
+
+export type AvailableMoveShipData = { ship: Building; source: string; targets: AvailableShipTarget[] };
+
 interface CommandData {
   [Command.Action]: AvailableBoardActionData;
   [Command.Bid]: { bids: PossibleBid[] };
@@ -141,6 +155,7 @@ interface CommandData {
   [Command.Pass]: { boosters: Booster[] };
   [Command.PISwap]: AvailableBuildCommandData;
   [Command.PlaceLostPlanet]: { spaces: AvailableHex[] };
+  [Command.MoveShip]: AvailableMoveShipData[];
   [Command.RotateSectors]: never;
   [Command.Setup]: AvailableSetupOption;
   [Command.Special]: { specialacts: { income: string; spec: string }[] };
@@ -152,7 +167,13 @@ type AvailableCommand<C extends Command = Command> = __AvailableCommand<C, Comma
 
 export default AvailableCommand;
 
-export type HighlightHex = { cost?: string; warnings?: BuildWarning[] };
+export type HighlightHex = {
+  cost?: string;
+  warnings?: BuildWarning[];
+  building?: Building;
+  hideBuilding?: Building;
+  preventClick?: boolean;
+};
 export type AvailableHex = HighlightHex & { coordinates: string };
 
 export type AvailableBuilding = AvailableHex & {
@@ -204,9 +225,12 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
       return possibleLabDowngrades(engine, player);
     case SubPhase.BrainStone:
       return [{ name: Command.BrainStone, player, data }];
+    // case SubPhase.MoveShip:
+    //   return possibleShipMovements(engine, player);
     case SubPhase.BeforeMove: {
       return [
         ...possibleBuildings(engine, player),
+        ...possibleShipMovements(engine, player),
         ...possibleFederations(engine, player),
         ...possibleResearchAreas(engine, player, UPGRADE_RESEARCH_COST),
         ...possibleBoardActions(engine.boardActions, engine.player(player), engine.replay),
@@ -324,24 +348,45 @@ function addPossibleNewPlanet(
   }
 }
 
+export function shipsInHex(location: string, data): Ship[] {
+  return data.players.flatMap((p) => p.data.ships).filter((s) => s.location === location);
+}
+
+function possibleShips(pl: PlayerObject, engine: Engine, map: SpaceMap, hex: GaiaHex) {
+  const buildings: AvailableBuilding[] = [];
+  for (const ship of Object.values(Building).filter((b) => isShip(b))) {
+    const check = pl.canBuild(null, ship, engine.isLastRound, engine.replay);
+    if (check) {
+      for (const h of map.withinDistance(hex, 1)) {
+        if (!h.hasPlanet() && shipsInHex(h.toString(), engine).length < MAX_SHIPS_PER_HEX) {
+          buildings.push(newAvailableBuilding(ship, h, check, false));
+        }
+      }
+    }
+  }
+  return buildings;
+}
+
 export function possibleBuildings(engine: Engine, player: Player): AvailableCommand<Command.Build>[] {
   const map = engine.map;
   const pl = engine.player(player);
-  const { data } = pl;
   const buildings: AvailableBuilding[] = [];
 
   for (const hex of engine.map.toJSON()) {
     // upgrade existing player's building
-    if (hex.buildingOf(player)) {
-      const building = hex.buildingOf(player);
-
-      if (player !== hex.data.player) {
-        // This is a secondary building, so we can't upgrade it
+    const building = hex.buildingOf(player);
+    if (building) {
+      // excluding Transdim planet until transformed into Gaia planets
+      if (hex.data.planet === Planet.Transdim) {
         continue;
       }
 
-      // excluding Transdim planet until transformed into Gaia planets
-      if (hex.data.planet === Planet.Transdim) {
+      if (stdBuildingValue(building) > 0 && engine.expansions === Expansion.Frontiers) {
+        buildings.push(...possibleShips(pl, engine, map, hex));
+      }
+
+      if (player !== hex.data.player) {
+        // This is a secondary building, so we can't upgrade it
         continue;
       }
 
@@ -358,7 +403,7 @@ export function possibleBuildings(engine: Engine, player: Player): AvailableComm
 
         // Check each other player to see if there's a building in range
         for (const _pl of engine.players) {
-          if (_pl !== engine.player(player)) {
+          if (_pl !== pl) {
             for (const loc of _pl.data.occupied) {
               if (loc.hasStructure() && map.distance(loc, hex) < ISOLATED_DISTANCE) {
                 return false;
@@ -370,10 +415,10 @@ export function possibleBuildings(engine: Engine, player: Player): AvailableComm
         return true;
       })();
 
-      const upgraded = upgradedBuildings(building, engine.player(player).faction);
+      const upgraded = upgradedBuildings(building, pl.faction);
 
       for (const upgrade of upgraded) {
-        const check = engine.player(player).canBuild(hex.data.planet, upgrade, engine.isLastRound, engine.replay, {
+        const check = pl.canBuild(hex.data.planet, upgrade, engine.isLastRound, engine.replay, {
           isolated,
           existingBuilding: building,
         });
@@ -397,7 +442,7 @@ export function possibleBuildings(engine: Engine, player: Player): AvailableComm
       {
         name: Command.Build,
         player,
-        data: { buildings },
+        data: { buildings: uniq(buildings) }, //ship locations may be duplicated
       },
     ];
   }
@@ -405,10 +450,88 @@ export function possibleBuildings(engine: Engine, player: Player): AvailableComm
   return [];
 }
 
+function shipTargets(
+  source: string,
+  hex: string,
+  range: number,
+  targets: AvailableHex[],
+  engine: Engine
+): AvailableHex[] {
+  if (!targets.find((t) => t.coordinates === hex) && shipsInHex(hex, engine).length < MAX_SHIPS_PER_HEX) {
+    targets.push({ coordinates: hex });
+  }
+  if (range === 0) {
+    return targets;
+  }
+  const map = engine.map;
+  for (const h of map.withinDistance(map.getS(hex), 1)) {
+    const c = h.toString();
+    if (!h.hasPlanet() && c !== source) {
+      shipTargets(source, c, range - 1, targets, engine);
+    }
+  }
+  return targets;
+}
+
+function possibleColonyShipActions(engine: Engine, ship: Ship, shipLocation: string): AvailableShipAction[] {
+  const map = engine.map;
+  const pl = engine.player(ship.player);
+  const locations: AvailableHex[] = map.withinDistance(map.getS(shipLocation), SHIP_ACTION_RANGE).flatMap((h) => {
+    if (h.hasPlanet() && !h.occupied() && h.data.planet !== Planet.Transdim) {
+      const check = pl.canBuild(h.data.planet, Building.Colony, engine.isLastRound, engine.replay);
+      if (check) {
+        return [newAvailableBuilding(Building.Colony, h, check, false)];
+      }
+    }
+    return [];
+  });
+  if (locations.length > 0) {
+    return [
+      {
+        type: ShipAction.BuildColony,
+        locations,
+      } as AvailableShipAction,
+    ];
+  }
+  return [];
+}
+
+function possibleShipActions(engine: Engine, ship: Ship, shipLocation: string): AvailableShipAction[] {
+  switch (ship.type) {
+    case Building.ColonyShip:
+      return possibleColonyShipActions(engine, ship, shipLocation);
+  }
+  return [];
+}
+
+export function possibleShipMovements(engine: Engine, player: Player): AvailableCommand<Command.MoveShip>[] {
+  const pl = engine.player(player);
+
+  const ships = pl.data.ships.filter((s) => !s.moved);
+  if (ships.length === 0) {
+    return [];
+  }
+
+  const shipRange = engine.player(player).data.shipRange;
+  return [
+    {
+      name: Command.MoveShip,
+      player,
+      data: ships.map((s) => ({
+        ship: s.type,
+        source: s.location,
+        targets: shipTargets(s.location, s.location, shipRange, [], engine).map((t) => ({
+          location: t,
+          actions: possibleShipActions(engine, s, t.coordinates),
+        })),
+      })),
+    },
+  ];
+}
+
 export function possibleSpaceStations(engine: Engine, player: Player): AvailableCommand<Command.Build>[] {
   const map = engine.map;
   const pl = engine.player(player);
-  const { data } = pl;
   const buildings = [];
 
   for (const hex of map.toJSON()) {
