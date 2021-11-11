@@ -11,7 +11,7 @@ import {
   TechTilePos,
 } from "@gaia-project/engine";
 import { CubeCoordinates } from "hexagrid";
-import { FastConversionTooltips, MoveButtonController } from "../logic/commands";
+import { FastConversionTooltips, MoveButtonController } from "../logic/buttons/types";
 
 export type ButtonWarning = { title?: string; body: string[]; okButton?: { label: string; action: () => void } };
 
@@ -28,19 +28,14 @@ export interface ButtonData {
   conversion?: { from: Reward[]; to: Reward[] };
   modal?: ModalButtonData;
   hexes?: HexSelection;
-  boosters?: Booster[];
-  onClick?: () => void;
-  onOpen?: () => void;
-  onShow?: () => void;
+  onClick?: (button: ButtonData) => void;
+  onShow?: (button: ButtonData) => void;
   onShowTriggered?: boolean;
-  onCreate?: (controller: MoveButtonController) => void; //may be called multiple times!
+  buttonController?: MoveButtonController;
   hover?: { enter: () => void; leave: () => void };
   boardActions?: BoardAction[];
   specialActions?: SpecialActionIncome[];
   federations?: Federation[];
-  costs?: { [range: number]: string };
-  // Rotate sectors command?
-  rotation?: boolean;
   needConfirm?: boolean;
   warning?: ButtonWarning;
   buttons?: ButtonData[];
@@ -51,6 +46,11 @@ export interface ButtonData {
   boardAction?: BoardAction;
   specialAction?: SpecialActionIncome;
   shortcuts?: string[];
+  autoClick?: boolean;
+  smartAutoClick?: boolean;
+  handlingClick?: boolean;
+  keepContext?: boolean;
+  subscription?: () => void;
 }
 
 export type HighlightHexData = Map<GaiaHex, HighlightHex>;
@@ -78,6 +78,7 @@ export interface GameContext {
   activeButton: ButtonData | null;
   fastConversionTooltips: FastConversionTooltips;
   hasCommandChain: boolean;
+  autoClick: boolean[][];
 
   logPlacement: LogPlacement;
 }

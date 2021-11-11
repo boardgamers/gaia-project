@@ -31,18 +31,15 @@
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { ButtonData } from "../../data";
-import { withShortcut } from "../../logic/commands";
+import { withShortcut } from "../../logic/buttons/shortcuts";
 
 @Component
 export default class ButtonContent extends Vue {
   @Prop()
   button: ButtonData;
 
-  @Prop()
-  customLabel: string;
-
   get htmlLabel(): string {
-    const l = this.customLabel || this.button.label || this.button.command;
+    const l = this.button.label || this.button.command;
     const s = this.button.shortcuts;
     if (l && s?.length > 0) {
       const shortcut = s[0];

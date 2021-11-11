@@ -27,6 +27,7 @@ export function stdBuildingValue(building: Building): number {
     case Building.PlanetaryInstitute:
     case Building.Academy1:
     case Building.Academy2:
+    case Building.Colony:
       return 3;
   }
 

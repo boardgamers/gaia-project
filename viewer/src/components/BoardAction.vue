@@ -59,7 +59,7 @@ import Engine, {
 } from "@gaia-project/engine";
 import Resource from "./Resource.vue";
 import SpecialAction from "./SpecialAction.vue";
-import { boardActionButton } from "../logic/commands";
+import { boardActionButton } from "../logic/buttons/actions";
 
 @Component<BoardAction>({
   components: {

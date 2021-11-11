@@ -9,13 +9,8 @@ export function phaseBeforeSetupBuilding(data: Engine): boolean {
   );
 }
 
-export function getMapHex(map, location: string) {
-  const { q, r } = map.parse(location);
-  return map.grid.get({ q, r });
-}
-
 export const deltaCounter: (initial: number) => (val: number) => number = (initial: number) => {
-  let last = 0;
+  let last = initial;
 
   return (val: number) => {
     const ret = val - last;
@@ -23,3 +18,10 @@ export const deltaCounter: (initial: number) => (val: number) => number = (initi
     return ret;
   };
 };
+
+export function radiusTranslate(radius: number, index: number, positions: number) {
+  const deg = 360 / positions;
+  const x = radius * Math.sin(((-180 + index * deg) * Math.PI) / 180);
+  const y = radius * Math.cos(((-180 + index * deg) * Math.PI) / 180);
+  return `translate(${x}, ${y})`;
+}

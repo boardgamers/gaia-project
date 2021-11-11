@@ -15,6 +15,7 @@ import {
   Faction,
   Federation,
   FinalTile,
+  isShip,
   Operator,
   Phase,
   Planet,
@@ -22,6 +23,7 @@ import {
   PowerArea,
   ResearchField,
   Resource,
+  Ship,
   TechPos,
   TechTile,
   TechTilePos,
@@ -242,17 +244,12 @@ export default class Player extends EventEmitter {
     this.data.payCosts(costs, source);
   }
 
-  gainRewards(rewards: Reward[], source: EventSource, toPick = 0) {
-    if (toPick) {
-      this.data.toPick = { count: toPick, rewards: [...rewards], source };
-      this.emit("pick-rewards");
-    } else {
-      this.data.gainRewards(
-        rewards.map((rew) => this.factionReward(rew, source)),
-        false,
-        source
-      );
-    }
+  gainRewards(rewards: Reward[], source: EventSource) {
+    this.data.gainRewards(
+      rewards.map((rew) => this.factionReward(rew, source)),
+      false,
+      source
+    );
   }
 
   maxPayRange(cost: Reward[]): number {
@@ -272,7 +269,7 @@ export default class Player extends EventEmitter {
   }
 
   canBuild(
-    targetPlanet: Planet,
+    targetPlanet: Planet | null,
     building: Building,
     lastRound: boolean,
     replay: boolean,
@@ -311,7 +308,7 @@ export default class Player extends EventEmitter {
     // gaiaforming discount
     if (building === Building.GaiaFormer) {
       addedCost.push(new Reward(-this.data.gaiaFormingDiscount(), Resource.MoveTokenToGaiaArea));
-    } else if (building === Building.Mine) {
+    } else if (building === Building.Mine || building === Building.Colony) {
       // habitability costs
       if (targetPlanet === Planet.Gaia) {
         if (this.data.temporaryStep > 0 && !replay) {
@@ -348,7 +345,7 @@ export default class Player extends EventEmitter {
       }
     }
 
-    const cost = Reward.merge(this.board.cost(targetPlanet, building, isolated), addedCost);
+    const cost = Reward.merge(this.board.cost(building, isolated), addedCost);
     const creditCost = (r: Reward[]) => r.filter((r) => r.type === Resource.Credit)[0].count;
     if (
       building === Building.TradingStation &&
@@ -433,8 +430,7 @@ export default class Player extends EventEmitter {
       const times = this.eventConditionCount(event.condition);
       this.gainRewards(
         event.rewards.map((reward) => new Reward(reward.count * times, reward.type)),
-        event.source,
-        event.toPick
+        event.source
       );
     }
   }
@@ -526,7 +522,7 @@ export default class Player extends EventEmitter {
     const isNewLostPlanet = hex.data.planet === Planet.Lost && !hex.occupied();
 
     // excluding Gaiaformers as occupied
-    if (building !== Building.GaiaFormer) {
+    if (building !== Building.GaiaFormer && !isShip(building)) {
       if (!wasOccupied) {
         this.data.occupied.push(hex);
         // Clear federation cache on new building
@@ -571,16 +567,20 @@ export default class Player extends EventEmitter {
     // Lantids
     const isAdditionalMine = !upgradedBuilding && hex.occupied();
 
-    if (isAdditionalMine) {
-      hex.data.additionalMine = this.player;
-      if (this.data.hasPlanetaryInstitute()) {
-        this.gainRewards([new Reward("2k")], Faction.Lantids);
-      }
+    if (isShip(building)) {
+      this.placeShip(building, hex);
     } else {
-      hex.data.building = building;
-      hex.data.player = this.player;
+      if (isAdditionalMine) {
+        hex.data.additionalMine = this.player;
+        if (this.data.hasPlanetaryInstitute()) {
+          this.gainRewards([new Reward("2k")], Faction.Lantids);
+        }
+      } else {
+        hex.data.building = building;
+        hex.data.player = this.player;
+      }
+      this.addBuildingToNearbyFederation(building, hex, map);
     }
-    this.addBuildingToNearbyFederation(building, hex, map);
 
     // get triggered income for new building
     this.receiveBuildingTriggerIncome(building, hex.data.planet, isAdditionalMine);
@@ -609,6 +609,25 @@ export default class Player extends EventEmitter {
       }
     }
     return added;
+  }
+
+  placeShip(ship: Building, hex: GaiaHex) {
+    this.data.ships.push({ type: ship, location: hex.toString(), moved: false, player: this.player });
+  }
+
+  findUnmovedShip(ship: Building, location: string): Ship | null {
+    return this.data.ships.find((s) => s.location === location && s.type === ship && !s.moved);
+  }
+
+  removeShip(ship: Ship, destroyed: boolean) {
+    const l = this.data.ships;
+    l.splice(l.indexOf(ship), 1);
+    if (destroyed) {
+      this.data.destroyedShips[ship.type]++;
+      this.data.buildings[ship.type]--;
+    } else {
+      this.data.deployedShips[ship.type]++;
+    }
   }
 
   resetTemporaryVariables() {
@@ -734,7 +753,7 @@ export default class Player extends EventEmitter {
   receiveTriggerIncome(condition: Condition) {
     for (const event of this.events[Operator.Trigger]) {
       if (event.condition === condition) {
-        this.gainRewards(event.rewards, event.source, event.toPick);
+        this.gainRewards(event.rewards, event.source);
       }
     }
   }

@@ -19,6 +19,10 @@ export async function init(
     options.creator = creator;
   }
 
+  if (expansions.includes("frontiers")) {
+    options.frontiers = true;
+  }
+
   const engine = new Engine([`init ${nbPlayers} ${seed}`], options);
   engine.generateAvailableCommandsIfNeeded();
 

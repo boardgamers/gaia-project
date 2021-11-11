@@ -9,9 +9,11 @@ import {
   Command,
   Expansion,
   Federation,
+  isShip,
   PowerArea,
   ResearchField,
   Resource,
+  Ship,
   TechTile,
   TechTilePos,
 } from "./enums";
@@ -65,6 +67,22 @@ export default class PlayerData extends EventEmitter {
     [key in Building]: number;
   } = fromPairs(Object.values(Building).map((bld) => [bld, 0])) as any;
 
+  destroyedShips: {
+    [key in Building]: number;
+  } = fromPairs(
+    Object.values(Building)
+      .filter((b) => isShip(b))
+      .map((bld) => [bld, 0])
+  ) as any;
+
+  deployedShips: {
+    [key in Building]: number;
+  } = fromPairs(
+    Object.values(Building)
+      .filter((b) => isShip(b))
+      .map((bld) => [bld, 0])
+  ) as any;
+
   satellites = 0;
   research: {
     [key in ResearchField]: number;
@@ -77,6 +95,7 @@ export default class PlayerData extends EventEmitter {
     sci: 0,
   };
   range = 1;
+  shipRange = 2;
   /** Total number of gaiaformers gained (including those on the board & the gaia area) */
   gaiaformers = 0;
   /** number of gaiaformers gained that are in gaia area */
@@ -98,6 +117,7 @@ export default class PlayerData extends EventEmitter {
 
   /** Hexes occupied by buildings with value (not gaia formers), refs match the map hexes with a simple equality test */
   occupied: GaiaHex[] = [];
+  ships: Ship[] = [];
   leechPossible: number;
   tokenModifier = 1;
   lostPlanet = 0;
@@ -131,8 +151,12 @@ export default class PlayerData extends EventEmitter {
       leechPossible: this.leechPossible,
       tokenModifier: this.tokenModifier,
       buildings: this.buildings,
+      destroyedShips: this.destroyedShips,
+      deployedShips: this.deployedShips,
       federationCount: this.federationCount,
       lostPlanet: this.lostPlanet,
+      ships: this.ships,
+      shipRange: this.shipRange,
     };
 
     return ret;

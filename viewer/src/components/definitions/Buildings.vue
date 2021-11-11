@@ -35,6 +35,11 @@
         <image xlink:href="../../assets/buildings/trading-station.svg" :filter="faction ? `url(#color-${faction})` : ''"
         :height=667/504*80 width=80 x=-40 y=-50 />
       </g>
+
+      <g :key="'colony-' + faction" :id="'colony-' + faction">
+        <image xlink:href="../../assets/buildings/colony.svg" :filter="faction ? `url(#color-${faction})` : ''" width=80
+        :height=335/543*80 x=-40 y=-20 />
+      </g>
     </template>
   </defs>
 </template>

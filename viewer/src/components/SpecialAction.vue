@@ -32,8 +32,8 @@
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import Engine, { Planet, Player } from "@gaia-project/engine";
-import { specialActionButton } from "../logic/commands";
 import { ButtonData } from "../data";
+import { specialActionButton } from "../logic/buttons/actions";
 
 @Component
 export default class SpecialAction extends Vue {

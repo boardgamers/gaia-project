@@ -92,7 +92,7 @@ import SpaceMap from "./SpaceMap.vue";
 import TurnOrder from "./TurnOrder.vue";
 import { parseCommands } from "../logic/recent";
 import { LogPlacement } from "../data";
-import { UndoPropagation } from "../logic/commands";
+import { ExecuteBack } from "../logic/buttons/types";
 
 @Component<Game>({
   created(this: Game) {
@@ -183,9 +183,7 @@ export default class Game extends Vue {
   mounted() {
     const undoListener = this.$store.subscribeAction(({ type, payload }) => {
       if (type === "undo") {
-        if (!(payload as UndoPropagation).undoPerformed) {
-          this.undoMove();
-        }
+        this.undoMove();
       }
     });
     this.$on("hook:beforeDestroy", () => undoListener());
@@ -201,6 +199,14 @@ export default class Game extends Vue {
 
   get logPlacement(): LogPlacement {
     return this.$store.state.preferences.logPlacement;
+  }
+
+  get autoClick(): boolean[][] {
+    return this.$store.getters.autoClick;
+  }
+
+  setAutoClick(value: boolean[][]) {
+    this.$store.commit("setAutoClick", value);
   }
 
   get actions(): BoardActionEnum[] {
@@ -263,8 +269,6 @@ export default class Game extends Vue {
   }
 
   handleData(data: Engine, keepMoveHistory?: boolean) {
-    console.log("handle data", keepMoveHistory);
-
     for (const sector of (document.getElementsByClassName("sector") as any) as Element[]) {
       sector.classList.add("notransition");
     }
@@ -277,6 +281,7 @@ export default class Game extends Vue {
       this.currentMove = "";
       this.hideLog = false;
       this.currentMoveWarnings.clear();
+      this.setAutoClick([]);
     } else {
       this.currentMove = data.moveHistory.pop() ?? "";
     }
@@ -316,16 +321,31 @@ export default class Game extends Vue {
   }
 
   undoMove() {
-    if (this.$store.state.context.hasCommandChain) {
-      // was "back", not undo
+    console.log("undo");
+
+    const back = new ExecuteBack();
+    this.$store.dispatch("back", back);
+
+    if (back.performed) {
       return;
     }
 
-    if (this.currentMove.includes(".")) {
-      this.currentMove = this.currentMove.slice(0, this.currentMove.lastIndexOf("."));
-    } else {
-      this.currentMove = "";
-    }
+    const click = this.autoClick;
+
+    const isAutoClickMove = () => {
+      const a = click.pop();
+      return a && a.every(c => c);
+    };
+
+    do {
+      if (this.currentMove.includes(".")) {
+        this.currentMove = this.currentMove.slice(0, this.currentMove.lastIndexOf("."));
+      } else {
+        this.currentMove = "";
+      }
+    } while (isAutoClickMove());
+    this.setAutoClick(click);
+
     this.removeWarnings();
     this.addMove(this.currentMove);
   }

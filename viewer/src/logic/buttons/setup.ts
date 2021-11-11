@@ -12,10 +12,11 @@ import { eventDesc } from "../../data/event";
 import { federationData } from "../../data/federations";
 import { roundScoringNames } from "../../data/round-scorings";
 import { finalScoringSources } from "../charts/final-scoring";
-import { CommandController, symbolButton, textButton } from "../commands";
+import { CommandController } from "./types";
+import { autoClickButton, symbolButton, textButton } from "./utils";
 
-function chooseTechButton(command: string, data: AvailableSetupOption, label: string) {
-  const button = textButton({
+function chooseTechButton(command: string, data: AvailableSetupOption, controller: CommandController, label: string) {
+  return autoClickButton({
     command,
     label,
     buttons: data.options.map((tile) =>
@@ -24,16 +25,17 @@ function chooseTechButton(command: string, data: AvailableSetupOption, label: st
         tech: { tile: tile as TechTile, commandOverride: tile },
       })
     ),
+    onClick: (button) => {
+      controller.subscribeFinal("techClick", button);
+    },
   });
-  button.buttons[0].onCreate = (controller) => controller.subscribeButtonClick("techClick");
-  return button;
 }
 
 export function setupButton(data: AvailableSetupOption, controller: CommandController, engine: Engine): ButtonData {
   const command = `${Command.Setup} ${data.type} ${data.position} to`;
   switch (data.type) {
     case SetupType.Booster:
-      return textButton({
+      return autoClickButton({
         command,
         label: `Choose Booster ${data.position}`,
         buttons: data.options.map((booster) =>
@@ -45,11 +47,11 @@ export function setupButton(data: AvailableSetupOption, controller: CommandContr
         ),
       });
     case SetupType.TechTile:
-      return chooseTechButton(command, data, `Choose Tech Tile for Position ${data.position}`);
+      return chooseTechButton(command, data, controller, `Choose Tech Tile for Position ${data.position}`);
     case SetupType.AdvTechTile:
-      return chooseTechButton(command, data, `Choose Advanced Tech Tile for Position ${data.position}`);
+      return chooseTechButton(command, data, controller, `Choose Advanced Tech Tile for Position ${data.position}`);
     case SetupType.TerraformingFederation:
-      return textButton({
+      return autoClickButton({
         command,
         label: "Choose Terraforming Federation",
         buttons: data.options.map((fed) =>
@@ -61,7 +63,7 @@ export function setupButton(data: AvailableSetupOption, controller: CommandContr
         ),
       });
     case SetupType.RoundScoringTile:
-      return textButton({
+      return autoClickButton({
         command,
         label: `Choose Round Scoring ${data.position}`,
         buttons: data.options.map((scoring) =>
@@ -72,7 +74,7 @@ export function setupButton(data: AvailableSetupOption, controller: CommandContr
         ),
       });
     case SetupType.FinalScoringTile:
-      return textButton({
+      return autoClickButton({
         command,
         label: `Choose Final Scoring ${data.position}`,
         buttons: data.options.map((scoring) =>
@@ -83,7 +85,7 @@ export function setupButton(data: AvailableSetupOption, controller: CommandContr
         ),
       });
     case SetupType.MapTile:
-      return textButton({
+      return autoClickButton({
         command,
         label: `Choose Map Tile ${data.position} (for red circle)`,
         buttons: data.options.map((tile) =>
@@ -91,9 +93,36 @@ export function setupButton(data: AvailableSetupOption, controller: CommandContr
             command: tile,
           })
         ),
-        onOpen: () => {
+        onClick: (button) => {
           controller.highlightSectors(engine.map.configuration().centers.slice(Number(data.position) - 1));
+          controller.emitButtonCommand(button);
         },
       });
   }
+}
+
+export function sectorRotationButton(controller: CommandController) {
+  return {
+    label: "Rotate sectors",
+    command: Command.RotateSectors,
+    shortcuts: ["r"],
+    buttons: [
+      textButton({
+        label: "Sector rotations finished",
+        needConfirm: true,
+        keepContext: true,
+        onShow: (button) => {
+          controller.subscribeHexClick(button, (hex) => controller.rotate(hex));
+          controller.highlightHexes({ hexes: new Map(), backgroundLight: true, selectAnyHex: true });
+        },
+        onClick: (button) => {
+          const rotations = [...controller.getRotation().entries()];
+          for (const rotation of rotations) {
+            rotation[1] %= 6;
+          }
+          controller.emitButtonCommand(button, [].concat(...rotations.filter((r) => !!r[1])).join(" "));
+        },
+      }),
+    ],
+  };
 }

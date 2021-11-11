@@ -22,7 +22,7 @@
       v-for="i in buildingList"
       :transform="`translate(${(i + 0.5) * buildingSpacing + offset}, 0)`"
       :key="i"
-      v-b-tooltip
+      v-b-tooltip.html
       :title="tooltip(i)"
     >
       <circle
@@ -30,7 +30,6 @@
         stroke-width="0.07"
         fill="white"
         r="1"
-        :key="i"
         v-if="!isPI"
         :class="{ recent: recentlyBuilt(i), 'current-round': currentRoundBuilt(i) }"
       />
@@ -42,7 +41,6 @@
         :width="2 * incomeTypes"
         y="-1"
         height="2"
-        :key="i"
         :class="{ recent: recentlyBuilt(i), 'current-round': currentRoundBuilt(i) }"
         v-else
       />
@@ -60,9 +58,21 @@
         :key="'field-' + index"
         :kind="resource.type"
         :count="resource.count"
-        :transform="`translate(${index * 1.5 + isPI * 0.5}, 0) scale(0.08)`"
+        :transform="resourceTranslate(i, index)"
         style="opacity: 0.7"
       />
+      <circle
+        stroke="black"
+        stroke-width="0.07"
+        fill="white"
+        r=".6"
+        v-if="!isPI"
+        :class="{ resolution: true, deployed: isDeployed(i) }"
+      />
+    </g>
+    <g v-if="isShip" transform="translate(7.5,0)" v-b-tooltip="destroyedTooltip">
+      <circle r=".6" class="destroyed" />
+      <text transform="translate(-.33,-.1)" class="board-text">{{ destroyed }}</text>
     </g>
   </g>
 </template>
@@ -76,12 +86,15 @@ import Engine, {
   Building as BuildingEnum,
   factionBoard,
   factionVariantBoard,
+  isShip,
   Operator,
   Player,
   Resource as ResourceEnum,
   Reward,
 } from "@gaia-project/engine";
 import { CommandObject, markBuilding } from "../../logic/recent";
+import { buildingName } from "../../data/building";
+import { radiusTranslate } from "../../logic/utils";
 
 @Component({
   components: {
@@ -104,6 +117,12 @@ export default class BuildingGroup extends Vue {
 
   @Prop({ default: 0 })
   gaia: number;
+
+  @Prop({ default: 0 })
+  destroyed: number;
+
+  @Prop({ default: 0 })
+  deployed: number;
 
   @Prop({ default: 0 })
   discount: number;
@@ -138,19 +157,33 @@ export default class BuildingGroup extends Vue {
     return this.building === BuildingEnum.PlanetaryInstitute;
   }
 
+  get isShip() {
+    return isShip(this.building);
+  }
+
   tooltip(i: number) {
     const building = this.building;
     const b = this.board.buildings[building];
     const cost = this.discount
       ? b.cost.map((c) => `${c.count - this.discount}${c.type}`).join(", ")
       : b.cost.join(", ") || "~";
-    const isolatedCost = b.isolatedCost ? "\n Isolated cost: " + (b.isolatedCost.join(", ") || "~") : "";
-    const income = building === BuildingEnum.GaiaFormer ? "" : "\n " + (this.resources(i, true).join(", ") || "~");
-    return `Cost: ${cost}${isolatedCost}${income} Power Value: ${this.player.buildingValue(null, {building})}`;
+    const isolatedCost = b.isolatedCost ? " Isolated cost: " + (b.isolatedCost.join(", ") || "~") : "";
+    const income = building === BuildingEnum.GaiaFormer || isShip(building) ? null : (this.resources(i, true).join(", ") || "~");
+    const rows = [
+      buildingName(building, this.faction) + (this.isDeployed(i) ? " (deployed)" : ""),
+      `Cost: ${cost}${isolatedCost}`,
+      income,
+      `Power Value: ${this.player.buildingValue(null, {building})}`,
+    ];
+    return rows.filter(r => r).join("<br/>");
+  }
+
+  get destroyedTooltip() {
+    return `Destroyed ${buildingName(this.building, this.faction)}s`;
   }
 
   get offset() {
-    return this.building === BuildingEnum.GaiaFormer ? 0.2 : 1.4;
+    return this.resource.length == 0 ? 0.2 : 1.4;
   }
 
   get buildingSpacing() {
@@ -167,6 +200,8 @@ export default class BuildingGroup extends Vue {
       minWidth = 3;
     } else if (this.building === BuildingEnum.PlanetaryInstitute) {
       minWidth = this.incomeTypes;
+    } else if (isShip(this.building)) {
+      minWidth = 3.6;
     }
     return Math.max(this.nBuildings, minWidth) * this.buildingSpacing + this.offset + this.paddingRight;
   }
@@ -195,6 +230,10 @@ export default class BuildingGroup extends Vue {
       return i === 0 ? !this.ac1 : !this.ac2;
     }
     return i >= this.placed + this.gaia;
+  }
+
+  isDeployed(i: number): boolean {
+    return i < this.deployed;
   }
 
   recentlyBuilt(i: number): boolean {
@@ -226,6 +265,18 @@ export default class BuildingGroup extends Vue {
     return markBuilding(i, countMoves(roundMoves), this.placed, countMoves(moves), this.nBuildings);
   }
 
+  resourceTranslate(building: number, resource: number): string {
+    if (this.isPI) {
+      return `translate(${resource * 1.5 + 0.5}, 0) scale(0.08)`;
+    } else {
+      const n = this.resources(building).length;
+      if (n == 1) {
+        return `scale(0.08)`;
+      }
+      return radiusTranslate(.55, resource, n) + " scale(0.04)";
+    }
+  }
+
   resources(i: number, tooltip = false): Array<string | Reward> {
     if (this.showBuilding(i) && !tooltip) {
       return [];
@@ -253,6 +304,10 @@ export default class BuildingGroup extends Vue {
         return tooltip ? income + ev.rewards.toString() : ev.rewards;
       }
 
+      if (ev.operator === Operator.Once && tooltip) {
+        return "Once: " + rew;
+      }
+
       if (special) {
         return tooltip ? "Special Action: " + rew : ev.rewards;
       }
@@ -278,6 +333,20 @@ export default class BuildingGroup extends Vue {
 
     .recent {
       fill: var(--recent);
+      opacity: 1;
+    }
+
+    .resolution {
+      opacity: 0;
+    }
+
+    .destroyed {
+      fill: red;
+      opacity: 1;
+    }
+
+    .deployed {
+      fill: blue;
       opacity: 1;
     }
   }

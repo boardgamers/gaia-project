@@ -58,5 +58,11 @@ export const buildingsSourceFactory: SimpleSourceFactory<ChartSource<Building>> 
       color: "--rt-gaia",
       weight: 0,
     },
+    {
+      type: Building.Colony,
+      label: "Colony",
+      color: "--rt-nav",
+      weight: 0,
+    },
   ],
 };

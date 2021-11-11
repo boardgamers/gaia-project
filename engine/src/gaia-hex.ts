@@ -3,6 +3,8 @@ import { Hex } from "hexagrid";
 import { stdBuildingValue } from "./buildings";
 import { Building, Planet, Player } from "./enums";
 
+type PlayerShip = { player: Player; ship: Building; moved: boolean };
+
 export interface GaiaHexData {
   planet: Planet;
   sector: string;
