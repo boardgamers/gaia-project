@@ -81,6 +81,7 @@ import { moveWarnings } from "../data/warnings";
 import { commandButtons, CommandController, FastConversionTooltips, hasPass, UndoPropagation } from "../logic/commands";
 import Undo from "./Resources/Undo.vue";
 import { ActionPayload, SubscribeActionOptions, SubscribeOptions } from "vuex";
+import { CubeCoordinates } from "hexagrid";
 
 let show = false;
 
@@ -398,6 +399,10 @@ export default class Commands extends Vue implements CommandController {
 
   highlightHexes(selection: HexSelection | null) {
     this.$store.commit("highlightHexes", selection);
+  }
+
+  highlightSectors(sectors: CubeCoordinates[]) {
+    this.$store.commit("highlightSectors", sectors);
   }
 
   setFastConversionTooltips(tooltips: FastConversionTooltips) {

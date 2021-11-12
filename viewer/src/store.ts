@@ -70,6 +70,7 @@ const gaiaViewer = {
     data: new Engine(),
     context: {
       highlighted: {
+        sectors: [],
         hexes: null,
         researchTiles: new Set(),
         techs: new Set(),
@@ -95,6 +96,10 @@ const gaiaViewer = {
     receiveData(state: State, data: Engine) {
       state.data = data;
       state.context.rotation = new Map();
+    },
+
+    highlightSectors(state: State, sectors: CubeCoordinates[]) {
+      state.context.highlighted.sectors = sectors;
     },
 
     highlightHexes(state: State, selection: HexSelection) {
@@ -126,6 +131,7 @@ const gaiaViewer = {
     },
 
     clearContext(state: State) {
+      state.context.highlighted.sectors = [];
       state.context.highlighted.hexes = null;
       state.context.highlighted.researchTiles = new Set();
       state.context.highlighted.techs = new Set();

@@ -10,6 +10,7 @@ import {
   TechTile,
   TechTilePos,
 } from "@gaia-project/engine";
+import { CubeCoordinates } from "hexagrid";
 import { FastConversionTooltips, MoveButtonController } from "../logic/commands";
 
 export type ButtonWarning = { title?: string; body: string[]; okButton?: { label: string; action: () => void } };
@@ -63,6 +64,7 @@ export type LogPlacement = "top" | "bottom" | "off";
 
 export interface GameContext {
   highlighted: {
+    sectors: CubeCoordinates[];
     hexes: HexSelection;
     researchTiles: Set<string>;
     techs: Set<TechTilePos | AdvTechTilePos>;
