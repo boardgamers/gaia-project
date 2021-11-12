@@ -37,6 +37,7 @@ import Engine, {
 import { AvailableFederation } from "@gaia-project/engine/src/available-command";
 import { FederationInfo } from "@gaia-project/engine/src/federation";
 import assert from "assert";
+import { CubeCoordinates } from "hexagrid";
 import { max, minBy, range, sortBy } from "lodash";
 import { ActionPayload, SubscribeActionOptions, SubscribeOptions } from "vuex";
 import { ButtonData, ButtonWarning, HexSelection, HighlightHexData } from "../data";
@@ -75,6 +76,8 @@ export interface CommandController {
   subscribeAction<P extends ActionPayload>(fn: SubscribeActionOptions<P, any>, options?: SubscribeOptions): () => void;
   setFastConversionTooltips(tooltips: FastConversionTooltips);
   supportsHover(): boolean;
+
+  highlightSectors(sectors: CubeCoordinates[]): void;
 }
 
 export interface MoveButtonController {
@@ -1077,7 +1080,7 @@ function commandButton(
       ];
     }
     case Command.Setup: {
-      return [setupButton(command.data)];
+      return [setupButton(command.data, controller, engine)];
     }
     case Command.Build: {
       return buildButtons(engine, command);

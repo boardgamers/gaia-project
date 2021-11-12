@@ -9,6 +9,14 @@
         rotation(center) * 60
       }deg);`"
     />
+    <circle
+      v-for="(s, i) in highlightedSectors"
+      :key="i"
+      r="1"
+      :style="`fill: ${i === 0 ? 'red' : 'back'}; transform: translate(${hexCenter(s).x * 1.01}px, ${
+        hexCenter(s).y * 1.01
+      }px)`"
+    />
     <FactionWheel transform="translate(-10.2, -8.7) scale(0.65)" />
     <image v-if="showCharts" xlink:href="../assets/resources/line-chart.svg" :height=155/211*22 width="22" x="-11"
     y="-8" v-b-modal.chart-button role="button" :transform="`translate(${right - 15}, -10) scale(0.1)`" />
@@ -18,7 +26,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
-import Engine, { GaiaHex, SpaceMap as SpaceMapData } from "@gaia-project/engine";
+import Engine, { SpaceMap as SpaceMapData } from "@gaia-project/engine";
 import { hexCenter } from "../graphics/hex";
 import Sector from "./Sector.vue";
 import { CubeCoordinates } from "hexagrid";
@@ -33,8 +41,12 @@ import Definitions from "./definitions/Definitions.vue";
   },
 })
 export default class SpaceMap extends Vue {
-  hexCenter(hex: GaiaHex) {
+  hexCenter(hex: CubeCoordinates) {
     return hexCenter(hex);
+  }
+
+  get highlightedSectors(): CubeCoordinates[] {
+    return this.$store.state.context.highlighted.sectors;
   }
 
   get sectors(): CubeCoordinates[] {

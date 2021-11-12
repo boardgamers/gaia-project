@@ -1,10 +1,18 @@
-import { AvailableSetupOption, Booster, Command, Event, SetupType, TechTile, tiles } from "@gaia-project/engine";
+import Engine, {
+  AvailableSetupOption,
+  Booster,
+  Command,
+  Event,
+  SetupType,
+  TechTile,
+  tiles,
+} from "@gaia-project/engine";
 import { ButtonData } from "../../data";
 import { eventDesc } from "../../data/event";
 import { federationData } from "../../data/federations";
 import { roundScoringNames } from "../../data/round-scorings";
 import { finalScoringSources } from "../charts/final-scoring";
-import { symbolButton, textButton } from "../commands";
+import { CommandController, symbolButton, textButton } from "../commands";
 
 function chooseTechButton(command: string, data: AvailableSetupOption, label: string) {
   const button = textButton({
@@ -21,7 +29,7 @@ function chooseTechButton(command: string, data: AvailableSetupOption, label: st
   return button;
 }
 
-export function setupButton(data: AvailableSetupOption): ButtonData {
+export function setupButton(data: AvailableSetupOption, controller: CommandController, engine: Engine): ButtonData {
   const command = `${Command.Setup} ${data.type} ${data.position} to`;
   switch (data.type) {
     case SetupType.Booster:
@@ -77,12 +85,15 @@ export function setupButton(data: AvailableSetupOption): ButtonData {
     case SetupType.MapTile:
       return textButton({
         command,
-        label: `Choose Map Tile ${data.position} - starting from (left) center, then clockwise from 11 o'clock, you can rotate later`,
+        label: `Choose Map Tile ${data.position} (for red circle)`,
         buttons: data.options.map((tile) =>
           textButton({
             command: tile,
           })
         ),
+        onOpen: () => {
+          controller.highlightSectors(engine.map.configuration().centers.slice(Number(data.position) - 1));
+        },
       });
   }
 }
