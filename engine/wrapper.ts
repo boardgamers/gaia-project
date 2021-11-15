@@ -9,20 +9,14 @@ export async function init(
   nbPlayers: number,
   expansions: string[],
   options: EngineOptions,
-  seed?: string
+  seed?: string,
+  creator?: number
 ): Promise<Engine> {
   if (!seed) {
     seed = crypto.randomBytes(8).toString("base64");
   }
-
-  let numberSeed: number;
-  // If the seed is a number, use it directly, otherwise use a number generated from its hash
-  if ("" + parseInt(seed, 10) === seed) {
-    numberSeed = parseInt(seed, 10);
-  } else {
-    const md5sum = crypto.createHash("md5");
-    md5sum.update(seed);
-    numberSeed = "" + parseInt(seed, 10) === seed ? parseInt(seed, 10) : parseInt(md5sum.digest("hex").slice(-10), 16);
+  if (creator && creator >= 0) {
+    options.creator = creator;
   }
 
   const engine = new Engine([`init ${nbPlayers} ${seed}`], options);
