@@ -143,7 +143,9 @@ describe("Resource Counter", () => {
   });
 
   it("parse power usage", () => {
-    const usage = parsePowerUsage(parseCommands("terrans build gf 6A7 using area1: 4 area2: 2, brainstone: 1.")[0]);
+    const usage = parsePowerUsage(
+      parseCommands("terrans build gf 6A7 using area1: 4 area2: 2, brainstone: 1 (4/0/0/0 ⇒ 3/0/0/0).")[0]
+    );
     expect(usage).to.deep.equal({ area1: 4, area2: 2, area3: 0, brainstone: 1 });
   });
 
