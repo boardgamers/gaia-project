@@ -17,7 +17,7 @@ export function parseCommands(move: string): CommandObject[] {
     .split(".")
     .filter((c) => c.length > 0)
     .map((c) => {
-      const split = c.trim().split(" ");
+      const split = c.split("(")[0].trim().split(" ");
 
       return {
         faction: faction,
