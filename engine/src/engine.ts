@@ -102,6 +102,8 @@ export interface EngineOptions {
   layout?: Layout;
   /* Force players to have random factions */
   randomFactions?: boolean;
+  /** player that created the game **/
+  creator?: PlayerEnum;
 }
 
 export type LogEntryChanges = {
@@ -1110,8 +1112,8 @@ export default class Engine {
     if (this.options.customBoardSetup) {
       initCustomSetup(this);
 
-      // The first player (host) does board setup and rotation
-      this.currentPlayer = this.players[0].player;
+      // The creator does board setup and rotation
+      this.currentPlayer = this.players[this.options.creator ?? 0].player;
     } else if (this.options.advancedRules) {
       // The last player is the one to rotate the sectors
       this.currentPlayer = this.players.slice(-1).pop().player;
