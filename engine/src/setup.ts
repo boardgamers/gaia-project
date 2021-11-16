@@ -1,4 +1,5 @@
 import assert from "assert";
+import shuffleSeed from "shuffle-seed";
 import AvailableCommand from "./available-command";
 import Engine from "./engine";
 import {
@@ -114,19 +115,20 @@ function setMap(engine: Engine, tiles: MapTile[]) {
   engine.options.map = engine.map.placement;
 }
 
-const factories = (engine: Engine): SetupFactory[] => [
+const getFactories = (engine: Engine, nbPlayers = engine.players.length): SetupFactory[] => [
   {
     type: SetupType.Booster,
     init: () => {
       for (const b of Booster.values(engine.expansions)) {
-        engine.tiles.boosters[b] = false;
+        delete engine.tiles.boosters[b];
       }
     },
     nextAvailable: () => {
       const boosters = Booster.values(engine.expansions);
       const left = boosters.filter((b) => !engine.tiles.boosters[b]);
       const used = boosters.filter((b) => engine.tiles.boosters[b]).length;
-      if (used < engine.players.length + 3) {
+      // Choose nbPlayers+3 boosters as part of the pool
+      if (used < nbPlayers + 3) {
         const b = left[0];
         return {
           position: used + 1,
@@ -144,7 +146,7 @@ const factories = (engine: Engine): SetupFactory[] => [
     SetupType.TechTile,
     TechTilePos.values(engine.expansions),
     TechTile.values(engine.expansions),
-    engine.players.length
+    nbPlayers
   ),
   techFactory(
     engine,
@@ -211,14 +213,34 @@ const factories = (engine: Engine): SetupFactory[] => [
   },
 ];
 
+export function applyRandomBoardSetup(engine: Engine, seed: string, nbPlayers: number) {
+  //map has too many quirks to keep test cases compatible
+  const factories = getFactories(engine, nbPlayers).filter((f) => f.type !== SetupType.MapTile);
+  for (const factory of factories) {
+    factory.init();
+
+    let options: SetupOption[];
+
+    let next: SetupFactoryOption;
+    while ((next = factory.nextAvailable()) !== null) {
+      if (!options) {
+        //only shuffle once for compatability with old test cases
+        options = shuffleSeed.shuffle(next.options, engine.map.rng());
+      }
+
+      factory.applyOption(options.shift(), next.position);
+    }
+  }
+}
+
 export function initCustomSetup(engine: Engine) {
-  for (const factory of factories(engine)) {
+  for (const factory of getFactories(engine)) {
     factory.init();
   }
 }
 
 function nextAvailableSetupOption(engine: Engine): AvailableSetupOption | null {
-  for (const factory of factories(engine)) {
+  for (const factory of getFactories(engine)) {
     const o = factory.nextAvailable();
     if (o) {
       return {
@@ -232,7 +254,7 @@ function nextAvailableSetupOption(engine: Engine): AvailableSetupOption | null {
 }
 
 export function applySetupOption(engine: Engine, type: SetupType, position: SetupPosition, option: SetupOption) {
-  for (const factory of factories(engine)) {
+  for (const factory of getFactories(engine)) {
     const o = factory.nextAvailable();
     if (o) {
       assert(factory.type === type, `expected option for ${factory.type}, but got option for ${type}`);
