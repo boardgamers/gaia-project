@@ -1,6 +1,5 @@
 import assert from "assert";
 import { isEqual, range, set, uniq } from "lodash";
-import shuffleSeed from "shuffle-seed";
 import { version } from "../package.json";
 import { boardActions } from "./actions";
 import { finalRankings, gainFinalScoringVictoryPoints } from "./algorithms/scoring";
@@ -47,6 +46,7 @@ import PlayerData, { BrainstoneDest, MoveTokens, powerLogString } from "./player
 import * as researchTracks from "./research-tracks";
 import Reward from "./reward";
 import {
+  applyRandomBoardSetup,
   applySetupOption,
   initCustomSetup,
   possibleSetupBoardActions,
@@ -230,7 +230,7 @@ export default class Engine {
   } = {
     boosters: {},
     techs: {},
-    scorings: { round: null, final: null },
+    scorings: { round: [], final: [] },
     federations: {},
   };
   boardActions: BoardActions = {};
@@ -1536,43 +1536,12 @@ export default class Engine {
     }
     this.options.map = this.map.placement;
 
-    // Choose nbPlayers+3 boosters as part of the pool
-    const boosters = shuffleSeed.shuffle(Booster.values(this.expansions), this.map.rng()).slice(0, nbPlayers + 3);
-    for (const booster of boosters) {
-      this.tiles.boosters[booster] = true;
-    }
-
-    // Shuffle tech tiles
-    const techtiles = shuffleSeed.shuffle(TechTile.values(this.expansions), this.map.rng());
-    TechTilePos.values(this.expansions).forEach((pos, i) => {
-      this.tiles.techs[pos] = { tile: techtiles[i], count: nbPlayers };
-    });
-
-    // Choose adv tech tiles as part of the pool
-    const advtechtiles = shuffleSeed.shuffle(AdvTechTile.values(this.expansions), this.map.rng());
-    AdvTechTilePos.values(this.expansions).forEach((pos, i) => {
-      this.tiles.techs[pos] = { tile: advtechtiles[i], count: 1 };
-    });
+    applyRandomBoardSetup(this, seed, nbPlayers);
 
     // powerActions
     BoardAction.values(this.expansions).forEach((pos: BoardAction) => {
       this.boardActions[pos] = null;
     });
-
-    const feds = Federation.values();
-    this.terraformingFederation = shuffleSeed.shuffle(feds, this.map.rng())[0];
-    for (const federation of feds) {
-      this.tiles.federations[federation] = 3;
-    }
-    this.tiles.federations[this.terraformingFederation] -= 1;
-
-    // Choose roundScoring Tiles as part of the pool
-    const roundscoringtiles = shuffleSeed.shuffle(ScoringTile.values(this.expansions), this.map.rng()).slice(0, 6);
-    this.tiles.scorings.round = roundscoringtiles;
-
-    // Choose finalScoring Tiles as part of the pool
-    const finalscoringtiles = shuffleSeed.shuffle(FinalTile.values(this.expansions), this.map.rng()).slice(0, 2);
-    this.tiles.scorings.final = finalscoringtiles;
 
     this.players = [];
     this.setup = [];
