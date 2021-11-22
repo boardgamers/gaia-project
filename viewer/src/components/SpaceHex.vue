@@ -52,8 +52,18 @@
     <polygon
       v-for="(player, index) in hex.data.federations || []"
       :points="hexCorners.map((p) => `${p.x * (1 - (index + 0.5) / 8)},${p.y * (1 - (index + 0.5) / 8)}`).join(' ')"
-      :class="['space-hex-federation', 'planet', planet(player)]"
+      :class="{
+        'space-hex-federation': true,
+        planet: true,
+        'planet-fill': federationHighlight(player),
+        [planet(player)]: true,
+      }"
       :key="`${player}-${index}`"
+    />
+    <use
+      v-if="sectorHighlight !== null"
+      xlink:href="#space-hex"
+      :class="['space-hex-federation', 'planet', 'planet-fill', planet(sectorHighlight)]"
     />
   </g>
 </template>
@@ -225,6 +235,23 @@ export default class SpaceHex extends Vue {
 
   player(player: PlayerEnum): Player {
     return this.engine.players[player];
+  }
+
+  federationHighlight(player: PlayerEnum): boolean {
+    const mode = this.$store.getters.mapMode;
+    return mode && this.hex.data.planet === "e" && mode.player == player && mode.type === "federations" ?
+      this.hex.data.federations?.some(f => f === player) : false;
+
+  }
+
+  get sectorHighlight(): PlayerEnum {
+    const mode = this.$store.getters.mapMode;
+    return mode
+    && this.hex.data.planet === "e"
+    && mode.type === "sectors"
+    && this.player(mode.player).data.occupied.some((hex) => hex.colonizedBy(mode.player) && hex.data.sector === this.hex.data.sector)
+      ? mode.player
+      : null;
   }
 
   planet(player: PlayerEnum): PlanetEnum {

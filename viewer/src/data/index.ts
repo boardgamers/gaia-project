@@ -12,6 +12,7 @@ import {
 } from "@gaia-project/engine";
 import { CubeCoordinates } from "hexagrid";
 import { FastConversionTooltips, MoveButtonController } from "../logic/buttons/types";
+import { MapMode } from "./actions";
 
 export type ButtonWarning = { title?: string; body: string[]; okButton?: { label: string; action: () => void } };
 
@@ -81,4 +82,5 @@ export interface GameContext {
   autoClick: boolean[][];
 
   logPlacement: LogPlacement;
+  mapMode?: MapMode;
 }

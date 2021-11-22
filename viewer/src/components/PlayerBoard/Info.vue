@@ -48,26 +48,26 @@
             <text style="text-anchor: middle; dominant-baseline: central; font-size: 5px">-{{ data.bid }}</text>
           </g>
         </g>
-        <g transform="translate(15, 1)" v-b-tooltip title="Satellites and space stations, satellites left ">
+        <g transform="translate(15.2, 1.4)" v-b-tooltip title="Satellites and space stations, satellites left ">
           <image xlink:href="../../assets/resources/satellite.svg" :height=155/211*22 width="22" x="-11" y="-8"
           transform="scale(0.07)" />
-          <text :class="['board-text']" transform="translate(1,0) scale(0.7)"
+          <text :class="['board-text']" transform="translate(1,0) scale(0.8)"
             >{{ data.satellites + data.buildings.sp }}, {{ satellitesLeft }}
           </text>
         </g>
-        <g transform="translate(15, 2.2)" v-b-tooltip title="Sectors with a colonized planet">
+        <g transform="translate(12.5, 3.5)" v-b-tooltip title="Sectors with a colonized planet">
           <image xlink:href="../../assets/conditions/sector.svg" :height=155/211*22 width="22" x="-11" y="-8"
-          transform="scale(0.07)" />
-          <text :class="['board-text']" transform="translate(1,0) scale(0.7)">{{ sectors }}</text>
+          transform="scale(0.1)" @click="toggleMapMode('sectors')" style="cursor: pointer"/>
+          <text :class="['board-text']" transform="translate(1,-.1) scale(0.8)">{{ sectors }}</text>
         </g>
         <g
-          transform="translate(15, 3.6)"
+          transform="translate(15.2, 3.5)"
           v-b-tooltip
           title="Power value of structures in federations, outside of federations"
         >
           <image xlink:href="../../assets/conditions/federation.svg" :height=155/211*22 width="22" x="-11" y="-8"
-          transform="scale(0.08)" />
-          <text :class="['board-text']" transform="translate(1,0) scale(0.7)"
+          transform="scale(0.1)" @click="toggleMapMode('federations')" style="cursor: pointer" />
+          <text :class="['board-text']" transform="translate(1,-.1) scale(0.8)"
             >{{ player.fedValue }}, {{ player.structureValue - player.fedValue }}
           </text>
         </g>
@@ -99,13 +99,13 @@
           <text class="board-text" transform="scale(0.7)">+{{ income("q") }}</text>
         </g>
       </g>
-      <g v-for="i in 6" :key="i" :transform="`translate(${i * 2},3.5) scale(1)`">
+      <g v-for="i in 6" :key="i" :transform="`translate(${i * 2 - 1.4},3.5) scale(1)`">
         <polygon
           points="-7.5,3 -3,7.5 3,7.5 7.5,3 7.5,-3 3,-7.5 -3,-7.5 -7.5,-3"
           transform="scale(0.1)"
           :class="['board-info', 'research-tile', researchType(i - 1), researchClass(i - 1)]"
         />
-        <text :class="['board-text', researchType(i - 1)]" transform="scale(0.7)" x="-.35" y="-.1"
+        <text :class="['board-text', researchType(i - 1)]" transform="scale(0.8)" x="-.35" y="-.15"
           >{{ research(i - 1) }}
         </text>
       </g>
@@ -128,7 +128,7 @@ import {
   Resource as ResourceEnum,
 } from "@gaia-project/engine";
 import VictoryPoint from "../Resources/VictoryPoint.vue";
-import { FastConversionEvent } from "../../data/actions";
+import { FastConversionEvent, MapModeType, MapMode } from "../../data/actions";
 import { factionName } from "../../data/factions";
 
 @Component({
@@ -165,6 +165,10 @@ export default class PlayerBoardInfo extends Vue {
 
   convert(resource: ResourceEnum) {
     this.$store.dispatch("fastConversionClick", { button: resource } as FastConversionEvent);
+  }
+
+  toggleMapMode(mode: MapModeType) {
+    this.$store.commit("toggleMapMode", { type: mode, player: this.player.player  } as MapMode);
   }
 
   convertTooltip(resource: ResourceEnum): string | null {
