@@ -14,7 +14,7 @@ import { max, minBy, range, sortBy } from "lodash";
 import { ButtonData } from "../../data";
 import { FastConversion, FastConversionEvent, freeActionShortcuts } from "../../data/actions";
 import { AvailableConversions, FastConversionTooltips } from "./types";
-import { symbolButton, translateResources } from "./utils";
+import { autoClickButton, symbolButton, translateResources } from "./utils";
 import { resourceWasteWarning, rewardWarnings } from "./warnings";
 
 function conversionLabel(cost: Reward[], income: Reward[]) {
@@ -188,11 +188,11 @@ export function freeAndBurnButton(
   }
 
   return {
-    button: {
+    button: autoClickButton({
       label: labels.join(" / "),
       shortcuts: ["a"],
       buttons: sortBy(buttons, (b) => b.conversion.from[0].type),
-    },
+    }),
     tooltips,
   };
 }

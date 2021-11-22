@@ -2,7 +2,7 @@ import Engine, { AvailableCommand, Command, Player } from "@gaia-project/engine"
 import { ButtonData } from "../../data";
 import { boardActionsButton, specialActionsButton } from "./actions";
 import { AutoClickStrategy, checkAutoClick } from "./autoClick";
-import { buildButtons, moveShipButton } from "./buildings";
+import { buildButtons, hexSelectionButton, moveShipButton } from "./buildings";
 import { fastConversionClick, freeAndBurnButton } from "./conversion";
 import { deadEndButton } from "./dead-end";
 import { declineButton } from "./decline";
@@ -38,21 +38,21 @@ function commandButton(
 
     case Command.PISwap:
       return [
-        {
+        hexSelectionButton(controller, {
           label: "Swap Planetary Institute",
           shortcuts: ["w"],
           command: command.name,
           hexes: hexMap(engine, command.data.buildings, false),
-        },
+        }),
       ];
 
     case Command.PlaceLostPlanet:
       return [
-        {
+        hexSelectionButton(controller, {
           label: "Place Lost Planet",
           command: command.name,
           hexes: hexMap(engine, command.data.spaces, true),
-        },
+        }),
       ];
 
     case Command.Pass:
