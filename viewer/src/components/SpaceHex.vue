@@ -56,14 +56,14 @@
         'space-hex-federation': true,
         planet: true,
         'planet-fill': federationHighlight(player),
-        [planet(player)]: true,
+        [playerPlanet(player)]: true,
       }"
       :key="`${player}-${index}`"
     />
     <use
       v-if="sectorHighlight !== null"
       xlink:href="#space-hex"
-      :class="['space-hex-federation', 'planet', 'planet-fill', planet(sectorHighlight)]"
+      :class="['space-hex-federation', 'planet', 'planet-fill', playerPlanet(sectorHighlight)]"
     />
   </g>
 </template>
@@ -93,6 +93,7 @@ import { factionName } from "../data/factions";
 import { radiusTranslate } from "../logic/utils";
 import { Ship } from "@gaia-project/engine/src/enums";
 import { shipsInHex } from "@gaia-project/engine/src/available-command";
+import { MapMode } from "../data/actions";
 
 type BuildingOverride = { building: BuildingEnum; player: PlayerEnum };
 @Component<SpaceHex>({
@@ -174,7 +175,12 @@ export default class SpaceHex extends Vue {
     const ret = ["space-hex"];
 
     const selection = this.selection;
-    if (selection) {
+    const mode = this.mapMode;
+    if (mode?.type == "planetType") {
+      if (mode.planet === this.planet) {
+        ret.push("bold");
+      }
+    } else if (selection) {
       if (selection.hexes.has(hex)) {
         const h = selection.hexes?.get(hex);
         if (!h.preventClick) {
@@ -237,24 +243,31 @@ export default class SpaceHex extends Vue {
     return this.engine.players[player];
   }
 
-  federationHighlight(player: PlayerEnum): boolean {
-    const mode = this.$store.getters.mapMode;
-    return mode && this.hex.data.planet === "e" && mode.player == player && mode.type === "federations" ?
-      this.hex.data.federations?.some(f => f === player) : false;
+  get mapMode(): MapMode | null {
+    return this.$store.getters.mapMode;
+  }
 
+  federationHighlight(player: PlayerEnum): boolean {
+    const mode = this.mapMode;
+    return mode && this.planet === "e" && mode.player == player && mode.type === "federations" ?
+      this.hex.data.federations?.some(f => f === player) : false;
+  }
+
+  get planet() {
+    return this.hex.data.planet;
   }
 
   get sectorHighlight(): PlayerEnum {
-    const mode = this.$store.getters.mapMode;
+    const mode = this.mapMode;
     return mode
-    && this.hex.data.planet === "e"
+    && this.planet === "e"
     && mode.type === "sectors"
     && this.player(mode.player).data.occupied.some((hex) => hex.colonizedBy(mode.player) && hex.data.sector === this.hex.data.sector)
       ? mode.player
       : null;
   }
 
-  planet(player: PlayerEnum): PlanetEnum {
+  playerPlanet(player: PlayerEnum): PlanetEnum {
     return factionPlanet(this.faction(player));
   }
 

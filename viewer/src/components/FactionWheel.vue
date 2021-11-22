@@ -1,9 +1,6 @@
 <template>
   <g>
-    <path
-      :transform="`scale(0.11) translate(-8,-8)`"
-      d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"
-    />
+    <use xlink:href="#info" :transform="`scale(0.11) translate(-8,-8)`" />
     <circle class="rules-button" r="1.6" v-b-modal="'rules'" />
     <circle :r="r" fill="none" />
     <g v-for="i in planetPositions" :key="i" :transform="translate(r, i)">
@@ -13,6 +10,7 @@
       >
         {{ remainingPlanets(planet(i)) }}
       </text>
+      <circle :r="1" style="cursor: pointer; opacity: 0" @click="togglePlanetHighlight(planet(i))" />
     </g>
     <g v-for="i in planetPositions" :key="`I${i}`" :transform="translate(1.4, i)">
       <text style="font-size: 0.75pt; text-anchor: middle; dominant-baseline: central; pointer-events: none">
@@ -26,6 +24,7 @@
       >
         {{ remainingPlanets(planet(i)) }}
       </text>
+      <circle :r="1" style="cursor: pointer; opacity: 0" @click="togglePlanetHighlight(planet(i))" />
     </g>
   </g>
 </template>
@@ -36,6 +35,7 @@ import { Component } from "vue-property-decorator";
 import { planetFill } from "../graphics/utils";
 import Engine, { factionPlanet, Planet } from "@gaia-project/engine";
 import { radiusTranslate } from "../logic/utils";
+import { MapMode } from "../data/actions";
 
 const planets = [
   Planet.Terra,
@@ -103,6 +103,10 @@ export default class FactionWheel extends Vue {
 
   planetFill(planet: string) {
     return planetFill(planet);
+  }
+
+  togglePlanetHighlight(planet: Planet) {
+    this.$store.commit("toggleMapMode", { type: "planetType", planet  } as MapMode);
   }
 }
 </script>

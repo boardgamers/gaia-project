@@ -145,6 +145,7 @@
               >
                 {{ player.ownedPlanetsCount[planet] }}
               </text>
+              <circle :r="1" style="cursor: pointer; opacity: 0" @click="togglePlanetHighlight(planet)" />
             </g>
             <line x1="1.9" x2="1.9" y1="-2.3" y2="2.3" stroke-width="0.06" stroke="black" />
           </g>
@@ -153,12 +154,14 @@
             <text style="font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: white">
               {{ player.ownedPlanetsCount["g"] }}
             </text>
+            <circle :r="1" style="cursor: pointer; opacity: 0" @click="togglePlanetHighlight(planet)" />
           </g>
           <g v-if="hasLostPlanet" :transform="`translate(7.6, 1.4 )`">
             <circle :r="1" style="stroke-width: 0.06px !important" :class="['player-token', 'planet-fill', 'l']" />
             <text style="font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: white">
               {{ player.ownedPlanetsCount["l"] }}
             </text>
+            <circle :r="1" style="cursor: pointer; opacity: 0" @click="togglePlanetHighlight(planet)" />
           </g>
         </g>
 
@@ -215,6 +218,7 @@ import PlayerBoardInfo from "./PlayerBoard/Info.vue";
 import PowerBowls from "./PlayerBoard/PowerBowls.vue";
 import Rules from "./Rules.vue";
 import { factionName, planetsWithSteps } from "../data/factions";
+import { MapMode} from "../data/actions";
 
 @Component({
   components: {
@@ -314,6 +318,10 @@ export default class PlayerInfo extends Vue {
       [Building.Frigate]: "translate(8.5, 3)",
       [Building.BattleShip]: "translate(17, 3)",
     };
+  }
+
+  togglePlanetHighlight(planet: Planet) {
+    this.$store.commit("toggleMapMode", { type: "planetType", planet  } as MapMode);
   }
 }
 </script>

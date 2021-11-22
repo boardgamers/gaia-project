@@ -62,6 +62,7 @@
           <li>New Preference: Auto-click whenever there is a single button (unless confirm or warning)</li>
           <li>Click on federation icon in player board: highlight federations of that player</li>
           <li>Click on sectors icon in player board: highlight colonized sectors of that player</li>
+          <li>Click on planets in player board or faction wheel: highlight planets of that type</li>
         </ul>
         <h5>2021-11-12</h5>
         <ul>

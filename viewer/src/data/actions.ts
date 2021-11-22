@@ -1,4 +1,4 @@
-import { BoardAction, FreeAction, PlayerEnum, PowerArea, Resource } from "@gaia-project/engine";
+import { BoardAction, FreeAction, Planet, PlayerEnum, PowerArea, Resource } from "@gaia-project/engine";
 
 export const boardActionNames: { [key in BoardAction]: { name: string; color: string; shortcut: string } } = {
   [BoardAction.Power1]: { name: "3 knowledge", color: "--recent", shortcut: "n" },
@@ -24,11 +24,12 @@ export type FastConversion = FastConversionEvent & {
   filter?: (Player) => boolean;
 };
 
-export type MapModeType = "default" | "federations" | "sectors";
+export type MapModeType = "default" | "federations" | "sectors" | "planetType";
 
 export type MapMode = {
   type: MapModeType;
-  player: PlayerEnum;
+  player?: PlayerEnum;
+  planet?: Planet;
 };
 
 export const freeActionShortcuts: { [key in FreeAction]: { shortcut: string; fast: FastConversion } } = {
