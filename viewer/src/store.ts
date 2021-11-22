@@ -13,7 +13,7 @@ import { CubeCoordinates } from "hexagrid";
 import Vue from "vue";
 import Vuex from "vuex";
 import { ButtonData, GameContext, HexSelection, SpecialActionIncome } from "./data";
-import { FastConversionEvent } from "./data/actions";
+import { FastConversionEvent, MapMode } from "./data/actions";
 import { ExecuteBack, FastConversionTooltips } from "./logic/buttons/types";
 import {
   CommandObject,
@@ -88,6 +88,7 @@ const gaiaViewer = {
       activeButton: null,
       hasCommandChain: false,
       autoClick: [],
+      mapMode: null,
       fastConversionTooltips: {} as FastConversionTooltips,
     },
     preferences: {
@@ -165,6 +166,10 @@ const gaiaViewer = {
       state.context.fastConversionTooltips = tooltips;
     },
 
+    toggleMapMode(state: State, mapMode: MapMode) {
+      state.context.mapMode = JSON.stringify(state.context.mapMode) === JSON.stringify(mapMode) ? null : mapMode;
+    },
+
     preferences(state: State, preferences: { [key in Preference]: boolean }) {
       state.preferences = {
         ...state.preferences,
@@ -238,6 +243,7 @@ const gaiaViewer = {
       indexCommands(getters.recentCommands, Command.Special),
     canUndo: (state: State): boolean => state.context.hasCommandChain || !state.data.newTurn,
     autoClick: (state: State): boolean[][] => state.context.autoClick,
+    mapMode: (state: State): MapMode | null => state.context.mapMode,
   },
 };
 
