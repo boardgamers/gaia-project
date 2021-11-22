@@ -219,7 +219,13 @@ export class ChartSetup {
     this.chartFactories = new Map<ChartFamily, ChartFactory<any>>(
       vpChartFactoryEntries(finalTileName, vpAdvTechTiles, data, vpBoosters).concat(
         simpleChartFactoryEntries(
-          createSimpleSourceFactories(nonVpAdvTechTiles, allBoosters, statistics ? [] : finalTiles, factions)
+          createSimpleSourceFactories(
+            nonVpAdvTechTiles,
+            allBoosters,
+            statistics ? [] : finalTiles,
+            factions,
+            data.expansions
+          )
         )
       )
     );

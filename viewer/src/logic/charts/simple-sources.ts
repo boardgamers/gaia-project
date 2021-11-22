@@ -1,4 +1,13 @@
-import Engine, { AdvTechTile, Booster, Faction, FinalTile, LogEntry, Player, PlayerEnum } from "@gaia-project/engine";
+import Engine, {
+  AdvTechTile,
+  Booster,
+  Expansion,
+  Faction,
+  FinalTile,
+  LogEntry,
+  Player,
+  PlayerEnum,
+} from "@gaia-project/engine";
 import { buildingsSourceFactory } from "./buildings";
 import { leechSourceFactory, powerChargeSourceFactory } from "./charge";
 import { ChartFactory } from "./chart-factory";
@@ -29,7 +38,8 @@ export const createSimpleSourceFactories = (
   advTechTiles: Map<AdvTechTile, string>,
   boosters: Booster[],
   finalTiles: FinalTile[],
-  factions: Faction[]
+  factions: Faction[],
+  expansion: Expansion
 ): SimpleSourceFactory<ChartSource<any>>[] => {
   return [
     resourceSourceFactory,
@@ -38,7 +48,7 @@ export const createSimpleSourceFactories = (
     factionSourceFactory(factions),
     freeActionSourceFactory,
     boardActionSourceFactory,
-    buildingsSourceFactory,
+    buildingsSourceFactory(expansion),
     researchSourceFactory,
     planetsSourceFactory,
     terraformingStepsSourceFactory,
