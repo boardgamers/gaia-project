@@ -314,7 +314,7 @@ function addPossibleNewPlanet(
     return;
   }
 
-  const check = pl.canBuild(planet, building, lastRound, replay, {
+  const check = pl.canBuild(map, hex, planet, building, lastRound, replay, {
     addedCost: [new Reward(qicNeeded.amount, Resource.Qic)],
   });
 
@@ -355,7 +355,7 @@ export function shipsInHex(location: string, data): Ship[] {
 function possibleShips(pl: PlayerObject, engine: Engine, map: SpaceMap, hex: GaiaHex) {
   const buildings: AvailableBuilding[] = [];
   for (const ship of Object.values(Building).filter((b) => isShip(b))) {
-    const check = pl.canBuild(null, ship, engine.isLastRound, engine.replay);
+    const check = pl.canBuild(null, null, null, ship, engine.isLastRound, engine.replay);
     if (check) {
       for (const h of map.withinDistance(hex, 1)) {
         if (!h.hasPlanet() && shipsInHex(h.toString(), engine).length < MAX_SHIPS_PER_HEX) {
@@ -418,7 +418,7 @@ export function possibleBuildings(engine: Engine, player: Player): AvailableComm
       const upgraded = upgradedBuildings(building, pl.faction);
 
       for (const upgrade of upgraded) {
-        const check = pl.canBuild(hex.data.planet, upgrade, engine.isLastRound, engine.replay, {
+        const check = pl.canBuild(map, hex, hex.data.planet, upgrade, engine.isLastRound, engine.replay, {
           isolated,
           existingBuilding: building,
         });
@@ -478,7 +478,7 @@ function possibleColonyShipActions(engine: Engine, ship: Ship, shipLocation: str
   const pl = engine.player(ship.player);
   const locations: AvailableHex[] = map.withinDistance(map.getS(shipLocation), SHIP_ACTION_RANGE).flatMap((h) => {
     if (h.hasPlanet() && !h.occupied() && h.data.planet !== Planet.Transdim) {
-      const check = pl.canBuild(h.data.planet, Building.Colony, engine.isLastRound, engine.replay);
+      const check = pl.canBuild(map, h, h.data.planet, Building.Colony, engine.isLastRound, engine.replay);
       if (check) {
         return [newAvailableBuilding(Building.Colony, h, check, false)];
       }
@@ -540,8 +540,7 @@ export function possibleSpaceStations(engine: Engine, player: Player): Available
       continue;
     }
 
-    const building = Building.SpaceStation;
-    addPossibleNewPlanet(map, hex, pl, pl.planet, building, buildings, engine.isLastRound, engine.replay);
+    addPossibleNewPlanet(map, hex, pl, pl.planet, Building.SpaceStation, buildings, engine.isLastRound, engine.replay);
   }
 
   if (buildings.length > 0) {

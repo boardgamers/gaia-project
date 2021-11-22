@@ -88,7 +88,8 @@ export type BuildWarning =
   | "geodens-build-without-PI"
   | "expensive-trade-station"
   | "gaia-former-would-extend-range"
-  | "gaia-former-last-round";
+  | "gaia-former-last-round"
+  | "building-will-be-part-of-federation";
 
 export type BuildCheck = { cost: Reward[]; steps: number; warnings: BuildWarning[] };
 
@@ -269,6 +270,8 @@ export default class Player extends EventEmitter {
   }
 
   canBuild(
+    map: SpaceMap,
+    hex: GaiaHex | null,
     targetPlanet: Planet | null,
     building: Building,
     lastRound: boolean,
@@ -361,15 +364,22 @@ export default class Player extends EventEmitter {
     if (building === Building.GaiaFormer && lastRound) {
       warnings.push("gaia-former-last-round");
     }
-
-    if (!this.data.canPay(cost)) {
-      return null;
+    if (hex && this.faction !== Faction.Ivits) {
+      for (const h of map.withinDistance(hex, 1)) {
+        if (h.belongsToFederationOf(this.player)) {
+          warnings.push("building-will-be-part-of-federation");
+          break;
+        }
+      }
     }
-    return {
-      cost,
-      steps,
-      warnings,
-    };
+
+    return !this.data.canPay(cost)
+      ? null
+      : {
+          cost,
+          steps,
+          warnings,
+        };
   }
 
   maxBuildings(building: Building) {

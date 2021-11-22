@@ -16,6 +16,9 @@ export const moveWarnings: { [key in BuildWarning | BrainstoneWarning]: { text: 
   "expensive-trade-station": { text: "Trade station for 6c instead of 3c." },
   "gaia-former-would-extend-range": { text: "Upgrade a gaia former first to save QICs for range." },
   "gaia-former-last-round": { text: "The gaia former cannot be upgraded - it's the last round." },
+  "building-will-be-part-of-federation": {
+    text: "The building will be part of an existing federation - not helping you to form new federations.",
+  },
   "brainstone-charges-wasted": {
     text: "Some of the 3 brainstone charges are wasted. Convert 3 power charges to 3 credit at once.",
   },
