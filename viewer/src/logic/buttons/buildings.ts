@@ -32,7 +32,7 @@ function commonHexWarning(warnings: string[][]): ButtonWarning | null {
   return null;
 }
 
-function hexSelectionButton(
+export function hexSelectionButton(
   controller: CommandController,
   data: ButtonData,
   newLocationButton = (hex: GaiaHex) => textButton({}),

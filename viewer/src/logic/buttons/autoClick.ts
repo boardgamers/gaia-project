@@ -22,17 +22,16 @@ export function autoClickStrategy(pref: AutoClickPreference, preventFirst: boole
         first: preventFirst ? AutoClickPolicy.Never : AutoClickPolicy.Always,
         children: AutoClickPolicy.Always,
       };
-    case "smart":
-      return {
-        first: preventFirst ? AutoClickPolicy.Never : AutoClickPolicy.Smart,
-        children: AutoClickPolicy.Smart,
-      };
     case "never":
       return {
         first: AutoClickPolicy.Never,
         children: AutoClickPolicy.Never,
       };
   }
+  return {
+    first: preventFirst ? AutoClickPolicy.Never : AutoClickPolicy.Smart,
+    children: AutoClickPolicy.Smart,
+  };
 }
 
 function allowAutoClick(p: AutoClickPolicy, button: ButtonData): boolean {
