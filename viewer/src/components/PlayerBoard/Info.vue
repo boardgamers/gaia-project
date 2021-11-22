@@ -40,6 +40,11 @@
         </g>
         <Resource kind="q" :count="data.qics" :center-left="true" transform="translate(12.5,0) scale(0.1)" />
         <Undo v-if="canUndo" :transform="`translate(6.1,${height - 32.3}) scale(.08)`" />
+        <use
+          xlink:href="#info"
+          :transform="`translate(34.7,${height - 6.8}) scale(.1)`"
+          v-b-tooltip.html="buttonTooltip"
+        />
         <g transform="translate(15, -3) scale(0.2)">
           <VictoryPoint width="15" height="15" />
           <text class="vp-text" x="7" y="10">{{ data.victoryPoints }}</text>
@@ -128,7 +133,7 @@ import {
   Resource as ResourceEnum,
 } from "@gaia-project/engine";
 import VictoryPoint from "../Resources/VictoryPoint.vue";
-import { FastConversionEvent, MapModeType, MapMode } from "../../data/actions";
+import { FastConversionEvent, MapMode, MapModeType } from "../../data/actions";
 import { factionName } from "../../data/factions";
 
 @Component({
@@ -175,6 +180,18 @@ export default class PlayerBoardInfo extends Vue {
     if (this.engine.currentPlayer == this.player.player) {
       return this.$store.state.context.fastConversionTooltips[resource];
     }
+  }
+
+  get buttonTooltip() {
+    return "<ul>" +
+      "<li>Click on the faction name to see the faction rules (and there's a dropdown to see all faction rules)</li>" +
+      "<li>Click on the buildings to see their cost, income, and power value</li>" +
+      "<li>Click on the resources to get an additional resource of this kind (using the best conversion available)</li>" +
+      "<li>Click on the power bowls to gain (area 1) or burn (area 3) tokens (the gaia area has faction dependent actions)</li>" +
+      "<li>Click on the planets to highlight all planets of this type</li>" +
+      "<li>Click on the sectors icon to highlight all colonized sectors (also works for other players)</li>" +
+      "<li>Click on the federation icon to highlight all federation (also works for other players)</li>" +
+      "</ul>";
   }
 
   income(resource: ResourceEnum) {
