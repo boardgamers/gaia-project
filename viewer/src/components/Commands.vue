@@ -338,9 +338,9 @@ export default class Commands extends Vue implements CommandController {
       return [];
     }
 
-    //todo test "always" better, then re-enable
     // const s = autoClickStrategy(this.$store.state.preferences.autoClick, this.preventFirstAutoClick);
-    const s = autoClickStrategy("smart", this.preventFirstAutoClick);
+    //todo special test version, don't roll out generally
+    const s = autoClickStrategy("always", this.preventFirstAutoClick);
     const buttons = commandButtons(commands, this.engine, this.player, this, s);
     this.allButtons = buttons;
     this.preventFirstAutoClick = false;
