@@ -14,7 +14,7 @@ import Engine, {
 import { ButtonData, ButtonWarning } from "../../data";
 import { boosterNames } from "../../data/boosters";
 import { CommandController } from "./types";
-import { autoClickButton, symbolButton, textButton, translateResources } from "./utils";
+import { autoClickButton, confirmationButton, symbolButton, textButton, translateResources } from "./utils";
 import { chargeIncomeWarning, passWarningButton, rewardWarnings } from "./warnings";
 
 export function endTurnWarning(player: Player): ButtonWarning | null {
@@ -110,13 +110,7 @@ export function passButton(
       label: "Pass",
       shortcuts: ["p"],
       command: Command.Pass,
-      buttons: [
-        textButton({
-          command: "",
-          needConfirm: true,
-          label: `Confirm Pass`,
-        }),
-      ],
+      buttons: confirmationButton("Confirm Pass"),
       warning,
     });
   }
@@ -131,14 +125,7 @@ export function passButton(
         label,
         command: booster,
         booster,
-        buttons: [
-          textButton({
-            command: "",
-            label: `Confirm Booster ${label}`,
-            needConfirm: true,
-            warning: boosterWarning(player, booster),
-          }),
-        ],
+        buttons: confirmationButton(`Confirm Booster ${label}`, boosterWarning(player, booster)),
       });
     }),
     warning,
@@ -150,13 +137,7 @@ export function endTurnButton(command: AvailableCommand<Command.EndTurn>, player
     label: "End Turn",
     shortcuts: ["e"],
     command: Command.EndTurn,
-    buttons: [
-      textButton({
-        command: Command.EndTurn,
-        needConfirm: true,
-        label: `Confirm End Turn`,
-      }),
-    ],
+    buttons: confirmationButton("Confirm End Turn"),
     warning: endTurnWarning(player),
   });
 }

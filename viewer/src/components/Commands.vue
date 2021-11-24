@@ -86,7 +86,7 @@ import Undo from "./Resources/Undo.vue";
 import { ActionPayload, SubscribeActionOptions, SubscribeOptions } from "vuex";
 import { CommandController, ExecuteBack, FastConversionTooltips } from "../logic/buttons/types";
 import { callOnShow } from "../logic/buttons/utils";
-import { commandButtons } from "../logic/buttons/commands";
+import { commandButtons, replaceRepeat } from "../logic/buttons/commands";
 import { CubeCoordinates } from "hexagrid";
 import { autoClickStrategy } from "../logic/buttons/autoClick";
 
@@ -267,13 +267,13 @@ export default class Commands extends Vue implements CommandController {
     this.updater += 1;
   }
 
-  handleCommand(command: string, source?: ButtonData, warnings?: BuildWarning[]) {
+  handleCommand(command: string, source?: ButtonData, warnings?: BuildWarning[], times?: number) {
     console.log("handle command", command);
     this.unsubscribeCommands();
 
     if (source?.buttons?.length > 0) {
-      this.commandTitles.push(source.longLabel ?? source.label);
-      this.commandChain.push(source.command);
+      this.commandTitles.push(replaceRepeat(source.longLabel ?? source.label, times));
+      this.commandChain.push(command);
       this.buttonChain.push(source);
       this.addAutoClick(source.autoClick);
       this.customButtons = source.buttons;
@@ -338,9 +338,9 @@ export default class Commands extends Vue implements CommandController {
       return [];
     }
 
+    //todo test "always" better, then re-enable
     // const s = autoClickStrategy(this.$store.state.preferences.autoClick, this.preventFirstAutoClick);
-    //todo special test version, don't roll out generally
-    const s = autoClickStrategy("always", this.preventFirstAutoClick);
+    const s = autoClickStrategy("smart", this.preventFirstAutoClick);
     const buttons = commandButtons(commands, this.engine, this.player, this, s);
     this.allButtons = buttons;
     this.preventFirstAutoClick = false;
@@ -612,15 +612,14 @@ export default class Commands extends Vue implements CommandController {
     let command = (button.command || "") + "";
 
     if (times && typeof times === "number") {
-      // the \b is necessary for things like '1t-a3', so the 3 is not caught
-      command = command.replace(/\b[0-9]+/g, (x) => "" + parseInt(x) * times);
+      command = replaceRepeat(command, times);
     }
 
     command = command.replace(/\$times\b/g, "" + (times ?? 0));
 
     commandBody = [command, append].filter((x) => !!x);
 
-    this.handleCommand(commandBody.join(" "), button, warnings);
+    this.handleCommand(commandBody.join(" "), button, warnings, times);
   }
 
   private updater = 0;

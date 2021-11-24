@@ -60,7 +60,7 @@ function commandButton(
       return [passButton(controller, engine, player, command)];
 
     case Command.UpgradeResearch:
-      return researchButtons(command.data.tracks, controller, player);
+      return researchButtons(command.data.tracks, controller, player, engine.phase);
 
     case Command.ChooseTechTile:
       return [techTiles(controller, command.name, "Pick tech tile", command.data.tiles)];
@@ -152,7 +152,7 @@ export function commandButtons(
     });
 
     const pass = ret.pop();
-    const d = freeAndBurnButton(conversions, player);
+    const d = freeAndBurnButton(conversions, player, engine.phase);
     ret.push(d.button);
     if (pass) {
       ret.push(pass);
@@ -182,4 +182,12 @@ export function commandButtons(
   checkAutoClick(controller, ret, autoClickStrategy);
 
   return ret;
+}
+
+export function replaceRepeat(command: string, times?: number) {
+  if (times > 1) {
+    // the \b is necessary for things like '1t-a3', so the 3 is not caught
+    return command.replace(/\b[0-9]+/g, (x) => "" + parseInt(x) * times);
+  }
+  return command;
 }

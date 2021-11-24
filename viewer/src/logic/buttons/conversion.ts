@@ -5,6 +5,7 @@ import {
   Command,
   conversionToFreeAction,
   Faction,
+  Phase,
   Player,
   PowerArea,
   Resource,
@@ -14,7 +15,7 @@ import { max, minBy, range, sortBy } from "lodash";
 import { ButtonData } from "../../data";
 import { FastConversion, FastConversionEvent, freeActionShortcuts } from "../../data/actions";
 import { AvailableConversions, FastConversionTooltips } from "./types";
-import { autoClickButton, symbolButton, translateResources } from "./utils";
+import { autoClickButton, confirmationButton, symbolButton, translateResources } from "./utils";
 import { resourceWasteWarning, rewardWarnings } from "./warnings";
 
 function conversionLabel(cost: Reward[], income: Reward[]) {
@@ -71,6 +72,7 @@ export function conversionButton(
     },
     skipShortcut
   );
+  button.longLabel = button.label;
   button.label = "<u></u>"; //don't show command
   return button;
 }
@@ -170,7 +172,8 @@ export function fastConversionClick(
 
 export function freeAndBurnButton(
   conversions: AvailableConversions,
-  player: Player
+  player: Player,
+  phase: Phase
 ): { button: ButtonData; tooltips: FastConversionTooltips } {
   const labels = [];
   const buttons: ButtonData[] = [];
@@ -178,6 +181,13 @@ export function freeAndBurnButton(
   if (conversions.free) {
     labels.push("Free action");
     const b = freeActionButton(conversions.free, player);
+    if (phase === Phase.RoundGaia) {
+      for (const cb of b.buttons) {
+        if (cb.conversion.to[0].type != Resource.TechTile) {
+          cb.buttons = confirmationButton("Confirm Free Action");
+        }
+      }
+    }
     buttons.push(...b.buttons);
     tooltips = b.tooltips;
   }

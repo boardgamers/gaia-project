@@ -18,7 +18,7 @@ import { buildingName, buildingShortcut, shipActionName, shipLetter } from "../.
 import { moveWarnings } from "../../data/warnings";
 import { prependShortcut, tooltipWithShortcut, withShortcut } from "./shortcuts";
 import { CommandController } from "./types";
-import { addOnClick, addOnShow, hexMap, textButton } from "./utils";
+import { addOnClick, addOnShow, confirmationButton, hexMap, textButton } from "./utils";
 import { buttonWarnings } from "./warnings";
 
 function commonHexWarning(warnings: string[][]): ButtonWarning | null {
@@ -106,7 +106,7 @@ function buildingMenu(building: Building): string | null {
   }
 
   if (building == Building.Academy1 || building == Building.Academy2) {
-    return "Upgrade to <u>A</u>cademy";
+    return "Upgrade to A<u>c</u>ademy";
   }
 
   return null;
@@ -212,17 +212,6 @@ export function buildButtons(
 
       menus.set(menu, buttons);
     } else {
-      const confirm: ButtonData[] =
-        engine.round === Round.None
-          ? [
-              {
-                command: "",
-                label: `Confirm ${buildingName(building, faction)}`,
-                needConfirm: true,
-              } as ButtonData,
-            ]
-          : undefined;
-
       ret.push(
         buildingButton(
           controller,
@@ -232,7 +221,7 @@ export function buildButtons(
           `${Command.Build} ${building}`,
           engine,
           buildings,
-          confirm
+          engine.round === Round.None ? confirmationButton(`Confirm ${buildingName(building, faction)}`) : null
         )
       );
     }

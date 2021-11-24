@@ -43,6 +43,7 @@ describe("commands", () => {
             ],
           },
           label: "<u></u>",
+          longLabel: "4 Power Charges ⇒ 1 Ore and 1 Credit",
           shortcuts: ["i"],
           times: undefined,
           tooltip: "4 Power Charges ⇒ 1 Ore and 1 Cred<u>i</u>t",
