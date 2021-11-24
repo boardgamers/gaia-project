@@ -4,6 +4,7 @@ import {
   Command,
   Event,
   Operator,
+  Phase,
   Player,
   researchTracks,
   Reward,
@@ -11,7 +12,7 @@ import {
 import { ButtonData, ButtonWarning } from "../../data";
 import { researchNames } from "../../data/research";
 import { CommandController } from "./types";
-import { autoClickButton, textButton } from "./utils";
+import { autoClickButton, confirmationButton, textButton } from "./utils";
 import { resourceWasteWarning, rewardWarnings } from "./warnings";
 
 function advanceResearchWarning(player: Player, track: AvailableResearchTrack): ButtonWarning | null {
@@ -27,7 +28,8 @@ function advanceResearchWarning(player: Player, track: AvailableResearchTrack): 
 export function researchButtons(
   tracks: AvailableResearchTrack[],
   controller: CommandController,
-  player: Player
+  player: Player,
+  phase: Phase
 ): ButtonData[] {
   return [
     autoClickButton({
@@ -40,6 +42,8 @@ export function researchButtons(
           label: researchNames[track.field],
           shortcuts: [track.field.substring(0, 1)],
           warning: advanceResearchWarning(player, track),
+          buttons:
+            phase == Phase.RoundGaia ? confirmationButton("Confirm Research " + researchNames[track.field]) : null,
         })
       ),
       onClick: (button) => {

@@ -56,13 +56,17 @@
           <li><a href="https://www.boardgamers.space/page/elo">How Elo works</a></li>
         </ul>
         <h4>Recent changes</h4>
+        <h5>2021-11-25</h5>
+        <ul>
+          <li>Confirm actions in gaia phase (Itars, Terrans)</li>
+        </ul>
         <h5>2021-11-22</h5>
         <ul>
           <li>Buttons for building locations</li>
-          <li>New Preference: Auto-click whenever there is a single button (unless confirm or warning)</li>
           <li>Click on federation icon in player board: highlight federations of that player</li>
           <li>Click on sectors icon in player board: highlight colonized sectors of that player</li>
           <li>Click on planets in player board or faction wheel: highlight planets of that type</li>
+          <li>Warning when adding a building to an existing federation</li>
         </ul>
         <h5>2021-11-12</h5>
         <ul>

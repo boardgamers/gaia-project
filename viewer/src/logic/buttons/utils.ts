@@ -1,6 +1,6 @@
-import Engine, { AvailableCommand, AvailableHex, Command, GaiaHex, HighlightHex, Reward } from "@gaia-project/engine";
+import Engine, { AvailableHex, GaiaHex, HighlightHex, Reward } from "@gaia-project/engine";
 import assert from "assert";
-import { ButtonData, HexSelection, HighlightHexData } from "../../data";
+import { ButtonData, ButtonWarning, HexSelection, HighlightHexData } from "../../data";
 import { resourceNames } from "../../data/resources";
 import { tooltipWithShortcut } from "./shortcuts";
 
@@ -75,14 +75,21 @@ export function autoClickButton(button: ButtonData): ButtonData {
   return button;
 }
 
+export function confirmationButton(label: string, warning?: ButtonWarning): ButtonData[] {
+  return [
+    textButton({
+      label,
+      command: "",
+      needConfirm: true,
+      warning,
+    }),
+  ];
+}
+
 export function customHexSelection(hexes: HighlightHexData): HexSelection {
   return {
     hexes: hexes,
     selectAnyHex: true,
     backgroundLight: true,
   };
-}
-
-export function hasPass(commands: AvailableCommand[]) {
-  return commands.some((c) => c.name === Command.Pass);
 }
