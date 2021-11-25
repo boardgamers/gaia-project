@@ -56,14 +56,14 @@
         <g transform="translate(15.2, 1.4)" v-b-tooltip title="Satellites and space stations, satellites left ">
           <image xlink:href="../../assets/resources/satellite.svg" :height=155/211*22 width="22" x="-11" y="-8"
           transform="scale(0.07)" />
-          <text :class="['board-text']" transform="translate(1,0) scale(0.8)"
+          <text class="board-text" transform="translate(1,0) scale(0.8)"
             >{{ data.satellites + data.buildings.sp }}, {{ satellitesLeft }}
           </text>
         </g>
-        <g transform="translate(12.5, 3.5)" v-b-tooltip title="Sectors with a colonized planet">
+        <g transform="translate(12.4, 3.5)" v-b-tooltip title="Sectors with a colonized planet">
           <image xlink:href="../../assets/conditions/sector.svg" :height=155/211*22 width="22" x="-11" y="-8"
           transform="scale(0.1)" @click="toggleMapMode('sectors')" style="cursor: pointer"/>
-          <text :class="['board-text']" transform="translate(1,-.1) scale(0.8)">{{ sectors }}</text>
+          <text class="board-text" transform="translate(1.4,-.1) scale(0.8)" text-anchor="middle">{{ sectors }}</text>
         </g>
         <g
           transform="translate(15.2, 3.5)"
@@ -72,7 +72,7 @@
         >
           <image xlink:href="../../assets/conditions/federation.svg" :height=155/211*22 width="22" x="-11" y="-8"
           transform="scale(0.1)" @click="toggleMapMode('federations')" style="cursor: pointer" />
-          <text :class="['board-text']" transform="translate(1,-.1) scale(0.8)"
+          <text class="board-text" transform="translate(1,-.1) scale(0.8)"
             >{{ player.fedValue }}, {{ player.structureValue - player.fedValue }}
           </text>
         </g>
