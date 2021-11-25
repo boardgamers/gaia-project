@@ -82,5 +82,5 @@ export interface GameContext {
   autoClick: boolean[][];
 
   logPlacement: LogPlacement;
-  mapMode?: MapMode;
+  mapModes: MapMode[];
 }
