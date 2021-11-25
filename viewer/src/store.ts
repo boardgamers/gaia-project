@@ -88,7 +88,7 @@ const gaiaViewer = {
       activeButton: null,
       hasCommandChain: false,
       autoClick: [],
-      mapMode: null,
+      mapModes: [],
       fastConversionTooltips: {} as FastConversionTooltips,
     },
     preferences: {
@@ -148,6 +148,7 @@ const gaiaViewer = {
       state.context.highlighted.specialActions = new Set();
       state.context.activeButton = null;
       state.context.fastConversionTooltips = {};
+      state.context.mapModes = [];
     },
 
     activeButton(state: State, button: ButtonData | null) {
@@ -167,7 +168,16 @@ const gaiaViewer = {
     },
 
     toggleMapMode(state: State, mapMode: MapMode) {
-      state.context.mapMode = JSON.stringify(state.context.mapMode) === JSON.stringify(mapMode) ? null : mapMode;
+      const modes = state.context.mapModes;
+      const old = modes.find((m) => m.type == mapMode.type && m.planet == mapMode.planet);
+      if (old) {
+        modes.splice(modes.indexOf(old), 1);
+        if (JSON.stringify(old) !== JSON.stringify(mapMode)) {
+          modes.push(mapMode);
+        }
+      } else {
+        modes.push(mapMode);
+      }
     },
 
     preferences(state: State, preferences: { [key in Preference]: boolean }) {
@@ -243,7 +253,7 @@ const gaiaViewer = {
       indexCommands(getters.recentCommands, Command.Special),
     canUndo: (state: State): boolean => state.context.hasCommandChain || !state.data.newTurn,
     autoClick: (state: State): boolean[][] => state.context.autoClick,
-    mapMode: (state: State): MapMode | null => state.context.mapMode,
+    mapModes: (state: State): MapMode[] => state.context.mapModes,
   },
 };
 

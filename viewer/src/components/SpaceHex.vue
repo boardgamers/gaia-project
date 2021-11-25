@@ -175,9 +175,9 @@ export default class SpaceHex extends Vue {
     const ret = ["space-hex"];
 
     const selection = this.selection;
-    const mode = this.mapMode;
-    if (mode?.type == "planetType") {
-      if (mode.planet === this.planet) {
+    const modes = this.mapModes.filter(m => m.planet);
+    if (modes.length > 0) {
+      if (modes.filter(m => m.planet === this.planet).length > 0) {
         ret.push("bold");
       }
     } else if (selection) {
@@ -243,12 +243,12 @@ export default class SpaceHex extends Vue {
     return this.engine.players[player];
   }
 
-  get mapMode(): MapMode | null {
-    return this.$store.getters.mapMode;
+  get mapModes(): MapMode[] {
+    return this.$store.getters.mapModes;
   }
 
   federationHighlight(player: PlayerEnum): boolean {
-    const mode = this.mapMode;
+    const mode = this.mapModes.find(mode => mode.type === "sectors");
     return mode && this.planet === "e" && mode.player == player && mode.type === "federations" ?
       this.hex.data.federations?.some(f => f === player) : false;
   }
@@ -257,14 +257,14 @@ export default class SpaceHex extends Vue {
     return this.hex.data.planet;
   }
 
-  get sectorHighlight(): PlayerEnum {
-    const mode = this.mapMode;
+  get sectorHighlight(): PlayerEnum | null {
+    const mode = this.mapModes.find(mode => mode.type === "sectors");
     return mode
-    && this.planet === "e"
-    && mode.type === "sectors"
-    && this.player(mode.player).data.occupied.some((hex) => hex.colonizedBy(mode.player) && hex.data.sector === this.hex.data.sector)
-      ? mode.player
-      : null;
+        && this.planet === "e"
+        && mode.type === "sectors"
+        && this.player(mode.player).data.occupied.some((hex) => hex.colonizedBy(mode.player) && hex.data.sector === this.hex.data.sector)
+          ? mode.player
+          : null;
   }
 
   playerPlanet(player: PlayerEnum): PlanetEnum {
