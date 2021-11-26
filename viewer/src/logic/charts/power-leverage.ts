@@ -27,7 +27,7 @@ export const taklonsPowerLeverage: (factor: number) => ExtractLog<any> = (factor
     return 0;
   });
 
-export const nevlasPowerLeverage = (): ExtractLog<any> => {
+export const nevlasPowerLeverage: ExtractLog<any> = ExtractLog.wrapper(() => {
   let pi = false;
 
   return resourceCounter((want, a, data, simulateResources) => {
@@ -44,4 +44,4 @@ export const nevlasPowerLeverage = (): ExtractLog<any> => {
 
     return pi ? sum(changes.flatMap((r) => leverage(r))) : 0;
   });
-};
+});

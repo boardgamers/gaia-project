@@ -15,15 +15,20 @@ export function parseCommands(move: string): CommandObject[] {
   return move
     .slice(factionIndex)
     .split(".")
-    .filter((c) => c.length > 0)
-    .map((c) => {
+    .flatMap((c) => {
       const split = c.split("(")[0].trim().split(" ");
 
-      return {
-        faction: faction,
-        command: split[0] as Command,
-        args: split.slice(1),
-      };
+      if (split[0].length == 0) {
+        return [];
+      }
+
+      return [
+        {
+          faction: faction,
+          command: split[0] as Command,
+          args: split.slice(1),
+        },
+      ];
     });
 }
 
