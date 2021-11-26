@@ -96,7 +96,7 @@ export function flattenChanges(changes: LogEntryChanges, source: EventSource): L
 }
 
 export const resourceCounter = (
-  processor: (want: Player, a: ExtractLogArg<any>, data: PlayerData, simulateResources: () => void) => number
+  processor: (want: Player, a: ExtractLogArg<any>, data: PlayerData, simulateResources: () => Reward[]) => number
 ): ExtractLog<any> =>
   ExtractLog.new((want) => {
     const simulationPlayer = new Player();
@@ -106,6 +106,7 @@ export const resourceCounter = (
 
     let changes: LogEntryChanges = null;
     let processedChanges: Map<EventSource, Reward[]> = null;
+    let commandChanges: Reward[] = [];
 
     function addProcessedChange(change: Reward[], source: EventSource) {
       if (processedChanges == null) {
@@ -118,7 +119,12 @@ export const resourceCounter = (
       processedChanges.set(source, change);
     }
 
-    const gainRewards = (source: EventSource, rewards: { [resource in Resource]?: number }) => {
+    function gainRewards(rewards: Reward[]) {
+      data.gainRewards(rewards);
+      commandChanges = Reward.merge(rewards.concat(commandChanges));
+    }
+
+    const gainRewardsBySource = (source: EventSource, rewards: { [resource in Resource]?: number }) => {
       const processed = processedChanges?.get(source);
       for (const type in rewards) {
         let count = rewards[type];
@@ -128,15 +134,15 @@ export const resourceCounter = (
           count -= p.count;
         }
 
-        data.gainRewards([new Reward(count, type as Resource)]);
+        gainRewards([new Reward(count, type as Resource)]);
       }
     };
 
-    const payPowerUsage = (cmd: CommandObject, data: PlayerData, type: Resource, source?: EventSource) => {
+    const payPowerUsage = (cmd: CommandObject, type: Resource, source?: EventSource) => {
       const powerUsage = parsePowerUsage(cmd);
       if (powerUsage) {
         const r = [new Reward(-sum(Object.values(powerUsage)), type)];
-        data.gainRewards(r);
+        gainRewards(r);
         if (source) {
           addProcessedChange(r, source);
         }
@@ -150,26 +156,26 @@ export const resourceCounter = (
         case Command.Build:
           const building = cmd.args[0] as Building;
           if (building == Building.GaiaFormer) {
-            payPowerUsage(cmd, data, Resource.MoveTokenToGaiaArea);
+            payPowerUsage(cmd, Resource.MoveTokenToGaiaArea);
           } else if (building == Building.PlanetaryInstitute && want.faction == Faction.Nevlas) {
             data.tokenModifier = 2;
           }
           break;
         case Command.FormFederation:
-          payPowerUsage(cmd, data, Resource.GainToken, Command.FormFederation);
+          payPowerUsage(cmd, Resource.GainToken, Command.FormFederation);
           break;
       }
 
       //gain or use changes
       switch (cmd.command) {
         case Command.Spend:
-          data.payCosts(Reward.parse(args[0]));
-          data.gainRewards(Reward.parse(args[2]));
+          gainRewards(Reward.parse(args[0]).map((r) => new Reward(-r.count, r.type)));
+          gainRewards(Reward.parse(args[2]));
           delete changes.spend;
           break;
         case Command.Special:
           if (args[0] == "4pw") {
-            data.gainRewards(Reward.parse("4pw"));
+            gainRewards(Reward.parse("4pw"));
             for (const pos of TechPos.values()) {
               delete changes[pos];
             }
@@ -180,7 +186,7 @@ export const resourceCounter = (
           break;
         case Command.ChooseIncome:
           const r = Reward.parse(args[0]);
-          data.gainRewards(r);
+          gainRewards(r);
           addProcessedChange(r, Command.ChooseIncome);
           //all event sources might be reduced by this command
           changes = flattenChanges(changes, Command.ChooseIncome);
@@ -190,7 +196,7 @@ export const resourceCounter = (
             for (const eventSource of commandEventSource(cmd)) {
               const change = changes[eventSource];
               if (change) {
-                gainRewards(eventSource, change);
+                gainRewardsBySource(eventSource, change);
                 delete changes[eventSource];
               }
             }
@@ -202,9 +208,10 @@ export const resourceCounter = (
 
     const process = (a: ExtractLogArg<any>) =>
       processor(want, a, data, () => {
+        commandChanges = [];
         if (a.log.phase == Phase.RoundGaia) {
           gaiaPhase = true;
-          return false;
+          return [];
         }
         if (gaiaPhase && !isGaiaMove(a.allCommands)) {
           gaiaPhase = false;
@@ -212,7 +219,7 @@ export const resourceCounter = (
         }
 
         if (a.log.player != want.player) {
-          return;
+          return [];
         }
         if (a.cmdIndex == 0) {
           changes = {};
@@ -227,12 +234,12 @@ export const resourceCounter = (
 
         if (isLastChange(a)) {
           for (const s in changes) {
-            gainRewards(s as EventSource, changes[s]);
+            gainRewardsBySource(s as EventSource, changes[s]);
           }
           changes = null;
           processedChanges = null;
         }
-        return;
+        return commandChanges;
       });
 
     const board = chartPlayerBoard(want);
