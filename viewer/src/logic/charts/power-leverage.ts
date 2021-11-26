@@ -1,4 +1,5 @@
-import { Building, Command, PowerArea } from "@gaia-project/engine";
+import { Building, Command, PowerArea, Resource, Reward } from "@gaia-project/engine";
+import { sum } from "lodash";
 import { resourceCounter } from "./resource-counter";
 import { ResourceSource } from "./resources";
 import { ExtractLog } from "./simple-charts";
@@ -28,6 +29,7 @@ export const taklonsPowerLeverage: (factor: number) => ExtractLog<any> = (factor
 
 export const nevlasPowerLeverage = (): ExtractLog<any> => {
   let pi = false;
+
   return resourceCounter((want, a, data, simulateResources) => {
     if (a.log.player != want.player) {
       return 0;
@@ -36,15 +38,10 @@ export const nevlasPowerLeverage = (): ExtractLog<any> => {
       pi = true;
     }
 
-    const area1 = data.power.area1;
-    const area3 = data.power.area3;
+    const changes = simulateResources();
 
-    simulateResources();
+    const leverage = (r: Reward) => (r.type == Resource.ChargePower && r.count < 0 ? Math.floor(-r.count / 2) : 0);
 
-    if (pi && data.power.area3 < area3 && data.power.area1 > area1) {
-      return area3 - data.power.area3;
-    }
-
-    return 0;
+    return pi ? sum(changes.flatMap((r) => leverage(r))) : 0;
   });
 };
