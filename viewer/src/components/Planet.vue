@@ -98,7 +98,7 @@ svg {
 
     .accessible-space-map &.v {
       stroke-dasharray: 0.25;
-      stroke-width: 0.1;
+      stroke-width: 0.15;
     }
 
     // gaia
@@ -117,8 +117,8 @@ svg {
     }
 
     .accessible-space-map &.m {
-      stroke-dasharray: 0.14;
-      stroke-width: 0.1;
+      stroke-dasharray: 0.25;
+      stroke-width: 0.15;
     }
 
     // lost planet
