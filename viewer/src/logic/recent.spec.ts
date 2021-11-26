@@ -146,7 +146,7 @@ describe("Moves", () => {
   });
 
   it("should parse commands correctly", () => {
-    expect(parseCommands("taklons charge 1pw. brainstone area1.")).to.deep.equal([
+    expect(parseCommands("taklons charge 1pw. brainstone area1 (0 ⇒ 1). (0/0/6/0 ⇒ 3/0/3/0)")).to.deep.equal([
       {
         args: ["1pw"],
         command: "charge",

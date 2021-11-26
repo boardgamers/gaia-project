@@ -19,7 +19,7 @@ import {
   TooltipModel,
   TooltipOptions,
 } from "chart.js";
-import { sortBy, sum, sumBy } from "lodash";
+import { memoize, sortBy, sum, sumBy } from "lodash";
 import { factionName } from "../../data/factions";
 import {
   ChartFamily,
@@ -362,7 +362,12 @@ export class ChartSetup {
       players
         .filter((pl) => data.player(pl).faction != null)
         .map((pl) => {
-          const details = f.newDetails(data, pl, sources, "last", family, false);
+          // only calculate data points once
+          const details = f.newDetails(data, pl, sources, "last", family, false).map((f) => {
+            const res = Object.assign({}, f);
+            res.getDataPoints = memoize(f.getDataPoints);
+            return res;
+          });
           const points = details.map((f) => f.getDataPoints()[0]);
 
           const total = sum(points);

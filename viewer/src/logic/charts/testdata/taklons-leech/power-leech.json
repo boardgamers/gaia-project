@@ -28,25 +28,25 @@
       }
     ],
     "datasetMeta": {
-      "Gleens (29)": {
-        "label": "Gleens",
-        "total": 61,
-        "weightedTotal": 29
-      },
-      "Bal T'aks (23)": {
-        "label": "Bal T'aks",
-        "total": 48,
-        "weightedTotal": 23
-      },
-      "Bescods (44)": {
-        "label": "Bescods",
-        "total": 70,
-        "weightedTotal": 44
-      },
-      "Itars (36)": {
+      "Itars (25)": {
         "label": "Itars",
-        "total": 60,
-        "weightedTotal": 36
+        "total": 29,
+        "weightedTotal": 25
+      },
+      "Gleens (6)": {
+        "label": "Gleens",
+        "total": 6,
+        "weightedTotal": 6
+      },
+      "Taklons (18)": {
+        "label": "Taklons",
+        "total": 23,
+        "weightedTotal": 18
+      },
+      "Ivits (13)": {
+        "label": "Ivits",
+        "total": 22,
+        "weightedTotal": 13
       }
     }
   },
@@ -62,20 +62,20 @@
   ],
   "datasets": [
     {
-      "label": "Bescods (44)",
-      "data": [12, 26, 6, 0, 0, 24, 0, 2]
+      "label": "Itars (25)",
+      "data": [5, 14, 6, 0, 0, 0, 0, 4]
     },
     {
-      "label": "Gleens (29)",
-      "data": [4, 22, 3, 0, 0, 19, 0, 13]
+      "label": "Taklons (18)",
+      "data": [5, 10, 3, 0, 0, 0, 0, 5]
     },
     {
-      "label": "Itars (36)",
-      "data": [21, 6, 9, 0, 0, 20, 0, 4]
+      "label": "Ivits (13)",
+      "data": [2, 2, 9, 0, 0, 2, 0, 7]
     },
     {
-      "label": "Bal T'aks (23)",
-      "data": [7, 16, 0, 0, 0, 7, 0, 18]
+      "label": "Gleens (6)",
+      "data": [1, 2, 3, 0, 0, 0, 0, 0]
     }
   ]
 }

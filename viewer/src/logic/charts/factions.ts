@@ -149,7 +149,7 @@ const specials: FactionSpecial[] = [
     faction: Faction.Nevlas,
     label: "Powerful Power Tokens",
     description: "How often power tokens was spend for 2 power (with Planetary Institute)",
-    extractLog: nevlasPowerLeverage(),
+    extractLog: nevlasPowerLeverage,
   },
   {
     faction: Faction.Taklons,

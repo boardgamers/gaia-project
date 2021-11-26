@@ -115,7 +115,7 @@ export const resourceSourceFactory: SimpleSourceFactory<ResourceSource> = {
     {
       factionFilter: [Faction.Nevlas],
       sourceTypeFilter: [powerLeverage],
-      extractLog: nevlasPowerLeverage(),
+      extractLog: nevlasPowerLeverage,
     },
   ]),
   sources: resourceSources,

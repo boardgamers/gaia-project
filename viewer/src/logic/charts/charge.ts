@@ -183,26 +183,34 @@ const extractLeech: GetPowerChargeDetails<LeechSource> = (eventSource, source, c
 };
 
 export function leechOpportunities(wantSource: (maxLeech: MaxLeech) => number): ExtractLog<ChartSource<LeechSource>> {
-  const counter = new BuildingPowerValueCounter(false);
+  return ExtractLog.wrapper(() => {
+    const counter = new BuildingPowerValueCounter(false);
 
-  return resourceCounter((want, a, data, simulateResources) => {
-    simulateResources();
+    return resourceCounter((want, a, data, simulateResources) => {
+      simulateResources();
 
-    if (a.log.player == want.player && a.cmd) {
-      counter.playerCommand(a.cmd, a.data);
-    }
-
-    if (a.cmd?.command == Command.Build) {
-      if (a.log.player != want.player) {
-        //check for missed leech
-        const map = a.data.map;
-        const leechPossible = a.data.leechPossible(map.getS(a.cmd.args[1]), (h) => counter.buildingValue(h, map, want));
-        const maxLeech = data.maxLeech(leechPossible, want.faction == Faction.Taklons && counter.hasPlanetaryInstitute);
-        return Math.max(0, leechPossible - wantSource(maxLeech));
+      if (a.log.player == want.player && a.cmd) {
+        counter.playerCommand(a.cmd, a.data);
       }
-    }
 
-    return 0;
+      if (a.cmd?.command == Command.Build) {
+        if (a.log.player != want.player) {
+          //check for missed leech
+          const map = a.data.map;
+          const leechPossible = a.data.leechPossible(map.getS(a.cmd.args[1]), (h) =>
+            counter.buildingValue(h, map, want)
+          );
+          const maxLeech = data.maxLeech(
+            leechPossible,
+            want.faction == Faction.Taklons && counter.hasPlanetaryInstitute
+          );
+
+          return Math.max(0, leechPossible - wantSource(maxLeech));
+        }
+      }
+
+      return 0;
+    });
   });
 }
 

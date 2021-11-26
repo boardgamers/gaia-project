@@ -62,6 +62,11 @@ export interface DatasetFactory {
 
 export type IncludeRounds = "all" | "except-final" | "last";
 
+export type DataFactoryWithPoints = {
+  factory: DatasetFactory;
+  points: number[];
+};
+
 export function chartPlayerOrder(data: Engine): PlayerEnum[] {
   return data.players.map((p) => p.player);
 }
@@ -212,7 +217,11 @@ export function playerLabel(pl: Player) {
   return factionName(pl.faction);
 }
 
-export function weightedSum(data: Engine, player: PlayerEnum, factories: DatasetFactory[]): DatasetFactory | null {
+export function weightedSumForDataPoints(
+  data: Engine,
+  player: PlayerEnum,
+  dataPoints: DataFactoryWithPoints[]
+): DatasetFactory | null {
   const pl = data.player(player);
   if (!pl.faction) {
     return null;
@@ -223,8 +232,8 @@ export function weightedSum(data: Engine, player: PlayerEnum, factories: Dataset
     label: playerLabel(pl),
     fill: false,
     getDataPoints: () =>
-      factories
-        .map((f) => f.getDataPoints().map((p) => f.weight * p))
+      dataPoints
+        .map((f) => f.points.map((p) => f.factory.weight * p))
         .reduce((prev: number[], cur: number[]) => {
           for (let i = 0; i < cur.length; i++) {
             prev[i] += cur[i];
@@ -233,6 +242,14 @@ export function weightedSum(data: Engine, player: PlayerEnum, factories: Dataset
         }),
     weight: 1,
   };
+}
+
+export function weightedSum(data: Engine, player: PlayerEnum, factories: DatasetFactory[]): DatasetFactory | null {
+  return weightedSumForDataPoints(
+    data,
+    player,
+    factories.map((f) => ({ factory: f, points: f.getDataPoints() }))
+  );
 }
 
 export function chartPlayerBoard(player: Player): FactionBoard {
