@@ -1,5 +1,6 @@
 import {
   Building,
+  Expansion,
   Faction,
   factionBoard,
   factionPlanet,
@@ -10,6 +11,7 @@ import {
 } from "@gaia-project/engine";
 import { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
 import { factionColor, planetFill } from "../graphics/utils";
+import { buildingName, isFrontiersBuilding } from "./building";
 
 const factionData: { [faction in Faction]: { name: string; ability: string; PI: string; shortcut: string } } = {
   [Faction.Terrans]: {
@@ -139,18 +141,22 @@ export function factionShortcut(faction: Faction): string {
   return factionData[faction].shortcut;
 }
 
-export function factionDesc(faction: Faction, variant?: FactionBoardRaw) {
+export function factionDesc(faction: Faction, variant: FactionBoardRaw | null, expansion: Expansion) {
   const board = factionBoard(faction, variant);
   const p = factionPlanet(faction);
 
   const buildingDesc =
     "<ul>" +
     Object.values(Building)
-      .filter((bld) => bld !== Building.GaiaFormer && bld !== Building.SpaceStation)
+      .filter(
+        (bld) =>
+          (bld !== Building.GaiaFormer && bld !== Building.SpaceStation && !isFrontiersBuilding(bld)) ||
+          expansion === Expansion.Frontiers
+      )
       .map(
         (bld) =>
           "<li><b>" +
-          bld +
+          buildingName(bld, faction) +
           "</b> - " +
           board.buildings[bld].cost +
           " -> " +

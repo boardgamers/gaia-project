@@ -104,7 +104,7 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
   },
   methods: {
     tooltip(faction: Faction) {
-      return factionDesc(faction, factionVariantBoard(this.factionCustomization, faction)?.board);
+      return factionDesc(faction, factionVariantBoard(this.factionCustomization, faction)?.board, this.engine.expansions);
     },
 
     modalDialog(title: string, msg: string): ModalButtonData {

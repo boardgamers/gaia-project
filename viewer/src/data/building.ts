@@ -38,6 +38,10 @@ export function buildingName(building: Building, faction: Faction): string {
   }
 }
 
+export function isFrontiersBuilding(building: BuildingEnum): boolean {
+  return isShip(building) || building === Building.Colony;
+}
+
 export function shipLetter(building: BuildingEnum): string {
   switch (building) {
     case BuildingEnum.ColonyShip:
