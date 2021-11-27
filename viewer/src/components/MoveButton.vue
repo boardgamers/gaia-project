@@ -24,7 +24,7 @@
     />
     <b-btn
       v-else-if="button.times === undefined"
-      :variant="button.warning ? 'warning' : 'secondary'"
+      :variant="variant"
       :class="['mr-2', 'mb-2', 'move-button', { 'symbol-button': button.conversion, active }]"
       @click="controller.handleButtonClick(button)"
       @mouseenter="hover"
@@ -37,7 +37,7 @@
       </template>
     </b-btn>
     <b-dropdown
-      :variant="button.warning ? 'warning' : 'secondary'"
+      :variant="variant"
       :class="['mr-2', 'mb-2', 'move-button', { 'symbol-button': button.conversion }]"
       v-else
       split
@@ -70,7 +70,7 @@
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { Player } from "@gaia-project/engine";
-import { ButtonData } from "../data";
+import { ButtonData, LogPlacement, WarningsPreference } from "../data";
 import Booster from "./Booster.vue";
 import TechTile from "./TechTile.vue";
 import ButtonContent from "./Resources/ButtonContent.vue";
@@ -192,6 +192,13 @@ export default class MoveButton extends Vue implements MoveButtonController {
     this.button.hover?.leave();
   }
 
+  get warningPreference(): WarningsPreference {
+    return this.$store.state.preferences.warnings;
+  }
+
+  get variant(): string {
+    return this.button.warning && this.warningPreference !== "tooltip" ? "warning" : "secondary";
+  }
 }
 </script>
 

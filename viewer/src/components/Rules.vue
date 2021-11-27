@@ -60,6 +60,7 @@
         <ul>
           <li>Show cost on build buttons</li>
           <li>Game creator can now decide player order</li>
+          <li>New Preference: Warnings</li>
         </ul>
         <h5>2021-11-25</h5>
         <ul>
