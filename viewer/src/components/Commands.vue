@@ -77,7 +77,7 @@ import Engine, {
   TechTilePos,
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
-import { ButtonData, GameContext, HexSelection, ModalButtonData } from "../data";
+import { ButtonData, GameContext, HexSelection, ModalButtonData, WarningsPreference } from "../data";
 import { factionDesc, factionName, factionShortcut } from "../data/factions";
 import { FactionCustomization } from "@gaia-project/engine/src/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
@@ -342,6 +342,20 @@ export default class Commands extends Vue implements CommandController {
     // const s = autoClickStrategy(this.$store.state.preferences.autoClick, this.preventFirstAutoClick);
     const s = autoClickStrategy("smart", this.preventFirstAutoClick);
     const buttons = commandButtons(commands, this.engine, this.player, this, s);
+    if (this.warningPreference === "buttonText") {
+      for (const button of buttons) {
+        if (button.warning && !button.warningInLabel) {
+          const w = button.warning.body.join(", ");
+          if (button.longLabel) {
+            button.longLabel = `${button.longLabel} (${w})`;
+          }
+          if (button.label) {
+            button.label = `${button.label} (${w})`;
+          }
+          button.warningInLabel = true;
+        }
+      }
+    }
     this.allButtons = buttons;
     this.preventFirstAutoClick = false;
     return buttons;
@@ -508,7 +522,7 @@ export default class Commands extends Vue implements CommandController {
       button.handlingClick = true;
       const warning = button.warning;
       const activeButton = this.isActiveButton(button);
-      if (warning && !activeButton) {
+      if (warning && !activeButton && this.warningPreference === 'modalDialog') {
         try {
           const c = this.$createElement;
           const message = warning.body.length == 1 ? warning.body[0] : warning.body.map((w) => c("ul", [c("li", [w])]));
@@ -561,6 +575,10 @@ export default class Commands extends Vue implements CommandController {
     } finally {
       button.handlingClick = false;
     }
+  }
+
+  get warningPreference(): WarningsPreference {
+    return this.$store.state.preferences.warnings;
   }
 
   getRotation() {

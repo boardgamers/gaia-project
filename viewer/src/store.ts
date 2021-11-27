@@ -34,6 +34,7 @@ type Preference =
   | "flatBuildings"
   | "highlightRecentActions"
   | "logPlacement"
+  | "warnings"
   | "autoClick";
 
 export enum LoadFromJsonType {
@@ -98,6 +99,7 @@ const gaiaViewer = {
       highlightRecentActions: !!process.env.VUE_APP_highlightRecentActions,
       autoClick: process.env.VUE_APP_autoClick ?? "smart",
       logPlacement: process.env.VUE_APP_logPlacement ?? "bottom",
+      warnings: process.env.VUE_APP_warnings ?? "modalDialog",
     },
     player: null,
   } as State,

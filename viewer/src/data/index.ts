@@ -39,6 +39,7 @@ export interface ButtonData {
   federations?: Federation[];
   needConfirm?: boolean;
   warning?: ButtonWarning;
+  warningInLabel?: boolean;
   buttons?: ButtonData[];
   hide?: boolean;
   disabled?: boolean;
@@ -63,6 +64,13 @@ export type HexSelection = {
 };
 export type LogPlacement = "top" | "bottom" | "off";
 
+export enum WarningsPreference {
+  Tooltip = "tooltip",
+  ButtonColor = "buttonColor",
+  ButtonText = "buttonText", //including button color
+  ModalDialog = "modalDialog", //including button color
+}
+
 export interface GameContext {
   highlighted: {
     sectors: CubeCoordinates[];
@@ -82,5 +90,6 @@ export interface GameContext {
   autoClick: boolean[][];
 
   logPlacement: LogPlacement;
+  warnings: WarningsPreference;
   mapModes: MapMode[];
 }
