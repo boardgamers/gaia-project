@@ -9,6 +9,7 @@ import Engine, {
   GaiaHex,
   HighlightHex,
   isShip,
+  Reward,
   Round,
 } from "@gaia-project/engine";
 import assert from "assert";
@@ -49,7 +50,7 @@ export function hexSelectionButton(
 
   const hexes = button.hexes.hexes;
 
-  button.buttons = Array.from(hexes.keys())
+  button.buttons = sortBy(Array.from(hexes.keys()), (h) => hexes.get(h).cost.replace("~", "0"))
     .filter((h) => !hexes.get(h).preventClick)
     .map((hex) => {
       const b = newLocationButton(hex);
@@ -63,7 +64,11 @@ export function hexSelectionButton(
         b.label = hex.toString();
       }
 
-      b.warning = buttonWarnings(hexes.get(hex).warnings?.map((w) => moveWarnings[w].text));
+      const highlightHex = hexes.get(hex);
+      b.warning = buttonWarnings(highlightHex.warnings?.map((w) => moveWarnings[w].text));
+      if (highlightHex.cost != "~") {
+        b.conversion = { from: Reward.parse(highlightHex.cost), to: [] };
+      }
       b.tooltip = tooltipWithShortcut(null, b.warning);
 
       addOnShow(b, () => {
