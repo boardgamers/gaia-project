@@ -1,11 +1,7 @@
 <template>
   <div class="d-flex" style="justify-content: center; align-items: center">
-    <svg
-      v-if="button.conversion"
-      :viewBox="`2 -13 ${(button.conversion.from.length + button.conversion.to.length) * 8} 20`"
-      :width="(button.conversion.from.length + button.conversion.to.length) * 28 + 7"
-      height="30"
-    >
+    <div v-if="frontLabel" v-html="frontLabel" style="padding-right: 4px"></div>
+    <svg v-if="button.conversion" :viewBox="`2 -13 ${boxWidth} 20`" :width="width" height="30">
       <Resource
         v-for="(r, i) in button.conversion.from"
         :key="i"
@@ -13,7 +9,7 @@
         :count="Number(r.count)"
         :transform="`translate(${i * 12 - 4}, -2) scale(.7)`"
       />
-      <use xlink:href="#arrow" x="5" y="0" transform="translate(-4, -2)" />
+      <use v-if="hasTo" xlink:href="#arrow" x="5" y="0" transform="translate(-4, -2)" />
       <Resource
         v-for="(r, i) in button.conversion.to"
         :key="i + 20"
@@ -22,7 +18,7 @@
         :transform="`translate(${(i + button.conversion.from.length + 1) * 12 - 4}, -2) scale(.7)`"
       />
     </svg>
-    <div v-html="htmlLabel"></div>
+    <div v-if="backLabel" v-html="backLabel"></div>
     <span class="sr-only">{{ button.tooltip }}</span>
   </div>
 </template>
@@ -37,6 +33,28 @@ import { withShortcut } from "../../logic/buttons/shortcuts";
 export default class ButtonContent extends Vue {
   @Prop()
   button: ButtonData;
+
+  get hasTo(): boolean {
+    return this.button.conversion?.to?.length > 0;
+  }
+
+  get boxWidth(): number {
+    return this.hasTo ? (this.button.conversion.from.length + this.button.conversion.to.length) * 8 :
+      this.button.conversion.from.length;
+  }
+
+  get width(): number {
+    return this.hasTo ? (this.button.conversion.from.length + this.button.conversion.to.length) * 28 + 7 :
+      this.button.conversion.from.length * 23;
+  }
+
+  get frontLabel(): string {
+    return this.hasTo ? null : this.htmlLabel;
+  }
+
+  get backLabel(): string {
+    return this.hasTo ? this.htmlLabel : null;
+  }
 
   get htmlLabel(): string {
     const l = this.button.label || this.button.command;
