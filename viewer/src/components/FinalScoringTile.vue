@@ -1,5 +1,5 @@
 <template>
-  <g :class="['finalScoringTile', { highlighted }]" v-b-tooltip :title="tooltip" v-b-modal="'rules'" role="button">
+  <g :class="['finalScoringTile', { highlighted }]" v-b-tooltip :title="tooltip">
     <rect x="1" y="1" width="75" height="55" />
     <text class="title" x="5" y="12">{{ content }}</text>
     <Token
@@ -16,15 +16,25 @@
     >
       {{ progress(player) }}
     </text>
+    <circle
+      v-for="(mode, index) in mapModeType"
+      :key="mode.player.faction + '-circle'"
+      :transform="`translate(${tokenX(index)}, ${tokenY(index)})`"
+      class="button"
+      role="button"
+      @click="toggleMapMode(mode.type, mode.player)"
+      r="9"
+    />
   </g>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Phase, Player, finalScorings, Faction } from "@gaia-project/engine";
+import { Phase, Player, finalScorings, Faction, FinalTile } from "@gaia-project/engine";
 import Token from "./Token.vue";
 import { factionName } from "../data/factions";
+import { MapMode, MapModeType } from "../data/actions";
 
 @Component<FinalScoringTile>({
   computed: {
@@ -60,8 +70,24 @@ export default class FinalScoringTile extends Vue {
       : player.progress(this.tile);
   }
 
-  get tile() {
+  get tile(): FinalTile {
     return this.$store.state.data.tiles.scorings.final[this.index];
+  }
+
+  get mapModeType(): { type: MapModeType; player: Player }[] {
+    const m = (type: MapModeType) => this.players.filter(p => p.faction != "automa").map(player => ({ type, player }));
+    switch (this.tile) {
+      case FinalTile.Sector:
+        return m("sectors");
+      case FinalTile.StructureFed:
+      case FinalTile.Satellite:
+        return m("federations");
+    }
+    return [];
+  }
+
+  toggleMapMode(mode: MapModeType, player: Player) {
+    this.$store.commit("toggleMapMode", { type: mode, player: player.player  } as MapMode);
   }
 
   get content() {
@@ -128,8 +154,11 @@ g {
 
     .player-token {
       stroke: #111;
-      pointer-events: none;
       stroke-width: 1;
+    }
+
+    .button {
+      opacity: 0;
     }
   }
 }

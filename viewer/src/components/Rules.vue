@@ -56,6 +56,10 @@
           <li><a href="https://www.boardgamers.space/page/elo">How Elo works</a></li>
         </ul>
         <h4>Recent changes</h4>
+        <h5>2021-11-28</h5>
+        <ul>
+          <li>Highlight sectors or federations on final tiles</li>
+        </ul>
         <h5>2021-11-27</h5>
         <ul>
           <li>Show cost on build buttons</li>
