@@ -19,7 +19,7 @@ import { moveWarnings } from "../../data/warnings";
 import { tooltipWithShortcut } from "./shortcuts";
 import { CommandController } from "./types";
 import { customHexSelection, textButton } from "./utils";
-import { buttonWarning, resourceWasteWarning, rewardWarnings } from "./warnings";
+import { buttonWarning, commonButtonWarning, resourceWasteWarning, rewardWarnings } from "./warnings";
 
 export function federationTypeButtons(federations: Federation[], player: Player) {
   return federations.map((fed, i) => {
@@ -120,6 +120,11 @@ export function federationButton(
     });
   });
 
+  const commonWarnings = commonButtonWarning(
+    "federation location",
+    locationButtons.map((b) => b.warning?.body ?? [])
+  );
+
   const n = locationButtons.length;
 
   const cycle = (update: number) => () => {
@@ -197,6 +202,7 @@ export function federationButton(
     shortcuts: ["f"],
     command: Command.FormFederation,
     buttons: locationButtons,
+    warning: commonWarnings,
     onClick: (button) => {
       next();
       controller.emitButtonCommand(button);

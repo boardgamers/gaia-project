@@ -48,3 +48,18 @@ export function chargeIncomeWarning(player: Player, additionalEvents: Event[]) {
 export function resourceWasteWarning(warnings: string[]): ButtonWarning | null {
   return warnings.length == 0 ? null : { title: "Resources will be wasted - are you sure?", body: warnings };
 }
+
+export function commonButtonWarning(
+  subject: string,
+  warnings: string[][],
+  translate = (s: string) => s
+): ButtonWarning | null {
+  if (warnings.every((b) => b?.length > 0)) {
+    const common = warnings[0].filter((w) => warnings.every((b) => b.includes(w))).map((w) => translate(w));
+    return {
+      title: `Every possible ${subject} has a warning`,
+      body: common.length > 0 ? common : ["Different warnings."],
+    } as ButtonWarning;
+  }
+  return null;
+}
