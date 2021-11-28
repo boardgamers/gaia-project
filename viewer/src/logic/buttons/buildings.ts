@@ -14,24 +14,13 @@ import Engine, {
 } from "@gaia-project/engine";
 import assert from "assert";
 import { sortBy, sortedUniq } from "lodash";
-import { ButtonData, ButtonWarning } from "../../data";
+import { ButtonData } from "../../data";
 import { buildingName, buildingShortcut, shipActionName, shipLetter } from "../../data/building";
 import { moveWarnings } from "../../data/warnings";
 import { prependShortcut, tooltipWithShortcut, withShortcut } from "./shortcuts";
 import { CommandController } from "./types";
 import { addOnClick, addOnShow, confirmationButton, hexMap, textButton } from "./utils";
-import { buttonWarnings } from "./warnings";
-
-function commonHexWarning(warnings: string[][]): ButtonWarning | null {
-  if (warnings.every((b) => b?.length > 0)) {
-    const common = warnings[0].filter((w) => warnings.every((b) => b.includes(w))).map((w) => moveWarnings[w].text);
-    return {
-      title: "Every possible building location has a warning",
-      body: common.length > 0 ? common : ["Different warnings."],
-    } as ButtonWarning;
-  }
-  return null;
-}
+import { buttonWarnings, commonButtonWarning } from "./warnings";
 
 export function hexSelectionButton(
   controller: CommandController,
@@ -97,10 +86,12 @@ export function hexSelectionButton(
       });
       return b;
     });
-  button.warning = commonHexWarning(
+  button.warning = commonButtonWarning(
+    "building location",
     Array.from(hexes.values())
       .filter((h) => !h.preventClick)
-      .map((h) => h.warnings)
+      .map((h) => h.warnings),
+    (w) => moveWarnings[w].text
   );
   return textButton(button);
 }
