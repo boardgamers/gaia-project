@@ -6,12 +6,13 @@ import {
   GaiaHex,
   parseLocation,
   Planet,
+  Player,
   SpaceMap,
   stdBuildingValue,
 } from "@gaia-project/engine";
 import { Grid } from "hexagrid";
 import { ChartSource } from "./charts";
-import { ExtractLog, planetCounter, SimpleSourceFactory } from "./simple-charts";
+import { ExtractLog, ExtractLogArg, planetCounter, SimpleSourceFactory } from "./simple-charts";
 
 type FinalScoringExtractLog = ExtractLog<ChartSource<FinalTile>>;
 
@@ -33,28 +34,35 @@ class FinalScoringSource extends FinalScoringTableRow {
   extractLog: FinalScoringExtractLog;
 }
 
-const structureFed: FinalScoringExtractLog = ExtractLog.wrapper((wantPlayer) => {
-  let map = null;
+class FederationSimulator {
+  map: SpaceMap;
+  private wantPlayer: Player;
 
-  function hasBuildingValue(h: GaiaHex) {
+  constructor(wantPlayer: Player) {
+    this.wantPlayer = wantPlayer;
+  }
+
+  hasBuildingValue(h: GaiaHex) {
     return h.data.building != null && stdBuildingValue(h.data.building) > 0;
   }
 
-  function addBuilding(location: string, building: Building): number {
-    const hex = map.getS(location);
+  addBuilding(location: string, building: Building): number {
+    const hex = this.map.getS(location);
 
     hex.data.building = building;
-    hex.data.player = wantPlayer;
+    hex.data.player = this.wantPlayer.player;
 
-    return wantPlayer.addBuildingToNearbyFederation(building, hex, map).filter((h) => hasBuildingValue(h)).length;
+    return this.wantPlayer
+      .addBuildingToNearbyFederation(building, hex, this.map)
+      .filter((h) => this.hasBuildingValue(h)).length;
   }
 
-  return ExtractLog.filterPlayer((e) => {
-    if (map == null) {
-      map = new SpaceMap();
-      map.grid = new Grid<GaiaHex>();
-      map.placement = e.data.map.placement;
-      map.grid.push(
+  process(e: ExtractLogArg<any>): number {
+    if (this.map == null) {
+      this.map = new SpaceMap();
+      this.map.grid = new Grid<GaiaHex>();
+      this.map.placement = e.data.map.placement;
+      this.map.grid.push(
         ...Array.from(e.data.map.grid.values()).map((hex) => {
           return new GaiaHex(hex.q, hex.r, {
             planet: hex.data.planet,
@@ -65,15 +73,23 @@ const structureFed: FinalScoringExtractLog = ExtractLog.wrapper((wantPlayer) => 
     }
     switch (e.cmd.command) {
       case Command.FormFederation:
-        const hexes = wantPlayer.hexesForFederationLocation(e.cmd.args[0], map);
-        const gaiaHexes = hexes.filter((h) => h.addToFederationOf(wantPlayer.player) && hasBuildingValue(h));
+        const hexes = this.wantPlayer.hexesForFederationLocation(e.cmd.args[0], this.map);
+        const gaiaHexes = hexes.filter((h) => h.addToFederationOf(this.wantPlayer.player) && this.hasBuildingValue(h));
         return gaiaHexes.length;
       case Command.Build:
-        return addBuilding(e.cmd.args[1], e.cmd.args[0] as Building);
+        return this.addBuilding(e.cmd.args[1], e.cmd.args[0] as Building);
       case Command.PlaceLostPlanet:
-        return addBuilding(e.cmd.args[0], Building.Mine);
+        return this.addBuilding(e.cmd.args[0], Building.Mine);
     }
     return 0;
+  }
+}
+
+const structureFed: FinalScoringExtractLog = ExtractLog.wrapper((wantPlayer) => {
+  const simulator = new FederationSimulator(wantPlayer);
+
+  return ExtractLog.filterPlayer((e) => {
+    return simulator.process(e);
   });
 });
 
@@ -89,11 +105,17 @@ const satellites: FinalScoringExtractLog = ExtractLog.wrapper((wantPlayer) => {
     return result;
   }
 
+  const simulator = new FederationSimulator(wantPlayer);
+
   return ExtractLog.filterPlayer((e) => {
+    simulator.process(e);
+
     switch (e.cmd.command) {
       case Command.FormFederation:
-        const hexes = wantPlayer.hexesForFederationLocation(e.cmd.args[0], e.data.map);
-        return subtractLast(hexes.filter((h) => h.data.building == null).length);
+        const hexes = wantPlayer.hexesForFederationLocation(e.cmd.args[0], simulator.map);
+        return subtractLast(
+          hexes.filter((h) => !h.colonizedBy(wantPlayer.player) && h.data.building !== Building.SpaceStation).length
+        );
       case Command.Build:
         const building = e.cmd.args[0] as Building;
         return building == Building.SpaceStation ? 1 : 0;
