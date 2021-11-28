@@ -93,7 +93,7 @@ import { factionName } from "../data/factions";
 import { radiusTranslate } from "../logic/utils";
 import { Ship } from "@gaia-project/engine/src/enums";
 import { shipsInHex } from "@gaia-project/engine/src/available-command";
-import { MapMode } from "../data/actions";
+import { MapMode, MapModeType } from "../data/actions";
 
 type BuildingOverride = { building: BuildingEnum; player: PlayerEnum };
 @Component<SpaceHex>({
@@ -247,10 +247,12 @@ export default class SpaceHex extends Vue {
     return this.$store.getters.mapModes;
   }
 
+  private playerMapMode(type: MapModeType): MapMode | null {
+    return this.mapModes.find(mode => mode.type === type);
+  }
+
   federationHighlight(player: PlayerEnum): boolean {
-    const mode = this.mapModes.find(mode => mode.type === "sectors");
-    return mode && this.planet === "e" && mode.player == player && mode.type === "federations" ?
-      this.hex.data.federations?.some(f => f === player) : false;
+    return this.planet === "e" && this.playerMapMode("federations")?.player == player ? this.hex.data.federations?.some(f => f === player) : false;
   }
 
   get planet() {
@@ -258,10 +260,9 @@ export default class SpaceHex extends Vue {
   }
 
   get sectorHighlight(): PlayerEnum | null {
-    const mode = this.mapModes.find(mode => mode.type === "sectors");
+    const mode = this.playerMapMode("sectors");
     return mode
         && this.planet === "e"
-        && mode.type === "sectors"
         && this.player(mode.player).data.occupied.some((hex) => hex.colonizedBy(mode.player) && hex.data.sector === this.hex.data.sector)
           ? mode.player
           : null;
