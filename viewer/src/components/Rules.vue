@@ -58,7 +58,7 @@
         <h4>Recent changes</h4>
         <h5>2021-11-28</h5>
         <ul>
-          <li>Highlight sectors or federations on final tiles</li>
+          <li>Click on final tiles to highlight sectors or federations on</li>
         </ul>
         <h5>2021-11-27</h5>
         <ul>

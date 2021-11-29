@@ -33,7 +33,7 @@ export interface ButtonData {
   onShow?: (button: ButtonData) => void;
   onShowTriggered?: boolean;
   buttonController?: MoveButtonController;
-  hover?: { enter: () => void; leave: () => void };
+  hover?: { enter: (button: ButtonData) => void; leave: (button: ButtonData) => void };
   boardActions?: BoardAction[];
   specialActions?: SpecialActionIncome[];
   federations?: Federation[];

@@ -21,6 +21,13 @@ import { CommandController } from "./types";
 import { customHexSelection, textButton } from "./utils";
 import { buttonWarning, commonButtonWarning, resourceWasteWarning, rewardWarnings } from "./warnings";
 
+type Cycler = {
+  currentIndex: number;
+  next: () => void;
+  locationButtons: ButtonData[];
+  activateButton: (button: ButtonData) => void;
+};
+
 export function federationTypeButtons(federations: Federation[], player: Player) {
   return federations.map((fed, i) => {
     const federation = tiles.federations[fed];
@@ -33,7 +40,7 @@ export function federationTypeButtons(federations: Federation[], player: Player)
   });
 }
 
-function federationButtonDetails(long: boolean, satelliteName: string, info) {
+function federationButtonDetails(long: boolean, satelliteName: string, info: FederationInfo) {
   const powerValue = long ? " power value" : "";
   const satellites = long ? " " + satelliteName : "";
   const sep = long ? " / " : "/";
@@ -41,99 +48,8 @@ function federationButtonDetails(long: boolean, satelliteName: string, info) {
   return `(${info.powerValue}${powerValue}${sep}${info.newSatellites}${satellites})`;
 }
 
-export function federationButton(
-  command: AvailableCommand<Command.FormFederation>,
-  engine: Engine,
-  controller: CommandController,
-  player: Player
-): ButtonData {
-  const fedTypeButtons: ButtonData[] = federationTypeButtons(command.data.tiles, player);
-
-  const entries: [FederationInfo, AvailableFederation][] = command.data.federations.map((fed) => [
-    player.federationInfo(player.hexesForFederationLocation(fed.hexes, engine.map)),
-    fed,
-  ]);
-
-  const sorted: [FederationInfo, AvailableFederation][] = sortBy(
-    entries,
-    (e) => 100 * e[0].powerValue + e[0].newSatellites
-  );
-
-  const sat = player.faction === Faction.Ivits ? "QICs" : "power tokens";
-
-  let index: number = null;
-  const canHover = controller.supportsHover();
-  let locationButtons: ButtonData[] = null;
-
-  const okButton = textButton({
-    label: "OK",
-    shortcuts: ["o", "Enter"],
-    onClick: () => {
-      const button = locationButtons[index];
-      controller.handleCommand(button.command, button); //to keep the selection
-    },
-  });
-
-  function selectButton(index: number) {
-    const button = locationButtons[index];
-    okButton.label = `OK ${index + 1} ${federationButtonDetails(true, sat, sorted[index][0])}`;
-    okButton.warning = button.warning;
-    okButton.tooltip = tooltipWithShortcut(null, button.warning);
-    if (okButton) {
-      okButton.buttonController?.setButton(okButton, String(index));
-      controller.activate(button);
-    }
-    controller.highlightHexes(button.hexes);
-  }
-
-  locationButtons = sorted.map((e, i) => {
-    const info = e[0];
-    const fed = e[1];
-    return textButton({
-      command: fed.hexes,
-      label: `Location ${i + 1} ${federationButtonDetails(i == 0, sat, info)}`,
-      hexes: {
-        hexes: new Map(
-          fed.hexes.split(",").map((coord) => [engine.map.getS(coord), { coordinates: coord }]) //what is 'coordinates' for?
-        ) as HighlightHexData,
-        // hover: true
-      },
-      buttons: fedTypeButtons,
-      warning: buttonWarning(fed.warning != null ? moveWarnings[fed.warning].text : null),
-      onClick: () => {
-        const button = locationButtons[i];
-        if (canHover) {
-          controller.handleCommand(button.command, button); //to keep the selection
-        } else {
-          selectButton(i);
-        }
-      },
-      hover: {
-        enter: () => {
-          controller.highlightHexes(locationButtons[i].hexes);
-        },
-        leave: () => {
-          controller.highlightHexes(null);
-          controller.disableTooltips();
-        },
-      },
-    });
-  });
-
-  const commonWarnings = commonButtonWarning(
-    "federation location",
-    locationButtons.map((b) => b.warning?.body ?? [])
-  );
-
-  const n = locationButtons.length;
-
-  const cycle = (update: number) => () => {
-    index = index == null ? 0 : (((index + update) % n) + n) % n;
-
-    selectButton(index);
-  };
-
-  locationButtons.push({
+function customFederationButton(controller: CommandController, fedTypeButtons: ButtonData[]) {
+  return {
     label: "Custom location",
     shortcuts: ["c"],
     buttons: [
@@ -170,11 +86,84 @@ export function federationButton(
         ],
       }),
     ],
+  };
+}
+
+function federationLocationButton(
+  fed: AvailableFederation,
+  label: string,
+  engine: Engine,
+  fedTypeButtons: ButtonData[],
+  canHover: boolean,
+  controller: CommandController,
+  cycler: Cycler
+) {
+  return textButton({
+    command: fed.hexes,
+    label: label,
+    hexes: {
+      hexes: new Map(
+        fed.hexes.split(",").map((coord) => [engine.map.getS(coord), { coordinates: coord }]) //what is 'coordinates' for?
+      ) as HighlightHexData,
+    },
+    buttons: fedTypeButtons,
+    warning: buttonWarning(fed.warning != null ? moveWarnings[fed.warning].text : null),
+    onClick: (button) => {
+      if (canHover) {
+        controller.handleCommand(button.command, button);
+      } else {
+        cycler.activateButton(button);
+      }
+    },
+    hover: {
+      enter: (button) => {
+        controller.highlightHexes(button.hexes);
+      },
+      leave: () => {
+        controller.highlightHexes(null);
+        controller.disableTooltips();
+      },
+    },
+  });
+}
+
+function cycleButtons(
+  cycler: Cycler,
+  controller: CommandController,
+  satType: string,
+  sorted: [FederationInfo, AvailableFederation][]
+): ButtonData[] {
+  const okButton = textButton({
+    label: "OK",
+    shortcuts: ["o", "Enter"],
+    onClick: () => {
+      const button = cycler.locationButtons[cycler.currentIndex];
+      controller.handleCommand(button.command, button);
+    },
   });
 
-  let next = () => {};
-  if (n > 0) {
-    locationButtons.push(
+  cycler.activateButton = (button: ButtonData) => {
+    const i = cycler.locationButtons.indexOf(button);
+    okButton.label = `OK ${i + 1} ${federationButtonDetails(true, satType, sorted[i][0])}`;
+    okButton.warning = button.warning;
+    okButton.tooltip = tooltipWithShortcut(null, button.warning);
+    if (okButton) {
+      okButton.buttonController?.setButton(okButton, String(i));
+      controller.activate(button);
+    }
+    controller.highlightHexes(button.hexes);
+  };
+
+  const cycle = (update: number) => () => {
+    const n = cycler.locationButtons.length;
+    cycler.currentIndex = cycler.currentIndex == null ? 0 : (((cycler.currentIndex + update) % n) + n) % n;
+
+    cycler.activateButton(cycler.locationButtons[cycler.currentIndex]);
+  };
+
+  const ret: ButtonData[] = [];
+  if (cycler.locationButtons.length > 0) {
+    ret.push(
       textButton({
         label: "Previous",
         shortcuts: ["p"],
@@ -182,29 +171,74 @@ export function federationButton(
       })
     );
 
-    locationButtons.push(okButton);
+    ret.push(okButton);
 
-    next = cycle(1);
-    locationButtons.push(
+    cycler.next = cycle(1);
+    ret.push(
       textButton({
         label: "Next",
         shortcuts: ["n"],
-        onClick: next,
+        onClick: cycler.next,
       })
     );
   }
+  return ret;
+}
+
+export function federationButton(
+  command: AvailableCommand<Command.FormFederation>,
+  engine: Engine,
+  controller: CommandController,
+  player: Player
+): ButtonData {
+  const fedTypeButtons: ButtonData[] = federationTypeButtons(command.data.tiles, player);
+
+  const entries: [FederationInfo, AvailableFederation][] = command.data.federations.map((fed) => [
+    player.federationInfo(player.hexesForFederationLocation(fed.hexes, engine.map)),
+    fed,
+  ]);
+
+  const sorted: [FederationInfo, AvailableFederation][] = sortBy(
+    entries,
+    (e) => 100 * e[0].powerValue + e[0].newSatellites
+  );
+
+  const satType = player.faction === Faction.Ivits ? "QICs" : "power tokens";
+
+  const cycler: Cycler = {
+    currentIndex: 0,
+    next: () => {},
+    locationButtons: [],
+    activateButton: () => {},
+  };
+  const canHover = controller.supportsHover();
+
+  const buttons = sorted.map((e, i) => {
+    const label = `Location ${i + 1} ${federationButtonDetails(i == 0, satType, e[0])}`;
+    return federationLocationButton(e[1], label, engine, fedTypeButtons, canHover, controller, cycler);
+  });
+
+  const commonWarnings = commonButtonWarning(
+    "federation location",
+    buttons.map((b) => b.warning?.body ?? [])
+  );
+
+  cycler.locationButtons = buttons.slice();
+
+  buttons.push(customFederationButton(controller, fedTypeButtons));
+  buttons.push(...cycleButtons(cycler, controller, satType, sorted));
 
   return textButton({
     label: "Form federation",
-    longLabel: `Form federation (${player.maxSatellites} ${sat} can be used as satellites, ${
+    longLabel: `Form federation (${player.maxSatellites} ${satType} can be used as satellites, ${
       MAX_SATELLITES - player.data.satellites
     } satellites are left)`,
     shortcuts: ["f"],
     command: Command.FormFederation,
-    buttons: locationButtons,
+    buttons: buttons,
     warning: commonWarnings,
     onClick: (button) => {
-      next();
+      cycler.next(); //highlight the first federation
       controller.emitButtonCommand(button);
     },
   });
