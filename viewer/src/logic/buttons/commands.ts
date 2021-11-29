@@ -38,21 +38,27 @@ function commandButton(
 
     case Command.PISwap:
       return [
-        hexSelectionButton(controller, {
-          label: "Swap Planetary Institute",
-          shortcuts: ["w"],
-          command: command.name,
-          hexes: hexMap(engine, command.data.buildings, false),
-        }),
+        hexSelectionButton(
+          controller,
+          autoClickButton({
+            label: "Swap Planetary Institute",
+            shortcuts: ["w"],
+            command: command.name,
+            hexes: hexMap(engine, command.data.buildings, false),
+          })
+        ),
       ];
 
     case Command.PlaceLostPlanet:
       return [
-        hexSelectionButton(controller, {
-          label: "Place Lost Planet",
-          command: command.name,
-          hexes: hexMap(engine, command.data.spaces, true),
-        }),
+        hexSelectionButton(
+          controller,
+          autoClickButton({
+            label: "Place Lost Planet",
+            command: command.name,
+            hexes: hexMap(engine, command.data.spaces, true),
+          })
+        ),
       ];
 
     case Command.Pass:

@@ -19,18 +19,16 @@ import { buildingName, buildingShortcut, shipActionName, shipLetter } from "../.
 import { moveWarnings } from "../../data/warnings";
 import { prependShortcut, tooltipWithShortcut, withShortcut } from "./shortcuts";
 import { CommandController } from "./types";
-import { addOnClick, addOnShow, confirmationButton, hexMap, textButton } from "./utils";
+import { addOnClick, addOnShow, autoClickButton, confirmationButton, hexMap, textButton } from "./utils";
 import { buttonWarnings, commonButtonWarning } from "./warnings";
 
 export function hexSelectionButton(
   controller: CommandController,
-  data: ButtonData,
+  button: ButtonData,
   newLocationButton = (hex: GaiaHex) => textButton({}),
   highlightOnClick?: Building,
   hideOnClick?: { hex: GaiaHex; building: Building }
 ): ButtonData {
-  const button = textButton(data);
-
   assert(button.hexes, "hexes missing");
   assert(!button.buttons, "buttons already exists");
   assert(!button.warning, "warning already exists");
@@ -144,13 +142,12 @@ function buildingButton(
 ) {
   return hexSelectionButton(
     controller,
-    {
+    autoClickButton({
       label,
       shortcuts: [shortcut],
       command,
       hexes: hexMap(engine, buildings, false),
-      smartAutoClick: true,
-    },
+    }),
     () => textButton({ buttons: confirm }),
     building
   );
@@ -238,11 +235,11 @@ function moveTargetButton(controller: CommandController, data: AvailableMoveShip
 
         return hexSelectionButton(
           controller,
-          {
+          autoClickButton({
             command: a.type,
             label: shipActionName(a.type),
             hexes,
-          },
+          }),
           () => textButton({})
         );
       })
@@ -259,13 +256,13 @@ function moveTargetButton(controller: CommandController, data: AvailableMoveShip
 function moveSourceButton(controller: CommandController, engine: Engine, data: AvailableMoveShipData) {
   return hexSelectionButton(
     controller,
-    {
+    autoClickButton({
       hexes: hexMap(
         engine,
         data.targets.map((t) => t.location),
         false
       ),
-    },
+    }),
     (target) => moveTargetButton(controller, data, target, engine),
     data.ship,
     { building: data.ship, hex: engine.map.getS(data.source) }
@@ -286,7 +283,7 @@ export function moveShipButton(
     buttons: sortedUniq(command.data.map((e) => e.ship)).map((ship) =>
       hexSelectionButton(
         controller,
-        {
+        autoClickButton({
           label: buildingName(ship, faction),
           command: ship,
           shortcuts: [shipLetter(ship).toLowerCase()],
@@ -295,7 +292,7 @@ export function moveShipButton(
             command.data.filter((e) => e.ship === ship).map((l) => ({ coordinates: l.source } as AvailableHex)),
             false
           ),
-        },
+        }),
         (hex) =>
           moveSourceButton(
             controller,
