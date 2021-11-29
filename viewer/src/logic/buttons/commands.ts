@@ -42,7 +42,6 @@ function commandButton(
           controller,
           autoClickButton({
             label: "Swap Planetary Institute",
-            shortcuts: ["w"],
             command: command.name,
             hexes: hexMap(engine, command.data.buildings, false),
           })

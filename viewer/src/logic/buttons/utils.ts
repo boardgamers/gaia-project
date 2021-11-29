@@ -4,6 +4,10 @@ import { ButtonData, ButtonWarning, HexSelection, HighlightHexData } from "../..
 import { resourceNames } from "../../data/resources";
 import { tooltipWithShortcut } from "./shortcuts";
 
+export function isFree(hex: HighlightHex) {
+  return hex.cost == null || hex.cost === "~";
+}
+
 export function addOnClick(button: ButtonData, action: (button: ButtonData) => void): ButtonData {
   const next = button.onClick;
   button.onClick = () => {

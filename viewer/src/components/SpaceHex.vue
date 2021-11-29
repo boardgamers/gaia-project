@@ -94,6 +94,7 @@ import { radiusTranslate } from "../logic/utils";
 import { Ship } from "@gaia-project/engine/src/enums";
 import { shipsInHex } from "@gaia-project/engine/src/available-command";
 import { MapMode, MapModeType } from "../data/actions";
+import { isFree } from "../logic/buttons/utils";
 
 type BuildingOverride = { building: BuildingEnum; player: PlayerEnum };
 @Component<SpaceHex>({
@@ -225,7 +226,7 @@ export default class SpaceHex extends Vue {
   cost(hex: GaiaHex) {
     const data = this.highlightedHexes?.get(hex);
 
-    return data && data.cost && data.cost !== "~" ? data.cost.replace(/,/g, ", ") : "";
+    return data && !isFree(data) ? data.cost.replace(/,/g, ", ") : "";
   }
 
   hexClick(hex: GaiaHex) {
