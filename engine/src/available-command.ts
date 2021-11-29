@@ -1075,13 +1075,14 @@ export function possibleTechTiles(engine: Engine, player: Player) {
 export function possiblePISwaps(engine: Engine, player: Player) {
   const commands = [];
   const data = engine.player(player).data;
-  const buildings = [];
+  const buildings: AvailableBuilding[] = [];
 
   for (const hex of data.occupied) {
     if (hex.buildingOf(player) === Building.Mine && hex.data.planet !== Planet.Lost) {
       buildings.push({
         building: Building.Mine,
         coordinates: hex.toString(),
+        cost: "~",
       });
     }
   }
