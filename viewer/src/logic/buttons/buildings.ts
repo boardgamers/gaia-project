@@ -37,7 +37,7 @@ export function hexSelectionButton(
 
   const hexes = button.hexes.hexes;
 
-  const sortKey = (h: HighlightHex): string => isFree(h) ? "0" : h.cost;
+  const sortKey = (h: HighlightHex): string => (isFree(h) ? "0" : h.cost);
 
   button.buttons = sortBy(Array.from(hexes.keys()), (h) => sortKey(hexes.get(h)))
     .filter((h) => !hexes.get(h).preventClick)

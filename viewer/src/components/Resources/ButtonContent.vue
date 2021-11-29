@@ -1,21 +1,26 @@
 <template>
   <div class="d-flex" style="justify-content: center; align-items: center">
-    <div v-if="frontLabel" v-html="frontLabel" style="padding-right: 4px"></div>
-    <svg v-if="button.conversion" :viewBox="`2 -13 ${boxWidth} 20`" :width="width" height="30">
+    <div v-if="frontLabel" v-html="frontLabel"></div>
+    <svg
+      v-if="button.conversion"
+      :viewBox="`2 -13 ${(from + to) * 8} 20`"
+      :width="hasTo ? (from + to) * 28 + 37 : from * 28 + 17"
+      height="30"
+    >
       <Resource
         v-for="(r, i) in button.conversion.from"
         :key="i"
         :kind="r.type"
         :count="Number(r.count)"
-        :transform="`translate(${i * 12 - 4}, -2) scale(.7)`"
+        :transform="`translate(${i * 16 + (hasTo ? -8 : 8 - 3 * from)}, -3)`"
       />
-      <use v-if="hasTo" xlink:href="#arrow" x="5" y="0" transform="translate(-4, -2)" />
+      <use v-if="hasTo" xlink:href="#arrow" x="5" y="0" transform="translate(-2, -2.5)" />
       <Resource
         v-for="(r, i) in button.conversion.to"
         :key="i + 20"
         :kind="r.type"
         :count="Number(r.count)"
-        :transform="`translate(${(i + button.conversion.from.length + 1) * 12 - 4}, -2) scale(.7)`"
+        :transform="`translate(${(i + from + 1) * 16 + -6}, -3)`"
       />
     </svg>
     <div v-if="backLabel" v-html="backLabel"></div>
@@ -38,14 +43,12 @@ export default class ButtonContent extends Vue {
     return this.button.conversion?.to?.length > 0;
   }
 
-  get boxWidth(): number {
-    return this.hasTo ? (this.button.conversion.from.length + this.button.conversion.to.length) * 8 :
-      this.button.conversion.from.length;
+  get from(): number {
+    return this.button.conversion.from.length;
   }
 
-  get width(): number {
-    return this.hasTo ? (this.button.conversion.from.length + this.button.conversion.to.length) * 28 + 7 :
-      this.button.conversion.from.length * 23;
+  get to(): number {
+    return this.button.conversion.to.length;
   }
 
   get frontLabel(): string {
