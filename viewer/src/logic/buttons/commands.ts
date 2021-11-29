@@ -31,7 +31,7 @@ function commandButton(
       return [setupButton(command.data, controller, engine)];
 
     case Command.Build:
-      return buildButtons(controller, engine, command);
+      return buildButtons(controller, engine, command, player);
 
     case Command.MoveShip:
       return [moveShipButton(controller, engine, command)];

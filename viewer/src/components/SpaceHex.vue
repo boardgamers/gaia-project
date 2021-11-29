@@ -76,7 +76,6 @@ import {
   Faction,
   factionPlanet,
   GaiaHex,
-  HighlightHex,
   Planet as PlanetEnum,
   Player,
   PlayerEnum,
@@ -87,7 +86,7 @@ import Planet from "./Planet.vue";
 import Building from "./Building.vue";
 import { buildingName } from "../data/building";
 import { planetNames } from "../data/planets";
-import { HexSelection, HighlightHexData } from "../data";
+import { HexSelection, HighlightHex, HighlightHexData } from "../data";
 import { moveWarnings } from "../data/warnings";
 import { factionName } from "../data/factions";
 import { radiusTranslate } from "../logic/utils";
@@ -188,7 +187,9 @@ export default class SpaceHex extends Vue {
           ret.push("pointer");
         }
 
-        if (this.warning(hex)) {
+        if (h.class) {
+          ret.push(h.class);
+        } else if (this.warning(hex)) {
           ret.push("warn");
         } else if (this.cost(hex).includes("q")) {
           ret.push("qic");

@@ -7,14 +7,16 @@ import Engine, {
   Command,
   Faction,
   GaiaHex,
-  HighlightHex,
   isShip,
+  Planet,
+  Player,
   Reward,
   Round,
 } from "@gaia-project/engine";
+import { qicForDistance } from "@gaia-project/engine/src/cost";
 import assert from "assert";
 import { sortBy, sortedUniq } from "lodash";
-import { ButtonData } from "../../data";
+import { ButtonData, HighlightHex } from "../../data";
 import { buildingName, buildingShortcut, shipActionName, shipLetter } from "../../data/building";
 import { moveWarnings } from "../../data/warnings";
 import { prependShortcut, tooltipWithShortcut, withShortcut } from "./shortcuts";
@@ -140,15 +142,29 @@ function buildingButton(
   command: string,
   engine: Engine,
   buildings: AvailableBuilding[],
-  confirm: ButtonData[]
+  confirm: ButtonData[],
+  upgrade: boolean,
+  player: Player
 ) {
+  const hexes = hexMap(engine, buildings, false);
+  if (!upgrade && engine.round != Round.None && building != Building.SpaceStation && !isShip(building)) {
+    const map = engine.map;
+    for (const hex of map.grid.values()) {
+      if (hex.data.planet == Planet.Empty) {
+        const qicNeeded = qicForDistance(map, hex, player, false);
+        if (qicNeeded && qicNeeded.amount <= player.data.qics) {
+          hexes.hexes.set(hex, { preventClick: true, class: qicNeeded.amount > 0 ? "qic" : "light" });
+        }
+      }
+    }
+  }
   return hexSelectionButton(
     controller,
     autoClickButton({
       label,
       shortcuts: [shortcut],
       command,
-      hexes: hexMap(engine, buildings, false),
+      hexes,
     }),
     () => textButton({ buttons: confirm }),
     building
@@ -158,7 +174,8 @@ function buildingButton(
 export function buildButtons(
   controller: CommandController,
   engine: Engine,
-  command: AvailableCommand<Command.Build>
+  command: AvailableCommand<Command.Build>,
+  player: Player
 ): ButtonData[] {
   const byTypeLabel = new Map<string, AvailableBuilding[]>();
   const faction = engine.player(command.player).faction;
@@ -202,7 +219,18 @@ export function buildButtons(
       }
 
       buttons.push(
-        buildingButton(controller, building, buildingName(building, faction), shortcut, building, engine, buildings, [])
+        buildingButton(
+          controller,
+          building,
+          buildingName(building, faction),
+          shortcut,
+          building,
+          engine,
+          buildings,
+          [],
+          b.upgrade,
+          player
+        )
       );
 
       menus.set(menu, buttons);
@@ -216,7 +244,9 @@ export function buildButtons(
           `${Command.Build} ${building}`,
           engine,
           buildings,
-          engine.round === Round.None ? confirmationButton(`Confirm ${buildingName(building, faction)}`) : null
+          engine.round === Round.None ? confirmationButton(`Confirm ${buildingName(building, faction)}`) : null,
+          b.upgrade,
+          player
         )
       );
     }

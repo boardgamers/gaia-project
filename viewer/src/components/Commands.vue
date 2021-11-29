@@ -69,7 +69,6 @@ import Engine, {
   Faction,
   factionPlanet,
   GaiaHex,
-  HighlightHex,
   Player,
   Resource,
   Reward,
@@ -77,7 +76,7 @@ import Engine, {
   TechTilePos,
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
-import { ButtonData, GameContext, HexSelection, ModalButtonData, WarningsPreference } from "../data";
+import { ButtonData, GameContext, HexSelection, HighlightHex, ModalButtonData, WarningsPreference } from "../data";
 import { factionDesc, factionName, factionShortcut } from "../data/factions";
 import { FactionCustomization } from "@gaia-project/engine/src/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";

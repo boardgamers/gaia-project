@@ -28,7 +28,6 @@ export {
   canTakeAdvancedTechTile,
   ChooseTechTile,
   conversionToFreeAction,
-  HighlightHex,
   MAX_SHIPS_PER_HEX,
 } from "./src/available-command";
 export {

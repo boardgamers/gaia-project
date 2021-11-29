@@ -6,14 +6,13 @@ import Engine, {
   Federation,
   FederationInfo,
   GaiaHex,
-  HighlightHex,
   MAX_SATELLITES,
   Player,
   Reward,
   tiles,
 } from "@gaia-project/engine";
 import { sortBy } from "lodash";
-import { ButtonData, HighlightHexData } from "../../data";
+import { ButtonData, HighlightHex, HighlightHexData } from "../../data";
 import { federationData } from "../../data/federations";
 import { moveWarnings } from "../../data/warnings";
 import { tooltipWithShortcut } from "./shortcuts";
