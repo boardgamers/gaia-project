@@ -19,7 +19,7 @@ import { buildingName, buildingShortcut, shipActionName, shipLetter } from "../.
 import { moveWarnings } from "../../data/warnings";
 import { prependShortcut, tooltipWithShortcut, withShortcut } from "./shortcuts";
 import { CommandController } from "./types";
-import { addOnClick, addOnShow, autoClickButton, confirmationButton, hexMap, textButton } from "./utils";
+import { addOnClick, addOnShow, autoClickButton, confirmationButton, hexMap, isFree, textButton } from "./utils";
 import { buttonWarnings, commonButtonWarning } from "./warnings";
 
 export function hexSelectionButton(
@@ -37,7 +37,9 @@ export function hexSelectionButton(
 
   const hexes = button.hexes.hexes;
 
-  button.buttons = sortBy(Array.from(hexes.keys()), (h) => hexes.get(h).cost.replace("~", "0"))
+  const sortKey = (h: HighlightHex): string => isFree(h) ? "0" : h.cost;
+
+  button.buttons = sortBy(Array.from(hexes.keys()), (h) => sortKey(hexes.get(h)))
     .filter((h) => !hexes.get(h).preventClick)
     .map((hex) => {
       const b = newLocationButton(hex);
@@ -53,7 +55,7 @@ export function hexSelectionButton(
 
       const highlightHex = hexes.get(hex);
       b.warning = buttonWarnings(highlightHex.warnings?.map((w) => moveWarnings[w].text));
-      if (highlightHex.cost != "~") {
+      if (!isFree(highlightHex)) {
         b.conversion = { from: Reward.parse(highlightHex.cost), to: [] };
       }
       b.tooltip = tooltipWithShortcut(null, b.warning);
@@ -120,7 +122,7 @@ function buildingLabel(bld: AvailableBuilding, faction: Faction) {
   } else if (bld.downgrade) {
     label = `Downgrade to ${name}`;
   } else if (
-    bld.cost === "~" ||
+    isFree(bld) ||
     building === Building.SpaceStation ||
     building === Building.GaiaFormer ||
     isShip(building)

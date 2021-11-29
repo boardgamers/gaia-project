@@ -178,7 +178,6 @@ export type AvailableHex = HighlightHex & { coordinates: string };
 
 export type AvailableBuilding = AvailableHex & {
   building: Building;
-  cost: string; // overrides optional cost in HighlightHex
   upgrade?: boolean;
   downgrade?: boolean;
   steps?: number;
@@ -1082,7 +1081,6 @@ export function possiblePISwaps(engine: Engine, player: Player) {
       buildings.push({
         building: Building.Mine,
         coordinates: hex.toString(),
-        cost: "~",
       });
     }
   }
