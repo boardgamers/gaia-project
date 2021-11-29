@@ -1,6 +1,6 @@
-import Engine, { AvailableHex, GaiaHex, HighlightHex, Reward } from "@gaia-project/engine";
+import Engine, { AvailableHex, GaiaHex, Reward } from "@gaia-project/engine";
 import assert from "assert";
-import { ButtonData, ButtonWarning, HexSelection, HighlightHexData } from "../../data";
+import { ButtonData, ButtonWarning, HexSelection, HighlightHex, HighlightHexData } from "../../data";
 import { resourceNames } from "../../data/resources";
 import { tooltipWithShortcut } from "./shortcuts";
 

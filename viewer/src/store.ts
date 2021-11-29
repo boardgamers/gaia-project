@@ -4,7 +4,6 @@ import Engine, {
   Command,
   Faction,
   GaiaHex,
-  HighlightHex,
   Player,
   ResearchField,
   TechTilePos,
@@ -12,7 +11,7 @@ import Engine, {
 import { CubeCoordinates } from "hexagrid";
 import Vue from "vue";
 import Vuex from "vuex";
-import { ButtonData, GameContext, HexSelection, SpecialActionIncome } from "./data";
+import { ButtonData, GameContext, HexSelection, HighlightHex, SpecialActionIncome } from "./data";
 import { FastConversionEvent, MapMode } from "./data/actions";
 import { ExecuteBack, FastConversionTooltips } from "./logic/buttons/types";
 import {

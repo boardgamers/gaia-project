@@ -1,15 +1,8 @@
-import {
-  AdvTechTilePos,
-  AvailableFreeActionData,
-  Command,
-  GaiaHex,
-  HighlightHex,
-  TechTilePos,
-} from "@gaia-project/engine";
+import { AdvTechTilePos, AvailableFreeActionData, Command, GaiaHex, TechTilePos } from "@gaia-project/engine";
 import { CubeCoordinates } from "hexagrid";
 import { ActionPayload, SubscribeActionOptions, SubscribeOptions } from "vuex";
 import { EmitCommandParams } from "../../components/Commands.vue";
-import { ButtonData, HexSelection } from "../../data";
+import { ButtonData, HexSelection, HighlightHex } from "../../data";
 import { FastConversionButton } from "../../data/actions";
 
 export type FastConversionTooltips = { [key in FastConversionButton]?: string };

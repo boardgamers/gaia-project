@@ -21,9 +21,9 @@ export function terraformingCost(d: PlayerData, steps: number, replay: boolean):
   return new Reward(cost, Resource.Ore);
 }
 
-export type QicNeeded = { amount: number; distance: number; warning?: BuildWarning } | null;
+export type QicNeeded = { amount: number; distance: number; warning?: BuildWarning };
 
-export function qicForDistance(map: SpaceMap, hex: GaiaHex, pl: PlayerObject, replay: boolean): QicNeeded {
+export function qicForDistance(map: SpaceMap, hex: GaiaHex, pl: PlayerObject, replay: boolean): QicNeeded | null {
   const distance = (acceptGaiaFormer: boolean) => {
     const hexes = acceptGaiaFormer
       ? Array.from(map.grid.values()).filter((loc) => loc.data.player === pl.player)
@@ -41,7 +41,7 @@ export function qicForDistance(map: SpaceMap, hex: GaiaHex, pl: PlayerObject, re
     // there's no reason to activate the booster and not use it
     return null;
   }
-  const qicWithGaiaFormer = qic(pl.data.temporaryRange, distance(this));
+  const qicWithGaiaFormer = qic(pl.data.temporaryRange, distance(true));
   return {
     amount: qicNeeded,
     distance: d,

@@ -167,14 +167,11 @@ type AvailableCommand<C extends Command = Command> = __AvailableCommand<C, Comma
 
 export default AvailableCommand;
 
-export type HighlightHex = {
+export type AvailableHex = {
   cost?: string;
   warnings?: BuildWarning[];
-  building?: Building;
-  hideBuilding?: Building;
-  preventClick?: boolean;
+  coordinates: string;
 };
-export type AvailableHex = HighlightHex & { coordinates: string };
 
 export type AvailableBuilding = AvailableHex & {
   building: Building;

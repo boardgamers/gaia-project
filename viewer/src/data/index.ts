@@ -3,9 +3,10 @@ import {
   AdvTechTilePos,
   BoardAction,
   Booster,
+  Building,
+  BuildWarning,
   Federation,
   GaiaHex,
-  HighlightHex,
   Reward,
   TechTile,
   TechTilePos,
@@ -55,6 +56,14 @@ export interface ButtonData {
   subscription?: () => void;
 }
 
+export type HighlightHex = {
+  cost?: string;
+  warnings?: BuildWarning[];
+  building?: Building;
+  hideBuilding?: Building;
+  preventClick?: boolean;
+  class?: string;
+};
 export type HighlightHexData = Map<GaiaHex, HighlightHex>;
 export type HexSelection = {
   hexes: HighlightHexData;
