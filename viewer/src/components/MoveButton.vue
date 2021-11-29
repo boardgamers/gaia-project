@@ -185,11 +185,11 @@ export default class MoveButton extends Vue implements MoveButtonController {
   }
 
   hover() {
-    this.button.hover?.enter();
+    this.button.hover?.enter(this.button);
   }
 
   leave() {
-    this.button.hover?.leave();
+    this.button.hover?.leave(this.button);
   }
 
   get warningPreference(): WarningsPreference {
