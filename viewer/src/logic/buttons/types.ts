@@ -24,6 +24,8 @@ export interface CommandController {
   readonly customButtons: ButtonData[];
   readonly subscriptions: { [key in Command]?: () => void };
 
+  readonly temporaryRange: number;
+
   undo();
 
   handleCommand(command: string, source?: ButtonData);

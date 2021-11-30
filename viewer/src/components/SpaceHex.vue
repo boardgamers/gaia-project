@@ -360,6 +360,10 @@ svg {
       opacity: 0.7;
     }
 
+    &.range {
+      opacity: 0.8;
+    }
+
     &.warn {
       fill: red;
     }
