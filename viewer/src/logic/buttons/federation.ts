@@ -17,7 +17,7 @@ import { federationData } from "../../data/federations";
 import { moveWarnings } from "../../data/warnings";
 import { tooltipWithShortcut } from "./shortcuts";
 import { CommandController } from "./types";
-import { customHexSelection, textButton } from "./utils";
+import { autoClickButton, customHexSelection, textButton } from "./utils";
 import { buttonWarning, commonButtonWarning, resourceWasteWarning, rewardWarnings } from "./warnings";
 
 type Cycler = {
@@ -52,7 +52,7 @@ function customFederationButton(controller: CommandController, fedTypeButtons: B
     label: "Custom location",
     shortcuts: ["c"],
     buttons: [
-      textButton({
+      autoClickButton({
         label: "Select planets and empty space to be included in the federation",
         buttons: [
           textButton({
