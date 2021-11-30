@@ -639,6 +639,10 @@ export default class Commands extends Vue implements CommandController {
     this.handleCommand(commandBody.join(" "), button, warnings, times);
   }
 
+  get temporaryRange(): number {
+    return this.currentMove.includes("range+3") ? 3 : 0;
+  }
+
   private updater = 0;
   public subscriptions: { [key in Command]?: () => void } = {};
   private commandTitles: string[] = [];

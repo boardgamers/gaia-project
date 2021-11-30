@@ -151,9 +151,9 @@ function buildingButton(
     const map = engine.map;
     for (const hex of map.grid.values()) {
       if (hex.data.planet == Planet.Empty) {
-        const qicNeeded = qicForDistance(map, hex, player, false);
+        const qicNeeded = qicForDistance(map, hex, player, false, controller.temporaryRange);
         if (qicNeeded && qicNeeded.amount <= player.data.qics) {
-          hexes.hexes.set(hex, { preventClick: true, class: qicNeeded.amount > 0 ? "qic" : "light" });
+          hexes.hexes.set(hex, { preventClick: true, class: qicNeeded.amount > 0 ? "qic range" : "range" });
         }
       }
     }
