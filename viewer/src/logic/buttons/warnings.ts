@@ -54,7 +54,7 @@ export function commonButtonWarning(
   warnings: string[][],
   translate = (s: string) => s
 ): ButtonWarning | null {
-  if (warnings.every((b) => b?.length > 0)) {
+  if (warnings.length > 0 && warnings.every((b) => b?.length > 0)) {
     const common = warnings[0].filter((w) => warnings.every((b) => b.includes(w))).map((w) => translate(w));
     return {
       title: `Every possible ${subject} has a warning`,
