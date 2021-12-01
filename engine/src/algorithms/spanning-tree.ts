@@ -80,7 +80,7 @@ function spanningTreeWithHeuristic<T>(
     }
   };
 
-  let minScore = maxAdditional === -1 ? grid.size + 1 : destHexes.length + maxAdditional + 1;
+  let minScore = maxAdditional === -1 ? grid.size + 1 : maxAdditional + 1;
   let bestSolution: Hex<T>[];
 
   for (const startingPoint of startingPoints) {

@@ -60,7 +60,7 @@ describe("Federations", () => {
     ).to.throw("Federation requires too many satellites");
   });
 
-  it.only("should show a federation for bescods", function () {
+  it("should show a federation for bescods", function () {
     this.timeout(10000);
 
     const engine = new Engine(game6.moveHistory, game6.options);
