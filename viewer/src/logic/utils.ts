@@ -1,4 +1,6 @@
-import Engine, { Phase } from "@gaia-project/engine";
+import Engine, { GaiaHex, Phase, PlayerEnum, SpaceMap } from "@gaia-project/engine";
+import { upgradedBuildings } from "@gaia-project/engine/src/buildings";
+import { LEECHING_DISTANCE } from "@gaia-project/engine/src/engine";
 
 export function phaseBeforeSetupBuilding(data: Engine): boolean {
   return (
@@ -24,4 +26,21 @@ export function radiusTranslate(radius: number, index: number, positions: number
   const x = radius * Math.sin(((-180 + index * deg) * Math.PI) / 180);
   const y = radius * Math.cos(((-180 + index * deg) * Math.PI) / 180);
   return `translate(${x}, ${y})`;
+}
+
+export function leechPlanets(map: SpaceMap, player: PlayerEnum, hex: GaiaHex): GaiaHex[] {
+  return Array.from(map.grid.values()).filter(
+    (h) => h.colonizedBy(player) && map.distance(h, hex) <= LEECHING_DISTANCE
+  );
+}
+
+export function upgradableBuildingsOfOtherPlayers(engine: Engine, hex: GaiaHex, player: PlayerEnum): number {
+  return hex
+    .occupyingPlayers()
+    .filter(
+      (p) =>
+        p != player &&
+        hex.isMainOccupier(p) &&
+        upgradedBuildings(hex.buildingOf(p), engine.player(p).faction).length > 0
+    ).length;
 }

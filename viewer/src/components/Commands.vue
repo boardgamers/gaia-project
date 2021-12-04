@@ -9,7 +9,7 @@
         <span v-else>
           <span v-html="[playerName, ...titles].join(' - ')" />
           <span class="smaller small">{{ currentTurnLog }}</span>
-          <Undo v-if="canUndo" />
+          <Undo v-if="canUndo" transform="scale(1.2)" />
         </span>
       </h5>
     </div>

@@ -24,7 +24,7 @@ export type FastConversion = FastConversionEvent & {
   filter?: (Player) => boolean;
 };
 
-export type MapModeType = "default" | "federations" | "sectors" | "planetType";
+export type MapModeType = "default" | "federations" | "sectors" | "leech" | "planetType";
 
 export type MapMode = {
   type: MapModeType;

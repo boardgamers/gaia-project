@@ -61,10 +61,11 @@
       :key="`${player}-${index}`"
     />
     <use
-      v-if="sectorHighlight !== null"
+      v-if="sectorHighlight"
       xlink:href="#space-hex"
       :class="['space-hex-federation', 'planet', 'planet-fill', playerPlanet(sectorHighlight)]"
     />
+    <use v-if="leechHighlightClass" xlink:href="#space-hex" :class="['space-hex-federation', leechHighlightClass]" />
   </g>
 </template>
 
@@ -89,11 +90,12 @@ import { planetNames } from "../data/planets";
 import { HexSelection, HighlightHex, HighlightHexData } from "../data";
 import { moveWarnings } from "../data/warnings";
 import { factionName } from "../data/factions";
-import { radiusTranslate } from "../logic/utils";
+import { leechPlanets, radiusTranslate, upgradableBuildingsOfOtherPlayers } from "../logic/utils";
 import { Ship } from "@gaia-project/engine/src/enums";
 import { shipsInHex } from "@gaia-project/engine/src/available-command";
 import { MapMode, MapModeType } from "../data/actions";
 import { isFree } from "../logic/buttons/utils";
+import { max } from "lodash";
 
 type BuildingOverride = { building: BuildingEnum; player: PlayerEnum };
 @Component<SpaceHex>({
@@ -264,10 +266,29 @@ export default class SpaceHex extends Vue {
   get sectorHighlight(): PlayerEnum | null {
     const mode = this.playerMapMode("sectors");
     return mode
-        && this.planet === "e"
-        && this.player(mode.player).data.occupied.some((hex) => hex.colonizedBy(mode.player) && hex.data.sector === this.hex.data.sector)
-          ? mode.player
-          : null;
+    && this.planet === "e"
+    && this.player(mode.player).data.occupied.some((hex) => hex.colonizedBy(mode.player) && hex.data.sector === this.hex.data.sector)
+      ? mode.player
+      : null;
+  }
+
+  get leechHighlightClass(): string | null {
+    const mode = this.playerMapMode("leech");
+
+    if (mode) {
+      const hex = this.hex;
+      const p = mode.player;
+      const maxLeech = max(leechPlanets(this.map, p, hex).map(h => this.player(p).buildingValue(h)));
+      if (maxLeech) {
+        const otherPlayers = upgradableBuildingsOfOtherPlayers(this.engine, hex, p);
+        if (otherPlayers) {
+          return `leech power${maxLeech} planet`;
+        } else {
+          return "leech empty";
+        }
+      }
+    }
+    return null;
   }
 
   playerPlanet(player: PlayerEnum): PlanetEnum {
@@ -385,6 +406,33 @@ svg {
     stroke-width: 0.1;
     fill: none;
     pointer-events: none;
+
+    &.leech {
+      &.empty {
+        fill: white;
+        opacity: 0.3;
+      }
+
+      &.power1 {
+        fill: var(--ice);
+      }
+
+      &.power2 {
+        fill: var(--desert);
+      }
+
+      &.power3 {
+        fill: var(--volcanic);
+      }
+
+      &.power4 {
+        fill: var(--swamp);
+      }
+
+      &.power5 {
+        fill: var(--current-round);
+      }
+    }
   }
 
   .sector-name {

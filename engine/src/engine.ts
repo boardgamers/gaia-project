@@ -62,7 +62,7 @@ import { roundScorings } from "./tiles/scoring";
 import { isAdvanced } from "./tiles/techs";
 import { isVersionOrLater } from "./utils";
 
-const LEECHING_DISTANCE = 2;
+export const LEECHING_DISTANCE = 2;
 
 export enum AuctionVariant {
   /** Finish choosing all factions first, then start an auction phase */
