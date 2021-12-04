@@ -88,6 +88,7 @@ import { callOnShow } from "../logic/buttons/utils";
 import { commandButtons, replaceRepeat } from "../logic/buttons/commands";
 import { CubeCoordinates } from "hexagrid";
 import { autoClickStrategy } from "../logic/buttons/autoClick";
+import engine from "@gaia-project/engine";
 
 let show = false;
 
@@ -243,7 +244,7 @@ export default class Commands extends Vue implements CommandController {
   }
 
   get titles() {
-    return this.commandTitles.length === 0 ? ["Your turn"] : this.commandTitles;
+    return this.commandTitles.length === 0 ? [`Your turn - Round ${this.engine.round}`] : this.commandTitles;
   }
 
   get warnings(): string[] {
