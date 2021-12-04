@@ -34,7 +34,8 @@ type Preference =
   | "highlightRecentActions"
   | "logPlacement"
   | "warnings"
-  | "autoClick";
+  | "autoClick"
+  | "statistics";
 
 export enum LoadFromJsonType {
   load = "load",
@@ -99,6 +100,7 @@ const gaiaViewer = {
       autoClick: process.env.VUE_APP_autoClick ?? "smart",
       logPlacement: process.env.VUE_APP_logPlacement ?? "bottom",
       warnings: process.env.VUE_APP_warnings ?? "modalDialog",
+      statistics: process.env.VUE_APP_statistics ?? "auto",
     },
     player: null,
   } as State,

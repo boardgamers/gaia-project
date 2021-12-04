@@ -72,6 +72,7 @@ import {
   ChartSetup,
 } from "../logic/charts/chart-factory";
 import { tableHeader, tableItems } from "../logic/charts/table";
+import { StatisticsDisplay } from "../data";
 
 Chart.register(
   LineController,
@@ -130,9 +131,16 @@ export default class Charts extends Vue {
   }
 
   mounted() {
+    const pref = this.$store.state.preferences.statistics as StatisticsDisplay;
+    let style = pref === "table" ? 1 : 0;
     if (window.innerWidth < 500) {
-      this.chartStyle = this.chartStyles[3];
+      if (pref === "auto") {
+        style = 3;
+      } else {
+        style += 2;
+      }
     }
+    this.chartStyle = this.chartStyles[style];
     this.loadChart();
   }
 
