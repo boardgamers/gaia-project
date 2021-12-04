@@ -2,7 +2,7 @@
   <svg viewBox="-15 -15 30 30" width="50" height="50" style="overflow: visible">
     <g :transform="transform">
       <Resource class="undo-button" kind="pay-pw" />
-      <text class="undo-text" x="0" y="2">undo</text>
+      <text class="undo-text" x="0" y="2">Back</text>
       <circle class="undo-button" r="7" @click="undo" />
     </g>
   </svg>
@@ -30,7 +30,7 @@ export default class Undo extends Vue {
 
 .undo-text {
   pointer-events: none;
-  font-size: 5.5px;
+  font-size: 5px;
   fill: white;
   font-weight: 600;
   text-anchor: middle;

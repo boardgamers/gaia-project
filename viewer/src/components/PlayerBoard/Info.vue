@@ -39,12 +39,17 @@
           </text>
         </g>
         <Resource kind="q" :count="data.qics" :center-left="true" transform="translate(12.5,0) scale(0.1)" />
-        <Undo v-if="canUndo" :transform="`translate(6.1,${height - 32.3}) scale(.08)`" />
-        <use
-          xlink:href="#info"
-          :transform="`translate(34.7,${height - 6.8}) scale(.1)`"
-          v-b-tooltip.html="buttonTooltip"
-        />
+        <g v-b-tooltip title="Leech network - number of upgradable buildings by other players within leeching distance" :transform="`translate(33.5,${height - 16.6}) scale(.08)`">
+          <image xlink:href="../../assets/other/network.svg" :height=155/211*22 width="22" x="0" y="0"
+          transform="scale(2)" @click="toggleMapMode('leech')" style="cursor: pointer" />
+          <text class="board-text" transform="translate(22,38) scale(10)" text-anchor="middle">
+            {{ leechNetwork }}
+          </text>
+        </g>
+        <g :transform="`translate(34.7,${height - 6.8}) scale(.1)`">
+          <Undo v-if="canUndo" transform="translate(-8, -8) scale(.9)" />
+          <use v-else xlink:href="#info" v-b-tooltip.html="buttonTooltip" />
+        </g>
         <g transform="translate(15, -3) scale(0.2)">
           <VictoryPoint width="15" height="15" />
           <text class="vp-text" x="7" y="10">{{ data.victoryPoints }}</text>
@@ -54,7 +59,7 @@
           </g>
         </g>
         <g transform="translate(15.2, 1.4)" v-b-tooltip title="Satellites and space stations, satellites left ">
-          <image xlink:href="../../assets/resources/satellite.svg" :height=155/211*22 width="22" x="-11" y="-8"
+          <image xlink:href="../../assets/other/satellite.svg" :height=155/211*22 width="22" x="-11" y="-8"
           transform="scale(0.07)" />
           <text class="board-text" transform="translate(1,0) scale(0.8)"
             >{{ data.satellites + data.buildings.sp }}, {{ satellitesLeft }}
@@ -62,7 +67,7 @@
         </g>
         <g transform="translate(12.4, 3.5)" v-b-tooltip title="Sectors with a colonized planet">
           <image xlink:href="../../assets/conditions/sector.svg" :height=155/211*22 width="22" x="-11" y="-8"
-          transform="scale(0.1)" @click="toggleMapMode('sectors')" style="cursor: pointer"/>
+          transform="scale(0.1)" @click="toggleMapMode('sectors')" style="cursor: pointer" />
           <text class="board-text" transform="translate(1.4,-.1) scale(0.8)" text-anchor="middle">{{ sectors }}</text>
         </g>
         <g
@@ -121,11 +126,11 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { uniq } from "lodash";
+import { sum, uniq } from "lodash";
 import Resource from "../Resource.vue";
 import Undo from "../Resources/Undo.vue";
-import {
-  Faction,
+import Engine, {
+  Faction, GaiaHex,
   MAX_SATELLITES,
   Player,
   PlayerData,
@@ -135,6 +140,8 @@ import {
 import VictoryPoint from "../Resources/VictoryPoint.vue";
 import { FastConversionEvent, MapMode, MapModeType } from "../../data/actions";
 import { factionName } from "../../data/factions";
+import { LEECHING_DISTANCE } from "@gaia-project/engine/src/engine";
+import { leechPlanets, upgradableBuildingsOfOtherPlayers } from "../../logic/utils";
 
 @Component({
   components: {
@@ -156,7 +163,7 @@ export default class PlayerBoardInfo extends Vue {
   @Prop()
   player: Player;
 
-  get engine() {
+  get engine(): Engine {
     return this.$store.state.data;
   }
 
@@ -173,7 +180,7 @@ export default class PlayerBoardInfo extends Vue {
   }
 
   toggleMapMode(mode: MapModeType) {
-    this.$store.commit("toggleMapMode", { type: mode, player: this.player.player  } as MapMode);
+    this.$store.commit("toggleMapMode", { type: mode, player: this.player.player } as MapMode);
   }
 
   convertTooltip(resource: ResourceEnum): string | null {
@@ -191,6 +198,7 @@ export default class PlayerBoardInfo extends Vue {
       "<li>Click on the planets to highlight all planets of this type</li>" +
       "<li>Click on the sectors icon to highlight all colonized sectors (also works for other players)</li>" +
       "<li>Click on the federation icon to highlight all federation (also works for other players)</li>" +
+      "<li>Click on the network icon (right of power bowl) to leech network - how much power can be gained if other players upgrade buildings</li>" +
       "</ul>";
   }
 
@@ -223,6 +231,20 @@ export default class PlayerBoardInfo extends Vue {
 
   get satellitesLeft(): number {
     return MAX_SATELLITES - this.data.satellites;
+  }
+
+  get leechNetwork(): number {
+    const map = this.engine.map;
+    const hexes: GaiaHex[] = Array.from(map.grid.values());
+    const player = this.player.player;
+
+    return sum(hexes.map(hex => {
+      const b = upgradableBuildingsOfOtherPlayers(this.engine, hex, player);
+      if (b > 0 && leechPlanets(map, player, hex).length > 0) {
+        return b;
+      }
+      return 0;
+    }));
   }
 }
 </script>
