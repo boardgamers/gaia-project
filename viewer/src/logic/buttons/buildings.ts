@@ -31,13 +31,14 @@ export function hexSelectionButton(
   highlightOnClick?: Building,
   hideOnClick?: { hex: GaiaHex; building: Building }
 ): ButtonData {
-  assert(button.hexes, "hexes missing");
+  const hexSelection = button.hexes;
+  assert(hexSelection, "hexes missing");
   assert(!button.buttons, "buttons already exists");
   assert(!button.warning, "warning already exists");
 
   let i = 1;
 
-  const hexes = button.hexes.hexes;
+  const hexes = hexSelection.hexes;
 
   const sortKey = (h: HighlightHex): string => (isFree(h) ? "0" : h.cost);
 
@@ -45,6 +46,14 @@ export function hexSelectionButton(
     .filter((h) => !hexes.get(h).preventClick)
     .map((hex) => {
       const b = newLocationButton(hex);
+      assert(!b.command, "command already exists");
+      assert(!b.label, "label already exists");
+      assert(!b.shortcuts, "shortcuts already exists");
+      assert(!b.warning, "warning already exists");
+      assert(!b.tooltip, "tooltip already exists");
+      assert(!b.conversion, "conversion already exists");
+      assert(!b.hover, "hover already exists");
+
       b.command = hex.toString();
       const shortcut = String(i);
       if (i <= 9) {
@@ -61,6 +70,19 @@ export function hexSelectionButton(
         b.conversion = { from: Reward.parse(highlightHex.cost), to: [] };
       }
       b.tooltip = tooltipWithShortcut(null, b.warning);
+
+      b.hover = {
+        enter: () => {
+          const h = Object.assign({}, hexSelection);
+          h.hexes = new Map(Array.from(hexes.entries()).filter((e) => e[0] === hex));
+          h.selectedLight = false;
+          controller.highlightHexes(h);
+        },
+        leave: () => {
+          controller.highlightHexes(hexSelection);
+          controller.disableTooltips();
+        },
+      };
 
       addOnShow(b, () => {
         controller.subscribeHexClick(
@@ -254,7 +276,12 @@ export function buildButtons(
   return ret;
 }
 
-function moveTargetButton(controller: CommandController, data: AvailableMoveShipData, target: GaiaHex, engine: Engine) {
+function moveTargetButton(
+  controller: CommandController,
+  data: AvailableMoveShipData,
+  target: GaiaHex,
+  engine: Engine
+): ButtonData {
   const actions = data.targets.find((t) => t.location.coordinates === target.toString()).actions;
   if (actions.length == 0) {
     return textButton({});
@@ -285,7 +312,7 @@ function moveTargetButton(controller: CommandController, data: AvailableMoveShip
   });
 }
 
-function moveSourceButton(controller: CommandController, engine: Engine, data: AvailableMoveShipData) {
+function moveSourceButton(controller: CommandController, engine: Engine, data: AvailableMoveShipData): ButtonData {
   return hexSelectionButton(
     controller,
     autoClickButton({
