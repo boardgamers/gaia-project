@@ -70,7 +70,7 @@
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { Player } from "@gaia-project/engine";
-import { ButtonData, LogPlacement, WarningsPreference } from "../data";
+import { ButtonData, WarningsPreference } from "../data";
 import Booster from "./Booster.vue";
 import TechTile from "./TechTile.vue";
 import ButtonContent from "./Resources/ButtonContent.vue";

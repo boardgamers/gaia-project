@@ -80,6 +80,12 @@ export enum WarningsPreference {
   ModalDialog = "modalDialog", //including button color
 }
 
+export enum StatisticsDisplay {
+  auto = "auto", //depending on screen size
+  table = "table",
+  charts = "charts",
+}
+
 export interface GameContext {
   highlighted: {
     sectors: CubeCoordinates[];
@@ -98,7 +104,5 @@ export interface GameContext {
   hasCommandChain: boolean;
   autoClick: boolean[][];
 
-  logPlacement: LogPlacement;
-  warnings: WarningsPreference;
   mapModes: MapMode[];
 }
