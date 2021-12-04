@@ -58,7 +58,10 @@
         <h4>Recent changes</h4>
         <h5>2021-12-04</h5>
         <ul>
-          <li>Click on the network icon (right of power bowl) to leech network - how much power can be gained if other players upgrade buildings</li>
+          <li>
+            Click on the network icon (right of power bowl) to leech network - how much power can be gained if other
+            players upgrade buildings
+          </li>
           <li>Highlight building location when hovering a building location button</li>
           <li>New Preference: display style of charts</li>
         </ul>

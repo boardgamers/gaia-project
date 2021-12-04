@@ -39,7 +39,11 @@
           </text>
         </g>
         <Resource kind="q" :count="data.qics" :center-left="true" transform="translate(12.5,0) scale(0.1)" />
-        <g v-b-tooltip title="Leech network - number of upgradable buildings by other players within leeching distance" :transform="`translate(33.5,${height - 16.6}) scale(.08)`">
+        <g
+          v-b-tooltip
+          title="Leech network - number of upgradable buildings by other players within leeching distance"
+          :transform="`translate(33.5,${height - 16.6}) scale(.08)`"
+        >
           <image xlink:href="../../assets/other/network.svg" :height=155/211*22 width="22" x="0" y="0"
           transform="scale(2)" @click="toggleMapMode('leech')" style="cursor: pointer" />
           <text class="board-text" transform="translate(22,38) scale(10)" text-anchor="middle">
