@@ -22,7 +22,6 @@ import { buttonWarning, commonButtonWarning, resourceWasteWarning, rewardWarning
 
 type Cycler = {
   currentIndex: number;
-  next: () => void;
   locationButtons: ButtonData[];
   activateButton: (button: ButtonData) => void;
 };
@@ -172,12 +171,11 @@ function cycleButtons(
 
     ret.push(okButton);
 
-    cycler.next = cycle(1);
     ret.push(
       textButton({
         label: "Next",
         shortcuts: ["n"],
-        onClick: cycler.next,
+        onClick: cycle(1),
       })
     );
   }
@@ -206,7 +204,6 @@ export function federationButton(
 
   const cycler: Cycler = {
     currentIndex: 0,
-    next: () => {},
     locationButtons: [],
     activateButton: () => {},
   };
@@ -236,9 +233,5 @@ export function federationButton(
     command: Command.FormFederation,
     buttons: buttons,
     warning: commonWarnings,
-    onClick: (button) => {
-      cycler.next(); //highlight the first federation
-      controller.emitButtonCommand(button);
-    },
   });
 }
