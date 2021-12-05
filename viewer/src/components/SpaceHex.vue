@@ -5,8 +5,9 @@
     <text class="sector-name" v-if="isCenter">
       {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
     </text>
+    <use v-if="leechHighlightClass" xlink:href="#space-hex" :class="['space-hex-federation', leechHighlightClass]" />
     <Planet
-      v-if="hex.data.planet !== 'e'"
+      v-if="showPlanet"
       :planet="hex.data.planet"
       :faction="faction(hex.data.player)"
       :classes="planetClasses(hex)"
@@ -50,7 +51,7 @@
       :transform="shipTransform(i)"
     />
     <polygon
-      v-for="(player, index) in hex.data.federations || []"
+      v-for="(player, index) in federations"
       :points="hexCorners.map((p) => `${p.x * (1 - (index + 0.5) / 8)},${p.y * (1 - (index + 0.5) / 8)}`).join(' ')"
       :class="{
         'space-hex-federation': true,
@@ -65,7 +66,6 @@
       xlink:href="#space-hex"
       :class="['space-hex-federation', 'planet', 'planet-fill', playerPlanet(sectorHighlight)]"
     />
-    <use v-if="leechHighlightClass" xlink:href="#space-hex" :class="['space-hex-federation', leechHighlightClass]" />
   </g>
 </template>
 
@@ -177,9 +177,8 @@ export default class SpaceHex extends Vue {
     const ret = ["space-hex"];
 
     const selection = this.selection;
-    const modes = this.mapModes.filter(m => m.planet);
-    if (modes.length > 0) {
-      if (modes.filter(m => m.planet === this.planet).length > 0) {
+    if (this.mapModes.length > 0) {
+      if (this.planetMapMode) {
         ret.push("bold");
       }
     } else if (selection) {
@@ -251,8 +250,24 @@ export default class SpaceHex extends Vue {
     return this.$store.getters.mapModes;
   }
 
+  get planetMapMode(): boolean {
+    return this.mapModes.filter(m => m.planet === this.planet).length > 0;
+  }
+
   private playerMapMode(type: MapModeType): MapMode | null {
     return this.mapModes.find(mode => mode.type === type);
+  }
+
+  get federations(): PlayerEnum[] {
+    return this.leechHighlightClass ? [] : (this.hex.data.federations || []);
+  }
+
+  get showPlanet(): boolean {
+    if (this.hex.data.planet === "e") {
+      return false;
+    }
+    const c = this.leechHighlightClass;
+    return c === null || !c.includes("planet");
   }
 
   federationHighlight(player: PlayerEnum): boolean {
@@ -273,6 +288,9 @@ export default class SpaceHex extends Vue {
   }
 
   get leechHighlightClass(): string | null {
+    if (this.planetMapMode) {
+      return null;
+    }
     const mode = this.playerMapMode("leech");
 
     if (mode) {
@@ -283,6 +301,8 @@ export default class SpaceHex extends Vue {
         const otherPlayers = upgradableBuildingsOfOtherPlayers(this.engine, hex, p);
         if (otherPlayers) {
           return `leech power${maxLeech} planet`;
+        } else if (hex.colonizedBy(mode.player)) {
+          return null;
         } else {
           return "leech empty";
         }
@@ -414,7 +434,7 @@ svg {
       }
 
       &.power1 {
-        fill: var(--ice);
+        fill: var(--terra);
       }
 
       &.power2 {
