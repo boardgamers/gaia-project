@@ -88,7 +88,6 @@ import { callOnShow } from "../logic/buttons/utils";
 import { commandButtons, replaceRepeat } from "../logic/buttons/commands";
 import { CubeCoordinates } from "hexagrid";
 import { autoClickStrategy } from "../logic/buttons/autoClick";
-import engine from "@gaia-project/engine";
 
 let show = false;
 
@@ -520,10 +519,9 @@ export default class Commands extends Vue implements CommandController {
     }
     try {
       button.handlingClick = true;
-      const warning = button.warning;
-      const activeButton = this.isActiveButton(button);
-      if (warning && !activeButton && this.warningPreference === 'modalDialog') {
+      if (this.shouldShowModal(button)) {
         try {
+          const warning = button.warning;
           const c = this.$createElement;
           const message = warning.body.length == 1 ? warning.body[0] : warning.body.map((w) => c("ul", [c("li", [w])]));
           const okClicked = await this.$bvModal.msgBoxConfirm(message, {
@@ -548,7 +546,7 @@ export default class Commands extends Vue implements CommandController {
       }
 
       // Remove highlights caused by another button
-      if (!activeButton) {
+      if (!this.isActiveButton(button)) {
         if (!button.keepContext) {
           this.clearContext();
         }
@@ -575,6 +573,18 @@ export default class Commands extends Vue implements CommandController {
     } finally {
       button.handlingClick = false;
     }
+  }
+
+  private shouldShowModal(button: ButtonData) {
+    if (button.warning && !this.isActiveButton(button)) {
+      if (this.warningPreference === "modalDialog") {
+        return true;
+      }
+      if (this.warningPreference === "buttonText" && (button.boardAction || button.specialAction || button.booster || button.tech)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   get warningPreference(): WarningsPreference {
