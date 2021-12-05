@@ -5,7 +5,6 @@ import {
   Booster,
   Building,
   BuildWarning,
-  Federation,
   GaiaHex,
   Reward,
   TechTile,
