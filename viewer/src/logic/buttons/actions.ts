@@ -49,7 +49,7 @@ export function specialActionButton(income: string, player: Player | null): Butt
   });
 }
 
-export function specialActionsButton(command: AvailableCommand<Command.Special>, player: Player) {
+export function specialActionsButton(command: AvailableCommand<Command.Special>, player: Player): ButtonData {
   return {
     label: "Special Action",
     shortcuts: ["s"],
