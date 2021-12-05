@@ -37,7 +37,6 @@ export interface ButtonData {
   hover?: { enter: (button: ButtonData) => void; leave: (button: ButtonData) => void };
   boardActions?: BoardAction[];
   specialActions?: SpecialActionIncome[];
-  federations?: Federation[];
   needConfirm?: boolean;
   warning?: ButtonWarning;
   warningInLabel?: boolean;

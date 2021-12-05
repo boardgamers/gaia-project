@@ -61,7 +61,7 @@
       :key="`${player}-${index}`"
     />
     <use
-      v-if="sectorHighlight"
+      v-if="sectorHighlight !== null"
       xlink:href="#space-hex"
       :class="['space-hex-federation', 'planet', 'planet-fill', playerPlanet(sectorHighlight)]"
     />
