@@ -172,7 +172,11 @@ const gaiaViewer = {
 
     toggleMapMode(state: State, mapMode: MapMode) {
       const modes = state.context.mapModes;
-      const old = modes.find((m) => m.type == mapMode.type && m.planet == mapMode.planet);
+      const old =
+        mapMode.type === "planetType"
+          ? modes.find((m) => m.type == "planetType" && m.planet == mapMode.planet)
+          : modes.find((m) => m.planet == null);
+
       if (old) {
         modes.splice(modes.indexOf(old), 1);
         if (JSON.stringify(old) !== JSON.stringify(mapMode)) {
