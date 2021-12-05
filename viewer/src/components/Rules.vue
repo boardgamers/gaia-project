@@ -71,7 +71,7 @@
         </ul>
         <h5>2021-11-28</h5>
         <ul>
-          <li>Click on final tiles to highlight sectors or federations on</li>
+          <li>Click on final tiles to see the the sectors or federations (for structures in federations, satellites) of a player</li>
         </ul>
         <h5>2021-11-27</h5>
         <ul>
