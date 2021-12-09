@@ -426,32 +426,32 @@ svg {
     stroke-width: 0.1;
     fill: none;
     pointer-events: none;
+  }
 
-    &.leech {
-      &.empty {
-        fill: white;
-        opacity: 0.3;
-      }
+  .leech {
+    &.empty {
+      fill: white;
+      opacity: 0.3;
+    }
 
-      &.power1 {
-        fill: var(--terra);
-      }
+    &.power1 {
+      fill: var(--res-power);
+    }
 
-      &.power2 {
-        fill: var(--desert);
-      }
+    &.power2 {
+      fill: var(--rt-eco);
+    }
 
-      &.power3 {
-        fill: var(--volcanic);
-      }
+    &.power3 {
+      fill: var(--specialAction);
+    }
 
-      &.power4 {
-        fill: var(--swamp);
-      }
+    &.power4 {
+      fill: var(--rt-terra);
+    }
 
-      &.power5 {
-        fill: var(--current-round);
-      }
+    &.power5 {
+      fill: var(--current-round);
     }
   }
 

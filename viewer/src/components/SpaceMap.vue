@@ -20,6 +20,10 @@
     <FactionWheel transform="translate(-10.2, -8.7) scale(0.65)" />
     <image v-if="showCharts" xlink:href="../assets/other/line-chart.svg" :height=155/211*22 width="22" x="-11" y="-8"
     v-b-modal.chart-button role="button" :transform="`translate(${right - 15}, -10) scale(0.1)`" />
+    <g v-for="(color, i) in colorLegend" :key="i" :transform="`translate(-12.5, ${2.3 + 2 * i}) scale(.8)`">
+      <rect width="2" height="2" class="color-legend leech" :class="color.class" />
+      <text class="color-legend" transform="translate(1, 1.55)">{{ color.text }}</text>
+    </g>
   </svg>
 </template>
 
@@ -72,7 +76,25 @@ export default class SpaceMap extends Vue {
   get right() {
     return (this.sectors || []).length > 7 ? 33.5 : 26;
   }
+
+  get colorLegend(): { class: string; text: string }[] {
+    if (this.$store.getters.mapModes.find(m => m.type === "leech")) {
+      return [...Array(5).keys()].map(i => ({class: `power${i + 1}`, text: String(i + 1)}));
+    }
+    return [];
+  }
 }
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+.color-legend {
+  stroke: black;
+  stroke-width: 0.1px;
+  font-size: 1.5px;
+  text-anchor: middle;
+}
+text.color-legend {
+  fill: white;
+  stroke: white;
+}
+</style>
