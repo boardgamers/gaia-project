@@ -16,13 +16,17 @@ import Engine, {
 import { qicForDistance } from "@gaia-project/engine/src/cost";
 import assert from "assert";
 import { sortBy, sortedUniq } from "lodash";
-import { ButtonData, HighlightHex } from "../../data";
+import { ButtonData, HighlightHex, WarningWithKey } from "../../data";
 import { buildingName, buildingShortcut, shipActionName, shipLetter } from "../../data/building";
 import { moveWarnings } from "../../data/warnings";
 import { prependShortcut, tooltipWithShortcut, withShortcut } from "./shortcuts";
 import { CommandController } from "./types";
 import { addOnClick, addOnShow, autoClickButton, confirmationButton, hexMap, isFree, textButton } from "./utils";
 import { buttonWarnings, commonButtonWarning } from "./warnings";
+
+function hexWarnings(h: HighlightHex): WarningWithKey[] {
+  return h.warnings?.map((w) => ({ disableKey: w, message: moveWarnings[w].text })) ?? [];
+}
 
 export function hexSelectionButton(
   controller: CommandController,
@@ -65,7 +69,7 @@ export function hexSelectionButton(
       }
 
       const highlightHex = hexes.get(hex);
-      b.warning = buttonWarnings(highlightHex.warnings?.map((w) => moveWarnings[w].text));
+      b.warning = buttonWarnings(hexWarnings(highlightHex));
       if (!isFree(highlightHex)) {
         b.conversion = { from: Reward.parse(highlightHex.cost), to: [] };
       }
@@ -111,11 +115,11 @@ export function hexSelectionButton(
       return b;
     });
   button.warning = commonButtonWarning(
+    controller,
     "building location",
     Array.from(hexes.values())
       .filter((h) => !h.preventClick)
-      .map((h) => h.warnings),
-    (w) => moveWarnings[w].text
+      .map((h) => hexWarnings(h))
   );
   return textButton(button);
 }

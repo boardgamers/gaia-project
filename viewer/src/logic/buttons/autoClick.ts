@@ -69,7 +69,7 @@ export function checkAutoClick(controller: CommandController, buttons: ButtonDat
 
   if (
     buttons.length == 1 &&
-    !buttons[0].warning &&
+    controller.enabledButtonWarnings(buttons[0]).length == 0 &&
     !buttons[0].needConfirm &&
     allowAutoClick(strategy.first, buttons[0])
   ) {

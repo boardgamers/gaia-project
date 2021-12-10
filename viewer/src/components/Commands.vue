@@ -80,7 +80,7 @@ import { ButtonData, GameContext, HexSelection, HighlightHex, ModalButtonData, W
 import { factionDesc, factionName, factionShortcut } from "../data/factions";
 import { FactionCustomization } from "@gaia-project/engine/src/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
-import { moveWarnings } from "../data/warnings";
+import { enabledButtonWarnings, isWarningEnabled, moveWarnings } from "../data/warnings";
 import Undo from "./Resources/Undo.vue";
 import { ActionPayload, SubscribeActionOptions, SubscribeOptions } from "vuex";
 import { CommandController, ExecuteBack, FastConversionTooltips } from "../logic/buttons/types";
@@ -331,6 +331,14 @@ export default class Commands extends Vue implements CommandController {
     return this.engine.map;
   }
 
+  isWarningEnabled(disableKey: string): boolean {
+    return isWarningEnabled(disableKey, this.$store.state.preferences);
+  }
+
+  enabledButtonWarnings(button: ButtonData): string[] {
+    return enabledButtonWarnings(button, this.$store.state.preferences);
+  }
+
   get buttons(): ButtonData[] {
     const commands = this.availableCommands;
     if (!commands) {
@@ -341,10 +349,10 @@ export default class Commands extends Vue implements CommandController {
     // const s = autoClickStrategy(this.$store.state.preferences.autoClick, this.preventFirstAutoClick);
     const s = autoClickStrategy("smart", this.preventFirstAutoClick);
     const buttons = commandButtons(commands, this.engine, this.player, this, s);
-    if (this.warningPreference === "buttonText") {
+    if (this.warningPreference === WarningsPreference.ButtonText) {
       for (const button of buttons) {
-        if (button.warning && !button.warningInLabel) {
-          const w = button.warning.body.join(", ");
+        const w = this.enabledButtonWarnings(button).join(", ");
+        if (w.length > 0 && !button.warningInLabel) {
           if (button.longLabel) {
             button.longLabel = `${button.longLabel} (${w})`;
           }
@@ -523,7 +531,8 @@ export default class Commands extends Vue implements CommandController {
         try {
           const warning = button.warning;
           const c = this.$createElement;
-          const message = warning.body.length == 1 ? warning.body[0] : warning.body.map((w) => c("ul", [c("li", [w])]));
+          const w = this.enabledButtonWarnings(button);
+          const message = w.length == 1 ? w[0] : w.map((w) => c("ul", [c("li", [w])]));
           const okClicked = await this.$bvModal.msgBoxConfirm(message, {
             title: warning.title,
             headerClass: "warning",
@@ -576,11 +585,11 @@ export default class Commands extends Vue implements CommandController {
   }
 
   private shouldShowModal(button: ButtonData) {
-    if (button.warning && !this.isActiveButton(button)) {
-      if (this.warningPreference === "modalDialog") {
+    if (this.enabledButtonWarnings(button).length > 0 && !this.isActiveButton(button)) {
+      if (this.warningPreference === WarningsPreference.ModalDialog) {
         return true;
       }
-      if (this.warningPreference === "buttonText" && (button.boardAction || button.specialAction || button.booster || button.tech)) {
+      if (this.warningPreference === WarningsPreference.ButtonText && (button.boardAction || button.specialAction || button.booster || button.tech)) {
         return true;
       }
     }

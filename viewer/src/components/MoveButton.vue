@@ -78,6 +78,7 @@ import BoardAction from "./BoardAction.vue";
 import SpecialAction from "./SpecialAction.vue";
 import { CommandController, MoveButtonController } from "../logic/buttons/types";
 import { callOnShow } from "../logic/buttons/utils";
+import { enabledButtonWarnings } from "../data/warnings";
 
 @Component({
   components: {
@@ -197,7 +198,7 @@ export default class MoveButton extends Vue implements MoveButtonController {
   }
 
   get variant(): string {
-    return this.button.warning && this.warningPreference !== "tooltip" ? "warning" : "secondary";
+    return enabledButtonWarnings(this.button, this.$store.state.preferences).length > 0 && this.warningPreference !== WarningsPreference.Tooltip ? "warning" : "secondary";
   }
 }
 </script>

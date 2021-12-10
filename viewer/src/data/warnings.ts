@@ -1,5 +1,16 @@
 import { BuildWarning } from "@gaia-project/engine";
 import { BrainstoneWarning } from "@gaia-project/engine/src/available-command";
+import { ButtonData } from "./index";
+
+export enum WarningKey {
+  declineFree = "decline-free",
+  resourceWaste = "resource-waste",
+  actionNotUsed = "action-not-used",
+  itarsNotBurned = "itars-not-burned",
+  taklonsNotBurned = "taklons-not-burned",
+  taklonsBrainstoneArea3 = "taklons-brainstone-area3",
+  cannotBeDisabled = "-",
+}
 
 export const moveWarnings: { [key in BuildWarning | BrainstoneWarning]: { text: string } } = {
   "step-booster-not-used": { text: "Step booster is not used." },
@@ -23,3 +34,14 @@ export const moveWarnings: { [key in BuildWarning | BrainstoneWarning]: { text: 
     text: "Some of the 3 brainstone charges are wasted. Convert 3 power charges to 3 credit at once.",
   },
 };
+
+export function isWarningEnabled(disableKey: string, preferences: any) {
+  return preferences[`warning-${disableKey}`] ?? true;
+}
+
+export function enabledButtonWarnings(button: ButtonData, preferences: any): string[] {
+  if (!button.warning) {
+    return [];
+  }
+  return button.warning.body.filter((w) => isWarningEnabled(w.disableKey, preferences)).map((w) => w.message);
+}

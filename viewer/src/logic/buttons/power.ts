@@ -7,9 +7,8 @@ import Engine, {
   PowerArea,
 } from "@gaia-project/engine";
 import { ButtonData, ButtonWarning } from "../../data";
-import { moveWarnings } from "../../data/warnings";
 import { textButton } from "./utils";
-import { buttonWarning, chargeIncomeWarning } from "./warnings";
+import { chargeIncomeWarning, moveButtonWarning } from "./warnings";
 
 function chargeWarning(engine: Engine, player: Player, offer: string): ButtonWarning | null {
   return engine.passedPlayers.includes(player.player) ? chargeIncomeWarning(player, [new Event(offer)]) : null;
@@ -20,7 +19,7 @@ export function brainstoneButtons(data: BrainstoneActionData): ButtonData[] {
     const area = d.area;
     return textButton({
       label: `Brainstone ${area}`,
-      warning: buttonWarning(moveWarnings[d.warning]?.text),
+      warning: moveButtonWarning(d.warning),
       command: `${Command.BrainStone} ${area}`,
       shortcuts: [area == PowerArea.Gaia ? "g" : area.substring("area".length, area.length)],
     });

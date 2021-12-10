@@ -265,7 +265,13 @@ const gaiaViewer = {
 };
 
 function makeStore() {
-  return new Vuex.Store(gaiaViewer);
+  const store = new Vuex.Store(gaiaViewer);
+  for (const k in process.env) {
+    if (k.startsWith("VUE_APP_warning-")) {
+      store.state.preferences[k.substring("VUE_APP_".length)] = process.env[k] === "true";
+    }
+  }
+  return store;
 }
 
 export default makeStore();

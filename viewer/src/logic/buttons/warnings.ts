@@ -1,15 +1,21 @@
 import { applyChargePowers, Event, Player, Resource, Reward } from "@gaia-project/engine";
-import { ButtonWarning } from "../../data";
+import { ButtonWarning, WarningWithKey } from "../../data";
+import { moveWarnings, WarningKey } from "../../data/warnings";
+import { CommandController } from "./types";
 
-export function buttonWarnings(messages?: string[]): ButtonWarning | null {
-  return messages?.length > 0 && { title: "Are you sure?", body: messages };
+export function buttonWarnings(messages: WarningWithKey[]): ButtonWarning | null {
+  return messages.length > 0 && { title: "Are you sure?", body: messages };
 }
 
-export function buttonWarning(message?: string): ButtonWarning | null {
-  return message ? buttonWarnings([message]) : null;
+export function buttonWarning(disableKey: string, message: string): ButtonWarning | null {
+  return message ? buttonWarnings([{ disableKey, message }]) : null;
 }
 
-export function rewardWarnings(player: Player, rewards: Reward[]): string[] {
+export function moveButtonWarning(key?: string): ButtonWarning | null {
+  return key ? buttonWarning(key, moveWarnings[key].type) : null;
+}
+
+export function rewardWarnings(player: Player, rewards: Reward[]): WarningWithKey[] {
   const data = player.data.clone();
   return rewards.flatMap((r) => {
     let waste = 0;
@@ -25,13 +31,13 @@ export function rewardWarnings(player: Player, rewards: Reward[]): string[] {
       waste = resources + r.count - data.getResources(r.type);
     }
     if (waste > 0) {
-      return [`${waste}${r.type} will be wasted.`];
+      return [{ disableKey: WarningKey.resourceWaste, message: `${waste}${r.type} will be wasted.` }];
     }
     return [];
   });
 }
 
-export function passWarningButton(warnings: string[]): ButtonWarning {
+export function passWarningButton(warnings: WarningWithKey[]): ButtonWarning {
   return { title: "Are you sure you want to pass?", body: warnings };
 }
 
@@ -39,26 +45,30 @@ export function chargeIncomeWarning(player: Player, additionalEvents: Event[]) {
   const incomeSelection = player.incomeSelection(additionalEvents);
   if (incomeSelection.remainingChargesAfterIncome < 0) {
     return passWarningButton([
-      `${-incomeSelection.remainingChargesAfterIncome} power charges will be wasted during income phase.`,
+      {
+        disableKey: WarningKey.resourceWaste,
+        message: `${-incomeSelection.remainingChargesAfterIncome} power charges will be wasted during income phase.`,
+      },
     ]);
   }
   return null;
 }
 
-export function resourceWasteWarning(warnings: string[]): ButtonWarning | null {
+export function resourceWasteWarning(warnings: WarningWithKey[]): ButtonWarning | null {
   return warnings.length == 0 ? null : { title: "Resources will be wasted - are you sure?", body: warnings };
 }
 
 export function commonButtonWarning(
+  controller: CommandController,
   subject: string,
-  warnings: string[][],
-  translate = (s: string) => s
+  warnings: WarningWithKey[][]
 ): ButtonWarning | null {
-  if (warnings.length > 0 && warnings.every((b) => b?.length > 0)) {
-    const common = warnings[0].filter((w) => warnings.every((b) => b.includes(w))).map((w) => translate(w));
+  const enabled = warnings.map((list) => list.filter((w) => controller.isWarningEnabled(w.disableKey)));
+  if (enabled.length > 0 && enabled.every((b) => b?.length > 0)) {
+    const common = enabled[0].filter((w) => enabled.every((b) => b.map((c) => c.message).includes(w.message)));
     return {
       title: `Every possible ${subject} has a warning`,
-      body: common.length > 0 ? common : ["Different warnings."],
+      body: common.length > 0 ? common : [{ disableKey: WarningKey.cannotBeDisabled, message: "Different warnings." }],
     } as ButtonWarning;
   }
   return null;

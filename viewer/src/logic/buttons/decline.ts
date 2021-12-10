@@ -1,5 +1,6 @@
 import { AvailableCommand, Command } from "@gaia-project/engine";
 import { ButtonData } from "../../data";
+import { WarningKey } from "../../data/warnings";
 import { textButton } from "./utils";
 import { buttonWarning } from "./warnings";
 
@@ -18,6 +19,6 @@ export function declineButton(command: AvailableCommand<Command.Decline>): Butto
     label: `Decline ${offer}`,
     shortcuts: ["d"],
     command: `${Command.Decline} ${offer}`,
-    warning: buttonWarning(message),
+    warning: buttonWarning(message ? WarningKey.declineFree : null, message),
   });
 }

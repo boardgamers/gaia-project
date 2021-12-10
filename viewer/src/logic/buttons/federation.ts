@@ -14,11 +14,10 @@ import Engine, {
 import { sortBy } from "lodash";
 import { ButtonData, HighlightHex, HighlightHexData } from "../../data";
 import { federationData } from "../../data/federations";
-import { moveWarnings } from "../../data/warnings";
 import { tooltipWithShortcut } from "./shortcuts";
 import { CommandController } from "./types";
 import { autoClickButton, customHexSelection, textButton } from "./utils";
-import { buttonWarning, commonButtonWarning, resourceWasteWarning, rewardWarnings } from "./warnings";
+import { commonButtonWarning, moveButtonWarning, resourceWasteWarning, rewardWarnings } from "./warnings";
 
 type Cycler = {
   currentIndex: number;
@@ -105,7 +104,7 @@ function federationLocationButton(
       ) as HighlightHexData,
     },
     buttons: fedTypeButtons,
-    warning: buttonWarning(fed.warning != null ? moveWarnings[fed.warning].text : null),
+    warning: moveButtonWarning(fed.warning),
     onClick: (button) => {
       if (canHover) {
         controller.handleCommand(button.command, button);
@@ -215,6 +214,7 @@ export function federationButton(
   });
 
   const commonWarnings = commonButtonWarning(
+    controller,
     "federation location",
     buttons.map((b) => b.warning?.body ?? [])
   );

@@ -2,7 +2,7 @@
   <svg width="56" height="56" viewBox="-28 -28 56 56" style="overflow: visible">
     <g
       :transform="transform"
-      :class="['boardAction', kind, { highlighted, recent, warning: button.warning }]"
+      :class="['boardAction', kind, { highlighted, recent, warning }]"
       v-b-tooltip.html
       :title="button.tooltip"
     >
@@ -60,6 +60,7 @@ import Engine, {
 import Resource from "./Resource.vue";
 import SpecialAction from "./SpecialAction.vue";
 import { boardActionButton } from "../logic/buttons/actions";
+import { enabledButtonWarnings } from "../data/warnings";
 
 @Component<BoardAction>({
   components: {
@@ -93,6 +94,10 @@ export default class BoardAction extends Vue {
   get button() {
     const player = this.$store.state.player?.index ?? this.gameData.currentPlayer;
     return boardActionButton(this.action, this.gameData.player(player));
+  }
+
+  get warning(): boolean {
+    return enabledButtonWarnings(this.button, this.$store.state.preferences).length > 0;
   }
 
   get faded() {

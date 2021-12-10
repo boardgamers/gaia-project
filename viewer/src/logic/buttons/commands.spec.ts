@@ -8,6 +8,7 @@ import {
   Power,
 } from "@gaia-project/engine";
 import { expect } from "chai";
+import { WarningWithKey } from "../../data";
 import { freeActionButton } from "./conversion";
 import { boosterWarning } from "./pass";
 import { withShortcut } from "./shortcuts";
@@ -67,7 +68,7 @@ describe("commands", () => {
       power: Power;
       ores: number;
       booster: Booster;
-      warnings: string[] | null;
+      warnings: WarningWithKey[] | null;
     }[] = [
       {
         name: "no warnings - o booster",
@@ -88,14 +89,24 @@ describe("commands", () => {
         power: new Power(0, 0, 1),
         ores: 15,
         booster: Booster.Booster1,
-        warnings: ["1o will be wasted during income phase."],
+        warnings: [
+          {
+            disableKey: "resource-waste",
+            message: "1o will be wasted during income phase.",
+          },
+        ],
       },
       {
         name: "warnings - 4pw booster",
         power: new Power(1, 1, 0),
         ores: 15,
         booster: Booster.Booster9,
-        warnings: ["1 power charges will be wasted during income phase."],
+        warnings: [
+          {
+            disableKey: "resource-waste",
+            message: "1 power charges will be wasted during income phase.",
+          },
+        ],
       },
     ];
 

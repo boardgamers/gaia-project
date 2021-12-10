@@ -34,7 +34,7 @@ export function tooltipWithShortcut(
   shortcut?: string,
   skip?: string[]
 ) {
-  const warnings = warn?.body?.join(", ");
+  const warnings = warn?.body?.map((w) => w.message)?.join(", ");
 
   if (tooltip && warn) {
     return withShortcut(tooltip, shortcut, skip) + " - " + warnings;
