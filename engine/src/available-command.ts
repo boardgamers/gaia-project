@@ -850,9 +850,11 @@ export function possibleRoundBoosters(engine: Engine, player: Player) {
   return commands;
 }
 
-export function possibleFederations(engine: Engine, player: Player) {
-  const commands = [];
-  const possibleTiles = Object.keys(engine.tiles.federations).filter((key) => engine.tiles.federations[key] > 0);
+export function possibleFederations(engine: Engine, player: Player): AvailableCommand<Command.FormFederation>[] {
+  const commands = Array<AvailableCommand<Command.FormFederation>>();
+  const possibleTiles: Federation[] = Object.keys(engine.tiles.federations)
+    .filter((key) => engine.tiles.federations[key] > 0)
+    .map((f) => f as Federation);
 
   if (possibleTiles.length > 0) {
     if (engine.options.noFedCheck || engine.replay) {

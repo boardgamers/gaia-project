@@ -87,8 +87,8 @@ import Planet from "./Planet.vue";
 import Building from "./Building.vue";
 import { buildingName } from "../data/building";
 import { planetNames } from "../data/planets";
-import { HexSelection, HighlightHex, HighlightHexData } from "../data";
-import { moveWarnings } from "../data/warnings";
+import { HexSelection, HighlightHex, HighlightHexData, WarningsPreference } from "../data";
+import { isWarningEnabled, moveWarnings } from "../data/warnings";
 import { factionName } from "../data/factions";
 import { leechPlanets, radiusTranslate, upgradableBuildingsOfOtherPlayers } from "../logic/utils";
 import { Ship } from "@gaia-project/engine/src/enums";
@@ -153,9 +153,19 @@ export default class SpaceHex extends Vue {
     return this.$store.state.data;
   }
 
-  warning(hex: GaiaHex): string {
-    const warnings = this.highlightedHexes?.get(hex)?.warnings;
-    return warnings?.length > 0 ? warnings?.map((w) => moveWarnings[w].text).join(", ") : null;
+  get warningPreference(): WarningsPreference {
+    return this.$store.state.preferences.warnings;
+  }
+
+  warning(hex: GaiaHex, tooltip: boolean): string | null {
+    if (this.warningPreference === WarningsPreference.Tooltip && !tooltip) {
+      return null;
+    }
+
+    return this.highlightedHexes?.get(hex)?.warnings
+      ?.filter(w => tooltip || isWarningEnabled(w, this.$store.state.preferences))
+      ?.map((w) => moveWarnings[w].text)
+      ?.join(", ");
   }
 
   get highlightBuilding(): BuildingOverride | null {
@@ -190,7 +200,7 @@ export default class SpaceHex extends Vue {
 
         if (h.class) {
           ret.push(h.class);
-        } else if (this.warning(hex)) {
+        } else if (this.warning(hex, false)) {
           ret.push("warn");
         } else if (this.cost(hex).includes("q")) {
           ret.push("qic");
@@ -216,7 +226,7 @@ export default class SpaceHex extends Vue {
   planetClasses(hex: GaiaHex): string[] {
     const ret = [];
     const highlightHex = this.highlightedHexes?.get(hex);
-    if (highlightHex?.warnings?.length > 0) {
+    if (this.warning(hex, false)) {
       ret.push("warn");
     }
     if (highlightHex) {
@@ -372,7 +382,7 @@ export default class SpaceHex extends Vue {
         return (`${buildingName(s.type, faction)} (${factionName(faction)})`);
       });
     }
-    const w = this.warning(hex);
+    const w = this.warning(hex, true);
     const warning = w ? `Warning: ${w}` : null;
     const coord = `Coordinates: ${hex}`;
     return [

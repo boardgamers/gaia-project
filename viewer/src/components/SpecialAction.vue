@@ -1,10 +1,7 @@
 <template>
   <svg viewBox="-25 -25 50 50" width="50" height="50" style="overflow: visible">
     <g
-      :class="[
-        'specialAction',
-        { highlighted: isHighlighted, disabled, board, recent, warning: button && button.warning },
-      ]"
+      :class="['specialAction', { highlighted: isHighlighted, disabled, board, recent, warning }]"
       v-b-tooltip.html
       :title="button ? button.tooltip : null"
     >
@@ -34,6 +31,7 @@ import { Component, Prop } from "vue-property-decorator";
 import Engine, { Planet, Player } from "@gaia-project/engine";
 import { ButtonData } from "../data";
 import { specialActionButton } from "../logic/buttons/actions";
+import { enabledButtonWarnings } from "../data/warnings";
 
 @Component
 export default class SpecialAction extends Vue {
@@ -80,6 +78,11 @@ export default class SpecialAction extends Vue {
     }
     const player = this.$store.state.player?.index ?? this.gameData.currentPlayer;
     return specialActionButton(this.income, this.gameData.player(player));
+  }
+
+  get warning(): boolean {
+    const b = this.button;
+    return b ? enabledButtonWarnings(b, this.$store.state.preferences).length > 0 : false;
   }
 
   /** When the action content is highlighted - not the parent component */

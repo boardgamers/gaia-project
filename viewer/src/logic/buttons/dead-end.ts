@@ -1,5 +1,6 @@
 import { AvailableCommand, Command, SubPhase } from "@gaia-project/engine";
 import { ButtonData } from "../../data";
+import { WarningKey } from "../../data/warnings";
 import { textButton } from "./utils";
 
 export function deadEndButton(command: AvailableCommand<Command.DeadEnd>, undo: () => void): ButtonData {
@@ -29,7 +30,12 @@ export function deadEndButton(command: AvailableCommand<Command.DeadEnd>, undo: 
     label: reason,
     warning: {
       title: "Dead end reached",
-      body: ["You've reached a required move that is not possible to execute."],
+      body: [
+        {
+          disableKey: WarningKey.cannotBeDisabled,
+          message: "You've reached a required move that is not possible to execute.",
+        },
+      ],
       okButton: {
         label: "Undo",
         action: () => {

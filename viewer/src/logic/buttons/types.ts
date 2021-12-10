@@ -78,6 +78,10 @@ export interface CommandController {
   ): void;
 
   subscribeFinal(action: string, button: ButtonData): void;
+
+  enabledButtonWarnings(button: ButtonData): string[];
+
+  isWarningEnabled(disableKey: string): boolean;
 }
 
 export interface MoveButtonController {

@@ -14,7 +14,13 @@ import { CubeCoordinates } from "hexagrid";
 import { FastConversionTooltips, MoveButtonController } from "../logic/buttons/types";
 import { MapMode } from "./actions";
 
-export type ButtonWarning = { title?: string; body: string[]; okButton?: { label: string; action: () => void } };
+export type WarningWithKey = { disableKey: string; message: string };
+
+export type ButtonWarning = {
+  title?: string;
+  body: WarningWithKey[];
+  okButton?: { label: string; action: () => void };
+};
 
 export type ModalButtonData = { title: string; content: string; canActivate: () => boolean; show: (boolean) => void };
 
