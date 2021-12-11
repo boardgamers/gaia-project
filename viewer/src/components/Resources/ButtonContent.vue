@@ -3,24 +3,24 @@
     <div v-if="frontLabel" v-html="frontLabel"></div>
     <svg
       v-if="button.conversion"
-      :viewBox="`2 -13 ${(from + to) * 8} 20`"
-      :width="hasTo ? (from + to) * 28 + 37 : from * 28 + 17"
-      height="30"
+      :viewBox="`2 -13 ${(from + to) * 8} 27`"
+      :width="hasTo ? (from + to) * 36 : from * 36"
+      height="40"
     >
       <Resource
         v-for="(r, i) in button.conversion.from"
         :key="i"
         :kind="r.type"
-        :count="Number(r.count)"
-        :transform="`translate(${i * 16 + (hasTo ? -8 : 8 - 3 * from)}, -3)`"
+        :count="r.count"
+        :transform="`translate(${i * 16 + (hasTo ? -5 : 8 - 3 * from)}, 1)`"
       />
-      <use v-if="hasTo" xlink:href="#arrow" x="5" y="0" transform="translate(-2, -2.5)" />
+      <use v-if="hasTo" xlink:href="#arrow" x="5" y="0" transform="translate(-2, 1)" />
       <Resource
         v-for="(r, i) in button.conversion.to"
         :key="i + 20"
         :kind="r.type"
-        :count="Number(r.count)"
-        :transform="`translate(${(i + from + 1) * 16 + -6}, -3)`"
+        :count="r.count"
+        :transform="`translate(${(i + from + 1) * 16 - 8}, 1)`"
       />
     </svg>
     <div v-if="backLabel" v-html="backLabel"></div>
