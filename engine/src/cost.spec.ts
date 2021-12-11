@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { PlayerEnum } from "../index";
+import { BuildWarning, PlayerEnum } from "../index";
 import { qicForDistance, QicNeeded, terraformingCost } from "./cost";
 import { Building, Resource } from "./enums";
 import SpaceMap from "./map";
@@ -22,7 +22,7 @@ describe("cost", () => {
       {
         name: "need 2 q, gaia former would save 1",
         give: { location: "5A2", range: 1, temporaryRange: 0 },
-        want: { distance: 5, amount: 2, warning: "gaia-former-would-extend-range" },
+        want: { distance: 5, amount: 2, warning: BuildWarning.gaiaFormerWouldExtendRange },
       },
       {
         name: "need 1 q with temp range",

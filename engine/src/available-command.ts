@@ -48,7 +48,9 @@ export const UPGRADE_RESEARCH_COST = "4k";
 export const MAX_SHIPS_PER_HEX = 3;
 const SHIP_ACTION_RANGE = 1;
 
-export type BrainstoneWarning = "brainstone-charges-wasted";
+export enum BrainstoneWarning {
+  brainstoneChargesWasted = "brainstone-charges-wasted",
+}
 
 export type BrainstoneActionData = {
   choices: { area: BrainstoneDest; warning?: BrainstoneWarning }[];
@@ -122,7 +124,7 @@ export type ChooseTechTile = TechTileWithPos | AdvTechTileWithPos;
 
 type AvailableBuildCommandData = { buildings: AvailableBuilding[] };
 
-export type AvailableFederation = { hexes: string; warning?: string };
+export type AvailableFederation = { hexes: string; warning?: BuildWarning };
 
 export enum ShipAction {
   BuildColony = "buildColony",
@@ -318,7 +320,7 @@ function addPossibleNewPlanet(
     switch (pl.faction) {
       case Faction.Geodens:
         if (building === Building.Mine && !pl.data.hasPlanetaryInstitute() && pl.data.isNewPlanetType(hex)) {
-          check.warnings.push("geodens-build-without-PI");
+          check.warnings.push(BuildWarning.geodensBuildWithoutPi);
         }
         break;
       case Faction.Lantids:
@@ -327,10 +329,10 @@ function addPossibleNewPlanet(
             pl.data.occupied.filter((hex) => hex.data.additionalMine !== undefined).length ===
             pl.maxBuildings(Building.Mine) - 1
           ) {
-            check.warnings.push("lantids-deadlock");
+            check.warnings.push(BuildWarning.lantidsDeadlock);
           }
           if (!pl.data.hasPlanetaryInstitute()) {
-            check.warnings.push("lantids-build-without-PI");
+            check.warnings.push(BuildWarning.lantidsBuildWithoutPi);
           }
         }
 
@@ -884,7 +886,7 @@ export function possibleFederations(engine: Engine, player: Player): AvailableCo
                 .join(","),
               warning:
                 p.faction !== Faction.Ivits && fed.newSatellites > p.data.power.area1
-                  ? "federation-with-charged-tokens"
+                  ? BuildWarning.federationWithChargedTokens
                   : null,
             })),
           },

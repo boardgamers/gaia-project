@@ -429,7 +429,7 @@ export default class PlayerData extends EventEmitter {
   spendPower(power: number) {
     if (this.brainstone === PowerArea.Area3) {
       let useBrainStone = true;
-      const warning: BrainstoneWarning = power < 3 ? "brainstone-charges-wasted" : undefined;
+      const warning: BrainstoneWarning = power < 3 ? BrainstoneWarning.brainstoneChargesWasted : undefined;
       // Choose whether to spend the brainstone power or not
       const needBrainstone = this.power.area3 < power;
 

@@ -76,20 +76,21 @@ export class Settings {
   ) {}
 }
 
-export type BuildWarning =
-  | "step-booster-not-used"
-  | "range-booster-not-used"
-  | "step-action-partially-wasted"
-  | "expensive-terraforming"
-  | "gaia-forming-with-charged-tokens"
-  | "federation-with-charged-tokens"
-  | "lantids-deadlock"
-  | "lantids-build-without-PI"
-  | "geodens-build-without-PI"
-  | "expensive-trade-station"
-  | "gaia-former-would-extend-range"
-  | "gaia-former-last-round"
-  | "building-will-be-part-of-federation";
+export enum BuildWarning {
+  stepBoosterNotUsed = "step-booster-not-used",
+  rangeBoosterNotUsed = "range-booster-not-used",
+  stepActionPartiallyWasted = "step-action-partially-wasted",
+  expensiveTerraforming = "expensive-terraforming",
+  gaiaFormingWithChargedTokens = "gaia-forming-with-charged-tokens",
+  federationWithChargedTokens = "federation-with-charged-tokens",
+  lantidsDeadlock = "lantids-deadlock",
+  lantidsBuildWithoutPi = "lantids-build-without-PI",
+  geodensBuildWithoutPi = "geodens-build-without-PI",
+  expensiveTradingStation = "expensive-trade-station",
+  gaiaFormerWouldExtendRange = "gaia-former-would-extend-range",
+  gaiaFormerLastRound = "gaia-former-last-round",
+  buildingWillBePartOfFederation = "building-will-be-part-of-federation",
+}
 
 export type BuildCheck = { cost: Reward[]; steps: number; warnings: BuildWarning[] };
 
@@ -303,7 +304,7 @@ export default class Player extends EventEmitter {
       this.hasActiveBooster(Resource.TemporaryRange) &&
       !buildActionUsed
     ) {
-      warnings.push("range-booster-not-used");
+      warnings.push(BuildWarning.rangeBoosterNotUsed);
     }
 
     let steps = 0;
@@ -336,13 +337,13 @@ export default class Player extends EventEmitter {
         }
 
         if (steps > 0 && this.hasActiveBooster(Resource.TemporaryStep) && !buildActionUsed) {
-          warnings.push("step-booster-not-used");
+          warnings.push(BuildWarning.stepBoosterNotUsed);
         }
         if (reward.count > 0 && this.data.terraformCostDiscount < 2) {
-          warnings.push("expensive-terraforming");
+          warnings.push(BuildWarning.expensiveTerraforming);
         }
         if (this.data.temporaryStep > steps) {
-          warnings.push("step-action-partially-wasted");
+          warnings.push(BuildWarning.stepActionPartiallyWasted);
         }
         addedCost.push(reward);
       }
@@ -354,20 +355,20 @@ export default class Player extends EventEmitter {
       building === Building.TradingStation &&
       creditCost(cost) === creditCost(this.board.buildings[Building.TradingStation].isolatedCost)
     ) {
-      warnings.push("expensive-trade-station");
+      warnings.push(BuildWarning.expensiveTradingStation);
     }
 
     const toGaia = cost.find((r) => r.type === Resource.MoveTokenToGaiaArea);
     if (toGaia?.count > this.data.power.area1) {
-      warnings.push("gaia-forming-with-charged-tokens");
+      warnings.push(BuildWarning.gaiaFormingWithChargedTokens);
     }
     if (building === Building.GaiaFormer && lastRound) {
-      warnings.push("gaia-former-last-round");
+      warnings.push(BuildWarning.gaiaFormerLastRound);
     }
     if (hex && this.faction !== Faction.Ivits) {
       for (const h of map.withinDistance(hex, 1)) {
         if (h.belongsToFederationOf(this.player)) {
-          warnings.push("building-will-be-part-of-federation");
+          warnings.push(BuildWarning.buildingWillBePartOfFederation);
           break;
         }
       }
