@@ -56,9 +56,10 @@
           <li><a href="https://www.boardgamers.space/page/elo">How Elo works</a></li>
         </ul>
         <h4>Recent changes</h4>
-        <h5>2021-12-10</h5>
+        <h5>2021-12-11</h5>
         <ul>
           <li>New Preference: disable warnings selectively</li>
+          <li>Show power value of buildings in federation highlight</li>
         </ul>
         <h5>2021-12-04</h5>
         <ul>

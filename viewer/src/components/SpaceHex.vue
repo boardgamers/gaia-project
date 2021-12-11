@@ -5,7 +5,7 @@
     <text class="sector-name" v-if="isCenter">
       {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
     </text>
-    <use v-if="leechHighlightClass" xlink:href="#space-hex" :class="['space-hex-federation', leechHighlightClass]" />
+    <use v-if="powerHighlightClass" xlink:href="#space-hex" :class="['space-hex-federation', powerHighlightClass]" />
     <Planet
       v-if="showPlanet"
       :planet="hex.data.planet"
@@ -269,19 +269,19 @@ export default class SpaceHex extends Vue {
   }
 
   get federations(): PlayerEnum[] {
-    return this.leechHighlightClass ? [] : (this.hex.data.federations || []);
+    return this.powerHighlightClass ? [] : (this.hex.data.federations || []);
   }
 
   get showPlanet(): boolean {
     if (this.hex.data.planet === "e") {
       return false;
     }
-    const c = this.leechHighlightClass;
+    const c = this.powerHighlightClass;
     return c === null || !c.includes("planet");
   }
 
   federationHighlight(player: PlayerEnum): boolean {
-    return this.planet === "e" && this.playerMapMode("federations")?.player == player ? this.hex.data.federations?.some(f => f === player) : false;
+    return this.planet === "e" && this.playerMapMode(MapModeType.federations)?.player == player ? this.hex.data.federations?.some(f => f === player) : false;
   }
 
   get planet() {
@@ -289,7 +289,7 @@ export default class SpaceHex extends Vue {
   }
 
   get sectorHighlight(): PlayerEnum | null {
-    const mode = this.playerMapMode("sectors");
+    const mode = this.playerMapMode(MapModeType.sectors);
     return mode
     && this.planet === "e"
     && this.player(mode.player).data.occupied.some((hex) => hex.colonizedBy(mode.player) && hex.data.sector === this.hex.data.sector)
@@ -297,26 +297,47 @@ export default class SpaceHex extends Vue {
       : null;
   }
 
-  get leechHighlightClass(): string | null {
+  get powerHighlightClass(): string | null {
     if (this.planetMapMode) {
       return null;
     }
-    const mode = this.playerMapMode("leech");
+    const leech = this.playerMapMode(MapModeType.leech);
+    const federations = this.playerMapMode(MapModeType.federations);
+    if (leech) {
+      return this.leechHighlightClass(leech);
+    } else if (federations) {
+      return this.federationPlanetClass(federations);
+    } else {
+      return null;
+    }
+  }
 
-    if (mode) {
-      const hex = this.hex;
-      const p = mode.player;
-      const maxLeech = max(leechPlanets(this.map, p, hex).map(h => this.player(p).buildingValue(h)));
-      if (maxLeech) {
-        const otherPlayers = upgradableBuildingsOfOtherPlayers(this.engine, hex, p);
-        if (otherPlayers) {
-          return `leech power${maxLeech} planet`;
-        } else if (hex.colonizedBy(mode.player)) {
-          return null;
-        } else {
-          return "leech empty";
-        }
+  private leechHighlightClass(mode: MapMode) {
+    const hex = this.hex;
+    const p = mode.player;
+    const maxLeech = max(leechPlanets(this.map, p, hex).map(h => this.player(p).buildingValue(h)));
+    if (maxLeech) {
+      const otherPlayers = upgradableBuildingsOfOtherPlayers(this.engine, hex, p);
+      if (otherPlayers) {
+        return this.powerValueClass(maxLeech);
+      } else if (hex.colonizedBy(mode.player)) {
+        return null;
+      } else {
+        return "leech empty";
       }
+    }
+    return null;
+  }
+
+  private powerValueClass(powerValue) {
+    return `leech power${powerValue} planet`;
+  }
+
+  private federationPlanetClass(mode: MapMode) {
+    const value = this.player(mode.player).buildingValue(this.hex, { federation: true});
+
+    if (value > 0) {
+      return this.powerValueClass(value);
     }
     return null;
   }

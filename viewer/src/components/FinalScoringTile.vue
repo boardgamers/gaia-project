@@ -31,7 +31,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Phase, Player, finalScorings, Faction, FinalTile } from "@gaia-project/engine";
+import { Faction, finalScorings, FinalTile, Phase, Player } from "@gaia-project/engine";
 import Token from "./Token.vue";
 import { factionName } from "../data/factions";
 import { MapMode, MapModeType } from "../data/actions";
@@ -78,10 +78,10 @@ export default class FinalScoringTile extends Vue {
     const m = (type: MapModeType) => this.players.filter(p => p.faction != "automa").map(player => ({ type, player }));
     switch (this.tile) {
       case FinalTile.Sector:
-        return m("sectors");
+        return m(MapModeType.sectors);
       case FinalTile.StructureFed:
       case FinalTile.Satellite:
-        return m("federations");
+        return m(MapModeType.federations);
     }
     return [];
   }
