@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { BrainstoneWarning } from "../available-command";
 import Engine from "../engine";
 import { Player, PowerArea } from "../enums";
 
@@ -71,7 +72,7 @@ describe("Taklons", () => {
         choices: [
           {
             area: "area1",
-            warning: "brainstone-charges-wasted",
+            warning: BrainstoneWarning.brainstoneChargesWasted,
           },
         ],
       });

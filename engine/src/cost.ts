@@ -51,6 +51,6 @@ export function qicForDistance(
   return {
     amount: qicNeeded,
     distance: d,
-    warning: qicWithGaiaFormer < qicNeeded ? "gaia-former-would-extend-range" : null,
+    warning: qicWithGaiaFormer < qicNeeded ? BuildWarning.gaiaFormerWouldExtendRange : null,
   };
 }

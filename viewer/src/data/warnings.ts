@@ -13,24 +13,30 @@ export enum WarningKey {
 }
 
 export const moveWarnings: { [key in BuildWarning | BrainstoneWarning]: { text: string } } = {
-  "step-booster-not-used": { text: "Step booster is not used." },
-  "range-booster-not-used": { text: "Range booster is not used." },
-  "expensive-terraforming": { text: "Terraforming using more than 1 ore per step." },
-  "step-action-partially-wasted": { text: "Board action could save 2 terraforming steps, but only 1 is used." },
-  "gaia-forming-with-charged-tokens": { text: "Gaia forming with tokens that are not in area 1." },
-  "federation-with-charged-tokens": { text: "Form federation with tokens that are not in area 1." },
-  "lantids-deadlock": { text: "Once you have only guest mines, you cannot upgrade to trading stations any more." },
-  "lantids-build-without-PI": { text: "Building guest mines with the planetary institute would give 2 knowledge." },
-  "geodens-build-without-PI": {
+  [BuildWarning.stepBoosterNotUsed]: { text: "Step booster is not used." },
+  [BuildWarning.rangeBoosterNotUsed]: { text: "Range booster is not used." },
+  [BuildWarning.expensiveTerraforming]: { text: "Terraforming using more than 1 ore per step." },
+  [BuildWarning.stepActionPartiallyWasted]: {
+    text: "Board action could save 2 terraforming steps, but only 1 is used.",
+  },
+  [BuildWarning.gaiaFormingWithChargedTokens]: { text: "Gaia forming with tokens that are not in area 1." },
+  [BuildWarning.federationWithChargedTokens]: { text: "Form federation with tokens that are not in area 1." },
+  [BuildWarning.lantidsDeadlock]: {
+    text: "Once you have only guest mines, you cannot upgrade to trading stations any more.",
+  },
+  [BuildWarning.lantidsBuildWithoutPi]: {
+    text: "Building guest mines with the planetary institute would give 2 knowledge.",
+  },
+  [BuildWarning.geodensBuildWithoutPi]: {
     text: "Building on a new planet type with the planetary institute would give 3 knowledge.",
   },
-  "expensive-trade-station": { text: "Trade station for 6c instead of 3c." },
-  "gaia-former-would-extend-range": { text: "Upgrade a gaia former first to save QICs for range." },
-  "gaia-former-last-round": { text: "The gaia former cannot be upgraded - it's the last round." },
-  "building-will-be-part-of-federation": {
+  [BuildWarning.expensiveTradingStation]: { text: "Trade station for 6c instead of 3c." },
+  [BuildWarning.gaiaFormerWouldExtendRange]: { text: "Upgrade a gaia former first to save QICs for range." },
+  [BuildWarning.gaiaFormerLastRound]: { text: "The gaia former cannot be upgraded - it's the last round." },
+  [BuildWarning.buildingWillBePartOfFederation]: {
     text: "The building will be part of an existing federation - not helping you to form new federations.",
   },
-  "brainstone-charges-wasted": {
+  [BrainstoneWarning.brainstoneChargesWasted]: {
     text: "Some of the 3 brainstone charges are wasted. Convert 3 power charges to 3 credit at once.",
   },
 };
