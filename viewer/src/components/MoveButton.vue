@@ -217,7 +217,13 @@ export default class MoveButton extends Vue implements MoveButtonController {
   background-color: var(--warning);
 }
 
+.symbol-button,
+.symbol-button button {
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+  padding: 0.075rem 0.5rem 0.075rem 0.5rem !important;
+}
+
 .symbol-button > button {
-  padding: 0.275rem 0.35rem 0.275rem 0.15rem;
 }
 </style>
