@@ -1,8 +1,11 @@
 <template>
   <div class="player-info no-gutters" v-if="player && player.faction">
+    <div class="d-flex justify-content-between align-items-center">
     <span @click="playerClick(player)" :class="['player-name', { dropped: player.dropped }]" role="button">{{
-      name
-    }}</span>
+        name
+      }}</span>
+      <b-form-select :v-model="selectedMapModeType" :options="mapModeTypeOptions" @change="toggleMapMode" style="width: auto"/>
+    </div>
     <div class="board mt-2">
       <svg :viewBox="`-0.2 -0.5 38.5 ${height}`" class="player-board" :style="`background-color: ${factionColor}`">
         <rect x="-1" y="-1" width="50" height="50" fill="#ffffff44"></rect>
@@ -218,7 +221,7 @@ import PlayerBoardInfo from "./PlayerBoard/Info.vue";
 import PowerBowls from "./PlayerBoard/PowerBowls.vue";
 import Rules from "./Rules.vue";
 import { factionName, planetsWithSteps } from "../data/factions";
-import { MapMode} from "../data/actions";
+import { MapMode, MapModeType } from "../data/actions";
 
 @Component({
   components: {
@@ -231,10 +234,17 @@ import { MapMode} from "../data/actions";
     PlayerBoardInfo,
     Rules,
   },
+  watch: {
+    selectedMapModes(this: PlayerInfo, val) {
+      this.selectedMapModeType = this.mapModeType;
+    },
+  },
 })
 export default class PlayerInfo extends Vue {
   @Prop()
   player: Player;
+
+  private selectedMapModeType: MapModeType = MapModeType.default;
 
   get playerData() {
     return this.player?.data;
@@ -321,7 +331,28 @@ export default class PlayerInfo extends Vue {
   }
 
   togglePlanetHighlight(planet: Planet) {
-    this.$store.commit("toggleMapMode", { type: "planetType", planet  } as MapMode);
+    this.$store.commit("toggleMapMode", { type: "planetType", planet } as MapMode);
+  }
+
+  get selectedMapModes(): MapMode[] {
+    return this.$store.getters.mapModes;
+  }
+
+  get mapModeType(): MapModeType {
+    return this.selectedMapModes.find(m => m.player == this.player.player)?.type ?? MapModeType.default;
+  }
+
+  get mapModeTypeOptions() {
+    return [
+      { value: MapModeType.default, text: "Default" },
+      { value: MapModeType.sectors, text: "Sectors" },
+      { value: MapModeType.federations, text: "Federations" },
+      { value: MapModeType.leech, text: "Leech Network" },
+    ];
+  }
+
+  toggleMapMode(mode: MapModeType) {
+    this.$store.commit("toggleMapMode", { type: mode, player: this.player.player } as MapMode);
   }
 }
 </script>
