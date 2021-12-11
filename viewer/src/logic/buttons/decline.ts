@@ -2,7 +2,7 @@ import { AvailableCommand, Command } from "@gaia-project/engine";
 import { ButtonData } from "../../data";
 import { WarningKey } from "../../data/warnings";
 import { textButton } from "./utils";
-import { buttonWarning } from "./warnings";
+import { buttonWarnings } from "./warnings";
 
 export function declineButton(command: AvailableCommand<Command.Decline>): ButtonData {
   const offer = command.data.offers[0].offer;
@@ -19,6 +19,6 @@ export function declineButton(command: AvailableCommand<Command.Decline>): Butto
     label: `Decline ${offer}`,
     shortcuts: ["d"],
     command: `${Command.Decline} ${offer}`,
-    warning: buttonWarning(message ? WarningKey.declineFree : null, message),
+    warning: message ? buttonWarnings([{ message, disableKey: WarningKey.declineFree }]) : null,
   });
 }

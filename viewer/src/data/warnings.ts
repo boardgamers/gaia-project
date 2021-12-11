@@ -22,7 +22,7 @@ export const moveWarnings: { [key in BuildWarning | BrainstoneWarning]: { text: 
   [BuildWarning.gaiaFormingWithChargedTokens]: { text: "Gaia forming with tokens that are not in area 1." },
   [BuildWarning.federationWithChargedTokens]: { text: "Form federation with tokens that are not in area 1." },
   [BuildWarning.lantidsDeadlock]: {
-    text: "Once you have only guest mines, you cannot upgrade to trading stations any more.",
+    text: "Once you have only guest mines, you cannot upgrade to trading stations anymore.",
   },
   [BuildWarning.lantidsBuildWithoutPi]: {
     text: "Building guest mines with the planetary institute would give 2 knowledge.",
@@ -35,6 +35,12 @@ export const moveWarnings: { [key in BuildWarning | BrainstoneWarning]: { text: 
   [BuildWarning.gaiaFormerLastRound]: { text: "The gaia former cannot be upgraded - it's the last round." },
   [BuildWarning.buildingWillBePartOfFederation]: {
     text: "The building will be part of an existing federation - not helping you to form new federations.",
+  },
+  [BuildWarning.ambasFederationWithoutPi]: {
+    text: "From federation with the Ambas PI is not taking advantage of the swap ability of the PI.",
+  },
+  [BuildWarning.ambasSwapIntoFederation]: {
+    text: "This mine is part of an existing federation - it doesn't help you to form a new federation.",
   },
   [BrainstoneWarning.brainstoneChargesWasted]: {
     text: "Some of the 3 brainstone charges are wasted. Convert 3 power charges to 3 credit at once.",

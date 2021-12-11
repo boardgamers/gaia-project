@@ -7,12 +7,11 @@ export function buttonWarnings(messages: WarningWithKey[]): ButtonWarning | null
   return messages.length > 0 && { title: "Are you sure?", body: messages };
 }
 
-export function buttonWarning(disableKey: string, message: string): ButtonWarning | null {
-  return message ? buttonWarnings([{ disableKey, message }]) : null;
-}
-
-export function moveButtonWarning(key?: string): ButtonWarning | null {
-  return key ? buttonWarning(key, moveWarnings[key].type) : null;
+export function translateWarnings(keys: string[]): WarningWithKey[] {
+  return keys.map((disableKey) => ({
+    disableKey,
+    message: moveWarnings[disableKey].text,
+  }));
 }
 
 export function rewardWarnings(player: Player, rewards: Reward[]): WarningWithKey[] {

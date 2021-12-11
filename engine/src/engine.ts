@@ -45,7 +45,7 @@ import { remainingFactions } from "./factions";
 import { GaiaHex } from "./gaia-hex";
 import SpaceMap, { MapConfiguration } from "./map";
 import Player from "./player";
-import PlayerData, { BrainstoneDest, MoveTokens, powerLogString } from "./player-data";
+import { BrainstoneDest, MoveTokens, powerLogString } from "./player-data";
 import * as researchTracks from "./research-tracks";
 import Reward from "./reward";
 import {
@@ -137,7 +137,7 @@ export interface LogEntry {
 }
 
 const replaceRegex = new RegExp(
-  `\\b((${Command.Pass}|${Building.GaiaFormer}|${Command.FormFederation} [^ ]+|${Command.UpgradeResearch}) ?([^. ]+)?)(\\.|$)`,
+  `\\b((${Command.Pass}|${Command.PISwap}|${Building.GaiaFormer}|${Command.FormFederation} [^ ]+|${Command.UpgradeResearch}) ?([^. ]+)?)(\\.|$)`,
   "g"
 );
 
@@ -145,20 +145,26 @@ const powerRegex = new RegExp(
   " \\((\\d+(,B)?/\\d+(,B)?/\\d+(,B)?/\\d+(,B)?) ⇒ \\d+(,B)?/\\d+(,B)?/\\d+(,B)?/\\d+(,B)?\\)"
 );
 
-export function createMoveToShow(move: string, p: PlayerData, executeMove: () => void): string {
+export function createMoveToShow(move: string, player: Player, map: SpaceMap, executeMove: () => void): string {
   let moveToGaia: MoveTokens = null;
+  const data = player.data;
 
-  const oldPower = powerLogString(p.power, p.brainstone);
+  const oldPower = powerLogString(data.power, data.brainstone);
 
   const listener = (event: MoveTokens) => (moveToGaia = event);
 
-  const formerBooster = p.tiles.booster;
+  const formerBooster = data.tiles.booster;
 
-  p.on("move-tokens", listener);
+  const formerPI =
+    player.faction === Faction.Ambas && move.includes(Command.PISwap)
+      ? [...map.grid.values()].find((h) => h.buildingOf(player.player) === Building.PlanetaryInstitute)
+      : null;
+
+  data.on("move-tokens", listener);
   try {
     executeMove();
   } finally {
-    p.off("move-tokens", listener);
+    data.off("move-tokens", listener);
   }
 
   const addDetails = () => {
@@ -177,8 +183,10 @@ export function createMoveToShow(move: string, p: PlayerData, executeMove: () =>
       switch (command) {
         case Command.Pass:
           return `${moveWithoutEnding} returning ${formerBooster}${moveEnding}`;
+        case Command.PISwap:
+          return `${moveWithoutEnding} (from ${formerPI.toString()})${moveEnding}`;
         case Command.UpgradeResearch: {
-          const level = p.research[commandArgument];
+          const level = data.research[commandArgument];
           if (!level) {
             //decline up
             return match;
@@ -192,7 +200,7 @@ export function createMoveToShow(move: string, p: PlayerData, executeMove: () =>
 
   const withDetails = addDetails();
 
-  const newPower = powerLogString(p.power, p.brainstone);
+  const newPower = powerLogString(data.power, data.brainstone);
 
   if (oldPower !== newPower) {
     const lastOldPower = powerRegex.exec(withDetails);
@@ -370,7 +378,7 @@ export default class Engine {
     let moveToShow = move;
     if (this.playerToMove !== undefined) {
       this.log(this.playerToMove, undefined, 0, undefined);
-      moveToShow = createMoveToShow(move, this.player(this.playerToMove).data, execute);
+      moveToShow = createMoveToShow(move, this.player(this.playerToMove), this.map, execute);
     } else {
       execute();
     }
