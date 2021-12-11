@@ -25,12 +25,7 @@
     <div class="row mt-2">
       <TurnOrder v-if="!ended && engine.players.length > 0" class="col-md-4 order-4 order-md-1" />
       <div class="col-md-8 order-1 order-md-2">
-        <Commands
-          @command="handleCommand"
-          v-if="canPlay"
-          :currentMove="currentMove"
-          :currentMoveWarnings="Array.from(currentMoveWarnings.values()).flat()"
-        />
+        <Commands @command="handleCommand" v-if="canPlay" :currentMove="currentMove" />
         <div v-else-if="player != null && !ended" class="current-player">
           <h5>Current player</h5>
           <svg viewBox="-1.2 -1.2 2.5 4.5">
@@ -170,7 +165,6 @@ import { ExecuteBack } from "../logic/buttons/types";
 export default class Game extends Vue {
   public currentMove = "";
   public hideLog = false;
-  public currentMoveWarnings: Map<string, BuildWarning[]> = new Map<string, BuildWarning[]>();
   clearCurrentMove = false;
   // When joining a game
   name = "";
@@ -280,7 +274,6 @@ export default class Game extends Vue {
     if (data.newTurn) {
       this.currentMove = "";
       this.hideLog = false;
-      this.currentMoveWarnings.clear();
       this.setAutoClick([]);
     } else {
       this.currentMove = data.moveHistory.pop() ?? "";
@@ -304,12 +297,6 @@ export default class Game extends Vue {
     if (move.command === Command.EndTurn) {
       this.addMove(this.currentMove + ".");
       return;
-    }
-
-    if (warnings?.length > 0) {
-      this.currentMoveWarnings.set(command, warnings);
-    } else {
-      this.currentMoveWarnings.delete(command);
     }
 
     if (this.currentMove && !this.clearCurrentMove) {
@@ -346,16 +333,7 @@ export default class Game extends Vue {
     } while (isAutoClickMove());
     this.setAutoClick(click);
 
-    this.removeWarnings();
     this.addMove(this.currentMove);
-  }
-
-  private removeWarnings() {
-    for (const key of this.currentMoveWarnings.keys()) {
-      if (!this.currentMove.includes(key)) {
-        this.currentMoveWarnings.delete(key);
-      }
-    }
   }
 
   addMove(command: string) {

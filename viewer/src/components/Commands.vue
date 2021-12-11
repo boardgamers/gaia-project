@@ -1,8 +1,5 @@
 <template>
   <div id="move">
-    <b-alert v-for="(w, i) in warnings" :key="i" show variant="warning">
-      <a href="#" class="alert-link">{{ w }}</a>
-    </b-alert>
     <div id="move-title">
       <h5>
         <span v-if="init">Pick the number of players</span>
@@ -142,9 +139,6 @@ export default class Commands extends Vue implements CommandController {
   @Prop()
   currentMove?: string;
 
-  @Prop()
-  currentMoveWarnings?: BuildWarning[];
-
   @Prop({ default: "" })
   remainingTime: string;
 
@@ -244,10 +238,6 @@ export default class Commands extends Vue implements CommandController {
 
   get titles() {
     return this.commandTitles.length === 0 ? [`Your turn - Round ${this.engine.round}`] : this.commandTitles;
-  }
-
-  get warnings(): string[] {
-    return this.currentMoveWarnings?.map((w) => moveWarnings[w].text) ?? [];
   }
 
   factionName(faction: Faction) {
