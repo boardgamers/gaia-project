@@ -1,9 +1,9 @@
 import { AssertionError } from "assert";
 import { expect } from "chai";
-import { BoardAction, Booster, Building, PlayerEnum } from "..";
+import { BoardAction, Booster, Building, Player } from "..";
 import { version } from "../package.json";
 import Engine, { AuctionVariant, createMoveToShow } from "./engine";
-import { Command, Condition, Faction, Operator, Phase, Planet, Player } from "./enums";
+import { Command, Condition, Faction, Operator, Phase, Planet, Player as PlayerEnum } from "./enums";
 import PlayerData, { MoveTokens } from "./player-data";
 
 describe("Engine", () => {
@@ -185,11 +185,11 @@ describe("Engine", () => {
 
     const engine = new Engine(moves);
 
-    const qic = engine.player(Player.Player1).data.qics;
+    const qic = engine.player(PlayerEnum.Player1).data.qics;
 
     engine.move("p1 build m -5x0");
 
-    expect(engine.player(Player.Player1).data.qics).to.equal(qic);
+    expect(engine.player(PlayerEnum.Player1).data.qics).to.equal(qic);
   });
 
   it("should allow to place a gaia former and next round checks for transformation to gaia planet, pass is checking booster availablity", () => {
@@ -211,11 +211,11 @@ describe("Engine", () => {
 
     const engine = new Engine(moves);
 
-    const qicCount = engine.player(Player.Player1).data.qics;
+    const qicCount = engine.player(PlayerEnum.Player1).data.qics;
 
     engine.move("p1 build m -3x1");
 
-    expect(engine.player(Player.Player1).data.qics).to.equal(
+    expect(engine.player(PlayerEnum.Player1).data.qics).to.equal(
       qicCount,
       "Building a mine from a gaia former doest NOT need a qic"
     );
@@ -271,8 +271,8 @@ describe("Engine", () => {
     this.timeout(10000);
     const engine = new Engine(fullGame(), { noFedCheck: true });
 
-    expect(engine.player(Player.Player1).data.victoryPoints).to.equal(130);
-    expect(engine.player(Player.Player2).data.victoryPoints).to.equal(124);
+    expect(engine.player(PlayerEnum.Player1).data.victoryPoints).to.equal(130);
+    expect(engine.player(PlayerEnum.Player2).data.victoryPoints).to.equal(124);
   });
 
   describe("fromData", () => {
@@ -293,41 +293,41 @@ describe("Engine", () => {
           state = JSON.parse(JSON.stringify(engine));
         }
 
-        expect(state.players[Player.Player1].data.knowledge).to.equal(
-          baseLine.players[Player.Player1].data.knowledge,
+        expect(state.players[PlayerEnum.Player1].data.knowledge).to.equal(
+          baseLine.players[PlayerEnum.Player1].data.knowledge,
           "Error loading move " + move
         );
-        expect(state.players[Player.Player2].income).to.equal(
-          baseLine.players[Player.Player2].toJSON().income,
+        expect(state.players[PlayerEnum.Player2].income).to.equal(
+          baseLine.players[PlayerEnum.Player2].toJSON().income,
           "Error loading move " + move
         );
-        expect(state.players[Player.Player2].events[Operator.Income].length).to.equal(
-          baseLine.players[Player.Player2].events[Operator.Income].length,
+        expect(state.players[PlayerEnum.Player2].events[Operator.Income].length).to.equal(
+          baseLine.players[PlayerEnum.Player2].events[Operator.Income].length,
           "Error loading move " + move
         );
-        expect(state.players[Player.Player2].data.ores).to.equal(
-          baseLine.players[Player.Player2].data.ores,
+        expect(state.players[PlayerEnum.Player2].data.ores).to.equal(
+          baseLine.players[PlayerEnum.Player2].data.ores,
           "Error loading move " + move
         );
         expect(state.version).to.equal(version);
       }
 
       const endEngine = Engine.fromData(state);
-      expect(endEngine.player(Player.Player1).data.victoryPoints).to.equal(
-        baseLine.player(Player.Player1).data.victoryPoints
+      expect(endEngine.player(PlayerEnum.Player1).data.victoryPoints).to.equal(
+        baseLine.player(PlayerEnum.Player1).data.victoryPoints
       );
-      expect(endEngine.player(Player.Player2).data.victoryPoints).to.equal(
-        baseLine.player(Player.Player2).data.victoryPoints
+      expect(endEngine.player(PlayerEnum.Player2).data.victoryPoints).to.equal(
+        baseLine.player(PlayerEnum.Player2).data.victoryPoints
       );
 
       const lastMove = moveList.pop();
       endEngine.move(lastMove);
       baseLine.move(lastMove);
-      expect(endEngine.player(Player.Player1).data.victoryPoints).to.equal(
-        baseLine.player(Player.Player1).data.victoryPoints
+      expect(endEngine.player(PlayerEnum.Player1).data.victoryPoints).to.equal(
+        baseLine.player(PlayerEnum.Player1).data.victoryPoints
       );
-      expect(endEngine.player(Player.Player2).data.victoryPoints).to.equal(
-        baseLine.player(Player.Player2).data.victoryPoints
+      expect(endEngine.player(PlayerEnum.Player2).data.victoryPoints).to.equal(
+        baseLine.player(PlayerEnum.Player2).data.victoryPoints
       );
     });
 
@@ -358,7 +358,7 @@ describe("Engine", () => {
         {
           name: "should transform false (old for 'not available') to Player5",
           give: false,
-          want: Player.Player5,
+          want: PlayerEnum.Player5,
         },
       ];
 
@@ -500,9 +500,9 @@ describe("Engine", () => {
       bescods pass booster4
     `);
     const engine = new Engine(moves);
-    const structure = engine.player(Player.Player1).eventConditionCount(Condition.StructureFed);
+    const structure = engine.player(PlayerEnum.Player1).eventConditionCount(Condition.StructureFed);
     engine.move("terrans action power2. build m -5x5.");
-    expect(engine.player(Player.Player1).eventConditionCount(Condition.StructureFed)).to.be.equal(structure + 1);
+    expect(engine.player(PlayerEnum.Player1).eventConditionCount(Condition.StructureFed)).to.be.equal(structure + 1);
   });
 
   it("should give step vps", () => {
@@ -557,10 +557,10 @@ describe("Engine", () => {
       terrans action power5.
     `);
     const engine = new Engine(moves);
-    const vps = engine.player(Player.Player1).data.victoryPoints;
+    const vps = engine.player(PlayerEnum.Player1).data.victoryPoints;
     engine.move("nevlas action power6. build m -1x3.");
-    expect(engine.player(Player.Player1).data.victoryPoints).to.be.equal(vps + 2);
-    expect(engine.player(Player.Player1).data.temporaryStep).to.be.equal(0);
+    expect(engine.player(PlayerEnum.Player1).data.victoryPoints).to.be.equal(vps + 2);
+    expect(engine.player(PlayerEnum.Player1).data.temporaryStep).to.be.equal(0);
   });
 
   describe("autoChargePower", () => {
@@ -610,7 +610,7 @@ describe("Engine", () => {
       const engine = new Engine(moves);
 
       engine.generateAvailableCommandsIfNeeded();
-      engine.player(Player.Player1).settings.autoChargePower = 2;
+      engine.player(PlayerEnum.Player1).settings.autoChargePower = 2;
 
       expect(autoCharge(engine)).to.equal("charge 2pw");
     });
@@ -825,7 +825,7 @@ describe("Engine", () => {
         d.tiles.booster = Booster.Booster3;
         d.research.nav = 2;
         d.research.terra = 4;
-        return createMoveToShow(give, d, () => {
+        return createMoveToShow(give, { data: d } as Player, null, () => {
           if (give.includes(Building.GaiaFormer)) {
             d.emit("move-tokens", { area1: 1, area2: 2, area3: 3, brainstone: 1 } as MoveTokens);
           }

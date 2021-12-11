@@ -90,6 +90,8 @@ export enum BuildWarning {
   gaiaFormerWouldExtendRange = "gaia-former-would-extend-range",
   gaiaFormerLastRound = "gaia-former-last-round",
   buildingWillBePartOfFederation = "building-will-be-part-of-federation",
+  ambasFederationWithoutPi = "ambas-federation-without-PI",
+  ambasSwapIntoFederation = "ambas-swap-into-federation",
 }
 
 export type BuildCheck = { cost: Reward[]; steps: number; warnings: BuildWarning[] };

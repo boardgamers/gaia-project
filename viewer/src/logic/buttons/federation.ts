@@ -17,7 +17,13 @@ import { federationData } from "../../data/federations";
 import { tooltipWithShortcut } from "./shortcuts";
 import { CommandController } from "./types";
 import { autoClickButton, customHexSelection, textButton } from "./utils";
-import { commonButtonWarning, moveButtonWarning, resourceWasteWarning, rewardWarnings } from "./warnings";
+import {
+  buttonWarnings,
+  commonButtonWarning,
+  resourceWasteWarning,
+  rewardWarnings,
+  translateWarnings,
+} from "./warnings";
 
 type Cycler = {
   currentIndex: number;
@@ -104,7 +110,7 @@ function federationLocationButton(
       ) as HighlightHexData,
     },
     buttons: fedTypeButtons,
-    warning: moveButtonWarning(fed.warning),
+    warning: buttonWarnings(translateWarnings(fed.warnings)),
     onClick: (button) => {
       if (canHover) {
         controller.handleCommand(button.command, button);

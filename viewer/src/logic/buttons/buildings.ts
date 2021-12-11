@@ -18,14 +18,13 @@ import assert from "assert";
 import { sortBy, sortedUniq } from "lodash";
 import { ButtonData, HighlightHex, WarningWithKey } from "../../data";
 import { buildingName, buildingShortcut, shipActionName, shipLetter } from "../../data/building";
-import { moveWarnings } from "../../data/warnings";
 import { prependShortcut, tooltipWithShortcut, withShortcut } from "./shortcuts";
 import { CommandController } from "./types";
 import { addOnClick, addOnShow, autoClickButton, confirmationButton, hexMap, isFree, textButton } from "./utils";
-import { buttonWarnings, commonButtonWarning } from "./warnings";
+import { buttonWarnings, commonButtonWarning, translateWarnings } from "./warnings";
 
 function hexWarnings(h: HighlightHex): WarningWithKey[] {
-  return h.warnings?.map((w) => ({ disableKey: w, message: moveWarnings[w].text })) ?? [];
+  return h.warnings ? translateWarnings(h.warnings) : [];
 }
 
 export function hexSelectionButton(

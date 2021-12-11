@@ -357,7 +357,6 @@ export default class PlayerInfo extends Vue {
 
   @Watch("selectedMapModes")
   resetMapMode() {
-    console.log("reset map mode", this.faction, this.mapModeType);
     this.selectedMapModeType = this.mapModeType;
   }
 }

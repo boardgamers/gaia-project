@@ -34,6 +34,7 @@ import {
   TechTilePos,
 } from "./enums";
 import { remainingFactions } from "./factions";
+import { FederationInfo } from "./federation";
 import { GaiaHex } from "./gaia-hex";
 import SpaceMap from "./map";
 import PlayerObject, { BuildCheck, BuildWarning } from "./player";
@@ -124,7 +125,7 @@ export type ChooseTechTile = TechTileWithPos | AdvTechTileWithPos;
 
 type AvailableBuildCommandData = { buildings: AvailableBuilding[] };
 
-export type AvailableFederation = { hexes: string; warning?: BuildWarning };
+export type AvailableFederation = { hexes: string; warnings: BuildWarning[] };
 
 export enum ShipAction {
   BuildColony = "buildColony",
@@ -852,6 +853,17 @@ export function possibleRoundBoosters(engine: Engine, player: Player) {
   return commands;
 }
 
+function federationWarnings(p: PlayerObject, fed: FederationInfo): BuildWarning[] {
+  const ret: BuildWarning[] = [];
+  if (p.faction !== Faction.Ivits && fed.newSatellites > p.data.power.area1) {
+    ret.push(BuildWarning.federationWithChargedTokens);
+  }
+  if (p.faction === Faction.Ambas && !fed.hexes.some((h) => h.buildingOf(p.player) === Building.PlanetaryInstitute)) {
+    ret.push(BuildWarning.ambasFederationWithoutPi);
+  }
+  return ret;
+}
+
 export function possibleFederations(engine: Engine, player: Player): AvailableCommand<Command.FormFederation>[] {
   const commands = Array<AvailableCommand<Command.FormFederation>>();
   const possibleTiles: Federation[] = Object.keys(engine.tiles.federations)
@@ -884,10 +896,7 @@ export function possibleFederations(engine: Engine, player: Player): AvailableCo
                 .map((hex) => hex.toString())
                 .sort()
                 .join(","),
-              warning:
-                p.faction !== Faction.Ivits && fed.newSatellites > p.data.power.area1
-                  ? BuildWarning.federationWithChargedTokens
-                  : null,
+              warnings: federationWarnings(p, fed),
             })),
           },
         });
@@ -1082,6 +1091,7 @@ export function possiblePISwaps(engine: Engine, player: Player) {
       buildings.push({
         building: Building.Mine,
         coordinates: hex.toString(),
+        warnings: hex.belongsToFederationOf(player) ? [BuildWarning.ambasSwapIntoFederation] : null,
       });
     }
   }
