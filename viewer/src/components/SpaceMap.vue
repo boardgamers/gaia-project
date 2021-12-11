@@ -36,6 +36,7 @@ import Sector from "./Sector.vue";
 import { CubeCoordinates } from "hexagrid";
 import FactionWheel from "./FactionWheel.vue";
 import Definitions from "./definitions/Definitions.vue";
+import { MapMode, MapModeType } from "../data/actions";
 
 @Component<SpaceMap>({
   components: {
@@ -77,8 +78,12 @@ export default class SpaceMap extends Vue {
     return (this.sectors || []).length > 7 ? 33.5 : 26;
   }
 
+  get mapModes(): MapMode[] {
+    return this.$store.getters.mapModes;
+  }
+
   get colorLegend(): { class: string; text: string }[] {
-    if (this.$store.getters.mapModes.find(m => m.type === "leech")) {
+    if (this.mapModes.find(m => m.type === MapModeType.leech || m.type == MapModeType.federations)) {
       return [...Array(5).keys()].map(i => ({class: `power${i + 1}`, text: String(i + 1)}));
     }
     return [];
