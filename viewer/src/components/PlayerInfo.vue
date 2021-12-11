@@ -1,10 +1,15 @@
 <template>
   <div class="player-info no-gutters" v-if="player && player.faction">
     <div class="d-flex justify-content-between align-items-center">
-    <span @click="playerClick(player)" :class="['player-name', { dropped: player.dropped }]" role="button">{{
+      <span @click="playerClick(player)" :class="['player-name', { dropped: player.dropped }]" role="button">{{
         name
       }}</span>
-      <b-form-select :v-model="selectedMapModeType" :options="mapModeTypeOptions" @change="toggleMapMode" style="width: auto"/>
+      <b-form-select
+        :value="selectedMapModeType"
+        :options="mapModeTypeOptions"
+        @change="toggleMapMode"
+        style="width: auto"
+      />
     </div>
     <div class="board mt-2">
       <svg :viewBox="`-0.2 -0.5 38.5 ${height}`" class="player-board" :style="`background-color: ${factionColor}`">
@@ -209,7 +214,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
+import { Component, Prop, Watch } from "vue-property-decorator";
 import Engine, { Building, Expansion, factionPlanet, Planet, Player } from "@gaia-project/engine";
 import { factionColor } from "../graphics/utils";
 import TechTile from "./TechTile.vue";
@@ -234,17 +239,12 @@ import { MapMode, MapModeType } from "../data/actions";
     PlayerBoardInfo,
     Rules,
   },
-  watch: {
-    selectedMapModes(this: PlayerInfo, val) {
-      this.selectedMapModeType = this.mapModeType;
-    },
-  },
 })
 export default class PlayerInfo extends Vue {
   @Prop()
   player: Player;
 
-  private selectedMapModeType: MapModeType = MapModeType.default;
+  protected selectedMapModeType: MapModeType = MapModeType.default;
 
   get playerData() {
     return this.player?.data;
@@ -339,7 +339,7 @@ export default class PlayerInfo extends Vue {
   }
 
   get mapModeType(): MapModeType {
-    return this.selectedMapModes.find(m => m.player == this.player.player)?.type ?? MapModeType.default;
+    return this.selectedMapModes.find((m) => m.player == this.player.player)?.type ?? MapModeType.default;
   }
 
   get mapModeTypeOptions() {
@@ -353,6 +353,12 @@ export default class PlayerInfo extends Vue {
 
   toggleMapMode(mode: MapModeType) {
     this.$store.commit("toggleMapMode", { type: mode, player: this.player.player } as MapMode);
+  }
+
+  @Watch("selectedMapModes")
+  resetMapMode() {
+    console.log("reset map mode", this.faction, this.mapModeType);
+    this.selectedMapModeType = this.mapModeType;
   }
 }
 </script>
