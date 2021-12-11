@@ -7,7 +7,7 @@ export function buttonWarnings(messages: WarningWithKey[]): ButtonWarning | null
   return messages.length > 0 && { title: "Are you sure?", body: messages };
 }
 
-export function translateWarnings(keys: string[]): WarningWithKey[] {
+export function translateWarnings(keys: string[] = []): WarningWithKey[] {
   return keys.map((disableKey) => ({
     disableKey,
     message: moveWarnings[disableKey].text,
