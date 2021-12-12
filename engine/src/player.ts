@@ -22,6 +22,7 @@ import {
   Player as PlayerEnum,
   PowerArea,
   ResearchField,
+  Resource as ResourceEnum,
   Resource,
   Ship,
   TechPos,
@@ -132,6 +133,17 @@ export default class Player extends EventEmitter {
       Reward.merge([].concat(...this.events[Operator.Income].map((event) => event.rewards))),
       true
     );
+  }
+
+  resourceIncome(resource: ResourceEnum) {
+    const i = this.income;
+    const index = i.search(new RegExp("[0-9]+" + resource));
+
+    if (index < 0) {
+      return 0;
+    }
+
+    return parseInt(i.substr(index));
   }
 
   get actions() {

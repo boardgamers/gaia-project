@@ -69,13 +69,7 @@ export default class PowerBowls extends Vue {
   }
 
   income(resource: ResourceEnum) {
-    const index = this.player.income.search(new RegExp("[0-9]+" + resource));
-
-    if (index < 0) {
-      return 0;
-    }
-
-    return parseInt(this.player.income.substr(index));
+    return this.player.resourceIncome(resource);
   }
 }
 </script>
