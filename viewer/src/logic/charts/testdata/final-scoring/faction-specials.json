@@ -22,9 +22,9 @@
       }
     ],
     "datasetMeta": {
-      "Gleens (16)": {
+      "Gleens (15)": {
         "label": "Gleens",
-        "total": 16,
+        "total": 15,
         "weightedTotal": null
       },
       "Terrans (60)": {
@@ -58,8 +58,8 @@
       "data": [0, 0, 0, 0, 30, 30]
     },
     {
-      "label": "Gleens (16)",
-      "data": [6, 10, 0, 0, 0, 0]
+      "label": "Gleens (15)",
+      "data": [5, 10, 0, 0, 0, 0]
     },
     {
       "label": "Itars (7)",
