@@ -123,7 +123,7 @@ const specials: FactionSpecial[] = [
     description: "Gaia planets settled with ore instead of QICs",
     extractLog: planetCounter(
       () => false,
-      () => true,
+      () => false,
       (p) => p == Planet.Gaia
     ),
   },
