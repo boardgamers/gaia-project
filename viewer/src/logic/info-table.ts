@@ -87,7 +87,7 @@ function resolveCellColor(color: string | CellStyle, canvas: HTMLCanvasElement):
 function inlineCellStyle(c: Cell, canvas: HTMLCanvasElement): string {
   const cellColor = c?.color ? resolveCellColor(c.color, canvas) : null;
   const color = cellColor ? `color: ${cellColor.color}; background: ${cellColor.backgroundColor};` : "";
-  return `style="${color}`;
+  return `style="${color}"`;
 }
 
 function formatCell(content: CellContent, canvas: HTMLCanvasElement): string {
@@ -491,7 +491,7 @@ function generalTables(engine: Engine): GeneralTable[] {
       })),
     },
     {
-      caption: "Round Scoring",
+      caption: "Round",
       columns: [null as ScoringTile].concat(...engine.tiles.scorings.round).map((r, round) => ({
         header: {
           label: String(round),
