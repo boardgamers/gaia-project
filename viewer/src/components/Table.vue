@@ -38,7 +38,7 @@
         :value="selectedMapMode(p.player)"
         :options="mapModeTypeOptions"
         @change="(mode) => toggleMapMode(p.player, mode)"
-        style="width: auto; height: 4vmin; font-size: 1.6vmin"
+        style="width: auto; height: 3.1vh; font-size: 1.4vh"
       />
     </div>
   </div>
@@ -82,19 +82,20 @@ export default class Table extends Vue {
 <style lang="scss">
 .info-table {
   width: auto;
-  margin: 2px;
-  font-size: 2vmin;
+  margin: 0 !important;
+  font-size: 2vh;
   text-align: center;
 }
 
 .info-table th,
 .info-table td {
-  padding: 0;
-  height: 3vmin;
+  padding: 0 !important;
+  height: 3vh;
 }
 
 .info-table .cell {
   padding: 2px;
+  height: 3vh;
 }
 
 .break {
