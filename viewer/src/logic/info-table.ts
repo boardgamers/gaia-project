@@ -87,7 +87,7 @@ function resolveCellColor(color: string | CellStyle, canvas: HTMLCanvasElement):
 function inlineCellStyle(c: Cell, canvas: HTMLCanvasElement): string {
   const cellColor = c?.color ? resolveCellColor(c.color, canvas) : null;
   const color = cellColor ? `color: ${cellColor.color}; background: ${cellColor.backgroundColor};` : "";
-  return `style="${color} height: 3.3vmin"`;
+  return `style="${color}`;
 }
 
 function formatCell(content: CellContent, canvas: HTMLCanvasElement): string {
