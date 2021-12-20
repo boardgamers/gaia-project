@@ -32,7 +32,9 @@
     "dist/package/viewer.umd.min.*.js",
     "dist/package/viewer.css",
     "dist/package/img",
-    "dist/package/css"
+    "dist/package/css",
+    "dist/package/viewer.umd.min.js.map",
+    "dist/package/viewer.umd.min.*.js.map"
   ],
   "dependencies": {
     "@gaia-project/engine": "workspace:../engine",
