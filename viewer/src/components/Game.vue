@@ -5,61 +5,70 @@
     </b-modal>
     <Rules id="rules" />
 
-    <div
-      :class="['row', 'no-gutters', 'justify-content-center', engine.players.length > 2 ? 'medium-map' : 'small-map']"
-      v-if="hasMap"
-    >
-      <SpaceMap :class="['mb-1', 'space-map', 'col-md-7']" />
-      <svg class="scoring-research-board" :viewBox="`0 0 480 505`">
-        <ResearchBoard height="450" ref="researchBoard" x="-50" />
-        <ScoringBoard class="ml-4" width="90" x="380" y="-25" />
-        <BoardAction
-          :scale="17"
-          :transform="`translate(${45 * i + 6}, 455)`"
-          v-for="(action, i) in actions"
-          :key="action"
-          :action="action"
-        />
-      </svg>
-    </div>
-    <div class="row mt-2">
-      <TurnOrder v-if="!ended && engine.players.length > 0" class="col-md-4 order-4 order-md-1" />
-      <div class="col-md-8 order-1 order-md-2">
-        <Commands @command="handleCommand" v-if="canPlay" :currentMove="currentMove" />
-        <div v-else-if="player != null && !ended" class="current-player">
-          <h5>Current player</h5>
-          <svg viewBox="-1.2 -1.2 2.5 4.5">
-            <PlayerCircle :player="engine.players[player]" />
-          </svg>
+    <template v-if="uiMode === 'graphical'">
+      <div
+        :class="['row', 'no-gutters', 'justify-content-center', engine.players.length > 2 ? 'medium-map' : 'small-map']"
+        v-if="hasMap"
+      >
+        <SpaceMap :class="['mb-1', 'space-map', 'col-md-7']" />
+        <svg class="scoring-research-board" :viewBox="`0 0 480 505`">
+          <ResearchBoard height="450" ref="researchBoard" x="-50" />
+          <ScoringBoard class="ml-4" width="90" x="380" y="-25" />
+          <BoardAction
+            :scale="17"
+            :transform="`translate(${45 * i + 6}, 455)`"
+            v-for="(action, i) in actions"
+            :key="action"
+            :action="action"
+          />
+        </svg>
+      </div>
+      <div class="row mt-2">
+        <TurnOrder v-if="!ended && engine.players.length > 0" class="col-md-4 order-4 order-md-1" />
+        <div class="col-md-8 order-1 order-md-2">
+          <Commands @command="handleCommand" v-if="canPlay" :currentMove="currentMove" />
+          <div v-else-if="player != null && !ended" class="current-player">
+            <h5>Current player</h5>
+            <svg viewBox="-1.2 -1.2 2.5 4.5">
+              <PlayerCircle :player="engine.players[player]" />
+            </svg>
+          </div>
         </div>
       </div>
-    </div>
-    <AdvancedLog
-      class="col-12 order-last mt-4"
-      :currentMove="currentMove"
-      :hideLog.sync="hideLog"
-      v-if="logPlacement === 'top'"
-    />
-    <div class="row mt-2">
-      <template v-if="sessionPlayer === undefined">
-        <PlayerInfo v-for="player in orderedPlayers" :player="player" :key="player.player" class="col-md-6 order-6" />
-      </template>
-      <template v-else>
-        <PlayerInfo :player="sessionPlayer" class="col-md-6 order-3" />
-        <PlayerInfo
-          v-for="player in orderedPlayers.filter((pl) => pl !== sessionPlayer)"
-          :player="player"
-          :key="player.player"
-          class="col-md-6 order-6"
-        />
-      </template>
-      <Pool class="col-12 order-10 mt-4" />
       <AdvancedLog
         class="col-12 order-last mt-4"
         :currentMove="currentMove"
         :hideLog.sync="hideLog"
-        v-if="logPlacement === 'bottom'"
+        v-if="logPlacement === 'top'"
       />
+      <div class="row mt-2">
+        <template v-if="sessionPlayer === undefined">
+          <PlayerInfo v-for="player in orderedPlayers" :player="player" :key="player.player" class="col-md-6 order-6" />
+        </template>
+        <template v-else>
+          <PlayerInfo :player="sessionPlayer" class="col-md-6 order-3" />
+          <PlayerInfo
+            v-for="player in orderedPlayers.filter((pl) => pl !== sessionPlayer)"
+            :player="player"
+            :key="player.player"
+            class="col-md-6 order-6"
+          />
+        </template>
+        <Pool class="col-12 order-10 mt-4" />
+        <AdvancedLog
+          class="col-12 order-last mt-4"
+          :currentMove="currentMove"
+          :hideLog.sync="hideLog"
+          v-if="logPlacement === 'bottom'"
+        />
+      </div>
+    </template>
+    <div v-else-if="loaded" class="d-flex flex-column">
+      <SpaceMap :class="['mb-1', 'space-map', 'col-md-7']" />
+      <AdvancedLog :currentMove="currentMove" :hideLog.sync="hideLog" v-if="logPlacement === 'top'" />
+      <Commands @command="handleCommand" v-if="canPlay" :currentMove="currentMove" />
+      <Table />
+      <AdvancedLog :currentMove="currentMove" :hideLog.sync="hideLog" v-if="logPlacement === 'bottom'" />
     </div>
   </div>
 </template>
@@ -73,6 +82,7 @@ import Engine, {
   Command,
   EngineOptions,
   Phase,
+  Player,
 } from "@gaia-project/engine";
 import AdvancedLog from "./AdvancedLog.vue";
 import BoardAction from "./BoardAction.vue";
@@ -88,6 +98,10 @@ import TurnOrder from "./TurnOrder.vue";
 import { parseCommands } from "../logic/recent";
 import { LogPlacement } from "../data";
 import { ExecuteBack } from "../logic/buttons/types";
+import { currentPlayer } from "@gaia-project/engine/wrapper";
+import { UiMode } from "../store";
+import Table from "./Table.vue";
+import { orderedPlayers } from "../data/player";
 
 @Component<Game>({
   created(this: Game) {
@@ -159,10 +173,12 @@ import { ExecuteBack } from "../logic/buttons/types";
     SpaceMap,
     TurnOrder,
     Rules,
+    Table,
     Charts: () => import("./Charts.vue"),
   },
 })
 export default class Game extends Vue {
+
   public currentMove = "";
   public hideLog = false;
   clearCurrentMove = false;
@@ -170,6 +186,8 @@ export default class Game extends Vue {
   name = "";
 
   replayData: { current: number; backup: Engine } = null;
+
+  protected loaded = false;
 
   @Prop()
   options: EngineOptions;
@@ -181,10 +199,16 @@ export default class Game extends Vue {
       }
     });
     this.$on("hook:beforeDestroy", () => undoListener());
+
+    this.loaded = true;
   }
 
   get engine(): Engine {
     return this.$store.state.data;
+  }
+
+  get uiMode(): UiMode {
+    return this.$store.state.preferences.uiMode;
   }
 
   get expansions() {
@@ -211,20 +235,8 @@ export default class Game extends Vue {
     return this.engine.phase === Phase.EndGame;
   }
 
-  get orderedPlayers() {
-    const engine = this.engine;
-
-    if (!engine.round || !engine.turnOrder) {
-      return engine.players;
-    }
-    const turnOrder = engine.turnOrder;
-
-    // Do not switch boards anymore now that there's two in  a row
-    // if (engine.turnOrder.indexOf(this.player) !== -1) {
-    //   turnOrder = turnOrder.slice(turnOrder.indexOf(this.player)).concat(turnOrder.slice(0, turnOrder.indexOf(this.player)));
-    // }
-
-    return turnOrder.concat(engine.passedPlayers).map((player) => engine.players[player]);
+  get orderedPlayers(): Player[] {
+    return orderedPlayers(this.engine);
   }
 
   get canPlay() {
@@ -250,7 +262,7 @@ export default class Game extends Vue {
   }
 
   get player() {
-    return this.engine.availableCommands?.[0]?.player;
+    return currentPlayer(this.engine);
   }
 
   get sessionPlayer() {

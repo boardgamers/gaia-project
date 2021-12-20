@@ -12,7 +12,7 @@ import Engine, {
   tiles,
 } from "@gaia-project/engine";
 import { ButtonData, ButtonWarning, WarningWithKey } from "../../data";
-import { boosterNames } from "../../data/boosters";
+import { boosterData } from "../../data/boosters";
 import { WarningKey } from "../../data/warnings";
 import { CommandController } from "./types";
 import { autoClickButton, confirmationButton, symbolButton, textButton, translateResources } from "./utils";
@@ -134,7 +134,7 @@ export function passButton(
     shortcuts: ["p"],
     command: command.name,
     buttons: command.data.boosters.map((booster) => {
-      const label = boosterNames[booster].name;
+      const label = boosterData[booster].name;
       return symbolButton({
         label,
         command: booster,

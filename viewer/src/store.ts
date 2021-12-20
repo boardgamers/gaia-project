@@ -35,7 +35,13 @@ type Preference =
   | "logPlacement"
   | "warnings"
   | "autoClick"
-  | "statistics";
+  | "statistics"
+  | "uiMode";
+
+export enum UiMode {
+  graphical = "graphical",
+  table = "table",
+}
 
 export enum LoadFromJsonType {
   load = "load",
@@ -101,6 +107,7 @@ const gaiaViewer = {
       logPlacement: process.env.VUE_APP_logPlacement ?? "bottom",
       warnings: process.env.VUE_APP_warnings ?? "modalDialog",
       statistics: process.env.VUE_APP_statistics ?? "auto",
+      uiMode: process.env.VUE_APP_uiMode ?? "graphical",
     },
     player: null,
   } as State,

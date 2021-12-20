@@ -7,5 +7,5 @@ export const federationData: { [key in Federation]: { color: string; shortcut: s
   [Federation.Fed4]: { color: "--res-ore", shortcut: "o" },
   [Federation.Fed5]: { color: "--res-credit", shortcut: "c" },
   [Federation.Fed6]: { color: "--res-knowledge", shortcut: "k" },
-  [Federation.Gleens]: { color: "--desert", shortcut: null }, // is gained passively when buidling the PI
+  [Federation.Gleens]: { color: "--desert", shortcut: "g" }, // is gained passively when building the PI
 };

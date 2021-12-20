@@ -10,7 +10,7 @@ const nameColumn = {
 
 const weightKey = "Weight";
 
-type CellStyle = { color: string; backgroundColor: string };
+export type CellStyle = { color: string; backgroundColor: string };
 
 export function cellStyle(canvas: HTMLElement, backgroundColor: ColorVar): CellStyle {
   return {

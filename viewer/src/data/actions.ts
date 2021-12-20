@@ -1,6 +1,6 @@
 import { BoardAction, FreeAction, Planet, PlayerEnum, PowerArea, Resource } from "@gaia-project/engine";
 
-export const boardActionNames: { [key in BoardAction]: { name: string; color: string; shortcut: string } } = {
+export const boardActionData: { [key in BoardAction]: { name: string; color: string; shortcut: string } } = {
   [BoardAction.Power1]: { name: "3 knowledge", color: "--recent", shortcut: "n" },
   [BoardAction.Power2]: { name: "2 steps", color: "--current-round", shortcut: "e" },
   [BoardAction.Power3]: { name: "2 ore", color: "--res-ore", shortcut: "o" },

@@ -3,22 +3,22 @@
     "weights": null,
     "colors": [
       {
-        "color": "--rt-terra"
+        "color": "--federation"
       },
       {
-        "color": "--rt-nav"
+        "color": "--res-credit"
       },
       {
-        "color": "--rt-int"
+        "color": "--res-credit"
       },
       {
-        "color": "--rt-gaia"
+        "color": "--specialAction"
       },
       {
-        "color": "--rt-eco"
+        "color": "--rt-science"
       },
       {
-        "color": "--rt-sci"
+        "color": "--current-round"
       }
     ],
     "datasetMeta": {

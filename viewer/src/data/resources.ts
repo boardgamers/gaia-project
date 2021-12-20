@@ -1,4 +1,4 @@
-import { Resource } from "@gaia-project/engine";
+import Engine, { Phase, Player, Resource } from "@gaia-project/engine";
 
 export type ResourceName = {
   type: Resource;
@@ -135,3 +135,12 @@ export const resourceNames: ResourceName[] = [
     shortcut: "d",
   },
 ];
+
+export function showIncome(engine: Engine, player: Player) {
+  return (
+    !engine.isLastRound ||
+    engine.phase == Phase.RoundStart ||
+    (engine.phase == Phase.RoundIncome &&
+      (engine.playerToMove == player.player || engine.tempTurnOrder.includes(player.player)))
+  );
+}

@@ -3,37 +3,37 @@
     "weights": null,
     "colors": [
       {
-        "color": "--tech-tile"
+        "color": "--federation"
       },
       {
-        "color": "--tech-tile"
+        "color": "--rt-science"
       },
       {
-        "color": "--tech-tile"
+        "color": "--res-ore"
       },
       {
-        "color": "--tech-tile"
+        "color": "--res-knowledge"
       },
       {
-        "color": "--tech-tile"
+        "color": "--dig"
       },
       {
-        "color": "--tech-tile"
+        "color": "--gaia"
       },
       {
-        "color": "--tech-tile"
+        "color": "--res-credit"
       },
       {
-        "color": "--tech-tile"
+        "color": "--current-round"
       },
       {
-        "color": "--tech-tile"
+        "color": "--federation"
       },
       {
-        "color": "--tech-tile"
+        "color": "--res-ore"
       },
       {
-        "color": "--tech-tile"
+        "color": "--res-credit"
       }
     ],
     "datasetMeta": {

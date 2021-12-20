@@ -1,7 +1,7 @@
 import { BoardAction, Booster, Command, Faction, Planet, Resource, Reward } from "@gaia-project/engine";
 import { sum } from "lodash";
-import { boardActionNames } from "../../data/actions";
-import { boosterNames } from "../../data/boosters";
+import { boardActionData } from "../../data/actions";
+import { boosterData } from "../../data/boosters";
 import { resourceNames } from "../../data/resources";
 import { terranChargeExtractLog, useChargedTokensExtractLog } from "./charge";
 import { ChartKind } from "./chart-factory";
@@ -160,8 +160,8 @@ export const boardActionSourceFactory: SimpleSourceFactory<ChartSource<BoardActi
   extractLog: commandCounterArg0EqualsSource(Command.Action),
   sources: BoardAction.values().map((action) => ({
     type: action,
-    label: boardActionNames[action].name,
-    color: boardActionNames[action].color,
+    label: boardActionData[action].name,
+    color: boardActionData[action].color,
     weight: 1,
   })),
 };
@@ -173,8 +173,8 @@ export const boosterSourceFactory = (boosters: Booster[]): SimpleSourceFactory<C
   extractLog: commandCounterArg0EqualsSource(Command.Pass, Command.ChooseRoundBooster),
   sources: boosters.map((b) => ({
     type: b,
-    label: boosterNames[b].name,
-    color: boosterNames[b].color,
+    label: boosterData[b].name,
+    color: boosterData[b].color,
     weight: 1,
   })),
 });

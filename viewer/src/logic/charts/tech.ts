@@ -1,6 +1,6 @@
 import { AdvTechTile, AdvTechTilePos, Command, ResearchField, TechTile, TechTilePos } from "@gaia-project/engine";
 import { researchNames } from "../../data/research";
-import { advancedTechTileNames, baseTechTileNames } from "../../data/tech-tiles";
+import { advancedTechTileData, baseTechTileData } from "../../data/tech-tiles";
 import { ChartSource, initialResearch } from "./charts";
 import { commandCounterArg0EqualsSource, ExtractLog, SimpleSourceFactory } from "./simple-charts";
 
@@ -23,8 +23,8 @@ export const baseTechSourceFactory: SimpleSourceFactory<ChartSource<TechTile>> =
   extractLog: techTileExtractLog,
   sources: TechTile.values().map((t) => ({
     type: t,
-    label: baseTechTileNames[t].name,
-    color: baseTechTileNames[t].color,
+    label: baseTechTileData[t].name,
+    color: baseTechTileData[t].color,
     weight: 1,
   })),
 };
@@ -38,8 +38,8 @@ export const advancedTechSourceFactory = (
   extractLog: techTileExtractLog,
   sources: Array.from(advTechTiles.entries()).map(([tile, color]) => ({
     type: tile,
-    label: advancedTechTileNames[tile],
-    color: color,
+    label: advancedTechTileData[tile].name,
+    color: advancedTechTileData[tile].color,
     weight: 1,
   })),
 });
