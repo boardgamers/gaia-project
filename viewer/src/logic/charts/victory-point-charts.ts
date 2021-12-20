@@ -18,8 +18,8 @@ import Engine, {
   TechPos,
 } from "@gaia-project/engine";
 import { sum } from "lodash";
-import { boosterNames } from "../../data/boosters";
-import { advancedTechTileNames } from "../../data/tech-tiles";
+import { boosterData } from "../../data/boosters";
+import { advancedTechTileData } from "../../data/tech-tiles";
 import {
   ColorVar,
   DatasetFactory,
@@ -235,15 +235,15 @@ function advancedTechTileTypes(e: Engine, tile: AdvTechTile): AdvTechTilePos[] {
 
 export const advancedTechTileSource = (data: Engine, tile: AdvTechTile, color: string): VictoryPointSource => ({
   types: advancedTechTileTypes(data, tile),
-  label: advancedTechTileNames[tile],
-  color: color,
+  label: advancedTechTileData[tile].name,
+  color: advancedTechTileData[tile].color,
   roundValues: passIncomeProjection(advancedTechTileTypes(data, tile), true),
 });
 
 export const boosterSource = (data: Engine, booster: Booster): VictoryPointSource => ({
   types: [booster],
-  label: boosterNames[booster].name,
-  color: boosterNames[booster].color,
+  label: boosterData[booster].name,
+  color: boosterData[booster].color,
   roundValues: passIncomeProjection([booster], false),
 });
 

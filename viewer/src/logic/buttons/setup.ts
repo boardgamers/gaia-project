@@ -10,7 +10,7 @@ import Engine, {
 import { ButtonData } from "../../data";
 import { eventDesc } from "../../data/event";
 import { federationData } from "../../data/federations";
-import { roundScoringNames } from "../../data/round-scorings";
+import { roundScoringData } from "../../data/round-scorings";
 import { finalScoringSources } from "../charts/final-scoring";
 import { CommandController } from "./types";
 import { autoClickButton, symbolButton, textButton } from "./utils";
@@ -69,7 +69,7 @@ export function setupButton(data: AvailableSetupOption, controller: CommandContr
         buttons: data.options.map((scoring) =>
           textButton({
             command: scoring,
-            label: roundScoringNames[scoring],
+            label: roundScoringData[scoring].name,
           })
         ),
       });

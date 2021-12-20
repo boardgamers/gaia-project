@@ -14,7 +14,7 @@
     </g>
     <g :transform="`translate(${-r * spacing}, ${2 * r * sin60 * spacing})`">
       <PowerBowl :player="player" area="area1" class="power-bowl" />
-      <text y="1.7" transform="scale(0.7)" v-if="!engine.isLastRound && income('t')">+{{ income("t") }}</text>
+      <text y="1.7" transform="scale(0.7)" v-if="showIncome && income('t')">+{{ income("t") }}</text>
       <text class="label" x="-2.6">I</text>
     </g>
     <g :transform="`translate(${-r * spacing}, ${-2 * r * sin60 * spacing})`">
@@ -25,7 +25,7 @@
       <PowerBowl :player="player" area="area3" class="power-bowl" />
       <text class="label" y="2.6" x="0">III</text>
     </g>
-    <text class="label" transform="translate(-3.5, 0) scale(0.75)" v-if="!engine.isLastRound && income('pw')"
+    <text class="label" transform="translate(-3.5, 0) scale(0.75)" v-if="showIncome && income('pw')"
       >+{{ income("pw") }}
     </text>
   </g>
@@ -37,6 +37,7 @@ import { Component, Prop } from "vue-property-decorator";
 import Resource from "../Resource.vue";
 import Engine, { Faction, Player, Resource as ResourceEnum } from "@gaia-project/engine";
 import PowerBowl from "./PowerBowl.vue";
+import { showIncome } from "../../data/resources";
 
 @Component<PowerBowls>({
   components: {
@@ -50,6 +51,10 @@ export default class PowerBowls extends Vue {
 
   get engine(): Engine {
     return this.$store.state.data;
+  }
+
+  get showIncome() {
+    return showIncome(this.engine, this.player);
   }
 
   get isTerran() {

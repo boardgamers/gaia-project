@@ -32,6 +32,7 @@ export class FinalScoringTableRow {
 
 class FinalScoringSource extends FinalScoringTableRow {
   extractLog: FinalScoringExtractLog;
+  abbreviation: string;
 }
 
 class FederationSimulator {
@@ -164,6 +165,7 @@ const sectors: FinalScoringExtractLog = ExtractLog.wrapper(() => {
 export const finalScoringSources: { [key in FinalTile]: FinalScoringSource } = {
   [FinalTile.Gaia]: {
     name: "Gaia planets",
+    abbreviation: "G",
     contributors: ["Regular Building"],
     color: "--rt-gaia",
     extractLog: planetCounter(
@@ -175,24 +177,28 @@ export const finalScoringSources: { [key in FinalTile]: FinalScoringSource } = {
   },
   [FinalTile.PlanetType]: {
     contributors: ["Regular Building", "Lost Planet"],
+    abbreviation: "P",
     name: "Planet Types",
     color: "--rt-terra",
     extractLog: planetTypes,
   },
   [FinalTile.Sector]: {
     contributors: ["Regular Building", "Lost Planet", "Lantids Guest Mine"],
+    abbreviation: "E",
     name: "Sectors",
     color: "--tech-tile",
     extractLog: sectors,
   },
   [FinalTile.Satellite]: {
     contributors: ["Satellite", "Space Station"],
+    abbreviation: "A",
     name: "Satellites",
     color: "--current-round",
     extractLog: satellites,
   },
   [FinalTile.Structure]: {
     contributors: ["Regular Building", "Lost Planet", "Lantids Guest Mine"],
+    abbreviation: "R",
     name: "Structures",
     color: "--recent",
     extractLog: planetCounter(
@@ -205,6 +211,7 @@ export const finalScoringSources: { [key in FinalTile]: FinalScoringSource } = {
   [FinalTile.StructureFed]: {
     contributors: ["Regular Building", "Lost Planet", "Lantids Guest Mine"],
     name: "Structures in federations",
+    abbreviation: "F",
     color: "--federation",
     extractLog: structureFed,
   },

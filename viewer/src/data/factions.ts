@@ -11,7 +11,7 @@ import {
 } from "@gaia-project/engine";
 import { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
 import { factionColor, planetFill } from "../graphics/utils";
-import { buildingName, isFrontiersBuilding } from "./building";
+import { allBuildings, buildingName } from "./building";
 
 const factionData: { [faction in Faction]: { name: string; ability: string; PI: string; shortcut: string } } = {
   [Faction.Terrans]: {
@@ -147,12 +147,7 @@ export function factionDesc(faction: Faction, variant: FactionBoardRaw | null, e
 
   const buildingDesc =
     "<ul>" +
-    Object.values(Building)
-      .filter(
-        (bld) =>
-          (bld !== Building.GaiaFormer && bld !== Building.SpaceStation && !isFrontiersBuilding(bld)) ||
-          expansion === Expansion.Frontiers
-      )
+    allBuildings(expansion, false)
       .map(
         (bld) =>
           "<li><b>" +
@@ -169,9 +164,9 @@ export function factionDesc(faction: Faction, variant: FactionBoardRaw | null, e
   const roundIncome = board.income.filter((ev) => ev.operator === Operator.Income);
 
   return `
-  <div class='faction-desc' style='background-color: ${factionColor(faction)}; color: ${planetFill(
+  <div class="faction-desc" style="background-color: ${factionColor(faction)}; color: ${planetFill(
     factionPlanet(faction)
-  )}; padding: 1rem'>
+  )}; padding: 1rem">
     <b>Ability: </b> ${factionData[faction].ability} </br>
     <b>Planetary Institute: </b> ${factionData[faction].PI}<br/>
     <b>Buildings:</b> ${buildingDesc.replace(/,,/g, ",~,").replace(/,/g, ", ")}

@@ -3,16 +3,16 @@
     "weights": null,
     "colors": [
       {
-        "color": "--tech-tile"
+        "color": "--specialAction"
       },
       {
-        "color": "--tech-tile"
+        "color": "--lost"
       },
       {
-        "color": "--tech-tile"
+        "color": "--specialAction"
       },
       {
-        "color": "--tech-tile"
+        "color": "--specialAction"
       }
     ],
     "datasetMeta": {

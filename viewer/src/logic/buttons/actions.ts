@@ -9,7 +9,7 @@ import {
   Reward,
 } from "@gaia-project/engine";
 import { ButtonData, ButtonWarning } from "../../data";
-import { boardActionNames } from "../../data/actions";
+import { boardActionData } from "../../data/actions";
 import { resourceNames } from "../../data/resources";
 import { conversionButton } from "./conversion";
 import { symbolButton, translateResources } from "./utils";
@@ -20,7 +20,7 @@ export function boardActionButton(action: BoardAction, player: Player | null) {
   const cost = Reward.parse(b.cost);
   const income = Reward.merge(Event.parse(b.income, null).flatMap((e) => e.rewards));
 
-  const shortcut = boardActionNames[action].shortcut;
+  const shortcut = boardActionData[action].shortcut;
   return conversionButton(cost, income, player, shortcut, ["Power Charges", "Terraforming"], action, action);
 }
 

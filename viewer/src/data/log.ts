@@ -12,12 +12,12 @@ import Engine, {
 } from "@gaia-project/engine";
 import { factionLogColors, factionLogTextColors, lightFactionLogColors } from "../graphics/utils";
 import { CommandObject, MovesSlice, ownTurn, parsedMove, ParsedMove } from "../logic/recent";
-import { boosterNames } from "./boosters";
-import { advancedTechTileNames, baseTechTileNames } from "./tech-tiles";
+import { boosterData } from "./boosters";
+import { advancedTechTileData, baseTechTileData } from "./tech-tiles";
 
 function replaceTech(data: Engine, pos: TechTilePos | AdvTechTilePos) {
   const tile = data.tiles.techs[pos].tile;
-  return pos.startsWith("adv") ? advancedTechTileNames[tile] : baseTechTileNames[tile].name;
+  return pos.startsWith("adv") ? advancedTechTileData[tile].name : baseTechTileData[tile].name;
 }
 
 export function replaceMove(data: Engine, move: ParsedMove): ParsedMove {
@@ -29,7 +29,7 @@ export function replaceMove(data: Engine, move: ParsedMove): ParsedMove {
     commands: move.commands,
     move: move.move.replace(/\b(tech|cover) [a-z0-9-]+|fed[0-9]+|booster[0-9]+/g, (match) => {
       if (match.startsWith("booster")) {
-        return addDetails(match, boosterNames[match].name);
+        return addDetails(match, boosterData[match].name);
       } else if (match.startsWith("fed")) {
         return addDetails(match, federations[match]);
       } else if (match.startsWith("cover")) {
@@ -50,7 +50,7 @@ export function replaceChange(data: Engine, move: string): string {
 
   if (move.match(/\btech-[a-z0-9-]+|adv-[a-z]+|booster[0-9]+/g)) {
     if (move.startsWith("booster")) {
-      return addDetails(move, boosterNames[move].name);
+      return addDetails(move, boosterData[move].name);
     } else if (move.startsWith("tech-")) {
       const pos = move.substr("tech-".length) as TechTilePos;
       return addDetails(move, replaceTech(data, pos));

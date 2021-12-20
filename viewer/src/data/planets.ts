@@ -1,4 +1,4 @@
-import { Planet } from "@gaia-project/engine";
+import Engine, { Planet } from "@gaia-project/engine";
 
 export default {
   [Planet.Swamp]: { radius: 0.65, color: "#704100", borderColor: "#874d12" },
@@ -25,3 +25,7 @@ export const planetNames = {
   [Planet.Transdim]: "Transdim",
   [Planet.Lost]: "Lost planet",
 };
+
+export function remainingPlanets(planet: Planet, engine: Engine): number {
+  return Array.from(engine.map.grid.values()).filter((hex) => !hex.occupied() && hex.data.planet === planet).length;
+}

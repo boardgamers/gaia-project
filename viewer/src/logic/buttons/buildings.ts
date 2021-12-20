@@ -17,7 +17,7 @@ import { qicForDistance } from "@gaia-project/engine/src/cost";
 import assert from "assert";
 import { sortBy, sortedUniq } from "lodash";
 import { ButtonData, HighlightHex, WarningWithKey } from "../../data";
-import { buildingName, buildingShortcut, shipActionName, shipLetter } from "../../data/building";
+import { availableBuildingShortcut, buildingName, shipActionName, shipLetter } from "../../data/building";
 import { prependShortcut, tooltipWithShortcut, withShortcut } from "./shortcuts";
 import { CommandController } from "./types";
 import { addOnClick, addOnShow, autoClickButton, confirmationButton, hexMap, isFree, textButton } from "./utils";
@@ -144,7 +144,7 @@ function buildingLabel(bld: AvailableBuilding, faction: Faction) {
     if (building == Building.Mine) {
       label = "Upgrade Gaia Former to Mine";
     } else {
-      label = withShortcut(`Upgrade to ${name}`, buildingShortcut(bld, faction), ["Upgrade to"]);
+      label = withShortcut(`Upgrade to ${name}`, availableBuildingShortcut(bld, faction), ["Upgrade to"]);
     }
   } else if (bld.downgrade) {
     label = `Downgrade to ${name}`;
@@ -227,7 +227,7 @@ export function buildButtons(
 
     const b = buildings[0];
     const building = b.building;
-    const shortcut = buildingShortcut(b, faction);
+    const shortcut = availableBuildingShortcut(b, faction);
 
     const menu = buildingMenu(building);
     if (menu) {

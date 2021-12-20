@@ -3,22 +3,22 @@
     "weights": null,
     "colors": [
       {
-        "color": "--rt-terra"
+        "color": "--specialAction"
       },
       {
-        "color": "--rt-nav"
+        "color": "--lost"
       },
       {
-        "color": "--rt-int"
+        "color": "--dig"
       },
       {
-        "color": "--rt-gaia"
+        "color": "--res-knowledge"
       },
       {
-        "color": "--rt-eco"
+        "color": "--res-credit"
       },
       {
-        "color": "--rt-sci"
+        "color": "--gaia"
       }
     ],
     "datasetMeta": {

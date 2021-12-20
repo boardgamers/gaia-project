@@ -98,7 +98,7 @@
           :title="convertTooltip(r)"
         />
       </g>
-      <g transform="translate(0, 1.5)" v-if="!engine.isLastRound">
+      <g transform="translate(0, 1.5)" v-if="showIncome">
         <text class="board-text" x="0.25">I</text>
         <g transform="translate(2.2, 0)" v-if="income('c') > 0">
           <text class="board-text" transform="scale(0.7)">+{{ income("c") }}</text>
@@ -144,8 +144,8 @@ import Engine, {
 import VictoryPoint from "../Resources/VictoryPoint.vue";
 import { FastConversionEvent, MapMode, MapModeType } from "../../data/actions";
 import { factionName } from "../../data/factions";
-import { LEECHING_DISTANCE } from "@gaia-project/engine/src/engine";
-import { leechPlanets, upgradableBuildingsOfOtherPlayers } from "../../logic/utils";
+import { showIncome } from "../../data/resources";
+import { leechNetwork, sectors } from "../../data/stats";
 
 @Component({
   components: {
@@ -210,6 +210,10 @@ export default class PlayerBoardInfo extends Vue {
     return this.player.resourceIncome(resource);
   }
 
+  get showIncome() {
+    return showIncome(this.engine, this.player);
+  }
+
   researchClass(index: number): string {
     return this.$store.getters.researchClasses.get(this.player.faction)?.get(this.researchType(index)) ?? "";
   }
@@ -223,8 +227,7 @@ export default class PlayerBoardInfo extends Vue {
   }
 
   get sectors(): number {
-    return uniq(this.data.occupied.filter((hex) => hex.colonizedBy(this.player.player)).map((hex) => hex.data.sector))
-      .length;
+    return sectors(this.player);
   }
 
   get satellitesLeft(): number {
@@ -232,17 +235,7 @@ export default class PlayerBoardInfo extends Vue {
   }
 
   get leechNetwork(): number {
-    const map = this.engine.map;
-    const hexes: GaiaHex[] = Array.from(map.grid.values());
-    const player = this.player.player;
-
-    return sum(hexes.map(hex => {
-      const b = upgradableBuildingsOfOtherPlayers(this.engine, hex, player);
-      if (b > 0 && leechPlanets(map, player, hex).length > 0) {
-        return b;
-      }
-      return 0;
-    }));
+    return leechNetwork(this.engine, this.player.player);
   }
 }
 </script>

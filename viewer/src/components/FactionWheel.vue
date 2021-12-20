@@ -36,6 +36,7 @@ import { planetFill } from "../graphics/utils";
 import Engine, { factionPlanet, Planet } from "@gaia-project/engine";
 import { radiusTranslate } from "../logic/utils";
 import { MapMode } from "../data/actions";
+import { remainingPlanets } from "../data/planets";
 
 const planets = [
   Planet.Terra,
@@ -68,8 +69,7 @@ export default class FactionWheel extends Vue {
   }
 
   remainingPlanets(planet: Planet) {
-    return Array.from(this.gameData.map.grid.values()).filter((hex) => !hex.occupied() && hex.data.planet === planet)
-      .length;
+    return remainingPlanets(planet, this.gameData);
   }
 
   strokeWidth(pos: number) {

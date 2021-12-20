@@ -227,6 +227,7 @@ import PowerBowls from "./PlayerBoard/PowerBowls.vue";
 import Rules from "./Rules.vue";
 import { factionName, planetsWithSteps } from "../data/factions";
 import { MapMode, MapModeType } from "../data/actions";
+import { mapModeTypeOptions } from "../data/stats";
 
 @Component({
   components: {
@@ -343,12 +344,7 @@ export default class PlayerInfo extends Vue {
   }
 
   get mapModeTypeOptions() {
-    return [
-      { value: MapModeType.default, text: "Default" },
-      { value: MapModeType.sectors, text: "Sectors" },
-      { value: MapModeType.federations, text: "Federations" },
-      { value: MapModeType.leech, text: "Leech Network" },
-    ];
+    return mapModeTypeOptions;
   }
 
   toggleMapMode(mode: MapModeType) {
