@@ -84,7 +84,7 @@ export default class Table extends Vue {
   width: auto;
   margin: 0 !important;
   font-size: 17px;
-  text-align: center;
+  text-align: center !important;
 
   th,
   td,
