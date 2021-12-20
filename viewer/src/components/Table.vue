@@ -38,7 +38,7 @@
         :value="selectedMapMode(p.player)"
         :options="mapModeTypeOptions"
         @change="(mode) => toggleMapMode(p.player, mode)"
-        style="width: auto; height: 3.1vh; font-size: 1.4vh"
+        class="info-table-dropdown"
       />
     </div>
   </div>
@@ -83,19 +83,28 @@ export default class Table extends Vue {
 .info-table {
   width: auto;
   margin: 0 !important;
-  font-size: 2vh;
+  font-size: 17px;
   text-align: center;
+
+  th,
+  td,
+  .cell {
+    height: 27px !important;
+  }
+  th,
+  td {
+    padding: 0 !important;
+  }
+  .cell {
+    padding: 2px;
+  }
 }
 
-.info-table th,
-.info-table td {
-  padding: 0 !important;
-  height: 3vh;
-}
-
-.info-table .cell {
-  padding: 2px;
-  height: 3vh;
+.info-table-dropdown {
+  width: auto;
+  height: 28px !important;
+  padding: 1px !important;
+  font-size: 18px !important;
 }
 
 .break {
