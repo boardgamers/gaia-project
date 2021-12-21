@@ -42,6 +42,11 @@ export type Cell = {
   class?: string;
 };
 
+const emptyCell: Cell = {
+  label: "",
+  title: "",
+};
+
 type AdditionalHeader = Cell & { colspan: number };
 export type InfoTable = {
   caption: string;
@@ -118,6 +123,9 @@ function formatCell(content: CellContent): string {
 }
 
 function multiCell(cells: Cell[]): Cell {
+  if (cells.length == 0) {
+    cells = [emptyCell];
+  }
   const content = cells
     .map(
       (c, i) =>
@@ -166,7 +174,7 @@ function resourceCell(r: Resource | PowerArea): Cell {
 function incomeCell(r: Resource | PowerArea, val: any, income: number, showIncome = true): Cell {
   const cell = resourceCell(r);
   return {
-    label: showIncome ? `${val}+${income}` : val,
+    label: showIncome && income ? `${val}+${income}` : val,
     title: cell.title,
     color: cell.color,
   };
@@ -411,10 +419,7 @@ function planets(engine: Engine): PlayerTable {
         label: "",
         title: "Planet types, except transdim",
         cell: (p) => Object.keys(count.get(p.player)).filter((p) => p != Planet.Transdim).length,
-        additionalHeader: {
-          label: "",
-          title: "",
-        },
+        additionalHeader: emptyCell,
       } as PlayerColumn,
     ].concat(
       ...Object.values(Planet)

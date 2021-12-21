@@ -51,6 +51,7 @@ import { orderedPlayers } from "../data/player";
 import { MapMode, MapModeType } from "../data/actions";
 import { mapModeTypeOptions } from "../data/stats";
 import { UiMode } from "../store";
+import { rotate } from "../logic/utils";
 
 @Component
 export default class Table extends Vue {
@@ -59,7 +60,18 @@ export default class Table extends Vue {
   }
 
   get orderedPlayers(): Player[] {
-    return orderedPlayers(this.engine);
+    const players = orderedPlayers(this.engine);
+    const s = this.sessionPlayer;
+    return s ? rotate(players, s) : players;
+  }
+
+  get sessionPlayer(): Player {
+    const player = this.$store.state.player;
+    if (player) {
+      if (player.index !== undefined) {
+        return this.engine.players[player.index];
+      }
+    }
   }
 
   get infoTables(): InfoTable[] {

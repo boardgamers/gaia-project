@@ -38,3 +38,11 @@ export function upgradableBuildingsOfOtherPlayers(engine: Engine, hex: GaiaHex, 
   const p = hex.data.player;
   return p != null && p != player && upgradedBuildings(hex.buildingOf(p), engine.player(p).faction).length > 0 ? 1 : 0;
 }
+
+export function rotate<T>(list: Array<T>, first: T): Array<T> {
+  const i = list.indexOf(first);
+  if (i <= 0) {
+    return list;
+  }
+  return list.slice(i).concat(list.slice(0, i));
+}
