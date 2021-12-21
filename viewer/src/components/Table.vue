@@ -25,7 +25,7 @@
           </b-tr>
         </template>
         <template #cell()="data">
-          <span v-html="data.value" v-b-tooltip.hover :title="data.title"></span>
+          <span v-html="data.value" v-b-tooltip.hover :title="data.title" @click="convert(data.field.convert)"></span>
         </template>
       </b-table>
       <div v-if="table.break" :key="`${i}break`" class="break" />
@@ -45,10 +45,10 @@
 </template>
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import Engine, { Player, PlayerEnum } from "@gaia-project/engine";
+import Engine, { Player, PlayerEnum, PowerArea, Resource as ResourceEnum } from "@gaia-project/engine";
 import { InfoTable, infoTables } from "../logic/info-table";
 import { orderedPlayers } from "../data/player";
-import { MapMode, MapModeType } from "../data/actions";
+import { FastConversionEvent, MapMode, MapModeType } from "../data/actions";
 import { mapModeTypeOptions } from "../data/stats";
 import { UiMode } from "../store";
 import { rotate } from "../logic/utils";
@@ -75,7 +75,10 @@ export default class Table extends Vue {
   }
 
   get infoTables(): InfoTable[] {
-    return infoTables(this.engine, this.orderedPlayers, this.uiMode);
+    return infoTables(this.engine, this.orderedPlayers, this.uiMode,
+      {
+        convertTooltip: (resource, player) => this.convertTooltip(resource, player),
+      });
   }
 
   get mapModeTypeOptions() {
@@ -92,6 +95,18 @@ export default class Table extends Vue {
 
   get uiMode(): UiMode {
     return this.$store.state.preferences.uiMode;
+  }
+
+  convert(resource: ResourceEnum | PowerArea) {
+    if (resource) {
+      this.$store.dispatch("fastConversionClick", { button: resource } as FastConversionEvent);
+    }
+  }
+
+  convertTooltip(resource: ResourceEnum | PowerArea, player: PlayerEnum): string | null {
+    if (this.engine.currentPlayer == player) {
+      return this.$store.state.context.fastConversionTooltips[resource];
+    }
   }
 }
 </script>
@@ -119,6 +134,7 @@ export default class Table extends Vue {
     display: flex;
     justify-content: center;
     align-items: center;
+    cursor: pointer;
   }
 }
 
