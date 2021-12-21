@@ -11,6 +11,7 @@ import Engine, {
   PowerArea,
   ResearchField,
   Resource,
+  Resource as ResourceEnum,
   ScoringTile,
   TechTile,
   TechTilePos,
@@ -40,6 +41,11 @@ export type Cell = {
   color?: string | CellStyle;
   deactivated?: boolean;
   class?: string;
+  convert?: ResourceEnum | PowerArea;
+};
+
+export type ConversionSupport = {
+  convertTooltip(resource: ResourceEnum | PowerArea, player: PlayerEnum): string | null;
 };
 
 const emptyCell: Cell = {
@@ -90,6 +96,8 @@ const uiModeSettings: { [key in UiMode]?: TableSettings } = {
     caption: false,
   },
 };
+
+const stripUnderline = new RegExp("<u>(.*?)</u>", "g");
 
 function deactivated(s: string, deactivated = true): string {
   return deactivated ? `<s><i>${s}</i></s>` : s;
@@ -171,22 +179,31 @@ function resourceCell(r: Resource | PowerArea): Cell {
   };
 }
 
-function incomeCell(r: Resource | PowerArea, val: any, income: number, showIncome = true): Cell {
+function incomeCell(
+  r: Resource | PowerArea,
+  val: any,
+  income: number,
+  player: Player,
+  support: ConversionSupport | null,
+  showIncome = true
+): Cell {
   const cell = resourceCell(r);
+  const tooltip = support?.convertTooltip(r, player.player)?.replace(stripUnderline, (match, group) => group);
   return {
     label: showIncome && income ? `${val}+${income}` : val,
-    title: cell.title,
+    title: tooltip ? `${cell.title} (${tooltip})` : cell.title,
     color: cell.color,
   };
 }
 
-function resourceColumn(r: Resource, showIncome: (Player) => boolean): PlayerColumn {
+function resourceColumn(r: Resource, showIncome: (Player) => boolean, support: ConversionSupport | null): PlayerColumn {
   const cell = resourceCell(r);
   return {
     label: cell.label,
     title: cell.title,
     color: cell.color,
-    cell: (p) => incomeCell(r, p.data.getResources(r), p.resourceIncome(r), showIncome(p)),
+    cell: (p) => incomeCell(r, p.data.getResources(r), p.resourceIncome(r), p, support, showIncome(p)),
+    convert: r,
   };
 }
 
@@ -229,21 +246,21 @@ function general(engine: Engine): PlayerTable {
         title: "Actions",
         cell: (p, passed) => p.actions.map((a) => deactivated(a.rewards, !a.enabled || passed)).join(", "),
       },
-      resourceColumn(Resource.VictoryPoint, () => false),
+      resourceColumn(Resource.VictoryPoint, () => false, null),
     ],
   };
 }
 
-function resources(engine: Engine): PlayerTable {
+function resources(engine: Engine, support: ConversionSupport): PlayerTable {
   return {
     caption: "Resources",
     columns: [Resource.Credit, Resource.Ore, Resource.Knowledge, Resource.Qic].map((r) =>
-      resourceColumn(r, (p) => showIncome(engine, p))
+      resourceColumn(r, (p) => showIncome(engine, p), support)
     ),
   };
 }
 
-function power(engine: Engine): PlayerTable {
+function power(engine: Engine, support: ConversionSupport): PlayerTable {
   return {
     caption: "Power",
     columns: Object.values(PowerArea).map((a) => {
@@ -252,19 +269,36 @@ function power(engine: Engine): PlayerTable {
         label: cell.label,
         title: cell.title,
         color: cell.color,
+        convert: a,
         cell: (p) => {
           switch (a) {
             case PowerArea.Area1:
-              return incomeCell(a, powerArea(a, p.data), p.resourceIncome(Resource.GainToken), showIncome(engine, p));
+              return incomeCell(
+                a,
+                powerArea(a, p.data),
+                p.resourceIncome(Resource.GainToken),
+                p,
+                support,
+                showIncome(engine, p)
+              );
             case PowerArea.Area2:
-              return incomeCell(a, powerArea(a, p.data), p.resourceIncome(Resource.ChargePower), showIncome(engine, p));
+              return incomeCell(
+                a,
+                powerArea(a, p.data),
+                p.resourceIncome(Resource.ChargePower),
+                p,
+                support,
+                showIncome(engine, p)
+              );
             case PowerArea.Area3:
-              return incomeCell(a, powerArea(a, p.data), 0, false);
+              return incomeCell(a, powerArea(a, p.data), 0, p, support, false);
             case PowerArea.Gaia:
               return incomeCell(
                 a,
                 p.data.gaiaformersInGaia ? `${p.data.power.gaia}, ${p.data.gaiaformersInGaia}gf` : p.data.power.gaia,
                 0,
+                p,
+                support,
                 false
               );
           }
@@ -480,11 +514,11 @@ function stats(engine: Engine): PlayerTable {
   };
 }
 
-function playerTables(engine: Engine): PlayerTable[] {
+function playerTables(engine: Engine, support: ConversionSupport): PlayerTable[] {
   return [
     general(engine),
-    resources(engine),
-    power(engine),
+    resources(engine, support),
+    power(engine, support),
     research(engine),
     finals(engine),
     buildings(engine),
@@ -565,16 +599,23 @@ function generalTables(engine: Engine): GeneralTable[] {
 function field(c: Cell, sortable: boolean): { key: string } & BvTableField {
   const style = c.color && !c.deactivated ? (resolveCellColor(c.color) as any) : {};
   style.padding = "2px";
-  return {
+  const column = {
     key: c.title,
     label: deactivated(c.label, c.deactivated ?? false),
     thStyle: style,
     headerTitle: c.title,
     sortable,
   };
+  (column as any).convert = c.convert;
+  return column;
 }
 
-export function infoTables(engine: Engine, orderedPlayers: Player[], uiMode: UiMode): InfoTable[] {
+export function infoTables(
+  engine: Engine,
+  orderedPlayers: Player[],
+  uiMode: UiMode,
+  support: ConversionSupport
+): InfoTable[] {
   const settings = uiModeSettings[uiMode];
   function caption(s: string): string | null {
     return settings.caption ? s : null;
@@ -605,7 +646,7 @@ export function infoTables(engine: Engine, orderedPlayers: Player[], uiMode: UiM
   });
   gTables[gTables.length - 1].break = true;
 
-  const pTables: InfoTable[] = playerTables(engine).map((t) => ({
+  const pTables: InfoTable[] = playerTables(engine, support).map((t) => ({
     caption: caption(t.caption),
     fields: t.columns.map((c) => field(c, settings.sortable)),
     additionalHeader: t.columns
