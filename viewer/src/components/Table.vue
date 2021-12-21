@@ -50,6 +50,7 @@ import { InfoTable, infoTables } from "../logic/info-table";
 import { orderedPlayers } from "../data/player";
 import { MapMode, MapModeType } from "../data/actions";
 import { mapModeTypeOptions } from "../data/stats";
+import { UiMode } from "../store";
 
 @Component
 export default class Table extends Vue {
@@ -62,8 +63,7 @@ export default class Table extends Vue {
   }
 
   get infoTables(): InfoTable[] {
-    const element = document.getElementById("root") as HTMLCanvasElement;
-    return infoTables(element, this.engine, this.orderedPlayers);
+    return infoTables(this.engine, this.orderedPlayers, this.uiMode);
   }
 
   get mapModeTypeOptions() {
@@ -77,12 +77,16 @@ export default class Table extends Vue {
   toggleMapMode(player: PlayerEnum, mode: MapModeType) {
     this.$store.commit("toggleMapMode", { type: mode, player: player } as MapMode);
   }
+
+  get uiMode(): UiMode {
+    return this.$store.state.preferences.uiMode;
+  }
 }
 </script>
 <style lang="scss">
 .info-table {
   width: auto;
-  margin: 0 !important;
+  margin: 2px !important;
   font-size: 17px;
   text-align: center !important;
 
@@ -90,6 +94,7 @@ export default class Table extends Vue {
   td,
   .cell {
     height: 27px !important;
+    min-width: 16px;
   }
   th,
   td {

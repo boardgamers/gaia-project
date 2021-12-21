@@ -13,6 +13,7 @@ import Engine, {
   Resource,
   ScoringTile,
   TechTile,
+  TechTilePos,
   tiles,
 } from "@gaia-project/engine";
 import { BvTableField, BvTableFieldArray } from "bootstrap-vue/src/components/table";
@@ -27,9 +28,10 @@ import { researchNames } from "../data/research";
 import { resourceNames, showIncome } from "../data/resources";
 import { roundScoringData } from "../data/round-scorings";
 import { leechNetwork, sectors } from "../data/stats";
-import { advancedTechTileData, baseTechTileData, techTileData } from "../data/tech-tiles";
+import { techTileData } from "../data/tech-tiles";
 import { CellStyle, planetColorVar, playerColor, staticCellStyle } from "../graphics/colors";
 import { lightenDarkenColor } from "../graphics/utils";
+import { UiMode } from "../store";
 import { finalScoringSources } from "./charts/final-scoring";
 
 export type Cell = {
@@ -66,11 +68,29 @@ type GeneralTable = {
   columns: { header: Cell; row: Cell }[];
 };
 
+type TableSettings = {
+  sortable: boolean;
+  rowHeaderOnAllColumns: boolean;
+  caption: boolean;
+};
+const uiModeSettings: { [key in UiMode]?: TableSettings } = {
+  [UiMode.table]: {
+    sortable: false,
+    rowHeaderOnAllColumns: false,
+    caption: true,
+  },
+  [UiMode.compactTable]: {
+    sortable: false,
+    rowHeaderOnAllColumns: false,
+    caption: false,
+  },
+};
+
 function deactivated(s: string, deactivated = true): string {
   return deactivated ? `<s><i>${s}</i></s>` : s;
 }
 
-function resolveCellColor(color: string | CellStyle, canvas: HTMLCanvasElement): CellStyle {
+function resolveCellColor(color: string | CellStyle): CellStyle {
   if (typeof color === "object") {
     return color;
   } else if (color.startsWith("--")) {
@@ -83,28 +103,25 @@ function resolveCellColor(color: string | CellStyle, canvas: HTMLCanvasElement):
   }
 }
 
-function inlineCellStyle(c: Cell, canvas: HTMLCanvasElement): string {
-  const cellColor = c?.color ? resolveCellColor(c.color, canvas) : null;
+function inlineCellStyle(c: Cell): string {
+  const cellColor = c?.color ? resolveCellColor(c.color) : null;
   const color = cellColor ? `color: ${cellColor.color}; background: ${cellColor.backgroundColor};` : "";
   return `style="${color}"`;
 }
 
-function formatCell(content: CellContent, canvas: HTMLCanvasElement): string {
+function formatCell(content: CellContent): string {
   const c: Cell = typeof content === "object" ? content : null;
-  const style = inlineCellStyle(c, canvas);
+  const style = inlineCellStyle(c);
   const title = c?.title ? `title="${c.title}"` : "";
   const value = deactivated(c?.label ?? content?.toString() ?? "", c?.deactivated ?? false);
   return `<div class="${c?.class ?? "cell"}" ${title} ${style}>${value}</div>`;
 }
 
-function multiCell(cells: Cell[], canvas: HTMLCanvasElement): Cell {
+function multiCell(cells: Cell[]): Cell {
   const content = cells
     .map(
       (c, i) =>
-        `<td title="${c.title}" style="border-width:0 0 0 ${i > 0 ? "1px" : "0"}; padding: 0">${formatCell(
-          c,
-          canvas
-        )}</td>`
+        `<td title="${c.title}" style="border-width:0 0 0 ${i > 0 ? "1px" : "0"}; padding: 0">${formatCell(c)}</td>`
     )
     .join("");
   return {
@@ -167,10 +184,6 @@ function resourceColumn(r: Resource, showIncome: (Player) => boolean): PlayerCol
 
 function powerArea(a: PowerArea, d: PlayerData) {
   return d.brainstone == a ? `${d.power[a]},B` : d.power[a];
-}
-
-function translateTech(tile: TechTile | AdvTechTile, count = 1) {
-  return deactivated(techTileData(tile).abbreviation, count == 0).toUpperCase();
 }
 
 function playerCell(p: Player | null, showPassed: boolean, engine: Engine): Cell {
@@ -268,7 +281,16 @@ function buildings(engine: Engine): PlayerTable {
   };
 }
 
-function research(engine: Engine, canvas: HTMLCanvasElement): PlayerTable {
+function techCell(t: TechTile | AdvTechTile, remaining: number) {
+  const d = techTileData(t);
+  return {
+    label: deactivated(d.abbreviation, remaining == 0).toUpperCase(),
+    title: d.name,
+    color: d.color,
+  };
+}
+
+function research(engine: Engine): PlayerTable {
   return {
     caption: "Research",
     columns: [
@@ -290,27 +312,15 @@ function research(engine: Engine, canvas: HTMLCanvasElement): PlayerTable {
       } as PlayerColumn,
     ].concat(
       ...ResearchField.values(engine.expansions).map((f) => {
-        const baseTech = engine.tiles.techs[f];
-        const advTech = engine.tiles.techs["adv-" + f];
         return {
           label: f.substring(0, 1).toUpperCase(),
           title: researchNames[f],
           color: `--rt-${f}`,
           cell: (p) => p.data.research[f],
           additionalHeader: multiCell(
-            [
-              {
-                label: translateTech(baseTech.tile, baseTech.count),
-                title: baseTechTileData[baseTech.tile].name,
-                color: baseTechTileData[baseTech.tile].color,
-              },
-              {
-                label: translateTech(advTech.tile, advTech.count),
-                title: advancedTechTileData[advTech.tile].name,
-                color: advancedTechTileData[advTech.tile].color,
-              },
-            ],
-            canvas
+            [engine.tiles.techs[f], engine.tiles.techs["adv-" + f]]
+              .filter((t) => t)
+              .map((t) => techCell(t.tile, t.count))
           ),
         };
       })
@@ -330,7 +340,7 @@ function finals(engine: Engine): PlayerTable {
   };
 }
 
-function assets(canvas: HTMLCanvasElement): PlayerTable {
+function assets(engine: Engine): PlayerTable {
   return {
     caption: "Asserts",
     columns: [
@@ -342,17 +352,23 @@ function assets(canvas: HTMLCanvasElement): PlayerTable {
           multiCell(
             sortBy(
               sortBy(
-                p.data.tiles.techs.map((t) => techTileData(t.tile)),
-                "abbreviation"
+                p.data.tiles.techs.map((t) => techCell(t.tile, 1)),
+                "label"
               ),
-              (s) => s.abbreviation.length
-            ).map((t) => ({
-              label: t.abbreviation.toUpperCase(),
-              title: t.name,
-              color: t.color,
-            })),
-            canvas
+              (s) => s.label.length
+            )
           ),
+        additionalHeader: multiCell(
+          TechTilePos.values()
+            .filter((p) => p.startsWith("free"))
+            .map((p) => engine.tiles.techs[p])
+            .filter((t) => t)
+            .map((t, i) => {
+              const c = techCell(t.tile, t.count);
+              c.title = `Free Tech ${i + 1}: ${c.title}`;
+              return c;
+            })
+        ),
       },
       {
         label: "F",
@@ -364,8 +380,7 @@ function assets(canvas: HTMLCanvasElement): PlayerTable {
               label: federationData[f].shortcut.toUpperCase(),
               title: federations[f],
               color: federationData[f].color,
-            })),
-            canvas
+            }))
           ),
       },
     ],
@@ -373,6 +388,10 @@ function assets(canvas: HTMLCanvasElement): PlayerTable {
 }
 
 function planets(engine: Engine): PlayerTable {
+  if (!engine.map) {
+    return null;
+  }
+
   const count = new Map(
     engine.players.map((p) => [
       p.player,
@@ -456,18 +475,18 @@ function stats(engine: Engine): PlayerTable {
   };
 }
 
-function playerTables(engine: Engine, canvas: HTMLCanvasElement): PlayerTable[] {
+function playerTables(engine: Engine): PlayerTable[] {
   return [
     general(engine),
     resources(engine),
     power(engine),
-    buildings(engine),
-    research(engine, canvas),
+    research(engine),
     finals(engine),
-    assets(canvas),
+    buildings(engine),
+    assets(engine),
     planets(engine),
     stats(engine),
-  ];
+  ].filter((t) => t);
 }
 
 function generalTables(engine: Engine): GeneralTable[] {
@@ -538,26 +557,32 @@ function generalTables(engine: Engine): GeneralTable[] {
   ];
 }
 
-function field(canvas: HTMLCanvasElement, c: Cell): { key: string } & BvTableField {
-  const style = c.color && !c.deactivated ? (resolveCellColor(c.color, canvas) as any) : {};
+function field(c: Cell, sortable: boolean): { key: string } & BvTableField {
+  const style = c.color && !c.deactivated ? (resolveCellColor(c.color) as any) : {};
   style.padding = "2px";
   return {
     key: c.title,
     label: deactivated(c.label, c.deactivated ?? false),
     thStyle: style,
     headerTitle: c.title,
+    sortable,
   };
 }
 
-export function infoTables(canvas: HTMLCanvasElement, engine: Engine, orderedPlayers: Player[]): InfoTable[] {
+export function infoTables(engine: Engine, orderedPlayers: Player[], uiMode: UiMode): InfoTable[] {
+  const settings = uiModeSettings[uiMode];
+  function caption(s: string): string | null {
+    return settings.caption ? s : null;
+  }
+
   function createRows(createRow: (p: Player, passed: boolean) => any): any[] {
     return orderedPlayers.map((p) => {
       const passed = (engine.passedPlayers || []).includes(p.player);
       const row = createRow(p, passed);
       for (const key of Object.keys(row)) {
-        row[key] = formatCell(row[key], canvas);
+        row[key] = formatCell(row[key]);
       }
-      row.order = formatCell(playerCell(p, true, engine), canvas);
+      row.order = formatCell(playerCell(p, true, engine));
       return row;
     });
   }
@@ -565,25 +590,25 @@ export function infoTables(canvas: HTMLCanvasElement, engine: Engine, orderedPla
   const gTables: InfoTable[] = generalTables(engine).map((t) => {
     const row = {};
     for (const column of t.columns) {
-      row[column.header.title] = formatCell(column.row, canvas);
+      row[column.header.title] = formatCell(column.row);
     }
     return {
-      caption: t.caption,
-      fields: t.columns.map((c) => field(canvas, c.header)),
+      caption: caption(t.caption),
+      fields: t.columns.map((c) => field(c.header, false)),
       rows: [row],
     };
   });
   gTables[gTables.length - 1].break = true;
 
-  const pTables: InfoTable[] = playerTables(engine, canvas).map((t) => ({
-    caption: t.caption,
-    fields: t.columns.map((c) => field(canvas, c)),
+  const pTables: InfoTable[] = playerTables(engine).map((t) => ({
+    caption: caption(t.caption),
+    fields: t.columns.map((c) => field(c, settings.sortable)),
     additionalHeader: t.columns
       .filter((c) => c.additionalHeader)
       .map(
         (c) =>
           ({
-            label: formatCell(c.additionalHeader, canvas),
+            label: formatCell(c.additionalHeader),
             title: c.additionalHeader.title,
             colspan: 1,
           } as AdditionalHeader)
@@ -604,17 +629,23 @@ export function infoTables(canvas: HTMLCanvasElement, engine: Engine, orderedPla
       return row;
     }),
   }));
-  for (const r of pTables) {
-    r.fields.unshift({
-      key: "order",
-      label: "",
-      headerTitle: "Player Order",
-    });
-    r.additionalHeader.unshift({
-      label: formatCell("", canvas), //this makes sure that all tables have the same height
-      title: "",
-      colspan: r.additionalHeader.length == 0 ? r.fields.length + 1 : 1,
-    });
-  }
+  pTables.forEach((r, i) => {
+    const extraColumns: number = settings.rowHeaderOnAllColumns || i == 0 ? 1 : 0;
+    if (extraColumns) {
+      r.fields.unshift({
+        key: "order",
+        sortable: settings.sortable,
+        label: "",
+        headerTitle: "Player Order",
+      });
+    }
+    if (r.additionalHeader.length == 0 || extraColumns) {
+      r.additionalHeader.unshift({
+        label: formatCell(""), //this makes sure that all tables have the same height
+        title: "",
+        colspan: r.additionalHeader.length == 0 ? r.fields.length + extraColumns : extraColumns,
+      });
+    }
+  });
   return gTables.concat(...pTables);
 }
