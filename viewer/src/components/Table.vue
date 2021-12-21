@@ -88,20 +88,25 @@ export default class Table extends Vue {
   width: auto;
   margin: 2px !important;
   font-size: 17px;
-  text-align: center !important;
 
   th,
   td,
   .cell {
     height: 27px !important;
     min-width: 16px;
+    text-align: center !important;
   }
+
   th,
   td {
     padding: 0 !important;
   }
+
   .cell {
     padding: 2px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 }
 
