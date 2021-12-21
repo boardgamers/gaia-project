@@ -1,6 +1,7 @@
 import { ChartConfiguration } from "chart.js";
+import { CellStyle, ColorVar, dynamicCellStyle } from "../../graphics/colors";
 import { TableMeta } from "./chart-factory";
-import { ChartStyleDisplay, ColorVar } from "./charts";
+import { ChartStyleDisplay } from "./charts";
 
 const nameColumn = {
   key: "Name",
@@ -9,15 +10,6 @@ const nameColumn = {
 };
 
 const weightKey = "Weight";
-
-export type CellStyle = { color: string; backgroundColor: string };
-
-export function cellStyle(canvas: HTMLElement, backgroundColor: ColorVar): CellStyle {
-  return {
-    backgroundColor: backgroundColor.lookup(canvas),
-    color: new ColorVar(backgroundColor.color + "-text").lookup(canvas) ?? "black",
-  };
-}
 
 export function tableHeader(
   canvas: HTMLCanvasElement,
@@ -48,7 +40,7 @@ export function tableHeader(
 
   headers.push(
     ...config.data.datasets.map((s) => ({
-      thStyle: cellStyle(canvas, new ColorVar(s.backgroundColor)),
+      thStyle: dynamicCellStyle(canvas, new ColorVar(s.backgroundColor)),
       key: s.label,
       sortable: true,
       label: cropLabel(meta?.[s.label]?.label ?? s.label),
@@ -78,7 +70,7 @@ export function tableItems(canvas: HTMLCanvasElement, config: ChartConfiguration
   config.data.labels.forEach(
     (s, index) =>
       (rows[index][nameColumn.key] =
-        colors == null ? dataCell(s) : rowHeaderCell(cellStyle(canvas, colors[index]), s as string))
+        colors == null ? dataCell(s) : rowHeaderCell(dynamicCellStyle(canvas, colors[index]), s as string))
   );
   const weights = tableMeta?.weights;
   if (weights != null) {

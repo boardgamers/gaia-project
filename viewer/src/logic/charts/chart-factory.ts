@@ -21,18 +21,16 @@ import {
 } from "chart.js";
 import { memoize, sortBy, sum, sumBy } from "lodash";
 import { factionName } from "../../data/factions";
+import { ColorVar, playerColor, resolveColor } from "../../graphics/colors";
 import {
   ChartFamily,
   chartPlayerOrder,
   ChartSource,
   ChartStyleDisplay,
-  ColorVar,
   DatasetFactory,
   DeepPartial,
   IncludeRounds,
-  playerColor,
   playerLabel,
-  resolveColor,
   vpChartFamily,
   weightedSum,
 } from "./charts";

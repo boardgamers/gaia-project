@@ -8,18 +8,11 @@ import Engine, {
   Player,
   PlayerEnum,
 } from "@gaia-project/engine";
+import { resolveColor } from "../../graphics/colors";
 import { buildingsSourceFactory } from "./buildings";
 import { leechSourceFactory, powerChargeSourceFactory } from "./charge";
 import { ChartFactory } from "./chart-factory";
-import {
-  ChartFamily,
-  ChartSource,
-  DatasetFactory,
-  getDataPoints,
-  IncludeRounds,
-  playerLabel,
-  resolveColor,
-} from "./charts";
+import { ChartFamily, ChartSource, DatasetFactory, getDataPoints, IncludeRounds, playerLabel } from "./charts";
 import { factionSourceFactory } from "./factions";
 import { federationsSourceFactory } from "./federations";
 import { finalScoringSourceFactory } from "./final-scoring";
