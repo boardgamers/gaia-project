@@ -1,6 +1,7 @@
 import { Planet } from "@gaia-project/engine";
 import { planetNames } from "../../data/planets";
-import { ChartSource, planetColor } from "./charts";
+import { planetColorVar } from "../../graphics/colors";
+import { ChartSource } from "./charts";
 import { planetCounter, SimpleSourceFactory } from "./simple-charts";
 
 export const planetsSourceFactory: SimpleSourceFactory<ChartSource<Planet>> = {
@@ -18,7 +19,7 @@ export const planetsSourceFactory: SimpleSourceFactory<ChartSource<Planet>> = {
       return {
         type: planet,
         label: `${planetNames[planet]}`,
-        color: planetColor(planet, true),
+        color: planetColorVar(planet, true),
         weight: 1,
       };
     })

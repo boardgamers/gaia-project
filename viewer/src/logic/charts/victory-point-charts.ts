@@ -20,8 +20,8 @@ import Engine, {
 import { sum } from "lodash";
 import { boosterData } from "../../data/boosters";
 import { advancedTechTileData } from "../../data/tech-tiles";
+import { ColorVar } from "../../graphics/colors";
 import {
-  ColorVar,
   DatasetFactory,
   extractChanges,
   finalScoringRound,

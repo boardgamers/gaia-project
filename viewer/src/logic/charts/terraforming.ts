@@ -1,6 +1,7 @@
 import { Planet } from "@gaia-project/engine";
 import { planetsWithSteps } from "../../data/factions";
-import { ChartSource, planetColor } from "./charts";
+import { planetColorVar } from "../../graphics/colors";
+import { ChartSource } from "./charts";
 import { planetCounter, SimpleSourceFactory } from "./simple-charts";
 
 export enum TerraformingSteps {
@@ -56,7 +57,7 @@ export const terraformingStepsSourceFactory: SimpleSourceFactory<ChartSource<Ter
   sources: Object.values(TerraformingSteps).map((steps) => ({
     type: steps,
     label: steps,
-    color: (player) => planetColor(planetsForSteps(steps, player.planet)[0], true),
+    color: (player) => planetColorVar(planetsForSteps(steps, player.planet)[0], true),
     weight: getTerraformingSteps(steps),
   })),
 };

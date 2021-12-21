@@ -28,10 +28,9 @@ import { resourceNames, showIncome } from "../data/resources";
 import { roundScoringData } from "../data/round-scorings";
 import { leechNetwork, sectors } from "../data/stats";
 import { advancedTechTileData, baseTechTileData, techTileData } from "../data/tech-tiles";
+import { CellStyle, planetColorVar, playerColor, staticCellStyle } from "../graphics/colors";
 import { lightenDarkenColor } from "../graphics/utils";
-import { ColorVar, planetColor, playerColor } from "./charts/charts";
 import { finalScoringSources } from "./charts/final-scoring";
-import { CellStyle, cellStyle } from "./charts/table";
 
 export type Cell = {
   label: string;
@@ -75,7 +74,7 @@ function resolveCellColor(color: string | CellStyle, canvas: HTMLCanvasElement):
   if (typeof color === "object") {
     return color;
   } else if (color.startsWith("--")) {
-    return cellStyle(canvas, new ColorVar(color));
+    return staticCellStyle(color);
   } else {
     return {
       backgroundColor: color,
@@ -402,7 +401,7 @@ function planets(engine: Engine): PlayerTable {
       ...Object.values(Planet)
         .filter((planet) => planet != Planet.Empty)
         .map((planet) => {
-          const color = planetColor(planet, false);
+          const color = planetColorVar(planet, false);
           return {
             label: planet.toUpperCase(),
             title: planetNames[planet],

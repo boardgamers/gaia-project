@@ -63,7 +63,7 @@
         />
       </div>
     </template>
-    <div v-else-if="loaded" class="d-flex flex-column">
+    <div v-else class="d-flex flex-column">
       <SpaceMap :class="['mb-1', 'space-map', 'col-md-7']" />
       <AdvancedLog :currentMove="currentMove" :hideLog.sync="hideLog" v-if="logPlacement === 'top'" />
       <Commands @command="handleCommand" v-if="canPlay" :currentMove="currentMove" />
@@ -187,8 +187,6 @@ export default class Game extends Vue {
 
   replayData: { current: number; backup: Engine } = null;
 
-  protected loaded = false;
-
   @Prop()
   options: EngineOptions;
 
@@ -199,8 +197,6 @@ export default class Game extends Vue {
       }
     });
     this.$on("hook:beforeDestroy", () => undoListener());
-
-    this.loaded = true;
   }
 
   get engine(): Engine {

@@ -1,6 +1,6 @@
-import { ColorVar } from "./charts/charts";
+import { ColorVar, dynamicCellStyle } from "../graphics/colors";
 import { FinalScoringContributor, finalScoringSources, FinalScoringTableRow } from "./charts/final-scoring";
-import { cellStyle, rowHeaderCell } from "./charts/table";
+import { rowHeaderCell } from "./charts/table";
 
 const finalScoringContributorColors: { [key in FinalScoringContributor]: string } = {
   "Regular Building": "--res-ore",
@@ -42,7 +42,7 @@ export function finalScoringFields(canvas: HTMLElement): any[] {
       return {
         key: c,
         sortable: true,
-        thStyle: cellStyle(canvas as HTMLCanvasElement, new ColorVar(finalScoringContributorColors[c])),
+        thStyle: dynamicCellStyle(canvas as HTMLCanvasElement, new ColorVar(finalScoringContributorColors[c])),
       };
     })
   );
@@ -50,7 +50,7 @@ export function finalScoringFields(canvas: HTMLElement): any[] {
 
 export function finalScoringItems(canvas: HTMLElement): any[] {
   return finalScoringTableRows.map((r) => {
-    const row = { Name: rowHeaderCell(cellStyle(canvas, new ColorVar(r.color)), r.name) };
+    const row = { Name: rowHeaderCell(dynamicCellStyle(canvas, new ColorVar(r.color)), r.name) };
 
     for (const contributor of r.contributors) {
       row[contributor] = true;
