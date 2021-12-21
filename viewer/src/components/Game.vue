@@ -64,7 +64,7 @@
       </div>
     </template>
     <div v-else class="d-flex flex-column">
-      <SpaceMap :class="['mb-1', 'space-map', 'col-md-7']" />
+      <SpaceMap v-if="hasMap" :class="['mb-1', 'space-map', 'col-md-7']" />
       <AdvancedLog :currentMove="currentMove" :hideLog.sync="hideLog" v-if="logPlacement === 'top'" />
       <Commands @command="handleCommand" v-if="canPlay" :currentMove="currentMove" />
       <Table />

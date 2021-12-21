@@ -41,6 +41,7 @@ type Preference =
 export enum UiMode {
   graphical = "graphical",
   table = "table",
+  compactTable = "compactTable",
 }
 
 export enum LoadFromJsonType {
