@@ -35,12 +35,6 @@ export function leechPlanets(map: SpaceMap, player: PlayerEnum, hex: GaiaHex): G
 }
 
 export function upgradableBuildingsOfOtherPlayers(engine: Engine, hex: GaiaHex, player: PlayerEnum): number {
-  return hex
-    .occupyingPlayers()
-    .filter(
-      (p) =>
-        p != player &&
-        hex.isMainOccupier(p) &&
-        upgradedBuildings(hex.buildingOf(p), engine.player(p).faction).length > 0
-    ).length;
+  const p = hex.data.player;
+  return p != null && p != player && upgradedBuildings(hex.buildingOf(p), engine.player(p).faction).length > 0 ? 1 : 0;
 }
