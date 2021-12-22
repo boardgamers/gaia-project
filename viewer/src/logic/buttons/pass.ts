@@ -13,9 +13,10 @@ import Engine, {
 } from "@gaia-project/engine";
 import { ButtonData, ButtonWarning, WarningWithKey } from "../../data";
 import { boosterData } from "../../data/boosters";
+import { translateResources } from "../../data/resources";
 import { WarningKey } from "../../data/warnings";
 import { CommandController } from "./types";
-import { autoClickButton, confirmationButton, symbolButton, textButton, translateResources } from "./utils";
+import { autoClickButton, confirmationButton, symbolButton, textButton } from "./utils";
 import { chargeIncomeWarning, passWarningButton, rewardWarnings } from "./warnings";
 
 export function endTurnWarning(player: Player): ButtonWarning | null {
@@ -49,7 +50,7 @@ function passWarning(engine: Engine, player: Player): ButtonWarning | null {
     for (const e of player.events[Operator.Activate].filter((e) => !e.activated)) {
       warnings.push({
         disableKey: WarningKey.actionNotUsed,
-        message: `Special action is not yet used: ${translateResources(e.rewards)}.`,
+        message: `Special action is not yet used: ${translateResources(e.rewards, false)}.`,
       });
     }
 

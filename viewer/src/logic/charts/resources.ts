@@ -2,7 +2,7 @@ import { BoardAction, Booster, Command, Faction, Planet, Resource, Reward } from
 import { sum } from "lodash";
 import { boardActionData } from "../../data/actions";
 import { boosterData } from "../../data/boosters";
-import { resourceNames } from "../../data/resources";
+import { resourceData } from "../../data/resources";
 import { terranChargeExtractLog, useChargedTokensExtractLog } from "./charge";
 import { ChartKind } from "./chart-factory";
 import { ChartSource, extractChanges } from "./charts";
@@ -18,60 +18,52 @@ class BaseResourceSource<T extends ChartKind> extends ChartSource<T> {
 export type ResourceSource = BaseResourceSource<Resource | "powerLeverage">;
 type FreeActionSource = BaseResourceSource<Resource | "range">;
 
-type ResourceWeight = { type: Resource; color: string; weight: number; inverseOf?: Resource };
+type ResourceWeight = { type: Resource; weight: number; inverseOf?: Resource };
 const resourceWeights: ResourceWeight[] = [
   {
     type: Resource.Credit,
-    color: "--res-credit",
     weight: 1,
   },
   {
     type: Resource.Ore,
-    color: "--res-ore",
     weight: 3,
   },
   {
     type: Resource.Knowledge,
-    color: "--res-knowledge",
     weight: 4,
   },
   {
     type: Resource.Qic,
-    color: "--res-qic",
     weight: 4,
   },
   {
     type: Resource.ChargePower,
-    color: "--res-power",
     weight: 0,
   },
   {
     type: Resource.PayPower,
     inverseOf: Resource.ChargePower,
-    color: "--lost",
     weight: 0,
   },
   {
     type: Resource.GainToken,
-    color: "--recent",
     weight: 0,
   },
   {
     type: Resource.BurnToken,
-    color: "--current-round",
     weight: 0,
   },
 ];
 
 export const resourceSources: ResourceSource[] = resourceWeights
   .map((w) => {
-    const n = resourceNames.find((n) => n.type == w.type);
+    const d = resourceData[w.type];
     return {
       type: w.type,
       weight: w.weight,
-      color: w.color,
+      color: d.color,
       inverseOf: w.inverseOf,
-      label: n.plural,
+      label: d.plural,
     } as ResourceSource;
   })
   .concat(powerLeverageSource);
