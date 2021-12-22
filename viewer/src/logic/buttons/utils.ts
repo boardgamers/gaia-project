@@ -1,7 +1,5 @@
-import Engine, { AvailableHex, GaiaHex, Reward } from "@gaia-project/engine";
-import assert from "assert";
+import Engine, { AvailableHex, GaiaHex } from "@gaia-project/engine";
 import { ButtonData, ButtonWarning, HexSelection, HighlightHex, HighlightHexData } from "../../data";
-import { resourceNames } from "../../data/resources";
 import { tooltipWithShortcut } from "./shortcuts";
 
 export function isFree(hex: HighlightHex) {
@@ -31,16 +29,6 @@ export function callOnShow(button: ButtonData) {
   }
   button.onShowTriggered = true;
   button.onShow?.(button);
-}
-
-export function translateResources(rewards: Reward[]): string {
-  return rewards
-    .map((r) => {
-      const s = resourceNames.find((s) => s.type == r.type);
-      assert(s, "no resource name for " + r.type);
-      return r.count + " " + (r.count == 1 ? s.label : s.plural);
-    })
-    .join(" and ");
 }
 
 export function hexMap(engine: Engine, coordinates: AvailableHex[], selectedLight: boolean): HexSelection {

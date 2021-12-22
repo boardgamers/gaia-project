@@ -1,140 +1,141 @@
-import Engine, { Phase, Player, Resource } from "@gaia-project/engine";
+import Engine, { Phase, Player, Resource, Reward } from "@gaia-project/engine";
+import assert from "assert";
 
 export type ResourceName = {
-  type: Resource;
   label: string;
   plural: string;
   shortcut: string;
+  color: string;
 };
 
-export const resourceNames: ResourceName[] = [
-  {
-    type: Resource.Credit,
+export const resourceData: { [key in Resource]?: ResourceName } = {
+  [Resource.Credit]: {
     label: "Credit",
     plural: "Credits",
     shortcut: "c",
+    color: "--res-credit",
   },
-  {
-    type: Resource.Ore,
+  [Resource.Ore]: {
     label: "Ore",
     plural: "Ores",
     shortcut: "o",
+    color: "--res-ore",
   },
-  {
-    type: Resource.Knowledge,
+  [Resource.Knowledge]: {
     label: "Knowledge",
     plural: "Knowledge",
     shortcut: "k",
+    color: "--res-knowledge",
   },
-  {
-    type: Resource.Qic,
+  [Resource.Qic]: {
     label: "QIC",
     plural: "QICs",
     shortcut: "q",
+    color: "--res-qic",
   },
-  {
-    type: Resource.ChargePower,
+  [Resource.ChargePower]: {
     label: "Power Charge",
     plural: "Power Charges",
     shortcut: "p",
+    color: "--res-power",
   },
-  {
-    type: Resource.PayPower,
+  [Resource.PayPower]: {
     label: "Spent Power",
     plural: "Spent Power",
     shortcut: "p",
+    color: "--lost",
   },
-  {
-    type: Resource.GainToken,
+  [Resource.GainToken]: {
     label: "Gained Token",
     plural: "Gained Tokens",
     shortcut: "g",
+    color: "--recent",
   },
-  {
-    type: Resource.BurnToken,
+  [Resource.BurnToken]: {
     label: "Burned Token",
     plural: "Burned Tokens",
     shortcut: "b",
+    color: "--current-round",
   },
-  {
-    type: Resource.TokenArea3,
+  [Resource.TokenArea3]: {
     label: "Token in area 3 to gaia",
     plural: "Tokens in area 3 to gaia",
     shortcut: "g",
+    color: "--gaia",
   },
-  {
-    type: Resource.TechTile,
+  [Resource.TechTile]: {
     label: "Tech tile",
     plural: "Tech tiles",
     shortcut: "t",
+    color: "--tech-tile",
   },
-  {
-    type: Resource.GainTokenGaiaArea,
+  [Resource.GainTokenGaiaArea]: {
     label: "Token in gaia area",
     plural: "Tokens in gaia area",
     shortcut: "g",
+    color: "--gaia",
   },
-  {
-    type: Resource.GaiaFormer,
+  [Resource.GaiaFormer]: {
     label: "Gaia Former to gaia",
     plural: "Gaia Formers to gaia",
     shortcut: "g",
+    color: "--gaia",
   },
-  {
-    type: Resource.TemporaryStep,
+  [Resource.TemporaryStep]: {
     label: "Terraforming Step",
     plural: "Terraforming Steps",
     shortcut: "t",
+    color: "--dig",
   },
-  {
-    type: Resource.VictoryPoint,
+  [Resource.VictoryPoint]: {
     label: "Victory Point",
     plural: "Victory Points",
     shortcut: "v",
+    color: "--res-vp",
   },
-  {
-    type: Resource.RescoreFederation,
+  [Resource.RescoreFederation]: {
     label: "Re-score Federation",
     plural: "Re-score Federation",
     shortcut: "f",
+    color: "--federation",
   },
-  {
-    type: Resource.BowlToken,
+  [Resource.BowlToken]: {
     label: "Token in Area 2",
     plural: "Token in Area 2",
     shortcut: "t",
+    color: "--res-power",
   },
-  {
-    type: Resource.SpaceStation,
+  [Resource.SpaceStation]: {
     label: "Space Station",
     plural: "Space Station",
     shortcut: "s",
+    color: "--oxide",
   },
-  {
-    type: Resource.TemporaryRange,
+  [Resource.TemporaryRange]: {
     label: "Temporary <u>R</u>ange",
     plural: "Temporary <u>R</u>ange",
     shortcut: "r",
+    color: "--rt-nav",
   },
-  {
-    type: Resource.UpgradeLowest,
+  [Resource.UpgradeLowest]: {
     label: "Upgrade the lowest technology",
     plural: "Upgrade the lowest technology",
     shortcut: "u",
+    color: "--titanium",
   },
-  {
-    type: Resource.PISwap,
+  [Resource.PISwap]: {
     label: "Swap the Planetary institute with a mine",
     plural: "Swap the Planetary institute with a mine",
     shortcut: "s",
+    color: "--swamp",
   },
-  {
-    type: Resource.DowngradeLab,
+  [Resource.DowngradeLab]: {
     label: "Downgrade Research Lab",
     plural: "Downgrade Research Lab",
     shortcut: "d",
+    color: "--titanium",
   },
-];
+};
 
 export function showIncome(engine: Engine, player: Player) {
   return (
@@ -143,4 +144,24 @@ export function showIncome(engine: Engine, player: Player) {
     (engine.phase == Phase.RoundIncome &&
       (engine.playerToMove == player.player || engine.tempTurnOrder.includes(player.player)))
   );
+}
+
+export function translateResources(rewards: Reward[], countForSingle: boolean): string {
+  return rewards
+    .map((r) => {
+      const d = resourceData[r.type];
+      assert(d, "no resource name for " + r.type);
+      return `${r.count == 1 && !countForSingle ? "" : r.count} ${r.count == 1 ? d.label : d.plural}`;
+    })
+    .join(" and ");
+}
+
+export function translateAbbreviatedResources(rewards: Reward[]): string {
+  return rewards
+    .map((r) => {
+      const d = resourceData[r.type];
+      assert(d, "no resource name for " + r.type);
+      return `${r.count == 1 ? "" : r.count}${d.shortcut.toUpperCase()}`;
+    })
+    .join(",");
 }

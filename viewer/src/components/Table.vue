@@ -25,7 +25,7 @@
           </b-tr>
         </template>
         <template #cell()="data">
-          <span v-html="data.value" v-b-tooltip.hover :title="data.title" @click="convert(data.field.convert)"></span>
+          <span v-html="data.value" @click="convert(data.field.convert)"></span>
         </template>
       </b-table>
       <div v-if="table.break" :key="`${i}break`" class="break" />

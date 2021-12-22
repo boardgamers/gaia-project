@@ -14,12 +14,13 @@ import {
 import { max, minBy, range, sortBy } from "lodash";
 import { ButtonData } from "../../data";
 import { FastConversion, FastConversionEvent, freeActionShortcuts } from "../../data/actions";
+import { translateResources } from "../../data/resources";
 import { AvailableConversions, FastConversionTooltips } from "./types";
-import { autoClickButton, confirmationButton, symbolButton, translateResources } from "./utils";
+import { autoClickButton, confirmationButton, symbolButton } from "./utils";
 import { resourceWasteWarning, rewardWarnings } from "./warnings";
 
 function conversionLabel(cost: Reward[], income: Reward[]) {
-  return `${translateResources(cost)} ⇒ ${translateResources(income).replace(
+  return `${translateResources(cost, true)} ⇒ ${translateResources(income, true).replace(
     "4 Victory Points",
     "3 VP + 1 VP / Planet Type"
   )}`;

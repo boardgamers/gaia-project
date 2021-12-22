@@ -10,9 +10,9 @@ import {
 } from "@gaia-project/engine";
 import { ButtonData, ButtonWarning } from "../../data";
 import { boardActionData } from "../../data/actions";
-import { resourceNames } from "../../data/resources";
+import { resourceData, translateResources } from "../../data/resources";
 import { conversionButton } from "./conversion";
-import { symbolButton, translateResources } from "./utils";
+import { symbolButton } from "./utils";
 import { resourceWasteWarning, rewardWarnings } from "./warnings";
 
 export function boardActionButton(action: BoardAction, player: Player | null) {
@@ -41,11 +41,11 @@ function specialActionWarning(player: Player, income: string): ButtonWarning | n
 export function specialActionButton(income: string, player: Player | null): ButtonData {
   const rewards = Reward.parse(income);
   return symbolButton({
-    label: translateResources(rewards),
+    label: translateResources(rewards, false),
     command: income,
     specialAction: income,
     warning: player ? specialActionWarning(player, income) : null,
-    shortcuts: [resourceNames.find((r) => r.type === rewards[0].type).shortcut],
+    shortcuts: [resourceData[rewards[0].type].shortcut],
   });
 }
 

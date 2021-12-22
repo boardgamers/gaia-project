@@ -12,6 +12,7 @@ import Engine, {
   ResearchField,
   Resource,
   Resource as ResourceEnum,
+  Reward,
   ScoringTile,
   TechTile,
   TechTilePos,
@@ -26,7 +27,7 @@ import { factionName } from "../data/factions";
 import { federationData } from "../data/federations";
 import { planetNames, remainingPlanets } from "../data/planets";
 import { researchNames } from "../data/research";
-import { resourceNames, showIncome } from "../data/resources";
+import { resourceData, showIncome, translateAbbreviatedResources, translateResources } from "../data/resources";
 import { roundScoringData } from "../data/round-scorings";
 import { leechNetwork, sectors } from "../data/stats";
 import { techTileData } from "../data/tech-tiles";
@@ -48,18 +49,19 @@ export type ConversionSupport = {
   convertTooltip(resource: ResourceEnum | PowerArea, player: PlayerEnum): string | null;
 };
 
-const emptyCell: Cell = {
-  label: "",
-  title: "",
-};
+export type AdditionalHeader = Cell & { colspan: number };
 
-type AdditionalHeader = Cell & { colspan: number };
 export type InfoTable = {
   caption: string;
   fields: BvTableFieldArray;
   rows: any[];
   additionalHeader?: AdditionalHeader[];
   break?: boolean;
+};
+
+const emptyCell: Cell = {
+  label: "",
+  title: "",
 };
 
 type CellContent = string | number | Cell;
@@ -84,6 +86,7 @@ type TableSettings = {
   rowHeaderOnAllColumns: boolean;
   caption: boolean;
 };
+
 const uiModeSettings: { [key in UiMode]?: TableSettings } = {
   [UiMode.table]: {
     sortable: false,
@@ -156,12 +159,12 @@ function boosterCell(b: Booster): Cell {
 }
 
 function resourceCell(r: Resource | PowerArea): Cell {
-  const n = resourceNames.find((s) => s.type == r);
-  if (n) {
+  const d = resourceData[r];
+  if (d) {
     return {
-      label: n.shortcut.toUpperCase(),
-      title: n.plural,
-      color: `--res-${r == Resource.VictoryPoint ? "vp" : n.label.toLowerCase()}`,
+      label: d.shortcut.toUpperCase(),
+      title: d.plural,
+      color: d.color,
     };
   }
   if (r == PowerArea.Gaia) {
@@ -244,7 +247,18 @@ function general(engine: Engine): PlayerTable {
       {
         label: "A",
         title: "Actions",
-        cell: (p, passed) => p.actions.map((a) => deactivated(a.rewards, !a.enabled || passed)).join(", "),
+        cell: (p, passed) =>
+          multiCell(
+            p.actions.map((a) => {
+              const r = Reward.parse(a.rewards);
+              return {
+                label: translateAbbreviatedResources(r),
+                title: translateResources(r, false),
+                color: resourceData[r[0].type].color,
+                deactivated: !a.enabled || passed,
+              };
+            })
+          ),
       },
       resourceColumn(Resource.VictoryPoint, () => false, null),
     ],
