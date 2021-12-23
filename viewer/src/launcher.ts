@@ -45,6 +45,7 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
     store.dispatch("replayTo", info);
     item.emit("replaceLog", store.state.data.moveHistory);
   });
+  item.addListener("avatars", (data) => store.commit("avatars", data));
   item.addListener("replay:end", () => {
     store.dispatch("replayEnd");
     replaying = false;

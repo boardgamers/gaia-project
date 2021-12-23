@@ -111,6 +111,7 @@ const gaiaViewer = {
       uiMode: process.env.VUE_APP_uiMode ?? "graphical",
     },
     player: null,
+    avatars: [] as string[],
   } as State,
   mutations: {
     receiveData(state: State, data: Engine) {
@@ -204,6 +205,10 @@ const gaiaViewer = {
 
     player(state: State, data: { index?: number }) {
       state.player = data;
+    },
+
+    avatars(state, data) {
+      state.avatars = data;
     },
   },
   actions: {

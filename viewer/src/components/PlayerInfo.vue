@@ -1,9 +1,10 @@
 <template>
   <div class="player-info no-gutters" v-if="player && player.faction">
     <div class="d-flex justify-content-between align-items-center">
-      <span @click="playerClick(player)" :class="['player-name', { dropped: player.dropped }]" role="button">{{
-        name
-      }}</span>
+      <div style="display: flex; align-items: center" @click="playerClick(player)" role="button">
+        <img class="player-avatar" :alt="`${name}'s avatar`" :src="avatar" />
+        <span :class="['player-name', { dropped: player.dropped }]" role="button">{{ name }}</span>
+      </div>
       <b-form-select
         :value="selectedMapModeType"
         :options="mapModeTypeOptions"
@@ -270,6 +271,12 @@ export default class PlayerInfo extends Vue {
     return this.$store.state.data;
   }
 
+  get avatar(): string {
+    return (
+      this.$store.state.avatars[this.player.player] || `https://avatars.dicebear.com/api/pixel-art/${this.name}.svg`
+    );
+  }
+
   get planet() {
     return factionPlanet(this.faction);
   }
@@ -359,6 +366,14 @@ export default class PlayerInfo extends Vue {
 </script>
 
 <style lang="scss">
+.player-avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  border: 1px solid gray;
+  margin-right: 0.25rem;
+}
+
 .player-token {
   stroke: #111;
   pointer-events: none;
