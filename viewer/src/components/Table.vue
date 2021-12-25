@@ -1,5 +1,5 @@
 <template>
-  <div class="d-flex flex-wrap">
+  <div class="d-flex flex-wrap align-items-end">
     <template v-for="(table, i) in infoTables">
       <b-table
         :key="i"
@@ -15,17 +15,16 @@
       >
         <template #thead-top>
           <b-tr v-if="table.additionalHeader">
-            <b-th
-              v-for="(h, j) in table.additionalHeader"
-              :key="j"
-              :title="h.title"
-              v-html="h.label"
-              :colspan="h.colspan"
-            ></b-th>
+            <b-th v-for="(h, j) in table.additionalHeader" :key="j" :colspan="h.colspan">
+              <TableCell :cells="h.cells" />
+            </b-th>
           </b-tr>
         </template>
+        <template #head()="data">
+          <TableCell :cells="data.field.cells" />
+        </template>
         <template #cell()="data">
-          <span v-html="data.value" @click="convert(data.field.convert)"></span>
+          <TableCell :cells="data.value" />
         </template>
       </b-table>
       <div v-if="table.break" :key="`${i}break`" class="break" />
@@ -48,12 +47,18 @@ import { Component, Vue } from "vue-property-decorator";
 import Engine, { Player, PlayerEnum, PowerArea, Resource as ResourceEnum } from "@gaia-project/engine";
 import { InfoTable, infoTables } from "../logic/info-table";
 import { orderedPlayers } from "../data/player";
-import { FastConversionEvent, MapMode, MapModeType } from "../data/actions";
+import { MapMode, MapModeType } from "../data/actions";
 import { mapModeTypeOptions } from "../data/stats";
 import { UiMode } from "../store";
 import { rotate } from "../logic/utils";
+import TableCell from "./TableCell.vue";
 
-@Component
+@Component({
+  components: {
+    TableCell,
+  },
+})
+
 export default class Table extends Vue {
   get engine(): Engine {
     return this.$store.state.data;
@@ -62,7 +67,20 @@ export default class Table extends Vue {
   get orderedPlayers(): Player[] {
     const players = orderedPlayers(this.engine);
     const s = this.sessionPlayer;
-    return s ? rotate(players, s) : players;
+    return s ? this.passedLast(rotate(players, s)) : players;
+  }
+
+  passedLast(players: Player[]): Player[] {
+    const s = this.sessionPlayer;
+    const e = this.engine;
+    function passed(p: Player) {
+      return (e.passedPlayers || []).includes(p.player);
+    }
+
+    if (s && !passed(s)) {
+      return players.filter(p => !passed(p)).concat(...players.filter(p => passed(p)));
+    }
+    return players;
   }
 
   get sessionPlayer(): Player {
@@ -97,12 +115,6 @@ export default class Table extends Vue {
     return this.$store.state.preferences.uiMode;
   }
 
-  convert(resource: ResourceEnum | PowerArea) {
-    if (resource) {
-      this.$store.dispatch("fastConversionClick", { button: resource } as FastConversionEvent);
-    }
-  }
-
   convertTooltip(resource: ResourceEnum | PowerArea, player: PlayerEnum): string | null {
     if (this.engine.currentPlayer == player) {
       return this.$store.state.context.fastConversionTooltips[resource];
@@ -117,24 +129,8 @@ export default class Table extends Vue {
   font-size: 17px;
 
   th,
-  td,
-  .cell {
-    height: 27px !important;
-    min-width: 16px;
-    text-align: center !important;
-  }
-
-  th,
   td {
     padding: 0 !important;
-  }
-
-  .cell {
-    padding: 2px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
   }
 }
 

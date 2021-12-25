@@ -1,5 +1,6 @@
 import Engine, { Phase, Player, Resource, Reward } from "@gaia-project/engine";
 import assert from "assert";
+import { colorCodes } from "../logic/color-codes";
 
 export type ResourceName = {
   label: string;
@@ -57,48 +58,38 @@ export const resourceData: { [key in Resource]?: ResourceName } = {
     shortcut: "b",
     color: "--current-round",
   },
-  [Resource.TokenArea3]: {
+  [Resource.TokenArea3]: colorCodes.gaia.add({
     label: "Token in area 3 to gaia",
     plural: "Tokens in area 3 to gaia",
-    shortcut: "g",
-    color: "--gaia",
-  },
+  }),
   [Resource.TechTile]: {
     label: "Tech tile",
     plural: "Tech tiles",
     shortcut: "t",
     color: "--tech-tile",
   },
-  [Resource.GainTokenGaiaArea]: {
+  [Resource.GainTokenGaiaArea]: colorCodes.gaia.add({
     label: "Token in gaia area",
     plural: "Tokens in gaia area",
-    shortcut: "g",
-    color: "--gaia",
-  },
-  [Resource.GaiaFormer]: {
+  }),
+  [Resource.GaiaFormer]: colorCodes.gaia.add({
     label: "Gaia Former to gaia",
     plural: "Gaia Formers to gaia",
-    shortcut: "g",
-    color: "--gaia",
-  },
-  [Resource.TemporaryStep]: {
+  }),
+  [Resource.TemporaryStep]: colorCodes.terraformingStep.add({
     label: "Terraforming Step",
     plural: "Terraforming Steps",
-    shortcut: "t",
-    color: "--dig",
-  },
+  }),
   [Resource.VictoryPoint]: {
     label: "Victory Point",
     plural: "Victory Points",
     shortcut: "v",
     color: "--res-vp",
   },
-  [Resource.RescoreFederation]: {
+  [Resource.RescoreFederation]: colorCodes.federation.add({
     label: "Re-score Federation",
     plural: "Re-score Federation",
-    shortcut: "f",
-    color: "--federation",
-  },
+  }),
   [Resource.BowlToken]: {
     label: "Token in Area 2",
     plural: "Token in Area 2",
@@ -108,15 +99,13 @@ export const resourceData: { [key in Resource]?: ResourceName } = {
   [Resource.SpaceStation]: {
     label: "Space Station",
     plural: "Space Station",
-    shortcut: "s",
+    shortcut: "p",
     color: "--oxide",
   },
-  [Resource.TemporaryRange]: {
+  [Resource.TemporaryRange]: colorCodes.range.add({
     label: "Temporary <u>R</u>ange",
     plural: "Temporary <u>R</u>ange",
-    shortcut: "r",
-    color: "--rt-nav",
-  },
+  }),
   [Resource.UpgradeLowest]: {
     label: "Upgrade the lowest technology",
     plural: "Upgrade the lowest technology",
@@ -126,7 +115,7 @@ export const resourceData: { [key in Resource]?: ResourceName } = {
   [Resource.PISwap]: {
     label: "Swap the Planetary institute with a mine",
     plural: "Swap the Planetary institute with a mine",
-    shortcut: "s",
+    shortcut: "w",
     color: "--swamp",
   },
   [Resource.DowngradeLab]: {

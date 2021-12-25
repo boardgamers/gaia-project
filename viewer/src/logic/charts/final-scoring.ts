@@ -11,6 +11,7 @@ import {
   stdBuildingValue,
 } from "@gaia-project/engine";
 import { Grid } from "hexagrid";
+import { colorCodes } from "../color-codes";
 import { ChartSource } from "./charts";
 import { ExtractLog, ExtractLogArg, planetCounter, SimpleSourceFactory } from "./simple-charts";
 
@@ -32,7 +33,7 @@ export class FinalScoringTableRow {
 
 class FinalScoringSource extends FinalScoringTableRow {
   extractLog: FinalScoringExtractLog;
-  abbreviation: string;
+  shortcut: string;
 }
 
 class FederationSimulator {
@@ -163,42 +164,34 @@ const sectors: FinalScoringExtractLog = ExtractLog.wrapper(() => {
 });
 
 export const finalScoringSources: { [key in FinalTile]: FinalScoringSource } = {
-  [FinalTile.Gaia]: {
+  [FinalTile.Gaia]: colorCodes.gaia.add({
     name: "Gaia planets",
-    abbreviation: "G",
     contributors: ["Regular Building"],
-    color: "--rt-gaia",
     extractLog: planetCounter(
       () => false,
       () => false,
       (p) => p == Planet.Gaia,
       false
     ),
-  },
-  [FinalTile.PlanetType]: {
+  }),
+  [FinalTile.PlanetType]: colorCodes.planetType.add({
     contributors: ["Regular Building", "Lost Planet"],
-    abbreviation: "P",
     name: "Planet Types",
-    color: "--rt-terra",
     extractLog: planetTypes,
-  },
-  [FinalTile.Sector]: {
+  }),
+  [FinalTile.Sector]: colorCodes.sector.add({
     contributors: ["Regular Building", "Lost Planet", "Lantids Guest Mine"],
-    abbreviation: "E",
     name: "Sectors",
-    color: "--tech-tile",
     extractLog: sectors,
-  },
-  [FinalTile.Satellite]: {
+  }),
+  [FinalTile.Satellite]: colorCodes.satellite.add({
     contributors: ["Satellite", "Space Station"],
-    abbreviation: "A",
     name: "Satellites",
-    color: "--current-round",
     extractLog: satellites,
-  },
+  }),
   [FinalTile.Structure]: {
     contributors: ["Regular Building", "Lost Planet", "Lantids Guest Mine"],
-    abbreviation: "R",
+    shortcut: "R",
     name: "Structures",
     color: "--recent",
     extractLog: planetCounter(
@@ -208,13 +201,11 @@ export const finalScoringSources: { [key in FinalTile]: FinalScoringSource } = {
       false
     ),
   },
-  [FinalTile.StructureFed]: {
+  [FinalTile.StructureFed]: colorCodes.federation.add({
     contributors: ["Regular Building", "Lost Planet", "Lantids Guest Mine"],
     name: "Structures in federations",
-    abbreviation: "F",
-    color: "--federation",
     extractLog: structureFed,
-  },
+  }),
 };
 
 export const finalScoringExtractLog: ExtractLog<ChartSource<FinalTile>> = ExtractLog.wrapper(

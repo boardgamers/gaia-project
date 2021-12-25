@@ -1,4 +1,5 @@
 import { BoardAction, FreeAction, Planet, PlayerEnum, PowerArea, Resource } from "@gaia-project/engine";
+import { colorCodes } from "../logic/color-codes";
 
 export const boardActionData: { [key in BoardAction]: { name: string; color: string; shortcut: string } } = {
   [BoardAction.Power1]: { name: "3 knowledge", color: "--recent", shortcut: "n" },
@@ -6,10 +7,10 @@ export const boardActionData: { [key in BoardAction]: { name: string; color: str
   [BoardAction.Power3]: { name: "2 ore", color: "--res-ore", shortcut: "o" },
   [BoardAction.Power4]: { name: "7 credits", color: "--res-credit", shortcut: "c" },
   [BoardAction.Power5]: { name: "2 knowledge", color: "--res-knowledge", shortcut: "k" },
-  [BoardAction.Power6]: { name: "1 step", color: "--dig", shortcut: "s" },
+  [BoardAction.Power6]: colorCodes.terraformingStep.add({ name: "1 step" }),
   [BoardAction.Power7]: { name: "2 tokens", color: "--res-power", shortcut: "g" },
   [BoardAction.Qic1]: { name: "Tech tile", color: "--tech-tile", shortcut: "t" },
-  [BoardAction.Qic2]: { name: "Re-score federation", color: "--federation", shortcut: "f" },
+  [BoardAction.Qic2]: colorCodes.federation.add({ name: "Re-score federation" }),
   [BoardAction.Qic3]: { name: "VP for planet types", color: "--res-vp", shortcut: "v" },
 };
 

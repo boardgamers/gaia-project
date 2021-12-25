@@ -35,7 +35,7 @@ export const buildingData: { [key in Building]: { name: string; color: string } 
   },
   [Building.GaiaFormer]: {
     name: "Gaia Former",
-    color: "--rt-gaia",
+    color: "--gaia",
   },
   [Building.SpaceStation]: {
     name: "Space Station",
@@ -150,7 +150,7 @@ export function buildingShortcut(building: Building, faction?: Faction): string 
     case Building.GaiaFormer:
       return "g";
     case Building.SpaceStation:
-      return "s";
+      return "p";
   }
 }
 
