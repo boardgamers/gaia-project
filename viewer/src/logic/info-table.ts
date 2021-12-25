@@ -4,6 +4,7 @@ import Engine, {
   Booster,
   Building,
   federations,
+  Operator,
   Planet,
   Player,
   PlayerData,
@@ -18,7 +19,7 @@ import Engine, {
   TechTilePos,
   tiles,
 } from "@gaia-project/engine";
-import { BvTableField, BvTableFieldArray } from "bootstrap-vue/src/components/table";
+import { BvTableField } from "bootstrap-vue/src/components/table";
 import { countBy, sortBy } from "lodash";
 import { boardActionData } from "../data/actions";
 import { boosterData } from "../data/boosters";
@@ -35,40 +36,66 @@ import { CellStyle, planetColorVar, playerColor, staticCellStyle } from "../grap
 import { lightenDarkenColor } from "../graphics/utils";
 import { UiMode } from "../store";
 import { finalScoringSources } from "./charts/final-scoring";
+import { colorCodes } from "./color-codes";
 
-export type Cell = {
+export type Convert = ResourceEnum | PowerArea;
+
+export enum InfoTableFlex {
+  row = "row",
+  rowGrow = "rowGrow",
+  column = "column",
+}
+
+export type InfoTableCell = {
   label: string;
-  title: string;
-  color?: string | CellStyle;
-  deactivated?: boolean;
-  class?: string;
-  convert?: ResourceEnum | PowerArea;
+  title: string | null;
+  style: string;
+  convert?: Convert;
+  flex: InfoTableFlex;
 };
 
-export type ConversionSupport = {
-  convertTooltip(resource: ResourceEnum | PowerArea, player: PlayerEnum): string | null;
+export type InfoTableRow = {
+  [key in string]: InfoTableCell[];
 };
 
-export type AdditionalHeader = Cell & { colspan: number };
+export type InfoTableAdditionalHeader = { cells: InfoTableCell[]; colspan: number };
+
+export type InfoTableColumn = BvTableField & { key: string; cells: InfoTableCell[] };
 
 export type InfoTable = {
   caption: string;
-  fields: BvTableFieldArray;
-  rows: any[];
-  additionalHeader?: AdditionalHeader[];
+  fields: Array<InfoTableColumn>;
+  rows: InfoTableRow[];
+  additionalHeader?: InfoTableAdditionalHeader[];
   break?: boolean;
 };
 
-const emptyCell: Cell = {
-  label: "",
-  title: "",
+export type ConversionSupport = {
+  convertTooltip(resource: Convert, player: PlayerEnum): string | null;
 };
 
-type CellContent = string | number | Cell;
+type Cell = {
+  shortcut: string;
+  title: string;
+  color: string | CellStyle;
+  deactivated?: boolean;
+  convert?: Convert;
+};
+
+const defaultBackground = "white";
+
+const emptyCell: Cell = {
+  shortcut: "",
+  title: "",
+  color: defaultBackground,
+};
+
+type CellContent = string | number | Cell[];
 
 type PlayerColumn = Cell & {
   cell: (p: Player, passed: boolean) => CellContent;
-  additionalHeader?: Cell;
+  additionalHeader?: { cells: Cell[]; flex?: InfoTableFlex };
+  flex?: InfoTableFlex;
 };
 
 type PlayerTable = {
@@ -114,45 +141,33 @@ function resolveCellColor(color: string | CellStyle): CellStyle {
   } else {
     return {
       backgroundColor: color,
-      color: "white",
+      color: "black",
     };
   }
 }
 
 function inlineCellStyle(c: Cell): string {
   const cellColor = c?.color ? resolveCellColor(c.color) : null;
-  const color = cellColor ? `color: ${cellColor.color}; background: ${cellColor.backgroundColor};` : "";
-  return `style="${color}"`;
+  return cellColor ? `background: ${cellColor.backgroundColor}; color: ${cellColor.color};` : "";
 }
 
-function formatCell(content: CellContent): string {
-  const c: Cell = typeof content === "object" ? content : null;
-  const style = inlineCellStyle(c);
-  const title = c?.title ? `title="${c.title}"` : "";
-  const value = deactivated(c?.label ?? content?.toString() ?? "", c?.deactivated ?? false);
-  return `<div class="${c?.class ?? "cell"}" ${title} ${style}>${value}</div>`;
-}
-
-function multiCell(cells: Cell[]): Cell {
-  if (cells.length == 0) {
-    cells = [emptyCell];
-  }
-  const content = cells
-    .map(
-      (c, i) =>
-        `<td title="${c.title}" style="border-width:0 0 0 ${i > 0 ? "1px" : "0"}; padding: 0">${formatCell(c)}</td>`
-    )
-    .join("");
-  return {
-    label: `<table><tr>${content}</tr></table>`,
-    title: "",
-    class: "",
-  };
+function formatCell(cells: Cell[], flex = InfoTableFlex.rowGrow): InfoTableCell[] {
+  return cells.map((c) => {
+    const style = inlineCellStyle(c);
+    const label = deactivated(c.shortcut?.toString()?.toUpperCase(), c.deactivated ?? false);
+    return {
+      label,
+      style,
+      convert: c.convert,
+      title: c.title,
+      flex,
+    };
+  });
 }
 
 function boosterCell(b: Booster): Cell {
   return {
-    label: boosterData[b].abbreviation.toUpperCase(),
+    shortcut: boosterData[b].shortcut,
     title: boosterData[b].name,
     color: boosterData[b].color,
   };
@@ -162,23 +177,24 @@ function resourceCell(r: Resource | PowerArea): Cell {
   const d = resourceData[r];
   if (d) {
     return {
-      label: d.shortcut.toUpperCase(),
+      shortcut: d.shortcut,
       title: d.plural,
       color: d.color,
     };
   }
   if (r == PowerArea.Gaia) {
-    return {
-      label: "G",
+    return colorCodes.gaia.add({
       title: "Power area gaia",
-      color: "--gaia",
-    };
+    });
   }
   const area = r.substring(r.length - 1);
   return {
-    label: area,
+    shortcut: area,
     title: `Power area ${area}`,
-    color: lightenDarkenColor("#984ff1", Number(area) * -40),
+    color: {
+      color: "white",
+      backgroundColor: lightenDarkenColor("#984ff1", Number(area) * -40),
+    },
   };
 }
 
@@ -189,24 +205,26 @@ function incomeCell(
   player: Player,
   support: ConversionSupport | null,
   showIncome = true
-): Cell {
+): Cell[] {
   const cell = resourceCell(r);
   const tooltip = support?.convertTooltip(r, player.player)?.replace(stripUnderline, (match, group) => group);
-  return {
-    label: showIncome && income ? `${val}+${income}` : val,
-    title: tooltip ? `${cell.title} (${tooltip})` : cell.title,
-    color: cell.color,
-  };
+  return [
+    {
+      shortcut: showIncome && income ? `${val}+${income}` : val,
+      title: tooltip ? `${cell.title} (${tooltip})` : cell.title,
+      color: cell.color,
+      convert: tooltip ? r : null,
+    },
+  ];
 }
 
 function resourceColumn(r: Resource, showIncome: (Player) => boolean, support: ConversionSupport | null): PlayerColumn {
   const cell = resourceCell(r);
   return {
-    label: cell.label,
+    shortcut: cell.shortcut,
     title: cell.title,
     color: cell.color,
     cell: (p) => incomeCell(r, p.data.getResources(r), p.resourceIncome(r), p, support, showIncome(p)),
-    convert: r,
   };
 }
 
@@ -214,19 +232,24 @@ function powerArea(a: PowerArea, d: PlayerData) {
   return d.brainstone == a ? `${d.power[a]},B` : d.power[a];
 }
 
-function playerCell(p: Player | null, showPassed: boolean, engine: Engine): Cell {
+function playerCell(p: Player | null, bold = false): Cell {
   if (p == null) {
     return {
-      label: "-",
+      shortcut: "-",
       title: "Available",
+      color: defaultBackground,
     };
   }
+
+  function b(s: string): string {
+    return bold ? `<b>${s}</b>` : s;
+  }
+
   const f = p.faction;
   return {
-    label: f?.substring(0, 1).toUpperCase() ?? "",
+    shortcut: f ? b(f.substring(0, 1)) : "",
     title: f ? factionName(f) : "",
     color: f ? playerColor(p, true).color : null,
-    deactivated: showPassed && (engine.passedPlayers || []).includes(p.player),
   };
 }
 
@@ -235,30 +258,62 @@ function general(engine: Engine): PlayerTable {
     caption: "General",
     columns: [
       {
-        label: "C",
+        shortcut: "C",
+        color: "--recent",
         title: "Current Player",
-        cell: (p) => (engine.playerToMove === p.player ? "*" : ""),
+        cell: (p, passed) => {
+          if (engine.playerToMove === p.player) {
+            return [
+              {
+                shortcut: "",
+                title: "This is the current player",
+                color: "--recent",
+              },
+            ];
+          } else if (passed) {
+            return [
+              {
+                shortcut: "",
+                title: "The player has passed for the current round",
+                color: "--current-round",
+              },
+            ];
+          } else {
+            return [
+              {
+                shortcut: "",
+                title: "This is not the current player",
+                color: defaultBackground,
+              },
+            ];
+          }
+        },
       },
       {
-        label: "B",
+        shortcut: "B",
+        color: "--res-ore",
         title: "Booster",
-        cell: (p) => (p.data.tiles.booster ? boosterCell(p.data.tiles.booster) : null),
+        cell: (p) => (p.data.tiles.booster ? [boosterCell(p.data.tiles.booster)] : []),
       },
       {
-        label: "A",
+        shortcut: "A",
+        color: "--specialAction",
         title: "Actions",
+        flex: InfoTableFlex.row,
         cell: (p, passed) =>
-          multiCell(
-            p.actions.map((a) => {
-              const r = Reward.parse(a.rewards);
-              return {
-                label: translateAbbreviatedResources(r),
-                title: translateResources(r, false),
-                color: resourceData[r[0].type].color,
-                deactivated: !a.enabled || passed,
-              };
-            })
-          ),
+          p.events[Operator.Activate].map((e) => {
+            const a = e.action();
+            const r = Reward.parse(a.rewards);
+            return {
+              shortcut:
+                boosterData[e.source]?.shortcut ??
+                techTileData(engine.tiles.techs[e.source.substring("tech-".length)]?.tile)?.shortcut ??
+                translateAbbreviatedResources(r),
+              title: translateResources(r, false),
+              color: resourceData[r[0].type].color,
+              deactivated: !a.enabled || passed,
+            };
+          }),
       },
       resourceColumn(Resource.VictoryPoint, () => false, null),
     ],
@@ -280,10 +335,9 @@ function power(engine: Engine, support: ConversionSupport): PlayerTable {
     columns: Object.values(PowerArea).map((a) => {
       const cell = resourceCell(a);
       return {
-        label: cell.label,
+        shortcut: cell.shortcut,
         title: cell.title,
         color: cell.color,
-        convert: a,
         cell: (p) => {
           switch (a) {
             case PowerArea.Area1:
@@ -326,7 +380,7 @@ function buildings(engine: Engine): PlayerTable {
   return {
     caption: "Buildings",
     columns: allBuildings(engine.expansions, true).map((b) => ({
-      label: buildingShortcut(b).toUpperCase(),
+      shortcut: buildingShortcut(b),
       title: buildingData[b].name,
       color: buildingData[b].color,
       cell: (p) =>
@@ -337,10 +391,10 @@ function buildings(engine: Engine): PlayerTable {
   };
 }
 
-function techCell(t: TechTile | AdvTechTile, remaining: number) {
+function techCell(t: TechTile | AdvTechTile, remaining: number): Cell {
   const d = techTileData(t);
   return {
-    label: deactivated(d.abbreviation, remaining == 0).toUpperCase(),
+    shortcut: deactivated(d.shortcut, remaining == 0),
     title: d.name,
     color: d.color,
   };
@@ -350,34 +404,38 @@ function research(engine: Engine): PlayerTable {
   return {
     caption: "Research",
     columns: [
-      {
-        label: "F",
+      colorCodes.federation.add<PlayerColumn>({
         title: "Green Federations",
-        color: "--federation",
         cell: (p) => p.data.tiles.federations.filter((f) => f.green).length,
-        additionalHeader: engine.terraformingFederation
-          ? {
-              label: federationData[engine.terraformingFederation].shortcut.toUpperCase(),
-              title: `Terraforming Federation: ${tiles.federations[engine.terraformingFederation]}`,
-              color: federationData[engine.terraformingFederation].color,
-            }
-          : {
-              label: "-",
-              title: "Terraforming Federation already taken",
-            },
-      } as PlayerColumn,
+        additionalHeader: {
+          cells: [
+            engine.terraformingFederation
+              ? {
+                  shortcut: federationData[engine.terraformingFederation].shortcut,
+                  title: `Terraforming Federation: ${tiles.federations[engine.terraformingFederation]}`,
+                  color: federationData[engine.terraformingFederation].color,
+                }
+              : {
+                  shortcut: "-",
+                  color: defaultBackground,
+                  title: "Terraforming Federation already taken",
+                },
+          ],
+        },
+      }),
     ].concat(
       ...ResearchField.values(engine.expansions).map((f) => {
         return {
-          label: f.substring(0, 1).toUpperCase(),
+          shortcut: f.substring(0, 1),
           title: researchNames[f],
           color: `--rt-${f}`,
           cell: (p) => p.data.research[f],
-          additionalHeader: multiCell(
-            [engine.tiles.techs[f], engine.tiles.techs["adv-" + f]]
+          additionalHeader: {
+            cells: [engine.tiles.techs["adv-" + f], engine.tiles.techs[f]]
               .filter((t) => t)
-              .map((t) => techCell(t.tile, t.count))
-          ),
+              .map((t) => techCell(t.tile, t.count)),
+            flex: InfoTableFlex.column,
+          },
         };
       })
     ),
@@ -388,7 +446,7 @@ function finals(engine: Engine): PlayerTable {
   return {
     caption: "Finals",
     columns: engine.tiles.scorings.final.map((f) => ({
-      label: finalScoringSources[f].abbreviation.toUpperCase(),
+      shortcut: finalScoringSources[f].shortcut,
       title: `Final Scoring: ${finalScoringSources[f].name}`,
       color: finalScoringSources[f].color,
       cell: (p) => p.progress(f),
@@ -401,21 +459,20 @@ function assets(engine: Engine): PlayerTable {
     caption: "Asserts",
     columns: [
       {
-        label: "T",
+        shortcut: "T",
         title: "Tech Tiles",
         color: "--tech-tile",
+        flex: InfoTableFlex.row,
         cell: (p) =>
-          multiCell(
+          sortBy(
             sortBy(
-              sortBy(
-                p.data.tiles.techs.map((t) => techCell(t.tile, 1)),
-                "label"
-              ),
-              (s) => s.label.length
-            )
+              p.data.tiles.techs.map((t) => techCell(t.tile, 1)),
+              "shortcut"
+            ),
+            (s) => s.shortcut.length
           ),
-        additionalHeader: multiCell(
-          TechTilePos.values()
+        additionalHeader: {
+          cells: TechTilePos.values()
             .filter((p) => p.startsWith("free"))
             .map((p) => engine.tiles.techs[p])
             .filter((t) => t)
@@ -423,22 +480,20 @@ function assets(engine: Engine): PlayerTable {
               const c = techCell(t.tile, t.count);
               c.title = `Free Tech ${i + 1}: ${c.title}`;
               return c;
-            })
-        ),
+            }),
+          flex: InfoTableFlex.row,
+        },
       },
-      {
-        label: "F",
+      colorCodes.federation.add({
         title: "Federations",
-        color: "--federation",
+        flex: InfoTableFlex.row,
         cell: (p) =>
-          multiCell(
-            sortBy(p.data.tiles.federations.map((f) => f.tile)).map((f) => ({
-              label: federationData[f].shortcut.toUpperCase(),
-              title: federations[f],
-              color: federationData[f].color,
-            }))
-          ),
-      },
+          sortBy(p.data.tiles.federations.map((f) => f.tile)).map((f) => ({
+            shortcut: federationData[f].shortcut,
+            title: federations[f],
+            color: federationData[f].color,
+          })),
+      }),
     ],
   };
 }
@@ -464,10 +519,11 @@ function planets(engine: Engine): PlayerTable {
     caption: "Planets",
     columns: [
       {
-        label: "",
+        shortcut: "",
+        color: defaultBackground,
         title: "Planet types, except transdim",
         cell: (p) => Object.keys(count.get(p.player)).filter((p) => p != Planet.Transdim).length,
-        additionalHeader: emptyCell,
+        additionalHeader: { cells: [emptyCell] },
       } as PlayerColumn,
     ].concat(
       ...Object.values(Planet)
@@ -475,14 +531,18 @@ function planets(engine: Engine): PlayerTable {
         .map((planet) => {
           const color = planetColorVar(planet, false);
           return {
-            label: planet.toUpperCase(),
+            shortcut: planet,
             title: planetNames[planet],
             color,
             cell: (p) => count.get(p.player)[planet] ?? "",
             additionalHeader: {
-              label: String(remainingPlanets(planet, engine)),
-              title: `Remaining ${planetNames[planet]} Planets`,
-              color,
+              cells: [
+                {
+                  shortcut: String(remainingPlanets(planet, engine)),
+                  title: `Remaining ${planetNames[planet]} Planets`,
+                  color,
+                },
+              ],
             },
           };
         })
@@ -494,32 +554,26 @@ function stats(engine: Engine): PlayerTable {
   return {
     caption: "Stats",
     columns: [
-      {
-        label: "E",
+      colorCodes.sector.add({
         title: "Sectors with a colonized planet",
-        color: "--tech-tile",
         cell: (p) => sectors(p),
-      },
-      {
-        label: "A",
+      }),
+      colorCodes.satellite.add({
         title: "Satellites and space stations",
-        color: "--current-round",
         cell: (p) => p.data.satellites + p.data.buildings.sp,
-      },
+      }),
       {
-        label: "I",
+        shortcut: "I",
         title: "Power value of structures in federations",
         color: "--oxide",
         cell: (p) => p.fedValue,
       },
-      {
-        label: "F",
+      colorCodes.federation.add({
         title: "Power value of structures outside of federations",
-        color: "--federation",
         cell: (p) => p.structureValue - p.fedValue,
-      },
+      }),
       {
-        label: "L",
+        shortcut: "L",
         title: "Leech network",
         color: "--res-power",
         cell: (p) => leechNetwork(engine, p.player),
@@ -548,16 +602,14 @@ function generalTables(engine: Engine): GeneralTable[] {
       caption: "Board Actions",
       columns: BoardAction.values(engine.expansions).map((a) => ({
         header: {
-          label: boardActionData[a].shortcut.toUpperCase(),
+          shortcut: boardActionData[a].shortcut,
           title: boardActionData[a].name,
           color: boardActionData[a].color,
         },
         row: playerCell(
           engine.boardActions[a] != null && engine.boardActions[a] !== PlayerEnum.Player5
             ? engine.player(engine.boardActions[a])
-            : null,
-          false,
-          engine
+            : null
         ),
       })),
     },
@@ -565,15 +617,15 @@ function generalTables(engine: Engine): GeneralTable[] {
       caption: "Round",
       columns: [null as ScoringTile].concat(...engine.tiles.scorings.round).map((r, round) => ({
         header: {
-          label: String(round),
+          shortcut: String(round),
           title: `Round ${round}`,
           color: engine.round == round && !engine.ended ? "--current-round" : null,
         },
         row:
           round == 0
-            ? null
+            ? emptyCell
             : {
-                label: `<b>${roundScoringData[r].abbreviation.toUpperCase()}</b>`,
+                shortcut: `<b>${roundScoringData[r].shortcut}</b>`,
                 title: roundScoringData[r].name,
                 color: roundScoringData[r].color,
               },
@@ -585,23 +637,19 @@ function generalTables(engine: Engine): GeneralTable[] {
         .filter((b) => engine.tiles.boosters[b] != null)
         .map((b) => ({
           header: boosterCell(b),
-          row: playerCell(
-            engine.players.find((p) => p.data.tiles.booster == b),
-            false,
-            engine
-          ),
+          row: playerCell(engine.players.find((p) => p.data.tiles.booster == b)),
         })),
     },
     {
       caption: "Federations",
       columns: Object.entries(engine.tiles.federations).map(([fed, count]) => ({
         header: {
-          label: federationData[fed].shortcut.toUpperCase(),
+          shortcut: federationData[fed].shortcut,
           title: tiles.federations[fed],
           color: federationData[fed].color,
         },
         row: {
-          label: String(count),
+          shortcut: String(count),
           title: "Number of federations left",
           color: federationData[fed].color,
         },
@@ -610,18 +658,13 @@ function generalTables(engine: Engine): GeneralTable[] {
   ];
 }
 
-function field(c: Cell, sortable: boolean): { key: string } & BvTableField {
-  const style = c.color && !c.deactivated ? (resolveCellColor(c.color) as any) : {};
-  style.padding = "2px";
-  const column = {
+function field(c: Cell, sortable: boolean): InfoTableColumn {
+  return {
     key: c.title,
-    label: deactivated(c.label, c.deactivated ?? false),
-    thStyle: style,
-    headerTitle: c.title,
+    label: deactivated(c.shortcut?.toUpperCase(), c.deactivated ?? false),
     sortable,
+    cells: formatCell([c]),
   };
-  (column as any).convert = c.convert;
-  return column;
 }
 
 export function infoTables(
@@ -631,26 +674,24 @@ export function infoTables(
   support: ConversionSupport
 ): InfoTable[] {
   const settings = uiModeSettings[uiMode];
+
   function caption(s: string): string | null {
     return settings.caption ? s : null;
   }
 
-  function createRows(createRow: (p: Player, passed: boolean) => any): any[] {
+  function createRows(createRow: (p: Player, passed: boolean) => InfoTableRow): InfoTableRow[] {
     return orderedPlayers.map((p) => {
       const passed = (engine.passedPlayers || []).includes(p.player);
       const row = createRow(p, passed);
-      for (const key of Object.keys(row)) {
-        row[key] = formatCell(row[key]);
-      }
-      row.order = formatCell(playerCell(p, true, engine));
+      row.order = formatCell([playerCell(p, true)]);
       return row;
     });
   }
 
   const gTables: InfoTable[] = generalTables(engine).map((t) => {
-    const row = {};
+    const row: InfoTableRow = {};
     for (const column of t.columns) {
-      row[column.header.title] = formatCell(column.row);
+      row[column.header.title] = formatCell([column.row]);
     }
     return {
       caption: caption(t.caption),
@@ -665,26 +706,26 @@ export function infoTables(
     fields: t.columns.map((c) => field(c, settings.sortable)),
     additionalHeader: t.columns
       .filter((c) => c.additionalHeader)
-      .map(
-        (c) =>
-          ({
-            label: formatCell(c.additionalHeader),
-            title: c.additionalHeader.title,
-            colspan: 1,
-          } as AdditionalHeader)
-      ),
+      .map((c) => ({
+        cells: formatCell(c.additionalHeader.cells, c.additionalHeader.flex),
+        colspan: 1,
+      })),
     rows: createRows((p, passed) => {
-      const row = {};
+      const row: InfoTableRow = {};
       for (const column of t.columns) {
         const cell = column.cell(p, passed);
-        row[column.title] =
+        row[column.title] = formatCell(
           typeof cell == "object"
-            ? cell
-            : {
-                label: cell,
-                title: column.title,
-                color: column.color,
-              };
+            ? ((cell.length == 0 ? [emptyCell] : cell) as Cell[])
+            : [
+                {
+                  shortcut: String(cell),
+                  title: column.title,
+                  color: column.color,
+                },
+              ],
+          column.flex ?? InfoTableFlex.rowGrow
+        );
       }
       return row;
     }),
@@ -695,15 +736,13 @@ export function infoTables(
       r.fields.unshift({
         key: "order",
         sortable: settings.sortable,
-        label: "",
-        headerTitle: "Player Order",
-      });
-    }
-    if (r.additionalHeader.length == 0 || extraColumns) {
-      r.additionalHeader.unshift({
-        label: formatCell(""), //this makes sure that all tables have the same height
-        title: "",
-        colspan: r.additionalHeader.length == 0 ? r.fields.length + extraColumns : extraColumns,
+        cells: formatCell([
+          {
+            shortcut: "",
+            title: "Faction in play order",
+            color: defaultBackground,
+          },
+        ]),
       });
     }
   });

@@ -21,6 +21,7 @@ import { sum } from "lodash";
 import { boosterData } from "../../data/boosters";
 import { advancedTechTileData } from "../../data/tech-tiles";
 import { ColorVar } from "../../graphics/colors";
+import { colorCodes } from "../color-codes";
 import {
   DatasetFactory,
   extractChanges,
@@ -199,7 +200,7 @@ export const victoryPointSources = (finalTileName: (tile: number) => string): Vi
     types: [Command.FormFederation],
     label: "Federation",
     description: "Re-scoring is counted as QIC action",
-    color: "--federation",
+    color: colorCodes.federation.color,
   },
   {
     types: ["chart-final1"],

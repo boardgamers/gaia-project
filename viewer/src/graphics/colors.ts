@@ -1,7 +1,20 @@
 import { factionPlanet, Planet, Player } from "@gaia-project/engine";
 import { ChartColor, ChartStyleDisplay } from "../logic/charts/charts";
 
-const invertedForeground: string[] = ["--swamp", "--titanium", "--lost", "--dig", "--res-vp", "--current-round"];
+const invertedForeground: string[] = [
+  "--swamp",
+  "--titanium",
+  "--lost",
+  "--dig",
+  "--res-qic",
+  "--res-vp",
+  "--current-round",
+  "--rt-terra",
+  "--rt-nav",
+  "--rt-int",
+  "--rt-gaia",
+  "--federation",
+];
 
 export class ColorVar {
   color: string;
@@ -66,6 +79,6 @@ function withVar(v: string): string {
 export function staticCellStyle(backgroundColor: string): CellStyle {
   return {
     backgroundColor: withVar(backgroundColor),
-    color: invertedForeground.includes(backgroundColor) ? withVar(backgroundColor + "-text") : "black",
+    color: invertedForeground.includes(backgroundColor) ? "white" : "black",
   };
 }

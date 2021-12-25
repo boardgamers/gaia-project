@@ -10,6 +10,7 @@ import {
   Reward,
   TechPos,
 } from "@gaia-project/engine";
+import { colorCodes } from "../color-codes";
 import { ChartSource, extractChanges } from "./charts";
 import { BuildingPowerValueCounter } from "./federations";
 import { parsePowerUsage, resourceCounter } from "./resource-counter";
@@ -71,7 +72,7 @@ const powerChargeSources: ChartSource<PowerChargeSource>[] = [
   {
     type: PowerChargeSource.research,
     label: "Research",
-    color: "--rt-sci",
+    color: colorCodes.researchStep.color,
     weight: 1,
   },
   {

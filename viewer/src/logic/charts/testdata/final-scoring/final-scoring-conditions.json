@@ -3,16 +3,16 @@
     "weights": null,
     "colors": [
       {
-        "color": "--rt-gaia"
+        "color": "--gaia"
       },
       {
-        "color": "--rt-terra"
-      },
-      {
-        "color": "--tech-tile"
+        "color": "--dig"
       },
       {
         "color": "--current-round"
+      },
+      {
+        "color": "--terra"
       },
       {
         "color": "--recent"
