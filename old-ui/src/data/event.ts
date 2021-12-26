@@ -33,7 +33,7 @@ const operators = {
   [Operator.Income]: "During the income phase,",
   [Operator.Once]: "Immediately ",
   [Operator.Trigger]: "When ",
-  [Operator.Special]:
+  [Operator.FourPowerBuildings]:
     "Planetary institutes and academies have a power value of 4, when building federations and charging power.",
 };
 

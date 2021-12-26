@@ -19,7 +19,7 @@ describe("Events", () => {
   it("should load the PA->4PW event", () => {
     const event = new Event("PA->4pw");
 
-    expect(event.operator).to.equal(Operator.Special);
+    expect(event.operator).to.equal(Operator.FourPowerBuildings);
   });
 
   it("should load pass events", () => {

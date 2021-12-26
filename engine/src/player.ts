@@ -112,7 +112,7 @@ export default class Player extends EventEmitter {
     [Operator.Trigger]: [],
     [Operator.Activate]: [],
     [Operator.Pass]: [],
-    [Operator.Special]: [],
+    [Operator.FourPowerBuildings]: [],
   };
   // To avoid recalculating federations every time
   federationCache: FederationCache;
@@ -691,7 +691,13 @@ export default class Player extends EventEmitter {
   coverTechTile(pos: TechTilePos) {
     const tile = this.data.tiles.techs.find((tech) => tech.pos === pos);
     tile.enabled = false;
-    this.removeEvents(Event.parse(techs[tile.tile], `tech-${pos}` as TechPos));
+
+    const events = Event.parse(techs[tile.tile], `tech-${pos}` as TechPos);
+    this.removeEvents(events);
+
+    if (events.some((event) => event.operator === Operator.FourPowerBuildings)) {
+      this.federationCache = null;
+    }
   }
 
   incomeSelection(additionalEvents?: Event[]): IncomeSelection {
@@ -834,7 +840,7 @@ export default class Player extends EventEmitter {
       return 0;
     }
 
-    const hasSpecialOperator = options?.hasSpecialOperator ?? this.events[Operator.Special].length > 0;
+    const hasSpecialOperator = options?.hasSpecialOperator ?? this.events[Operator.FourPowerBuildings].length > 0;
     if (baseValue === 3 && hasSpecialOperator) {
       baseValue = 4;
     }
