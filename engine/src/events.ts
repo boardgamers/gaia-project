@@ -98,7 +98,7 @@ export default class Event {
     }
     let remaining: string;
 
-    if ([Operator.Special].includes(this.spec as Operator)) {
+    if ([Operator.FourPowerBuildings].includes(this.spec as Operator)) {
       this.condition = Condition.None;
       this.rewards = [];
       this.operator = spec as Operator;

@@ -3,7 +3,7 @@ import { AdvTechTile, AdvTechTilePos, Operator, TechTile, TechTilePos } from "..
 export default {
   [TechTile.Tech1]: ["o,q"],
   [TechTile.Tech2]: ["pt > k"],
-  [TechTile.Tech3]: [Operator.Special],
+  [TechTile.Tech3]: [Operator.FourPowerBuildings],
   [TechTile.Tech4]: ["7vp"],
   [TechTile.Tech5]: ["+o,pw"],
   [TechTile.Tech6]: ["+k,c"],

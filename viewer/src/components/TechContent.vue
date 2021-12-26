@@ -155,7 +155,7 @@ export default class TechContent extends Vue {
     if (
       this.event.operator === OperatorEnum.Activate ||
       this.event.operator === OperatorEnum.Income ||
-      this.event.operator === OperatorEnum.Special
+      this.event.operator === OperatorEnum.FourPowerBuildings
     ) {
       return false;
     }
