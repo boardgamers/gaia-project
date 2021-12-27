@@ -29,7 +29,7 @@ export const advancedTechTileData: {
   [AdvTechTile.AdvTech3]: { name: "q,5c special action", color: "--specialAction", shortcut: "5c" },
   [AdvTechTile.AdvTech4]: { name: "2 VP / mine", color: "--res-ore", shortcut: "2m" },
   [AdvTechTile.AdvTech5]: { name: "3 VP / lab when passing", color: "--res-knowledge", shortcut: "3l" },
-  [AdvTechTile.AdvTech6]: { name: "1 ore / sector", color: "--lost", shortcut: "os" },
+  [AdvTechTile.AdvTech6]: colorCodes.sector.add({ name: "1 ore / sector" }, "o"),
   [AdvTechTile.AdvTech7]: colorCodes.planetType.add({ name: "1 VP / planet type when passing" }, "1"),
   [AdvTechTile.AdvTech8]: { name: "2 VP / gaia planet", color: "--gaia", shortcut: "2g" },
   [AdvTechTile.AdvTech9]: { name: "4 VP / ts", color: "--res-credit", shortcut: "4t" },

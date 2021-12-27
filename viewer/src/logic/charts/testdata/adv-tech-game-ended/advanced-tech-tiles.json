@@ -9,7 +9,7 @@
         "color": "--federation"
       },
       {
-        "color": "--lost"
+        "color": "--current-round"
       },
       {
         "color": "--res-ore"

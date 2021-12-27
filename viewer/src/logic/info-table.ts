@@ -3,6 +3,9 @@ import Engine, {
   BoardAction,
   Booster,
   Building,
+  Event,
+  factionBoard,
+  factionVariantBoard,
   federations,
   Operator,
   Planet,
@@ -11,6 +14,7 @@ import Engine, {
   PlayerEnum,
   PowerArea,
   ResearchField,
+  researchTracks,
   Resource,
   Resource as ResourceEnum,
   Reward,
@@ -23,8 +27,9 @@ import { BvTableField } from "bootstrap-vue/src/components/table";
 import { countBy, sortBy } from "lodash";
 import { boardActionData } from "../data/actions";
 import { boosterData } from "../data/boosters";
-import { allBuildings, buildingData, buildingShortcut } from "../data/building";
-import { factionName } from "../data/factions";
+import { allBuildings, buildingData, buildingName, buildingShortcut, gaiaFormerCost } from "../data/building";
+import { eventDesc } from "../data/event";
+import { buildingDesc, factionName } from "../data/factions";
 import { federationData } from "../data/federations";
 import { planetNames, remainingPlanets } from "../data/planets";
 import { researchNames } from "../data/research";
@@ -204,14 +209,22 @@ function incomeCell(
   income: number,
   player: Player,
   support: ConversionSupport | null,
-  showIncome = true
+  showIncome: boolean,
+  incomeType: string = null
 ): Cell[] {
   const cell = resourceCell(r);
   const tooltip = support?.convertTooltip(r, player.player)?.replace(stripUnderline, (match, group) => group);
+  const hasIncome = showIncome && income;
+  if (incomeType && hasIncome) {
+    cell.title = `${cell.title} (+${incomeType} income)`;
+  }
+  if (tooltip) {
+    cell.title = `${cell.title} (${tooltip})`;
+  }
   return [
     {
-      shortcut: showIncome && income ? `${val}+${income}` : val,
-      title: tooltip ? `${cell.title} (${tooltip})` : cell.title,
+      shortcut: hasIncome ? `${val}+${income}` : val,
+      title: cell.title,
       color: cell.color,
       convert: tooltip ? r : null,
     },
@@ -291,7 +304,7 @@ function general(engine: Engine): PlayerTable {
       },
       {
         shortcut: "B",
-        color: "--res-ore",
+        color: "--oxide",
         title: "Booster",
         cell: (p) => (p.data.tiles.booster ? [boosterCell(p.data.tiles.booster)] : []),
       },
@@ -347,7 +360,8 @@ function power(engine: Engine, support: ConversionSupport): PlayerTable {
                 p.resourceIncome(Resource.GainToken),
                 p,
                 support,
-                showIncome(engine, p)
+                showIncome(engine, p),
+                "token"
               );
             case PowerArea.Area2:
               return incomeCell(
@@ -356,7 +370,8 @@ function power(engine: Engine, support: ConversionSupport): PlayerTable {
                 p.resourceIncome(Resource.ChargePower),
                 p,
                 support,
-                showIncome(engine, p)
+                showIncome(engine, p),
+                "power charge"
               );
             case PowerArea.Area3:
               return incomeCell(a, powerArea(a, p.data), 0, p, support, false);
@@ -376,18 +391,37 @@ function power(engine: Engine, support: ConversionSupport): PlayerTable {
   };
 }
 
+function buildingTooltip(p: Player, engine: Engine, b: Building): string {
+  const faction = p.faction;
+  if (!faction) {
+    return "";
+  }
+  const variant = p?.variant?.board ?? factionVariantBoard(engine.factionCustomization, faction)?.board;
+  return ": " + buildingDesc(b, faction, factionBoard(faction, variant), p);
+}
+
 function buildings(engine: Engine): PlayerTable {
   return {
     caption: "Buildings",
-    columns: allBuildings(engine.expansions, true).map((b) => ({
-      shortcut: buildingShortcut(b),
-      title: buildingData[b].name,
-      color: buildingData[b].color,
-      cell: (p) =>
-        b == Building.GaiaFormer
-          ? `${p.data.gaiaformers - p.data.buildings.gf - p.data.gaiaformersInGaia}/${p.data.gaiaformers}`
-          : p.data.buildings[b],
-    })),
+    columns: allBuildings(engine.expansions, true).map((b) => {
+      const color = buildingData[b].color;
+      const title = buildingData[b].name;
+      return {
+        shortcut: buildingShortcut(b),
+        title,
+        color,
+        cell: (p) => [
+          {
+            shortcut:
+              b == Building.GaiaFormer
+                ? `${p.data.gaiaformers - p.data.buildings.gf - p.data.gaiaformersInGaia}/${p.data.gaiaformers}`
+                : String(p.data.buildings[b]),
+            title: `${buildingName(b, p.faction)}${buildingTooltip(p, engine, b)}`,
+            color,
+          },
+        ],
+      };
+    }),
   };
 }
 
@@ -398,6 +432,34 @@ function techCell(t: TechTile | AdvTechTile, remaining: number): Cell {
     title: d.name,
     color: d.color,
   };
+}
+
+function researchLevelTitle(events: string[], field: ResearchField, level: number): string {
+  const effects = events
+    .map((s) => new Event(s))
+    .filter((e) => !e.rewards.some((r) => r.type == Resource.ShipRange))
+    .map((e) => eventDesc(e));
+
+  if (level == 5) {
+    switch (field) {
+      case ResearchField.Terraforming:
+        effects.push("Immediately gain the terraforming federation");
+        break;
+      case ResearchField.Navigation:
+        effects.push("Immediately place the lost planet");
+    }
+  }
+  if (field == ResearchField.GaiaProject) {
+    const c = gaiaFormerCost.get(level);
+    if (c) {
+      effects.push("Gaia former cost: " + c);
+    }
+  }
+  if (effects.length == 0) {
+    return null;
+  }
+
+  return `Level ${level}: ${effects.join(", ")}`;
 }
 
 function research(engine: Engine): PlayerTable {
@@ -424,20 +486,21 @@ function research(engine: Engine): PlayerTable {
         },
       }),
     ].concat(
-      ...ResearchField.values(engine.expansions).map((f) => {
-        return {
-          shortcut: f.substring(0, 1),
-          title: researchNames[f],
-          color: `--rt-${f}`,
-          cell: (p) => p.data.research[f],
-          additionalHeader: {
-            cells: [engine.tiles.techs["adv-" + f], engine.tiles.techs[f]]
-              .filter((t) => t)
-              .map((t) => techCell(t.tile, t.count)),
-            flex: InfoTableFlex.column,
-          },
-        };
-      })
+      ...ResearchField.values(engine.expansions).map((f) => ({
+        shortcut: f.substring(0, 1),
+        title: `${researchNames[f]} (${researchTracks[f]
+          .map((events, level) => researchLevelTitle(events, f, level))
+          .filter((e) => e)
+          .join(", ")})`,
+        color: `--rt-${f}`,
+        cell: (p) => p.data.research[f],
+        additionalHeader: {
+          cells: [engine.tiles.techs["adv-" + f], engine.tiles.techs[f]]
+            .filter((t) => t)
+            .map((t) => techCell(t.tile, t.count)),
+          flex: InfoTableFlex.column,
+        },
+      }))
     ),
   };
 }
