@@ -43,13 +43,16 @@ function rewardDesc(rewards: Reward[]) {
       switch (reward.type) {
         case Resource.TechTile:
           return `gain ${reward.count} tech tile${reward.count > 1 ? "s" : ""}`;
+        case Resource.TerraformCostDiscount:
+          return `gain ${reward.count} terraforming discount`;
         case Resource.TemporaryStep:
           return `gain ${reward.count} temporary step${reward.count > 1 ? "s" : ""}`;
+        case Resource.Range:
+          return `gain ${reward.count} range`;
         case Resource.TemporaryRange:
           return `gain ${reward.count} temporary range`;
         case Resource.RescoreFederation:
           return `gain the rewards from one of your federation tokens`;
-        // case Resource.Range: return `gain ${reward.count} range for the duration of the round`;
         case Resource.Turn:
           return `play an extra ${reward.count} turn${reward.count > 1 ? "s" : ""} at once`;
         default:

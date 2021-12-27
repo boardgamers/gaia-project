@@ -6,7 +6,7 @@
         "color": "--specialAction"
       },
       {
-        "color": "--lost"
+        "color": "--current-round"
       },
       {
         "color": "--dig"

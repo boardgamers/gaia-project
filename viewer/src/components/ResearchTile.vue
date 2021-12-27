@@ -74,6 +74,7 @@ import FederationTile from "./FederationTile.vue";
 import Planet from "./Planet.vue";
 import Resource from "./Resource.vue";
 import { ButtonData } from "../data";
+import { gaiaFormerCost } from "../data/building";
 
 @Component<ResearchTile>({
   components: {
@@ -147,11 +148,7 @@ export default class ResearchTile extends Vue {
       ],
       [
         ResearchField.GaiaProject,
-        new Map([
-          [1, "6tg"],
-          [3, "4tg"],
-          [4, "3tg"],
-        ]),
+        gaiaFormerCost,
       ],
     ]);
 

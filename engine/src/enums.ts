@@ -58,6 +58,7 @@ export enum Resource {
   VictoryPoint = "vp",
   TerraformCostDiscount = "d",
   Range = "r",
+  ShipRange = "ship-range",
   GaiaFormer = "gf",
   SpaceStation = "space-station",
   DowngradeLab = "down-lab",

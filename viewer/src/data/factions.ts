@@ -2,10 +2,12 @@ import {
   Building,
   Expansion,
   Faction,
+  FactionBoard,
   factionBoard,
   factionPlanet,
   Operator,
   Planet,
+  Player,
   PowerArea,
   terraformingStepsRequired,
 } from "@gaia-project/engine";
@@ -141,23 +143,26 @@ export function factionShortcut(faction: Faction): string {
   return factionData[faction].shortcut;
 }
 
+export function buildingDesc(b: Building, faction: Faction, board: FactionBoard, player?: Player) {
+  const cost = board.buildings[b].cost;
+  const income = " -> " + (b !== Building.ResearchLab ? board.buildings[b].income : board.buildings[b].income[0]);
+  return (
+    (player && b === Building.GaiaFormer
+      ? cost.toString().replace("6", String(6 - player.data.gaiaFormingDiscount()))
+      : cost) + (b === Building.GaiaFormer ? "" : income)
+  )
+    .replace(/,,/g, ",~,")
+    .replace(/,/g, ", ");
+}
+
 export function factionDesc(faction: Faction, variant: FactionBoardRaw | null, expansion: Expansion) {
   const board = factionBoard(faction, variant);
   const p = factionPlanet(faction);
 
-  const buildingDesc =
+  const buildingDescription =
     "<ul>" +
     allBuildings(expansion, false)
-      .map(
-        (bld) =>
-          "<li><b>" +
-          buildingName(bld, faction) +
-          "</b> - " +
-          board.buildings[bld].cost +
-          " -> " +
-          (bld !== Building.ResearchLab ? board.buildings[bld].income : board.buildings[bld].income[0]) +
-          "</li>"
-      )
+      .map((bld) => `<li><b>${buildingName(bld, faction)}</b> - ${buildingDesc(bld, faction, board)}</li>`)
       .join("\n") +
     "</ul>";
   const startingIncome = board.income.filter((ev) => ev.operator === Operator.Once);
@@ -169,7 +174,7 @@ export function factionDesc(faction: Faction, variant: FactionBoardRaw | null, e
   )}; padding: 1rem">
     <b>Ability: </b> ${factionData[faction].ability} </br>
     <b>Planetary Institute: </b> ${factionData[faction].PI}<br/>
-    <b>Buildings:</b> ${buildingDesc.replace(/,,/g, ",~,").replace(/,/g, ", ")}
+    <b>Buildings:</b> ${buildingDescription}
     <b>Starting Power:</b> area 1: ${board.power.area1}${
     board.brainstone == PowerArea.Area1 ? ", brainstone" : ""
   }, area 2: ${board.power.area2} </br>

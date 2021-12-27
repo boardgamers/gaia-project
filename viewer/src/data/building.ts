@@ -26,7 +26,7 @@ export const buildingData: { [key in Building]: { name: string; color: string } 
     color: "--current-round",
   },
   [Building.Academy1]: {
-    name: "Academy 1",
+    name: "Knowledge Academy",
     color: "--rt-terra",
   },
   [Building.Academy2]: {
@@ -74,6 +74,12 @@ export const buildingData: { [key in Building]: { name: string; color: string } 
     color: "--current-round",
   },
 };
+
+export const gaiaFormerCost = new Map([
+  [1, "6tg"],
+  [3, "4tg"],
+  [4, "3tg"],
+]);
 
 export function isFrontiersBuilding(building: BuildingEnum): boolean {
   return isShip(building) || building === Building.Colony;

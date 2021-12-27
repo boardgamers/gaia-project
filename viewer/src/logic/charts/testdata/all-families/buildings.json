@@ -47,7 +47,15 @@
       }
     }
   },
-  "labels": ["Mine", "Trading Station", "Research Lab", "Planetary Institute", "Academy 1", "Academy 2", "Gaia Former"],
+  "labels": [
+    "Mine",
+    "Trading Station",
+    "Research Lab",
+    "Planetary Institute",
+    "Knowledge Academy",
+    "Academy 2",
+    "Gaia Former"
+  ],
   "datasets": [
     {
       "label": "Geoden (13)",
