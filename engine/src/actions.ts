@@ -1,4 +1,5 @@
-import { AvailableFreeAction, freeActionData } from "./available-command";
+import { freeActionData } from "./available/actions";
+import { AvailableFreeAction } from "./available/types";
 import { BoardAction } from "./enums";
 import Player from "./player";
 

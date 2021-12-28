@@ -1,5 +1,5 @@
 import { ConversionPool, FreeAction, freeActionsNevlas, freeActionsNevlasPI } from "../actions";
-import { conversionToFreeAction } from "../available-command";
+import { conversionToFreeAction } from "../available/actions";
 import { Building, Faction } from "../enums";
 import Player from "../player";
 import { FactionBoardVariants } from "./types";

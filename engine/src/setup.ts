@@ -1,6 +1,6 @@
 import assert from "assert";
 import shuffleSeed from "shuffle-seed";
-import AvailableCommand from "./available-command";
+import { AvailableCommand } from "./available/types";
 import Engine from "./engine";
 import {
   AdvTechTile,

@@ -81,6 +81,7 @@ import {
   Player,
   PlayerEnum,
   SpaceMap as ISpaceMap,
+  shipsInHex,
 } from "@gaia-project/engine";
 import { corners } from "../graphics/hex";
 import Planet from "./Planet.vue";
@@ -92,7 +93,6 @@ import { isWarningEnabled, moveWarnings } from "../data/warnings";
 import { factionName } from "../data/factions";
 import { leechPlanets, radiusTranslate, upgradableBuildingsOfOtherPlayers } from "../logic/utils";
 import { Ship } from "@gaia-project/engine/src/enums";
-import { shipsInHex } from "@gaia-project/engine/src/available-command";
 import { MapMode, MapModeType } from "../data/actions";
 import { isFree } from "../logic/buttons/utils";
 import { max } from "lodash";

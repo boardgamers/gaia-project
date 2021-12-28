@@ -1,6 +1,6 @@
 import { EventEmitter } from "eventemitter3";
 import { cloneDeep, fromPairs } from "lodash";
-import { BrainstoneActionData, BrainstoneWarning } from "./available-command";
+import { BrainstoneActionData, BrainstoneWarning } from "./available/types";
 import {
   AdvTechTile,
   AdvTechTilePos,

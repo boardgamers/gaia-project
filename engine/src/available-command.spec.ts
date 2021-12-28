@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import { PlayerEnum } from "../index";
-import { choosableFactions, possibleBoardActions, possibleFreeActions } from "./available-command";
+import { possibleBoardActions, possibleFreeActions } from "./available/actions";
+import { choosableFactions } from "./available/setup";
 import Engine, { AuctionVariant } from "./engine";
 import { BoardAction, Faction } from "./enums";
 import Player from "./player";

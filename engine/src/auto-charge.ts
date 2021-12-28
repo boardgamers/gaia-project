@@ -1,4 +1,4 @@
-import { Offer } from "./available-command";
+import { Offer } from "./available/types";
 import { Faction, Resource } from "./enums";
 import { IncomeSelection } from "./income";
 import Player, { AutoCharge } from "./player";

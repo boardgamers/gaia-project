@@ -1,5 +1,4 @@
 import { finalRankings, gainFinalScoringVictoryPoints } from "./src/algorithms/scoring";
-import AvailableCommand from "./src/available-command";
 import { stdBuildingValue } from "./src/buildings";
 import Engine from "./src/engine";
 import Event, { EventSource } from "./src/events";
@@ -12,10 +11,14 @@ import tiles from "./src/tiles";
 import federations from "./src/tiles/federations";
 
 export { boardActions, FreeAction, freeActionConversions, ResourceConversion } from "./src/actions";
+export { conversionToFreeAction } from "./src/available/actions";
+export { canResearchField, canTakeAdvancedTechTile } from "./src/available/research";
+export { shipsInHex } from "./src/available/ships";
 export {
   AvailableBoardAction,
   AvailableBoardActionData,
   AvailableBuilding,
+  AvailableCommand,
   AvailableFederation,
   AvailableFreeAction,
   AvailableFreeActionData,
@@ -24,12 +27,11 @@ export {
   AvailableResearchData,
   AvailableResearchTrack,
   BrainstoneActionData,
-  canResearchField,
-  canTakeAdvancedTechTile,
+  BrainstoneWarning,
   ChooseTechTile,
-  conversionToFreeAction,
   MAX_SHIPS_PER_HEX,
-} from "./src/available-command";
+  ShipAction,
+} from "./src/available/types";
 export {
   AuctionVariant,
   EngineOptions,
@@ -81,7 +83,6 @@ export {
   Player,
   PlayerData,
   Event,
-  AvailableCommand,
   tiles,
   Reward,
   SpaceMap,

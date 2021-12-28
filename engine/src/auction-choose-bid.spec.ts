@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { generate } from "./available-command";
+import { generate } from "./available/available-command";
 import Engine, { AuctionVariant } from "./engine";
 import { Faction } from "./enums";
 
