@@ -1,10 +1,12 @@
 import {
   Building,
+  Event,
   Expansion,
   Faction,
   FactionBoard,
   factionBoard,
   factionPlanet,
+  isShip,
   Operator,
   Planet,
   Player,
@@ -143,16 +145,18 @@ export function factionShortcut(faction: Faction): string {
   return factionData[faction].shortcut;
 }
 
+function formatIncome(income: Event[]): string {
+  return income.length == 0 ? "~" : income.join(", ");
+}
+
 export function buildingDesc(b: Building, faction: Faction, board: FactionBoard, player?: Player) {
   const cost = board.buildings[b].cost;
-  const income = " -> " + (b !== Building.ResearchLab ? board.buildings[b].income : board.buildings[b].income[0]);
+  const income = " -> " + board.buildings[b].income.map(i => formatIncome(i)).join(" / ");
   return (
     (player && b === Building.GaiaFormer
       ? cost.toString().replace("6", String(6 - player.data.gaiaFormingDiscount()))
-      : cost) + (b === Building.GaiaFormer ? "" : income)
-  )
-    .replace(/,,/g, ",~,")
-    .replace(/,/g, ", ");
+      : cost) + (b === Building.GaiaFormer || isShip(b) ? "" : income)
+  );
 }
 
 export function factionDesc(faction: Faction, variant: FactionBoardRaw | null, expansion: Expansion) {

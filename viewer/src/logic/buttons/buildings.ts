@@ -297,7 +297,7 @@ function moveTargetButton(
 
         return hexSelectionButton(
           controller,
-          autoClickButton({
+          textButton({
             command: a.type,
             label: shipActionName(a.type),
             hexes,
@@ -318,7 +318,7 @@ function moveTargetButton(
 function moveSourceButton(controller: CommandController, engine: Engine, data: AvailableMoveShipData): ButtonData {
   return hexSelectionButton(
     controller,
-    autoClickButton({
+    textButton({
       hexes: hexMap(
         engine,
         data.targets.map((t) => t.location),
@@ -345,7 +345,7 @@ export function moveShipButton(
     buttons: sortedUniq(command.data.map((e) => e.ship)).map((ship) =>
       hexSelectionButton(
         controller,
-        autoClickButton({
+        textButton({
           label: buildingName(ship, faction),
           command: ship,
           shortcuts: [shipLetter(ship).toLowerCase()],
