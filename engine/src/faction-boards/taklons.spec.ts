@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { BrainstoneWarning } from "../available-command";
+import { BrainstoneWarning } from "../available/types";
 import Engine from "../engine";
 import { Player, PowerArea } from "../enums";
 

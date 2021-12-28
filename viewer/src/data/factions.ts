@@ -151,7 +151,7 @@ function formatIncome(income: Event[]): string {
 
 export function buildingDesc(b: Building, faction: Faction, board: FactionBoard, player?: Player) {
   const cost = board.buildings[b].cost;
-  const income = " -> " + board.buildings[b].income.map(i => formatIncome(i)).join(" / ");
+  const income = " -> " + board.buildings[b].income.map((i) => formatIncome(i)).join(" / ");
   return (
     (player && b === Building.GaiaFormer
       ? cost.toString().replace("6", String(6 - player.data.gaiaFormingDiscount()))

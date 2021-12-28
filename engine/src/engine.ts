@@ -4,14 +4,15 @@ import { version } from "../package.json";
 import { boardActions } from "./actions";
 import { finalRankings, gainFinalScoringVictoryPoints } from "./algorithms/scoring";
 import { ChargeDecision, ChargeRequest, decideChargeRequest } from "./auto-charge";
-import AvailableCommand, {
+import { generate as generateAvailableCommands } from "./available/available-command";
+import {
   AvailableBuilding,
+  AvailableCommand,
   AvailableFreeActionData,
   BrainstoneActionData,
-  generate as generateAvailableCommands,
   Offer,
   ShipAction,
-} from "./available-command";
+} from "./available/types";
 import { stdBuildingValue } from "./buildings";
 import {
   AdvTechTile,

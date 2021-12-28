@@ -7,7 +7,8 @@ import {
   ChargeRequest,
   decideChargeRequest,
 } from "./auto-charge";
-import { getTaklonsExtraLeechOffers, Offer } from "./available-command";
+import { getTaklonsExtraLeechOffers } from "./available/leech";
+import { Offer } from "./available/types";
 import { Resource } from "./enums";
 import { IncomeSelection } from "./income";
 import Player, { AutoCharge } from "./player";

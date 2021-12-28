@@ -1,5 +1,4 @@
-import { BuildWarning } from "@gaia-project/engine";
-import { BrainstoneWarning } from "@gaia-project/engine/src/available-command";
+import { BrainstoneWarning, BuildWarning } from "@gaia-project/engine";
 import { ButtonData } from "./index";
 
 export enum WarningKey {

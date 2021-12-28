@@ -116,9 +116,7 @@
       <text v-if="count >= 1" x="13" y="1.2" stroke-width="0.3" style="font-weight: bold; font-size: 10px">
         {{ count }}
       </text>
-      <text v-if="count >= 1" x="-13" y="1.2" stroke-width="0.3" style="font-weight: bold; font-size: 10px">
-        S
-      </text>
+      <text v-if="count >= 1" x="-13" y="1.2" stroke-width="0.3" style="font-weight: bold; font-size: 10px"> S </text>
     </template>
     <template v-else-if="kind === 'up-lowest'">
       <Condition condition="a" transform="scale(0.75)" />

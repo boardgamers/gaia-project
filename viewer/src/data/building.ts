@@ -5,8 +5,8 @@ import {
   Expansion,
   Faction,
   isShip,
+  ShipAction,
 } from "@gaia-project/engine";
-import { ShipAction } from "@gaia-project/engine/src/available-command";
 
 export const buildingData: { [key in Building]: { name: string; color: string } } = {
   [Building.Mine]: {
@@ -88,9 +88,9 @@ export function isFrontiersBuilding(building: BuildingEnum): boolean {
 export function allBuildings(expansion: Expansion, gaiaFormer: boolean) {
   return Object.values(Building).filter(
     (bld) =>
-      (bld !== Building.GaiaFormer || gaiaFormer)
-        && bld !== Building.SpaceStation
-        && (!isFrontiersBuilding(bld) || expansion === Expansion.Frontiers)
+      (bld !== Building.GaiaFormer || gaiaFormer) &&
+      bld !== Building.SpaceStation &&
+      (!isFrontiersBuilding(bld) || expansion === Expansion.Frontiers)
   );
 }
 
