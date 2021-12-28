@@ -15,7 +15,7 @@
         <Resource
           v-for="(resource, i) in resources"
           :key="'field-' + i"
-          :transform="`translate(${2 + 56 / 2 + resourceX(i)}, ${(height / 3) * 2 + 3 + resourceOffset})`"
+          :transform="`translate(${2 + 56 / 2 + resourceX(i)}, ${resourceY(i)}) scale(${scale(resource.type)})`"
           :kind="resource.type"
           :count="resource.count"
         />
@@ -58,6 +58,7 @@ import Engine, {
   canTakeAdvancedTechTile,
   Condition,
   Event,
+  Expansion,
   Federation,
   Operator,
   Planet as PlanetEnum,
@@ -96,10 +97,31 @@ export default class ResearchTile extends Vue {
 
   resourceX(index: number) {
     const res = this.resources;
-    const l = res.length;
+    const range = this.smallRange(res[0].type);
+
+    let l = res.length;
+    if (range) {
+      l = 1;
+      index = 0;
+    }
+
     const sep = l <= 2 ? 7 : 6;
 
     return -6 * (l - 1) + index * 2 * sep - ((res[0].count as any) === "+" ? 2 : 0);
+  }
+
+  resourceY(index: number): number {
+    const range = this.smallRange((this.resources)[0].type);
+    return (this.height / 3) * 2 + 3 + this.resourceOffset + (range ? (index - .4) * 10 : 0);
+  }
+
+  scale(resource: ResourceEnum): number {
+    return this.smallRange(resource) ? 0.8 : 1;
+  }
+
+  smallRange(resource: ResourceEnum): boolean {
+    return (resource === ResourceEnum.ShipRange || resource === ResourceEnum.Range)
+      && this.gameData.expansions === Expansion.Frontiers;
   }
 
   tokenX(index: PlayerEnum) {
@@ -140,10 +162,10 @@ export default class ResearchTile extends Vue {
       [
         ResearchField.Navigation,
         new Map([
-          [0, "1r"],
-          [2, "2r"],
-          [4, "3r"],
-          [5, "4r"],
+          [0, "1r,2ship-range"],
+          [2, "2r,3ship-range"],
+          [4, "3r,4ship-range"],
+          [5, "4r,6ship-range"],
         ]),
       ],
       [

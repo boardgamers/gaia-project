@@ -103,6 +103,23 @@
         {{ count }}
       </text>
     </template>
+    <template v-else-if="kind === 'ship-range'">
+      <g transform="scale(1) translate(-13,0)">
+        <image xlink:href="../assets/resources/flat-hex.svg" :height=162/328*20 width=20 x=-10 y=-4 />
+      </g>
+      <g transform="scale(1) translate(13,0)">
+        <image xlink:href="../assets/resources/flat-hex.svg" :height=162/328*20 width=20 x=-10 y=-4 />
+      </g>
+      <g transform="translate(1,0) rotate(70)">
+        <image xlink:href="../assets/resources/range-arrow.svg" :height=285/164*9 width=10 x=-5 y=-8 />
+      </g>
+      <text v-if="count >= 1" x="13" y="1.2" stroke-width="0.3" style="font-weight: bold; font-size: 10px">
+        {{ count }}
+      </text>
+      <text v-if="count >= 1" x="-13" y="1.2" stroke-width="0.3" style="font-weight: bold; font-size: 10px">
+        S
+      </text>
+    </template>
     <template v-else-if="kind === 'up-lowest'">
       <Condition condition="a" transform="scale(0.75)" />
       <Token faction="bescods" transform="scale(0.15) translate(50,-24)" />

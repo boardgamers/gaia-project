@@ -278,6 +278,9 @@ export default class PlayerData extends EventEmitter {
       case Resource.Range:
         this.range += count;
         break;
+      case Resource.ShipRange:
+        this.shipRange += count;
+        break;
       case Resource.TemporaryRange:
         this.temporaryRange += count;
         break;
