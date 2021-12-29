@@ -4,6 +4,7 @@ import { BoardAction, Booster, Building, Player } from "..";
 import { version } from "../package.json";
 import Engine, { AuctionVariant, createMoveToShow } from "./engine";
 import { Command, Condition, Faction, Operator, Phase, Planet, Player as PlayerEnum } from "./enums";
+import { autoChargePower } from "./move/auto";
 import PlayerData, { MoveTokens } from "./player-data";
 
 describe("Engine", () => {
@@ -950,7 +951,7 @@ function autoCharge(engine: Engine) {
 
   const availableCommand = engine.findAvailableCommand(engine.playerToMove, Command.ChargePower);
 
-  return engine.autoChargePower(availableCommand);
+  return autoChargePower(engine, availableCommand);
 }
 
 function parseMoves(moves: string) {

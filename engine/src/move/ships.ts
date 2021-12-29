@@ -1,10 +1,11 @@
-import { Building, Command, Player as PlayerEnum, Resource } from "../enums";
-import { AvailableBuilding, AvailableCommand, ShipAction } from "../available/types";
 import assert from "assert";
+import { AvailableBuilding, AvailableCommand, ShipAction } from "../available/types";
 import Engine from "../engine";
-import Player from "../player";
+import { Building, Command, Player as PlayerEnum, Resource } from "../enums";
 import { GaiaHex } from "../gaia-hex";
+import Player from "../player";
 import Reward from "../reward";
+import { placeBuilding } from "./buildings";
 
 export function moveShip(
   engine: Engine,
@@ -14,7 +15,7 @@ export function moveShip(
   source: string,
   dest: string,
   actionType?: ShipAction,
-  actionLocation?: string,
+  actionLocation?: string
 ) {
   const pl = engine.player(player);
 
@@ -45,7 +46,7 @@ export function moveShip(
 
     switch (actionType) {
       case ShipAction.BuildColony:
-        engine.placeBuilding(pl, location as AvailableBuilding);
+        placeBuilding(engine, pl, location as AvailableBuilding);
         pl.removeShip(ship, false);
         break;
       case ShipAction.Trade:
@@ -91,6 +92,3 @@ function gainTradeReward(p: Player, ownBuilding: boolean, building: Building) {
       break;
   }
 }
-
-
-

@@ -1,5 +1,5 @@
 import { uniq } from "lodash";
-import { stdBuildingValue, upgradedBuildings } from "../buildings";
+import { upgradedBuildings } from "../buildings";
 import { qicForDistance } from "../cost";
 import Engine from "../engine";
 import { Building, Command, Expansion, Faction, Planet, Player, Resource } from "../enums";
