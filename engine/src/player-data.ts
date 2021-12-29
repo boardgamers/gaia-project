@@ -629,38 +629,6 @@ export default class PlayerData extends EventEmitter {
     });
   }
 
-  gainTradeReward(ownBuilding: boolean, building: Building) {
-    const gain = (reward: Reward) => {
-      this.gainReward(reward, false, "trade");
-    };
-
-    switch (building) {
-      case Building.Mine:
-        if (ownBuilding) {
-          gain(new Reward(1, Resource.Ore));
-        } else {
-          //build toll station
-        }
-        break;
-      case Building.TradingStation:
-        gain(new Reward(5, Resource.Credit));
-        break;
-      case Building.ResearchLab:
-        gain(new Reward(2, Resource.Knowledge));
-        break;
-      case Building.PlanetaryInstitute:
-        gain(new Reward(5, Resource.ChargePower));
-        break;
-      case Building.Academy1:
-      case Building.Academy2:
-        gain(new Reward(2, Resource.Knowledge));
-        break;
-      case Building.Colony:
-        gain(new Reward(3, Resource.VictoryPoint));
-        break;
-    }
-  }
-
   isNewPlanetType(hex: GaiaHex): boolean {
     for (const hex2 of this.occupied) {
       if (hex !== hex2 && hex2.data.planet === hex.data.planet) {

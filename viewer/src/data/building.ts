@@ -45,6 +45,10 @@ export const buildingData: { [key in Building]: { name: string; color: string } 
     name: "Colony",
     color: "--rt-nav",
   },
+  [Building.CustomsPost]: {
+    name: "Customs Post",
+    color: "--res-credit",
+  },
   [Building.ColonyShip]: {
     name: "Colony Ship",
     color: "--current-round",
@@ -82,7 +86,7 @@ export const gaiaFormerCost = new Map([
 ]);
 
 export function isFrontiersBuilding(building: BuildingEnum): boolean {
-  return isShip(building) || building === Building.Colony;
+  return isShip(building) || building === Building.Colony || building === Building.CustomsPost;
 }
 
 export function allBuildings(expansion: Expansion, gaiaFormer: boolean) {
@@ -160,6 +164,10 @@ export function buildingShortcut(building: Building, faction?: Faction): string 
       return "g";
     case Building.SpaceStation:
       return "p";
+    case Building.Colony:
+      return "c";
+    case Building.CustomsPost:
+      return "u";
   }
 }
 

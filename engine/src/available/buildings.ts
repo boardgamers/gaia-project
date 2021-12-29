@@ -95,7 +95,7 @@ export function possibleBuildings(engine: Engine, player: Player): AvailableComm
         continue;
       }
 
-      if (stdBuildingValue(building) > 0 && engine.expansions === Expansion.Frontiers) {
+      if (hex.isRangeStartingPoint(player) && engine.expansions === Expansion.Frontiers) {
         buildings.push(...possibleShips(pl, engine, map, hex));
       }
 

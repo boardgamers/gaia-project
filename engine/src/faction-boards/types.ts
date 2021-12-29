@@ -80,6 +80,10 @@ const defaultBoard: FactionBoardRaw = {
         ["+3c", "+3pw", "+5vp", "2vp"],
       ],
     },
+    [Building.CustomsPost]: {
+      cost: "2c",
+      income: [["+2c"], ["+2c"], ["+2c"], ["+2c"], ["+2c"]],
+    },
 
     [Building.ColonyShip]: {
       cost: "4c,3o",
