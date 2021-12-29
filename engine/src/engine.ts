@@ -1,17 +1,9 @@
 import assert from "assert";
-import { isEqual, range, set, uniq } from "lodash";
+import { range, set } from "lodash";
 import { version } from "../package.json";
-import { boardActions } from "./actions";
 import { finalRankings, gainFinalScoringVictoryPoints } from "./algorithms/scoring";
-import { ChargeDecision, ChargeRequest, decideChargeRequest } from "./auto-charge";
 import { generate as generateAvailableCommands } from "./available/available-command";
-import {
-  AvailableBuilding,
-  AvailableCommand,
-  AvailableFreeActionData,
-  BrainstoneActionData,
-  Offer,
-} from "./available/types";
+import { AvailableCommand, BrainstoneActionData } from "./available/types";
 import { stdBuildingValue } from "./buildings";
 import {
   AdvTechTile,
@@ -24,12 +16,10 @@ import {
   Faction,
   Federation,
   FinalTile,
-  isShip,
   Operator,
   Phase,
   Planet,
   Player as PlayerEnum,
-  PowerArea,
   ResearchField,
   Resource,
   Round,
@@ -41,27 +31,24 @@ import {
 } from "./enums";
 import Event, { EventSource } from "./events";
 import { factionVariantBoard, latestVariantVersion } from "./faction-boards";
-import { remainingFactions } from "./factions";
 import { GaiaHex } from "./gaia-hex";
 import SpaceMap, { MapConfiguration } from "./map";
+import { moveAction, moveBurn, movePiSwap, moveSpecial, moveSpend } from "./move/actions";
+import { autoMove } from "./move/auto";
+import { moveBuild, moveLostPlanet } from "./move/buildings";
+import { moveChooseFederationTile, moveFormFederation } from "./move/federation";
+import { moveBrainStone, moveChargePower, moveDecline } from "./move/leech";
+import { moveChooseCoverTechTile, moveChooseTechTile, moveResearch } from "./move/research";
+import { moveChooseIncome, moveChooseRoundBooster, moveEndTurn, movePass } from "./move/round";
+import { moveBid, moveChooseFaction, moveInit, moveRotateSectors, moveSetup } from "./move/setup";
+import { moveShip } from "./move/ships";
 import Player from "./player";
-import { BrainstoneDest, MoveTokens, powerLogString } from "./player-data";
+import { MoveTokens, powerLogString } from "./player-data";
 import * as researchTracks from "./research-tracks";
 import Reward from "./reward";
-import {
-  applyRandomBoardSetup,
-  applySetupOption,
-  initCustomSetup,
-  possibleSetupBoardActions,
-  SetupOption,
-  SetupPosition,
-  SetupType,
-} from "./setup";
-import federations from "./tiles/federations";
+import { initCustomSetup, possibleSetupBoardActions } from "./setup";
 import { roundScorings } from "./tiles/scoring";
-import { isAdvanced } from "./tiles/techs";
 import { isVersionOrLater } from "./utils";
-import { moveShip } from "./move/ships";
 
 export const LEECHING_DISTANCE = 2;
 
@@ -571,204 +558,9 @@ export default class Engine {
     return true;
   }
 
-  /** Return move a dropped player would make */
-  autoPass(): string | undefined {
-    const toMove = this.playerToMove;
-
-    assert(toMove !== undefined, "Can't execute a move when no player can move");
-
-    const pl = this.player(toMove);
-
-    if (this.availableCommands.some((cmd) => cmd.name === Command.Decline)) {
-      const cmd = this.findAvailableCommand(this.playerToMove, Command.Decline);
-      return `${Command.Decline} ${cmd.data.offers[0].offer}`;
-    } else if (this.availableCommands.some((cmd) => cmd.name === Command.Pass)) {
-      const cmd = this.findAvailableCommand(this.playerToMove, Command.Pass);
-      const boosters = cmd.data.boosters;
-
-      if (boosters.length > 0) {
-        return `${Command.Pass} ${boosters[0]}`;
-      } else {
-        return `${Command.Pass}`;
-      }
-    } else if (this.availableCommands.some((cmd) => cmd.name === Command.ChooseIncome)) {
-      const cmd = this.findAvailableCommand(this.playerToMove, Command.ChooseIncome);
-      return `${Command.ChooseIncome} ${cmd.data}`;
-    } else if (this.availableCommands.some((cmd) => cmd.name === Command.BrainStone)) {
-      const cmd = this.findAvailableCommand(this.playerToMove, Command.BrainStone);
-      return `${Command.BrainStone} ${cmd.data.choices[0].area}`;
-    } else if (
-      this.availableCommands.some(
-        (cmd) =>
-          cmd.name === Command.Spend &&
-          (cmd.data as AvailableFreeActionData).acts[0].cost.includes(Resource.GainTokenGaiaArea)
-      )
-    ) {
-      // Terrans spending power in gaia phase to create resources
-      return `${Command.Spend} ${pl.data.power.gaia}${Resource.GainTokenGaiaArea} for ${pl.data.power.gaia}${Resource.Credit}`;
-    } else {
-      assert(
-        false,
-        "Can't automove for player " +
-          (this.playerToMove + 1) +
-          ", available command: " +
-          this.availableCommands[0].name
-      );
-    }
-  }
-
   /** Automatically generate moves based on player settings */
   autoMove(partialMove?: string, options?: { autoPass?: boolean }): boolean {
-    if (this.playerToMove === undefined) {
-      return false;
-    }
-
-    const toMove = this.playerToMove;
-    const factionOrPlayer = this.player(toMove).faction ?? `p${toMove + 1}`;
-
-    let _copy: Engine;
-    const copy = () => _copy || (_copy = Engine.fromData(JSON.parse(JSON.stringify(this))));
-    // copy() could be used instead, but this is an optimisation for when we don't need to create a copy
-    // if it doesn't already exist
-    const copyOrThis = () => _copy || this;
-
-    const functions = [
-      [
-        Command.ChooseFaction,
-        (cmd: AvailableCommand) => copyOrThis().autoChooseFaction(cmd as AvailableCommand<Command.ChooseFaction>),
-      ],
-      [
-        Command.ChargePower,
-        (cmd: AvailableCommand) => copyOrThis().autoChargePower(cmd as AvailableCommand<Command.ChargePower>),
-      ],
-      [
-        Command.ChooseIncome,
-        (cmd: AvailableCommand) => copyOrThis().autoIncome(cmd as AvailableCommand<Command.ChooseIncome>),
-      ],
-      [
-        Command.BrainStone,
-        (cmd: AvailableCommand) => copyOrThis().autoBrainstone(cmd as AvailableCommand<Command.BrainStone>),
-      ],
-      ...(options?.autoPass ? [[undefined, () => copyOrThis().autoPass()] as const] : []),
-    ] as const;
-
-    if (partialMove) {
-      copy().move(partialMove);
-
-      // Recursion end condition
-      if (copy().newTurn) {
-        this.move(partialMove, false);
-        return true;
-      }
-    }
-
-    for (const [command, handler] of functions) {
-      let movePart: string | false;
-      if (command) {
-        const availableCommand = copyOrThis().findAvailableCommand(toMove, command);
-
-        if (!availableCommand) {
-          continue;
-        }
-
-        movePart = handler(availableCommand);
-      } else {
-        movePart = (handler as () => string)();
-      }
-
-      if (!movePart) {
-        continue;
-      }
-
-      const newMove = partialMove ? `${partialMove}. ${movePart}` : `${factionOrPlayer} ${movePart}`;
-
-      return this.autoMove(newMove, options);
-    }
-
-    return false;
-  }
-
-  /** Automatically choose faction when there's only one faction available */
-  autoChooseFaction(cmd: AvailableCommand<Command.ChooseFaction>): string | false {
-    if (this.availableCommands.length > 1) {
-      // There can be a bid command too
-      return false;
-    }
-
-    const factions: Faction[] = cmd.data;
-
-    if (factions.length === 1) {
-      return `${Command.ChooseFaction} ${factions[0]}`;
-    }
-
-    return false;
-  }
-
-  /**
-   * Automatically leech when there's no cost
-   */
-  autoChargePower(cmd: AvailableCommand<Command.ChargePower>): string | false {
-    const offers = cmd.data.offers;
-    const pl = this.player(this.playerToMove);
-    const playerHasPassed = this.passedPlayers.includes(pl.player);
-    const request = new ChargeRequest(pl, offers, this.isLastRound, playerHasPassed, pl.incomeSelection());
-
-    const chargeDecision = decideChargeRequest(request);
-    switch (chargeDecision) {
-      case ChargeDecision.Yes: {
-        const offer = request.maxAllowedOffer;
-        assert(offer, `could not find max offer: ${JSON.stringify([offers, pl.settings])}`);
-        return `${Command.ChargePower} ${offer.offer}`;
-      }
-      case ChargeDecision.No:
-        return `${Command.Decline} ${offers[0].offer}`;
-      case ChargeDecision.Ask:
-        return false;
-      case ChargeDecision.Undecided:
-        assert(false, `Could not decide how to charge power: ${request}`);
-    }
-  }
-
-  /**
-   * Automatically decide on income if autoIncome is enabled
-   */
-  autoIncome(cmd: AvailableCommand): string | false {
-    const pl = this.player(this.playerToMove);
-
-    if (pl.settings.autoIncome) {
-      const events = pl.incomeSelection().autoplayEvents();
-      const relevantReward = events[0]?.rewards.find(
-        (rew) => rew.type === Resource.ChargePower || rew.type === Resource.GainToken
-      );
-
-      if (!relevantReward) {
-        // should never happen, as autoIncome is only called if income command is possible
-        return false;
-      }
-
-      // Returns only the first event. As there maybe brainstone commands between events for example
-      return `${Command.ChooseIncome} ${relevantReward}`;
-    }
-    return false;
-  }
-
-  /**
-   * Automatically decide on brainstone if autoBrainstone is enabled
-   */
-  autoBrainstone(cmd: AvailableCommand<Command.BrainStone>): string | false {
-    const pl = this.player(this.playerToMove);
-
-    if (pl.settings.autoBrainstone) {
-      const choices = cmd.data.choices.map((c) => c.area);
-
-      if (choices.some((choice) => choice === PowerArea.Gaia || choice === "discard")) {
-        return false;
-      }
-
-      const dest = choices.includes(PowerArea.Area3) ? PowerArea.Area3 : PowerArea.Area2;
-      return `${Command.BrainStone} ${dest}`;
-    }
-    return false;
+    return autoMove(this, partialMove, options);
   }
 
   static fromData(data: Record<string, any>): Engine {
@@ -1018,15 +810,41 @@ export default class Engine {
 
     this.checkCommand(move.command);
 
-    const registry = {
+    const moveRegistry: {
+      [key in Command]: (engine: Engine, command: AvailableCommand, player: PlayerEnum, ...args: any) => void;
+    } = {
+      [Command.Init]: () => {
+        throw new Error("init cannot be executed");
+      },
+      [Command.DeadEnd]: () => {
+        throw new Error("deadEnd cannot be executed");
+      },
+      [Command.Setup]: moveSetup,
+      [Command.RotateSectors]: moveRotateSectors,
+      [Command.ChooseFaction]: moveChooseFaction,
+      [Command.Bid]: moveBid,
+      [Command.Build]: moveBuild,
+      [Command.PlaceLostPlanet]: moveLostPlanet,
       [Command.MoveShip]: moveShip,
+      [Command.Special]: moveSpecial,
+      [Command.Spend]: moveSpend,
+      [Command.BurnPower]: moveBurn,
+      [Command.Action]: moveAction,
+      [Command.PISwap]: movePiSwap,
+      [Command.ChooseFederationTile]: moveChooseFederationTile,
+      [Command.FormFederation]: moveFormFederation,
+      [Command.ChargePower]: moveChargePower,
+      [Command.Decline]: moveDecline,
+      [Command.BrainStone]: moveBrainStone,
+      [Command.UpgradeResearch]: moveResearch,
+      [Command.ChooseTechTile]: moveChooseTechTile,
+      [Command.ChooseCoverTechTile]: moveChooseCoverTechTile,
+      [Command.ChooseRoundBooster]: moveChooseRoundBooster,
+      [Command.Pass]: movePass,
+      [Command.EndTurn]: moveEndTurn,
+      [Command.ChooseIncome]: moveChooseIncome,
     };
-    const fn = registry[move.command]
-    if (fn) {
-      fn(this, this.avCommand(), this.playerToMove, ...move.args);
-    } else {
-      (this[move.command] as any)(this.playerToMove, ...move.args);
-    }
+    moveRegistry[move.command](this, this.avCommand(), this.playerToMove, ...move.args);
 
     return move;
   }
@@ -1405,11 +1223,12 @@ export default class Engine {
   // ****************************************
   [Phase.SetupInit](move: string) {
     const split = move.split(" ");
-    const command = split[0] as Command;
+    const command = split.shift() as Command;
 
     assert(command === Command.Init, "The first command of a game needs to be the initialization command");
 
-    (this[Command.Init] as any)(...split.slice(1));
+    const players = split.shift();
+    moveInit(this, +players || 2, split.shift() || "defaultSeed");
 
     this.beginSetupBoardPhase();
   }
@@ -1542,393 +1361,6 @@ export default class Engine {
       // Next leech rounds (eg: double leech happens with lab + lost planet in same turn)
       this.beginLeechingPhase();
     }
-  }
-
-  // ****************************************
-  // ************** COMMANDS ****************
-  // ****************************************
-  [Command.Init](players: string, seed: string) {
-    const nbPlayers = +players || 2;
-    seed = seed || "defaultSeed";
-
-    assert(nbPlayers >= 2 && nbPlayers <= 5, "Invalid number of players");
-
-    this.map = new SpaceMap(nbPlayers, seed, this.options.map?.mirror ?? false, this.options.layout);
-
-    if (this.options.map?.sectors) {
-      this.map.load(this.options.map);
-    }
-    this.options.map = this.map.placement;
-
-    applyRandomBoardSetup(this, seed, nbPlayers);
-
-    // powerActions
-    BoardAction.values(this.expansions).forEach((pos: BoardAction) => {
-      this.boardActions[pos] = null;
-    });
-
-    this.players = [];
-    this.setup = [];
-
-    for (let i = 0; i < nbPlayers; i++) {
-      this.addPlayer(new Player(i));
-    }
-
-    if (this.options.randomFactions) {
-      const randomFactions = [];
-
-      for (const _ of this.players) {
-        const possible = remainingFactions(randomFactions);
-
-        randomFactions.push(possible[Math.floor(possible.length * this.map.rng())]);
-      }
-      this.randomFactions = randomFactions;
-    }
-  }
-
-  [Command.Setup](player: PlayerEnum, type: SetupType, position: SetupPosition, _to: "to", option: SetupOption) {
-    applySetupOption(this, type, position, option);
-  }
-
-  [Command.RotateSectors](player: PlayerEnum, ...params: string[]) {
-    assert(params.length % 2 === 0, "The rotate command needs an even number of parameters");
-
-    const pairs: Array<[string, string]> = [];
-    for (let i = 0; i < params.length; i += 2) {
-      pairs.push([params[i], params[i + 1]]);
-    }
-
-    assert(uniq(pairs.map((pair) => pair[0])).length === params.length / 2, "Duplicate rotations are not allowed");
-
-    for (const pair of pairs) {
-      this.map.rotateSector(pair[0], +pair[1]);
-    }
-    this.map.recalibrate();
-    assert(this.map.isValid(), "Map is invalid with two planets for the same type being near each other");
-  }
-
-  [Command.ChooseFaction](player: PlayerEnum, faction: Faction) {
-    assert(
-      this.avCommand<Command.ChooseFaction>().data.includes(faction),
-      `${faction} is not in the available factions`
-    );
-    this.setup.push(faction as Faction);
-    if (this.options.auction !== AuctionVariant.ChooseBid) {
-      this.executeBid(player, faction, 0);
-    }
-  }
-
-  [Command.Bid](player: PlayerEnum, faction: string, bid: number) {
-    if (!this.replay) {
-      const bidsAC = this.avCommand<Command.Bid>().data.bids;
-      const bidAC = bidsAC.find((b) => b.faction === faction);
-      assert(bidAC, `${faction} is not in the available factions`);
-      assert(bidAC.bid.includes(+bid), "You have to bid the right amount");
-    }
-    this.executeBid(player, faction, bid);
-  }
-
-  private executeBid(player: PlayerEnum, faction: string, bid: number) {
-    const previous = this.players.find((s) => s.faction === faction);
-    // remove faction from previous owner
-    if (previous) {
-      previous.faction = undefined;
-    }
-
-    this.players[player].faction = faction as Faction;
-    this.players[player].data.bid = +bid;
-  }
-
-  [Command.ChooseRoundBooster](
-    player: PlayerEnum,
-    booster: Booster,
-    fromCommand: Command = Command.ChooseRoundBooster
-  ) {
-    const { boosters } = this.avCommand<Command.ChooseRoundBooster>().data;
-
-    assert(boosters.includes(booster), `${booster} is not in the available boosters`);
-
-    this.tiles.boosters[booster] = false;
-    this.players[player].getRoundBooster(booster);
-  }
-
-  [Command.Build](player: PlayerEnum, building: Building, location: string) {
-    const { buildings } = this.avCommand<Command.Build>().data;
-    const parsed = this.map.parse(location);
-    const pl = this.player(player);
-
-    for (const elem of buildings) {
-      if (elem.building === building && isEqual(this.map.parse(elem.coordinates), parsed)) {
-        this.placeBuilding(pl, elem);
-        return;
-      }
-    }
-
-    assert(
-      false,
-      `Impossible to execute build command at ${location}, available: ${buildings.map((b) => b.coordinates)}`
-    );
-  }
-
-  placeBuilding(pl: Player, building: AvailableBuilding) {
-    const hex = this.map.getS(building.coordinates);
-    pl.build(building.building, hex, Reward.parse(building.cost), this.map, building.steps);
-
-    // will trigger a LeechPhase
-    if ((this.phase === Phase.RoundMove || this.phase === Phase.RoundShip) && !isShip(building.building)) {
-      this.leechSources.unshift({ player: pl.player, coordinates: building.coordinates });
-    }
-  }
-
-  [Command.UpgradeResearch](player: PlayerEnum, field: ResearchField) {
-    const { tracks } = this.avCommand<Command.UpgradeResearch>().data;
-    const track = tracks.find((tr) => tr.field === field);
-
-    assert(track, `Impossible to upgrade research for ${field}`);
-
-    this.advanceResearchAreaPhase(player, track.cost, field);
-  }
-
-  [Command.Pass](player: PlayerEnum, booster: Booster) {
-    this.tiles.boosters[this.players[player].data.tiles.booster] = true;
-    this.players[player].pass();
-
-    if (!this.isLastRound) {
-      (this[Command.ChooseRoundBooster] as any)(player, booster, Command.Pass);
-    }
-
-    this.passedPlayers.push(player);
-    this.turnOrder.splice(this.turnOrder.indexOf(player), 1);
-  }
-
-  [Command.ChargePower](player: PlayerEnum, income: string) {
-    const leechCommand = this.avCommand<Command.ChargePower>().data;
-    // leech rewards are including +t, if needed and in the right sequence
-    const leechRewards = Reward.parse(income);
-
-    // Handles legacy stuff. To remove when all games with old engine have ended
-    if (!leechCommand.offers) {
-      const legacy = leechCommand as any;
-      leechCommand.offers = [
-        {
-          offer: legacy.offer,
-          cost: legacy.cost,
-        } as Offer,
-      ];
-    }
-
-    const offer = leechCommand.offers.find((ofr) => ofr.offer === income);
-
-    assert(
-      offer,
-      `Cannot leech ${income}. Possible leeches: ${leechCommand.offers.map((ofr) => ofr.offer).join(" - ")}`
-    );
-
-    this.player(player).gainRewards(leechRewards, Command.ChargePower);
-    this.player(player).payCosts(Reward.parse(offer.cost), Command.ChargePower);
-  }
-
-  [Command.Decline](player: PlayerEnum) {
-    this.player(player).declined = true;
-  }
-
-  [Command.EndTurn](player: PlayerEnum) {
-    // this.player(player).endTurn();
-  }
-
-  [Command.ChooseTechTile](player: PlayerEnum, pos: TechTilePos | AdvTechTilePos) {
-    const { tiles } = this.avCommand<Command.ChooseTechTile>().data;
-    const tileAvailable = tiles.find((ta) => ta.pos === pos);
-
-    assert(tileAvailable !== undefined, `Impossible to get ${pos} tile`);
-
-    // BEFORE gaining the tech tile (e.g. the ship+move tech tile can generate trade, and so the tech tile
-    // with trade >> 2vp needs to be covered before)
-    if (isAdvanced(pos)) {
-      this.processNextMove(SubPhase.CoverTechTile);
-    }
-
-    this.player(player).gainTechTile(tileAvailable.tile, tileAvailable.pos);
-    this.tiles.techs[pos].count -= 1;
-
-    // AFTER gaining the tech tile (as green federation can be flipped and lock research tracks)
-    this.processNextMove(
-      SubPhase.UpgradeResearch,
-      ResearchField.values(Expansion.All).includes((pos as any) as ResearchField) ? { pos } : undefined
-    );
-  }
-
-  [Command.ChooseCoverTechTile](player: PlayerEnum, tilePos: TechTilePos) {
-    const { tiles } = this.avCommand<Command.ChooseCoverTechTile>().data;
-    const tileAvailable = tiles.find((ta) => ta.pos === tilePos);
-
-    assert(tileAvailable !== undefined, `Impossible to cover ${tilePos} tile`);
-    // remove tile
-    this.player(player).coverTechTile(tileAvailable.pos);
-  }
-
-  [Command.Special](player: PlayerEnum, income: string) {
-    const { specialacts } = this.avCommand<Command.Special>().data;
-    const actAvailable = specialacts.find((sa) => Reward.match(Reward.parse(sa.income), Reward.parse(income)));
-
-    assert(actAvailable !== undefined, `Special action ${income} is not available`);
-
-    // mark as activated special action for this turn
-    // triggers buildMine subphase from the activation
-    this.player(player).activateEvent(actAvailable.spec);
-  }
-
-  [Command.ChooseFederationTile](player: PlayerEnum, federation: Federation) {
-    const { tiles, rescore } = this.avCommand<Command.ChooseFederationTile>().data;
-
-    assert(tiles.indexOf(federation) !== -1, `Federation ${federation} is not availabe`);
-
-    if (rescore) {
-      this.player(player).gainRewards(Reward.parse(federations[federation]), BoardAction.Qic2);
-    } else {
-      this.player(player).gainFederationToken(federation);
-      this.tiles.federations[federation] -= 1;
-    }
-  }
-
-  [Command.PlaceLostPlanet](player: PlayerEnum, location: string) {
-    const { spaces } = this.avCommand<Command.PlaceLostPlanet>().data;
-    const parsed = this.map.parse(location);
-
-    const data = spaces.find((space) => isEqual(this.map.parse(space.coordinates), parsed));
-
-    assert(data, `Impossible to place lost planet at ${location}`);
-
-    const hex = this.map.getS(location);
-    hex.data.planet = Planet.Lost;
-
-    // As the geometry of the universe changed, federations are possibly invalid.
-    this.players.forEach((p) => p.notifyOfNewPlanet(hex));
-
-    this.player(player).build(Building.Mine, hex, Reward.parse(data.cost), this.map, 0);
-
-    // will trigger a LeechPhase
-    this.leechSources.unshift({ player, coordinates: location });
-  }
-
-  [Command.Spend](player: PlayerEnum, costS: string, _for: "for", incomeS: string) {
-    const command = this.avCommand<Command.Spend>();
-    const pl = this.player(player);
-    const cost = Reward.merge(Reward.parse(costS));
-    const income = Reward.merge(Reward.parse(incomeS));
-
-    assert(!cost.some((r) => r.count <= 0) && !income.some((r) => r.count <= 0), "Nice try!");
-    assert(pl.data.canPay(cost) && cost, `Impossible to pay ${costS}`);
-    assert(_for === "for", "Expect second part of command to be 'for'");
-
-    // tslint:disable-next-line no-shadowed-variable
-    const isPossible = (cost: Reward[], income: Reward[]) => {
-      for (const action of command.data.acts) {
-        const actionCost = Reward.parse(action.cost);
-        if (Reward.includes(cost, actionCost)) {
-          // Remove income & cost of action
-          const newCost = Reward.merge(cost, Reward.negative(actionCost));
-          let newIncome = Reward.merge(income, Reward.negative(Reward.parse(action.income)));
-
-          // Convert unused income into cost
-          newCost.push(...Reward.negative(newIncome.filter((rew) => rew.count < 0)));
-          newIncome = newIncome.filter((rew) => rew.count > 0);
-
-          if (newIncome.length === 0 && newCost.length === 0) {
-            return true;
-          }
-
-          if (isPossible(newCost, newIncome)) {
-            return true;
-          }
-        }
-      }
-      return false;
-    };
-
-    assert(isPossible(cost, income), `spend ${cost} for ${income} is not allowed`);
-
-    pl.payCosts(cost, Command.Spend);
-    pl.gainRewards(income, Command.Spend);
-  }
-
-  [Command.BurnPower](player: PlayerEnum, cost: string) {
-    const burn = this.avCommand<Command.BurnPower>().data;
-    assert(burn.includes(+cost), `Impossible to burn ${cost} power`);
-
-    this.players[player].data.burnPower(+cost);
-  }
-
-  [Command.BrainStone](player: PlayerEnum, dest: BrainstoneDest) {
-    const areas = this.avCommand<Command.BrainStone>().data.choices.map((a) => a.area);
-    assert(areas.includes(dest), "Possible brain stone areas: " + areas.join(", "));
-    this.players[player].data.brainstoneDest = dest;
-  }
-
-  [Command.Action](player: PlayerEnum, action: BoardAction) {
-    const data = this.avCommand<Command.Action>().data;
-
-    assert(
-      data.poweracts.find((act) => act.name === action),
-      `${action} is not in the available power actions`
-    );
-
-    const pl = this.player(player);
-    this.boardActions[action] = player;
-
-    pl.payCosts(Reward.parse(boardActions[action].cost), action);
-    pl.loadEvents(Event.parse(boardActions[action].income, action));
-  }
-
-  [Command.ChooseIncome](player: PlayerEnum, income: string) {
-    const incomes = this.avCommand<Command.ChooseIncome>().data;
-    const incomeRewards = income.split(",");
-    const pl = this.player(player);
-
-    for (const incR of incomeRewards) {
-      const eventIdx = incomes.findIndex((rw) => Reward.match(Reward.parse(incR), [rw]));
-      assert(eventIdx > -1, `${incR} is not in the available income`);
-      incomes.splice(eventIdx, 1);
-    }
-    pl.receiveIncomeEvent(Reward.parse(income));
-  }
-
-  [Command.FormFederation](player: PlayerEnum, hexes: string, federation: Federation) {
-    const pl = this.player(player);
-
-    const fedInfo = pl.checkAndGetFederationInfo(hexes, this.map, this.options.flexibleFederations, this.replay);
-
-    assert(fedInfo, `Impossible to form federation at ${hexes}`);
-    assert(
-      this.avCommand<Command.FormFederation>().data.tiles.includes(federation),
-      `Impossible to form federation ${federation}`
-    );
-
-    pl.formFederation(fedInfo.hexes, federation);
-    this.tiles.federations[federation] -= 1;
-  }
-
-  [Command.PISwap](player: PlayerEnum, location: string) {
-    const { buildings } = this.avCommand<Command.PISwap>().data;
-    const pl = this.player(player);
-
-    const PIHex = pl.data.occupied.find((hex) => hex.buildingOf(player) === Building.PlanetaryInstitute);
-    const parsed = this.map.parse(location);
-
-    for (const elem of buildings) {
-      if (isEqual(this.map.parse(elem.coordinates), parsed)) {
-        const hex = this.map.getS(location);
-
-        if (hex.buildingOf(player) === Building.Mine) {
-          hex.data.building = Building.PlanetaryInstitute;
-          PIHex.data.building = Building.Mine;
-          pl.federationCache = null;
-          return;
-        }
-      }
-    }
-
-    assert(false, `Impossible to execute PI swap command at ${location}`);
   }
 
   private avCommand<C extends Command>(): AvailableCommand<C> {
