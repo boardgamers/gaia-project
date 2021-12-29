@@ -1671,6 +1671,11 @@ export default class Engine {
     }
   }
 
+  private trade(pl: Player, hex: GaiaHex) {
+    hex.data.tradeTokens = hex.tradeTokens.concat(pl.player);
+    pl.data.gainTradeReward(pl.player === hex.data.player, hex.data.building);
+  }
+
   [Command.UpgradeResearch](player: PlayerEnum, field: ResearchField) {
     const { tracks } = this.avCommand<Command.UpgradeResearch>().data;
     const track = tracks.find((tr) => tr.field === field);
@@ -1839,8 +1844,11 @@ export default class Engine {
 
       switch (actionType) {
         case ShipAction.BuildColony:
-          this.placeBuilding(pl, location);
+          this.placeBuilding(pl, location as AvailableBuilding);
           pl.removeShip(ship, false);
+          break;
+        case ShipAction.Trade:
+          this.trade(pl, this.map.getS(location.coordinates));
           break;
       }
     }

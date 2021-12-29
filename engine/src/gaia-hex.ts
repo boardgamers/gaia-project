@@ -3,8 +3,6 @@ import { Hex } from "hexagrid";
 import { stdBuildingValue } from "./buildings";
 import { Building, Planet, Player } from "./enums";
 
-type PlayerShip = { player: Player; ship: Building; moved: boolean };
-
 export interface GaiaHexData {
   planet: Planet;
   sector: string;
@@ -13,6 +11,8 @@ export interface GaiaHexData {
   player?: Player;
   /** List of players who have a federation occupying this square */
   federations?: Player[];
+  /** List of players who have a traded with this planet */
+  tradeTokens?: Player[];
   /** Additional mine of lantids */
   additionalMine?: Player;
 }
@@ -55,7 +55,9 @@ export class GaiaHex extends Hex<GaiaHexData> {
 
   /** Space stations are not structures, so a trading station built near one will still be isolated */
   hasStructure(): boolean {
-    return this.occupied && this.data.building !== Building.GaiaFormer && this.data.building !== Building.SpaceStation;
+    return (
+      this.occupied() && this.data.building !== Building.GaiaFormer && this.data.building !== Building.SpaceStation
+    );
   }
 
   /**
@@ -91,6 +93,10 @@ export class GaiaHex extends Hex<GaiaHexData> {
       this.data.federations = [player];
     }
     return true;
+  }
+
+  get tradeTokens(): Player[] {
+    return this.data.tradeTokens ?? [];
   }
 
   // Can probably math this better

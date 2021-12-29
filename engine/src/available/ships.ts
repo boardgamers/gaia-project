@@ -11,6 +11,7 @@ import {
   AvailableShipAction,
   MAX_SHIPS_PER_HEX,
   ShipAction,
+  ShipActionLocation,
   SHIP_ACTION_RANGE,
 } from "./types";
 
@@ -56,22 +57,21 @@ function shipTargets(
   return targets;
 }
 
-function possibleColonyShipActions(engine: Engine, ship: Ship, shipLocation: string): AvailableShipAction[] {
+function possibleShipActionsOfType(
+  engine: Engine,
+  ship: Ship,
+  shipLocation: string,
+  type: ShipAction,
+  locationFactory: (h: GaiaHex) => ShipActionLocation[]
+): AvailableShipAction[] {
   const map = engine.map;
-  const pl = engine.player(ship.player);
-  const locations: AvailableHex[] = map.withinDistance(map.getS(shipLocation), SHIP_ACTION_RANGE).flatMap((h) => {
-    if (h.hasPlanet() && !h.occupied() && h.data.planet !== Planet.Transdim) {
-      const check = pl.canBuild(map, h, h.data.planet, Building.Colony, engine.isLastRound, engine.replay);
-      if (check) {
-        return [newAvailableBuilding(Building.Colony, h, check, false)];
-      }
-    }
-    return [];
-  });
+  const locations: AvailableHex[] = map
+    .withinDistance(map.getS(shipLocation), SHIP_ACTION_RANGE)
+    .flatMap((h) => locationFactory(h));
   if (locations.length > 0) {
     return [
       {
-        type: ShipAction.BuildColony,
+        type,
         locations,
       } as AvailableShipAction,
     ];
@@ -79,10 +79,39 @@ function possibleColonyShipActions(engine: Engine, ship: Ship, shipLocation: str
   return [];
 }
 
+function possibleTradeShipActions(engine: Engine, ship: Ship, shipLocation: string): AvailableShipAction[] {
+  return possibleShipActionsOfType(engine, ship, shipLocation, ShipAction.Trade, (h) => {
+    if (h.hasStructure() && !h.tradeTokens.some((t) => t === ship.player)) {
+      return [
+        {
+          coordinates: h.toString(),
+        } as AvailableHex,
+      ];
+    }
+    return [];
+  });
+}
+
+function possibleColonyShipActions(engine: Engine, ship: Ship, shipLocation: string): AvailableShipAction[] {
+  return possibleShipActionsOfType(engine, ship, shipLocation, ShipAction.BuildColony, (h) => {
+    if (h.hasPlanet() && !h.occupied() && h.data.planet !== Planet.Transdim) {
+      const check = engine
+        .player(ship.player)
+        .canBuild(engine.map, h, h.data.planet, Building.Colony, engine.isLastRound, engine.replay);
+      if (check) {
+        return [newAvailableBuilding(Building.Colony, h, check, false)];
+      }
+    }
+    return [];
+  });
+}
+
 export function possibleShipActions(engine: Engine, ship: Ship, shipLocation: string): AvailableShipAction[] {
   switch (ship.type) {
     case Building.ColonyShip:
       return possibleColonyShipActions(engine, ship, shipLocation);
+    case Building.TradeShip:
+      return possibleTradeShipActions(engine, ship, shipLocation);
   }
   return [];
 }
