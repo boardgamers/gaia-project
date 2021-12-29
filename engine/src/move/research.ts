@@ -11,6 +11,7 @@ import {
   TechTilePos,
 } from "../enums";
 import { isAdvanced } from "../tiles/techs";
+import { advanceResearchAreaPhase } from "./phase";
 
 export function moveResearch(
   engine: Engine,
@@ -23,7 +24,7 @@ export function moveResearch(
 
   assert(track, `Impossible to upgrade research for ${field}`);
 
-  engine.advanceResearchAreaPhase(player, track.cost, field);
+  advanceResearchAreaPhase(engine, player, track.cost, field);
 }
 
 export function moveChooseTechTile(

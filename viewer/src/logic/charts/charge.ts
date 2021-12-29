@@ -3,6 +3,7 @@ import {
   Command,
   EventSource,
   Faction,
+  leechPossible,
   MaxLeech,
   Phase,
   ResearchField,
@@ -198,15 +199,15 @@ export function leechOpportunities(wantSource: (maxLeech: MaxLeech) => number): 
         if (a.log.player != want.player) {
           //check for missed leech
           const map = a.data.map;
-          const leechPossible = a.data.leechPossible(map.getS(a.cmd.args[1]), (h) =>
+          const possible = leechPossible(a.data, map.getS(a.cmd.args[1]), (h) =>
             counter.buildingValue(h, map, want)
           );
           const maxLeech = data.maxLeech(
-            leechPossible,
+            possible,
             want.faction == Faction.Taklons && counter.hasPlanetaryInstitute
           );
 
-          return Math.max(0, leechPossible - wantSource(maxLeech));
+          return Math.max(0, possible - wantSource(maxLeech));
         }
       }
 
