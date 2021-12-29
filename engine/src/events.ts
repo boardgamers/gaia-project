@@ -73,7 +73,8 @@ export type EventSource =
   | Command.FormFederation
   | Command.UpgradeResearch
   | Faction
-  | Command.Bid;
+  | Command.Bid
+  | "trade";
 
 export default class Event {
   spec: string;

@@ -128,6 +128,8 @@ export function shipActionName(action: ShipAction): string {
   switch (action) {
     case ShipAction.BuildColony:
       return "Build <u>C</u>olony";
+    case ShipAction.Trade:
+      return "<u>T</u>rade";
   }
 }
 
