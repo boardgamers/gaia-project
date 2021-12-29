@@ -151,6 +151,7 @@ export enum Building {
 
   //frontiers
   Colony = "colony",
+  CustomsPost = "customsPost",
 
   ColonyShip = "colonyShip",
   TradeShip = "tradeShip",

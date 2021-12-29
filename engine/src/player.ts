@@ -829,8 +829,13 @@ export default class Player extends EventEmitter {
     const building = options?.building ?? hex.buildingOf(this.player);
     const forFederation = options?.federation ?? false;
 
-    if (forFederation && building === Building.SpaceStation) {
-      return 1;
+    if (forFederation) {
+      switch (building) {
+        case Building.SpaceStation:
+          return 1;
+        case Building.CustomsPost:
+          return 0;
+      }
     }
 
     let baseValue = stdBuildingValue(building);

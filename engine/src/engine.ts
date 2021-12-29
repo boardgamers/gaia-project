@@ -11,7 +11,6 @@ import {
   AvailableFreeActionData,
   BrainstoneActionData,
   Offer,
-  ShipAction,
 } from "./available/types";
 import { stdBuildingValue } from "./buildings";
 import {
@@ -62,6 +61,7 @@ import federations from "./tiles/federations";
 import { roundScorings } from "./tiles/scoring";
 import { isAdvanced } from "./tiles/techs";
 import { isVersionOrLater } from "./utils";
+import { moveShip } from "./move/ships";
 
 export const LEECHING_DISTANCE = 2;
 
@@ -1017,7 +1017,16 @@ export default class Engine {
     }
 
     this.checkCommand(move.command);
-    (this[move.command === Command.MoveShip ? "_move" : move.command] as any)(this.playerToMove, ...move.args);
+
+    const registry = {
+      [Command.MoveShip]: moveShip,
+    };
+    const fn = registry[move.command]
+    if (fn) {
+      fn(this, this.avCommand(), this.playerToMove, ...move.args);
+    } else {
+      (this[move.command] as any)(this.playerToMove, ...move.args);
+    }
 
     return move;
   }
@@ -1661,7 +1670,7 @@ export default class Engine {
     );
   }
 
-  private placeBuilding(pl: Player, building: AvailableBuilding) {
+  placeBuilding(pl: Player, building: AvailableBuilding) {
     const hex = this.map.getS(building.coordinates);
     pl.build(building.building, hex, Reward.parse(building.cost), this.map, building.steps);
 
@@ -1669,11 +1678,6 @@ export default class Engine {
     if ((this.phase === Phase.RoundMove || this.phase === Phase.RoundShip) && !isShip(building.building)) {
       this.leechSources.unshift({ player: pl.player, coordinates: building.coordinates });
     }
-  }
-
-  private trade(pl: Player, hex: GaiaHex) {
-    hex.data.tradeTokens = hex.tradeTokens.concat(pl.player);
-    pl.data.gainTradeReward(pl.player === hex.data.player, hex.data.building);
   }
 
   [Command.UpgradeResearch](player: PlayerEnum, field: ResearchField) {
@@ -1805,53 +1809,6 @@ export default class Engine {
 
     // will trigger a LeechPhase
     this.leechSources.unshift({ player, coordinates: location });
-  }
-
-  [`_${Command.MoveShip}`](
-    player: PlayerEnum,
-    shipType: Building,
-    source: string,
-    dest: string,
-    actionType?: ShipAction,
-    actionLocation?: string
-  ) {
-    const pl = this.player(player);
-
-    const data = this.avCommand<Command.MoveShip>().data;
-
-    const shipCommand = data.find((s) => s.ship === shipType && s.source === source);
-    assert(shipCommand, `There is no ship ${shipType} at ${source}`);
-
-    const target = shipCommand.targets.find((t) => t.location.coordinates === dest);
-    assert(target, `The ship ${shipType} doesn't have the range to move from ${source} to ${dest}`);
-
-    const ship = pl.findUnmovedShip(shipType, source);
-    assert(ship, `No ${shipType} at ${source} (or has already moved)`);
-
-    ship.moved = true;
-    ship.location = dest;
-
-    const actions = target.actions;
-
-    if (actionType) {
-      const action = actions?.find((a) => a.type === actionType);
-
-      assert(action, `action ${actionType} not possible for ship ${shipType} at ship location ${dest}`);
-      assert(actionLocation, "no action location provided");
-
-      const location = action.locations.find((l) => l.coordinates === actionLocation);
-      assert(location, `action ${actionType} not possible for ship ${shipType} at action location ${actionLocation}`);
-
-      switch (actionType) {
-        case ShipAction.BuildColony:
-          this.placeBuilding(pl, location as AvailableBuilding);
-          pl.removeShip(ship, false);
-          break;
-        case ShipAction.Trade:
-          this.trade(pl, this.map.getS(location.coordinates));
-          break;
-      }
-    }
   }
 
   [Command.Spend](player: PlayerEnum, costS: string, _for: "for", incomeS: string) {

@@ -20,6 +20,7 @@ export function upgradedBuildings(currentBuilding: Building, faction: Faction): 
 export function stdBuildingValue(building: Building): number {
   switch (building) {
     case Building.Mine:
+    case Building.CustomsPost:
       return 1;
     case Building.TradingStation:
     case Building.ResearchLab:

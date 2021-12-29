@@ -45,7 +45,8 @@ class FederationSimulator {
   }
 
   hasBuildingValue(h: GaiaHex) {
-    return h.data.building != null && stdBuildingValue(h.data.building) > 0;
+    const building = h.data.building;
+    return building != null && stdBuildingValue(building) > 0 && building !== Building.CustomsPost;
   }
 
   addBuilding(location: string, building: Building): number {
