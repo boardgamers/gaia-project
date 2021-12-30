@@ -64,6 +64,7 @@ export type HighlightHex = {
   cost?: string;
   warnings?: BuildWarning[];
   building?: Building;
+  rewards?: string;
   hideBuilding?: Building;
   preventClick?: boolean;
   class?: string;

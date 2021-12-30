@@ -1,5 +1,7 @@
 import assert from "assert";
 import { range } from "lodash";
+import { finalRankings, gainFinalScoringVictoryPoints } from "../algorithms/scoring";
+import { stdBuildingValue } from "../buildings";
 import Engine, { AuctionVariant, LEECHING_DISTANCE } from "../engine";
 import {
   BoardAction,
@@ -9,18 +11,18 @@ import {
   Operator,
   Phase,
   Planet,
-  Player as PlayerEnum, ResearchField, Resource,
+  Player as PlayerEnum,
+  ResearchField,
+  Resource,
   SubPhase,
 } from "../enums";
+import { factionVariantBoard } from "../faction-boards";
+import { GaiaHex } from "../gaia-hex";
+import Player from "../player";
+import * as researchTracks from "../research-tracks";
+import Reward from "../reward";
 import { initCustomSetup, possibleSetupBoardActions } from "../setup";
 import { moveInit } from "./setup";
-import { factionVariantBoard } from "../faction-boards";
-import { finalRankings, gainFinalScoringVictoryPoints } from "../algorithms/scoring";
-import Reward from "../reward";
-import Player from "../player";
-import { stdBuildingValue } from "../buildings";
-import * as researchTracks from "../research-tracks";
-import { GaiaHex } from "../gaia-hex";
 
 export function phaseSetupInit(engine: Engine, move: string) {
   const split = move.split(" ");
@@ -412,7 +414,12 @@ function beginLeechingPhase(engine: Engine) {
       continue;
     }
     // Do not use PlayerData.maxLeech() here, cuz taklons
-    pl.data.leechPossible = leechPossible(engine, sourceHex, (hex) => pl.buildingValue(engine.map.grid.get(hex)));
+    pl.data.leechPossible = leechPossible(engine, sourceHex, (hex) =>
+      pl.buildingValue(engine.map.grid.get(hex), {
+        building:
+          hex.buildingOf(pl.player) ?? (hex.customPosts.some((c) => c === pl.player) ? Building.CustomsPost : null),
+      })
+    );
     if (pl.canLeech()) {
       canLeechPlayers.push(pl);
     }

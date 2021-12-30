@@ -13,6 +13,8 @@ export interface GaiaHexData {
   federations?: Player[];
   /** List of players who have a traded with this planet */
   tradeTokens?: Player[];
+  /** List of players who have build a customs post on this planet */
+  customPosts?: Player[];
   /** Additional mine of lantids */
   additionalMine?: Player;
 }
@@ -92,6 +94,10 @@ export class GaiaHex extends Hex<GaiaHexData> {
       this.data.federations = [player];
     }
     return true;
+  }
+
+  get customPosts(): Player[] {
+    return this.data.customPosts ?? [];
   }
 
   get tradeTokens(): Player[] {

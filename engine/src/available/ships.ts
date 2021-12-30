@@ -1,8 +1,9 @@
 import Engine from "../engine";
-import { Building, Command, isShip, Planet, Player, Ship } from "../enums";
+import { Building, Command, isShip, Planet, Player, Resource, Ship } from "../enums";
 import { GaiaHex } from "../gaia-hex";
 import SpaceMap from "../map";
 import PlayerObject from "../player";
+import Reward from "../reward";
 import { newAvailableBuilding } from "./buildings";
 import {
   AvailableBuilding,
@@ -13,6 +14,7 @@ import {
   ShipAction,
   ShipActionLocation,
   SHIP_ACTION_RANGE,
+  TradingLocation,
 } from "./types";
 
 export function shipsInHex(location: string, data): Ship[] {
@@ -79,14 +81,47 @@ function possibleShipActionsOfType(
   return [];
 }
 
+function tradeReward(building: Building): Reward {
+  switch (building) {
+    case Building.Mine:
+      return new Reward(1, Resource.Ore);
+    case Building.TradingStation:
+      return new Reward(5, Resource.Credit);
+    case Building.ResearchLab:
+      return new Reward(2, Resource.Knowledge);
+    case Building.PlanetaryInstitute:
+      return new Reward(5, Resource.ChargePower);
+    case Building.Academy1:
+    case Building.Academy2:
+      return new Reward(2, Resource.Knowledge);
+    case Building.Colony:
+      return new Reward(3, Resource.VictoryPoint);
+  }
+  throw new Error("unknown trade bonus: " + building);
+}
+
 function possibleTradeShipActions(engine: Engine, ship: Ship, shipLocation: string): AvailableShipAction[] {
   return possibleShipActionsOfType(engine, ship, shipLocation, ShipAction.Trade, (h) => {
-    if (h.hasStructure() && !h.tradeTokens.some((t) => t === ship.player)) {
-      return [
-        {
-          coordinates: h.toString(),
-        } as AvailableHex,
-      ];
+    if (
+      h.hasStructure() &&
+      !h.tradeTokens.some((t) => t === ship.player) &&
+      !h.customPosts.some((t) => t === ship.player)
+    ) {
+      if (h.data.building === Building.Mine && h.data.player !== ship.player) {
+        const check = engine
+          .player(ship.player)
+          .canBuild(engine.map, h, h.data.planet, Building.CustomsPost, engine.isLastRound, engine.replay);
+        if (check) {
+          return [newAvailableBuilding(Building.CustomsPost, h, check, false)];
+        }
+      } else {
+        return [
+          {
+            coordinates: h.toString(),
+            rewards: tradeReward(h.data.building).toString(),
+          } as TradingLocation,
+        ];
+      }
     }
     return [];
   });

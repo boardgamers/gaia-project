@@ -92,7 +92,8 @@ export enum ShipAction {
   Trade = "trade",
 }
 
-export type ShipActionLocation = AvailableHex | AvailableBuilding;
+export type TradingLocation = AvailableHex & { rewards: string };
+export type ShipActionLocation = TradingLocation | AvailableBuilding;
 export type AvailableShipAction = { type: ShipAction; locations: ShipActionLocation[] };
 export type AvailableShipTarget = { location: AvailableHex; actions: AvailableShipAction[] };
 export type AvailableMoveShipData = { ship: Building; source: string; targets: AvailableShipTarget[] };

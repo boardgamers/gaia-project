@@ -547,7 +547,7 @@ export default class Player extends EventEmitter {
     const isNewLostPlanet = hex.data.planet === Planet.Lost && !hex.occupied();
 
     // excluding Gaiaformers as occupied
-    if (building !== Building.GaiaFormer && !isShip(building)) {
+    if (building !== Building.GaiaFormer && building !== Building.CustomsPost && !isShip(building)) {
       if (!wasOccupied) {
         this.data.occupied.push(hex);
         // Clear federation cache on new building
@@ -569,16 +569,16 @@ export default class Player extends EventEmitter {
     }
 
     // The mine of the lost planet doesn't grant any extra income
-    if (!isNewLostPlanet) {
+    if (isNewLostPlanet) {
+      this.data.lostPlanet += 1;
+    } else {
       // Add income of the building to the list of events
       this.data.buildings[building] += 1; // NEEDS TO BE BEFORE REWARDS, so gleens can get qic from tech if they build academy 2
-    } else {
-      this.data.lostPlanet += 1;
     }
 
     // remove upgraded building and the associated event
     const upgradedBuilding = hex.buildingOf(this.player);
-    if (upgradedBuilding) {
+    if (upgradedBuilding && building !== Building.CustomsPost) {
       this.data.buildings[upgradedBuilding] -= 1;
       this.removeEvents(this.board.buildings[upgradedBuilding].income[this.data.buildings[upgradedBuilding]]);
     }
@@ -594,6 +594,8 @@ export default class Player extends EventEmitter {
 
     if (isShip(building)) {
       this.placeShip(building, hex);
+    } else if (building === Building.CustomsPost) {
+      hex.data.customPosts = hex.customPosts.concat(this.player);
     } else {
       if (isAdditionalMine) {
         hex.data.additionalMine = this.player;

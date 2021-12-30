@@ -2,15 +2,17 @@ import Engine, { AvailableCommand, Command, Player } from "@gaia-project/engine"
 import { ButtonData } from "../../data";
 import { boardActionsButton, specialActionsButton } from "./actions";
 import { AutoClickStrategy, checkAutoClick } from "./autoClick";
-import { buildButtons, hexSelectionButton, moveShipButton } from "./buildings";
+import { buildButtons } from "./buildings";
 import { fastConversionClick, freeAndBurnButton } from "./conversion";
 import { deadEndButton } from "./dead-end";
 import { declineButton } from "./decline";
 import { federationButton, federationTypeButtons } from "./federation";
+import { hexSelectionButton } from "./hex";
 import { endTurnButton, passButton } from "./pass";
 import { brainstoneButtons, chargePowerButtons } from "./power";
 import { researchButtons, techTiles } from "./research";
 import { sectorRotationButton, setupButton } from "./setup";
+import { moveShipButton } from "./ships";
 import { finalizeShortcuts } from "./shortcuts";
 import { AvailableConversions, CommandController } from "./types";
 import { autoClickButton, hexMap } from "./utils";
