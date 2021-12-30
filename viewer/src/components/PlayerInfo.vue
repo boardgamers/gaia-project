@@ -42,12 +42,21 @@
             :resource="['q']"
           />
           <BuildingGroup
-            v-if="hasShips"
+            v-if="isFrontiers"
             transform="translate(21, 10.7) scale(1.65)"
             :nBuildings="3"
             building="colony"
             :player="player"
             :placed="playerData.buildings.colony"
+            :resource="[]"
+          />
+          <BuildingGroup
+            v-if="isFrontiers"
+            transform="translate(13.47, 20.57) scale(.6)"
+            :nBuildings="5"
+            building="customsPost"
+            :player="player"
+            :placed="playerData.buildings.customsPost"
             :resource="[]"
           />
           <BuildingGroup
@@ -122,7 +131,7 @@
           />
         </g>
 
-        <g transform="translate(0, 18.5) scale(0.7)" v-if="hasShips">
+        <g transform="translate(0, 18.5) scale(0.7)" v-if="isFrontiers">
           <BuildingGroup
             v-for="s in Object.keys(shipPositions)"
             :key="s"
@@ -318,12 +327,12 @@ export default class PlayerInfo extends Vue {
     return (this.player.ownedPlanetsCount.l ?? 0) > 0;
   }
 
-  get hasShips() {
+  get isFrontiers() {
     return this.$store.state.data.expansions == Expansion.Frontiers;
   }
 
   get height() {
-    return this.hasShips ? "26.2" : "21.4";
+    return this.isFrontiers ? "26.2" : "21.4";
   }
 
   get shipPositions() {

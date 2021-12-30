@@ -1,127 +1,22 @@
 import Engine, {
   AvailableBuilding,
   AvailableCommand,
-  AvailableHex,
-  AvailableMoveShipData,
   Building,
   Command,
   Faction,
-  GaiaHex,
   isShip,
   Planet,
   Player,
-  Reward,
   Round,
 } from "@gaia-project/engine";
 import { qicForDistance } from "@gaia-project/engine/src/cost";
-import assert from "assert";
-import { sortBy, sortedUniq } from "lodash";
-import { ButtonData, HighlightHex, WarningWithKey } from "../../data";
-import { availableBuildingShortcut, buildingName, shipActionName, shipLetter } from "../../data/building";
-import { prependShortcut, tooltipWithShortcut, withShortcut } from "./shortcuts";
+import { sortBy } from "lodash";
+import { ButtonData } from "../../data";
+import { availableBuildingShortcut, buildingName } from "../../data/building";
+import { hexSelectionButton } from "./hex";
+import { withShortcut } from "./shortcuts";
 import { CommandController } from "./types";
-import { addOnClick, addOnShow, autoClickButton, confirmationButton, hexMap, isFree, textButton } from "./utils";
-import { buttonWarnings, commonButtonWarning, translateWarnings } from "./warnings";
-
-function hexWarnings(h: HighlightHex): WarningWithKey[] {
-  return h.warnings ? translateWarnings(h.warnings) : [];
-}
-
-export function hexSelectionButton(
-  controller: CommandController,
-  button: ButtonData,
-  newLocationButton = (hex: GaiaHex) => textButton({}),
-  highlightOnClick?: Building,
-  hideOnClick?: { hex: GaiaHex; building: Building }
-): ButtonData {
-  const hexSelection = button.hexes;
-  assert(hexSelection, "hexes missing");
-  assert(!button.buttons, "buttons already exists");
-  assert(!button.warning, "warning already exists");
-
-  let i = 1;
-
-  const hexes = hexSelection.hexes;
-
-  const sortKey = (h: HighlightHex): string => (isFree(h) ? "0" : h.cost);
-
-  button.buttons = sortBy(Array.from(hexes.keys()), (h) => sortKey(hexes.get(h)))
-    .filter((h) => !hexes.get(h).preventClick)
-    .map((hex) => {
-      const b = newLocationButton(hex);
-      assert(!b.command, "command already exists");
-      assert(!b.label, "label already exists");
-      assert(!b.shortcuts, "shortcuts already exists");
-      assert(!b.warning, "warning already exists");
-      assert(!b.tooltip, "tooltip already exists");
-      assert(!b.conversion, "conversion already exists");
-      assert(!b.hover, "hover already exists");
-
-      b.command = hex.toString();
-      const shortcut = String(i);
-      if (i <= 9) {
-        b.label = prependShortcut(shortcut, hex.toString());
-        b.shortcuts = [shortcut];
-        i++;
-      } else {
-        b.label = hex.toString();
-      }
-
-      const highlightHex = hexes.get(hex);
-      b.warning = buttonWarnings(hexWarnings(highlightHex));
-      if (!isFree(highlightHex)) {
-        b.conversion = { from: Reward.parse(highlightHex.cost), to: [] };
-      }
-      b.tooltip = tooltipWithShortcut(null, b.warning);
-
-      b.hover = {
-        enter: () => {
-          const h = Object.assign({}, hexSelection);
-          h.hexes = new Map(Array.from(hexes.entries()).filter((e) => e[0] === hex));
-          h.selectedLight = false;
-          controller.highlightHexes(h);
-        },
-        leave: () => {
-          controller.highlightHexes(hexSelection);
-          controller.disableTooltips();
-        },
-      };
-
-      addOnShow(b, () => {
-        controller.subscribeHexClick(
-          b,
-          () => {
-            controller.handleButtonClick(b);
-          },
-          (h) => h == hex
-        );
-      });
-      addOnClick(b, () => {
-        controller.executeCommand(b);
-
-        if (highlightOnClick) {
-          const nullMove = hideOnClick && hideOnClick.hex === hex;
-          const map = new Map<GaiaHex, HighlightHex>([
-            [hex, { building: nullMove ? null : highlightOnClick, preventClick: true }],
-          ]);
-
-          if (hideOnClick && !nullMove) {
-            map.set(hideOnClick.hex, { hideBuilding: hideOnClick.building, preventClick: true });
-          }
-          controller.highlightHexes({ hexes: map });
-        }
-      });
-      return b;
-    });
-  button.warning = commonButtonWarning(
-    controller,
-    "building location",
-    Array.from(hexes.values())
-      .filter((h) => !h.preventClick)
-      .map((h) => hexWarnings(h))
-  );
-  return textButton(button);
-}
+import { autoClickButton, confirmationButton, hexMap, isFree, textButton } from "./utils";
 
 function buildingMenu(building: Building): string | null {
   if (isShip(building)) {
@@ -277,91 +172,4 @@ export function buildButtons(
     }
   }
   return ret;
-}
-
-function moveTargetButton(
-  controller: CommandController,
-  data: AvailableMoveShipData,
-  target: GaiaHex,
-  engine: Engine
-): ButtonData {
-  const actions = data.targets.find((t) => t.location.coordinates === target.toString()).actions;
-  if (actions.length == 0) {
-    return textButton({});
-  }
-  return textButton({
-    buttons: actions
-      .map((a) => {
-        const hexes = hexMap(engine, a.locations, false);
-        hexes.hexes.set(target, { building: data.ship, preventClick: true });
-
-        return hexSelectionButton(
-          controller,
-          textButton({
-            command: a.type,
-            label: shipActionName(a.type),
-            hexes,
-          }),
-          () => textButton({})
-        );
-      })
-      .concat(
-        textButton({
-          label: "Decline",
-          shortcuts: ["d"],
-          command: "",
-        })
-      ),
-  });
-}
-
-function moveSourceButton(controller: CommandController, engine: Engine, data: AvailableMoveShipData): ButtonData {
-  return hexSelectionButton(
-    controller,
-    textButton({
-      hexes: hexMap(
-        engine,
-        data.targets.map((t) => t.location),
-        false
-      ),
-    }),
-    (target) => moveTargetButton(controller, data, target, engine),
-    data.ship,
-    { building: data.ship, hex: engine.map.getS(data.source) }
-  );
-}
-
-export function moveShipButton(
-  controller: CommandController,
-  engine: Engine,
-  command: AvailableCommand<Command.MoveShip>
-): ButtonData {
-  const faction = engine.player(command.player).faction;
-
-  return textButton({
-    label: "Move Ship",
-    shortcuts: ["o"],
-    command: Command.MoveShip,
-    buttons: sortedUniq(command.data.map((e) => e.ship)).map((ship) =>
-      hexSelectionButton(
-        controller,
-        textButton({
-          label: buildingName(ship, faction),
-          command: ship,
-          shortcuts: [shipLetter(ship).toLowerCase()],
-          hexes: hexMap(
-            engine,
-            command.data.filter((e) => e.ship === ship).map((l) => ({ coordinates: l.source } as AvailableHex)),
-            false
-          ),
-        }),
-        (hex) =>
-          moveSourceButton(
-            controller,
-            engine,
-            command.data.find((d) => d.ship == ship && d.source == hex.toString())
-          )
-      )
-    ),
-  });
 }

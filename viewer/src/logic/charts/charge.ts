@@ -199,13 +199,8 @@ export function leechOpportunities(wantSource: (maxLeech: MaxLeech) => number): 
         if (a.log.player != want.player) {
           //check for missed leech
           const map = a.data.map;
-          const possible = leechPossible(a.data, map.getS(a.cmd.args[1]), (h) =>
-            counter.buildingValue(h, map, want)
-          );
-          const maxLeech = data.maxLeech(
-            possible,
-            want.faction == Faction.Taklons && counter.hasPlanetaryInstitute
-          );
+          const possible = leechPossible(a.data, map.getS(a.cmd.args[1]), (h) => counter.buildingValue(h, map, want));
+          const maxLeech = data.maxLeech(possible, want.faction == Faction.Taklons && counter.hasPlanetaryInstitute);
 
           return Math.max(0, possible - wantSource(maxLeech));
         }

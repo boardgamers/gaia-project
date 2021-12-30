@@ -50,6 +50,15 @@
       :flat="flat"
       :transform="shipTransform(i)"
     />
+    <Building
+      v-for="(p, i) in hex.customPosts"
+      :key="i"
+      building="customsPost"
+      :faction="faction(p)"
+      outline
+      :flat="flat"
+      :transform="customsPostTransform(i)"
+    />
     <polygon
       v-for="(player, index) in federations"
       :points="hexCorners.map((p) => `${p.x * (1 - (index + 0.5) / 8)},${p.y * (1 - (index + 0.5) / 8)}`).join(' ')"
@@ -80,13 +89,13 @@ import {
   Planet as PlanetEnum,
   Player,
   PlayerEnum,
-  SpaceMap as ISpaceMap,
   shipsInHex,
+  SpaceMap as ISpaceMap,
 } from "@gaia-project/engine";
 import { corners } from "../graphics/hex";
 import Planet from "./Planet.vue";
 import Building from "./Building.vue";
-import { buildingName } from "../data/building";
+import { buildingData, buildingName } from "../data/building";
 import { planetNames } from "../data/planets";
 import { HexSelection, HighlightHex, HighlightHexData, WarningsPreference } from "../data";
 import { isWarningEnabled, moveWarnings } from "../data/warnings";
@@ -120,6 +129,10 @@ export default class SpaceHex extends Vue {
       default:
         return `scale(0.06) ${radiusTranslate(7.5, index, this.ships.length)}`;
     }
+  }
+
+  customsPostTransform(index: number): string {
+    return `scale(.05) ${radiusTranslate(12.6, index, 7)}`;
   }
 
   get hexCorners() {
@@ -375,27 +388,35 @@ export default class SpaceHex extends Vue {
     const data = hex.data;
     const planet = data.planet !== "e" ? `Planet: ${planetNames[data.planet]}` : null;
     const c = this.cost(hex);
-    const cost = c ? `Cost: ${c}` : null;
+    const messages: string[] = [];
+    const highlightHex = this.highlightedHexes?.get(hex);
+    if (c) {
+      messages.push(highlightHex?.building
+        ? `Build ${buildingData[highlightHex.building].name} for ${c}`
+        : `Cost: ${c}`);
+    }
+    if (highlightHex?.rewards) {
+      messages.push(`Reward: ${highlightHex.rewards}`);
+    }
 
-    const buildingLabel = (player: Player) => {
-      const value = player.buildingValue(hex);
-      const fedValue = player.buildingValue(hex, { federation: true });
+    const buildingLabel = (player: Player, building: BuildingEnum) => {
+      const value = player.buildingValue(hex, { building });
+      const fedValue = player.buildingValue(hex, { federation: true, building });
       let powerValue = `Power Value: ${value}`;
       if (value != fedValue) {
         powerValue += ` (For Federations: ${fedValue})`;
       }
 
       const faction = player.faction;
-      return `Building: ${buildingName(hex.buildingOf(player.player), faction)} (${factionName(faction)}, ${powerValue})`;
+      return `Building: ${buildingName(building, faction)} (${factionName(faction)}, ${powerValue})`;
     };
 
-    let building = null;
-    let guestBuilding = null;
+    const buildings: string[] = [];
     let ships: string[] = [];
     if (data.building) {
-      building = buildingLabel(this.player(data.player));
+      buildings.push(buildingLabel(this.player(data.player), data.building));
       if (data.additionalMine != null) {
-        guestBuilding = buildingLabel(this.player(data.additionalMine));
+        buildings.push(buildingLabel(this.player(data.additionalMine), BuildingEnum.Mine));
       }
     } else if (this.ships) {
       ships = this.ships.map(s => {
@@ -403,12 +424,18 @@ export default class SpaceHex extends Vue {
         return (`${buildingName(s.type, faction)} (${factionName(faction)})`);
       });
     }
+    buildings.push(...hex.customPosts.map(p => buildingLabel(this.player(p), BuildingEnum.CustomsPost)));
+    buildings.push(...hex.tradeTokens.map(p => `Traded: ${factionName(this.player(p).faction)}`));
     const w = this.warning(hex, true);
-    const warning = w ? `Warning: ${w}` : null;
+    if (w) {
+      messages.push(`Warning: ${w}`);
+    }
     const coord = `Coordinates: ${hex}`;
-    return [
-      coord, planet, building, guestBuilding, cost, warning,
-    ].filter(s => s).concat(ships).join(" ");
+    return [coord, planet]
+      .concat(buildings)
+      .concat(ships)
+      .concat(messages)
+      .join(" ");
   }
 }
 </script>

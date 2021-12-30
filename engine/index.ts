@@ -73,10 +73,10 @@ export { factionPlanet } from "./src/factions";
 export { federationCost, FederationInfo, parseFederationLocation } from "./src/federation";
 export { GaiaHex, GaiaHexData } from "./src/gaia-hex";
 export { applyChargePowers } from "./src/income";
+export { leechPossible } from "./src/move/phase";
 export { planetNames, terraformingStepsRequired } from "./src/planets";
 export { AvailableSetupOption, SetupType } from "./src/setup";
 export { finalScorings, roundScorings } from "./src/tiles/scoring";
-export { leechPossible } from "./src/move/phase"
 export {
   BrainstoneDest,
   MaxLeech,

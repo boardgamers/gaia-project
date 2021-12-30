@@ -1,8 +1,7 @@
 import assert from "assert";
-import { AvailableBuilding, AvailableCommand, ShipAction } from "../available/types";
+import { AvailableBuilding, AvailableCommand, ShipAction, TradingLocation } from "../available/types";
 import Engine from "../engine";
-import { Building, Command, Player as PlayerEnum, Resource } from "../enums";
-import { GaiaHex } from "../gaia-hex";
+import { Building, Command, Player as PlayerEnum } from "../enums";
 import Player from "../player";
 import Reward from "../reward";
 import { placeBuilding } from "./buildings";
@@ -50,45 +49,19 @@ export function moveShip(
         pl.removeShip(ship, false);
         break;
       case ShipAction.Trade:
-        trade(pl, engine.map.getS(location.coordinates));
+        trade(engine, pl, location as TradingLocation);
         break;
     }
   }
 }
 
-function trade(pl: Player, hex: GaiaHex) {
-  hex.data.tradeTokens = hex.tradeTokens.concat(pl.player);
-  gainTradeReward(pl, pl.player === hex.data.player, hex.data.building);
-}
-
-function gainTradeReward(p: Player, ownBuilding: boolean, building: Building) {
-  const gain = (reward: Reward) => {
-    p.gainRewards([reward], "trade");
-  };
-
-  switch (building) {
-    case Building.Mine:
-      if (ownBuilding) {
-        gain(new Reward(1, Resource.Ore));
-      } else {
-        //build toll station
-      }
-      break;
-    case Building.TradingStation:
-      gain(new Reward(5, Resource.Credit));
-      break;
-    case Building.ResearchLab:
-      gain(new Reward(2, Resource.Knowledge));
-      break;
-    case Building.PlanetaryInstitute:
-      gain(new Reward(5, Resource.ChargePower));
-      break;
-    case Building.Academy1:
-    case Building.Academy2:
-      gain(new Reward(2, Resource.Knowledge));
-      break;
-    case Building.Colony:
-      gain(new Reward(3, Resource.VictoryPoint));
-      break;
+function trade(engine: Engine, pl: Player, location: TradingLocation) {
+  const hex = engine.map.getS(location.coordinates);
+  const cost = location.cost ? Reward.parse(location.cost) : [];
+  if (hex.data.building === Building.Mine && pl.player !== hex.data.player) {
+    pl.build(Building.CustomsPost, hex, cost, engine.map)
+  } else {
+    hex.data.tradeTokens = hex.tradeTokens.concat(pl.player);
+    pl.gainRewards(Reward.parse(location.rewards), "trade");
   }
 }

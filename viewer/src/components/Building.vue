@@ -4,6 +4,10 @@
     <Planet :planet="planetClass" transform="scale(7)" />
     <text transform="translate(-2, -.7) scale(5)" class="board-text" style="font-weight: bolder">{{ shipLetter }}</text>
   </g>
+  <g v-else-if="customsPost">
+    <Planet :planet="planetClass" transform="scale(7)" />
+    <text transform="translate(-2, -.7) scale(5)" class="board-text" style="font-weight: bolder">C</text>
+  </g>
   <g v-else :class="['building']">
     <g :class="['planet-fill', planetClass]" v-if="flat">
       <rect v-if="mine" x="-20" y="-20" width="40" height="40" />
@@ -106,6 +110,10 @@ export default class Building extends Vue {
 
   get spaceStation() {
     return this.building === BuildingEnum.SpaceStation;
+  }
+
+  get customsPost() {
+    return this.building === BuildingEnum.CustomsPost;
   }
 
   get isShip() {
