@@ -57,8 +57,11 @@
       :faction="faction(p)"
       outline
       :flat="flat"
-      :transform="customsPostTransform(i)"
+      :transform="radiusTransform(p, 0.05)"
     />
+    <g v-for="(p, i) in hex.tradeTokens" :key="i">
+      <Planet :planet="playerPlanet(p)" :transform="radiusTransform(p, 0.35)" />
+    </g>
     <polygon
       v-for="(player, index) in federations"
       :points="hexCorners.map((p) => `${p.x * (1 - (index + 0.5) / 8)},${p.y * (1 - (index + 0.5) / 8)}`).join(' ')"
@@ -131,8 +134,8 @@ export default class SpaceHex extends Vue {
     }
   }
 
-  customsPostTransform(index: number): string {
-    return `scale(.05) ${radiusTranslate(12.6, index, 7)}`;
+  radiusTransform(index: number, scale: number): string {
+    return `scale(${scale}) ${radiusTranslate(.63 / scale, index, 7)}`;
   }
 
   get hexCorners() {
@@ -347,7 +350,7 @@ export default class SpaceHex extends Vue {
   }
 
   private federationPlanetClass(mode: MapMode) {
-    const value = this.player(mode.player).buildingValue(this.hex, { federation: true});
+    const value = this.player(mode.player).buildingValue(this.hex, { federation: true });
 
     if (value > 0) {
       return this.powerValueClass(value);
