@@ -535,7 +535,7 @@ function assets(engine: Engine): PlayerTable {
             (s) => s.shortcut.length
           ),
         additionalHeader: {
-          cells: TechTilePos.values()
+          cells: TechTilePos.values(engine.expansions)
             .filter((p) => p.startsWith("free"))
             .map((p) => engine.tiles.techs[p])
             .filter((t) => t)

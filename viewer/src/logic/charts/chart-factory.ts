@@ -166,7 +166,7 @@ function vpChartFactoryEntries(
   boosters: Booster[]
 ): [ChartFamily, ChartFactory<any>][] {
   return [
-    [vpChartFamily, vpChartFactory("Victory Points", victoryPointSources(finalTileName))],
+    [vpChartFamily, vpChartFactory("Victory Points", victoryPointSources(finalTileName, data.expansions))],
     [
       "Advanced Tech Tiles (Victory Points)",
       vpChartFactory(
@@ -188,11 +188,14 @@ export class ChartSetup {
   chartFactories: Map<ChartFamily, ChartFactory<any>>;
   families: ChartFamily[];
 
-  constructor(data: Engine, statistics = false) {
+  constructor(engine: Engine, statistics = false) {
     const scoringTechTile: (tile: AdvTechTile) => boolean = (tile: AdvTechTile) =>
       new Event(tiles.techs[tile][0]).rewards.some((r) => r.type == Resource.VictoryPoint);
     const currentAdvTechTiles: Map<AdvTechTile, string> = new Map(
-      AdvTechTilePos.values().map((tile) => [data.tiles.techs[tile].tile as AdvTechTile, tile.replace("adv", "--rt")])
+      AdvTechTilePos.values(engine.expansions).map((tile) => [
+        engine.tiles.techs[tile].tile as AdvTechTile,
+        tile.replace("adv", "--rt"),
+      ])
     );
     const singleColorTechTile = (tiles: AdvTechTile[]) => new Map(tiles.map((v) => [v, "--tech-tile"]));
     const vpAdvTechTiles = statistics
@@ -204,25 +207,25 @@ export class ChartSetup {
 
     const scoringBooster: (booster: Booster) => boolean = (booster: Booster) =>
       new Event(tiles.boosters[booster][1]).rewards.some((r) => r.type == Resource.VictoryPoint);
-    const currentBoosters = Booster.values().filter((b) => data.tiles.boosters[b] != null);
+    const currentBoosters = Booster.values().filter((b) => engine.tiles.boosters[b] != null);
     const vpBoosters = statistics ? Booster.values().filter(scoringBooster) : currentBoosters;
     const allBoosters = statistics ? Booster.values() : currentBoosters;
 
-    const finalTiles = data.tiles.scorings.final;
+    const finalTiles = engine.tiles.scorings.final;
     const finalTileName = (tile) =>
       statistics ? `Final ${String.fromCharCode(65 + tile)}` : finalScoringSources[finalTiles[tile]].name;
 
-    const factions: Faction[] = statistics ? Object.values(Faction) : data.players.map((p) => p.faction);
+    const factions: Faction[] = statistics ? Object.values(Faction) : engine.players.map((p) => p.faction);
 
     this.chartFactories = new Map<ChartFamily, ChartFactory<any>>(
-      vpChartFactoryEntries(finalTileName, vpAdvTechTiles, data, vpBoosters).concat(
+      vpChartFactoryEntries(finalTileName, vpAdvTechTiles, engine, vpBoosters).concat(
         simpleChartFactoryEntries(
           createSimpleSourceFactories(
             nonVpAdvTechTiles,
             allBoosters,
             statistics ? [] : finalTiles,
             factions,
-            data.expansions
+            engine.expansions
           )
         )
       )

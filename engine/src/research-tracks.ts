@@ -7,6 +7,14 @@ export default {
   [ResearchField.GaiaProject]: [[], [">gf"], ["3t"], [">gf", "3pw"], [">gf"], ["4vp", "g > vp"]],
   [ResearchField.Economy]: [[], ["+2c,pw"], ["+2c,1o,2pw"], ["+3c,1o,3pw", "3pw"], ["+4c,2o,4pw"], ["6c,3o,6pw"]],
   [ResearchField.Science]: [[], ["+k"], ["+2k"], ["+3k", "3pw"], ["+4k"], ["9k"]],
+  [ResearchField.Diplomacy]: [
+    [],
+    ["+pw", "trade-bonus"],
+    ["+2pw", "q"],
+    ["+3pw", "trade-bonus", "3pw"],
+    ["+4pw", "trade-bonus"],
+    ["+6pw", "trade-bonus"],
+  ],
 };
 
 export function lastTile(field: ResearchField) {

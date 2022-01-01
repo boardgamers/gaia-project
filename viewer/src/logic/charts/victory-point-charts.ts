@@ -5,6 +5,7 @@ import Engine, {
   Booster,
   Command,
   EventSource,
+  Expansion,
   Faction,
   finalRankings,
   gainFinalScoringVictoryPoints,
@@ -126,7 +127,10 @@ function finalScoringProjection(finalTile: number): (engine: Engine, pl: Player)
   };
 }
 
-export const victoryPointSources = (finalTileName: (tile: number) => string): VictoryPointSource[] => [
+export const victoryPointSources = (
+  finalTileName: (tile: number) => string,
+  expansion: Expansion
+): VictoryPointSource[] => [
   {
     types: ["chart-init"],
     label: "Initial",
@@ -184,17 +188,17 @@ export const victoryPointSources = (finalTileName: (tile: number) => string): Vi
     color: "--specialAction",
   },
   {
-    types: ([Command.UpgradeResearch] as VictoryPointType[]).concat(ResearchField.values()),
+    types: ([Command.UpgradeResearch] as VictoryPointType[]).concat(ResearchField.values(expansion)),
     label: "Research",
     description: "Research in counted in the round where the level is reached",
     color: "--res-knowledge",
   },
   {
-    types: AdvTechTilePos.values(),
+    types: AdvTechTilePos.values(expansion),
     label: "Advanced Tech",
     description: "Advanced Tech Tiles",
     color: "--current-round",
-    roundValues: passIncomeProjection(AdvTechTilePos.values(), true),
+    roundValues: passIncomeProjection(AdvTechTilePos.values(expansion), true),
   },
   {
     types: [Command.FormFederation],
