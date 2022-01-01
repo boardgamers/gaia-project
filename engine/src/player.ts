@@ -124,9 +124,9 @@ export default class Player extends EventEmitter {
   /** Is the player dropped (i.e. no move) */
   dropped?: boolean;
 
-  constructor(public player: PlayerEnum = PlayerEnum.Player1) {
+  constructor(expansion: Expansion = Expansion.All, public player: PlayerEnum = PlayerEnum.Player1) {
     super();
-    this.data.on("advance-research", (track, dest) => this.onResearchAdvanced(track, dest));
+    this.data.on("advance-research", (track, dest) => this.onResearchAdvanced(track, dest, expansion));
   }
 
   get income() {
@@ -199,8 +199,8 @@ export default class Player extends EventEmitter {
   /**
    * @param board LEGACY Only useful for old games, now loaded directly from data.variant
    */
-  static fromData(data: any, map: SpaceMap, board: FactionBoardVariant | null, expansions: number, version: string) {
-    const player = new Player(data.player);
+  static fromData(data: any, map: SpaceMap, board: FactionBoardVariant | null, expansions: Expansion, version: string) {
+    const player = new Player(expansions, data.player);
 
     player.faction = data.faction;
 
@@ -399,9 +399,14 @@ export default class Player extends EventEmitter {
   }
 
   maxBuildings(building: Building) {
-    return building === Building.GaiaFormer
-      ? this.data.gaiaformers - this.data.gaiaformersInGaia
-      : this.board.buildings[building].income.length;
+    switch (building) {
+      case Building.GaiaFormer:
+        return this.data.gaiaformers - this.data.gaiaformersInGaia;
+      case Building.TradeShip:
+        return this.data.tradeShips;
+      default:
+        return this.board.buildings[building].income.length;
+    }
   }
 
   get ownedPlanets(): GaiaHex[] {
@@ -437,7 +442,7 @@ export default class Player extends EventEmitter {
     const fields = ResearchField.values(expansions);
 
     for (const field of fields) {
-      this.loadEvents(researchEvents(field, this.data.research[field]));
+      this.loadEvents(researchEvents(field, this.data.research[field], expansions));
     }
   }
 
@@ -529,10 +534,10 @@ export default class Player extends EventEmitter {
    * Second parameter is necessary in case someone advances research mutliple times in one go, we don't
    * want to remove multiple green federations for one track
    */
-  onResearchAdvanced(field: ResearchField, dest: number) {
-    const events = researchEvents(field, dest);
+  onResearchAdvanced(field: ResearchField, dest: number, expansion: Expansion) {
+    const events = researchEvents(field, dest, expansion);
     this.loadEvents(events);
-    const oldEvents = researchEvents(field, dest - 1);
+    const oldEvents = researchEvents(field, dest - 1, expansion);
     this.removeEvents(oldEvents);
 
     if (dest === lastTile(field)) {

@@ -119,7 +119,7 @@ export default class ResearchTile extends Vue {
 
   smallRange(resource: ResourceEnum): boolean {
     return (resource === ResourceEnum.ShipRange || resource === ResourceEnum.Range)
-      && this.gameData.expansions === Expansion.Frontiers;
+      && this.engine.expansions === Expansion.Frontiers;
   }
 
   tokenX(index: PlayerEnum) {
@@ -149,11 +149,11 @@ export default class ResearchTile extends Vue {
       rewards.unshift(new Reward("+", ResourceEnum.None));
       rewards[0].count = "+" as any;
     }
-    return applyResearchEffectCounters(this.field, this.level, rewards);
+    return applyResearchEffectCounters(this.field, this.level, rewards, this.engine.expansions);
   }
 
   get events() {
-    return researchEvents(this.field, this.level);
+    return researchEvents(this.field, this.level, this.engine.expansions);
   }
 
   get techContent() {
@@ -170,8 +170,8 @@ export default class ResearchTile extends Vue {
     if (this.level >= 4) {
       const tilePos = ("adv-" + this.field) as AdvTechTilePos;
       if (
-        canTakeAdvancedTechTile(this.gameData, player.data, tilePos) ||
-        canResearchField(this.gameData, player, this.field)
+        canTakeAdvancedTechTile(this.engine, player.data, tilePos) ||
+        canResearchField(this.engine, player, this.field)
       ) {
         classes.push("warn");
       }
@@ -184,7 +184,7 @@ export default class ResearchTile extends Vue {
   }
 
   get players(): Array<{ player: Player; class: string }> {
-    const players = this.gameData.players;
+    const players = this.engine.players;
     return players
       .filter((player) => player.faction && player.data.research[this.field] === this.level)
       .map((p) => ({ player: p, class: this.tokenClass(p) }));
@@ -201,7 +201,7 @@ export default class ResearchTile extends Vue {
   get federation(): Federation {
     if (this.level === 5) {
       if (this.field === ResearchField.Terraforming) {
-        return this.gameData.terraformingFederation;
+        return this.engine.terraformingFederation;
       }
     }
   }
@@ -217,7 +217,7 @@ export default class ResearchTile extends Vue {
     }
   }
 
-  get gameData(): Engine {
+  get engine(): Engine {
     return this.$store.state.data;
   }
 }

@@ -136,7 +136,7 @@
             v-for="s in Object.keys(shipPositions)"
             :key="s"
             :transform="shipPositions[s]"
-            :nBuildings="3"
+            :nBuildings="s === 'tradeShip' ? playerData.tradeShips : 3"
             :destroyed="playerData.destroyedShips[s]"
             :deployed="playerData.deployedShips[s]"
             :building="s"

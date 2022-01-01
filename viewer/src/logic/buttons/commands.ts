@@ -67,7 +67,7 @@ function commandButton(
       return [passButton(controller, engine, player, command)];
 
     case Command.UpgradeResearch:
-      return researchButtons(command.data.tracks, controller, player, engine.phase);
+      return researchButtons(command.data.tracks, controller, player, engine.phase, engine.expansions);
 
     case Command.ChooseTechTile:
       return [techTiles(controller, command.name, "Pick tech tile", command.data.tiles)];

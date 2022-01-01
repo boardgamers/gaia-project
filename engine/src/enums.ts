@@ -83,6 +83,7 @@ export enum Resource {
   PISwap = "swap-PI",
   Turn = "turn",
   TradeBonus = "trade-bonus",
+  TradeShip = "trade-ship",
 }
 
 export enum Operator {

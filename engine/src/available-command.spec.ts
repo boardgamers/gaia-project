@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { PlayerEnum } from "../index";
+import { Expansion, PlayerEnum } from "../index";
 import { possibleBoardActions, possibleFreeActions } from "./available/actions";
 import { choosableFactions } from "./available/setup";
 import Engine, { AuctionVariant } from "./engine";
@@ -78,7 +78,7 @@ describe("Available commands", () => {
 
   describe("Free actions", () => {
     it("should return only 1 free action with 1pw", () => {
-      const player = new Player(PlayerEnum.Player1);
+      const player = new Player(Expansion.All, PlayerEnum.Player1);
       player.data.power.area3 = 1;
 
       const actions = possibleFreeActions(player);

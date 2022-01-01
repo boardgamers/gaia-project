@@ -103,6 +103,7 @@ export default class PlayerData extends EventEmitter {
   gaiaformersInGaia = 0;
   terraformCostDiscount = 0;
   tradeBonus = 0;
+  tradeShips = 0;
 
   tiles: {
     booster: Booster;
@@ -159,6 +160,8 @@ export default class PlayerData extends EventEmitter {
       lostPlanet: this.lostPlanet,
       ships: this.ships,
       shipRange: this.shipRange,
+      tradeBonus: this.tradeBonus,
+      tradeShips: this.tradeShips,
     };
 
     return ret;
@@ -288,6 +291,9 @@ export default class PlayerData extends EventEmitter {
         break;
       case Resource.TradeBonus:
         this.tradeBonus += count;
+        break;
+      case Resource.TradeShip:
+        this.tradeShips += count;
         break;
       case Resource.GaiaFormer:
         count > 0 ? (this.gaiaformers += count) : (this.gaiaformersInGaia -= count);
