@@ -50,7 +50,7 @@ import { moveBid, moveChooseFaction, moveRotateSectors, moveSetup } from "./move
 import { moveShip } from "./move/ships";
 import Player from "./player";
 import { MoveTokens, powerLogString } from "./player-data";
-import * as researchTracks from "./research-tracks";
+import { lastTile } from "./research-tracks";
 import { roundScorings } from "./tiles/scoring";
 import { isVersionOrLater } from "./utils";
 
@@ -483,10 +483,7 @@ export default class Engine {
       const destTile = player.data.research[field] + 1;
       if (!player.canUpgradeResearch(field)) {
         player.data.canUpgradeResearch = false;
-      } else if (
-        destTile === researchTracks.lastTile(field) &&
-        this.players.some((pl) => pl.data.research[field] === destTile)
-      ) {
+      } else if (destTile === lastTile(field) && this.players.some((pl) => pl.data.research[field] === destTile)) {
         player.data.canUpgradeResearch = false;
       }
     });

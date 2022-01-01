@@ -1,6 +1,7 @@
+import { Event } from "../index";
 import { ResearchField } from "./enums";
 
-export default {
+const researchTracks = {
   [ResearchField.Terraforming]: [[], ["2o"], ["d"], ["d", "3pw"], ["2o"], []],
   [ResearchField.Navigation]: [[], ["q"], ["r", "ship-range"], ["q", "3pw"], ["r", "ship-range"], ["r", "2ship-range"]],
   [ResearchField.Intelligence]: [[], ["q"], ["q"], ["2q", "3pw"], ["2q"], ["4q"]],
@@ -17,8 +18,12 @@ export default {
   ],
 };
 
+export function researchEvents(field: ResearchField, level: number) {
+  return researchTracks[field][level].map((s) => new Event(s, field));
+}
+
 export function lastTile(field: ResearchField) {
-  return 5;
+  return researchTracks[field].length - 1;
 }
 
 export function keyNeeded(field: ResearchField, dest: number): boolean {

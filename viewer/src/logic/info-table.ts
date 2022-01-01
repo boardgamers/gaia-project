@@ -14,7 +14,6 @@ import Engine, {
   PlayerEnum,
   PowerArea,
   ResearchField,
-  researchTracks,
   Resource,
   Resource as ResourceEnum,
   Reward,
@@ -23,16 +22,17 @@ import Engine, {
   TechTilePos,
   tiles,
 } from "@gaia-project/engine";
+import { lastTile, researchEvents } from "@gaia-project/engine/src/research-tracks";
 import { BvTableField } from "bootstrap-vue/src/components/table";
 import { countBy, sortBy } from "lodash";
 import { boardActionData } from "../data/actions";
 import { boosterData } from "../data/boosters";
-import { allBuildings, buildingData, buildingName, buildingShortcut, gaiaFormerCost } from "../data/building";
+import { allBuildings, buildingData, buildingName, buildingShortcut } from "../data/building";
 import { eventDesc } from "../data/event";
 import { buildingDesc, factionName } from "../data/factions";
 import { federationData } from "../data/federations";
 import { planetNames, remainingPlanets } from "../data/planets";
-import { researchNames } from "../data/research";
+import { applyResearchEffectCounters, researchNames } from "../data/research";
 import { resourceData, showIncome, translateAbbreviatedResources, translateResources } from "../data/resources";
 import { roundScoringData } from "../data/round-scorings";
 import { leechNetwork, sectors } from "../data/stats";
@@ -434,11 +434,8 @@ function techCell(t: TechTile | AdvTechTile, remaining: number): Cell {
   };
 }
 
-function researchLevelTitle(events: string[], field: ResearchField, level: number): string {
-  const effects = events
-    .map((s) => new Event(s))
-    .filter((e) => !e.rewards.some((r) => r.type == Resource.ShipRange))
-    .map((e) => eventDesc(e));
+function researchLevelTitle(events: Event[], field: ResearchField, level: number): string {
+  const effects = events.filter((e) => !e.rewards.some((r) => r.type == Resource.ShipRange)).map((e) => eventDesc(e));
 
   if (level == 5) {
     switch (field) {
@@ -450,7 +447,12 @@ function researchLevelTitle(events: string[], field: ResearchField, level: numbe
     }
   }
   if (field == ResearchField.GaiaProject) {
-    const c = gaiaFormerCost.get(level);
+    const c =
+      applyResearchEffectCounters(
+        ResearchField.GaiaProject,
+        level,
+        researchEvents(ResearchField.GaiaProject, level).flatMap((e) => e.rewards)
+      ).find((r) => r.type === Resource.GainTokenGaiaArea)?.count ?? null;
     if (c) {
       effects.push("Gaia former cost: " + c);
     }
@@ -488,8 +490,8 @@ function research(engine: Engine): PlayerTable {
     ].concat(
       ...ResearchField.values(engine.expansions).map((f) => ({
         shortcut: f.substring(0, 1),
-        title: `${researchNames[f]} (${researchTracks[f]
-          .map((events, level) => researchLevelTitle(events, f, level))
+        title: `${researchNames[f]} (${[...Array(lastTile(f) + 1).keys()]
+          .map((level) => researchLevelTitle(researchEvents(f, level), f, level))
           .filter((e) => e)
           .join(", ")})`,
         color: `--rt-${f}`,
