@@ -81,7 +81,17 @@ function possibleShipActionsOfType(
   return [];
 }
 
-function tradeReward(building: Building): Reward {
+function tradeUnits(engine: Engine, player: Player, building: Building): Reward[] {
+  const p = engine.player(player);
+
+  let rewards = [];
+  for (let i = 0; i < p.data.tradeBonus; i++) {
+    rewards = Reward.merge(rewards.concat(tradeUnit(building)));
+  }
+  return rewards;
+}
+
+function baseTradeReward(building: Building): Reward {
   switch (building) {
     case Building.Mine:
       return new Reward(1, Resource.Ore);
@@ -100,25 +110,49 @@ function tradeReward(building: Building): Reward {
   throw new Error("unknown trade bonus: " + building);
 }
 
+function tradeUnit(building: Building): Reward[] {
+  switch (building) {
+    case Building.Mine:
+      return Reward.parse("1c,1o");
+    case Building.TradingStation:
+      return Reward.parse("2c,1pw");
+    case Building.ResearchLab:
+    case Building.Academy1:
+    case Building.Academy2:
+      return Reward.parse("1k");
+    case Building.PlanetaryInstitute:
+      return Reward.parse("3pw");
+    case Building.Colony:
+      return Reward.parse("2vp");
+  }
+  throw new Error("unknown trade bonus: " + building);
+}
+
 function possibleTradeShipActions(engine: Engine, ship: Ship, shipLocation: string): AvailableShipAction[] {
   return possibleShipActionsOfType(engine, ship, shipLocation, ShipAction.Trade, (h) => {
-    if (
-      h.hasStructure() &&
-      !h.tradeTokens.some((t) => t === ship.player) &&
-      !h.customPosts.some((t) => t === ship.player)
-    ) {
-      if (h.data.building === Building.Mine && h.data.player !== ship.player) {
+    const player = ship.player;
+    if (h.hasStructure() && !h.tradeTokens.some((t) => t === player) && !h.customPosts.some((t) => t === player)) {
+      const building = h.data.building;
+      const host = h.data.player;
+      if (host !== player && building === Building.Mine) {
         const check = engine
-          .player(ship.player)
+          .player(player)
           .canBuild(engine.map, h, h.data.planet, Building.CustomsPost, engine.isLastRound, engine.replay);
         if (check) {
-          return [newAvailableBuilding(Building.CustomsPost, h, check, false)];
+          const b = newAvailableBuilding(Building.CustomsPost, h, check, false);
+          b.cost = Reward.merge(
+            Reward.parse(b.cost).concat(Reward.negative(tradeUnits(engine, player, building)))
+          ).toString();
+          return [b];
         }
-      } else {
+      } else if (host !== player || building === Building.Mine) {
         return [
           {
             coordinates: h.toString(),
-            rewards: tradeReward(h.data.building).toString(),
+            rewards: (host !== player
+              ? Reward.merge([baseTradeReward(building)].concat(tradeUnits(engine, player, building)))
+              : tradeUnits(engine, player, building)
+            ).toString(),
           } as TradingLocation,
         ];
       }
