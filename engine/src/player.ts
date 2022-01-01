@@ -12,6 +12,7 @@ import {
   Building,
   Command,
   Condition,
+  Expansion,
   Faction,
   Federation,
   FinalTile,
@@ -407,7 +408,7 @@ export default class Player extends EventEmitter {
     return this.data.occupied.filter((hex) => hex.data.planet !== Planet.Empty && hex.isMainOccupier(this.player));
   }
 
-  loadFaction(board: FactionBoardVariant | null, expansions = 0, skipIncome = false) {
+  loadFaction(board: FactionBoardVariant | null, expansions: Expansion, skipIncome = false) {
     this.variant = {
       board: board?.board,
       version: board?.version,
@@ -416,7 +417,7 @@ export default class Player extends EventEmitter {
     this.loadBoard(factionBoard(this.faction, this.variant.board), expansions, skipIncome);
   }
 
-  loadBoard(board: FactionBoard, expansions = 0, skipIncome = false) {
+  loadBoard(board: FactionBoard, expansions: Expansion, skipIncome = false) {
     this.board = board;
     if (!skipIncome) {
       this.loadTechs(expansions);
@@ -432,7 +433,7 @@ export default class Player extends EventEmitter {
     }
   }
 
-  loadTechs(expansions: number) {
+  loadTechs(expansions: Expansion) {
     const fields = ResearchField.values(expansions);
 
     for (const field of fields) {

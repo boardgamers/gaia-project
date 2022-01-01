@@ -11,9 +11,9 @@
         v-if="hasMap"
       >
         <SpaceMap :class="['mb-1', 'space-map', 'col-md-7']" />
-        <svg class="scoring-research-board" :viewBox="`0 0 480 505`">
+        <svg class="scoring-research-board" :viewBox="`0 0 ${researchBoardWidth + 120} 505`">
           <ResearchBoard height="450" ref="researchBoard" x="-50" />
-          <ScoringBoard class="ml-4" width="90" x="380" y="-25" />
+          <ScoringBoard class="ml-4" width="90" :x="researchBoardWidth + 20" y="-25" />
           <BoardAction
             :scale="17"
             :transform="`translate(${45 * i + 6}, 455)`"
@@ -82,7 +82,7 @@ import Engine, {
   Command,
   EngineOptions,
   Phase,
-  Player,
+  Player, ResearchField,
 } from "@gaia-project/engine";
 import AdvancedLog from "./AdvancedLog.vue";
 import BoardAction from "./BoardAction.vue";
@@ -208,7 +208,11 @@ export default class Game extends Vue {
   }
 
   get expansions() {
-    return this.$store.state.data.expansions;
+    return this.engine.expansions;
+  }
+
+  get researchBoardWidth() {
+    return ResearchField.values(this.expansions).length * 60;
   }
 
   get logPlacement(): LogPlacement {
@@ -240,7 +244,7 @@ export default class Game extends Vue {
   }
 
   get hasMap() {
-    return !!this.$store.state.data.map;
+    return !!this.engine.map;
   }
 
   get classes() {

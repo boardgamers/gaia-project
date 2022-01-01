@@ -93,6 +93,7 @@ export default class PlayerData extends EventEmitter {
     gaia: 0,
     eco: 0,
     sci: 0,
+    dip: 0,
   };
   range = 1;
   shipRange = 2;
@@ -101,6 +102,7 @@ export default class PlayerData extends EventEmitter {
   /** number of gaiaformers gained that are in gaia area */
   gaiaformersInGaia = 0;
   terraformCostDiscount = 0;
+  tradeBonus = 0;
 
   tiles: {
     booster: Booster;
@@ -283,6 +285,9 @@ export default class PlayerData extends EventEmitter {
         break;
       case Resource.TemporaryRange:
         this.temporaryRange += count;
+        break;
+      case Resource.TradeBonus:
+        this.tradeBonus += count;
         break;
       case Resource.GaiaFormer:
         count > 0 ? (this.gaiaformers += count) : (this.gaiaformersInGaia -= count);

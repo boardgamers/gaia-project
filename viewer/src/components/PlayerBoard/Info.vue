@@ -130,11 +130,11 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { sum, uniq } from "lodash";
 import Resource from "../Resource.vue";
 import Undo from "../Resources/Undo.vue";
 import Engine, {
-  Faction, GaiaHex,
+  Expansion,
+  Faction,
   MAX_SATELLITES,
   Player,
   PlayerData,
@@ -219,7 +219,7 @@ export default class PlayerBoardInfo extends Vue {
   }
 
   researchType(index: number): ResearchField {
-    return ResearchField.values()[index];
+    return ResearchField.values(Expansion.All)[index];
   }
 
   research(index: number): number {

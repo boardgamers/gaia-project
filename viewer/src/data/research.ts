@@ -7,6 +7,7 @@ export const researchNames = {
   [ResearchField.GaiaProject]: "Gaia Project",
   [ResearchField.Economy]: "Economy",
   [ResearchField.Science]: "Science",
+  [ResearchField.Diplomacy]: "Diplomacy",
 };
 
 export const descriptions = {
@@ -57,5 +58,13 @@ export const descriptions = {
     "To start a Gaia project, you must move four power tokens to your Gaia area. Immediately gain one of your Gaiaformers.",
     "To start a Gaia project, you must move three power tokens to your Gaia area. Immediately gain one of your Gaiaformers.",
     "To start a Gaia project, you must move three power tokens to your Gaia area. Immediately gain 4 VP and 1 additional VP for each Gaia Planet with one of your structures on it (you do not gain VP for Gaiaformers on Gaia Planets).",
+  ],
+  [ResearchField.Diplomacy]: [
+    "This level has no effect.",
+    "You have one trade bonus. During each income phase, charge one power.",
+    "You have one trade bonus. During each income phase, charge two power. Immediately gain one Q.I.C.",
+    "You have two trade bonuses. During each income phase, charge three power.",
+    "You have three trade bonuses. During each income phase, charge four power.",
+    "You have four trade bonuses. During each income phase, charge six power.",
   ],
 };

@@ -19,6 +19,7 @@ export enum ResearchField {
   GaiaProject = "gaia",
   Economy = "eco",
   Science = "sci",
+  Diplomacy = "dip",
 }
 
 export enum Expansion {
@@ -28,7 +29,7 @@ export enum Expansion {
 }
 
 export namespace ResearchField {
-  export function values(expansions = 0): ResearchField[] {
+  export function values(expansions: Expansion): ResearchField[] {
     const ret = [
       ResearchField.Terraforming,
       ResearchField.Navigation,
@@ -37,6 +38,10 @@ export namespace ResearchField {
       ResearchField.Economy,
       ResearchField.Science,
     ];
+
+    if (expansions === Expansion.Frontiers) {
+      ret.push(ResearchField.Diplomacy);
+    }
 
     return ret;
   }
@@ -68,6 +73,7 @@ export enum Resource {
   UpgradeGaiaProject = "up-gaia",
   UpgradeEconomy = "up-eco",
   UpgradeScience = "up-sci",
+  UpgradeDiplomacy = "up-dip",
   UpgradeLowest = "up-lowest",
   TechTile = "tech",
   RescoreFederation = "fed",
@@ -76,6 +82,7 @@ export enum Resource {
   TokenArea3 = "t-a3",
   PISwap = "swap-PI",
   Turn = "turn",
+  TradeBonus = "trade-bonus",
 }
 
 export enum Operator {
@@ -330,6 +337,7 @@ export enum TechPos {
   GaiaProject = "tech-gaia",
   Economy = "tech-eco",
   Science = "tech-sci",
+  Diplomacy = "tech-dip",
   Free1 = "tech-free1",
   Free2 = "tech-free2",
   Free3 = "tech-free3",
@@ -349,6 +357,10 @@ export namespace TechPos {
       "tech-free3",
     ] as TechPos[];
 
+    if (expansions === Expansion.Frontiers) {
+      ret.push(TechPos.Diplomacy);
+    }
+
     return ret;
   }
 }
@@ -360,14 +372,20 @@ export enum TechTilePos {
   GaiaProject = "gaia",
   Economy = "eco",
   Science = "sci",
+  Diplomacy = "dip",
   Free1 = "free1",
   Free2 = "free2",
   Free3 = "free3",
 }
 
 export namespace TechTilePos {
-  export function values(expansions = 0): TechTilePos[] {
+  export function values(expansions: Expansion): TechTilePos[] {
     const ret = ["terra", "nav", "int", "gaia", "eco", "sci", "free1", "free2", "free3"] as TechTilePos[];
+
+    if (expansions === Expansion.Frontiers) {
+      // ret.push(TechTilePos.Diplomacy);
+      //todo need to define a new tech tile first - otherwise one spot is empty
+    }
 
     return ret;
   }
@@ -411,11 +429,16 @@ export enum AdvTechTilePos {
   GaiaProject = "adv-gaia",
   Economy = "adv-eco",
   Science = "adv-sci",
+  Diplomacy = "adv-dip",
 }
 
 export namespace AdvTechTilePos {
-  export function values(expansions = 0): AdvTechTilePos[] {
+  export function values(expansions: Expansion): AdvTechTilePos[] {
     const ret = ["adv-terra", "adv-nav", "adv-int", "adv-gaia", "adv-eco", "adv-sci"] as AdvTechTilePos[];
+
+    if (expansions === Expansion.Frontiers) {
+      ret.push(AdvTechTilePos.Diplomacy);
+    }
 
     return ret;
   }

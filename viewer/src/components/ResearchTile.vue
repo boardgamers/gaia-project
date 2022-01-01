@@ -172,12 +172,21 @@ export default class ResearchTile extends Vue {
         ResearchField.GaiaProject,
         gaiaFormerCost,
       ],
+      [
+        ResearchField.Diplomacy,
+        new Map([
+          [1, "1trade-bonus"],
+          [3, "2trade-bonus"],
+          [4, "3trade-bonus"],
+          [5, "4trade-bonus"],
+        ]),
+      ],
     ]);
 
     const extra = extraRewards.get(this.field)?.get(this.level);
     if (extra) {
       const r = Reward.parse(extra);
-      if (this.field === ResearchField.GaiaProject) {
+      if (this.field === ResearchField.GaiaProject || this.field === ResearchField.Diplomacy) {
         return rewards.concat(r);
       }
       return r;
@@ -297,6 +306,10 @@ svg {
 
     &.sci {
       fill: var(--rt-sci);
+    }
+
+    &.dip {
+      fill: var(--rt-dip);
     }
 
     &.terra {
