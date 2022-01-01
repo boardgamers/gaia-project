@@ -1,7 +1,7 @@
-import { Event } from "../index";
+import { Event, Expansion } from "../index";
 import { ResearchField } from "./enums";
 
-const researchTracks = {
+const researchTracks: { [key in ResearchField]: string[][] } = {
   [ResearchField.Terraforming]: [[], ["2o"], ["d"], ["d", "3pw"], ["2o"], []],
   [ResearchField.Navigation]: [[], ["q"], ["r", "ship-range"], ["q", "3pw"], ["r", "ship-range"], ["r", "2ship-range"]],
   [ResearchField.Intelligence]: [[], ["q"], ["q"], ["2q", "3pw"], ["2q"], ["4q"]],
@@ -18,8 +18,21 @@ const researchTracks = {
   ],
 };
 
-export function researchEvents(field: ResearchField, level: number) {
-  return researchTracks[field][level].map((s) => new Event(s, field));
+const frontiersEco: string[][] = [
+  [">trade-ship"],
+  ["+2c", ">trade-ship"],
+  ["+2c,1o,1pw"],
+  ["+3c,1o,1pw", "3pw", ">trade-ship"],
+  ["+4c,2o,2pw"],
+  ["6c,3o,6pw"],
+];
+
+export function researchEvents(field: ResearchField, level: number, expansion: Expansion) {
+  const spec: string[] =
+    expansion === Expansion.Frontiers && field === ResearchField.Economy
+      ? frontiersEco[level]
+      : researchTracks[field][level];
+  return spec.map((s) => new Event(s, field));
 }
 
 export function lastTile(field: ResearchField) {

@@ -4,6 +4,7 @@ import Engine, {
   Booster,
   Building,
   Event,
+  Expansion,
   factionBoard,
   factionVariantBoard,
   federations,
@@ -434,7 +435,7 @@ function techCell(t: TechTile | AdvTechTile, remaining: number): Cell {
   };
 }
 
-function researchLevelTitle(events: Event[], field: ResearchField, level: number): string {
+function researchLevelTitle(events: Event[], field: ResearchField, level: number, expansions: Expansion): string {
   const effects = events.filter((e) => !e.rewards.some((r) => r.type == Resource.ShipRange)).map((e) => eventDesc(e));
 
   if (level == 5) {
@@ -451,7 +452,8 @@ function researchLevelTitle(events: Event[], field: ResearchField, level: number
       applyResearchEffectCounters(
         ResearchField.GaiaProject,
         level,
-        researchEvents(ResearchField.GaiaProject, level).flatMap((e) => e.rewards)
+        researchEvents(ResearchField.GaiaProject, level, expansions).flatMap((e) => e.rewards),
+        expansions
       ).find((r) => r.type === Resource.GainTokenGaiaArea)?.count ?? null;
     if (c) {
       effects.push("Gaia former cost: " + c);
@@ -491,7 +493,7 @@ function research(engine: Engine): PlayerTable {
       ...ResearchField.values(engine.expansions).map((f) => ({
         shortcut: f.substring(0, 1),
         title: `${researchNames[f]} (${[...Array(lastTile(f) + 1).keys()]
-          .map((level) => researchLevelTitle(researchEvents(f, level), f, level))
+          .map((level) => researchLevelTitle(researchEvents(f, level, engine.expansions), f, level, engine.expansions))
           .filter((e) => e)
           .join(", ")})`,
         color: `--rt-${f}`,

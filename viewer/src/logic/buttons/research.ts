@@ -1,4 +1,13 @@
-import { AvailableResearchTrack, ChooseTechTile, Command, Operator, Phase, Player, Reward } from "@gaia-project/engine";
+import {
+  AvailableResearchTrack,
+  ChooseTechTile,
+  Command,
+  Expansion,
+  Operator,
+  Phase,
+  Player,
+  Reward,
+} from "@gaia-project/engine";
 import { researchEvents } from "@gaia-project/engine/src/research-tracks";
 import { ButtonData, ButtonWarning } from "../../data";
 import { researchNames } from "../../data/research";
@@ -6,8 +15,12 @@ import { CommandController } from "./types";
 import { autoClickButton, confirmationButton, textButton } from "./utils";
 import { resourceWasteWarning, rewardWarnings } from "./warnings";
 
-function advanceResearchWarning(player: Player, track: AvailableResearchTrack): ButtonWarning | null {
-  let rewards = researchEvents(track.field, track.to)
+function advanceResearchWarning(
+  player: Player,
+  track: AvailableResearchTrack,
+  expansion: Expansion
+): ButtonWarning | null {
+  let rewards = researchEvents(track.field, track.to, expansion)
     .filter((e) => e.operator == Operator.Once)
     .flatMap((e) => e.rewards);
   if (track.cost) {
@@ -20,7 +33,8 @@ export function researchButtons(
   tracks: AvailableResearchTrack[],
   controller: CommandController,
   player: Player,
-  phase: Phase
+  phase: Phase,
+  expansions: Expansion
 ): ButtonData[] {
   return [
     autoClickButton({
@@ -32,7 +46,7 @@ export function researchButtons(
           command: track.field,
           label: researchNames[track.field],
           shortcuts: [track.field.substring(0, 1)],
-          warning: advanceResearchWarning(player, track),
+          warning: advanceResearchWarning(player, track, expansions),
           buttons:
             phase == Phase.RoundGaia ? confirmationButton("Confirm Research " + researchNames[track.field]) : null,
         })

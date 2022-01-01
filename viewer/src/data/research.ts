@@ -1,4 +1,4 @@
-import { Player, ResearchField, Resource, Reward } from "@gaia-project/engine";
+import { Expansion, Player, ResearchField, Resource, Reward } from "@gaia-project/engine";
 import { GAIA_FORMER_COST } from "@gaia-project/engine/src/faction-boards/types";
 import { researchEvents } from "@gaia-project/engine/src/research-tracks";
 
@@ -109,7 +109,12 @@ const researchEffectCounters: ResearchEffectCounter[] = [
   },
 ];
 
-export function applyResearchEffectCounters(field: ResearchField, level: number, rewards: Reward[]): Reward[] {
+export function applyResearchEffectCounters(
+  field: ResearchField,
+  level: number,
+  rewards: Reward[],
+  expansion: Expansion
+): Reward[] {
   const counters = researchEffectCounters.filter((c) => c.field == field);
 
   const p = new Player();
@@ -117,7 +122,7 @@ export function applyResearchEffectCounters(field: ResearchField, level: number,
   const vals = {};
 
   [...Array(level + 1).keys()]
-    .map((l) => researchEvents(field, l))
+    .map((l) => researchEvents(field, l, expansion))
     .forEach((events, l) => {
       for (const e of events) {
         p.gainRewards(e.rewards, e.source);

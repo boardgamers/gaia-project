@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import "mocha";
-import { Building, Faction, Operator, Planet, Player as PlayerEnum, Resource } from "./enums";
+import { Building, Expansion, Faction, Operator, Planet, Player as PlayerEnum, Resource } from "./enums";
 import Event from "./events";
 import { GaiaHex } from "./gaia-hex";
 import Player from "./player";
@@ -9,7 +9,7 @@ import Reward from "./reward";
 describe("Player", () => {
   describe("canBuild", () => {
     it("should take addedCost into account", () => {
-      const player = new Player(PlayerEnum.Player1);
+      const player = new Player(Expansion.All, PlayerEnum.Player1);
 
       player.faction = Faction.Terrans;
       player.loadFaction(null);

@@ -8,6 +8,7 @@
     <rect v-else-if="kind === 'o'" class="ore" width="14" height="14" x="-7" y="-7" />
     <rect v-else-if="kind === 'c'" class="credit" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
     <rect v-else-if="kind === 'trade-bonus'" class="trade-bonus" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
+    <rect v-else-if="kind === 'trade-ship'" class="trade-ship" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
     <rect v-else-if="kind === 'tg'" class="gaia" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
     <rect
       v-else-if="['pw', 'pay-pw', 't', 'bowl-t', 'burn-token', 'brainstone'].includes(kind)"
@@ -134,9 +135,22 @@
       y="0"
       v-if="
         (count >= 0 &&
-          ['o', 'c', 'k', 'pw', 'pay-pw', 't', 'bowl-t', 'burn-token', 'tg', 'vp', 'q', 'gf', 'trade-bonus'].includes(
-            kind
-          )) ||
+          [
+            'o',
+            'c',
+            'k',
+            'pw',
+            'pay-pw',
+            't',
+            'bowl-t',
+            'burn-token',
+            'tg',
+            'vp',
+            'q',
+            'gf',
+            'trade-bonus',
+            'trade-ship',
+          ].includes(kind)) ||
         count === '+'
       "
       :class="{ plus: count === '+' }"
@@ -218,6 +232,10 @@ g.resource {
 
   .trade-bonus {
     fill: var(--current-round);
+  }
+
+  .trade-ship {
+    fill: var(--volcanic);
   }
 
   .ore,
