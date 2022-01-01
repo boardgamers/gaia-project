@@ -1,4 +1,6 @@
-import { ResearchField } from "@gaia-project/engine";
+import { Player, ResearchField, Resource, Reward } from "@gaia-project/engine";
+import { GAIA_FORMER_COST } from "@gaia-project/engine/src/faction-boards/types";
+import { researchEvents } from "@gaia-project/engine/src/research-tracks";
 
 export const researchNames = {
   [ResearchField.Terraforming]: "Terraforming",
@@ -68,3 +70,77 @@ export const descriptions = {
     "You have four trade bonuses. During each income phase, charge six power.",
   ],
 };
+
+type ResearchEffectCounter = {
+  field: ResearchField;
+  minLevel?: number;
+  from: Resource;
+  to?: Resource;
+  currentValue: (p: Player) => number;
+};
+
+const researchEffectCounters: ResearchEffectCounter[] = [
+  {
+    field: ResearchField.Terraforming,
+    from: Resource.TerraformCostDiscount,
+    currentValue: (p) => p.data.terraformCostDiscount + 1,
+  },
+  {
+    field: ResearchField.Navigation,
+    from: Resource.Range,
+    currentValue: (p) => p.data.range,
+  },
+  {
+    field: ResearchField.Navigation,
+    from: Resource.ShipRange,
+    currentValue: (p) => p.data.shipRange,
+  },
+  {
+    field: ResearchField.GaiaProject,
+    minLevel: 1,
+    from: Resource.GaiaFormer,
+    to: Resource.GainTokenGaiaArea,
+    currentValue: (p) => GAIA_FORMER_COST - p.data.gaiaFormingDiscount(),
+  },
+  {
+    field: ResearchField.Diplomacy,
+    from: Resource.TradeBonus,
+    currentValue: (p) => p.data.tradeBonus,
+  },
+];
+
+export function applyResearchEffectCounters(field: ResearchField, level: number, rewards: Reward[]): Reward[] {
+  const counters = researchEffectCounters.filter((c) => c.field == field);
+
+  const p = new Player();
+
+  const vals = {};
+
+  [...Array(level + 1).keys()]
+    .map((l) => researchEvents(field, l))
+    .forEach((events, l) => {
+      for (const e of events) {
+        p.gainRewards(e.rewards, e.source);
+      }
+      const m = vals[l] ?? {};
+      for (const c of counters) {
+        // if (c.minLevel == null || l >= c.minLevel) {
+        m[c.from] = c.currentValue(p);
+        // }
+      }
+      vals[l] = m;
+    });
+
+  for (const c of counters) {
+    if (c.to == null) {
+      rewards = rewards.filter((r) => r.type != c.from);
+    }
+    const last = level > 0 ? vals[level - 1][c.from] : 0;
+    const cur = vals[level][c.from];
+    if (((c.minLevel == null || level >= c.minLevel) && cur !== last) || c.minLevel == level) {
+      rewards.push(new Reward(cur, c.to ?? c.from));
+    }
+  }
+
+  return rewards;
+}

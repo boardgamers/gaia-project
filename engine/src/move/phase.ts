@@ -19,7 +19,7 @@ import {
 import { factionVariantBoard } from "../faction-boards";
 import { GaiaHex } from "../gaia-hex";
 import Player from "../player";
-import * as researchTracks from "../research-tracks";
+import { lastTile } from "../research-tracks";
 import Reward from "../reward";
 import { initCustomSetup, possibleSetupBoardActions } from "../setup";
 import { moveInit } from "./setup";
@@ -452,7 +452,7 @@ export function advanceResearchAreaPhase(engine: Engine, player: PlayerEnum, cos
   const destTile = pl.data.research[field] + 1;
 
   // If someone is already on last tile
-  if (destTile === researchTracks.lastTile(field)) {
+  if (destTile === lastTile(field)) {
     if (engine.players.some((pl2) => pl2.data.research[field] === destTile)) {
       return;
     }
@@ -461,7 +461,7 @@ export function advanceResearchAreaPhase(engine: Engine, player: PlayerEnum, cos
   pl.payCosts(Reward.parse(cost), Command.UpgradeResearch);
   pl.gainRewards([new Reward(`${Command.UpgradeResearch}-${field}`)], Command.UpgradeResearch);
 
-  if (pl.data.research[field] === researchTracks.lastTile(field)) {
+  if (pl.data.research[field] === lastTile(field)) {
     if (field === ResearchField.Terraforming) {
       // gets federation token
       if (engine.terraformingFederation) {

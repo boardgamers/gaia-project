@@ -79,12 +79,6 @@ export const buildingData: { [key in Building]: { name: string; color: string } 
   },
 };
 
-export const gaiaFormerCost = new Map([
-  [1, "6tg"],
-  [3, "4tg"],
-  [4, "3tg"],
-]);
-
 export function isFrontiersBuilding(building: BuildingEnum): boolean {
   return isShip(building) || building === Building.Colony || building === Building.CustomsPost;
 }

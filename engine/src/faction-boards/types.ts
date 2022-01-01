@@ -6,6 +6,8 @@ import Player from "../player";
 import Reward from "../reward";
 import { merge } from "../utils";
 
+export const GAIA_FORMER_COST = 6;
+
 export interface FactionBoardRaw {
   income?: string[];
   buildings?: {
@@ -63,7 +65,7 @@ const defaultBoard: FactionBoardRaw = {
     },
 
     [Building.GaiaFormer]: {
-      cost: "6t->tg",
+      cost: `${GAIA_FORMER_COST}t->tg`,
       income: [[], [], []],
     },
     [Building.SpaceStation]: {

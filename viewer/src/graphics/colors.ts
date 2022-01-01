@@ -13,6 +13,7 @@ const invertedForeground: string[] = [
   "--rt-nav",
   "--rt-int",
   "--rt-gaia",
+  "--rt-dip",
   "--federation",
 ];
 

@@ -5,7 +5,6 @@ import Event, { EventSource } from "./src/events";
 import SpaceMap, { parseLocation } from "./src/map";
 import Player, { BuildWarning, MAX_SATELLITES } from "./src/player";
 import PlayerData, { BrainstoneDest, MaxLeech, Power } from "./src/player-data";
-import researchTracks from "./src/research-tracks";
 import Reward from "./src/reward";
 import tiles from "./src/tiles";
 import federations from "./src/tiles/federations";
@@ -87,7 +86,6 @@ export {
   tiles,
   Reward,
   SpaceMap,
-  researchTracks,
   EventSource,
   gainFinalScoringVictoryPoints,
   finalRankings,

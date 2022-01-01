@@ -2,14 +2,14 @@ import Engine from "../engine";
 import { AdvTechTilePos, Command, Player, ResearchField, TechTilePos } from "../enums";
 import PlayerObject from "../player";
 import PlayerData from "../player-data";
-import * as researchTracks from "../research-tracks";
+import { lastTile } from "../research-tracks";
 import Reward from "../reward";
 import { isAdvanced } from "../tiles/techs";
 import { AvailableResearchData, AvailableResearchTrack, Offer, UPGRADE_RESEARCH_COST } from "./types";
 
 export function canResearchField(engine: Engine, player: PlayerObject, field: ResearchField): boolean {
   const destTile = player.data.research[field] + 1;
-  if (destTile === researchTracks.lastTile(field) && engine.players.some((p) => p.data.research[field] === destTile)) {
+  if (destTile === lastTile(field) && engine.players.some((p) => p.data.research[field] === destTile)) {
     return false;
   }
 

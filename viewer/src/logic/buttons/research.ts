@@ -1,14 +1,5 @@
-import {
-  AvailableResearchTrack,
-  ChooseTechTile,
-  Command,
-  Event,
-  Operator,
-  Phase,
-  Player,
-  researchTracks,
-  Reward,
-} from "@gaia-project/engine";
+import { AvailableResearchTrack, ChooseTechTile, Command, Operator, Phase, Player, Reward } from "@gaia-project/engine";
+import { researchEvents } from "@gaia-project/engine/src/research-tracks";
 import { ButtonData, ButtonWarning } from "../../data";
 import { researchNames } from "../../data/research";
 import { CommandController } from "./types";
@@ -16,9 +7,9 @@ import { autoClickButton, confirmationButton, textButton } from "./utils";
 import { resourceWasteWarning, rewardWarnings } from "./warnings";
 
 function advanceResearchWarning(player: Player, track: AvailableResearchTrack): ButtonWarning | null {
-  const events = researchTracks[track.field][track.to].map((s) => new Event(s));
-
-  let rewards = events.filter((e) => e.operator == Operator.Once).flatMap((e) => e.rewards);
+  let rewards = researchEvents(track.field, track.to)
+    .filter((e) => e.operator == Operator.Once)
+    .flatMap((e) => e.rewards);
   if (track.cost) {
     rewards = Reward.merge(rewards, Reward.negative(Reward.parse(track.cost)));
   }

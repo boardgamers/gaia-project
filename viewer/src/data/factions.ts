@@ -14,6 +14,7 @@ import {
   terraformingStepsRequired,
 } from "@gaia-project/engine";
 import { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
+import { GAIA_FORMER_COST } from "@gaia-project/engine/src/faction-boards/types";
 import { factionColor, planetFill } from "../graphics/utils";
 import { allBuildings, buildingName } from "./building";
 
@@ -154,7 +155,7 @@ export function buildingDesc(b: Building, faction: Faction, board: FactionBoard,
   const income = " -> " + board.buildings[b].income.map((i) => formatIncome(i)).join(" / ");
   return (
     (player && b === Building.GaiaFormer
-      ? cost.toString().replace("6", String(6 - player.data.gaiaFormingDiscount()))
+      ? cost.toString().replace(String(GAIA_FORMER_COST), String(GAIA_FORMER_COST - player.data.gaiaFormingDiscount()))
       : cost) + (b === Building.GaiaFormer || isShip(b) ? "" : income)
   );
 }

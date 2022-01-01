@@ -46,7 +46,7 @@ import { IncomeSelection } from "./income";
 import SpaceMap from "./map";
 import { terraformingStepsRequired } from "./planets";
 import PlayerData from "./player-data";
-import researchTracks, { keyNeeded, lastTile } from "./research-tracks";
+import { keyNeeded, lastTile, researchEvents } from "./research-tracks";
 import Reward from "./reward";
 import boosts from "./tiles/boosters";
 import federationTiles, { isGreen } from "./tiles/federations";
@@ -437,7 +437,7 @@ export default class Player extends EventEmitter {
     const fields = ResearchField.values(expansions);
 
     for (const field of fields) {
-      this.loadEvents(Event.parse(researchTracks[field][this.data.research[field]], field));
+      this.loadEvents(researchEvents(field, this.data.research[field]));
     }
   }
 
@@ -530,9 +530,9 @@ export default class Player extends EventEmitter {
    * want to remove multiple green federations for one track
    */
   onResearchAdvanced(field: ResearchField, dest: number) {
-    const events = Event.parse(researchTracks[field][dest], field);
+    const events = researchEvents(field, dest);
     this.loadEvents(events);
-    const oldEvents = Event.parse(researchTracks[field][dest - 1], field);
+    const oldEvents = researchEvents(field, dest - 1);
     this.removeEvents(oldEvents);
 
     if (dest === lastTile(field)) {

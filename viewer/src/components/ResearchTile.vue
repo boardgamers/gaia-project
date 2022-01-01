@@ -57,7 +57,6 @@ import Engine, {
   canResearchField,
   canTakeAdvancedTechTile,
   Condition,
-  Event,
   Expansion,
   Federation,
   Operator,
@@ -65,17 +64,16 @@ import Engine, {
   Player,
   PlayerEnum,
   ResearchField,
-  researchTracks,
   Resource as ResourceEnum,
   Reward,
 } from "@gaia-project/engine";
-import { descriptions } from "../data/research";
+import { applyResearchEffectCounters, descriptions } from "../data/research";
 import Token from "./Token.vue";
 import FederationTile from "./FederationTile.vue";
 import Planet from "./Planet.vue";
 import Resource from "./Resource.vue";
 import { ButtonData } from "../data";
-import { gaiaFormerCost } from "../data/building";
+import { researchEvents } from "@gaia-project/engine/src/research-tracks";
 
 @Component<ResearchTile>({
   components: {
@@ -143,59 +141,19 @@ export default class ResearchTile extends Vue {
   }
 
   get resources() {
-    const rewards = Reward.merge(...this.events.slice(0, 1).map((ev) => ev.rewards));
+    const rewards = this.events
+      .filter(e => e.spec !== "3pw" && e.condition === Condition.None)
+      .flatMap((ev) => ev.rewards);
 
     if (this.events[0] && this.events[0].operator === Operator.Income) {
       rewards.unshift(new Reward("+", ResourceEnum.None));
       rewards[0].count = "+" as any;
     }
-
-    const extraRewards = new Map<ResearchField, Map<number, string>>([
-      [
-        ResearchField.Terraforming,
-        new Map([
-          [0, "d"],
-          [2, "2d"],
-          [3, "3d"],
-        ]),
-      ],
-      [
-        ResearchField.Navigation,
-        new Map([
-          [0, "1r,2ship-range"],
-          [2, "2r,3ship-range"],
-          [4, "3r,4ship-range"],
-          [5, "4r,6ship-range"],
-        ]),
-      ],
-      [
-        ResearchField.GaiaProject,
-        gaiaFormerCost,
-      ],
-      [
-        ResearchField.Diplomacy,
-        new Map([
-          [1, "1trade-bonus"],
-          [3, "2trade-bonus"],
-          [4, "3trade-bonus"],
-          [5, "4trade-bonus"],
-        ]),
-      ],
-    ]);
-
-    const extra = extraRewards.get(this.field)?.get(this.level);
-    if (extra) {
-      const r = Reward.parse(extra);
-      if (this.field === ResearchField.GaiaProject || this.field === ResearchField.Diplomacy) {
-        return rewards.concat(r);
-      }
-      return r;
-    }
-    return rewards;
+    return applyResearchEffectCounters(this.field, this.level, rewards);
   }
 
   get events() {
-    return researchTracks[this.field][this.level].map((s) => new Event(s));
+    return researchEvents(this.field, this.level);
   }
 
   get techContent() {
