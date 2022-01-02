@@ -1,4 +1,12 @@
-import { AdvTechTile, AdvTechTilePos, Command, ResearchField, TechTile, TechTilePos } from "@gaia-project/engine";
+import {
+  AdvTechTile,
+  AdvTechTilePos,
+  Command,
+  Expansion,
+  ResearchField,
+  TechTile,
+  TechTilePos,
+} from "@gaia-project/engine";
 import { researchNames } from "../../data/research";
 import { advancedTechTileData, baseTechTileData } from "../../data/tech-tiles";
 import { ChartSource, initialResearch } from "./charts";
@@ -16,17 +24,19 @@ const techTileExtractLog: ExtractLog<ChartSource<TechTile | AdvTechTile>> = Extr
   return 0;
 });
 
-export const baseTechSourceFactory: SimpleSourceFactory<ChartSource<TechTile>> = {
-  name: "Base Tech Tiles",
-  showWeightedTotal: false,
-  playerSummaryLineChartTitle: "Base Tech tiles of all players",
-  extractLog: techTileExtractLog,
-  sources: TechTile.values().map((t) => ({
-    type: t,
-    label: baseTechTileData[t].name,
-    color: baseTechTileData[t].color,
-    weight: 1,
-  })),
+export const baseTechSourceFactory = (expansion: Expansion): SimpleSourceFactory<ChartSource<TechTile>> => {
+  return {
+    name: "Base Tech Tiles",
+    showWeightedTotal: false,
+    playerSummaryLineChartTitle: "Base Tech tiles of all players",
+    extractLog: techTileExtractLog,
+    sources: TechTile.values(expansion).map((t) => ({
+      type: t,
+      label: baseTechTileData[t].name,
+      color: baseTechTileData[t].color,
+      weight: 1,
+    })),
+  };
 };
 
 export const advancedTechSourceFactory = (

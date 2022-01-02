@@ -86,6 +86,17 @@ export enum Resource {
   TradeShip = "trade-ship",
 }
 
+export function isResourceUsed(resource: Resource, expansion: Expansion) {
+  switch (resource) {
+    case Resource.ShipRange:
+    case Resource.TradeBonus:
+    case Resource.TradeShip:
+    case Resource.UpgradeDiplomacy:
+      return expansion === Expansion.Frontiers;
+  }
+  return true;
+}
+
 export enum Operator {
   /** One-time income */
   Once = ">",

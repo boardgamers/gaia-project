@@ -73,8 +73,8 @@ export const resourceData: { [key in Resource]?: ResourceName } = {
     plural: "Tokens in gaia area",
   }),
   [Resource.GaiaFormer]: colorCodes.gaia.add({
-    label: "Gaia Former to gaia",
-    plural: "Gaia Formers to gaia",
+    label: "Gaia Former",
+    plural: "Gaia Formers",
   }),
   [Resource.TemporaryStep]: colorCodes.terraformingStep.add({
     label: "Terraforming Step",
@@ -124,6 +124,10 @@ export const resourceData: { [key in Resource]?: ResourceName } = {
     shortcut: "d",
     color: "--titanium",
   },
+  [Resource.TradeShip]: colorCodes.tradeShip.add({
+    label: "Trade Ship",
+    plural: "Trade Ships",
+  }),
 };
 
 export function showIncome(engine: Engine, player: Player) {

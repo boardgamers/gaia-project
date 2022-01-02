@@ -67,7 +67,7 @@ import Engine, {
   Resource as ResourceEnum,
   Reward,
 } from "@gaia-project/engine";
-import { applyResearchEffectCounters, descriptions } from "../data/research";
+import { researchEventsWithCounters, researchLevelDesc } from "../data/research";
 import Token from "./Token.vue";
 import FederationTile from "./FederationTile.vue";
 import Planet from "./Planet.vue";
@@ -141,15 +141,15 @@ export default class ResearchTile extends Vue {
   }
 
   get resources() {
-    const rewards = this.events
+    const events = researchEventsWithCounters(this.engine, this.field, this.level);
+    const rewards = events
       .filter(e => e.spec !== "3pw" && e.condition === Condition.None)
       .flatMap((ev) => ev.rewards);
-
-    if (this.events[0] && this.events[0].operator === Operator.Income) {
+    if (events[0] && events[0].operator === Operator.Income) {
       rewards.unshift(new Reward("+", ResourceEnum.None));
       rewards[0].count = "+" as any;
     }
-    return applyResearchEffectCounters(this.field, this.level, rewards, this.engine.expansions);
+    return rewards;
   }
 
   get events() {
@@ -191,7 +191,7 @@ export default class ResearchTile extends Vue {
   }
 
   get tooltip() {
-    return `<b>Level ${this.level}:</b> ${descriptions[this.field][this.level]}`;
+    return `<b>Level ${this.level}:</b> ${researchLevelDesc(this.engine, this.field, this.level, true).join(" ")}`;
   }
 
   get height() {
