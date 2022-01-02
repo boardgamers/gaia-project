@@ -19,6 +19,7 @@ export const baseTechTileData: {
   [TechTile.Tech7]: colorCodes.gaia.add({ name: "3 VP / build mine on gaia" }),
   [TechTile.Tech8]: { name: "4c income", color: "--res-credit", shortcut: "c" },
   [TechTile.Tech9]: { name: "4pw special action", color: "--res-power", shortcut: "p" },
+  [TechTile.TechFrontiers1]: colorCodes.tradeBonus.add({ name: "trade bonus" }),
 };
 
 export const advancedTechTileData: {

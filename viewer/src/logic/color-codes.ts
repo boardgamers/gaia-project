@@ -24,4 +24,5 @@ export const colorCodes = {
   range: new ColorCoded("r", "--rt-nav"),
   gaia: new ColorCoded("g", "--gaia"),
   researchStep: new ColorCoded("r", "--rt-sci"),
+  tradeBonus: new ColorCoded("r", "--volcanic"),
 };

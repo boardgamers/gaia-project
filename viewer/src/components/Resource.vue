@@ -148,10 +148,10 @@
             'vp',
             'q',
             'gf',
-            'trade-bonus',
             'trade-ship',
-          ].includes(kind)) ||
-        count === '+'
+          ].includes(kind))
+          || count === '+'
+          || kind === 'trade-bonus'
       "
       :class="{ plus: count === '+' }"
       :text-decoration="kind === 'burn-token' ? 'line-through' : ''"
@@ -184,7 +184,7 @@ export default class Resource extends Vue {
   @Prop()
   kind: Resource | "brainstone";
 
-  @Prop()
+  @Prop({default: 0})
   count: number;
 
   @Prop({ default: false })
