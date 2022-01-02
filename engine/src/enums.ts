@@ -183,12 +183,49 @@ export enum Building {
   BattleShip = "battleShip",
 }
 
+export namespace Building {
+  export function values(expansion: Expansion): Building[] {
+    return (Object.values(Building) as Building[]).filter((b: Building) => {
+      if (typeof b !== "string") {
+        return false;
+      }
+
+      if (isShip(b)) {
+        if (!isAvailableShip(b)) {
+          return false;
+        }
+        return expansion === Expansion.Frontiers;
+      }
+      switch (b) {
+        case Building.Colony:
+        case Building.CustomsPost:
+          return expansion === Expansion.Frontiers;
+      }
+
+      return true;
+    });
+  }
+  export function ships(): Building[] {
+    return values(Expansion.Frontiers).filter((b) => isShip(b));
+  }
+}
+
 export type Ship = {
   type: Building;
   player: Player;
   location: string;
   moved: boolean;
 };
+
+function isAvailableShip(b: Building) {
+  //some ships are not implemented yet
+  switch (b) {
+    case Building.ColonyShip:
+    case Building.TradeShip:
+      return true;
+  }
+  return false;
+}
 
 export function isShip(b: Building) {
   switch (b) {

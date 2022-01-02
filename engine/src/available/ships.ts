@@ -1,5 +1,5 @@
 import Engine from "../engine";
-import { Building, Command, isShip, Planet, Player, Resource, Ship } from "../enums";
+import { Building, Command, Expansion, Planet, Player, Resource, Ship } from "../enums";
 import { GaiaHex } from "../gaia-hex";
 import SpaceMap from "../map";
 import PlayerObject from "../player";
@@ -23,7 +23,7 @@ export function shipsInHex(location: string, data): Ship[] {
 
 export function possibleShips(pl: PlayerObject, engine: Engine, map: SpaceMap, hex: GaiaHex) {
   const buildings: AvailableBuilding[] = [];
-  for (const ship of Object.values(Building).filter((b) => isShip(b))) {
+  for (const ship of Building.values(Expansion.Frontiers)) {
     const check = pl.canBuild(null, null, null, ship, engine.isLastRound, engine.replay);
     if (check) {
       for (const h of map.withinDistance(hex, 1)) {

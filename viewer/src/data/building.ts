@@ -79,16 +79,9 @@ export const buildingData: { [key in Building]: { name: string; color: string } 
   },
 };
 
-export function isFrontiersBuilding(building: BuildingEnum): boolean {
-  return isShip(building) || building === Building.Colony || building === Building.CustomsPost;
-}
-
 export function allBuildings(expansion: Expansion, gaiaFormer: boolean) {
-  return Object.values(Building).filter(
-    (bld) =>
-      (bld !== Building.GaiaFormer || gaiaFormer) &&
-      bld !== Building.SpaceStation &&
-      (!isFrontiersBuilding(bld) || expansion === Expansion.Frontiers)
+  return Building.values(expansion).filter(
+    (bld) => (bld !== Building.GaiaFormer || gaiaFormer) && bld !== Building.SpaceStation
   );
 }
 

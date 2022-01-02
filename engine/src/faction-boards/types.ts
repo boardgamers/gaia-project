@@ -1,6 +1,6 @@
 import { get, set } from "lodash";
 import { FactionVariant } from "../engine";
-import { Building, Command, Faction, Operator, Phase, PowerArea } from "../enums";
+import { Building, Command, Expansion, Faction, Operator, Phase, PowerArea } from "../enums";
 import Event from "../events";
 import Player from "../player";
 import Reward from "../reward";
@@ -145,7 +145,7 @@ export class FactionBoard {
   constructor(input: FactionBoardVariants, variant?: FactionBoardRaw) {
     Object.assign(this, merge({}, defaultBoard, input.standard, variant ?? {}));
 
-    const buildings = Object.values(Building);
+    const buildings = Building.values(Expansion.All);
     const toRewards = [`${Building.TradingStation}.isolatedCost`].concat(buildings.map((bld) => `${bld}.cost`));
     const toIncome = buildings.map((bld) => `${bld}.income`);
 

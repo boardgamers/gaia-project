@@ -1,5 +1,5 @@
 import {
-  Building,
+  Building, Expansion,
   Faction,
   factionBoard,
   factionPlanet,
@@ -58,11 +58,11 @@ const factionData: { [faction in Faction]: { name: string; ability: string; PI: 
     ability: `During setup, do not place mines. Instead, after all other players have placed mines (including the Xenos’ third mine), place your planetary institute on any red planet.
     You can have only one federation during the whole game, but unlike other factions, you will be able to grow that federation to gain new federation tokens. After you have formed a federation,
     to take the “Form a Federation” action again, you must connect planets to that federation instead of forming a new federation. The power values of the structures on those planets must bring the total power value of that federation to at least to 7X, where X is the number of federation tokens you own plus one (not including the federation token from level 5 of “Terraforming”). All other rules for forming a federation apply, including building satellites and gaining federation tokens. To build a satellite during this action, you must spend one Q.I.C. instead of discarding one power.`,
-    PI: `As a special action, place a space station on an accessible space that does not contain a planet or another space station. 
+    PI: `As a special action, place a space station on an accessible space that does not contain a planet or another space station.
     The accessibility of a space follows the same rules as the “Build a Mine” action. Like planets, a space station can
-    be connected with satellites; each space station counts as having a power value of one for its federation. 
+    be connected with satellites; each space station counts as having a power value of one for its federation.
     A space station is not a structure, so placing one does not allow opponents to charge power. A space station does not count as a colonized planet,
-    but it can be used as a “starting point” when determining the accessibility of a planet (i.e., range can be counted from a space station). 
+    but it can be used as a “starting point” when determining the accessibility of a planet (i.e., range can be counted from a space station).
     Your opponents can place satellites in a space containing a space station.`,
   },
   [Faction.Geodens]: {
@@ -124,7 +124,7 @@ export function factionDesc(faction: Faction) {
 
   const buildingDesc =
     "<ul>" +
-    Object.values(Building)
+    Building.values(Expansion.None)
       .filter((bld) => bld !== Building.GaiaFormer && bld !== Building.SpaceStation)
       .map(
         (bld) =>
@@ -149,7 +149,7 @@ export function factionDesc(faction: Faction) {
     <b>Starting Income:</b> ${startingIncome.toString().replace(/,/g, ", ")} </br>
     <b>Round Income:</b> ${roundIncome} </br>
     <span style="white-space: nowrap; line-height: 1em">
-      <b>Steps:</b> 
+      <b>Steps:</b>
       ${[0, 1, 2, 3]
         .map(
           (i) =>

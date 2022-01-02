@@ -55,20 +55,20 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   AvailableCommand,
-  Command,
-  Building,
-  GaiaHex,
   Booster,
-  tiles,
+  Building,
+  Command,
   Event,
-  Faction,
-  SpaceMap,
   Expansion,
+  Faction,
   factionPlanet,
+  GaiaHex,
+  SpaceMap,
+  tiles,
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
 import { buildingName } from "../data/building";
-import { GameContext, ButtonData, HighlightHexData } from "../data";
+import { ButtonData, GameContext, HighlightHexData } from "../data";
 import { eventDesc } from "../data/event";
 import { factionDesc, factionName } from "../data/factions";
 
@@ -255,7 +255,7 @@ export default class Commands extends Vue {
           break;
         }
         case Command.Build: {
-          for (const building of Object.values(Building)) {
+          for (const building of Building.values(Expansion.None)) {
             const coordinates = command.data.buildings.filter((bld) => bld.building === building);
             if (coordinates.length > 0) {
               let label = `Build a ${buildingName(building)}`;
