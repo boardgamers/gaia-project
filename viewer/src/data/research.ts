@@ -1,7 +1,6 @@
-import Engine, { Event, Player, ResearchField, Resource } from "@gaia-project/engine";
+import Engine, { Event, Player, researchEvents, ResearchField, Resource } from "@gaia-project/engine";
 import { isResourceUsed } from "@gaia-project/engine/src/enums";
 import { GAIA_FORMER_COST } from "@gaia-project/engine/src/faction-boards/types";
-import { researchEvents } from "@gaia-project/engine/src/research-tracks";
 import { eventDescForCounters } from "./event";
 
 export const researchNames = {

@@ -66,6 +66,7 @@ import Engine, {
   ResearchField,
   Resource as ResourceEnum,
   Reward,
+  researchEvents,
 } from "@gaia-project/engine";
 import { researchEventsWithCounters, researchLevelDesc } from "../data/research";
 import Token from "./Token.vue";
@@ -73,7 +74,6 @@ import FederationTile from "./FederationTile.vue";
 import Planet from "./Planet.vue";
 import Resource from "./Resource.vue";
 import { ButtonData } from "../data";
-import { researchEvents } from "@gaia-project/engine/src/research-tracks";
 
 @Component<ResearchTile>({
   components: {
