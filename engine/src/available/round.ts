@@ -1,11 +1,11 @@
 import Engine from "../engine";
-import { Booster, Command, Expansion, Phase, Player } from "../enums";
+import { Booster, Command, Phase, Player } from "../enums";
 
 export function possibleRoundBoosters(engine: Engine, player: Player) {
   const commands = [];
   const boosters = engine.isLastRound
     ? []
-    : Booster.values(Expansion.All).filter((booster) => engine.tiles.boosters[booster]);
+    : Booster.values(engine.expansions).filter((booster) => engine.tiles.boosters[booster]);
 
   commands.push({
     name: engine.phase === Phase.SetupBooster ? Command.ChooseRoundBooster : Command.Pass,

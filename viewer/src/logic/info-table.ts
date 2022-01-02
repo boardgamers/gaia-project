@@ -6,6 +6,7 @@ import Engine, {
   factionBoard,
   factionVariantBoard,
   federations,
+  lastTile,
   Operator,
   Planet,
   Player,
@@ -21,7 +22,6 @@ import Engine, {
   TechTilePos,
   tiles,
 } from "@gaia-project/engine";
-import { lastTile } from "@gaia-project/engine/src/research-tracks";
 import { BvTableField } from "bootstrap-vue/src/components/table";
 import { countBy, sortBy } from "lodash";
 import { boardActionData } from "../data/actions";

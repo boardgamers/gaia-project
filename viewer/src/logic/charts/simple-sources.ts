@@ -42,7 +42,7 @@ export const createSimpleSourceFactories = (
     freeActionSourceFactory,
     boardActionSourceFactory,
     buildingsSourceFactory(expansion),
-    researchSourceFactory,
+    researchSourceFactory(expansion),
     planetsSourceFactory,
     terraformingStepsSourceFactory,
     boosterSourceFactory(boosters),

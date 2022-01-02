@@ -74,6 +74,7 @@ export { GaiaHex, GaiaHexData } from "./src/gaia-hex";
 export { applyChargePowers } from "./src/income";
 export { leechPossible } from "./src/move/phase";
 export { planetNames, terraformingStepsRequired } from "./src/planets";
+export { lastTile, researchEvents } from "./src/research-tracks";
 export { AvailableSetupOption, SetupType } from "./src/setup";
 export { finalScorings, roundScorings } from "./src/tiles/scoring";
 export {

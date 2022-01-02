@@ -53,11 +53,12 @@ import {
   Player,
   Federation,
   Resource as ResourceEnum,
-  researchTracks,
+  researchEvents,
   Event,
   Reward,
   Operator,
   Planet as PlanetEnum,
+  Expansion,
 } from "@gaia-project/engine";
 import { descriptions } from "../data/research";
 import Token from "./Token.vue";
@@ -158,7 +159,7 @@ export default class ResearchTile extends Vue {
   }
 
   get resources() {
-    const events = researchTracks[this.field][this.level].map((s) => new Event(s)).slice(0, 1);
+    const events = researchEvents(this.field, this.level, Expansion.None).slice(0, 1);
 
     const rewards = Reward.merge(...events.map((ev) => ev.rewards));
 

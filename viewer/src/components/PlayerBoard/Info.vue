@@ -219,7 +219,7 @@ export default class PlayerBoardInfo extends Vue {
   }
 
   researchType(index: number): ResearchField {
-    return ResearchField.values(Expansion.All)[index];
+    return ResearchField.values(this.engine.expansions)[index];
   }
 
   research(index: number): number {

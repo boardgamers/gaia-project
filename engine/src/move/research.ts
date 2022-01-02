@@ -1,15 +1,7 @@
 import assert from "assert";
 import { AvailableCommand } from "../available/types";
 import Engine from "../engine";
-import {
-  AdvTechTilePos,
-  Command,
-  Expansion,
-  Player as PlayerEnum,
-  ResearchField,
-  SubPhase,
-  TechTilePos,
-} from "../enums";
+import { AdvTechTilePos, Command, Player as PlayerEnum, ResearchField, SubPhase, TechTilePos } from "../enums";
 import { isAdvanced } from "../tiles/techs";
 import { advanceResearchAreaPhase } from "./phase";
 
@@ -50,7 +42,7 @@ export function moveChooseTechTile(
   // AFTER gaining the tech tile (as green federation can be flipped and lock research tracks)
   engine.processNextMove(
     SubPhase.UpgradeResearch,
-    ResearchField.values(Expansion.All).includes((pos as any) as ResearchField) ? { pos } : undefined
+    ResearchField.values(engine.expansions).includes((pos as any) as ResearchField) ? { pos } : undefined
   );
 }
 

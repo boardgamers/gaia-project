@@ -54,13 +54,13 @@ export const advancedTechSourceFactory = (
   })),
 });
 
-export const researchSourceFactory: SimpleSourceFactory<ChartSource<ResearchField>> = {
+export const researchSourceFactory = (expansion: Expansion): SimpleSourceFactory<ChartSource<ResearchField>> => ({
   name: "Research",
   playerSummaryLineChartTitle: "Research steps of all players",
   showWeightedTotal: false,
   initialValue: (player, source) => initialResearch(player).get(source.type) ?? 0,
   extractLog: commandCounterArg0EqualsSource(Command.UpgradeResearch),
-  sources: Object.keys(researchNames).map((field) => {
+  sources: ResearchField.values(expansion).map((field) => {
     return {
       type: field as ResearchField,
       label: researchNames[field],
@@ -68,4 +68,4 @@ export const researchSourceFactory: SimpleSourceFactory<ChartSource<ResearchFiel
       weight: 1,
     };
   }),
-};
+});

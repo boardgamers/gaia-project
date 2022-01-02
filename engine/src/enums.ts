@@ -24,6 +24,7 @@ export enum ResearchField {
 
 export enum Expansion {
   // 1 was the old spaceships expansion
+  None = 0,
   Frontiers = 2,
   All = 2,
 }

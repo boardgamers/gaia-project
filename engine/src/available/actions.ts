@@ -9,7 +9,7 @@ import {
   freeActionsTerrans,
 } from "../actions";
 import Engine, { BoardActions } from "../engine";
-import { BoardAction, Building, Command, Expansion, Operator, Player, Resource } from "../enums";
+import { BoardAction, Building, Command, Operator, Player, Resource } from "../enums";
 import PlayerObject from "../player";
 import { resourceLimits } from "../player-data";
 import Reward from "../reward";
@@ -75,7 +75,7 @@ export function possibleBoardActions(actions: BoardActions, p: PlayerObject, rep
     return p.data.getResources(type) < resourceLimits[type];
   };
 
-  let poweracts = BoardAction.values(Expansion.All).filter(
+  let poweracts = BoardAction.values().filter(
     (pwract) =>
       actions[pwract] === null &&
       p.data.canPay(Reward.parse(boardActions[pwract].cost)) &&
