@@ -135,23 +135,11 @@
       y="0"
       v-if="
         (count !== 0 &&
-          [
-            'o',
-            'c',
-            'k',
-            'pw',
-            'pay-pw',
-            't',
-            'bowl-t',
-            'burn-token',
-            'tg',
-            'vp',
-            'q',
-            'gf',
-            'trade-ship',
-          ].includes(kind))
-          || count === '+'
-          || kind === 'trade-bonus'
+          ['o', 'c', 'k', 'pw', 'pay-pw', 't', 'bowl-t', 'burn-token', 'tg', 'vp', 'q', 'gf', 'trade-ship'].includes(
+            kind
+          )) ||
+        count === '+' ||
+        kind === 'trade-bonus'
       "
       :class="{ plus: count === '+' }"
       :text-decoration="kind === 'burn-token' ? 'line-through' : ''"

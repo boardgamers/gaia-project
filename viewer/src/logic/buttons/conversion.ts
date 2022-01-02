@@ -20,10 +20,9 @@ import { autoClickButton, confirmationButton, symbolButton } from "./utils";
 import { resourceWasteWarning, rewardWarnings } from "./warnings";
 
 function conversionLabel(cost: Reward[], income: Reward[]) {
-  return `${translateResources(cost, true)} ⇒ ${translateResources(income, true).replace(
-    "4 Victory Points",
-    "3 VP + 1 VP / Planet Type"
-  )}`;
+  const to = translateResources(income, true).replace("4 Victory Points", "3 VP + 1 VP / Planet Type");
+  const from = translateResources(cost, true).replace("1 Gaia Former", "Move 1 gaia former to gaia area");
+  return `${from} ⇒ ${to}`;
 }
 
 function resourceSymbol(type: Resource) {

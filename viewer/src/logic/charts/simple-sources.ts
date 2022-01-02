@@ -47,7 +47,7 @@ export const createSimpleSourceFactories = (
     terraformingStepsSourceFactory,
     boosterSourceFactory(boosters),
     federationsSourceFactory,
-    baseTechSourceFactory,
+    baseTechSourceFactory(expansion),
     advancedTechSourceFactory(advTechTiles),
     finalScoringSourceFactory(finalTiles),
   ];
