@@ -139,7 +139,7 @@
 
         <g transform="translate(0, 18.5) scale(0.7)" v-if="isFrontiers">
           <BuildingGroup
-            v-for="s in Object.keys(shipPositions)"
+            v-for="s in ships"
             :key="s"
             :transform="shipPositions[s]"
             :nBuildings="s === 'tradeShip' ? playerData.tradeShips : 3"
@@ -231,7 +231,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop, Watch } from "vue-property-decorator";
-import Engine, { Building, Expansion, factionPlanet, Planet, Player } from "@gaia-project/engine";
+import Engine, { Building, Expansion, factionPlanet, isShip, Planet, Player } from "@gaia-project/engine";
 import { factionColor } from "../graphics/utils";
 import TechTile from "./TechTile.vue";
 import Booster from "./Booster.vue";
@@ -283,7 +283,7 @@ export default class PlayerInfo extends Vue {
   }
 
   get gameData(): Engine {
-    return this.$store.state.data;
+    return this.engine;
   }
 
   get avatar(): string {
@@ -322,11 +322,11 @@ export default class PlayerInfo extends Vue {
   }
 
   get passed() {
-    return (this.$store.state.data.passedPlayers || []).includes(this.player.player);
+    return (this.engine.passedPlayers || []).includes(this.player.player);
   }
 
   get round() {
-    return this.$store.state.data.round;
+    return this.engine.round;
   }
 
   get hasLostPlanet() {
@@ -334,11 +334,19 @@ export default class PlayerInfo extends Vue {
   }
 
   get isFrontiers() {
-    return this.$store.state.data.expansions == Expansion.Frontiers;
+    return this.engine.expansions == Expansion.Frontiers;
+  }
+
+  get engine() {
+    return this.$store.state.data;
   }
 
   get height() {
     return this.isFrontiers ? "26.2" : "21.4";
+  }
+
+  get ships(): Building[] {
+    return Building.ships();
   }
 
   get shipPositions() {

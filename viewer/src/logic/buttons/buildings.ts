@@ -3,6 +3,7 @@ import Engine, {
   AvailableCommand,
   Building,
   Command,
+  Expansion,
   Faction,
   isShip,
   Planet,
@@ -107,7 +108,7 @@ export function buildButtons(
     byTypeLabel.set(label, old);
   }
 
-  const sort = Object.values(Building);
+  const sort = Building.values(Expansion.All);
   const sorted = sortBy(
     Array.from(byTypeLabel.entries()),
     ([, b]) => sort.indexOf(b[0].building) * 2 + (b[0].upgrade || b[0].downgrade ? 1 : 0)

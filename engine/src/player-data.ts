@@ -9,7 +9,6 @@ import {
   Command,
   Expansion,
   Federation,
-  isShip,
   PowerArea,
   ResearchField,
   Resource,
@@ -65,21 +64,17 @@ export default class PlayerData extends EventEmitter {
 
   buildings: {
     [key in Building]: number;
-  } = fromPairs(Object.values(Building).map((bld) => [bld, 0])) as any;
+  } = fromPairs(Building.values(Expansion.All).map((bld) => [bld, 0])) as any;
 
   destroyedShips: {
     [key in Building]: number;
-  } = fromPairs(
-    Object.values(Building)
-      .filter((b) => isShip(b))
-      .map((bld) => [bld, 0])
-  ) as any;
+  } = fromPairs(Building.ships().map((bld) => [bld, 0])) as any;
 
   deployedShips: {
     [key in Building]: number;
   } = fromPairs(
-    Object.values(Building)
-      .filter((b) => isShip(b))
+    Building.ships()
+      .map((bld) => [bld, 0])
       .map((bld) => [bld, 0])
   ) as any;
 
