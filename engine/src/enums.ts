@@ -316,17 +316,16 @@ export enum TechTile {
   Tech7 = "tech7",
   Tech8 = "tech8",
   Tech9 = "tech9",
+  TechFrontiers1 = "tech-frontiers1",
 }
 
 export namespace TechTile {
-  export function values(expansions = 0): TechTile[] {
+  export function values(expansions: Expansion): TechTile[] {
     return (Object.values(TechTile) as TechTile[]).filter((val: TechTile) => {
       if (typeof val !== "string") {
         return;
       }
-      if (/^tech[0-9]/.test(val)) {
-        return true;
-      }
+      return !val.includes("frontiers") || expansions === Expansion.Frontiers;
     }) as TechTile[];
   }
 }
@@ -384,8 +383,7 @@ export namespace TechTilePos {
     const ret = ["terra", "nav", "int", "gaia", "eco", "sci", "free1", "free2", "free3"] as TechTilePos[];
 
     if (expansions === Expansion.Frontiers) {
-      // ret.push(TechTilePos.Diplomacy);
-      //todo need to define a new tech tile first - otherwise one spot is empty
+      ret.push(TechTilePos.Diplomacy);
     }
 
     return ret;

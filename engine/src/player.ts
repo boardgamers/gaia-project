@@ -645,7 +645,7 @@ export default class Player extends EventEmitter {
   }
 
   placeShip(ship: Building, hex: GaiaHex) {
-    this.data.ships.push({ type: ship, location: hex.toString(), moved: false, player: this.player });
+    this.data.ships.push({ type: ship, location: hex.toString(), moved: true, player: this.player });
   }
 
   findUnmovedShip(ship: Building, location: string): Ship | null {
