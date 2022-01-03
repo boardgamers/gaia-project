@@ -17,7 +17,7 @@ import { availableBuildingShortcut, buildingName } from "../../data/building";
 import { hexSelectionButton } from "./hex";
 import { withShortcut } from "./shortcuts";
 import { CommandController } from "./types";
-import { autoClickButton, confirmationButton, hexMap, isFree, textButton } from "./utils";
+import { confirmationButton, hexMap, isFree, textButton } from "./utils";
 
 function buildingMenu(building: Building): string | null {
   if (isShip(building)) {
@@ -81,7 +81,7 @@ function buildingButton(
   }
   return hexSelectionButton(
     controller,
-    autoClickButton({
+    textButton({
       label,
       shortcuts: [shortcut],
       command,

@@ -109,6 +109,7 @@
         />
         <Resource kind="r" :count="playerData.range" transform="translate(35.5,1) scale(0.1)" style="opacity: 0.7" />
         <Resource
+          v-if="isFrontiers"
           kind="trade-bonus"
           :count="playerData.tradeBonus"
           transform="translate(37,3) scale(0.1)"
