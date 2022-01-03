@@ -70,11 +70,11 @@
         :class="{ resolution: true, deployed: isDeployed(i) }"
       />
     </g>
-<!--    not displayed because military is not implemented yet-->
-<!--    <g v-if="isShip" transform="translate(7.5,0)" v-b-tooltip="destroyedTooltip">-->
-<!--      <circle r=".6" class="destroyed" />-->
-<!--      <text transform="translate(-.33,-.1)" class="board-text">{{ destroyed }}</text>-->
-<!--    </g>-->
+    <!--    not displayed because military is not implemented yet-->
+    <!--    <g v-if="isShip" transform="translate(7.5,0)" v-b-tooltip="destroyedTooltip">-->
+    <!--      <circle r=".6" class="destroyed" />-->
+    <!--      <text transform="translate(-.33,-.1)" class="board-text">{{ destroyed }}</text>-->
+    <!--    </g>-->
   </g>
 </template>
 

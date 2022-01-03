@@ -1,5 +1,6 @@
 import {
-  Building, Expansion,
+  Building,
+  Expansion,
   Faction,
   factionBoard,
   factionPlanet,

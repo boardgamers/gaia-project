@@ -1,5 +1,5 @@
 import Engine from "../engine";
-import { Building, Command, Expansion, Planet, Player, Resource, Ship } from "../enums";
+import { Building, Command, Planet, Player, Resource, Ship } from "../enums";
 import { GaiaHex } from "../gaia-hex";
 import SpaceMap from "../map";
 import PlayerObject from "../player";
@@ -23,7 +23,7 @@ export function shipsInHex(location: string, data): Ship[] {
 
 export function possibleShips(pl: PlayerObject, engine: Engine, map: SpaceMap, hex: GaiaHex) {
   const buildings: AvailableBuilding[] = [];
-  for (const ship of Building.values(Expansion.Frontiers)) {
+  for (const ship of Building.ships()) {
     const check = pl.canBuild(null, null, null, ship, engine.isLastRound, engine.replay);
     if (check) {
       for (const h of map.withinDistance(hex, 1)) {
@@ -43,7 +43,10 @@ function shipTargets(
   targets: AvailableHex[],
   engine: Engine
 ): AvailableHex[] {
-  if (!targets.find((t) => t.coordinates === hex) && shipsInHex(hex, engine).length < MAX_SHIPS_PER_HEX) {
+  if (
+    !targets.find((t) => t.coordinates === hex) &&
+    (shipsInHex(hex, engine).length < MAX_SHIPS_PER_HEX || source === hex)
+  ) {
     targets.push({ coordinates: hex });
   }
   if (range === 0) {
@@ -98,12 +101,11 @@ function baseTradeReward(building: Building): Reward {
     case Building.TradingStation:
       return new Reward(5, Resource.Credit);
     case Building.ResearchLab:
-      return new Reward(2, Resource.Knowledge);
-    case Building.PlanetaryInstitute:
-      return new Reward(5, Resource.ChargePower);
     case Building.Academy1:
     case Building.Academy2:
       return new Reward(2, Resource.Knowledge);
+    case Building.PlanetaryInstitute:
+      return new Reward(5, Resource.ChargePower);
     case Building.Colony:
       return new Reward(3, Resource.VictoryPoint);
   }
@@ -128,13 +130,12 @@ function tradeUnit(building: Building): Reward[] {
   throw new Error("unknown trade bonus: " + building);
 }
 
-function possibleTradeShipActions(engine: Engine, ship: Ship, shipLocation: string): AvailableShipAction[] {
-  return possibleShipActionsOfType(engine, ship, shipLocation, ShipAction.Trade, (h) => {
-    const player = ship.player;
-    if (h.hasStructure() && !h.tradeTokens.some((t) => t === player) && !h.customPosts.some((t) => t === player)) {
-      const building = h.data.building;
-      const host = h.data.player;
-      if (host !== player && building === Building.Mine) {
+function totalTradeReward(h: GaiaHex, player: Player, engine: Engine) {
+  if (h.hasStructure() && !h.tradeTokens.some((t) => t === player) && !h.customPosts.some((t) => t === player)) {
+    const building = h.data.building;
+    const host = h.data.player;
+    if (host !== player) {
+      if (building === Building.Mine) {
         const check = engine
           .player(player)
           .canBuild(engine.map, h, h.data.planet, Building.CustomsPost, engine.isLastRound, engine.replay);
@@ -145,20 +146,30 @@ function possibleTradeShipActions(engine: Engine, ship: Ship, shipLocation: stri
           ).toString();
           return [b];
         }
-      } else if (host !== player || building === Building.Mine) {
+      } else {
         return [
           {
             coordinates: h.toString(),
-            rewards: (host !== player
-              ? Reward.merge([baseTradeReward(building)].concat(tradeUnits(engine, player, building)))
-              : tradeUnits(engine, player, building)
-            ).toString(),
+            rewards: Reward.merge([baseTradeReward(building)].concat(tradeUnits(engine, player, building))).toString(),
           } as TradingLocation,
         ];
       }
+    } else if (building === Building.Mine) {
+      return [
+        {
+          coordinates: h.toString(),
+          rewards: baseTradeReward(building).toString(),
+        } as TradingLocation,
+      ];
     }
-    return [];
-  });
+  }
+  return [];
+}
+
+function possibleTradeShipActions(engine: Engine, ship: Ship, shipLocation: string): AvailableShipAction[] {
+  return possibleShipActionsOfType(engine, ship, shipLocation, ShipAction.Trade, (h) =>
+    totalTradeReward(h, ship.player, engine)
+  );
 }
 
 function possibleColonyShipActions(engine: Engine, ship: Ship, shipLocation: string): AvailableShipAction[] {

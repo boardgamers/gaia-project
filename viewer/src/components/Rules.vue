@@ -47,6 +47,9 @@
               >Rules for the base game</a
             >
           </li>
+          <li v-if="isFrontiers">
+            <a href="https://www.boardgamers.space/page/gaia-project/frontiers">Rules for the Frontiers expansion</a>
+          </li>
           <li><a href="https://www.boardgamers.space/page/gaia-project/auction">Rules for auction</a></li>
           <li><a href="https://www.boardgamers.space/page/gaia-project/settings">Game settings</a></li>
           <li><a href="https://www.boardgamers.space/page/gaia-project/preferences">Game preferences</a></li>
@@ -56,6 +59,17 @@
           <li><a href="https://www.boardgamers.space/page/elo">How Elo works</a></li>
         </ul>
         <h4>Recent changes</h4>
+        <h5>2022-01-07</h5>
+        <ul>
+          <li>
+            First alpha release of the new
+            <a href="https://www.boardgamers.space/page/gaia-project/frontiers">Frontiers expansion</a>
+          </li>
+        </ul>
+        <h5>2021-12-27</h5>
+        <ul>
+          <li>New Preference: Table UI - shows all relevant information on a single screen.</li>
+        </ul>
         <h5>2021-12-11</h5>
         <ul>
           <li>New Preference: disable warnings selectively</li>
@@ -203,7 +217,7 @@
 import { factionDesc, factionName } from "../data/factions";
 
 import { Component, Prop, Vue } from "vue-property-decorator";
-import Engine, { Faction, factionPlanet, factionVariantBoard } from "@gaia-project/engine";
+import Engine, { Expansion, Faction, factionPlanet, factionVariantBoard } from "@gaia-project/engine";
 import { finalScoringFields, finalScoringItems } from "../logic/final-scoring-rules";
 import { factionColor, planetFill } from "../graphics/utils";
 
@@ -222,8 +236,12 @@ export default class Rules extends Vue {
   private finalScoringFields: any[] = null;
   private finalScoringItems: any[] = null;
 
-  get gameData(): Engine {
+  get engine(): Engine {
     return this.$store.state.data;
+  }
+
+  get isFrontiers(): boolean {
+    return this.engine.expansions === Expansion.Frontiers;
   }
 
   mounted() {
@@ -257,9 +275,9 @@ export default class Rules extends Vue {
   get factionTooltip(): string {
     const faction = this.rule as Faction;
 
-    const player = this.gameData.players.find((p) => p.faction == faction);
-    const variant = player?.variant?.board ?? factionVariantBoard(this.gameData.factionCustomization, faction)?.board;
-    return factionDesc(faction, variant, this.gameData.expansions);
+    const player = this.engine.players.find((p) => p.faction == faction);
+    const variant = player?.variant?.board ?? factionVariantBoard(this.engine.factionCustomization, faction)?.board;
+    return factionDesc(faction, variant, this.engine.expansions);
   }
 }
 </script>
