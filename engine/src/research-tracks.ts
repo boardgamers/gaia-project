@@ -1,5 +1,5 @@
 import { Event, Expansion } from "../index";
-import { ResearchField } from "./enums";
+import { isResourceUsed, ResearchField } from "./enums";
 
 const researchTracks: { [key in ResearchField]: string[][] } = {
   [ResearchField.Terraforming]: [[], ["2o"], ["d"], ["d", "3pw"], ["2o"], []],
@@ -32,7 +32,7 @@ export function researchEvents(field: ResearchField, level: number, expansion: E
     expansion === Expansion.Frontiers && field === ResearchField.Economy
       ? frontiersEco[level]
       : researchTracks[field][level];
-  return spec.map((s) => new Event(s, field));
+  return spec.map((s) => new Event(s, field)).filter((e) => e.rewards.every((r) => isResourceUsed(r.type, expansion)));
 }
 
 export function lastTile(field: ResearchField) {

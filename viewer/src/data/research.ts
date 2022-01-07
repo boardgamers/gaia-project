@@ -1,5 +1,4 @@
-import Engine, { Event, Player, researchEvents, ResearchField, Resource } from "@gaia-project/engine";
-import { isResourceUsed } from "@gaia-project/engine/src/enums";
+import Engine, { Event, Expansion, Player, researchEvents, ResearchField, Resource } from "@gaia-project/engine";
 import { GAIA_FORMER_COST } from "@gaia-project/engine/src/faction-boards/types";
 import { eventDescForCounters } from "./event";
 
@@ -14,6 +13,7 @@ export const researchNames = {
 };
 
 type ResearchEffectCounter = {
+  expansion?: Expansion;
   field: ResearchField;
   minLevel?: number;
   from: Resource;
@@ -33,6 +33,7 @@ const researchEffectCounters: ResearchEffectCounter[] = [
     currentValue: (p) => p.data.range,
   },
   {
+    expansion: Expansion.Frontiers,
     field: ResearchField.Navigation,
     from: Resource.ShipRange,
     currentValue: (p) => p.data.shipRange,
@@ -45,6 +46,7 @@ const researchEffectCounters: ResearchEffectCounter[] = [
     currentValue: (p) => GAIA_FORMER_COST - p.data.gaiaFormingDiscount(),
   },
   {
+    expansion: Expansion.Frontiers,
     field: ResearchField.Diplomacy,
     from: Resource.TradeBonus,
     currentValue: (p) => p.data.tradeBonus,
@@ -54,7 +56,9 @@ const researchEffectCounters: ResearchEffectCounter[] = [
 export function researchEventsWithCounters(engine: Engine, field: ResearchField, level: number): Event[] {
   let events = researchEvents(field, level, engine.expansions);
 
-  const counters = researchEffectCounters.filter((c) => c.field == field);
+  const counters = researchEffectCounters.filter(
+    (c) => c.field == field && (c.expansion == null || c.expansion == engine.expansions)
+  );
 
   const p = new Player();
 
@@ -89,9 +93,7 @@ export function researchEventsWithCounters(engine: Engine, field: ResearchField,
 
 export function researchLevelDesc(engine: Engine, field: ResearchField, level: number, long: boolean): string[] {
   const events = researchEventsWithCounters(engine, field, level);
-  const effects = events
-    .filter((e) => e.rewards.every((r) => isResourceUsed(r.type, engine.expansions)))
-    .map((e) => eventDescForCounters(e, long));
+  const effects = events.map((e) => eventDescForCounters(e, long));
 
   if (level == 5) {
     switch (field) {
