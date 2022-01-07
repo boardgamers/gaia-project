@@ -1,6 +1,6 @@
 {
   "name": "@gaia-project/engine",
-  "version": "4.8.28",
+  "version": "4.8.29",
   "description": "Javascript engine for project gaia",
   "main": "dist/index.js",
   "types": "index.ts",
