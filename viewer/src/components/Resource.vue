@@ -134,7 +134,7 @@
       x="0"
       y="0"
       v-if="
-        (count !== 0 &&
+        (count != null &&
           ['o', 'c', 'k', 'pw', 'pay-pw', 't', 'bowl-t', 'burn-token', 'tg', 'vp', 'q', 'gf', 'trade-ship'].includes(
             kind
           )) ||
@@ -172,7 +172,7 @@ export default class Resource extends Vue {
   @Prop()
   kind: Resource | "brainstone";
 
-  @Prop({default: 0})
+  @Prop()
   count: number;
 
   @Prop({ default: false })
