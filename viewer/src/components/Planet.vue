@@ -126,6 +126,7 @@ svg {
       stroke: var(--lost);
     }
   }
+
   .planet-fill {
     .no-faction-fill &.faction-fill {
       display: none;
@@ -150,6 +151,7 @@ svg {
     &.o {
       fill: var(--oxide);
     }
+
     // titanium
     &.t {
       fill: var(--titanium);
@@ -189,6 +191,10 @@ svg {
     &.dig {
       fill: var(--dig);
     }
+  }
+
+  .ship .planet-fill.i {
+    fill: black;
   }
 }
 </style>

@@ -2,7 +2,9 @@
   <g v-if="isShip" class="ship">
     <circle v-if="shipMoved" r="7" />
     <Planet :planet="planetClass" transform="scale(7)" />
-    <text transform="translate(-2, -.7) scale(5)" class="board-text" style="font-weight: bolder">{{ shipLetter }}</text>
+    <text transform="translate(-2, -.7) scale(5)" :class="`board-text ${planetClass}`" style="font-weight: bolder">{{
+      shipLetter
+    }}</text>
   </g>
   <g v-else-if="customsPost">
     <Planet :planet="planetClass" transform="scale(7)" />
@@ -145,6 +147,10 @@ svg {
   .ship > circle {
     fill: white;
     pointer-events: none;
+  }
+
+  .ship text.i {
+    fill: var(--ice);
   }
 }
 </style>
