@@ -24,7 +24,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { tiles, Event, Phase } from "@gaia-project/engine";
+import Engine, { tiles, Event, Phase } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
 import Condition from "./Condition.vue";
 import Resource from "./Resource.vue";
@@ -42,7 +42,7 @@ export default class ScoringTile extends Vue {
   round: number;
 
   get tile() {
-    return this.$store.state.data.tiles.scorings.round[this.round - 1];
+    return this.engine.tiles.scorings.round[this.round - 1];
   }
 
   get event() {
@@ -57,16 +57,20 @@ export default class ScoringTile extends Vue {
     return tiles.roundScorings[this.tile][0];
   }
 
+  get engine(): Engine {
+    return this.$store.state.data;
+  }
+
   get tooltip() {
-    return eventDesc(this.event);
+    return eventDesc(this.event, this.engine.expansions);
   }
 
   get highlighted() {
-    return this.$store.state.data.round === this.round && !this.faded;
+    return this.engine.round === this.round && !this.faded;
   }
 
   get faded() {
-    return this.$store.state.data.round > this.round || this.$store.state.data.phase === Phase.EndGame;
+    return this.engine.round > this.round || this.engine.phase === Phase.EndGame;
   }
 }
 </script>

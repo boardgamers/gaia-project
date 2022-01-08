@@ -93,7 +93,7 @@ export function researchEventsWithCounters(engine: Engine, field: ResearchField,
 
 export function researchLevelDesc(engine: Engine, field: ResearchField, level: number, long: boolean): string[] {
   const events = researchEventsWithCounters(engine, field, level);
-  const effects = events.map((e) => eventDescForCounters(e, long));
+  const effects = events.map((e) => eventDescForCounters(e, engine.expansions, long));
 
   if (level == 5) {
     switch (field) {

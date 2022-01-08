@@ -29,45 +29,48 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { tiles, Event } from "@gaia-project/engine";
+import Engine, { tiles, Event, Booster as BoosterEnum } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
 import TechContent from "./TechContent.vue";
 
 @Component<Booster>({
-  computed: {
-    tileObject() {
-      return tiles.boosters[this.booster];
-    },
-
-    event1() {
-      return this.tileObject[0];
-    },
-
-    event2() {
-      return this.tileObject[1];
-    },
-
-    title() {
-      return this.booster;
-    },
-
-    tooltip() {
-      return `- ${eventDesc(new Event(this.event1))}\n- ${eventDesc(new Event(this.event2))}`;
-    },
-  },
   components: {
     TechContent,
   },
 })
 export default class Booster extends Vue {
   @Prop()
-  booster: Booster;
+  booster: BoosterEnum;
 
   @Prop()
   disabled: boolean;
 
   @Prop({ default: false, type: Boolean })
   highlighted: boolean;
+
+  get tileObject() {
+    return tiles.boosters[this.booster];
+  }
+
+  get event1() {
+    return this.tileObject[0];
+  }
+
+  get event2() {
+    return this.tileObject[1];
+  }
+
+  get title() {
+    return this.booster;
+  }
+
+  get engine(): Engine {
+    return this.$store.state.data;
+  }
+
+  get tooltip() {
+    return `- ${eventDesc(new Event(this.event1), this.engine.expansions)}\n- ${eventDesc(new Event(this.event2), this.engine.expansions)}`;
+  }
 }
 </script>
 
