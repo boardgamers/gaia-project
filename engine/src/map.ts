@@ -357,10 +357,10 @@ export default class SpaceMap {
 
     const relative = CubeCoordinates.parse(reverseSuffixes[suffix]);
 
-    let center = this.placement!.sectors!.find((conf) => conf.sector.replace(/[AB]/, "") === sector).center!;
+    let center = this.placement.sectors.find((conf) => conf.sector.replace(/[AB]/, "") === sector).center;
 
     if (!center) {
-      const index = this.placement!.sectors!.findIndex((conf) => conf.sector.replace(/[AB]/, "") === sector);
+      const index = this.placement.sectors.findIndex((conf) => conf.sector.replace(/[AB]/, "") === sector);
       center = (this.placement.sectors.length === 7 ? smallCenters : bigCenters)[index];
     }
 
