@@ -299,7 +299,9 @@ export default class Engine {
     }
     this.sanitizeOptions();
     this.loadMoves(moves);
-    this.options = options;
+    if (replay) {
+      this.options = options; // is this necessary?
+    }
   }
 
   /** Fix old options passed. To remove when legacy data is no more in database */

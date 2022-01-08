@@ -29,7 +29,7 @@ export function moveInit(engine: Engine, players: number, seed: string) {
   engine.setup = [];
 
   for (let i = 0; i < players; i++) {
-    engine.addPlayer(new Player(this.expansions, i));
+    engine.addPlayer(new Player(engine.expansions, i));
   }
 
   if (engine.options.randomFactions) {
