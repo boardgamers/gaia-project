@@ -94,6 +94,7 @@ type Table = { title: string; header: any[]; items: any[] };
   components: { PlayerCircle, BuildingImage, SpecialAction },
 })
 export default class Charts extends Vue {
+  // eslint-disable-next-line no-invalid-this
   private chartStyle: ChartStyleDisplay = this.chartStyles[0];
   private chartFamily: ChartFamily = vpChartFamily;
   private chartKind: ChartKind = barChartKind;

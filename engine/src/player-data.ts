@@ -486,8 +486,10 @@ export default class PlayerData extends EventEmitter {
     switch (area) {
       case PowerArea.Area3:
         power += this.power.area3;
+      // eslint-disable-next-line no-fallthrough
       case PowerArea.Area2:
         power += this.power.area2;
+      // eslint-disable-next-line no-fallthrough
       case PowerArea.Area1:
         power += this.power.area1;
     }

@@ -155,7 +155,7 @@ import { orderedPlayers } from "../data/player";
         }
         this.handleData(Engine.fromData(JSON.parse(JSON.stringify(this.engine))));
 
-        return;
+
       }
     });
 

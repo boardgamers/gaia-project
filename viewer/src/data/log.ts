@@ -198,15 +198,16 @@ export function makeHistory(
 
   const bumpLog = () => {
     advancedLogIndex += 1;
-    nextLogEntry = advancedLog[advancedLogIndex];
+    const entry = advancedLog[advancedLogIndex];
     if (advancedLogIndex == 0) {
       ret.push(makeEntry(data, state, recent.index > 0 && onlyRecent ? "moves-skipped" : Phase.SetupInit));
-    } else if (nextLogEntry?.round) {
-      state.round = nextLogEntry.round;
+    } else if (entry?.round) {
+      state.round = entry.round;
       newPhase(Phase.RoundStart, 0);
-    } else if (nextLogEntry?.phase) {
-      newPhase(nextLogEntry?.phase, state.turn);
+    } else if (entry?.phase) {
+      newPhase(entry?.phase, state.turn);
     }
+    return entry;
   };
 
   const newEntry = (move: ParsedMove = null, entry: LogEntry = nextLogEntry): HistoryEntry => {
@@ -214,7 +215,7 @@ export function makeHistory(
     return makeEntry(data, state, newPhase, move, entry.player, entry.changes);
   };
 
-  bumpLog();
+  nextLogEntry = bumpLog();
 
   recent.allMoves.forEach((parsedMove, i) => {
     if (onlyRecent && i == recent.index) {
@@ -233,19 +234,19 @@ export function makeHistory(
       if (nextLogEntry.player === undefined || !!nextLogEntry.changes) {
         addEntry(newEntry());
       }
-      bumpLog();
+      nextLogEntry = bumpLog();
     }
     const entry = newEntry(replaceMove(data, parsedMove), {} as LogEntry);
     if (nextLogEntry && nextLogEntry.move === i) {
       entry.changes = makeChanges(data, nextLogEntry.changes);
-      bumpLog();
+      nextLogEntry = bumpLog();
     }
     addEntry(entry);
     while (nextLogEntry && nextLogEntry.move === undefined) {
       if (nextLogEntry.player === undefined || !!nextLogEntry.changes) {
         addEntry(newEntry());
       }
-      bumpLog();
+      nextLogEntry = bumpLog();
     }
   });
 
