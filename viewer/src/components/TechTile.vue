@@ -31,15 +31,13 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import {
+import Engine, {
   tiles,
   PlayerEnum,
   Event,
   TechTilePos,
   AdvTechTilePos,
-  Operator as OperatorEnum,
-  Condition as ConditionEnum,
-  Building as BuildingEnum,
+  TechTile as TechTileEnum,
   AdvTechTile,
 } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
@@ -62,7 +60,7 @@ export default class TechTile extends Vue {
   countOverride?: number;
 
   @Prop()
-  tileOverride: TechTile | AdvTechTile;
+  tileOverride: TechTileEnum | AdvTechTile;
 
   @Prop()
   commandOverride: string;
@@ -83,10 +81,10 @@ export default class TechTile extends Vue {
   }
 
   get tileObject() {
-    return this.$store.state.data.tiles.techs[this.pos];
+    return this.engine.tiles.techs[this.pos];
   }
 
-  get tile() {
+  get tile(): TechTileEnum | AdvTechTile {
     return this.tileOverride ?? this.tileObject.tile;
   }
 
@@ -112,8 +110,12 @@ export default class TechTile extends Vue {
     return this.tile.startsWith("adv");
   }
 
+  get engine(): Engine {
+    return this.$store.state.data;
+  }
+
   get tooltip() {
-    return eventDesc(this.event);
+    return eventDesc(this.event, this.engine.expansions);
   }
 }
 </script>

@@ -42,7 +42,7 @@ export function setupButton(data: AvailableSetupOption, controller: CommandContr
           symbolButton({
             command: booster,
             booster: booster as Booster,
-            label: tiles.boosters[booster].map((spec) => eventDesc(new Event(spec))).join("\n"),
+            label: tiles.boosters[booster].map((spec) => eventDesc(new Event(spec), engine.expansions)).join("\n"),
           })
         ),
       });

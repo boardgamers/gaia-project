@@ -1,4 +1,4 @@
-import { Condition, Event, Operator, Resource, Reward } from "@gaia-project/engine";
+import { Condition, Event, Expansion, Operator, Resource, Reward } from "@gaia-project/engine";
 import { translateResources } from "./resources";
 
 const conditionsCount = {
@@ -35,7 +35,7 @@ const operators = {
   [Operator.Once]: "Immediately ",
   [Operator.Trigger]: "When ",
   [Operator.FourPowerBuildings]:
-    "Planetary institutes and academies have a power value of 4, when building federations and charging power.",
+    "Planetary institutes and academies have a power value of 4, when forming federations and charging power.",
 };
 
 function rewardDesc(rewards: Reward[], long: boolean) {
@@ -63,10 +63,14 @@ function rewardDesc(rewards: Reward[], long: boolean) {
     .join(", ");
 }
 
-export function eventDesc(event: Event, long = false): string {
-  const operatorString = operators[event.operator];
+export function eventDesc(event: Event, expansion: Expansion, long = false): string {
+  const op = event.operator;
+  const operatorString =
+    op == Operator.FourPowerBuildings && expansion == Expansion.Frontiers
+      ? "Planetary institutes, academies, and colonies have a power value of 4, when forming federations and charging power."
+      : operators[op];
   const conditionString =
-    event.operator === Operator.Trigger
+    op === Operator.Trigger
       ? conditionsTrigger[event.condition as keyof typeof conditionsTrigger] + ","
       : conditionsCount[event.condition as keyof typeof conditionsCount] &&
         "for each " + conditionsCount[event.condition as keyof typeof conditionsCount] + ",";
@@ -75,7 +79,7 @@ export function eventDesc(event: Event, long = false): string {
   return [operatorString, conditionString, rewardString].filter((x) => !!x).join(" ");
 }
 
-export function eventDescForCounters(event: Event, long: boolean): string {
+export function eventDescForCounters(event: Event, expansions: Expansion, long: boolean): string {
   const reward = event.rewards[0];
   switch (reward.type) {
     case Resource.TerraformCostDiscount:
@@ -90,5 +94,5 @@ export function eventDescForCounters(event: Event, long: boolean): string {
       return `You have ${reward.count} trade bonus`;
   }
 
-  return eventDesc(event, long);
+  return eventDesc(event, expansions, long);
 }
