@@ -113,7 +113,7 @@
           <text class="board-text" transform="scale(0.7)">+{{ income("q") }}</text>
         </g>
       </g>
-      <g v-for="i in 6" :key="i" :transform="`translate(${i * 2 - 1.4},3.5) scale(1)`">
+      <g v-for="i in researchFields" :key="i" :transform="`translate(${i * 2 + (i < 7 ? - 1.4 : 6)},3.5) scale(1)`">
         <polygon
           points="-7.5,3 -3,7.5 3,7.5 7.5,3 7.5,-3 3,-7.5 -3,-7.5 -7.5,-3"
           transform="scale(0.1)"
@@ -169,6 +169,10 @@ export default class PlayerBoardInfo extends Vue {
 
   get engine(): Engine {
     return this.$store.state.data;
+  }
+
+  get researchFields(): number {
+    return ResearchField.values(this.engine.expansions).length;
   }
 
   get canUndo() {
