@@ -764,12 +764,12 @@ export default class Player extends EventEmitter {
     }
   }
 
-  passIncomeEvents(): { source: EventSource; rewards: Reward[] }[] {
+  passIncomeEvents(): Event[] {
     // this is for pass tile income (e.g. round boosters, adv tiles)
     return this.events[Operator.Pass].map((event) => {
       const times = this.eventConditionCount(event.condition);
       const rewards = event.rewards.map((reward) => new Reward(reward.count * times, reward.type));
-      return { source: event.source, rewards: rewards };
+      return new Event(rewards.join(","), event.source);
     });
   }
 

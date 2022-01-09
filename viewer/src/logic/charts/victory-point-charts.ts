@@ -4,12 +4,14 @@ import Engine, {
   BoardAction,
   Booster,
   Command,
+  Event,
   EventSource,
   Expansion,
   Faction,
   finalRankings,
   gainFinalScoringVictoryPoints,
   LogEntry,
+  Operator,
   Player,
   PlayerEnum,
   ResearchField,
@@ -84,6 +86,28 @@ export type VictoryPointSource = {
   aggregate?: VictoryPointAggregate;
 };
 
+function vpProjection(events: Event[], sources: EventSource[], e: Engine, eachRound: boolean, addedRounds: number) {
+  let points = 0;
+  for (const e of events) {
+    if (sources.includes(e.source)) {
+      for (const reward of e.rewards) {
+        if (reward.type == Resource.VictoryPoint) {
+          points += reward.count;
+        }
+      }
+    }
+  }
+
+  const map = new Map<number, number>();
+  for (let round = e.round + addedRounds; round <= Round.LastRound; round++) {
+    map.set(round, points);
+    if (!eachRound) {
+      break;
+    }
+  }
+  return map;
+}
+
 function passIncomeProjection(
   sources: EventSource[],
   eachRound: boolean
@@ -93,25 +117,16 @@ function passIncomeProjection(
     if (e.isLastRound && hasPassed) {
       return null;
     }
-    let points = 0;
-    for (const e of p.passIncomeEvents()) {
-      if (sources.includes(e.source)) {
-        for (const reward of e.rewards) {
-          if (reward.type == Resource.VictoryPoint) {
-            points += reward.count;
-          }
-        }
-      }
-    }
+    return vpProjection(p.passIncomeEvents(), sources, e, eachRound, hasPassed ? 1 : 0);
+  };
+}
 
-    const map = new Map<number, number>();
-    for (let round = e.round + (hasPassed ? 1 : 0); round <= Round.LastRound; round++) {
-      map.set(round, points);
-      if (!eachRound) {
-        break;
-      }
+function incomeProjection(sources: EventSource[]): (e: Engine, p: Player) => Map<number, number> | null {
+  return (e, p) => {
+    if (e.isLastRound) {
+      return null;
     }
-    return map;
+    return vpProjection(p.events[Operator.Income], sources, e, true, 1);
   };
 }
 
@@ -130,107 +145,127 @@ function finalScoringProjection(finalTile: number): (engine: Engine, pl: Player)
 export const victoryPointSources = (
   finalTileName: (tile: number) => string,
   expansion: Expansion
-): VictoryPointSource[] => [
-  {
-    types: ["chart-init"],
-    label: "Initial",
-    description: "10 starting points",
-    color: "--gaia",
-    aggregate: charge,
-    initialValue: () => 10,
-  },
-  {
-    types: ["chart-bid"],
-    label: "Bid",
-    description: "Initial bid",
-    color: "--volcanic",
-    aggregate: charge,
-    initialValue: (p) => -p.data.bid,
-  },
-  {
-    types: [Command.ChargePower],
-    label: "Charge",
-    description: "Points spend for power charges",
-    color: "--res-power",
-    aggregate: charge,
-  },
-  {
-    types: TechPos.values(),
-    label: "Base Tech",
-    description: "Base Tech Tiles",
-    color: "--tech-tile",
-    aggregate: otherScoring,
-  },
-  {
-    types: [Faction.Gleens],
-    label: "Gleens",
-    description: "Gleens special",
-    color: "--desert",
-    aggregate: otherScoring,
-  },
-  {
-    types: RoundScoring.values(),
-    label: "Round",
-    description: "Round Bonus",
-    color: "--rt-gaia",
-  },
-  {
-    types: Booster.values(),
-    label: "Booster",
-    description: "Round Boosters",
-    color: "--oxide",
-    roundValues: passIncomeProjection(Booster.values(), false),
-  },
-  {
-    types: BoardAction.values(),
-    label: "QIC",
-    description: "QIC actions",
-    color: "--specialAction",
-  },
-  {
-    types: ([Command.UpgradeResearch] as VictoryPointType[]).concat(ResearchField.values(expansion)),
-    label: "Research",
-    description: "Research in counted in the round where the level is reached",
-    color: "--res-knowledge",
-  },
-  {
-    types: AdvTechTilePos.values(expansion),
-    label: "Advanced Tech",
-    description: "Advanced Tech Tiles",
-    color: "--current-round",
-    roundValues: passIncomeProjection(AdvTechTilePos.values(expansion), true),
-  },
-  {
-    types: [Command.FormFederation],
-    label: "Federation",
-    description: "Re-scoring is counted as QIC action",
-    color: colorCodes.federation.color,
-  },
-  {
-    types: ["chart-final1"],
-    label: finalTileName(0),
-    description: "Final Scoring A",
-    color: "--rt-sci",
-    aggregate: finalScoring,
-    roundValues: finalScoringProjection(0),
-  },
-  {
-    types: ["chart-final2"],
-    label: finalTileName(1),
-    description: "Final Scoring B",
-    color: "--dig",
-    aggregate: finalScoring,
-    roundValues: finalScoringProjection(1),
-  },
-  {
-    types: ["chart-spend"],
-    label: "Resources",
-    description: "Points for the remaining resources converted to credits",
-    color: "--res-credit",
-    roundValues: (e: Engine, pl: Player) =>
-      new Map([[finalScoringRound, simulateIncome(pl, (clone) => clone.data.finalResourceHandling(), e.version)]]),
-  },
-];
+): VictoryPointSource[] => {
+  const sources: VictoryPointSource[] = [
+    {
+      types: ["chart-init"],
+      label: "Initial",
+      description: "10 starting points",
+      color: "--gaia",
+      aggregate: charge,
+      initialValue: () => 10,
+    },
+    {
+      types: ["chart-bid"],
+      label: "Bid",
+      description: "Initial bid",
+      color: "--volcanic",
+      aggregate: charge,
+      initialValue: (p) => -p.data.bid,
+    },
+    {
+      types: [Command.ChargePower],
+      label: "Charge",
+      description: "Points spend for power charges",
+      color: "--res-power",
+      aggregate: charge,
+    },
+    {
+      types: TechPos.values(),
+      label: "Base Tech",
+      description: "Base Tech Tiles",
+      color: "--tech-tile",
+      aggregate: otherScoring,
+    },
+    {
+      types: [Faction.Gleens],
+      label: "Gleens",
+      description: "Gleens special",
+      color: "--desert",
+      aggregate: otherScoring,
+    },
+    {
+      types: RoundScoring.values(),
+      label: "Round",
+      description: "Round Bonus",
+      color: "--rt-gaia",
+    },
+    {
+      types: Booster.values(),
+      label: "Booster",
+      description: "Round Boosters",
+      color: "--oxide",
+      roundValues: passIncomeProjection(Booster.values(), false),
+    },
+    {
+      types: BoardAction.values(),
+      label: "QIC",
+      description: "QIC actions",
+      color: "--specialAction",
+    },
+    {
+      types: ([Command.UpgradeResearch] as VictoryPointType[]).concat(ResearchField.values(expansion)),
+      label: "Research",
+      description: "Research in counted in the round where the level is reached",
+      color: "--res-knowledge",
+    },
+    {
+      types: AdvTechTilePos.values(expansion),
+      label: "Advanced Tech",
+      description: "Advanced Tech Tiles",
+      color: "--current-round",
+      roundValues: passIncomeProjection(AdvTechTilePos.values(expansion), true),
+    },
+    {
+      types: [Command.FormFederation],
+      label: "Federation",
+      description: "Re-scoring is counted as QIC action",
+      color: colorCodes.federation.color,
+    },
+    {
+      types: ["chart-final1"],
+      label: finalTileName(0),
+      description: "Final Scoring A",
+      color: "--rt-sci",
+      aggregate: finalScoring,
+      roundValues: finalScoringProjection(0),
+    },
+    {
+      types: ["chart-final2"],
+      label: finalTileName(1),
+      description: "Final Scoring B",
+      color: "--dig",
+      aggregate: finalScoring,
+      roundValues: finalScoringProjection(1),
+    },
+    {
+      types: ["chart-spend"],
+      label: "Resources",
+      description: "Points for the remaining resources converted to credits",
+      color: "--res-credit",
+      roundValues: (e: Engine, pl: Player) =>
+        new Map([[finalScoringRound, simulateIncome(pl, (clone) => clone.data.finalResourceHandling(), e.version)]]),
+    },
+  ];
+  if (expansion == Expansion.Frontiers) {
+    sources.push(
+      {
+        types: [Command.ChooseIncome],
+        label: "Colonies",
+        description: "Income from colonies",
+        color: "--rt-dip",
+        roundValues: incomeProjection([Command.ChooseIncome]),
+      },
+      {
+        types: ["trade"],
+        label: "Trade",
+        description: "Trade with colonies",
+        color: "--rt-dip",
+      }
+    );
+  }
+  return sources;
+};
 
 function advancedTechTileTypes(e: Engine, tile: AdvTechTile): AdvTechTilePos[] {
   return Object.entries(e.tiles.techs)
