@@ -39,7 +39,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
     case SubPhase.RescoreFederationTile:
       return possibleFederationTiles(engine, player, "player");
     case SubPhase.BuildMine:
-      return possibleMineBuildings(engine, player, false);
+      return [...possibleMineBuildings(engine, player, false), ...possibleShipMovements(engine, player, true)];
     case SubPhase.BuildMineOrGaiaFormer:
       return possibleMineBuildings(engine, player, true, data);
     case SubPhase.SpaceStation:
@@ -55,7 +55,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
     case SubPhase.BeforeMove: {
       return [
         ...possibleBuildings(engine, player),
-        ...possibleShipMovements(engine, player),
+        ...possibleShipMovements(engine, player, false),
         ...possibleFederations(engine, player),
         ...possibleResearchAreas(engine, player, UPGRADE_RESEARCH_COST),
         ...possibleBoardActions(engine.boardActions, engine.player(player), engine.replay),

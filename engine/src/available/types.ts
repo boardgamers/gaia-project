@@ -88,6 +88,7 @@ export type AvailableBuildCommandData = { buildings: AvailableBuilding[] };
 export type AvailableFederation = { hexes: string; warnings: BuildWarning[] };
 
 export enum ShipAction {
+  Nothing = "nothing",
   BuildColony = "buildColony",
   Trade = "trade",
 }

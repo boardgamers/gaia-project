@@ -117,6 +117,8 @@ export function shipLetter(building: BuildingEnum): string {
 
 export function shipActionName(action: ShipAction): string {
   switch (action) {
+    case ShipAction.Nothing:
+      return "<u>D</u>ecline";
     case ShipAction.BuildColony:
       return "Build <u>C</u>olony";
     case ShipAction.Trade:

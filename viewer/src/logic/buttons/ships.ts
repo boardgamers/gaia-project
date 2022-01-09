@@ -5,6 +5,7 @@ import Engine, {
   AvailableMoveShipData,
   Command,
   GaiaHex,
+  ShipAction,
 } from "@gaia-project/engine";
 import { TradingLocation } from "@gaia-project/engine/src/available/types";
 import { sortedUniq } from "lodash";
@@ -25,34 +26,26 @@ function moveTargetButton(
     return textButton({});
   }
   return textButton({
-    buttons: actions
-      .map((a) => {
-        const hexes = hexMap(engine, a.locations, false);
-        for (const location of a.locations) {
-          const hex = hexes.hexes.get(engine.map.getS(location.coordinates));
-          hex.rewards = (location as TradingLocation).rewards;
-          hex.building = (location as AvailableBuilding).building;
-        }
-        hexes.hexes.set(target, { building: data.ship, preventClick: true });
-        hexes.hexes.set(engine.map.getS(data.source), { hideBuilding: data.ship, preventClick: true });
+    buttons: actions.map((a) => {
+      const hexes = hexMap(engine, a.locations, false);
+      for (const location of a.locations) {
+        const hex = hexes.hexes.get(engine.map.getS(location.coordinates));
+        hex.rewards = (location as TradingLocation).rewards;
+        hex.building = (location as AvailableBuilding).building;
+      }
+      hexes.hexes.set(target, { building: data.ship, preventClick: true });
+      hexes.hexes.set(engine.map.getS(data.source), { hideBuilding: data.ship, preventClick: true });
 
-        return hexSelectionButton(
-          controller,
-          textButton({
-            command: a.type,
-            label: shipActionName(a.type),
-            hexes,
-          }),
-          () => textButton({})
-        );
-      })
-      .concat(
+      return hexSelectionButton(
+        controller,
         textButton({
-          label: "Decline",
-          shortcuts: ["d"],
-          command: "",
-        })
-      ),
+          command: a.type === ShipAction.Nothing ? null : a.type,
+          label: shipActionName(a.type),
+          hexes,
+        }),
+        () => textButton({})
+      );
+    }),
   });
 }
 
