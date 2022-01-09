@@ -11,6 +11,7 @@ const invertedForeground: string[] = [
   "--current-round",
   "--rt-terra",
   "--rt-nav",
+  "--rt-dip",
   "--rt-int",
   "--rt-gaia",
   "--rt-dip",
