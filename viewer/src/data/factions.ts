@@ -183,7 +183,7 @@ export function factionDesc(faction: Faction, variant: FactionBoardRaw | null, e
 
   const data = factionData[faction];
   const strategy = data.strategyLink
-    ? `<iframe sandbox="allow-popups" src="${data.strategyLink}" width="640" height="480" allow="autoplay"></iframe>`
+    ? `<iframe sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" src="${data.strategyLink}" width="640" height="480" allow="autoplay"></iframe>`
     : "";
 
   return `

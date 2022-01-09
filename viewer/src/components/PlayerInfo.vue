@@ -8,7 +8,7 @@
       <a
         v-if="strategyLink"
         v-b-popover.html.hover.click.left="
-          `<iframe sandbox=&quot;allow-popups&quot; src=&quot;${strategyLink}&quot; width=&quot;640&quot; height=&quot;480&quot; allow=&quot;autoplay&quot;></iframe>`
+          `<iframe sandbox=&quot;allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox&quot; src=&quot;${strategyLink}&quot; width=&quot;640&quot; height=&quot;480&quot; allow=&quot;autoplay&quot;></iframe>`
         "
         title="Strategy Deck"
         >Strategy</a
