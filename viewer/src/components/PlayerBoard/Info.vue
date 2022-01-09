@@ -113,10 +113,14 @@
           <text class="board-text" transform="scale(0.7)">+{{ income("q") }}</text>
         </g>
       </g>
-      <g v-for="i in researchFields" :key="i" :transform="`translate(${i * 2 + (i < 7 ? -1.4 : 6)},3.5) scale(1)`">
+      <g
+        v-for="i in researchFields"
+        :key="i"
+        :transform="`translate(${(i * 2 + -1.4) * (isFrontiers ? 0.85 : 1)},3.5) scale(1)`"
+      >
         <polygon
           points="-7.5,3 -3,7.5 3,7.5 7.5,3 7.5,-3 3,-7.5 -3,-7.5 -7.5,-3"
-          transform="scale(0.1)"
+          :transform="`scale(${isFrontiers ? 0.085 : 0.1})`"
           :class="['board-info', 'research-tile', researchType(i - 1), researchClass(i - 1)]"
         />
         <text :class="['board-text', researchType(i - 1)]" transform="scale(0.8)" x="-.35" y="-.15"
@@ -169,6 +173,10 @@ export default class PlayerBoardInfo extends Vue {
 
   get engine(): Engine {
     return this.$store.state.data;
+  }
+
+  get isFrontiers() {
+    return this.engine.expansions == Expansion.Frontiers;
   }
 
   get researchFields(): number {
