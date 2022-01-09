@@ -19,6 +19,7 @@
       class="mb-1 mr-1"
       :pos="button.tech.pos"
       :tile-override="button.tech.tile"
+      :shortcut="true"
       :command-override="button.tech.commandOverride"
       :count-override="1"
     />

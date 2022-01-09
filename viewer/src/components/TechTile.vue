@@ -2,7 +2,7 @@
   <svg
     :class="['techTile', pos, { highlighted, covered, advanced: isAdvanced }]"
     v-if="this.count"
-    v-b-tooltip
+    v-b-tooltip.html
     :title="tooltip"
     @click="onClick"
     width="60"
@@ -32,17 +32,19 @@
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import Engine, {
-  tiles,
-  PlayerEnum,
-  Event,
-  TechTilePos,
-  AdvTechTilePos,
-  TechTile as TechTileEnum,
   AdvTechTile,
+  AdvTechTilePos,
+  Event,
+  PlayerEnum,
+  TechTile as TechTileEnum,
+  TechTilePos,
+  tiles,
 } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
 import TechContent from "./TechContent.vue";
 import { ButtonData } from "../data";
+import { prependShortcut } from "../logic/buttons/shortcuts";
+import { techTileData } from "../data/tech-tiles";
 
 @Component({
   components: {
@@ -58,6 +60,9 @@ export default class TechTile extends Vue {
 
   @Prop()
   countOverride?: number;
+
+  @Prop()
+  shortcut?: boolean;
 
   @Prop()
   tileOverride: TechTileEnum | AdvTechTile;
@@ -115,7 +120,9 @@ export default class TechTile extends Vue {
   }
 
   get tooltip() {
-    return eventDesc(this.event, this.engine.expansions);
+    const desc = eventDesc(this.event, this.engine.expansions);
+    const s = techTileData(this.tile).shortcut;
+    return this.shortcut && s.length == 1 ? prependShortcut(s, desc) : desc;
   }
 }
 </script>
