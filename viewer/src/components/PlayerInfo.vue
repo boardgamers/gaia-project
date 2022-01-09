@@ -5,6 +5,14 @@
         <img class="player-avatar" :alt="`${name}'s avatar`" :src="avatar" />
         <span :class="['player-name', { dropped: player.dropped }]" role="button">{{ name }}</span>
       </div>
+      <a
+        v-if="strategyLink"
+        v-b-popover.html.hover.click="
+          `<iframe src=&quot;${strategyLink}&quot; width=&quot;640&quot; height=&quot;480&quot; allow=&quot;autoplay&quot;></iframe>`
+        "
+        title="Strategy Deck"
+        >Strategy</a
+      >
       <b-form-select
         :value="selectedMapModeType"
         :options="mapModeTypeOptions"
@@ -232,7 +240,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop, Watch } from "vue-property-decorator";
-import Engine, { Building, Expansion, factionPlanet, isShip, Planet, Player } from "@gaia-project/engine";
+import Engine, { Building, Expansion, factionPlanet, Planet, Player } from "@gaia-project/engine";
 import { factionColor } from "../graphics/utils";
 import TechTile from "./TechTile.vue";
 import Booster from "./Booster.vue";
@@ -242,7 +250,7 @@ import BuildingGroup from "./PlayerBoard/BuildingGroup.vue";
 import PlayerBoardInfo from "./PlayerBoard/Info.vue";
 import PowerBowls from "./PlayerBoard/PowerBowls.vue";
 import Rules from "./Rules.vue";
-import { factionName, planetsWithSteps } from "../data/factions";
+import { factionData, factionName, planetsWithSteps } from "../data/factions";
 import { MapMode, MapModeType } from "../data/actions";
 import { mapModeTypeOptions } from "../data/stats";
 
@@ -385,6 +393,10 @@ export default class PlayerInfo extends Vue {
   @Watch("selectedMapModes")
   resetMapMode() {
     this.selectedMapModeType = this.mapModeType;
+  }
+
+  get strategyLink() {
+    return factionData[this.faction].strategyLink;
   }
 }
 </script>

@@ -18,7 +18,9 @@ import { GAIA_FORMER_COST } from "@gaia-project/engine/src/faction-boards/types"
 import { factionColor, planetFill } from "../graphics/utils";
 import { allBuildings, buildingName } from "./building";
 
-const factionData: { [faction in Faction]: { name: string; ability: string; PI: string; shortcut: string } } = {
+export const factionData: {
+  [faction in Faction]: { name: string; ability: string; PI: string; shortcut: string; strategyLink?: string };
+} = {
   [Faction.Terrans]: {
     name: "Terrans",
     ability:
@@ -33,6 +35,7 @@ const factionData: { [faction in Faction]: { name: string; ability: string; PI: 
       "When you take the Build a Mine action, you may build a mine on a planet colonized by an opponent (including the Lost Planet). Place your mine next to the opponent’s structure. You do not have to pay for terraforming, but you must still pay the mine’s cost. This mine counts as a normal mine in all ways except the following: this mine cannot be upgraded, and it does not count for any effects that relate to how many planet types or Gaia planets you have colonized.",
     PI: "Each time you build a mine on a planet colonized by an opponent, gain two knowledge.",
     shortcut: "l",
+    strategyLink: "https://drive.google.com/file/d/1gHzf_c1gszw-qOiy0wMpB4g00Oa2kiNm/preview",
   },
   [Faction.Xenos]: {
     name: "Xenos",
@@ -48,6 +51,7 @@ const factionData: { [faction in Faction]: { name: string; ability: string; PI: 
     PI:
       "When you upgrade to the planetary institute, immediately gain the Gleens’ federation token (2 credits, 1 ore, 1 knowledge). Gaining this tile counts as forming a federation. The planetary institute itself can still be part of a federation on the board.",
     shortcut: "e",
+    strategyLink: "https://drive.google.com/file/d/1Ka1DfeeLh4JgwRZX6eEZ1CPhuhF3NfOF/preview",
   },
   [Faction.Taklons]: {
     name: "Taklons",
@@ -89,6 +93,7 @@ const factionData: { [faction in Faction]: { name: string; ability: string; PI: 
     PI:
       "The first time you build a mine on each planet type, gain 3 knowledge. (You do not gain knowledge for planet types you colonized before upgrading to your planetary institute.)",
     shortcut: "o",
+    strategyLink: "https://drive.google.com/file/d/1MEww2mTrAXEIg4S7PjPxlolLsu588Wkg/preview",
   },
   [Faction.BalTaks]: {
     name: "Bal T'aks",
@@ -96,6 +101,7 @@ const factionData: { [faction in Faction]: { name: string; ability: string; PI: 
     As a free action, you can move a Gaiaformer from a Gaiaformer space on your faction board to your Gaia area to gain one Q.I.C. Gaiaformers in your Gaia area are not available until the next Gaia phase. In the next Gaia phase, move any Gaiaformer in your Gaia area back to its Gaiaformer space.`,
     PI: "You can now advance in the “Navigation” research area.",
     shortcut: "'",
+    strategyLink: "https://drive.google.com/file/d/1wAAlemgqxhqwsBPE1AZd82T7feqwRx9E/preview",
   },
   [Faction.Firaks]: {
     name: "Firaks",
@@ -112,6 +118,7 @@ const factionData: { [faction in Faction]: { name: string; ability: string; PI: 
     PI:
       "The power value of your structures on gray planets (your home type) is increased by one (in addition to any other effects that increase their power value).",
     shortcut: "c",
+    strategyLink: "https://drive.google.com/file/d/1wjMlRiS5T6g7t_YNOwEoHV-4AX3STOZy/preview",
   },
   [Faction.Nevlas]: {
     name: "Nevlas",
@@ -120,6 +127,7 @@ const factionData: { [faction in Faction]: { name: string; ability: string; PI: 
     PI:
       "You can spend power tokens in area III of your power cycle as if they were each two power. Otherwise, they count as one power token (when starting a Gaia Project, building satellites, etc.). When paying for a power action with an odd power cost (1, 3, 5, etc.), the unspent power is lost.",
     shortcut: "n",
+    strategyLink: "https://drive.google.com/file/d/1IohZgoB05UgybiP2SVkKKV19OPm-jq2v/preview",
   },
   [Faction.Itars]: {
     name: "Itars",
@@ -173,12 +181,17 @@ export function factionDesc(faction: Faction, variant: FactionBoardRaw | null, e
   const startingIncome = board.income.filter((ev) => ev.operator === Operator.Once);
   const roundIncome = board.income.filter((ev) => ev.operator === Operator.Income);
 
+  const data = factionData[faction];
+  const strategy = data.strategyLink
+    ? `<iframe src="${data.strategyLink}" width="640" height="480" allow="autoplay"></iframe>`
+    : "";
+
   return `
   <div class="faction-desc" style="background-color: ${factionColor(faction)}; color: ${planetFill(
     factionPlanet(faction)
   )}; padding: 1rem">
-    <b>Ability: </b> ${factionData[faction].ability} </br>
-    <b>Planetary Institute: </b> ${factionData[faction].PI}<br/>
+    <b>Ability: </b> ${data.ability} </br>
+    <b>Planetary Institute: </b> ${data.PI}<br/>
     <b>Buildings:</b> ${buildingDescription}
     <b>Starting Power:</b> area 1: ${board.power.area1}${
     board.brainstone == PowerArea.Area1 ? ", brainstone" : ""
@@ -200,7 +213,8 @@ export function factionDesc(faction: Faction, variant: FactionBoardRaw | null, e
               .join("")} ${i}</span>`
         )
         .join("")}
-    </span>
+    </span> </br>
+    ${strategy}
   </div>
   `;
 }
