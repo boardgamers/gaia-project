@@ -472,6 +472,11 @@ svg {
 
     &.qic {
       fill: lightGreen;
+
+      &.range {
+        fill: var(--gaia);
+        opacity: 0.6;
+      }
     }
 
     &.current-round {
