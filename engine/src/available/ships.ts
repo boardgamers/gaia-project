@@ -67,6 +67,7 @@ function possibleShipActionsOfType(
   ship: Ship,
   shipLocation: string,
   type: ShipAction,
+  allowDecline: boolean,
   locationFactory: (h: GaiaHex) => ShipActionLocation[]
 ): AvailableShipAction[] {
   const map = engine.map;
@@ -74,12 +75,19 @@ function possibleShipActionsOfType(
     .withinDistance(map.getS(shipLocation), SHIP_ACTION_RANGE)
     .flatMap((h) => locationFactory(h));
   if (locations.length > 0) {
-    return [
+    const actions = [
       {
         type,
         locations,
       } as AvailableShipAction,
     ];
+    if (allowDecline) {
+      actions.push({
+        type: ShipAction.Nothing,
+        locations: [],
+      });
+    }
+    return actions;
   }
   return [];
 }
@@ -167,13 +175,18 @@ function totalTradeReward(h: GaiaHex, player: Player, engine: Engine) {
 }
 
 function possibleTradeShipActions(engine: Engine, ship: Ship, shipLocation: string): AvailableShipAction[] {
-  return possibleShipActionsOfType(engine, ship, shipLocation, ShipAction.Trade, (h) =>
+  return possibleShipActionsOfType(engine, ship, shipLocation, ShipAction.Trade, true, (h) =>
     totalTradeReward(h, ship.player, engine)
   );
 }
 
-function possibleColonyShipActions(engine: Engine, ship: Ship, shipLocation: string): AvailableShipAction[] {
-  return possibleShipActionsOfType(engine, ship, shipLocation, ShipAction.BuildColony, (h) => {
+function possibleColonyShipActions(
+  engine: Engine,
+  ship: Ship,
+  shipLocation: string,
+  requireTemporaryStep: boolean
+): AvailableShipAction[] {
+  return possibleShipActionsOfType(engine, ship, shipLocation, ShipAction.BuildColony, !requireTemporaryStep, (h) => {
     if (h.hasPlanet() && !h.occupied() && h.data.planet !== Planet.Transdim) {
       const check = engine
         .player(ship.player)
@@ -186,20 +199,29 @@ function possibleColonyShipActions(engine: Engine, ship: Ship, shipLocation: str
   });
 }
 
-export function possibleShipActions(engine: Engine, ship: Ship, shipLocation: string): AvailableShipAction[] {
+export function possibleShipActions(
+  engine: Engine,
+  ship: Ship,
+  shipLocation: string,
+  requireTemporaryStep: boolean
+): AvailableShipAction[] {
   switch (ship.type) {
     case Building.ColonyShip:
-      return possibleColonyShipActions(engine, ship, shipLocation);
+      return possibleColonyShipActions(engine, ship, shipLocation, requireTemporaryStep);
     case Building.TradeShip:
       return possibleTradeShipActions(engine, ship, shipLocation);
   }
   return [];
 }
 
-export function possibleShipMovements(engine: Engine, player: Player): AvailableCommand<Command.MoveShip>[] {
+export function possibleShipMovements(
+  engine: Engine,
+  player: Player,
+  requireTemporaryStep: boolean
+): AvailableCommand<Command.MoveShip>[] {
   const pl = engine.player(player);
 
-  const ships = pl.data.ships.filter((s) => !s.moved);
+  const ships = pl.data.ships.filter((s) => !s.moved && (!requireTemporaryStep || s.type === Building.ColonyShip));
   if (ships.length === 0) {
     return [];
   }
@@ -209,14 +231,18 @@ export function possibleShipMovements(engine: Engine, player: Player): Available
     {
       name: Command.MoveShip,
       player,
-      data: ships.map((s) => ({
-        ship: s.type,
-        source: s.location,
-        targets: shipTargets(s.location, s.location, shipRange, [], engine).map((t) => ({
-          location: t,
-          actions: possibleShipActions(engine, s, t.coordinates),
-        })),
-      })),
+      data: ships
+        .map((s) => ({
+          ship: s.type,
+          source: s.location,
+          targets: shipTargets(s.location, s.location, shipRange, [], engine)
+            .map((t) => ({
+              location: t,
+              actions: possibleShipActions(engine, s, t.coordinates, requireTemporaryStep),
+            }))
+            .filter((t) => t.actions.length > 0),
+        }))
+        .filter((d) => d.targets.length > 0),
     },
   ];
 }
