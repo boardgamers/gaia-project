@@ -11,6 +11,7 @@ import {
 import { researchEvents } from "@gaia-project/engine/src/research-tracks";
 import { ButtonData, ButtonWarning } from "../../data";
 import { researchNames } from "../../data/research";
+import { techTileData } from "../../data/tech-tiles";
 import { CommandController } from "./types";
 import { autoClickButton, confirmationButton, textButton } from "./utils";
 import { resourceWasteWarning, rewardWarnings } from "./warnings";
@@ -71,6 +72,7 @@ export function techTiles(
     buttons: tiles.map((tile) =>
       textButton({
         command: tile.pos,
+        shortcuts: [techTileData(tile.tile).shortcut],
         tech: { pos: tile.pos },
       })
     ),
