@@ -27,6 +27,15 @@ module.exports = {
     "no-inner-declarations": "off",
     "no-return-assign": "off",
     "no-fallthrough": "off",
+    "no-invalid-this": "error",
     eqeqeq: ["error", "always"],
   },
+  overrides: [
+    {
+      files: ["*.spec.ts"],
+      rules: {
+        "no-invalid-this": "off",
+      },
+    },
+  ],
 };
