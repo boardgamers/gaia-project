@@ -7,7 +7,7 @@
       </div>
       <a
         v-if="strategyLink"
-        v-b-popover.html.hover.click="
+        v-b-popover.html.hover.click.left="
           `<iframe src=&quot;${strategyLink}&quot; width=&quot;640&quot; height=&quot;480&quot; allow=&quot;autoplay&quot;></iframe>`
         "
         title="Strategy Deck"
@@ -402,6 +402,10 @@ export default class PlayerInfo extends Vue {
 </script>
 
 <style lang="scss">
+.popover {
+  max-width: 674px !important;
+}
+
 .player-avatar {
   width: 2.25rem;
   height: 2.25rem;
