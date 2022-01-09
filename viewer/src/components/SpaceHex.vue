@@ -331,7 +331,7 @@ export default class SpaceHex extends Vue {
   private leechHighlightClass(mode: MapMode) {
     const hex = this.hex;
     const p = mode.player;
-    const maxLeech = max(leechPlanets(this.map, p, hex).map(h => this.player(p).buildingValue(h)));
+    const maxLeech = max(leechPlanets(this.map, p, hex).map(lp => this.player(p).buildingValue(lp.hex, {building:lp.building})));
     if (maxLeech) {
       const otherPlayers = upgradableBuildingsOfOtherPlayers(this.engine, hex, p);
       if (otherPlayers) {
