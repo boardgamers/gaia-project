@@ -7,7 +7,7 @@ import {
   TechTile,
   TechTilePos,
 } from "@gaia-project/engine";
-import { researchNames } from "../../data/research";
+import { researchColorVar, researchNames } from "../../data/research";
 import { advancedTechTileData, baseTechTileData } from "../../data/tech-tiles";
 import { ChartSource, initialResearch } from "./charts";
 import { commandCounterArg0EqualsSource, ExtractLog, SimpleSourceFactory } from "./simple-charts";
@@ -64,7 +64,7 @@ export const researchSourceFactory = (expansion: Expansion): SimpleSourceFactory
     return {
       type: field as ResearchField,
       label: researchNames[field],
-      color: `--rt-${field}`,
+      color: researchColorVar(field),
       weight: 1,
     };
   }),

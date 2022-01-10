@@ -1,5 +1,6 @@
 import Engine, { Event, Expansion, Player, researchEvents, ResearchField, Resource } from "@gaia-project/engine";
 import { GAIA_FORMER_COST } from "@gaia-project/engine/src/faction-boards/types";
+import { CellStyle, staticCellStyle } from "../graphics/colors";
 import { eventDescForCounters } from "./event";
 
 export const researchNames = {
@@ -123,4 +124,11 @@ export function researchLevelDesc(engine: Engine, field: ResearchField, level: n
     effects.push("This level has no effect");
   }
   return effects.map((e) => e + ".");
+}
+
+export function researchColorVar(field: ResearchField): string {
+  return `--rt-${field}`;
+}
+export function researchColor(field: ResearchField): CellStyle {
+  return staticCellStyle(researchColorVar(field));
 }

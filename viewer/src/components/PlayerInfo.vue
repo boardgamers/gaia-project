@@ -465,11 +465,7 @@ export default class PlayerInfo extends Vue {
   text-align: center;
   stroke-width: 0.07;
 
-  &.current-round,
-  &.int,
-  &.terra,
-  &.nav,
-  &.gaia {
+  &.current-round {
     fill: white;
   }
 }

@@ -30,7 +30,7 @@ import { allBuildings, buildingData, buildingName, buildingShortcut } from "../d
 import { buildingDesc, factionName } from "../data/factions";
 import { federationData } from "../data/federations";
 import { planetNames, remainingPlanets } from "../data/planets";
-import { researchLevelDesc, researchNames } from "../data/research";
+import { researchColorVar, researchLevelDesc, researchNames } from "../data/research";
 import { resourceData, showIncome, translateAbbreviatedResources, translateResources } from "../data/resources";
 import { roundScoringData } from "../data/round-scorings";
 import { leechNetwork, sectors } from "../data/stats";
@@ -464,7 +464,7 @@ function research(engine: Engine): PlayerTable {
             return desc ? `Level ${level}: ${desc.join(" ")}` : "";
           })
           .join(", ")})`,
-        color: `--rt-${f}`,
+        color: researchColorVar(f),
         cell: (p) => p.data.research[f],
         additionalHeader: {
           cells: [engine.tiles.techs["adv-" + f], engine.tiles.techs[f]]
