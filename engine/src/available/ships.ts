@@ -144,13 +144,11 @@ function totalTradeReward(h: GaiaHex, player: Player, engine: Engine) {
       if (building === Building.Mine) {
         const check = engine
           .player(player)
-          .canBuild(engine.map, h, h.data.planet, Building.CustomsPost, engine.isLastRound, engine.replay);
+          .canBuild(engine.map, h, h.data.planet, Building.CustomsPost, engine.isLastRound, engine.replay, {
+            addedCost: Reward.negative(tradeUnits(engine, player, building)),
+          });
         if (check) {
-          const b = newAvailableBuilding(Building.CustomsPost, h, check, false);
-          b.cost = Reward.merge(
-            Reward.parse(b.cost).concat(Reward.negative(tradeUnits(engine, player, building)))
-          ).toString();
-          return [b];
+          return [newAvailableBuilding(Building.CustomsPost, h, check, false)];
         }
       } else {
         return [
