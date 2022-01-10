@@ -253,7 +253,7 @@ export const victoryPointSources = (
         types: [Command.ChooseIncome],
         label: "Colonies",
         description: "Income from colonies",
-        color: "--rt-dip",
+        color: "--rt-nav",
         roundValues: incomeProjection([Command.ChooseIncome]),
       },
       {

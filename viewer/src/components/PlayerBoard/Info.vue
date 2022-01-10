@@ -121,9 +121,10 @@
         <polygon
           points="-7.5,3 -3,7.5 3,7.5 7.5,3 7.5,-3 3,-7.5 -3,-7.5 -7.5,-3"
           :transform="`scale(${isFrontiers ? 0.085 : 0.1})`"
-          :class="['board-info', 'research-tile', researchType(i - 1), researchClass(i - 1)]"
+          :class="['board-info', 'research-tile', researchClass(i - 1)]"
+          :style="`fill: ${researchStyle(i - 1).backgroundColor}`"
         />
-        <text :class="['board-text', researchType(i - 1)]" transform="scale(0.8)" x="-.35" y="-.15"
+        <text class="board-text" transform="scale(0.8)" x="-.35" y="-.15" :style="`fill: ${researchStyle(i - 1).color}`"
           >{{ research(i - 1) }}
         </text>
       </g>
@@ -150,6 +151,8 @@ import { FastConversionEvent, MapMode, MapModeType } from "../../data/actions";
 import { factionName } from "../../data/factions";
 import { showIncome } from "../../data/resources";
 import { leechNetwork, sectors } from "../../data/stats";
+import { CellStyle } from "../../graphics/colors";
+import { researchColor } from "../../data/research";
 
 @Component({
   components: {
@@ -236,6 +239,10 @@ export default class PlayerBoardInfo extends Vue {
 
   research(index: number): number {
     return this.data.research[this.researchType(index)];
+  }
+
+  researchStyle(index: number): CellStyle {
+    return researchColor(this.researchType(index));
   }
 
   get sectors(): number {
