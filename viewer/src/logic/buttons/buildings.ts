@@ -86,6 +86,7 @@ function buildingButton(
       shortcuts: [shortcut],
       command,
       hexes,
+      smartAutoClick: !isShip(building),
     }),
     () => textButton({ buttons: confirm }),
     building

@@ -74,22 +74,20 @@ function possibleShipActionsOfType(
   const locations: AvailableHex[] = map
     .withinDistance(map.getS(shipLocation), SHIP_ACTION_RANGE)
     .flatMap((h) => locationFactory(h));
+  const actions: AvailableShipAction[] = [];
   if (locations.length > 0) {
-    const actions = [
-      {
-        type,
-        locations,
-      } as AvailableShipAction,
-    ];
-    if (allowDecline) {
-      actions.push({
-        type: ShipAction.Nothing,
-        locations: [],
-      });
-    }
-    return actions;
+    actions.push({
+      type,
+      locations,
+    } as AvailableShipAction);
   }
-  return [];
+  if (allowDecline) {
+    actions.push({
+      type: ShipAction.Nothing,
+      locations: [],
+    });
+  }
+  return actions;
 }
 
 function tradeUnits(engine: Engine, player: Player, building: Building): Reward[] {
