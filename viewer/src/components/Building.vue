@@ -18,6 +18,7 @@
       <circle v-else-if="lab" r="30" />
       <circle v-else-if="academy" r="50" />
       <polygon v-else-if="tradingStation" points="-20,-20 0,-38 20,-20 20,20 -20,20" transform="translate(0, 0.08)" />
+      <polygon v-else-if="colony" points="-35,30 0,-40 35,30" transform="translate(0, 0.08)" />
       <circle v-else-if="spaceStation" r="20" />
     </g>
     <use
@@ -108,6 +109,10 @@ export default class Building extends Vue {
 
   get gaiaFormer() {
     return this.building === BuildingEnum.GaiaFormer;
+  }
+
+  get colony() {
+    return this.building === BuildingEnum.Colony;
   }
 
   get spaceStation() {
