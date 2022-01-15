@@ -41,7 +41,7 @@ export default class TableCell extends Vue {
   padding-right: 2px;
   display: flex;
   justify-content: center;
-  align-items: end;
+  align-items: flex-end;
   cursor: pointer;
 
   &.first {

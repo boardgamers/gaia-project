@@ -14,6 +14,8 @@
             v-for="j in rowSpan(event)"
             :key="`${i}-${j}`"
             :style="`background-color: ${event.color}; color: ${event.textColor}`"
+            :role="event.moveIndex ? 'button' : ''"
+            @click="event.moveIndex ? replayTo(event.moveIndex) : null"
           >
             <td
               v-if="j === 1 && !['setupInit', 'moves-skipped', 'roundStart'].includes(event.phase)"
@@ -86,6 +88,10 @@ export default class AdvancedLog extends Vue {
 
   toggleScope() {
     this.scope = this.scope == "all" ? "recent" : "all";
+  }
+
+  replayTo(moveIndex: number) {
+    this.$store.dispatch("replayTo", moveIndex + 1);
   }
 
   get gameData(): Engine {
