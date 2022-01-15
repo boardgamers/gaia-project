@@ -1,11 +1,11 @@
 import { Condition, Event, Expansion, Operator, Resource, Reward } from "@gaia-project/engine";
 import { translateResources } from "./resources";
 
-const conditionsCount = {
+const conditionsCount: { [key in Condition]?: string } = {
   [Condition.Mine]: "mine",
   [Condition.TradingStation]: "trading station",
   [Condition.ResearchLab]: "research lab",
-  [Condition.PlanetaryInstituteOrAcademy]: "planetary institute or academy",
+  [Condition.BigBuilding]: "planetary institute or academy",
   [Condition.Federation]: "federation",
   [Condition.Gaia]: "gaia planet colonized",
   [Condition.PlanetType]: "type of planet colonized",
@@ -17,11 +17,11 @@ const conditionsCount = {
   [Condition.AdvanceResearch]: "level reached in any research track",
 };
 
-const conditionsTrigger = {
+const conditionsTrigger: { [key in Condition]?: string } = {
   [Condition.Mine]: "building a mine",
   [Condition.TradingStation]: "building a trading station",
   [Condition.ResearchLab]: "building a research lab",
-  [Condition.PlanetaryInstituteOrAcademy]: "building a planetary institute or academy",
+  [Condition.BigBuilding]: "building a planetary institute or academy",
   [Condition.Federation]: "forming a federation",
   [Condition.MineOnGaia]: "building a mine on a gaia planet",
   [Condition.AdvanceResearch]: "advancing a level in research",
@@ -69,11 +69,17 @@ export function eventDesc(event: Event, expansion: Expansion, long = false): str
     op == Operator.FourPowerBuildings && expansion == Expansion.Frontiers
       ? "Planetary institutes, academies, and colonies have a power value of 4, when forming federations and charging power."
       : operators[op];
+  const colony = event.condition === Condition.BigBuilding && expansion == Expansion.Frontiers;
+  const cond = colony
+      ? "planetary institute, academy, or colony"
+      : conditionsCount[event.condition as keyof typeof conditionsCount];
+  const trigger = colony
+      ? "building a planetary institute, academy, or colony"
+      : conditionsTrigger[event.condition as keyof typeof conditionsTrigger];
   const conditionString =
     op === Operator.Trigger
-      ? conditionsTrigger[event.condition as keyof typeof conditionsTrigger] + ","
-      : conditionsCount[event.condition as keyof typeof conditionsCount] &&
-        "for each " + conditionsCount[event.condition as keyof typeof conditionsCount] + ",";
+      ? trigger + ","
+      : cond && "for each " + cond + ",";
   const rewardString = event.rewards.length === 0 ? "" : rewardDesc(event.rewards, long);
 
   return [operatorString, conditionString, rewardString].filter((x) => !!x).join(" ");

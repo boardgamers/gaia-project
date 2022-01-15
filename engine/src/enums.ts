@@ -120,7 +120,7 @@ export enum Condition {
   Mine = "m",
   TradingStation = "ts",
   ResearchLab = "lab",
-  PlanetaryInstituteOrAcademy = "PA",
+  BigBuilding = "PA",
   Federation = "fed",
 
   // count only
@@ -150,9 +150,9 @@ export namespace Condition {
     switch (condition) {
       case Condition.MineOnGaia:
         return building === Building.Mine && planet === Planet.Gaia;
-      case Condition.PlanetaryInstituteOrAcademy:
+      case Condition.BigBuilding:
         return (
-          building === Building.PlanetaryInstitute || building === Building.Academy1 || building === Building.Academy2
+          building === Building.PlanetaryInstitute || building === Building.Academy1 || building === Building.Academy2 || building === Building.Colony
         );
     }
     return false;

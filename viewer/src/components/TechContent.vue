@@ -170,7 +170,7 @@ export default class TechContent extends Vue {
         [
           ConditionEnum.None,
           ConditionEnum.Federation,
-          ConditionEnum.PlanetaryInstituteOrAcademy,
+          ConditionEnum.BigBuilding,
           ConditionEnum.AdvanceResearch,
           ConditionEnum.MineOnGaia,
           ConditionEnum.PlanetType,
