@@ -150,7 +150,7 @@ function makeEntry(
     changes: makeChanges(data, changes),
     color: color,
     textColor: textColor,
-    moveIndex,
+    ...(moveIndex != null && { moveIndex }),
   };
   //to avoid confusing data in unit tests
   if (newPhase != undefined) {
