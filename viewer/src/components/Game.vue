@@ -82,7 +82,8 @@ import Engine, {
   Command,
   EngineOptions,
   Phase,
-  Player, ResearchField,
+  Player,
+  ResearchField,
 } from "@gaia-project/engine";
 import AdvancedLog from "./AdvancedLog.vue";
 import BoardAction from "./BoardAction.vue";
@@ -104,63 +105,6 @@ import Table from "./Table.vue";
 import { orderedPlayers } from "../data/player";
 
 @Component<Game>({
-  created(this: Game) {
-    const unsub = this.$store.subscribeAction(({ type, payload }) => {
-      if (type === "externalData") {
-        this.handleData(Engine.fromData(payload));
-        return;
-      }
-      if (type === "replayStart") {
-        this.$store.dispatch("replayInfo", {
-          start: 1,
-          end: this.engine.moveHistory.length,
-          current: this.engine.moveHistory.length,
-        });
-
-        this.replayData = {
-          current: this.engine.moveHistory.length,
-          backup: JSON.parse(JSON.stringify(this.engine)),
-        };
-        return;
-      }
-      if (type === "replayEnd") {
-        const restore = payload || this.replayData?.backup;
-        this.replayData = null;
-        this.handleData(Engine.fromData(restore));
-        return;
-      }
-      if (type === "replayTo") {
-        const dest: number = payload;
-        const current = this.replayData.current;
-
-        this.replayData.current = dest;
-
-        const backup = this.replayData.backup;
-        this.$store.dispatch("replayInfo", {
-          start: 1,
-          end: backup.moveHistory.length,
-          current: dest,
-        });
-
-        if (dest === current) {
-          return;
-        }
-        if (dest < current) {
-          this.handleData(Engine.fromData(JSON.parse(JSON.stringify(backup))).replayedTo(dest, true));
-          return;
-        }
-
-        for (const move of backup.moveHistory.slice(current, dest)) {
-          this.engine.move(move);
-        }
-        this.handleData(Engine.fromData(JSON.parse(JSON.stringify(this.engine))));
-
-
-      }
-    });
-
-    this.$once("hook:beforeDestroy", unsub);
-  },
   components: {
     AdvancedLog,
     BoardAction,
@@ -178,7 +122,6 @@ import { orderedPlayers } from "../data/player";
   },
 })
 export default class Game extends Vue {
-
   public currentMove = "";
   public hideLog = false;
   clearCurrentMove = false;
@@ -197,6 +140,76 @@ export default class Game extends Vue {
       }
     });
     this.$on("hook:beforeDestroy", () => undoListener());
+  }
+
+  created(this: Game) {
+    const unsub = this.$store.subscribeAction(({ type, payload }) => {
+      if (type === "externalData") {
+        this.handleData(Engine.fromData(payload));
+        return;
+      }
+      if (type === "replayStart") {
+        this.startReplay();
+        return;
+      }
+      if (type === "replayEnd") {
+        const restore = payload || this.replayData?.backup;
+        this.replayData = null;
+        this.handleData(Engine.fromData(restore));
+        return;
+      }
+      if (type === "replayTo") {
+        this.replayTo(payload as number);
+      }
+    });
+
+    this.$once("hook:beforeDestroy", unsub);
+  }
+
+  startReplay() {
+    if (this.replayData) {
+      return;
+    }
+    this.$store.dispatch("replayInfo", {
+      start: 1,
+      end: this.engine.moveHistory.length,
+      current: this.engine.moveHistory.length,
+    });
+
+    this.replayData = {
+      current: this.engine.moveHistory.length,
+      backup: JSON.parse(JSON.stringify(this.engine)),
+    };
+    return;
+  }
+
+  replayTo(dest: number) {
+    if (!this.replayData) {
+      this.startReplay();
+    }
+    const current = this.replayData.current;
+
+    this.replayData.current = dest;
+
+    const backup = this.replayData.backup;
+    this.$store.dispatch("replayInfo", {
+      start: 1,
+      end: backup.moveHistory.length,
+      current: dest,
+    });
+
+    if (dest === current) {
+      return;
+    }
+    if (dest < current) {
+      this.handleData(Engine.fromData(JSON.parse(JSON.stringify(backup))).replayedTo(dest, true));
+      return;
+    }
+
+    for (const move of backup.moveHistory.slice(current, dest)) {
+      this.engine.move(move);
+    }
+    this.handleData(Engine.fromData(JSON.parse(JSON.stringify(this.engine))));
   }
 
   get engine(): Engine {
@@ -333,7 +346,7 @@ export default class Game extends Vue {
 
     const isAutoClickMove = () => {
       const a = click.pop();
-      return a && a.every(c => c);
+      return a && a.every((c) => c);
     };
 
     do {
