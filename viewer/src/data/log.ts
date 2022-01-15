@@ -67,6 +67,7 @@ export type HistoryPhase = Phase | "moves-skipped";
 
 export type HistoryEntry = {
   move?: string;
+  moveIndex?: number;
   phase?: HistoryPhase;
   changes: Change[];
   round: number;
@@ -105,7 +106,8 @@ function makeEntry(
   newPhase?: HistoryPhase,
   parsedMove?: ParsedMove,
   player?: PlayerEnum,
-  changes?: LogEntryChanges
+  changes?: LogEntryChanges,
+  moveIndex?: number
 ): HistoryEntry {
   let faction: Faction = null;
   let turnFaction: string = null;
@@ -148,6 +150,7 @@ function makeEntry(
     changes: makeChanges(data, changes),
     color: color,
     textColor: textColor,
+    moveIndex,
   };
   //to avoid confusing data in unit tests
   if (newPhase != undefined) {
@@ -212,7 +215,7 @@ export function makeHistory(
 
   const newEntry = (move: ParsedMove = null, entry: LogEntry = nextLogEntry): HistoryEntry => {
     const newPhase = entry.round ? Phase.RoundStart : entry.phase;
-    return makeEntry(data, state, newPhase, move, entry.player, entry.changes);
+    return makeEntry(data, state, newPhase, move, entry.player, entry.changes, entry.move);
   };
 
   nextLogEntry = bumpLog();
@@ -236,7 +239,7 @@ export function makeHistory(
       }
       nextLogEntry = bumpLog();
     }
-    const entry = newEntry(replaceMove(data, parsedMove), {} as LogEntry);
+    const entry = newEntry(replaceMove(data, parsedMove), { move: i } as LogEntry);
     if (nextLogEntry && nextLogEntry.move === i) {
       entry.changes = makeChanges(data, nextLogEntry.changes);
       nextLogEntry = bumpLog();
