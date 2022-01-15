@@ -19,8 +19,6 @@ import { AvailableSetupOption } from "../setup";
 
 export const ISOLATED_DISTANCE = 3;
 export const UPGRADE_RESEARCH_COST = "4k";
-export const MAX_SHIPS_PER_HEX = 3;
-export const SHIP_ACTION_RANGE = 1;
 
 export enum BrainstoneWarning {
   brainstoneChargesWasted = "brainstone-charges-wasted",

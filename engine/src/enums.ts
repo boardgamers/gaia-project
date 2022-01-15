@@ -83,14 +83,16 @@ export enum Resource {
   TokenArea3 = "t-a3",
   PISwap = "swap-PI",
   Turn = "turn",
-  TradeBonus = "trade-bonus",
-  TradeShip = "trade-ship",
+  TradeBonus = "tradeBonus",
+  TradeDiscount = "tradeDiscount",
+  TradeShip = "tradeShip",
 }
 
 export function isResourceUsed(resource: Resource, expansion: Expansion) {
   switch (resource) {
     case Resource.ShipRange:
     case Resource.TradeBonus:
+    case Resource.TradeDiscount:
     case Resource.TradeShip:
     case Resource.UpgradeDiplomacy:
       return expansion === Expansion.Frontiers;
@@ -140,6 +142,7 @@ export enum Condition {
   AdvanceResearch = "a",
   TerraformStep = "step",
   GaiaFormer = "gf",
+  Trade = "trade",
 }
 
 export namespace Condition {
@@ -152,7 +155,10 @@ export namespace Condition {
         return building === Building.Mine && planet === Planet.Gaia;
       case Condition.BigBuilding:
         return (
-          building === Building.PlanetaryInstitute || building === Building.Academy1 || building === Building.Academy2 || building === Building.Colony
+          building === Building.PlanetaryInstitute ||
+          building === Building.Academy1 ||
+          building === Building.Academy2 ||
+          building === Building.Colony
         );
     }
     return false;

@@ -111,12 +111,14 @@
 
         <Resource
           kind="d"
+          tooltip="Terraforming Cost"
           :count="1 + playerData.terraformCostDiscount"
           transform="translate(31.5,1) scale(0.09)"
           style="opacity: 0.7"
         />
         <Resource
           kind="r"
+          tooltip="Range"
           :count="playerData.range"
           :transform="`translate(35.5,${isFrontiers ? 0.3 : 1}) scale(0.1)`"
           style="opacity: 0.7"
@@ -124,15 +126,26 @@
         <Resource
           v-if="isFrontiers"
           kind="ship-range"
+          tooltip="Ship Range"
           :count="playerData.shipRange"
           transform="translate(35.5,1.5) scale(0.1)"
           style="opacity: 0.7"
         />
         <Resource
           v-if="isFrontiers"
-          kind="trade-bonus"
+          kind="tradeBonus"
+          tooltip="Trade Bonus"
           :count="playerData.tradeBonus"
-          transform="translate(37,3.2) scale(0.1)"
+          transform="translate(35.5,3.2) scale(0.1)"
+          style="opacity: 0.7"
+        />
+
+        <Resource
+          v-if="isFrontiers"
+          kind="tradeDiscount"
+          tooltip="Trading Cost in pw"
+          :count="playerData.tradeCost()"
+          transform="translate(37.3,3.2) scale(0.1)"
           style="opacity: 0.7"
         />
 

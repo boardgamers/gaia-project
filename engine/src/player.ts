@@ -706,9 +706,6 @@ export default class Player extends EventEmitter {
     if (events.some((event) => event.operator === Operator.FourPowerBuildings)) {
       this.federationCache = null;
     }
-    if (events.flatMap((e) => e.rewards).some((r) => r.type === Resource.TradeBonus)) {
-      this.data.tradeBonus--;
-    }
   }
 
   incomeSelection(additionalEvents?: Event[]): IncomeSelection {

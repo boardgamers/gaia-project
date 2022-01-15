@@ -1,5 +1,5 @@
 <template>
-  <g class="resource">
+  <g :class="{ resource: true, 'no-tooltip': !tooltip }" v-b-tooltip :title="tooltip">
     <template v-if="kind === 'q'">
       <Qic v-if="!flat" class="qic" :transform="`translate(-0.5,0)`" />
       <rect v-else class="qic" width="14" height="14" x="-7" y="-7" />
@@ -7,8 +7,18 @@
     <!-- <rect v-if="kind=='q'" class="qic" width="14" height="14" x="-7" y="-7" /> -->
     <rect v-else-if="kind === 'o'" class="ore" width="14" height="14" x="-7" y="-7" />
     <rect v-else-if="kind === 'c'" class="credit" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
-    <rect v-else-if="kind === 'trade-bonus'" class="trade-bonus" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
-    <rect v-else-if="kind === 'trade-ship'" class="trade-ship" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
+    <rect v-else-if="kind === 'tradeBonus'" class="trade-bonus" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
+    <rect
+      v-else-if="kind === 'tradeDiscount'"
+      class="trade-discount"
+      width="16"
+      height="16"
+      ry="8"
+      rx="8"
+      x="-8"
+      y="-8"
+    />
+    <rect v-else-if="kind === 'tradeShip'" class="trade-ship" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
     <rect v-else-if="kind === 'tg'" class="gaia" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
     <rect
       v-else-if="['pw', 'pay-pw', 't', 'bowl-t', 'burn-token', 'brainstone'].includes(kind)"
@@ -135,11 +145,12 @@
       y="0"
       v-if="
         (count != null &&
-          ['o', 'c', 'k', 'pw', 'pay-pw', 't', 'bowl-t', 'burn-token', 'tg', 'vp', 'q', 'gf', 'trade-ship'].includes(
+          ['o', 'c', 'k', 'pw', 'pay-pw', 't', 'bowl-t', 'burn-token', 'tg', 'vp', 'q', 'gf', 'tradeShip'].includes(
             kind
           )) ||
         count === '+' ||
-        kind === 'trade-bonus'
+        kind === 'tradeBonus' ||
+        kind === 'tradeDiscount'
       "
       :class="{ plus: count === '+' }"
       :text-decoration="kind === 'burn-token' ? 'line-through' : ''"
@@ -181,6 +192,9 @@ export default class Resource extends Vue {
   @Prop({ default: "gen" })
   faction: Faction;
 
+  @Prop()
+  tooltip: string;
+
   get flat() {
     return this.$store.state.preferences.flatBuildings;
   }
@@ -189,7 +203,9 @@ export default class Resource extends Vue {
 
 <style lang="scss">
 g.resource {
-  pointer-events: none;
+  &.no-tooltip {
+    pointer-events: none;
+  }
 
   rect,
   .knowledge {
@@ -220,6 +236,10 @@ g.resource {
 
   .trade-bonus {
     fill: var(--current-round);
+  }
+
+  .trade-discount {
+    fill: var(--oxide);
   }
 
   .trade-ship {

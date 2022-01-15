@@ -1,7 +1,7 @@
 import assert from "assert";
 import { AvailableBuilding, AvailableCommand, ShipAction, TradingLocation } from "../available/types";
 import Engine from "../engine";
-import { Building, Command, Player as PlayerEnum } from "../enums";
+import { Building, Command, Condition, Player as PlayerEnum } from "../enums";
 import Player from "../player";
 import Reward from "../reward";
 import { placeBuilding } from "./buildings";
@@ -64,4 +64,5 @@ function trade(engine: Engine, pl: Player, location: TradingLocation) {
     hex.data.tradeTokens = hex.tradeTokens.concat(pl.player);
     pl.gainRewards(Reward.parse(location.rewards), "trade");
   }
+  pl.receiveTriggerIncome(Condition.Trade);
 }

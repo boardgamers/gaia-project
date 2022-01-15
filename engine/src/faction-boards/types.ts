@@ -77,9 +77,9 @@ const defaultBoard: FactionBoardRaw = {
     [Building.Colony]: {
       cost: "~",
       income: [
-        ["+3c", "+3pw", "+3vp", "2vp"],
-        ["+3c", "+3pw", "+4vp", "2vp"],
-        ["+3c", "+3pw", "+5vp", "2vp"],
+        ["+2c", "+2pw", "+3vp", "2vp"],
+        ["+2c", "+2pw", "+4vp", "2vp"],
+        ["+2c", "+2pw", "+5vp", "2vp"],
       ],
     },
     [Building.CustomsPost]: {
@@ -88,7 +88,7 @@ const defaultBoard: FactionBoardRaw = {
     },
 
     [Building.ColonyShip]: {
-      cost: "4c,3o",
+      cost: "5c,5o",
       income: [[], [], []],
     },
     [Building.ConstructionShip]: {

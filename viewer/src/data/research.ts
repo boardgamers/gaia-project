@@ -40,6 +40,12 @@ const researchEffectCounters: ResearchEffectCounter[] = [
     currentValue: (p) => p.data.shipRange,
   },
   {
+    expansion: Expansion.Frontiers,
+    field: ResearchField.Economy,
+    from: Resource.TradeShip,
+    currentValue: (p) => p.data.tradeShips,
+  },
+  {
     field: ResearchField.GaiaProject,
     minLevel: 1,
     from: Resource.GaiaFormer,
@@ -51,6 +57,12 @@ const researchEffectCounters: ResearchEffectCounter[] = [
     field: ResearchField.Diplomacy,
     from: Resource.TradeBonus,
     currentValue: (p) => p.data.tradeBonus,
+  },
+  {
+    expansion: Expansion.Frontiers,
+    field: ResearchField.Diplomacy,
+    from: Resource.TradeDiscount,
+    currentValue: (p) => p.data.tradeCost(),
   },
 ];
 

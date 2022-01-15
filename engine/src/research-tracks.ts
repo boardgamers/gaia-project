@@ -10,19 +10,19 @@ const researchTracks: { [key in ResearchField]: string[][] } = {
   [ResearchField.Science]: [[], ["+k"], ["+2k"], ["+3k", "3pw"], ["+4k"], ["9k"]],
   [ResearchField.Diplomacy]: [
     [],
-    ["+pw", "trade-bonus"],
-    ["+2pw", "q"],
-    ["+3pw", "trade-bonus", "3pw"],
-    ["+4pw", "trade-bonus"],
-    ["+6pw", "trade-bonus"],
+    ["+pw", "tradeDiscount"],
+    ["+2pw", "tradeBonus"],
+    ["+3pw", "tradeDiscount", "3pw"],
+    ["+4pw", "tradeBonus"],
+    ["+6pw", "tradeBonus", "tradeDiscount"],
   ],
 };
 
 const frontiersEco: string[][] = [
-  [">trade-ship"],
-  ["+2c", ">trade-ship"],
+  ["tradeShip"],
+  ["+2c", "tradeShip"],
   ["+2c,1o,1pw"],
-  ["+3c,1o,1pw", "3pw", ">trade-ship"],
+  ["+3c,1o,1pw", "3pw", "tradeShip"],
   ["+4c,2o,2pw"],
   ["6c,3o,6pw"],
 ];

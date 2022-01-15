@@ -26,6 +26,7 @@ const conditionsTrigger: { [key in Condition]?: string } = {
   [Condition.MineOnGaia]: "building a mine on a gaia planet",
   [Condition.AdvanceResearch]: "advancing a level in research",
   [Condition.TerraformStep]: "terraforming a planet one step",
+  [Condition.Trade]: "trading (afterwards)",
 };
 
 const operators = {
@@ -71,15 +72,12 @@ export function eventDesc(event: Event, expansion: Expansion, long = false): str
       : operators[op];
   const colony = event.condition === Condition.BigBuilding && expansion == Expansion.Frontiers;
   const cond = colony
-      ? "planetary institute, academy, or colony"
-      : conditionsCount[event.condition as keyof typeof conditionsCount];
+    ? "planetary institute, academy, or colony"
+    : conditionsCount[event.condition as keyof typeof conditionsCount];
   const trigger = colony
-      ? "building a planetary institute, academy, or colony"
-      : conditionsTrigger[event.condition as keyof typeof conditionsTrigger];
-  const conditionString =
-    op === Operator.Trigger
-      ? trigger + ","
-      : cond && "for each " + cond + ",";
+    ? "building a planetary institute, academy, or colony"
+    : conditionsTrigger[event.condition as keyof typeof conditionsTrigger];
+  const conditionString = op === Operator.Trigger ? trigger + "," : cond && "for each " + cond + ",";
   const rewardString = event.rewards.length === 0 ? "" : rewardDesc(event.rewards, long);
 
   return [operatorString, conditionString, rewardString].filter((x) => !!x).join(" ");
@@ -98,6 +96,8 @@ export function eventDescForCounters(event: Event, expansions: Expansion, long: 
       return `To start a Gaia project, you must move ${reward.count} power tokens to your Gaia area`;
     case Resource.TradeBonus:
       return `You have ${reward.count} trade bonus`;
+    case Resource.TradeDiscount:
+      return `You have ${reward.count} trade discount`;
   }
 
   return eventDesc(event, expansions, long);

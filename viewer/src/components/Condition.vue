@@ -24,6 +24,7 @@
       />
     </g>
     <Resource v-else-if="condition === 'step'" kind="step" />
+    <Resource v-else-if="condition === 'trade'" kind="tradeShip" />
     <g v-else-if="condition === 'mg'">
       <image v-if="!flat" xlink:href="../assets/conditions/planet-flat.svg" :height=120/198*30 width=30 x=-12 y=-13.5
       transform="translate(-2,0) scale(-1,-1)" />
