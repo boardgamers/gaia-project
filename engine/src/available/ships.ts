@@ -94,7 +94,7 @@ function possibleShipActionsOfType(
 }
 
 function tradeCost(engine: Engine, player: Player): Reward {
-  return new Reward(-engine.player(player).data.tradeCost(), Resource.ChargePower);
+  return new Reward(engine.player(player).data.tradeCost(), Resource.ChargePower);
 }
 
 function tradeUnits(engine: Engine, player: Player, building: Building): Reward[] {
@@ -160,16 +160,18 @@ function totalTradeReward(h: GaiaHex, player: Player, engine: Engine) {
     const building = h.data.building;
     const host = h.data.player;
     if (host !== player) {
+      const canTrade = engine.player(player).data.canPay([tradeCost(engine, player)]);
+      if (!canTrade) return [];
       if (building === Building.Mine) {
-        const check = engine
+        const canBuildAfterTrade = engine
           .player(player)
           .canBuild(engine.map, h, h.data.planet, Building.CustomsPost, engine.isLastRound, engine.replay, {
-            addedCost: Reward.negative(
-              Reward.merge(tradeUnits(engine, player, building)).concat(tradeCost(engine, player))
+            addedCost: Reward.negative(Reward.merge(tradeUnits(engine, player, building))).concat(
+              tradeCost(engine, player)
             ),
           });
-        if (check) {
-          return [newAvailableBuilding(Building.CustomsPost, h, check, false)];
+        if (canBuildAfterTrade) {
+          return [newAvailableBuilding(Building.CustomsPost, h, canBuildAfterTrade, false)];
         }
       } else {
         return [
@@ -177,7 +179,7 @@ function totalTradeReward(h: GaiaHex, player: Player, engine: Engine) {
             coordinates: h.toString(),
             rewards: Reward.merge(
               baseTradeReward(building, player, host, engine)
-                .concat(tradeCost(engine, player))
+                .concat(Reward.negative([tradeCost(engine, player)]))
                 .concat(tradeUnits(engine, player, building))
             ).toString(),
           } as TradingLocation,
