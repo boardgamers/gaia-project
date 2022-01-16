@@ -165,17 +165,17 @@ export default class TechContent extends Vue {
       this.event.operator === OperatorEnum.Trigger ||
       this.event.operator === OperatorEnum.Pass
     ) {
-      // console.log(this.event, this.event.condition);
       if (
         [
           ConditionEnum.None,
           ConditionEnum.Federation,
-          ConditionEnum.PlanetaryInstituteOrAcademy,
+          ConditionEnum.BigBuilding,
           ConditionEnum.AdvanceResearch,
           ConditionEnum.MineOnGaia,
           ConditionEnum.PlanetType,
           ConditionEnum.Sector,
           ConditionEnum.Gaia,
+          ConditionEnum.Trade,
           ...Object.values(BuildingEnum),
         ].includes(this.event.condition as any)
       ) {

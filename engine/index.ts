@@ -28,7 +28,6 @@ export {
   BrainstoneActionData,
   BrainstoneWarning,
   ChooseTechTile,
-  MAX_SHIPS_PER_HEX,
   ShipAction,
 } from "./src/available/types";
 export {

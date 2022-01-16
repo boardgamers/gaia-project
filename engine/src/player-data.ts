@@ -1,5 +1,6 @@
 import { EventEmitter } from "eventemitter3";
 import { cloneDeep, fromPairs } from "lodash";
+import { TRADE_COST } from "./available/ships";
 import { BrainstoneActionData, BrainstoneWarning } from "./available/types";
 import {
   AdvTechTile,
@@ -52,6 +53,9 @@ export type MoveTokens = Power & { brainstone: number };
 
 export type BrainstoneDest = PowerArea | "discard";
 export type MaxLeech = { value: number; victoryPoints: number; charge: number };
+export type ResearchProgress = {
+  [key in ResearchField]: number;
+};
 export default class PlayerData extends EventEmitter {
   victoryPoints = 10;
   bid = 0;
@@ -79,9 +83,7 @@ export default class PlayerData extends EventEmitter {
   ) as any;
 
   satellites = 0;
-  research: {
-    [key in ResearchField]: number;
-  } = {
+  research: ResearchProgress = {
     terra: 0,
     nav: 0,
     int: 0,
@@ -98,6 +100,7 @@ export default class PlayerData extends EventEmitter {
   gaiaformersInGaia = 0;
   terraformCostDiscount = 0;
   tradeBonus = 0;
+  tradeDiscount = 0;
   tradeShips = 0;
 
   tiles: {
@@ -156,6 +159,7 @@ export default class PlayerData extends EventEmitter {
       ships: this.ships,
       shipRange: this.shipRange,
       tradeBonus: this.tradeBonus,
+      tradeDiscount: this.tradeDiscount,
       tradeShips: this.tradeShips,
     };
 
@@ -286,6 +290,9 @@ export default class PlayerData extends EventEmitter {
         break;
       case Resource.TradeBonus:
         this.tradeBonus += count;
+        break;
+      case Resource.TradeDiscount:
+        this.tradeDiscount += count;
         break;
       case Resource.TradeShip:
         this.tradeShips += count;
@@ -595,6 +602,10 @@ export default class PlayerData extends EventEmitter {
 
   gaiaFormingDiscount() {
     return this.gaiaformers > 1 ? this.gaiaformers : 0;
+  }
+
+  tradeCost(): number {
+    return TRADE_COST - this.tradeDiscount;
   }
 
   /**

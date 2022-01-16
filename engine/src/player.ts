@@ -706,9 +706,6 @@ export default class Player extends EventEmitter {
     if (events.some((event) => event.operator === Operator.FourPowerBuildings)) {
       this.federationCache = null;
     }
-    if (events.flatMap((e) => e.rewards).some((r) => r.type === Resource.TradeBonus)) {
-      this.data.tradeBonus--;
-    }
   }
 
   incomeSelection(additionalEvents?: Event[]): IncomeSelection {
@@ -928,11 +925,12 @@ export default class Player extends EventEmitter {
         return this.data.buildings[Building.TradingStation];
       case Condition.ResearchLab:
         return this.data.buildings[Building.ResearchLab];
-      case Condition.PlanetaryInstituteOrAcademy:
+      case Condition.BigBuilding:
         return (
           this.data.buildings[Building.Academy1] +
           this.data.buildings[Building.Academy2] +
-          this.data.buildings[Building.PlanetaryInstitute]
+          this.data.buildings[Building.PlanetaryInstitute] +
+          this.data.buildings[Building.Colony]
         );
       case Condition.Federation:
         return this.data.tiles.federations.length;

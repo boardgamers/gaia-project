@@ -1,8 +1,9 @@
 import Engine from "../engine";
-import { Building, Command, Planet, Player, Resource, Ship } from "../enums";
+import { Building, Command, Expansion, Planet, Player, ResearchField, Resource, Ship } from "../enums";
 import { GaiaHex } from "../gaia-hex";
 import SpaceMap from "../map";
 import PlayerObject from "../player";
+import { ResearchProgress } from "../player-data";
 import Reward from "../reward";
 import { newAvailableBuilding } from "./buildings";
 import {
@@ -10,12 +11,14 @@ import {
   AvailableCommand,
   AvailableHex,
   AvailableShipAction,
-  MAX_SHIPS_PER_HEX,
   ShipAction,
   ShipActionLocation,
-  SHIP_ACTION_RANGE,
   TradingLocation,
 } from "./types";
+
+const MAX_SHIPS_PER_HEX = 3;
+const SHIP_ACTION_RANGE = 1;
+export const TRADE_COST = 3;
 
 export function shipsInHex(location: string, data): Ship[] {
   return data.players.flatMap((p) => p.data.ships).filter((s) => s.location === location);
@@ -90,6 +93,10 @@ function possibleShipActionsOfType(
   return actions;
 }
 
+function tradeCost(engine: Engine, player: Player): Reward {
+  return new Reward(-engine.player(player).data.tradeCost(), Resource.ChargePower);
+}
+
 function tradeUnits(engine: Engine, player: Player, building: Building): Reward[] {
   const p = engine.player(player);
 
@@ -100,20 +107,31 @@ function tradeUnits(engine: Engine, player: Player, building: Building): Reward[
   return rewards;
 }
 
-function baseTradeReward(building: Building): Reward {
+function isFurther(guest: ResearchProgress, host: ResearchProgress): number {
+  return ResearchField.values(Expansion.All).filter((f) => host[f] > guest[f]).length;
+}
+
+function baseTradeReward(building: Building, guest: Player, host: Player, engine: Engine): Reward[] {
   switch (building) {
+    //Own Mine
     case Building.Mine:
-      return new Reward(1, Resource.Ore);
+      return Reward.parse("1o");
     case Building.TradingStation:
-      return new Reward(5, Resource.Credit);
+      return Reward.parse("5c");
     case Building.ResearchLab:
+      return Reward.parse("2k");
     case Building.Academy1:
     case Building.Academy2:
-      return new Reward(2, Resource.Knowledge);
+      return [
+        new Reward(
+          isFurther(engine.player(guest).data.research, engine.player(host).data.research),
+          Resource.Knowledge
+        ),
+      ];
     case Building.PlanetaryInstitute:
-      return new Reward(5, Resource.ChargePower);
+      return Reward.parse("1t,2pw");
     case Building.Colony:
-      return new Reward(3, Resource.VictoryPoint);
+      return Reward.parse("3vp");
   }
   throw new Error("unknown trade bonus: " + building);
 }
@@ -121,15 +139,16 @@ function baseTradeReward(building: Building): Reward {
 function tradeUnit(building: Building): Reward[] {
   switch (building) {
     case Building.Mine:
+      //foreign mine
       return Reward.parse("1c,1o");
     case Building.TradingStation:
-      return Reward.parse("2c,1pw");
+      return Reward.parse("3c,1pw");
     case Building.ResearchLab:
     case Building.Academy1:
     case Building.Academy2:
       return Reward.parse("1k");
     case Building.PlanetaryInstitute:
-      return Reward.parse("3pw");
+      return Reward.parse("4pw");
     case Building.Colony:
       return Reward.parse("2vp");
   }
@@ -145,7 +164,9 @@ function totalTradeReward(h: GaiaHex, player: Player, engine: Engine) {
         const check = engine
           .player(player)
           .canBuild(engine.map, h, h.data.planet, Building.CustomsPost, engine.isLastRound, engine.replay, {
-            addedCost: Reward.negative(tradeUnits(engine, player, building)),
+            addedCost: Reward.negative(
+              Reward.merge(tradeUnits(engine, player, building)).concat(tradeCost(engine, player))
+            ),
           });
         if (check) {
           return [newAvailableBuilding(Building.CustomsPost, h, check, false)];
@@ -154,7 +175,11 @@ function totalTradeReward(h: GaiaHex, player: Player, engine: Engine) {
         return [
           {
             coordinates: h.toString(),
-            rewards: Reward.merge([baseTradeReward(building)].concat(tradeUnits(engine, player, building))).toString(),
+            rewards: Reward.merge(
+              baseTradeReward(building, player, host, engine)
+                .concat(tradeCost(engine, player))
+                .concat(tradeUnits(engine, player, building))
+            ).toString(),
           } as TradingLocation,
         ];
       }
@@ -162,7 +187,7 @@ function totalTradeReward(h: GaiaHex, player: Player, engine: Engine) {
       return [
         {
           coordinates: h.toString(),
-          rewards: baseTradeReward(building).toString(),
+          rewards: baseTradeReward(building, player, host, engine).toString(),
         } as TradingLocation,
       ];
     }
