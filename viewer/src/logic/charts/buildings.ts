@@ -1,5 +1,6 @@
-import { Building, Command, Expansion, stdBuildingValue } from "@gaia-project/engine";
+import Engine, { Building, Command, Expansion, GaiaHex, PlayerData, stdBuildingValue } from "@gaia-project/engine";
 import { allBuildings, buildingData } from "../../data/building";
+import { CommandObject } from "../recent";
 import { ChartSource } from "./charts";
 import { ExtractLog, SimpleSourceFactory } from "./simple-charts";
 
@@ -25,3 +26,51 @@ export const buildingsSourceFactory = (expansion: Expansion): SimpleSourceFactor
     })),
   };
 };
+
+export class BuildingCounter {
+  initialPlanetaryInstituteLocation?: GaiaHex;
+  planetaryInstituteLocation?: GaiaHex;
+  buildings: Map<GaiaHex, Building> = new Map<GaiaHex, Building>();
+  playerData: PlayerData;
+
+  constructor(playerData: PlayerData = new PlayerData()) {
+    this.playerData = playerData;
+  }
+
+  get(hex: GaiaHex): Building | null {
+    return this.buildings.get(hex);
+  }
+
+  playerCommand(cmd: CommandObject, data: Engine) {
+    switch (cmd.command) {
+      case Command.Build:
+        {
+          const building = cmd.args[0] as Building;
+          const hex = data.map.getS(cmd.args[1]);
+
+          this.playerData.buildings[building]++;
+          const upgradedBuilding = this.buildings.get(hex);
+
+          if (upgradedBuilding != null) {
+            this.playerData.buildings[upgradedBuilding]--;
+          }
+
+          this.buildings.set(hex, building);
+
+          if (building == Building.PlanetaryInstitute) {
+            this.initialPlanetaryInstituteLocation = hex;
+            this.planetaryInstituteLocation = hex;
+          }
+        }
+        break;
+      case Command.PISwap:
+        {
+          const hex = data.map.getS(cmd.args[0]);
+          this.buildings.set(this.planetaryInstituteLocation, Building.Mine);
+          this.buildings.set(hex, Building.PlanetaryInstitute);
+          this.planetaryInstituteLocation = hex;
+        }
+        break;
+    }
+  }
+}

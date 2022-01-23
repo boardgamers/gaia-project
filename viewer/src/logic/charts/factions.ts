@@ -34,7 +34,7 @@ function spentResources(resource: Resource) {
 function ambasFederationBonus(a: GetFederationBonusArg) {
   const piMoved =
     a.counter.hasPlanetaryInstitute &&
-    a.counter.planetaryInstituteLocation != a.counter.initialPlanetaryInstituteLocation;
+    a.counter.buildings.planetaryInstituteLocation != a.counter.buildings.initialPlanetaryInstituteLocation;
   return piMoved
     ? a.player.buildingValue(null, {
         building: Building.PlanetaryInstitute,

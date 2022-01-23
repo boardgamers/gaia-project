@@ -19,23 +19,35 @@ export type SimpleSourceFactory<Source extends ChartSource<any>> = {
   extractLog?: ExtractLog<Source>;
 };
 
+export function processLogEntry(
+  log: LogEntry,
+  commands: CommandObject[] | null,
+  processor: (cmd: CommandObject | null, log: LogEntry, allCommands: CommandObject[], cmdIndex: number) => number
+): number {
+  if (commands != null) {
+    let res = 0;
+
+    commands.forEach((cmd, index) => {
+      res += processor(cmd, log, commands, index);
+    });
+    return res;
+  } else {
+    return processor(null, log, [], 0);
+  }
+}
+
 export function logEntryProcessor(
   processor: (cmd: CommandObject | null, log: LogEntry, allCommands: CommandObject[], cmdIndex: number) => number
 ): (moveHistory: string[], log: LogEntry) => number {
   return (moveHistory: string[], log: LogEntry): number => {
     if (log.move != null) {
-      let res = 0;
-
       const move = moveHistory[log.move]; // current move isn't added yet
       if (move != null) {
-        const commands = parseCommands(move);
-        commands.forEach((cmd, index) => {
-          res += processor(cmd, log, commands, index);
-        });
+        return processLogEntry(log, parseCommands(move), processor);
       }
-      return res;
+      return 0;
     } else {
-      return processor(null, log, [], 0);
+      return processLogEntry(log, null, processor);
     }
   };
 }

@@ -10,7 +10,6 @@ import Engine, {
   Faction,
   finalRankings,
   gainFinalScoringVictoryPoints,
-  LogEntry,
   Operator,
   Player,
   PlayerEnum,
@@ -20,20 +19,12 @@ import Engine, {
   RoundScoring,
   TechPos,
 } from "@gaia-project/engine";
-import { sum } from "lodash";
 import { boosterData } from "../../data/boosters";
 import { advancedTechTileData } from "../../data/tech-tiles";
 import { ColorVar } from "../../graphics/colors";
 import { colorCodes } from "../color-codes";
-import {
-  DatasetFactory,
-  extractChanges,
-  finalScoringRound,
-  getDataPoints,
-  IncludeRounds,
-  initialResearch,
-} from "./charts";
-import { logEntryProcessor } from "./simple-charts";
+import { DatasetFactory, extractChanges, finalScoringRound, getDataPoints, IncludeRounds } from "./charts";
+import { countResearch } from "./research";
 
 function simulateIncome(pl: Player, consume: (p: Player) => void, engineVersion: string): number {
   const json = JSON.parse(JSON.stringify(pl));
@@ -286,26 +277,6 @@ export const boosterSource = (data: Engine, booster: Booster): VictoryPointSourc
   color: boosterData[booster].color,
   roundValues: passIncomeProjection([booster], false),
 });
-
-export function countResearch(player: Player): (moveHistory: string[], log: LogEntry) => number {
-  const research = initialResearch(player);
-
-  return logEntryProcessor((cmd) => {
-    if (cmd) {
-      if (cmd.faction == player.faction && cmd.command == Command.UpgradeResearch) {
-        const field = cmd.args[0] as ResearchField;
-        const newLevel = (research.get(field) ?? 0) + 1;
-        research.set(field, newLevel);
-        if (newLevel >= 3) {
-          return 4;
-        }
-      } else if (cmd.command == Command.ChooseFaction && cmd.args[0] == player.faction) {
-        return sum(Array.from(research.values()).map((level) => Math.max(0, (level - 2) * 4)));
-      }
-    }
-    return 0;
-  });
-}
 
 export function groupSources(sources: VictoryPointSource[]): VictoryPointSource[] {
   const res: VictoryPointSource[] = [];

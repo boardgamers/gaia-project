@@ -33,6 +33,7 @@ type Preference =
   | "flatBuildings"
   | "highlightRecentActions"
   | "logPlacement"
+  | "extendedLog"
   | "warnings"
   | "autoClick"
   | "statistics"
@@ -106,6 +107,7 @@ const gaiaViewer = {
       highlightRecentActions: !!process.env.VUE_APP_highlightRecentActions,
       autoClick: process.env.VUE_APP_autoClick ?? "smart",
       logPlacement: process.env.VUE_APP_logPlacement ?? "bottom",
+      extendedLog: !!process.env.VUE_APP_extendedLog,
       warnings: process.env.VUE_APP_warnings ?? "modalDialog",
       statistics: process.env.VUE_APP_statistics ?? "auto",
       uiMode: process.env.VUE_APP_uiMode ?? "graphical",

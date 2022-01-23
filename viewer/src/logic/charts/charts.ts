@@ -5,7 +5,6 @@ import Engine, {
   LogEntry,
   Player,
   PlayerEnum,
-  ResearchField,
   Resource,
   Round,
 } from "@gaia-project/engine";
@@ -207,15 +206,4 @@ export function weightedSum(data: Engine, player: PlayerEnum, factories: Dataset
 
 export function chartPlayerBoard(player: Player): FactionBoard {
   return player.board ?? factionBoard(player.faction, player.variant?.board);
-}
-
-export function initialResearch(player: Player): Map<ResearchField, number> {
-  const research = new Map<ResearchField, number>();
-  chartPlayerBoard(player).income[0].rewards.forEach((r) => {
-    if (r.type.startsWith("up-")) {
-      const key = r.type.slice(3) as ResearchField;
-      research.set(key, (research.get(key) ?? 0) + 1);
-    }
-  });
-  return research;
 }

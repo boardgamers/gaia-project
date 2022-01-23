@@ -14,6 +14,7 @@ import SpaceMap from "@gaia-project/engine/src/map";
 import { sum } from "lodash";
 import { federationData } from "../../data/federations";
 import { CommandObject } from "../recent";
+import { BuildingCounter } from "./buildings";
 import { ChartSource } from "./charts";
 import { ExtractLog, SimpleSourceFactory } from "./simple-charts";
 
@@ -23,32 +24,24 @@ function isSpecialOperator(data: Engine, cmd: CommandObject) {
 
 export class BuildingPowerValueCounter {
   hasPlanetaryInstitute = false;
-  initialPlanetaryInstituteLocation?: GaiaHex;
-  planetaryInstituteLocation?: GaiaHex;
   hasSpecialOperator = false;
-  buildings: Map<GaiaHex, Building> = new Map<GaiaHex, Building>();
+  readonly buildings;
   private readonly federation: boolean;
 
   constructor(federation: boolean) {
+    this.buildings = new BuildingCounter();
     this.federation = federation;
   }
 
   playerCommand(cmd: CommandObject, data: Engine) {
+    this.buildings.playerCommand(cmd, data);
+
     if (cmd.command == Command.Build) {
       const building = cmd.args[0] as Building;
       const hex = data.map.getS(cmd.args[1]);
-      this.buildings.set(hex, building);
       if (building == Building.PlanetaryInstitute) {
         this.hasPlanetaryInstitute = true;
-        this.initialPlanetaryInstituteLocation = hex;
-        this.planetaryInstituteLocation = hex;
       }
-    }
-    if (cmd.command == Command.PISwap) {
-      const hex = data.map.getS(cmd.args[0]);
-      this.buildings.set(this.planetaryInstituteLocation, Building.Mine);
-      this.buildings.set(hex, Building.PlanetaryInstitute);
-      this.planetaryInstituteLocation = hex;
     }
     if (cmd.command == Command.ChooseTechTile && isSpecialOperator(data, cmd)) {
       this.hasSpecialOperator = true;

@@ -6,14 +6,26 @@ import Engine, {
   LogEntry,
   LogEntryChanges,
   Phase,
+  Player,
   PlayerEnum,
   Resource,
   TechTilePos,
 } from "@gaia-project/engine";
 import { factionLogColors, factionLogTextColors, lightFactionLogColors } from "../graphics/utils";
+import { BuildingCounter } from "../logic/charts/buildings";
+import { ResearchCounter } from "../logic/charts/research";
+import { newResourceSimulator } from "../logic/charts/resource-counter";
+import { ExtractLogArg, processLogEntry } from "../logic/charts/simple-charts";
+import { logPlayerTables, playerTableRow } from "../logic/info-table";
 import { CommandObject, MovesSlice, ownTurn, parsedMove, ParsedMove } from "../logic/recent";
 import { boosterData } from "./boosters";
 import { advancedTechTileData, baseTechTileData } from "./tech-tiles";
+
+type LogCounter = {
+  consumeChanges: (a: ExtractLogArg<any>) => void;
+  newRows: () => string[][];
+  faction: Faction;
+};
 
 function replaceTech(data: Engine, pos: TechTilePos | AdvTechTilePos) {
   const tile = data.tiles.techs[pos].tile;
@@ -74,6 +86,8 @@ export type HistoryEntry = {
   turn: number;
   color: string;
   textColor: string;
+  rows?: string[][];
+  faction?: Faction;
 };
 
 function makeChanges(data: Engine, entryChanges?: LogEntryChanges): Change[] {
@@ -150,8 +164,10 @@ function makeEntry(
     changes: makeChanges(data, changes),
     color: color,
     textColor: textColor,
+    faction: faction,
     ...(moveIndex != null && { moveIndex }),
   };
+
   //to avoid confusing data in unit tests
   if (newPhase != undefined) {
     res.phase = newPhase;
@@ -167,12 +183,84 @@ export function isGaiaMove(commands: CommandObject[]): boolean {
   return commands.some((c) => c.command == Command.Spend && c.args[0].endsWith(Resource.GainTokenGaiaArea));
 }
 
+function newPlayerLogCounter(engine: Engine, p: Player): LogCounter {
+  const tables = logPlayerTables(engine);
+
+  const resourceSimulator = newResourceSimulator(p);
+  const playerData = resourceSimulator.playerData;
+  const buildings = new BuildingCounter(playerData);
+  const research = new ResearchCounter(p, playerData);
+
+  return {
+    faction: p.faction,
+    consumeChanges: (a) => {
+      resourceSimulator.simulateResources(a);
+      if (a.cmd?.faction == p.faction) {
+        research.processCommand(a.cmd);
+        buildings.playerCommand(a.cmd, engine);
+      }
+    },
+    newRows: () => {
+      const player = { data: playerData } as Player;
+      return tables
+        .map((table) => playerTableRow(table, player, false))
+        .map((row) => Array.from(Object.values(row)).map((cells) => cells[0].label));
+    },
+  };
+}
+
+function updateCounters(move: ParsedMove | null, entry: LogEntry, logCounters: LogCounter[], data: Engine) {
+  for (const logCounter of logCounters) {
+    processLogEntry(entry, move?.commands, (cmd, log, allCommands, cmdIndex) => {
+      logCounter.consumeChanges({
+        cmd,
+        allCommands,
+        cmdIndex,
+        source: null,
+        data,
+        log,
+      });
+      return 0;
+    });
+  }
+}
+
+function addExtendedRow(
+  move: ParsedMove | null,
+  entry: LogEntry,
+  historyEntry: HistoryEntry,
+  logCounters: LogCounter[],
+  engine: Engine
+) {
+  if (logCounters.length == 0) {
+    return;
+  }
+
+  updateCounters(move, entry, logCounters, engine);
+  if (historyEntry.faction) {
+    const logCounter = logCounters.find((c) => c.faction === historyEntry.faction);
+
+    historyEntry.rows = logCounter.newRows();
+  }
+}
+
 export function makeHistory(
   data: Engine,
   recent: MovesSlice,
   onlyRecent: boolean,
-  currentMove?: string
+  currentMove: string,
+  extendedLog: boolean
 ): HistoryEntry[] {
+  const logCounters: LogCounter[] = [];
+
+  if (extendedLog) {
+    for (const player of data.players) {
+      if (player.faction) {
+        logCounters.push(newPlayerLogCounter(data, player));
+      }
+    }
+  }
+
   const advancedLog = data.advancedLog;
 
   let append = !onlyRecent || recent.index < 0;
@@ -199,7 +287,7 @@ export function makeHistory(
   let advancedLogIndex = -1;
   let nextLogEntry: LogEntry = null;
 
-  const bumpLog = () => {
+  const bumpLog: () => LogEntry = () => {
     advancedLogIndex += 1;
     const entry = advancedLog[advancedLogIndex];
     if (advancedLogIndex == 0) {
@@ -213,10 +301,19 @@ export function makeHistory(
     return entry;
   };
 
-  const newEntry = (move: ParsedMove = null, entry: LogEntry = nextLogEntry): HistoryEntry => {
+  const newHistoryEntry = (move: ParsedMove = null, entry: LogEntry = nextLogEntry): HistoryEntry => {
     const newPhase = entry.round ? Phase.RoundStart : entry.phase;
     return makeEntry(data, state, newPhase, move, entry.player, entry.changes, entry.move);
   };
+
+  function addChangesEntry(logEntry: LogEntry): LogEntry {
+    if (logEntry.player === undefined || !!logEntry.changes) {
+      const entry = newHistoryEntry();
+      addExtendedRow(null, logEntry, entry, logCounters, data);
+      addEntry(entry);
+    }
+    return bumpLog();
+  }
 
   nextLogEntry = bumpLog();
 
@@ -234,27 +331,22 @@ export function makeHistory(
     }
 
     while (nextLogEntry && (nextLogEntry.move === undefined || nextLogEntry.move < i)) {
-      if (nextLogEntry.player === undefined || !!nextLogEntry.changes) {
-        addEntry(newEntry());
-      }
-      nextLogEntry = bumpLog();
+      nextLogEntry = addChangesEntry(nextLogEntry);
     }
-    const entry = newEntry(replaceMove(data, parsedMove), { move: i } as LogEntry);
+    const entry = newHistoryEntry(replaceMove(data, parsedMove), { move: i } as LogEntry);
     if (nextLogEntry && nextLogEntry.move === i) {
       entry.changes = makeChanges(data, nextLogEntry.changes);
+      addExtendedRow(parsedMove, nextLogEntry, entry, logCounters, data);
       nextLogEntry = bumpLog();
     }
     addEntry(entry);
     while (nextLogEntry && nextLogEntry.move === undefined) {
-      if (nextLogEntry.player === undefined || !!nextLogEntry.changes) {
-        addEntry(newEntry());
-      }
-      nextLogEntry = bumpLog();
+      nextLogEntry = addChangesEntry(nextLogEntry);
     }
   });
 
   if (nextLogEntry && currentMove) {
-    addEntry(newEntry(replaceMove(data, parsedMove(currentMove))));
+    addEntry(newHistoryEntry(replaceMove(data, parsedMove(currentMove))));
   }
 
   ret.reverse();
