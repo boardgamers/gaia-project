@@ -76,11 +76,7 @@ export default class PlayerData extends EventEmitter {
 
   deployedShips: {
     [key in Building]: number;
-  } = fromPairs(
-    Building.ships()
-      .map((bld) => [bld, 0])
-      .map((bld) => [bld, 0])
-  ) as any;
+  } = fromPairs(Building.ships().map((bld) => [bld, 0])) as any;
 
   satellites = 0;
   research: ResearchProgress = {
