@@ -279,7 +279,7 @@ function playerCell(p: Player | null, bold = false): Cell {
   };
 }
 
-function general(engine: Engine): PlayerTable {
+function general(engine: Engine, showIncome: (Player) => boolean): PlayerTable {
   return {
     caption: "General",
     columns: [
@@ -341,7 +341,7 @@ function general(engine: Engine): PlayerTable {
             };
           }),
       },
-      resourceColumn(Resource.VictoryPoint, () => false, null),
+      resourceColumn(Resource.VictoryPoint, showIncome, null),
     ],
   };
 }
@@ -622,7 +622,7 @@ function stats(engine: Engine): PlayerTable {
 function playerTables(engine: Engine, support: ConversionSupport): PlayerTable[] {
   const show = (p) => showIncome(engine, p);
   return [
-    general(engine),
+    general(engine, show),
     resources(show, support),
     power(show, support),
     research(engine, true),

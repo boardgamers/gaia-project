@@ -61,6 +61,9 @@
             <circle r="3" fill="white" stroke="black" stroke-width="0.2" />
             <text style="text-anchor: middle; dominant-baseline: central; font-size: 5px">-{{ data.bid }}</text>
           </g>
+          <g transform="translate(13, 14)" v-if="income('vp') > 0">
+            <text class="board-text" transform="scale(4)">+{{ income("vp") }}</text>
+          </g>
         </g>
         <g transform="translate(15.2, 1.4)" v-b-tooltip title="Satellites and space stations, satellites left ">
           <image xlink:href="../../assets/other/satellite.svg" :height=155/211*22 width="22" x="-11" y="-8"
