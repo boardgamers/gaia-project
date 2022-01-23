@@ -1,5 +1,5 @@
 import Engine from "../engine";
-import { Building, Command, Expansion, Planet, Player, ResearchField, Resource, Ship } from "../enums";
+import { Building, Command, Expansion, Player, ResearchField, Resource, Ship } from "../enums";
 import { GaiaHex } from "../gaia-hex";
 import SpaceMap from "../map";
 import PlayerObject from "../player";
@@ -210,10 +210,12 @@ function possibleColonyShipActions(
   requireTemporaryStep: boolean
 ): AvailableShipAction[] {
   return possibleShipActionsOfType(engine, ship, shipLocation, ShipAction.BuildColony, !requireTemporaryStep, (h) => {
-    if (h.hasPlanet() && !h.occupied() && h.data.planet !== Planet.Transdim) {
-      const check = engine
-        .player(ship.player)
-        .canBuild(engine.map, h, h.data.planet, Building.Colony, engine.isLastRound, engine.replay);
+    const player = engine.player(ship.player);
+    const existingBuilding = h.buildingOf(player.player);
+    if (h.hasPlanet() && (!h.occupied() || existingBuilding === Building.GaiaFormer)) {
+      const check = player.canBuild(engine.map, h, h.data.planet, Building.Colony, engine.isLastRound, engine.replay, {
+        existingBuilding,
+      });
       if (check) {
         return [newAvailableBuilding(Building.Colony, h, check, false)];
       }
