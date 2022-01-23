@@ -130,7 +130,7 @@ export const resourceData: { [key in Resource]?: ResourceName } = {
   }),
 };
 
-export function showIncome(engine: Engine, player: Player) {
+export function showIncome(engine: Engine, player: Player): boolean {
   return (
     !engine.isLastRound ||
     engine.phase == Phase.RoundStart ||

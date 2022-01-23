@@ -67,7 +67,7 @@ export type InfoTableColumn = BvTableField & { key: string; cells: InfoTableCell
 
 export type InfoTable = {
   caption: string;
-  fields: Array<InfoTableColumn>;
+  fields: InfoTableColumn[];
   rows: InfoTableRow[];
   additionalHeader?: InfoTableAdditionalHeader[];
   break?: boolean;
@@ -95,7 +95,7 @@ const emptyCell: Cell = {
 
 type CellContent = string | number | Cell[];
 
-type PlayerColumn = Cell & {
+export type PlayerColumn = Cell & {
   cell: (p: Player, passed: boolean) => CellContent;
   additionalHeader?: { cells: Cell[]; flex?: InfoTableFlex };
   flex?: InfoTableFlex;
@@ -149,14 +149,14 @@ function resolveCellColor(color: string | CellStyle): CellStyle {
   }
 }
 
-function inlineCellStyle(c: Cell): string {
-  const cellColor = c?.color ? resolveCellColor(c.color) : null;
+export function cellStyle(color: string | CellStyle) {
+  const cellColor = color ? resolveCellColor(color) : null;
   return cellColor ? `background: ${cellColor.backgroundColor}; color: ${cellColor.color};` : "";
 }
 
 function formatCell(cells: Cell[], flex = InfoTableFlex.rowGrow): InfoTableCell[] {
   return cells.map((c) => {
-    const style = inlineCellStyle(c);
+    const style = cellStyle(c?.color);
     const label = deactivated(c.shortcut?.toString()?.toUpperCase(), c.deactivated ?? false);
     return {
       label,
@@ -203,16 +203,15 @@ function resourceCell(r: Resource | PowerArea): Cell {
 
 function incomeCell(
   r: Resource | PowerArea,
-  val: any,
+  val: string | number,
   income: number,
   player: Player,
   support: ConversionSupport | null,
-  showIncome: boolean,
   incomeType: string = null
 ): Cell[] {
   const cell = resourceCell(r);
   const tooltip = support?.convertTooltip(r, player.player)?.replace(stripUnderline, (match, group) => group);
-  const hasIncome = showIncome && income;
+  const hasIncome = income > 0;
   if (incomeType && hasIncome) {
     cell.title = `${cell.title} (+${incomeType} income)`;
   }
@@ -221,7 +220,7 @@ function incomeCell(
   }
   return [
     {
-      shortcut: hasIncome ? `${val}+${income}` : val,
+      shortcut: hasIncome ? `${val}+${income}` : String(val),
       title: cell.title,
       color: cell.color,
       convert: tooltip ? r : null,
@@ -229,17 +228,33 @@ function incomeCell(
   ];
 }
 
-function resourceColumn(r: Resource, showIncome: (Player) => boolean, support: ConversionSupport | null): PlayerColumn {
+function realIncomeCell(
+  resource: Resource | PowerArea,
+  current: string | number,
+  p: Player,
+  incomeResource: Resource,
+  support: ConversionSupport,
+  showIncome: (Player) => boolean,
+  incomeType: string
+) {
+  return incomeCell(resource, current, showIncome(p) ? p.resourceIncome(incomeResource) : 0, p, support, incomeType);
+}
+
+function resourceColumn(
+  r: Resource,
+  showIncome: (Player) => boolean,
+  support?: ConversionSupport | null
+): PlayerColumn {
   const cell = resourceCell(r);
   return {
     shortcut: cell.shortcut,
     title: cell.title,
     color: cell.color,
-    cell: (p) => incomeCell(r, p.data.getResources(r), p.resourceIncome(r), p, support, showIncome(p)),
+    cell: (p) => realIncomeCell(r, p.data.getResources(r), p, r, support, showIncome, null),
   };
 }
 
-function powerArea(a: PowerArea, d: PlayerData) {
+function powerArea(a: PowerArea, d: PlayerData): string | number {
   return d.brainstone == a ? `${d.power[a]},B` : d.power[a];
 }
 
@@ -331,16 +346,16 @@ function general(engine: Engine): PlayerTable {
   };
 }
 
-function resources(engine: Engine, support: ConversionSupport): PlayerTable {
+function resources(showIncome: (Player) => boolean, support?: ConversionSupport): PlayerTable {
   return {
     caption: "Resources",
     columns: [Resource.Credit, Resource.Ore, Resource.Knowledge, Resource.Qic].map((r) =>
-      resourceColumn(r, (p) => showIncome(engine, p), support)
+      resourceColumn(r, showIncome, support)
     ),
   };
 }
 
-function power(engine: Engine, support: ConversionSupport): PlayerTable {
+function power(showIncome: (Player) => boolean, support?: ConversionSupport): PlayerTable {
   return {
     caption: "Power",
     columns: Object.values(PowerArea).map((a) => {
@@ -350,37 +365,21 @@ function power(engine: Engine, support: ConversionSupport): PlayerTable {
         title: cell.title,
         color: cell.color,
         cell: (p) => {
+          const power = powerArea(a, p.data);
           switch (a) {
             case PowerArea.Area1:
-              return incomeCell(
-                a,
-                powerArea(a, p.data),
-                p.resourceIncome(Resource.GainToken),
-                p,
-                support,
-                showIncome(engine, p),
-                "token"
-              );
+              return realIncomeCell(a, power, p, Resource.GainToken, support, showIncome, "token");
             case PowerArea.Area2:
-              return incomeCell(
-                a,
-                powerArea(a, p.data),
-                p.resourceIncome(Resource.ChargePower),
-                p,
-                support,
-                showIncome(engine, p),
-                "power charge"
-              );
+              return realIncomeCell(a, power, p, Resource.ChargePower, support, showIncome, "power charge");
             case PowerArea.Area3:
-              return incomeCell(a, powerArea(a, p.data), 0, p, support, false);
+              return incomeCell(a, power, 0, p, support);
             case PowerArea.Gaia:
               return incomeCell(
                 a,
                 p.data.gaiaformersInGaia ? `${p.data.power.gaia}, ${p.data.gaiaformersInGaia}gf` : p.data.power.gaia,
                 0,
                 p,
-                support,
-                false
+                support
               );
           }
         },
@@ -432,30 +431,33 @@ function techCell(t: TechTile | AdvTechTile, remaining: number): Cell {
   };
 }
 
-function research(engine: Engine): PlayerTable {
+function research(engine: Engine, greenFederations: boolean): PlayerTable {
   return {
     caption: "Research",
-    columns: [
-      colorCodes.federation.add<PlayerColumn>({
-        title: "Green Federations",
-        cell: (p) => p.data.tiles.federations.filter((f) => f.green).length,
-        additionalHeader: {
-          cells: [
-            engine.terraformingFederation
-              ? {
-                  shortcut: federationData[engine.terraformingFederation].shortcut,
-                  title: `Terraforming Federation: ${tiles.federations[engine.terraformingFederation]}`,
-                  color: federationData[engine.terraformingFederation].color,
-                }
-              : {
-                  shortcut: "-",
-                  color: defaultBackground,
-                  title: "Terraforming Federation already taken",
-                },
-          ],
-        },
-      }),
-    ].concat(
+    columns: (greenFederations
+      ? [
+          colorCodes.federation.add<PlayerColumn>({
+            title: "Green Federations",
+            cell: (p) => p.data.tiles.federations.filter((f) => f.green).length,
+            additionalHeader: {
+              cells: [
+                engine.terraformingFederation
+                  ? {
+                      shortcut: federationData[engine.terraformingFederation].shortcut,
+                      title: `Terraforming Federation: ${tiles.federations[engine.terraformingFederation]}`,
+                      color: federationData[engine.terraformingFederation].color,
+                    }
+                  : {
+                      shortcut: "-",
+                      color: defaultBackground,
+                      title: "Terraforming Federation already taken",
+                    },
+              ],
+            },
+          }),
+        ]
+      : []
+    ).concat(
       ...ResearchField.values(engine.expansions).map((f) => ({
         shortcut: f.substring(0, 1),
         title: `${researchNames[f]} (${[...Array(lastTile(f) + 1).keys()]
@@ -618,17 +620,23 @@ function stats(engine: Engine): PlayerTable {
 }
 
 function playerTables(engine: Engine, support: ConversionSupport): PlayerTable[] {
+  const show = (p) => showIncome(engine, p);
   return [
     general(engine),
-    resources(engine, support),
-    power(engine, support),
-    research(engine),
+    resources(show, support),
+    power(show, support),
+    research(engine, true),
     finals(engine),
     buildings(engine),
     assets(engine),
     planets(engine),
     stats(engine),
   ].filter((t) => t);
+}
+
+export function logPlayerTables(engine: Engine): PlayerTable[] {
+  const show = () => false;
+  return [resources(show), power(show), research(engine, false), buildings(engine)].filter((t) => t);
 }
 
 function generalTables(engine: Engine): GeneralTable[] {
@@ -702,6 +710,26 @@ function field(c: Cell, sortable: boolean): InfoTableColumn {
   };
 }
 
+export function playerTableRow(t: PlayerTable, p: Player, passed: boolean): InfoTableRow {
+  const row: InfoTableRow = {};
+  for (const column of t.columns) {
+    const cell = column.cell(p, passed);
+    row[column.title] = formatCell(
+      typeof cell == "object"
+        ? ((cell.length == 0 ? [emptyCell] : cell) as Cell[])
+        : [
+            {
+              shortcut: String(cell),
+              title: column.title,
+              color: column.color,
+            },
+          ],
+      column.flex ?? InfoTableFlex.rowGrow
+    );
+  }
+  return row;
+}
+
 export function infoTables(
   engine: Engine,
   orderedPlayers: Player[],
@@ -745,25 +773,7 @@ export function infoTables(
         cells: formatCell(c.additionalHeader.cells, c.additionalHeader.flex),
         colspan: 1,
       })),
-    rows: createRows((p, passed) => {
-      const row: InfoTableRow = {};
-      for (const column of t.columns) {
-        const cell = column.cell(p, passed);
-        row[column.title] = formatCell(
-          typeof cell == "object"
-            ? ((cell.length == 0 ? [emptyCell] : cell) as Cell[])
-            : [
-                {
-                  shortcut: String(cell),
-                  title: column.title,
-                  color: column.color,
-                },
-              ],
-          column.flex ?? InfoTableFlex.rowGrow
-        );
-      }
-      return row;
-    }),
+    rows: createRows((p, passed) => playerTableRow(t, p, passed)),
   }));
   pTables.forEach((r, i) => {
     const extraColumns: number = settings.rowHeaderOnAllColumns || i == 0 ? 1 : 0;

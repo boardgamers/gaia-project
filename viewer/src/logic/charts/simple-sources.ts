@@ -17,6 +17,7 @@ import { factionSourceFactory } from "./factions";
 import { federationsSourceFactory } from "./federations";
 import { finalScoringSourceFactory } from "./final-scoring";
 import { planetsSourceFactory } from "./plantets";
+import { researchSourceFactory } from "./research";
 import {
   boardActionSourceFactory,
   boosterSourceFactory,
@@ -24,7 +25,7 @@ import {
   resourceSourceFactory,
 } from "./resources";
 import { ExtractLog, logEntryProcessor, SimpleSourceFactory } from "./simple-charts";
-import { advancedTechSourceFactory, baseTechSourceFactory, researchSourceFactory } from "./tech";
+import { advancedTechSourceFactory, baseTechSourceFactory } from "./tech";
 import { terraformingStepsSourceFactory } from "./terraforming";
 
 export const createSimpleSourceFactories = (

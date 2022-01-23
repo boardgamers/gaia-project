@@ -1,16 +1,7 @@
-import {
-  AdvTechTile,
-  AdvTechTilePos,
-  Command,
-  Expansion,
-  ResearchField,
-  TechTile,
-  TechTilePos,
-} from "@gaia-project/engine";
-import { researchColorVar, researchNames } from "../../data/research";
+import { AdvTechTile, AdvTechTilePos, Command, Expansion, TechTile, TechTilePos } from "@gaia-project/engine";
 import { advancedTechTileData, baseTechTileData } from "../../data/tech-tiles";
-import { ChartSource, initialResearch } from "./charts";
-import { commandCounterArg0EqualsSource, ExtractLog, SimpleSourceFactory } from "./simple-charts";
+import { ChartSource } from "./charts";
+import { ExtractLog, SimpleSourceFactory } from "./simple-charts";
 
 const techTileExtractLog: ExtractLog<ChartSource<TechTile | AdvTechTile>> = ExtractLog.filterPlayer((e) => {
   if (e.cmd.command == Command.ChooseTechTile) {
@@ -52,20 +43,4 @@ export const advancedTechSourceFactory = (
     color: advancedTechTileData[tile].color,
     weight: 1,
   })),
-});
-
-export const researchSourceFactory = (expansion: Expansion): SimpleSourceFactory<ChartSource<ResearchField>> => ({
-  name: "Research",
-  playerSummaryLineChartTitle: "Research steps of all players",
-  showWeightedTotal: false,
-  initialValue: (player, source) => initialResearch(player).get(source.type) ?? 0,
-  extractLog: commandCounterArg0EqualsSource(Command.UpgradeResearch),
-  sources: ResearchField.values(expansion).map((field) => {
-    return {
-      type: field as ResearchField,
-      label: researchNames[field],
-      color: researchColorVar(field),
-      weight: 1,
-    };
-  }),
 });

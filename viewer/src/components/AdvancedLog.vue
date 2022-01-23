@@ -1,12 +1,21 @@
 <template>
-  <div v-if="gameData.phase !== 'setupInit'">
+  <div v-if="engine.phase !== 'setupInit'">
     <div class="d-flex" style="justify-content: center">
       <b-checkbox :checked="scope == 'all'" @change="toggleScope">Show ever<u>y</u>thing</b-checkbox>
       <b-checkbox :checked="hideLog" @change="toggleLog"><u>H</u>ide log until next turn</b-checkbox>
     </div>
     <table class="table table-hover table-striped table-sm">
+      <thead v-if="!hideLog" class="table-bordered">
+        <td>Turn</td>
+        <td>Faction</td>
+        <td>Source</td>
+        <td>Changes</td>
+        <td v-for="(h, i) in rowHeaders" :key="i" :title="h.title" :style="cellStyle(h)">
+          {{ h.shortcut.toUpperCase() }}
+        </td>
+      </thead>
       <tbody>
-        <tr class="major-event" v-if="gameData.phase === 'endGame'">
+        <tr class="major-event" v-if="engine.phase === 'endGame'">
           <td colspan="4">Game Ended</td>
         </tr>
         <template v-for="(event, i) in history">
@@ -28,21 +37,29 @@
             <td v-else-if="event.phase === 'moves-skipped'" colspan="4" class="major-event">
               Click "Show everything" to expand
             </td>
-            <td v-else-if="event.phase === 'roundIncome'" class="phase-change">Income phase</td>
-            <td v-else-if="event.phase === 'roundGaia'" class="phase-change">Gaia phase</td>
-            <td v-else-if="event.phase === 'roundMove'" class="phase-change">Move phase</td>
-            <td v-else-if="event.phase === 'endGame'" class="phase-change">End scoring</td>
+            <td v-else-if="event.phase === 'roundIncome'" colspan="3" class="phase-change">Income phase</td>
+            <td v-else-if="event.phase === 'roundGaia'" colspan="3" class="phase-change">Gaia phase</td>
+            <td v-else-if="event.phase === 'roundMove'" colspan="3" class="phase-change">Move phase</td>
+            <td v-else-if="event.phase === 'endGame'" colspan="3" class="phase-change">End scoring</td>
             <td v-else-if="j === 1" :rowspan="rowSpan(event)" class="move">
               <div>{{ event.move }}</div>
             </td>
             <td v-if="event.changes.length > 0" :class="j === 1 ? 'first-change' : 'changes'">
               {{ event.changes[j - 1].source }}
             </td>
-            <td v-else />
+            <td v-else-if="event.phase == null" />
             <td v-if="event.changes.length > 0" :class="j === 1 ? 'first-change' : 'changes'">
               {{ event.changes[j - 1].changes }}
             </td>
-            <td v-else />
+            <td v-else-if="event.phase == null" />
+            <td
+              v-for="(value, k) in rowValues(event, j)"
+              :rowspan="rowSpan(event)"
+              :key="k"
+              :class="{ 'border-left': value.leftBorder }"
+            >
+              {{ value.value }}
+            </td>
           </tr>
         </template>
       </tbody>
@@ -54,6 +71,7 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import Engine from "@gaia-project/engine";
 import { HistoryEntry, makeHistory } from "../data/log";
+import { cellStyle, logPlayerTables, PlayerColumn } from "../logic/info-table";
 
 type LogScope = "recent" | "all";
 
@@ -94,18 +112,45 @@ export default class AdvancedLog extends Vue {
     this.$store.dispatch("replayTo", moveIndex + 1);
   }
 
-  get gameData(): Engine {
+  get engine(): Engine {
     return this.$store.state.data;
+  }
+
+  get extendedLog(): boolean {
+    return this.$store.state.preferences.extendedLog;
   }
 
   get history(): HistoryEntry[] {
     if (this.hideLog) return [];
 
-    return makeHistory(this.gameData, this.$store.getters.recentMoves, this.scope == "recent", this.currentMove);
+    return makeHistory(this.engine, this.$store.getters.recentMoves, this.scope == "recent", this.currentMove, this.extendedLog);
   }
 
   rowSpan(entry: HistoryEntry): number {
     return entry.changes.length > 0 ? entry.changes.length : 1;
+  }
+
+  get rowHeaders(): PlayerColumn[] {
+    return this.extendedLog ? logPlayerTables(this.engine).flatMap(t => t.columns) : [];
+  }
+
+  cellStyle(c: PlayerColumn): string {
+    return `${cellStyle(c.color)} border: 1px`;
+  }
+
+  rowValues(entry: HistoryEntry, change: number): { value: string; leftBorder: boolean }[] {
+    if (!this.extendedLog || change > 1) {
+      return [];
+    }
+
+    return entry.rows ? entry.rows.flatMap(r => r.map((value, i) => ({
+        value,
+        leftBorder: i == 0,
+      })))
+      : logPlayerTables(this.engine).flatMap(t => t.columns.map((c, i) => ({
+        value: "",
+        leftBorder: i == 0,
+      })));
   }
 }
 </script>

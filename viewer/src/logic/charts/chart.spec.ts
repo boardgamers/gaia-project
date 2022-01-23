@@ -3,8 +3,8 @@ import { expect } from "chai";
 import { runJsonTests } from "../test-utils";
 import { ChartSetup } from "./chart-factory";
 // Here we import the File System module of node
-import { ChartFamily, initialResearch } from "./charts";
-import { countResearch } from "./victory-point-charts";
+import { ChartFamily } from "./charts";
+import { countResearch, ResearchCounter } from "./research";
 
 describe("Chart", () => {
   describe("initial research", () => {
@@ -17,7 +17,7 @@ describe("Chart", () => {
         ],
       },
     } as Player;
-    expect(initialResearch(p).get(ResearchField.Navigation)).to.equal(2);
+    expect(new ResearchCounter(p).playerData.research[ResearchField.Navigation]).to.equal(2);
   });
 
   describe("count research", () => {

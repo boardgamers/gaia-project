@@ -48,6 +48,11 @@ export class BrainstoneSimulator {
   }
 }
 
+export type ResourceSimulator = {
+  simulateResources: (a: ExtractLogArg<any>) => Reward[];
+  playerData: PlayerData;
+};
+
 export function parsePowerUsage(command: CommandObject): MoveTokens | null {
   let offset = command.args.indexOf("using");
   if (offset < 0) {
@@ -95,155 +100,159 @@ export function flattenChanges(changes: LogEntryChanges, source: EventSource): L
   return { [source]: c };
 }
 
+export function newResourceSimulator(want: Player): ResourceSimulator {
+  const simulationPlayer = new Player();
+  const playerData = simulationPlayer.data;
+
+  const brainstoneSimulator = want.faction == Faction.Taklons ? new BrainstoneSimulator(playerData) : null;
+
+  let changes: LogEntryChanges = null;
+  let processedChanges: Map<EventSource, Reward[]> = null;
+  let commandChanges: Reward[] = [];
+
+  function addProcessedChange(change: Reward[], source: EventSource) {
+    if (processedChanges == null) {
+      processedChanges = new Map<EventSource, Reward[]>();
+    }
+    const last = processedChanges.get(source);
+    if (last) {
+      change = Reward.merge(last, change);
+    }
+    processedChanges.set(source, change);
+  }
+
+  function gainRewards(rewards: Reward[]) {
+    playerData.gainRewards(rewards);
+    commandChanges = Reward.merge(rewards.concat(commandChanges));
+  }
+
+  const gainRewardsBySource = (source: EventSource, rewards: { [resource in Resource]?: number }) => {
+    const processed = processedChanges?.get(source);
+    for (const type in rewards) {
+      let count = rewards[type];
+
+      const p = processed?.find((p) => p.type == type);
+      if (p) {
+        count -= p.count;
+      }
+
+      gainRewards([new Reward(count, type as Resource)]);
+    }
+  };
+
+  const payPowerUsage = (cmd: CommandObject, type: Resource, source?: EventSource) => {
+    const powerUsage = parsePowerUsage(cmd);
+    if (powerUsage) {
+      const r = [new Reward(-sum(Object.values(powerUsage)), type)];
+      gainRewards(r);
+      if (source) {
+        addProcessedChange(r, source);
+      }
+    }
+  };
+
+  const consumeChanges = (cmd: CommandObject) => {
+    const args = cmd.args;
+    //gain on top of changes
+    switch (cmd.command) {
+      case Command.Build:
+        const building = cmd.args[0] as Building;
+        if (building == Building.GaiaFormer) {
+          payPowerUsage(cmd, Resource.MoveTokenToGaiaArea);
+        } else if (building == Building.PlanetaryInstitute && want.faction == Faction.Nevlas) {
+          playerData.tokenModifier = 2;
+        }
+        break;
+      case Command.FormFederation:
+        payPowerUsage(cmd, Resource.GainToken, Command.FormFederation);
+        break;
+    }
+
+    //gain or use changes
+    switch (cmd.command) {
+      case Command.Spend:
+        gainRewards(Reward.parse(args[0]).map((r) => new Reward(-r.count, r.type)));
+        gainRewards(Reward.parse(args[2]));
+        delete changes.spend;
+        break;
+      case Command.Special:
+        if (args[0] == "4pw") {
+          gainRewards(Reward.parse("4pw"));
+          for (const pos of TechPos.values()) {
+            delete changes[pos];
+          }
+        }
+        break;
+      case Command.BurnPower:
+        playerData.burnPower(Number(args[0]));
+        break;
+      case Command.ChooseIncome:
+        const r = Reward.parse(args[0]);
+        gainRewards(r);
+        addProcessedChange(r, Command.ChooseIncome);
+        //all event sources might be reduced by this command
+        changes = flattenChanges(changes, Command.ChooseIncome);
+        break;
+      default:
+        if (changes) {
+          for (const eventSource of commandEventSource(cmd)) {
+            const change = changes[eventSource];
+            if (change) {
+              gainRewardsBySource(eventSource, change);
+              delete changes[eventSource];
+            }
+          }
+        }
+    }
+  };
+
+  let gaiaPhase = false;
+
+  const simulateResources = (a: ExtractLogArg<any>) => {
+    commandChanges = [];
+    if (a.log.phase == Phase.RoundGaia) {
+      gaiaPhase = true;
+      return [];
+    }
+    if (gaiaPhase && !isGaiaMove(a.allCommands)) {
+      gaiaPhase = false;
+      simulationPlayer.gaiaPhase();
+    }
+
+    if (a.log.player != want.player) {
+      return [];
+    }
+    if (a.cmdIndex == 0) {
+      changes = {};
+      Object.assign(changes, a.log.changes); //copy, so we can delete keys
+      brainstoneSimulator?.setTurnCommands(a.allCommands ?? []);
+    }
+
+    const cmd = a.cmd;
+    if (cmd) {
+      consumeChanges(cmd);
+    }
+
+    if (isLastChange(a)) {
+      for (const s in changes) {
+        gainRewardsBySource(s as EventSource, changes[s]);
+      }
+      changes = null;
+      processedChanges = null;
+    }
+    return commandChanges;
+  };
+
+  const board = chartPlayerBoard(want);
+  simulationPlayer.loadBoard(board, 0, true);
+  return { playerData, simulateResources };
+}
+
 export const resourceCounter = (
   processor: (want: Player, a: ExtractLogArg<any>, data: PlayerData, simulateResources: () => Reward[]) => number
 ): ExtractLog<any> =>
   ExtractLog.new((want) => {
-    const simulationPlayer = new Player();
-    const data = simulationPlayer.data;
+    const simulator = newResourceSimulator(want);
 
-    const brainstoneSimulator = want.faction == Faction.Taklons ? new BrainstoneSimulator(data) : null;
-
-    let changes: LogEntryChanges = null;
-    let processedChanges: Map<EventSource, Reward[]> = null;
-    let commandChanges: Reward[] = [];
-
-    function addProcessedChange(change: Reward[], source: EventSource) {
-      if (processedChanges == null) {
-        processedChanges = new Map<EventSource, Reward[]>();
-      }
-      const last = processedChanges.get(source);
-      if (last) {
-        change = Reward.merge(last, change);
-      }
-      processedChanges.set(source, change);
-    }
-
-    function gainRewards(rewards: Reward[]) {
-      data.gainRewards(rewards);
-      commandChanges = Reward.merge(rewards.concat(commandChanges));
-    }
-
-    const gainRewardsBySource = (source: EventSource, rewards: { [resource in Resource]?: number }) => {
-      const processed = processedChanges?.get(source);
-      for (const type in rewards) {
-        let count = rewards[type];
-
-        const p = processed?.find((p) => p.type == type);
-        if (p) {
-          count -= p.count;
-        }
-
-        gainRewards([new Reward(count, type as Resource)]);
-      }
-    };
-
-    const payPowerUsage = (cmd: CommandObject, type: Resource, source?: EventSource) => {
-      const powerUsage = parsePowerUsage(cmd);
-      if (powerUsage) {
-        const r = [new Reward(-sum(Object.values(powerUsage)), type)];
-        gainRewards(r);
-        if (source) {
-          addProcessedChange(r, source);
-        }
-      }
-    };
-
-    const consumeChanges = (cmd: CommandObject) => {
-      const args = cmd.args;
-      //gain on top of changes
-      switch (cmd.command) {
-        case Command.Build:
-          const building = cmd.args[0] as Building;
-          if (building == Building.GaiaFormer) {
-            payPowerUsage(cmd, Resource.MoveTokenToGaiaArea);
-          } else if (building == Building.PlanetaryInstitute && want.faction == Faction.Nevlas) {
-            data.tokenModifier = 2;
-          }
-          break;
-        case Command.FormFederation:
-          payPowerUsage(cmd, Resource.GainToken, Command.FormFederation);
-          break;
-      }
-
-      //gain or use changes
-      switch (cmd.command) {
-        case Command.Spend:
-          gainRewards(Reward.parse(args[0]).map((r) => new Reward(-r.count, r.type)));
-          gainRewards(Reward.parse(args[2]));
-          delete changes.spend;
-          break;
-        case Command.Special:
-          if (args[0] == "4pw") {
-            gainRewards(Reward.parse("4pw"));
-            for (const pos of TechPos.values()) {
-              delete changes[pos];
-            }
-          }
-          break;
-        case Command.BurnPower:
-          data.burnPower(Number(args[0]));
-          break;
-        case Command.ChooseIncome:
-          const r = Reward.parse(args[0]);
-          gainRewards(r);
-          addProcessedChange(r, Command.ChooseIncome);
-          //all event sources might be reduced by this command
-          changes = flattenChanges(changes, Command.ChooseIncome);
-          break;
-        default:
-          if (changes) {
-            for (const eventSource of commandEventSource(cmd)) {
-              const change = changes[eventSource];
-              if (change) {
-                gainRewardsBySource(eventSource, change);
-                delete changes[eventSource];
-              }
-            }
-          }
-      }
-    };
-
-    let gaiaPhase = false;
-
-    const process = (a: ExtractLogArg<any>) =>
-      processor(want, a, data, () => {
-        commandChanges = [];
-        if (a.log.phase == Phase.RoundGaia) {
-          gaiaPhase = true;
-          return [];
-        }
-        if (gaiaPhase && !isGaiaMove(a.allCommands)) {
-          gaiaPhase = false;
-          simulationPlayer.gaiaPhase();
-        }
-
-        if (a.log.player != want.player) {
-          return [];
-        }
-        if (a.cmdIndex == 0) {
-          changes = {};
-          Object.assign(changes, a.log.changes); //copy, so we can delete keys
-          brainstoneSimulator?.setTurnCommands(a.allCommands ?? []);
-        }
-
-        const cmd = a.cmd;
-        if (cmd) {
-          consumeChanges(cmd);
-        }
-
-        if (isLastChange(a)) {
-          for (const s in changes) {
-            gainRewardsBySource(s as EventSource, changes[s]);
-          }
-          changes = null;
-          processedChanges = null;
-        }
-        return commandChanges;
-      });
-
-    const board = chartPlayerBoard(want);
-    simulationPlayer.loadBoard(board, 0, true);
-
-    return (a) => process(a);
+    return (a) => processor(want, a, simulator.playerData, () => simulator.simulateResources(a));
   });
