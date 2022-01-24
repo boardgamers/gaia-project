@@ -61,14 +61,10 @@
         :transform="resourceTranslate(i, index)"
         style="opacity: 0.7"
       />
-      <circle
-        stroke="black"
-        stroke-width="0.07"
-        fill="white"
-        r=".6"
-        v-if="!isPI"
-        :class="{ resolution: true, deployed: isDeployed(i) }"
-      />
+      <g v-if="isDeployed(i)">
+        <line y1="-.1" y2=".1" x1="-.1" x2=".1" stroke="#333" stroke-width="2" />
+        <line y1=".1" y2="-.1" x1="-.1" x2=".1" stroke="#333" stroke-width="2" />
+      </g>
     </g>
     <!--    not displayed because military is not implemented yet-->
     <!--    <g v-if="isShip" transform="translate(7.5,0)" v-b-tooltip="destroyedTooltip">-->
@@ -337,17 +333,8 @@ export default class BuildingGroup extends Vue {
       opacity: 1;
     }
 
-    .resolution {
-      opacity: 0;
-    }
-
     .destroyed {
       fill: red;
-      opacity: 1;
-    }
-
-    .deployed {
-      fill: blue;
       opacity: 1;
     }
   }
