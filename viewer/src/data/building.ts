@@ -7,6 +7,7 @@ import {
   isShip,
   ShipAction,
 } from "@gaia-project/engine";
+import { colorCodes } from "../logic/color-codes";
 
 export const buildingData: { [key in Building]: { name: string; color: string } } = {
   [Building.Mine]: {
@@ -152,7 +153,7 @@ export function buildingShortcut(building: Building, faction?: Faction): string 
     case Building.GaiaFormer:
       return "g";
     case Building.SpaceStation:
-      return "p";
+      return colorCodes.spaceStation.shortcut;
     case Building.Colony:
       return "c";
     case Building.CustomsPost:
