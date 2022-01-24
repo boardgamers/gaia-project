@@ -124,7 +124,7 @@ function baseTradeReward(building: Building, guest: Player, host: Player, engine
     case Building.Academy2:
       return [
         new Reward(
-          isFurther(engine.player(guest).data.research, engine.player(host).data.research),
+          Math.max(2, isFurther(engine.player(guest).data.research, engine.player(host).data.research)),
           Resource.Knowledge
         ),
       ];
