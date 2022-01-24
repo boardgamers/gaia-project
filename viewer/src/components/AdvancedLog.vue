@@ -7,7 +7,7 @@
     <table class="table table-hover table-striped table-sm">
       <thead v-if="!hideLog" class="table-bordered">
         <td>Turn</td>
-        <td>Faction</td>
+        <td>Moves</td>
         <td>Source</td>
         <td>Changes</td>
         <td v-for="(h, i) in rowHeaders" :key="i" :title="h.title" :style="cellStyle(h)">
