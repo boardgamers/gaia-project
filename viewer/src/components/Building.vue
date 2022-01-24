@@ -6,9 +6,11 @@
       shipLetter
     }}</text>
   </g>
-  <g v-else-if="customsPost">
+  <g v-else-if="customsPost" class="ship">
     <Planet :planet="planetClass" transform="scale(7)" />
-    <text transform="translate(-2, -.7) scale(5)" class="board-text" style="font-weight: bolder">C</text>
+    <text transform="translate(-2, -.7) scale(5)" :class="`board-text ${planetClass}`" style="font-weight: bolder"
+      >C</text
+    >
   </g>
   <g v-else :class="['building']">
     <g :class="['planet-fill', planetClass]" v-if="flat">
