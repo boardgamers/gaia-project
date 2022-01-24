@@ -96,12 +96,10 @@ export const resourceData: { [key in Resource]?: ResourceName } = {
     shortcut: "t",
     color: "--res-power",
   },
-  [Resource.SpaceStation]: {
+  [Resource.SpaceStation]: colorCodes.spaceStation.add({
     label: "Space Station",
     plural: "Space Station",
-    shortcut: "p",
-    color: "--oxide",
-  },
+  }),
   [Resource.TemporaryRange]: colorCodes.range.add({
     label: "Temporary <u>R</u>ange",
     plural: "Temporary <u>R</u>ange",

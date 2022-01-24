@@ -25,4 +25,5 @@ export const colorCodes = {
   gaia: new ColorCoded("g", "--gaia"),
   researchStep: new ColorCoded("r", "--rt-sci"),
   tradeShip: new ColorCoded("s", "--volcanic"),
+  spaceStation: new ColorCoded("s", "--oxide"),
 };
