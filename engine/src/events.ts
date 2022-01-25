@@ -74,7 +74,8 @@ export type EventSource =
   | Command.UpgradeResearch
   | Faction
   | Command.Bid
-  | "trade";
+  | "trade"
+  | "tradeCost";
 
 export default class Event {
   spec: string;

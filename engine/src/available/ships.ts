@@ -113,7 +113,7 @@ function isFurther(guest: ResearchProgress, host: ResearchProgress): number {
 
 function baseTradeReward(building: Building, guest: Player, host: Player, engine: Engine): Reward[] {
   switch (building) {
-    //Own Mine
+    //own Mine
     case Building.Mine:
       return Reward.parse("1o");
     case Building.TradingStation:
@@ -155,32 +155,45 @@ function tradeUnit(building: Building): Reward[] {
   throw new Error("unknown trade bonus: " + building);
 }
 
-function totalTradeReward(h: GaiaHex, player: Player, engine: Engine) {
+function possibleCustomsPost(engine: Engine, h: GaiaHex, player: Player) {
+  const p = engine.player(player);
+  const b = Building.CustomsPost;
+  const units = tradeUnits(engine, player, Building.Mine);
+  const canBuildAfterTrade = p.canBuild(engine.map, h, h.data.planet, b, engine.isLastRound, engine.replay, {
+    addedCost: Reward.negative(units),
+  });
+  if (canBuildAfterTrade) {
+    canBuildAfterTrade.cost = p.board.cost(b, false);
+    const availableBuilding = newAvailableBuilding(b, h, canBuildAfterTrade, false);
+    return [
+      {
+        ...availableBuilding,
+        tradeCost: tradeCost(engine, player).toString(),
+        rewards: units.toString(),
+      },
+    ];
+  }
+  return [];
+}
+
+function totalTradeReward(h: GaiaHex, player: Player, engine: Engine): ShipActionLocation[] {
   if (h.hasStructure() && !h.tradeTokens.some((t) => t === player) && !h.customPosts.some((t) => t === player)) {
     const building = h.data.building;
     const host = h.data.player;
     if (host !== player) {
       const canTrade = engine.player(player).data.canPay([tradeCost(engine, player)]);
-      if (!canTrade) return [];
+      if (!canTrade) {
+        return [];
+      }
       if (building === Building.Mine) {
-        const canBuildAfterTrade = engine
-          .player(player)
-          .canBuild(engine.map, h, h.data.planet, Building.CustomsPost, engine.isLastRound, engine.replay, {
-            addedCost: Reward.negative(Reward.merge(tradeUnits(engine, player, building))).concat(
-              tradeCost(engine, player)
-            ),
-          });
-        if (canBuildAfterTrade) {
-          return [newAvailableBuilding(Building.CustomsPost, h, canBuildAfterTrade, false)];
-        }
+        return possibleCustomsPost(engine, h, player);
       } else {
         return [
           {
             coordinates: h.toString(),
+            tradeCost: tradeCost(engine, player).toString(),
             rewards: Reward.merge(
-              baseTradeReward(building, player, host, engine)
-                .concat(Reward.negative([tradeCost(engine, player)]))
-                .concat(tradeUnits(engine, player, building))
+              baseTradeReward(building, player, host, engine).concat(tradeUnits(engine, player, building))
             ).toString(),
           } as TradingLocation,
         ];

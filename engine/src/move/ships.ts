@@ -56,13 +56,19 @@ export function moveShip(
 }
 
 function trade(engine: Engine, pl: Player, location: TradingLocation) {
+  if (location.tradeCost) {
+    pl.payCosts(Reward.parse(location.tradeCost), "tradeCost");
+  }
+  if (location.rewards) {
+    pl.gainRewards(Reward.parse(location.rewards), "trade");
+  }
+
   const hex = engine.map.getS(location.coordinates);
-  const cost = location.cost ? Reward.parse(location.cost) : [];
   if (hex.data.building === Building.Mine && pl.player !== hex.data.player) {
+    const cost = location.cost ? Reward.parse(location.cost) : [];
     pl.build(Building.CustomsPost, hex, cost, engine.map);
   } else {
     hex.data.tradeTokens = hex.tradeTokens.concat(pl.player);
-    pl.gainRewards(Reward.parse(location.rewards), "trade");
   }
   pl.receiveTriggerIncome(Condition.Trade);
 }

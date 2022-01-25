@@ -398,6 +398,9 @@ export default class SpaceHex extends Vue {
         ? `Build ${buildingData[highlightHex.building].name} for ${c}`
         : `Cost: ${c}`);
     }
+    if (highlightHex?.tradeCost) {
+      messages.push(`Trade Cost: ${highlightHex.tradeCost}`);
+    }
     if (highlightHex?.rewards) {
       messages.push(`Reward: ${highlightHex.rewards}`);
     }

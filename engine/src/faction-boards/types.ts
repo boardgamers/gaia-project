@@ -165,7 +165,7 @@ export class FactionBoard {
     }
   }
 
-  cost(building: Building, isolated = true): Reward[] {
+  cost(building: Building, isolated: boolean): Reward[] {
     if (building === Building.TradingStation && isolated) {
       return this.buildings[building].isolatedCost;
     }

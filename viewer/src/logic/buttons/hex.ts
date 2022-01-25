@@ -53,6 +53,9 @@ export function hexSelectionButton(
       }
 
       const highlightHex = hexes.get(hex);
+      if (highlightHex.tradeCost) {
+        b.label += ` Trade Cost: ${highlightHex.tradeCost}`;
+      }
       if (highlightHex.rewards) {
         b.label += ` Reward: ${highlightHex.rewards}`;
       }
