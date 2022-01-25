@@ -30,7 +30,9 @@ function moveTargetButton(
       const hexes = hexMap(engine, a.locations, false);
       for (const location of a.locations) {
         const hex = hexes.hexes.get(engine.map.getS(location.coordinates));
-        hex.rewards = (location as TradingLocation).rewards;
+        const l = location as TradingLocation;
+        hex.tradeCost = l.tradeCost;
+        hex.rewards = l.rewards;
         hex.building = (location as AvailableBuilding).building;
       }
       hexes.hexes.set(target, { building: data.ship, preventClick: true });
