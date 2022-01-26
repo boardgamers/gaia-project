@@ -52,7 +52,7 @@ export const buildingData: { [key in Building]: { name: string; color: string } 
   },
   [Building.ColonyShip]: {
     name: "Colony Ship",
-    color: "--current-round",
+    color: "--rt-gaia",
   },
   [Building.ConstructionShip]: {
     name: "Construction Ship",
@@ -64,7 +64,7 @@ export const buildingData: { [key in Building]: { name: string; color: string } 
   },
   [Building.TradeShip]: {
     name: "Trade Ship",
-    color: "--current-round",
+    color: colorCodes.tradeShip.color,
   },
   [Building.Scout]: {
     name: "Scout",
