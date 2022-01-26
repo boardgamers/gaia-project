@@ -1,7 +1,7 @@
 <template>
   <div v-if="engine.phase !== 'setupInit'">
     <div class="d-flex" style="justify-content: center">
-      <b-checkbox :checked="scope == 'all'" @change="toggleScope">Show ever<u>y</u>thing</b-checkbox>
+      <b-checkbox :checked="scope === 'all'" @change="toggleScope">Show ever<u>y</u>thing</b-checkbox>
       <b-checkbox :checked="hideLog" @change="toggleLog"><u>H</u>ide log until next turn</b-checkbox>
     </div>
     <table class="table table-hover table-striped table-sm">
@@ -22,6 +22,7 @@
           <tr
             v-for="j in rowSpan(event)"
             :key="`${i}-${j}`"
+            class="border-bottom"
             :style="`background-color: ${event.color}; color: ${event.textColor}`"
             :role="event.moveIndex ? 'button' : ''"
             @click="event.moveIndex ? replayTo(event.moveIndex) : null"
@@ -29,34 +30,39 @@
             <td
               v-if="j === 1 && !['setupInit', 'moves-skipped', 'roundStart'].includes(event.phase)"
               :rowspan="rowSpan(event)"
+              class="border-left turn"
             >
               {{ event.round }}.{{ event.turn }}
             </td>
             <td v-if="event.phase === 'roundStart'" colspan="4" class="major-event">Round {{ event.round }}</td>
-            <td v-else-if="event.phase === 'setupInit'" colspan="4" class="major-event">Game Started</td>
-            <td v-else-if="event.phase === 'moves-skipped'" colspan="4" class="major-event">
+            <td v-else-if="event.phase === 'setupInit'" colspan="4" class="major-event border-left">Game Started</td>
+            <td v-else-if="event.phase === 'moves-skipped'" colspan="4" class="major-event border-left">
               Click "Show everything" to expand
             </td>
             <td v-else-if="event.phase === 'roundIncome'" colspan="3" class="phase-change">Income phase</td>
             <td v-else-if="event.phase === 'roundGaia'" colspan="3" class="phase-change">Gaia phase</td>
             <td v-else-if="event.phase === 'roundMove'" colspan="3" class="phase-change">Move phase</td>
             <td v-else-if="event.phase === 'endGame'" colspan="3" class="phase-change">End scoring</td>
-            <td v-else-if="j === 1" :rowspan="rowSpan(event)" class="move">
+            <td v-else-if="j === 1" :rowspan="rowSpan(event)" class="move border-left">
               <div>{{ event.move }}</div>
             </td>
-            <td v-if="event.changes.length > 0" :class="j === 1 ? 'first-change' : 'changes'">
+            <td v-if="event.changes.length > 0" :class="[j === 1 ? 'first-change' : 'changes', 'border-left']">
               {{ event.changes[j - 1].source }}
             </td>
-            <td v-else-if="event.phase == null" />
-            <td v-if="event.changes.length > 0" :class="j === 1 ? 'first-change' : 'changes'">
+            <td v-else-if="event.phase == null" class="border-left" />
+            <td v-if="event.changes.length > 0" :class="[j === 1 ? 'first-change' : 'changes', 'border-left']">
               {{ event.changes[j - 1].changes }}
             </td>
-            <td v-else-if="event.phase == null" />
+            <td v-else-if="event.phase == null" class="border-left border-right" />
             <td
               v-for="(value, k) in rowValues(event, j)"
               :rowspan="rowSpan(event)"
               :key="k"
-              :class="{ 'border-left': value.leftBorder }"
+              :class="{
+                'extended-log': true,
+                'border-left': value.leftBorder,
+                'border-right': k === rowValues(event, j).length - 1,
+              }"
             >
               {{ value.value }}
             </td>
@@ -156,6 +162,12 @@ export default class AdvancedLog extends Vue {
 </script>
 
 <style lang="scss" scoped>
+.table thead td,
+.extended-log,
+.turn {
+  text-align: center;
+}
+
 .major-event {
   font-weight: bold;
   color: black;
