@@ -9,7 +9,7 @@ import {
   Resource,
 } from "@gaia-project/engine";
 import { sum } from "lodash";
-import { researchColorVar, researchNames } from "../../data/research";
+import { researchColorVar, researchData } from "../../data/research";
 import { CommandObject } from "../recent";
 import { chartPlayerBoard, ChartSource } from "./charts";
 import { commandCounterArg0EqualsSource, logEntryProcessor, SimpleSourceFactory } from "./simple-charts";
@@ -76,7 +76,7 @@ export const researchSourceFactory = (expansion: Expansion): SimpleSourceFactory
   sources: ResearchField.values(expansion).map((field) => {
     return {
       type: field as ResearchField,
-      label: researchNames[field],
+      label: researchData[field].name,
       color: researchColorVar(field),
       weight: 1,
     };
