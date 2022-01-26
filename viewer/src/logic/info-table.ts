@@ -460,12 +460,12 @@ function research(engine: Engine, greenFederations: boolean): PlayerTable {
     ).concat(
       ...ResearchField.values(engine.expansions).map((f) => ({
         shortcut: f.substring(0, 1),
-        title: `${researchNames[f]} (${[...Array(lastTile(f) + 1).keys()]
+        title: `<b>${researchNames[f]}</b>${[...Array(lastTile(f) + 1).keys()]
           .map((level) => {
             const desc = researchLevelDesc(engine, f, level, false);
-            return desc ? `Level ${level}: ${desc.join(" ")}` : "";
+            return desc ? `<br/>Level ${level}: ${desc.join(" ")}` : "";
           })
-          .join(", ")})`,
+          .join("")}`,
         color: researchColorVar(f),
         cell: (p) => p.data.research[f],
         additionalHeader: {

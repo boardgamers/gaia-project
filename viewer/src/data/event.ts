@@ -85,19 +85,20 @@ export function eventDesc(event: Event, expansion: Expansion, long = false): str
 
 export function eventDescForCounters(event: Event, expansions: Expansion, long: boolean): string {
   const reward = event.rewards[0];
+  const value = reward.count;
   switch (reward.type) {
     case Resource.TerraformCostDiscount:
-      return `Each terraforming step costs you ${reward.count} ore`;
+      return `Each terraforming step costs you ${value} ore`;
     case Resource.Range:
-      return `Your basic range is ${reward.count}`;
+      return `Your basic range is ${value}`;
     case Resource.ShipRange:
-      return `Your ship range is ${reward.count}`;
+      return `Your ship range is ${value}`;
     case Resource.GainTokenGaiaArea:
-      return `To start a Gaia project, you must move ${reward.count} power tokens to your Gaia area`;
+      return `To start a Gaia project, you must move ${value} power tokens to your Gaia area`;
     case Resource.TradeBonus:
-      return `You have ${reward.count} trade bonus`;
+      return `Your trade bonus level is ${value}`;
     case Resource.TradeDiscount:
-      return `You have ${reward.count} trade discount`;
+      return `Trading costs ${value} power`;
   }
 
   return eventDesc(event, expansions, long);
