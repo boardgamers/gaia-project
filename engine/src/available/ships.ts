@@ -1,5 +1,5 @@
 import Engine from "../engine";
-import { Building, Command, Expansion, Player, ResearchField, Resource, Ship } from "../enums";
+import { Building, Command, Expansion, Planet, Player, ResearchField, Resource, Ship } from "../enums";
 import { GaiaHex } from "../gaia-hex";
 import SpaceMap from "../map";
 import PlayerObject from "../player";
@@ -231,7 +231,7 @@ function tradeLocations(h: GaiaHex, player: Player, engine: Engine): ShipActionL
 function colonyActions(engine: Engine, ship: Ship, h: GaiaHex): AvailableBuilding[] {
   const player = engine.player(ship.player);
   const existingBuilding = h.buildingOf(player.player);
-  if (h.hasPlanet() && (!h.occupied() || existingBuilding === Building.GaiaFormer)) {
+  if (h.hasPlanet() && h.data.planet !== Planet.Transdim && (!h.occupied() || existingBuilding === Building.GaiaFormer)) {
     const check = player.canBuild(engine.map, h, h.data.planet, Building.Colony, engine.isLastRound, engine.replay, {
       existingBuilding,
     });
