@@ -221,6 +221,7 @@ export default class PlayerBoardInfo extends Vue {
       "<li>Click on the sectors icon to highlight all colonized sectors (also works for other players)</li>" +
       "<li>Click on the federation icon to highlight all federation (also works for other players)</li>" +
       "<li>Click on the network icon (right of power bowl) to leech network - how much power can be gained if other players upgrade buildings</li>" +
+      (this.isFrontiers ? "<li>Click on the trade bonus or cost icons to see the trade rewards table</li>": "") +
       "</ul>";
   }
 

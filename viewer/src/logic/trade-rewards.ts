@@ -1,4 +1,4 @@
-import Engine, {
+import {
   Building,
   Expansion,
   Faction,
@@ -10,30 +10,22 @@ import Engine, {
 } from "@gaia-project/engine";
 import { tradeCost, TradeOption, tradeOptions, tradeRewards } from "@gaia-project/engine/src/available/ships";
 import { buildingData } from "../data/building";
-import { staticCellStyle } from "../graphics/colors";
-import { rowHeaderCell } from "./charts/table";
+import { cellStyle } from "./info-table";
+
+type TradeRow = { style: string; cells: string[] };
 
 const levels = Array.from(Array(lastTile(ResearchField.Diplomacy) + 1).keys());
 
-export function tradeRewardFields(engine: Engine): any[] {
-  return [{ key: "Name", sortable: true, isRowHeader: true } as { key: string }].concat(
-    levels.map((level) => {
-      return {
-        key: String(level),
-        label: `Diplomacy ${level}`,
-        sortable: true,
-      };
-    })
-  );
+export function tradeHeaders(): string[] {
+  return ["Name"].concat(levels.map((level) => `Diplomacy ${level}`));
 }
 
-function row(option: TradeOption) {
+function row(option: TradeOption): TradeRow {
   const b = option.building;
   const data = buildingData[b];
   const name = `${option.domestic ? "Domestic" : "Foreign"} ${b === Building.Academy1 ? "Academy" : data.name}`;
-  const row = { Name: rowHeaderCell(staticCellStyle(data.color), name) };
 
-  for (const level of levels) {
+  const cells = levels.map((level) => {
     const guest = new PlayerData();
 
     [...Array(level + 1).keys()]
@@ -51,12 +43,15 @@ function row(option: TradeOption) {
       ? `<br/>Build ${buildingData[bld].name} for ${factionBoard(Faction.Terrans).buildings[bld].cost.join(",")}`
       : "";
     const academy = option.researchAdvancementBonus ? ` *` : "";
-    row[level] = `${cost}: ${rewards.join(",")}${buildDesc}${academy}`;
-  }
+    return `${cost}: ${rewards.join(",")}${buildDesc}${academy}`;
+  });
 
-  return row;
+  return {
+    style: cellStyle(data.color),
+    cells: [name].concat(cells),
+  };
 }
 
-export function tradeRewardItems(engine: Engine): any[] {
+export function tradeRows(): TradeRow[] {
   return tradeOptions.map((option) => row(option));
 }

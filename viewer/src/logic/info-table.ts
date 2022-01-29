@@ -149,7 +149,7 @@ function resolveCellColor(color: string | CellStyle): CellStyle {
   }
 }
 
-export function cellStyle(color: string | CellStyle) {
+export function cellStyle(color: string | CellStyle): string {
   const cellColor = color ? resolveCellColor(color) : null;
   return cellColor ? `background: ${cellColor.backgroundColor}; color: ${cellColor.color};` : "";
 }

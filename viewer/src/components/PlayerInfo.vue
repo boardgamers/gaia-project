@@ -131,23 +131,31 @@
           transform="translate(35.5,1.5) scale(0.1)"
           style="opacity: 0.7"
         />
-        <Resource
-          v-if="isFrontiers"
-          kind="tradeBonus"
-          tooltip="Trade Bonus"
-          :count="playerData.tradeBonus"
-          transform="translate(35.5,3.2) scale(0.1)"
-          style="opacity: 0.7"
-        />
-
-        <Resource
-          v-if="isFrontiers"
-          kind="tradeDiscount"
-          tooltip="Trading Cost in pw"
-          :count="playerData.tradeCost().count"
-          transform="translate(37.3,3.2) scale(0.1)"
-          style="opacity: 0.7"
-        />
+        <g transform="translate(35.5,3.2) scale(0.1)">
+          <Resource v-if="isFrontiers" kind="tradeBonus" :count="playerData.tradeBonus" style="opacity: 0.7" />
+          <circle
+            r="10"
+            style="opacity: 0"
+            v-b-modal.modal-center="'trade'"
+            role="button"
+            v-b-tooltip="'Trade Bonus'"
+          />
+        </g>
+        <g transform="translate(37.3,3.2) scale(0.1)">
+          <Resource
+            v-if="isFrontiers"
+            kind="tradeDiscount"
+            :count="playerData.tradeCost().count"
+            style="opacity: 0.7"
+          />
+          <circle
+            r="10"
+            style="opacity: 0"
+            v-b-modal.modal-center="'trade'"
+            role="button"
+            v-b-tooltip="'Trading Cost in pw'"
+          />
+        </g>
 
         <BuildingGroup
           transform="translate(21, 1.2)"
@@ -259,6 +267,7 @@
       />
     </div>
     <Rules :id="player.faction" :type="player.faction" />
+    <Rules id="trade" type="trade" />
   </div>
 </template>
 

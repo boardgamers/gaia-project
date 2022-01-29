@@ -250,7 +250,9 @@ export function possibleShipActions(
 ): AvailableShipAction[] {
   switch (ship.type) {
     case Building.ColonyShip:
-      return possibleShipActionsOfType(engine, ship, shipLocation, ShipAction.BuildColony, !requireTemporaryStep, (h) => colonyActions(engine, ship, h));
+      return possibleShipActionsOfType(engine, ship, shipLocation, ShipAction.BuildColony, !requireTemporaryStep, (h) =>
+        colonyActions(engine, ship, h)
+      );
     case Building.TradeShip:
       return possibleShipActionsOfType(engine, ship, shipLocation, ShipAction.Trade, true, (h) =>
         tradeLocations(h, ship.player, engine)

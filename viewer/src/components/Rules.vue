@@ -41,24 +41,19 @@
           <b-checkbox :checked="data.value" disabled />
         </template>
       </b-table>
-      <div v-if="rule === 'trade'">
-        <b-table
-          striped
-          bordered
-          small
-          responsive="true"
-          hover
-          :items="tradeRewardItems"
-          :fields="tradeRewardFields"
-          class="rule-table"
-        >
-          <template #cell(Name)="data">
-            <span v-html="data.value"></span>
-          </template>
-          <template #cell()="data">
-            <span v-html="data.value"></span>
-          </template>
-        </b-table>
+      <div v-else-if="rule === 'trade'">
+        <table class="table-bordered">
+          <thead>
+            <td v-for="(h, i) in tradeHeaders" :key="i" class="trade header">
+              <b>{{ h }}</b>
+            </td>
+          </thead>
+          <tbody>
+            <tr v-for="(row, i) in tradeRows" :key="i">
+              <th v-for="(c, j) in row.cells" :key="j" class="trade" :style="row.style" v-html="c"></th>
+            </tr>
+          </tbody>
+        </table>
         <span
           >*: You get an additional 1k for each research track where the Academy owner is more advanced than you, except
           for the first 2 (e.g. 2k if the Academy owner has Science 2, Terraforming 3, Gaia Forming 4, and Economy 1,
@@ -98,7 +93,7 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 import Engine, { Expansion, Faction, factionPlanet, factionVariantBoard } from "@gaia-project/engine";
 import { finalScoringFields, finalScoringItems } from "../logic/final-scoring-rules";
 import { factionColor, planetFill } from "../graphics/utils";
-import { tradeRewardFields, tradeRewardItems } from "../logic/trade-rewards";
+import { tradeHeaders, tradeRows } from "../logic/trade-rewards";
 
 type Rule = Faction | "rules" | "scoring" | "trade";
 
@@ -115,9 +110,6 @@ export default class Rules extends Vue {
   private finalScoringFields: any[] = null;
   private finalScoringItems: any[] = null;
 
-  private tradeRewardFields: any[] = null;
-  private tradeRewardItems: any[] = null;
-
   get engine(): Engine {
     return this.$store.state.data;
   }
@@ -130,10 +122,16 @@ export default class Rules extends Vue {
     const element = document.getElementById("root");
     this.finalScoringFields = finalScoringFields(element);
     this.finalScoringItems = finalScoringItems(element);
-    this.tradeRewardFields = tradeRewardFields(this.engine);
-    this.tradeRewardItems = tradeRewardItems(this.engine);
 
     this.selectRule(this.type ?? "rules");
+  }
+
+  get tradeHeaders() {
+    return tradeHeaders();
+  }
+
+  get tradeRows() {
+    return tradeRows();
   }
 
   selectRule(rule: Rule) {
@@ -179,5 +177,14 @@ footer.rules .btn-secondary {
 .rule-table th > span > span,
 .rule-table th > div {
   display: block;
+}
+
+.trade {
+  padding: 4px;
+
+  &.header {
+    background: var(--rt-dip);
+    color: white;
+  }
 }
 </style>
