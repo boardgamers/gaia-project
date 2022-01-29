@@ -34,8 +34,8 @@
               {{ event.round }}.{{ event.turn }}
             </td>
             <td v-if="event.phase === 'roundStart'" colspan="4" class="major-event">Round {{ event.round }}</td>
-            <td v-else-if="event.phase === 'setupInit'" colspan="4" class="major-event border-left">Game Started</td>
-            <td v-else-if="event.phase === 'moves-skipped'" colspan="4" class="major-event border-left">
+            <td v-else-if="event.phase === 'setupInit'" colspan="4" class="major-event border-left border-bottom">Game Started</td>
+            <td v-else-if="event.phase === 'moves-skipped'" colspan="4" class="major-event border-left border-bottom">
               Click "Show everything" to expand
             </td>
             <td v-else-if="event.phase === 'roundIncome'" colspan="3" class="phase-change">Income phase</td>
@@ -52,7 +52,7 @@
             <td v-if="event.changes.length > 0" :class="[j === 1 ? 'first-change' : 'changes']">
               {{ event.changes[j - 1].changes }}
             </td>
-            <td v-else-if="event.phase == null" class="border-left border-right" />
+            <td v-else-if="event.phase == null" class="border-right" />
             <td
               v-for="(value, k) in rowValues(event, j)"
               :rowspan="rowSpan(event)"
@@ -61,6 +61,7 @@
                 'extended-log': true,
                 'border-left': value.leftBorder,
                 'border-right': k === rowValues(event, j).length - 1,
+                'border-bottom': ['moves-skipped', 'setupInit'].includes(event.phase),
               }"
             >
               {{ value.value }}
