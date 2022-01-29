@@ -8,8 +8,7 @@
       <thead v-if="!hideLog" class="table-bordered">
         <td>Turn</td>
         <td>Moves</td>
-        <td>Source</td>
-        <td>Changes</td>
+        <td colspan="2">Changes</td>
         <td v-for="(h, i) in rowHeaders" :key="i" :title="h.title" :style="cellStyle(h)">
           {{ h.shortcut.toUpperCase() }}
         </td>
@@ -22,7 +21,7 @@
           <tr
             v-for="j in rowSpan(event)"
             :key="`${i}-${j}`"
-            class="border-bottom"
+            :class="{'border-top': j == 0}"
             :style="`background-color: ${event.color}; color: ${event.textColor}`"
             :role="event.moveIndex ? 'button' : ''"
             @click="event.moveIndex ? replayTo(event.moveIndex) : null"
@@ -50,7 +49,7 @@
               {{ event.changes[j - 1].source }}
             </td>
             <td v-else-if="event.phase == null" class="border-left" />
-            <td v-if="event.changes.length > 0" :class="[j === 1 ? 'first-change' : 'changes', 'border-left']">
+            <td v-if="event.changes.length > 0" :class="[j === 1 ? 'first-change' : 'changes']">
               {{ event.changes[j - 1].changes }}
             </td>
             <td v-else-if="event.phase == null" class="border-left border-right" />
