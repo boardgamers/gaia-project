@@ -192,15 +192,14 @@ function possibleBuilding(
 }
 
 export function tradeRewards(option: TradeOption, guest: PlayerData, host: PlayerData) {
-  const rewards = Reward.merge(baseTradeReward(option, guest, host).concat(tradeBonus(guest, option)));
-  return rewards;
+  return Reward.merge(baseTradeReward(option, guest, host).concat(tradeBonus(guest, option)));
 }
 
 export function tradeCost(guest: PlayerData, option: TradeOption) {
   return option.free ? new Reward(0, Resource.ChargePower) : guest.tradeCost();
 }
 
-function shipActionLocation(h: GaiaHex, player: Player, engine: Engine): ShipActionLocation[] {
+function tradeLocations(h: GaiaHex, player: Player, engine: Engine): ShipActionLocation[] {
   const p = engine.player(player);
   if (h.hasStructure() && !h.tradeTokens.some((t) => t === player) && !h.customPosts.some((t) => t === player)) {
     const building = h.data.building;
@@ -208,54 +207,39 @@ function shipActionLocation(h: GaiaHex, player: Player, engine: Engine): ShipAct
     const guest = p.data;
     const domestic = h.data.player === player;
     const option = tradeOptions.find((o) => o.building === building && !!o.domestic === domestic);
-    if (option === null) {
-      return [];
-    }
-
-    const cost = tradeCost(guest, option);
-    if (!engine.player(player).data.canPay([cost])) {
-      return [];
-    }
-    const rewards = tradeRewards(option, guest, host);
-    if (option.build) {
-      return possibleBuilding(engine, h, player, option.build, rewards, cost);
-    } else {
-      return [
-        {
-          coordinates: h.toString(),
-          tradeCost: cost.toString(),
-          rewards: rewards.toString(),
-        } as TradingLocation,
-      ];
-    }
-  }
-}
-
-function possibleTradeShipActions(engine: Engine, ship: Ship, shipLocation: string): AvailableShipAction[] {
-  return possibleShipActionsOfType(engine, ship, shipLocation, ShipAction.Trade, true, (h) =>
-    shipActionLocation(h, ship.player, engine)
-  );
-}
-
-function possibleColonyShipActions(
-  engine: Engine,
-  ship: Ship,
-  shipLocation: string,
-  requireTemporaryStep: boolean
-): AvailableShipAction[] {
-  return possibleShipActionsOfType(engine, ship, shipLocation, ShipAction.BuildColony, !requireTemporaryStep, (h) => {
-    const player = engine.player(ship.player);
-    const existingBuilding = h.buildingOf(player.player);
-    if (h.hasPlanet() && (!h.occupied() || existingBuilding === Building.GaiaFormer)) {
-      const check = player.canBuild(engine.map, h, h.data.planet, Building.Colony, engine.isLastRound, engine.replay, {
-        existingBuilding,
-      });
-      if (check) {
-        return [newAvailableBuilding(Building.Colony, h, check, false)];
+    if (option) {
+      const cost = tradeCost(guest, option);
+      if (engine.player(player).data.canPay([cost])) {
+        const rewards = tradeRewards(option, guest, host);
+        if (option.build) {
+          return possibleBuilding(engine, h, player, option.build, rewards, cost);
+        } else {
+          return [
+            {
+              coordinates: h.toString(),
+              tradeCost: cost.toString(),
+              rewards: rewards.toString(),
+            } as TradingLocation,
+          ];
+        }
       }
     }
-    return [];
-  });
+  }
+  return [];
+}
+
+function colonyActions(engine: Engine, ship: Ship, h: GaiaHex): AvailableBuilding[] {
+  const player = engine.player(ship.player);
+  const existingBuilding = h.buildingOf(player.player);
+  if (h.hasPlanet() && (!h.occupied() || existingBuilding === Building.GaiaFormer)) {
+    const check = player.canBuild(engine.map, h, h.data.planet, Building.Colony, engine.isLastRound, engine.replay, {
+      existingBuilding,
+    });
+    if (check) {
+      return [newAvailableBuilding(Building.Colony, h, check, false)];
+    }
+  }
+  return [];
 }
 
 export function possibleShipActions(
@@ -266,9 +250,11 @@ export function possibleShipActions(
 ): AvailableShipAction[] {
   switch (ship.type) {
     case Building.ColonyShip:
-      return possibleColonyShipActions(engine, ship, shipLocation, requireTemporaryStep);
+      return possibleShipActionsOfType(engine, ship, shipLocation, ShipAction.BuildColony, !requireTemporaryStep, (h) => colonyActions(engine, ship, h));
     case Building.TradeShip:
-      return possibleTradeShipActions(engine, ship, shipLocation);
+      return possibleShipActionsOfType(engine, ship, shipLocation, ShipAction.Trade, true, (h) =>
+        tradeLocations(h, ship.player, engine)
+      );
   }
   return [];
 }
