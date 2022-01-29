@@ -128,13 +128,16 @@ export const resourceData: { [key in Resource]?: ResourceName } = {
   }),
 };
 
-export function showIncome(engine: Engine, player: Player): boolean {
-  return (
-    !engine.isLastRound ||
+export function playerHasReceivedAllIncome(engine: Engine, player: Player) {
+  return !(
     engine.phase == Phase.RoundStart ||
     (engine.phase == Phase.RoundIncome &&
       (engine.playerToMove == player.player || engine.tempTurnOrder.includes(player.player)))
   );
+}
+
+export function showIncome(engine: Engine, player: Player): boolean {
+  return !engine.isLastRound || !playerHasReceivedAllIncome(engine, player);
 }
 
 export function translateResources(rewards: Reward[], countForSingle: boolean): string {

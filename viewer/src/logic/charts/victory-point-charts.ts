@@ -20,6 +20,7 @@ import Engine, {
   TechPos,
 } from "@gaia-project/engine";
 import { boosterData } from "../../data/boosters";
+import { playerHasReceivedAllIncome } from "../../data/resources";
 import { advancedTechTileData } from "../../data/tech-tiles";
 import { ColorVar } from "../../graphics/colors";
 import { colorCodes } from "../color-codes";
@@ -117,7 +118,7 @@ function incomeProjection(sources: EventSource[]): (e: Engine, p: Player) => Map
     if (e.isLastRound) {
       return null;
     }
-    return vpProjection(p.events[Operator.Income], sources, e, true, 1);
+    return vpProjection(p.events[Operator.Income], sources, e, true, playerHasReceivedAllIncome(e, p) ? 1 : 0);
   };
 }
 
