@@ -10,7 +10,7 @@ import {
 } from "@gaia-project/engine";
 import { researchEvents } from "@gaia-project/engine/src/research-tracks";
 import { ButtonData, ButtonWarning } from "../../data";
-import { researchNames } from "../../data/research";
+import { researchData } from "../../data/research";
 import { techTileData } from "../../data/tech-tiles";
 import { CommandController } from "./types";
 import { autoClickButton, confirmationButton, textButton } from "./utils";
@@ -42,16 +42,16 @@ export function researchButtons(
       command: Command.UpgradeResearch,
       label: "Research",
       shortcuts: ["r"],
-      buttons: tracks.map((track) =>
-        textButton({
+      buttons: tracks.map((track) => {
+        const d = researchData[track.field];
+        return textButton({
           command: track.field,
-          label: researchNames[track.field],
-          shortcuts: [track.field.substring(0, 1)],
+          label: d.name,
+          shortcuts: [d.shortcut],
           warning: advanceResearchWarning(player, track, expansions),
-          buttons:
-            phase == Phase.RoundGaia ? confirmationButton("Confirm Research " + researchNames[track.field]) : null,
-        })
-      ),
+          buttons: phase == Phase.RoundGaia ? confirmationButton("Confirm Research " + d.name) : null,
+        });
+      }),
       onClick: (button) => {
         controller.highlightResearchTiles(tracks.map((track) => track.field + "-" + track.to));
         controller.subscribeFinal("researchClick", button);

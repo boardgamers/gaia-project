@@ -5,6 +5,7 @@
         <b-dropdown size="sm" class="mr-2 mb-2" text="Type">
           <b-dropdown-item @click="selectRule('rules')">Rules</b-dropdown-item>
           <b-dropdown-item @click="selectRule('scoring')">Final Scoring</b-dropdown-item>
+          <b-dropdown-item v-if="isFrontiers" @click="selectRule('trade')">Trade Rewards</b-dropdown-item>
           <b-dropdown-divider />
           <b-dropdown-item
             v-for="(f, i) in factions"
@@ -18,6 +19,7 @@
         <h4>
           <div v-text="'Final Scoring'" v-if="rule === 'scoring'" />
           <div v-text="'Rules'" v-else-if="rule === 'rules'" />
+          <div v-text="'Trade Rewards'" v-else-if="rule === 'trade'" />
           <div v-text="factionName(this.rule)" v-else />
         </h4>
       </div>
@@ -30,7 +32,7 @@
         hover
         :items="finalScoringItems"
         :fields="finalScoringFields"
-        class="final-store-table"
+        class="rule-table"
       >
         <template #cell(Name)="data">
           <span v-html="data.value"></span>
@@ -39,6 +41,25 @@
           <b-checkbox :checked="data.value" disabled />
         </template>
       </b-table>
+      <div v-else-if="rule === 'trade'">
+        <table class="table-bordered">
+          <thead>
+            <td v-for="(h, i) in tradeHeaders" :key="i" class="trade header">
+              <b>{{ h }}</b>
+            </td>
+          </thead>
+          <tbody>
+            <tr v-for="(row, i) in tradeRows" :key="i">
+              <th v-for="(c, j) in row.cells" :key="j" class="trade" :style="row.style" v-html="c"></th>
+            </tr>
+          </tbody>
+        </table>
+        <span
+          >*: You get an additional 1k for each research track where the Academy owner is more advanced than you, except
+          for the first 2 (e.g. 2k if the Academy owner has Science 2, Terraforming 3, Gaia Forming 4, and Economy 1,
+          but your advancements are 1, 2, 2, and 0, respectively).</span
+        >
+      </div>
       <div v-else-if="rule === 'rules'">
         <ul>
           <li>
@@ -72,8 +93,9 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 import Engine, { Expansion, Faction, factionPlanet, factionVariantBoard } from "@gaia-project/engine";
 import { finalScoringFields, finalScoringItems } from "../logic/final-scoring-rules";
 import { factionColor, planetFill } from "../graphics/utils";
+import { tradeHeaders, tradeRows } from "../logic/trade-rewards";
 
-type Rule = Faction | "rules" | "scoring";
+type Rule = Faction | "rules" | "scoring" | "trade";
 
 @Component
 export default class Rules extends Vue {
@@ -102,6 +124,14 @@ export default class Rules extends Vue {
     this.finalScoringItems = finalScoringItems(element);
 
     this.selectRule(this.type ?? "rules");
+  }
+
+  get tradeHeaders() {
+    return tradeHeaders();
+  }
+
+  get tradeRows() {
+    return tradeRows();
   }
 
   selectRule(rule: Rule) {
@@ -139,13 +169,22 @@ footer.rules .btn-secondary {
   display: none !important;
 }
 
-.final-store-table th {
+.rule-table th {
   padding: 0 !important;
 }
 
-.final-store-table th > span,
-.final-store-table th > span > span,
-.final-store-table th > div {
+.rule-table th > span,
+.rule-table th > span > span,
+.rule-table th > div {
   display: block;
+}
+
+.trade {
+  padding: 4px;
+
+  &.header {
+    background: var(--rt-dip);
+    color: white;
+  }
 }
 </style>

@@ -84,14 +84,21 @@ const freeActionSources = (resourceSources as FreeActionSource[])
     weight: 0,
   });
 
+function extractResourceChanges(eventSourceFilter: (EventSource) => boolean) {
+  return (wantPlayer, source) =>
+    extractChanges(wantPlayer.player, (player, eventSource, resource, round, change) =>
+      (eventSourceFilter(eventSource) && resource == source.type && change > 0) ||
+      (resource == source.inverseOf && change < 0)
+        ? Math.abs(change)
+        : 0
+    );
+}
+
 export const resourceSourceFactory: SimpleSourceFactory<ResourceSource> = {
   name: "Resources",
   playerSummaryLineChartTitle: "Resources of all players as if bought with power",
   showWeightedTotal: true,
-  extractChange: (wantPlayer, source) =>
-    extractChanges(wantPlayer.player, (player, eventSource, resource, round, change) =>
-      (resource == source.type && change > 0) || (resource == source.inverseOf && change < 0) ? Math.abs(change) : 0
-    ),
+  extractChange: extractResourceChanges(() => true),
   extractLog: ExtractLog.mux([
     {
       sourceTypeFilter: [Resource.BurnToken],
@@ -112,6 +119,14 @@ export const resourceSourceFactory: SimpleSourceFactory<ResourceSource> = {
     },
   ]),
   sources: resourceSources,
+};
+
+export const tradeResourceSourceFactory: SimpleSourceFactory<ResourceSource> = {
+  name: "Trade Resources",
+  playerSummaryLineChartTitle: "Resources from trade of all players as if bought with power",
+  showWeightedTotal: true,
+  extractChange: extractResourceChanges((s) => s == "trade"),
+  sources: resourceSources.filter((s) => s.type != Resource.BurnToken && s.type != powerLeverageSource.type),
 };
 
 export const freeActionSourceFactory: SimpleSourceFactory<FreeActionSource> = {

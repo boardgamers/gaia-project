@@ -191,7 +191,7 @@ export default class ResearchTile extends Vue {
   }
 
   get tooltip() {
-    return `<b>Level ${this.level}:</b> ${researchLevelDesc(this.engine, this.field, this.level, true).join(" ")}`;
+    return `<b>Level ${this.level}:</b> ${researchLevelDesc(this.engine, this.field, this.level, true).join("<br/>")}`;
   }
 
   get height() {

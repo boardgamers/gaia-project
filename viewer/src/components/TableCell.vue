@@ -5,7 +5,7 @@
       :key="i"
       :class="{ first: i === 0, 'info-table-cell': true, 'flex-grow-1': c.flex === 'rowGrow' }"
       :style="c.style"
-      v-b-tooltip.hover
+      v-b-tooltip.html.hover
       :title="c.title"
       @click="convert(c.convert)"
     >

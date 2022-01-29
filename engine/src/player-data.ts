@@ -600,8 +600,8 @@ export default class PlayerData extends EventEmitter {
     return this.gaiaformers > 1 ? this.gaiaformers : 0;
   }
 
-  tradeCost(): number {
-    return TRADE_COST - this.tradeDiscount;
+  tradeCost(): Reward {
+    return new Reward(TRADE_COST - this.tradeDiscount, Resource.ChargePower);
   }
 
   /**

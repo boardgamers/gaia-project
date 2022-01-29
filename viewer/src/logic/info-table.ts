@@ -30,7 +30,7 @@ import { allBuildings, buildingData, buildingName, buildingShortcut } from "../d
 import { buildingDesc, factionName } from "../data/factions";
 import { federationData } from "../data/federations";
 import { planetNames, remainingPlanets } from "../data/planets";
-import { researchColorVar, researchLevelDesc, researchNames } from "../data/research";
+import { researchColorVar, researchData, researchLevelDesc } from "../data/research";
 import { resourceData, showIncome, translateAbbreviatedResources, translateResources } from "../data/resources";
 import { roundScoringData } from "../data/round-scorings";
 import { leechNetwork, sectors } from "../data/stats";
@@ -149,7 +149,7 @@ function resolveCellColor(color: string | CellStyle): CellStyle {
   }
 }
 
-export function cellStyle(color: string | CellStyle) {
+export function cellStyle(color: string | CellStyle): string {
   const cellColor = color ? resolveCellColor(color) : null;
   return cellColor ? `background: ${cellColor.backgroundColor}; color: ${cellColor.color};` : "";
 }
@@ -460,12 +460,12 @@ function research(engine: Engine, greenFederations: boolean): PlayerTable {
     ).concat(
       ...ResearchField.values(engine.expansions).map((f) => ({
         shortcut: f.substring(0, 1),
-        title: `${researchNames[f]} (${[...Array(lastTile(f) + 1).keys()]
+        title: `<b>${researchData[f].name}</b>${[...Array(lastTile(f) + 1).keys()]
           .map((level) => {
             const desc = researchLevelDesc(engine, f, level, false);
-            return desc ? `Level ${level}: ${desc.join(" ")}` : "";
+            return desc ? `<br/>Level ${level}: ${desc.join(" ")}` : "";
           })
-          .join(", ")})`,
+          .join("")}`,
         color: researchColorVar(f),
         cell: (p) => p.data.research[f],
         additionalHeader: {

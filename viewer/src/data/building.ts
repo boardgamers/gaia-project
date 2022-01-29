@@ -52,7 +52,7 @@ export const buildingData: { [key in Building]: { name: string; color: string } 
   },
   [Building.ColonyShip]: {
     name: "Colony Ship",
-    color: "--current-round",
+    color: "--rt-gaia",
   },
   [Building.ConstructionShip]: {
     name: "Construction Ship",
@@ -64,7 +64,7 @@ export const buildingData: { [key in Building]: { name: string; color: string } 
   },
   [Building.TradeShip]: {
     name: "Trade Ship",
-    color: "--current-round",
+    color: colorCodes.tradeShip.color,
   },
   [Building.Scout]: {
     name: "Scout",
@@ -87,12 +87,8 @@ export function allBuildings(expansion: Expansion, gaiaFormer: boolean) {
 }
 
 export function buildingName(building: Building, faction: Faction): string {
-  switch (building) {
-    case Building.Academy2:
-      if (faction == null) {
-        return "Academy 2";
-      }
-      return faction == Faction.BalTaks ? "Credit Academy" : "QIC Academy";
+  if (building === Building.Academy2 && faction != null) {
+    return faction == Faction.BalTaks ? "Credit Academy" : "QIC Academy";
   }
   return buildingData[building].name;
 }

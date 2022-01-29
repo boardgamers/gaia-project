@@ -3,14 +3,14 @@ import { GAIA_FORMER_COST } from "@gaia-project/engine/src/faction-boards/types"
 import { CellStyle, staticCellStyle } from "../graphics/colors";
 import { eventDescForCounters } from "./event";
 
-export const researchNames = {
-  [ResearchField.Terraforming]: "Terraforming",
-  [ResearchField.Navigation]: "Navigation",
-  [ResearchField.Intelligence]: "Intelligence",
-  [ResearchField.GaiaProject]: "Gaia Project",
-  [ResearchField.Economy]: "Economy",
-  [ResearchField.Science]: "Science",
-  [ResearchField.Diplomacy]: "Diplomacy",
+export const researchData: { [key in ResearchField]: { name: string; shortcut: string } } = {
+  [ResearchField.Terraforming]: { name: "Terraforming", shortcut: "t" },
+  [ResearchField.Navigation]: { name: "Navigation", shortcut: "n" },
+  [ResearchField.Intelligence]: { name: "Intelligence", shortcut: "i" },
+  [ResearchField.GaiaProject]: { name: "Gaia Project", shortcut: "g" },
+  [ResearchField.Economy]: { name: "Economy", shortcut: "e" },
+  [ResearchField.Science]: { name: "Science", shortcut: "s" },
+  [ResearchField.Diplomacy]: { name: "Diplomacy", shortcut: "p" },
 };
 
 type ResearchEffectCounter = {
@@ -62,7 +62,7 @@ const researchEffectCounters: ResearchEffectCounter[] = [
     expansion: Expansion.Frontiers,
     field: ResearchField.Diplomacy,
     from: Resource.TradeDiscount,
-    currentValue: (p) => p.data.tradeCost(),
+    currentValue: (p) => p.data.tradeCost().count,
   },
 ];
 
@@ -141,6 +141,7 @@ export function researchLevelDesc(engine: Engine, field: ResearchField, level: n
 export function researchColorVar(field: ResearchField): string {
   return `--rt-${field}`;
 }
+
 export function researchColor(field: ResearchField): CellStyle {
   return staticCellStyle(researchColorVar(field));
 }
