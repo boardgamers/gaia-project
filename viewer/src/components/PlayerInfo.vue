@@ -144,7 +144,7 @@
           v-if="isFrontiers"
           kind="tradeDiscount"
           tooltip="Trading Cost in pw"
-          :count="playerData.tradeCost()"
+          :count="playerData.tradeCost().count"
           transform="translate(37.3,3.2) scale(0.1)"
           style="opacity: 0.7"
         />

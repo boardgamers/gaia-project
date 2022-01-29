@@ -35,7 +35,7 @@ export function researchEvents(field: ResearchField, level: number, expansion: E
   return spec.map((s) => new Event(s, field)).filter((e) => e.rewards.every((r) => isResourceUsed(r.type, expansion)));
 }
 
-export function lastTile(field: ResearchField) {
+export function lastTile(field: ResearchField): number {
   return researchTracks[field].length - 1;
 }
 

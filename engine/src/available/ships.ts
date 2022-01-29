@@ -3,7 +3,7 @@ import { Building, Command, Expansion, Player, ResearchField, Resource, Ship } f
 import { GaiaHex } from "../gaia-hex";
 import SpaceMap from "../map";
 import PlayerObject from "../player";
-import { ResearchProgress } from "../player-data";
+import PlayerData, { ResearchProgress } from "../player-data";
 import Reward from "../reward";
 import { newAvailableBuilding } from "./buildings";
 import {
@@ -19,6 +19,58 @@ import {
 const MAX_SHIPS_PER_HEX = 3;
 const SHIP_ACTION_RANGE = 1;
 export const TRADE_COST = 3;
+
+export type TradeOption = {
+  building: Building;
+  domestic?: boolean;
+  free?: boolean;
+  base: Reward[];
+  bonus: Reward[];
+  researchAdvancementBonus?: boolean;
+  build?: Building;
+};
+
+export const tradeOptions: TradeOption[] = [
+  {
+    building: Building.Mine,
+    domestic: true,
+    free: true,
+    base: Reward.parse("1o"),
+    bonus: [],
+  },
+  {
+    building: Building.Mine,
+    base: [],
+    bonus: Reward.parse("1c,1o"),
+    build: Building.CustomsPost,
+  },
+  {
+    building: Building.TradingStation,
+    base: Reward.parse("5c"),
+    bonus: Reward.parse("3c,1pw"),
+  },
+  {
+    building: Building.ResearchLab,
+    base: Reward.parse("2k"),
+    bonus: Reward.parse("1k"),
+  },
+  {
+    building: Building.Academy1,
+    base: Reward.parse("2k"),
+    bonus: Reward.parse("1k"),
+    researchAdvancementBonus: true,
+  },
+  {
+    building: Building.PlanetaryInstitute,
+    base: Reward.parse("1t,2pw"),
+    bonus: Reward.parse("4pw"),
+  },
+  {
+    building: Building.Colony,
+    base: Reward.parse("3vp"),
+    bonus: Reward.parse("2vp"),
+  },
+];
 
 export function shipsInHex(location: string, data): Ship[] {
   return data.players.flatMap((p) => p.data.ships).filter((s) => s.location === location);
@@ -93,16 +145,10 @@ function possibleShipActionsOfType(
   return actions;
 }
 
-function tradeCost(engine: Engine, player: Player): Reward {
-  return new Reward(engine.player(player).data.tradeCost(), Resource.ChargePower);
-}
-
-function tradeUnits(engine: Engine, player: Player, building: Building): Reward[] {
-  const p = engine.player(player);
-
+export function tradeBonus(data: PlayerData, option: TradeOption): Reward[] {
   let rewards = [];
-  for (let i = 0; i < p.data.tradeBonus; i++) {
-    rewards = Reward.merge(rewards.concat(tradeUnit(building)));
+  for (let i = 0; i < data.tradeBonus; i++) {
+    rewards = Reward.merge(rewards.concat(option.bonus));
   }
   return rewards;
 }
@@ -111,108 +157,83 @@ function isFurther(guest: ResearchProgress, host: ResearchProgress): number {
   return ResearchField.values(Expansion.All).filter((f) => host[f] > guest[f]).length;
 }
 
-function baseTradeReward(building: Building, guest: Player, host: Player, engine: Engine): Reward[] {
-  switch (building) {
-    //own Mine
-    case Building.Mine:
-      return Reward.parse("1o");
-    case Building.TradingStation:
-      return Reward.parse("5c");
-    case Building.ResearchLab:
-      return Reward.parse("2k");
-    case Building.Academy1:
-    case Building.Academy2:
-      return [
-        new Reward(
-          Math.max(2, isFurther(engine.player(guest).data.research, engine.player(host).data.research)),
-          Resource.Knowledge
-        ),
-      ];
-    case Building.PlanetaryInstitute:
-      return Reward.parse("1t,2pw");
-    case Building.Colony:
-      return Reward.parse("3vp");
+export function baseTradeReward(option: TradeOption, guest: PlayerData, host: PlayerData): Reward[] {
+  if (option.researchAdvancementBonus) {
+    const base = option.base[0];
+    return [new Reward(Math.max(base.count, isFurther(guest.research, host.research)), base.type)];
   }
-  throw new Error("unknown trade bonus: " + building);
+  return option.base;
 }
 
-function tradeUnit(building: Building): Reward[] {
-  switch (building) {
-    case Building.Mine:
-      //foreign mine
-      return Reward.parse("1c,1o");
-    case Building.TradingStation:
-      return Reward.parse("3c,1pw");
-    case Building.ResearchLab:
-    case Building.Academy1:
-    case Building.Academy2:
-      return Reward.parse("1k");
-    case Building.PlanetaryInstitute:
-      return Reward.parse("4pw");
-    case Building.Colony:
-      return Reward.parse("2vp");
-  }
-  throw new Error("unknown trade bonus: " + building);
-}
-
-function possibleCustomsPost(engine: Engine, h: GaiaHex, player: Player) {
+function possibleBuilding(
+  engine: Engine,
+  h: GaiaHex,
+  player: Player,
+  building: Building,
+  rewards: Reward[],
+  cost: Reward
+) {
   const p = engine.player(player);
-  const b = Building.CustomsPost;
-  const units = tradeUnits(engine, player, Building.Mine);
-  const canBuildAfterTrade = p.canBuild(engine.map, h, h.data.planet, b, engine.isLastRound, engine.replay, {
-    addedCost: Reward.negative(units),
+  const canBuildAfterTrade = p.canBuild(engine.map, h, h.data.planet, building, engine.isLastRound, engine.replay, {
+    addedCost: Reward.negative(rewards),
   });
   if (canBuildAfterTrade) {
-    canBuildAfterTrade.cost = p.board.cost(b, false);
-    const availableBuilding = newAvailableBuilding(b, h, canBuildAfterTrade, false);
+    canBuildAfterTrade.cost = p.board.cost(building, false);
+    const availableBuilding = newAvailableBuilding(building, h, canBuildAfterTrade, false);
     return [
       {
         ...availableBuilding,
-        tradeCost: tradeCost(engine, player).toString(),
-        rewards: units.toString(),
+        tradeCost: cost.toString(),
+        rewards: rewards.toString(),
       },
     ];
   }
   return [];
 }
 
-function totalTradeReward(h: GaiaHex, player: Player, engine: Engine): ShipActionLocation[] {
+export function tradeRewards(option: TradeOption, guest: PlayerData, host: PlayerData) {
+  const rewards = Reward.merge(baseTradeReward(option, guest, host).concat(tradeBonus(guest, option)));
+  return rewards;
+}
+
+export function tradeCost(guest: PlayerData, option: TradeOption) {
+  return option.free ? new Reward(0, Resource.ChargePower) : guest.tradeCost();
+}
+
+function shipActionLocation(h: GaiaHex, player: Player, engine: Engine): ShipActionLocation[] {
+  const p = engine.player(player);
   if (h.hasStructure() && !h.tradeTokens.some((t) => t === player) && !h.customPosts.some((t) => t === player)) {
     const building = h.data.building;
-    const host = h.data.player;
-    if (host !== player) {
-      const canTrade = engine.player(player).data.canPay([tradeCost(engine, player)]);
-      if (!canTrade) {
-        return [];
-      }
-      if (building === Building.Mine) {
-        return possibleCustomsPost(engine, h, player);
-      } else {
-        return [
-          {
-            coordinates: h.toString(),
-            tradeCost: tradeCost(engine, player).toString(),
-            rewards: Reward.merge(
-              baseTradeReward(building, player, host, engine).concat(tradeUnits(engine, player, building))
-            ).toString(),
-          } as TradingLocation,
-        ];
-      }
-    } else if (building === Building.Mine) {
+    const host = engine.player(h.data.player).data;
+    const guest = p.data;
+    const domestic = h.data.player === player;
+    const option = tradeOptions.find((o) => o.building === building && !!o.domestic === domestic);
+    if (option === null) {
+      return [];
+    }
+
+    const cost = tradeCost(guest, option);
+    if (!engine.player(player).data.canPay([cost])) {
+      return [];
+    }
+    const rewards = tradeRewards(option, guest, host);
+    if (option.build) {
+      return possibleBuilding(engine, h, player, option.build, rewards, cost);
+    } else {
       return [
         {
           coordinates: h.toString(),
-          rewards: baseTradeReward(building, player, host, engine).toString(),
+          tradeCost: cost.toString(),
+          rewards: rewards.toString(),
         } as TradingLocation,
       ];
     }
   }
-  return [];
 }
 
 function possibleTradeShipActions(engine: Engine, ship: Ship, shipLocation: string): AvailableShipAction[] {
   return possibleShipActionsOfType(engine, ship, shipLocation, ShipAction.Trade, true, (h) =>
-    totalTradeReward(h, ship.player, engine)
+    shipActionLocation(h, ship.player, engine)
   );
 }
 

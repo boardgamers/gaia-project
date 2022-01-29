@@ -87,12 +87,8 @@ export function allBuildings(expansion: Expansion, gaiaFormer: boolean) {
 }
 
 export function buildingName(building: Building, faction: Faction): string {
-  switch (building) {
-    case Building.Academy2:
-      if (faction == null) {
-        return "Academy 2";
-      }
-      return faction == Faction.BalTaks ? "Credit Academy" : "QIC Academy";
+  if (building === Building.Academy2 && faction != null) {
+    return faction == Faction.BalTaks ? "Credit Academy" : "QIC Academy";
   }
   return buildingData[building].name;
 }

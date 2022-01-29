@@ -62,7 +62,7 @@ const researchEffectCounters: ResearchEffectCounter[] = [
     expansion: Expansion.Frontiers,
     field: ResearchField.Diplomacy,
     from: Resource.TradeDiscount,
-    currentValue: (p) => p.data.tradeCost(),
+    currentValue: (p) => p.data.tradeCost().count,
   },
 ];
 
