@@ -23,6 +23,7 @@ import {
   boosterSourceFactory,
   freeActionSourceFactory,
   resourceSourceFactory,
+  tradeResourceSourceFactory,
 } from "./resources";
 import { ExtractLog, logEntryProcessor, SimpleSourceFactory } from "./simple-charts";
 import { advancedTechSourceFactory, baseTechSourceFactory } from "./tech";
@@ -35,7 +36,7 @@ export const createSimpleSourceFactories = (
   factions: Faction[],
   expansion: Expansion
 ): SimpleSourceFactory<ChartSource<any>>[] => {
-  return [
+  const s = [
     resourceSourceFactory,
     powerChargeSourceFactory,
     leechSourceFactory,
@@ -52,6 +53,10 @@ export const createSimpleSourceFactories = (
     advancedTechSourceFactory(advTechTiles),
     finalScoringSourceFactory(finalTiles),
   ];
+  if (expansion == Expansion.Frontiers) {
+    s.push(tradeResourceSourceFactory);
+  }
+  return s;
 };
 
 function simpleChartDetails<Source extends ChartSource<any>>(
