@@ -7,12 +7,14 @@ import {
   PlayerData,
   researchEvents,
   ResearchField,
+  Resource,
 } from "@gaia-project/engine";
 import { tradeCost, TradeOption, tradeOptions, tradeRewards } from "@gaia-project/engine/src/available/ships";
 import { buildingData } from "../data/building";
+import { ResourceText } from "../graphics/utils";
 import { cellStyle } from "./info-table";
 
-type TradeRow = { style: string; cells: string[] };
+type TradeRow = { style: string; cells: ResourceText[] };
 
 const levels = Array.from(Array(lastTile(ResearchField.Diplomacy) + 1).keys());
 
@@ -23,9 +25,11 @@ export function tradeHeaders(): string[] {
 function row(option: TradeOption): TradeRow {
   const b = option.building;
   const data = buildingData[b];
-  const name = `${option.domestic ? "Domestic" : "Foreign"} ${b === Building.Academy1 ? "Academy" : data.name}`;
+  const name: ResourceText = [
+    `${option.domestic ? "Domestic" : "Foreign"} ${b === Building.Academy1 ? "Academy" : data.name}`,
+  ];
 
-  const cells = levels.map((level) => {
+  const cells: ResourceText[] = levels.map((level) => {
     const guest = new PlayerData();
 
     [...Array(level + 1).keys()]
@@ -36,14 +40,15 @@ function row(option: TradeOption): TradeRow {
         }
       });
 
-    const cost = tradeCost(guest, option).toString();
+    const cost = tradeCost(guest, option);
+    cost.type = Resource.PayPower;
     const rewards = tradeRewards(option, guest, guest);
     const bld = option.build;
     const buildDesc = bld
       ? `<br/>Build ${buildingData[bld].name} for ${factionBoard(Faction.Terrans).buildings[bld].cost.join(",")}`
       : "";
     const academy = option.researchAdvancementBonus ? ` *` : "";
-    return `${cost}: ${rewards.join(",")}${buildDesc}${academy}`;
+    return [[cost], "arrow", rewards, `${buildDesc}${academy}`];
   });
 
   return {

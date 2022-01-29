@@ -195,7 +195,7 @@ export function tradeRewards(option: TradeOption, guest: PlayerData, host: Playe
   return Reward.merge(baseTradeReward(option, guest, host).concat(tradeBonus(guest, option)));
 }
 
-export function tradeCost(guest: PlayerData, option: TradeOption) {
+export function tradeCost(guest: PlayerData, option: TradeOption): Reward {
   return option.free ? new Reward(0, Resource.ChargePower) : guest.tradeCost();
 }
 

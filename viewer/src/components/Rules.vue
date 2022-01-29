@@ -50,7 +50,9 @@
           </thead>
           <tbody>
             <tr v-for="(row, i) in tradeRows" :key="i">
-              <th v-for="(c, j) in row.cells" :key="j" class="trade" :style="row.style" v-html="c"></th>
+              <td v-for="(c, j) in row.cells" :key="j" class="trade" :style="row.style">
+                <ResourcesText :content="c" />
+              </td>
             </tr>
           </tbody>
         </table>
@@ -90,14 +92,16 @@
 import { factionDesc, factionName } from "../data/factions";
 
 import { Component, Prop, Vue } from "vue-property-decorator";
-import Engine, { Expansion, Faction, factionPlanet, factionVariantBoard } from "@gaia-project/engine";
+import Engine, { Expansion, Faction, factionPlanet, factionVariantBoard, Resource, Reward } from "@gaia-project/engine";
 import { finalScoringFields, finalScoringItems } from "../logic/final-scoring-rules";
-import { factionColor, planetFill } from "../graphics/utils";
+import { factionColor, planetFill, ResourceText } from "../graphics/utils";
 import { tradeHeaders, tradeRows } from "../logic/trade-rewards";
+import ResourcesText from "./Resources/ResourcesText.vue";
 
 type Rule = Faction | "rules" | "scoring" | "trade";
-
-@Component
+@Component({
+  components: { ResourcesText },
+})
 export default class Rules extends Vue {
   @Prop()
   id: string;

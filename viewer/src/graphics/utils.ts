@@ -1,5 +1,7 @@
-import { Faction, factionPlanet, Planet } from "@gaia-project/engine";
+import { Faction, factionPlanet, Planet, Reward } from "@gaia-project/engine";
 import planets from "../data/planets";
+
+export type ResourceText = (string | Reward[])[];
 
 export function factionColor(faction: Faction | "gen"): string {
   if (faction === "gen") {
