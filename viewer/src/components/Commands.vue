@@ -3,9 +3,8 @@
     <div id="move-title">
       <h5>
         <span v-if="init">Pick the number of players</span>
-        <span v-else>
-          <span v-html="[playerName, ...titles].join(' - ')" />
-          <span class="smaller small">{{ currentTurnLog }}</span>
+        <span v-else class="d-flex">
+          <ResourcesText :content="statusLine" />
           <Undo v-if="canUndo" transform="scale(1.2)" />
         </span>
       </h5>
@@ -31,17 +30,12 @@
         />
       </div>
       <div v-if="isChoosingFaction" class="d-flex flex-wrap align-content-stretch">
-        <MoveButton
-          v-for="faction in factionsToChoose.data"
-          :button="{
-            command: `${factionsToChoose.name} ${faction}`,
+        <MoveButton v-for="faction in factionsToChoose.data" :button="{ command: `${factionsToChoose.name} ${faction}`,
             modal: modalDialog(factionName(faction), tooltip(faction)),
             label: `${factionName(faction)} <i class='planet ${factionPlanet(faction)}'></i>`,
             shortcuts: [factionShortcut(faction)],
           }"
-          :controller="controller"
-          :key="faction"
-        />
+        :controller="controller" :key="faction" />
         <MoveButton
           v-if="!gameData.randomFactions"
           :button="randomFactionButton"
@@ -83,8 +77,13 @@ import { buttonStringLabel, callOnShow } from "../logic/buttons/utils";
 import { commandButtons, replaceRepeat } from "../logic/buttons/commands";
 import { CubeCoordinates } from "hexagrid";
 import { autoClickStrategy } from "../logic/buttons/autoClick";
+import ResourcesText from "./Resources/ResourcesText.vue";
+import { ResourceText } from "../graphics/utils";
+import { chargePowerToPay } from "../logic/utils";
 
 let show = false;
+
+const statusLineSeparator = " - ";
 
 export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?: BuildWarning[] };
 
@@ -129,6 +128,7 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
     },
   },
   components: {
+    ResourcesText,
     MoveButton,
     Undo,
   },
@@ -152,14 +152,19 @@ export default class Commands extends Vue implements CommandController {
     return this.gameData.factionCustomization;
   }
 
-  get currentTurnLog(): string {
-    if (this.currentMove == null) {
-      return "";
+  get statusLine(): ResourceText {
+    const t: ResourceText = [[this.playerName, ...this.titles].join(statusLineSeparator)];
+
+    if (this.currentMove?.length > 0) {
+      t.push(statusLineSeparator);
+      t.push(this.currentMove.substring(this.currentMove.indexOf(" ")));
+      t.push(...this.currentTurnChanges);
     }
-    return this.currentMove.substring(this.currentMove.indexOf(" ")) + this.currentTurnChanges();
+
+    return t;
   }
 
-  private currentTurnChanges(): string {
+  get currentTurnChanges(): ResourceText {
     const logEntries = this.gameData.advancedLog;
     const entry = logEntries[logEntries.length - 1];
     if (entry != null && entry.changes != null && entry.move != null) {
@@ -167,10 +172,10 @@ export default class Commands extends Vue implements CommandController {
         const values = Object.values(entry.changes).flatMap((e) =>
           Object.keys(e).map((k) => new Reward(e[k], k as Resource))
         );
-        return ` (${Reward.merge(values).toString()})`;
+        return [Reward.merge(chargePowerToPay(values))];
       }
     }
-    return "";
+    return [];
   }
 
   loadCommands(commands: AvailableCommand[]) {

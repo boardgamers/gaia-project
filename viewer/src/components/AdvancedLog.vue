@@ -81,6 +81,7 @@ import Engine, { Resource, Reward } from "@gaia-project/engine";
 import { HistoryEntry, makeHistory } from "../data/log";
 import { cellStyle, logPlayerTables, PlayerColumn } from "../logic/info-table";
 import ResourcesText from "./Resources/ResourcesText.vue";
+import { parseRewardsForLog } from "../logic/utils";
 
 type LogScope = "recent" | "all";
 @Component({
@@ -149,8 +150,7 @@ export default class AdvancedLog extends Vue {
   }
 
   parseRewards(s: string): Reward[] {
-    return Reward.parse(s.replace(/ /g, ""))
-      .map(r => r.type === Resource.ChargePower && r.count < 0 ? new Reward(-r.count, Resource.PayPower) : r);
+    return parseRewardsForLog(s);
   }
 
   rowValues(entry: HistoryEntry, change: number): { value: string; leftBorder: boolean }[] {
@@ -188,6 +188,10 @@ export default class AdvancedLog extends Vue {
 
 .move {
   word-break: break-word;
+}
+
+td {
+  vertical-align: middle !important;
 }
 
 .first-change {

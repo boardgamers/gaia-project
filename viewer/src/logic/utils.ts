@@ -1,6 +1,7 @@
-import Engine, { Building, GaiaHex, Phase, PlayerEnum, SpaceMap } from "@gaia-project/engine";
+import Engine, { Building, GaiaHex, Phase, PlayerEnum, Resource, Reward, SpaceMap } from "@gaia-project/engine";
 import { upgradedBuildings } from "@gaia-project/engine/src/buildings";
 import { LEECHING_DISTANCE } from "@gaia-project/engine/src/engine";
+import { ResourceText } from "../graphics/utils";
 
 export function phaseBeforeSetupBuilding(data: Engine): boolean {
   return (
@@ -54,3 +55,14 @@ export function rotate<T>(list: Array<T>, first: T): Array<T> {
   }
   return list.slice(i).concat(list.slice(0, i));
 }
+
+export function chargePowerToPay(rewards: Reward[]) {
+  return rewards.map((r) =>
+    r.type === Resource.ChargePower && r.count < 0 ? new Reward(-r.count, Resource.PayPower) : r
+  );
+}
+
+export function parseRewardsForLog(s: string): Reward[] {
+  return chargePowerToPay(Reward.parse(s.replace(/ /g, "")));
+}
+
