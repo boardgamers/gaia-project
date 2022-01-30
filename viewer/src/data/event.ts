@@ -93,7 +93,7 @@ export function eventDescForCounters(event: Event, expansions: Expansion, long: 
       return `Your basic range is ${value}`;
     case Resource.ShipRange:
       return `Your ship range is ${value}`;
-    case Resource.GainTokenGaiaArea:
+    case Resource.MoveTokenToGaiaArea:
       return `To start a Gaia project, you must move ${value} power tokens to your Gaia area`;
     case Resource.TradeBonus:
       return `Your trade bonus level is ${value}`;

@@ -66,7 +66,6 @@ export function conversionButton(
     {
       label: conversionLabel(cost, income),
       resourceLabel: [conversion.from, ResourceTextSymbols.arrow, conversion.to],
-      conversion: conversion,
       shortcuts: shortcut != null ? [shortcut] : [],
       command,
       warning: player ? resourceWasteWarning(rewardWarnings(player, income)) : null,
@@ -186,7 +185,7 @@ export function freeAndBurnButton(
     const b = freeActionButton(conversions.free, player);
     if (phase === Phase.RoundGaia) {
       for (const cb of b.buttons) {
-        if (cb.conversion.to[0].type != Resource.TechTile) {
+        if (!cb.resourceLabel.some((c) => typeof c == "object" && c[0].type === Resource.TechTile)) {
           cb.buttons = confirmationButton("Confirm Free Action");
         }
       }
@@ -204,7 +203,7 @@ export function freeAndBurnButton(
     button: autoClickButton({
       label: labels.join(" / "),
       shortcuts: ["a"],
-      buttons: sortBy(buttons, (b) => b.conversion.from[0].type),
+      buttons: sortBy(buttons, (b) => (b.resourceLabel[0] as Reward[])[0].type),
     }),
     tooltips,
   };

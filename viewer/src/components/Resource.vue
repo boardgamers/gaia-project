@@ -19,7 +19,7 @@
       y="-8"
     />
     <rect v-else-if="kind === 'tradeShip'" class="trade-ship" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
-    <rect v-else-if="kind === 'tg'" class="gaia" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
+    <rect v-else-if="['tg', 't->tg'].includes(kind)" class="gaia" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
     <rect
       v-else-if="['pw', 'pay-pw', 't', 'bowl-t', 'burn-token', 'brainstone'].includes(kind)"
       class="power"
@@ -145,9 +145,22 @@
       y="0"
       v-if="
         (count != null &&
-          ['o', 'c', 'k', 'pw', 'pay-pw', 't', 'bowl-t', 'burn-token', 'tg', 'vp', 'q', 'gf', 'tradeShip'].includes(
-            kind
-          )) ||
+          [
+            'o',
+            'c',
+            'k',
+            'pw',
+            'pay-pw',
+            't',
+            'bowl-t',
+            'burn-token',
+            'tg',
+            't->tg',
+            'vp',
+            'q',
+            'gf',
+            'tradeShip',
+          ].includes(kind)) ||
         count === '+' ||
         kind === 'tradeBonus' ||
         kind === 'tradeDiscount'

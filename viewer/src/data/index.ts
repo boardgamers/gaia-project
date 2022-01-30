@@ -6,7 +6,6 @@ import {
   Building,
   BuildWarning,
   GaiaHex,
-  Reward,
   TechTile,
   TechTilePos,
 } from "@gaia-project/engine";
@@ -34,7 +33,6 @@ export interface ButtonData {
   command?: string;
   tooltip?: string;
   times?: number[];
-  conversion?: { from: Reward[]; to: Reward[] };
   modal?: ModalButtonData;
   hexes?: HexSelection;
   onClick?: (button: ButtonData) => void;

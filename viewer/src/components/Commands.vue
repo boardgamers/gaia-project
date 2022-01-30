@@ -356,6 +356,7 @@ export default class Commands extends Vue implements CommandController {
     }
     this.allButtons = buttons;
     this.preventFirstAutoClick = false;
+
     return buttons;
   }
 

@@ -41,7 +41,6 @@ export function hexSelectionButton(
       assert(!b.shortcuts, "shortcuts already exists");
       assert(!b.warning, "warning already exists");
       assert(!b.tooltip, "tooltip already exists");
-      assert(!b.conversion, "conversion already exists");
       assert(!b.hover, "hover already exists");
 
       b.command = hex.toString();

@@ -55,7 +55,7 @@ import Engine, {
   Command,
   factionPlanet,
   Planet,
-  PlayerEnum,
+  PlayerEnum, Reward,
 } from "@gaia-project/engine";
 import Resource from "./Resource.vue";
 import SpecialAction from "./SpecialAction.vue";
@@ -126,7 +126,7 @@ export default class BoardAction extends Vue {
   }
 
   get costNumber() {
-    return this.button.conversion.from[0].count;
+    return Reward.parse(boardActions[this.action].cost)[0].count;
   }
 
   boardActions = boardActions;
