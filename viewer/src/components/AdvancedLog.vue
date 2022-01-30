@@ -52,7 +52,7 @@
             </td>
             <td v-else-if="event.phase == null" class="border-left" />
             <td v-if="event.changes.length > 0" :class="[j === 1 ? 'first-change' : 'changes']">
-              {{ event.changes[j - 1].changes }}
+              <ResourcesText :content="[parseRewards(event.changes[j - 1].changes)]" />
             </td>
             <td v-else-if="event.phase == null" class="border-right" />
             <td
@@ -77,13 +77,15 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Engine from "@gaia-project/engine";
+import Engine, { Resource, Reward } from "@gaia-project/engine";
 import { HistoryEntry, makeHistory } from "../data/log";
 import { cellStyle, logPlayerTables, PlayerColumn } from "../logic/info-table";
+import ResourcesText from "./Resources/ResourcesText.vue";
 
 type LogScope = "recent" | "all";
-
-@Component
+@Component({
+  components: { ResourcesText },
+})
 export default class AdvancedLog extends Vue {
   private scope: LogScope = "recent";
 
@@ -144,6 +146,11 @@ export default class AdvancedLog extends Vue {
 
   cellStyle(c: PlayerColumn): string {
     return `${cellStyle(c.color)} border: 1px`;
+  }
+
+  parseRewards(s: string): Reward[] {
+    return Reward.parse(s.replace(/ /g, ""))
+      .map(r => r.type === Resource.ChargePower && r.count < 0 ? new Reward(-r.count, Resource.PayPower) : r);
   }
 
   rowValues(entry: HistoryEntry, change: number): { value: string; leftBorder: boolean }[] {
