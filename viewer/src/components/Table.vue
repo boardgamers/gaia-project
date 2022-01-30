@@ -11,7 +11,6 @@
         :items="table.rows"
         :fields="table.fields"
         :caption="table.caption"
-        caption-top
       >
         <template #thead-top>
           <b-tr v-if="table.additionalHeader">
@@ -37,7 +36,7 @@
         :value="selectedMapMode(p.player)"
         :options="mapModeTypeOptions"
         @change="(mode) => toggleMapMode(p.player, mode)"
-        class="info-table-dropdown"
+        :class="{ 'info-table-dropdown': true, compact: uiMode === 'compactTable' }"
       />
     </div>
   </div>
@@ -136,9 +135,13 @@ export default class Table extends Vue {
 
 .info-table-dropdown {
   width: auto;
-  height: 28px !important;
+  height: 38px !important;
   padding: 1px !important;
   font-size: 18px !important;
+
+  &.compact {
+    height: 28px !important;
+  }
 }
 
 .break {

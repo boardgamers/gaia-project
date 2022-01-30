@@ -36,10 +36,11 @@ import { roundScoringData } from "../data/round-scorings";
 import { leechNetwork, sectors } from "../data/stats";
 import { techTileData } from "../data/tech-tiles";
 import { CellStyle, planetColorVar, playerColor, staticCellStyle } from "../graphics/colors";
-import { lightenDarkenColor } from "../graphics/utils";
+import { lightenDarkenColor, ResourceText } from "../graphics/utils";
 import { UiMode } from "../store";
 import { finalScoringSources } from "./charts/final-scoring";
 import { colorCodes } from "./color-codes";
+import { plusReward } from "./utils";
 
 export type Convert = ResourceEnum | PowerArea;
 
@@ -50,7 +51,7 @@ export enum InfoTableFlex {
 }
 
 export type InfoTableCell = {
-  label: string;
+  label: ResourceText;
   title: string | null;
   style: string;
   convert?: Convert;
@@ -78,7 +79,7 @@ export type ConversionSupport = {
 };
 
 type Cell = {
-  shortcut: string;
+  shortcut: string | ResourceText;
   title: string;
   color: string | CellStyle;
   deactivated?: boolean;
@@ -154,12 +155,15 @@ export function cellStyle(color: string | CellStyle): string {
   return cellColor ? `background: ${cellColor.backgroundColor}; color: ${cellColor.color};` : "";
 }
 
+function deactivatedLabel(c: Cell) {
+  return deactivated(c.shortcut?.toString()?.toUpperCase(), c.deactivated ?? false);
+}
+
 function formatCell(cells: Cell[], flex = InfoTableFlex.rowGrow): InfoTableCell[] {
   return cells.map((c) => {
     const style = cellStyle(c?.color);
-    const label = deactivated(c.shortcut?.toString()?.toUpperCase(), c.deactivated ?? false);
     return {
-      label,
+      label: typeof c.shortcut === "string" ? [deactivatedLabel(c)] : c.shortcut,
       style,
       convert: c.convert,
       title: c.title,
@@ -207,6 +211,7 @@ function incomeCell(
   income: number,
   player: Player,
   support: ConversionSupport | null,
+  compact: boolean,
   incomeType: string = null
 ): Cell[] {
   const cell = resourceCell(r);
@@ -218,9 +223,32 @@ function incomeCell(
   if (tooltip) {
     cell.title = `${cell.title} (${tooltip})`;
   }
+  function resource(): Resource {
+    switch (r) {
+      case PowerArea.Area1:
+      case PowerArea.Area2:
+      case PowerArea.Area3:
+        return Resource.BowlToken;
+      case PowerArea.Gaia:
+        return Resource.GainTokenGaiaArea;
+    }
+    return r as Resource;
+  }
+  function reward(value: string | number): Reward[] {
+    return [new Reward(Number(value), resource())];
+  }
+
+  const shortcut = compact
+    ? hasIncome
+      ? `${val}+${income}`
+      : String(val)
+    : hasIncome
+    ? [reward(val).concat(plusReward()).concat(reward(income))]
+    : [reward(val)];
+
   return [
     {
-      shortcut: hasIncome ? `${val}+${income}` : String(val),
+      shortcut,
       title: cell.title,
       color: cell.color,
       convert: tooltip ? r : null,
@@ -235,14 +263,24 @@ function realIncomeCell(
   incomeResource: Resource,
   support: ConversionSupport,
   showIncome: (Player) => boolean,
+  compact: boolean,
   incomeType: string
 ) {
-  return incomeCell(resource, current, showIncome(p) ? p.resourceIncome(incomeResource) : 0, p, support, incomeType);
+  return incomeCell(
+    resource,
+    current,
+    showIncome(p) ? p.resourceIncome(incomeResource) : 0,
+    p,
+    support,
+    compact,
+    incomeType
+  );
 }
 
 function resourceColumn(
   r: Resource,
   showIncome: (Player) => boolean,
+  compact: boolean,
   support?: ConversionSupport | null
 ): PlayerColumn {
   const cell = resourceCell(r);
@@ -250,7 +288,7 @@ function resourceColumn(
     shortcut: cell.shortcut,
     title: cell.title,
     color: cell.color,
-    cell: (p) => realIncomeCell(r, p.data.getResources(r), p, r, support, showIncome, null),
+    cell: (p) => realIncomeCell(r, p.data.getResources(r), p, r, support, showIncome, compact, null),
   };
 }
 
@@ -279,7 +317,7 @@ function playerCell(p: Player | null, bold = false): Cell {
   };
 }
 
-function general(engine: Engine, showIncome: (Player) => boolean): PlayerTable {
+function general(engine: Engine, compact: boolean, showIncome: (Player) => boolean): PlayerTable {
   return {
     caption: "General",
     columns: [
@@ -341,21 +379,21 @@ function general(engine: Engine, showIncome: (Player) => boolean): PlayerTable {
             };
           }),
       },
-      resourceColumn(Resource.VictoryPoint, showIncome, null),
+      resourceColumn(Resource.VictoryPoint, showIncome, compact, null),
     ],
   };
 }
 
-function resources(showIncome: (Player) => boolean, support?: ConversionSupport): PlayerTable {
+function resources(showIncome: (Player) => boolean, compact: boolean, support?: ConversionSupport): PlayerTable {
   return {
     caption: "Resources",
     columns: [Resource.Credit, Resource.Ore, Resource.Knowledge, Resource.Qic].map((r) =>
-      resourceColumn(r, showIncome, support)
+      resourceColumn(r, showIncome, compact, support)
     ),
   };
 }
 
-function power(showIncome: (Player) => boolean, support?: ConversionSupport): PlayerTable {
+function power(showIncome: (Player) => boolean, compact: boolean, support?: ConversionSupport): PlayerTable {
   return {
     caption: "Power",
     columns: Object.values(PowerArea).map((a) => {
@@ -368,18 +406,19 @@ function power(showIncome: (Player) => boolean, support?: ConversionSupport): Pl
           const power = powerArea(a, p.data);
           switch (a) {
             case PowerArea.Area1:
-              return realIncomeCell(a, power, p, Resource.GainToken, support, showIncome, "token");
+              return realIncomeCell(a, power, p, Resource.GainToken, support, showIncome, compact, "token");
             case PowerArea.Area2:
-              return realIncomeCell(a, power, p, Resource.ChargePower, support, showIncome, "power charge");
+              return realIncomeCell(a, power, p, Resource.ChargePower, support, showIncome, compact, "power charge");
             case PowerArea.Area3:
-              return incomeCell(a, power, 0, p, support);
+              return incomeCell(a, power, 0, p, support, compact);
             case PowerArea.Gaia:
               return incomeCell(
                 a,
                 p.data.gaiaformersInGaia ? `${p.data.power.gaia}, ${p.data.gaiaformersInGaia}gf` : p.data.power.gaia,
                 0,
                 p,
-                support
+                support,
+                compact
               );
           }
         },
@@ -619,12 +658,12 @@ function stats(engine: Engine): PlayerTable {
   };
 }
 
-function playerTables(engine: Engine, support: ConversionSupport): PlayerTable[] {
+function playerTables(engine: Engine, support: ConversionSupport, compact: boolean): PlayerTable[] {
   const show = (p) => showIncome(engine, p);
   return [
-    general(engine, show),
-    resources(show, support),
-    power(show, support),
+    general(engine, compact, show),
+    resources(show, compact, support),
+    power(show, compact, support),
     research(engine, true),
     finals(engine),
     buildings(engine),
@@ -636,7 +675,7 @@ function playerTables(engine: Engine, support: ConversionSupport): PlayerTable[]
 
 export function logPlayerTables(engine: Engine): PlayerTable[] {
   const show = () => false;
-  return [resources(show), power(show), research(engine, false), buildings(engine)].filter((t) => t);
+  return [resources(show, false), power(show, false), research(engine, false), buildings(engine)].filter((t) => t);
 }
 
 function generalTables(engine: Engine): GeneralTable[] {
@@ -704,7 +743,7 @@ function generalTables(engine: Engine): GeneralTable[] {
 function field(c: Cell, sortable: boolean): InfoTableColumn {
   return {
     key: c.title,
-    label: deactivated(c.shortcut?.toUpperCase(), c.deactivated ?? false),
+    label: deactivatedLabel(c),
     sortable,
     cells: formatCell([c]),
   };
@@ -764,7 +803,7 @@ export function infoTables(
   });
   gTables[gTables.length - 1].break = true;
 
-  const pTables: InfoTable[] = playerTables(engine, support).map((t) => ({
+  const pTables: InfoTable[] = playerTables(engine, support, uiMode == UiMode.compactTable).map((t) => ({
     caption: caption(t.caption),
     fields: t.columns.map((c) => field(c, settings.sortable)),
     additionalHeader: t.columns

@@ -11,7 +11,7 @@ import Engine, {
   Resource,
   TechTilePos,
 } from "@gaia-project/engine";
-import { factionLogColors, factionLogTextColors, lightFactionLogColors } from "../graphics/utils";
+import { factionLogColors, factionLogTextColors, lightFactionLogColors, ResourceText } from "../graphics/utils";
 import { BuildingCounter } from "../logic/charts/buildings";
 import { ResearchCounter } from "../logic/charts/research";
 import { newResourceSimulator } from "../logic/charts/resource-counter";
@@ -23,7 +23,7 @@ import { advancedTechTileData, baseTechTileData } from "./tech-tiles";
 
 type LogCounter = {
   consumeChanges: (a: ExtractLogArg<any>) => void;
-  newRows: () => string[][];
+  newRows: () => ResourceText[][];
   faction: Faction;
 };
 
@@ -86,7 +86,7 @@ export type HistoryEntry = {
   turn: number;
   color: string;
   textColor: string;
-  rows?: string[][];
+  rows?: ResourceText[][];
   faction?: Faction;
 };
 

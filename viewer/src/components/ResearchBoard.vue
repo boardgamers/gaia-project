@@ -19,16 +19,6 @@
       </g>
       <!--      resource conversion-->
       <g transform="translate(247, 412) scale(0.95)">
-        <defs>
-          <polygon
-            id="arrow"
-            points="0 0, 10 3.5, 0 7"
-            fill="white"
-            stroke="black"
-            transform="scale(.7) translate(4, -3.5)"
-          />
-        </defs>
-
         <Resource kind="pay-pw" :count="4" transform="translate(-45, -15)" />
         <Resource kind="pay-pw" :count="1" transform="translate(-15, -15)" />
         <Resource kind="pay-pw" :count="3" transform="translate(15, -15)" />

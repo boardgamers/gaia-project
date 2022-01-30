@@ -66,7 +66,7 @@
                 'border-bottom': ['moves-skipped', 'setupInit'].includes(event.phase),
               }"
             >
-              {{ value.value }}
+              <ResourcesText :content="value.value" />
             </td>
           </tr>
         </template>
@@ -82,6 +82,7 @@ import { HistoryEntry, makeHistory } from "../data/log";
 import { cellStyle, logPlayerTables, PlayerColumn } from "../logic/info-table";
 import ResourcesText from "./Resources/ResourcesText.vue";
 import { parseRewardsForLog } from "../logic/utils";
+import { ResourceText } from "../graphics/utils";
 
 type LogScope = "recent" | "all";
 @Component({
@@ -153,7 +154,7 @@ export default class AdvancedLog extends Vue {
     return parseRewardsForLog(s);
   }
 
-  rowValues(entry: HistoryEntry, change: number): { value: string; leftBorder: boolean }[] {
+  rowValues(entry: HistoryEntry, change: number): { value: ResourceText; leftBorder: boolean }[] {
     if (!this.extendedLog || change > 1) {
       return [];
     }
@@ -163,7 +164,7 @@ export default class AdvancedLog extends Vue {
         leftBorder: i == 0,
       })))
       : logPlayerTables(this.engine).flatMap(t => t.columns.map((c, i) => ({
-        value: "",
+        value: [],
         leftBorder: i == 0,
       })));
   }

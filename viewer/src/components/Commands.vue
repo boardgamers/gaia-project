@@ -30,12 +30,17 @@
         />
       </div>
       <div v-if="isChoosingFaction" class="d-flex flex-wrap align-content-stretch">
-        <MoveButton v-for="faction in factionsToChoose.data" :button="{ command: `${factionsToChoose.name} ${faction}`,
+        <MoveButton
+          v-for="faction in factionsToChoose.data"
+          :button="{
+            command: `${factionsToChoose.name} ${faction}`,
             modal: modalDialog(factionName(faction), tooltip(faction)),
             label: `${factionName(faction)} <i class='planet ${factionPlanet(faction)}'></i>`,
             shortcuts: [factionShortcut(faction)],
           }"
-        :controller="controller" :key="faction" />
+          :controller="controller"
+          :key="faction"
+        />
         <MoveButton
           v-if="!gameData.randomFactions"
           :button="randomFactionButton"
