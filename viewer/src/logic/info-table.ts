@@ -5,6 +5,7 @@ import Engine, {
   Building,
   factionBoard,
   factionVariantBoard,
+  Federation,
   federations,
   lastTile,
   Operator,
@@ -678,6 +679,12 @@ export function logPlayerTables(engine: Engine): PlayerTable[] {
   return [resources(show, false), power(show, false), research(engine, false), buildings(engine)].filter((t) => t);
 }
 
+function federationResource(fed: Federation) {
+  return (
+    Reward.parse(tiles.federations[fed]).find((r) => r.type != Resource.VictoryPoint)?.type ?? Resource.VictoryPoint
+  );
+}
+
 function generalTables(engine: Engine): GeneralTable[] {
   return [
     {
@@ -731,7 +738,7 @@ function generalTables(engine: Engine): GeneralTable[] {
           color: federationData[fed].color,
         },
         row: {
-          shortcut: String(count),
+          shortcut: [[new Reward(count, federationResource(fed as Federation))]],
           title: "Number of federations left",
           color: federationData[fed].color,
         },
