@@ -3,6 +3,10 @@ import planets from "../data/planets";
 
 export type ResourceText = (string | Reward[])[];
 
+export enum ResourceTextSymbols {
+  arrow = "arrow",
+}
+
 export function factionColor(faction: Faction | "gen"): string {
   if (faction === "gen") {
     return "#d3d3d3";

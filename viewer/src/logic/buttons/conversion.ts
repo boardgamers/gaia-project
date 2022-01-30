@@ -15,6 +15,7 @@ import { max, minBy, range, sortBy } from "lodash";
 import { ButtonData } from "../../data";
 import { FastConversion, FastConversionEvent, freeActionShortcuts } from "../../data/actions";
 import { translateResources } from "../../data/resources";
+import { ResourceTextSymbols } from "../../graphics/utils";
 import { AvailableConversions, FastConversionTooltips } from "./types";
 import { autoClickButton, confirmationButton, symbolButton } from "./utils";
 import { resourceWasteWarning, rewardWarnings } from "./warnings";
@@ -36,7 +37,7 @@ function resourceSymbol(type: Resource) {
   }
 }
 
-function newConversion(cost: Reward[], income: Reward[], player?: Player) {
+function newConversion(cost: Reward[], income: Reward[], player?: Player): { from: Reward[]; to: Reward[] } {
   return {
     from: cost.map((r) => {
       return new Reward(
@@ -60,10 +61,12 @@ export function conversionButton(
   boardAction?: BoardAction,
   times?: number[]
 ): ButtonData {
+  const conversion = newConversion(cost, income, player);
   const button = symbolButton(
     {
       label: conversionLabel(cost, income),
-      conversion: newConversion(cost, income, player),
+      resourceLabel: [conversion.from, ResourceTextSymbols.arrow, conversion.to],
+      conversion: conversion,
       shortcuts: shortcut != null ? [shortcut] : [],
       command,
       warning: player ? resourceWasteWarning(rewardWarnings(player, income)) : null,

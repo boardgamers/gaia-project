@@ -28,9 +28,7 @@
           :button="button"
           :controller="controller"
           :key="(button.label || button.command) + '-' + i"
-        >
-          {{ button.label || button.command }}
-        </MoveButton>
+        />
       </div>
       <div v-if="isChoosingFaction" class="d-flex flex-wrap align-content-stretch">
         <MoveButton
@@ -77,11 +75,11 @@ import { ButtonData, GameContext, HexSelection, HighlightHex, ModalButtonData, W
 import { factionDesc, factionName, factionShortcut } from "../data/factions";
 import { FactionCustomization } from "@gaia-project/engine/src/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
-import { enabledButtonWarnings, isWarningEnabled, moveWarnings } from "../data/warnings";
+import { enabledButtonWarnings, isWarningEnabled } from "../data/warnings";
 import Undo from "./Resources/Undo.vue";
 import { ActionPayload, SubscribeActionOptions, SubscribeOptions } from "vuex";
 import { CommandController, ExecuteBack, FastConversionTooltips } from "../logic/buttons/types";
-import { callOnShow } from "../logic/buttons/utils";
+import { buttonStringLabel, callOnShow } from "../logic/buttons/utils";
 import { commandButtons, replaceRepeat } from "../logic/buttons/commands";
 import { CubeCoordinates } from "hexagrid";
 import { autoClickStrategy } from "../logic/buttons/autoClick";
@@ -261,7 +259,7 @@ export default class Commands extends Vue implements CommandController {
     this.unsubscribeCommands();
 
     if (source?.buttons?.length > 0) {
-      this.commandTitles.push(replaceRepeat(source.longLabel ?? source.label, times));
+      this.commandTitles.push(replaceRepeat(source.longLabel ?? buttonStringLabel(source), times));
       this.commandChain.push(command);
       this.buttonChain.push(source);
       this.addAutoClick(source.autoClick);
@@ -349,6 +347,9 @@ export default class Commands extends Vue implements CommandController {
           if (button.label) {
             button.label = `${button.label} (${w})`;
           }
+          if (button.resourceLabel) {
+            button.resourceLabel.push(`(${w})`);
+          }
           button.warningInLabel = true;
         }
       }
@@ -384,7 +385,7 @@ export default class Commands extends Vue implements CommandController {
       lastAutoClick = click[click.length - 1].pop();
       this.setAutoClick(click);
 
-      console.log("back", last.command ?? last.label);
+      console.log("back", buttonStringLabel(last));
 
       if (!lastAutoClick && steps > 1) {
         redo = last;

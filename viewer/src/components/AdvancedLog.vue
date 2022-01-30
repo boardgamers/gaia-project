@@ -34,7 +34,9 @@
               {{ event.round }}.{{ event.turn }}
             </td>
             <td v-if="event.phase === 'roundStart'" colspan="4" class="major-event">Round {{ event.round }}</td>
-            <td v-else-if="event.phase === 'setupInit'" colspan="4" class="major-event border-left border-bottom">Game Started</td>
+            <td v-else-if="event.phase === 'setupInit'" colspan="4" class="major-event border-left border-bottom">
+              Game Started
+            </td>
             <td v-else-if="event.phase === 'moves-skipped'" colspan="4" class="major-event border-left border-bottom">
               Click "Show everything" to expand
             </td>

@@ -1,6 +1,27 @@
 import Engine, { AvailableHex, GaiaHex } from "@gaia-project/engine";
 import { ButtonData, ButtonWarning, HexSelection, HighlightHex, HighlightHexData } from "../../data";
-import { tooltipWithShortcut } from "./shortcuts";
+import { ResourceText } from "../../graphics/utils";
+import { tooltipWithShortcut, withShortcut } from "./shortcuts";
+
+export function buttonStringLabel(button: ButtonData) {
+  return (button.resourceLabel?.find((l) => typeof l == "string") as string) ?? button.label ?? button.command;
+}
+
+export function resourcesTextLabel(button: ButtonData): ResourceText {
+  if (button.resourceLabel) {
+    return button.resourceLabel;
+  }
+  const l = button.label || button.command;
+  const s = button.shortcuts;
+  if (l && s?.length > 0) {
+    const shortcut = s[0];
+    if (shortcut == "Enter" || l.includes("<u>")) {
+      return [l];
+    }
+    return [withShortcut(l, shortcut)];
+  }
+  return [l];
+}
 
 export function isFree(hex: HighlightHex) {
   return hex.cost == null || hex.cost === "~";
