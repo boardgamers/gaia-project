@@ -53,14 +53,22 @@ describe("Advanced log details", () => {
       baseDir: "src/data/logTests",
       subTests: () => ["all", "recent"],
       replay: false,
-      createActualOutput: (data, scope) =>
-        makeHistory(
+      createActualOutput: (data, scope) => {
+        const history = makeHistory(
           data,
           recentMoves(Player.Player1, data.advancedLog, data.moveHistory),
           scope === "recent",
           undefined,
           true
-        ),
+        );
+        if (scope === "all") {
+          //remove rows, it's just too much to handle
+          for (const e of history) {
+            delete e.rows;
+          }
+        }
+        return history;
+      },
     });
   });
 
