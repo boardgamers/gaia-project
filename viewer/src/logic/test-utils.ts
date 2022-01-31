@@ -30,10 +30,10 @@ export function runJsonTests(tester: JsonTester) {
         if (engine == null) {
           engine = new Engine(testCase.moveHistory, testCase.options, null, tester.replay);
         }
-        const actual = tester.createActualOutput(engine, subTest, testCase);
+        const actual = JSON.stringify(tester.createActualOutput(engine, subTest, testCase));
         expect(actual).to.deep.equal(
-          JSON.parse(fs.readFileSync(path).toString()),
-          `${path}:\n${JSON.stringify(actual)}\n`
+          JSON.stringify(JSON.parse(fs.readFileSync(path).toString())),
+          `${path}:\n${actual}\n`
         );
       });
     }

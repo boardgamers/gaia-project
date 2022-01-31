@@ -4,6 +4,7 @@
       <Charts />
     </b-modal>
     <Rules id="rules" />
+    <Rules id="trade" type="trade" />
 
     <template v-if="uiMode === 'graphical'">
       <div

@@ -267,7 +267,6 @@
       />
     </div>
     <Rules :id="player.faction" :type="player.faction" />
-    <Rules id="trade" type="trade" />
   </div>
 </template>
 

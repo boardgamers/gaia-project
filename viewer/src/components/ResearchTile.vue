@@ -74,6 +74,7 @@ import FederationTile from "./FederationTile.vue";
 import Planet from "./Planet.vue";
 import Resource from "./Resource.vue";
 import { ButtonData } from "../data";
+import { plusReward } from "../logic/utils";
 
 @Component<ResearchTile>({
   components: {
@@ -146,8 +147,7 @@ export default class ResearchTile extends Vue {
       .filter(e => e.spec !== "3pw" && e.condition === Condition.None)
       .flatMap((ev) => ev.rewards);
     if (events[0] && events[0].operator === Operator.Income) {
-      rewards.unshift(new Reward("+", ResourceEnum.None));
-      rewards[0].count = "+" as any;
+      rewards.unshift(plusReward());
     }
     return rewards;
   }

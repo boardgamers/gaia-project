@@ -38,6 +38,10 @@ export default class Reward {
     if (this.isEmpty()) {
       return "~";
     }
+    return this.toStringWithZero();
+  }
+
+  toStringWithZero() {
     return `${this.count}${this.type}`;
   }
 

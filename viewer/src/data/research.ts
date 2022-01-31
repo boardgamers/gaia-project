@@ -49,7 +49,7 @@ const researchEffectCounters: ResearchEffectCounter[] = [
     field: ResearchField.GaiaProject,
     minLevel: 1,
     from: Resource.GaiaFormer,
-    to: Resource.GainTokenGaiaArea,
+    to: Resource.MoveTokenToGaiaArea,
     currentValue: (p) => GAIA_FORMER_COST - p.data.gaiaFormingDiscount(),
   },
   {

@@ -72,6 +72,10 @@ export const resourceData: { [key in Resource]?: ResourceName } = {
     label: "Token in gaia area",
     plural: "Tokens in gaia area",
   }),
+  [Resource.MoveTokenToGaiaArea]: colorCodes.gaia.add({
+    label: "Move tokens to gaia area",
+    plural: "Move tokens to gaia area",
+  }),
   [Resource.GaiaFormer]: colorCodes.gaia.add({
     label: "Gaia Former",
     plural: "Gaia Formers",

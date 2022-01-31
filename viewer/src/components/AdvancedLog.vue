@@ -34,8 +34,10 @@
               {{ event.round }}.{{ event.turn }}
             </td>
             <td v-if="event.phase === 'roundStart'" colspan="4" class="major-event">Round {{ event.round }}</td>
-            <td v-else-if="event.phase === 'setupInit'" colspan="4" class="major-event border-left">Game Started</td>
-            <td v-else-if="event.phase === 'moves-skipped'" colspan="4" class="major-event border-left">
+            <td v-else-if="event.phase === 'setupInit'" colspan="4" class="major-event border-left border-bottom">
+              Game Started
+            </td>
+            <td v-else-if="event.phase === 'moves-skipped'" colspan="4" class="major-event border-left border-bottom">
               Click "Show everything" to expand
             </td>
             <td v-else-if="event.phase === 'roundIncome'" colspan="3" class="phase-change">Income phase</td>
@@ -50,9 +52,9 @@
             </td>
             <td v-else-if="event.phase == null" class="border-left" />
             <td v-if="event.changes.length > 0" :class="[j === 1 ? 'first-change' : 'changes']">
-              {{ event.changes[j - 1].changes }}
+              <ResourcesText :content="[parseRewards(event.changes[j - 1].changes)]" />
             </td>
-            <td v-else-if="event.phase == null" class="border-left border-right" />
+            <td v-else-if="event.phase == null" class="border-right" />
             <td
               v-for="(value, k) in rowValues(event, j)"
               :rowspan="rowSpan(event)"
@@ -61,9 +63,10 @@
                 'extended-log': true,
                 'border-left': value.leftBorder,
                 'border-right': k === rowValues(event, j).length - 1,
+                'border-bottom': ['moves-skipped', 'setupInit'].includes(event.phase),
               }"
             >
-              {{ value.value }}
+              <ResourcesText :content="value.value" />
             </td>
           </tr>
         </template>
@@ -74,13 +77,17 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Engine from "@gaia-project/engine";
+import Engine, { Resource, Reward } from "@gaia-project/engine";
 import { HistoryEntry, makeHistory } from "../data/log";
 import { cellStyle, logPlayerTables, PlayerColumn } from "../logic/info-table";
+import ResourcesText from "./Resources/ResourcesText.vue";
+import { parseRewardsForLog } from "../logic/utils";
+import { ResourceText } from "../graphics/utils";
 
 type LogScope = "recent" | "all";
-
-@Component
+@Component({
+  components: { ResourcesText },
+})
 export default class AdvancedLog extends Vue {
   private scope: LogScope = "recent";
 
@@ -143,7 +150,11 @@ export default class AdvancedLog extends Vue {
     return `${cellStyle(c.color)} border: 1px`;
   }
 
-  rowValues(entry: HistoryEntry, change: number): { value: string; leftBorder: boolean }[] {
+  parseRewards(s: string): Reward[] {
+    return parseRewardsForLog(s);
+  }
+
+  rowValues(entry: HistoryEntry, change: number): { value: ResourceText; leftBorder: boolean }[] {
     if (!this.extendedLog || change > 1) {
       return [];
     }
@@ -153,7 +164,7 @@ export default class AdvancedLog extends Vue {
         leftBorder: i == 0,
       })))
       : logPlayerTables(this.engine).flatMap(t => t.columns.map((c, i) => ({
-        value: "",
+        value: [],
         leftBorder: i == 0,
       })));
   }
@@ -178,6 +189,10 @@ export default class AdvancedLog extends Vue {
 
 .move {
   word-break: break-word;
+}
+
+td {
+  vertical-align: middle !important;
 }
 
 .first-change {

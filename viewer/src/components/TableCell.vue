@@ -3,13 +3,14 @@
     <div
       v-for="(c, i) in cells"
       :key="i"
-      :class="{ first: i === 0, 'info-table-cell': true, 'flex-grow-1': c.flex === 'rowGrow' }"
+      :class="{ first: i === 0, 'info-table-cell': true, 'flex-grow-1': c.flex === 'rowGrow', compact }"
       :style="c.style"
       v-b-tooltip.html.hover
       :title="c.title"
       @click="convert(c.convert)"
     >
-      <div v-html="c.label" />
+      <div v-if="compact" v-html="c.label[0]" />
+      <ResourcesText v-else :content="c.label" />
     </div>
   </div>
 </template>
@@ -18,8 +19,11 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 import { InfoTableCell } from "../logic/info-table";
 import { PowerArea, Resource as ResourceEnum } from "@gaia-project/engine";
 import { FastConversionEvent } from "../data/actions";
-
-@Component
+import ResourcesText from "./Resources/ResourcesText.vue";
+import { UiMode } from "../store";
+@Component({
+  components: { ResourcesText },
+})
 export default class TableCell extends Vue {
   @Prop()
   cells: InfoTableCell[];
@@ -29,12 +33,16 @@ export default class TableCell extends Vue {
       this.$store.dispatch("fastConversionClick", { button: resource } as FastConversionEvent);
     }
   }
+
+  get compact(): boolean {
+    return this.$store.state.preferences.uiMode == UiMode.compactTable;
+  }
 }
 </script>
 <style lang="scss">
 .info-table-cell {
   border-width: 0 0 0 1px !important;
-  min-height: 26px !important;
+  min-height: 36px !important;
   min-width: 16px;
   text-align: center !important;
   padding-left: 2px;
@@ -43,6 +51,10 @@ export default class TableCell extends Vue {
   justify-content: center;
   align-items: flex-end;
   cursor: pointer;
+
+  &.compact {
+    min-height: 26px !important;
+  }
 
   &.first {
     border-left: 0 !important;

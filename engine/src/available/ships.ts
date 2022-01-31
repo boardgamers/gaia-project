@@ -165,6 +165,14 @@ export function baseTradeReward(option: TradeOption, guest: PlayerData, host: Pl
   return option.base;
 }
 
+function tradeLocation(cost: Reward, rewards: Reward[], target: AvailableHex | AvailableBuilding): TradingLocation {
+  return {
+    ...target,
+    tradeCost: cost.toStringWithZero(),
+    rewards: rewards.map((r) => r.toStringWithZero()).join(","),
+  };
+}
+
 function possibleBuilding(
   engine: Engine,
   h: GaiaHex,
@@ -172,7 +180,7 @@ function possibleBuilding(
   building: Building,
   rewards: Reward[],
   cost: Reward
-) {
+): TradingLocation[] {
   const p = engine.player(player);
   const canBuildAfterTrade = p.canBuild(engine.map, h, h.data.planet, building, engine.isLastRound, engine.replay, {
     addedCost: Reward.negative(rewards),
@@ -180,13 +188,7 @@ function possibleBuilding(
   if (canBuildAfterTrade) {
     canBuildAfterTrade.cost = p.board.cost(building, false);
     const availableBuilding = newAvailableBuilding(building, h, canBuildAfterTrade, false);
-    return [
-      {
-        ...availableBuilding,
-        tradeCost: cost.toString(),
-        rewards: rewards.toString(),
-      },
-    ];
+    return [tradeLocation(cost, rewards, availableBuilding)];
   }
   return [];
 }
@@ -195,7 +197,7 @@ export function tradeRewards(option: TradeOption, guest: PlayerData, host: Playe
   return Reward.merge(baseTradeReward(option, guest, host).concat(tradeBonus(guest, option)));
 }
 
-export function tradeCost(guest: PlayerData, option: TradeOption) {
+export function tradeCost(guest: PlayerData, option: TradeOption): Reward {
   return option.free ? new Reward(0, Resource.ChargePower) : guest.tradeCost();
 }
 
@@ -211,17 +213,9 @@ function tradeLocations(h: GaiaHex, player: Player, engine: Engine): ShipActionL
       const cost = tradeCost(guest, option);
       if (engine.player(player).data.canPay([cost])) {
         const rewards = tradeRewards(option, guest, host);
-        if (option.build) {
-          return possibleBuilding(engine, h, player, option.build, rewards, cost);
-        } else {
-          return [
-            {
-              coordinates: h.toString(),
-              tradeCost: cost.toString(),
-              rewards: rewards.toString(),
-            } as TradingLocation,
-          ];
-        }
+        return option.build
+          ? possibleBuilding(engine, h, player, option.build, rewards, cost)
+          : [tradeLocation(cost, rewards, { coordinates: h.toString() })];
       }
     }
   }

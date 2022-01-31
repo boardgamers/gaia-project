@@ -1,4 +1,5 @@
 import { ButtonData, ButtonWarning } from "../../data";
+import { buttonStringLabel } from "./utils";
 
 export const forceNumericShortcut = (label: string) => ["Charge", "Income"].find((b) => label.startsWith(b));
 
@@ -48,7 +49,7 @@ function addSingleButtonShortcut(b: ButtonData) {
     return;
   }
 
-  const label = b.label ?? b.command;
+  const label = buttonStringLabel(b);
   if (label && !label.includes("<u>")) {
     if (isFinite(Number(b.shortcuts[0]))) {
       //remove any numeric shortcuts
@@ -76,7 +77,8 @@ function addDefaultShortcuts(shown: ButtonData[]) {
       addNumeric = false;
     }
     if (b.shortcuts.length == 0) {
-      const assigned = b.label?.includes("<u>") ? b.label.substr(b.label.indexOf("<u>") + 3, 1).toLowerCase() : null;
+      const label = buttonStringLabel(b);
+      const assigned = label?.includes("<u>") ? label.substr(label.indexOf("<u>") + 3, 1).toLowerCase() : null;
 
       if (assigned && assigned != "<") {
         //to avoid <u></u>

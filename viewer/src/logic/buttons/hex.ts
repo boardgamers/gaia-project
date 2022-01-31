@@ -1,8 +1,9 @@
-import { Building, GaiaHex, Reward } from "@gaia-project/engine";
+import { Building, GaiaHex, Resource, Reward } from "@gaia-project/engine";
 import assert from "assert";
 import { sortBy } from "lodash";
 import { ButtonData, HighlightHex, WarningWithKey } from "../../data";
 import { buildingData } from "../../data/building";
+import { ResourceText, ResourceTextSymbols } from "../../graphics/utils";
 import { prependShortcut, tooltipWithShortcut } from "./shortcuts";
 import { CommandController } from "./types";
 import { addOnClick, addOnShow, isFree, textButton } from "./utils";
@@ -36,37 +37,44 @@ export function hexSelectionButton(
       const b = newLocationButton(hex);
       assert(!b.command, "command already exists");
       assert(!b.label, "label already exists");
+      assert(!b.resourceLabel, "resourceLabel already exists");
       assert(!b.shortcuts, "shortcuts already exists");
       assert(!b.warning, "warning already exists");
       assert(!b.tooltip, "tooltip already exists");
-      assert(!b.conversion, "conversion already exists");
       assert(!b.hover, "hover already exists");
 
       b.command = hex.toString();
       const shortcut = String(i);
+
+      //we need the label to determine the active button
+      b.label = hex.toString();
+
+      const label: ResourceText = [];
+      b.resourceLabel = label;
+
       if (i <= 9) {
-        b.label = prependShortcut(shortcut, hex.toString());
+        label.push(prependShortcut(shortcut, hex.toString()));
         b.shortcuts = [shortcut];
         i++;
       } else {
-        b.label = hex.toString();
+        label.push(hex.toString());
       }
 
       const highlightHex = hexes.get(hex);
       if (highlightHex.tradeCost) {
-        b.label += ` Trade Cost: ${highlightHex.tradeCost}`;
+        label.push(Reward.parse(highlightHex.tradeCost), ResourceTextSymbols.arrow);
       }
       if (highlightHex.rewards) {
-        b.label += ` Reward: ${highlightHex.rewards}`;
+        label.push(Reward.parse(highlightHex.rewards));
       }
       if (highlightHex.building) {
-        b.label += ` Build ${buildingData[highlightHex.building].name} for `;
+        label.push(`Build ${buildingData[highlightHex.building].name} for`);
+      }
+      if (highlightHex.cost != null) {
+        label.push(isFree(highlightHex) ? [new Reward(0, Resource.Credit)] : Reward.parse(highlightHex.cost));
       }
 
       b.warning = buttonWarnings(hexWarnings(highlightHex));
-      if (!isFree(highlightHex)) {
-        b.conversion = { from: Reward.parse(highlightHex.cost), to: [] };
-      }
       b.tooltip = tooltipWithShortcut(null, b.warning);
 
       b.hover = {

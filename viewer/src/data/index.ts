@@ -6,11 +6,11 @@ import {
   Building,
   BuildWarning,
   GaiaHex,
-  Reward,
   TechTile,
   TechTilePos,
 } from "@gaia-project/engine";
 import { CubeCoordinates } from "hexagrid";
+import { ResourceText } from "../graphics/utils";
 import { FastConversionTooltips, MoveButtonController } from "../logic/buttons/types";
 import { MapMode } from "./actions";
 
@@ -28,11 +28,11 @@ export type SpecialActionIncome = string;
 
 export interface ButtonData {
   label?: string;
+  resourceLabel?: ResourceText;
   longLabel?: string;
   command?: string;
   tooltip?: string;
   times?: number[];
-  conversion?: { from: Reward[]; to: Reward[] };
   modal?: ModalButtonData;
   hexes?: HexSelection;
   onClick?: (button: ButtonData) => void;

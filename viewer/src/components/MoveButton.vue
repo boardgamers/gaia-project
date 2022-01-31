@@ -26,7 +26,7 @@
     <b-btn
       v-else-if="button.times === undefined"
       :variant="variant"
-      :class="['mr-2', 'mb-2', 'move-button', { 'symbol-button': button.conversion, active }]"
+      :class="['mr-2', 'mb-2', 'move-button', { active }]"
       @click="controller.handleButtonClick(button)"
       @mouseenter="hover"
       @mouseleave="leave"
@@ -34,12 +34,12 @@
       v-b-tooltip.html
     >
       <template>
-        <ButtonContent :button="button" />
+        <ResourcesText :content="label" />
       </template>
     </b-btn>
     <b-dropdown
       :variant="variant"
-      :class="['mr-2', 'mb-2', 'move-button', { 'symbol-button': button.conversion }]"
+      :class="['mr-2', 'mb-2', 'move-button']"
       v-else
       split
       right
@@ -48,7 +48,7 @@
       @click="handleRangeClick(button.times[0])"
     >
       <template #button-content>
-        <ButtonContent :button="button" />
+        <ResourcesText :content="label" />
       </template>
       <b-dropdown-item v-for="i in button.times" :key="i" @click="handleRangeClick(i)">{{ i }}</b-dropdown-item>
     </b-dropdown>
@@ -74,18 +74,18 @@ import { Player } from "@gaia-project/engine";
 import { ButtonData, WarningsPreference } from "../data";
 import Booster from "./Booster.vue";
 import TechTile from "./TechTile.vue";
-import ButtonContent from "./Resources/ButtonContent.vue";
 import BoardAction from "./BoardAction.vue";
 import SpecialAction from "./SpecialAction.vue";
 import { CommandController, MoveButtonController } from "../logic/buttons/types";
-import { callOnShow } from "../logic/buttons/utils";
+import { callOnShow, resourcesTextLabel } from "../logic/buttons/utils";
 import { enabledButtonWarnings } from "../data/warnings";
+import ResourcesText from "./Resources/ResourcesText.vue";
 
 @Component({
   components: {
+    ResourcesText,
     Booster,
     TechTile,
-    ButtonContent,
     BoardAction,
     SpecialAction,
   },
@@ -186,6 +186,10 @@ export default class MoveButton extends Vue implements MoveButtonController {
     return this.controller.isActiveButton(this.button);
   }
 
+  get label() {
+    return resourcesTextLabel(this.button);
+  }
+
   hover() {
     this.button.hover?.enter(this.button);
   }
@@ -216,15 +220,5 @@ export default class MoveButton extends Vue implements MoveButtonController {
 
 .warning {
   background-color: var(--warning);
-}
-
-.symbol-button,
-.symbol-button button {
-  border-top: 0 !important;
-  border-bottom: 0 !important;
-  padding: 0.075rem 0.5rem 0.075rem 0.5rem !important;
-}
-
-.symbol-button > button {
 }
 </style>
