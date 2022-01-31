@@ -3,7 +3,7 @@
     <template v-for="(c, i) in filteredContent">
       <svg
         v-if="c.rewards != null"
-        :viewBox="`-10 -13 ${c.rewards.length * 25} 25`"
+        :viewBox="`-10 -13 ${c.rewards.length * 20} 25`"
         :width="c.rewards.length * 30"
         height="36"
         :key="i"
@@ -11,7 +11,7 @@
         <Resource
           v-for="(r, j) in c.rewards"
           :key="j"
-          :transform="`translate(${j * 20}, 0) scale(${r.type === 'vp' ? 1.3 : 1.15})`"
+          :transform="`translate(${j * 20}, ${y(r.type)}) scale(${scale(r.type)})`"
           :kind="r.type"
           :count="r.count"
         />
@@ -28,6 +28,7 @@
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { RichText } from "../../graphics/utils";
+import { Resource } from "@gaia-project/engine";
 
 @Component
 export default class RichTextView extends Vue {
@@ -36,6 +37,26 @@ export default class RichTextView extends Vue {
 
   get filteredContent() {
     return this.content.filter((c) => c?.rewards?.length > 0 || c?.text?.length > 0);
+  }
+
+  scale(r: Resource): number {
+    switch (r) {
+      case Resource.VictoryPoint:
+        return 1.3;
+      case Resource.ChargePower:
+      case Resource.PayPower:
+        return 1;
+    }
+    return 1.15;
+  }
+
+  y(r: Resource): number {
+    switch (r) {
+      case Resource.ChargePower:
+      case Resource.PayPower:
+        return 2;
+    }
+    return 0;
   }
 }
 </script>

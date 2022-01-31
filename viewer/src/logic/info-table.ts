@@ -210,6 +210,43 @@ function skipZero(val: string | number): string {
   return String(val) !== "0" ? String(val) : "";
 }
 
+function brainstone() {
+  const r = new Reward(1, Resource.Qic);
+  r.type = "brainstone" as Resource; //it's not a real resource
+  return r;
+}
+
+function powerRichText(r: Resource | PowerArea, hasIncome: boolean, val: string | number, income: number) {
+  function resource(): Resource {
+    switch (r) {
+      case PowerArea.Area1:
+      case PowerArea.Area2:
+      case PowerArea.Area3:
+        return Resource.BowlToken;
+      case PowerArea.Gaia:
+        return Resource.GainTokenGaiaArea;
+    }
+    return r as Resource;
+  }
+
+  function reward(value: string | number): Reward[] {
+    const split = String(value)
+      .split(",")
+      .map((s) => s.trim());
+    if (split.length > 1) {
+      const base = reward(split[0]);
+      const extra = split[1];
+      return (base[0].count == 0 ? [] : base).concat(extra === "B" ? [brainstone()] : Reward.parse(extra));
+    }
+    return [new Reward(Number(value), resource())];
+  }
+
+  if (hasIncome) {
+    return [{ rewards: reward(val).concat(plusReward()).concat(reward(income)) }];
+  }
+  return String(val) === "0" ? [] : [{ rewards: reward(val) }];
+}
+
 function incomeCell(
   r: Resource | PowerArea,
   val: string | number,
@@ -228,32 +265,11 @@ function incomeCell(
   if (tooltip) {
     cell.title = `${cell.title} (${tooltip})`;
   }
-
-  function resource(): Resource {
-    switch (r) {
-      case PowerArea.Area1:
-      case PowerArea.Area2:
-      case PowerArea.Area3:
-        return Resource.BowlToken;
-      case PowerArea.Gaia:
-        return Resource.GainTokenGaiaArea;
-    }
-    return r as Resource;
-  }
-
-  function reward(value: string | number): Reward[] {
-    return [new Reward(Number(value), resource())];
-  }
-
   const shortcut = compact
     ? hasIncome
       ? `${val}+${income}`
       : skipZero(val)
-    : hasIncome
-    ? [{ rewards: reward(val).concat(plusReward()).concat(reward(income)) }]
-    : String(val) !== "0"
-    ? [{ rewards: reward(val) }]
-    : [];
+    : powerRichText(r, hasIncome, val, income);
 
   return [
     {

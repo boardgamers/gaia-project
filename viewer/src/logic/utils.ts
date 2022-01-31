@@ -72,7 +72,7 @@ export function chargePowerToPay(rewards: Reward[]): Reward[] {
 }
 
 export function parseRewardsForLog(s: string): RichText {
-   return [{ rewards: chargePowerToPay(Reward.parse(s.replace(/ /g, ""))) }];
+  return [{ rewards: chargePowerToPay(Reward.parse(s.replace(/ /g, ""))) }];
 }
 
 export function plusReward(): Reward {
