@@ -206,6 +206,10 @@ function resourceCell(r: Resource | PowerArea): Cell {
   };
 }
 
+function skipZero(val: string | number): string {
+  return String(val) !== "0" ? String(val) : "";
+}
+
 function incomeCell(
   r: Resource | PowerArea,
   val: string | number,
@@ -242,10 +246,12 @@ function incomeCell(
   const shortcut = compact
     ? hasIncome
       ? `${val}+${income}`
-      : String(val)
+      : skipZero(val)
     : hasIncome
     ? [reward(val).concat(plusReward()).concat(reward(income))]
-    : [reward(val)];
+    : String(val) !== "0"
+    ? [reward(val)]
+    : [];
 
   return [
     {
@@ -437,6 +443,15 @@ function buildingTooltip(p: Player, engine: Engine, b: Building): string {
   return ": " + buildingDesc(b, faction, factionBoard(faction, variant), p);
 }
 
+function gaiaFormers(p: Player): string {
+  const total = p.data.gaiaformers;
+  const available = total - p.data.buildings.gf - p.data.gaiaformersInGaia;
+  if (available == 0 && total == 0) {
+    return "";
+  }
+  return `${available}/${total}`;
+}
+
 function buildings(engine: Engine): PlayerTable {
   return {
     caption: "Buildings",
@@ -449,10 +464,7 @@ function buildings(engine: Engine): PlayerTable {
         color,
         cell: (p) => [
           {
-            shortcut:
-              b == Building.GaiaFormer
-                ? `${p.data.gaiaformers - p.data.buildings.gf - p.data.gaiaformersInGaia}/${p.data.gaiaformers}`
-                : String(p.data.buildings[b]),
+            shortcut: b == Building.GaiaFormer ? gaiaFormers(p) : skipZero(p.data.buildings[b]),
             title: `${buildingName(b, p.faction)}${buildingTooltip(p, engine, b)}`,
             color,
           },
@@ -478,7 +490,7 @@ function research(engine: Engine, greenFederations: boolean): PlayerTable {
       ? [
           colorCodes.federation.add<PlayerColumn>({
             title: "Green Federations",
-            cell: (p) => p.data.tiles.federations.filter((f) => f.green).length,
+            cell: (p) => skipZero(p.data.tiles.federations.filter((f) => f.green).length),
             additionalHeader: {
               cells: [
                 engine.terraformingFederation
@@ -507,7 +519,7 @@ function research(engine: Engine, greenFederations: boolean): PlayerTable {
           })
           .join("")}`,
         color: researchColorVar(f),
-        cell: (p) => p.data.research[f],
+        cell: (p) => skipZero(p.data.research[f]),
         additionalHeader: {
           cells: [engine.tiles.techs["adv-" + f], engine.tiles.techs[f]]
             .filter((t) => t)
@@ -633,27 +645,27 @@ function stats(engine: Engine): PlayerTable {
     columns: [
       colorCodes.sector.add({
         title: "Sectors with a colonized planet",
-        cell: (p) => sectors(p),
+        cell: (p) => skipZero(sectors(p)),
       }),
       colorCodes.satellite.add({
         title: "Satellites and space stations",
-        cell: (p) => p.data.satellites + p.data.buildings.sp,
+        cell: (p) => skipZero(p.data.satellites + p.data.buildings.sp),
       }),
       {
         shortcut: "I",
         title: "Power value of structures in federations",
         color: "--oxide",
-        cell: (p) => p.fedValue,
+        cell: (p) => skipZero(p.fedValue),
       },
       colorCodes.federation.add({
         title: "Power value of structures outside of federations",
-        cell: (p) => p.structureValue - p.fedValue,
+        cell: (p) => skipZero(p.structureValue - p.fedValue),
       }),
       {
         shortcut: "L",
         title: "Leech network",
         color: "--res-power",
-        cell: (p) => leechNetwork(engine, p.player),
+        cell: (p) => skipZero(leechNetwork(engine, p.player)),
       },
     ],
   };

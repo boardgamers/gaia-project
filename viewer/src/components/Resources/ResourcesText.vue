@@ -11,7 +11,7 @@
         <Resource
           v-for="(r, j) in c"
           :key="j"
-          :transform="`translate(${j * 20}, -1) scale(${r.type === 'vp' ? 1.3 : 1.15})`"
+          :transform="`translate(${j * 20}, 0) scale(${r.type === 'vp' ? 1.3 : 1.15})`"
           :kind="r.type"
           :count="r.count"
         />
