@@ -26,23 +26,29 @@ describe("commands", () => {
           command: "spend 4pw for 1o,1c",
           boardAction: null,
           resourceLabel: [
-            [
-              {
-                count: 2,
-                type: "pay-pw",
-              },
-            ],
-            "arrow",
-            [
-              {
-                count: 1,
-                type: "o",
-              },
-              {
-                count: 1,
-                type: "c",
-              },
-            ],
+            {
+              rewards: [
+                {
+                  count: 2,
+                  type: "pay-pw",
+                },
+              ],
+            },
+            {
+              text: "arrow",
+            },
+            {
+              rewards: [
+                {
+                  count: 1,
+                  type: "o",
+                },
+                {
+                  count: 1,
+                  type: "c",
+                },
+              ],
+            },
           ],
           label: "<u></u>",
           longLabel: "4 Power Charges ⇒ 1 Ore and 1 Credit",
