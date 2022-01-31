@@ -1,11 +1,17 @@
 import { Faction, factionPlanet, Planet, Reward } from "@gaia-project/engine";
 import planets from "../data/planets";
 
-export type ResourceText = (string | Reward[])[];
+export type RichTextElement = {
+  text?: string;
+  rewards?: Reward[];
+};
+export type RichText = RichTextElement[];
 
-export enum ResourceTextSymbols {
-  arrow = "arrow",
+export function richText(s: string): RichTextElement {
+  return { text: s };
 }
+
+export const richTextArrow = richText("arrow");
 
 export function factionColor(faction: Faction | "gen"): string {
   if (faction === "gen") {

@@ -37,7 +37,7 @@ import { roundScoringData } from "../data/round-scorings";
 import { leechNetwork, sectors } from "../data/stats";
 import { techTileData } from "../data/tech-tiles";
 import { CellStyle, planetColorVar, playerColor, staticCellStyle } from "../graphics/colors";
-import { lightenDarkenColor, ResourceText } from "../graphics/utils";
+import { lightenDarkenColor, richText, RichText } from "../graphics/utils";
 import { UiMode } from "../store";
 import { finalScoringSources } from "./charts/final-scoring";
 import { colorCodes } from "./color-codes";
@@ -52,7 +52,7 @@ export enum InfoTableFlex {
 }
 
 export type InfoTableCell = {
-  label: ResourceText;
+  label: RichText;
   title: string | null;
   style: string;
   convert?: Convert;
@@ -80,7 +80,7 @@ export type ConversionSupport = {
 };
 
 type Cell = {
-  shortcut: string | ResourceText;
+  shortcut: string | RichText;
   title: string;
   color: string | CellStyle;
   deactivated?: boolean;
@@ -156,7 +156,7 @@ export function cellStyle(color: string | CellStyle): string {
   return cellColor ? `background: ${cellColor.backgroundColor}; color: ${cellColor.color};` : "";
 }
 
-function deactivatedLabel(c: Cell) {
+function deactivatedLabel(c: Cell): string {
   return deactivated(c.shortcut?.toString()?.toUpperCase(), c.deactivated ?? false);
 }
 
@@ -164,7 +164,7 @@ function formatCell(cells: Cell[], flex = InfoTableFlex.rowGrow): InfoTableCell[
   return cells.map((c) => {
     const style = cellStyle(c?.color);
     return {
-      label: typeof c.shortcut === "string" ? [deactivatedLabel(c)] : c.shortcut,
+      label: typeof c.shortcut === "string" ? [richText(deactivatedLabel(c))] : c.shortcut,
       style,
       convert: c.convert,
       title: c.title,
@@ -228,6 +228,7 @@ function incomeCell(
   if (tooltip) {
     cell.title = `${cell.title} (${tooltip})`;
   }
+
   function resource(): Resource {
     switch (r) {
       case PowerArea.Area1:
@@ -239,6 +240,7 @@ function incomeCell(
     }
     return r as Resource;
   }
+
   function reward(value: string | number): Reward[] {
     return [new Reward(Number(value), resource())];
   }
@@ -248,9 +250,9 @@ function incomeCell(
       ? `${val}+${income}`
       : skipZero(val)
     : hasIncome
-    ? [reward(val).concat(plusReward()).concat(reward(income))]
+    ? [{ rewards: reward(val).concat(plusReward()).concat(reward(income)) }]
     : String(val) !== "0"
-    ? [reward(val)]
+    ? [{ rewards: reward(val) }]
     : [];
 
   return [
@@ -750,7 +752,7 @@ function generalTables(engine: Engine): GeneralTable[] {
           color: federationData[fed].color,
         },
         row: {
-          shortcut: [[new Reward(count, federationResource(fed as Federation))]],
+          shortcut: [{ rewards: [new Reward(count, federationResource(fed as Federation))] }],
           title: "Number of federations left",
           color: federationData[fed].color,
         },

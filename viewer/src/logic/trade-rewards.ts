@@ -11,10 +11,10 @@ import {
 } from "@gaia-project/engine";
 import { tradeCost, TradeOption, tradeOptions, tradeRewards } from "@gaia-project/engine/src/available/ships";
 import { buildingData } from "../data/building";
-import { ResourceText, ResourceTextSymbols } from "../graphics/utils";
+import { richText, RichText, richTextArrow } from "../graphics/utils";
 import { cellStyle } from "./info-table";
 
-type TradeRow = { style: string; cells: ResourceText[] };
+type TradeRow = { style: string; cells: RichText[] };
 
 const levels = Array.from(Array(lastTile(ResearchField.Diplomacy) + 1).keys());
 
@@ -25,11 +25,11 @@ export function tradeHeaders(): string[] {
 function row(option: TradeOption): TradeRow {
   const b = option.building;
   const data = buildingData[b];
-  const name: ResourceText = [
-    `${option.domestic ? "Domestic" : "Foreign"} ${b === Building.Academy1 ? "Academy" : data.name}`,
+  const name: RichText = [
+    richText(`${option.domestic ? "Domestic" : "Foreign"} ${b === Building.Academy1 ? "Academy" : data.name}`),
   ];
 
-  const cells: ResourceText[] = levels.map((level) => {
+  const cells: RichText[] = levels.map((level) => {
     const guest = new PlayerData();
 
     [...Array(level + 1).keys()]
@@ -48,7 +48,7 @@ function row(option: TradeOption): TradeRow {
       ? `<br/>Build ${buildingData[bld].name} for ${factionBoard(Faction.Terrans).buildings[bld].cost.join(",")}`
       : "";
     const academy = option.researchAdvancementBonus ? ` *` : "";
-    return [[cost], ResourceTextSymbols.arrow, rewards, `${buildDesc}${academy}`];
+    return [{ rewards: [cost] }, richTextArrow, { rewards }, richText(`${buildDesc}${academy}`)];
   });
 
   return {

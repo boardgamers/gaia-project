@@ -1,25 +1,25 @@
 <template>
   <div class="d-flex flex-wrap" style="justify-content: center; align-items: center">
-    <template v-for="(c, i) in content.filter((c) => c.length > 0)">
+    <template v-for="(c, i) in filteredContent">
       <svg
-        v-if="typeof c !== 'string'"
-        :viewBox="`-10 -13 ${c.length * 25} 25`"
-        :width="c.length * 30"
+        v-if="c.rewards != null"
+        :viewBox="`-10 -13 ${c.rewards.length * 25} 25`"
+        :width="c.rewards.length * 30"
         height="36"
         :key="i"
       >
         <Resource
-          v-for="(r, j) in c"
+          v-for="(r, j) in c.rewards"
           :key="j"
           :transform="`translate(${j * 20}, 0) scale(${r.type === 'vp' ? 1.3 : 1.15})`"
           :kind="r.type"
           :count="r.count"
         />
       </svg>
-      <svg v-else-if="c === 'arrow'" :key="i" viewBox="0 0 10 10" width="20" height="20">
+      <svg v-else-if="c.text === 'arrow'" :key="i" viewBox="0 0 10 10" width="20" height="20">
         <use xlink:href="#arrow" x="-2" y="5" />
       </svg>
-      <div v-else v-html="c" :key="i" class="text" />
+      <div v-else v-html="c.text" :key="i" class="text" />
     </template>
   </div>
 </template>
@@ -27,12 +27,16 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { ResourceText } from "../../graphics/utils";
+import { RichText } from "../../graphics/utils";
 
 @Component
-export default class ResourcesText extends Vue {
+export default class RichTextView extends Vue {
   @Prop()
-  content: ResourceText;
+  content: RichText;
+
+  get filteredContent() {
+    return this.content.filter((c) => c?.rewards?.length > 0 || c?.text?.length > 0);
+  }
 }
 </script>
 

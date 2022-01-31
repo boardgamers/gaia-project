@@ -34,7 +34,7 @@
       v-b-tooltip.html
     >
       <template>
-        <ResourcesText :content="label" />
+        <RichTextView :content="label" />
       </template>
     </b-btn>
     <b-dropdown
@@ -48,7 +48,7 @@
       @click="handleRangeClick(button.times[0])"
     >
       <template #button-content>
-        <ResourcesText :content="label" />
+        <RichTextView :content="label" />
       </template>
       <b-dropdown-item v-for="i in button.times" :key="i" @click="handleRangeClick(i)">{{ i }}</b-dropdown-item>
     </b-dropdown>
@@ -77,13 +77,13 @@ import TechTile from "./TechTile.vue";
 import BoardAction from "./BoardAction.vue";
 import SpecialAction from "./SpecialAction.vue";
 import { CommandController, MoveButtonController } from "../logic/buttons/types";
-import { callOnShow, resourcesTextLabel } from "../logic/buttons/utils";
+import { callOnShow, buttonRichTextLabel } from "../logic/buttons/utils";
 import { enabledButtonWarnings } from "../data/warnings";
-import ResourcesText from "./Resources/ResourcesText.vue";
+import RichTextView from "./Resources/RichTextView.vue";
 
 @Component({
   components: {
-    ResourcesText,
+    RichTextView,
     Booster,
     TechTile,
     BoardAction,
@@ -187,7 +187,7 @@ export default class MoveButton extends Vue implements MoveButtonController {
   }
 
   get label() {
-    return resourcesTextLabel(this.button);
+    return buttonRichTextLabel(this.button);
   }
 
   hover() {

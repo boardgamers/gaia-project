@@ -4,7 +4,7 @@
       <h5>
         <span v-if="init">Pick the number of players</span>
         <span v-else class="d-flex">
-          <ResourcesText :content="statusLine" />
+          <RichTextView :content="statusLine" />
           <Undo v-if="canUndo" transform="scale(1.2)" />
         </span>
       </h5>
@@ -82,8 +82,8 @@ import { buttonStringLabel, callOnShow } from "../logic/buttons/utils";
 import { commandButtons, replaceRepeat } from "../logic/buttons/commands";
 import { CubeCoordinates } from "hexagrid";
 import { autoClickStrategy } from "../logic/buttons/autoClick";
-import ResourcesText from "./Resources/ResourcesText.vue";
-import { ResourceText } from "../graphics/utils";
+import RichTextView from "./Resources/RichTextView.vue";
+import { richText, RichText } from "../graphics/utils";
 import { chargePowerToPay } from "../logic/utils";
 
 let show = false;
@@ -133,7 +133,7 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
     },
   },
   components: {
-    ResourcesText,
+    RichTextView,
     MoveButton,
     Undo,
   },
@@ -157,19 +157,19 @@ export default class Commands extends Vue implements CommandController {
     return this.gameData.factionCustomization;
   }
 
-  get statusLine(): ResourceText {
-    const t: ResourceText = [[this.playerName, ...this.titles].join(statusLineSeparator)];
+  get statusLine(): RichText {
+    const t: RichText = [richText([this.playerName, ...this.titles].join(statusLineSeparator))];
 
     if (this.currentMove?.length > 0) {
-      t.push(statusLineSeparator);
-      t.push(this.currentMove.substring(this.currentMove.indexOf(" ")));
+      t.push(richText(statusLineSeparator));
+      t.push(richText(this.currentMove.substring(this.currentMove.indexOf(" "))));
       t.push(...this.currentTurnChanges);
     }
 
     return t;
   }
 
-  get currentTurnChanges(): ResourceText {
+  get currentTurnChanges(): RichText {
     const logEntries = this.gameData.advancedLog;
     const entry = logEntries[logEntries.length - 1];
     if (entry != null && entry.changes != null && entry.move != null) {
@@ -177,7 +177,7 @@ export default class Commands extends Vue implements CommandController {
         const values = Object.values(entry.changes).flatMap((e) =>
           Object.keys(e).map((k) => new Reward(e[k], k as Resource))
         );
-        return [Reward.merge(chargePowerToPay(values))];
+        return [{ rewards: Reward.merge(chargePowerToPay(values))}];
       }
     }
     return [];
@@ -358,7 +358,7 @@ export default class Commands extends Vue implements CommandController {
             button.label = `${button.label} (${w})`;
           }
           if (button.resourceLabel) {
-            button.resourceLabel.push(`(${w})`);
+            button.resourceLabel.push(richText(`(${w})`));
           }
           button.warningInLabel = true;
         }
