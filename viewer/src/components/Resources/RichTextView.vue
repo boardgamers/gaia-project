@@ -4,7 +4,7 @@
       <svg
         v-if="c.rewards != null"
         :viewBox="`-10 -13 ${c.rewards.length * 20} 25`"
-        :width="c.rewards.length * 30"
+        :width="width(c.rewards)"
         height="36"
         :key="i"
       >
@@ -27,16 +27,23 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { RichText } from "../../graphics/utils";
+import { RichText, richTextArrow, RichTextElement } from "../../graphics/utils";
 import { Resource } from "@gaia-project/engine";
+import Reward from "@gaia-project/engine/src/reward";
+import { plusReward } from "../../logic/utils";
 
 @Component
 export default class RichTextView extends Vue {
   @Prop()
   content: RichText;
 
-  get filteredContent() {
-    return this.content.filter((c) => c?.rewards?.length > 0 || c?.text?.length > 0);
+  get filteredContent(): RichText {
+    return this.content.flatMap(c => {
+      if (c.rewards) {
+        return c.rewards.map(r => ({rewards:[r]} as RichTextElement));
+      }
+      return c;
+    });
   }
 
   scale(r: Resource): number {
@@ -57,6 +64,10 @@ export default class RichTextView extends Vue {
         return 2;
     }
     return 0;
+  }
+
+  width(rewards: Reward[]): number {
+    return rewards[0].count as any == '+' ? 15 : rewards.length * 30;
   }
 }
 </script>

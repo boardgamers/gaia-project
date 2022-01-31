@@ -147,7 +147,7 @@ export default class ResearchTile extends Vue {
       .filter(e => e.spec !== "3pw" && e.condition === Condition.None)
       .flatMap((ev) => ev.rewards);
     if (events[0] && events[0].operator === Operator.Income) {
-      rewards.unshift(plusReward());
+      rewards.unshift(plusReward);
     }
     return rewards;
   }

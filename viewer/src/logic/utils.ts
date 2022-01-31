@@ -75,8 +75,10 @@ export function parseRewardsForLog(s: string): RichText {
   return [{ rewards: chargePowerToPay(Reward.parse(s.replace(/ /g, ""))) }];
 }
 
-export function plusReward(): Reward {
+function newPlusReward(): Reward {
   const reward = new Reward("+", ResourceEnum.None);
   reward.count = "+" as any;
   return reward;
 }
+
+export const plusReward = newPlusReward();

@@ -242,7 +242,7 @@ function powerRichText(r: Resource | PowerArea, hasIncome: boolean, val: string 
   }
 
   if (hasIncome) {
-    return [{ rewards: reward(val).concat(plusReward()).concat(reward(income)) }];
+    return [{ rewards: reward(val).concat(plusReward).concat(reward(income)) }];
   }
   return String(val) === "0" ? [] : [{ rewards: reward(val) }];
 }
