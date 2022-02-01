@@ -4,7 +4,9 @@
       <h5>
         <span v-if="init">Pick the number of players</span>
         <span v-else class="d-flex">
-          <RichTextView :content="statusLine" />
+          <div class="status-line">
+            <RichTextView :content="statusLine" />
+          </div>
           <Undo v-if="canUndo" transform="scale(1.2)" />
         </span>
       </h5>
@@ -748,5 +750,8 @@ i.planet {
       filter: drop-shadow(0px 0px 1px black);
     }
   }
+}
+.status-line {
+  max-width: 80%;
 }
 </style>

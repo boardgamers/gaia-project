@@ -23,7 +23,7 @@
           <div v-text="factionName(this.rule)" v-else />
         </h4>
       </div>
-      <b-table
+      <b-table-lite
         v-if="rule === 'scoring'"
         striped
         bordered
@@ -40,7 +40,7 @@
         <template #cell()="data">
           <b-checkbox :checked="data.value" disabled />
         </template>
-      </b-table>
+      </b-table-lite>
       <div v-else-if="rule === 'trade'">
         <table class="table-bordered">
           <thead>

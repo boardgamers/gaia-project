@@ -1,7 +1,7 @@
 <template>
   <div class="d-flex flex-wrap align-items-end">
     <template v-for="(table, i) in infoTables">
-      <b-table
+      <b-table-lite
         :key="i"
         bordered
         small
@@ -25,7 +25,7 @@
         <template #cell()="data">
           <TableCell :cells="data.value" />
         </template>
-      </b-table>
+      </b-table-lite>
       <div v-if="table.break" :key="`${i}break`" class="break" />
     </template>
     <div class="d-flex flex-column align-items-end">
@@ -36,8 +36,9 @@
         :value="selectedMapMode(p.player)"
         :options="mapModeTypeOptions"
         @change="(mode) => toggleMapMode(p.player, mode)"
-        :class="{ 'info-table-dropdown': true, compact: uiMode === 'compactTable' }"
+        :class="{ 'info-table-dropdown': true, compact }"
       />
+      <div v-if="!compact" style="min-height: 48px" />
     </div>
   </div>
 </template>
@@ -112,6 +113,10 @@ export default class Table extends Vue {
 
   get uiMode(): UiMode {
     return this.$store.state.preferences.uiMode;
+  }
+
+  get compact(): boolean {
+    return this.uiMode === UiMode.compactTable;
   }
 
   convertTooltip(resource: ResourceEnum | PowerArea, player: PlayerEnum): string | null {
