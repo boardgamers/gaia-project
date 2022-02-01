@@ -37,7 +37,7 @@ import { roundScoringData } from "../data/round-scorings";
 import { leechNetwork, sectors } from "../data/stats";
 import { techTileData } from "../data/tech-tiles";
 import { CellStyle, planetColorVar, playerColor, staticCellStyle } from "../graphics/colors";
-import { lightenDarkenColor, ResourceText } from "../graphics/utils";
+import { lightenDarkenColor, richText, RichText } from "../graphics/utils";
 import { UiMode } from "../store";
 import { finalScoringSources } from "./charts/final-scoring";
 import { colorCodes } from "./color-codes";
@@ -52,7 +52,7 @@ export enum InfoTableFlex {
 }
 
 export type InfoTableCell = {
-  label: ResourceText;
+  label: RichText;
   title: string | null;
   style: string;
   convert?: Convert;
@@ -80,7 +80,7 @@ export type ConversionSupport = {
 };
 
 type Cell = {
-  shortcut: string | ResourceText;
+  shortcut: string | RichText;
   title: string;
   color: string | CellStyle;
   deactivated?: boolean;
@@ -156,7 +156,7 @@ export function cellStyle(color: string | CellStyle): string {
   return cellColor ? `background: ${cellColor.backgroundColor}; color: ${cellColor.color};` : "";
 }
 
-function deactivatedLabel(c: Cell) {
+function deactivatedLabel(c: Cell): string {
   return deactivated(c.shortcut?.toString()?.toUpperCase(), c.deactivated ?? false);
 }
 
@@ -164,7 +164,7 @@ function formatCell(cells: Cell[], flex = InfoTableFlex.rowGrow): InfoTableCell[
   return cells.map((c) => {
     const style = cellStyle(c?.color);
     return {
-      label: typeof c.shortcut === "string" ? [deactivatedLabel(c)] : c.shortcut,
+      label: typeof c.shortcut === "string" ? [richText(deactivatedLabel(c))] : c.shortcut,
       style,
       convert: c.convert,
       title: c.title,
@@ -210,6 +210,43 @@ function skipZero(val: string | number): string {
   return String(val) !== "0" ? String(val) : "";
 }
 
+function brainstone() {
+  const r = new Reward(1, Resource.Qic);
+  r.type = "brainstone" as Resource; //it's not a real resource
+  return r;
+}
+
+function powerRichText(r: Resource | PowerArea, hasIncome: boolean, val: string | number, income: number) {
+  function resource(): Resource {
+    switch (r) {
+      case PowerArea.Area1:
+      case PowerArea.Area2:
+      case PowerArea.Area3:
+        return Resource.BowlToken;
+      case PowerArea.Gaia:
+        return Resource.GainTokenGaiaArea;
+    }
+    return r as Resource;
+  }
+
+  function reward(value: string | number): Reward[] {
+    const split = String(value)
+      .split(",")
+      .map((s) => s.trim());
+    if (split.length > 1) {
+      const base = reward(split[0]);
+      const extra = split[1];
+      return (base[0].count == 0 ? [] : base).concat(extra === "B" ? [brainstone()] : Reward.parse(extra));
+    }
+    return [new Reward(Number(value), resource())];
+  }
+
+  if (hasIncome) {
+    return [{ rewards: reward(val).concat(plusReward).concat(reward(income)) }];
+  }
+  return String(val) === "0" ? [] : [{ rewards: reward(val) }];
+}
+
 function incomeCell(
   r: Resource | PowerArea,
   val: string | number,
@@ -228,30 +265,11 @@ function incomeCell(
   if (tooltip) {
     cell.title = `${cell.title} (${tooltip})`;
   }
-  function resource(): Resource {
-    switch (r) {
-      case PowerArea.Area1:
-      case PowerArea.Area2:
-      case PowerArea.Area3:
-        return Resource.BowlToken;
-      case PowerArea.Gaia:
-        return Resource.GainTokenGaiaArea;
-    }
-    return r as Resource;
-  }
-  function reward(value: string | number): Reward[] {
-    return [new Reward(Number(value), resource())];
-  }
-
   const shortcut = compact
     ? hasIncome
       ? `${val}+${income}`
       : skipZero(val)
-    : hasIncome
-    ? [reward(val).concat(plusReward()).concat(reward(income))]
-    : String(val) !== "0"
-    ? [reward(val)]
-    : [];
+    : powerRichText(r, hasIncome, val, income);
 
   return [
     {
@@ -750,7 +768,7 @@ function generalTables(engine: Engine): GeneralTable[] {
           color: federationData[fed].color,
         },
         row: {
-          shortcut: [[new Reward(count, federationResource(fed as Federation))]],
+          shortcut: [{ rewards: [new Reward(count, federationResource(fed as Federation))] }],
           title: "Number of federations left",
           color: federationData[fed].color,
         },

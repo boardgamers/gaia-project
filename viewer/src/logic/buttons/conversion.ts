@@ -15,7 +15,7 @@ import { max, minBy, range, sortBy } from "lodash";
 import { ButtonData } from "../../data";
 import { FastConversion, FastConversionEvent, freeActionShortcuts } from "../../data/actions";
 import { translateResources } from "../../data/resources";
-import { ResourceTextSymbols } from "../../graphics/utils";
+import { richTextArrow } from "../../graphics/utils";
 import { AvailableConversions, FastConversionTooltips } from "./types";
 import { autoClickButton, confirmationButton, symbolButton } from "./utils";
 import { resourceWasteWarning, rewardWarnings } from "./warnings";
@@ -65,7 +65,7 @@ export function conversionButton(
   const button = symbolButton(
     {
       label: conversionLabel(cost, income),
-      resourceLabel: [conversion.from, ResourceTextSymbols.arrow, conversion.to],
+      resourceLabel: [{ rewards: conversion.from }, richTextArrow, { rewards: conversion.to }],
       shortcuts: shortcut != null ? [shortcut] : [],
       command,
       warning: player ? resourceWasteWarning(rewardWarnings(player, income)) : null,
@@ -203,7 +203,7 @@ export function freeAndBurnButton(
     button: autoClickButton({
       label: labels.join(" / "),
       shortcuts: ["a"],
-      buttons: sortBy(buttons, (b) => (b.resourceLabel[0] as Reward[])[0].type),
+      buttons: sortBy(buttons, (b) => b.resourceLabel[0].rewards[0].type),
     }),
     tooltips,
   };

@@ -3,7 +3,7 @@ import assert from "assert";
 import { sortBy } from "lodash";
 import { ButtonData, HighlightHex, WarningWithKey } from "../../data";
 import { buildingData } from "../../data/building";
-import { ResourceText, ResourceTextSymbols } from "../../graphics/utils";
+import { RichText, richText, richTextArrow } from "../../graphics/utils";
 import { prependShortcut, tooltipWithShortcut } from "./shortcuts";
 import { CommandController } from "./types";
 import { addOnClick, addOnShow, isFree, textButton } from "./utils";
@@ -49,29 +49,31 @@ export function hexSelectionButton(
       //we need the label to determine the active button
       b.label = hex.toString();
 
-      const label: ResourceText = [];
+      const label: RichText = [];
       b.resourceLabel = label;
 
       if (i <= 9) {
-        label.push(prependShortcut(shortcut, hex.toString()));
+        label.push(richText(prependShortcut(shortcut, hex.toString())));
         b.shortcuts = [shortcut];
         i++;
       } else {
-        label.push(hex.toString());
+        label.push(richText(hex.toString()));
       }
 
       const highlightHex = hexes.get(hex);
       if (highlightHex.tradeCost) {
-        label.push(Reward.parse(highlightHex.tradeCost), ResourceTextSymbols.arrow);
+        label.push({ rewards: Reward.parse(highlightHex.tradeCost) }, richTextArrow);
       }
       if (highlightHex.rewards) {
-        label.push(Reward.parse(highlightHex.rewards));
+        label.push({ rewards: Reward.parse(highlightHex.rewards) });
       }
       if (highlightHex.building) {
-        label.push(`Build ${buildingData[highlightHex.building].name} for`);
+        label.push(richText(`Build ${buildingData[highlightHex.building].name} for`));
       }
       if (highlightHex.cost != null) {
-        label.push(isFree(highlightHex) ? [new Reward(0, Resource.Credit)] : Reward.parse(highlightHex.cost));
+        label.push({
+          rewards: isFree(highlightHex) ? [new Reward(0, Resource.Credit)] : Reward.parse(highlightHex.cost),
+        });
       }
 
       b.warning = buttonWarnings(hexWarnings(highlightHex));

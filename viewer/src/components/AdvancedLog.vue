@@ -52,7 +52,7 @@
             </td>
             <td v-else-if="event.phase == null" class="border-left" />
             <td v-if="event.changes.length > 0" :class="[j === 1 ? 'first-change' : 'changes']">
-              <ResourcesText :content="[parseRewards(event.changes[j - 1].changes)]" />
+              <RichTextView :content="parseRewards(event.changes[j - 1].changes)" />
             </td>
             <td v-else-if="event.phase == null" class="border-right" />
             <td
@@ -66,7 +66,7 @@
                 'border-bottom': ['moves-skipped', 'setupInit'].includes(event.phase),
               }"
             >
-              <ResourcesText :content="value.value" />
+              <RichTextView :content="value.value" />
             </td>
           </tr>
         </template>
@@ -77,16 +77,16 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Engine, { Resource, Reward } from "@gaia-project/engine";
+import Engine, { Reward } from "@gaia-project/engine";
 import { HistoryEntry, makeHistory } from "../data/log";
 import { cellStyle, logPlayerTables, PlayerColumn } from "../logic/info-table";
-import ResourcesText from "./Resources/ResourcesText.vue";
+import RichTextView from "./Resources/RichTextView.vue";
 import { parseRewardsForLog } from "../logic/utils";
-import { ResourceText } from "../graphics/utils";
+import { RichText } from "../graphics/utils";
 
 type LogScope = "recent" | "all";
 @Component({
-  components: { ResourcesText },
+  components: { RichTextView },
 })
 export default class AdvancedLog extends Vue {
   private scope: LogScope = "recent";
@@ -150,11 +150,11 @@ export default class AdvancedLog extends Vue {
     return `${cellStyle(c.color)} border: 1px`;
   }
 
-  parseRewards(s: string): Reward[] {
+  parseRewards(s: string): RichText {
     return parseRewardsForLog(s);
   }
 
-  rowValues(entry: HistoryEntry, change: number): { value: ResourceText; leftBorder: boolean }[] {
+  rowValues(entry: HistoryEntry, change: number): { value: RichText; leftBorder: boolean }[] {
     if (!this.extendedLog || change > 1) {
       return [];
     }

@@ -10,6 +10,7 @@ import Engine, {
 } from "@gaia-project/engine";
 import { upgradedBuildings } from "@gaia-project/engine/src/buildings";
 import { LEECHING_DISTANCE } from "@gaia-project/engine/src/engine";
+import { RichText } from "../graphics/utils";
 
 export function phaseBeforeSetupBuilding(data: Engine): boolean {
   return (
@@ -64,18 +65,20 @@ export function rotate<T>(list: Array<T>, first: T): Array<T> {
   return list.slice(i).concat(list.slice(0, i));
 }
 
-export function chargePowerToPay(rewards: Reward[]) {
+export function chargePowerToPay(rewards: Reward[]): Reward[] {
   return rewards.map((r) =>
     r.type === Resource.ChargePower && r.count < 0 ? new Reward(-r.count, Resource.PayPower) : r
   );
 }
 
-export function parseRewardsForLog(s: string): Reward[] {
-  return chargePowerToPay(Reward.parse(s.replace(/ /g, "")));
+export function parseRewardsForLog(s: string): RichText {
+  return [{ rewards: chargePowerToPay(Reward.parse(s.replace(/ /g, ""))) }];
 }
 
-export function plusReward(): Reward {
+function newPlusReward(): Reward {
   const reward = new Reward("+", ResourceEnum.None);
   reward.count = "+" as any;
   return reward;
 }
+
+export const plusReward = newPlusReward();

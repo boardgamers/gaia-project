@@ -167,7 +167,7 @@
       "
       :class="{ plus: count === '+' }"
       :text-decoration="kind === 'burn-token' ? 'line-through' : ''"
-      >{{ kind === "t" ? "+" : "" }}{{ count }}</text
+      >{{ kind === "t" && count > 0 ? "+" : "" }}{{ count }}</text
     >
     <text x="0" y="0" v-if="kind == 'brainstone'">B</text>
   </g>

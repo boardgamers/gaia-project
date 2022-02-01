@@ -9,8 +9,8 @@
       :title="c.title"
       @click="convert(c.convert)"
     >
-      <div v-if="compact" v-html="c.label[0]" />
-      <ResourcesText v-else :content="c.label" />
+      <div v-if="compact" v-html="c.label[0].text" />
+      <RichTextView v-else :content="c.label" />
     </div>
   </div>
 </template>
@@ -19,10 +19,10 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 import { InfoTableCell } from "../logic/info-table";
 import { PowerArea, Resource as ResourceEnum } from "@gaia-project/engine";
 import { FastConversionEvent } from "../data/actions";
-import ResourcesText from "./Resources/ResourcesText.vue";
+import RichTextView from "./Resources/RichTextView.vue";
 import { UiMode } from "../store";
 @Component({
-  components: { ResourcesText },
+  components: { RichTextView },
 })
 export default class TableCell extends Vue {
   @Prop()
