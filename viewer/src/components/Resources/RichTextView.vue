@@ -30,7 +30,6 @@ import { Component, Prop } from "vue-property-decorator";
 import { RichText, richTextArrow, RichTextElement } from "../../graphics/utils";
 import { Resource } from "@gaia-project/engine";
 import Reward from "@gaia-project/engine/src/reward";
-import { plusReward } from "../../logic/utils";
 
 @Component
 export default class RichTextView extends Vue {
