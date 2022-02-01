@@ -185,7 +185,7 @@ export function freeAndBurnButton(
     const b = freeActionButton(conversions.free, player);
     if (phase === Phase.RoundGaia) {
       for (const cb of b.buttons) {
-        if (!cb.resourceLabel.some((c) => typeof c == "object" && c[0].type === Resource.TechTile)) {
+        if (!cb.resourceLabel.some((c) => c.rewards && c.rewards[0].type === Resource.TechTile)) {
           cb.buttons = confirmationButton("Confirm Free Action");
         }
       }
