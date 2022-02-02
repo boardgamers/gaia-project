@@ -13,7 +13,7 @@ import { brainstoneButtons, chargePowerButtons } from "./power";
 import { researchButtons, techTiles } from "./research";
 import { sectorRotationButton, setupButton } from "./setup";
 import { moveShipButton } from "./ships";
-import { finalizeShortcuts } from "./shortcuts";
+import { finalizeShortcutsAndParents } from "./shortcuts";
 import { AvailableConversions, CommandController } from "./types";
 import { autoClickButton, hexMap } from "./utils";
 
@@ -138,7 +138,8 @@ export function commandButtons(
   engine: Engine,
   player: Player,
   controller: CommandController,
-  autoClickStrategy: AutoClickStrategy
+  autoClickStrategy: AutoClickStrategy,
+  parents: number
 ) {
   const conversions: AvailableConversions = {};
   const ret: ButtonData[] = [];
@@ -185,7 +186,7 @@ export function commandButtons(
     ret.push(...controller.customButtons);
   }
 
-  finalizeShortcuts(ret);
+  finalizeShortcutsAndParents(ret, parents);
   checkAutoClick(controller, ret, autoClickStrategy);
 
   return ret;
