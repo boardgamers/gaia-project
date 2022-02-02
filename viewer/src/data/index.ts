@@ -58,6 +58,7 @@ export interface ButtonData {
   handlingClick?: boolean;
   keepContext?: boolean;
   subscription?: () => void;
+  parents?: number;
 }
 
 export type HighlightHex = {

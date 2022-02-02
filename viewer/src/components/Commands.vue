@@ -348,7 +348,7 @@ export default class Commands extends Vue implements CommandController {
     //todo test "always" better, then re-enable
     // const s = autoClickStrategy(this.$store.state.preferences.autoClick, this.preventFirstAutoClick);
     const s = autoClickStrategy("smart", this.preventFirstAutoClick);
-    const buttons = commandButtons(commands, this.engine, this.player, this, s);
+    const buttons = commandButtons(commands, this.engine, this.player, this, s, this.buttonChain.length);
     if (this.warningPreference === WarningsPreference.ButtonText) {
       for (const button of buttons) {
         const w = this.enabledButtonWarnings(button).join(", ");
@@ -483,16 +483,10 @@ export default class Commands extends Vue implements CommandController {
     this.unsubscribe(button);
 
     button.subscription = (this.$store as any).subscribeAction(({ type, payload }) => {
-      if (type !== action) {
-        return;
+      if (type === action && button.parents == this.buttonChain.length && (!filter || filter(payload))) {
+        console.log(type, payload);
+        callback(payload);
       }
-      if (filter && !filter(payload)) {
-        return;
-      }
-
-      console.log(type, payload);
-
-      callback(payload);
     });
   }
 

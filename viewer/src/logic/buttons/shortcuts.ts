@@ -51,11 +51,6 @@ function addSingleButtonShortcut(b: ButtonData) {
 
   const label = buttonStringLabel(b);
   if (label && !label.includes("<u>")) {
-    if (isFinite(Number(b.shortcuts[0]))) {
-      //remove any numeric shortcuts
-      b.shortcuts = [];
-    }
-
     if (forceNumericShortcut(label)) {
       b.shortcuts.push("1");
     } else {
@@ -92,12 +87,14 @@ function addDefaultShortcuts(shown: ButtonData[]) {
   }
 }
 
-export function finalizeShortcuts(buttons: ButtonData[]) {
+export function finalizeShortcutsAndParents(buttons: ButtonData[], parents: number) {
   for (const button of buttons) {
+    button.parents = parents;
     if (button.buttons) {
-      finalizeShortcuts(button.buttons);
+      finalizeShortcutsAndParents(button.buttons, parents + 1);
     }
   }
+
   const shown = buttons.filter((b) => !b.hide);
   addDefaultShortcuts(shown);
 
