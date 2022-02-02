@@ -44,6 +44,9 @@ export function tooltipWithShortcut(
 }
 
 function addSingleButtonShortcut(b: ButtonData) {
+  if (b.shortcuts == undefined) {
+    b.shortcuts = [];
+  }
   if (b.shortcuts.includes("Enter")) {
     //already processed
     return;
@@ -96,9 +99,10 @@ export function finalizeShortcutsAndParents(buttons: ButtonData[], parents: numb
   }
 
   const shown = buttons.filter((b) => !b.hide);
-  addDefaultShortcuts(shown);
 
   if (shown.length == 1) {
     addSingleButtonShortcut(shown[0]);
+  } else {
+    addDefaultShortcuts(shown);
   }
 }
