@@ -70,13 +70,6 @@ export interface CommandController {
 
   rotate(hex: GaiaHex): void;
 
-  subscribe(
-    action: string,
-    button: ButtonData,
-    callback: (payload: any) => any,
-    filter: (payload: any) => boolean
-  ): void;
-
   subscribeFinal(action: string, button: ButtonData): void;
 
   enabledButtonWarnings(button: ButtonData): string[];
