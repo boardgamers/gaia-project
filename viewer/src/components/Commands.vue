@@ -483,7 +483,7 @@ export default class Commands extends Vue implements CommandController {
     this.unsubscribe(button);
 
     button.subscription = (this.$store as any).subscribeAction(({ type, payload }) => {
-      if (type === action && button.parents == this.buttonChain.length && (!filter || filter(payload))) {
+      if (type === action && (!filter || filter(payload))) {
         console.log(type, payload);
         callback(payload);
       }
@@ -495,9 +495,12 @@ export default class Commands extends Vue implements CommandController {
   }
 
   subscribeHexClick(button: ButtonData, callback: (hex: GaiaHex, highlight: HighlightHex) => void, filter?: (hex: GaiaHex) => boolean) {
-    this.subscribe("hexClick", button, (payload) => {
+    const heightFilter = () => {
+      return this.buttonChain.length == button.parents;
+    };
+    this.subscribe("hexClick", button,  (payload) => {
       callback(payload.hex, payload.highlight);
-    }, filter ? payload => filter(payload.hex) : null);
+    }, payload => (filter ? filter(payload.hex) : true) && heightFilter());
   }
 
   subscribeFinal(action: string, button: ButtonData) {
