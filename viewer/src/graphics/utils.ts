@@ -1,9 +1,12 @@
-import { Faction, factionPlanet, Planet, Reward } from "@gaia-project/engine";
+import { Building, Faction, factionPlanet, Planet, Reward } from "@gaia-project/engine";
 import planets from "../data/planets";
+
+export type RichTextBuilding = { type: Building; faction: Faction; count: number };
 
 export type RichTextElement = {
   text?: string;
   rewards?: Reward[];
+  building?: RichTextBuilding;
 };
 export type RichText = RichTextElement[];
 
