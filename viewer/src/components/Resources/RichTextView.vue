@@ -18,7 +18,7 @@
       </svg>
       <svg v-else-if="c.building != null" :key="i" viewBox="0 0 10 10" width="36" height="36">
         <Building :building="c.building.type" :faction="c.building.faction" transform="translate(5,5) scale(.8)" />
-        <text v-if="c.building.count > 1" x="7" y="14" transform="scale(.5)" class="building-count">
+        <text v-if="c.building.count > 1" x="7" y="14" transform="scale(.5)" :style="buildingCountStyle(c.building)">
           {{ c.building.count }}
         </text>
         <Resource
@@ -42,6 +42,8 @@ import { RichText, RichTextBuilding, RichTextElement } from "../../graphics/rich
 import { Building as BuildingEnum, Faction, Resource } from "@gaia-project/engine";
 import Reward from "@gaia-project/engine/src/reward";
 import Building from "../Building.vue";
+import { foregroundColor } from "../../graphics/colors";
+import { factionColorVar } from "../../graphics/utils";
 
 @Component({
   components: { Building },
@@ -92,16 +94,15 @@ export default class RichTextView extends Vue {
     }
     return null;
   }
+
+  buildingCountStyle(b: RichTextBuilding): string {
+    return `fill: ${(foregroundColor(factionColorVar(b.faction)))}; font-weight: bold;`;
+  }
 }
 </script>
 
 <style lang="scss" scoped>
 .text {
   margin: 2px;
-}
-
-.building-count {
-  fill: white;
-  font-weight: bold;
 }
 </style>

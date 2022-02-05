@@ -1,6 +1,7 @@
-import { Building, Command, Faction, factionPlanet, Planet, planetNames, Resource, Reward } from "@gaia-project/engine";
+import { Building, Command, Faction, Planet, Resource, Reward } from "@gaia-project/engine";
 import { orderBy } from "lodash";
 import { factionName } from "../../data/factions";
+import { factionColorVar } from "../../graphics/utils";
 import { deltaCounter } from "../utils";
 import { terranChargeExtractLog } from "./charge";
 import { ChartSource } from "./charts";
@@ -214,7 +215,7 @@ export const factionSourceFactory = (factions: Faction[]): SimpleSourceFactory<C
         description: s.entries
           .map((e) => (s.entries.length > 1 ? factionName(e.faction) + ": " : "") + e.description)
           .join(", "),
-        color: `--${planetNames[factionPlanet(s.entries[0].faction)]}`,
+        color: factionColorVar(s.entries[0].faction),
         weight: 1,
       })),
       "label"

@@ -1,4 +1,4 @@
-import { Faction, factionPlanet, Planet } from "@gaia-project/engine";
+import { Faction, factionPlanet, Planet, planetNames } from "@gaia-project/engine";
 import planets from "../data/planets";
 
 export function factionColor(faction: Faction | "gen"): string {
@@ -6,6 +6,10 @@ export function factionColor(faction: Faction | "gen"): string {
     return "#d3d3d3";
   }
   return planets[factionPlanet(faction)].color;
+}
+
+export function factionColorVar(faction: Faction) {
+  return `--${planetNames[factionPlanet(faction)]}`;
 }
 
 export function planetColor(planet: Exclude<Planet, Planet.Empty>): string {
