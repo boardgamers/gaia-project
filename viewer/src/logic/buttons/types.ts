@@ -2,7 +2,7 @@ import { AdvTechTilePos, AvailableFreeActionData, Command, GaiaHex, TechTilePos 
 import { CubeCoordinates } from "hexagrid";
 import { ActionPayload, SubscribeActionOptions, SubscribeOptions } from "vuex";
 import { EmitCommandParams } from "../../components/Commands.vue";
-import { ButtonData, HexSelection, HighlightHex } from "../../data";
+import { ButtonData, HexSelection, HighlightHex, SpecialActionIncome } from "../../data";
 import { FastConversionButton } from "../../data/actions";
 
 export type FastConversionTooltips = { [key in FastConversionButton]?: string };
@@ -75,6 +75,10 @@ export interface CommandController {
   enabledButtonWarnings(button: ButtonData): string[];
 
   isWarningEnabled(disableKey: string): boolean;
+
+  highlightBoardActions(button: ButtonData): void;
+
+  highlightSpecialActions(specialActions: SpecialActionIncome[]): void;
 }
 
 export interface MoveButtonController {

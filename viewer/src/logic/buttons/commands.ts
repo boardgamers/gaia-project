@@ -98,7 +98,7 @@ function commandButton(
       return [boardActionsButton(command.data, player)];
 
     case Command.Special:
-      return [specialActionsButton(command, player)];
+      return [specialActionsButton(command, player, controller)];
 
     case Command.EndTurn:
       return [endTurnButton(command, player)];

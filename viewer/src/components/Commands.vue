@@ -72,7 +72,15 @@ import Engine, {
   TechTilePos,
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
-import { ButtonData, GameContext, HexSelection, HighlightHex, ModalButtonData, WarningsPreference } from "../data";
+import {
+  ButtonData,
+  GameContext,
+  HexSelection,
+  HighlightHex,
+  ModalButtonData,
+  SpecialActionIncome,
+  WarningsPreference
+} from "../data";
 import { factionDesc, factionName, factionShortcut } from "../data/factions";
 import { FactionCustomization } from "@gaia-project/engine/src/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
@@ -566,12 +574,10 @@ export default class Commands extends Vue implements CommandController {
         }
       }
 
-      if (button.specialActions) {
-        this.$store.commit("highlightSpecialActions", button.specialActions);
-        this.subscribeFinal("specialActionClick", button);
-      } else if (button.boardActions) {
-        this.$store.commit("highlightBoardActions", button.boardActions);
-        this.subscribeFinal("boardActionClick", button);
+      if (button.boardActions) {
+        let boardActions = button.boardActions;
+        this.$store.commit("highlightBoardActions", boardActions);
+        this.highlightBoardActions(button);
       } else if (button.onClick) {
         button.onClick(button);
       } else if (button.modal) {
@@ -590,7 +596,7 @@ export default class Commands extends Vue implements CommandController {
       if (this.warningPreference === WarningsPreference.ModalDialog) {
         return true;
       }
-      if (this.warningPreference === WarningsPreference.ButtonText && (button.boardAction || button.specialAction || button.booster || button.tech)) {
+      if (this.warningPreference === WarningsPreference.ButtonText && (button.boardAction || button.booster || button.tech)) {
         return true;
       }
     }
@@ -627,6 +633,14 @@ export default class Commands extends Vue implements CommandController {
 
   highlightSectors(sectors: CubeCoordinates[]) {
     this.$store.commit("highlightSectors", sectors);
+  }
+
+  highlightBoardActions(button: ButtonData) {
+    this.subscribeFinal("boardActionClick", button);
+  }
+
+  highlightSpecialActions(specialActions: SpecialActionIncome[]) {
+    this.$store.commit("highlightSpecialActions", specialActions);
   }
 
   executeCommand(button: ButtonData): void {
