@@ -40,7 +40,6 @@ export interface ButtonData {
   onShowTriggered?: boolean;
   buttonController?: MoveButtonController;
   hover?: { enter: (button: ButtonData) => void; leave: (button: ButtonData) => void };
-  boardActions?: BoardAction[];
   needConfirm?: boolean;
   warning?: ButtonWarning;
   warningInLabel?: boolean;
@@ -49,7 +48,6 @@ export interface ButtonData {
   disabled?: boolean;
   booster?: Booster;
   tech?: { pos?: TechTilePos | AdvTechTilePos; tile?: TechTile | AdvTechTile; commandOverride?: string };
-  boardAction?: BoardAction;
   shortcuts?: string[];
   autoClick?: boolean;
   smartAutoClick?: boolean;

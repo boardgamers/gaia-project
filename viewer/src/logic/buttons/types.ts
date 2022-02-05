@@ -1,4 +1,11 @@
-import { AdvTechTilePos, AvailableFreeActionData, Command, GaiaHex, TechTilePos } from "@gaia-project/engine";
+import {
+  AdvTechTilePos,
+  AvailableFreeActionData,
+  BoardAction,
+  Command,
+  GaiaHex,
+  TechTilePos,
+} from "@gaia-project/engine";
 import { CubeCoordinates } from "hexagrid";
 import { ActionPayload, SubscribeActionOptions, SubscribeOptions } from "vuex";
 import { EmitCommandParams } from "../../components/Commands.vue";
@@ -76,9 +83,9 @@ export interface CommandController {
 
   isWarningEnabled(disableKey: string): boolean;
 
-  highlightBoardActions(button: ButtonData): void;
-
   highlightSpecialActions(specialActions: SpecialActionIncome[]): void;
+
+  highlightBoardActions(boardActions: BoardAction[]): void;
 }
 
 export interface MoveButtonController {

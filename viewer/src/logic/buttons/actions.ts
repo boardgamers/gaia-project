@@ -25,12 +25,19 @@ export function boardActionButton(action: BoardAction, player: Player | null) {
   return conversionButton(cost, income, player, shortcut, ["Power Charges", "Terraforming"], action, action);
 }
 
-export function boardActionsButton(data: AvailableBoardActionData, player: Player): ButtonData {
+export function boardActionsButton(
+  data: AvailableBoardActionData,
+  player: Player,
+  controller: CommandController
+): ButtonData {
   return {
     label: "Power/Q.I.C Action",
     shortcuts: ["q"],
     command: Command.Action,
-    boardActions: data.poweracts.map((act) => act.name),
+    onClick: (button) => {
+      controller.highlightBoardActions(data.poweracts.map((act) => act.name));
+      controller.subscribeFinal("boardActionClick", button);
+    },
     buttons: data.poweracts.map((act) => boardActionButton(act.name, player)),
   };
 }

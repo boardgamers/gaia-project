@@ -95,7 +95,7 @@ function commandButton(
     }
 
     case Command.Action:
-      return [boardActionsButton(command.data, player)];
+      return [boardActionsButton(command.data, player, controller)];
 
     case Command.Special:
       return [specialActionsButton(command, player, controller)];

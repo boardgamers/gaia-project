@@ -60,6 +60,7 @@ import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   AdvTechTilePos,
   AvailableCommand,
+  BoardAction,
   BuildWarning,
   Command,
   Faction,
@@ -574,11 +575,7 @@ export default class Commands extends Vue implements CommandController {
         }
       }
 
-      if (button.boardActions) {
-        let boardActions = button.boardActions;
-        this.$store.commit("highlightBoardActions", boardActions);
-        this.highlightBoardActions(button);
-      } else if (button.onClick) {
+      if (button.onClick) {
         button.onClick(button);
       } else if (button.modal) {
         button.buttonController.setModalShow(true);
@@ -596,7 +593,7 @@ export default class Commands extends Vue implements CommandController {
       if (this.warningPreference === WarningsPreference.ModalDialog) {
         return true;
       }
-      if (this.warningPreference === WarningsPreference.ButtonText && (button.boardAction || button.booster || button.tech)) {
+      if (this.warningPreference === WarningsPreference.ButtonText && (button.booster || button.tech)) {
         return true;
       }
     }
@@ -635,8 +632,8 @@ export default class Commands extends Vue implements CommandController {
     this.$store.commit("highlightSectors", sectors);
   }
 
-  highlightBoardActions(button: ButtonData) {
-    this.subscribeFinal("boardActionClick", button);
+  highlightBoardActions(boardActions: BoardAction[]) {
+    this.$store.commit("highlightBoardActions", boardActions);
   }
 
   highlightSpecialActions(specialActions: SpecialActionIncome[]) {
