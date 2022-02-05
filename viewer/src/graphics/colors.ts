@@ -78,9 +78,13 @@ function withVar(v: string): string {
   return `var(${v})`;
 }
 
+export function foregroundColor(backgroundColor: string) {
+  return invertedForeground.includes(backgroundColor) ? "white" : "black";
+}
+
 export function staticCellStyle(backgroundColor: string): CellStyle {
   return {
     backgroundColor: withVar(backgroundColor),
-    color: invertedForeground.includes(backgroundColor) ? "white" : "black",
+    color: foregroundColor(backgroundColor),
   };
 }

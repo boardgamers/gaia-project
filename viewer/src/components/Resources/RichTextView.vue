@@ -16,6 +16,17 @@
           :count="r.count"
         />
       </svg>
+      <svg v-else-if="c.building != null" :key="i" viewBox="0 0 10 10" width="36" height="36">
+        <Building :building="c.building.type" :faction="c.building.faction" transform="translate(5,5) scale(.8)" />
+        <text v-if="c.building.count > 1" x="7" y="14" transform="scale(.5)" class="building-count">
+          {{ c.building.count }}
+        </text>
+        <Resource
+          v-if="buildingResource(c.building)"
+          :kind="buildingResource(c.building)"
+          transform="translate(5,5) scale(.3)"
+        />
+      </svg>
       <svg v-else-if="c.text === 'arrow'" :key="i" viewBox="0 0 10 10" width="20" height="20">
         <use xlink:href="#arrow" x="-2" y="5" />
       </svg>
@@ -27,11 +38,14 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { RichText, richTextArrow, RichTextElement } from "../../graphics/utils";
-import { Resource } from "@gaia-project/engine";
+import { RichText, RichTextBuilding, RichTextElement } from "../../graphics/utils";
+import { Building as BuildingEnum, Faction, Resource } from "@gaia-project/engine";
 import Reward from "@gaia-project/engine/src/reward";
+import Building from "../Building.vue";
 
-@Component
+@Component({
+  components: { Building },
+})
 export default class RichTextView extends Vue {
   @Prop()
   content: RichText;
@@ -39,7 +53,7 @@ export default class RichTextView extends Vue {
   get filteredContent(): RichText {
     return this.content.flatMap(c => {
       if (c.rewards) {
-        return c.rewards.map(r => ({rewards:[r]} as RichTextElement));
+        return c.rewards.map(r => ({ rewards: [r] } as RichTextElement));
       }
       return c;
     });
@@ -66,7 +80,17 @@ export default class RichTextView extends Vue {
   }
 
   width(rewards: Reward[]): number {
-    return rewards[0].count as any == '+' ? 15 : rewards.length * 30;
+    return rewards[0].count as any == "+" ? 15 : rewards.length * 30;
+  }
+
+  buildingResource(b: RichTextBuilding): Resource | null {
+    switch (b.type) {
+      case BuildingEnum.Academy1:
+        return Resource.Knowledge;
+      case BuildingEnum.Academy2:
+        return b.faction === Faction.BalTaks ? Resource.Credit : Resource.Qic;
+    }
+    return null;
   }
 }
 </script>
@@ -74,5 +98,10 @@ export default class RichTextView extends Vue {
 <style lang="scss" scoped>
 .text {
   margin: 2px;
+}
+
+.building-count {
+  fill: white;
+  font-weight: bold;
 }
 </style>

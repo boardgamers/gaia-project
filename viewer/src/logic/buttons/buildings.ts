@@ -11,6 +11,7 @@ import Engine, {
   Round,
 } from "@gaia-project/engine";
 import { qicForDistance } from "@gaia-project/engine/src/cost";
+import { isAcademy } from "@gaia-project/engine/src/enums";
 import { sortBy } from "lodash";
 import { ButtonData } from "../../data";
 import { availableBuildingShortcut, buildingName } from "../../data/building";
@@ -24,7 +25,7 @@ function buildingMenu(building: Building): string | null {
     return "<u>B</u>uild Ship";
   }
 
-  if (building == Building.Academy1 || building == Building.Academy2) {
+  if (isAcademy(building)) {
     return "Upgrade to A<u>c</u>ademy";
   }
 

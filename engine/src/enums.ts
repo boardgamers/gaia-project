@@ -154,12 +154,7 @@ export namespace Condition {
       case Condition.MineOnGaia:
         return building === Building.Mine && planet === Planet.Gaia;
       case Condition.BigBuilding:
-        return (
-          building === Building.PlanetaryInstitute ||
-          building === Building.Academy1 ||
-          building === Building.Academy2 ||
-          building === Building.Colony
-        );
+        return building === Building.PlanetaryInstitute || isAcademy(building) || building === Building.Colony;
     }
     return false;
   }
@@ -245,6 +240,10 @@ export function isShip(b: Building) {
       return true;
   }
   return false;
+}
+
+export function isAcademy(b: Building) {
+  return b === Building.Academy1 || b === Building.Academy2;
 }
 
 export enum Faction {

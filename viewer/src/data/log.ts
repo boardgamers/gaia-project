@@ -201,7 +201,7 @@ function newPlayerLogCounter(engine: Engine, p: Player): LogCounter {
       }
     },
     newRows: () => {
-      const player = { data: playerData } as Player;
+      const player = { data: playerData, faction: p.faction } as Player;
       return tables
         .map((table) => playerTableRow(table, player, false))
         .map((row) => Array.from(Object.values(row)).map((cells) => cells[0].label));

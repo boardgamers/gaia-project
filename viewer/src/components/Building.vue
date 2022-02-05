@@ -39,6 +39,7 @@ import { corners } from "../graphics/hex";
 import { planetClass } from "../graphics/utils";
 import Planet from "./Planet.vue";
 import { shipLetter } from "../data/building";
+import { isAcademy } from "@gaia-project/engine/src/enums";
 
 @Component<Building>({
   components: {
@@ -65,7 +66,7 @@ export default class Building extends Vue {
   outlineWhite: boolean;
 
   get buildingId() {
-    return this.building === BuildingEnum.Academy1 || this.building === BuildingEnum.Academy2 ? "ac" : this.building;
+    return isAcademy(this.building) ? "ac" : this.building;
   }
 
   // FLAT buildings
@@ -106,7 +107,7 @@ export default class Building extends Vue {
   }
 
   get academy() {
-    return this.building === BuildingEnum.Academy1 || this.building === BuildingEnum.Academy2;
+    return isAcademy(this.building);
   }
 
   get gaiaFormer() {

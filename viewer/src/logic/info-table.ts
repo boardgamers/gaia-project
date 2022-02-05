@@ -470,7 +470,31 @@ function gaiaFormers(p: Player): string {
   return `${available}/${total}`;
 }
 
-function buildings(engine: Engine): PlayerTable {
+function building(b: Building, p: Player, compact: boolean): string | RichText {
+  if (b == Building.GaiaFormer) {
+    return gaiaFormers(p);
+  }
+  const count = p.data.buildings[b];
+
+  if (compact) {
+    return skipZero(count);
+  }
+  if (count === 0) {
+    return [];
+  }
+
+  return [
+    {
+      building: {
+        type: b,
+        faction: p.faction,
+        count,
+      },
+    },
+  ];
+}
+
+function buildings(engine: Engine, compact: boolean): PlayerTable {
   return {
     caption: "Buildings",
     columns: allBuildings(engine.expansions, true).map((b) => {
@@ -482,7 +506,7 @@ function buildings(engine: Engine): PlayerTable {
         color,
         cell: (p) => [
           {
-            shortcut: b == Building.GaiaFormer ? gaiaFormers(p) : skipZero(p.data.buildings[b]),
+            shortcut: building(b, p, compact),
             title: `${buildingName(b, p.faction)}${buildingTooltip(p, engine, b)}`,
             color,
           },
@@ -697,7 +721,7 @@ function playerTables(engine: Engine, support: ConversionSupport, compact: boole
     power(show, compact, support),
     research(engine, true),
     finals(engine),
-    buildings(engine),
+    buildings(engine, compact),
     assets(engine),
     planets(engine),
     stats(engine),
@@ -706,7 +730,9 @@ function playerTables(engine: Engine, support: ConversionSupport, compact: boole
 
 export function logPlayerTables(engine: Engine): PlayerTable[] {
   const show = () => false;
-  return [resources(show, false), power(show, false), research(engine, false), buildings(engine)].filter((t) => t);
+  return [resources(show, false), power(show, false), research(engine, false), buildings(engine, false)].filter(
+    (t) => t
+  );
 }
 
 function federationResource(fed: Federation) {
