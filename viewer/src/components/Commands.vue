@@ -593,7 +593,7 @@ export default class Commands extends Vue implements CommandController {
       if (this.warningPreference === WarningsPreference.ModalDialog) {
         return true;
       }
-      if (this.warningPreference === WarningsPreference.ButtonText && (button.booster || button.tech)) {
+      if (this.warningPreference === WarningsPreference.ButtonText && (button.booster)) {
         return true;
       }
     }

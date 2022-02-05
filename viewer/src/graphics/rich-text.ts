@@ -1,4 +1,13 @@
-import { BoardAction, Building, Faction, Reward } from "@gaia-project/engine";
+import {
+  AdvTechTile,
+  AdvTechTilePos,
+  BoardAction,
+  Building,
+  Faction,
+  Reward,
+  TechTile,
+  TechTilePos
+} from "@gaia-project/engine";
 import { SpecialActionIncome } from "../data";
 
 export type RichTextBuilding = { type: Building; faction: Faction; count: number; skipResource: boolean };
@@ -9,6 +18,7 @@ export type RichTextElement = {
   building?: RichTextBuilding;
   specialAction?: SpecialActionIncome;
   boardAction?: BoardAction;
+  tech?: { pos?: TechTilePos | AdvTechTilePos; tile?: TechTile | AdvTechTile; commandOverride?: string };
 };
 export type RichText = RichTextElement[];
 

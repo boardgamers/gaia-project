@@ -22,7 +22,7 @@ function chooseTechButton(command: string, data: AvailableSetupOption, controlle
     buttons: data.options.map((tile) =>
       symbolButton({
         command: tile,
-        tech: { tile: tile as TechTile, commandOverride: tile },
+        richText: [{tech: { tile: tile as TechTile, commandOverride: tile }}],
       })
     ),
     onClick: (button) => {

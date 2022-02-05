@@ -73,7 +73,7 @@ export function techTiles(
       textButton({
         command: tile.pos,
         shortcuts: [techTileData(tile.tile).shortcut],
-        tech: { pos: tile.pos },
+        richText: [{ tech: { pos: tile.pos }}],
       })
     ),
     onClick: (button) => {
