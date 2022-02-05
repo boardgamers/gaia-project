@@ -66,7 +66,7 @@ function powerRichText(r: Resource | PowerArea, hasIncome: boolean, val: string 
   if (hasIncome) {
     return [richTextRewards(reward(val).concat(plusReward).concat(reward(income)))];
   }
-  return String(val) === "0" ? [] : [richTextRewards(reward(val))];
+  return [richTextRewards(reward(val))];
 }
 
 export function incomeCell(
