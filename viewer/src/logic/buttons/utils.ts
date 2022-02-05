@@ -1,15 +1,15 @@
 import Engine, { AvailableHex, GaiaHex } from "@gaia-project/engine";
 import { ButtonData, ButtonWarning, HexSelection, HighlightHex, HighlightHexData } from "../../data";
-import { richText, RichText } from "../../graphics/utils";
+import { richText, RichText } from "../../graphics/rich-text";
 import { tooltipWithShortcut, withShortcut } from "./shortcuts";
 
 export function buttonStringLabel(button: ButtonData) {
-  return (button.resourceLabel?.find((l) => typeof l == "string") as string) ?? button.label ?? button.command;
+  return (button.richText?.find((l) => typeof l == "string") as string) ?? button.label ?? button.command;
 }
 
 export function buttonRichTextLabel(button: ButtonData): RichText {
-  if (button.resourceLabel) {
-    return button.resourceLabel;
+  if (button.richText) {
+    return button.richText;
   }
   const l = button.label || button.command;
   const s = button.shortcuts;

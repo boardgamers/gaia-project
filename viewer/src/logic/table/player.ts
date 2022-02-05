@@ -1,15 +1,15 @@
 import Engine, { Operator, Resource, Reward } from "@gaia-project/engine";
 import { boosterData } from "../../data/boosters";
-import { techTileData } from "../../data/tech-tiles";
 import { resourceData, showIncome, translateAbbreviatedResources, translateResources } from "../../data/resources";
-import { ConversionSupport, defaultBackground, InfoTableFlex, PlayerTable } from "./types";
+import { techTileData } from "../../data/tech-tiles";
+import { buildings } from "./buildings";
+import { boosterCell } from "./general";
+import { planets } from "./planets";
 import { power } from "./power";
 import { research } from "./research";
-import { assets, finals, stats } from "./stats";
-import { buildings } from "./buildings";
-import { planets } from "./planets";
 import { resourceColumn } from "./resource";
-import { boosterCell } from "./general";
+import { assets, finals, stats } from "./stats";
+import { ConversionSupport, defaultBackground, InfoTableFlex, PlayerTable } from "./types";
 
 function general(engine: Engine, compact: boolean, showIncome: (Player) => boolean): PlayerTable {
   return {

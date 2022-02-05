@@ -1,20 +1,5 @@
-import { Building, Faction, factionPlanet, Planet, Reward } from "@gaia-project/engine";
+import { Faction, factionPlanet, Planet } from "@gaia-project/engine";
 import planets from "../data/planets";
-
-export type RichTextBuilding = { type: Building; faction: Faction; count: number };
-
-export type RichTextElement = {
-  text?: string;
-  rewards?: Reward[];
-  building?: RichTextBuilding;
-};
-export type RichText = RichTextElement[];
-
-export function richText(s: string): RichTextElement {
-  return { text: s };
-}
-
-export const richTextArrow = richText("arrow");
 
 export function factionColor(faction: Faction | "gen"): string {
   if (faction === "gen") {

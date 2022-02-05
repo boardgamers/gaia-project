@@ -1,7 +1,7 @@
 import Engine, { Building, factionBoard, factionVariantBoard, Player } from "@gaia-project/engine";
-import { buildingDesc } from "../../data/factions";
-import { RichText } from "../../graphics/utils";
 import { allBuildings, buildingData, buildingName, buildingShortcut } from "../../data/building";
+import { buildingDesc } from "../../data/factions";
+import { RichText, richTextBuilding } from "../../graphics/rich-text";
 import { PlayerTable } from "./types";
 import { skipZero } from "./util";
 
@@ -32,19 +32,7 @@ function building(b: Building, p: Player, compact: boolean): string | RichText {
   if (compact) {
     return skipZero(count);
   }
-  if (count === 0) {
-    return [];
-  }
-
-  return [
-    {
-      building: {
-        type: b,
-        faction: p.faction,
-        count,
-      },
-    },
-  ];
+  return count === 0 ? [] : [richTextBuilding(b, p.faction, count)];
 }
 
 export function buildings(engine: Engine, compact: boolean): PlayerTable {

@@ -1,5 +1,5 @@
 import { CellStyle, staticCellStyle } from "../../graphics/colors";
-import { richText } from "../../graphics/utils";
+import { richText } from "../../graphics/rich-text";
 import { Cell, InfoTableCell, InfoTableFlex } from "./types";
 
 export function deactivated(s: string, deactivated = true): string {
@@ -44,4 +44,3 @@ export function formatCell(cells: Cell[], flex = InfoTableFlex.rowGrow): InfoTab
 export function skipZero(val: string | number): string {
   return String(val) !== "0" ? String(val) : "";
 }
-

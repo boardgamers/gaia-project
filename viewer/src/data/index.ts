@@ -10,7 +10,7 @@ import {
   TechTilePos,
 } from "@gaia-project/engine";
 import { CubeCoordinates } from "hexagrid";
-import { RichText } from "../graphics/utils";
+import { RichText } from "../graphics/rich-text";
 import { FastConversionTooltips, MoveButtonController } from "../logic/buttons/types";
 import { MapMode } from "./actions";
 
@@ -28,7 +28,7 @@ export type SpecialActionIncome = string;
 
 export interface ButtonData {
   label?: string;
-  resourceLabel?: RichText;
+  richText?: RichText;
   longLabel?: string;
   command?: string;
   tooltip?: string;

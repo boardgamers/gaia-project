@@ -12,13 +12,14 @@ import Engine, {
 } from "@gaia-project/engine";
 import { qicForDistance } from "@gaia-project/engine/src/cost";
 import { isAcademy } from "@gaia-project/engine/src/enums";
-import { sortBy } from "lodash";
+import { pick, sortBy } from "lodash";
 import { ButtonData } from "../../data";
 import { availableBuildingShortcut, buildingName } from "../../data/building";
+import { RichText, richText, richTextArrow, richTextBuilding } from "../../graphics/rich-text";
 import { hexSelectionButton } from "./hex";
 import { withShortcut } from "./shortcuts";
 import { CommandController } from "./types";
-import { confirmationButton, hexMap, isFree, textButton } from "./utils";
+import { confirmationButton, hexMap, isFree, symbolButton, textButton } from "./utils";
 
 function buildingMenu(building: Building): string | null {
   if (isShip(building)) {
@@ -32,19 +33,22 @@ function buildingMenu(building: Building): string | null {
   return null;
 }
 
-function buildingLabel(bld: AvailableBuilding, faction: Faction) {
+function buildingLabel(bld: AvailableBuilding, faction: Faction): { richText: RichText; label: string } {
   const building = bld.building;
   const name = buildingName(building, faction);
   let label = `Build a ${name}`;
+  const rich = [richTextBuilding(building, faction)];
 
   if (bld.upgrade) {
     if (building == Building.Mine) {
       label = "Upgrade Gaia Former to Mine";
+      rich.unshift(richTextBuilding(Building.GaiaFormer, faction), richTextArrow);
     } else {
       label = withShortcut(`Upgrade to ${name}`, availableBuildingShortcut(bld, faction), ["Upgrade to"]);
     }
   } else if (bld.downgrade) {
     label = `Downgrade to ${name}`;
+    rich.unshift(richText("Downgrade to"));
   } else if (
     isFree(bld) ||
     building === Building.SpaceStation ||
@@ -53,13 +57,14 @@ function buildingLabel(bld: AvailableBuilding, faction: Faction) {
   ) {
     label = `Place a ${name}`;
   }
-  return label;
+  return { label, richText: rich };
 }
 
 function buildingButton(
   controller: CommandController,
   building: Building,
   label: string,
+  richText: RichText,
   shortcut: string,
   command: string,
   engine: Engine,
@@ -82,15 +87,18 @@ function buildingButton(
   }
   return hexSelectionButton(
     controller,
-    textButton({
+    symbolButton({
       label,
+      richText,
       shortcuts: [shortcut],
       command,
       hexes,
       smartAutoClick: !isShip(building),
     }),
     () => textButton({ buttons: confirm }),
-    building
+    building,
+    null,
+    symbolButton
   );
 }
 
@@ -103,11 +111,10 @@ export function buildButtons(
   const byTypeLabel = new Map<string, AvailableBuilding[]>();
   const faction = engine.player(command.player).faction;
   for (const bld of command.data.buildings) {
-    const label = buildingLabel(bld, faction);
-
-    const old = byTypeLabel.get(label) ?? [];
+    const key = JSON.stringify(pick(bld, ["building", "upgrade", "downgrade"]));
+    const old = byTypeLabel.get(key) ?? [];
     old.push(bld);
-    byTypeLabel.set(label, old);
+    byTypeLabel.set(key, old);
   }
 
   const sort = Building.values(Expansion.All);
@@ -120,10 +127,10 @@ export function buildButtons(
   const menus = new Map<string, ButtonData[]>();
 
   for (const s of sorted) {
-    const label = s[0] as string;
     const buildings = s[1] as AvailableBuilding[];
-
     const b = buildings[0];
+    const label = buildingLabel(b, faction);
+
     const building = b.building;
     const shortcut = availableBuildingShortcut(b, faction);
 
@@ -145,7 +152,8 @@ export function buildButtons(
         buildingButton(
           controller,
           building,
-          buildingName(building, faction),
+          label.label,
+          label.richText,
           shortcut,
           building,
           engine,
@@ -162,7 +170,8 @@ export function buildButtons(
         buildingButton(
           controller,
           building,
-          label,
+          label.label,
+          label.richText,
           shortcut,
           `${Command.Build} ${building}`,
           engine,

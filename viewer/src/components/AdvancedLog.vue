@@ -77,11 +77,11 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Engine, { Reward } from "@gaia-project/engine";
+import Engine from "@gaia-project/engine";
 import { HistoryEntry, makeHistory } from "../data/log";
 import RichTextView from "./Resources/RichTextView.vue";
 import { parseRewardsForLog } from "../logic/utils";
-import { RichText } from "../graphics/utils";
+import { RichText } from "../graphics/rich-text";
 import { PlayerColumn } from "src/logic/table/types";
 import { logPlayerTables } from "../logic/table/player";
 import { cellStyle } from "../logic/table/util";

@@ -1,9 +1,8 @@
 import { Player, PlayerEnum, PowerArea, Resource as ResourceEnum } from "@gaia-project/engine";
-import { richText, RichText } from "../../graphics/utils";
 import { BvTableField } from "bootstrap-vue/src/components/table";
-import { CellStyle, playerColor, staticCellStyle } from "../../graphics/colors";
+import { CellStyle } from "../../graphics/colors";
+import { RichText } from "../../graphics/rich-text";
 import { UiMode } from "../../store";
-import { factionName } from "../../data/factions";
 
 export type Convert = ResourceEnum | PowerArea;
 
@@ -95,4 +94,3 @@ export const uiModeSettings: { [key in UiMode]?: TableSettings } = {
 };
 
 export const stripUnderline = new RegExp("<u>(.*?)</u>", "g");
-

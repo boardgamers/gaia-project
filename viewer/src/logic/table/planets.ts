@@ -1,7 +1,7 @@
 import Engine, { Planet } from "@gaia-project/engine";
 import { countBy } from "lodash";
-import { planetColorVar } from "../../graphics/colors";
 import { planetNames, remainingPlanets } from "../../data/planets";
+import { planetColorVar } from "../../graphics/colors";
 import { defaultBackground, emptyCell, PlayerColumn, PlayerTable } from "./types";
 
 export function planets(engine: Engine): PlayerTable {

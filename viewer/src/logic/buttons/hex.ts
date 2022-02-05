@@ -3,7 +3,7 @@ import assert from "assert";
 import { sortBy } from "lodash";
 import { ButtonData, HighlightHex, WarningWithKey } from "../../data";
 import { buildingData } from "../../data/building";
-import { RichText, richText, richTextArrow } from "../../graphics/utils";
+import { RichText, richText, richTextArrow, richTextRewards } from "../../graphics/rich-text";
 import { prependShortcut, tooltipWithShortcut } from "./shortcuts";
 import { CommandController } from "./types";
 import { addOnClick, addOnShow, isFree, textButton } from "./utils";
@@ -18,7 +18,8 @@ export function hexSelectionButton(
   button: ButtonData,
   newLocationButton = (hex: GaiaHex) => textButton({}),
   highlightOnClick?: Building,
-  hideOnClick?: { hex: GaiaHex; building: Building }
+  hideOnClick?: { hex: GaiaHex; building: Building },
+  buttonTransformer = textButton
 ): ButtonData {
   const hexSelection = button.hexes;
   assert(hexSelection, "hexes missing");
@@ -37,7 +38,7 @@ export function hexSelectionButton(
       const b = newLocationButton(hex);
       assert(!b.command, "command already exists");
       assert(!b.label, "label already exists");
-      assert(!b.resourceLabel, "resourceLabel already exists");
+      assert(!b.richText, "richText already exists");
       assert(!b.shortcuts, "shortcuts already exists");
       assert(!b.warning, "warning already exists");
       assert(!b.tooltip, "tooltip already exists");
@@ -50,7 +51,7 @@ export function hexSelectionButton(
       b.label = hex.toString();
 
       const label: RichText = [];
-      b.resourceLabel = label;
+      b.richText = label;
 
       if (i <= 9) {
         label.push(richText(prependShortcut(shortcut, hex.toString())));
@@ -62,18 +63,18 @@ export function hexSelectionButton(
 
       const highlightHex = hexes.get(hex);
       if (highlightHex.tradeCost) {
-        label.push({ rewards: Reward.parse(highlightHex.tradeCost) }, richTextArrow);
+        label.push(richTextRewards(Reward.parse(highlightHex.tradeCost)), richTextArrow);
       }
       if (highlightHex.rewards) {
-        label.push({ rewards: Reward.parse(highlightHex.rewards) });
+        label.push(richTextRewards(Reward.parse(highlightHex.rewards)));
       }
       if (highlightHex.building) {
         label.push(richText(`Build ${buildingData[highlightHex.building].name} for`));
       }
       if (highlightHex.cost != null) {
-        label.push({
-          rewards: isFree(highlightHex) ? [new Reward(0, Resource.Credit)] : Reward.parse(highlightHex.cost),
-        });
+        label.push(
+          richTextRewards(isFree(highlightHex) ? [new Reward(0, Resource.Credit)] : Reward.parse(highlightHex.cost))
+        );
       }
 
       b.warning = buttonWarnings(hexWarnings(highlightHex));
@@ -125,5 +126,5 @@ export function hexSelectionButton(
       .filter((h) => !h.preventClick)
       .map((h) => hexWarnings(h))
   );
-  return textButton(button);
+  return buttonTransformer(button);
 }

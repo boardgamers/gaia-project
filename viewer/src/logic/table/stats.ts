@@ -1,12 +1,12 @@
 import Engine, { federations, TechTilePos } from "@gaia-project/engine";
-import { colorCodes } from "../color-codes";
-import { leechNetwork, sectors } from "../../data/stats";
-import { InfoTableFlex, PlayerTable } from "./types";
-import { skipZero } from "./util";
 import { sortBy } from "lodash";
 import { federationData } from "../../data/federations";
-import { techCell } from "./research";
+import { leechNetwork, sectors } from "../../data/stats";
 import { finalScoringSources } from "../charts/final-scoring";
+import { colorCodes } from "../color-codes";
+import { techCell } from "./research";
+import { InfoTableFlex, PlayerTable } from "./types";
+import { skipZero } from "./util";
 
 export function assets(engine: Engine): PlayerTable {
   return {
@@ -95,4 +95,3 @@ export function finals(engine: Engine): PlayerTable {
     })),
   };
 }
-
