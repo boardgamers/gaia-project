@@ -86,6 +86,9 @@ export default class RichTextView extends Vue {
   }
 
   buildingResource(b: RichTextBuilding): Resource | null {
+    if (b.skipResource) {
+      return null;
+    }
     switch (b.type) {
       case BuildingEnum.Academy1:
         return Resource.Knowledge;

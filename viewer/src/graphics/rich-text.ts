@@ -1,6 +1,6 @@
 import { Building, Faction, Reward } from "@gaia-project/engine";
 
-export type RichTextBuilding = { type: Building; faction: Faction; count: number };
+export type RichTextBuilding = { type: Building; faction: Faction; count: number; skipResource: boolean };
 
 export type RichTextElement = {
   text?: string;
@@ -17,12 +17,13 @@ export function richTextRewards(rewards: Reward[]): RichTextElement {
   return { rewards };
 }
 
-export function richTextBuilding(type: Building, faction: Faction, count = 1): RichTextElement {
+export function richTextBuilding(type: Building, faction: Faction, count = 1, skipResource = false): RichTextElement {
   return {
     building: {
       type,
       faction,
       count,
+      skipResource,
     },
   };
 }

@@ -21,13 +21,13 @@ import { withShortcut } from "./shortcuts";
 import { CommandController } from "./types";
 import { confirmationButton, hexMap, isFree, symbolButton, textButton } from "./utils";
 
-function buildingMenu(building: Building): string | null {
+function buildingMenu(building: Building, faction: Faction): { richText?: RichText; label: string } | null {
   if (isShip(building)) {
-    return "<u>B</u>uild Ship";
+    return { label: "<u>B</u>uild Ship" };
   }
 
   if (isAcademy(building)) {
-    return "Upgrade to A<u>c</u>ademy";
+    return { label: "Upgrade to A<u>c</u>ademy", richText: [richTextBuilding(Building.Academy1, faction, 1, true)] };
   }
 
   return null;
@@ -134,14 +134,16 @@ export function buildButtons(
     const building = b.building;
     const shortcut = availableBuildingShortcut(b, faction);
 
-    const menu = buildingMenu(building);
+    const menu = buildingMenu(building, player.faction);
     if (menu) {
-      const buttons = menus.get(menu) ?? [];
+      const buttons = menus.get(menu.label) ?? [];
 
       if (buttons.length == 0) {
+        const fac = menu.richText ? symbolButton : textButton;
         ret.push(
-          textButton({
-            label: menu,
+          fac({
+            label: menu.label,
+            richText: menu.richText,
             command: Command.Build,
             buttons,
           })
@@ -164,7 +166,7 @@ export function buildButtons(
         )
       );
 
-      menus.set(menu, buttons);
+      menus.set(menu.label, buttons);
     } else {
       ret.push(
         buildingButton(
