@@ -12,6 +12,7 @@ import { ButtonData, ButtonWarning } from "../../data";
 import { boardActionData } from "../../data/actions";
 import { resourceData, translateResources } from "../../data/resources";
 import { conversionButton } from "./conversion";
+import { CommandController } from "./types";
 import { symbolButton } from "./utils";
 import { resourceWasteWarning, rewardWarnings } from "./warnings";
 
@@ -42,19 +43,26 @@ export function specialActionButton(income: string, player: Player | null): Butt
   const rewards = Reward.parse(income);
   return symbolButton({
     label: translateResources(rewards, false),
+    richText: [{ specialAction: income }],
     command: income,
-    specialAction: income,
     warning: player ? specialActionWarning(player, income) : null,
     shortcuts: [resourceData[rewards[0].type].shortcut],
   });
 }
 
-export function specialActionsButton(command: AvailableCommand<Command.Special>, player: Player): ButtonData {
+export function specialActionsButton(
+  command: AvailableCommand<Command.Special>,
+  player: Player,
+  controller: CommandController
+): ButtonData {
   return {
     label: "Special Action",
     shortcuts: ["s"],
     command: Command.Special,
-    specialActions: command.data.specialacts.map((act) => act.income),
+    onClick: (button) => {
+      controller.highlightSpecialActions(command.data.specialacts.map((act) => act.income));
+      controller.subscribeFinal("specialActionClick", button);
+    },
     buttons: command.data.specialacts.map((act) => specialActionButton(act.income, player)),
   };
 }

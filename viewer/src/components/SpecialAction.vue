@@ -53,9 +53,6 @@ export default class SpecialAction extends Vue {
   @Prop()
   planet: Planet;
 
-  @Prop()
-  player: Player | null;
-
   onClick() {
     if (!this._highlighted) {
       this.$emit("click");

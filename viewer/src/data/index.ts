@@ -41,7 +41,6 @@ export interface ButtonData {
   buttonController?: MoveButtonController;
   hover?: { enter: (button: ButtonData) => void; leave: (button: ButtonData) => void };
   boardActions?: BoardAction[];
-  specialActions?: SpecialActionIncome[];
   needConfirm?: boolean;
   warning?: ButtonWarning;
   warningInLabel?: boolean;
@@ -51,7 +50,6 @@ export interface ButtonData {
   booster?: Booster;
   tech?: { pos?: TechTilePos | AdvTechTilePos; tile?: TechTile | AdvTechTile; commandOverride?: string };
   boardAction?: BoardAction;
-  specialAction?: SpecialActionIncome;
   shortcuts?: string[];
   autoClick?: boolean;
   smartAutoClick?: boolean;

@@ -27,6 +27,12 @@
           transform="translate(5,5) scale(.3)"
         />
       </svg>
+      <SpecialAction
+        v-else-if="c.specialAction != null"
+        :key="i"
+        :action="[c.specialAction]"
+        transform="translate(0,1) scale(1)"
+      />
       <svg v-else-if="c.text === 'arrow'" :key="i" viewBox="0 0 10 10" width="20" height="20">
         <use xlink:href="#arrow" x="-2" y="5" />
       </svg>
@@ -42,11 +48,12 @@ import { RichText, RichTextBuilding, RichTextElement } from "../../graphics/rich
 import { Building as BuildingEnum, Faction, Resource } from "@gaia-project/engine";
 import Reward from "@gaia-project/engine/src/reward";
 import Building from "../Building.vue";
+import SpecialAction from "../SpecialAction.vue";
 import { foregroundColor } from "../../graphics/colors";
 import { factionColorVar } from "../../graphics/utils";
 
 @Component({
-  components: { Building },
+  components: { Building, SpecialAction },
 })
 export default class RichTextView extends Vue {
   @Prop()
