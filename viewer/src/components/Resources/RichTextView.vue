@@ -27,6 +27,7 @@
           transform="translate(5,5) scale(.3)"
         />
       </svg>
+      <BoardAction v-else-if="c.boardAction" :action="c.boardAction" transform="scale(1.3)" />
       <SpecialAction
         v-else-if="c.specialAction != null"
         :key="i"
@@ -51,9 +52,10 @@ import Building from "../Building.vue";
 import SpecialAction from "../SpecialAction.vue";
 import { foregroundColor } from "../../graphics/colors";
 import { factionColorVar } from "../../graphics/utils";
+import BoardAction from "../BoardAction.vue";
 
 @Component({
-  components: { Building, SpecialAction },
+  components: { BoardAction, Building, SpecialAction },
 })
 export default class RichTextView extends Vue {
   @Prop()

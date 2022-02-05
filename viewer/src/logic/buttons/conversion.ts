@@ -65,12 +65,13 @@ export function conversionButton(
   const button = symbolButton(
     {
       label: conversionLabel(cost, income),
-      richText: [richTextRewards(conversion.from), richTextArrow, richTextRewards(conversion.to)],
+      richText: boardAction
+        ? [{ boardAction }]
+        : [richTextRewards(conversion.from), richTextArrow, richTextRewards(conversion.to)],
       shortcuts: shortcut != null ? [shortcut] : [],
       command,
       warning: player ? resourceWasteWarning(rewardWarnings(player, income)) : null,
       times,
-      boardAction,
     },
     skipShortcut
   );

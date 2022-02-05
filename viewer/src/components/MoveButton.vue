@@ -7,7 +7,6 @@
       :booster="button.booster"
       highlighted
     />
-    <BoardAction v-else-if="button.boardAction" :action="button.boardAction" class="mb-1 mr-1" transform="scale(1.3)" />
     <TechTile
       v-else-if="button.tech"
       class="mb-1 mr-1"
