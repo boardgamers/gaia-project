@@ -3,12 +3,7 @@
     <div id="move-title">
       <h5>
         <span v-if="init">Pick the number of players</span>
-        <span v-else class="d-flex">
-          <div class="status-line">
-            <RichTextView :content="statusLine" />
-          </div>
-          <Undo v-if="canUndo" transform="scale(1.2)" />
-        </span>
+        <RichTextView :content="statusLine" />
       </h5>
     </div>
     <div id="move-buttons">
@@ -30,6 +25,11 @@
           :controller="controller"
           :key="(button.label || button.command) + '-' + i"
         />
+        <b-btn v-if="canUndo" :class="['mr-2', 'mb-2', 'move-button']" @click="undo">
+          <template>
+            <Undo v-if="canUndo" transform="scale(1.2)" />
+          </template>
+        </b-btn>
       </div>
       <div v-if="isChoosingFaction" class="d-flex flex-wrap align-content-stretch">
         <MoveButton
@@ -188,7 +188,7 @@ export default class Commands extends Vue implements CommandController {
         const values = Object.values(entry.changes).flatMap((e) =>
           Object.keys(e).map((k) => new Reward(e[k], k as Resource))
         );
-        return [{ rewards: Reward.merge(chargePowerToPay(values))}];
+        return [{ rewards: Reward.merge(chargePowerToPay(values)) }];
       }
     }
     return [];
@@ -507,7 +507,7 @@ export default class Commands extends Vue implements CommandController {
     const heightFilter = () => {
       return this.buttonChain.length == button.parents;
     };
-    this.subscribe("hexClick", button,  (payload) => {
+    this.subscribe("hexClick", button, (payload) => {
       callback(payload.hex, payload.highlight);
     }, payload => (filter ? filter(payload.hex) : true) && heightFilter());
   }
@@ -752,8 +752,5 @@ i.planet {
       filter: drop-shadow(0px 0px 1px black);
     }
   }
-}
-.status-line {
-  max-width: 80%;
 }
 </style>
