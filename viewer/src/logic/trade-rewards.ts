@@ -12,7 +12,7 @@ import {
 import { tradeCost, TradeOption, tradeOptions, tradeRewards } from "@gaia-project/engine/src/available/ships";
 import { buildingData } from "../data/building";
 import { richText, RichText, richTextArrow } from "../graphics/utils";
-import { cellStyle } from "./info-table";
+import { cellStyle } from "./table/util";
 
 type TradeRow = { style: string; cells: RichText[] };
 

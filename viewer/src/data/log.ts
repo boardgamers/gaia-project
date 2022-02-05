@@ -16,8 +16,9 @@ import { BuildingCounter } from "../logic/charts/buildings";
 import { ResearchCounter } from "../logic/charts/research";
 import { newResourceSimulator } from "../logic/charts/resource-counter";
 import { ExtractLogArg, processLogEntry } from "../logic/charts/simple-charts";
-import { logPlayerTables, playerTableRow } from "../logic/info-table";
 import { CommandObject, MovesSlice, ownTurn, parsedMove, ParsedMove } from "../logic/recent";
+import { playerTableRow } from "../logic/table/info-table";
+import { logPlayerTables } from "../logic/table/player";
 import { boosterData } from "./boosters";
 import { advancedTechTileData, baseTechTileData } from "./tech-tiles";
 

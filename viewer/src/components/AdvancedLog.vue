@@ -79,10 +79,12 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import Engine, { Reward } from "@gaia-project/engine";
 import { HistoryEntry, makeHistory } from "../data/log";
-import { cellStyle, logPlayerTables, PlayerColumn } from "../logic/info-table";
 import RichTextView from "./Resources/RichTextView.vue";
 import { parseRewardsForLog } from "../logic/utils";
 import { RichText } from "../graphics/utils";
+import { PlayerColumn } from "src/logic/table/types";
+import { logPlayerTables } from "../logic/table/player";
+import { cellStyle } from "../logic/table/util";
 
 type LogScope = "recent" | "all";
 @Component({

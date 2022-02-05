@@ -45,13 +45,14 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import Engine, { Player, PlayerEnum, PowerArea, Resource as ResourceEnum } from "@gaia-project/engine";
-import { InfoTable, infoTables } from "../logic/info-table";
+import { infoTables } from "../logic/table/info-table";
 import { orderedPlayers } from "../data/player";
 import { MapMode, MapModeType } from "../data/actions";
 import { mapModeTypeOptions } from "../data/stats";
 import { UiMode } from "../store";
 import { rotate } from "../logic/utils";
 import TableCell from "./TableCell.vue";
+import { InfoTable } from "src/logic/table/types";
 
 @Component({
   components: {
