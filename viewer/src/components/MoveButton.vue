@@ -1,14 +1,7 @@
 <template>
   <div class="move-button" :key="key">
-    <Booster
-      v-if="button.booster"
-      class="mb-1 mr-1"
-      @click.native="controller.handleButtonClick(button)"
-      :booster="button.booster"
-      highlighted
-    />
     <b-btn
-      v-else-if="button.times === undefined"
+      v-if="button.times === undefined"
       :variant="variant"
       :class="['mr-2', 'mb-2', 'move-button', { active }]"
       @click="controller.handleButtonClick(button)"

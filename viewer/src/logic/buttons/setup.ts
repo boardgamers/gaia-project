@@ -22,7 +22,7 @@ function chooseTechButton(command: string, data: AvailableSetupOption, controlle
     buttons: data.options.map((tile) =>
       symbolButton({
         command: tile,
-        richText: [{tech: { tile: tile as TechTile, commandOverride: tile }}],
+        richText: [{ tech: { tile: tile as TechTile, commandOverride: tile } }],
       })
     ),
     onClick: (button) => {
@@ -41,7 +41,7 @@ export function setupButton(data: AvailableSetupOption, controller: CommandContr
         buttons: data.options.map((booster) =>
           symbolButton({
             command: booster,
-            booster: booster as Booster,
+            richText: [{ booster: booster as Booster }],
             label: tiles.boosters[booster].map((spec) => eventDesc(new Event(spec), engine.expansions)).join("\n"),
           })
         ),

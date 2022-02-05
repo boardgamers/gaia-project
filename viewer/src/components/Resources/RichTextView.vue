@@ -27,7 +27,7 @@
           transform="translate(5,5) scale(.3)"
         />
       </svg>
-      <BoardAction v-else-if="c.boardAction" :action="c.boardAction" transform="scale(1.3)" />
+      <BoardAction v-else-if="c.boardAction" :key="i" :action="c.boardAction" transform="scale(1.3)" />
       <SpecialAction
         v-else-if="c.specialAction != null"
         :key="i"
@@ -36,12 +36,14 @@
       />
       <TechTile
         v-else-if="c.tech"
+        :key="i"
         :pos="c.tech.pos"
         :tile-override="c.tech.tile"
         :shortcut="true"
         :command-override="c.tech.commandOverride"
         :count-override="1"
       />
+      <Booster v-else-if="c.booster" :key="i" :booster="c.booster" highlighted />
       <svg v-else-if="c.text === 'arrow'" :key="i" viewBox="0 0 10 10" width="20" height="20">
         <use xlink:href="#arrow" x="-2" y="5" />
       </svg>
@@ -62,9 +64,10 @@ import { foregroundColor } from "../../graphics/colors";
 import { factionColorVar } from "../../graphics/utils";
 import BoardAction from "../BoardAction.vue";
 import TechTile from "../TechTile.vue";
+import Booster from "../Booster.vue";
 
 @Component({
-  components: { TechTile, BoardAction, Building, SpecialAction },
+  components: { Booster, TechTile, BoardAction, Building, SpecialAction },
 })
 export default class RichTextView extends Vue {
   @Prop()

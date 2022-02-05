@@ -139,8 +139,9 @@ export function passButton(
       return symbolButton({
         label,
         command: booster,
-        booster,
-        buttons: confirmationButton(`Confirm Booster ${label}`, boosterWarning(player, booster)),
+        richText: [{ booster }],
+        warning: boosterWarning(player, booster),
+        buttons: confirmationButton(`Confirm Booster ${label}`),
       });
     }),
     warning,
