@@ -38,7 +38,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { RichText, RichTextBuilding, RichTextElement } from "../../graphics/utils";
+import { RichText, RichTextBuilding, RichTextElement } from "../../graphics/rich-text";
 import { Building as BuildingEnum, Faction, Resource } from "@gaia-project/engine";
 import Reward from "@gaia-project/engine/src/reward";
 import Building from "../Building.vue";

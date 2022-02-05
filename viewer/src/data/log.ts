@@ -11,7 +11,8 @@ import Engine, {
   Resource,
   TechTilePos,
 } from "@gaia-project/engine";
-import { factionLogColors, factionLogTextColors, lightFactionLogColors, RichText } from "../graphics/utils";
+import { RichText } from "../graphics/rich-text";
+import { factionLogColors, factionLogTextColors, lightFactionLogColors } from "../graphics/utils";
 import { BuildingCounter } from "../logic/charts/buildings";
 import { ResearchCounter } from "../logic/charts/research";
 import { newResourceSimulator } from "../logic/charts/resource-counter";

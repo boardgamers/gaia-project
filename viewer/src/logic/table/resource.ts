@@ -1,10 +1,11 @@
 import { Player, PowerArea, Resource, Reward } from "@gaia-project/engine";
-import { Cell, ConversionSupport, PlayerColumn, stripUnderline } from "./types";
 import { resourceData } from "../../data/resources";
-import { colorCodes } from "../color-codes";
+import { richTextRewards } from "../../graphics/rich-text";
 import { lightenDarkenColor } from "../../graphics/utils";
-import { skipZero } from "./util";
+import { colorCodes } from "../color-codes";
 import { plusReward } from "../utils";
+import { Cell, ConversionSupport, PlayerColumn, stripUnderline } from "./types";
+import { skipZero } from "./util";
 
 export function resourceCell(r: Resource | PowerArea): Cell {
   const d = resourceData[r];
@@ -63,9 +64,9 @@ function powerRichText(r: Resource | PowerArea, hasIncome: boolean, val: string 
   }
 
   if (hasIncome) {
-    return [{ rewards: reward(val).concat(plusReward).concat(reward(income)) }];
+    return [richTextRewards(reward(val).concat(plusReward).concat(reward(income)))];
   }
-  return String(val) === "0" ? [] : [{ rewards: reward(val) }];
+  return String(val) === "0" ? [] : [richTextRewards(reward(val))];
 }
 
 export function incomeCell(

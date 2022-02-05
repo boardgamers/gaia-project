@@ -1,5 +1,7 @@
 import Engine, { Player } from "@gaia-project/engine";
 import { UiMode } from "../../store";
+import { generalTables, playerCell } from "./general";
+import { playerTables } from "./player";
 import {
   Cell,
   ConversionSupport,
@@ -13,9 +15,6 @@ import {
   uiModeSettings,
 } from "./types";
 import { deactivatedLabel, formatCell } from "./util";
-import { playerTables } from "./player";
-import { generalTables, playerCell } from "./general";
-
 
 function field(c: Cell, sortable: boolean): InfoTableColumn {
   return {

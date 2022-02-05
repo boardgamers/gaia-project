@@ -15,7 +15,7 @@ import { max, minBy, range, sortBy } from "lodash";
 import { ButtonData } from "../../data";
 import { FastConversion, FastConversionEvent, freeActionShortcuts } from "../../data/actions";
 import { translateResources } from "../../data/resources";
-import { richTextArrow } from "../../graphics/utils";
+import { richTextArrow, richTextRewards } from "../../graphics/rich-text";
 import { AvailableConversions, FastConversionTooltips } from "./types";
 import { autoClickButton, confirmationButton, symbolButton } from "./utils";
 import { resourceWasteWarning, rewardWarnings } from "./warnings";
@@ -65,7 +65,7 @@ export function conversionButton(
   const button = symbolButton(
     {
       label: conversionLabel(cost, income),
-      resourceLabel: [{ rewards: conversion.from }, richTextArrow, { rewards: conversion.to }],
+      richText: [richTextRewards(conversion.from), richTextArrow, richTextRewards(conversion.to)],
       shortcuts: shortcut != null ? [shortcut] : [],
       command,
       warning: player ? resourceWasteWarning(rewardWarnings(player, income)) : null,
@@ -185,7 +185,7 @@ export function freeAndBurnButton(
     const b = freeActionButton(conversions.free, player);
     if (phase === Phase.RoundGaia) {
       for (const cb of b.buttons) {
-        if (!cb.resourceLabel.some((c) => c.rewards && c.rewards[0].type === Resource.TechTile)) {
+        if (!cb.richText.some((c) => c.rewards && c.rewards[0].type === Resource.TechTile)) {
           cb.buttons = confirmationButton("Confirm Free Action");
         }
       }
@@ -203,7 +203,7 @@ export function freeAndBurnButton(
     button: autoClickButton({
       label: labels.join(" / "),
       shortcuts: ["a"],
-      buttons: sortBy(buttons, (b) => b.resourceLabel[0].rewards[0].type),
+      buttons: sortBy(buttons, (b) => b.richText[0].rewards[0].type),
     }),
     tooltips,
   };

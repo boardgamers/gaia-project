@@ -85,7 +85,7 @@ import { commandButtons, replaceRepeat } from "../logic/buttons/commands";
 import { CubeCoordinates } from "hexagrid";
 import { autoClickStrategy } from "../logic/buttons/autoClick";
 import RichTextView from "./Resources/RichTextView.vue";
-import { richText, RichText } from "../graphics/utils";
+import { richText, RichText } from "../graphics/rich-text";
 import { chargePowerToPay } from "../logic/utils";
 
 let show = false;
@@ -359,8 +359,8 @@ export default class Commands extends Vue implements CommandController {
           if (button.label) {
             button.label = `${button.label} (${w})`;
           }
-          if (button.resourceLabel) {
-            button.resourceLabel.push(richText(`(${w})`));
+          if (button.richText) {
+            button.richText.push(richText(`(${w})`));
           }
           button.warningInLabel = true;
         }

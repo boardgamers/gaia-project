@@ -10,7 +10,7 @@ import Engine, {
 } from "@gaia-project/engine";
 import { upgradedBuildings } from "@gaia-project/engine/src/buildings";
 import { LEECHING_DISTANCE } from "@gaia-project/engine/src/engine";
-import { RichText } from "../graphics/utils";
+import { RichText, richTextRewards } from "../graphics/rich-text";
 
 export function phaseBeforeSetupBuilding(data: Engine): boolean {
   return (
@@ -72,7 +72,7 @@ export function chargePowerToPay(rewards: Reward[]): Reward[] {
 }
 
 export function parseRewardsForLog(s: string): RichText {
-  return [{ rewards: chargePowerToPay(Reward.parse(s.replace(/ /g, ""))) }];
+  return [richTextRewards(chargePowerToPay(Reward.parse(s.replace(/ /g, ""))))];
 }
 
 function newPlusReward(): Reward {

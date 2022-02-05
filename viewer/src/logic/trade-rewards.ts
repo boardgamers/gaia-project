@@ -11,7 +11,7 @@ import {
 } from "@gaia-project/engine";
 import { tradeCost, TradeOption, tradeOptions, tradeRewards } from "@gaia-project/engine/src/available/ships";
 import { buildingData } from "../data/building";
-import { richText, RichText, richTextArrow } from "../graphics/utils";
+import { richText, RichText, richTextArrow, richTextRewards } from "../graphics/rich-text";
 import { cellStyle } from "./table/util";
 
 type TradeRow = { style: string; cells: RichText[] };
@@ -48,7 +48,7 @@ function row(option: TradeOption): TradeRow {
       ? `<br/>Build ${buildingData[bld].name} for ${factionBoard(Faction.Terrans).buildings[bld].cost.join(",")}`
       : "";
     const academy = option.researchAdvancementBonus ? ` *` : "";
-    return [{ rewards: [cost] }, richTextArrow, { rewards }, richText(`${buildDesc}${academy}`)];
+    return [richTextRewards([cost]), richTextArrow, { rewards }, richText(`${buildDesc}${academy}`)];
   });
 
   return {

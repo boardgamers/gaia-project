@@ -1,19 +1,22 @@
 import Engine, {
   BoardAction,
   Booster,
-  Federation, Player,
-  PlayerEnum, Resource,
+  Federation,
+  Player,
+  PlayerEnum,
+  Resource,
   Reward,
   ScoringTile,
   tiles,
 } from "@gaia-project/engine";
 import { boardActionData } from "../../data/actions";
-import { roundScoringData } from "../../data/round-scorings";
-import { federationData } from "../../data/federations";
-import { Cell, defaultBackground, emptyCell, GeneralTable } from "./types";
-import { factionName } from "../../data/factions";
-import { playerColor } from "../../graphics/colors";
 import { boosterData } from "../../data/boosters";
+import { factionName } from "../../data/factions";
+import { federationData } from "../../data/federations";
+import { roundScoringData } from "../../data/round-scorings";
+import { playerColor } from "../../graphics/colors";
+import { richTextRewards } from "../../graphics/rich-text";
+import { Cell, defaultBackground, emptyCell, GeneralTable } from "./types";
 
 export function playerCell(p: Player | null, bold = false): Cell {
   if (p == null) {
@@ -103,7 +106,7 @@ export function generalTables(engine: Engine): GeneralTable[] {
           color: federationData[fed].color,
         },
         row: {
-          shortcut: [{ rewards: [new Reward(count, federationResource(fed as Federation))] }],
+          shortcut: [richTextRewards([new Reward(count, federationResource(fed as Federation))])],
           title: "Number of federations left",
           color: federationData[fed].color,
         },
@@ -111,5 +114,3 @@ export function generalTables(engine: Engine): GeneralTable[] {
     },
   ];
 }
-
-
