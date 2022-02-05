@@ -2,11 +2,12 @@ import {
   AdvTechTile,
   AdvTechTilePos,
   BoardAction,
+  Booster,
   Building,
   Faction,
   Reward,
   TechTile,
-  TechTilePos
+  TechTilePos,
 } from "@gaia-project/engine";
 import { SpecialActionIncome } from "../data";
 
@@ -19,6 +20,7 @@ export type RichTextElement = {
   specialAction?: SpecialActionIncome;
   boardAction?: BoardAction;
   tech?: { pos?: TechTilePos | AdvTechTilePos; tile?: TechTile | AdvTechTile; commandOverride?: string };
+  booster?: Booster;
 };
 export type RichText = RichTextElement[];
 

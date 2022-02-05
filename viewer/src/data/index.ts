@@ -1,12 +1,10 @@
 import {
-  AdvTechTile,
   AdvTechTilePos,
   BoardAction,
   Booster,
   Building,
   BuildWarning,
   GaiaHex,
-  TechTile,
   TechTilePos,
 } from "@gaia-project/engine";
 import { CubeCoordinates } from "hexagrid";
@@ -46,7 +44,6 @@ export interface ButtonData {
   buttons?: ButtonData[];
   hide?: boolean;
   disabled?: boolean;
-  booster?: Booster;
   shortcuts?: string[];
   autoClick?: boolean;
   smartAutoClick?: boolean;

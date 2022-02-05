@@ -1,5 +1,5 @@
 import Engine, { AvailableHex, GaiaHex } from "@gaia-project/engine";
-import { ButtonData, ButtonWarning, HexSelection, HighlightHex, HighlightHexData } from "../../data";
+import { ButtonData, HexSelection, HighlightHex, HighlightHexData } from "../../data";
 import { richText, RichText } from "../../graphics/rich-text";
 import { tooltipWithShortcut, withShortcut } from "./shortcuts";
 
@@ -88,13 +88,12 @@ export function autoClickButton(button: ButtonData): ButtonData {
   return button;
 }
 
-export function confirmationButton(label: string, warning?: ButtonWarning): ButtonData[] {
+export function confirmationButton(label: string): ButtonData[] {
   return [
     textButton({
       label,
       command: "",
       needConfirm: true,
-      warning,
     }),
   ];
 }

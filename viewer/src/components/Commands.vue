@@ -589,15 +589,9 @@ export default class Commands extends Vue implements CommandController {
   }
 
   private shouldShowModal(button: ButtonData) {
-    if (this.enabledButtonWarnings(button).length > 0 && !this.isActiveButton(button)) {
-      if (this.warningPreference === WarningsPreference.ModalDialog) {
-        return true;
-      }
-      if (this.warningPreference === WarningsPreference.ButtonText && (button.booster)) {
-        return true;
-      }
-    }
-    return false;
+    return this.enabledButtonWarnings(button).length > 0
+      && !this.isActiveButton(button)
+      && this.warningPreference === WarningsPreference.ModalDialog;
   }
 
   get warningPreference(): WarningsPreference {
