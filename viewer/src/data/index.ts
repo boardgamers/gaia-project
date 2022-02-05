@@ -47,7 +47,6 @@ export interface ButtonData {
   hide?: boolean;
   disabled?: boolean;
   booster?: Booster;
-  tech?: { pos?: TechTilePos | AdvTechTilePos; tile?: TechTile | AdvTechTile; commandOverride?: string };
   shortcuts?: string[];
   autoClick?: boolean;
   smartAutoClick?: boolean;

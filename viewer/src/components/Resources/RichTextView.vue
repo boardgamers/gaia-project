@@ -34,6 +34,14 @@
         :action="[c.specialAction]"
         transform="translate(0,1) scale(1)"
       />
+      <TechTile
+        v-else-if="c.tech"
+        :pos="c.tech.pos"
+        :tile-override="c.tech.tile"
+        :shortcut="true"
+        :command-override="c.tech.commandOverride"
+        :count-override="1"
+      />
       <svg v-else-if="c.text === 'arrow'" :key="i" viewBox="0 0 10 10" width="20" height="20">
         <use xlink:href="#arrow" x="-2" y="5" />
       </svg>
@@ -53,9 +61,10 @@ import SpecialAction from "../SpecialAction.vue";
 import { foregroundColor } from "../../graphics/colors";
 import { factionColorVar } from "../../graphics/utils";
 import BoardAction from "../BoardAction.vue";
+import TechTile from "../TechTile.vue";
 
 @Component({
-  components: { BoardAction, Building, SpecialAction },
+  components: { TechTile, BoardAction, Building, SpecialAction },
 })
 export default class RichTextView extends Vue {
   @Prop()

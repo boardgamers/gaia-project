@@ -7,15 +7,6 @@
       :booster="button.booster"
       highlighted
     />
-    <TechTile
-      v-else-if="button.tech"
-      class="mb-1 mr-1"
-      :pos="button.tech.pos"
-      :tile-override="button.tech.tile"
-      :shortcut="true"
-      :command-override="button.tech.commandOverride"
-      :count-override="1"
-    />
     <b-btn
       v-else-if="button.times === undefined"
       :variant="variant"
