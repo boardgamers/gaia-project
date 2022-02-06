@@ -54,7 +54,7 @@ export function logEntryProcessor(
 
 type ExtractLogArgProcessor<Source> = (a: ExtractLogArg<Source>) => number;
 
-type ExtractLogFunction<Source> = (p: Player, s: Source) => ExtractLogArgProcessor<Source>;
+type ExtractLogFunction<Source> = (p: Player, s: Source, engine: Engine) => ExtractLogArgProcessor<Source>;
 
 export type ExtractLogEntry<T extends ChartKind> = {
   extractLog: ExtractLog<ChartSource<T>>;
@@ -74,8 +74,8 @@ export class ExtractLog<Source> {
     return new ExtractLog<Source>(fn);
   }
 
-  static wrapper<Source>(supplier: (p: Player, s: Source) => ExtractLog<Source>): ExtractLog<Source> {
-    return ExtractLog.new((p, s) => supplier(p, s).processor(p, s));
+  static wrapper<Source>(supplier: (p: Player, s: Source, engine: Engine) => ExtractLog<Source>): ExtractLog<Source> {
+    return ExtractLog.new((p, s, engine) => supplier(p, s, engine).processor(p, s, engine));
   }
 
   static filterPlayer<Source>(e: (a: ExtractLogArg<Source>) => number): ExtractLog<Source> {
@@ -87,13 +87,13 @@ export class ExtractLog<Source> {
   }
 
   static mux<T extends ChartKind>(entries: ExtractLogEntry<T>[]): ExtractLog<ChartSource<T>> {
-    return ExtractLog.wrapper((p, s) => {
+    return ExtractLog.wrapper((p, s, engine) => {
       const logs = entries
         .filter(
           (e) => (!e.sourceTypeFilter || e.sourceTypeFilter.includes(s.type)) && this.matchesFaction(e.factionFilter, p)
         )
         .map((e) => ({
-          extractLog: e.extractLog.processor(p, s),
+          extractLog: e.extractLog.processor(p, s, engine),
           commandFilter: e.commandFilter,
           factionFilter: e.factionFilter,
         }));
@@ -116,8 +116,8 @@ export class ExtractLog<Source> {
     return !filter || (p && filter.includes(p.faction));
   }
 
-  processor(p: Player, s: Source): ExtractLogArgProcessor<Source> {
-    return this.fn(p, s);
+  processor(p: Player, s: Source, engine: Engine): ExtractLogArgProcessor<Source> {
+    return this.fn(p, s, engine);
   }
 }
 

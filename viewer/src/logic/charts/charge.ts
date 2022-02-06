@@ -145,8 +145,8 @@ const leechSources: ChartSource<LeechSource>[] = [
 
 const powerChargeSourceMap = new Map<EventSource, PowerChargeSource>([
   [Command.ChooseIncome, PowerChargeSource.income],
-  ...new Map(TechPos.values().map((p) => [p, PowerChargeSource.tech])),
-  ...new Map(Booster.values().map((b) => [b, PowerChargeSource.booster])),
+  ...new Map(TechPos.values(Expansion.All).map((p) => [p, PowerChargeSource.tech])),
+  ...new Map(Booster.values(Expansion.All).map((b) => [b, PowerChargeSource.booster])),
   ...new Map(ResearchField.values(Expansion.All).map((f) => [f, PowerChargeSource.research])),
 ]);
 

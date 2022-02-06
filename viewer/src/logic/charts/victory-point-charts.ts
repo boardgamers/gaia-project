@@ -163,7 +163,7 @@ export const victoryPointSources = (
       aggregate: charge,
     },
     {
-      types: TechPos.values(),
+      types: TechPos.values(Expansion.All),
       label: "Base Tech",
       description: "Base Tech Tiles",
       color: "--tech-tile",

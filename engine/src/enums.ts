@@ -322,7 +322,7 @@ export enum RoundScoring {
 }
 
 export namespace RoundScoring {
-  export function values(expansions = 0): RoundScoring[] {
+  export function values(): RoundScoring[] {
     return (Object.values(RoundScoring) as RoundScoring[]).filter((val: RoundScoring) => {
       if (typeof val !== "string") {
         return;
@@ -398,7 +398,7 @@ export enum TechPos {
 }
 
 export namespace TechPos {
-  export function values(expansions = 0): TechPos[] {
+  export function values(expansions: Expansion): TechPos[] {
     const ret = [
       "tech-terra",
       "tech-nav",
@@ -463,7 +463,7 @@ export enum AdvTechTile {
 }
 
 export namespace AdvTechTile {
-  export function values(expansions = 0): AdvTechTile[] {
+  export function values(expansions: Expansion): AdvTechTile[] {
     return (Object.values(AdvTechTile) as AdvTechTile[]).filter((val: AdvTechTile) => {
       if (typeof val !== "string") {
         return;
@@ -508,7 +508,7 @@ export enum Federation {
 }
 
 export namespace Federation {
-  export function values(expansions = 0) {
+  export function values(expansions: Expansion) {
     return ["fed1", "fed2", "fed3", "fed4", "fed5", "fed6"] as Federation[];
   }
 }

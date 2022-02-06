@@ -48,7 +48,7 @@ export const createSimpleSourceFactories = (
     planetsSourceFactory,
     terraformingStepsSourceFactory,
     boosterSourceFactory(boosters),
-    federationsSourceFactory,
+    federationsSourceFactory(expansion),
     baseTechSourceFactory(expansion),
     advancedTechSourceFactory(advTechTiles),
     finalScoringSourceFactory(finalTiles),
@@ -78,7 +78,7 @@ function simpleChartDetails<Source extends ChartSource<any>>(
     if (!extract) {
       return () => 0;
     }
-    const processor = extract.processor(pl, s);
+    const processor = extract.processor(pl, s, data);
 
     return logEntryProcessor((cmd, log, allCommands, cmdIndex) =>
       processor({

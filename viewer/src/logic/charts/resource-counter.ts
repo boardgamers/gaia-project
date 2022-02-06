@@ -3,6 +3,7 @@ import {
   Building,
   Command,
   EventSource,
+  Expansion,
   Faction,
   LogEntryChanges,
   Phase,
@@ -12,6 +13,7 @@ import {
   Reward,
   TechPos,
 } from "@gaia-project/engine";
+import { tradeCostSource, tradeSource } from "@gaia-project/engine/src/events";
 import { MoveTokens } from "@gaia-project/engine/src/player-data";
 import { sum } from "lodash";
 import { isGaiaMove } from "../../data/log";
@@ -81,6 +83,8 @@ const commandEventSource = (c: CommandObject): EventSource[] => {
       return [c.command as EventSource, c.args[0] as EventSource];
     case Command.Build:
       return [c.command as EventSource, Faction.Gleens, Faction.Geodens, Faction.Lantids, Command.FormFederation];
+    case Command.MoveShip:
+      return [tradeCostSource, tradeSource, Command.Build];
   }
   return [c.command as EventSource];
 };
@@ -100,7 +104,7 @@ export function flattenChanges(changes: LogEntryChanges, source: EventSource): L
   return { [source]: c };
 }
 
-export function newResourceSimulator(want: Player): ResourceSimulator {
+export function newResourceSimulator(want: Player, expansions: Expansion): ResourceSimulator {
   const simulationPlayer = new Player();
   const playerData = simulationPlayer.data;
 
@@ -178,7 +182,7 @@ export function newResourceSimulator(want: Player): ResourceSimulator {
       case Command.Special:
         if (args[0] == "4pw") {
           gainRewards(Reward.parse("4pw"));
-          for (const pos of TechPos.values()) {
+          for (const pos of TechPos.values(expansions)) {
             delete changes[pos];
           }
         }
@@ -251,8 +255,8 @@ export function newResourceSimulator(want: Player): ResourceSimulator {
 export const resourceCounter = (
   processor: (want: Player, a: ExtractLogArg<any>, data: PlayerData, simulateResources: () => Reward[]) => number
 ): ExtractLog<any> =>
-  ExtractLog.new((want) => {
-    const simulator = newResourceSimulator(want);
+  ExtractLog.new((want, s, engine) => {
+    const simulator = newResourceSimulator(want, engine.expansions);
 
     return (a) => processor(want, a, simulator.playerData, () => simulator.simulateResources(a));
   });

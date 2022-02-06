@@ -191,18 +191,19 @@ export class ChartSetup {
   constructor(engine: Engine, statistics = false) {
     const scoringTechTile: (tile: AdvTechTile) => boolean = (tile: AdvTechTile) =>
       new Event(tiles.techs[tile][0]).rewards.some((r) => r.type == Resource.VictoryPoint);
+    const expansions = engine.expansions;
     const currentAdvTechTiles: Map<AdvTechTile, string> = new Map(
-      AdvTechTilePos.values(engine.expansions).map((tile) => [
+      AdvTechTilePos.values(expansions).map((tile) => [
         engine.tiles.techs[tile].tile as AdvTechTile,
         tile.replace("adv", "--rt"),
       ])
     );
     const singleColorTechTile = (tiles: AdvTechTile[]) => new Map(tiles.map((v) => [v, "--tech-tile"]));
     const vpAdvTechTiles = statistics
-      ? singleColorTechTile(AdvTechTile.values().filter(scoringTechTile))
+      ? singleColorTechTile(AdvTechTile.values(expansions).filter(scoringTechTile))
       : currentAdvTechTiles;
     const nonVpAdvTechTiles = statistics
-      ? singleColorTechTile(AdvTechTile.values().filter((t) => !scoringTechTile(t)))
+      ? singleColorTechTile(AdvTechTile.values(expansions).filter((t) => !scoringTechTile(t)))
       : currentAdvTechTiles;
 
     const scoringBooster: (booster: Booster) => boolean = (booster: Booster) =>
@@ -225,7 +226,7 @@ export class ChartSetup {
             allBoosters,
             statistics ? [] : finalTiles,
             factions,
-            engine.expansions
+            expansions
           )
         )
       )
