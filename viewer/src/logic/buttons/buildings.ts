@@ -20,6 +20,7 @@ import { hexSelectionButton } from "./hex";
 import { withShortcut } from "./shortcuts";
 import { CommandController } from "./types";
 import { confirmationButton, hexMap, isFree, symbolButton, textButton } from "./utils";
+import { commonButtonWarning } from "./warnings";
 
 function buildingMenu(building: Building, faction: Faction): { richText?: RichText; label: string } | null {
   if (isShip(building)) {
@@ -125,6 +126,7 @@ export function buildButtons(
 
   const ret: ButtonData[] = [];
   const menus = new Map<string, ButtonData[]>();
+  const menuButtons: ButtonData[] = [];
 
   for (const s of sorted) {
     const buildings = s[1] as AvailableBuilding[];
@@ -140,14 +142,14 @@ export function buildButtons(
 
       if (buttons.length == 0) {
         const fac = menu.richText ? symbolButton : textButton;
-        ret.push(
-          fac({
-            label: menu.label,
-            richText: menu.richText,
-            command: Command.Build,
-            buttons,
-          })
-        );
+        const menuButton = fac({
+          label: menu.label,
+          richText: menu.richText,
+          command: Command.Build,
+          buttons,
+        });
+        ret.push(menuButton);
+        menuButtons.push(menuButton);
       }
 
       buttons.push(
@@ -184,6 +186,13 @@ export function buildButtons(
         )
       );
     }
+  }
+  for (const button of menuButtons) {
+    button.warning = commonButtonWarning(
+      controller,
+      "choice",
+      button.buttons.map((b) => b.warning?.body ?? [])
+    );
   }
   return ret;
 }
