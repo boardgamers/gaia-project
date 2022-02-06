@@ -2,6 +2,7 @@ import assert from "assert";
 import { AvailableBuilding, AvailableCommand, ShipAction, TradingLocation } from "../available/types";
 import Engine from "../engine";
 import { Building, Command, Condition, Player as PlayerEnum } from "../enums";
+import { tradeCostSource, tradeSource } from "../events";
 import Player from "../player";
 import Reward from "../reward";
 import { placeBuilding } from "./buildings";
@@ -57,10 +58,10 @@ export function moveShip(
 
 function trade(engine: Engine, pl: Player, location: TradingLocation) {
   if (location.tradeCost) {
-    pl.payCosts(Reward.parse(location.tradeCost), "tradeCost");
+    pl.payCosts(Reward.parse(location.tradeCost), tradeCostSource);
   }
   if (location.rewards) {
-    pl.gainRewards(Reward.parse(location.rewards), "trade");
+    pl.gainRewards(Reward.parse(location.rewards), tradeSource);
   }
 
   const hex = engine.map.getS(location.coordinates);

@@ -1,8 +1,33 @@
-import Engine, { Building, Command, Expansion, GaiaHex, PlayerData, stdBuildingValue } from "@gaia-project/engine";
+import Engine, {
+  Building,
+  Command,
+  Expansion,
+  GaiaHex,
+  PlayerData,
+  ShipAction,
+  stdBuildingValue,
+} from "@gaia-project/engine";
 import { allBuildings, buildingData } from "../../data/building";
 import { CommandObject } from "../recent";
 import { ChartSource } from "./charts";
-import { ExtractLog, SimpleSourceFactory } from "./simple-charts";
+import { ExtractLog, ExtractLogArg, SimpleSourceFactory } from "./simple-charts";
+
+function buildingFromLog(e: ExtractLogArg<ChartSource<Building>>): Building | null {
+  const args = e.cmd.args;
+  switch (e.cmd.command) {
+    case Command.Build:
+      return args[0] as Building;
+    case Command.MoveShip:
+      if (e.log.changes?.[Command.Build] != null) {
+        return Building.CustomsPost;
+      }
+      if (args.some((a) => a === ShipAction.BuildColony)) {
+        return Building.Colony;
+      }
+      return null;
+  }
+  return null;
+}
 
 export const buildingsSourceFactory = (expansion: Expansion): SimpleSourceFactory<ChartSource<Building>> => {
   return {
@@ -10,13 +35,7 @@ export const buildingsSourceFactory = (expansion: Expansion): SimpleSourceFactor
     playerSummaryLineChartTitle: "Power value of all buildings of all players (1-3 base power value)",
     showWeightedTotal: true,
     extractLog: ExtractLog.filterPlayer((e) => {
-      if (e.cmd.command == Command.Build) {
-        const t = e.cmd.args[0] as Building;
-        if (e.source.type == t) {
-          return 1;
-        }
-      }
-      return 0;
+      return buildingFromLog(e) === e.source.type ? 1 : 0;
     }),
     sources: allBuildings(expansion, true).map((b) => ({
       type: b,

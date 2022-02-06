@@ -56,6 +56,9 @@ function findOperator(spec: string): [Operator, string] {
   return [Operator.Once, spec];
 }
 
+export const tradeSource = "trade";
+export const tradeCostSource = "tradeCost";
+
 export type EventSource =
   | Booster
   | TechPos
@@ -74,8 +77,8 @@ export type EventSource =
   | Command.UpgradeResearch
   | Faction
   | Command.Bid
-  | "trade"
-  | "tradeCost";
+  | typeof tradeSource
+  | typeof tradeCostSource;
 
 export default class Event {
   spec: string;
