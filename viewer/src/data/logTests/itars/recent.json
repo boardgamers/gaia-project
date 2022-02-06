@@ -30,10 +30,18 @@
             "rewards": ["6k"]
           }
         ],
-        []
+        [
+          {
+            "rewards": ["~"]
+          }
+        ]
       ],
       [
-        [],
+        [
+          {
+            "rewards": ["~"]
+          }
+        ],
         [
           {
             "rewards": ["8bowl-t"]
@@ -44,7 +52,11 @@
             "rewards": ["1bowl-t"]
           }
         ],
-        []
+        [
+          {
+            "rewards": ["~"]
+          }
+        ]
       ],
       [
         [
@@ -81,34 +93,46 @@
       [
         [
           {
-            "text": "4"
+            "building": {
+              "type": "m",
+              "faction": "geodens",
+              "count": 4,
+              "skipResource": false
+            }
           }
         ],
         [
           {
-            "text": "2"
+            "building": {
+              "type": "ts",
+              "faction": "geodens",
+              "count": 2,
+              "skipResource": false
+            }
           }
         ],
         [
           {
-            "text": "2"
+            "building": {
+              "type": "lab",
+              "faction": "geodens",
+              "count": 2,
+              "skipResource": false
+            }
           }
         ],
         [
           {
-            "text": "1"
+            "building": {
+              "type": "PI",
+              "faction": "geodens",
+              "count": 1,
+              "skipResource": false
+            }
           }
         ],
-        [
-          {
-            "text": ""
-          }
-        ],
-        [
-          {
-            "text": ""
-          }
-        ],
+        [],
+        [],
         [
           {
             "text": ""
@@ -178,7 +202,11 @@
             "rewards": ["2bowl-t"]
           }
         ],
-        []
+        [
+          {
+            "rewards": ["~"]
+          }
+        ]
       ],
       [
         [
@@ -215,32 +243,62 @@
       [
         [
           {
-            "text": "6"
+            "building": {
+              "type": "m",
+              "faction": "taklons",
+              "count": 6,
+              "skipResource": false
+            }
           }
         ],
         [
           {
-            "text": "2"
+            "building": {
+              "type": "ts",
+              "faction": "taklons",
+              "count": 2,
+              "skipResource": false
+            }
           }
         ],
         [
           {
-            "text": "1"
+            "building": {
+              "type": "lab",
+              "faction": "taklons",
+              "count": 1,
+              "skipResource": false
+            }
           }
         ],
         [
           {
-            "text": "1"
+            "building": {
+              "type": "PI",
+              "faction": "taklons",
+              "count": 1,
+              "skipResource": false
+            }
           }
         ],
         [
           {
-            "text": "1"
+            "building": {
+              "type": "ac1",
+              "faction": "taklons",
+              "count": 1,
+              "skipResource": false
+            }
           }
         ],
         [
           {
-            "text": "1"
+            "building": {
+              "type": "ac2",
+              "faction": "taklons",
+              "count": 1,
+              "skipResource": false
+            }
           }
         ],
         [
@@ -297,14 +355,26 @@
         ]
       ],
       [
-        [],
-        [],
+        [
+          {
+            "rewards": ["~"]
+          }
+        ],
+        [
+          {
+            "rewards": ["~"]
+          }
+        ],
         [
           {
             "rewards": ["6bowl-t"]
           }
         ],
-        []
+        [
+          {
+            "rewards": ["~"]
+          }
+        ]
       ],
       [
         [
@@ -341,34 +411,55 @@
       [
         [
           {
-            "text": "5"
+            "building": {
+              "type": "m",
+              "faction": "lantids",
+              "count": 5,
+              "skipResource": false
+            }
           }
         ],
         [
           {
-            "text": "4"
+            "building": {
+              "type": "ts",
+              "faction": "lantids",
+              "count": 4,
+              "skipResource": false
+            }
           }
         ],
         [
           {
-            "text": "1"
+            "building": {
+              "type": "lab",
+              "faction": "lantids",
+              "count": 1,
+              "skipResource": false
+            }
           }
         ],
         [
           {
-            "text": "1"
+            "building": {
+              "type": "PI",
+              "faction": "lantids",
+              "count": 1,
+              "skipResource": false
+            }
           }
         ],
         [
           {
-            "text": "1"
+            "building": {
+              "type": "ac1",
+              "faction": "lantids",
+              "count": 1,
+              "skipResource": false
+            }
           }
         ],
-        [
-          {
-            "text": ""
-          }
-        ],
+        [],
         [
           {
             "text": ""
@@ -415,7 +506,11 @@
         ]
       ],
       [
-        [],
+        [
+          {
+            "rewards": ["~"]
+          }
+        ],
         [
           {
             "rewards": ["1bowl-t"]
@@ -426,7 +521,11 @@
             "rewards": ["2bowl-t"]
           }
         ],
-        []
+        [
+          {
+            "rewards": ["~"]
+          }
+        ]
       ],
       [
         [
@@ -463,34 +562,46 @@
       [
         [
           {
-            "text": "7"
+            "building": {
+              "type": "m",
+              "faction": "itars",
+              "count": 7,
+              "skipResource": false
+            }
           }
         ],
         [
           {
-            "text": "4"
+            "building": {
+              "type": "ts",
+              "faction": "itars",
+              "count": 4,
+              "skipResource": false
+            }
+          }
+        ],
+        [],
+        [
+          {
+            "building": {
+              "type": "PI",
+              "faction": "itars",
+              "count": 1,
+              "skipResource": false
+            }
           }
         ],
         [
           {
-            "text": ""
+            "building": {
+              "type": "ac1",
+              "faction": "itars",
+              "count": 1,
+              "skipResource": false
+            }
           }
         ],
-        [
-          {
-            "text": "1"
-          }
-        ],
-        [
-          {
-            "text": "1"
-          }
-        ],
-        [
-          {
-            "text": ""
-          }
-        ],
+        [],
         [
           {
             "text": "0/3"
@@ -537,7 +648,11 @@
         ]
       ],
       [
-        [],
+        [
+          {
+            "rewards": ["~"]
+          }
+        ],
         [
           {
             "rewards": ["1bowl-t"]
@@ -548,7 +663,11 @@
             "rewards": ["3bowl-t", "1brainstone"]
           }
         ],
-        []
+        [
+          {
+            "rewards": ["~"]
+          }
+        ]
       ],
       [
         [
@@ -585,32 +704,62 @@
       [
         [
           {
-            "text": "5"
+            "building": {
+              "type": "m",
+              "faction": "taklons",
+              "count": 5,
+              "skipResource": false
+            }
           }
         ],
         [
           {
-            "text": "2"
+            "building": {
+              "type": "ts",
+              "faction": "taklons",
+              "count": 2,
+              "skipResource": false
+            }
           }
         ],
         [
           {
-            "text": "1"
+            "building": {
+              "type": "lab",
+              "faction": "taklons",
+              "count": 1,
+              "skipResource": false
+            }
           }
         ],
         [
           {
-            "text": "1"
+            "building": {
+              "type": "PI",
+              "faction": "taklons",
+              "count": 1,
+              "skipResource": false
+            }
           }
         ],
         [
           {
-            "text": "1"
+            "building": {
+              "type": "ac1",
+              "faction": "taklons",
+              "count": 1,
+              "skipResource": false
+            }
           }
         ],
         [
           {
-            "text": "1"
+            "building": {
+              "type": "ac2",
+              "faction": "taklons",
+              "count": 1,
+              "skipResource": false
+            }
           }
         ],
         [
@@ -656,7 +805,11 @@
             "rewards": ["6k"]
           }
         ],
-        []
+        [
+          {
+            "rewards": ["~"]
+          }
+        ]
       ],
       [
         [
@@ -674,7 +827,11 @@
             "rewards": ["1bowl-t"]
           }
         ],
-        []
+        [
+          {
+            "rewards": ["~"]
+          }
+        ]
       ],
       [
         [
@@ -711,34 +868,46 @@
       [
         [
           {
-            "text": "4"
+            "building": {
+              "type": "m",
+              "faction": "geodens",
+              "count": 4,
+              "skipResource": false
+            }
           }
         ],
         [
           {
-            "text": "2"
+            "building": {
+              "type": "ts",
+              "faction": "geodens",
+              "count": 2,
+              "skipResource": false
+            }
           }
         ],
         [
           {
-            "text": "2"
+            "building": {
+              "type": "lab",
+              "faction": "geodens",
+              "count": 2,
+              "skipResource": false
+            }
           }
         ],
         [
           {
-            "text": "1"
+            "building": {
+              "type": "PI",
+              "faction": "geodens",
+              "count": 1,
+              "skipResource": false
+            }
           }
         ],
-        [
-          {
-            "text": ""
-          }
-        ],
-        [
-          {
-            "text": ""
-          }
-        ],
+        [],
+        [],
         [
           {
             "text": ""
@@ -802,8 +971,16 @@
         ]
       ],
       [
-        [],
-        [],
+        [
+          {
+            "rewards": ["~"]
+          }
+        ],
+        [
+          {
+            "rewards": ["~"]
+          }
+        ],
         [
           {
             "rewards": ["2bowl-t"]
@@ -850,34 +1027,46 @@
       [
         [
           {
-            "text": "7"
+            "building": {
+              "type": "m",
+              "faction": "itars",
+              "count": 7,
+              "skipResource": false
+            }
           }
         ],
         [
           {
-            "text": "4"
+            "building": {
+              "type": "ts",
+              "faction": "itars",
+              "count": 4,
+              "skipResource": false
+            }
+          }
+        ],
+        [],
+        [
+          {
+            "building": {
+              "type": "PI",
+              "faction": "itars",
+              "count": 1,
+              "skipResource": false
+            }
           }
         ],
         [
           {
-            "text": ""
+            "building": {
+              "type": "ac1",
+              "faction": "itars",
+              "count": 1,
+              "skipResource": false
+            }
           }
         ],
-        [
-          {
-            "text": "1"
-          }
-        ],
-        [
-          {
-            "text": "1"
-          }
-        ],
-        [
-          {
-            "text": ""
-          }
-        ],
+        [],
         [
           {
             "text": "0/3"
