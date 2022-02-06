@@ -188,7 +188,7 @@ export function isGaiaMove(commands: CommandObject[]): boolean {
 function newPlayerLogCounter(engine: Engine, p: Player): LogCounter {
   const tables = logPlayerTables(engine);
 
-  const resourceSimulator = newResourceSimulator(p);
+  const resourceSimulator = newResourceSimulator(p, engine.expansions);
   const playerData = resourceSimulator.playerData;
   const buildings = new BuildingCounter(playerData);
   const research = new ResearchCounter(p, playerData);

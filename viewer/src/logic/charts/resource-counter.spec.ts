@@ -52,6 +52,10 @@ function runResourceCounterTest(testCase: any, wantPlayer: PlayerEnum) {
       if (got != want) {
         console.log("want", want);
         console.log("got", got);
+        const s = Object.assign({}, a);
+        delete s.data;
+        console.log("args", JSON.stringify(s));
+        console.log("history", JSON.stringify(a.data.advancedLog));
         expect(got).to.deep.equal(want);
       }
     }
@@ -81,7 +85,7 @@ function runResourceCounterTest(testCase: any, wantPlayer: PlayerEnum) {
 
   const engine = new TestEngine(testCase.moveHistory, testCase.options, new Engine().version, true);
   const player = engine.player(wantPlayer);
-  const processor = counter.processor(player, null);
+  const processor = counter.processor(player, null, engine);
   const logProcessor = logEntryProcessor((cmd, log, allCommands, cmdIndex) =>
     processor({
       cmd,
