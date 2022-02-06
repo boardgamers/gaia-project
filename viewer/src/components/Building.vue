@@ -1,7 +1,7 @@
 <template>
   <g v-if="isShip" class="ship">
     <circle v-if="shipMoved" r="7" />
-    <Planet :planet="planetClass" transform="scale(7)" />
+    <Planet :planet="planetClass" transform="scale(7)" :classes="['ship']" />
     <text transform="translate(-2, -.7) scale(5)" :class="`board-text ${planetClass}`" style="font-weight: bolder">{{
       shipLetter
     }}</text>

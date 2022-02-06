@@ -50,7 +50,7 @@ svg {
     stroke-width: 0.3;
   }
 
-  &.space-map .planet {
+  .planet {
     // terra
     &.r {
       stroke: var(--terra);
@@ -125,6 +125,10 @@ svg {
     &.l {
       stroke: var(--lost);
     }
+  }
+
+  .ship {
+    stroke: none;
   }
 
   .planet-fill {

@@ -53,6 +53,7 @@
         :flat="flat"
         outline
       />
+      <Planet v-if="gaiaFormerForegroundPlanet(i)" :planet="gaiaFormerForegroundPlanet(i)" />
       <Resource
         v-for="(resource, index) in resources(i)"
         :key="'field-' + index"
@@ -77,7 +78,6 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Building from "../Building.vue";
 import Resource from "../Resource.vue";
 import Engine, {
   Building as BuildingEnum,
@@ -85,6 +85,7 @@ import Engine, {
   factionVariantBoard,
   isShip,
   Operator,
+  Planet as PlanetEnum,
   Player,
   Resource as ResourceEnum,
   Reward,
@@ -92,9 +93,12 @@ import Engine, {
 import { CommandObject, markBuilding } from "../../logic/recent";
 import { buildingName } from "../../data/building";
 import { radiusTranslate } from "../../logic/utils";
+import Planet from "../Planet.vue";
+import Building from "../Building.vue";
 
 @Component({
   components: {
+    Planet,
     Building,
     Resource,
   },
@@ -137,9 +141,12 @@ export default class BuildingGroup extends Vue {
     if (this.player.board) {
       return this.player.board;
     }
-    const engine = this.$store.state.data as Engine;
-    const factionVariant = factionVariantBoard(engine.factionCustomization, this.faction)?.board;
+    const factionVariant = factionVariantBoard(this.engine.factionCustomization, this.faction)?.board;
     return factionBoard(this.faction, factionVariant);
+  }
+
+  get engine() {
+    return this.$store.state.data as Engine;
   }
 
   get faction() {
@@ -260,6 +267,17 @@ export default class BuildingGroup extends Vue {
     }
 
     return markBuilding(i, countMoves(roundMoves), this.placed, countMoves(moves), this.nBuildings);
+  }
+
+  gaiaFormerForegroundPlanet(i: number): PlanetEnum | null {
+    if (this.building == BuildingEnum.GaiaFormer && i < this.placed + this.gaia) {
+      if (i < this.gaia) {
+        return PlanetEnum.Volcanic;
+      }
+      const onGaia = [...this.engine.map.grid.values()]
+        .filter(h => h.buildingOf(this.player.player) === BuildingEnum.GaiaFormer && h.data.planet == PlanetEnum.Gaia).length;
+      return i < onGaia + this.gaia ? PlanetEnum.Gaia : PlanetEnum.Transdim;
+    }
   }
 
   resourceTranslate(building: number, resource: number): string {
