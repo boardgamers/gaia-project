@@ -18,11 +18,11 @@ function buildingFromLog(e: ExtractLogArg<ChartSource<Building>>): Building | nu
     case Command.Build:
       return args[0] as Building;
     case Command.MoveShip:
-      if (e.log.changes?.[Command.Build] != null) {
-        return Building.CustomsPost;
-      }
       if (args.some((a) => a === ShipAction.BuildColony)) {
         return Building.Colony;
+      }
+      if (e.log.changes?.[Command.Build] != null) {
+        return Building.CustomsPost;
       }
       return null;
   }
