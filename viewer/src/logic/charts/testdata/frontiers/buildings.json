@@ -1,0 +1,93 @@
+{
+  "tableMeta": {
+    "weights": [1, 2, 2, 3, 3, 3, 0, 3, 1, 0, 0],
+    "colors": [
+      {
+        "color": "--res-ore"
+      },
+      {
+        "color": "--res-credit"
+      },
+      {
+        "color": "--res-knowledge"
+      },
+      {
+        "color": "--current-round"
+      },
+      {
+        "color": "--rt-terra"
+      },
+      {
+        "color": "--res-qic"
+      },
+      {
+        "color": "--gaia"
+      },
+      {
+        "color": "--rt-nav"
+      },
+      {
+        "color": "--res-credit"
+      },
+      {
+        "color": "--rt-gaia"
+      },
+      {
+        "color": "--volcanic"
+      }
+    ],
+    "datasetMeta": {
+      "Nevlas (16)": {
+        "label": "Nevlas",
+        "total": 15,
+        "weightedTotal": 16
+      },
+      "Hadsch Hallas (14)": {
+        "label": "Hadsch Hallas",
+        "total": 15,
+        "weightedTotal": 14
+      },
+      "Terrans (15)": {
+        "label": "Terrans",
+        "total": 14,
+        "weightedTotal": 15
+      },
+      "Taklons (17)": {
+        "label": "Taklons",
+        "total": 12,
+        "weightedTotal": 17
+      }
+    }
+  },
+  "labels": [
+    "Mine",
+    "Trading Station",
+    "Research Lab",
+    "Planetary Institute",
+    "Knowledge Academy",
+    "Academy 2",
+    "Gaia Former",
+    "Colony",
+    "Customs Post",
+    "Colony Ship",
+    "Trade Ship"
+  ],
+  "datasets": [
+    {
+      "label": "Nevlas (16)",
+      "data": [7, 2, 1, 1, 0, 0, 0, 0, 0, 2, 2]
+    },
+    {
+      "label": "Hadsch Hallas (14)",
+      "data": [4, 2, 1, 0, 0, 0, 0, 0, 4, 2, 2]
+    },
+    {
+      "label": "Terrans (15)",
+      "data": [5, 2, 0, 1, 0, 0, 3, 1, 0, 1, 1]
+    },
+    {
+      "label": "Taklons (17)",
+      "data": [4, 3, 2, 0, 1, 0, 0, 0, 0, 1, 1]
+    }
+  ]
+}

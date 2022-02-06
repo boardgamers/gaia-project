@@ -1,0 +1,261 @@
+{
+  "families": ["Buildings", "Trade Resources"],
+  "options": {
+    "layout": "standard",
+    "factionVariant": "more-balanced",
+    "frontiers": true,
+    "factionVariantVersion": 0,
+    "map": {
+      "sectors": [
+        {
+          "sector": "5A",
+          "rotation": 0,
+          "center": {
+            "q": 0,
+            "r": 0,
+            "s": 0
+          }
+        },
+        {
+          "sector": "6A",
+          "rotation": 4,
+          "center": {
+            "q": 5,
+            "r": -2,
+            "s": -3
+          }
+        },
+        {
+          "sector": "8",
+          "rotation": 4,
+          "center": {
+            "q": 2,
+            "r": 3,
+            "s": -5
+          }
+        },
+        {
+          "sector": "9",
+          "rotation": 1,
+          "center": {
+            "q": -3,
+            "r": 5,
+            "s": -2
+          }
+        },
+        {
+          "sector": "3",
+          "rotation": 1,
+          "center": {
+            "q": -5,
+            "r": 2,
+            "s": 3
+          }
+        },
+        {
+          "sector": "1",
+          "rotation": 1,
+          "center": {
+            "q": -2,
+            "r": -3,
+            "s": 5
+          }
+        },
+        {
+          "sector": "4",
+          "rotation": 3,
+          "center": {
+            "q": 3,
+            "r": -5,
+            "s": 2
+          }
+        },
+        {
+          "sector": "10",
+          "rotation": 4,
+          "center": {
+            "q": -1,
+            "r": 8,
+            "s": -7
+          }
+        },
+        {
+          "sector": "7A",
+          "rotation": 4,
+          "center": {
+            "q": -6,
+            "r": 10,
+            "s": -4
+          }
+        },
+        {
+          "sector": "2",
+          "rotation": 2,
+          "center": {
+            "q": -8,
+            "r": 7,
+            "s": 1
+          }
+        }
+      ],
+      "mirror": false
+    }
+  },
+  "moveHistory": [
+    "init 4 Frontiers-4",
+    "p1 faction nevlas",
+    "p2 faction hadsch-hallas",
+    "p3 faction terrans",
+    "p4 faction taklons (0/0/0/0 ⇒ 2,B/4/0/0)",
+    "nevlas build m 9A4",
+    "hadsch-hallas build m 5A3",
+    "terrans build m 1B2",
+    "taklons build m 7A9",
+    "taklons build m 9A10",
+    "terrans build m 8A8",
+    "hadsch-hallas build m 7B4",
+    "nevlas build m 5A0",
+    "taklons booster booster5",
+    "terrans booster booster9",
+    "hadsch-hallas booster booster2",
+    "nevlas booster booster3",
+    "taklons brainstone area2 (2,B/4/0/0 ⇒ 1/5,B/0/0)",
+    "nevlas build ts 9A4.",
+    "hadsch-hallas charge 1pw (4/4/0/0 ⇒ 3/5/0/0)",
+    "taklons charge 1pw (1/5,B/0/0 ⇒ 0/6,B/0/0)",
+    "hadsch-hallas build m 2A11.",
+    "nevlas charge 2pw (2/4/0/0 ⇒ 0/6/0/0)",
+    "terrans build ts 8A8.",
+    "nevlas charge 1pw (0/6/0/0 ⇒ 0/5/1/0)",
+    "taklons burn 2. action power3. (0/6,B/0/0 ⇒ 1,B/3/0/0)",
+    "nevlas build ts 5A0.",
+    "terrans charge 2pw (0/8/0/0 ⇒ 0/6/2/0)",
+    "hadsch-hallas build ts 2A11.",
+    "nevlas charge 2pw (0/5/1/0 ⇒ 0/3/3/0)",
+    "terrans burn 1. action power6. build m 8B4. (0/6/2/0 ⇒ 3/4/0/0)",
+    "nevlas charge 2pw (0/3/3/0 ⇒ 0/1/5/0)",
+    "taklons build ts 7A9.",
+    "nevlas charge 1pw (0/1/5/0 ⇒ 0/0/6/0)",
+    "hadsch-hallas charge 1pw (3/5/0/0 ⇒ 2/6/0/0)",
+    "nevlas spend 1q for 1o. build PI 9A4. spend 6pw for 2o. (0/0/6/0 ⇒ 3/0/3/0)",
+    "hadsch-hallas charge 2pw (2/6/0/0 ⇒ 0/8/0/0)",
+    "taklons charge 2pw (1,B/3/0/0 ⇒ 0/4,B/0/0)",
+    "hadsch-hallas up dip (0 ⇒ 1).",
+    "terrans build PI 8A8.",
+    "nevlas charge 2pw (3/0/3/0 ⇒ 1/2/3/0)",
+    "taklons burn 1. spend 3pw for 1o. build lab 7A9. tech dip. up dip (0 ⇒ 1). (0/4,B/0/0 ⇒ 0,B/3/0/0)",
+    "nevlas charge 3pw (1/2/3/0 ⇒ 0/1/5/0)",
+    "hadsch-hallas charge 1pw (0/8/0/0 ⇒ 0/7/1/0)",
+    "nevlas action power4. (0/1/5/0 ⇒ 2/1/3/0)",
+    "hadsch-hallas build tradeShip 5B1.",
+    "terrans build gf 1A5 using area1: 3, area2: 3. (3/4/0/0 ⇒ 0/1/0/6)",
+    "taklons special 4pw. brainstone area3. spend 3pw for 1o. (0,B/3/0/0 ⇒ 0,B/1/2/0)",
+    "nevlas up nav (0 ⇒ 1).",
+    "hadsch-hallas build lab 2A11. tech free2. up dip (1 ⇒ 2).",
+    "nevlas charge 3pw (2/1/3/0 ⇒ 0/2/4/0)",
+    "terrans up eco (0 ⇒ 1).",
+    "taklons build ac1 7A9. tech free3. up dip (1 ⇒ 2).",
+    "nevlas charge 2pw (0/2/4/0 ⇒ 0/0/6/0)",
+    "hadsch-hallas charge 1pw (0/7/1/0 ⇒ 0/6/2/0)",
+    "nevlas spend 6pw for 2o. build lab 5A0. tech dip. up dip (0 ⇒ 1). (0/0/6/0 ⇒ 3/0/3/0)",
+    "terrans charge 1pw (0/1/0/6 ⇒ 0/0/1/6)",
+    "hadsch-hallas build tradeShip 9A9.",
+    "terrans spend 1pw for 1c. pass booster10 returning booster9 (0/0/1/6 ⇒ 1/0/0/6)",
+    "taklons up dip (2 ⇒ 3). spend 3pw for 1o. brainstone area1. (0,B/1/2/0 ⇒ 0,B/0/3/0)",
+    "nevlas special 4pw. (3/0/3/0 ⇒ 0/2/4/0)",
+    "hadsch-hallas pass booster9 returning booster2",
+    "taklons spend 1pw for 1c. special range+3. build m 2B0. (0,B/0/3/0 ⇒ 1,B/0/2/0)",
+    "nevlas charge 2pw (0/2/4/0 ⇒ 0/0/6/0)",
+    "hadsch-hallas decline 2pw",
+    "nevlas action power5. (0/0/6/0 ⇒ 2/0/4/0)",
+    "taklons pass booster2 returning booster5",
+    "nevlas spend 1t-a3 for 1k. spend 1t-a3 for 1k. up nav (1 ⇒ 2). (2/0/4/0 ⇒ 2/0/2/2)",
+    "nevlas spend 4pw for 1o,1c. build m 9B3. (2/0/2/2 ⇒ 4/0/0/2)",
+    "hadsch-hallas decline 2pw",
+    "nevlas build m 5B5.",
+    "nevlas pass booster5 returning booster3",
+    "terrans income 1t (1/0/0/6 ⇒ 0/0/2/6)",
+    "taklons income 3pw. brainstone area3 (1,B/0/2/0 ⇒ 2/1/2,B/0)",
+    "nevlas income 1t (4/0/0/2 ⇒ 0/1/4/2)",
+    "terrans spend 6tg for 2o (0/0/2/6 ⇒ 0/6/2/0)",
+    "terrans build tradeShip 1A3.",
+    "hadsch-hallas action power5. (0/0/8/0 ⇒ 4/0/4/0)",
+    "taklons action power4. (2/1/2,B/0 ⇒ 3,B/1/1/0)",
+    "nevlas action power6. build m 9B5. (2/1/4/0 ⇒ 4/1/2/0)",
+    "hadsch-hallas charge 1pw (4/0/4/0 ⇒ 3/1/4/0)",
+    "taklons charge 1pw. brainstone area2 (3,B/1/1/0 ⇒ 3/1,B/1/0)",
+    "terrans build colonyShip 1A4.",
+    "hadsch-hallas up dip (2 ⇒ 3). (3/1/4/0 ⇒ 0/4/4/0)",
+    "taklons burn 1. action power3. (3/1,B/1/0 ⇒ 4,B/0/0/0)",
+    "nevlas special range+3. build m 3B3.",
+    "terrans build m 1A5.",
+    "hadsch-hallas move tradeShip 5B1 5C trade 5B5. (0/4/4/0 ⇒ 1/4/3/0)",
+    "taklons special 4pw. brainstone area2. (4,B/0/0/0 ⇒ 1/3,B/0/0)",
+    "nevlas special 4pw. (4/1/2/0 ⇒ 0/5/2/0)",
+    "terrans spend 1pw for 1c. spend 1pw for 1c. build gf 8A3 using area1: 2, area2: 4. (0/6/2/0 ⇒ 0/2/0/6)",
+    "hadsch-hallas move tradeShip 9A9 9A9 trade 9A10. (1/4/3/0 ⇒ 2/4/2/0)",
+    "taklons build ts 9A10.",
+    "nevlas charge 1pw (0/5/2/0 ⇒ 0/4/3/0)",
+    "hadsch-hallas charge 1pw (2/4/2/0 ⇒ 1/5/2/0)",
+    "nevlas spend 1t-a3 for 1k. spend 1t-a3 for 1k. up eco (0 ⇒ 1). (0/4/3/0 ⇒ 0/4/1/2)",
+    "terrans pass booster3 returning booster10",
+    "hadsch-hallas build colonyShip 7C.",
+    "taklons build lab 9A10. tech free2. up dip (3 ⇒ 4). burn 1. spend 3pw for 3c. (1/3,B/0/0 ⇒ 1,B/2/0/0)",
+    "nevlas charge 1pw (0/4/1/2 ⇒ 0/3/2/2)",
+    "hadsch-hallas charge 1pw (1/5/2/0 ⇒ 0/6/2/0)",
+    "nevlas spend 2pw for 2c. build m 4A3. (0/3/2/2 ⇒ 1/3/1/2)",
+    "hadsch-hallas charge 1pw (0/6/2/0 ⇒ 0/5/3/0)",
+    "hadsch-hallas build ts 5A3.",
+    "taklons charge 2pw (1,B/2/0/0 ⇒ 0/3,B/0/0)",
+    "nevlas charge 1pw (1/3/1/2 ⇒ 0/4/1/2)",
+    "taklons build tradeShip 2A0.",
+    "nevlas spend 2pw for 2c. pass booster8 returning booster5 (0/4/1/2 ⇒ 1/4/0/2)",
+    "hadsch-hallas pass booster5 returning booster9",
+    "taklons pass booster7 returning booster2",
+    "terrans income 1t (0/2/0/6 ⇒ 0/0/3/6)",
+    "nevlas income 1t (1/4/0/2 ⇒ 0/1/5/2)",
+    "terrans spend 6tg for 2o (0/0/3/6 ⇒ 0/6/3/0)",
+    "terrans build ts 8B4.",
+    "nevlas charge 2pw (2/1/5/0 ⇒ 0/3/5/0)",
+    "nevlas action power4. (0/3/5/0 ⇒ 2/3/3/0)",
+    "hadsch-hallas action power5. (0/0/8/0 ⇒ 4/0/4/0)",
+    "taklons action power3. (0/0/3,B/0 ⇒ 1,B/0/2/0)",
+    "terrans build m 8A3.",
+    "nevlas special 4pw. (2/3/3/0 ⇒ 0/3/5/0)",
+    "hadsch-hallas up dip (3 ⇒ 4).",
+    "taklons move tradeShip 2A0 9A6 trade 2A11. (1,B/0/2/0 ⇒ 2,B/0/1/0)",
+    "terrans spend 3pw for 3c. build gf 10A9 using area1: 3, area2: 3. (0/6/3/0 ⇒ 0/3/0/6)",
+    "nevlas build tradeShip 5A1.",
+    "hadsch-hallas move tradeShip 5C 5A1 trade 8A8. spend 4pw for 1q. (4/0/4/0 ⇒ 4/2/3/0)",
+    "taklons special 4pw. brainstone area3. (2,B/0/1/0 ⇒ 0/2/1,B/0)",
+    "terrans move tradeShip 1A3 1A1.",
+    "nevlas build tradeShip 7A8.",
+    "hadsch-hallas move colonyShip 7C 7C buildColony 7B0.",
+    "taklons charge 2pw (0/2/1,B/0 ⇒ 0/0/3,B/0)",
+    "taklons up nav (0 ⇒ 1). spend 3pw for 1o. brainstone area1. (0/0/3,B/0 ⇒ 0,B/0/3/0)",
+    "terrans move colonyShip 1A4 3A10 buildColony 3A9.",
+    "nevlas charge 1pw (0/3/5/0 ⇒ 0/2/6/0)",
+    "nevlas spend 1t-a3 for 1k. up terra (0 ⇒ 1). (0/2/6/0 ⇒ 0/2/5/1)",
+    "hadsch-hallas special range+3. build m 10A3.",
+    "taklons up nav (1 ⇒ 2).",
+    "terrans pass booster2 returning booster3",
+    "nevlas spend 4pw for 4c. build colonyShip 9A6. (0/2/5/1 ⇒ 2/2/3/1)",
+    "hadsch-hallas move tradeShip 9A9 9C trade 9B5. (4/2/3/0 ⇒ 5/2/2/0)",
+    "taklons build m 3B0.",
+    "nevlas charge 1pw (2/2/3/1 ⇒ 1/3/3/1)",
+    "terrans decline 3pw",
+    "nevlas spend 4pw for 1o,1c. spend 2pw for 2c. build colonyShip 5A10. (1/3/3/1 ⇒ 4/3/0/1)",
+    "hadsch-hallas build colonyShip 7A7.",
+    "taklons build ts 2B0.",
+    "nevlas charge 2pw (4/3/0/1 ⇒ 2/5/0/1)",
+    "hadsch-hallas charge 2pw (5/2/2/0 ⇒ 3/4/2/0)",
+    "nevlas pass booster9 returning booster8",
+    "hadsch-hallas pass booster3 returning booster5",
+    "taklons spend 3pw for 3c. build colonyShip 3B5. (0,B/0/3/0 ⇒ 3,B/0/0/0)",
+    "taklons pass booster8 returning booster7",
+    "terrans income 2t. income 4pw. income 3pw (0/3/0/6 ⇒ 1/0/5/6)",
+    "nevlas income 1t (2/5/0/1 ⇒ 0/0/8/1)",
+    "terrans spend 6tg for 2o (1/0/5/6 ⇒ 1/6/5/0)",
+    "terrans action power3. (1/6/5/0 ⇒ 5/6/1/0)"
+  ]
+}

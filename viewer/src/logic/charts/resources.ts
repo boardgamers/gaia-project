@@ -1,4 +1,5 @@
 import { BoardAction, Booster, Command, Faction, Planet, Resource, Reward } from "@gaia-project/engine";
+import { tradeCostSource, tradeSource } from "@gaia-project/engine/src/events";
 import { sum } from "lodash";
 import { boardActionData } from "../../data/actions";
 import { boosterData } from "../../data/boosters";
@@ -87,8 +88,8 @@ const freeActionSources = (resourceSources as FreeActionSource[])
 function extractResourceChanges(eventSourceFilter: (EventSource) => boolean) {
   return (wantPlayer, source) =>
     extractChanges(wantPlayer.player, (player, eventSource, resource, round, change) =>
-      (eventSourceFilter(eventSource) && resource == source.type && change > 0) ||
-      (resource == source.inverseOf && change < 0)
+      eventSourceFilter(eventSource) &&
+      ((resource == source.type && change > 0) || (resource == source.inverseOf && change < 0))
         ? Math.abs(change)
         : 0
     );
@@ -125,7 +126,7 @@ export const tradeResourceSourceFactory: SimpleSourceFactory<ResourceSource> = {
   name: "Trade Resources",
   playerSummaryLineChartTitle: "Resources from trade of all players as if bought with power",
   showWeightedTotal: true,
-  extractChange: extractResourceChanges((s) => s == "trade"),
+  extractChange: extractResourceChanges((s) => s == tradeSource || s == tradeCostSource),
   sources: resourceSources.filter((s) => s.type != Resource.BurnToken && s.type != powerLeverageSource.type),
 };
 
