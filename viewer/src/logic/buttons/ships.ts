@@ -10,7 +10,8 @@ import Engine, {
 import { TradingLocation } from "@gaia-project/engine/src/available/types";
 import { sortedUniq } from "lodash";
 import { ButtonData } from "../../data";
-import { buildingName, shipActionName, shipLetter } from "../../data/building";
+import { shipActionName, shipLetter } from "../../data/building";
+import { richTextBuilding } from "../../graphics/rich-text";
 import { hexSelectionButton } from "./hex";
 import { CommandController } from "./types";
 import { hexMap, textButton } from "./utils";
@@ -82,7 +83,7 @@ export function moveShipButton(
       hexSelectionButton(
         controller,
         textButton({
-          label: buildingName(ship, faction),
+          richText: [richTextBuilding(ship, faction)],
           command: ship,
           shortcuts: [shipLetter(ship).toLowerCase()],
           hexes: hexMap(
