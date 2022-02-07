@@ -61,7 +61,7 @@
             <circle r="3" fill="white" stroke="black" stroke-width="0.2" />
             <text style="text-anchor: middle; dominant-baseline: central; font-size: 5px">-{{ data.bid }}</text>
           </g>
-          <g transform="translate(11, 15)" v-if="income('vp') > 0">
+          <g transform="translate(11, 15)" v-if="showIncome && income('vp') > 0">
             <text class="board-text" transform="scale(4)">+{{ income("vp") }}</text>
           </g>
         </g>
