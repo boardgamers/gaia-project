@@ -7,6 +7,7 @@ export type JsonTester = {
   subTests: (testCase: any) => string[];
   createActualOutput: (data: Engine, subTest: string, testCase: any) => any;
   replay: boolean;
+  timeout?: (subTest: string) => number | null;
 };
 
 export function runMoveHistoryTests(base: string, engineTest: (testCaseDir: string, testCase: any) => void) {
@@ -25,7 +26,12 @@ export function runJsonTests(tester: JsonTester) {
   runMoveHistoryTests(tester.baseDir + "/", (testCaseDir: string, testCase: any) => {
     let engine: Engine = null;
     for (const subTest of tester.subTests(testCase)) {
-      it(subTest, () => {
+      it(subTest, function (done) {
+        const t = tester?.timeout?.(subTest);
+        if (t) {
+          setTimeout(done, t);
+        }
+
         const path = `${testCaseDir}/${subTest.replace(/ /g, "-").toLowerCase()}.json`;
         if (engine == null) {
           engine = new Engine(testCase.moveHistory, testCase.options, null, tester.replay);
@@ -35,6 +41,7 @@ export function runJsonTests(tester: JsonTester) {
           JSON.stringify(JSON.parse(fs.readFileSync(path).toString())),
           `${path}:\n${actual}\n`
         );
+        done();
       });
     }
   });

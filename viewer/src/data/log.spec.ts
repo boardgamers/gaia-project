@@ -52,6 +52,7 @@ describe("Advanced log details", () => {
     runJsonTests({
       baseDir: "src/data/logTests",
       subTests: () => ["all", "recent"],
+      timeout: (subTest) => (subTest === "all" ? 6000 : null),
       replay: false,
       createActualOutput: (data, scope) => {
         const history = makeHistory(
