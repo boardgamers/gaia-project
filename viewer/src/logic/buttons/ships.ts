@@ -14,7 +14,7 @@ import { shipActionName, shipLetter } from "../../data/building";
 import { richTextBuilding } from "../../graphics/rich-text";
 import { hexSelectionButton } from "./hex";
 import { CommandController } from "./types";
-import { hexMap, textButton } from "./utils";
+import { hexMap, symbolButton, textButton } from "./utils";
 
 function moveTargetButton(
   controller: CommandController,
@@ -82,7 +82,7 @@ export function moveShipButton(
     buttons: sortedUniq(command.data.map((e) => e.ship)).map((ship) =>
       hexSelectionButton(
         controller,
-        textButton({
+        symbolButton({
           richText: [richTextBuilding(ship, faction)],
           command: ship,
           shortcuts: [shipLetter(ship).toLowerCase()],
