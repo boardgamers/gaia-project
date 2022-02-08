@@ -3,7 +3,7 @@ import { AdvTechTile, AdvTechTilePos, Operator, TechPos, TechTile, TechTilePos }
 import Event, { EventSource } from "../events";
 import Reward from "../reward";
 
-const techTileSpec = {
+const techTileSpec: { [key in TechTile | AdvTechTile]: string[] } = {
   [TechTile.Tech1]: ["o,q"],
   [TechTile.Tech2]: ["pt > k"],
   [TechTile.Tech3]: [Operator.FourPowerBuildings],

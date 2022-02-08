@@ -2,7 +2,7 @@ import Engine, {
   AdvTechTilePos,
   Command,
   Faction,
-  federations,
+  Federation,
   LogEntry,
   LogEntryChanges,
   Phase,
@@ -11,6 +11,7 @@ import Engine, {
   Resource,
   TechTilePos,
 } from "@gaia-project/engine";
+import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
 import { RichText } from "../graphics/rich-text";
 import { factionLogColors, factionLogTextColors, lightFactionLogColors } from "../graphics/utils";
 import { BuildingCounter } from "../logic/charts/buildings";
@@ -45,7 +46,7 @@ export function replaceMove(data: Engine, move: ParsedMove): ParsedMove {
       if (match.startsWith("booster")) {
         return addDetails(match, boosterData[match].name);
       } else if (match.startsWith("fed")) {
-        return addDetails(match, federations[match]);
+        return addDetails(match, federationRewards(match as Federation).join(","));
       } else if (match.startsWith("cover")) {
         const pos = match.substr("cover ".length) as TechTilePos;
         return addDetails(match, replaceTech(data, pos));

@@ -21,17 +21,18 @@
       filter="url(#shadow-1)"
     />
     <line x1="-29" x2="29" y1="-8" y2="-8" stroke="#aaa" stroke-width="2" />
-    <TechContent :content="event1" transform="translate(0, -33)" />
-    <TechContent :content="event2" :transform="`translate(0, ${30 - (event2.startsWith('+') ? 4 : 0)})`" />
+    <TechContent :event="event1" transform="translate(0, -33)" />
+    <TechContent :event="event2" :transform="`translate(0, ${30 - (event2.operator === '+' ? 4 : 0)})`" />
   </svg>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Engine, { tiles, Event, Booster as BoosterEnum } from "@gaia-project/engine";
+import Engine, { Event, Booster as BoosterEnum } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
 import TechContent from "./TechContent.vue";
+import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
 
 @Component<Booster>({
   components: {
@@ -48,8 +49,8 @@ export default class Booster extends Vue {
   @Prop({ default: false, type: Boolean })
   highlighted: boolean;
 
-  get tileObject() {
-    return tiles.boosters[this.booster];
+  get tileObject(): Event[] {
+    return boosterEvents(this.booster);
   }
 
   get event1() {
@@ -69,7 +70,7 @@ export default class Booster extends Vue {
   }
 
   get tooltip() {
-    return `- ${eventDesc(new Event(this.event1), this.engine.expansions)}\n- ${eventDesc(new Event(this.event2), this.engine.expansions)}`;
+    return `- ${eventDesc(this.event1, this.engine.expansions)}\n- ${eventDesc(this.event2, this.engine.expansions)}`;
   }
 }
 </script>

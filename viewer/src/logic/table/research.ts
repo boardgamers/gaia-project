@@ -1,4 +1,5 @@
-import Engine, { AdvTechTile, lastTile, ResearchField, TechTile, tiles } from "@gaia-project/engine";
+import Engine, { AdvTechTile, lastTile, ResearchField, TechTile } from "@gaia-project/engine";
+import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
 import { federationData } from "../../data/federations";
 import { researchColorVar, researchData, researchLevelDesc } from "../../data/research";
 import { techTileData } from "../../data/tech-tiles";
@@ -28,7 +29,7 @@ export function research(engine: Engine, greenFederations: boolean): PlayerTable
                 engine.terraformingFederation
                   ? {
                       shortcut: federationData[engine.terraformingFederation].shortcut,
-                      title: `Terraforming Federation: ${tiles.federations[engine.terraformingFederation]}`,
+                      title: `Terraforming Federation: ${federationRewards(engine.terraformingFederation).join(",")}`,
                       color: federationData[engine.terraformingFederation].color,
                     }
                   : {

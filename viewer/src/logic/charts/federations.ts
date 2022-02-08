@@ -4,7 +4,6 @@ import Engine, {
   Expansion,
   Federation,
   federationCost,
-  federations,
   GaiaHex,
   parseFederationLocation,
   Player,
@@ -12,6 +11,7 @@ import Engine, {
   TechTile,
 } from "@gaia-project/engine";
 import SpaceMap from "@gaia-project/engine/src/map";
+import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
 import { sum } from "lodash";
 import { federationData } from "../../data/federations";
 import { CommandObject } from "../recent";
@@ -119,7 +119,7 @@ export function federationsSourceFactory(expansions: Expansion): SimpleSourceFac
           const want = Object.entries(c)
             .map(([r, a]) => (a > 1 ? a : "") + r)
             .join(",");
-          if (Object.entries(federations).find(([, res]) => res == want)[0] == type) {
+          if (Federation.values(expansions).some((f) => federationRewards(f).join(",") === want)[0] == type) {
             return 1;
           }
         }
@@ -129,7 +129,7 @@ export function federationsSourceFactory(expansions: Expansion): SimpleSourceFac
     sources: Federation.values(expansions)
       .map((f) => ({
         type: f,
-        label: federations[f],
+        label: federationRewards(f).join(","),
         color: federationData[f].color,
         weight: 1,
       }))

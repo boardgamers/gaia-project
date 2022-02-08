@@ -26,8 +26,8 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { tiles, Event, Federation as FederationEnum, PlayerEnum, Reward } from "@gaia-project/engine";
-import { eventDesc } from "../data/event";
+import { Federation as FederationEnum, Reward } from "@gaia-project/engine";
+import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
 
 @Component
 export default class FederationTile extends Vue {
@@ -44,7 +44,7 @@ export default class FederationTile extends Vue {
   numTiles: number;
 
   get rewards(): Reward[] {
-    return Reward.parse(tiles.federations[this.federation]);
+    return federationRewards(this.federation);
   }
 
   get disabled() {

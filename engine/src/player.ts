@@ -46,8 +46,8 @@ import { terraformingStepsRequired } from "./planets";
 import PlayerData from "./player-data";
 import { keyNeeded, lastTile, researchEvents } from "./research-tracks";
 import Reward from "./reward";
-import boosts from "./tiles/boosters";
-import federationTiles, { isGreen } from "./tiles/federations";
+import { boosterEvents } from "./tiles/boosters";
+import { federationRewards, isGreen } from "./tiles/federations";
 import { finalScorings } from "./tiles/scoring";
 import { isAdvanced, techTileEvents } from "./tiles/techs";
 import { isVersionOrLater } from "./utils";
@@ -484,12 +484,11 @@ export default class Player extends EventEmitter {
   }
 
   removeRoundBoosterEvents(type?: Operator.Income) {
-    let eventList = Event.parse(boosts[this.data.tiles.booster], this.data.tiles.booster);
-    eventList = eventList.filter(
+    const events = boosterEvents(this.data.tiles.booster).filter(
       (ev) => (type && ev.operator === Operator.Income) || (!type && ev.operator !== Operator.Income)
     );
 
-    for (const event of eventList) {
+    for (const event of events) {
       this.removeEvent(event);
     }
   }
@@ -673,7 +672,7 @@ export default class Player extends EventEmitter {
   getRoundBooster(roundBooster: Booster) {
     // add the booster to the the player
     this.data.tiles.booster = roundBooster;
-    this.loadEvents(Event.parse(boosts[roundBooster], roundBooster));
+    this.loadEvents(boosterEvents(roundBooster));
   }
 
   gainTechTile(chooseTechTile: ChooseTechTile) {
@@ -885,7 +884,7 @@ export default class Player extends EventEmitter {
       green: isGreen(federation),
     });
 
-    this.gainRewards(Reward.parse(federationTiles[federation]), Command.FormFederation);
+    this.gainRewards(federationRewards(federation), Command.FormFederation);
     this.receiveTriggerIncome(Condition.Federation);
   }
 

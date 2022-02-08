@@ -1,6 +1,7 @@
 import { Booster } from "../enums";
+import Event from "../events";
 
-export default {
+const boosterSpec: { [key in Booster]: string[] } = {
   [Booster.Booster1]: ["+k", "+o"],
   [Booster.Booster2]: ["+o", "+2t"],
   [Booster.Booster3]: ["+q", "+2c"],
@@ -12,3 +13,7 @@ export default {
   [Booster.Booster9]: ["+4pw", "PA | 4vp"],
   [Booster.Booster10]: ["+4c", "g | vp"],
 };
+
+export function boosterEvents(booster: Booster): Event[] {
+  return Event.parse(boosterSpec[booster], booster);
+}

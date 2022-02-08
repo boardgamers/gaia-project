@@ -18,7 +18,6 @@ import {
   Player as PlayerEnum,
   Resource,
   Round,
-  RoundScoring,
   ScoringTile,
   SubPhase,
   TechTile,
@@ -51,7 +50,7 @@ import { moveShip } from "./move/ships";
 import Player from "./player";
 import { MoveTokens, powerLogString } from "./player-data";
 import { lastTile } from "./research-tracks";
-import { roundScorings } from "./tiles/scoring";
+import { roundScoringEvents } from "./tiles/scoring";
 import { isVersionOrLater } from "./utils";
 
 export const LEECHING_DISTANCE = 2;
@@ -914,10 +913,9 @@ export default class Engine {
     this.processNextMove();
   }
 
-  get currentRoundScoringEvents() {
-    const roundScoringTile = this.tiles.scorings.round[this.round - 1];
-    const roundScoring = roundScorings[roundScoringTile];
-    return roundScoring && Event.parse(roundScoring, `round${this.round}` as RoundScoring);
+  get currentRoundScoringEvents(): Event[] | null {
+    const tile = this.tiles.scorings.round[this.round - 1];
+    return tile && roundScoringEvents(tile, this.round);
   }
 
   changePhase(phase: Phase) {

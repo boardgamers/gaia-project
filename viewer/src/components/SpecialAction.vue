@@ -12,9 +12,9 @@
         :class="`${planet != null ? 'planet-fill ' + planet : ''} special-action`"
       />
       <TechContent
-        :content="(board ? '' : '>') + act"
         v-for="(act, i) in action"
         :key="i"
+        :event="techEvent(act)"
         :transform="`translate(0, ${(i - (action.length - 1) / 2) * 24}) scale(${action.length === 1 ? 0.8 : 0.55})`"
       />
     </g>
@@ -28,7 +28,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Engine, { Planet, Player } from "@gaia-project/engine";
+import Engine, { Event, Planet, Player } from "@gaia-project/engine";
 import { ButtonData } from "../data";
 import { specialActionButton } from "../logic/buttons/actions";
 import { enabledButtonWarnings } from "../data/warnings";
@@ -63,6 +63,10 @@ export default class SpecialAction extends Vue {
 
   get income() {
     return this.action.join(",");
+  }
+
+  techEvent(act: string): Event {
+    return new Event((this.board ? '' : '>') + act);
   }
 
   get gameData(): Engine {
