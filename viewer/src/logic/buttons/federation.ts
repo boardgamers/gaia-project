@@ -8,9 +8,8 @@ import Engine, {
   GaiaHex,
   MAX_SATELLITES,
   Player,
-  Reward,
-  tiles,
 } from "@gaia-project/engine";
+import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
 import { sortBy } from "lodash";
 import { ButtonData, HighlightHex, HighlightHexData } from "../../data";
 import { federationData } from "../../data/federations";
@@ -27,12 +26,12 @@ type Cycler = {
 
 export function federationTypeButtons(federations: Federation[], player: Player) {
   return federations.map((fed, i) => {
-    const federation = tiles.federations[fed];
+    const rewards = federationRewards(fed);
     return textButton({
       command: fed,
-      label: `Federation ${i + 1}: ${federation}`,
+      label: `Federation ${i + 1}: ${rewards.join(",")}`,
       shortcuts: [federationData[fed].shortcut],
-      warning: resourceWasteWarning(player, Reward.parse(federation)),
+      warning: resourceWasteWarning(player, rewards),
     });
   });
 }

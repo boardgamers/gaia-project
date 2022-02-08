@@ -7,8 +7,8 @@ import Engine, {
   Resource,
   Reward,
   ScoringTile,
-  tiles,
 } from "@gaia-project/engine";
+import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
 import { boardActionData } from "../../data/actions";
 import { boosterData } from "../../data/boosters";
 import { factionName } from "../../data/factions";
@@ -48,9 +48,7 @@ export function boosterCell(b: Booster): Cell {
 }
 
 function federationResource(fed: Federation): Resource {
-  return (
-    Reward.parse(tiles.federations[fed]).find((r) => r.type != Resource.VictoryPoint)?.type ?? Resource.VictoryPoint
-  );
+  return federationRewards(fed).find((r) => r.type != Resource.VictoryPoint)?.type ?? Resource.VictoryPoint;
 }
 
 export function generalTables(engine: Engine): GeneralTable[] {
@@ -102,7 +100,7 @@ export function generalTables(engine: Engine): GeneralTable[] {
       columns: Object.entries(engine.tiles.federations).map(([fed, count]) => ({
         header: {
           shortcut: federationData[fed].shortcut,
-          title: tiles.federations[fed],
+          title: federationRewards(fed as Federation).join(","),
           color: federationData[fed].color,
         },
         row: {

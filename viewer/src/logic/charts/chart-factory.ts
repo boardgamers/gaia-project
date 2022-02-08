@@ -2,13 +2,12 @@ import Engine, {
   AdvTechTile,
   AdvTechTilePos,
   Booster,
-  Event,
   Faction,
   Player,
   PlayerEnum,
   Resource,
-  tiles,
 } from "@gaia-project/engine";
+import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
 import { techTileRewards } from "@gaia-project/engine/src/tiles/techs";
 import {
   ChartConfiguration,
@@ -208,7 +207,7 @@ export class ChartSetup {
       : currentAdvTechTiles;
 
     const scoringBooster: (booster: Booster) => boolean = (booster: Booster) =>
-      new Event(tiles.boosters[booster][1]).rewards.some((r) => r.type == Resource.VictoryPoint);
+      boosterEvents(booster)[1].rewards.some((r) => r.type == Resource.VictoryPoint);
     const currentBoosters = Booster.values().filter((b) => engine.tiles.boosters[b] != null);
     const vpBoosters = statistics ? Booster.values().filter(scoringBooster) : currentBoosters;
     const allBoosters = statistics ? Booster.values() : currentBoosters;

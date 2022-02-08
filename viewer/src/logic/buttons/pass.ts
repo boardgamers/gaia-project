@@ -2,15 +2,14 @@ import Engine, {
   AvailableCommand,
   Booster,
   Command,
-  Event,
   Faction,
   Operator,
   Player,
   PowerArea,
   Resource,
   Reward,
-  tiles,
 } from "@gaia-project/engine";
+import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
 import { ButtonData, ButtonWarning, WarningWithKey } from "../../data";
 import { boosterData } from "../../data/boosters";
 import { translateResources } from "../../data/resources";
@@ -78,7 +77,7 @@ function passWarning(engine: Engine, player: Player): ButtonWarning | null {
 export function boosterWarning(player: Player, booster: Booster): ButtonWarning | null {
   const warnings: WarningWithKey[] = [];
 
-  const additionalEvents = tiles.boosters[booster].map((spec) => new Event(spec));
+  const additionalEvents = boosterEvents(booster);
 
   const charge = chargeIncomeWarning(player, additionalEvents);
   if (charge) {

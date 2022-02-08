@@ -2,8 +2,7 @@ import assert from "assert";
 import { AvailableCommand } from "../available/types";
 import Engine from "../engine";
 import { BoardAction, Command, Federation, Player as PlayerEnum } from "../enums";
-import Reward from "../reward";
-import federations from "../tiles/federations";
+import { federationRewards } from "../tiles/federations";
 
 export function moveChooseFederationTile(
   engine: Engine,
@@ -16,7 +15,7 @@ export function moveChooseFederationTile(
   assert(tiles.indexOf(federation) !== -1, `Federation ${federation} is not availabe`);
 
   if (rescore) {
-    engine.player(player).gainRewards(Reward.parse(federations[federation]), BoardAction.Qic2);
+    engine.player(player).gainRewards(federationRewards(federation), BoardAction.Qic2);
   } else {
     engine.player(player).gainFederationToken(federation);
     engine.tiles.federations[federation] -= 1;

@@ -1,12 +1,6 @@
-import Engine, {
-  AvailableSetupOption,
-  Booster,
-  Command,
-  Event,
-  SetupType,
-  TechTile,
-  tiles,
-} from "@gaia-project/engine";
+import Engine, { AvailableSetupOption, Booster, Command, Federation, SetupType, TechTile } from "@gaia-project/engine";
+import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
+import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
 import { ButtonData } from "../../data";
 import { eventDesc } from "../../data/event";
 import { federationData } from "../../data/federations";
@@ -42,7 +36,9 @@ export function setupButton(data: AvailableSetupOption, controller: CommandContr
           symbolButton({
             command: booster,
             richText: [{ booster: booster as Booster }],
-            label: tiles.boosters[booster].map((spec) => eventDesc(new Event(spec), engine.expansions)).join("\n"),
+            label: boosterEvents(booster as Booster)
+              .map((e) => eventDesc(e, engine.expansions))
+              .join("\n"),
           })
         ),
       });
@@ -57,7 +53,7 @@ export function setupButton(data: AvailableSetupOption, controller: CommandContr
         buttons: data.options.map((fed) =>
           textButton({
             command: fed,
-            label: tiles.federations[fed],
+            label: federationRewards(fed as Federation).join(","),
             shortcuts: [federationData[fed].shortcut],
           })
         ),

@@ -2,7 +2,6 @@
   <g :class="['scoringTile', { highlighted, faded }]" v-b-tooltip :title="tooltip">
     <rect x="1" y="1" width="75" height="40" rx="2" ry="2" stroke="none" fill="white" />
     <text class="title" x="58" y="36">R{{ round }}</text>
-    <!-- <text class="content" x="5" y="31">{{content.split(" ")[0]}}</text>-->
     <Resource :kind="reward.type" :count="reward.count" transform="translate(63.7, 13.1) scale(1.5)" />
     <Condition
       :condition="event.condition"
@@ -24,11 +23,12 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Engine, { tiles, Event, Phase } from "@gaia-project/engine";
+import Engine, { Phase } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
 import Condition from "./Condition.vue";
 import Resource from "./Resource.vue";
 import Operator from "./Operator.vue";
+import { roundScoringEvents } from "@gaia-project/engine/src/tiles/scoring";
 
 @Component<ScoringTile>({
   components: {
@@ -46,15 +46,11 @@ export default class ScoringTile extends Vue {
   }
 
   get event() {
-    return new Event(this.content);
+    return roundScoringEvents(this.tile, this.round)[0];
   }
 
   get reward() {
     return this.event.rewards[0];
-  }
-
-  get content() {
-    return tiles.roundScorings[this.tile][0];
   }
 
   get engine(): Engine {

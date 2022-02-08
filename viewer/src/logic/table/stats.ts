@@ -1,4 +1,5 @@
-import Engine, { federations, TechTilePos } from "@gaia-project/engine";
+import Engine, { TechTilePos } from "@gaia-project/engine";
+import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
 import { sortBy } from "lodash";
 import { federationData } from "../../data/federations";
 import { leechNetwork, sectors } from "../../data/stats";
@@ -44,7 +45,7 @@ export function assets(engine: Engine): PlayerTable {
         cell: (p) =>
           sortBy(p.data.tiles.federations.map((f) => f.tile)).map((f) => ({
             shortcut: federationData[f].shortcut,
-            title: federations[f],
+            title: federationRewards(f).join(","),
             color: federationData[f].color,
           })),
       }),

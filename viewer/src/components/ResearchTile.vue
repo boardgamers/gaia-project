@@ -21,7 +21,7 @@
         />
         <TechContent
           v-if="techContent.length > 0"
-          :content="techContent[0].toString()"
+          :event="techContent[0]"
           :transform="`translate(${2 + 56 / 2}, ${height - 10}) scale(0.55)`"
         />
       </g>
@@ -65,7 +65,7 @@ import Engine, {
   PlayerEnum,
   ResearchField,
   Resource as ResourceEnum,
-  Reward,
+  Event,
   researchEvents,
 } from "@gaia-project/engine";
 import { researchEventsWithCounters, researchLevelDesc } from "../data/research";
@@ -156,7 +156,7 @@ export default class ResearchTile extends Vue {
     return researchEvents(this.field, this.level, this.engine.expansions);
   }
 
-  get techContent() {
+  get techContent(): Event[] {
     return this.events.filter((event) => event.condition !== Condition.None);
   }
 

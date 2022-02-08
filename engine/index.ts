@@ -6,8 +6,6 @@ import SpaceMap, { parseLocation } from "./src/map";
 import Player, { BuildWarning, MAX_SATELLITES } from "./src/player";
 import PlayerData, { BrainstoneDest, MaxLeech, Power } from "./src/player-data";
 import Reward from "./src/reward";
-import tiles from "./src/tiles";
-import federations from "./src/tiles/federations";
 
 export { boardActions, FreeAction, freeActionConversions, ResourceConversion } from "./src/actions";
 export { conversionToFreeAction } from "./src/available/actions";
@@ -75,7 +73,7 @@ export { leechPossible } from "./src/move/phase";
 export { planetNames, terraformingStepsRequired } from "./src/planets";
 export { lastTile, researchEvents } from "./src/research-tracks";
 export { AvailableSetupOption, SetupType } from "./src/setup";
-export { finalScorings, roundScorings } from "./src/tiles/scoring";
+export { finalScorings } from "./src/tiles/scoring";
 export {
   BrainstoneDest,
   MaxLeech,
@@ -83,14 +81,12 @@ export {
   Player,
   PlayerData,
   Event,
-  tiles,
   Reward,
   SpaceMap,
   EventSource,
   gainFinalScoringVictoryPoints,
   finalRankings,
   parseLocation,
-  federations,
   stdBuildingValue,
   Power,
   MAX_SATELLITES,

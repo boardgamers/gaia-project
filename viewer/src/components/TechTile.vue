@@ -23,7 +23,7 @@
         filter="url(#shadow-1)"
       />
       <!--<text class="title" x="-25" y="-18">{{title}}</text>-->
-      <TechContent :content="this.event.toString()" style="pointer-events: none" />
+      <TechContent :event="this.event" style="pointer-events: none" />
     </g>
   </svg>
 </template>
@@ -38,7 +38,6 @@ import Engine, {
   PlayerEnum,
   TechTile as TechTileEnum,
   TechTilePos,
-  tiles,
 } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
 import TechContent from "./TechContent.vue";
