@@ -53,7 +53,8 @@ export function chargeIncomeWarning(player: Player, additionalEvents: Event[]) {
   return null;
 }
 
-export function resourceWasteWarning(warnings: WarningWithKey[]): ButtonWarning | null {
+export function resourceWasteWarning(player: Player, rewards: Reward[]): ButtonWarning | null {
+  const warnings = rewardWarnings(player, rewards);
   return warnings.length == 0 ? null : { title: "Resources will be wasted - are you sure?", body: warnings };
 }
 

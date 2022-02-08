@@ -1,22 +1,8 @@
 import { EventEmitter } from "eventemitter3";
 import { cloneDeep, fromPairs } from "lodash";
 import { TRADE_COST } from "./available/ships";
-import { BrainstoneActionData, BrainstoneWarning } from "./available/types";
-import {
-  AdvTechTile,
-  AdvTechTilePos,
-  Booster,
-  Building,
-  Command,
-  Expansion,
-  Federation,
-  PowerArea,
-  ResearchField,
-  Resource,
-  Ship,
-  TechTile,
-  TechTilePos,
-} from "./enums";
+import { BrainstoneActionData, BrainstoneWarning, ChooseTechTile } from "./available/types";
+import { Booster, Building, Command, Expansion, Federation, PowerArea, ResearchField, Resource, Ship } from "./enums";
 import { EventSource } from "./events";
 import { FactionBoard } from "./faction-boards";
 import { GaiaHex } from "./gaia-hex";
@@ -101,7 +87,7 @@ export default class PlayerData extends EventEmitter {
 
   tiles: {
     booster: Booster;
-    techs: Array<{ tile: TechTile | AdvTechTile; pos: TechTilePos | AdvTechTilePos; enabled: boolean }>;
+    techs: Array<ChooseTechTile & { enabled: boolean }>;
     federations: Array<{ tile: Federation; green: boolean }>;
   } = {
     booster: null,

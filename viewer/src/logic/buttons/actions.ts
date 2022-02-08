@@ -14,7 +14,7 @@ import { resourceData, translateResources } from "../../data/resources";
 import { conversionButton } from "./conversion";
 import { CommandController } from "./types";
 import { symbolButton } from "./utils";
-import { resourceWasteWarning, rewardWarnings } from "./warnings";
+import { resourceWasteWarning } from "./warnings";
 
 export function boardActionButton(action: BoardAction, player: Player | null) {
   const b = boardActions[action];
@@ -43,7 +43,7 @@ export function boardActionsButton(
 }
 
 function specialActionWarning(player: Player, income: string): ButtonWarning | null {
-  return resourceWasteWarning(rewardWarnings(player, [new Reward(income)]));
+  return resourceWasteWarning(player, [new Reward(income)]);
 }
 
 export function specialActionButton(income: string, player: Player | null): ButtonData {

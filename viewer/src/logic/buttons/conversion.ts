@@ -18,7 +18,7 @@ import { translateResources } from "../../data/resources";
 import { richTextArrow, richTextRewards } from "../../graphics/rich-text";
 import { AvailableConversions, FastConversionTooltips } from "./types";
 import { autoClickButton, confirmationButton, symbolButton } from "./utils";
-import { resourceWasteWarning, rewardWarnings } from "./warnings";
+import { resourceWasteWarning } from "./warnings";
 
 function conversionLabel(cost: Reward[], income: Reward[]) {
   const to = translateResources(income, true).replace("4 Victory Points", "3 VP + 1 VP / Planet Type");
@@ -70,7 +70,7 @@ export function conversionButton(
         : [richTextRewards(conversion.from), richTextArrow, richTextRewards(conversion.to)],
       shortcuts: shortcut != null ? [shortcut] : [],
       command,
-      warning: player ? resourceWasteWarning(rewardWarnings(player, income)) : null,
+      warning: player ? resourceWasteWarning(player, income) : null,
       times,
     },
     skipShortcut

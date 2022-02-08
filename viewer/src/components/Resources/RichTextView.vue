@@ -42,6 +42,7 @@
         :shortcut="true"
         :command-override="c.tech.commandOverride"
         :count-override="1"
+        :disable-tooltip="true"
       />
       <Booster v-else-if="c.booster" :key="i" :booster="c.booster" highlighted />
       <svg v-else-if="c.text === 'arrow'" :key="i" viewBox="0 0 10 10" width="20" height="20">

@@ -70,10 +70,12 @@ function commandButton(
       return researchButtons(command.data.tracks, controller, player, engine.phase, engine.expansions);
 
     case Command.ChooseTechTile:
-      return [techTiles(controller, command.name, "Pick tech tile", command.data.tiles)];
+      return [techTiles(controller, command.name, "Pick tech tile", command.data.tiles, player, engine.expansions)];
 
     case Command.ChooseCoverTechTile:
-      return [techTiles(controller, command.name, "Pick tech tile to cover", command.data.tiles)];
+      return [
+        techTiles(controller, command.name, "Pick tech tile to cover", command.data.tiles, null, engine.expansions),
+      ];
 
     case Command.ChargePower:
       return chargePowerButtons(command, engine, player);

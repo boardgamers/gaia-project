@@ -23,7 +23,7 @@
         filter="url(#shadow-1)"
       />
       <!--<text class="title" x="-25" y="-18">{{title}}</text>-->
-      <TechContent :content="rawContent" style="pointer-events: none" />
+      <TechContent :content="this.event.toString()" style="pointer-events: none" />
     </g>
   </svg>
 </template>
@@ -45,6 +45,7 @@ import TechContent from "./TechContent.vue";
 import { ButtonData } from "../data";
 import { prependShortcut } from "../logic/buttons/shortcuts";
 import { techTileData } from "../data/tech-tiles";
+import { techTileEventWithSource } from "@gaia-project/engine/src/tiles/techs";
 
 @Component({
   components: {
@@ -63,6 +64,9 @@ export default class TechTile extends Vue {
 
   @Prop()
   shortcut?: boolean;
+
+  @Prop()
+  disableTooltip?: boolean;
 
   @Prop()
   tileOverride: TechTileEnum | AdvTechTile;
@@ -93,8 +97,8 @@ export default class TechTile extends Vue {
     return this.tileOverride ?? this.tileObject.tile;
   }
 
-  get event() {
-    return new Event(this.rawContent);
+  get event(): Event {
+    return techTileEventWithSource(this.tile, null)[0];
   }
 
   get count() {
@@ -107,10 +111,6 @@ export default class TechTile extends Vue {
     return this.tileObject?.count;
   }
 
-  get rawContent() {
-    return tiles.techs[this.tile][0];
-  }
-
   get isAdvanced() {
     return this.tile.startsWith("adv");
   }
@@ -120,6 +120,9 @@ export default class TechTile extends Vue {
   }
 
   get tooltip() {
+    if (this.disableTooltip) {
+      return null;
+    }
     const desc = eventDesc(this.event, this.engine.expansions);
     const s = techTileData(this.tile).shortcut;
     return this.shortcut && s.length == 1 ? prependShortcut(s, desc) : desc;

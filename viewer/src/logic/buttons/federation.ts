@@ -17,13 +17,7 @@ import { federationData } from "../../data/federations";
 import { tooltipWithShortcut } from "./shortcuts";
 import { CommandController } from "./types";
 import { autoClickButton, customHexSelection, textButton } from "./utils";
-import {
-  buttonWarnings,
-  commonButtonWarning,
-  resourceWasteWarning,
-  rewardWarnings,
-  translateWarnings,
-} from "./warnings";
+import { buttonWarnings, commonButtonWarning, resourceWasteWarning, translateWarnings } from "./warnings";
 
 type Cycler = {
   currentIndex: number;
@@ -38,7 +32,7 @@ export function federationTypeButtons(federations: Federation[], player: Player)
       command: fed,
       label: `Federation ${i + 1}: ${federation}`,
       shortcuts: [federationData[fed].shortcut],
-      warning: resourceWasteWarning(rewardWarnings(player, Reward.parse(federation))),
+      warning: resourceWasteWarning(player, Reward.parse(federation)),
     });
   });
 }

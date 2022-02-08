@@ -1,6 +1,9 @@
-import { AdvTechTile, AdvTechTilePos, Operator, TechTile, TechTilePos } from "../enums";
+import { ChooseTechTile } from "../available/types";
+import { AdvTechTile, AdvTechTilePos, Operator, TechPos, TechTile, TechTilePos } from "../enums";
+import Event, { EventSource } from "../events";
+import Reward from "../reward";
 
-export default {
+const techTileSpec = {
   [TechTile.Tech1]: ["o,q"],
   [TechTile.Tech2]: ["pt > k"],
   [TechTile.Tech3]: [Operator.FourPowerBuildings],
@@ -27,6 +30,22 @@ export default {
   [AdvTechTile.AdvTech14]: ["m >> 3vp"],
   [AdvTechTile.AdvTech15]: ["ts >> 3vp"],
 };
+
+export function techTileEventWithSource(tile: TechTile | AdvTechTile, source: EventSource): Event[] {
+  return Event.parse(techTileSpec[tile], source);
+}
+
+export function techTileEvents(chooseTechTile: ChooseTechTile): Event[] {
+  const pos = chooseTechTile.pos;
+  return techTileEventWithSource(
+    chooseTechTile.tile,
+    isAdvanced(pos) ? (pos as AdvTechTilePos) : (`tech-${pos}` as TechPos)
+  );
+}
+
+export function techTileRewards(tile: TechTile | AdvTechTile): Reward[] {
+  return techTileEventWithSource(tile, null).flatMap((e) => e.rewards);
+}
 
 export function isAdvanced(pos: TechTilePos | AdvTechTilePos): boolean {
   return pos.startsWith("adv");
