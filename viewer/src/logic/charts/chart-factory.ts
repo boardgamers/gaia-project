@@ -9,6 +9,7 @@ import Engine, {
   Resource,
   tiles,
 } from "@gaia-project/engine";
+import { techTileRewards } from "@gaia-project/engine/src/tiles/techs";
 import {
   ChartConfiguration,
   ChartDataset,
@@ -190,7 +191,7 @@ export class ChartSetup {
 
   constructor(engine: Engine, statistics = false) {
     const scoringTechTile: (tile: AdvTechTile) => boolean = (tile: AdvTechTile) =>
-      new Event(tiles.techs[tile][0]).rewards.some((r) => r.type == Resource.VictoryPoint);
+      techTileRewards(tile).some((r) => r.type == Resource.VictoryPoint);
     const expansions = engine.expansions;
     const currentAdvTechTiles: Map<AdvTechTile, string> = new Map(
       AdvTechTilePos.values(expansions).map((tile) => [

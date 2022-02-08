@@ -3,11 +3,10 @@ import { EventEmitter } from "eventemitter3";
 import { Grid, Hex } from "hexagrid";
 import { countBy, difference, merge, sum, uniq, uniqWith, zipWith } from "lodash";
 import spanningTree from "./algorithms/spanning-tree";
+import { ChooseTechTile } from "./available/types";
 import { stdBuildingValue } from "./buildings";
 import { terraformingCost } from "./cost";
 import {
-  AdvTechTile,
-  AdvTechTilePos,
   Booster,
   Building,
   Command,
@@ -26,7 +25,6 @@ import {
   Resource,
   Resource as ResourceEnum,
   Ship,
-  TechPos,
   TechTile,
   TechTilePos,
 } from "./enums";
@@ -51,7 +49,7 @@ import Reward from "./reward";
 import boosts from "./tiles/boosters";
 import federationTiles, { isGreen } from "./tiles/federations";
 import { finalScorings } from "./tiles/scoring";
-import techs, { isAdvanced } from "./tiles/techs";
+import { isAdvanced, techTileEvents } from "./tiles/techs";
 import { isVersionOrLater } from "./utils";
 
 // 25 satellites total
@@ -458,11 +456,7 @@ export default class Player extends EventEmitter {
     this.events[event.operator].push(event.clone());
 
     if (event.operator === Operator.Once) {
-      const times = this.eventConditionCount(event.condition);
-      this.gainRewards(
-        event.rewards.map((reward) => new Reward(reward.count * times, reward.type)),
-        event.source
-      );
+      this.gainRewards(this.eventConditionRewards(event), event.source);
     }
   }
 
@@ -682,16 +676,16 @@ export default class Player extends EventEmitter {
     this.loadEvents(Event.parse(boosts[roundBooster], roundBooster));
   }
 
-  gainTechTile(tile: TechTile | AdvTechTile, pos: TechTilePos | AdvTechTilePos) {
-    const advanced = isAdvanced(pos);
+  gainTechTile(chooseTechTile: ChooseTechTile) {
+    const advanced = isAdvanced(chooseTechTile.pos);
     if (advanced) {
       this.data.removeGreenFederation();
     }
-    this.data.tiles.techs.push({ tile, pos, enabled: true });
-    this.loadEvents(Event.parse(techs[tile], !advanced ? (`tech-${pos}` as TechPos) : (pos as AdvTechTilePos)));
+    this.data.tiles.techs.push({ ...chooseTechTile, enabled: true });
+    this.loadEvents(techTileEvents(chooseTechTile));
 
     // resets federationCache if Special PA->4pw
-    if (tile === TechTile.Tech3) {
+    if (chooseTechTile.tile === TechTile.Tech3) {
       this.federationCache = null;
     }
   }
@@ -700,7 +694,7 @@ export default class Player extends EventEmitter {
     const tile = this.data.tiles.techs.find((tech) => tech.pos === pos);
     tile.enabled = false;
 
-    const events = Event.parse(techs[tile.tile], `tech-${pos}` as TechPos);
+    const events = techTileEvents(tile);
     this.removeEvents(events);
 
     if (events.some((event) => event.operator === Operator.FourPowerBuildings)) {
@@ -763,11 +757,14 @@ export default class Player extends EventEmitter {
 
   passIncomeEvents(): Event[] {
     // this is for pass tile income (e.g. round boosters, adv tiles)
-    return this.events[Operator.Pass].map((event) => {
-      const times = this.eventConditionCount(event.condition);
-      const rewards = event.rewards.map((reward) => new Reward(reward.count * times, reward.type));
-      return new Event(rewards.join(","), event.source);
-    });
+    return this.events[Operator.Pass].map(
+      (event) => new Event(this.eventConditionRewards(event).join(","), event.source)
+    );
+  }
+
+  eventConditionRewards(event: Event): Reward[] {
+    const times = this.eventConditionCount(event.condition);
+    return event.rewards.map((reward) => new Reward(reward.count * times, reward.type));
   }
 
   receivePassIncome() {

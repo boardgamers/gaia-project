@@ -79,8 +79,8 @@ type _MoveNameWithData<Command extends string, AvailableCommandData extends Base
   [command in Command]: _CommandHelper<Command, AvailableCommandData, command> extends never ? never : command;
 };
 export type PossibleBid = { faction: Faction; bid: number[] };
-type TechTileWithPos = { tile: TechTile; pos: TechTilePos };
-type AdvTechTileWithPos = { tile: AdvTechTile; pos: AdvTechTilePos };
+export type TechTileWithPos = { tile: TechTile; pos: TechTilePos };
+export type AdvTechTileWithPos = { tile: AdvTechTile; pos: AdvTechTilePos };
 export type ChooseTechTile = TechTileWithPos | AdvTechTileWithPos;
 export type AvailableBuildCommandData = { buildings: AvailableBuilding[] };
 export type AvailableFederation = { hexes: string; warnings: BuildWarning[] };

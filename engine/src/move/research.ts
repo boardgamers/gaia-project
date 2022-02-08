@@ -36,7 +36,7 @@ export function moveChooseTechTile(
     engine.processNextMove(SubPhase.CoverTechTile);
   }
 
-  engine.player(player).gainTechTile(tileAvailable.tile, tileAvailable.pos);
+  engine.player(player).gainTechTile(tileAvailable);
   engine.tiles.techs[pos].count -= 1;
 
   // AFTER gaining the tech tile (as green federation can be flipped and lock research tracks)
