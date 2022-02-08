@@ -5,7 +5,7 @@ import PlayerObject, { BuildWarning } from "./player";
 import PlayerData from "./player-data";
 import Reward from "./reward";
 
-const TERRAFORMING_COST = 3;
+export const TERRAFORMING_COST = 3;
 const QIC_RANGE_UPGRADE = 2;
 
 export function terraformingCost(d: PlayerData, steps: number, replay: boolean): Reward | null {

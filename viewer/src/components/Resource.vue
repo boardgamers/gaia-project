@@ -81,7 +81,7 @@
       </g>
       <g transform="translate(-7,-7)">
         <rect class="ore" width="12" height="12" x="-6" y="-6" />
-        <text x="0" y="0">{{ 4 - count }}</text>
+        <text x="0" y="0">{{ 3 - count }}</text>
       </g>
     </template>
     <image v-else-if="kind === 'tech'" xlink:href='../assets/resources/tech.svg' :height=155/211*22 width=22 x=-11 y=-8

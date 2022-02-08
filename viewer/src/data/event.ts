@@ -1,4 +1,5 @@
 import { Condition, Event, Expansion, Operator, Resource, Reward } from "@gaia-project/engine";
+import { TERRAFORMING_COST } from "@gaia-project/engine/src/cost";
 import { translateResources } from "./resources";
 
 const conditionsCount: { [key in Condition]?: string } = {
@@ -88,7 +89,7 @@ export function eventDescForCounters(event: Event, expansions: Expansion, long: 
   const value = reward.count;
   switch (reward.type) {
     case Resource.TerraformCostDiscount:
-      return `Each terraforming step costs you ${value} ore`;
+      return `Each terraforming step costs you ${TERRAFORMING_COST - value} ore`;
     case Resource.Range:
       return `Your basic range is ${value}`;
     case Resource.ShipRange:
