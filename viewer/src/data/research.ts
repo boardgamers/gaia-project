@@ -26,7 +26,8 @@ const researchEffectCounters: ResearchEffectCounter[] = [
   {
     field: ResearchField.Terraforming,
     from: Resource.TerraformCostDiscount,
-    currentValue: (p) => p.data.terraformCostDiscount + 1,
+    minLevel: 0,
+    currentValue: (p) => p.data.terraformCostDiscount,
   },
   {
     field: ResearchField.Navigation,
