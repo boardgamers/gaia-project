@@ -143,6 +143,9 @@ function autoBrainstone(engine: Engine, cmd: AvailableCommand<Command.BrainStone
   const pl = engine.player(engine.playerToMove);
 
   if (pl.settings.autoBrainstone) {
+    if (cmd.data.choices.some((c) => c.warning)) {
+      return false;
+    }
     const choices = cmd.data.choices.map((c) => c.area);
 
     if (choices.some((choice) => choice === PowerArea.Gaia || choice === "discard")) {

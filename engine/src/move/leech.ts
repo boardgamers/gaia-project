@@ -45,6 +45,6 @@ export function moveBrainStone(
   dest: BrainstoneDest
 ) {
   const areas = command.data.choices.map((a) => a.area);
-  assert(areas.includes(dest), "Possible brain stone areas: " + areas.join(", "));
+  assert(areas.includes(dest), `Possible brain stone areas: ${areas.join(", ")} - got ${dest}`);
   engine.players[player].data.brainstoneDest = dest;
 }
