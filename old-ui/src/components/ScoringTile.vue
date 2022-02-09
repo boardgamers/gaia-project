@@ -9,8 +9,9 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { tiles, Event, Phase } from "@gaia-project/engine";
+import { Event, Phase } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
+import { roundScoringEvents } from "@gaia-project/engine/src/tiles/scoring";
 
 @Component<ScoringTile>({
   computed: {
@@ -19,7 +20,7 @@ import { eventDesc } from "../data/event";
     },
 
     content() {
-      return tiles.roundScorings[this.tile][0];
+      return roundScoringEvents(this.tile, 0)[0].toString();
     },
 
     tooltip() {

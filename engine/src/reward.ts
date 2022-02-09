@@ -42,7 +42,7 @@ export default class Reward {
   }
 
   toStringWithZero() {
-    return `${this.count}${this.type}`;
+    return this.count === 1 ? this.type.toString() : `${this.count}${this.type}`;
   }
 
   toJSON() {
@@ -84,7 +84,6 @@ export default class Reward {
   }
 
   static toString(rewards: Reward[], sorted = true) {
-    // const sortOrder = ['c', 'o', 'k', 'q', 'pw'];
     const sortOrder = ["pw", "q", "k", "o", "c"];
     if (sorted) {
       rewards.sort(

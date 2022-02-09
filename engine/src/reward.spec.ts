@@ -42,13 +42,13 @@ describe("Reward", () => {
 
   it("should convert back to a string", () => {
     expect(new Reward("3vp").toString()).to.equal("3vp");
-    expect(new Reward("1vp").toString()).to.equal("1vp");
-    expect(new Reward("vp").toString()).to.equal("1vp");
+    expect(new Reward("1vp").toString()).to.equal("vp");
+    expect(new Reward("vp").toString()).to.equal("vp");
     expect(new Reward("5c").toString()).to.equal("5c");
   });
 
   it("should convert an array of rewards to a string", () => {
-    expect(Reward.toString([new Reward("3vp"), new Reward("q")], true)).to.equal("1q,3vp");
+    expect(Reward.toString([new Reward("3vp"), new Reward("q")], true)).to.equal("q,3vp");
   });
 
   it("should be able to test whether two sets of rewards are equal", () => {

@@ -18,8 +18,9 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { tiles, PlayerEnum, Event, TechTilePos, AdvTechTilePos } from "@gaia-project/engine";
+import { PlayerEnum, Event, TechTilePos, AdvTechTilePos } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
+import { techTileEvents } from "@gaia-project/engine/src/tiles/techs";
 
 @Component<TechTile>({
   computed: {
@@ -39,7 +40,7 @@ import { eventDesc } from "../data/event";
     },
 
     rawContent() {
-      return tiles.techs[this.tile][0];
+      return techTileEvents(this.tile)[0].toString();
     },
 
     content() {
