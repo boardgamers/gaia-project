@@ -76,7 +76,7 @@ describe("Player", () => {
         true
       );
 
-      expect(orderedEvents).to.be.equal("1c,1o,1k,1t");
+      expect(orderedEvents).to.be.equal("c,o,k,t");
     });
   });
 
