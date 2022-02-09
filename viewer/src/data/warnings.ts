@@ -11,7 +11,9 @@ export enum WarningKey {
   cannotBeDisabled = "-",
 }
 
-export const moveWarnings: { [key in BuildWarning | BrainstoneWarning]: { text: string } } = {
+export type TranslatedWarningKey = BuildWarning | BrainstoneWarning;
+
+export const moveWarnings: { [key in TranslatedWarningKey]: { text: string } } = {
   [BuildWarning.stepBoosterNotUsed]: { text: "Step booster is not used." },
   [BuildWarning.rangeBoosterNotUsed]: { text: "Range booster is not used." },
   [BuildWarning.expensiveTerraforming]: { text: "Terraforming using more than 1 ore per step." },

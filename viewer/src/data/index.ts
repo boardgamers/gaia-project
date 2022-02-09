@@ -1,12 +1,4 @@
-import {
-  AdvTechTilePos,
-  BoardAction,
-  Booster,
-  Building,
-  BuildWarning,
-  GaiaHex,
-  TechTilePos,
-} from "@gaia-project/engine";
+import { AdvTechTilePos, BoardAction, Booster, Building, GaiaHex, TechTilePos } from "@gaia-project/engine";
 import { CubeCoordinates } from "hexagrid";
 import { RichText } from "../graphics/rich-text";
 import { FastConversionTooltips, MoveButtonController } from "../logic/buttons/types";
@@ -57,7 +49,7 @@ export type HighlightHex = {
   cost?: string;
   tradeCost?: string;
   rewards?: string;
-  warnings?: BuildWarning[];
+  warnings?: WarningWithKey[];
   building?: Building;
   hideBuilding?: Building;
   preventClick?: boolean;

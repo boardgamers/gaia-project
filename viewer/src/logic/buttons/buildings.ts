@@ -51,7 +51,7 @@ function buildingLabel(bld: AvailableBuilding, faction: Faction): { richText: Ri
     label = `Downgrade to ${name}`;
     rich.unshift(richText("Downgrade to"));
   } else if (
-    isFree(bld) ||
+    isFree(bld.cost) ||
     building === Building.SpaceStation ||
     building === Building.GaiaFormer ||
     isShip(building)

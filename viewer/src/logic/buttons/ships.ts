@@ -5,6 +5,8 @@ import Engine, {
   AvailableMoveShipData,
   Command,
   GaiaHex,
+  Player,
+  Reward,
   ShipAction,
 } from "@gaia-project/engine";
 import { TradingLocation } from "@gaia-project/engine/src/available/types";
@@ -15,12 +17,14 @@ import { richTextBuilding } from "../../graphics/rich-text";
 import { hexSelectionButton } from "./hex";
 import { CommandController } from "./types";
 import { hexMap, symbolButton, textButton } from "./utils";
+import { rewardWarnings } from "./warnings";
 
 function moveTargetButton(
   controller: CommandController,
   data: AvailableMoveShipData,
   target: GaiaHex,
-  engine: Engine
+  engine: Engine,
+  player: Player
 ): ButtonData {
   const actions = data.targets.find((t) => t.location.coordinates === target.toString()).actions;
   if (actions.length == 0) {
@@ -35,6 +39,12 @@ function moveTargetButton(
         hex.tradeCost = l.tradeCost;
         hex.rewards = l.rewards;
         hex.building = (location as AvailableBuilding).building;
+
+        //don't merge the rewards, because we want the trade cost to be applied first
+        hex.warnings = rewardWarnings(
+          player,
+          Reward.negative(Reward.parse(l.tradeCost)).concat(Reward.parse(l.rewards))
+        );
       }
       hexes.hexes.set(target, { building: data.ship, preventClick: true });
       hexes.hexes.set(engine.map.getS(data.source), { hideBuilding: data.ship, preventClick: true });
@@ -52,7 +62,12 @@ function moveTargetButton(
   });
 }
 
-function moveSourceButton(controller: CommandController, engine: Engine, data: AvailableMoveShipData): ButtonData {
+function moveSourceButton(
+  controller: CommandController,
+  engine: Engine,
+  player: Player,
+  data: AvailableMoveShipData
+): ButtonData {
   return hexSelectionButton(
     controller,
     textButton({
@@ -62,7 +77,7 @@ function moveSourceButton(controller: CommandController, engine: Engine, data: A
         false
       ),
     }),
-    (target) => moveTargetButton(controller, data, target, engine),
+    (target) => moveTargetButton(controller, data, target, engine, player),
     data.ship,
     { building: data.ship, hex: engine.map.getS(data.source) }
   );
@@ -73,7 +88,8 @@ export function moveShipButton(
   engine: Engine,
   command: AvailableCommand<Command.MoveShip>
 ): ButtonData {
-  const faction = engine.player(command.player).faction;
+  let player = engine.player(command.player);
+  const faction = player.faction;
 
   return textButton({
     label: "Move Ship",
@@ -96,6 +112,7 @@ export function moveShipButton(
           moveSourceButton(
             controller,
             engine,
+            player,
             command.data.find((d) => d.ship == ship && d.source == hex.toString())
           )
       )

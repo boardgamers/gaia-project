@@ -2,6 +2,7 @@ import Engine, { AvailableHex, GaiaHex } from "@gaia-project/engine";
 import { ButtonData, HexSelection, HighlightHex, HighlightHexData } from "../../data";
 import { richText, RichText } from "../../graphics/rich-text";
 import { tooltipWithShortcut, withShortcut } from "./shortcuts";
+import { translateWarnings } from "./warnings";
 
 export function buttonStringLabel(button: ButtonData) {
   return (button.richText?.find((l) => typeof l == "string") as string) ?? button.label ?? button.command;
@@ -23,8 +24,8 @@ export function buttonRichTextLabel(button: ButtonData): RichText {
   return [richText(l)];
 }
 
-export function isFree(hex: HighlightHex) {
-  return hex.cost == null || hex.cost === "~";
+export function isFree(cost: string) {
+  return cost == null || cost === "~";
 }
 
 export function addOnClick(button: ButtonData, action: (button: ButtonData) => void): ButtonData {
@@ -60,7 +61,7 @@ export function hexMap(engine: Engine, coordinates: AvailableHex[], selectedLigh
         engine.map.getS(coord.coordinates),
         {
           cost: coord.cost,
-          warnings: coord.warnings,
+          warnings: translateWarnings(coord.warnings),
         },
       ])
     ),

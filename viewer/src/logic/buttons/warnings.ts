@@ -1,13 +1,13 @@
 import { applyChargePowers, Event, Player, Resource, Reward } from "@gaia-project/engine";
 import { ButtonWarning, WarningWithKey } from "../../data";
-import { moveWarnings, WarningKey } from "../../data/warnings";
+import { moveWarnings, TranslatedWarningKey, WarningKey } from "../../data/warnings";
 import { CommandController } from "./types";
 
 export function buttonWarnings(messages: WarningWithKey[]): ButtonWarning | null {
   return messages.length > 0 && { title: "Are you sure?", body: messages };
 }
 
-export function translateWarnings(keys: string[] = []): WarningWithKey[] {
+export function translateWarnings(keys: TranslatedWarningKey[] = []): WarningWithKey[] {
   return keys.map((disableKey) => ({
     disableKey,
     message: moveWarnings[disableKey].text,
@@ -19,7 +19,11 @@ export function rewardWarnings(player: Player, rewards: Reward[]): WarningWithKe
   return rewards.flatMap((r) => {
     let waste = 0;
     if (r.type === Resource.ChargePower) {
-      waste = applyChargePowers(data, [new Event(r.toString())]);
+      if (r.count < 0) {
+        data.spendPower(-r.count);
+      } else {
+        waste = applyChargePowers(data, [new Event(r.toString())]);
+      }
     } else {
       data.gainRewards([r]);
       const resources = player.data.getResources(r.type);
