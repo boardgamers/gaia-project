@@ -22,13 +22,13 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { tiles, Event, Federation as FederationEnum, PlayerEnum } from "@gaia-project/engine";
-import { eventDesc } from "../data/event";
+import { Federation as FederationEnum } from "@gaia-project/engine";
+import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
 
 @Component<FederationTile>({
   computed: {
     income() {
-      const [first, ...others] = tiles.federations[this.federation].split(",");
+      const [first, ...others] = federationRewards(this.federation).map(r => r.toString());
       return others.length > 0 ? [first, others.join(", ")] : first.split("-");
     },
 

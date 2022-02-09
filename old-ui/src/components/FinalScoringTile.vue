@@ -23,7 +23,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { tiles, Event, FinalTile, Phase, Player, finalScorings, Faction } from "@gaia-project/engine";
+import { Phase, Player, finalScorings, Faction } from "@gaia-project/engine";
 import Token from "./Token.vue";
 import { factionName } from "../data/factions";
 

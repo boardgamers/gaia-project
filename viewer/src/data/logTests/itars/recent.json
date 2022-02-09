@@ -49,7 +49,7 @@
         ],
         [
           {
-            "rewards": ["1bowl-t"]
+            "rewards": ["bowl-t"]
           }
         ],
         [
@@ -189,12 +189,12 @@
       [
         [
           {
-            "rewards": ["1bowl-t", "1brainstone"]
+            "rewards": ["bowl-t", "brainstone"]
           }
         ],
         [
           {
-            "rewards": ["1bowl-t"]
+            "rewards": ["bowl-t"]
           }
         ],
         [
@@ -350,7 +350,7 @@
         ],
         [
           {
-            "rewards": ["1q"]
+            "rewards": ["q"]
           }
         ]
       ],
@@ -513,7 +513,7 @@
         ],
         [
           {
-            "rewards": ["1bowl-t"]
+            "rewards": ["bowl-t"]
           }
         ],
         [
@@ -655,12 +655,12 @@
         ],
         [
           {
-            "rewards": ["1bowl-t"]
+            "rewards": ["bowl-t"]
           }
         ],
         [
           {
-            "rewards": ["3bowl-t", "1brainstone"]
+            "rewards": ["3bowl-t", "brainstone"]
           }
         ],
         [
@@ -814,7 +814,7 @@
       [
         [
           {
-            "rewards": ["1bowl-t"]
+            "rewards": ["bowl-t"]
           }
         ],
         [
@@ -824,7 +824,7 @@
         ],
         [
           {
-            "rewards": ["1bowl-t"]
+            "rewards": ["bowl-t"]
           }
         ],
         [
@@ -988,7 +988,7 @@
         ],
         [
           {
-            "rewards": ["1tg"]
+            "rewards": ["tg"]
           }
         ]
       ],

@@ -64,13 +64,14 @@ import Engine, {
   factionPlanet,
   GaiaHex,
   SpaceMap,
-  tiles,
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
 import { buildingName } from "../data/building";
 import { ButtonData, GameContext, HighlightHexData } from "../data";
 import { eventDesc } from "../data/event";
 import { factionDesc, factionName } from "../data/factions";
+import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
+import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
 
 @Component<Commands>({
   watch: {
@@ -307,7 +308,7 @@ export default class Commands extends Vue {
                 label: `Booster ${i + 1}`,
                 booster,
                 needConfirm: true,
-                tooltip: tiles.boosters[booster].map((spec) => eventDesc(new Event(spec))).join("\n"),
+                tooltip: boosterEvents(booster).map((e) => eventDesc(e)).join("\n"),
               });
             }
           });
@@ -465,7 +466,7 @@ export default class Commands extends Vue {
         case Command.FormFederation: {
           const tilesButtons = command.data.tiles.map((fed, i) => ({
             command: fed,
-            label: `Federation ${i + 1}: ${tiles.federations[fed]}`,
+            label: `Federation ${i + 1}: ${federationRewards(fed).join(",")}`,
           }));
           const locationButtons: ButtonData[] = command.data.federations.map((fed, i) => ({
             command: fed.hexes,
@@ -491,7 +492,7 @@ export default class Commands extends Vue {
         case Command.ChooseFederationTile: {
           const tilesButtons = command.data.tiles.map((fed, i) => ({
             command: fed,
-            label: `Federation ${i + 1}: ${tiles.federations[fed]}`,
+            label: `Federation ${i + 1}: ${federationRewards(fed).join(",")}`,
           }));
           ret.push({
             label: "Rescore federation",

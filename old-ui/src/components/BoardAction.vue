@@ -21,7 +21,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { tiles, Event, BoardAction as BoardActionEnum, boardActions } from "@gaia-project/engine";
+import { Event, BoardAction as BoardActionEnum, boardActions } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
 
 @Component<BoardAction>({

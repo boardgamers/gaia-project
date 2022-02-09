@@ -18,13 +18,14 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { tiles, Event } from "@gaia-project/engine";
+import { Event } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
+import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
 
 @Component<Booster>({
   computed: {
     tileObject() {
-      return tiles.boosters[this.booster];
+      return boosterEvents(this.booster).map(e => e.spec);
     },
 
     event1() {

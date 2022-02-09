@@ -119,7 +119,7 @@ export function federationsSourceFactory(expansions: Expansion): SimpleSourceFac
           const want = Object.entries(c)
             .map(([r, a]) => (a > 1 ? a : "") + r)
             .join(",");
-          if (Federation.values(expansions).some((f) => federationRewards(f).join(",") === want)[0] == type) {
+          if (federationRewards(type).join(",") === want) {
             return 1;
           }
         }
