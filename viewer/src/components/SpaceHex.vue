@@ -179,8 +179,8 @@ export default class SpaceHex extends Vue {
     }
 
     return this.highlightedHexes?.get(hex)?.warnings
-      ?.filter(w => tooltip || isWarningEnabled(w, this.$store.state.preferences))
-      ?.map((w) => moveWarnings[w].text)
+      ?.filter(w => tooltip || isWarningEnabled(w.disableKey, this.$store.state.preferences))
+      ?.map((w) => w.message)
       ?.join(", ");
   }
 
@@ -254,7 +254,7 @@ export default class SpaceHex extends Vue {
   cost(hex: GaiaHex) {
     const data = this.highlightedHexes?.get(hex);
 
-    return data && !isFree(data) ? data.cost.replace(/,/g, ", ") : "";
+    return data && !isFree(data.cost) ? data.cost.replace(/,/g, ", ") : "";
   }
 
   hexClick(hex: GaiaHex) {

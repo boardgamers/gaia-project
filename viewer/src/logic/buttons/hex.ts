@@ -1,17 +1,13 @@
 import { Building, GaiaHex, Resource, Reward } from "@gaia-project/engine";
 import assert from "assert";
 import { sortBy } from "lodash";
-import { ButtonData, HighlightHex, WarningWithKey } from "../../data";
+import { ButtonData, HighlightHex } from "../../data";
 import { buildingData } from "../../data/building";
 import { RichText, richText, richTextArrow, richTextRewards } from "../../graphics/rich-text";
 import { prependShortcut, tooltipWithShortcut } from "./shortcuts";
 import { CommandController } from "./types";
 import { addOnClick, addOnShow, isFree, textButton } from "./utils";
-import { buttonWarnings, commonButtonWarning, translateWarnings } from "./warnings";
-
-function hexWarnings(h: HighlightHex): WarningWithKey[] {
-  return h.warnings ? translateWarnings(h.warnings) : [];
-}
+import { buttonWarnings, commonButtonWarning } from "./warnings";
 
 export function hexSelectionButton(
   controller: CommandController,
@@ -30,7 +26,7 @@ export function hexSelectionButton(
 
   const hexes = hexSelection.hexes;
 
-  const sortKey = (h: HighlightHex): string => (isFree(h) ? "0" : h.cost);
+  const sortKey = (h: HighlightHex): string => (isFree(h.cost) ? "0" : h.cost);
 
   button.buttons = sortBy(Array.from(hexes.keys()), (h) => sortKey(hexes.get(h)))
     .filter((h) => !hexes.get(h).preventClick)
@@ -73,11 +69,13 @@ export function hexSelectionButton(
       }
       if (highlightHex.cost != null) {
         label.push(
-          richTextRewards(isFree(highlightHex) ? [new Reward(0, Resource.Credit)] : Reward.parse(highlightHex.cost))
+          richTextRewards(
+            isFree(highlightHex.cost) ? [new Reward(0, Resource.Credit)] : Reward.parse(highlightHex.cost)
+          )
         );
       }
 
-      b.warning = buttonWarnings(hexWarnings(highlightHex));
+      b.warning = buttonWarnings(highlightHex.warnings);
       b.tooltip = tooltipWithShortcut(null, b.warning);
 
       b.hover = {
@@ -124,7 +122,7 @@ export function hexSelectionButton(
     "building location",
     Array.from(hexes.values())
       .filter((h) => !h.preventClick)
-      .map((h) => hexWarnings(h))
+      .map((h) => h.warnings)
   );
   return buttonTransformer(button);
 }
