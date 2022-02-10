@@ -155,7 +155,7 @@ export default class BuildingGroup extends Vue {
       }
       const rew = ev.rewards.toString();
 
-      return ev.operator === Operator.Activate && (rew === "1q" || rew === "4c");
+      return ev.operator === Operator.Activate && (rew === "q" || rew === "4c");
     }).map(ev => ev.rewards));
   }
 }

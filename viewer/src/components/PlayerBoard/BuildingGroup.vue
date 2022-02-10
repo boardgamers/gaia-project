@@ -311,7 +311,7 @@ export default class BuildingGroup extends Vue {
     let incomeAdded = false;
     const ret = this.board.buildings[building].income[i].map((ev) => {
       const rew = ev.rewards.toString();
-      const special = ev.operator === Operator.Activate && (rew === "1q" || rew === "4c");
+      const special = ev.operator === Operator.Activate && (rew === "q" || rew === "4c");
 
       if (ev.operator === Operator.Income) {
         const income = special || incomeAdded ? "" : "Income: ";
