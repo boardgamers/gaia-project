@@ -112,7 +112,7 @@
         <Resource
           kind="d"
           tooltip="Terraforming Cost"
-          :count="1 + playerData.terraformCostDiscount"
+          :count="playerData.terraformCostDiscount"
           transform="translate(31.5,1) scale(0.09)"
           style="opacity: 0.7"
         />
