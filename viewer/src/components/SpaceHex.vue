@@ -1,7 +1,44 @@
 <template>
   <g :id="`${hex}`">
+    <defs>
+      <linearGradient
+        v-for="p in this.planetColors"
+        :key="`lg-${p.planet}`"
+        :id="`federation-gradient-line-${p.planet}`"
+        gradientUnits="userSpaceOnUse"
+        x1="-1"
+        y1="-1"
+        x2="1"
+        y2="1"
+        gradientTransform="rotate(135)"
+      >
+        <stop offset="40%" stop-opacity="0" />
+        <stop offset="50%" stop-opacity="1" :stop-color="p.color" />
+        <stop offset="60%" stop-opacity="0" />
+      </linearGradient>
+
+      <line
+        v-for="p in this.planetColors"
+        :key="`l-${p.planet}`"
+        :id="`federation-line-${p.planet}`"
+        x1="0"
+        y1="0"
+        x2="0"
+        y2="0.9"
+        :stroke="`url(#federation-gradient-line-${p.planet})`"
+        stroke-width="1"
+        opacity=".5"
+      ></line>
+    </defs>
     <title v-text="tooltip" />
     <use xlink:href="#space-hex" :class="polygonClasses(hex)" @click="hexClick(hex)" />
+
+    <use
+      v-for="(l, i) in federationLines"
+      :key="i"
+      :xlink:href="`#federation-line-${l.planet}`"
+      :transform="`rotate(${l.rotate})`"
+    />
     <text class="sector-name" v-if="isCenter">
       {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
     </text>
@@ -62,21 +99,10 @@
     <g v-for="(p, i) in hex.tradeTokens" :key="i">
       <Planet :planet="playerPlanet(p)" :transform="radiusTransform(p, 0.35)" />
     </g>
-    <polygon
-      v-for="(player, index) in federations"
-      :points="hexCorners.map((p) => `${p.x * (1 - (index + 0.5) / 8)},${p.y * (1 - (index + 0.5) / 8)}`).join(' ')"
-      :class="{
-        'space-hex-federation': true,
-        planet: true,
-        'planet-fill': federationHighlight(player),
-        [playerPlanet(player)]: true,
-      }"
-      :key="`${player}-${index}`"
-    />
     <use
-      v-if="sectorHighlight !== null"
+      v-if="mapModeHighlight !== null"
       xlink:href="#space-hex"
-      :class="['space-hex-federation', 'planet', 'planet-fill', playerPlanet(sectorHighlight)]"
+      :class="['space-hex-federation', 'planet', 'planet-fill', playerPlanet(mapModeHighlight)]"
     />
   </g>
 </template>
@@ -95,13 +121,14 @@ import {
   shipsInHex,
   SpaceMap as ISpaceMap,
 } from "@gaia-project/engine";
+import { Direction } from "hexagrid";
 import { corners } from "../graphics/hex";
 import Planet from "./Planet.vue";
 import Building from "./Building.vue";
 import { buildingData, buildingName } from "../data/building";
-import { planetNames } from "../data/planets";
+import planets, { planetNames } from "../data/planets";
 import { HexSelection, HighlightHex, HighlightHexData, WarningsPreference } from "../data";
-import { isWarningEnabled, moveWarnings } from "../data/warnings";
+import { isWarningEnabled } from "../data/warnings";
 import { factionName } from "../data/factions";
 import { leechPlanets, radiusTranslate, upgradableBuildingsOfOtherPlayers } from "../logic/utils";
 import { Ship } from "@gaia-project/engine/src/enums";
@@ -122,6 +149,8 @@ export default class SpaceHex extends Vue {
 
   @Prop()
   isCenter: boolean;
+
+  planetColors = Object.entries(planets).map(e => ({ planet: e[0], color: e[1].color }));
 
   shipTransform(index: number): string {
     switch (this.ships.length) {
@@ -284,8 +313,12 @@ export default class SpaceHex extends Vue {
     return this.mapModes.find(mode => mode.type === type);
   }
 
-  get federations(): PlayerEnum[] {
-    return this.powerHighlightClass ? [] : (this.hex.data.federations || []);
+  get federationLines(): { rotate: number; planet: PlanetEnum }[] {
+    const grid = this.map.grid;
+    return this.powerHighlightClass ? [] : this.hex.federations
+      .flatMap(player => Direction.list()
+        .filter(d => grid.neighbour(this.hex, d)?.federations?.includes(player))
+        .map(direction => ({ rotate: Math.log2(direction) * 60 + 180, planet: factionPlanet(this.faction(player)) })));
   }
 
   get showPlanet(): boolean {
@@ -296,21 +329,23 @@ export default class SpaceHex extends Vue {
     return c === null || !c.includes("planet");
   }
 
-  federationHighlight(player: PlayerEnum): boolean {
-    return this.planet === "e" && this.playerMapMode(MapModeType.federations)?.player == player ? this.hex.data.federations?.some(f => f === player) : false;
-  }
-
   get planet() {
     return this.hex.data.planet;
   }
 
-  get sectorHighlight(): PlayerEnum | null {
-    const mode = this.playerMapMode(MapModeType.sectors);
-    return mode
-    && this.planet === "e"
-    && this.player(mode.player).data.occupied.some((hex) => hex.colonizedBy(mode.player) && hex.data.sector === this.hex.data.sector)
-      ? mode.player
-      : null;
+  get mapModeHighlight(): PlayerEnum | null {
+    if (this.planet === "e") {
+      const sec = this.playerMapMode(MapModeType.sectors);
+      if (sec && this.player(sec.player).data.occupied.some((hex) => hex.colonizedBy(sec.player) && hex.data.sector === this.hex.data.sector)) {
+        return sec.player;
+      }
+
+      const fed = this.playerMapMode(MapModeType.federations);
+      if (fed && this.hex.federations.some(f => f === fed.player)) {
+        return fed.player;
+      }
+    }
+    return null;
   }
 
   get powerHighlightClass(): string | null {
@@ -331,7 +366,7 @@ export default class SpaceHex extends Vue {
   private leechHighlightClass(mode: MapMode) {
     const hex = this.hex;
     const p = mode.player;
-    const maxLeech = max(leechPlanets(this.map, p, hex).map(lp => this.player(p).buildingValue(lp.hex, {building:lp.building})));
+    const maxLeech = max(leechPlanets(this.map, p, hex).map(lp => this.player(p).buildingValue(lp.hex, { building: lp.building })));
     if (maxLeech) {
       const otherPlayers = upgradableBuildingsOfOtherPlayers(this.engine, hex, p);
       if (otherPlayers) {
