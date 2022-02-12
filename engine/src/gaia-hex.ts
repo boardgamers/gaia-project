@@ -80,8 +80,12 @@ export class GaiaHex extends Hex<GaiaHexData> {
     return this.data.building;
   }
 
+  get federations(): Player[] {
+    return this.data.federations ?? [];
+  }
+
   belongsToFederationOf(player: Player): boolean {
-    return this.data.federations && this.data.federations.includes(player);
+    return this.federations.includes(player);
   }
 
   addToFederationOf(player: Player): boolean {
