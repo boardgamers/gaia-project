@@ -1,6 +1,6 @@
 {
   "name": "@gaia-project/old-ui",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "scripts": {
     "serve": "vue-cli-service serve --port 8080",
     "build": "vue-cli-service build",
