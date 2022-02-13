@@ -90,7 +90,7 @@ export function moveShipButton(
   engine: Engine,
   command: AvailableCommand<Command.MoveShip>
 ): ButtonData {
-  let player = engine.player(command.player);
+  const player = engine.player(command.player);
   const faction = player.faction;
 
   return textButton({
