@@ -1,4 +1,8 @@
+import { factionPlanet, GaiaHex, Player } from "@gaia-project/engine";
+import { Direction, Grid } from "hexagrid";
 import { CubeCoordinatesPartial } from "hexagrid/src/cubecoordinates";
+
+export type FederationLine = { rotate: number; id: string };
 
 const vSpacing = Math.sqrt(3) / 2;
 
@@ -18,4 +22,46 @@ export function corners(radius = 1) {
     { x: radius / 2, y: vSpacing * radius },
     { x: -radius / 2, y: vSpacing * radius },
   ];
+}
+
+function rotateRight(d: Direction, times: number): Direction {
+  if (times == 0) {
+    return d;
+  }
+  return rotateRight(d == Direction.NorthWest ? Direction.North : 2 * d, times - 1);
+}
+
+function rotate(direction: Direction): number {
+  return Math.log2(direction) * 60 + 180;
+}
+
+export function playerFederationLines(grid: Grid<GaiaHex>, hex: GaiaHex, player: Player): FederationLine[] {
+  const directions = Direction.list().filter((d) => grid.neighbour(hex, d)?.federations?.includes(player.player));
+
+  const arcs: FederationLine[] = [];
+  const skipped: Direction[] = [];
+  for (const direction of directions) {
+    const r = rotateRight(direction, 2);
+
+    if (directions.includes(r)) {
+      if (!directions.includes(rotateRight(direction, 3))) {
+        skipped.push(direction);
+      }
+      if (!directions.includes(rotateRight(direction, 5))) {
+        skipped.push(r);
+      }
+      arcs.push({
+        id: `#federation-arc-${factionPlanet(player.faction)}`,
+        rotate: rotate(direction),
+      });
+    }
+  }
+
+  return directions
+    .filter((d) => !skipped.includes(d))
+    .map((direction) => ({
+      rotate: rotate(direction),
+      id: `#federation-line-${factionPlanet(player.faction)}`,
+    }))
+    .concat(arcs);
 }

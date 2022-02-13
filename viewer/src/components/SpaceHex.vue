@@ -29,16 +29,36 @@
         stroke-width="1"
         opacity=".5"
       />
+
+      <radialGradient
+        v-for="p in this.planetColors"
+        :key="`rg-${p.planet}`"
+        :id="`federation-gradient-arc-${p.planet}`"
+        gradientUnits="userSpaceOnUse"
+        cx="0"
+        cy="0"
+        r="3"
+      >
+        <stop offset="41%" stop-opacity="0" />
+        <stop offset="50%" stop-opacity=".5" :stop-color="p.color" />
+        <stop offset="59%" stop-opacity="0" />
+      </radialGradient>
+
+      <path
+        v-for="p in this.planetColors"
+        :key="`arc-${p.planet}`"
+        :id="`federation-arc-${p.planet}`"
+        d="M 1.5 0 A 1.5 1.5 0 0 0 0.7500000000000002 -1.299038105676658"
+        fill="none"
+        :stroke="`url(#federation-gradient-arc-${p.planet})`"
+        stroke-width=".7"
+        transform="translate(-1.52,.86)"
+      />
     </defs>
     <title v-text="tooltip" />
     <use xlink:href="#space-hex" :class="polygonClasses(hex)" @click="hexClick(hex)" />
 
-    <use
-      v-for="(l, i) in federationLines"
-      :key="`fl-${i}`"
-      :xlink:href="`#federation-line-${l.planet}`"
-      :transform="`rotate(${l.rotate})`"
-    />
+    <use v-for="(l, i) in federationLines" :key="`fl-${i}`" :xlink:href="l.id" :transform="`rotate(${l.rotate})`" />
     <text class="sector-name" v-if="isCenter">
       {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
     </text>
@@ -110,7 +130,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import {
+import Engine, {
   Building as BuildingEnum,
   Faction,
   factionPlanet,
@@ -122,7 +142,7 @@ import {
   SpaceMap as ISpaceMap,
 } from "@gaia-project/engine";
 import { Direction } from "hexagrid";
-import { corners } from "../graphics/hex";
+import { corners, FederationLine, playerFederationLines } from "../graphics/hex";
 import Planet from "./Planet.vue";
 import Building from "./Building.vue";
 import { buildingData, buildingName } from "../data/building";
@@ -194,7 +214,7 @@ export default class SpaceHex extends Vue {
     });
   }
 
-  private get engine() {
+  private get engine(): Engine {
     return this.$store.state.data;
   }
 
@@ -298,7 +318,7 @@ export default class SpaceHex extends Vue {
   }
 
   player(player: PlayerEnum): Player {
-    return this.engine.players[player];
+    return this.engine.player(player);
   }
 
   get mapModes(): MapMode[] {
@@ -313,12 +333,9 @@ export default class SpaceHex extends Vue {
     return this.mapModes.find(mode => mode.type === type);
   }
 
-  get federationLines(): { rotate: number; planet: PlanetEnum }[] {
-    const grid = this.map.grid;
-    return this.powerHighlightClass ? [] : this.hex.federations
-      .flatMap(player => Direction.list()
-        .filter(d => grid.neighbour(this.hex, d)?.federations?.includes(player))
-        .map(direction => ({ rotate: Math.log2(direction) * 60 + 180, planet: factionPlanet(this.faction(player)) })));
+  get federationLines(): FederationLine[] {
+    return this.powerHighlightClass ? [] :
+      this.hex.federations.flatMap(player => playerFederationLines(this.map.grid, this.hex, this.player(player)));
   }
 
   get showPlanet(): boolean {
@@ -564,7 +581,7 @@ svg {
     dominant-baseline: central;
     font-size: 1px;
     fill: white;
-    opacity: 0.35;
+    opacity: 0.75;
     pointer-events: none;
   }
 }
