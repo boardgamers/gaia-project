@@ -8,6 +8,9 @@ export function buttonWarnings(messages: WarningWithKey[]): ButtonWarning | null
 }
 
 export function translateWarnings(keys: TranslatedWarningKey[] = []): WarningWithKey[] {
+  if (keys == null) {
+    return [];
+  }
   return keys.map((disableKey) => ({
     disableKey,
     message: moveWarnings[disableKey].text,
