@@ -18,7 +18,7 @@
         "color": "--desert"
       },
       {
-        "color": "--rt-gaia"
+        "color": "--titanium"
       },
       {
         "color": "--oxide"
@@ -28,6 +28,9 @@
       },
       {
         "color": "--res-knowledge"
+      },
+      {
+        "color": "--rt-gaia"
       },
       {
         "color": "--current-round"
@@ -78,6 +81,7 @@
     "Booster",
     "QIC",
     "Research",
+    "Gaia",
     "Advanced Tech",
     "Federation",
     "Sectors",
@@ -87,19 +91,19 @@
   "datasets": [
     {
       "label": "Gleens (22)",
-      "data": [10, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 8]
+      "data": [10, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 8]
     },
     {
       "label": "Terrans (18)",
-      "data": [10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8]
+      "data": [10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8]
     },
     {
       "label": "Hadsch Hallas (18)",
-      "data": [10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8]
+      "data": [10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8]
     },
     {
       "label": "Ambas (18)",
-      "data": [10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8]
+      "data": [10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8]
     }
   ]
 }

@@ -96,15 +96,13 @@ function simpleChartDetails<Source extends ChartSource<any>>(
     const initialValue = factory.initialValue?.(pl, s) ?? 0;
     const extractChange = factory.extractChange?.(pl, s) ?? (() => 0);
     const extractLog = makeExtractLog(s, factory.extractLog);
-    const deltaForEnded = () => 0;
 
     return {
       backgroundColor: resolveColor(s.color, pl),
       label: s.label,
       description: "",
       fill: false,
-      getDataPoints: () =>
-        getDataPoints(data, initialValue, extractChange, extractLog, null, deltaForEnded, includeRounds),
+      getDataPoints: () => getDataPoints(data, initialValue, extractChange, extractLog, null, includeRounds),
       weight: s.weight,
     };
   });

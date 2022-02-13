@@ -18,7 +18,7 @@
         "color": "--desert"
       },
       {
-        "color": "--rt-gaia"
+        "color": "--titanium"
       },
       {
         "color": "--oxide"
@@ -28,6 +28,9 @@
       },
       {
         "color": "--res-knowledge"
+      },
+      {
+        "color": "--rt-gaia"
       },
       {
         "color": "--current-round"
@@ -78,6 +81,7 @@
     "Booster",
     "QIC",
     "Research",
+    "Gaia",
     "Advanced Tech",
     "Federation",
     "Structures in federations",
@@ -87,19 +91,19 @@
   "datasets": [
     {
       "label": "Geoden (57)",
-      "data": [10, 0, -12, 0, 0, 10, 0, 0, 0, 0, 6, 18, 18, 7]
+      "data": [10, 0, -12, 0, 0, 10, 0, 0, 0, 0, 0, 6, 18, 18, 7]
     },
     {
       "label": "Itars (19)",
-      "data": [10, 0, -2, 0, 0, 5, 1, 0, 0, 0, 0, 0, 0, 5]
+      "data": [10, 0, -2, 0, 0, 5, 1, 0, 0, 0, 0, 0, 0, 0, 5]
     },
     {
       "label": "Taklons (19)",
-      "data": [10, 0, -9, 0, 0, 5, 4, 0, 0, 0, 0, 0, 0, 9]
+      "data": [10, 0, -9, 0, 0, 5, 4, 0, 0, 0, 0, 0, 0, 0, 9]
     },
     {
       "label": "Lantids (16)",
-      "data": [10, 0, -5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 6]
+      "data": [10, 0, -5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 6]
     }
   ]
 }

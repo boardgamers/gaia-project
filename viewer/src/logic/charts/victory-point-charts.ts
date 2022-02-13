@@ -55,7 +55,7 @@ const finalScoring: VictoryPointAggregate = {
 
 const otherScoring: VictoryPointAggregate = {
   label: "Other",
-  description: "Base Tech Tiles, Gleens special",
+  description: "Base Tech Tiles, Gleens special, Gaia level 5",
   color: "--tech-tile",
 };
 
@@ -76,6 +76,7 @@ export type VictoryPointSource = {
   roundValues?: (e: Engine, p: Player) => Map<number, number>;
   initialValue?: (p: Player) => number;
   aggregate?: VictoryPointAggregate;
+  ignoreEndScoring?: boolean;
 };
 
 function vpProjection(events: Event[], sources: EventSource[], e: Engine, eachRound: boolean, addedRounds: number) {
@@ -180,7 +181,7 @@ export const victoryPointSources = (
       types: RoundScoring.values(),
       label: "Round",
       description: "Round Bonus",
-      color: "--rt-gaia",
+      color: "--titanium",
     },
     {
       types: Booster.values(),
@@ -196,10 +197,18 @@ export const victoryPointSources = (
       color: "--specialAction",
     },
     {
-      types: ([Command.UpgradeResearch] as VictoryPointType[]).concat(ResearchField.values(expansion)),
+      types: [Command.UpgradeResearch] as VictoryPointType[],
       label: "Research",
       description: "Research in counted in the round where the level is reached",
       color: "--res-knowledge",
+    },
+    {
+      types: ResearchField.values(expansion),
+      label: "Gaia",
+      description: "Gaia forming level 5",
+      color: "--rt-gaia",
+      ignoreEndScoring: true, //this is where the game scores research regularly
+      aggregate: otherScoring,
     },
     {
       types: AdvTechTilePos.values(expansion),
@@ -341,19 +350,15 @@ export function victoryPointDetails(
 
     const initialValue = s.initialValue != null ? s.initialValue(pl) : 0;
 
-    const extractChange = extractChanges(wantPlayer, (player, source, resource, round, change) =>
-      resource == Resource.VictoryPoint && values.includes(source) ? change : 0
-    );
+    const extractChange = extractChanges(wantPlayer, (player, source, resource, round, change) => {
+      if (s.ignoreEndScoring && round == finalScoringRound) {
+        return 0;
+      }
+
+      return resource == Resource.VictoryPoint && values.includes(source) ? change : 0;
+    });
 
     const extractLog = s.types.includes(Command.UpgradeResearch) ? countResearch(pl) : () => 0;
-
-    const deltaForEnded = () => {
-      if (s.types.includes(Command.UpgradeResearch)) {
-        // research was already counted in chart separately
-        return -simulateIncome(pl, (clone) => clone.data.gainResearchVictoryPoints(), data.version);
-      }
-      return 0;
-    };
 
     return {
       backgroundColor: new ColorVar(s.color),
@@ -367,7 +372,6 @@ export function victoryPointDetails(
           extractChange,
           extractLog,
           s.roundValues == null ? null : s.roundValues(data, pl),
-          deltaForEnded,
           includeRounds
         ),
       weight: 1,
