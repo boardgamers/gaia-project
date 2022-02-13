@@ -128,21 +128,15 @@ export default class Player extends EventEmitter {
   }
 
   get income() {
-    return Reward.toString(
-      Reward.merge([].concat(...this.events[Operator.Income].map((event) => event.rewards))),
-      true
-    );
+    return Reward.toString(this.incomeRewards, true);
   }
 
-  resourceIncome(resource: ResourceEnum) {
-    const i = this.income;
-    const index = i.search(new RegExp("[0-9]+" + resource));
+  get incomeRewards() {
+    return Reward.merge([].concat(...this.events[Operator.Income].map((event) => event.rewards)));
+  }
 
-    if (index < 0) {
-      return 0;
-    }
-
-    return parseInt(i.substr(index));
+  resourceIncome(resource: ResourceEnum): number {
+    return this.incomeRewards.find((r) => r.type === resource)?.count ?? 0;
   }
 
   get actions() {

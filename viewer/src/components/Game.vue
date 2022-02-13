@@ -181,7 +181,6 @@ export default class Game extends Vue {
       current: this.engine.moveHistory.length,
       backup: JSON.parse(JSON.stringify(this.engine)),
     };
-    return;
   }
 
   replayTo(dest: number) {

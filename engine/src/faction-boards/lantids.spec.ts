@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import Engine from "../engine";
-import { Building, Command, Operator, Planet, Player } from "../enums";
+import { Building, Command, Operator, Planet, Player, Resource } from "../enums";
 
 const parseMoves = Engine.parseMoves;
 
@@ -133,12 +133,9 @@ describe("Lantids", () => {
     `);
 
     const engine = new Engine(moves);
-    const income = engine.player(Player.Player1).income;
-
-    // tslint:disable-next-line no-unused-expression
-    expect(income.includes("4pw")).to.be.true;
-    // tslint:disable-next-line no-unused-expression
-    expect(income.includes("t")).to.be.false;
+    const player = engine.player(Player.Player1);
+    expect(player.resourceIncome(Resource.ChargePower)).to.equal(4);
+    expect(player.resourceIncome(Resource.GainToken)).to.equal(0);
   });
 
   it("should allow to place a mine in the Lost Planet", () => {
