@@ -40,11 +40,13 @@ function moveTargetButton(
         hex.rewards = l.rewards;
         hex.building = (location as AvailableBuilding).building;
 
-        //don't merge the rewards, because we want the trade cost to be applied first
-        hex.warnings = rewardWarnings(
-          player,
-          Reward.negative(Reward.parse(l.tradeCost)).concat(Reward.parse(l.rewards))
-        );
+        if (a.type == ShipAction.Trade) {
+          //don't merge the rewards, because we want the trade cost to be applied first
+          hex.warnings = rewardWarnings(
+            player,
+            Reward.negative(Reward.parse(l.tradeCost)).concat(Reward.parse(l.rewards))
+          );
+        }
       }
       hexes.hexes.set(target, { building: data.ship, preventClick: true });
       hexes.hexes.set(engine.map.getS(data.source), { hideBuilding: data.ship, preventClick: true });
