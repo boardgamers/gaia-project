@@ -28,14 +28,14 @@
         :stroke="`url(#federation-gradient-line-${p.planet})`"
         stroke-width="1"
         opacity=".5"
-      ></line>
+      />
     </defs>
     <title v-text="tooltip" />
     <use xlink:href="#space-hex" :class="polygonClasses(hex)" @click="hexClick(hex)" />
 
     <use
       v-for="(l, i) in federationLines"
-      :key="i"
+      :key="`fl-${i}`"
       :xlink:href="`#federation-line-${l.planet}`"
       :transform="`rotate(${l.rotate})`"
     />
