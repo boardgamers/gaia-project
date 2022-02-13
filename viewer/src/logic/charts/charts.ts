@@ -3,6 +3,7 @@ import Engine, {
   FactionBoard,
   factionBoard,
   LogEntry,
+  Phase,
   Player,
   PlayerEnum,
   Resource,
@@ -72,8 +73,8 @@ export function chartPlayerOrder(data: Engine): PlayerEnum[] {
 export function extractChanges(
   player: PlayerEnum,
   extractChange: EventFilter
-): (entry: LogEntry, logIndex: number) => number {
-  return (logItem, logIndex) => {
+): (entry: LogEntry, logIndex: number, endScoring: boolean) => number {
+  return (logItem, logIndex, endScoring: boolean) => {
     if (player != logItem.player) {
       return 0;
     }
@@ -85,7 +86,7 @@ export function extractChanges(
           logItem.player,
           source as EventSource,
           resource as Resource,
-          logItem.round,
+          endScoring ? finalScoringRound : logItem.round,
           change[resource],
           logIndex
         );
@@ -109,10 +110,9 @@ function lastIndex(includeRounds: IncludeRounds): number {
 export function getDataPoints(
   data: Engine,
   initialValue: number,
-  extractChange: (entry: LogEntry, logIndex: number) => number,
+  extractChange: (entry: LogEntry, logIndex: number, endSoring: boolean) => number,
   extractLog: (moveHistory: string[], entry: LogEntry) => number,
   roundValues: Map<number, number> | null,
-  deltaForEnded: () => number,
   includeRounds: IncludeRounds
 ): number[] {
   const perRoundData: number[] = [0, NaN, NaN, NaN, NaN, NaN, NaN];
@@ -131,7 +131,11 @@ export function getDataPoints(
   onRound(0);
 
   perRoundData[round] = counter;
+  let endScoring = false;
   data.advancedLog.forEach((logItem, logIndex) => {
+    if (logItem.phase == Phase.EndGame) {
+      endScoring = true;
+    }
     if (logItem.round != null) {
       if (includeRounds != "last") {
         round = logItem.round;
@@ -142,17 +146,13 @@ export function getDataPoints(
     counter += extractLog(data.moveHistory, logItem);
 
     if (logItem.changes) {
-      counter += extractChange(logItem, logIndex);
+      counter += extractChange(logItem, logIndex, endScoring);
     }
     perRoundData[round] = counter;
   });
 
   const lastRound = lastIndex(includeRounds);
 
-  if (data.ended) {
-    counter += deltaForEnded();
-    perRoundData[round] = counter;
-  }
   for (let i = data.round + 1; i <= finalScoringRound; i++) {
     if (i <= lastRound) {
       round = i;

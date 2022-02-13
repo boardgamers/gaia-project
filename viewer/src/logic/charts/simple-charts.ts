@@ -7,7 +7,7 @@ import { ChartFamily, ChartSource } from "./charts";
 export type ExtractChange<Source extends ChartSource<any>> = (
   player: Player,
   source: Source
-) => (entry: LogEntry, logIndex: number) => number;
+) => (entry: LogEntry, logIndex: number, endScoring: boolean) => number;
 
 export type SimpleSourceFactory<Source extends ChartSource<any>> = {
   name: ChartFamily;
