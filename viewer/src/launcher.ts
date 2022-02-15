@@ -14,6 +14,8 @@ Vue.component("TechContent", TechContent);
 Vue.component("Resource", Resource);
 
 function launch(selector: string, component: VueConstructor<Vue> = Game) {
+  let lastMovedAt: number = 0;
+
   const store = makeStore();
 
   const app = new Vue({
@@ -64,6 +66,12 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
     // console.log("spy action", type, payload);
 
     if (type === "move") {
+      // There's a bug with the viewer, after an undo on some occasions moves are emitted twice in a row
+      if (lastMovedAt + 50 > Date.now()) {
+        return;
+      }
+      lastMovedAt = Date.now();
+
       item.emit("move", payload);
       return;
     }
