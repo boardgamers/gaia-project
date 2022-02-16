@@ -50,8 +50,8 @@ export function moveChooseIncome(
   const pl = engine.player(player);
 
   for (const incR of incomeRewards) {
-    const eventIdx = incomes.findIndex((rw) => Reward.match(Reward.parse(incR), [rw]));
-    assert(eventIdx > -1, `${incR} is not in the available income`);
+    const eventIdx = incomes.findIndex((rw) => Reward.match(Reward.parse(incR), Reward.parse(rw)));
+    assert(eventIdx > -1, `${incR} is not in the available income: ${incomes.join(",")}`);
     incomes.splice(eventIdx, 1);
   }
   pl.receiveIncomeEvent(Reward.parse(income));
