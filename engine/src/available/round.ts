@@ -26,7 +26,7 @@ export function possibleIncomes(engine: Engine, player: Player) {
     commands.push({
       name: Command.ChooseIncome,
       player,
-      data: s.descriptions,
+      data: s.descriptions.map((d) => d.toString()),
     });
   }
   return commands;

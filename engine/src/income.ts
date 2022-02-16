@@ -39,7 +39,7 @@ export class IncomeSelection {
   }
 }
 
-function descriptions(gainTokens: Event[], chargePowers: Event[]) {
+function descriptions(gainTokens: Event[], chargePowers: Event[]): Reward[] {
   return [
     ...gainTokens.map((ev) => ev.rewards.find((rw) => rw.type === Resource.GainToken)),
     ...chargePowers.map((ev) => ev.rewards.find((rw) => rw.type === Resource.ChargePower)),

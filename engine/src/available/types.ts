@@ -14,7 +14,6 @@ import {
 } from "../enums";
 import { BuildWarning } from "../player";
 import { BrainstoneDest } from "../player-data";
-import Reward from "../reward";
 import { AvailableSetupOption } from "../setup";
 
 export const ISOLATED_DISTANCE = 3;
@@ -107,7 +106,7 @@ interface CommandData {
   [Command.ChooseCoverTechTile]: { tiles: TechTileWithPos[] };
   [Command.ChooseFaction]: Faction[];
   [Command.ChooseFederationTile]: { tiles: Federation[]; rescore: boolean };
-  [Command.ChooseIncome]: Reward[];
+  [Command.ChooseIncome]: string[];
   [Command.ChooseRoundBooster]: { boosters: Booster[] };
   [Command.ChooseTechTile]: { tiles: ChooseTechTile[] };
   [Command.DeadEnd]: SubPhase; // for debugging
