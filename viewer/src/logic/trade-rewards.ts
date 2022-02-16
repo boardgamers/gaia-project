@@ -23,7 +23,7 @@ export function tradeHeaders(): string[] {
 }
 
 function row(option: TradeOption): TradeRow {
-  const b = option.building;
+  const b = option.buildings[0];
   const data = buildingData[b];
   const name: RichText = [
     richText(`${option.domestic ? "Domestic" : "Foreign"} ${b === Building.Academy1 ? "Academy" : data.name}`),
