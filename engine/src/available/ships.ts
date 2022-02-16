@@ -21,7 +21,7 @@ const SHIP_ACTION_RANGE = 1;
 export const TRADE_COST = 3;
 
 export type TradeOption = {
-  building: Building;
+  buildings: Building[];
   domestic?: boolean;
   free?: boolean;
   base: Reward[];
@@ -32,41 +32,41 @@ export type TradeOption = {
 
 export const tradeOptions: TradeOption[] = [
   {
-    building: Building.Mine,
+    buildings: [Building.Mine],
     domestic: true,
     free: true,
     base: Reward.parse("1o"),
     bonus: [],
   },
   {
-    building: Building.Mine,
+    buildings: [Building.Mine],
     base: [],
     bonus: Reward.parse("1c,1o"),
     build: Building.CustomsPost,
   },
   {
-    building: Building.TradingStation,
+    buildings: [Building.TradingStation],
     base: Reward.parse("5c"),
     bonus: Reward.parse("3c,1pw"),
   },
   {
-    building: Building.ResearchLab,
+    buildings: [Building.ResearchLab],
     base: Reward.parse("2k"),
     bonus: Reward.parse("1k"),
   },
   {
-    building: Building.Academy1,
+    buildings: [Building.Academy1, Building.Academy2],
     base: Reward.parse("2k"),
     bonus: Reward.parse("1k"),
     researchAdvancementBonus: true,
   },
   {
-    building: Building.PlanetaryInstitute,
+    buildings: [Building.PlanetaryInstitute],
     base: Reward.parse("1t,2pw"),
     bonus: Reward.parse("4pw"),
   },
   {
-    building: Building.Colony,
+    buildings: [Building.Colony],
     base: Reward.parse("3vp"),
     bonus: Reward.parse("2vp"),
   },
@@ -208,7 +208,7 @@ function tradeLocations(h: GaiaHex, player: Player, engine: Engine): ShipActionL
     const host = engine.player(h.data.player).data;
     const guest = p.data;
     const domestic = h.data.player === player;
-    const option = tradeOptions.find((o) => o.building === building && !!o.domestic === domestic);
+    const option = tradeOptions.find((o) => o.buildings.includes(building) && !!o.domestic === domestic);
     if (option) {
       const cost = tradeCost(guest, option);
       if (engine.player(player).data.canPay([cost])) {
