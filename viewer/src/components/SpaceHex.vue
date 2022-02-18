@@ -99,7 +99,7 @@
     />
     <Building
       v-for="(s, i) in ships"
-      :key="i"
+      :key="`b-${i}`"
       :building="s.type"
       :ship-moved="s.moved"
       :faction="faction(s.player)"
@@ -109,14 +109,14 @@
     />
     <Building
       v-for="(p, i) in hex.customPosts"
-      :key="i"
+      :key="`cp-${i}`"
       building="customsPost"
       :faction="faction(p)"
       outline
       :flat="flat"
       :transform="radiusTransform(p, 0.05)"
     />
-    <g v-for="(p, i) in hex.tradeTokens" :key="i">
+    <g v-for="(p, i) in hex.tradeTokens" :key="`tt-${i}`">
       <Planet :planet="playerPlanet(p)" :transform="radiusTransform(p, 0.35)" />
     </g>
     <use
