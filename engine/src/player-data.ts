@@ -261,6 +261,9 @@ export default class PlayerData extends EventEmitter {
       case Resource.ChargePower:
         count > 0 ? this.chargePower(count, true, followBrainStoneHeuristics) : this.spendPower(-count);
         break;
+      case Resource.BurnToken:
+        this.burnPower(count);
+        break;
       case Resource.Range:
         this.range += count;
         break;
@@ -594,22 +597,38 @@ export default class PlayerData extends EventEmitter {
    * Convert all resources into knowledge / ore / credits,
    * to have the maximum victory points
    */
-  finalResourceHandling() {
-    this.burnPower(this.burnablePower());
+  finalResourceHandling(): Reward[] {
+    const ret: Reward[] = [];
+    const gain = (...rewards: Reward[]) => {
+      this.gainRewards(rewards, true, Command.Spend);
+      ret.push(...rewards);
+    };
+
+    const burnablePower = this.burnablePower();
+    if (burnablePower) {
+      gain(new Reward(burnablePower, Resource.BurnToken));
+    }
 
     // Convert power into credits
     // Taklons & Nevlas have different power rules, so this is why we use that roundabout way
     const spentPower = this.spendablePowerTokens();
-    this.spendPower(spentPower);
-    this.credits += spentPower;
+    const creditGain = spentPower * this.tokenModifier;
+    if (creditGain > 0) {
+      gain(new Reward(-creditGain, Resource.ChargePower), new Reward(creditGain, Resource.Credit));
+    }
 
-    // Convert qics into ore
-    this.ores += this.qics;
-    this.qics = 0;
+    const qics = this.qics;
+    if (qics > 0) {
+      // Convert qics into ore
+      gain(new Reward(-qics, Resource.Qic), new Reward(qics, Resource.Ore));
+    }
 
     // Gain 1 point for any 3 of ore, credits & knowledge.
     const resources = this.ores + this.credits + this.knowledge;
-    this.gainReward(new Reward(Math.max(Math.floor(resources / 3)), Resource.VictoryPoint), false, Command.Spend);
+    if (resources > 0) {
+      gain(new Reward(Math.max(Math.floor(resources / 3)), Resource.VictoryPoint));
+    }
+    return ret;
   }
 
   gainResearchVictoryPoints() {

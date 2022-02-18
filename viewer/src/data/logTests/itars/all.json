@@ -2,7 +2,12 @@
   {
     "round": 6,
     "turn": 2,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "geodens",
@@ -13,9 +18,18 @@
     "round": 6,
     "turn": 2,
     "changes": [
-      { "source": "spend", "changes": "-4pw, 1q" },
-      { "source": "build", "changes": "-2c, -1o, -1q" },
-      { "source": "round6", "changes": "4vp" }
+      {
+        "source": "spend",
+        "changes": "-4pw, 1q"
+      },
+      {
+        "source": "build",
+        "changes": "-2c, -1o, -1q"
+      },
+      {
+        "source": "round6",
+        "changes": "4vp"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -27,9 +41,18 @@
     "round": 6,
     "turn": 2,
     "changes": [
-      { "source": "spend", "changes": "-3pw, 1o" },
-      { "source": "up", "changes": "-4k" },
-      { "source": "eco", "changes": "6c, 3o, 6pw" }
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      },
+      {
+        "source": "up",
+        "changes": "-4k"
+      },
+      {
+        "source": "eco",
+        "changes": "6c, 3o, 6pw"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -40,7 +63,12 @@
   {
     "round": 6,
     "turn": 2,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
     "faction": "itars",
@@ -50,7 +78,12 @@
   {
     "round": 6,
     "turn": 2,
-    "changes": [{ "source": "charge", "changes": "1t, 1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1t, 1pw"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -61,8 +94,14 @@
     "round": 6,
     "turn": 2,
     "changes": [
-      { "source": "build", "changes": "-2c, -1o, -1q" },
-      { "source": "round6", "changes": "4vp" }
+      {
+        "source": "build",
+        "changes": "-2c, -1o, -1q"
+      },
+      {
+        "source": "round6",
+        "changes": "4vp"
+      }
     ],
     "color": "#FF9500",
     "textColor": "black",
@@ -83,9 +122,18 @@
     "round": 6,
     "turn": 1,
     "changes": [
-      { "source": "tech-int (k for planet types)", "changes": "4k" },
-      { "source": "int", "changes": "2q" },
-      { "source": "adv-int (4 VP / ts)", "changes": "16vp" }
+      {
+        "source": "tech-int (k for planet types)",
+        "changes": "4k"
+      },
+      {
+        "source": "int",
+        "changes": "2q"
+      },
+      {
+        "source": "adv-int (4 VP / ts)",
+        "changes": "16vp"
+      }
     ],
     "color": "#000000",
     "textColor": "white",
@@ -106,12 +154,30 @@
     "round": 6,
     "turn": 0,
     "changes": [
-      { "source": "income", "changes": "7o, 4k, 2t, 4pw, 16c" },
-      { "source": "tech-free2 (1k,1c income)", "changes": "1k, 1c" },
-      { "source": "tech-sci (4c income)", "changes": "4c" },
-      { "source": "sci", "changes": "1k" },
-      { "source": "tech-gaia (1o,1pw income)", "changes": "1o, 1pw" },
-      { "source": "booster7 (1o, 2 VP / ts)", "changes": "1o" }
+      {
+        "source": "income",
+        "changes": "7o, 4k, 2t, 4pw, 16c"
+      },
+      {
+        "source": "tech-free2 (1k,1c income)",
+        "changes": "1k, 1c"
+      },
+      {
+        "source": "tech-sci (4c income)",
+        "changes": "4c"
+      },
+      {
+        "source": "sci",
+        "changes": "1k"
+      },
+      {
+        "source": "tech-gaia (1o,1pw income)",
+        "changes": "1o, 1pw"
+      },
+      {
+        "source": "booster7 (1o, 2 VP / ts)",
+        "changes": "1o"
+      }
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
@@ -123,12 +189,30 @@
     "round": 6,
     "turn": 0,
     "changes": [
-      { "source": "income", "changes": "1t, 5o, 4k, 4pw, 7c" },
-      { "source": "tech-free2 (1k,1c income)", "changes": "1k, 1c" },
-      { "source": "eco", "changes": "4c, 2o, 4pw" },
-      { "source": "tech-sci (4c income)", "changes": "4c" },
-      { "source": "sci", "changes": "4k" },
-      { "source": "booster6 (1o, 1 VP / mine)", "changes": "1o" }
+      {
+        "source": "income",
+        "changes": "1t, 5o, 4k, 4pw, 7c"
+      },
+      {
+        "source": "tech-free2 (1k,1c income)",
+        "changes": "1k, 1c"
+      },
+      {
+        "source": "eco",
+        "changes": "4c, 2o, 4pw"
+      },
+      {
+        "source": "tech-sci (4c income)",
+        "changes": "4c"
+      },
+      {
+        "source": "sci",
+        "changes": "4k"
+      },
+      {
+        "source": "booster6 (1o, 1 VP / mine)",
+        "changes": "1o"
+      }
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
@@ -140,10 +224,22 @@
     "round": 6,
     "turn": 0,
     "changes": [
-      { "source": "income", "changes": "5o, 4k, 4pw, 16c" },
-      { "source": "eco", "changes": "4c, 2o, 4pw" },
-      { "source": "sci", "changes": "2k" },
-      { "source": "booster9 (4pw, 4 VP / PI or academy)", "changes": "4pw" }
+      {
+        "source": "income",
+        "changes": "5o, 4k, 4pw, 16c"
+      },
+      {
+        "source": "eco",
+        "changes": "4c, 2o, 4pw"
+      },
+      {
+        "source": "sci",
+        "changes": "2k"
+      },
+      {
+        "source": "booster9 (4pw, 4 VP / PI or academy)",
+        "changes": "4pw"
+      }
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
@@ -154,8 +250,14 @@
     "round": 6,
     "turn": 0,
     "changes": [
-      { "source": "income", "changes": "4pw, 3o, 3k, 1t, 7c" },
-      { "source": "booster10 (4c, 1 VP / gaia planet)", "changes": "4c" }
+      {
+        "source": "income",
+        "changes": "4pw, 3o, 3k, 1t, 7c"
+      },
+      {
+        "source": "booster10 (4c, 1 VP / gaia planet)",
+        "changes": "4c"
+      }
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
@@ -194,7 +296,12 @@
   {
     "round": 5,
     "turn": 18,
-    "changes": [{ "source": "spend", "changes": "-1pw, 1c" }],
+    "changes": [
+      {
+        "source": "spend",
+        "changes": "-1pw, 1c"
+      }
+    ],
     "color": "#704100",
     "textColor": "white",
     "faction": "taklons",
@@ -204,7 +311,12 @@
   {
     "round": 5,
     "turn": 18,
-    "changes": [{ "source": "spend", "changes": "-1pw, 1c, -1q, 0o, 1t" }],
+    "changes": [
+      {
+        "source": "spend",
+        "changes": "-1pw, 1c, -1q, 0o, 1t"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -215,8 +327,14 @@
     "round": 5,
     "turn": 17,
     "changes": [
-      { "source": "spend", "changes": "-4pw, 1q" },
-      { "source": "federation", "changes": "-5t, 8vp, 1q" }
+      {
+        "source": "spend",
+        "changes": "-4pw, 1q"
+      },
+      {
+        "source": "federation",
+        "changes": "-5t, 8vp, 1q"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -238,8 +356,14 @@
     "round": 5,
     "turn": 17,
     "changes": [
-      { "source": "build", "changes": "-3c, -2o" },
-      { "source": "round5", "changes": "3vp" }
+      {
+        "source": "build",
+        "changes": "-3c, -2o"
+      },
+      {
+        "source": "round5",
+        "changes": "3vp"
+      }
     ],
     "color": "#000000",
     "textColor": "white",
@@ -250,7 +374,12 @@
   {
     "round": 5,
     "turn": 16,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "geodens",
@@ -260,7 +389,12 @@
   {
     "round": 5,
     "turn": 16,
-    "changes": [{ "source": "build", "changes": "-2c, -2o" }],
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-2c, -2o"
+      }
+    ],
     "color": "#704100",
     "textColor": "white",
     "faction": "taklons",
@@ -271,9 +405,18 @@
     "round": 5,
     "turn": 16,
     "changes": [
-      { "source": "spend", "changes": "-1o, 1t" },
-      { "source": "up", "changes": "-4k" },
-      { "source": "int", "changes": "2q, 3pw" }
+      {
+        "source": "spend",
+        "changes": "-1o, 1t"
+      },
+      {
+        "source": "up",
+        "changes": "-4k"
+      },
+      {
+        "source": "int",
+        "changes": "2q, 3pw"
+      }
     ],
     "color": "#000000",
     "textColor": "white",
@@ -295,9 +438,18 @@
     "round": 5,
     "turn": 15,
     "changes": [
-      { "source": "build", "changes": "-3c, -2o" },
-      { "source": "round5", "changes": "3vp" },
-      { "source": "adv-nav (3 VP when building ts)", "changes": "3vp" }
+      {
+        "source": "build",
+        "changes": "-3c, -2o"
+      },
+      {
+        "source": "round5",
+        "changes": "3vp"
+      },
+      {
+        "source": "adv-nav (3 VP when building ts)",
+        "changes": "3vp"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -309,8 +461,14 @@
     "round": 5,
     "turn": 15,
     "changes": [
-      { "source": "federation", "changes": "-1t, 6vp, 2k" },
-      { "source": "spend", "changes": "-1pw, 1c" }
+      {
+        "source": "federation",
+        "changes": "-1t, 6vp, 2k"
+      },
+      {
+        "source": "spend",
+        "changes": "-1pw, 1c"
+      }
     ],
     "color": "#000000",
     "textColor": "white",
@@ -321,7 +479,12 @@
   {
     "round": 5,
     "turn": 14,
-    "changes": [{ "source": "build", "changes": "-2c, -1o" }],
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-2c, -1o"
+      }
+    ],
     "color": "#704100",
     "textColor": "white",
     "faction": "taklons",
@@ -342,10 +505,22 @@
     "round": 5,
     "turn": 13,
     "changes": [
-      { "source": "spend", "changes": "-4pw, 1q" },
-      { "source": "qic1", "changes": "-4q" },
-      { "source": "int", "changes": "1q" },
-      { "source": "adv-eco (2 VP when researching)", "changes": "2vp" }
+      {
+        "source": "spend",
+        "changes": "-4pw, 1q"
+      },
+      {
+        "source": "qic1",
+        "changes": "-4q"
+      },
+      {
+        "source": "int",
+        "changes": "1q"
+      },
+      {
+        "source": "adv-eco (2 VP when researching)",
+        "changes": "2vp"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -366,7 +541,12 @@
   {
     "round": 5,
     "turn": 13,
-    "changes": [{ "source": "charge", "changes": "2pw, 1t, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, 1t, -1vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -377,8 +557,14 @@
     "round": 5,
     "turn": 13,
     "changes": [
-      { "source": "build", "changes": "-2c, -1o" },
-      { "source": "spend", "changes": "-4pw, 1q" }
+      {
+        "source": "build",
+        "changes": "-2c, -1o"
+      },
+      {
+        "source": "spend",
+        "changes": "-4pw, 1q"
+      }
     ],
     "color": "#000000",
     "textColor": "white",
@@ -389,7 +575,12 @@
   {
     "round": 5,
     "turn": 12,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "geodens",
@@ -399,7 +590,12 @@
   {
     "round": 5,
     "turn": 12,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
     "faction": "itars",
@@ -409,7 +605,12 @@
   {
     "round": 5,
     "turn": 12,
-    "changes": [{ "source": "build", "changes": "-2c, -2o" }],
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-2c, -2o"
+      }
+    ],
     "color": "#704100",
     "textColor": "white",
     "faction": "taklons",
@@ -420,8 +621,14 @@
     "round": 5,
     "turn": 12,
     "changes": [
-      { "source": "up", "changes": "-4k" },
-      { "source": "int", "changes": "1q" }
+      {
+        "source": "up",
+        "changes": "-4k"
+      },
+      {
+        "source": "int",
+        "changes": "1q"
+      }
     ],
     "color": "#000000",
     "textColor": "white",
@@ -432,7 +639,12 @@
   {
     "round": 5,
     "turn": 11,
-    "changes": [{ "source": "charge", "changes": "4pw, -3vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "4pw, -3vp"
+      }
+    ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
     "faction": "itars",
@@ -452,7 +664,12 @@
   {
     "round": 5,
     "turn": 11,
-    "changes": [{ "source": "build", "changes": "-2c, -2o" }],
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-2c, -2o"
+      }
+    ],
     "color": "#704100",
     "textColor": "white",
     "faction": "taklons",
@@ -463,8 +680,14 @@
     "round": 5,
     "turn": 11,
     "changes": [
-      { "source": "up", "changes": "-4k" },
-      { "source": "int", "changes": "1q" }
+      {
+        "source": "up",
+        "changes": "-4k"
+      },
+      {
+        "source": "int",
+        "changes": "1q"
+      }
     ],
     "color": "#000000",
     "textColor": "white",
@@ -476,8 +699,14 @@
     "round": 5,
     "turn": 11,
     "changes": [
-      { "source": "spend", "changes": "-3pw, 0o, 1t" },
-      { "source": "booster7 (1o, 2 VP / ts)", "changes": "8vp" }
+      {
+        "source": "spend",
+        "changes": "-3pw, 0o, 1t"
+      },
+      {
+        "source": "booster7 (1o, 2 VP / ts)",
+        "changes": "8vp"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -489,8 +718,14 @@
     "round": 5,
     "turn": 10,
     "changes": [
-      { "source": "up", "changes": "-4k" },
-      { "source": "adv-eco (2 VP when researching)", "changes": "2vp" }
+      {
+        "source": "up",
+        "changes": "-4k"
+      },
+      {
+        "source": "adv-eco (2 VP when researching)",
+        "changes": "2vp"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -512,8 +747,14 @@
     "round": 5,
     "turn": 10,
     "changes": [
-      { "source": "build", "changes": "-3c, -2o" },
-      { "source": "round5", "changes": "3vp" }
+      {
+        "source": "build",
+        "changes": "-3c, -2o"
+      },
+      {
+        "source": "round5",
+        "changes": "3vp"
+      }
     ],
     "color": "#000000",
     "textColor": "white",
@@ -524,7 +765,12 @@
   {
     "round": 5,
     "turn": 10,
-    "changes": [{ "source": "up", "changes": "-4k" }],
+    "changes": [
+      {
+        "source": "up",
+        "changes": "-4k"
+      }
+    ],
     "color": "#2080f0",
     "textColor": "black",
     "faction": "lantids",
@@ -535,10 +781,22 @@
     "round": 5,
     "turn": 9,
     "changes": [
-      { "source": "up", "changes": "-4k" },
-      { "source": "nav", "changes": "1q, 3pw" },
-      { "source": "adv-eco (2 VP when researching)", "changes": "2vp" },
-      { "source": "spend", "changes": "-4pw, 1q" }
+      {
+        "source": "up",
+        "changes": "-4k"
+      },
+      {
+        "source": "nav",
+        "changes": "1q, 3pw"
+      },
+      {
+        "source": "adv-eco (2 VP when researching)",
+        "changes": "2vp"
+      },
+      {
+        "source": "spend",
+        "changes": "-4pw, 1q"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -549,7 +807,12 @@
   {
     "round": 5,
     "turn": 9,
-    "changes": [{ "source": "build", "changes": "-2c, -1o" }],
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-2c, -1o"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -559,7 +822,12 @@
   {
     "round": 5,
     "turn": 9,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
     "faction": "itars",
@@ -570,9 +838,18 @@
     "round": 5,
     "turn": 9,
     "changes": [
-      { "source": "spend", "changes": "-1pw, 1c" },
-      { "source": "build", "changes": "-3c, -2o" },
-      { "source": "round5", "changes": "3vp" }
+      {
+        "source": "spend",
+        "changes": "-1pw, 1c"
+      },
+      {
+        "source": "build",
+        "changes": "-3c, -2o"
+      },
+      {
+        "source": "round5",
+        "changes": "3vp"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -583,7 +860,12 @@
   {
     "round": 5,
     "turn": 8,
-    "changes": [{ "source": "qic3", "changes": "-2q, 7vp" }],
+    "changes": [
+      {
+        "source": "qic3",
+        "changes": "-2q, 7vp"
+      }
+    ],
     "color": "#704100",
     "textColor": "white",
     "faction": "taklons",
@@ -604,8 +886,14 @@
     "round": 5,
     "turn": 8,
     "changes": [
-      { "source": "spend", "changes": "-1pw, 1c" },
-      { "source": "qic2", "changes": "-2q, 8vp" }
+      {
+        "source": "spend",
+        "changes": "-1pw, 1c"
+      },
+      {
+        "source": "qic2",
+        "changes": "-2q, 8vp"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -617,8 +905,14 @@
     "round": 5,
     "turn": 7,
     "changes": [
-      { "source": "spend", "changes": "-3pw, 1o" },
-      { "source": "income", "changes": "1q" }
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      },
+      {
+        "source": "income",
+        "changes": "1q"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -629,7 +923,12 @@
   {
     "round": 5,
     "turn": 7,
-    "changes": [{ "source": "power7", "changes": "-3pw, 2t" }],
+    "changes": [
+      {
+        "source": "power7",
+        "changes": "-3pw, 2t"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -639,7 +938,12 @@
   {
     "round": 5,
     "turn": 7,
-    "changes": [{ "source": "charge", "changes": "1t, 4pw, -3vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1t, 4pw, -3vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -649,7 +953,12 @@
   {
     "round": 5,
     "turn": 7,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
     "faction": "itars",
@@ -660,9 +969,18 @@
     "round": 5,
     "turn": 7,
     "changes": [
-      { "source": "build", "changes": "-5c, -3o" },
-      { "source": "tech-int (k for planet types)", "changes": "3k" },
-      { "source": "int", "changes": "2q" }
+      {
+        "source": "build",
+        "changes": "-5c, -3o"
+      },
+      {
+        "source": "tech-int (k for planet types)",
+        "changes": "3k"
+      },
+      {
+        "source": "int",
+        "changes": "2q"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -673,7 +991,12 @@
   {
     "round": 5,
     "turn": 6,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
     "faction": "itars",
@@ -684,9 +1007,18 @@
     "round": 5,
     "turn": 6,
     "changes": [
-      { "source": "spend", "changes": "-3pw, 1o" },
-      { "source": "build", "changes": "-3c, -2o" },
-      { "source": "round5", "changes": "3vp" }
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      },
+      {
+        "source": "build",
+        "changes": "-3c, -2o"
+      },
+      {
+        "source": "round5",
+        "changes": "3vp"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -697,7 +1029,12 @@
   {
     "round": 5,
     "turn": 6,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -707,7 +1044,12 @@
   {
     "round": 5,
     "turn": 6,
-    "changes": [{ "source": "charge", "changes": "1t, 4pw, -3vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1t, 4pw, -3vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -718,8 +1060,14 @@
     "round": 5,
     "turn": 6,
     "changes": [
-      { "source": "build", "changes": "-3c, -2o" },
-      { "source": "round5", "changes": "3vp" }
+      {
+        "source": "build",
+        "changes": "-3c, -2o"
+      },
+      {
+        "source": "round5",
+        "changes": "3vp"
+      }
     ],
     "color": "#000000",
     "textColor": "white",
@@ -730,7 +1078,12 @@
   {
     "round": 5,
     "turn": 6,
-    "changes": [{ "source": "charge", "changes": "4pw, 1t, -3vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "4pw, 1t, -3vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -740,7 +1093,12 @@
   {
     "round": 5,
     "turn": 6,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
     "faction": "itars",
@@ -751,8 +1109,14 @@
     "round": 5,
     "turn": 6,
     "changes": [
-      { "source": "build", "changes": "-3c, -2o" },
-      { "source": "round5", "changes": "3vp" }
+      {
+        "source": "build",
+        "changes": "-3c, -2o"
+      },
+      {
+        "source": "round5",
+        "changes": "3vp"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -764,8 +1128,14 @@
     "round": 5,
     "turn": 5,
     "changes": [
-      { "source": "up", "changes": "-4k" },
-      { "source": "adv-eco (2 VP when researching)", "changes": "2vp" }
+      {
+        "source": "up",
+        "changes": "-4k"
+      },
+      {
+        "source": "adv-eco (2 VP when researching)",
+        "changes": "2vp"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -776,7 +1146,12 @@
   {
     "round": 5,
     "turn": 5,
-    "changes": [{ "source": "build", "changes": "-2c, -1o" }],
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-2c, -1o"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -787,8 +1162,14 @@
     "round": 5,
     "turn": 5,
     "changes": [
-      { "source": "adv-terra (3 VP / federation when passing)", "changes": "6vp" },
-      { "source": "booster6 (1o, 1 VP / mine)", "changes": "3vp" }
+      {
+        "source": "adv-terra (3 VP / federation when passing)",
+        "changes": "6vp"
+      },
+      {
+        "source": "booster6 (1o, 1 VP / mine)",
+        "changes": "3vp"
+      }
     ],
     "color": "#FF9500",
     "textColor": "black",
@@ -799,7 +1180,12 @@
   {
     "round": 5,
     "turn": 5,
-    "changes": [{ "source": "federation", "changes": "8vp, 1q" }],
+    "changes": [
+      {
+        "source": "federation",
+        "changes": "8vp, 1q"
+      }
+    ],
     "color": "#2080f0",
     "textColor": "black",
     "faction": "lantids",
@@ -809,7 +1195,12 @@
   {
     "round": 5,
     "turn": 4,
-    "changes": [{ "source": "power5", "changes": "-4pw, 2k" }],
+    "changes": [
+      {
+        "source": "power5",
+        "changes": "-4pw, 2k"
+      }
+    ],
     "color": "#704100",
     "textColor": "white",
     "faction": "taklons",
@@ -819,7 +1210,12 @@
   {
     "round": 5,
     "turn": 4,
-    "changes": [{ "source": "adv-gaia (3k special action)", "changes": "3k" }],
+    "changes": [
+      {
+        "source": "adv-gaia (3k special action)",
+        "changes": "3k"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -830,9 +1226,18 @@
     "round": 5,
     "turn": 4,
     "changes": [
-      { "source": "power2", "changes": "-5pw" },
-      { "source": "build", "changes": "-2c, -2o" },
-      { "source": "geodens", "changes": "3k" }
+      {
+        "source": "power2",
+        "changes": "-5pw"
+      },
+      {
+        "source": "build",
+        "changes": "-2c, -2o"
+      },
+      {
+        "source": "geodens",
+        "changes": "3k"
+      }
     ],
     "color": "#FF9500",
     "textColor": "black",
@@ -843,7 +1248,12 @@
   {
     "round": 5,
     "turn": 4,
-    "changes": [{ "source": "charge", "changes": "1t, 4pw, -3vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1t, 4pw, -3vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -853,7 +1263,12 @@
   {
     "round": 5,
     "turn": 4,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "geodens",
@@ -863,7 +1278,12 @@
   {
     "round": 5,
     "turn": 4,
-    "changes": [{ "source": "charge", "changes": "4pw, -3vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "4pw, -3vp"
+      }
+    ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
     "faction": "itars",
@@ -874,8 +1294,14 @@
     "round": 5,
     "turn": 4,
     "changes": [
-      { "source": "build", "changes": "-3c, -2o" },
-      { "source": "round5", "changes": "3vp" }
+      {
+        "source": "build",
+        "changes": "-3c, -2o"
+      },
+      {
+        "source": "round5",
+        "changes": "3vp"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -887,8 +1313,14 @@
     "round": 5,
     "turn": 3,
     "changes": [
-      { "source": "tech-nav (4pw special action)", "changes": "4pw" },
-      { "source": "spend", "changes": "-3pw, 1o" }
+      {
+        "source": "tech-nav (4pw special action)",
+        "changes": "4pw"
+      },
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -899,7 +1331,12 @@
   {
     "round": 5,
     "turn": 3,
-    "changes": [{ "source": "power4", "changes": "-4pw, 7c" }],
+    "changes": [
+      {
+        "source": "power4",
+        "changes": "-4pw, 7c"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -910,8 +1347,14 @@
     "round": 5,
     "turn": 3,
     "changes": [
-      { "source": "up", "changes": "-4k" },
-      { "source": "int", "changes": "1q" }
+      {
+        "source": "up",
+        "changes": "-4k"
+      },
+      {
+        "source": "int",
+        "changes": "1q"
+      }
     ],
     "color": "#FF9500",
     "textColor": "black",
@@ -922,7 +1365,12 @@
   {
     "round": 5,
     "turn": 3,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
     "faction": "itars",
@@ -933,8 +1381,14 @@
     "round": 5,
     "turn": 3,
     "changes": [
-      { "source": "build", "changes": "-2c, -1o, -2q" },
-      { "source": "spend", "changes": "-1pw, 1c" }
+      {
+        "source": "build",
+        "changes": "-2c, -1o, -2q"
+      },
+      {
+        "source": "spend",
+        "changes": "-1pw, 1c"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -945,7 +1399,12 @@
   {
     "round": 5,
     "turn": 2,
-    "changes": [{ "source": "power3", "changes": "-4pw, 2o" }],
+    "changes": [
+      {
+        "source": "power3",
+        "changes": "-4pw, 2o"
+      }
+    ],
     "color": "#704100",
     "textColor": "white",
     "faction": "taklons",
@@ -955,7 +1414,12 @@
   {
     "round": 5,
     "turn": 2,
-    "changes": [{ "source": "tech-nav (4pw special action)", "changes": "4pw" }],
+    "changes": [
+      {
+        "source": "tech-nav (4pw special action)",
+        "changes": "4pw"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -965,7 +1429,12 @@
   {
     "round": 5,
     "turn": 2,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -976,8 +1445,14 @@
     "round": 5,
     "turn": 2,
     "changes": [
-      { "source": "build", "changes": "-3c, -2o" },
-      { "source": "round5", "changes": "3vp" }
+      {
+        "source": "build",
+        "changes": "-3c, -2o"
+      },
+      {
+        "source": "round5",
+        "changes": "3vp"
+      }
     ],
     "color": "#FF9500",
     "textColor": "black",
@@ -989,9 +1464,18 @@
     "round": 5,
     "turn": 2,
     "changes": [
-      { "source": "spend", "changes": "-2pw, 2c" },
-      { "source": "up", "changes": "-4k" },
-      { "source": "int", "changes": "2q, 3pw" }
+      {
+        "source": "spend",
+        "changes": "-2pw, 2c"
+      },
+      {
+        "source": "up",
+        "changes": "-4k"
+      },
+      {
+        "source": "int",
+        "changes": "2q, 3pw"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -1031,12 +1515,30 @@
     "round": 5,
     "turn": 0,
     "changes": [
-      { "source": "income", "changes": "1t, 3o, 4k, 4pw" },
-      { "source": "tech-free2 (1k,1c income)", "changes": "1k, 1c" },
-      { "source": "eco", "changes": "4c, 2o, 4pw" },
-      { "source": "tech-sci (4c income)", "changes": "4c" },
-      { "source": "sci", "changes": "4k" },
-      { "source": "booster3 (q, 2c)", "changes": "1q, 2c" }
+      {
+        "source": "income",
+        "changes": "1t, 3o, 4k, 4pw"
+      },
+      {
+        "source": "tech-free2 (1k,1c income)",
+        "changes": "1k, 1c"
+      },
+      {
+        "source": "eco",
+        "changes": "4c, 2o, 4pw"
+      },
+      {
+        "source": "tech-sci (4c income)",
+        "changes": "4c"
+      },
+      {
+        "source": "sci",
+        "changes": "4k"
+      },
+      {
+        "source": "booster3 (q, 2c)",
+        "changes": "1q, 2c"
+      }
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
@@ -1048,12 +1550,30 @@
     "round": 5,
     "turn": 0,
     "changes": [
-      { "source": "booster2 (1o, 2 tokens)", "changes": "2t, 1o" },
-      { "source": "income", "changes": "7o, 4k, 2t, 4pw, 3c" },
-      { "source": "tech-gaia (1o,1pw income)", "changes": "1o, 1pw" },
-      { "source": "tech-free2 (1k,1c income)", "changes": "1k, 1c" },
-      { "source": "tech-sci (4c income)", "changes": "4c" },
-      { "source": "sci", "changes": "1k" }
+      {
+        "source": "booster2 (1o, 2 tokens)",
+        "changes": "2t, 1o"
+      },
+      {
+        "source": "income",
+        "changes": "7o, 4k, 2t, 4pw, 3c"
+      },
+      {
+        "source": "tech-gaia (1o,1pw income)",
+        "changes": "1o, 1pw"
+      },
+      {
+        "source": "tech-free2 (1k,1c income)",
+        "changes": "1k, 1c"
+      },
+      {
+        "source": "tech-sci (4c income)",
+        "changes": "4c"
+      },
+      {
+        "source": "sci",
+        "changes": "1k"
+      }
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
@@ -1065,8 +1585,14 @@
     "round": 5,
     "turn": 0,
     "changes": [
-      { "source": "income", "changes": "4pw, 3o, 3k, 1t, 3c" },
-      { "source": "booster6 (1o, 1 VP / mine)", "changes": "1o" }
+      {
+        "source": "income",
+        "changes": "4pw, 3o, 3k, 1t, 3c"
+      },
+      {
+        "source": "booster6 (1o, 1 VP / mine)",
+        "changes": "1o"
+      }
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
@@ -1078,10 +1604,22 @@
     "round": 5,
     "turn": 0,
     "changes": [
-      { "source": "income", "changes": "7o, 3k, 4pw, 7c" },
-      { "source": "eco", "changes": "4c, 2o, 4pw" },
-      { "source": "sci", "changes": "1k" },
-      { "source": "booster7 (1o, 2 VP / ts)", "changes": "1o" }
+      {
+        "source": "income",
+        "changes": "7o, 3k, 4pw, 7c"
+      },
+      {
+        "source": "eco",
+        "changes": "4c, 2o, 4pw"
+      },
+      {
+        "source": "sci",
+        "changes": "1k"
+      },
+      {
+        "source": "booster7 (1o, 2 VP / ts)",
+        "changes": "1o"
+      }
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
@@ -1110,8 +1648,14 @@
     "round": 4,
     "turn": 13,
     "changes": [
-      { "source": "spend", "changes": "-2pw, 2c" },
-      { "source": "booster9 (4pw, 4 VP / PI or academy)", "changes": "12vp" }
+      {
+        "source": "spend",
+        "changes": "-2pw, 2c"
+      },
+      {
+        "source": "booster9 (4pw, 4 VP / PI or academy)",
+        "changes": "12vp"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -1133,8 +1677,14 @@
     "round": 4,
     "turn": 12,
     "changes": [
-      { "source": "tech-nav (4pw special action)", "changes": "4pw" },
-      { "source": "spend", "changes": "-3pw, 1o" }
+      {
+        "source": "tech-nav (4pw special action)",
+        "changes": "4pw"
+      },
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -1155,7 +1705,12 @@
   {
     "round": 4,
     "turn": 11,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
     "faction": "itars",
@@ -1166,8 +1721,14 @@
     "round": 4,
     "turn": 11,
     "changes": [
-      { "source": "build", "changes": "-2c, -4o" },
-      { "source": "round4", "changes": "6vp" }
+      {
+        "source": "build",
+        "changes": "-2c, -4o"
+      },
+      {
+        "source": "round4",
+        "changes": "6vp"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -1179,8 +1740,14 @@
     "round": 4,
     "turn": 11,
     "changes": [
-      { "source": "build", "changes": "-2c, -2o" },
-      { "source": "round4", "changes": "2vp" }
+      {
+        "source": "build",
+        "changes": "-2c, -2o"
+      },
+      {
+        "source": "round4",
+        "changes": "2vp"
+      }
     ],
     "color": "#000000",
     "textColor": "white",
@@ -1192,8 +1759,14 @@
     "round": 4,
     "turn": 10,
     "changes": [
-      { "source": "spend", "changes": "-3pw, 1o" },
-      { "source": "federation", "changes": "-2t, 7vp, 2o" }
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      },
+      {
+        "source": "federation",
+        "changes": "-2t, 7vp, 2o"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -1204,7 +1777,12 @@
   {
     "round": 4,
     "turn": 10,
-    "changes": [{ "source": "build", "changes": "-2c, -1o" }],
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-2c, -1o"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -1214,7 +1792,12 @@
   {
     "round": 4,
     "turn": 9,
-    "changes": [{ "source": "income", "changes": "1q" }],
+    "changes": [
+      {
+        "source": "income",
+        "changes": "1q"
+      }
+    ],
     "color": "#704100",
     "textColor": "white",
     "faction": "taklons",
@@ -1225,8 +1808,14 @@
     "round": 4,
     "turn": 9,
     "changes": [
-      { "source": "build", "changes": "-2c, -2o, -1q" },
-      { "source": "round4", "changes": "2vp" }
+      {
+        "source": "build",
+        "changes": "-2c, -2o, -1q"
+      },
+      {
+        "source": "round4",
+        "changes": "2vp"
+      }
     ],
     "color": "#000000",
     "textColor": "white",
@@ -1238,8 +1827,14 @@
     "round": 4,
     "turn": 8,
     "changes": [
-      { "source": "build", "changes": "-2c, -2o" },
-      { "source": "round4", "changes": "2vp" }
+      {
+        "source": "build",
+        "changes": "-2c, -2o"
+      },
+      {
+        "source": "round4",
+        "changes": "2vp"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -1251,9 +1846,18 @@
     "round": 4,
     "turn": 8,
     "changes": [
-      { "source": "spend", "changes": "-3pw, 1o" },
-      { "source": "up", "changes": "-4k" },
-      { "source": "terra", "changes": "2o" }
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      },
+      {
+        "source": "up",
+        "changes": "-4k"
+      },
+      {
+        "source": "terra",
+        "changes": "2o"
+      }
     ],
     "color": "#000000",
     "textColor": "white",
@@ -1265,8 +1869,14 @@
     "round": 4,
     "turn": 8,
     "changes": [
-      { "source": "adv-terra (3 VP / federation when passing)", "changes": "6vp" },
-      { "source": "booster10 (4c, 1 VP / gaia planet)", "changes": "1vp" }
+      {
+        "source": "adv-terra (3 VP / federation when passing)",
+        "changes": "6vp"
+      },
+      {
+        "source": "booster10 (4c, 1 VP / gaia planet)",
+        "changes": "1vp"
+      }
     ],
     "color": "#FF9500",
     "textColor": "black",
@@ -1277,7 +1887,12 @@
   {
     "round": 4,
     "turn": 7,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
     "faction": "itars",
@@ -1287,7 +1902,12 @@
   {
     "round": 4,
     "turn": 7,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -1297,7 +1917,12 @@
   {
     "round": 4,
     "turn": 7,
-    "changes": [{ "source": "build", "changes": "-6c, -4o" }],
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-6c, -4o"
+      }
+    ],
     "color": "#704100",
     "textColor": "white",
     "faction": "taklons",
@@ -1308,9 +1933,18 @@
     "round": 4,
     "turn": 7,
     "changes": [
-      { "source": "spend", "changes": "-1o, 1t" },
-      { "source": "up", "changes": "-4k" },
-      { "source": "terra", "changes": "3pw" }
+      {
+        "source": "spend",
+        "changes": "-1o, 1t"
+      },
+      {
+        "source": "up",
+        "changes": "-4k"
+      },
+      {
+        "source": "terra",
+        "changes": "3pw"
+      }
     ],
     "color": "#000000",
     "textColor": "white",
@@ -1331,7 +1965,12 @@
   {
     "round": 4,
     "turn": 7,
-    "changes": [{ "source": "up", "changes": "-4k" }],
+    "changes": [
+      {
+        "source": "up",
+        "changes": "-4k"
+      }
+    ],
     "color": "#FF9500",
     "textColor": "black",
     "faction": "geodens",
@@ -1341,7 +1980,12 @@
   {
     "round": 4,
     "turn": 6,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
     "faction": "itars",
@@ -1351,7 +1995,12 @@
   {
     "round": 4,
     "turn": 6,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -1361,7 +2010,12 @@
   {
     "round": 4,
     "turn": 6,
-    "changes": [{ "source": "build", "changes": "-3c, -2o" }],
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-3c, -2o"
+      }
+    ],
     "color": "#704100",
     "textColor": "white",
     "faction": "taklons",
@@ -1371,7 +2025,12 @@
   {
     "round": 4,
     "turn": 6,
-    "changes": [{ "source": "adv-gaia (3k special action)", "changes": "3k" }],
+    "changes": [
+      {
+        "source": "adv-gaia (3k special action)",
+        "changes": "3k"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -1381,7 +2040,12 @@
   {
     "round": 4,
     "turn": 6,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "geodens",
@@ -1392,9 +2056,18 @@
     "round": 4,
     "turn": 6,
     "changes": [
-      { "source": "spend", "changes": "-1pw, 1c" },
-      { "source": "build", "changes": "-2c, -1o" },
-      { "source": "lantids", "changes": "2k" }
+      {
+        "source": "spend",
+        "changes": "-1pw, 1c"
+      },
+      {
+        "source": "build",
+        "changes": "-2c, -1o"
+      },
+      {
+        "source": "lantids",
+        "changes": "2k"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -1406,10 +2079,22 @@
     "round": 4,
     "turn": 6,
     "changes": [
-      { "source": "spend", "changes": "-3pw, 1o" },
-      { "source": "build", "changes": "-2c, -2o, -1q" },
-      { "source": "round4", "changes": "2vp" },
-      { "source": "geodens", "changes": "3k" }
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      },
+      {
+        "source": "build",
+        "changes": "-2c, -2o, -1q"
+      },
+      {
+        "source": "round4",
+        "changes": "2vp"
+      },
+      {
+        "source": "geodens",
+        "changes": "3k"
+      }
     ],
     "color": "#FF9500",
     "textColor": "black",
@@ -1421,10 +2106,22 @@
     "round": 4,
     "turn": 5,
     "changes": [
-      { "source": "up", "changes": "-4k" },
-      { "source": "terra", "changes": "3pw" },
-      { "source": "adv-eco (2 VP when researching)", "changes": "2vp" },
-      { "source": "spend", "changes": "-3pw, 1o" }
+      {
+        "source": "up",
+        "changes": "-4k"
+      },
+      {
+        "source": "terra",
+        "changes": "3pw"
+      },
+      {
+        "source": "adv-eco (2 VP when researching)",
+        "changes": "2vp"
+      },
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -1445,7 +2142,12 @@
   {
     "round": 4,
     "turn": 5,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -1455,7 +2157,12 @@
   {
     "round": 4,
     "turn": 5,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
     "faction": "itars",
@@ -1465,7 +2172,12 @@
   {
     "round": 4,
     "turn": 5,
-    "changes": [{ "source": "build", "changes": "-2c, -1o, -3q" }],
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-2c, -1o, -3q"
+      }
+    ],
     "color": "#2080f0",
     "textColor": "black",
     "faction": "lantids",
@@ -1476,8 +2188,14 @@
     "round": 4,
     "turn": 5,
     "changes": [
-      { "source": "up", "changes": "-4k" },
-      { "source": "nav", "changes": "1q, 3pw" }
+      {
+        "source": "up",
+        "changes": "-4k"
+      },
+      {
+        "source": "nav",
+        "changes": "1q, 3pw"
+      }
     ],
     "color": "#FF9500",
     "textColor": "black",
@@ -1489,8 +2207,14 @@
     "round": 4,
     "turn": 4,
     "changes": [
-      { "source": "up", "changes": "-4k" },
-      { "source": "adv-eco (2 VP when researching)", "changes": "2vp" }
+      {
+        "source": "up",
+        "changes": "-4k"
+      },
+      {
+        "source": "adv-eco (2 VP when researching)",
+        "changes": "2vp"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -1502,8 +2226,14 @@
     "round": 4,
     "turn": 4,
     "changes": [
-      { "source": "build", "changes": "-2c, -1o" },
-      { "source": "round4", "changes": "2vp" }
+      {
+        "source": "build",
+        "changes": "-2c, -1o"
+      },
+      {
+        "source": "round4",
+        "changes": "2vp"
+      }
     ],
     "color": "#000000",
     "textColor": "white",
@@ -1515,8 +2245,14 @@
     "round": 4,
     "turn": 4,
     "changes": [
-      { "source": "up", "changes": "-4k" },
-      { "source": "int", "changes": "1q" }
+      {
+        "source": "up",
+        "changes": "-4k"
+      },
+      {
+        "source": "int",
+        "changes": "1q"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -1527,7 +2263,12 @@
   {
     "round": 4,
     "turn": 4,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -1538,8 +2279,14 @@
     "round": 4,
     "turn": 4,
     "changes": [
-      { "source": "build", "changes": "-2c, -1o, -1q" },
-      { "source": "geodens", "changes": "3k" }
+      {
+        "source": "build",
+        "changes": "-2c, -1o, -1q"
+      },
+      {
+        "source": "geodens",
+        "changes": "3k"
+      }
     ],
     "color": "#FF9500",
     "textColor": "black",
@@ -1550,7 +2297,12 @@
   {
     "round": 4,
     "turn": 3,
-    "changes": [{ "source": "power4", "changes": "-4pw, 7c" }],
+    "changes": [
+      {
+        "source": "power4",
+        "changes": "-4pw, 7c"
+      }
+    ],
     "color": "#704100",
     "textColor": "white",
     "faction": "taklons",
@@ -1560,7 +2312,12 @@
   {
     "round": 4,
     "turn": 3,
-    "changes": [{ "source": "charge", "changes": "4pw, -3vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "4pw, -3vp"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -1570,7 +2327,12 @@
   {
     "round": 4,
     "turn": 3,
-    "changes": [{ "source": "build", "changes": "-2c, -1o" }],
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-2c, -1o"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -1580,7 +2342,12 @@
   {
     "round": 4,
     "turn": 3,
-    "changes": [{ "source": "charge", "changes": "4pw, -3vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "4pw, -3vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -1601,9 +2368,18 @@
     "round": 4,
     "turn": 3,
     "changes": [
-      { "source": "build", "changes": "-6c, -6o" },
-      { "source": "tech-free3 (o,q)", "changes": "1o, 1q" },
-      { "source": "int", "changes": "1q" }
+      {
+        "source": "build",
+        "changes": "-6c, -6o"
+      },
+      {
+        "source": "tech-free3 (o,q)",
+        "changes": "1o, 1q"
+      },
+      {
+        "source": "int",
+        "changes": "1q"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -1614,7 +2390,12 @@
   {
     "round": 4,
     "turn": 3,
-    "changes": [{ "source": "up", "changes": "-4k" }],
+    "changes": [
+      {
+        "source": "up",
+        "changes": "-4k"
+      }
+    ],
     "color": "#FF9500",
     "textColor": "black",
     "faction": "geodens",
@@ -1624,7 +2405,12 @@
   {
     "round": 4,
     "turn": 2,
-    "changes": [{ "source": "power3", "changes": "-4pw, 2o" }],
+    "changes": [
+      {
+        "source": "power3",
+        "changes": "-4pw, 2o"
+      }
+    ],
     "color": "#704100",
     "textColor": "white",
     "faction": "taklons",
@@ -1634,7 +2420,12 @@
   {
     "round": 4,
     "turn": 2,
-    "changes": [{ "source": "power7", "changes": "-3pw, 2t" }],
+    "changes": [
+      {
+        "source": "power7",
+        "changes": "-3pw, 2t"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -1644,7 +2435,12 @@
   {
     "round": 4,
     "turn": 2,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "geodens",
@@ -1654,7 +2450,12 @@
   {
     "round": 4,
     "turn": 2,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
     "faction": "itars",
@@ -1665,9 +2466,18 @@
     "round": 4,
     "turn": 2,
     "changes": [
-      { "source": "power6", "changes": "-3pw" },
-      { "source": "build", "changes": "-2c, -1o" },
-      { "source": "round4", "changes": "2vp" }
+      {
+        "source": "power6",
+        "changes": "-3pw"
+      },
+      {
+        "source": "build",
+        "changes": "-2c, -1o"
+      },
+      {
+        "source": "round4",
+        "changes": "2vp"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -1678,7 +2488,12 @@
   {
     "round": 4,
     "turn": 2,
-    "changes": [{ "source": "power5", "changes": "-4pw, 2k" }],
+    "changes": [
+      {
+        "source": "power5",
+        "changes": "-4pw, 2k"
+      }
+    ],
     "color": "#FF9500",
     "textColor": "black",
     "faction": "geodens",
@@ -1697,7 +2512,12 @@
   {
     "round": 4,
     "turn": 1,
-    "changes": [{ "source": "tech-free3 (o,q)", "changes": "1o, 1q" }],
+    "changes": [
+      {
+        "source": "tech-free3 (o,q)",
+        "changes": "1o, 1q"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -1717,11 +2537,26 @@
     "round": 4,
     "turn": 0,
     "changes": [
-      { "source": "eco", "changes": "4c, 2o, 4pw" },
-      { "source": "income", "changes": "1k, 2o" },
-      { "source": "tech-sci (4c income)", "changes": "4c" },
-      { "source": "sci", "changes": "4k" },
-      { "source": "booster9 (4pw, 4 VP / PI or academy)", "changes": "4pw" }
+      {
+        "source": "eco",
+        "changes": "4c, 2o, 4pw"
+      },
+      {
+        "source": "income",
+        "changes": "1k, 2o"
+      },
+      {
+        "source": "tech-sci (4c income)",
+        "changes": "4c"
+      },
+      {
+        "source": "sci",
+        "changes": "4k"
+      },
+      {
+        "source": "booster9 (4pw, 4 VP / PI or academy)",
+        "changes": "4pw"
+      }
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
@@ -1733,8 +2568,14 @@
     "round": 4,
     "turn": 0,
     "changes": [
-      { "source": "income", "changes": "1o, 3k" },
-      { "source": "tech-free2 (1k,1c income)", "changes": "1k, 1c" }
+      {
+        "source": "income",
+        "changes": "1o, 3k"
+      },
+      {
+        "source": "tech-free2 (1k,1c income)",
+        "changes": "1k, 1c"
+      }
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
@@ -1745,12 +2586,30 @@
     "round": 4,
     "turn": 0,
     "changes": [
-      { "source": "income", "changes": "3o, 4k, 2t, 4pw, 3c" },
-      { "source": "tech-free2 (1k,1c income)", "changes": "1k, 1c" },
-      { "source": "tech-sci (4c income)", "changes": "4c" },
-      { "source": "sci", "changes": "1k" },
-      { "source": "tech-gaia (1o,1pw income)", "changes": "1o, 1pw" },
-      { "source": "booster4 (2c, 1 step)", "changes": "2c" }
+      {
+        "source": "income",
+        "changes": "3o, 4k, 2t, 4pw, 3c"
+      },
+      {
+        "source": "tech-free2 (1k,1c income)",
+        "changes": "1k, 1c"
+      },
+      {
+        "source": "tech-sci (4c income)",
+        "changes": "4c"
+      },
+      {
+        "source": "sci",
+        "changes": "1k"
+      },
+      {
+        "source": "tech-gaia (1o,1pw income)",
+        "changes": "1o, 1pw"
+      },
+      {
+        "source": "booster4 (2c, 1 step)",
+        "changes": "2c"
+      }
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
@@ -1762,10 +2621,22 @@
     "round": 4,
     "turn": 0,
     "changes": [
-      { "source": "booster2 (1o, 2 tokens)", "changes": "2t, 1o" },
-      { "source": "income", "changes": "4o, 2k, 4pw, 7c" },
-      { "source": "eco", "changes": "4c, 2o, 4pw" },
-      { "source": "sci", "changes": "1k" }
+      {
+        "source": "booster2 (1o, 2 tokens)",
+        "changes": "2t, 1o"
+      },
+      {
+        "source": "income",
+        "changes": "4o, 2k, 4pw, 7c"
+      },
+      {
+        "source": "eco",
+        "changes": "4c, 2o, 4pw"
+      },
+      {
+        "source": "sci",
+        "changes": "1k"
+      }
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
@@ -1777,8 +2648,14 @@
     "round": 4,
     "turn": 0,
     "changes": [
-      { "source": "income", "changes": "4pw, 2o, 3k, 1t, 3c" },
-      { "source": "booster10 (4c, 1 VP / gaia planet)", "changes": "4c" }
+      {
+        "source": "income",
+        "changes": "4pw, 2o, 3k, 1t, 3c"
+      },
+      {
+        "source": "booster10 (4c, 1 VP / gaia planet)",
+        "changes": "4c"
+      }
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
@@ -1808,8 +2685,14 @@
     "round": 3,
     "turn": 12,
     "changes": [
-      { "source": "spend", "changes": "-2pw, 2c" },
-      { "source": "booster6 (1o, 1 VP / mine)", "changes": "2vp" }
+      {
+        "source": "spend",
+        "changes": "-2pw, 2c"
+      },
+      {
+        "source": "booster6 (1o, 1 VP / mine)",
+        "changes": "2vp"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -1820,7 +2703,12 @@
   {
     "round": 3,
     "turn": 12,
-    "changes": [{ "source": "booster9 (4pw, 4 VP / PI or academy)", "changes": "8vp" }],
+    "changes": [
+      {
+        "source": "booster9 (4pw, 4 VP / PI or academy)",
+        "changes": "8vp"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -1831,8 +2719,14 @@
     "round": 3,
     "turn": 11,
     "changes": [
-      { "source": "up", "changes": "-4k" },
-      { "source": "adv-eco (2 VP when researching)", "changes": "2vp" }
+      {
+        "source": "up",
+        "changes": "-4k"
+      },
+      {
+        "source": "adv-eco (2 VP when researching)",
+        "changes": "2vp"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -1843,7 +2737,12 @@
   {
     "round": 3,
     "turn": 11,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -1853,7 +2752,12 @@
   {
     "round": 3,
     "turn": 11,
-    "changes": [{ "source": "build", "changes": "-2c, -1o, -1q" }],
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-2c, -1o, -1q"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -1863,7 +2767,12 @@
   {
     "round": 3,
     "turn": 10,
-    "changes": [{ "source": "build", "changes": "-2c, -1o, -1q" }],
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-2c, -1o, -1q"
+      }
+    ],
     "color": "#704100",
     "textColor": "white",
     "faction": "taklons",
@@ -1874,8 +2783,14 @@
     "round": 3,
     "turn": 10,
     "changes": [
-      { "source": "spend", "changes": "-2pw, 2c" },
-      { "source": "federation", "changes": "-2t, 7vp, 2o" }
+      {
+        "source": "spend",
+        "changes": "-2pw, 2c"
+      },
+      {
+        "source": "federation",
+        "changes": "-2t, 7vp, 2o"
+      }
     ],
     "color": "#000000",
     "textColor": "white",
@@ -1887,9 +2802,18 @@
     "round": 3,
     "turn": 9,
     "changes": [
-      { "source": "up", "changes": "-4k" },
-      { "source": "terra", "changes": "2o" },
-      { "source": "adv-eco (2 VP when researching)", "changes": "2vp" }
+      {
+        "source": "up",
+        "changes": "-4k"
+      },
+      {
+        "source": "terra",
+        "changes": "2o"
+      },
+      {
+        "source": "adv-eco (2 VP when researching)",
+        "changes": "2vp"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -1901,8 +2825,14 @@
     "round": 3,
     "turn": 9,
     "changes": [
-      { "source": "up", "changes": "-4k" },
-      { "source": "nav", "changes": "1q, 3pw" }
+      {
+        "source": "up",
+        "changes": "-4k"
+      },
+      {
+        "source": "nav",
+        "changes": "1q, 3pw"
+      }
     ],
     "color": "#000000",
     "textColor": "white",
@@ -1913,7 +2843,12 @@
   {
     "round": 3,
     "turn": 8,
-    "changes": [{ "source": "build", "changes": "-2c, -1o, -1q" }],
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-2c, -1o, -1q"
+      }
+    ],
     "color": "#704100",
     "textColor": "white",
     "faction": "taklons",
@@ -1934,8 +2869,14 @@
     "round": 3,
     "turn": 8,
     "changes": [
-      { "source": "build", "changes": "-3c, -2o" },
-      { "source": "round3", "changes": "4vp" }
+      {
+        "source": "build",
+        "changes": "-3c, -2o"
+      },
+      {
+        "source": "round3",
+        "changes": "4vp"
+      }
     ],
     "color": "#000000",
     "textColor": "white",
@@ -1947,8 +2888,14 @@
     "round": 3,
     "turn": 7,
     "changes": [
-      { "source": "tech-nav (4pw special action)", "changes": "4pw" },
-      { "source": "spend", "changes": "-3pw, 1o" }
+      {
+        "source": "tech-nav (4pw special action)",
+        "changes": "4pw"
+      },
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -1969,7 +2916,12 @@
   {
     "round": 3,
     "turn": 7,
-    "changes": [{ "source": "spend", "changes": "-2pw, 2c" }],
+    "changes": [
+      {
+        "source": "spend",
+        "changes": "-2pw, 2c"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -1979,7 +2931,12 @@
   {
     "round": 3,
     "turn": 6,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -1990,10 +2947,22 @@
     "round": 3,
     "turn": 6,
     "changes": [
-      { "source": "build", "changes": "-5c, -3o" },
-      { "source": "sci", "changes": "3pw" },
-      { "source": "adv-eco (2 VP when researching)", "changes": "2vp" },
-      { "source": "spend", "changes": "-4pw, 1q" }
+      {
+        "source": "build",
+        "changes": "-5c, -3o"
+      },
+      {
+        "source": "sci",
+        "changes": "3pw"
+      },
+      {
+        "source": "adv-eco (2 VP when researching)",
+        "changes": "2vp"
+      },
+      {
+        "source": "spend",
+        "changes": "-4pw, 1q"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -2004,7 +2973,12 @@
   {
     "round": 3,
     "turn": 6,
-    "changes": [{ "source": "up", "changes": "-4k" }],
+    "changes": [
+      {
+        "source": "up",
+        "changes": "-4k"
+      }
+    ],
     "color": "#2080f0",
     "textColor": "black",
     "faction": "lantids",
@@ -2014,7 +2988,12 @@
   {
     "round": 3,
     "turn": 6,
-    "changes": [{ "source": "power7", "changes": "-3pw, 2t" }],
+    "changes": [
+      {
+        "source": "power7",
+        "changes": "-3pw, 2t"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -2024,7 +3003,12 @@
   {
     "round": 3,
     "turn": 5,
-    "changes": [{ "source": "power4", "changes": "-4pw, 7c" }],
+    "changes": [
+      {
+        "source": "power4",
+        "changes": "-4pw, 7c"
+      }
+    ],
     "color": "#704100",
     "textColor": "white",
     "faction": "taklons",
@@ -2034,7 +3018,12 @@
   {
     "round": 3,
     "turn": 5,
-    "changes": [{ "source": "charge", "changes": "4pw, -3vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "4pw, -3vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -2044,7 +3033,12 @@
   {
     "round": 3,
     "turn": 5,
-    "changes": [{ "source": "charge", "changes": "4pw, -3vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "4pw, -3vp"
+      }
+    ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
     "faction": "itars",
@@ -2055,8 +3049,14 @@
     "round": 3,
     "turn": 5,
     "changes": [
-      { "source": "build", "changes": "-2c, -1o" },
-      { "source": "lantids", "changes": "2k" }
+      {
+        "source": "build",
+        "changes": "-2c, -1o"
+      },
+      {
+        "source": "lantids",
+        "changes": "2k"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -2067,7 +3067,12 @@
   {
     "round": 3,
     "turn": 5,
-    "changes": [{ "source": "build", "changes": "-2c, -1o" }],
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-2c, -1o"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -2077,7 +3082,12 @@
   {
     "round": 3,
     "turn": 4,
-    "changes": [{ "source": "income", "changes": "1q" }],
+    "changes": [
+      {
+        "source": "income",
+        "changes": "1q"
+      }
+    ],
     "color": "#704100",
     "textColor": "white",
     "faction": "taklons",
@@ -2087,7 +3097,12 @@
   {
     "round": 3,
     "turn": 4,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "geodens",
@@ -2098,9 +3113,18 @@
     "round": 3,
     "turn": 4,
     "changes": [
-      { "source": "build", "changes": "-3c, -2o" },
-      { "source": "round3", "changes": "4vp" },
-      { "source": "spend", "changes": "-2pw, 2c" }
+      {
+        "source": "build",
+        "changes": "-3c, -2o"
+      },
+      {
+        "source": "round3",
+        "changes": "4vp"
+      },
+      {
+        "source": "spend",
+        "changes": "-2pw, 2c"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -2111,7 +3135,12 @@
   {
     "round": 3,
     "turn": 4,
-    "changes": [{ "source": "adv-terra (3 VP / federation when passing)", "changes": "6vp" }],
+    "changes": [
+      {
+        "source": "adv-terra (3 VP / federation when passing)",
+        "changes": "6vp"
+      }
+    ],
     "color": "#FF9500",
     "textColor": "black",
     "faction": "geodens",
@@ -2121,7 +3150,12 @@
   {
     "round": 3,
     "turn": 4,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -2131,7 +3165,12 @@
   {
     "round": 3,
     "turn": 4,
-    "changes": [{ "source": "build", "changes": "-2c, -1o" }],
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-2c, -1o"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -2141,7 +3180,12 @@
   {
     "round": 3,
     "turn": 3,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -2152,8 +3196,14 @@
     "round": 3,
     "turn": 3,
     "changes": [
-      { "source": "build", "changes": "-3c, -2o" },
-      { "source": "round3", "changes": "4vp" }
+      {
+        "source": "build",
+        "changes": "-3c, -2o"
+      },
+      {
+        "source": "round3",
+        "changes": "4vp"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -2164,7 +3214,12 @@
   {
     "round": 3,
     "turn": 3,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -2174,7 +3229,12 @@
   {
     "round": 3,
     "turn": 3,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "geodens",
@@ -2185,8 +3245,14 @@
     "round": 3,
     "turn": 3,
     "changes": [
-      { "source": "build", "changes": "-3c, -2o" },
-      { "source": "round3", "changes": "4vp" }
+      {
+        "source": "build",
+        "changes": "-3c, -2o"
+      },
+      {
+        "source": "round3",
+        "changes": "4vp"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -2197,7 +3263,12 @@
   {
     "round": 3,
     "turn": 3,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -2208,9 +3279,18 @@
     "round": 3,
     "turn": 3,
     "changes": [
-      { "source": "spend", "changes": "-3pw, 1o" },
-      { "source": "build", "changes": "-5c, -3o" },
-      { "source": "nav", "changes": "1q" }
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      },
+      {
+        "source": "build",
+        "changes": "-5c, -3o"
+      },
+      {
+        "source": "nav",
+        "changes": "1q"
+      }
     ],
     "color": "#FF9500",
     "textColor": "black",
@@ -2221,7 +3301,12 @@
   {
     "round": 3,
     "turn": 3,
-    "changes": [{ "source": "up", "changes": "-4k" }],
+    "changes": [
+      {
+        "source": "up",
+        "changes": "-4k"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -2231,7 +3316,12 @@
   {
     "round": 3,
     "turn": 2,
-    "changes": [{ "source": "power5", "changes": "-4pw, 2k" }],
+    "changes": [
+      {
+        "source": "power5",
+        "changes": "-4pw, 2k"
+      }
+    ],
     "color": "#704100",
     "textColor": "white",
     "faction": "taklons",
@@ -2241,7 +3331,12 @@
   {
     "round": 3,
     "turn": 2,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "geodens",
@@ -2252,8 +3347,14 @@
     "round": 3,
     "turn": 2,
     "changes": [
-      { "source": "power6", "changes": "-3pw" },
-      { "source": "build", "changes": "-2c, -1o, -1q" }
+      {
+        "source": "power6",
+        "changes": "-3pw"
+      },
+      {
+        "source": "build",
+        "changes": "-2c, -1o, -1q"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -2265,9 +3366,18 @@
     "round": 3,
     "turn": 2,
     "changes": [
-      { "source": "spend", "changes": "-3pw, 1o" },
-      { "source": "build", "changes": "-3c, -2o" },
-      { "source": "round3", "changes": "4vp" }
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      },
+      {
+        "source": "build",
+        "changes": "-3c, -2o"
+      },
+      {
+        "source": "round3",
+        "changes": "4vp"
+      }
     ],
     "color": "#FF9500",
     "textColor": "black",
@@ -2278,7 +3388,12 @@
   {
     "round": 3,
     "turn": 2,
-    "changes": [{ "source": "power3", "changes": "-4pw, 2o" }],
+    "changes": [
+      {
+        "source": "power3",
+        "changes": "-4pw, 2o"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -2297,7 +3412,12 @@
   {
     "round": 3,
     "turn": 1,
-    "changes": [{ "source": "gaia", "changes": "3t, 3pw" }],
+    "changes": [
+      {
+        "source": "gaia",
+        "changes": "3t, 3pw"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -2317,9 +3437,18 @@
     "round": 3,
     "turn": 0,
     "changes": [
-      { "source": "eco", "changes": "4c, 2o, 4pw" },
-      { "source": "sci", "changes": "2k" },
-      { "source": "booster6 (1o, 1 VP / mine)", "changes": "1o" }
+      {
+        "source": "eco",
+        "changes": "4c, 2o, 4pw"
+      },
+      {
+        "source": "sci",
+        "changes": "2k"
+      },
+      {
+        "source": "booster6 (1o, 1 VP / mine)",
+        "changes": "1o"
+      }
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
@@ -2331,8 +3460,14 @@
     "round": 3,
     "turn": 0,
     "changes": [
-      { "source": "income", "changes": "2o, 3k" },
-      { "source": "tech-free2 (1k,1c income)", "changes": "1k, 1c" }
+      {
+        "source": "income",
+        "changes": "2o, 3k"
+      },
+      {
+        "source": "tech-free2 (1k,1c income)",
+        "changes": "1k, 1c"
+      }
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
@@ -2343,9 +3478,18 @@
     "round": 3,
     "turn": 0,
     "changes": [
-      { "source": "income", "changes": "4o, 2k, 4pw" },
-      { "source": "eco", "changes": "4c, 2o, 4pw" },
-      { "source": "booster3 (q, 2c)", "changes": "1q, 2c" }
+      {
+        "source": "income",
+        "changes": "4o, 2k, 4pw"
+      },
+      {
+        "source": "eco",
+        "changes": "4c, 2o, 4pw"
+      },
+      {
+        "source": "booster3 (q, 2c)",
+        "changes": "1q, 2c"
+      }
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
@@ -2356,8 +3500,14 @@
     "round": 3,
     "turn": 0,
     "changes": [
-      { "source": "income", "changes": "1t, 3o, 2k, 4pw, 3c" },
-      { "source": "booster4 (2c, 1 step)", "changes": "2c" }
+      {
+        "source": "income",
+        "changes": "1t, 3o, 2k, 4pw, 3c"
+      },
+      {
+        "source": "booster4 (2c, 1 step)",
+        "changes": "2c"
+      }
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
@@ -2369,11 +3519,26 @@
     "round": 3,
     "turn": 0,
     "changes": [
-      { "source": "income", "changes": "1o, 4k, 2t, 4pw" },
-      { "source": "tech-free2 (1k,1c income)", "changes": "1k, 1c" },
-      { "source": "tech-sci (4c income)", "changes": "4c" },
-      { "source": "sci", "changes": "1k" },
-      { "source": "booster9 (4pw, 4 VP / PI or academy)", "changes": "4pw" }
+      {
+        "source": "income",
+        "changes": "1o, 4k, 2t, 4pw"
+      },
+      {
+        "source": "tech-free2 (1k,1c income)",
+        "changes": "1k, 1c"
+      },
+      {
+        "source": "tech-sci (4c income)",
+        "changes": "4c"
+      },
+      {
+        "source": "sci",
+        "changes": "1k"
+      },
+      {
+        "source": "booster9 (4pw, 4 VP / PI or academy)",
+        "changes": "4pw"
+      }
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
@@ -2413,8 +3578,14 @@
     "round": 2,
     "turn": 9,
     "changes": [
-      { "source": "qic1", "changes": "-4q" },
-      { "source": "adv-eco (2 VP when researching)", "changes": "2vp" }
+      {
+        "source": "qic1",
+        "changes": "-4q"
+      },
+      {
+        "source": "adv-eco (2 VP when researching)",
+        "changes": "2vp"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -2426,8 +3597,14 @@
     "round": 2,
     "turn": 8,
     "changes": [
-      { "source": "federation", "changes": "-2t, 8vp, 1q" },
-      { "source": "round2", "changes": "5vp" }
+      {
+        "source": "federation",
+        "changes": "-2t, 8vp, 1q"
+      },
+      {
+        "source": "round2",
+        "changes": "5vp"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -2438,7 +3615,12 @@
   {
     "round": 2,
     "turn": 7,
-    "changes": [{ "source": "spend", "changes": "-2pw, 2c" }],
+    "changes": [
+      {
+        "source": "spend",
+        "changes": "-2pw, 2c"
+      }
+    ],
     "color": "#2080f0",
     "textColor": "black",
     "faction": "lantids",
@@ -2448,7 +3630,12 @@
   {
     "round": 2,
     "turn": 7,
-    "changes": [{ "source": "income", "changes": "1q" }],
+    "changes": [
+      {
+        "source": "income",
+        "changes": "1q"
+      }
+    ],
     "color": "#704100",
     "textColor": "white",
     "faction": "taklons",
@@ -2458,7 +3645,12 @@
   {
     "round": 2,
     "turn": 6,
-    "changes": [{ "source": "spend", "changes": "-1pw, 1c" }],
+    "changes": [
+      {
+        "source": "spend",
+        "changes": "-1pw, 1c"
+      }
+    ],
     "color": "#FF9500",
     "textColor": "black",
     "faction": "geodens",
@@ -2468,7 +3660,12 @@
   {
     "round": 2,
     "turn": 6,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -2478,7 +3675,12 @@
   {
     "round": 2,
     "turn": 6,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "geodens",
@@ -2489,8 +3691,14 @@
     "round": 2,
     "turn": 6,
     "changes": [
-      { "source": "spend", "changes": "-1pw, 1c" },
-      { "source": "build", "changes": "-2c, -1o, -1q" }
+      {
+        "source": "spend",
+        "changes": "-1pw, 1c"
+      },
+      {
+        "source": "build",
+        "changes": "-2c, -1o, -1q"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -2501,7 +3709,12 @@
   {
     "round": 2,
     "turn": 6,
-    "changes": [{ "source": "charge", "changes": "3pw, -2vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "3pw, -2vp"
+      }
+    ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
     "faction": "itars",
@@ -2511,7 +3724,12 @@
   {
     "round": 2,
     "turn": 6,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -2522,8 +3740,14 @@
     "round": 2,
     "turn": 6,
     "changes": [
-      { "source": "spend", "changes": "-3pw, 1o" },
-      { "source": "build", "changes": "-6c, -6o" }
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      },
+      {
+        "source": "build",
+        "changes": "-6c, -6o"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -2534,7 +3758,12 @@
   {
     "round": 2,
     "turn": 6,
-    "changes": [{ "source": "spend", "changes": "-3pw, 1o" }],
+    "changes": [
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -2544,7 +3773,12 @@
   {
     "round": 2,
     "turn": 5,
-    "changes": [{ "source": "build", "changes": "-2c, -1o, -1q" }],
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-2c, -1o, -1q"
+      }
+    ],
     "color": "#FF9500",
     "textColor": "black",
     "faction": "geodens",
@@ -2555,9 +3789,18 @@
     "round": 2,
     "turn": 5,
     "changes": [
-      { "source": "spend", "changes": "-1pw, 1c" },
-      { "source": "federation", "changes": "-1t, 7vp, 2o" },
-      { "source": "round2", "changes": "5vp" }
+      {
+        "source": "spend",
+        "changes": "-1pw, 1c"
+      },
+      {
+        "source": "federation",
+        "changes": "-1t, 7vp, 2o"
+      },
+      {
+        "source": "round2",
+        "changes": "5vp"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -2568,7 +3811,12 @@
   {
     "round": 2,
     "turn": 5,
-    "changes": [{ "source": "charge", "changes": "3pw, -2vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "3pw, -2vp"
+      }
+    ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
     "faction": "itars",
@@ -2578,7 +3826,12 @@
   {
     "round": 2,
     "turn": 5,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -2589,9 +3842,18 @@
     "round": 2,
     "turn": 5,
     "changes": [
-      { "source": "spend", "changes": "-3pw, 1o" },
-      { "source": "build", "changes": "-5c, -3o" },
-      { "source": "tech-free3 (o,q)", "changes": "1o, 1q" }
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      },
+      {
+        "source": "build",
+        "changes": "-5c, -3o"
+      },
+      {
+        "source": "tech-free3 (o,q)",
+        "changes": "1o, 1q"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -2602,7 +3864,12 @@
   {
     "round": 2,
     "turn": 5,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "geodens",
@@ -2613,8 +3880,14 @@
     "round": 2,
     "turn": 5,
     "changes": [
-      { "source": "spend", "changes": "-1q, 1o, -2pw, 2c" },
-      { "source": "build", "changes": "-6c, -4o" }
+      {
+        "source": "spend",
+        "changes": "-1q, 1o, -2pw, 2c"
+      },
+      {
+        "source": "build",
+        "changes": "-6c, -4o"
+      }
     ],
     "color": "#000000",
     "textColor": "white",
@@ -2625,7 +3898,12 @@
   {
     "round": 2,
     "turn": 4,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -2636,10 +3914,22 @@
     "round": 2,
     "turn": 4,
     "changes": [
-      { "source": "build", "changes": "-5c, -3o" },
-      { "source": "tech-terra (7 VP)", "changes": "7vp" },
-      { "source": "federation", "changes": "8vp, 2t" },
-      { "source": "round2", "changes": "5vp" }
+      {
+        "source": "build",
+        "changes": "-5c, -3o"
+      },
+      {
+        "source": "tech-terra (7 VP)",
+        "changes": "7vp"
+      },
+      {
+        "source": "federation",
+        "changes": "8vp, 2t"
+      },
+      {
+        "source": "round2",
+        "changes": "5vp"
+      }
     ],
     "color": "#FF9500",
     "textColor": "black",
@@ -2650,7 +3940,12 @@
   {
     "round": 2,
     "turn": 4,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -2660,7 +3955,12 @@
   {
     "round": 2,
     "turn": 4,
-    "changes": [{ "source": "charge", "changes": "3pw, -2vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "3pw, -2vp"
+      }
+    ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
     "faction": "itars",
@@ -2671,8 +3971,14 @@
     "round": 2,
     "turn": 4,
     "changes": [
-      { "source": "spend", "changes": "-1pw, 1c" },
-      { "source": "build", "changes": "-5c, -3o" }
+      {
+        "source": "spend",
+        "changes": "-1pw, 1c"
+      },
+      {
+        "source": "build",
+        "changes": "-5c, -3o"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -2684,9 +3990,18 @@
     "round": 2,
     "turn": 4,
     "changes": [
-      { "source": "up", "changes": "-4k" },
-      { "source": "eco", "changes": "3pw" },
-      { "source": "spend", "changes": "-3pw, 1o" }
+      {
+        "source": "up",
+        "changes": "-4k"
+      },
+      {
+        "source": "eco",
+        "changes": "3pw"
+      },
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -2697,7 +4012,12 @@
   {
     "round": 2,
     "turn": 4,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "geodens",
@@ -2708,8 +4028,14 @@
     "round": 2,
     "turn": 4,
     "changes": [
-      { "source": "spend", "changes": "-1pw, 1c" },
-      { "source": "build", "changes": "-3c, -2o" }
+      {
+        "source": "spend",
+        "changes": "-1pw, 1c"
+      },
+      {
+        "source": "build",
+        "changes": "-3c, -2o"
+      }
     ],
     "color": "#000000",
     "textColor": "white",
@@ -2721,8 +4047,14 @@
     "round": 2,
     "turn": 3,
     "changes": [
-      { "source": "up", "changes": "-4k" },
-      { "source": "terra", "changes": "2o" }
+      {
+        "source": "up",
+        "changes": "-4k"
+      },
+      {
+        "source": "terra",
+        "changes": "2o"
+      }
     ],
     "color": "#FF9500",
     "textColor": "black",
@@ -2734,8 +4066,14 @@
     "round": 2,
     "turn": 3,
     "changes": [
-      { "source": "up", "changes": "-4k" },
-      { "source": "eco", "changes": "3pw" }
+      {
+        "source": "up",
+        "changes": "-4k"
+      },
+      {
+        "source": "eco",
+        "changes": "3pw"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -2746,7 +4084,12 @@
   {
     "round": 2,
     "turn": 3,
-    "changes": [{ "source": "charge", "changes": "3pw, -2vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "3pw, -2vp"
+      }
+    ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
     "faction": "itars",
@@ -2756,7 +4099,12 @@
   {
     "round": 2,
     "turn": 3,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -2767,8 +4115,14 @@
     "round": 2,
     "turn": 3,
     "changes": [
-      { "source": "spend", "changes": "-3pw, 1o" },
-      { "source": "build", "changes": "-3c, -2o" }
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      },
+      {
+        "source": "build",
+        "changes": "-3c, -2o"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -2779,7 +4133,12 @@
   {
     "round": 2,
     "turn": 3,
-    "changes": [{ "source": "build", "changes": "-1q" }],
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-1q"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -2790,8 +4149,14 @@
     "round": 2,
     "turn": 2,
     "changes": [
-      { "source": "up", "changes": "-4k" },
-      { "source": "terra", "changes": "3pw" }
+      {
+        "source": "up",
+        "changes": "-4k"
+      },
+      {
+        "source": "terra",
+        "changes": "3pw"
+      }
     ],
     "color": "#FF9500",
     "textColor": "black",
@@ -2802,7 +4167,12 @@
   {
     "round": 2,
     "turn": 2,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -2812,7 +4182,12 @@
   {
     "round": 2,
     "turn": 2,
-    "changes": [{ "source": "charge", "changes": "3pw, -2vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "3pw, -2vp"
+      }
+    ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
     "faction": "itars",
@@ -2822,7 +4197,12 @@
   {
     "round": 2,
     "turn": 2,
-    "changes": [{ "source": "build", "changes": "-3c, -2o" }],
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-3c, -2o"
+      }
+    ],
     "color": "#2080f0",
     "textColor": "black",
     "faction": "lantids",
@@ -2833,8 +4213,14 @@
     "round": 2,
     "turn": 2,
     "changes": [
-      { "source": "tech-nav (4pw special action)", "changes": "4pw" },
-      { "source": "spend", "changes": "-3pw, 1o" }
+      {
+        "source": "tech-nav (4pw special action)",
+        "changes": "4pw"
+      },
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -2845,7 +4231,12 @@
   {
     "round": 2,
     "turn": 2,
-    "changes": [{ "source": "up", "changes": "-4k" }],
+    "changes": [
+      {
+        "source": "up",
+        "changes": "-4k"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -2856,8 +4247,14 @@
     "round": 2,
     "turn": 1,
     "changes": [
-      { "source": "federation", "changes": "-2t, 6vp, 2k" },
-      { "source": "round2", "changes": "5vp" }
+      {
+        "source": "federation",
+        "changes": "-2t, 6vp, 2k"
+      },
+      {
+        "source": "round2",
+        "changes": "5vp"
+      }
     ],
     "color": "#FF9500",
     "textColor": "black",
@@ -2868,7 +4265,12 @@
   {
     "round": 2,
     "turn": 1,
-    "changes": [{ "source": "power5", "changes": "-4pw, 2k" }],
+    "changes": [
+      {
+        "source": "power5",
+        "changes": "-4pw, 2k"
+      }
+    ],
     "color": "#2080f0",
     "textColor": "black",
     "faction": "lantids",
@@ -2878,7 +4280,12 @@
   {
     "round": 2,
     "turn": 1,
-    "changes": [{ "source": "power4", "changes": "-4pw, 7c" }],
+    "changes": [
+      {
+        "source": "power4",
+        "changes": "-4pw, 7c"
+      }
+    ],
     "color": "#704100",
     "textColor": "white",
     "faction": "taklons",
@@ -2888,7 +4295,12 @@
   {
     "round": 2,
     "turn": 1,
-    "changes": [{ "source": "power3", "changes": "-4pw, 2o" }],
+    "changes": [
+      {
+        "source": "power3",
+        "changes": "-4pw, 2o"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -2917,8 +4329,14 @@
     "round": 2,
     "turn": 0,
     "changes": [
-      { "source": "income", "changes": "1t, 2o, 1k, 4pw, 7c" },
-      { "source": "booster3 (q, 2c)", "changes": "1q, 2c" }
+      {
+        "source": "income",
+        "changes": "1t, 2o, 1k, 4pw, 7c"
+      },
+      {
+        "source": "booster3 (q, 2c)",
+        "changes": "1q, 2c"
+      }
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
@@ -2930,9 +4348,18 @@
     "round": 2,
     "turn": 0,
     "changes": [
-      { "source": "income", "changes": "4o, 1k, 4pw" },
-      { "source": "eco", "changes": "2c, 1o, 2pw" },
-      { "source": "booster10 (4c, 1 VP / gaia planet)", "changes": "4c" }
+      {
+        "source": "income",
+        "changes": "4o, 1k, 4pw"
+      },
+      {
+        "source": "eco",
+        "changes": "2c, 1o, 2pw"
+      },
+      {
+        "source": "booster10 (4c, 1 VP / gaia planet)",
+        "changes": "4c"
+      }
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
@@ -2943,10 +4370,22 @@
     "round": 2,
     "turn": 0,
     "changes": [
-      { "source": "eco", "changes": "2c, 1o, 2pw" },
-      { "source": "income", "changes": "3o, 3k" },
-      { "source": "tech-free2 (1k,1c income)", "changes": "1k, 1c" },
-      { "source": "booster2 (1o, 2 tokens)", "changes": "1o, 2t" }
+      {
+        "source": "eco",
+        "changes": "2c, 1o, 2pw"
+      },
+      {
+        "source": "income",
+        "changes": "3o, 3k"
+      },
+      {
+        "source": "tech-free2 (1k,1c income)",
+        "changes": "1k, 1c"
+      },
+      {
+        "source": "booster2 (1o, 2 tokens)",
+        "changes": "1o, 2t"
+      }
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
@@ -2958,11 +4397,26 @@
     "round": 2,
     "turn": 0,
     "changes": [
-      { "source": "income", "changes": "2o, 4k, 1t" },
-      { "source": "tech-free2 (1k,1c income)", "changes": "1k, 1c" },
-      { "source": "tech-sci (4c income)", "changes": "4c" },
-      { "source": "sci", "changes": "1k" },
-      { "source": "booster6 (1o, 1 VP / mine)", "changes": "1o" }
+      {
+        "source": "income",
+        "changes": "2o, 4k, 1t"
+      },
+      {
+        "source": "tech-free2 (1k,1c income)",
+        "changes": "1k, 1c"
+      },
+      {
+        "source": "tech-sci (4c income)",
+        "changes": "4c"
+      },
+      {
+        "source": "sci",
+        "changes": "1k"
+      },
+      {
+        "source": "booster6 (1o, 1 VP / mine)",
+        "changes": "1o"
+      }
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
@@ -3000,7 +4454,12 @@
   {
     "round": 1,
     "turn": 9,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
     "faction": "itars",
@@ -3010,7 +4469,12 @@
   {
     "round": 1,
     "turn": 9,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -3020,7 +4484,12 @@
   {
     "round": 1,
     "turn": 9,
-    "changes": [{ "source": "charge", "changes": "3pw, -2vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "3pw, -2vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -3031,8 +4500,14 @@
     "round": 1,
     "turn": 9,
     "changes": [
-      { "source": "spend", "changes": "-5pw, 1o, 2c" },
-      { "source": "build", "changes": "-3c, -2o" }
+      {
+        "source": "spend",
+        "changes": "-5pw, 1o, 2c"
+      },
+      {
+        "source": "build",
+        "changes": "-3c, -2o"
+      }
     ],
     "color": "#FF9500",
     "textColor": "black",
@@ -3053,7 +4528,12 @@
   {
     "round": 1,
     "turn": 8,
-    "changes": [{ "source": "booster9 (4pw, 4 VP / PI or academy)", "changes": "4vp" }],
+    "changes": [
+      {
+        "source": "booster9 (4pw, 4 VP / PI or academy)",
+        "changes": "4vp"
+      }
+    ],
     "color": "#704100",
     "textColor": "white",
     "faction": "taklons",
@@ -3063,7 +4543,12 @@
   {
     "round": 1,
     "turn": 8,
-    "changes": [{ "source": "up", "changes": "-4k" }],
+    "changes": [
+      {
+        "source": "up",
+        "changes": "-4k"
+      }
+    ],
     "color": "#FF9500",
     "textColor": "black",
     "faction": "geodens",
@@ -3073,7 +4558,12 @@
   {
     "round": 1,
     "turn": 7,
-    "changes": [{ "source": "up", "changes": "-4k" }],
+    "changes": [
+      {
+        "source": "up",
+        "changes": "-4k"
+      }
+    ],
     "color": "#2080f0",
     "textColor": "black",
     "faction": "lantids",
@@ -3083,7 +4573,12 @@
   {
     "round": 1,
     "turn": 7,
-    "changes": [{ "source": "up", "changes": "-4k" }],
+    "changes": [
+      {
+        "source": "up",
+        "changes": "-4k"
+      }
+    ],
     "color": "#704100",
     "textColor": "white",
     "faction": "taklons",
@@ -3093,7 +4588,12 @@
   {
     "round": 1,
     "turn": 7,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -3103,7 +4603,12 @@
   {
     "round": 1,
     "turn": 7,
-    "changes": [{ "source": "build", "changes": "-3c, -2o" }],
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-3c, -2o"
+      }
+    ],
     "color": "#FF9500",
     "textColor": "black",
     "faction": "geodens",
@@ -3113,7 +4618,12 @@
   {
     "round": 1,
     "turn": 6,
-    "changes": [{ "source": "charge", "changes": "3pw, -2vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "3pw, -2vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "geodens",
@@ -3124,9 +4634,18 @@
     "round": 1,
     "turn": 6,
     "changes": [
-      { "source": "spend", "changes": "-3pw, 1o" },
-      { "source": "build", "changes": "-2c, -1o" },
-      { "source": "lantids", "changes": "2k" }
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      },
+      {
+        "source": "build",
+        "changes": "-2c, -1o"
+      },
+      {
+        "source": "lantids",
+        "changes": "2k"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -3137,7 +4656,12 @@
   {
     "round": 1,
     "turn": 6,
-    "changes": [{ "source": "charge", "changes": "3pw, -2vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "3pw, -2vp"
+      }
+    ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
     "faction": "itars",
@@ -3147,7 +4671,12 @@
   {
     "round": 1,
     "turn": 6,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -3158,9 +4687,18 @@
     "round": 1,
     "turn": 6,
     "changes": [
-      { "source": "spend", "changes": "-3pw, 1o" },
-      { "source": "power6", "changes": "-3pw" },
-      { "source": "build", "changes": "-2c, -1o, -1q" }
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      },
+      {
+        "source": "power6",
+        "changes": "-3pw"
+      },
+      {
+        "source": "build",
+        "changes": "-2c, -1o, -1q"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -3171,7 +4709,12 @@
   {
     "round": 1,
     "turn": 6,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
     "faction": "itars",
@@ -3181,7 +4724,12 @@
   {
     "round": 1,
     "turn": 6,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -3191,7 +4739,12 @@
   {
     "round": 1,
     "turn": 6,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -3201,7 +4754,12 @@
   {
     "round": 1,
     "turn": 6,
-    "changes": [{ "source": "build", "changes": "-2c, -1o, -1q" }],
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-2c, -1o, -1q"
+      }
+    ],
     "color": "#FF9500",
     "textColor": "black",
     "faction": "geodens",
@@ -3211,7 +4769,12 @@
   {
     "round": 1,
     "turn": 5,
-    "changes": [{ "source": "charge", "changes": "3pw, -2vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "3pw, -2vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -3221,7 +4784,12 @@
   {
     "round": 1,
     "turn": 5,
-    "changes": [{ "source": "charge", "changes": "3pw, -2vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "3pw, -2vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "geodens",
@@ -3232,8 +4800,14 @@
     "round": 1,
     "turn": 5,
     "changes": [
-      { "source": "build", "changes": "-2c, -1o, -1q" },
-      { "source": "lantids", "changes": "2k" }
+      {
+        "source": "build",
+        "changes": "-2c, -1o, -1q"
+      },
+      {
+        "source": "lantids",
+        "changes": "2k"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -3244,7 +4818,12 @@
   {
     "round": 1,
     "turn": 5,
-    "changes": [{ "source": "charge", "changes": "3pw, -2vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "3pw, -2vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "geodens",
@@ -3254,7 +4833,12 @@
   {
     "round": 1,
     "turn": 5,
-    "changes": [{ "source": "charge", "changes": "3pw, -2vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "3pw, -2vp"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -3265,9 +4849,18 @@
     "round": 1,
     "turn": 5,
     "changes": [
-      { "source": "spend", "changes": "-3pw, 1o" },
-      { "source": "build", "changes": "-6c, -6o" },
-      { "source": "round1", "changes": "5vp" }
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      },
+      {
+        "source": "build",
+        "changes": "-6c, -6o"
+      },
+      {
+        "source": "round1",
+        "changes": "5vp"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -3278,7 +4871,12 @@
   {
     "round": 1,
     "turn": 5,
-    "changes": [{ "source": "power5", "changes": "-4pw, 2k" }],
+    "changes": [
+      {
+        "source": "power5",
+        "changes": "-4pw, 2k"
+      }
+    ],
     "color": "#FF9500",
     "textColor": "black",
     "faction": "geodens",
@@ -3298,7 +4896,12 @@
   {
     "round": 1,
     "turn": 4,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -3308,7 +4911,12 @@
   {
     "round": 1,
     "turn": 4,
-    "changes": [{ "source": "charge", "changes": "3pw, -2vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "3pw, -2vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "geodens",
@@ -3319,8 +4927,14 @@
     "round": 1,
     "turn": 4,
     "changes": [
-      { "source": "build", "changes": "-2c, -1o" },
-      { "source": "lantids", "changes": "2k" }
+      {
+        "source": "build",
+        "changes": "-2c, -1o"
+      },
+      {
+        "source": "lantids",
+        "changes": "2k"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -3332,8 +4946,14 @@
     "round": 1,
     "turn": 4,
     "changes": [
-      { "source": "tech-nav (4pw special action)", "changes": "4pw" },
-      { "source": "spend", "changes": "-3pw, 1o" }
+      {
+        "source": "tech-nav (4pw special action)",
+        "changes": "4pw"
+      },
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -3345,8 +4965,14 @@
     "round": 1,
     "turn": 4,
     "changes": [
-      { "source": "build", "changes": "-2c, -1o" },
-      { "source": "geodens", "changes": "3k" }
+      {
+        "source": "build",
+        "changes": "-2c, -1o"
+      },
+      {
+        "source": "geodens",
+        "changes": "3k"
+      }
     ],
     "color": "#FF9500",
     "textColor": "black",
@@ -3358,8 +4984,14 @@
     "round": 1,
     "turn": 4,
     "changes": [
-      { "source": "up", "changes": "-4k" },
-      { "source": "nav", "changes": "1q" }
+      {
+        "source": "up",
+        "changes": "-4k"
+      },
+      {
+        "source": "nav",
+        "changes": "1q"
+      }
     ],
     "color": "#000000",
     "textColor": "white",
@@ -3371,8 +5003,14 @@
     "round": 1,
     "turn": 3,
     "changes": [
-      { "source": "spend", "changes": "-3pw, 1o" },
-      { "source": "up", "changes": "-4k" }
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      },
+      {
+        "source": "up",
+        "changes": "-4k"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -3383,7 +5021,12 @@
   {
     "round": 1,
     "turn": 3,
-    "changes": [{ "source": "power4", "changes": "-4pw, 7c" }],
+    "changes": [
+      {
+        "source": "power4",
+        "changes": "-4pw, 7c"
+      }
+    ],
     "color": "#704100",
     "textColor": "white",
     "faction": "taklons",
@@ -3393,7 +5036,12 @@
   {
     "round": 1,
     "turn": 3,
-    "changes": [{ "source": "charge", "changes": "3pw, -2vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "3pw, -2vp"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -3403,7 +5051,12 @@
   {
     "round": 1,
     "turn": 3,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -3414,8 +5067,14 @@
     "round": 1,
     "turn": 3,
     "changes": [
-      { "source": "build", "changes": "-6c, -4o" },
-      { "source": "round1", "changes": "5vp" }
+      {
+        "source": "build",
+        "changes": "-6c, -4o"
+      },
+      {
+        "source": "round1",
+        "changes": "5vp"
+      }
     ],
     "color": "#FF9500",
     "textColor": "black",
@@ -3426,7 +5085,12 @@
   {
     "round": 1,
     "turn": 3,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -3436,7 +5100,12 @@
   {
     "round": 1,
     "turn": 3,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "geodens",
@@ -3447,8 +5116,14 @@
     "round": 1,
     "turn": 3,
     "changes": [
-      { "source": "build", "changes": "-6c, -6o" },
-      { "source": "round1", "changes": "5vp" }
+      {
+        "source": "build",
+        "changes": "-6c, -6o"
+      },
+      {
+        "source": "round1",
+        "changes": "5vp"
+      }
     ],
     "color": "#000000",
     "textColor": "white",
@@ -3459,7 +5134,12 @@
   {
     "round": 1,
     "turn": 2,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -3469,7 +5149,12 @@
   {
     "round": 1,
     "turn": 2,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "geodens",
@@ -3480,9 +5165,18 @@
     "round": 1,
     "turn": 2,
     "changes": [
-      { "source": "spend", "changes": "-1pw, 1c" },
-      { "source": "build", "changes": "-6c, -4o" },
-      { "source": "round1", "changes": "5vp" }
+      {
+        "source": "spend",
+        "changes": "-1pw, 1c"
+      },
+      {
+        "source": "build",
+        "changes": "-6c, -4o"
+      },
+      {
+        "source": "round1",
+        "changes": "5vp"
+      }
     ],
     "color": "#2080f0",
     "textColor": "black",
@@ -3493,7 +5187,12 @@
   {
     "round": 1,
     "turn": 2,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "geodens",
@@ -3503,7 +5202,12 @@
   {
     "round": 1,
     "turn": 2,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -3514,9 +5218,18 @@
     "round": 1,
     "turn": 2,
     "changes": [
-      { "source": "spend", "changes": "-3pw, 1o" },
-      { "source": "build", "changes": "-5c, -3o" },
-      { "source": "nav", "changes": "1q" }
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      },
+      {
+        "source": "build",
+        "changes": "-5c, -3o"
+      },
+      {
+        "source": "nav",
+        "changes": "1q"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -3527,7 +5240,12 @@
   {
     "round": 1,
     "turn": 2,
-    "changes": [{ "source": "power3", "changes": "-4pw, 2o" }],
+    "changes": [
+      {
+        "source": "power3",
+        "changes": "-4pw, 2o"
+      }
+    ],
     "color": "#FF9500",
     "textColor": "black",
     "faction": "geodens",
@@ -3537,7 +5255,12 @@
   {
     "round": 1,
     "turn": 2,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -3547,7 +5270,12 @@
   {
     "round": 1,
     "turn": 2,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "geodens",
@@ -3558,8 +5286,14 @@
     "round": 1,
     "turn": 2,
     "changes": [
-      { "source": "build", "changes": "-5c, -3o" },
-      { "source": "terra", "changes": "2o" }
+      {
+        "source": "build",
+        "changes": "-5c, -3o"
+      },
+      {
+        "source": "terra",
+        "changes": "2o"
+      }
     ],
     "color": "#000000",
     "textColor": "white",
@@ -3570,7 +5304,12 @@
   {
     "round": 1,
     "turn": 1,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -3580,7 +5319,12 @@
   {
     "round": 1,
     "turn": 1,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "geodens",
@@ -3590,7 +5334,12 @@
   {
     "round": 1,
     "turn": 1,
-    "changes": [{ "source": "build", "changes": "-3c, -2o" }],
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-3c, -2o"
+      }
+    ],
     "color": "#2080f0",
     "textColor": "black",
     "faction": "lantids",
@@ -3600,7 +5349,12 @@
   {
     "round": 1,
     "turn": 1,
-    "changes": [{ "source": "charge", "changes": "2pw, -1vp" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "2pw, -1vp"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "geodens",
@@ -3610,7 +5364,12 @@
   {
     "round": 1,
     "turn": 1,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -3621,8 +5380,14 @@
     "round": 1,
     "turn": 1,
     "changes": [
-      { "source": "spend", "changes": "-3pw, 1o" },
-      { "source": "build", "changes": "-3c, -2o" }
+      {
+        "source": "spend",
+        "changes": "-3pw, 1o"
+      },
+      {
+        "source": "build",
+        "changes": "-3c, -2o"
+      }
     ],
     "color": "#704100",
     "textColor": "white",
@@ -3633,7 +5398,12 @@
   {
     "round": 1,
     "turn": 1,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -3643,7 +5413,12 @@
   {
     "round": 1,
     "turn": 1,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -3653,7 +5428,12 @@
   {
     "round": 1,
     "turn": 1,
-    "changes": [{ "source": "build", "changes": "-3c, -2o" }],
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-3c, -2o"
+      }
+    ],
     "color": "#FF9500",
     "textColor": "black",
     "faction": "geodens",
@@ -3663,7 +5443,12 @@
   {
     "round": 1,
     "turn": 1,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -3673,7 +5458,12 @@
   {
     "round": 1,
     "turn": 1,
-    "changes": [{ "source": "charge", "changes": "1pw" }],
+    "changes": [
+      {
+        "source": "charge",
+        "changes": "1pw"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "geodens",
@@ -3683,7 +5473,12 @@
   {
     "round": 1,
     "turn": 1,
-    "changes": [{ "source": "build", "changes": "-3c, -2o" }],
+    "changes": [
+      {
+        "source": "build",
+        "changes": "-3c, -2o"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -3712,8 +5507,14 @@
     "round": 1,
     "turn": 0,
     "changes": [
-      { "source": "income", "changes": "3o, 1k" },
-      { "source": "booster3 (q, 2c)", "changes": "1q, 2c" }
+      {
+        "source": "income",
+        "changes": "3o, 1k"
+      },
+      {
+        "source": "booster3 (q, 2c)",
+        "changes": "1q, 2c"
+      }
     ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
@@ -3723,7 +5524,12 @@
   {
     "round": 1,
     "turn": 0,
-    "changes": [{ "source": "booster9 (4pw, 4 VP / PI or academy)", "changes": "4pw" }],
+    "changes": [
+      {
+        "source": "booster9 (4pw, 4 VP / PI or academy)",
+        "changes": "4pw"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -3733,7 +5539,12 @@
   {
     "round": 1,
     "turn": 0,
-    "changes": [{ "source": "income", "changes": "3o, 1k" }],
+    "changes": [
+      {
+        "source": "income",
+        "changes": "3o, 1k"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -3743,8 +5554,14 @@
     "round": 1,
     "turn": 0,
     "changes": [
-      { "source": "income", "changes": "3o, 1k" },
-      { "source": "booster4 (2c, 1 step)", "changes": "2c" }
+      {
+        "source": "income",
+        "changes": "3o, 1k"
+      },
+      {
+        "source": "booster4 (2c, 1 step)",
+        "changes": "2c"
+      }
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
@@ -3755,8 +5572,14 @@
     "round": 1,
     "turn": 0,
     "changes": [
-      { "source": "income", "changes": "3o, 1k, 1t" },
-      { "source": "booster2 (1o, 2 tokens)", "changes": "1o, 2t" }
+      {
+        "source": "income",
+        "changes": "3o, 1k, 1t"
+      },
+      {
+        "source": "booster2 (1o, 2 tokens)",
+        "changes": "1o, 2t"
+      }
     ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
@@ -3904,7 +5727,12 @@
   {
     "round": 0,
     "turn": 1,
-    "changes": [{ "source": "beginGame", "changes": "3k, 4o, 13c, 1q" }],
+    "changes": [
+      {
+        "source": "beginGame",
+        "changes": "4t, 3k, 4o, 13c, 1q"
+      }
+    ],
     "color": "#deffff",
     "textColor": "var(--res-power)",
     "faction": "lantids",
@@ -3913,7 +5741,12 @@
   {
     "round": 0,
     "turn": 1,
-    "changes": [{ "source": "beginGame", "changes": "3k, 4o, 15c, 1q" }],
+    "changes": [
+      {
+        "source": "beginGame",
+        "changes": "6t, 4pw, 1brainstone, 3k, 4o, 15c, 1q"
+      }
+    ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
     "faction": "taklons",
@@ -3923,8 +5756,14 @@
     "round": 0,
     "turn": 1,
     "changes": [
-      { "source": "beginGame", "changes": "3k, 4o, 15c, 1q" },
-      { "source": "terra", "changes": "2o" }
+      {
+        "source": "beginGame",
+        "changes": "6t, 4pw, 3k, 4o, 15c, 1q"
+      },
+      {
+        "source": "terra",
+        "changes": "2o"
+      }
     ],
     "color": "#ffffbe",
     "textColor": "var(--res-power)",
@@ -3934,7 +5773,12 @@
   {
     "round": 0,
     "turn": 1,
-    "changes": [{ "source": "beginGame", "changes": "3k, 5o, 15c, 1q" }],
+    "changes": [
+      {
+        "source": "beginGame",
+        "changes": "8t, 4pw, 3k, 5o, 15c, 1q"
+      }
+    ],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
     "faction": "itars",
