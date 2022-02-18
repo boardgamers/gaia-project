@@ -49,9 +49,9 @@
       }
     ],
     "datasetMeta": {
-      "Gleens (22)": {
+      "Gleens (23)": {
         "label": "Gleens",
-        "total": 22,
+        "total": 23,
         "weightedTotal": null
       },
       "Terrans (18)": {
@@ -90,8 +90,8 @@
   ],
   "datasets": [
     {
-      "label": "Gleens (22)",
-      "data": [10, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 8]
+      "label": "Gleens (23)",
+      "data": [10, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 9]
     },
     {
       "label": "Terrans (18)",
