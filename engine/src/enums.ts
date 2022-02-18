@@ -527,7 +527,7 @@ export enum BoardAction {
 }
 
 export namespace BoardAction {
-  export function values(expansions = 0): BoardAction[] {
+  export function values(expansions: Expansion = 0): BoardAction[] {
     return Object.values(BoardAction).filter((val: BoardAction) => {
       if (typeof val !== "string") {
         return;
