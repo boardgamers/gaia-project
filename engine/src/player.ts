@@ -416,11 +416,12 @@ export default class Player extends EventEmitter {
 
   loadBoard(board: FactionBoard, expansions: Expansion, skipIncome = false) {
     this.board = board;
+
+    this.data.loadPower(this.board);
     if (!skipIncome) {
       this.loadTechs(expansions);
       this.loadEvents(this.board.income);
     }
-    this.data.loadPower(this.board);
 
     // Load faction specific code changes
     for (const eventName of Object.keys(this.board.handlers)) {
