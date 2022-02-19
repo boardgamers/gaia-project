@@ -10,7 +10,7 @@ import Engine, {
   Round,
 } from "@gaia-project/engine";
 import { factionName } from "../../data/factions";
-import { ColorVar, playerColor } from "../../graphics/colors";
+import { playerColor } from "../../graphics/colors";
 import { ChartKind } from "./chart-factory";
 
 export type ChartStyle = "table" | "chart";
@@ -23,9 +23,16 @@ export type ChartStyleDisplay = {
 
 export type ChartColor = string | ((player: Player) => string);
 
-export type ChartFamily = string;
+export enum ChartGroup {
+  vp = "Victory Points",
+  resources = "Resources",
+}
 
-export const vpChartFamily = "Victory Points";
+export type ChartType = string;
+
+export type ChartSelect = ChartGroup | ChartType;
+
+export const vpChartType = "Overview";
 
 export const finalScoringRound = Round.LastRound + 1;
 
@@ -51,7 +58,7 @@ export type EventFilter = (
 ) => number;
 
 export interface DatasetFactory {
-  backgroundColor: ColorVar;
+  backgroundColor: string;
   fill: string | false;
   label: string;
   description?: string;
@@ -64,6 +71,11 @@ export type IncludeRounds = "all" | "except-final" | "last";
 export type DataFactoryWithPoints = {
   factory: DatasetFactory;
   points: number[];
+};
+
+export type DatasetFactoryBalance = {
+  income: number;
+  cost: number;
 };
 
 export function chartPlayerOrder(data: Engine): PlayerEnum[] {
@@ -169,10 +181,11 @@ export function playerLabel(pl: Player) {
   return factionName(pl.faction);
 }
 
-export function weightedSumForDataPoints(
+function sumDataPoints(
   data: Engine,
   player: PlayerEnum,
-  dataPoints: DataFactoryWithPoints[]
+  dataPoints: DataFactoryWithPoints[],
+  transform: (f: DatasetFactory, p: number) => number
 ): DatasetFactory | null {
   const pl = data.player(player);
   if (!pl.faction) {
@@ -185,7 +198,7 @@ export function weightedSumForDataPoints(
     fill: false,
     getDataPoints: () =>
       dataPoints
-        .map((f) => f.points.map((p) => f.factory.weight * p))
+        .map((f) => f.points.map((p) => transform(f.factory, p)))
         .reduce((prev: number[], cur: number[]) => {
           for (let i = 0; i < cur.length; i++) {
             prev[i] += cur[i];
@@ -196,11 +209,30 @@ export function weightedSumForDataPoints(
   };
 }
 
+export function dataPointsBalance(
+  data: Engine,
+  player: PlayerEnum,
+  factories: DatasetFactory[]
+): DatasetFactoryBalance | null {
+  const pl = data.player(player);
+  if (!pl.faction) {
+    return null;
+  }
+
+  const dataPoints = factories.map((f) => ({ factory: f, points: f.getDataPoints() }));
+
+  return {
+    income: sumDataPoints(data, player, dataPoints, (f, p) => (f.weight > 0 ? f.weight * p : 0)).getDataPoints()[0],
+    cost: sumDataPoints(data, player, dataPoints, (f, p) => (f.weight < 0 ? f.weight * p : 0)).getDataPoints()[0],
+  };
+}
+
 export function weightedSum(data: Engine, player: PlayerEnum, factories: DatasetFactory[]): DatasetFactory | null {
-  return weightedSumForDataPoints(
+  return sumDataPoints(
     data,
     player,
-    factories.map((f) => ({ factory: f, points: f.getDataPoints() }))
+    factories.map((f) => ({ factory: f, points: f.getDataPoints() })),
+    (f, p) => f.weight * p
   );
 }
 

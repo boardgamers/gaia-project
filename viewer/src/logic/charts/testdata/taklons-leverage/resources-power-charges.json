@@ -1,0 +1,79 @@
+{
+  "tableMeta": {
+    "weights": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -2, -2, -1],
+    "colors": [
+      "--gaia",
+      "--res-credit",
+      "--current-round",
+      "--rt-sci",
+      "--oxide",
+      "--res-power",
+      "--res-qic",
+      "--tech-tile",
+      "--terra",
+      "--volcanic",
+      "--res-power",
+      "--specialAction",
+      "--res-qic"
+    ],
+    "datasetMeta": {
+      "Hadsch Hallas (9)": {
+        "label": "Hadsch Hallas",
+        "income": 9,
+        "cost": 0,
+        "balance": 9
+      },
+      "Bal T'aks (3)": {
+        "label": "Bal T'aks",
+        "income": 3,
+        "cost": 0,
+        "balance": 3
+      },
+      "Firaks (5)": {
+        "label": "Firaks",
+        "income": 5,
+        "cost": 0,
+        "balance": 5
+      },
+      "Taklons (14)": {
+        "label": "Taklons",
+        "income": 14,
+        "cost": -8,
+        "balance": 6
+      }
+    }
+  },
+  "labels": [
+    "Game start income",
+    "Base income",
+    "Tech Tiles income",
+    "Research income",
+    "Booster income",
+    "Free Leech income",
+    "Paid Leech income",
+    "Powerful Power Tokens income",
+    "Terrans income",
+    "Trade income",
+    "Free actions cost",
+    "Power/Q.I.C Action cost",
+    "Waste cost"
+  ],
+  "datasets": [
+    {
+      "label": "Taklons (14)",
+      "data": [4, 0, 0, 0, 4, 2, 0, 4, 0, 0, 0, 4, 0]
+    },
+    {
+      "label": "Hadsch Hallas (9)",
+      "data": [4, 0, 0, 1, 0, 2, 2, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "label": "Firaks (5)",
+      "data": [4, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "label": "Bal T'aks (3)",
+      "data": [2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+    }
+  ]
+}

@@ -2,57 +2,33 @@
   "tableMeta": {
     "weights": null,
     "colors": [
-      {
-        "color": "--titanium"
-      },
-      {
-        "color": "--swamp"
-      },
-      {
-        "color": "--res-qic"
-      },
-      {
-        "color": "--dig"
-      },
-      {
-        "color": "--rt-nav"
-      },
-      {
-        "color": "--res-ore"
-      },
-      {
-        "color": "--res-credit"
-      },
-      {
-        "color": "--res-knowledge"
-      },
-      {
-        "color": "--recent"
-      },
-      {
-        "color": "--gaia"
-      }
+      "--titanium",
+      "--swamp",
+      "--res-qic",
+      "--dig",
+      "--rt-nav",
+      "--res-ore",
+      "--res-credit",
+      "--res-knowledge",
+      "--recent",
+      "--gaia"
     ],
     "datasetMeta": {
       "Terrans (6)": {
         "label": "Terrans",
-        "total": 6,
-        "weightedTotal": null
+        "total": 6
       },
       "Nevlas (6)": {
         "label": "Nevlas",
-        "total": 6,
-        "weightedTotal": null
+        "total": 6
       },
       "Xenos (6)": {
         "label": "Xenos",
-        "total": 6,
-        "weightedTotal": null
+        "total": 6
       },
       "Hadsch Hallas (6)": {
         "label": "Hadsch Hallas",
-        "total": 6,
-        "weightedTotal": null
+        "total": 6
       }
     }
   },

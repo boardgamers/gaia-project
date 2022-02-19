@@ -1,40 +1,23 @@
 {
   "tableMeta": {
     "weights": null,
-    "colors": [
-      {
-        "color": "--volcanic"
-      },
-      {
-        "color": "--ice"
-      },
-      {
-        "color": "--swamp"
-      },
-      {
-        "color": "--swamp"
-      }
-    ],
+    "colors": ["--volcanic", "--ice", "--swamp", "--swamp"],
     "datasetMeta": {
       "Itars (0)": {
         "label": "Itars",
-        "total": 0,
-        "weightedTotal": null
+        "total": 0
       },
       "Geoden (3)": {
         "label": "Geoden",
-        "total": 3,
-        "weightedTotal": null
+        "total": 3
       },
       "Taklons (7)": {
         "label": "Taklons",
-        "total": 7,
-        "weightedTotal": null
+        "total": 7
       },
       "Lantids (6)": {
         "label": "Lantids",
-        "total": 6,
-        "weightedTotal": null
+        "total": 6
       }
     }
   },

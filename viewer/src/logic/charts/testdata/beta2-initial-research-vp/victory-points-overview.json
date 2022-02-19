@@ -2,72 +2,38 @@
   "tableMeta": {
     "weights": null,
     "colors": [
-      {
-        "color": "--gaia"
-      },
-      {
-        "color": "--volcanic"
-      },
-      {
-        "color": "--res-power"
-      },
-      {
-        "color": "--tech-tile"
-      },
-      {
-        "color": "--desert"
-      },
-      {
-        "color": "--titanium"
-      },
-      {
-        "color": "--oxide"
-      },
-      {
-        "color": "--specialAction"
-      },
-      {
-        "color": "--res-knowledge"
-      },
-      {
-        "color": "--rt-gaia"
-      },
-      {
-        "color": "--current-round"
-      },
-      {
-        "color": "--federation"
-      },
-      {
-        "color": "--rt-sci"
-      },
-      {
-        "color": "--dig"
-      },
-      {
-        "color": "--res-credit"
-      }
+      "--gaia",
+      "--volcanic",
+      "--res-power",
+      "--tech-tile",
+      "--desert",
+      "--titanium",
+      "--oxide",
+      "--specialAction",
+      "--res-knowledge",
+      "--rt-gaia",
+      "--current-round",
+      "--federation",
+      "--rt-sci",
+      "--dig",
+      "--res-credit"
     ],
     "datasetMeta": {
       "Gleens (23)": {
         "label": "Gleens",
-        "total": 23,
-        "weightedTotal": null
+        "total": 23
       },
       "Terrans (18)": {
         "label": "Terrans",
-        "total": 18,
-        "weightedTotal": null
+        "total": 18
       },
       "Hadsch Hallas (18)": {
         "label": "Hadsch Hallas",
-        "total": 18,
-        "weightedTotal": null
+        "total": 18
       },
       "Ambas (18)": {
         "label": "Ambas",
-        "total": 18,
-        "weightedTotal": null
+        "total": 18
       }
     }
   },

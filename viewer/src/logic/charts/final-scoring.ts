@@ -13,7 +13,7 @@ import {
 import { Grid } from "hexagrid";
 import { colorCodes } from "../color-codes";
 import { ChartSource } from "./charts";
-import { ExtractLog, ExtractLogArg, planetCounter, SimpleSourceFactory } from "./simple-charts";
+import { ChartSummary, ExtractLog, ExtractLogArg, planetCounter, SimpleSourceFactory } from "./simple-charts";
 
 type FinalScoringExtractLog = ExtractLog<ChartSource<FinalTile>>;
 
@@ -215,7 +215,7 @@ export const finalScoringExtractLog: ExtractLog<ChartSource<FinalTile>> = Extrac
 
 export const finalScoringSourceFactory = (finalTiles: FinalTile[]): SimpleSourceFactory<ChartSource<FinalTile>> => ({
   name: "Final Scoring Conditions",
-  showWeightedTotal: false,
+  summary: ChartSummary.total,
   playerSummaryLineChartTitle: "All final Scoring Conditions of all players (not only the active ones)",
   extractLog: finalScoringExtractLog,
   sources: Object.keys(finalScoringSources).map((tile) => ({

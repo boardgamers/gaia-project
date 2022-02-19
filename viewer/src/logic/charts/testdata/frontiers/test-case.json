@@ -1,5 +1,5 @@
 {
-  "families": ["Buildings", "Trade Resources"],
+  "types": ["Buildings", "Resources/Trade"],
   "options": {
     "layout": "standard",
     "factionVariant": "more-balanced",

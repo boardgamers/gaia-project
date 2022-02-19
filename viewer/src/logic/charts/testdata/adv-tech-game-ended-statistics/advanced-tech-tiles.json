@@ -1,40 +1,23 @@
 {
   "tableMeta": {
     "weights": null,
-    "colors": [
-      {
-        "color": "--specialAction"
-      },
-      {
-        "color": "--current-round"
-      },
-      {
-        "color": "--specialAction"
-      },
-      {
-        "color": "--specialAction"
-      }
-    ],
+    "colors": ["--specialAction", "--current-round", "--specialAction", "--specialAction"],
     "datasetMeta": {
       "Terrans (0)": {
         "label": "Terrans",
-        "total": 0,
-        "weightedTotal": null
+        "total": 0
       },
       "Nevlas (1)": {
         "label": "Nevlas",
-        "total": 1,
-        "weightedTotal": null
+        "total": 1
       },
       "Xenos (1)": {
         "label": "Xenos",
-        "total": 1,
-        "weightedTotal": null
+        "total": 1
       },
       "Hadsch Hallas (0)": {
         "label": "Hadsch Hallas",
-        "total": 0,
-        "weightedTotal": null
+        "total": 0
       }
     }
   },

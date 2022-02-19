@@ -1,46 +1,23 @@
 {
   "tableMeta": {
     "weights": null,
-    "colors": [
-      {
-        "color": "--desert"
-      },
-      {
-        "color": "--desert"
-      },
-      {
-        "color": "--ice"
-      },
-      {
-        "color": "--oxide"
-      },
-      {
-        "color": "--terra"
-      },
-      {
-        "color": "--terra"
-      }
-    ],
+    "colors": ["--desert", "--desert", "--ice", "--oxide", "--terra", "--terra"],
     "datasetMeta": {
       "Gleens (15)": {
         "label": "Gleens",
-        "total": 15,
-        "weightedTotal": null
+        "total": 15
       },
       "Terrans (60)": {
         "label": "Terrans",
-        "total": 60,
-        "weightedTotal": null
+        "total": 60
       },
       "Itars (7)": {
         "label": "Itars",
-        "total": 7,
-        "weightedTotal": null
+        "total": 7
       },
       "Ivits (6)": {
         "label": "Ivits",
-        "total": 6,
-        "weightedTotal": null
+        "total": 6
       }
     }
   },

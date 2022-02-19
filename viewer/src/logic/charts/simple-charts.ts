@@ -2,18 +2,25 @@ import Engine, { Building, Command, Faction, LogEntry, Planet, Player } from "@g
 import { sum } from "lodash";
 import { CommandObject, parseCommands } from "../recent";
 import { ChartKind } from "./chart-factory";
-import { ChartFamily, ChartSource } from "./charts";
+import { ChartGroup, ChartSource, ChartType } from "./charts";
 
 export type ExtractChange<Source extends ChartSource<any>> = (
   player: Player,
   source: Source
 ) => (entry: LogEntry, logIndex: number, endScoring: boolean) => number;
 
+export enum ChartSummary {
+  total,
+  weightedTotal,
+  balance,
+}
+
 export type SimpleSourceFactory<Source extends ChartSource<any>> = {
-  name: ChartFamily;
+  name: ChartType;
+  group?: ChartGroup;
   playerSummaryLineChartTitle: string;
   sources: Source[];
-  showWeightedTotal: boolean;
+  summary: ChartSummary;
   initialValue?: (player: Player, source: Source) => number;
   extractChange?: ExtractChange<Source>;
   extractLog?: ExtractLog<Source>;

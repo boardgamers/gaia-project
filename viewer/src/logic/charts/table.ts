@@ -1,6 +1,6 @@
 import { ChartConfiguration } from "chart.js";
-import { CellStyle, ColorVar, dynamicCellStyle } from "../../graphics/colors";
-import { TableMeta } from "./chart-factory";
+import { CellStyle, staticCellStyle } from "../../graphics/colors";
+import { DatasetSummary, TableMeta } from "./chart-factory";
 import { ChartStyleDisplay } from "./charts";
 
 const nameColumn = {
@@ -11,12 +11,7 @@ const nameColumn = {
 
 const weightKey = "Weight";
 
-export function tableHeader(
-  canvas: HTMLCanvasElement,
-  style: ChartStyleDisplay,
-  config: ChartConfiguration<any>,
-  tableMeta?: TableMeta
-): any[] {
+export function tableHeader(style: ChartStyleDisplay, config: ChartConfiguration<any>, tableMeta?: TableMeta): any[] {
   const meta = tableMeta?.datasetMeta;
 
   const compact = style.compact;
@@ -40,7 +35,7 @@ export function tableHeader(
 
   headers.push(
     ...config.data.datasets.map((s) => ({
-      thStyle: dynamicCellStyle(canvas, new ColorVar(s.backgroundColor)),
+      thStyle: staticCellStyle(s.backgroundColor),
       key: s.label,
       sortable: true,
       label: cropLabel(meta?.[s.label]?.label ?? s.label),
@@ -61,16 +56,38 @@ function totalsCell(label: any) {
   return `<span class="totals">${label}</span>`;
 }
 
-export function tableItems(canvas: HTMLCanvasElement, config: ChartConfiguration<any>, tableMeta?: TableMeta): any[] {
+const tableTotals: { name: string; get: (s: DatasetSummary) => number | null }[] = [
+  {
+    name: "Total",
+    get: (s) => s.total,
+  },
+  {
+    name: "Weighted Total",
+    get: (s) => s.weightedTotal,
+  },
+  {
+    name: "Income",
+    get: (s) => s.income,
+  },
+  {
+    name: "Cost",
+    get: (s) => s.cost,
+  },
+  {
+    name: "Balance",
+    get: (s) => s.balance,
+  },
+];
+
+export function tableItems(config: ChartConfiguration<any>, tableMeta?: TableMeta): any[] {
   const datasets = config.data.datasets;
-  const totals = {};
-  const weightedTotals = {};
+  const totals = tableTotals.map((t) => ({ [nameColumn.key]: dataCell(t.name) }));
   const rows = (datasets[0].data as number[]).map(() => ({}));
   const colors = tableMeta?.colors;
   config.data.labels.forEach(
     (s, index) =>
       (rows[index][nameColumn.key] =
-        colors == null ? dataCell(s) : rowHeaderCell(dynamicCellStyle(canvas, colors[index]), s as string))
+        colors == null ? dataCell(s) : rowHeaderCell(staticCellStyle(colors[index]), s as string))
   );
   const weights = tableMeta?.weights;
   if (weights != null) {
@@ -78,8 +95,6 @@ export function tableItems(canvas: HTMLCanvasElement, config: ChartConfiguration
       rows[index][weightKey] = dataCell(s);
     });
   }
-  totals[nameColumn.key] = dataCell("Total");
-  weightedTotals[nameColumn.key] = dataCell("Weighted Total");
 
   function cell(value: any): any {
     const val = typeof value == "number" ? value : value.y;
@@ -94,18 +109,20 @@ export function tableItems(canvas: HTMLCanvasElement, config: ChartConfiguration
       rows[index][s.label] = dataCell(cell(value));
     });
     const meta = tableMeta?.datasetMeta?.[s.label];
-    if (meta?.total != null) {
-      totals[s.label] = totalsCell(meta.total);
-    }
-    if (meta?.weightedTotal != null) {
-      weightedTotals[s.label] = totalsCell(meta.weightedTotal);
+    if (meta != null) {
+      for (let i = 0; i < tableTotals.length; i++) {
+        const tableTotal = tableTotals[i];
+        const val = tableTotal.get(meta);
+        if (val != null) {
+          totals[i][s.label] = totalsCell(val);
+        }
+      }
     }
   }
-  if (Object.values(totals).length > 1) {
-    rows.push(totals);
-  }
-  if (Object.values(weightedTotals).length > 1) {
-    rows.push(weightedTotals);
+  for (const total of totals) {
+    if (Object.values(total).length > 1) {
+      rows.push(total);
+    }
   }
   return rows;
 }

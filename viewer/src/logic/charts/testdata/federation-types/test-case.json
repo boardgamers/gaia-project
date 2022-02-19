@@ -1,5 +1,5 @@
 {
-  "families": ["Federations", "Power Leech"],
+  "types": ["Federations", "Power Leech"],
   "options": {
     "layout": "standard"
   },

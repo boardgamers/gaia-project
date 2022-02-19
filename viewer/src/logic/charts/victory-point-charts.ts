@@ -22,7 +22,6 @@ import Engine, {
 import { boosterData } from "../../data/boosters";
 import { playerHasReceivedAllIncome } from "../../data/resources";
 import { advancedTechTileData } from "../../data/tech-tiles";
-import { ColorVar } from "../../graphics/colors";
 import { colorCodes } from "../color-codes";
 import { DatasetFactory, extractChanges, finalScoringRound, getDataPoints, IncludeRounds } from "./charts";
 import { countResearch } from "./research";
@@ -187,7 +186,7 @@ export const victoryPointSources = (
       types: Booster.values(),
       label: "Booster",
       description: "Round Boosters",
-      color: "--oxide",
+      color: colorCodes.booster.color,
       roundValues: passIncomeProjection(Booster.values(), false),
     },
     {
@@ -361,7 +360,7 @@ export function victoryPointDetails(
     const extractLog = s.types.includes(Command.UpgradeResearch) ? countResearch(pl) : () => 0;
 
     return {
-      backgroundColor: new ColorVar(s.color),
+      backgroundColor: s.color,
       label: s.label,
       description: s.description,
       fill: "-1",

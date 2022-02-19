@@ -1,46 +1,23 @@
 {
   "tableMeta": {
     "weights": null,
-    "colors": [
-      {
-        "color": "--gaia"
-      },
-      {
-        "color": "--dig"
-      },
-      {
-        "color": "--current-round"
-      },
-      {
-        "color": "--terra"
-      },
-      {
-        "color": "--recent"
-      },
-      {
-        "color": "--federation"
-      }
-    ],
+    "colors": ["--gaia", "--dig", "--current-round", "--terra", "--recent", "--federation"],
     "datasetMeta": {
       "Itars (5)": {
         "label": "Itars",
-        "total": 5,
-        "weightedTotal": null
+        "total": 5
       },
       "Geoden (14)": {
         "label": "Geoden",
-        "total": 14,
-        "weightedTotal": null
+        "total": 14
       },
       "Taklons (7)": {
         "label": "Taklons",
-        "total": 7,
-        "weightedTotal": null
+        "total": 7
       },
       "Lantids (8)": {
         "label": "Lantids",
-        "total": 8,
-        "weightedTotal": null
+        "total": 8
       }
     }
   },

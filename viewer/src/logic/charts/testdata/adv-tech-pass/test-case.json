@@ -1,5 +1,5 @@
 {
-  "families": ["Victory Points", "Advanced Tech Tiles (Victory Points)"],
+  "types": ["Victory Points/Overview", "Victory Points/Advanced Tech Tiles"],
   "options": {
     "layout": "standard"
   },

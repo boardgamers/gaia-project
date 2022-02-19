@@ -2,7 +2,7 @@ import { Planet } from "@gaia-project/engine";
 import { planetsWithSteps } from "../../data/factions";
 import { planetColorVar } from "../../graphics/colors";
 import { ChartSource } from "./charts";
-import { planetCounter, SimpleSourceFactory } from "./simple-charts";
+import { ChartSummary, planetCounter, SimpleSourceFactory } from "./simple-charts";
 
 export enum TerraformingSteps {
   Step0 = "Home world",
@@ -47,7 +47,7 @@ export function planetsForSteps(type: TerraformingSteps, planet: Planet): Planet
 
 export const terraformingStepsSourceFactory: SimpleSourceFactory<ChartSource<TerraformingSteps>> = {
   name: "Terraforming Steps",
-  showWeightedTotal: true,
+  summary: ChartSummary.weightedTotal,
   playerSummaryLineChartTitle: "Terraforming Steps of all players (Gaia planets and gaia formers excluded)",
   extractLog: planetCounter(
     (source) => source.type == TerraformingSteps.Lantids,

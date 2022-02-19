@@ -1,32 +1,7 @@
 {
   "tableMeta": {
     "weights": [1, 1, 1, 1, 1, 0, 0, 0],
-    "colors": [
-      {
-        "color": "--rt-terra"
-      },
-      {
-        "color": "--rt-nav"
-      },
-      {
-        "color": "--rt-int"
-      },
-      {
-        "color": "--rt-gaia"
-      },
-      {
-        "color": "--rt-eco"
-      },
-      {
-        "color": "--lost"
-      },
-      {
-        "color": "--rt-sci"
-      },
-      {
-        "color": "--tech-tile"
-      }
-    ],
+    "colors": ["--rt-terra", "--rt-nav", "--rt-int", "--rt-gaia", "--rt-eco", "--lost", "--rt-sci", "--tech-tile"],
     "datasetMeta": {
       "Itars (25)": {
         "label": "Itars",

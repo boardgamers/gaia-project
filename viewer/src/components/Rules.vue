@@ -123,9 +123,8 @@ export default class Rules extends Vue {
   }
 
   mounted() {
-    const element = document.getElementById("root");
-    this.finalScoringFields = finalScoringFields(element);
-    this.finalScoringItems = finalScoringItems(element);
+    this.finalScoringFields = finalScoringFields();
+    this.finalScoringItems = finalScoringItems();
 
     this.selectRule(this.type ?? "rules");
   }

@@ -1,18 +1,7 @@
 import { Building, Command, PowerArea, Resource, Reward } from "@gaia-project/engine";
 import { sum } from "lodash";
 import { resourceCounter } from "./resource-counter";
-import { ResourceSource } from "./resources";
 import { ExtractLog } from "./simple-charts";
-
-export const powerLeverage = "powerLeverage";
-
-export const powerLeverageSource: ResourceSource = {
-  type: powerLeverage,
-  label: "Power Leverage",
-  description: "Additional spent power due to Brainstone (2 per use) or Nevlas tokens with Planetary Institute",
-  weight: 0,
-  color: "--tech-tile",
-};
 
 export const taklonsPowerLeverage: (factor: number) => ExtractLog<any> = (factor: number) =>
   resourceCounter((want, a, data, simulateResources) => {
@@ -42,6 +31,12 @@ export const nevlasPowerLeverage: ExtractLog<any> = ExtractLog.wrapper(() => {
 
     const leverage = (r: Reward) => (r.type == Resource.ChargePower && r.count < 0 ? Math.floor(-r.count / 2) : 0);
 
-    return pi ? sum(changes.flatMap((r) => leverage(r))) : 0;
+    return pi
+      ? sum(
+          Object.values(changes)
+            .flat()
+            .map((r) => leverage(r))
+        )
+      : 0;
   });
 });

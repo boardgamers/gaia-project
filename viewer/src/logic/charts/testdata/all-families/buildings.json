@@ -1,29 +1,7 @@
 {
   "tableMeta": {
     "weights": [1, 2, 2, 3, 3, 3, 0],
-    "colors": [
-      {
-        "color": "--res-ore"
-      },
-      {
-        "color": "--res-credit"
-      },
-      {
-        "color": "--res-knowledge"
-      },
-      {
-        "color": "--current-round"
-      },
-      {
-        "color": "--rt-terra"
-      },
-      {
-        "color": "--res-qic"
-      },
-      {
-        "color": "--gaia"
-      }
-    ],
+    "colors": ["--res-ore", "--res-credit", "--res-knowledge", "--current-round", "--rt-terra", "--res-qic", "--gaia"],
     "datasetMeta": {
       "Itars (9)": {
         "label": "Itars",

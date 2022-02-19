@@ -1,43 +1,23 @@
 {
   "tableMeta": {
     "weights": null,
-    "colors": [
-      {
-        "color": "--oxide"
-      },
-      {
-        "color": "--swamp"
-      },
-      {
-        "color": "--swamp"
-      },
-      {
-        "color": "--terra"
-      },
-      {
-        "color": "--terra"
-      }
-    ],
+    "colors": ["--oxide", "--swamp", "--swamp", "--terra", "--terra"],
     "datasetMeta": {
       "Ivits (5)": {
         "label": "Ivits",
-        "total": 5,
-        "weightedTotal": null
+        "total": 5
       },
       "Terrans (60)": {
         "label": "Terrans",
-        "total": 60,
-        "weightedTotal": null
+        "total": 60
       },
       "Taklons (21)": {
         "label": "Taklons",
-        "total": 21,
-        "weightedTotal": null
+        "total": 21
       },
       "Xenos (8)": {
         "label": "Xenos",
-        "total": 8,
-        "weightedTotal": null
+        "total": 8
       }
     }
   },

@@ -2,72 +2,38 @@
   "tableMeta": {
     "weights": null,
     "colors": [
-      {
-        "color": "--gaia"
-      },
-      {
-        "color": "--volcanic"
-      },
-      {
-        "color": "--res-power"
-      },
-      {
-        "color": "--tech-tile"
-      },
-      {
-        "color": "--desert"
-      },
-      {
-        "color": "--titanium"
-      },
-      {
-        "color": "--oxide"
-      },
-      {
-        "color": "--specialAction"
-      },
-      {
-        "color": "--res-knowledge"
-      },
-      {
-        "color": "--rt-gaia"
-      },
-      {
-        "color": "--current-round"
-      },
-      {
-        "color": "--federation"
-      },
-      {
-        "color": "--rt-sci"
-      },
-      {
-        "color": "--dig"
-      },
-      {
-        "color": "--res-credit"
-      }
+      "--gaia",
+      "--volcanic",
+      "--res-power",
+      "--tech-tile",
+      "--desert",
+      "--titanium",
+      "--oxide",
+      "--specialAction",
+      "--res-knowledge",
+      "--rt-gaia",
+      "--current-round",
+      "--federation",
+      "--rt-sci",
+      "--dig",
+      "--res-credit"
     ],
     "datasetMeta": {
       "Terrans (165)": {
         "label": "Terrans",
-        "total": 165,
-        "weightedTotal": null
+        "total": 165
       },
       "Nevlas (164)": {
         "label": "Nevlas",
-        "total": 164,
-        "weightedTotal": null
+        "total": 164
       },
       "Xenos (182)": {
         "label": "Xenos",
-        "total": 182,
-        "weightedTotal": null
+        "total": 182
       },
       "Hadsch Hallas (108)": {
         "label": "Hadsch Hallas",
-        "total": 108,
-        "weightedTotal": null
+        "total": 108
       }
     }
   },

@@ -59,6 +59,7 @@ export enum Resource {
   BowlToken = "bowl-t",
   BurnToken = "burn-token",
   GainToken = "t",
+  Brainstone = "brainstone",
   GainTokenGaiaArea = "tg",
   MoveTokenToGaiaArea = "t->tg",
   VictoryPoint = "vp",

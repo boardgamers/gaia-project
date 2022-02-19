@@ -1,0 +1,79 @@
+{
+  "tableMeta": {
+    "weights": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -2, -2, -1],
+    "colors": [
+      "--gaia",
+      "--res-credit",
+      "--current-round",
+      "--rt-sci",
+      "--oxide",
+      "--res-power",
+      "--res-qic",
+      "--tech-tile",
+      "--terra",
+      "--volcanic",
+      "--res-power",
+      "--specialAction",
+      "--res-qic"
+    ],
+    "datasetMeta": {
+      "Ivits (102)": {
+        "label": "Ivits",
+        "income": 102,
+        "cost": -74,
+        "balance": 28
+      },
+      "Terrans (107)": {
+        "label": "Terrans",
+        "income": 107,
+        "cost": -91,
+        "balance": 16
+      },
+      "Taklons (149)": {
+        "label": "Taklons",
+        "income": 149,
+        "cost": -144,
+        "balance": 5
+      },
+      "Xenos (60)": {
+        "label": "Xenos",
+        "income": 60,
+        "cost": -60,
+        "balance": 0
+      }
+    }
+  },
+  "labels": [
+    "Game start income",
+    "Base income",
+    "Tech Tiles income",
+    "Research income",
+    "Booster income",
+    "Free Leech income",
+    "Paid Leech income",
+    "Powerful Power Tokens income",
+    "Terrans income",
+    "Trade income",
+    "Free actions cost",
+    "Power/Q.I.C Action cost",
+    "Waste cost"
+  ],
+  "datasets": [
+    {
+      "label": "Taklons (149)",
+      "data": [4, 8, 20, 9, 6, 17, 13, 72, 0, 0, 50, 22, 0]
+    },
+    {
+      "label": "Terrans (107)",
+      "data": [4, 27, 8, 3, 0, 23, 12, 0, 30, 0, 11, 30, 9]
+    },
+    {
+      "label": "Ivits (102)",
+      "data": [4, 30, 0, 6, 0, 19, 19, 0, 24, 0, 9, 26, 4]
+    },
+    {
+      "label": "Xenos (60)",
+      "data": [4, 8, 0, 3, 8, 25, 12, 0, 0, 0, 0, 26, 8]
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import { factionPlanet, Planet, Player } from "@gaia-project/engine";
-import { ChartColor, ChartStyleDisplay } from "../logic/charts/charts";
+import { ChartColor } from "../logic/charts/charts";
 
 const invertedForeground: string[] = [
   "--volcanic",
@@ -21,30 +21,8 @@ const invertedForeground: string[] = [
   "--federation",
 ];
 
-export class ColorVar {
-  color: string;
-
-  constructor(color: string) {
-    if (!color.startsWith("--")) {
-      throw `${color} does not start with --`;
-    }
-    this.color = color;
-  }
-
-  lookupForChart(style: ChartStyleDisplay, canvas: HTMLCanvasElement): string {
-    if (style.type == "chart") {
-      return this.lookup(canvas);
-    }
-    return this.color;
-  }
-
-  lookup(canvas: HTMLElement): string | null {
-    return window.getComputedStyle(canvas).getPropertyValue(this.color);
-  }
-}
-
-export function resolveColor(color: ChartColor, player: Player): ColorVar {
-  return new ColorVar(typeof color == "string" ? color : color(player));
+export function resolveColor(color: ChartColor, player: Player): string {
+  return typeof color == "string" ? color : color(player);
 }
 
 export function planetColorVar(planet: Planet, invert: boolean): string {
@@ -63,22 +41,17 @@ export function planetColorVar(planet: Planet, invert: boolean): string {
   }
 }
 
-export function playerColor(pl: Player, invert: boolean): ColorVar {
-  return new ColorVar(planetColorVar(factionPlanet(pl.faction), invert));
+export function playerColor(pl: Player, invert: boolean): string {
+  return planetColorVar(factionPlanet(pl.faction), invert);
 }
 
 export type CellStyle = { color: string; backgroundColor: string };
 
-//maybe replace with staticCellStyle
-export function dynamicCellStyle(canvas: HTMLElement, backgroundColor: ColorVar): CellStyle {
-  return {
-    backgroundColor: backgroundColor.lookup(canvas),
-    color: new ColorVar(backgroundColor.color + "-text").lookup(canvas) ?? "black",
-  };
-}
-
 function withVar(v: string): string {
-  return `var(${v})`;
+  if (v.startsWith("--")) {
+    return `var(${v})`;
+  }
+  return v;
 }
 
 export function foregroundColor(backgroundColor: string) {

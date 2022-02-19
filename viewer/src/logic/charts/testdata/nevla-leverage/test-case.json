@@ -1,5 +1,5 @@
 {
-  "families": ["Resources"],
+  "types": ["Resources/Power Charges"],
   "options": {
     "layout": "standard"
   },

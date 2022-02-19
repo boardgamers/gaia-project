@@ -2,12 +2,12 @@ import { Planet } from "@gaia-project/engine";
 import { planetNames } from "../../data/planets";
 import { planetColorVar } from "../../graphics/colors";
 import { ChartSource } from "./charts";
-import { planetCounter, SimpleSourceFactory } from "./simple-charts";
+import { ChartSummary, planetCounter, SimpleSourceFactory } from "./simple-charts";
 
 export const planetsSourceFactory: SimpleSourceFactory<ChartSource<Planet>> = {
   name: "Planets",
   playerSummaryLineChartTitle: "Planets of all players",
-  showWeightedTotal: false,
+  summary: ChartSummary.total,
   extractLog: planetCounter(
     (source) => source.type == Planet.Empty,
     (source) => source.type == Planet.Lost,

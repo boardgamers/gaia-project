@@ -2,72 +2,38 @@
   "tableMeta": {
     "weights": null,
     "colors": [
-      {
-        "color": "--gaia"
-      },
-      {
-        "color": "--volcanic"
-      },
-      {
-        "color": "--res-power"
-      },
-      {
-        "color": "--tech-tile"
-      },
-      {
-        "color": "--desert"
-      },
-      {
-        "color": "--titanium"
-      },
-      {
-        "color": "--oxide"
-      },
-      {
-        "color": "--specialAction"
-      },
-      {
-        "color": "--res-knowledge"
-      },
-      {
-        "color": "--rt-gaia"
-      },
-      {
-        "color": "--current-round"
-      },
-      {
-        "color": "--federation"
-      },
-      {
-        "color": "--rt-sci"
-      },
-      {
-        "color": "--dig"
-      },
-      {
-        "color": "--res-credit"
-      }
+      "--gaia",
+      "--volcanic",
+      "--res-power",
+      "--tech-tile",
+      "--desert",
+      "--titanium",
+      "--oxide",
+      "--specialAction",
+      "--res-knowledge",
+      "--rt-gaia",
+      "--current-round",
+      "--federation",
+      "--rt-sci",
+      "--dig",
+      "--res-credit"
     ],
     "datasetMeta": {
       "Itars (19)": {
         "label": "Itars",
-        "total": 19,
-        "weightedTotal": null
+        "total": 19
       },
       "Geoden (57)": {
         "label": "Geoden",
-        "total": 57,
-        "weightedTotal": null
+        "total": 57
       },
       "Taklons (19)": {
         "label": "Taklons",
-        "total": 19,
-        "weightedTotal": null
+        "total": 19
       },
       "Lantids (16)": {
         "label": "Lantids",
-        "total": 16,
-        "weightedTotal": null
+        "total": 16
       }
     }
   },

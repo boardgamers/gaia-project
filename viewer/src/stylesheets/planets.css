@@ -2,7 +2,6 @@
 .gaia-viewer-modal {
   --volcanic: #ff9500;
   --swamp: #704100;
-  --swamp-text: white;
   --generic: lightgray;
 
   --terra: #2080f0;
@@ -10,15 +9,12 @@
 
   --oxide: #ff160a;
   --titanium: #808080;
-  --titanium-text: white;
   --ice: #f8fff5;
 
   --gaia: #0a0;
   --transdim: #a64dff;
   --lost: #004570;
-  --lost-text: white;
   --dig: #702506;
-  --dig-text: white;
 
   --rt-eco: #ffd700;
   --rt-sci: #79b9f8;
@@ -27,7 +23,6 @@
   --rt-gaia: #a5589c;
   --rt-int: #508344;
   --rt-dip: #243e83;
-  --rt-dip-text: white;
 
   --tech-tile: #e5e5ea;
   --adv-tech-tile: #6888fa;
@@ -39,7 +34,6 @@
   --res-credit: #f2ff00;
   --res-power: #984ff1;
   --res-vp: #248a3d;
-  --res-vp-text: white;
 
   --highlighted-rgb: 32, 204, 68;
   --highlighted: #2c4;
@@ -58,5 +52,4 @@
 
   --recent: gold;
   --current-round: black;
-  --current-round-text: white;
 }

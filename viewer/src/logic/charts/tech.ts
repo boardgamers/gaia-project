@@ -1,7 +1,7 @@
 import { AdvTechTile, AdvTechTilePos, Command, Expansion, TechTile, TechTilePos } from "@gaia-project/engine";
 import { advancedTechTileData, baseTechTileData } from "../../data/tech-tiles";
 import { ChartSource } from "./charts";
-import { ExtractLog, SimpleSourceFactory } from "./simple-charts";
+import { ChartSummary, ExtractLog, SimpleSourceFactory } from "./simple-charts";
 
 const techTileExtractLog: ExtractLog<ChartSource<TechTile | AdvTechTile>> = ExtractLog.filterPlayer((e) => {
   if (e.cmd.command == Command.ChooseTechTile) {
@@ -18,7 +18,7 @@ const techTileExtractLog: ExtractLog<ChartSource<TechTile | AdvTechTile>> = Extr
 export const baseTechSourceFactory = (expansion: Expansion): SimpleSourceFactory<ChartSource<TechTile>> => {
   return {
     name: "Base Tech Tiles",
-    showWeightedTotal: false,
+    summary: ChartSummary.total,
     playerSummaryLineChartTitle: "Base Tech tiles of all players",
     extractLog: techTileExtractLog,
     sources: TechTile.values(expansion).map((t) => ({
@@ -34,7 +34,7 @@ export const advancedTechSourceFactory = (
   advTechTiles: Map<AdvTechTile, string>
 ): SimpleSourceFactory<ChartSource<AdvTechTile>> => ({
   name: "Advanced Tech Tiles",
-  showWeightedTotal: false,
+  summary: ChartSummary.total,
   playerSummaryLineChartTitle: "Advanced Tech tiles of all players",
   extractLog: techTileExtractLog,
   sources: Array.from(advTechTiles.entries()).map(([tile, color]) => ({
