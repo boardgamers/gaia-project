@@ -1,49 +1,23 @@
 {
   "tableMeta": {
     "weights": null,
-    "colors": [
-      {
-        "color": "--res-vp"
-      },
-      {
-        "color": "--res-qic"
-      },
-      {
-        "color": "--res-power"
-      },
-      {
-        "color": "--res-ore"
-      },
-      {
-        "color": "--res-credit"
-      },
-      {
-        "color": "--res-knowledge"
-      },
-      {
-        "color": "--desert"
-      }
-    ],
+    "colors": ["--res-vp", "--res-qic", "--res-power", "--res-ore", "--res-credit", "--res-knowledge", "--desert"],
     "datasetMeta": {
       "Itars (0)": {
         "label": "Itars",
-        "total": 0,
-        "weightedTotal": null
+        "total": 0
       },
       "Geoden (1)": {
         "label": "Geoden",
-        "total": 1,
-        "weightedTotal": null
+        "total": 1
       },
       "Taklons (0)": {
         "label": "Taklons",
-        "total": 0,
-        "weightedTotal": null
+        "total": 0
       },
       "Lantids (0)": {
         "label": "Lantids",
-        "total": 0,
-        "weightedTotal": null
+        "total": 0
       }
     }
   },

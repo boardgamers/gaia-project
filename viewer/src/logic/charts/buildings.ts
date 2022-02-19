@@ -10,7 +10,7 @@ import Engine, {
 import { allBuildings, buildingData } from "../../data/building";
 import { CommandObject } from "../recent";
 import { ChartSource } from "./charts";
-import { ExtractLog, ExtractLogArg, SimpleSourceFactory } from "./simple-charts";
+import { ChartSummary, ExtractLog, ExtractLogArg, SimpleSourceFactory } from "./simple-charts";
 
 function buildingFromLog(e: ExtractLogArg<ChartSource<Building>>): Building | null {
   const args = e.cmd.args;
@@ -33,7 +33,7 @@ export const buildingsSourceFactory = (expansion: Expansion): SimpleSourceFactor
   return {
     name: "Buildings",
     playerSummaryLineChartTitle: "Power value of all buildings of all players (1-3 base power value)",
-    showWeightedTotal: true,
+    summary: ChartSummary.weightedTotal,
     extractLog: ExtractLog.filterPlayer((e) => {
       return buildingFromLog(e) === e.source.type ? 1 : 0;
     }),

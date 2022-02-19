@@ -2,67 +2,34 @@
   "tableMeta": {
     "weights": null,
     "colors": [
-      {
-        "color": "--gaia"
-      },
-      {
-        "color": "--volcanic"
-      },
-      {
-        "color": "--res-power"
-      },
-      {
-        "color": "--tech-tile"
-      },
-      {
-        "color": "--desert"
-      },
-      {
-        "color": "--titanium"
-      },
-      {
-        "color": "--oxide"
-      },
-      {
-        "color": "--specialAction"
-      },
-      {
-        "color": "--res-knowledge"
-      },
-      {
-        "color": "--rt-gaia"
-      },
-      {
-        "color": "--current-round"
-      },
-      {
-        "color": "--federation"
-      },
-      {
-        "color": "--rt-sci"
-      },
-      {
-        "color": "--dig"
-      },
-      {
-        "color": "--res-credit"
-      }
+      "--gaia",
+      "--volcanic",
+      "--res-power",
+      "--tech-tile",
+      "--desert",
+      "--titanium",
+      "--oxide",
+      "--specialAction",
+      "--res-knowledge",
+      "--rt-gaia",
+      "--current-round",
+      "--federation",
+      "--rt-sci",
+      "--dig",
+      "--res-credit"
     ],
     "datasetMeta": {
       "Bal T'aks (109)": {
         "label": "Bal T'aks",
-        "total": 109,
-        "weightedTotal": null
+        "total": 109
       },
       "Ivits (68)": {
         "label": "Ivits",
-        "total": 68,
-        "weightedTotal": null
+        "total": 68
       },
       "Gleens (49)": {
         "label": "Gleens",
-        "total": 49,
-        "weightedTotal": null
+        "total": 49
       }
     }
   },

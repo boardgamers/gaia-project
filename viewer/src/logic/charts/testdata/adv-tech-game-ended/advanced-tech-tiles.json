@@ -1,46 +1,23 @@
 {
   "tableMeta": {
     "weights": null,
-    "colors": [
-      {
-        "color": "--specialAction"
-      },
-      {
-        "color": "--federation"
-      },
-      {
-        "color": "--current-round"
-      },
-      {
-        "color": "--res-ore"
-      },
-      {
-        "color": "--current-round"
-      },
-      {
-        "color": "--specialAction"
-      }
-    ],
+    "colors": ["--specialAction", "--federation", "--current-round", "--res-ore", "--current-round", "--specialAction"],
     "datasetMeta": {
       "Terrans (0)": {
         "label": "Terrans",
-        "total": 0,
-        "weightedTotal": null
+        "total": 0
       },
       "Nevlas (2)": {
         "label": "Nevlas",
-        "total": 2,
-        "weightedTotal": null
+        "total": 2
       },
       "Xenos (2)": {
         "label": "Xenos",
-        "total": 2,
-        "weightedTotal": null
+        "total": 2
       },
       "Hadsch Hallas (1)": {
         "label": "Hadsch Hallas",
-        "total": 1,
-        "weightedTotal": null
+        "total": 1
       }
     }
   },

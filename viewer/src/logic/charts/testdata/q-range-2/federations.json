@@ -1,49 +1,23 @@
 {
   "tableMeta": {
     "weights": null,
-    "colors": [
-      {
-        "color": "--res-vp"
-      },
-      {
-        "color": "--res-qic"
-      },
-      {
-        "color": "--res-power"
-      },
-      {
-        "color": "--res-ore"
-      },
-      {
-        "color": "--res-credit"
-      },
-      {
-        "color": "--res-knowledge"
-      },
-      {
-        "color": "--desert"
-      }
-    ],
+    "colors": ["--res-vp", "--res-qic", "--res-power", "--res-ore", "--res-credit", "--res-knowledge", "--desert"],
     "datasetMeta": {
       "Ivits (4)": {
         "label": "Ivits",
-        "total": 4,
-        "weightedTotal": null
+        "total": 4
       },
       "Terrans (1)": {
         "label": "Terrans",
-        "total": 1,
-        "weightedTotal": null
+        "total": 1
       },
       "Taklons (4)": {
         "label": "Taklons",
-        "total": 4,
-        "weightedTotal": null
+        "total": 4
       },
       "Xenos (2)": {
         "label": "Xenos",
-        "total": 2,
-        "weightedTotal": null
+        "total": 2
       }
     }
   },

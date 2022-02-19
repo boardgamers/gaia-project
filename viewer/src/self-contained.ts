@@ -41,6 +41,7 @@ function launchSelfContained(selector = "#app", debug = true) {
 
         if (index < 0) {
           console.error("stop move not found", p.stopMove);
+          console.log(moveHistory);
         } else {
           moveHistory = moveHistory.slice(0, index);
           console.log("loading game from index", index);

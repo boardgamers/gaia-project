@@ -1,46 +1,23 @@
 {
   "tableMeta": {
     "weights": null,
-    "colors": [
-      {
-        "color": "--gaia"
-      },
-      {
-        "color": "--dig"
-      },
-      {
-        "color": "--current-round"
-      },
-      {
-        "color": "--terra"
-      },
-      {
-        "color": "--recent"
-      },
-      {
-        "color": "--federation"
-      }
-    ],
+    "colors": ["--gaia", "--dig", "--current-round", "--terra", "--recent", "--federation"],
     "datasetMeta": {
       "Gleens (43)": {
         "label": "Gleens",
-        "total": 43,
-        "weightedTotal": null
+        "total": 43
       },
       "Terrans (55)": {
         "label": "Terrans",
-        "total": 55,
-        "weightedTotal": null
+        "total": 55
       },
       "Itars (49)": {
         "label": "Itars",
-        "total": 49,
-        "weightedTotal": null
+        "total": 49
       },
       "Ivits (38)": {
         "label": "Ivits",
-        "total": 38,
-        "weightedTotal": null
+        "total": 38
       }
     }
   },

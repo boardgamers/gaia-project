@@ -9,10 +9,11 @@ import Engine, {
   PlayerEnum,
 } from "@gaia-project/engine";
 import { resolveColor } from "../../graphics/colors";
+import { balanceSheetResources, balanceSheetSourceFactory } from "./balance-sheet";
 import { buildingsSourceFactory } from "./buildings";
-import { leechSourceFactory, powerChargeSourceFactory } from "./charge";
+import { leechSourceFactory } from "./charge";
 import { ChartFactory } from "./chart-factory";
-import { ChartFamily, ChartSource, DatasetFactory, getDataPoints, IncludeRounds, playerLabel } from "./charts";
+import { ChartSource, DatasetFactory, getDataPoints, IncludeRounds, playerLabel } from "./charts";
 import { factionSourceFactory } from "./factions";
 import { federationsSourceFactory } from "./federations";
 import { finalScoringSourceFactory } from "./final-scoring";
@@ -23,7 +24,7 @@ import {
   boosterSourceFactory,
   freeActionSourceFactory,
   resourceSourceFactory,
-  tradeResourceSourceFactory,
+  tradeSourceFactory,
 } from "./resources";
 import { ExtractLog, logEntryProcessor, SimpleSourceFactory } from "./simple-charts";
 import { advancedTechSourceFactory, baseTechSourceFactory } from "./tech";
@@ -37,8 +38,7 @@ export const createSimpleSourceFactories = (
   expansion: Expansion
 ): SimpleSourceFactory<ChartSource<any>>[] => {
   const s = [
-    resourceSourceFactory,
-    powerChargeSourceFactory,
+    resourceSourceFactory(expansion),
     leechSourceFactory,
     factionSourceFactory(factions),
     freeActionSourceFactory,
@@ -52,9 +52,9 @@ export const createSimpleSourceFactories = (
     baseTechSourceFactory(expansion),
     advancedTechSourceFactory(advTechTiles),
     finalScoringSourceFactory(finalTiles),
-  ];
+  ].concat(balanceSheetResources.map((r) => balanceSheetSourceFactory(r, expansion)));
   if (expansion == Expansion.Frontiers) {
-    s.push(tradeResourceSourceFactory);
+    s.push(tradeSourceFactory(expansion));
   }
   return s;
 };
@@ -108,47 +108,25 @@ function simpleChartDetails<Source extends ChartSource<any>>(
   });
 }
 
-export const simpleChartFactory = (
-  simpleSourceFactory: <Source extends ChartSource<any>>(family: ChartFamily) => SimpleSourceFactory<Source>
-): ChartFactory<ChartSource<any>> => ({
-  includeRounds: "except-final",
-
-  sources(family: ChartFamily): ChartSource<any>[] {
-    return simpleSourceFactory(family).sources;
-  },
-  newDetails(
-    data: Engine,
-    player: PlayerEnum,
-    sources: ChartSource<any>[],
-    includeRounds: IncludeRounds,
-    family: ChartFamily
-  ) {
-    return simpleChartDetails(simpleSourceFactory(family), data, player, sources, includeRounds);
-  },
-  singlePlayerSummaryTitle(player: Player, family: ChartFamily): string {
-    return `${simpleSourceFactory(family).name} of ${playerLabel(player)}`;
-  },
-  playerSummaryTitle(family: ChartFamily): string {
-    const sourceFactory = simpleSourceFactory(family);
-    return sourceFactory.playerSummaryLineChartTitle;
-  },
-  kindBreakdownTitle(family: ChartFamily, source: ChartSource<any>): string {
-    return `${source.label} of all players`;
-  },
-  stacked() {
-    return false;
-  },
-  showWeightedTotal(family: ChartFamily): boolean {
-    return simpleSourceFactory(family).showWeightedTotal;
-  },
-});
-
-export const simpleChartFactoryEntries = (sourceFactories: SimpleSourceFactory<ChartSource<any>>[]) => {
-  function simpleSourceFactory<Source extends ChartSource<any>>(family: ChartFamily): SimpleSourceFactory<Source> {
-    return sourceFactories.find((f) => f.name == family) as SimpleSourceFactory<Source>;
-  }
-
-  const scf = simpleChartFactory(simpleSourceFactory);
-
-  return sourceFactories.map((value) => [value.name, scf] as [ChartFamily, ChartFactory<any>]);
-};
+export function simpleChartFactory(simpleSourceFactory: SimpleSourceFactory<any>): ChartFactory<ChartSource<any>> {
+  return {
+    type: simpleSourceFactory.name,
+    group: simpleSourceFactory.group,
+    includeRounds: "except-final",
+    sources: simpleSourceFactory.sources,
+    newDetails(data: Engine, player: PlayerEnum, sources: ChartSource<any>[], includeRounds: IncludeRounds) {
+      return simpleChartDetails(simpleSourceFactory, data, player, sources, includeRounds);
+    },
+    singlePlayerSummaryTitle(player: Player): string {
+      return `${simpleSourceFactory.name} of ${playerLabel(player)}`;
+    },
+    playerSummaryTitle: simpleSourceFactory.playerSummaryLineChartTitle,
+    kindBreakdownTitle(source: ChartSource<any>): string {
+      return `${source.label} of all players`;
+    },
+    stacked() {
+      return false;
+    },
+    summary: simpleSourceFactory.summary,
+  };
+}

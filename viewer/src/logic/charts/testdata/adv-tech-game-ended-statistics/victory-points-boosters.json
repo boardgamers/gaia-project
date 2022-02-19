@@ -1,43 +1,23 @@
 {
   "tableMeta": {
     "weights": null,
-    "colors": [
-      {
-        "color": "--res-ore"
-      },
-      {
-        "color": "--res-credit"
-      },
-      {
-        "color": "--res-knowledge"
-      },
-      {
-        "color": "--recent"
-      },
-      {
-        "color": "--gaia"
-      }
-    ],
+    "colors": ["--res-ore", "--res-credit", "--res-knowledge", "--recent", "--gaia"],
     "datasetMeta": {
       "Terrans (17)": {
         "label": "Terrans",
-        "total": 17,
-        "weightedTotal": null
+        "total": 17
       },
       "Nevlas (22)": {
         "label": "Nevlas",
-        "total": 22,
-        "weightedTotal": null
+        "total": 22
       },
       "Xenos (14)": {
         "label": "Xenos",
-        "total": 14,
-        "weightedTotal": null
+        "total": 14
       },
       "Hadsch Hallas (4)": {
         "label": "Hadsch Hallas",
-        "total": 4,
-        "weightedTotal": null
+        "total": 4
       }
     }
   },

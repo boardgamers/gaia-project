@@ -6,11 +6,14 @@
           >{{ s.label }}
         </b-dropdown-item>
       </b-dropdown>
-      <b-dropdown size="sm" class="mr-2 mb-2" text="What">
-        <b-dropdown-item v-for="i in families" :key="`family${i}`" @click="selectFamily(i)">{{ i }} </b-dropdown-item>
+      <b-dropdown size="sm" class="mr-2 mb-2" text="Type">
+        <b-dropdown-item v-for="i in selects" :key="`select${i}`" @click="selectSelect(i)">{{ i }} </b-dropdown-item>
       </b-dropdown>
-      <b-dropdown size="sm" class="mr-2 mb-2" right text="Details">
-        <template v-for="(group, index) in kinds">
+      <b-dropdown v-if="types.length > 0" size="sm" class="mr-2 mb-2" text="Sub-Type">
+        <b-dropdown-item v-for="i in types" :key="`select${i}`" @click="selectType(i)">{{ i }} </b-dropdown-item>
+      </b-dropdown>
+      <b-dropdown v-if="setup != null" size="sm" class="mr-2 mb-2" right text="Details">
+        <template v-for="(group, index) in chartKinds">
           <b-dropdown-divider v-if="index > 0" :key="`divider${index}`" />
           <b-dropdown-item v-for="(g, i) in group" :key="`kind${index}${i}`" @click="selectKind(g.kind)"
             >{{ g.label }}
@@ -22,14 +25,14 @@
     <canvas id="graphs" v-show="chartStyle.type === 'chart'" />
     <!-- :key is necessary to force update -->
     <b-table
-      :key="chartStyle.type + chartFamily + chartKind"
+      :key="tableKey"
       striped
       bordered
       small
       responsive="true"
       hover
       :class="{ compact: chartStyle.compact, 'chart-table': true }"
-      v-if="chartStyle.type === 'table'"
+      v-if="table != null"
       :items="table.items"
       :fields="table.header"
       :caption="table.title"
@@ -42,12 +45,12 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
-import { ChartFamily, ChartStyleDisplay, vpChartFamily } from "../logic/charts/charts";
+import {Component, Vue} from "vue-property-decorator";
+import {ChartGroup, ChartSelect, ChartStyleDisplay, ChartType} from "../logic/charts/charts";
 import PlayerCircle from "./PlayerCircle.vue";
 import BuildingImage from "./Building.vue";
 import SpecialAction from "./SpecialAction.vue";
-import Engine, { PlayerEnum } from "@gaia-project/engine";
+import Engine, {PlayerEnum} from "@gaia-project/engine";
 import {
   BarController,
   BarElement,
@@ -63,16 +66,9 @@ import {
   Title,
   Tooltip,
 } from "chart.js";
-import {
-  barChartKind,
-  ChartKind,
-  ChartKindDisplay,
-  lineChartKind,
-  TableMeta,
-  ChartSetup,
-} from "../logic/charts/chart-factory";
-import { tableHeader, tableItems } from "../logic/charts/table";
-import { StatisticsDisplay } from "../data";
+import {barChartKind, ChartKind, ChartKindDisplay, ChartSetup, lineChartKind, TableMeta,} from "../logic/charts/chart-factory";
+import {tableHeader, tableItems} from "../logic/charts/table";
+import {StatisticsDisplay} from "../data";
 
 Chart.register(
   LineController,
@@ -95,12 +91,15 @@ type Table = { title: string; header: any[]; items: any[] };
 })
 export default class Charts extends Vue {
   // eslint-disable-next-line no-invalid-this
-  private chartStyle: ChartStyleDisplay = this.chartStyles[0];
-  private chartFamily: ChartFamily = vpChartFamily;
-  private chartKind: ChartKind = barChartKind;
-  private chart: Chart;
-  private table: Table;
   private setup: ChartSetup;
+  private chartStyle: ChartStyleDisplay = this.chartStyles[0];
+  private chartSelect: ChartSelect = null;
+  private chartType: ChartType | null;
+  private chartKinds: ChartKindDisplay[][] = [];
+  private chartKind: ChartKind = barChartKind;
+  private tableKey = 0;
+  private chart: Chart = null;
+  private table: Table = null;
 
   get gameData(): Engine {
     return this.$store.state.data;
@@ -115,12 +114,12 @@ export default class Charts extends Vue {
     ];
   }
 
-  get families(): ChartFamily[] {
-    return this.setup.families;
+  get selects(): ChartSelect[] {
+    return this.setup.selects;
   }
 
-  get kinds(): ChartKindDisplay[][] {
-    return this.setup.kinds(this.gameData, this.chartFamily);
+  get types(): ChartType[] {
+    return this.setup == null ? [] : this.setup.types(this.chartSelect);
   }
 
   get flat() {
@@ -142,7 +141,7 @@ export default class Charts extends Vue {
       }
     }
     this.chartStyle = this.chartStyles[style];
-    this.loadChart();
+    this.selectSelect(ChartGroup.vp);
   }
 
   isCommonKind() {
@@ -151,36 +150,46 @@ export default class Charts extends Vue {
 
   selectStyle(display: ChartStyleDisplay) {
     this.chartStyle = display;
+    this.loadChart();
   }
 
-  selectFamily(family: ChartFamily) {
-    if (this.chartFamily != family) {
+    selectSelect(s: ChartSelect) {
+    if (this.chartSelect != s) {
+      this.chartSelect = s;
+      this.selectType(this.setup.types(s)?.[0] ?? null, true);
+    }
+  }
+
+  selectType(type: ChartType | null, force = false) {
+    if (this.chartType != type || force) {
       if (!this.isCommonKind()) {
         this.chartKind = barChartKind;
       }
 
-      this.chartFamily = family;
+      this.chartType = type;
+      this.loadChart();
     }
   }
 
   selectKind(kind: ChartKind) {
     this.chartKind = kind;
+    this.loadChart();
   }
 
-  @Watch("chartStyle")
-  @Watch("chartFamily")
-  @Watch("chartKind")
   loadChart() {
+    const factory = this.setup.factory(this.chartSelect, this.chartType);
+    this.chartKinds = this.setup.kinds(this.gameData, factory);
+
     const data = this.gameData;
     const canvas = Charts.canvas();
 
     if (this.chartKind === barChartKind) {
-      const config = this.setup.newBarChart(this.chartStyle, this.chartFamily, data, canvas);
+      const config = this.setup.newBarChart(this.chartStyle, factory, data);
       this.newChart(canvas, config.chart, config.table);
     } else if (this.chartKind === lineChartKind) {
-      this.newChart(canvas, this.setup.newLineChart(this.chartStyle, this.chartFamily, data, canvas, PlayerEnum.All));
+      this.newChart(canvas, this.setup.newLineChart(this.chartStyle, factory, data, PlayerEnum.All));
     } else {
-      this.newChart(canvas, this.setup.newLineChart(this.chartStyle, this.chartFamily, data, canvas, this.chartKind));
+      this.newChart(canvas, this.setup.newLineChart(this.chartStyle, factory, data, this.chartKind));
     }
   }
 
@@ -190,16 +199,24 @@ export default class Charts extends Vue {
 
   private newChart(canvas: HTMLCanvasElement, config: ChartConfiguration<any>, tableMeta?: TableMeta) {
     if (this.chartStyle.type == "chart") {
-      if (this.chart) {
-        this.chart.destroy();
-      }
+      this.destroyChart();
       this.chart = new Chart(canvas, config);
+      this.table = null;
     } else {
       this.table = {
         title: config.options.plugins.title.text,
-        header: tableHeader(canvas, this.chartStyle, config, tableMeta),
-        items: tableItems(canvas, config, tableMeta),
+        header: tableHeader(this.chartStyle, config, tableMeta),
+        items: tableItems(config, tableMeta),
       };
+      this.tableKey++;
+      this.destroyChart();
+    }
+  }
+
+  private destroyChart() {
+    if (this.chart) {
+      this.chart.destroy();
+      this.chart = null;
     }
   }
 }

@@ -50,8 +50,10 @@ export class BrainstoneSimulator {
   }
 }
 
+export type ResourceSimulatorChanges = { [key in EventSource]?: Reward[] };
+
 export type ResourceSimulator = {
-  simulateResources: (a: ExtractLogArg<any>) => Reward[];
+  simulateResources: (a: ExtractLogArg<any>) => ResourceSimulatorChanges;
   playerData: PlayerData;
 };
 
@@ -112,7 +114,7 @@ export function newResourceSimulator(want: Player, expansions: Expansion): Resou
 
   let changes: LogEntryChanges = null;
   let processedChanges: Map<EventSource, Reward[]> = null;
-  let commandChanges: Reward[] = [];
+  let commandChanges: ResourceSimulatorChanges = {};
 
   function addProcessedChange(change: Reward[], source: EventSource) {
     if (processedChanges == null) {
@@ -125,9 +127,9 @@ export function newResourceSimulator(want: Player, expansions: Expansion): Resou
     processedChanges.set(source, change);
   }
 
-  function gainRewards(rewards: Reward[]) {
+  function gainRewards(source: EventSource, rewards: Reward[]) {
     playerData.gainRewards(rewards);
-    commandChanges = Reward.merge(rewards.concat(commandChanges));
+    commandChanges[source] = Reward.merge(rewards.concat(commandChanges[source] ?? []));
   }
 
   const gainRewardsBySource = (source: EventSource, rewards: { [resource in Resource]?: number }) => {
@@ -140,20 +142,22 @@ export function newResourceSimulator(want: Player, expansions: Expansion): Resou
         count -= p.count;
       }
 
-      gainRewards([new Reward(count, type as Resource)]);
+      gainRewards(source, [new Reward(count, type as Resource)]);
     }
   };
 
-  const payPowerUsage = (cmd: CommandObject, type: Resource, source?: EventSource) => {
+  const payPowerUsage = (cmd: CommandObject, type: Resource, source: EventSource) => {
     const powerUsage = parsePowerUsage(cmd);
     if (powerUsage) {
       const r = [new Reward(-sum(Object.values(powerUsage)), type)];
-      gainRewards(r);
+      gainRewards(source, r);
       if (source) {
         addProcessedChange(r, source);
       }
     }
   };
+
+  let gameEnded = false;
 
   const consumeChanges = (cmd: CommandObject) => {
     const args = cmd.args;
@@ -162,7 +166,7 @@ export function newResourceSimulator(want: Player, expansions: Expansion): Resou
       case Command.Build:
         const building = cmd.args[0] as Building;
         if (building == Building.GaiaFormer) {
-          payPowerUsage(cmd, Resource.MoveTokenToGaiaArea);
+          payPowerUsage(cmd, Resource.MoveTokenToGaiaArea, Command.Build);
         } else if (building == Building.PlanetaryInstitute && want.faction == Faction.Nevlas) {
           playerData.tokenModifier = 2;
         }
@@ -175,24 +179,29 @@ export function newResourceSimulator(want: Player, expansions: Expansion): Resou
     //gain or use changes
     switch (cmd.command) {
       case Command.Spend:
-        gainRewards(Reward.parse(args[0]).map((r) => new Reward(-r.count, r.type)));
-        gainRewards(Reward.parse(args[2]));
+        gainRewards(
+          Command.Spend,
+          Reward.parse(args[0]).map((r) => new Reward(-r.count, r.type))
+        );
+        gainRewards(Command.Spend, Reward.parse(args[2]));
         delete changes.spend;
         break;
       case Command.Special:
         if (args[0] == "4pw") {
-          gainRewards(Reward.parse("4pw"));
           for (const pos of TechPos.values(expansions)) {
+            if (changes[pos] != null) {
+              gainRewards(pos, Reward.parse("4pw"));
+            }
             delete changes[pos];
           }
         }
         break;
       case Command.BurnPower:
-        playerData.burnPower(Number(args[0]));
+        gainRewards(Command.Spend, [new Reward(Number(args[0]), Resource.BurnToken)]);
         break;
       case Command.ChooseIncome:
         const r = Reward.parse(args[0]);
-        gainRewards(r);
+        gainRewards(Command.ChooseIncome, r);
         addProcessedChange(r, Command.ChooseIncome);
         //all event sources might be reduced by this command
         changes = flattenChanges(changes, Command.ChooseIncome);
@@ -213,10 +222,14 @@ export function newResourceSimulator(want: Player, expansions: Expansion): Resou
   let gaiaPhase = false;
 
   const simulateResources = (a: ExtractLogArg<any>) => {
-    commandChanges = [];
-    if (a.log.phase == Phase.RoundGaia) {
-      gaiaPhase = true;
-      return [];
+    commandChanges = {};
+    switch (a.log.phase) {
+      case Phase.RoundGaia:
+        gaiaPhase = true;
+        return {};
+      case Phase.EndGame:
+        gameEnded = true;
+        return { [Command.Spend]: playerData.finalResourceHandling() };
     }
     if (gaiaPhase && !isGaiaMove(a.allCommands)) {
       gaiaPhase = false;
@@ -224,7 +237,7 @@ export function newResourceSimulator(want: Player, expansions: Expansion): Resou
     }
 
     if (a.log.player != want.player) {
-      return [];
+      return {};
     }
     if (a.cmdIndex == 0) {
       changes = {};
@@ -239,6 +252,10 @@ export function newResourceSimulator(want: Player, expansions: Expansion): Resou
 
     if (isLastChange(a)) {
       for (const s in changes) {
+        if (gameEnded && s === Command.Spend) {
+          //the end game spend doesn't contain all resource changes (in older games), therefore we call finalResourceHandling manually
+          continue;
+        }
         gainRewardsBySource(s as EventSource, changes[s]);
       }
       changes = null;
@@ -253,7 +270,12 @@ export function newResourceSimulator(want: Player, expansions: Expansion): Resou
 }
 
 export const resourceCounter = (
-  processor: (want: Player, a: ExtractLogArg<any>, data: PlayerData, simulateResources: () => Reward[]) => number
+  processor: (
+    want: Player,
+    a: ExtractLogArg<any>,
+    data: PlayerData,
+    simulateResources: () => ResourceSimulatorChanges
+  ) => number
 ): ExtractLog<any> =>
   ExtractLog.new((want, s, engine) => {
     const simulator = newResourceSimulator(want, engine.expansions);

@@ -21,21 +21,25 @@ import {
 } from "chart.js";
 import { memoize, sortBy, sum, sumBy } from "lodash";
 import { factionName } from "../../data/factions";
-import { ColorVar, playerColor, resolveColor } from "../../graphics/colors";
+import { playerColor, resolveColor } from "../../graphics/colors";
 import {
-  ChartFamily,
+  ChartGroup,
   chartPlayerOrder,
+  ChartSelect,
   ChartSource,
   ChartStyleDisplay,
+  ChartType,
+  dataPointsBalance,
   DatasetFactory,
   DeepPartial,
   IncludeRounds,
   playerLabel,
-  vpChartFamily,
+  vpChartType,
   weightedSum,
 } from "./charts";
 import { finalScoringSources } from "./final-scoring";
-import { createSimpleSourceFactories, simpleChartFactoryEntries } from "./simple-sources";
+import { ChartSummary } from "./simple-charts";
+import { createSimpleSourceFactories, simpleChartFactory } from "./simple-sources";
 import {
   advancedTechTileSource,
   boosterSource,
@@ -45,8 +49,16 @@ import {
   victoryPointSources,
 } from "./victory-point-charts";
 
-export type DatasetMeta = { [key: string]: { label: string; total: number; weightedTotal: number } };
-export type TableMeta = { weights?: number[]; colors?: ColorVar[]; datasetMeta: DatasetMeta };
+export type DatasetSummary = {
+  label: string;
+  total?: number;
+  weightedTotal?: number;
+  income?: number;
+  cost?: number;
+  balance?: number;
+};
+export type DatasetMeta = { [key: string]: DatasetSummary };
+export type TableMeta = { weights?: number[]; colors?: string[]; datasetMeta: DatasetMeta };
 export type BarChartConfig = { chart: ChartConfiguration<"bar">; table: TableMeta };
 
 export type ChartKind = string | PlayerEnum;
@@ -56,44 +68,48 @@ export const lineChartKind: ChartKind = "line";
 export type ChartKindDisplay = { label: string; kind: ChartKind };
 
 export type ChartFactory<Source extends ChartSource<any>> = {
-  sources(family: ChartFamily): Source[];
+  type: ChartType;
+  group: ChartGroup | null;
+  sources: Source[];
   newDetails(
     data: Engine,
     player: PlayerEnum,
     sources: Source[],
     includeRounds: IncludeRounds,
-    family: ChartFamily,
     groupDatasets: boolean
   ): DatasetFactory[];
-  singlePlayerSummaryTitle(player: Player, family: ChartFamily): string;
-  playerSummaryTitle(family: ChartFamily): string;
-  kindBreakdownTitle(family: ChartFamily, source: Source): string;
+  singlePlayerSummaryTitle(player: Player): string;
+  playerSummaryTitle: string;
+  kindBreakdownTitle(source: Source): string;
   includeRounds: IncludeRounds;
   stacked(kind: ChartKind);
-  showWeightedTotal(family: ChartFamily): boolean;
+  summary: ChartSummary;
 };
 
 function victoryPointSource(source: ChartSource<any>, sources: VictoryPointSource[]): VictoryPointSource {
   return sources.find((s) => s.types[0] == source.type);
 }
 
-const vpChartFactory = (title: string, allSources: VictoryPointSource[]): ChartFactory<ChartSource<any>> => ({
+const vpChartFactory = (
+  type: ChartType,
+  title: string,
+  allSources: VictoryPointSource[]
+): ChartFactory<ChartSource<any>> => ({
+  type: type,
+  group: ChartGroup.vp,
   includeRounds: "all",
-  sources(): ChartSource<any>[] {
-    return allSources.map((s) => ({
-      type: s.types[0],
-      label: s.label,
-      description: s.description,
-      color: s.color,
-      weight: 1,
-    }));
-  },
+  sources: allSources.map((s) => ({
+    type: s.types[0],
+    label: s.label,
+    description: s.description,
+    color: s.color,
+    weight: 1,
+  })),
   newDetails(
     data: Engine,
     player: PlayerEnum,
     sources: ChartSource<any>[],
     includeRounds: IncludeRounds,
-    family: ChartFamily,
     groupDatasets: boolean
   ) {
     const vpSources = sources.map((s) => victoryPointSource(s, allSources));
@@ -103,18 +119,14 @@ const vpChartFactory = (title: string, allSources: VictoryPointSource[]): ChartF
   singlePlayerSummaryTitle(player: Player): string {
     return `${title} of ${playerLabel(player)}`;
   },
-  playerSummaryTitle(): string {
-    return `${title} of all players`;
-  },
-  kindBreakdownTitle(family: ChartFamily, source: ChartSource<any>): string {
+  playerSummaryTitle: `${title} of all players`,
+  kindBreakdownTitle(source: ChartSource<any>): string {
     return `${victoryPointSource(source, allSources).label} of all players`;
   },
   stacked(kind: ChartKind) {
     return Object.values(PlayerEnum).includes(kind) && kind != PlayerEnum.All;
   },
-  showWeightedTotal(): boolean {
-    return false;
-  },
+  summary: ChartSummary.total,
 });
 
 function cropLabels(style: ChartStyleDisplay, labels: string[]): string[] {
@@ -164,29 +176,26 @@ function vpChartFactoryEntries(
   advTechTiles: Map<AdvTechTile, string>,
   data: Engine,
   boosters: Booster[]
-): [ChartFamily, ChartFactory<any>][] {
+): ChartFactory<any>[] {
   return [
-    [vpChartFamily, vpChartFactory("Victory Points", victoryPointSources(finalTileName, data.expansions))],
-    [
-      "Advanced Tech Tiles (Victory Points)",
-      vpChartFactory(
-        "Victory Points from Advanced Tech Tiles",
-        Array.from(advTechTiles.entries()).map(([tile, color]) => advancedTechTileSource(data, tile, color))
-      ),
-    ],
-    [
-      "Boosters (Victory Points)",
-      vpChartFactory(
-        "Victory Points from Boosters",
-        boosters.map((b) => boosterSource(data, b))
-      ),
-    ],
+    vpChartFactory(vpChartType, "Victory Points", victoryPointSources(finalTileName, data.expansions)),
+    vpChartFactory(
+      "Advanced Tech Tiles",
+      "Victory Points from Advanced Tech Tiles",
+      Array.from(advTechTiles.entries()).map(([tile, color]) => advancedTechTileSource(data, tile, color))
+    ),
+    vpChartFactory(
+      "Boosters",
+      "Victory Points from Boosters",
+      boosters.map((b) => boosterSource(data, b))
+    ),
   ];
 }
 
 export class ChartSetup {
-  chartFactories: Map<ChartFamily, ChartFactory<any>>;
-  families: ChartFamily[];
+  private readonly chartFactories: ChartFactory<any>[];
+  private groups: Map<ChartType, ChartType[]>;
+  selects: ChartSelect[];
 
   constructor(engine: Engine, statistics = false) {
     const scoringTechTile: (tile: AdvTechTile) => boolean = (tile: AdvTechTile) =>
@@ -218,59 +227,76 @@ export class ChartSetup {
 
     const factions: Faction[] = statistics ? Object.values(Faction) : engine.players.map((p) => p.faction);
 
-    this.chartFactories = new Map<ChartFamily, ChartFactory<any>>(
-      vpChartFactoryEntries(finalTileName, vpAdvTechTiles, engine, vpBoosters).concat(
-        simpleChartFactoryEntries(
-          createSimpleSourceFactories(
-            nonVpAdvTechTiles,
-            allBoosters,
-            statistics ? [] : finalTiles,
-            factions,
-            expansions
-          )
-        )
-      )
+    this.chartFactories = vpChartFactoryEntries(finalTileName, vpAdvTechTiles, engine, vpBoosters).concat(
+      createSimpleSourceFactories(
+        nonVpAdvTechTiles,
+        allBoosters,
+        statistics ? [] : finalTiles,
+        factions,
+        expansions
+      ).map((f) => simpleChartFactory(f))
     );
 
-    this.families = Array.from(this.chartFactories.keys()).sort();
+    this.selects = [];
+    this.groups = new Map();
+    for (const f of this.chartFactories) {
+      const group = f.group;
+      if (group != null) {
+        const last = this.groups.get(group);
+        if (last == null) {
+          this.selects.push(group);
+        }
+        this.groups.set(group, (last ?? []).concat(f.type));
+      } else {
+        this.selects.push(f.type);
+      }
+    }
+    this.selects = this.selects.sort();
   }
 
-  chartFactory(family: ChartFamily): ChartFactory<any> {
-    return this.chartFactories.get(family);
+  factory(chartSelect: ChartSelect, chartType: ChartType | null) {
+    const f = this.chartFactories.find((f) =>
+      chartType != null ? f.group == chartSelect && f.type == chartType : f.group == null && f.type == chartSelect
+    );
+    if (f == null) {
+      throw Error(`no factory found for ${chartSelect}/${chartType}`);
+    }
+    return f;
+  }
+
+  types(chartSelect: ChartSelect): ChartType[] {
+    return this.groups.get(chartSelect) ?? [];
   }
 
   newLineChart(
     style: ChartStyleDisplay,
-    family: ChartFamily,
+    factory: ChartFactory<any>,
     data: Engine,
-    canvas: HTMLCanvasElement,
     kind: ChartKind
   ): ChartConfiguration<"line"> {
-    const f = this.chartFactory(family);
-
     let title: string;
     let factories: DatasetFactory[];
 
-    const allSources = f.sources(family);
-    const includeRounds = f.includeRounds;
+    const allSources = factory.sources;
+    const includeRounds = factory.includeRounds;
     if (typeof kind == "number") {
       const numbers = kind === PlayerEnum.All ? chartPlayerOrder(data) : [kind as PlayerEnum];
 
       if (numbers.length == 1) {
         const p = numbers[0];
-        title = f.singlePlayerSummaryTitle(data.player(p), family);
-        factories = f.newDetails(data, p, allSources, includeRounds, family, style.type == "chart");
+        title = factory.singlePlayerSummaryTitle(data.player(p));
+        factories = factory.newDetails(data, p, allSources, includeRounds, style.type == "chart");
       } else {
-        title = f.playerSummaryTitle(family);
+        title = factory.playerSummaryTitle;
         factories = numbers.map((p) =>
-          weightedSum(data, p, f.newDetails(data, p, allSources, includeRounds, family, false))
+          weightedSum(data, p, factory.newDetails(data, p, allSources, includeRounds, false))
         );
       }
     } else {
       const sources = allSources.filter((r) => r.type === kind);
 
       const source = sources[0];
-      title = f.kindBreakdownTitle(family, source);
+      title = factory.kindBreakdownTitle(source);
       factories = chartPlayerOrder(data).map((p) => {
         const pl = data.player(p);
         if (!pl.faction) {
@@ -281,17 +307,17 @@ export class ChartSetup {
           backgroundColor: playerColor(pl, true),
           label: playerLabel(pl),
           fill: false,
-          getDataPoints: () => f.newDetails(data, p, sources, includeRounds, family, false)[0].getDataPoints(),
+          getDataPoints: () => factory.newDetails(data, p, sources, includeRounds, false)[0].getDataPoints(),
           weight: 1,
         };
       });
     }
 
     const datasetFactories = factories.filter((f) => f != null);
-    const stacked = f.stacked(kind);
+    const stacked = factory.stacked(kind);
 
     const datasets: ChartDataset<"line">[] = datasetFactories.map((f) => {
-      const color = f.backgroundColor.lookupForChart(style, canvas);
+      const color = f.backgroundColor;
       return {
         backgroundColor: color,
         borderColor: color,
@@ -352,20 +378,17 @@ export class ChartSetup {
     };
   }
 
-  newBarChart(style: ChartStyleDisplay, family: ChartFamily, data: Engine, canvas: HTMLCanvasElement): BarChartConfig {
-    const f = this.chartFactory(family);
-    const showWeightedTotal = f.showWeightedTotal(family);
-
+  newBarChart(style: ChartStyleDisplay, factory: ChartFactory<any>, data: Engine): BarChartConfig {
     const datasetMeta: DatasetMeta = {};
 
-    const sources: ChartSource<any>[] = f.sources(family);
+    const sources: ChartSource<any>[] = factory.sources;
     const players = chartPlayerOrder(data);
     const datasets: ChartDataset<"bar">[] = sortBy(
       players
         .filter((pl) => data.player(pl).faction != null)
         .map((pl) => {
           // only calculate data points once
-          const details = f.newDetails(data, pl, sources, "last", family, false).map((f) => {
+          const details = factory.newDetails(data, pl, sources, "last", false).map((f) => {
             const res = Object.assign({}, f);
             res.getDataPoints = memoize(f.getDataPoints);
             return res;
@@ -373,20 +396,33 @@ export class ChartSetup {
           const points = details.map((f) => f.getDataPoints()[0]);
 
           const total = sum(points);
-          const weighted = showWeightedTotal ? weightedSum(data, pl, details).getDataPoints()[0] : null;
 
           const player = data.player(pl);
           const label = playerLabel(player);
-          const key = `${label} (${weighted ?? total})`;
-          datasetMeta[key] = {
+          let key: string;
+          const meta: DatasetSummary = {
             label: label,
-            total: total,
-            weightedTotal: weighted,
           };
+          if (factory.summary == ChartSummary.total) {
+            meta.total = total;
+            key = `${label} (${meta.total})`;
+          } else if (factory.summary == ChartSummary.balance) {
+            const balance = dataPointsBalance(data, pl, details);
+            meta.income = balance.income;
+            meta.cost = balance.cost;
+            meta.balance = meta.income + meta.cost;
+            key = `${label} (${meta.income})`;
+          } else if (factory.summary == ChartSummary.weightedTotal) {
+            meta.total = total;
+            meta.weightedTotal = weightedSum(data, pl, details).getDataPoints()[0];
+            key = `${label} (${meta.weightedTotal})`;
+          }
+
+          datasetMeta[key] = meta;
           const d: ChartDataset<"bar"> = {
             data: points,
             label: key,
-            backgroundColor: playerColor(player, style.type == "table").lookupForChart(style, canvas),
+            backgroundColor: playerColor(player, style.type == "table"),
             borderColor: "black",
             borderWidth: 1,
           };
@@ -401,7 +437,7 @@ export class ChartSetup {
     const player = data.player(players[0]);
     return {
       table: {
-        weights: showWeightedTotal ? sources.map((s) => s.weight) : null,
+        weights: factory.summary != ChartSummary.total ? sources.map((s) => s.weight) : null,
         colors: sources.map((s) => resolveColor(s.color, player)),
         datasetMeta: datasetMeta,
       },
@@ -425,7 +461,7 @@ export class ChartSetup {
               },
             },
             title: {
-              text: f.playerSummaryTitle(family),
+              text: factory.playerSummaryTitle,
               display: true,
             },
           } as any,
@@ -438,7 +474,7 @@ export class ChartSetup {
     };
   }
 
-  kinds(data: Engine, family: ChartFamily): ChartKindDisplay[][] {
+  kinds(data: Engine, factory: ChartFactory<any>): ChartKindDisplay[][] {
     const players = chartPlayerOrder(data);
 
     const general: ChartKindDisplay[] = [
@@ -455,12 +491,10 @@ export class ChartSetup {
       kind: p,
       label: factionName(data.player(p).faction),
     }));
-    const kinds: ChartKindDisplay[] = this.chartFactory(family)
-      .sources(family)
-      .map((s) => ({
-        kind: s.type,
-        label: s.label,
-      }));
+    const kinds: ChartKindDisplay[] = factory.sources.map((s) => ({
+      kind: s.type,
+      label: s.label,
+    }));
 
     return [general, playerDetails, kinds];
   }

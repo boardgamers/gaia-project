@@ -7,7 +7,7 @@ import { terranChargeExtractLog } from "./charge";
 import { ChartSource } from "./charts";
 import { federationDiscount, GetFederationBonusArg } from "./federations";
 import { nevlasPowerLeverage, taklonsPowerLeverage } from "./power-leverage";
-import { commandCounter, ExtractLog, planetCounter, SimpleSourceFactory } from "./simple-charts";
+import { ChartSummary, commandCounter, ExtractLog, planetCounter, SimpleSourceFactory } from "./simple-charts";
 import { TerraformingSteps } from "./terraforming";
 
 type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never };
@@ -198,7 +198,7 @@ export const factionSourceFactory = (factions: Faction[]): SimpleSourceFactory<C
   return {
     name: "Faction Specials",
     playerSummaryLineChartTitle: "Special abilities of all factions",
-    showWeightedTotal: false,
+    summary: ChartSummary.total,
     extractLog: ExtractLog.mux(
       entries.flatMap((s) =>
         s.entries.map((e) => ({

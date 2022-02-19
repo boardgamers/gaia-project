@@ -2,39 +2,17 @@
   "tableMeta": {
     "weights": [1, 2, 2, 3, 3, 3, 0, 3, 1, 0, 0],
     "colors": [
-      {
-        "color": "--res-ore"
-      },
-      {
-        "color": "--res-credit"
-      },
-      {
-        "color": "--res-knowledge"
-      },
-      {
-        "color": "--current-round"
-      },
-      {
-        "color": "--rt-terra"
-      },
-      {
-        "color": "--res-qic"
-      },
-      {
-        "color": "--gaia"
-      },
-      {
-        "color": "--rt-nav"
-      },
-      {
-        "color": "--res-credit"
-      },
-      {
-        "color": "--rt-gaia"
-      },
-      {
-        "color": "--volcanic"
-      }
+      "--res-ore",
+      "--res-credit",
+      "--res-knowledge",
+      "--current-round",
+      "--rt-terra",
+      "--res-qic",
+      "--gaia",
+      "--rt-nav",
+      "--res-credit",
+      "--rt-gaia",
+      "--volcanic"
     ],
     "datasetMeta": {
       "Nevlas (16)": {

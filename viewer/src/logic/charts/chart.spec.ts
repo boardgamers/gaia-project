@@ -2,8 +2,7 @@ import Engine, { Faction, LogEntry, Player, ResearchField, Reward } from "@gaia-
 import { expect } from "chai";
 import { runJsonTests } from "../test-utils";
 import { ChartSetup } from "./chart-factory";
-// Here we import the File System module of node
-import { ChartFamily } from "./charts";
+import { ChartType } from "./charts";
 import { countResearch, ResearchCounter } from "./research";
 
 describe("Chart", () => {
@@ -50,17 +49,29 @@ describe("Chart", () => {
   describe("chart data", () => {
     runJsonTests({
       baseDir: "src/logic/charts/testdata",
-      subTests: (testCase: any) =>
-        testCase.families.flatMap((f) =>
-          f == "all" ? new ChartSetup(new Engine(["init 2 foo"])).families : [f as ChartFamily]
-        ),
+      subTests: (testCase: any) => {
+        const setup = new ChartSetup(new Engine(["init 2 foo"]));
+        return testCase.types.flatMap((f) =>
+          f == "all"
+            ? setup.selects.flatMap((s) => {
+                const types = setup.types(s);
+                return types.length == 0 ? [s] : types.map((t) => `${s}/${t}`);
+              })
+            : [f as ChartType]
+        );
+      },
       replay: true,
-      createActualOutput: (engine, family, testCase: any) => {
-        const config = new ChartSetup(engine, testCase.statistics).newBarChart(
-          { type: "table", label: "Table", compact: false },
-          family,
-          engine,
-          null
+      createActualOutput: (engine, fullType, testCase: any) => {
+        const setup = new ChartSetup(engine, testCase.statistics);
+        const split = fullType.split("/");
+        const config = setup.newBarChart(
+          {
+            type: "table",
+            label: "Table",
+            compact: false,
+          },
+          setup.factory(split[0], split.length > 1 ? split[1] : null),
+          engine
         );
         return {
           tableMeta: config.table,

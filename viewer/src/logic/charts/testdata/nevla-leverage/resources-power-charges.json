@@ -1,0 +1,59 @@
+{
+  "tableMeta": {
+    "weights": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -2, -2, -1],
+    "colors": [
+      "--gaia",
+      "--res-credit",
+      "--current-round",
+      "--rt-sci",
+      "--oxide",
+      "--res-power",
+      "--res-qic",
+      "--tech-tile",
+      "--terra",
+      "--volcanic",
+      "--res-power",
+      "--specialAction",
+      "--res-qic"
+    ],
+    "datasetMeta": {
+      "Nevlas (19)": {
+        "label": "Nevlas",
+        "income": 19,
+        "cost": -16,
+        "balance": 3
+      },
+      "Terrans (14)": {
+        "label": "Terrans",
+        "income": 14,
+        "cost": -8,
+        "balance": 6
+      }
+    }
+  },
+  "labels": [
+    "Game start income",
+    "Base income",
+    "Tech Tiles income",
+    "Research income",
+    "Booster income",
+    "Free Leech income",
+    "Paid Leech income",
+    "Powerful Power Tokens income",
+    "Terrans income",
+    "Trade income",
+    "Free actions cost",
+    "Power/Q.I.C Action cost",
+    "Waste cost"
+  ],
+  "datasets": [
+    {
+      "label": "Nevlas (19)",
+      "data": [4, 0, 0, 0, 2, 2, 3, 8, 0, 0, 0, 7, 2]
+    },
+    {
+      "label": "Terrans (14)",
+      "data": [4, 0, 0, 0, 4, 3, 3, 0, 0, 0, 0, 4, 0]
+    }
+  ]
+}

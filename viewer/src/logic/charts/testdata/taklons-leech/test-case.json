@@ -1,5 +1,5 @@
 {
-  "families": ["Power Leech"],
+  "types": ["Power Leech"],
   "options": {
     "advancedRules": true,
     "layout": "standard",

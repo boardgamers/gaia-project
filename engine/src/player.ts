@@ -417,8 +417,8 @@ export default class Player extends EventEmitter {
   loadBoard(board: FactionBoard, expansions: Expansion, skipIncome = false) {
     this.board = board;
 
-    this.data.loadPower(this.board);
     if (!skipIncome) {
+      this.gainRewards(this.data.initialPowerRewards(this.board), Phase.BeginGame);
       this.loadTechs(expansions);
       this.loadEvents(this.board.income);
     }

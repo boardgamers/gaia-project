@@ -1,5 +1,5 @@
 {
-  "families": ["Final Scoring Conditions", "Faction Specials"],
+  "types": ["Final Scoring Conditions", "Faction Specials"],
   "options": {
     "layout": "standard"
   },

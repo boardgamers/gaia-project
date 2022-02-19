@@ -1,5 +1,5 @@
 {
-  "families": ["all"],
+  "types": ["all"],
   "options": {
     "advancedRules": true,
     "layout": "standard"

@@ -35,7 +35,7 @@ export function playerCell(p: Player | null, bold = false): Cell {
   return {
     shortcut: f ? b(f.substring(0, 1)) : "",
     title: f ? factionName(f) : "",
-    color: f ? playerColor(p, true).color : null,
+    color: f ? playerColor(p, true) : null,
   };
 }
 

@@ -1,10 +1,10 @@
 {
-  "families": [
+  "types": [
     "Advanced Tech Tiles",
-    "Advanced Tech Tiles (Victory Points)",
+    "Victory Points/Advanced Tech Tiles",
     "Boosters",
-    "Boosters (Victory Points)",
-    "Victory Points"
+    "Victory Points/Boosters",
+    "Victory Points/Overview"
   ],
   "options": {
     "layout": "standard"

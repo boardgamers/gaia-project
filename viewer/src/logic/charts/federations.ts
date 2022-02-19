@@ -17,7 +17,7 @@ import { federationData } from "../../data/federations";
 import { CommandObject } from "../recent";
 import { BuildingCounter } from "./buildings";
 import { ChartSource } from "./charts";
-import { ExtractLog, SimpleSourceFactory } from "./simple-charts";
+import { ChartSummary, ExtractLog, SimpleSourceFactory } from "./simple-charts";
 
 function isSpecialOperator(data: Engine, cmd: CommandObject) {
   return data.tiles.techs[cmd.args[0]].tile == TechTile.Tech3;
@@ -105,7 +105,7 @@ export const federationDiscount = (
 export function federationsSourceFactory(expansions: Expansion): SimpleSourceFactory<ChartSource<Federation>> {
   return {
     name: "Federations",
-    showWeightedTotal: false,
+    summary: ChartSummary.total,
     playerSummaryLineChartTitle: "Federations of all players",
     extractLog: ExtractLog.filterPlayer((e) => {
       const type = e.source.type;

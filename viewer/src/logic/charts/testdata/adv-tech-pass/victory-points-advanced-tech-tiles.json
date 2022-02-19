@@ -1,41 +1,19 @@
 {
   "tableMeta": {
     "weights": null,
-    "colors": [
-      {
-        "color": "--specialAction"
-      },
-      {
-        "color": "--current-round"
-      },
-      {
-        "color": "--dig"
-      },
-      {
-        "color": "--res-knowledge"
-      },
-      {
-        "color": "--res-credit"
-      },
-      {
-        "color": "--gaia"
-      }
-    ],
+    "colors": ["--specialAction", "--current-round", "--dig", "--res-knowledge", "--res-credit", "--gaia"],
     "datasetMeta": {
       "Bal T'aks (33)": {
         "label": "Bal T'aks",
-        "total": 33,
-        "weightedTotal": null
+        "total": 33
       },
       "Ivits (0)": {
         "label": "Ivits",
-        "total": 0,
-        "weightedTotal": null
+        "total": 0
       },
       "Gleens (0)": {
         "label": "Gleens",
-        "total": 0,
-        "weightedTotal": null
+        "total": 0
       }
     }
   },

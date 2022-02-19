@@ -176,7 +176,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Faction } from "@gaia-project/engine";
+import { Faction, Resource as ResourceEnum } from "@gaia-project/engine";
 import Building from "./Building.vue";
 import Qic from "./Resources/Qic.vue";
 import VictoryPoint from "./Resources/VictoryPoint.vue";
@@ -194,7 +194,7 @@ import Token from "./Token.vue";
 })
 export default class Resource extends Vue {
   @Prop()
-  kind: Resource | "brainstone";
+  kind: ResourceEnum;
 
   @Prop()
   count: number;

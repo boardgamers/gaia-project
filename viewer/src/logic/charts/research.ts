@@ -12,7 +12,7 @@ import { sum } from "lodash";
 import { researchColorVar, researchData } from "../../data/research";
 import { CommandObject } from "../recent";
 import { chartPlayerBoard, ChartSource } from "./charts";
-import { commandCounterArg0EqualsSource, logEntryProcessor, SimpleSourceFactory } from "./simple-charts";
+import { ChartSummary, commandCounterArg0EqualsSource, logEntryProcessor, SimpleSourceFactory } from "./simple-charts";
 
 export class ResearchCounter {
   player: Player;
@@ -70,7 +70,7 @@ export function countResearch(player: Player): (moveHistory: string[], log: LogE
 export const researchSourceFactory = (expansion: Expansion): SimpleSourceFactory<ChartSource<ResearchField>> => ({
   name: "Research",
   playerSummaryLineChartTitle: "Research steps of all players",
-  showWeightedTotal: false,
+  summary: ChartSummary.total,
   initialValue: (player, source) => new ResearchCounter(player).playerData.research[source.type] ?? 0,
   extractLog: commandCounterArg0EqualsSource(Command.UpgradeResearch),
   sources: ResearchField.values(expansion).map((field) => {

@@ -496,6 +496,7 @@ export default class Engine {
       Resource.Ore,
       Resource.GainToken,
       Resource.BurnToken,
+      Resource.Brainstone,
     ]) {
       player.data.on(`gain-${resource}`, (amount: number, source: EventSource) =>
         this.log(player.player, resource, amount, source)

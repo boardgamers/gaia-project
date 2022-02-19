@@ -1,26 +1,26 @@
-import { BoardAction, Booster, Command, Faction, Planet, Resource, Reward } from "@gaia-project/engine";
+import { BoardAction, Booster, Command, Expansion, Faction, Planet, Resource, Reward } from "@gaia-project/engine";
 import { tradeCostSource, tradeSource } from "@gaia-project/engine/src/events";
 import { sum } from "lodash";
 import { boardActionData } from "../../data/actions";
 import { boosterData } from "../../data/boosters";
 import { resourceData } from "../../data/resources";
 import { colorCodes } from "../color-codes";
-import { terranChargeExtractLog, useChargedTokensExtractLog } from "./charge";
-import { ChartKind } from "./chart-factory";
-import { ChartSource, extractChanges } from "./charts";
-import { nevlasPowerLeverage, powerLeverage, powerLeverageSource, taklonsPowerLeverage } from "./power-leverage";
-import { commandCounterArg0EqualsSource, ExtractLog, planetCounter, SimpleSourceFactory } from "./simple-charts";
+import { balanceSheetExtractLog, balanceSheetSources, BalanceSheetSourceType } from "./balance-sheet";
+import { ChartGroup, ChartSource } from "./charts";
+import {
+  ChartSummary,
+  commandCounterArg0EqualsSource,
+  ExtractLog,
+  planetCounter,
+  SimpleSourceFactory,
+} from "./simple-charts";
 
 const range = "range";
 
-class BaseResourceSource<T extends ChartKind> extends ChartSource<T> {
-  inverseOf?: Resource;
-}
+export type ResourceSource = ChartSource<Resource>;
+type FreeActionSource = ChartSource<Resource | "range">;
 
-export type ResourceSource = BaseResourceSource<Resource | "powerLeverage">;
-type FreeActionSource = BaseResourceSource<Resource | "range">;
-
-type ResourceWeight = { type: Resource; weight: number; inverseOf?: Resource };
+type ResourceWeight = { type: Resource; weight: number };
 const resourceWeights: ResourceWeight[] = [
   {
     type: Resource.Credit,
@@ -43,32 +43,20 @@ const resourceWeights: ResourceWeight[] = [
     weight: 0,
   },
   {
-    type: Resource.PayPower,
-    inverseOf: Resource.ChargePower,
-    weight: 0,
-  },
-  {
     type: Resource.GainToken,
-    weight: 0,
-  },
-  {
-    type: Resource.BurnToken,
     weight: 0,
   },
 ];
 
-export const resourceSources: ResourceSource[] = resourceWeights
-  .map((w) => {
-    const d = resourceData[w.type];
-    return {
-      type: w.type,
-      weight: w.weight,
-      color: d.color,
-      inverseOf: w.inverseOf,
-      label: d.plural,
-    } as ResourceSource;
-  })
-  .concat(powerLeverageSource);
+export const resourceSources: ResourceSource[] = resourceWeights.map((w) => {
+  const d = resourceData[w.type];
+  return {
+    type: w.type,
+    weight: w.weight,
+    color: d.color,
+    label: d.plural,
+  } as ResourceSource;
+});
 
 const freeActionSources = (resourceSources as FreeActionSource[])
   .filter((s) => s.weight > 0 || s.type == Resource.GainToken)
@@ -85,56 +73,51 @@ const freeActionSources = (resourceSources as FreeActionSource[])
     weight: 0,
   });
 
-function extractResourceChanges(eventSourceFilter: (EventSource) => boolean) {
-  return (wantPlayer, source) =>
-    extractChanges(wantPlayer.player, (player, eventSource, resource, round, change) =>
-      eventSourceFilter(eventSource) &&
-      ((resource == source.type && change > 0) || (resource == source.inverseOf && change < 0))
-        ? Math.abs(change)
-        : 0
-    );
+function balanceSheetSummary(
+  name: string,
+  description: string,
+  wantEventSources: BalanceSheetSourceType[],
+  amountFilter: (v: number) => boolean
+) {
+  return {
+    name,
+    group: ChartGroup.resources,
+    playerSummaryLineChartTitle: description,
+    summary: ChartSummary.weightedTotal,
+    extractLog: balanceSheetExtractLog<ChartSource<Resource>>(
+      (s) => s.type,
+      () => wantEventSources,
+      (s, e, reward, amount) => (amountFilter(amount) && wantEventSources.includes(e) ? amount : 0)
+    ),
+    sources: resourceSources,
+  };
 }
 
-export const resourceSourceFactory: SimpleSourceFactory<ResourceSource> = {
-  name: "Resources",
-  playerSummaryLineChartTitle: "Resources of all players as if bought with power",
-  showWeightedTotal: true,
-  extractChange: extractResourceChanges(() => true),
-  extractLog: ExtractLog.mux([
-    {
-      sourceTypeFilter: [Resource.BurnToken],
-      commandFilter: [Command.BurnPower],
-      extractLog: ExtractLog.filterPlayer((e) => Number(e.cmd.args[0])),
-    },
-    terranChargeExtractLog(Resource.ChargePower),
-    useChargedTokensExtractLog(Resource.ChargePower),
-    {
-      factionFilter: [Faction.Taklons],
-      sourceTypeFilter: [powerLeverage],
-      extractLog: taklonsPowerLeverage(2),
-    },
-    {
-      factionFilter: [Faction.Nevlas],
-      sourceTypeFilter: [powerLeverage],
-      extractLog: nevlasPowerLeverage,
-    },
-  ]),
-  sources: resourceSources,
-};
+export function resourceSourceFactory(expansion: Expansion): SimpleSourceFactory<ChartSource<Resource>> {
+  return balanceSheetSummary(
+    "Overview",
+    "Resources of all players as if bought with power",
+    balanceSheetSources(expansion)
+      .filter((s) => s.incomeResources.length > 0)
+      .flatMap((s) => s.eventSources),
+    (a) => a > 0
+  );
+}
 
-export const tradeResourceSourceFactory: SimpleSourceFactory<ResourceSource> = {
-  name: "Trade Resources",
-  playerSummaryLineChartTitle: "Resources from trade of all players as if bought with power",
-  showWeightedTotal: true,
-  extractChange: extractResourceChanges((s) => s == tradeSource || s == tradeCostSource),
-  sources: resourceSources.filter((s) => s.type != Resource.BurnToken && s.type != powerLeverageSource.type),
-};
+export function tradeSourceFactory(expansion: Expansion): SimpleSourceFactory<ChartSource<Resource>> {
+  return balanceSheetSummary(
+    "Trade",
+    "Resources from trade of all players as if bought with power",
+    [tradeSource, tradeCostSource],
+    () => true
+  );
+}
 
 export const freeActionSourceFactory: SimpleSourceFactory<FreeActionSource> = {
   name: "Free actions",
   playerSummaryLineChartTitle:
     "Resources bought with free actions by all players (paid with power, credits, ore, QIC, and gaia formers)",
-  showWeightedTotal: true,
+  summary: ChartSummary.weightedTotal,
   extractLog: ExtractLog.mux([
     {
       commandFilter: [Command.Spend],
@@ -165,7 +148,7 @@ export const freeActionSourceFactory: SimpleSourceFactory<FreeActionSource> = {
 export const boardActionSourceFactory: SimpleSourceFactory<ChartSource<BoardAction>> = {
   name: "Board actions",
   playerSummaryLineChartTitle: `Board actions taken by all players`,
-  showWeightedTotal: false,
+  summary: ChartSummary.total,
   extractLog: commandCounterArg0EqualsSource(Command.Action),
   sources: BoardAction.values().map((action) => ({
     type: action,
@@ -177,7 +160,7 @@ export const boardActionSourceFactory: SimpleSourceFactory<ChartSource<BoardActi
 
 export const boosterSourceFactory = (boosters: Booster[]): SimpleSourceFactory<ChartSource<Booster>> => ({
   name: "Boosters",
-  showWeightedTotal: false,
+  summary: ChartSummary.total,
   playerSummaryLineChartTitle: "Boosters taken by all players",
   extractLog: commandCounterArg0EqualsSource(Command.Pass, Command.ChooseRoundBooster),
   sources: boosters.map((b) => ({

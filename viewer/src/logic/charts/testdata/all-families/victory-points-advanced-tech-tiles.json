@@ -1,46 +1,23 @@
 {
   "tableMeta": {
     "weights": null,
-    "colors": [
-      {
-        "color": "--federation"
-      },
-      {
-        "color": "--res-credit"
-      },
-      {
-        "color": "--res-credit"
-      },
-      {
-        "color": "--specialAction"
-      },
-      {
-        "color": "--rt-sci"
-      },
-      {
-        "color": "--current-round"
-      }
-    ],
+    "colors": ["--federation", "--res-credit", "--res-credit", "--specialAction", "--rt-sci", "--current-round"],
     "datasetMeta": {
       "Itars (0)": {
         "label": "Itars",
-        "total": 0,
-        "weightedTotal": null
+        "total": 0
       },
       "Geoden (0)": {
         "label": "Geoden",
-        "total": 0,
-        "weightedTotal": null
+        "total": 0
       },
       "Taklons (0)": {
         "label": "Taklons",
-        "total": 0,
-        "weightedTotal": null
+        "total": 0
       },
       "Lantids (0)": {
         "label": "Lantids",
-        "total": 0,
-        "weightedTotal": null
+        "total": 0
       }
     }
   },

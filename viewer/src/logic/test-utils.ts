@@ -26,7 +26,7 @@ export function runJsonTests(tester: JsonTester) {
     let engine: Engine = null;
     for (const subTest of tester.subTests(testCase)) {
       it(subTest, () => {
-        const path = `${testCaseDir}/${subTest.replace(/ /g, "-").toLowerCase()}.json`;
+        const path = `${testCaseDir}/${subTest.replace(/[\/ ]/g, "-").toLowerCase()}.json`;
         if (engine == null) {
           engine = new Engine(testCase.moveHistory, testCase.options, null, tester.replay);
         }

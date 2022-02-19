@@ -16,6 +16,7 @@ export class ColorCoded {
 }
 
 export const colorCodes = {
+  booster: new ColorCoded("", "--oxide"),
   terraformingStep: new ColorCoded("s", "--dig"),
   planetType: new ColorCoded("t", "--dig"),
   sector: new ColorCoded("e", "--current-round"),

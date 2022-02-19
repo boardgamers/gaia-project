@@ -1,32 +1,7 @@
 {
   "tableMeta": {
     "weights": [0, 1, 2, 3, 0, 0, 0, 0],
-    "colors": [
-      {
-        "color": "--current-round"
-      },
-      {
-        "color": "--terra"
-      },
-      {
-        "color": "--oxide"
-      },
-      {
-        "color": "--volcanic"
-      },
-      {
-        "color": "--transdim"
-      },
-      {
-        "color": "--gaia"
-      },
-      {
-        "color": "--recent"
-      },
-      {
-        "color": "--lost"
-      }
-    ],
+    "colors": ["--current-round", "--terra", "--oxide", "--volcanic", "--transdim", "--gaia", "--recent", "--lost"],
     "datasetMeta": {
       "Itars (0)": {
         "label": "Itars",

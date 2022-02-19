@@ -16,10 +16,10 @@ import {
   BrainstoneSimulator,
   flattenChanges,
   isLastChange,
+  newResourceSimulator,
   parsePowerUsage,
-  resourceCounter,
 } from "./resource-counter";
-import { logEntryProcessor } from "./simple-charts";
+import { ExtractLog, logEntryProcessor } from "./simple-charts";
 
 function runResourceCounterTest(testCase: any, wantPlayer: PlayerEnum) {
   const wantProps = new Map<number, string>();
@@ -32,36 +32,6 @@ function runResourceCounterTest(testCase: any, wantPlayer: PlayerEnum) {
     }
     return JSON.stringify(res);
   };
-
-  let round = 0;
-  let ended = false;
-
-  const counter = resourceCounter((want, a, data, simulateResources) => {
-    simulateResources();
-
-    if (a.log.round) {
-      round = a.log.round;
-    }
-    if (a.log.phase == Phase.EndGame) {
-      ended = true;
-    }
-
-    if (a.log.player == wantPlayer && round > 0 && !ended && isLastChange(a) && !isGaiaMove(a.allCommands)) {
-      const got = getProps(data);
-      const want = wantProps.get(logIndex);
-      if (got != want) {
-        console.log("want", want);
-        console.log("got", got);
-        const s = Object.assign({}, a);
-        delete s.data;
-        console.log("args", JSON.stringify(s));
-        console.log("history", JSON.stringify(a.data.advancedLog));
-        expect(got).to.deep.equal(want);
-      }
-    }
-
-    return 0;
-  });
 
   class TestEngine extends Engine {
     move(_move: string, allowIncomplete = true) {
@@ -85,6 +55,44 @@ function runResourceCounterTest(testCase: any, wantPlayer: PlayerEnum) {
 
   const engine = new TestEngine(testCase.moveHistory, testCase.options, new Engine().version, true);
   const player = engine.player(wantPlayer);
+
+  const simulator = newResourceSimulator(player, engine.expansions);
+
+  function assertResources(want: string, args: () => string) {
+    const got = getProps(simulator.playerData);
+    if (got != want) {
+      console.log("want", want);
+      console.log("got", got);
+      console.log("args", args());
+      console.log("history", JSON.stringify(engine.advancedLog));
+      expect(got).to.deep.equal(want);
+    }
+  }
+
+  let round = 0;
+  let ended = false;
+
+  const counter = ExtractLog.new(() => (a) => {
+    simulator.simulateResources(a);
+
+    if (a.log.round) {
+      round = a.log.round;
+    }
+    if (a.log.phase == Phase.EndGame) {
+      ended = true;
+    }
+
+    if (a.log.player == wantPlayer && round > 0 && !ended && isLastChange(a) && !isGaiaMove(a.allCommands)) {
+      assertResources(wantProps.get(logIndex), () => {
+        const s = Object.assign({}, a);
+        delete s.data;
+        return JSON.stringify(s);
+      });
+    }
+
+    return 0;
+  });
+
   const processor = counter.processor(player, null, engine);
   const logProcessor = logEntryProcessor((cmd, log, allCommands, cmdIndex) =>
     processor({
@@ -102,6 +110,8 @@ function runResourceCounterTest(testCase: any, wantPlayer: PlayerEnum) {
     logIndex = index;
     logProcessor(history, entry);
   });
+
+  assertResources(getProps(engine.player(wantPlayer).data), () => "Game ended");
 }
 
 describe("Resource Counter", () => {

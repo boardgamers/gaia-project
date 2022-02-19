@@ -1,3 +1,4 @@
+import assert from "assert";
 import { EventEmitter } from "eventemitter3";
 import { cloneDeep, fromPairs } from "lodash";
 import { TRADE_COST } from "./available/ships";
@@ -148,10 +149,16 @@ export default class PlayerData extends EventEmitter {
     return ret;
   }
 
-  loadPower(board: FactionBoard) {
-    this.power.area1 = board.power.area1;
-    this.power.area2 = board.power.area2;
-    this.brainstone = board.brainstone;
+  initialPowerRewards(board: FactionBoard): Reward[] {
+    const rewards = [
+      new Reward(board.power.area1 + board.power.area2, Resource.GainToken),
+      new Reward(board.power.area2, Resource.ChargePower),
+    ];
+    if (board.brainstone !== null) {
+      assert(board.brainstone === PowerArea.Area1, "other initial areas for brainstone are not supported");
+      rewards.push(new Reward(1, Resource.Brainstone));
+    }
+    return rewards;
   }
 
   /**
@@ -251,6 +258,9 @@ export default class PlayerData extends EventEmitter {
         break;
       case Resource.GainToken:
         count > 0 ? (this.power.area1 += count) : this.discardPower(-count);
+        break;
+      case Resource.Brainstone:
+        this.brainstone = PowerArea.Area1; //initial brainstone gain
         break;
       case Resource.GainTokenGaiaArea:
         count > 0 ? this.chargeGaiaPower(count) : this.discardGaiaPower(-count);

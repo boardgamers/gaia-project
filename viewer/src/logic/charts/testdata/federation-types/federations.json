@@ -1,49 +1,23 @@
 {
   "tableMeta": {
     "weights": null,
-    "colors": [
-      {
-        "color": "--res-vp"
-      },
-      {
-        "color": "--res-qic"
-      },
-      {
-        "color": "--res-power"
-      },
-      {
-        "color": "--res-ore"
-      },
-      {
-        "color": "--res-credit"
-      },
-      {
-        "color": "--res-knowledge"
-      },
-      {
-        "color": "--desert"
-      }
-    ],
+    "colors": ["--res-vp", "--res-qic", "--res-power", "--res-ore", "--res-credit", "--res-knowledge", "--desert"],
     "datasetMeta": {
       "Gleens (3)": {
         "label": "Gleens",
-        "total": 3,
-        "weightedTotal": null
+        "total": 3
       },
       "Bal T'aks (3)": {
         "label": "Bal T'aks",
-        "total": 3,
-        "weightedTotal": null
+        "total": 3
       },
       "Bescods (4)": {
         "label": "Bescods",
-        "total": 4,
-        "weightedTotal": null
+        "total": 4
       },
       "Itars (3)": {
         "label": "Itars",
-        "total": 3,
-        "weightedTotal": null
+        "total": 3
       }
     }
   },

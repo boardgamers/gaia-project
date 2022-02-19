@@ -1,4 +1,4 @@
-import { ColorVar, dynamicCellStyle } from "../graphics/colors";
+import { staticCellStyle } from "../graphics/colors";
 import { FinalScoringContributor, finalScoringSources, FinalScoringTableRow } from "./charts/final-scoring";
 import { rowHeaderCell } from "./charts/table";
 import { colorCodes } from "./color-codes";
@@ -37,21 +37,21 @@ const finalScoringTableRows: FinalScoringTableRow[] = Object.keys(finalScoringSo
     }
   );
 
-export function finalScoringFields(canvas: HTMLElement): any[] {
+export function finalScoringFields(): any[] {
   return [{ key: "Name", sortable: true, isRowHeader: true } as { key: string }].concat(
     ...Object.keys(finalScoringContributorColors).map((c) => {
       return {
         key: c,
         sortable: true,
-        thStyle: dynamicCellStyle(canvas as HTMLCanvasElement, new ColorVar(finalScoringContributorColors[c])),
+        thStyle: staticCellStyle(finalScoringContributorColors[c]),
       };
     })
   );
 }
 
-export function finalScoringItems(canvas: HTMLElement): any[] {
+export function finalScoringItems(): any[] {
   return finalScoringTableRows.map((r) => {
-    const row = { Name: rowHeaderCell(dynamicCellStyle(canvas, new ColorVar(r.color)), r.name) };
+    const row = { Name: rowHeaderCell(staticCellStyle(r.color), r.name) };
 
     for (const contributor of r.contributors) {
       row[contributor] = true;

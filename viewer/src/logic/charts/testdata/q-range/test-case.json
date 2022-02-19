@@ -1,5 +1,5 @@
 {
-  "families": ["Free actions"],
+  "types": ["Free actions"],
   "options": {
     "map": {
       "sectors": [

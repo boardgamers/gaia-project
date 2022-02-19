@@ -1,0 +1,77 @@
+{
+  "tableMeta": {
+    "weights": [1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -2, -1],
+    "colors": [
+      "--gaia",
+      "--res-credit",
+      "--current-round",
+      "--rt-sci",
+      "--oxide",
+      "--res-power",
+      "--specialAction",
+      "--federation",
+      "--volcanic",
+      "--res-ore",
+      "--res-power",
+      "--res-qic"
+    ],
+    "datasetMeta": {
+      "Itars (20)": {
+        "label": "Itars",
+        "income": 20,
+        "cost": -14,
+        "balance": 6
+      },
+      "Geoden (28)": {
+        "label": "Geoden",
+        "income": 28,
+        "cost": -19,
+        "balance": 9
+      },
+      "Taklons (32)": {
+        "label": "Taklons",
+        "income": 32,
+        "cost": -16,
+        "balance": 16
+      },
+      "Lantids (22)": {
+        "label": "Lantids",
+        "income": 22,
+        "cost": -15,
+        "balance": 7
+      }
+    }
+  },
+  "labels": [
+    "Game start income",
+    "Base income",
+    "Tech Tiles income",
+    "Research income",
+    "Booster income",
+    "Free actions income",
+    "Power/Q.I.C Action income",
+    "Federations income",
+    "Trade income",
+    "Build cost",
+    "Free actions cost",
+    "Waste cost"
+  ],
+  "datasets": [
+    {
+      "label": "Taklons (32)",
+      "data": [15, 3, 0, 0, 0, 0, 14, 0, 0, 16, 0, 0]
+    },
+    {
+      "label": "Geoden (28)",
+      "data": [15, 9, 0, 0, 2, 2, 0, 0, 0, 19, 0, 0]
+    },
+    {
+      "label": "Lantids (22)",
+      "data": [13, 0, 0, 2, 6, 1, 0, 0, 0, 15, 0, 0]
+    },
+    {
+      "label": "Itars (20)",
+      "data": [15, 0, 5, 0, 0, 0, 0, 0, 0, 14, 0, 0]
+    }
+  ]
+}
