@@ -1,6 +1,6 @@
 {
   "tableMeta": {
-    "weights": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -2, -2, -1],
+    "weights": [1, 1, 1, 1, 1, 1, 1, 1, 1, -2, -2, -1],
     "colors": [
       "--gaia",
       "--res-credit",
@@ -11,7 +11,6 @@
       "--res-qic",
       "--tech-tile",
       "--terra",
-      "--volcanic",
       "--res-power",
       "--specialAction",
       "--res-qic"
@@ -41,19 +40,18 @@
     "Paid Leech income",
     "Powerful Power Tokens income",
     "Terrans income",
-    "Trade income",
     "Free actions cost",
-    "Power/Q.I.C Action cost",
+    "Power/Q.I.C Actions cost",
     "Waste cost"
   ],
   "datasets": [
     {
       "label": "Nevlas (19)",
-      "data": [4, 0, 0, 0, 2, 2, 3, 8, 0, 0, 0, 7, 2]
+      "data": [4, 0, 0, 0, 2, 2, 3, 8, 0, 0, 7, 2]
     },
     {
       "label": "Terrans (14)",
-      "data": [4, 0, 0, 0, 4, 3, 3, 0, 0, 0, 0, 4, 0]
+      "data": [4, 0, 0, 0, 4, 3, 3, 0, 0, 0, 4, 0]
     }
   ]
 }

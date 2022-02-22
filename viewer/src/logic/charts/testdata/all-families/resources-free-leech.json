@@ -1,0 +1,51 @@
+{
+  "tableMeta": {
+    "weights": [0],
+    "colors": ["--res-power"],
+    "datasetMeta": {
+      "Itars (0)": {
+        "label": "Itars",
+        "income": 0,
+        "cost": 0,
+        "balance": 0
+      },
+      "Geoden (0)": {
+        "label": "Geoden",
+        "income": 0,
+        "cost": 0,
+        "balance": 0
+      },
+      "Taklons (0)": {
+        "label": "Taklons",
+        "income": 0,
+        "cost": 0,
+        "balance": 0
+      },
+      "Lantids (0)": {
+        "label": "Lantids",
+        "income": 0,
+        "cost": 0,
+        "balance": 0
+      }
+    }
+  },
+  "labels": ["Power Charges income"],
+  "datasets": [
+    {
+      "label": "Lantids (0)",
+      "data": [12]
+    },
+    {
+      "label": "Geoden (0)",
+      "data": [11]
+    },
+    {
+      "label": "Taklons (0)",
+      "data": [8]
+    },
+    {
+      "label": "Itars (0)",
+      "data": [3]
+    }
+  ]
+}

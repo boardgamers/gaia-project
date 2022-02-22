@@ -20,17 +20,17 @@ import {
   TechPos,
   TechTile,
 } from "@gaia-project/engine";
-import {tradeCostSource, tradeSource} from "@gaia-project/engine/src/events";
-import {boosterEvents} from "@gaia-project/engine/src/tiles/boosters";
-import {federationRewards} from "@gaia-project/engine/src/tiles/federations";
-import {techTileRewards} from "@gaia-project/engine/src/tiles/techs";
-import {sum, uniq} from "lodash";
-import {isGaiaMove} from "../../data/log";
-import {resourceData} from "../../data/resources";
-import {colorCodes} from "../color-codes";
-import {ChartGroup, ChartSource} from "./charts";
-import {resourceCounter, ResourceSimulatorChanges} from "./resource-counter";
-import {ChartSummary, ExtractLog, SimpleSourceFactory} from "./simple-charts";
+import { tradeCostSource, tradeSource } from "@gaia-project/engine/src/events";
+import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
+import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
+import { techTileRewards } from "@gaia-project/engine/src/tiles/techs";
+import { sum, uniq } from "lodash";
+import { isGaiaMove } from "../../data/log";
+import { resourceData } from "../../data/resources";
+import { colorCodes } from "../color-codes";
+import { ChartGroup, ChartSource } from "./charts";
+import { resourceCounter, ResourceSimulatorChanges } from "./resource-counter";
+import { ChartSummary, ExtractLog, SimpleSourceFactory } from "./simple-charts";
 
 export const balanceSheetResources = [
   Resource.Credit,
@@ -142,7 +142,7 @@ export function balanceSheetEventSources(expansion: Expansion): BalanceSheetSour
       color: "--res-power",
     },
     {
-      label: "Power/Q.I.C Action",
+      label: "Power/Q.I.C Actions",
       costResources: rewardTypes(BoardAction.values(expansion).flatMap((a) => Reward.parse(boardActions[a].cost))),
       costFactor: 2,
       incomeResources: eventTypes(
@@ -195,33 +195,39 @@ export function balanceSheetEventSources(expansion: Expansion): BalanceSheetSour
       eventSources: [waste],
       color: "--res-qic",
     },
-  ] as BalanceSheetSourceTemplate[]).concat(expansion == Expansion.Frontiers ? [{
-    label: "Trade",
-    costResources: [],
-    incomeResources: balanceSheetResources,
-    eventSources: [tradeSource, tradeCostSource],
-    color: colorCodes.tradeShip.color,
-  }] : []);
+  ] as BalanceSheetSourceTemplate[]).concat(
+    expansion == Expansion.Frontiers
+      ? [
+          {
+            label: "Trade",
+            costResources: [Resource.ChargePower],
+            incomeResources: balanceSheetResources,
+            eventSources: [tradeSource, tradeCostSource],
+            color: colorCodes.tradeShip.color,
+          },
+        ]
+      : []
+  );
 }
 
 function isPayPower(wantResource: Resource, reward: Reward) {
   return wantResource == Resource.ChargePower && reward.type == Resource.ChargePower && reward.count < 0;
 }
 
-function effectiveAmount(reward: Reward | null, wantResource: Resource, faction: Faction): number {
+function effectiveAmount(reward: Reward | null, wantResource: Resource, faction: Faction): Reward | null {
   if (reward == null) {
-    return 0;
+    return null;
   }
 
   if (wantResource == Resource.GainToken) {
     if (reward.type == Resource.BurnToken && faction != Faction.Itars) {
-      return -reward.count;
+      return new Reward(-reward.count, Resource.GainToken);
     }
     if (reward.type == Resource.Brainstone) {
-      return reward.count;
+      return new Reward(reward.count, Resource.GainToken);
     }
   }
-  return reward.type == wantResource ? reward.count : 0;
+  return reward.type == wantResource ? reward : null;
 }
 
 function resourceChanges<Source>(
@@ -230,15 +236,14 @@ function resourceChanges<Source>(
   wantResource: Resource,
   faction: Faction,
   eventSources: BalanceSheetSourceType[],
-  matchesEventSource: (s: Source, e: EventSource, reward: Reward, amount: number) => number
+  matchesEventSource: (s: Source, e: EventSource, reward: Reward) => number
 ): number {
   return sum(
     Object.entries(changes).flatMap((c) => {
       const eventSource = c[0] as EventSource;
       return c[1].map((reward) => {
-        const amount = effectiveAmount(reward, wantResource, faction);
-        const abs = Math.abs(amount);
-        if (abs == 0) {
+        const r = effectiveAmount(reward, wantResource, faction);
+        if (r == null || Math.abs(r.count) == 0) {
           return 0;
         }
 
@@ -246,12 +251,12 @@ function resourceChanges<Source>(
           if (eventSources.includes(PowerChargeSource.freeLeech)) {
             return 1;
           } else if (eventSources.includes(PowerChargeSource.paidLeech)) {
-            return amount - 1;
+            return r.count - 1;
           }
           return 0;
         }
 
-        return matchesEventSource(source, eventSource, reward, amount);
+        return matchesEventSource(source, eventSource, r);
       });
     })
   );
@@ -277,7 +282,7 @@ function newBalanceSource(
   };
 }
 
-function currentAmount(data: PlayerData, wantResource: Resource) {
+function currentAmount(data: PlayerData, wantResource: Resource): number {
   switch (wantResource) {
     case Resource.ChargePower:
       let brainstone = 0;
@@ -298,7 +303,7 @@ function currentAmount(data: PlayerData, wantResource: Resource) {
 export function balanceSheetExtractLog<Source>(
   getWantResource: (s: Source) => Resource,
   getSources: (s: Source) => BalanceSheetSourceType[],
-  matchesEventSource: (s: Source, e: EventSource, reward: Reward, amount: number) => number
+  matchesEventSource: (s: Source, e: EventSource, reward: Reward) => number
 ): ExtractLog<any> {
   return resourceCounter((want, a, data, simulateResources) => {
     const wantResource = getWantResource(a.source);
@@ -308,7 +313,11 @@ export function balanceSheetExtractLog<Source>(
     const changes = simulateResources();
 
     const eventSources = getSources(a.source);
-    if (eventSources.includes(PowerChargeSource.terrans) && a.log.phase == Phase.RoundGaia) {
+    if (
+      want.faction == Faction.Terrans &&
+      eventSources.includes(PowerChargeSource.terrans) &&
+      a.log.phase == Phase.RoundGaia
+    ) {
       return data.power.gaia;
     }
 
@@ -336,7 +345,7 @@ export function balanceSheetExtractLog<Source>(
         sum(
           Object.values(changes)
             .flat()
-            .map((r) => effectiveAmount(r, wantResource, faction))
+            .map((r) => effectiveAmount(r, wantResource, faction)?.count ?? 0)
         ) * (payPower ? 2 : 1);
 
       const waste = gain - diff;
@@ -344,13 +353,19 @@ export function balanceSheetExtractLog<Source>(
         throw Error(
           `negative waste in ${JSON.stringify(a.log)}: cmd=${JSON.stringify(
             a.cmd
-          )} resource=${wantResource} gain=${gain} diff=${diff}`
+          )} resource=${wantResource} gain=${gain} diff=${diff} old=${old} payPower=${payPower} power=${JSON.stringify(
+            data.power
+          )}`
         );
       }
       return waste;
     }
     return resourceChanges(changes, a.source, wantResource, faction, eventSources, matchesEventSource);
   });
+}
+
+export function balanceSheetResourceName(wantResource: Resource) {
+  return wantResource == Resource.GainToken ? "Power Tokens" : resourceData[wantResource].plural;
 }
 
 export function balanceSheetResourceFactory(
@@ -361,20 +376,20 @@ export function balanceSheetResourceFactory(
   const cost = new Map<BalanceSheetSourceType, string>();
 
   return {
-    name: wantResource == Resource.GainToken ? "Power Tokens" : resourceData[wantResource].plural,
+    name: balanceSheetResourceName(wantResource),
     group: ChartGroup.resources,
     playerSummaryLineChartTitle: `Income and Expenses of ${resourceData[wantResource].plural} of all players`,
     summary: ChartSummary.balance,
     extractLog: balanceSheetExtractLog<BalanceSheetSource>(
       () => wantResource,
       (s) => s.eventSources,
-      (source, eventSource, reward, amount) => {
-        const label = amount < 0 ? cost.get(eventSource) : income.get(eventSource);
+      (source, eventSource, reward) => {
+        const label = reward.count < 0 ? cost.get(eventSource) : income.get(eventSource);
 
         if (label == null) {
           throw Error(`no source found for eventSource=${eventSource} reward=${reward}`);
         }
-        return source.label === label ? Math.abs(amount) : 0;
+        return source.label === label ? Math.abs(reward.count) : 0;
       }
     ),
     sources: balanceSheetEventSources(expansion)

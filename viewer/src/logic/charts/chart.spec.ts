@@ -63,14 +63,14 @@ describe("Chart", () => {
       replay: true,
       createActualOutput: (engine, fullType, testCase: any) => {
         const setup = new ChartSetup(engine, testCase.statistics);
-        const split = fullType.split("/");
+        const i = fullType.indexOf("/");
         const config = setup.newBarChart(
           {
             type: "table",
             label: "Table",
             compact: false,
           },
-          setup.factory(split[0], split.length > 1 ? split[1] : null),
+          setup.factory(i > 0 ? fullType.substring(0, i) : fullType, i > 1 ? fullType.substring(i + 1) : null),
           engine
         );
         return {
