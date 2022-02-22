@@ -1,6 +1,6 @@
 {
   "tableMeta": {
-    "weights": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -2, -1],
+    "weights": [1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -2, -1],
     "colors": [
       "--gaia",
       "--res-credit",
@@ -11,18 +11,17 @@
       "--res-power",
       "--specialAction",
       "--federation",
-      "--volcanic",
       "--rt-sci",
       "--res-ore",
       "--res-power",
       "--res-qic"
     ],
     "datasetMeta": {
-      "Itars (12)": {
+      "Itars (10)": {
         "label": "Itars",
-        "income": 12,
+        "income": 10,
         "cost": -8,
-        "balance": 4
+        "balance": 2
       },
       "Geoden (12)": {
         "label": "Geoden",
@@ -52,9 +51,8 @@
     "Research income",
     "Booster income",
     "Free actions income",
-    "Power/Q.I.C Action income",
+    "Power/Q.I.C Actions income",
     "Federations income",
-    "Trade income",
     "Research cost",
     "Build cost",
     "Free actions cost",
@@ -63,19 +61,19 @@
   "datasets": [
     {
       "label": "Lantids (13)",
-      "data": [3, 2, 6, 0, 0, 0, 0, 2, 0, 0, 8, 0, 0, 0]
+      "data": [3, 2, 6, 0, 0, 0, 0, 2, 0, 8, 0, 0, 0]
     },
     {
-      "label": "Itars (12)",
-      "data": [3, 5, 2, 1, 1, 0, 0, 0, 0, 0, 8, 0, 0, 0]
+      "label": "Itars (10)",
+      "data": [3, 5, 0, 1, 1, 0, 0, 0, 0, 8, 0, 0, 0]
     },
     {
       "label": "Geoden (12)",
-      "data": [3, 2, 3, 0, 0, 0, 0, 2, 2, 0, 4, 0, 0, 0]
+      "data": [3, 2, 3, 0, 0, 0, 0, 2, 2, 4, 0, 0, 0]
     },
     {
       "label": "Taklons (8)",
-      "data": [3, 5, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0]
+      "data": [3, 5, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0]
     }
   ]
 }

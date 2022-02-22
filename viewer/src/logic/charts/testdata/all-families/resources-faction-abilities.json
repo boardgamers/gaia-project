@@ -1,0 +1,51 @@
+{
+  "tableMeta": {
+    "weights": [4],
+    "colors": ["--res-knowledge"],
+    "datasetMeta": {
+      "Itars (0)": {
+        "label": "Itars",
+        "income": 0,
+        "cost": 0,
+        "balance": 0
+      },
+      "Geoden (12)": {
+        "label": "Geoden",
+        "income": 12,
+        "cost": 0,
+        "balance": 12
+      },
+      "Taklons (0)": {
+        "label": "Taklons",
+        "income": 0,
+        "cost": 0,
+        "balance": 0
+      },
+      "Lantids (24)": {
+        "label": "Lantids",
+        "income": 24,
+        "cost": 0,
+        "balance": 24
+      }
+    }
+  },
+  "labels": ["Knowledge income"],
+  "datasets": [
+    {
+      "label": "Lantids (24)",
+      "data": [6]
+    },
+    {
+      "label": "Geoden (12)",
+      "data": [3]
+    },
+    {
+      "label": "Itars (0)",
+      "data": [0]
+    },
+    {
+      "label": "Taklons (0)",
+      "data": [0]
+    }
+  ]
+}

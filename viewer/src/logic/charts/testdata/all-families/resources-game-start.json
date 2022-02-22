@@ -1,0 +1,58 @@
+{
+  "tableMeta": {
+    "weights": [1, 3, 4, 4, 0, 0],
+    "colors": ["--res-credit", "--res-ore", "--res-knowledge", "--res-qic", "--res-power", "--recent"],
+    "datasetMeta": {
+      "Itars (46)": {
+        "label": "Itars",
+        "income": 46,
+        "cost": 0,
+        "balance": 46
+      },
+      "Geoden (43)": {
+        "label": "Geoden",
+        "income": 43,
+        "cost": 0,
+        "balance": 43
+      },
+      "Taklons (43)": {
+        "label": "Taklons",
+        "income": 43,
+        "cost": 0,
+        "balance": 43
+      },
+      "Lantids (41)": {
+        "label": "Lantids",
+        "income": 41,
+        "cost": 0,
+        "balance": 41
+      }
+    }
+  },
+  "labels": [
+    "Credits income",
+    "Ores income",
+    "Knowledge income",
+    "QICs income",
+    "Power Charges income",
+    "Power Tokens income"
+  ],
+  "datasets": [
+    {
+      "label": "Itars (46)",
+      "data": [15, 5, 3, 1, 4, 8]
+    },
+    {
+      "label": "Taklons (43)",
+      "data": [15, 4, 3, 1, 4, 7]
+    },
+    {
+      "label": "Geoden (43)",
+      "data": [15, 4, 3, 1, 4, 6]
+    },
+    {
+      "label": "Lantids (41)",
+      "data": [13, 4, 3, 1, 0, 4]
+    }
+  ]
+}

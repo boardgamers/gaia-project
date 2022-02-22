@@ -1,6 +1,6 @@
 {
   "tableMeta": {
-    "weights": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -2, -2, -1],
+    "weights": [1, 1, 1, 1, 1, 1, 1, 1, 1, -2, -2, -1],
     "colors": [
       "--gaia",
       "--res-credit",
@@ -11,17 +11,16 @@
       "--res-qic",
       "--tech-tile",
       "--terra",
-      "--volcanic",
       "--res-power",
       "--specialAction",
       "--res-qic"
     ],
     "datasetMeta": {
-      "Itars (11)": {
+      "Itars (9)": {
         "label": "Itars",
-        "income": 11,
+        "income": 9,
         "cost": -8,
-        "balance": 3
+        "balance": 1
       },
       "Geoden (31)": {
         "label": "Geoden",
@@ -53,27 +52,26 @@
     "Paid Leech income",
     "Powerful Power Tokens income",
     "Terrans income",
-    "Trade income",
     "Free actions cost",
-    "Power/Q.I.C Action cost",
+    "Power/Q.I.C Actions cost",
     "Waste cost"
   ],
   "datasets": [
     {
       "label": "Taklons (59)",
-      "data": [4, 2, 4, 0, 4, 8, 9, 28, 0, 0, 15, 11, 0]
+      "data": [4, 2, 4, 0, 4, 8, 9, 28, 0, 15, 11, 0]
     },
     {
       "label": "Geoden (31)",
-      "data": [4, 4, 0, 0, 0, 11, 12, 0, 0, 0, 5, 8, 0]
+      "data": [4, 4, 0, 0, 0, 11, 12, 0, 0, 5, 8, 0]
     },
     {
       "label": "Lantids (23)",
-      "data": [0, 4, 0, 2, 0, 12, 5, 0, 0, 0, 7, 4, 1]
+      "data": [0, 4, 0, 2, 0, 12, 5, 0, 0, 7, 4, 1]
     },
     {
-      "label": "Itars (11)",
-      "data": [4, 0, 0, 0, 0, 3, 2, 0, 2, 0, 0, 4, 0]
+      "label": "Itars (9)",
+      "data": [4, 0, 0, 0, 0, 3, 2, 0, 0, 0, 4, 0]
     }
   ]
 }

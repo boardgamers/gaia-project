@@ -1,6 +1,6 @@
 {
   "tableMeta": {
-    "weights": [1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -2, -1],
+    "weights": [1, 1, 1, 1, 1, 1, 1, 1, -1, -2, -1],
     "colors": [
       "--gaia",
       "--res-credit",
@@ -10,7 +10,6 @@
       "--res-power",
       "--specialAction",
       "--federation",
-      "--volcanic",
       "--res-ore",
       "--res-power",
       "--res-qic"
@@ -49,9 +48,8 @@
     "Research income",
     "Booster income",
     "Free actions income",
-    "Power/Q.I.C Action income",
+    "Power/Q.I.C Actions income",
     "Federations income",
-    "Trade income",
     "Build cost",
     "Free actions cost",
     "Waste cost"
@@ -59,19 +57,19 @@
   "datasets": [
     {
       "label": "Taklons (32)",
-      "data": [15, 3, 0, 0, 0, 0, 14, 0, 0, 16, 0, 0]
+      "data": [15, 3, 0, 0, 0, 0, 14, 0, 16, 0, 0]
     },
     {
       "label": "Geoden (28)",
-      "data": [15, 9, 0, 0, 2, 2, 0, 0, 0, 19, 0, 0]
+      "data": [15, 9, 0, 0, 2, 2, 0, 0, 19, 0, 0]
     },
     {
       "label": "Lantids (22)",
-      "data": [13, 0, 0, 2, 6, 1, 0, 0, 0, 15, 0, 0]
+      "data": [13, 0, 0, 2, 6, 1, 0, 0, 15, 0, 0]
     },
     {
       "label": "Itars (20)",
-      "data": [15, 0, 5, 0, 0, 0, 0, 0, 0, 14, 0, 0]
+      "data": [15, 0, 5, 0, 0, 0, 0, 0, 14, 0, 0]
     }
   ]
 }

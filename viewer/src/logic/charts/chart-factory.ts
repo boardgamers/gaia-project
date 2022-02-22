@@ -259,7 +259,7 @@ export class ChartSetup {
       chartType != null ? f.group == chartSelect && f.type == chartType : f.group == null && f.type == chartSelect
     );
     if (f == null) {
-      throw Error(`no factory found for ${chartSelect}/${chartType}`);
+      throw Error(`no factory found for "${chartSelect}"/"${chartType}"`);
     }
     return f;
   }

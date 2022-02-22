@@ -9,7 +9,8 @@ import Engine, {
   PlayerEnum,
 } from "@gaia-project/engine";
 import { resolveColor } from "../../graphics/colors";
-import {balanceSheetResources, balanceSheetResourceFactory, balanceSheetEventSources} from "./balance-sheet";
+import { balanceSheetEventSources, balanceSheetResourceFactory, balanceSheetResources } from "./balance-sheet";
+import { balanceSheetEventSourceFactory, resourceSourceFactory } from "./balance-sheet-summary";
 import { buildingsSourceFactory } from "./buildings";
 import { leechSourceFactory } from "./charge";
 import { ChartFactory } from "./chart-factory";
@@ -19,15 +20,10 @@ import { federationsSourceFactory } from "./federations";
 import { finalScoringSourceFactory } from "./final-scoring";
 import { planetsSourceFactory } from "./plantets";
 import { researchSourceFactory } from "./research";
-import {
-  boardActionSourceFactory,
-  boosterSourceFactory,
-  freeActionSourceFactory,
-} from "./resources";
+import { boardActionSourceFactory, boosterSourceFactory, freeActionSourceFactory } from "./resources";
 import { ExtractLog, logEntryProcessor, SimpleSourceFactory } from "./simple-charts";
 import { advancedTechSourceFactory, baseTechSourceFactory } from "./tech";
 import { terraformingStepsSourceFactory } from "./terraforming";
-import {balanceSheetEventSourceFactory, resourceSourceFactory} from "./balance-sheet-summary";
 
 export const createSimpleSourceFactories = (
   advTechTiles: Map<AdvTechTile, string>,
