@@ -1,19 +1,11 @@
-import { BoardAction, Booster, Command, Expansion, Faction, Planet, Resource, Reward } from "@gaia-project/engine";
-import { tradeCostSource, tradeSource } from "@gaia-project/engine/src/events";
-import { sum } from "lodash";
-import { boardActionData } from "../../data/actions";
-import { boosterData } from "../../data/boosters";
-import { resourceData } from "../../data/resources";
-import { colorCodes } from "../color-codes";
-import { balanceSheetExtractLog, balanceSheetSources, BalanceSheetSourceType } from "./balance-sheet";
-import { ChartGroup, ChartSource } from "./charts";
-import {
-  ChartSummary,
-  commandCounterArg0EqualsSource,
-  ExtractLog,
-  planetCounter,
-  SimpleSourceFactory,
-} from "./simple-charts";
+import {BoardAction, Booster, Command, Faction, Planet, Resource, Reward} from "@gaia-project/engine";
+import {sum} from "lodash";
+import {boardActionData} from "../../data/actions";
+import {boosterData} from "../../data/boosters";
+import {resourceData} from "../../data/resources";
+import {colorCodes} from "../color-codes";
+import {ChartSource} from "./charts";
+import {ChartSummary, commandCounterArg0EqualsSource, ExtractLog, planetCounter, SimpleSourceFactory,} from "./simple-charts";
 
 const range = "range";
 
@@ -72,46 +64,6 @@ const freeActionSources = (resourceSources as FreeActionSource[])
     color: "--tech-tile",
     weight: 0,
   });
-
-function balanceSheetSummary(
-  name: string,
-  description: string,
-  wantEventSources: BalanceSheetSourceType[],
-  amountFilter: (v: number) => boolean
-) {
-  return {
-    name,
-    group: ChartGroup.resources,
-    playerSummaryLineChartTitle: description,
-    summary: ChartSummary.weightedTotal,
-    extractLog: balanceSheetExtractLog<ChartSource<Resource>>(
-      (s) => s.type,
-      () => wantEventSources,
-      (s, e, reward, amount) => (amountFilter(amount) && wantEventSources.includes(e) ? amount : 0)
-    ),
-    sources: resourceSources,
-  };
-}
-
-export function resourceSourceFactory(expansion: Expansion): SimpleSourceFactory<ChartSource<Resource>> {
-  return balanceSheetSummary(
-    "Overview",
-    "Resources of all players as if bought with power",
-    balanceSheetSources(expansion)
-      .filter((s) => s.incomeResources.length > 0)
-      .flatMap((s) => s.eventSources),
-    (a) => a > 0
-  );
-}
-
-export function tradeSourceFactory(expansion: Expansion): SimpleSourceFactory<ChartSource<Resource>> {
-  return balanceSheetSummary(
-    "Trade",
-    "Resources from trade of all players as if bought with power",
-    [tradeSource, tradeCostSource],
-    () => true
-  );
-}
 
 export const freeActionSourceFactory: SimpleSourceFactory<FreeActionSource> = {
   name: "Free actions",
