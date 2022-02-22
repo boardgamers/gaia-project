@@ -20,17 +20,17 @@ import {
   TechPos,
   TechTile,
 } from "@gaia-project/engine";
-import { tradeCostSource, tradeSource } from "@gaia-project/engine/src/events";
-import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
-import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
-import { techTileRewards } from "@gaia-project/engine/src/tiles/techs";
-import { sum, uniq } from "lodash";
-import { isGaiaMove } from "../../data/log";
-import { resourceData } from "../../data/resources";
-import { colorCodes } from "../color-codes";
-import { ChartGroup, ChartSource } from "./charts";
-import { resourceCounter, ResourceSimulatorChanges } from "./resource-counter";
-import { ChartSummary, ExtractLog, SimpleSourceFactory } from "./simple-charts";
+import {tradeCostSource, tradeSource} from "@gaia-project/engine/src/events";
+import {boosterEvents} from "@gaia-project/engine/src/tiles/boosters";
+import {federationRewards} from "@gaia-project/engine/src/tiles/federations";
+import {techTileRewards} from "@gaia-project/engine/src/tiles/techs";
+import {sum, uniq} from "lodash";
+import {isGaiaMove} from "../../data/log";
+import {resourceData} from "../../data/resources";
+import {colorCodes} from "../color-codes";
+import {ChartGroup, ChartSource} from "./charts";
+import {resourceCounter, ResourceSimulatorChanges} from "./resource-counter";
+import {ChartSummary, ExtractLog, SimpleSourceFactory} from "./simple-charts";
 
 export const balanceSheetResources = [
   Resource.Credit,
@@ -52,7 +52,7 @@ enum PowerChargeSource {
 
 export type BalanceSheetSourceType = EventSource | typeof waste | PowerChargeSource;
 
-type BalanceSheetSourceTemplate = {
+export type BalanceSheetSourceTemplate = {
   incomeResources: Resource[];
   costResources: Resource[];
   costFactor?: number;
@@ -74,8 +74,8 @@ function eventTypes(events: Event[]): Resource[] {
   return rewardTypes(events.flatMap((e) => e.rewards));
 }
 
-export function balanceSheetSources(expansion: Expansion): BalanceSheetSourceTemplate[] {
-  return [
+export function balanceSheetEventSources(expansion: Expansion): BalanceSheetSourceTemplate[] {
+  return ([
     {
       label: "Game start",
       costResources: [],
@@ -188,13 +188,6 @@ export function balanceSheetSources(expansion: Expansion): BalanceSheetSourceTem
       color: "--federation",
     },
     {
-      label: "Trade",
-      costResources: [],
-      incomeResources: balanceSheetResources,
-      eventSources: [tradeSource, tradeCostSource],
-      color: colorCodes.tradeShip.color,
-    },
-    {
       label: "Waste",
       description: "Also includes tye use of tokens in area2 or area3 for gaia forming or forming federations",
       costResources: balanceSheetResources,
@@ -202,7 +195,13 @@ export function balanceSheetSources(expansion: Expansion): BalanceSheetSourceTem
       eventSources: [waste],
       color: "--res-qic",
     },
-  ];
+  ] as BalanceSheetSourceTemplate[]).concat(expansion == Expansion.Frontiers ? [{
+    label: "Trade",
+    costResources: [],
+    incomeResources: balanceSheetResources,
+    eventSources: [tradeSource, tradeCostSource],
+    color: colorCodes.tradeShip.color,
+  }] : []);
 }
 
 function isPayPower(wantResource: Resource, reward: Reward) {
@@ -354,7 +353,7 @@ export function balanceSheetExtractLog<Source>(
   });
 }
 
-export function balanceSheetSourceFactory(
+export function balanceSheetResourceFactory(
   wantResource: Resource,
   expansion: Expansion
 ): SimpleSourceFactory<ChartSource<string>> {
@@ -378,11 +377,11 @@ export function balanceSheetSourceFactory(
         return source.label === label ? Math.abs(amount) : 0;
       }
     ),
-    sources: balanceSheetSources(expansion)
+    sources: balanceSheetEventSources(expansion)
       .filter((s) => s.incomeResources.includes(wantResource))
       .map((s) => newBalanceSource(s, "income", 1, income))
       .concat(
-        balanceSheetSources(expansion)
+        balanceSheetEventSources(expansion)
           .filter((s) => s.costResources.includes(wantResource))
           .map((s) => newBalanceSource(s, "cost", -1 * (s.costFactor ?? 1), cost))
       ),

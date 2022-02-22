@@ -9,7 +9,7 @@ import Engine, {
   PlayerEnum,
 } from "@gaia-project/engine";
 import { resolveColor } from "../../graphics/colors";
-import { balanceSheetResources, balanceSheetSourceFactory } from "./balance-sheet";
+import {balanceSheetResources, balanceSheetResourceFactory, balanceSheetEventSources} from "./balance-sheet";
 import { buildingsSourceFactory } from "./buildings";
 import { leechSourceFactory } from "./charge";
 import { ChartFactory } from "./chart-factory";
@@ -23,12 +23,11 @@ import {
   boardActionSourceFactory,
   boosterSourceFactory,
   freeActionSourceFactory,
-  resourceSourceFactory,
-  tradeSourceFactory,
 } from "./resources";
 import { ExtractLog, logEntryProcessor, SimpleSourceFactory } from "./simple-charts";
 import { advancedTechSourceFactory, baseTechSourceFactory } from "./tech";
 import { terraformingStepsSourceFactory } from "./terraforming";
+import {balanceSheetEventSourceFactory, resourceSourceFactory} from "./balance-sheet-summary";
 
 export const createSimpleSourceFactories = (
   advTechTiles: Map<AdvTechTile, string>,
@@ -52,10 +51,9 @@ export const createSimpleSourceFactories = (
     baseTechSourceFactory(expansion),
     advancedTechSourceFactory(advTechTiles),
     finalScoringSourceFactory(finalTiles),
-  ].concat(balanceSheetResources.map((r) => balanceSheetSourceFactory(r, expansion)));
-  if (expansion == Expansion.Frontiers) {
-    s.push(tradeSourceFactory(expansion));
-  }
+  ]
+    .concat(balanceSheetResources.map((r) => balanceSheetResourceFactory(r, expansion)))
+    .concat(balanceSheetEventSources(expansion).map((s) => balanceSheetEventSourceFactory(s, expansion)));
   return s;
 };
 
