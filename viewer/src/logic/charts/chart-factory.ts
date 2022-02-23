@@ -21,7 +21,7 @@ import {
 } from "chart.js";
 import { memoize, sortBy, sum, sumBy } from "lodash";
 import { factionName } from "../../data/factions";
-import { playerColor, resolveColor } from "../../graphics/colors";
+import { playerColor, resolveColor} from "../../graphics/colors";
 import {
   ChartGroup,
   chartPlayerOrder,
@@ -272,7 +272,8 @@ export class ChartSetup {
     style: ChartStyleDisplay,
     factory: ChartFactory<any>,
     data: Engine,
-    kind: ChartKind
+    kind: ChartKind,
+    lookupColor: (c: string) => string,
   ): ChartConfiguration<"line"> {
     let title: string;
     let factories: DatasetFactory[];
@@ -317,7 +318,7 @@ export class ChartSetup {
     const stacked = factory.stacked(kind);
 
     const datasets: ChartDataset<"line">[] = datasetFactories.map((f) => {
-      const color = f.backgroundColor;
+      const color = lookupColor(f.backgroundColor);
       return {
         backgroundColor: color,
         borderColor: color,
@@ -378,7 +379,7 @@ export class ChartSetup {
     };
   }
 
-  newBarChart(style: ChartStyleDisplay, factory: ChartFactory<any>, data: Engine): BarChartConfig {
+  newBarChart(style: ChartStyleDisplay, factory: ChartFactory<any>, data: Engine, lookupColor: (c: string) => string): BarChartConfig {
     const datasetMeta: DatasetMeta = {};
 
     const sources: ChartSource<any>[] = factory.sources;
@@ -422,7 +423,7 @@ export class ChartSetup {
           const d: ChartDataset<"bar"> = {
             data: points,
             label: key,
-            backgroundColor: playerColor(player, style.type == "table"),
+            backgroundColor: lookupColor(playerColor(player, style.type == "table")),
             borderColor: "black",
             borderWidth: 1,
           };

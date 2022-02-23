@@ -71,7 +71,8 @@ describe("Chart", () => {
             compact: false,
           },
           setup.factory(i > 0 ? fullType.substring(0, i) : fullType, i > 1 ? fullType.substring(i + 1) : null),
-          engine
+          engine,
+          null,
         );
         return {
           tableMeta: config.table,
