@@ -181,26 +181,32 @@ export default class Charts extends Vue {
     this.chartKinds = this.setup.kinds(this.gameData, factory);
 
     const data = this.gameData;
-    const canvas = Charts.canvas();
+    const isChart = this.chartStyle.type == "chart";
+    const colorLookup = (color: string): string => {
+      const canvas =  this.canvas();
+      return color.startsWith("--") && isChart
+        ? window.getComputedStyle(canvas).getPropertyValue(color)
+        : color;
+    };
 
     if (this.chartKind === barChartKind) {
-      const config = this.setup.newBarChart(this.chartStyle, factory, data);
-      this.newChart(canvas, config.chart, config.table);
+      const config = this.setup.newBarChart(this.chartStyle, factory, data, colorLookup);
+      this.newChart(config.chart, config.table);
     } else if (this.chartKind === lineChartKind) {
-      this.newChart(canvas, this.setup.newLineChart(this.chartStyle, factory, data, PlayerEnum.All));
+      this.newChart(this.setup.newLineChart(this.chartStyle, factory, data, PlayerEnum.All, colorLookup));
     } else {
-      this.newChart(canvas, this.setup.newLineChart(this.chartStyle, factory, data, this.chartKind));
+      this.newChart(this.setup.newLineChart(this.chartStyle, factory, data, this.chartKind, colorLookup));
     }
   }
 
-  private static canvas(): HTMLCanvasElement {
+  private canvas(): HTMLCanvasElement {
     return document.getElementById("graphs") as HTMLCanvasElement;
   }
 
-  private newChart(canvas: HTMLCanvasElement, config: ChartConfiguration<any>, tableMeta?: TableMeta) {
+  private newChart(config: ChartConfiguration<any>, tableMeta?: TableMeta) {
     if (this.chartStyle.type == "chart") {
       this.destroyChart();
-      this.chart = new Chart(canvas, config);
+      this.chart = new Chart(this.canvas(), config);
       this.table = null;
     } else {
       this.table = {

@@ -1,5 +1,5 @@
-import { factionPlanet, Planet, Player } from "@gaia-project/engine";
-import { ChartColor } from "../logic/charts/charts";
+import {factionPlanet, Planet, Player} from "@gaia-project/engine";
+import {ChartColor, ChartStyleDisplay} from "../logic/charts/charts";
 
 const invertedForeground: string[] = [
   "--volcanic",
