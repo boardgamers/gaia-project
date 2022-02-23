@@ -38,7 +38,7 @@
       :caption="table.title"
     >
       <template #cell()="data">
-        <span v-html="data.value"></span>
+        <span v-b-tooltip.hover :title="table.descriptions[data.index]" v-html="data.value"></span>
       </template>
     </b-table>
   </div>
@@ -84,7 +84,7 @@ Chart.register(
   BarElement
 );
 
-type Table = { title: string; header: any[]; items: any[] };
+type Table = { title: string; header: any[]; items: any[]; descriptions: any[] };
 
 @Component({
   components: { PlayerCircle, BuildingImage, SpecialAction },
@@ -213,6 +213,7 @@ export default class Charts extends Vue {
         title: config.options.plugins.title.text,
         header: tableHeader(this.chartStyle, config, tableMeta),
         items: tableItems(config, tableMeta),
+        descriptions: tableMeta.descriptions,
       };
       this.tableKey++;
       this.destroyChart();

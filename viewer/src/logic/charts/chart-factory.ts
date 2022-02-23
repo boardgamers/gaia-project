@@ -21,7 +21,7 @@ import {
 } from "chart.js";
 import { memoize, sortBy, sum, sumBy } from "lodash";
 import { factionName } from "../../data/factions";
-import { playerColor, resolveColor} from "../../graphics/colors";
+import { playerColor, resolveColor } from "../../graphics/colors";
 import {
   ChartGroup,
   chartPlayerOrder,
@@ -58,7 +58,7 @@ export type DatasetSummary = {
   balance?: number;
 };
 export type DatasetMeta = { [key: string]: DatasetSummary };
-export type TableMeta = { weights?: number[]; colors?: string[]; datasetMeta: DatasetMeta };
+export type TableMeta = { weights?: number[]; colors?: string[]; datasetMeta: DatasetMeta; descriptions: string[] };
 export type BarChartConfig = { chart: ChartConfiguration<"bar">; table: TableMeta };
 
 export type ChartKind = string | PlayerEnum;
@@ -273,7 +273,7 @@ export class ChartSetup {
     factory: ChartFactory<any>,
     data: Engine,
     kind: ChartKind,
-    lookupColor: (c: string) => string,
+    lookupColor: (c: string) => string
   ): ChartConfiguration<"line"> {
     let title: string;
     let factories: DatasetFactory[];
@@ -379,7 +379,12 @@ export class ChartSetup {
     };
   }
 
-  newBarChart(style: ChartStyleDisplay, factory: ChartFactory<any>, data: Engine, lookupColor: (c: string) => string): BarChartConfig {
+  newBarChart(
+    style: ChartStyleDisplay,
+    factory: ChartFactory<any>,
+    data: Engine,
+    lookupColor: (c: string) => string
+  ): BarChartConfig {
     const datasetMeta: DatasetMeta = {};
 
     const sources: ChartSource<any>[] = factory.sources;
@@ -441,6 +446,7 @@ export class ChartSetup {
         weights: factory.summary != ChartSummary.total ? sources.map((s) => s.weight) : null,
         colors: sources.map((s) => resolveColor(s.color, player)),
         datasetMeta: datasetMeta,
+        descriptions: sources.map((s) => s.description ?? s.label),
       },
       chart: {
         type: "bar",
