@@ -32,7 +32,7 @@ export const createSimpleSourceFactories = (
   factions: Faction[],
   expansion: Expansion
 ): SimpleSourceFactory<ChartSource<any>>[] => {
-  const s = [
+  return [
     resourceSourceFactory(expansion),
     leechSourceFactory,
     factionSourceFactory(factions),
@@ -50,7 +50,6 @@ export const createSimpleSourceFactories = (
   ]
     .concat(balanceSheetResources.map((r) => balanceSheetResourceFactory(r, expansion)))
     .concat(balanceSheetEventSources(expansion).map((s) => balanceSheetEventSourceFactory(s, expansion)));
-  return s;
 };
 
 function simpleChartDetails<Source extends ChartSource<any>>(
@@ -122,5 +121,8 @@ export function simpleChartFactory(simpleSourceFactory: SimpleSourceFactory<any>
       return false;
     },
     summary: simpleSourceFactory.summary,
+    roundLabels(source: ChartSource<any>): string[] | null {
+      return null;
+    },
   };
 }
