@@ -134,6 +134,7 @@ function finalScoringProjection(finalTile: number): (engine: Engine, pl: Player)
   };
 }
 
+export const roundScoring = "Round";
 export const victoryPointSources = (
   finalTileName: (tile: number) => string,
   expansion: Expansion
@@ -178,7 +179,7 @@ export const victoryPointSources = (
     },
     {
       types: RoundScoring.values(),
-      label: "Round",
+      label: roundScoring,
       description: "Round Bonus",
       color: "--titanium",
     },

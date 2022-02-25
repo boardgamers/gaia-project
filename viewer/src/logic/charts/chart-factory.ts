@@ -21,6 +21,7 @@ import {
 } from "chart.js";
 import { memoize, sortBy, sum, sumBy } from "lodash";
 import { factionName } from "../../data/factions";
+import { roundScoringData } from "../../data/round-scorings";
 import { playerColor, resolveColor } from "../../graphics/colors";
 import {
   ChartGroup,
@@ -44,6 +45,7 @@ import {
   advancedTechTileSource,
   boosterSource,
   groupSources,
+  roundScoring,
   victoryPointDetails,
   VictoryPointSource,
   victoryPointSources,
@@ -69,7 +71,7 @@ export type ChartKindDisplay = { label: string; kind: ChartKind };
 
 export type ChartFactory<Source extends ChartSource<any>> = {
   type: ChartType;
-  group: ChartGroup | null;
+  group?: ChartGroup;
   sources: Source[];
   newDetails(
     data: Engine,
@@ -84,6 +86,7 @@ export type ChartFactory<Source extends ChartSource<any>> = {
   includeRounds: IncludeRounds;
   stacked(kind: ChartKind);
   summary: ChartSummary;
+  roundLabels(source: Source): string[] | null;
 };
 
 function victoryPointSource(source: ChartSource<any>, sources: VictoryPointSource[]): VictoryPointSource {
@@ -93,7 +96,8 @@ function victoryPointSource(source: ChartSource<any>, sources: VictoryPointSourc
 const vpChartFactory = (
   type: ChartType,
   title: string,
-  allSources: VictoryPointSource[]
+  allSources: VictoryPointSource[],
+  roundScoringNames: string[] | null
 ): ChartFactory<ChartSource<any>> => ({
   type: type,
   group: ChartGroup.vp,
@@ -127,6 +131,9 @@ const vpChartFactory = (
     return Object.values(PlayerEnum).includes(kind) && kind != PlayerEnum.All;
   },
   summary: ChartSummary.total,
+  roundLabels(source: ChartSource<any>): string[] | null {
+    return source.label == roundScoring ? roundScoringNames : null;
+  },
 });
 
 function cropLabels(style: ChartStyleDisplay, labels: string[]): string[] {
@@ -175,19 +182,27 @@ function vpChartFactoryEntries(
   finalTileName: (tile) => string,
   advTechTiles: Map<AdvTechTile, string>,
   data: Engine,
-  boosters: Booster[]
+  boosters: Booster[],
+  roundScoringNames: string[] | null
 ): ChartFactory<any>[] {
   return [
-    vpChartFactory(vpChartType, "Victory Points", victoryPointSources(finalTileName, data.expansions)),
+    vpChartFactory(
+      vpChartType,
+      "Victory Points",
+      victoryPointSources(finalTileName, data.expansions),
+      roundScoringNames
+    ),
     vpChartFactory(
       "Advanced Tech Tiles",
       "Victory Points from Advanced Tech Tiles",
-      Array.from(advTechTiles.entries()).map(([tile, color]) => advancedTechTileSource(data, tile, color))
+      Array.from(advTechTiles.entries()).map(([tile, color]) => advancedTechTileSource(data, tile, color)),
+      null
     ),
     vpChartFactory(
       "Boosters",
       "Victory Points from Boosters",
-      boosters.map((b) => boosterSource(data, b))
+      boosters.map((b) => boosterSource(data, b)),
+      null
     ),
   ];
 }
@@ -224,10 +239,17 @@ export class ChartSetup {
     const finalTiles = engine.tiles.scorings.final;
     const finalTileName = (tile) =>
       statistics ? `Final ${String.fromCharCode(65 + tile)}` : finalScoringSources[finalTiles[tile]].name;
+    const roundScoringNames = statistics ? null : engine.tiles.scorings.round.map((r) => roundScoringData[r].name);
 
     const factions: Faction[] = statistics ? Object.values(Faction) : engine.players.map((p) => p.faction);
 
-    this.chartFactories = vpChartFactoryEntries(finalTileName, vpAdvTechTiles, engine, vpBoosters).concat(
+    this.chartFactories = vpChartFactoryEntries(
+      finalTileName,
+      vpAdvTechTiles,
+      engine,
+      vpBoosters,
+      roundScoringNames
+    ).concat(
       createSimpleSourceFactories(
         nonVpAdvTechTiles,
         allBoosters,
@@ -277,6 +299,7 @@ export class ChartSetup {
   ): ChartConfiguration<"line"> {
     let title: string;
     let factories: DatasetFactory[];
+    let roundLabels: string[] = null;
 
     const allSources = factory.sources;
     const includeRounds = factory.includeRounds;
@@ -298,6 +321,7 @@ export class ChartSetup {
 
       const source = sources[0];
       title = factory.kindBreakdownTitle(source);
+      roundLabels = factory.roundLabels(source);
       factories = chartPlayerOrder(data).map((p) => {
         const pl = data.player(p);
         if (!pl.faction) {
@@ -329,6 +353,9 @@ export class ChartSetup {
     });
 
     const labels = ["Start", "Round 1", "Round 2", "Round 3", "Round 4", "Round 5", "Round 6"];
+    roundLabels?.forEach((value, index) => {
+      labels[index + 1] += ` (${value})`;
+    });
     if (includeRounds === "all") {
       if (data.ended) {
         labels.push("Final");

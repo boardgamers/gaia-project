@@ -38,7 +38,11 @@
       :caption="table.title"
     >
       <template #cell()="data">
-        <span v-b-tooltip.hover :title="table.descriptions[data.index]" v-html="data.value"></span>
+        <span
+          v-b-tooltip.hover
+          :title="table.descriptions ? table.descriptions[data.index] : null"
+          v-html="data.value"
+        ></span>
       </template>
     </b-table>
   </div>
@@ -213,7 +217,7 @@ export default class Charts extends Vue {
         title: config.options.plugins.title.text,
         header: tableHeader(this.chartStyle, config, tableMeta),
         items: tableItems(config, tableMeta),
-        descriptions: tableMeta.descriptions,
+        descriptions: tableMeta?.descriptions,
       };
       this.tableKey++;
       this.destroyChart();
