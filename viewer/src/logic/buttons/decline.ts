@@ -2,6 +2,7 @@ import { AvailableCommand, Command, Reward } from "@gaia-project/engine";
 import { ButtonData } from "../../data";
 import { WarningKey } from "../../data/warnings";
 import { richText, RichText, richTextRewards } from "../../graphics/rich-text";
+import { withShortcut } from "./shortcuts";
 import { textButton } from "./utils";
 import { buttonWarnings } from "./warnings";
 
@@ -17,7 +18,7 @@ export function declineButton(command: AvailableCommand<Command.Decline>): Butto
       message = "Are you sure you want to decline a free research step?";
       break;
     default:
-      r = [richText("Decline"), richTextRewards(Reward.parse(offer))];
+      r = [richText(withShortcut("Decline", "d")), richTextRewards(Reward.parse(offer))];
   }
   return textButton({
     richText: r,
