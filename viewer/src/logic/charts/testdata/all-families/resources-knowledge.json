@@ -17,10 +17,10 @@
       "--res-qic"
     ],
     "datasetMeta": {
-      "Itars (10)": {
+      "Itars (18)": {
         "label": "Itars",
-        "income": 10,
-        "cost": -8,
+        "income": 18,
+        "cost": -16,
         "balance": 2
       },
       "Geoden (12)": {
@@ -29,10 +29,10 @@
         "cost": -4,
         "balance": 8
       },
-      "Taklons (8)": {
+      "Taklons (16)": {
         "label": "Taklons",
-        "income": 8,
-        "cost": -4,
+        "income": 16,
+        "cost": -12,
         "balance": 4
       },
       "Lantids (13)": {
@@ -60,20 +60,20 @@
   ],
   "datasets": [
     {
+      "label": "Itars (18)",
+      "data": [3, 5, 0, 9, 1, 0, 0, 0, 0, 16, 0, 0, 0]
+    },
+    {
+      "label": "Taklons (16)",
+      "data": [3, 5, 0, 8, 0, 0, 0, 0, 0, 12, 0, 0, 0]
+    },
+    {
       "label": "Lantids (13)",
       "data": [3, 2, 6, 0, 0, 0, 0, 2, 0, 8, 0, 0, 0]
     },
     {
-      "label": "Itars (10)",
-      "data": [3, 5, 0, 1, 1, 0, 0, 0, 0, 8, 0, 0, 0]
-    },
-    {
       "label": "Geoden (12)",
       "data": [3, 2, 3, 0, 0, 0, 0, 2, 2, 4, 0, 0, 0]
-    },
-    {
-      "label": "Taklons (8)",
-      "data": [3, 5, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0]
     }
   ]
 }

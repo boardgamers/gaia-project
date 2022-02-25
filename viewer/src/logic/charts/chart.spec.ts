@@ -72,8 +72,9 @@ describe("Chart", () => {
           },
           setup.factory(i > 0 ? fullType.substring(0, i) : fullType, i > 1 ? fullType.substring(i + 1) : null),
           engine,
-          null
+          (c) => c
         );
+        delete config.table.descriptions;
         return {
           tableMeta: config.table,
           labels: config.chart.data.labels,

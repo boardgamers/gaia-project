@@ -14,8 +14,8 @@
       "Itars (14)": {
         "label": "Itars",
         "income": 14,
-        "cost": -32,
-        "balance": -18
+        "cost": -64,
+        "balance": -50
       },
       "Geoden (6)": {
         "label": "Geoden",
@@ -26,8 +26,8 @@
       "Taklons (4)": {
         "label": "Taklons",
         "income": 4,
-        "cost": -16,
-        "balance": -12
+        "cost": -48,
+        "balance": -44
       },
       "Lantids (5)": {
         "label": "Lantids",
@@ -48,20 +48,20 @@
   ],
   "datasets": [
     {
+      "label": "Itars (14)",
+      "data": [0, 2, 1, 1, 0, 0, 16]
+    },
+    {
+      "label": "Taklons (4)",
+      "data": [0, 0, 0, 1, 0, 0, 12]
+    },
+    {
       "label": "Lantids (5)",
       "data": [2, 1, 0, 0, 2, 0, 8]
     },
     {
-      "label": "Itars (14)",
-      "data": [0, 2, 1, 1, 0, 0, 8]
-    },
-    {
       "label": "Geoden (6)",
       "data": [0, 2, 0, 0, 0, 0, 4]
-    },
-    {
-      "label": "Taklons (4)",
-      "data": [0, 0, 0, 1, 0, 0, 4]
     }
   ]
 }

@@ -20,6 +20,7 @@ import {
   TechPos,
   TechTile,
 } from "@gaia-project/engine";
+import { UPGRADE_RESEARCH_COST } from "@gaia-project/engine/src/available/types";
 import { tradeCostSource, tradeSource } from "@gaia-project/engine/src/events";
 import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
 import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
@@ -99,6 +100,7 @@ export function balanceSheetEventSources(expansion: Expansion): BalanceSheetSour
     },
     {
       label: "Tech Tiles",
+      description: "Tech Tiles income, including the free 4k for the free research step when gained",
       costResources: [],
       incomeResources: rewardTypes(
         (TechTile.values(expansion) as (TechTile | AdvTechTile)[])
@@ -236,13 +238,14 @@ function resourceChanges<Source>(
   wantResource: Resource,
   faction: Faction,
   eventSources: BalanceSheetSourceType[],
-  matchesEventSource: (s: Source, e: EventSource, reward: Reward) => number
+  matchesEventSource: (s: Source, e: BalanceSheetSourceType, reward: Reward) => number
 ): number {
   return sum(
     Object.entries(changes).flatMap((c) => {
       const eventSource = c[0] as EventSource;
       return c[1].map((reward) => {
         const r = effectiveAmount(reward, wantResource, faction);
+
         if (r == null || Math.abs(r.count) == 0) {
           return 0;
         }
@@ -303,7 +306,7 @@ function currentAmount(data: PlayerData, wantResource: Resource): number {
 export function balanceSheetExtractLog<Source>(
   getWantResource: (s: Source) => Resource,
   getSources: (s: Source) => BalanceSheetSourceType[],
-  matchesEventSource: (s: Source, e: EventSource, reward: Reward) => number
+  matchesEventSource: (s: Source, e: BalanceSheetSourceType, reward: Reward) => number
 ): ExtractLog<any> {
   return resourceCounter((want, a, data, simulateResources) => {
     const wantResource = getWantResource(a.source);
@@ -337,6 +340,18 @@ export function balanceSheetExtractLog<Source>(
       old += leverage;
     }
 
+    const implicitResearchCost =
+      wantResource == Resource.Knowledge &&
+      a.cmd?.command == Command.ChooseTechTile &&
+      (matchesEventSource(a.source, `tech-${a.cmd.args[0]}` as TechPos, UPGRADE_RESEARCH_COST) ||
+        matchesEventSource(
+          a.source,
+          a.allCommands.some((c) => c.command == Command.Decline) ? waste : Command.UpgradeResearch,
+          Reward.negative([UPGRADE_RESEARCH_COST])[0]
+        ))
+        ? UPGRADE_RESEARCH_COST.count
+        : 0;
+
     const faction = want.faction;
     const isTerranCharge = faction == Faction.Terrans && a.cmd != null && isGaiaMove([a.cmd]);
     if (eventSources.includes(waste) && !isTerranCharge) {
@@ -349,6 +364,7 @@ export function balanceSheetExtractLog<Source>(
         ) * (payPower ? 2 : 1);
 
       const waste = gain - diff;
+
       if (waste < 0) {
         throw Error(
           `negative waste in ${JSON.stringify(a.log)}: cmd=${JSON.stringify(
@@ -358,9 +374,11 @@ export function balanceSheetExtractLog<Source>(
           )}`
         );
       }
-      return waste;
+      return waste + implicitResearchCost;
     }
-    return resourceChanges(changes, a.source, wantResource, faction, eventSources, matchesEventSource);
+    return (
+      resourceChanges(changes, a.source, wantResource, faction, eventSources, matchesEventSource) + implicitResearchCost
+    );
   });
 }
 
