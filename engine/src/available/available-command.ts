@@ -31,7 +31,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
     case SubPhase.CoverTechTile:
       return possibleCoverTechTiles(engine, player);
     case SubPhase.UpgradeResearch:
-      return possibleResearchAreas(engine, player, "", data);
+      return possibleResearchAreas(engine, player, null, data);
     case SubPhase.PlaceLostPlanet:
       return possibleSpaceLostPlanet(engine, player);
     case SubPhase.ChooseFederationTile:

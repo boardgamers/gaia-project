@@ -16,13 +16,13 @@ export function canResearchField(engine: Engine, player: PlayerObject, field: Re
   return player.canUpgradeResearch(field);
 }
 
-export function possibleResearchAreas(engine: Engine, player: Player, cost?: string, data?: any) {
+export function possibleResearchAreas(engine: Engine, player: Player, cost: Reward | null, data?: any) {
   const commands = [];
   const tracks: AvailableResearchTrack[] = [];
   const pl = engine.player(player);
   const fields = ResearchField.values(engine.expansions);
 
-  if (pl.data.canPay(Reward.parse(cost))) {
+  if (cost === null || pl.data.canPay([cost])) {
     let avFields: ResearchField[] = fields;
 
     if (data) {
@@ -39,7 +39,7 @@ export function possibleResearchAreas(engine: Engine, player: Player, cost?: str
         tracks.push({
           field,
           to: pl.data.research[field] + 1,
-          cost,
+          cost: cost?.toString() ?? "",
         });
       }
     }

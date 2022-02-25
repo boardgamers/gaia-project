@@ -8,16 +8,18 @@ import {
   Faction,
   Federation,
   ResearchField,
+  Resource,
   SubPhase,
   TechTile,
   TechTilePos,
 } from "../enums";
 import { BuildWarning } from "../player";
 import { BrainstoneDest } from "../player-data";
+import Reward from "../reward";
 import { AvailableSetupOption } from "../setup";
 
 export const ISOLATED_DISTANCE = 3;
-export const UPGRADE_RESEARCH_COST = "4k";
+export const UPGRADE_RESEARCH_COST = new Reward(4, Resource.Knowledge);
 
 export enum BrainstoneWarning {
   brainstoneChargesWasted = "brainstone-charges-wasted",
