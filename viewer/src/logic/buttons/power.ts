@@ -9,6 +9,7 @@ import Engine, {
 } from "@gaia-project/engine";
 import { ButtonData, ButtonWarning } from "../../data";
 import { richText, richTextRewards } from "../../graphics/rich-text";
+import { withShortcut } from "./shortcuts";
 import { textButton } from "./utils";
 import { buttonWarnings, chargeIncomeWarning, translateWarnings } from "./warnings";
 
@@ -35,24 +36,26 @@ export function chargePowerButtons(
 ): ButtonData[] {
   const ret: ButtonData[] = [];
 
-  for (const offer of command.data.offers) {
+  command.data.offers.forEach((offer, index) => {
     const leech = offer.offer;
     const action = leech.includes("pw") ? "Charge" : "Gain";
+    const shortcut = String(index + 1);
     ret.push(
       textButton({
         richText:
           offer.cost && offer.cost !== "~"
             ? [
-                richText(action),
+                richText(withShortcut(action, shortcut)),
                 richTextRewards(Reward.parse(leech)),
                 richText("for"),
                 richTextRewards(Reward.parse(offer.cost)),
               ]
-            : [richText(action), richTextRewards(Reward.parse(leech))],
+            : [richText(withShortcut(action, shortcut)), richTextRewards(Reward.parse(leech))],
+        shortcuts: [shortcut],
         command: `${Command.ChargePower} ${leech}`,
         warning: chargeWarning(engine, player, leech),
       })
     );
-  }
+  });
   return ret;
 }
