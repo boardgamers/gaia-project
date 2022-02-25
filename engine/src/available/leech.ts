@@ -18,7 +18,7 @@ export function possibleLeech(engine: Engine, player: Player) {
       offers.push(
         new Offer(
           `${maxLeech}${Resource.ChargePower}`,
-          new Reward(Math.max(maxLeech - 1, 0), Resource.VictoryPoint).toString()
+          new Reward(Math.max(maxLeech - 1, 0), Resource.VictoryPoint).toStringWithOne()
         )
       );
     }
@@ -45,11 +45,11 @@ export function possibleLeech(engine: Engine, player: Player) {
 export function getTaklonsExtraLeechOffers(earlyLeechValue: number, lateLeechValue: number): Offer[] {
   const earlyLeech = new Offer(
     `${earlyLeechValue}${Resource.ChargePower},1t`,
-    new Reward(Math.max(earlyLeechValue - 1, 0), Resource.VictoryPoint).toString()
+    new Reward(Math.max(earlyLeechValue - 1, 0), Resource.VictoryPoint).toStringWithOne()
   );
   const lateLeech = new Offer(
     `1t,${lateLeechValue}${Resource.ChargePower}`,
-    new Reward(Math.max(lateLeechValue - 1, 0), Resource.VictoryPoint).toString()
+    new Reward(Math.max(lateLeechValue - 1, 0), Resource.VictoryPoint).toStringWithOne()
   );
 
   return [earlyLeech, lateLeech];

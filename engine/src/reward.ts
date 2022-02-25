@@ -41,6 +41,13 @@ export default class Reward {
     return this.toStringWithZero();
   }
 
+  toStringWithOne() {
+    if (this.isEmpty()) {
+      return "~";
+    }
+    return `${this.count}${this.type}`;
+  }
+
   toStringWithZero() {
     return this.count === 1 ? this.type.toString() : `${this.count}${this.type}`;
   }

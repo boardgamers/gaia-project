@@ -5,8 +5,10 @@ import Engine, {
   Event,
   Player,
   PowerArea,
+  Reward,
 } from "@gaia-project/engine";
 import { ButtonData, ButtonWarning } from "../../data";
+import { richText, richTextRewards } from "../../graphics/rich-text";
 import { textButton } from "./utils";
 import { buttonWarnings, chargeIncomeWarning, translateWarnings } from "./warnings";
 
@@ -38,7 +40,15 @@ export function chargePowerButtons(
     const action = leech.includes("pw") ? "Charge" : "Gain";
     ret.push(
       textButton({
-        label: offer.cost && offer.cost !== "~" ? `${action} ${leech} for ${offer.cost}` : `${action} ${leech}`,
+        richText:
+          offer.cost && offer.cost !== "~"
+            ? [
+                richText(action),
+                richTextRewards(Reward.parse(leech)),
+                richText("for"),
+                richTextRewards(Reward.parse(offer.cost)),
+              ]
+            : [richText(action), richTextRewards(Reward.parse(leech))],
         command: `${Command.ChargePower} ${leech}`,
         warning: chargeWarning(engine, player, leech),
       })
