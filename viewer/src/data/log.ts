@@ -8,9 +8,9 @@ import Engine, {
   Phase,
   Player,
   PlayerEnum,
-  Resource,
   TechTilePos,
 } from "@gaia-project/engine";
+import { AnyTechTilePos } from "@gaia-project/engine/src/enums";
 import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
 import { RichText } from "../graphics/rich-text";
 import { factionLogColors, factionLogTextColors, lightFactionLogColors } from "../graphics/utils";
@@ -18,7 +18,7 @@ import { BuildingCounter } from "../logic/charts/buildings";
 import { ResearchCounter } from "../logic/charts/research";
 import { newResourceSimulator } from "../logic/charts/resource-counter";
 import { ExtractLogArg, processLogEntry } from "../logic/charts/simple-charts";
-import { CommandObject, MovesSlice, ownTurn, parsedMove, ParsedMove } from "../logic/recent";
+import { MovesSlice, ownTurn, parsedMove, ParsedMove } from "../logic/recent";
 import { playerTableRow } from "../logic/table/info-table";
 import { logPlayerTables } from "../logic/table/player";
 import { boosterData } from "./boosters";
@@ -30,7 +30,7 @@ type LogCounter = {
   faction: Faction;
 };
 
-function replaceTech(data: Engine, pos: TechTilePos | AdvTechTilePos) {
+function replaceTech(data: Engine, pos: AnyTechTilePos) {
   const tile = data.tiles.techs[pos].tile;
   return pos.startsWith("adv") ? advancedTechTileData[tile].name : baseTechTileData[tile].name;
 }
@@ -51,7 +51,7 @@ export function replaceMove(data: Engine, move: ParsedMove): ParsedMove {
         const pos = match.substr("cover ".length) as TechTilePos;
         return addDetails(match, replaceTech(data, pos));
       } else {
-        const pos = match.substr("tech ".length) as TechTilePos | AdvTechTilePos;
+        const pos = match.substr("tech ".length) as AnyTechTilePos;
         return addDetails(match, replaceTech(data, pos));
       }
     }),
@@ -180,10 +180,6 @@ function makeEntry(
   }
 
   return res;
-}
-
-export function isGaiaMove(commands: CommandObject[]): boolean {
-  return commands.some((c) => c.command == Command.Spend && c.args[0].endsWith(Resource.GainTokenGaiaArea));
 }
 
 function newPlayerLogCounter(engine: Engine, p: Player): LogCounter {
@@ -323,14 +319,6 @@ export function makeHistory(
   recent.allMoves.forEach((parsedMove, i) => {
     if (onlyRecent && i == recent.index) {
       append = true;
-    }
-
-    const commands = parsedMove.commands;
-    if (state.phase == Phase.RoundGaia) {
-      if (!isGaiaMove(commands)) {
-        newPhase(Phase.RoundMove, state.turn + 1);
-        addEntry(makeEntry(data, state, Phase.RoundMove));
-      }
     }
 
     while (nextLogEntry && (nextLogEntry.move === undefined || nextLogEntry.move < i)) {

@@ -168,12 +168,6 @@ export default class PlayerData extends EventEmitter {
     return Object.assign(new PlayerData(), cloneDeep(this.toJSON()));
   }
 
-  payCosts(costs: Reward[], source?: EventSource) {
-    for (const cost of costs) {
-      this.gainReward(cost, true, source);
-    }
-  }
-
   private emitBrainstoneEvent(choices: BrainstoneDest[], area1Warning?: BrainstoneWarning) {
     const d: BrainstoneActionData = {
       choices: choices.map((a) => ({
@@ -218,8 +212,7 @@ export default class PlayerData extends EventEmitter {
     }
   }
 
-  // Not to be called by Player. use gainRewards instead.
-  private gainReward(reward: Reward, pay = false, source?: EventSource, followBrainStoneHeuristics = true) {
+  gainReward(reward: Reward, pay = false, source?: EventSource, followBrainStoneHeuristics = true) {
     if (reward.isEmpty()) {
       return;
     }
@@ -260,13 +253,16 @@ export default class PlayerData extends EventEmitter {
         count > 0 ? (this.power.area1 += count) : this.discardPower(-count);
         break;
       case Resource.Brainstone:
-        this.brainstone = PowerArea.Area1; //initial brainstone gain
+        this.brainstone = PowerArea.Area1; //initial brainstone gain or gaia to area1
         break;
       case Resource.GainTokenGaiaArea:
         count > 0 ? this.chargeGaiaPower(count) : this.discardGaiaPower(-count);
         break;
       case Resource.MoveTokenToGaiaArea:
         this.movePowerToGaia(-count);
+        break;
+      case Resource.MoveTokenFromGaiaAreaToArea1:
+        this.movePowerFromGaia(count);
         break;
       case Resource.ChargePower:
         count > 0 ? this.chargePower(count, true, followBrainStoneHeuristics) : this.spendPower(-count);
@@ -295,13 +291,16 @@ export default class PlayerData extends EventEmitter {
       case Resource.GaiaFormer:
         count > 0 ? (this.gaiaformers += count) : (this.gaiaformersInGaia -= count);
         break;
+      case Resource.MoveGaiaFormerFromGaiaAreaToArea1:
+        this.gaiaformersInGaia -= count;
+        break;
       case Resource.TerraformCostDiscount:
         this.terraformCostDiscount += count;
         break;
       case Resource.TemporaryStep:
         this.temporaryStep += count;
         break;
-      case Resource.TokenArea3:
+      case Resource.MoveTokenFromArea3ToGaia:
         if (count < 0) {
           this.power.area3 += count;
           this.power.gaia -= count;
@@ -346,7 +345,7 @@ export default class PlayerData extends EventEmitter {
         return this.gaiaPowerTokens();
       case Resource.ChargePower:
         return this.spendablePowerTokens();
-      case Resource.TokenArea3:
+      case Resource.MoveTokenFromArea3ToGaia:
         return this.power.area3;
       case Resource.GaiaFormer:
         return this.gaiaformers - this.gaiaformersInGaia - this.buildings[Building.GaiaFormer];
@@ -506,6 +505,12 @@ export default class PlayerData extends EventEmitter {
     this.moveTokens(power, PowerArea.Gaia);
   }
 
+  movePowerFromGaia(power: number) {
+    this.power.gaia -= power;
+    this.power.area1 += power;
+    this.emit("discardGaia", power);
+  }
+
   private moveTokens(power: number, targetArea: PowerArea.Gaia | null) {
     const brainstoneEvent = targetArea ?? "discard";
 
@@ -558,7 +563,6 @@ export default class PlayerData extends EventEmitter {
 
   discardGaiaPower(power: number) {
     this.power.gaia -= power;
-    this.emit("discardGaia", power);
   }
 
   burnablePower() {

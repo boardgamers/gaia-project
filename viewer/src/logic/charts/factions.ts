@@ -109,7 +109,7 @@ const specials: FactionSpecial[] = [
       {
         faction: Faction.Nevlas,
         description: "Knowledge for moving a token to the gaia area",
-        extractLog: spentResources(Resource.TokenArea3),
+        extractLog: spentResources(Resource.MoveTokenFromArea3ToGaia),
       },
     ],
   },

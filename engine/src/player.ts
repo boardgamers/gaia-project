@@ -250,7 +250,9 @@ export default class Player extends EventEmitter {
   }
 
   payCosts(costs: Reward[], source: EventSource) {
-    this.data.payCosts(costs, source);
+    for (const cost of costs) {
+      this.data.gainReward(this.factionReward(cost, source), true, source);
+    }
   }
 
   gainRewards(rewards: Reward[], source: EventSource) {
@@ -414,7 +416,7 @@ export default class Player extends EventEmitter {
     this.loadBoard(factionBoard(this.faction, this.variant.board), expansions, skipIncome);
   }
 
-  loadBoard(board: FactionBoard, expansions: Expansion, skipIncome = false) {
+  loadBoard(board: FactionBoard, expansions: Expansion, skipIncome = false, subscribeListeners = true) {
     this.board = board;
 
     if (!skipIncome) {
@@ -424,9 +426,11 @@ export default class Player extends EventEmitter {
     }
 
     // Load faction specific code changes
-    for (const eventName of Object.keys(this.board.handlers)) {
-      for (const emitter of [this, this.data]) {
-        emitter.on(eventName, (...args) => this.board.handlers[eventName](this, ...args));
+    if (subscribeListeners) {
+      for (const eventName of Object.keys(this.board.handlers)) {
+        for (const emitter of [this, this.data]) {
+          emitter.on(eventName, (...args) => this.board.handlers[eventName](this, ...args));
+        }
       }
     }
   }
@@ -803,17 +807,23 @@ export default class Player extends EventEmitter {
     return this.eventConditionCount(finalScorings[tile].condition);
   }
 
-  gaiaPhase() {
-    /* Move gaia power tokens to regular power areas */
-    this.emit("gaiaPhase-beforeTokenMove");
-
-    this.data.power.area1 += this.data.power.gaia;
+  gaiaPhaseEnd() {
     if (this.data.brainstone === PowerArea.Gaia) {
       this.data.brainstone = PowerArea.Area1;
+      this.gainRewards([new Reward(1, Resource.Brainstone)], Phase.RoundGaia);
     }
 
-    this.data.power.gaia = 0;
-    this.data.gaiaformersInGaia = 0;
+    const gaia = this.data.power.gaia;
+    if (gaia > 0) {
+      this.gainRewards([new Reward(gaia, Resource.MoveTokenFromGaiaAreaToArea1)], Phase.RoundGaia);
+    }
+
+    if (this.data.gaiaformersInGaia > 0) {
+      this.gainRewards(
+        [new Reward(this.data.gaiaformersInGaia, Resource.MoveGaiaFormerFromGaiaAreaToArea1)],
+        Phase.RoundGaia
+      );
+    }
   }
 
   buildingValue(
@@ -884,6 +894,9 @@ export default class Player extends EventEmitter {
   }
 
   factionReward(reward: Reward, source: EventSource): Reward {
+    if (this.faction === Faction.Terrans && reward.type === Resource.GainTokenGaiaArea) {
+      return new Reward(-reward.count, Resource.MoveTokenFromGaiaAreaToArea1);
+    }
     // this is for Gleens getting ore instead of qics until Academy2
     if (
       source !== Phase.BeginGame &&

@@ -62,11 +62,13 @@ export enum Resource {
   Brainstone = "brainstone",
   GainTokenGaiaArea = "tg",
   MoveTokenToGaiaArea = "t->tg",
+  MoveTokenFromGaiaAreaToArea1 = "tg->t",
   VictoryPoint = "vp",
   TerraformCostDiscount = "d",
   Range = "r",
   ShipRange = "ship-range",
   GaiaFormer = "gf",
+  MoveGaiaFormerFromGaiaAreaToArea1 = "gf->t",
   SpaceStation = "space-station",
   DowngradeLab = "down-lab",
   UpgradeTerraforming = "up-terra",
@@ -81,7 +83,7 @@ export enum Resource {
   RescoreFederation = "fed",
   TemporaryStep = "step",
   TemporaryRange = "range",
-  TokenArea3 = "t-a3",
+  MoveTokenFromArea3ToGaia = "t-a3",
   PISwap = "swap-PI",
   Turn = "turn",
   TradeBonus = "tradeBonus",
@@ -497,6 +499,9 @@ export namespace AdvTechTilePos {
     return ret;
   }
 }
+
+export type AnyTechTilePos = TechTilePos | AdvTechTilePos;
+export type AnyTechTile = TechTile | AdvTechTile;
 
 export enum Federation {
   Fed1 = "fed1",

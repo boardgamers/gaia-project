@@ -39,3 +39,16 @@ export function runJsonTests(tester: JsonTester) {
     }
   });
 }
+
+export function findFirstBad<T>(array: Array<T>, isBad: (T) => boolean, from = 0, to = array.length): number {
+  const middle = Math.floor((to - from) / 2);
+  const first = array.slice(0, to - middle);
+  const bad = isBad(first);
+  if (middle == 0) {
+    return bad ? to : null;
+  }
+  if (bad) {
+    return findFirstBad(array, isBad, from, to - middle);
+  }
+  return findFirstBad(array, isBad, from + middle, to);
+}

@@ -1,7 +1,7 @@
 [
   {
     "round": 6,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "charge",
@@ -132,7 +132,16 @@
           }
         ],
         [],
-        [],
+        [
+          {
+            "building": {
+              "type": "ac2",
+              "faction": "geodens",
+              "count": 1,
+              "skipResource": false
+            }
+          }
+        ],
         [
           {
             "text": ""
@@ -143,7 +152,7 @@
   },
   {
     "round": 6,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "spend",
@@ -296,7 +305,7 @@
             "building": {
               "type": "ac2",
               "faction": "taklons",
-              "count": 1,
+              "count": 2,
               "skipResource": false
             }
           }
@@ -311,7 +320,7 @@
   },
   {
     "round": 6,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "spend",
@@ -459,7 +468,16 @@
             }
           }
         ],
-        [],
+        [
+          {
+            "building": {
+              "type": "ac2",
+              "faction": "lantids",
+              "count": 1,
+              "skipResource": false
+            }
+          }
+        ],
         [
           {
             "text": ""
@@ -470,7 +488,7 @@
   },
   {
     "round": 6,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "charge",
@@ -601,7 +619,16 @@
             }
           }
         ],
-        [],
+        [
+          {
+            "building": {
+              "type": "ac2",
+              "faction": "itars",
+              "count": 1,
+              "skipResource": false
+            }
+          }
+        ],
         [
           {
             "text": "0/3"
@@ -612,7 +639,7 @@
   },
   {
     "round": 6,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "charge",
@@ -757,7 +784,7 @@
             "building": {
               "type": "ac2",
               "faction": "taklons",
-              "count": 1,
+              "count": 2,
               "skipResource": false
             }
           }
@@ -772,7 +799,7 @@
   },
   {
     "round": 6,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "build",
@@ -907,7 +934,16 @@
           }
         ],
         [],
-        [],
+        [
+          {
+            "building": {
+              "type": "ac2",
+              "faction": "geodens",
+              "count": 1,
+              "skipResource": false
+            }
+          }
+        ],
         [
           {
             "text": ""
@@ -918,7 +954,7 @@
   },
   {
     "round": 6,
-    "turn": 2,
+    "turn": 1,
     "changes": [],
     "color": "white",
     "textColor": "var(--res-power)",
@@ -930,6 +966,10 @@
     "turn": 1,
     "changes": [
       {
+        "source": "spend",
+        "changes": "-8tg"
+      },
+      {
         "source": "tech-int (k for planet types)",
         "changes": "4k"
       },
@@ -940,6 +980,10 @@
       {
         "source": "adv-int (4 VP / ts)",
         "changes": "16vp"
+      },
+      {
+        "source": "roundGaia",
+        "changes": "1tg->t"
       }
     ],
     "color": "#000000",
@@ -973,7 +1017,7 @@
       [
         [
           {
-            "rewards": ["~"]
+            "rewards": ["bowl-t"]
           }
         ],
         [
@@ -988,7 +1032,7 @@
         ],
         [
           {
-            "rewards": ["tg"]
+            "rewards": ["~"]
           }
         ]
       ],
@@ -1066,7 +1110,16 @@
             }
           }
         ],
-        [],
+        [
+          {
+            "building": {
+              "type": "ac2",
+              "faction": "itars",
+              "count": 1,
+              "skipResource": false
+            }
+          }
+        ],
         [
           {
             "text": "0/3"

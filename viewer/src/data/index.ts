@@ -1,4 +1,5 @@
-import { AdvTechTilePos, BoardAction, Booster, Building, GaiaHex, TechTilePos } from "@gaia-project/engine";
+import { BoardAction, Booster, Building, GaiaHex } from "@gaia-project/engine";
+import { AnyTechTilePos } from "@gaia-project/engine/src/enums";
 import { CubeCoordinates } from "hexagrid";
 import { RichText } from "../graphics/rich-text";
 import { FastConversionTooltips, MoveButtonController } from "../logic/buttons/types";
@@ -82,7 +83,7 @@ export interface GameContext {
     sectors: CubeCoordinates[];
     hexes: HexSelection;
     researchTiles: Set<string>;
-    techs: Set<TechTilePos | AdvTechTilePos>;
+    techs: Set<AnyTechTilePos>;
     boosters: Set<Booster>;
     boardActions: Set<BoardAction>;
     specialActions: Set<SpecialActionIncome>;

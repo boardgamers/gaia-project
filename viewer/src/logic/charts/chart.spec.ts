@@ -5,6 +5,21 @@ import { ChartSetup } from "./chart-factory";
 import { ChartType } from "./charts";
 import { countResearch, ResearchCounter } from "./research";
 
+export function createTestChartConfig(setup: ChartSetup, chartSelect: string, chartType: string, engine: Engine) {
+  const config = setup.newBarChart(
+    {
+      type: "table",
+      label: "Table",
+      compact: false,
+    },
+    setup.factory(chartSelect, chartType),
+    engine,
+    (c) => c
+  );
+  delete config.table.descriptions;
+  return config;
+}
+
 describe("Chart", () => {
   describe("initial research", () => {
     const p = {
@@ -64,17 +79,9 @@ describe("Chart", () => {
       createActualOutput: (engine, fullType, testCase: any) => {
         const setup = new ChartSetup(engine, testCase.statistics);
         const i = fullType.indexOf("/");
-        const config = setup.newBarChart(
-          {
-            type: "table",
-            label: "Table",
-            compact: false,
-          },
-          setup.factory(i > 0 ? fullType.substring(0, i) : fullType, i > 1 ? fullType.substring(i + 1) : null),
-          engine,
-          (c) => c
-        );
-        delete config.table.descriptions;
+        const chartSelect = i > 0 ? fullType.substring(0, i) : fullType;
+        const chartType = i > 1 ? fullType.substring(i + 1) : null;
+        const config = createTestChartConfig(setup, chartSelect, chartType, engine);
         return {
           tableMeta: config.table,
           labels: config.chart.data.labels,

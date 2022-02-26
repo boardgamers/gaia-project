@@ -5,6 +5,8 @@ import Engine from "./engine";
 import {
   AdvTechTile,
   AdvTechTilePos,
+  AnyTechTile,
+  AnyTechTilePos,
   Booster,
   Command,
   Federation,
@@ -26,8 +28,8 @@ export enum SetupType {
   MapTile = "mapTile",
 }
 
-export type SetupPosition = number | TechTilePos | AdvTechTilePos;
-export type SetupOption = Booster | TechTile | AdvTechTile | Federation | ScoringTile | FinalTile | string; //string is for MapTile name
+export type SetupPosition = number | AnyTechTilePos;
+export type SetupOption = Booster | AnyTechTile | Federation | ScoringTile | FinalTile | string; //string is for MapTile name
 
 type SetupFactoryOption = {
   position: SetupPosition;
@@ -46,8 +48,8 @@ type SetupFactory = {
 function techFactory(
   engine: Engine,
   type: SetupType,
-  tilePos: (TechTilePos | AdvTechTilePos)[],
-  techTiles: (TechTile | AdvTechTile)[],
+  tilePos: AnyTechTilePos[],
+  techTiles: AnyTechTile[],
   count: number
 ) {
   return {

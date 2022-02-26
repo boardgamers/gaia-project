@@ -30,7 +30,7 @@ function resourceSymbol(type: Resource) {
   switch (type) {
     case Resource.ChargePower:
       return Resource.PayPower;
-    case Resource.TokenArea3:
+    case Resource.MoveTokenFromArea3ToGaia:
       return Resource.BowlToken;
     default:
       return type;

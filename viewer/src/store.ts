@@ -1,13 +1,5 @@
-import Engine, {
-  AdvTechTilePos,
-  BoardAction,
-  Command,
-  Faction,
-  GaiaHex,
-  Player,
-  ResearchField,
-  TechTilePos,
-} from "@gaia-project/engine";
+import Engine, { BoardAction, Command, Faction, GaiaHex, Player, ResearchField } from "@gaia-project/engine";
+import { AnyTechTilePos } from "@gaia-project/engine/src/enums";
 import { CubeCoordinates } from "hexagrid";
 import Vue from "vue";
 import Vuex from "vuex";
@@ -133,7 +125,7 @@ const gaiaViewer = {
       state.context.highlighted.researchTiles = new Set(tiles);
     },
 
-    highlightTechs(state: State, techs: Array<TechTilePos | AdvTechTilePos>) {
+    highlightTechs(state: State, techs: Array<AnyTechTilePos>) {
       state.context.highlighted.techs = new Set(techs);
     },
 
@@ -217,7 +209,7 @@ const gaiaViewer = {
     // No body, used for signalling with store.subscribeAction
     hexClick(context: any, hex: GaiaHex, highlight?: HighlightHex) {},
     researchClick(context: any, field: ResearchField) {},
-    techClick(context: any, pos: TechTilePos | AdvTechTilePos) {},
+    techClick(context: any, pos: AnyTechTilePos) {},
     fastConversionClick(context: any, event: FastConversionEvent) {},
     specialActionClick(context: any, action: SpecialActionIncome) {},
     boardActionClick(context: any, action: BoardAction) {},

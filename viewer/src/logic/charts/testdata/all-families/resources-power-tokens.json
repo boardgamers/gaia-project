@@ -1,6 +1,6 @@
 {
   "tableMeta": {
-    "weights": [1, 1, 1, 1, 1, 1, 1, -2, -1, -1],
+    "weights": [1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1],
     "colors": [
       "--gaia",
       "--res-credit",
@@ -8,6 +8,8 @@
       "--oxide",
       "--res-power",
       "--specialAction",
+      "--res-power",
+      "--res-qic",
       "--federation",
       "--res-power",
       "--federation",
@@ -47,6 +49,8 @@
     "Booster income",
     "Free actions income",
     "Power/Q.I.C Actions income",
+    "Free Leech income",
+    "Paid Leech income",
     "Federations income",
     "Free actions cost",
     "Federations cost",
@@ -55,19 +59,19 @@
   "datasets": [
     {
       "label": "Itars (12)",
-      "data": [8, 2, 0, 2, 0, 0, 0, 0, 0, 0]
+      "data": [8, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0]
     },
     {
       "label": "Geoden (7)",
-      "data": [6, 1, 0, 0, 0, 0, 0, 0, 2, 0]
+      "data": [6, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0]
     },
     {
       "label": "Taklons (9)",
-      "data": [7, 2, 0, 0, 0, 0, 0, 0, 0, 0]
+      "data": [7, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     },
     {
       "label": "Lantids (4)",
-      "data": [4, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      "data": [4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     }
   ]
 }

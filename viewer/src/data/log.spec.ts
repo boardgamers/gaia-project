@@ -1,9 +1,9 @@
 import Engine, { AdvTechTile, AdvTechTilePos, TechTile, TechTilePos } from "@gaia-project/engine";
 import { Player } from "@gaia-project/engine/src/enums";
 import { expect } from "chai";
-import { parseCommands, parsedMove, recentMoves } from "../logic/recent";
+import { parsedMove, recentMoves } from "../logic/recent";
 import { runJsonTests } from "../logic/test-utils";
-import { isGaiaMove, makeHistory, replaceChange, replaceMove } from "./log";
+import { makeHistory, replaceChange, replaceMove } from "./log";
 
 describe("Advanced log details", () => {
   const data = new Engine();
@@ -70,17 +70,5 @@ describe("Advanced log details", () => {
         return history;
       },
     });
-  });
-
-  describe("gaiaMove", () => {
-    const moves = [
-      "terrans spend 4tg for 4c",
-      "itars spend 4tg for tech. tech sci (3 VP / build mine on gaia). up sci (2 ⇒ 3). spend 4tg for tech. tech gaia (power value 4 for PI / academy). up gaia (1 ⇒ 2)",
-    ];
-    for (const move of moves) {
-      it(move, () => {
-        expect(isGaiaMove(parseCommands(move))).to.be.true;
-      });
-    }
   });
 });

@@ -9,9 +9,13 @@ import Engine, {
   Resource,
 } from "@gaia-project/engine";
 import { expect } from "chai";
-import { isGaiaMove } from "../../data/log";
-import { parseCommands } from "../recent";
-import { runMoveHistoryTests } from "../test-utils";
+import { factionName } from "../../data/factions";
+import { CommandObject, parseCommands } from "../recent";
+import { findFirstBad, runMoveHistoryTests } from "../test-utils";
+import { balanceSheetResourceName, balanceSheetResources, currentAmount } from "./balance-sheet";
+import { ChartSetup } from "./chart-factory";
+import { createTestChartConfig } from "./chart.spec";
+import { ChartGroup } from "./charts";
 import {
   BrainstoneSimulator,
   flattenChanges,
@@ -20,6 +24,45 @@ import {
   parsePowerUsage,
 } from "./resource-counter";
 import { ExtractLog, logEntryProcessor } from "./simple-charts";
+
+function findErrorMoveInBalanceSheet(engine: Engine, wantPlayer: PlayerEnum, findMove = false): number | null {
+  const setup = new ChartSetup(engine, false);
+  for (const wantResource of balanceSheetResources) {
+    const config = createTestChartConfig(setup, ChartGroup.resources, balanceSheetResourceName(wantResource), engine);
+    for (const meta of Object.values(config.table.datasetMeta)) {
+      const p = engine.players.find((p) => factionName(p.faction) == meta.label);
+      const want = currentAmount(p.data, wantResource);
+      const have = meta.balance;
+      if (have != want && p.player == wantPlayer) {
+        if (!findMove) {
+          return findFirstBad(engine.moveHistory, (moves) => {
+            if (moves.length < 1) {
+              return false;
+            }
+            const commands = parseCommands(moves[moves.length - 1]);
+
+            return (
+              findErrorMoveInBalanceSheet(new Engine(moves, engine.options, engine.version, true), wantPlayer, true) !=
+              null
+            );
+          });
+        }
+        console.log("player", p.faction, "resource", wantResource, "want", want, "have", have);
+        return engine.moveHistory.length;
+      }
+    }
+  }
+  return null;
+}
+
+function assertBalanceSheet(engine: Engine, wantPlayer: PlayerEnum) {
+  const move = findErrorMoveInBalanceSheet(engine, wantPlayer);
+  expect(move).to.be.null;
+}
+
+function isGaiaMove(commands: CommandObject[]): boolean {
+  return commands.some((c) => c.command == Command.Spend && c.args[0].endsWith(Resource.GainTokenGaiaArea));
+}
 
 function runResourceCounterTest(testCase: any, wantPlayer: PlayerEnum) {
   const wantProps = new Map<number, string>();
@@ -54,6 +97,7 @@ function runResourceCounterTest(testCase: any, wantPlayer: PlayerEnum) {
   }
 
   const engine = new TestEngine(testCase.moveHistory, testCase.options, new Engine().version, true);
+
   const player = engine.player(wantPlayer);
 
   const simulator = newResourceSimulator(player, engine.expansions);
@@ -61,10 +105,10 @@ function runResourceCounterTest(testCase: any, wantPlayer: PlayerEnum) {
   function assertResources(want: string, args: () => string) {
     const got = getProps(simulator.playerData);
     if (got != want) {
+      console.log("history", JSON.stringify(engine.advancedLog));
       console.log("want", want);
       console.log("got", got);
       console.log("args", args());
-      console.log("history", JSON.stringify(engine.advancedLog));
       expect(got).to.deep.equal(want);
     }
   }
@@ -84,7 +128,7 @@ function runResourceCounterTest(testCase: any, wantPlayer: PlayerEnum) {
 
     if (a.log.player == wantPlayer && round > 0 && !ended && isLastChange(a) && !isGaiaMove(a.allCommands)) {
       assertResources(wantProps.get(logIndex), () => {
-        const s = Object.assign({}, a);
+        const s = Object.assign({ logIndex }, a);
         delete s.data;
         return JSON.stringify(s);
       });
@@ -112,9 +156,22 @@ function runResourceCounterTest(testCase: any, wantPlayer: PlayerEnum) {
   });
 
   assertResources(getProps(engine.player(wantPlayer).data), () => "Game ended");
+  assertBalanceSheet(engine, wantPlayer);
 }
 
 describe("Resource Counter", () => {
+  describe("gaiaMove", () => {
+    const moves = [
+      "terrans spend 4tg for 4c",
+      "itars spend 4tg for tech. tech sci (3 VP / build mine on gaia). up sci (2 ⇒ 3). spend 4tg for tech. tech gaia (power value 4 for PI / academy). up gaia (1 ⇒ 2)",
+    ];
+    for (const move of moves) {
+      it(move, () => {
+        expect(isGaiaMove(parseCommands(move))).to.be.true;
+      });
+    }
+  });
+
   it("brainstone simulator", () => {
     const tests: {
       name: string;

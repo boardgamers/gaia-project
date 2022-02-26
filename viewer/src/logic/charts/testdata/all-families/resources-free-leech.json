@@ -1,7 +1,7 @@
 {
   "tableMeta": {
-    "weights": [0],
-    "colors": ["--res-power"],
+    "weights": [0, 0],
+    "colors": ["--res-power", "--recent"],
     "datasetMeta": {
       "Itars (0)": {
         "label": "Itars",
@@ -29,23 +29,23 @@
       }
     }
   },
-  "labels": ["Power Charges income"],
+  "labels": ["Power Charges income", "Power Tokens income"],
   "datasets": [
     {
       "label": "Lantids (0)",
-      "data": [12]
+      "data": [12, 0]
     },
     {
       "label": "Geoden (0)",
-      "data": [11]
+      "data": [11, 0]
     },
     {
       "label": "Taklons (0)",
-      "data": [8]
+      "data": [8, 0]
     },
     {
       "label": "Itars (0)",
-      "data": [3]
+      "data": [3, 0]
     }
   ]
 }

@@ -1,4 +1,5 @@
 import { AdvTechTile, TechTile } from "@gaia-project/engine";
+import { AnyTechTile } from "@gaia-project/engine/src/enums";
 import { colorCodes } from "../logic/color-codes";
 
 export type TileTileData = {
@@ -42,6 +43,6 @@ export const advancedTechTileData: {
   [AdvTechTile.AdvTech15]: { name: "3 VP when building ts", color: "--res-credit", shortcut: "3t" },
 };
 
-export function techTileData(tile: TechTile | AdvTechTile): TileTileData {
+export function techTileData(tile: AnyTechTile): TileTileData {
   return baseTechTileData[tile] ?? advancedTechTileData[tile];
 }

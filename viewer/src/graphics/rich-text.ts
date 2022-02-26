@@ -1,14 +1,5 @@
-import {
-  AdvTechTile,
-  AdvTechTilePos,
-  BoardAction,
-  Booster,
-  Building,
-  Faction,
-  Reward,
-  TechTile,
-  TechTilePos,
-} from "@gaia-project/engine";
+import { BoardAction, Booster, Building, Faction, Reward } from "@gaia-project/engine";
+import { AnyTechTile, AnyTechTilePos } from "@gaia-project/engine/src/enums";
 import { SpecialActionIncome } from "../data";
 
 export type RichTextBuilding = { type: Building; faction: Faction; count: number; skipResource: boolean };
@@ -19,7 +10,7 @@ export type RichTextElement = {
   building?: RichTextBuilding;
   specialAction?: SpecialActionIncome;
   boardAction?: BoardAction;
-  tech?: { pos?: TechTilePos | AdvTechTilePos; tile?: TechTile | AdvTechTile; commandOverride?: string };
+  tech?: { pos?: AnyTechTilePos; tile?: AnyTechTile; commandOverride?: string };
   booster?: Booster;
 };
 export type RichText = RichTextElement[];
