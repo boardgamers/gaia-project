@@ -1,4 +1,5 @@
-import { Building, Faction } from "../enums";
+import { Building, Faction, Resource } from "../enums";
+import Reward from "../reward";
 import { FactionBoardVariants } from "./types";
 
 const itars: FactionBoardVariants = {
@@ -14,7 +15,9 @@ const itars: FactionBoardVariants = {
       area1: 4,
     },
     handlers: {
-      burn: (player, amount) => (player.data.power.gaia += amount),
+      burn: (player, amount) => {
+        player.gainRewards([new Reward(amount, Resource.GainTokenGaiaArea)], Faction.Itars);
+      },
     },
   },
   variants: [

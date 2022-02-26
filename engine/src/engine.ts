@@ -4,8 +4,8 @@ import { version } from "../package.json";
 import { generate as generateAvailableCommands } from "./available/available-command";
 import { AvailableCommand, BrainstoneActionData } from "./available/types";
 import {
-  AdvTechTile,
-  AdvTechTilePos,
+  AnyTechTile,
+  AnyTechTilePos,
   BoardAction,
   Booster,
   Building,
@@ -20,8 +20,6 @@ import {
   Round,
   ScoringTile,
   SubPhase,
-  TechTile,
-  TechTilePos,
 } from "./enums";
 import Event, { EventSource } from "./events";
 import { factionVariantBoard, latestVariantVersion } from "./faction-boards";
@@ -101,8 +99,9 @@ export interface EngineOptions {
   creator?: PlayerEnum;
 }
 
+export type LogEntryChange = { [resource in Resource]?: number };
 export type LogEntryChanges = {
-  [source in EventSource]?: { [resource in Resource]?: number };
+  [source in EventSource]?: LogEntryChange;
 };
 
 /**
@@ -124,7 +123,7 @@ export interface LogEntry {
   // For round changes
   round?: number;
   // For phase change
-  phase?: Phase.RoundIncome | Phase.RoundGaia | Phase.EndGame;
+  phase?: Phase.RoundIncome | Phase.RoundGaia | Phase.RoundMove | Phase.EndGame;
 }
 
 const replaceRegex = new RegExp(
@@ -218,8 +217,8 @@ export default class Engine {
       [key in Booster]?: boolean;
     };
     techs: {
-      [key in TechTilePos | AdvTechTilePos]?: {
-        tile: TechTile | AdvTechTile;
+      [key in AnyTechTilePos]?: {
+        tile: AnyTechTile;
         count: number;
       };
     };
@@ -495,8 +494,11 @@ export default class Engine {
       Resource.Knowledge,
       Resource.Ore,
       Resource.GainToken,
+      Resource.GainTokenGaiaArea,
       Resource.BurnToken,
       Resource.Brainstone,
+      Resource.MoveTokenFromGaiaAreaToArea1,
+      Resource.MoveGaiaFormerFromGaiaAreaToArea1,
     ]) {
       player.data.on(`gain-${resource}`, (amount: number, source: EventSource) =>
         this.log(player.player, resource, amount, source)

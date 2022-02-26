@@ -1,0 +1,81 @@
+{
+  "tableMeta": {
+    "weights": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -2, -2, -1, -2],
+    "colors": [
+      "--gaia",
+      "--res-credit",
+      "--current-round",
+      "--rt-sci",
+      "--oxide",
+      "--res-power",
+      "--res-qic",
+      "--tech-tile",
+      "--terra",
+      "--volcanic",
+      "--res-power",
+      "--specialAction",
+      "--res-qic",
+      "--volcanic"
+    ],
+    "datasetMeta": {
+      "Nevlas (206)": {
+        "label": "Nevlas",
+        "income": 206,
+        "cost": -197,
+        "balance": 9
+      },
+      "Hadsch Hallas (68)": {
+        "label": "Hadsch Hallas",
+        "income": 68,
+        "cost": -54,
+        "balance": 14
+      },
+      "Terrans (67)": {
+        "label": "Terrans",
+        "income": 67,
+        "cost": -56,
+        "balance": 11
+      },
+      "Taklons (125)": {
+        "label": "Taklons",
+        "income": 125,
+        "cost": -116,
+        "balance": 9
+      }
+    }
+  },
+  "labels": [
+    "Game start income",
+    "Base income",
+    "Tech Tiles income",
+    "Research income",
+    "Booster income",
+    "Free Leech income",
+    "Paid Leech income",
+    "Powerful Power Tokens income",
+    "Terrans income",
+    "Trade income",
+    "Free actions cost",
+    "Power/Q.I.C Actions cost",
+    "Waste cost",
+    "Trade cost"
+  ],
+  "datasets": [
+    {
+      "label": "Nevlas (206)",
+      "data": [4, 40, 20, 6, 0, 24, 20, 86, 0, 6, 42, 34, 35, 5]
+    },
+    {
+      "label": "Taklons (125)",
+      "data": [4, 10, 16, 17, 2, 8, 6, 60, 0, 2, 35, 20, 0, 3]
+    },
+    {
+      "label": "Terrans (67)",
+      "data": [4, 24, 0, 3, 4, 5, 3, 0, 24, 0, 7, 7, 10, 9]
+    },
+    {
+      "label": "Hadsch Hallas (68)",
+      "data": [4, 18, 0, 15, 6, 13, 2, 0, 0, 10, 4, 16, 2, 6]
+    }
+  ]
+}

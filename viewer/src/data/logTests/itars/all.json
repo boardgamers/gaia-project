@@ -1,7 +1,7 @@
 [
   {
     "round": 6,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "charge",
@@ -16,7 +16,7 @@
   },
   {
     "round": 6,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "spend",
@@ -39,7 +39,7 @@
   },
   {
     "round": 6,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "spend",
@@ -62,7 +62,7 @@
   },
   {
     "round": 6,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "charge",
@@ -77,7 +77,7 @@
   },
   {
     "round": 6,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "charge",
@@ -92,7 +92,7 @@
   },
   {
     "round": 6,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "build",
@@ -111,7 +111,7 @@
   },
   {
     "round": 6,
-    "turn": 2,
+    "turn": 1,
     "changes": [],
     "color": "white",
     "textColor": "var(--res-power)",
@@ -123,6 +123,10 @@
     "turn": 1,
     "changes": [
       {
+        "source": "spend",
+        "changes": "-8tg"
+      },
+      {
         "source": "tech-int (k for planet types)",
         "changes": "4k"
       },
@@ -133,6 +137,10 @@
       {
         "source": "adv-int (4 VP / ts)",
         "changes": "16vp"
+      },
+      {
+        "source": "roundGaia",
+        "changes": "1tg->t"
       }
     ],
     "color": "#000000",
@@ -285,7 +293,7 @@
   },
   {
     "round": 5,
-    "turn": 19,
+    "turn": 18,
     "changes": [],
     "color": "#000000",
     "textColor": "white",
@@ -295,7 +303,7 @@
   },
   {
     "round": 5,
-    "turn": 18,
+    "turn": 17,
     "changes": [
       {
         "source": "spend",
@@ -310,7 +318,7 @@
   },
   {
     "round": 5,
-    "turn": 18,
+    "turn": 17,
     "changes": [
       {
         "source": "spend",
@@ -325,7 +333,7 @@
   },
   {
     "round": 5,
-    "turn": 17,
+    "turn": 16,
     "changes": [
       {
         "source": "spend",
@@ -344,7 +352,7 @@
   },
   {
     "round": 5,
-    "turn": 17,
+    "turn": 16,
     "changes": [],
     "color": "#deffff",
     "textColor": "var(--res-power)",
@@ -354,7 +362,7 @@
   },
   {
     "round": 5,
-    "turn": 17,
+    "turn": 16,
     "changes": [
       {
         "source": "build",
@@ -373,7 +381,7 @@
   },
   {
     "round": 5,
-    "turn": 16,
+    "turn": 15,
     "changes": [
       {
         "source": "charge",
@@ -388,7 +396,7 @@
   },
   {
     "round": 5,
-    "turn": 16,
+    "turn": 15,
     "changes": [
       {
         "source": "build",
@@ -403,7 +411,7 @@
   },
   {
     "round": 5,
-    "turn": 16,
+    "turn": 15,
     "changes": [
       {
         "source": "spend",
@@ -426,7 +434,7 @@
   },
   {
     "round": 5,
-    "turn": 15,
+    "turn": 14,
     "changes": [],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
@@ -436,7 +444,7 @@
   },
   {
     "round": 5,
-    "turn": 15,
+    "turn": 14,
     "changes": [
       {
         "source": "build",
@@ -459,7 +467,7 @@
   },
   {
     "round": 5,
-    "turn": 15,
+    "turn": 14,
     "changes": [
       {
         "source": "federation",
@@ -478,7 +486,7 @@
   },
   {
     "round": 5,
-    "turn": 14,
+    "turn": 13,
     "changes": [
       {
         "source": "build",
@@ -493,7 +501,7 @@
   },
   {
     "round": 5,
-    "turn": 14,
+    "turn": 13,
     "changes": [],
     "color": "#000000",
     "textColor": "white",
@@ -503,7 +511,7 @@
   },
   {
     "round": 5,
-    "turn": 13,
+    "turn": 12,
     "changes": [
       {
         "source": "spend",
@@ -530,7 +538,7 @@
   },
   {
     "round": 5,
-    "turn": 13,
+    "turn": 12,
     "changes": [],
     "color": "#deffff",
     "textColor": "var(--res-power)",
@@ -540,7 +548,7 @@
   },
   {
     "round": 5,
-    "turn": 13,
+    "turn": 12,
     "changes": [
       {
         "source": "charge",
@@ -555,7 +563,7 @@
   },
   {
     "round": 5,
-    "turn": 13,
+    "turn": 12,
     "changes": [
       {
         "source": "build",
@@ -574,7 +582,7 @@
   },
   {
     "round": 5,
-    "turn": 12,
+    "turn": 11,
     "changes": [
       {
         "source": "charge",
@@ -589,7 +597,7 @@
   },
   {
     "round": 5,
-    "turn": 12,
+    "turn": 11,
     "changes": [
       {
         "source": "charge",
@@ -604,7 +612,7 @@
   },
   {
     "round": 5,
-    "turn": 12,
+    "turn": 11,
     "changes": [
       {
         "source": "build",
@@ -619,7 +627,7 @@
   },
   {
     "round": 5,
-    "turn": 12,
+    "turn": 11,
     "changes": [
       {
         "source": "up",
@@ -638,7 +646,7 @@
   },
   {
     "round": 5,
-    "turn": 11,
+    "turn": 10,
     "changes": [
       {
         "source": "charge",
@@ -653,7 +661,7 @@
   },
   {
     "round": 5,
-    "turn": 11,
+    "turn": 10,
     "changes": [],
     "color": "#deffff",
     "textColor": "var(--res-power)",
@@ -663,7 +671,7 @@
   },
   {
     "round": 5,
-    "turn": 11,
+    "turn": 10,
     "changes": [
       {
         "source": "build",
@@ -678,7 +686,7 @@
   },
   {
     "round": 5,
-    "turn": 11,
+    "turn": 10,
     "changes": [
       {
         "source": "up",
@@ -697,7 +705,7 @@
   },
   {
     "round": 5,
-    "turn": 11,
+    "turn": 10,
     "changes": [
       {
         "source": "spend",
@@ -716,7 +724,7 @@
   },
   {
     "round": 5,
-    "turn": 10,
+    "turn": 9,
     "changes": [
       {
         "source": "up",
@@ -735,7 +743,7 @@
   },
   {
     "round": 5,
-    "turn": 10,
+    "turn": 9,
     "changes": [],
     "color": "#deffff",
     "textColor": "var(--res-power)",
@@ -745,7 +753,7 @@
   },
   {
     "round": 5,
-    "turn": 10,
+    "turn": 9,
     "changes": [
       {
         "source": "build",
@@ -764,7 +772,7 @@
   },
   {
     "round": 5,
-    "turn": 10,
+    "turn": 9,
     "changes": [
       {
         "source": "up",
@@ -779,7 +787,7 @@
   },
   {
     "round": 5,
-    "turn": 9,
+    "turn": 8,
     "changes": [
       {
         "source": "up",
@@ -806,7 +814,7 @@
   },
   {
     "round": 5,
-    "turn": 9,
+    "turn": 8,
     "changes": [
       {
         "source": "build",
@@ -821,7 +829,7 @@
   },
   {
     "round": 5,
-    "turn": 9,
+    "turn": 8,
     "changes": [
       {
         "source": "charge",
@@ -836,7 +844,7 @@
   },
   {
     "round": 5,
-    "turn": 9,
+    "turn": 8,
     "changes": [
       {
         "source": "spend",
@@ -859,7 +867,7 @@
   },
   {
     "round": 5,
-    "turn": 8,
+    "turn": 7,
     "changes": [
       {
         "source": "qic3",
@@ -874,7 +882,7 @@
   },
   {
     "round": 5,
-    "turn": 8,
+    "turn": 7,
     "changes": [],
     "color": "#000000",
     "textColor": "white",
@@ -884,7 +892,7 @@
   },
   {
     "round": 5,
-    "turn": 8,
+    "turn": 7,
     "changes": [
       {
         "source": "spend",
@@ -903,7 +911,7 @@
   },
   {
     "round": 5,
-    "turn": 7,
+    "turn": 6,
     "changes": [
       {
         "source": "spend",
@@ -922,7 +930,7 @@
   },
   {
     "round": 5,
-    "turn": 7,
+    "turn": 6,
     "changes": [
       {
         "source": "power7",
@@ -937,7 +945,7 @@
   },
   {
     "round": 5,
-    "turn": 7,
+    "turn": 6,
     "changes": [
       {
         "source": "charge",
@@ -952,7 +960,7 @@
   },
   {
     "round": 5,
-    "turn": 7,
+    "turn": 6,
     "changes": [
       {
         "source": "charge",
@@ -967,7 +975,7 @@
   },
   {
     "round": 5,
-    "turn": 7,
+    "turn": 6,
     "changes": [
       {
         "source": "build",
@@ -990,7 +998,7 @@
   },
   {
     "round": 5,
-    "turn": 6,
+    "turn": 5,
     "changes": [
       {
         "source": "charge",
@@ -1005,7 +1013,7 @@
   },
   {
     "round": 5,
-    "turn": 6,
+    "turn": 5,
     "changes": [
       {
         "source": "spend",
@@ -1028,7 +1036,7 @@
   },
   {
     "round": 5,
-    "turn": 6,
+    "turn": 5,
     "changes": [
       {
         "source": "charge",
@@ -1043,7 +1051,7 @@
   },
   {
     "round": 5,
-    "turn": 6,
+    "turn": 5,
     "changes": [
       {
         "source": "charge",
@@ -1058,7 +1066,7 @@
   },
   {
     "round": 5,
-    "turn": 6,
+    "turn": 5,
     "changes": [
       {
         "source": "build",
@@ -1077,7 +1085,7 @@
   },
   {
     "round": 5,
-    "turn": 6,
+    "turn": 5,
     "changes": [
       {
         "source": "charge",
@@ -1092,7 +1100,7 @@
   },
   {
     "round": 5,
-    "turn": 6,
+    "turn": 5,
     "changes": [
       {
         "source": "charge",
@@ -1107,7 +1115,7 @@
   },
   {
     "round": 5,
-    "turn": 6,
+    "turn": 5,
     "changes": [
       {
         "source": "build",
@@ -1126,7 +1134,7 @@
   },
   {
     "round": 5,
-    "turn": 5,
+    "turn": 4,
     "changes": [
       {
         "source": "up",
@@ -1145,7 +1153,7 @@
   },
   {
     "round": 5,
-    "turn": 5,
+    "turn": 4,
     "changes": [
       {
         "source": "build",
@@ -1160,7 +1168,7 @@
   },
   {
     "round": 5,
-    "turn": 5,
+    "turn": 4,
     "changes": [
       {
         "source": "adv-terra (3 VP / federation when passing)",
@@ -1179,7 +1187,7 @@
   },
   {
     "round": 5,
-    "turn": 5,
+    "turn": 4,
     "changes": [
       {
         "source": "federation",
@@ -1194,7 +1202,7 @@
   },
   {
     "round": 5,
-    "turn": 4,
+    "turn": 3,
     "changes": [
       {
         "source": "power5",
@@ -1209,7 +1217,7 @@
   },
   {
     "round": 5,
-    "turn": 4,
+    "turn": 3,
     "changes": [
       {
         "source": "adv-gaia (3k special action)",
@@ -1224,7 +1232,7 @@
   },
   {
     "round": 5,
-    "turn": 4,
+    "turn": 3,
     "changes": [
       {
         "source": "power2",
@@ -1247,7 +1255,7 @@
   },
   {
     "round": 5,
-    "turn": 4,
+    "turn": 3,
     "changes": [
       {
         "source": "charge",
@@ -1262,7 +1270,7 @@
   },
   {
     "round": 5,
-    "turn": 4,
+    "turn": 3,
     "changes": [
       {
         "source": "charge",
@@ -1277,7 +1285,7 @@
   },
   {
     "round": 5,
-    "turn": 4,
+    "turn": 3,
     "changes": [
       {
         "source": "charge",
@@ -1292,7 +1300,7 @@
   },
   {
     "round": 5,
-    "turn": 4,
+    "turn": 3,
     "changes": [
       {
         "source": "build",
@@ -1311,7 +1319,7 @@
   },
   {
     "round": 5,
-    "turn": 3,
+    "turn": 2,
     "changes": [
       {
         "source": "tech-nav (4pw special action)",
@@ -1330,7 +1338,7 @@
   },
   {
     "round": 5,
-    "turn": 3,
+    "turn": 2,
     "changes": [
       {
         "source": "power4",
@@ -1345,7 +1353,7 @@
   },
   {
     "round": 5,
-    "turn": 3,
+    "turn": 2,
     "changes": [
       {
         "source": "up",
@@ -1364,7 +1372,7 @@
   },
   {
     "round": 5,
-    "turn": 3,
+    "turn": 2,
     "changes": [
       {
         "source": "charge",
@@ -1379,7 +1387,7 @@
   },
   {
     "round": 5,
-    "turn": 3,
+    "turn": 2,
     "changes": [
       {
         "source": "build",
@@ -1398,7 +1406,7 @@
   },
   {
     "round": 5,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "power3",
@@ -1413,7 +1421,7 @@
   },
   {
     "round": 5,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "tech-nav (4pw special action)",
@@ -1428,7 +1436,7 @@
   },
   {
     "round": 5,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "charge",
@@ -1443,7 +1451,7 @@
   },
   {
     "round": 5,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "build",
@@ -1462,7 +1470,7 @@
   },
   {
     "round": 5,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "spend",
@@ -1485,7 +1493,7 @@
   },
   {
     "round": 5,
-    "turn": 2,
+    "turn": 1,
     "changes": [],
     "color": "white",
     "textColor": "var(--res-power)",
@@ -1495,7 +1503,16 @@
   {
     "round": 5,
     "turn": 1,
-    "changes": [],
+    "changes": [
+      {
+        "source": "spend",
+        "changes": "-4tg"
+      },
+      {
+        "source": "roundGaia",
+        "changes": "2tg->t"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -1646,7 +1663,7 @@
   },
   {
     "round": 4,
-    "turn": 13,
+    "turn": 12,
     "changes": [
       {
         "source": "spend",
@@ -1665,7 +1682,7 @@
   },
   {
     "round": 4,
-    "turn": 13,
+    "turn": 12,
     "changes": [],
     "color": "#000000",
     "textColor": "white",
@@ -1675,7 +1692,7 @@
   },
   {
     "round": 4,
-    "turn": 12,
+    "turn": 11,
     "changes": [
       {
         "source": "tech-nav (4pw special action)",
@@ -1694,7 +1711,7 @@
   },
   {
     "round": 4,
-    "turn": 12,
+    "turn": 11,
     "changes": [],
     "color": "#000000",
     "textColor": "white",
@@ -1704,7 +1721,7 @@
   },
   {
     "round": 4,
-    "turn": 11,
+    "turn": 10,
     "changes": [
       {
         "source": "charge",
@@ -1719,7 +1736,7 @@
   },
   {
     "round": 4,
-    "turn": 11,
+    "turn": 10,
     "changes": [
       {
         "source": "build",
@@ -1738,7 +1755,7 @@
   },
   {
     "round": 4,
-    "turn": 11,
+    "turn": 10,
     "changes": [
       {
         "source": "build",
@@ -1757,7 +1774,7 @@
   },
   {
     "round": 4,
-    "turn": 10,
+    "turn": 9,
     "changes": [
       {
         "source": "spend",
@@ -1776,7 +1793,7 @@
   },
   {
     "round": 4,
-    "turn": 10,
+    "turn": 9,
     "changes": [
       {
         "source": "build",
@@ -1791,7 +1808,7 @@
   },
   {
     "round": 4,
-    "turn": 9,
+    "turn": 8,
     "changes": [
       {
         "source": "income",
@@ -1806,7 +1823,7 @@
   },
   {
     "round": 4,
-    "turn": 9,
+    "turn": 8,
     "changes": [
       {
         "source": "build",
@@ -1825,7 +1842,7 @@
   },
   {
     "round": 4,
-    "turn": 8,
+    "turn": 7,
     "changes": [
       {
         "source": "build",
@@ -1844,7 +1861,7 @@
   },
   {
     "round": 4,
-    "turn": 8,
+    "turn": 7,
     "changes": [
       {
         "source": "spend",
@@ -1867,7 +1884,7 @@
   },
   {
     "round": 4,
-    "turn": 8,
+    "turn": 7,
     "changes": [
       {
         "source": "adv-terra (3 VP / federation when passing)",
@@ -1886,7 +1903,7 @@
   },
   {
     "round": 4,
-    "turn": 7,
+    "turn": 6,
     "changes": [
       {
         "source": "charge",
@@ -1901,7 +1918,7 @@
   },
   {
     "round": 4,
-    "turn": 7,
+    "turn": 6,
     "changes": [
       {
         "source": "charge",
@@ -1916,7 +1933,7 @@
   },
   {
     "round": 4,
-    "turn": 7,
+    "turn": 6,
     "changes": [
       {
         "source": "build",
@@ -1931,7 +1948,7 @@
   },
   {
     "round": 4,
-    "turn": 7,
+    "turn": 6,
     "changes": [
       {
         "source": "spend",
@@ -1954,7 +1971,7 @@
   },
   {
     "round": 4,
-    "turn": 7,
+    "turn": 6,
     "changes": [],
     "color": "#2080f0",
     "textColor": "black",
@@ -1964,7 +1981,7 @@
   },
   {
     "round": 4,
-    "turn": 7,
+    "turn": 6,
     "changes": [
       {
         "source": "up",
@@ -1979,7 +1996,7 @@
   },
   {
     "round": 4,
-    "turn": 6,
+    "turn": 5,
     "changes": [
       {
         "source": "charge",
@@ -1994,7 +2011,7 @@
   },
   {
     "round": 4,
-    "turn": 6,
+    "turn": 5,
     "changes": [
       {
         "source": "charge",
@@ -2009,7 +2026,7 @@
   },
   {
     "round": 4,
-    "turn": 6,
+    "turn": 5,
     "changes": [
       {
         "source": "build",
@@ -2024,7 +2041,7 @@
   },
   {
     "round": 4,
-    "turn": 6,
+    "turn": 5,
     "changes": [
       {
         "source": "adv-gaia (3k special action)",
@@ -2039,7 +2056,7 @@
   },
   {
     "round": 4,
-    "turn": 6,
+    "turn": 5,
     "changes": [
       {
         "source": "charge",
@@ -2054,7 +2071,7 @@
   },
   {
     "round": 4,
-    "turn": 6,
+    "turn": 5,
     "changes": [
       {
         "source": "spend",
@@ -2077,7 +2094,7 @@
   },
   {
     "round": 4,
-    "turn": 6,
+    "turn": 5,
     "changes": [
       {
         "source": "spend",
@@ -2104,7 +2121,7 @@
   },
   {
     "round": 4,
-    "turn": 5,
+    "turn": 4,
     "changes": [
       {
         "source": "up",
@@ -2131,7 +2148,7 @@
   },
   {
     "round": 4,
-    "turn": 5,
+    "turn": 4,
     "changes": [],
     "color": "#000000",
     "textColor": "white",
@@ -2141,7 +2158,7 @@
   },
   {
     "round": 4,
-    "turn": 5,
+    "turn": 4,
     "changes": [
       {
         "source": "charge",
@@ -2156,7 +2173,7 @@
   },
   {
     "round": 4,
-    "turn": 5,
+    "turn": 4,
     "changes": [
       {
         "source": "charge",
@@ -2171,7 +2188,7 @@
   },
   {
     "round": 4,
-    "turn": 5,
+    "turn": 4,
     "changes": [
       {
         "source": "build",
@@ -2186,7 +2203,7 @@
   },
   {
     "round": 4,
-    "turn": 5,
+    "turn": 4,
     "changes": [
       {
         "source": "up",
@@ -2205,7 +2222,7 @@
   },
   {
     "round": 4,
-    "turn": 4,
+    "turn": 3,
     "changes": [
       {
         "source": "up",
@@ -2224,7 +2241,7 @@
   },
   {
     "round": 4,
-    "turn": 4,
+    "turn": 3,
     "changes": [
       {
         "source": "build",
@@ -2243,7 +2260,7 @@
   },
   {
     "round": 4,
-    "turn": 4,
+    "turn": 3,
     "changes": [
       {
         "source": "up",
@@ -2262,7 +2279,7 @@
   },
   {
     "round": 4,
-    "turn": 4,
+    "turn": 3,
     "changes": [
       {
         "source": "charge",
@@ -2277,7 +2294,7 @@
   },
   {
     "round": 4,
-    "turn": 4,
+    "turn": 3,
     "changes": [
       {
         "source": "build",
@@ -2296,7 +2313,7 @@
   },
   {
     "round": 4,
-    "turn": 3,
+    "turn": 2,
     "changes": [
       {
         "source": "power4",
@@ -2311,7 +2328,7 @@
   },
   {
     "round": 4,
-    "turn": 3,
+    "turn": 2,
     "changes": [
       {
         "source": "charge",
@@ -2326,7 +2343,7 @@
   },
   {
     "round": 4,
-    "turn": 3,
+    "turn": 2,
     "changes": [
       {
         "source": "build",
@@ -2341,7 +2358,7 @@
   },
   {
     "round": 4,
-    "turn": 3,
+    "turn": 2,
     "changes": [
       {
         "source": "charge",
@@ -2356,7 +2373,7 @@
   },
   {
     "round": 4,
-    "turn": 3,
+    "turn": 2,
     "changes": [],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
@@ -2366,7 +2383,7 @@
   },
   {
     "round": 4,
-    "turn": 3,
+    "turn": 2,
     "changes": [
       {
         "source": "build",
@@ -2389,7 +2406,7 @@
   },
   {
     "round": 4,
-    "turn": 3,
+    "turn": 2,
     "changes": [
       {
         "source": "up",
@@ -2404,7 +2421,7 @@
   },
   {
     "round": 4,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "power3",
@@ -2419,7 +2436,7 @@
   },
   {
     "round": 4,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "power7",
@@ -2434,7 +2451,7 @@
   },
   {
     "round": 4,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "charge",
@@ -2449,7 +2466,7 @@
   },
   {
     "round": 4,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "charge",
@@ -2464,7 +2481,7 @@
   },
   {
     "round": 4,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "power6",
@@ -2487,7 +2504,7 @@
   },
   {
     "round": 4,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "power5",
@@ -2502,7 +2519,7 @@
   },
   {
     "round": 4,
-    "turn": 2,
+    "turn": 1,
     "changes": [],
     "color": "white",
     "textColor": "var(--res-power)",
@@ -2514,8 +2531,16 @@
     "turn": 1,
     "changes": [
       {
+        "source": "spend",
+        "changes": "-8tg"
+      },
+      {
         "source": "tech-free3 (o,q)",
         "changes": "1o, 1q"
+      },
+      {
+        "source": "roundGaia",
+        "changes": "1tg->t"
       }
     ],
     "color": "#000000",
@@ -2683,7 +2708,7 @@
   },
   {
     "round": 3,
-    "turn": 12,
+    "turn": 11,
     "changes": [
       {
         "source": "spend",
@@ -2702,7 +2727,7 @@
   },
   {
     "round": 3,
-    "turn": 12,
+    "turn": 11,
     "changes": [
       {
         "source": "booster9 (4pw, 4 VP / PI or academy)",
@@ -2717,7 +2742,7 @@
   },
   {
     "round": 3,
-    "turn": 11,
+    "turn": 10,
     "changes": [
       {
         "source": "up",
@@ -2736,7 +2761,7 @@
   },
   {
     "round": 3,
-    "turn": 11,
+    "turn": 10,
     "changes": [
       {
         "source": "charge",
@@ -2751,7 +2776,7 @@
   },
   {
     "round": 3,
-    "turn": 11,
+    "turn": 10,
     "changes": [
       {
         "source": "build",
@@ -2766,7 +2791,7 @@
   },
   {
     "round": 3,
-    "turn": 10,
+    "turn": 9,
     "changes": [
       {
         "source": "build",
@@ -2781,8 +2806,12 @@
   },
   {
     "round": 3,
-    "turn": 10,
+    "turn": 9,
     "changes": [
+      {
+        "source": "itars",
+        "changes": "2tg"
+      },
       {
         "source": "spend",
         "changes": "-2pw, 2c"
@@ -2800,7 +2829,7 @@
   },
   {
     "round": 3,
-    "turn": 9,
+    "turn": 8,
     "changes": [
       {
         "source": "up",
@@ -2823,7 +2852,7 @@
   },
   {
     "round": 3,
-    "turn": 9,
+    "turn": 8,
     "changes": [
       {
         "source": "up",
@@ -2842,7 +2871,7 @@
   },
   {
     "round": 3,
-    "turn": 8,
+    "turn": 7,
     "changes": [
       {
         "source": "build",
@@ -2857,7 +2886,7 @@
   },
   {
     "round": 3,
-    "turn": 8,
+    "turn": 7,
     "changes": [],
     "color": "#deffff",
     "textColor": "var(--res-power)",
@@ -2867,7 +2896,7 @@
   },
   {
     "round": 3,
-    "turn": 8,
+    "turn": 7,
     "changes": [
       {
         "source": "build",
@@ -2886,7 +2915,7 @@
   },
   {
     "round": 3,
-    "turn": 7,
+    "turn": 6,
     "changes": [
       {
         "source": "tech-nav (4pw special action)",
@@ -2905,7 +2934,7 @@
   },
   {
     "round": 3,
-    "turn": 7,
+    "turn": 6,
     "changes": [],
     "color": "#2080f0",
     "textColor": "black",
@@ -2915,8 +2944,12 @@
   },
   {
     "round": 3,
-    "turn": 7,
+    "turn": 6,
     "changes": [
+      {
+        "source": "itars",
+        "changes": "2tg"
+      },
       {
         "source": "spend",
         "changes": "-2pw, 2c"
@@ -2930,7 +2963,7 @@
   },
   {
     "round": 3,
-    "turn": 6,
+    "turn": 5,
     "changes": [
       {
         "source": "charge",
@@ -2945,7 +2978,7 @@
   },
   {
     "round": 3,
-    "turn": 6,
+    "turn": 5,
     "changes": [
       {
         "source": "build",
@@ -2972,7 +3005,7 @@
   },
   {
     "round": 3,
-    "turn": 6,
+    "turn": 5,
     "changes": [
       {
         "source": "up",
@@ -2987,8 +3020,12 @@
   },
   {
     "round": 3,
-    "turn": 6,
+    "turn": 5,
     "changes": [
+      {
+        "source": "itars",
+        "changes": "1tg"
+      },
       {
         "source": "power7",
         "changes": "-3pw, 2t"
@@ -3002,7 +3039,7 @@
   },
   {
     "round": 3,
-    "turn": 5,
+    "turn": 4,
     "changes": [
       {
         "source": "power4",
@@ -3017,7 +3054,7 @@
   },
   {
     "round": 3,
-    "turn": 5,
+    "turn": 4,
     "changes": [
       {
         "source": "charge",
@@ -3032,7 +3069,7 @@
   },
   {
     "round": 3,
-    "turn": 5,
+    "turn": 4,
     "changes": [
       {
         "source": "charge",
@@ -3047,7 +3084,7 @@
   },
   {
     "round": 3,
-    "turn": 5,
+    "turn": 4,
     "changes": [
       {
         "source": "build",
@@ -3066,7 +3103,7 @@
   },
   {
     "round": 3,
-    "turn": 5,
+    "turn": 4,
     "changes": [
       {
         "source": "build",
@@ -3081,7 +3118,7 @@
   },
   {
     "round": 3,
-    "turn": 4,
+    "turn": 3,
     "changes": [
       {
         "source": "income",
@@ -3096,7 +3133,7 @@
   },
   {
     "round": 3,
-    "turn": 4,
+    "turn": 3,
     "changes": [
       {
         "source": "charge",
@@ -3111,7 +3148,7 @@
   },
   {
     "round": 3,
-    "turn": 4,
+    "turn": 3,
     "changes": [
       {
         "source": "build",
@@ -3134,7 +3171,7 @@
   },
   {
     "round": 3,
-    "turn": 4,
+    "turn": 3,
     "changes": [
       {
         "source": "adv-terra (3 VP / federation when passing)",
@@ -3149,7 +3186,7 @@
   },
   {
     "round": 3,
-    "turn": 4,
+    "turn": 3,
     "changes": [
       {
         "source": "charge",
@@ -3164,7 +3201,7 @@
   },
   {
     "round": 3,
-    "turn": 4,
+    "turn": 3,
     "changes": [
       {
         "source": "build",
@@ -3179,7 +3216,7 @@
   },
   {
     "round": 3,
-    "turn": 3,
+    "turn": 2,
     "changes": [
       {
         "source": "charge",
@@ -3194,7 +3231,7 @@
   },
   {
     "round": 3,
-    "turn": 3,
+    "turn": 2,
     "changes": [
       {
         "source": "build",
@@ -3213,7 +3250,7 @@
   },
   {
     "round": 3,
-    "turn": 3,
+    "turn": 2,
     "changes": [
       {
         "source": "charge",
@@ -3228,7 +3265,7 @@
   },
   {
     "round": 3,
-    "turn": 3,
+    "turn": 2,
     "changes": [
       {
         "source": "charge",
@@ -3243,7 +3280,7 @@
   },
   {
     "round": 3,
-    "turn": 3,
+    "turn": 2,
     "changes": [
       {
         "source": "build",
@@ -3262,7 +3299,7 @@
   },
   {
     "round": 3,
-    "turn": 3,
+    "turn": 2,
     "changes": [
       {
         "source": "charge",
@@ -3277,7 +3314,7 @@
   },
   {
     "round": 3,
-    "turn": 3,
+    "turn": 2,
     "changes": [
       {
         "source": "spend",
@@ -3300,7 +3337,7 @@
   },
   {
     "round": 3,
-    "turn": 3,
+    "turn": 2,
     "changes": [
       {
         "source": "up",
@@ -3315,7 +3352,7 @@
   },
   {
     "round": 3,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "power5",
@@ -3330,7 +3367,7 @@
   },
   {
     "round": 3,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "charge",
@@ -3345,7 +3382,7 @@
   },
   {
     "round": 3,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "power6",
@@ -3364,7 +3401,7 @@
   },
   {
     "round": 3,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "spend",
@@ -3387,7 +3424,7 @@
   },
   {
     "round": 3,
-    "turn": 2,
+    "turn": 1,
     "changes": [
       {
         "source": "power3",
@@ -3402,7 +3439,7 @@
   },
   {
     "round": 3,
-    "turn": 2,
+    "turn": 1,
     "changes": [],
     "color": "white",
     "textColor": "var(--res-power)",
@@ -3413,6 +3450,10 @@
     "round": 3,
     "turn": 1,
     "changes": [
+      {
+        "source": "spend",
+        "changes": "-8tg"
+      },
       {
         "source": "gaia",
         "changes": "3t, 3pw"
@@ -4297,6 +4338,10 @@
     "turn": 1,
     "changes": [
       {
+        "source": "itars",
+        "changes": "2tg"
+      },
+      {
         "source": "power3",
         "changes": "-4pw, 2o"
       }
@@ -4309,12 +4354,26 @@
   },
   {
     "round": 2,
-    "turn": 1,
+    "turn": 0,
     "changes": [],
     "color": "white",
     "textColor": "var(--res-power)",
     "faction": null,
     "phase": "roundMove"
+  },
+  {
+    "round": 2,
+    "turn": 0,
+    "changes": [
+      {
+        "source": "roundGaia",
+        "changes": "2tg->t"
+      }
+    ],
+    "color": "#bebebe",
+    "textColor": "var(--res-power)",
+    "faction": "itars",
+    "move": "itars"
   },
   {
     "round": 2,
@@ -4886,7 +4945,12 @@
   {
     "round": 1,
     "turn": 5,
-    "changes": [],
+    "changes": [
+      {
+        "source": "itars",
+        "changes": "2tg"
+      }
+    ],
     "color": "#000000",
     "textColor": "white",
     "faction": "itars",
@@ -5487,7 +5551,7 @@
   },
   {
     "round": 1,
-    "turn": 1,
+    "turn": 0,
     "changes": [],
     "color": "white",
     "textColor": "var(--res-power)",

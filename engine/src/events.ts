@@ -72,6 +72,7 @@ export type EventSource =
   | BoardAction
   | Command.ChooseIncome
   | Phase.BeginGame
+  | Phase.RoundGaia
   | Command.Build
   | Command.FormFederation
   | Command.UpgradeResearch

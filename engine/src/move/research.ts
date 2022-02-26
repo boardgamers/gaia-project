@@ -1,7 +1,7 @@
 import assert from "assert";
 import { AvailableCommand } from "../available/types";
 import Engine from "../engine";
-import { AdvTechTilePos, Command, Player as PlayerEnum, ResearchField, SubPhase, TechTilePos } from "../enums";
+import { AnyTechTilePos, Command, Player as PlayerEnum, ResearchField, SubPhase, TechTilePos } from "../enums";
 import { isAdvanced } from "../tiles/techs";
 import { advanceResearchAreaPhase } from "./phase";
 
@@ -23,7 +23,7 @@ export function moveChooseTechTile(
   engine: Engine,
   command: AvailableCommand<Command.ChooseTechTile>,
   player: PlayerEnum,
-  pos: TechTilePos | AdvTechTilePos
+  pos: AnyTechTilePos
 ) {
   const { tiles } = command.data;
   const tileAvailable = tiles.find((ta) => ta.pos === pos);

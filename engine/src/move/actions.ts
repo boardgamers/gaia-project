@@ -36,7 +36,7 @@ export function moveSpend(
   const income = Reward.merge(Reward.parse(incomeS));
 
   assert(!cost.some((r) => r.count <= 0) && !income.some((r) => r.count <= 0), "Nice try!");
-  assert(pl.data.canPay(cost) && cost, `Impossible to pay ${costS}`);
+  assert(pl.data.canPay(cost) && cost, `Impossible to pay ${costS} for ${incomeS}`);
   assert(_for === "for", "Expect second part of command to be 'for'");
 
   // tslint:disable-next-line no-shadowed-variable

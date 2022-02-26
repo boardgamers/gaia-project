@@ -3,29 +3,29 @@
     "weights": [1, 3, 4, 4, 0, 0, 0],
     "colors": ["--res-credit", "--res-ore", "--res-knowledge", "--res-qic", "--res-power", "--recent", "--res-power"],
     "datasetMeta": {
-      "Nevlas (0)": {
+      "Nevlas (12)": {
         "label": "Nevlas",
-        "income": 0,
+        "income": 12,
         "cost": 0,
-        "balance": 0
+        "balance": 12
       },
-      "Hadsch Hallas (16)": {
+      "Hadsch Hallas (72)": {
         "label": "Hadsch Hallas",
-        "income": 16,
+        "income": 72,
         "cost": 0,
-        "balance": 16
+        "balance": 72
       },
-      "Terrans (0)": {
+      "Terrans (8)": {
         "label": "Terrans",
-        "income": 0,
+        "income": 8,
         "cost": 0,
-        "balance": 0
+        "balance": 8
       },
-      "Taklons (16)": {
+      "Taklons (43)": {
         "label": "Taklons",
-        "income": 16,
+        "income": 43,
         "cost": 0,
-        "balance": 16
+        "balance": 43
       }
     }
   },
@@ -40,20 +40,20 @@
   ],
   "datasets": [
     {
-      "label": "Hadsch Hallas (16)",
-      "data": [4, 4, 0, 0, 10, 1, 4]
+      "label": "Hadsch Hallas (72)",
+      "data": [9, 9, 9, 0, 10, 1, 6]
     },
     {
-      "label": "Taklons (16)",
-      "data": [0, 0, 4, 0, 0, 0, 1]
+      "label": "Taklons (43)",
+      "data": [11, 0, 8, 0, 2, 0, 3]
     },
     {
-      "label": "Nevlas (0)",
-      "data": [0, 0, 0, 0, 0, 0, 0]
+      "label": "Nevlas (12)",
+      "data": [0, 0, 3, 0, 6, 1, 5]
     },
     {
-      "label": "Terrans (0)",
-      "data": [0, 0, 0, 0, 0, 0, 0]
+      "label": "Terrans (8)",
+      "data": [0, 0, 2, 0, 0, 0, 9]
     }
   ]
 }

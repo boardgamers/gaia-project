@@ -1,5 +1,11 @@
-import { Faction } from "../enums";
+import { Faction, Resource } from "../enums";
+import Player from "../player";
+import Reward from "../reward";
 import { FactionBoardVariants } from "./types";
+
+function terranCharge(player: Player, amount: number) {
+  player.gainRewards([new Reward(amount, Resource.ChargePower)], Faction.Terrans);
+}
 
 const terrans: FactionBoardVariants = {
   faction: Faction.Terrans,
@@ -9,10 +15,11 @@ const terrans: FactionBoardVariants = {
       area1: 4,
     },
     handlers: {
-      discardGaia: (player, amount) => (player.data.power.area2 += amount),
-      "gaiaPhase-beforeTokenMove": (player) => {
-        player.data.power.area2 += player.data.power.gaia;
-        player.data.power.gaia = 0;
+      discardGaia: (player, amount) => {
+        terranCharge(player, amount);
+      },
+      "gaiaPhase-tokensMovedFromGaia": (player, amount) => {
+        terranCharge(player, amount);
       },
     },
   },

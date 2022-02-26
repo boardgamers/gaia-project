@@ -19,7 +19,16 @@
       y="-8"
     />
     <rect v-else-if="kind === 'tradeShip'" class="trade-ship" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
-    <rect v-else-if="['tg', 't->tg'].includes(kind)" class="gaia" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
+    <rect
+      v-else-if="['tg', 't->tg', 'tg->t'].includes(kind)"
+      class="gaia"
+      width="16"
+      height="16"
+      ry="8"
+      rx="8"
+      x="-8"
+      y="-8"
+    />
     <rect
       v-else-if="['pw', 'pay-pw', 't', 'bowl-t', 'burn-token', 'brainstone'].includes(kind)"
       class="power"
@@ -39,7 +48,7 @@
       <VictoryPoint width="15" height="15" />
     </g>
     <Building
-      v-else-if="kind == 'gf'"
+      v-else-if="kind == 'gf' || kind == 'gf->t'"
       building="gf"
       transform="translate(0.5, 0) scale(2.5)"
       :flat="flat"
@@ -156,9 +165,11 @@
             'burn-token',
             'tg',
             't->tg',
+            'tg->t',
             'vp',
             'q',
             'gf',
+            'gf->t',
             'tradeShip',
           ].includes(kind)) ||
         count === '+' ||

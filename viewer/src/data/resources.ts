@@ -58,7 +58,7 @@ export const resourceData: { [key in Resource]?: ResourceName } = {
     shortcut: "b",
     color: "--current-round",
   },
-  [Resource.TokenArea3]: colorCodes.gaia.add({
+  [Resource.MoveTokenFromArea3ToGaia]: colorCodes.gaia.add({
     label: "Token in area 3 to gaia",
     plural: "Tokens in area 3 to gaia",
   }),

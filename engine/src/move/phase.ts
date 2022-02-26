@@ -291,7 +291,7 @@ function handleNextGaia(engine: Engine, afterCommand = false) {
     return false;
   }
 
-  player.gaiaPhase();
+  player.gaiaPhaseEnd();
 
   if (!engine.moveToNextPlayer(engine.tempTurnOrder, { loop: false })) {
     endGaiaPhase(engine);
@@ -343,6 +343,7 @@ function beginGaiaPhase(engine: Engine) {
 function endGaiaPhase(engine: Engine) {
   engine.currentPlayer = engine.turnOrder[0];
   beginRoundMovePhase(engine);
+  engine.addAdvancedLog({ phase: Phase.RoundMove });
 }
 
 function beginRoundMovePhase(engine: Engine) {

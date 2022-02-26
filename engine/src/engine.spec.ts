@@ -773,7 +773,7 @@ describe("Engine", () => {
       `);
 
       const engine = new Engine(moves);
-      const log = engine.advancedLog.slice(-6);
+      const log = engine.advancedLog.slice(-7);
 
       expect(log[0].move).to.equal(9);
       expect(log[1].round).to.equal(1);

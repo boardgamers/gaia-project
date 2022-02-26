@@ -21,12 +21,12 @@ import {
   TechTile,
 } from "@gaia-project/engine";
 import { UPGRADE_RESEARCH_COST } from "@gaia-project/engine/src/available/types";
+import { AnyTechTile, AnyTechTilePos } from "@gaia-project/engine/src/enums";
 import { tradeCostSource, tradeSource } from "@gaia-project/engine/src/events";
 import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
 import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
-import { techTileRewards } from "@gaia-project/engine/src/tiles/techs";
+import { techTileEventSource, techTileRewards } from "@gaia-project/engine/src/tiles/techs";
 import { sum, uniq } from "lodash";
-import { isGaiaMove } from "../../data/log";
 import { resourceData } from "../../data/resources";
 import { colorCodes } from "../color-codes";
 import { ChartGroup, ChartSource } from "./charts";
@@ -47,7 +47,6 @@ const waste = "Waste";
 enum PowerChargeSource {
   freeLeech = "freeLeech",
   paidLeech = "paidLeech",
-  terrans = "terrans",
   powerLeverage = "powerLeverage",
 }
 
@@ -56,7 +55,6 @@ export type BalanceSheetSourceType = EventSource | typeof waste | PowerChargeSou
 export type BalanceSheetSourceTemplate = {
   incomeResources: Resource[];
   costResources: Resource[];
-  costFactor?: number;
   label: string;
   description?: string;
   color: string;
@@ -103,7 +101,7 @@ export function balanceSheetEventSources(expansion: Expansion): BalanceSheetSour
       description: "Tech Tiles income, including the free 4k for the free research step when gained",
       costResources: [],
       incomeResources: rewardTypes(
-        (TechTile.values(expansion) as (TechTile | AdvTechTile)[])
+        (TechTile.values(expansion) as AnyTechTile[])
           .concat(AdvTechTile.values(expansion))
           .flatMap((t) => techTileRewards(t))
       ),
@@ -138,7 +136,6 @@ export function balanceSheetEventSources(expansion: Expansion): BalanceSheetSour
       costResources: rewardTypes(Object.values(freeActionConversions).flatMap((c) => Reward.parse(c.cost))).concat(
         Resource.GainToken
       ), //for burn
-      costFactor: 2,
       incomeResources: rewardTypes(Object.values(freeActionConversions).flatMap((c) => Reward.parse(c.income))),
       eventSources: [Command.Spend],
       color: "--res-power",
@@ -146,7 +143,6 @@ export function balanceSheetEventSources(expansion: Expansion): BalanceSheetSour
     {
       label: "Power/Q.I.C Actions",
       costResources: rewardTypes(BoardAction.values(expansion).flatMap((a) => Reward.parse(boardActions[a].cost))),
-      costFactor: 2,
       incomeResources: eventTypes(
         BoardAction.values(expansion).flatMap((a) => Event.parse(boardActions[a].income, null))
       ),
@@ -155,14 +151,14 @@ export function balanceSheetEventSources(expansion: Expansion): BalanceSheetSour
     },
     {
       label: "Free Leech",
-      incomeResources: [Resource.ChargePower],
+      incomeResources: [Resource.ChargePower, Resource.GainToken],
       costResources: [],
       eventSources: [PowerChargeSource.freeLeech],
       color: "--res-power",
     },
     {
       label: "Paid Leech",
-      incomeResources: [Resource.ChargePower],
+      incomeResources: [Resource.ChargePower, Resource.GainToken],
       costResources: [],
       eventSources: [PowerChargeSource.paidLeech],
       color: "--res-qic",
@@ -179,7 +175,7 @@ export function balanceSheetEventSources(expansion: Expansion): BalanceSheetSour
       description: "Tokens are moved from the gaia area to area 2",
       incomeResources: [Resource.ChargePower],
       costResources: [],
-      eventSources: [PowerChargeSource.terrans],
+      eventSources: [Faction.Terrans],
       color: "--terra",
     },
     {
@@ -250,13 +246,25 @@ function resourceChanges<Source>(
           return 0;
         }
 
-        if (eventSource == Command.ChargePower && wantResource == Resource.ChargePower) {
-          if (eventSources.includes(PowerChargeSource.freeLeech)) {
-            return 1;
-          } else if (eventSources.includes(PowerChargeSource.paidLeech)) {
-            return r.count - 1;
+        if (eventSource == Command.ChargePower) {
+          if (wantResource == Resource.ChargePower) {
+            if (eventSources.includes(PowerChargeSource.freeLeech)) {
+              return 1;
+            } else if (eventSources.includes(PowerChargeSource.paidLeech)) {
+              return r.count - 1;
+            }
+            return 0;
+          } else if (wantResource == Resource.GainToken) {
+            const vpCost = Object.values(changes)
+              .flat()
+              .find((r) => r.type == Resource.VictoryPoint);
+            if (eventSources.includes(PowerChargeSource.freeLeech) && vpCost == null) {
+              return r.count;
+            } else if (eventSources.includes(PowerChargeSource.paidLeech) && vpCost != null) {
+              return r.count;
+            }
+            return 0;
           }
-          return 0;
         }
 
         return matchesEventSource(source, eventSource, r);
@@ -285,7 +293,7 @@ function newBalanceSource(
   };
 }
 
-function currentAmount(data: PlayerData, wantResource: Resource): number {
+export function currentAmount(data: PlayerData, wantResource: Resource): number {
   switch (wantResource) {
     case Resource.ChargePower:
       let brainstone = 0;
@@ -303,6 +311,10 @@ function currentAmount(data: PlayerData, wantResource: Resource): number {
   return data.getResources(wantResource);
 }
 
+function gainFactor(wantResource: Resource, amount: number) {
+  return wantResource == Resource.ChargePower && amount < 0 ? 2 * amount : amount;
+}
+
 export function balanceSheetExtractLog<Source>(
   getWantResource: (s: Source) => Resource,
   getSources: (s: Source) => BalanceSheetSourceType[],
@@ -315,18 +327,11 @@ export function balanceSheetExtractLog<Source>(
     const oldBrainstone = data.brainstone;
     const changes = simulateResources();
 
-    const eventSources = getSources(a.source);
-    if (
-      want.faction == Faction.Terrans &&
-      eventSources.includes(PowerChargeSource.terrans) &&
-      a.log.phase == Phase.RoundGaia
-    ) {
-      return data.power.gaia;
-    }
-
-    if (a.log.player != want.player) {
+    if (a.log.player != null && a.log.player != want.player) {
       return 0;
     }
+
+    const eventSources = getSources(a.source);
 
     const payPower = Object.values(changes).some((r) => r.some((r) => isPayPower(wantResource, r)));
     if (payPower) {
@@ -343,7 +348,7 @@ export function balanceSheetExtractLog<Source>(
     const implicitResearchCost =
       wantResource == Resource.Knowledge &&
       a.cmd?.command == Command.ChooseTechTile &&
-      (matchesEventSource(a.source, `tech-${a.cmd.args[0]}` as TechPos, UPGRADE_RESEARCH_COST) ||
+      (matchesEventSource(a.source, techTileEventSource(a.cmd.args[0] as AnyTechTilePos), UPGRADE_RESEARCH_COST) ||
         matchesEventSource(
           a.source,
           a.allCommands.some((c) => c.command == Command.Decline) ? waste : Command.UpgradeResearch,
@@ -353,25 +358,24 @@ export function balanceSheetExtractLog<Source>(
         : 0;
 
     const faction = want.faction;
-    const isTerranCharge = faction == Faction.Terrans && a.cmd != null && isGaiaMove([a.cmd]);
-    if (eventSources.includes(waste) && !isTerranCharge) {
+    if (eventSources.includes(waste)) {
       const diff = currentAmount(data, wantResource) - old;
-      const gain =
-        sum(
-          Object.values(changes)
-            .flat()
-            .map((r) => effectiveAmount(r, wantResource, faction)?.count ?? 0)
-        ) * (payPower ? 2 : 1);
+
+      const gain = sum(
+        Object.values(changes)
+          .flat()
+          .map((r) => gainFactor(wantResource, effectiveAmount(r, wantResource, faction)?.count ?? 0))
+      );
 
       const waste = gain - diff;
 
       if (waste < 0) {
         throw Error(
-          `negative waste in ${JSON.stringify(a.log)}: cmd=${JSON.stringify(
+          `negative waste ${waste} in ${JSON.stringify(a.log)}: cmd=${JSON.stringify(
             a.cmd
           )} resource=${wantResource} gain=${gain} diff=${diff} old=${old} payPower=${payPower} power=${JSON.stringify(
             data.power
-          )}`
+          )} brainstone=${data.brainstone} changes=${JSON.stringify(changes)}`
         );
       }
       return waste + implicitResearchCost;
@@ -416,7 +420,9 @@ export function balanceSheetResourceFactory(
       .concat(
         balanceSheetEventSources(expansion)
           .filter((s) => s.costResources.includes(wantResource))
-          .map((s) => newBalanceSource(s, "cost", -1 * (s.costFactor ?? 1), cost))
+          .map((s) =>
+            newBalanceSource(s, "cost", s.eventSources.includes(waste) ? -1 : gainFactor(wantResource, -1), cost)
+          )
       ),
   };
 }

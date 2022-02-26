@@ -6,17 +6,16 @@ import {
   Expansion,
   Faction,
   LogEntryChanges,
-  Phase,
   Player,
   PlayerData,
   Resource,
   Reward,
   TechPos,
 } from "@gaia-project/engine";
+import { LogEntryChange } from "@gaia-project/engine/src/engine";
 import { tradeCostSource, tradeSource } from "@gaia-project/engine/src/events";
 import { MoveTokens } from "@gaia-project/engine/src/player-data";
 import { sum } from "lodash";
-import { isGaiaMove } from "../../data/log";
 import { CommandObject } from "../recent";
 import { chartPlayerBoard } from "./charts";
 import { ExtractLog, ExtractLogArg } from "./simple-charts";
@@ -78,6 +77,8 @@ export function parsePowerUsage(command: CommandObject): MoveTokens | null {
 
 const commandEventSource = (c: CommandObject): EventSource[] => {
   switch (c.command) {
+    case Command.BurnPower:
+      return [Faction.Itars];
     case Command.Action:
     case Command.ChooseTechTile:
       return [c.args[0] as EventSource];
@@ -108,7 +109,9 @@ export function flattenChanges(changes: LogEntryChanges, source: EventSource): L
 
 export function newResourceSimulator(want: Player, expansions: Expansion): ResourceSimulator {
   const simulationPlayer = new Player();
+  simulationPlayer.faction = want.faction;
   const playerData = simulationPlayer.data;
+  playerData.buildings.ac2 = 1; //don't change gleens qic rewards
 
   const brainstoneSimulator = want.faction == Faction.Taklons ? new BrainstoneSimulator(playerData) : null;
 
@@ -128,7 +131,7 @@ export function newResourceSimulator(want: Player, expansions: Expansion): Resou
   }
 
   function gainRewards(source: EventSource, rewards: Reward[]) {
-    playerData.gainRewards(rewards);
+    simulationPlayer.gainRewards(rewards, null);
     commandChanges[source] = Reward.merge(rewards.concat(commandChanges[source] ?? []));
   }
 
@@ -157,7 +160,17 @@ export function newResourceSimulator(want: Player, expansions: Expansion): Resou
     }
   };
 
-  let gameEnded = false;
+  function consumeCommandChanges(cmd: CommandObject) {
+    if (changes) {
+      for (const eventSource of commandEventSource(cmd)) {
+        const change = changes[eventSource];
+        if (change) {
+          gainRewardsBySource(eventSource, change);
+          delete changes[eventSource];
+        }
+      }
+    }
+  }
 
   const consumeChanges = (cmd: CommandObject) => {
     const args = cmd.args;
@@ -198,6 +211,7 @@ export function newResourceSimulator(want: Player, expansions: Expansion): Resou
         break;
       case Command.BurnPower:
         gainRewards(Command.Spend, [new Reward(Number(args[0]), Resource.BurnToken)]);
+        consumeCommandChanges(cmd);
         break;
       case Command.ChooseIncome:
         const r = Reward.parse(args[0]);
@@ -207,34 +221,12 @@ export function newResourceSimulator(want: Player, expansions: Expansion): Resou
         changes = flattenChanges(changes, Command.ChooseIncome);
         break;
       default:
-        if (changes) {
-          for (const eventSource of commandEventSource(cmd)) {
-            const change = changes[eventSource];
-            if (change) {
-              gainRewardsBySource(eventSource, change);
-              delete changes[eventSource];
-            }
-          }
-        }
+        consumeCommandChanges(cmd);
     }
   };
 
-  let gaiaPhase = false;
-
   const simulateResources = (a: ExtractLogArg<any>) => {
     commandChanges = {};
-    switch (a.log.phase) {
-      case Phase.RoundGaia:
-        gaiaPhase = true;
-        return {};
-      case Phase.EndGame:
-        gameEnded = true;
-        return { [Command.Spend]: playerData.finalResourceHandling() };
-    }
-    if (gaiaPhase && !isGaiaMove(a.allCommands)) {
-      gaiaPhase = false;
-      simulationPlayer.gaiaPhase();
-    }
 
     if (a.log.player != want.player) {
       return {};
@@ -251,12 +243,17 @@ export function newResourceSimulator(want: Player, expansions: Expansion): Resou
     }
 
     if (isLastChange(a)) {
+      let terrans: LogEntryChange = null;
       for (const s in changes) {
-        if (gameEnded && s === Command.Spend) {
-          //the end game spend doesn't contain all resource changes (in older games), therefore we call finalResourceHandling manually
-          continue;
+        const change = changes[s];
+        if (s == Faction.Terrans) {
+          terrans = change;
+        } else {
+          gainRewardsBySource(s as EventSource, change);
         }
-        gainRewardsBySource(s as EventSource, changes[s]);
+      }
+      if (terrans != null) {
+        gainRewardsBySource(Faction.Terrans, terrans);
       }
       changes = null;
       processedChanges = null;
@@ -265,7 +262,7 @@ export function newResourceSimulator(want: Player, expansions: Expansion): Resou
   };
 
   const board = chartPlayerBoard(want);
-  simulationPlayer.loadBoard(board, 0, true);
+  simulationPlayer.loadBoard(board, 0, true, false);
   return { playerData, simulateResources };
 }
 
