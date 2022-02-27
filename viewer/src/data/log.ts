@@ -277,10 +277,12 @@ export function makeHistory(
     turn: 0,
     turnFactions: [],
   };
-  const newPhase = (newPhase: Phase, turn: number) => {
+  const newPhase = (newPhase: Phase, turn: number, clearTurnFactions: boolean) => {
     state.phase = newPhase;
     state.turn = turn;
-    state.turnFactions = [];
+    if (clearTurnFactions) {
+      state.turnFactions = [];
+    }
   };
 
   let advancedLogIndex = -1;
@@ -293,9 +295,9 @@ export function makeHistory(
       ret.push(makeEntry(data, state, recent.index > 0 && onlyRecent ? "moves-skipped" : Phase.SetupInit));
     } else if (entry?.round) {
       state.round = entry.round;
-      newPhase(Phase.RoundStart, 0);
+      newPhase(Phase.RoundStart, 0, true);
     } else if (entry?.phase) {
-      newPhase(entry?.phase, state.turn);
+      newPhase(entry?.phase, state.turn, false);
     }
     return entry;
   };
