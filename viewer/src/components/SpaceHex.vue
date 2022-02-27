@@ -30,6 +30,34 @@
         opacity=".5"
       />
 
+      <linearGradient
+        v-for="p in this.planetColors"
+        :key="`blg-${p.planet}`"
+        :id="`federation-gradient-big-line-${p.planet}`"
+        gradientUnits="userSpaceOnUse"
+        x1="-1"
+        y1="-1"
+        x2="1"
+        y2="1"
+        gradientTransform="rotate(135)"
+      >
+        <stop offset="10%" stop-opacity="0" />
+        <stop offset="50%" stop-opacity="1" :stop-color="p.color" />
+        <stop offset="90%" stop-opacity="0" />
+      </linearGradient>
+
+      <line
+        v-for="p in this.planetColors"
+        :key="`bl-${p.planet}`"
+        :id="`federation-big-line-${p.planet}`"
+        x1="0"
+        y1="0"
+        x2="0"
+        y2="0.9"
+        :stroke="`url(#federation-gradient-big-line-${p.planet})`"
+        stroke-width="1"
+      />
+
       <radialGradient
         v-for="p in this.planetColors"
         :key="`rg-${p.planet}`"
