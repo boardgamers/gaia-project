@@ -75,32 +75,3 @@ export function latestVariantVersion(variant: FactionVariant) {
 export function factionBoard(faction: Faction, variant?: FactionBoardRaw): FactionBoard {
   return new FactionBoard(factionBoards[faction], variant);
 }
-
-export function serializeFactionVariant(variant?: FactionBoardRaw) {
-  if (!variant) {
-    return variant;
-  }
-
-  const data = JSON.parse(JSON.stringify(variant));
-
-  if (variant?.handlers) {
-    for (const [event, handler] of Object.entries(variant.handlers)) {
-      data.handlers[event] = handler.toString().replace(/\r/g, "") as any;
-    }
-  }
-
-  return data;
-}
-
-export function deserializeFactionVariant(variant?: FactionBoardRaw) {
-  if (!variant?.handlers) {
-    return variant;
-  }
-
-  for (const [event, handler] of Object.entries(variant.handlers)) {
-    if (typeof handler === "string") {
-      variant.handlers[event] = (0, eval)(handler);
-    }
-  }
-  return variant;
-}
