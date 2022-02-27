@@ -293,7 +293,7 @@
   },
   {
     "round": 5,
-    "turn": 18,
+    "turn": 19,
     "changes": [],
     "color": "#000000",
     "textColor": "white",
@@ -303,7 +303,7 @@
   },
   {
     "round": 5,
-    "turn": 17,
+    "turn": 18,
     "changes": [
       {
         "source": "spend",
@@ -318,7 +318,7 @@
   },
   {
     "round": 5,
-    "turn": 17,
+    "turn": 18,
     "changes": [
       {
         "source": "spend",
@@ -333,7 +333,7 @@
   },
   {
     "round": 5,
-    "turn": 16,
+    "turn": 17,
     "changes": [
       {
         "source": "spend",
@@ -352,7 +352,7 @@
   },
   {
     "round": 5,
-    "turn": 16,
+    "turn": 17,
     "changes": [],
     "color": "#deffff",
     "textColor": "var(--res-power)",
@@ -362,7 +362,7 @@
   },
   {
     "round": 5,
-    "turn": 16,
+    "turn": 17,
     "changes": [
       {
         "source": "build",
@@ -381,7 +381,7 @@
   },
   {
     "round": 5,
-    "turn": 15,
+    "turn": 16,
     "changes": [
       {
         "source": "charge",
@@ -396,7 +396,7 @@
   },
   {
     "round": 5,
-    "turn": 15,
+    "turn": 16,
     "changes": [
       {
         "source": "build",
@@ -411,7 +411,7 @@
   },
   {
     "round": 5,
-    "turn": 15,
+    "turn": 16,
     "changes": [
       {
         "source": "spend",
@@ -434,7 +434,7 @@
   },
   {
     "round": 5,
-    "turn": 14,
+    "turn": 15,
     "changes": [],
     "color": "#bebebe",
     "textColor": "var(--res-power)",
@@ -444,7 +444,7 @@
   },
   {
     "round": 5,
-    "turn": 14,
+    "turn": 15,
     "changes": [
       {
         "source": "build",
@@ -467,7 +467,7 @@
   },
   {
     "round": 5,
-    "turn": 14,
+    "turn": 15,
     "changes": [
       {
         "source": "federation",
@@ -486,7 +486,7 @@
   },
   {
     "round": 5,
-    "turn": 13,
+    "turn": 14,
     "changes": [
       {
         "source": "build",
@@ -501,7 +501,7 @@
   },
   {
     "round": 5,
-    "turn": 13,
+    "turn": 14,
     "changes": [],
     "color": "#000000",
     "textColor": "white",
@@ -511,7 +511,7 @@
   },
   {
     "round": 5,
-    "turn": 12,
+    "turn": 13,
     "changes": [
       {
         "source": "spend",
@@ -538,7 +538,7 @@
   },
   {
     "round": 5,
-    "turn": 12,
+    "turn": 13,
     "changes": [],
     "color": "#deffff",
     "textColor": "var(--res-power)",
@@ -548,7 +548,7 @@
   },
   {
     "round": 5,
-    "turn": 12,
+    "turn": 13,
     "changes": [
       {
         "source": "charge",
@@ -563,7 +563,7 @@
   },
   {
     "round": 5,
-    "turn": 12,
+    "turn": 13,
     "changes": [
       {
         "source": "build",
@@ -582,7 +582,7 @@
   },
   {
     "round": 5,
-    "turn": 11,
+    "turn": 12,
     "changes": [
       {
         "source": "charge",
@@ -597,7 +597,7 @@
   },
   {
     "round": 5,
-    "turn": 11,
+    "turn": 12,
     "changes": [
       {
         "source": "charge",
@@ -612,7 +612,7 @@
   },
   {
     "round": 5,
-    "turn": 11,
+    "turn": 12,
     "changes": [
       {
         "source": "build",
@@ -627,7 +627,7 @@
   },
   {
     "round": 5,
-    "turn": 11,
+    "turn": 12,
     "changes": [
       {
         "source": "up",
@@ -646,7 +646,7 @@
   },
   {
     "round": 5,
-    "turn": 10,
+    "turn": 11,
     "changes": [
       {
         "source": "charge",
@@ -661,7 +661,7 @@
   },
   {
     "round": 5,
-    "turn": 10,
+    "turn": 11,
     "changes": [],
     "color": "#deffff",
     "textColor": "var(--res-power)",
@@ -671,7 +671,7 @@
   },
   {
     "round": 5,
-    "turn": 10,
+    "turn": 11,
     "changes": [
       {
         "source": "build",
@@ -686,7 +686,7 @@
   },
   {
     "round": 5,
-    "turn": 10,
+    "turn": 11,
     "changes": [
       {
         "source": "up",
@@ -724,7 +724,7 @@
   },
   {
     "round": 5,
-    "turn": 9,
+    "turn": 10,
     "changes": [
       {
         "source": "up",
@@ -743,7 +743,7 @@
   },
   {
     "round": 5,
-    "turn": 9,
+    "turn": 10,
     "changes": [],
     "color": "#deffff",
     "textColor": "var(--res-power)",
@@ -753,7 +753,7 @@
   },
   {
     "round": 5,
-    "turn": 9,
+    "turn": 10,
     "changes": [
       {
         "source": "build",
@@ -787,7 +787,7 @@
   },
   {
     "round": 5,
-    "turn": 8,
+    "turn": 9,
     "changes": [
       {
         "source": "up",
@@ -814,7 +814,7 @@
   },
   {
     "round": 5,
-    "turn": 8,
+    "turn": 9,
     "changes": [
       {
         "source": "build",
@@ -867,7 +867,7 @@
   },
   {
     "round": 5,
-    "turn": 7,
+    "turn": 8,
     "changes": [
       {
         "source": "qic3",
@@ -882,7 +882,7 @@
   },
   {
     "round": 5,
-    "turn": 7,
+    "turn": 8,
     "changes": [],
     "color": "#000000",
     "textColor": "white",
@@ -911,7 +911,7 @@
   },
   {
     "round": 5,
-    "turn": 6,
+    "turn": 7,
     "changes": [
       {
         "source": "spend",
@@ -930,7 +930,7 @@
   },
   {
     "round": 5,
-    "turn": 6,
+    "turn": 7,
     "changes": [
       {
         "source": "power7",
@@ -998,7 +998,7 @@
   },
   {
     "round": 5,
-    "turn": 5,
+    "turn": 6,
     "changes": [
       {
         "source": "charge",
@@ -1013,7 +1013,7 @@
   },
   {
     "round": 5,
-    "turn": 5,
+    "turn": 6,
     "changes": [
       {
         "source": "spend",
@@ -1036,7 +1036,7 @@
   },
   {
     "round": 5,
-    "turn": 5,
+    "turn": 6,
     "changes": [
       {
         "source": "charge",
@@ -1051,7 +1051,7 @@
   },
   {
     "round": 5,
-    "turn": 5,
+    "turn": 6,
     "changes": [
       {
         "source": "charge",
@@ -1066,7 +1066,7 @@
   },
   {
     "round": 5,
-    "turn": 5,
+    "turn": 6,
     "changes": [
       {
         "source": "build",
@@ -1134,7 +1134,7 @@
   },
   {
     "round": 5,
-    "turn": 4,
+    "turn": 5,
     "changes": [
       {
         "source": "up",
@@ -1153,7 +1153,7 @@
   },
   {
     "round": 5,
-    "turn": 4,
+    "turn": 5,
     "changes": [
       {
         "source": "build",
@@ -1202,7 +1202,7 @@
   },
   {
     "round": 5,
-    "turn": 3,
+    "turn": 4,
     "changes": [
       {
         "source": "power5",
@@ -1217,7 +1217,7 @@
   },
   {
     "round": 5,
-    "turn": 3,
+    "turn": 4,
     "changes": [
       {
         "source": "adv-gaia (3k special action)",
@@ -1319,7 +1319,7 @@
   },
   {
     "round": 5,
-    "turn": 2,
+    "turn": 3,
     "changes": [
       {
         "source": "tech-nav (4pw special action)",
@@ -1338,7 +1338,7 @@
   },
   {
     "round": 5,
-    "turn": 2,
+    "turn": 3,
     "changes": [
       {
         "source": "power4",
@@ -1406,7 +1406,7 @@
   },
   {
     "round": 5,
-    "turn": 1,
+    "turn": 2,
     "changes": [
       {
         "source": "power3",
@@ -1421,7 +1421,7 @@
   },
   {
     "round": 5,
-    "turn": 1,
+    "turn": 2,
     "changes": [
       {
         "source": "tech-nav (4pw special action)",
@@ -1663,7 +1663,7 @@
   },
   {
     "round": 4,
-    "turn": 12,
+    "turn": 13,
     "changes": [
       {
         "source": "spend",
@@ -1682,7 +1682,7 @@
   },
   {
     "round": 4,
-    "turn": 12,
+    "turn": 13,
     "changes": [],
     "color": "#000000",
     "textColor": "white",
@@ -1692,7 +1692,7 @@
   },
   {
     "round": 4,
-    "turn": 11,
+    "turn": 12,
     "changes": [
       {
         "source": "tech-nav (4pw special action)",
@@ -1711,7 +1711,7 @@
   },
   {
     "round": 4,
-    "turn": 11,
+    "turn": 12,
     "changes": [],
     "color": "#000000",
     "textColor": "white",
@@ -1721,7 +1721,7 @@
   },
   {
     "round": 4,
-    "turn": 10,
+    "turn": 11,
     "changes": [
       {
         "source": "charge",
@@ -1736,7 +1736,7 @@
   },
   {
     "round": 4,
-    "turn": 10,
+    "turn": 11,
     "changes": [
       {
         "source": "build",
@@ -1755,7 +1755,7 @@
   },
   {
     "round": 4,
-    "turn": 10,
+    "turn": 11,
     "changes": [
       {
         "source": "build",
@@ -1774,7 +1774,7 @@
   },
   {
     "round": 4,
-    "turn": 9,
+    "turn": 10,
     "changes": [
       {
         "source": "spend",
@@ -1793,7 +1793,7 @@
   },
   {
     "round": 4,
-    "turn": 9,
+    "turn": 10,
     "changes": [
       {
         "source": "build",
@@ -1808,7 +1808,7 @@
   },
   {
     "round": 4,
-    "turn": 8,
+    "turn": 9,
     "changes": [
       {
         "source": "income",
@@ -1823,7 +1823,7 @@
   },
   {
     "round": 4,
-    "turn": 8,
+    "turn": 9,
     "changes": [
       {
         "source": "build",
@@ -1842,7 +1842,7 @@
   },
   {
     "round": 4,
-    "turn": 7,
+    "turn": 8,
     "changes": [
       {
         "source": "build",
@@ -1861,7 +1861,7 @@
   },
   {
     "round": 4,
-    "turn": 7,
+    "turn": 8,
     "changes": [
       {
         "source": "spend",
@@ -1903,7 +1903,7 @@
   },
   {
     "round": 4,
-    "turn": 6,
+    "turn": 7,
     "changes": [
       {
         "source": "charge",
@@ -1918,7 +1918,7 @@
   },
   {
     "round": 4,
-    "turn": 6,
+    "turn": 7,
     "changes": [
       {
         "source": "charge",
@@ -1933,7 +1933,7 @@
   },
   {
     "round": 4,
-    "turn": 6,
+    "turn": 7,
     "changes": [
       {
         "source": "build",
@@ -1948,7 +1948,7 @@
   },
   {
     "round": 4,
-    "turn": 6,
+    "turn": 7,
     "changes": [
       {
         "source": "spend",
@@ -1996,7 +1996,7 @@
   },
   {
     "round": 4,
-    "turn": 5,
+    "turn": 6,
     "changes": [
       {
         "source": "charge",
@@ -2011,7 +2011,7 @@
   },
   {
     "round": 4,
-    "turn": 5,
+    "turn": 6,
     "changes": [
       {
         "source": "charge",
@@ -2026,7 +2026,7 @@
   },
   {
     "round": 4,
-    "turn": 5,
+    "turn": 6,
     "changes": [
       {
         "source": "build",
@@ -2041,7 +2041,7 @@
   },
   {
     "round": 4,
-    "turn": 5,
+    "turn": 6,
     "changes": [
       {
         "source": "adv-gaia (3k special action)",
@@ -2121,7 +2121,7 @@
   },
   {
     "round": 4,
-    "turn": 4,
+    "turn": 5,
     "changes": [
       {
         "source": "up",
@@ -2148,7 +2148,7 @@
   },
   {
     "round": 4,
-    "turn": 4,
+    "turn": 5,
     "changes": [],
     "color": "#000000",
     "textColor": "white",
@@ -2222,7 +2222,7 @@
   },
   {
     "round": 4,
-    "turn": 3,
+    "turn": 4,
     "changes": [
       {
         "source": "up",
@@ -2241,7 +2241,7 @@
   },
   {
     "round": 4,
-    "turn": 3,
+    "turn": 4,
     "changes": [
       {
         "source": "build",
@@ -2313,7 +2313,7 @@
   },
   {
     "round": 4,
-    "turn": 2,
+    "turn": 3,
     "changes": [
       {
         "source": "power4",
@@ -2328,7 +2328,7 @@
   },
   {
     "round": 4,
-    "turn": 2,
+    "turn": 3,
     "changes": [
       {
         "source": "charge",
@@ -2343,7 +2343,7 @@
   },
   {
     "round": 4,
-    "turn": 2,
+    "turn": 3,
     "changes": [
       {
         "source": "build",
@@ -2421,7 +2421,7 @@
   },
   {
     "round": 4,
-    "turn": 1,
+    "turn": 2,
     "changes": [
       {
         "source": "power3",
@@ -2436,7 +2436,7 @@
   },
   {
     "round": 4,
-    "turn": 1,
+    "turn": 2,
     "changes": [
       {
         "source": "power7",
@@ -2708,7 +2708,7 @@
   },
   {
     "round": 3,
-    "turn": 11,
+    "turn": 12,
     "changes": [
       {
         "source": "spend",
@@ -2727,7 +2727,7 @@
   },
   {
     "round": 3,
-    "turn": 11,
+    "turn": 12,
     "changes": [
       {
         "source": "booster9 (4pw, 4 VP / PI or academy)",
@@ -2742,7 +2742,7 @@
   },
   {
     "round": 3,
-    "turn": 10,
+    "turn": 11,
     "changes": [
       {
         "source": "up",
@@ -2761,7 +2761,7 @@
   },
   {
     "round": 3,
-    "turn": 10,
+    "turn": 11,
     "changes": [
       {
         "source": "charge",
@@ -2776,7 +2776,7 @@
   },
   {
     "round": 3,
-    "turn": 10,
+    "turn": 11,
     "changes": [
       {
         "source": "build",
@@ -2791,7 +2791,7 @@
   },
   {
     "round": 3,
-    "turn": 9,
+    "turn": 10,
     "changes": [
       {
         "source": "build",
@@ -2806,7 +2806,7 @@
   },
   {
     "round": 3,
-    "turn": 9,
+    "turn": 10,
     "changes": [
       {
         "source": "itars",
@@ -2829,7 +2829,7 @@
   },
   {
     "round": 3,
-    "turn": 8,
+    "turn": 9,
     "changes": [
       {
         "source": "up",
@@ -2852,7 +2852,7 @@
   },
   {
     "round": 3,
-    "turn": 8,
+    "turn": 9,
     "changes": [
       {
         "source": "up",
@@ -2871,7 +2871,7 @@
   },
   {
     "round": 3,
-    "turn": 7,
+    "turn": 8,
     "changes": [
       {
         "source": "build",
@@ -2886,7 +2886,7 @@
   },
   {
     "round": 3,
-    "turn": 7,
+    "turn": 8,
     "changes": [],
     "color": "#deffff",
     "textColor": "var(--res-power)",
@@ -2896,7 +2896,7 @@
   },
   {
     "round": 3,
-    "turn": 7,
+    "turn": 8,
     "changes": [
       {
         "source": "build",
@@ -2915,7 +2915,7 @@
   },
   {
     "round": 3,
-    "turn": 6,
+    "turn": 7,
     "changes": [
       {
         "source": "tech-nav (4pw special action)",
@@ -2934,7 +2934,7 @@
   },
   {
     "round": 3,
-    "turn": 6,
+    "turn": 7,
     "changes": [],
     "color": "#2080f0",
     "textColor": "black",
@@ -2944,7 +2944,7 @@
   },
   {
     "round": 3,
-    "turn": 6,
+    "turn": 7,
     "changes": [
       {
         "source": "itars",
@@ -2963,7 +2963,7 @@
   },
   {
     "round": 3,
-    "turn": 5,
+    "turn": 6,
     "changes": [
       {
         "source": "charge",
@@ -2978,7 +2978,7 @@
   },
   {
     "round": 3,
-    "turn": 5,
+    "turn": 6,
     "changes": [
       {
         "source": "build",
@@ -3005,7 +3005,7 @@
   },
   {
     "round": 3,
-    "turn": 5,
+    "turn": 6,
     "changes": [
       {
         "source": "up",
@@ -3020,7 +3020,7 @@
   },
   {
     "round": 3,
-    "turn": 5,
+    "turn": 6,
     "changes": [
       {
         "source": "itars",
@@ -3039,7 +3039,7 @@
   },
   {
     "round": 3,
-    "turn": 4,
+    "turn": 5,
     "changes": [
       {
         "source": "power4",
@@ -3054,7 +3054,7 @@
   },
   {
     "round": 3,
-    "turn": 4,
+    "turn": 5,
     "changes": [
       {
         "source": "charge",
@@ -3069,7 +3069,7 @@
   },
   {
     "round": 3,
-    "turn": 4,
+    "turn": 5,
     "changes": [
       {
         "source": "charge",
@@ -3084,7 +3084,7 @@
   },
   {
     "round": 3,
-    "turn": 4,
+    "turn": 5,
     "changes": [
       {
         "source": "build",
@@ -3103,7 +3103,7 @@
   },
   {
     "round": 3,
-    "turn": 4,
+    "turn": 5,
     "changes": [
       {
         "source": "build",
@@ -3118,7 +3118,7 @@
   },
   {
     "round": 3,
-    "turn": 3,
+    "turn": 4,
     "changes": [
       {
         "source": "income",
@@ -3133,7 +3133,7 @@
   },
   {
     "round": 3,
-    "turn": 3,
+    "turn": 4,
     "changes": [
       {
         "source": "charge",
@@ -3148,7 +3148,7 @@
   },
   {
     "round": 3,
-    "turn": 3,
+    "turn": 4,
     "changes": [
       {
         "source": "build",
@@ -3171,7 +3171,7 @@
   },
   {
     "round": 3,
-    "turn": 3,
+    "turn": 4,
     "changes": [
       {
         "source": "adv-terra (3 VP / federation when passing)",
@@ -3186,7 +3186,7 @@
   },
   {
     "round": 3,
-    "turn": 3,
+    "turn": 4,
     "changes": [
       {
         "source": "charge",
@@ -3201,7 +3201,7 @@
   },
   {
     "round": 3,
-    "turn": 3,
+    "turn": 4,
     "changes": [
       {
         "source": "build",
@@ -3216,7 +3216,7 @@
   },
   {
     "round": 3,
-    "turn": 2,
+    "turn": 3,
     "changes": [
       {
         "source": "charge",
@@ -3231,7 +3231,7 @@
   },
   {
     "round": 3,
-    "turn": 2,
+    "turn": 3,
     "changes": [
       {
         "source": "build",
@@ -3250,7 +3250,7 @@
   },
   {
     "round": 3,
-    "turn": 2,
+    "turn": 3,
     "changes": [
       {
         "source": "charge",
@@ -3265,7 +3265,7 @@
   },
   {
     "round": 3,
-    "turn": 2,
+    "turn": 3,
     "changes": [
       {
         "source": "charge",
@@ -3280,7 +3280,7 @@
   },
   {
     "round": 3,
-    "turn": 2,
+    "turn": 3,
     "changes": [
       {
         "source": "build",
@@ -3299,7 +3299,7 @@
   },
   {
     "round": 3,
-    "turn": 2,
+    "turn": 3,
     "changes": [
       {
         "source": "charge",
@@ -3314,7 +3314,7 @@
   },
   {
     "round": 3,
-    "turn": 2,
+    "turn": 3,
     "changes": [
       {
         "source": "spend",
@@ -3337,7 +3337,7 @@
   },
   {
     "round": 3,
-    "turn": 2,
+    "turn": 3,
     "changes": [
       {
         "source": "up",
@@ -3352,7 +3352,7 @@
   },
   {
     "round": 3,
-    "turn": 1,
+    "turn": 2,
     "changes": [
       {
         "source": "power5",
@@ -3367,7 +3367,7 @@
   },
   {
     "round": 3,
-    "turn": 1,
+    "turn": 2,
     "changes": [
       {
         "source": "charge",
@@ -3382,7 +3382,7 @@
   },
   {
     "round": 3,
-    "turn": 1,
+    "turn": 2,
     "changes": [
       {
         "source": "power6",
@@ -3401,7 +3401,7 @@
   },
   {
     "round": 3,
-    "turn": 1,
+    "turn": 2,
     "changes": [
       {
         "source": "spend",
@@ -3424,7 +3424,7 @@
   },
   {
     "round": 3,
-    "turn": 1,
+    "turn": 2,
     "changes": [
       {
         "source": "power3",
