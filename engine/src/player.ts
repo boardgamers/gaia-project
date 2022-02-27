@@ -29,13 +29,7 @@ import {
   TechTilePos,
 } from "./enums";
 import Event, { EventSource } from "./events";
-import {
-  deserializeFactionVariant,
-  factionBoard,
-  FactionBoard,
-  FactionBoardRaw,
-  serializeFactionVariant,
-} from "./faction-boards";
+import { factionBoard, FactionBoard, FactionBoardRaw } from "./faction-boards";
 import { FactionBoardVariant } from "./faction-boards/types";
 import { factionPlanet } from "./factions";
 import { federationCost, FederationInfo, isOutclassedBy, parseFederationLocation } from "./federation";
@@ -169,7 +163,7 @@ export default class Player extends EventEmitter {
       name: this.name,
       dropped: this.dropped,
       variant: this.variant && {
-        board: serializeFactionVariant(this.variant.board),
+        board: this.variant.board,
         version: this.variant.version,
       },
       factionLoaded: !!this.board,
@@ -200,13 +194,12 @@ export default class Player extends EventEmitter {
       // Legacy
       if (data.factionVariant) {
         player.variant = {
-          board: deserializeFactionVariant(data.factionVariant),
+          board: data.factionVariant,
           version: data.factionVariantVersion,
         };
       } else {
         // Not Legacy
         player.variant = data.variant;
-        deserializeFactionVariant(player.variant.board);
       }
       board = player.variant;
     }
