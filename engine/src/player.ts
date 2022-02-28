@@ -244,13 +244,13 @@ export default class Player extends EventEmitter {
 
   payCosts(costs: Reward[], source: EventSource) {
     for (const cost of costs) {
-      this.data.gainReward(this.factionReward(cost, source, true), true, source);
+      this.data.gainReward(this.factionReward(cost, source, false), true, source);
     }
   }
 
   gainRewards(rewards: Reward[], source: EventSource) {
     this.data.gainRewards(
-      rewards.map((rew) => this.factionReward(rew, source, false)),
+      rewards.map((rew) => this.factionReward(rew, source, true)),
       false,
       source
     );
@@ -886,13 +886,13 @@ export default class Player extends EventEmitter {
     this.receiveTriggerIncome(Condition.Federation);
   }
 
-  factionReward(reward: Reward, source: EventSource, pay: boolean): Reward {
+  factionReward(reward: Reward, source: EventSource, gleensQic: boolean): Reward {
     if (this.faction === Faction.Terrans && reward.type === Resource.GainTokenGaiaArea) {
       return new Reward(-reward.count, Resource.MoveTokenFromGaiaAreaToArea1);
     }
     // this is for Gleens getting ore instead of qics until Academy2
     if (
-      !pay &&
+      gleensQic &&
       source !== Phase.BeginGame &&
       this.faction === Faction.Gleens &&
       this.data.buildings[Building.Academy2] === 0 &&

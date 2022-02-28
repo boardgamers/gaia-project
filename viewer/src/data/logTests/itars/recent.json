@@ -132,16 +132,7 @@
           }
         ],
         [],
-        [
-          {
-            "building": {
-              "type": "ac2",
-              "faction": "geodens",
-              "count": 1,
-              "skipResource": false
-            }
-          }
-        ],
+        [],
         [
           {
             "text": ""
@@ -305,7 +296,7 @@
             "building": {
               "type": "ac2",
               "faction": "taklons",
-              "count": 2,
+              "count": 1,
               "skipResource": false
             }
           }
@@ -468,16 +459,7 @@
             }
           }
         ],
-        [
-          {
-            "building": {
-              "type": "ac2",
-              "faction": "lantids",
-              "count": 1,
-              "skipResource": false
-            }
-          }
-        ],
+        [],
         [
           {
             "text": ""
@@ -619,16 +601,7 @@
             }
           }
         ],
-        [
-          {
-            "building": {
-              "type": "ac2",
-              "faction": "itars",
-              "count": 1,
-              "skipResource": false
-            }
-          }
-        ],
+        [],
         [
           {
             "text": "0/3"
@@ -784,7 +757,7 @@
             "building": {
               "type": "ac2",
               "faction": "taklons",
-              "count": 2,
+              "count": 1,
               "skipResource": false
             }
           }
@@ -934,16 +907,7 @@
           }
         ],
         [],
-        [
-          {
-            "building": {
-              "type": "ac2",
-              "faction": "geodens",
-              "count": 1,
-              "skipResource": false
-            }
-          }
-        ],
+        [],
         [
           {
             "text": ""
@@ -1110,16 +1074,7 @@
             }
           }
         ],
-        [
-          {
-            "building": {
-              "type": "ac2",
-              "faction": "itars",
-              "count": 1,
-              "skipResource": false
-            }
-          }
-        ],
+        [],
         [
           {
             "text": "0/3"

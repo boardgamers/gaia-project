@@ -111,7 +111,6 @@ export function newResourceSimulator(want: Player, expansions: Expansion): Resou
   const simulationPlayer = new Player();
   simulationPlayer.faction = want.faction;
   const playerData = simulationPlayer.data;
-  playerData.buildings.ac2 = 1; //don't change gleens qic rewards
 
   const brainstoneSimulator = want.faction == Faction.Taklons ? new BrainstoneSimulator(playerData) : null;
 
@@ -131,7 +130,12 @@ export function newResourceSimulator(want: Player, expansions: Expansion): Resou
   }
 
   function gainRewards(source: EventSource, rewards: Reward[]) {
-    simulationPlayer.gainRewards(rewards, null);
+    simulationPlayer.data.gainRewards(
+      rewards.map((rew) => simulationPlayer.factionReward(rew, source, false)),
+      false,
+      null
+    );
+
     commandChanges[source] = Reward.merge(rewards.concat(commandChanges[source] ?? []));
   }
 
