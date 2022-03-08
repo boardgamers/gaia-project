@@ -60,14 +60,19 @@ export function playerFederationLines(grid: Grid<GaiaHex>, hex: GaiaHex, player:
   const building = hex.colonizedBy(player.player);
 
   return directions
-    .filter((d) => !skipped.includes(d))
-    .map((direction) => {
+    .flatMap((direction) => {
       const gaiaHex = grid.neighbour(hex, direction);
-      const line = building && gaiaHex.colonizedBy(player.player) ? "big-line" : "line";
-      return {
-        rotate: rotate(direction),
-        id: `#federation-${line}-${factionPlanet(player.faction)}`,
-      };
+      const big = gaiaHex.colonizedBy(player.player) && building;
+      if (!big && skipped.includes(direction)) {
+        return [];
+      }
+      const line = big ? "big-line" : "line";
+      return [
+        {
+          rotate: rotate(direction),
+          id: `#federation-${line}-${factionPlanet(player.faction)}`,
+        },
+      ];
     })
     .concat(arcs);
 }

@@ -85,8 +85,13 @@
     </defs>
     <title v-text="tooltip" />
     <use xlink:href="#space-hex" :class="polygonClasses(hex)" @click="hexClick(hex)" />
-
-    <use v-for="(l, i) in federationLines" :key="`fl-${i}`" :xlink:href="l.id" :transform="`rotate(${l.rotate})`" />
+    <use
+      v-for="(l, i) in federationLines"
+      :key="`fl-${i}`"
+      :xlink:href="l.id"
+      :transform="`rotate(${l.rotate})`"
+      pointer-events="none"
+    />
     <text class="sector-name" v-if="isCenter">
       {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
     </text>

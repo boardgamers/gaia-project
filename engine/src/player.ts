@@ -1193,7 +1193,7 @@ export default class Player extends EventEmitter {
 
     assert(!outclasser, "Federation is outclassed by other federation at " + (outclasser?.hexes ?? []).join(","));
 
-    // Check if federation can be built with less satellites
+    // Check if federation can be built with fewer satellites
     if (!flexible) {
       const allHexes = [...map.grid.values()].filter((hex) => !excluded.has(hex));
 
@@ -1225,7 +1225,7 @@ export default class Player extends EventEmitter {
         const info2 = this.federationInfo(smallFederation);
         assert(
           info2.satellites >= info.satellites,
-          "The federation can be built with less satellites, for example: " + path.join(",")
+          "The federation can be built with fewer satellites, for example: " + path.join(",")
         );
       }
     }

@@ -31,7 +31,7 @@ describe("Federations", () => {
     expect(() => engine.move("ambas federation -2x3,-2x2,-1x1,0x0 fed3.")).to.throw();
   });
 
-  it("should force to add a mine to the federation if it means less satellites", function () {
+  it("should force to add a mine to the federation if it means fewer satellites", function () {
     this.timeout(10000);
 
     const engine = new Engine(game3.moveHistory, game3.options);
