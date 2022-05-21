@@ -3,7 +3,7 @@ import crypto from "crypto";
 import { set } from "lodash";
 import Engine, { EngineOptions } from "./src/engine";
 import { Round } from "./src/enums";
-import { defaultAutoCharge } from "./src/player";
+import { defaultAutoCharge, defaultAutoChargeTargetSpendablePower } from "./src/player";
 
 export async function init(
   nbPlayers: number,
@@ -42,6 +42,7 @@ export function setPlayerSettings(
   player: number,
   settings: {
     autoCharge?: string;
+    autoChargeTargetSpendablePower?: string;
     autoIncome?: boolean;
     autoBrainstone?: boolean;
     itarsAutoChargeToArea3?: boolean;
@@ -52,6 +53,13 @@ export function setPlayerSettings(
       engine.players[player],
       "settings.autoChargePower",
       isNaN(settings.autoCharge as any) ? settings.autoCharge : Number(settings.autoCharge)
+    );
+  }
+  if ("autoChargeTargetSpendablePower" in settings) {
+    set(
+      engine.players[player],
+      "settings.autoChargeTargetSpendablePower",
+      Number(settings.autoChargeTargetSpendablePower)
     );
   }
   if ("autoIncome" in settings) {
@@ -70,6 +78,9 @@ export function setPlayerSettings(
 export function playerSettings(engine: Engine, player: number) {
   return {
     autoCharge: String(engine.players[player].settings?.autoChargePower ?? defaultAutoCharge),
+    autoChargeTargetSpendablePower: String(
+      engine.players[player].settings?.autoChargeTargetSpendablePower ?? defaultAutoChargeTargetSpendablePower
+    ),
     autoIncome: !!engine.players[player].settings?.autoIncome,
     autoBrainstone: !!engine.players[player].settings?.autoBrainstone,
     itarsAutoChargeToArea3: !!engine.players[player].settings?.itarsAutoChargeToArea3,
