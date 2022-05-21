@@ -98,7 +98,14 @@ describe("AutoCharge", () => {
   describe("decideChargeRequest", () => {
     const tests: {
       name: string;
-      give: { power: number; autoCharge: AutoCharge; lastRound?: boolean; playerHasPassed?: boolean };
+      give: {
+        power: number;
+        autoCharge: AutoCharge;
+        autoChargeTargetSpendablePower?: number;
+        powerInArea3?: number;
+        lastRound?: boolean;
+        playerHasPassed?: boolean;
+      };
       want: ChargeDecision;
     }[] = [
       {
@@ -131,12 +138,24 @@ describe("AutoCharge", () => {
         give: { power: 2, autoCharge: 1 },
         want: ChargeDecision.Ask,
       },
+      {
+        name: "target power is already satisfied",
+        give: { power: 2, autoCharge: 1, powerInArea3: 3, autoChargeTargetSpendablePower: 3 },
+        want: ChargeDecision.Ask,
+      },
+      {
+        name: "target power overrides decision",
+        give: { power: 2, autoCharge: 1, powerInArea3: 2, autoChargeTargetSpendablePower: 3 },
+        want: ChargeDecision.Yes,
+      },
     ];
 
     for (const test of tests) {
       it(test.name, () => {
         const player = new Player();
         player.settings.autoChargePower = test.give.autoCharge;
+        player.settings.autoChargeTargetSpendablePower = test.give.autoChargeTargetSpendablePower;
+        player.data.power.area3 = test.give.powerInArea3;
 
         const offer = new Offer(
           `${test.give.power}${Resource.ChargePower}`,

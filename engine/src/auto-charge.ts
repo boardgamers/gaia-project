@@ -68,6 +68,7 @@ export class ChargeRequest {
 const chargeRules: ((ChargeRequest) => ChargeDecision)[] = [
   askOrDeclineForPassedPlayer,
   (r: ChargeRequest) => askForMultipleTaklonsOffers(r.offers, r.player.settings.autoBrainstone),
+  (r: ChargeRequest) => allowBasedOnTargetPower(r.player),
   (r: ChargeRequest) => askOrDeclineBasedOnCost(r.minCharge, r.maxCharge, r.player.settings.autoChargePower),
   askForItars,
   () => ChargeDecision.Yes,
@@ -120,6 +121,13 @@ function askForMultipleTaklonsOffers(offers: Offer[], autoBrainstone: boolean): 
   }
   if (offers.length > 1) {
     return ChargeDecision.Ask;
+  }
+  return ChargeDecision.Undecided;
+}
+
+export function allowBasedOnTargetPower(player: Player) {
+  if (player.data.spendablePowerTokens() < player.settings.autoChargeTargetSpendablePower) {
+    return ChargeDecision.Yes;
   }
   return ChargeDecision.Undecided;
 }
