@@ -4,6 +4,12 @@ import Player from "../player";
 import Reward from "../reward";
 import { FactionBoardVariants } from "./types";
 
+function gaiaVp(hex: GaiaHex, player: Player) {
+  if (hex.data.planet === Planet.Gaia) {
+    player.gainRewards([new Reward("2vp")], Faction.Gleens);
+  }
+}
+
 const gleens: FactionBoardVariants = {
   faction: Faction.Gleens,
   standard: {
@@ -15,11 +21,8 @@ const gleens: FactionBoardVariants = {
     income: ["3k,4o,15c,up-nav", "+o,k"],
     handlers: {
       [`build-${Building.PlanetaryInstitute}`]: (player: Player) => player.gainFederationToken(Federation.Gleens),
-      [`build-${Building.Mine}`]: (player: Player, hex: GaiaHex) => {
-        if (hex.data.planet === Planet.Gaia) {
-          player.gainRewards([new Reward("2vp")], Faction.Gleens);
-        }
-      },
+      [`build-${Building.Mine}`]: (player: Player, hex: GaiaHex) => gaiaVp(hex, player),
+      [`build-${Building.Colony}`]: (player: Player, hex: GaiaHex) => gaiaVp(hex, player),
     },
   },
   variants: [
