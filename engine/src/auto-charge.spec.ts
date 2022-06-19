@@ -154,7 +154,7 @@ describe("AutoCharge", () => {
       it(test.name, () => {
         const player = new Player();
         player.settings.autoChargePower = test.give.autoCharge;
-        player.settings.autoChargeTargetSpendablePower = test.give.autoChargeTargetSpendablePower;
+        player.settings.autoChargeTargetSpendablePower = test.give.autoChargeTargetSpendablePower ?? 0;
         player.data.power.area3 = test.give.powerInArea3;
 
         const offer = new Offer(
@@ -165,6 +165,9 @@ describe("AutoCharge", () => {
         const request = new ChargeRequest(player, [offer], test.give.lastRound, test.give.playerHasPassed, null);
         const decision = decideChargeRequest(request);
         expect(decision).to.equal(test.want);
+        if (decision === ChargeDecision.Yes) {
+          expect(request.maxAllowedOffer?.offer).to.equal(`${test.give.power}pw`);
+        }
       });
     }
   });

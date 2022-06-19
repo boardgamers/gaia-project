@@ -30,7 +30,10 @@ export class ChargeRequest {
     let minCharge = 100;
     let maxCharge = 0;
 
-    const limit = autoCharge === "decline-cost" || autoCharge === "ask" ? 1 : autoCharge;
+    const limit = Math.max(
+      player.settings.autoChargeTargetSpendablePower,
+      autoCharge === "decline-cost" || autoCharge === "ask" ? 1 : autoCharge
+    );
     let allowedMax = 0;
     let maxAllowedOffer: Offer = null;
 
