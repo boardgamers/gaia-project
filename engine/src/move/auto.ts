@@ -101,6 +101,10 @@ export function autoChargePower(engine: Engine, cmd: AvailableCommand<Command.Ch
   switch (chargeDecision) {
     case ChargeDecision.Yes: {
       const offer = request.maxAllowedOffer;
+      if (!offer) {
+        // Hotfix, game https://www.boardgamers.space/game/GPS3-H move 5.7 w/ xenos power 6 + build m 9A7
+        return false;
+      }
       assert(offer, `could not find max offer: ${JSON.stringify([offers, pl.settings])}`);
       return `${Command.ChargePower} ${offer.offer}`;
     }
