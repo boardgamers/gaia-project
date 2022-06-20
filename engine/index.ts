@@ -11,6 +11,7 @@ export { boardActions, FreeAction, freeActionConversions, ResourceConversion } f
 export { conversionToFreeAction } from "./src/available/actions";
 export { canResearchField, canTakeAdvancedTechTile } from "./src/available/research";
 export { shipsInHex } from "./src/available/ships";
+export { autoMove } from "./src/move/auto";
 export {
   AvailableBoardAction,
   AvailableBoardActionData,
