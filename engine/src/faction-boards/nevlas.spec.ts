@@ -4,6 +4,27 @@ import { Player } from "../enums";
 
 const parseMoves = Engine.parseMoves;
 
+const movesWithPi = `
+init 2 randomSeed
+p1 faction firaks
+p2 faction nevlas
+p1 build m -1x-1
+p2 build m -1x0
+p2 build m 3x-3
+p1 build m 3x-2
+p2 booster booster3
+p1 booster booster7
+p1 build ts -1x-1.
+p2 charge 1pw
+p2 build ts -1x0.
+p1 charge 2pw
+p1 build PI -1x-1.
+p2 charge 2pw
+p2 build PI -1x0.
+p1 charge 3pw
+p1 up terra.
+`;
+
 describe("Nevlas", () => {
   it("should allow Nevlas to use action power using empowered tokens and free actions", () => {
     const engine = new Engine(
@@ -46,33 +67,29 @@ describe("Nevlas", () => {
   });
 
   it("should move the correct number of tokens to area 1", () => {
-    const engine = new Engine(
-      parseMoves(`
-      init 2 randomSeed
-      p1 faction firaks
-      p2 faction nevlas
-      p1 build m -1x-1
-      p2 build m -1x0
-      p2 build m 3x-3
-      p1 build m 3x-2
-      p2 booster booster3
-      p1 booster booster7
-      p1 build ts -1x-1.
-      p2 charge 1pw
-      p2 build ts -1x0.
-      p1 charge 2pw
-      p1 build PI -1x-1.
-      p2 charge 2pw
-      p2 build PI -1x0.
-      p1 charge 3pw
-      p1 up terra.
-    `)
-    );
+    const engine = new Engine(parseMoves(movesWithPi));
 
     const area1 = engine.player(Player.Player2).data.power.area1;
 
     // Only actually spend 2 power tokens due to nevlas' ability
     engine.move("p2 burn 1. spend 4pw for 1k");
     expect(engine.player(Player.Player2).data.power.area1).to.equal(area1 + 2);
+  });
+
+  it("should respect token modifier in final resource handing", () => {
+    const engine = new Engine(parseMoves(movesWithPi));
+
+    const player = engine.player(Player.Player2);
+    const data = player.data;
+    data.victoryPoints = 0;
+    data.credits = 0;
+    data.ores = 0;
+    data.qics = 0;
+    data.knowledge = 0;
+    data.power.area2 = 0;
+    data.power.area3 = 5;
+    data.finalResourceHandling();
+
+    expect(data.victoryPoints).to.equal(3);
   });
 });

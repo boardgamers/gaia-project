@@ -625,10 +625,9 @@ export default class PlayerData extends EventEmitter {
 
     // Convert power into credits
     // Taklons & Nevlas have different power rules, so this is why we use that roundabout way
-    const spentPower = this.spendablePowerTokens();
-    const creditGain = spentPower * this.tokenModifier;
+    const creditGain = this.spendablePowerTokens();
     if (creditGain > 0) {
-      gain(new Reward(-creditGain, Resource.ChargePower), new Reward(creditGain, Resource.Credit));
+      gain(new Reward(-creditGain / this.tokenModifier, Resource.ChargePower), new Reward(creditGain, Resource.Credit));
     }
 
     const qics = this.qics;
