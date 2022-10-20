@@ -1,4 +1,4 @@
-import Engine, { FactionVariant } from "@gaia-project/engine";
+import Engine, { autoMove, FactionVariant } from "@gaia-project/engine";
 import { AuctionVariant, Layout } from "@gaia-project/engine/src/engine";
 import Game from "./components/Game.vue";
 import Wrapper from "./components/Wrapper.vue";
@@ -67,6 +67,18 @@ function launchSelfContained(selector = "#app", debug = true) {
       }
       engine.generateAvailableCommandsIfNeeded();
       emitter.emit("state", JSON.parse(JSON.stringify(engine)));
+      return;
+    }
+    if (type === "automove") {
+      const copy = Engine.fromData(JSON.parse(JSON.stringify(engine)));
+
+      if (autoMove(copy)) {
+        console.log("automove sucessful");
+        emitter.emit("state", JSON.parse(JSON.stringify(copy)));
+      } else {
+        console.log("automove failed");
+      }
+      return;
     }
   });
   emitter.app.$once("hook:beforeDestroy", unsub);

@@ -16,7 +16,7 @@
         <b-row class="my-1">
           <b-col sm="3">Stop Move</b-col>
           <b-col sm="9">
-            <b-form-input v-model="stopMove" />
+            <b-form-input type="number" v-model="stopMove" />
           </b-col>
         </b-row>
       </b-container>
@@ -48,6 +48,7 @@
         <b-btn size="sm" class="mx-1" @click="replayTo(replayData.end)">⏭️</b-btn>
         <b-btn size="sm" class="ml-1" @click="endReplay">⏹️</b-btn>
       </div>
+      <b-button @click="automove">Automove</b-button>
     </div>
   </div>
 </template>
@@ -67,11 +68,23 @@ export default class Wrapper extends Vue {
   replayData: { stard: number; end: number; current: number } | null = null;
 
   handleOK() {
+    localStorage.setItem("gp-text", this.text);
+    let data = JSON.parse(this.text);
+
+    // Check if this is the JSON of the encompassing BGS game
+    if ("timing" in data && "game" in data && "context" in data && "data" in data) {
+      data = data.data;
+    }
+
     this.$store.dispatch("loadFromJSON", {
-      engineData: JSON.parse(this.text),
+      engineData: data,
       type: this.loadType,
-      stopMove: this.stopMove
+      stopMove: this.stopMove,
     } as LoadFromJson);
+  }
+
+  automove() {
+    this.$store.dispatch("automove");
   }
 
   openExport() {
@@ -93,6 +106,10 @@ export default class Wrapper extends Vue {
   }
 
   mounted() {
+    const text = localStorage.getItem("gp-text");
+    if (text) {
+      this.text = text;
+    }
     const unsub = this.$store.subscribeAction(({ type, payload }) => {
       if (type === "replayInfo") {
         this.replayData = payload;

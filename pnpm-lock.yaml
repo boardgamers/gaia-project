@@ -1,4 +1,4 @@
-lockfileVersion: 5.3
+lockfileVersion: 5.4
 
 specifiers:
   husky: ^5.0.9
@@ -11,7 +11,7 @@ devDependencies:
   husky: 5.0.9
   lint-staged: 10.5.4
   prettier: 2.2.1
-  prettier-plugin-organize-imports: 1.1.1_prettier@2.2.1+typescript@4.1.5
+  prettier-plugin-organize-imports: 1.1.1_filkqmn4ccjwlja4el4bhwrxa4
   typescript: 4.1.5
 
 packages:
@@ -489,7 +489,7 @@ packages:
       semver-compare: 1.0.0
     dev: true
 
-  /prettier-plugin-organize-imports/1.1.1_prettier@2.2.1+typescript@4.1.5:
+  /prettier-plugin-organize-imports/1.1.1_filkqmn4ccjwlja4el4bhwrxa4:
     resolution: {integrity: sha512-rFA1lnek1FYkMGthm4xBKME41qUKItTovuo24bCGZu/Vu1n3gW71UPLAkIdwewwkZCe29gRVweSOPXvAdckFuw==}
     peerDependencies:
       prettier: '>=1.10'
