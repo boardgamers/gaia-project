@@ -4,16 +4,16 @@
       "player": 0,
       "faction": "taklons",
       "data": {
-        "victoryPoints": 7,
+        "victoryPoints": 15,
         "bid": 0,
-        "credits": 0,
-        "ores": 0,
+        "credits": 2,
+        "ores": 4,
         "qics": 0,
         "knowledge": 0,
         "power": {
-          "area1": 0,
+          "area1": 1,
           "area2": 1,
-          "area3": 4,
+          "area3": 0,
           "gaia": 0
         },
         "research": {
@@ -33,20 +33,25 @@
           "booster": "booster6",
           "techs": [
             {
-              "tile": "tech8",
+              "tile": "tech9",
               "pos": "free3",
               "enabled": true
             }
           ],
-          "federations": []
+          "federations": [
+            {
+              "tile": "fed4",
+              "green": true
+            }
+          ]
         },
-        "satellites": 0,
+        "satellites": 3,
         "brainstone": "area1",
         "leechPossible": 0,
         "tokenModifier": 1,
         "buildings": {
-          "m": 7,
-          "ts": 1,
+          "m": 3,
+          "ts": 3,
           "lab": 1,
           "PI": 0,
           "ac1": 0,
@@ -66,7 +71,7 @@
           "colonyShip": 0,
           "tradeShip": 0
         },
-        "federationCount": 0,
+        "federationCount": 1,
         "lostPlanet": 0,
         "ships": [],
         "shipRange": 2,
@@ -110,6 +115,10 @@
           {
             "spec": "2step",
             "source": "power2"
+          },
+          {
+            "spec": ">fed",
+            "source": "qic2"
           }
         ],
         "+": [
@@ -122,18 +131,6 @@
             "source": "income"
           },
           {
-            "spec": "+4c",
-            "source": "tech-free3"
-          },
-          {
-            "spec": "+o",
-            "source": "income"
-          },
-          {
-            "spec": "+o",
-            "source": "income"
-          },
-          {
             "spec": "+3c",
             "source": "income"
           },
@@ -142,7 +139,7 @@
             "source": "income"
           },
           {
-            "spec": "+o",
+            "spec": "+4c",
             "source": "income"
           },
           {
@@ -150,7 +147,7 @@
             "source": "income"
           },
           {
-            "spec": "+o",
+            "spec": "+4c",
             "source": "income"
           }
         ],
@@ -160,7 +157,12 @@
             "source": "round1"
           }
         ],
-        "=>": [],
+        "=>": [
+          {
+            "spec": "=> 4pw!",
+            "source": "tech-free3"
+          }
+        ],
         "|": [
           {
             "spec": "m | vp",
@@ -170,22 +172,26 @@
         "PA->4pw": []
       },
       "variant": {},
-      "factionLoaded": true
+      "factionLoaded": true,
+      "federationCache": {
+        "availableSatellites": 3,
+        "federations": []
+      }
     },
     {
       "player": 1,
       "faction": "lantids",
       "data": {
-        "victoryPoints": 18,
+        "victoryPoints": 27,
         "bid": 0,
         "credits": 0,
         "ores": 0,
-        "qics": 2,
-        "knowledge": 2,
+        "qics": 0,
+        "knowledge": 0,
         "power": {
-          "area1": 0,
+          "area1": 1,
           "area2": 2,
-          "area3": 2,
+          "area3": 0,
           "gaia": 0
         },
         "research": {
@@ -204,15 +210,20 @@
         "tiles": {
           "booster": "booster5",
           "techs": [],
-          "federations": []
+          "federations": [
+            {
+              "tile": "fed4",
+              "green": true
+            }
+          ]
         },
         "satellites": 0,
         "brainstone": null,
-        "leechPossible": 0,
+        "leechPossible": 2,
         "tokenModifier": 1,
         "buildings": {
           "m": 8,
-          "ts": 1,
+          "ts": 2,
           "lab": 0,
           "PI": 0,
           "ac1": 0,
@@ -232,7 +243,7 @@
           "colonyShip": 0,
           "tradeShip": 0
         },
-        "federationCount": 0,
+        "federationCount": 1,
         "lostPlanet": 0,
         "ships": [],
         "shipRange": 2,
@@ -268,10 +279,6 @@
             "source": "income"
           },
           {
-            "spec": "+o",
-            "source": "income"
-          },
-          {
             "spec": "+3c",
             "source": "income"
           },
@@ -300,6 +307,14 @@
             "source": "income"
           },
           {
+            "spec": "+4c",
+            "source": "income"
+          },
+          {
+            "spec": "+o",
+            "source": "income"
+          },
+          {
             "spec": "+2pw",
             "source": "booster5"
           }
@@ -320,7 +335,11 @@
         "PA->4pw": []
       },
       "variant": {},
-      "factionLoaded": true
+      "factionLoaded": true,
+      "federationCache": {
+        "availableSatellites": 3,
+        "federations": []
+      }
     },
     {
       "player": 2,
@@ -364,7 +383,7 @@
         },
         "satellites": 0,
         "brainstone": null,
-        "leechPossible": 1,
+        "leechPossible": 0,
         "tokenModifier": 1,
         "buildings": {
           "m": 3,
@@ -468,7 +487,11 @@
         "PA->4pw": []
       },
       "variant": {},
-      "factionLoaded": true
+      "factionLoaded": true,
+      "federationCache": {
+        "availableSatellites": 6,
+        "federations": []
+      }
     },
     {
       "player": 3,
@@ -508,7 +531,7 @@
               "enabled": true
             },
             {
-              "tile": "tech8",
+              "tile": "tech9",
               "pos": "free3",
               "enabled": true
             }
@@ -605,10 +628,6 @@
             "source": "income"
           },
           {
-            "spec": "+4c",
-            "source": "tech-free3"
-          },
-          {
             "spec": "+2c",
             "source": "booster4"
           }
@@ -621,6 +640,10 @@
         ],
         "=>": [
           {
+            "spec": "=> 4pw",
+            "source": "tech-free3"
+          },
+          {
             "spec": "=> step",
             "source": "booster4"
           }
@@ -629,7 +652,11 @@
         "PA->4pw": []
       },
       "variant": {},
-      "factionLoaded": true
+      "factionLoaded": true,
+      "federationCache": {
+        "availableSatellites": 0,
+        "federations": []
+      }
     }
   ],
   "setup": [
@@ -769,7 +796,7 @@
         "count": 4
       },
       "eco": {
-        "tile": "tech9",
+        "tile": "tech8",
         "count": 4
       },
       "sci": {
@@ -785,7 +812,7 @@
         "count": 4
       },
       "free3": {
-        "tile": "tech8",
+        "tile": "tech9",
         "count": 2
       },
       "adv-terra": {
@@ -831,7 +858,7 @@
       "fed1": 3,
       "fed2": 3,
       "fed3": 3,
-      "fed4": 3,
+      "fed4": 1,
       "fed5": 2,
       "fed6": 3
     }
@@ -845,23 +872,57 @@
     "power6": 0,
     "power7": 3,
     "qic1": null,
-    "qic2": null,
+    "qic2": 0,
     "qic3": null
   },
   "availableCommands": [
     {
-      "name": "federation",
+      "name": "build",
       "player": 0,
       "data": {
-        "tiles": [
-          "fed1",
-          "fed2",
-          "fed3",
-          "fed4",
-          "fed5",
-          "fed6"
-        ],
-        "federations": []
+        "buildings": [
+          {
+            "building": "m",
+            "coordinates": "7A6",
+            "cost": "2c,4o",
+            "warnings": [
+              "expensive-terraforming"
+            ],
+            "steps": 1,
+            "upgrade": false
+          },
+          {
+            "building": "m",
+            "coordinates": "3A9",
+            "cost": "2c,4o",
+            "warnings": [
+              "expensive-terraforming"
+            ],
+            "steps": 1,
+            "upgrade": false
+          },
+          {
+            "building": "m",
+            "coordinates": "10B3",
+            "cost": "2c,4o",
+            "warnings": [
+              "expensive-terraforming"
+            ],
+            "steps": 1,
+            "upgrade": false
+          },
+          {
+            "building": "m",
+            "coordinates": "9B5",
+            "cost": "2c,4o",
+            "warnings": [
+              "expensive-terraforming",
+              "building-will-be-part-of-federation"
+            ],
+            "steps": 1,
+            "upgrade": false
+          }
+        ]
       }
     },
     {
@@ -870,20 +931,8 @@
       "data": {
         "acts": [
           {
-            "cost": "4pw",
-            "income": "1q"
-          },
-          {
-            "cost": "4pw",
-            "income": "1k"
-          },
-          {
-            "cost": "3pw",
-            "income": "1o"
-          },
-          {
-            "cost": "1pw",
-            "income": "1c",
+            "cost": "1o",
+            "income": "1t",
             "range": [
               1,
               2,
@@ -892,8 +941,14 @@
             ]
           },
           {
-            "cost": "3pw",
-            "income": "3c"
+            "cost": "1o",
+            "income": "1c",
+            "range": [
+              1,
+              2,
+              3,
+              4
+            ]
           }
         ]
       }
@@ -1056,14 +1111,24 @@
     "taklons build m 9A10. spend 3pw for 1o. brainstone area1. (0/1/4,B/0 ⇒ 0,B/1/4/0)",
     "lantids spend 1pw for 1c. spend 1pw for 1c. build m 9A10. (0/0/4/0 ⇒ 2/0/2/0)",
     "taklons charge 2pw. brainstone area3 (0,B/1/4/0 ⇒ 0/1/4,B/0)",
-    "taklons build m 3B2. spend 3pw for 3c. brainstone area1. (0/1/4,B/0 ⇒ 0,B/1/4/0)",
-    "lantids charge 2pw (2/0/2/0 ⇒ 0/2/2/0)",
-    "lantids pass booster5 returning booster3",
-    "taklons build m 7B2.",
-    "lantids decline 1pw",
+    "taklons spend 3pw for 1o. brainstone area1. build ts 7A1. (0/1/4,B/0 ⇒ 0,B/1/4/0)",
+    "lantids charge 1pw (2/0/2/0 ⇒ 1/1/2/0)",
     "hadsch-hallas decline 1pw",
-    "taklons build m 7B4.",
-    "hadsch-hallas decline 1pw"
+    "lantids federation 10A3,10A4,2A7,2B4,3A0,3A1 fed4.",
+    "taklons spend 1pw for 1c. special 4pw. brainstone area3. spend 3pw for 1o (0,B/1/4/0 ⇒ 0/1/4,B/0). brainstone area1.",
+    "lantids spend 1k for 1c. spend 1pw for 1c. spend 1pw for 1c. build ts 4A6. (1/1/2/0 ⇒ 3/1/0/0)",
+    "taklons charge 2pw. brainstone area3 (0,B/1/4/0 ⇒ 0/1/4,B/0)",
+    "taklons spend 3pw for 3c. brainstone area1. build m 7B2. (0/1/4,B/0 ⇒ 0,B/1/4/0)",
+    "lantids charge 1pw (3/1/0/0 ⇒ 2/2/0/0)",
+    "hadsch-hallas decline 1pw",
+    "lantids burn 1. spend 1pw for 1c. spend 1k for 1c. spend 1q for 1o. build m 7A1. (2/2/0/0 ⇒ 3/0/0/0)",
+    "hadsch-hallas decline 1pw",
+    "taklons charge 2pw. brainstone area3 (0,B/1/4/0 ⇒ 0/1/4,B/0)",
+    "taklons spend 4pw for 1q. brainstone area1. spend 1pw for 1c. build ts 9A10. (0/1/4,B/0 ⇒ 2,B/1/2/0)",
+    "lantids charge 2pw (3/0/0/0 ⇒ 1/2/0/0)",
+    "lantids pass booster5 returning booster3",
+    "taklons spend 1pw for 1c. spend 1pw for 1c. federation 4A7,4B3,7A1,7A2,7A3,7B2,9A10 fed4 using area1: 3. (2,B/1/2/0 ⇒ 1,B/1/0/0)",
+    "taklons action qic2. fedtile fed4."
   ],
   "advancedLog": [
     {
@@ -2275,6 +2340,86 @@
       "player": 0,
       "move": 137,
       "changes": {
+        "spend": {
+          "pw": -3,
+          "o": 1
+        },
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 138,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 139
+    },
+    {
+      "player": 1,
+      "move": 140,
+      "changes": {
+        "federation": {
+          "vp": 7,
+          "o": 2
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 141,
+      "changes": {
+        "spend": {
+          "pw": -4,
+          "c": 1,
+          "o": 1
+        },
+        "tech-free3": {
+          "pw": 4
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 142,
+      "changes": {
+        "spend": {
+          "k": -1,
+          "c": 3,
+          "pw": -2
+        },
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 143,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 144,
+      "changes": {
+        "spend": {
+          "pw": -3,
+          "c": 3
+        },
         "build": {
           "c": -2,
           "o": -1,
@@ -2282,16 +2427,75 @@
         },
         "round1": {
           "vp": 2
-        },
-        "spend": {
-          "pw": -3,
-          "c": 3
         }
       }
     },
     {
       "player": 1,
-      "move": 138,
+      "move": 145,
+      "changes": {
+        "charge": {
+          "pw": 1
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 146
+    },
+    {
+      "player": 1,
+      "move": 147,
+      "changes": {
+        "spend": {
+          "pw": -1,
+          "c": 2,
+          "k": -1,
+          "q": -1,
+          "o": 1
+        },
+        "build": {
+          "c": -2,
+          "o": -1,
+          "q": -1
+        },
+        "round1": {
+          "vp": 2
+        }
+      }
+    },
+    {
+      "player": 2,
+      "move": 148
+    },
+    {
+      "player": 0,
+      "move": 149,
+      "changes": {
+        "charge": {
+          "pw": 2,
+          "vp": -1
+        }
+      }
+    },
+    {
+      "player": 0,
+      "move": 150,
+      "changes": {
+        "spend": {
+          "pw": -5,
+          "q": 1,
+          "c": 1
+        },
+        "build": {
+          "c": -3,
+          "o": -2
+        }
+      }
+    },
+    {
+      "player": 1,
+      "move": 151,
       "changes": {
         "charge": {
           "pw": 2,
@@ -2301,58 +2505,43 @@
     },
     {
       "player": 1,
-      "move": 139
+      "move": 152
     },
     {
       "player": 0,
-      "move": 140,
+      "move": 153,
       "changes": {
-        "build": {
-          "c": -2,
-          "o": -1,
-          "q": -1
+        "spend": {
+          "pw": -2,
+          "c": 2
         },
-        "round1": {
-          "vp": 2
+        "federation": {
+          "t": -3,
+          "vp": 7,
+          "o": 2
         }
       }
     },
     {
-      "player": 1,
-      "move": 141
-    },
-    {
-      "player": 2,
-      "move": 142
-    },
-    {
       "player": 0,
-      "move": 143,
+      "move": 154,
       "changes": {
-        "build": {
-          "c": -2,
-          "o": -1,
-          "q": -1
-        },
-        "round1": {
-          "vp": 2
+        "qic2": {
+          "q": -3,
+          "vp": 7,
+          "o": 2
         }
       }
-    },
-    {
-      "player": 2,
-      "move": 144
     }
   ],
   "turnMoves": [],
   "newTurn": true,
-  "replay": true,
   "version": "4.8.51",
   "terraformingFederation": "fed5",
   "currentPlayer": 0,
   "availableCommand": null,
-  "oldPhase": "roundLeech",
-  "processedPlayer": 2,
+  "oldPhase": "roundMove",
+  "processedPlayer": 0,
   "passedPlayers": [
     2,
     3,
@@ -2360,7 +2549,7 @@
   ],
   "lastLeechSource": {
     "player": 0,
-    "coordinates": "7B4"
+    "coordinates": "9A10"
   },
   "map": [
     {
@@ -2435,7 +2624,10 @@
         "sector": "2",
         "building": "lab",
         "player": 2,
-        "additionalMine": 1
+        "additionalMine": 1,
+        "federations": [
+          1
+        ]
       }
     },
     {
@@ -2523,7 +2715,10 @@
         "sector": "2",
         "building": "lab",
         "player": 0,
-        "additionalMine": 1
+        "additionalMine": 1,
+        "federations": [
+          1
+        ]
       }
     },
     {
@@ -2929,7 +3124,7 @@
       "data": {
         "planet": "r",
         "sector": "4",
-        "building": "m",
+        "building": "ts",
         "player": 1
       }
     },
@@ -2939,7 +3134,10 @@
       "s": 0,
       "data": {
         "planet": "e",
-        "sector": "4"
+        "sector": "4",
+        "federations": [
+          0
+        ]
       }
     },
     {
@@ -3027,7 +3225,10 @@
         "sector": "4",
         "building": "ts",
         "player": 0,
-        "additionalMine": 1
+        "additionalMine": 1,
+        "federations": [
+          0
+        ]
       }
     },
     {
@@ -3082,8 +3283,12 @@
       "data": {
         "planet": "s",
         "sector": "7A",
-        "building": "m",
-        "player": 0
+        "building": "ts",
+        "player": 0,
+        "additionalMine": 1,
+        "federations": [
+          0
+        ]
       }
     },
     {
@@ -3092,7 +3297,10 @@
       "s": 1,
       "data": {
         "planet": "e",
-        "sector": "7A"
+        "sector": "7A",
+        "federations": [
+          0
+        ]
       }
     },
     {
@@ -3101,7 +3309,10 @@
       "s": 2,
       "data": {
         "planet": "e",
-        "sector": "7A"
+        "sector": "7A",
+        "federations": [
+          0
+        ]
       }
     },
     {
@@ -3204,7 +3415,10 @@
         "planet": "g",
         "sector": "7A",
         "building": "m",
-        "player": 0
+        "player": 0,
+        "federations": [
+          0
+        ]
       }
     },
     {
@@ -3222,9 +3436,7 @@
       "s": 4,
       "data": {
         "planet": "g",
-        "sector": "7A",
-        "building": "m",
-        "player": 0
+        "sector": "7A"
       }
     },
     {
@@ -3308,7 +3520,10 @@
         "sector": "3",
         "building": "m",
         "player": 0,
-        "additionalMine": 1
+        "additionalMine": 1,
+        "federations": [
+          1
+        ]
       }
     },
     {
@@ -3319,7 +3534,10 @@
         "planet": "r",
         "sector": "3",
         "building": "ts",
-        "player": 1
+        "player": 1,
+        "federations": [
+          1
+        ]
       }
     },
     {
@@ -3411,9 +3629,7 @@
       "s": 5,
       "data": {
         "planet": "g",
-        "sector": "3",
-        "building": "m",
-        "player": 0
+        "sector": "3"
       }
     },
     {
@@ -3497,7 +3713,10 @@
         "sector": "10",
         "building": "m",
         "player": 2,
-        "additionalMine": 1
+        "additionalMine": 1,
+        "federations": [
+          1
+        ]
       }
     },
     {
@@ -3508,7 +3727,10 @@
         "planet": "r",
         "sector": "10",
         "building": "m",
-        "player": 1
+        "player": 1,
+        "federations": [
+          1
+        ]
       }
     },
     {
@@ -4026,9 +4248,12 @@
       "data": {
         "planet": "s",
         "sector": "9",
-        "building": "m",
+        "building": "ts",
         "player": 0,
-        "additionalMine": 1
+        "additionalMine": 1,
+        "federations": [
+          0
+        ]
       }
     },
     {
