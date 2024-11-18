@@ -35,7 +35,7 @@ export const factionData: {
       "When you take the Build a Mine action, you may build a mine on a planet colonized by an opponent (including the Lost Planet). Place your mine next to the opponent’s structure. You do not have to pay for terraforming, but you must still pay the mine’s cost. This mine counts as a normal mine in all ways except the following: this mine cannot be upgraded, and it does not count for any effects that relate to how many planet types or Gaia planets you have colonized.",
     PI: "Each time you build a mine on a planet colonized by an opponent, gain two knowledge.",
     shortcut: "l",
-    strategyLink: "https://drive.google.com/file/d/1gHzf_c1gszw-qOiy0wMpB4g00Oa2kiNm/preview",
+    // strategyLink: "https://drive.google.com/file/d/1gHzf_c1gszw-qOiy0wMpB4g00Oa2kiNm/preview",
   },
   [Faction.Xenos]: {
     name: "Xenos",
@@ -51,7 +51,7 @@ export const factionData: {
     PI:
       "When you upgrade to the planetary institute, immediately gain the Gleens’ federation token (2 credits, 1 ore, 1 knowledge). Gaining this tile counts as forming a federation. The planetary institute itself can still be part of a federation on the board.",
     shortcut: "e",
-    strategyLink: "https://drive.google.com/file/d/1Ka1DfeeLh4JgwRZX6eEZ1CPhuhF3NfOF/preview",
+    // strategyLink: "https://drive.google.com/file/d/1Ka1DfeeLh4JgwRZX6eEZ1CPhuhF3NfOF/preview",
   },
   [Faction.Taklons]: {
     name: "Taklons",
@@ -93,7 +93,7 @@ export const factionData: {
     PI:
       "The first time you build a mine on each planet type, gain 3 knowledge. (You do not gain knowledge for planet types you colonized before upgrading to your planetary institute.)",
     shortcut: "o",
-    strategyLink: "https://drive.google.com/file/d/1MEww2mTrAXEIg4S7PjPxlolLsu588Wkg/preview",
+    // strategyLink: "https://drive.google.com/file/d/1MEww2mTrAXEIg4S7PjPxlolLsu588Wkg/preview",
   },
   [Faction.BalTaks]: {
     name: "Bal T'aks",
@@ -101,7 +101,7 @@ export const factionData: {
     As a free action, you can move a Gaiaformer from a Gaiaformer space on your faction board to your Gaia area to gain one Q.I.C. Gaiaformers in your Gaia area are not available until the next Gaia phase. In the next Gaia phase, move any Gaiaformer in your Gaia area back to its Gaiaformer space.`,
     PI: "You can now advance in the “Navigation” research area.",
     shortcut: "'",
-    strategyLink: "https://drive.google.com/file/d/1wAAlemgqxhqwsBPE1AZd82T7feqwRx9E/preview",
+    // strategyLink: "https://drive.google.com/file/d/1wAAlemgqxhqwsBPE1AZd82T7feqwRx9E/preview",
   },
   [Faction.Firaks]: {
     name: "Firaks",
@@ -118,7 +118,7 @@ export const factionData: {
     PI:
       "The power value of your structures on gray planets (your home type) is increased by one (in addition to any other effects that increase their power value).",
     shortcut: "c",
-    strategyLink: "https://drive.google.com/file/d/1wjMlRiS5T6g7t_YNOwEoHV-4AX3STOZy/preview",
+    // strategyLink: "https://drive.google.com/file/d/1wjMlRiS5T6g7t_YNOwEoHV-4AX3STOZy/preview",
   },
   [Faction.Nevlas]: {
     name: "Nevlas",
@@ -127,7 +127,7 @@ export const factionData: {
     PI:
       "You can spend power tokens in area III of your power cycle as if they were each two power. Otherwise, they count as one power token (when starting a Gaia Project, building satellites, etc.). When paying for a power action with an odd power cost (1, 3, 5, etc.), the unspent power is lost.",
     shortcut: "n",
-    strategyLink: "https://drive.google.com/file/d/1IohZgoB05UgybiP2SVkKKV19OPm-jq2v/preview",
+    // strategyLink: "https://drive.google.com/file/d/1IohZgoB05UgybiP2SVkKKV19OPm-jq2v/preview",
   },
   [Faction.Itars]: {
     name: "Itars",
