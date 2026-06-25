@@ -1,0 +1,90 @@
+# Faction starting-conditions overview (COMMUNITY source, transcribed values only)
+# Provenance: fan-made 'Gaia Project + Lost Fleet faction overview' PDF supplied by repo owner.
+# Base-faction rows cross-validate vs known base values. Confidence INFERRED; confirm vs physical boards.
+# Columns: Faction | StartBuildings | Power(B1/B2) | StartResources | StartResearch | BasicIncome | TS | PI | RL | AC1 AC2 | ShuttleCost | LF special
+# ---
+       Shows deviation from standard starting conditions
+
+Faction  Starting Starting Starting  Start                Basic  TS  PI            RL         AC1 AC2 Space           Lost
+                                                                                                                ship  fleet
+         buildings power ressources research income (1/2/3/4)                                                   cost  special
+                                                                                                                      abilities
+              (B1/B2)                                                                         +2K 1Q 5VP
+                                                                                                                      None
+Terrans  2M   4/4      3K, 4R,       GF                   +1K, +1R +3/4/4/5C +4P, +1PB1 +1K
+
+                       15C, 1Q
+
+Lantids  2M   4/0      3K, 4R,       None                 +1K, +1R, +3/4/4/5C +4P  +1K        +2K 1Q 5VP              None
+
+                       13C, 1Q                            +1PB1
+
+Xenos    3M   2/4      3K, 4R,       AI                   +1K, +1R +3/4/4/5C +4P, +1Q +1K     +2K 1Q 5VP              1R 
+                                                                                                                      1PB3
+                       15C, 1Q                                                                                        free
+                                                                                                                      action
+Gleens   2M   2/4      3K, 4R,       Nav                  +1K, +1R +3/4/4/5C +4P, +1R +1K     +2K 1Q 5VP
+                                                                                                                      +2
+                       15C                                                                                            range
+                                                                                                                      special
+Taklons  2M   2+BS/4 3K, 4R,         None                 +1K, +1R +3/4/4/5C +4P, +1PB1 +1K   +2K 1Q  5VP +           action
+                           15C, 1Q                                                                    BS to
+                                                                                                      gaia            None
+                                                                                                      area
+                                                                                                                      None
+Ambas    2M   2/4      3K, 4R,       Nav                  +1K, +2R +3/4/4/5C +4P, +2PB1 +1K   +2K 1Q 5VP
+
+                       15C, 1Q                                   de
+
+Hadsch   2M   2/4      3K, 4R,       Eco                  +1K, +1R, +3/4/4/5C +4P, +1PB1 +1K  +2K 1Q 5VP              None
+
+                       15C, 1Q                            +3C
+
+Ivits    1PI  2/2      3K, 4R,       None                 +1K, +1R, +3/4/4/5C +4P, +1PB1 +1K  +2K 1Q 5VP              None
+
+                       15C, 1Q                            +1Q
+
+Geodens 2M    2/4      3K, 4R,       TF                   +1K, +1R +3/4/4/5C +4P, +1PB1 +1K   +2K 1Q 5VP              None
+
+                       15C, 1Q
+Bal T'aks 2M    2/2  3K, 4R,  GF    +1K, +1R +3/4/4/5C +4P, +1PB1 +1K   +2K 4C 7VP  None
+
+                     15C
+
+Firaks  2M      2/4  2K, 4R,  None  +2K, +1R +3/4/4/5C +4P, +1PB1 +1K   +2K 1Q 5VP  None
+
+                     15C, 1Q
+
+Bescods 2M      2/4  3K, 4R,  None  +1R    +1/1/1/1K +4P, +2PB1 +3/4/5C +2K 1Q 5VP  None
+
+                     15C, 1Q
+
+Nevlas  2M      2/4  2K, 4R,  Sci   +1K, +1R +3/4/4/5C +4P, +1PB1 +2P   +2K 1Q 5VP + None
+                                                                                          burn 1P
+                     15C, 1Q
+
+Itars   2M      4/4  3K, 5R,  None  +1K, +1R, +3/4/4/5C +4P, +1PB1 +1K  +3K 1Q 5VP + None
+
+                     15C, 1Q        +1PB1                               burn 1P
+
+Moweyds 1M      4/4  5K, 6R,  GF    +1K, +1R +3/4/4/5C +4P, +1PB1 +1K   +2K 1Q 5VP  None
+
+                     15C, 2Q
+
+Space   1M      4/4  3K, 6R,  Nav   +1K, +1R +3/4/4/5C +6P, +1PB1 +1K   +2K 1Q 5VP  2 dig
+
+giants               15C, 1Q                                                        special
+
+                                                                                    action
+
+Darkanians 1M   4/2  3K, 7R,  Nav,  +1K, +1R +3/4/4/5C +4P, +1PB1 +1K   +2K 1Q 5VP  None
+
+                     15C, 1Q Eco
+
+Tinkeroids 1PI  4/2  2K, 4R,  Sci   +1K, +1R +3/4/4/5C +4P, +1PB1 +1K   +2K 1Q 5VP  None
+
+                     15C, 1Q
+TWILIGHT   TF MARS
+
+REBELLION  ECLIPSE
+

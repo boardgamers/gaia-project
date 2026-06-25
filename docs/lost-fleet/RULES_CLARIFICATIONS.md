@@ -72,9 +72,15 @@ and Confidence = `CONFIRMED`.
 ## B. NEW FACTION VALUES  (fill from faction boards + p.16)
 
 ### B1. Tinkeroids — start planet: Asteroid
-- Starting income row(s): `TODO [BOARD-ART faction board]`
-- Starting resources (c/o/k/q): `TODO [BOARD-ART]`
-- Starting power Area I / Area II: `TODO [BOARD-ART]`
+- Starting resources (one-time): **2k, 4o, 15c, 1q** + **1 step Science track**.
+  → engine income[0] ≈ `"2k,4o,15c,q,up-sci"`.
+- Recurring base income (income[1]): **+1k, +1o** → `"+o,k"`.
+- Starting power: **Area I = 4, Area II = 2** (`power.area1=4, area2=2`).
+- Planetary Institute income: **+4pw, +1 token(B1)** (standard) → `["+4pw","+t"]`.
+- TS/RL/AC incomes: standard (TS +3/4/4/5c, RL +k+tech, AC1 +2k, AC2 =>q). No building-cost deltas.
+- Source: `COMMUNITY (faction-overview PDF, pp.1-2 table; base-faction rows in same table match known
+  base values → high trust)`. Confidence: INFERRED — **spot-confirm vs physical board** (esp. 2k start
+  knowledge and 4/2 power split).
 - Terraform: 3 steps for 3 base planet types, 1 step for others; set after faction selection via
   the Moweyds/Tinkeroids Terraforming board. Gaia planet habitable = 2 Q.I.C. Source: `RULEBOOK-TEXT p.13`. CONFIRMED.
 - Starts with Planetary Institute (not mines), placed in stage 2. Source: p.13. CONFIRMED.
@@ -82,21 +88,40 @@ and Confidence = `CONFIRMED`.
   Individual tile effects: `TODO [BOARD-ART tinkering tiles]` (only the 1-free-terraform tile shown p.13).
 
 ### B2. Darkanians — start planet: Asteroid
-- Starting income / resources / power: `TODO [BOARD-ART]`
+- Starting resources (one-time): **3k, 7o, 15c, 1q** + **1 step Navigation AND 1 step Economy**.
+  → engine income[0] ≈ `"3k,7o,15c,q,up-nav,up-eco"`. (Note: 7 ore is unusually high — confirm.)
+- Recurring base income: **+1k, +1o** → `"+o,k"`.
+- Starting power: **Area I = 4, Area II = 2**.
+- PI income: **+4pw, +1 token(B1)** (standard). TS/RL/AC standard; no cost deltas.
+- Source: `COMMUNITY (faction-overview PDF table)`. Confidence: INFERRED — **spot-confirm vs board**
+  (esp. 7 ore start + the two research advances Nav+Eco).
 - Starts with 1 mine (stage 2). Standard planet = 1 terraform step. Gaia habitable = 2 Q.I.C.
   Source: p.13. CONFIRMED.
 - PI: first time colonizing in a Space/Deep Space sector, gain 2c + 1k. Interspace tiles ≠ sectors.
   Source: p.13. CONFIRMED.
 
 ### B3. Moweyds — start planet: Protoplanet
-- Starting income / resources / power: `TODO [BOARD-ART]`
+- Starting resources (one-time): **5k, 6o, 15c, 2q** + **1 step Gaiaforming track**.
+  → engine income[0] ≈ `"5k,6o,15c,2q,up-gaia"`. (High start — compensates 1-mine + 0-VP protoplanet.)
+- Recurring base income: **+1k, +1o** → `"+o,k"`.
+- Starting power: **Area I = 4, Area II = 4**.
+- PI income: **+4pw, +1 token(B1)** (standard). TS/RL/AC standard; no cost deltas.
+- Source: `COMMUNITY (faction-overview PDF table)`. Confidence: INFERRED — **spot-confirm vs board**
+  (esp. 5k / 6o / 2q start — notably generous).
 - Starts with 1 mine (stage 2) AND an Exploration Shuttle already on T F Mars. 3 steps for 3 base
   planet types, 1 for others (Terraforming board). Source: p.13. CONFIRMED.
 - PI: once/round place a Power Ring (action) on a planet with your building; +2 power value there.
   6 Power Rings available. Source: p.13. CONFIRMED.
 
 ### B4. Space Giants — start planet: Protoplanet
-- Starting income / resources / power: `TODO [BOARD-ART]`
+- Starting resources (one-time): **3k, 6o, 15c, 1q** + **1 step Navigation track**.
+  → engine income[0] ≈ `"3k,6o,15c,q,up-nav"`.
+- Recurring base income: **+1k, +1o** → `"+o,k"`.
+- Starting power: **Area I = 4, Area II = 4**.
+- **PI income: +6pw, +1 token(B1)** — NOTE: +6 power, not the standard +4. → `["+6pw","+t"]`.
+  TS/RL/AC standard; no cost deltas.
+- Source: `COMMUNITY (faction-overview PDF table)`. Confidence: INFERRED — **spot-confirm vs board**
+  (esp. the +6-power PI income — only non-standard building value among the 4 new boards).
 - Starts with 1 mine (stage 2). Standard planet = 2 terraform steps. Has a "Build a Mine" action
   with 2 free terraform steps on the Exploration board. Gaia habitable = 2 Q.I.C. Source: p.13. CONFIRMED.
 - PI: immediately take 1 tech tile of choice (Upgrade rules apply); once only. Source: p.13. CONFIRMED.
@@ -112,22 +137,39 @@ and Confidence = `CONFIRMED`.
 
 For each ship, capture every action space: {type, cost, effect, grid-position} and tech-slot count.
 
+> **Partial read from faction-overview PDF p.3** (the 4 ship boards are pictured). I can read each
+> action tile's COST HEADER fairly reliably; the EFFECTS are small and need board confirmation.
+> Provisional color→type mapping (confirm): **green = Q.I.C. action, purple = Power action,
+> blue = Knowledge action, yellow = Credit action.** Each cost header shows power as a purple disc and
+> any additional resource as a small shield/disc beside it. Source for all C1–C4 below:
+> `BOARD-ART (overview scan p.3)`. Confidence: **INFERRED — confirm costs + effects on physical ships.**
+
 ### C1. Twilight (Nautilaks)
-- Action spaces: `TODO [BOARD-ART Twilight board]`
-- Artifact slots + which artifacts seed here: `TODO [BOARD-ART]`
-- Standard-tech slots (2 or 3): `TODO`
+- Tile 1 (green): cost **3 Q.I.C.** → effect = "Gain a Tech Tile" (matches rulebook p.13: that action
+  costs 3 Q.I.C.; take Standard Tech from a ship if you have a shuttle there).
+- Tile 2 (purple): cost **3 power + 2 knowledge** → advance 1 research level (matches p.13).
+- Tile 3 (blue): cost **1 knowledge** → **+3 Range** action (matches p.13: "+3 Range" costs 1 knowledge).
+- Plus **artifact slots** (the asteroid-cluster art) — artifacts seed here; "Examine Artifact" = discard
+  6 power → 1 artifact (D4). Number of artifact slots: `TODO [confirm count vs player count]`.
+- Standard-tech slots (2 or 3): `TODO [confirm]`.
 
 ### C2. Rebellion (Vo'Kron)  — excluded in 2p
-- Action spaces: `TODO [BOARD-ART Rebellion board]`
-- Standard-tech slots: `TODO`
+- Tile 1 (green): cost **3 Q.I.C.**.  Tile 2 (purple): cost **3 power + 1 knowledge**.
+  Tile 3 (blue): cost **2 knowledge**. Effects: `TODO [confirm on board]`.
+- Standard-tech slots: `TODO`.
 
 ### C3. T F Mars (Gaia Federation)
-- Action spaces: `TODO [BOARD-ART T F Mars board]`
-- Standard-tech slots: `TODO`
+- Tile 1 (green): cost **2 Q.I.C.** → effect appears terraform/build related (shows "2" + "1") —
+  likely "Build a Mine w/ 2 free terraform steps, pay 1 ore for a 3rd". `TODO confirm`.
+- Tile 2 (purple): cost **2 power** → "Start a Gaia Project / transform transdim→Gaia" (green-planet
+  icon; matches p.13). Tile 3 (yellow): cost **2 (credit action)** → gain resources / build-related.
+  `TODO confirm effects`.
+- Standard-tech slots: `TODO`.
 
 ### C4. Eclipse (Eridani Empire)
-- Action spaces: `TODO [BOARD-ART Eclipse board]`
-- Standard-tech slots: `TODO`
+- Tile 1 (green): cost **2 Q.I.C.**.  Tile 2 (purple): cost **3 power + 2 (blue)**.
+  Tile 3 (yellow): cost **2 (credit action)**. Effects: `TODO [confirm on board]`.
+- Standard-tech slots: `TODO`.
 
 ### C5. Shuttle-space charge values
 - Charge power gained when placing a shuttle on space N (1-5), if not first to explore: `TODO [BOARD-ART]`
@@ -197,6 +239,20 @@ For each ship, capture every action space: {type, cost, effect, grid-position} a
 - I4. Xenos: free action 1o→1pw(AreaIII) (p.11). Board deltas: `TODO [BOARD-ART]`.
 - I5. Gleens: special action incl. Explore +2 range (p.11). Board deltas: `TODO [BOARD-ART]`.
 - I6. Every other faction: diff vs p.16 to catch silent changes: `TODO [BOARD-ART p.16 full audit]`.
+- **I7. Audit source acquired:** the faction-overview PDF (pp.1-2) tabulates **full starting conditions
+  for all 18 factions** (buildings, power B1/B2, resources, starting research, basic income, TS/PI/RL/AC
+  incomes, shuttle cost, special ability). Its base-faction rows match known base values, so it can be
+  diffed to find LF deltas. Captured from it (Source: `COMMUNITY overview`, Confidence INFERRED —
+  confirm vs board):
+  - **Lantids**: power **4/0**; start credits **13c** (not 15c); basic income gains **+1 power(B1)**
+    (the LF adjustment, matches p.8). PI income standard +4pw.
+  - **Ivits**: power **2/2** (matches p.8).  **Bescods**: starts **3k** + inverted-research income line
+    (Bescods-specific).  **Itars**: basic income includes **+1 power(B1)**; AC1 **+3k** (Itars-specific).
+  - **Xenos**: PI income **+1 Q.I.C.**; free action **1o→1pw(area III)** (p.11).
+  - **Gleens**: special action with **+2 range** (p.11); PI income **+1 ore**.
+  - **Bal T'aks**: power 2/2; start **0 q**; shuttle deploy **7 VP** (matches p.9).
+  - Full per-faction numbers are in `rulebook-v1.0.txt` companion + the overview; transcribe remaining
+    rows into code when building base-faction LF variants.
 
 ## J. MULTIPLAYER / SYNC RULINGS
 - J1. Turn commitment: only completed turns persist + broadcast (ties to A2 undo). OUR-RULING. CONFIRMED.
