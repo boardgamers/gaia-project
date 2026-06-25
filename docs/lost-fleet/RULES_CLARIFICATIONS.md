@@ -79,8 +79,7 @@ and Confidence = `CONFIRMED`.
 - Planetary Institute income: **+4pw, +1 token(B1)** (standard) → `["+4pw","+t"]`.
 - TS/RL/AC incomes: standard (TS +3/4/4/5c, RL +k+tech, AC1 +2k, AC2 =>q). No building-cost deltas.
 - Source: `COMMUNITY (faction-overview PDF, pp.1-2 table; base-faction rows in same table match known
-  base values → high trust)`. Confidence: INFERRED — **spot-confirm vs physical board** (esp. 2k start
-  knowledge and 4/2 power split).
+  base values → high trust)`. Confidence: **CONFIRMED** (owner-verified 2026-06-25: 2k start + 4/2 power split).
 - Terraform: 3 steps for 3 base planet types, 1 step for others; set after faction selection via
   the Moweyds/Tinkeroids Terraforming board. Gaia planet habitable = 2 Q.I.C. Source: `RULEBOOK-TEXT p.13`. CONFIRMED.
 - Starts with Planetary Institute (not mines), placed in stage 2. Source: p.13. CONFIRMED.
@@ -93,7 +92,7 @@ and Confidence = `CONFIRMED`.
 - Recurring base income: **+1k, +1o** → `"+o,k"`.
 - Starting power: **Area I = 4, Area II = 2**.
 - PI income: **+4pw, +1 token(B1)** (standard). TS/RL/AC standard; no cost deltas.
-- Source: `COMMUNITY (faction-overview PDF table)`. Confidence: INFERRED — **spot-confirm vs board**
+- Source: `COMMUNITY (faction-overview PDF table)`. Confidence: **CONFIRMED** (owner-verified 2026-06-25)
   (esp. 7 ore start + the two research advances Nav+Eco).
 - Starts with 1 mine (stage 2). Standard planet = 1 terraform step. Gaia habitable = 2 Q.I.C.
   Source: p.13. CONFIRMED.
@@ -106,7 +105,7 @@ and Confidence = `CONFIRMED`.
 - Recurring base income: **+1k, +1o** → `"+o,k"`.
 - Starting power: **Area I = 4, Area II = 4**.
 - PI income: **+4pw, +1 token(B1)** (standard). TS/RL/AC standard; no cost deltas.
-- Source: `COMMUNITY (faction-overview PDF table)`. Confidence: INFERRED — **spot-confirm vs board**
+- Source: `COMMUNITY (faction-overview PDF table)`. Confidence: **CONFIRMED** (owner-verified 2026-06-25)
   (esp. 5k / 6o / 2q start — notably generous).
 - Starts with 1 mine (stage 2) AND an Exploration Shuttle already on T F Mars. 3 steps for 3 base
   planet types, 1 for others (Terraforming board). Source: p.13. CONFIRMED.
@@ -120,7 +119,7 @@ and Confidence = `CONFIRMED`.
 - Starting power: **Area I = 4, Area II = 4**.
 - **PI income: +6pw, +1 token(B1)** — NOTE: +6 power, not the standard +4. → `["+6pw","+t"]`.
   TS/RL/AC standard; no cost deltas.
-- Source: `COMMUNITY (faction-overview PDF table)`. Confidence: INFERRED — **spot-confirm vs board**
+- Source: `COMMUNITY (faction-overview PDF table)`. Confidence: **CONFIRMED** (owner-verified 2026-06-25)
   (esp. the +6-power PI income — only non-standard building value among the 4 new boards).
 - Starts with 1 mine (stage 2). Standard planet = 2 terraform steps. Has a "Build a Mine" action
   with 2 free terraform steps on the Exploration board. Gaia habitable = 2 Q.I.C. Source: p.13. CONFIRMED.
@@ -244,8 +243,8 @@ For each ship, capture every action space: {type, cost, effect, grid-position} a
   incomes, shuttle cost, special ability). Its base-faction rows match known base values, so it can be
   diffed to find LF deltas. Captured from it (Source: `COMMUNITY overview`, Confidence INFERRED —
   confirm vs board):
-  - **Lantids**: power **4/0**; start credits **13c** (not 15c); basic income gains **+1 power(B1)**
-    (the LF adjustment, matches p.8). PI income standard +4pw.
+  - **Lantids**: power **4/0**; start credits **13c** (not 15c) — **owner-confirmed 2026-06-25**;
+    basic income gains **+1 power(B1)** (the LF adjustment, matches p.8). PI income standard +4pw.
   - **Ivits**: power **2/2** (matches p.8).  **Bescods**: starts **3k** + inverted-research income line
     (Bescods-specific).  **Itars**: basic income includes **+1 power(B1)**; AC1 **+3k** (Itars-specific).
   - **Xenos**: PI income **+1 Q.I.C.**; free action **1o→1pw(area III)** (p.11).
