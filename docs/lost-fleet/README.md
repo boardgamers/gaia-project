@@ -4,6 +4,9 @@ This folder is the **source of truth** for adding the official *Gaia Project: Th
 expansion to this fork of the open-source `boardgamers/gaia-project` engine + viewer, plus a thin
 private Supabase multiplayer backend for invite-only async play among friends who own the game.
 
+> 🟢 **New session / "what do I do next?" → read [`PROGRESS.md`](PROGRESS.md) first.** It's the
+> running state + prioritized next actions, kept current each session.
+
 ## Canonical documents (read in this order)
 1. **`rulebook-v1.0.pdf`** — the official rulebook (v1.0). The PDF holds the component artwork.
 2. **`rulebook-v1.0.txt`** — searchable text layer extracted from the PDF (`pdftotext -layout`).
