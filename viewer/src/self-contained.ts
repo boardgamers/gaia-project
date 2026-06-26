@@ -8,18 +8,44 @@ import { LoadFromJson, LoadFromJsonType } from "./store";
 function launchSelfContained(selector = "#app", debug = true) {
   const emitter = launch(selector, debug ? Wrapper : Game);
 
-  const players = process.env.VUE_APP_players ?? 3;
-  const seed = process.env.VUE_APP_seed ?? Math.floor(Math.random() * 10000);
+  // Game setup can be configured at runtime via URL query params (no rebuild
+  // needed) — e.g. ?players=4&seed=42&factionVariant=beta&frontiers=1
+  // Query params take precedence over the VUE_APP_* build-time env vars.
+  // Supported: players (2-5), seed, layout (standard|balanced|xshape),
+  // auction (choose-bid|bid-while-choosing),
+  // factionVariant (standard|more-balanced|beta), and the flags
+  // randomFactions, advancedRules (alias rotateSectors), customBoardSetup,
+  // frontiers.
+  const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+  const str = (key: string, env?: string) => params.get(key) ?? env;
+  // A flag is "on" when the param is present with no value or a truthy string
+  // (1/true/yes/on); an explicit falsy string turns it off.
+  const flag = (key: string, env?: string): boolean => {
+    const v = params.get(key);
+    if (v === null) return !!env;
+    return v === "" || /^(1|true|yes|on)$/i.test(v);
+  };
+
+  let players = Number(str("players", process.env.VUE_APP_players) ?? 3);
+  if (!Number.isInteger(players) || players < 2 || players > 5) {
+    console.warn(`Invalid players "${params.get("players")}"; falling back to 3 (valid range: 2-5)`);
+    players = 3;
+  }
+  const seed = str("seed", process.env.VUE_APP_seed) ?? Math.floor(Math.random() * 10000);
   const moves = process.env.VUE_APP_moves ? JSON.parse(process.env.VUE_APP_moves) : [];
-  let engine = new Engine([`init ${players} ${seed}`, ...moves], {
-    layout: (process.env.VUE_APP_layout ?? undefined) as Layout,
-    auction: (process.env.VUE_APP_auction ?? undefined) as AuctionVariant,
-    factionVariant: (process.env.VUE_APP_factionVariant ?? "standard") as FactionVariant,
-    randomFactions: !!process.env.VUE_APP_randomFactions,
-    advancedRules: !!process.env.VUE_APP_rotateSectors,
-    customBoardSetup: !!process.env.VUE_APP_customBoardSetup,
-    frontiers: !!process.env.VUE_APP_frontiers,
-  });
+
+  const options = {
+    layout: (str("layout", process.env.VUE_APP_layout) ?? undefined) as Layout,
+    auction: (str("auction", process.env.VUE_APP_auction) ?? undefined) as AuctionVariant,
+    factionVariant: (str("factionVariant", process.env.VUE_APP_factionVariant) ?? "standard") as FactionVariant,
+    randomFactions: flag("randomFactions", process.env.VUE_APP_randomFactions),
+    advancedRules: flag("advancedRules") || flag("rotateSectors", process.env.VUE_APP_rotateSectors),
+    customBoardSetup: flag("customBoardSetup", process.env.VUE_APP_customBoardSetup),
+    frontiers: flag("frontiers", process.env.VUE_APP_frontiers),
+  };
+  console.log("self-contained game setup:", { players, seed, ...options });
+
+  let engine = new Engine([`init ${players} ${seed}`, ...moves], options);
   engine.generateAvailableCommandsIfNeeded();
 
   const unsub = emitter.store.subscribeAction(({ payload, type }) => {
