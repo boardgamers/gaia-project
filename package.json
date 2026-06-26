@@ -1,5 +1,6 @@
 {
   "license": "MIT",
+  "packageManager": "pnpm@9.12.0",
   "scripts": {
     "commit-msg-check": "node scripts/check-commit-msg.js",
     "lint-staged": "lint-staged",
