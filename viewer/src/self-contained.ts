@@ -98,7 +98,6 @@ function launchSelfContained(selector = "#app", debug = true) {
   emitter.app.$once("hook:beforeDestroy", unsub);
 
   emitter.on("move", (move: string) => {
-    console.log("executing move", move);
     const copy = Engine.fromData(JSON.parse(JSON.stringify(engine)));
 
     if (move) {

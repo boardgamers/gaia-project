@@ -1,88 +1,5 @@
 <template>
   <g :id="`${hex}`">
-    <defs>
-      <linearGradient
-        v-for="p in this.planetColors"
-        :key="`lg-${p.planet}`"
-        :id="`federation-gradient-line-${p.planet}`"
-        gradientUnits="userSpaceOnUse"
-        x1="-1"
-        y1="-1"
-        x2="1"
-        y2="1"
-        gradientTransform="rotate(135)"
-      >
-        <stop offset="40%" stop-opacity="0" />
-        <stop offset="50%" stop-opacity="1" :stop-color="p.color" />
-        <stop offset="60%" stop-opacity="0" />
-      </linearGradient>
-
-      <line
-        v-for="p in this.planetColors"
-        :key="`l-${p.planet}`"
-        :id="`federation-line-${p.planet}`"
-        x1="0"
-        y1="0"
-        x2="0"
-        y2="0.9"
-        :stroke="`url(#federation-gradient-line-${p.planet})`"
-        stroke-width="1"
-        opacity=".5"
-      />
-
-      <linearGradient
-        v-for="p in this.planetColors"
-        :key="`blg-${p.planet}`"
-        :id="`federation-gradient-big-line-${p.planet}`"
-        gradientUnits="userSpaceOnUse"
-        x1="-1"
-        y1="-1"
-        x2="1"
-        y2="1"
-        gradientTransform="rotate(135)"
-      >
-        <stop offset="10%" stop-opacity="0" />
-        <stop offset="50%" stop-opacity="1" :stop-color="p.color" />
-        <stop offset="90%" stop-opacity="0" />
-      </linearGradient>
-
-      <line
-        v-for="p in this.planetColors"
-        :key="`bl-${p.planet}`"
-        :id="`federation-big-line-${p.planet}`"
-        x1="0"
-        y1="0"
-        x2="0"
-        y2="0.9"
-        :stroke="`url(#federation-gradient-big-line-${p.planet})`"
-        stroke-width="1"
-      />
-
-      <radialGradient
-        v-for="p in this.planetColors"
-        :key="`rg-${p.planet}`"
-        :id="`federation-gradient-arc-${p.planet}`"
-        gradientUnits="userSpaceOnUse"
-        cx="0"
-        cy="0"
-        r="3"
-      >
-        <stop offset="41%" stop-opacity="0" />
-        <stop offset="50%" stop-opacity=".5" :stop-color="p.color" />
-        <stop offset="59%" stop-opacity="0" />
-      </radialGradient>
-
-      <path
-        v-for="p in this.planetColors"
-        :key="`arc-${p.planet}`"
-        :id="`federation-arc-${p.planet}`"
-        d="M 1.5 0 A 1.5 1.5 0 0 0 0.7500000000000002 -1.299038105676658"
-        fill="none"
-        :stroke="`url(#federation-gradient-arc-${p.planet})`"
-        stroke-width=".7"
-        transform="translate(-1.52,.86)"
-      />
-    </defs>
     <title v-text="tooltip" />
     <use xlink:href="#space-hex" :class="polygonClasses(hex)" @click="hexClick(hex)" />
     <use
@@ -179,7 +96,7 @@ import { corners, FederationLine, playerFederationLines } from "../graphics/hex"
 import Planet from "./Planet.vue";
 import Building from "./Building.vue";
 import { buildingData, buildingName } from "../data/building";
-import planets, { planetNames } from "../data/planets";
+import { planetNames } from "../data/planets";
 import { HexSelection, HighlightHex, HighlightHexData, WarningsPreference } from "../data";
 import { isWarningEnabled } from "../data/warnings";
 import { factionName } from "../data/factions";
@@ -202,8 +119,6 @@ export default class SpaceHex extends Vue {
 
   @Prop()
   isCenter: boolean;
-
-  planetColors = Object.entries(planets).map(e => ({ planet: e[0], color: e[1].color }));
 
   shipTransform(index: number): string {
     switch (this.ships.length) {

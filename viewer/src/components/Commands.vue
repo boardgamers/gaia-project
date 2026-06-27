@@ -276,7 +276,6 @@ export default class Commands extends Vue implements CommandController {
   }
 
   handleCommand(command: string, source?: ButtonData, warnings?: BuildWarning[], times?: number) {
-    console.log("handle command", command);
     this.unsubscribeCommands();
 
     if (source?.buttons?.length > 0) {
@@ -493,7 +492,6 @@ export default class Commands extends Vue implements CommandController {
 
     button.subscription = (this.$store as any).subscribeAction(({ type, payload }) => {
       if (type === action && (!filter || filter(payload))) {
-        console.log(type, payload);
         callback(payload);
       }
     });
@@ -639,7 +637,6 @@ export default class Commands extends Vue implements CommandController {
   }
 
   emitButtonCommand(button: ButtonData, append?: string, params?: EmitCommandParams) {
-    console.log("emit command", button.command, append, params);
     params = Object.assign({}, { disappear: true, times: 1 }, params);
     const { disappear, times, warnings } = params;
 

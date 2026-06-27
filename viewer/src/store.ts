@@ -1,7 +1,7 @@
 import Engine, { BoardAction, Command, Faction, GaiaHex, Player, ResearchField } from "@gaia-project/engine";
 import { AnyTechTilePos } from "@gaia-project/engine/src/enums";
 import { CubeCoordinates } from "hexagrid";
-import Vue from "vue";
+import Vue, { markRaw } from "vue";
 import Vuex from "vuex";
 import { ButtonData, GameContext, HexSelection, HighlightHex, SpecialActionIncome } from "./data";
 import { FastConversionEvent, MapMode } from "./data/actions";
@@ -109,7 +109,12 @@ const gaiaViewer = {
   } as State,
   mutations: {
     receiveData(state: State, data: Engine) {
-      state.data = data;
+      // The engine state is large, deeply nested, and replaced wholesale on every
+      // update — the viewer treats it as read-only display data and never relies on
+      // deep reactivity into it. markRaw skips Vue's deep observation (the expensive
+      // defineReactive/Dep walk over the whole game state) while keeping the object
+      // mutable; reassigning state.data still triggers re-render via the top-level key.
+      state.data = markRaw(data);
       state.context.rotation = new Map();
     },
 

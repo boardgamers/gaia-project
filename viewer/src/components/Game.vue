@@ -292,10 +292,11 @@ export default class Game extends Vue {
       sector.classList.add("notransition");
     }
 
-    this.$store.commit("receiveData", data);
-
     this.clearCurrentMove = false;
 
+    // Compute currentMove (popping the last move off the history for display) before
+    // committing: the stored state is no longer deeply reactive, so this must happen
+    // before the render rather than triggering a second reactive update afterwards.
     if (data.newTurn) {
       this.currentMove = "";
       this.hideLog = false;
@@ -303,6 +304,8 @@ export default class Game extends Vue {
     } else {
       this.currentMove = data.moveHistory.pop() ?? "";
     }
+
+    this.$store.commit("receiveData", data);
 
     setTimeout(() => {
       for (const sector of (document.getElementsByClassName("sector") as any) as Element[]) {
