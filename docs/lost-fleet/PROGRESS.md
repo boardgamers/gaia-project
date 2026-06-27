@@ -128,19 +128,22 @@ of the chunk that touches it. (File:line refs are to `engine/src/`.)
    These are two different code paths; the plan must touch both:
    - **Terrain-step axis (`terraformingStepsRequired`, `planets.ts:3`):** keys cost off the faction's
      home-planet index in a hardcoded 7-base-planet `planetCycle`. The new factions have no terrain
-     home planet, so the cycle math is meaningless for them. Their step cost is a flat/board rule:
-     Darkanians flat 1 to any terrain, Space Giants flat 2, Tinkeroids/Moweyds 3 steps for 3 base
-     colors and 1 for the other 4 (the 3 expensive colors drawn at setup via the Terraforming board,
-     §B5 — so Tinkeroids/Moweyds terrain cost varies game-to-game). Plan: add a faction-aware override
-     (pass faction or a per-faction cost table) ahead of the cycle math. Also: Protoplanet/Asteroid
-     themselves aren't in the cycle and need flat early-returns (Protoplanet=3 steps §E1; Asteroid via
+     home planet, so the cycle math is meaningless for them. Their step cost:
+     • **Darkanians** flat 1 to any terrain color; • **Space Giants** flat 2 to any terrain color
+     (both simple, faction-only). • **Tinkeroids/Moweyds** 3 steps for the "cost-3" colors, 1 for all
+     others — and the cost-3 set is NOT a blind random draw: it's the OTHER players' home colors first
+     (always cost 3), topped up from the random setup layout to always total exactly 3 (§B5, fully
+     revised). This makes their terrain cost **per-game and opponent-dependent**, so the override needs
+     access to game state (the per-game cost-3 color set), not just `(faction, targetPlanet)` — a
+     deeper signature change than a static per-faction table. Also: Protoplanet/Asteroid themselves
+     aren't in the cycle and need flat early-returns (Protoplanet=3 steps §E1; Asteroid via
      gaiaformer-consume §E2), like the existing `Gaia`/`Transdim` → 0 early-return at `planets.ts:14`.
-   - **Gaia-QIC axis (`gaiaFormingCost()`, `player.ts:911`):** SEPARATE from terrain steps — this is
-     the QIC paid to make a Gaia planet habitable when building a mine on it. Base = 1 QIC; already
-     faction-aware (Gleens pays 1 ore). All 4 new factions pay **2 QIC** for Gaia (§B1/B2/B4 confirmed;
-     §B3 Moweyds not yet explicitly stated — VERIFY before coding). Plan: add the new-faction branch
-     here too. Easy to miss because it's a different function from the step cost — call it out in
-     whatever chunk implements the new factions (Chunk 3), not Chunk 2.
+   - **Gaia-QIC axis (`gaiaFormingCost()`, `player.ts:911`):** SEPARATE from terrain steps — the QIC
+     paid to build a mine ON a Gaia planet. Base = 1 QIC; already faction-aware (Gleens pays 1 ore).
+     **Only Darkanians & Space Giants pay 2 QIC here; Tinkeroids & Moweyds pay the normal 1**
+     (owner-confirmed 2026-06-27 — corrects an earlier "all 4" note). The gaiaforming PROJECT cost
+     (transdim→Gaia, the `gaiaFormingDiscount`/GaiaFormer path) is untouched for all of them. Plan: add
+     a Darkanians/Space-Giants branch returning 2 QIC. Belongs to Chunk 3 (new factions), not Chunk 2.
 2. **Faction availability has NO expansion gate.** `remainingFactions(Object.values(Faction))`
    (`factions.ts:61`, `available/setup.ts:33`) offers EVERY `Faction` enum value in every game. Add
    the 4 new factions to the enum and they leak into base/Frontiers games. Plan: thread `expansions`

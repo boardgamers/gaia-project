@@ -103,8 +103,11 @@ text (effect + depiction plan) is kept here. Concretely, each component-type ent
 - TS/RL/AC incomes: standard (TS +3/4/4/5c, RL +k+tech, AC1 +2k, AC2 =>q). No building-cost deltas.
 - Source: `COMMUNITY (faction-overview PDF, pp.1-2 table; base-faction rows in same table match known
   base values → high trust)`. Confidence: **CONFIRMED** (owner-verified 2026-06-25: 2k start + 4/2 power split).
-- Terraform: 3 steps for 3 base planet types, 1 step for others; set after faction selection via
-  the Moweyds/Tinkeroids Terraforming board. Gaia planet habitable = 2 Q.I.C. Source: `RULEBOOK-TEXT p.13`. CONFIRMED.
+- Terraform: 3 steps for the "cost-3" base colors, 1 step for all others; the cost-3 set is
+  determined at setup via the Moweyds/Tinkeroids Terraforming board (see revised §B5).
+  **Gaia planet: a mine costs the normal 1 Q.I.C. — NOT 2** (corrected 2026-06-27; only Darkanians &
+  Space Giants pay the 2-Q.I.C. Gaia surcharge, see §B2/§B4). Source: `RULEBOOK-TEXT p.13` + owner
+  2026-06-27. CONFIRMED.
 - Starts with Planetary Institute (not mines), placed in stage 2. Source: p.13. CONFIRMED.
 - 6 Tinkering tiles (3 for rounds 1-3, 3 for 4-6); PI: once/round use current Tinkering tile as action.
   Individual tile effects, all confirmed (owner board-read 2026-06-27):
@@ -121,8 +124,11 @@ text (effect + depiction plan) is kept here. Concretely, each component-type ent
 - PI income: **+4pw, +1 token(B1)** (standard). TS/RL/AC standard; no cost deltas.
 - Source: `COMMUNITY (faction-overview PDF table)`. Confidence: **CONFIRMED** (owner-verified 2026-06-25)
   (esp. 7 ore start + the two research advances Nav+Eco).
-- Starts with 1 mine (stage 2). Standard planet = 1 terraform step. Gaia habitable = 2 Q.I.C.
-  Source: p.13. CONFIRMED.
+- Starts with 1 mine (stage 2). **Standard (terrain) planet = a flat 1 terraform step**, any color.
+  **Gaia planet: a mine costs 2 Q.I.C. instead of the base 1** — a faction-specific surcharge on the
+  mine-on-Gaia cost (maps to `gaiaFormingCost()` in `player.ts`, which is already faction-aware for
+  Gleens). The gaiaforming PROJECT cost (converting transdim→Gaia) is untouched. Owner-confirmed
+  2026-06-27. Source: p.13 + owner. CONFIRMED.
 - PI: first time colonizing in a Space/Deep Space sector, gain 2c + 1k. Interspace tiles ≠ sectors.
   Source: p.13. CONFIRMED.
 
@@ -134,11 +140,11 @@ text (effect + depiction plan) is kept here. Concretely, each component-type ent
 - PI income: **+4pw, +1 token(B1)** (standard). TS/RL/AC standard; no cost deltas.
 - Source: `COMMUNITY (faction-overview PDF table)`. Confidence: **CONFIRMED** (owner-verified 2026-06-25)
   (esp. 5k / 6o / 2q start — notably generous).
-- Starts with 1 mine (stage 2) AND an Exploration Shuttle already on T F Mars. 3 steps for 3 base
-  planet types, 1 for others (Terraforming board). Source: p.13. CONFIRMED.
-- Gaia planet habitable cost: **assumed 2 Q.I.C.** (matching the other 3 new factions, B1/B2/B4) but
-  NOT independently confirmed for Moweyds — the p.13 text/board read above didn't capture it. ⚠️ TODO:
-  owner verify Moweyds' Gaia mine cost is 2 Q.I.C. (vs. the base 1). Confidence: INFERRED.
+- Starts with 1 mine (stage 2) AND an Exploration Shuttle already on T F Mars. Terraform: 3 steps for
+  the "cost-3" base colors, 1 step for all others; cost-3 set determined at setup via the Terraforming
+  board (see revised §B5). **Gaia planet: a mine costs the normal 1 Q.I.C. — NOT 2** (corrected
+  2026-06-27; only Darkanians & Space Giants pay the 2-Q.I.C. Gaia surcharge). Source: p.13 + owner
+  2026-06-27. CONFIRMED.
 - PI: once/round place a Power Ring (action) on a planet with your building; +2 power value there.
   6 Power Rings available. Source: p.13. CONFIRMED.
 
@@ -151,20 +157,41 @@ text (effect + depiction plan) is kept here. Concretely, each component-type ent
   TS/RL/AC standard; no cost deltas.
 - Source: `COMMUNITY (faction-overview PDF table)`. Confidence: **CONFIRMED** (owner-verified 2026-06-25)
   (esp. the +6-power PI income — only non-standard building value among the 4 new boards).
-- Starts with 1 mine (stage 2). Standard planet = 2 terraform steps. Has a "Build a Mine" action
-  with 2 free terraform steps on the Exploration board. Gaia habitable = 2 Q.I.C. Source: p.13. CONFIRMED.
+- Starts with 1 mine (stage 2). **Standard (terrain) planet = a flat 2 terraform steps**, any color.
+  Has a "Build a Mine" action with 2 free terraform steps on the Exploration board. **Gaia planet: a
+  mine costs 2 Q.I.C. instead of the base 1** (same faction-specific mine-on-Gaia surcharge as
+  Darkanians, §B2 — maps to `gaiaFormingCost()`; gaiaforming project cost untouched). Owner-confirmed
+  2026-06-27. Source: p.13 + owner. CONFIRMED.
 - PI: immediately take 1 tech tile of choice (Upgrade rules apply); once only. Source: p.13. CONFIRMED.
 
-### B5. Moweyds/Tinkeroids Terraforming board
-- 7 spaces filled randomly with 1 satellite of each color at setup; determines which 3 base planet
-  types cost 3 steps. Full setup procedure: Source: `RULEBOOK-TEXT p.8`. CONFIRMED.
-- Exact board layout / space numbering: **CLOSED, not needed for engine purposes (owner-confirmed
-  2026-06-27 — question was unclear, downgrading rather than re-asking).** The board's physical layout
-  (which space is "space 3," how the 7 spaces are arranged/numbered on the printed board) is cosmetic
-  only — it exists so players can physically track a 1-of-7 random draw at the table. The only thing
-  that matters for engine logic is already fully specified above: at setup, 3 of the 7 base planet
-  colors are randomly selected to cost 3 terraform steps for Moweyds/Tinkeroids (the other 4 stay at 1
-  step). No further data is needed from the physical board art.
+### B5. Moweyds/Tinkeroids Terraforming board — cost-3 color selection (REVISED 2026-06-27, owner-confirmed)
+Determines which base planet colors cost 3 terraform steps (vs. 1 for all others) for these two
+no-home-planet factions. **This is NOT a blind random draw** (corrects the earlier description).
+Source: `RULEBOOK-TEXT p.8` + owner clarification 2026-06-27. Confidence: CONFIRMED (rule), see ⚠️
+below for the one detail still to pin down.
+- **There are always exactly 3 base colors that cost 3 steps; every other base color costs 1 step.**
+- **Opponents' home colors always cost 3, and take priority.** Terraforming toward any color that is
+  another player's faction home color costs 3 steps. (An opponent that is itself a no-home-planet
+  faction — e.g. the *other* new faction in the game — contributes NO color, so the count of
+  color-bearing opponents can be fewer than playerCount−1.)
+- The remaining cost-3 slots (to always reach exactly 3) are filled from the random setup layout:
+  - **4 players:** the 3 color-bearing opponents normally already supply all 3 → no random fill.
+  - **3 players:** ~2 opponents' colors + 1 filled from the setup layout.
+  - **2 players:** 1 opponent's color + 2 filled from the setup layout.
+  (If a new-faction opponent reduces the color-bearing-opponent count, proportionally more slots are
+  filled from the layout — the invariant is simply "exactly 3 cost-3 colors total.")
+- **Random-fill procedure:** at setup the 7 base colors are placed on the board in a random order (one
+  satellite of each color, p.8). After assigning opponents' colors, fill the remaining cost-3 slots in
+  board order — owner's words: *"other players' colors get priority, and then whatever is highest from
+  left gets to be the color that is cost 3."*
+  ⚠️ **One detail to pin down before coding:** the exact meaning of "highest from left" — leftmost
+  board position vs. a position value, and the tie/scan direction. The INTENT is unambiguous (opponents
+  first, then a deterministic fill from the random layout up to 3); only the precise scan order needs
+  confirming against the physical board. Flag, don't guess, when implementing.
+- **Engine implications:** this is stateful and per-GAME (not precomputable per faction) — the cost-3
+  set depends on which other factions are in the game. `terraformingStepsRequired` for Tinkeroids/
+  Moweyds must therefore consult this per-game cost-3 set + the target planet's color, not the base
+  planet-cycle math (see PROGRESS.md Integration flag 1). Belongs to Chunk 3 (new-faction setup).
 
 ---
 
