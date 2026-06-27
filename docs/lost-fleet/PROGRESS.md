@@ -3,8 +3,9 @@
 > **New session? Start here.** This file is the running state of the project. Read it, then read
 > `RULES_CLARIFICATIONS.md` (the value ledger) and `COMPONENTS.md` (the inventory/status). If the
 > task touches viewer rendering/perf, also read `PERFORMANCE.md` first — it has hard-measured
-> findings that should not be rediscovered. Then ask the user "what next?" and use the **Next
-> actions** section below to guide them.
+> findings that should not be rediscovered. Read the **Testing — required going forward** section
+> below before touching viewer rendering code — it's a standing instruction, not optional. Then
+> ask the user "what next?" and use the **Next actions** section below to guide them.
 > Last updated: **2026-06-29**.
 
 ## What this project is
@@ -791,6 +792,34 @@ As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
 1. **Revised Space Sector tiles 05/06/07** — the actual planet arrangement on the Lost-Fleet-specific
    face (which tiles are double-sided and why is confirmed; the layout itself still needs a photo of
    the physical component). (§H4)
+
+## Testing — required going forward
+Real test commands (don't use raw `mocha -r ts-node/register` for the viewer — it hits stricter
+TS resolution than the real webpack-based path and gives false failures; use the actual scripts):
+- Engine: `cd engine && npm test` (or `npx mocha -r ts-node/register 'src/**/*.spec.ts' 'src/*.spec.ts'`
+  — equivalent for engine, which has no webpack step). 259 tests passing as of 2026-06-27.
+- Viewer: `cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'`
+  (this is what `pnpm test` runs — uses `mochapack`/webpack, required for files that touch engine
+  types). 155 tests passing as of 2026-06-27.
+
+**Convention for future sessions:** there was no test that mounted the actual hex-map component
+tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/
+`FederationGradients.vue`), so the `PERFORMANCE.md` `<defs>`-duplication regression class could
+have shipped silently. `viewer/src/components/SpaceMap.spec.ts` now covers this: it builds a real
+`Engine` from `engine/fixtures/Beta-2.json` via `Engine.fromData()`, installs it into a store made
+with `makeStore()` (`viewer/src/store.ts`), renders `SpaceMap` with `@testing-library/vue`, and
+asserts structural invariants (sector count matches `map.configuration().centers`, hex count
+matches `map.grid.size`, `<defs>` count stays flat/small instead of scaling per-hex). **Any future
+session that touches viewer rendering components (hex map, `SpaceHex`, `Definitions`, federation/
+building/ship rendering, or anything else in that render tree) must add to or extend this test —
+or add a sibling test using the same pattern — covering the new rendering path, not just rely on
+existing tests staying green.** This is a standing instruction, not a one-time task.
+
+Also fixed this session: `viewer/src/components/BoardAction.spec.ts` had 2 pre-existing broken
+tests (predating this fork) — its mock store `getters` were plain functions (`recentCommands: ()
+=> []`) but real Vuex getters resolve to already-evaluated values, not callables. Fixed by using
+plain values. If a future session sees a similar `TypeError: ... is not a function` from a getter
+in a test, check whether the mock is calling vs. holding the getter's result.
 
 Resolved this session (2026-06-27), for reference: Adjusted Economy tile (§F1), 4 Spaceship boards
 (§C), Tinkering tiles (§B1), Federation token green sides (§G5), Deep Space hex composition incl. the

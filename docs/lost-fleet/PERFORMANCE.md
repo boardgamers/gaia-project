@@ -4,6 +4,15 @@
 > `Sector` again. It records what was actually measured, not guessed, so the same profiling work
 > doesn't get redone from scratch in a future session. Last updated: **2026-06-27**.
 
+## Regression test
+
+`viewer/src/components/SpaceMap.spec.ts` mounts the real `SpaceMap → Sector → SpaceHex` +
+`Definitions`/`FederationGradients` tree (real `Engine` from `engine/fixtures/Beta-2.json`,
+`makeStore()`) and asserts hex/sector counts and that `<defs>` stays flat instead of scaling
+per-hex. This is the test that would have caught the `<defs>`-duplication bug fixed below if it
+had existed first. **Extend this test (or add a sibling) whenever you touch viewer rendering** —
+see `PROGRESS.md`'s "Testing — required going forward" section.
+
 ## Bottom line
 
 The perceived "laggy buttons" (Build a Mine, Trade, Research, browser Back) are **not** caused by

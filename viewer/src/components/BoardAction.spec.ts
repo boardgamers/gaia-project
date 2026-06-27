@@ -7,10 +7,10 @@ import BoardAction from "./BoardAction.vue";
 function makeTestStore() {
   const store = makeStore();
   (store as any).getters = {
-    recentCommands: () => [],
-    currentRoundCommands: () => [],
-    recentHexes: () => new Set(),
-    currentRoundHexes: () => new Set(),
+    recentCommands: [],
+    currentRoundCommands: [],
+    recentHexes: new Set(),
+    currentRoundHexes: new Set(),
   };
   return store;
 }
