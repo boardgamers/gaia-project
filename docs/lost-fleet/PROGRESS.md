@@ -1,9 +1,11 @@
 # Lost Fleet — Progress & Next-Session Handoff
 
 > **New session? Start here.** This file is the running state of the project. Read it, then read
-> `RULES_CLARIFICATIONS.md` (the value ledger) and `COMPONENTS.md` (the inventory/status). Then ask
-> the user "what next?" and use the **Next actions** section below to guide them.
-> Last updated: **2026-06-25**.
+> `RULES_CLARIFICATIONS.md` (the value ledger) and `COMPONENTS.md` (the inventory/status). If the
+> task touches viewer rendering/perf, also read `PERFORMANCE.md` first — it has hard-measured
+> findings that should not be rediscovered. Then ask the user "what next?" and use the **Next
+> actions** section below to guide them.
+> Last updated: **2026-06-27**.
 
 ## What this project is
 Add the official **Gaia Project: The Lost Fleet** expansion to a private fork of the open-source
@@ -50,6 +52,15 @@ notifications).
 7. ◐ **Spaceship action COSTS** read from art (§C). Effects/slot-counts/charge-values still pending.
 8. ✅ Evaluated the uiqoo.kr randomizer: it's a seeded PNG image-renderer of setups with **no effect
    text** — not a viable source for "what components do." Skip it (maybe use only for map-tile images).
+9. ✅ **Viewer deployed** to Vercel (Git integration, auto-deploy on push to this branch) and
+   **performance foundation work done** before starting Lost Fleet feature coding (user's explicit
+   request — get the foundation right first). Full investigation, root causes, fixes, measured
+   before/after numbers, and the Vue 2 vs Vue 3 decision are in `PERFORMANCE.md` — **read that file**
+   before touching viewer rendering again. Bottom line: engine logic was never the bottleneck
+   (~3.6 ms/move); it was Vue 2 deep reactivity over the whole engine state + ~4,500 duplicate SVG
+   `<defs>` nodes. Fixed (`markRaw`, hoisted federation gradient defs): load -16%, worst click
+   (Build a Mine) -45%. Vue 3 migration was evaluated and rejected for now (wouldn't fix the actual
+   bottleneck, huge migration cost in this stack) — see `PERFORMANCE.md` for the full reasoning.
 
 ## Still MISSING — all art-only, need photos (no text/randomizer source exists)
 Priority order (gates the most downstream code first):
@@ -78,5 +89,6 @@ Confidence `CONFIRMED`, and flip the matching `COMPONENTS.md` row to `◐ SPEC`.
 
 ## Canonical files (trust order)
 `PROGRESS.md` (this) → `RULES_CLARIFICATIONS.md` (values; §A decisions, §K errata) →
-`COMPONENTS.md` (inventory/status) → `rulebook-v1.0.txt` / `.pdf` (source) →
+`COMPONENTS.md` (inventory/status) → `PERFORMANCE.md` (viewer perf investigation/findings, read
+before touching viewer rendering) → `rulebook-v1.0.txt` / `.pdf` (source) →
 `faction-overview-table.txt` (community faction data).
