@@ -40,7 +40,7 @@ export function moveInit(engine: Engine, players: number, seed: string) {
     const randomFactions = [];
 
     for (const _ of engine.players) {
-      const possible = remainingFactions(randomFactions);
+      const possible = remainingFactions(randomFactions, engine.expansions);
 
       randomFactions.push(possible[Math.floor(possible.length * engine.map.rng())]);
     }

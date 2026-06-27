@@ -30,7 +30,7 @@ export function choosableFactions(engine: Engine) {
     }
   } else {
     // Standard
-    return remainingFactions(engine.setup);
+    return remainingFactions(engine.setup, engine.expansions);
   }
 }
 

@@ -4,6 +4,7 @@ import { Faction } from "../enums";
 import Ambas from "./ambas";
 import BalTaks from "./baltaks";
 import Bescods from "./bescods";
+import Darkanians from "./darkanians";
 import Firaks from "./firaks";
 import Geodens from "./geodens";
 import Gleens from "./gleens";
@@ -12,6 +13,7 @@ import Itars from "./itars";
 import Ivits from "./ivits";
 import Lantids from "./lantids";
 import Nevlas from "./nevlas";
+import SpaceGiants from "./space-giants";
 import Taklons from "./taklons";
 import Terrans from "./terrans";
 import { FactionBoard, FactionBoardRaw, FactionBoardVariant, FactionBoardVariants } from "./types";
@@ -34,6 +36,8 @@ const factionBoards: { [key in Faction]: FactionBoardVariants } = {
   [Faction.Bescods]: Bescods,
   [Faction.Nevlas]: Nevlas,
   [Faction.Itars]: Itars,
+  [Faction.Darkanians]: Darkanians,
+  [Faction.SpaceGiants]: SpaceGiants,
 };
 
 export function factionVariantBoard(customization: FactionCustomization, faction: Faction): FactionBoardVariant | null {

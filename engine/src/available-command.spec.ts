@@ -12,7 +12,7 @@ describe("Available commands", () => {
     it("should show all factions at the beginning", () => {
       const engine = new Engine();
 
-      expect(choosableFactions(engine)).to.have.members(Object.values(Faction));
+      expect(choosableFactions(engine)).to.have.members(Faction.values(Expansion.None));
     });
 
     it("should show 2 less factions after one is selected", () => {
@@ -26,7 +26,7 @@ describe("Available commands", () => {
 
       expect(factions).to.not.include(Faction.Gleens);
       expect(factions).to.not.include(Faction.Xenos);
-      expect(factions).to.have.length(Object.values(Faction).length - 2);
+      expect(factions).to.have.length(Faction.values(Expansion.None).length - 2);
     });
 
     describe("when randomFactions is enabled", () => {

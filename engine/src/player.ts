@@ -333,7 +333,7 @@ export default class Player extends EventEmitter {
         }
       } else {
         // Get the number of terraforming steps to pay discounting terraforming track
-        steps = terraformingStepsRequired(factionPlanet(this.faction), targetPlanet);
+        steps = terraformingStepsRequired(this.faction, targetPlanet);
         const reward = terraformingCost(this.data, steps, replay);
 
         if (reward === null) {
@@ -925,6 +925,11 @@ export default class Player extends EventEmitter {
   gaiaFormingCost(): Reward {
     if (this.faction === Faction.Gleens) {
       return new Reward(1, Resource.Ore);
+    }
+    // Lost Fleet: Darkanians & Space Giants pay a 2-Q.I.C. surcharge to build a mine on a Gaia
+    // planet (Tinkeroids/Moweyds pay the normal 1, unlike the rest of this no-home-planet group).
+    if (this.faction === Faction.Darkanians || this.faction === Faction.SpaceGiants) {
+      return new Reward(2, Resource.Qic);
     }
     return new Reward(1, Resource.Qic);
   }

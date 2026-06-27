@@ -296,6 +296,35 @@ export enum Faction {
   Bescods = "bescods",
   Nevlas = "nevlas",
   Itars = "itars",
+  Darkanians = "darkanians",
+  SpaceGiants = "space-giants",
+}
+
+export namespace Faction {
+  export function values(expansions: Expansion): Faction[] {
+    const ret = [
+      Faction.Terrans,
+      Faction.Lantids,
+      Faction.HadschHallas,
+      Faction.Ivits,
+      Faction.Geodens,
+      Faction.BalTaks,
+      Faction.Xenos,
+      Faction.Gleens,
+      Faction.Taklons,
+      Faction.Ambas,
+      Faction.Firaks,
+      Faction.Bescods,
+      Faction.Nevlas,
+      Faction.Itars,
+    ];
+
+    if (hasExpansion(expansions, Expansion.LostFleet)) {
+      ret.push(Faction.Darkanians, Faction.SpaceGiants);
+    }
+
+    return ret;
+  }
 }
 
 export enum Command {

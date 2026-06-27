@@ -1,11 +1,21 @@
 import { expect } from "chai";
 import Engine from "./engine";
-import { Faction, Player as PlayerEnum, ResearchField } from "./enums";
+import { Expansion, Faction, Player as PlayerEnum, ResearchField } from "./enums";
 import { remainingFactions } from "./factions";
 
 describe("Factions", () => {
   it("lantids and terrans can not be chosen together", () => {
-    expect(remainingFactions([Faction.Terrans])).to.not.contain(Faction.Lantids);
+    expect(remainingFactions([Faction.Terrans], Expansion.None)).to.not.contain(Faction.Lantids);
+  });
+
+  it("should not offer the Lost Fleet factions without the expansion", () => {
+    expect(remainingFactions([], Expansion.None)).to.not.contain(Faction.Darkanians);
+  });
+
+  it("should still offer Space Giants after Darkanians is chosen, since they are not the same-color pair", () => {
+    const remaining = remainingFactions([Faction.Darkanians], Expansion.LostFleet);
+
+    expect(remaining).to.contain(Faction.SpaceGiants);
   });
 
   describe("balanced variant", () => {

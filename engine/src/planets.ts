@@ -1,6 +1,7 @@
-import { Planet } from "./enums";
+import { factionPlanet } from "./factions";
+import { Faction, Planet } from "./enums";
 
-export function terraformingStepsRequired(factionPlanet: Planet, targetPlanet: Planet): number {
+export function terraformingStepsRequired(faction: Faction, targetPlanet: Planet): number {
   const planetCycle = [
     Planet.Terra,
     Planet.Oxide,
@@ -19,7 +20,18 @@ export function terraformingStepsRequired(factionPlanet: Planet, targetPlanet: P
     return 3;
   }
 
-  let dist = planetCycle.findIndex((pc) => pc === targetPlanet) - planetCycle.findIndex((pc) => pc === factionPlanet);
+  // Lost Fleet: these factions have no home terrain planet, so the planet-cycle math below
+  // (keyed off factionPlanet()) doesn't apply to them - their terraform cost is a flat
+  // per-faction rule instead, regardless of target color.
+  if (faction === Faction.Darkanians) {
+    return 1;
+  }
+  if (faction === Faction.SpaceGiants) {
+    return 2;
+  }
+
+  let dist =
+    planetCycle.findIndex((pc) => pc === targetPlanet) - planetCycle.findIndex((pc) => pc === factionPlanet(faction));
   if (dist > 3) {
     dist -= 7;
   } else if (dist < -3) {

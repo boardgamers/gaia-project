@@ -25,10 +25,10 @@ policy" there) — not just the effect text alone.
 
 | Faction | Start planet | Maps to | Status |
 |---|---|---|---|
-| Tinkeroids | Asteroid | `Faction` enum + `faction-boards/tinkeroids.ts` | ☐ TODO |
-| Darkanians | Asteroid | `Faction` enum + `faction-boards/darkanians.ts` | ☐ TODO |
-| Moweyds | Protoplanet | `Faction` enum + `faction-boards/moweyds.ts` | ☐ TODO |
-| Space Giants | Protoplanet | `Faction` enum + `faction-boards/space-giants.ts` | ☐ TODO |
+| Tinkeroids | Asteroid | `Faction` enum + `faction-boards/tinkeroids.ts` | ☐ TODO (blocked on §B5 cost-3 scan-order ambiguity) |
+| Darkanians | Asteroid | `Faction` enum + `faction-boards/darkanians.ts` | ● DONE except PI ability (deferred — see PROGRESS.md "Done so far" #11) |
+| Moweyds | Protoplanet | `Faction` enum + `faction-boards/moweyds.ts` | ☐ TODO (blocked on §B5 cost-3 scan-order ambiguity) |
+| Space Giants | Protoplanet | `Faction` enum + `faction-boards/space-giants.ts` | ● DONE except Exploration-board special action (subsystem not yet built) |
 
 Each new faction needs (see RULES_CLARIFICATIONS for values):
 - Starting income row(s) `[NEED FROM BOARD]`

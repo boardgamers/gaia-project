@@ -57,6 +57,61 @@ describe("Player", () => {
       // tslint:disable-next-line no-unused-expression
       expect(Reward.match([], cost)).to.be.true;
     });
+
+    it("should charge Darkanians a flat 1 terraforming step regardless of the target planet's color", () => {
+      const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+
+      player.faction = Faction.Darkanians;
+      player.loadFaction(null);
+      player.data.ores = 20; // enough to afford the terraform step on top of the base mine cost
+
+      const { cost } = player.canBuild(null, null, Planet.Terra, Building.Mine, false, false);
+
+      // base mine cost (2c,o) + 1 terraforming step (3o, no discount)
+      // tslint:disable-next-line no-unused-expression
+      expect(Reward.match(Reward.parse("2c,4o"), cost)).to.be.true;
+    });
+
+    it("should charge Space Giants a flat 2 terraforming steps regardless of the target planet's color", () => {
+      const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+
+      player.faction = Faction.SpaceGiants;
+      player.loadFaction(null);
+      player.data.ores = 20; // enough to afford both terraform steps on top of the base mine cost
+
+      const { cost } = player.canBuild(null, null, Planet.Terra, Building.Mine, false, false);
+
+      // base mine cost (2c,o) + 2 terraforming steps (6o, no discount)
+      // tslint:disable-next-line no-unused-expression
+      expect(Reward.match(Reward.parse("2c,7o"), cost)).to.be.true;
+    });
+
+    it("should charge a 2 QIC surcharge (instead of the standard 1) for Darkanians/Space Giants building a mine on a Gaia planet", () => {
+      for (const faction of [Faction.Darkanians, Faction.SpaceGiants]) {
+        const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+
+        player.faction = faction;
+        player.loadFaction(null);
+        player.data.qics = 20; // enough to afford the 2 QIC surcharge
+
+        const { cost } = player.canBuild(null, null, Planet.Gaia, Building.Mine, false, false);
+
+        // tslint:disable-next-line no-unused-expression
+        expect(Reward.match(Reward.parse("2c,o,2q"), cost)).to.be.true;
+      }
+    });
+
+    it("should still only charge the standard 1 QIC for other factions building a mine on a Gaia planet", () => {
+      const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+
+      player.faction = Faction.Terrans;
+      player.loadFaction(null);
+
+      const { cost } = player.canBuild(null, null, Planet.Gaia, Building.Mine, false, false);
+
+      // tslint:disable-next-line no-unused-expression
+      expect(Reward.match(Reward.parse("2c,o,q"), cost)).to.be.true;
+    });
   });
 
   describe("build", () => {
