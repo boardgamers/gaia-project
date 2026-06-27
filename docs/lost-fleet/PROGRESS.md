@@ -71,22 +71,25 @@ notifications).
    (Build a Mine) -45%. Vue 3 migration was evaluated and rejected for now (wouldn't fix the actual
    bottleneck, huge migration cost in this stack) — see `PERFORMANCE.md` for the full reasoning.
 
-## Still MISSING — all art-only, need photos (no text/randomizer source exists)
-Priority order (gates the most downstream code first):
-1. **Adjusted Economy research tile** — level 3 & 4 income, BOTH sides. (§F1)
-2. **4 Spaceship boards** (Twilight, Rebellion, T F Mars, Eclipse) — each action space's exact
-   EFFECT, the Standard-Tech slot count (2 or 3), Twilight's artifact-slot count, and the
-   shuttle-space charge values (spaces 1–5). (§C)
-3. **Tinkering tiles** — 5 of 6 effects (rulebook shows only 1). (§B1)
-4. **Artifact tokens** — count of each type among the 13 (effects already known). (§G6)
-5. **Federation tokens** — which of the 8 carry the green side (effects already known). (§G5)
-6. **Map tile planet layouts** — Deep Space (8×2 sides), Interspace (per player count), Revised
-   Space Sectors. (§H2–H4) ← the one place the randomizer could substitute, via tile images.
-7. **Moweyds/Tinkeroids Terraforming board** layout (mostly random-fill; low priority). (§B5)
+## Still MISSING — only one art-only item left
+As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
+1. **Revised Space Sector tiles 05/06/07** — the actual planet arrangement on the Lost-Fleet-specific
+   face (which tiles are double-sided and why is confirmed; the layout itself still needs a photo of
+   the physical component). (§H4)
 
-**How to fill:** user photographs the item → drop the image in chat → render/read with PyMuPDF or
-read the image directly → transcribe into `RULES_CLARIFICATIONS.md` with Source `BOARD-ART` /
-Confidence `CONFIRMED`, and flip the matching `COMPONENTS.md` row to `◐ SPEC`.
+Resolved this session (2026-06-27), for reference: Adjusted Economy tile (§F1), 4 Spaceship boards
+(§C), Tinkering tiles (§B1), Federation token green sides (§G5), Deep Space hex composition incl. the
+"unidentified" Transdim hex (§H2), Interspace tile per-player-count composition (§H3), Moweyds/
+Tinkeroids Terraforming board layout (§B5, closed as not-needed for engine logic), the full p.16
+existing-faction delta audit (§I, via owner screenshot), and a transcription error in the "big"
+Advanced Tech tile (§G2, was wrongly merged with the Deep Space tile due to a column-layout artifact).
+Artifact token type-counts (§G6) remain an unconfirmed "1-of-each" assumption — low priority, the
+effects are already known regardless of count.
+
+**How to fill the one remaining item:** user photographs Sector tiles 05/06/07's Lost-Fleet-specific
+face → drop the image in chat → render/read with PyMuPDF or read the image directly → transcribe into
+`RULES_CLARIFICATIONS.md` §H4 with Source `BOARD-ART` / Confidence `CONFIRMED`, and flip the matching
+`COMPONENTS.md` row to `◐ SPEC`.
 
 ## Build order once the spec is filled (from the brief)
 1. **Engine**: Lost Fleet behind `Expansion.LostFleet`; all existing base-game tests stay green
