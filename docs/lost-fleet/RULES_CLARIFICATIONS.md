@@ -236,7 +236,9 @@ For each ship, capture every action space: {type, cost, effect, grid-position} a
   - One side is placed at random at setup, covering the base game's level-3/4 income symbols on the
     Economy research track. Source: `RULEBOOK-TEXT` (placement only, not the reward values). CONFIRMED.
   (Base + Frontiers economy strings are in `research-tracks.ts` for reference.)
-- F2. No new research track is added (unlike Frontiers' Diplomacy). Confirm. Source: INFERRED. TODO verify.
+- F2. No new research track is added (unlike Frontiers' Diplomacy) — Lost Fleet only modifies the
+  existing Economy track via the F1 overlay tile, it doesn't add a 7th track. Owner-confirmed 2026-06-27.
+  CONFIRMED.
 
 ## G. TILES — EXACT EFFECTS
 
