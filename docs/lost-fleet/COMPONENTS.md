@@ -43,8 +43,8 @@ Each new faction needs (see RULES_CLARIFICATIONS for values):
 
 | Planet | Rule | Maps to | Status |
 |---|---|---|---|
-| Protoplanet | 3 terraform steps; +6 VP on mine (0 VP if starting planet) | `Planet` enum | ☐ TODO |
-| Asteroid | requires sacrificing a Gaiaformer; no build cost | `Planet` enum | ☐ TODO |
+| Protoplanet | 3 terraform steps; +6 VP on mine (0 VP if starting planet — not yet codeable, no faction has this home planet; see PROGRESS.md "Done so far" #10) | `Planet` enum | ● DONE |
+| Asteroid | requires sacrificing a Gaiaformer; no build cost | `Planet` enum | ● DONE |
 
 - New "11 planet types" symbol replaces the base "different planet types" symbol — affects
   the `PlanetType` final-scoring and any planet-type counting logic.

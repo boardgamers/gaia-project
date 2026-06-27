@@ -10,6 +10,8 @@ export enum Planet {
   Gaia = "g",
   Transdim = "m",
   Lost = "l",
+  Protoplanet = "p",
+  Asteroid = "a",
 }
 
 export enum ResearchField {
@@ -33,6 +35,30 @@ export enum Expansion {
 
 export function hasExpansion(expansions: Expansion, expansion: Expansion): boolean {
   return (expansions & expansion) !== 0;
+}
+
+export namespace Planet {
+  export function values(expansions: Expansion): Planet[] {
+    const ret = [
+      Planet.Empty,
+      Planet.Terra,
+      Planet.Desert,
+      Planet.Swamp,
+      Planet.Oxide,
+      Planet.Volcanic,
+      Planet.Titanium,
+      Planet.Ice,
+      Planet.Gaia,
+      Planet.Transdim,
+      Planet.Lost,
+    ];
+
+    if (hasExpansion(expansions, Expansion.LostFleet)) {
+      ret.push(Planet.Protoplanet, Planet.Asteroid);
+    }
+
+    return ret;
+  }
 }
 
 export namespace ResearchField {

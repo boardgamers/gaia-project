@@ -350,6 +350,15 @@ export default class Player extends EventEmitter {
           warnings.push(BuildWarning.stepActionPartiallyWasted);
         }
         addedCost.push(reward);
+
+        if (targetPlanet === Planet.Protoplanet) {
+          addedCost.push(new Reward(-6, Resource.VictoryPoint));
+        } else if (targetPlanet === Planet.Asteroid) {
+          if (!this.data.hasResource(new Reward(1, Resource.GaiaFormer))) {
+            return null;
+          }
+          addedCost.push(...Reward.negative(this.board.cost(building, isolated)));
+        }
       }
     }
 
@@ -538,6 +547,11 @@ export default class Player extends EventEmitter {
     this.payCosts(cost, Command.Build);
     const wasOccupied = this.data.occupied.includes(hex);
     const isNewLostPlanet = hex.data.planet === Planet.Lost && !hex.occupied();
+    const isNewAsteroidColonization = hex.data.planet === Planet.Asteroid && !hex.occupied();
+
+    if (isNewAsteroidColonization) {
+      this.data.gaiaformersUsedForAsteroid += 1;
+    }
 
     // excluding Gaiaformers as occupied
     if (building !== Building.GaiaFormer && building !== Building.CustomsPost && !isShip(building)) {
@@ -937,6 +951,7 @@ export default class Player extends EventEmitter {
       case Condition.Gaia:
         return this.ownedPlanets.filter((hex) => hex.data.planet === Planet.Gaia).length;
       case Condition.PlanetType:
+        // Lost Fleet Artifacts can grant a "virtual" planet type with no hex; fold those into this list when added.
         return uniq(this.ownedPlanets.map((hex) => hex.data.planet)).length;
       case Condition.Sector:
         return uniq(this.data.occupied.filter((hex) => hex.colonizedBy(this.player)).map((hex) => hex.data.sector))

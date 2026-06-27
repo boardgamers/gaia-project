@@ -3,6 +3,7 @@ import "mocha";
 import { Building, Expansion, Faction, Operator, Planet, Player as PlayerEnum, Resource } from "./enums";
 import Event from "./events";
 import { GaiaHex } from "./gaia-hex";
+import SpaceMap from "./map";
 import Player from "./player";
 import Reward from "./reward";
 
@@ -20,6 +21,61 @@ describe("Player", () => {
 
       // tslint:disable-next-line no-unused-expression
       expect(Reward.match(Reward.parse("2c,o,q"), cost)).to.be.true;
+    });
+
+    it("should grant a 6 VP bonus (encoded as -6vp cost) when building a mine on a Protoplanet", () => {
+      const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+
+      player.faction = Faction.Terrans;
+      player.loadFaction(null);
+      player.data.ores = 20; // enough to afford the 3 terraform steps on top of the base mine cost
+
+      const { cost } = player.canBuild(null, null, Planet.Protoplanet, Building.Mine, false, false);
+
+      // tslint:disable-next-line no-unused-expression
+      expect(Reward.match(Reward.parse("2c,10o,-6vp"), cost)).to.be.true;
+    });
+
+    it("should reject building a mine on an Asteroid without an available Gaiaformer", () => {
+      const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+
+      player.faction = Faction.Terrans;
+      player.loadFaction(null);
+      player.data.gaiaformers = 0; // every faction starts with 1 via GaiaProject research level 1
+
+      expect(player.canBuild(null, null, Planet.Asteroid, Building.Mine, false, false)).to.equal(null);
+    });
+
+    it("should waive the mine build cost on an Asteroid when a Gaiaformer is available", () => {
+      const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+
+      player.faction = Faction.Terrans;
+      player.loadFaction(null);
+
+      const { cost } = player.canBuild(null, null, Planet.Asteroid, Building.Mine, false, false);
+
+      // tslint:disable-next-line no-unused-expression
+      expect(Reward.match([], cost)).to.be.true;
+    });
+  });
+
+  describe("build", () => {
+    it("should permanently consume a Gaiaformer when colonizing an Asteroid, while still granting normal mine income", () => {
+      const map = new SpaceMap(2, "test-seed");
+      const hex = Array.from(map.grid.values()).find((h) => h.data.planet !== Planet.Empty && !h.data.building);
+      hex.data.planet = Planet.Asteroid;
+
+      const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+      player.faction = Faction.Terrans;
+      player.loadFaction(null);
+
+      const { cost } = player.canBuild(map, hex, Planet.Asteroid, Building.Mine, false, false);
+      player.build(Building.Mine, hex, cost, map);
+
+      expect(player.data.gaiaformersUsedForAsteroid).to.equal(1);
+      // tslint:disable-next-line no-unused-expression
+      expect(player.data.hasResource(new Reward(1, Resource.GaiaFormer))).to.be.false;
+      expect(player.data.buildings[Building.Mine]).to.equal(1);
     });
   });
 

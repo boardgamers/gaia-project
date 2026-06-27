@@ -11,8 +11,12 @@ export function terraformingStepsRequired(factionPlanet: Planet, targetPlanet: P
     Planet.Ice,
   ];
 
-  if (targetPlanet === Planet.Gaia || targetPlanet === Planet.Transdim) {
+  if (targetPlanet === Planet.Gaia || targetPlanet === Planet.Transdim || targetPlanet === Planet.Asteroid) {
     return 0;
+  }
+
+  if (targetPlanet === Planet.Protoplanet) {
+    return 3;
   }
 
   let dist = planetCycle.findIndex((pc) => pc === targetPlanet) - planetCycle.findIndex((pc) => pc === factionPlanet);
@@ -37,4 +41,6 @@ export const planetNames = {
   [Planet.Titanium]: "titanium",
   [Planet.Transdim]: "transdim",
   [Planet.Volcanic]: "volcanic",
+  [Planet.Protoplanet]: "protoplanet",
+  [Planet.Asteroid]: "asteroid",
 };

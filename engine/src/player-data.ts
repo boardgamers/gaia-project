@@ -81,6 +81,8 @@ export default class PlayerData extends EventEmitter {
   gaiaformers = 0;
   /** number of gaiaformers gained that are in gaia area */
   gaiaformersInGaia = 0;
+  /** number of gaiaformers permanently consumed to colonize an asteroid (Lost Fleet) */
+  gaiaformersUsedForAsteroid = 0;
   terraformCostDiscount = 0;
   tradeBonus = 0;
   tradeDiscount = 0;
@@ -128,6 +130,7 @@ export default class PlayerData extends EventEmitter {
       range: this.range,
       gaiaformers: this.gaiaformers,
       gaiaformersInGaia: this.gaiaformersInGaia,
+      gaiaformersUsedForAsteroid: this.gaiaformersUsedForAsteroid,
       terraformCostDiscount: this.terraformCostDiscount,
       tiles: this.tiles,
       satellites: this.satellites,
@@ -348,7 +351,12 @@ export default class PlayerData extends EventEmitter {
       case Resource.MoveTokenFromArea3ToGaia:
         return this.power.area3;
       case Resource.GaiaFormer:
-        return this.gaiaformers - this.gaiaformersInGaia - this.buildings[Building.GaiaFormer];
+        return (
+          this.gaiaformers -
+          this.gaiaformersInGaia -
+          this.buildings[Building.GaiaFormer] -
+          this.gaiaformersUsedForAsteroid
+        );
     }
 
     return 0;

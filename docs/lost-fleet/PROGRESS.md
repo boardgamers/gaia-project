@@ -74,6 +74,32 @@ notifications).
    `<defs>` nodes. Fixed (`markRaw`, hoisted federation gradient defs): load -16%, worst click
    (Build a Mine) -45%. Vue 3 migration was evaluated and rejected for now (wouldn't fix the actual
    bottleneck, huge migration cost in this stack) — see `PERFORMANCE.md` for the full reasoning.
+10. ✅ **Protoplanet & Asteroid planet types (Chunk 2) CODED & TESTED** (`COMPONENTS.md` §2, done
+    2026-06-27): `Planet` enum gained `Protoplanet`/`Asteroid`, gated via a new `Planet.values(expansions)`
+    namespace function mirroring `ResearchField.values()`'s pattern — establishing the gating convention
+    flag 5 asked for, ahead of the adv-tech/federation/booster/scoring tiles that also need it.
+    `planets.ts`'s `terraformingStepsRequired()` gained flat early-returns (Protoplanet=3 steps;
+    Asteroid=0, folded into the existing Gaia/Transdim branch). `player.ts`'s `canBuild()`/`build()`
+    wire the build path: Protoplanet mines get a +6VP bonus (encoded as a `-6vp` cost reward);
+    Asteroid mines require an available Gaiaformer (`canBuild` returns `null` otherwise), permanently
+    consume it (new `PlayerData.gaiaformersUsedForAsteroid` field, factored into
+    `getResources(GaiaFormer)`), and waive the board's ore/credit mine cost via `Reward.negative()`.
+    `Condition.PlanetType` needed no code change (purely hex-driven on owned hexes), so flag 6's
+    "virtual planet type" seam is a one-line comment at the count site for now — there's no Artifact
+    code yet to union in, so a real data structure would be speculative; revisit when Chunk 4+ codes
+    Artifacts. **280/280 engine tests pass** (274 baseline + new `planets.spec.ts` + 4 new cases in
+    `player.spec.ts`).
+    **Scope deviation flagged, not guessed past:** the "Refined ordering takeaway" below originally
+    said Chunk 2 should carry flag 1's full terraform-cost refactor too. That refactor is specifically
+    for the 4 *new* no-home-planet factions (Darkanians/Space Giants flat steps, Tinkeroids/Moweyds
+    per-game randomized cost-3 set) — none of which are coded yet, so there is no `factionPlanet()`
+    value to route and nothing concrete to test. Chunk 2 only added the flat Protoplanet/Asteroid
+    early-returns that flag 1 also called out (the part that's faction-agnostic); the per-faction
+    terrain-step override is still Chunk 3 as originally sequenced. **Known gap, not yet hit:** the
+    +6VP Protoplanet bonus is unconditional — it does not yet check "0 VP if a start planet" (§E1),
+    because no currently-coded faction has Protoplanet as a home planet, so `factionPlanet(this.faction)
+    === Planet.Protoplanet` can never be true today and there's no way to test the branch. This must
+    be added when Moweyds/Space Giants are coded (Chunk 4+), not before.
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -106,12 +132,14 @@ face → drop the image in chat → render/read with PyMuPDF or read the image d
 
 ### Engine chunk sequence (each chunk = own tested commit, confirm before moving on)
 - ✅ **Chunk 1 — `Expansion` enum bitwise restructure.** Done (see "Done so far" #3 above).
-- **Chunk 2 (next, proposed) — Protoplanet & Asteroid planet types.** Universal mechanics for ALL
-  18 factions (not just the 4 new ones) per rulebook "Changes to the Base Game Actions": Protoplanet
-  = 3 terraform steps to mine, +6VP (0VP if a start planet); Asteroid = consumes a Gaiaformer
-  permanently to build, mine has zero ore/credit cost. Touches `planets.ts`, `cost.ts`,
-  `player.ts` build logic. Gated behind `hasExpansion(expansions, Expansion.LostFleet)`.
-- **Chunk 3 — no-home-planet faction terraforming infra.** Split in two: (a) Darkanians (flat
+- ✅ **Chunk 2 — Protoplanet & Asteroid planet types.** Done (see "Done so far" #10 above). Universal
+  mechanics for ALL 18 currently-coded factions per rulebook "Changes to the Base Game Actions":
+  Protoplanet = 3 terraform steps to mine, +6VP; Asteroid = consumes a Gaiaformer permanently to
+  build, mine has zero ore/credit cost. Touched `enums.ts`, `planets.ts`, `player-data.ts`, `player.ts`
+  build logic. Gated behind `hasExpansion(expansions, Expansion.LostFleet)`. Did **not** touch the
+  "0VP if a start planet" carve-out (no coded faction can hit it yet — see the known-gap note in
+  "Done so far" #10) or the new factions' terrain-step cost (still Chunk 3, flag 1).
+- **Chunk 3 (next, proposed) — no-home-planet faction terraforming infra.** Split in two: (a) Darkanians (flat
   1-step to any base planet) / Space Giants (flat 2-step) first, since they're stateless flat-cost
   rules; (b) Tinkeroids/Moweyds shared randomized Terraforming board (satellite-cube draft setup
   procedure) after, since it's stateful setup logic shared between exactly those two factions.
@@ -191,17 +219,22 @@ of the chunk that touches it. (File:line refs are to `engine/src/`.)
 concern, not new placement code; Chunk 1's `hasExpansion` + bitwise enum is the right foundation for
 all the gating above.
 
-**Refined ordering takeaway:** Chunk 2 (Protoplanet/Asteroid) must also carry the `planets.ts`
-terraform-cost refactor (flag 1) and the virtual-planet-type counting hook (flag 6), or it'll be
-half-done. Chunk 3 (new factions) is blocked on flags 2-3 (gating + pairing) before any board values
-matter. The tile-gating convention (flag 5) is worth establishing once, early, before adding any new
-enum members across adv-tech/federation/booster/scoring.
+**Refined ordering takeaway (superseded by Chunk 2's actual scope, see "Done so far" #10):** this
+section originally said Chunk 2 must also carry the *full* `planets.ts` terraform-cost refactor (flag
+1) and the virtual-planet-type counting hook (flag 6), or it'd be half-done. In practice flag 1 splits
+cleanly into a faction-agnostic half (Protoplanet/Asteroid flat early-returns — done in Chunk 2) and a
+faction-specific half (the 4 new factions' per-faction/per-game terrain cost — needs factions that
+don't exist yet, so it stayed in Chunk 3 as originally sequenced). Flag 6 only needed a seam comment
+since there's no Artifact code yet to union in. Chunk 3 (new factions) is still blocked on flags 2-3
+(gating + pairing) before any board values matter. The tile-gating convention (flag 5) is now
+established (`Planet.values(expansions)`, Chunk 2) — reuse that exact shape for adv-tech/federation/
+booster/scoring enum members when those chunks come up.
 
 ## Next actions
-Chunk 1 is complete and verified (274/274 tests). Chunk 2 (Protoplanet/Asteroid planet types) is
-proposed as the next unit of work — but per flag 1 & 6 above, scope it to include the `planets.ts`
-terraform-cost refactor and the virtual-planet-type counting hook, not just the enum additions.
-Confirm with the user before starting it.
+Chunk 1 and Chunk 2 are complete and verified (280/280 tests: 274 baseline + 6 new). Chunk 3
+(no-home-planet faction terraforming infra, split into Darkanians/Space-Giants flat-cost then
+Tinkeroids/Moweyds randomized-board setup) is proposed as the next unit of work. Confirm with the
+user before starting it.
 
 ## Canonical files (trust order)
 `PROGRESS.md` (this) → `RULES_CLARIFICATIONS.md` (values; §A decisions, §K errata) →
