@@ -48,6 +48,9 @@ Each new faction needs (see RULES_CLARIFICATIONS for values):
 
 - New "11 planet types" symbol replaces the base "different planet types" symbol — affects
   the `PlanetType` final-scoring and any planet-type counting logic.
+- The 11th type in that symbol is the EXISTING base-game "Lost Planet" (gained at Navigation Level 5)
+  — not a new physical token, just newly counted. Confirmed via rulebook text + the randomizer's
+  `lostplanet.png` asset. See RULES_CLARIFICATIONS.md §G4b.
 
 ## 3. Lost Fleet Spaceship Boards (4)
 
@@ -80,7 +83,7 @@ Each faction's Exploration board needs `[NEED FROM BOARD]`:
 
 | Component | Count | Detail needed | Status |
 |---|---|---|---|
-| Deep Space Sector tiles | 8 (double-sided) | Planet layout per side `[NEED FROM BOARD]` | ☐ TODO |
+| Deep Space Sector tiles | 8 (double-sided) | Planet layout per side — CONFIRMED for 13 of 16 faces, see RULES_CLARIFICATIONS.md §H2 (1 unidentified hex motif on 3 faces still `[NEED FROM BOARD]`) | ◐ SPEC |
 | Interspace tiles | 30, in 4 player-count sets | spaceship / planet / blank per tile, per set `[NEED FROM BOARD]` | ☐ TODO |
 | Revised Space Sector tiles | replaces base "different planet types" components | which planets on revised sides `[NEED FROM BOARD]` | ☐ TODO |
 | Shifted-sector setup geometry | per player count (2/3/4) | encode the offset-placement layout (rulebook p.4-5) | ☐ TODO |
@@ -89,13 +92,13 @@ Each faction's Exploration board needs `[NEED FROM BOARD]`:
 
 | Component | Count | Detail | Status |
 |---|---|---|---|
-| Standard Tech tiles (new) | 12 (4 each of 3 types) | exact effect of each type — text p.13-15, VERIFY counts `[NEED FROM BOARD]` | ☐ TODO |
-| Advanced Tech tiles (new) | 6 | exact effects `[NEED FROM BOARD]` (text p.15 partial) | ☐ TODO |
-| Round Boosters (new) | 4 | income + pass bonus (text p.14, verify icons) | ☐ TODO |
-| Round Scoring tiles (new) | 3 | text p.14 | ☐ TODO |
-| Final Scoring tiles (new) | 3 | "most asteroids", "PI–Academy distance", "most deep space sectors" (text p.15) | ☐ TODO |
-| Federation tokens (new) | 8 (gold outline) | exact effects + which have green side `[NEED FROM BOARD]` (text p.15 partial) | ☐ TODO |
-| Artifact tokens | 13 | effect + count of each type among the 13 `[NEED FROM BOARD]` (text p.15 lists types) | ☐ TODO |
+| Standard Tech tiles (new) | 3 distinct types (1 in play per ship; rulebook's "4 each" is spare reprints) | exact effect of each type — CONFIRMED, see RULES_CLARIFICATIONS.md §G1 | ◐ SPEC |
+| Advanced Tech tiles (new) | 6 | exact effects CONFIRMED for all 6 — RULES_CLARIFICATIONS.md §G2 ("big"'s exact VP value still `[NEED FROM BOARD]`) | ◐ SPEC |
+| Round Boosters (new) | 4 | income + pass bonus — CONFIRMED, see RULES_CLARIFICATIONS.md §G3 | ◐ SPEC |
+| Round Scoring tiles (new) | 3 | text p.14 — CONFIRMED verbatim, see RULES_CLARIFICATIONS.md §G4 | ◐ SPEC |
+| Final Scoring tiles (new) | 3 | "most asteroids", "PI–Academy distance", "most deep space sectors" — CONFIRMED verbatim, see RULES_CLARIFICATIONS.md §G4 | ◐ SPEC |
+| Federation tokens (new) | 8 (gold outline) | exact effects CONFIRMED for all 8, see RULES_CLARIFICATIONS.md §G5; which OTHER tokens (besides "vp") have a green side `[NEED FROM BOARD]` | ◐ SPEC |
+| Artifact tokens | 13 | effect CONFIRMED for all 13, see RULES_CLARIFICATIONS.md §G6; count of each type among the 13 inferred as 1-each, VERIFY `[NEED FROM BOARD]` | ◐ SPEC |
 | Gaia Planet tokens | 4 | additive to base supply | ☐ TODO |
 | Action tokens | 12 | mark used spaceship action spaces | ☐ TODO |
 | Tinkering tiles | 6 (Tinkeroids only) | effect of each; 3 for rounds 1-3, 3 for 4-6 `[NEED FROM BOARD]` (one shown p.13) | ☐ TODO |
@@ -105,10 +108,10 @@ Each faction's Exploration board needs `[NEED FROM BOARD]`:
 
 | Component | Detail | Status |
 |---|---|---|
-| Adjusted Economy Research tile (double-sided) | levels 3 & 4 rewards, BOTH sides `[NEED FROM BOARD]` | ☐ TODO |
-| Adjusted Lantids PI tile (double-sided) | solo/2p side AND 3p side exact values `[NEED FROM BOARD]` | ☐ TODO |
+| Adjusted Economy Research tile (double-sided) | levels 3 & 4 rewards, BOTH sides — CONFIRMED, see RULES_CLARIFICATIONS.md §F1 | ◐ SPEC |
+| Adjusted Lantids PI tile (double-sided) | solo/2p side AND 3p side — CONFIRMED verbatim (RULES_CLARIFICATIONS.md §I2); NOT rendered by the uiqoo.kr randomizer tool at all, text-only | ◐ SPEC |
 | Colonization overlay | covers Q.I.C. actions on Research board; defines protoplanet/asteroid terraform | ☐ TODO |
-| Scoring Board Extension (double-sided) | 25-VP side / 3-shuttle side; +1 advanced tech slot | ☐ TODO |
+| Scoring Board Extension (double-sided) | 25-VP side / 3-shuttle side; +1 advanced tech slot — CONFIRMED (was previously mislabeled "Adjusted Lantids PI tile" in early review passes; see RULES_CLARIFICATIONS.md §E6) | ◐ SPEC |
 
 ## 9. Existing-Faction Changes  ⚠️ HIGHEST-RISK GAP
 

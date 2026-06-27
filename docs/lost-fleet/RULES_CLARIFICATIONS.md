@@ -225,32 +225,159 @@ For each ship, capture every action space: {type, cost, effect, grid-position} a
 
 ## F. RESEARCH TRACK CHANGES
 
-- F1. Adjusted Economy track — levels 3 & 4 income, BOTH tile sides: `TODO [BOARD-ART economy tile]`.
+- F1. Adjusted Economy track — levels 3 & 4 income, BOTH tile sides. Source: `BOARD-ART economy tile`
+  (owner-read 2026-06-27 — corrects an earlier icon-only guess that had levels 3 and 4 swapped).
+  Confidence: CONFIRMED.
+  - **Side "pw" (power-charge side):** Level 3 = 1 ore + 2 credits + charge 3 power. Level 4 = 2 ore +
+    2 credits + charge 2 power.
+  - **Side "vp" (flat-VP side):** Level 3 = 1 ore + 3 credits + 1 VP. Level 4 = 2 ore + 4 credits + 1 VP.
+  - One side is placed at random at setup, covering the base game's level-3/4 income symbols on the
+    Economy research track. Source: `RULEBOOK-TEXT` (placement only, not the reward values). CONFIRMED.
   (Base + Frontiers economy strings are in `research-tracks.ts` for reference.)
 - F2. No new research track is added (unlike Frontiers' Diplomacy). Confirm. Source: INFERRED. TODO verify.
 
 ## G. TILES — EXACT EFFECTS
 
-- G1. New Standard Tech tiles (12 = 4×3 types): the 3 types are described p.13-15. Exact effect of
-  each + confirm 3 distinct types × 4: `TODO [BOARD-ART standard tech tiles]`.
-- G2. New Advanced Tech (6): effects partly p.15. Exact 6: `TODO [BOARD-ART]`.
-- G3. Round Boosters (4): income (1o / 3c / 2pw) + pass bonus. Text p.14 lists all four — transcribe
-  & verify against tiles: `TODO [verify BOARD-ART]`.
-- G4. Round Scoring (3) + Final Scoring (3): text p.14-15. Transcribe exactly: mostly CONFIRMED, verify icons.
-- G5. New Federation tokens (8): effects p.15 (partial). Which carry the green side: `TODO [BOARD-ART]`.
-- G6. Artifacts (13): types listed p.15; count of each among 13 tokens: `TODO [BOARD-ART artifact tokens]`.
+- G1. New Standard Tech tiles seeded on spaceship boards (3 distinct types; the rulebook's "4 copies
+  each" is just spare-reprint count — only 1 of each type is ever in play at a time, see COMPONENTS.md
+  §3/§7). All 3 confirmed:
+  - **Range tile:** "Your basic range increases by 1 for the rest of the game, as long as the tile is
+    not covered by an Advanced Tech tile." Source: `RULEBOOK-TEXT` Appendix V. CONFIRMED.
+  - **Terraform tile:** "Immediately and only once receive a 'Build a Mine' action with up to 2 free
+    terraforming steps and without paying the cost for that mine. You may spend additional ore to get a
+    third terraforming step, and Q.I.C.s to increase range." Source: `RULEBOOK-TEXT` Appendix V. CONFIRMED.
+  - **Resource tile:** gain 1 ore + 3 knowledge. Source: `BOARD-ART` (owner-read 2026-06-27). CONFIRMED.
+- G2. New Advanced Tech tiles (6), all confirmed (rulebook Appendix V for 2; owner board-read for the
+  other 4, 2026-06-27):
+  - **asteroidpass:** "When you pass, you gain 2 victory points for each asteroid that you have
+    colonized." Source: RULEBOOK-TEXT. CONFIRMED.
+  - **big:** "Immediately and only once receive victory points for each Planetary Institute and/or
+    Academy, and for each Deep Space sector in which you have colonized at least 1 planet." Source:
+    RULEBOOK-TEXT (mechanism CONFIRMED; exact VP-per-unit value still needs the printed tile, `TODO`).
+  - **deep:** Immediately gain 4 VP per Deep Space sector colonized; the Lost Planet counts if it's
+    placed in a Deep Space sector you hadn't already colonized. Source: BOARD-ART. CONFIRMED.
+  - **deeppass:** When you pass, gain 2 VP per Deep Space sector colonized (same Lost-Planet caveat as
+    "deep"). Source: BOARD-ART. CONFIRMED.
+  - **qaction:** Every time you take a Q.I.C. action, gain 4 VP. Source: BOARD-ART. CONFIRMED.
+  - **terra:** Every time you terraform 1 step, gain 2 VP (3 steps on one planet = 6 VP; colonizing a
+    Protoplanet, which costs 3 steps, gives the full 6). Cannot over-terraform for extra VP. Triggers
+    off ANY action that grants free terraforming steps, including the "terra" New Federation token (3
+    free steps + build a mine). Source: BOARD-ART. CONFIRMED.
+  - (`planetpass` is a reskin of the base "planet" tile, not one of these 6 — see G4b below.)
+- G3. Round Boosters (4), all confirmed verbatim from rulebook Appendix III:
+  - **former:** income 1 ore. Pass bonus: 3 VP per Gaiaformer (on Faction board or deployed); none for
+    Gaiaformers already used to colonize an asteroid. CONFIRMED.
+  - **planet:** income 1 ore. Pass bonus: 1 VP per planet type colonized. CONFIRMED.
+  - **deep:** income 3 credits. Pass bonus: 2 VP per Deep Space sector with ≥1 planet colonized. CONFIRMED.
+  - **instant:** no income row. Special action (once): perform "Start a Gaia Project" without moving
+    power tokens into the Gaia Area, instantly converting a transdim planet (must be in range; Q.I.C.s
+    may extend range) into a Gaia planet. CONFIRMED.
+- G4. Round Scoring (3) + Final Scoring (3): text p.14-15, all 6 CONFIRMED verbatim (lab4/sector3/
+  planet3 round tiles; asteroid/deep/distance final tiles — exact quotes in the scratchpad review doc).
+  Owner confirmed (2026-06-27) that the planet-type-counting tiles (G4b) explicitly count
+  asteroids/protoplanets held only via an Artifact (G6) too, even though no mine is physically placed
+  for those.
+- G4b. Planet-type-counting tiles (3 reskins of existing base tiles, owner-confirmed 2026-06-27, same
+  underlying template, now counting all 11 planet types incl. Asteroid/Protoplanet/Lost Planet):
+  - Standard Tech `planetk`: immediately gain 1 knowledge per planet type colonized.
+  - Advanced Tech `planetpass`: when you pass, gain 1 VP per planet type colonized.
+  - Final Scoring `planet`: most planet types colonized (counts Protoplanet/Asteroid incl. via Artifact,
+    and the Lost Planet).
+- G5. New Federation tokens (8), all confirmed (rulebook Appendix VI for 4; owner board-read 2026-06-27
+  for the other 4 — their gear-shaped badge is VP, not an unidentified resource as previously guessed):
+  - **c:** Immediately gain 8 VP + 8 credits. CONFIRMED (BOARD-ART).
+  - **k:** Immediately gain 4 VP + 4 knowledge. CONFIRMED (BOARD-ART).
+  - **oq:** Immediately gain 4 VP + 2 ore + 1 Q.I.C. CONFIRMED (BOARD-ART).
+  - **pwt:** Immediately gain 7 VP + 2 power tokens placed directly into Area III (new tokens, not
+    charged up from Area II, per owner's reading). CONFIRMED (BOARD-ART).
+  - **range:** Immediately and only once receive a "Build a Mine" action of limitless range without
+    paying the build cost; ore still pays for terraforming, Q.I.C. still required for Gaia planets.
+    CONFIRMED (RULEBOOK-TEXT).
+  - **tech:** Immediately and only once receive 1 Tech tile of choice (same rules as "Upgrade Existing
+    Structures"). CONFIRMED (RULEBOOK-TEXT).
+  - **terra:** Immediately and only once receive a "Build a Mine" action with up to 3 free terraforming
+    steps, without paying the build cost; Q.I.C.s may still increase range. CONFIRMED (RULEBOOK-TEXT).
+  - **vp:** Immediately gain 12 VP. Unlike base-game 12-VP Federation tokens, this one ALSO has a green
+    reverse side letting you discover an Advanced Tech tile or research to the highest level of a
+    Research Area. CONFIRMED (RULEBOOK-TEXT) for the gold face; the green-side trigger condition is
+    still `TODO [BOARD-ART]`.
+  - Which OTHER tokens (besides `vp`) carry a green side, if any: still `TODO [BOARD-ART]` — the
+    rulebook only calls out `vp` as having one.
+- G6. Artifact tokens (13), all confirmed. 13 distinct names/images, no two alike — simplest reading is
+  1 copy of each (owner to confirm physical box count if duplicates actually exist). Effects:
+  - **1 Knowledge + 1 Ore:** ongoing — gain an extra 1 knowledge + 1 ore EVERY income phase (NOT a
+    one-time examine bonus — corrects an earlier guess). Source: BOARD-ART (owner 2026-06-27). CONFIRMED.
+  - **3 Credits + 3 Ore:** immediately (one-time, on examine) gain 3 credits + 3 ore. CONFIRMED.
+  - **3 Knowledge + 1 Q.I.C.:** immediately gain 3 knowledge + 1 Q.I.C. CONFIRMED.
+  - **5 Credits + 2 Ore:** immediately gain 5 credits + 2 ore. CONFIRMED.
+  - **Power-charge:** gain 2 power as income, placed in Area III. Source: RULEBOOK-TEXT Appendix VII. CONFIRMED.
+  - **Asteroid-themed / Protoplanet-themed** (shared template, 7 VP each): immediately and only once
+    gain 7 VP; the artifact ALSO counts as if you're building a mine and colonizing an asteroid (or
+    protoplanet) for that mine — not allocated to a sector (no new-sector credit, no 6 VP protoplanet
+    bonus), no mine physically placed. Source: RULEBOOK-TEXT Appendix VII (verbatim, shared template). CONFIRMED.
+  - **Research/Knowledge-themed (per-level):** immediately and only once gain 3 VP per level reached in
+    the matching Research Area (rulebook's own worked example: Level 5 → 15 VP). Source: RULEBOOK-TEXT
+    Appendix VII. CONFIRMED. ⚠️ Owner's review comment for this row was cut off mid-sentence ("T") —
+    flag to owner to resend/finish in case it contained a correction.
+  - **Research-track-themed (generic, count-based):** immediately and only once gain 3 VP for each
+    Research Area at Level ≥3 (track-agnostic — distinct from the per-level one above). Source:
+    RULEBOOK-TEXT Appendix VII. CONFIRMED.
+  - **Federation-token-shaped:** re-score (re-trigger) a Federation token you ALREADY own — gold or
+    green side, doesn't matter which. Reuses the base game's federation-scoring mechanic, just
+    re-triggered by this artifact. Source: BOARD-ART (owner 2026-06-27 — corrects the earlier "grants a
+    new federation token" guess). CONFIRMED.
+  - **Gaia-Planet-themed:** immediately and only once gain 3 VP per step up the Gaiaforming track (same
+    per-level-multiplier mechanism as the Research/Knowledge-themed artifact above, applied to the
+    Gaiaforming track instead of a Research Area). Source: BOARD-ART (owner 2026-06-27). CONFIRMED.
+  - **Planet-types-themed:** immediately and only once gain 3 VP + 1 VP per planet type colonized
+    (counts planet types held only via another Artifact's asteroid/protoplanet effect, see above).
+    Source: BOARD-ART (owner 2026-06-27). CONFIRMED.
+  - **Deep-Space-themed:** immediately and only once gain 3 VP per Deep Space sector colonized; the
+    Lost Planet counts if placed in a Deep Space sector you hadn't already colonized. Source: BOARD-ART
+    (owner 2026-06-27). CONFIRMED.
 
 ## H. MAP / SETUP
 
 - H1. Shifted-sector layouts for 2/3/4p (offset placement, 6/holes, interspace + deep-space): p.4-5. CONFIRMED (procedure).
-- H2. Deep Space sector planet layouts (8 tiles, 2 sides each): `TODO [BOARD-ART deep space tiles]`.
+- H2. Deep Space sector tiles (8 physical tiles, 2 sides each = 16 faces, each a 3-hex cluster). Hex
+  contents read directly off the randomizer art (2026-06-27). Owner does NOT need the art itself
+  redrawn pixel-for-pixel (own SVG style instead, per Art policy above) but DOES need this composition
+  data for game logic — explicitly requested, not yet captured anywhere else:
+
+  | Tile | Side a | Side b |
+  |---|---|---|
+  | 11 | Protoplanet, Asteroid, Blank | Asteroid, Blank, Blank |
+  | 12 | **Unidentified†**, Protoplanet, Blank | Asteroid, Blank, Blank |
+  | 13 | **Unidentified†**, Blank, Asteroid | Blank, Blank, Asteroid |
+  | 14 | Protoplanet, Blank, Asteroid | Blank, Blank, Asteroid |
+  | 15 | Protoplanet, Blank, Blank | Protoplanet, Blank, Asteroid |
+  | 16 | Blank, Blank, Protoplanet | Asteroid, Blank, Asteroid |
+  | 17 | **Unidentified†**, Blank, Blank | Blank, Asteroid, Blank |
+  | 18 | Protoplanet, Blank, Blank | Asteroid, Blank, Blank |
+
+  Source: `BOARD-ART` (randomizer asset read). Confidence: CONFIRMED for the Asteroid/Protoplanet/Blank
+  classifications. **† Unidentified (tiles 12a, 13a, 17a only):** a solid violet/magenta cratered
+  sphere with no glow — visually distinct from the confirmed teal-glow Protoplanet motif, and doesn't
+  match any of the 9 base-game planet colors either. Deliberately NOT guessed further (that's exactly
+  the kind of icon-only call that's been wrong elsewhere in this review) — flagged `TODO [BOARD-ART]`
+  for the owner to check against the physical tiles. If it turns out to be decorative-only, those 3
+  cells are effectively Blank; if it's a real 4th hex type, the table undercounts it.
+  - Extends H5: tile 16 has 0 asteroid hexes on side a vs. 2 on side b — exactly the swing the setup
+    code keys off (`advcond`-style forced logic) when deciding whether to flip tile 16 to reach the ≥6
+    asteroid minimum. A full side-b set totals 9 asteroid hexes across all 8 tiles; a full side-a set
+    totals only 3 — confirms why tile 16 specifically is the one the rulebook calls out to flip.
 - H3. Interspace tile contents per player-count set (30 in 4 sets): `TODO [BOARD-ART interspace tiles]`.
 - H4. Revised Space Sector tile planet layouts: `TODO [BOARD-ART revised sectors]`.
 - H5. "Most asteroids" final scoring needs ≥6 asteroids in play (flip Deep Space tile 16 if not). p.4. CONFIRMED.
 
 ## I. EXISTING-FACTION DELTAS  ⚠️ audit p.16 vs base boards
 - I1. Ivits: start 2 power Area I + 2 Area II (p.8). Other deltas: `TODO [BOARD-ART p.16]`.
-- I2. Lantids: +1 power Area I income; adjusted PI tile (solo/2p vs 3p sides): `TODO [BOARD-ART]`.
+- I2. Lantids: +1 power Area I income (CONFIRMED, p.8). Adjusted PI tile, both sides confirmed verbatim
+  (`RULEBOOK-TEXT` p.9 — this tile has NO image in the uiqoo.kr randomizer at all, text-only, see
+  COMPONENTS.md §8): **solo/2-player side** — gain 2 knowledge both when adding a mine to a colonized
+  planet AND when building a mine on the Lantids' home planet type, even without using their faction
+  ability. **3-player side** — may charge 1 additional power when adding a mine to a colonized planet.
+  Only relevant with fewer than 4 players (a 4-player game uses the unadjusted base PI tile). CONFIRMED.
 - I3. Bescods: start 3 knowledge (p.8). Other deltas: `TODO [BOARD-ART]`.
 - I4. Xenos: free action 1o→1pw(AreaIII) (p.11). Board deltas: `TODO [BOARD-ART]`.
 - I5. Gleens: special action incl. Explore +2 range (p.11). Board deltas: `TODO [BOARD-ART]`.
