@@ -273,7 +273,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop, Watch } from "vue-property-decorator";
-import Engine, { Building, Expansion, factionPlanet, Planet, Player } from "@gaia-project/engine";
+import Engine, { Building, Expansion, factionPlanet, hasExpansion, Planet, Player } from "@gaia-project/engine";
 import { factionColor } from "../graphics/utils";
 import TechTile from "./TechTile.vue";
 import Booster from "./Booster.vue";
@@ -376,7 +376,7 @@ export default class PlayerInfo extends Vue {
   }
 
   get isFrontiers() {
-    return this.engine.expansions == Expansion.Frontiers;
+    return hasExpansion(this.engine.expansions, Expansion.Frontiers);
   }
 
   get engine() {

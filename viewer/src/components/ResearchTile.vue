@@ -66,6 +66,7 @@ import Engine, {
   ResearchField,
   Resource as ResourceEnum,
   Event,
+  hasExpansion,
   researchEvents,
 } from "@gaia-project/engine";
 import { researchEventsWithCounters, researchLevelDesc } from "../data/research";
@@ -120,7 +121,7 @@ export default class ResearchTile extends Vue {
 
   smallRange(resource: ResourceEnum): boolean {
     return (resource === ResourceEnum.ShipRange || resource === ResourceEnum.Range)
-      && this.engine.expansions === Expansion.Frontiers;
+      && hasExpansion(this.engine.expansions, Expansion.Frontiers);
   }
 
   tokenX(index: PlayerEnum) {

@@ -1,5 +1,5 @@
 import { Event, Expansion } from "../index";
-import { isResourceUsed, ResearchField } from "./enums";
+import { hasExpansion, isResourceUsed, ResearchField } from "./enums";
 
 const researchTracks: { [key in ResearchField]: string[][] } = {
   [ResearchField.Terraforming]: [[], ["2o"], ["d"], ["d", "3pw"], ["2o"], []],
@@ -29,7 +29,7 @@ const frontiersEco: string[][] = [
 
 export function researchEvents(field: ResearchField, level: number, expansion: Expansion) {
   const spec: string[] =
-    expansion === Expansion.Frontiers && field === ResearchField.Economy
+    hasExpansion(expansion, Expansion.Frontiers) && field === ResearchField.Economy
       ? frontiersEco[level]
       : researchTracks[field][level];
   return spec.map((s) => new Event(s, field)).filter((e) => e.rewards.every((r) => isResourceUsed(r.type, expansion)));

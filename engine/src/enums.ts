@@ -26,7 +26,13 @@ export enum Expansion {
   // 1 was the old spaceships expansion
   None = 0,
   Frontiers = 2,
-  All = 2,
+  LostFleet = 4,
+  // "all content" sentinel for `.values()` enumeration only - never a valid game-config selection
+  All = Frontiers | LostFleet,
+}
+
+export function hasExpansion(expansions: Expansion, expansion: Expansion): boolean {
+  return (expansions & expansion) !== 0;
 }
 
 export namespace ResearchField {
@@ -40,7 +46,7 @@ export namespace ResearchField {
       ResearchField.Science,
     ];
 
-    if (expansions === Expansion.Frontiers) {
+    if (hasExpansion(expansions, Expansion.Frontiers)) {
       ret.push(ResearchField.Diplomacy);
     }
 
@@ -98,7 +104,7 @@ export function isResourceUsed(resource: Resource, expansion: Expansion) {
     case Resource.TradeDiscount:
     case Resource.TradeShip:
     case Resource.UpgradeDiplomacy:
-      return expansion === Expansion.Frontiers;
+      return hasExpansion(expansion, Expansion.Frontiers);
   }
   return true;
 }
@@ -198,12 +204,12 @@ export namespace Building {
         if (!isAvailableShip(b)) {
           return false;
         }
-        return expansion === Expansion.Frontiers;
+        return hasExpansion(expansion, Expansion.Frontiers);
       }
       switch (b) {
         case Building.Colony:
         case Building.CustomsPost:
-          return expansion === Expansion.Frontiers;
+          return hasExpansion(expansion, Expansion.Frontiers);
       }
 
       return true;
@@ -382,7 +388,7 @@ export namespace TechTile {
       if (typeof val !== "string") {
         return;
       }
-      return !val.includes("frontiers") || expansions === Expansion.Frontiers;
+      return !val.includes("frontiers") || hasExpansion(expansions, Expansion.Frontiers);
     }) as TechTile[];
   }
 }
@@ -414,7 +420,7 @@ export namespace TechPos {
       "tech-free3",
     ] as TechPos[];
 
-    if (expansions === Expansion.Frontiers) {
+    if (hasExpansion(expansions, Expansion.Frontiers)) {
       ret.push(TechPos.Diplomacy);
     }
 
@@ -439,7 +445,7 @@ export namespace TechTilePos {
   export function values(expansions: Expansion): TechTilePos[] {
     const ret = ["terra", "nav", "int", "gaia", "eco", "sci", "free1", "free2", "free3"] as TechTilePos[];
 
-    if (expansions === Expansion.Frontiers) {
+    if (hasExpansion(expansions, Expansion.Frontiers)) {
       ret.push(TechTilePos.Diplomacy);
     }
 
@@ -492,7 +498,7 @@ export namespace AdvTechTilePos {
   export function values(expansions: Expansion): AdvTechTilePos[] {
     const ret = ["adv-terra", "adv-nav", "adv-int", "adv-gaia", "adv-eco", "adv-sci"] as AdvTechTilePos[];
 
-    if (expansions === Expansion.Frontiers) {
+    if (hasExpansion(expansions, Expansion.Frontiers)) {
       ret.push(AdvTechTilePos.Diplomacy);
     }
 

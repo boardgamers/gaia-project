@@ -86,6 +86,8 @@ export interface EngineOptions {
   flexibleFederations?: boolean;
   /** Frontiers expansion */
   frontiers?: boolean;
+  /** Lost Fleet expansion */
+  lostFleet?: boolean;
   /** auction */
   auction?: AuctionVariant;
   /**  **/
@@ -249,7 +251,9 @@ export default class Engine {
   replay: boolean; // be more permissive during replay
 
   get expansions(): Expansion {
-    return 0 | (this.options.frontiers ? Expansion.Frontiers : 0);
+    return (
+      0 | (this.options.frontiers ? Expansion.Frontiers : 0) | (this.options.lostFleet ? Expansion.LostFleet : 0)
+    );
   }
 
   round: number = Round.None;

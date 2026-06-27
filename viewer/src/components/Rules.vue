@@ -92,7 +92,7 @@
 import { factionDesc, factionName } from "../data/factions";
 
 import { Component, Prop, Vue } from "vue-property-decorator";
-import Engine, { Expansion, Faction, factionPlanet, factionVariantBoard } from "@gaia-project/engine";
+import Engine, { Expansion, Faction, factionPlanet, factionVariantBoard, hasExpansion } from "@gaia-project/engine";
 import { finalScoringFields, finalScoringItems } from "../logic/final-scoring-rules";
 import { factionColor, planetFill } from "../graphics/utils";
 import { tradeHeaders, tradeRows } from "../logic/trade-rewards";
@@ -119,7 +119,7 @@ export default class Rules extends Vue {
   }
 
   get isFrontiers(): boolean {
-    return this.engine.expansions === Expansion.Frontiers;
+    return hasExpansion(this.engine.expansions, Expansion.Frontiers);
   }
 
   mounted() {

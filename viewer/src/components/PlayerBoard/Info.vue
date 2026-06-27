@@ -143,6 +143,7 @@ import Undo from "../Resources/Undo.vue";
 import Engine, {
   Expansion,
   Faction,
+  hasExpansion,
   MAX_SATELLITES,
   Player,
   PlayerData,
@@ -182,7 +183,7 @@ export default class PlayerBoardInfo extends Vue {
   }
 
   get isFrontiers() {
-    return this.engine.expansions == Expansion.Frontiers;
+    return hasExpansion(this.engine.expansions, Expansion.Frontiers);
   }
 
   get researchFields(): number {

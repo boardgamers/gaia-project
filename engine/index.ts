@@ -48,6 +48,7 @@ export {
   Faction,
   Federation,
   FinalTile,
+  hasExpansion,
   isShip,
   Operator,
   Phase,

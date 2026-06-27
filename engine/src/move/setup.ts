@@ -10,6 +10,10 @@ import { applyRandomBoardSetup, applySetupOption, SetupOption, SetupPosition, Se
 
 export function moveInit(engine: Engine, players: number, seed: string) {
   assert(players >= 2 && players <= 5, "Invalid number of players");
+  assert(
+    !(engine.options.frontiers && engine.options.lostFleet),
+    "Frontiers and Lost Fleet expansions cannot be combined"
+  );
 
   engine.map = new SpaceMap(players, seed, engine.options.map?.mirror ?? false, engine.options.layout);
 

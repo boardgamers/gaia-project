@@ -2,7 +2,7 @@ import { uniq } from "lodash";
 import { upgradedBuildings } from "../buildings";
 import { qicForDistance } from "../cost";
 import Engine from "../engine";
-import { Building, Command, Expansion, Faction, Planet, Player, Resource } from "../enums";
+import { Building, Command, Expansion, Faction, hasExpansion, Planet, Player, Resource } from "../enums";
 import { GaiaHex } from "../gaia-hex";
 import SpaceMap from "../map";
 import PlayerObject, { BuildCheck, BuildWarning } from "../player";
@@ -95,7 +95,7 @@ export function possibleBuildings(engine: Engine, player: Player): AvailableComm
         continue;
       }
 
-      if (hex.isRangeStartingPoint(player) && engine.expansions === Expansion.Frontiers) {
+      if (hex.isRangeStartingPoint(player) && hasExpansion(engine.expansions, Expansion.Frontiers)) {
         buildings.push(...possibleShips(pl, engine, map, hex));
       }
 
