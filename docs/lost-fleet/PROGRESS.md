@@ -138,14 +138,17 @@ of the chunk that touches it. (File:line refs are to `engine/src/`.)
    the 4 new factions to the enum and they leak into base/Frontiers games. Plan: thread `expansions`
    into `remainingFactions` and filter (new 4 only when `hasExpansion(.., LostFleet)`; conversely the
    14 base factions stay available without it).
-3. **`oppositeFaction` will wrongly forbid two new factions together.** `factions.ts:49` pairs any
-   two factions sharing a home planet as mutually exclusive (Terrans/Lantids both Terra, etc.).
-   Tinkeroids+Darkanians both start on Asteroid; Moweyds+Space Giants both on Protoplanet — if added
-   to the `factions` map with `planet: Asteroid/Protoplanet` they'd be treated as an exclusive pair,
-   which is WRONG (the real game lets them coexist). Plan: exclude the new factions from shared-planet
-   pairing (give each a unique sentinel, or special-case them out of `oppositeFaction`). Also note the
-   `factions` map type is exhaustive `{[key in Faction]: {planet}}` — adding enum values forces
-   filling it or TS won't compile.
+3. **`oppositeFaction` pairing is CORRECT to keep for the new factions (owner-confirmed 2026-06-27).**
+   Same-color factions are mutually exclusive exactly like the base game — only one per game.
+   Tinkeroids↔Darkanians share the Asteroid "color"; Moweyds↔Space Giants share Protoplanet (this
+   matches the 2 new player colors, turquoise/pink — see COMPONENTS.md §10). So add them to the
+   `factions` map (`factions.ts:4`) with `planet: Asteroid` / `planet: Protoplanet` and the existing
+   `oppositeFaction` shared-planet logic enforces the one-per-game rule with no change. **The one
+   subtlety:** the `planet` field does double duty in the base game — it drives BOTH faction pairing
+   AND terraform origin (`factionPlanet()` feeds `terraformingStepsRequired`, see flag 1). For these
+   factions it must drive pairing only; their terraform cost is a flat/board rule, so the flag-1
+   override must NOT route them through the planet-cycle math. Also note the `factions` map type is
+   exhaustive `{[key in Faction]: {planet}}` — adding enum values forces filling it or TS won't compile.
 4. **Lost Fleet "Spaceship Boards" are NOT Frontiers ships — limited reuse.** `move/ships.ts` +
    `Building` enum show Frontiers ships are movable units (`moved` flag, `location`, `MoveShip`
    command, trade system). LF spaceships are STATIONARY map tiles you *explore* by placing a shuttle

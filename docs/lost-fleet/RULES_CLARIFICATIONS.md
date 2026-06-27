@@ -79,10 +79,16 @@ text (effect + depiction plan) is kept here. Concretely, each component-type ent
 
 - **A3. No Automa / no solo.** Source: `OUR-RULING`. Confidence: CONFIRMED.
 
-- **A4. No-home-planet factions.** The 4 new factions have no home planet. `factions.ts`
-  `oppositeFaction()` / `factionPlanet()` assume a home planet exists. Needs a guarded code path so
-  setup, terraforming-cost, and faction-pairing logic don't break. Source: `RULEBOOK-TEXT p.7`.
-  Confidence: CONFIRMED (rule), INFERRED (code impact).
+- **A4. No-home-planet factions.** The 4 new factions have no home *terrain* planet (they start on
+  Asteroid/Protoplanet). **Same-color exclusivity still applies (owner-confirmed 2026-06-27): only one
+  faction per color per game, exactly like the base game.** The 4 new factions form 2 color pairs —
+  Tinkeroids↔Darkanians (Asteroid/turquoise) and Moweyds↔Space Giants (Protoplanet/pink) — and are
+  mutually exclusive within each pair. Implementation: give each its shared planet in the `factions.ts`
+  map so the existing `oppositeFaction()` pairing enforces this unchanged. The ONLY thing to guard is
+  terraform cost: `factionPlanet()` feeds `terraformingStepsRequired()`, whose planet-cycle math is
+  meaningless for these factions (their cost is a flat/board rule, §B2/B4/B5) — so the terraform path,
+  not the pairing path, needs the guarded branch. Source: `RULEBOOK-TEXT p.7` + `OUR-RULING`
+  (same-color exclusivity). Confidence: CONFIRMED.
 
 ---
 
