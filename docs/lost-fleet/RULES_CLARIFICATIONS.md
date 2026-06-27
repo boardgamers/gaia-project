@@ -153,43 +153,50 @@ text (effect + depiction plan) is kept here. Concretely, each component-type ent
 
 For each ship, capture every action space: {type, cost, effect, grid-position} and tech-slot count.
 
-> **Partial read from faction-overview PDF p.3** (the 4 ship boards are pictured). I can read each
-> action tile's COST HEADER fairly reliably; the EFFECTS are small and need board confirmation.
-> Provisional color→type mapping (confirm): **green = Q.I.C. action, purple = Power action,
-> blue = Knowledge action, yellow = Credit action.** Each cost header shows power as a purple disc and
-> any additional resource as a small shield/disc beside it. Source for all C1–C4 below:
-> `BOARD-ART (overview scan p.3)`. Confidence: **INFERRED — confirm costs + effects on physical ships.**
+Each ship has exactly 3 action tiles: 1 Q.I.C.-cost action, 1 Power-cost action, and a 3rd that's
+either a Knowledge-cost action (Twilight, Rebellion) or a Credit-cost action (T F Mars, Eclipse).
+Color→type mapping CONFIRMED: **green = Q.I.C. action, purple = Power action, blue = Knowledge action,
+yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-read 2026-06-27. CONFIRMED.
 
 ### C1. Twilight (Nautilaks)
-- Tile 1 (green): cost **3 Q.I.C.** → effect = "Gain a Tech Tile" (matches rulebook p.13: that action
-  costs 3 Q.I.C.; take Standard Tech from a ship if you have a shuttle there).
-- Tile 2 (purple): cost **3 power + 2 knowledge** → advance 1 research level (matches p.13).
-- Tile 3 (blue): cost **1 knowledge** → **+3 Range** action (matches p.13: "+3 Range" costs 1 knowledge).
+- Q.I.C. action: 3 Q.I.C. → re-score (re-trigger) a Federation token you already own (same mechanic as
+  the base game's federation re-scoring / the Federation-token-shaped Artifact, G6).
+- Power action: 3 power (Area III) + 2 ore → build a Research Lab.
+- Knowledge action: 1 knowledge → +3 Range, usable for Build a Mine, Gaiaforming, or Exploring a ship.
 - Plus **artifact slots** (the asteroid-cluster art) — artifacts seed here; "Examine Artifact" = discard
-  6 power → 1 artifact (D4). Number of artifact slots: `TODO [confirm count vs player count]`.
+  6 power (any of Areas I/II/III) → 1 artifact (D4). Number of artifact slots: `TODO [confirm count vs
+  player count]`.
 - Standard-tech slots (2 or 3): `TODO [confirm]`.
 
 ### C2. Rebellion (Vo'Kron)  — excluded in 2p
-- Tile 1 (green): cost **3 Q.I.C.**.  Tile 2 (purple): cost **3 power + 1 knowledge**.
-  Tile 3 (blue): cost **2 knowledge**. Effects: `TODO [confirm on board]`.
+- Q.I.C. action: 3 Q.I.C. → claim a Tech tile (same as the base game's "take a tech tile" Q.I.C. action).
+- Power action: 3 power + 1 ore → build a Trading Station, ignoring the normal adjacency-to-a-mine
+  requirement.
+- Knowledge action: 2 knowledge → gain 2 credits + 1 Q.I.C.
 - Standard-tech slots: `TODO`.
 
 ### C3. T F Mars (Gaia Federation)
-- Tile 1 (green): cost **2 Q.I.C.** → effect appears terraform/build related (shows "2" + "1") —
-  likely "Build a Mine w/ 2 free terraform steps, pay 1 ore for a 3rd". `TODO confirm`.
-- Tile 2 (purple): cost **2 power** → "Start a Gaia Project / transform transdim→Gaia" (green-planet
-  icon; matches p.13). Tile 3 (yellow): cost **2 (credit action)** → gain resources / build-related.
-  `TODO confirm effects`.
+- Q.I.C. action: 2 Q.I.C. → gain 2 VP + 1 VP per Tech tile you have.
+- Power action: charge 2 power → perform the Instant Gaiaforming action (same mechanic as the
+  "instant" Round Booster, G3: convert a transdim planet in range into a Gaia planet without moving
+  power tokens into the Gaia Area).
+- Credit action: 3 credits → terraform 1 step AND build (same combined terraform+build as the base
+  game's standard "Build a Mine" action, just paid in credits instead of ore).
 - Standard-tech slots: `TODO`.
 
 ### C4. Eclipse (Eridani Empire)
-- Tile 1 (green): cost **2 Q.I.C.**.  Tile 2 (purple): cost **3 power + 2 (blue)**.
-  Tile 3 (yellow): cost **2 (credit action)**. Effects: `TODO [confirm on board]`.
+- Q.I.C. action: 2 Q.I.C. → gain 2 VP + 1 VP per planet type colonized.
+- Power action: 3 power + 2 knowledge → advance 1 level on any Research track of your choice.
+- Credit action: 6 credits → place a Mine on an Asteroid under normal range rules; the mine itself is
+  free (the 6 credits is the entire cost — distinct from the standard Asteroid-mine route in E2, which
+  instead requires consuming a Gaiaformer and waives the normal build cost).
 - Standard-tech slots: `TODO`.
 
-### C5. Shuttle-space charge values
-- Charge power gained when placing a shuttle on space N (1-5), if not first to explore: `TODO [BOARD-ART]`
-- (Example from p.9: space 2 charges 2 power.)
+### C5. Shuttle-space charge values — CONFIRMED (owner board-read 2026-06-27)
+- The Exploration track has **4 spaces per ship**, not 5 (corrects D1's earlier "5 spaces" guess).
+  Never more than 1 shuttle per ship per player, so a ship caps out at 4 explorers.
+- Space 1: no charge (whoever lands here is by definition the first explorer, per D1's exception).
+  Space 2: charge 2 power. Space 3: charge 2 power. Space 4: charge 4 power.
 
 ---
 
@@ -197,7 +204,8 @@ For each ship, capture every action space: {type, cost, effect, grid-position} a
 
 - D1. Explore: target spaceship tile must be in range from a colonized planet; Q.I.C./special can
   extend range. Need a shuttle on your Exploration board; never more than 1 shuttle per ship.
-  Place on lowest-numbered free space; charge as shown unless first explorer. Source: p.9. CONFIRMED.
+  Place on lowest-numbered free space (4 spaces total per ship, see C5); charge as shown unless first
+  explorer. Source: p.9. CONFIRMED.
 - D2. Deploy cost: usually 5 VP. Bal T'aks 7 VP. Taklons also move Brainstone to Gaia Area.
   Nevlas & Itars also discard 1 power to supply. Source: p.9. CONFIRMED.
 - D3. A ship is EXPLORED, not colonized — range never measured from a ship. Source: p.9. CONFIRMED.
