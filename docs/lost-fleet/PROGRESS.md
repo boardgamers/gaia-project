@@ -54,11 +54,15 @@ notifications).
    blocking, left alone.)
 4. ✅ **4 new faction boards — owner-CONFIRMED** (`RULES_CLARIFICATIONS.md` §B): Tinkeroids,
    Darkanians, Moweyds, Space Giants (starting resources/power/research/PI income, in engine syntax).
-5. ✅ **Base-faction LF deltas** captured (§I7): Lantids 4/0 + 13c + 1pw income, Ivits 2/2, Bal T'aks
-   7-VP shuttle, Xenos/Gleens PI tweaks, etc. (community-sourced; cross-checks vs prose).
-6. ✅ **Tile/booster/scoring/tech/federation/artifact EFFECTS** — covered by rulebook prose
-   (Appendices II–VII), already read and referenced.
-7. ◐ **Spaceship action COSTS** read from art (§C). Effects/slot-counts/charge-values still pending.
+5. ✅ **Existing-faction audit CLOSED** (§I7): full 18-faction p.16 comparison table transcribed from
+   owner screenshot (2026-06-27, BOARD-ART, CONFIRMED). Only Xenos/Gleens/Space Giants get a genuinely
+   new LF ability (all already captured); every other faction's deviation is pre-existing vanilla
+   personality. Implementation note: diff each row vs. existing `faction-boards/*.ts` at coding time.
+6. ✅ **Tile/booster/scoring/tech/federation/artifact EFFECTS** — all CONFIRMED (rulebook Appendices
+   II–VII for the prose ones; owner board-reads 2026-06-27 for the art-only values). See §G1–G6.
+7. ✅ **Spaceship boards fully captured** (§C1–C5): all 3 action tiles per ship (type/cost/effect),
+   the standard-tech-slot assignment (0 on Twilight, 1 each on the other 3), Twilight's artifact slots
+   (= player count), and the 4-space exploration charge track (0/2/2/4). Owner board-read 2026-06-27.
 8. ✅ Evaluated the uiqoo.kr randomizer: it's a seeded PNG image-renderer of setups with **no effect
    text** — not a viable source for "what components do." Skip it (maybe use only for map-tile images).
 9. ✅ **Viewer deployed** to Vercel (Git integration, auto-deploy on push to this branch) and
@@ -94,7 +98,8 @@ face → drop the image in chat → render/read with PyMuPDF or read the image d
 ## Build order once the spec is filled (from the brief)
 1. **Engine**: Lost Fleet behind `Expansion.LostFleet`; all existing base-game tests stay green
    (`cd engine && npm test`). Start with enums.ts (A1), then Planet/Faction enums, faction-boards/
-   *.ts for the 4 new factions, then exploration/ships (reuse Frontiers helpers), tiles.
+   *.ts for the 4 new factions, then exploration (a NEW subsystem — only the range/`ShipRange`
+   helpers carry over from Frontiers, not the ship-unit/move/trade code; see Integration flag 4), tiles.
 2. **Viewer**: new player colors (turquoise/pink) + 2 new planet types first; then plain-SVG panels
    for spaceships/exploration/tracks (do NOT use scanned official art; style-match later).
 3. **Supabase backend** glue + realtime sync — last, once single-browser play works end to end.
@@ -114,9 +119,75 @@ face → drop the image in chat → render/read with PyMuPDF or read the image d
   its terraforming rule is simplest), then the remaining 3 factions, then ships/exploration/map
   content, then viewer work, then Supabase.
 
+## Integration risks & code-grounded flags (2026-06-27 plan review)
+Read of the actual base-game engine, cross-checked against the now-complete spec. These are the
+places where the new content does NOT slot cleanly into existing assumptions — resolve each as part
+of the chunk that touches it. (File:line refs are to `engine/src/`.)
+
+1. **`terraformingStepsRequired` breaks for the 4 new factions.** `planets.ts:3` keys terraform
+   cost off the faction's home-planet index in a hardcoded 7-base-planet `planetCycle`. The new
+   factions have no home planet, so `factionPlanet()` returns `Planet.Lost` (`factions.ts:75`),
+   which is not in the cycle → `findIndex` = -1 → garbage distance. Their terraform cost is instead
+   a flat/board rule (Darkanians flat 1, Space Giants flat 2, Tinkeroids/Moweyds 3-or-1 per the
+   Terraforming board, §B2/B4/B5). Plan: add a faction-aware override (pass faction or a per-faction
+   cost table) ahead of the cycle math. Protoplanet/Asteroid themselves also aren't in the cycle and
+   need flat early-returns (Protoplanet=3 steps §E1; Asteroid via gaiaformer-consume §E2), like the
+   existing `Gaia`/`Transdim` → 0 early-return at `planets.ts:14`.
+2. **Faction availability has NO expansion gate.** `remainingFactions(Object.values(Faction))`
+   (`factions.ts:61`, `available/setup.ts:33`) offers EVERY `Faction` enum value in every game. Add
+   the 4 new factions to the enum and they leak into base/Frontiers games. Plan: thread `expansions`
+   into `remainingFactions` and filter (new 4 only when `hasExpansion(.., LostFleet)`; conversely the
+   14 base factions stay available without it).
+3. **`oppositeFaction` will wrongly forbid two new factions together.** `factions.ts:49` pairs any
+   two factions sharing a home planet as mutually exclusive (Terrans/Lantids both Terra, etc.).
+   Tinkeroids+Darkanians both start on Asteroid; Moweyds+Space Giants both on Protoplanet — if added
+   to the `factions` map with `planet: Asteroid/Protoplanet` they'd be treated as an exclusive pair,
+   which is WRONG (the real game lets them coexist). Plan: exclude the new factions from shared-planet
+   pairing (give each a unique sentinel, or special-case them out of `oppositeFaction`). Also note the
+   `factions` map type is exhaustive `{[key in Faction]: {planet}}` — adding enum values forces
+   filling it or TS won't compile.
+4. **Lost Fleet "Spaceship Boards" are NOT Frontiers ships — limited reuse.** `move/ships.ts` +
+   `Building` enum show Frontiers ships are movable units (`moved` flag, `location`, `MoveShip`
+   command, trade system). LF spaceships are STATIONARY map tiles you *explore* by placing a shuttle
+   and charging power on a 4-space track (§C5) — a different mechanic. Reuse is limited to the range /
+   `Resource.ShipRange` helpers (measuring distance to a target hex), not the ship-unit/move/trade
+   code. Treat LF exploration + the per-faction Exploration board as a NEW subsystem, not a reskin of
+   Frontiers ships. (The "Build order" line below that says "reuse Frontiers helpers" overstates it.)
+5. **New tiles/tokens leak without a gating convention.** `AdvTechTile.values()` (`enums.ts:474`)
+   returns every `advtech*` with NO expansion filter — adding the 6 LF adv-tech tiles would surface
+   them in base games. Same shape: `Federation.values` hardcodes `fed1-6`; `Booster`/`ScoringTile`/
+   `FinalTile` `.values()` ignore their `expansions` arg. Each new LF tile/booster/scoring/federation
+   needs a naming + filter convention (mirror how `TechTile.values` keys off the `"frontiers"`
+   substring — use a `"lostfleet"`/`"lf"` marker). The 8 new federation tokens (§G5) are seeded on
+   spaceships and form a SEPARATE pool from the 6 standard federation tiles — don't merge them.
+6. **Planet-type counting misses Artifact-granted "virtual" planets.** `Condition.PlanetType`
+   (`player.ts:939`) = `uniq(ownedPlanets.map(h => h.data.planet))`, i.e. distinct planet of hexes
+   the player has a building on. Adding Protoplanet/Asteroid as `Planet` values makes normal mines on
+   them count automatically — good. BUT §G4b/§G6 let an Artifact grant an asteroid/protoplanet *type*
+   with NO hex and no mine placed; this count will miss those. Plan: maintain a separate
+   virtual-planet-type set (from artifacts) and union it into the `PlanetType` count. (The Lost Planet
+   is already handled separately — see `lostPlanet` in `Condition.Mine`, `player.ts:923`.)
+7. **Q.I.C. board actions get overlaid (§E4/§K3).** Under Lost Fleet the Research-board Q.I.C.
+   actions (`BoardAction.Qic1-3`) are covered by the Colonization overlay and replaced by ship
+   actions; the "gain VP per planet type" Q.I.C. action's base also drops from 3 to 2 (§K3, because
+   there are now more planet types). Gate these in `available/actions.ts`.
+
+**Already in place / no work needed:** mutual-exclusivity guard (`move/setup.ts:15`); the Lost Planet
++ `PlaceLostPlanet` + Navigation-5 infra all exist, so the "11th planet type" is purely a counting
+concern, not new placement code; Chunk 1's `hasExpansion` + bitwise enum is the right foundation for
+all the gating above.
+
+**Refined ordering takeaway:** Chunk 2 (Protoplanet/Asteroid) must also carry the `planets.ts`
+terraform-cost refactor (flag 1) and the virtual-planet-type counting hook (flag 6), or it'll be
+half-done. Chunk 3 (new factions) is blocked on flags 2-3 (gating + pairing) before any board values
+matter. The tile-gating convention (flag 5) is worth establishing once, early, before adding any new
+enum members across adv-tech/federation/booster/scoring.
+
 ## Next actions
 Chunk 1 is complete and verified (274/274 tests). Chunk 2 (Protoplanet/Asteroid planet types) is
-proposed as the next unit of work — confirm with the user before starting it.
+proposed as the next unit of work — but per flag 1 & 6 above, scope it to include the `planets.ts`
+terraform-cost refactor and the virtual-planet-type counting hook, not just the enum additions.
+Confirm with the user before starting it.
 
 ## Canonical files (trust order)
 `PROGRESS.md` (this) → `RULES_CLARIFICATIONS.md` (values; §A decisions, §K errata) →
