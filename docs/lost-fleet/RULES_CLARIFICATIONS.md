@@ -164,16 +164,23 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
 - Power action: 3 power (Area III) + 2 ore → build a Research Lab.
 - Knowledge action: 1 knowledge → +3 Range, usable for Build a Mine, Gaiaforming, or Exploring a ship.
 - Plus **artifact slots** (the asteroid-cluster art) — artifacts seed here; "Examine Artifact" = discard
-  6 power (any of Areas I/II/III) → 1 artifact (D4). Number of artifact slots: `TODO [confirm count vs
-  player count]`.
-- Standard-tech slots (2 or 3): `TODO [confirm]`.
+  6 power (any of Areas I/II/III) → 1 artifact (D4). **Artifact slot count = number of players.**
+  Source: `RULEBOOK-TEXT` p.6: "Take as many Artifact tokens at random as there are players. Place the
+  tokens face up on the corresponding spaces on the Twilight spaceship." (remaining tokens return to
+  the box). Owner-confirmed 2026-06-27. CONFIRMED.
+- Standard-tech slots: **0 — Twilight never gets a Standard Tech tile slot.** Only Rebellion, T F Mars,
+  and Eclipse have one each; see the assignment note under C4. Source: `RULEBOOK-TEXT` p.6 (solo-mode
+  setup names exactly those 3 ships for tile placement, omitting Twilight) + owner-confirmed
+  2026-06-27. CONFIRMED.
 
 ### C2. Rebellion (Vo'Kron)  — excluded in 2p
 - Q.I.C. action: 3 Q.I.C. → claim a Tech tile (same as the base game's "take a tech tile" Q.I.C. action).
 - Power action: 3 power + 1 ore → build a Trading Station, ignoring the normal adjacency-to-a-mine
   requirement.
 - Knowledge action: 2 knowledge → gain 2 credits + 1 Q.I.C.
-- Standard-tech slots: `TODO`.
+- Standard-tech slots: 1 — randomly filled at setup with one of the 3 new Standard Tech tile types
+  (see the assignment note under C4). Excluded entirely in 2p (ship not in play). Source:
+  `RULEBOOK-TEXT` p.6. CONFIRMED.
 
 ### C3. T F Mars (Gaia Federation)
 - Q.I.C. action: 2 Q.I.C. → gain 2 VP + 1 VP per Tech tile you have.
@@ -182,7 +189,8 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   power tokens into the Gaia Area).
 - Credit action: 3 credits → terraform 1 step AND build (same combined terraform+build as the base
   game's standard "Build a Mine" action, just paid in credits instead of ore).
-- Standard-tech slots: `TODO`.
+- Standard-tech slots: 1 — same mechanism, see the assignment note under C4. Source: `RULEBOOK-TEXT`
+  p.6. CONFIRMED.
 
 ### C4. Eclipse (Eridani Empire)
 - Q.I.C. action: 2 Q.I.C. → gain 2 VP + 1 VP per planet type colonized.
@@ -190,7 +198,16 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
 - Credit action: 6 credits → place a Mine on an Asteroid under normal range rules; the mine itself is
   free (the 6 credits is the entire cost — distinct from the standard Asteroid-mine route in E2, which
   instead requires consuming a Gaiaformer and waives the normal build cost).
-- Standard-tech slots: `TODO`.
+- Standard-tech slots: 1 — same mechanism. **Assignment mechanism (applies to C2–C4 collectively):**
+  the box holds 4 copies each of the 3 new Standard Tech tile types (12 total), but only 3 are ever in
+  play (1 of each type, matching G1) — shuffled and dealt at random, 1 tile per ship, onto Rebellion's
+  / T F Mars's / Eclipse's single tech slot, so which specific ship gets which tile type varies by
+  game. In 2p, Rebellion is removed (C2), so only 2 of the 3 drawn tiles get placed (T F Mars +
+  Eclipse) and the 3rd is returned to the box unused. Source: `RULEBOOK-TEXT` p.6 ("Place the new
+  Standard Tech tiles at random ... onto the corresponding 2 or 3 spots on the spaceships. If there
+  are only 2 players, return the remaining Standard Tech tiles to the box.") + solo-mode setup (names
+  exactly Rebellion/T F Mars/Eclipse). Owner-confirmed 2026-06-27 ("only 1 tech slot per ship... setup
+  varies which ship has what"). CONFIRMED.
 
 ### C5. Shuttle-space charge values — CONFIRMED (owner board-read 2026-06-27)
 - The Exploration track has **4 spaces per ship**, not 5 (corrects D1's earlier "5 spaces" guess).
@@ -211,7 +228,13 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
 - D3. A ship is EXPLORED, not colonized — range never measured from a ship. Source: p.9. CONFIRMED.
 - D4. Examine Artifact (Twilight only): discard 6 power (any of Areas I/II/III) → gain 1 artifact.
   Source: p.9. CONFIRMED.
-- D5. Per-faction shuttle deploy cost (Exploration board, lower-left): `TODO [BOARD-ART per faction]`.
+- D5. Per-faction shuttle deploy cost exceptions — RESOLVED, same 3 exceptions as D2, and confirmed
+  exhaustive (no other faction has a board-printed deploy-cost exception beyond these 3): Bal T'aks
+  pay 7 VP instead of 5; Taklons additionally move their Brainstone to their Gaia Area; Itars and
+  Nevlas additionally discard 1 power token to the supply. Every other faction (incl. all 4 new Lost
+  Fleet factions) pays a flat 5 VP, no extra cost. Source: `RULEBOOK-TEXT` p.9 (verbatim, "Action:
+  Explore a Lost Fleet Spaceship"). Owner-confirmed 2026-06-27 ("that's it. For everyone else the cost
+  is 5vp"). CONFIRMED.
 
 ---
 
@@ -229,9 +252,26 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   unavailable; ship actions replace them (incl. new Knowledge & Credit action types). Source: p.10. CONFIRMED.
 - E5. Upgrade — explored ships offer extra Standard Tech; taking it advances 1 research level.
   Source: p.10. CONFIRMED.
-- E6. Advanced Tech via Scoring Board Extension: the +1 advanced tech ignores the level-4/5
-  requirement; instead requires ≥25 VP OR explored 3 ships (3-4p only). Other 2 conditions unchanged.
-  Source: p.10. CONFIRMED.
+- E6. Advanced Tech via Scoring Board Extension — **verified against `rulebook-v1.0.txt` p.5 & p.9
+  2026-06-27, confirms owner's elaboration:** the swap applies to exactly **ONE** Advanced Tech tile,
+  not a change to the bonus-tech mechanism in general. At setup you take the double-sided Scoring
+  Board Extension and place 1 randomly-drawn Advanced Tech tile onto it (p.5) — that single tile,
+  whichever it turns out to be, is the only one affected.
+  - For that tile, the normal **1st** of the base game's 3 conditions for taking an Advanced Tech tile
+    (player's marker at level 4 or 5 in the matching Research Area) is REPLACED by whichever side of
+    the Extension is face up: side A = "≥25 VP", side B = "explored 3 of the 4 Lost Fleet spaceships."
+    Side selection by player count (p.5): **2p always uses side A** (25 VP) — side B doesn't apply in
+    2p, since only 3 ships are even in play there (Rebellion removed, see C2). **3-4p default to side
+    B**, but the rulebook explicitly allows choosing either side at random "in later games."
+  - The **2nd** condition (flip an owned, unflipped Federation token) and **3rd** condition (cover an
+    owned Standard Tech tile in the matching Research Area with this Advanced Tech tile) are
+    UNCHANGED — confirms owner's "AND also have a fed token" framing. Reaching level 4/5 on ANY
+    research track is irrelevant for this one tile, exactly as owner stated.
+  - Net gate for this one tile: (side-A: ≥25 VP, or side-B: explored 3 of 4 ships) AND flip an
+    unflipped Federation token AND cover a matching Standard Tech tile. The other 5 Advanced Tech
+    tiles in the game are still taken under the normal, unmodified 3-condition rule.
+  Source: `RULEBOOK-TEXT` p.5 (setup/side selection), p.9 ("Action: Upgrade Existing Structures" —
+  conditions paragraph). CONFIRMED.
 
 ## F. RESEARCH TRACK CHANGES
 
@@ -390,6 +430,14 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   planet AND when building a mine on the Lantids' home planet type, even without using their faction
   ability. **3-player side** — may charge 1 additional power when adding a mine to a colonized planet.
   Only relevant with fewer than 4 players (a 4-player game uses the unadjusted base PI tile). CONFIRMED.
+  ⚠️ **2026-06-25 discrepancy flag:** owner separately described the rule (before attributing it) as
+  "2p: every leech mine and mine on blue planet gives 2 knowledge; 3p: every leech mine gives 2
+  knowledge AND 1 power charge; 4p unchanged," then confirmed "It is the lantids." The 2p half matches
+  this entry exactly (Lantids' home planet, Terra, IS the blue planet in this viewer's palette — see
+  `viewer/src/data/planets.ts`). The 3p half does NOT match: the rulebook quote above grants ONLY the
+  extra power charge on the 3p side, no knowledge. Keeping the rulebook-verbatim text above as
+  CONFIRMED; flagging for owner to re-check against the physical tile in case there's a 3p knowledge
+  bonus the text extraction missed.
 - I3. Bescods: start 3 knowledge (p.8). Other deltas: `TODO [BOARD-ART]`.
 - I4. Xenos: free action 1o→1pw(AreaIII) (p.11). Board deltas: `TODO [BOARD-ART]`.
 - I5. Gleens: special action incl. Explore +2 range (p.11). Board deltas: `TODO [BOARD-ART]`.
@@ -446,5 +494,5 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
    errata exists (§K1). Remaining: human review of community threads (§K2).
 2. ☐ Fill all `TODO [BOARD-ART]` placeholders from the physical game.
 3. ☑ Decide final `Expansion` enum restructure shape (A1) before touching enums.ts. → LOCKED, see §A1.
-4. ☐ Confirm no new research track (F2).
+4. ☑ Confirm no new research track (F2). → DONE, owner-confirmed 2026-06-27, see §F2.
 5. ☐ Complete the p.16 existing-faction audit (section I).
