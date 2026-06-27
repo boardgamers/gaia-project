@@ -136,6 +136,9 @@ text (effect + depiction plan) is kept here. Concretely, each component-type ent
   (esp. 5k / 6o / 2q start — notably generous).
 - Starts with 1 mine (stage 2) AND an Exploration Shuttle already on T F Mars. 3 steps for 3 base
   planet types, 1 for others (Terraforming board). Source: p.13. CONFIRMED.
+- Gaia planet habitable cost: **assumed 2 Q.I.C.** (matching the other 3 new factions, B1/B2/B4) but
+  NOT independently confirmed for Moweyds — the p.13 text/board read above didn't capture it. ⚠️ TODO:
+  owner verify Moweyds' Gaia mine cost is 2 Q.I.C. (vs. the base 1). Confidence: INFERRED.
 - PI: once/round place a Power Ring (action) on a planet with your building; +2 power value there.
   6 Power Rings available. Source: p.13. CONFIRMED.
 
