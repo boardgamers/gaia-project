@@ -93,7 +93,7 @@ Each faction's Exploration board needs `[NEED FROM BOARD]`:
 | Component | Count | Detail | Status |
 |---|---|---|---|
 | Standard Tech tiles (new) | 3 distinct types (1 in play per ship; rulebook's "4 each" is spare reprints) | exact effect of each type — CONFIRMED, see RULES_CLARIFICATIONS.md §G1 | ◐ SPEC |
-| Advanced Tech tiles (new) | 6 | exact effects CONFIRMED for all 6 — RULES_CLARIFICATIONS.md §G2 ("big"'s exact VP value still `[NEED FROM BOARD]`) | ◐ SPEC |
+| Advanced Tech tiles (new) | 6 | exact effects CONFIRMED for all 6 — RULES_CLARIFICATIONS.md §G2 (corrected 2026-06-27: "big" is PI/Academy-only, 6VP each max 18; the Deep Space clause belongs to the separate "deep" tile) | ◐ SPEC |
 | Round Boosters (new) | 4 | income + pass bonus — CONFIRMED, see RULES_CLARIFICATIONS.md §G3 | ◐ SPEC |
 | Round Scoring tiles (new) | 3 | text p.14 — CONFIRMED verbatim, see RULES_CLARIFICATIONS.md §G4 | ◐ SPEC |
 | Final Scoring tiles (new) | 3 | "most asteroids", "PI–Academy distance", "most deep space sectors" — CONFIRMED verbatim, see RULES_CLARIFICATIONS.md §G4 | ◐ SPEC |
@@ -113,20 +113,25 @@ Each faction's Exploration board needs `[NEED FROM BOARD]`:
 | Colonization overlay | covers Q.I.C. actions on Research board; defines protoplanet/asteroid terraform | ☐ TODO |
 | Scoring Board Extension (double-sided) | 25-VP side / 3-shuttle side; +1 advanced tech slot — CONFIRMED (was previously mislabeled "Adjusted Lantids PI tile" in early review passes; see RULES_CLARIFICATIONS.md §E6) | ◐ SPEC |
 
-## 9. Existing-Faction Changes  ⚠️ HIGHEST-RISK GAP
+## 9. Existing-Faction Changes — AUDIT CLOSED 2026-06-27
 
-> Community sources (Paia Groject podcast) confirm Lost Fleet **changes** several base factions.
-> Some changes are encoded ONLY in revised-component art / faction-summary art (p.16), not prose.
-> Audit p.16 of the rulebook against the BASE-GAME faction boards to find every delta.
+> p.16's full 18-faction comparison graphic was screenshotted by the owner and transcribed in full
+> into RULES_CLARIFICATIONS.md §I7. Result: only 3 existing factions get a genuinely new Lost-Fleet
+> ability (Xenos, Gleens, Space Giants — all already captured); every other existing faction's
+> deviation from the table's baseline is pre-existing vanilla personality, not a Lost Fleet change.
 
-Confirmed-to-need-auditing (from podcast timestamps + rulebook text):
-- Ivits — `[NEED FROM BOARD]` (start power: 2 Area I + 2 Area II per p.8; verify other deltas)
-- Xenos — free action: spend 1 ore → 1 power Area III (text p.11); verify board deltas `[NEED FROM BOARD]`
-- Gleens — special action incl. Explore (text p.11); verify `[NEED FROM BOARD]`
-- Bescods — start with 3 knowledge (text p.8); verify `[NEED FROM BOARD]`
-- Lantids — adjusted PI tile (§8) + income 1 power Area I (text p.8) `[NEED FROM BOARD]`
-- Taklons / Nevlas / Itars / Bal T'aks — exploration-cost adjustments (text p.9, captured)
-- ALL OTHER FACTIONS — diff each against p.16 art to confirm no silent change `[NEED FROM BOARD]`
+- Ivits — CLOSED, no delta found beyond power 2/2 (matches pre-existing vanilla value). §I1/§I7.
+- Xenos — free action: spend 1 ore → 1 power Area III (text p.11). CONFIRMED, cross-validated by p.16. §I4.
+- Gleens — special action incl. Explore +2 range (text p.11). CONFIRMED, cross-validated by p.16. §I5.
+- Bescods — CLOSED, no delta found; "start with 3 knowledge" (p.8) just restates their existing
+  vanilla baseline, not a deviation. §I3/§I7.
+- Lantids — adjusted PI tile (§8) + income 1 power Area I (text p.8). CONFIRMED. §I2.
+- Taklons / Nevlas / Itars / Bal T'aks — exploration-cost adjustments (text p.9, captured). §D5.
+- ALL OTHER FACTIONS (Ambas, Hadsch Hallas, Geodens, Firaks) — diffed against p.16 art, no silent
+  change found. §I6/§I7. Implementation note: when coding each faction's Lost Fleet config, diff
+  §I7's table row against the existing `engine/src/faction-boards/*.ts` definition to be certain no
+  non-ability income/PI/AC delta was missed — the table itself doesn't distinguish "changed by LF"
+  from "always been true," only the engine's existing correct vanilla numbers can confirm that.
 
 ## 10. Player Pieces (new colors: turquoise, pink)
 Per new color: 8 mines, 4 trading stations, 3 research labs, 2 academies, 1 PI,

@@ -332,9 +332,18 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   other 4, 2026-06-27):
   - **asteroidpass:** "When you pass, you gain 2 victory points for each asteroid that you have
     colonized." Source: RULEBOOK-TEXT. CONFIRMED.
-  - **big:** "Immediately and only once receive victory points for each Planetary Institute and/or
-    Academy, and for each Deep Space sector in which you have colonized at least 1 planet." Source:
-    RULEBOOK-TEXT (mechanism CONFIRMED; exact VP-per-unit value still needs the printed tile, `TODO`).
+  - **big:** Immediately and only once gain **6 VP per Planetary Institute and/or Academy** you've
+    built (max 3 such buildings per player — 1 PI + 2 Academies — so max 18 VP). Source: `BOARD-ART`
+    (owner-confirmed 2026-06-27). CONFIRMED. **Corrects an earlier mis-transcription:** Appendix V's
+    printed text ("Immediately and only once receive victory points for each Planetary Institute
+    and/or Academy, and for each Deep Space sector in which you have colonized at least 1 planet")
+    reads as one combined sentence in the `.txt` extraction, but is actually **two separate tiles'**
+    text concatenated by the same column-flattening artifact already seen elsewhere in this doc (see
+    E6's mis-citation note) — the first clause ("...for each Planetary Institute and/or Academy") is
+    `big`; the second clause ("...for each Deep Space sector...") is a different tile, already captured
+    independently below as `deep` (its specific 4-VP multiplier came from BOARD-ART, since the rulebook
+    text alone never states a quantity). `big` does NOT also reward Deep Space sectors — owner-confirmed
+    these are two separate tiles, not one with a combined effect.
   - **deep:** Immediately gain 4 VP per Deep Space sector colonized; the Lost Planet counts if it's
     placed in a Deep Space sector you hadn't already colonized. Source: BOARD-ART. CONFIRMED.
   - **deeppass:** When you pass, gain 2 VP per Deep Space sector colonized (same Lost-Planet caveat as
@@ -526,8 +535,62 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   Still need the actual revised-side planet arrangement for 05/06/07 from the physical components.
 - H5. "Most asteroids" final scoring needs ≥6 asteroids in play (flip Deep Space tile 16 if not). p.4. CONFIRMED.
 
-## I. EXISTING-FACTION DELTAS  ⚠️ audit p.16 vs base boards
-- I1. Ivits: start 2 power Area I + 2 Area II (p.8). Other deltas: `TODO [BOARD-ART p.16]`.
+## I. EXISTING-FACTION DELTAS — RESOLVED 2026-06-27 via p.16 screenshot
+
+- **I7. Full 18-faction comparison table — CONFIRMED (Source: `BOARD-ART p.16`, owner screenshot
+  2026-06-27 of the rulebook's own per-faction comparison graphic; supersedes the earlier `COMMUNITY`/
+  `INFERRED` partial extract).** Green-highlighted cells in the original mark "deviation from a generic
+  baseline faction" (≈ 2 mines / 2pw Area I+4pw Area II / 3k,4o,15c,1q / no start research / +1k+1o
+  basic income / +3/4/4/5c TS / +4pw+1 token PI / +1k RL / +2k AC1 / 1q AC2 / 5VP shuttle / no special
+  ability) — transcribed verbatim below, abbreviations: M=Mine, PI=Planetary Institute (starting
+  buildings); B1/B2=power Area I/II; K=knowledge, R=ore, C=credit, Q=Q.I.C. (resources/income); P=power;
+  PB1/PB2=token(s) gained into Area I/II; "de" (Ambas TS) = a board-printed footnote abbreviation, not
+  yet decoded — flag if it matters when implementing Ambas.
+
+  | Faction | Bldgs | Power B1/B2 | Resources | Start research | Basic income | TS 1/2/3/4 | PI | RL | AC1 | AC2 | Ship cost | LF special ability |
+  |---|---|---|---|---|---|---|---|---|---|---|---|---|
+  | Terrans | 2M | 4/4 | 3K,4R,15C,1Q | GF | +1K,+1R | +3/4/4/5C | +4P,+1PB1 | +1K | +2K | 1Q | 5VP | None |
+  | Lantids | 2M | 4/0 | 3K,4R,13C,1Q | None | +1K,+1R,+1PB1 | +3/4/4/5C | +4P | +1K | +2K | 1Q | 5VP | None |
+  | Xenos | 3M | 2/4 | 3K,4R,15C,1Q | AI | +1K,+1R | +3/4/4/5C | +4P,+1Q | +1K | +2K | 1Q | 5VP | 1R→1PB3 free action |
+  | Gleens | 2M | 2/4 | 3K,4R,15C | Nav | +1K,+1R | +3/4/4/5C | +4P,+1R | +1K | +2K | 1Q | 5VP | +2 range special action |
+  | Taklons | 2M | 2+BS/4 | 3K,4R,15C,1Q | None | +1K,+1R | +3/4/4/5C | +4P,+1PB1 | +1K | +2K | 1Q | 5VP + BS to gaia area | None |
+  | Ambas | 2M | 2/4 | 3K,4R,15C,1Q | Nav | +1K,+2R | +3/4/4/5C de | +4P,+2PB1 | +1K | +2K | 1Q | 5VP | None |
+  | Hadsch Hallas | 2M | 2/4 | 3K,4R,15C,1Q | Eco | +1K,+1R,+3C | +3/4/4/5C | +4P,+1PB1 | +1K | +2K | 1Q | 5VP | None |
+  | Ivits | 1PI | 2/2 | 3K,4R,15C,1Q | None | +1K,+1R,+1Q | +3/4/4/5C | +4P,+1PB1 | +1K | +2K | 1Q | 5VP | None |
+  | Geodens | 2M | 2/4 | 3K,4R,15C,1Q | TF | +1K,+1R | +3/4/4/5C | +4P,+1PB1 | +1K | +2K | 1Q | 5VP | None |
+  | Bal T'aks | 2M | 2/2 | 3K,4R,15C | GF | +1K,+1R | +3/4/4/5C | +4P,+1PB1 | +1K | +2K | 4C | 7VP | None |
+  | Firaks | 2M | 2/4 | 2K,4R,15C,1Q | None | +2K,+1R | +3/4/4/5C | +4P,+1PB1 | +1K | +2K | 1Q | 5VP | None |
+  | Bescods | 2M | 2/4 | 3K,4R,15C,1Q | None | +1R | +1/1/1/1K | +4P,+2PB1 | +2K | +3/4/5C | 1Q | 5VP | None |
+  | Nevlas | 2M | 2/4 | 2K,4R,15C,1Q | Sci | +1K,+1R | +3/4/4/5C | +4P,+1PB1 | +2P | +2K | 1Q | 5VP + burn 1P | None |
+  | Itars | 2M | 4/4 | 3K,5R,15C,1Q | None | +1K,+1R,+1PB1 | +3/4/4/5C | +4P,+1PB1 | +1K | +3K | 1Q | 5VP + burn 1P | None |
+  | Moweyds | 1M | 4/4 | 5K,6R,15C,2Q | GF | +1K,+1R | +3/4/4/5C | +4P,+1PB1 | +1K | +2K | 1Q | 5VP | None |
+  | Space Giants | 1M | 4/4 | 3K,6R,15C,1Q | Nav | +1K,+1R | +3/4/4/5C | +6P,+1PB1 | +1K | +2K | 1Q | 5VP | 2 dig special action |
+  | Darkanians | 1M | 4/2 | 3K,7R,15C,1Q | Nav,Eco | +1K,+1R | +3/4/4/5C | +4P,+1PB1 | +1K | +2K | 1Q | 5VP | None |
+  | Tinkeroids | 1PI | 4/2 | 2K,4R,15C,1Q | Sci | +1K,+1R | +3/4/4/5C | +4P,+1PB1 | +1K | +2K | 1Q | 5VP | None |
+
+  **Important caveat before using this for I1/I3/I6 below:** most of the green-highlighted deviations
+  above (e.g. Ivits' 1-PI start, Taklons' Brainstone, Bescods' all-knowledge research income, Ambas'
+  extra ore) are this faction's **pre-existing base-game personality**, not something Lost Fleet
+  changed — the table just shows each faction's actual current numbers, it doesn't separately flag
+  "changed by this expansion" vs. "always been true." The one column that DOES isolate genuinely NEW
+  Lost-Fleet content is **"LF special ability"**, and it shows non-`None` for exactly 3 existing
+  factions: **Xenos** (matches I4's `1o→1pw(AreaIII)` free action — same ability, table's "R" = ore),
+  **Gleens** (matches I5's `+2 range` special action), and **Space Giants** (matches B4's "2 free
+  terraform steps" Build-a-Mine action — "2 dig" in the table's shorthand). Every other faction,
+  including Lantids/Ivits/Bescods/Itars, shows `None` here.
+  **Resolution for I1/I3/I6:** there is no further Lost-Fleet-specific delta to chase for Ivits,
+  Bescods, or any of the other existing factions beyond what's already captured (I2 Lantids, I4 Xenos,
+  I5 Gleens) — the LF-special-ability column is empty for all of them. The other column values above
+  (income, PI, AC1/AC2, etc.) are each faction's correct CURRENT numbers under Lost Fleet, useful as a
+  direct implementation reference, but determining whether any specific cell differs from that
+  faction's pre-existing vanilla number (the only way a "silent" non-ability rule change could hide)
+  isn't something to guess at from memory — **when actually coding each base faction's Lost Fleet
+  config, diff this table's row against that faction's existing `engine/src/faction-boards/*.ts`
+  definition** (which already encodes correct, tested vanilla numbers); any mismatch found that way is
+  the real delta to apply, anything matching needs no change. No further owner input is needed for I1/
+  I3/I6 — this is now a coding-time verification step, not an open question.
+- I1. Ivits — **CLOSED**, see I7: power 2/2 (table-confirmed, matches p.8 and pre-existing vanilla
+  value), no LF-specific ability or other delta found.
 - I2. Lantids: +1 power Area I income (CONFIRMED, p.8). Adjusted PI tile, text-only (no image in the
   uiqoo.kr randomizer, see COMPONENTS.md §8), both sides: **solo/2-player side** — gain 2 knowledge
   both when adding a mine to a colonized planet AND when building a mine on the Lantids' home planet
@@ -539,24 +602,18 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   text). Only relevant with fewer than 4 players (a 4-player game uses the unadjusted base PI tile,
   which itself already grants 2 knowledge per additional mine when a Planetary Institute is built —
   see `player.ts` `gainRewards([new Reward("2k")], Faction.Lantids)`). CONFIRMED.
-- I3. Bescods: start 3 knowledge (p.8). Other deltas: `TODO [BOARD-ART]`.
-- I4. Xenos: free action 1o→1pw(AreaIII) (p.11). Board deltas: `TODO [BOARD-ART]`.
-- I5. Gleens: special action incl. Explore +2 range (p.11). Board deltas: `TODO [BOARD-ART]`.
-- I6. Every other faction: diff vs p.16 to catch silent changes: `TODO [BOARD-ART p.16 full audit]`.
-- **I7. Audit source acquired:** the faction-overview PDF (pp.1-2) tabulates **full starting conditions
-  for all 18 factions** (buildings, power B1/B2, resources, starting research, basic income, TS/PI/RL/AC
-  incomes, shuttle cost, special ability). Its base-faction rows match known base values, so it can be
-  diffed to find LF deltas. Captured from it (Source: `COMMUNITY overview`, Confidence INFERRED —
-  confirm vs board):
-  - **Lantids**: power **4/0**; start credits **13c** (not 15c) — **owner-confirmed 2026-06-25**;
-    basic income gains **+1 power(B1)** (the LF adjustment, matches p.8). PI income standard +4pw.
-  - **Ivits**: power **2/2** (matches p.8).  **Bescods**: starts **3k** + inverted-research income line
-    (Bescods-specific).  **Itars**: basic income includes **+1 power(B1)**; AC1 **+3k** (Itars-specific).
-  - **Xenos**: PI income **+1 Q.I.C.**; free action **1o→1pw(area III)** (p.11).
-  - **Gleens**: special action with **+2 range** (p.11); PI income **+1 ore**.
-  - **Bal T'aks**: power 2/2; start **0 q**; shuttle deploy **7 VP** (matches p.9).
-  - Full per-faction numbers are in `rulebook-v1.0.txt` companion + the overview; transcribe remaining
-    rows into code when building base-faction LF variants.
+- I3. Bescods — **CLOSED**, see I7: table shows no LF-specific ability; the "starts 3 knowledge"
+  recap on p.8 just restates their pre-existing vanilla starting resources (3K is the table's own
+  baseline value, not a deviation) — no Lost-Fleet delta found for Bescods.
+- I4. Xenos: free action 1o→1pw(AreaIII) (p.11). Board deltas: cross-validated by I7's table — no
+  further deltas beyond this one ability. CONFIRMED.
+- I5. Gleens: special action incl. Explore +2 range (p.11). Board deltas: cross-validated by I7's
+  table — no further deltas beyond this one ability. CONFIRMED.
+- I6. Every other faction (Taklons, Ambas, Hadsch Hallas, Geodens, Bal T'aks, Firaks, Nevlas, Itars) —
+  **CLOSED**, see I7: table shows `None` in the LF-special-ability column for all of them; their
+  other column values are pre-existing vanilla traits (Brainstone, inverted research income, etc.),
+  not new Lost Fleet content. Per-faction implementation should still diff against existing engine
+  code per I7's note, but no owner input is needed.
 
 ## J. MULTIPLAYER / SYNC RULINGS
 - J1. Turn commitment: only completed turns persist + broadcast (ties to A2 undo). OUR-RULING. CONFIRMED.
@@ -578,7 +635,10 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   Confidence: CONFIRMED.
 - **K2. Lost-Fleet corrections exist only as BGG community forum threads** (not official errata, and BGG
   blocks automated fetch with HTTP 403, so they must be read by a human). Threads to review and, if a
-  ruling is found, record with `COMMUNITY` source (NOT `ERRATA`):
+  ruling is found, record with `COMMUNITY` source (NOT `ERRATA`). **Owner pre-authorized 2026-06-27:
+  if a thread states a clear ruling on a question this doc has open, record it directly as
+  `Confidence: CONFIRMED`** (not `INFERRED`) — no separate owner re-confirmation needed after the
+  human read, since the read itself IS the confirmation step here.
   - "Confusing things after first reading" — https://boardgamegeek.com/thread/3278038
   - "Geodens' Planetary Institute and Protoplanets/Asteroids" — https://boardgamegeek.com/thread/3354496
     (directly relevant to §I: does an existing per-planet-type bonus fire on the 2 new planet types?)
@@ -593,10 +653,17 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
 ## OPEN QUESTIONS / TODO BEFORE CODING
 1. ☑ Check BGG errata thread; record any corrections here with `ERRATA` source. → DONE: no official
    errata exists (§K1). Remaining: human review of community threads (§K2).
-2. ☐ Fill all `TODO [BOARD-ART]` placeholders from the physical game.
+2. ◐ Fill all `TODO [BOARD-ART]` placeholders from the physical game. Remaining open: H4 (revised
+   Sector 05/06/07 planet layout — still needs the physical component). Everything else closed
+   2026-06-27 (H2 Transdim ID, H3 Interspace composition, B1 Tinkering tiles, B5 closed as
+   not-needed, G2 "big" tile fix, G5 green-side rule, full §I faction audit).
 3. ☑ Decide final `Expansion` enum restructure shape (A1) before touching enums.ts. → LOCKED, see §A1.
 4. ☑ Confirm no new research track (F2). → DONE, owner-confirmed 2026-06-27, see §F2.
-5. ☐ Complete the p.16 existing-faction audit (section I).
+5. ☑ Complete the p.16 existing-faction audit (section I). → DONE 2026-06-27 via owner screenshot of
+   p.16; see §I7's full 18-faction table. No Lost-Fleet-specific delta found beyond what was already
+   captured (Lantids/Xenos/Gleens/Space Giants); diff-against-engine-code note left for implementation time.
 6. ☑ Resolve the E6 side-selection conflict. → DONE, owner ruling 2026-06-27: 2p always forced to the
    25-VP side (matches rulebook); 3-4p always randomize the side every game (exercising the rulebook's
    own "decide at random" option unconditionally, rather than as an optional later-game variant). See §E6.
+7. ☐ K2: human review of the 4 BGG community threads (owner has BGG access) — any clear ruling found
+   should be recorded directly as CONFIRMED, per owner's 2026-06-27 pre-authorization. See §K2.
