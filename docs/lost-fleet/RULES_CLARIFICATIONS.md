@@ -252,26 +252,53 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   unavailable; ship actions replace them (incl. new Knowledge & Credit action types). Source: p.10. CONFIRMED.
 - E5. Upgrade — explored ships offer extra Standard Tech; taking it advances 1 research level.
   Source: p.10. CONFIRMED.
-- E6. Advanced Tech via Scoring Board Extension — **verified against `rulebook-v1.0.txt` p.5 & p.9
-  2026-06-27, confirms owner's elaboration:** the swap applies to exactly **ONE** Advanced Tech tile,
-  not a change to the bonus-tech mechanism in general. At setup you take the double-sided Scoring
+- E6. Advanced Tech via Scoring Board Extension — the swap applies to exactly **ONE** Advanced Tech
+  tile, not a change to the bonus-tech mechanism in general. At setup you take the double-sided Scoring
   Board Extension and place 1 randomly-drawn Advanced Tech tile onto it (p.5) — that single tile,
-  whichever it turns out to be, is the only one affected.
+  whichever it turns out to be, is the only one affected. Confirms owner's elaboration on this part.
   - For that tile, the normal **1st** of the base game's 3 conditions for taking an Advanced Tech tile
     (player's marker at level 4 or 5 in the matching Research Area) is REPLACED by whichever side of
     the Extension is face up: side A = "≥25 VP", side B = "explored 3 of the 4 Lost Fleet spaceships."
-    Side selection by player count (p.5): **2p always uses side A** (25 VP) — side B doesn't apply in
-    2p, since only 3 ships are even in play there (Rebellion removed, see C2). **3-4p default to side
-    B**, but the rulebook explicitly allows choosing either side at random "in later games."
+  - **⚠️ Side-selection rule — UNRESOLVED CONFLICT, flagged 2026-06-27, needs owner re-check against the
+    physical component before this can read CONFIRMED.** The rulebook states the rule twice, in two
+    separate, cleanly-typeset passages (re-checked directly — this is not a column-merge/OCR artifact;
+    both read unambiguously in isolation):
+    - p.5, setup: *"Take the Scoring Board Extension. For 2 players, always use the side showing 25
+      victory points. For 3 or 4 players, use the side showing 3 Exploration Shuttles. In later games,
+      you can decide at random which side to use."*
+    - p.10, the Advanced-Tech-conditions paragraph attached to "Action: Build a Mine" (NOT "Action:
+      Upgrade Existing Structures" — that's a separate paragraph on the same physical page; corrects an
+      earlier mis-citation): *"Instead, the conditions shown on the Scoring Board Extension are applied
+      (either you have at least 25 victory points or have explored 3 different spaceships in the Lost
+      Fleet; the latter condition only applies in 3- and 4-player games)."*
+    Both passages agree with each other, and both tie side selection to player count by default:
+    **2p always uses the 25-VP side** (no stated exception); **3-4p default to the ships-explored side**,
+    with the rulebook explicitly allowing later games to randomize — but that randomization clause is
+    scoped only to the 3-4p paragraph, and the second passage independently states the ships condition
+    "only applies in 3- and 4-player games" at all, with no carve-out for 2p even under randomization.
+    **Owner stated (2026-06-27) "25 vp or 3 ships is random and not tied to player count"** — this
+    directly contradicts both printed passages above. An earlier edit to this entry accepted that
+    correction at face value and speculated the printed text might be "an OCR/layout misread" — that
+    speculation has since been checked and is wrong: both source passages are clean, well-structured,
+    non-garbled text in this extraction, so the conflict is real, not an artifact of the `.txt` companion.
+    Possible explanations, none yet confirmed: (a) this is a deliberate **house-rule** choice for the
+    digital implementation — always randomize the side regardless of player count, overriding the
+    printed default; (b) owner is recalling the "in later games, randomize" line and generalizing it to
+    all player counts; (c) a physical insert/correction exists that isn't reflected in the v1.0 PDF text.
+    **Needs an explicit owner call before implementing** — until then, the engine should default to the
+    printed rule (2p forced to the 25-VP side; 3-4p forced to the ships side, with side selection only
+    becoming a manual/random toggle for 3-4p games after the first).
   - The **2nd** condition (flip an owned, unflipped Federation token) and **3rd** condition (cover an
     owned Standard Tech tile in the matching Research Area with this Advanced Tech tile) are
     UNCHANGED — confirms owner's "AND also have a fed token" framing. Reaching level 4/5 on ANY
     research track is irrelevant for this one tile, exactly as owner stated.
-  - Net gate for this one tile: (side-A: ≥25 VP, or side-B: explored 3 of 4 ships) AND flip an
-    unflipped Federation token AND cover a matching Standard Tech tile. The other 5 Advanced Tech
-    tiles in the game are still taken under the normal, unmodified 3-condition rule.
-  Source: `RULEBOOK-TEXT` p.5 (setup/side selection), p.9 ("Action: Upgrade Existing Structures" —
-  conditions paragraph). CONFIRMED.
+  - Net gate for this one tile (pending the side-selection resolution above): (≥25 VP, or — in 3-4p,
+    by default — explored 3 of 4 ships) AND flip an unflipped Federation token AND cover a matching
+    Standard Tech tile. The other 5 Advanced Tech tiles in the game are still taken under the normal,
+    unmodified 3-condition rule.
+  Source: `RULEBOOK-TEXT` p.5 (setup/side selection) + p.10 (Advanced-Tech-conditions paragraph).
+  Confidence: CONFIRMED (single tile; 2nd/3rd conditions unchanged) / **CONFLICT** (side-selection
+  randomness — see flag above).
 
 ## F. RESEARCH TRACK CHANGES
 
@@ -390,7 +417,45 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
 
 ## H. MAP / SETUP
 
-- H1. Shifted-sector layouts for 2/3/4p (offset placement, 6/holes, interspace + deep-space): p.4-5. CONFIRMED (procedure).
+- H1. Variable Gameboard Layout setup — full procedure (previously only a one-line summary in this
+  doc; now captured verbatim from a fresh full read of `rulebook-v1.0.txt` p.4-5, 2026-06-27).
+  Source: `RULEBOOK-TEXT` p.4-5. CONFIRMED.
+  - **2 players:** Space Sector tiles **01-07** (7 of the base game's 10). Flip Sectors **05, 06, 07**
+    to their *"black numbers outlined in white"* side (a Lost-Fleet-specific revised face — see H4).
+    Randomly pick 1 of Sectors 01-04 for the center; arrange the other 6 around it, sliding each outer
+    sector 1 space left/right so it only borders the inner sector along 2 spaces (not a full edge
+    match like the base game) — this opens **6 holes**, 1 space each, around the center sector. Place
+    the **6 Interspace tiles for 2p** into the holes at random, such that **each spaceship tile ends up
+    ≥5 spaces from every other spaceship tile** (rulebook's suggested method: alternate
+    holes-with-a-spaceship and holes-without as you place them). Then place the **6 Deep Space Sector
+    tiles 11-16**, random side up, in the gaps around the outside edge. (H5's "flip tile 16 if <6
+    asteroids in play" applies here.)
+  - **3 players:** Space Sector tiles **01-10 except 08** (9 of 10; 08 returns to the box). Sectors
+    05/06/07 flipped exactly as in 2p. Randomly pick 1 of Sectors 01-04 for the center; arrange 6 random
+    others around it the same shifted way (6 holes) — then place the **2 remaining** sectors too,
+    shifted the same way, extending the ring. Place the **8 Interspace tiles for 3p** into the (now
+    more numerous) holes at random; the spacing rule is phrased differently at this player count: **no
+    spaceship tile may be within 3 spaces of another** (vs. 2p's "≥5 spaces" framing — see the
+    engine-implementation note below). Place the **8 Deep Space Sector tiles**, random side up, in the
+    gaps around the outside edge — **3p-only rule: place 2 Deep Space tiles next to each other in the
+    larger gap beside the last-placed sector.**
+  - **4 players:** **All 10** Space Sector tiles. Sectors 05/06/07 stay on their normal *white numbers*
+    side (4p is the only player count using the base-game-style face for those 3 tiles — no flip).
+    Randomly pick 2 of Sectors 01-04 and place them adjacent in the center; arrange the other 8 around
+    them at random, shifted the same way — 10 holes. Place the **10 Interspace tiles for 4p** at
+    random; same "not within 3 spaces" spacing rule as 3p. Place the (same) **8 Deep Space Sector
+    tiles**, random side up, in the gaps — no 3p-style "2 adjacent" rule at 4p.
+  - **Engine-relevant details not previously captured in this doc:**
+    1. Deep Space tile *count* is fixed at 8 in the physical set, but 2p games only place 6 of them
+       (tiles 11-16 explicitly, by number) — 3p/4p both place all 8.
+    2. Sectors 05/06/07 are genuine double-sided Lost-Fleet components (revised face for 2-3p, stock
+       base-game face for 4p) — feeds directly into H4 below.
+    3. The Interspace spacing rule's *wording* changes by player count (2p: "≥5 spaces," 3-4p: "not
+       within 3 spaces") — likely the same underlying minimum-distance check scaled to a smaller (2p,
+       7-tile) vs. larger (3-4p, 9/10-tile) ring, but this is inferred, not confirmed: whoever
+       implements board generation should verify the two phrasings reduce to one formula (e.g., via the
+       actual hex-distance layout) rather than assuming it without checking, since the rulebook gives
+       no explicit unit conversion between the two framings.
 - H2. Deep Space sector tiles (8 physical tiles, 2 sides each = 16 faces, each a 3-hex cluster). Hex
   contents read directly off the randomizer art (2026-06-27). Owner does NOT need the art itself
   redrawn pixel-for-pixel (own SVG style instead, per Art policy above) but DOES need this composition
@@ -419,25 +484,33 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
     asteroid minimum. A full side-b set totals 9 asteroid hexes across all 8 tiles; a full side-a set
     totals only 3 — confirms why tile 16 specifically is the one the rulebook calls out to flip.
 - H3. Interspace tile contents per player-count set (30 in 4 sets): `TODO [BOARD-ART interspace tiles]`.
-- H4. Revised Space Sector tile planet layouts: `TODO [BOARD-ART revised sectors]`.
+  Structural detail newly confirmed (`RULEBOOK-TEXT` p.5 sidebar, verbatim) explaining the "4 sets"
+  framing: each Interspace tile has 2 faces — **front** shows one of {Lost Fleet spaceship tile,
+  planet tile (Protoplanet or Asteroid), blank}; **back** is marked for the player-count set it
+  belongs to ("Only use the tiles that correspond to your player count"). This implies 4 genuinely
+  distinct physical groups (solo=6, 2p=6, 3p=8, 4p=10 → 30 total), matching this entry's existing
+  count. Exact face-by-face spaceship/planet-type assignment per tile is still `TODO [BOARD-ART]`.
+- H4. Revised Space Sector tile planet layouts: `TODO [BOARD-ART revised sectors]`. Newly confirmed
+  which tiles are "revised" (`RULEBOOK-TEXT` p.4 setup text): specifically Sectors **05, 06, and 07**
+  are genuinely double-sided Lost-Fleet components — one face matches the base game's appearance
+  ("white numbers," used at 4p), the other is Lost-Fleet-specific ("black numbers outlined in white,"
+  used at 2p and 3p). Sectors 01-04 and 08-10 are unmodified base-game tiles reused as-is (no revision).
+  Still need the actual revised-side planet arrangement for 05/06/07 from the physical components.
 - H5. "Most asteroids" final scoring needs ≥6 asteroids in play (flip Deep Space tile 16 if not). p.4. CONFIRMED.
 
 ## I. EXISTING-FACTION DELTAS  ⚠️ audit p.16 vs base boards
 - I1. Ivits: start 2 power Area I + 2 Area II (p.8). Other deltas: `TODO [BOARD-ART p.16]`.
-- I2. Lantids: +1 power Area I income (CONFIRMED, p.8). Adjusted PI tile, both sides confirmed verbatim
-  (`RULEBOOK-TEXT` p.9 — this tile has NO image in the uiqoo.kr randomizer at all, text-only, see
-  COMPONENTS.md §8): **solo/2-player side** — gain 2 knowledge both when adding a mine to a colonized
-  planet AND when building a mine on the Lantids' home planet type, even without using their faction
-  ability. **3-player side** — may charge 1 additional power when adding a mine to a colonized planet.
-  Only relevant with fewer than 4 players (a 4-player game uses the unadjusted base PI tile). CONFIRMED.
-  ⚠️ **2026-06-25 discrepancy flag:** owner separately described the rule (before attributing it) as
-  "2p: every leech mine and mine on blue planet gives 2 knowledge; 3p: every leech mine gives 2
-  knowledge AND 1 power charge; 4p unchanged," then confirmed "It is the lantids." The 2p half matches
-  this entry exactly (Lantids' home planet, Terra, IS the blue planet in this viewer's palette — see
-  `viewer/src/data/planets.ts`). The 3p half does NOT match: the rulebook quote above grants ONLY the
-  extra power charge on the 3p side, no knowledge. Keeping the rulebook-verbatim text above as
-  CONFIRMED; flagging for owner to re-check against the physical tile in case there's a 3p knowledge
-  bonus the text extraction missed.
+- I2. Lantids: +1 power Area I income (CONFIRMED, p.8). Adjusted PI tile, text-only (no image in the
+  uiqoo.kr randomizer, see COMPONENTS.md §8), both sides: **solo/2-player side** — gain 2 knowledge
+  both when adding a mine to a colonized planet AND when building a mine on the Lantids' home planet
+  type (Terra = the blue planet in this viewer's palette, see `viewer/src/data/planets.ts`), even
+  without using their faction ability. **3-player side** — gain 2 knowledge AND charge 1 additional
+  power when adding a mine to a colonized planet. **Owner board-read 2026-06-27 corrects the rulebook
+  prose** (`RULEBOOK-TEXT` p.8's "Choosing Your Faction" recap only mentioned the power charge for the 3p side,
+  omitting the knowledge gain that's also on the physical tile — abbreviated narrative vs. full tile
+  text). Only relevant with fewer than 4 players (a 4-player game uses the unadjusted base PI tile,
+  which itself already grants 2 knowledge per additional mine when a Planetary Institute is built —
+  see `player.ts` `gainRewards([new Reward("2k")], Faction.Lantids)`). CONFIRMED.
 - I3. Bescods: start 3 knowledge (p.8). Other deltas: `TODO [BOARD-ART]`.
 - I4. Xenos: free action 1o→1pw(AreaIII) (p.11). Board deltas: `TODO [BOARD-ART]`.
 - I5. Gleens: special action incl. Explore +2 range (p.11). Board deltas: `TODO [BOARD-ART]`.
@@ -496,3 +569,7 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
 3. ☑ Decide final `Expansion` enum restructure shape (A1) before touching enums.ts. → LOCKED, see §A1.
 4. ☑ Confirm no new research track (F2). → DONE, owner-confirmed 2026-06-27, see §F2.
 5. ☐ Complete the p.16 existing-faction audit (section I).
+6. ☐ Resolve the E6 side-selection conflict: owner says random/not player-count-gated, but the
+   rulebook states player-count-gated (2p always 25-VP; 3-4p default ships, optional later-game
+   randomize) in two independent, clean passages (p.5 and p.10). Needs an explicit owner call — see
+   the ⚠️ flag in §E6 — before the engine's default behavior is locked in.
