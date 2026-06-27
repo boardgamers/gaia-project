@@ -83,8 +83,8 @@ Each faction's Exploration board needs `[NEED FROM BOARD]`:
 
 | Component | Count | Detail needed | Status |
 |---|---|---|---|
-| Deep Space Sector tiles | 8 (double-sided) | Planet layout per side — CONFIRMED for 13 of 16 faces, see RULES_CLARIFICATIONS.md §H2 (1 unidentified hex motif on 3 faces still `[NEED FROM BOARD]`) | ◐ SPEC |
-| Interspace tiles | 30, in 4 player-count sets | spaceship / planet / blank per tile, per set `[NEED FROM BOARD]` | ☐ TODO |
+| Deep Space Sector tiles | 8 (double-sided) | Planet layout per side — CONFIRMED for all 16 faces, see RULES_CLARIFICATIONS.md §H2 (the 3rd hex motif on 12a/13a/17a is Transdim, resolved 2026-06-27) | ◐ SPEC |
+| Interspace tiles | 30, in 4 player-count sets | per-set composition (asteroid/protoplanet/spaceship/blank counts) CONFIRMED, see RULES_CLARIFICATIONS.md §H3; exact tile-by-tile identity not needed (random placement) | ◐ SPEC |
 | Revised Space Sector tiles | replaces base "different planet types" components | which planets on revised sides `[NEED FROM BOARD]` | ☐ TODO |
 | Shifted-sector setup geometry | per player count (2/3/4) | encode the offset-placement layout (rulebook p.4-5) | ☐ TODO |
 
@@ -97,11 +97,11 @@ Each faction's Exploration board needs `[NEED FROM BOARD]`:
 | Round Boosters (new) | 4 | income + pass bonus — CONFIRMED, see RULES_CLARIFICATIONS.md §G3 | ◐ SPEC |
 | Round Scoring tiles (new) | 3 | text p.14 — CONFIRMED verbatim, see RULES_CLARIFICATIONS.md §G4 | ◐ SPEC |
 | Final Scoring tiles (new) | 3 | "most asteroids", "PI–Academy distance", "most deep space sectors" — CONFIRMED verbatim, see RULES_CLARIFICATIONS.md §G4 | ◐ SPEC |
-| Federation tokens (new) | 8 (gold outline) | exact effects CONFIRMED for all 8, see RULES_CLARIFICATIONS.md §G5; which OTHER tokens (besides "vp") have a green side `[NEED FROM BOARD]` | ◐ SPEC |
+| Federation tokens (new) | 8 (gold outline) | exact effects CONFIRMED for all 8, see RULES_CLARIFICATIONS.md §G5; ALL 8 have a green side (standard base-game mechanic — only the base game's original 12-VP token lacks one), resolved 2026-06-27 | ◐ SPEC |
 | Artifact tokens | 13 | effect CONFIRMED for all 13, see RULES_CLARIFICATIONS.md §G6; count of each type among the 13 inferred as 1-each, VERIFY `[NEED FROM BOARD]` | ◐ SPEC |
 | Gaia Planet tokens | 4 | additive to base supply | ☐ TODO |
 | Action tokens | 12 | mark used spaceship action spaces | ☐ TODO |
-| Tinkering tiles | 6 (Tinkeroids only) | effect of each; 3 for rounds 1-3, 3 for 4-6 `[NEED FROM BOARD]` (one shown p.13) | ☐ TODO |
+| Tinkering tiles | 6 (Tinkeroids only) | effect of each CONFIRMED, see RULES_CLARIFICATIONS.md §B1 (rounds 1-3: terra 1 / charge 4pw / 1 Q.I.C.; rounds 4-6: terra 3 / 3 knowledge / 2 Q.I.C.) | ◐ SPEC |
 | Power Rings | 6 (Moweyds only) | +2 power value to a structure (text p.13) | ☐ TODO |
 
 ## 8. Revised / Adjusted Base Components

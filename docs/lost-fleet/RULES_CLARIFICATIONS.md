@@ -101,7 +101,11 @@ text (effect + depiction plan) is kept here. Concretely, each component-type ent
   the Moweyds/Tinkeroids Terraforming board. Gaia planet habitable = 2 Q.I.C. Source: `RULEBOOK-TEXT p.13`. CONFIRMED.
 - Starts with Planetary Institute (not mines), placed in stage 2. Source: p.13. CONFIRMED.
 - 6 Tinkering tiles (3 for rounds 1-3, 3 for 4-6); PI: once/round use current Tinkering tile as action.
-  Individual tile effects: `TODO [BOARD-ART tinkering tiles]` (only the 1-free-terraform tile shown p.13).
+  Individual tile effects, all confirmed (owner board-read 2026-06-27):
+  - **Rounds 1-3** (one of these 3 is the active Tinkering tile each round): (1) terraform 1 step free;
+    (2) charge 4 power; (3) gain 1 Q.I.C.
+  - **Rounds 4-6:** (1) terraform 3 steps free; (2) gain 3 knowledge; (3) gain 2 Q.I.C.
+  - Source: `BOARD-ART tinkering tiles` (owner board-read 2026-06-27). Confidence: CONFIRMED.
 
 ### B2. Darkanians — start planet: Asteroid
 - Starting resources (one-time): **3k, 7o, 15c, 1q** + **1 step Navigation AND 1 step Economy**.
@@ -145,7 +149,13 @@ text (effect + depiction plan) is kept here. Concretely, each component-type ent
 ### B5. Moweyds/Tinkeroids Terraforming board
 - 7 spaces filled randomly with 1 satellite of each color at setup; determines which 3 base planet
   types cost 3 steps. Full setup procedure: Source: `RULEBOOK-TEXT p.8`. CONFIRMED.
-- Exact board layout / space numbering: `TODO [BOARD-ART terraforming board]`.
+- Exact board layout / space numbering: **CLOSED, not needed for engine purposes (owner-confirmed
+  2026-06-27 — question was unclear, downgrading rather than re-asking).** The board's physical layout
+  (which space is "space 3," how the 7 spaces are arranged/numbered on the printed board) is cosmetic
+  only — it exists so players can physically track a 1-of-7 random draw at the table. The only thing
+  that matters for engine logic is already fully specified above: at setup, 3 of the 7 base planet
+  colors are randomly selected to cost 3 terraform steps for Moweyds/Tinkeroids (the other 4 stay at 1
+  step). No further data is needed from the physical board art.
 
 ---
 
@@ -259,10 +269,9 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   - For that tile, the normal **1st** of the base game's 3 conditions for taking an Advanced Tech tile
     (player's marker at level 4 or 5 in the matching Research Area) is REPLACED by whichever side of
     the Extension is face up: side A = "≥25 VP", side B = "explored 3 of the 4 Lost Fleet spaceships."
-  - **⚠️ Side-selection rule — UNRESOLVED CONFLICT, flagged 2026-06-27, needs owner re-check against the
-    physical component before this can read CONFIRMED.** The rulebook states the rule twice, in two
-    separate, cleanly-typeset passages (re-checked directly — this is not a column-merge/OCR artifact;
-    both read unambiguously in isolation):
+  - **Side-selection rule — RESOLVED 2026-06-27 (owner ruling, `OUR-RULING`).** The rulebook states the
+    rule twice (re-checked directly, not a column-merge/OCR artifact — both passages are clean,
+    unambiguous text):
     - p.5, setup: *"Take the Scoring Board Extension. For 2 players, always use the side showing 25
       victory points. For 3 or 4 players, use the side showing 3 Exploration Shuttles. In later games,
       you can decide at random which side to use."*
@@ -271,23 +280,16 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
       earlier mis-citation): *"Instead, the conditions shown on the Scoring Board Extension are applied
       (either you have at least 25 victory points or have explored 3 different spaceships in the Lost
       Fleet; the latter condition only applies in 3- and 4-player games)."*
-    Both passages agree with each other, and both tie side selection to player count by default:
-    **2p always uses the 25-VP side** (no stated exception); **3-4p default to the ships-explored side**,
-    with the rulebook explicitly allowing later games to randomize — but that randomization clause is
-    scoped only to the 3-4p paragraph, and the second passage independently states the ships condition
-    "only applies in 3- and 4-player games" at all, with no carve-out for 2p even under randomization.
-    **Owner stated (2026-06-27) "25 vp or 3 ships is random and not tied to player count"** — this
-    directly contradicts both printed passages above. An earlier edit to this entry accepted that
-    correction at face value and speculated the printed text might be "an OCR/layout misread" — that
-    speculation has since been checked and is wrong: both source passages are clean, well-structured,
-    non-garbled text in this extraction, so the conflict is real, not an artifact of the `.txt` companion.
-    Possible explanations, none yet confirmed: (a) this is a deliberate **house-rule** choice for the
-    digital implementation — always randomize the side regardless of player count, overriding the
-    printed default; (b) owner is recalling the "in later games, randomize" line and generalizing it to
-    all player counts; (c) a physical insert/correction exists that isn't reflected in the v1.0 PDF text.
-    **Needs an explicit owner call before implementing** — until then, the engine should default to the
-    printed rule (2p forced to the 25-VP side; 3-4p forced to the ships side, with side selection only
-    becoming a manual/random toggle for 3-4p games after the first).
+    Both passages agree with each other and tie side selection to player count by default: 2p always
+    uses the 25-VP side; 3-4p default to the ships-explored side, with randomization offered only as an
+    optional "in later games" house option for 3-4p. **Owner's final call: keep the printed 2p rule as-is
+    (always forced to the 25-VP side), but for 3-4p, always randomize the side from game 1 onward**
+    (exercising the rulebook's own "decide at random" option every game, rather than defaulting to the
+    ships side with optional later randomization). This is now the engine's locked behavior — no conflict
+    remains; this was never a misprint, just a digital house-rule choice to apply the rulebook's own
+    randomization option unconditionally for 3-4p.
+  - **Engine rule, final:** 2 players → side is always "25 VP." 3 or 4 players → side is chosen uniformly
+    at random (50/50) at setup, every game.
   - The **2nd** condition (flip an owned, unflipped Federation token) and **3rd** condition (cover an
     owned Standard Tech tile in the matching Research Area with this Advanced Tech tile) are
     UNCHANGED — confirms owner's "AND also have a fed token" framing. Reaching level 4/5 on ANY
@@ -296,9 +298,9 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
     by default — explored 3 of 4 ships) AND flip an unflipped Federation token AND cover a matching
     Standard Tech tile. The other 5 Advanced Tech tiles in the game are still taken under the normal,
     unmodified 3-condition rule.
-  Source: `RULEBOOK-TEXT` p.5 (setup/side selection) + p.10 (Advanced-Tech-conditions paragraph).
-  Confidence: CONFIRMED (single tile; 2nd/3rd conditions unchanged) / **CONFLICT** (side-selection
-  randomness — see flag above).
+  Source: `RULEBOOK-TEXT` p.5 (setup/side selection) + p.10 (Advanced-Tech-conditions paragraph) +
+  `OUR-RULING` (3-4p always-random side selection, owner-confirmed 2026-06-27).
+  Confidence: CONFIRMED.
 
 ## F. RESEARCH TRACK CHANGES
 
@@ -377,11 +379,19 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   - **terra:** Immediately and only once receive a "Build a Mine" action with up to 3 free terraforming
     steps, without paying the build cost; Q.I.C.s may still increase range. CONFIRMED (RULEBOOK-TEXT).
   - **vp:** Immediately gain 12 VP. Unlike base-game 12-VP Federation tokens, this one ALSO has a green
-    reverse side letting you discover an Advanced Tech tile or research to the highest level of a
-    Research Area. CONFIRMED (RULEBOOK-TEXT) for the gold face; the green-side trigger condition is
-    still `TODO [BOARD-ART]`.
-  - Which OTHER tokens (besides `vp`) carry a green side, if any: still `TODO [BOARD-ART]` — the
-    rulebook only calls out `vp` as having one.
+    reverse side. CONFIRMED (RULEBOOK-TEXT) for the gold face.
+  - **Green reverse side — RESOLVED 2026-06-27 (owner clarification, Source: `BOARD-ART` +
+    `RULEBOOK-TEXT`, Confidence: CONFIRMED).** This is the base game's existing, universal Federation
+    mechanic, not anything new or per-token-unique: in the base game, EVERY Federation token has a
+    green reverse side EXCEPT the 12-VP token — flipping a token to its green side lets you discover an
+    Advanced Tech tile, or research to the highest level of a Research Area, instead of gaining the
+    gold side's resource reward. In Lost Fleet, this rule is unchanged for all the new tokens too — ALL
+    8 new Federation tokens (`c`, `k`, `oq`, `pwt`, `range`, `tech`, `terra`, `vp`) have a green side
+    using this same standard mechanic. The only thing notable about the new `vp` token specifically is
+    that, unlike its base-game 12-VP counterpart (which has no green side at all), this Lost-Fleet `vp`
+    token — found on the spaceships — DOES have one, so it can still be flipped for the Advanced
+    Tech/research benefit despite being a 12-VP token. No per-token green-side variation to track; it's
+    "has a green side" (all of them) vs. "has no green side" (only the base game's original 12-VP token).
 - G6. Artifact tokens (13), all confirmed. 13 distinct names/images, no two alike — simplest reading is
   1 copy of each (owner to confirm physical box count if duplicates actually exist). Effects:
   - **1 Knowledge + 1 Ore:** ongoing — gain an extra 1 knowledge + 1 ore EVERY income phase (NOT a
@@ -464,32 +474,50 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   | Tile | Side a | Side b |
   |---|---|---|
   | 11 | Protoplanet, Asteroid, Blank | Asteroid, Blank, Blank |
-  | 12 | **Unidentified†**, Protoplanet, Blank | Asteroid, Blank, Blank |
-  | 13 | **Unidentified†**, Blank, Asteroid | Blank, Blank, Asteroid |
+  | 12 | **Transdim**, Protoplanet, Blank | Asteroid, Blank, Blank |
+  | 13 | **Transdim**, Blank, Asteroid | Blank, Blank, Asteroid |
   | 14 | Protoplanet, Blank, Asteroid | Blank, Blank, Asteroid |
   | 15 | Protoplanet, Blank, Blank | Protoplanet, Blank, Asteroid |
   | 16 | Blank, Blank, Protoplanet | Asteroid, Blank, Asteroid |
-  | 17 | **Unidentified†**, Blank, Blank | Blank, Asteroid, Blank |
+  | 17 | **Transdim**, Blank, Blank | Blank, Asteroid, Blank |
   | 18 | Protoplanet, Blank, Blank | Asteroid, Blank, Blank |
 
-  Source: `BOARD-ART` (randomizer asset read). Confidence: CONFIRMED for the Asteroid/Protoplanet/Blank
-  classifications. **† Unidentified (tiles 12a, 13a, 17a only):** a solid violet/magenta cratered
-  sphere with no glow — visually distinct from the confirmed teal-glow Protoplanet motif, and doesn't
-  match any of the 9 base-game planet colors either. Deliberately NOT guessed further (that's exactly
-  the kind of icon-only call that's been wrong elsewhere in this review) — flagged `TODO [BOARD-ART]`
-  for the owner to check against the physical tiles. If it turns out to be decorative-only, those 3
-  cells are effectively Blank; if it's a real 4th hex type, the table undercounts it.
+  Source: `BOARD-ART` (randomizer asset read). Confidence: CONFIRMED — including the previously
+  "unidentified" hex. **RESOLVED 2026-06-27:** the hex on tiles 12a/13a/17a (a solid violet/magenta
+  cratered sphere, no glow) is a **Transdim planet** — confirmed by direct visual match against the
+  randomizer's own `planet_transdim.png` base-game asset (same purple nebulous/cratered texture,
+  side-by-side comparison). This is not a new Lost Fleet element; it's the base game's existing
+  wildcard/ghost planet type (becomes Gaia when converted via Gaiaforming), simply also seeded onto
+  Deep Space tiles alongside Protoplanet/Asteroid/Blank. Yes — the randomizer site's own asset set was
+  sufficient to resolve this without needing the physical component; no further owner check needed.
   - Extends H5: tile 16 has 0 asteroid hexes on side a vs. 2 on side b — exactly the swing the setup
     code keys off (`advcond`-style forced logic) when deciding whether to flip tile 16 to reach the ≥6
     asteroid minimum. A full side-b set totals 9 asteroid hexes across all 8 tiles; a full side-a set
     totals only 3 — confirms why tile 16 specifically is the one the rulebook calls out to flip.
-- H3. Interspace tile contents per player-count set (30 in 4 sets): `TODO [BOARD-ART interspace tiles]`.
-  Structural detail newly confirmed (`RULEBOOK-TEXT` p.5 sidebar, verbatim) explaining the "4 sets"
-  framing: each Interspace tile has 2 faces — **front** shows one of {Lost Fleet spaceship tile,
-  planet tile (Protoplanet or Asteroid), blank}; **back** is marked for the player-count set it
-  belongs to ("Only use the tiles that correspond to your player count"). This implies 4 genuinely
-  distinct physical groups (solo=6, 2p=6, 3p=8, 4p=10 → 30 total), matching this entry's existing
-  count. Exact face-by-face spaceship/planet-type assignment per tile is still `TODO [BOARD-ART]`.
+- H3. Interspace tile contents per player-count set (30 in 4 sets). Structural detail
+  (`RULEBOOK-TEXT` p.5 sidebar, verbatim) explaining the "4 sets" framing: each Interspace tile has 2
+  faces — **front** shows one of {Lost Fleet spaceship tile, planet tile (Protoplanet or Asteroid),
+  blank}; **back** is marked for the player-count set it belongs to ("Only use the tiles that
+  correspond to your player count"). This implies 4 genuinely distinct physical groups (solo=6, 2p=6,
+  3p=8, 4p=10 → 30 total), matching this entry's existing count.
+  - **Per-set composition, owner-confirmed 2026-06-27 (Source: `BOARD-ART interspace tiles`,
+    Confidence: CONFIRMED):**
+    | Set | Asteroid | Protoplanet | Spaceships | Blank | Total |
+    |---|---|---|---|---|---|
+    | Solo | 2 | 1 | 3 (excl. Rebellion) | 0 | 6 |
+    | 2p | 2 | 1 | 3 (excl. Rebellion) | 0 | 6 |
+    | 3p | 2 | 1 | 4 (all) | 1 | 8 |
+    | 4p | 4 | 1 | 4 (all) | 1 | 10 |
+  - **Note (low priority — solo/Automa is not implemented per A3):** the rulebook's own solo-setup text
+    (p.6) excludes a different ship for solo play than what the owner stated above — it says *"Return
+    the Twilight spaceship ... to the box. Put the other 3 spaceships [Rebellion, T F Mars, Eclipse]
+    near the gameboard,"* i.e. solo excludes **Twilight**, not Rebellion. The owner's solo composition
+    above says "no Rebellion" instead. Since solo play isn't being built (A3), this discrepancy is
+    flagged for completeness only and isn't blocking — 2p (which IS in scope and does exclude Rebellion,
+    per C2) matches the owner's data exactly.
+  - Exact face-by-face identity of WHICH spaceship/planet-type goes on which specific numbered tile
+    (as opposed to just the per-set counts above) is not needed for engine logic — at setup, the set's
+    tiles are placed into the board's holes at random (per H1), so only the aggregate counts matter.
 - H4. Revised Space Sector tile planet layouts: `TODO [BOARD-ART revised sectors]`. Newly confirmed
   which tiles are "revised" (`RULEBOOK-TEXT` p.4 setup text): specifically Sectors **05, 06, and 07**
   are genuinely double-sided Lost-Fleet components — one face matches the base game's appearance
@@ -569,7 +597,6 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
 3. ☑ Decide final `Expansion` enum restructure shape (A1) before touching enums.ts. → LOCKED, see §A1.
 4. ☑ Confirm no new research track (F2). → DONE, owner-confirmed 2026-06-27, see §F2.
 5. ☐ Complete the p.16 existing-faction audit (section I).
-6. ☐ Resolve the E6 side-selection conflict: owner says random/not player-count-gated, but the
-   rulebook states player-count-gated (2p always 25-VP; 3-4p default ships, optional later-game
-   randomize) in two independent, clean passages (p.5 and p.10). Needs an explicit owner call — see
-   the ⚠️ flag in §E6 — before the engine's default behavior is locked in.
+6. ☑ Resolve the E6 side-selection conflict. → DONE, owner ruling 2026-06-27: 2p always forced to the
+   25-VP side (matches rulebook); 3-4p always randomize the side every game (exercising the rulebook's
+   own "decide at random" option unconditionally, rather than as an optional later-game variant). See §E6.
