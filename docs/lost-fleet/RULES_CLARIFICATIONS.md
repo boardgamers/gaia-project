@@ -214,7 +214,9 @@ For each ship, capture every action space: {type, cost, effect, grid-position} a
 - E2. Build a Mine — Asteroid: needs an available Gaiaformer; Gaiaformer is consumed (placed on
   overlay, unusable rest of game); no 1o+2c build cost paid. Source: p.10. CONFIRMED.
 - E3. Form a Federation — may NOT place a satellite on a spaceship tile. Explored ships with a
-  remaining fed token grant it when you form a federation. Source: p.10. CONFIRMED.
+  remaining fed token grant it when you form a federation. **Owner-clarified 2026-06-27: the ship does
+  NOT need to be adjacent to/part of the federation being formed — merely having it explored (a shuttle
+  there) is sufficient to grant its fed token whenever you form any federation.** Source: p.10. CONFIRMED.
 - E4. Power/Q.I.C. actions — the Research-board Q.I.C. actions are COVERED by the overlay and
   unavailable; ship actions replace them (incl. new Knowledge & Credit action types). Source: p.10. CONFIRMED.
 - E5. Upgrade — explored ships offer extra Standard Tech; taking it advances 1 research level.
