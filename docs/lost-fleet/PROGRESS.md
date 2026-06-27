@@ -3,10 +3,20 @@
 > **New session? Start here.** This file is the running state of the project. Read it, then read
 > `RULES_CLARIFICATIONS.md` (the value ledger) and `COMPONENTS.md` (the inventory/status). If the
 > task touches viewer rendering/perf, also read `PERFORMANCE.md` first — it has hard-measured
-> findings that should not be rediscovered. Read the **Testing — required going forward** section
-> below before touching viewer rendering code — it's a standing instruction, not optional. Then
-> ask the user "what next?" and use the **Next actions** section below to guide them.
+> findings that should not be rediscovered. Read **Working agreements** below before doing
+> anything else, including the **Testing — required going forward** section it points to — both
+> are standing process, not optional. Then ask the user "what next?" and use the **Next actions**
+> section below to guide them.
 > Last updated: **2026-06-29**.
+
+## Working agreements (read every session, not optional)
+1. **Before writing any implementation plan, go read the current mechanics/code it will touch
+   first.** Don't propose a plan from memory or assumption — trace the actual component tree,
+   data flow, or engine logic involved, the same way the turn-order and persistence questions
+   below were answered by reading `self-contained.ts`/`Game.vue`/`launcher.ts` rather than
+   guessing. A plan that doesn't reflect how the existing code actually works isn't useful.
+2. **Testing convention** — see the **Testing — required going forward** section below; it's the
+   same kind of standing instruction.
 
 ## What this project is
 Add the official **Gaia Project: The Lost Fleet** expansion to a private fork of the open-source
@@ -829,6 +839,28 @@ existing-faction delta audit (§I, via owner screenshot), and a transcription er
 Advanced Tech tile (§G2, was wrongly merged with the Deep Space tile due to a column-layout artifact).
 Artifact token type-counts (§G6) remain an unconfirmed "1-of-each" assumption — low priority, the
 effects are already known regardless of count.
+
+## Current mechanics: single-browser demo, no persistence, no turn locking (as of 2026-06-27)
+Two things the user noticed while testing that are **expected at this build stage, not bugs**:
+
+- **One browser can act for every player.** `viewer/src/store.ts`'s `state.player` (the "which
+  player is *this session*" identity) defaults to `null` and nothing in `self-contained.ts` ever
+  sets it. `Game.vue`'s `canPlay` getter is `!ended && (!state.player || sessionPlayer ===
+  current-turn-player)` — with `state.player` always null, that's unconditionally `true`, so the
+  move UI never checks whose turn it actually is. The locking mechanism already exists and is
+  wired for it: `launcher.ts:41` listens for a `"player"` event → `store.commit("player", data)`.
+  A real per-session host (the eventual Supabase integration) would emit that to lock a browser
+  to one player; `self-contained.ts` just never does, by design (it's a local hot-seat harness).
+- **Reloading the link always starts a brand-new game.** `self-contained.ts:48` always runs `new
+  Engine([`init ${players} ${seed}`, ...moves])` on load. There is zero persistence code anywhere
+  in `viewer/src` (`localStorage`/`sessionStorage`/backend — none exist, confirmed by grep). Two
+  compounding causes: (1) nothing saves move history anywhere — `moves` can only come from a
+  *build-time* env var, not the URL; (2) unless `?seed=` is in the URL, the seed is also
+  randomized per load (`Math.floor(Math.random() * 10000)`), so even the initial deal changes.
+  **Manual workaround that already works today**, no new code needed: the debug `Wrapper.vue` UI
+  has "Export"/"Load" buttons — Export copies the current game JSON, paste it back into Load next
+  time to resume. Real automatic persistence (append-only move list via Supabase) is the
+  already-planned last build-order step below — this is expected to stay this way until then.
 
 **How to fill the one remaining item:** user photographs Sector tiles 05/06/07's Lost-Fleet-specific
 face → drop the image in chat → render/read with PyMuPDF or read the image directly → transcribe into
