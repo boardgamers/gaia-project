@@ -9,12 +9,29 @@
 
 ## How to use this file
 Every entry has:
-- **Value/Rule** — the actual answer
+- **Value/Rule** — the actual answer (the effect text)
 - **Source** — one of: `RULEBOOK-TEXT p.N` | `BOARD-ART <component>` | `ERRATA <link>` | `COMMUNITY <link>` | `OUR-RULING`
 - **Confidence** — `CONFIRMED` (read directly / official) | `INFERRED` (reasoned, unverified) | `TODO` (placeholder, needs filling)
+- **Depiction** — how the viewer will render this component, in our own SVG style (see below).
+  Required for every component-type entry (tiles, tokens, boards); not needed for pure numeric/
+  text rules that have no physical card.
 
-When you read a value off the physical game, replace the placeholder, set Source = `BOARD-ART`,
-and Confidence = `CONFIRMED`.
+When you read a value off a physical/rendered component, replace the placeholder, set Source =
+`BOARD-ART <component name/seed>` (a text pointer to *where* it was confirmed, never the image
+file itself — see "Art policy" below), and Confidence = `CONFIRMED`.
+
+### Art policy: original image vs. our depiction
+We never commit official Lost Fleet artwork (scans, randomizer screenshots, photos) into this
+repo — copyrighted third-party game art, and the project already keeps everything else
+text-only (see `PROGRESS.md` "Done so far" #1: "no third-party art committed"). Source images are
+a *reference used once to derive the rule and the depiction*, then discarded — only the derived
+text (effect + depiction plan) is kept here. Concretely, each component-type entry has three parts:
+1. **Original component** — identified by name (Source line), not stored as a file.
+2. **Depiction** — how it's drawn in the viewer, reusing existing house style/components instead of
+   replicating scanned art (already the stated viewer principle for Lost Fleet — see `PROGRESS.md`
+   "Build order" #2). E.g. "icon row like `ResearchTile.vue`'s tech-content slot, new federation-gold
+   border" rather than a redrawn version of the physical tile's background art.
+3. **Value/Rule** — the actual game-mechanical effect, in engine-implementable terms.
 
 ---
 

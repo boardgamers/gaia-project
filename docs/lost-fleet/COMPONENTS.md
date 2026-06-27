@@ -15,6 +15,10 @@
 - `● DONE` — implemented + base-game tests still green
 - `[NEED FROM BOARD]` — value must be read off the physical component (not in rulebook text)
 
+`◐ SPEC` for any tile/token/board means all three of: effect text, source, AND a planned digital
+depiction are filled in over in `RULES_CLARIFICATIONS.md` (see "How to use this file" → "Art
+policy" there) — not just the effect text alone.
+
 ---
 
 ## 1. New Factions (4)
