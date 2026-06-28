@@ -75,7 +75,7 @@ export const spaceshipBoards: { [key in Spaceship]: SpaceshipBoardSpec } = {
 };
 
 /** Charge cost (power) for landing on exploration-track spaces 1-4 of any spaceship. Same track on every ship. */
-export const EXPLORATION_CHARGE_TRACK: readonly number[] = [0, 2, 2, 3];
+export const EXPLORATION_CHARGE_TRACK: readonly number[] = [0, 2, 2, 4];
 
 /** Artifact slots only exist on Twilight, one per player. */
 export function artifactSlotCount(ship: Spaceship, nbPlayers: number): number {

@@ -31,8 +31,8 @@ describe("Spaceship boards", () => {
     expect(spaceshipBoards[Spaceship.Eclipse].hasStandardTechSlot).to.be.true;
   });
 
-  it("should have a 4-space exploration charge track of 0/2/2/3", () => {
-    expect(EXPLORATION_CHARGE_TRACK).to.deep.equal([0, 2, 2, 3]);
+  it("should have a 4-space exploration charge track of 0/2/2/4", () => {
+    expect(EXPLORATION_CHARGE_TRACK).to.deep.equal([0, 2, 2, 4]);
   });
 
   describe("artifactSlotCount", () => {
