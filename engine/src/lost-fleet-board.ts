@@ -13,7 +13,7 @@ import {
   interspaceSet,
   lostFleetSectorCenters,
 } from "./lost-fleet-map";
-import { MapTile, s1, s2, s3, s4, s5, s5b, s6, s6b, s7, s7b, s8, s9, s10 } from "./map";
+import { MapTile, s1, s2, s3, s4, s5, s5b, s6, s6b, s7, s7b, s8, s9, s10, SectorInMapConfiguration } from "./map";
 import Sector from "./sector";
 import { shipsInPlay } from "./spaceships";
 
@@ -41,16 +41,25 @@ function lostFleetSectorTiles(nbPlayers: number): MapTile[] {
   return [s1, s2, s3, s4, s5, s6, s7, s8, s9, s10];
 }
 
-/** Step 1: place the (rotated) Space Sector tiles onto the shifted Lost Fleet centers. */
-function generateSectorGrid(nbPlayers: number, rng: seedrandom.prng): Grid<GaiaHex> {
+/** Step 1: place the (rotated) Space Sector tiles onto the shifted Lost Fleet centers. Also returns the
+ * per-sector placement (tile name/rotation/center) so callers can populate a `MapConfiguration`-shaped
+ * record (e.g. `SpaceMap.placement`) for sector-suffix coordinate parsing and rotation. */
+function generateSectorGrid(
+  nbPlayers: number,
+  rng: seedrandom.prng
+): { grid: Grid<GaiaHex>; sectors: SectorInMapConfiguration[] } {
   const centers = lostFleetSectorCenters(nbPlayers);
   const tiles = shuffleSeed.shuffle(lostFleetSectorTiles(nbPlayers), rng());
 
-  const grids = tiles.map((tile, i) =>
-    Sector.create(tile.map, tile.name, centers[i]).rotateRight(Math.floor(rng() * 6), centers[i])
-  );
+  const sectors: SectorInMapConfiguration[] = [];
+  const grids = tiles.map((tile, i) => {
+    const rotation = Math.floor(rng() * 6);
+    const center = centers[i];
+    sectors.push({ sector: tile.name, rotation, center });
+    return Sector.create(tile.map, tile.name, center).rotateRight(rotation, center);
+  });
   const [first, ...rest] = grids;
-  return first.merge(...rest);
+  return { grid: first.merge(...rest), sectors };
 }
 
 /** Content tags for a single Interspace tile, before a specific ship/coordinate is assigned. */
@@ -158,6 +167,10 @@ export interface LostFleetBoard {
   grid: Grid<GaiaHex>;
   /** Pairs of Deep Space notch indices that are hex-adjacent (the 3p-only "larger gap"; empty at 2p/4p). */
   adjacentNotchPairs: Array<[number, number]>;
+  /** Per-Space-Sector placement (tile name/rotation/center), for populating `SpaceMap.placement`. Does
+   * not include Interspace/Deep Space hexes, which aren't sectors and address directly via their own
+   * `IS<n>`/`DS<tileId>_<0-2>` sector id (see `GaiaHex.toString()`). */
+  sectors: SectorInMapConfiguration[];
 }
 
 /**
@@ -193,12 +206,12 @@ const MAX_LAYOUT_ATTEMPTS = 50;
 export function generateLostFleetBoard(nbPlayers: number, seed: string): LostFleetBoard {
   for (let attempt = 0; attempt < MAX_LAYOUT_ATTEMPTS; attempt++) {
     const rng = seedrandom(attempt === 0 ? seed : `${seed}-retry${attempt}`);
-    const grid = generateSectorGrid(nbPlayers, rng);
+    const { grid, sectors } = generateSectorGrid(nbPlayers, rng);
     placeInterspaceTiles(grid, nbPlayers, rng);
     placeDeepSpaceTiles(grid, nbPlayers, rng);
 
     if (isValidBoard(grid)) {
-      return { grid, adjacentNotchPairs: findAdjacentNotchPairs(lostFleetSectorCenters(nbPlayers)) };
+      return { grid, adjacentNotchPairs: findAdjacentNotchPairs(lostFleetSectorCenters(nbPlayers)), sectors };
     }
   }
 

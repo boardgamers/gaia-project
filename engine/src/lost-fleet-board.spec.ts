@@ -95,6 +95,29 @@ describe("Lost Fleet board assembly", () => {
       }
     });
 
+    it("should return per-sector placement metadata matching the assembled grid", () => {
+      for (const nbPlayers of [2, 3, 4]) {
+        const { grid, sectors } = generateLostFleetBoard(nbPlayers, `placement-${nbPlayers}`);
+        expect(sectors, `sector count at ${nbPlayers}p`).to.have.length(SECTOR_COUNT[nbPlayers]);
+
+        const names = sectors.map((s) => s.sector);
+        expect(new Set(names).size, `duplicate sector names at ${nbPlayers}p`).to.equal(names.length);
+
+        for (const placement of sectors) {
+          // Every hex of that sector's 19-hex hexagon should exist in the grid, centered exactly
+          // where the placement says, and tagged with this same sector name.
+          for (const hex of grid.values()) {
+            if (hex.data.sector === placement.sector) {
+              expect(dist(hex, placement.center), `${placement.sector} hex within radius 2 of its center`).to.be.at.most(2);
+            }
+          }
+          expect(grid.get(placement.center)?.data.sector, `center hex sector at ${nbPlayers}p`).to.equal(
+            placement.sector
+          );
+        }
+      }
+    });
+
     it("should only use Deep Space tiles 11-16 at 2 players", () => {
       const { grid } = generateLostFleetBoard(2, "deep-space-2p");
       for (const hex of grid.values()) {
