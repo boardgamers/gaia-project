@@ -58,18 +58,17 @@ Each new faction needs (see RULES_CLARIFICATIONS for values):
 
 | Spaceship | Special note | Status |
 |---|---|---|
-| Twilight (Nautilaks) | Holds Artifacts; "Examine Artifact" action | ◐ Board data + setup ● DONE (`spaceships.ts`, `setup.ts`); core Explore action/state ● DONE; federation-claim ownership hook ● DONE; QIC action (re-score owned Federation token) ● DONE; Artifact-token seeding + Examine Artifact action ☐ TODO |
-| Rebellion (Vo'Kron) | NOT used in 2-player games | ◐ Board data + setup ● DONE (`spaceships.ts`, `setup.ts`); core Explore action/state ● DONE; federation-claim ownership hook ● DONE; Standard-Tech claim hook ● DONE; QIC action (claim Tech tile) ● DONE; Knowledge action (2k → 2c+1q) ● DONE; remaining live board actions ☐ TODO |
-| T F Mars (Gaia Federation) | Moweyds start with a shuttle here | ◐ Board data + setup ● DONE; core Explore action/state ● DONE; federation-claim ownership hook ● DONE; Standard-Tech claim hook ● DONE; QIC action (VP scaled by owned Tech tiles) ● DONE; Power action / Instant-Gaiaforming (2pw → convert a Transdim planet in range, QIC-for-extra-range, into Gaia, no building placed) ● DONE; remaining live board actions ☐ TODO |
-| Eclipse (Eridani Empire) | — | ◐ Board data + setup ● DONE; core Explore action/state ● DONE; federation-claim ownership hook ● DONE; Standard-Tech claim hook ● DONE; QIC action (VP scaled by colonized planet types) ● DONE; Power action (3pw,2k → free research upgrade) ● DONE; remaining live board actions ☐ TODO |
+| Twilight (Nautilaks) | Holds Artifacts; "Examine Artifact" action | ◐ Board data + setup ● DONE (`spaceships.ts`, `setup.ts`); core Explore action/state ● DONE; federation-claim ownership hook ● DONE; QIC action (re-score owned Federation token) ● DONE; Knowledge action (1k → +3 range for Build a Mine/Gaiaforming/Exploring) ● DONE; Power action (3pw,2o → upgrade a Trading Station into a Research Lab) ● DONE; Artifact-token seeding + Examine Artifact action ☐ TODO |
+| Rebellion (Vo'Kron) | NOT used in 2-player games | ◐ Board data + setup ● DONE (`spaceships.ts`, `setup.ts`); core Explore action/state ● DONE; federation-claim ownership hook ● DONE; Standard-Tech claim hook ● DONE; QIC action (claim Tech tile) ● DONE; Knowledge action (2k → 2c+1q) ● DONE; Power action (3pw,1o → upgrade a Mine into a Trading Station, ignoring isolation) ● DONE |
+| T F Mars (Gaia Federation) | Moweyds start with a shuttle here | ◐ Board data + setup ● DONE; core Explore action/state ● DONE; federation-claim ownership hook ● DONE; Standard-Tech claim hook ● DONE; QIC action (VP scaled by owned Tech tiles) ● DONE; Power action / Instant-Gaiaforming (2pw → convert a Transdim planet in range, QIC-for-extra-range, into Gaia, no building placed) ● DONE; Credit action (3c → terraform + build a Mine in range, ore for steps beyond the first) ● DONE |
+| Eclipse (Eridani Empire) | — | ◐ Board data + setup ● DONE; core Explore action/state ● DONE; federation-claim ownership hook ● DONE; Standard-Tech claim hook ● DONE; QIC action (VP scaled by colonized planet types) ● DONE; Power action (3pw,2k → free research upgrade) ● DONE; Credit action (6c → free Mine on an Asteroid in range) ● DONE |
 
 Each spaceship needs:
 - Every action space on the board: type (Q.I.C. / Power / Knowledge / Credit), cost, effect, position
   — ● DONE, see `engine/src/spaceships.ts` (`spaceshipBoards`). Live availability/execution wiring
   (`available/spaceship-actions.ts`, `move/spaceship-actions.ts`, `engine.spaceshipActions` per-round
-  lock) is ● DONE for 7 of 12 actions (Twilight QIC, Rebellion QIC + Knowledge, T F Mars QIC + Power,
-  Eclipse QIC + Power); the remaining 5 (Twilight Power + Knowledge, Rebellion Power, T F Mars Credit,
-  Eclipse Credit — all "bypass normal build" or build-range actions) are ☐ TODO. Separately, and not
+  lock) is ● DONE for all 12 of 12 actions (Twilight QIC + Knowledge + Power, Rebellion QIC + Knowledge
+  + Power, T F Mars QIC + Power + Credit, Eclipse QIC + Power + Credit). Separately, and not
   counted in the 12, Twilight's Examine Artifact action and claimed ship Federation tokens' gold-side
   rescoring execution remain ☐ TODO.
 - Number of standard-tech slots — ● DONE: 0 (Twilight, has no Standard Tech slot at all), 1 each for

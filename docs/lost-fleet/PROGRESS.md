@@ -445,6 +445,45 @@ notifications).
     388/388** (+1 test). This wires the 7th of the 12 ship-board actions; see "Next actions" below for
     the remaining 5 plus the two separate not-counted-in-12 features (Examine Artifact, Federation
     gold-side execution).
+23. ✅ **Spaceship Boards live-gameplay wiring, COMPLETE — all 12 of 12 actions CODED & TESTED**
+    (done 2026-06-28). The remaining 5 ship-board actions are now live, closing out the
+    "Next actions" item #1 below.
+    - **Twilight's Knowledge action** (1k → +3 range for Build a Mine/Gaiaforming/Exploring a ship)
+      needed only a declarative `spaceshipActionEffects[Twilight].knowledge = ["3range"]` entry —
+      zero new Command/SubPhase code. Granting `Resource.TemporaryRange` already triggers the
+      engine's existing `gain-${Resource.TemporaryRange}` listener (`engine.ts`), which forces
+      `SubPhase.BuildMineOrGaiaFormer` — a subphase that already bundles exactly the 3 documented
+      uses (`possibleMineBuildings(..., true)` + `possibleExplorations(...)`).
+    - **The other 4 (Eclipse Credit, T F Mars Credit, Rebellion Power, Twilight Power)** all place or
+      upgrade a building, so each is wired as bespoke `Command.Build`-shaped available-command data —
+      reusing the existing `moveBuild`/`placeBuilding` machinery unmodified (zero new move code),
+      exactly mirroring how `possibleLabDowngrades`/`possiblePISwaps` already produce non-build-cost
+      `Command.Build` data. Two new `SubPhase`s chain off `moveSpaceshipAction()` after the fixed
+      ship-board fee is paid: `SpaceshipBuildMine` (Eclipse Credit / T F Mars Credit, via new
+      `possibleSpaceshipBuildMine()`) and `SpaceshipUpgradeBuilding` (Rebellion Power / Twilight Power,
+      via new `possibleSpaceshipUpgradeBuilding()`), both in `available/spaceship-actions.ts`.
+      - Eclipse Credit: free Mine on any in-range, unoccupied Asteroid (`pl.canOccupy`); cost is QIC
+        range-extension only, the 6c fee covers the mine itself.
+      - T F Mars Credit: Mine on any in-range, non-Transdim/non-Asteroid hex; cost is QIC range
+        extension + ore for `terraformingStepsRequired(...) - 1` steps (the 3c fee's flat "1 free
+        step" matches the base game's "Build a Mine" terraform+build action, just paid in credits).
+      - Rebellion Power: upgrades a Mine the player already owns into a Trading Station, **ignoring
+        the normal isolation check** — no new hex, so no range/QIC/terraform applies at all (confirmed
+        with the user: only a genuinely new hex placement needs those).
+      - Twilight Power: upgrades a Trading Station the player already owns into a Research Lab, same
+        no-range/no-terraform reasoning.
+    - `spaceshipActionEffects` gained empty-array placeholders (`power: []` / `credit: []`) for these 4
+      actions, marking them wired-via-bespoke-SubPhase rather than declarative Reward/Event strings —
+      the same convention already used for Eclipse/T F Mars's Power actions.
+    - New tests in `move/spaceship-actions.spec.ts` cover all 5 actions end-to-end (fee payment, any
+      leftover per-hex QIC/ore cost, and the resulting building placement/upgrade), including a
+      Twilight-Power case that chains through the Research Lab's granted Tech-tile + free research-track
+      reward. One pre-existing test ("should not offer an action the player cannot afford") needed an
+      added `credits = 2` so T F Mars's now-wired Credit action doesn't make the ship's action list
+      affordable again. **388/388 → 393/393** (+5 tests: 1 for Knowledge, 4 for the build-bypass
+      actions). All 12 of 12 Spaceship Board actions are now live; only Examine Artifact + Twilight's
+      Artifact-token seeding and the gold-side execution for claimed ship Federation tokens remain as
+      separate, not-counted-in-12 features (see "Next actions" below).
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -615,30 +654,28 @@ exact shape for adv-tech/federation/booster/scoring enum members when those chun
 
 ## Next actions
 Chunks 1-7b plus Darkanians' PI follow-up, the core Explore action, the federation-claim hook, the
-Standard-Tech claim hook, and the first two slices of Spaceship Boards live-gameplay wiring are
-complete and verified — **388/388 engine tests pass** (274 baseline → 280 after Chunk 2
+Standard-Tech claim hook, and the full Spaceship Boards live-gameplay wiring are
+complete and verified — **393/393 engine tests pass** (274 baseline → 280 after Chunk 2
 → 299 after Chunk 3 → 321 after Chunk 4 → 337 after Chunk 5 → 345 after Chunk 6 → 352 after Chunk 7a →
 353 after the German-rules reroll fix → 354 after Chunk 7b's placement-metadata step → 361 after Chunk
 7b's `SpaceMap`/`moveInit` wiring + integration tests → 362 after Darkanians' PI integration test → 366
 after the Explore-action slice → 370 after the federation-claim slice → 372 after the Standard-Tech
 claim slice → 387 after the Spaceship Boards live-gameplay wiring slice → 388 after T F Mars's
-Instant-Gaiaforming Power action, see "Done so far" #16-#22). Darkanians and Space Giants are fully
-playable factions for every mechanic that doesn't depend on an unbuilt subsystem; the 4 Spaceship
-Boards' static config and setup-time tile/token seeding are coded and tested; the **core Explore
-action** is live in the engine; explored ships can redeem their seeded Federation token through
-federation formation and their seeded Standard Tech tile through the normal tech-pick flow; and 7 of
-the 12 ship board-actions (Twilight QIC, Rebellion QIC + Knowledge, T F Mars QIC + Power, Eclipse
-QIC + Power) are now live through a new `Command.SpaceshipAction`, with a per-round per-action lock
-(see #18-#22). The Lost Fleet variable-map
+Instant-Gaiaforming Power action → 393 after wiring the remaining 5 ship-board actions (Twilight
+Knowledge/Power, Rebellion Power, T F Mars Credit, Eclipse Credit), see "Done so far" #16-#23).
+Darkanians and Space Giants are fully playable factions for every mechanic that doesn't depend on an
+unbuilt subsystem; the 4 Spaceship Boards' static config and setup-time tile/token seeding are coded
+and tested; the **core Explore action** is live in the engine; explored ships can redeem their seeded
+Federation token through federation formation and their seeded Standard Tech tile through the normal
+tech-pick flow; and all 12 of the 12 ship board-actions are now live through a new
+`Command.SpaceshipAction`, with a per-round per-action lock (see #18-#23). The Lost Fleet variable-map
 geometry, tile data, full board assembly, `GaiaHex` addressing fix, AND the
 `SpaceMap`/`moveInit` wiring are all coded and tested (see #13-#16) — `new Engine([...], { lostFleet: true })`
 now produces a real, playable Lost Fleet board through the normal engine entry points. Explicitly still
 open, in priority order the user should pick from:
-1. **Remaining Spaceship Boards live-gameplay wiring**: every ship's Credit/Power "bypass normal
-   build" action (Twilight Power = build a Research Lab, Twilight Knowledge = +3 build/Gaiaform/explore
-   range, Rebellion Power = build a Trading Station ignoring adjacency, T F Mars Credit = terraform +
-   build a mine, Eclipse Credit = free mine on an Asteroid in range), Examine Artifact + Twilight's
-   Artifact-token seeding, and the gold-side execution for claimed ship Federation tokens.
+1. **Examine Artifact + Twilight's Artifact-token seeding, and the gold-side execution for claimed ship
+   Federation tokens** — the two remaining Spaceship-Boards-adjacent features not counted in the 12
+   ship-board actions (all 12 of which are now fully wired, see "Done so far" #23).
 2. **Space Giants' Exploration-board special action** (deferred; core Explore plumbing now exists, but
    the faction-specific action hook still doesn't).
 3. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.
