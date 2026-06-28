@@ -522,20 +522,19 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
        (only the distance-3 minimum-adjacent pairs are excluded either way); there is no case where the
        two phrasings would disagree. Engine implementation: a single rule, "no two spaceship-bearing
        Interspace holes may be at hex-distance ≤ 3 of each other," applies uniformly at 2p/3p/4p.
-    4. **Open question found while implementing the 3p-only "place 2 Deep Space tiles next to each
-       other in the larger gap by the sector you placed last" rule (2026-06-28):** computed all 8
-       perimeter Deep Space notches for the 3p layout (`findDeepSpaceNotches(lostFleetSectorCenters(3))`)
-       and found them **geometrically uniform** — every notch is the same 3-hex triangle shape with the
-       same local-pocket size (5 open cells within hex-distance 2 of the notch's corner). There is no
-       computable basis in the abstract `SHIFTED_OFFSET` hex math for calling any one notch "larger"
-       than another; the rulebook phrase most likely refers to the physical tile-placement photo/layout,
-       not a derivable geometric property. **Owner decision (2026-06-28):** implement a deterministic
-       convention — among the (up to 2) notches that border the last sector index in
-       `lostFleetSectorCenters(3)`'s returned array (the array's construction order is treated as
-       "placement order"), the first one found gets 2 Deep Space tiles instead of the usual 1. This is
-       an **inferred convention, not a confirmed rule** — flagged for a follow-up check against the
-       actual rulebook setup image if the owner can access it, since the "larger gap" framing implies a
-       visible size difference this geometry doesn't reproduce.
+    4. **RESOLVED 2026-06-28 — the 3p-only "place 2 Deep Space tiles next to each other in the larger
+       gap by the sector you placed last" rule has an exact geometric match, not just an inferred
+       convention.** All 8 notches are individually uniform in size (same 3-hex triangle, same local
+       pocket), but checking pairwise hex-adjacency *between* notches (do any two notches share a hex
+       border?) found exactly **one adjacent pair at 3p, and zero adjacent pairs at 2p and 4p** — this
+       is a fixed structural property of `lostFleetSectorCenters()`'s geometry (sector centers are not
+       randomized, only which physical tile goes where is), so it holds in every 3p game, never in 2p/4p
+       games, matching the rulebook's "3p-only" framing exactly. The adjacent pair sits where ring sector
+       index 2 meets *both* extra sectors (indices 7 and 8, the two sectors added after the base 6-ring
+       in `lostFleetSectorCenters(3)`) — i.e. right beside index 8, the array's last sector, matching
+       "the sector you placed last." Engine implementation: find the (3p-only) adjacent notch pair via
+       hex-adjacency and place 2 Deep Space tiles there instead of the usual 1; no separate "last sector"
+       bookkeeping is needed since the adjacency check alone reproduces the rule.
     5. **Tile shapes (owner-clarified 2026-06-28, was the cause of a long-running layout bug):** an
        **Interspace tile is a single hex**, placed only in the interior holes; a **Deep Space tile is a
        3-hex triangle**, placed only in the perimeter notches along the outside edge. A 3-hex cluster
