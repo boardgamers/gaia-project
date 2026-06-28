@@ -160,12 +160,47 @@ export interface LostFleetBoard {
   adjacentNotchPairs: Array<[number, number]>;
 }
 
-/** Builds a complete, seed-deterministic Lost Fleet board: Space Sectors + Interspace + Deep Space. */
-export function generateLostFleetBoard(nbPlayers: number, seed: string): LostFleetBoard {
-  const rng = seedrandom(seed);
-  const grid = generateSectorGrid(nbPlayers, rng);
-  placeInterspaceTiles(grid, nbPlayers, rng);
-  placeDeepSpaceTiles(grid, nbPlayers, rng);
+/**
+ * German-rules adjacency check, mirroring `SpaceMap.isValid(true)`: no two hexes of the same planet
+ * type (other than Transdim/Empty/Gaia) may touch. Re-implemented here rather than reusing `SpaceMap`
+ * directly since this board isn't wired into `SpaceMap` yet; checked across the whole assembled grid
+ * (Space Sector boundaries are where this can actually trigger, since the shifted layout's sectors
+ * only border each other along 2 spaces, not a full matched edge).
+ */
+function isValidBoard(grid: Grid<GaiaHex>): boolean {
+  for (const hex of grid.values()) {
+    for (const neighbour of grid.neighbours(hex)) {
+      if (
+        hex.data.planet !== Planet.Transdim &&
+        hex.data.planet !== Planet.Empty &&
+        hex.data.planet !== Planet.Gaia &&
+        hex.data.planet === neighbour.data.planet
+      ) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
 
-  return { grid, adjacentNotchPairs: findAdjacentNotchPairs(lostFleetSectorCenters(nbPlayers)) };
+const MAX_LAYOUT_ATTEMPTS = 50;
+
+/**
+ * Builds a complete, seed-deterministic Lost Fleet board: Space Sectors + Interspace + Deep Space.
+ * Rerolls (re-deriving the RNG from the seed) until the German-rules adjacency check passes, the same
+ * guarantee the base game's `SpaceMap` constructor provides via its own `isValid()` retry loop.
+ */
+export function generateLostFleetBoard(nbPlayers: number, seed: string): LostFleetBoard {
+  for (let attempt = 0; attempt < MAX_LAYOUT_ATTEMPTS; attempt++) {
+    const rng = seedrandom(attempt === 0 ? seed : `${seed}-retry${attempt}`);
+    const grid = generateSectorGrid(nbPlayers, rng);
+    placeInterspaceTiles(grid, nbPlayers, rng);
+    placeDeepSpaceTiles(grid, nbPlayers, rng);
+
+    if (isValidBoard(grid)) {
+      return { grid, adjacentNotchPairs: findAdjacentNotchPairs(lostFleetSectorCenters(nbPlayers)) };
+    }
+  }
+
+  throw new Error(`Could not find a valid Lost Fleet board layout for seed "${seed}" after ${MAX_LAYOUT_ATTEMPTS} attempts`);
 }

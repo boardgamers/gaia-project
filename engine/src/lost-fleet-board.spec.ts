@@ -110,5 +110,24 @@ describe("Lost Fleet board assembly", () => {
       expect(generateLostFleetBoard(3, "adj-3p").adjacentNotchPairs).to.have.length(1);
       expect(generateLostFleetBoard(4, "adj-4p").adjacentNotchPairs).to.have.length(0);
     });
+
+    it("should never place two hexes of the same planet type next to each other (German rules)", () => {
+      for (const nbPlayers of [2, 3, 4]) {
+        for (const seed of ["valid-1", "valid-2", "valid-3", "valid-4", "valid-5"]) {
+          const { grid } = generateLostFleetBoard(nbPlayers, `${seed}-${nbPlayers}`);
+          for (const hex of grid.values()) {
+            if (hex.data.planet === Planet.Transdim || hex.data.planet === Planet.Empty || hex.data.planet === Planet.Gaia) {
+              continue;
+            }
+            for (const neighbour of grid.neighbours(hex)) {
+              expect(
+                neighbour.data.planet,
+                `${key(hex)} (${hex.data.planet}) next to ${key(neighbour)} (${neighbour.data.planet}) at ${nbPlayers}p`
+              ).to.not.equal(hex.data.planet);
+            }
+          }
+        }
+      }
+    });
   });
 });
