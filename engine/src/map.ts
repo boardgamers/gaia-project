@@ -6,6 +6,8 @@ import shuffleSeed from "shuffle-seed";
 import { EngineOptions } from "./engine";
 import { Faction, Planet, Player } from "./enums";
 import { GaiaHex, reverseSuffixes } from "./gaia-hex";
+import { generateLostFleetBoard } from "./lost-fleet-board";
+import { classifySectorId, lostFleetSectorCenters, LostFleetSectorType } from "./lost-fleet-map";
 import Sector from "./sector";
 
 // Data: from outer ring to inside ring, starting from top
@@ -88,6 +90,17 @@ for (let i = 0; i < 6; i++) {
   xConfiguration.centers.push(hex.toJSON());
 }
 
+/** `configuration()`-shaped record for Lost Fleet boards: no fixed `sectors` pool (tiles are picked by
+ * `lostFleetSectorTiles()` in lost-fleet-board.ts), but real sector centers so `rotateSector()`'s
+ * center-validation assertion works. */
+function lostFleetConfiguration(nbPlayers: number) {
+  return {
+    sectors: [] as MapTile[],
+    nbSectors: lostFleetSectorCenters(nbPlayers).length,
+    centers: lostFleetSectorCenters(nbPlayers),
+  };
+}
+
 // X Configuration: remove last and add top & bottom
 xConfiguration.centers.splice(xConfiguration.centers.length - 1);
 
@@ -115,6 +128,7 @@ export default class SpaceMap {
   nbPlayers: number;
   seed: string;
   layout: EngineOptions["layout"];
+  lostFleet?: boolean;
 
   /**
    * Simple array listing sectors and how they are placed. Allows to reconstruct the map with little data
@@ -123,7 +137,13 @@ export default class SpaceMap {
   grid: Grid<GaiaHex>; // hexagrid
   distanceCache: { [coord: string]: { [coord: string]: number } } = {};
 
-  constructor(nbPlayers?: number, seed?: string, mirror?: boolean, layout: EngineOptions["layout"] = "standard") {
+  constructor(
+    nbPlayers?: number,
+    seed?: string,
+    mirror?: boolean,
+    layout: EngineOptions["layout"] = "standard",
+    lostFleet = false
+  ) {
     if (nbPlayers === undefined) {
       return;
     }
@@ -132,6 +152,17 @@ export default class SpaceMap {
     this.rng = seedrandom(seed);
     this.seed = seed;
     this.layout = layout;
+    this.lostFleet = lostFleet;
+
+    if (lostFleet) {
+      // Variable Gameboard Layout: shifted sectors + Interspace + Deep Space, with its own
+      // German-rules reroll loop -- bypasses the random-tile-shuffle/isValid() machinery below,
+      // which assumes the base game's fixed sector lattice.
+      const board = generateLostFleetBoard(nbPlayers, seed);
+      this.grid = board.grid;
+      this.placement = { sectors: board.sectors, mirror: false };
+      return;
+    }
 
     // Keep tests valid even under new map generation rules
     const germanRules = ![
@@ -275,6 +306,9 @@ export default class SpaceMap {
   }
 
   configuration() {
+    if (this.lostFleet) {
+      return lostFleetConfiguration(this.nbPlayers);
+    }
     if (this.layout === "xshape") {
       return xConfiguration;
     }
@@ -351,6 +385,13 @@ export default class SpaceMap {
   parse(coords: string) {
     if (coords.includes("x")) {
       return CubeCoordinates.parse(coords);
+    }
+    if (classifySectorId(coords) !== LostFleetSectorType.Space) {
+      // Interspace/Deep Space hexes ("IS3", "DS14_0") aren't part of a numbered/lettered sector and
+      // have no center-relative suffix; their toString() is already a unique address, so scan for it.
+      const hex = [...this.grid.values()].find((h) => h.toString() === coords);
+      assert(hex, `Can't find hex for Lost Fleet coordinate ${coords}`);
+      return { q: hex.q, r: hex.r, s: hex.s };
     }
     assert(this.placement, "Needs sector info to parse sector coordinates");
     const { sector, suffix } = parseLocation(coords);

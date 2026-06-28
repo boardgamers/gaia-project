@@ -14,8 +14,22 @@ export function moveInit(engine: Engine, players: number, seed: string) {
     !(engine.options.frontiers && engine.options.lostFleet),
     "Frontiers and Lost Fleet expansions cannot be combined"
   );
+  assert(
+    !(engine.options.lostFleet && engine.options.map?.sectors),
+    "A custom map configuration cannot be combined with the Lost Fleet expansion"
+  );
+  assert(
+    !(engine.options.lostFleet && engine.options.customBoardSetup),
+    "Custom (drafted) board setup is not supported with the Lost Fleet expansion"
+  );
 
-  engine.map = new SpaceMap(players, seed, engine.options.map?.mirror ?? false, engine.options.layout);
+  engine.map = new SpaceMap(
+    players,
+    seed,
+    engine.options.map?.mirror ?? false,
+    engine.options.layout,
+    engine.options.lostFleet
+  );
 
   if (engine.options.map?.sectors) {
     engine.map.load(engine.options.map);
