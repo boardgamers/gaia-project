@@ -697,3 +697,66 @@ export enum SubPhase {
   PISwap = "swap-PI",
   DowngradeLab = "down-lab",
 }
+
+// Lost Fleet Spaceship Boards (4 generic boards, not tied to any faction).
+export enum Spaceship {
+  Twilight = "twilight",
+  Rebellion = "rebellion",
+  TFMars = "tfmars",
+  Eclipse = "eclipse",
+}
+
+export namespace Spaceship {
+  export function values(expansions: Expansion): Spaceship[] {
+    if (!hasExpansion(expansions, Expansion.LostFleet)) {
+      return [];
+    }
+    return [Spaceship.Twilight, Spaceship.Rebellion, Spaceship.TFMars, Spaceship.Eclipse];
+  }
+}
+
+// The 3 new Standard Tech tiles seeded onto Rebellion/T F Mars/Eclipse's single tech slot at setup.
+export enum SpaceshipTechTile {
+  Range = "ship-tech-range",
+  Terraform = "ship-tech-terraform",
+  Resource = "ship-tech-resource",
+}
+
+export namespace SpaceshipTechTile {
+  export function values(expansions: Expansion): SpaceshipTechTile[] {
+    if (!hasExpansion(expansions, Expansion.LostFleet)) {
+      return [];
+    }
+    return [SpaceshipTechTile.Range, SpaceshipTechTile.Terraform, SpaceshipTechTile.Resource];
+  }
+}
+
+// The 8 new Federation tokens distributed at random across the spaceships in play at setup.
+export enum SpaceshipFederation {
+  Credit = "ship-fed-credit",
+  Knowledge = "ship-fed-knowledge",
+  OreQic = "ship-fed-orequic",
+  PowerTokens = "ship-fed-power",
+  Range = "ship-fed-range",
+  Tech = "ship-fed-tech",
+  Terraform = "ship-fed-terraform",
+  Vp = "ship-fed-vp",
+}
+
+export namespace SpaceshipFederation {
+  export function values(expansions: Expansion): SpaceshipFederation[] {
+    if (!hasExpansion(expansions, Expansion.LostFleet)) {
+      return [];
+    }
+    return [
+      SpaceshipFederation.Credit,
+      SpaceshipFederation.Knowledge,
+      SpaceshipFederation.OreQic,
+      SpaceshipFederation.PowerTokens,
+      SpaceshipFederation.Range,
+      SpaceshipFederation.Tech,
+      SpaceshipFederation.Terraform,
+      SpaceshipFederation.Vp,
+    ];
+  }
+}

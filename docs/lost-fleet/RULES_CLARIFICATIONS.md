@@ -254,6 +254,14 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   are only 2 players, return the remaining Standard Tech tiles to the box.") + solo-mode setup (names
   exactly Rebellion/T F Mars/Eclipse). Owner-confirmed 2026-06-27 ("only 1 tech slot per ship... setup
   varies which ship has what"). CONFIRMED.
+- **Federation-token setup distribution (separate from the Standard Tech assignment above; applies to
+  all 4 ships, not just C2-C4) — transcribed verbatim from `rulebook-v1.0.txt` p.6, previously found
+  but not yet quoted in this doc:** *"Take 4 of the new Federation tokens and distribute them on the 4
+  spaceships at random. If there are 2 players, you will only be playing with 3 spaceships, so take 3
+  of the new Federation tokens at random and place them onto those 3 spaceships. Return the remaining
+  Federation tokens to the box."* So: 3-4p draws 4 of the 8 tokens (one per ship, all 4 ships incl.
+  Twilight); 2p draws 3 of the 8 (one per ship, Rebellion excluded per C2); the rest go back in the box
+  unused. CONFIRMED.
 
 ### C5. Shuttle-space charge values — CONFIRMED (owner board-read 2026-06-27)
 - The Exploration track has **4 spaces per ship**, not 5 (corrects D1's earlier "5 spaces" guess).

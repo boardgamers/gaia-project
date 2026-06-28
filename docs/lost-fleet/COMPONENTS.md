@@ -58,15 +58,20 @@ Each new faction needs (see RULES_CLARIFICATIONS for values):
 
 | Spaceship | Special note | Status |
 |---|---|---|
-| Twilight (Nautilaks) | Holds Artifacts; "Examine Artifact" action | ☐ TODO |
-| Rebellion (Vo'Kron) | NOT used in 2-player games | ☐ TODO |
-| T F Mars (Gaia Federation) | Moweyds start with a shuttle here | ☐ TODO |
-| Eclipse (Eridani Empire) | — | ☐ TODO |
+| Twilight (Nautilaks) | Holds Artifacts; "Examine Artifact" action | ◐ Board data + setup ● DONE (`spaceships.ts`); Artifact-token seeding + Examine Artifact action ☐ TODO |
+| Rebellion (Vo'Kron) | NOT used in 2-player games | ◐ Board data + setup ● DONE (`spaceships.ts`, `setup.ts`); live board actions ☐ TODO |
+| T F Mars (Gaia Federation) | Moweyds start with a shuttle here | ◐ Board data + setup ● DONE; live board actions ☐ TODO |
+| Eclipse (Eridani Empire) | — | ◐ Board data + setup ● DONE; live board actions ☐ TODO |
 
-Each spaceship needs `[NEED FROM BOARD]`:
+Each spaceship needs:
 - Every action space on the board: type (Q.I.C. / Power / Knowledge / Credit), cost, effect, position
-- Number of standard-tech slots (2 or 3)
-- Which new federation token + standard tech is seeded onto it at setup (random, but model the slots)
+  — ● DONE, see `engine/src/spaceships.ts` (`spaceshipBoards`); execution of these actions during
+  play is a separate, not-yet-started chunk.
+- Number of standard-tech slots — ● DONE: 0 (Twilight, has no Standard Tech slot at all), 1 each for
+  Rebellion/T F Mars/Eclipse. Confirmed via owner board photos, see RULES_CLARIFICATIONS.md §C1/§C4.
+- Which new federation token + standard tech is seeded onto it at setup — ● DONE, random
+  setup-time assignment implemented in `engine/src/setup.ts` (`shipAssignmentFactory`); only the
+  *seeding* is implemented, not yet the gameplay hooks that let a player redeem a seeded tile/token.
 
 ## 4. Exploration Boards (per faction, all 18 factions get one)
 

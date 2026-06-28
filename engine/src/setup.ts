@@ -13,10 +13,14 @@ import {
   FinalTile,
   Player,
   ScoringTile,
+  Spaceship,
+  SpaceshipFederation,
+  SpaceshipTechTile,
   TechTile,
   TechTilePos,
 } from "./enums";
 import SpaceMap, { MapTile } from "./map";
+import { spaceshipBoards, shipsInPlay } from "./spaceships";
 
 export enum SetupType {
   Booster = "booster",
@@ -26,10 +30,20 @@ export enum SetupType {
   RoundScoringTile = "roundScoringTile",
   FinalScoringTile = "finalScoringTile",
   MapTile = "mapTile",
+  SpaceshipTechTile = "spaceshipTechTile",
+  SpaceshipFederation = "spaceshipFederation",
 }
 
-export type SetupPosition = number | AnyTechTilePos;
-export type SetupOption = Booster | AnyTechTile | Federation | ScoringTile | FinalTile | string; //string is for MapTile name
+export type SetupPosition = number | AnyTechTilePos | Spaceship;
+export type SetupOption =
+  | Booster
+  | AnyTechTile
+  | Federation
+  | ScoringTile
+  | FinalTile
+  | SpaceshipTechTile
+  | SpaceshipFederation
+  | string; //string is for MapTile name
 
 type SetupFactoryOption = {
   position: SetupPosition;
@@ -76,6 +90,40 @@ function techFactory(
     },
     applyOption: (option, position) => {
       engine.tiles.techs[position] = { tile: option, count: count };
+    },
+  };
+}
+
+// Assigns each Spaceship in `positions` one random, distinct value from `pool` (shuffled by the caller),
+// writing into `target`. Fewer positions than pool entries is expected (e.g. 2p Rebellion exclusion,
+// or more Federation tokens than spaceships) - the leftover pool entries are simply never assigned.
+function shipAssignmentFactory<T>(
+  type: SetupType,
+  positions: Spaceship[],
+  pool: T[],
+  target: { [key in Spaceship]?: T }
+): SetupFactory {
+  return {
+    type,
+    init: () => {
+      for (const pos of positions) {
+        delete target[pos];
+      }
+    },
+    nextAvailable: () => {
+      const used = positions.map((pos) => target[pos]).filter((t) => t !== undefined);
+      for (const pos of positions) {
+        if (target[pos] === undefined) {
+          return {
+            position: pos,
+            options: pool.filter((o) => !used.includes(o)),
+          };
+        }
+      }
+      return null;
+    },
+    applyOption: (option, position) => {
+      target[position as Spaceship] = option as T;
     },
   };
 }
@@ -191,6 +239,18 @@ const getFactories = (engine: Engine, nbPlayers = engine.players.length): SetupF
     FinalTile.values(engine.expansions),
     engine.tiles.scorings.final,
     2
+  ),
+  shipAssignmentFactory(
+    SetupType.SpaceshipTechTile,
+    shipsInPlay(engine.expansions, nbPlayers).filter((ship) => spaceshipBoards[ship].hasStandardTechSlot),
+    SpaceshipTechTile.values(engine.expansions),
+    engine.tiles.spaceshipTechs
+  ),
+  shipAssignmentFactory(
+    SetupType.SpaceshipFederation,
+    shipsInPlay(engine.expansions, nbPlayers),
+    SpaceshipFederation.values(engine.expansions),
+    engine.tiles.spaceshipFederations
   ),
   {
     type: SetupType.MapTile,

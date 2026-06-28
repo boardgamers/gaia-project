@@ -19,6 +19,9 @@ import {
   Resource,
   Round,
   ScoringTile,
+  Spaceship,
+  SpaceshipFederation,
+  SpaceshipTechTile,
   SubPhase,
 } from "./enums";
 import Event, { EventSource } from "./events";
@@ -231,11 +234,19 @@ export default class Engine {
     federations: {
       [key in Federation]?: number;
     };
+    spaceshipTechs: {
+      [key in Spaceship]?: SpaceshipTechTile;
+    };
+    spaceshipFederations: {
+      [key in Spaceship]?: SpaceshipFederation;
+    };
   } = {
     boosters: {},
     techs: {},
     scorings: { round: [], final: [] },
     federations: {},
+    spaceshipTechs: {},
+    spaceshipFederations: {},
   };
   boardActions: BoardActions = {};
 

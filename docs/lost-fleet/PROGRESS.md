@@ -150,6 +150,55 @@ notifications).
       the Exploration-board subsystem itself isn't built (see flag 4 below; `COMPONENTS.md` §4).
     - **Tinkeroids/Moweyds remain entirely untouched**, still blocked on the §B5 "highest from left"
       scan-order ambiguity the user has not yet resolved.
+12. ✅ **Spaceship Boards — data + setup only (Chunk 4) CODED & TESTED** (`COMPONENTS.md` §3,
+    `RULES_CLARIFICATIONS.md` §C, done 2026-06-28). **Scope explicitly limited, confirmed with the user
+    via `AskUserQuestion`** ("Data + setup only first") — this chunk covers the 4 boards' static
+    config and setup-time randomization ONLY; every live-gameplay hook is deferred (see below).
+    What's coded: 3 brand-new enums in `enums.ts` — `Spaceship` (Twilight/Rebellion/TFMars/Eclipse),
+    `SpaceshipTechTile` (Range/Terraform/Resource), `SpaceshipFederation` (8 values: Credit/Knowledge/
+    OreQic/PowerTokens/Range/Tech/Terraform/Vp) — each gated via its own `.values(expansions)`
+    namespace function (same `Planet.values`/`Faction.values` shape, returns `[]` without
+    `Expansion.LostFleet`). **Deliberately NOT merged into the existing `TechTile`/`Federation`
+    enums**, even though flag 5 below originally suggested extending them: `engine.tiles.federations`
+    is a live count-based pool decremented by `move/federation.ts`/read by `available/federations.ts`,
+    and `TechTile`/`AnyTechTilePos` are live-consumed by `move/research.ts`/`available/research.ts` —
+    extending either would auto-wire untested ship-seeded content into existing action-availability
+    checks before the "must have explored that ship" gating logic exists. New
+    `engine/src/spaceships.ts` holds the static per-ship board data (`spaceshipBoards`: 3 actions each
+    — type qic/power/knowledge-or-credit, cost, effect text; `hasStandardTechSlot`: false for Twilight,
+    true for the other 3), the shared `EXPLORATION_CHARGE_TRACK = [0, 2, 2, 4]`, `artifactSlotCount()`
+    (= player count, Twilight only), and `shipsInPlay(expansions, nbPlayers)` (excludes Rebellion at
+    2p). New `tiles/spaceship-techs.ts`/`tiles/spaceship-federations.ts` hold plain descriptive effect
+    text for the 3 tech tiles / 8 federation tokens (NOT Reward/Event-parseable yet — no execution-side
+    consumer exists for these new mechanics, so inventing parsing grammar now would be speculative).
+    `engine.ts`'s `Engine.tiles` gained `spaceshipTechs`/`spaceshipFederations` (both
+    `{[key in Spaceship]?: T}`, default `{}`). `setup.ts` gained a new generic
+    `shipAssignmentFactory<T>()` setup-factory builder (mirrors the existing `techFactory`'s
+    shuffle-once-then-shift determinism) and 2 new factory instances wired into `getFactories()`,
+    giving both the automatic (`applyRandomBoardSetup`) and manual/custom setup flows seeded
+    Standard-Tech-tile and Federation-token assignment for free. Transcribed the exact rulebook
+    setup-distribution quotes verbatim into `RULES_CLARIFICATIONS.md` §C4 (previously found but not
+    yet quoted): Standard Tech tiles place 1 per ship onto Rebellion/T F Mars/Eclipse's single slot (2
+    of 3 placed at 2p, all 3 at 3-4p); Federation tokens place 1 per ship onto all ships in play (3 of 8
+    at 2p, 4 of 8 at 3-4p) — both leave the rest in the box. **321/321 engine tests pass** (299
+    baseline + 22 new: `spaceships.spec.ts`, `tiles/spaceship-techs.spec.ts`,
+    `tiles/spaceship-federations.spec.ts`, `setup.spec.ts` covering 2p/3p/4p seeding counts, Rebellion
+    exclusion, no-duplicates, no-op without the expansion, and same-seed determinism).
+    **Explicitly deferred, not guessed past (all out of this chunk's locked-in scope):**
+    - The **Explore action** itself (shuttle deployment onto a spaceship's exploration track, the
+      power-charge cost per §C5, range/Q.I.C. extension per D1) — no exploration-board subsystem
+      exists yet (flag 4 below).
+    - The **12 ship board-actions' live availability/execution** (re-score a Federation token, build a
+      Research Lab/Trading Station as a granted action, instant Gaiaforming, advance a Research
+      track, etc.) — `spaceshipBoards`' `cost`/`effect` strings are descriptive only, not wired to
+      `available/actions.ts` or any `move/*.ts` handler.
+    - **Examine Artifact** (Twilight-only: discard 6 power → gain 1 Artifact) and **Twilight's
+      Artifact-token setup seeding** (= player count, drawn from the 13 Artifact tokens) — paired
+      together for a future chunk since the seeding has no standalone value without the action that
+      consumes it.
+    - The **Form-a-Federation / Upgrade-Existing-Structures hooks** that let a player actually redeem
+      a ship-seeded Standard Tech tile or Federation token once they've explored that ship — the
+      seeding now happens at setup, but nothing yet lets a player claim what's seeded.
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -197,10 +246,14 @@ face → drop the image in chat → render/read with PyMuPDF or read the image d
   added to the enum — there was no way to do less than that. Part (b) (Tinkeroids/Moweyds shared
   randomized Terraforming board) is **unchanged and still NOT started** — still blocked on the §B5
   scan-order ambiguity, deferred to a future chunk once the user resolves it.
-- **Chunk 4+ (next, proposed) — Tinkeroids/Moweyds** (blocked on §B5; needs the user's resolution
-  before any code can be written) **or** a different unit of work (ships/exploration/map content,
-  viewer work, Supabase) if the user prefers to leave Tinkeroids/Moweyds blocked for now. Confirm with
-  the user before starting either.
+- ✅ **Chunk 4 — Spaceship Boards, data + setup only.** Done (see "Done so far" #12 above). Scope
+  deliberately narrowed to static board config + setup-time randomization; all live-gameplay wiring
+  (Explore action, board-action execution, Examine Artifact, Form-a-Federation hooks) deferred to a
+  future chunk, to be confirmed with the user before starting.
+- **Chunk 5+ (next, proposed) — Tinkeroids/Moweyds** (blocked on §B5; needs the user's resolution
+  before any code can be written) **or** Spaceship Boards live-gameplay wiring (the items deferred from
+  Chunk 4) **or** a different unit of work (map content, viewer work, Supabase) — confirm with the user
+  before starting any of these.
 
 ## Integration risks & code-grounded flags (2026-06-27 plan review)
 Read of the actual base-game engine, cross-checked against the now-complete spec. These are the
@@ -264,8 +317,14 @@ of the chunk that touches it. (File:line refs are to `engine/src/`.)
    them in base games. Same shape: `Federation.values` hardcodes `fed1-6`; `Booster`/`ScoringTile`/
    `FinalTile` `.values()` ignore their `expansions` arg. Each new LF tile/booster/scoring/federation
    needs a naming + filter convention (mirror how `TechTile.values` keys off the `"frontiers"`
-   substring — use a `"lostfleet"`/`"lf"` marker). The 8 new federation tokens (§G5) are seeded on
-   spaceships and form a SEPARATE pool from the 6 standard federation tiles — don't merge them.
+   substring — use a `"lostfleet"`/`"lf"` marker). **✅ RESOLVED for the 8 spaceship-seeded Federation
+   tokens and 3 spaceship-seeded Standard Tech tiles specifically (Chunk 4):** these got their own
+   dedicated `SpaceshipFederation`/`SpaceshipTechTile` enums + `.values(expansions)` functions instead
+   of being merged into `Federation`/`TechTile` — both a gating-convention fix AND a deliberate
+   separation from the existing live-gameplay pools (see "Done so far" #12). The remaining instances
+   of this flag (base `AdvTechTile`/`Federation`/`Booster`/`ScoringTile`/`FinalTile` `.values()` still
+   ignoring `expansions`) are still open — not touched by Chunk 4, since none of the Lost Fleet content
+   coded so far actually adds new members to those 5 enums.
 6. **Planet-type counting misses Artifact-granted "virtual" planets.** `Condition.PlanetType`
    (`player.ts:939`) = `uniq(ownedPlanets.map(h => h.data.planet))`, i.e. distinct planet of hexes
    the player has a building on. Adding Protoplanet/Asteroid as `Planet` values makes normal mines on
@@ -297,19 +356,22 @@ resolved for the 2 factions that exist; the tile-gating convention (flag 5) is n
 exact shape for adv-tech/federation/booster/scoring enum members when those chunks come up.
 
 ## Next actions
-Chunks 1, 2, and 3 are complete and verified — **299/299 engine tests pass** (274 baseline → 280 after
-Chunk 2 → 299 after Chunk 3). Darkanians and Space Giants are now fully playable factions for every
-mechanic that doesn't depend on an unbuilt subsystem (terraforming, income, power, building costs,
-Gaia-QIC surcharge; Space Giants' PI tech-tile/power-charge bonus). Explicitly still open, in priority
-order the user should pick from:
-1. **Darkanians' Planetary Institute ability** (deferred, needs sector-type classification on
+Chunks 1-4 are complete and verified — **321/321 engine tests pass** (274 baseline → 280 after Chunk 2
+→ 299 after Chunk 3 → 321 after Chunk 4). Darkanians and Space Giants are fully playable factions for
+every mechanic that doesn't depend on an unbuilt subsystem; the 4 Spaceship Boards' static config and
+setup-time tile/token seeding are coded and tested, with all live-gameplay wiring deferred (see "Done
+so far" #12). Explicitly still open, in priority order the user should pick from:
+1. **Spaceship Boards live-gameplay wiring** (deferred from Chunk 4): the Explore action, the 12 ship
+   board-actions' availability/execution, Examine Artifact + Twilight's Artifact-token seeding, and the
+   Form-a-Federation/Upgrade-Existing-Structures hooks that redeem seeded tiles/tokens.
+2. **Darkanians' Planetary Institute ability** (deferred, needs sector-type classification on
    `GaiaHex` — Lost Fleet map content, not yet built).
-2. **Space Giants' Exploration-board special action** (deferred, needs the Exploration-board
+3. **Space Giants' Exploration-board special action** (deferred, needs the Exploration-board
    subsystem — not yet built).
-3. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.
-4. **Viewer-side `Object.values(Faction)` fix** (6 call sites, currently harmless since the viewer
+4. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.
+5. **Viewer-side `Object.values(Faction)` fix** (6 call sites, currently harmless since the viewer
    hasn't been touched, but will need fixing before any viewer chunk starts).
-5. Or a different unit of work entirely (ships/exploration/map content, ahead of either blocked item).
+6. Or a different unit of work entirely (map content, viewer, Supabase), ahead of any blocked item.
 
 Confirm with the user before starting any of the above.
 
