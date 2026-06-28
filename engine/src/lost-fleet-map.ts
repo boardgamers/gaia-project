@@ -204,6 +204,53 @@ export function findDeepSpaceNotches(centers: CubeCoordinates[]): CubeCoordinate
   });
 }
 
+/**
+ * Pairs of Deep Space notches (from `findDeepSpaceNotches`) that are themselves hex-adjacent to each
+ * other, forming one larger contiguous gap. This is a fixed structural property of the sector-center
+ * geometry (centers are never randomized, only tile identity/rotation is), so it is the same in every
+ * game at a given player count.
+ *
+ * Implements the rulebook's 3p-only "place 2 Deep Space Sector tiles next to each other in the larger
+ * gap by the sector you placed last" rule (§H1): there is exactly one such adjacent pair at 3 players,
+ * and none at 2 or 4 players, which already matches the rule's player-count scope without any extra
+ * "last placed sector" bookkeeping. See RULES_CLARIFICATIONS.md §H1 note 4.
+ */
+export function findAdjacentNotchPairs(centers: CubeCoordinates[]): Array<[number, number]> {
+  const notches = findDeepSpaceNotches(centers);
+  const pairs: Array<[number, number]> = [];
+  for (let i = 0; i < notches.length; i++) {
+    for (let j = i + 1; j < notches.length; j++) {
+      const adjacent = notches[i].some((a) => notches[j].some((b) => neighbours(a).some((n) => key(n) === key(b))));
+      if (adjacent) {
+        pairs.push([i, j]);
+      }
+    }
+  }
+  return pairs;
+}
+
+/**
+ * Lost Fleet hex classification, distinguishing a regular 19-hex Space Sector tile from the single-hex
+ * Interspace holes and 3-hex Deep Space notches that fill the gaps the shifted layout creates.
+ * Needed for effects that key off sector type (e.g. Darkanians' Planetary Institute ability).
+ */
+export enum LostFleetSectorType {
+  Space = "space",
+  DeepSpace = "deepSpace",
+  Interspace = "interspace",
+}
+
+/** Sector ids for Interspace/Deep Space hexes follow the `IS<n>`/`DS<tileId>` convention (see lost-fleet-board.ts). */
+export function classifySectorId(sector: string): LostFleetSectorType {
+  if (sector.startsWith("IS")) {
+    return LostFleetSectorType.Interspace;
+  }
+  if (sector.startsWith("DS")) {
+    return LostFleetSectorType.DeepSpace;
+  }
+  return LostFleetSectorType.Space;
+}
+
 /** A single face (3 hexes) of a Deep Space Sector tile. Each hex is one of Protoplanet/Asteroid/Transdim/Empty. */
 export type DeepSpaceFace = [Planet, Planet, Planet];
 

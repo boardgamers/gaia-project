@@ -1,7 +1,7 @@
 import assert from "assert";
 import { Hex } from "hexagrid";
 import { stdBuildingValue } from "./buildings";
-import { Building, Planet, Player } from "./enums";
+import { Building, Planet, Player, Spaceship } from "./enums";
 
 export interface GaiaHexData {
   planet: Planet;
@@ -17,6 +17,8 @@ export interface GaiaHexData {
   customPosts?: Player[];
   /** Additional mine of lantids */
   additionalMine?: Player;
+  /** Lost Fleet: which spaceship's Interspace tile occupies this hex, if any */
+  spaceship?: Spaceship;
 }
 
 export class GaiaHex extends Hex<GaiaHexData> {
