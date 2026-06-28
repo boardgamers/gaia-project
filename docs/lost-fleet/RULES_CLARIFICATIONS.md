@@ -233,8 +233,10 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
 - Power action: charge 2 power → perform the Instant Gaiaforming action (same mechanic as the
   "instant" Round Booster, G3: convert a transdim planet in range into a Gaia planet without moving
   power tokens into the Gaia Area).
-- Credit action: 3 credits → terraform 1 step AND build (same combined terraform+build as the base
-  game's standard "Build a Mine" action, just paid in credits instead of ore).
+- Credit action: 3 credits → terraform 1 step. The mine itself and any further terraforming steps
+  still cost their normal building/ore price — the 3 credits replace only the ore cost of the first
+  step (owner-confirmed 2026-06-28: "the 3 coins only covers 1 terraforming step. You still have to
+  pay for the mine itself and any additional terraforming steps").
 - Standard-tech slots: 1 — same mechanism, see the assignment note under C4. Source: `RULEBOOK-TEXT`
   p.6. CONFIRMED.
 

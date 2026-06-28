@@ -464,9 +464,11 @@ notifications).
       via new `possibleSpaceshipUpgradeBuilding()`), both in `available/spaceship-actions.ts`.
       - Eclipse Credit: free Mine on any in-range, unoccupied Asteroid (`pl.canOccupy`); cost is QIC
         range-extension only, the 6c fee covers the mine itself.
-      - T F Mars Credit: Mine on any in-range, non-Transdim/non-Asteroid hex; cost is QIC range
-        extension + ore for `terraformingStepsRequired(...) - 1` steps (the 3c fee's flat "1 free
-        step" matches the base game's "Build a Mine" terraform+build action, just paid in credits).
+      - T F Mars Credit: Mine on any in-range, non-Transdim/non-Asteroid hex; the 3c fee covers only 1
+        terraforming step — the mine's normal building cost (`pl.board.cost(Building.Mine)`, 2c+1o) and
+        ore for any `terraformingStepsRequired(...) - 1` further steps are still paid through the
+        `Command.Build` data, plus QIC for range extension (owner-confirmed 2026-06-28 correction; an
+        earlier draft of this action had mistakenly folded the mine's building cost into the 3c fee).
       - Rebellion Power: upgrades a Mine the player already owns into a Trading Station, **ignoring
         the normal isolation check** — no new hex, so no range/QIC/terraform applies at all (confirmed
         with the user: only a genuinely new hex placement needs those).

@@ -12,6 +12,7 @@ import {
   Planet,
   Player as PlayerEnum,
   ResearchField,
+  Resource,
   Spaceship,
   TechTile,
   TechTilePos,
@@ -416,6 +417,9 @@ describe("Lost Fleet spaceship board actions", () => {
     const target = cheapestHexNeedingExtraTerraforming(engine, PlayerEnum.Player1, Faction.Terrans);
     expect(target, "need a planet at least 2 terraforming steps away").to.not.equal(undefined);
     const expectedOreCost = terraformingCost(player.data, target.steps - 1, engine.replay).count;
+    const mineCost = player.board.cost(Building.Mine, false);
+    const mineCreditCost = mineCost.find((r) => r.type === Resource.Credit)?.count ?? 0;
+    const mineOreCost = mineCost.find((r) => r.type === Resource.Ore)?.count ?? 0;
 
     const command = availableSpaceshipActionCommand(engine, PlayerEnum.Player1);
     const action = command.data.actions.find((a) => a.ship === Spaceship.TFMars && a.type === "credit");
@@ -428,9 +432,11 @@ describe("Lost Fleet spaceship board actions", () => {
     engine.turnMoves = [`build m ${target.hex.toString()}`];
     moveSpaceshipAction(engine, command, PlayerEnum.Player1, Spaceship.TFMars, "credit");
 
-    expect(player.data.credits).to.equal(beforeCredits - 3);
+    // The 3c ship fee only covers 1 terraforming step; the mine's normal building cost (credits + ore)
+    // and any further terraforming steps are still paid for separately.
+    expect(player.data.credits).to.equal(beforeCredits - 3 - mineCreditCost);
     expect(player.data.qics).to.equal(beforeQic - target.qicNeeded);
-    expect(player.data.ores).to.equal(beforeOres - expectedOreCost);
+    expect(player.data.ores).to.equal(beforeOres - mineOreCost - expectedOreCost);
     expect(target.hex.data.building).to.equal(Building.Mine);
     expect(target.hex.data.player).to.equal(PlayerEnum.Player1);
   });

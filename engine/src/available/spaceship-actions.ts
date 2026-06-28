@@ -79,11 +79,12 @@ export function possibleInstantGaiaforming(engine: Engine, player: Player): Avai
 
 /**
  * Eclipse's Credit action (free Mine on an Asteroid, normal range rules, no Gaiaformer needed) and
- * T F Mars's Credit action (terraform 1 step for free and build a Mine, extra steps cost normal ore)
- * both place a Mine via a fixed ship-board fee already paid through Command.SpaceshipAction; this
- * computes only the leftover per-hex cost (range QIC, plus - T F Mars only - ore for steps beyond the
- * first) and returns it as ordinary Command.Build data so the existing moveBuild/placeBuilding
- * machinery executes the placement (income, federations, leech, etc.) unchanged.
+ * T F Mars's Credit action (terraform 1 step, extra steps cost normal ore, then build a Mine at its
+ * normal building cost) both place a Mine via a fixed ship-board fee already paid through
+ * Command.SpaceshipAction; this computes only the leftover per-hex cost (range QIC for both ships,
+ * plus - T F Mars only - the normal Mine building cost and ore for any terraforming steps beyond the
+ * 1 the ship fee covers) and returns it as ordinary Command.Build data so the existing
+ * moveBuild/placeBuilding machinery executes the placement (income, federations, leech, etc.) unchanged.
  */
 export function possibleSpaceshipBuildMine(
   engine: Engine,
@@ -121,6 +122,9 @@ export function possibleSpaceshipBuildMine(
       if (oreCost === null) {
         continue;
       }
+      // The 3c ship fee only covers 1 terraforming step; the mine itself and any further steps are
+      // paid normally.
+      rewards.push(...pl.board.cost(Building.Mine, false));
       if (oreCost.count > 0) {
         rewards.push(oreCost);
       }
@@ -130,14 +134,16 @@ export function possibleSpaceshipBuildMine(
       rewards.push(new Reward(qicNeeded.amount, Resource.Qic));
     }
 
-    if (!pl.data.canPay(rewards)) {
+    const mergedRewards = Reward.merge(rewards);
+
+    if (!pl.data.canPay(mergedRewards)) {
       continue;
     }
 
     buildings.push({
       building: Building.Mine,
       coordinates: hex.toString(),
-      cost: Reward.toString(rewards),
+      cost: Reward.toString(mergedRewards),
       steps,
       warnings: qicNeeded.warning ? [qicNeeded.warning] : null,
     });
