@@ -513,24 +513,52 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
        (tiles 11-16 explicitly, by number) — 3p/4p both place all 8.
     2. Sectors 05/06/07 are genuine double-sided Lost-Fleet components (revised face for 2-3p, stock
        base-game face for 4p) — feeds directly into H4 below.
-    3. The Interspace spacing rule's *wording* changes by player count (2p: "≥5 spaces," 3-4p: "not
-       within 3 spaces") — likely the same underlying minimum-distance check scaled to a smaller (2p,
-       7-tile) vs. larger (3-4p, 9/10-tile) ring, but this is inferred, not confirmed: whoever
-       implements board generation should verify the two phrasings reduce to one formula (e.g., via the
-       actual hex-distance layout) rather than assuming it without checking, since the rulebook gives
-       no explicit unit conversion between the two framings.
-    4. **Tile shapes (owner-clarified 2026-06-28, was the cause of a long-running layout bug):** an
+    3. **RESOLVED 2026-06-28 (empirical, engine-side):** the Interspace spacing rule's *wording* changes
+       by player count (2p: "≥5 spaces," 3-4p: "not within 3 spaces") but is the **same underlying
+       constraint**, not two different formulas. Computed all pairwise hex-distances between
+       `findInterspaceHoles()` results at 2p/3p/4p: the only distances that ever occur are
+       `{3, 5, 6, 7, 8, 9, 10, 11}` — **a distance of 4 never occurs at any player count.** Therefore
+       "not within 3 spaces" (i.e. distance > 3) and "≥5 spaces" exclude exactly the same set of pairs
+       (only the distance-3 minimum-adjacent pairs are excluded either way); there is no case where the
+       two phrasings would disagree. Engine implementation: a single rule, "no two spaceship-bearing
+       Interspace holes may be at hex-distance ≤ 3 of each other," applies uniformly at 2p/3p/4p.
+    4. **Open question found while implementing the 3p-only "place 2 Deep Space tiles next to each
+       other in the larger gap by the sector you placed last" rule (2026-06-28):** computed all 8
+       perimeter Deep Space notches for the 3p layout (`findDeepSpaceNotches(lostFleetSectorCenters(3))`)
+       and found them **geometrically uniform** — every notch is the same 3-hex triangle shape with the
+       same local-pocket size (5 open cells within hex-distance 2 of the notch's corner). There is no
+       computable basis in the abstract `SHIFTED_OFFSET` hex math for calling any one notch "larger"
+       than another; the rulebook phrase most likely refers to the physical tile-placement photo/layout,
+       not a derivable geometric property. **Owner decision (2026-06-28):** implement a deterministic
+       convention — among the (up to 2) notches that border the last sector index in
+       `lostFleetSectorCenters(3)`'s returned array (the array's construction order is treated as
+       "placement order"), the first one found gets 2 Deep Space tiles instead of the usual 1. This is
+       an **inferred convention, not a confirmed rule** — flagged for a follow-up check against the
+       actual rulebook setup image if the owner can access it, since the "larger gap" framing implies a
+       visible size difference this geometry doesn't reproduce.
+    5. **Tile shapes (owner-clarified 2026-06-28, was the cause of a long-running layout bug):** an
        **Interspace tile is a single hex**, placed only in the interior holes; a **Deep Space tile is a
        3-hex triangle**, placed only in the perimeter notches along the outside edge. A 3-hex cluster
        appearing *in the interior* between sectors is therefore a layout DEFECT (the interior must be
        clean single-hex holes), not a Deep Space slot. The "slide every outer sector the same way"
        rule must be applied consistently or the seam between two inner-adjacent sectors collapses two
        interior singles into a 3-hex middle cluster.
-    5. **Geometry CODED & verified (Chunk 5):** `engine/src/lost-fleet-map.ts` —
+    6. **Geometry CODED & verified (Chunk 5):** `engine/src/lost-fleet-map.ts` —
        `lostFleetSectorCenters(nbPlayers)` (7/9/10 sectors), `findInterspaceHoles()` (6/8/10 isolated
        single hexes), `findDeepSpaceNotches()` (6/8/8 three-hex triangles), all with 0 sector overlap
        and no adjacent interior holes. Tile data: `DEEP_SPACE_TILES` (§H2), `INTERSPACE_SETS` (§H3).
        Not yet wired into a playable `SpaceMap` (planet placement + spacing rules still to do).
+    7. **Blocker found 2026-06-28, deferred to a future chunk (owner-confirmed):** `GaiaHex.toString()` /
+       `relativeCoordinates` (`engine/src/gaia-hex.ts`) compute a hex's move-string address (e.g. `"5A2"`)
+       via a lattice-reduction algorithm built on the base game's `MATCHED_OFFSET` sector spacing. Lost
+       Fleet sectors use `SHIFTED_OFFSET` instead. Verified by direct round-trip computation: for every
+       non-origin sector at every player count, this address calculation is wrong (it does not throw —
+       it silently returns an incorrect/mismatched suffix). Any future chunk that wires Lost Fleet
+       sectors into a live, playable `SpaceMap` (move parsing, `available/*` command generation, etc.)
+       must first fix or bypass this addressing system for `SHIFTED_OFFSET`-placed sectors. Chunk 6
+       (this chunk) works only at the `Grid<GaiaHex>`/geometry level and never calls `.toString()` on a
+       Lost-Fleet-placed hex, so it is unaffected, but this is a hard prerequisite for any move-command
+       integration later.
 - H2. Deep Space sector tiles (8 physical tiles, 2 sides each = 16 faces, each a 3-hex cluster). Hex
   contents read directly off the randomizer art (2026-06-27). Owner does NOT need the art itself
   redrawn pixel-for-pixel (own SVG style instead, per Art policy above) but DOES need this composition
@@ -589,6 +617,15 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   ("white numbers," used at 4p), the other is Lost-Fleet-specific ("black numbers outlined in white,"
   used at 2p and 3p). Sectors 01-04 and 08-10 are unmodified base-game tiles reused as-is (no revision).
   Still need the actual revised-side planet arrangement for 05/06/07 from the physical components.
+  - **Fallback decision (owner-confirmed 2026-06-28), used until the real revised-face art is
+    supplied:** match the base game's own existing per-player-count choice for these 3 sectors. The
+    base game already ships both faces (`s5`/`s6`/`s7` = "A" side, `s5b`/`s6b`/`s7b` = "B" side in
+    `engine/src/map.ts`) and already picks B-side for its 2-3p `smallConfiguration` and A-side for its
+    4-5p `bigConfiguration`. Lost Fleet board generation reuses that exact same split — B-side
+    (`s5b`/`s6b`/`s7b`) for LF 2p/3p, A-side (`s5`/`s6`/`s7`) for LF 4p — even though it isn't
+    confirmed to be the *correct* Lost-Fleet-specific revised art, since it's the closest available
+    proxy and keeps 4p genuinely unrevised (matching the rulebook's explicit "white numbers" note for
+    4p above).
 - H5. "Most asteroids" final scoring needs ≥6 asteroids in play (flip Deep Space tile 16 if not). p.4. CONFIRMED.
 
 ## I. EXISTING-FACTION DELTAS — RESOLVED 2026-06-27 via p.16 screenshot
