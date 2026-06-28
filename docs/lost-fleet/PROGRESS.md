@@ -266,6 +266,31 @@ notifications).
     - **Still standalone, per the agreed "data structure only" scope** (confirmed with the user before
       starting): NOT wired into `SpaceMap`/`moveInit` — that needs the addressing fix above first.
     **345/345 engine tests pass** (337 baseline + 8 new).
+15. ✅ **`GaiaHex` addressing bug FIXED (Chunk 7a)** (done 2026-06-28). Fixes the bug flagged in
+    "Done so far" #14 above, as its own commit per the user-confirmed plan:
+    - `Sector.create()` (`sector.ts`) now stamps every hex it creates with the `center` it was built
+      around (`sectorCenter?: CubeCoordinates` on `GaiaHexData`).
+    - `GaiaHex.relativeCoordinates` (`gaia-hex.ts`) prefers that stamped `sectorCenter` (exact: direct
+      subtraction) when present, falling back to the old lattice-reduction guess only for hexes built
+      without going through `Sector.create()` (legacy serialized game state, or direct
+      `new GaiaHex(...)` calls e.g. in `player.spec.ts`). Verified mathematically and empirically
+      identical to the old guess for every base-game sector (rotation-safe too, since
+      `Hex.rotateRight(times, center)` pivots around `center`, which never moves).
+    - `GaiaHex.toString()` now special-cases non-Space sector ids (`classifySectorId()`) to return the
+      raw sector id directly, instead of asserting on a suffix-table lookup that doesn't exist for
+      Interspace/Deep Space hexes.
+    - Deep Space sector ids changed from the shared `DS<tileId>` to the per-hex-unique
+      `DS<tileId>_<0-2>` (`lost-fleet-board.ts`), since all 3 hexes of one notch previously shared one
+      id — now each has its own unique address.
+    - New `gaia-hex.spec.ts` (7 tests) covers: stamped-center hexes match the legacy suffix for an
+      unshifted sector, a sector centered away from the origin, rotation-safety, the no-`sectorCenter`
+      fallback path, and the new Interspace/Deep Space `toString()` behavior (no throw, raw id
+      returned).
+    **352/352 engine tests pass** (345 baseline + 7 new). Zero regressions — every existing
+    base-game `toString()`/coordinate-parsing test (e.g. `map.spec.ts`, full-game replays) still
+    passes unchanged, confirming the fix is a behavior-preserving no-op for the base game.
+    **Still NOT wired into `SpaceMap`/`moveInit`** — that's Chunk 7b, see "Next actions" below; scoping
+    it surfaced more complexity than originally anticipated (see that section).
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -325,11 +350,18 @@ face → drop the image in chat → render/read with PyMuPDF or read the image d
   placement (incl. the §H1 spacing rule and the 3p larger-gap rule, which needed no special-casing),
   and `GaiaHex` sector-type classification. Still NOT wired into `SpaceMap`/`moveInit` — blocked on the
   `GaiaHex.toString()`/`relativeCoordinates` addressing bug (§H1 note 7).
-- **Chunk 7+ (next, proposed) — Wire the Lost Fleet map into `SpaceMap`** (fix the addressing bug
-  first, then thread `generateLostFleetBoard()` through `SpaceMap`'s constructor/`load()`) **or**
-  Tinkeroids/Moweyds (blocked on §B5; needs the user's resolution before any code can be written)
-  **or** Spaceship Boards live-gameplay wiring (the items deferred from Chunk 4) **or** a different
-  unit of work (viewer work, Supabase) — confirm with the user before starting any of these.
+- ✅ **Chunk 7a — `GaiaHex` addressing bug fix.** Done (see "Done so far" #15 above). Stamped
+  `sectorCenter` at hex-creation time in `Sector.create()`; `relativeCoordinates`/`toString()` now
+  handle shifted sectors and Interspace/Deep Space hexes correctly. 352/352 tests, zero regressions.
+- **Chunk 7b (next, proposed) — Wire `generateLostFleetBoard()` into `SpaceMap`/`moveInit`.** Scoping
+  this (see "Next actions" below) found the integration is more invasive than "add a layout branch to
+  `SpaceMap.configuration()`": `SpaceMap.generate()`/`load()` assume sector-tile-only content plus an
+  `isValid()` random-reroll loop, and `SpaceMap.parse()` (string coordinate → hex, used for move
+  parsing) has no reverse-direction handling for `IS<n>`/`DS<tileId>_<n>` ids. Needs a design check-in
+  with the user before writing code. **Alternative units of work, any of which could go first instead:**
+  Tinkeroids/Moweyds (blocked on §B5; needs the user's resolution before any code can be written),
+  Spaceship Boards live-gameplay wiring (items deferred from Chunk 4), or a different unit of work
+  (viewer work, Supabase) — confirm with the user before starting any of these.
 
 ## Integration risks & code-grounded flags (2026-06-27 plan review)
 Read of the actual base-game engine, cross-checked against the now-complete spec. These are the
@@ -432,22 +464,34 @@ resolved for the 2 factions that exist; the tile-gating convention (flag 5) is n
 exact shape for adv-tech/federation/booster/scoring enum members when those chunks come up.
 
 ## Next actions
-Chunks 1-6 are complete and verified — **345/345 engine tests pass** (274 baseline → 280 after Chunk 2
-→ 299 after Chunk 3 → 321 after Chunk 4 → 337 after Chunk 5 → 345 after Chunk 6). Darkanians and Space
-Giants are fully playable factions for every mechanic that doesn't depend on an unbuilt subsystem; the
-4 Spaceship Boards' static config and setup-time tile/token seeding are coded and tested, with all
-live-gameplay wiring deferred (see "Done so far" #12); the Lost Fleet variable-map geometry, tile data,
-AND full board assembly (`generateLostFleetBoard()`) are coded and tested as a standalone module, not
-yet wired into `SpaceMap` (see #13/#14). Explicitly still open, in priority order the user should pick
-from:
+Chunks 1-7a are complete and verified — **352/352 engine tests pass** (274 baseline → 280 after Chunk 2
+→ 299 after Chunk 3 → 321 after Chunk 4 → 337 after Chunk 5 → 345 after Chunk 6 → 352 after Chunk 7a).
+Darkanians and Space Giants are fully playable factions for every mechanic that doesn't depend on an
+unbuilt subsystem; the 4 Spaceship Boards' static config and setup-time tile/token seeding are coded
+and tested, with all live-gameplay wiring deferred (see "Done so far" #12); the Lost Fleet variable-map
+geometry, tile data, full board assembly (`generateLostFleetBoard()`), AND the `GaiaHex` addressing fix
+are coded and tested (see #13/#14/#15) — `generateLostFleetBoard()` now produces hexes that address
+correctly via `.toString()`, but the board itself is still a standalone `Grid<GaiaHex>`, not yet wired
+into `SpaceMap`. Explicitly still open, in priority order the user should pick from:
 1. **Spaceship Boards live-gameplay wiring** (deferred from Chunk 4): the Explore action, the 12 ship
    board-actions' availability/execution, Examine Artifact + Twilight's Artifact-token seeding, and the
    Form-a-Federation/Upgrade-Existing-Structures hooks that redeem seeded tiles/tokens.
-2. **Wire the Lost Fleet map into `SpaceMap`/`moveInit`** (Chunk 6 built a complete standalone
-   `Grid<GaiaHex>`; the remaining blocker is fixing `GaiaHex.toString()`/`relativeCoordinates`, which
-   assume the base game's `MATCHED_OFFSET` sector spacing and silently miscalculate for Lost Fleet's
-   `SHIFTED_OFFSET` sectors — see RULES_CLARIFICATIONS.md §H1 note 7 — then threading
-   `generateLostFleetBoard()` through `SpaceMap`'s constructor/`load()` path).
+2. **Wire the Lost Fleet map into `SpaceMap`/`moveInit` (Chunk 7b)** — the addressing-bug blocker from
+   Chunk 6 is now fixed (Chunk 7a), but scoping this revealed more surface area than "add a layout
+   branch to `SpaceMap.configuration()`":
+   - `SpaceMap.generate()`/`load()` are built around picking N *whole 19-hex sector tiles* and
+     retry-looping on `isValid()` (no-same-planet-adjacent German rule) — there's no existing path for
+     placing Interspace (1-hex) / Deep Space (3-hex) content, and `generateLostFleetBoard()` doesn't
+     currently apply any `isValid()`-style reroll of its own.
+   - `SpaceMap.parse(coords: string)` reverse-parses a "5A8"-style string back into a coordinate via
+     `placement.sectors` + `reverseSuffixes`; it has no handling for `IS<n>`/`DS<tileId>_<n>` strings,
+     so anything that round-trips a Lost Fleet hex's address back into coordinates (e.g. move-command
+     parsing) would need a new branch here too.
+   - Likely shape: a Lost-Fleet-specific path in `SpaceMap`'s constructor that calls
+     `generateLostFleetBoard()` directly and assigns the result to `this.grid`/`this.placement`,
+     bypassing `generate()`/`load()`'s tile-shuffle machinery rather than extending it — but this needs
+     a design check-in with the user before code gets written, since it's a bigger shape decision than
+     originally scoped.
 3. **Darkanians' Planetary Institute ability** (the sector-type classification it needs,
    `classifySectorId()`, now exists from Chunk 6 — but the ability itself isn't wired up yet, and
    doing so meaningfully needs item 2 above, since Darkanians aren't reachable on a live Lost Fleet
