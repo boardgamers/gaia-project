@@ -231,6 +231,41 @@ notifications).
     rule §H1, the 3p "2 adjacent Deep Space tiles in the larger gap" rule), and the `GaiaHex`
     sector-type classification (Space / Deep Space / Interspace) that Darkanians' PI ability needs —
     the geometry foundation for that classification now exists.
+14. ✅ **Lost Fleet board assembly — full `Grid<GaiaHex>` generation (Chunk 6) CODED & TESTED**
+    (`COMPONENTS.md` §6, done 2026-06-28). New self-contained `engine/src/lost-fleet-board.ts`
+    (+ `lost-fleet-board.spec.ts`, 8 tests), completing the deferred items from Chunk 5. What's coded:
+    - `generateSectorGrid()` places the (shuffled, randomly rotated) Space Sector tiles onto
+      `lostFleetSectorCenters()`, reusing the existing `s1..s10`/`s5b/s6b/s7b` planet-layout strings
+      from `map.ts` (newly exported for this) instead of re-encoding them — §H4's revised-face gap is
+      filled with the base game's matching per-count choice (B-side 2p/3p, A-side 4p), per the
+      owner-confirmed fallback.
+    - `placeInterspaceTiles()` fills the Interspace holes per §H3's composition, drawing ship
+      identities from the existing `shipsInPlay()` (Rebellion excluded at 2p) and enforcing the §H1
+      spacing rule (no two spaceship tiles within hex-distance 4) via rejection sampling — verified
+      empirically to converge in practice (~7-10% of random subsets are valid at every player count).
+    - `placeDeepSpaceTiles()` fills the Deep Space notches per §H2 (tile pool restricted to ids 11-16
+      at 2p). The 3p-only "2 tiles in the larger gap" rule needed **no special-casing**: a new
+      `findAdjacentNotchPairs()` (in `lost-fleet-map.ts`) found that exactly one pair of notches is
+      itself hex-adjacent at 3p, and none at 2p/4p — a fixed property of the (never-randomized)
+      sector-center geometry — so the rule falls out for free from uniform one-tile-per-notch
+      placement. This upgraded an earlier weaker "deterministic convention" approach (which the user
+      had approved via `AskUserQuestion` as a fallback) to a fully confirmed geometric match; see
+      RULES_CLARIFICATIONS.md §H1 note 4 for the full writeup.
+    - `LostFleetSectorType`/`classifySectorId()` (in `lost-fleet-map.ts`) classify any `GaiaHex` as
+      Space/Deep Space/Interspace from its `sector` id string (`IS<n>`/`DS<tileId>`/anything else) —
+      the classification Darkanians' PI ability needs (still not wired to that ability itself, see
+      flag 6 below).
+    - `gaia-hex.ts` gained an optional `spaceship?: Spaceship` field on `GaiaHexData` (ship-bearing
+      Interspace tiles use `Planet.Empty` + this field, since `Planet` has no "ship" value).
+    - **Bug found, documented, NOT fixed (out of scope for "data structure only"):**
+      `GaiaHex.toString()`/`relativeCoordinates` assume the base game's `MATCHED_OFFSET` sector
+      spacing and will silently miscalculate for Lost-Fleet-placed (`SHIFTED_OFFSET`) sectors. The new
+      module never calls `.toString()` on its hexes, so it's unaffected, but this MUST be fixed before
+      any future chunk wires Lost Fleet sectors into live move-command parsing
+      (`SpaceMap`/`moveInit`/`move/setup.ts`). See RULES_CLARIFICATIONS.md §H1 note 7.
+    - **Still standalone, per the agreed "data structure only" scope** (confirmed with the user before
+      starting): NOT wired into `SpaceMap`/`moveInit` — that needs the addressing fix above first.
+    **345/345 engine tests pass** (337 baseline + 8 new).
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -282,10 +317,19 @@ face → drop the image in chat → render/read with PyMuPDF or read the image d
   deliberately narrowed to static board config + setup-time randomization; all live-gameplay wiring
   (Explore action, board-action execution, Examine Artifact, Form-a-Federation hooks) deferred to a
   future chunk, to be confirmed with the user before starting.
-- **Chunk 5+ (next, proposed) — Tinkeroids/Moweyds** (blocked on §B5; needs the user's resolution
-  before any code can be written) **or** Spaceship Boards live-gameplay wiring (the items deferred from
-  Chunk 4) **or** a different unit of work (map content, viewer work, Supabase) — confirm with the user
-  before starting any of these.
+- ✅ **Chunk 5 — Lost Fleet map geometry + tile data.** Done (see "Done so far" #13 above). Standalone
+  `lost-fleet-map.ts`: sector-center geometry, Interspace/Deep Space hole-finding, tile composition
+  data. Did not touch `SpaceMap` or place any tiles yet.
+- ✅ **Chunk 6 — Lost Fleet board assembly (full `Grid<GaiaHex>` generation).** Done (see "Done so far"
+  #14 above). Standalone `lost-fleet-board.ts`: sector-tile placement, Interspace/Deep Space tile
+  placement (incl. the §H1 spacing rule and the 3p larger-gap rule, which needed no special-casing),
+  and `GaiaHex` sector-type classification. Still NOT wired into `SpaceMap`/`moveInit` — blocked on the
+  `GaiaHex.toString()`/`relativeCoordinates` addressing bug (§H1 note 7).
+- **Chunk 7+ (next, proposed) — Wire the Lost Fleet map into `SpaceMap`** (fix the addressing bug
+  first, then thread `generateLostFleetBoard()` through `SpaceMap`'s constructor/`load()`) **or**
+  Tinkeroids/Moweyds (blocked on §B5; needs the user's resolution before any code can be written)
+  **or** Spaceship Boards live-gameplay wiring (the items deferred from Chunk 4) **or** a different
+  unit of work (viewer work, Supabase) — confirm with the user before starting any of these.
 
 ## Integration risks & code-grounded flags (2026-06-27 plan review)
 Read of the actual base-game engine, cross-checked against the now-complete spec. These are the
@@ -388,21 +432,26 @@ resolved for the 2 factions that exist; the tile-gating convention (flag 5) is n
 exact shape for adv-tech/federation/booster/scoring enum members when those chunks come up.
 
 ## Next actions
-Chunks 1-5 are complete and verified — **337/337 engine tests pass** (274 baseline → 280 after Chunk 2
-→ 299 after Chunk 3 → 321 after Chunk 4 → 337 after Chunk 5). Darkanians and Space Giants are fully
-playable factions for every mechanic that doesn't depend on an unbuilt subsystem; the 4 Spaceship
-Boards' static config and setup-time tile/token seeding are coded and tested, with all live-gameplay
-wiring deferred (see "Done so far" #12); the Lost Fleet variable-map geometry + Interspace/Deep Space
-tile data are coded and tested as a standalone module, not yet wired into `SpaceMap` (see #13).
-Explicitly still open, in priority order the user should pick from:
+Chunks 1-6 are complete and verified — **345/345 engine tests pass** (274 baseline → 280 after Chunk 2
+→ 299 after Chunk 3 → 321 after Chunk 4 → 337 after Chunk 5 → 345 after Chunk 6). Darkanians and Space
+Giants are fully playable factions for every mechanic that doesn't depend on an unbuilt subsystem; the
+4 Spaceship Boards' static config and setup-time tile/token seeding are coded and tested, with all
+live-gameplay wiring deferred (see "Done so far" #12); the Lost Fleet variable-map geometry, tile data,
+AND full board assembly (`generateLostFleetBoard()`) are coded and tested as a standalone module, not
+yet wired into `SpaceMap` (see #13/#14). Explicitly still open, in priority order the user should pick
+from:
 1. **Spaceship Boards live-gameplay wiring** (deferred from Chunk 4): the Explore action, the 12 ship
    board-actions' availability/execution, Examine Artifact + Twilight's Artifact-token seeding, and the
    Form-a-Federation/Upgrade-Existing-Structures hooks that redeem seeded tiles/tokens.
-2. **Wire the Lost Fleet map into `SpaceMap`** (Chunk 5 built the geometry + tile data standalone;
-   next is planet placement onto Interspace/Deep Space hexes, the §H1 spacing rules, and the
-   `GaiaHex` Space/Deep Space/Interspace sector-type classification).
-3. **Darkanians' Planetary Institute ability** (deferred, needs the sector-type classification from
-   the item above — the map geometry foundation now exists).
+2. **Wire the Lost Fleet map into `SpaceMap`/`moveInit`** (Chunk 6 built a complete standalone
+   `Grid<GaiaHex>`; the remaining blocker is fixing `GaiaHex.toString()`/`relativeCoordinates`, which
+   assume the base game's `MATCHED_OFFSET` sector spacing and silently miscalculate for Lost Fleet's
+   `SHIFTED_OFFSET` sectors — see RULES_CLARIFICATIONS.md §H1 note 7 — then threading
+   `generateLostFleetBoard()` through `SpaceMap`'s constructor/`load()` path).
+3. **Darkanians' Planetary Institute ability** (the sector-type classification it needs,
+   `classifySectorId()`, now exists from Chunk 6 — but the ability itself isn't wired up yet, and
+   doing so meaningfully needs item 2 above, since Darkanians aren't reachable on a live Lost Fleet
+   map yet).
 4. **Space Giants' Exploration-board special action** (deferred, needs the Exploration-board
    subsystem — not yet built).
 5. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.
