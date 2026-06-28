@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import "mocha";
 import { AvailableCommand } from "../available/types";
-import { qicForDistance } from "../cost";
+import { qicForDistance, terraformingCost } from "../cost";
 import Engine from "../engine";
 import {
   Building,
@@ -18,6 +18,7 @@ import {
 } from "../enums";
 import { GaiaHex } from "../gaia-hex";
 import { Power } from "../player-data";
+import { terraformingStepsRequired } from "../planets";
 import { moveSpaceshipAction } from "./spaceship-actions";
 
 function createLostFleetRoundMoveEngine(
@@ -110,6 +111,50 @@ function cheapestRangeExtendableHex(engine: Engine, player: PlayerEnum): { hex: 
     const qicNeeded = qicForDistance(engine.map, hex, pl, engine.replay).amount;
     if (qicNeeded > 0 && (!best || qicNeeded < best.qicNeeded)) {
       best = { hex, qicNeeded };
+    }
+  }
+
+  return best;
+}
+
+/** Cheapest unoccupied Asteroid planet the player could colonize. */
+function cheapestAsteroidHex(engine: Engine, player: PlayerEnum): { hex: GaiaHex; qicNeeded: number } | undefined {
+  const pl = engine.player(player);
+  let best: { hex: GaiaHex; qicNeeded: number } | undefined;
+
+  for (const hex of engine.map.grid.values()) {
+    if (hex.data.planet !== Planet.Asteroid || !pl.canOccupy(hex)) {
+      continue;
+    }
+    const qicNeeded = qicForDistance(engine.map, hex, pl, engine.replay).amount;
+    if (!best || qicNeeded < best.qicNeeded) {
+      best = { hex, qicNeeded };
+    }
+  }
+
+  return best;
+}
+
+/** Cheapest unoccupied, non-Transdim/Asteroid planet that needs at least 2 terraforming steps (so T F Mars's 1 free step still leaves an ore cost). */
+function cheapestHexNeedingExtraTerraforming(
+  engine: Engine,
+  player: PlayerEnum,
+  faction: Faction
+): { hex: GaiaHex; qicNeeded: number; steps: number } | undefined {
+  const pl = engine.player(player);
+  let best: { hex: GaiaHex; qicNeeded: number; steps: number } | undefined;
+
+  for (const hex of engine.map.grid.values()) {
+    if (hex.data.planet === Planet.Transdim || hex.data.planet === Planet.Asteroid || !pl.canOccupy(hex)) {
+      continue;
+    }
+    const steps = terraformingStepsRequired(faction, hex.data.planet);
+    if (steps < 2) {
+      continue;
+    }
+    const qicNeeded = qicForDistance(engine.map, hex, pl, engine.replay).amount;
+    if (!best || qicNeeded < best.qicNeeded) {
+      best = { hex, qicNeeded, steps };
     }
   }
 
@@ -333,5 +378,106 @@ describe("Lost Fleet spaceship board actions", () => {
     expect(player.data.qics).to.equal(beforeQic - target.qicNeeded);
     expect(target.hex.data.planet).to.equal(Planet.Gaia);
     expect(target.hex.data.building).to.equal(undefined);
+  });
+
+  it("should pay 6 credits and place a free Mine on an Asteroid in range via Eclipse's Credit action", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    player.data.explorationShips[Spaceship.Eclipse] = 1;
+    occupyPlanetsOfDistinctTypes(engine, PlayerEnum.Player1, 1);
+
+    const target = cheapestAsteroidHex(engine, PlayerEnum.Player1);
+    expect(target, "need an Asteroid planet on the board").to.not.equal(undefined);
+
+    const command = availableSpaceshipActionCommand(engine, PlayerEnum.Player1);
+    const action = command.data.actions.find((a) => a.ship === Spaceship.Eclipse && a.type === "credit");
+    expect(action.cost).to.equal("6c");
+
+    const beforeCredits = player.data.credits;
+    const beforeQic = player.data.qics;
+    const beforeOres = player.data.ores;
+
+    engine.turnMoves = [`build m ${target.hex.toString()}`];
+    moveSpaceshipAction(engine, command, PlayerEnum.Player1, Spaceship.Eclipse, "credit");
+
+    expect(player.data.credits).to.equal(beforeCredits - 6);
+    expect(player.data.qics).to.equal(beforeQic - target.qicNeeded);
+    expect(player.data.ores).to.equal(beforeOres);
+    expect(target.hex.data.building).to.equal(Building.Mine);
+    expect(target.hex.data.player).to.equal(PlayerEnum.Player1);
+  });
+
+  it("should pay 3 credits, terraform beyond the 1 free step using ore, and build a Mine via T F Mars's Credit action", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    player.data.explorationShips[Spaceship.TFMars] = 1;
+    occupyPlanetsOfDistinctTypes(engine, PlayerEnum.Player1, 1);
+
+    const target = cheapestHexNeedingExtraTerraforming(engine, PlayerEnum.Player1, Faction.Terrans);
+    expect(target, "need a planet at least 2 terraforming steps away").to.not.equal(undefined);
+    const expectedOreCost = terraformingCost(player.data, target.steps - 1, engine.replay).count;
+
+    const command = availableSpaceshipActionCommand(engine, PlayerEnum.Player1);
+    const action = command.data.actions.find((a) => a.ship === Spaceship.TFMars && a.type === "credit");
+    expect(action.cost).to.equal("3c");
+
+    const beforeCredits = player.data.credits;
+    const beforeQic = player.data.qics;
+    const beforeOres = player.data.ores;
+
+    engine.turnMoves = [`build m ${target.hex.toString()}`];
+    moveSpaceshipAction(engine, command, PlayerEnum.Player1, Spaceship.TFMars, "credit");
+
+    expect(player.data.credits).to.equal(beforeCredits - 3);
+    expect(player.data.qics).to.equal(beforeQic - target.qicNeeded);
+    expect(player.data.ores).to.equal(beforeOres - expectedOreCost);
+    expect(target.hex.data.building).to.equal(Building.Mine);
+    expect(target.hex.data.player).to.equal(PlayerEnum.Player1);
+  });
+
+  it("should pay 3 Power + 1 Ore and upgrade an isolated Mine into a Trading Station via Rebellion's Power action", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    player.data.explorationShips[Spaceship.Rebellion] = 1;
+    const [hex] = occupyPlanetsOfDistinctTypes(engine, PlayerEnum.Player1, 1);
+
+    const command = availableSpaceshipActionCommand(engine, PlayerEnum.Player1);
+    const action = command.data.actions.find((a) => a.ship === Spaceship.Rebellion && a.type === "power");
+    expect(action.cost).to.equal("3pw,1o");
+
+    const beforePower = player.data.power.area3;
+    const beforeOres = player.data.ores;
+
+    engine.turnMoves = [`build ts ${hex.toString()}`];
+    moveSpaceshipAction(engine, command, PlayerEnum.Player1, Spaceship.Rebellion, "power");
+
+    expect(player.data.power.area3).to.equal(beforePower - 3);
+    expect(player.data.ores).to.equal(beforeOres - 1);
+    expect(hex.data.building).to.equal(Building.TradingStation);
+  });
+
+  it("should pay 3 Power + 2 Ore and upgrade a Trading Station into a Research Lab via Twilight's Power action", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    player.data.explorationShips[Spaceship.Twilight] = 1;
+    const [hex] = occupyPlanetsOfDistinctTypes(engine, PlayerEnum.Player1, 1);
+    hex.data.building = Building.TradingStation;
+    player.data.buildings[Building.Mine] -= 1;
+    player.data.buildings[Building.TradingStation] += 1;
+
+    const command = availableSpaceshipActionCommand(engine, PlayerEnum.Player1);
+    const action = command.data.actions.find((a) => a.ship === Spaceship.Twilight && a.type === "power");
+    expect(action.cost).to.equal("3pw,2o");
+
+    const beforePower = player.data.power.area3;
+    const beforeOres = player.data.ores;
+
+    // Building a Research Lab grants a Tech tile, which forces a free research-track advance too
+    engine.turnMoves = [`build lab ${hex.toString()}`, "tech free1", "up nav"];
+    moveSpaceshipAction(engine, command, PlayerEnum.Player1, Spaceship.Twilight, "power");
+
+    expect(player.data.power.area3).to.equal(beforePower - 3);
+    expect(player.data.ores).to.equal(beforeOres - 2);
+    expect(hex.data.building).to.equal(Building.ResearchLab);
   });
 });
