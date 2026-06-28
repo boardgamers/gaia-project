@@ -98,6 +98,24 @@ function cheapestTransdimHex(engine: Engine, player: PlayerEnum): { hex: GaiaHex
   return best;
 }
 
+/** Cheapest non-Transdim, unoccupied planet that currently requires at least 1 QIC of range extension. */
+function cheapestRangeExtendableHex(engine: Engine, player: PlayerEnum): { hex: GaiaHex; qicNeeded: number } | undefined {
+  const pl = engine.player(player);
+  let best: { hex: GaiaHex; qicNeeded: number } | undefined;
+
+  for (const hex of engine.map.grid.values()) {
+    if (!hex.hasPlanet() || hex.data.planet === Planet.Transdim || hex.occupied()) {
+      continue;
+    }
+    const qicNeeded = qicForDistance(engine.map, hex, pl, engine.replay).amount;
+    if (qicNeeded > 0 && (!best || qicNeeded < best.qicNeeded)) {
+      best = { hex, qicNeeded };
+    }
+  }
+
+  return best;
+}
+
 describe("Lost Fleet spaceship board actions", () => {
   it("should not offer a ship's actions until it has been explored", () => {
     const engine = createLostFleetRoundMoveEngine(3);
@@ -154,6 +172,35 @@ describe("Lost Fleet spaceship board actions", () => {
 
     expect(player.data.victoryPoints).to.equal(beforeVp + 8);
     expect(player.data.qics).to.equal(beforeQic - 3 + 1);
+  });
+
+  it("should pay 1 Knowledge, grant +3 temporary range, and let the player build a mine beyond normal range for free via Twilight's Knowledge action", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    player.data.explorationShips[Spaceship.Twilight] = 1;
+    occupyPlanetsOfDistinctTypes(engine, PlayerEnum.Player1, 1);
+
+    const target = cheapestRangeExtendableHex(engine, PlayerEnum.Player1);
+    expect(target, "need a planet outside normal range").to.not.equal(undefined);
+    expect(
+      qicForDistance(engine.map, target.hex, player, engine.replay, 3).amount,
+      "+3 range should cover the cheapest extendable hex for free"
+    ).to.equal(0);
+
+    const command = availableSpaceshipActionCommand(engine, PlayerEnum.Player1);
+    const action = command.data.actions.find((a) => a.ship === Spaceship.Twilight && a.type === "knowledge");
+    expect(action.cost).to.equal("1k");
+
+    const beforeKnowledge = player.data.knowledge;
+    const beforeQic = player.data.qics;
+
+    engine.turnMoves = [`build m ${target.hex.toString()}`];
+    moveSpaceshipAction(engine, command, PlayerEnum.Player1, Spaceship.Twilight, "knowledge");
+
+    expect(player.data.knowledge).to.equal(beforeKnowledge - 1);
+    expect(player.data.qics).to.equal(beforeQic);
+    expect(target.hex.data.building).to.equal(Building.Mine);
+    expect(target.hex.data.player).to.equal(PlayerEnum.Player1);
   });
 
   it("should pay 3 QIC, claim a Tech tile, and trigger the chained research upgrade via Rebellion's QIC action", () => {

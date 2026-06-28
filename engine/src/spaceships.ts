@@ -26,6 +26,7 @@ export interface SpaceshipBoardSpec {
 export const spaceshipActionEffects: { [key in Spaceship]?: Partial<{ [key in SpaceshipActionType]: string[] }> } = {
   [Spaceship.Twilight]: {
     qic: [">fed"],
+    knowledge: ["3range"],
   },
   [Spaceship.Rebellion]: {
     qic: ["tech"],
