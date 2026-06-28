@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import { CubeCoordinates } from "hexagrid";
 import { Planet, Spaceship } from "./enums";
+import { GaiaHex } from "./gaia-hex";
 import {
   DEEP_SPACE_TILES,
   DEEP_SPACE_TILES_2P,
@@ -8,10 +9,15 @@ import {
   findDeepSpaceNotches,
   findInterspaceHoles,
   interspaceSet,
+  isNewLostFleetSector,
   lostFleetSectorCenters,
   REVISED_SECTOR_FACES_TODO,
   sectorHexes,
 } from "./lost-fleet-map";
+
+function hex(sector: string): GaiaHex {
+  return new GaiaHex(0, 0, { planet: Planet.Terra, sector });
+}
 
 function key(c: CubeCoordinates): string {
   return `${c.q}x${c.r}`;
@@ -166,6 +172,44 @@ describe("Lost Fleet map layout", () => {
       expect(REVISED_SECTOR_FACES_TODO.available).to.be.false;
       expect([...REVISED_SECTOR_FACES_TODO.sectorsNeedingRevisedFace]).to.deep.equal(["5", "6", "7"]);
       expect([...REVISED_SECTOR_FACES_TODO.usedAtPlayerCounts]).to.deep.equal([2, 3]);
+    });
+  });
+
+  describe("isNewLostFleetSector", () => {
+    it("should be true for the first hex colonized in a Space sector", () => {
+      const a = hex("5A");
+      expect(isNewLostFleetSector([a], a)).to.be.true;
+    });
+
+    it("should be false for a second hex in the same Space sector", () => {
+      const a = hex("5A");
+      const b = hex("5A");
+      expect(isNewLostFleetSector([a, b], b)).to.be.false;
+    });
+
+    it("should treat different Space sectors as distinct", () => {
+      const a = hex("5A");
+      const b = hex("7B");
+      expect(isNewLostFleetSector([a, b], b)).to.be.true;
+    });
+
+    it("should treat all 3 hexes of one Deep Space tile as the same sector", () => {
+      const a = hex("DS14_0");
+      const b = hex("DS14_1");
+      expect(isNewLostFleetSector([a, b], b)).to.be.false;
+    });
+
+    it("should treat different Deep Space tiles as distinct sectors", () => {
+      const a = hex("DS14_0");
+      const b = hex("DS9_1");
+      expect(isNewLostFleetSector([a, b], b)).to.be.true;
+    });
+
+    it("should never count an Interspace tile as a sector", () => {
+      const a = hex("IS3");
+      const b = hex("IS3");
+      expect(isNewLostFleetSector([a], a)).to.be.false;
+      expect(isNewLostFleetSector([a, b], b)).to.be.false;
     });
   });
 });

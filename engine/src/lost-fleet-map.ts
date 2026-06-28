@@ -1,5 +1,6 @@
 import { CubeCoordinates, Hex } from "hexagrid";
 import { Planet, Spaceship } from "./enums";
+import { GaiaHex } from "./gaia-hex";
 
 /**
  * Lost Fleet "Variable Gameboard Layout" geometry + tile data.
@@ -249,6 +250,30 @@ export function classifySectorId(sector: string): LostFleetSectorType {
     return LostFleetSectorType.DeepSpace;
   }
   return LostFleetSectorType.Space;
+}
+
+/**
+ * Identifies which "sector" a hex belongs to for effects that count distinct Lost Fleet sectors
+ * colonized (e.g. Darkanians' PI ability; later also the `deep`/`deeppass` Advanced Tech tiles and
+ * the "most Deep Space sectors" Final Scoring tile). A Deep Space Sector tile is a 3-hex cluster
+ * that counts as a single sector, so its `DS<tileId>_<0-2>` hex ids are normalized by stripping the
+ * per-hex suffix. Interspace tiles are never sectors and have no key.
+ */
+function lostFleetSectorKey(hex: GaiaHex): string | undefined {
+  const type = classifySectorId(hex.data.sector);
+  if (type === LostFleetSectorType.Interspace) {
+    return undefined;
+  }
+  return type === LostFleetSectorType.DeepSpace ? hex.data.sector.replace(/_\d+$/, "") : hex.data.sector;
+}
+
+/** True if `hex` is the first hex among `occupied` that belongs to its Lost Fleet sector (see `lostFleetSectorKey`). */
+export function isNewLostFleetSector(occupied: readonly GaiaHex[], hex: GaiaHex): boolean {
+  const key = lostFleetSectorKey(hex);
+  if (key === undefined) {
+    return false;
+  }
+  return !occupied.some((other) => other !== hex && lostFleetSectorKey(other) === key);
 }
 
 /** A single face (3 hexes) of a Deep Space Sector tile. Each hex is one of Protoplanet/Asteroid/Transdim/Empty. */
