@@ -983,7 +983,9 @@ export default class Player extends EventEmitter {
       case Condition.PlanetType:
         return uniq([...this.ownedPlanets.map((hex) => hex.data.planet), ...this.data.artifactPlanetTypes]).length;
       case Condition.TechTile:
-        return this.data.tiles.techs.length;
+        // Standard Tech tiles only: an Advanced Tech tile covers a standard slot rather than
+        // adding a new one, so it must not count again on top of the slot it covers.
+        return this.data.tiles.techs.filter((tech) => !isAdvanced(tech.pos)).length;
       case Condition.Sector:
         return uniq(this.data.occupied.filter((hex) => hex.colonizedBy(this.player)).map((hex) => hex.data.sector))
           .length;

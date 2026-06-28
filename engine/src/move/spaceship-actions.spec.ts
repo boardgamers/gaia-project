@@ -5,6 +5,7 @@ import { qicForDistance, terraformingCost } from "../cost";
 import Engine from "../engine";
 import {
   AdvTechTile,
+  AdvTechTilePos,
   Building,
   Command,
   Faction,
@@ -298,13 +299,14 @@ describe("Lost Fleet spaceship board actions", () => {
     expect(player.data.qics).to.equal(beforeQic + 1);
   });
 
-  it("should pay 2 QIC and gain VP scaled by owned Tech tiles via T F Mars's QIC action", () => {
+  it("should pay 2 QIC and gain VP scaled by owned Standard Tech tiles via T F Mars's QIC action", () => {
     const engine = createLostFleetRoundMoveEngine(3);
     const player = engine.player(PlayerEnum.Player1);
     player.data.explorationShips[Spaceship.TFMars] = 1;
     player.data.tiles.techs.push(
-      { tile: TechTile.Tech1, pos: TechTilePos.Terraforming, enabled: true },
-      { tile: TechTile.Tech4, pos: TechTilePos.Economy, enabled: true }
+      { tile: TechTile.Tech1, pos: TechTilePos.Terraforming, enabled: false }, // covered by the Advanced tile below
+      { tile: TechTile.Tech4, pos: TechTilePos.Economy, enabled: true },
+      { tile: AdvTechTile.AdvTech1, pos: AdvTechTilePos.Terraforming, enabled: true }
     );
 
     const command = availableSpaceshipActionCommand(engine, PlayerEnum.Player1);
@@ -316,6 +318,8 @@ describe("Lost Fleet spaceship board actions", () => {
 
     moveSpaceshipAction(engine, command, PlayerEnum.Player1, Spaceship.TFMars, "qic");
 
+    // 2 Standard Tech tiles (the covered one still counts); the Advanced tile covering one of
+    // them does not add a separate +1.
     expect(player.data.victoryPoints).to.equal(beforeVp + 2 + 2);
     expect(player.data.qics).to.equal(beforeQic - 2);
   });
