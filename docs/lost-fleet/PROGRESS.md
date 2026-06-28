@@ -291,6 +291,47 @@ notifications).
     passes unchanged, confirming the fix is a behavior-preserving no-op for the base game.
     **Still NOT wired into `SpaceMap`/`moveInit`** — that's Chunk 7b, see "Next actions" below; scoping
     it surfaced more complexity than originally anticipated (see that section).
+16. ✅ **German-rules adjacency reroll on the assembled Lost Fleet board, + Chunk 7b `SpaceMap`/
+    `moveInit` wiring, CODED & TESTED** (done 2026-06-28; this entry backfills an undocumented fix from
+    a prior session alongside this session's Chunk 7b work).
+    - **Backfilled, previously undocumented:** `generateLostFleetBoard()` (`lost-fleet-board.ts`) gained
+      its own German-rules reroll loop (`isValidBoard()` + `MAX_LAYOUT_ATTEMPTS = 50`, re-deriving the
+      RNG per attempt), mirroring the guarantee the base game's `SpaceMap` constructor already provides
+      via its own `isValid()` retry loop — Chunk 6 had assembled the board but never checked the
+      no-same-planet-adjacent rule across sector boundaries. **352/352 → 353/353** (+1 test: "should
+      never place two hexes of the same planet type next to each other").
+    - **Chunk 7b — wired into `SpaceMap`/`moveInit`.** First extended `generateLostFleetBoard()` to also
+      return per-sector placement metadata (tile name/rotation/center, reusing the existing
+      `SectorInMapConfiguration` type from `map.ts`) so a `MapConfiguration`-shaped record could be
+      populated for sector-suffix coordinate parsing. **353/353 → 354/354** (+1 test).
+      Then: `SpaceMap`'s constructor gained a 5th `lostFleet` parameter — when set, it calls
+      `generateLostFleetBoard()` directly and assigns `this.grid`/`this.placement`, bypassing the base
+      game's random-tile-shuffle/`isValid()`-reroll loop entirely (Lost Fleet has its own, see above).
+      `configuration()` gained a Lost-Fleet branch (real sector centers, empty fixed-tile pool, so
+      `rotateSector()`'s center-validation assertion still works correctly). `parse()` gained a fallback
+      branch for non-Space-sector coordinate strings (`IS<n>`/`DS<tileId>_<n>`, via
+      `classifySectorId()`) that linear-scans the grid for the matching hex's `toString()`, since those
+      hexes have no sector-suffix table entry to reverse through. `moveInit()` (`move/setup.ts`) threads
+      `engine.options.lostFleet` through to the `SpaceMap` constructor, and gained two new incompatibility
+      asserts: Lost Fleet cannot be combined with a custom pinned `map.sectors` configuration (only
+      seed-based random generation is supported by this generator), nor with `customBoardSetup` (manual
+      board drafting calls `engine.map.generate()` directly, which would silently build a base-game-
+      shaped board). `Engine.fromData()` restores `map.lostFleet` on deserialization, mirroring the
+      existing `map.layout` restore, so `configuration()`/`rotateSector()` keep working after replay.
+      **Verified safe, by design, with no further code changes needed:** `rotateSector()`'s mechanics
+      (rotates only the 19 hexes of a sector's own hexagon around its fixed center — Interspace/Deep
+      Space holes are geometrically outside any sector's hexagon, so rotation never touches them);
+      `Grid.recalibrate()` (hexagrid library; pure shape-agnostic re-index, no Lost-Fleet-specific
+      concern); the `advancedRules + lostFleet` combination (pre-game sector rotation is an intentional,
+      still-supported Lost Fleet feature, not an incompatibility); and the `map.ts` ↔ `lost-fleet-board.ts`
+      circular import (safe — all cross-references are inside function bodies, never at module-evaluation
+      top level).
+      New `map.spec.ts` "Lost Fleet" test block (7 tests): `SpaceMap(..., lostFleet=true)` matches
+      `generateLostFleetBoard()` exactly for a given seed; `getS()`/`toString()` round-trip across Space,
+      Interspace, and Deep Space hex addressing; `rotateSector()` accepts a real Lost Fleet center and
+      rejects a non-center coordinate, preserving hex count/no collisions; the two new incompatibility
+      asserts fire; and an end-to-end `Engine` game builds a genuinely Lost-Fleet-shaped board that
+      survives a `toJSON()`/`fromData()` serialization round trip. **354/354 → 361/361** (+7 tests).
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -353,15 +394,11 @@ face → drop the image in chat → render/read with PyMuPDF or read the image d
 - ✅ **Chunk 7a — `GaiaHex` addressing bug fix.** Done (see "Done so far" #15 above). Stamped
   `sectorCenter` at hex-creation time in `Sector.create()`; `relativeCoordinates`/`toString()` now
   handle shifted sectors and Interspace/Deep Space hexes correctly. 352/352 tests, zero regressions.
-- **Chunk 7b (next, proposed) — Wire `generateLostFleetBoard()` into `SpaceMap`/`moveInit`.** Scoping
-  this (see "Next actions" below) found the integration is more invasive than "add a layout branch to
-  `SpaceMap.configuration()`": `SpaceMap.generate()`/`load()` assume sector-tile-only content plus an
-  `isValid()` random-reroll loop, and `SpaceMap.parse()` (string coordinate → hex, used for move
-  parsing) has no reverse-direction handling for `IS<n>`/`DS<tileId>_<n>` ids. Needs a design check-in
-  with the user before writing code. **Alternative units of work, any of which could go first instead:**
-  Tinkeroids/Moweyds (blocked on §B5; needs the user's resolution before any code can be written),
-  Spaceship Boards live-gameplay wiring (items deferred from Chunk 4), or a different unit of work
-  (viewer work, Supabase) — confirm with the user before starting any of these.
+- ✅ **Chunk 7b — Wire `generateLostFleetBoard()` into `SpaceMap`/`moveInit`.** Done (see "Done so far"
+  #16 above). `SpaceMap` constructor/`configuration()`/`parse()` got Lost-Fleet-aware branches;
+  `moveInit()` threads `engine.options.lostFleet` through and rejects the two unsupported combinations
+  (custom `map.sectors`, `customBoardSetup`); `Engine.fromData()` restores `map.lostFleet`. **361/361
+  engine tests pass.**
 
 ## Integration risks & code-grounded flags (2026-06-27 plan review)
 Read of the actual base-game engine, cross-checked against the now-complete spec. These are the
@@ -464,43 +501,30 @@ resolved for the 2 factions that exist; the tile-gating convention (flag 5) is n
 exact shape for adv-tech/federation/booster/scoring enum members when those chunks come up.
 
 ## Next actions
-Chunks 1-7a are complete and verified — **352/352 engine tests pass** (274 baseline → 280 after Chunk 2
-→ 299 after Chunk 3 → 321 after Chunk 4 → 337 after Chunk 5 → 345 after Chunk 6 → 352 after Chunk 7a).
+Chunks 1-7b are complete and verified — **361/361 engine tests pass** (274 baseline → 280 after Chunk 2
+→ 299 after Chunk 3 → 321 after Chunk 4 → 337 after Chunk 5 → 345 after Chunk 6 → 352 after Chunk 7a →
+353 after the German-rules reroll fix → 354 after Chunk 7b's placement-metadata step → 361 after Chunk
+7b's `SpaceMap`/`moveInit` wiring + integration tests, see "Done so far" #16).
 Darkanians and Space Giants are fully playable factions for every mechanic that doesn't depend on an
 unbuilt subsystem; the 4 Spaceship Boards' static config and setup-time tile/token seeding are coded
 and tested, with all live-gameplay wiring deferred (see "Done so far" #12); the Lost Fleet variable-map
-geometry, tile data, full board assembly (`generateLostFleetBoard()`), AND the `GaiaHex` addressing fix
-are coded and tested (see #13/#14/#15) — `generateLostFleetBoard()` now produces hexes that address
-correctly via `.toString()`, but the board itself is still a standalone `Grid<GaiaHex>`, not yet wired
-into `SpaceMap`. Explicitly still open, in priority order the user should pick from:
+geometry, tile data, full board assembly, `GaiaHex` addressing fix, AND the `SpaceMap`/`moveInit` wiring
+are all coded and tested (see #13-#16) — `new Engine([...], { lostFleet: true })` now produces a real,
+playable Lost Fleet board through the normal engine entry points. Explicitly still open, in priority
+order the user should pick from:
 1. **Spaceship Boards live-gameplay wiring** (deferred from Chunk 4): the Explore action, the 12 ship
    board-actions' availability/execution, Examine Artifact + Twilight's Artifact-token seeding, and the
    Form-a-Federation/Upgrade-Existing-Structures hooks that redeem seeded tiles/tokens.
-2. **Wire the Lost Fleet map into `SpaceMap`/`moveInit` (Chunk 7b)** — the addressing-bug blocker from
-   Chunk 6 is now fixed (Chunk 7a), but scoping this revealed more surface area than "add a layout
-   branch to `SpaceMap.configuration()`":
-   - `SpaceMap.generate()`/`load()` are built around picking N *whole 19-hex sector tiles* and
-     retry-looping on `isValid()` (no-same-planet-adjacent German rule) — there's no existing path for
-     placing Interspace (1-hex) / Deep Space (3-hex) content, and `generateLostFleetBoard()` doesn't
-     currently apply any `isValid()`-style reroll of its own.
-   - `SpaceMap.parse(coords: string)` reverse-parses a "5A8"-style string back into a coordinate via
-     `placement.sectors` + `reverseSuffixes`; it has no handling for `IS<n>`/`DS<tileId>_<n>` strings,
-     so anything that round-trips a Lost Fleet hex's address back into coordinates (e.g. move-command
-     parsing) would need a new branch here too.
-   - Likely shape: a Lost-Fleet-specific path in `SpaceMap`'s constructor that calls
-     `generateLostFleetBoard()` directly and assigns the result to `this.grid`/`this.placement`,
-     bypassing `generate()`/`load()`'s tile-shuffle machinery rather than extending it — but this needs
-     a design check-in with the user before code gets written, since it's a bigger shape decision than
-     originally scoped.
-3. **Darkanians' Planetary Institute ability** (the sector-type classification it needs,
-   `classifySectorId()`, now exists from Chunk 6 — but the ability itself isn't wired up yet, and
-   doing so meaningfully needs item 2 above, since Darkanians aren't reachable on a live Lost Fleet
-   map yet).
-4. **Space Giants' Exploration-board special action** (deferred, needs the Exploration-board
+2. **Darkanians' Planetary Institute ability** (the sector-type classification it needs,
+   `classifySectorId()`, exists from Chunk 6, and Darkanians are now reachable on a live Lost Fleet map
+   since Chunk 7b — this item is now unblocked).
+3. **Space Giants' Exploration-board special action** (deferred, needs the Exploration-board
    subsystem — not yet built).
-5. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.
-6. **Viewer-side `Object.values(Faction)` fix** (6 call sites, currently harmless since the viewer
+4. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.
+5. **Viewer-side `Object.values(Faction)` fix** (6 call sites, currently harmless since the viewer
    hasn't been touched, but will need fixing before any viewer chunk starts).
+6. **Revised Space Sector tiles 05/06/07** (§H4, the one remaining art-only TODO — see "Still MISSING"
+   above) — would let Lost Fleet stop falling back to the base game's per-count face for those 3 tiles.
 7. Or a different unit of work entirely (viewer, Supabase), ahead of any blocked item.
 
 Confirm with the user before starting any of the above.

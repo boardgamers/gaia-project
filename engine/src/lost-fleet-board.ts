@@ -20,10 +20,8 @@ import { shipsInPlay } from "./spaceships";
 /**
  * Lost Fleet "Variable Gameboard Layout" board assembly: turns the geometry/tile data in
  * `lost-fleet-map.ts` into an actual `Grid<GaiaHex>`, following the same pattern as
- * `bigConfiguration`/`smallConfiguration` in `map.ts`. Standalone and seed-deterministic; not wired
- * into `SpaceMap`/`moveInit` (see docs/lost-fleet/RULES_CLARIFICATIONS.md §H1 note 7 for why: the
- * existing `GaiaHex` addressing system assumes the base game's sector spacing and needs a separate fix
- * first).
+ * `bigConfiguration`/`smallConfiguration` in `map.ts`. Seed-deterministic. Wired into `SpaceMap`/
+ * `moveInit` (Chunk 7b, `map.ts`'s `lostFleet` constructor branch / `move/setup.ts`'s `moveInit()`).
  */
 
 /**
