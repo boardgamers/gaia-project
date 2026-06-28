@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import "mocha";
-import { Building, Expansion, Faction, Operator, Planet, Player as PlayerEnum, Resource } from "./enums";
+import { Building, Expansion, Faction, Operator, Planet, Player as PlayerEnum, Resource, SpaceshipFederation } from "./enums";
 import Event from "./events";
 import { GaiaHex } from "./gaia-hex";
 import { classifySectorId, LostFleetSectorType } from "./lost-fleet-map";
@@ -200,6 +200,109 @@ describe("Player", () => {
       player.build(Building.Mine, deepSpaceSector[1], [], map);
       expect(player.data.credits).to.equal(baselineCredits + 4);
       expect(player.data.knowledge).to.equal(baselineKnowledge + 2);
+    });
+  });
+
+  describe("gainSpaceshipFederationToken", () => {
+    it("should grant 8 VP and 8 credits for the Credit token", () => {
+      const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+      player.faction = Faction.Terrans;
+      player.loadFaction(null);
+      const beforeVp = player.data.victoryPoints;
+      const beforeCredits = player.data.credits;
+
+      player.gainSpaceshipFederationToken(SpaceshipFederation.Credit);
+
+      expect(player.data.victoryPoints).to.equal(beforeVp + 8);
+      expect(player.data.credits).to.equal(beforeCredits + 8);
+    });
+
+    it("should grant 4 VP and 4 knowledge for the Knowledge token", () => {
+      const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+      player.faction = Faction.Terrans;
+      player.loadFaction(null);
+      const beforeVp = player.data.victoryPoints;
+      const beforeKnowledge = player.data.knowledge;
+
+      player.gainSpaceshipFederationToken(SpaceshipFederation.Knowledge);
+
+      expect(player.data.victoryPoints).to.equal(beforeVp + 4);
+      expect(player.data.knowledge).to.equal(beforeKnowledge + 4);
+    });
+
+    it("should grant 4 VP, 2 ore, and 1 QIC for the OreQic token", () => {
+      const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+      player.faction = Faction.Terrans;
+      player.loadFaction(null);
+      const beforeVp = player.data.victoryPoints;
+      const beforeOres = player.data.ores;
+      const beforeQic = player.data.qics;
+
+      player.gainSpaceshipFederationToken(SpaceshipFederation.OreQic);
+
+      expect(player.data.victoryPoints).to.equal(beforeVp + 4);
+      expect(player.data.ores).to.equal(beforeOres + 2);
+      expect(player.data.qics).to.equal(beforeQic + 1);
+    });
+
+    it("should grant 12 VP for the Vp token", () => {
+      const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+      player.faction = Faction.Terrans;
+      player.loadFaction(null);
+      const beforeVp = player.data.victoryPoints;
+
+      player.gainSpaceshipFederationToken(SpaceshipFederation.Vp);
+
+      expect(player.data.victoryPoints).to.equal(beforeVp + 12);
+    });
+
+    it("should grant 7 VP and 2 power tokens placed directly into Area III for the PowerTokens token", () => {
+      const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+      player.faction = Faction.Terrans;
+      player.loadFaction(null);
+      const beforeVp = player.data.victoryPoints;
+      const beforeArea3 = player.data.power.area3;
+
+      player.gainSpaceshipFederationToken(SpaceshipFederation.PowerTokens);
+
+      expect(player.data.victoryPoints).to.equal(beforeVp + 7);
+      expect(player.data.power.area3).to.equal(beforeArea3 + 2);
+    });
+
+    it("should grant a Tech tile pick (TechTile reward) for the Tech token", () => {
+      const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+      player.faction = Faction.Terrans;
+      player.loadFaction(null);
+
+      let gained = 0;
+      player.data.on(`gain-${Resource.TechTile}`, (count: number) => {
+        gained += count;
+      });
+
+      player.gainSpaceshipFederationToken(SpaceshipFederation.Tech);
+
+      expect(gained).to.equal(1);
+    });
+
+    it("should not grant any plain reward for the Range/Terraform tokens (a bonus build action is wired separately)", () => {
+      for (const federation of [SpaceshipFederation.Range, SpaceshipFederation.Terraform]) {
+        const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+        player.faction = Faction.Terrans;
+        player.loadFaction(null);
+        const beforeVp = player.data.victoryPoints;
+        const beforeCredits = player.data.credits;
+        const beforeOres = player.data.ores;
+        const beforeQic = player.data.qics;
+        const beforeKnowledge = player.data.knowledge;
+
+        player.gainSpaceshipFederationToken(federation);
+
+        expect(player.data.victoryPoints).to.equal(beforeVp);
+        expect(player.data.credits).to.equal(beforeCredits);
+        expect(player.data.ores).to.equal(beforeOres);
+        expect(player.data.qics).to.equal(beforeQic);
+        expect(player.data.knowledge).to.equal(beforeKnowledge);
+      }
     });
   });
 

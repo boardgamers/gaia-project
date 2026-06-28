@@ -45,6 +45,7 @@ import Reward from "./reward";
 import { boosterEvents } from "./tiles/boosters";
 import { federationRewards, isGreen } from "./tiles/federations";
 import { finalScorings } from "./tiles/scoring";
+import { spaceshipFederationRewards } from "./tiles/spaceship-federations";
 import { isAdvanced, techTileEvents } from "./tiles/techs";
 import { isVersionOrLater } from "./utils";
 
@@ -910,8 +911,18 @@ export default class Player extends EventEmitter {
       green: true,
     });
 
-    // The actual Lost Fleet gold-side token effects land with the later live-token execution slice.
-    // This hook only redeems ownership so federation counting and green-side consumption work now.
+    const rewardSpec = spaceshipFederationRewards[federation];
+    if (rewardSpec) {
+      this.gainRewards(Reward.parse(rewardSpec), Command.FormFederation);
+    }
+    if (federation === SpaceshipFederation.PowerTokens) {
+      // No Resource type grants power tokens directly into Area III; direct area mutation is the
+      // established pattern for this (see burnPower's area2/area3 manipulation above).
+      this.data.power.area3 += 2;
+    }
+
+    // Range/Terraform grant a bonus Build a Mine action instead of a reward; the caller
+    // (move/federation.ts) chains SubPhase.FederationTokenBuildMine for those two tokens.
     this.receiveTriggerIncome(Condition.Federation);
   }
 

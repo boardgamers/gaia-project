@@ -17,3 +17,18 @@ export const spaceshipFederationSpec: { [key in SpaceshipFederation]: string } =
     "Q.I.C.s may still increase range.",
   [SpaceshipFederation.Vp]: "Immediately gain 12 VP.",
 };
+
+/**
+ * Reward.parse-compatible income strings for the tokens whose gold-side effect is a plain
+ * resource grant. PowerTokens additionally needs a direct power.area3 mutation (no Resource type
+ * grants tokens straight into Area III) and Range/Terraform grant a bonus Build a Mine action
+ * instead of a reward; all 4 are handled with bespoke logic in player.ts/move/federation.ts.
+ */
+export const spaceshipFederationRewards: Partial<{ [key in SpaceshipFederation]: string }> = {
+  [SpaceshipFederation.Credit]: "8vp,8c",
+  [SpaceshipFederation.Knowledge]: "4vp,4k",
+  [SpaceshipFederation.OreQic]: "4vp,2o,q",
+  [SpaceshipFederation.PowerTokens]: "7vp",
+  [SpaceshipFederation.Tech]: "tech",
+  [SpaceshipFederation.Vp]: "12vp",
+};
