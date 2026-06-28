@@ -99,7 +99,7 @@ describe("Lost Fleet board assembly", () => {
       const { grid } = generateLostFleetBoard(2, "deep-space-2p");
       for (const hex of grid.values()) {
         if (classifySectorId(hex.data.sector) === LostFleetSectorType.DeepSpace) {
-          const id = Number(hex.data.sector.replace("DS", ""));
+          const id = Number(hex.data.sector.replace("DS", "").split("_")[0]);
           expect(id, `tile id ${id} should be in 11-16 range at 2p`).to.be.at.most(16);
         }
       }

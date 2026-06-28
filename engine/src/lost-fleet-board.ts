@@ -149,7 +149,7 @@ function placeDeepSpaceTiles(grid: Grid<GaiaHex>, nbPlayers: number, rng: seedra
     const side: "a" | "b" = rng() < 0.5 ? "a" : "b";
     const face: DeepSpaceFace = tile[side];
     notch.forEach((cell, j) => {
-      grid.push(new GaiaHex(cell.q, cell.r, { planet: face[j], sector: `DS${tile.id}` }));
+      grid.push(new GaiaHex(cell.q, cell.r, { planet: face[j], sector: `DS${tile.id}_${j}` }));
     });
   });
 }

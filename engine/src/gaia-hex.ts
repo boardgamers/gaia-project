@@ -1,7 +1,8 @@
 import assert from "assert";
-import { Hex } from "hexagrid";
+import { CubeCoordinates, Hex } from "hexagrid";
 import { stdBuildingValue } from "./buildings";
 import { Building, Planet, Player, Spaceship } from "./enums";
+import { classifySectorId, LostFleetSectorType } from "./lost-fleet-map";
 
 export interface GaiaHexData {
   planet: Planet;
@@ -19,6 +20,10 @@ export interface GaiaHexData {
   additionalMine?: Player;
   /** Lost Fleet: which spaceship's Interspace tile occupies this hex, if any */
   spaceship?: Spaceship;
+  /** Center this hex was created around (stamped by Sector.create). Used to derive relativeCoordinates
+   * directly instead of guessing it from the base-game sector lattice, which Lost Fleet's shifted
+   * sectors and Interspace/Deep Space hexes don't sit on. */
+  sectorCenter?: CubeCoordinates;
 }
 
 export class GaiaHex extends Hex<GaiaHexData> {
@@ -112,6 +117,10 @@ export class GaiaHex extends Hex<GaiaHexData> {
 
   // Can probably math this better
   get relativeCoordinates() {
+    if (this.data.sectorCenter) {
+      return { q: this.q - this.data.sectorCenter.q, r: this.r - this.data.sectorCenter.r };
+    }
+
     const horizontal = { q: -3, r: 5 };
     const vertical = { q: 2, r: 3 };
     const diagonal = { q: 5, r: -2 };
@@ -136,6 +145,12 @@ export class GaiaHex extends Hex<GaiaHexData> {
   }
 
   toString() {
+    if (classifySectorId(this.data.sector) !== LostFleetSectorType.Space) {
+      // Interspace/Deep Space hexes aren't part of a 19-hex sector and have no suffix table entry;
+      // their sector id (e.g. "IS3", "DS14_0") is already a unique address.
+      return this.data.sector;
+    }
+
     const relative = this.relativeCoordinates;
     const suffix = suffixes[`${relative.q}x${relative.r}`];
 

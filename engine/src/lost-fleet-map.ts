@@ -240,7 +240,7 @@ export enum LostFleetSectorType {
   Interspace = "interspace",
 }
 
-/** Sector ids for Interspace/Deep Space hexes follow the `IS<n>`/`DS<tileId>` convention (see lost-fleet-board.ts). */
+/** Sector ids for Interspace/Deep Space hexes follow the `IS<n>`/`DS<tileId>_<0-2>` convention (see lost-fleet-board.ts). */
 export function classifySectorId(sector: string): LostFleetSectorType {
   if (sector.startsWith("IS")) {
     return LostFleetSectorType.Interspace;
