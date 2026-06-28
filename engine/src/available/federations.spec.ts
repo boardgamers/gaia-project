@@ -173,6 +173,39 @@ describe("possibleFederationTokenBuildMine", () => {
     );
   });
 
+  [Faction.Darkanians, Faction.SpaceGiants].forEach((faction) => {
+    it(`charges ${faction}'s 2-QIC Gaia-forming surcharge (instead of the normal 1 QIC) on Gaia planets, for either token`, () => {
+      const engine = createLostFleetRoundMoveEngine(2, [faction, Faction.Terrans]);
+      occupyStartingHex(engine, PlayerEnum.Player1);
+      const player = engine.player(PlayerEnum.Player1);
+
+      // Independent of player.gaiaFormingCost(), so this can't pass merely by mirroring the
+      // implementation: §G5/player.ts hardcode this surcharge at exactly 2 QIC for these 2 factions.
+      const gaiaSurcharge = new Reward(2, Resource.Qic);
+      expect(player.gaiaFormingCost()).to.deep.equal(gaiaSurcharge);
+
+      const gaiaHex = findUnoccupiedHexOfPlanet(engine, Planet.Gaia);
+      expect(gaiaHex, "need an unoccupied Gaia hex").to.not.equal(undefined);
+
+      const [rangeCommand] = possibleFederationTokenBuildMine(engine, PlayerEnum.Player1, {
+        federation: SpaceshipFederation.Range,
+      });
+      const rangeBuilding = rangeCommand.data.buildings.find((b) => b.coordinates === gaiaHex.toString());
+      expect(rangeBuilding, "Range should still allow building on Gaia planets").to.not.equal(undefined);
+      expect(rangeBuilding.cost).to.equal(Reward.toString([gaiaSurcharge]));
+
+      const rangeQic = qicForDistance(engine.map, gaiaHex, player, engine.replay)?.amount ?? 0;
+      const [terraformCommand] = possibleFederationTokenBuildMine(engine, PlayerEnum.Player1, {
+        federation: SpaceshipFederation.Terraform,
+      });
+      const terraformBuilding = terraformCommand.data.buildings.find((b) => b.coordinates === gaiaHex.toString());
+      expect(terraformBuilding, "Terraform should still allow building on Gaia planets").to.not.equal(undefined);
+      expect(terraformBuilding.cost).to.equal(
+        Reward.toString(Reward.merge([gaiaSurcharge, new Reward(rangeQic, Resource.Qic)]))
+      );
+    });
+  });
+
   it("returns nothing once the mine limit is reached", () => {
     const engine = createLostFleetRoundMoveEngine(2);
     const player = engine.player(PlayerEnum.Player1);
