@@ -62,7 +62,7 @@ notifications).
    II–VII for the prose ones; owner board-reads 2026-06-27 for the art-only values). See §G1–G6.
 7. ✅ **Spaceship boards fully captured** (§C1–C5): all 3 action tiles per ship (type/cost/effect),
    the standard-tech-slot assignment (0 on Twilight, 1 each on the other 3), Twilight's artifact slots
-   (= player count), and the 4-space exploration charge track (0/2/2/4). Owner board-read 2026-06-27.
+   (= player count), and the 4-space exploration charge track (0/2/2/3). Owner board-read 2026-06-27.
 8. ✅ Evaluated the uiqoo.kr randomizer: it's a seeded PNG image-renderer of setups with **no effect
    text** — not a viable source for "what components do." Skip it (maybe use only for map-tile images).
 9. ✅ **Viewer deployed** to Vercel (Git integration, auto-deploy on push to this branch) and
@@ -166,7 +166,7 @@ notifications).
     checks before the "must have explored that ship" gating logic exists. New
     `engine/src/spaceships.ts` holds the static per-ship board data (`spaceshipBoards`: 3 actions each
     — type qic/power/knowledge-or-credit, cost, effect text; `hasStandardTechSlot`: false for Twilight,
-    true for the other 3), the shared `EXPLORATION_CHARGE_TRACK = [0, 2, 2, 4]`, `artifactSlotCount()`
+    true for the other 3), the shared `EXPLORATION_CHARGE_TRACK = [0, 2, 2, 3]`, `artifactSlotCount()`
     (= player count, Twilight only), and `shipsInPlay(expansions, nbPlayers)` (excludes Rebellion at
     2p). New `tiles/spaceship-techs.ts`/`tiles/spaceship-federations.ts` hold plain descriptive effect
     text for the 3 tech tiles / 8 federation tokens (NOT Reward/Event-parseable yet — no execution-side
@@ -332,6 +332,68 @@ notifications).
       rejects a non-center coordinate, preserving hex count/no collisions; the two new incompatibility
       asserts fire; and an end-to-end `Engine` game builds a genuinely Lost-Fleet-shaped board that
       survives a `toJSON()`/`fromData()` serialization round trip. **354/354 → 361/361** (+7 tests).
+17. ✅ **Darkanians' Planetary Institute ability, CODED & TESTED** (done 2026-06-28).
+    The deferred Chunk-3 gap is now closed using the Lost Fleet sector-type foundation added in Chunks
+    5/6/7b. `engine/src/faction-boards/darkanians.ts` now hooks `build-m` and `build-colony` so that,
+    once the PI is built, the Darkanians gain **2 credits + 1 knowledge** the first time they colonize a
+    **Space** sector or **Deep Space** sector; **Interspace** is explicitly ignored per the rulebook.
+    Deep Space is grouped per physical tile, not per addressed hex (`DS14_0` / `DS14_1` / `DS14_2`
+    collapse to `DS14` for this ability), so the reward only fires once per Deep Space sector.
+    The implementation intentionally counts prior colonization history even if it happened before the PI
+    was built, matching the engine's existing Geodens pattern for PI-gated "first/new" checks.
+    New `player.spec.ts` integration coverage proves all four edges through the real `build()` flow:
+    no retroactive reward for a sector first colonized before PI, reward once for the first later Space
+    sector, no reward for Interspace, and reward once per Deep Space tile. **361/361 → 362/362** (+1
+    test). No base-game behavior changed.
+18. ✅ **Lost Fleet Explore action core, CODED & TESTED** (done 2026-06-28).
+    The first live-gameplay slice of Spaceship Boards is now in place without touching the viewer.
+    New `engine/src/exploration.ts` centralizes the reusable rules/data hooks: per-player explored-ship
+    state, 2-player vs. 3/4-player shuttle limits, "one shuttle per ship," lowest-free-slot placement,
+    the shared `0/2/2/3` slot-charge track, range measurement **from colonized planets only** (never
+    from a spaceship, matching §D3), and the faction-specific deploy adjustments for Taklons, Nevlas,
+    Itars, and Bal T'aks. `player-data.ts` now persists `explorationShips` through `toJSON()` /
+    `fromData()`, giving later chunks a clean foundation for "explored ship" gating.
+    Live command plumbing is in with a dedicated `Command.Explore`: `available/exploration.ts` exposes
+    reachable ships during `BeforeMove`, and the existing temporary-range subphase
+    (`BuildMineOrGaiaFormer`) now also offers Explore, so temporary-range effects can feed spaceship
+    exploration cleanly instead of remaining build-only. `move/exploration.ts` executes the action:
+    pay the deploy + Q.I.C. cost, apply the Taklons brainstone move when relevant, record the occupied
+    slot, and immediately grant the slot's charge-power reward.
+    Focused coverage in new `exploration.spec.ts` proves 2-player Rebellion exclusion, cost payment,
+    slot assignment / charge timing, one-shuttle-per-ship + 2-player shuttle-cap enforcement,
+    Taklons/Nevlas deploy adjustments, and serialization round-trip safety. **362/362 → 366/366** (+4
+    tests). Full engine suite passes at **366/366**.
+19. ✅ **Spaceship Federation claim hook, CODED & TESTED** (done 2026-06-28).
+    Forming any federation can now also redeem a ship-seeded Lost Fleet Federation token from an
+    explored ship, without any adjacency requirement between that ship and the formed federation
+    (`RULES_CLARIFICATIONS.md` §E3). `available/federations.ts` now surfaces the currently claimable
+    ship-token choices on the existing `Command.FormFederation` command, keyed purely off
+    `explorationShips` plus the unclaimed token still seeded on that ship. `move/federation.ts` now
+    treats those ship tokens as **additional selectable federation options** during federation
+    formation, rather than as an extra auto-claim layered onto a normal federation pick.
+    Claimed ship tokens are persisted separately in `player-data.ts` so the engine can already treat
+    them as owned federation tokens for **counting and green-side consumption** (`Condition.Federation`,
+    `hasGreenFederation()`, `removeGreenFederation()`), without prematurely guessing at the still-open
+    gold-side execution for the special build-action tokens. Focused additions in `exploration.spec.ts`
+    prove the non-adjacent redemption rule, that explored ship tokens join the federation choice list,
+    that multiple explored ships present multiple selectable ship-token options, and the
+    owned-token counting/green-side seam.
+    Full engine suite passes at **370/370**.
+20. ✅ **Spaceship Standard Tech claim hook, CODED & TESTED** (done 2026-06-28).
+    Explored ships now surface their seeded Lost Fleet Standard Tech tile directly on the existing
+    `Command.ChooseTechTile` flow, alongside the normal research-board choices. The claim path stays
+    engine-native instead of inventing a parallel command: `available/research.ts` adds explored /
+    unclaimed ship tiles as extra tech choices, `move/research.ts` removes a claimed tile from
+    `engine.tiles.spaceshipTechs`, and the claimed tile is stored in `player.data.tiles.techs` as a
+    normal **coverable** Standard Tech so later Advanced Tech flow can still treat it like any other
+    claimable tech slot. The follow-up Lost Fleet research advance is handled by the same post-claim
+    upgrade subphase already used by the existing tech-pick machinery. To avoid guessing ahead of the
+    still-open "live ship-board actions / tile effects" slice, the 3 new Lost Fleet Standard Tech
+    tiles are still effect-text-only for now — this hook lands ownership, availability, removal, and
+    coverability, not their unique effect execution yet. Focused additions in `exploration.spec.ts`
+    prove availability from explored ships, removal from the ship on claim, the extra research
+    advance, and later coverability by an Advanced Tech tile.
+    Full engine suite passes at **372/372**.
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -501,31 +563,32 @@ resolved for the 2 factions that exist; the tile-gating convention (flag 5) is n
 exact shape for adv-tech/federation/booster/scoring enum members when those chunks come up.
 
 ## Next actions
-Chunks 1-7b are complete and verified — **361/361 engine tests pass** (274 baseline → 280 after Chunk 2
+Chunks 1-7b plus Darkanians' PI follow-up, the core Explore action, the federation-claim hook, and the Standard-Tech claim hook are complete and verified — **372/372 engine tests pass** (274 baseline → 280 after Chunk 2
 → 299 after Chunk 3 → 321 after Chunk 4 → 337 after Chunk 5 → 345 after Chunk 6 → 352 after Chunk 7a →
 353 after the German-rules reroll fix → 354 after Chunk 7b's placement-metadata step → 361 after Chunk
-7b's `SpaceMap`/`moveInit` wiring + integration tests, see "Done so far" #16).
+7b's `SpaceMap`/`moveInit` wiring + integration tests → 362 after Darkanians' PI integration test → 366
+after the Explore-action slice → 370 after the federation-claim slice → 372 after the Standard-Tech
+claim slice, see "Done so far" #16-#20).
 Darkanians and Space Giants are fully playable factions for every mechanic that doesn't depend on an
 unbuilt subsystem; the 4 Spaceship Boards' static config and setup-time tile/token seeding are coded
-and tested, with all live-gameplay wiring deferred (see "Done so far" #12); the Lost Fleet variable-map
-geometry, tile data, full board assembly, `GaiaHex` addressing fix, AND the `SpaceMap`/`moveInit` wiring
-are all coded and tested (see #13-#16) — `new Engine([...], { lostFleet: true })` now produces a real,
-playable Lost Fleet board through the normal engine entry points. Explicitly still open, in priority
-order the user should pick from:
-1. **Spaceship Boards live-gameplay wiring** (deferred from Chunk 4): the Explore action, the 12 ship
-   board-actions' availability/execution, Examine Artifact + Twilight's Artifact-token seeding, and the
-   Form-a-Federation/Upgrade-Existing-Structures hooks that redeem seeded tiles/tokens.
-2. **Darkanians' Planetary Institute ability** (the sector-type classification it needs,
-   `classifySectorId()`, exists from Chunk 6, and Darkanians are now reachable on a live Lost Fleet map
-   since Chunk 7b — this item is now unblocked).
-3. **Space Giants' Exploration-board special action** (deferred, needs the Exploration-board
-   subsystem — not yet built).
-4. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.
-5. **Viewer-side `Object.values(Faction)` fix** (6 call sites, currently harmless since the viewer
+and tested; the **core Explore action** is live in the engine; and explored ships can now redeem their
+seeded Federation token through federation formation and their seeded Standard Tech tile through the
+normal tech-pick flow (see #18-#20). The Lost Fleet variable-map
+geometry, tile data, full board assembly, `GaiaHex` addressing fix, AND the
+`SpaceMap`/`moveInit` wiring are all coded and tested (see #13-#16) — `new Engine([...], { lostFleet: true })`
+now produces a real, playable Lost Fleet board through the normal engine entry points. Explicitly still
+open, in priority order the user should pick from:
+1. **Remaining Spaceship Boards live-gameplay wiring**: the 12 ship board-actions'
+   availability/execution, Examine Artifact + Twilight's Artifact-token seeding, and the remaining
+   gold-side execution for claimed ship Federation tokens / later ship-seeded actions.
+2. **Space Giants' Exploration-board special action** (deferred; core Explore plumbing now exists, but
+   the faction-specific action hook still doesn't).
+3. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.
+4. **Viewer-side `Object.values(Faction)` fix** (6 call sites, currently harmless since the viewer
    hasn't been touched, but will need fixing before any viewer chunk starts).
-6. **Revised Space Sector tiles 05/06/07** (§H4, the one remaining art-only TODO — see "Still MISSING"
+5. **Revised Space Sector tiles 05/06/07** (§H4, the one remaining art-only TODO — see "Still MISSING"
    above) — would let Lost Fleet stop falling back to the base game's per-count face for those 3 tiles.
-7. Or a different unit of work entirely (viewer, Supabase), ahead of any blocked item.
+6. Or a different unit of work entirely (viewer, Supabase), ahead of any blocked item.
 
 Confirm with the user before starting any of the above.
 

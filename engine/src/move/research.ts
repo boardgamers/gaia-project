@@ -1,7 +1,7 @@
 import assert from "assert";
 import { AvailableCommand } from "../available/types";
 import Engine from "../engine";
-import { AnyTechTilePos, Command, Player as PlayerEnum, ResearchField, SubPhase, TechTilePos } from "../enums";
+import { AnyTechTilePos, Command, Player as PlayerEnum, ResearchField, Spaceship, SubPhase, TechTilePos } from "../enums";
 import { isAdvanced } from "../tiles/techs";
 import { advanceResearchAreaPhase } from "./phase";
 
@@ -23,7 +23,7 @@ export function moveChooseTechTile(
   engine: Engine,
   command: AvailableCommand<Command.ChooseTechTile>,
   player: PlayerEnum,
-  pos: AnyTechTilePos
+  pos: AnyTechTilePos | Spaceship
 ) {
   const { tiles } = command.data;
   const tileAvailable = tiles.find((ta) => ta.pos === pos);
@@ -37,7 +37,16 @@ export function moveChooseTechTile(
   }
 
   engine.player(player).gainTechTile(tileAvailable);
-  engine.tiles.techs[pos].count -= 1;
+  if (Spaceship.values(engine.expansions).includes(pos as Spaceship)) {
+    const shipTech = engine.tiles.spaceshipTechs[pos as Spaceship];
+    assert(shipTech !== undefined && shipTech.count > 0, `Impossible to get ${pos} spaceship tech tile`);
+    shipTech.count -= 1;
+    if (shipTech.count === 0) {
+      delete engine.tiles.spaceshipTechs[pos as Spaceship];
+    }
+  } else {
+    engine.tiles.techs[pos as AnyTechTilePos].count -= 1;
+  }
 
   // AFTER gaining the tech tile (as green federation can be flipped and lock research tracks)
   engine.processNextMove(
@@ -50,7 +59,7 @@ export function moveChooseCoverTechTile(
   engine: Engine,
   command: AvailableCommand<Command.ChooseCoverTechTile>,
   player: PlayerEnum,
-  tilePos: TechTilePos
+  tilePos: TechTilePos | Spaceship
 ) {
   const { tiles } = command.data;
   const tileAvailable = tiles.find((ta) => ta.pos === tilePos);

@@ -3,6 +3,7 @@ import "mocha";
 import { Building, Expansion, Faction, Operator, Planet, Player as PlayerEnum, Resource } from "./enums";
 import Event from "./events";
 import { GaiaHex } from "./gaia-hex";
+import { classifySectorId, LostFleetSectorType } from "./lost-fleet-map";
 import SpaceMap from "./map";
 import Player from "./player";
 import Reward from "./reward";
@@ -131,6 +132,74 @@ describe("Player", () => {
       // tslint:disable-next-line no-unused-expression
       expect(player.data.hasResource(new Reward(1, Resource.GaiaFormer))).to.be.false;
       expect(player.data.buildings[Building.Mine]).to.equal(1);
+    });
+
+    it("should grant Darkanians 2 credits and 1 knowledge only for the first colonization in each Space/Deep Space sector", () => {
+      const map = new SpaceMap(2, "darkanians-sector-reward", false, "standard", true);
+      const colonizableHexes = [...map.grid.values()].filter((hex) => hex.data.planet !== Planet.Empty && !hex.data.building);
+      const spaceGroups = new Map<string, GaiaHex[]>();
+      const deepSpaceGroups = new Map<string, GaiaHex[]>();
+
+      for (const hex of colonizableHexes) {
+        const sectorType = classifySectorId(hex.data.sector);
+
+        if (sectorType === LostFleetSectorType.Space) {
+          spaceGroups.set(hex.data.sector, (spaceGroups.get(hex.data.sector) ?? []).concat(hex));
+        } else if (sectorType === LostFleetSectorType.DeepSpace) {
+          const sectorId = hex.data.sector.split("_")[0];
+          deepSpaceGroups.set(sectorId, (deepSpaceGroups.get(sectorId) ?? []).concat(hex));
+        }
+      }
+
+      const sameSpaceSectorGroups = [...spaceGroups.values()].filter((group) => group.length >= 2);
+      const prePiSector = sameSpaceSectorGroups[0];
+      const rewardedSpaceSector = sameSpaceSectorGroups.find((group) => group[0].data.sector !== prePiSector[0].data.sector);
+      const deepSpaceSector = [...deepSpaceGroups.values()].find((group) => group.length >= 2);
+      const interspaceHex = colonizableHexes.find(
+        (hex) => classifySectorId(hex.data.sector) === LostFleetSectorType.Interspace
+      );
+
+      expect(prePiSector, "need a Space sector with at least 2 colonizable hexes").to.not.equal(undefined);
+      expect(rewardedSpaceSector, "need a second Space sector with at least 2 colonizable hexes").to.not.equal(undefined);
+      expect(deepSpaceSector, "need a Deep Space tile with at least 2 colonizable hexes").to.not.equal(undefined);
+      expect(interspaceHex, "need a colonizable Interspace hex").to.not.equal(undefined);
+
+      const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+      player.faction = Faction.Darkanians;
+      player.loadFaction(null);
+
+      const baselineCredits = player.data.credits;
+      const baselineKnowledge = player.data.knowledge;
+
+      player.build(Building.Mine, prePiSector[0], [], map);
+      expect(player.data.credits).to.equal(baselineCredits);
+      expect(player.data.knowledge).to.equal(baselineKnowledge);
+
+      player.data.buildings[Building.PlanetaryInstitute] = 1;
+
+      player.build(Building.Mine, prePiSector[1], [], map);
+      expect(player.data.credits).to.equal(baselineCredits);
+      expect(player.data.knowledge).to.equal(baselineKnowledge);
+
+      player.build(Building.Mine, rewardedSpaceSector[0], [], map);
+      expect(player.data.credits).to.equal(baselineCredits + 2);
+      expect(player.data.knowledge).to.equal(baselineKnowledge + 1);
+
+      player.build(Building.Mine, rewardedSpaceSector[1], [], map);
+      expect(player.data.credits).to.equal(baselineCredits + 2);
+      expect(player.data.knowledge).to.equal(baselineKnowledge + 1);
+
+      player.build(Building.Mine, interspaceHex, [], map);
+      expect(player.data.credits).to.equal(baselineCredits + 2);
+      expect(player.data.knowledge).to.equal(baselineKnowledge + 1);
+
+      player.build(Building.Mine, deepSpaceSector[0], [], map);
+      expect(player.data.credits).to.equal(baselineCredits + 4);
+      expect(player.data.knowledge).to.equal(baselineKnowledge + 2);
+
+      player.build(Building.Mine, deepSpaceSector[1], [], map);
+      expect(player.data.credits).to.equal(baselineCredits + 4);
+      expect(player.data.knowledge).to.equal(baselineKnowledge + 2);
     });
   });
 

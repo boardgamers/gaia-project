@@ -25,6 +25,8 @@ import {
   Resource,
   Resource as ResourceEnum,
   Ship,
+  Spaceship,
+  SpaceshipFederation,
   TechTile,
   TechTilePos,
 } from "./enums";
@@ -697,7 +699,7 @@ export default class Player extends EventEmitter {
     }
   }
 
-  coverTechTile(pos: TechTilePos) {
+  coverTechTile(pos: TechTilePos | Spaceship) {
     const tile = this.data.tiles.techs.find((tech) => tech.pos === pos);
     tile.enabled = false;
 
@@ -902,6 +904,17 @@ export default class Player extends EventEmitter {
     this.receiveTriggerIncome(Condition.Federation);
   }
 
+  gainSpaceshipFederationToken(federation: SpaceshipFederation) {
+    this.data.spaceshipFederations.push({
+      tile: federation,
+      green: true,
+    });
+
+    // The actual Lost Fleet gold-side token effects land with the later live-token execution slice.
+    // This hook only redeems ownership so federation counting and green-side consumption work now.
+    this.receiveTriggerIncome(Condition.Federation);
+  }
+
   factionReward(reward: Reward, source: EventSource, gleensQic: boolean): Reward {
     if (this.faction === Faction.Terrans && reward.type === Resource.GainTokenGaiaArea) {
       return new Reward(-reward.count, Resource.MoveTokenFromGaiaAreaToArea1);
@@ -952,7 +965,7 @@ export default class Player extends EventEmitter {
           this.data.buildings[Building.Colony]
         );
       case Condition.Federation:
-        return this.data.tiles.federations.length;
+        return this.data.tiles.federations.length + this.data.spaceshipFederations.length;
       case Condition.Gaia:
         return this.ownedPlanets.filter((hex) => hex.data.planet === Planet.Gaia).length;
       case Condition.PlanetType:
@@ -1167,6 +1180,11 @@ export default class Player extends EventEmitter {
   }
 
   formFederation(hexes: GaiaHex[], token: Federation) {
+    this.completeFederation(hexes);
+    this.gainFederationToken(token);
+  }
+
+  completeFederation(hexes: GaiaHex[]) {
     let newSatellites = 0;
     for (const hex of hexes) {
       // Second test is for ivits
@@ -1180,7 +1198,6 @@ export default class Player extends EventEmitter {
       Command.FormFederation
     );
     this.data.satellites += newSatellites;
-    this.gainFederationToken(token);
     this.data.federationCount += 1;
     this.federationCache = null;
   }

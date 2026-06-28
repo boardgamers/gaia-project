@@ -4,6 +4,7 @@ import PlayerObject from "../player";
 import PlayerData from "../player-data";
 import { lastTile } from "../research-tracks";
 import Reward from "../reward";
+import { claimableSpaceshipTechs } from "../spaceships";
 import { isAdvanced } from "../tiles/techs";
 import { AvailableResearchData, AvailableResearchTrack, Offer, UPGRADE_RESEARCH_COST } from "./types";
 
@@ -118,6 +119,16 @@ export function possibleTechTiles(engine: Engine, player: Player) {
       });
     }
   }
+
+  for (const claimableTech of claimableSpaceshipTechs(data.explorationShips, engine.tiles.spaceshipTechs)) {
+    if (!data.tiles.techs.find((tech) => tech.tile === claimableTech.tile)) {
+      tiles.push({
+        tile: claimableTech.tile,
+        pos: claimableTech.ship,
+      });
+    }
+  }
+
   if (tiles.length > 0) {
     commands.push({
       name: Command.ChooseTechTile,

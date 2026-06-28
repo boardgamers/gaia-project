@@ -3,7 +3,19 @@ import { EventEmitter } from "eventemitter3";
 import { cloneDeep, fromPairs } from "lodash";
 import { TRADE_COST } from "./available/ships";
 import { BrainstoneActionData, BrainstoneWarning, ChooseTechTile } from "./available/types";
-import { Booster, Building, Command, Expansion, Federation, PowerArea, ResearchField, Resource, Ship } from "./enums";
+import {
+  Booster,
+  Building,
+  Command,
+  Expansion,
+  Federation,
+  PowerArea,
+  ResearchField,
+  Resource,
+  Ship,
+  Spaceship,
+  SpaceshipFederation,
+} from "./enums";
 import { EventSource } from "./events";
 import { FactionBoard } from "./faction-boards";
 import { GaiaHex } from "./gaia-hex";
@@ -100,6 +112,12 @@ export default class PlayerData extends EventEmitter {
 
   /** Number of federations built (used for ivits) */
   federationCount = 0;
+  /** Lost Fleet Federation tokens claimed from explored spaceship boards */
+  spaceshipFederations: Array<{ tile: SpaceshipFederation; green: boolean }> = [];
+  /** Lost Fleet spaceship exploration slot occupied by this player's shuttle, if any, per ship */
+  explorationShips: {
+    [key in Spaceship]?: number;
+  } = {};
 
   /** Hexes occupied by buildings with value (not gaia formers), refs match the map hexes with a simple equality test */
   occupied: GaiaHex[] = [];
@@ -141,6 +159,8 @@ export default class PlayerData extends EventEmitter {
       destroyedShips: this.destroyedShips,
       deployedShips: this.deployedShips,
       federationCount: this.federationCount,
+      spaceshipFederations: this.spaceshipFederations,
+      explorationShips: this.explorationShips,
       lostPlanet: this.lostPlanet,
       ships: this.ships,
       shipRange: this.shipRange,
@@ -377,6 +397,14 @@ export default class PlayerData extends EventEmitter {
     return this.buildings[Building.PlanetaryInstitute] > 0;
   }
 
+  hasExplored(ship: Spaceship): boolean {
+    return this.explorationShips[ship] !== undefined;
+  }
+
+  exploredShipsCount(): number {
+    return Object.keys(this.explorationShips).length;
+  }
+
   discardablePowerTokens(): number {
     return this.power.area1 + this.power.area2 + this.power.area3 + (this.brainstoneInPlay() ? 1 : 0);
   }
@@ -604,7 +632,7 @@ export default class PlayerData extends EventEmitter {
   }
 
   hasGreenFederation() {
-    return this.tiles.federations.some((fed) => fed.green);
+    return this.tiles.federations.some((fed) => fed.green) || this.spaceshipFederations.some((fed) => fed.green);
   }
 
   gaiaFormingDiscount() {
@@ -662,7 +690,18 @@ export default class PlayerData extends EventEmitter {
 
   removeGreenFederation() {
     // console.log("removing green federation...");
-    this.tiles.federations.some((fed) => {
+    if (
+      this.tiles.federations.some((fed) => {
+        if (fed.green) {
+          fed.green = false;
+          return true;
+        }
+      })
+    ) {
+      return;
+    }
+
+    this.spaceshipFederations.some((fed) => {
       if (fed.green) {
         fed.green = false;
         return true;

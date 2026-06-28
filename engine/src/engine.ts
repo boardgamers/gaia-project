@@ -30,6 +30,7 @@ import SpaceMap, { MapConfiguration } from "./map";
 import { moveAction, moveBurn, movePiSwap, moveSpecial, moveSpend } from "./move/actions";
 import { autoMove } from "./move/auto";
 import { moveBuild, moveLostPlanet } from "./move/buildings";
+import { moveExplore } from "./move/exploration";
 import { moveChooseFederationTile, moveFormFederation } from "./move/federation";
 import { moveBrainStone, moveChargePower, moveDecline } from "./move/leech";
 import {
@@ -51,6 +52,7 @@ import { moveShip } from "./move/ships";
 import Player from "./player";
 import { MoveTokens, powerLogString } from "./player-data";
 import { lastTile } from "./research-tracks";
+import { SeededSpaceshipTech } from "./spaceships";
 import { roundScoringEvents } from "./tiles/scoring";
 import { isVersionOrLater } from "./utils";
 
@@ -235,7 +237,7 @@ export default class Engine {
       [key in Federation]?: number;
     };
     spaceshipTechs: {
-      [key in Spaceship]?: SpaceshipTechTile;
+      [key in Spaceship]?: SeededSpaceshipTech;
     };
     spaceshipFederations: {
       [key in Spaceship]?: SpaceshipFederation;
@@ -885,6 +887,7 @@ export default class Engine {
       [Command.ChooseTechTile]: moveChooseTechTile,
       [Command.ChooseCoverTechTile]: moveChooseCoverTechTile,
       [Command.ChooseRoundBooster]: moveChooseRoundBooster,
+      [Command.Explore]: moveExplore,
       [Command.Pass]: movePass,
       [Command.EndTurn]: moveEndTurn,
       [Command.ChooseIncome]: moveChooseIncome,

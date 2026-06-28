@@ -9,6 +9,9 @@ import {
   Federation,
   ResearchField,
   Resource,
+  Spaceship,
+  SpaceshipFederation,
+  SpaceshipTechTile,
   SubPhase,
   TechTile,
   TechTilePos,
@@ -45,6 +48,22 @@ export type AvailableBoardAction = {
 export type AvailableBoardActionData = {
   poweracts: AvailableBoardAction[];
 };
+export type AvailableExploreAction = {
+  ship: Spaceship;
+  coordinates: string;
+  cost: string;
+  charge: number;
+  slot: number;
+  adjustments?: string[];
+};
+export type AvailableExploreActionData = {
+  ships: AvailableExploreAction[];
+};
+export type AvailableSpaceshipFederationClaim = {
+  ship: Spaceship;
+  federation: SpaceshipFederation;
+};
+export type AvailableFederationChoice = Federation | SpaceshipFederation;
 
 export class Offer {
   constructor(readonly offer: string, readonly cost: string) {}
@@ -81,8 +100,10 @@ type _MoveNameWithData<Command extends string, AvailableCommandData extends Base
 };
 export type PossibleBid = { faction: Faction; bid: number[] };
 export type TechTileWithPos = { tile: TechTile; pos: TechTilePos };
+export type SpaceshipTechTileWithPos = { tile: SpaceshipTechTile; pos: Spaceship };
+export type StandardTechTileChoice = TechTileWithPos | SpaceshipTechTileWithPos;
 export type AdvTechTileWithPos = { tile: AdvTechTile; pos: AdvTechTilePos };
-export type ChooseTechTile = TechTileWithPos | AdvTechTileWithPos;
+export type ChooseTechTile = StandardTechTileChoice | AdvTechTileWithPos;
 export type AvailableBuildCommandData = { buildings: AvailableBuilding[] };
 export type AvailableFederation = { hexes: string; warnings: BuildWarning[] };
 
@@ -105,7 +126,7 @@ interface CommandData {
   [Command.Build]: AvailableBuildCommandData;
   [Command.BurnPower]: number[];
   [Command.ChargePower]: { offers: Offer[] };
-  [Command.ChooseCoverTechTile]: { tiles: TechTileWithPos[] };
+  [Command.ChooseCoverTechTile]: { tiles: StandardTechTileChoice[] };
   [Command.ChooseFaction]: Faction[];
   [Command.ChooseFederationTile]: { tiles: Federation[]; rescore: boolean };
   [Command.ChooseIncome]: string[];
@@ -114,7 +135,12 @@ interface CommandData {
   [Command.DeadEnd]: SubPhase; // for debugging
   [Command.Decline]: { offers: Offer[] };
   [Command.EndTurn]: never;
-  [Command.FormFederation]: { tiles: Federation[]; federations: AvailableFederation[] };
+  [Command.Explore]: AvailableExploreActionData;
+  [Command.FormFederation]: {
+    tiles: AvailableFederationChoice[];
+    federations: AvailableFederation[];
+    claimableFederations?: AvailableSpaceshipFederationClaim[];
+  };
   [Command.Init]: never;
   [Command.Pass]: { boosters: Booster[] };
   [Command.PISwap]: AvailableBuildCommandData;

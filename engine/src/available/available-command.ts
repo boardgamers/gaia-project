@@ -10,6 +10,7 @@ import {
   possibleSpaceLostPlanet,
   possibleSpaceStations,
 } from "./buildings";
+import { possibleExplorations } from "./exploration";
 import { possibleFederations, possibleFederationTiles } from "./federations";
 import { possibleLeech } from "./leech";
 import { possibleCoverTechTiles, possibleResearchAreas, possibleTechTiles } from "./research";
@@ -41,7 +42,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
     case SubPhase.BuildMine:
       return [...possibleMineBuildings(engine, player, false), ...possibleShipMovements(engine, player, true)];
     case SubPhase.BuildMineOrGaiaFormer:
-      return possibleMineBuildings(engine, player, true, data);
+      return [...possibleMineBuildings(engine, player, true, data), ...possibleExplorations(engine, player)];
     case SubPhase.SpaceStation:
       return possibleSpaceStations(engine, player);
     case SubPhase.PISwap:
@@ -55,6 +56,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
     case SubPhase.BeforeMove: {
       return [
         ...possibleBuildings(engine, player),
+        ...possibleExplorations(engine, player),
         ...possibleShipMovements(engine, player, false),
         ...possibleFederations(engine, player),
         ...possibleResearchAreas(engine, player, UPGRADE_RESEARCH_COST),

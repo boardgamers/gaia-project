@@ -343,6 +343,7 @@ export enum Command {
   DeadEnd = "deadEnd", // this command cannot be executed - it just signals that you have to undo
   Decline = "decline",
   EndTurn = "endturn",
+  Explore = "explore",
   FormFederation = "federation",
   Init = "init",
   MoveShip = "move",
