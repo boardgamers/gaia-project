@@ -703,6 +703,7 @@ export enum SubPhase {
   InstantGaiaforming = "instantGaiaforming",
   SpaceshipBuildMine = "spaceshipBuildMine",
   SpaceshipUpgradeBuilding = "spaceshipUpgradeBuilding",
+  FederationTokenBuildMine = "federationTokenBuildMine",
 }
 
 // Lost Fleet Spaceship Boards (4 generic boards, not tied to any faction).

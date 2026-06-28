@@ -1,7 +1,7 @@
 import assert from "assert";
 import { AvailableCommand } from "../available/types";
 import Engine from "../engine";
-import { BoardAction, Command, Expansion, Federation, Player as PlayerEnum, SpaceshipFederation } from "../enums";
+import { BoardAction, Command, Expansion, Federation, Player as PlayerEnum, SpaceshipFederation, SubPhase } from "../enums";
 import { claimableSpaceshipFederations } from "../spaceships";
 import { federationRewards } from "../tiles/federations";
 
@@ -49,5 +49,9 @@ export function moveFormFederation(
     pl.completeFederation(fedInfo.hexes);
     pl.gainSpaceshipFederationToken(claimedShip.federation);
     delete engine.tiles.spaceshipFederations[claimedShip.ship];
+
+    if (claimedShip.federation === SpaceshipFederation.Range || claimedShip.federation === SpaceshipFederation.Terraform) {
+      engine.processNextMove(SubPhase.FederationTokenBuildMine, { federation: claimedShip.federation }, false);
+    }
   }
 }

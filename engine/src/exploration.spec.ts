@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import "mocha";
 import { AvailableCommand } from "./available/types";
+import { qicForDistance, terraformingCost } from "./cost";
 import Engine from "./engine";
 import { spaceshipHex } from "./exploration";
 import {
@@ -10,6 +11,7 @@ import {
   Faction,
   Federation,
   Phase,
+  Planet,
   Player as PlayerEnum,
   PowerArea,
   ResearchField,
@@ -23,6 +25,7 @@ import { GaiaHex } from "./gaia-hex";
 import { moveExplore } from "./move/exploration";
 import { moveFormFederation } from "./move/federation";
 import { moveChooseCoverTechTile, moveChooseTechTile } from "./move/research";
+import { terraformingStepsRequired } from "./planets";
 import { Power } from "./player-data";
 import Reward from "./reward";
 
@@ -112,6 +115,38 @@ function occupyConnectedPlanets(engine: Engine, player: PlayerEnum, count: numbe
   pl.data.buildings[Building.Mine] = pl.data.occupied.length;
 
   return cluster;
+}
+
+/** Cheapest unoccupied, non-Transdim/Asteroid/Gaia hex that needs both QIC range extension and terraforming ore. */
+function cheapestHexNeedingRangeAndTerraforming(
+  engine: Engine,
+  player: PlayerEnum,
+  faction: Faction
+): { hex: GaiaHex; qic: number; steps: number } | undefined {
+  const pl = engine.player(player);
+  let best: { hex: GaiaHex; qic: number; steps: number } | undefined;
+
+  for (const hex of engine.map.grid.values()) {
+    if (!hex.hasPlanet() || hex.occupied()) {
+      continue;
+    }
+    if (hex.data.planet === Planet.Transdim || hex.data.planet === Planet.Asteroid || hex.data.planet === Planet.Gaia) {
+      continue;
+    }
+    const steps = terraformingStepsRequired(faction, hex.data.planet);
+    if (steps < 1) {
+      continue;
+    }
+    const qic = qicForDistance(engine.map, hex, pl, engine.replay)?.amount ?? 0;
+    if (qic < 1) {
+      continue;
+    }
+    if (!best || qic < best.qic) {
+      best = { hex, qic, steps };
+    }
+  }
+
+  return best;
 }
 
 describe("Lost Fleet exploration", () => {
@@ -373,5 +408,75 @@ describe("Lost Fleet exploration", () => {
     moveFormFederation(engine, command, PlayerEnum.Player1, command.data.federations[0].hexes, SpaceshipFederation.Credit);
 
     expect(player.data.spaceshipFederations.map((fed) => fed.tile)).to.deep.equal([SpaceshipFederation.Credit]);
+  });
+
+  it("should claim a Range Federation token and chain into a free Build a Mine action with unlimited range", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+
+    const federationCluster = occupyConnectedPlanets(engine, PlayerEnum.Player1, 6);
+    federationCluster[0].data.building = Building.ResearchLab;
+    player.data.buildings[Building.Mine] = federationCluster.length - 1;
+    player.data.buildings[Building.ResearchLab] = 1;
+    player.data.explorationShips[Spaceship.Eclipse] = 1;
+    engine.tiles.spaceshipFederations[Spaceship.Eclipse] = SpaceshipFederation.Range;
+
+    const target = cheapestHexNeedingRangeAndTerraforming(engine, PlayerEnum.Player1, Faction.Terrans);
+    expect(target, "need a hex needing both QIC range extension and terraforming").to.not.equal(undefined);
+
+    const beforeOre = player.data.ores;
+    const beforeQic = player.data.qics;
+    const beforeCredits = player.data.credits;
+    const expectedOre = terraformingCost(player.data, target.steps, engine.replay).count;
+
+    engine.clearAvailableCommands();
+    const command = engine.findAvailableCommand(PlayerEnum.Player1, Command.FormFederation);
+
+    engine.turnMoves = [`build m ${target.hex.toString()}`];
+    moveFormFederation(engine, command, PlayerEnum.Player1, command.data.federations[0].hexes, SpaceshipFederation.Range);
+
+    expect(engine.tiles.spaceshipFederations[Spaceship.Eclipse]).to.equal(undefined);
+    expect(player.data.spaceshipFederations.map((fed) => fed.tile)).to.deep.equal([SpaceshipFederation.Range]);
+    expect(target.hex.data.building).to.equal(Building.Mine);
+    expect(target.hex.data.player).to.equal(PlayerEnum.Player1);
+    expect(player.data.qics, "Range waives range QIC entirely").to.equal(beforeQic);
+    expect(player.data.credits, "the board build cost should be waived").to.equal(beforeCredits);
+    expect(player.data.ores, "Range still charges the full, undiscounted terraforming ore").to.equal(beforeOre - expectedOre);
+  });
+
+  it("should claim a Terraform Federation token and chain into a free Build a Mine action with discounted terraforming", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+
+    const federationCluster = occupyConnectedPlanets(engine, PlayerEnum.Player1, 6);
+    federationCluster[0].data.building = Building.ResearchLab;
+    player.data.buildings[Building.Mine] = federationCluster.length - 1;
+    player.data.buildings[Building.ResearchLab] = 1;
+    player.data.explorationShips[Spaceship.TFMars] = 1;
+    engine.tiles.spaceshipFederations[Spaceship.TFMars] = SpaceshipFederation.Terraform;
+
+    const target = cheapestHexNeedingRangeAndTerraforming(engine, PlayerEnum.Player1, Faction.Terrans);
+    expect(target, "need a hex needing both QIC range extension and terraforming").to.not.equal(undefined);
+
+    const beforeOre = player.data.ores;
+    const beforeQic = player.data.qics;
+    const beforeCredits = player.data.credits;
+
+    engine.clearAvailableCommands();
+    const command = engine.findAvailableCommand(PlayerEnum.Player1, Command.FormFederation);
+
+    engine.turnMoves = [`build m ${target.hex.toString()}`];
+    moveFormFederation(engine, command, PlayerEnum.Player1, command.data.federations[0].hexes, SpaceshipFederation.Terraform);
+
+    expect(engine.tiles.spaceshipFederations[Spaceship.TFMars]).to.equal(undefined);
+    expect(player.data.spaceshipFederations.map((fed) => fed.tile)).to.deep.equal([SpaceshipFederation.Terraform]);
+    expect(target.hex.data.building).to.equal(Building.Mine);
+    expect(target.hex.data.player).to.equal(PlayerEnum.Player1);
+    expect(player.data.credits, "the board build cost should be waived").to.equal(beforeCredits);
+    expect(player.data.qics, "Terraform still charges range QIC normally").to.equal(beforeQic - target.qic);
+    expect(
+      player.data.ores,
+      "terraformingStepsRequired never exceeds 3, so Terraform's 3-step discount waives ore entirely"
+    ).to.equal(beforeOre);
   });
 });
