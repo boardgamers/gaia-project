@@ -212,7 +212,7 @@ describe("Lost Fleet exploration", () => {
     const player = engine.player(PlayerEnum.Player1);
 
     player.data.explorationShips[Spaceship.TFMars] = 1;
-    engine.tiles.spaceshipTechs[Spaceship.TFMars] = SpaceshipTechTile.Resource;
+    engine.tiles.spaceshipTechs[Spaceship.TFMars] = { tile: SpaceshipTechTile.Resource, count: 1 };
 
     engine.generateAvailableCommands(SubPhase.ChooseTechTile);
     const command = engine.findAvailableCommand(PlayerEnum.Player1, Command.ChooseTechTile);

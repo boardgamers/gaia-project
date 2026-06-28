@@ -19,10 +19,11 @@ describe("Lost Fleet spaceship setup", () => {
 
       expect(Object.keys(engine.tiles.spaceshipTechs)).to.have.length(ships.length);
       for (const ship of ships) {
-        expect(engine.tiles.spaceshipTechs[ship]).to.be.oneOf(SpaceshipTechTile.values(engine.expansions));
+        expect(engine.tiles.spaceshipTechs[ship].tile).to.be.oneOf(SpaceshipTechTile.values(engine.expansions));
+        expect(engine.tiles.spaceshipTechs[ship].count).to.equal(nbPlayers);
       }
       // every assigned tile is distinct
-      const assigned = ships.map((ship) => engine.tiles.spaceshipTechs[ship]);
+      const assigned = ships.map((ship) => engine.tiles.spaceshipTechs[ship].tile);
       expect(new Set(assigned).size).to.equal(assigned.length);
     });
 
