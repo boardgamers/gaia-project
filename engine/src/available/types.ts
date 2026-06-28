@@ -20,6 +20,7 @@ import { BuildWarning } from "../player";
 import { BrainstoneDest } from "../player-data";
 import Reward from "../reward";
 import { AvailableSetupOption } from "../setup";
+import { SpaceshipActionType } from "../spaceships";
 
 export const ISOLATED_DISTANCE = 3;
 export const UPGRADE_RESEARCH_COST = new Reward(4, Resource.Knowledge);
@@ -64,6 +65,14 @@ export type AvailableSpaceshipFederationClaim = {
   federation: SpaceshipFederation;
 };
 export type AvailableFederationChoice = Federation | SpaceshipFederation;
+export type AvailableSpaceshipBoardAction = {
+  ship: Spaceship;
+  type: SpaceshipActionType;
+  cost: string;
+};
+export type AvailableSpaceshipBoardActionData = {
+  actions: AvailableSpaceshipBoardAction[];
+};
 
 export class Offer {
   constructor(readonly offer: string, readonly cost: string) {}
@@ -150,6 +159,7 @@ interface CommandData {
   [Command.Setup]: AvailableSetupOption;
   [Command.Special]: { specialacts: { income: string; spec: string }[] };
   [Command.Spend]: AvailableFreeActionData;
+  [Command.SpaceshipAction]: AvailableSpaceshipBoardActionData;
   [Command.UpgradeResearch]: AvailableResearchData;
 }
 

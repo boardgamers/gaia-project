@@ -17,6 +17,7 @@ import { possibleCoverTechTiles, possibleResearchAreas, possibleTechTiles } from
 import { possibleIncomes, possibleRoundBoosters } from "./round";
 import { chooseFactionOrBid, possibleBids } from "./setup";
 import { possibleShipMovements } from "./ships";
+import { possibleSpaceshipActions } from "./spaceship-actions";
 import { AvailableCommand, UPGRADE_RESEARCH_COST } from "./types";
 
 export function generate(engine: Engine, subPhase: SubPhase = null, data?: any): AvailableCommand[] {
@@ -64,6 +65,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
         ...possibleSpecialActions(engine, player),
         ...possibleFreeActions(engine.player(player)),
         ...possibleRoundBoosters(engine, player),
+        ...possibleSpaceshipActions(engine, player),
       ];
     }
     case SubPhase.AfterMove:

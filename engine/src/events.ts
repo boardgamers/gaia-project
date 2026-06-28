@@ -9,6 +9,7 @@ import {
   Phase,
   ResearchField,
   RoundScoring,
+  Spaceship,
   TechPos,
 } from "./enums";
 import Reward from "./reward";
@@ -70,6 +71,7 @@ export type EventSource =
   | RoundScoring
   | ResearchField
   | BoardAction
+  | Spaceship
   | Command.ChooseIncome
   | Phase.BeginGame
   | Phase.RoundGaia

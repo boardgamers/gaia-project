@@ -58,15 +58,18 @@ Each new faction needs (see RULES_CLARIFICATIONS for values):
 
 | Spaceship | Special note | Status |
 |---|---|---|
-| Twilight (Nautilaks) | Holds Artifacts; "Examine Artifact" action | ◐ Board data + setup ● DONE (`spaceships.ts`, `setup.ts`); core Explore action/state ● DONE; federation-claim ownership hook ● DONE; Artifact-token seeding + Examine Artifact action ☐ TODO |
-| Rebellion (Vo'Kron) | NOT used in 2-player games | ◐ Board data + setup ● DONE (`spaceships.ts`, `setup.ts`); core Explore action/state ● DONE; federation-claim ownership hook ● DONE; Standard-Tech claim hook ● DONE; live board actions ☐ TODO |
-| T F Mars (Gaia Federation) | Moweyds start with a shuttle here | ◐ Board data + setup ● DONE; core Explore action/state ● DONE; federation-claim ownership hook ● DONE; Standard-Tech claim hook ● DONE; live board actions ☐ TODO |
-| Eclipse (Eridani Empire) | — | ◐ Board data + setup ● DONE; core Explore action/state ● DONE; federation-claim ownership hook ● DONE; Standard-Tech claim hook ● DONE; live board actions ☐ TODO |
+| Twilight (Nautilaks) | Holds Artifacts; "Examine Artifact" action | ◐ Board data + setup ● DONE (`spaceships.ts`, `setup.ts`); core Explore action/state ● DONE; federation-claim ownership hook ● DONE; QIC action (re-score owned Federation token) ● DONE; Artifact-token seeding + Examine Artifact action ☐ TODO |
+| Rebellion (Vo'Kron) | NOT used in 2-player games | ◐ Board data + setup ● DONE (`spaceships.ts`, `setup.ts`); core Explore action/state ● DONE; federation-claim ownership hook ● DONE; Standard-Tech claim hook ● DONE; QIC action (claim Tech tile) ● DONE; Knowledge action (2k → 2c+1q) ● DONE; remaining live board actions ☐ TODO |
+| T F Mars (Gaia Federation) | Moweyds start with a shuttle here | ◐ Board data + setup ● DONE; core Explore action/state ● DONE; federation-claim ownership hook ● DONE; Standard-Tech claim hook ● DONE; QIC action (VP scaled by owned Tech tiles) ● DONE; Power action + Instant-Gaiaforming ☐ TODO |
+| Eclipse (Eridani Empire) | — | ◐ Board data + setup ● DONE; core Explore action/state ● DONE; federation-claim ownership hook ● DONE; Standard-Tech claim hook ● DONE; QIC action (VP scaled by colonized planet types) ● DONE; Power action (3pw,2k → free research upgrade) ● DONE; remaining live board actions ☐ TODO |
 
 Each spaceship needs:
 - Every action space on the board: type (Q.I.C. / Power / Knowledge / Credit), cost, effect, position
-  — ● DONE, see `engine/src/spaceships.ts` (`spaceshipBoards`); execution of these actions during
-  play is a separate, not-yet-started chunk.
+  — ● DONE, see `engine/src/spaceships.ts` (`spaceshipBoards`). Live availability/execution wiring
+  (`available/spaceship-actions.ts`, `move/spaceship-actions.ts`, `engine.spaceshipActions` per-round
+  lock) is ● DONE for 6 of 12 actions (Twilight QIC, Rebellion QIC + Knowledge, T F Mars QIC, Eclipse
+  QIC + Power); the remaining 6 (build-bypass actions, T F Mars Power/Instant-Gaiaforming, Federation
+  gold-side execution) are ☐ TODO.
 - Number of standard-tech slots — ● DONE: 0 (Twilight, has no Standard Tech slot at all), 1 each for
   Rebellion/T F Mars/Eclipse. Confirmed via owner board photos, see RULES_CLARIFICATIONS.md §C1/§C4.
 - Which new federation token + standard tech is seeded onto it at setup — ● DONE, random

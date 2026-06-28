@@ -163,6 +163,7 @@ export enum Condition {
   // count only
   Gaia = "g",
   PlanetType = "pt",
+  TechTile = "tt",
   Sector = "s",
   Structure = "st",
   StructureFed = "stfed",
@@ -354,6 +355,7 @@ export enum Command {
   Special = "special",
   Setup = "set",
   Spend = "spend",
+  SpaceshipAction = "spaceshipAction",
   UpgradeResearch = "up",
 }
 

@@ -394,6 +394,34 @@ notifications).
     prove availability from explored ships, removal from the ship on claim, the extra research
     advance, and later coverability by an Advanced Tech tile.
     Full engine suite passes at **372/372**.
+21. ✅ **Spaceship Boards live-gameplay wiring, first slice — CODED & TESTED** (done 2026-06-28).
+    Explored ships now expose their board actions through the normal turn-action flow instead of
+    only owning static cost/effect text. New `engine.spaceshipActions` field tracks a per-round,
+    per-ship-action lock (`{[ship]?: {[actionType]?: PlayerEnum}}`), reset alongside the base game's
+    own board-action reset in `move/phase.ts`'s `cleanUpPhase()` — once any player takes a given
+    ship's action, it's locked for everyone until the next round. `available/spaceship-actions.ts`
+    surfaces only affordable, unlocked actions on explored ships during `SubPhase.BeforeMove`; the
+    existing `Command.SpaceshipAction` move handler in `move/spaceship-actions.ts` pays the cost and
+    loads the action's effect as a normal `Event`, reusing — not duplicating — base-game reward
+    machinery: Rebellion's QIC action chains into the same `Resource.TechTile` listener the base
+    game's QIC1 board action uses (`SubPhase.ChooseTechTile`), and Twilight's QIC action chains into
+    the same `Resource.RescoreFederation` listener the base game's QIC2 board action uses
+    (`SubPhase.RescoreFederationTile`) — both pre-existing engine mechanisms, reused unmodified.
+    This slice wires exactly 6 of the 12 total ship actions, the set the user confirmed as in scope:
+    Twilight QIC (3q → re-score an owned Federation token), Rebellion QIC (3q → claim a Tech tile,
+    same as the base game's QIC1 action) and Knowledge (2k → 2c + 1q), T F Mars QIC (2q → 2vp + 1vp
+    per owned Tech tile), and Eclipse QIC (2q → 2vp + 1vp per distinct colonized planet type) and
+    Power (3pw,2k → a free research-track upgrade of choice). Deliberately deferred to a later chunk
+    (still ☐ TODO, see "Next actions" below): every build-bypass ship action, T F Mars's Power action
+    (Instant-Gaiaforming), Examine Artifact + Twilight's Artifact-token seeding, and the gold-side
+    execution for claimed ship Federation tokens.
+    New `move/spaceship-actions.spec.ts` proves: no action offered before a ship is explored, no
+    action offered if unaffordable, an affordable action is offered/locks for every player once
+    taken/survives serialization, and each of the 6 actions' full cost-payment + effect for both
+    immediate-reward and chained-subphase effects (Twilight's federation re-score, Rebellion's
+    tech-claim + chained research upgrade, Eclipse's chained research upgrade). **372/372 → 387/387**
+    (+9 tests). No base-game behavior changed — `Resource.RescoreFederation` and the tech-claim
+    listener are pre-existing base-game mechanisms, only reused, not modified.
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -563,24 +591,28 @@ resolved for the 2 factions that exist; the tile-gating convention (flag 5) is n
 exact shape for adv-tech/federation/booster/scoring enum members when those chunks come up.
 
 ## Next actions
-Chunks 1-7b plus Darkanians' PI follow-up, the core Explore action, the federation-claim hook, and the Standard-Tech claim hook are complete and verified — **372/372 engine tests pass** (274 baseline → 280 after Chunk 2
+Chunks 1-7b plus Darkanians' PI follow-up, the core Explore action, the federation-claim hook, the
+Standard-Tech claim hook, and the first slice of Spaceship Boards live-gameplay wiring are complete
+and verified — **387/387 engine tests pass** (274 baseline → 280 after Chunk 2
 → 299 after Chunk 3 → 321 after Chunk 4 → 337 after Chunk 5 → 345 after Chunk 6 → 352 after Chunk 7a →
 353 after the German-rules reroll fix → 354 after Chunk 7b's placement-metadata step → 361 after Chunk
 7b's `SpaceMap`/`moveInit` wiring + integration tests → 362 after Darkanians' PI integration test → 366
 after the Explore-action slice → 370 after the federation-claim slice → 372 after the Standard-Tech
-claim slice, see "Done so far" #16-#20).
+claim slice → 387 after the Spaceship Boards live-gameplay wiring slice, see "Done so far" #16-#21).
 Darkanians and Space Giants are fully playable factions for every mechanic that doesn't depend on an
 unbuilt subsystem; the 4 Spaceship Boards' static config and setup-time tile/token seeding are coded
-and tested; the **core Explore action** is live in the engine; and explored ships can now redeem their
-seeded Federation token through federation formation and their seeded Standard Tech tile through the
-normal tech-pick flow (see #18-#20). The Lost Fleet variable-map
+and tested; the **core Explore action** is live in the engine; explored ships can redeem their seeded
+Federation token through federation formation and their seeded Standard Tech tile through the normal
+tech-pick flow; and 6 of the 12 ship board-actions (Twilight QIC, Rebellion QIC + Knowledge, T F Mars
+QIC, Eclipse QIC + Power) are now live through a new `Command.SpaceshipAction`, with a per-round
+per-action lock (see #18-#21). The Lost Fleet variable-map
 geometry, tile data, full board assembly, `GaiaHex` addressing fix, AND the
 `SpaceMap`/`moveInit` wiring are all coded and tested (see #13-#16) — `new Engine([...], { lostFleet: true })`
 now produces a real, playable Lost Fleet board through the normal engine entry points. Explicitly still
 open, in priority order the user should pick from:
-1. **Remaining Spaceship Boards live-gameplay wiring**: the 12 ship board-actions'
-   availability/execution, Examine Artifact + Twilight's Artifact-token seeding, and the remaining
-   gold-side execution for claimed ship Federation tokens / later ship-seeded actions.
+1. **Remaining Spaceship Boards live-gameplay wiring**: every build-bypass ship action, T F Mars's
+   Power action (Instant-Gaiaforming), Examine Artifact + Twilight's Artifact-token seeding, and the
+   gold-side execution for claimed ship Federation tokens.
 2. **Space Giants' Exploration-board special action** (deferred; core Explore plumbing now exists, but
    the faction-specific action hook still doesn't).
 3. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.

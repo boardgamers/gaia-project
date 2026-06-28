@@ -49,10 +49,11 @@ import { moveChooseCoverTechTile, moveChooseTechTile, moveResearch } from "./mov
 import { moveChooseIncome, moveChooseRoundBooster, moveEndTurn, movePass } from "./move/round";
 import { moveBid, moveChooseFaction, moveRotateSectors, moveSetup } from "./move/setup";
 import { moveShip } from "./move/ships";
+import { moveSpaceshipAction } from "./move/spaceship-actions";
 import Player from "./player";
 import { MoveTokens, powerLogString } from "./player-data";
 import { lastTile } from "./research-tracks";
-import { SeededSpaceshipTech } from "./spaceships";
+import { SeededSpaceshipTech, SpaceshipActionType } from "./spaceships";
 import { roundScoringEvents } from "./tiles/scoring";
 import { isVersionOrLater } from "./utils";
 
@@ -214,6 +215,10 @@ export type BoardActions = {
   [key in BoardAction]?: PlayerEnum;
 };
 
+export type SpaceshipActions = {
+  [key in Spaceship]?: { [key in SpaceshipActionType]?: PlayerEnum };
+};
+
 export default class Engine {
   map: SpaceMap;
   players: Player[] = [];
@@ -251,6 +256,7 @@ export default class Engine {
     spaceshipFederations: {},
   };
   boardActions: BoardActions = {};
+  spaceshipActions: SpaceshipActions = {};
 
   terraformingFederation: Federation;
   availableCommands: AvailableCommand[] = [];
@@ -472,7 +478,11 @@ export default class Engine {
     this.players.push(player);
 
     player.data.on(`gain-${Resource.TechTile}`, (count, source) =>
-      this.processNextMove(SubPhase.ChooseTechTile, null, source === BoardAction.Qic1)
+      this.processNextMove(
+        SubPhase.ChooseTechTile,
+        null,
+        source === BoardAction.Qic1 || source === Spaceship.Rebellion
+      )
     );
     player.data.on(`gain-${Resource.TemporaryStep}`, () => this.processNextMove(SubPhase.BuildMine, null, true));
     player.data.on(`gain-${Resource.TemporaryRange}`, (count: number) => {
@@ -888,6 +898,7 @@ export default class Engine {
       [Command.ChooseCoverTechTile]: moveChooseCoverTechTile,
       [Command.ChooseRoundBooster]: moveChooseRoundBooster,
       [Command.Explore]: moveExplore,
+      [Command.SpaceshipAction]: moveSpaceshipAction,
       [Command.Pass]: movePass,
       [Command.EndTurn]: moveEndTurn,
       [Command.ChooseIncome]: moveChooseIncome,

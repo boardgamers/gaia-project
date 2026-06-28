@@ -364,6 +364,8 @@ function cleanUpPhase(engine: Engine) {
   BoardAction.values(engine.expansions).forEach((pos: BoardAction) => {
     engine.boardActions[pos] = null;
   });
+  // resets spaceship board actions
+  engine.spaceshipActions = {};
 
   if (engine.isLastRound) {
     finalScoringPhase(engine);
