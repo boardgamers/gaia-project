@@ -19,9 +19,9 @@ export interface SpaceshipBoardSpec {
  * Reward.parse/Event.parse-compatible income strings for ship board actions whose effect maps
  * directly onto existing engine grammar. An empty array marks an action as wired but executed with
  * bespoke logic in move/spaceship-actions.ts rather than through this declarative table (e.g. Eclipse's
- * Power action triggers the UpgradeResearch subphase directly). Actions absent from this table
- * (TF Mars's Power action, and every ship's Credit/Power "bypass normal build" actions) are not yet
- * wired and stay unavailable in possibleSpaceshipActions.
+ * Power action triggers the UpgradeResearch subphase directly, and TF Mars's Power action triggers the
+ * InstantGaiaforming subphase directly). Actions absent from this table (every ship's Credit/Power
+ * "bypass normal build" actions) are not yet wired and stay unavailable in possibleSpaceshipActions.
  */
 export const spaceshipActionEffects: { [key in Spaceship]?: Partial<{ [key in SpaceshipActionType]: string[] }> } = {
   [Spaceship.Twilight]: {
@@ -33,6 +33,7 @@ export const spaceshipActionEffects: { [key in Spaceship]?: Partial<{ [key in Sp
   },
   [Spaceship.TFMars]: {
     qic: ["2vp", "tt > vp"],
+    power: [],
   },
   [Spaceship.Eclipse]: {
     qic: ["2vp", "pt > vp"],

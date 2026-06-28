@@ -1,7 +1,8 @@
 import assert from "assert";
+import { isEqual } from "lodash";
 import { AvailableCommand } from "../available/types";
 import Engine from "../engine";
-import { Command, Player as PlayerEnum, Spaceship, SubPhase } from "../enums";
+import { Command, Planet, Player as PlayerEnum, Spaceship, SubPhase } from "../enums";
 import Event from "../events";
 import Reward from "../reward";
 import { SpaceshipActionType, spaceshipActionEffects } from "../spaceships";
@@ -27,5 +28,26 @@ export function moveSpaceshipAction(
     return;
   }
 
+  if (ship === Spaceship.TFMars && type === "power") {
+    engine.processNextMove(SubPhase.InstantGaiaforming, null, false);
+    return;
+  }
+
   pl.loadEvents(Event.parse(spaceshipActionEffects[ship][type], ship));
+}
+
+export function moveGaiaFormTransdim(
+  engine: Engine,
+  command: AvailableCommand<Command.GaiaFormTransdim>,
+  player: PlayerEnum,
+  location: string
+) {
+  const { spaces } = command.data;
+  const parsed = engine.map.parse(location);
+  const space = spaces.find((space) => isEqual(engine.map.parse(space.coordinates), parsed));
+
+  assert(space, `Impossible to instant-gaiaform at ${location}`);
+
+  engine.player(player).payCosts(Reward.parse(space.cost), Command.GaiaFormTransdim);
+  engine.map.getS(location).data.planet = Planet.Gaia;
 }

@@ -49,7 +49,7 @@ import { moveChooseCoverTechTile, moveChooseTechTile, moveResearch } from "./mov
 import { moveChooseIncome, moveChooseRoundBooster, moveEndTurn, movePass } from "./move/round";
 import { moveBid, moveChooseFaction, moveRotateSectors, moveSetup } from "./move/setup";
 import { moveShip } from "./move/ships";
-import { moveSpaceshipAction } from "./move/spaceship-actions";
+import { moveGaiaFormTransdim, moveSpaceshipAction } from "./move/spaceship-actions";
 import Player from "./player";
 import { MoveTokens, powerLogString } from "./player-data";
 import { lastTile } from "./research-tracks";
@@ -899,6 +899,7 @@ export default class Engine {
       [Command.ChooseRoundBooster]: moveChooseRoundBooster,
       [Command.Explore]: moveExplore,
       [Command.SpaceshipAction]: moveSpaceshipAction,
+      [Command.GaiaFormTransdim]: moveGaiaFormTransdim,
       [Command.Pass]: movePass,
       [Command.EndTurn]: moveEndTurn,
       [Command.ChooseIncome]: moveChooseIncome,

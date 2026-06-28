@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import "mocha";
 import { AvailableCommand } from "../available/types";
+import { qicForDistance } from "../cost";
 import Engine from "../engine";
 import {
   Building,
@@ -80,6 +81,23 @@ function occupyPlanetsOfDistinctTypes(engine: Engine, player: PlayerEnum, count:
   return hexes;
 }
 
+function cheapestTransdimHex(engine: Engine, player: PlayerEnum): { hex: GaiaHex; qicNeeded: number } | undefined {
+  const pl = engine.player(player);
+  let best: { hex: GaiaHex; qicNeeded: number } | undefined;
+
+  for (const hex of engine.map.grid.values()) {
+    if (hex.data.planet !== Planet.Transdim || hex.data.building) {
+      continue;
+    }
+    const qicNeeded = qicForDistance(engine.map, hex, pl, engine.replay).amount;
+    if (!best || qicNeeded < best.qicNeeded) {
+      best = { hex, qicNeeded };
+    }
+  }
+
+  return best;
+}
+
 describe("Lost Fleet spaceship board actions", () => {
   it("should not offer a ship's actions until it has been explored", () => {
     const engine = createLostFleetRoundMoveEngine(3);
@@ -92,6 +110,7 @@ describe("Lost Fleet spaceship board actions", () => {
     const player = engine.player(PlayerEnum.Player1);
     player.data.explorationShips[Spaceship.TFMars] = 1;
     player.data.qics = 1; // T F Mars' QIC action costs 2q
+    player.data.power = new Power(0, 0, 0, 0); // T F Mars' Power action costs 2pw
 
     expect(availableSpaceshipActionCommand(engine, PlayerEnum.Player1)).to.equal(undefined);
   });
@@ -241,5 +260,30 @@ describe("Lost Fleet spaceship board actions", () => {
 
     expect(player.data.knowledge).to.equal(beforeKnowledge - 2);
     expect(player.data.research[ResearchField.Navigation]).to.equal(beforeNav + 1);
+  });
+
+  it("should pay 2 Power, plus any range QIC cost, and convert a Transdim planet into Gaia via T F Mars's Power action", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    player.data.explorationShips[Spaceship.TFMars] = 1;
+    occupyPlanetsOfDistinctTypes(engine, PlayerEnum.Player1, 1);
+
+    const target = cheapestTransdimHex(engine, PlayerEnum.Player1);
+    expect(target, "need a Transdim planet on the board").to.not.equal(undefined);
+
+    const command = availableSpaceshipActionCommand(engine, PlayerEnum.Player1);
+    const action = command.data.actions.find((a) => a.ship === Spaceship.TFMars && a.type === "power");
+    expect(action.cost).to.equal("2pw");
+
+    const beforePower = player.data.power.area3;
+    const beforeQic = player.data.qics;
+
+    engine.turnMoves = [`gaiaFormTransdim ${target.hex.toString()}`];
+    moveSpaceshipAction(engine, command, PlayerEnum.Player1, Spaceship.TFMars, "power");
+
+    expect(player.data.power.area3).to.equal(beforePower - 2);
+    expect(player.data.qics).to.equal(beforeQic - target.qicNeeded);
+    expect(target.hex.data.planet).to.equal(Planet.Gaia);
+    expect(target.hex.data.building).to.equal(undefined);
   });
 });

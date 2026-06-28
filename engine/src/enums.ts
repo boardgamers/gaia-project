@@ -346,6 +346,7 @@ export enum Command {
   EndTurn = "endturn",
   Explore = "explore",
   FormFederation = "federation",
+  GaiaFormTransdim = "gaiaFormTransdim",
   Init = "init",
   MoveShip = "move",
   PISwap = "swap-PI",
@@ -699,6 +700,7 @@ export enum SubPhase {
   SpaceStation = "spaceStation",
   PISwap = "swap-PI",
   DowngradeLab = "down-lab",
+  InstantGaiaforming = "instantGaiaforming",
 }
 
 // Lost Fleet Spaceship Boards (4 generic boards, not tied to any faction).

@@ -17,7 +17,7 @@ import { possibleCoverTechTiles, possibleResearchAreas, possibleTechTiles } from
 import { possibleIncomes, possibleRoundBoosters } from "./round";
 import { chooseFactionOrBid, possibleBids } from "./setup";
 import { possibleShipMovements } from "./ships";
-import { possibleSpaceshipActions } from "./spaceship-actions";
+import { possibleInstantGaiaforming, possibleSpaceshipActions } from "./spaceship-actions";
 import { AvailableCommand, UPGRADE_RESEARCH_COST } from "./types";
 
 export function generate(engine: Engine, subPhase: SubPhase = null, data?: any): AvailableCommand[] {
@@ -36,6 +36,8 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
       return possibleResearchAreas(engine, player, null, data);
     case SubPhase.PlaceLostPlanet:
       return possibleSpaceLostPlanet(engine, player);
+    case SubPhase.InstantGaiaforming:
+      return possibleInstantGaiaforming(engine, player);
     case SubPhase.ChooseFederationTile:
       return possibleFederationTiles(engine, player, "pool");
     case SubPhase.RescoreFederationTile:

@@ -150,6 +150,7 @@ interface CommandData {
     federations: AvailableFederation[];
     claimableFederations?: AvailableSpaceshipFederationClaim[];
   };
+  [Command.GaiaFormTransdim]: { spaces: AvailableHex[] };
   [Command.Init]: never;
   [Command.Pass]: { boosters: Booster[] };
   [Command.PISwap]: AvailableBuildCommandData;
