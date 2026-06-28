@@ -20,7 +20,7 @@ import {
   TechTilePos,
 } from "./enums";
 import SpaceMap, { MapTile } from "./map";
-import { spaceshipBoards, shipsInPlay } from "./spaceships";
+import { SeededSpaceshipTech, spaceshipBoards, shipsInPlay } from "./spaceships";
 
 export enum SetupType {
   Booster = "booster",
@@ -124,6 +124,40 @@ function shipAssignmentFactory<T>(
     },
     applyOption: (option, position) => {
       target[position as Spaceship] = option as T;
+    },
+  };
+}
+
+function spaceshipTechAssignmentFactory(
+  positions: Spaceship[],
+  pool: SpaceshipTechTile[],
+  target: { [key in Spaceship]?: SeededSpaceshipTech },
+  count: number
+): SetupFactory {
+  return {
+    type: SetupType.SpaceshipTechTile,
+    init: () => {
+      for (const pos of positions) {
+        delete target[pos];
+      }
+    },
+    nextAvailable: () => {
+      const used = positions.map((pos) => target[pos]?.tile).filter((t) => t !== undefined);
+      for (const pos of positions) {
+        if (target[pos] === undefined) {
+          return {
+            position: pos,
+            options: pool.filter((o) => !used.includes(o)),
+          };
+        }
+      }
+      return null;
+    },
+    applyOption: (option, position) => {
+      target[position as Spaceship] = {
+        tile: option as SpaceshipTechTile,
+        count,
+      };
     },
   };
 }
@@ -240,11 +274,11 @@ const getFactories = (engine: Engine, nbPlayers = engine.players.length): SetupF
     engine.tiles.scorings.final,
     2
   ),
-  shipAssignmentFactory(
-    SetupType.SpaceshipTechTile,
+  spaceshipTechAssignmentFactory(
     shipsInPlay(engine.expansions, nbPlayers).filter((ship) => spaceshipBoards[ship].hasStandardTechSlot),
     SpaceshipTechTile.values(engine.expansions),
-    engine.tiles.spaceshipTechs
+    engine.tiles.spaceshipTechs,
+    nbPlayers
   ),
   shipAssignmentFactory(
     SetupType.SpaceshipFederation,

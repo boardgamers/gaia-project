@@ -1,4 +1,4 @@
-import { Expansion, Spaceship } from "./enums";
+import { Expansion, Spaceship, SpaceshipFederation, SpaceshipTechTile } from "./enums";
 
 export type SpaceshipActionType = "qic" | "power" | "knowledge" | "credit";
 
@@ -13,6 +13,22 @@ export interface SpaceshipAction {
 export interface SpaceshipBoardSpec {
   actions: [SpaceshipAction, SpaceshipAction, SpaceshipAction];
   hasStandardTechSlot: boolean;
+}
+
+export interface ClaimableSpaceshipFederation {
+  ship: Spaceship;
+  federation: SpaceshipFederation;
+}
+
+export interface ClaimableSpaceshipTech {
+  ship: Spaceship;
+  tile: SpaceshipTechTile;
+}
+
+export interface SeededSpaceshipTech {
+  tile: SpaceshipTechTile;
+  /** Remaining claimable copies on this ship; equal to player count at setup. */
+  count: number;
 }
 
 export const spaceshipBoards: { [key in Spaceship]: SpaceshipBoardSpec } = {
@@ -59,7 +75,7 @@ export const spaceshipBoards: { [key in Spaceship]: SpaceshipBoardSpec } = {
 };
 
 /** Charge cost (power) for landing on exploration-track spaces 1-4 of any spaceship. Same track on every ship. */
-export const EXPLORATION_CHARGE_TRACK: readonly number[] = [0, 2, 2, 4];
+export const EXPLORATION_CHARGE_TRACK: readonly number[] = [0, 2, 2, 3];
 
 /** Artifact slots only exist on Twilight, one per player. */
 export function artifactSlotCount(ship: Spaceship, nbPlayers: number): number {
@@ -69,4 +85,28 @@ export function artifactSlotCount(ship: Spaceship, nbPlayers: number): number {
 /** Rebellion is removed from the game entirely in 2-player games. */
 export function shipsInPlay(expansions: Expansion, nbPlayers: number): Spaceship[] {
   return Spaceship.values(expansions).filter((ship) => nbPlayers > 2 || ship !== Spaceship.Rebellion);
+}
+
+export function claimableSpaceshipFederations(
+  explorationShips: { [key in Spaceship]?: number },
+  spaceshipFederations: { [key in Spaceship]?: SpaceshipFederation }
+): ClaimableSpaceshipFederation[] {
+  return Spaceship.values(Expansion.LostFleet)
+    .filter((ship) => explorationShips[ship] !== undefined && spaceshipFederations[ship] !== undefined)
+    .map((ship) => ({
+      ship,
+      federation: spaceshipFederations[ship],
+    }));
+}
+
+export function claimableSpaceshipTechs(
+  explorationShips: { [key in Spaceship]?: number },
+  spaceshipTechs: { [key in Spaceship]?: SeededSpaceshipTech }
+): ClaimableSpaceshipTech[] {
+  return Spaceship.values(Expansion.LostFleet)
+    .filter((ship) => explorationShips[ship] !== undefined && (spaceshipTechs[ship]?.count ?? 0) > 0)
+    .map((ship) => ({
+      ship,
+      tile: spaceshipTechs[ship].tile,
+    }));
 }

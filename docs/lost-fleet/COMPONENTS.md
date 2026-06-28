@@ -26,7 +26,7 @@ policy" there) — not just the effect text alone.
 | Faction | Start planet | Maps to | Status |
 |---|---|---|---|
 | Tinkeroids | Asteroid | `Faction` enum + `faction-boards/tinkeroids.ts` | ☐ TODO (blocked on §B5 cost-3 scan-order ambiguity) |
-| Darkanians | Asteroid | `Faction` enum + `faction-boards/darkanians.ts` | ● DONE except PI ability (deferred — see PROGRESS.md "Done so far" #11) |
+| Darkanians | Asteroid | `Faction` enum + `faction-boards/darkanians.ts` | ● DONE |
 | Moweyds | Protoplanet | `Faction` enum + `faction-boards/moweyds.ts` | ☐ TODO (blocked on §B5 cost-3 scan-order ambiguity) |
 | Space Giants | Protoplanet | `Faction` enum + `faction-boards/space-giants.ts` | ● DONE except Exploration-board special action (subsystem not yet built) |
 
@@ -58,10 +58,10 @@ Each new faction needs (see RULES_CLARIFICATIONS for values):
 
 | Spaceship | Special note | Status |
 |---|---|---|
-| Twilight (Nautilaks) | Holds Artifacts; "Examine Artifact" action | ◐ Board data + setup ● DONE (`spaceships.ts`); Artifact-token seeding + Examine Artifact action ☐ TODO |
-| Rebellion (Vo'Kron) | NOT used in 2-player games | ◐ Board data + setup ● DONE (`spaceships.ts`, `setup.ts`); live board actions ☐ TODO |
-| T F Mars (Gaia Federation) | Moweyds start with a shuttle here | ◐ Board data + setup ● DONE; live board actions ☐ TODO |
-| Eclipse (Eridani Empire) | — | ◐ Board data + setup ● DONE; live board actions ☐ TODO |
+| Twilight (Nautilaks) | Holds Artifacts; "Examine Artifact" action | ◐ Board data + setup ● DONE (`spaceships.ts`, `setup.ts`); core Explore action/state ● DONE; federation-claim ownership hook ● DONE; Artifact-token seeding + Examine Artifact action ☐ TODO |
+| Rebellion (Vo'Kron) | NOT used in 2-player games | ◐ Board data + setup ● DONE (`spaceships.ts`, `setup.ts`); core Explore action/state ● DONE; federation-claim ownership hook ● DONE; Standard-Tech claim hook ● DONE; live board actions ☐ TODO |
+| T F Mars (Gaia Federation) | Moweyds start with a shuttle here | ◐ Board data + setup ● DONE; core Explore action/state ● DONE; federation-claim ownership hook ● DONE; Standard-Tech claim hook ● DONE; live board actions ☐ TODO |
+| Eclipse (Eridani Empire) | — | ◐ Board data + setup ● DONE; core Explore action/state ● DONE; federation-claim ownership hook ● DONE; Standard-Tech claim hook ● DONE; live board actions ☐ TODO |
 
 Each spaceship needs:
 - Every action space on the board: type (Q.I.C. / Power / Knowledge / Credit), cost, effect, position
@@ -71,15 +71,34 @@ Each spaceship needs:
   Rebellion/T F Mars/Eclipse. Confirmed via owner board photos, see RULES_CLARIFICATIONS.md §C1/§C4.
 - Which new federation token + standard tech is seeded onto it at setup — ● DONE, random
   setup-time assignment implemented in `engine/src/setup.ts` (`shipAssignmentFactory`); only the
-  *seeding* is implemented, not yet the gameplay hooks that let a player redeem a seeded tile/token.
+  *seeding* was the first slice; redemption hooks are now live for seeded Standard Tech tiles and
+  Federation tokens, while the ships' own action-space execution is still TODO.
+- Core Explore action/state — ● DONE in engine (`exploration.ts`, `available/exploration.ts`,
+  `move/exploration.ts`): range from colonized planets only, Q.I.C. extension, 2-player vs. 3/4-player
+  shuttle limits, one shuttle per ship, lowest free slot, slot charge rewards `0/2/2/3`, Taklons /
+  Nevlas / Itars / Bal T'aks deploy adjustments, and serialization of per-player explored ships.
+  Remaining ship-board action execution / redemption hooks are still TODO.
+- Federation-token claim hook — ● DONE in engine: when a player forms any federation, eligible
+  ship-seeded Federation tokens from explored ships are added to the selectable federation-token
+  choices, without requiring the ship to be adjacent to the formed federation. Claimed ship tokens are
+  persisted as owned federation tokens for count / green-side consumption; their special gold-side
+  action execution is still TODO.
+- Standard-Tech claim hook — ● DONE in engine: explored ships add their seeded Standard Tech tile to
+  the normal `Command.ChooseTechTile` options, claiming the tile removes it from the ship and stores it
+  as a normal coverable Standard Tech, and the normal follow-up free research advance still applies.
+  The 3 Lost Fleet Standard Tech tiles' own gameplay effects remain a later live-effect slice.
 
 ## 4. Exploration Boards (per faction, all 18 factions get one)
 
+Core Explore action/status: ● DONE in engine for currently coded factions. Remaining Exploration-board
+special actions (notably Space Giants, and later Moweyds' pre-seeded shuttle once that faction exists)
+are still TODO.
+
 Each faction's Exploration board needs `[NEED FROM BOARD]`:
-- Shuttle deployment cost (usually 5 VP; Bal T'aks 7 VP)
-- Faction-specific deploy adjustment (Taklons: Brainstone→Gaia; Nevlas/Itars: discard 1 power)
-- Number of shuttles (3 normally, 2 in 2-player)
-- Charge-power value at each numbered shuttle space (1–5) on the SPACESHIP board (see §3)
+- Shuttle deployment cost (usually 5 VP; Bal T'aks 7 VP) — ● DONE in engine
+- Faction-specific deploy adjustment (Taklons: Brainstone→Gaia; Nevlas/Itars: discard 1 power) — ● DONE in engine
+- Number of shuttles (3 normally, 2 in 2-player) — ● DONE in engine
+- Charge-power value at each numbered shuttle space (1–4) on the SPACESHIP board (see §3) — ● DONE in engine (`0/2/2/3`)
 
 ## 5. Exploration Shuttles
 - 27 shuttles total (3 × 9 colors). Per-player-color piece. Status: ☐ TODO

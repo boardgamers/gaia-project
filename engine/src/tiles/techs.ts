@@ -1,5 +1,14 @@
 import { ChooseTechTile } from "../available/types";
-import { AdvTechTile, AdvTechTilePos, AnyTechTile, AnyTechTilePos, Operator, TechPos, TechTile } from "../enums";
+import {
+  AdvTechTile,
+  AdvTechTilePos,
+  AnyTechTile,
+  AnyTechTilePos,
+  Operator,
+  SpaceshipTechTile,
+  TechPos,
+  TechTile,
+} from "../enums";
 import Event, { EventSource } from "../events";
 import Reward from "../reward";
 
@@ -40,6 +49,9 @@ export function techTileEventSource(pos: AnyTechTilePos): AdvTechTilePos | TechP
 }
 
 export function techTileEvents(chooseTechTile: ChooseTechTile): Event[] {
+  if (isSpaceshipTechTile(chooseTechTile.tile)) {
+    return [];
+  }
   return techTileEventWithSource(chooseTechTile.tile, techTileEventSource(chooseTechTile.pos));
 }
 
@@ -47,6 +59,10 @@ export function techTileRewards(tile: AnyTechTile): Reward[] {
   return techTileEventWithSource(tile, null).flatMap((e) => e.rewards);
 }
 
-export function isAdvanced(pos: AnyTechTilePos): boolean {
+export function isAdvanced(pos: string): boolean {
   return pos.startsWith("adv");
+}
+
+export function isSpaceshipTechTile(tile: AnyTechTile | SpaceshipTechTile): tile is SpaceshipTechTile {
+  return tile.startsWith("ship-tech-");
 }
