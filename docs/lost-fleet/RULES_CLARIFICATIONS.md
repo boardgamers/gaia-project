@@ -519,6 +519,18 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
        implements board generation should verify the two phrasings reduce to one formula (e.g., via the
        actual hex-distance layout) rather than assuming it without checking, since the rulebook gives
        no explicit unit conversion between the two framings.
+    4. **Tile shapes (owner-clarified 2026-06-28, was the cause of a long-running layout bug):** an
+       **Interspace tile is a single hex**, placed only in the interior holes; a **Deep Space tile is a
+       3-hex triangle**, placed only in the perimeter notches along the outside edge. A 3-hex cluster
+       appearing *in the interior* between sectors is therefore a layout DEFECT (the interior must be
+       clean single-hex holes), not a Deep Space slot. The "slide every outer sector the same way"
+       rule must be applied consistently or the seam between two inner-adjacent sectors collapses two
+       interior singles into a 3-hex middle cluster.
+    5. **Geometry CODED & verified (Chunk 5):** `engine/src/lost-fleet-map.ts` —
+       `lostFleetSectorCenters(nbPlayers)` (7/9/10 sectors), `findInterspaceHoles()` (6/8/10 isolated
+       single hexes), `findDeepSpaceNotches()` (6/8/8 three-hex triangles), all with 0 sector overlap
+       and no adjacent interior holes. Tile data: `DEEP_SPACE_TILES` (§H2), `INTERSPACE_SETS` (§H3).
+       Not yet wired into a playable `SpaceMap` (planet placement + spacing rules still to do).
 - H2. Deep Space sector tiles (8 physical tiles, 2 sides each = 16 faces, each a 3-hex cluster). Hex
   contents read directly off the randomizer art (2026-06-27). Owner does NOT need the art itself
   redrawn pixel-for-pixel (own SVG style instead, per Art policy above) but DOES need this composition

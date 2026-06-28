@@ -5,7 +5,7 @@
 > task touches viewer rendering/perf, also read `PERFORMANCE.md` first — it has hard-measured
 > findings that should not be rediscovered. Then ask the user "what next?" and use the **Next
 > actions** section below to guide them.
-> Last updated: **2026-06-27**.
+> Last updated: **2026-06-28**.
 
 ## What this project is
 Add the official **Gaia Project: The Lost Fleet** expansion to a private fork of the open-source
@@ -199,6 +199,38 @@ notifications).
     - The **Form-a-Federation / Upgrade-Existing-Structures hooks** that let a player actually redeem
       a ship-seeded Standard Tech tile or Federation token once they've explored that ship — the
       seeding now happens at setup, but nothing yet lets a player claim what's seeded.
+13. ✅ **Lost Fleet map subsystem — geometry + tile data (Chunk 5) CODED & TESTED**
+    (`RULES_CLARIFICATIONS.md` §H1–H5, `COMPONENTS.md` §6, done 2026-06-28). New self-contained
+    `engine/src/lost-fleet-map.ts` (+ `lost-fleet-map.spec.ts`, 16 tests) that **does not touch the
+    base-game `SpaceMap` generation** (so all base tests stay valid). What's coded:
+    - `lostFleetSectorCenters(nbPlayers)` — the "Variable Gameboard Layout" sector centres for 2p
+      (1 inner + 6 shifted ring = 7), 3p (+2 shifted extras = 9), 4p (2 adjacent inner hubs + 8
+      shifted outer = 10). Built parametrically from a single `SHIFTED_OFFSET = (5,-1,-4)` ("slide
+      one space, border the inner sector along only 2 spaces") rotated 6 ways via the engine's own
+      `Hex.rotateRight`, so it shares the grid's coordinate/rotation convention.
+    - `findInterspaceHoles(centers)` — the single-hex interior holes (Interspace slots). Returns
+      exactly **6 / 8 / 10** isolated singles for 2/3/4p, matching the rulebook hole counts. Found via
+      halo connected-components: every bounded (non-outer) component is size 1.
+    - `findDeepSpaceNotches(centers)` — the perimeter 3-hex triangle gaps (Deep Space slots). Returns
+      **6 / 8 / 8** triangles, one per adjacent-outer-sector wedge, matching the tiles physically
+      placed (`deepSpaceTileCount()`).
+    - `DEEP_SPACE_TILES` (§H2, all 8 tiles × 2 faces of Protoplanet/Asteroid/Transdim/Blank, incl. the
+      tile-16 asteroid swing §H5 keys off), `DEEP_SPACE_TILES_2P` (11–16), `INTERSPACE_SETS`/
+      `interspaceSet()` (§H3 per-player-count composition, Rebellion excluded at 2p).
+    - **§H4 stub, flagged not guessed:** `REVISED_SECTOR_FACES_TODO` records that sectors 5/6/7 need a
+      Lost-Fleet revised face at 2p/3p (`available: false` → callers fall back to the base-game face)
+      until the physical art is supplied. Still the one remaining art-only TODO.
+    - **Key correction captured this session (was the long-standing "picture 11" defect):** Deep Space
+      tiles are **3-hex triangles** (perimeter only) and Interspace tiles are **single hexes**
+      (interior only). The earlier draft 4p layout wrongly produced two 3-hex clusters in the *middle*;
+      the fix slides the offending sectors one hex so all interior gaps are clean singles. The geometry
+      is now verified for all three player counts (0 overlap, correct hole/notch counts, no adjacent
+      interior holes). **337/337 engine tests pass** (321 baseline + 16 new).
+    **Deferred (out of this chunk's scope):** wiring these layouts into a playable `SpaceMap` (planet
+    placement onto Interspace/Deep Space hexes, the "no spaceship within 3 spaces" Interspace spacing
+    rule §H1, the 3p "2 adjacent Deep Space tiles in the larger gap" rule), and the `GaiaHex`
+    sector-type classification (Space / Deep Space / Interspace) that Darkanians' PI ability needs —
+    the geometry foundation for that classification now exists.
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -356,22 +388,27 @@ resolved for the 2 factions that exist; the tile-gating convention (flag 5) is n
 exact shape for adv-tech/federation/booster/scoring enum members when those chunks come up.
 
 ## Next actions
-Chunks 1-4 are complete and verified — **321/321 engine tests pass** (274 baseline → 280 after Chunk 2
-→ 299 after Chunk 3 → 321 after Chunk 4). Darkanians and Space Giants are fully playable factions for
-every mechanic that doesn't depend on an unbuilt subsystem; the 4 Spaceship Boards' static config and
-setup-time tile/token seeding are coded and tested, with all live-gameplay wiring deferred (see "Done
-so far" #12). Explicitly still open, in priority order the user should pick from:
+Chunks 1-5 are complete and verified — **337/337 engine tests pass** (274 baseline → 280 after Chunk 2
+→ 299 after Chunk 3 → 321 after Chunk 4 → 337 after Chunk 5). Darkanians and Space Giants are fully
+playable factions for every mechanic that doesn't depend on an unbuilt subsystem; the 4 Spaceship
+Boards' static config and setup-time tile/token seeding are coded and tested, with all live-gameplay
+wiring deferred (see "Done so far" #12); the Lost Fleet variable-map geometry + Interspace/Deep Space
+tile data are coded and tested as a standalone module, not yet wired into `SpaceMap` (see #13).
+Explicitly still open, in priority order the user should pick from:
 1. **Spaceship Boards live-gameplay wiring** (deferred from Chunk 4): the Explore action, the 12 ship
    board-actions' availability/execution, Examine Artifact + Twilight's Artifact-token seeding, and the
    Form-a-Federation/Upgrade-Existing-Structures hooks that redeem seeded tiles/tokens.
-2. **Darkanians' Planetary Institute ability** (deferred, needs sector-type classification on
-   `GaiaHex` — Lost Fleet map content, not yet built).
-3. **Space Giants' Exploration-board special action** (deferred, needs the Exploration-board
+2. **Wire the Lost Fleet map into `SpaceMap`** (Chunk 5 built the geometry + tile data standalone;
+   next is planet placement onto Interspace/Deep Space hexes, the §H1 spacing rules, and the
+   `GaiaHex` Space/Deep Space/Interspace sector-type classification).
+3. **Darkanians' Planetary Institute ability** (deferred, needs the sector-type classification from
+   the item above — the map geometry foundation now exists).
+4. **Space Giants' Exploration-board special action** (deferred, needs the Exploration-board
    subsystem — not yet built).
-4. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.
-5. **Viewer-side `Object.values(Faction)` fix** (6 call sites, currently harmless since the viewer
+5. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.
+6. **Viewer-side `Object.values(Faction)` fix** (6 call sites, currently harmless since the viewer
    hasn't been touched, but will need fixing before any viewer chunk starts).
-6. Or a different unit of work entirely (map content, viewer, Supabase), ahead of any blocked item.
+7. Or a different unit of work entirely (viewer, Supabase), ahead of any blocked item.
 
 Confirm with the user before starting any of the above.
 

@@ -88,10 +88,10 @@ Each faction's Exploration board needs `[NEED FROM BOARD]`:
 
 | Component | Count | Detail needed | Status |
 |---|---|---|---|
-| Deep Space Sector tiles | 8 (double-sided) | Planet layout per side — CONFIRMED for all 16 faces, see RULES_CLARIFICATIONS.md §H2 (the 3rd hex motif on 12a/13a/17a is Transdim, resolved 2026-06-27) | ◐ SPEC |
-| Interspace tiles | 30, in 4 player-count sets | per-set composition (asteroid/protoplanet/spaceship/blank counts) CONFIRMED, see RULES_CLARIFICATIONS.md §H3; exact tile-by-tile identity not needed (random placement) | ◐ SPEC |
-| Revised Space Sector tiles | replaces base "different planet types" components | which planets on revised sides `[NEED FROM BOARD]` | ☐ TODO |
-| Shifted-sector setup geometry | per player count (2/3/4) | encode the offset-placement layout (rulebook p.4-5) | ☐ TODO |
+| Deep Space Sector tiles | 8 (double-sided) | Planet layout per side — CONFIRMED for all 16 faces, see RULES_CLARIFICATIONS.md §H2 (the 3rd hex motif on 12a/13a/17a is Transdim, resolved 2026-06-27). **Data CODED** in `engine/src/lost-fleet-map.ts` `DEEP_SPACE_TILES` (Chunk 5) | ● CODED (data) |
+| Interspace tiles | 30, in 4 player-count sets | per-set composition (asteroid/protoplanet/spaceship/blank counts) CONFIRMED, see RULES_CLARIFICATIONS.md §H3; exact tile-by-tile identity not needed (random placement). **Data CODED** in `lost-fleet-map.ts` `INTERSPACE_SETS`/`interspaceSet()` (Chunk 5) | ● CODED (data) |
+| Revised Space Sector tiles | replaces base "different planet types" components | which planets on revised sides `[NEED FROM BOARD]` — §H4. Stubbed/flagged in `lost-fleet-map.ts` `REVISED_SECTOR_FACES_TODO` (`available: false`, falls back to base-game face) | ☐ TODO (stubbed) |
+| Shifted-sector setup geometry | per player count (2/3/4) | encode the offset-placement layout (rulebook p.4-5). **CODED & verified** in `lost-fleet-map.ts` `lostFleetSectorCenters()` + `findInterspaceHoles()` + `findDeepSpaceNotches()` (Chunk 5): 6/8/10 single-hex Interspace holes, 6/8/8 Deep Space triangle notches, 0 overlap. Not yet wired into `SpaceMap` | ● CODED (geometry) |
 
 ## 7. Tiles & Tokens
 
