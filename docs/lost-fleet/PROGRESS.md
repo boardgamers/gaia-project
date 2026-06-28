@@ -486,6 +486,33 @@ notifications).
       actions). All 12 of 12 Spaceship Board actions are now live; only Examine Artifact + Twilight's
       Artifact-token seeding and the gold-side execution for claimed ship Federation tokens remain as
       separate, not-counted-in-12 features (see "Next actions" below).
+24. ✅ **Federation tokens' gold-side execution, COMPLETE for all 8 claimed-ship tokens** (done
+    2026-06-28). Closes out the "gold-side execution for claimed ship Federation tokens" half of the
+    item flagged in #23 above; only Twilight's Examine Artifact + Artifact-token seeding remains (see
+    "Next actions" below).
+    - **6 direct-reward tokens** (Credit/Knowledge/OreQic/Tech/Vp/PowerTokens) grant their income the
+      moment the ship's federation is claimed, via `pl.gainSpaceshipFederationToken()` in `player.ts`:
+      Credit/Knowledge/OreQic/Tech/Vp parse straight into `Reward.parse`-compatible income strings;
+      PowerTokens is the one exception, mutating `power.area3` directly since no `Resource` grants
+      power tokens straight into Area III.
+    - **Range/Terraform** each grant a one-time bonus Build a Mine action instead of a direct reward.
+      A new `SubPhase.FederationTokenBuildMine` chains off `moveFormFederation()`'s claimed-ship branch
+      in `move/federation.ts` (mirrors the `SpaceshipBuildMine` chaining pattern from #23), generating
+      commands via a new `possibleFederationTokenBuildMine()` in `available/federations.ts`: excludes
+      Transdim/Asteroid hexes (same as the non-Eclipse branch of `possibleSpaceshipBuildMine`); Gaia
+      planets still cost their normal `gaiaFormingCost()` QIC (a habitability cost, not the build cost,
+      so it is never waived by either token); Range waives range-extension QIC entirely (limitless
+      range) but still charges full terraforming ore with no discount; Terraform charges normal range
+      QIC but discounts terraforming ore by up to 3 steps — since `terraformingStepsRequired()` never
+      exceeds 3 for any faction in the game, this discount is in practice always a full waiver of
+      terraforming ore, never a partial one.
+    - New tests: 5 unit tests directly on `possibleFederationTokenBuildMine` (Transdim/Asteroid
+      exclusion, Range's zero-QIC/full-ore cost shape, Terraform's normal-QIC/discounted-ore cost
+      shape, Gaia-hex QIC stacking for both tokens, mine-limit exhaustion returns no commands) in new
+      `available/federations.spec.ts`, plus 2 end-to-end tests in `exploration.spec.ts` exercising the
+      full claim-ship-federation → chained Build-a-Mine pipeline for both tokens. Direct-reward token
+      coverage lives in `player.spec.ts`. **393/393 → 407/407** (+14 tests total for this entry: 7 for
+      the 6 direct-reward tokens, 5 unit + 2 end-to-end for Range/Terraform).
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -656,28 +683,32 @@ exact shape for adv-tech/federation/booster/scoring enum members when those chun
 
 ## Next actions
 Chunks 1-7b plus Darkanians' PI follow-up, the core Explore action, the federation-claim hook, the
-Standard-Tech claim hook, and the full Spaceship Boards live-gameplay wiring are
-complete and verified — **393/393 engine tests pass** (274 baseline → 280 after Chunk 2
-→ 299 after Chunk 3 → 321 after Chunk 4 → 337 after Chunk 5 → 345 after Chunk 6 → 352 after Chunk 7a →
-353 after the German-rules reroll fix → 354 after Chunk 7b's placement-metadata step → 361 after Chunk
-7b's `SpaceMap`/`moveInit` wiring + integration tests → 362 after Darkanians' PI integration test → 366
-after the Explore-action slice → 370 after the federation-claim slice → 372 after the Standard-Tech
-claim slice → 387 after the Spaceship Boards live-gameplay wiring slice → 388 after T F Mars's
-Instant-Gaiaforming Power action → 393 after wiring the remaining 5 ship-board actions (Twilight
-Knowledge/Power, Rebellion Power, T F Mars Credit, Eclipse Credit), see "Done so far" #16-#23).
+Standard-Tech claim hook, the full Spaceship Boards live-gameplay wiring, and the gold-side execution
+for all 8 claimed-ship Federation tokens are complete and verified — **407/407 engine tests pass**
+(274 baseline → 280 after Chunk 2 → 299 after Chunk 3 → 321 after Chunk 4 → 337 after Chunk 5 → 345
+after Chunk 6 → 352 after Chunk 7a → 353 after the German-rules reroll fix → 354 after Chunk 7b's
+placement-metadata step → 361 after Chunk 7b's `SpaceMap`/`moveInit` wiring + integration tests → 362
+after Darkanians' PI integration test → 366 after the Explore-action slice → 370 after the
+federation-claim slice → 372 after the Standard-Tech claim slice → 387 after the Spaceship Boards
+live-gameplay wiring slice → 388 after T F Mars's Instant-Gaiaforming Power action → 393 after wiring
+the remaining 5 ship-board actions (Twilight Knowledge/Power, Rebellion Power, T F Mars Credit, Eclipse
+Credit) → 407 after wiring the gold-side execution for all 8 claimed-ship Federation tokens, see "Done
+so far" #16-#24).
 Darkanians and Space Giants are fully playable factions for every mechanic that doesn't depend on an
 unbuilt subsystem; the 4 Spaceship Boards' static config and setup-time tile/token seeding are coded
 and tested; the **core Explore action** is live in the engine; explored ships can redeem their seeded
 Federation token through federation formation and their seeded Standard Tech tile through the normal
-tech-pick flow; and all 12 of the 12 ship board-actions are now live through a new
-`Command.SpaceshipAction`, with a per-round per-action lock (see #18-#23). The Lost Fleet variable-map
-geometry, tile data, full board assembly, `GaiaHex` addressing fix, AND the
+tech-pick flow; all 12 of the 12 ship board-actions are now live through a new
+`Command.SpaceshipAction`, with a per-round per-action lock (see #18-#23); and claiming a ship's seeded
+Federation token now executes its gold-side effect — direct rewards for 6 of the 8 tokens, and a
+chained bonus Build a Mine action for the other 2 (Range/Terraform), see #24. The Lost Fleet
+variable-map geometry, tile data, full board assembly, `GaiaHex` addressing fix, AND the
 `SpaceMap`/`moveInit` wiring are all coded and tested (see #13-#16) — `new Engine([...], { lostFleet: true })`
 now produces a real, playable Lost Fleet board through the normal engine entry points. Explicitly still
 open, in priority order the user should pick from:
-1. **Examine Artifact + Twilight's Artifact-token seeding, and the gold-side execution for claimed ship
-   Federation tokens** — the two remaining Spaceship-Boards-adjacent features not counted in the 12
-   ship-board actions (all 12 of which are now fully wired, see "Done so far" #23).
+1. **Examine Artifact + Twilight's Artifact-token seeding** — the one remaining Spaceship-Boards-
+   adjacent feature not counted in the 12 ship-board actions; the other (claimed ship Federation
+   tokens' gold-side execution) is now fully wired, see "Done so far" #24.
 2. **Space Giants' Exploration-board special action** (deferred; core Explore plumbing now exists, but
    the faction-specific action hook still doesn't).
 3. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.
