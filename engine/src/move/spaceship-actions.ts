@@ -2,7 +2,7 @@ import assert from "assert";
 import { isEqual } from "lodash";
 import { AvailableCommand } from "../available/types";
 import Engine from "../engine";
-import { Command, Planet, Player as PlayerEnum, Spaceship, SubPhase } from "../enums";
+import { Building, Command, Planet, Player as PlayerEnum, Spaceship, SubPhase } from "../enums";
 import Event from "../events";
 import Reward from "../reward";
 import { SpaceshipActionType, spaceshipActionEffects } from "../spaceships";
@@ -30,6 +30,25 @@ export function moveSpaceshipAction(
 
   if (ship === Spaceship.TFMars && type === "power") {
     engine.processNextMove(SubPhase.InstantGaiaforming, null, false);
+    return;
+  }
+
+  if ((ship === Spaceship.Eclipse || ship === Spaceship.TFMars) && type === "credit") {
+    engine.processNextMove(SubPhase.SpaceshipBuildMine, { ship }, false);
+    return;
+  }
+
+  if (ship === Spaceship.Rebellion && type === "power") {
+    engine.processNextMove(SubPhase.SpaceshipUpgradeBuilding, { from: Building.Mine, to: Building.TradingStation }, false);
+    return;
+  }
+
+  if (ship === Spaceship.Twilight && type === "power") {
+    engine.processNextMove(
+      SubPhase.SpaceshipUpgradeBuilding,
+      { from: Building.TradingStation, to: Building.ResearchLab },
+      false
+    );
     return;
   }
 

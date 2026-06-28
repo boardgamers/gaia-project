@@ -129,6 +129,7 @@ describe("Lost Fleet spaceship board actions", () => {
     player.data.explorationShips[Spaceship.TFMars] = 1;
     player.data.qics = 1; // T F Mars' QIC action costs 2q
     player.data.power = new Power(0, 0, 0, 0); // T F Mars' Power action costs 2pw
+    player.data.credits = 2; // T F Mars' Credit action costs 3c
 
     expect(availableSpaceshipActionCommand(engine, PlayerEnum.Player1)).to.equal(undefined);
   });

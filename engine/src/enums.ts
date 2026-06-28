@@ -701,6 +701,8 @@ export enum SubPhase {
   PISwap = "swap-PI",
   DowngradeLab = "down-lab",
   InstantGaiaforming = "instantGaiaforming",
+  SpaceshipBuildMine = "spaceshipBuildMine",
+  SpaceshipUpgradeBuilding = "spaceshipUpgradeBuilding",
 }
 
 // Lost Fleet Spaceship Boards (4 generic boards, not tied to any faction).
