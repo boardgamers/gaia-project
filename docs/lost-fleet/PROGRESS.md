@@ -5,7 +5,7 @@
 > task touches viewer rendering/perf, also read `PERFORMANCE.md` first — it has hard-measured
 > findings that should not be rediscovered. Then ask the user "what next?" and use the **Next
 > actions** section below to guide them.
-> Last updated: **2026-06-28**.
+> Last updated: **2026-06-29**.
 
 ## What this project is
 Add the official **Gaia Project: The Lost Fleet** expansion to a private fork of the open-source
@@ -561,6 +561,28 @@ notifications).
     with 3 tests: Transdim exclusion alone, Asteroid inclusion at `"~"` (zero) cost plus permanent
     Gaiaformer consumption on build, and Asteroid exclusion once `gaiaformers = 0`. **404/404 →
     406/406** (net +2 tests: 1 old test removed, 3 new ones added).
+27. ✅ **Space Giants' Exploration-board special action — CODED & TESTED** (done 2026-06-29). Per
+    explicit user decision (confirmed via `AskUserQuestion`), this was the next item picked off the
+    "Next actions" list. Added a once-per-round "Build a Mine with 2 free terraforming steps" special
+    action by appending a single `"=> 2step"` entry to `space-giants.ts`'s base `income` array — no new
+    engine logic was needed anywhere else. This reuses, unmodified: the existing `Operator.Activate`
+    ("=>") lifecycle (`Player.activateEvent()` sets `activated = true`; `move/phase.ts`'s
+    `cleanUpPhase()` resets it every round-end, exactly like the `bescods.ts` precedent
+    `"=> up-lowest"`, which proved a non-building-gated base-income Activate entry works as a recurring
+    special action from turn 1); `possibleSpecialActions()` (already iterates `events[Operator.Activate]`
+    generically, so no faction-specific gating code was required — other factions simply never have this
+    event); the `Resource.TemporaryStep` ("step") reward type and its `gain-step` engine hook (auto-
+    transitions into `SubPhase.BuildMine`); and `terraformingCost()`'s existing discount formula (already
+    generic over however many free steps are granted). Added
+    `describe("Space Giants - Exploration board special action")` to `space-giants.spec.ts` (3 new
+    tests, using the same lightweight `createLostFleetRoundMoveEngine()` + direct-function-call pattern
+    established in `available/federations.spec.ts`/`move/spaceship-actions.spec.ts`): the special action
+    is offered once per round and fully covers a flat 2-step terraform (then locks for the rest of the
+    round); a 3-step target (a Protoplanet, which always needs 3 steps regardless of faction) still
+    charges ore for the 1 step beyond the 2 free ones; and the action is never offered to any
+    non-Space-Giants faction. **416/416 → 419/419** (net +3 tests).
+    (Note: `git stash` confirmed the actual pre-existing baseline at session start was **416/416**, not
+    the 406/406 this doc had stated — a stale/miscounted tally predating this session, corrected here.)
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -732,9 +754,10 @@ exact shape for adv-tech/federation/booster/scoring enum members when those chun
 ## Next actions
 Chunks 1-7b plus Darkanians' PI follow-up, the core Explore action, the federation-claim hook, the
 Standard-Tech claim hook, the full Spaceship Boards live-gameplay wiring, the gold-side execution
-for all 8 claimed-ship Federation tokens, rescoring ship Federation tokens, and including Asteroid
-hexes in the Federation tokens' Build-a-Mine (per BGG designer ruling) are complete and verified —
-**406/406 engine tests pass**
+for all 8 claimed-ship Federation tokens, rescoring ship Federation tokens, including Asteroid
+hexes in the Federation tokens' Build-a-Mine (per BGG designer ruling), and Space Giants'
+Exploration-board special action are complete and verified —
+**419/419 engine tests pass**
 (274 baseline → 280 after Chunk 2 → 299 after Chunk 3 → 321 after Chunk 4 → 337 after Chunk 5 → 345
 after Chunk 6 → 352 after Chunk 7a → 353 after the German-rules reroll fix → 354 after Chunk 7b's
 placement-metadata step → 361 after Chunk 7b's `SpaceMap`/`moveInit` wiring + integration tests → 362
@@ -744,9 +767,11 @@ live-gameplay wiring slice → 388 after T F Mars's Instant-Gaiaforming Power ac
 the remaining 5 ship-board actions (Twilight Knowledge/Power, Rebellion Power, T F Mars Credit, Eclipse
 Credit) → 399 after wiring the gold-side execution for all 8 claimed-ship Federation tokens → 404 after
 fixing rescore to offer and re-trigger ship Federation tokens → 406 after fixing Federation tokens'
-Build-a-Mine to include Asteroid hexes once a spare Gaiaformer is available, see "Done so far" #16-#26).
+Build-a-Mine to include Asteroid hexes once a spare Gaiaformer is available → 419 after Space Giants'
+Exploration-board special action, see "Done so far" #16-#27).
 (Note: the 399 and 404 figures here are git-verified; an earlier draft of this doc had momentarily
-overstated them as 407/412 before the correction in "Done so far" #24-#25 above.)
+overstated them as 407/412 before the correction in "Done so far" #24-#25 above. The 406 figure was
+also stale by session start — `git stash` confirmed the real baseline was 416 — see #27's note.)
 Darkanians and Space Giants are fully playable factions for every mechanic that doesn't depend on an
 unbuilt subsystem; the 4 Spaceship Boards' static config and setup-time tile/token seeding are coded
 and tested; the **core Explore action** is live in the engine; explored ships can redeem their seeded
@@ -756,8 +781,10 @@ tech-pick flow; all 12 of the 12 ship board-actions are now live through a new
 Federation token now executes its gold-side effect — direct rewards for 6 of the 8 tokens, and a
 chained bonus Build a Mine action for the other 2 (Range/Terraform), see #24; rescoring (QIC2 board
 action) now offers and re-triggers ship-claimed Federation tokens exactly like pool-drawn ones, see
-#25; and that chained Build a Mine action now correctly includes Asteroid hexes (gated on a spare
-Gaiaformer) instead of blanket-excluding them, per a designer ruling on BGG, see #26. The Lost Fleet
+#25; that chained Build a Mine action now correctly includes Asteroid hexes (gated on a spare
+Gaiaformer) instead of blanket-excluding them, per a designer ruling on BGG, see #26; and Space
+Giants now have their Exploration-board special action (once-per-round Build a Mine with 2 free
+terraforming steps), see #27. The Lost Fleet
 variable-map geometry, tile data, full board assembly, `GaiaHex` addressing fix, AND the
 `SpaceMap`/`moveInit` wiring are all coded and tested (see #13-#16) — `new Engine([...], { lostFleet: true })`
 now produces a real, playable Lost Fleet board through the normal engine entry points. Explicitly still
@@ -766,14 +793,12 @@ open, in priority order the user should pick from:
    adjacent feature not counted in the 12 ship-board actions; the other (claimed ship Federation
    tokens' gold-side execution, rescoring them, and the Asteroid-hex fix to their Build-a-Mine action)
    is fully wired, see "Done so far" #24-#26.
-2. **Space Giants' Exploration-board special action** (deferred; core Explore plumbing now exists, but
-   the faction-specific action hook still doesn't).
-3. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.
-4. **Viewer-side `Object.values(Faction)` fix** (6 call sites, currently harmless since the viewer
+2. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.
+3. **Viewer-side `Object.values(Faction)` fix** (6 call sites, currently harmless since the viewer
    hasn't been touched, but will need fixing before any viewer chunk starts).
-5. **Revised Space Sector tiles 05/06/07** (§H4, the one remaining art-only TODO — see "Still MISSING"
+4. **Revised Space Sector tiles 05/06/07** (§H4, the one remaining art-only TODO — see "Still MISSING"
    above) — would let Lost Fleet stop falling back to the base game's per-count face for those 3 tiles.
-6. Or a different unit of work entirely (viewer, Supabase), ahead of any blocked item.
+5. Or a different unit of work entirely (viewer, Supabase), ahead of any blocked item.
 
 Confirm with the user before starting any of the above.
 

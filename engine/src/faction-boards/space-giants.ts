@@ -4,7 +4,10 @@ import { FactionBoardVariants } from "./types";
 const spaceGiants: FactionBoardVariants = {
   faction: Faction.SpaceGiants,
   standard: {
-    income: ["3k,6o,15c,q,up-nav", "+o,k"],
+    // Exploration board special action: once per round, Build a Mine with 2 free terraforming
+    // steps (extra ore still owed for any step beyond that) - reuses the same temporaryStep
+    // discount mechanism as the "step" round booster.
+    income: ["3k,6o,15c,q,up-nav", "+o,k", "=> 2step"],
     power: {
       area1: 4,
       area2: 4,
