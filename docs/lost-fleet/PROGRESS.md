@@ -793,12 +793,23 @@ open, in priority order the user should pick from:
    adjacent feature not counted in the 12 ship-board actions; the other (claimed ship Federation
    tokens' gold-side execution, rescoring them, and the Asteroid-hex fix to their Build-a-Mine action)
    is fully wired, see "Done so far" #24-#26.
-2. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.
-3. **Viewer-side `Object.values(Faction)` fix** (6 call sites, currently harmless since the viewer
+2. **Scoring Board Extension's alternate Advanced Tech gate (§E6) — newly flagged 2026-06-29, NOT
+   CODED.** Spec'd in full in `RULES_CLARIFICATIONS.md` §E6 and listed `◐ SPEC` in `COMPONENTS.md`
+   line 149, but never made it onto this list before now. One randomly-drawn Advanced Tech tile at
+   setup has its normal "research level 4/5" condition replaced by the Extension's face-up side:
+   2p always "≥25 VP"; 3-4p randomized 50/50 each game between "≥25 VP" and "explored 3 of the 4
+   ships" (the other 2 conditions — flip a Federation token, cover a Standard Tech tile — are
+   unchanged). `canTakeAdvancedTechTile()` (`engine/src/available/research.ts:81`) currently has no
+   branch for this — it always checks `data.research[...] < 4` unconditionally for every Adv Tech
+   tile. Needs: a setup-time random tile+side assignment (mirrors the Tinkeroids/Moweyds §B5
+   per-game-random pattern already used elsewhere), and a gate override in that function for the
+   chosen tile.
+3. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.
+4. **Viewer-side `Object.values(Faction)` fix** (6 call sites, currently harmless since the viewer
    hasn't been touched, but will need fixing before any viewer chunk starts).
-4. **Revised Space Sector tiles 05/06/07** (§H4, the one remaining art-only TODO — see "Still MISSING"
+5. **Revised Space Sector tiles 05/06/07** (§H4, the one remaining art-only TODO — see "Still MISSING"
    above) — would let Lost Fleet stop falling back to the base game's per-count face for those 3 tiles.
-5. Or a different unit of work entirely (viewer, Supabase), ahead of any blocked item.
+6. Or a different unit of work entirely (viewer, Supabase), ahead of any blocked item.
 
 Confirm with the user before starting any of the above.
 
