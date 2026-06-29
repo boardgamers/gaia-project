@@ -796,6 +796,50 @@ notifications).
       bundle-size warnings, unrelated). The site is live at
       `gaia-lost-fleet-git-claude-lost-fl-6bd3b1-kimphamnguyensproject.vercel.app` (branch alias) and
       will auto-update on every future push to this branch.
+35. ✅ **Branch consolidation — all Lost Fleet work merged onto this branch** (done 2026-06-29).
+    The project had accumulated work spread across several parallel branches. Per the user's
+    explicit choice (consolidate onto this branch, not master; delete superseded branches),
+    cherry-picked every commit with unique value from the 3 branches that still had any:
+    - `claude/spaceship-boards-gameplay-opnt1p` → `d50b75d`, "Fix T F Mars QIC action to count only
+      Standard Tech tiles": `Condition.TechTile` was counting every tech tile including ones
+      covered by an `AdvTechTile` at the same position, double-counting VP. Fixed by filtering with
+      `isAdvanced(tech.pos)` (`engine/src/tiles/techs.ts`) before counting, in `player.ts`. Its
+      other unique commit (`3e020cf`, refreshing `CLAUDE.md`/`AGENTS.md`) was stale by the time of
+      this merge and superseded by the fresh rewrite below instead of being cherry-picked verbatim.
+    - `claude/quirky-thompson-gt0n0h` → `25e9da5`, "add hex-map render smoke test, fix BoardAction
+      mock": added `viewer/src/components/SpaceMap.spec.ts`, the first test that mounts the real
+      `SpaceMap → Sector → SpaceHex` + `Definitions`/`FederationGradients` tree against a fixture
+      Engine — the test that would have caught the `<defs>`-duplication regression in
+      `PERFORMANCE.md` had it existed first. Also fixed 2 pre-existing broken tests in
+      `BoardAction.spec.ts` (mock Vuex getters were zero-arg functions instead of plain values).
+      Then `e4b1409`, "consolidate turn-order/persistence findings, add working agreements": added
+      a **Working agreements** section (read current code before planning; the testing convention)
+      and documented that the single-browser demo has no turn-locking or persistence by design
+      (`Game.vue`'s `canPlay`, `self-contained.ts`'s fresh-Engine-per-load, `launcher.ts`'s
+      `"player"`-event hook) — not bugs, just the current build stage; `Wrapper.vue`'s Export/Load
+      buttons are today's manual workaround.
+    - `claude/lost-fleet-expansion-gedyrk` → only unique commit was `52508fa`, a docs-only entry
+      recording a Codex-branch merge and 2 regression fixes (exploration charge track reverted to
+      the owner-confirmed `0/2/2/4`; a `SeededSpaceshipTech` `{tile, count}` shape mismatch in
+      specs). The underlying code commits (`751bb69`, `6cf4ae7`, merge `f73b011`) were already
+      ancestors of this branch and remain correctly in place (verified `EXPLORATION_CHARGE_TRACK =
+      [0, 2, 2, 4]` in `spaceships.ts`, asserted by a test in `spaceships.spec.ts`) — only the
+      *narrative* of that doc commit was new, and it was written against doc line numbers/test
+      counts (`372/372` → `378/378`) many revisions out of date with this branch's `467/467` and
+      35-item "Done so far" list, so it was skipped rather than cherry-picked verbatim.
+    All cherry-picks verified with the project's real test commands (not raw `mocha`): engine
+    `cd engine && npm test` → still 467/467; viewer `cd viewer && npx vue-cli-service test:unit
+    --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'` → 155/155, including the new
+    `SpaceMap.spec.ts` test and the fixed `BoardAction.spec.ts` tests passing for the first time.
+    Also rewrote `CLAUDE.md`/`AGENTS.md` from scratch (both were stale — wrong branch name, a dead
+    Windows path, a `362/362`/`372/372` test count) to reflect the actual consolidated branch and
+    current test counts. Branches with zero remaining unique value were deleted from `origin`:
+    `claude/lost-fleet-advtech-tiles-c2fo8w`, `claude/lost-fleet-engine-work-l3bzsk`,
+    `claude/spaceship-boards-gameplay-opnt1p-t991fv`, `codex/continue-lost-fleet-work` (already
+    fully contained before this session), plus the 3 source branches above once their unique
+    commits were absorbed: `claude/lost-fleet-expansion-gedyrk`, `claude/quirky-thompson-gt0n0h`,
+    `claude/spaceship-boards-gameplay-opnt1p`. `master` was left untouched, per the user's explicit
+    choice not to merge into it.
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
