@@ -4,16 +4,21 @@ This repo is the active Lost Fleet worktree for this project.
 
 ## Current Branch
 
-- **Push directly to `master`.** As of 2026-06-29 there is no separate long-lived feature branch —
-  `claude/lost-fleet-viewer-support-95lled` was fully absorbed into `master` (identical tip,
-  `0ae1a9c`) and is kept only as a historical ref. Develop and commit on `master`.
+- **Temporary exception to the earlier single-branch note: continue the current Lost Fleet viewer
+  work on `claude/lost-fleet-viewer-support-95lled`.** `master` and that branch were identical at
+  `0e678332` when this Codex session started, but the user explicitly asked this session to commit
+  and push new viewer work to `claude/lost-fleet-viewer-support-95lled` and decide separately later
+  if/when to sync `master` again.
+- Historical context: earlier on 2026-06-29 the project had briefly simplified to "push directly to
+  `master`" after `claude/lost-fleet-viewer-support-95lled` was fully absorbed there. That
+  simplification is superseded for now by the user's later branch-specific request above.
 - If your local clone is missing files you'd expect (e.g. this file, `PERFORMANCE.md`,
   `CODEX_HANDOFF.md`, or `viewer/src/components/SpaceMap.spec.ts`), your local `master` is stale —
   run `git fetch origin && git pull origin master` before doing anything else. `master` was
   deliberately left untouched for most of this project's history, so an old local clone of it can
   be missing a huge amount of work that has long existed on the feature branches.
-- Note: `master` is also the Vercel production deploy target — every push goes live immediately.
-  That's an accepted tradeoff for a single-branch workflow with one contributor, not a mistake.
+- Note: `master` is still the Vercel production deploy target, but this session's new work was
+  pushed only to `claude/lost-fleet-viewer-support-95lled` per the user's explicit request.
 
 ## Read Order
 

@@ -8,10 +8,15 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
 
 - The user switches between Claude Code and Codex; treat the repo as shared with another session
   unless `git status --short --branch` is clean.
-- **`master` is the single active branch — push directly to it.** As of 2026-06-29 the project
-  dropped the separate feature-branch workflow: `claude/lost-fleet-viewer-support-95lled` was fully
-  absorbed into `master` (identical tip, `0ae1a9c`) and is kept only as a historical ref. Don't
-  create a new feature branch for normal work; commit and push to `master`.
+- **Temporary exception: for the current Lost Fleet viewer pass, commit and push to
+  `claude/lost-fleet-viewer-support-95lled`.** `master` and that branch were identical at
+  `0e678332` when this Codex session started, but the user explicitly asked this session to continue
+  on `claude/lost-fleet-viewer-support-95lled` and decide separately later if/when to sync `master`
+  again.
+- Historical context: earlier on 2026-06-29 the project had briefly dropped the separate
+  feature-branch workflow after `claude/lost-fleet-viewer-support-95lled` was fully absorbed into
+  `master` (identical tip, `0ae1a9c`). That simplification is superseded for now by the user's later
+  branch-specific instruction above.
 - **If your local clone is missing files this doc references** (itself, `PERFORMANCE.md`,
   `AGENTS.md`, or `viewer/src/components/SpaceMap.spec.ts`), your local `master` is stale — run
   `git fetch origin && git pull origin master` before reading anything else. `master` was
@@ -29,9 +34,10 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
 
 ## Resume Checklist
 
-1. Run `git status --short --branch` and confirm you're on `master`, then `git pull origin master`
-   to make sure your local copy isn't stale (see the warning above — this has already happened
-   once).
+1. Run `git status --short --branch` and confirm which branch you're on. For this viewer-work thread
+   it should currently be `claude/lost-fleet-viewer-support-95lled`; if your local `master` is
+   stale, still `git fetch origin && git pull origin master` first so the docs/codebase are current,
+   then switch to the active feature branch before editing.
 2. Read `docs/lost-fleet/PROGRESS.md` in full — start with its **Working agreements** section
    (standing instruction, not optional), then the "Done so far" list and "Next actions".
 3. Read `docs/lost-fleet/RULES_CLARIFICATIONS.md` and `COMPONENTS.md` if the task touches Lost

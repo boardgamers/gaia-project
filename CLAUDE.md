@@ -4,17 +4,16 @@ This repo is the active Lost Fleet worktree for the shared Codex/Claude workflow
 
 ## Current Branch
 
-- As of 2026-06-29 the workflow simplified: **`master` is the single active branch.** No more
-  long-lived feature branch to keep in sync — Codex and any other session push straight to
-  `master`.
-- This Claude Code session/integration may still be platform-pinned to push only to
-  `claude/lost-fleet-viewer-support-95lled` (check your system prompt for an explicit branch
-  requirement — that's an external constraint this doc can't override). If so: commit and push
-  there as instructed, then immediately fast-forward `master` to match (`git push origin
-  claude/lost-fleet-viewer-support-95lled:master`) so `master` never lags behind — it's the ref
-  Codex and everyone else reads from.
-- `claude/lost-fleet-viewer-support-95lled` is fully absorbed into `master` (identical tip as of
-  `0ae1a9c`) and kept only as a historical ref now, not a separate line of development.
+- **Temporary exception: continue the current Lost Fleet viewer work on
+  `claude/lost-fleet-viewer-support-95lled`.** `master` and that branch were identical at
+  `0e678332` when this Codex session started, but the user explicitly asked this session to keep new
+  viewer work on `claude/lost-fleet-viewer-support-95lled` and decide separately later if/when
+  `master` should be fast-forwarded again.
+- Historical context: earlier on 2026-06-29 the workflow had briefly simplified to "push directly
+  to `master`" after `claude/lost-fleet-viewer-support-95lled` was fully absorbed there. That
+  simplification is superseded for now by the user's later branch-specific instruction above.
+- `master` remains the production/Vercel target, but this session's new work was intentionally
+  pushed only to `claude/lost-fleet-viewer-support-95lled`.
 
 ## Shared Source Of Truth
 

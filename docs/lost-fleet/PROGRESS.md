@@ -906,6 +906,14 @@ notifications).
     - Verification: engine `cd engine && npm test` → **467/467** passing; viewer `cd viewer && npx
       vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'` →
       **156/156** passing (the new Lost Fleet `SpaceMap` smoke test is the +1).
+40. ✅ **Branch routing temporarily moved back onto
+    `claude/lost-fleet-viewer-support-95lled` for viewer work** (done 2026-06-29). Although the docs
+    had briefly been rewritten earlier the same day for a single-branch `master` workflow (#37), the
+    user explicitly asked this Codex session to continue the new Lost Fleet viewer work on
+    `claude/lost-fleet-viewer-support-95lled` and decide separately later if/when to sync `master`
+    again. This session therefore committed and pushed the map-rendering slice to
+    `claude/lost-fleet-viewer-support-95lled` (commit `3657117`) and updated the handoff docs so the
+    next session does not silently drift back onto `master`.
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
