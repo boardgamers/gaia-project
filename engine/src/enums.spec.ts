@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import Engine from "./engine";
-import { AdvTechTile, Building, Expansion, hasExpansion } from "./enums";
+import { AdvTechTile, BoardAction, Building, Expansion, hasExpansion } from "./enums";
 
 describe("Expansion", () => {
   it("hasExpansion tests individual bits", () => {
@@ -53,6 +53,25 @@ describe("Expansion", () => {
     for (const tile of lostFleetOnlyTiles) {
       expect(withLostFleet).to.contain(tile);
       expect(withoutExpansion).to.not.contain(tile);
+    }
+  });
+
+  it("BoardAction.values(LostFleet) excludes qic1-3, replaced by the spaceship boards' own Q.I.C. actions (RULES_CLARIFICATIONS.md §E4/§K3)", () => {
+    const qicActions = [BoardAction.Qic1, BoardAction.Qic2, BoardAction.Qic3];
+
+    for (const expansions of [Expansion.None, Expansion.Frontiers]) {
+      const values = BoardAction.values(expansions);
+      for (const action of qicActions) {
+        expect(values).to.contain(action);
+      }
+    }
+
+    const withLostFleet = BoardAction.values(Expansion.LostFleet);
+    for (const action of qicActions) {
+      expect(withLostFleet).to.not.contain(action);
+    }
+    for (let i = 1; i <= 7; i++) {
+      expect(withLostFleet).to.contain(BoardAction[`Power${i}`]);
     }
   });
 });

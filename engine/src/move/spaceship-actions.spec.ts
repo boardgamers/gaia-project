@@ -509,4 +509,14 @@ describe("Lost Fleet spaceship board actions", () => {
     expect(player.data.victoryPoints).to.equal(beforeVp + 2 + 4);
     expect(player.data.qics).to.equal(beforeQic - 2);
   });
+
+  it("should not offer the research-board Q.I.C. actions, replaced by the spaceship boards' own (RULES_CLARIFICATIONS.md §E4/§K3)", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+
+    engine.clearAvailableCommands();
+    const command = engine.findAvailableCommand(PlayerEnum.Player1, Command.Action);
+
+    const names = command?.data.poweracts.map((a) => a.name) ?? [];
+    expect(names).to.not.include.members(["qic1", "qic2", "qic3"]);
+  });
 });

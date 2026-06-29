@@ -634,6 +634,23 @@ notifications).
     `tiles/lost-fleet-techs.spec.ts`, one per tile except `qaction`), and 1 integration test
     (`move/spaceship-actions.spec.ts`, exercising `qaction` through the real `moveSpaceshipAction()`
     Q.I.C. hook). **433/433 → 440/440** (net +7 tests).
+30. ✅ **Research-board Q.I.C. actions (qic1-3) now correctly disabled under Lost Fleet — RESOLVES flag
+    #7** (done 2026-06-29). Owner-confirmed: in Lost Fleet, the base research-board Q.I.C. actions
+    (`BoardAction.Qic1-3`) are entirely replaced by the 4 spaceship boards' own Q.I.C. actions, not
+    offered alongside them (RULES_CLARIFICATIONS.md §E4/§K3). `BoardAction.values(expansions)`
+    (`enums.ts`) previously ignored its `expansions` parameter entirely (same bug shape as flag 5,
+    `AdvTechTile.values()`) — now mirrors that fix: Power1-7 always included, Qic1-3 included only when
+    `!hasExpansion(expansions, Expansion.LostFleet)`. No other code changes were needed —
+    `move/setup.ts` and `move/phase.ts` already called `BoardAction.values(engine.expansions)` when
+    (re-)initializing `engine.boardActions`, so under Lost Fleet the `qic1`/`qic2`/`qic3` keys simply
+    never get seeded to `null`, and the existing `actions[pwract] === null` availability check in
+    `available/actions.ts` naturally excludes them (an `undefined` slot, never having existed, doesn't
+    pass that check) — confirmed this holds through the real `Command.Action` flow, not just the
+    enum function in isolation. Added a unit test (`enums.spec.ts`: `BoardAction.values(LostFleet)`
+    excludes qic1-3, `.values(None)`/`.values(Frontiers)` include them), an availability-layer test
+    (`available-command.spec.ts`: `possibleBoardActions` excludes qic1-3 under Lost Fleet even when
+    affordable, base game unaffected), and an end-to-end test (`move/spaceship-actions.spec.ts`: a real
+    Lost Fleet `Command.Action` never lists qic1/2/3). **440/440 → 443/443** (net +3 tests).
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -779,10 +796,14 @@ of the chunk that touches it. (File:line refs are to `engine/src/`.)
    with NO hex and no mine placed; this count will miss those. Plan: maintain a separate
    virtual-planet-type set (from artifacts) and union it into the `PlanetType` count. (The Lost Planet
    is already handled separately — see `lostPlanet` in `Condition.Mine`, `player.ts:923`.)
-7. **Q.I.C. board actions get overlaid (§E4/§K3).** Under Lost Fleet the Research-board Q.I.C.
-   actions (`BoardAction.Qic1-3`) are covered by the Colonization overlay and replaced by ship
-   actions; the "gain VP per planet type" Q.I.C. action's base also drops from 3 to 2 (§K3, because
-   there are now more planet types). Gate these in `available/actions.ts`.
+7. ✅ **RESOLVED (see "Done so far" #30).** Q.I.C. board actions get overlaid (§E4/§K3): under Lost
+   Fleet the Research-board Q.I.C. actions (`BoardAction.Qic1-3`) are covered by the Colonization
+   overlay and replaced by ship actions — owner-confirmed 2026-06-29, now gated via
+   `BoardAction.values(expansions)`. The "gain VP per planet type" Q.I.C. action's base dropping from
+   3 to 2 (§K3, because there are now more planet types) turned out to already be correctly coded: one
+   spaceship board's own Q.I.C. action (`spaceships.ts`) already reads `["2vp", "pt > vp"]`, the
+   exact replacement for the base game's `BoardAction.Qic3` (`["3vp", "pt > vp"]`) — no separate
+   change was needed there.
 
 **Already in place / no work needed:** mutual-exclusivity guard (`move/setup.ts:15`); the Lost Planet
 + `PlaceLostPlanet` + Navigation-5 infra all exist, so the "11th planet type" is purely a counting
@@ -808,8 +829,9 @@ Standard-Tech claim hook, the full Spaceship Boards live-gameplay wiring, the go
 for all 8 claimed-ship Federation tokens, rescoring ship Federation tokens, including Asteroid
 hexes in the Federation tokens' Build-a-Mine (per BGG designer ruling), Space Giants'
 Exploration-board special action, the Scoring Board Extension's alternate Advanced Tech gate
-(§E6), and the 6 newly-named Lost Fleet Advanced Tech tiles (§G2) are complete and verified —
-**440/440 engine tests pass**
+(§E6), the 6 newly-named Lost Fleet Advanced Tech tiles (§G2), and the research-board Q.I.C.
+actions' Lost Fleet overlay (§E4/§K3) are complete and verified —
+**443/443 engine tests pass**
 (274 baseline → 280 after Chunk 2 → 299 after Chunk 3 → 321 after Chunk 4 → 337 after Chunk 5 → 345
 after Chunk 6 → 352 after Chunk 7a → 353 after the German-rules reroll fix → 354 after Chunk 7b's
 placement-metadata step → 361 after Chunk 7b's `SpaceMap`/`moveInit` wiring + integration tests → 362
@@ -821,7 +843,8 @@ Credit) → 399 after wiring the gold-side execution for all 8 claimed-ship Fede
 fixing rescore to offer and re-trigger ship Federation tokens → 406 after fixing Federation tokens'
 Build-a-Mine to include Asteroid hexes once a spare Gaiaformer is available → 419 after Space Giants'
 Exploration-board special action → 433 after the Scoring Board Extension's alternate Advanced Tech
-gate → 440 after the 6 newly-named Lost Fleet Advanced Tech tiles (§G2), see "Done so far" #16-#29).
+gate → 440 after the 6 newly-named Lost Fleet Advanced Tech tiles (§G2) → 443 after the research-board
+Q.I.C. actions' Lost Fleet overlay, see "Done so far" #16-#30).
 (Note: the 399 and 404 figures here are git-verified; an earlier draft of this doc had momentarily
 overstated them as 407/412 before the correction in "Done so far" #24-#25 above. The 406 figure was
 also stale by session start — `git stash` confirmed the real baseline was 416 — see #27's note.)
@@ -839,9 +862,11 @@ Gaiaformer) instead of blanket-excluding them, per a designer ruling on BGG, see
 Giants now have their Exploration-board special action (once-per-round Build a Mine with 2 free
 terraforming steps), see #27; the 7th Advanced Tech slot from the Scoring Board Extension (gated
 on ≥25 VP, or in 3-4p on a 50/50-randomized choice between ≥25 VP and 3 explored ships) is now seeded
-at setup and correctly gates `canTakeAdvancedTechTile()`, see #28; and the 6 newly-named Lost Fleet
+at setup and correctly gates `canTakeAdvancedTechTile()`, see #28; the 6 newly-named Lost Fleet
 Advanced Tech tiles from §G2 (`asteroidpass`, `big`, `deep`, `deeppass`, `qaction`, `terra`) are now
-real, gated `AdvTechTile` enum members with wired effects, see #29. The Lost Fleet
+real, gated `AdvTechTile` enum members with wired effects, see #29; and the research-board Q.I.C.
+actions (`BoardAction.Qic1-3`) are now correctly disabled under Lost Fleet, replaced entirely by the
+spaceship boards' own Q.I.C. actions, see #30. The Lost Fleet
 variable-map geometry, tile data, full board assembly, `GaiaHex` addressing fix, AND the
 `SpaceMap`/`moveInit` wiring are all coded and tested (see #13-#16) — `new Engine([...], { lostFleet: true })`
 now produces a real, playable Lost Fleet board through the normal engine entry points. Explicitly still

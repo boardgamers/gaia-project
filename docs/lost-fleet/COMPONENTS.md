@@ -145,7 +145,7 @@ Each faction's Exploration board needs `[NEED FROM BOARD]`:
 |---|---|---|
 | Adjusted Economy Research tile (double-sided) | levels 3 & 4 rewards, BOTH sides — CONFIRMED, see RULES_CLARIFICATIONS.md §F1 | ◐ SPEC |
 | Adjusted Lantids PI tile (double-sided) | solo/2p side AND 3p side — CONFIRMED verbatim (RULES_CLARIFICATIONS.md §I2); NOT rendered by the uiqoo.kr randomizer tool at all, text-only | ◐ SPEC |
-| Colonization overlay | covers Q.I.C. actions on Research board; defines protoplanet/asteroid terraform | ☐ TODO |
+| Colonization overlay | covers Q.I.C. actions on Research board; defines protoplanet/asteroid terraform | ◐ the Q.I.C.-actions-covering half is **CODED & TESTED** (done 2026-06-29): `BoardAction.values(expansions)` excludes `Qic1-3` under Lost Fleet, so they're never offered alongside the spaceship boards' own Q.I.C. actions; the protoplanet/asteroid terraform-cost half was already done in Chunk 2 (flat early-returns in `planets.ts`) |
 | Scoring Board Extension (double-sided) | 25-VP side / 3-shuttle side; +1 advanced tech slot — CONFIRMED (was previously mislabeled "Adjusted Lantids PI tile" in early review passes; see RULES_CLARIFICATIONS.md §E6) | ● DONE for the gating mechanic (`AdvTechTilePos.ScoringExtension`, `Engine.scoringExtensionSide`, `canTakeAdvancedTechTile()`); the physical board's own visual (no dedicated UI component yet) is a separate viewer-side TODO |
 
 ## 9. Existing-Faction Changes — AUDIT CLOSED 2026-06-27

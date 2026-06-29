@@ -106,5 +106,27 @@ describe("Available commands", () => {
       d.knowledge = 15;
       expect(possible()).to.not.include("power1");
     });
+
+    it("should exclude the research-board Q.I.C. actions (qic1-3) under Lost Fleet (RULES_CLARIFICATIONS.md §E4/§K3)", () => {
+      const d = new PlayerData();
+      d.qics = 10;
+      d.power.area3 = 9;
+      const player = { data: d } as Player;
+
+      const baseActions = {};
+      BoardAction.values(Expansion.None).forEach((pos: BoardAction) => {
+        baseActions[pos] = null;
+      });
+      const baseNames = possibleBoardActions(baseActions, player, false)[0].data.poweracts.map((a) => a.name);
+      expect(baseNames).to.include.members(["qic1", "qic3", "power1"]);
+
+      const lostFleetActions = {};
+      BoardAction.values(Expansion.LostFleet).forEach((pos: BoardAction) => {
+        lostFleetActions[pos] = null;
+      });
+      const lostFleetNames = possibleBoardActions(lostFleetActions, player, false)[0].data.poweracts.map((a) => a.name);
+      expect(lostFleetNames).to.not.include.members(["qic1", "qic2", "qic3"]);
+      expect(lostFleetNames).to.include("power1");
+    });
   });
 });
