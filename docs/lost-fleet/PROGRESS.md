@@ -886,6 +886,26 @@ notifications).
     git pull origin master` on the desktop clone before retrying Codex. Added the same warning +
     fix to `CODEX_HANDOFF.md`'s working assumptions and resume checklist so the next handoff
     catches this before wasting a Codex turn on it.
+39. ✅ **Lost Fleet viewer map rendering, first slice, CODED & TESTED** (done 2026-06-29). The first
+    real Lost Fleet UI work is now in place: the viewer no longer silently drops Interspace and Deep
+    Space hexes just because they are not part of a 19-hex sector.
+    - `viewer/src/components/SpaceMap.vue` now keeps the existing per-sector render path for regular
+      Space sectors, but also renders every non-Space hex directly from `engine.map.grid` using the
+      engine's own `classifySectorId()` / `LostFleetSectorType` helpers. This preserves sector
+      rotation grouping for base sectors while finally making Lost Fleet's Interspace and Deep Space
+      geometry visible.
+    - `viewer/src/components/SpaceHex.vue` now tags Interspace / Deep Space polygons with their own
+      CSS classes, adds a first-pass on-map marker for Lost Fleet spaceship tiles (Twilight /
+      Rebellion / T F Mars / Eclipse), and extends tooltips with sector-type / spaceship-name text so
+      non-sector hexes are inspectable instead of looking like anonymous empty cells.
+    - `viewer/src/components/SpaceMap.spec.ts` now has a second smoke test that renders a real
+      `new Engine(["init 2 lost-fleet-space-map"], { lostFleet: true })` board and asserts three
+      invariants: sector groups still match `map.configuration().centers`, rendered hex count matches
+      `map.grid.size` including the extra Lost Fleet cells, and the spaceship-tile markers render once
+      per ship-bearing Interspace hex.
+    - Verification: engine `cd engine && npm test` → **467/467** passing; viewer `cd viewer && npx
+      vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'` →
+      **156/156** passing (the new Lost Fleet `SpaceMap` smoke test is the +1).
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -897,10 +917,10 @@ As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
 Real test commands (don't use raw `mocha -r ts-node/register` for the viewer — it hits stricter
 TS resolution than the real webpack-based path and gives false failures; use the actual scripts):
 - Engine: `cd engine && npm test` (or `npx mocha -r ts-node/register 'src/**/*.spec.ts' 'src/*.spec.ts'`
-  — equivalent for engine, which has no webpack step). 259 tests passing as of 2026-06-27.
+  — equivalent for engine, which has no webpack step). **467 tests passing as of 2026-06-29.**
 - Viewer: `cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'`
   (this is what `pnpm test` runs — uses `mochapack`/webpack, required for files that touch engine
-  types). 155 tests passing as of 2026-06-27.
+  types). **156 tests passing as of 2026-06-29.**
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/
@@ -914,6 +934,9 @@ session that touches viewer rendering components (hex map, `SpaceHex`, `Definiti
 building/ship rendering, or anything else in that render tree) must add to or extend this test —
 or add a sibling test using the same pattern — covering the new rendering path, not just rely on
 existing tests staying green.** This is a standing instruction, not a one-time task.
+As of 2026-06-29, that same smoke-test file now also includes a real Lost Fleet render case, so
+future map work should extend the base-game and Lost-Fleet paths together rather than treating Lost
+Fleet as an untested special case.
 
 Also fixed this session: `viewer/src/components/BoardAction.spec.ts` had 2 pre-existing broken
 tests (predating this fork) — its mock store `getters` were plain functions (`recentCommands: ()
@@ -1172,9 +1195,10 @@ open, in priority order the user should pick from:
    `Object.values(Planet)` sites, `SpaceshipTechTile` display data, a stale chart fixture) are all
    fixed. `viewer/` now builds and type-checks clean against the Lost Fleet engine (`npm run
    quick-test` 152/152; `npm test` 152/154, the 2 failures pre-existing/unrelated, see #33). The
-   viewer is now unblocked for new Lost Fleet UI work (map rendering for Lost Fleet sectors, spaceship
-   board panels, player-color turquoise/pink pieces per COMPONENTS.md §10, etc.) — none of that has
-   started yet.
+   viewer is now unblocked for new Lost Fleet UI work. **Map rendering for Lost Fleet sectors is now
+   started and in its first tested slice** (see #39): Interspace / Deep Space hexes and spaceship
+   tiles on the map render, but the remaining viewer work still includes richer Lost Fleet map polish,
+   spaceship board panels, and player-color turquoise/pink pieces per COMPONENTS.md §10.
 3. **Revised Space Sector tiles 05/06/07** (§H4, the one remaining art-only TODO — see "Still MISSING"
    above) — would let Lost Fleet stop falling back to the base game's per-count face for those 3 tiles.
 4. Or a different unit of work entirely (viewer, Supabase), ahead of any blocked item.

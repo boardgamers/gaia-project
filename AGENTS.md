@@ -32,7 +32,7 @@ This repo is the active Lost Fleet worktree for this project.
   action, the Scoring Board Extension's alternate Advanced Tech gate, the 6 Lost Fleet Advanced
   Tech tiles, and Examine Artifact + Artifact-token seeding are all implemented and tested.
 - `new Engine([...], { lostFleet: true })` builds a real, playable Lost Fleet board.
-- Engine tests: 467/467 passing. Viewer tests: 155/155 passing.
+- Engine tests: 467/467 passing. Viewer tests: 156/156 passing.
 - The viewer is deployed to Vercel (Git integration); `master` is the production deploy target.
 
 ## Open Work

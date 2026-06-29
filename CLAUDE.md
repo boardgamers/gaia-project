@@ -33,7 +33,7 @@ Read these before coding:
   gold-side execution, Space Giants' Exploration special action, the Scoring Board Extension gate,
   the 6 Lost Fleet Advanced Tech tiles, and Examine Artifact + Artifact-token seeding are all
   implemented and tested.
-- Engine: 467/467 tests passing. Viewer: 155/155 tests passing.
+- Engine: 467/467 tests passing. Viewer: 156/156 tests passing.
 - The viewer is deployed to Vercel with Git integration; `master` is the production deploy target,
   so every push to `master` goes live immediately.
 - See `docs/lost-fleet/PROGRESS.md`'s "Done so far" list for the full numbered history and "Next

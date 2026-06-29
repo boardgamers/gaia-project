@@ -9,6 +9,13 @@
         rotation(center) * 60
       }deg);`"
     />
+    <SpaceHex
+      v-for="hex in looseHexes"
+      :key="hex.toString()"
+      :transform="`translate(${hexCenter(hex).x * 1.01}, ${hexCenter(hex).y * 1.01})`"
+      :hex="hex"
+      :isCenter="false"
+    />
     <circle
       v-for="(s, i) in highlightedSectors"
       :key="i"
@@ -30,19 +37,21 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
-import Engine, { SpaceMap as SpaceMapData } from "@gaia-project/engine";
+import Engine, { classifySectorId, GaiaHex, LostFleetSectorType, SpaceMap as SpaceMapData } from "@gaia-project/engine";
 import { hexCenter } from "../graphics/hex";
 import Sector from "./Sector.vue";
 import { CubeCoordinates } from "hexagrid";
 import FactionWheel from "./FactionWheel.vue";
 import Definitions from "./definitions/Definitions.vue";
 import { MapMode, MapModeType } from "../data/actions";
+import SpaceHex from "./SpaceHex.vue";
 
 @Component<SpaceMap>({
   components: {
     FactionWheel,
     Definitions,
     Sector,
+    SpaceHex,
   },
 })
 export default class SpaceMap extends Vue {
@@ -56,6 +65,12 @@ export default class SpaceMap extends Vue {
 
   get sectors(): CubeCoordinates[] {
     return this.map.configuration().centers;
+  }
+
+  get looseHexes(): GaiaHex[] {
+    return [...this.map.grid.values()]
+      .filter((hex) => classifySectorId(hex.data.sector) !== LostFleetSectorType.Space)
+      .sort((a, b) => a.q - b.q || a.r - b.r || a.s - b.s);
   }
 
   rotation(center: CubeCoordinates) {

@@ -1,5 +1,5 @@
 <template>
-  <g :id="`${hex}`">
+  <g :id="`${hex}`" class="space-hex-cell">
     <title v-text="tooltip" />
     <use xlink:href="#space-hex" :class="polygonClasses(hex)" @click="hexClick(hex)" />
     <use
@@ -12,6 +12,10 @@
     <text class="sector-name" v-if="isCenter">
       {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
     </text>
+    <g v-if="lostFleetSpaceship" class="lost-fleet-spaceship">
+      <circle r="0.42" />
+      <text>{{ lostFleetSpaceshipLabel }}</text>
+    </g>
     <use v-if="powerHighlightClass" xlink:href="#space-hex" :class="['space-hex-federation', powerHighlightClass]" />
     <Planet
       v-if="showPlanet"
@@ -82,14 +86,17 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   Building as BuildingEnum,
+  classifySectorId,
   Faction,
   factionPlanet,
   GaiaHex,
+  LostFleetSectorType,
   Planet as PlanetEnum,
   Player,
   PlayerEnum,
   shipsInHex,
   SpaceMap as ISpaceMap,
+  Spaceship,
 } from "@gaia-project/engine";
 import { Direction } from "hexagrid";
 import { corners, FederationLine, playerFederationLines } from "../graphics/hex";
@@ -114,6 +121,20 @@ type BuildingOverride = { building: BuildingEnum; player: PlayerEnum };
   },
 })
 export default class SpaceHex extends Vue {
+  private readonly lostFleetSpaceshipLabels: Record<Spaceship, string> = {
+    [Spaceship.Twilight]: "T",
+    [Spaceship.Rebellion]: "R",
+    [Spaceship.TFMars]: "M",
+    [Spaceship.Eclipse]: "E",
+  };
+
+  private readonly lostFleetSpaceshipNames: Record<Spaceship, string> = {
+    [Spaceship.Twilight]: "Twilight",
+    [Spaceship.Rebellion]: "Rebellion",
+    [Spaceship.TFMars]: "T F Mars",
+    [Spaceship.Eclipse]: "Eclipse",
+  };
+
   @Prop()
   hex: GaiaHex;
 
@@ -198,6 +219,11 @@ export default class SpaceHex extends Vue {
 
   polygonClasses(hex: GaiaHex): string[] {
     const ret = ["space-hex"];
+    if (this.sectorType === LostFleetSectorType.Interspace) {
+      ret.push("interspace");
+    } else if (this.sectorType === LostFleetSectorType.DeepSpace) {
+      ret.push("deep-space");
+    }
 
     const selection = this.selection;
     if (this.mapModes.length > 0) {
@@ -296,6 +322,29 @@ export default class SpaceHex extends Vue {
 
   get planet() {
     return this.hex.data.planet;
+  }
+
+  get sectorType(): LostFleetSectorType {
+    return classifySectorId(this.hex.data.sector);
+  }
+
+  get lostFleetSpaceship(): Spaceship | null {
+    return this.hex.data.spaceship ?? null;
+  }
+
+  get lostFleetSpaceshipLabel(): string {
+    return this.lostFleetSpaceship ? this.lostFleetSpaceshipLabels[this.lostFleetSpaceship] : "";
+  }
+
+  private get sectorTypeLabel(): string {
+    switch (this.sectorType) {
+      case LostFleetSectorType.Interspace:
+        return "Interspace";
+      case LostFleetSectorType.DeepSpace:
+        return "Deep Space";
+      default:
+        return "Space";
+    }
   }
 
   get mapModeHighlight(): PlayerEnum | null {
@@ -437,7 +486,9 @@ export default class SpaceHex extends Vue {
       messages.push(`Warning: ${w}`);
     }
     const coord = `Coordinates: ${hex}`;
-    return [coord, planet]
+    const sector = `Sector type: ${this.sectorTypeLabel}`;
+    const spaceship = this.lostFleetSpaceship ? `Lost Fleet spaceship: ${this.lostFleetSpaceshipNames[this.lostFleetSpaceship]}` : null;
+    return [coord, sector, spaceship, planet]
       .concat(buildings)
       .concat(ships)
       .concat(messages)
@@ -455,6 +506,16 @@ svg {
 
     &.pointer {
       cursor: pointer;
+    }
+
+    &.interspace {
+      fill: #203760;
+      stroke-dasharray: 0.18 0.08;
+    }
+
+    &.deep-space {
+      fill: #111c3d;
+      stroke: #7b88b6;
     }
 
     &.bold {
@@ -531,6 +592,24 @@ svg {
     fill: white;
     opacity: 0.75;
     pointer-events: none;
+  }
+
+  .lost-fleet-spaceship {
+    pointer-events: none;
+
+    circle {
+      fill: #efe6c4;
+      stroke: #172e62;
+      stroke-width: 0.05;
+    }
+
+    text {
+      fill: #172e62;
+      font-size: 0.45px;
+      font-weight: 700;
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
   }
 }
 </style>

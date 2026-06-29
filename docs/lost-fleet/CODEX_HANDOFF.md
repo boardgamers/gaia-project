@@ -47,11 +47,14 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
   Federation token gold-side execution + rescoring, Space Giants' Exploration special action, the
   Scoring Board Extension's alternate Advanced Tech gate, the 6 Lost Fleet Advanced Tech tiles, and
   Examine Artifact + Artifact-token seeding are implemented and tested.
-- Engine: **467/467** tests passing (`cd engine && npm test`). Viewer: **155/155** tests passing
+- Engine: **467/467** tests passing (`cd engine && npm test`). Viewer: **156/156** tests passing
   (`cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts'
   'src/logic/**/*.spec.ts'`).
 - "Viewer Step Zero" is done: the viewer builds and type-checks clean against the Lost Fleet engine
   (the 6 `Object.values(Faction)` call sites and related gaps are all fixed).
+- Lost Fleet map rendering has started: `SpaceMap.vue` now renders Interspace / Deep Space hexes
+  directly from `engine.map.grid`, `SpaceHex.vue` distinguishes Lost Fleet sector types and spaceship
+  tiles visually, and `SpaceMap.spec.ts` has a real Lost Fleet smoke test alongside the base-game one.
 - The viewer is deployed to Vercel with Git integration; both `master` and
   `claude/lost-fleet-viewer-support-95lled` auto-deploy on push (`master` is the production target).
 - `CLAUDE.md` and `AGENTS.md` at the repo root both mirror this file's read order and current state
@@ -60,12 +63,12 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
 
 ## Next Likely Work
 
-No new Lost Fleet UI work has started yet. Per `PROGRESS.md`'s "Next actions", in priority order:
+Per `PROGRESS.md`'s "Next actions", in priority order:
 
 1. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.
-2. **New Lost Fleet UI work** — map rendering for Lost Fleet sectors, spaceship board panels,
-   player-color turquoise/pink pieces (`COMPONENTS.md` §10). This is the main unblocked item now
-   that Viewer Step Zero is done.
+2. **Continue the new Lost Fleet UI work** — the first map-rendering slice is done, but remaining
+   viewer work still includes richer map polish, spaceship board panels, and player-color
+   turquoise/pink pieces (`COMPONENTS.md` §10).
 3. **Revised Space Sector tiles 05/06/07** (§H4) — the one remaining art-only TODO; needs a photo
    of the physical component.
 4. Or a different unit of work entirely (viewer, Supabase), ahead of any blocked item.
