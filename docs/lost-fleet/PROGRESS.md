@@ -754,16 +754,18 @@ Federation token through federation formation and their seeded Standard Tech til
 tech-pick flow; all 12 of the 12 ship board-actions are now live through a new
 `Command.SpaceshipAction`, with a per-round per-action lock (see #18-#23); claiming a ship's seeded
 Federation token now executes its gold-side effect — direct rewards for 6 of the 8 tokens, and a
-chained bonus Build a Mine action for the other 2 (Range/Terraform), see #24; and rescoring (QIC2 board
+chained bonus Build a Mine action for the other 2 (Range/Terraform), see #24; rescoring (QIC2 board
 action) now offers and re-triggers ship-claimed Federation tokens exactly like pool-drawn ones, see
-#25. The Lost Fleet
+#25; and that chained Build a Mine action now correctly includes Asteroid hexes (gated on a spare
+Gaiaformer) instead of blanket-excluding them, per a designer ruling on BGG, see #26. The Lost Fleet
 variable-map geometry, tile data, full board assembly, `GaiaHex` addressing fix, AND the
 `SpaceMap`/`moveInit` wiring are all coded and tested (see #13-#16) — `new Engine([...], { lostFleet: true })`
 now produces a real, playable Lost Fleet board through the normal engine entry points. Explicitly still
 open, in priority order the user should pick from:
 1. **Examine Artifact + Twilight's Artifact-token seeding** — the one remaining Spaceship-Boards-
    adjacent feature not counted in the 12 ship-board actions; the other (claimed ship Federation
-   tokens' gold-side execution, and now rescoring them) is fully wired, see "Done so far" #24-#25.
+   tokens' gold-side execution, rescoring them, and the Asteroid-hex fix to their Build-a-Mine action)
+   is fully wired, see "Done so far" #24-#26.
 2. **Space Giants' Exploration-board special action** (deferred; core Explore plumbing now exists, but
    the faction-specific action hook still doesn't).
 3. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.
