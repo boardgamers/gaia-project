@@ -2,6 +2,7 @@ import Engine from "../engine";
 import { Building, Command, Faction, Phase, SubPhase } from "../enums";
 import { possibleSetupBoardActions } from "../setup";
 import { possibleBoardActions, possibleFreeActions, possibleGaiaFreeActions, possibleSpecialActions } from "./actions";
+import { possibleArtifactTokens, possibleExamineArtifact } from "./artifacts";
 import {
   possibleBuildings,
   possibleLabDowngrades,
@@ -53,6 +54,8 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
       return possibleFederationTiles(engine, player, "pool");
     case SubPhase.RescoreFederationTile:
       return possibleFederationTiles(engine, player, "player");
+    case SubPhase.ChooseArtifactToken:
+      return possibleArtifactTokens(engine, player);
     case SubPhase.BuildMine:
       return [...possibleMineBuildings(engine, player, false), ...possibleShipMovements(engine, player, true)];
     case SubPhase.BuildMineOrGaiaFormer:
@@ -79,6 +82,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
         ...possibleFreeActions(engine.player(player)),
         ...possibleRoundBoosters(engine, player),
         ...possibleSpaceshipActions(engine, player),
+        ...possibleExamineArtifact(engine, player),
       ];
     }
     case SubPhase.AfterMove:

@@ -58,7 +58,7 @@ Each new faction needs (see RULES_CLARIFICATIONS for values):
 
 | Spaceship | Special note | Status |
 |---|---|---|
-| Twilight (Nautilaks) | Holds Artifacts; "Examine Artifact" action | ◐ Board data + setup ● DONE (`spaceships.ts`, `setup.ts`); core Explore action/state ● DONE; federation-claim ownership hook ● DONE; claimed-token gold-side execution ● DONE; QIC action (re-score owned Federation token) ● DONE; Knowledge action (1k → +3 range for Build a Mine/Gaiaforming/Exploring) ● DONE; Power action (3pw,2o → upgrade a Trading Station into a Research Lab) ● DONE; Artifact-token seeding + Examine Artifact action ☐ TODO |
+| Twilight (Nautilaks) | Holds Artifacts; "Examine Artifact" action | ● Board data + setup ● DONE (`spaceships.ts`, `setup.ts`); core Explore action/state ● DONE; federation-claim ownership hook ● DONE; claimed-token gold-side execution ● DONE; QIC action (re-score owned Federation token) ● DONE; Knowledge action (1k → +3 range for Build a Mine/Gaiaforming/Exploring) ● DONE; Power action (3pw,2o → upgrade a Trading Station into a Research Lab) ● DONE; Artifact-token seeding + Examine Artifact action ● DONE |
 | Rebellion (Vo'Kron) | NOT used in 2-player games | ◐ Board data + setup ● DONE (`spaceships.ts`, `setup.ts`); core Explore action/state ● DONE; federation-claim ownership hook ● DONE; claimed-token gold-side execution ● DONE; Standard-Tech claim hook ● DONE; QIC action (claim Tech tile) ● DONE; Knowledge action (2k → 2c+1q) ● DONE; Power action (3pw,1o → upgrade a Mine into a Trading Station, ignoring isolation) ● DONE |
 | T F Mars (Gaia Federation) | Moweyds start with a shuttle here | ◐ Board data + setup ● DONE; core Explore action/state ● DONE; federation-claim ownership hook ● DONE; claimed-token gold-side execution ● DONE; Standard-Tech claim hook ● DONE; QIC action (VP scaled by owned Tech tiles) ● DONE; Power action / Instant-Gaiaforming (2pw → convert a Transdim planet in range, QIC-for-extra-range, into Gaia, no building placed) ● DONE; Credit action (3c → terraform + build a Mine in range, ore for steps beyond the first) ● DONE |
 | Eclipse (Eridani Empire) | — | ◐ Board data + setup ● DONE; core Explore action/state ● DONE; federation-claim ownership hook ● DONE; claimed-token gold-side execution ● DONE; Standard-Tech claim hook ● DONE; QIC action (VP scaled by colonized planet types) ● DONE; Power action (3pw,2k → free research upgrade) ● DONE; Credit action (6c → free Mine on an Asteroid in range) ● DONE |
@@ -75,7 +75,10 @@ Each spaceship needs:
   Mine). Rescoring (QIC2 board action) is also ● DONE for ship-claimed tokens — they're offered in the
   rescore list alongside pool-drawn tokens and re-trigger their gold-side effect uniformly, same as
   pool tokens (`available/federations.ts`, `move/federation.ts`'s `rescoreSpaceshipFederationToken`).
-  Only Twilight's Examine Artifact action remains ☐ TODO.
+  Twilight's Examine Artifact action (`Command.ExamineArtifact`/`ChooseArtifactToken`, `move/artifacts.ts`)
+  and the Artifact-token setup seeding are now also ● DONE, so every Spaceship-Boards-adjacent action
+  is live (kept as 2 separate commands rather than a 4th `SpaceshipActionType`, since `spaceships.spec.ts`
+  hard-asserts exactly 3 actions per ship).
 - Number of standard-tech slots — ● DONE: 0 (Twilight, has no Standard Tech slot at all), 1 each for
   Rebellion/T F Mars/Eclipse. Confirmed via owner board photos, see RULES_CLARIFICATIONS.md §C1/§C4.
 - Which new federation token + standard tech is seeded onto it at setup — ● DONE, random
@@ -133,7 +136,7 @@ Each faction's Exploration board needs `[NEED FROM BOARD]`:
 | Round Scoring tiles (new) | 3 | text p.14 — CONFIRMED verbatim, see RULES_CLARIFICATIONS.md §G4 | ◐ SPEC |
 | Final Scoring tiles (new) | 3 | "most asteroids", "PI–Academy distance", "most deep space sectors" — CONFIRMED verbatim, see RULES_CLARIFICATIONS.md §G4 | ◐ SPEC |
 | Federation tokens (new) | 8 (gold outline) | exact effects CONFIRMED for all 8, see RULES_CLARIFICATIONS.md §G5; ALL 8 have a green side (standard base-game mechanic — only the base game's original 12-VP token lacks one), resolved 2026-06-27 | ◐ SPEC |
-| Artifact tokens | 13 | effect CONFIRMED for all 13, see RULES_CLARIFICATIONS.md §G6; count of each type among the 13 inferred as 1-each, VERIFY `[NEED FROM BOARD]` | ◐ SPEC |
+| Artifact tokens | 13 | effect CONFIRMED for all 13, see RULES_CLARIFICATIONS.md §G6; count of each type among the 13 inferred as 1-each, VERIFY `[NEED FROM BOARD]`. **All 13 effects CODED & TESTED** (`tiles/artifacts.ts`, `move/artifacts.ts`, `available/artifacts.ts`; setup seeding via `setup.ts`'s `scoringFactory`) — ⚠️VERIFY: the `ResearchLevel` token's Research Area (assumed `ResearchField.Science`) was never confirmed, the owner's rules-text comment was cut off mid-sentence | ● CODED |
 | Gaia Planet tokens | 4 | additive to base supply | ☐ TODO |
 | Action tokens | 12 | mark used spaceship action spaces | ☐ TODO |
 | Tinkering tiles | 6 (Tinkeroids only) | effect of each CONFIRMED, see RULES_CLARIFICATIONS.md §B1 (rounds 1-3: terra 1 / charge 4pw / 1 Q.I.C.; rounds 4-6: terra 3 / 3 knowledge / 2 Q.I.C.) | ◐ SPEC |

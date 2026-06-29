@@ -1,13 +1,25 @@
 import { expect } from "chai";
 import Engine from "./engine";
-import { AdvTechTilePos, ScoringBoardExtensionSide, Spaceship, SpaceshipFederation, SpaceshipTechTile } from "./enums";
-import { shipsInPlay, spaceshipBoards } from "./spaceships";
+import {
+  AdvTechTilePos,
+  ArtifactToken,
+  ScoringBoardExtensionSide,
+  Spaceship,
+  SpaceshipFederation,
+  SpaceshipTechTile,
+} from "./enums";
+import { artifactSlotCount, shipsInPlay, spaceshipBoards } from "./spaceships";
 
 describe("Lost Fleet spaceship setup", () => {
   it("should not assign any tech tiles or federation tokens without the Lost Fleet expansion", () => {
     const engine = new Engine(["init 4 randomSeed"], {});
     expect(engine.tiles.spaceshipTechs).to.deep.equal({});
     expect(engine.tiles.spaceshipFederations).to.deep.equal({});
+  });
+
+  it("should not seed any Artifact tokens without the Lost Fleet expansion", () => {
+    const engine = new Engine(["init 4 randomSeed"], {});
+    expect(engine.tiles.artifacts).to.deep.equal([]);
   });
 
   for (const nbPlayers of [2, 3, 4]) {
@@ -38,7 +50,23 @@ describe("Lost Fleet spaceship setup", () => {
       const assigned = ships.map((ship) => engine.tiles.spaceshipFederations[ship]);
       expect(new Set(assigned).size).to.equal(assigned.length);
     });
+
+    it(`should seed one distinct Artifact token per player onto Twilight (${nbPlayers}p)`, () => {
+      const engine = new Engine([`init ${nbPlayers} randomSeed`], { lostFleet: true });
+
+      expect(engine.tiles.artifacts).to.have.length(artifactSlotCount(Spaceship.Twilight, nbPlayers));
+      for (const token of engine.tiles.artifacts) {
+        expect(token).to.be.oneOf(ArtifactToken.values(engine.expansions));
+      }
+      expect(new Set(engine.tiles.artifacts).size).to.equal(engine.tiles.artifacts.length);
+    });
   }
+
+  it("should be deterministic for a given seed (Artifact tokens)", () => {
+    const a = new Engine(["init 4 myseed"], { lostFleet: true });
+    const b = new Engine(["init 4 myseed"], { lostFleet: true });
+    expect(a.tiles.artifacts).to.deep.equal(b.tiles.artifacts);
+  });
 
   it("should exclude Rebellion from both seedings in 2-player games", () => {
     const engine = new Engine(["init 2 randomSeed"], { lostFleet: true });
@@ -89,10 +117,10 @@ describe("Lost Fleet spaceship setup", () => {
     });
 
     it("should randomize the side 50/50 in 4-player games", () => {
-      const vp = new Engine(["init 4 lf-ext-4p-2"], { lostFleet: true });
+      const vp = new Engine(["init 4 lf-ext-4p-0"], { lostFleet: true });
       expect(vp.scoringExtensionSide).to.equal(ScoringBoardExtensionSide.VictoryPoints);
 
-      const ships = new Engine(["init 4 lf-ext-4p-0"], { lostFleet: true });
+      const ships = new Engine(["init 4 lf-ext-4p-2"], { lostFleet: true });
       expect(ships.scoringExtensionSide).to.equal(ScoringBoardExtensionSide.ExploredShips);
     });
 

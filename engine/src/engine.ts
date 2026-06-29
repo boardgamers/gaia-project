@@ -6,6 +6,7 @@ import { AvailableCommand, BrainstoneActionData } from "./available/types";
 import {
   AnyTechTile,
   AnyTechTilePos,
+  ArtifactToken,
   BoardAction,
   Booster,
   Building,
@@ -29,6 +30,7 @@ import Event, { EventSource } from "./events";
 import { factionVariantBoard, latestVariantVersion } from "./faction-boards";
 import SpaceMap, { MapConfiguration } from "./map";
 import { moveAction, moveBurn, movePiSwap, moveSpecial, moveSpend } from "./move/actions";
+import { moveChooseArtifactToken, moveExamineArtifact } from "./move/artifacts";
 import { autoMove } from "./move/auto";
 import { moveBuild, moveLostPlanet } from "./move/buildings";
 import { moveExplore } from "./move/exploration";
@@ -248,6 +250,7 @@ export default class Engine {
     spaceshipFederations: {
       [key in Spaceship]?: SpaceshipFederation;
     };
+    artifacts: ArtifactToken[];
   } = {
     boosters: {},
     techs: {},
@@ -255,6 +258,7 @@ export default class Engine {
     federations: {},
     spaceshipTechs: {},
     spaceshipFederations: {},
+    artifacts: [],
   };
   boardActions: BoardActions = {};
   spaceshipActions: SpaceshipActions = {};
@@ -493,6 +497,9 @@ export default class Engine {
     });
     player.data.on(`gain-${Resource.RescoreFederation}`, () =>
       this.processNextMove(SubPhase.RescoreFederationTile, null, true)
+    );
+    player.data.on(`gain-${Resource.GainArtifact}`, () =>
+      this.processNextMove(SubPhase.ChooseArtifactToken, null, true)
     );
     player.data.on(`gain-${Resource.PISwap}`, () => this.processNextMove(SubPhase.PISwap, null, true));
     player.data.on(`gain-${Resource.SpaceStation}`, () => this.processNextMove(SubPhase.SpaceStation, null, true));
@@ -906,6 +913,8 @@ export default class Engine {
       [Command.Pass]: movePass,
       [Command.EndTurn]: moveEndTurn,
       [Command.ChooseIncome]: moveChooseIncome,
+      [Command.ExamineArtifact]: moveExamineArtifact,
+      [Command.ChooseArtifactToken]: moveChooseArtifactToken,
     };
     moveRegistry[move.command](this, this.avCommand(), this.playerToMove, ...move.args);
 

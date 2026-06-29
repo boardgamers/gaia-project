@@ -113,6 +113,7 @@ export enum Resource {
   UpgradeLowest = "up-lowest",
   TechTile = "tech",
   RescoreFederation = "fed",
+  GainArtifact = "artifact",
   TemporaryStep = "step",
   TemporaryRange = "range",
   MoveTokenFromArea3ToGaia = "t-a3",
@@ -362,6 +363,8 @@ export enum Command {
   Setup = "set",
   Spend = "spend",
   SpaceshipAction = "spaceshipAction",
+  ExamineArtifact = "examineArtifact",
+  ChooseArtifactToken = "chooseArtifactToken",
   UpgradeResearch = "up",
 }
 
@@ -753,6 +756,7 @@ export enum SubPhase {
   SpaceshipBuildMine = "spaceshipBuildMine",
   SpaceshipUpgradeBuilding = "spaceshipUpgradeBuilding",
   FederationTokenBuildMine = "federationTokenBuildMine",
+  ChooseArtifactToken = "chooseArtifactToken",
 }
 
 // Lost Fleet Spaceship Boards (4 generic boards, not tied to any faction).
@@ -814,6 +818,47 @@ export namespace SpaceshipFederation {
       SpaceshipFederation.Tech,
       SpaceshipFederation.Terraform,
       SpaceshipFederation.Vp,
+    ];
+  }
+}
+
+// The 13 Artifact tokens seeded onto Twilight's artifact slots at setup (one slot per player); see
+// RULES_CLARIFICATIONS.md §G6.
+export enum ArtifactToken {
+  KnowledgeOre = "artifact-knowledgeore",
+  Credit = "artifact-credit",
+  KnowledgeQic = "artifact-knowledgeqic",
+  CreditLarge = "artifact-creditlarge",
+  Power = "artifact-power",
+  Asteroid = "artifact-asteroid",
+  Protoplanet = "artifact-protoplanet",
+  ResearchLevel = "artifact-researchlevel",
+  ResearchTracks = "artifact-researchtracks",
+  Federation = "artifact-federation",
+  GaiaProject = "artifact-gaiaproject",
+  PlanetTypes = "artifact-planettypes",
+  DeepSpace = "artifact-deepspace",
+}
+
+export namespace ArtifactToken {
+  export function values(expansions: Expansion): ArtifactToken[] {
+    if (!hasExpansion(expansions, Expansion.LostFleet)) {
+      return [];
+    }
+    return [
+      ArtifactToken.KnowledgeOre,
+      ArtifactToken.Credit,
+      ArtifactToken.KnowledgeQic,
+      ArtifactToken.CreditLarge,
+      ArtifactToken.Power,
+      ArtifactToken.Asteroid,
+      ArtifactToken.Protoplanet,
+      ArtifactToken.ResearchLevel,
+      ArtifactToken.ResearchTracks,
+      ArtifactToken.Federation,
+      ArtifactToken.GaiaProject,
+      ArtifactToken.PlanetTypes,
+      ArtifactToken.DeepSpace,
     ];
   }
 }

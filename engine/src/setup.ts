@@ -7,6 +7,7 @@ import {
   AdvTechTilePos,
   AnyTechTile,
   AnyTechTilePos,
+  ArtifactToken,
   Booster,
   Command,
   Expansion,
@@ -23,7 +24,7 @@ import {
   TechTilePos,
 } from "./enums";
 import SpaceMap, { MapTile } from "./map";
-import { SeededSpaceshipTech, spaceshipBoards, shipsInPlay } from "./spaceships";
+import { artifactSlotCount, SeededSpaceshipTech, spaceshipBoards, shipsInPlay } from "./spaceships";
 
 export enum SetupType {
   Booster = "booster",
@@ -35,6 +36,7 @@ export enum SetupType {
   MapTile = "mapTile",
   SpaceshipTechTile = "spaceshipTechTile",
   SpaceshipFederation = "spaceshipFederation",
+  ArtifactToken = "artifactToken",
 }
 
 export type SetupPosition = number | AnyTechTilePos | Spaceship;
@@ -46,6 +48,7 @@ export type SetupOption =
   | FinalTile
   | SpaceshipTechTile
   | SpaceshipFederation
+  | ArtifactToken
   | string; //string is for MapTile name
 
 type SetupFactoryOption = {
@@ -288,6 +291,13 @@ const getFactories = (engine: Engine, nbPlayers = engine.players.length): SetupF
     shipsInPlay(engine.expansions, nbPlayers),
     SpaceshipFederation.values(engine.expansions),
     engine.tiles.spaceshipFederations
+  ),
+  scoringFactory(
+    engine,
+    SetupType.ArtifactToken,
+    ArtifactToken.values(engine.expansions),
+    engine.tiles.artifacts,
+    hasExpansion(engine.expansions, Expansion.LostFleet) ? artifactSlotCount(Spaceship.Twilight, nbPlayers) : 0
   ),
   {
     type: SetupType.MapTile,

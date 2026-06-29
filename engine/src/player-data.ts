@@ -9,6 +9,7 @@ import {
   Command,
   Expansion,
   Federation,
+  Planet,
   PowerArea,
   ResearchField,
   Resource,
@@ -125,6 +126,8 @@ export default class PlayerData extends EventEmitter {
   leechPossible: number;
   tokenModifier = 1;
   lostPlanet = 0;
+  /** Virtual planet types granted by Asteroid/Protoplanet-themed Artifact tokens, no hex placed */
+  artifactPlanetTypes: Planet[] = [];
 
   // Internal variables, not meant to be in toJSON():
   brainstoneDest: BrainstoneDest;
@@ -162,6 +165,7 @@ export default class PlayerData extends EventEmitter {
       spaceshipFederations: this.spaceshipFederations,
       explorationShips: this.explorationShips,
       lostPlanet: this.lostPlanet,
+      artifactPlanetTypes: this.artifactPlanetTypes,
       ships: this.ships,
       shipRange: this.shipRange,
       tradeBonus: this.tradeBonus,

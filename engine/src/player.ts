@@ -981,8 +981,7 @@ export default class Player extends EventEmitter {
       case Condition.Gaia:
         return this.ownedPlanets.filter((hex) => hex.data.planet === Planet.Gaia).length;
       case Condition.PlanetType:
-        // Lost Fleet Artifacts can grant a "virtual" planet type with no hex; fold those into this list when added.
-        return uniq(this.ownedPlanets.map((hex) => hex.data.planet)).length;
+        return uniq([...this.ownedPlanets.map((hex) => hex.data.planet), ...this.data.artifactPlanetTypes]).length;
       case Condition.TechTile:
         return this.data.tiles.techs.length;
       case Condition.Sector:

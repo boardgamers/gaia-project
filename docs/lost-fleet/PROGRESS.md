@@ -670,6 +670,31 @@ notifications).
     Build-a-Mine both with and without `terra` loaded, and confirms the VP delta between the two runs
     equals exactly `2 * steps` — i.e. `terra` fires on the discounted/free steps too, not just paid
     ones) directly covering the rules text's own worked example. **443/443 → 444/444** (net +1 test).
+32. ✅ **Examine Artifact + Twilight's Artifact-token seeding, all 13 token effects CODED & TESTED**
+    (`RULES_CLARIFICATIONS.md` §G6; `COMPONENTS.md` "Lost Fleet Spaceship Boards" row 1; the last item
+    from "Next actions" #1). This was kept as 2 separate commands (`Command.ExamineArtifact`,
+    `Command.ChooseArtifactToken`) rather than a 4th `SpaceshipActionType`, since `spaceships.spec.ts`
+    hard-asserts exactly 3 actions per ship — but otherwise follows the same layered pattern as the
+    other 12 ship actions (static data in `spaceships.ts`/`tiles/artifacts.ts`, availability in
+    `available/artifacts.ts`, move handling in `move/artifacts.ts`, setup seeding via a new
+    `scoringFactory(SetupType.ArtifactToken, ...)` entry in `setup.ts`). Examine Artifact costs 6 power
+    (`"6t"`, discarded from any power area) and lets the player immediately claim one of the remaining
+    Artifact tokens; all 13 tokens' effects are wired — 8 immediate-reward/VP tokens via a switch in
+    `applyArtifactToken()`, the Federation token chains into the existing rescore subphase exactly like
+    the ship-claimed Federation tokens, and the 5 simple resource/income tokens go through the existing
+    DSL reward parser (`KnowledgeOre` in particular resolves as an `Operator.Income` event, i.e. ongoing
+    income, not an immediate gain — confirmed by testing `player.resourceIncome()` deltas rather than
+    instant balance changes). **Bug found and fixed while writing seeding tests**: the new
+    `ArtifactToken` setup factory computed its target slot count via `artifactSlotCount(Spaceship.Twilight,
+    nbPlayers)`, which doesn't itself check the active expansion — so without Lost Fleet, the factory
+    still tried to seed `nbPlayers` slots from an empty `ArtifactToken.values(engine.expansions)` pool,
+    leaving `engine.tiles.artifacts` as `[undefined, ...]` instead of `[]`. Fixed by gating the
+    `setup.ts` call site on `hasExpansion(engine.expansions, Expansion.LostFleet)`, now covered by a
+    regression test. The `ResearchLevel` token's Research Area (`ResearchField.Science`) remains a
+    flagged ⚠️VERIFY best guess — the owner's rules-text comment on this token was cut off mid-sentence
+    and was never confirmed; see the comment in `tiles/artifacts.ts` and `move/artifacts.ts`.
+    **444/444 → 467/467** (net +23 tests: 18 in new `move/artifacts.spec.ts`, 5 new seeding/gating cases
+    in `setup.spec.ts`).
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -849,10 +874,10 @@ for all 8 claimed-ship Federation tokens, rescoring ship Federation tokens, incl
 hexes in the Federation tokens' Build-a-Mine (per BGG designer ruling), Space Giants'
 Exploration-board special action, the Scoring Board Extension's alternate Advanced Tech gate
 (§E6), the 6 newly-named Lost Fleet Advanced Tech tiles (§G2), the research-board Q.I.C.
-actions' Lost Fleet overlay (§E4/§K3), and an audit confirming the `terra` Advanced Tech tile
-correctly fires on every free/discounted terraforming step, not just paid ones, are complete and
-verified —
-**444/444 engine tests pass**
+actions' Lost Fleet overlay (§E4/§K3), an audit confirming the `terra` Advanced Tech tile
+correctly fires on every free/discounted terraforming step, not just paid ones, and Examine Artifact
+plus Twilight's Artifact-token seeding (all 13 token effects), are complete and verified —
+**467/467 engine tests pass**
 (274 baseline → 280 after Chunk 2 → 299 after Chunk 3 → 321 after Chunk 4 → 337 after Chunk 5 → 345
 after Chunk 6 → 352 after Chunk 7a → 353 after the German-rules reroll fix → 354 after Chunk 7b's
 placement-metadata step → 361 after Chunk 7b's `SpaceMap`/`moveInit` wiring + integration tests → 362
@@ -865,8 +890,8 @@ fixing rescore to offer and re-trigger ship Federation tokens → 406 after fixi
 Build-a-Mine to include Asteroid hexes once a spare Gaiaformer is available → 419 after Space Giants'
 Exploration-board special action → 433 after the Scoring Board Extension's alternate Advanced Tech
 gate → 440 after the 6 newly-named Lost Fleet Advanced Tech tiles (§G2) → 443 after the research-board
-Q.I.C. actions' Lost Fleet overlay → 444 after the `terra` free-terraforming-steps audit, see "Done so
-far" #16-#31).
+Q.I.C. actions' Lost Fleet overlay → 444 after the `terra` free-terraforming-steps audit → 467 after
+Examine Artifact + Twilight's Artifact-token seeding, see "Done so far" #16-#32).
 (Note: the 399 and 404 figures here are git-verified; an earlier draft of this doc had momentarily
 overstated them as 407/412 before the correction in "Done so far" #24-#25 above. The 406 figure was
 also stale by session start — `git stash` confirmed the real baseline was 416 — see #27's note.)
@@ -888,24 +913,23 @@ at setup and correctly gates `canTakeAdvancedTechTile()`, see #28; the 6 newly-n
 Advanced Tech tiles from §G2 (`asteroidpass`, `big`, `deep`, `deeppass`, `qaction`, `terra`) are now
 real, gated `AdvTechTile` enum members with wired effects, see #29; the research-board Q.I.C.
 actions (`BoardAction.Qic1-3`) are now correctly disabled under Lost Fleet, replaced entirely by the
-spaceship boards' own Q.I.C. actions, see #30; and `terra` has been audited against every source of
+spaceship boards' own Q.I.C. actions, see #30; `terra` has been audited against every source of
 free terraforming steps in the engine (normal builds, the Federation tokens' bonus Build-a-Mine,
-Space Giants' special action, Lost Planet placement, ship buildings) with no bug found, see #31. The
-Lost Fleet
+Space Giants' special action, Lost Planet placement, ship buildings) with no bug found, see #31; and
+Examine Artifact + Twilight's Artifact-token seeding (all 13 token effects) are now coded and tested,
+see #32. The Lost Fleet
 variable-map geometry, tile data, full board assembly, `GaiaHex` addressing fix, AND the
 `SpaceMap`/`moveInit` wiring are all coded and tested (see #13-#16) — `new Engine([...], { lostFleet: true })`
-now produces a real, playable Lost Fleet board through the normal engine entry points. Explicitly still
+now produces a real, playable Lost Fleet board through the normal engine entry points. Every Spaceship-
+Boards-adjacent feature is now wired: all 12 ship-board actions, the gold-side execution and rescoring
+of claimed ship Federation tokens, and Examine Artifact + Artifact-token seeding. Explicitly still
 open, in priority order the user should pick from:
-1. **Examine Artifact + Twilight's Artifact-token seeding** — the one remaining Spaceship-Boards-
-   adjacent feature not counted in the 12 ship-board actions; the other (claimed ship Federation
-   tokens' gold-side execution, rescoring them, and the Asteroid-hex fix to their Build-a-Mine action)
-   is fully wired, see "Done so far" #24-#26.
-2. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.
-3. **Viewer-side `Object.values(Faction)` fix** (6 call sites, currently harmless since the viewer
+1. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.
+2. **Viewer-side `Object.values(Faction)` fix** (6 call sites, currently harmless since the viewer
    hasn't been touched, but will need fixing before any viewer chunk starts).
-4. **Revised Space Sector tiles 05/06/07** (§H4, the one remaining art-only TODO — see "Still MISSING"
+3. **Revised Space Sector tiles 05/06/07** (§H4, the one remaining art-only TODO — see "Still MISSING"
    above) — would let Lost Fleet stop falling back to the base game's per-count face for those 3 tiles.
-5. Or a different unit of work entirely (viewer, Supabase), ahead of any blocked item.
+4. Or a different unit of work entirely (viewer, Supabase), ahead of any blocked item.
 
 Confirm with the user before starting any of the above.
 

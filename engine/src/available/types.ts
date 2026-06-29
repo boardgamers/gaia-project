@@ -1,6 +1,7 @@
 import {
   AdvTechTile,
   AdvTechTilePos,
+  ArtifactToken,
   BoardAction,
   Booster,
   Building,
@@ -135,6 +136,7 @@ interface CommandData {
   [Command.Build]: AvailableBuildCommandData;
   [Command.BurnPower]: number[];
   [Command.ChargePower]: { offers: Offer[] };
+  [Command.ChooseArtifactToken]: { tokens: ArtifactToken[] };
   [Command.ChooseCoverTechTile]: { tiles: StandardTechTileChoice[] };
   [Command.ChooseFaction]: Faction[];
   [Command.ChooseFederationTile]: { tiles: AvailableFederationChoice[]; rescore: boolean };
@@ -144,6 +146,7 @@ interface CommandData {
   [Command.DeadEnd]: SubPhase; // for debugging
   [Command.Decline]: { offers: Offer[] };
   [Command.EndTurn]: never;
+  [Command.ExamineArtifact]: { cost: string };
   [Command.Explore]: AvailableExploreActionData;
   [Command.FormFederation]: {
     tiles: AvailableFederationChoice[];
