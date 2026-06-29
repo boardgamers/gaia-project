@@ -172,6 +172,9 @@ export enum Condition {
   StructureFedValue = "stfedvalue",
   ResearchLevels = "a",
   HighestResearchLevel = "L",
+  // Lost Fleet
+  Asteroid = "ast",
+  DeepSpaceSector = "ds",
 
   // trigger only
   MineOnGaia = "mg",
@@ -179,6 +182,8 @@ export enum Condition {
   TerraformStep = "step",
   GaiaFormer = "gf",
   Trade = "trade",
+  // Lost Fleet
+  SpaceshipQicAction = "shipq",
 }
 
 export namespace Condition {
@@ -528,18 +533,48 @@ export enum AdvTechTile {
   AdvTech13 = "advtech13",
   AdvTech14 = "advtech14",
   AdvTech15 = "advtech15",
+
+  // Lost Fleet, see RULES_CLARIFICATIONS.md §G2
+  AsteroidPass = "advtech-asteroidpass",
+  Big = "advtech-big",
+  Deep = "advtech-deep",
+  DeepPass = "advtech-deeppass",
+  QAction = "advtech-qaction",
+  Terra = "advtech-terra",
 }
 
 export namespace AdvTechTile {
   export function values(expansions: Expansion): AdvTechTile[] {
-    return (Object.values(AdvTechTile) as AdvTechTile[]).filter((val: AdvTechTile) => {
-      if (typeof val !== "string") {
-        return;
-      }
-      if (val.startsWith("advtech")) {
-        return true;
-      }
-    }) as AdvTechTile[];
+    const ret = [
+      AdvTechTile.AdvTech1,
+      AdvTechTile.AdvTech2,
+      AdvTechTile.AdvTech3,
+      AdvTechTile.AdvTech4,
+      AdvTechTile.AdvTech5,
+      AdvTechTile.AdvTech6,
+      AdvTechTile.AdvTech7,
+      AdvTechTile.AdvTech8,
+      AdvTechTile.AdvTech9,
+      AdvTechTile.AdvTech10,
+      AdvTechTile.AdvTech11,
+      AdvTechTile.AdvTech12,
+      AdvTechTile.AdvTech13,
+      AdvTechTile.AdvTech14,
+      AdvTechTile.AdvTech15,
+    ];
+
+    if (hasExpansion(expansions, Expansion.LostFleet)) {
+      ret.push(
+        AdvTechTile.AsteroidPass,
+        AdvTechTile.Big,
+        AdvTechTile.Deep,
+        AdvTechTile.DeepPass,
+        AdvTechTile.QAction,
+        AdvTechTile.Terra
+      );
+    }
+
+    return ret;
   }
 }
 

@@ -38,6 +38,14 @@ const techTileSpec: { [key in AnyTechTile]: string[] } = {
   [AdvTechTile.AdvTech13]: ["=> 3k"],
   [AdvTechTile.AdvTech14]: ["m >> 3vp"],
   [AdvTechTile.AdvTech15]: ["ts >> 3vp"],
+
+  // Lost Fleet, see RULES_CLARIFICATIONS.md §G2
+  [AdvTechTile.AsteroidPass]: ["ast | 2vp"],
+  [AdvTechTile.Big]: ["PA > 6vp"],
+  [AdvTechTile.Deep]: ["ds > 4vp"],
+  [AdvTechTile.DeepPass]: ["ds | 2vp"],
+  [AdvTechTile.QAction]: ["shipq >> 4vp"],
+  [AdvTechTile.Terra]: ["step >> 2vp"],
 };
 
 export function techTileEventWithSource(tile: AnyTechTile, source: EventSource): Event[] {

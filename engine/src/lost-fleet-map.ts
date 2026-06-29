@@ -1,4 +1,5 @@
 import { CubeCoordinates, Hex } from "hexagrid";
+import { uniq } from "lodash";
 import { Planet, Spaceship } from "./enums";
 import { GaiaHex } from "./gaia-hex";
 
@@ -274,6 +275,19 @@ export function isNewLostFleetSector(occupied: readonly GaiaHex[], hex: GaiaHex)
     return false;
   }
   return !occupied.some((other) => other !== hex && lostFleetSectorKey(other) === key);
+}
+
+/**
+ * Number of distinct Deep Space sectors among `hexes` (each physical 3-hex Deep Space tile counts
+ * once, via `lostFleetSectorKey`'s per-hex-suffix normalization). Used by the `deep`/`deeppass`
+ * Advanced Tech tiles.
+ */
+export function colonizedDeepSpaceSectorCount(hexes: readonly GaiaHex[]): number {
+  return uniq(
+    hexes
+      .filter((hex) => classifySectorId(hex.data.sector) === LostFleetSectorType.DeepSpace)
+      .map((hex) => lostFleetSectorKey(hex))
+  ).length;
 }
 
 /** A single face (3 hexes) of a Deep Space Sector tile. Each hex is one of Protoplanet/Asteroid/Transdim/Empty. */

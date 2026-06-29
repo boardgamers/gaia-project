@@ -37,6 +37,7 @@ import { factionPlanet } from "./factions";
 import { federationCost, FederationInfo, isOutclassedBy, parseFederationLocation } from "./federation";
 import { GaiaHex } from "./gaia-hex";
 import { IncomeSelection } from "./income";
+import { colonizedDeepSpaceSectorCount } from "./lost-fleet-map";
 import SpaceMap from "./map";
 import { terraformingStepsRequired } from "./planets";
 import PlayerData from "./player-data";
@@ -1007,6 +1008,10 @@ export default class Player extends EventEmitter {
         return sum(Object.values(this.data.research));
       case Condition.HighestResearchLevel:
         return Math.max(...Object.values(this.data.research));
+      case Condition.Asteroid:
+        return this.ownedPlanets.filter((hex) => hex.data.planet === Planet.Asteroid).length;
+      case Condition.DeepSpaceSector:
+        return colonizedDeepSpaceSectorCount(this.ownedPlanets);
     }
 
     return 0;

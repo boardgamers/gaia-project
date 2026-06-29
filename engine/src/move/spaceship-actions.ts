@@ -2,7 +2,7 @@ import assert from "assert";
 import { isEqual } from "lodash";
 import { AvailableCommand } from "../available/types";
 import Engine from "../engine";
-import { Building, Command, Planet, Player as PlayerEnum, Spaceship, SubPhase } from "../enums";
+import { Building, Command, Condition, Planet, Player as PlayerEnum, Spaceship, SubPhase } from "../enums";
 import Event from "../events";
 import Reward from "../reward";
 import { SpaceshipActionType, spaceshipActionEffects } from "../spaceships";
@@ -22,6 +22,10 @@ export function moveSpaceshipAction(
   engine.spaceshipActions[ship] = { ...engine.spaceshipActions[ship], [type]: player };
 
   pl.payCosts(Reward.parse(availableAction.cost), ship);
+
+  if (type === "qic") {
+    pl.receiveTriggerIncome(Condition.SpaceshipQicAction);
+  }
 
   if (ship === Spaceship.Eclipse && type === "power") {
     engine.processNextMove(SubPhase.UpgradeResearch, null, false);

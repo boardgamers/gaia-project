@@ -4,6 +4,7 @@ import { AvailableCommand } from "../available/types";
 import { qicForDistance, terraformingCost } from "../cost";
 import Engine from "../engine";
 import {
+  AdvTechTile,
   Building,
   Command,
   Faction,
@@ -20,6 +21,7 @@ import {
 import { GaiaHex } from "../gaia-hex";
 import { Power } from "../player-data";
 import { terraformingStepsRequired } from "../planets";
+import { techTileEventWithSource } from "../tiles/techs";
 import { moveSpaceshipAction } from "./spaceship-actions";
 
 function createLostFleetRoundMoveEngine(
@@ -485,5 +487,26 @@ describe("Lost Fleet spaceship board actions", () => {
     expect(player.data.power.area3).to.equal(beforePower - 3);
     expect(player.data.ores).to.equal(beforeOres - 2);
     expect(hex.data.building).to.equal(Building.ResearchLab);
+  });
+
+  it("should additionally grant 4 VP per Q.I.C. action via the qaction Advanced Tech tile (RULES_CLARIFICATIONS.md §G2)", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    player.data.explorationShips[Spaceship.TFMars] = 1;
+    player.loadEvents(techTileEventWithSource(AdvTechTile.QAction, AdvTechTile.QAction));
+
+    const command = availableSpaceshipActionCommand(engine, PlayerEnum.Player1);
+    const action = command.data.actions.find((a) => a.ship === Spaceship.TFMars && a.type === "qic");
+    expect(action.cost).to.equal("2q");
+
+    const beforeVp = player.data.victoryPoints;
+    const beforeQic = player.data.qics;
+
+    moveSpaceshipAction(engine, command, PlayerEnum.Player1, Spaceship.TFMars, "qic");
+
+    // T F Mars's own qic action grants 2 VP (+0 from "tt > vp", no tech tiles owned);
+    // qaction adds a further 4 VP on top, for this and every other Q.I.C. action.
+    expect(player.data.victoryPoints).to.equal(beforeVp + 2 + 4);
+    expect(player.data.qics).to.equal(beforeQic - 2);
   });
 });

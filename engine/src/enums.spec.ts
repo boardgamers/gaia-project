@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import Engine from "./engine";
-import { Building, Expansion, hasExpansion } from "./enums";
+import { AdvTechTile, Building, Expansion, hasExpansion } from "./enums";
 
 describe("Expansion", () => {
   it("hasExpansion tests individual bits", () => {
@@ -35,5 +35,24 @@ describe("Expansion", () => {
 
   it("Frontiers and Lost Fleet can not be combined", () => {
     expect(() => new Engine(["init 2 randomSeed"], { frontiers: true, lostFleet: true })).to.throw();
+  });
+
+  it("AdvTechTile.values(LostFleet) includes the 6 §G2 tiles, AdvTechTile.values(None) does not", () => {
+    const lostFleetOnlyTiles = [
+      AdvTechTile.AsteroidPass,
+      AdvTechTile.Big,
+      AdvTechTile.Deep,
+      AdvTechTile.DeepPass,
+      AdvTechTile.QAction,
+      AdvTechTile.Terra,
+    ];
+
+    const withLostFleet = AdvTechTile.values(Expansion.LostFleet);
+    const withoutExpansion = AdvTechTile.values(Expansion.None);
+
+    for (const tile of lostFleetOnlyTiles) {
+      expect(withLostFleet).to.contain(tile);
+      expect(withoutExpansion).to.not.contain(tile);
+    }
   });
 });
