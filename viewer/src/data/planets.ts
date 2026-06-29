@@ -12,8 +12,8 @@ export default {
   [Planet.Transdim]: { radius: 0.5, color: "#a64dff", borderColor: "#a64dff" },
   [Planet.Lost]: { radius: 0.5, color: "#004570", borderColor: "#d1d1e0" },
   // Lost Fleet
-  [Planet.Asteroid]: { radius: 0.5, color: "#30d5c8", borderColor: "#1a9e94" },
-  [Planet.Protoplanet]: { radius: 0.5, color: "#ff66b3", borderColor: "#cc3d8a" },
+  [Planet.Asteroid]: { radius: 0.5, color: "#ff66b3", borderColor: "#cc3d8a" },
+  [Planet.Protoplanet]: { radius: 0.5, color: "#30d5c8", borderColor: "#1a9e94" },
 };
 
 export const planetNames = {

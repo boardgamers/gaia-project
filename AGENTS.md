@@ -37,9 +37,11 @@ This repo is the active Lost Fleet worktree for this project.
   action, the Scoring Board Extension's alternate Advanced Tech gate, the 6 Lost Fleet Advanced
   Tech tiles, and Examine Artifact + Artifact-token seeding are all implemented and tested.
 - `new Engine([...], { lostFleet: true })` builds a real, playable Lost Fleet board.
-- Engine tests: 467/467 passing. Viewer tests: 160/160 passing.
+- Engine tests: 470/470 passing. Viewer tests: 161/161 passing.
 - The self-contained viewer can now boot Lost Fleet directly via `?lostFleet=1` (for example
   `?players=2&seed=lost-fleet-space-map&lostFleet=1`).
+- Darkanians and Space Giants now correctly place only 1 starting mine during Lost Fleet setup, and
+  the viewer now uses Asteroid=pink / Protoplanet=turquoise.
 - The viewer is deployed to Vercel (Git integration); `master` is the production deploy target.
 
 ## Open Work

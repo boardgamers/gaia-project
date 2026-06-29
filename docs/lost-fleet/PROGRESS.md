@@ -939,6 +939,23 @@ notifications).
       vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'` â†’
       **160/160** passing (+4 viewer tests this slice). A concrete Lost Fleet demo seed now exists
       for the self-contained viewer: `?players=2&seed=lost-fleet-space-map&lostFleet=1`.
+42. Ã¢Å“â€¦ **Lost Fleet one-mine setup factions now actually get one setup placement, and Asteroid /
+    Protoplanet colors were swapped per user request, CODED & TESTED** (done 2026-06-29).
+    - Engine fix: `engine/src/move/phase.ts` no longer hardcodes setup as "everyone twice, Xenos
+      three times, Ivits special-case". It now uses a new `startingSetupPlacements()` helper in
+      `engine/src/factions.ts`, so the currently coded Lost Fleet no-home-planet factions
+      (Darkanians and Space Giants) correctly receive 1 setup placement, normal factions receive 2,
+      Xenos still receive 3, and Ivits still keep their special PI-last behavior.
+    - New engine regression coverage: `engine/src/factions.spec.ts` asserts the special setup
+      placement counts, and `engine/src/engine.spec.ts` now checks that Darkanians and Space Giants
+      enter `Phase.SetupBuilding` with only a single placement slot before Terrans' two normal
+      placements in a Lost Fleet game.
+    - Viewer color swap: `viewer/src/data/planets.ts` and `viewer/src/stylesheets/planets.css` now
+      map **Asteroid Ã¢â€ â€™ pink** and **Protoplanet Ã¢â€ â€™ turquoise** (the inverse of the previous
+      mapping). `viewer/src/data/planets.spec.ts` locks that mapping with a direct unit test.
+    - Verification: engine `cd engine && npm test` Ã¢â€ â€™ **470/470** passing; viewer `cd viewer && npx
+      vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'` Ã¢â€ â€™
+      **161/161** passing.
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -954,6 +971,8 @@ TS resolution than the real webpack-based path and gives false failures; use the
 - Viewer: `cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'`
   (this is what `pnpm test` runs — uses `mochapack`/webpack, required for files that touch engine
   types). **160 tests passing as of 2026-06-29.**
+
+**Latest full rerun after #42:** engine **470/470**, viewer **161/161**.
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/

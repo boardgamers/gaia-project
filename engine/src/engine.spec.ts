@@ -59,6 +59,18 @@ describe("Engine", () => {
     expect(() => new Engine(moves)).to.not.throw();
   });
 
+  [Faction.Darkanians, Faction.SpaceGiants].forEach((faction) => {
+    it(`should give ${faction} only one starting placement in Lost Fleet setup`, () => {
+      const engine = new Engine(["init 2 lost-fleet-one-mine"], { lostFleet: true });
+
+      engine.move(`p1 faction ${faction}`);
+      engine.move("p2 faction terrans");
+
+      expect(engine.phase).to.equal(Phase.SetupBuilding);
+      expect([engine.currentPlayer, ...engine.turnOrder]).to.eql([PlayerEnum.Player1, PlayerEnum.Player2, PlayerEnum.Player2]);
+    });
+  });
+
   it("should have passedPlayers empty at beginning of a new round", () => {
     const moves = parseMoves(`
       init 2 randomSeed

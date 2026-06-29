@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import Engine from "./engine";
 import { Expansion, Faction, Player as PlayerEnum, ResearchField } from "./enums";
-import { remainingFactions } from "./factions";
+import { remainingFactions, startingSetupPlacements } from "./factions";
 
 describe("Factions", () => {
   it("lantids and terrans can not be chosen together", () => {
@@ -16,6 +16,14 @@ describe("Factions", () => {
     const remaining = remainingFactions([Faction.Darkanians], Expansion.LostFleet);
 
     expect(remaining).to.contain(Faction.SpaceGiants);
+  });
+
+  it("should use the correct number of starting setup placements for special factions", () => {
+    expect(startingSetupPlacements(Faction.Terrans)).to.equal(2);
+    expect(startingSetupPlacements(Faction.Xenos)).to.equal(3);
+    expect(startingSetupPlacements(Faction.Ivits)).to.equal(1);
+    expect(startingSetupPlacements(Faction.Darkanians)).to.equal(1);
+    expect(startingSetupPlacements(Faction.SpaceGiants)).to.equal(1);
   });
 
   describe("balanced variant", () => {

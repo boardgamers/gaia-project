@@ -17,6 +17,7 @@ import {
   SubPhase,
 } from "../enums";
 import { factionVariantBoard } from "../faction-boards";
+import { startingSetupPlacements } from "../factions";
 import { GaiaHex } from "../gaia-hex";
 import Player from "../player";
 import { lastTile } from "../research-tracks";
@@ -213,14 +214,12 @@ function beginSetupBuildingPhase(engine: Engine) {
   const posIvits = engine.players.findIndex((player) => player.faction === Faction.Ivits);
 
   const setupTurnOrder = engine.turnOrderAfterSetupAuction.filter((i) => i !== posIvits);
-  const reverseSetupTurnOrder = setupTurnOrder.slice().reverse();
-  engine.turnOrder = setupTurnOrder.concat(reverseSetupTurnOrder);
-
-  const posXenos = engine.players.findIndex((player) => player.faction === Faction.Xenos);
-
-  if (posXenos !== -1) {
-    engine.turnOrder.push(posXenos as PlayerEnum);
-  }
+  const reverseSetupTurnOrder = setupTurnOrder
+    .slice()
+    .reverse()
+    .filter((player) => startingSetupPlacements(engine.players[player].faction) >= 2);
+  const extraSetupTurnOrder = setupTurnOrder.filter((player) => startingSetupPlacements(engine.players[player].faction) >= 3);
+  engine.turnOrder = setupTurnOrder.concat(reverseSetupTurnOrder, extraSetupTurnOrder);
 
   if (posIvits !== -1) {
     if (engine.players.length === 2 && engine.factionCustomization.variant === "more-balanced") {

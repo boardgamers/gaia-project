@@ -85,3 +85,16 @@ export function factionPlanet(faction: Faction): Planet {
   }
   return Planet.Lost;
 }
+
+export function startingSetupPlacements(faction: Faction): number {
+  switch (faction) {
+    case Faction.Ivits:
+    case Faction.Darkanians:
+    case Faction.SpaceGiants:
+      return 1;
+    case Faction.Xenos:
+      return 3;
+    default:
+      return 2;
+  }
+}

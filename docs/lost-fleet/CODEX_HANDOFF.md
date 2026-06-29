@@ -54,7 +54,7 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
   Federation token gold-side execution + rescoring, Space Giants' Exploration special action, the
   Scoring Board Extension's alternate Advanced Tech gate, the 6 Lost Fleet Advanced Tech tiles, and
   Examine Artifact + Artifact-token seeding are implemented and tested.
-- Engine: **467/467** tests passing (`cd engine && npm test`). Viewer: **160/160** tests passing
+- Engine: **470/470** tests passing (`cd engine && npm test`). Viewer: **161/161** tests passing
   (`cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts'
   'src/logic/**/*.spec.ts'`).
 - "Viewer Step Zero" is done: the viewer builds and type-checks clean against the Lost Fleet engine
@@ -65,6 +65,8 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
 - Lost Fleet self-contained viewer links now work: `self-contained.ts` accepts `lostFleet=1`, and
   `FactionWheel.vue` now surfaces Asteroid / Protoplanet when Lost Fleet is active. Concrete demo
   seed: `?players=2&seed=lost-fleet-space-map&lostFleet=1`.
+- Darkanians and Space Giants now correctly get only 1 setup placement in Lost Fleet setup, and the
+  viewer now uses Asteroid=pink / Protoplanet=turquoise.
 - The viewer is deployed to Vercel with Git integration; both `master` and
   `claude/lost-fleet-viewer-support-95lled` auto-deploy on push (`master` is the production target).
 - `CLAUDE.md` and `AGENTS.md` at the repo root both mirror this file's read order and current state

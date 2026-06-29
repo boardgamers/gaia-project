@@ -32,9 +32,11 @@ Read these before coding:
   gold-side execution, Space Giants' Exploration special action, the Scoring Board Extension gate,
   the 6 Lost Fleet Advanced Tech tiles, and Examine Artifact + Artifact-token seeding are all
   implemented and tested.
-- Engine: 467/467 tests passing. Viewer: 160/160 tests passing.
+- Engine: 470/470 tests passing. Viewer: 161/161 tests passing.
 - The self-contained viewer can now boot Lost Fleet directly via `?lostFleet=1` (for example
   `?players=2&seed=lost-fleet-space-map&lostFleet=1`).
+- Darkanians and Space Giants now correctly place only 1 starting mine during Lost Fleet setup, and
+  the viewer now uses Asteroid=pink / Protoplanet=turquoise.
 - The viewer is deployed to Vercel with Git integration; `master` is the production deploy target,
   so every push to `master` goes live immediately.
 - See `docs/lost-fleet/PROGRESS.md`'s "Done so far" list for the full numbered history and "Next
