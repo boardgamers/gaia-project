@@ -9,9 +9,12 @@ import {
   AnyTechTilePos,
   Booster,
   Command,
+  Expansion,
   Federation,
   FinalTile,
+  hasExpansion,
   Player,
+  ScoringBoardExtensionSide,
   ScoringTile,
   Spaceship,
   SpaceshipFederation,
@@ -326,6 +329,14 @@ export function applyRandomBoardSetup(engine: Engine, seed: string, nbPlayers: n
 
       factory.applyOption(options.shift(), next.position);
     }
+  }
+
+  if (hasExpansion(engine.expansions, Expansion.LostFleet)) {
+    // §E6: 2p always uses the 25-VP side; 3-4p randomize 50/50 every game.
+    engine.scoringExtensionSide =
+      nbPlayers <= 2 || engine.map.rng() < 0.5
+        ? ScoringBoardExtensionSide.VictoryPoints
+        : ScoringBoardExtensionSide.ExploredShips;
   }
 }
 

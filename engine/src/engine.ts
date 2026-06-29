@@ -18,6 +18,7 @@ import {
   Player as PlayerEnum,
   Resource,
   Round,
+  ScoringBoardExtensionSide,
   ScoringTile,
   Spaceship,
   SpaceshipFederation,
@@ -259,6 +260,8 @@ export default class Engine {
   spaceshipActions: SpaceshipActions = {};
 
   terraformingFederation: Federation;
+  // Lost Fleet's Scoring Board Extension: the face-up side, decided once per game at setup (§E6).
+  scoringExtensionSide?: ScoringBoardExtensionSide;
   availableCommands: AvailableCommand[] = [];
   availableCommand: AvailableCommand;
   phase: Phase = Phase.SetupInit;

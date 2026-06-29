@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import Engine from "./engine";
-import { Spaceship, SpaceshipFederation, SpaceshipTechTile } from "./enums";
+import { AdvTechTilePos, ScoringBoardExtensionSide, Spaceship, SpaceshipFederation, SpaceshipTechTile } from "./enums";
 import { shipsInPlay, spaceshipBoards } from "./spaceships";
 
 describe("Lost Fleet spaceship setup", () => {
@@ -58,5 +58,48 @@ describe("Lost Fleet spaceship setup", () => {
     const b = new Engine(["init 4 myseed"], { lostFleet: true });
     expect(a.tiles.spaceshipTechs).to.deep.equal(b.tiles.spaceshipTechs);
     expect(a.tiles.spaceshipFederations).to.deep.equal(b.tiles.spaceshipFederations);
+  });
+
+  describe("Scoring Board Extension (§E6)", () => {
+    it("should place exactly one randomly-drawn Advanced Tech tile on the extension slot", () => {
+      const engine = new Engine(["init 3 randomSeed"], { lostFleet: true });
+      expect(engine.tiles.techs[AdvTechTilePos.ScoringExtension]).to.not.be.undefined;
+      expect(engine.tiles.techs[AdvTechTilePos.ScoringExtension].count).to.equal(1);
+    });
+
+    it("should not set up the extension slot without the Lost Fleet expansion", () => {
+      const engine = new Engine(["init 3 randomSeed"], {});
+      expect(engine.scoringExtensionSide).to.be.undefined;
+      expect(engine.tiles.techs[AdvTechTilePos.ScoringExtension]).to.be.undefined;
+    });
+
+    it("should always force the 25-VP side in 2-player games", () => {
+      for (const seed of ["lf-ext-2p-0", "lf-ext-2p-1", "lf-ext-2p-2"]) {
+        const engine = new Engine([`init 2 ${seed}`], { lostFleet: true });
+        expect(engine.scoringExtensionSide).to.equal(ScoringBoardExtensionSide.VictoryPoints);
+      }
+    });
+
+    it("should randomize the side 50/50 in 3-player games", () => {
+      const vp = new Engine(["init 3 lf-ext-3p-1"], { lostFleet: true });
+      expect(vp.scoringExtensionSide).to.equal(ScoringBoardExtensionSide.VictoryPoints);
+
+      const ships = new Engine(["init 3 lf-ext-3p-0"], { lostFleet: true });
+      expect(ships.scoringExtensionSide).to.equal(ScoringBoardExtensionSide.ExploredShips);
+    });
+
+    it("should randomize the side 50/50 in 4-player games", () => {
+      const vp = new Engine(["init 4 lf-ext-4p-2"], { lostFleet: true });
+      expect(vp.scoringExtensionSide).to.equal(ScoringBoardExtensionSide.VictoryPoints);
+
+      const ships = new Engine(["init 4 lf-ext-4p-0"], { lostFleet: true });
+      expect(ships.scoringExtensionSide).to.equal(ScoringBoardExtensionSide.ExploredShips);
+    });
+
+    it("should be deterministic for a given seed", () => {
+      const a = new Engine(["init 4 myseed"], { lostFleet: true });
+      const b = new Engine(["init 4 myseed"], { lostFleet: true });
+      expect(a.scoringExtensionSide).to.equal(b.scoringExtensionSide);
+    });
   });
 });

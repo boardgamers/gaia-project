@@ -551,6 +551,8 @@ export enum AdvTechTilePos {
   Economy = "adv-eco",
   Science = "adv-sci",
   Diplomacy = "adv-dip",
+  // Lost Fleet's Scoring Board Extension: a 7th Advanced Tech slot not tied to any research field.
+  ScoringExtension = "adv-ext",
 }
 
 export namespace AdvTechTilePos {
@@ -561,8 +563,19 @@ export namespace AdvTechTilePos {
       ret.push(AdvTechTilePos.Diplomacy);
     }
 
+    if (hasExpansion(expansions, Expansion.LostFleet)) {
+      ret.push(AdvTechTilePos.ScoringExtension);
+    }
+
     return ret;
   }
+}
+
+// The face-up side of Lost Fleet's Scoring Board Extension, decided once per game at setup. It
+// replaces the usual "research level 4/5" condition for the one Advanced Tech tile placed on it.
+export enum ScoringBoardExtensionSide {
+  VictoryPoints = "vp",
+  ExploredShips = "ships",
 }
 
 export type AnyTechTilePos = TechTilePos | AdvTechTilePos;

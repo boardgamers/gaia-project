@@ -583,6 +583,38 @@ notifications).
     non-Space-Giants faction. **416/416 → 419/419** (net +3 tests).
     (Note: `git stash` confirmed the actual pre-existing baseline at session start was **416/416**, not
     the 406/406 this doc had stated — a stale/miscounted tally predating this session, corrected here.)
+28. ✅ **Scoring Board Extension's alternate Advanced Tech gate (§E6) — CODED & TESTED** (done
+    2026-06-29). User confirmed there is no "medium Adv Tech tile" (a misspelling) and asked for this
+    exact item — previously flagged as a gap in "Next actions" #2 — to be implemented. Added
+    `AdvTechTilePos.ScoringExtension = "adv-ext"`, a 7th Advanced Tech slot not tied to any research
+    field, included in `AdvTechTilePos.values(expansions)` only when Lost Fleet is active; the existing
+    `techFactory`/`applyRandomBoardSetup` shuffle-and-assign machinery in `setup.ts` automatically seeds
+    it with 1 randomly-drawn Advanced Tech tile from the general pool, with zero other changes needed —
+    confirming the architectural finding that Lost Fleet always uses this automatic random-setup path
+    (interactive/drafted setup is asserted against for Lost Fleet in `move/setup.ts`). Added a new
+    `ScoringBoardExtensionSide` enum (`VictoryPoints` | `ExploredShips`) and an `Engine.scoringExtensionSide`
+    field, decided once per game in `applyRandomBoardSetup()`: 2p always forces `VictoryPoints` (no RNG
+    call at all, to leave 2p Lost Fleet's existing rng-call sequence untouched); 3-4p draw a 50/50
+    `engine.map.rng()` call. `canTakeAdvancedTechTile()` (`available/research.ts`) now special-cases
+    `AdvTechTilePos.ScoringExtension`: instead of the normal `data.research[field] < 4` check, it
+    requires `data.victoryPoints >= 25` (VP side) or `data.exploredShipsCount() >= 3` (ships side,
+    via the existing `PlayerData.exploredShipsCount()` helper) — the other 2 conditions (unflipped
+    Federation token via `hasGreenFederation()`, an owned enabled Standard Tech tile to cover) are
+    untouched, exactly as the rule requires, and were already field-agnostic in the existing code (no
+    changes needed there). Verified by brute-forcing seeds where each side of the 50/50 split occurs at
+    3p and 4p (`lf-ext-3p-0`/`lf-ext-3p-1`, `lf-ext-4p-0`/`lf-ext-4p-2`), confirming genuine
+    randomization rather than a constant-folded branch. Added a new `describe("Scoring Board Extension
+    (§E6)")` block to `setup.spec.ts` (6 tests: tile placement, no-op without Lost Fleet, 2p always
+    forced, 3p and 4p randomize, deterministic-per-seed) and a new `available/research.spec.ts` (8
+    tests: VP side gates on VP not research level, ships side gates on explored-ship count, Federation
+    token and cover-tile conditions still apply, tile-stock check still applies, and the other 6 normal
+    Advanced Tech tiles are unaffected — still gated by research level as before). **419/419 → 433/433**
+    (net +14 tests). Separately noted, not yet actioned (see "Next actions"): the 6 newly-named Lost
+    Fleet Advanced Tech tiles from §G2 (`asteroidpass`, `big`, `deep`, `deeppass`, `qaction`, `terra`)
+    have never been implemented as engine content — confirmed via `git log --all -p` that all 15
+    existing `AdvTechTile` enum members predate Lost Fleet entirely (a 2022 upstream bot commit). This
+    Scoring Extension feature doesn't need them, since its randomly-drawn tile comes from the existing
+    general pool — it's a separate, larger, not-yet-requested body of work.
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -755,9 +787,10 @@ exact shape for adv-tech/federation/booster/scoring enum members when those chun
 Chunks 1-7b plus Darkanians' PI follow-up, the core Explore action, the federation-claim hook, the
 Standard-Tech claim hook, the full Spaceship Boards live-gameplay wiring, the gold-side execution
 for all 8 claimed-ship Federation tokens, rescoring ship Federation tokens, including Asteroid
-hexes in the Federation tokens' Build-a-Mine (per BGG designer ruling), and Space Giants'
-Exploration-board special action are complete and verified —
-**419/419 engine tests pass**
+hexes in the Federation tokens' Build-a-Mine (per BGG designer ruling), Space Giants'
+Exploration-board special action, and the Scoring Board Extension's alternate Advanced Tech gate
+(§E6) are complete and verified —
+**433/433 engine tests pass**
 (274 baseline → 280 after Chunk 2 → 299 after Chunk 3 → 321 after Chunk 4 → 337 after Chunk 5 → 345
 after Chunk 6 → 352 after Chunk 7a → 353 after the German-rules reroll fix → 354 after Chunk 7b's
 placement-metadata step → 361 after Chunk 7b's `SpaceMap`/`moveInit` wiring + integration tests → 362
@@ -768,7 +801,8 @@ the remaining 5 ship-board actions (Twilight Knowledge/Power, Rebellion Power, T
 Credit) → 399 after wiring the gold-side execution for all 8 claimed-ship Federation tokens → 404 after
 fixing rescore to offer and re-trigger ship Federation tokens → 406 after fixing Federation tokens'
 Build-a-Mine to include Asteroid hexes once a spare Gaiaformer is available → 419 after Space Giants'
-Exploration-board special action, see "Done so far" #16-#27).
+Exploration-board special action → 433 after the Scoring Board Extension's alternate Advanced Tech
+gate, see "Done so far" #16-#28).
 (Note: the 399 and 404 figures here are git-verified; an earlier draft of this doc had momentarily
 overstated them as 407/412 before the correction in "Done so far" #24-#25 above. The 406 figure was
 also stale by session start — `git stash` confirmed the real baseline was 416 — see #27's note.)
@@ -782,9 +816,11 @@ Federation token now executes its gold-side effect — direct rewards for 6 of t
 chained bonus Build a Mine action for the other 2 (Range/Terraform), see #24; rescoring (QIC2 board
 action) now offers and re-triggers ship-claimed Federation tokens exactly like pool-drawn ones, see
 #25; that chained Build a Mine action now correctly includes Asteroid hexes (gated on a spare
-Gaiaformer) instead of blanket-excluding them, per a designer ruling on BGG, see #26; and Space
+Gaiaformer) instead of blanket-excluding them, per a designer ruling on BGG, see #26; Space
 Giants now have their Exploration-board special action (once-per-round Build a Mine with 2 free
-terraforming steps), see #27. The Lost Fleet
+terraforming steps), see #27; and the 7th Advanced Tech slot from the Scoring Board Extension (gated
+on ≥25 VP, or in 3-4p on a 50/50-randomized choice between ≥25 VP and 3 explored ships) is now seeded
+at setup and correctly gates `canTakeAdvancedTechTile()`, see #28. The Lost Fleet
 variable-map geometry, tile data, full board assembly, `GaiaHex` addressing fix, AND the
 `SpaceMap`/`moveInit` wiring are all coded and tested (see #13-#16) — `new Engine([...], { lostFleet: true })`
 now produces a real, playable Lost Fleet board through the normal engine entry points. Explicitly still
@@ -793,17 +829,17 @@ open, in priority order the user should pick from:
    adjacent feature not counted in the 12 ship-board actions; the other (claimed ship Federation
    tokens' gold-side execution, rescoring them, and the Asteroid-hex fix to their Build-a-Mine action)
    is fully wired, see "Done so far" #24-#26.
-2. **Scoring Board Extension's alternate Advanced Tech gate (§E6) — newly flagged 2026-06-29, NOT
-   CODED.** Spec'd in full in `RULES_CLARIFICATIONS.md` §E6 and listed `◐ SPEC` in `COMPONENTS.md`
-   line 149, but never made it onto this list before now. One randomly-drawn Advanced Tech tile at
-   setup has its normal "research level 4/5" condition replaced by the Extension's face-up side:
-   2p always "≥25 VP"; 3-4p randomized 50/50 each game between "≥25 VP" and "explored 3 of the 4
-   ships" (the other 2 conditions — flip a Federation token, cover a Standard Tech tile — are
-   unchanged). `canTakeAdvancedTechTile()` (`engine/src/available/research.ts:81`) currently has no
-   branch for this — it always checks `data.research[...] < 4` unconditionally for every Adv Tech
-   tile. Needs: a setup-time random tile+side assignment (mirrors the Tinkeroids/Moweyds §B5
-   per-game-random pattern already used elsewhere), and a gate override in that function for the
-   chosen tile.
+2. **The 6 newly-named Lost Fleet Advanced Tech tiles (§G2) — newly flagged 2026-06-29, NOT CODED.**
+   `asteroidpass`, `big`, `deep`, `deeppass`, `qaction`, `terra` are described in
+   `RULES_CLARIFICATIONS.md` §G2 but have never been added as engine content — `git log --all -p`
+   confirms all 15 existing `AdvTechTile` enum members predate Lost Fleet entirely (a 2022 upstream bot
+   commit). This is a separate, larger body of work from the Scoring Board Extension (#28 above, now
+   done) — that feature's randomly-drawn tile comes from the existing general pool and doesn't need
+   these 6 new tiles to exist. Needs: new `AdvTechTile` enum members properly gated by
+   `Expansion.LostFleet` in `.values(expansions)` (currently that function ignores its `expansions`
+   parameter entirely — a latent gap to fix as part of this work), new `techTileSpec` DSL entries in
+   `tiles/techs.ts`, and— since they're new tiles, not new positions — no `setup.ts` changes needed
+   beyond the pool growing.
 3. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.
 4. **Viewer-side `Object.values(Faction)` fix** (6 call sites, currently harmless since the viewer
    hasn't been touched, but will need fixing before any viewer chunk starts).
