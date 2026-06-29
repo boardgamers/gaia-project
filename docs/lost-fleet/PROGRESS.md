@@ -744,6 +744,47 @@ notifications).
       files are anywhere near `BoardAction.vue`/`BoardAction.spec.ts`/`store.ts`. Confirmed structurally
       (mock shape vs. usage pattern) rather than fixed, since it's out of Step Zero's scope — flagged to
       the user as a separately-tracked, already-broken test.
+34. ✅ **Vercel deployment fixed — 3 independent root causes found and fixed in sequence** (done
+    2026-06-29; infra/deploy-pipeline work, not Lost Fleet UI). The Vercel deploy for this branch had
+    been failing since before this session; root-caused and fixed all 3 issues:
+    - **Dead `popper` devDependency → SSH git-clone failure.** Both `viewer/package.json` AND
+      `old-ui/package.json` (independently) had a stray bare `popper` devDependency (distinct from the
+      actively-used `popper.js`), with zero references in either package's source. It transitively
+      pulled in `rijs.sync` → a git-pinned `buble` fork resolved via an SSH URL
+      (`git@github.com:pemrouz/buble.git`). Vercel's sandboxed build container has no SSH credentials,
+      so `pnpm install` failed with `Command failed with exit code 128: git clone git@github.com:...`.
+      Removing `popper` from both `package.json`s and regenerating both `pnpm-lock.yaml`s (workspace
+      root `pnpm install`, since `shared-workspace-lockfile=false` means per-package lockfiles, but
+      Vercel's `installCommand` runs at the workspace root and installs all 4 packages regardless)
+      dropped the entire `buble`/`rijs` transitive subtree. Took 2 commits to find both occurrences,
+      because fixing `viewer/`'s copy alone left `old-ui/`'s identical copy still triggering the same
+      failure on the next deploy.
+    - **Stale `.pnpm-store` build-cache corruption.** With the SSH issue fixed, the next deploy failed
+      differently: `ENOENT: no such file or directory, open '/vercel/path0/.pnpm-store/v3/files/.../*-
+      index.json'`, immediately after a build log line reading "Restored build cache from previous
+      deployment." Vercel's persisted `.pnpm-store` (pnpm's content-addressable package store) from an
+      earlier, failed deployment had a missing/corrupted content blob — unrelated to whether the
+      lockfiles were correct (already proven via a from-scratch clean install). Fixed by having
+      `vercel.json`'s `installCommand` `rm -rf .pnpm-store` before running `pnpm install`.
+    - **`node_modules` was *also* being restored from the cache, defeating the `.pnpm-store` fix.** The
+      very next deploy hit the *exact same* `ENOENT` on the *same* content hash, even with `.pnpm-store`
+      cleared. Cause: Vercel's cache restoration also restores `node_modules` (root + each workspace
+      package's own `node_modules`), which still contains pnpm's virtual store
+      (`node_modules/.pnpm/...`) and `.modules.yaml` pointing at the now-wiped store. Seeing matching
+      `node_modules`, pnpm treated the install as incremental ("Lockfile is up to date, resolution step
+      is skipped") and tried to link the handful of changed packages against a store that no longer had
+      their content. Fixed by also clearing `node_modules`, `engine/node_modules`, `viewer/node_modules`,
+      and `old-ui/node_modules` in `installCommand`, alongside `.pnpm-store` — matching the exact
+      from-scratch local repro that had already proven the lockfiles/build correct.
+    - **Verification methodology:** for each fix, ran the *exact* Vercel `installCommand` then
+      `buildCommand` locally from a fully clean state (`rm -rf` every `node_modules` + `.pnpm-store`
+      first) rather than trusting an already-populated local install, since that's the only way to
+      genuinely reproduce Vercel's fresh sandboxed container. **Final outcome confirmed via the Vercel
+      MCP tools**, not just local repro: deployment `dpl_4Sy7WME2ZoK4g8Hih3hexLfbmis9` (commit
+      `ca63d25`) reached **`READY`**, build completed in ~1m with 0 errors (only pre-existing
+      bundle-size warnings, unrelated). The site is live at
+      `gaia-lost-fleet-git-claude-lost-fl-6bd3b1-kimphamnguyensproject.vercel.app` (branch alias) and
+      will auto-update on every future push to this branch.
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
