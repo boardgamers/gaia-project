@@ -5,6 +5,74 @@ import Wrapper from "./components/Wrapper.vue";
 import launch from "./launcher";
 import { LoadFromJson, LoadFromJsonType } from "./store";
 
+type SelfContainedEnv = Record<string, string | undefined>;
+
+export type SelfContainedSetup = {
+  players: number;
+  seed: string | number;
+  moves: string[];
+  options: {
+    layout: Layout | undefined;
+    auction: AuctionVariant | undefined;
+    factionVariant: FactionVariant;
+    randomFactions: boolean;
+    advancedRules: boolean;
+    customBoardSetup: boolean;
+    frontiers: boolean;
+    lostFleet: boolean;
+  };
+};
+
+function parseFlagValue(value?: string | null): boolean | undefined {
+  if (value == null) {
+    return undefined;
+  }
+  if (value === "") {
+    return true;
+  }
+  if (/^(1|true|yes|on)$/i.test(value)) {
+    return true;
+  }
+  if (/^(0|false|no|off)$/i.test(value)) {
+    return false;
+  }
+  return true;
+}
+
+export function parseSelfContainedSetup(search = "", env: SelfContainedEnv = process.env): SelfContainedSetup {
+  const params = new URLSearchParams(search);
+  const str = (key: string, envValue?: string) => params.get(key) ?? envValue;
+  const flag = (key: string, envValue?: string): boolean => {
+    const paramValue = params.get(key);
+    if (paramValue !== null) {
+      return parseFlagValue(paramValue) ?? false;
+    }
+    return parseFlagValue(envValue) ?? false;
+  };
+
+  let players = Number(str("players", env.VUE_APP_players) ?? 3);
+  if (!Number.isInteger(players) || players < 2 || players > 5) {
+    console.warn(`Invalid players "${params.get("players")}"; falling back to 3 (valid range: 2-5)`);
+    players = 3;
+  }
+
+  return {
+    players,
+    seed: str("seed", env.VUE_APP_seed) ?? Math.floor(Math.random() * 10000),
+    moves: env.VUE_APP_moves ? JSON.parse(env.VUE_APP_moves) : [],
+    options: {
+      layout: (str("layout", env.VUE_APP_layout) ?? undefined) as Layout,
+      auction: (str("auction", env.VUE_APP_auction) ?? undefined) as AuctionVariant,
+      factionVariant: (str("factionVariant", env.VUE_APP_factionVariant) ?? "standard") as FactionVariant,
+      randomFactions: flag("randomFactions", env.VUE_APP_randomFactions),
+      advancedRules: flag("advancedRules") || flag("rotateSectors", env.VUE_APP_rotateSectors),
+      customBoardSetup: flag("customBoardSetup", env.VUE_APP_customBoardSetup),
+      frontiers: flag("frontiers", env.VUE_APP_frontiers),
+      lostFleet: flag("lostFleet", env.VUE_APP_lostFleet),
+    },
+  };
+}
+
 function launchSelfContained(selector = "#app", debug = true) {
   const emitter = launch(selector, debug ? Wrapper : Game);
 
@@ -15,34 +83,11 @@ function launchSelfContained(selector = "#app", debug = true) {
   // auction (choose-bid|bid-while-choosing),
   // factionVariant (standard|more-balanced|beta), and the flags
   // randomFactions, advancedRules (alias rotateSectors), customBoardSetup,
-  // frontiers.
-  const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
-  const str = (key: string, env?: string) => params.get(key) ?? env;
-  // A flag is "on" when the param is present with no value or a truthy string
-  // (1/true/yes/on); an explicit falsy string turns it off.
-  const flag = (key: string, env?: string): boolean => {
-    const v = params.get(key);
-    if (v === null) return !!env;
-    return v === "" || /^(1|true|yes|on)$/i.test(v);
-  };
-
-  let players = Number(str("players", process.env.VUE_APP_players) ?? 3);
-  if (!Number.isInteger(players) || players < 2 || players > 5) {
-    console.warn(`Invalid players "${params.get("players")}"; falling back to 3 (valid range: 2-5)`);
-    players = 3;
-  }
-  const seed = str("seed", process.env.VUE_APP_seed) ?? Math.floor(Math.random() * 10000);
-  const moves = process.env.VUE_APP_moves ? JSON.parse(process.env.VUE_APP_moves) : [];
-
-  const options = {
-    layout: (str("layout", process.env.VUE_APP_layout) ?? undefined) as Layout,
-    auction: (str("auction", process.env.VUE_APP_auction) ?? undefined) as AuctionVariant,
-    factionVariant: (str("factionVariant", process.env.VUE_APP_factionVariant) ?? "standard") as FactionVariant,
-    randomFactions: flag("randomFactions", process.env.VUE_APP_randomFactions),
-    advancedRules: flag("advancedRules") || flag("rotateSectors", process.env.VUE_APP_rotateSectors),
-    customBoardSetup: flag("customBoardSetup", process.env.VUE_APP_customBoardSetup),
-    frontiers: flag("frontiers", process.env.VUE_APP_frontiers),
-  };
+  // frontiers, lostFleet.
+  const { moves, options, players, seed } = parseSelfContainedSetup(
+    typeof window !== "undefined" ? window.location.search : "",
+    process.env
+  );
   console.log("self-contained game setup:", { players, seed, ...options });
 
   let engine = new Engine([`init ${players} ${seed}`, ...moves], options);

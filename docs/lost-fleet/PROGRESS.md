@@ -914,6 +914,31 @@ notifications).
     again. This session therefore committed and pushed the map-rendering slice to
     `claude/lost-fleet-viewer-support-95lled` (commit `3657117`) and updated the handoff docs so the
     next session does not silently drift back onto `master`.
+41. âœ… **Lost Fleet self-contained viewer links now work, and the faction wheel exposes the 2 new
+    Lost Fleet planet colors, CODED & TESTED** (done 2026-06-29). This finished the next smallest
+    viewer slice after the first map-rendering pass: there is now a real URL-level way to boot the
+    deployed viewer into a Lost Fleet game, and the map-side faction wheel no longer hides
+    Asteroid/Protoplanet once Lost Fleet is active.
+    - `viewer/src/self-contained.ts` now factors its URL/env parsing into a tested
+      `parseSelfContainedSetup()` helper and adds a real `lostFleet` flag alongside `frontiers`.
+      This means the self-contained harness can finally create `new Engine([...], { lostFleet:
+      true })` from a plain link instead of always silently booting base Gaia Project. As part of the
+      same change, explicit falsy env/query values like `lostFleet=0` / `VUE_APP_frontiers=0` are
+      now parsed correctly instead of truthy-string coercion treating any non-empty value as "on".
+    - `viewer/src/components/FactionWheel.vue` keeps the standard 7-planet ring intact for base
+      Gaia Project, but when Lost Fleet is active it now adds Asteroid + Protoplanet as extra
+      visible wheel entries, with the same remaining-planet counts / click-to-highlight behavior as
+      the existing Gaia and Transdim entries. The ring-rotation logic is also guarded so
+      Darkanians/Space Giants do not corrupt the 7-planet orbit by trying to rotate Asteroid or
+      Protoplanet into a slot that only exists in the extra row.
+    - New tests: `viewer/src/self-contained.spec.ts` covers URL/env Lost Fleet flag parsing; new
+      `viewer/src/components/FactionWheel.spec.ts` asserts the base-game 9-planet wheel stays
+      unchanged while Lost Fleet grows it to 11 visible planet entries including Asteroid and
+      Protoplanet.
+    - Verification: engine `cd engine && npm test` â†’ **467/467** passing; viewer `cd viewer && npx
+      vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'` â†’
+      **160/160** passing (+4 viewer tests this slice). A concrete Lost Fleet demo seed now exists
+      for the self-contained viewer: `?players=2&seed=lost-fleet-space-map&lostFleet=1`.
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -928,7 +953,7 @@ TS resolution than the real webpack-based path and gives false failures; use the
   — equivalent for engine, which has no webpack step). **467 tests passing as of 2026-06-29.**
 - Viewer: `cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'`
   (this is what `pnpm test` runs — uses `mochapack`/webpack, required for files that touch engine
-  types). **156 tests passing as of 2026-06-29.**
+  types). **160 tests passing as of 2026-06-29.**
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/
@@ -1203,9 +1228,10 @@ open, in priority order the user should pick from:
    `Object.values(Planet)` sites, `SpaceshipTechTile` display data, a stale chart fixture) are all
    fixed. `viewer/` now builds and type-checks clean against the Lost Fleet engine (`npm run
    quick-test` 152/152; `npm test` 152/154, the 2 failures pre-existing/unrelated, see #33). The
-   viewer is now unblocked for new Lost Fleet UI work. **Map rendering for Lost Fleet sectors is now
-   started and in its first tested slice** (see #39): Interspace / Deep Space hexes and spaceship
-   tiles on the map render, but the remaining viewer work still includes richer Lost Fleet map polish,
+   viewer is now unblocked for new Lost Fleet UI work. **Lost Fleet viewer work is now in 2 tested
+   slices** (see #39 and #41): Interspace / Deep Space hexes and spaceship tiles render on the map,
+   self-contained viewer links can now boot Lost Fleet directly via `lostFleet=1`, and the faction
+   wheel exposes Asteroid / Protoplanet. The remaining viewer work is richer Lost Fleet map polish,
    spaceship board panels, and player-color turquoise/pink pieces per COMPONENTS.md §10.
 3. **Revised Space Sector tiles 05/06/07** (§H4, the one remaining art-only TODO — see "Still MISSING"
    above) — would let Lost Fleet stop falling back to the base game's per-count face for those 3 tiles.

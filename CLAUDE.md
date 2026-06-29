@@ -5,15 +5,15 @@ This repo is the active Lost Fleet worktree for the shared Codex/Claude workflow
 ## Current Branch
 
 - **Temporary exception: continue the current Lost Fleet viewer work on
-  `claude/lost-fleet-viewer-support-95lled`.** `master` and that branch were identical at
-  `0e678332` when this Codex session started, but the user explicitly asked this session to keep new
-  viewer work on `claude/lost-fleet-viewer-support-95lled` and decide separately later if/when
-  `master` should be fast-forwarded again.
+  `claude/lost-fleet-viewer-support-95lled`, then sync `master` when the user explicitly asks for a
+  deploy.** `master` and that branch were identical at `0e678332` when this Codex session started;
+  later in the same session the user asked to push `master` so Vercel would deploy, so the current
+  viewer-work tip now exists on both branches.
 - Historical context: earlier on 2026-06-29 the workflow had briefly simplified to "push directly
   to `master`" after `claude/lost-fleet-viewer-support-95lled` was fully absorbed there. That
   simplification is superseded for now by the user's later branch-specific instruction above.
-- `master` remains the production/Vercel target, but this session's new work was intentionally
-  pushed only to `claude/lost-fleet-viewer-support-95lled`.
+- `master` remains the production/Vercel target, and the current viewer-work tip has already been
+  synced there.
 
 ## Shared Source Of Truth
 
@@ -32,7 +32,9 @@ Read these before coding:
   gold-side execution, Space Giants' Exploration special action, the Scoring Board Extension gate,
   the 6 Lost Fleet Advanced Tech tiles, and Examine Artifact + Artifact-token seeding are all
   implemented and tested.
-- Engine: 467/467 tests passing. Viewer: 156/156 tests passing.
+- Engine: 467/467 tests passing. Viewer: 160/160 tests passing.
+- The self-contained viewer can now boot Lost Fleet directly via `?lostFleet=1` (for example
+  `?players=2&seed=lost-fleet-space-map&lostFleet=1`).
 - The viewer is deployed to Vercel with Git integration; `master` is the production deploy target,
   so every push to `master` goes live immediately.
 - See `docs/lost-fleet/PROGRESS.md`'s "Done so far" list for the full numbered history and "Next

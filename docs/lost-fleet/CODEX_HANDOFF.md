@@ -8,11 +8,12 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
 
 - The user switches between Claude Code and Codex; treat the repo as shared with another session
   unless `git status --short --branch` is clean.
-- **Temporary exception: for the current Lost Fleet viewer pass, commit and push to
+- **Temporary exception: for the current Lost Fleet viewer pass, do active code work on
   `claude/lost-fleet-viewer-support-95lled`.** `master` and that branch were identical at
-  `0e678332` when this Codex session started, but the user explicitly asked this session to continue
-  on `claude/lost-fleet-viewer-support-95lled` and decide separately later if/when to sync `master`
-  again.
+  `0e678332` when this Codex session started, and the user explicitly asked this session to
+  continue the new viewer work there first. Later in the same session the user also explicitly asked
+  to sync/push `master` so Vercel would deploy, so the current viewer-work tip now exists on both
+  branches.
 - Historical context: earlier on 2026-06-29 the project had briefly dropped the separate
   feature-branch workflow after `claude/lost-fleet-viewer-support-95lled` was fully absorbed into
   `master` (identical tip, `0ae1a9c`). That simplification is superseded for now by the user's later
@@ -53,7 +54,7 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
   Federation token gold-side execution + rescoring, Space Giants' Exploration special action, the
   Scoring Board Extension's alternate Advanced Tech gate, the 6 Lost Fleet Advanced Tech tiles, and
   Examine Artifact + Artifact-token seeding are implemented and tested.
-- Engine: **467/467** tests passing (`cd engine && npm test`). Viewer: **156/156** tests passing
+- Engine: **467/467** tests passing (`cd engine && npm test`). Viewer: **160/160** tests passing
   (`cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts'
   'src/logic/**/*.spec.ts'`).
 - "Viewer Step Zero" is done: the viewer builds and type-checks clean against the Lost Fleet engine
@@ -61,6 +62,9 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
 - Lost Fleet map rendering has started: `SpaceMap.vue` now renders Interspace / Deep Space hexes
   directly from `engine.map.grid`, `SpaceHex.vue` distinguishes Lost Fleet sector types and spaceship
   tiles visually, and `SpaceMap.spec.ts` has a real Lost Fleet smoke test alongside the base-game one.
+- Lost Fleet self-contained viewer links now work: `self-contained.ts` accepts `lostFleet=1`, and
+  `FactionWheel.vue` now surfaces Asteroid / Protoplanet when Lost Fleet is active. Concrete demo
+  seed: `?players=2&seed=lost-fleet-space-map&lostFleet=1`.
 - The viewer is deployed to Vercel with Git integration; both `master` and
   `claude/lost-fleet-viewer-support-95lled` auto-deploy on push (`master` is the production target).
 - `CLAUDE.md` and `AGENTS.md` at the repo root both mirror this file's read order and current state

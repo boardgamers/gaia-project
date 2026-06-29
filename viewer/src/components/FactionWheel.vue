@@ -3,28 +3,40 @@
     <use xlink:href="#info" :transform="`scale(0.11) translate(-8,-8)`" />
     <circle class="rules-button" r="1.6" v-b-modal="'rules'" />
     <circle :r="r" fill="none" />
-    <g v-for="i in planetPositions" :key="i" :transform="translate(r, i)">
-      <circle :r="1" :class="['planet-fill', planet(i)]" :style="`stroke-width: ${strokeWidth(i)}`" />
+    <g
+      v-for="i in planetPositions"
+      :key="i"
+      class="faction-wheel-planet"
+      :data-planet="ringPlanet(i)"
+      :transform="translate(r, i)"
+    >
+      <circle :r="1" :class="['planet-fill', ringPlanet(i)]" :style="`stroke-width: ${strokeWidth(ringPlanet(i))}`" />
       <text
-        :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(planet(i))}`"
+        :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(ringPlanet(i))}`"
       >
-        {{ remainingPlanets(planet(i)) }}
+        {{ remainingPlanets(ringPlanet(i)) }}
       </text>
-      <circle :r="1" style="cursor: pointer; opacity: 0" @click="togglePlanetHighlight(planet(i))" />
+      <circle :r="1" style="cursor: pointer; opacity: 0" @click="togglePlanetHighlight(ringPlanet(i))" />
     </g>
     <g v-for="i in planetPositions" :key="`I${i}`" :transform="translate(1.4, i)">
       <text style="font-size: 0.75pt; text-anchor: middle; dominant-baseline: central; pointer-events: none">
-        {{ factionInitial(planet(i)) }}
+        {{ factionInitial(ringPlanet(i)) }}
       </text>
     </g>
-    <g v-for="i in [7, 8]" :key="i" :transform="`translate(${-2 + (i - 7) * 4}, 5)`">
-      <circle :r="1" :class="['planet-fill', planet(i)]" />
+    <g
+      v-for="slot in extraPlanetSlots"
+      :key="slot.planet"
+      class="faction-wheel-planet faction-wheel-extra-planet"
+      :data-planet="slot.planet"
+      :transform="`translate(${slot.x}, ${slot.y})`"
+    >
+      <circle :r="1" :class="['planet-fill', slot.planet]" :style="`stroke-width: ${strokeWidth(slot.planet)}`" />
       <text
-        :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(planet(i))}`"
+        :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(slot.planet)}`"
       >
-        {{ remainingPlanets(planet(i)) }}
+        {{ remainingPlanets(slot.planet) }}
       </text>
-      <circle :r="1" style="cursor: pointer; opacity: 0" @click="togglePlanetHighlight(planet(i))" />
+      <circle :r="1" style="cursor: pointer; opacity: 0" @click="togglePlanetHighlight(slot.planet)" />
     </g>
   </g>
 </template>
@@ -38,7 +50,7 @@ import { radiusTranslate } from "../logic/utils";
 import { MapMode } from "../data/actions";
 import { remainingPlanets } from "../data/planets";
 
-const planets = [
+const ringPlanets = [
   Planet.Terra,
   Planet.Oxide,
   Planet.Volcanic,
@@ -46,9 +58,10 @@ const planets = [
   Planet.Swamp,
   Planet.Titanium,
   Planet.Ice,
-  Planet.Gaia,
-  Planet.Transdim,
 ];
+
+const standardExtraPlanets = [Planet.Gaia, Planet.Transdim];
+const lostFleetExtraPlanets = [Planet.Asteroid, Planet.Protoplanet];
 
 @Component
 export default class FactionWheel extends Vue {
@@ -72,8 +85,7 @@ export default class FactionWheel extends Vue {
     return remainingPlanets(planet, this.gameData);
   }
 
-  strokeWidth(pos: number) {
-    const planet = this.planet(pos);
+  strokeWidth(planet: Planet) {
     if (this.gameData.players.some((p) => p.faction && factionPlanet(p.faction) === planet)) {
       return "0.2px; stroke-dasharray:.5 .2";
     }
@@ -81,24 +93,34 @@ export default class FactionWheel extends Vue {
     return "0.05px";
   }
 
+  get extraPlanetSlots(): Array<{ planet: Planet; x: number; y: number }> {
+    const planets = this.gameData.options.lostFleet
+      ? [...standardExtraPlanets, ...lostFleetExtraPlanets]
+      : standardExtraPlanets;
+    const xs = planets.length === 4 ? [-4.5, -1.5, 1.5, 4.5] : [-2, 2];
+
+    return planets.map((planet, index) => ({ planet, x: xs[index], y: 5 }));
+  }
+
   factionInitial(planet: Planet): string {
     const player = this.gameData.players.find((p) => p.faction && factionPlanet(p.faction) === planet);
     return player ? player.faction.substr(0, 1).toUpperCase() : "";
   }
 
-  planet(pos: number): Planet {
-    if (pos < 7) {
-      const data = this.gameData;
-      const player = this.$store.state.player?.index ?? data.currentPlayer;
-      const faction = data.player(player)?.faction;
-      if (faction != null) {
-        // own faction - or current players faction - should be at the top
-        const planet = factionPlanet(faction);
-        const offset = planets.indexOf(planet);
-        return planets[(pos + offset) % 7];
+  ringPlanet(pos: number): Planet {
+    const data = this.gameData;
+    const player = this.$store.state.player?.index ?? data.currentPlayer;
+    const faction = data.player(player)?.faction;
+    if (faction != null) {
+      // own faction - or current player's faction - should be at the top when it belongs to the
+      // standard 7-planet ring; Lost Fleet's Asteroid/Protoplanet stay in the extra row below.
+      const planet = factionPlanet(faction);
+      const offset = ringPlanets.indexOf(planet);
+      if (offset >= 0) {
+        return ringPlanets[(pos + offset) % ringPlanets.length];
       }
     }
-    return planets[pos];
+    return ringPlanets[pos];
   }
 
   planetFill(planet: string) {

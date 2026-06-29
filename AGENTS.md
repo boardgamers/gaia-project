@@ -5,10 +5,10 @@ This repo is the active Lost Fleet worktree for this project.
 ## Current Branch
 
 - **Temporary exception to the earlier single-branch note: continue the current Lost Fleet viewer
-  work on `claude/lost-fleet-viewer-support-95lled`.** `master` and that branch were identical at
-  `0e678332` when this Codex session started, but the user explicitly asked this session to commit
-  and push new viewer work to `claude/lost-fleet-viewer-support-95lled` and decide separately later
-  if/when to sync `master` again.
+  work on `claude/lost-fleet-viewer-support-95lled`, then sync `master` when the user explicitly
+  asks for a Vercel deploy.** `master` and that branch were identical at `0e678332` when this Codex
+  session started; later in the same session the user asked to push `master` so Vercel would
+  deploy, so the current viewer-work tip now exists on both branches.
 - Historical context: earlier on 2026-06-29 the project had briefly simplified to "push directly to
   `master`" after `claude/lost-fleet-viewer-support-95lled` was fully absorbed there. That
   simplification is superseded for now by the user's later branch-specific request above.
@@ -17,8 +17,8 @@ This repo is the active Lost Fleet worktree for this project.
   run `git fetch origin && git pull origin master` before doing anything else. `master` was
   deliberately left untouched for most of this project's history, so an old local clone of it can
   be missing a huge amount of work that has long existed on the feature branches.
-- Note: `master` is still the Vercel production deploy target, but this session's new work was
-  pushed only to `claude/lost-fleet-viewer-support-95lled` per the user's explicit request.
+- Note: `master` is still the Vercel production deploy target, and the current viewer-work tip has
+  already been synced there for deployment.
 
 ## Read Order
 
@@ -37,7 +37,9 @@ This repo is the active Lost Fleet worktree for this project.
   action, the Scoring Board Extension's alternate Advanced Tech gate, the 6 Lost Fleet Advanced
   Tech tiles, and Examine Artifact + Artifact-token seeding are all implemented and tested.
 - `new Engine([...], { lostFleet: true })` builds a real, playable Lost Fleet board.
-- Engine tests: 467/467 passing. Viewer tests: 156/156 passing.
+- Engine tests: 467/467 passing. Viewer tests: 160/160 passing.
+- The self-contained viewer can now boot Lost Fleet directly via `?lostFleet=1` (for example
+  `?players=2&seed=lost-fleet-space-map&lostFleet=1`).
 - The viewer is deployed to Vercel (Git integration); `master` is the production deploy target.
 
 ## Open Work
