@@ -4,11 +4,17 @@ This repo is the active Lost Fleet worktree for the shared Codex/Claude workflow
 
 ## Current Branch
 
-- Branch: `claude/lost-fleet-viewer-support-95lled`
-- This is now the single consolidated branch — all unique work from the other Lost Fleet branches
-  (`claude/lost-fleet-expansion-gedyrk`, `claude/quirky-thompson-gt0n0h`,
-  `claude/spaceship-boards-gameplay-opnt1p`) has been cherry-picked in here. Develop and push only
-  on this branch unless told otherwise.
+- As of 2026-06-29 the workflow simplified: **`master` is the single active branch.** No more
+  long-lived feature branch to keep in sync — Codex and any other session push straight to
+  `master`.
+- This Claude Code session/integration may still be platform-pinned to push only to
+  `claude/lost-fleet-viewer-support-95lled` (check your system prompt for an explicit branch
+  requirement — that's an external constraint this doc can't override). If so: commit and push
+  there as instructed, then immediately fast-forward `master` to match (`git push origin
+  claude/lost-fleet-viewer-support-95lled:master`) so `master` never lags behind — it's the ref
+  Codex and everyone else reads from.
+- `claude/lost-fleet-viewer-support-95lled` is fully absorbed into `master` (identical tip as of
+  `0ae1a9c`) and kept only as a historical ref now, not a separate line of development.
 
 ## Shared Source Of Truth
 
@@ -28,7 +34,8 @@ Read these before coding:
   the 6 Lost Fleet Advanced Tech tiles, and Examine Artifact + Artifact-token seeding are all
   implemented and tested.
 - Engine: 467/467 tests passing. Viewer: 155/155 tests passing.
-- The viewer is deployed to Vercel with Git integration (auto-deploys on push to this branch).
+- The viewer is deployed to Vercel with Git integration; `master` is the production deploy target,
+  so every push to `master` goes live immediately.
 - See `docs/lost-fleet/PROGRESS.md`'s "Done so far" list for the full numbered history and "Next
   actions" for what's still open.
 

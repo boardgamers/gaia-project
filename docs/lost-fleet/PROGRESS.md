@@ -862,6 +862,30 @@ notifications).
       **`master` and this branch are now identical.** Vercel's production deployment (configured
       target branch = `master`) auto-deployed the new tip (`dpl_79PiRMyvhtFzGsWkcL8FKbebanLa`,
       commit `e6e7e43`, `target: "production"`, `state: "READY"`) without any manual trigger needed.
+37. ✅ **Workflow simplified to a single branch ahead of the Claude→Codex handoff** (done
+    2026-06-29). With `master` and `claude/lost-fleet-viewer-support-95lled` identical and the user
+    about to start switching between Claude and Codex sessions, keeping a separate long-lived
+    feature branch in sync (cherry-pick → verify → fast-forward, every session) was decided to be
+    unnecessary overhead for a single-contributor project. New decision: **push directly to
+    `master`** going forward; no more feature-branch juggling. `claude/lost-fleet-viewer-support-
+    95lled` is kept only as a historical ref, not a separate line of development. Accepted
+    tradeoff: `master` is also the Vercel production deploy target, so every push goes live
+    immediately, including WIP commits — the user chose this explicitly over a staging branch.
+    Updated `CLAUDE.md`, `AGENTS.md`, and `docs/lost-fleet/CODEX_HANDOFF.md` to record the new
+    policy. (Caveat: a Claude-Code-on-the-web session's platform config may still pin it to push
+    only to the named feature branch regardless of this doc — if so, fast-forward `master` to match
+    immediately after, per the note in `CLAUDE.md`.)
+38. ✅ **Caught a stale local clone on the very first Codex handoff attempt** (2026-06-29). The user
+    ran the Codex handoff prompt against their local desktop clone ("Kims_desktop") and Codex
+    correctly reported it was on `master` but with `AGENTS.md`, `CODEX_HANDOFF.md`,
+    `PERFORMANCE.md`, and `viewer/src/components/SpaceMap.spec.ts` all missing. Root cause: that
+    local clone's `master` predates today's fast-forward (and likely predates most of this
+    project's history, since `master` was deliberately untouched until earlier today) — it had
+    never been `git pull`ed. Not a problem with `origin` (verified all 4 files/paths exist on
+    `origin/master`). Fix communicated to the user: `git fetch origin && git checkout master &&
+    git pull origin master` on the desktop clone before retrying Codex. Added the same warning +
+    fix to `CODEX_HANDOFF.md`'s working assumptions and resume checklist so the next handoff
+    catches this before wasting a Codex turn on it.
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

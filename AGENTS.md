@@ -4,9 +4,16 @@ This repo is the active Lost Fleet worktree for this project.
 
 ## Current Branch
 
-- Branch: `claude/lost-fleet-viewer-support-95lled`
-- This is now the single consolidated branch — all unique work from the other Lost Fleet branches
-  has been cherry-picked in here. Develop and push only on this branch unless told otherwise.
+- **Push directly to `master`.** As of 2026-06-29 there is no separate long-lived feature branch —
+  `claude/lost-fleet-viewer-support-95lled` was fully absorbed into `master` (identical tip,
+  `0ae1a9c`) and is kept only as a historical ref. Develop and commit on `master`.
+- If your local clone is missing files you'd expect (e.g. this file, `PERFORMANCE.md`,
+  `CODEX_HANDOFF.md`, or `viewer/src/components/SpaceMap.spec.ts`), your local `master` is stale —
+  run `git fetch origin && git pull origin master` before doing anything else. `master` was
+  deliberately left untouched for most of this project's history, so an old local clone of it can
+  be missing a huge amount of work that has long existed on the feature branches.
+- Note: `master` is also the Vercel production deploy target — every push goes live immediately.
+  That's an accepted tradeoff for a single-branch workflow with one contributor, not a mistake.
 
 ## Read Order
 
@@ -26,7 +33,7 @@ This repo is the active Lost Fleet worktree for this project.
   Tech tiles, and Examine Artifact + Artifact-token seeding are all implemented and tested.
 - `new Engine([...], { lostFleet: true })` builds a real, playable Lost Fleet board.
 - Engine tests: 467/467 passing. Viewer tests: 155/155 passing.
-- The viewer is deployed to Vercel (Git integration, auto-deploys on push to this branch).
+- The viewer is deployed to Vercel (Git integration); `master` is the production deploy target.
 
 ## Open Work
 

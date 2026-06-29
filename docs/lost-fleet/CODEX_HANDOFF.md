@@ -8,13 +8,18 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
 
 - The user switches between Claude Code and Codex; treat the repo as shared with another session
   unless `git status --short --branch` is clean.
-- The branch to continue from is `claude/lost-fleet-viewer-support-95lled`. This is the single
-  consolidated branch — all unique work from every other Lost Fleet branch has been cherry-picked
-  into it (see `PROGRESS.md` "Done so far" #35/#36).
-- As of 2026-06-29, `origin/master` was fast-forwarded to exactly match this branch (`git diff
-  origin/master origin/claude/lost-fleet-viewer-support-95lled --stat` is empty). Either ref gives
-  the same code right now, but keep developing on `claude/lost-fleet-viewer-support-95lled` and
-  push there — don't push new work straight to `master` without the user's explicit say-so again.
+- **`master` is the single active branch — push directly to it.** As of 2026-06-29 the project
+  dropped the separate feature-branch workflow: `claude/lost-fleet-viewer-support-95lled` was fully
+  absorbed into `master` (identical tip, `0ae1a9c`) and is kept only as a historical ref. Don't
+  create a new feature branch for normal work; commit and push to `master`.
+- **If your local clone is missing files this doc references** (itself, `PERFORMANCE.md`,
+  `AGENTS.md`, or `viewer/src/components/SpaceMap.spec.ts`), your local `master` is stale — run
+  `git fetch origin && git pull origin master` before reading anything else. `master` was
+  deliberately left untouched for most of this project's history (all work happened on feature
+  branches), so an old local clone of `master` can predate huge amounts of work that's been on
+  `origin` for a long time. This has already bitten one handoff — see `PROGRESS.md` #37/#38.
+- `master` is also the Vercel production deploy target, so every push goes live immediately. This
+  is an accepted tradeoff for a single-branch, single-contributor workflow, not a bug to fix.
 - 7 superseded branches still exist on `origin` (`claude/lost-fleet-advtech-tiles-c2fo8w`,
   `claude/lost-fleet-engine-work-l3bzsk`, `claude/spaceship-boards-gameplay-opnt1p-t991fv`,
   `codex/continue-lost-fleet-work`, `claude/lost-fleet-expansion-gedyrk`,
@@ -24,7 +29,9 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
 
 ## Resume Checklist
 
-1. Run `git status --short --branch` and confirm you're on `claude/lost-fleet-viewer-support-95lled`.
+1. Run `git status --short --branch` and confirm you're on `master`, then `git pull origin master`
+   to make sure your local copy isn't stale (see the warning above — this has already happened
+   once).
 2. Read `docs/lost-fleet/PROGRESS.md` in full — start with its **Working agreements** section
    (standing instruction, not optional), then the "Done so far" list and "Next actions".
 3. Read `docs/lost-fleet/RULES_CLARIFICATIONS.md` and `COMPONENTS.md` if the task touches Lost
