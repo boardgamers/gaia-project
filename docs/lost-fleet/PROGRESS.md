@@ -651,6 +651,25 @@ notifications).
     (`available-command.spec.ts`: `possibleBoardActions` excludes qic1-3 under Lost Fleet even when
     affordable, base game unaffected), and an end-to-end test (`move/spaceship-actions.spec.ts`: a real
     Lost Fleet `Command.Action` never lists qic1/2/3). **440/440 → 443/443** (net +3 tests).
+31. ✅ **`terra` Advanced Tech tile audited against "ANY source of free terraforming steps" — no bug
+    found, confirmed by a new regression test** (done 2026-06-29). RULES_CLARIFICATIONS.md §G2 requires
+    `terra` to fire on every terraforming step regardless of how it's paid for, explicitly calling out
+    the "terra" New Federation token's 3-free-step Build-a-Mine as an example. Audited every production
+    call site of `Player.build()`'s `stepsReq` parameter (the single place `receiveTerraformingStepTriggerIncome`
+    is invoked, `player.ts`): (1) normal builds (`move/buildings.ts`'s `placeBuilding()` → `available/
+    buildings.ts`'s `canBuild.steps`, computed as the full `terraformingStepsRequired()` count regardless
+    of any cost discount) — correct; (2) the Federation tokens' bonus Build-a-Mine chain (`available/
+    federations.ts`'s `possibleFederationTokenBuildMine()`) — also pushes the full, undiscounted `steps`
+    count even though the Terraform token discounts the ore *cost* for those same steps — correct; (3)
+    Space Giants' Exploration-board special action — reuses the same normal-build path (temporary step
+    discount only affects cost, not the `steps` count) — correct; (4) `move/buildings.ts`'s
+    `moveLostPlanet()` hardcodes `stepsReq=0` — correct, since placing the (wildcard) Lost Planet never
+    requires terraforming; (5) `move/ships.ts`'s Customs Post build omits `stepsReq` entirely — correct,
+    ships aren't terraformed. No code changes were needed. Added one regression test
+    (`available/federations.spec.ts`: builds the same hex via the Terraform Federation token's free
+    Build-a-Mine both with and without `terra` loaded, and confirms the VP delta between the two runs
+    equals exactly `2 * steps` — i.e. `terra` fires on the discounted/free steps too, not just paid
+    ones) directly covering the rules text's own worked example. **443/443 → 444/444** (net +1 test).
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -829,9 +848,11 @@ Standard-Tech claim hook, the full Spaceship Boards live-gameplay wiring, the go
 for all 8 claimed-ship Federation tokens, rescoring ship Federation tokens, including Asteroid
 hexes in the Federation tokens' Build-a-Mine (per BGG designer ruling), Space Giants'
 Exploration-board special action, the Scoring Board Extension's alternate Advanced Tech gate
-(§E6), the 6 newly-named Lost Fleet Advanced Tech tiles (§G2), and the research-board Q.I.C.
-actions' Lost Fleet overlay (§E4/§K3) are complete and verified —
-**443/443 engine tests pass**
+(§E6), the 6 newly-named Lost Fleet Advanced Tech tiles (§G2), the research-board Q.I.C.
+actions' Lost Fleet overlay (§E4/§K3), and an audit confirming the `terra` Advanced Tech tile
+correctly fires on every free/discounted terraforming step, not just paid ones, are complete and
+verified —
+**444/444 engine tests pass**
 (274 baseline → 280 after Chunk 2 → 299 after Chunk 3 → 321 after Chunk 4 → 337 after Chunk 5 → 345
 after Chunk 6 → 352 after Chunk 7a → 353 after the German-rules reroll fix → 354 after Chunk 7b's
 placement-metadata step → 361 after Chunk 7b's `SpaceMap`/`moveInit` wiring + integration tests → 362
@@ -844,7 +865,8 @@ fixing rescore to offer and re-trigger ship Federation tokens → 406 after fixi
 Build-a-Mine to include Asteroid hexes once a spare Gaiaformer is available → 419 after Space Giants'
 Exploration-board special action → 433 after the Scoring Board Extension's alternate Advanced Tech
 gate → 440 after the 6 newly-named Lost Fleet Advanced Tech tiles (§G2) → 443 after the research-board
-Q.I.C. actions' Lost Fleet overlay, see "Done so far" #16-#30).
+Q.I.C. actions' Lost Fleet overlay → 444 after the `terra` free-terraforming-steps audit, see "Done so
+far" #16-#31).
 (Note: the 399 and 404 figures here are git-verified; an earlier draft of this doc had momentarily
 overstated them as 407/412 before the correction in "Done so far" #24-#25 above. The 406 figure was
 also stale by session start — `git stash` confirmed the real baseline was 416 — see #27's note.)
@@ -864,9 +886,12 @@ terraforming steps), see #27; the 7th Advanced Tech slot from the Scoring Board 
 on ≥25 VP, or in 3-4p on a 50/50-randomized choice between ≥25 VP and 3 explored ships) is now seeded
 at setup and correctly gates `canTakeAdvancedTechTile()`, see #28; the 6 newly-named Lost Fleet
 Advanced Tech tiles from §G2 (`asteroidpass`, `big`, `deep`, `deeppass`, `qaction`, `terra`) are now
-real, gated `AdvTechTile` enum members with wired effects, see #29; and the research-board Q.I.C.
+real, gated `AdvTechTile` enum members with wired effects, see #29; the research-board Q.I.C.
 actions (`BoardAction.Qic1-3`) are now correctly disabled under Lost Fleet, replaced entirely by the
-spaceship boards' own Q.I.C. actions, see #30. The Lost Fleet
+spaceship boards' own Q.I.C. actions, see #30; and `terra` has been audited against every source of
+free terraforming steps in the engine (normal builds, the Federation tokens' bonus Build-a-Mine,
+Space Giants' special action, Lost Planet placement, ship buildings) with no bug found, see #31. The
+Lost Fleet
 variable-map geometry, tile data, full board assembly, `GaiaHex` addressing fix, AND the
 `SpaceMap`/`moveInit` wiring are all coded and tested (see #13-#16) — `new Engine([...], { lostFleet: true })`
 now produces a real, playable Lost Fleet board through the normal engine entry points. Explicitly still

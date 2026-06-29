@@ -3,6 +3,7 @@ import "mocha";
 import { qicForDistance, terraformingCost } from "../cost";
 import Engine from "../engine";
 import {
+  AdvTechTile,
   Building,
   Command,
   Faction,
@@ -19,6 +20,7 @@ import { moveChooseFederationTile } from "../move/federation";
 import { terraformingStepsRequired } from "../planets";
 import { Power } from "../player-data";
 import Reward from "../reward";
+import { techTileEventWithSource } from "../tiles/techs";
 import { possibleFederationTokenBuildMine } from "./federations";
 
 function createLostFleetRoundMoveEngine(
@@ -198,6 +200,39 @@ describe("possibleFederationTokenBuildMine", () => {
     expect(cost.find((r) => r.type === Resource.Qic)?.count ?? 0).to.equal(target.qic);
     // terraformingStepsRequired never exceeds 3, so the "discount up to 3 steps" always waives it entirely.
     expect(cost.find((r) => r.type === Resource.Ore)?.count ?? 0).to.equal(0);
+  });
+
+  it("terra: the Terraform token's free Build-a-Mine still triggers the full terraforming VP bonus on every step, paid or free (RULES_CLARIFICATIONS.md §G2/§G5)", () => {
+    function buildViaTerraformToken(withTerra: boolean): { gain: number; steps: number } {
+      const engine = createLostFleetRoundMoveEngine(2);
+      occupyStartingHex(engine, PlayerEnum.Player1);
+      const player = engine.player(PlayerEnum.Player1);
+
+      if (withTerra) {
+        player.loadEvents(techTileEventWithSource(AdvTechTile.Terra, AdvTechTile.Terra));
+      }
+
+      const target = cheapestHexNeedingRangeAndTerraforming(engine, PlayerEnum.Player1, Faction.Terrans);
+      expect(target, "need a hex needing terraforming").to.not.equal(undefined);
+
+      const [command] = possibleFederationTokenBuildMine(engine, PlayerEnum.Player1, {
+        federation: SpaceshipFederation.Terraform,
+      });
+      const building = command.data.buildings.find((b) => b.coordinates === target.hex.toString());
+      expect(building, "target hex should be buildable via the Terraform token").to.not.equal(undefined);
+
+      const beforeVp = player.data.victoryPoints;
+      player.build(Building.Mine, target.hex, Reward.parse(building.cost), engine.map, building.steps);
+
+      return { gain: player.data.victoryPoints - beforeVp, steps: target.steps };
+    }
+
+    const baseline = buildViaTerraformToken(false);
+    const withTerra = buildViaTerraformToken(true);
+
+    expect(withTerra.steps, "both runs must terraform the same hex/step count").to.equal(baseline.steps);
+    expect(withTerra.steps, "need a target that actually requires terraforming").to.be.greaterThan(0);
+    expect(withTerra.gain - baseline.gain).to.equal(2 * withTerra.steps);
   });
 
   it("still charges the Gaia-forming QIC cost for Gaia planets with either token, on top of Terraform's range QIC", () => {
