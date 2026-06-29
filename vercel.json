@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "installCommand": "npx -y pnpm@9 install --no-frozen-lockfile --prod=false",
+  "installCommand": "rm -rf .pnpm-store && npx -y pnpm@9 install --no-frozen-lockfile --prod=false",
   "buildCommand": "NODE_OPTIONS=--openssl-legacy-provider npx -y pnpm@9 --filter @gaia-project/viewer build",
   "outputDirectory": "viewer/dist/app"
 }
