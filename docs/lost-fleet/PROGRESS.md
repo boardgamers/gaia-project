@@ -695,6 +695,55 @@ notifications).
     and was never confirmed; see the comment in `tiles/artifacts.ts` and `move/artifacts.ts`.
     **444/444 → 467/467** (net +23 tests: 18 in new `move/artifacts.spec.ts`, 5 new seeding/gating cases
     in `setup.spec.ts`).
+33. ✅ **Viewer "Step Zero" — all pre-existing compile/runtime gaps surfaced by the Lost Fleet engine
+    work are now fixed; `viewer/` builds and tests clean** (done 2026-06-29; this is prerequisite
+    plumbing, not new Lost Fleet UI — see "Next actions" item 2 below, now resolved). Originally scoped
+    as "6 missing `AdvTechTile` entries + 6 `Object.values(Faction)` call sites" but running the
+    viewer's test suites surfaced a longer cascading chain of gaps, all fixed in this pass:
+    - `data/factions.ts`: added the missing `factionData` entries for Darkanians/Space Giants
+      (name/ability/PI text/shortcut), closing the exhaustive `{[key in Faction]: X}` map.
+    - `planetsWithSteps`'s signature changed from `(planet: Planet, steps: number)` to
+      `(faction: Faction, steps: number)` (Darkanians/Space Giants have no real home planet, so the
+      function now derives the planet internally via `factionPlanet(faction)`); ripple fixed across
+      `logic/charts/terraforming.ts` (`planetsForSteps`, 2 call sites) and `PlayerInfo.vue`.
+    - `data/planets.ts` + `stylesheets/planets.css`: added color-data entries (`--asteroid` turquoise
+      `#30d5c8`, `--protoplanet` pink `#ff66b3`, picked by Claude — COMPONENTS.md §10 names the colors
+      but gives no exact hex) and `planetNames` entries for `Planet.Asteroid`/`Planet.Protoplanet`.
+      This was the one genuine **runtime crash** in the batch (`TypeError` reading `.color` of
+      `undefined` in `graphics/utils.ts`'s `newPlanetColors()`), not just a compile error — every other
+      item in this list is a type-check-only fix.
+    - Confirmed the engine's `.values(expansions)` namespace-merge pattern (established for `Faction`
+      in Chunk 3/§I) is systemic across many more enums (`Planet`, `ResearchField`, `Building`,
+      `RoundScoring`, `Booster`, `TechTile`/`AdvTechTile` + their `*Pos` variants, `BoardAction`,
+      `ScoringTile`, `FinalTile`, `Spaceship`, `SpaceshipTechTile`, `SpaceshipFederation`,
+      `ArtifactToken`). Grepped the whole viewer for every `Object.values(X)` call site against this
+      list; found and fixed 2 more beyond the known 6 `Faction` sites: `logic/table/planets.ts`
+      (`Planet.values(engine.expansions)`, per-game context) and `components/definitions/Filters.vue`
+      (`Planet.values(Expansion.All)`, module-level static SVG-filter generator with no engine
+      instance). No other call sites of this shape remain anywhere in `viewer/src`.
+    - `data/tech-tiles.ts`: added a new `spaceshipTechTileData` table for the 3 `SpaceshipTechTile`
+      Standard Tech tiles seeded onto Rebellion/T F Mars/Eclipse boards at setup (Range/Terraform/
+      Resource — effects sourced from RULES_CLARIFICATIONS.md §G1), and widened `techTileData()`'s
+      parameter type to `AnyTechTile | SpaceshipTechTile`. The engine's `ChooseTechTile` type
+      (`available/types.ts`) already included `SpaceshipTechTileWithPos` alongside the normal tech/adv
+      tech union, so `p.data.tiles.techs[].tile` was wider than the viewer's display-data lookup;
+      `logic/table/research.ts`'s `techCell()` widened to match.
+    - `logic/charts/testdata/all-families/planets.json`: updated the literal JSON fixture for the
+      "Planets" chart to include the 2 new always-present Asteroid/Protoplanet columns (this chart's
+      source list is `Object.keys(planetNames)`, not expansion-filtered — same existing convention as
+      the always-present "Lantids guest mine" column — so the fixture, not the source, was the stale
+      side).
+    - **Verification:** `npm run quick-test` → **152/152 passing**, 0 TypeScript compile errors.
+      `npm test` (full mochapack/webpack suite incl. Vue component specs) → **152 passing, 2 failing**;
+      both failures are `BoardAction.spec.ts`'s `TypeError: moves.some is not a function`, confirmed
+      **pre-existing and unrelated** to this work: the getter (`BoardAction.vue`'s `get recent()`) and
+      its test's `makeTestStore()` mock (`recentCommands: () => []`, a function, vs. the component's
+      bare-property read expecting an already-evaluated array — real Vuex getters don't need invoking)
+      were introduced together in the same ancestor commit (`5d00aedd`, an old `master` release tag,
+      long before any Lost Fleet work) and have never been touched since; none of this session's edited
+      files are anywhere near `BoardAction.vue`/`BoardAction.spec.ts`/`store.ts`. Confirmed structurally
+      (mock shape vs. usage pattern) rather than fixed, since it's out of Step Zero's scope — flagged to
+      the user as a separately-tracked, already-broken test.
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -925,8 +974,15 @@ Boards-adjacent feature is now wired: all 12 ship-board actions, the gold-side e
 of claimed ship Federation tokens, and Examine Artifact + Artifact-token seeding. Explicitly still
 open, in priority order the user should pick from:
 1. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.
-2. **Viewer-side `Object.values(Faction)` fix** (6 call sites, currently harmless since the viewer
-   hasn't been touched, but will need fixing before any viewer chunk starts).
+2. ~~**Viewer-side `Object.values(Faction)` fix**~~ — **DONE** (see "Done so far" #33, 2026-06-29,
+   "Viewer Step Zero"): the 6 `Faction` call sites plus a cascading chain of related gaps (Darkanians/
+   Space Giants `factionData`, `planetsWithSteps` signature, Asteroid/Protoplanet color data, 2 more
+   `Object.values(Planet)` sites, `SpaceshipTechTile` display data, a stale chart fixture) are all
+   fixed. `viewer/` now builds and type-checks clean against the Lost Fleet engine (`npm run
+   quick-test` 152/152; `npm test` 152/154, the 2 failures pre-existing/unrelated, see #33). The
+   viewer is now unblocked for new Lost Fleet UI work (map rendering for Lost Fleet sectors, spaceship
+   board panels, player-color turquoise/pink pieces per COMPONENTS.md §10, etc.) — none of that has
+   started yet.
 3. **Revised Space Sector tiles 05/06/07** (§H4, the one remaining art-only TODO — see "Still MISSING"
    above) — would let Lost Fleet stop falling back to the base game's per-count face for those 3 tiles.
 4. Or a different unit of work entirely (viewer, Supabase), ahead of any blocked item.

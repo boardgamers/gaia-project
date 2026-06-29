@@ -1,4 +1,4 @@
-import { AdvTechTile, TechTile } from "@gaia-project/engine";
+import { AdvTechTile, SpaceshipTechTile, TechTile } from "@gaia-project/engine";
 import { AnyTechTile } from "@gaia-project/engine/src/enums";
 import { colorCodes } from "../logic/color-codes";
 
@@ -41,8 +41,28 @@ export const advancedTechTileData: {
   [AdvTechTile.AdvTech13]: { name: "3k special action", color: "--specialAction", shortcut: "3k" },
   [AdvTechTile.AdvTech14]: { name: "3 VP when building a mine", color: "--res-ore", shortcut: "3m" },
   [AdvTechTile.AdvTech15]: { name: "3 VP when building ts", color: "--res-credit", shortcut: "3t" },
+
+  // Lost Fleet, see RULES_CLARIFICATIONS.md §G2
+  [AdvTechTile.AsteroidPass]: { name: "2 VP / asteroid when passing", color: "--titanium", shortcut: "2a" },
+  [AdvTechTile.Big]: { name: "6 VP / PI or academy (max 18)", color: "--recent", shortcut: "6b" },
+  [AdvTechTile.Deep]: { name: "4 VP / deep space sector", color: "--lost", shortcut: "4d" },
+  [AdvTechTile.DeepPass]: { name: "2 VP / deep space sector when passing", color: "--lost", shortcut: "2d" },
+  [AdvTechTile.QAction]: { name: "4 VP / QIC action", color: "--res-qic", shortcut: "4q" },
+  [AdvTechTile.Terra]: colorCodes.terraformingStep.add({ name: "2 VP / terraforming step" }, "2"),
 };
 
-export function techTileData(tile: AnyTechTile): TileTileData {
-  return baseTechTileData[tile] ?? advancedTechTileData[tile];
+// The 3 Standard Tech tiles seeded on spaceship boards, see RULES_CLARIFICATIONS.md §G1
+export const spaceshipTechTileData: {
+  [key in SpaceshipTechTile]: TileTileData;
+} = {
+  [SpaceshipTechTile.Range]: colorCodes.range.add({ name: "Range +1 (while uncovered)" }, "+1"),
+  [SpaceshipTechTile.Terraform]: colorCodes.terraformingStep.add(
+    { name: "Once: free mine with up to 2 free terraforming steps" },
+    "2"
+  ),
+  [SpaceshipTechTile.Resource]: { name: "1 ore, 3 knowledge", color: "--res-knowledge", shortcut: "1o3k" },
+};
+
+export function techTileData(tile: AnyTechTile | SpaceshipTechTile): TileTileData {
+  return baseTechTileData[tile] ?? advancedTechTileData[tile] ?? spaceshipTechTileData[tile];
 }

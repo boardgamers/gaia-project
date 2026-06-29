@@ -360,7 +360,7 @@ export default class PlayerInfo extends Vue {
   }
 
   planetsWithSteps(steps: number) {
-    return planetsWithSteps(this.planet, steps);
+    return planetsWithSteps(this.faction, steps);
   }
 
   get passed() {

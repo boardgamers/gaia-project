@@ -142,7 +142,7 @@ export default class Rules extends Vue {
   }
 
   get factions(): Faction[] {
-    return Object.values(Faction);
+    return Faction.values(this.engine.expansions);
   }
 
   factionName(faction: Rule): string {

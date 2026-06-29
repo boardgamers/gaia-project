@@ -1,4 +1,4 @@
-import { Planet } from "@gaia-project/engine";
+import { Faction, factionPlanet, Planet } from "@gaia-project/engine";
 import { planetsWithSteps } from "../../data/factions";
 import { planetColorVar } from "../../graphics/colors";
 import { ChartSource } from "./charts";
@@ -28,7 +28,7 @@ function getTerraformingSteps(steps: TerraformingSteps): number {
   }
 }
 
-export function planetsForSteps(type: TerraformingSteps, planet: Planet): Planet[] {
+export function planetsForSteps(type: TerraformingSteps, faction: Faction): Planet[] {
   switch (type) {
     case TerraformingSteps.Gaia:
       return [Planet.Gaia];
@@ -39,9 +39,9 @@ export function planetsForSteps(type: TerraformingSteps, planet: Planet): Planet
     case TerraformingSteps.LostMine:
       return [Planet.Lost];
     case TerraformingSteps.Step0:
-      return [planet];
+      return [factionPlanet(faction)];
     default:
-      return planetsWithSteps(planet, getTerraformingSteps(type));
+      return planetsWithSteps(faction, getTerraformingSteps(type));
   }
 }
 
@@ -52,12 +52,12 @@ export const terraformingStepsSourceFactory: SimpleSourceFactory<ChartSource<Ter
   extractLog: planetCounter(
     (source) => source.type == TerraformingSteps.Lantids,
     (source) => source.type == TerraformingSteps.LostMine,
-    (p, type, player) => planetsForSteps(type, player.planet).includes(p)
+    (p, type, player) => planetsForSteps(type, player.faction).includes(p)
   ),
   sources: Object.values(TerraformingSteps).map((steps) => ({
     type: steps,
     label: steps,
-    color: (player) => planetColorVar(planetsForSteps(steps, player.planet)[0], true),
+    color: (player) => planetColorVar(planetsForSteps(steps, player.faction)[0], true),
     weight: getTerraformingSteps(steps),
   })),
 };

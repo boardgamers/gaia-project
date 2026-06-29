@@ -136,9 +136,25 @@ export const factionData: {
     PI: `During the Gaia phase, you can discard 4 power tokens from your Gaia area to immediately gain a tech tile. You may do this as many times as you can afford to.`,
     shortcut: "s",
   },
+  [Faction.Darkanians]: {
+    name: "Darkanians",
+    ability:
+      "You have no home planet type. Start with one mine instead of two. Terraforming any standard planet always costs one step, regardless of color. Building a mine on a Gaia Planet costs two Q.I.C. instead of one.",
+    PI:
+      "The first time you colonize a planet in a Space or Deep Space sector, gain two credits and one knowledge. (Interspace tiles do not count as sectors for this effect.)",
+    shortcut: "i",
+  },
+  [Faction.SpaceGiants]: {
+    name: "Space Giants",
+    ability:
+      "You have no home planet type. Start with one mine instead of two. Terraforming any standard planet always costs two steps, regardless of color. Building a mine on a Gaia Planet costs two Q.I.C. instead of one.",
+    PI: "Immediately take one tech tile of your choice (normal upgrade restrictions apply). This can only be done once.",
+    shortcut: "g",
+  },
 };
 
-export function planetsWithSteps(planet: Planet, steps: number) {
+export function planetsWithSteps(faction: Faction, steps: number) {
+  const planet = factionPlanet(faction);
   // Planets are ordered the same as in the planet wheel
   let list = [Planet.Terra, Planet.Oxide, Planet.Volcanic, Planet.Desert, Planet.Swamp, Planet.Titanium, Planet.Ice];
 
@@ -147,7 +163,7 @@ export function planetsWithSteps(planet: Planet, steps: number) {
     list = list.slice(list.lastIndexOf(planet)).concat(list.slice(0, list.indexOf(planet)));
   }
 
-  return list.filter((p) => terraformingStepsRequired(planet, p) === steps);
+  return list.filter((p) => terraformingStepsRequired(faction, p) === steps);
 }
 
 export function factionShortcut(faction: Faction): string {
@@ -203,7 +219,7 @@ export function factionDesc(faction: Faction, variant: FactionBoardRaw | null, e
       ${[0, 1, 2, 3]
         .map(
           (i) =>
-            `<span class="ml-2">${planetsWithSteps(p, i)
+            `<span class="ml-2">${planetsWithSteps(faction, i)
               .map(
                 (p) =>
                   `<svg width="15" height="20" viewbox="0 0 15 15" >

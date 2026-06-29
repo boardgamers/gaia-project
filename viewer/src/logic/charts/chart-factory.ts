@@ -147,7 +147,7 @@ function newLegendOptions(provider: (index: number) => string) {
   let hovering = false;
   const tooltip = document.getElementById("tooltip");
 
-  const legendOptions: DeepPartial<LegendOptions> = {
+  const legendOptions: DeepPartial<LegendOptions<"line">> = {
     onHover(event: ChartEvent, legendItem: LegendItem) {
       const description = provider(legendItem.datasetIndex);
       if (hovering || description == null) {
@@ -241,7 +241,7 @@ export class ChartSetup {
       statistics ? `Final ${String.fromCharCode(65 + tile)}` : finalScoringSources[finalTiles[tile]].name;
     const roundScoringNames = statistics ? null : engine.tiles.scorings.round.map((r) => roundScoringData[r].name);
 
-    const factions: Faction[] = statistics ? Object.values(Faction) : engine.players.map((p) => p.faction);
+    const factions: Faction[] = statistics ? Faction.values(expansions) : engine.players.map((p) => p.faction);
 
     this.chartFactories = vpChartFactoryEntries(
       finalTileName,

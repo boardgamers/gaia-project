@@ -32,7 +32,7 @@ export function planets(engine: Engine): PlayerTable {
         additionalHeader: { cells: [emptyCell] },
       } as PlayerColumn,
     ].concat(
-      ...Object.values(Planet)
+      ...Planet.values(engine.expansions)
         .filter((planet) => planet != Planet.Empty)
         .map((planet) => {
           const color = planetColorVar(planet, false);

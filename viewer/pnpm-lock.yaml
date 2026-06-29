@@ -46,8 +46,8 @@ importers:
         specifier: ^3.3.1
         version: 3.5.34
       '@types/lodash':
-        specifier: ^4.14.168
-        version: 4.17.24
+        specifier: 4.14.168
+        version: 4.14.168
       '@types/mocha':
         specifier: ^8.2.1
         version: 8.2.3
@@ -480,8 +480,8 @@ packages:
   '@types/keyv@3.1.4':
     resolution: {integrity: sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==}
 
-  '@types/lodash@4.17.24':
-    resolution: {integrity: sha512-gIW7lQLZbue7lRSWEFql49QJJWThrTFFeIMJdp3eH4tKoxm1OvEPg02rm4wCCSHS0cL3/Fizimb35b7k8atwsQ==}
+  '@types/lodash@4.14.168':
+    resolution: {integrity: sha512-oVfRvqHV/V6D1yifJbVRU3TMp8OT6o6BG+U9MkwuJ3U8/CsDHvalRpsxBqivn71ztOFZBTfJMvETbqHiaNSj7Q==}
 
   '@types/minimatch@6.0.0':
     resolution: {integrity: sha512-zmPitbQ8+6zNutpwgcQuLcsEpn/Cj54Kbn7L5pX0Os5kdWplB7xPgEh/g+SWOB/qmows2gpuCaPyduq8ZZRnxA==}
@@ -6769,7 +6769,7 @@ snapshots:
       '@types/node': 10.17.60
     optional: true
 
-  '@types/lodash@4.17.24': {}
+  '@types/lodash@4.14.168': {}
 
   '@types/minimatch@6.0.0':
     dependencies:

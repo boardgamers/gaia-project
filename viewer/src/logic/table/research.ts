@@ -1,4 +1,4 @@
-import Engine, { lastTile, ResearchField } from "@gaia-project/engine";
+import Engine, { lastTile, ResearchField, SpaceshipTechTile } from "@gaia-project/engine";
 import { AnyTechTile } from "@gaia-project/engine/src/enums";
 import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
 import { federationData } from "../../data/federations";
@@ -8,7 +8,7 @@ import { colorCodes } from "../color-codes";
 import { Cell, defaultBackground, InfoTableFlex, PlayerColumn, PlayerTable } from "./types";
 import { deactivated, skipZero } from "./util";
 
-export function techCell(t: AnyTechTile, remaining: number): Cell {
+export function techCell(t: AnyTechTile | SpaceshipTechTile, remaining: number): Cell {
   const d = techTileData(t);
   return {
     shortcut: deactivated(d.shortcut, remaining == 0),

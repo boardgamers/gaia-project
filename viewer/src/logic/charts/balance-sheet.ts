@@ -93,7 +93,7 @@ export function balanceSheetEventSources(expansion: Expansion): BalanceSheetSour
       label: "Faction abilities",
       costResources: [],
       incomeResources: [Resource.Knowledge],
-      eventSources: Object.values(Faction),
+      eventSources: Faction.values(expansion),
       color: "--volcanic",
     },
     {
