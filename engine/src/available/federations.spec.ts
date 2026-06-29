@@ -2,8 +2,20 @@ import { expect } from "chai";
 import "mocha";
 import { qicForDistance, terraformingCost } from "../cost";
 import Engine from "../engine";
-import { Building, Faction, Phase, Planet, Player as PlayerEnum, Resource, SpaceshipFederation } from "../enums";
+import {
+  Building,
+  Command,
+  Faction,
+  Federation,
+  Phase,
+  Planet,
+  Player as PlayerEnum,
+  Resource,
+  SpaceshipFederation,
+  SubPhase,
+} from "../enums";
 import { GaiaHex } from "../gaia-hex";
+import { moveChooseFederationTile } from "../move/federation";
 import { terraformingStepsRequired } from "../planets";
 import { Power } from "../player-data";
 import Reward from "../reward";
@@ -214,5 +226,97 @@ describe("possibleFederationTokenBuildMine", () => {
     expect(
       possibleFederationTokenBuildMine(engine, PlayerEnum.Player1, { federation: SpaceshipFederation.Range })
     ).to.deep.equal([]);
+  });
+});
+
+/**
+ * processNextMove() (chained when rescoring Range/Terraform/Tech) always tries to pop the next
+ * queued move off engine.turnMoves once it has set up the new subphase's available commands; with
+ * no queued moves (as in these direct-call unit tests) it signals readiness by throwing an Error
+ * with an `availableCommands` property attached - the same signal engine.move()'s own try/catch
+ * relies on. Tests that trigger that chain need to expect and swallow exactly that signal.
+ */
+function expectSubphaseReady(fn: () => void) {
+  try {
+    fn();
+  } catch (err) {
+    expect(err.availableCommands, `unexpected error: ${err.message}`).to.not.equal(undefined);
+  }
+}
+
+function giveShipFederationTile(engine: Engine, player: PlayerEnum, federation: SpaceshipFederation) {
+  engine.player(player).data.spaceshipFederations.push({ tile: federation, green: true });
+}
+
+describe("rescoring Federation tokens (§C1/§G6: re-score applies uniformly to pool and ship tokens)", () => {
+  it("offers ship-claimed tokens for rescoring alongside pool-drawn tokens", () => {
+    const engine = createLostFleetRoundMoveEngine(2);
+    const player = engine.player(PlayerEnum.Player1);
+    player.data.tiles.federations.push({ tile: Federation.Fed2, green: true });
+    giveShipFederationTile(engine, PlayerEnum.Player1, SpaceshipFederation.Vp);
+
+    engine.generateAvailableCommands(SubPhase.RescoreFederationTile);
+    const command = engine.findAvailableCommand(PlayerEnum.Player1, Command.ChooseFederationTile);
+
+    expect(command.data.rescore).to.be.true;
+    expect(command.data.tiles).to.include(Federation.Fed2);
+    expect(command.data.tiles).to.include(SpaceshipFederation.Vp);
+  });
+
+  it("re-grants a direct-reward ship token's gold-side reward when rescored, without removing it", () => {
+    const engine = createLostFleetRoundMoveEngine(2);
+    const player = engine.player(PlayerEnum.Player1);
+    giveShipFederationTile(engine, PlayerEnum.Player1, SpaceshipFederation.Credit);
+
+    const vpBefore = player.data.victoryPoints;
+    const creditsBefore = player.data.credits;
+
+    engine.generateAvailableCommands(SubPhase.RescoreFederationTile);
+    const command = engine.findAvailableCommand(PlayerEnum.Player1, Command.ChooseFederationTile);
+    moveChooseFederationTile(engine, command, PlayerEnum.Player1, SpaceshipFederation.Credit);
+
+    // §G5: the Credit token's gold side is "Immediately gain 8 VP and 8 credits."
+    expect(player.data.victoryPoints).to.equal(vpBefore + 8);
+    expect(player.data.credits).to.equal(creditsBefore + 8);
+    expect(player.data.spaceshipFederations).to.have.length(1);
+  });
+
+  it("re-grants the PowerTokens token's 2 power tokens into Area III when rescored", () => {
+    const engine = createLostFleetRoundMoveEngine(2);
+    const player = engine.player(PlayerEnum.Player1);
+    giveShipFederationTile(engine, PlayerEnum.Player1, SpaceshipFederation.PowerTokens);
+
+    const area3Before = player.data.power.area3;
+
+    engine.generateAvailableCommands(SubPhase.RescoreFederationTile);
+    const command = engine.findAvailableCommand(PlayerEnum.Player1, Command.ChooseFederationTile);
+    moveChooseFederationTile(engine, command, PlayerEnum.Player1, SpaceshipFederation.PowerTokens);
+
+    expect(player.data.power.area3).to.equal(area3Before + 2);
+  });
+
+  it("re-triggers Range's bonus Build a Mine action when rescored", () => {
+    const engine = createLostFleetRoundMoveEngine(2);
+    occupyStartingHex(engine, PlayerEnum.Player1);
+    giveShipFederationTile(engine, PlayerEnum.Player1, SpaceshipFederation.Range);
+
+    engine.generateAvailableCommands(SubPhase.RescoreFederationTile);
+    const command = engine.findAvailableCommand(PlayerEnum.Player1, Command.ChooseFederationTile);
+    expectSubphaseReady(() => moveChooseFederationTile(engine, command, PlayerEnum.Player1, SpaceshipFederation.Range));
+
+    const buildCommand = engine.findAvailableCommand(PlayerEnum.Player1, Command.Build);
+    expect(buildCommand, "rescoring Range should grant another free Build a Mine action").to.not.equal(null);
+  });
+
+  it("re-triggers Tech's free Tech tile pick when rescored", () => {
+    const engine = createLostFleetRoundMoveEngine(2);
+    giveShipFederationTile(engine, PlayerEnum.Player1, SpaceshipFederation.Tech);
+
+    engine.generateAvailableCommands(SubPhase.RescoreFederationTile);
+    const command = engine.findAvailableCommand(PlayerEnum.Player1, Command.ChooseFederationTile);
+    expectSubphaseReady(() => moveChooseFederationTile(engine, command, PlayerEnum.Player1, SpaceshipFederation.Tech));
+
+    const techCommand = engine.findAvailableCommand(PlayerEnum.Player1, Command.ChooseTechTile);
+    expect(techCommand, "rescoring Tech should grant another free Tech tile pick").to.not.equal(null);
   });
 });

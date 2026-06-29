@@ -72,7 +72,10 @@ Each spaceship needs:
   counted in the 12, claimed ship Federation tokens' gold-side execution is now ● DONE for all 8
   tokens (`player.ts` direct rewards for 6, `available/federations.ts` +
   `move/federation.ts`'s `SubPhase.FederationTokenBuildMine` chain for Range/Terraform's bonus Build a
-  Mine); only Twilight's Examine Artifact action remains ☐ TODO.
+  Mine). Rescoring (QIC2 board action) is also ● DONE for ship-claimed tokens — they're offered in the
+  rescore list alongside pool-drawn tokens and re-trigger their gold-side effect uniformly, same as
+  pool tokens (`available/federations.ts`, `move/federation.ts`'s `rescoreSpaceshipFederationToken`).
+  Only Twilight's Examine Artifact action remains ☐ TODO.
 - Number of standard-tech slots — ● DONE: 0 (Twilight, has no Standard Tech slot at all), 1 each for
   Rebellion/T F Mars/Eclipse. Confirmed via owner board photos, see RULES_CLARIFICATIONS.md §C1/§C4.
 - Which new federation token + standard tech is seeded onto it at setup — ● DONE, random

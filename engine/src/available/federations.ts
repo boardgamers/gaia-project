@@ -76,7 +76,11 @@ export function possibleFederationTiles(engine: Engine, player: Player, from: "p
   const possibleTiles: Federation[] = Object.keys(engine.tiles.federations)
     .filter((key) => engine.tiles.federations[key] > 0)
     .map((f) => f as Federation);
-  const playerTiles = uniq(engine.player(player).data.tiles.federations.map((fed) => fed.tile));
+  const pl = engine.player(player);
+  const playerTiles: AvailableFederationChoice[] = uniq([
+    ...pl.data.tiles.federations.map((fed) => fed.tile),
+    ...pl.data.spaceshipFederations.map((fed) => fed.tile),
+  ]);
 
   commands.push({
     name: Command.ChooseFederationTile,

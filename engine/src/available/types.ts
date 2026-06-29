@@ -137,7 +137,7 @@ interface CommandData {
   [Command.ChargePower]: { offers: Offer[] };
   [Command.ChooseCoverTechTile]: { tiles: StandardTechTileChoice[] };
   [Command.ChooseFaction]: Faction[];
-  [Command.ChooseFederationTile]: { tiles: Federation[]; rescore: boolean };
+  [Command.ChooseFederationTile]: { tiles: AvailableFederationChoice[]; rescore: boolean };
   [Command.ChooseIncome]: string[];
   [Command.ChooseRoundBooster]: { boosters: Booster[] };
   [Command.ChooseTechTile]: { tiles: ChooseTechTile[] };

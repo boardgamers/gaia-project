@@ -513,6 +513,36 @@ notifications).
       full claim-ship-federation → chained Build-a-Mine pipeline for both tokens. Direct-reward token
       coverage lives in `player.spec.ts`. **393/393 → 407/407** (+14 tests total for this entry: 7 for
       the 6 direct-reward tokens, 5 unit + 2 end-to-end for Range/Terraform).
+25. ✅ **Rescore (QIC2 board action) now offers claimed ship Federation tokens, not just pool-drawn
+    ones — CODED & TESTED** (done 2026-06-29). User report: "Restoring a Fed you should be able to
+    choose from whichever fed tile you have which also includes the ship federations if you've
+    claimed one." `possibleFederationTiles(engine, player, "player")` (the rescore branch) previously
+    only listed `pl.data.tiles.federations` (pool tokens); it now also lists
+    `pl.data.spaceshipFederations` (ship-claimed tokens), via `available/federations.ts`. The
+    `Command.ChooseFederationTile` data's `tiles` field widened from `Federation[]` to the existing
+    `AvailableFederationChoice` union (`available/types.ts`), mirroring `Command.FormFederation`'s
+    existing use of the same union.
+    `move/federation.ts`'s `moveChooseFederationTile()` now branches the rescore case on whether the
+    chosen tile is a `SpaceshipFederation` (`Object.values(SpaceshipFederation).includes(...)`, not
+    `Federation.values()` — the latter deliberately excludes the PI-only `Federation.Gleens`, which
+    would have been a subtly wrong reuse) or a pool `Federation`, dispatching to a new
+    `rescoreSpaceshipFederationToken()` helper for the former. Per explicit user decision (confirmed
+    via `AskUserQuestion`: "Treat 're-score = re-trigger the gold-side text' literally for every
+    token"), rescoring is uniform across all 8 tokens with **no "only once" carve-out**: the 6
+    direct-reward tokens re-grant their full income again (Credit/Knowledge/OreQic/Tech/Vp/
+    PowerTokens), and Range/Terraform re-grant another one-time bonus Build a Mine action via the same
+    `SubPhase.FederationTokenBuildMine` chain used on initial claim (`#24` above) — i.e. rescoring
+    Range/Terraform a second time grants a second free mine, and rescoring Tech a second time grants
+    another free Tech tile pick. Rescoring never removes the token from `spaceshipFederations` (it
+    stays available to rescore again later, same as pool tokens staying in `tiles.federations`).
+    New `describe("rescoring Federation tokens (§C1/§G6: re-score applies uniformly to pool and ship
+    tokens)")` in `available/federations.spec.ts` covers: ship tokens appearing alongside pool tokens
+    in the rescore list; a direct-reward token's exact gold-side numbers re-granted without removing
+    it; PowerTokens' bespoke `power.area3` mutation re-applied; Range's bonus Build-a-Mine re-offered;
+    Tech's free tile pick re-offered. Tests use a new `giveShipFederationTile()` helper that seeds
+    `spaceshipFederations` directly (bypassing `gainSpaceshipFederationToken()`'s own reward grant) so
+    each test's rescore call is the only reward grant, avoiding `MAX_CREDIT`-style cap clamping that
+    would otherwise make the Credit token's assertion flaky. **407/407 → 412/412** (+5 tests).
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -683,8 +713,9 @@ exact shape for adv-tech/federation/booster/scoring enum members when those chun
 
 ## Next actions
 Chunks 1-7b plus Darkanians' PI follow-up, the core Explore action, the federation-claim hook, the
-Standard-Tech claim hook, the full Spaceship Boards live-gameplay wiring, and the gold-side execution
-for all 8 claimed-ship Federation tokens are complete and verified — **407/407 engine tests pass**
+Standard-Tech claim hook, the full Spaceship Boards live-gameplay wiring, the gold-side execution
+for all 8 claimed-ship Federation tokens, and rescoring ship Federation tokens are complete and
+verified — **412/412 engine tests pass**
 (274 baseline → 280 after Chunk 2 → 299 after Chunk 3 → 321 after Chunk 4 → 337 after Chunk 5 → 345
 after Chunk 6 → 352 after Chunk 7a → 353 after the German-rules reroll fix → 354 after Chunk 7b's
 placement-metadata step → 361 after Chunk 7b's `SpaceMap`/`moveInit` wiring + integration tests → 362
@@ -692,23 +723,25 @@ after Darkanians' PI integration test → 366 after the Explore-action slice →
 federation-claim slice → 372 after the Standard-Tech claim slice → 387 after the Spaceship Boards
 live-gameplay wiring slice → 388 after T F Mars's Instant-Gaiaforming Power action → 393 after wiring
 the remaining 5 ship-board actions (Twilight Knowledge/Power, Rebellion Power, T F Mars Credit, Eclipse
-Credit) → 407 after wiring the gold-side execution for all 8 claimed-ship Federation tokens, see "Done
-so far" #16-#24).
+Credit) → 407 after wiring the gold-side execution for all 8 claimed-ship Federation tokens → 412 after
+fixing rescore to offer and re-trigger ship Federation tokens, see "Done so far" #16-#25).
 Darkanians and Space Giants are fully playable factions for every mechanic that doesn't depend on an
 unbuilt subsystem; the 4 Spaceship Boards' static config and setup-time tile/token seeding are coded
 and tested; the **core Explore action** is live in the engine; explored ships can redeem their seeded
 Federation token through federation formation and their seeded Standard Tech tile through the normal
 tech-pick flow; all 12 of the 12 ship board-actions are now live through a new
-`Command.SpaceshipAction`, with a per-round per-action lock (see #18-#23); and claiming a ship's seeded
+`Command.SpaceshipAction`, with a per-round per-action lock (see #18-#23); claiming a ship's seeded
 Federation token now executes its gold-side effect — direct rewards for 6 of the 8 tokens, and a
-chained bonus Build a Mine action for the other 2 (Range/Terraform), see #24. The Lost Fleet
+chained bonus Build a Mine action for the other 2 (Range/Terraform), see #24; and rescoring (QIC2 board
+action) now offers and re-triggers ship-claimed Federation tokens exactly like pool-drawn ones, see
+#25. The Lost Fleet
 variable-map geometry, tile data, full board assembly, `GaiaHex` addressing fix, AND the
 `SpaceMap`/`moveInit` wiring are all coded and tested (see #13-#16) — `new Engine([...], { lostFleet: true })`
 now produces a real, playable Lost Fleet board through the normal engine entry points. Explicitly still
 open, in priority order the user should pick from:
 1. **Examine Artifact + Twilight's Artifact-token seeding** — the one remaining Spaceship-Boards-
    adjacent feature not counted in the 12 ship-board actions; the other (claimed ship Federation
-   tokens' gold-side execution) is now fully wired, see "Done so far" #24.
+   tokens' gold-side execution, and now rescoring them) is fully wired, see "Done so far" #24-#25.
 2. **Space Giants' Exploration-board special action** (deferred; core Explore plumbing now exists, but
    the faction-specific action hook still doesn't).
 3. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.

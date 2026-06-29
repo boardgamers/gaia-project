@@ -2,24 +2,49 @@ import assert from "assert";
 import { AvailableCommand } from "../available/types";
 import Engine from "../engine";
 import { BoardAction, Command, Expansion, Federation, Player as PlayerEnum, SpaceshipFederation, SubPhase } from "../enums";
+import Reward from "../reward";
 import { claimableSpaceshipFederations } from "../spaceships";
 import { federationRewards } from "../tiles/federations";
+import { spaceshipFederationRewards } from "../tiles/spaceship-federations";
 
 export function moveChooseFederationTile(
   engine: Engine,
   command: AvailableCommand<Command.ChooseFederationTile>,
   player: PlayerEnum,
-  federation: Federation
+  federation: Federation | SpaceshipFederation
 ) {
   const { tiles, rescore } = command.data;
 
   assert(tiles.indexOf(federation) !== -1, `Federation ${federation} is not availabe`);
 
   if (rescore) {
-    engine.player(player).gainRewards(federationRewards(federation), BoardAction.Qic2);
+    if (Object.values(SpaceshipFederation).includes(federation as SpaceshipFederation)) {
+      rescoreSpaceshipFederationToken(engine, player, federation as SpaceshipFederation);
+    } else {
+      engine.player(player).gainRewards(federationRewards(federation as Federation), BoardAction.Qic2);
+    }
   } else {
-    engine.player(player).gainFederationToken(federation);
-    engine.tiles.federations[federation] -= 1;
+    engine.player(player).gainFederationToken(federation as Federation);
+    engine.tiles.federations[federation as Federation] -= 1;
+  }
+}
+
+/**
+ * Re-triggers a ship-claimed Federation token's gold-side effect. Per §C1/§G6, re-scoring
+ * applies uniformly to all 8 tokens, including Range/Terraform's bonus Build a Mine and
+ * Tech's free tile pick - there's no "only once" carve-out for rescoring itself.
+ */
+function rescoreSpaceshipFederationToken(engine: Engine, player: PlayerEnum, federation: SpaceshipFederation) {
+  const pl = engine.player(player);
+  const rewardSpec = spaceshipFederationRewards[federation];
+  if (rewardSpec) {
+    pl.gainRewards(Reward.parse(rewardSpec), BoardAction.Qic2);
+  }
+  if (federation === SpaceshipFederation.PowerTokens) {
+    pl.data.power.area3 += 2;
+  }
+  if (federation === SpaceshipFederation.Range || federation === SpaceshipFederation.Terraform) {
+    engine.processNextMove(SubPhase.FederationTokenBuildMine, { federation }, false);
   }
 }
 
