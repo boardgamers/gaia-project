@@ -511,8 +511,9 @@ notifications).
       shape, Gaia-hex QIC stacking for both tokens, mine-limit exhaustion returns no commands) in new
       `available/federations.spec.ts`, plus 2 end-to-end tests in `exploration.spec.ts` exercising the
       full claim-ship-federation → chained Build-a-Mine pipeline for both tokens. Direct-reward token
-      coverage lives in `player.spec.ts`. **393/393 → 407/407** (+14 tests total for this entry: 7 for
-      the 6 direct-reward tokens, 5 unit + 2 end-to-end for Range/Terraform).
+      coverage lives in `player.spec.ts`. **393/393 → 399/399** (verified via `git checkout` at this
+      entry's final commit, `7d38a88`; a previous draft of this entry overstated the total as
+      407/407 — corrected here since that wrong baseline was about to propagate into later entries).
 25. ✅ **Rescore (QIC2 board action) now offers claimed ship Federation tokens, not just pool-drawn
     ones — CODED & TESTED** (done 2026-06-29). User report: "Restoring a Fed you should be able to
     choose from whichever fed tile you have which also includes the ship federations if you've
@@ -542,7 +543,24 @@ notifications).
     Tech's free tile pick re-offered. Tests use a new `giveShipFederationTile()` helper that seeds
     `spaceshipFederations` directly (bypassing `gainSpaceshipFederationToken()`'s own reward grant) so
     each test's rescore call is the only reward grant, avoiding `MAX_CREDIT`-style cap clamping that
-    would otherwise make the Credit token's assertion flaky. **407/407 → 412/412** (+5 tests).
+    would otherwise make the Credit token's assertion flaky. **399/399 → 404/404** (+5 tests).
+26. ✅ **Federation token Build-a-Mine now includes Asteroid hexes (gated on a spare Gaiaformer),
+    instead of blanket-excluding them — CODED & TESTED** (done 2026-06-29). User-shared BGG ruling
+    from the designer (@theagricolan): the Range/Terraform tokens' cost waiver applies only to the
+    mine's *building* cost — terraforming costs (ore for steps, QIC for Gaia, **and a Gaiaformer for
+    Asteroid**) are still owed regardless. `possibleFederationTokenBuildMine()` previously excluded
+    `Planet.Asteroid` hexes outright, treating the Gaiaformer requirement as if it conflicted with the
+    waiver; that was wrong per the ruling — Asteroid's own *build* cost is already 0 ore/credit (same
+    as the base game), so the token waiver changes nothing there besides making it a valid target once
+    a spare Gaiaformer is available. Fixed by replacing the blanket Asteroid exclusion with the same
+    gate `canBuild()` uses for normal Asteroid colonization
+    (`pl.data.hasResource(new Reward(1, Resource.GaiaFormer))`); Transdim stays excluded (needs
+    `Command.GaiaFormTransdim`, a separate action, not a cost). The Gaiaformer is consumed
+    automatically by `player.build()` once the mine is placed, same as any other Asteroid mine.
+    Replaced the old single "excludes Transdim and Asteroid hexes" test in `available/federations.spec.ts`
+    with 3 tests: Transdim exclusion alone, Asteroid inclusion at `"~"` (zero) cost plus permanent
+    Gaiaformer consumption on build, and Asteroid exclusion once `gaiaformers = 0`. **404/404 →
+    406/406** (net +2 tests: 1 old test removed, 3 new ones added).
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -714,8 +732,9 @@ exact shape for adv-tech/federation/booster/scoring enum members when those chun
 ## Next actions
 Chunks 1-7b plus Darkanians' PI follow-up, the core Explore action, the federation-claim hook, the
 Standard-Tech claim hook, the full Spaceship Boards live-gameplay wiring, the gold-side execution
-for all 8 claimed-ship Federation tokens, and rescoring ship Federation tokens are complete and
-verified — **412/412 engine tests pass**
+for all 8 claimed-ship Federation tokens, rescoring ship Federation tokens, and including Asteroid
+hexes in the Federation tokens' Build-a-Mine (per BGG designer ruling) are complete and verified —
+**406/406 engine tests pass**
 (274 baseline → 280 after Chunk 2 → 299 after Chunk 3 → 321 after Chunk 4 → 337 after Chunk 5 → 345
 after Chunk 6 → 352 after Chunk 7a → 353 after the German-rules reroll fix → 354 after Chunk 7b's
 placement-metadata step → 361 after Chunk 7b's `SpaceMap`/`moveInit` wiring + integration tests → 362
@@ -723,8 +742,11 @@ after Darkanians' PI integration test → 366 after the Explore-action slice →
 federation-claim slice → 372 after the Standard-Tech claim slice → 387 after the Spaceship Boards
 live-gameplay wiring slice → 388 after T F Mars's Instant-Gaiaforming Power action → 393 after wiring
 the remaining 5 ship-board actions (Twilight Knowledge/Power, Rebellion Power, T F Mars Credit, Eclipse
-Credit) → 407 after wiring the gold-side execution for all 8 claimed-ship Federation tokens → 412 after
-fixing rescore to offer and re-trigger ship Federation tokens, see "Done so far" #16-#25).
+Credit) → 399 after wiring the gold-side execution for all 8 claimed-ship Federation tokens → 404 after
+fixing rescore to offer and re-trigger ship Federation tokens → 406 after fixing Federation tokens'
+Build-a-Mine to include Asteroid hexes once a spare Gaiaformer is available, see "Done so far" #16-#26).
+(Note: the 399 and 404 figures here are git-verified; an earlier draft of this doc had momentarily
+overstated them as 407/412 before the correction in "Done so far" #24-#25 above.)
 Darkanians and Space Giants are fully playable factions for every mechanic that doesn't depend on an
 unbuilt subsystem; the 4 Spaceship Boards' static config and setup-time tile/token seeding are coded
 and tested; the **core Explore action** is live in the engine; explored ships can redeem their seeded

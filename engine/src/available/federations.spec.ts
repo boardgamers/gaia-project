@@ -97,14 +97,12 @@ function cheapestHexNeedingRangeAndTerraforming(
 }
 
 describe("possibleFederationTokenBuildMine", () => {
-  it("excludes Transdim and Asteroid hexes", () => {
+  it("excludes Transdim hexes", () => {
     const engine = createLostFleetRoundMoveEngine(2);
     occupyStartingHex(engine, PlayerEnum.Player1);
 
     const transdimHex = findUnoccupiedHexOfPlanet(engine, Planet.Transdim);
-    const asteroidHex = findUnoccupiedHexOfPlanet(engine, Planet.Asteroid);
     expect(transdimHex, "need an unoccupied Transdim hex").to.not.equal(undefined);
-    expect(asteroidHex, "need an unoccupied Asteroid hex").to.not.equal(undefined);
 
     const [command] = possibleFederationTokenBuildMine(engine, PlayerEnum.Player1, {
       federation: SpaceshipFederation.Range,
@@ -112,6 +110,51 @@ describe("possibleFederationTokenBuildMine", () => {
     const coords = command.data.buildings.map((b) => b.coordinates);
 
     expect(coords).to.not.include(transdimHex.toString());
+  });
+
+  it("includes Asteroid hexes at zero net cost when a Gaiaformer is available, and still permanently consumes it on build", () => {
+    const engine = createLostFleetRoundMoveEngine(2);
+    occupyStartingHex(engine, PlayerEnum.Player1);
+    const player = engine.player(PlayerEnum.Player1);
+
+    const asteroidHex = findUnoccupiedHexOfPlanet(engine, Planet.Asteroid);
+    expect(asteroidHex, "need an unoccupied Asteroid hex").to.not.equal(undefined);
+    expect(
+      player.data.hasResource(new Reward(1, Resource.GaiaFormer)),
+      "every faction starts with 1 Gaiaformer via research level 1"
+    ).to.be.true;
+
+    const [command] = possibleFederationTokenBuildMine(engine, PlayerEnum.Player1, {
+      federation: SpaceshipFederation.Range,
+    });
+    const building = command.data.buildings.find((b) => b.coordinates === asteroidHex.toString());
+
+    // Designer ruling (BGG): the token's "cost" waiver refers only to the build cost, not
+    // terraforming - Asteroid's own build cost is already 0, so it's includable as soon as a
+    // Gaiaformer is available, same gate the normal colonization path uses.
+    expect(building, "Asteroid should be buildable once a Gaiaformer is available").to.not.equal(undefined);
+    expect(building.cost).to.equal("~");
+
+    player.build(Building.Mine, asteroidHex, Reward.parse(building.cost), engine.map, building.steps);
+
+    expect(player.data.gaiaformersUsedForAsteroid).to.equal(1);
+    expect(player.data.hasResource(new Reward(1, Resource.GaiaFormer))).to.be.false;
+  });
+
+  it("excludes Asteroid hexes once the player has no spare Gaiaformer left", () => {
+    const engine = createLostFleetRoundMoveEngine(2);
+    occupyStartingHex(engine, PlayerEnum.Player1);
+    const player = engine.player(PlayerEnum.Player1);
+    player.data.gaiaformers = 0;
+
+    const asteroidHex = findUnoccupiedHexOfPlanet(engine, Planet.Asteroid);
+    expect(asteroidHex, "need an unoccupied Asteroid hex").to.not.equal(undefined);
+
+    const [command] = possibleFederationTokenBuildMine(engine, PlayerEnum.Player1, {
+      federation: SpaceshipFederation.Range,
+    });
+    const coords = command.data.buildings.map((b) => b.coordinates);
+
     expect(coords).to.not.include(asteroidHex.toString());
   });
 

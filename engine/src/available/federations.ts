@@ -97,12 +97,17 @@ export function possibleFederationTiles(engine: Engine, player: Player, from: "p
 
 /**
  * Range/Terraform Federation tokens each grant a one-time bonus Build a Mine action without paying
- * the mine's normal build cost (board cost). Transdim (needs Command.GaiaFormTransdim) and Asteroid
- * (needs a consumed Gaiaformer, which doesn't compose with a blanket cost waiver) are excluded, same
- * as the non-Eclipse branch of possibleSpaceshipBuildMine. Gaia planets still cost their normal
- * gaiaFormingCost() QIC for both tokens, since that's a habitability cost, not the build cost.
- * Range additionally waives range QIC entirely (limitless range) but still charges full terraforming
- * ore with no discount; Terraform charges normal range QIC but discounts up to 3 terraforming steps.
+ * the mine's normal build cost (board cost) - confirmed by designer ruling (BGG): the token's "cost"
+ * waiver refers only to the building cost, not terraforming. Transdim is still excluded (needs
+ * Command.GaiaFormTransdim, a separate action, not a cost). Asteroid IS includable: it still requires
+ * spending a Gaiaformer to terraform it, gated the same way canBuild()'s normal Asteroid-colonization
+ * path gates it (hasResource(1 GaiaFormer)) - the token only waives the build cost, and Asteroid's own
+ * build cost is already 0 ore/credit, so the waiver changes nothing there besides unlocking it as a
+ * target when a spare Gaiaformer is available; the Gaiaformer itself is consumed automatically by
+ * player.build() once the mine is placed. Gaia planets still cost their normal gaiaFormingCost() QIC
+ * for both tokens, since that's a habitability cost, not the build cost. Range additionally waives
+ * range QIC entirely (limitless range) but still charges full terraforming ore with no discount;
+ * Terraform charges normal range QIC but discounts up to 3 terraforming steps.
  */
 export function possibleFederationTokenBuildMine(
   engine: Engine,
@@ -117,7 +122,10 @@ export function possibleFederationTokenBuildMine(
   }
 
   for (const hex of engine.map.toJSON()) {
-    if (hex.data.planet === Planet.Transdim || hex.data.planet === Planet.Asteroid || !pl.canOccupy(hex)) {
+    if (hex.data.planet === Planet.Transdim || !pl.canOccupy(hex)) {
+      continue;
+    }
+    if (hex.data.planet === Planet.Asteroid && !pl.data.hasResource(new Reward(1, Resource.GaiaFormer))) {
       continue;
     }
 
