@@ -839,7 +839,29 @@ notifications).
     fully contained before this session), plus the 3 source branches above once their unique
     commits were absorbed: `claude/lost-fleet-expansion-gedyrk`, `claude/quirky-thompson-gt0n0h`,
     `claude/spaceship-boards-gameplay-opnt1p`. `master` was left untouched, per the user's explicit
-    choice not to merge into it.
+    choice not to merge into it at the time. **Correction (same day, see #36): both of these
+    decisions changed shortly after.**
+36. ✅ **`master` fast-forwarded to match this branch; branch deletion still blocked** (done
+    2026-06-29). Two corrections to #35 above:
+    - The `git push origin --delete` calls for all 7 superseded branches actually **failed with
+      `HTTP 403`** — this session's git credentials/proxy can push/forward commits (proven by the
+      master push below) but are not scoped to delete refs. No GitHub MCP tool exists for branch
+      deletion either. **None of the 7 branches listed in #35 have actually been deleted** —
+      `claude/lost-fleet-advtech-tiles-c2fo8w`, `claude/lost-fleet-engine-work-l3bzsk`,
+      `claude/spaceship-boards-gameplay-opnt1p-t991fv`, `codex/continue-lost-fleet-work`,
+      `claude/lost-fleet-expansion-gedyrk`, `claude/quirky-thompson-gt0n0h`,
+      `claude/spaceship-boards-gameplay-opnt1p` all still exist on `origin` and need manual deletion
+      (GitHub web UI or a CLI with delete-scoped credentials).
+    - The user then explicitly reversed the "don't touch master" choice ("Push the branch to master
+      I want everything there now... so I have everything consolidated in the GitHub master").
+      Verified safety first: `master` was a clean ancestor of this branch with zero unique commits
+      of its own (`git rev-list --left-right --count origin/master...HEAD` → `0  33`), so the push
+      was a pure fast-forward, not a merge. Executed `git push origin
+      claude/lost-fleet-viewer-support-95lled:master` (`751bb69..e6e7e43`). Confirmed
+      `git diff origin/master origin/claude/lost-fleet-viewer-support-95lled --stat` is empty —
+      **`master` and this branch are now identical.** Vercel's production deployment (configured
+      target branch = `master`) auto-deployed the new tip (`dpl_79PiRMyvhtFzGsWkcL8FKbebanLa`,
+      commit `e6e7e43`, `target: "production"`, `state: "READY"`) without any manual trigger needed.
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
