@@ -78,6 +78,8 @@ export type EventSource =
   | Command.Build
   | Command.FormFederation
   | Command.UpgradeResearch
+  | Command.Explore
+  | Command.GaiaFormTransdim
   | Faction
   | Command.Bid
   | typeof tradeSource

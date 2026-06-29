@@ -103,7 +103,7 @@ function techFactory(
 // Assigns each Spaceship in `positions` one random, distinct value from `pool` (shuffled by the caller),
 // writing into `target`. Fewer positions than pool entries is expected (e.g. 2p Rebellion exclusion,
 // or more Federation tokens than spaceships) - the leftover pool entries are simply never assigned.
-function shipAssignmentFactory<T>(
+function shipAssignmentFactory<T extends SetupOption>(
   type: SetupType,
   positions: Spaceship[],
   pool: T[],

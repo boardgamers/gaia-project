@@ -39,6 +39,7 @@ export {
 export {
   AdvTechTile,
   AdvTechTilePos,
+  ArtifactToken,
   BoardAction,
   Booster,
   Building,
@@ -59,7 +60,11 @@ export {
   Resource,
   Round,
   RoundScoring,
+  ScoringBoardExtensionSide,
   ScoringTile,
+  Spaceship,
+  SpaceshipFederation,
+  SpaceshipTechTile,
   SubPhase,
   TechPos,
   TechTile,
@@ -70,10 +75,13 @@ export { factionPlanet } from "./src/factions";
 export { federationCost, FederationInfo, parseFederationLocation } from "./src/federation";
 export { GaiaHex, GaiaHexData } from "./src/gaia-hex";
 export { applyChargePowers } from "./src/income";
+export { classifySectorId, LostFleetSectorType } from "./src/lost-fleet-map";
 export { leechPossible } from "./src/move/phase";
 export { planetNames, terraformingStepsRequired } from "./src/planets";
 export { lastTile, researchEvents } from "./src/research-tracks";
 export { AvailableSetupOption, SetupType } from "./src/setup";
+export { artifactSlotCount, shipsInPlay, spaceshipBoards } from "./src/spaceships";
+export { artifactTokenRewards, artifactTokenSpec } from "./src/tiles/artifacts";
 export { finalScorings } from "./src/tiles/scoring";
 export {
   BrainstoneDest,

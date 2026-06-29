@@ -8,6 +8,7 @@ import {
   SpaceshipTechTile,
   TechPos,
   TechTile,
+  TechTilePos,
 } from "../enums";
 import Event, { EventSource } from "../events";
 import Reward from "../reward";
@@ -60,7 +61,10 @@ export function techTileEvents(chooseTechTile: ChooseTechTile): Event[] {
   if (isSpaceshipTechTile(chooseTechTile.tile)) {
     return [];
   }
-  return techTileEventWithSource(chooseTechTile.tile, techTileEventSource(chooseTechTile.pos));
+  return techTileEventWithSource(
+    chooseTechTile.tile,
+    techTileEventSource(chooseTechTile.pos as TechTilePos | AdvTechTilePos)
+  );
 }
 
 export function techTileRewards(tile: AnyTechTile): Reward[] {

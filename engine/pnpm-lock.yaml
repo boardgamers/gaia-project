@@ -31,8 +31,8 @@ importers:
         specifier: ^4.1.2
         version: 4.3.20
       '@types/lodash':
-        specifier: ^4.14.149
-        version: 4.17.24
+        specifier: 4.14.168
+        version: 4.14.168
       '@types/mocha':
         specifier: ^2.2.48
         version: 2.2.48
@@ -107,8 +107,8 @@ packages:
   '@types/json5@0.0.29':
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
 
-  '@types/lodash@4.17.24':
-    resolution: {integrity: sha512-gIW7lQLZbue7lRSWEFql49QJJWThrTFFeIMJdp3eH4tKoxm1OvEPg02rm4wCCSHS0cL3/Fizimb35b7k8atwsQ==}
+  '@types/lodash@4.14.168':
+    resolution: {integrity: sha512-oVfRvqHV/V6D1yifJbVRU3TMp8OT6o6BG+U9MkwuJ3U8/CsDHvalRpsxBqivn71ztOFZBTfJMvETbqHiaNSj7Q==}
 
   '@types/mocha@2.2.48':
     resolution: {integrity: sha512-nlK/iyETgafGli8Zh9zJVCTicvU3iajSkRwOh3Hhiva598CMqNJ4NcVCGMTGKpGpTYj/9R8RLzS9NAykSSCqGw==}
@@ -1315,7 +1315,7 @@ snapshots:
 
   '@types/json5@0.0.29': {}
 
-  '@types/lodash@4.17.24': {}
+  '@types/lodash@4.14.168': {}
 
   '@types/mocha@2.2.48': {}
 
