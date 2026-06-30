@@ -242,6 +242,38 @@ describe("Lost Fleet exploration", () => {
     expect(nevlas.data.power.area3).to.equal(0);
   });
 
+  it("should not offer Taklons an Explore action while the brainstone is already in Gaia, but should again next round", () => {
+    const engine = createLostFleetRoundMoveEngine(2, [Faction.Taklons, Faction.Terrans]);
+    occupyNearestPlanet(engine, PlayerEnum.Player1, Spaceship.Eclipse);
+
+    const taklons = engine.player(PlayerEnum.Player1);
+    taklons.data.brainstone = PowerArea.Gaia;
+
+    expect(availableExploreCommand(engine)).to.equal(undefined);
+
+    taklons.gaiaPhaseEnd();
+
+    expect(taklons.data.brainstone).to.equal(PowerArea.Area1);
+    expect(availableExploreCommand(engine)).to.not.equal(undefined);
+  });
+
+  it("should not offer Explore when Bal T'aks, Nevlas, or Itars cannot pay their faction-specific cost", () => {
+    const baltaksEngine = createLostFleetRoundMoveEngine(2, [Faction.BalTaks, Faction.Terrans]);
+    occupyNearestPlanet(baltaksEngine, PlayerEnum.Player1, Spaceship.Twilight);
+    baltaksEngine.player(PlayerEnum.Player1).data.victoryPoints = 6;
+    expect(availableExploreCommand(baltaksEngine)).to.equal(undefined);
+
+    const nevlasEngine = createLostFleetRoundMoveEngine(2, [Faction.Nevlas, Faction.Terrans]);
+    occupyNearestPlanet(nevlasEngine, PlayerEnum.Player1, Spaceship.TFMars);
+    nevlasEngine.player(PlayerEnum.Player1).data.power = new Power(0, 0, 0, 0);
+    expect(availableExploreCommand(nevlasEngine)).to.equal(undefined);
+
+    const itarsEngine = createLostFleetRoundMoveEngine(2, [Faction.Itars, Faction.Terrans]);
+    occupyNearestPlanet(itarsEngine, PlayerEnum.Player1, Spaceship.Eclipse);
+    itarsEngine.player(PlayerEnum.Player1).data.power = new Power(0, 0, 0, 0);
+    expect(availableExploreCommand(itarsEngine)).to.equal(undefined);
+  });
+
   it("should offer an explored ship Standard Tech tile through the normal tech-pick flow", () => {
     const engine = createLostFleetRoundMoveEngine(3);
     const player = engine.player(PlayerEnum.Player1);

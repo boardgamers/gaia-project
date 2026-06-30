@@ -1,7 +1,7 @@
 import assert from "assert";
 import { AvailableCommand } from "../available/types";
 import Engine from "../engine";
-import { deployExplorationShuttle } from "../exploration";
+import { canPayExplorationCost, deployExplorationShuttle } from "../exploration";
 import { Command, Player as PlayerEnum, Spaceship } from "../enums";
 import Reward from "../reward";
 
@@ -16,6 +16,10 @@ export function moveExplore(
   assert(availableShip !== undefined, `${ship} is not in the available exploration targets`);
 
   const pl = engine.player(player);
-  pl.payCosts(Reward.parse(availableShip.cost), Command.Explore);
+  const cost = Reward.parse(availableShip.cost);
+
+  assert(canPayExplorationCost(pl, cost), `${player} cannot pay the exploration cost for ${ship}`);
+
+  pl.payCosts(cost, Command.Explore);
   deployExplorationShuttle(pl, ship, availableShip.slot, Command.Explore);
 }

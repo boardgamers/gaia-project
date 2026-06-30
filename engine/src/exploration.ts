@@ -66,6 +66,14 @@ export function explorationCost(pl: Player): Reward[] {
   return cost;
 }
 
+export function canPayExplorationCost(pl: Player, cost: Reward[]): boolean {
+  if (pl.faction === Faction.Taklons && pl.data.brainstone === PowerArea.Gaia) {
+    return false;
+  }
+
+  return pl.data.canPay(cost);
+}
+
 export function explorationCostAdjustments(pl: Player): string[] {
   const adjustments: string[] = [];
 

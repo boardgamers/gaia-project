@@ -1,5 +1,6 @@
 import Engine from "../engine";
 import {
+  canPayExplorationCost,
   explorationCost,
   explorationCostAdjustments,
   maxExplorationShuttles,
@@ -46,7 +47,7 @@ export function possibleExplorations(engine: Engine, player: Player): AvailableC
     }
 
     const cost = Reward.merge(explorationCost(pl).concat(new Reward(distanceCost.amount, Resource.Qic)));
-    if (!pl.data.canPay(cost)) {
+    if (!canPayExplorationCost(pl, cost)) {
       continue;
     }
 
