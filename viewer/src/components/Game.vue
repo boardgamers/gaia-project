@@ -12,17 +12,20 @@
         v-if="hasMap"
       >
         <SpaceMap :class="['mb-1', 'space-map', 'col-md-7']" />
-        <svg class="scoring-research-board" :viewBox="`0 0 ${researchBoardWidth + 120} 505`">
-          <ResearchBoard height="450" ref="researchBoard" x="-50" />
-          <ScoringBoard class="ml-4" width="90" :x="researchBoardWidth + 20" y="-25" />
-          <BoardAction
-            :scale="17"
-            :transform="`translate(${45 * i + 6}, 455)`"
-            v-for="(action, i) in actions"
-            :key="action"
-            :action="action"
-          />
-        </svg>
+        <div class="col-md-5 research-side">
+          <svg class="scoring-research-board" :viewBox="`0 0 ${researchBoardWidth + 120} 505`">
+            <ResearchBoard height="450" ref="researchBoard" x="-50" />
+            <ScoringBoard class="ml-4" width="90" :x="researchBoardWidth + 20" y="-25" />
+            <BoardAction
+              :scale="17"
+              :transform="`translate(${45 * i + 6}, 455)`"
+              v-for="(action, i) in actions"
+              :key="action"
+              :action="action"
+            />
+          </svg>
+          <LostFleetSpaceships v-if="engine.options.lostFleet" class="mt-2" />
+        </div>
       </div>
       <div class="row mt-2">
         <TurnOrder v-if="!ended && engine.players.length > 0" class="col-md-4 order-4 order-md-1" />
@@ -96,6 +99,7 @@ import PlayerInfo from "./PlayerInfo.vue";
 import ResearchBoard from "./ResearchBoard.vue";
 import ScoringBoard from "./ScoringBoard.vue";
 import SpaceMap from "./SpaceMap.vue";
+import LostFleetSpaceships from "./LostFleetSpaceships.vue";
 import TurnOrder from "./TurnOrder.vue";
 import { parseCommands } from "../logic/recent";
 import { LogPlacement } from "../data";
@@ -116,6 +120,7 @@ import { orderedPlayers } from "../data/player";
     ResearchBoard,
     ScoringBoard,
     SpaceMap,
+    LostFleetSpaceships,
     TurnOrder,
     Rules,
     Table,
@@ -382,6 +387,11 @@ export default class Game extends Vue {
   width: 100%;
   // this is needed for Safari
   height: intrinsic;
+}
+
+.research-side {
+  display: flex;
+  flex-direction: column;
 }
 
 .medium-map,
