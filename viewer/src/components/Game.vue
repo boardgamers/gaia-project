@@ -314,7 +314,8 @@ export default class Game extends Vue {
       this.hideLog = false;
       this.setAutoClick([]);
     } else {
-      this.currentMove = data.moveHistory.pop() ?? "";
+      this.currentMove = data.pendingMove || data.moveHistory[data.moveHistory.length - 1] || "";
+      data.moveHistory.pop();
     }
 
     this.$store.commit("receiveData", data);

@@ -321,6 +321,9 @@ export default class Engine {
   advancedLog: LogEntry[] = [];
   // Current move being processed, separated in phase
   turnMoves: string[] = [];
+  // Raw move string for an incomplete turn, used by the viewer to append
+  // follow-up commands without the human-readable log decorations.
+  pendingMove = "";
   // Tells the UI if the new move should be on the same line or not
   newTurn = true;
 
@@ -402,6 +405,7 @@ export default class Engine {
     };
 
     const move = _move.trim();
+    this.pendingMove = move;
     let moveToShow = move;
     if (this.playerToMove !== undefined) {
       this.log(this.playerToMove, undefined, 0, undefined);
@@ -413,6 +417,7 @@ export default class Engine {
     if (!this.replay) {
       assert(this.turnMoves.length === 0, "Unnecessary commands at the end of the turn: " + this.turnMoves.join(". "));
     }
+    this.pendingMove = this.newTurn ? "" : move;
     this.moveHistory.push(moveToShow);
   }
 
