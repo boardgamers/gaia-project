@@ -1352,6 +1352,10 @@ open, in priority order the user should pick from:
    viewer supports exact `state=` share URLs, short named `scenario=` URLs, and an in-viewer **Test
    Scenarios** launcher for common Lost Fleet mechanics; the serialized viewer state now also preserves
    temporary range/step mid-turn state so those links can restore action-dependent overlays faithfully.
+   The scenario catalog now includes direct-entry states for Explore, Twilight `+3 range`, ship-tech
+   claim, ship-federation claim, artifact choice, Space Giants' special action, T F Mars instant
+   Gaiaforming, Eclipse's asteroid mine, both Federation-token Build-a-Mine follow-ups, Rebellion's
+   ship upgrade, Moweyds' power-ring action, and the Lost Fleet terraforming-board setup state.
    The remaining viewer work is any further map polish or panel/UI
    refinement beyond those current markers and boards.
 3. **Revised Space Sector tiles 05/06/07** (§H4, the one remaining art-only TODO — see "Still MISSING"

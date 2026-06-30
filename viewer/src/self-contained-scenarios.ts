@@ -146,6 +146,33 @@ function occupyNearestPlanet(engine: Engine, player: PlayerEnum, ship: Spaceship
   return candidate;
 }
 
+function occupyFirstAvailablePlanet(
+  engine: Engine,
+  player: PlayerEnum,
+  building = Building.Mine,
+  predicate?: (hex: GaiaHex) => boolean
+): GaiaHex {
+  const pl = engine.player(player);
+  const hex = [...engine.map.grid.values()].find(
+    (space) =>
+      space.hasPlanet() &&
+      space.data.spaceship === undefined &&
+      !space.occupied() &&
+      (predicate ? predicate(space) : true)
+  );
+
+  if (!hex) {
+    throw new Error("No available colonizable planet found");
+  }
+
+  hex.data.player = player;
+  hex.data.building = building;
+  pl.data.occupied.push(hex);
+  pl.data.buildings[building] += 1;
+
+  return hex;
+}
+
 function setSubPhaseCommands(engine: Engine, subPhase: SubPhase, data?: any) {
   engine.subPhase = subPhase;
   engine.availableCommands = engine.generateAvailableCommands(subPhase, data);
@@ -331,6 +358,104 @@ export const selfContainedScenarios: SelfContainedScenario[] = [
       });
       engine.tiles.spaceshipTechs[Spaceship.TFMars] = { tile: SpaceshipTechTile.Resource, count: 1 };
       setSubPhaseCommands(engine, SubPhase.ChooseTechTile);
+
+      return finalizeScenario(engine);
+    },
+  },
+  {
+    id: "lost-fleet-tf-mars-instant-gaiaforming",
+    label: "T F Mars Instant Gaiaforming",
+    description: "T F Mars's power action is at the target-selection step so you can test transdim-to-Gaia targeting directly.",
+    tags: ["tf-mars", "gaiaforming", "ships"],
+    build: () => {
+      const engine = createLostFleetRoundMoveEngine(3);
+      const player = engine.player(PlayerEnum.Player1);
+
+      player.data.explorationShips[Spaceship.TFMars] = 1;
+      occupyPlanetsOfDistinctTypes(engine, PlayerEnum.Player1, 1);
+      setSubPhaseCommands(engine, SubPhase.InstantGaiaforming);
+
+      return finalizeScenario(engine);
+    },
+  },
+  {
+    id: "lost-fleet-eclipse-asteroid-mine",
+    label: "Eclipse Asteroid Mine",
+    description: "Eclipse's credit action is paused on the bonus asteroid-mine placement step.",
+    tags: ["eclipse", "asteroid", "build"],
+    build: () => {
+      const engine = createLostFleetRoundMoveEngine(3);
+      const player = engine.player(PlayerEnum.Player1);
+
+      player.data.explorationShips[Spaceship.Eclipse] = 1;
+      occupyPlanetsOfDistinctTypes(engine, PlayerEnum.Player1, 1);
+      setSubPhaseCommands(engine, SubPhase.SpaceshipBuildMine, { ship: Spaceship.Eclipse });
+
+      return finalizeScenario(engine);
+    },
+  },
+  {
+    id: "lost-fleet-range-fed-build-mine",
+    label: "Range Federation Build",
+    description: "The Range federation token's follow-up Build a Mine action is ready, with unlimited range and no mine build cost.",
+    tags: ["federation", "range", "build"],
+    build: () => {
+      const engine = createLostFleetRoundMoveEngine(3);
+
+      occupyPlanetsOfDistinctTypes(engine, PlayerEnum.Player1, 1);
+      setSubPhaseCommands(engine, SubPhase.FederationTokenBuildMine, {
+        federation: SpaceshipFederation.Range,
+      });
+
+      return finalizeScenario(engine);
+    },
+  },
+  {
+    id: "lost-fleet-terraform-fed-build-mine",
+    label: "Terraform Federation Build",
+    description: "The Terraform federation token's discounted Build a Mine follow-up is ready for placement testing.",
+    tags: ["federation", "terraform", "build"],
+    build: () => {
+      const engine = createLostFleetRoundMoveEngine(3);
+
+      occupyPlanetsOfDistinctTypes(engine, PlayerEnum.Player1, 1);
+      setSubPhaseCommands(engine, SubPhase.FederationTokenBuildMine, {
+        federation: SpaceshipFederation.Terraform,
+      });
+
+      return finalizeScenario(engine);
+    },
+  },
+  {
+    id: "lost-fleet-rebellion-upgrade-ts",
+    label: "Rebellion Upgrade TS",
+    description: "Rebellion's power action is positioned on the mine-to-trading-station upgrade selection step.",
+    tags: ["rebellion", "upgrade", "ships"],
+    build: () => {
+      const engine = createLostFleetRoundMoveEngine(3);
+      const player = engine.player(PlayerEnum.Player1);
+
+      player.data.explorationShips[Spaceship.Rebellion] = 1;
+      occupyFirstAvailablePlanet(engine, PlayerEnum.Player1, Building.Mine);
+      setSubPhaseCommands(engine, SubPhase.SpaceshipUpgradeBuilding, {
+        from: Building.Mine,
+        to: Building.TradingStation,
+      });
+
+      return finalizeScenario(engine);
+    },
+  },
+  {
+    id: "lost-fleet-moweyds-power-ring",
+    label: "Moweyds Power Ring",
+    description: "Moweyds can trigger their power-ring special action from the Planetary Institute and place the ring on-map.",
+    tags: ["moweyds", "power-ring", "special-action"],
+    build: () => {
+      const engine = createLostFleetRoundMoveEngine(2, [Faction.Moweyds, Faction.Terrans]);
+      const player = engine.player(PlayerEnum.Player1);
+
+      occupyFirstAvailablePlanet(engine, PlayerEnum.Player1, Building.PlanetaryInstitute);
+      player.loadEvents(player.board.buildings[Building.PlanetaryInstitute].income[0]);
 
       return finalizeScenario(engine);
     },
