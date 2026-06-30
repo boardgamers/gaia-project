@@ -32,6 +32,9 @@
       <div class="row mt-2" v-if="engine.options.lostFleet">
         <LostFleetSpaceships class="col-12" />
       </div>
+      <div class="row mt-2" v-if="engine.options.lostFleet">
+        <LostFleetTerraformingBoard class="col-12" />
+      </div>
       <div class="row mt-2">
         <TurnOrder v-if="!ended && engine.players.length > 0" class="col-md-4 order-4 order-md-1" />
         <div class="col-md-8 order-1 order-md-2">
@@ -106,6 +109,7 @@ import ScoringBoard from "./ScoringBoard.vue";
 import SpaceMap from "./SpaceMap.vue";
 import LostFleetShipActionsRow from "./LostFleetShipActionsRow.vue";
 import LostFleetSpaceships from "./LostFleetSpaceships.vue";
+import LostFleetTerraformingBoard from "./LostFleetTerraformingBoard.vue";
 import TurnOrder from "./TurnOrder.vue";
 import { parseCommands } from "../logic/recent";
 import { LogPlacement } from "../data";
@@ -128,6 +132,7 @@ import { orderedPlayers } from "../data/player";
     SpaceMap,
     LostFleetShipActionsRow,
     LostFleetSpaceships,
+    LostFleetTerraformingBoard,
     TurnOrder,
     Rules,
     Table,
