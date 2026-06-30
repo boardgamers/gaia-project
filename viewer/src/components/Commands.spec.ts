@@ -9,6 +9,40 @@ import Commands from "./Commands.vue";
 Vue.use(BootstrapVue);
 
 describe("Commands", () => {
+  it("renders Lost Fleet faction picker dots with Asteroid/Protoplanet colors", () => {
+    const engine = new Engine(["init 2 lf-faction-colors"], { lostFleet: true });
+    engine.generateAvailableCommandsIfNeeded();
+
+    expect(engine.availableCommands.map((command) => command.name)).to.deep.equal([Command.ChooseFaction]);
+
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(Commands, {
+      props: { currentMove: "" },
+      store,
+    });
+
+    const buttonFor = (name: string) =>
+      Array.from(container.querySelectorAll<HTMLButtonElement>("#move-buttons button.move-button")).find((button) =>
+        button.textContent?.includes(name)
+      );
+
+    const tinkeroidsIcon = buttonFor("Tinkeroids")?.querySelector<HTMLElement>("i.planet");
+    const darkaniansIcon = buttonFor("Darkanians")?.querySelector<HTMLElement>("i.planet");
+    const moweydsIcon = buttonFor("Moweyds")?.querySelector<HTMLElement>("i.planet");
+    const spaceGiantsIcon = buttonFor("Space Giants")?.querySelector<HTMLElement>("i.planet");
+
+    expect(tinkeroidsIcon).to.not.equal(null);
+    expect(darkaniansIcon).to.not.equal(null);
+    expect(moweydsIcon).to.not.equal(null);
+    expect(spaceGiantsIcon).to.not.equal(null);
+    expect(tinkeroidsIcon?.getAttribute("style")).to.contain("#ff66b3");
+    expect(darkaniansIcon?.getAttribute("style")).to.contain("#ff66b3");
+    expect(moweydsIcon?.getAttribute("style")).to.contain("#30d5c8");
+    expect(spaceGiantsIcon?.getAttribute("style")).to.contain("#30d5c8");
+  });
+
   it("renders Tinkeroids' round-start tinkering choice after Lost Fleet setup", async () => {
     const engine = new Engine(
       [

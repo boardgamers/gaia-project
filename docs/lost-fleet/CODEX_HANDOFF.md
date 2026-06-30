@@ -49,7 +49,7 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
   shared Terraforming-board 3-step color assignment, Tinkeroids' round-start Tinkering tile choice,
   Moweyds' pre-seeded T F Mars shuttle, Moweyds' Power Ring action, and the home-Protoplanet
   0-VP correction for Moweyds / Space Giants are all coded and covered.
-- Engine: **490/490** tests passing (`cd engine && npm test`). Viewer: **167/167** tests passing
+- Engine: **490/490** tests passing (`cd engine && npm test`). Viewer: **168/168** tests passing
   (`cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts'
   'src/logic/**/*.spec.ts'`).
 - "Viewer Step Zero" is done: the viewer builds and type-checks clean against the Lost Fleet engine
@@ -74,6 +74,9 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
 - The viewer no longer stalls on the last setup confirmation when Lost Fleet Tinkeroids are in the
   game: `commands.ts` now renders `ChooseTinkeringTile`, `buttons/tinkering.ts` maps the 6 tile
   choices into viewer buttons, and `Commands.spec.ts` covers the round-1 chooser regression.
+- The Lost Fleet faction-picker now shows the correct faction colors during setup too: Tinkeroids +
+  Darkanians render the Asteroid pink dot, while Moweyds + Space Giants render the Protoplanet
+  turquoise dot, and `Commands.spec.ts` covers that chooser regression.
 - The viewer is deployed to Vercel with Git integration; `master` auto-deploys on push and is the
   production target.
 - `CLAUDE.md` and `AGENTS.md` at the repo root both mirror this file's read order and current state

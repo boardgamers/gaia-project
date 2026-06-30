@@ -37,7 +37,7 @@
           :button="{
             command: `${factionsToChoose.name} ${faction}`,
             modal: modalDialog(factionName(faction), tooltip(faction)),
-            label: `${factionName(faction)} <i class='planet ${factionPlanet(faction)}'></i>`,
+            label: factionPickerLabel(faction),
             shortcuts: [factionShortcut(faction)],
           }"
           :controller="controller"
@@ -91,11 +91,13 @@ import { ActionPayload, SubscribeActionOptions, SubscribeOptions } from "vuex";
 import { CommandController, ExecuteBack, FastConversionTooltips } from "../logic/buttons/types";
 import { buttonStringLabel, callOnShow } from "../logic/buttons/utils";
 import { commandButtons, replaceRepeat } from "../logic/buttons/commands";
+import { prependShortcut } from "../logic/buttons/shortcuts";
 import { CubeCoordinates } from "hexagrid";
 import { autoClickStrategy } from "../logic/buttons/autoClick";
 import RichTextView from "./Resources/RichTextView.vue";
 import { richText, RichText } from "../graphics/rich-text";
 import { chargePowerToPay } from "../logic/utils";
+import { factionColor } from "../graphics/utils";
 
 let show = false;
 
@@ -269,6 +271,19 @@ export default class Commands extends Vue implements CommandController {
 
   factionShortcut(faction: Faction) {
     return factionShortcut(faction);
+  }
+
+  factionPickerColor(faction: Faction) {
+    return factionColor(faction);
+  }
+
+  factionPickerLabel(faction: Faction) {
+    return prependShortcut(
+      this.factionShortcut(faction),
+      `${this.factionName(faction)} <i class='planet ${this.factionPlanet(faction)}' style='color: ${this.factionPickerColor(
+        faction
+      )}'></i>`
+    );
   }
 
   updateRandomFaction() {
@@ -736,6 +751,16 @@ i.planet {
   // lost planet
   &.l {
     color: var(--lost);
+  }
+
+  // asteroid
+  &.a {
+    color: var(--asteroid);
+  }
+
+  // protoplanet
+  &.p {
+    color: var(--protoplanet);
   }
 
   filter: drop-shadow(0px 0px 1px black);
