@@ -5,7 +5,6 @@ import Engine, {
   SpaceshipFederation,
   SpaceshipTechTile,
 } from "@gaia-project/engine";
-import { Player as PlayerEnum } from "@gaia-project/engine/src/enums";
 import { render } from "@testing-library/vue";
 import { expect } from "chai";
 import { makeStore } from "../store";
@@ -21,7 +20,7 @@ describe("LostFleetSpaceships", () => {
     expect(container.querySelector(".lost-fleet-ships")).to.equal(null);
   });
 
-  it("renders the Lost Fleet ships in play and reflects live ship state", () => {
+  it("renders the Lost Fleet ship rewards and omits the action strip", () => {
     const engine = new Engine(["init 2 lost-fleet-spaceship-panel"], { lostFleet: true });
     engine.players[0].faction = Faction.Terrans;
     engine.players[0].name = "Ada";
@@ -35,9 +34,6 @@ describe("LostFleetSpaceships", () => {
       [Spaceship.Twilight]: SpaceshipFederation.Tech,
     };
     engine.tiles.artifacts = [ArtifactToken.Credit, ArtifactToken.Power];
-    engine.players[0].data.explorationShips[Spaceship.Twilight] = 2;
-    engine.players[1].data.explorationShips[Spaceship.Eclipse] = 4;
-    engine.spaceshipActions[Spaceship.Twilight] = { qic: PlayerEnum.Player1 };
 
     const store = makeStore();
     store.commit("receiveData", engine);
@@ -46,13 +42,7 @@ describe("LostFleetSpaceships", () => {
 
     expect(container.querySelectorAll(".lost-fleet-ship-card").length).to.equal(3);
     expect(container.querySelector('[data-ship="rebellion"]')).to.equal(null);
-    expect(container.querySelector('[data-ship="twilight"] [data-slot="2"] .lost-fleet-track__occupant')?.textContent).to.contain(
-      "Ada"
-    );
-    expect(container.querySelector('[data-ship="eclipse"] [data-slot="4"] .lost-fleet-track__occupant')?.textContent).to.contain(
-      "Bo"
-    );
-    expect(container.querySelector('[data-ship="twilight"] [data-action="qic"]')?.textContent).to.contain("Used by Ada");
+    expect(container.querySelector('[data-ship="twilight"] [data-action="qic"]')).to.equal(null);
     expect(container.querySelector('[data-ship="tfmars"] [data-section="tech"]')?.textContent).to.contain("Range +1");
     expect(container.querySelector('[data-ship="twilight"] [data-section="federation"]')?.textContent).to.contain("Tech");
     expect(container.querySelector('[data-ship="twilight"] [data-artifact="artifact-credit"]')).to.not.equal(null);

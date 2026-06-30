@@ -957,6 +957,25 @@ notifications).
     - Verification: engine `cd engine && npm test` → **473/473** passing; viewer `cd viewer && npx
       vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'` Ã¢â€ â€™
       **161/161** passing.
+43. ✅ **Lost Fleet viewer ship actions moved into a compact horizontal second row, reusing the base
+    board-action footprint** (done 2026-06-30).
+    - User-facing layout change: the oversized per-ship action cards were replaced with a compact,
+      horizontally aligned ship-action strip. The base-game board-action row remains exactly where
+      it already was on the research/scoring board, and Lost Fleet ship actions now render as a
+      separate second row beneath it.
+    - Rendering approach: added `viewer/src/components/LostFleetShipActionsRow.vue`, which renders
+      each ship's 3 actions in a bordered ship group using the same `56x56` action-tile dimensions
+      and `SpecialAction` footprint as the existing board actions. Each ship group also exposes its
+      4 access slots as compact faction-colored markers so it is immediately visible which players
+      have access to that ship's actions.
+    - Rewards/info board split: `viewer/src/components/LostFleetSpaceships.vue` was reduced to the
+      persistent reward state only (seeded Standard Tech, Federation token, Twilight artifacts).
+      The action UI no longer lives in those cards.
+    - New viewer coverage: `viewer/src/components/LostFleetShipActionsRow.spec.ts` asserts the
+      compact ship groups, action count, and faction-colored access markers; the updated
+      `LostFleetSpaceships.spec.ts` now locks the rewards-board-only rendering.
+    - Verification: viewer `cd viewer && npx vue-cli-service test:unit --timeout 4000
+      'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'` → **165/165** passing.
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -971,9 +990,9 @@ TS resolution than the real webpack-based path and gives false failures; use the
   — equivalent for engine, which has no webpack step). **473 tests passing as of 2026-06-30.**
 - Viewer: `cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'`
   (this is what `pnpm test` runs — uses `mochapack`/webpack, required for files that touch engine
-  types). **161 tests passing as of 2026-06-29.**
+  types). **165 tests passing as of 2026-06-30.**
 
-**Latest full rerun after #42:** engine **473/473**, viewer **161/161**.
+**Latest full rerun after #43:** engine **473/473**, viewer **165/165**.
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/
@@ -1248,10 +1267,10 @@ open, in priority order the user should pick from:
    `Object.values(Planet)` sites, `SpaceshipTechTile` display data, a stale chart fixture) are all
    fixed. `viewer/` now builds and type-checks clean against the Lost Fleet engine (`npm run
    quick-test` 152/152; `npm test` 152/154, the 2 failures pre-existing/unrelated, see #33). The
-   viewer is now unblocked for new Lost Fleet UI work. **Lost Fleet viewer work is now in 2 tested
-   slices** (see #39 and #41): Interspace / Deep Space hexes and spaceship tiles render on the map,
-   self-contained viewer links can now boot Lost Fleet directly via `lostFleet=1`, and the faction
-   wheel exposes Asteroid / Protoplanet. The remaining viewer work is richer Lost Fleet map polish,
+   viewer is now unblocked for new Lost Fleet UI work. **Lost Fleet viewer work is now in 3 tested
+   slices** (see #39, #41, and #43): Interspace / Deep Space hexes and spaceship tiles render on
+   the map, self-contained viewer links can now boot Lost Fleet directly via `lostFleet=1`, the
+   faction wheel exposes Asteroid / Protoplanet. The remaining viewer work is richer Lost Fleet map polish,
    spaceship board panels, and player-color turquoise/pink pieces per COMPONENTS.md §10.
 3. **Revised Space Sector tiles 05/06/07** (§H4, the one remaining art-only TODO — see "Still MISSING"
    above) — would let Lost Fleet stop falling back to the base game's per-count face for those 3 tiles.

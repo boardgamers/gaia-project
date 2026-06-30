@@ -12,7 +12,7 @@
         v-if="hasMap"
       >
         <SpaceMap :class="['mb-1', 'space-map', 'col-md-7']" />
-        <div class="col-md-5 research-side">
+        <div class="col-md-5">
           <svg class="scoring-research-board" :viewBox="`0 0 ${researchBoardWidth + 120} 505`">
             <ResearchBoard height="450" ref="researchBoard" x="-50" />
             <ScoringBoard class="ml-4" width="90" :x="researchBoardWidth + 20" y="-25" />
@@ -24,8 +24,13 @@
               :action="action"
             />
           </svg>
-          <LostFleetSpaceships v-if="engine.options.lostFleet" class="mt-2" />
         </div>
+      </div>
+      <div class="row mt-2" v-if="engine.options.lostFleet">
+        <LostFleetShipActionsRow class="col-12" />
+      </div>
+      <div class="row mt-2" v-if="engine.options.lostFleet">
+        <LostFleetSpaceships class="col-12" />
       </div>
       <div class="row mt-2">
         <TurnOrder v-if="!ended && engine.players.length > 0" class="col-md-4 order-4 order-md-1" />
@@ -99,6 +104,7 @@ import PlayerInfo from "./PlayerInfo.vue";
 import ResearchBoard from "./ResearchBoard.vue";
 import ScoringBoard from "./ScoringBoard.vue";
 import SpaceMap from "./SpaceMap.vue";
+import LostFleetShipActionsRow from "./LostFleetShipActionsRow.vue";
 import LostFleetSpaceships from "./LostFleetSpaceships.vue";
 import TurnOrder from "./TurnOrder.vue";
 import { parseCommands } from "../logic/recent";
@@ -120,6 +126,7 @@ import { orderedPlayers } from "../data/player";
     ResearchBoard,
     ScoringBoard,
     SpaceMap,
+    LostFleetShipActionsRow,
     LostFleetSpaceships,
     TurnOrder,
     Rules,
@@ -387,11 +394,6 @@ export default class Game extends Vue {
   width: 100%;
   // this is needed for Safari
   height: intrinsic;
-}
-
-.research-side {
-  display: flex;
-  flex-direction: column;
 }
 
 .medium-map,

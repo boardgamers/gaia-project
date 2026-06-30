@@ -38,14 +38,14 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
 5. Confirm the next unit of work against `PROGRESS.md`'s "Next actions" before editing — it asks
    to confirm with the user first.
 
-## Current Snapshot (as of 2026-06-29)
+## Current Snapshot (as of 2026-06-30)
 
 - Lost Fleet chunks 1-7b, Darkanians' Planetary Institute, the full Explore/federation/Standard-Tech
   claim hooks, all 12 Spaceship Board actions (live gameplay wiring complete), claimed-ship
   Federation token gold-side execution + rescoring, Space Giants' Exploration special action, the
   Scoring Board Extension's alternate Advanced Tech gate, the 6 Lost Fleet Advanced Tech tiles, and
   Examine Artifact + Artifact-token seeding are implemented and tested.
-- Engine: **473/473** tests passing (`cd engine && npm test`). Viewer: **161/161** tests passing
+- Engine: **473/473** tests passing (`cd engine && npm test`). Viewer: **165/165** tests passing
   (`cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts'
   'src/logic/**/*.spec.ts'`).
 - "Viewer Step Zero" is done: the viewer builds and type-checks clean against the Lost Fleet engine
@@ -59,6 +59,9 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
 - Darkanians and Space Giants now correctly get only 1 setup placement in Lost Fleet's expansion-
   faction stage (after base-game factions finish their normal setup, before Ivits), and the viewer
   now uses Asteroid=pink / Protoplanet=turquoise.
+- Lost Fleet viewer ship actions now render in a compact horizontal strip that reuses the base
+  board-action tile footprint, grouped by ship with faction-colored access markers; the separate
+  Lost Fleet rewards board now only carries the seeded tech / federation / artifact state.
 - The viewer is deployed to Vercel with Git integration; `master` auto-deploys on push and is the
   production target.
 - `CLAUDE.md` and `AGENTS.md` at the repo root both mirror this file's read order and current state
@@ -70,9 +73,9 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
 Per `PROGRESS.md`'s "Next actions", in priority order:
 
 1. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.
-2. **Continue the new Lost Fleet UI work** — the first map-rendering slice is done, but remaining
-   viewer work still includes richer map polish, spaceship board panels, and player-color
-   turquoise/pink pieces (`COMPONENTS.md` §10).
+2. **Continue the new Lost Fleet UI work** — the map-rendering slice and the first compact
+   spaceship-action/rewards-board slice are done, but remaining viewer work still includes richer
+   map polish and player-color turquoise/pink pieces (`COMPONENTS.md` §10).
 3. **Revised Space Sector tiles 05/06/07** (§H4) — the one remaining art-only TODO; needs a photo
    of the physical component.
 4. Or a different unit of work entirely (viewer, Supabase), ahead of any blocked item.
