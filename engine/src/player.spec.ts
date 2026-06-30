@@ -113,6 +113,22 @@ describe("Player", () => {
       // tslint:disable-next-line no-unused-expression
       expect(Reward.match(Reward.parse("2c,o,q"), cost)).to.be.true;
     });
+
+    [Faction.Moweyds, Faction.SpaceGiants].forEach((faction) => {
+      it(`should not grant the +6 VP Protoplanet bonus when ${faction} builds on its home Protoplanet`, () => {
+        const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+        const map = new SpaceMap(2, `home-protoplanet-${faction}`);
+        const hex = new GaiaHex(0, 0, { sector: "s1", planet: Planet.Protoplanet });
+
+        player.faction = faction;
+        player.loadFaction(null);
+        player.data.ores = 20;
+
+        const { cost } = player.canBuild(map, hex, Planet.Protoplanet, Building.Mine, false, false);
+
+        expect(cost.some((reward) => reward.type === Resource.VictoryPoint && reward.count === -6)).to.be.false;
+      });
+    });
   });
 
   describe("build", () => {

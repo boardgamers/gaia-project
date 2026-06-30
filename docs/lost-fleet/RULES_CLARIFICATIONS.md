@@ -164,11 +164,10 @@ text (effect + depiction plan) is kept here. Concretely, each component-type ent
   2026-06-27. Source: p.13 + owner. CONFIRMED.
 - PI: immediately take 1 tech tile of choice (Upgrade rules apply); once only. Source: p.13. CONFIRMED.
 
-### B5. Moweyds/Tinkeroids Terraforming board — cost-3 color selection (REVISED 2026-06-27, owner-confirmed)
+### B5. Moweyds/Tinkeroids Terraforming board — cost-3 color selection (REVISED 2026-06-30, owner-confirmed)
 Determines which base planet colors cost 3 terraform steps (vs. 1 for all others) for these two
 no-home-planet factions. **This is NOT a blind random draw** (corrects the earlier description).
-Source: `RULEBOOK-TEXT p.8` + owner clarification 2026-06-27. Confidence: CONFIRMED (rule), see ⚠️
-below for the one detail still to pin down.
+Source: `RULEBOOK-TEXT p.8` + owner clarifications 2026-06-27 and 2026-06-30. Confidence: CONFIRMED.
 - **There are always exactly 3 base colors that cost 3 steps; every other base color costs 1 step.**
 - **Opponents' home colors always cost 3, and take priority.** Terraforming toward any color that is
   another player's faction home color costs 3 steps. (An opponent that is itself a no-home-planet
@@ -180,14 +179,13 @@ below for the one detail still to pin down.
   - **2 players:** 1 opponent's color + 2 filled from the setup layout.
   (If a new-faction opponent reduces the color-bearing-opponent count, proportionally more slots are
   filled from the layout — the invariant is simply "exactly 3 cost-3 colors total.")
-- **Random-fill procedure:** at setup the 7 base colors are placed on the board in a random order (one
-  satellite of each color, p.8). After assigning opponents' colors, fill the remaining cost-3 slots in
-  board order — owner's words: *"other players' colors get priority, and then whatever is highest from
-  left gets to be the color that is cost 3."*
-  ⚠️ **One detail to pin down before coding:** the exact meaning of "highest from left" — leftmost
-  board position vs. a position value, and the tie/scan direction. The INTENT is unambiguous (opponents
-  first, then a deterministic fill from the random layout up to 3); only the precise scan order needs
-  confirming against the physical board. Flag, don't guess, when implementing.
+- **Random-fill procedure (owner-resolved 2026-06-30):** at setup the 7 base colors are placed on the
+  board in a random order (one satellite of each color, p.8). After assigning/removing the mandatory
+  opponent colors, scan that randomized 7-color row **left to right** and take the next remaining colors
+  that are **not already another player's home color** until the board reaches exactly 3 cost-3 colors.
+  If both Tinkeroids and Moweyds are in the game, the duplicate cubes exist only so both players can
+  remove the mandatory opponent colors first; the remaining filler colors are then taken left-to-right
+  in turn order from what remains on the shared row.
 - **Engine implications:** this is stateful and per-GAME (not precomputable per faction) — the cost-3
   set depends on which other factions are in the game. `terraformingStepsRequired` for Tinkeroids/
   Moweyds must therefore consult this per-game cost-3 set + the target planet's color, not the base

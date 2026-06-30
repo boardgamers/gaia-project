@@ -136,7 +136,7 @@ export function possibleFederationTokenBuildMine(
       rewards.push(pl.gaiaFormingCost());
     } else {
       const planet = hex.occupied() ? pl.planet : hex.data.planet;
-      steps = terraformingStepsRequired(pl.faction, planet);
+      steps = terraformingStepsRequired(pl.faction, planet, pl.data.lostFleetCost3Planets);
       const discountedSteps = data.federation === SpaceshipFederation.Terraform ? Math.max(steps - 3, 0) : steps;
       const oreCost = terraformingCost(pl.data, discountedSteps, engine.replay);
       if (oreCost === null) {

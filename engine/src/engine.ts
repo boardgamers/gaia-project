@@ -29,7 +29,15 @@ import {
 import Event, { EventSource } from "./events";
 import { factionVariantBoard, latestVariantVersion } from "./faction-boards";
 import SpaceMap, { MapConfiguration } from "./map";
-import { moveAction, moveBurn, movePiSwap, moveSpecial, moveSpend } from "./move/actions";
+import {
+  moveAction,
+  moveBurn,
+  moveChooseTinkeringTile,
+  movePiSwap,
+  movePlacePowerRing,
+  moveSpecial,
+  moveSpend,
+} from "./move/actions";
 import { moveChooseArtifactToken, moveExamineArtifact } from "./move/artifacts";
 import { autoMove } from "./move/auto";
 import { moveBuild, moveLostPlanet } from "./move/buildings";
@@ -501,6 +509,7 @@ export default class Engine {
     player.data.on(`gain-${Resource.GainArtifact}`, () =>
       this.processNextMove(SubPhase.ChooseArtifactToken, null, true)
     );
+    player.data.on(`gain-${Resource.PowerRing}`, () => this.processNextMove(SubPhase.PlacePowerRing, null, true));
     player.data.on(`gain-${Resource.PISwap}`, () => this.processNextMove(SubPhase.PISwap, null, true));
     player.data.on(`gain-${Resource.SpaceStation}`, () => this.processNextMove(SubPhase.SpaceStation, null, true));
     player.data.on(`gain-${Resource.DowngradeLab}`, () => {
@@ -907,9 +916,11 @@ export default class Engine {
       [Command.ChooseTechTile]: moveChooseTechTile,
       [Command.ChooseCoverTechTile]: moveChooseCoverTechTile,
       [Command.ChooseRoundBooster]: moveChooseRoundBooster,
+      [Command.ChooseTinkeringTile]: moveChooseTinkeringTile,
       [Command.Explore]: moveExplore,
       [Command.SpaceshipAction]: moveSpaceshipAction,
       [Command.GaiaFormTransdim]: moveGaiaFormTransdim,
+      [Command.PlacePowerRing]: movePlacePowerRing,
       [Command.Pass]: movePass,
       [Command.EndTurn]: moveEndTurn,
       [Command.ChooseIncome]: moveChooseIncome,

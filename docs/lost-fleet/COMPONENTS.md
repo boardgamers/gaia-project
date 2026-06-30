@@ -25,10 +25,10 @@ policy" there) — not just the effect text alone.
 
 | Faction | Start planet | Maps to | Status |
 |---|---|---|---|
-| Tinkeroids | Asteroid | `Faction` enum + `faction-boards/tinkeroids.ts` | ☐ TODO (blocked on §B5 cost-3 scan-order ambiguity) |
+| Tinkeroids | Asteroid | `Faction` enum + `faction-boards/tinkeroids.ts` | ● DONE |
 | Darkanians | Asteroid | `Faction` enum + `faction-boards/darkanians.ts` | ● DONE |
-| Moweyds | Protoplanet | `Faction` enum + `faction-boards/moweyds.ts` | ☐ TODO (blocked on §B5 cost-3 scan-order ambiguity) |
-| Space Giants | Protoplanet | `Faction` enum + `faction-boards/space-giants.ts` | ● DONE except Exploration-board special action (subsystem not yet built) |
+| Moweyds | Protoplanet | `Faction` enum + `faction-boards/moweyds.ts` | ● DONE |
+| Space Giants | Protoplanet | `Faction` enum + `faction-boards/space-giants.ts` | ● DONE |
 
 Each new faction needs (see RULES_CLARIFICATIONS for values):
 - Starting income row(s) `[NEED FROM BOARD]`
@@ -43,7 +43,7 @@ Each new faction needs (see RULES_CLARIFICATIONS for values):
 
 | Planet | Rule | Maps to | Status |
 |---|---|---|---|
-| Protoplanet | 3 terraform steps; +6 VP on mine (0 VP if starting planet — not yet codeable, no faction has this home planet; see PROGRESS.md "Done so far" #10) | `Planet` enum | ● DONE |
+| Protoplanet | 3 terraform steps; +6 VP on mine (0 VP if starting planet) | `Planet` enum | ● DONE |
 | Asteroid | requires sacrificing a Gaiaformer; no build cost | `Planet` enum | ● DONE |
 
 - New "11 planet types" symbol replaces the base "different planet types" symbol — affects
@@ -104,9 +104,8 @@ Each spaceship needs:
 
 ## 4. Exploration Boards (per faction, all 18 factions get one)
 
-Core Explore action/status: ● DONE in engine for currently coded factions. Remaining Exploration-board
-special actions (notably Space Giants, and later Moweyds' pre-seeded shuttle once that faction exists)
-are still TODO.
+Core Explore action/status: ● DONE in engine for currently coded factions, including Moweyds' pre-seeded
+T F Mars shuttle and Space Giants' once-per-round 2-step special action.
 
 Each faction's Exploration board needs `[NEED FROM BOARD]`:
 - Shuttle deployment cost (usually 5 VP; Bal T'aks 7 VP) — ● DONE in engine
@@ -139,8 +138,8 @@ Each faction's Exploration board needs `[NEED FROM BOARD]`:
 | Artifact tokens | 13 | effect CONFIRMED for all 13, see RULES_CLARIFICATIONS.md §G6; count of each type among the 13 inferred as 1-each, VERIFY `[NEED FROM BOARD]`. **All 13 effects CODED & TESTED** (`tiles/artifacts.ts`, `move/artifacts.ts`, `available/artifacts.ts`; setup seeding via `setup.ts`'s `scoringFactory`) — ⚠️VERIFY: the `ResearchLevel` token's Research Area (assumed `ResearchField.Science`) was never confirmed, the owner's rules-text comment was cut off mid-sentence | ● CODED |
 | Gaia Planet tokens | 4 | additive to base supply | ☐ TODO |
 | Action tokens | 12 | mark used spaceship action spaces | ☐ TODO |
-| Tinkering tiles | 6 (Tinkeroids only) | effect of each CONFIRMED, see RULES_CLARIFICATIONS.md §B1 (rounds 1-3: terra 1 / charge 4pw / 1 Q.I.C.; rounds 4-6: terra 3 / 3 knowledge / 2 Q.I.C.) | ◐ SPEC |
-| Power Rings | 6 (Moweyds only) | +2 power value to a structure (text p.13) | ☐ TODO |
+| Tinkering tiles | 6 (Tinkeroids only) | effect of each CONFIRMED, see RULES_CLARIFICATIONS.md §B1 (rounds 1-3: terra 1 / charge 4pw / 1 Q.I.C.; rounds 4-6: terra 3 / 3 knowledge / 2 Q.I.C.) | ● DONE |
+| Power Rings | 6 (Moweyds only) | +2 power value to a structure (text p.13) | ● DONE |
 
 ## 8. Revised / Adjusted Base Components
 

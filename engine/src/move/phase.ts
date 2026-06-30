@@ -14,10 +14,16 @@ import {
   Player as PlayerEnum,
   ResearchField,
   Resource,
+  Spaceship,
   SubPhase,
 } from "../enums";
 import { factionVariantBoard } from "../faction-boards";
-import { lostFleetSetupStage, startingSetupPlacements } from "../factions";
+import {
+  lostFleetSetupStage,
+  lostFleetTerraformingBoard,
+  lostFleetTerraformingCost3Planets,
+  startingSetupPlacements,
+} from "../factions";
 import { GaiaHex } from "../gaia-hex";
 import Player from "../player";
 import { lastTile } from "../research-tracks";
@@ -205,6 +211,24 @@ function endSetupFactionPhase(engine: Engine) {
     pl.loadFaction(board, engine.expansions);
   }
 
+  if (engine.options.lostFleet) {
+    const cost3Planets = lostFleetTerraformingCost3Planets(
+      engine.players.map((pl) => ({ player: pl.player, faction: pl.faction })),
+      engine.turnOrderAfterSetupAuction,
+      lostFleetTerraformingBoard(engine.map.seed)
+    );
+
+    for (const [player, planets] of Object.entries(cost3Planets)) {
+      engine.player(+player as PlayerEnum).data.lostFleetCost3Planets = [...planets];
+    }
+
+    for (const pl of engine.players) {
+      if (pl.faction === Faction.Moweyds) {
+        pl.data.explorationShips[Spaceship.TFMars] = 1;
+      }
+    }
+  }
+
   beginSetupBuildingPhase(engine);
 }
 
@@ -270,6 +294,9 @@ function beginRoundStartPhase(engine: Engine) {
  */
 function handleNextIncome(engine: Engine) {
   const pl = engine.player(engine.currentPlayer);
+  if (pl.needsTinkeringTileChoice(engine.round)) {
+    return false;
+  }
   if (pl.incomeSelection().needed) {
     return false;
   }
@@ -360,6 +387,7 @@ function cleanUpPhase(engine: Engine) {
   for (const player of engine.players) {
     // remove roundScoringTile
     player.removeEvents(engine.currentRoundScoringEvents);
+    player.removeCurrentTinkeringTile();
 
     // resets special action
     for (const event of player.events[Operator.Activate]) {

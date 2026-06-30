@@ -16,6 +16,7 @@ import {
   Ship,
   Spaceship,
   SpaceshipFederation,
+  TinkeringTile,
 } from "./enums";
 import { EventSource } from "./events";
 import { FactionBoard } from "./faction-boards";
@@ -119,6 +120,14 @@ export default class PlayerData extends EventEmitter {
   explorationShips: {
     [key in Spaceship]?: number;
   } = {};
+  /** Lost Fleet: the 3 base-game planet colors that cost this player 3 terraform steps */
+  lostFleetCost3Planets: Planet[] = [];
+  /** Lost Fleet Tinkeroids: the current round's chosen Tinkering tile, if any */
+  currentTinkeringTile: TinkeringTile = null;
+  /** Lost Fleet Tinkeroids: tiles already used and removed from play */
+  usedTinkeringTiles: TinkeringTile[] = [];
+  /** Lost Fleet Moweyds: number of Power Rings placed so far */
+  powerRingsPlaced = 0;
 
   /** Hexes occupied by buildings with value (not gaia formers), refs match the map hexes with a simple equality test */
   occupied: GaiaHex[] = [];
@@ -164,6 +173,10 @@ export default class PlayerData extends EventEmitter {
       federationCount: this.federationCount,
       spaceshipFederations: this.spaceshipFederations,
       explorationShips: this.explorationShips,
+      lostFleetCost3Planets: this.lostFleetCost3Planets,
+      currentTinkeringTile: this.currentTinkeringTile,
+      usedTinkeringTiles: this.usedTinkeringTiles,
+      powerRingsPlaced: this.powerRingsPlaced,
       lostPlanet: this.lostPlanet,
       artifactPlanetTypes: this.artifactPlanetTypes,
       ships: this.ships,

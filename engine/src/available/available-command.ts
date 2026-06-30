@@ -1,7 +1,14 @@
 import Engine from "../engine";
 import { Building, Command, Faction, Phase, SubPhase } from "../enums";
 import { possibleSetupBoardActions } from "../setup";
-import { possibleBoardActions, possibleFreeActions, possibleGaiaFreeActions, possibleSpecialActions } from "./actions";
+import {
+  possibleBoardActions,
+  possibleFreeActions,
+  possibleGaiaFreeActions,
+  possiblePowerRingPlacements,
+  possibleSpecialActions,
+  possibleTinkeringTiles,
+} from "./actions";
 import { possibleArtifactTokens, possibleExamineArtifact } from "./artifacts";
 import {
   possibleBuildings,
@@ -56,6 +63,8 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
       return possibleFederationTiles(engine, player, "player");
     case SubPhase.ChooseArtifactToken:
       return possibleArtifactTokens(engine, player);
+    case SubPhase.PlacePowerRing:
+      return possiblePowerRingPlacements(engine, player);
     case SubPhase.BuildMine:
       return [...possibleMineBuildings(engine, player, false), ...possibleShipMovements(engine, player, true)];
     case SubPhase.BuildMineOrGaiaFormer:
@@ -102,12 +111,14 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
       return possibleBids(engine, player);
     case Phase.SetupBuilding: {
       const planet = engine.player(player).planet;
+      const faction = engine.player(player).faction;
       const buildings = [];
 
       for (const hex of engine.map.toJSON()) {
         if (hex.data.planet === planet && !hex.data.building) {
           buildings.push({
-            building: engine.player(player).faction !== Faction.Ivits ? Building.Mine : Building.PlanetaryInstitute,
+            building:
+              faction === Faction.Ivits || faction === Faction.Tinkeroids ? Building.PlanetaryInstitute : Building.Mine,
             coordinates: hex.toString(),
             cost: "~",
           });
@@ -119,6 +130,9 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
     case Phase.SetupBooster:
       return possibleRoundBoosters(engine, player);
     case Phase.RoundIncome:
+      if (engine.player(player).needsTinkeringTileChoice(engine.round)) {
+        return possibleTinkeringTiles(engine, player);
+      }
       return possibleIncomes(engine, player);
     case Phase.RoundGaia:
       return possibleGaiaFreeActions(engine, player);

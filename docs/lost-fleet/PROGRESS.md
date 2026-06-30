@@ -998,6 +998,33 @@ notifications).
       `PERFORMANCE.md`, extending the actual `SpaceMap` tree instead of only unit-testing helpers.
     - Verification: viewer `cd viewer && npx vue-cli-service test:unit --timeout 4000
       'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'` → **166/166** passing.
+45. ✅ **Tinkeroids + Moweyds full faction/rules slice, CODED & TESTED** (done 2026-06-30).
+    - Added the 2 remaining Lost Fleet factions to the real engine surface: `Faction.Tinkeroids` /
+      `Faction.Moweyds`, full faction-board registration, setup-stage placement rules (Tinkeroids
+      start with a PI, Moweyds with 1 mine), and viewer faction metadata so the updated engine still
+      compiles cleanly through the viewer test path.
+    - Closed the §B5 blocker with the user's 2026-06-30 ruling: the shared Terraforming-board helper
+      now assigns the mandatory opponent colors first for all relevant players, then fills the
+      remaining cost-3 colors left-to-right from the randomized row in turn order. This is persisted
+      per player via `PlayerData.lostFleetCost3Planets`, and every relevant build path now reads it
+      (`player.canBuild`, ship Build-a-Mine actions, Federation-token Build-a-Mine actions).
+    - Tinkeroids: round-income flow now interrupts at the start of each round with a mandatory
+      `ChooseTinkeringTile` command, loads that round's chosen tile as a once-per-round action, and
+      cleans it up at round end so each tile can only be used once in its 3-round band.
+    - Moweyds: the faction now starts the game with an Exploration Shuttle already on `T F Mars`,
+      and their PI action is wired as a real placement subphase (`PlacePowerRing`) rather than a
+      passive counter. Placed rings persist on the hex, are serialized, and add +2 structure power
+      value for federation / leech / scoring logic through `player.buildingValue(...)`.
+    - Adjacent rules fix required by the new factions: Protoplanet's +6 VP bonus is now correctly
+      suppressed on home-Protoplanet setup builds for Moweyds and Space Giants, while remaining live
+      elsewhere.
+    - New engine regression coverage: added dedicated `tinkeroids.spec.ts` / `moweyds.spec.ts` board
+      + rules tests, expanded `factions.spec.ts`, `planets.spec.ts`, `player.spec.ts`, and updated
+      the Space Giants Protoplanet expectation. This covers the real round-income interruption, the
+      Power Ring placement chain, the T F Mars starting shuttle, and the cost-3 assignment order.
+    - Verification: engine `cd engine && npm test` → **489/489** passing; viewer `cd viewer && cmd /c
+      npx vue-cli-service test:unit --timeout 4000 "src/**/*.spec.ts" "src/logic/**/*.spec.ts"` →
+      **166/166** passing.
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -1009,12 +1036,12 @@ As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
 Real test commands (don't use raw `mocha -r ts-node/register` for the viewer — it hits stricter
 TS resolution than the real webpack-based path and gives false failures; use the actual scripts):
 - Engine: `cd engine && npm test` (or `npx mocha -r ts-node/register 'src/**/*.spec.ts' 'src/*.spec.ts'`
-  — equivalent for engine, which has no webpack step). **473 tests passing as of 2026-06-30.**
+  — equivalent for engine, which has no webpack step). **489 tests passing as of 2026-06-30.**
 - Viewer: `cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'`
   (this is what `pnpm test` runs — uses `mochapack`/webpack, required for files that touch engine
   types). **166 tests passing as of 2026-06-30.**
 
-**Latest full rerun after #44:** engine **473/473**, viewer **166/166**.
+**Latest full rerun after #45:** engine **489/489**, viewer **166/166**.
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/
@@ -1235,7 +1262,7 @@ Exploration-board special action, the Scoring Board Extension's alternate Advanc
 actions' Lost Fleet overlay (§E4/§K3), an audit confirming the `terra` Advanced Tech tile
 correctly fires on every free/discounted terraforming step, not just paid ones, and Examine Artifact
 plus Twilight's Artifact-token seeding (all 13 token effects), are complete and verified —
-**473/473 engine tests pass**
+**489/489 engine tests pass**
 (274 baseline → 280 after Chunk 2 → 299 after Chunk 3 → 321 after Chunk 4 → 337 after Chunk 5 → 345
 after Chunk 6 → 352 after Chunk 7a → 353 after the German-rules reroll fix → 354 after Chunk 7b's
 placement-metadata step → 361 after Chunk 7b's `SpaceMap`/`moveInit` wiring + integration tests → 362
@@ -1249,7 +1276,8 @@ Build-a-Mine to include Asteroid hexes once a spare Gaiaformer is available → 
 Exploration-board special action → 433 after the Scoring Board Extension's alternate Advanced Tech
 gate → 440 after the 6 newly-named Lost Fleet Advanced Tech tiles (§G2) → 443 after the research-board
 Q.I.C. actions' Lost Fleet overlay → 444 after the `terra` free-terraforming-steps audit → 467 after
-Examine Artifact + Twilight's Artifact-token seeding, see "Done so far" #16-#32).
+Examine Artifact + Twilight's Artifact-token seeding → 489 after the Tinkeroids/Moweyds faction slice,
+see "Done so far" #16-#32 and #45).
 (Note: the 399 and 404 figures here are git-verified; an earlier draft of this doc had momentarily
 overstated them as 407/412 before the correction in "Done so far" #24-#25 above. The 406 figure was
 also stale by session start — `git stash` confirmed the real baseline was 416 — see #27's note.)
@@ -1282,7 +1310,8 @@ now produces a real, playable Lost Fleet board through the normal engine entry p
 Boards-adjacent feature is now wired: all 12 ship-board actions, the gold-side execution and rescoring
 of claimed ship Federation tokens, and Examine Artifact + Artifact-token seeding. Explicitly still
 open, in priority order the user should pick from:
-1. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.
+1. **Continue the new Lost Fleet UI work** — the viewer is now unblocked for richer Lost Fleet map
+   polish and adjacent UI refinement beyond the current ship/rewards boards.
 2. ~~**Viewer-side `Object.values(Faction)` fix**~~ — **DONE** (see "Done so far" #33, 2026-06-29,
    "Viewer Step Zero"): the 6 `Faction` call sites plus a cascading chain of related gaps (Darkanians/
    Space Giants `factionData`, `planetsWithSteps` signature, Asteroid/Protoplanet color data, 2 more
@@ -1298,7 +1327,8 @@ open, in priority order the user should pick from:
    any further UI refinement beyond the current ship/rewards boards.
 3. **Revised Space Sector tiles 05/06/07** (§H4, the one remaining art-only TODO — see "Still MISSING"
    above) — would let Lost Fleet stop falling back to the base game's per-count face for those 3 tiles.
-4. Or a different unit of work entirely (viewer, Supabase), ahead of any blocked item.
+4. Or a different unit of work entirely (viewer, Supabase), since the old blocked Tinkeroids/
+   Moweyds item is now complete.
 
 Confirm with the user before starting any of the above.
 

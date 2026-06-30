@@ -3,8 +3,10 @@ import planets from "../data/planets";
 
 export function factionPiecePlanet(faction: Faction): Planet {
   switch (faction) {
+    case Faction.Tinkeroids:
     case Faction.Darkanians:
       return Planet.Protoplanet;
+    case Faction.Moweyds:
     case Faction.SpaceGiants:
       return Planet.Asteroid;
     default:

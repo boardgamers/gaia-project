@@ -26,9 +26,23 @@ describe("terraformingStepsRequired", () => {
     expect(terraformingStepsRequired(Faction.SpaceGiants, Planet.Volcanic)).to.equal(2);
   });
 
+  it("should require 3 steps only for the assigned cost-3 colors for Tinkeroids and Moweyds", () => {
+    const cost3 = [Planet.Terra, Planet.Oxide, Planet.Ice];
+
+    expect(terraformingStepsRequired(Faction.Tinkeroids, Planet.Terra, cost3)).to.equal(3);
+    expect(terraformingStepsRequired(Faction.Tinkeroids, Planet.Volcanic, cost3)).to.equal(1);
+    expect(terraformingStepsRequired(Faction.Moweyds, Planet.Ice, cost3)).to.equal(3);
+    expect(terraformingStepsRequired(Faction.Moweyds, Planet.Desert, cost3)).to.equal(1);
+  });
+
   it("should still require 0 steps for Darkanians/Space Giants on Asteroid/Gaia/Transdim", () => {
     expect(terraformingStepsRequired(Faction.Darkanians, Planet.Asteroid)).to.equal(0);
     expect(terraformingStepsRequired(Faction.Darkanians, Planet.Gaia)).to.equal(0);
     expect(terraformingStepsRequired(Faction.SpaceGiants, Planet.Transdim)).to.equal(0);
+  });
+
+  it("should still use the global Asteroid/Protoplanet rules for Tinkeroids and Moweyds", () => {
+    expect(terraformingStepsRequired(Faction.Tinkeroids, Planet.Asteroid, [Planet.Terra])).to.equal(0);
+    expect(terraformingStepsRequired(Faction.Moweyds, Planet.Protoplanet, [Planet.Terra])).to.equal(3);
   });
 });

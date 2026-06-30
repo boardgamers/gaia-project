@@ -12,10 +12,12 @@ import HadschHallas from "./hadsch-hallas";
 import Itars from "./itars";
 import Ivits from "./ivits";
 import Lantids from "./lantids";
+import Moweyds from "./moweyds";
 import Nevlas from "./nevlas";
 import SpaceGiants from "./space-giants";
 import Taklons from "./taklons";
 import Terrans from "./terrans";
+import Tinkeroids from "./tinkeroids";
 import { FactionBoard, FactionBoardRaw, FactionBoardVariant, FactionBoardVariants } from "./types";
 import Xenos from "./xenos";
 
@@ -36,7 +38,9 @@ const factionBoards: { [key in Faction]: FactionBoardVariants } = {
   [Faction.Bescods]: Bescods,
   [Faction.Nevlas]: Nevlas,
   [Faction.Itars]: Itars,
+  [Faction.Tinkeroids]: Tinkeroids,
   [Faction.Darkanians]: Darkanians,
+  [Faction.Moweyds]: Moweyds,
   [Faction.SpaceGiants]: SpaceGiants,
 };
 

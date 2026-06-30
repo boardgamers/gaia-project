@@ -18,6 +18,8 @@ export interface GaiaHexData {
   customPosts?: Player[];
   /** Additional mine of lantids */
   additionalMine?: Player;
+  /** Lost Fleet Moweyds: +2 power value ring placed on this planet */
+  powerRing?: Player;
   /** Lost Fleet: which spaceship's Interspace tile occupies this hex, if any */
   spaceship?: Spaceship;
   /** Center this hex was created around (stamped by Sector.create). Used to derive relativeCoordinates

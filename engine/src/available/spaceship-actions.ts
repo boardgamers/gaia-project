@@ -117,7 +117,7 @@ export function possibleSpaceshipBuildMine(
 
     if (data.ship === Spaceship.TFMars) {
       const planet = hex.occupied() ? pl.planet : hex.data.planet;
-      steps = terraformingStepsRequired(pl.faction, planet);
+      steps = terraformingStepsRequired(pl.faction, planet, pl.data.lostFleetCost3Planets);
       const oreCost = terraformingCost(pl.data, Math.max(steps - 1, 0), engine.replay);
       if (oreCost === null) {
         continue;

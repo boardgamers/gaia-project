@@ -1,7 +1,7 @@
 import { factionPlanet } from "./factions";
 import { Faction, Planet } from "./enums";
 
-export function terraformingStepsRequired(faction: Faction, targetPlanet: Planet): number {
+export function terraformingStepsRequired(faction: Faction, targetPlanet: Planet, cost3Planets: Planet[] = []): number {
   const planetCycle = [
     Planet.Terra,
     Planet.Oxide,
@@ -28,6 +28,9 @@ export function terraformingStepsRequired(faction: Faction, targetPlanet: Planet
   }
   if (faction === Faction.SpaceGiants) {
     return 2;
+  }
+  if (faction === Faction.Tinkeroids || faction === Faction.Moweyds) {
+    return cost3Planets.includes(targetPlanet) ? 3 : 1;
   }
 
   let dist =

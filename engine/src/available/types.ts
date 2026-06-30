@@ -16,6 +16,7 @@ import {
   SubPhase,
   TechTile,
   TechTilePos,
+  TinkeringTile,
 } from "../enums";
 import { BuildWarning } from "../player";
 import { BrainstoneDest } from "../player-data";
@@ -142,6 +143,7 @@ interface CommandData {
   [Command.ChooseFederationTile]: { tiles: AvailableFederationChoice[]; rescore: boolean };
   [Command.ChooseIncome]: string[];
   [Command.ChooseRoundBooster]: { boosters: Booster[] };
+  [Command.ChooseTinkeringTile]: { tiles: TinkeringTile[] };
   [Command.ChooseTechTile]: { tiles: ChooseTechTile[] };
   [Command.DeadEnd]: SubPhase; // for debugging
   [Command.Decline]: { offers: Offer[] };
@@ -159,6 +161,7 @@ interface CommandData {
   [Command.PISwap]: AvailableBuildCommandData;
   [Command.PlaceLostPlanet]: { spaces: AvailableHex[] };
   [Command.MoveShip]: AvailableMoveShipData[];
+  [Command.PlacePowerRing]: { spaces: AvailableHex[] };
   [Command.RotateSectors]: never;
   [Command.Setup]: AvailableSetupOption;
   [Command.Special]: { specialacts: { income: string; spec: string }[] };

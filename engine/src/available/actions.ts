@@ -14,7 +14,7 @@ import PlayerObject from "../player";
 import { resourceLimits } from "../player-data";
 import Reward from "../reward";
 import { possibleTechTiles } from "./research";
-import { AvailableBoardActionData, AvailableCommand, AvailableFreeAction, Offer } from "./types";
+import { AvailableBoardActionData, AvailableCommand, AvailableFreeAction, AvailableHex, Offer } from "./types";
 
 export function conversionToFreeAction(act: AvailableFreeAction): FreeAction | null {
   const entry = Object.entries(freeActionConversions).find(([k, v]) => v.cost === act.cost && v.income === act.income);
@@ -59,6 +59,40 @@ export function possibleSpecialActions(engine: Engine, player: Player) {
   }
 
   return commands;
+}
+
+export function possibleTinkeringTiles(engine: Engine, player: Player): AvailableCommand<Command.ChooseTinkeringTile>[] {
+  const pl = engine.player(player);
+  const tiles = pl.availableTinkeringTiles(engine.round);
+
+  if (tiles.length === 0) {
+    return [];
+  }
+
+  return [{ name: Command.ChooseTinkeringTile, player, data: { tiles } }];
+}
+
+export function possiblePowerRingPlacements(engine: Engine, player: Player): AvailableCommand<Command.PlacePowerRing>[] {
+  const pl = engine.player(player);
+  const spaces: AvailableHex[] = [];
+
+  if (pl.data.powerRingsPlaced >= 6) {
+    return [];
+  }
+
+  for (const hex of pl.data.occupied) {
+    if (!hex.hasPlanet() || hex.buildingOf(player) === undefined || hex.data.powerRing !== undefined) {
+      continue;
+    }
+
+    spaces.push({ coordinates: hex.toString() });
+  }
+
+  if (spaces.length === 0) {
+    return [];
+  }
+
+  return [{ name: Command.PlacePowerRing, player, data: { spaces } }];
 }
 
 export function possibleBoardActions(actions: BoardActions, p: PlayerObject, replay: boolean): AvailableCommand[] {

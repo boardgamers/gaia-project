@@ -122,6 +122,7 @@ export enum Resource {
   TradeBonus = "tradeBonus",
   TradeDiscount = "tradeDiscount",
   TradeShip = "tradeShip",
+  PowerRing = "power-ring",
 }
 
 export function isResourceUsed(resource: Resource, expansion: Expansion) {
@@ -303,7 +304,9 @@ export enum Faction {
   Bescods = "bescods",
   Nevlas = "nevlas",
   Itars = "itars",
+  Tinkeroids = "tinkeroids",
   Darkanians = "darkanians",
+  Moweyds = "moweyds",
   SpaceGiants = "space-giants",
 }
 
@@ -327,7 +330,7 @@ export namespace Faction {
     ];
 
     if (hasExpansion(expansions, Expansion.LostFleet)) {
-      ret.push(Faction.Darkanians, Faction.SpaceGiants);
+      ret.push(Faction.Tinkeroids, Faction.Darkanians, Faction.Moweyds, Faction.SpaceGiants);
     }
 
     return ret;
@@ -365,7 +368,9 @@ export enum Command {
   SpaceshipAction = "spaceshipAction",
   ExamineArtifact = "examineArtifact",
   ChooseArtifactToken = "chooseArtifactToken",
+  ChooseTinkeringTile = "chooseTinkeringTile",
   UpgradeResearch = "up",
+  PlacePowerRing = "placePowerRing",
 }
 
 export enum Player {
@@ -757,6 +762,29 @@ export enum SubPhase {
   SpaceshipUpgradeBuilding = "spaceshipUpgradeBuilding",
   FederationTokenBuildMine = "federationTokenBuildMine",
   ChooseArtifactToken = "chooseArtifactToken",
+  PlacePowerRing = "placePowerRing",
+}
+
+export enum TinkeringTile {
+  Step1 = "tinkering-step1",
+  Power4 = "tinkering-power4",
+  Qic1 = "tinkering-qic1",
+  Step3 = "tinkering-step3",
+  Knowledge3 = "tinkering-knowledge3",
+  Qic2 = "tinkering-qic2",
+}
+
+export namespace TinkeringTile {
+  export function values(): TinkeringTile[] {
+    return [
+      TinkeringTile.Step1,
+      TinkeringTile.Power4,
+      TinkeringTile.Qic1,
+      TinkeringTile.Step3,
+      TinkeringTile.Knowledge3,
+      TinkeringTile.Qic2,
+    ];
+  }
 }
 
 // Lost Fleet Spaceship Boards (4 generic boards, not tied to any faction).

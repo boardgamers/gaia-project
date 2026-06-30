@@ -45,7 +45,11 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
   Federation token gold-side execution + rescoring, Space Giants' Exploration special action, the
   Scoring Board Extension's alternate Advanced Tech gate, the 6 Lost Fleet Advanced Tech tiles, and
   Examine Artifact + Artifact-token seeding are implemented and tested.
-- Engine: **473/473** tests passing (`cd engine && npm test`). Viewer: **166/166** tests passing
+- Tinkeroids and Moweyds are now fully wired in the engine: setup-stage PI/mine placement, the
+  shared Terraforming-board 3-step color assignment, Tinkeroids' round-start Tinkering tile choice,
+  Moweyds' pre-seeded T F Mars shuttle, Moweyds' Power Ring action, and the home-Protoplanet
+  0-VP correction for Moweyds / Space Giants are all coded and covered.
+- Engine: **489/489** tests passing (`cd engine && npm test`). Viewer: **166/166** tests passing
   (`cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts'
   'src/logic/**/*.spec.ts'`).
 - "Viewer Step Zero" is done: the viewer builds and type-checks clean against the Lost Fleet engine
@@ -75,14 +79,13 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
 
 Per `PROGRESS.md`'s "Next actions", in priority order:
 
-1. **Tinkeroids/Moweyds** — blocked until the user resolves the §B5 scan-order ambiguity.
-2. **Continue the new Lost Fleet UI work** — the map-rendering slice and the first compact
+1. **Continue the new Lost Fleet UI work** — the map-rendering slice and the first compact
    spaceship-action/rewards-board slice are done, and the turquoise/pink player-piece treatment is
    now done too; remaining viewer work is richer map polish and any further UI refinement beyond the
    current ship/rewards boards.
-3. **Revised Space Sector tiles 05/06/07** (§H4) — the one remaining art-only TODO; needs a photo
+2. **Revised Space Sector tiles 05/06/07** (§H4) — the one remaining art-only TODO; needs a photo
    of the physical component.
-4. Or a different unit of work entirely (viewer, Supabase), ahead of any blocked item.
+3. Or a different unit of work entirely (viewer, Supabase).
 
 Confirm with the user before starting any of the above — this is a standing instruction in
 `PROGRESS.md`, not specific to this handoff.

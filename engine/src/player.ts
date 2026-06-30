@@ -29,11 +29,12 @@ import {
   SpaceshipFederation,
   TechTile,
   TechTilePos,
+  TinkeringTile,
 } from "./enums";
 import Event, { EventSource } from "./events";
 import { factionBoard, FactionBoard, FactionBoardRaw } from "./faction-boards";
 import { FactionBoardVariant } from "./faction-boards/types";
-import { factionPlanet } from "./factions";
+import { factionPlanet, tinkeringTileSpec, tinkeringTilesForRound } from "./factions";
 import { federationCost, FederationInfo, isOutclassedBy, parseFederationLocation } from "./federation";
 import { GaiaHex } from "./gaia-hex";
 import { IncomeSelection } from "./income";
@@ -337,7 +338,7 @@ export default class Player extends EventEmitter {
         }
       } else {
         // Get the number of terraforming steps to pay discounting terraforming track
-        steps = terraformingStepsRequired(this.faction, targetPlanet);
+        steps = terraformingStepsRequired(this.faction, targetPlanet, this.data.lostFleetCost3Planets);
         const reward = terraformingCost(this.data, steps, replay);
 
         if (reward === null) {
@@ -355,7 +356,8 @@ export default class Player extends EventEmitter {
         }
         addedCost.push(reward);
 
-        if (targetPlanet === Planet.Protoplanet) {
+        const scoredPlanet = hex?.data?.planet ?? targetPlanet;
+        if (scoredPlanet === Planet.Protoplanet && scoredPlanet !== factionPlanet(this.faction)) {
           addedCost.push(new Reward(-6, Resource.VictoryPoint));
         } else if (targetPlanet === Planet.Asteroid) {
           if (!this.data.hasResource(new Reward(1, Resource.GaiaFormer))) {
@@ -875,8 +877,9 @@ export default class Player extends EventEmitter {
     const hasPlanetaryInstitute = options?.hasPlanetaryInstitute ?? this.data.hasPlanetaryInstitute();
     const addedBescods =
       this.faction === Faction.Bescods && hasPlanetaryInstitute && hex?.data?.planet === Planet.Titanium ? 1 : 0;
+    const addedPowerRing = hex?.data?.powerRing === this.player ? 2 : 0;
 
-    return baseValue + addedBescods;
+    return baseValue + addedBescods + addedPowerRing;
   }
 
   maxLeech(extraPowerToken?: boolean): number {
@@ -957,6 +960,32 @@ export default class Player extends EventEmitter {
       return new Reward(2, Resource.Qic);
     }
     return new Reward(1, Resource.Qic);
+  }
+
+  needsTinkeringTileChoice(round: number): boolean {
+    return this.faction === Faction.Tinkeroids && round >= 1 && round <= 6 && !this.data.currentTinkeringTile;
+  }
+
+  availableTinkeringTiles(round: number): TinkeringTile[] {
+    return tinkeringTilesForRound(round).filter((tile) => !this.data.usedTinkeringTiles.includes(tile));
+  }
+
+  chooseTinkeringTile(round: number, tile: TinkeringTile) {
+    assert(this.availableTinkeringTiles(round).includes(tile), `${tile} is not available in round ${round}`);
+
+    const spec = tinkeringTileSpec(tile);
+    this.data.currentTinkeringTile = tile;
+    this.loadEvents(Event.parse([`=> ${spec}`], Faction.Tinkeroids));
+  }
+
+  removeCurrentTinkeringTile() {
+    if (!this.data.currentTinkeringTile) {
+      return;
+    }
+
+    this.removeEvent(new Event(`=> ${tinkeringTileSpec(this.data.currentTinkeringTile)}`, Faction.Tinkeroids));
+    this.data.usedTinkeringTiles.push(this.data.currentTinkeringTile);
+    this.data.currentTinkeringTile = null;
   }
 
   eventConditionCount(condition: Condition): number {

@@ -136,6 +136,14 @@ export const factionData: {
     PI: `During the Gaia phase, you can discard 4 power tokens from your Gaia area to immediately gain a tech tile. You may do this as many times as you can afford to.`,
     shortcut: "s",
   },
+  [Faction.Tinkeroids]: {
+    name: "Tinkeroids",
+    ability:
+      "You have no home planet type. Start with your Planetary Institute instead of two mines. Three base-game planet colors cost 3 terraforming steps and the others cost 1, determined from the Lost Fleet Terraforming board during setup. Building a mine on a Gaia Planet costs the normal one Q.I.C.",
+    PI:
+      "At the beginning of each round, choose the current round's unused Tinkering tile. Once that round, use it as an action. Rounds 1-3: terraform 1 step, charge 4 power, or gain 1 Q.I.C. Rounds 4-6: terraform 3 steps, gain 3 knowledge, or gain 2 Q.I.C.",
+    shortcut: "y",
+  },
   [Faction.Darkanians]: {
     name: "Darkanians",
     ability:
@@ -143,6 +151,14 @@ export const factionData: {
     PI:
       "The first time you colonize a planet in a Space or Deep Space sector, gain two credits and one knowledge. (Interspace tiles do not count as sectors for this effect.)",
     shortcut: "i",
+  },
+  [Faction.Moweyds]: {
+    name: "Moweyds",
+    ability:
+      "You have no home planet type. Start with one mine instead of two, and start the game with an Exploration Shuttle already on T F Mars. Three base-game planet colors cost 3 terraforming steps and the others cost 1, determined from the Lost Fleet Terraforming board during setup. Building a mine on a Gaia Planet costs the normal one Q.I.C.",
+    PI:
+      "Once per round, place a Power Ring as an action on a planet containing one of your buildings and no Power Ring. That building's power value is increased by 2.",
+    shortcut: "m",
   },
   [Faction.SpaceGiants]: {
     name: "Space Giants",
