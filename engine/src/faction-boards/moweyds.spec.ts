@@ -2,7 +2,7 @@ import { expect } from "chai";
 import Engine from "../engine";
 import { possibleSpecialActions } from "../available/actions";
 import { factionBoard } from ".";
-import { Building, Faction, Phase, Player as PlayerEnum, Resource, Spaceship } from "../enums";
+import { Building, Faction, Phase, Planet, Player as PlayerEnum, Resource, Spaceship } from "../enums";
 import { GaiaHex } from "../gaia-hex";
 import { moveSpecial } from "../move/actions";
 import { Power } from "../player-data";
@@ -90,5 +90,44 @@ describe("Moweyds", () => {
     expect(player.data.powerRingsPlaced).to.equal(1);
     expect(player.buildingValue(hex, { federation: true })).to.equal(5);
     expect(possibleSpecialActions(engine, PlayerEnum.Player1)).to.deep.equal([]);
+  });
+
+  it("should allow placing a Power Ring on the Lost Planet mine", () => {
+    const engine = new Engine(["init 2 lost-fleet-moweyds-lost-planet-ring"], { lostFleet: true });
+
+    engine.players[0].faction = Faction.Moweyds;
+    engine.players[0].loadFaction(null, engine.expansions);
+    engine.players[0].data.victoryPoints = 30;
+    engine.players[0].data.power = new Power(4, 4, 4, 0);
+
+    engine.players[1].faction = Faction.Terrans;
+    engine.players[1].loadFaction(null, engine.expansions);
+
+    engine.phase = Phase.RoundMove;
+    engine.round = 1;
+    engine.turnOrder = engine.players.map((pl) => pl.player);
+    engine.currentPlayer = PlayerEnum.Player1;
+
+    const hex = [...engine.map.grid.values()].find(
+      (space) => !space.hasPlanet() && space.data.spaceship === undefined && !space.occupied()
+    ) as GaiaHex;
+    hex.data.planet = Planet.Lost;
+    hex.data.player = PlayerEnum.Player1;
+    hex.data.building = Building.Mine;
+
+    const player = engine.player(PlayerEnum.Player1);
+    player.data.occupied.push(hex);
+    player.data.lostPlanet = 1;
+    player.loadEvents(player.board.buildings[Building.PlanetaryInstitute].income[0]);
+
+    const [command] = possibleSpecialActions(engine, PlayerEnum.Player1);
+    expect(command.data.specialacts.some((entry) => entry.income === "power-ring")).to.be.true;
+
+    engine.turnMoves = [`placePowerRing ${hex.toString()}`];
+    moveSpecial(engine, command, PlayerEnum.Player1, "power-ring");
+
+    expect(hex.data.powerRing).to.equal(PlayerEnum.Player1);
+    expect(player.data.powerRingsPlaced).to.equal(1);
+    expect(player.buildingValue(hex, { federation: true })).to.equal(3);
   });
 });

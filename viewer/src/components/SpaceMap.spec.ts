@@ -63,10 +63,10 @@ describe("SpaceMap", () => {
     expect(container.querySelectorAll("g.space-hex-cell .lost-fleet-spaceship").length).to.equal(spaceshipHexCount);
   });
 
-  it("keeps Asteroid and Protoplanet planet colors while rendering Lost Fleet player pieces in turquoise/pink", () => {
+  it("keeps Asteroid and Protoplanet planet colors while rendering Lost Fleet player pieces with the correct faction pairing", () => {
     const engine = new Engine(["init 2 lost-fleet-space-map"], { lostFleet: true });
     engine.players[0].faction = Faction.Darkanians;
-    engine.players[1].faction = Faction.SpaceGiants;
+    engine.players[1].faction = Faction.Moweyds;
 
     const asteroidHex = [...engine.map.grid.values()].find((hex) => !hex.occupied() && hex.data.planet === Planet.Asteroid);
     const protoplanetHex = [...engine.map.grid.values()].find(
@@ -88,14 +88,14 @@ describe("SpaceMap", () => {
     const { container } = render(SpaceMap, { store });
 
     const darkaniansHex = container.querySelector(`g.space-hex-cell[id="${asteroidHex}"]`);
-    const spaceGiantsHex = container.querySelector(`g.space-hex-cell[id="${protoplanetHex}"]`);
+    const moweydsHex = container.querySelector(`g.space-hex-cell[id="${protoplanetHex}"]`);
 
     expect(darkaniansHex?.querySelector(".planet-fill.a")).to.not.equal(null);
-    expect(darkaniansHex?.querySelector(".planet-fill.faction-fill.p")).to.not.equal(null);
-    expect(darkaniansHex?.querySelector(".building .planet-fill.p")).to.not.equal(null);
+    expect(darkaniansHex?.querySelector(".planet-fill.faction-fill.a")).to.not.equal(null);
+    expect(darkaniansHex?.querySelector(".building .planet-fill.a")).to.not.equal(null);
 
-    expect(spaceGiantsHex?.querySelector(".planet-fill.p")).to.not.equal(null);
-    expect(spaceGiantsHex?.querySelector(".planet-fill.faction-fill.a")).to.not.equal(null);
-    expect(spaceGiantsHex?.querySelector(".building .planet-fill.a")).to.not.equal(null);
+    expect(moweydsHex?.querySelector(".planet-fill.p")).to.not.equal(null);
+    expect(moweydsHex?.querySelector(".planet-fill.faction-fill.p")).to.not.equal(null);
+    expect(moweydsHex?.querySelector(".building .planet-fill.p")).to.not.equal(null);
   });
 });

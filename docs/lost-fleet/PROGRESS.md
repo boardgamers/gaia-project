@@ -980,8 +980,9 @@ notifications).
     - The viewer had been deriving faction-colored pieces directly from `factionPlanet(...)`, which
       is wrong for Lost Fleet's no-home-planet factions now that the planet colors are
       Asteroid=pink / Protoplanet=turquoise. Added a separate viewer-side piece-color mapping:
-      Darkanians now render with **turquoise** pieces and Space Giants with **pink** pieces, while
-      the underlying Asteroid / Protoplanet hex colors stay unchanged.
+      Tinkeroids + Darkanians now render with the **Asteroid-side** player color and Moweyds +
+      Space Giants with the **Protoplanet-side** player color, while the underlying Asteroid /
+      Protoplanet hex colors stay unchanged.
     - Wired that split through the real faction-colored render paths instead of a one-off override:
       faction colors / log colors (`graphics/utils.ts`, `graphics/colors.ts`), federation-line
       gradients (`graphics/hex.ts`), used-action owner markers (`BoardAction.vue`), map trade-token
@@ -992,9 +993,9 @@ notifications).
       stroke classes (`.a` / `.p`) so those planet types render consistently in every SVG path that
       reuses the shared planet component, including colonized-planet faction overlays.
     - New render regression coverage: `SpaceMap.spec.ts` now mounts a real Lost Fleet board with a
-      Darkanians mine placed on an Asteroid and a Space Giants mine placed on a Protoplanet, then
-      asserts that the **planet** stays pink/turquoise while the **piece/faction overlay** renders in
-      the opposite turquoise/pink player color. This follows the standing render-test rule from
+      Darkanians mine placed on an Asteroid and a Moweyds mine placed on a Protoplanet, then
+      asserts that the **planet** stays pink/turquoise while the **piece/faction overlay** uses the
+      correct Asteroid / Protoplanet faction pairing. This follows the standing render-test rule from
       `PERFORMANCE.md`, extending the actual `SpaceMap` tree instead of only unit-testing helpers.
     - Verification: viewer `cd viewer && npx vue-cli-service test:unit --timeout 4000
       'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'` → **166/166** passing.
@@ -1014,7 +1015,8 @@ notifications).
     - Moweyds: the faction now starts the game with an Exploration Shuttle already on `T F Mars`,
       and their PI action is wired as a real placement subphase (`PlacePowerRing`) rather than a
       passive counter. Placed rings persist on the hex, are serialized, and add +2 structure power
-      value for federation / leech / scoring logic through `player.buildingValue(...)`.
+      value for federation / leech / scoring logic through `player.buildingValue(...)`. Power Rings
+      are also locked by regression as placeable on a Moweyds Lost Planet mine once that mine exists.
     - Adjacent rules fix required by the new factions: Protoplanet's +6 VP bonus is now correctly
       suppressed on home-Protoplanet setup builds for Moweyds and Space Giants, while remaining live
       elsewhere.
@@ -1022,7 +1024,7 @@ notifications).
       + rules tests, expanded `factions.spec.ts`, `planets.spec.ts`, `player.spec.ts`, and updated
       the Space Giants Protoplanet expectation. This covers the real round-income interruption, the
       Power Ring placement chain, the T F Mars starting shuttle, and the cost-3 assignment order.
-    - Verification: engine `cd engine && npm test` → **489/489** passing; viewer `cd viewer && cmd /c
+    - Verification: engine `cd engine && npm test` → **490/490** passing; viewer `cd viewer && cmd /c
       npx vue-cli-service test:unit --timeout 4000 "src/**/*.spec.ts" "src/logic/**/*.spec.ts"` →
       **166/166** passing.
 
@@ -1036,12 +1038,12 @@ As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
 Real test commands (don't use raw `mocha -r ts-node/register` for the viewer — it hits stricter
 TS resolution than the real webpack-based path and gives false failures; use the actual scripts):
 - Engine: `cd engine && npm test` (or `npx mocha -r ts-node/register 'src/**/*.spec.ts' 'src/*.spec.ts'`
-  — equivalent for engine, which has no webpack step). **489 tests passing as of 2026-06-30.**
+  — equivalent for engine, which has no webpack step). **490 tests passing as of 2026-06-30.**
 - Viewer: `cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'`
   (this is what `pnpm test` runs — uses `mochapack`/webpack, required for files that touch engine
   types). **166 tests passing as of 2026-06-30.**
 
-**Latest full rerun after #45:** engine **489/489**, viewer **166/166**.
+**Latest full rerun after #45 follow-up:** engine **490/490**, viewer **166/166**.
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/
@@ -1262,7 +1264,7 @@ Exploration-board special action, the Scoring Board Extension's alternate Advanc
 actions' Lost Fleet overlay (§E4/§K3), an audit confirming the `terra` Advanced Tech tile
 correctly fires on every free/discounted terraforming step, not just paid ones, and Examine Artifact
 plus Twilight's Artifact-token seeding (all 13 token effects), are complete and verified —
-**489/489 engine tests pass**
+**490/490 engine tests pass**
 (274 baseline → 280 after Chunk 2 → 299 after Chunk 3 → 321 after Chunk 4 → 337 after Chunk 5 → 345
 after Chunk 6 → 352 after Chunk 7a → 353 after the German-rules reroll fix → 354 after Chunk 7b's
 placement-metadata step → 361 after Chunk 7b's `SpaceMap`/`moveInit` wiring + integration tests → 362

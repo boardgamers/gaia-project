@@ -5,10 +5,10 @@ export function factionPiecePlanet(faction: Faction): Planet {
   switch (faction) {
     case Faction.Tinkeroids:
     case Faction.Darkanians:
-      return Planet.Protoplanet;
+      return Planet.Asteroid;
     case Faction.Moweyds:
     case Faction.SpaceGiants:
-      return Planet.Asteroid;
+      return Planet.Protoplanet;
     default:
       return factionPlanet(faction);
   }

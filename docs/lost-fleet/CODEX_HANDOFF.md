@@ -49,7 +49,7 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
   shared Terraforming-board 3-step color assignment, Tinkeroids' round-start Tinkering tile choice,
   Moweyds' pre-seeded T F Mars shuttle, Moweyds' Power Ring action, and the home-Protoplanet
   0-VP correction for Moweyds / Space Giants are all coded and covered.
-- Engine: **489/489** tests passing (`cd engine && npm test`). Viewer: **166/166** tests passing
+- Engine: **490/490** tests passing (`cd engine && npm test`). Viewer: **166/166** tests passing
   (`cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts'
   'src/logic/**/*.spec.ts'`).
 - "Viewer Step Zero" is done: the viewer builds and type-checks clean against the Lost Fleet engine
@@ -66,9 +66,11 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
 - Lost Fleet viewer ship actions now render in a compact horizontal strip that reuses the base
   board-action tile footprint, grouped by ship with faction-colored access markers; the separate
   Lost Fleet rewards board now only carries the seeded tech / federation / artifact state.
-- Lost Fleet player pieces now render with the correct turquoise/pink faction colors independently
-  of Asteroid / Protoplanet hex colors; the shared `Planet.vue` paths also now have real Asteroid /
-  Protoplanet SVG class coverage, and `SpaceMap.spec.ts` locks the split with a real render case.
+- Lost Fleet player pieces now render with the correct Asteroid / Protoplanet faction pairing
+  independently of the underlying hex colors: Tinkeroids + Darkanians use the Asteroid-side player
+  color, while Moweyds + Space Giants use the Protoplanet-side player color. The shared `Planet.vue`
+  paths also now have real Asteroid / Protoplanet SVG class coverage, and `SpaceMap.spec.ts` locks
+  the split with a real render case.
 - The viewer is deployed to Vercel with Git integration; `master` auto-deploys on push and is the
   production target.
 - `CLAUDE.md` and `AGENTS.md` at the repo root both mirror this file's read order and current state
