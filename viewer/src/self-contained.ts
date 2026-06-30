@@ -4,6 +4,8 @@ import Game from "./components/Game.vue";
 import Wrapper from "./components/Wrapper.vue";
 import launch from "./launcher";
 import { LoadFromJson, LoadFromJsonType } from "./store";
+import { loadScenarioEngine, parseScenarioFromQuery } from "./self-contained-scenarios";
+import { loadEngineFromData, parseLoadFromQuery } from "./self-contained-state";
 
 type SelfContainedEnv = Record<string, string | undefined>;
 
@@ -83,14 +85,27 @@ function launchSelfContained(selector = "#app", debug = true) {
   // auction (choose-bid|bid-while-choosing),
   // factionVariant (standard|more-balanced|beta), and the flags
   // randomFactions, advancedRules (alias rotateSectors), customBoardSetup,
-  // frontiers, lostFleet.
-  const { moves, options, players, seed } = parseSelfContainedSetup(
-    typeof window !== "undefined" ? window.location.search : "",
-    process.env
-  );
+  // frontiers, lostFleet. Alternatively, ?state=<base64url-json> boots
+  // directly into an exported game state, and ?scenario=<id> loads a named
+  // Lost Fleet test position. State URLs take precedence over scenario URLs.
+  // Optional loadType and stopMove are supported for state URLs.
+  const search = typeof window !== "undefined" ? window.location.search : "";
+  const { moves, options, players, seed } = parseSelfContainedSetup(search, process.env);
   console.log("self-contained game setup:", { players, seed, ...options });
 
-  let engine = new Engine([`init ${players} ${seed}`, ...moves], options);
+  let engine: Engine;
+  try {
+    const initialLoad = parseLoadFromQuery(search);
+    const scenarioId = parseScenarioFromQuery(search);
+    engine = initialLoad
+      ? loadEngineFromData(initialLoad)
+      : scenarioId
+      ? loadScenarioEngine(scenarioId)
+      : new Engine([`init ${players} ${seed}`, ...moves], options);
+  } catch (error) {
+    console.error("could not load state from URL, falling back to fresh self-contained setup", error);
+    engine = new Engine([`init ${players} ${seed}`, ...moves], options);
+  }
   engine.generateAvailableCommandsIfNeeded();
 
   const unsub = emitter.store.subscribeAction(({ payload, type }) => {
@@ -98,44 +113,11 @@ function launchSelfContained(selector = "#app", debug = true) {
       const p: LoadFromJson = payload;
 
       console.log("load from JSON", p);
-      let egData = p.engineData;
-      if ("cancelled" in egData) {
-        egData = (egData as any).data;
-      }
-      let moveHistory = egData.moveHistory;
-      let type = p.type;
-      if (p.stopMove) {
-        let index = Number(p.stopMove);
-        if (Number.isNaN(index)) {
-          index = moveHistory.indexOf(p.stopMove);
-        }
-
-        if (index < 0) {
-          console.error("stop move not found", p.stopMove);
-          console.log(moveHistory);
-        } else {
-          moveHistory = moveHistory.slice(0, index);
-          console.log("loading game from index", index);
-        }
-
-        if (type == LoadFromJsonType.load) {
-          console.error("cannot use load with stop move - using permissive replay instead", type);
-          type = LoadFromJsonType.permissiveReplay;
-        }
-      }
-      switch (type) {
-        case LoadFromJsonType.load:
-          engine = Engine.fromData(egData);
-          break;
-        case LoadFromJsonType.strictReplay:
-          engine = new Engine(moveHistory, egData.options, null);
-          break;
-        case LoadFromJsonType.permissiveReplay:
-          engine = new Engine(moveHistory, egData.options, null, true);
-          break;
-        default:
-          console.error("unknown replay type", type);
-      }
+      engine = loadEngineFromData({
+        engineData: p.engineData,
+        type: p.type,
+        stopMove: p.stopMove,
+      });
       engine.generateAvailableCommandsIfNeeded();
       emitter.emit("state", JSON.parse(JSON.stringify(engine)));
     }

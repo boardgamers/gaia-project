@@ -184,6 +184,8 @@ export default class PlayerData extends EventEmitter {
       tradeBonus: this.tradeBonus,
       tradeDiscount: this.tradeDiscount,
       tradeShips: this.tradeShips,
+      temporaryRange: this.temporaryRange,
+      temporaryStep: this.temporaryStep,
     };
 
     return ret;

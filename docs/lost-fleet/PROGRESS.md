@@ -1348,7 +1348,11 @@ open, in priority order the user should pick from:
    Asteroid / Protoplanet hex colors. A 5th tested slice is now also done (see #46): Interspace /
    Deep Space hexes now have explicit `IS` / `DS` map badges, spaceship hexes have clearer ship
    markers, the map has a lightweight Lost Fleet legend, and the ship action/reward panels reuse the
-   same T/R/M/E marker language. The remaining viewer work is any further map polish or panel/UI
+   same T/R/M/E marker language. A 6th tested slice is now also done (2026-06-30): the self-contained
+   viewer supports exact `state=` share URLs, short named `scenario=` URLs, and an in-viewer **Test
+   Scenarios** launcher for common Lost Fleet mechanics; the serialized viewer state now also preserves
+   temporary range/step mid-turn state so those links can restore action-dependent overlays faithfully.
+   The remaining viewer work is any further map polish or panel/UI
    refinement beyond those current markers and boards.
 3. **Revised Space Sector tiles 05/06/07** (§H4, the one remaining art-only TODO — see "Still MISSING"
    above) — would let Lost Fleet stop falling back to the base game's per-count face for those 3 tiles.

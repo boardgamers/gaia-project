@@ -678,7 +678,7 @@ export default class Commands extends Vue implements CommandController {
   }
 
   get temporaryRange(): number {
-    return this.currentMove.includes("range+3") ? 3 : 0;
+    return Math.max(this.player?.data.temporaryRange ?? 0, this.currentMove.includes("range+3") ? 3 : 0);
   }
 
   private updater = 0;
