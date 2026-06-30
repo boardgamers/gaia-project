@@ -17,7 +17,7 @@ import {
   SubPhase,
 } from "../enums";
 import { factionVariantBoard } from "../faction-boards";
-import { startingSetupPlacements } from "../factions";
+import { lostFleetSetupStage, startingSetupPlacements } from "../factions";
 import { GaiaHex } from "../gaia-hex";
 import Player from "../player";
 import { lastTile } from "../research-tracks";
@@ -213,13 +213,20 @@ function beginSetupBuildingPhase(engine: Engine) {
 
   const posIvits = engine.players.findIndex((player) => player.faction === Faction.Ivits);
 
-  const setupTurnOrder = engine.turnOrderAfterSetupAuction.filter((i) => i !== posIvits);
-  const reverseSetupTurnOrder = setupTurnOrder
+  const baseSetupTurnOrder = engine.turnOrderAfterSetupAuction.filter(
+    (player) => lostFleetSetupStage(engine.players[player].faction) === 1
+  );
+  const reverseSetupTurnOrder = baseSetupTurnOrder
     .slice()
     .reverse()
     .filter((player) => startingSetupPlacements(engine.players[player].faction) >= 2);
-  const extraSetupTurnOrder = setupTurnOrder.filter((player) => startingSetupPlacements(engine.players[player].faction) >= 3);
-  engine.turnOrder = setupTurnOrder.concat(reverseSetupTurnOrder, extraSetupTurnOrder);
+  const extraSetupTurnOrder = baseSetupTurnOrder.filter(
+    (player) => startingSetupPlacements(engine.players[player].faction) >= 3
+  );
+  const expansionSetupTurnOrder = engine.turnOrderAfterSetupAuction.filter(
+    (player) => lostFleetSetupStage(engine.players[player].faction) === 2
+  );
+  engine.turnOrder = baseSetupTurnOrder.concat(reverseSetupTurnOrder, extraSetupTurnOrder, expansionSetupTurnOrder);
 
   if (posIvits !== -1) {
     if (engine.players.length === 2 && engine.factionCustomization.variant === "more-balanced") {

@@ -98,3 +98,15 @@ export function startingSetupPlacements(faction: Faction): number {
       return 2;
   }
 }
+
+export function lostFleetSetupStage(faction: Faction): 1 | 2 | 3 {
+  switch (faction) {
+    case Faction.Darkanians:
+    case Faction.SpaceGiants:
+      return 2;
+    case Faction.Ivits:
+      return 3;
+    default:
+      return 1;
+  }
+}

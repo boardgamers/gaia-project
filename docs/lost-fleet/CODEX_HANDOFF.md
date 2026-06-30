@@ -8,16 +8,9 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
 
 - The user switches between Claude Code and Codex; treat the repo as shared with another session
   unless `git status --short --branch` is clean.
-- **Temporary exception: for the current Lost Fleet viewer pass, do active code work on
-  `claude/lost-fleet-viewer-support-95lled`.** `master` and that branch were identical at
-  `0e678332` when this Codex session started, and the user explicitly asked this session to
-  continue the new viewer work there first. Later in the same session the user also explicitly asked
-  to sync/push `master` so Vercel would deploy, so the current viewer-work tip now exists on both
-  branches.
-- Historical context: earlier on 2026-06-29 the project had briefly dropped the separate
-  feature-branch workflow after `claude/lost-fleet-viewer-support-95lled` was fully absorbed into
-  `master` (identical tip, `0ae1a9c`). That simplification is superseded for now by the user's later
-  branch-specific instruction above.
+- **Do active code work on `master`.** As of 2026-06-29 there is no separate long-lived feature
+  branch — `claude/lost-fleet-viewer-support-95lled` was fully absorbed into `master` and is kept
+  only as a historical ref.
 - **If your local clone is missing files this doc references** (itself, `PERFORMANCE.md`,
   `AGENTS.md`, or `viewer/src/components/SpaceMap.spec.ts`), your local `master` is stale — run
   `git fetch origin && git pull origin master` before reading anything else. `master` was
@@ -35,10 +28,8 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
 
 ## Resume Checklist
 
-1. Run `git status --short --branch` and confirm which branch you're on. For this viewer-work thread
-   it should currently be `claude/lost-fleet-viewer-support-95lled`; if your local `master` is
-   stale, still `git fetch origin && git pull origin master` first so the docs/codebase are current,
-   then switch to the active feature branch before editing.
+1. Run `git status --short --branch` and confirm you're on `master`. If your local `master` is
+   stale, `git fetch origin && git pull origin master` before editing.
 2. Read `docs/lost-fleet/PROGRESS.md` in full — start with its **Working agreements** section
    (standing instruction, not optional), then the "Done so far" list and "Next actions".
 3. Read `docs/lost-fleet/RULES_CLARIFICATIONS.md` and `COMPONENTS.md` if the task touches Lost
@@ -54,7 +45,7 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
   Federation token gold-side execution + rescoring, Space Giants' Exploration special action, the
   Scoring Board Extension's alternate Advanced Tech gate, the 6 Lost Fleet Advanced Tech tiles, and
   Examine Artifact + Artifact-token seeding are implemented and tested.
-- Engine: **470/470** tests passing (`cd engine && npm test`). Viewer: **161/161** tests passing
+- Engine: **473/473** tests passing (`cd engine && npm test`). Viewer: **161/161** tests passing
   (`cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts'
   'src/logic/**/*.spec.ts'`).
 - "Viewer Step Zero" is done: the viewer builds and type-checks clean against the Lost Fleet engine
@@ -65,10 +56,11 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
 - Lost Fleet self-contained viewer links now work: `self-contained.ts` accepts `lostFleet=1`, and
   `FactionWheel.vue` now surfaces Asteroid / Protoplanet when Lost Fleet is active. Concrete demo
   seed: `?players=2&seed=lost-fleet-space-map&lostFleet=1`.
-- Darkanians and Space Giants now correctly get only 1 setup placement in Lost Fleet setup, and the
-  viewer now uses Asteroid=pink / Protoplanet=turquoise.
-- The viewer is deployed to Vercel with Git integration; both `master` and
-  `claude/lost-fleet-viewer-support-95lled` auto-deploy on push (`master` is the production target).
+- Darkanians and Space Giants now correctly get only 1 setup placement in Lost Fleet's expansion-
+  faction stage (after base-game factions finish their normal setup, before Ivits), and the viewer
+  now uses Asteroid=pink / Protoplanet=turquoise.
+- The viewer is deployed to Vercel with Git integration; `master` auto-deploys on push and is the
+  production target.
 - `CLAUDE.md` and `AGENTS.md` at the repo root both mirror this file's read order and current state
   — they were rewritten from scratch on 2026-06-29 after being found stale (wrong branch name, dead
   Windows path, old test counts). Keep all three in sync going forward.

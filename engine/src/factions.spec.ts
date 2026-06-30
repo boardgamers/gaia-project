@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import Engine from "./engine";
 import { Expansion, Faction, Player as PlayerEnum, ResearchField } from "./enums";
-import { remainingFactions, startingSetupPlacements } from "./factions";
+import { lostFleetSetupStage, remainingFactions, startingSetupPlacements } from "./factions";
 
 describe("Factions", () => {
   it("lantids and terrans can not be chosen together", () => {
@@ -24,6 +24,14 @@ describe("Factions", () => {
     expect(startingSetupPlacements(Faction.Ivits)).to.equal(1);
     expect(startingSetupPlacements(Faction.Darkanians)).to.equal(1);
     expect(startingSetupPlacements(Faction.SpaceGiants)).to.equal(1);
+  });
+
+  it("should use the correct Lost Fleet setup stage for base, expansion, and Ivits factions", () => {
+    expect(lostFleetSetupStage(Faction.Terrans)).to.equal(1);
+    expect(lostFleetSetupStage(Faction.Xenos)).to.equal(1);
+    expect(lostFleetSetupStage(Faction.Darkanians)).to.equal(2);
+    expect(lostFleetSetupStage(Faction.SpaceGiants)).to.equal(2);
+    expect(lostFleetSetupStage(Faction.Ivits)).to.equal(3);
   });
 
   describe("balanced variant", () => {

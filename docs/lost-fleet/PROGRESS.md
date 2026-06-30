@@ -942,18 +942,19 @@ notifications).
 42. Ã¢Å“â€¦ **Lost Fleet one-mine setup factions now actually get one setup placement, and Asteroid /
     Protoplanet colors were swapped per user request, CODED & TESTED** (done 2026-06-29).
     - Engine fix: `engine/src/move/phase.ts` no longer hardcodes setup as "everyone twice, Xenos
-      three times, Ivits special-case". It now uses a new `startingSetupPlacements()` helper in
-      `engine/src/factions.ts`, so the currently coded Lost Fleet no-home-planet factions
-      (Darkanians and Space Giants) correctly receive 1 setup placement, normal factions receive 2,
-      Xenos still receive 3, and Ivits still keep their special PI-last behavior.
+      three times, Ivits special-case". It now uses new setup helpers in `engine/src/factions.ts`,
+      so Lost Fleet setup follows the rulebook's 3-stage order: base-game factions place their 2 or
+      3 mines "as usual", the currently coded expansion factions (Darkanians and Space Giants)
+      place their single starting mine afterward in clockwise turn order, and Ivits still keep
+      their PI-last behavior.
     - New engine regression coverage: `engine/src/factions.spec.ts` asserts the special setup
-      placement counts, and `engine/src/engine.spec.ts` now checks that Darkanians and Space Giants
-      enter `Phase.SetupBuilding` with only a single placement slot before Terrans' two normal
-      placements in a Lost Fleet game.
+      placement counts plus Lost Fleet setup stage, and `engine/src/engine.spec.ts` now checks that
+      Darkanians / Space Giants place after base-game factions finish setup and that Ivits still
+      remain after the expansion-faction stage.
     - Viewer color swap: `viewer/src/data/planets.ts` and `viewer/src/stylesheets/planets.css` now
       map **Asteroid Ã¢â€ â€™ pink** and **Protoplanet Ã¢â€ â€™ turquoise** (the inverse of the previous
       mapping). `viewer/src/data/planets.spec.ts` locks that mapping with a direct unit test.
-    - Verification: engine `cd engine && npm test` Ã¢â€ â€™ **470/470** passing; viewer `cd viewer && npx
+    - Verification: engine `cd engine && npm test` → **473/473** passing; viewer `cd viewer && npx
       vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'` Ã¢â€ â€™
       **161/161** passing.
 
@@ -967,12 +968,12 @@ As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
 Real test commands (don't use raw `mocha -r ts-node/register` for the viewer — it hits stricter
 TS resolution than the real webpack-based path and gives false failures; use the actual scripts):
 - Engine: `cd engine && npm test` (or `npx mocha -r ts-node/register 'src/**/*.spec.ts' 'src/*.spec.ts'`
-  — equivalent for engine, which has no webpack step). **467 tests passing as of 2026-06-29.**
+  — equivalent for engine, which has no webpack step). **473 tests passing as of 2026-06-30.**
 - Viewer: `cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'`
   (this is what `pnpm test` runs — uses `mochapack`/webpack, required for files that touch engine
-  types). **160 tests passing as of 2026-06-29.**
+  types). **161 tests passing as of 2026-06-29.**
 
-**Latest full rerun after #42:** engine **470/470**, viewer **161/161**.
+**Latest full rerun after #42:** engine **473/473**, viewer **161/161**.
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/
@@ -1193,7 +1194,7 @@ Exploration-board special action, the Scoring Board Extension's alternate Advanc
 actions' Lost Fleet overlay (§E4/§K3), an audit confirming the `terra` Advanced Tech tile
 correctly fires on every free/discounted terraforming step, not just paid ones, and Examine Artifact
 plus Twilight's Artifact-token seeding (all 13 token effects), are complete and verified —
-**467/467 engine tests pass**
+**473/473 engine tests pass**
 (274 baseline → 280 after Chunk 2 → 299 after Chunk 3 → 321 after Chunk 4 → 337 after Chunk 5 → 345
 after Chunk 6 → 352 after Chunk 7a → 353 after the German-rules reroll fix → 354 after Chunk 7b's
 placement-metadata step → 361 after Chunk 7b's `SpaceMap`/`moveInit` wiring + integration tests → 362

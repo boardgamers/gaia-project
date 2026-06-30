@@ -4,21 +4,15 @@ This repo is the active Lost Fleet worktree for this project.
 
 ## Current Branch
 
-- **Temporary exception to the earlier single-branch note: continue the current Lost Fleet viewer
-  work on `claude/lost-fleet-viewer-support-95lled`, then sync `master` when the user explicitly
-  asks for a Vercel deploy.** `master` and that branch were identical at `0e678332` when this Codex
-  session started; later in the same session the user asked to push `master` so Vercel would
-  deploy, so the current viewer-work tip now exists on both branches.
-- Historical context: earlier on 2026-06-29 the project had briefly simplified to "push directly to
-  `master`" after `claude/lost-fleet-viewer-support-95lled` was fully absorbed there. That
-  simplification is superseded for now by the user's later branch-specific request above.
+- **Push directly to `master`.** As of 2026-06-29 there is no separate long-lived feature branch —
+  `claude/lost-fleet-viewer-support-95lled` was fully absorbed into `master` and is kept only as a
+  historical ref.
 - If your local clone is missing files you'd expect (e.g. this file, `PERFORMANCE.md`,
   `CODEX_HANDOFF.md`, or `viewer/src/components/SpaceMap.spec.ts`), your local `master` is stale —
   run `git fetch origin && git pull origin master` before doing anything else. `master` was
   deliberately left untouched for most of this project's history, so an old local clone of it can
   be missing a huge amount of work that has long existed on the feature branches.
-- Note: `master` is still the Vercel production deploy target, and the current viewer-work tip has
-  already been synced there for deployment.
+- Note: `master` is the Vercel production deploy target — every push goes live immediately.
 
 ## Read Order
 
@@ -37,11 +31,12 @@ This repo is the active Lost Fleet worktree for this project.
   action, the Scoring Board Extension's alternate Advanced Tech gate, the 6 Lost Fleet Advanced
   Tech tiles, and Examine Artifact + Artifact-token seeding are all implemented and tested.
 - `new Engine([...], { lostFleet: true })` builds a real, playable Lost Fleet board.
-- Engine tests: 470/470 passing. Viewer tests: 161/161 passing.
+- Engine tests: 473/473 passing. Viewer tests: 161/161 passing.
 - The self-contained viewer can now boot Lost Fleet directly via `?lostFleet=1` (for example
   `?players=2&seed=lost-fleet-space-map&lostFleet=1`).
-- Darkanians and Space Giants now correctly place only 1 starting mine during Lost Fleet setup, and
-  the viewer now uses Asteroid=pink / Protoplanet=turquoise.
+- Darkanians and Space Giants now correctly place only 1 starting mine in Lost Fleet's expansion-
+  faction setup stage (after base-game factions finish their normal setup, before Ivits), and the
+  viewer now uses Asteroid=pink / Protoplanet=turquoise.
 - The viewer is deployed to Vercel (Git integration); `master` is the production deploy target.
 
 ## Open Work

@@ -60,15 +60,49 @@ describe("Engine", () => {
   });
 
   [Faction.Darkanians, Faction.SpaceGiants].forEach((faction) => {
-    it(`should give ${faction} only one starting placement in Lost Fleet setup`, () => {
+    it(`should place ${faction} after base-game factions finish setup in Lost Fleet`, () => {
       const engine = new Engine(["init 2 lost-fleet-one-mine"], { lostFleet: true });
 
       engine.move(`p1 faction ${faction}`);
       engine.move("p2 faction terrans");
 
       expect(engine.phase).to.equal(Phase.SetupBuilding);
-      expect([engine.currentPlayer, ...engine.turnOrder]).to.eql([PlayerEnum.Player1, PlayerEnum.Player2, PlayerEnum.Player2]);
+      expect([engine.currentPlayer, ...engine.turnOrder]).to.eql([PlayerEnum.Player2, PlayerEnum.Player2, PlayerEnum.Player1]);
     });
+  });
+
+  it("should finish base-game setup before expansion-faction setup in Lost Fleet", () => {
+    const engine = new Engine(["init 3 lost-fleet-stage-order"], { lostFleet: true });
+
+    engine.move(`p1 faction ${Faction.Darkanians}`);
+    engine.move(`p2 faction ${Faction.Terrans}`);
+    engine.move(`p3 faction ${Faction.Xenos}`);
+
+    expect(engine.phase).to.equal(Phase.SetupBuilding);
+    expect([engine.currentPlayer, ...engine.turnOrder]).to.eql([
+      PlayerEnum.Player2,
+      PlayerEnum.Player3,
+      PlayerEnum.Player3,
+      PlayerEnum.Player2,
+      PlayerEnum.Player3,
+      PlayerEnum.Player1,
+    ]);
+  });
+
+  it("should place Ivits after Lost Fleet expansion factions finish setup", () => {
+    const engine = new Engine(["init 3 lost-fleet-ivits-order"], { lostFleet: true });
+
+    engine.move(`p1 faction ${Faction.Ivits}`);
+    engine.move(`p2 faction ${Faction.Terrans}`);
+    engine.move(`p3 faction ${Faction.Darkanians}`);
+
+    expect(engine.phase).to.equal(Phase.SetupBuilding);
+    expect([engine.currentPlayer, ...engine.turnOrder]).to.eql([
+      PlayerEnum.Player2,
+      PlayerEnum.Player2,
+      PlayerEnum.Player3,
+      PlayerEnum.Player1,
+    ]);
   });
 
   it("should have passedPlayers empty at beginning of a new round", () => {
