@@ -3,9 +3,12 @@
     <div class="lost-fleet-action-row__groups">
       <section v-for="ship in ships" :key="ship" class="lost-fleet-action-row__group" :data-ship="ship">
         <header class="lost-fleet-action-row__group-head">
-          <div>
-            <div class="lost-fleet-action-row__eyebrow">{{ shipLabel(ship) }}</div>
-            <div class="lost-fleet-action-row__title">{{ shipName(ship) }}</div>
+          <div class="lost-fleet-action-row__group-title">
+            <span class="lost-fleet-ship-marker" :data-marker="shipMarker(ship)">{{ shipMarker(ship) }}</span>
+            <div>
+              <div class="lost-fleet-action-row__eyebrow">{{ shipLabel(ship) }}</div>
+              <div class="lost-fleet-action-row__title">{{ shipName(ship) }}</div>
+            </div>
           </div>
           <div class="lost-fleet-action-row__slots">
             <span
@@ -106,6 +109,13 @@ const spaceshipLabels: Record<Spaceship, string> = {
   [Spaceship.Eclipse]: "Eridani Empire",
 };
 
+const spaceshipMarkers: Record<Spaceship, string> = {
+  [Spaceship.Twilight]: "T",
+  [Spaceship.Rebellion]: "R",
+  [Spaceship.TFMars]: "M",
+  [Spaceship.Eclipse]: "E",
+};
+
 @Component({
   components: {
     SpecialAction,
@@ -130,6 +140,10 @@ export default class LostFleetShipActionsRow extends Vue {
 
   shipLabel(ship: Spaceship): string {
     return spaceshipLabels[ship];
+  }
+
+  shipMarker(ship: Spaceship): string {
+    return spaceshipMarkers[ship];
   }
 
   shipActions(ship: Spaceship) {
@@ -244,6 +258,28 @@ export default class LostFleetShipActionsRow extends Vue {
   justify-content: space-between;
   gap: 0.75rem;
   margin-bottom: 0.4rem;
+}
+
+.lost-fleet-action-row__group-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lost-fleet-ship-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  border: 1px solid #d8c57c;
+  background: #efe6c4;
+  color: #172e62;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 35%);
 }
 
 .lost-fleet-action-row__eyebrow {

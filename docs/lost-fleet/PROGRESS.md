@@ -7,7 +7,7 @@
 > anything else, including the **Testing — required going forward** section it points to — both
 > are standing process, not optional. Then ask the user "what next?" and use the **Next actions**
 > section below to guide them.
-> Last updated: **2026-06-29**.
+> Last updated: **2026-06-30**.
 
 ## Working agreements (read every session, not optional)
 1. **Before writing any implementation plan, go read the current mechanics/code it will touch
@@ -1028,6 +1028,26 @@ notifications).
       npx vue-cli-service test:unit --timeout 4000 "src/**/*.spec.ts" "src/logic/**/*.spec.ts"` →
       **166/166** passing.
 
+46. ✅ **Lost Fleet viewer map-polish slice, CODED & TESTED** (done 2026-06-30).
+    - `SpaceHex.vue` now gives Lost Fleet's non-base spaces immediate on-map identity instead of
+      relying on tooltip text alone: Interspace hexes render an `IS` badge, Deep Space hexes render
+      a `DS` badge, and spaceship hexes get a clearer Nautilaks/Vo'Kron/T F Mars/Eclipse marker with
+      an orbit ring and "Ship" pill while keeping the existing compact map rendering footprint.
+    - `SpaceMap.vue` now carries a lightweight in-map Lost Fleet legend reusing the same visual
+      language (`IS`, `DS`, `T/R/M/E`) so the extra map semantics are readable at a glance without
+      opening rules text or hovering each hex.
+    - Adjacent UI refinement landed alongside the map work instead of inventing a second visual
+      language: the compact ship-action row and the separate ship-rewards cards now both show the
+      same T/R/M/E ship markers in their headers, matching the map markers and keeping the Lost Fleet
+      ship surfaces visually tied together.
+    - New render regression coverage extends the real Lost Fleet `SpaceMap` smoke test with the new
+      visible markers (Interspace / Deep Space badges plus the map legend), and both Lost Fleet ship
+      panel specs now lock the shared marker treatment in the rendered DOM. This follows the
+      standing render-test rule from `PERFORMANCE.md` by extending the real map/panel render path
+      rather than only unit-testing helpers or class lists.
+    - Verification: viewer `cd viewer && cmd /c npx vue-cli-service test:unit --timeout 4000
+      "src/**/*.spec.ts" "src/logic/**/*.spec.ts"` → **168/168** passing.
+
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
 1. **Revised Space Sector tiles 05/06/07** — the actual planet arrangement on the Lost-Fleet-specific
@@ -1041,9 +1061,9 @@ TS resolution than the real webpack-based path and gives false failures; use the
   — equivalent for engine, which has no webpack step). **490 tests passing as of 2026-06-30.**
 - Viewer: `cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'`
   (this is what `pnpm test` runs — uses `mochapack`/webpack, required for files that touch engine
-  types). **166 tests passing as of 2026-06-30.**
+  types). **168 tests passing as of 2026-06-30.**
 
-**Latest full rerun after #45 follow-up:** engine **490/490**, viewer **166/166**.
+**Latest full rerun after #46:** engine **490/490**, viewer **168/168**.
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/
@@ -1325,8 +1345,11 @@ open, in priority order the user should pick from:
    the map, self-contained viewer links can now boot Lost Fleet directly via `lostFleet=1`, the
    faction wheel exposes Asteroid / Protoplanet. A 4th tested slice is now also done (see #44):
    Lost Fleet player pieces render in the correct turquoise/pink faction colors independently of
-   Asteroid / Protoplanet hex colors. The remaining viewer work is richer Lost Fleet map polish and
-   any further UI refinement beyond the current ship/rewards boards.
+   Asteroid / Protoplanet hex colors. A 5th tested slice is now also done (see #46): Interspace /
+   Deep Space hexes now have explicit `IS` / `DS` map badges, spaceship hexes have clearer ship
+   markers, the map has a lightweight Lost Fleet legend, and the ship action/reward panels reuse the
+   same T/R/M/E marker language. The remaining viewer work is any further map polish or panel/UI
+   refinement beyond those current markers and boards.
 3. **Revised Space Sector tiles 05/06/07** (§H4, the one remaining art-only TODO — see "Still MISSING"
    above) — would let Lost Fleet stop falling back to the base game's per-count face for those 3 tiles.
 4. Or a different unit of work entirely (viewer, Supabase), since the old blocked Tinkeroids/

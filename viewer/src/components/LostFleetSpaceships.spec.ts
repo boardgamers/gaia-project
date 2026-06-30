@@ -42,6 +42,7 @@ describe("LostFleetSpaceships", () => {
 
     expect(container.querySelectorAll(".lost-fleet-ship-card").length).to.equal(3);
     expect(container.querySelector('[data-ship="rebellion"]')).to.equal(null);
+    expect(container.querySelector('[data-ship="twilight"] [data-marker="T"]')).to.not.equal(null);
     expect(container.querySelector('[data-ship="twilight"] [data-action="qic"]')).to.equal(null);
     expect(container.querySelector('[data-ship="tfmars"] [data-section="tech"]')?.textContent).to.contain("Range +1");
     expect(container.querySelector('[data-ship="twilight"] [data-section="federation"]')?.textContent).to.contain("Tech");

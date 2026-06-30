@@ -71,6 +71,13 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
   color, while Moweyds + Space Giants use the Protoplanet-side player color. The shared `Planet.vue`
   paths also now have real Asteroid / Protoplanet SVG class coverage, and `SpaceMap.spec.ts` locks
   the split with a real render case.
+- Lost Fleet map polish has advanced one more slice: Interspace and Deep Space hexes now render
+  explicit `IS` / `DS` map badges, spaceship hexes have clearer orbit-ring ship markers, and
+  `SpaceMap.vue` carries a lightweight Lost Fleet legend so those map-only semantics are readable
+  without hovering each hex.
+- The adjacent Lost Fleet UI now reuses the same ship-marker language as the map: the compact ship
+  action row and the separate ship rewards cards both show the same T/R/M/E markers in their
+  headers, and the render tests lock that shared treatment in place.
 - The viewer no longer stalls on the last setup confirmation when Lost Fleet Tinkeroids are in the
   game: `commands.ts` now renders `ChooseTinkeringTile`, `buttons/tinkering.ts` maps the 6 tile
   choices into viewer buttons, and `Commands.spec.ts` covers the round-1 chooser regression.
@@ -88,9 +95,9 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
 Per `PROGRESS.md`'s "Next actions", in priority order:
 
 1. **Continue the new Lost Fleet UI work** — the map-rendering slice and the first compact
-   spaceship-action/rewards-board slice are done, and the turquoise/pink player-piece treatment is
-   now done too; remaining viewer work is richer map polish and any further UI refinement beyond the
-   current ship/rewards boards.
+   spaceship-action/rewards-board slice are done, the turquoise/pink player-piece treatment is done,
+   and the first richer map-polish pass is now done too; remaining viewer work is any further map
+   polish or panel/UI refinement beyond the current badges, legend, and ship-marker treatment.
 2. **Revised Space Sector tiles 05/06/07** (§H4) — the one remaining art-only TODO; needs a photo
    of the physical component.
 3. Or a different unit of work entirely (viewer, Supabase).

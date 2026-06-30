@@ -60,7 +60,12 @@ describe("SpaceMap", () => {
 
     expect(interspaceHexCount).to.be.greaterThan(0);
     expect(deepSpaceHexCount).to.be.greaterThan(0);
+    expect(container.querySelectorAll('[data-sector-type="interspace"]').length).to.equal(interspaceHexCount);
+    expect(container.querySelectorAll('[data-sector-type="deep-space"]').length).to.equal(deepSpaceHexCount);
     expect(container.querySelectorAll("g.space-hex-cell .lost-fleet-spaceship").length).to.equal(spaceshipHexCount);
+    expect(container.querySelector('[data-kind="interspace"]')).to.not.equal(null);
+    expect(container.querySelector('[data-kind="deep-space"]')).to.not.equal(null);
+    expect(container.querySelector('[data-kind="ship"]')).to.not.equal(null);
   });
 
   it("keeps Asteroid and Protoplanet planet colors while rendering Lost Fleet player pieces with the correct faction pairing", () => {

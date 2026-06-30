@@ -37,6 +37,7 @@ describe("LostFleetShipActionsRow", () => {
     expect(container.querySelectorAll(".lost-fleet-action-row__group").length).to.equal(3);
     expect(container.querySelectorAll(".lost-fleet-action-row__action").length).to.equal(9);
     expect(container.querySelector('[data-ship="rebellion"]')).to.equal(null);
+    expect(container.querySelector('[data-ship="twilight"] [data-marker="T"]')).to.not.equal(null);
     expect(container.querySelector('[data-ship="twilight"] [data-action="qic"]')?.textContent).to.contain("Used by Ada");
     expect(container.querySelector('[data-ship="twilight"] [data-slot="2"]')?.getAttribute("style")).to.contain("--slot-bg");
     expect(container.querySelector('[data-ship="eclipse"] [data-slot="4"]')?.getAttribute("title")).to.contain("Bo");

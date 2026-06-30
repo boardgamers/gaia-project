@@ -2,6 +2,15 @@
   <g :id="`${hex}`" class="space-hex-cell">
     <title v-text="tooltip" />
     <use xlink:href="#space-hex" :class="polygonClasses(hex)" @click="hexClick(hex)" />
+    <g
+      v-if="lostFleetSectorBadge"
+      :class="['lost-fleet-sector-badge', `lost-fleet-sector-badge--${lostFleetSectorBadge.kind}`]"
+      :data-sector-type="lostFleetSectorBadge.kind"
+      transform="translate(-0.84,-0.79)"
+    >
+      <rect width="0.72" height="0.34" rx="0.12" ry="0.12" />
+      <text x="0.36" y="0.17">{{ lostFleetSectorBadge.label }}</text>
+    </g>
     <use
       v-for="(l, i) in federationLines"
       :key="`fl-${i}`"
@@ -13,8 +22,11 @@
       {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
     </text>
     <g v-if="lostFleetSpaceship" class="lost-fleet-spaceship">
-      <circle r="0.42" />
-      <text>{{ lostFleetSpaceshipLabel }}</text>
+      <circle class="lost-fleet-spaceship__orbit" r="0.74" />
+      <circle class="lost-fleet-spaceship__core" r="0.42" />
+      <rect class="lost-fleet-spaceship__pill" x="-0.48" y="0.42" width="0.96" height="0.26" rx="0.12" ry="0.12" />
+      <text class="lost-fleet-spaceship__label">{{ lostFleetSpaceshipLabel }}</text>
+      <text class="lost-fleet-spaceship__copy" y="0.55">Ship</text>
     </g>
     <use v-if="powerHighlightClass" xlink:href="#space-hex" :class="['space-hex-federation', powerHighlightClass]" />
     <Planet
@@ -336,6 +348,17 @@ export default class SpaceHex extends Vue {
     return this.lostFleetSpaceship ? this.lostFleetSpaceshipLabels[this.lostFleetSpaceship] : "";
   }
 
+  get lostFleetSectorBadge(): { kind: "interspace" | "deep-space"; label: string } | null {
+    switch (this.sectorType) {
+      case LostFleetSectorType.Interspace:
+        return { kind: "interspace", label: "IS" };
+      case LostFleetSectorType.DeepSpace:
+        return { kind: "deep-space", label: "DS" };
+      default:
+        return null;
+    }
+  }
+
   private get sectorTypeLabel(): string {
     switch (this.sectorType) {
       case LostFleetSectorType.Interspace:
@@ -594,21 +617,71 @@ svg {
     pointer-events: none;
   }
 
+  .lost-fleet-sector-badge {
+    pointer-events: none;
+
+    rect {
+      stroke: rgb(255 255 255 / 35%);
+      stroke-width: 0.04px;
+    }
+
+    text {
+      fill: white;
+      font-size: 0.18px;
+      font-weight: 700;
+      text-anchor: middle;
+      dominant-baseline: central;
+      letter-spacing: 0.03em;
+    }
+
+    &--interspace rect {
+      fill: #31507f;
+    }
+
+    &--deep-space rect {
+      fill: #4b5f97;
+    }
+  }
+
   .lost-fleet-spaceship {
     pointer-events: none;
 
-    circle {
+    &__orbit {
+      fill: none;
+      stroke: #efe6c4;
+      stroke-width: 0.05;
+      stroke-dasharray: 0.11 0.06;
+      opacity: 0.9;
+    }
+
+    &__core {
       fill: #efe6c4;
       stroke: #172e62;
       stroke-width: 0.05;
     }
 
-    text {
+    &__pill {
+      fill: rgb(239 230 196 / 96%);
+      stroke: #172e62;
+      stroke-width: 0.03px;
+    }
+
+    &__label,
+    &__copy {
       fill: #172e62;
-      font-size: 0.45px;
-      font-weight: 700;
       text-anchor: middle;
       dominant-baseline: central;
+    }
+
+    &__label {
+      font-size: 0.45px;
+      font-weight: 700;
+    }
+
+    &__copy {
+      font-size: 0.16px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
     }
   }
 }

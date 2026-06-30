@@ -8,9 +8,12 @@
       <div v-for="ship in ships" :key="ship" class="col-lg-4 col-md-6 mb-3">
         <section class="lost-fleet-ship-card" :data-ship="ship">
           <header class="lost-fleet-ship-card__top">
-            <div>
-              <div class="lost-fleet-ship-card__eyebrow">{{ shipLabel(ship) }}</div>
-              <h6>{{ shipName(ship) }}</h6>
+            <div class="lost-fleet-ship-card__head">
+              <span class="lost-fleet-ship-marker" :data-marker="shipMarker(ship)">{{ shipMarker(ship) }}</span>
+              <div>
+                <div class="lost-fleet-ship-card__eyebrow">{{ shipLabel(ship) }}</div>
+                <h6>{{ shipName(ship) }}</h6>
+              </div>
             </div>
           </header>
 
@@ -94,6 +97,13 @@ const spaceshipLabels: Record<Spaceship, string> = {
   [Spaceship.Eclipse]: "Eridani Empire",
 };
 
+const spaceshipMarkers: Record<Spaceship, string> = {
+  [Spaceship.Twilight]: "T",
+  [Spaceship.Rebellion]: "R",
+  [Spaceship.TFMars]: "M",
+  [Spaceship.Eclipse]: "E",
+};
+
 const spaceshipFederationNames: Record<SpaceshipFederation, string> = {
   [SpaceshipFederation.Credit]: "Credit",
   [SpaceshipFederation.Knowledge]: "Knowledge",
@@ -158,6 +168,10 @@ export default class LostFleetSpaceships extends Vue {
 
   shipLabel(ship: Spaceship): string {
     return spaceshipLabels[ship];
+  }
+
+  shipMarker(ship: Spaceship): string {
+    return spaceshipMarkers[ship];
   }
 
   hasTechSlot(ship: Spaceship): boolean {
@@ -240,6 +254,28 @@ export default class LostFleetSpaceships extends Vue {
     font-size: 0.96rem;
     color: #172e62;
   }
+}
+
+.lost-fleet-ship-card__head {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.lost-fleet-ship-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 999px;
+  border: 1px solid #d8c57c;
+  background: #efe6c4;
+  color: #172e62;
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 35%);
 }
 
 .lost-fleet-ship-card__eyebrow {
