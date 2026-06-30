@@ -199,19 +199,26 @@
         <g transform="translate(29.3, 4.7) scale(0.9) translate(0, 1)">
           <g v-for="i in [0, 1, 2, 3]" :key="i" :transform="`translate(${(i - 2) * 3.8}, 0)`">
             <g
-              v-for="(planet, index) in planetsWithSteps(i)"
-              :key="planet"
-              :transform="`translate(0, ${(i > 0 ? (index > 0 ? 1 : -1) : 0) * 1.4})`"
+              v-for="marker in terraformingMarkers(i)"
+              :key="marker.planet"
+              :data-terraforming-step="i"
+              :data-planet="marker.planet"
+              :data-radius="marker.radius"
+              :transform="`translate(${marker.x}, ${marker.y})`"
             >
-              <circle :r="1" style="stroke-width: 0.06px !important" :class="['player-token', 'planet-fill', planet]" />
+              <circle
+                :r="marker.radius"
+                style="stroke-width: 0.06px !important"
+                :class="['player-token', 'planet-fill', marker.planet]"
+              />
               <text
-                :style="`font-size: 1.4px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(
-                  planet
+                :style="`font-size: ${marker.fontSize}px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(
+                  marker.planet
                 )}`"
               >
-                {{ player.ownedPlanetsCount[planet] }}
+                {{ player.ownedPlanetsCount[marker.planet] }}
               </text>
-              <circle :r="1" style="cursor: pointer; opacity: 0" @click="togglePlanetHighlight(planet)" />
+              <circle :r="marker.radius" style="cursor: pointer; opacity: 0" @click="togglePlanetHighlight(marker.planet)" />
             </g>
             <line x1="1.9" x2="1.9" y1="-2.3" y2="2.3" stroke-width="0.06" stroke="black" />
           </g>
@@ -287,6 +294,14 @@ import { factionData, factionName, planetsWithSteps } from "../data/factions";
 import { MapMode, MapModeType } from "../data/actions";
 import { mapModeTypeOptions } from "../data/stats";
 
+type TerraformingMarker = {
+  planet: Planet;
+  x: number;
+  y: number;
+  radius: number;
+  fontSize: number;
+};
+
 @Component({
   components: {
     TechTile,
@@ -360,7 +375,105 @@ export default class PlayerInfo extends Vue {
   }
 
   planetsWithSteps(steps: number) {
-    return planetsWithSteps(this.faction, steps);
+    return planetsWithSteps(this.faction, steps, this.playerData?.lostFleetCost3Planets ?? []);
+  }
+
+  terraformingMarkers(steps: number): TerraformingMarker[] {
+    const planets = this.planetsWithSteps(steps);
+    const rowCounts = this.terraformingRowCounts(planets.length);
+    const yPositions = this.terraformingRowYPositions(rowCounts.length);
+    const radius = this.terraformingMarkerRadius(planets.length);
+    const fontSize = this.terraformingMarkerFontSize(planets.length);
+    const markers: TerraformingMarker[] = [];
+    let planetIndex = 0;
+
+    rowCounts.forEach((count, rowIndex) => {
+      this.terraformingRowXPositions(count).forEach((x) => {
+        const planet = planets[planetIndex++];
+        if (!planet) {
+          return;
+        }
+
+        markers.push({
+          planet,
+          x,
+          y: yPositions[rowIndex],
+          radius,
+          fontSize,
+        });
+      });
+    });
+
+    return markers;
+  }
+
+  terraformingRowCounts(count: number): number[] {
+    switch (count) {
+      case 0:
+        return [];
+      case 1:
+        return [1];
+      case 2:
+        return [1, 1];
+      case 3:
+        return [1, 2];
+      case 4:
+        return [2, 2];
+      case 5:
+        return [2, 3];
+      case 6:
+        return [3, 3];
+      case 7:
+        return [2, 3, 2];
+      default: {
+        const rows = Math.ceil(count / 3);
+        const base = Math.floor(count / rows);
+        const remainder = count % rows;
+        return Array.from({ length: rows }, (_, index) => base + (index < remainder ? 1 : 0));
+      }
+    }
+  }
+
+  terraformingRowYPositions(count: number): number[] {
+    switch (count) {
+      case 1:
+        return [0];
+      case 2:
+        return [-1.35, 1.35];
+      default:
+        return [-1.55, 0, 1.55];
+    }
+  }
+
+  terraformingRowXPositions(count: number): number[] {
+    switch (count) {
+      case 1:
+        return [0];
+      case 2:
+        return [-0.95, 0.95];
+      default:
+        return [-1.2, 0, 1.2];
+    }
+  }
+
+  terraformingMarkerRadius(count: number): number {
+    if (count <= 2) {
+      return 1;
+    }
+    if (count <= 4) {
+      return 0.8;
+    }
+    return 0.66;
+  }
+
+  terraformingMarkerFontSize(count: number): number {
+    if (count <= 2) {
+      return 1.4;
+    }
+    if (count <= 4) {
+      return 1.1;
+    }
+    return 0.9;
   }
 
   get passed() {

@@ -169,7 +169,7 @@ export const factionData: {
   },
 };
 
-export function planetsWithSteps(faction: Faction, steps: number) {
+export function planetsWithSteps(faction: Faction, steps: number, cost3Planets: Planet[] = []) {
   const planet = factionPlanet(faction);
   // Planets are ordered the same as in the planet wheel
   let list = [Planet.Terra, Planet.Oxide, Planet.Volcanic, Planet.Desert, Planet.Swamp, Planet.Titanium, Planet.Ice];
@@ -179,7 +179,7 @@ export function planetsWithSteps(faction: Faction, steps: number) {
     list = list.slice(list.lastIndexOf(planet)).concat(list.slice(0, list.indexOf(planet)));
   }
 
-  return list.filter((p) => terraformingStepsRequired(faction, p) === steps);
+  return list.filter((p) => terraformingStepsRequired(faction, p, cost3Planets) === steps);
 }
 
 export function factionShortcut(faction: Faction): string {
