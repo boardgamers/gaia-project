@@ -13,6 +13,7 @@ import { brainstoneButtons, chargePowerButtons } from "./power";
 import { researchButtons, techTiles } from "./research";
 import { sectorRotationButton, setupButton } from "./setup";
 import { moveShipButton } from "./ships";
+import { chooseTinkeringTileButton } from "./tinkering";
 import { finalizeShortcutsAndParents } from "./shortcuts";
 import { AvailableConversions, CommandController } from "./types";
 import { autoClickButton, hexMap } from "./utils";
@@ -65,6 +66,9 @@ function commandButton(
     case Command.Pass:
     case Command.ChooseRoundBooster:
       return [passButton(controller, engine, player, command)];
+
+    case Command.ChooseTinkeringTile:
+      return [chooseTinkeringTileButton(command)];
 
     case Command.UpgradeResearch:
       return researchButtons(command.data.tracks, controller, player, engine.phase, engine.expansions);
