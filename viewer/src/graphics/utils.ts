@@ -1,15 +1,32 @@
-import { Expansion, Faction, factionPlanet, Planet, planetNames } from "@gaia-project/engine";
+import { Expansion, Faction, factionPlanet, Planet } from "@gaia-project/engine";
 import planets from "../data/planets";
+
+export function factionPiecePlanet(faction: Faction): Planet {
+  switch (faction) {
+    case Faction.Darkanians:
+      return Planet.Protoplanet;
+    case Faction.SpaceGiants:
+      return Planet.Asteroid;
+    default:
+      return factionPlanet(faction);
+  }
+}
+
+function planetColorVarName(planet: Planet): string {
+  return `--${Object.keys(Planet)
+    .find((key) => Planet[key] === planet)!
+    .toLowerCase()}`;
+}
 
 export function factionColor(faction: Faction | "gen"): string {
   if (faction === "gen") {
     return "#d3d3d3";
   }
-  return planets[factionPlanet(faction)].color;
+  return planets[factionPiecePlanet(faction)].color;
 }
 
 export function factionColorVar(faction: Faction) {
-  return `--${planetNames[factionPlanet(faction)]}`;
+  return planetColorVarName(factionPiecePlanet(faction));
 }
 
 export function planetColor(planet: Exclude<Planet, Planet.Empty>): string {
@@ -36,7 +53,7 @@ export function planetClass(faction: string): string {
     case "automa":
       return "gen";
     default:
-      return factionPlanet(faction as Faction);
+      return factionPiecePlanet(faction as Faction);
   }
 }
 
@@ -71,7 +88,7 @@ export function lightenDarkenColor(col: string, amt: number) {
 function newPlanetColors(amt: number) {
   return Object.fromEntries(
     Faction.values(Expansion.All).map((faction) => {
-      const planet = factionPlanet(faction);
+      const planet = factionPiecePlanet(faction);
       const color = planet == Planet.Ice ? "#000000" : planets[planet].color;
       return [faction, amt == 0 ? color : lightenDarkenColor(color, amt)];
     })
@@ -80,7 +97,7 @@ function newPlanetColors(amt: number) {
 
 export const factionLogTextColors = Object.fromEntries(
   Faction.values(Expansion.All).map((faction) => {
-    const planet = factionPlanet(faction);
+    const planet = factionPiecePlanet(faction);
     const color = planet == Planet.Ice || planet == Planet.Swamp || planet == Planet.Titanium ? "white" : "black";
     return [faction, color];
   })

@@ -1,6 +1,7 @@
-import { factionPlanet, GaiaHex, Player } from "@gaia-project/engine";
+import { GaiaHex, Player } from "@gaia-project/engine";
 import { Direction, Grid } from "hexagrid";
 import { CubeCoordinatesPartial } from "hexagrid/src/cubecoordinates";
+import { factionPiecePlanet } from "./utils";
 
 export type FederationLine = { rotate: number; id: string };
 
@@ -51,7 +52,7 @@ export function playerFederationLines(grid: Grid<GaiaHex>, hex: GaiaHex, player:
         skipped.push(r);
       }
       arcs.push({
-        id: `#federation-arc-${factionPlanet(player.faction)}`,
+        id: `#federation-arc-${factionPiecePlanet(player.faction)}`,
         rotate: rotate(direction),
       });
     }
@@ -70,7 +71,7 @@ export function playerFederationLines(grid: Grid<GaiaHex>, hex: GaiaHex, player:
       return [
         {
           rotate: rotate(direction),
-          id: `#federation-${line}-${factionPlanet(player.faction)}`,
+          id: `#federation-${line}-${factionPiecePlanet(player.faction)}`,
         },
       ];
     })

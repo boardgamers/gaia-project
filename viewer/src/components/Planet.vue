@@ -10,7 +10,8 @@
 import Vue from "vue";
 import planets from "../data/planets";
 import { Component, Prop } from "vue-property-decorator";
-import { Faction, factionPlanet, Planet as PlanetEnum } from "@gaia-project/engine";
+import { Faction, Planet as PlanetEnum } from "@gaia-project/engine";
+import { factionPiecePlanet } from "../graphics/utils";
 
 @Component
 export default class Planet extends Vue {
@@ -30,7 +31,7 @@ export default class Planet extends Vue {
   get fill() {
     // Comment for planet staying planets!
     if (this.faction) {
-      return factionPlanet(this.faction);
+      return factionPiecePlanet(this.faction);
     }
     return this.planet;
   }
@@ -121,6 +122,26 @@ svg {
       stroke-width: 0.15;
     }
 
+    // asteroid
+    &.a {
+      stroke: var(--asteroid);
+
+      &.highlighted:not(.warn) {
+        stroke-width: 0.1;
+        stroke: black;
+      }
+    }
+
+    // protoplanet
+    &.p {
+      stroke: var(--protoplanet);
+
+      &.highlighted:not(.warn) {
+        stroke-width: 0.1;
+        stroke: black;
+      }
+    }
+
     // lost planet
     &.l {
       stroke: var(--lost);
@@ -179,6 +200,16 @@ svg {
     // transdim
     &.m {
       fill: var(--transdim);
+    }
+
+    // asteroid
+    &.a {
+      fill: var(--asteroid);
+    }
+
+    // protoplanet
+    &.p {
+      fill: var(--protoplanet);
     }
 
     // lost planet

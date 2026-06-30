@@ -976,6 +976,28 @@ notifications).
       `LostFleetSpaceships.spec.ts` now locks the rewards-board-only rendering.
     - Verification: viewer `cd viewer && npx vue-cli-service test:unit --timeout 4000
       'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'` → **165/165** passing.
+44. ✅ **Lost Fleet player-piece turquoise/pink treatment, CODED & TESTED** (done 2026-06-30).
+    - The viewer had been deriving faction-colored pieces directly from `factionPlanet(...)`, which
+      is wrong for Lost Fleet's no-home-planet factions now that the planet colors are
+      Asteroid=pink / Protoplanet=turquoise. Added a separate viewer-side piece-color mapping:
+      Darkanians now render with **turquoise** pieces and Space Giants with **pink** pieces, while
+      the underlying Asteroid / Protoplanet hex colors stay unchanged.
+    - Wired that split through the real faction-colored render paths instead of a one-off override:
+      faction colors / log colors (`graphics/utils.ts`, `graphics/colors.ts`), federation-line
+      gradients (`graphics/hex.ts`), used-action owner markers (`BoardAction.vue`), map trade-token
+      / overlay planet markers (`SpaceHex.vue`), player circles (`PlayerCircle.vue`), faction
+      backgrounds (`Rules.vue`, `data/factions.ts`), and all piece paths that already flow through
+      `Planet.vue` / `planetClass(...)`.
+    - Adjacent Lost Fleet polish: `Planet.vue` itself now has real Asteroid / Protoplanet fill and
+      stroke classes (`.a` / `.p`) so those planet types render consistently in every SVG path that
+      reuses the shared planet component, including colonized-planet faction overlays.
+    - New render regression coverage: `SpaceMap.spec.ts` now mounts a real Lost Fleet board with a
+      Darkanians mine placed on an Asteroid and a Space Giants mine placed on a Protoplanet, then
+      asserts that the **planet** stays pink/turquoise while the **piece/faction overlay** renders in
+      the opposite turquoise/pink player color. This follows the standing render-test rule from
+      `PERFORMANCE.md`, extending the actual `SpaceMap` tree instead of only unit-testing helpers.
+    - Verification: viewer `cd viewer && npx vue-cli-service test:unit --timeout 4000
+      'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'` → **166/166** passing.
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -990,9 +1012,9 @@ TS resolution than the real webpack-based path and gives false failures; use the
   — equivalent for engine, which has no webpack step). **473 tests passing as of 2026-06-30.**
 - Viewer: `cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'`
   (this is what `pnpm test` runs — uses `mochapack`/webpack, required for files that touch engine
-  types). **165 tests passing as of 2026-06-30.**
+  types). **166 tests passing as of 2026-06-30.**
 
-**Latest full rerun after #43:** engine **473/473**, viewer **165/165**.
+**Latest full rerun after #44:** engine **473/473**, viewer **166/166**.
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/
@@ -1270,8 +1292,10 @@ open, in priority order the user should pick from:
    viewer is now unblocked for new Lost Fleet UI work. **Lost Fleet viewer work is now in 3 tested
    slices** (see #39, #41, and #43): Interspace / Deep Space hexes and spaceship tiles render on
    the map, self-contained viewer links can now boot Lost Fleet directly via `lostFleet=1`, the
-   faction wheel exposes Asteroid / Protoplanet. The remaining viewer work is richer Lost Fleet map polish,
-   spaceship board panels, and player-color turquoise/pink pieces per COMPONENTS.md §10.
+   faction wheel exposes Asteroid / Protoplanet. A 4th tested slice is now also done (see #44):
+   Lost Fleet player pieces render in the correct turquoise/pink faction colors independently of
+   Asteroid / Protoplanet hex colors. The remaining viewer work is richer Lost Fleet map polish and
+   any further UI refinement beyond the current ship/rewards boards.
 3. **Revised Space Sector tiles 05/06/07** (§H4, the one remaining art-only TODO — see "Still MISSING"
    above) — would let Lost Fleet stop falling back to the base game's per-count face for those 3 tiles.
 4. Or a different unit of work entirely (viewer, Supabase), ahead of any blocked item.

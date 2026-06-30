@@ -88,7 +88,6 @@ import Engine, {
   Building as BuildingEnum,
   classifySectorId,
   Faction,
-  factionPlanet,
   GaiaHex,
   LostFleetSectorType,
   Planet as PlanetEnum,
@@ -112,6 +111,7 @@ import { Ship } from "@gaia-project/engine/src/enums";
 import { MapMode, MapModeType } from "../data/actions";
 import { isFree } from "../logic/buttons/utils";
 import { max } from "lodash";
+import { factionPiecePlanet } from "../graphics/utils";
 
 type BuildingOverride = { building: BuildingEnum; player: PlayerEnum };
 @Component<SpaceHex>({
@@ -408,7 +408,7 @@ export default class SpaceHex extends Vue {
   }
 
   playerPlanet(player: PlayerEnum): PlanetEnum {
-    return factionPlanet(this.faction(player));
+    return factionPiecePlanet(this.faction(player));
   }
 
   get highlightedHexes(): HighlightHexData | null {

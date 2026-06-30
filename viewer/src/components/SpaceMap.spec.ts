@@ -1,4 +1,4 @@
-import Engine, { classifySectorId, LostFleetSectorType } from "@gaia-project/engine";
+import Engine, { Building, classifySectorId, Faction, LostFleetSectorType, Planet } from "@gaia-project/engine";
 import { render } from "@testing-library/vue";
 import { expect } from "chai";
 import fs from "fs";
@@ -61,5 +61,41 @@ describe("SpaceMap", () => {
     expect(interspaceHexCount).to.be.greaterThan(0);
     expect(deepSpaceHexCount).to.be.greaterThan(0);
     expect(container.querySelectorAll("g.space-hex-cell .lost-fleet-spaceship").length).to.equal(spaceshipHexCount);
+  });
+
+  it("keeps Asteroid and Protoplanet planet colors while rendering Lost Fleet player pieces in turquoise/pink", () => {
+    const engine = new Engine(["init 2 lost-fleet-space-map"], { lostFleet: true });
+    engine.players[0].faction = Faction.Darkanians;
+    engine.players[1].faction = Faction.SpaceGiants;
+
+    const asteroidHex = [...engine.map.grid.values()].find((hex) => !hex.occupied() && hex.data.planet === Planet.Asteroid);
+    const protoplanetHex = [...engine.map.grid.values()].find(
+      (hex) => !hex.occupied() && hex.data.planet === Planet.Protoplanet
+    );
+
+    expect(asteroidHex, "need an unoccupied Asteroid hex").to.not.equal(undefined);
+    expect(protoplanetHex, "need an unoccupied Protoplanet hex").to.not.equal(undefined);
+
+    asteroidHex.data.building = Building.Mine;
+    asteroidHex.data.player = engine.players[0].player;
+    protoplanetHex.data.building = Building.Mine;
+    protoplanetHex.data.player = engine.players[1].player;
+
+    const store = makeStore();
+    store.commit("receiveData", engine);
+    store.state.preferences.flatBuildings = true;
+
+    const { container } = render(SpaceMap, { store });
+
+    const darkaniansHex = container.querySelector(`g.space-hex-cell[id="${asteroidHex}"]`);
+    const spaceGiantsHex = container.querySelector(`g.space-hex-cell[id="${protoplanetHex}"]`);
+
+    expect(darkaniansHex?.querySelector(".planet-fill.a")).to.not.equal(null);
+    expect(darkaniansHex?.querySelector(".planet-fill.faction-fill.p")).to.not.equal(null);
+    expect(darkaniansHex?.querySelector(".building .planet-fill.p")).to.not.equal(null);
+
+    expect(spaceGiantsHex?.querySelector(".planet-fill.p")).to.not.equal(null);
+    expect(spaceGiantsHex?.querySelector(".planet-fill.faction-fill.a")).to.not.equal(null);
+    expect(spaceGiantsHex?.querySelector(".building .planet-fill.a")).to.not.equal(null);
   });
 });

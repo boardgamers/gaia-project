@@ -92,9 +92,9 @@
 import { factionDesc, factionName } from "../data/factions";
 
 import { Component, Prop, Vue } from "vue-property-decorator";
-import Engine, { Expansion, Faction, factionPlanet, factionVariantBoard, hasExpansion } from "@gaia-project/engine";
+import Engine, { Expansion, Faction, factionVariantBoard, hasExpansion } from "@gaia-project/engine";
 import { finalScoringFields, finalScoringItems } from "../logic/final-scoring-rules";
-import { factionColor, planetFill } from "../graphics/utils";
+import { factionColor, factionPiecePlanet, planetFill } from "../graphics/utils";
 import { tradeHeaders, tradeRows } from "../logic/trade-rewards";
 import RichTextView from "./Resources/RichTextView.vue";
 
@@ -154,7 +154,7 @@ export default class Rules extends Vue {
   }
 
   color(rule: Rule): string {
-    return planetFill(factionPlanet(rule as Faction));
+    return planetFill(factionPiecePlanet(rule as Faction));
   }
 
   get factionTooltip(): string {

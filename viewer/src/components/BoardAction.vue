@@ -53,7 +53,6 @@ import Engine, {
   BoardAction as BoardActionEnum,
   boardActions,
   Command,
-  factionPlanet,
   Planet,
   PlayerEnum, Reward,
 } from "@gaia-project/engine";
@@ -61,6 +60,7 @@ import Resource from "./Resource.vue";
 import SpecialAction from "./SpecialAction.vue";
 import { boardActionButton } from "../logic/buttons/actions";
 import { enabledButtonWarnings } from "../data/warnings";
+import { factionPiecePlanet } from "../graphics/utils";
 
 @Component<BoardAction>({
   components: {
@@ -108,7 +108,7 @@ export default class BoardAction extends Vue {
     const player = this.player();
     if (player != null && player !== PlayerEnum.Player5) {
       // Player5 is for converted old games
-      return factionPlanet(this.gameData.player(player).faction);
+      return factionPiecePlanet(this.gameData.player(player).faction);
     }
     return null;
   }

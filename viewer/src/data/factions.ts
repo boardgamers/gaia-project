@@ -15,7 +15,7 @@ import {
 } from "@gaia-project/engine";
 import { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
 import { GAIA_FORMER_COST } from "@gaia-project/engine/src/faction-boards/types";
-import { factionColor, planetFill } from "../graphics/utils";
+import { factionColor, factionPiecePlanet, planetFill } from "../graphics/utils";
 import { allBuildings, buildingName } from "./building";
 
 export const factionData: {
@@ -204,7 +204,7 @@ export function factionDesc(faction: Faction, variant: FactionBoardRaw | null, e
 
   return `
   <div class="faction-desc" style="background-color: ${factionColor(faction)}; color: ${planetFill(
-    factionPlanet(faction)
+    factionPiecePlanet(faction)
   )}; padding: 1rem">
     <b>Ability: </b> ${data.ability} </br>
     <b>Planetary Institute: </b> ${data.PI}<br/>

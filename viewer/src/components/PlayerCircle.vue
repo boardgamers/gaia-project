@@ -9,8 +9,9 @@
 </template>
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import Engine, { factionPlanet, AuctionVariant, Phase, Planet, Player, PlayerEnum } from "@gaia-project/engine";
+import Engine, { AuctionVariant, Phase, Planet, Player, PlayerEnum } from "@gaia-project/engine";
 import { phaseBeforeSetupBuilding } from "../logic/utils";
+import { factionPiecePlanet } from "../graphics/utils";
 
 @Component
 export default class PlayerCircle extends Vue {
@@ -56,11 +57,11 @@ export default class PlayerCircle extends Vue {
 
   planet() {
     if (this.phaseBeforeSetupBuilding()) {
-      return this.gameData.setup[this.index] ? factionPlanet(this.gameData.setup[this.index]) : Planet.Lost;
+      return this.gameData.setup[this.index] ? factionPiecePlanet(this.gameData.setup[this.index]) : Planet.Lost;
     }
 
     if (this.player?.faction) {
-      return factionPlanet(this.player.faction);
+      return factionPiecePlanet(this.player.faction);
     }
 
     return Planet.Lost;
