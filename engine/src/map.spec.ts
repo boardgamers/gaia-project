@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { Hex } from "hexagrid";
 import Engine from "./engine";
-import { Planet } from "./enums";
+import { Faction, Planet, Player } from "./enums";
 import { generateLostFleetBoard } from "./lost-fleet-board";
 import { deepSpaceTileCount, interspaceSet, lostFleetSectorCenters } from "./lost-fleet-map";
 import SpaceMap, { MapConfiguration } from "./map";
@@ -115,6 +115,17 @@ describe("Map", () => {
           [...board.grid.values()].map((h) => h.toJSON())
         );
         expect(map.grid.size).to.equal(expectedHexCount(nbPlayers));
+      }
+    });
+
+    it("should exclude spaceship hexes from federation satellite routing", () => {
+      const map = new SpaceMap(3, "lost-fleet-federation-ship-hexes", false, "standard", true);
+      const excluded = map.excludedHexesForBuildingFederation(Player.Player1, Faction.Terrans);
+      const shipHexes = [...map.grid.values()].filter((hex) => hex.hasSpaceship());
+
+      expect(shipHexes).to.not.be.empty;
+      for (const shipHex of shipHexes) {
+        expect(excluded.has(shipHex), `${shipHex.toString()} should be excluded from federation paths`).to.be.true;
       }
     });
 

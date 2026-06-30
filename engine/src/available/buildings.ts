@@ -171,7 +171,7 @@ export function possibleSpaceStations(engine: Engine, player: Player): Available
 
   for (const hex of map.toJSON()) {
     // We can't put a space station where we already have a satellite
-    if (hex.occupied() || hex.hasPlanet() || hex.belongsToFederationOf(player)) {
+    if (hex.hasSpaceship() || hex.occupied() || hex.hasPlanet() || hex.belongsToFederationOf(player)) {
       continue;
     }
 
@@ -250,7 +250,7 @@ export function possibleSpaceLostPlanet(engine: Engine, player: Player) {
 
   for (const hex of engine.map.toJSON()) {
     // exclude existing planets, satellites and space stations
-    if (hex.data.planet !== Planet.Empty || hex.data.federations || hex.data.building) {
+    if (hex.hasSpaceship() || hex.data.planet !== Planet.Empty || hex.data.federations || hex.data.building) {
       continue;
     }
     const qicNeeded = qicForDistance(engine.map, hex, p, engine.replay);

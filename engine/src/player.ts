@@ -301,6 +301,10 @@ export default class Player extends EventEmitter {
       addedCost = [];
     }
 
+    if (hex?.hasSpaceship() && !isShip(building)) {
+      return null;
+    }
+
     if (!this.data.canPay(addedCost)) {
       return null;
     }

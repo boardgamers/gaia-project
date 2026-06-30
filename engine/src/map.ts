@@ -351,6 +351,11 @@ export default class SpaceMap {
     const ret: Set<GaiaHex> = new Set();
 
     for (const hex of this.grid.values()) {
+      if (hex.hasSpaceship()) {
+        ret.add(hex);
+        continue;
+      }
+
       // A planet not occupied by the player can't be used to build a federation
       if (hex.data.planet !== Planet.Empty && !hex.colonizedBy(player)) {
         ret.add(hex);

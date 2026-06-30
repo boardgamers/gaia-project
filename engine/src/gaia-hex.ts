@@ -41,6 +41,10 @@ export class GaiaHex extends Hex<GaiaHexData> {
     return this.data.player !== undefined;
   }
 
+  hasSpaceship(): boolean {
+    return this.data.spaceship !== undefined;
+  }
+
   occupyingPlayers(): Player[] {
     if (this.data.player === undefined) {
       return [];

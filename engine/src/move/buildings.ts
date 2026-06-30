@@ -54,6 +54,7 @@ export function moveLostPlanet(
   assert(data, `Impossible to place lost planet at ${location}`);
 
   const hex = engine.map.getS(location);
+  assert(!hex.hasSpaceship(), "Can't place the Lost Planet on a spaceship hex");
   hex.data.planet = Planet.Lost;
 
   // As the geometry of the universe changed, federations are possibly invalid.
