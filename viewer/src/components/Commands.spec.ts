@@ -1,4 +1,4 @@
-import Engine, { Building, Command, Faction, Phase, PlayerEnum, Spaceship } from "@gaia-project/engine";
+import Engine, { Building, Command, Faction, Phase, PlayerEnum, Spaceship, SpaceshipFederation } from "@gaia-project/engine";
 import { render, fireEvent } from "@testing-library/vue";
 import BootstrapVue from "bootstrap-vue";
 import { expect } from "chai";
@@ -6,6 +6,7 @@ import Vue from "vue";
 import { mount } from "@vue/test-utils";
 import { makeStore } from "../store";
 import Commands from "./Commands.vue";
+import { GaiaHex } from "@gaia-project/engine/src/gaia-hex";
 
 Vue.use(BootstrapVue);
 
@@ -30,6 +31,47 @@ describe("Commands", () => {
     engine.currentPlayer = PlayerEnum.Player1;
 
     return engine;
+  }
+
+  function occupyConnectedPlanets(engine: Engine, player: PlayerEnum, count: number): GaiaHex[] {
+    const pl = engine.player(player);
+    const start = [...engine.map.grid.values()].find((hex) => hex.hasPlanet() && hex.data.spaceship === undefined && !hex.occupied());
+
+    expect(start, "need a starting planet for federation setup").to.not.equal(undefined);
+
+    const queue: GaiaHex[] = [start!];
+    const visited = new Set<GaiaHex>();
+    const cluster: GaiaHex[] = [];
+
+    while (queue.length > 0 && cluster.length < count) {
+      const hex = queue.shift()!;
+      if (visited.has(hex)) {
+        continue;
+      }
+
+      visited.add(hex);
+
+      if (hex.hasPlanet() && hex.data.spaceship === undefined && !hex.occupied()) {
+        cluster.push(hex);
+        for (const neighbor of engine.map.grid.neighbours(hex)) {
+          if (!visited.has(neighbor)) {
+            queue.push(neighbor);
+          }
+        }
+      }
+    }
+
+    expect(cluster, `need ${count} connected planets for federation setup`).to.have.length(count);
+
+    for (const hex of cluster) {
+      hex.data.player = player;
+      hex.data.building = Building.Mine;
+      pl.data.occupied.push(hex);
+    }
+
+    pl.data.buildings[Building.Mine] = pl.data.occupied.length;
+
+    return cluster;
   }
 
   it("renders Lost Fleet faction picker dots with Asteroid/Protoplanet colors", () => {
@@ -155,5 +197,59 @@ describe("Commands", () => {
       0,
       "temporary +3 range should extend the empty-hex overlay beyond the player's base range"
     );
+  });
+
+  it("renders ship federation claim choices when forming a Lost Fleet federation", async () => {
+    const engine = createLostFleetRoundMoveEngine();
+    const player = engine.player(PlayerEnum.Player1);
+    const federationCluster = occupyConnectedPlanets(engine, PlayerEnum.Player1, 6);
+    const previousMatchMedia = window.matchMedia;
+
+    (window as any).matchMedia = () =>
+      ({
+        matches: true,
+        addListener: () => undefined,
+        removeListener: () => undefined,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+        dispatchEvent: () => false,
+      }) as MediaQueryList;
+
+    try {
+      federationCluster[0].data.building = Building.ResearchLab;
+      player.data.buildings[Building.Mine] = federationCluster.length - 1;
+      player.data.buildings[Building.ResearchLab] = 1;
+      player.data.explorationShips[Spaceship.Twilight] = 1;
+      engine.tiles.spaceshipFederations[Spaceship.Twilight] = SpaceshipFederation.Credit;
+      engine.generateAvailableCommandsIfNeeded();
+
+      const store = makeStore();
+      store.commit("receiveData", engine);
+
+      const { container } = render(Commands, {
+        props: { currentMove: "" },
+        store,
+      });
+
+      const visibleButtons = () =>
+        Array.from(container.querySelectorAll<HTMLButtonElement>("#move-buttons button.move-button")).filter(
+          (button) => !button.classList.contains("d-none")
+        );
+      const buttonWithText = (text: string) =>
+        visibleButtons().find((button) => button.textContent?.includes(text)) ?? null;
+
+      await fireEvent.click(buttonWithText("Form federation")!);
+      await Vue.nextTick();
+      expect(visibleButtons().some((button) => button.textContent?.includes("Location 1"))).to.equal(true);
+
+      await fireEvent.click(buttonWithText("Location 1")!);
+      await Vue.nextTick();
+
+      const labels = visibleButtons().map((button) => button.textContent?.trim() ?? "");
+      expect(labels.some((label) => label.includes("8vp,q"))).to.equal(true);
+      expect(labels.some((label) => label.includes("8vp,8c"))).to.equal(true);
+    } finally {
+      (window as any).matchMedia = previousMatchMedia;
+    }
   });
 });
