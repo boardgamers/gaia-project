@@ -1425,11 +1425,10 @@ open, in priority order the user should pick from:
 4. ~~Or a different unit of work entirely (viewer, Supabase)~~ — **Supabase multiplayer is DONE**
    (see "Done so far" #47 and `BACKEND.md`), pending two ~5-minute owner actions listed in
    `BACKEND.md` §11: deploy the `notify` Edge Function and set the Supabase Auth URL
-   configuration. Natural follow-ups once real games run: merge the
-   `claude/backend-state-multiplayer-sbhf6c-bov526` branch to `master` after review (this chunk
-   deliberately did NOT push to master — owner wants to review backend infra before it
-   auto-deploys), then later niceties like the Phase-2 snapshot cache (BACKEND.md §8), lobby
-   polish, or realtime lobby updates.
+   configuration. The `claude/backend-state-multiplayer-sbhf6c-bov526` branch was merged to
+   `master` on owner instruction 2026-07-01 (fast-forward), so the hosted mode is live on the
+   production Vercel deploy. Natural follow-ups once real games run: the Phase-2 snapshot cache
+   (BACKEND.md §8), lobby polish, or realtime lobby updates.
 
 Confirm with the user before starting any of the above.
 
