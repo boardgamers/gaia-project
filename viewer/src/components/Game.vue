@@ -39,10 +39,10 @@
         <TurnOrder v-if="!ended && engine.players.length > 0" class="col-md-4 order-4 order-md-1" />
         <div class="col-md-8 order-1 order-md-2">
           <Commands @command="handleCommand" v-if="canPlay" :currentMove="currentMove" />
-          <div v-else-if="player != null && !ended" class="current-player">
+          <div v-else-if="turnPlayer && !ended" class="current-player">
             <h5>Current player</h5>
             <svg viewBox="-1.2 -1.2 2.5 4.5">
-              <PlayerCircle :player="engine.players[player]" />
+              <PlayerCircle :player="turnPlayer" />
             </svg>
           </div>
         </div>
@@ -293,6 +293,15 @@ export default class Game extends Vue {
 
   get player() {
     return currentPlayer(this.engine);
+  }
+
+  get turnPlayer() {
+    const player = this.player;
+    if (player == null) {
+      return undefined;
+    }
+
+    return this.engine.players[player];
   }
 
   get sessionPlayer() {

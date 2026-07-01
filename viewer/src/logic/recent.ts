@@ -45,8 +45,8 @@ export function movesToHexes(data: Engine, moves: CommandObject[]): GaiaHex[] {
 
 const outOfTurn = [Command.ChargePower, Command.BrainStone, Command.ChooseIncome, Command.Decline];
 
-export function ownTurn(move: ParsedMove): boolean {
-  return move.commands.some((c) => !outOfTurn.includes(c.command));
+export function ownTurn(move?: ParsedMove): boolean {
+  return !!move && move.commands.some((c) => !outOfTurn.includes(c.command));
 }
 
 export function parsedMove(move: string): ParsedMove {
