@@ -7,6 +7,7 @@ import { mount } from "@vue/test-utils";
 import { makeStore } from "../store";
 import Commands from "./Commands.vue";
 import { GaiaHex } from "@gaia-project/engine/src/gaia-hex";
+import { loadScenarioEngine } from "../self-contained-scenarios";
 
 Vue.use(BootstrapVue);
 
@@ -251,5 +252,67 @@ describe("Commands", () => {
     } finally {
       (window as any).matchMedia = previousMatchMedia;
     }
+  });
+
+  it("renders Lost Fleet ship tech choices in the normal tech-pick command", async () => {
+    const engine = loadScenarioEngine("lost-fleet-ship-tech-claim");
+    const prefix = engine.player(engine.currentPlayer).faction;
+    const partial = Engine.fromData(JSON.parse(JSON.stringify(engine)));
+
+    partial.move(`${prefix} ${Command.SpaceshipAction} rebellion qic`);
+    partial.generateAvailableCommandsIfNeeded();
+
+    const store = makeStore();
+    store.commit("receiveData", partial);
+
+    const { container } = render(Commands, {
+      props: { currentMove: `${prefix} ${Command.SpaceshipAction} rebellion qic` },
+      store,
+    });
+
+    const visibleButtons = () =>
+      Array.from(container.querySelectorAll<HTMLButtonElement>("#move-buttons button.move-button")).filter(
+        (button) => !button.classList.contains("d-none")
+      );
+    const labels = () =>
+      visibleButtons().map(
+        (button) => button.textContent?.trim() ?? ""
+      );
+
+    expect(labels()).to.include("Pick tech tile");
+
+    const chooseTechButton = visibleButtons().find((button) => button.textContent?.includes("Pick tech tile"));
+    expect(chooseTechButton).to.not.equal(undefined);
+
+    await fireEvent.click(chooseTechButton!);
+    await Vue.nextTick();
+
+    const expandedLabels = labels();
+
+    expect(expandedLabels).to.include("Pick tech tile");
+    expect(expandedLabels.some((label) => label.includes("1o3k"))).to.equal(true);
+    expect(
+      Array.from(container.querySelectorAll<SVGElement>("#move-buttons svg.techTile")).some((tile) =>
+        tile.classList.contains(Spaceship.Rebellion)
+      )
+    ).to.equal(true);
+  });
+
+  it("renders Moweyds' power-ring special action without crashing", () => {
+    const engine = loadScenarioEngine("lost-fleet-moweyds-power-ring");
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(Commands, {
+      props: { currentMove: "" },
+      store,
+    });
+
+    const labels = () =>
+      Array.from(container.querySelectorAll<HTMLButtonElement>("#move-buttons button.move-button")).map(
+        (button) => button.textContent?.trim() ?? ""
+      );
+
+    expect(labels()).to.include("Special Action");
   });
 });

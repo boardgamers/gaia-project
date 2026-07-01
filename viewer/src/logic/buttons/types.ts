@@ -1,5 +1,5 @@
 import { AvailableFreeActionData, BoardAction, Command, GaiaHex } from "@gaia-project/engine";
-import { AnyTechTilePos } from "@gaia-project/engine/src/enums";
+import { AnyTechTilePos, Spaceship } from "@gaia-project/engine/src/enums";
 import { CubeCoordinates } from "hexagrid";
 import { ActionPayload, SubscribeActionOptions, SubscribeOptions } from "vuex";
 import { EmitCommandParams } from "../../components/Commands.vue";
@@ -41,7 +41,7 @@ export interface CommandController {
 
   highlightResearchTiles(tiles: string[]);
 
-  highlightTechs(techs: Array<AnyTechTilePos>);
+  highlightTechs(techs: Array<AnyTechTilePos | Spaceship>);
 
   activate(button: ButtonData | null);
 

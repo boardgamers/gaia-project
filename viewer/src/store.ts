@@ -1,5 +1,5 @@
 import Engine, { BoardAction, Command, Faction, GaiaHex, Player, ResearchField } from "@gaia-project/engine";
-import { AnyTechTilePos } from "@gaia-project/engine/src/enums";
+import { AnyTechTilePos, Spaceship } from "@gaia-project/engine/src/enums";
 import { CubeCoordinates } from "hexagrid";
 import Vue, { markRaw } from "vue";
 import Vuex from "vuex";
@@ -130,7 +130,7 @@ const gaiaViewer = {
       state.context.highlighted.researchTiles = new Set(tiles);
     },
 
-    highlightTechs(state: State, techs: Array<AnyTechTilePos>) {
+    highlightTechs(state: State, techs: Array<AnyTechTilePos | Spaceship>) {
       state.context.highlighted.techs = new Set(techs);
     },
 
@@ -214,7 +214,7 @@ const gaiaViewer = {
     // No body, used for signalling with store.subscribeAction
     hexClick(context: any, hex: GaiaHex, highlight?: HighlightHex) {},
     researchClick(context: any, field: ResearchField) {},
-    techClick(context: any, pos: AnyTechTilePos) {},
+    techClick(context: any, pos: AnyTechTilePos | Spaceship) {},
     fastConversionClick(context: any, event: FastConversionEvent) {},
     specialActionClick(context: any, action: SpecialActionIncome) {},
     boardActionClick(context: any, action: BoardAction) {},

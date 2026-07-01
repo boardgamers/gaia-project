@@ -1,4 +1,5 @@
 import Engine from "@gaia-project/engine";
+import { Spaceship, SpaceshipTechTile } from "@gaia-project/engine/src/enums";
 import { render } from "@testing-library/vue";
 import { expect } from "chai";
 import { makeStore } from "../store";
@@ -46,5 +47,26 @@ describe("PlayerInfo terraforming strip", () => {
     container.querySelectorAll('[data-terraforming-step="1"]').forEach((marker) => {
       expect(Number(marker.getAttribute("data-radius"))).to.be.lessThan(1);
     });
+  });
+
+  it("renders claimed Lost Fleet ship tech tiles on the player board", () => {
+    const engine = new Engine(["init 2 player-info-ship-tech", "p1 faction terrans", "p2 faction hadsch-hallas"], {
+      lostFleet: true,
+    });
+
+    engine.players[0].data.tiles.techs.push({
+      tile: SpaceshipTechTile.Resource,
+      pos: Spaceship.Rebellion,
+      enabled: true,
+    });
+
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(PlayerInfo, { props: { player: engine.players[0] }, store });
+    const shipTech = container.querySelector<SVGElement>("svg.techTile.rebellion");
+
+    expect(shipTech).to.not.equal(null);
+    expect(shipTech?.textContent).to.contain("1o3k");
   });
 });

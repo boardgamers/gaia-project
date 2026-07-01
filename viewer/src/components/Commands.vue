@@ -69,6 +69,7 @@ import Engine, {
   Player,
   Resource,
   Reward,
+  Spaceship,
   SpaceMap,
   TechTilePos,
 } from "@gaia-project/engine";
@@ -496,7 +497,7 @@ export default class Commands extends Vue implements CommandController {
     this.$store.commit("highlightResearchTiles", tiles);
   }
 
-  highlightTechs(techs: Array<TechTilePos | AdvTechTilePos>) {
+  highlightTechs(techs: Array<TechTilePos | AdvTechTilePos | Spaceship>) {
     this.$store.commit("highlightTechs", techs);
   }
 

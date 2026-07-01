@@ -23,7 +23,11 @@
         filter="url(#shadow-1)"
       />
       <!--<text class="title" x="-25" y="-18">{{title}}</text>-->
-      <TechContent :event="this.event" style="pointer-events: none" />
+      <TechContent v-if="this.event" :event="this.event" style="pointer-events: none" />
+      <template v-else>
+        <text class="title spaceship-title" x="0" y="-12">{{ spaceshipTitle }}</text>
+        <text class="content smaller spaceship-label" x="0" y="6">{{ spaceshipLabel }}</text>
+      </template>
     </g>
   </svg>
 </template>
@@ -34,8 +38,11 @@ import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   AdvTechTile,
   AdvTechTilePos,
+  Expansion,
   Event,
   PlayerEnum,
+  Spaceship,
+  SpaceshipTechTile,
   TechTile as TechTileEnum,
   TechTilePos,
 } from "@gaia-project/engine";
@@ -45,6 +52,7 @@ import { ButtonData } from "../data";
 import { prependShortcut } from "../logic/buttons/shortcuts";
 import { techTileData } from "../data/tech-tiles";
 import { techTileEventWithSource } from "@gaia-project/engine/src/tiles/techs";
+import { spaceshipTechSpec } from "@gaia-project/engine/src/tiles/spaceship-techs";
 
 @Component({
   components: {
@@ -53,7 +61,7 @@ import { techTileEventWithSource } from "@gaia-project/engine/src/tiles/techs";
 })
 export default class TechTile extends Vue {
   @Prop()
-  pos: TechTilePos | AdvTechTilePos;
+  pos: TechTilePos | AdvTechTilePos | Spaceship;
 
   @Prop()
   player: PlayerEnum;
@@ -68,7 +76,7 @@ export default class TechTile extends Vue {
   disableTooltip?: boolean;
 
   @Prop()
-  tileOverride: TechTileEnum | AdvTechTile;
+  tileOverride: TechTileEnum | AdvTechTile | SpaceshipTechTile;
 
   @Prop()
   commandOverride: string;
@@ -89,14 +97,29 @@ export default class TechTile extends Vue {
   }
 
   get tileObject() {
+    if (this.isSpaceshipPos(this.pos)) {
+      return this.engine.tiles.spaceshipTechs[this.pos];
+    }
     return this.engine.tiles.techs[this.pos];
   }
 
-  get tile(): TechTileEnum | AdvTechTile {
-    return this.tileOverride ?? this.tileObject.tile;
+  get tile(): TechTileEnum | AdvTechTile | SpaceshipTechTile | undefined {
+    if (this.tileOverride) {
+      return this.tileOverride;
+    }
+
+    if (this.player !== undefined && this.isSpaceshipPos(this.pos)) {
+      return this.engine.players[this.player]?.data.tiles.techs.find((tech) => tech.pos === this.pos)?.tile;
+    }
+
+    return this.tileObject?.tile;
   }
 
-  get event(): Event {
+  get event(): Event | null {
+    if (this.tile == null || this.isSpaceshipTile(this.tile)) {
+      return null;
+    }
+
     return techTileEventWithSource(this.tile, null)[0];
   }
 
@@ -111,7 +134,7 @@ export default class TechTile extends Vue {
   }
 
   get isAdvanced() {
-    return this.tile.startsWith("adv");
+    return typeof this.tile === "string" && this.tile.startsWith("adv");
   }
 
   get engine(): Engine {
@@ -122,9 +145,30 @@ export default class TechTile extends Vue {
     if (this.disableTooltip) {
       return null;
     }
-    const desc = eventDesc(this.event, this.engine.expansions);
+
+    if (this.tile == null) {
+      return null;
+    }
+
+    const desc = this.isSpaceshipTile(this.tile) ? spaceshipTechSpec[this.tile] : eventDesc(this.event, this.engine.expansions);
     const s = techTileData(this.tile).shortcut;
     return this.shortcut && s.length == 1 ? prependShortcut(s, desc) : desc;
+  }
+
+  get spaceshipTitle() {
+    return this.tile != null ? techTileData(this.tile).shortcut : "";
+  }
+
+  get spaceshipLabel() {
+    return this.tile != null ? techTileData(this.tile).name : "";
+  }
+
+  isSpaceshipPos(pos: TechTilePos | AdvTechTilePos | Spaceship): pos is Spaceship {
+    return Spaceship.values(Expansion.LostFleet).includes(pos as Spaceship);
+  }
+
+  isSpaceshipTile(tile: TechTileEnum | AdvTechTile | SpaceshipTechTile): tile is SpaceshipTechTile {
+    return Object.values(SpaceshipTechTile).includes(tile as SpaceshipTechTile);
   }
 }
 </script>
@@ -138,6 +182,7 @@ svg {
       font-weight: bold;
       pointer-events: none;
       fill: white;
+      text-anchor: middle;
     }
     .content {
       font-size: 11px;
@@ -151,6 +196,10 @@ svg {
 
     .tech-border {
       fill: var(--tech-tile);
+    }
+
+    .spaceship-label {
+      text-anchor: middle;
     }
 
     &.advanced .tech-border {

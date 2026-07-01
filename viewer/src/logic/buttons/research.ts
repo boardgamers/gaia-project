@@ -8,8 +8,10 @@ import {
   Phase,
   Player,
   Reward,
+  SpaceshipTechTile,
 } from "@gaia-project/engine";
 import { researchEvents } from "@gaia-project/engine/src/research-tracks";
+import { spaceshipTechSpec } from "@gaia-project/engine/src/tiles/spaceship-techs";
 import { techTileEvents } from "@gaia-project/engine/src/tiles/techs";
 import { ButtonData, ButtonWarning } from "../../data";
 import { eventDesc } from "../../data/event";
@@ -21,6 +23,26 @@ import { resourceWasteWarning } from "./warnings";
 
 function onceEventRewards(events: Event[], player: Player): Reward[] {
   return events.filter((e) => e.operator == Operator.Once).flatMap((e) => player.eventConditionRewards(e));
+}
+
+function isSpaceshipTechTile(tile: ChooseTechTile): tile is Extract<ChooseTechTile, { tile: SpaceshipTechTile }> {
+  return Object.values(SpaceshipTechTile).includes(tile.tile as SpaceshipTechTile);
+}
+
+function techChoiceLabel(tile: ChooseTechTile, expansions: Expansion): string {
+  if (isSpaceshipTechTile(tile)) {
+    return spaceshipTechSpec[tile.tile];
+  }
+
+  return eventDesc(techTileEvents(tile)[0], expansions);
+}
+
+function techChoiceWarning(tile: ChooseTechTile, player: Player | null): ButtonWarning | null {
+  if (player == null || isSpaceshipTechTile(tile)) {
+    return null;
+  }
+
+  return resourceWasteWarning(player, onceEventRewards(techTileEvents(tile), player));
 }
 
 function advanceResearchWarning(
@@ -80,12 +102,9 @@ export function techTiles(
       return symbolButton({
         command: tile.pos,
         shortcuts: [techTileData(tile.tile).shortcut],
-        label: eventDesc(techTileEvents(tile)[0], expansions),
-        warning:
-          playerForWarning != null
-            ? resourceWasteWarning(playerForWarning, onceEventRewards(techTileEvents(tile), playerForWarning))
-            : null,
-        richText: [{ tech: { pos: tile.pos } }],
+        label: techChoiceLabel(tile, expansions),
+        warning: techChoiceWarning(tile, playerForWarning),
+        richText: [{ tech: { pos: tile.pos, tile: tile.tile } }],
       });
     }),
     onClick: (button) => {
