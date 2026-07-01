@@ -44,6 +44,7 @@ create table games (
   status        text not null default 'active' check (status in ('active', 'finished')),
   current_seat  int,                                    -- engine.playerToMove after last commit; null when finished
   move_count    int not null default 0,                 -- = max(moves.seq); maintained only by commit_turn()
+  last_committed_by uuid,                               -- who committed last (notify skips self-notifications)
   -- Phase 2 (optional fast-boot cache, see §8) — columns exist but stay null in v1:
   cached_state       jsonb,
   cached_state_moves int
@@ -69,6 +70,24 @@ create table moves (
   committed_at timestamptz not null default now(),
   committed_by uuid not null references auth.users (id),
   primary key (game_id, seq)       -- append-only + race-safe: a stale double-commit is a PK conflict
+);
+
+-- §6 (push notifications, post-amendment):
+create table push_subscriptions (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references auth.users (id) on delete cascade,
+  endpoint   text not null unique,                      -- browser push service URL
+  p256dh     text not null,                             -- client public key
+  auth       text not null,                             -- client auth secret
+  user_agent text,
+  created_at timestamptz not null default now()
+);
+
+-- Service-role-only config (RLS on, zero policies): VAPID keypair + notify function URL/key,
+-- seeded directly into the live DB, never committed to the repo.
+create table app_config (
+  key   text primary key,
+  value jsonb not null
 );
 ```
 
@@ -181,22 +200,36 @@ RLS enabled on all three tables. One membership predicate, used everywhere
 - Realtime `postgres_changes` respects these SELECT policies, so move broadcasts only reach
   seated players. `moves` is added to the `supabase_realtime` publication in the migration.
 
-## 6. Email turn notifications (§J4)
+## 6. Turn notifications — Web Push (§J4 as AMENDED by owner ruling 2026-07-01)
 
-- Postgres trigger (Supabase Database Webhook, i.e. `pg_net`) fires on `games` UPDATE (when
-  `current_seat` or `status` changed) and on `games` INSERT (invites) → calls Edge Function
-  `notify`.
-- `notify` (Deno, `supabase/functions/notify/`, secrets via Supabase env): looks up the next
-  seat's email + game name, sends **"Your turn in <game> — <link>"**; skips when the next
-  player *is* the committer (e.g. chained decisions); on `finished`, mails everyone the
-  final-scores link. It never runs the engine — everything it needs is denormalized on `games`.
-- Provider: **Resend** (trivial API, generous free tier) — but its custom sender requires a
-  verified domain → **open question Q1 below**. The provider call is one `fetch` in one
-  function, so swapping providers later is a 10-line change.
+> Original plan was email-first per the old §J4; the owner overruled it on review: **push
+> notifications only, no turn-change emails** (owner doesn't check email / doesn't want spam).
+> §J4 in RULES_CLARIFICATIONS.md carries the amendment. The only emails left in the system are
+> Supabase Auth's built-in magic-link sign-in emails. Upside: no third-party email provider,
+> no domain verification — Web Push is free and provider-less (browser push services + VAPID).
+
+- **Subscriptions:** a `push_subscriptions` table (user_id, endpoint unique, `p256dh`/`auth`
+  keys). The viewer registers a service worker and, on an explicit "Enable notifications"
+  button (permission prompts require a user gesture), calls `pushManager.subscribe()` with the
+  VAPID public key and upserts the subscription. Per-user, multi-device.
+- **Trigger:** Postgres trigger (`pg_net`) on `games` INSERT (invites) and UPDATE of
+  `current_seat`/`status` → HTTP POST `{game_id, type}` to Edge Function `notify`. The
+  function URL + anon key live in an `app_config` table (RLS on, no policies → service-role
+  only), so nothing project-specific is hardcoded in the committed migration.
+- **`notify` Edge Function** (`supabase/functions/notify/`): service-role reads of
+  `games`/`players`/`push_subscriptions` + the VAPID keypair from `app_config`; sends
+  **"Your turn in <game>"** push (deep link `?game=<id>`) to every subscription of the seat
+  now on turn, skipping when that user *is* the committer (`games.last_committed_by`); on
+  `finished`, pushes final-scores to everyone; on game creation, pushes an invite notice to
+  invitees who already have accounts+subscriptions. Dead subscriptions (HTTP 404/410 from the
+  push service) are deleted. It never runs the engine — everything it needs is denormalized
+  on `games`.
+- **Accepted caveats (owner acknowledged):** iOS needs the viewer installed to the home screen
+  as a PWA (iOS 16.4+) before push works; each device grants permission once; a player with no
+  subscribed device gets no notification (game unaffected). First-time invitees can't receive
+  an invite push (no account yet) — the host shares the game link out-of-band once.
 - Known cosmetic wart, accepted for v1: a leech chain produces a couple of rapid turn-change
-  emails. Fine for a friend group; debounce later if it annoys.
-- PWA push: explicitly deferred (locked decision); email remains the baseline forever
-  (iOS push needs an installed PWA, 16.4+).
+  pushes. Fine for a friend group; debounce later if it annoys.
 
 ## 7. Viewer integration
 
@@ -249,14 +282,15 @@ data loss.
 5. `notify` Edge Function + trigger (turn emails + invite emails + finished emails).
 6. PROGRESS.md updates as each piece lands.
 
-## 10. Open questions for the owner (blocking implementation start)
+## 10. Open questions — RESOLVED (owner, 2026-07-01: "whatever you recommend is fine", plus
+the push-over-email override)
 
-- **Q1 — Email sender:** Resend needs a verified domain for a custom `from:` address. Do you
-  own a domain to verify, or prefer a different provider (Brevo/Mailgun/Postmark all work,
-  all need some sender verification)? This only affects §6, nothing else.
-- **Q2 — Supabase project:** create a fresh project in your Supabase org (name suggestion:
-  `gaia-lost-fleet`)? Which org/region, and OK to confirm the (free-tier) cost?
-- **Q3 — Lobby scope:** the minimal lobby described in §7 (sign-in, list, create) — enough
-  for v1?
-- **Q4 — Display names:** host types friends' names at invite time (simplest, proposed) — OK?
-- **Q5 — Post-commit undo:** confirmed out of scope for v1 (no "takeback by consensus")?
+- **Q1 — Notifications:** owner overrode the email plan → **Web Push only** (see §6 and the
+  §J4 amendment). No email provider, no domain needed.
+- **Q2 — Supabase project:** created fresh free-tier project **`gaia-lost-fleet`**
+  (ref `mitawjpdxkheascdiffz`, region `eu-west-1`, same org/region as the owner's existing
+  unrelated project, which was left untouched).
+- **Q3 — Lobby scope:** minimal lobby (sign-in, list, create) confirmed for v1.
+- **Q4 — Display names:** host types friends' names at invite time.
+- **Q5 — Post-commit undo:** out of scope for v1.
+- Design is **settled**; implementation proceeds in the §9 steps (with §6 swapped to push).

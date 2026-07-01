@@ -718,8 +718,14 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   sequential turns. Source: OUR-RULING / engine behavior. CONFIRMED (need), INFERRED (impl).
 - J3. Seed fixed at game creation, stored, never regenerated (engine is deterministic from seed +
   moves). OUR-RULING. CONFIRMED.
-- J4. Notifications: email on turn-change (works everywhere). PWA push optional later — note iOS
-  requires installed PWA (iOS 16.4+) so email is the reliable default. OUR-RULING. CONFIRMED.
+- J4. Notifications: ~~email on turn-change (works everywhere). PWA push optional later~~ —
+  **AMENDED by owner ruling 2026-07-01: Web Push notifications are the one notification channel;
+  turn-change emails are dropped entirely** (owner doesn't check email and doesn't want the spam).
+  The only emails in the system are Supabase Auth's built-in magic-link sign-in emails. Accepted
+  caveats, raised and acknowledged: iOS requires the viewer added to the home screen as a PWA
+  (iOS 16.4+) before push works, and each device must grant notification permission once; a
+  player with no subscribed device simply gets no notification (the game itself is unaffected).
+  Source: OUR-RULING (owner, 2026-07-01). CONFIRMED.
 
 ## K. ERRATA CHECK LOG (2026-06-25)
 
