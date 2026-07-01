@@ -118,11 +118,20 @@ describe("Commands", () => {
         "terrans build m 3A11",
         "terrans build m 4A6",
         "tinkeroids build PI IS1",
-        "terrans booster booster1",
-        "tinkeroids booster booster2",
       ],
       { lostFleet: true }
     );
+    const chooseBooster = () => {
+      const player = engine.currentPlayer;
+      const faction = engine.player(player).faction;
+      const command = engine.findAvailableCommand(player, Command.ChooseRoundBooster);
+
+      expect(command, `expected ${faction} to have a booster choice`).to.not.equal(null);
+      engine.move(`${faction} booster ${command!.data.boosters[0]}`);
+    };
+
+    chooseBooster();
+    chooseBooster();
     engine.generateAvailableCommandsIfNeeded();
 
     expect(engine.availableCommands.map((command) => command.name)).to.deep.equal([Command.ChooseTinkeringTile]);
