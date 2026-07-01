@@ -91,6 +91,27 @@ export default class FinalScoringTile extends Vue {
   }
 
   get content() {
+    switch (this.tile) {
+      case FinalTile.Structure:
+        return "Structures";
+      case FinalTile.StructureFed:
+        return "Fed Structures";
+      case FinalTile.PlanetType:
+        return "Planet Types";
+      case FinalTile.Gaia:
+        return "Gaia";
+      case FinalTile.Sector:
+        return "Sectors";
+      case FinalTile.Satellite:
+        return "Satellites";
+      case FinalTile.Asteroid:
+        return "Asteroids";
+      case FinalTile.PlanetaryInstituteAcademyDistance:
+        return "PI to AC";
+      case FinalTile.DeepSpaceSector:
+        return "Deep Space";
+    }
+
     return this.tile;
   }
 

@@ -412,7 +412,7 @@ function finalScoringPhase(engine: Engine) {
   engine.changePhase(Phase.EndGame);
   engine.addAdvancedLog({ phase: Phase.EndGame });
   engine.currentPlayer = engine.tempCurrentPlayer = undefined;
-  const allRankings = finalRankings(engine.tiles.scorings.final, engine.players);
+  const allRankings = finalRankings(engine.tiles.scorings.final, engine.players, engine.expansions);
 
   // Group gained points per player
   for (const player of engine.players) {

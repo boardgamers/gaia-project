@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import Engine from "./engine";
-import { AdvTechTile, BoardAction, Building, Expansion, hasExpansion } from "./enums";
+import { AdvTechTile, BoardAction, Building, Expansion, FinalTile, hasExpansion } from "./enums";
 
 describe("Expansion", () => {
   it("hasExpansion tests individual bits", () => {
@@ -72,6 +72,21 @@ describe("Expansion", () => {
     }
     for (let i = 1; i <= 7; i++) {
       expect(withLostFleet).to.contain(BoardAction[`Power${i}`]);
+    }
+  });
+  it("FinalTile.values(LostFleet) includes the 3 Lost Fleet end scorings, FinalTile.values(None) does not", () => {
+    const lostFleetOnlyTiles = [
+      FinalTile.Asteroid,
+      FinalTile.PlanetaryInstituteAcademyDistance,
+      FinalTile.DeepSpaceSector,
+    ];
+
+    const withLostFleet = FinalTile.values(Expansion.LostFleet);
+    const withoutExpansion = FinalTile.values(Expansion.None);
+
+    for (const tile of lostFleetOnlyTiles) {
+      expect(withLostFleet).to.contain(tile);
+      expect(withoutExpansion).to.not.contain(tile);
     }
   });
 });

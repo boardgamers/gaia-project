@@ -1,12 +1,12 @@
 import { sortBy, sum } from "lodash";
-import { FinalTile, Resource } from "../enums";
+import { Expansion, FinalTile, Resource } from "../enums";
 import Player from "../player";
 import Reward from "../reward";
-import { finalScorings } from "../tiles/scoring";
+import { finalScoringNeutralPlayer, finalScorings } from "../tiles/scoring";
 
 export type FinalScoreRankings = Array<Array<{ player?: Player; count: number }>>;
 
-export function finalRankings(finalTiles: FinalTile[], collection: Player[]) {
+export function finalRankings(finalTiles: FinalTile[], collection: Player[], expansions: Expansion = Expansion.None) {
   const allRankings: FinalScoreRankings = [];
 
   for (const tile of finalTiles) {
@@ -20,7 +20,7 @@ export function finalRankings(finalTiles: FinalTile[], collection: Player[]) {
     if (collection.length === 2) {
       rankings.push({
         player: null,
-        count: finalScorings[tile].neutralPlayer,
+        count: finalScoringNeutralPlayer(tile, expansions),
       });
       rankings.sort((pl1, pl2) => pl2.count - pl1.count);
     }

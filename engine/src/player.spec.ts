@@ -1,6 +1,16 @@
 import { expect } from "chai";
 import "mocha";
-import { Building, Expansion, Faction, Operator, Planet, Player as PlayerEnum, Resource, SpaceshipFederation } from "./enums";
+import {
+  Building,
+  Expansion,
+  Faction,
+  FinalTile,
+  Operator,
+  Planet,
+  Player as PlayerEnum,
+  Resource,
+  SpaceshipFederation,
+} from "./enums";
 import Event from "./events";
 import { GaiaHex } from "./gaia-hex";
 import { classifySectorId, LostFleetSectorType } from "./lost-fleet-map";
@@ -216,6 +226,93 @@ describe("Player", () => {
       player.build(Building.Mine, deepSpaceSector[1], [], map);
       expect(player.data.credits).to.equal(baselineCredits + 4);
       expect(player.data.knowledge).to.equal(baselineKnowledge + 2);
+    });
+  });
+
+  describe("finalCount", () => {
+    it("should count colonized Asteroids for the Lost Fleet asteroid final scoring", () => {
+      const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+      player.faction = Faction.Terrans;
+
+      player.data.occupied.push(
+        new GaiaHex(0, 0, { sector: "s1", planet: Planet.Asteroid, player: PlayerEnum.Player1, building: Building.Mine }),
+        new GaiaHex(1, -1, {
+          sector: "s2",
+          planet: Planet.Asteroid,
+          player: PlayerEnum.Player1,
+          building: Building.TradingStation,
+        }),
+        new GaiaHex(2, -2, { sector: "s3", planet: Planet.Protoplanet, player: PlayerEnum.Player1, building: Building.Mine })
+      );
+
+      expect(player.finalCount(FinalTile.Asteroid)).to.equal(2);
+    });
+
+    it("should count unique Deep Space tiles, not individual hexes, for the Lost Fleet deep-space final scoring", () => {
+      const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+      player.faction = Faction.Terrans;
+
+      player.data.occupied.push(
+        new GaiaHex(0, 0, {
+          sector: "DS11_0",
+          planet: Planet.Protoplanet,
+          player: PlayerEnum.Player1,
+          building: Building.Mine,
+        }),
+        new GaiaHex(1, -1, {
+          sector: "DS11_1",
+          planet: Planet.Asteroid,
+          player: PlayerEnum.Player1,
+          building: Building.TradingStation,
+        }),
+        new GaiaHex(2, -2, {
+          sector: "DS12_0",
+          planet: Planet.Transdim,
+          player: PlayerEnum.Player1,
+          building: Building.Academy1,
+        })
+      );
+
+      expect(player.finalCount(FinalTile.DeepSpaceSector)).to.equal(2);
+    });
+
+    it("should score the longest range from the Planetary Institute to either Academy for the Lost Fleet distance final scoring", () => {
+      const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+      player.faction = Faction.Terrans;
+
+      player.data.occupied.push(
+        new GaiaHex(0, 0, {
+          sector: "s1",
+          planet: Planet.Terra,
+          player: PlayerEnum.Player1,
+          building: Building.PlanetaryInstitute,
+        }),
+        new GaiaHex(2, 0, {
+          sector: "s2",
+          planet: Planet.Ice,
+          player: PlayerEnum.Player1,
+          building: Building.Academy1,
+        }),
+        new GaiaHex(4, 0, {
+          sector: "s3",
+          planet: Planet.Oxide,
+          player: PlayerEnum.Player1,
+          building: Building.Academy2,
+        })
+      );
+
+      expect(player.finalCount(FinalTile.PlanetaryInstituteAcademyDistance)).to.equal(4);
+    });
+
+    it("should score 0 for the Lost Fleet distance final scoring if the Planetary Institute or both Academies are missing", () => {
+      const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+      player.faction = Faction.Terrans;
+
+      player.data.occupied.push(
+        new GaiaHex(0, 0, { sector: "s1", planet: Planet.Terra, player: PlayerEnum.Player1, building: Building.Academy1 })
+      );
+
+      expect(player.finalCount(FinalTile.PlanetaryInstituteAcademyDistance)).to.equal(0);
     });
   });
 

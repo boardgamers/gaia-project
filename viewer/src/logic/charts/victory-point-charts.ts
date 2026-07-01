@@ -127,7 +127,10 @@ function finalScoringProjection(finalTile: number): (engine: Engine, pl: Player)
     const points = simulateIncome(
       pl,
       (clone) =>
-        gainFinalScoringVictoryPoints(finalRankings([engine.tiles.scorings.final[finalTile]], engine.players), clone),
+        gainFinalScoringVictoryPoints(
+          finalRankings([engine.tiles.scorings.final[finalTile]], engine.players, engine.expansions),
+          clone
+        ),
       engine.version
     );
     return new Map([[finalScoringRound, points]]);

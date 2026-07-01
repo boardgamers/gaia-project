@@ -1,4 +1,4 @@
-import { Condition, FinalTile, RoundScoring, ScoringTile } from "../enums";
+import { Condition, Expansion, FinalTile, RoundScoring, ScoringTile, hasExpansion } from "../enums";
 import Event from "../events";
 
 const roundScorings: { [key in ScoringTile]: string[] } = {
@@ -26,4 +26,18 @@ export const finalScorings: { [key in FinalTile]: { condition: Condition; neutra
   [FinalTile.Gaia]: { condition: Condition.Gaia, neutralPlayer: 4 },
   [FinalTile.Sector]: { condition: Condition.Sector, neutralPlayer: 6 },
   [FinalTile.Satellite]: { condition: Condition.Satellite, neutralPlayer: 8 },
+  [FinalTile.Asteroid]: { condition: Condition.Asteroid, neutralPlayer: 3 },
+  [FinalTile.PlanetaryInstituteAcademyDistance]: {
+    condition: Condition.PlanetaryInstituteAcademyDistance,
+    neutralPlayer: 8,
+  },
+  [FinalTile.DeepSpaceSector]: { condition: Condition.DeepSpaceSector, neutralPlayer: 3 },
 };
+
+export function finalScoringNeutralPlayer(tile: FinalTile, expansions: Expansion): number {
+  if (tile === FinalTile.PlanetType && hasExpansion(expansions, Expansion.LostFleet)) {
+    return 6;
+  }
+
+  return finalScorings[tile].neutralPlayer;
+}
