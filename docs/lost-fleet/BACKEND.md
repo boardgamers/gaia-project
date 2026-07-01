@@ -294,3 +294,39 @@ the push-over-email override)
 - **Q4 — Display names:** host types friends' names at invite time.
 - **Q5 — Post-commit undo:** out of scope for v1.
 - Design is **settled**; implementation proceeds in the §9 steps (with §6 swapped to push).
+
+## 11. Deployment status (2026-07-01) & the two remaining owner actions
+
+**Live right now:**
+- Supabase project `gaia-lost-fleet` (ref `mitawjpdxkheascdiffz`, eu-west-1, free tier).
+- Both migrations applied (schema, RPCs, RLS, realtime publication, notify trigger); security
+  advisors clean apart from the intentionally-callable RPCs.
+- `app_config` seeded with the VAPID keypair (subject `mailto:kim.pham.nguyen2@gmail.com`,
+  `site_url` `https://gaia-lost-fleet.vercel.app`) and the notify URL/key. The private VAPID key
+  exists ONLY there.
+- Viewer hosted mode on branch `claude/backend-state-multiplayer-sbhf6c-bov526` — deliberately
+  NOT merged to `master` (auto-deploys to production) pending owner review.
+
+**Owner actions (~5 minutes total):**
+1. **Deploy the `notify` Edge Function** (the session's MCP deploy call was approval-gated).
+   Either from the repo root:
+   `npx supabase login && npx supabase functions deploy notify --project-ref mitawjpdxkheascdiffz`
+   or paste `supabase/functions/notify/index.ts` into Dashboard → Edge Functions → Deploy new
+   function, named exactly `notify`, with "Verify JWT" **enabled**. Until deployed, games are
+   fully playable — the trigger's async HTTP call 404s harmlessly; no push arrives, nothing else
+   is affected. (`deno check` passes on the file; the seeded VAPID keys were verified to import
+   and to match the viewer's committed public key.)
+2. **Supabase Auth URL configuration** (Dashboard → Authentication → URL Configuration):
+   set Site URL to the real production domain (assumed `https://gaia-lost-fleet.vercel.app` —
+   verify in Vercel) and add redirect URLs `https://gaia-lost-fleet.vercel.app/*` and, for local
+   dev, `http://localhost:8080/*`. Without this, magic-link emails redirect to the default
+   `http://localhost:3000`.
+
+**If the production domain differs** from `https://gaia-lost-fleet.vercel.app`, fix the deep-link
+base once in SQL:
+`update app_config set value = jsonb_set(value, '{site_url}', '"https://REAL-DOMAIN"') where key = 'vapid';`
+
+**Key rotation note:** the anon key and VAPID public key are committed in
+`viewer/src/hosted/config.ts` (public by design). Rotating VAPID keys = regenerate a P-256 JWK
+pair, update `app_config['vapid']` and the viewer config, and every device must re-enable
+notifications.

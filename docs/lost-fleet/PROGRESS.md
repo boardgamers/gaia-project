@@ -7,7 +7,7 @@
 > anything else, including the **Testing — required going forward** section it points to — both
 > are standing process, not optional. Then ask the user "what next?" and use the **Next actions**
 > section below to guide them.
-> Last updated: **2026-06-30**.
+> Last updated: **2026-07-01**.
 
 ## Working agreements (read every session, not optional)
 1. **Before writing any implementation plan, go read the current mechanics/code it will touch
@@ -1047,6 +1047,60 @@ notifications).
       rather than only unit-testing helpers or class lists.
     - Verification: viewer `cd viewer && cmd /c npx vue-cli-service test:unit --timeout 4000
       "src/**/*.spec.ts" "src/logic/**/*.spec.ts"` → **168/168** passing.
+47. ✅ **Supabase multiplayer backend + viewer hosted mode (2026-07-01)** — the last build-order
+    step ("Supabase backend glue + realtime sync") is implemented. Design settled first in
+    `docs/lost-fleet/BACKEND.md` (read that for the full architecture; §0 lists the code facts it
+    was grounded in), including an owner ruling amending §J4: **Web Push notifications replace
+    turn-change emails entirely** (owner 2026-07-01; the only emails left are Supabase Auth's
+    magic-link sign-in emails). Highlights:
+    - **Supabase project `gaia-lost-fleet`** (ref `mitawjpdxkheascdiffz`, eu-west-1, free tier),
+      separate from the owner's unrelated existing project. Schema in
+      `supabase/migrations/0001_multiplayer.sql` + `0002_function_grants.sql`, both applied:
+      `games` (seed/options/status + denormalized `current_seat`/`move_count` for lobby+notify
+      only), `players` (seat = engine player index, invite email, claimed user), append-only
+      `moves` (`seq` = `moveHistory` index, PK `(game_id, seq)`), `push_subscriptions`,
+      service-role-only `app_config`. **No direct write policies anywhere** — all writes go
+      through security-definer RPCs (`create_game` / `claim_my_seats` / `commit_turn`), so the
+      move log is structurally append-only and `commit_turn`'s `seq` check makes double-commits
+      race-safe. RLS: one `is_game_member` predicate (user id or invited email) on all reads;
+      `moves` is in the realtime publication.
+    - **Viewer hosted mode** (`?game=<uuid>` / `?lobby=1` in `main.ts`; every existing
+      self-contained/scenario/state URL is untouched): `viewer/src/hosted.ts` + `viewer/src/hosted/`
+      with magic-link sign-in, seat claiming, a minimal lobby (list games / create game with
+      seat-ordered email invites; seed generated once at creation per §J3, `current_seat` computed
+      from a probe engine), and `HostedGameHost` (`hosted/host.ts`) — the Supabase-backed
+      counterpart of `self-contained.ts`: replays `seed + stored moves` into the engine, renders
+      partial turn lines locally only, and persists a line **only when `copy.newTurn`** via
+      `commit_turn` (§J1/§A2 exactly as before). Turn locking finally feeds the existing hook:
+      `emitter.emit("player", { index: seat })` → `Game.vue`'s `canPlay`, and since
+      `currentPlayer(engine)` is `engine.playerToMove` (returns `tempCurrentPlayer`), **mid-turn
+      leech interrupts lock/unlock the right browsers with zero new turn-order code (§J2)**.
+      Realtime `moves` INSERTs apply incrementally with full-replay resync on gaps/conflicts/
+      reconnects/tab-refocus. supabase-js v2 ships as a **version-pinned runtime UMD bundle**
+      (webpack 4 can't parse the npm package's syntax; TS 3.9 can't read its types) behind a
+      typed facade; the testable core takes an injected backend instead.
+    - **Push notifications**: `push_subscriptions` + PWA manifest + minimal `public/sw.js`
+      (push display + click-through only, deliberately no offline caching so it can never serve
+      a stale build) + an explicit "Enable notifications" opt-in button (iOS needs
+      Add-to-Home-Screen first, per the accepted §J4 caveats). Server side: pg_net trigger on
+      `games` (insert = invites, update of `current_seat`/`status` = turn/finished) → `notify`
+      Edge Function (`supabase/functions/notify/index.ts`, `jsr:@negrel/webpush`), which reads
+      everything via service role and never runs the engine. VAPID keypair generated locally,
+      seeded into `app_config` (private key never committed; the public
+      `applicationServerKey` in `viewer/src/hosted/config.ts` was verified to match the seeded
+      pair via a local Deno import test; `deno check` passes on the function).
+    - **Verification:** 11 new host unit tests (`viewer/src/hosted/host.spec.ts`) covering
+      load-replay + name stamping, seat mapping, commit seat/next-seat derivation, the §J2
+      leech-decider next-seat case (real engine fixture), local rejection of illegal moves,
+      seq-conflict resync, incremental realtime apply, echo skip, gap resync, and
+      render-without-persist for incomplete lines. Full suite: **189 passing + 2 failing chart
+      fixtures that pre-exist on `master`** (verified via `git stash` at HEAD `173d35d`:
+      178 passing + the same 2 failures without any of this work — the stale fixtures come from
+      an earlier master commit, out of scope here). Production build clean.
+    - **Not done / needs owner (~5 min, see BACKEND.md §11):** the Edge Function deploy and the
+      Supabase Auth URL configuration are dashboard/CLI actions this session's tooling couldn't
+      perform (deploy required an interactive approval). Games are fully playable without them —
+      the trigger's HTTP call just 404s harmlessly until the function exists.
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -1097,6 +1151,14 @@ Artifact token type-counts (§G6) remain an unconfirmed "1-of-each" assumption �
 effects are already known regardless of count.
 
 ## Current mechanics: single-browser demo, no persistence, no turn locking (as of 2026-06-27)
+
+> **SUPERSEDED 2026-07-01 for hosted play** — both gaps below are now closed by the Supabase
+> hosted mode (`?game=`/`?lobby=1`, see "Done so far" #47 and `BACKEND.md`): real per-session
+> seat locking via the `"player"` event, and automatic persistence via the append-only `moves`
+> log + Realtime. The analysis below stays because it's accurate for the DEFAULT self-contained
+> URLs (which intentionally still behave this way) and because it documents the hooks the
+> hosted mode is built on.
+
 Two things the user noticed while testing that are **expected at this build stage, not bugs**:
 
 - **One browser can act for every player.** `viewer/src/store.ts`'s `state.player` (the "which
@@ -1360,8 +1422,14 @@ open, in priority order the user should pick from:
    refinement beyond those current markers and boards.
 3. **Revised Space Sector tiles 05/06/07** (§H4, the one remaining art-only TODO — see "Still MISSING"
    above) — would let Lost Fleet stop falling back to the base game's per-count face for those 3 tiles.
-4. Or a different unit of work entirely (viewer, Supabase), since the old blocked Tinkeroids/
-   Moweyds item is now complete.
+4. ~~Or a different unit of work entirely (viewer, Supabase)~~ — **Supabase multiplayer is DONE**
+   (see "Done so far" #47 and `BACKEND.md`), pending two ~5-minute owner actions listed in
+   `BACKEND.md` §11: deploy the `notify` Edge Function and set the Supabase Auth URL
+   configuration. Natural follow-ups once real games run: merge the
+   `claude/backend-state-multiplayer-sbhf6c-bov526` branch to `master` after review (this chunk
+   deliberately did NOT push to master — owner wants to review backend infra before it
+   auto-deploys), then later niceties like the Phase-2 snapshot cache (BACKEND.md §8), lobby
+   polish, or realtime lobby updates.
 
 Confirm with the user before starting any of the above.
 
