@@ -80,6 +80,11 @@ export const resourceData: { [key in Resource]?: ResourceName } = {
     label: "Gaia Former",
     plural: "Gaia Formers",
   }),
+  [Resource.InstantGaiaforming]: colorCodes.gaia.add({
+    label: "Instant Gaiaforming",
+    plural: "Instant Gaiaforming",
+    shortcut: "g",
+  }),
   [Resource.TemporaryStep]: colorCodes.terraformingStep.add({
     label: "Terraforming Step",
     plural: "Terraforming Steps",

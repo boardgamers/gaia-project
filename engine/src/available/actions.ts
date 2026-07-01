@@ -13,6 +13,7 @@ import { BoardAction, Building, Command, Operator, Player, Resource } from "../e
 import PlayerObject from "../player";
 import { resourceLimits } from "../player-data";
 import Reward from "../reward";
+import { possibleInstantGaiaforming } from "./spaceship-actions";
 import { possibleTechTiles } from "./research";
 import { AvailableBoardActionData, AvailableCommand, AvailableFreeAction, AvailableHex, Offer } from "./types";
 
@@ -37,6 +38,9 @@ export function possibleSpecialActions(engine: Engine, player: Player) {
         continue;
       }
       if (event.rewards[0].type === Resource.PISwap && pl.data.buildings[Building.Mine] === 0) {
+        continue;
+      }
+      if (event.rewards[0].type === Resource.InstantGaiaforming && possibleInstantGaiaforming(engine, player).length === 0) {
         continue;
       }
       // If the action decreases rewards, the player must have them

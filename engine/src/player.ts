@@ -1,6 +1,6 @@
 import assert from "assert";
 import { EventEmitter } from "eventemitter3";
-import { Grid, Hex } from "hexagrid";
+import { CubeCoordinates, Grid, Hex } from "hexagrid";
 import { countBy, difference, merge, sum, uniq, uniqWith, zipWith } from "lodash";
 import spanningTree from "./algorithms/spanning-tree";
 import { ChooseTechTile } from "./available/types";
@@ -15,6 +15,7 @@ import {
   Faction,
   Federation,
   FinalTile,
+  isAcademy,
   isShip,
   Operator,
   Phase,
@@ -1042,10 +1043,22 @@ export default class Player extends EventEmitter {
         return sum(Object.values(this.data.research));
       case Condition.HighestResearchLevel:
         return Math.max(...Object.values(this.data.research));
+      case Condition.GaiaFormer:
+        return this.data.gaiaformers - this.data.gaiaformersInGaia - this.data.gaiaformersUsedForAsteroid;
       case Condition.Asteroid:
         return this.ownedPlanets.filter((hex) => hex.data.planet === Planet.Asteroid).length;
       case Condition.DeepSpaceSector:
         return colonizedDeepSpaceSectorCount(this.ownedPlanets);
+      case Condition.PlanetaryInstituteAcademyDistance: {
+        const pi = this.data.occupied.find((hex) => hex.buildingOf(this.player) === Building.PlanetaryInstitute);
+        const academies = this.data.occupied.filter((hex) => isAcademy(hex.buildingOf(this.player)));
+
+        if (!pi || academies.length === 0) {
+          return 0;
+        }
+
+        return Math.max(...academies.map((academy) => CubeCoordinates.distance(pi, academy)));
+      }
     }
 
     return 0;

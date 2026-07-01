@@ -27,6 +27,13 @@ export function possibleSpaceshipActions(engine: Engine, player: Player): Availa
       if (engine.spaceshipActions[ship]?.[action.type] !== undefined) {
         continue;
       }
+      if (
+        ship === Spaceship.TFMars &&
+        action.type === "power" &&
+        possibleInstantGaiaforming(engine, player).length === 0
+      ) {
+        continue;
+      }
       if (!pl.data.canPay(Reward.parse(action.cost))) {
         continue;
       }
@@ -51,6 +58,10 @@ export function possibleSpaceshipActions(engine: Engine, player: Player): Availa
 export function possibleInstantGaiaforming(engine: Engine, player: Player): AvailableCommand<Command.GaiaFormTransdim>[] {
   const pl = engine.player(player);
   const spaces: AvailableHex[] = [];
+
+  if (!pl.data.hasResource(new Reward(1, Resource.GaiaFormer))) {
+    return [];
+  }
 
   for (const hex of engine.map.toJSON()) {
     if (hex.data.planet !== Planet.Transdim || hex.data.building) {

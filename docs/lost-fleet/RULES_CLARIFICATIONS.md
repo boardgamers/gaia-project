@@ -229,8 +229,10 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
 ### C3. T F Mars (Gaia Federation)
 - Q.I.C. action: 2 Q.I.C. → gain 2 VP + 1 VP per Tech tile you have.
 - Power action: charge 2 power → perform the Instant Gaiaforming action (same mechanic as the
-  "instant" Round Booster, G3: convert a transdim planet in range into a Gaia planet without moving
-  power tokens into the Gaia Area).
+  "instant" Round Booster, G3: start a Gaia Project on a transdim planet in range without moving
+  power tokens into the Gaia Area, then immediately transform that planet into Gaia. A Gaiaformer is
+  still required and occupies the planet until you later build a Mine there, at which point it
+  returns for reuse in the same round).
 - Credit action: 3 credits → terraform 1 step. The mine itself and any further terraforming steps
   still cost their normal building/ore price — the 3 credits replace only the ore cost of the first
   step (owner-confirmed 2026-06-28: "the 3 coins only covers 1 terraforming step. You still have to
@@ -403,9 +405,11 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
     Gaiaformers already used to colonize an asteroid. CONFIRMED.
   - **planet:** income 1 ore. Pass bonus: 1 VP per planet type colonized. CONFIRMED.
   - **deep:** income 3 credits. Pass bonus: 2 VP per Deep Space sector with ≥1 planet colonized. CONFIRMED.
-  - **instant:** no income row. Special action (once): perform "Start a Gaia Project" without moving
+  - **instant:** income 2 power. Special action (once): perform "Start a Gaia Project" without moving
     power tokens into the Gaia Area, instantly converting a transdim planet (must be in range; Q.I.C.s
-    may extend range) into a Gaia planet. CONFIRMED.
+    may extend range) into a Gaia planet. A Gaiaformer is still required, occupies that planet until
+    you later build a Mine there, and then returns for reuse exactly like normal/base-game Gaiaforming.
+    CONFIRMED.
 - G4. Round Scoring (3) + Final Scoring (3): text p.14-15, all 6 CONFIRMED verbatim (lab4/sector3/
   planet3 round tiles; asteroid/deep/distance final tiles — exact quotes in the scratchpad review doc).
   Owner confirmed (2026-06-27) that the planet-type-counting tiles (G4b) explicitly count

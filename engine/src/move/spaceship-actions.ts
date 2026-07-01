@@ -71,6 +71,9 @@ export function moveGaiaFormTransdim(
 
   assert(space, `Impossible to instant-gaiaform at ${location}`);
 
-  engine.player(player).payCosts(Reward.parse(space.cost), Command.GaiaFormTransdim);
-  engine.map.getS(location).data.planet = Planet.Gaia;
+  const pl = engine.player(player);
+  const hex = engine.map.getS(location);
+
+  pl.build(Building.GaiaFormer, hex, Reward.parse(space.cost), engine.map);
+  hex.data.planet = Planet.Gaia;
 }

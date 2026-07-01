@@ -20,4 +20,8 @@ export const boosterData: {
   [Booster.Booster8]: { name: "1k, 3 VP / lab", color: "--res-knowledge", shortcut: "l" },
   [Booster.Booster9]: { name: "4pw, 4 VP / PI or academy", color: "--recent", shortcut: "b" },
   [Booster.Booster10]: colorCodes.gaia.add({ name: "4c, 1 VP / gaia planet" }),
+  [Booster.LostFleetFormer]: colorCodes.gaia.add({ name: "1o, 3 VP / gaiaformer", shortcut: "f" }),
+  [Booster.LostFleetPlanet]: { name: "1o, 1 VP / planet type", color: "--res-ore", shortcut: "p" },
+  [Booster.LostFleetDeep]: { name: "3c, 2 VP / deep space sector", color: "--res-credit", shortcut: "d" },
+  [Booster.LostFleetInstant]: colorCodes.gaia.add({ name: "2pw, instant Gaiaforming", shortcut: "g" }),
 };

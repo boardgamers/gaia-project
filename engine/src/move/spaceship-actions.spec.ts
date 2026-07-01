@@ -23,6 +23,7 @@ import { GaiaHex } from "../gaia-hex";
 import { Power } from "../player-data";
 import { terraformingStepsRequired } from "../planets";
 import { techTileEventWithSource } from "../tiles/techs";
+import { moveBuild } from "./buildings";
 import { moveSpaceshipAction } from "./spaceship-actions";
 
 function createLostFleetRoundMoveEngine(
@@ -377,6 +378,7 @@ describe("Lost Fleet spaceship board actions", () => {
 
     const beforePower = player.data.power.area3;
     const beforeQic = player.data.qics;
+    const beforeGaiaformers = player.data.getResources(Resource.GaiaFormer);
 
     engine.turnMoves = [`gaiaFormTransdim ${target.hex.toString()}`];
     moveSpaceshipAction(engine, command, PlayerEnum.Player1, Spaceship.TFMars, "power");
@@ -384,7 +386,34 @@ describe("Lost Fleet spaceship board actions", () => {
     expect(player.data.power.area3).to.equal(beforePower - 2);
     expect(player.data.qics).to.equal(beforeQic - target.qicNeeded);
     expect(target.hex.data.planet).to.equal(Planet.Gaia);
-    expect(target.hex.data.building).to.equal(undefined);
+    expect(target.hex.data.building).to.equal(Building.GaiaFormer);
+    expect(target.hex.data.player).to.equal(PlayerEnum.Player1);
+    expect(player.data.buildings[Building.GaiaFormer]).to.equal(1);
+    expect(player.data.getResources(Resource.GaiaFormer)).to.equal(beforeGaiaformers - 1);
+
+    engine.clearAvailableCommands();
+    const buildCommand = engine.findAvailableCommand(PlayerEnum.Player1, Command.Build);
+    const buildMine = buildCommand.data.buildings.find(
+      (b) => b.coordinates === target.hex.toString() && b.building === Building.Mine && b.upgrade
+    );
+    expect(buildMine, "instant-gaiaformed planet should upgrade from Gaiaformer to Mine").to.not.equal(undefined);
+
+    moveBuild(engine, buildCommand, PlayerEnum.Player1, Building.Mine, target.hex.toString());
+
+    expect(target.hex.data.building).to.equal(Building.Mine);
+    expect(player.data.buildings[Building.GaiaFormer]).to.equal(0);
+    expect(player.data.getResources(Resource.GaiaFormer)).to.equal(beforeGaiaformers);
+  });
+
+  it("should not offer T F Mars's Power action when the player has no available Gaiaformer", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    player.data.explorationShips[Spaceship.TFMars] = 1;
+    player.data.gaiaformers = 0;
+
+    const command = availableSpaceshipActionCommand(engine, PlayerEnum.Player1);
+    expect(command).to.not.equal(undefined);
+    expect(command.data.actions.find((a) => a.ship === Spaceship.TFMars && a.type === "power")).to.equal(undefined);
   });
 
   it("should pay 6 credits and place a free Mine on an Asteroid in range via Eclipse's Credit action", () => {

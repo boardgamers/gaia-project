@@ -13,6 +13,13 @@
     </g>
     <PlanetType v-else-if="condition === 'pt'" transform="scale(1.1)" />
     <Sector v-else-if="condition === 's'" transform="scale(1.5)" />
+    <Resource v-else-if="condition === 'gf'" kind="gf" />
+    <g v-else-if="condition === 'ds'" transform="scale(1.2)">
+      <Sector />
+      <text x="0" y="0" style="font-size: 8px; font-weight: bold; text-anchor: middle; dominant-baseline: central">
+        DS
+      </text>
+    </g>
     <g v-else-if="condition === 'g'" transform="scale(0.85)">
       <image
         xlink:href="../assets/conditions/planet.svg"
@@ -71,6 +78,7 @@ import Building from "./Building.vue";
 import Federation from "./FederationTile.vue";
 import Planet from "./Planet.vue";
 import PlanetType from "./Conditions/PlanetType.vue";
+import Resource from "./Resource.vue";
 import Sector from "./Conditions/Sector.vue";
 
 @Component({
@@ -79,6 +87,7 @@ import Sector from "./Conditions/Sector.vue";
     Federation,
     Planet,
     PlanetType,
+    Resource,
     Sector,
   },
 })

@@ -9,6 +9,7 @@ const conditionsCount: { [key in Condition]?: string } = {
   [Condition.BigBuilding]: "planetary institute or academy",
   [Condition.Federation]: "federation",
   [Condition.Gaia]: "gaia planet colonized",
+  [Condition.GaiaFormer]: "gaiaformer on your board or deployed",
   [Condition.PlanetType]: "type of planet colonized",
   [Condition.Sector]: "occupied sector",
   [Condition.Structure]: "colonized planet",
@@ -16,6 +17,7 @@ const conditionsCount: { [key in Condition]?: string } = {
   [Condition.Satellite]: "satellite or space station",
   [Condition.HighestResearchLevel]: "level of your highest research track",
   [Condition.AdvanceResearch]: "level reached in any research track",
+  [Condition.DeepSpaceSector]: "colonized deep space sector",
 };
 
 const conditionsTrigger: { [key in Condition]?: string } = {
@@ -56,6 +58,8 @@ function rewardDesc(rewards: Reward[], long: boolean) {
           return `gain ${reward.count} temporary range`;
         case Resource.RescoreFederation:
           return `gain the rewards from one of your federation tokens`;
+        case Resource.InstantGaiaforming:
+          return `perform instant Gaiaforming`;
         case Resource.Turn:
           return `play an extra ${reward.count} turn${reward.count > 1 ? "s" : ""} at once`;
         default:

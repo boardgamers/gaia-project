@@ -54,6 +54,12 @@
       :flat="flat"
       :faction="faction"
     />
+    <template v-else-if="kind == 'instant-gaiaforming'">
+      <Building building="gf" transform="translate(-8, 0) scale(1.5)" :flat="flat" :faction="faction" />
+      <line x1="-3" y1="0" x2="5" y2="0" stroke="black" stroke-width="1.2" />
+      <polygon points="5,0 1,-3 1,3" fill="black" />
+      <circle class="gaia" cx="9" cy="0" r="5.5" stroke="#111" stroke-width="0.9" />
+    </template>
     <g v-else-if="kind == 'swap-PI'" transform="scale(-1,1)">
       <Building faction="ambas" building="m" transform="translate(-8.5, 0) scale(1.5)" :flat="flat" />
       <Building faction="ambas" building="PI" transform="translate(6, 0) scale(1.5)" :flat="flat" />

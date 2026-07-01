@@ -504,6 +504,9 @@ export default class Engine {
         source === BoardAction.Qic1 || source === Spaceship.Rebellion
       )
     );
+    player.data.on(`gain-${Resource.InstantGaiaforming}`, () =>
+      this.processNextMove(SubPhase.InstantGaiaforming, null, true)
+    );
     player.data.on(`gain-${Resource.TemporaryStep}`, () => this.processNextMove(SubPhase.BuildMine, null, true));
     player.data.on(`gain-${Resource.TemporaryRange}`, (count: number) => {
       this.processNextMove(SubPhase.BuildMineOrGaiaFormer, null, true);

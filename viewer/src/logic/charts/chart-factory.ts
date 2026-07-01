@@ -232,9 +232,9 @@ export class ChartSetup {
 
     const scoringBooster: (booster: Booster) => boolean = (booster: Booster) =>
       boosterEvents(booster)[1].rewards.some((r) => r.type == Resource.VictoryPoint);
-    const currentBoosters = Booster.values().filter((b) => engine.tiles.boosters[b] != null);
-    const vpBoosters = statistics ? Booster.values().filter(scoringBooster) : currentBoosters;
-    const allBoosters = statistics ? Booster.values() : currentBoosters;
+    const currentBoosters = Booster.values(expansions).filter((b) => engine.tiles.boosters[b] != null);
+    const vpBoosters = statistics ? Booster.values(expansions).filter(scoringBooster) : currentBoosters;
+    const allBoosters = statistics ? Booster.values(expansions) : currentBoosters;
 
     const finalTiles = engine.tiles.scorings.final;
     const finalTileName = (tile) =>

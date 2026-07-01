@@ -101,6 +101,7 @@ export enum Resource {
   ShipRange = "ship-range",
   GaiaFormer = "gf",
   MoveGaiaFormerFromGaiaAreaToArea1 = "gf->t",
+  InstantGaiaforming = "instant-gaiaforming",
   SpaceStation = "space-station",
   DowngradeLab = "down-lab",
   UpgradeTerraforming = "up-terra",
@@ -177,6 +178,7 @@ export enum Condition {
   // Lost Fleet
   Asteroid = "ast",
   DeepSpaceSector = "ds",
+  PlanetaryInstituteAcademyDistance = "pi-ac-dist",
 
   // trigger only
   MineOnGaia = "mg",
@@ -426,18 +428,32 @@ export enum Booster {
   Booster8 = "booster8",
   Booster9 = "booster9",
   Booster10 = "booster10",
+  LostFleetFormer = "booster-lostfleet-former",
+  LostFleetPlanet = "booster-lostfleet-planet",
+  LostFleetDeep = "booster-lostfleet-deep",
+  LostFleetInstant = "booster-lostfleet-instant",
 }
 
 export namespace Booster {
-  export function values(expansions = 0): Booster[] {
-    return (Object.values(Booster) as Booster[]).filter((val: Booster) => {
-      if (typeof val !== "string") {
-        return;
-      }
-      if (/^booster[0-9]/.test(val)) {
-        return true;
-      }
-    }) as Booster[];
+  export function values(expansions: Expansion = Expansion.None): Booster[] {
+    const ret = [
+      Booster.Booster1,
+      Booster.Booster2,
+      Booster.Booster3,
+      Booster.Booster4,
+      Booster.Booster5,
+      Booster.Booster6,
+      Booster.Booster7,
+      Booster.Booster8,
+      Booster.Booster9,
+      Booster.Booster10,
+    ];
+
+    if (hasExpansion(expansions, Expansion.LostFleet)) {
+      ret.push(Booster.LostFleetFormer, Booster.LostFleetPlanet, Booster.LostFleetDeep, Booster.LostFleetInstant);
+    }
+
+    return ret;
   }
 }
 
@@ -700,6 +716,9 @@ export enum FinalTile {
   Gaia = "gaia",
   Sector = "sector",
   Satellite = "satellite",
+  Asteroid = "asteroid",
+  PlanetaryInstituteAcademyDistance = "piAcademyDistance",
+  DeepSpaceSector = "deepSpaceSector",
 }
 
 export namespace FinalTile {
@@ -712,6 +731,14 @@ export namespace FinalTile {
       FinalTile.Sector,
       FinalTile.Satellite,
     ];
+
+    if (hasExpansion(expansions, Expansion.LostFleet)) {
+      ret.push(
+        FinalTile.Asteroid,
+        FinalTile.PlanetaryInstituteAcademyDistance,
+        FinalTile.DeepSpaceSector
+      );
+    }
 
     return ret;
   }

@@ -184,14 +184,14 @@ export const victoryPointSources = (
       color: "--titanium",
     },
     {
-      types: Booster.values(),
+      types: Booster.values(expansion),
       label: "Booster",
       description: "Round Boosters",
       color: colorCodes.booster.color,
-      roundValues: passIncomeProjection(Booster.values(), false),
+      roundValues: passIncomeProjection(Booster.values(expansion), false),
     },
     {
-      types: BoardAction.values(),
+      types: BoardAction.values(expansion),
       label: "QIC",
       description: "QIC actions",
       color: "--specialAction",
