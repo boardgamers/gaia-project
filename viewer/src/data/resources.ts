@@ -135,6 +135,12 @@ export const resourceData: { [key in Resource]?: ResourceName } = {
     label: "Trade Ship",
     plural: "Trade Ships",
   }),
+  [Resource.PowerRing]: {
+    label: "Power Ring",
+    plural: "Power Rings",
+    shortcut: "r",
+    color: "--protoplanet",
+  },
 };
 
 export function playerHasReceivedAllIncome(engine: Engine, player: Player) {

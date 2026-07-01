@@ -39,6 +39,10 @@
       x="-7.5"
       y="-7.5"
     />
+    <g v-else-if="kind === 'power-ring'" class="power-ring">
+      <circle r="7" />
+      <circle r="3.5" />
+    </g>
     <polygon
       points="-7.5,3 -3,7.5 3,7.5 7.5,3 7.5,-3 3,-7.5 -3,-7.5 -7.5,-3"
       v-else-if="kind == 'k'"
@@ -258,6 +262,12 @@ g.resource {
 
   .power {
     fill: var(--res-power);
+  }
+
+  .power-ring {
+    fill: none;
+    stroke: var(--protoplanet);
+    stroke-width: 2.2px;
   }
 
   .gaia {
