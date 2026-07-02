@@ -1199,6 +1199,26 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
     - Verification: viewer suite **215/215** passing (3 old panel specs removed, 4 new tests added);
       visually verified per-ship at 3× zoom via Playwright against the dev server.
 
+52. ✅ **Reuse-first UI redesign (3c), slice 3 — Lost Fleet tile iconography, CODED & TESTED** (done
+    2026-07-02). Closes the "right now it's just text" gap for the tile families:
+    - `Condition.vue` gained the 2 missing Lost Fleet condition icons: `ast` (Asteroid — pink
+      `planet-fill a` circle) and `shipq` (Q.I.C. ship action — the SpecialAction octagon outline
+      around the base q icon). `TechContent.vue`'s text-suppression list now includes
+      `Condition.Asteroid`, `Condition.SpaceshipQicAction`, and `Condition.TerraformStep`, so the
+      `asteroidpass` (`ast | 2vp`), `qaction` (`shipq >> 4vp`), and `terra` (`step >> 2vp`) Advanced
+      Tech tiles stop printing their raw event specs and render icon-style like the other 3 LF adv
+      tiles (which already worked). `data/event.ts` gained tooltip text for both new conditions.
+    - The Scoring Board Extension's gate is now iconographic: the 25-VP side renders a VP `Resource`
+      icon, the 3-explored-ships side renders 3 gold ship markers (same marker language as the ship
+      strip and map), both with a full-rule tooltip — replacing the floating "25 VP"/"3 Ships" text.
+      Placement stays on the scoring board, mirroring the physical component (owner-approved).
+    - New `LostFleetTiles.spec.ts` locks the reuse-first rule for both tile families: all 6 LF
+      Advanced Tech tiles and all 4 LF round boosters must render through TechContent's icon system
+      with no raw spec text (the boosters already did — the spec pins it). `ScoringBoard.spec.ts`
+      updated from text-gate to icon-gate assertions.
+    - Verification: viewer suite **218/218** passing; booster pool + research board + extension gate
+      visually verified against the dev server.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -1216,9 +1236,9 @@ TS resolution than the real webpack-based path and gives false failures; use the
   — equivalent for engine, which has no webpack step). **490 tests passing as of 2026-06-30.**
 - Viewer: `cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'`
   (this is what `pnpm test` runs — uses `mochapack`/webpack, required for files that touch engine
-  types). **215 tests passing as of 2026-07-02.**
+  types). **218 tests passing as of 2026-07-02.**
 
-**Latest full rerun after #51:** viewer **215/215** (engine untouched by #50/#51; last full engine
+**Latest full rerun after #52:** viewer **218/218** (engine untouched by #50-#52; last full engine
 run **490/490** after #46).
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component

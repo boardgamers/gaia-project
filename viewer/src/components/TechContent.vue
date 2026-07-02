@@ -177,6 +177,9 @@ export default class TechContent extends Vue {
           ConditionEnum.Gaia,
           ConditionEnum.GaiaFormer,
           ConditionEnum.DeepSpaceSector,
+          ConditionEnum.Asteroid,
+          ConditionEnum.SpaceshipQicAction,
+          ConditionEnum.TerraformStep,
           ConditionEnum.Trade,
           ...Object.values(BuildingEnum),
         ].includes(this.event.condition as any)
