@@ -39,7 +39,7 @@ import { factionPlanet, tinkeringTileSpec, tinkeringTilesForRound } from "./fact
 import { federationCost, FederationInfo, isOutclassedBy, parseFederationLocation } from "./federation";
 import { GaiaHex } from "./gaia-hex";
 import { IncomeSelection } from "./income";
-import { colonizedDeepSpaceSectorCount } from "./lost-fleet-map";
+import { colonizedDeepSpaceSectorCount, isNewLostFleetSector } from "./lost-fleet-map";
 import SpaceMap from "./map";
 import { terraformingStepsRequired } from "./planets";
 import PlayerData from "./player-data";
@@ -123,6 +123,8 @@ export default class Player extends EventEmitter {
   name?: string;
   /** Is the player dropped (i.e. no move) */
   dropped?: boolean;
+  /** Active expansions, set in loadBoard; lets faction-board handlers gate expansion-only abilities. */
+  expansions: Expansion = Expansion.None;
 
   constructor(expansion: Expansion = Expansion.None, public player: PlayerEnum = PlayerEnum.Player1) {
     super();
@@ -433,6 +435,7 @@ export default class Player extends EventEmitter {
 
   loadBoard(board: FactionBoard, expansions: Expansion, skipIncome = false, subscribeListeners = true) {
     this.board = board;
+    this.expansions = expansions;
 
     if (!skipIncome) {
       this.gainRewards(this.data.initialPowerRewards(this.board), Phase.BeginGame);
@@ -629,6 +632,17 @@ export default class Player extends EventEmitter {
 
     // get triggered income for new building
     this.receiveBuildingTriggerIncome(building, hex.data.planet, isAdditionalMine);
+
+    // Lost Fleet round scoring tiles "sector3"/"planet3": a mine in a sector, or on a planet type,
+    // this player had not colonized before this build (RULES_CLARIFICATIONS.md §G4).
+    if (building === Building.Mine) {
+      if (isNewLostFleetSector(this.data.occupied, hex)) {
+        this.receiveTriggerIncome(Condition.NewSector);
+      }
+      if (!this.data.occupied.some((other) => other !== hex && other.data.planet === hex.data.planet)) {
+        this.receiveTriggerIncome(Condition.NewPlanetType);
+      }
+    }
 
     // get triggerd terffaorming step income for new building
     if (stepsReq) {

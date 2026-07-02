@@ -52,6 +52,12 @@ export const resourceData: { [key in Resource]?: ResourceName } = {
     shortcut: "g",
     color: "--recent",
   },
+  [Resource.GainTokenArea3]: {
+    label: "Power Token in Area III",
+    plural: "Power Tokens in Area III",
+    shortcut: "p",
+    color: "--recent",
+  },
   [Resource.BurnToken]: {
     label: "Burned Token",
     plural: "Burned Tokens",

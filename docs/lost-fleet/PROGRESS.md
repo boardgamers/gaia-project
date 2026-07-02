@@ -1350,6 +1350,111 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
       has real sign-in credentials: create a game through the real Lobby flow end-to-end and confirm
       a rotated sector's on-screen orientation matches between the preview and the live game.
 
+55. ✅ **Nine owner-reported bugs/polish items, CODED & TESTED** (done 2026-07-02). A batch of
+    gameplay-correctness and viewer-polish fixes reported directly by the owner after playing a real
+    game, on branch `claude/gaia-project-fixes-knpsu3`:
+    - **Eclipse's 6c ship action ("place a free Mine on an Asteroid in range") silently did nothing.**
+      Root cause found by writing a real move-string `engine.move()` reproduction (existing tests only
+      ever called `moveSpaceshipAction()` directly, skipping the string-command dispatch path): unlike
+      T F Mars's Power action, `possibleSpaceshipActions()` never checked whether
+      `possibleSpaceshipBuildMine()` actually had a legal target before offering Eclipse's/T F Mars's
+      credit actions — so clicking the action when no legal Mine placement existed (e.g. the player's
+      Mine supply was already exhausted) paid the fee and locked the action for the round with nothing
+      to show for it. **First attempted a different fix (gating the Asteroid target on a spare
+      Gaiaformer, mirroring `possibleFederationTokenBuildMine`'s §26 fix) — the owner corrected this
+      via a live playtest report, and the rulebook (Appendix II, p.13) confirms Eclipse's ship action
+      explicitly does NOT require a Gaiaformer ("You do not need to discard (or even have) a
+      Gaiaformer"), unlike the Federation tokens; that fix was reverted before the real bug was found.**
+      Fixed by adding the same zero-targets pre-check `possibleSpaceshipActions()` already had for T F
+      Mars's Power action, for both ships' credit actions. New test in `spaceship-actions.spec.ts`.
+    - **Xenos's Lost Fleet free action (1 ore → 1 power token directly into Area III, rulebook p.11,
+      already `CONFIRMED` in RULES_CLARIFICATIONS.md §I4) was never actually coded.** Added
+      `Resource.GainTokenArea3`, a new `FreeAction.OreToPowerTokenArea3` wired through Xenos's
+      `freeActionChoice` handler (same `ConversionPool` pattern as Nevlas/Taklons/BalTaks), gated on
+      `Expansion.LostFleet` via a new `Player.expansions` field (set in `loadBoard`, since faction-board
+      handlers previously had no way to know which expansion was active). Viewer: new resource icon
+      (reuses the round power-token circle), `freeActionShortcuts`/`resourceData` entries. New
+      `faction-boards/xenos.spec.ts` (4 tests).
+    - **Final scoring tiles' top edge was cropped off, and the "Extension" label overlapped the R1
+      round-scoring tile.** Both root-caused to the same fixed-height `viewBox="0 0 W 505"` on the
+      `scoring-research-board` SVG (`Game.vue`/`SetupPreviewBoard.vue`): `ScoringBoard`'s own nested
+      `<svg y="-25">` placement pushed its top 25 units above the parent's y=0 boundary (clipped), and
+      its internal `viewBox="0 0 80 470"` left only ~2 units of clearance between the R1 tile and the
+      "Extension" label below it. Fixed by widening both viewBoxes (`0 -25 W 545` outer, `0 0 80 480`
+      inner) and adding real spacing; also renamed the label to the owner-requested **"7th adv.
+      tech:"**. New `Game.spec.ts` viewBox-bounds test; `ScoringBoard.spec.ts` updated for the new label.
+    - **The Lost Fleet Deep Space icon (Advanced Tech tiles, round scoring, etc.) reused the base-game
+      7-hex Sector icon with a small "DS" text overlay** instead of showing the physical tile's actual
+      3-hex triangle shape. New `components/Conditions/DeepSpaceSector.vue` draws 3 real hex polygons
+      (reusing `graphics/hex.ts`'s `corners()`, the same geometry the real map hexes use) in the map's
+      own Deep Space color; wired into `Condition.vue` for `condition === 'ds'`. Also reused for the
+      map's own Lost Fleet legend (see next item). New `Condition.spec.ts`.
+    - **The map's Interspace/Deep Space legend swatches were nearly indistinguishable** (both just a
+      slightly-different-shade dark-navy rounded rect) — the owner's "loose legend" report. Fixed by
+      giving the Interspace swatch a dashed border (matching the real map hex style) and replacing the
+      Deep Space swatch with the new `DeepSpaceSector` 3-hex icon, so the two are now distinguishable by
+      shape, not just a subtle color difference; extended `SpaceMap.spec.ts`'s existing legend test.
+    - **The Lost Fleet Standard Tech "+1 range" icon was unnecessarily wide** (two flat-hex images plus
+      a rotated arrow glyph, ~46 units wide) compared to every other resource icon. Replaced with a
+      single hex + a "+1" text badge. Since the same `Resource kind="r"` icon is also used by
+      `PlayerInfo.vue` to show a player's absolute current range (where a "+" prefix would be
+      misleading — that's a total, not a gain), added an explicit `plus` prop (default `false`) so only
+      genuine reward-icon call sites (`TechContent.vue`'s `cornerReward`/`centerRewards`/`rightRewards`,
+      `RichTextView.vue`) opt in. New `Resource.spec.ts`.
+    - **Are the new Lost Fleet round scoring tiles implemented? No — now they are.** RULES_CLARIFICATIONS.md
+      §G4 already confirmed 3 new round scoring tiles (`lab4`: +4VP per Research Lab built; `sector3`:
+      +3VP the first time a mine is built in a Space/Deep Space sector not colonized before, Interspace
+      excluded; `planet3`: +3VP the first time a mine is built on a planet type not colonized before),
+      but `ScoringTile.values(expansions)` ignored its `expansions` parameter entirely (the same
+      long-standing gap flagged for `AdvTechTile`/`Federation`/`Booster`/`FinalTile` in the Integration
+      flags list) and none of the 3 tiles existed in `tiles/scoring.ts`. `lab4` needed zero new engine
+      logic (`Condition.ResearchLab === Building.ResearchLab === "lab"` already flows through the
+      existing `receiveBuildingTriggerIncome` dispatch, same mechanism as the base game's `ts >> 4vp`).
+      `sector3`/`planet3` needed genuine new plumbing: 2 new `Condition` values
+      (`NewSector`/`NewPlanetType`), checked in `player.build()` right after the existing
+      trigger-income call, reusing Darkanians' PI-ability helper `isNewLostFleetSector()` for the sector
+      check (already correctly excludes Interspace) and an equivalent inline check against
+      `pl.data.occupied` for the planet-type check. Viewer: `Condition.vue` reuses the existing
+      Sector/PlanetType icons (now also `newsector`/`newplanet`), `data/event.ts` tooltip text. New
+      `tiles/scoring.spec.ts` (5 tests) and `components/ScoringTile.spec.ts` (2 tests).
+    - **3-player Lost Fleet games rendered noticeably smaller than 2p/4p on a phone screen.** The
+      owner asked for the map to be rotated per player count to fill the available space, which #50 had
+      deferred pending exactly this kind of report. Measured the actual (seed-independent, since only
+      individual sector tile content is randomized, not the fixed sector-center macro-layout) hex
+      bounding-box width at every hex-grid-aligned rotation (0/60/120/180/240/300deg — matching the
+      existing per-sector rotation feature's convention, so sector-id numbers/text still look like a
+      normally-rotated physical tile rather than an arbitrary tilt) for each player count: 2p and 4p are
+      already narrowest at 0deg (no change), 3p is ~17% narrower at 120deg (27 → 22.5 units). Added
+      `SpaceMap.vue`'s `mapRotationDeg` getter (120deg for 3p Lost Fleet, else 0), wrapped the
+      sector/hex/highlight rendering in one outer `<g :transform="rotate(...)">`, and updated `bounds`
+      (and therefore the viewBox, faction wheel, and legend placement — all already dynamic per #50) to
+      compute against the rotated hex positions. Purely a rendering-layer transform: engine hex
+      coordinates, move strings, and saved/hosted game state are completely unaffected. Updated
+      `SpaceMap.spec.ts`'s existing viewBox-bounds test to rotate its own expected coordinates the same
+      way for 3p.
+    - **None of the above needed any Supabase/backend changes** — confirmed against BACKEND.md's
+      architecture (the `moves` table is an append-only log of move strings with zero game-rule
+      validation server-side; "the engine is client-side and authoritative") before starting, and
+      re-confirmed per fix: the spaceship-action/Xenos fixes only change what the client-side engine
+      offers or reuse the existing generic `Command.Spend` move format, and the map-rotation fix is
+      viewer-rendering-only.
+    - Verification: engine `cd engine && npm test` → **531/531** (490 baseline this doc had stated for
+      #45, actually 521 at this session's start per a fresh clean run — see note below — → 531 after
+      this batch, +10 new tests: 1 spaceship-actions, 4 xenos, 5 scoring).
+      Viewer `cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts'
+      'src/logic/**/*.spec.ts'` → **238/238** (232 baseline, confirmed accurate — → 238 after this
+      batch, +6 new tests: 1 `Game.spec.ts`, 1 `Condition.spec.ts`, 2 `Resource.spec.ts`, 2
+      `ScoringTile.spec.ts`; plus assertion extensions to 3 existing tests in `SpaceMap.spec.ts`/
+      `ScoringBoard.spec.ts`, no count change from those). One **pre-existing, unrelated flaky test** found and
+      confirmed via `git stash` (fails intermittently on baseline too, before any of this session's
+      changes): `hosted/SetupPreview.spec.ts`'s "emits lock-in with the seed and rotate move once a
+      valid setup is confirmed" is seed-dependent and occasionally hits a seed/rotation combination that
+      doesn't reproduce its own setup assumption — flagged here for a future session, not fixed (out of
+      scope for this batch).
+      **Test-count correction:** this doc's "Done so far" #45 line stated 490 engine tests, but a fresh
+      clean run at this session's start (`git stash`-verified) showed **521** — the real baseline had
+      grown from work in sessions not fully reflected in that line. The 232 viewer baseline was accurate.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -1364,15 +1469,15 @@ Real test commands (don't use raw `mocha -r ts-node/register` for the viewer —
 TS resolution than the real webpack-based path and gives false failures; use the actual scripts):
 
 - Engine: `cd engine && npm test` (or `npx mocha -r ts-node/register 'src/**/*.spec.ts' 'src/*.spec.ts'`
-  — equivalent for engine, which has no webpack step). **521 tests passing as of 2026-07-02.**
+  — equivalent for engine, which has no webpack step). **531 tests passing as of 2026-07-02.**
 - Viewer: `cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'`
   (this is what `pnpm test` runs — uses `mochapack`/webpack, required for files that touch engine
-  types). **232 tests passing as of 2026-07-02.**
+  types). **238 tests passing as of 2026-07-02** (one unrelated pre-existing flaky test, see #55).
 
-**Latest full rerun after #54:** engine **521/521**, viewer **232/232** (both run fresh at the
-start of #54's session — the engine count had already grown to 521 from work not reflected in this
-file's prior "490" line, confirmed via a clean run before any of #54's changes; no regressions
-either way. #54 added 1 engine test and net +13 viewer tests).
+**Latest full rerun after #55:** engine **531/531**, viewer **238/238** (both run fresh at the
+start of #55's session — the engine count had already grown to 521 from work not reflected in this
+file's prior "490" line, confirmed via a clean run before any of #55's changes; no regressions
+either way. #55 added 10 engine tests and 6 viewer tests).
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/
@@ -1694,9 +1799,9 @@ quick-test` 152/152; `npm test` 152/154, the 2 failures pre-existing/unrelated, 
    far" #50 map-fit/viewBox + wheel, #51 consolidated per-ship overview strip, #52 tile iconography,
    #53 mine-placement decode). Every LF component now renders through base-game components
    (TechContent/Condition/Resource icons, FederationTile art, TechTile, SpecialAction/BoardAction
-   octagons, faction Tokens). One optional follow-up remains, deliberately deferred with owner
-   knowledge: rotating the 3p/4p map for mobile — re-judge on the deployed site first, since the
-   #50 viewBox fix already makes 4p fit a portrait phone whole.
+   octagons, faction Tokens). The one deferred follow-up (rotating the map for mobile) is now
+   **DONE 2026-07-02** — see "Done so far" #55: 3p rotates 120deg (hex-grid-aligned, ~17% narrower);
+   2p/4p were already optimal at 0deg and stay unrotated.
 4. ~~Or a different unit of work entirely (viewer, Supabase)~~ — **Supabase multiplayer is DONE**
    (see "Done so far" #47 and `BACKEND.md`), pending two ~5-minute owner actions listed in
    `BACKEND.md` §11: deploy the `notify` Edge Function and set the Supabase Auth URL

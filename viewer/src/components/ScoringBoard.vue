@@ -1,10 +1,10 @@
 <template>
-  <svg viewBox="0 0 80 470" v-if="$store.state.data.tiles && $store.state.data.tiles.scorings.final">
+  <svg viewBox="0 0 80 480" v-if="$store.state.data.tiles && $store.state.data.tiles.scorings.final">
     <FinalScoringTile :index="0" v-if="final > 0" />
     <FinalScoringTile :index="1" v-if="final > 1" transform="translate(0, 60)" />
     <ScoringTile v-for="i in scorings" :round="i" :transform="`translate(0, ${400 - i * 45})`" :key="i" />
-    <g v-if="hasScoringExtension" transform="translate(10, 398)" v-b-tooltip :title="extensionTooltip">
-      <text x="30" y="0" class="extension-label">Extension</text>
+    <g v-if="hasScoringExtension" transform="translate(10, 403)" v-b-tooltip :title="extensionTooltip">
+      <text x="30" y="0" class="extension-label">7th adv. tech:</text>
       <g v-if="gateOnShips" data-extension-gate="ships" transform="translate(30, 9)">
         <circle v-for="i in [0, 1, 2]" :key="i" :cx="(i - 1) * 13" r="5.5" class="extension-ship" />
         <text v-for="i in [0, 1, 2]" :key="`t${i}`" :x="(i - 1) * 13" y="2.8" class="extension-ship-label">

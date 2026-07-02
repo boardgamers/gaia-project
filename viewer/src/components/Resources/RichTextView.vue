@@ -14,6 +14,7 @@
           :transform="`translate(${j * 20}, ${y(r.type)}) scale(${scale(r.type)})`"
           :kind="r.type"
           :count="r.count"
+          :plus="r.type === 'r'"
         />
       </svg>
       <svg v-else-if="c.building != null" :key="i" viewBox="0 0 10 10" width="36" height="36">

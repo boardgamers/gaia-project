@@ -13,7 +13,7 @@
       >
         <SpaceMap :class="['mb-1', 'space-map', 'col-md-7']" />
         <div class="col-md-5">
-          <svg class="scoring-research-board" :viewBox="`0 0 ${researchBoardWidth + 120} 505`">
+          <svg class="scoring-research-board" :viewBox="`0 -25 ${researchBoardWidth + 120} 545`">
             <ResearchBoard height="450" ref="researchBoard" x="-50" />
             <ScoringBoard class="ml-4" width="90" :x="researchBoardWidth + 20" y="-25" />
             <BoardAction

@@ -40,6 +40,9 @@ export enum FreeAction {
 
   //Taklons
   PowerTo3Credit,
+
+  //Xenos (Lost Fleet)
+  OreToPowerTokenArea3,
 }
 
 export type ResourceConversion = { cost: string; income: string };
@@ -98,6 +101,11 @@ export const freeActionsBaltaks: ConversionTable = { [FreeAction.GaiaFormerToQic
 // this is for convenience
 export const freeActionsTaklons: ConversionTable = { [FreeAction.PowerTo3Credit]: { cost: "3pw", income: "3c" } };
 
+// Lost Fleet: "As a free action, the Xenos can spend 1 ore to gain 1 power (in area III)." (rulebook p.11)
+export const freeActionsXenos: ConversionTable = {
+  [FreeAction.OreToPowerTokenArea3]: { cost: "1o", income: "1ta3" },
+};
+
 export const freeActionConversions: ConversionTable = Object.assign(
   {},
   freeActions,
@@ -107,7 +115,8 @@ export const freeActionConversions: ConversionTable = Object.assign(
   freeActionsNevlas,
   freeActionsNevlasPI,
   freeActionsBaltaks,
-  freeActionsTaklons
+  freeActionsTaklons,
+  freeActionsXenos
 );
 
 export const boardActions = {

@@ -91,6 +91,8 @@ export enum Resource {
   BowlToken = "bowl-t",
   BurnToken = "burn-token",
   GainToken = "t",
+  /** Lost Fleet: gain a power token directly into Area III (Xenos's free action). */
+  GainTokenArea3 = "ta3",
   Brainstone = "brainstone",
   GainTokenGaiaArea = "tg",
   MoveTokenToGaiaArea = "t->tg",
@@ -188,6 +190,10 @@ export enum Condition {
   Trade = "trade",
   // Lost Fleet
   SpaceshipQicAction = "shipq",
+  /** A mine built in a Space/Deep Space sector not colonized by this player before (§G4 "sector3"). */
+  NewSector = "newsector",
+  /** A mine built on a planet type not colonized by this player before (§G4 "planet3"). */
+  NewPlanetType = "newplanet",
 }
 
 export namespace Condition {
@@ -694,11 +700,15 @@ export enum ScoringTile {
   Score8 = "score8",
   Score9 = "score9",
   Score10 = "score10",
+  // Lost Fleet (RULES_CLARIFICATIONS.md §G4): "lab4"/"sector3"/"planet3"
+  LfLab4 = "lflab4",
+  LfSector3 = "lfsector3",
+  LfPlanet3 = "lfplanet3",
 }
 
 export namespace ScoringTile {
   export function values(expansions = 0): ScoringTile[] {
-    return (Object.values(ScoringTile) as ScoringTile[]).filter((val: ScoringTile) => {
+    const base = (Object.values(ScoringTile) as ScoringTile[]).filter((val: ScoringTile) => {
       if (typeof val !== "string") {
         return;
       }
@@ -706,6 +716,12 @@ export namespace ScoringTile {
         return true;
       }
     }) as ScoringTile[];
+
+    if (hasExpansion(expansions, Expansion.LostFleet)) {
+      base.push(ScoringTile.LfLab4, ScoringTile.LfSector3, ScoringTile.LfPlanet3);
+    }
+
+    return base;
   }
 }
 

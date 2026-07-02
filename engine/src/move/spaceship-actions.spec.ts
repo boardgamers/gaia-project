@@ -443,6 +443,17 @@ describe("Lost Fleet spaceship board actions", () => {
     expect(target.hex.data.player).to.equal(PlayerEnum.Player1);
   });
 
+  it("should not offer Eclipse's Credit action at all when there is no legal Mine target (all Mines already placed)", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    player.data.explorationShips[Spaceship.Eclipse] = 1;
+    occupyPlanetsOfDistinctTypes(engine, PlayerEnum.Player1, 1);
+    player.data.buildings[Building.Mine] = player.maxBuildings(Building.Mine);
+
+    const command = availableSpaceshipActionCommand(engine, PlayerEnum.Player1);
+    expect(command?.data.actions.find((a) => a.ship === Spaceship.Eclipse && a.type === "credit")).to.equal(undefined);
+  });
+
   it("should pay 3 credits, terraform beyond the 1 free step using ore, and build a Mine via T F Mars's Credit action", () => {
     const engine = createLostFleetRoundMoveEngine(3);
     const player = engine.player(PlayerEnum.Player1);

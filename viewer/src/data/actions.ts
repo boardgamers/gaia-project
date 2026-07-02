@@ -83,4 +83,7 @@ export const freeActionShortcuts: { [key in FreeAction]: { shortcut: string; fas
       filter: (player) => player.data.brainstone == PowerArea.Area3,
     },
   },
+
+  //Xenos (Lost Fleet)
+  [FreeAction.OreToPowerTokenArea3]: { shortcut: "p", fast: { button: PowerArea.Area2 } },
 };

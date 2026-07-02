@@ -30,7 +30,7 @@
       y="-8"
     />
     <rect
-      v-else-if="['pw', 'pay-pw', 't', 'bowl-t', 'burn-token', 'brainstone'].includes(kind)"
+      v-else-if="['pw', 'pay-pw', 't', 'ta3', 'bowl-t', 'burn-token', 'brainstone'].includes(kind)"
       class="power"
       width="15"
       height="15"
@@ -122,17 +122,16 @@
       </text>
     </template>
     <template v-else-if="kind === 'r'">
-      <g transform="scale(1) translate(-13,0)">
-        <image xlink:href="../assets/resources/flat-hex.svg" :height=162/328*20 width=20 x=-10 y=-4 />
-      </g>
-      <g transform="scale(1) translate(13,0)">
-        <image xlink:href="../assets/resources/flat-hex.svg" :height=162/328*20 width=20 x=-10 y=-4 />
-      </g>
-      <g transform="translate(1,0) rotate(70)">
-        <image xlink:href="../assets/resources/range-arrow.svg" :height=285/164*9 width=10 x=-5 y=-8 />
-      </g>
-      <text v-if="count >= 1" x="13" y="1.2" stroke-width="0.3" style="font-weight: bold; font-size: 10px">
-        {{ count }}
+      <image xlink:href="../assets/resources/flat-hex.svg" :height=162/328*20 width=20 x=-10 y=-4 />
+      <text
+        v-if="count >= 1"
+        x="0"
+        y="1.2"
+        stroke="black"
+        stroke-width="0.3"
+        style="font-weight: bold; font-size: 10px; stroke-width: 0.5px"
+      >
+        {{ plus ? "+" : "" }}{{ count }}
       </text>
     </template>
     <template v-else-if="kind === 'ship-range'">
@@ -171,6 +170,7 @@
             'pw',
             'pay-pw',
             't',
+            'ta3',
             'bowl-t',
             'burn-token',
             'tg',
@@ -188,7 +188,7 @@
       "
       :class="{ plus: count === '+' }"
       :text-decoration="kind === 'burn-token' ? 'line-through' : ''"
-      >{{ kind === "t" && count > 0 ? "+" : "" }}{{ count }}</text
+      >{{ (kind === "t" || kind === "ta3") && count > 0 ? "+" : "" }}{{ count }}</text
     >
     <text x="0" y="0" v-if="kind == 'brainstone'">B</text>
   </g>
@@ -228,6 +228,10 @@ export default class Resource extends Vue {
 
   @Prop()
   tooltip: string;
+
+  /** Show a "+" before the count (kind "r" only) - true when this icon represents a gain, not a raw total. */
+  @Prop({ default: false })
+  plus: boolean;
 
   get flat() {
     return this.$store.state.preferences.flatBuildings;

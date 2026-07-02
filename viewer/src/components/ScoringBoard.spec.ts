@@ -15,7 +15,7 @@ describe("ScoringBoard", () => {
     const { container, getByText } = render(ScoringBoard, { store });
 
     expect(container.querySelector(".techTile.adv-ext")).to.not.equal(null);
-    expect(getByText("Extension")).to.not.equal(null);
+    expect(getByText("7th adv. tech:")).to.not.equal(null);
     // the 25-VP gate renders as a VP resource icon, not text
     const vpGate = container.querySelector('[data-extension-gate="vp"]');
     expect(vpGate).to.not.equal(null);

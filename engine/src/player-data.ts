@@ -294,6 +294,9 @@ export default class PlayerData extends EventEmitter {
       case Resource.GainToken:
         count > 0 ? (this.power.area1 += count) : this.discardPower(-count);
         break;
+      case Resource.GainTokenArea3:
+        this.power.area3 += count;
+        break;
       case Resource.Brainstone:
         this.brainstone = PowerArea.Area1; //initial brainstone gain or gaia to area1
         break;

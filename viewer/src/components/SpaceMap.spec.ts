@@ -75,6 +75,12 @@ describe("SpaceMap", () => {
     expect(container.querySelector('[data-kind="interspace"]')).to.not.equal(null);
     expect(container.querySelector('[data-kind="deep-space"]')).to.not.equal(null);
     expect(container.querySelector('[data-kind="ship"]')).to.not.equal(null);
+
+    // the legend's Deep Space swatch renders as an actual 3-hex cluster (matching the physical
+    // tile), not the same shape as the single-hex Interspace swatch, so the two are distinguishable
+    // by more than a subtle color difference.
+    expect(container.querySelector('[data-kind="deep-space"] .deep-space-sector')).to.not.equal(null);
+    expect(container.querySelectorAll('[data-kind="deep-space"] .deep-space-sector polygon').length).to.equal(3);
   });
 
   it("sizes the viewBox to contain every hex and keeps the wheel and legends in the left sidebar", () => {
@@ -84,6 +90,16 @@ describe("SpaceMap", () => {
       const match = /translate\((-?[\d.]+)/.exec(el?.getAttribute("transform") ?? "");
       expect(match, "expected an anchored transform").to.not.equal(null);
       return Number(match[1]);
+    };
+
+    // Lost Fleet 3p is rendered rotated 120deg (hex-grid-aligned) to minimize the viewBox width on
+    // narrow phone screens (SpaceMap.vue's mapRotationDeg); 2p/4p are already narrowest at 0deg.
+    const rotationDeg = (players: number) => (players === 3 ? 120 : 0);
+    const rotate = (x: number, y: number, deg: number) => {
+      const rad = (deg * Math.PI) / 180;
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+      return { x: x * cos - y * sin, y: x * sin + y * cos };
     };
 
     for (const players of [2, 3, 4]) {
@@ -96,12 +112,13 @@ describe("SpaceMap", () => {
       const [x, y, w, h] = container.querySelector("svg").getAttribute("viewBox").split(" ").map(Number);
       let minHexX = Infinity;
       for (const hex of engine.map.grid.values()) {
-        const c = hexCenter(hex);
-        expect(c.x * 1.01 - 1, `${players}p hex ${hex} left of viewBox`).to.be.gte(x);
-        expect(c.x * 1.01 + 1, `${players}p hex ${hex} right of viewBox`).to.be.lte(x + w);
-        expect(c.y * 1.01 - 1, `${players}p hex ${hex} above viewBox`).to.be.gte(y);
-        expect(c.y * 1.01 + 1, `${players}p hex ${hex} below viewBox`).to.be.lte(y + h);
-        minHexX = Math.min(minHexX, c.x * 1.01);
+        const raw = hexCenter(hex);
+        const c = rotate(raw.x * 1.01, raw.y * 1.01, rotationDeg(players));
+        expect(c.x - 1, `${players}p hex ${hex} left of viewBox`).to.be.gte(x);
+        expect(c.x + 1, `${players}p hex ${hex} right of viewBox`).to.be.lte(x + w);
+        expect(c.y - 1, `${players}p hex ${hex} above viewBox`).to.be.gte(y);
+        expect(c.y + 1, `${players}p hex ${hex} below viewBox`).to.be.lte(y + h);
+        minHexX = Math.min(minHexX, c.x);
       }
 
       // The faction wheel (ring spans +-2.6 around its anchor at scale 0.65) and the Lost Fleet

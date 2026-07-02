@@ -1,29 +1,31 @@
 <template>
   <svg :viewBox="viewBox">
     <definitions />
-    <Sector
-      v-for="center in this.sectors"
-      :center="center"
-      :key="`${center.q}x{center.r}`"
-      :style="`transform: translate(${hexCenter(center).x * 1.01}px, ${hexCenter(center).y * 1.01}px) rotate(${
-        rotation(center) * 60
-      }deg);`"
-    />
-    <SpaceHex
-      v-for="hex in looseHexes"
-      :key="hex.toString()"
-      :transform="`translate(${hexCenter(hex).x * 1.01}, ${hexCenter(hex).y * 1.01})`"
-      :hex="hex"
-      :isCenter="false"
-    />
-    <circle
-      v-for="(s, i) in highlightedSectors"
-      :key="i"
-      r="1"
-      :style="`fill: ${i === 0 ? 'red' : 'back'}; transform: translate(${hexCenter(s).x * 1.01}px, ${
-        hexCenter(s).y * 1.01
-      }px)`"
-    />
+    <g :transform="`rotate(${mapRotationDeg})`">
+      <Sector
+        v-for="center in this.sectors"
+        :center="center"
+        :key="`${center.q}x{center.r}`"
+        :style="`transform: translate(${hexCenter(center).x * 1.01}px, ${hexCenter(center).y * 1.01}px) rotate(${
+          rotation(center) * 60
+        }deg);`"
+      />
+      <SpaceHex
+        v-for="hex in looseHexes"
+        :key="hex.toString()"
+        :transform="`translate(${hexCenter(hex).x * 1.01}, ${hexCenter(hex).y * 1.01})`"
+        :hex="hex"
+        :isCenter="false"
+      />
+      <circle
+        v-for="(s, i) in highlightedSectors"
+        :key="i"
+        r="1"
+        :style="`fill: ${i === 0 ? 'red' : 'back'}; transform: translate(${hexCenter(s).x * 1.01}px, ${
+          hexCenter(s).y * 1.01
+        }px)`"
+      />
+    </g>
     <FactionWheel class="faction-wheel" :transform="`translate(${bounds.left + 3.1}, ${bounds.top + 2.9}) scale(0.65)`" />
     <image v-if="showCharts" xlink:href="../assets/other/line-chart.svg" :height=155/211*22 width="22" x="-11" y="-8"
     v-b-modal.chart-button role="button" :transform="`translate(${bounds.right - 1.9}, ${bounds.top + 1.4}) scale(0.1)`" />
@@ -37,7 +39,7 @@
       </g>
       <g class="lost-fleet-map-legend__row" data-kind="deep-space" transform="translate(0.55, 3)">
         <rect class="lost-fleet-map-legend__swatch lost-fleet-map-legend__swatch--deep-space" width="1.2" height="0.68" rx="0.18" ry="0.18" />
-        <text class="lost-fleet-map-legend__label" transform="translate(0.6, 0.47)">DS</text>
+        <DeepSpaceSector transform="translate(0.6, 0.34) scale(0.055)" />
         <text class="lost-fleet-map-legend__copy" transform="translate(1.7, 0.5)">Deep Space</text>
       </g>
       <g class="lost-fleet-map-legend__row" data-kind="ship" transform="translate(0.55, 4.05)">
@@ -71,6 +73,7 @@ import FactionWheel from "./FactionWheel.vue";
 import Definitions from "./definitions/Definitions.vue";
 import { MapMode, MapModeType } from "../data/actions";
 import SpaceHex from "./SpaceHex.vue";
+import DeepSpaceSector from "./Conditions/DeepSpaceSector.vue";
 
 @Component<SpaceMap>({
   components: {
@@ -78,6 +81,7 @@ import SpaceHex from "./SpaceHex.vue";
     Definitions,
     Sector,
     SpaceHex,
+    DeepSpaceSector,
   },
 })
 export default class SpaceMap extends Vue {
@@ -120,22 +124,43 @@ export default class SpaceMap extends Vue {
   }
 
   /**
+   * Whole-board rotation (hex-grid-aligned, i.e. a multiple of 60deg so every hex/sector still
+   * looks "upright" like a physically-rotated tile - same visual language as the existing
+   * per-sector rotation), chosen per player count to minimize the rendered width, since on a
+   * narrow phone viewport a narrower viewBox renders at a larger scale. Measured once against the
+   * fixed (seed-independent) Lost Fleet sector-center layout for each player count: 2p and 4p are
+   * already narrowest at 0deg; 3p is ~17% narrower at 120deg (27 -> 22.5 units).
+   */
+  get mapRotationDeg(): number {
+    if (this.isLostFleet && this.engine.players.length === 3) {
+      return 120;
+    }
+    return 0;
+  }
+
+  /**
    * Bounding box of every hex on the board (in rendered units, i.e. hexCenter * 1.01 like the
-   * template's transforms), padded by one hex radius, plus a reserved left sidebar where the
-   * faction wheel / legends live so they never cover hexes. Replaces the old hardcoded
-   * viewBox, which clipped the taller Lost Fleet 3p/4p layouts.
+   * template's transforms, rotated by mapRotationDeg to match what's actually rendered), padded by
+   * one hex radius, plus a reserved left sidebar where the faction wheel / legends live so they
+   * never cover hexes. Replaces the old hardcoded viewBox, which clipped the taller Lost Fleet
+   * 3p/4p layouts.
    */
   get bounds(): { left: number; top: number; right: number; bottom: number } {
     let minX = Infinity;
     let maxX = -Infinity;
     let minY = Infinity;
     let maxY = -Infinity;
+    const rad = (this.mapRotationDeg * Math.PI) / 180;
+    const cos = Math.cos(rad);
+    const sin = Math.sin(rad);
     for (const hex of this.map.grid.values()) {
       const c = hexCenter(hex);
-      minX = Math.min(minX, c.x * 1.01);
-      maxX = Math.max(maxX, c.x * 1.01);
-      minY = Math.min(minY, c.y * 1.01);
-      maxY = Math.max(maxY, c.y * 1.01);
+      const x = (c.x * cos - c.y * sin) * 1.01;
+      const y = (c.x * sin + c.y * cos) * 1.01;
+      minX = Math.min(minX, x);
+      maxX = Math.max(maxX, x);
+      minY = Math.min(minY, y);
+      maxY = Math.max(maxY, y);
     }
     if (minX > maxX) {
       // no hexes (e.g. map not generated yet) - keep the old base-game frame
@@ -201,6 +226,7 @@ text.color-legend {
 
 .lost-fleet-map-legend__swatch--interspace {
   fill: #203760;
+  stroke-dasharray: 0.1 0.05;
 }
 
 .lost-fleet-map-legend__swatch--deep-space {
