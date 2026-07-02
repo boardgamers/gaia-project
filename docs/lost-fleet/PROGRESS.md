@@ -1453,6 +1453,11 @@ open, in priority order the user should pick from:
    refinement beyond those current markers and boards.
 3. **Revised Space Sector tiles 05/06/07** (§H4, the one remaining art-only TODO — see "Still MISSING"
    above) — would let Lost Fleet stop falling back to the base game's per-count face for those 3 tiles.
+3b. **Full-game playout fuzzer with rules-conformance oracles** — plan written and owner-requested
+   (2026-07-02), see `docs/lost-fleet/FUZZER_PLAN.md`: seeded random legal playouts to completion,
+   three oracle tiers (structural / conservation / Lost-Fleet rules oracles each citing its
+   rulebook/§-ledger source), failure minimization into committed regression specs, and a strict
+   triage protocol (no engine change without a CONFIRMED rules basis). Not started — next up.
 4. ~~Or a different unit of work entirely (viewer, Supabase)~~ — **Supabase multiplayer is DONE**
    (see "Done so far" #47 and `BACKEND.md`), pending two ~5-minute owner actions listed in
    `BACKEND.md` §11: deploy the `notify` Edge Function and set the Supabase Auth URL
