@@ -1101,6 +1101,37 @@ notifications).
       Supabase Auth URL configuration are dashboard/CLI actions this session's tooling couldn't
       perform (deploy required an interactive approval). Games are fully playable without them —
       the trigger's HTTP call just 404s harmlessly until the function exists.
+48. ✅ **Two-browser E2E verification of hosted multiplayer against PRODUCTION, plus the 2 real
+    bugs it flushed out (2026-07-01, merged to `master` on owner instruction).** After #47
+    shipped, the owner asked for the next most complex gap; the answer was that the whole
+    multiplayer stack had never executed in a real browser. Built
+    `viewer/e2e/hosted-multiplayer.e2e.js` (see BACKEND.md §12): Playwright drives **two real
+    Chromium sessions against the live Vercel deployment and the real Supabase project** —
+    lobby boot from a seeded session, game creation through the real form, per-browser seat
+    locking, faction picks through the real Commands UI (button → modal → confirm), realtime
+    fan-out to the other browser with **no reload**, reload-resume from the stored move log,
+    and a first-mine placement via a real map hex click + "Confirm Mine". **All 10 checks
+    pass against production.** Supporting pieces: two throwaway password auth users
+    (`e2e-*@lostfleet.test`, sign in via password grant, bypassing the not-yet-configured
+    magic-link Site URL) and `viewer/e2e/proxy-network.js`, a network adapter for sandboxes
+    whose TLS-intercepting egress proxy kills Chromium's post-quantum ClientHello (all HTTP
+    via Playwright's Node-side request API; WebSockets bridged over a manual CONNECT tunnel).
+    Bugs found and fixed along the way, both now regression-tested (viewer suite **193/193 —
+    fully green, first time since the stale-fixture failures appeared on master**):
+    - **Final-scoring chart leak (pre-existing on master, was misdiagnosed as "2 stale chart
+      fixtures"):** `finalScoringSourceFactory` ignored the `expansion` argument all its
+      sibling factories take, so the 3 Lost Fleet conditions (Asteroids, PI↔Academy distance,
+      Deep Space sectors) appeared in base-game charts and inflated totals — the exact
+      ungated-enumeration pattern from Integration flag 5. Now filtered by
+      `FinalTile.values(expansion)`.
+    - **Persisted engine-mutated options bricked Lost Fleet games:** Engine mutates the
+      options object it's given (stamps generated `map` layout + `factionVariantVersion`
+      into it); Lobby's probe engine shared that object with the `create_game` RPC, and on
+      reload `moveInit` rejects `map.sectors` + `lostFleet` → permanent silent
+      AssertionError. Fixed via a testable `buildCreateGameParams`
+      (`viewer/src/hosted/new-game.ts`, probe gets a clone), option-cloning in
+      `HostedGameHost.buildEngine`, and a visible load-error alert instead of a dead empty
+      board. The owner's real in-flight game was checked and unaffected (no `map` key).
 
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

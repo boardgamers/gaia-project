@@ -80,9 +80,14 @@ async function newSessionContext(browser, session, label, intercept) {
   }
   await context.addInitScript(
     ([key, value]) => {
-      // about:blank and data: documents throw on localStorage access
+      // about:blank and data: documents throw on localStorage access; and
+      // never clobber an existing session — supabase-js rotates the refresh
+      // token, so re-seeding the original one after a reload would leave a
+      // dead (410 Gone) refresh token in place.
       try {
-        window.localStorage.setItem(key, value);
+        if (!window.localStorage.getItem(key)) {
+          window.localStorage.setItem(key, value);
+        }
       } catch (err) {
         /* not a real origin yet */
       }
@@ -131,17 +136,19 @@ async function pickFirstFaction(page) {
   return label;
 }
 
-// Reads the committed move count straight from PostgREST, authenticated as
-// the given page's session (browser fetch, so it uses the browser's network).
-async function committedMoves(page, gameId, accessToken) {
+// Reads the committed moves straight from PostgREST, authenticated with the
+// page's CURRENT access token from localStorage (supabase-js refreshes it;
+// the one from the session file may have expired mid-run).
+async function committedMoves(page, gameId) {
   return page.evaluate(
-    async ([url, anon, token, game]) => {
+    async ([url, anon, ref, game]) => {
+      const stored = JSON.parse(window.localStorage.getItem(`sb-${ref}-auth-token`));
       const res = await fetch(`${url}/rest/v1/moves?game_id=eq.${game}&select=seq,seat,move&order=seq`, {
-        headers: { apikey: anon, Authorization: `Bearer ${token}` },
+        headers: { apikey: anon, Authorization: `Bearer ${stored.access_token}` },
       });
       return res.json();
     },
-    [SUPABASE_URL, ANON_KEY, accessToken, gameId]
+    [SUPABASE_URL, ANON_KEY, PROJECT_REF, gameId]
   );
 }
 
@@ -232,7 +239,7 @@ async function main() {
     // --- Persistence: the move log survives a full reload ---
     await pageA.reload();
     await waitForBadge(pageA, "Your turn");
-    const moves = await committedMoves(pageA, gameId, sessionA.access_token);
+    const moves = await committedMoves(pageA, gameId);
     if (moves.length !== 2 || moves[0].seq !== 1 || moves[1].seq !== 2) {
       throw new Error(`expected 2 committed moves, got ${JSON.stringify(moves)}`);
     }
@@ -242,14 +249,19 @@ async function main() {
     const hex = pageA.locator("use.space-hex.pointer").first();
     if (await hex.count()) {
       await hex.click({ force: true });
+      // placing a mine needs an explicit confirmation click
+      const confirm = pageA.locator("button", { hasText: "Confirm Mine" });
+      await confirm.waitFor({ state: "visible", timeout: 10000 });
+      await confirm.click();
       await pageA.waitForFunction(
-        async ([url, anon, token, game]) => {
+        async ([url, anon, ref, game]) => {
+          const stored = JSON.parse(window.localStorage.getItem(`sb-${ref}-auth-token`));
           const res = await fetch(`${url}/rest/v1/moves?game_id=eq.${game}&select=seq`, {
-            headers: { apikey: anon, Authorization: `Bearer ${token}` },
+            headers: { apikey: anon, Authorization: `Bearer ${stored.access_token}` },
           });
           return (await res.json()).length >= 3;
         },
-        [SUPABASE_URL, ANON_KEY, sessionA.access_token, gameId],
+        [SUPABASE_URL, ANON_KEY, PROJECT_REF, gameId],
         { timeout: 20000 }
       );
       await waitForBadge(pageB, "Your turn");
