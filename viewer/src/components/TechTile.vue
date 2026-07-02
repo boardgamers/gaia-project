@@ -24,10 +24,6 @@
       />
       <!--<text class="title" x="-25" y="-18">{{title}}</text>-->
       <TechContent v-if="this.event" :event="this.event" style="pointer-events: none" />
-      <template v-else>
-        <text class="title spaceship-title" x="0" y="-12">{{ spaceshipTitle }}</text>
-        <text class="content smaller spaceship-label" x="0" y="6">{{ spaceshipLabel }}</text>
-      </template>
     </g>
   </svg>
 </template>
@@ -50,7 +46,7 @@ import { eventDesc } from "../data/event";
 import TechContent from "./TechContent.vue";
 import { ButtonData } from "../data";
 import { prependShortcut } from "../logic/buttons/shortcuts";
-import { techTileData } from "../data/tech-tiles";
+import { spaceshipTechDisplayEvent, techTileData } from "../data/tech-tiles";
 import { techTileEventWithSource } from "@gaia-project/engine/src/tiles/techs";
 import { spaceshipTechSpec } from "@gaia-project/engine/src/tiles/spaceship-techs";
 
@@ -116,8 +112,13 @@ export default class TechTile extends Vue {
   }
 
   get event(): Event | null {
-    if (this.tile == null || this.isSpaceshipTile(this.tile)) {
+    if (this.tile == null) {
       return null;
+    }
+
+    if (this.isSpaceshipTile(this.tile)) {
+      // display-only event - the ship tiles have no engine Event grammar yet
+      return spaceshipTechDisplayEvent(this.tile);
     }
 
     return techTileEventWithSource(this.tile, null)[0];
@@ -155,14 +156,6 @@ export default class TechTile extends Vue {
     return this.shortcut && s.length == 1 ? prependShortcut(s, desc) : desc;
   }
 
-  get spaceshipTitle() {
-    return this.tile != null ? techTileData(this.tile).shortcut : "";
-  }
-
-  get spaceshipLabel() {
-    return this.tile != null ? techTileData(this.tile).name : "";
-  }
-
   isSpaceshipPos(pos: TechTilePos | AdvTechTilePos | Spaceship): pos is Spaceship {
     return Spaceship.values(Expansion.LostFleet).includes(pos as Spaceship);
   }
@@ -196,10 +189,6 @@ svg {
 
     .tech-border {
       fill: var(--tech-tile);
-    }
-
-    .spaceship-label {
-      text-anchor: middle;
     }
 
     &.advanced .tech-border {

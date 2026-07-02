@@ -1,5 +1,5 @@
 import Engine from "@gaia-project/engine";
-import { Spaceship, SpaceshipTechTile } from "@gaia-project/engine/src/enums";
+import { Spaceship, SpaceshipFederation, SpaceshipTechTile } from "@gaia-project/engine/src/enums";
 import { render } from "@testing-library/vue";
 import { expect } from "chai";
 import { makeStore } from "../store";
@@ -67,6 +67,26 @@ describe("PlayerInfo terraforming strip", () => {
     const shipTech = container.querySelector<SVGElement>("svg.techTile.rebellion");
 
     expect(shipTech).to.not.equal(null);
-    expect(shipTech?.textContent).to.contain("1o3k");
+    // renders through TechContent's icon system (o + 3k resource icons), not the old text fallback
+    expect(shipTech?.querySelector("rect.ore")).to.not.equal(null);
+    expect(shipTech?.textContent).to.contain("3");
+    expect(shipTech?.textContent).to.not.contain("1o3k");
+  });
+
+  it("renders claimed Lost Fleet ship Federation tokens with the base-game token art", () => {
+    const engine = new Engine(["init 2 player-info-ship-fed", "p1 faction terrans", "p2 faction hadsch-hallas"], {
+      lostFleet: true,
+    });
+
+    engine.players[0].data.spaceshipFederations.push({ tile: SpaceshipFederation.Credit, green: true });
+
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(PlayerInfo, { props: { player: engine.players[0] }, store });
+    const shipFed = container.querySelector(`[data-ship-federation="${SpaceshipFederation.Credit}"]`);
+
+    expect(shipFed, "claimed ship Federation token should render in the tiles row").to.not.equal(null);
+    expect(shipFed?.querySelector("image")).to.not.equal(null);
   });
 });

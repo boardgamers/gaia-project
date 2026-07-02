@@ -97,9 +97,10 @@ export default class FactionWheel extends Vue {
     const planets = this.gameData.options.lostFleet
       ? [...standardExtraPlanets, ...lostFleetExtraPlanets]
       : standardExtraPlanets;
-    const xs = planets.length === 4 ? [-4.5, -1.5, 1.5, 4.5] : [-2, 2];
 
-    return planets.map((planet, index) => ({ planet, x: xs[index], y: 5 }));
+    // 2 per row below the ring, so Lost Fleet's Asteroid/Protoplanet stack under Gaia/Transdim
+    // instead of widening the wheel's footprint.
+    return planets.map((planet, index) => ({ planet, x: index % 2 === 0 ? -2 : 2, y: 5 + Math.floor(index / 2) * 2.4 }));
   }
 
   factionInitial(planet: Planet): string {

@@ -1,4 +1,4 @@
-import { AdvTechTile, SpaceshipTechTile, TechTile } from "@gaia-project/engine";
+import { AdvTechTile, Event, SpaceshipTechTile, TechTile } from "@gaia-project/engine";
 import { AnyTechTile } from "@gaia-project/engine/src/enums";
 import { colorCodes } from "../logic/color-codes";
 
@@ -65,4 +65,20 @@ export const spaceshipTechTileData: {
 
 export function techTileData(tile: AnyTechTile | SpaceshipTechTile): TileTileData {
   return baseTechTileData[tile] ?? advancedTechTileData[tile] ?? spaceshipTechTileData[tile];
+}
+
+/**
+ * Display-only events so the 3 spaceship Standard Tech tiles render through TechContent's icon
+ * system like every base-game tile, instead of TechTile.vue's old text fallback. The engine has
+ * no Event grammar for these tiles yet (their execution is bespoke), so these exist purely for
+ * the viewer; tooltips still show the exact rules text from spaceshipTechSpec.
+ */
+const spaceshipTechDisplayEvents: { [key in SpaceshipTechTile]: string } = {
+  [SpaceshipTechTile.Range]: "+r",
+  [SpaceshipTechTile.Terraform]: "=> 2step",
+  [SpaceshipTechTile.Resource]: "o,3k",
+};
+
+export function spaceshipTechDisplayEvent(tile: SpaceshipTechTile): Event {
+  return new Event(spaceshipTechDisplayEvents[tile]);
 }

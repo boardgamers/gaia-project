@@ -299,12 +299,12 @@ describe("Commands", () => {
     const expandedLabels = labels();
 
     expect(expandedLabels).to.include("Pick tech tile");
-    expect(expandedLabels.some((label) => label.includes("1o3k"))).to.equal(true);
-    expect(
-      Array.from(container.querySelectorAll<SVGElement>("#move-buttons svg.techTile")).some((tile) =>
-        tile.classList.contains(Spaceship.Rebellion)
-      )
-    ).to.equal(true);
+    const rebellionTile = Array.from(container.querySelectorAll<SVGElement>("#move-buttons svg.techTile")).find(
+      (tile) => tile.classList.contains(Spaceship.Rebellion)
+    );
+    expect(rebellionTile).to.not.equal(undefined);
+    // the ship tech tile renders through TechContent's icon system (o + 3k), not a text shortcut
+    expect(rebellionTile!.querySelector("rect.ore")).to.not.equal(null);
   });
 
   it("renders Moweyds' power-ring special action without crashing", () => {
