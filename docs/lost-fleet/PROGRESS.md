@@ -49,46 +49,46 @@ notifications).
 
 ## Done so far
 
-1. ✅ **Source docs imported & version-controlled** in `docs/lost-fleet/`: rulebook v1.0 (PDF +
-   `rulebook-v1.0.txt` searchable text), `COMPONENTS.md`, `RULES_CLARIFICATIONS.md`,
-   `faction-overview-table.txt` (community faction data, text-only — no third-party art committed).
-2. ✅ **Errata check** — no official Lost Fleet errata/FAQ exists; v1.0 rulebook is authoritative
-   (`RULES_CLARIFICATIONS.md` §K). Community BGG threads still want a human skim (links in §K2).
-3. ✅ **Expansion enum (A1) LOCKED, CODED & TESTED** (`RULES_CLARIFICATIONS.md` §A1; Chunk 1 of the
-   build, done 2026-06-27): `engine/src/enums.ts` now has
-   `None=0, Frontiers=2, LostFleet=4, All=Frontiers|LostFleet=6` plus a new `hasExpansion(expansions,
+1.  ✅ **Source docs imported & version-controlled** in `docs/lost-fleet/`: rulebook v1.0 (PDF +
+    `rulebook-v1.0.txt` searchable text), `COMPONENTS.md`, `RULES_CLARIFICATIONS.md`,
+    `faction-overview-table.txt` (community faction data, text-only — no third-party art committed).
+2.  ✅ **Errata check** — no official Lost Fleet errata/FAQ exists; v1.0 rulebook is authoritative
+    (`RULES_CLARIFICATIONS.md` §K). Community BGG threads still want a human skim (links in §K2).
+3.  ✅ **Expansion enum (A1) LOCKED, CODED & TESTED** (`RULES_CLARIFICATIONS.md` §A1; Chunk 1 of the
+    build, done 2026-06-27): `engine/src/enums.ts` now has
+    `None=0, Frontiers=2, LostFleet=4, All=Frontiers|LostFleet=6` plus a new `hasExpansion(expansions,
 exp)` helper. Migrated all ~12 strict-equality `=== Expansion.Frontiers` checks to bitwise
-   (`enums.ts`, `available/buildings.ts`, `research-tracks.ts`, viewer `Rules.vue`,
-   `ResearchTile.vue`, `PlayerInfo.vue`, `PlayerBoard/Info.vue`). `EngineOptions` gained a
-   `lostFleet?: boolean` flag mirroring `frontiers?: boolean`; `moveInit()` asserts the two can't be
-   combined. New `engine/src/enums.spec.ts` covers `hasExpansion`, `All` composition, the
-   `Building.values(All)` regression, the `engine.expansions` getter, and the exclusivity guard.
-   **274/274 engine tests pass.** (Note: `tsc --noEmit` throws parse errors inside
-   `@types/lodash@4.17.24`'s `.d.ts` — verified pre-existing on a clean baseline via `git stash`, a
-   TypeScript 3.9.10 / lodash-types version mismatch unrelated to this work; not a regression, not
-   blocking, left alone.)
-4. ✅ **4 new faction boards — owner-CONFIRMED** (`RULES_CLARIFICATIONS.md` §B): Tinkeroids,
-   Darkanians, Moweyds, Space Giants (starting resources/power/research/PI income, in engine syntax).
-5. ✅ **Existing-faction audit CLOSED** (§I7): full 18-faction p.16 comparison table transcribed from
-   owner screenshot (2026-06-27, BOARD-ART, CONFIRMED). Only Xenos/Gleens/Space Giants get a genuinely
-   new LF ability (all already captured); every other faction's deviation is pre-existing vanilla
-   personality. Implementation note: diff each row vs. existing `faction-boards/*.ts` at coding time.
-6. ✅ **Tile/booster/scoring/tech/federation/artifact EFFECTS** — all CONFIRMED (rulebook Appendices
-   II–VII for the prose ones; owner board-reads 2026-06-27 for the art-only values). See §G1–G6.
-7. ✅ **Spaceship boards fully captured** (§C1–C5): all 3 action tiles per ship (type/cost/effect),
-   the standard-tech-slot assignment (0 on Twilight, 1 each on the other 3), Twilight's artifact slots
-   (= player count), and the 4-space exploration charge track (0/2/2/3). Owner board-read 2026-06-27.
-8. ✅ Evaluated the uiqoo.kr randomizer: it's a seeded PNG image-renderer of setups with **no effect
-   text** — not a viable source for "what components do." Skip it (maybe use only for map-tile images).
-9. ✅ **Viewer deployed** to Vercel (Git integration, auto-deploy on push to this branch) and
-   **performance foundation work done** before starting Lost Fleet feature coding (user's explicit
-   request — get the foundation right first). Full investigation, root causes, fixes, measured
-   before/after numbers, and the Vue 2 vs Vue 3 decision are in `PERFORMANCE.md` — **read that file**
-   before touching viewer rendering again. Bottom line: engine logic was never the bottleneck
-   (~3.6 ms/move); it was Vue 2 deep reactivity over the whole engine state + ~4,500 duplicate SVG
-   `<defs>` nodes. Fixed (`markRaw`, hoisted federation gradient defs): load -16%, worst click
-   (Build a Mine) -45%. Vue 3 migration was evaluated and rejected for now (wouldn't fix the actual
-   bottleneck, huge migration cost in this stack) — see `PERFORMANCE.md` for the full reasoning.
+    (`enums.ts`, `available/buildings.ts`, `research-tracks.ts`, viewer `Rules.vue`,
+    `ResearchTile.vue`, `PlayerInfo.vue`, `PlayerBoard/Info.vue`). `EngineOptions` gained a
+    `lostFleet?: boolean` flag mirroring `frontiers?: boolean`; `moveInit()` asserts the two can't be
+    combined. New `engine/src/enums.spec.ts` covers `hasExpansion`, `All` composition, the
+    `Building.values(All)` regression, the `engine.expansions` getter, and the exclusivity guard.
+    **274/274 engine tests pass.** (Note: `tsc --noEmit` throws parse errors inside
+    `@types/lodash@4.17.24`'s `.d.ts` — verified pre-existing on a clean baseline via `git stash`, a
+    TypeScript 3.9.10 / lodash-types version mismatch unrelated to this work; not a regression, not
+    blocking, left alone.)
+4.  ✅ **4 new faction boards — owner-CONFIRMED** (`RULES_CLARIFICATIONS.md` §B): Tinkeroids,
+    Darkanians, Moweyds, Space Giants (starting resources/power/research/PI income, in engine syntax).
+5.  ✅ **Existing-faction audit CLOSED** (§I7): full 18-faction p.16 comparison table transcribed from
+    owner screenshot (2026-06-27, BOARD-ART, CONFIRMED). Only Xenos/Gleens/Space Giants get a genuinely
+    new LF ability (all already captured); every other faction's deviation is pre-existing vanilla
+    personality. Implementation note: diff each row vs. existing `faction-boards/*.ts` at coding time.
+6.  ✅ **Tile/booster/scoring/tech/federation/artifact EFFECTS** — all CONFIRMED (rulebook Appendices
+    II–VII for the prose ones; owner board-reads 2026-06-27 for the art-only values). See §G1–G6.
+7.  ✅ **Spaceship boards fully captured** (§C1–C5): all 3 action tiles per ship (type/cost/effect),
+    the standard-tech-slot assignment (0 on Twilight, 1 each on the other 3), Twilight's artifact slots
+    (= player count), and the 4-space exploration charge track (0/2/2/3). Owner board-read 2026-06-27.
+8.  ✅ Evaluated the uiqoo.kr randomizer: it's a seeded PNG image-renderer of setups with **no effect
+    text** — not a viable source for "what components do." Skip it (maybe use only for map-tile images).
+9.  ✅ **Viewer deployed** to Vercel (Git integration, auto-deploy on push to this branch) and
+    **performance foundation work done** before starting Lost Fleet feature coding (user's explicit
+    request — get the foundation right first). Full investigation, root causes, fixes, measured
+    before/after numbers, and the Vue 2 vs Vue 3 decision are in `PERFORMANCE.md` — **read that file**
+    before touching viewer rendering again. Bottom line: engine logic was never the bottleneck
+    (~3.6 ms/move); it was Vue 2 deep reactivity over the whole engine state + ~4,500 duplicate SVG
+    `<defs>` nodes. Fixed (`markRaw`, hoisted federation gradient defs): load -16%, worst click
+    (Build a Mine) -45%. Vue 3 migration was evaluated and rejected for now (wouldn't fix the actual
+    bottleneck, huge migration cost in this stack) — see `PERFORMANCE.md` for the full reasoning.
 10. ✅ **Protoplanet & Asteroid planet types (Chunk 2) CODED & TESTED** (`COMPONENTS.md` §2, done
     2026-06-27): `Planet` enum gained `Protoplanet`/`Asteroid`, gated via a new `Planet.values(expansions)`
     namespace function mirroring `ResearchField.values()`'s pattern — establishing the gating convention
@@ -667,7 +667,7 @@ tokens)")` in `available/federations.spec.ts` covers: ship tokens appearing alon
     affordable, base game unaffected), and an end-to-end test (`move/spaceship-actions.spec.ts`: a real
     Lost Fleet `Command.Action` never lists qic1/2/3). **440/440 → 443/443** (net +3 tests).
 31. ✅ **`terra` Advanced Tech tile audited against "ANY source of free terraforming steps" — no bug
-    found, confirmed by a new regression test** (done 2026-06-29). RULES_CLARIFICATIONS.md §G2 requires
+    found, confirmed by a new regression test** (done 2026-06-29). RULES*CLARIFICATIONS.md §G2 requires
     `terra` to fire on every terraforming step regardless of how it's paid for, explicitly calling out
     the "terra" New Federation token's 3-free-step Build-a-Mine as an example. Audited every production
     call site of `Player.build()`'s `stepsReq` parameter (the single place `receiveTerraformingStepTriggerIncome`
@@ -675,7 +675,7 @@ tokens)")` in `available/federations.spec.ts` covers: ship tokens appearing alon
 buildings.ts`'s `canBuild.steps`, computed as the full `terraformingStepsRequired()` count regardless
     of any cost discount) — correct; (2) the Federation tokens' bonus Build-a-Mine chain (`available/
 federations.ts`'s `possibleFederationTokenBuildMine()`) — also pushes the full, undiscounted `steps`
-    count even though the Terraform token discounts the ore _cost_ for those same steps — correct; (3)
+    count even though the Terraform token discounts the ore \_cost* for those same steps — correct; (3)
     Space Giants' Exploration-board special action — reuses the same normal-build path (temporary step
     discount only affects cost, not the `steps` count) — correct; (4) `move/buildings.ts`'s
     `moveLostPlanet()` hardcodes `stepsReq=0` — correct, since placing the (wildcard) Lost Planet never
@@ -761,111 +761,102 @@ nbPlayers)`, which doesn't itself check the active expansion — so without Lost
       the user as a separately-tracked, already-broken test.
 34. ✅ **Vercel deployment fixed — 3 independent root causes found and fixed in sequence** (done
     2026-06-29; infra/deploy-pipeline work, not Lost Fleet UI). The Vercel deploy for this branch had
-    been failing since before this session; root-caused and fixed all 3 issues:
-    - **Dead `popper` devDependency → SSH git-clone failure.** Both `viewer/package.json` AND
-      `old-ui/package.json` (independently) had a stray bare `popper` devDependency (distinct from the
-      actively-used `popper.js`), with zero references in either package's source. It transitively
-      pulled in `rijs.sync` → a git-pinned `buble` fork resolved via an SSH URL
-      (`git@github.com:pemrouz/buble.git`). Vercel's sandboxed build container has no SSH credentials,
-      so `pnpm install` failed with `Command failed with exit code 128: git clone git@github.com:...`.
-      Removing `popper` from both `package.json`s and regenerating both `pnpm-lock.yaml`s (workspace
-      root `pnpm install`, since `shared-workspace-lockfile=false` means per-package lockfiles, but
-      Vercel's `installCommand` runs at the workspace root and installs all 4 packages regardless)
-      dropped the entire `buble`/`rijs` transitive subtree. Took 2 commits to find both occurrences,
-      because fixing `viewer/`'s copy alone left `old-ui/`'s identical copy still triggering the same
-      failure on the next deploy.
-    - **Stale `.pnpm-store` build-cache corruption.** With the SSH issue fixed, the next deploy failed
-      differently: `ENOENT: no such file or directory, open '/vercel/path0/.pnpm-store/v3/files/.../*-
+    been failing since before this session; root-caused and fixed all 3 issues: - **Dead `popper` devDependency → SSH git-clone failure.** Both `viewer/package.json` AND
+    `old-ui/package.json` (independently) had a stray bare `popper` devDependency (distinct from the
+    actively-used `popper.js`), with zero references in either package's source. It transitively
+    pulled in `rijs.sync` → a git-pinned `buble` fork resolved via an SSH URL
+    (`git@github.com:pemrouz/buble.git`). Vercel's sandboxed build container has no SSH credentials,
+    so `pnpm install` failed with `Command failed with exit code 128: git clone git@github.com:...`.
+    Removing `popper` from both `package.json`s and regenerating both `pnpm-lock.yaml`s (workspace
+    root `pnpm install`, since `shared-workspace-lockfile=false` means per-package lockfiles, but
+    Vercel's `installCommand` runs at the workspace root and installs all 4 packages regardless)
+    dropped the entire `buble`/`rijs` transitive subtree. Took 2 commits to find both occurrences,
+    because fixing `viewer/`'s copy alone left `old-ui/`'s identical copy still triggering the same
+    failure on the next deploy. - **Stale `.pnpm-store` build-cache corruption.** With the SSH issue fixed, the next deploy failed
+    differently: `ENOENT: no such file or directory, open '/vercel/path0/.pnpm-store/v3/files/.../*-
 index.json'`, immediately after a build log line reading "Restored build cache from previous
-      deployment." Vercel's persisted `.pnpm-store` (pnpm's content-addressable package store) from an
-      earlier, failed deployment had a missing/corrupted content blob — unrelated to whether the
-      lockfiles were correct (already proven via a from-scratch clean install). Fixed by having
-      `vercel.json`'s `installCommand` `rm -rf .pnpm-store` before running `pnpm install`.
-    - **`node_modules` was _also_ being restored from the cache, defeating the `.pnpm-store` fix.** The
-      very next deploy hit the _exact same_ `ENOENT` on the _same_ content hash, even with `.pnpm-store`
-      cleared. Cause: Vercel's cache restoration also restores `node_modules` (root + each workspace
-      package's own `node_modules`), which still contains pnpm's virtual store
-      (`node_modules/.pnpm/...`) and `.modules.yaml` pointing at the now-wiped store. Seeing matching
-      `node_modules`, pnpm treated the install as incremental ("Lockfile is up to date, resolution step
-      is skipped") and tried to link the handful of changed packages against a store that no longer had
-      their content. Fixed by also clearing `node_modules`, `engine/node_modules`, `viewer/node_modules`,
-      and `old-ui/node_modules` in `installCommand`, alongside `.pnpm-store` — matching the exact
-      from-scratch local repro that had already proven the lockfiles/build correct.
-    - **Verification methodology:** for each fix, ran the _exact_ Vercel `installCommand` then
-      `buildCommand` locally from a fully clean state (`rm -rf` every `node_modules` + `.pnpm-store`
-      first) rather than trusting an already-populated local install, since that's the only way to
-      genuinely reproduce Vercel's fresh sandboxed container. **Final outcome confirmed via the Vercel
-      MCP tools**, not just local repro: deployment `dpl_4Sy7WME2ZoK4g8Hih3hexLfbmis9` (commit
-      `ca63d25`) reached **`READY`**, build completed in ~1m with 0 errors (only pre-existing
-      bundle-size warnings, unrelated). The site is live at
-      `gaia-lost-fleet-git-claude-lost-fl-6bd3b1-kimphamnguyensproject.vercel.app` (branch alias) and
-      will auto-update on every future push to this branch.
+    deployment." Vercel's persisted `.pnpm-store` (pnpm's content-addressable package store) from an
+    earlier, failed deployment had a missing/corrupted content blob — unrelated to whether the
+    lockfiles were correct (already proven via a from-scratch clean install). Fixed by having
+    `vercel.json`'s `installCommand` `rm -rf .pnpm-store` before running `pnpm install`. - **`node_modules` was _also_ being restored from the cache, defeating the `.pnpm-store` fix.** The
+    very next deploy hit the _exact same_ `ENOENT` on the _same_ content hash, even with `.pnpm-store`
+    cleared. Cause: Vercel's cache restoration also restores `node_modules` (root + each workspace
+    package's own `node_modules`), which still contains pnpm's virtual store
+    (`node_modules/.pnpm/...`) and `.modules.yaml` pointing at the now-wiped store. Seeing matching
+    `node_modules`, pnpm treated the install as incremental ("Lockfile is up to date, resolution step
+    is skipped") and tried to link the handful of changed packages against a store that no longer had
+    their content. Fixed by also clearing `node_modules`, `engine/node_modules`, `viewer/node_modules`,
+    and `old-ui/node_modules` in `installCommand`, alongside `.pnpm-store` — matching the exact
+    from-scratch local repro that had already proven the lockfiles/build correct. - **Verification methodology:** for each fix, ran the _exact_ Vercel `installCommand` then
+    `buildCommand` locally from a fully clean state (`rm -rf` every `node_modules` + `.pnpm-store`
+    first) rather than trusting an already-populated local install, since that's the only way to
+    genuinely reproduce Vercel's fresh sandboxed container. **Final outcome confirmed via the Vercel
+    MCP tools**, not just local repro: deployment `dpl_4Sy7WME2ZoK4g8Hih3hexLfbmis9` (commit
+    `ca63d25`) reached **`READY`**, build completed in ~1m with 0 errors (only pre-existing
+    bundle-size warnings, unrelated). The site is live at
+    `gaia-lost-fleet-git-claude-lost-fl-6bd3b1-kimphamnguyensproject.vercel.app` (branch alias) and
+    will auto-update on every future push to this branch.
 35. ✅ **Branch consolidation — all Lost Fleet work merged onto this branch** (done 2026-06-29).
     The project had accumulated work spread across several parallel branches. Per the user's
     explicit choice (consolidate onto this branch, not master; delete superseded branches),
-    cherry-picked every commit with unique value from the 3 branches that still had any:
-    - `claude/spaceship-boards-gameplay-opnt1p` → `d50b75d`, "Fix T F Mars QIC action to count only
-      Standard Tech tiles": `Condition.TechTile` was counting every tech tile including ones
-      covered by an `AdvTechTile` at the same position, double-counting VP. Fixed by filtering with
-      `isAdvanced(tech.pos)` (`engine/src/tiles/techs.ts`) before counting, in `player.ts`. Its
-      other unique commit (`3e020cf`, refreshing `CLAUDE.md`/`AGENTS.md`) was stale by the time of
-      this merge and superseded by the fresh rewrite below instead of being cherry-picked verbatim.
-    - `claude/quirky-thompson-gt0n0h` → `25e9da5`, "add hex-map render smoke test, fix BoardAction
-      mock": added `viewer/src/components/SpaceMap.spec.ts`, the first test that mounts the real
-      `SpaceMap → Sector → SpaceHex` + `Definitions`/`FederationGradients` tree against a fixture
-      Engine — the test that would have caught the `<defs>`-duplication regression in
-      `PERFORMANCE.md` had it existed first. Also fixed 2 pre-existing broken tests in
-      `BoardAction.spec.ts` (mock Vuex getters were zero-arg functions instead of plain values).
-      Then `e4b1409`, "consolidate turn-order/persistence findings, add working agreements": added
-      a **Working agreements** section (read current code before planning; the testing convention)
-      and documented that the single-browser demo has no turn-locking or persistence by design
-      (`Game.vue`'s `canPlay`, `self-contained.ts`'s fresh-Engine-per-load, `launcher.ts`'s
-      `"player"`-event hook) — not bugs, just the current build stage; `Wrapper.vue`'s Export/Load
-      buttons are today's manual workaround.
-    - `claude/lost-fleet-expansion-gedyrk` → only unique commit was `52508fa`, a docs-only entry
-      recording a Codex-branch merge and 2 regression fixes (exploration charge track reverted to
-      the owner-confirmed `0/2/2/4`; a `SeededSpaceshipTech` `{tile, count}` shape mismatch in
-      specs). The underlying code commits (`751bb69`, `6cf4ae7`, merge `f73b011`) were already
-      ancestors of this branch and remain correctly in place (verified `EXPLORATION_CHARGE_TRACK =
+    cherry-picked every commit with unique value from the 3 branches that still had any: - `claude/spaceship-boards-gameplay-opnt1p` → `d50b75d`, "Fix T F Mars QIC action to count only
+    Standard Tech tiles": `Condition.TechTile` was counting every tech tile including ones
+    covered by an `AdvTechTile` at the same position, double-counting VP. Fixed by filtering with
+    `isAdvanced(tech.pos)` (`engine/src/tiles/techs.ts`) before counting, in `player.ts`. Its
+    other unique commit (`3e020cf`, refreshing `CLAUDE.md`/`AGENTS.md`) was stale by the time of
+    this merge and superseded by the fresh rewrite below instead of being cherry-picked verbatim. - `claude/quirky-thompson-gt0n0h` → `25e9da5`, "add hex-map render smoke test, fix BoardAction
+    mock": added `viewer/src/components/SpaceMap.spec.ts`, the first test that mounts the real
+    `SpaceMap → Sector → SpaceHex` + `Definitions`/`FederationGradients` tree against a fixture
+    Engine — the test that would have caught the `<defs>`-duplication regression in
+    `PERFORMANCE.md` had it existed first. Also fixed 2 pre-existing broken tests in
+    `BoardAction.spec.ts` (mock Vuex getters were zero-arg functions instead of plain values).
+    Then `e4b1409`, "consolidate turn-order/persistence findings, add working agreements": added
+    a **Working agreements** section (read current code before planning; the testing convention)
+    and documented that the single-browser demo has no turn-locking or persistence by design
+    (`Game.vue`'s `canPlay`, `self-contained.ts`'s fresh-Engine-per-load, `launcher.ts`'s
+    `"player"`-event hook) — not bugs, just the current build stage; `Wrapper.vue`'s Export/Load
+    buttons are today's manual workaround. - `claude/lost-fleet-expansion-gedyrk` → only unique commit was `52508fa`, a docs-only entry
+    recording a Codex-branch merge and 2 regression fixes (exploration charge track reverted to
+    the owner-confirmed `0/2/2/4`; a `SeededSpaceshipTech` `{tile, count}` shape mismatch in
+    specs). The underlying code commits (`751bb69`, `6cf4ae7`, merge `f73b011`) were already
+    ancestors of this branch and remain correctly in place (verified `EXPLORATION_CHARGE_TRACK =
   [0, 2, 2, 4]` in `spaceships.ts`, asserted by a test in `spaceships.spec.ts`) — only the
-      _narrative_ of that doc commit was new, and it was written against doc line numbers/test
-      counts (`372/372` → `378/378`) many revisions out of date with this branch's `467/467` and
-      35-item "Done so far" list, so it was skipped rather than cherry-picked verbatim.
-      All cherry-picks verified with the project's real test commands (not raw `mocha`): engine
-      `cd engine && npm test` → still 467/467; viewer `cd viewer && npx vue-cli-service test:unit
+    _narrative_ of that doc commit was new, and it was written against doc line numbers/test
+    counts (`372/372` → `378/378`) many revisions out of date with this branch's `467/467` and
+    35-item "Done so far" list, so it was skipped rather than cherry-picked verbatim.
+    All cherry-picks verified with the project's real test commands (not raw `mocha`): engine
+    `cd engine && npm test` → still 467/467; viewer `cd viewer && npx vue-cli-service test:unit
 --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'` → 155/155, including the new
-      `SpaceMap.spec.ts` test and the fixed `BoardAction.spec.ts` tests passing for the first time.
-      Also rewrote `CLAUDE.md`/`AGENTS.md` from scratch (both were stale — wrong branch name, a dead
-      Windows path, a `362/362`/`372/372` test count) to reflect the actual consolidated branch and
-      current test counts. Branches with zero remaining unique value were deleted from `origin`:
-      `claude/lost-fleet-advtech-tiles-c2fo8w`, `claude/lost-fleet-engine-work-l3bzsk`,
-      `claude/spaceship-boards-gameplay-opnt1p-t991fv`, `codex/continue-lost-fleet-work` (already
-      fully contained before this session), plus the 3 source branches above once their unique
-      commits were absorbed: `claude/lost-fleet-expansion-gedyrk`, `claude/quirky-thompson-gt0n0h`,
-      `claude/spaceship-boards-gameplay-opnt1p`. `master` was left untouched, per the user's explicit
-      choice not to merge into it at the time. **Correction (same day, see #36): both of these
-      decisions changed shortly after.**
+    `SpaceMap.spec.ts` test and the fixed `BoardAction.spec.ts` tests passing for the first time.
+    Also rewrote `CLAUDE.md`/`AGENTS.md` from scratch (both were stale — wrong branch name, a dead
+    Windows path, a `362/362`/`372/372` test count) to reflect the actual consolidated branch and
+    current test counts. Branches with zero remaining unique value were deleted from `origin`:
+    `claude/lost-fleet-advtech-tiles-c2fo8w`, `claude/lost-fleet-engine-work-l3bzsk`,
+    `claude/spaceship-boards-gameplay-opnt1p-t991fv`, `codex/continue-lost-fleet-work` (already
+    fully contained before this session), plus the 3 source branches above once their unique
+    commits were absorbed: `claude/lost-fleet-expansion-gedyrk`, `claude/quirky-thompson-gt0n0h`,
+    `claude/spaceship-boards-gameplay-opnt1p`. `master` was left untouched, per the user's explicit
+    choice not to merge into it at the time. **Correction (same day, see #36): both of these
+    decisions changed shortly after.**
 36. ✅ **`master` fast-forwarded to match this branch; branch deletion still blocked** (done
-    2026-06-29). Two corrections to #35 above:
-    - The `git push origin --delete` calls for all 7 superseded branches actually **failed with
-      `HTTP 403`** — this session's git credentials/proxy can push/forward commits (proven by the
-      master push below) but are not scoped to delete refs. No GitHub MCP tool exists for branch
-      deletion either. **None of the 7 branches listed in #35 have actually been deleted** —
-      `claude/lost-fleet-advtech-tiles-c2fo8w`, `claude/lost-fleet-engine-work-l3bzsk`,
-      `claude/spaceship-boards-gameplay-opnt1p-t991fv`, `codex/continue-lost-fleet-work`,
-      `claude/lost-fleet-expansion-gedyrk`, `claude/quirky-thompson-gt0n0h`,
-      `claude/spaceship-boards-gameplay-opnt1p` all still exist on `origin` and need manual deletion
-      (GitHub web UI or a CLI with delete-scoped credentials).
-    - The user then explicitly reversed the "don't touch master" choice ("Push the branch to master
-      I want everything there now... so I have everything consolidated in the GitHub master").
-      Verified safety first: `master` was a clean ancestor of this branch with zero unique commits
-      of its own (`git rev-list --left-right --count origin/master...HEAD` → `0  33`), so the push
-      was a pure fast-forward, not a merge. Executed `git push origin
+    2026-06-29). Two corrections to #35 above: - The `git push origin --delete` calls for all 7 superseded branches actually **failed with
+    `HTTP 403`** — this session's git credentials/proxy can push/forward commits (proven by the
+    master push below) but are not scoped to delete refs. No GitHub MCP tool exists for branch
+    deletion either. **None of the 7 branches listed in #35 have actually been deleted** —
+    `claude/lost-fleet-advtech-tiles-c2fo8w`, `claude/lost-fleet-engine-work-l3bzsk`,
+    `claude/spaceship-boards-gameplay-opnt1p-t991fv`, `codex/continue-lost-fleet-work`,
+    `claude/lost-fleet-expansion-gedyrk`, `claude/quirky-thompson-gt0n0h`,
+    `claude/spaceship-boards-gameplay-opnt1p` all still exist on `origin` and need manual deletion
+    (GitHub web UI or a CLI with delete-scoped credentials). - The user then explicitly reversed the "don't touch master" choice ("Push the branch to master
+    I want everything there now... so I have everything consolidated in the GitHub master").
+    Verified safety first: `master` was a clean ancestor of this branch with zero unique commits
+    of its own (`git rev-list --left-right --count origin/master...HEAD` → `0  33`), so the push
+    was a pure fast-forward, not a merge. Executed `git push origin
 claude/lost-fleet-viewer-support-95lled:master` (`751bb69..e6e7e43`). Confirmed
-      `git diff origin/master origin/claude/lost-fleet-viewer-support-95lled --stat` is empty —
-      **`master` and this branch are now identical.** Vercel's production deployment (configured
-      target branch = `master`) auto-deployed the new tip (`dpl_79PiRMyvhtFzGsWkcL8FKbebanLa`,
-      commit `e6e7e43`, `target: "production"`, `state: "READY"`) without any manual trigger needed.
+    `git diff origin/master origin/claude/lost-fleet-viewer-support-95lled --stat` is empty —
+    **`master` and this branch are now identical.** Vercel's production deployment (configured
+    target branch = `master`) auto-deployed the new tip (`dpl_79PiRMyvhtFzGsWkcL8FKbebanLa`,
+    commit `e6e7e43`, `target: "production"`, `state: "READY"`) without any manual trigger needed.
 37. ✅ **Workflow simplified to a single branch ahead of the Claude→Codex handoff** (done
     2026-06-29). With `master` and `claude/lost-fleet-viewer-support-95lled` identical and the user
     about to start switching between Claude and Codex sessions, keeping a separate long-lived
@@ -892,24 +883,20 @@ git pull origin master` on the desktop clone before retrying Codex. Added the sa
     catches this before wasting a Codex turn on it.
 39. ✅ **Lost Fleet viewer map rendering, first slice, CODED & TESTED** (done 2026-06-29). The first
     real Lost Fleet UI work is now in place: the viewer no longer silently drops Interspace and Deep
-    Space hexes just because they are not part of a 19-hex sector.
-    - `viewer/src/components/SpaceMap.vue` now keeps the existing per-sector render path for regular
-      Space sectors, but also renders every non-Space hex directly from `engine.map.grid` using the
-      engine's own `classifySectorId()` / `LostFleetSectorType` helpers. This preserves sector
-      rotation grouping for base sectors while finally making Lost Fleet's Interspace and Deep Space
-      geometry visible.
-    - `viewer/src/components/SpaceHex.vue` now tags Interspace / Deep Space polygons with their own
-      CSS classes, adds a first-pass on-map marker for Lost Fleet spaceship tiles (Twilight /
-      Rebellion / T F Mars / Eclipse), and extends tooltips with sector-type / spaceship-name text so
-      non-sector hexes are inspectable instead of looking like anonymous empty cells.
-    - `viewer/src/components/SpaceMap.spec.ts` now has a second smoke test that renders a real
-      `new Engine(["init 2 lost-fleet-space-map"], { lostFleet: true })` board and asserts three
-      invariants: sector groups still match `map.configuration().centers`, rendered hex count matches
-      `map.grid.size` including the extra Lost Fleet cells, and the spaceship-tile markers render once
-      per ship-bearing Interspace hex.
-    - Verification: engine `cd engine && npm test` → **467/467** passing; viewer `cd viewer && npx
+    Space hexes just because they are not part of a 19-hex sector. - `viewer/src/components/SpaceMap.vue` now keeps the existing per-sector render path for regular
+    Space sectors, but also renders every non-Space hex directly from `engine.map.grid` using the
+    engine's own `classifySectorId()` / `LostFleetSectorType` helpers. This preserves sector
+    rotation grouping for base sectors while finally making Lost Fleet's Interspace and Deep Space
+    geometry visible. - `viewer/src/components/SpaceHex.vue` now tags Interspace / Deep Space polygons with their own
+    CSS classes, adds a first-pass on-map marker for Lost Fleet spaceship tiles (Twilight /
+    Rebellion / T F Mars / Eclipse), and extends tooltips with sector-type / spaceship-name text so
+    non-sector hexes are inspectable instead of looking like anonymous empty cells. - `viewer/src/components/SpaceMap.spec.ts` now has a second smoke test that renders a real
+    `new Engine(["init 2 lost-fleet-space-map"], { lostFleet: true })` board and asserts three
+    invariants: sector groups still match `map.configuration().centers`, rendered hex count matches
+    `map.grid.size` including the extra Lost Fleet cells, and the spaceship-tile markers render once
+    per ship-bearing Interspace hex. - Verification: engine `cd engine && npm test` → **467/467** passing; viewer `cd viewer && npx
 vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'` →
-      **156/156** passing (the new Lost Fleet `SpaceMap` smoke test is the +1).
+    **156/156** passing (the new Lost Fleet `SpaceMap` smoke test is the +1).
 40. ✅ **Branch routing temporarily moved back onto
     `claude/lost-fleet-viewer-support-95lled` for viewer work** (done 2026-06-29). Although the docs
     had briefly been rewritten earlier the same day for a single-branch `master` workflow (#37), the
@@ -922,135 +909,113 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
     Lost Fleet planet colors, CODED & TESTED** (done 2026-06-29). This finished the next smallest
     viewer slice after the first map-rendering pass: there is now a real URL-level way to boot the
     deployed viewer into a Lost Fleet game, and the map-side faction wheel no longer hides
-    Asteroid/Protoplanet once Lost Fleet is active.
-    - `viewer/src/self-contained.ts` now factors its URL/env parsing into a tested
-      `parseSelfContainedSetup()` helper and adds a real `lostFleet` flag alongside `frontiers`.
-      This means the self-contained harness can finally create `new Engine([...], { lostFleet:
+    Asteroid/Protoplanet once Lost Fleet is active. - `viewer/src/self-contained.ts` now factors its URL/env parsing into a tested
+    `parseSelfContainedSetup()` helper and adds a real `lostFleet` flag alongside `frontiers`.
+    This means the self-contained harness can finally create `new Engine([...], { lostFleet:
 true })` from a plain link instead of always silently booting base Gaia Project. As part of the
-      same change, explicit falsy env/query values like `lostFleet=0` / `VUE_APP_frontiers=0` are
-      now parsed correctly instead of truthy-string coercion treating any non-empty value as "on".
-    - `viewer/src/components/FactionWheel.vue` keeps the standard 7-planet ring intact for base
-      Gaia Project, but when Lost Fleet is active it now adds Asteroid + Protoplanet as extra
-      visible wheel entries, with the same remaining-planet counts / click-to-highlight behavior as
-      the existing Gaia and Transdim entries. The ring-rotation logic is also guarded so
-      Darkanians/Space Giants do not corrupt the 7-planet orbit by trying to rotate Asteroid or
-      Protoplanet into a slot that only exists in the extra row.
-    - New tests: `viewer/src/self-contained.spec.ts` covers URL/env Lost Fleet flag parsing; new
-      `viewer/src/components/FactionWheel.spec.ts` asserts the base-game 9-planet wheel stays
-      unchanged while Lost Fleet grows it to 11 visible planet entries including Asteroid and
-      Protoplanet.
-    - Verification: engine `cd engine && npm test` â†’ **467/467** passing; viewer `cd viewer && npx
+    same change, explicit falsy env/query values like `lostFleet=0` / `VUE_APP_frontiers=0` are
+    now parsed correctly instead of truthy-string coercion treating any non-empty value as "on". - `viewer/src/components/FactionWheel.vue` keeps the standard 7-planet ring intact for base
+    Gaia Project, but when Lost Fleet is active it now adds Asteroid + Protoplanet as extra
+    visible wheel entries, with the same remaining-planet counts / click-to-highlight behavior as
+    the existing Gaia and Transdim entries. The ring-rotation logic is also guarded so
+    Darkanians/Space Giants do not corrupt the 7-planet orbit by trying to rotate Asteroid or
+    Protoplanet into a slot that only exists in the extra row. - New tests: `viewer/src/self-contained.spec.ts` covers URL/env Lost Fleet flag parsing; new
+    `viewer/src/components/FactionWheel.spec.ts` asserts the base-game 9-planet wheel stays
+    unchanged while Lost Fleet grows it to 11 visible planet entries including Asteroid and
+    Protoplanet. - Verification: engine `cd engine && npm test` â†’ **467/467** passing; viewer `cd viewer && npx
 vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'` â†’
-      **160/160** passing (+4 viewer tests this slice). A concrete Lost Fleet demo seed now exists
-      for the self-contained viewer: `?players=2&seed=lost-fleet-space-map&lostFleet=1`.
+    **160/160** passing (+4 viewer tests this slice). A concrete Lost Fleet demo seed now exists
+    for the self-contained viewer: `?players=2&seed=lost-fleet-space-map&lostFleet=1`.
 42. Ã¢Å“â€¦ **Lost Fleet one-mine setup factions now actually get one setup placement, and Asteroid /
-    Protoplanet colors were swapped per user request, CODED & TESTED** (done 2026-06-29).
-    - Engine fix: `engine/src/move/phase.ts` no longer hardcodes setup as "everyone twice, Xenos
-      three times, Ivits special-case". It now uses new setup helpers in `engine/src/factions.ts`,
-      so Lost Fleet setup follows the rulebook's 3-stage order: base-game factions place their 2 or
-      3 mines "as usual", the currently coded expansion factions (Darkanians and Space Giants)
-      place their single starting mine afterward in clockwise turn order, and Ivits still keep
-      their PI-last behavior.
-    - New engine regression coverage: `engine/src/factions.spec.ts` asserts the special setup
-      placement counts plus Lost Fleet setup stage, and `engine/src/engine.spec.ts` now checks that
-      Darkanians / Space Giants place after base-game factions finish setup and that Ivits still
-      remain after the expansion-faction stage.
-    - Viewer color swap: `viewer/src/data/planets.ts` and `viewer/src/stylesheets/planets.css` now
-      map **Asteroid Ã¢â€ â€™ pink** and **Protoplanet Ã¢â€ â€™ turquoise** (the inverse of the previous
-      mapping). `viewer/src/data/planets.spec.ts` locks that mapping with a direct unit test.
-    - Verification: engine `cd engine && npm test` → **473/473** passing; viewer `cd viewer && npx
+    Protoplanet colors were swapped per user request, CODED & TESTED** (done 2026-06-29). - Engine fix: `engine/src/move/phase.ts` no longer hardcodes setup as "everyone twice, Xenos
+    three times, Ivits special-case". It now uses new setup helpers in `engine/src/factions.ts`,
+    so Lost Fleet setup follows the rulebook's 3-stage order: base-game factions place their 2 or
+    3 mines "as usual", the currently coded expansion factions (Darkanians and Space Giants)
+    place their single starting mine afterward in clockwise turn order, and Ivits still keep
+    their PI-last behavior. - New engine regression coverage: `engine/src/factions.spec.ts` asserts the special setup
+    placement counts plus Lost Fleet setup stage, and `engine/src/engine.spec.ts` now checks that
+    Darkanians / Space Giants place after base-game factions finish setup and that Ivits still
+    remain after the expansion-faction stage. - Viewer color swap: `viewer/src/data/planets.ts` and `viewer/src/stylesheets/planets.css` now
+    map **Asteroid Ã¢â€ â€™ pink** and **Protoplanet Ã¢â€ â€™ turquoise** (the inverse of the previous
+    mapping). `viewer/src/data/planets.spec.ts` locks that mapping with a direct unit test. - Verification: engine `cd engine && npm test` → **473/473** passing; viewer `cd viewer && npx
 vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'` Ã¢â€ â€™
-      **161/161** passing.
+    **161/161** passing.
 43. ✅ **Lost Fleet viewer ship actions moved into a compact horizontal second row, reusing the base
-    board-action footprint** (done 2026-06-30).
-    - User-facing layout change: the oversized per-ship action cards were replaced with a compact,
-      horizontally aligned ship-action strip. The base-game board-action row remains exactly where
-      it already was on the research/scoring board, and Lost Fleet ship actions now render as a
-      separate second row beneath it.
-    - Rendering approach: added `viewer/src/components/LostFleetShipActionsRow.vue`, which renders
-      each ship's 3 actions in a bordered ship group using the same `56x56` action-tile dimensions
-      and `SpecialAction` footprint as the existing board actions. Each ship group also exposes its
-      4 access slots as compact faction-colored markers so it is immediately visible which players
-      have access to that ship's actions.
-    - Rewards/info board split: `viewer/src/components/LostFleetSpaceships.vue` was reduced to the
-      persistent reward state only (seeded Standard Tech, Federation token, Twilight artifacts).
-      The action UI no longer lives in those cards.
-    - New viewer coverage: `viewer/src/components/LostFleetShipActionsRow.spec.ts` asserts the
-      compact ship groups, action count, and faction-colored access markers; the updated
-      `LostFleetSpaceships.spec.ts` now locks the rewards-board-only rendering.
-    - Verification: viewer `cd viewer && npx vue-cli-service test:unit --timeout 4000
+    board-action footprint** (done 2026-06-30). - User-facing layout change: the oversized per-ship action cards were replaced with a compact,
+    horizontally aligned ship-action strip. The base-game board-action row remains exactly where
+    it already was on the research/scoring board, and Lost Fleet ship actions now render as a
+    separate second row beneath it. - Rendering approach: added `viewer/src/components/LostFleetShipActionsRow.vue`, which renders
+    each ship's 3 actions in a bordered ship group using the same `56x56` action-tile dimensions
+    and `SpecialAction` footprint as the existing board actions. Each ship group also exposes its
+    4 access slots as compact faction-colored markers so it is immediately visible which players
+    have access to that ship's actions. - Rewards/info board split: `viewer/src/components/LostFleetSpaceships.vue` was reduced to the
+    persistent reward state only (seeded Standard Tech, Federation token, Twilight artifacts).
+    The action UI no longer lives in those cards. - New viewer coverage: `viewer/src/components/LostFleetShipActionsRow.spec.ts` asserts the
+    compact ship groups, action count, and faction-colored access markers; the updated
+    `LostFleetSpaceships.spec.ts` now locks the rewards-board-only rendering. - Verification: viewer `cd viewer && npx vue-cli-service test:unit --timeout 4000
 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'` → **165/165** passing.
-44. ✅ **Lost Fleet player-piece turquoise/pink treatment, CODED & TESTED** (done 2026-06-30).
-    - The viewer had been deriving faction-colored pieces directly from `factionPlanet(...)`, which
-      is wrong for Lost Fleet's no-home-planet factions now that the planet colors are
-      Asteroid=pink / Protoplanet=turquoise. Added a separate viewer-side piece-color mapping:
-      Tinkeroids + Darkanians now render with the **Asteroid-side** player color and Moweyds +
-      Space Giants with the **Protoplanet-side** player color, while the underlying Asteroid /
-      Protoplanet hex colors stay unchanged.
-    - Wired that split through the real faction-colored render paths instead of a one-off override:
-      faction colors / log colors (`graphics/utils.ts`, `graphics/colors.ts`), federation-line
-      gradients (`graphics/hex.ts`), used-action owner markers (`BoardAction.vue`), map trade-token
-      / overlay planet markers (`SpaceHex.vue`), player circles (`PlayerCircle.vue`), faction
-      backgrounds (`Rules.vue`, `data/factions.ts`), and all piece paths that already flow through
-      `Planet.vue` / `planetClass(...)`.
-    - Adjacent Lost Fleet polish: `Planet.vue` itself now has real Asteroid / Protoplanet fill and
-      stroke classes (`.a` / `.p`) so those planet types render consistently in every SVG path that
-      reuses the shared planet component, including colonized-planet faction overlays.
-    - New render regression coverage: `SpaceMap.spec.ts` now mounts a real Lost Fleet board with a
-      Darkanians mine placed on an Asteroid and a Moweyds mine placed on a Protoplanet, then
-      asserts that the **planet** stays pink/turquoise while the **piece/faction overlay** uses the
-      correct Asteroid / Protoplanet faction pairing. This follows the standing render-test rule from
-      `PERFORMANCE.md`, extending the actual `SpaceMap` tree instead of only unit-testing helpers.
-    - Verification: viewer `cd viewer && npx vue-cli-service test:unit --timeout 4000
+44. ✅ **Lost Fleet player-piece turquoise/pink treatment, CODED & TESTED** (done 2026-06-30). - The viewer had been deriving faction-colored pieces directly from `factionPlanet(...)`, which
+    is wrong for Lost Fleet's no-home-planet factions now that the planet colors are
+    Asteroid=pink / Protoplanet=turquoise. Added a separate viewer-side piece-color mapping:
+    Tinkeroids + Darkanians now render with the **Asteroid-side** player color and Moweyds +
+    Space Giants with the **Protoplanet-side** player color, while the underlying Asteroid /
+    Protoplanet hex colors stay unchanged. - Wired that split through the real faction-colored render paths instead of a one-off override:
+    faction colors / log colors (`graphics/utils.ts`, `graphics/colors.ts`), federation-line
+    gradients (`graphics/hex.ts`), used-action owner markers (`BoardAction.vue`), map trade-token
+    / overlay planet markers (`SpaceHex.vue`), player circles (`PlayerCircle.vue`), faction
+    backgrounds (`Rules.vue`, `data/factions.ts`), and all piece paths that already flow through
+    `Planet.vue` / `planetClass(...)`. - Adjacent Lost Fleet polish: `Planet.vue` itself now has real Asteroid / Protoplanet fill and
+    stroke classes (`.a` / `.p`) so those planet types render consistently in every SVG path that
+    reuses the shared planet component, including colonized-planet faction overlays. - New render regression coverage: `SpaceMap.spec.ts` now mounts a real Lost Fleet board with a
+    Darkanians mine placed on an Asteroid and a Moweyds mine placed on a Protoplanet, then
+    asserts that the **planet** stays pink/turquoise while the **piece/faction overlay** uses the
+    correct Asteroid / Protoplanet faction pairing. This follows the standing render-test rule from
+    `PERFORMANCE.md`, extending the actual `SpaceMap` tree instead of only unit-testing helpers. - Verification: viewer `cd viewer && npx vue-cli-service test:unit --timeout 4000
 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'` → **166/166** passing.
 45. ✅ **Tinkeroids + Moweyds full faction/rules slice, CODED & TESTED** (done 2026-06-30).
 
-    - Added the 2 remaining Lost Fleet factions to the real engine surface: `Faction.Tinkeroids` /
-      `Faction.Moweyds`, full faction-board registration, setup-stage placement rules (Tinkeroids
-      start with a PI, Moweyds with 1 mine), and viewer faction metadata so the updated engine still
-      compiles cleanly through the viewer test path.
-    - Closed the §B5 blocker with the user's 2026-06-30 ruling: the shared Terraforming-board helper
-      now assigns the mandatory opponent colors first for all relevant players, then fills the
-      remaining cost-3 colors left-to-right from the randomized row in turn order. This is persisted
-      per player via `PlayerData.lostFleetCost3Planets`, and every relevant build path now reads it
-      (`player.canBuild`, ship Build-a-Mine actions, Federation-token Build-a-Mine actions).
-    - Tinkeroids: round-income flow now interrupts at the start of each round with a mandatory
-      `ChooseTinkeringTile` command, loads that round's chosen tile as a once-per-round action, and
-      cleans it up at round end so each tile can only be used once in its 3-round band.
-    - Moweyds: the faction now starts the game with an Exploration Shuttle already on `T F Mars`,
-      and their PI action is wired as a real placement subphase (`PlacePowerRing`) rather than a
-      passive counter. Placed rings persist on the hex, are serialized, and add +2 structure power
-      value for federation / leech / scoring logic through `player.buildingValue(...)`. Power Rings
-      are also locked by regression as placeable on a Moweyds Lost Planet mine once that mine exists.
-    - Adjacent rules fix required by the new factions: Protoplanet's +6 VP bonus is now correctly
-      suppressed on home-Protoplanet setup builds for Moweyds and Space Giants, while remaining live
-      elsewhere.
-    - New engine regression coverage: added dedicated `tinkeroids.spec.ts` / `moweyds.spec.ts` board
-      - rules tests, expanded `factions.spec.ts`, `planets.spec.ts`, `player.spec.ts`, and updated
-        the Space Giants Protoplanet expectation. This covers the real round-income interruption, the
-        Power Ring placement chain, the T F Mars starting shuttle, and the cost-3 assignment order.
-    - Verification: engine `cd engine && npm test` → **490/490** passing; viewer `cd viewer && cmd /c
-npx vue-cli-service test:unit --timeout 4000 "src/**/*.spec.ts" "src/logic/**/*.spec.ts"` →
-      **166/166** passing.
+        - Added the 2 remaining Lost Fleet factions to the real engine surface: `Faction.Tinkeroids` /
+          `Faction.Moweyds`, full faction-board registration, setup-stage placement rules (Tinkeroids
+          start with a PI, Moweyds with 1 mine), and viewer faction metadata so the updated engine still
+          compiles cleanly through the viewer test path.
+        - Closed the §B5 blocker with the user's 2026-06-30 ruling: the shared Terraforming-board helper
+          now assigns the mandatory opponent colors first for all relevant players, then fills the
+          remaining cost-3 colors left-to-right from the randomized row in turn order. This is persisted
+          per player via `PlayerData.lostFleetCost3Planets`, and every relevant build path now reads it
+          (`player.canBuild`, ship Build-a-Mine actions, Federation-token Build-a-Mine actions).
+        - Tinkeroids: round-income flow now interrupts at the start of each round with a mandatory
+          `ChooseTinkeringTile` command, loads that round's chosen tile as a once-per-round action, and
+          cleans it up at round end so each tile can only be used once in its 3-round band.
+        - Moweyds: the faction now starts the game with an Exploration Shuttle already on `T F Mars`,
+          and their PI action is wired as a real placement subphase (`PlacePowerRing`) rather than a
+          passive counter. Placed rings persist on the hex, are serialized, and add +2 structure power
+          value for federation / leech / scoring logic through `player.buildingValue(...)`. Power Rings
+          are also locked by regression as placeable on a Moweyds Lost Planet mine once that mine exists.
+        - Adjacent rules fix required by the new factions: Protoplanet's +6 VP bonus is now correctly
+          suppressed on home-Protoplanet setup builds for Moweyds and Space Giants, while remaining live
+          elsewhere.
+        - New engine regression coverage: added dedicated `tinkeroids.spec.ts` / `moweyds.spec.ts` board
+          - rules tests, expanded `factions.spec.ts`, `planets.spec.ts`, `player.spec.ts`, and updated
+            the Space Giants Protoplanet expectation. This covers the real round-income interruption, the
+            Power Ring placement chain, the T F Mars starting shuttle, and the cost-3 assignment order.
+        - Verification: engine `cd engine && npm test` → **490/490** passing; viewer `cd viewer && cmd /c
 
-46. ✅ **Lost Fleet viewer map-polish slice, CODED & TESTED** (done 2026-06-30).
-    - `SpaceHex.vue` now gives Lost Fleet's non-base spaces immediate on-map identity instead of
-      relying on tooltip text alone: Interspace hexes render an `IS` badge, Deep Space hexes render
-      a `DS` badge, and spaceship hexes get a clearer Nautilaks/Vo'Kron/T F Mars/Eclipse marker with
-      an orbit ring and "Ship" pill while keeping the existing compact map rendering footprint.
-    - `SpaceMap.vue` now carries a lightweight in-map Lost Fleet legend reusing the same visual
-      language (`IS`, `DS`, `T/R/M/E`) so the extra map semantics are readable at a glance without
-      opening rules text or hovering each hex.
-    - Adjacent UI refinement landed alongside the map work instead of inventing a second visual
-      language: the compact ship-action row and the separate ship-rewards cards now both show the
-      same T/R/M/E ship markers in their headers, matching the map markers and keeping the Lost Fleet
-      ship surfaces visually tied together.
-    - New render regression coverage extends the real Lost Fleet `SpaceMap` smoke test with the new
-      visible markers (Interspace / Deep Space badges plus the map legend), and both Lost Fleet ship
-      panel specs now lock the shared marker treatment in the rendered DOM. This follows the
-      standing render-test rule from `PERFORMANCE.md` by extending the real map/panel render path
-      rather than only unit-testing helpers or class lists.
-    - Verification: viewer `cd viewer && cmd /c npx vue-cli-service test:unit --timeout 4000
+    npx vue-cli-service test:unit --timeout 4000 "src/**/\*.spec.ts" "src/logic/**/\*.spec.ts"` →
+    **166/166** passing.
+
+46. ✅ **Lost Fleet viewer map-polish slice, CODED & TESTED** (done 2026-06-30). - `SpaceHex.vue` now gives Lost Fleet's non-base spaces immediate on-map identity instead of
+    relying on tooltip text alone: Interspace hexes render an `IS` badge, Deep Space hexes render
+    a `DS` badge, and spaceship hexes get a clearer Nautilaks/Vo'Kron/T F Mars/Eclipse marker with
+    an orbit ring and "Ship" pill while keeping the existing compact map rendering footprint. - `SpaceMap.vue` now carries a lightweight in-map Lost Fleet legend reusing the same visual
+    language (`IS`, `DS`, `T/R/M/E`) so the extra map semantics are readable at a glance without
+    opening rules text or hovering each hex. - Adjacent UI refinement landed alongside the map work instead of inventing a second visual
+    language: the compact ship-action row and the separate ship-rewards cards now both show the
+    same T/R/M/E ship markers in their headers, matching the map markers and keeping the Lost Fleet
+    ship surfaces visually tied together. - New render regression coverage extends the real Lost Fleet `SpaceMap` smoke test with the new
+    visible markers (Interspace / Deep Space badges plus the map legend), and both Lost Fleet ship
+    panel specs now lock the shared marker treatment in the rendered DOM. This follows the
+    standing render-test rule from `PERFORMANCE.md` by extending the real map/panel render path
+    rather than only unit-testing helpers or class lists. - Verification: viewer `cd viewer && cmd /c npx vue-cli-service test:unit --timeout 4000
 "src/**/*.spec.ts" "src/logic/**/*.spec.ts"` → **168/168** passing.
 47. ✅ **Supabase multiplayer backend + viewer hosted mode (2026-07-01)** — the last build-order
     step ("Supabase backend glue + realtime sync") is implemented. Design settled first in
@@ -1106,14 +1071,46 @@ npx vue-cli-service test:unit --timeout 4000 "src/**/*.spec.ts" "src/logic/**/*.
       Supabase Auth URL configuration are dashboard/CLI actions this session's tooling couldn't
       perform (deploy required an interactive approval). Games are fully playable without them —
       the trigger's HTTP call just 404s harmlessly until the function exists.
-48. ✅ **Login (Google), test mode, 2-4 player counts + create-game fixes (2026-07-02)** — polish
+48. ✅ **Two-browser E2E verification of hosted multiplayer against PRODUCTION, plus the 2 real
+    bugs it flushed out (2026-07-01, merged to `master` on owner instruction).** After #47
+    shipped, the owner asked for the next most complex gap; the answer was that the whole
+    multiplayer stack had never executed in a real browser. Built
+    `viewer/e2e/hosted-multiplayer.e2e.js` (see BACKEND.md §12): Playwright drives **two real
+    Chromium sessions against the live Vercel deployment and the real Supabase project** —
+    lobby boot from a seeded session, game creation through the real form, per-browser seat
+    locking, faction picks through the real Commands UI (button → modal → confirm), realtime
+    fan-out to the other browser with **no reload**, reload-resume from the stored move log,
+    and a first-mine placement via a real map hex click + "Confirm Mine". **All 10 checks
+    pass against production.** Supporting pieces: two throwaway password auth users
+    (`e2e-*@lostfleet.test`, sign in via password grant, bypassing the not-yet-configured
+    magic-link Site URL) and `viewer/e2e/proxy-network.js`, a network adapter for sandboxes
+    whose TLS-intercepting egress proxy kills Chromium's post-quantum ClientHello (all HTTP
+    via Playwright's Node-side request API; WebSockets bridged over a manual CONNECT tunnel).
+    Bugs found and fixed along the way, both now regression-tested (viewer suite **193/193 —
+    fully green, first time since the stale-fixture failures appeared on master**):
+    - **Final-scoring chart leak (pre-existing on master, was misdiagnosed as "2 stale chart
+      fixtures"):** `finalScoringSourceFactory` ignored the `expansion` argument all its
+      sibling factories take, so the 3 Lost Fleet conditions (Asteroids, PI↔Academy distance,
+      Deep Space sectors) appeared in base-game charts and inflated totals — the exact
+      ungated-enumeration pattern from Integration flag 5. Now filtered by
+      `FinalTile.values(expansion)`.
+    - **Persisted engine-mutated options bricked Lost Fleet games:** Engine mutates the
+      options object it's given (stamps generated `map` layout + `factionVariantVersion`
+      into it); Lobby's probe engine shared that object with the `create_game` RPC, and on
+      reload `moveInit` rejects `map.sectors` + `lostFleet` → permanent silent
+      AssertionError. Fixed via a testable `buildCreateGameParams`
+      (`viewer/src/hosted/new-game.ts`, probe gets a clone), option-cloning in
+      `HostedGameHost.buildEngine`, and a visible load-error alert instead of a dead empty
+      board. The owner's real in-flight game was checked and unaffected (no `map` key).
+49. ✅ **Login (Google), test mode, 2-4 player counts + create-game fixes (2026-07-02)** — polish
     pass on #47 in response to owner feedback ("login with Gmail, sign in once; a test mode where
     I control all players; there are no 5-player Gaia games; how do I invite players — maybe only
-    already-registered users?"). Migration `supabase/migrations/0003_test_mode_and_player_counts.sql`
-    (applied live to `mitawjpdxkheascdiffz`) + viewer wiring; full detail in **BACKEND.md §12**.
+    already-registered users?"), developed concurrently with #48 above on a separate branch and
+    merged in afterward. Migration `supabase/migrations/0003_test_mode_and_player_counts.sql`
+    (applied live to `mitawjpdxkheascdiffz`) + viewer wiring; full detail in **BACKEND.md §13**.
     - **Google sign-in** added to `SignIn.vue` (`signInWithOAuth({provider:"google"})`) as the
       primary button, magic link kept as fallback. Sessions already persist + auto-refresh, so
-      it's genuinely sign-in-once-per-device. Needs a one-time owner OAuth setup (BACKEND.md §12.5).
+      it's genuinely sign-in-once-per-device. Needs a one-time owner OAuth setup (BACKEND.md §13.5).
     - **Test mode = one account, all seats (hot-seat).** A "Test game — I control all seats"
       checkbox in `Lobby.vue` seats the creator's own email everywhere; migration drops the
       `unique (game_id, invited_email)` constraint + the distinct-email check so this is a _real_
@@ -1125,14 +1122,14 @@ npx vue-cli-service test:unit --timeout 4000 "src/**/*.spec.ts" "src/logic/**/*.
       select all corrected.
     - **Registered-only invites** — `create_game` rejects invited emails not in `auth.users`
       (names them in the error), closing the silent-orphan-seat failure; lobby warns up front.
-    - **Fixed a create-game bug that made every hosted Lost Fleet game unopenable**: the lobby's
-      probe Engine mutates `options` by writing the generated map into `options.map`, which was
-      persisted, and `init` rejects a preset map + `lostFleet`. Now stripped both at create time
-      (`Lobby.vue`) and defensively on every boot (`host.ts` `engineOptions`); the one broken live
-      row was repaired. Regression-tested.
-    - **Also fixed the 2 pre-existing failing chart fixtures** (they predate #47): the final-scoring
-      chart emitted Lost Fleet rows (Asteroids etc.) for base games too; `finalScoringSourceFactory`
-      now filters by the game's expansion. Suite is now fully green.
+    - **Merge note:** #48 (above) independently found and fixed the same stored-options-map bug
+      and the same final-scoring chart leak while this work was in flight on its own branch.
+      Reconciled on merge in favor of #48's implementation (`new-game.ts`'s `buildCreateGameParams`
+      - `host.ts` option-cloning, and `finalScoringSourceFactory`'s expansion filter) — this
+        item's own versions of those two fixes were dropped as duplicates; `host.ts` additionally
+        keeps `engineOptions()` stripping a stale `map` key defensively on every boot, so an
+        already-corrupted stored row (there was exactly one, repaired directly in the DB) still
+        opens even without a fresh create.
     - **Verification:** 6 new host unit tests (seat-lock rules + options sanitizing/legacy-boot),
       **viewer 197/197 passing**, production build clean, and a **full end-to-end run against the
       live backend**: signed in, created a 2p Lost Fleet test game, entered it, picked factions for
@@ -1471,6 +1468,23 @@ quick-test` 152/152; `npm test` 152/154, the 2 failures pre-existing/unrelated, 
    refinement beyond those current markers and boards.
 3. **Revised Space Sector tiles 05/06/07** (§H4, the one remaining art-only TODO — see "Still MISSING"
    above) — would let Lost Fleet stop falling back to the base game's per-count face for those 3 tiles.
+   3b. **Full-game playout fuzzer with rules-conformance oracles** — plan written and owner-requested
+   (2026-07-02), see `docs/lost-fleet/FUZZER_PLAN.md`: seeded random legal playouts to completion,
+   three oracle tiers (structural / conservation / Lost-Fleet rules oracles each citing its
+   rulebook/§-ledger source), failure minimization into committed regression specs, and a strict
+   triage protocol (no engine change without a CONFIRMED rules basis). Not started — next up.
+   3c. **Lost Fleet component UI redesign — REUSE-FIRST (owner-requested 2026-07-02, not started).**
+   Owner requirements, verbatim intent: completely redesign the expansion components' presentation
+   so it **keeps and/or reuses the art/visual language of the base game** — e.g. Lost Fleet round
+   boosters must look like base-game round boosters, LF tech/adv-tech tiles like base tiles, and
+   so on for every LF component; reuse is the priority, bespoke new art the exception. Layout is
+   in scope too: compact, in the style of the existing base-game implementation (no sprawling new
+   panels). Process requirements: viewer-only; read `PERFORMANCE.md` FIRST (hard render-perf
+   findings + the standing render-test rule); per the working agreements, trace the existing
+   base-game component rendering (how boosters/tech tiles/actions are drawn today) and propose a
+   component-by-component reuse plan for owner confirmation BEFORE restyling anything; keep all
+   viewer tests green and extend the real render-path specs. Scope is disjoint from 3b (engine),
+   so the two can run in parallel sessions if desired — both update this file, so pull before push.
 4. ~~Or a different unit of work entirely (viewer, Supabase)~~ — **Supabase multiplayer is DONE**
    (see "Done so far" #47 and `BACKEND.md`), pending two ~5-minute owner actions listed in
    `BACKEND.md` §11: deploy the `notify` Edge Function and set the Supabase Auth URL

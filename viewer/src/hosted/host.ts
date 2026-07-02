@@ -13,7 +13,12 @@ export function initMoveLine(game: GameRow): string {
  * regenerates deterministically from the stored seed.
  */
 export function engineOptions(game: GameRow): Record<string, unknown> {
-  const options = { ...(game.options ?? {}) };
+  // Deep clone: the Engine mutates the options object it's given (stamps the
+  // generated map + factionVariantVersion into it), so the stored row must
+  // never be handed to it directly. Also strip any already-stored `map` —
+  // a legacy row written before the create-game probe stopped leaking its
+  // mutation — since init rejects a preset map combined with lostFleet.
+  const options = JSON.parse(JSON.stringify(game.options ?? {}));
   delete options.map;
   return options;
 }

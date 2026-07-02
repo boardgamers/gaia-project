@@ -336,20 +336,45 @@ base once in SQL:
 pair, update `app_config['vapid']` and the viewer config, and every device must re-enable
 notifications.
 
-## 12. Test mode, player counts & registered-only invites (2026-07-02)
+## 12. End-to-end verification harness (2026-07-01)
+
+`viewer/e2e/hosted-multiplayer.e2e.js` drives **two real Chromium browsers against the live
+production deployment and the real Supabase project**: lobby boot with a stored session,
+game creation through the real form, seat locking on both sides, faction picks through the
+real Commands UI, realtime fan-out to the other browser without a reload, and reload-resume
+from the stored move log. Run instructions are in the file header. Supporting pieces:
+
+- **Test accounts:** two throwaway password users exist in the project's auth
+  (`e2e-alice@lostfleet.test` / `e2e-bob@lostfleet.test`), created via SQL insert into
+  `auth.users`/`auth.identities` specifically so the harness can sign in WITHOUT the
+  magic-link flow (sessions are minted via `POST /auth/v1/token?grant_type=password` and
+  seeded into the browsers' localStorage). They see only their own games under RLS. Delete
+  them (and any `E2E %`-named games first) if you ever want them gone.
+- **`viewer/e2e/proxy-network.js`:** optional network adapter (`E2E_NETWORK=intercept`) for
+  sandboxes whose TLS-intercepting egress proxy kills Chromium's post-quantum ClientHello
+  (X25519MLKEM768 — not disableable in the Playwright headless shell). It fulfills every
+  HTTP(S) request via Playwright's Node-side request API and bridges WebSockets (Supabase
+  Realtime) over a manual CONNECT tunnel, so the browser never performs TLS itself.
+- **First catch:** the harness immediately found a real production bug — the Engine mutates
+  the options object it's given (stamping the generated `map` into it), Lobby persisted that
+  mutated object, and `moveInit` rejects `map.sectors` + `lostFleet` on replay, bricking the
+  game. Fixed in `buildCreateGameParams` (`viewer/src/hosted/new-game.ts`) + option-cloning
+  in `HostedGameHost.buildEngine`, with unit regression tests.
+
+## 13. Test mode, player counts & registered-only invites (2026-07-02)
 
 Three related changes, migration `supabase/migrations/0003_test_mode_and_player_counts.sql`
 (applied live to project `mitawjpdxkheascdiffz`) plus viewer wiring. All verified end-to-end
 against the live backend (create → enter → play both seats → reload → persistence in `moves`).
 
-### 12.1 Player counts are 2-4, not 2-5
+### 13.1 Player counts are 2-4, not 2-5
 
 Gaia Project — base game or Lost Fleet — has no 5-player board (the Lost Fleet sector layouts
 and Interspace tile sets stop at 4p). The original `check (player_count between 2 and 5)` and the
 lobby's `[2,3,4,5]` select were wrong. Migration tightens the `games` check to `between 2 and 4`
 and `create_game` to reject >4; `Lobby.vue` offers `[2,3,4]`.
 
-### 12.2 Test mode = one account holding every seat (hot-seat)
+### 13.2 Test mode = one account holding every seat (hot-seat)
 
 For solo testing of the _hosted_ path (commits, realtime, resync, persistence) without waiting
 on friends. Rather than a client flag that bypasses seat locks — which would skip the very
@@ -372,14 +397,14 @@ occupies all seats:
 
 The general case (one person legitimately holding 2 of 4 seats among friends) now works too.
 
-### 12.3 Invites restricted to registered users (§2 amendment)
+### 13.3 Invites restricted to registered users (§2 amendment)
 
 `create_game` now rejects any invited email not present in `auth.users`, with a message naming
 the offending address(es). This closes the silent-orphan-seat failure (a typo'd invite created a
 seat nobody could claim, blocking the game). `Lobby.vue` warns up front that friends must sign in
 once before they can be seated. This is why §2 auth matters: get everyone signed in first.
 
-### 12.4 Stored-options map bug (fixed, was blocking game entry)
+### 13.4 Stored-options map bug (fixed, was blocking game entry)
 
 The lobby's create-game probe Engine **mutates the options object** it's given — the engine
 writes the generated map into `options.map`. `create_game` persisted that mutated object, and the
@@ -392,7 +417,7 @@ unopenable. Fixes:
   deterministically), so already-stored legacy rows open too. Regression-tested in `host.spec.ts`.
 - The one pre-existing broken row on the live DB was repaired in place (`options - 'map'`).
 
-### 12.5 Google OAuth — the owner's one-time setup (~10 min)
+### 13.5 Google OAuth — the owner's one-time setup (~10 min)
 
 Needed once for the "Sign in with Google" button; magic link works without it.
 

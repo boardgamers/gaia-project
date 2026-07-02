@@ -342,19 +342,22 @@ export const finalScoringExtractLog: ExtractLog<ChartSource<FinalTile>> = Extrac
 export const finalScoringSourceFactory = (
   finalTiles: FinalTile[],
   expansion: Expansion
-): SimpleSourceFactory<ChartSource<FinalTile>> => ({
-  name: "Final Scoring Conditions",
-  summary: ChartSummary.total,
-  playerSummaryLineChartTitle: "All final Scoring Conditions of all players (not only the active ones)",
-  extractLog: finalScoringExtractLog,
-  // Only the tiles that exist in this game's expansion set: a base game must
-  // not grow zero-filled Lost Fleet rows (Asteroids etc.).
-  sources: (Object.keys(finalScoringSources) as FinalTile[])
-    .filter((tile) => FinalTile.values(expansion).includes(tile))
-    .map((tile) => ({
-      type: tile,
-      label: finalScoringSources[tile].name + (finalTiles.includes(tile) ? " (active)" : ""),
-      color: finalScoringSources[tile].color,
-      weight: 1,
-    })),
-});
+): SimpleSourceFactory<ChartSource<FinalTile>> => {
+  // Only this game's condition pool: the 3 Lost Fleet conditions exist in
+  // finalScoringSources unconditionally and must not leak into base games.
+  const inExpansion = FinalTile.values(expansion);
+  return {
+    name: "Final Scoring Conditions",
+    summary: ChartSummary.total,
+    playerSummaryLineChartTitle: "All final Scoring Conditions of all players (not only the active ones)",
+    extractLog: finalScoringExtractLog,
+    sources: Object.keys(finalScoringSources)
+      .filter((tile) => inExpansion.includes(tile as FinalTile))
+      .map((tile) => ({
+        type: tile as FinalTile,
+        label: finalScoringSources[tile].name + (finalTiles.includes(tile as FinalTile) ? " (active)" : ""),
+        color: finalScoringSources[tile].color,
+        weight: 1,
+      })),
+  };
+};
