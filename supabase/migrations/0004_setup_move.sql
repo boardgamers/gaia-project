@@ -106,10 +106,12 @@ begin
 end;
 $$;
 
--- Adding a trailing defaulted parameter via CREATE OR REPLACE keeps the same
--- function identity/oid, so the pre-existing 6-argument grant below still
--- applies to calls that omit p_setup_move; the explicit 7-argument grant is
--- added defensively (harmless if redundant) so the widened signature is
--- unambiguously covered too.
+-- CORRECTION (see 0005_drop_stale_create_game_overload.sql): adding a
+-- trailing defaulted parameter here does NOT reuse the old 6-argument
+-- function's identity/oid as originally assumed below — verified against
+-- the live project, PostgreSQL created a SEPARATE overload alongside the
+-- old one instead. The 7-argument grant below is therefore load-bearing,
+-- not defensive: without it the new overload would have no grant of its
+-- own. 0005 drops the now-stale 6-argument overload outright.
 revoke execute on function public.create_game(text, text, int, jsonb, jsonb, int, text) from public, anon;
 grant execute on function public.create_game(text, text, int, jsonb, jsonb, int, text) to authenticated;

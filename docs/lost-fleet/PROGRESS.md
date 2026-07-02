@@ -1304,14 +1304,27 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
       when non-null/non-empty it inserts the `moves` row for `seq = 1`, `seat = p_player_count - 1`
       (matching `beginSetupBoardPhase`'s "last player" convention), and bumps `games.move_count` to
       1 in the same transaction so the next real `commit_turn` call correctly expects `seq = 2`
-      instead of colliding with the row just inserted. Adding a trailing defaulted parameter via
-      `CREATE OR REPLACE FUNCTION` is documented Postgres/Supabase-supported behavior (same
-      function identity/oid, old callers unaffected) — a defensive redundant grant for the widened
-      7-argument signature is included alongside the existing 6-argument one.
-      **NOT yet applied to the live Supabase project** (unlike 0001-0003, which prior sessions
-      applied directly) — this migration changes production schema and the RPC contract used by
-      every future game creation, so it's left for explicit owner confirmation before running
-      `apply_migration`/`supabase db push` against the live `gaia-lost-fleet` project.
+      instead of colliding with the row just inserted.
+      **Applied to the live `gaia-lost-fleet` Supabase project (2026-07-02), on explicit owner
+      request, and one real bug found + fixed in the process:** 0004's original comment assumed
+      `CREATE OR REPLACE FUNCTION` with a trailing default parameter reuses the old function's
+      identity/oid (true for 0001→0002→0003, which never changed the argument list) — this time it
+      didn't. Querying `pg_proc` after applying 0004 showed **two distinct `create_game` entries**
+      (6-arg, `pronargdefaults=0`; 7-arg, `pronargdefaults=1`), and the security advisor confirmed
+      both were separately callable by `authenticated`. Supabase-js's `.rpc()` calls with named
+      parameters, so this app's own calls (always including `p_setup_move`) only ever resolved to
+      the new overload — no player-facing bug — but the stale 6-arg overload stayed live and
+      callable, skipping the setup-move insert entirely (the exact "stuck game" failure mode 0004's
+      comment warned about, reachable by any caller of the old signature). Fixed with
+      **`supabase/migrations/0005_drop_stale_create_game_overload.sql`** (`drop function if exists
+      public.create_game(text, text, int, jsonb, jsonb, int)`), applied immediately after; `pg_proc`
+      now shows exactly one `create_game` (7-arg), and the advisor listing matches the pre-#54
+      baseline shape (one `create_game` entry, same acknowledged intentionally-callable-RPC set
+      documented in `BACKEND.md`). 0004's misleading comment about "same identity/oid" was also
+      corrected in place to point at this finding. **Lesson for future migrations that widen an
+      existing function's argument list: always verify via `pg_proc`/the advisor that the old
+      signature didn't survive as an orphaned overload — don't assume `CREATE OR REPLACE` unifies
+      them just because it worked for same-arity changes before.**
     - **Tests:** `viewer/src/hosted/setup-preview.spec.ts` (pure `buildRotateMove`/
       `validateRotation` unit tests, mod-6 wrap + zero-filter + the shared German-rules repro),
       `viewer/src/hosted/new-game.spec.ts` (new file, `buildCreateGameParams`'s new signature),
@@ -1331,9 +1344,11 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
       self-contained viewer confirmed identical planet-type coloring after the CSS-class fix above.
       The end-to-end "created game's board matches what was locked in" check (comparing against a
       live Supabase-backed game immediately after creation) was **not done** — this environment has
-      no credentials for the live `gaia-lost-fleet` Supabase project; the migration itself is also
-      unapplied for the same reason (see above). Both are natural next steps for whoever runs this
-      with real credentials.
+      no credentials for the live `gaia-lost-fleet` Supabase project's viewer-facing auth (Google/
+      magic-link sign-in), only Supabase project-management access (used to apply 0004/0005 above,
+      see that entry for the overload bug those applies caught). A natural next step for whoever
+      has real sign-in credentials: create a game through the real Lobby flow end-to-end and confirm
+      a rotated sector's on-screen orientation matches between the preview and the live game.
 
 ## Still MISSING — only one art-only item left
 
