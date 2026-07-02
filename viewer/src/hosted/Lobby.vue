@@ -55,8 +55,8 @@
 </template>
 
 <script lang="ts">
-import Engine from "@gaia-project/engine";
 import Vue from "vue";
+import { buildCreateGameParams } from "./new-game";
 import { enablePushNotifications } from "./push";
 
 type SeatForm = { email: string; name: string };
@@ -145,20 +145,13 @@ export default Vue.extend({
       this.creating = true;
       this.message = "";
       try {
-        const seed = `lf-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
-        const options = { lostFleet: this.form.lostFleet, factionVariant: "standard" };
-        // Seed is fixed here, once, forever (§J3); the engine tells us which
-        // seat opens the setup phase.
-        const probe = new Engine([`init ${this.form.playerCount} ${seed}`], options as any);
-        probe.generateAvailableCommandsIfNeeded();
-        const { data, error } = await (this.client as any).rpc("create_game", {
-          p_name: this.form.name,
-          p_seed: seed,
-          p_player_count: this.form.playerCount,
-          p_options: options,
-          p_invites: this.form.seats.map((s, i) => ({ email: s.email, seat: i, display_name: s.name })),
-          p_current_seat: probe.playerToMove,
+        const params = buildCreateGameParams({
+          name: this.form.name,
+          playerCount: this.form.playerCount,
+          lostFleet: this.form.lostFleet,
+          seats: this.form.seats,
         });
+        const { data, error } = await (this.client as any).rpc("create_game", params);
         if (error) {
           throw new Error(error.message);
         }

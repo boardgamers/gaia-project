@@ -68,7 +68,17 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
     },
   });
 
-  await host.load();
+  try {
+    await host.load();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    const alert = document.createElement("div");
+    alert.className = "alert alert-danger m-3";
+    alert.textContent = `Could not load this game: ${message}`;
+    root.insertBefore(alert, barEl);
+    console.error("[hosted] game load failed", err);
+    return;
+  }
 
   mySeats = host.mySeats(session.user.id, session.user.email);
   if (mySeats.length > 0) {

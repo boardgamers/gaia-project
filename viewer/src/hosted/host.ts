@@ -150,7 +150,9 @@ export class HostedGameHost {
 
   private buildEngine(game: GameRow, moves: MoveRow[]): Engine {
     const ordered = [...moves].sort((a, b) => a.seq - b.seq);
-    const engine = new Engine([initMoveLine(game), ...ordered.map((m) => m.move)], game.options as any);
+    // Engine mutates the options object it's given (e.g. stamps the generated
+    // map into options.map) — give it a clone so the stored row stays clean.
+    const engine = new Engine([initMoveLine(game), ...ordered.map((m) => m.move)], JSON.parse(JSON.stringify(game.options)));
     engine.generateAvailableCommandsIfNeeded();
     for (const p of this.players) {
       if (engine.players[p.seat]) {
