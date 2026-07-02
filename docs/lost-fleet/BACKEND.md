@@ -330,3 +330,28 @@ base once in SQL:
 `viewer/src/hosted/config.ts` (public by design). Rotating VAPID keys = regenerate a P-256 JWK
 pair, update `app_config['vapid']` and the viewer config, and every device must re-enable
 notifications.
+
+## 12. End-to-end verification harness (2026-07-01)
+
+`viewer/e2e/hosted-multiplayer.e2e.js` drives **two real Chromium browsers against the live
+production deployment and the real Supabase project**: lobby boot with a stored session,
+game creation through the real form, seat locking on both sides, faction picks through the
+real Commands UI, realtime fan-out to the other browser without a reload, and reload-resume
+from the stored move log. Run instructions are in the file header. Supporting pieces:
+
+- **Test accounts:** two throwaway password users exist in the project's auth
+  (`e2e-alice@lostfleet.test` / `e2e-bob@lostfleet.test`), created via SQL insert into
+  `auth.users`/`auth.identities` specifically so the harness can sign in WITHOUT the
+  magic-link flow (sessions are minted via `POST /auth/v1/token?grant_type=password` and
+  seeded into the browsers' localStorage). They see only their own games under RLS. Delete
+  them (and any `E2E %`-named games first) if you ever want them gone.
+- **`viewer/e2e/proxy-network.js`:** optional network adapter (`E2E_NETWORK=intercept`) for
+  sandboxes whose TLS-intercepting egress proxy kills Chromium's post-quantum ClientHello
+  (X25519MLKEM768 — not disableable in the Playwright headless shell). It fulfills every
+  HTTP(S) request via Playwright's Node-side request API and bridges WebSockets (Supabase
+  Realtime) over a manual CONNECT tunnel, so the browser never performs TLS itself.
+- **First catch:** the harness immediately found a real production bug — the Engine mutates
+  the options object it's given (stamping the generated `map` into it), Lobby persisted that
+  mutated object, and `moveInit` rejects `map.sectors` + `lostFleet` on replay, bricking the
+  game. Fixed in `buildCreateGameParams` (`viewer/src/hosted/new-game.ts`) + option-cloning
+  in `HostedGameHost.buildEngine`, with unit regression tests.
