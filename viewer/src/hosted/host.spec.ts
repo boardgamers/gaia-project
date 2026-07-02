@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { HostedGameHost, initMoveLine } from "./host";
+import { engineOptions, HostedGameHost, initMoveLine, seatToLock } from "./host";
 import { CommitTurnArgs, GameRow, HostedBackend, MoveRow, PlayerRow } from "./types";
 
 // Committed-turn lines from a known-valid engine fixture
@@ -89,6 +89,55 @@ function makeHost(backend: FakeBackend) {
   });
   return { host, states, errors };
 }
+
+describe("seat locking rule", () => {
+  it("locks a single-seat player to their seat, whoever is on turn", () => {
+    expect(seatToLock([1], 2, 1)).to.equal(1);
+    expect(seatToLock([1], 2, 0)).to.equal(1);
+  });
+
+  it("unlocks whichever owned seat must act for a player holding several seats", () => {
+    expect(seatToLock([0, 2], 4, 2)).to.equal(2);
+    expect(seatToLock([0, 2], 4, 0)).to.equal(0);
+    // an unowned seat is on turn: stay on the first owned seat (locked anyway)
+    expect(seatToLock([0, 2], 4, 1)).to.equal(0);
+  });
+
+  it("does not lock at all when the user owns every seat (test game hot-seat)", () => {
+    expect(seatToLock([0, 1], 2, 0)).to.equal(null);
+    expect(seatToLock([0, 1, 2], 3, 2)).to.equal(null);
+  });
+
+  it("does not lock users with no seats (commit_turn rejects them server-side)", () => {
+    expect(seatToLock([], 2, 0)).to.equal(null);
+  });
+});
+
+describe("engine options sanitizing", () => {
+  it("strips an engine-injected map without mutating the stored row", () => {
+    const game = gameRow();
+    game.options = { lostFleet: true, map: { sectors: [] } };
+    expect(engineOptions(game)).to.deep.equal({ lostFleet: true });
+    expect(game.options.map).to.deep.equal({ sectors: [] });
+  });
+
+  it("boots a legacy lostFleet game whose stored options contain a map", async () => {
+    // Regression: create_game used to persist options the probe Engine had
+    // mutated (it writes the generated map back), and init rejects a preset
+    // map combined with lostFleet — making the game unopenable.
+    const game = gameRow();
+    game.options = { lostFleet: true, map: { mirror: false, sectors: [{ sector: "1", rotation: 0 }] } };
+    const backend = new FakeBackend(game, playerRows());
+    backend.seedMoves([]);
+    const { host, states, errors } = makeHost(backend);
+
+    await host.load();
+
+    expect(errors).to.deep.equal([]);
+    expect(states).to.have.length(1);
+    expect(host.engine.moveHistory[0]).to.equal("init 2 randomSeed");
+  });
+});
 
 describe("hosted game host", () => {
   it("builds the init line from the stored seed and player count", () => {

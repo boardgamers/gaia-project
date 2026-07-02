@@ -3,7 +3,9 @@
     <div class="d-flex justify-content-between align-items-center">
       <h3 class="mb-0">The Lost Fleet — Games</h3>
       <div>
-        <b-button size="sm" variant="outline-secondary" @click="enablePush" :disabled="pushBusy">Enable notifications</b-button>
+        <b-button size="sm" variant="outline-secondary" @click="enablePush" :disabled="pushBusy"
+          >Enable notifications</b-button
+        >
         <b-button size="sm" variant="outline-secondary" @click="signOut">Sign out</b-button>
       </div>
     </div>
@@ -21,7 +23,10 @@
       >
         <span>
           <strong>{{ game.name || "Unnamed game" }}</strong>
-          <span class="text-muted small"> · {{ game.player_count }}p · {{ (game.options && game.options.lostFleet) ? "Lost Fleet" : "base game" }}</span>
+          <span class="text-muted small">
+            · {{ game.player_count }}p · {{ game.options && game.options.lostFleet ? "Lost Fleet" : "base game"
+            }}<template v-if="isTestGame(game)"> · test game</template>
+          </span>
         </span>
         <b-badge :variant="badgeVariant(game)">{{ turnLabel(game) }}</b-badge>
       </b-list-group-item>
@@ -33,20 +38,25 @@
         <b-form-input v-model="form.name" placeholder="Friday fleet night" />
       </b-form-group>
       <b-form-group label="Players">
-        <b-form-select v-model.number="form.playerCount" :options="[2, 3, 4, 5]" @change="resizeSeats" />
+        <b-form-select v-model.number="form.playerCount" :options="[2, 3, 4]" @change="resizeSeats" />
       </b-form-group>
       <b-form-checkbox v-model="form.lostFleet" class="mb-2">Lost Fleet expansion</b-form-checkbox>
-      <b-form-group
-        v-for="(seatForm, i) in form.seats"
-        :key="i"
-        :label="`Seat ${i + 1}`"
-      >
-        <div class="d-flex" style="gap: 0.5rem">
-          <b-form-input v-model="seatForm.email" type="email" required placeholder="friend@example.com" />
-          <b-form-input v-model="seatForm.name" placeholder="Display name" />
-        </div>
-      </b-form-group>
-      <b-button variant="outline-secondary" size="sm" class="mb-3" @click="shuffleSeats">Shuffle seat order</b-button>
+      <b-form-checkbox v-model="form.testGame" class="mb-2">
+        Test game — I control all seats
+        <span class="text-muted small">(hot-seat; handy for trying out mechanics solo)</span>
+      </b-form-checkbox>
+      <template v-if="!form.testGame">
+        <p class="text-muted small mb-2">
+          Friends must have signed in here once (their email needs an account) before you can seat them.
+        </p>
+        <b-form-group v-for="(seatForm, i) in form.seats" :key="i" :label="`Seat ${i + 1}`">
+          <div class="d-flex" style="gap: 0.5rem">
+            <b-form-input v-model="seatForm.email" type="email" required placeholder="friend@example.com" />
+            <b-form-input v-model="seatForm.name" placeholder="Display name" />
+          </div>
+        </b-form-group>
+        <b-button variant="outline-secondary" size="sm" class="mb-3" @click="shuffleSeats">Shuffle seat order</b-button>
+      </template>
       <div>
         <b-button type="submit" variant="primary" :disabled="creating">Create game</b-button>
       </div>
@@ -78,6 +88,7 @@ export default Vue.extend({
         name: "",
         playerCount: 2,
         lostFleet: true,
+        testGame: false,
         seats: [] as SeatForm[],
       },
     };
@@ -123,6 +134,11 @@ export default Vue.extend({
     playerAtSeat(game: any, seat: number | null): any {
       return (game.players ?? []).find((p: any) => p.seat === seat);
     },
+    isTestGame(game: any): boolean {
+      const players = game.players ?? [];
+      const me = (this.session as any).user?.id;
+      return players.length > 0 && players.every((p: any) => p.user_id === me);
+    },
     turnLabel(game: any): string {
       if (game.status === "finished") {
         return "finished";
@@ -151,12 +167,24 @@ export default Vue.extend({
         // seat opens the setup phase.
         const probe = new Engine([`init ${this.form.playerCount} ${seed}`], options as any);
         probe.generateAvailableCommandsIfNeeded();
+        // The probe writes the generated map back into `options`; a stored map
+        // must not be replayed (init rejects it with lostFleet — the seed
+        // regenerates it deterministically anyway), so strip it before saving.
+        delete (options as any).map;
+        // Test games: every seat is the creator's, played hot-seat.
+        const invites = this.form.testGame
+          ? Array.from({ length: this.form.playerCount }, (_, i) => ({
+              email: this.userEmail,
+              seat: i,
+              display_name: `Player ${i + 1}`,
+            }))
+          : this.form.seats.map((s, i) => ({ email: s.email, seat: i, display_name: s.name }));
         const { data, error } = await (this.client as any).rpc("create_game", {
           p_name: this.form.name,
           p_seed: seed,
           p_player_count: this.form.playerCount,
           p_options: options,
-          p_invites: this.form.seats.map((s, i) => ({ email: s.email, seat: i, display_name: s.name })),
+          p_invites: invites,
           p_current_seat: probe.playerToMove,
         });
         if (error) {

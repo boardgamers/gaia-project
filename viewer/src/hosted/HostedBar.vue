@@ -1,5 +1,8 @@
 <template>
-  <div class="d-flex justify-content-between align-items-center px-3 py-2 mb-2 border-bottom bg-light flex-wrap" style="gap: 0.5rem">
+  <div
+    class="d-flex justify-content-between align-items-center px-3 py-2 mb-2 border-bottom bg-light flex-wrap"
+    style="gap: 0.5rem"
+  >
     <span>
       <a href="?lobby=1">← Games</a>
       <strong class="ml-2">{{ gameName || "Unnamed game" }}</strong>

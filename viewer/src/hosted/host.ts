@@ -6,6 +6,35 @@ export function initMoveLine(game: GameRow): string {
 }
 
 /**
+ * Engine-safe copy of the stored game options. The engine writes the
+ * generated map back into the options object it is given, and `init` refuses
+ * a pre-set map together with lostFleet — so a stored map (from rows written
+ * before Lobby.vue probed on a copy) must be dropped. Always safe: the map
+ * regenerates deterministically from the stored seed.
+ */
+export function engineOptions(game: GameRow): Record<string, unknown> {
+  const options = { ...(game.options ?? {}) };
+  delete options.map;
+  return options;
+}
+
+/**
+ * Which seat to lock the local UI to (the launcher's "player" event):
+ * - `null` = no lock (hot-seat) when the user owns every seat (test games) —
+ *   or none (RLS keeps strangers out entirely, and commit_turn re-checks
+ *   seat ownership server-side, so an unlocked UI can never commit).
+ * - Otherwise the user's seat that must act now, falling back to their first
+ *   seat while an opponent (or an unowned seat) is on turn. Driven by
+ *   `playerToMove`, so leech interrupts unlock the right seat (§J2).
+ */
+export function seatToLock(mySeats: number[], playerCount: number, playerToMove: number | undefined): number | null {
+  if (mySeats.length === 0 || mySeats.length >= playerCount) {
+    return null;
+  }
+  return playerToMove !== undefined && mySeats.includes(playerToMove) ? playerToMove : mySeats[0];
+}
+
+/**
  * The Supabase-backed counterpart of self-contained.ts's harness: holds the
  * authoritative local engine (replayed from the stored move log), renders
  * partial moves locally, and persists a turn line only once the engine says
@@ -150,7 +179,7 @@ export class HostedGameHost {
 
   private buildEngine(game: GameRow, moves: MoveRow[]): Engine {
     const ordered = [...moves].sort((a, b) => a.seq - b.seq);
-    const engine = new Engine([initMoveLine(game), ...ordered.map((m) => m.move)], game.options as any);
+    const engine = new Engine([initMoveLine(game), ...ordered.map((m) => m.move)], engineOptions(game) as any);
     engine.generateAvailableCommandsIfNeeded();
     for (const p of this.players) {
       if (engine.players[p.seat]) {

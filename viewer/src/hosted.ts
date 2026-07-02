@@ -1,7 +1,7 @@
 import Vue from "vue";
 import Game from "./components/Game.vue";
 import HostedBar from "./hosted/HostedBar.vue";
-import { HostedGameHost } from "./hosted/host";
+import { HostedGameHost, seatToLock } from "./hosted/host";
 import Lobby from "./hosted/Lobby.vue";
 import { enablePushNotifications, registerServiceWorker } from "./hosted/push";
 import SignIn from "./hosted/SignIn.vue";
@@ -60,7 +60,19 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
       const turnSeat = data.playerToMove;
       bar.turnPlayerName = data.players?.[turnSeat]?.name ?? `Player ${turnSeat + 1}`;
       bar.myTurn = !bar.finished && mySeats.includes(turnSeat);
-      bar.mySeatName = mySeats.length > 0 ? data.players?.[mySeats[0]]?.name ?? `Player ${mySeats[0] + 1}` : "";
+      const playerCount = host.game?.player_count ?? 0;
+      bar.mySeatName =
+        mySeats.length >= playerCount && mySeats.length > 0
+          ? "all seats (test game)"
+          : mySeats.length > 0
+          ? data.players?.[mySeats[0]]?.name ?? `Player ${mySeats[0] + 1}`
+          : "";
+      // Re-lock on every state so a user playing several (but not all) seats
+      // gets whichever of their seats must act now (leech interrupts included).
+      const lock = seatToLock(mySeats, playerCount, turnSeat);
+      if (lock !== null) {
+        emitter.emit("player", { index: lock });
+      }
     },
     onError: (message: string) => {
       emitter.emit("error", message);
@@ -71,11 +83,10 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
   await host.load();
 
   mySeats = host.mySeats(session.user.id, session.user.email);
-  if (mySeats.length > 0) {
-    // Feeds Game.vue's canPlay check (launcher.ts "player" -> store.state.player):
-    // this is the turn-locking the self-contained demo never wires up.
-    emitter.emit("player", { index: mySeats[0] });
-  }
+  // Seat locking happens inside onState via seatToLock (launcher.ts "player"
+  // -> store.state.player -> Game.vue's canPlay): a user with SOME seats is
+  // locked to whichever of theirs must act; a user with ALL seats (test game)
+  // plays hot-seat with no lock. Re-emit now that mySeats is known.
   host.emitCurrentState();
 
   emitter.on("move", (move: string) => {
