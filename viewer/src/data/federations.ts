@@ -63,3 +63,24 @@ export function federationChoiceRewards(federation: FederationChoice): Reward[] 
 
   return federationRewards(federation);
 }
+
+/**
+ * Display-only reward icons for rendering a spaceship Federation token with the base game's
+ * FederationTile art. Differs from the engine's execution map (`spaceshipFederationRewards`):
+ * PowerTokens shows its 2 area-III tokens, and Range/Terraform (bonus Build-a-Mine actions,
+ * no direct reward) show a range / 3-step icon; tooltips carry the full effect text.
+ */
+const displayRewards: Record<SpaceshipFederation, string> = {
+  [SpaceshipFederation.Credit]: "8vp,8c",
+  [SpaceshipFederation.Knowledge]: "4vp,4k",
+  [SpaceshipFederation.OreQic]: "4vp,2o,q",
+  [SpaceshipFederation.PowerTokens]: "7vp,2t",
+  [SpaceshipFederation.Range]: "range",
+  [SpaceshipFederation.Tech]: "tech",
+  [SpaceshipFederation.Terraform]: "3step",
+  [SpaceshipFederation.Vp]: "12vp",
+};
+
+export function spaceshipFederationDisplayRewards(federation: SpaceshipFederation): Reward[] {
+  return Reward.parse(displayRewards[federation]);
+}
