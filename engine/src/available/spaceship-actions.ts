@@ -62,7 +62,10 @@ export function possibleSpaceshipActions(engine: Engine, player: Player): Availa
   ];
 }
 
-export function possibleInstantGaiaforming(engine: Engine, player: Player): AvailableCommand<Command.GaiaFormTransdim>[] {
+export function possibleInstantGaiaforming(
+  engine: Engine,
+  player: Player
+): AvailableCommand<Command.GaiaFormTransdim>[] {
   const pl = engine.player(player);
   const spaces: AvailableHex[] = [];
 

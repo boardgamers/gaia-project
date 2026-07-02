@@ -1,6 +1,11 @@
 <template>
   <g class="deep-space-sector">
-    <polygon v-for="(center, i) in centers" :key="i" :points="hexPoints" :transform="`translate(${center.x}, ${center.y})`" />
+    <polygon
+      v-for="(center, i) in centers"
+      :key="i"
+      :points="hexPoints"
+      :transform="`translate(${center.x}, ${center.y})`"
+    />
   </g>
 </template>
 

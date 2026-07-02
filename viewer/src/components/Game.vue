@@ -309,7 +309,7 @@ export default class Game extends Vue {
   }
 
   handleData(data: Engine, keepMoveHistory?: boolean) {
-    for (const sector of (document.getElementsByClassName("sector") as any) as Element[]) {
+    for (const sector of document.getElementsByClassName("sector") as any as Element[]) {
       sector.classList.add("notransition");
     }
 
@@ -330,7 +330,7 @@ export default class Game extends Vue {
     this.$store.commit("receiveData", data);
 
     setTimeout(() => {
-      for (const sector of (document.getElementsByClassName("sector") as any) as Element[]) {
+      for (const sector of document.getElementsByClassName("sector") as any as Element[]) {
         sector.classList.remove("notransition");
       }
     });

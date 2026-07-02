@@ -105,7 +105,10 @@ function cheapestTransdimHex(engine: Engine, player: PlayerEnum): { hex: GaiaHex
 }
 
 /** Cheapest non-Transdim, unoccupied planet that currently requires at least 1 QIC of range extension. */
-function cheapestRangeExtendableHex(engine: Engine, player: PlayerEnum): { hex: GaiaHex; qicNeeded: number } | undefined {
+function cheapestRangeExtendableHex(
+  engine: Engine,
+  player: PlayerEnum
+): { hex: GaiaHex; qicNeeded: number } | undefined {
   const pl = engine.player(player);
   let best: { hex: GaiaHex; qicNeeded: number } | undefined;
 

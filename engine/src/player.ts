@@ -228,7 +228,7 @@ export default class Player extends EventEmitter {
     if (data.federationCache) {
       player.federationCache = data.federationCache;
       for (const fed of player.federationCache.federations) {
-        fed.hexes = ((fed.hexes as any) as string[]).map((hex) => map.getS(hex));
+        fed.hexes = (fed.hexes as any as string[]).map((hex) => map.getS(hex));
       }
     }
 

@@ -68,7 +68,8 @@ describe("Lost Fleet round scoring tiles (RULES_CLARIFICATIONS.md §G4)", () => 
   it("lfsector3: never triggers for a mine on an Interspace tile", () => {
     const map = new SpaceMap(2, "lf-scoring-sector3-interspace", false, "standard", true);
     const interspaceHex = [...map.grid.values()].find(
-      (hex) => classifySectorId(hex.data.sector) === LostFleetSectorType.Interspace && hex.hasPlanet() && !hex.data.building
+      (hex) =>
+        classifySectorId(hex.data.sector) === LostFleetSectorType.Interspace && hex.hasPlanet() && !hex.data.building
     );
     expect(interspaceHex, "need a planet-bearing Interspace hex").to.not.equal(undefined);
 
@@ -92,7 +93,9 @@ describe("Lost Fleet round scoring tiles (RULES_CLARIFICATIONS.md §G4)", () => 
         distinctTypeHexes.push(hex);
       }
     }
-    const sameTypeHex = hexes.find((h) => h.data.planet === distinctTypeHexes[0].data.planet && h !== distinctTypeHexes[0]);
+    const sameTypeHex = hexes.find(
+      (h) => h.data.planet === distinctTypeHexes[0].data.planet && h !== distinctTypeHexes[0]
+    );
     expect(distinctTypeHexes.length, "need at least 2 distinct planet types on the board").to.be.greaterThan(1);
     expect(sameTypeHex, "need a second hex of the first type").to.not.equal(undefined);
 

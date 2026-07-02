@@ -679,7 +679,9 @@ export namespace BoardAction {
   // Lost Fleet replaces the research-board Q.I.C. actions with the spaceship boards' own
   // Q.I.C. actions (RULES_CLARIFICATIONS.md §E4/§K3) — Qic1-3 are not available in those games.
   export function values(expansions: Expansion = Expansion.None): BoardAction[] {
-    const ret = Object.values(BoardAction).filter((val: BoardAction) => typeof val === "string" && /^power[0-9]/.test(val)) as BoardAction[];
+    const ret = Object.values(BoardAction).filter(
+      (val: BoardAction) => typeof val === "string" && /^power[0-9]/.test(val)
+    ) as BoardAction[];
 
     if (!hasExpansion(expansions, Expansion.LostFleet)) {
       ret.push(BoardAction.Qic1, BoardAction.Qic2, BoardAction.Qic3);
@@ -749,11 +751,7 @@ export namespace FinalTile {
     ];
 
     if (hasExpansion(expansions, Expansion.LostFleet)) {
-      ret.push(
-        FinalTile.Asteroid,
-        FinalTile.PlanetaryInstituteAcademyDistance,
-        FinalTile.DeepSpaceSector
-      );
+      ret.push(FinalTile.Asteroid, FinalTile.PlanetaryInstituteAcademyDistance, FinalTile.DeepSpaceSector);
     }
 
     return ret;

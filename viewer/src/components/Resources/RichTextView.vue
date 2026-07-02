@@ -79,9 +79,9 @@ export default class RichTextView extends Vue {
   content: RichText;
 
   get filteredContent(): RichText {
-    return this.content.flatMap(c => {
+    return this.content.flatMap((c) => {
       if (c.rewards) {
-        return c.rewards.map(r => ({ rewards: [r] } as RichTextElement));
+        return c.rewards.map((r) => ({ rewards: [r] } as RichTextElement));
       }
       return c;
     });
@@ -108,7 +108,7 @@ export default class RichTextView extends Vue {
   }
 
   width(rewards: Reward[]): number {
-    return rewards[0].count as any == "+" ? 15 : rewards.length * 30;
+    return (rewards[0].count as any) == "+" ? 15 : rewards.length * 30;
   }
 
   buildingResource(b: RichTextBuilding): Resource | null {
@@ -125,7 +125,7 @@ export default class RichTextView extends Vue {
   }
 
   buildingCountStyle(b: RichTextBuilding): string {
-    return `fill: ${(foregroundColor(factionColorVar(b.faction)))}; font-weight: bold;`;
+    return `fill: ${foregroundColor(factionColorVar(b.faction))}; font-weight: bold;`;
   }
 }
 </script>

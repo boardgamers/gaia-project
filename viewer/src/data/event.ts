@@ -32,7 +32,8 @@ const conditionsTrigger: { [key in Condition]?: string } = {
   [Condition.TerraformStep]: "terraforming a planet one step",
   [Condition.Trade]: "trading (afterwards)",
   [Condition.SpaceshipQicAction]: "taking a spaceship Q.I.C. action",
-  [Condition.NewSector]: "building a mine in a Space or Deep Space sector you had not colonized before (Interspace doesn't count)",
+  [Condition.NewSector]:
+    "building a mine in a Space or Deep Space sector you had not colonized before (Interspace doesn't count)",
   [Condition.NewPlanetType]: "building a mine on a planet type you had not colonized before",
 };
 

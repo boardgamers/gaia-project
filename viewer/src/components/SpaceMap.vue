@@ -26,19 +26,39 @@
         }px)`"
       />
     </g>
-    <FactionWheel class="faction-wheel" :transform="`translate(${bounds.left + 3.1}, ${bounds.top + 2.9}) scale(0.65)`" />
+    <FactionWheel
+      class="faction-wheel"
+      :transform="`translate(${bounds.left + 3.1}, ${bounds.top + 2.9}) scale(0.65)`"
+    />
     <image v-if="showCharts" xlink:href="../assets/other/line-chart.svg" :height=155/211*22 width="22" x="-11" y="-8"
-    v-b-modal.chart-button role="button" :transform="`translate(${bounds.right - 1.9}, ${bounds.top + 1.4}) scale(0.1)`" />
-    <g v-if="isLostFleet" class="lost-fleet-map-legend" :transform="`translate(${bounds.left + 0.3}, ${bounds.top + 9.2})`">
+    v-b-modal.chart-button role="button" :transform="`translate(${bounds.right - 1.9}, ${bounds.top + 1.4}) scale(0.1)`"
+    />
+    <g
+      v-if="isLostFleet"
+      class="lost-fleet-map-legend"
+      :transform="`translate(${bounds.left + 0.3}, ${bounds.top + 9.2})`"
+    >
       <rect class="lost-fleet-map-legend__panel" width="5.5" height="5.4" rx="0.4" ry="0.4" />
       <text class="lost-fleet-map-legend__title" transform="translate(0.5, 1)">Lost Fleet</text>
       <g class="lost-fleet-map-legend__row" data-kind="interspace" transform="translate(0.55, 1.95)">
-        <rect class="lost-fleet-map-legend__swatch lost-fleet-map-legend__swatch--interspace" width="1.2" height="0.68" rx="0.18" ry="0.18" />
+        <rect
+          class="lost-fleet-map-legend__swatch lost-fleet-map-legend__swatch--interspace"
+          width="1.2"
+          height="0.68"
+          rx="0.18"
+          ry="0.18"
+        />
         <text class="lost-fleet-map-legend__label" transform="translate(0.6, 0.47)">IS</text>
         <text class="lost-fleet-map-legend__copy" transform="translate(1.7, 0.5)">Interspace</text>
       </g>
       <g class="lost-fleet-map-legend__row" data-kind="deep-space" transform="translate(0.55, 3)">
-        <rect class="lost-fleet-map-legend__swatch lost-fleet-map-legend__swatch--deep-space" width="1.2" height="0.68" rx="0.18" ry="0.18" />
+        <rect
+          class="lost-fleet-map-legend__swatch lost-fleet-map-legend__swatch--deep-space"
+          width="1.2"
+          height="0.68"
+          rx="0.18"
+          ry="0.18"
+        />
         <DeepSpaceSector transform="translate(0.6, 0.34) scale(0.055)" />
         <text class="lost-fleet-map-legend__copy" transform="translate(1.7, 0.5)">Deep Space</text>
       </g>
@@ -48,7 +68,11 @@
         <text class="lost-fleet-map-legend__copy" transform="translate(1.7, 0.5)">T/R/M/E Ship</text>
       </g>
     </g>
-    <g v-for="(color, i) in colorLegend" :key="i" :transform="`translate(${bounds.left + 0.6}, ${bounds.top + (isLostFleet ? 15.4 : 7.8) + 2 * i}) scale(.8)`">
+    <g
+      v-for="(color, i) in colorLegend"
+      :key="i"
+      :transform="`translate(${bounds.left + 0.6}, ${bounds.top + (isLostFleet ? 15.4 : 7.8) + 2 * i}) scale(.8)`"
+    >
       <rect width="2" height="2" class="color-legend leech" :class="color.class" />
       <text class="color-legend" transform="translate(1, 1.55)">{{ color.text }}</text>
     </g>
@@ -181,8 +205,8 @@ export default class SpaceMap extends Vue {
   }
 
   get colorLegend(): { class: string; text: string }[] {
-    if (this.mapModes.find(m => m.type === MapModeType.leech || m.type == MapModeType.federations)) {
-      return [...Array(5).keys()].map(i => ({class: `power${i + 1}`, text: String(i + 1)}));
+    if (this.mapModes.find((m) => m.type === MapModeType.leech || m.type == MapModeType.federations)) {
+      return [...Array(5).keys()].map((i) => ({ class: `power${i + 1}`, text: String(i + 1) }));
     }
     return [];
   }

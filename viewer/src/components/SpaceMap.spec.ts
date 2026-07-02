@@ -135,7 +135,9 @@ describe("SpaceMap", () => {
     engine.players[0].faction = Faction.Darkanians;
     engine.players[1].faction = Faction.Moweyds;
 
-    const asteroidHex = [...engine.map.grid.values()].find((hex) => !hex.occupied() && hex.data.planet === Planet.Asteroid);
+    const asteroidHex = [...engine.map.grid.values()].find(
+      (hex) => !hex.occupied() && hex.data.planet === Planet.Asteroid
+    );
     const protoplanetHex = [...engine.map.grid.values()].find(
       (hex) => !hex.occupied() && hex.data.planet === Planet.Protoplanet
     );

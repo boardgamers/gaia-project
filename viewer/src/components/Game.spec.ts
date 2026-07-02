@@ -104,7 +104,9 @@ describe("Game", () => {
 
     expect(vm.currentMove).to.equal("tinkeroids chooseTinkeringTile tinkering-power4. income t");
     expect(vm.currentMove).to.not.contain("⇒");
-    expect(store.state.data.moveHistory[store.state.data.moveHistory.length - 1]).to.equal("tinkeroids booster booster2");
+    expect(store.state.data.moveHistory[store.state.data.moveHistory.length - 1]).to.equal(
+      "tinkeroids booster booster2"
+    );
 
     vm.$destroy();
   });
