@@ -1,4 +1,4 @@
-import { BoardAction, Booster, Building, Faction, Reward, SpaceshipTechTile } from "@gaia-project/engine";
+import { BoardAction, Booster, Building, Faction, Planet, Reward, SpaceshipTechTile } from "@gaia-project/engine";
 import { AnyTechTile, AnyTechTilePos, Spaceship } from "@gaia-project/engine/src/enums";
 import { SpecialActionIncome } from "../data";
 
@@ -12,6 +12,7 @@ export type RichTextElement = {
   boardAction?: BoardAction;
   tech?: { pos?: AnyTechTilePos | Spaceship; tile?: AnyTechTile | SpaceshipTechTile; commandOverride?: string };
   booster?: Booster;
+  planet?: Planet;
 };
 export type RichText = RichTextElement[];
 
@@ -32,6 +33,10 @@ export function richTextBuilding(type: Building, faction: Faction, count = 1, sk
       skipResource,
     },
   };
+}
+
+export function richTextPlanet(planet: Planet): RichTextElement {
+  return { planet };
 }
 
 export const richTextArrow = richText("arrow");

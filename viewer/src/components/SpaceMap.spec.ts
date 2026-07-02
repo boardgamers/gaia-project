@@ -63,6 +63,14 @@ describe("SpaceMap", () => {
     expect(deepSpaceHexCount).to.be.greaterThan(0);
     expect(container.querySelectorAll('[data-sector-type="interspace"]').length).to.equal(interspaceHexCount);
     expect(container.querySelectorAll('[data-sector-type="deep-space"]').length).to.equal(deepSpaceHexCount);
+
+    // badges carry the full tile id (IS3, DS14) so they match the hex-selection button labels
+    container.querySelectorAll('[data-sector-type="interspace"] text').forEach((badge) => {
+      expect(badge.textContent.trim()).to.match(/^IS\d+$/);
+    });
+    container.querySelectorAll('[data-sector-type="deep-space"] text').forEach((badge) => {
+      expect(badge.textContent.trim()).to.match(/^DS\d+$/);
+    });
     expect(container.querySelectorAll("g.space-hex-cell .lost-fleet-spaceship").length).to.equal(spaceshipHexCount);
     expect(container.querySelector('[data-kind="interspace"]')).to.not.equal(null);
     expect(container.querySelector('[data-kind="deep-space"]')).to.not.equal(null);

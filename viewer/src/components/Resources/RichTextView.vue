@@ -45,6 +45,9 @@
         :disable-tooltip="true"
       />
       <Booster v-else-if="c.booster" :key="i" :booster="c.booster" highlighted />
+      <svg v-else-if="c.planet" :key="i" viewBox="-10 -10 20 20" width="20" height="20" :data-planet="c.planet">
+        <circle r="7" :class="['planet-fill', c.planet]" style="stroke: black; stroke-width: 0.7" />
+      </svg>
       <svg v-else-if="c.text === 'arrow'" :key="i" viewBox="0 0 10 10" width="20" height="20">
         <use xlink:href="#arrow" x="-2" y="5" />
       </svg>

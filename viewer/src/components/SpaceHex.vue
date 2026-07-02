@@ -349,11 +349,13 @@ export default class SpaceHex extends Vue {
   }
 
   get lostFleetSectorBadge(): { kind: "interspace" | "deep-space"; label: string } | null {
+    // full tile id (IS3, DS14), matching the labels on hex-selection command buttons so a
+    // "Build mine IS3" button can be located on the map at a glance
     switch (this.sectorType) {
       case LostFleetSectorType.Interspace:
-        return { kind: "interspace", label: "IS" };
+        return { kind: "interspace", label: this.hex.data.sector };
       case LostFleetSectorType.DeepSpace:
-        return { kind: "deep-space", label: "DS" };
+        return { kind: "deep-space", label: this.hex.data.sector.split("_")[0] };
       default:
         return null;
     }

@@ -1,9 +1,18 @@
-import { Building, GaiaHex, Resource, Reward } from "@gaia-project/engine";
+import {
+  Building,
+  classifySectorId,
+  GaiaHex,
+  LostFleetSectorType,
+  Planet,
+  Resource,
+  Reward,
+} from "@gaia-project/engine";
 import assert from "assert";
 import { sortBy } from "lodash";
 import { ButtonData, HighlightHex } from "../../data";
 import { buildingData } from "../../data/building";
-import { RichText, richText, richTextArrow, richTextRewards } from "../../graphics/rich-text";
+import { planetNames } from "../../data/planets";
+import { RichText, richText, richTextArrow, richTextPlanet, richTextRewards } from "../../graphics/rich-text";
 import { prependShortcut, tooltipWithShortcut } from "./shortcuts";
 import { CommandController } from "./types";
 import { addOnClick, addOnShow, isFree, textButton } from "./utils";
@@ -55,6 +64,12 @@ export function hexSelectionButton(
         i++;
       } else {
         label.push(richText(hex.toString()));
+      }
+
+      // Lost Fleet Interspace/Deep Space addresses (IS3, DS14_1) don't carry a readable sector
+      // reference like base-game coordinates do, so show which planet the button targets
+      if (hex.data.planet !== Planet.Empty && classifySectorId(hex.data.sector) !== LostFleetSectorType.Space) {
+        label.push(richTextPlanet(hex.data.planet), richText(planetNames[hex.data.planet]));
       }
 
       const highlightHex = hexes.get(hex);
