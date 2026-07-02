@@ -123,7 +123,7 @@ invited_email = lower(auth.email())`. Called by the client after every sign-in; 
   form (`signInWithOtp`) underneath for anyone whose invite email isn't a Google account. Both
   identify the player by their verified email, so everything downstream is unchanged. The
   Supabase client persists the session (localStorage) and auto-refreshes tokens, so it really is
-  **sign in once per device** — see §12 for the one-time Google OAuth setup the owner does.
+  **sign in once per device** — see §13.5 for the one-time Google OAuth setup the owner does.
 - Host fills in the create-game form: game name, options (incl. `lostFleet`), and the friends'
   emails in **seat order** (UI offers a shuffle button; seed is generated once client-side and
   stored — §J3). Seat index = engine player index; everything downstream (faction pick order,
