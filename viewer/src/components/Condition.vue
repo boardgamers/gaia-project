@@ -32,6 +32,15 @@
     </g>
     <Resource v-else-if="condition === 'step'" kind="step" />
     <Resource v-else-if="condition === 'trade'" kind="tradeShip" />
+    <circle v-else-if="condition === 'ast'" r="9" class="planet-fill a" style="stroke: black; stroke-width: 0.5" />
+    <g v-else-if="condition === 'shipq'">
+      <polygon
+        points="-10,4 -4,10 4,10 10,4 10,-4 4,-10 -4,-10 -10,-4"
+        transform="scale(1.1)"
+        style="fill: none; stroke: black; stroke-width: 1"
+      />
+      <Resource kind="q" transform="scale(0.85)" />
+    </g>
     <g v-else-if="condition === 'mg'">
       <image v-if="!flat" xlink:href="../assets/conditions/planet-flat.svg" :height=120/198*30 width=30 x=-12 y=-13.5
       transform="translate(-2,0) scale(-1,-1)" />

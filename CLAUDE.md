@@ -29,7 +29,13 @@ Read these before coding:
   gold-side execution, Space Giants' Exploration special action, the Scoring Board Extension gate,
   the 6 Lost Fleet Advanced Tech tiles, and Examine Artifact + Artifact-token seeding are all
   implemented and tested.
-- Engine: 473/473 tests passing. Viewer: 161/161 tests passing.
+- Engine: 490/490 tests passing. Viewer: 219/219 tests passing (as of 2026-07-02 — trust
+  `PROGRESS.md`'s "Testing" section over this line if they disagree).
+- The Lost Fleet component UI is reuse-first as of 2026-07-02 (PROGRESS #50-#53): all LF components
+  render through base-game components (TechContent/Condition/Resource icons, FederationTile art,
+  TechTile, SpecialAction octagons), one compact per-ship overview strip (`LostFleetShips.vue`),
+  dynamic map viewBox with a left sidebar for the faction wheel/legends, and planet-labeled
+  IS/DS hex buttons + map badges.
 - The self-contained viewer can now boot Lost Fleet directly via `?lostFleet=1` (for example
   `?players=2&seed=lost-fleet-space-map&lostFleet=1`).
 - Darkanians and Space Giants now correctly place only 1 starting mine in Lost Fleet's expansion-
