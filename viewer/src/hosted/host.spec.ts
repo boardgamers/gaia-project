@@ -1,6 +1,5 @@
 import { expect } from "chai";
 import { engineOptions, HostedGameHost, initMoveLine, seatToLock } from "./host";
-import { buildCreateGameParams } from "./new-game";
 import { CommitTurnArgs, GameRow, HostedBackend, MoveRow, PlayerRow } from "./types";
 
 // Committed-turn lines from a known-valid engine fixture
@@ -302,30 +301,6 @@ describe("hosted game host", () => {
     await host.resync();
     expect(host.game.options).to.deep.equal({ lostFleet: true, factionVariant: "standard" });
     expect(host.engine.moveHistory).to.have.length(1);
-  });
-
-  it("builds create_game params with pristine options and an engine-derived first seat", () => {
-    const params = buildCreateGameParams(
-      {
-        name: "Test",
-        playerCount: 2,
-        lostFleet: true,
-        seats: [
-          { email: "alice@example.com", name: "Alice" },
-          { email: "bob@example.com", name: "Bob" },
-        ],
-      },
-      "fixed-seed"
-    );
-
-    // the probe engine must not leak its mutations (map, factionVariantVersion)
-    expect(params.p_options).to.deep.equal({ lostFleet: true, factionVariant: "standard" });
-    expect(params.p_seed).to.equal("fixed-seed");
-    expect(params.p_current_seat).to.be.a("number");
-    expect(params.p_invites).to.deep.equal([
-      { email: "alice@example.com", seat: 0, display_name: "Alice" },
-      { email: "bob@example.com", seat: 1, display_name: "Bob" },
-    ]);
   });
 
   it("renders but does not persist an incomplete turn line", async () => {

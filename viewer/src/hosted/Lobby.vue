@@ -38,9 +38,19 @@
         <b-form-input v-model="form.name" placeholder="Friday fleet night" />
       </b-form-group>
       <b-form-group label="Players">
-        <b-form-select v-model.number="form.playerCount" :options="[2, 3, 4]" @change="resizeSeats" />
+        <b-form-select v-model.number="form.playerCount" :options="[2, 3, 4]" @change="onPlayerCountChange" />
       </b-form-group>
-      <b-form-checkbox v-model="form.lostFleet" class="mb-2">Lost Fleet expansion</b-form-checkbox>
+
+      <h6 class="mt-3">Setup preview</h6>
+      <p class="text-muted small mb-2">
+        Reroll until you like the map, then click sectors to rotate them. Lock in when you're happy — that exact
+        seed and rotation become the game.
+      </p>
+      <SetupPreview :player-count="form.playerCount" @lock-in="onLockIn" />
+      <b-alert :show="!!lockedSeed" variant="success" class="mt-2 mb-3">
+        Locked in — seed <code>{{ lockedSeed }}</code>
+      </b-alert>
+
       <b-form-checkbox v-model="form.testGame" class="mb-2">
         Test game — I control all seats
         <span class="text-muted small">(hot-seat; handy for trying out mechanics solo)</span>
@@ -58,7 +68,8 @@
         <b-button variant="outline-secondary" size="sm" class="mb-3" @click="shuffleSeats">Shuffle seat order</b-button>
       </template>
       <div>
-        <b-button type="submit" variant="primary" :disabled="creating">Create game</b-button>
+        <b-button type="submit" variant="primary" :disabled="creating || !lockedSeed">Create game</b-button>
+        <span v-if="!lockedSeed" class="text-muted small ml-2">Lock in a setup above first</span>
       </div>
     </b-form>
   </div>
@@ -68,11 +79,13 @@
 import Vue from "vue";
 import { buildCreateGameParams } from "./new-game";
 import { enablePushNotifications } from "./push";
+import SetupPreview from "./SetupPreview.vue";
 
 type SeatForm = { email: string; name: string };
 
 export default Vue.extend({
   name: "HostedLobby",
+  components: { SetupPreview },
   props: {
     client: { type: Object, required: true },
     session: { type: Object, required: true },
@@ -84,10 +97,14 @@ export default Vue.extend({
       creating: false,
       pushBusy: false,
       message: "",
+      // Set only by SetupPreview's lock-in event; creating a game is disabled
+      // until then. Cleared whenever the player count changes, since a locked
+      // rotation is meaningless for a different setup.
+      lockedSeed: "" as string,
+      lockedRotateMove: "" as string,
       form: {
         name: "",
         playerCount: 2,
-        lostFleet: true,
         testGame: false,
         seats: [] as SeatForm[],
       },
@@ -103,6 +120,15 @@ export default Vue.extend({
     this.refresh();
   },
   methods: {
+    onPlayerCountChange() {
+      this.resizeSeats();
+      this.lockedSeed = "";
+      this.lockedRotateMove = "";
+    },
+    onLockIn(payload: { seed: string; rotateMove: string }) {
+      this.lockedSeed = payload.seed;
+      this.lockedRotateMove = payload.rotateMove;
+    },
     resizeSeats() {
       const seats: SeatForm[] = this.form.seats.slice(0, this.form.playerCount);
       while (seats.length < this.form.playerCount) {
@@ -158,6 +184,10 @@ export default Vue.extend({
       return player && player.user_id === (this.session as any).user?.id ? "success" : "info";
     },
     async createGame() {
+      if (!this.lockedSeed) {
+        this.message = "Lock in a setup preview before creating the game.";
+        return;
+      }
       this.creating = true;
       this.message = "";
       try {
@@ -168,12 +198,15 @@ export default Vue.extend({
               name: `Player ${i + 1}`,
             }))
           : this.form.seats;
-        const params = buildCreateGameParams({
-          name: this.form.name,
-          playerCount: this.form.playerCount,
-          lostFleet: this.form.lostFleet,
-          seats,
-        });
+        const params = buildCreateGameParams(
+          {
+            name: this.form.name,
+            playerCount: this.form.playerCount,
+            seats,
+          },
+          this.lockedSeed,
+          this.lockedRotateMove
+        );
         const { data, error } = await (this.client as any).rpc("create_game", params);
         if (error) {
           throw new Error(error.message);

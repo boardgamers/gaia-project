@@ -1,0 +1,134 @@
+import { fireEvent, render } from "@testing-library/vue";
+import { expect } from "chai";
+import BootstrapVue from "bootstrap-vue";
+import Vue from "vue";
+import SetupPreview from "./SetupPreview.vue";
+
+Vue.use(BootstrapVue);
+
+function firstSector(container: HTMLElement): Element {
+  const sector = container.querySelector(".sector");
+  expect(sector, "expected at least one rendered sector").to.not.equal(null);
+  return sector;
+}
+
+function firstSectorHex(container: HTMLElement): Element {
+  const hex = firstSector(container).querySelector(".space-hex-cell use");
+  expect(hex, "expected a clickable hex inside the first sector").to.not.equal(null);
+  return hex;
+}
+
+function sectorStyle(container: HTMLElement): string {
+  return firstSector(container).getAttribute("style") || "";
+}
+
+function seedText(container: HTMLElement): string | null {
+  return container.querySelector("code")?.textContent ?? null;
+}
+
+// Full render-path coverage for the setup-preview screen: real Lost Fleet
+// components (map/research/scoring/ships/terraforming board), the live
+// click-to-rotate mechanism (no arming step), reroll/seed history, player
+// count changes, and the German-rules lock-in guard. Follows the render-path
+// testing convention from PERFORMANCE.md / SpaceMap.spec.ts.
+describe("SetupPreview", () => {
+  it("renders a full Lost Fleet setup with real components", async () => {
+    const { container, getByText } = render(SetupPreview, { props: { playerCount: 2 } });
+    await Vue.nextTick();
+
+    expect(container.querySelectorAll(".sector").length).to.be.greaterThan(0);
+    expect(container.querySelectorAll("svg.lost-fleet-ship").length).to.equal(3); // Rebellion excluded at 2p
+    expect(container.querySelector(".lost-fleet-terraforming-board")).to.not.equal(null);
+    expect(container.querySelector("svg.research-board")).to.not.equal(null);
+    expect(seedText(container)).to.be.a("string").that.is.not.empty;
+    expect(getByText("Lock in this setup")).to.not.equal(null);
+  });
+
+  it("clicking a hex increments its sector's rotation exactly once per click", async () => {
+    const { container } = render(SetupPreview, { props: { playerCount: 2 } });
+    await Vue.nextTick();
+
+    expect(sectorStyle(container)).to.contain("rotate(0deg)");
+
+    await fireEvent.click(firstSectorHex(container));
+    await Vue.nextTick();
+    expect(sectorStyle(container)).to.contain("rotate(60deg)");
+
+    await fireEvent.click(firstSectorHex(container));
+    await Vue.nextTick();
+    expect(sectorStyle(container)).to.contain("rotate(120deg)");
+
+    // 4 more clicks (6 total) is visually back to unrotated (mod 6 wraps at lock-in time too)
+    for (let i = 0; i < 4; i++) {
+      await fireEvent.click(firstSectorHex(container));
+      await Vue.nextTick();
+    }
+    expect(sectorStyle(container)).to.contain("rotate(360deg)");
+  });
+
+  it("reroll changes the seed and re-renders the board", async () => {
+    const { container, getByText } = render(SetupPreview, { props: { playerCount: 2 } });
+    await Vue.nextTick();
+
+    const seedBefore = seedText(container);
+    await fireEvent.click(getByText("Reroll"));
+    await Vue.nextTick();
+
+    expect(seedText(container)).to.not.equal(seedBefore);
+    // still a fully rendered setup after the reroll, not a stale/empty board
+    expect(container.querySelectorAll(".sector").length).to.be.greaterThan(0);
+  });
+
+  it("changing player count resets to a fresh seed", async () => {
+    const { container, updateProps } = render(SetupPreview, { props: { playerCount: 2 } });
+    await Vue.nextTick();
+
+    const seedBefore = seedText(container);
+    await updateProps({ playerCount: 3 });
+    await Vue.nextTick();
+
+    expect(seedText(container)).to.not.equal(seedBefore);
+    expect(container.querySelectorAll("svg.lost-fleet-ship").length).to.equal(4); // Rebellion included at 3p
+  });
+
+  it("disables lock-in and shows a message for a rotation that violates the German-rules assert", async () => {
+    const { container, getByText } = render(SetupPreview, { props: { playerCount: 2 } });
+    await Vue.nextTick();
+
+    // Same seed/center/rotation as the engine regression test
+    // (engine/src/map.spec.ts): rotating the (0,0) sector 3 times on this
+    // seed at 2p puts two matching planet types adjacent. (0,0) is always
+    // lostFleetSectorCenters(2)[0], i.e. the first .sector rendered.
+    const seedInput = container.querySelector("input") as HTMLInputElement;
+    await fireEvent.update(seedInput, "lost-fleet-space-map");
+    await fireEvent.click(getByText("Use seed"));
+    await Vue.nextTick();
+    expect(seedText(container)).to.equal("lost-fleet-space-map");
+
+    for (let i = 0; i < 3; i++) {
+      await fireEvent.click(firstSectorHex(container));
+      await Vue.nextTick();
+    }
+
+    expect(container.textContent).to.contain("Map is invalid with two planets for the same type being near each other");
+    const lockIn = getByText("Lock in this setup") as HTMLButtonElement;
+    expect(lockIn.disabled).to.equal(true);
+  });
+
+  it("emits lock-in with the seed and rotate move once a valid setup is confirmed", async () => {
+    const { container, getByText, emitted } = render(SetupPreview, { props: { playerCount: 2 } });
+    await Vue.nextTick();
+
+    await fireEvent.click(firstSectorHex(container));
+    await Vue.nextTick();
+
+    await fireEvent.click(getByText("Lock in this setup"));
+    await Vue.nextTick();
+
+    const events = emitted()["lock-in"];
+    expect(events).to.not.equal(undefined);
+    const payload = events[0][0];
+    expect(payload.seed).to.equal(seedText(container));
+    expect(payload.rotateMove).to.match(/^p2 rotate( .+ 1)?$/);
+  });
+});
