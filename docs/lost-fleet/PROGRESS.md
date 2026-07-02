@@ -1458,6 +1458,18 @@ open, in priority order the user should pick from:
    three oracle tiers (structural / conservation / Lost-Fleet rules oracles each citing its
    rulebook/§-ledger source), failure minimization into committed regression specs, and a strict
    triage protocol (no engine change without a CONFIRMED rules basis). Not started — next up.
+3c. **Lost Fleet component UI redesign — REUSE-FIRST (owner-requested 2026-07-02, not started).**
+   Owner requirements, verbatim intent: completely redesign the expansion components' presentation
+   so it **keeps and/or reuses the art/visual language of the base game** — e.g. Lost Fleet round
+   boosters must look like base-game round boosters, LF tech/adv-tech tiles like base tiles, and
+   so on for every LF component; reuse is the priority, bespoke new art the exception. Layout is
+   in scope too: compact, in the style of the existing base-game implementation (no sprawling new
+   panels). Process requirements: viewer-only; read `PERFORMANCE.md` FIRST (hard render-perf
+   findings + the standing render-test rule); per the working agreements, trace the existing
+   base-game component rendering (how boosters/tech tiles/actions are drawn today) and propose a
+   component-by-component reuse plan for owner confirmation BEFORE restyling anything; keep all
+   viewer tests green and extend the real render-path specs. Scope is disjoint from 3b (engine),
+   so the two can run in parallel sessions if desired — both update this file, so pull before push.
 4. ~~Or a different unit of work entirely (viewer, Supabase)~~ — **Supabase multiplayer is DONE**
    (see "Done so far" #47 and `BACKEND.md`), pending two ~5-minute owner actions listed in
    `BACKEND.md` §11: deploy the `notify` Edge Function and set the Supabase Auth URL
