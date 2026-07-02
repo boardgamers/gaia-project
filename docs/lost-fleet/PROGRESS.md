@@ -1137,6 +1137,32 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
       seat 0, `p2 faction xenos` seat 1) and the previously-broken game now opens. Test game cleaned
       up afterward.
 
+50. ✅ **Reuse-first UI redesign (3c), slice 1 — dynamic map viewBox + sidebar-anchored wheel/legends,
+    CODED & TESTED** (done 2026-07-02). The owner approved the full component-by-component reuse plan
+    for 3c this session (one consolidated per-ship overview panel; adv-ext stays on the scoring board;
+    map rotation deferred until after the viewBox fix — re-judge then; slices: map fit → ship strip →
+    tile iconography → mine-placement decode). Slice 1 fixes a real rendering bug found while tracing:
+    `SpaceMap.vue`'s hardcoded viewBox (`-13 -11.5 26|33.5 24`) **clipped the taller Lost Fleet
+    layouts** — measured hex extents are 3p y∈[-16.5, 11.3] and 4p y∈[-19.1, 11.3], so 3p lost ~5 hex
+    rows and 4p ~7.6 units off the top. Changes:
+    - `SpaceMap.vue` now computes the viewBox from the actual `map.grid` hex bounding box (same
+      `hexCenter * 1.01` math as the template transforms), padded by one hex radius, plus a reserved
+      6-unit **left sidebar** where the faction wheel, the Lost Fleet map legend, and the leech/
+      federation color legend are all anchored — measured corner occupancy showed 15-17 hexes inside
+      the old wheel's top-left box on most layouts (base included), so a reserved gutter is the only
+      placement that never covers hexes. Legend panel compacted to fit the sidebar (5.5 units wide).
+    - `FactionWheel.vue`: the 4 extra planets under Lost Fleet now stack 2×2 (Gaia/Transdim row, then
+      Asteroid/Protoplanet row) instead of a 4-wide strip, keeping the wheel's footprint inside the
+      sidebar (this was the owner's "proto and asteroid count seems kind of plastered on" item).
+    - Specs (per the standing render-test rule): `SpaceMap.spec.ts` gained a 2p/3p/4p Lost Fleet test
+      asserting every hex (±1 radius) lies inside the rendered viewBox and that the wheel/legend
+      anchors sit fully left of the leftmost hex; `FactionWheel.spec.ts` now locks the 2×2 stacking.
+    - Verified visually via Playwright screenshots against the dev server (LF 2p/4p, base 2p, and a
+      390px-wide mobile viewport): 4p now fits a portrait phone screen whole, so **map rotation looks
+      unnecessary** — owner to re-judge on the deployed site.
+    - Verification: viewer suite **215/215** passing after rebasing onto #49's concurrent master push
+      (208 baseline at session start + this slice's additions + #49's 6 host tests).
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -1154,9 +1180,10 @@ TS resolution than the real webpack-based path and gives false failures; use the
   — equivalent for engine, which has no webpack step). **490 tests passing as of 2026-06-30.**
 - Viewer: `cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'`
   (this is what `pnpm test` runs — uses `mochapack`/webpack, required for files that touch engine
-  types). **168 tests passing as of 2026-06-30.**
+  types). **215 tests passing as of 2026-07-02.**
 
-**Latest full rerun after #46:** engine **490/490**, viewer **168/168**.
+**Latest full rerun after #50:** viewer **215/215** (engine untouched by #50; last full engine run
+**490/490** after #46).
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/

@@ -2,6 +2,7 @@ import Engine, { Building, classifySectorId, Faction, LostFleetSectorType, Plane
 import { render } from "@testing-library/vue";
 import { expect } from "chai";
 import fs from "fs";
+import { hexCenter } from "../graphics/hex";
 import { makeStore } from "../store";
 import SpaceMap from "./SpaceMap.vue";
 
@@ -66,6 +67,42 @@ describe("SpaceMap", () => {
     expect(container.querySelector('[data-kind="interspace"]')).to.not.equal(null);
     expect(container.querySelector('[data-kind="deep-space"]')).to.not.equal(null);
     expect(container.querySelector('[data-kind="ship"]')).to.not.equal(null);
+  });
+
+  it("sizes the viewBox to contain every hex and keeps the wheel and legends in the left sidebar", () => {
+    // The old hardcoded viewBox (-13 -11.5 26|33.5 24) clipped the taller Lost Fleet 3p/4p
+    // layouts (top hexes at y=-16.5 / -19.1) and let the faction wheel sit on top of hexes.
+    const translateX = (el: Element | null): number => {
+      const match = /translate\((-?[\d.]+)/.exec(el?.getAttribute("transform") ?? "");
+      expect(match, "expected an anchored transform").to.not.equal(null);
+      return Number(match[1]);
+    };
+
+    for (const players of [2, 3, 4]) {
+      const engine = new Engine([`init ${players} lost-fleet-space-map`], { lostFleet: true });
+      const store = makeStore();
+      store.commit("receiveData", engine);
+
+      const { container } = render(SpaceMap, { store });
+
+      const [x, y, w, h] = container.querySelector("svg").getAttribute("viewBox").split(" ").map(Number);
+      let minHexX = Infinity;
+      for (const hex of engine.map.grid.values()) {
+        const c = hexCenter(hex);
+        expect(c.x * 1.01 - 1, `${players}p hex ${hex} left of viewBox`).to.be.gte(x);
+        expect(c.x * 1.01 + 1, `${players}p hex ${hex} right of viewBox`).to.be.lte(x + w);
+        expect(c.y * 1.01 - 1, `${players}p hex ${hex} above viewBox`).to.be.gte(y);
+        expect(c.y * 1.01 + 1, `${players}p hex ${hex} below viewBox`).to.be.lte(y + h);
+        minHexX = Math.min(minHexX, c.x * 1.01);
+      }
+
+      // The faction wheel (ring spans +-2.6 around its anchor at scale 0.65) and the Lost Fleet
+      // legend (5.5 wide) both stay in the reserved sidebar, fully left of the leftmost hex.
+      const wheelRight = translateX(container.querySelector(".faction-wheel")) + 2.6;
+      expect(wheelRight, `${players}p wheel overlaps hexes`).to.be.below(minHexX - 1);
+      const legendRight = translateX(container.querySelector(".lost-fleet-map-legend")) + 5.5;
+      expect(legendRight, `${players}p legend overlaps hexes`).to.be.below(minHexX - 1);
+    }
   });
 
   it("keeps Asteroid and Protoplanet planet colors while rendering Lost Fleet player pieces with the correct faction pairing", () => {

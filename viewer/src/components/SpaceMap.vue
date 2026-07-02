@@ -1,5 +1,5 @@
 <template>
-  <svg :viewBox="`-13 -11.5 ${right} 24`">
+  <svg :viewBox="viewBox">
     <definitions />
     <Sector
       v-for="center in this.sectors"
@@ -24,11 +24,11 @@
         hexCenter(s).y * 1.01
       }px)`"
     />
-    <FactionWheel transform="translate(-10.2, -8.7) scale(0.65)" />
+    <FactionWheel class="faction-wheel" :transform="`translate(${bounds.left + 3.1}, ${bounds.top + 2.9}) scale(0.65)`" />
     <image v-if="showCharts" xlink:href="../assets/other/line-chart.svg" :height=155/211*22 width="22" x="-11" y="-8"
-    v-b-modal.chart-button role="button" :transform="`translate(${right - 15}, -10) scale(0.1)`" />
-    <g v-if="isLostFleet" class="lost-fleet-map-legend" :transform="`translate(${right - 9.2}, -10.1)`">
-      <rect class="lost-fleet-map-legend__panel" width="8.3" height="5.4" rx="0.4" ry="0.4" />
+    v-b-modal.chart-button role="button" :transform="`translate(${bounds.right - 1.9}, ${bounds.top + 1.4}) scale(0.1)`" />
+    <g v-if="isLostFleet" class="lost-fleet-map-legend" :transform="`translate(${bounds.left + 0.3}, ${bounds.top + 9.2})`">
+      <rect class="lost-fleet-map-legend__panel" width="5.5" height="5.4" rx="0.4" ry="0.4" />
       <text class="lost-fleet-map-legend__title" transform="translate(0.5, 1)">Lost Fleet</text>
       <g class="lost-fleet-map-legend__row" data-kind="interspace" transform="translate(0.55, 1.95)">
         <rect class="lost-fleet-map-legend__swatch lost-fleet-map-legend__swatch--interspace" width="1.2" height="0.68" rx="0.18" ry="0.18" />
@@ -46,7 +46,7 @@
         <text class="lost-fleet-map-legend__copy" transform="translate(1.7, 0.5)">T/R/M/E Ship</text>
       </g>
     </g>
-    <g v-for="(color, i) in colorLegend" :key="i" :transform="`translate(-12.5, ${2.3 + 2 * i}) scale(.8)`">
+    <g v-for="(color, i) in colorLegend" :key="i" :transform="`translate(${bounds.left + 0.6}, ${bounds.top + (isLostFleet ? 15.4 : 7.8) + 2 * i}) scale(.8)`">
       <rect width="2" height="2" class="color-legend leech" :class="color.class" />
       <text class="color-legend" transform="translate(1, 1.55)">{{ color.text }}</text>
     </g>
@@ -119,8 +119,36 @@ export default class SpaceMap extends Vue {
     return hasExpansion(this.engine.expansions, Expansion.LostFleet);
   }
 
-  get right() {
-    return (this.sectors || []).length > 7 ? 33.5 : 26;
+  /**
+   * Bounding box of every hex on the board (in rendered units, i.e. hexCenter * 1.01 like the
+   * template's transforms), padded by one hex radius, plus a reserved left sidebar where the
+   * faction wheel / legends live so they never cover hexes. Replaces the old hardcoded
+   * viewBox, which clipped the taller Lost Fleet 3p/4p layouts.
+   */
+  get bounds(): { left: number; top: number; right: number; bottom: number } {
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+    for (const hex of this.map.grid.values()) {
+      const c = hexCenter(hex);
+      minX = Math.min(minX, c.x * 1.01);
+      maxX = Math.max(maxX, c.x * 1.01);
+      minY = Math.min(minY, c.y * 1.01);
+      maxY = Math.max(maxY, c.y * 1.01);
+    }
+    if (minX > maxX) {
+      // no hexes (e.g. map not generated yet) - keep the old base-game frame
+      return { left: -13, top: -11.5, right: 13, bottom: 12.5 };
+    }
+    const hexPad = 1.3;
+    const sidebar = 6;
+    return { left: minX - hexPad - sidebar, top: minY - hexPad, right: maxX + hexPad, bottom: maxY + hexPad };
+  }
+
+  get viewBox(): string {
+    const b = this.bounds;
+    return `${b.left} ${b.top} ${b.right - b.left} ${b.bottom - b.top}`;
   }
 
   get mapModes(): MapMode[] {
