@@ -13,7 +13,7 @@
       >
         <SpaceMap :class="['mb-1', 'space-map', 'col-md-7']" />
         <div class="col-md-5">
-          <svg class="scoring-research-board" :viewBox="`0 0 ${researchBoardWidth + 120} 505`">
+          <svg class="scoring-research-board" :viewBox="`0 -25 ${researchBoardWidth + 120} 545`">
             <ResearchBoard height="450" ref="researchBoard" x="-50" />
             <ScoringBoard class="ml-4" width="90" :x="researchBoardWidth + 20" y="-25" />
             <BoardAction
@@ -27,10 +27,7 @@
         </div>
       </div>
       <div class="row mt-2" v-if="engine.options.lostFleet">
-        <LostFleetShipActionsRow class="col-12" />
-      </div>
-      <div class="row mt-2" v-if="engine.options.lostFleet">
-        <LostFleetSpaceships class="col-12" />
+        <LostFleetShips class="col-12" />
       </div>
       <div class="row mt-2" v-if="engine.options.lostFleet">
         <LostFleetTerraformingBoard class="col-12" />
@@ -107,8 +104,7 @@ import PlayerInfo from "./PlayerInfo.vue";
 import ResearchBoard from "./ResearchBoard.vue";
 import ScoringBoard from "./ScoringBoard.vue";
 import SpaceMap from "./SpaceMap.vue";
-import LostFleetShipActionsRow from "./LostFleetShipActionsRow.vue";
-import LostFleetSpaceships from "./LostFleetSpaceships.vue";
+import LostFleetShips from "./LostFleetShips.vue";
 import LostFleetTerraformingBoard from "./LostFleetTerraformingBoard.vue";
 import TurnOrder from "./TurnOrder.vue";
 import { parseCommands } from "../logic/recent";
@@ -130,8 +126,7 @@ import { orderedPlayers } from "../data/player";
     ResearchBoard,
     ScoringBoard,
     SpaceMap,
-    LostFleetShipActionsRow,
-    LostFleetSpaceships,
+    LostFleetShips,
     LostFleetTerraformingBoard,
     TurnOrder,
     Rules,
@@ -314,7 +309,7 @@ export default class Game extends Vue {
   }
 
   handleData(data: Engine, keepMoveHistory?: boolean) {
-    for (const sector of (document.getElementsByClassName("sector") as any) as Element[]) {
+    for (const sector of document.getElementsByClassName("sector") as any as Element[]) {
       sector.classList.add("notransition");
     }
 
@@ -335,7 +330,7 @@ export default class Game extends Vue {
     this.$store.commit("receiveData", data);
 
     setTimeout(() => {
-      for (const sector of (document.getElementsByClassName("sector") as any) as Element[]) {
+      for (const sector of document.getElementsByClassName("sector") as any as Element[]) {
         sector.classList.remove("notransition");
       }
     });

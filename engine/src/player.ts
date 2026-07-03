@@ -17,6 +17,7 @@ import {
   FinalTile,
   isAcademy,
   isShip,
+  LostFleetEconomySide,
   Operator,
   Phase,
   Planet,
@@ -39,7 +40,7 @@ import { factionPlanet, tinkeringTileSpec, tinkeringTilesForRound } from "./fact
 import { federationCost, FederationInfo, isOutclassedBy, parseFederationLocation } from "./federation";
 import { GaiaHex } from "./gaia-hex";
 import { IncomeSelection } from "./income";
-import { colonizedDeepSpaceSectorCount } from "./lost-fleet-map";
+import { colonizedDeepSpaceSectorCount, isNewLostFleetSector } from "./lost-fleet-map";
 import SpaceMap from "./map";
 import { terraformingStepsRequired } from "./planets";
 import PlayerData from "./player-data";
@@ -123,6 +124,13 @@ export default class Player extends EventEmitter {
   name?: string;
   /** Is the player dropped (i.e. no move) */
   dropped?: boolean;
+  /** Active expansions, set in loadBoard; lets faction-board handlers gate expansion-only abilities. */
+  expansions: Expansion = Expansion.None;
+  /** Total number of players in the game, set in loadBoard; lets faction-board handlers gate
+   * player-count-specific abilities (e.g. Lost Fleet's Lantids adjusted PI tile, §I2). */
+  nbPlayers?: number;
+  /** Lost Fleet's Economy track overlay side, set in loadBoard from the game-wide setup choice (§F1). */
+  lostFleetEconomySide?: LostFleetEconomySide;
 
   constructor(expansion: Expansion = Expansion.None, public player: PlayerEnum = PlayerEnum.Player1) {
     super();
@@ -193,7 +201,15 @@ export default class Player extends EventEmitter {
   /**
    * @param board LEGACY Only useful for old games, now loaded directly from data.variant
    */
-  static fromData(data: any, map: SpaceMap, board: FactionBoardVariant | null, expansions: Expansion, version: string) {
+  static fromData(
+    data: any,
+    map: SpaceMap,
+    board: FactionBoardVariant | null,
+    expansions: Expansion,
+    version: string,
+    nbPlayers?: number,
+    lostFleetEconomySide?: LostFleetEconomySide
+  ) {
     const player = new Player(expansions, data.player);
 
     player.faction = data.faction;
@@ -213,7 +229,7 @@ export default class Player extends EventEmitter {
     }
 
     if (data.faction && (data.factionLoaded || !isVersionOrLater(version, "4.8.4"))) {
-      player.loadFaction(board, expansions, true);
+      player.loadFaction(board, expansions, true, nbPlayers, lostFleetEconomySide);
     }
 
     for (const kind of Object.keys(data.events)) {
@@ -226,7 +242,7 @@ export default class Player extends EventEmitter {
     if (data.federationCache) {
       player.federationCache = data.federationCache;
       for (const fed of player.federationCache.federations) {
-        fed.hexes = ((fed.hexes as any) as string[]).map((hex) => map.getS(hex));
+        fed.hexes = (fed.hexes as any as string[]).map((hex) => map.getS(hex));
       }
     }
 
@@ -422,17 +438,40 @@ export default class Player extends EventEmitter {
     return this.data.occupied.filter((hex) => hex.data.planet !== Planet.Empty && hex.isMainOccupier(this.player));
   }
 
-  loadFaction(board: FactionBoardVariant | null, expansions: Expansion, skipIncome = false) {
+  loadFaction(
+    board: FactionBoardVariant | null,
+    expansions: Expansion,
+    skipIncome = false,
+    nbPlayers?: number,
+    lostFleetEconomySide?: LostFleetEconomySide
+  ) {
     this.variant = {
       board: board?.board,
       version: board?.version,
     };
 
-    this.loadBoard(factionBoard(this.faction, this.variant.board), expansions, skipIncome);
+    this.loadBoard(
+      factionBoard(this.faction, this.variant.board),
+      expansions,
+      skipIncome,
+      true,
+      nbPlayers,
+      lostFleetEconomySide
+    );
   }
 
-  loadBoard(board: FactionBoard, expansions: Expansion, skipIncome = false, subscribeListeners = true) {
+  loadBoard(
+    board: FactionBoard,
+    expansions: Expansion,
+    skipIncome = false,
+    subscribeListeners = true,
+    nbPlayers?: number,
+    lostFleetEconomySide?: LostFleetEconomySide
+  ) {
     this.board = board;
+    this.expansions = expansions;
+    this.nbPlayers = nbPlayers;
+    this.lostFleetEconomySide = lostFleetEconomySide;
 
     if (!skipIncome) {
       this.gainRewards(this.data.initialPowerRewards(this.board), Phase.BeginGame);
@@ -454,7 +493,7 @@ export default class Player extends EventEmitter {
     const fields = ResearchField.values(expansions);
 
     for (const field of fields) {
-      this.loadEvents(researchEvents(field, this.data.research[field], expansions));
+      this.loadEvents(researchEvents(field, this.data.research[field], expansions, this.lostFleetEconomySide));
     }
   }
 
@@ -542,9 +581,9 @@ export default class Player extends EventEmitter {
    * want to remove multiple green federations for one track
    */
   onResearchAdvanced(field: ResearchField, dest: number, expansion: Expansion) {
-    const events = researchEvents(field, dest, expansion);
+    const events = researchEvents(field, dest, expansion, this.lostFleetEconomySide);
     this.loadEvents(events);
-    const oldEvents = researchEvents(field, dest - 1, expansion);
+    const oldEvents = researchEvents(field, dest - 1, expansion, this.lostFleetEconomySide);
     this.removeEvents(oldEvents);
 
     if (dest === lastTile(field)) {
@@ -641,6 +680,17 @@ export default class Player extends EventEmitter {
 
     // get triggered income for new building
     this.receiveBuildingTriggerIncome(building, hex.data.planet, isAdditionalMine);
+
+    // Lost Fleet round scoring tiles "sector3"/"planet3": a mine in a sector, or on a planet type,
+    // this player had not colonized before this build (RULES_CLARIFICATIONS.md §G4).
+    if (building === Building.Mine) {
+      if (isNewLostFleetSector(this.data.occupied, hex)) {
+        this.receiveTriggerIncome(Condition.NewSector);
+      }
+      if (!this.data.occupied.some((other) => other !== hex && other.data.planet === hex.data.planet)) {
+        this.receiveTriggerIncome(Condition.NewPlanetType);
+      }
+    }
 
     // get triggerd terffaorming step income for new building
     if (stepsReq) {

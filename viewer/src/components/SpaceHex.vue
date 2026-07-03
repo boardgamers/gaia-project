@@ -8,8 +8,8 @@
       :data-sector-type="lostFleetSectorBadge.kind"
       transform="translate(-0.84,-0.79)"
     >
-      <rect width="0.72" height="0.34" rx="0.12" ry="0.12" />
-      <text x="0.36" y="0.17">{{ lostFleetSectorBadge.label }}</text>
+      <rect :width="badgeWidth" height="0.34" rx="0.12" ry="0.12" />
+      <text :x="badgeWidth / 2" y="0.17">{{ lostFleetSectorBadge.label }}</text>
     </g>
     <use
       v-for="(l, i) in federationLines"
@@ -22,11 +22,8 @@
       {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
     </text>
     <g v-if="lostFleetSpaceship" class="lost-fleet-spaceship">
-      <circle class="lost-fleet-spaceship__orbit" r="0.74" />
       <circle class="lost-fleet-spaceship__core" r="0.42" />
-      <rect class="lost-fleet-spaceship__pill" x="-0.48" y="0.42" width="0.96" height="0.26" rx="0.12" ry="0.12" />
       <text class="lost-fleet-spaceship__label">{{ lostFleetSpaceshipLabel }}</text>
-      <text class="lost-fleet-spaceship__copy" y="0.55">Ship</text>
     </g>
     <use v-if="powerHighlightClass" xlink:href="#space-hex" :class="['space-hex-federation', powerHighlightClass]" />
     <Planet
@@ -351,12 +348,40 @@ export default class SpaceHex extends Vue {
   get lostFleetSectorBadge(): { kind: "interspace" | "deep-space"; label: string } | null {
     switch (this.sectorType) {
       case LostFleetSectorType.Interspace:
-        return { kind: "interspace", label: "IS" };
+        // Interspace tiles sit between sectors and have no id printed on the physical tile, so
+        // reference them by which sectors they border (e.g. "IS123" borders sectors 1, 2, 3)
+        // instead of an arbitrary internal id.
+        return { kind: "interspace", label: this.interspaceBorderLabel };
       case LostFleetSectorType.DeepSpace:
-        return { kind: "deep-space", label: "DS" };
+        // A physical Deep Space tile is 3 mutually-adjacent hexes sharing one id
+        // (DS<n>_0/_1/_2) - only the first hex renders the badge, not all 3, since all 3 would
+        // otherwise show the identical label stacked on top of each other.
+        return this.hex.data.sector.endsWith("_0")
+          ? { kind: "deep-space", label: this.hex.data.sector.split("_")[0].replace(/^DS/, "") }
+          : null;
       default:
         return null;
     }
+  }
+
+  get badgeWidth(): number {
+    const label = this.lostFleetSectorBadge?.label ?? "";
+    return Math.max(0.72, 0.22 + label.length * 0.13);
+  }
+
+  /** Sorted, deduped sector numbers this Interspace hex is grid-adjacent to, e.g. "IS123". */
+  private get interspaceBorderLabel(): string {
+    const sectorNumber = (sector: string): string => (sector[0] === "s" ? sector.slice(1) : sector);
+    const borders = new Set<string>();
+    for (const neighbour of this.map.grid.neighbours(this.hex)) {
+      if (classifySectorId(neighbour.data.sector) === LostFleetSectorType.Space) {
+        borders.add(sectorNumber(neighbour.data.sector));
+      }
+    }
+    // sector names aren't always pure numbers (e.g. an extra "6B" tile alongside "6"), so sort
+    // numerically first and fall back to a plain string compare for same-number variants.
+    const sorted = [...borders].sort((a, b) => parseInt(a, 10) - parseInt(b, 10) || a.localeCompare(b));
+    return "IS" + sorted.join("");
   }
 
   private get sectorTypeLabel(): string {
@@ -646,42 +671,18 @@ svg {
   .lost-fleet-spaceship {
     pointer-events: none;
 
-    &__orbit {
-      fill: none;
-      stroke: #efe6c4;
-      stroke-width: 0.05;
-      stroke-dasharray: 0.11 0.06;
-      opacity: 0.9;
-    }
-
     &__core {
       fill: #efe6c4;
       stroke: #172e62;
       stroke-width: 0.05;
     }
 
-    &__pill {
-      fill: rgb(239 230 196 / 96%);
-      stroke: #172e62;
-      stroke-width: 0.03px;
-    }
-
-    &__label,
-    &__copy {
+    &__label {
       fill: #172e62;
       text-anchor: middle;
       dominant-baseline: central;
-    }
-
-    &__label {
       font-size: 0.45px;
       font-weight: 700;
-    }
-
-    &__copy {
-      font-size: 0.16px;
-      font-weight: 700;
-      letter-spacing: 0.02em;
     }
   }
 }

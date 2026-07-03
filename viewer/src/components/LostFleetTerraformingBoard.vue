@@ -107,7 +107,7 @@ import {
 } from "@gaia-project/engine/src/factions";
 import { planetNames } from "../data/planets";
 import { factionName } from "../data/factions";
-import { phaseBeforeSetupBuilding } from "../logic/utils";
+import { gameSeed, phaseBeforeSetupBuilding } from "../logic/utils";
 import PlanetView from "./Planet.vue";
 
 @Component({
@@ -125,7 +125,9 @@ export default class LostFleetTerraformingBoard extends Vue {
   }
 
   get boardPlanets(): Planet[] {
-    const seed = this.engine.map?.seed;
+    // Not this.engine.map?.seed - only set on a freshly-generated SpaceMap, lost on any
+    // serialize/deserialize round-trip (see logic/utils.ts's gameSeed doc comment).
+    const seed = gameSeed(this.engine);
     return seed ? lostFleetTerraformingBoard(seed) : [];
   }
 

@@ -104,7 +104,9 @@ describe("Game", () => {
 
     expect(vm.currentMove).to.equal("tinkeroids chooseTinkeringTile tinkering-power4. income t");
     expect(vm.currentMove).to.not.contain("⇒");
-    expect(store.state.data.moveHistory[store.state.data.moveHistory.length - 1]).to.equal("tinkeroids booster booster2");
+    expect(store.state.data.moveHistory[store.state.data.moveHistory.length - 1]).to.equal(
+      "tinkeroids booster booster2"
+    );
 
     vm.$destroy();
   });
@@ -236,4 +238,27 @@ describe("Game", () => {
     vm.$destroy();
   });
 
+  it("keeps the scoring-research-board viewBox tall enough that ScoringBoard's negative y offset isn't clipped", () => {
+    const engine = new Engine(["init 2 lf-freeze-28"], { lostFleet: true });
+    engine.players.forEach((pl, index) => {
+      pl.faction = [Faction.Terrans, Faction.Lantids][index];
+      pl.loadFaction(null, engine.expansions);
+    });
+
+    const store = makeStore();
+    const vm = new (Vue.extend(Game as any))({ store }) as any;
+    vm.handleData(engine);
+    vm.$mount();
+    document.body.appendChild(vm.$el);
+
+    const svg = vm.$el.querySelector("svg.scoring-research-board");
+    const scoringBoard = svg.querySelector('svg[y="-25"]');
+    expect(scoringBoard, "expected to find ScoringBoard's own nested svg, offset by y=-25").to.not.equal(null);
+
+    const [, minY] = svg.getAttribute("viewBox").split(" ").map(Number);
+    expect(minY).to.be.at.most(-25);
+
+    vm.$el.remove();
+    vm.$destroy();
+  });
 });

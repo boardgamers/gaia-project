@@ -178,6 +178,17 @@ describe("Map", () => {
       expect(engine.map.grid.size).to.not.equal(Hex.hexagon(2).length * 7);
     });
 
+    it("should throw the German-rules assert via moveRotateSectors when a rotation puts two matching planet types adjacent", () => {
+      const moves = Engine.parseMoves(`
+        init 2 lost-fleet-space-map
+        p2 rotate 0x0 3
+      `);
+
+      expect(() => new Engine(moves, { lostFleet: true, advancedRules: true })).to.throw(
+        "Map is invalid with two planets for the same type being near each other"
+      );
+    });
+
     it("should preserve the Lost Fleet board through a serialization round trip", () => {
       const engine = new Engine(["init 3 lost-fleet-serialize-seed"], { lostFleet: true });
       const restored = Engine.fromData(JSON.parse(JSON.stringify(engine)));

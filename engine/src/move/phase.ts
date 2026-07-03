@@ -208,7 +208,7 @@ function endSetupFactionPhase(engine: Engine) {
     }
     const faction = pl.faction;
     const board = pl.variant ?? factionVariantBoard(engine.factionCustomization, faction);
-    pl.loadFaction(board, engine.expansions);
+    pl.loadFaction(board, engine.expansions, false, engine.players.length, engine.lostFleetEconomySide);
   }
 
   if (engine.options.lostFleet) {

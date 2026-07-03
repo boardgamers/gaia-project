@@ -3,63 +3,51 @@
     <div class="d-flex justify-content-between align-items-center">
       <h3 class="mb-0">The Lost Fleet — Games</h3>
       <div>
-        <b-button size="sm" variant="outline-secondary" @click="enablePush" :disabled="pushBusy">Enable notifications</b-button>
+        <b-button size="sm" variant="outline-secondary" @click="enablePush" :disabled="pushBusy"
+          >Enable notifications</b-button
+        >
         <b-button size="sm" variant="outline-secondary" @click="signOut">Sign out</b-button>
       </div>
     </div>
     <div class="text-muted small mb-3">{{ userEmail }}</div>
     <b-alert :show="!!message" variant="info" dismissible @dismissed="message = ''">{{ message }}</b-alert>
 
-    <b-list-group class="mb-4">
+    <b-list-group class="mb-3">
       <b-list-group-item v-if="loading">Loading games…</b-list-group-item>
       <b-list-group-item v-else-if="games.length === 0">No games yet — create one below.</b-list-group-item>
-      <b-list-group-item
-        v-for="game in games"
-        :key="game.id"
-        :href="`?game=${game.id}`"
-        class="d-flex justify-content-between align-items-center"
-      >
-        <span>
-          <strong>{{ game.name || "Unnamed game" }}</strong>
-          <span class="text-muted small"> · {{ game.player_count }}p · {{ (game.options && game.options.lostFleet) ? "Lost Fleet" : "base game" }}</span>
-        </span>
-        <b-badge :variant="badgeVariant(game)">{{ turnLabel(game) }}</b-badge>
+      <b-list-group-item v-for="game in games" :key="game.id" class="d-flex justify-content-between align-items-center">
+        <a
+          :href="`?game=${game.id}`"
+          class="text-body text-decoration-none flex-grow-1 d-flex justify-content-between align-items-center"
+          style="gap: 0.5rem"
+        >
+          <span>
+            <strong>{{ game.name || "Unnamed game" }}</strong>
+            <span class="text-muted small">
+              · {{ game.player_count }}p · {{ game.options && game.options.lostFleet ? "Lost Fleet" : "base game"
+              }}<template v-if="isTestGame(game)"> · test game</template>
+            </span>
+          </span>
+          <b-badge :variant="badgeVariant(game)">{{ turnLabel(game) }}</b-badge>
+        </a>
+        <b-button
+          v-if="isAdmin"
+          size="sm"
+          variant="outline-danger"
+          class="ml-2"
+          @click="deleteGame(game)"
+          >Delete</b-button
+        >
       </b-list-group-item>
     </b-list-group>
 
-    <h5>New game</h5>
-    <b-form @submit.prevent="createGame">
-      <b-form-group label="Name">
-        <b-form-input v-model="form.name" placeholder="Friday fleet night" />
-      </b-form-group>
-      <b-form-group label="Players">
-        <b-form-select v-model.number="form.playerCount" :options="[2, 3, 4, 5]" @change="resizeSeats" />
-      </b-form-group>
-      <b-form-checkbox v-model="form.lostFleet" class="mb-2">Lost Fleet expansion</b-form-checkbox>
-      <b-form-group
-        v-for="(seatForm, i) in form.seats"
-        :key="i"
-        :label="`Seat ${i + 1}`"
-      >
-        <div class="d-flex" style="gap: 0.5rem">
-          <b-form-input v-model="seatForm.email" type="email" required placeholder="friend@example.com" />
-          <b-form-input v-model="seatForm.name" placeholder="Display name" />
-        </div>
-      </b-form-group>
-      <b-button variant="outline-secondary" size="sm" class="mb-3" @click="shuffleSeats">Shuffle seat order</b-button>
-      <div>
-        <b-button type="submit" variant="primary" :disabled="creating">Create game</b-button>
-      </div>
-    </b-form>
+    <a href="?create=1" class="btn btn-primary">+ New game</a>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
-import { buildCreateGameParams } from "./new-game";
 import { enablePushNotifications } from "./push";
-
-type SeatForm = { email: string; name: string };
 
 export default Vue.extend({
   name: "HostedLobby",
@@ -71,42 +59,28 @@ export default Vue.extend({
     return {
       games: [] as any[],
       loading: true,
-      creating: false,
       pushBusy: false,
       message: "",
-      form: {
-        name: "",
-        playerCount: 2,
-        lostFleet: true,
-        seats: [] as SeatForm[],
-      },
     };
   },
   computed: {
     userEmail(): string {
       return (this.session as any).user?.email ?? "";
     },
+    myUserId(): string {
+      return (this.session as any).user?.id ?? "";
+    },
+    // Matches delete_game's own admin check (supabase/migrations/0006_delete_game.sql) - kept in
+    // sync manually since there's no roles table; the RPC is the actual enforcement point, this
+    // just avoids showing a Delete button that would only fail server-side for everyone else.
+    isAdmin(): boolean {
+      return this.userEmail.toLowerCase() === "kim.pham.nguyen2@gmail.com";
+    },
   },
   created() {
-    this.resizeSeats();
     this.refresh();
   },
   methods: {
-    resizeSeats() {
-      const seats: SeatForm[] = this.form.seats.slice(0, this.form.playerCount);
-      while (seats.length < this.form.playerCount) {
-        seats.push({ email: seats.length === 0 ? this.userEmail : "", name: "" });
-      }
-      this.form.seats = seats;
-    },
-    shuffleSeats() {
-      const seats = [...this.form.seats];
-      for (let i = seats.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [seats[i], seats[j]] = [seats[j], seats[i]];
-      }
-      this.form.seats = seats;
-    },
     async refresh() {
       this.loading = true;
       const { data, error } = await (this.client as any)
@@ -123,6 +97,10 @@ export default Vue.extend({
     playerAtSeat(game: any, seat: number | null): any {
       return (game.players ?? []).find((p: any) => p.seat === seat);
     },
+    isTestGame(game: any): boolean {
+      const players = game.players ?? [];
+      return players.length > 0 && players.every((p: any) => p.user_id === this.myUserId);
+    },
     turnLabel(game: any): string {
       if (game.status === "finished") {
         return "finished";
@@ -131,7 +109,7 @@ export default Vue.extend({
       if (!player) {
         return "active";
       }
-      const mine = player.user_id === (this.session as any).user?.id;
+      const mine = player.user_id === this.myUserId;
       return mine ? "your turn" : `${player.display_name || player.invited_email} to move`;
     },
     badgeVariant(game: any): string {
@@ -139,26 +117,17 @@ export default Vue.extend({
         return "secondary";
       }
       const player = this.playerAtSeat(game, game.current_seat);
-      return player && player.user_id === (this.session as any).user?.id ? "success" : "info";
+      return player && player.user_id === this.myUserId ? "success" : "info";
     },
-    async createGame() {
-      this.creating = true;
-      this.message = "";
-      try {
-        const params = buildCreateGameParams({
-          name: this.form.name,
-          playerCount: this.form.playerCount,
-          lostFleet: this.form.lostFleet,
-          seats: this.form.seats,
-        });
-        const { data, error } = await (this.client as any).rpc("create_game", params);
-        if (error) {
-          throw new Error(error.message);
-        }
-        window.location.search = `?game=${data}`;
-      } catch (err) {
-        this.message = `Could not create the game: ${err instanceof Error ? err.message : err}`;
-        this.creating = false;
+    async deleteGame(game: any) {
+      if (!window.confirm(`Delete "${game.name || "this game"}"? This cannot be undone.`)) {
+        return;
+      }
+      const { error } = await (this.client as any).rpc("delete_game", { p_game_id: game.id });
+      if (error) {
+        this.message = `Could not delete the game: ${error.message}`;
+      } else {
+        await this.refresh();
       }
     },
     async enablePush() {

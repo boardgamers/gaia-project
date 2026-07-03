@@ -1,0 +1,19 @@
+-- Corrects a wrong assumption in 0004_setup_move.sql's comment: adding a
+-- trailing DEFAULT-valued parameter to create_game via CREATE OR REPLACE did
+-- NOT reuse the old function's identity. Verified directly against this
+-- project after applying 0004: `pg_proc` held TWO distinct `create_game`
+-- entries (oid 17508, 6 args, pronargdefaults=0; oid 17846, 7 args,
+-- pronargdefaults=1) rather than one function with a widened signature, and
+-- the security advisor listed both as separately callable by `authenticated`.
+--
+-- Supabase-js's `.rpc()` calls functions with named parameters, so this
+-- app's own calls (which always include p_setup_move) only ever resolved to
+-- the new 7-arg overload — no functional bug reached players. But leaving
+-- the old 6-arg overload live means any caller can still create a Lost
+-- Fleet game through the pre-#54 path, skipping the p_setup_move insert
+-- entirely. If such a caller's p_options also sets advancedRules: true
+-- (matching this app's own options shape), that game gets stuck exactly as
+-- 0004's comment warned: Phase.SetupBoard expects a rotate move that will
+-- never arrive. Drop the stale overload outright instead of relying on
+-- CREATE OR REPLACE to have unified them.
+drop function if exists public.create_game(text, text, int, jsonb, jsonb, int);

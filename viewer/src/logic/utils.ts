@@ -12,6 +12,19 @@ import { upgradedBuildings } from "@gaia-project/engine/src/buildings";
 import { LEECHING_DISTANCE } from "@gaia-project/engine/src/engine";
 import { RichText, richTextRewards } from "../graphics/rich-text";
 
+/**
+ * The seed a game was created with, read from the "init <players> <seed>" line that's always
+ * moveHistory[0] - NOT from `engine.map.seed`, which is only set on a freshly-generated SpaceMap
+ * and is lost across any serialize/deserialize round-trip (`SpaceMap.fromData` doesn't restore
+ * it, since `SpaceMap.toJSON()` never included it - the seed's only job is one-time board
+ * generation, so the engine itself never needed it back). moveHistory, by contrast, is the
+ * append-only replay log this whole app is built around and always survives.
+ */
+export function gameSeed(engine: Engine): string | undefined {
+  const init = engine.moveHistory[0];
+  return init ? init.split(" ").slice(2).join(" ") || undefined : undefined;
+}
+
 export function phaseBeforeSetupBuilding(data: Engine): boolean {
   return (
     data.phase === Phase.SetupInit ||

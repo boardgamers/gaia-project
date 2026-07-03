@@ -12,6 +12,10 @@ const roundScorings: { [key in ScoringTile]: string[] } = {
   [ScoringTile.Score8]: ["ts >> 3vp"],
   [ScoringTile.Score9]: ["mg >> 3vp"],
   [ScoringTile.Score10]: ["PA >> 5vp"],
+  // Lost Fleet (RULES_CLARIFICATIONS.md §G4)
+  [ScoringTile.LfLab4]: ["lab >> 4vp"],
+  [ScoringTile.LfSector3]: ["newsector >> 3vp"],
+  [ScoringTile.LfPlanet3]: ["newplanet >> 3vp"],
 };
 
 export function roundScoringEvents(tile: ScoringTile, round: number): Event[] {

@@ -14,6 +14,7 @@
           :transform="`translate(${j * 20}, ${y(r.type)}) scale(${scale(r.type)})`"
           :kind="r.type"
           :count="r.count"
+          :plus="r.type === 'r'"
         />
       </svg>
       <svg v-else-if="c.building != null" :key="i" viewBox="0 0 10 10" width="36" height="36">
@@ -45,6 +46,9 @@
         :disable-tooltip="true"
       />
       <Booster v-else-if="c.booster" :key="i" :booster="c.booster" highlighted />
+      <svg v-else-if="c.planet" :key="i" viewBox="-10 -10 20 20" width="20" height="20" :data-planet="c.planet">
+        <circle r="7" :class="['planet-fill', c.planet]" style="stroke: black; stroke-width: 0.7" />
+      </svg>
       <svg v-else-if="c.text === 'arrow'" :key="i" viewBox="0 0 10 10" width="20" height="20">
         <use xlink:href="#arrow" x="-2" y="5" />
       </svg>
@@ -75,9 +79,9 @@ export default class RichTextView extends Vue {
   content: RichText;
 
   get filteredContent(): RichText {
-    return this.content.flatMap(c => {
+    return this.content.flatMap((c) => {
       if (c.rewards) {
-        return c.rewards.map(r => ({ rewards: [r] } as RichTextElement));
+        return c.rewards.map((r) => ({ rewards: [r] } as RichTextElement));
       }
       return c;
     });
@@ -104,7 +108,7 @@ export default class RichTextView extends Vue {
   }
 
   width(rewards: Reward[]): number {
-    return rewards[0].count as any == "+" ? 15 : rewards.length * 30;
+    return (rewards[0].count as any) == "+" ? 15 : rewards.length * 30;
   }
 
   buildingResource(b: RichTextBuilding): Resource | null {
@@ -121,7 +125,7 @@ export default class RichTextView extends Vue {
   }
 
   buildingCountStyle(b: RichTextBuilding): string {
-    return `fill: ${(foregroundColor(factionColorVar(b.faction)))}; font-weight: bold;`;
+    return `fill: ${foregroundColor(factionColorVar(b.faction))}; font-weight: bold;`;
   }
 }
 </script>

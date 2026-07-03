@@ -16,6 +16,7 @@ import {
   Ship,
   Spaceship,
   SpaceshipFederation,
+  SpaceshipTechTile,
   TinkeringTile,
 } from "./enums";
 import { EventSource } from "./events";
@@ -293,6 +294,9 @@ export default class PlayerData extends EventEmitter {
         break;
       case Resource.GainToken:
         count > 0 ? (this.power.area1 += count) : this.discardPower(-count);
+        break;
+      case Resource.GainTokenArea3:
+        this.power.area3 += count;
         break;
       case Resource.Brainstone:
         this.brainstone = PowerArea.Area1; //initial brainstone gain or gaia to area1
@@ -736,4 +740,17 @@ export default class PlayerData extends EventEmitter {
     }
     return true;
   }
+}
+
+/**
+ * Range used for build-distance checks: `data.range` (bumped by Reward.Range events, e.g.
+ * Navigation track) plus +1 while the Lost Fleet Range spaceship tech tile is claimed and not
+ * covered by an Advanced Tech tile (`tiles.techs[].enabled` already tracks covering for the base
+ * game's own standard/advanced tech mechanic - reused here rather than duplicated). A standalone
+ * function rather than a PlayerData method so callers can pass any range/tiles-shaped object
+ * (e.g. lightweight test fixtures), not only a fully-constructed PlayerData instance.
+ */
+export function effectiveRange(data: Pick<PlayerData, "range" | "tiles">): number {
+  const hasRangeTech = (data.tiles?.techs ?? []).some((t) => t.tile === SpaceshipTechTile.Range && t.enabled);
+  return data.range + (hasRangeTech ? 1 : 0);
 }

@@ -30,7 +30,7 @@
       y="-8"
     />
     <rect
-      v-else-if="['pw', 'pay-pw', 't', 'bowl-t', 'burn-token', 'brainstone'].includes(kind)"
+      v-else-if="['pw', 'pay-pw', 't', 'ta3', 'bowl-t', 'burn-token', 'brainstone'].includes(kind)"
       class="power"
       width="15"
       height="15"
@@ -39,6 +39,12 @@
       x="-7.5"
       y="-7.5"
     />
+    <!-- Xenos's free action (1 ore -> 1 power token in bowl 3) otherwise renders identically to the
+         base game's bowl-1 version - this badge is the only visual difference between them. -->
+    <g v-if="kind === 'ta3'" class="token-area-badge">
+      <circle cx="5.5" cy="-5.5" r="3.2" />
+      <text x="5.5" y="-4.3">3</text>
+    </g>
     <g v-else-if="kind === 'power-ring'" class="power-ring">
       <circle r="7" />
       <circle r="3.5" />
@@ -171,6 +177,7 @@
             'pw',
             'pay-pw',
             't',
+            'ta3',
             'bowl-t',
             'burn-token',
             'tg',
@@ -188,7 +195,7 @@
       "
       :class="{ plus: count === '+' }"
       :text-decoration="kind === 'burn-token' ? 'line-through' : ''"
-      >{{ kind === "t" && count > 0 ? "+" : "" }}{{ count }}</text
+      >{{ (kind === "t" || kind === "ta3") && count > 0 ? "+" : "" }}{{ count }}</text
     >
     <text x="0" y="0" v-if="kind == 'brainstone'">B</text>
   </g>
@@ -229,6 +236,10 @@ export default class Resource extends Vue {
   @Prop()
   tooltip: string;
 
+  /** Show a "+" before the count (kind "r" only) - true when this icon represents a gain, not a raw total. */
+  @Prop({ default: false })
+  plus: boolean;
+
   get flat() {
     return this.$store.state.preferences.flatBuildings;
   }
@@ -262,6 +273,23 @@ g.resource {
 
   .power {
     fill: var(--res-power);
+  }
+
+  .token-area-badge {
+    pointer-events: none;
+
+    circle {
+      fill: white;
+      stroke: #333;
+      stroke-width: 0.5;
+    }
+
+    text {
+      font-size: 5px;
+      font-weight: bold;
+      fill: #333;
+      text-anchor: middle;
+    }
   }
 
   .power-ring {

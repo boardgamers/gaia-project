@@ -18,6 +18,7 @@ const conditionsCount: { [key in Condition]?: string } = {
   [Condition.HighestResearchLevel]: "level of your highest research track",
   [Condition.AdvanceResearch]: "level reached in any research track",
   [Condition.DeepSpaceSector]: "colonized deep space sector",
+  [Condition.Asteroid]: "colonized asteroid",
 };
 
 const conditionsTrigger: { [key in Condition]?: string } = {
@@ -30,6 +31,10 @@ const conditionsTrigger: { [key in Condition]?: string } = {
   [Condition.AdvanceResearch]: "advancing a level in research",
   [Condition.TerraformStep]: "terraforming a planet one step",
   [Condition.Trade]: "trading (afterwards)",
+  [Condition.SpaceshipQicAction]: "taking a spaceship Q.I.C. action",
+  [Condition.NewSector]:
+    "building a mine in a Space or Deep Space sector you had not colonized before (Interspace doesn't count)",
+  [Condition.NewPlanetType]: "building a mine on a planet type you had not colonized before",
 };
 
 const operators = {

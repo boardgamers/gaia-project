@@ -30,13 +30,20 @@
       :data-planet="slot.planet"
       :transform="`translate(${slot.x}, ${slot.y})`"
     >
-      <circle :r="1" :class="['planet-fill', slot.planet]" :style="`stroke-width: ${strokeWidth(slot.planet)}`" />
+      <rect
+        width="1.5"
+        height="1.5"
+        x="-0.75"
+        y="-0.75"
+        :class="['planet-fill', slot.planet]"
+        :style="`stroke-width: ${strokeWidth(slot.planet)}`"
+      />
       <text
-        :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(slot.planet)}`"
+        :style="`font-size: 1.1px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(slot.planet)}`"
       >
         {{ remainingPlanets(slot.planet) }}
       </text>
-      <circle :r="1" style="cursor: pointer; opacity: 0" @click="togglePlanetHighlight(slot.planet)" />
+      <rect width="1.5" height="1.5" x="-0.75" y="-0.75" style="cursor: pointer; opacity: 0" @click="togglePlanetHighlight(slot.planet)" />
     </g>
   </g>
 </template>
@@ -97,9 +104,13 @@ export default class FactionWheel extends Vue {
     const planets = this.gameData.options.lostFleet
       ? [...standardExtraPlanets, ...lostFleetExtraPlanets]
       : standardExtraPlanets;
-    const xs = planets.length === 4 ? [-4.5, -1.5, 1.5, 4.5] : [-2, 2];
 
-    return planets.map((planet, index) => ({ planet, x: xs[index], y: 5 }));
+    // A single compact row directly under the ring (was a 2x2 block, roughly doubling the wheel's
+    // height) - square markers instead of the ring's circles so this reads as its own small
+    // legend rather than an odd extension of the turn-order ring.
+    const spacing = 2;
+    const startX = -((planets.length - 1) * spacing) / 2;
+    return planets.map((planet, index) => ({ planet, x: startX + index * spacing, y: 4.6 }));
   }
 
   factionInitial(planet: Planet): string {

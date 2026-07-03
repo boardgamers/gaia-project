@@ -4,6 +4,7 @@ import { GaiaHex } from "./gaia-hex";
 import SpaceMap from "./map";
 import Player from "./player";
 import { Faction, PowerArea, Resource, Spaceship } from "./enums";
+import { effectiveRange } from "./player-data";
 import Reward from "./reward";
 import { EXPLORATION_CHARGE_TRACK } from "./spaceships";
 
@@ -43,7 +44,8 @@ export function qicForExplorationDistance(
   }
 
   const distance = Math.min(...origins.map((loc) => map.distance(hex, loc)));
-  const qic = (rangeBoost: number) => Math.max(Math.ceil((distance - pl.data.range - rangeBoost) / QIC_RANGE_UPGRADE), 0);
+  const qic = (rangeBoost: number) =>
+    Math.max(Math.ceil((distance - effectiveRange(pl.data) - rangeBoost) / QIC_RANGE_UPGRADE), 0);
   const amount = qic(temporaryRange);
 
   if (!replay && temporaryRange > 0 && qic(0) === amount) {

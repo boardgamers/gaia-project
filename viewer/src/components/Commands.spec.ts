@@ -299,12 +299,51 @@ describe("Commands", () => {
     const expandedLabels = labels();
 
     expect(expandedLabels).to.include("Pick tech tile");
-    expect(expandedLabels.some((label) => label.includes("1o3k"))).to.equal(true);
-    expect(
-      Array.from(container.querySelectorAll<SVGElement>("#move-buttons svg.techTile")).some((tile) =>
-        tile.classList.contains(Spaceship.Rebellion)
-      )
-    ).to.equal(true);
+    const rebellionTile = Array.from(container.querySelectorAll<SVGElement>("#move-buttons svg.techTile")).find(
+      (tile) => tile.classList.contains(Spaceship.Rebellion)
+    );
+    expect(rebellionTile).to.not.equal(undefined);
+    // the ship tech tile renders through TechContent's icon system (o + 3k), not a text shortcut
+    expect(rebellionTile!.querySelector("rect.ore")).to.not.equal(null);
+  });
+
+  it("labels Lost Fleet hex-target buttons with the planet they build on", async () => {
+    // Eclipse's credit action targets Asteroids on Interspace/Deep Space hexes, whose addresses
+    // (IS3, DS14_1) don't reference a visible sector number like base coordinates do - the
+    // buttons must therefore show the target planet (colored dot + name) next to the address.
+    const engine = loadScenarioEngine("lost-fleet-eclipse-asteroid-mine");
+    const prefix = engine.player(engine.currentPlayer).faction;
+    const partial = Engine.fromData(JSON.parse(JSON.stringify(engine)));
+
+    partial.move(`${prefix} ${Command.SpaceshipAction} eclipse credit`);
+    partial.generateAvailableCommandsIfNeeded();
+
+    const store = makeStore();
+    store.commit("receiveData", partial);
+
+    const { container } = render(Commands, {
+      props: { currentMove: `${prefix} ${Command.SpaceshipAction} eclipse credit` },
+      store,
+    });
+
+    const visibleButtons = () =>
+      Array.from(container.querySelectorAll<HTMLButtonElement>("#move-buttons button.move-button")).filter(
+        (button) => !button.classList.contains("d-none")
+      );
+
+    // the Build-a-Mine command button renders as a building icon; "Mine" is in its title,
+    // which carries shortcut markup ("Build a <u>M</u>ine")
+    const mineButton = visibleButtons().find((button) =>
+      button.getAttribute("title")?.replace(/<[^>]+>/g, "").includes("Mine")
+    );
+    expect(mineButton, "expected a Build-a-Mine command button").to.not.equal(undefined);
+
+    await fireEvent.click(mineButton!);
+    await Vue.nextTick();
+
+    const asteroidTarget = visibleButtons().find((button) => button.querySelector('[data-planet="a"]'));
+    expect(asteroidTarget, "expected a hex button with an Asteroid planet dot").to.not.equal(undefined);
+    expect(asteroidTarget!.textContent).to.contain("Asteroid");
   });
 
   it("renders Moweyds' power-ring special action without crashing", () => {

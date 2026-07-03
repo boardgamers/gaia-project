@@ -11,15 +11,19 @@
     <g v-else-if="condition === 'fed'" transform="scale(0.45)">
       <Federation width="50" x="-20" y="-30" :used="true" filter="url(#white-shadow-1)" />
     </g>
-    <PlanetType v-else-if="condition === 'pt'" transform="scale(1.1)" />
+    <PlanetType v-else-if="condition === 'pt' || condition === 'newplanet'" transform="scale(1.1)" />
     <Sector v-else-if="condition === 's'" transform="scale(1.5)" />
-    <Resource v-else-if="condition === 'gf'" kind="gf" />
-    <g v-else-if="condition === 'ds'" transform="scale(1.2)">
-      <Sector />
-      <text x="0" y="0" style="font-size: 8px; font-weight: bold; text-anchor: middle; dominant-baseline: central">
-        DS
-      </text>
+    <g v-else-if="condition === 'newsector'" class="newsector-combo">
+      <g transform="translate(-6, 0) scale(0.55)">
+        <Sector />
+      </g>
+      <text x="0" y="3" class="newsector-combo__slash">/</text>
+      <g transform="translate(6, 0) scale(0.55)">
+        <DeepSpaceSector white />
+      </g>
     </g>
+    <Resource v-else-if="condition === 'gf'" kind="gf" />
+    <DeepSpaceSector v-else-if="condition === 'ds'" transform="scale(1.3)" />
     <g v-else-if="condition === 'g'" transform="scale(0.85)">
       <image
         xlink:href="../assets/conditions/planet.svg"
@@ -32,6 +36,15 @@
     </g>
     <Resource v-else-if="condition === 'step'" kind="step" />
     <Resource v-else-if="condition === 'trade'" kind="tradeShip" />
+    <circle v-else-if="condition === 'ast'" r="9" class="planet-fill a" style="stroke: black; stroke-width: 0.5" />
+    <g v-else-if="condition === 'shipq'">
+      <polygon
+        points="-10,4 -4,10 4,10 10,4 10,-4 4,-10 -4,-10 -10,-4"
+        transform="scale(1.1)"
+        style="fill: none; stroke: black; stroke-width: 1"
+      />
+      <Resource kind="q" transform="scale(0.85)" />
+    </g>
     <g v-else-if="condition === 'mg'">
       <image v-if="!flat" xlink:href="../assets/conditions/planet-flat.svg" :height=120/198*30 width=30 x=-12 y=-13.5
       transform="translate(-2,0) scale(-1,-1)" />
@@ -75,6 +88,7 @@
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { Condition as ConditionEnum, Building as BuildingEnum } from "@gaia-project/engine";
 import Building from "./Building.vue";
+import DeepSpaceSector from "./Conditions/DeepSpaceSector.vue";
 import Federation from "./FederationTile.vue";
 import Planet from "./Planet.vue";
 import PlanetType from "./Conditions/PlanetType.vue";
@@ -84,6 +98,7 @@ import Sector from "./Conditions/Sector.vue";
 @Component({
   components: {
     Building,
+    DeepSpaceSector,
     Federation,
     Planet,
     PlanetType,
@@ -111,6 +126,16 @@ g {
     &.gaia {
       fill: var(--gaia);
     }
+  }
+
+  .newsector-combo__slash {
+    font-size: 9px;
+    font-weight: bold;
+    text-anchor: middle;
+    fill: #333;
+    stroke: white;
+    stroke-width: 0.4px;
+    pointer-events: none;
   }
 }
 </style>

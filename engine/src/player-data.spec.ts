@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import "mocha";
-import { PowerArea } from "./enums";
-import PlayerData from "./player-data";
+import { PowerArea, Spaceship, SpaceshipTechTile } from "./enums";
+import PlayerData, { effectiveRange } from "./player-data";
 
 describe("PlayerData", () => {
   it("should export to JSON", () => {
@@ -69,6 +69,35 @@ describe("PlayerData", () => {
       expect(data.power.area3).to.equal(2);
       expect(data.brainstone).to.equal(PowerArea.Area3);
       expect(charged).to.equal(5);
+    });
+  });
+
+  describe("effectiveRange", () => {
+    it("equals the base range with no Range tech tile claimed", () => {
+      const data = new PlayerData();
+      data.range = 3;
+
+      expect(effectiveRange(data)).to.equal(3);
+    });
+
+    it("adds 1 while the Range spaceship tech tile is claimed and enabled", () => {
+      const data = new PlayerData();
+      data.range = 3;
+      data.tiles.techs.push({ tile: SpaceshipTechTile.Range, pos: Spaceship.Eclipse, enabled: true });
+
+      expect(effectiveRange(data)).to.equal(4);
+    });
+
+    it("does not add the bonus once the Range tile is covered by an Advanced Tech tile", () => {
+      const data = new PlayerData();
+      data.range = 3;
+      data.tiles.techs.push({ tile: SpaceshipTechTile.Range, pos: Spaceship.Eclipse, enabled: false });
+
+      expect(effectiveRange(data)).to.equal(3);
+    });
+
+    it("tolerates a partial (tiles-less) object, e.g. lightweight test fixtures", () => {
+      expect(effectiveRange({ range: 2 } as PlayerData)).to.equal(2);
     });
   });
 });

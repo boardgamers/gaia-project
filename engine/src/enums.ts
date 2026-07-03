@@ -91,6 +91,8 @@ export enum Resource {
   BowlToken = "bowl-t",
   BurnToken = "burn-token",
   GainToken = "t",
+  /** Lost Fleet: gain a power token directly into Area III (Xenos's free action). */
+  GainTokenArea3 = "ta3",
   Brainstone = "brainstone",
   GainTokenGaiaArea = "tg",
   MoveTokenToGaiaArea = "t->tg",
@@ -188,6 +190,10 @@ export enum Condition {
   Trade = "trade",
   // Lost Fleet
   SpaceshipQicAction = "shipq",
+  /** A mine built in a Space/Deep Space sector not colonized by this player before (§G4 "sector3"). */
+  NewSector = "newsector",
+  /** A mine built on a planet type not colonized by this player before (§G4 "planet3"). */
+  NewPlanetType = "newplanet",
 }
 
 export namespace Condition {
@@ -637,6 +643,13 @@ export enum ScoringBoardExtensionSide {
   ExploredShips = "ships",
 }
 
+// The face-up side of Lost Fleet's Economy research track overlay tile (covers levels 3/4 income),
+// decided once per game at setup (§F1).
+export enum LostFleetEconomySide {
+  Power = "pw",
+  VictoryPoints = "vp",
+}
+
 export type AnyTechTilePos = TechTilePos | AdvTechTilePos;
 export type AnyTechTile = TechTile | AdvTechTile;
 
@@ -673,7 +686,9 @@ export namespace BoardAction {
   // Lost Fleet replaces the research-board Q.I.C. actions with the spaceship boards' own
   // Q.I.C. actions (RULES_CLARIFICATIONS.md §E4/§K3) — Qic1-3 are not available in those games.
   export function values(expansions: Expansion = Expansion.None): BoardAction[] {
-    const ret = Object.values(BoardAction).filter((val: BoardAction) => typeof val === "string" && /^power[0-9]/.test(val)) as BoardAction[];
+    const ret = Object.values(BoardAction).filter(
+      (val: BoardAction) => typeof val === "string" && /^power[0-9]/.test(val)
+    ) as BoardAction[];
 
     if (!hasExpansion(expansions, Expansion.LostFleet)) {
       ret.push(BoardAction.Qic1, BoardAction.Qic2, BoardAction.Qic3);
@@ -694,11 +709,15 @@ export enum ScoringTile {
   Score8 = "score8",
   Score9 = "score9",
   Score10 = "score10",
+  // Lost Fleet (RULES_CLARIFICATIONS.md §G4): "lab4"/"sector3"/"planet3"
+  LfLab4 = "lflab4",
+  LfSector3 = "lfsector3",
+  LfPlanet3 = "lfplanet3",
 }
 
 export namespace ScoringTile {
   export function values(expansions = 0): ScoringTile[] {
-    return (Object.values(ScoringTile) as ScoringTile[]).filter((val: ScoringTile) => {
+    const base = (Object.values(ScoringTile) as ScoringTile[]).filter((val: ScoringTile) => {
       if (typeof val !== "string") {
         return;
       }
@@ -706,6 +725,12 @@ export namespace ScoringTile {
         return true;
       }
     }) as ScoringTile[];
+
+    if (hasExpansion(expansions, Expansion.LostFleet)) {
+      base.push(ScoringTile.LfLab4, ScoringTile.LfSector3, ScoringTile.LfPlanet3);
+    }
+
+    return base;
   }
 }
 
@@ -733,11 +758,7 @@ export namespace FinalTile {
     ];
 
     if (hasExpansion(expansions, Expansion.LostFleet)) {
-      ret.push(
-        FinalTile.Asteroid,
-        FinalTile.PlanetaryInstituteAcademyDistance,
-        FinalTile.DeepSpaceSector
-      );
+      ret.push(FinalTile.Asteroid, FinalTile.PlanetaryInstituteAcademyDistance, FinalTile.DeepSpaceSector);
     }
 
     return ret;

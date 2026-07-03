@@ -8,7 +8,7 @@
       <text x="16.5" y="-15.5" v-if="numTiles > 1">
         {{ numTiles }}
       </text>
-      <g v-if="federation !== undefined">
+      <g v-if="rewards.length > 0">
         <Resource
           v-for="(reward, i) in rewards"
           :key="i"
@@ -43,8 +43,15 @@ export default class FederationTile extends Vue {
   @Prop()
   numTiles: number;
 
+  /** Renders the same token art with custom reward icons (Lost Fleet spaceship Federation tokens). */
+  @Prop()
+  rewardsOverride?: Reward[];
+
   get rewards(): Reward[] {
-    return federationRewards(this.federation);
+    if (this.rewardsOverride) {
+      return this.rewardsOverride;
+    }
+    return this.federation !== undefined ? federationRewards(this.federation) : [];
   }
 
   get disabled() {

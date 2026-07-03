@@ -7,6 +7,7 @@
       v-if="cornerReward"
       :count="cornerReward.count"
       :kind="cornerReward.type"
+      :plus="cornerReward.type === 'r'"
       transform="translate(19, -19), scale(1.35)"
     />
     <g v-if="event.operator === '|'" style="pointer-events: none">
@@ -41,6 +42,7 @@
       v-for="(res, i) in centerRewards"
       :count="res.count"
       :kind="res.type"
+      :plus="res.type === 'r'"
       :key="i"
       :transform="`translate(${centerRewards.length > 1 ? (i - 0.5) * 26 : 0}, 0) scale(${
         centerRewards.length === 1 ? 2 : 1.5
@@ -50,6 +52,7 @@
       v-for="(res, i) in rightRewards"
       :count="res.count"
       :kind="res.type"
+      :plus="res.type === 'r'"
       :key="'right-' + i"
       :transform="`translate(13, ${rightRewards.length > 1 ? (i - 0.5) * 28 : 0}) scale(1.5)`"
     />
@@ -177,6 +180,9 @@ export default class TechContent extends Vue {
           ConditionEnum.Gaia,
           ConditionEnum.GaiaFormer,
           ConditionEnum.DeepSpaceSector,
+          ConditionEnum.Asteroid,
+          ConditionEnum.SpaceshipQicAction,
+          ConditionEnum.TerraformStep,
           ConditionEnum.Trade,
           ...Object.values(BuildingEnum),
         ].includes(this.event.condition as any)

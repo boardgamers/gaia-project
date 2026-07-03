@@ -15,8 +15,12 @@ describe("ScoringBoard", () => {
     const { container, getByText } = render(ScoringBoard, { store });
 
     expect(container.querySelector(".techTile.adv-ext")).to.not.equal(null);
-    expect(getByText("Extension")).to.not.equal(null);
-    expect(getByText("25 VP")).to.not.equal(null);
+    expect(getByText("7th adv. tech:")).to.not.equal(null);
+    // the 25-VP gate renders as a VP resource icon, not text
+    const vpGate = container.querySelector('[data-extension-gate="vp"]');
+    expect(vpGate).to.not.equal(null);
+    expect(vpGate.textContent).to.contain("25");
+    expect(container.querySelector('[data-extension-gate="ships"]')).to.equal(null);
   });
 
   it("shows the explored-ships gate when the reverse side is active", () => {
@@ -26,8 +30,12 @@ describe("ScoringBoard", () => {
     const store = makeStore();
     store.commit("receiveData", engine);
 
-    const { getByText } = render(ScoringBoard, { store });
+    const { container } = render(ScoringBoard, { store });
 
-    expect(getByText("3 Ships")).to.not.equal(null);
+    // the 3-explored-ships gate renders as 3 ship markers, not text
+    const shipsGate = container.querySelector('[data-extension-gate="ships"]');
+    expect(shipsGate).to.not.equal(null);
+    expect(shipsGate.querySelectorAll("circle.extension-ship").length).to.equal(3);
+    expect(container.querySelector('[data-extension-gate="vp"]')).to.equal(null);
   });
 });

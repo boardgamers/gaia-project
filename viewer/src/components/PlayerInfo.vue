@@ -118,8 +118,8 @@
         />
         <Resource
           kind="r"
-          tooltip="Range"
-          :count="playerData.range"
+          :tooltip="rangeTooltip"
+          :count="playerRange"
           :transform="`translate(35.5,${isFrontiers ? 0.3 : 1}) scale(0.1)`"
           style="opacity: 0.7"
         />
@@ -264,6 +264,16 @@
         :numTiles="1"
         filter="url(#shadow-1)"
       />
+      <FederationTile
+        v-for="(fed, i) in playerData.spaceshipFederations"
+        class="mb-1 mr-1"
+        :key="'ship-fed-' + i"
+        :data-ship-federation="fed.tile"
+        :rewardsOverride="shipFederationRewards(fed.tile)"
+        :used="!fed.green"
+        :numTiles="1"
+        filter="url(#shadow-1)"
+      />
       <TechTile
         v-for="tech in playerData.tiles.techs"
         :covered="!tech.enabled"
@@ -280,7 +290,17 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop, Watch } from "vue-property-decorator";
-import Engine, { Building, Expansion, factionPlanet, hasExpansion, Planet, Player } from "@gaia-project/engine";
+import Engine, {
+  Building,
+  effectiveRange,
+  Expansion,
+  factionPlanet,
+  hasExpansion,
+  Planet,
+  Player,
+  SpaceshipFederation,
+} from "@gaia-project/engine";
+import { spaceshipFederationDisplayRewards } from "../data/federations";
 import { factionColor } from "../graphics/utils";
 import TechTile from "./TechTile.vue";
 import Booster from "./Booster.vue";
@@ -322,6 +342,18 @@ export default class PlayerInfo extends Vue {
 
   get playerData() {
     return this.player?.data;
+  }
+
+  get playerRange(): number {
+    return effectiveRange(this.playerData);
+  }
+
+  get rangeTooltip(): string {
+    const data = this.playerData;
+    if (data && this.playerRange !== data.range) {
+      return "Range (includes +1 from the claimed Range spaceship tech tile)";
+    }
+    return "Range";
   }
 
   playerClick(player: Player) {
@@ -372,6 +404,10 @@ export default class PlayerInfo extends Vue {
       return "white";
     }
     return "black";
+  }
+
+  shipFederationRewards(federation: SpaceshipFederation) {
+    return spaceshipFederationDisplayRewards(federation);
   }
 
   planetsWithSteps(steps: number) {
