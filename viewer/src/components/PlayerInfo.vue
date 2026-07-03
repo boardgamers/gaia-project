@@ -118,8 +118,8 @@
         />
         <Resource
           kind="r"
-          tooltip="Range"
-          :count="playerData.range"
+          :tooltip="rangeTooltip"
+          :count="playerRange"
           :transform="`translate(35.5,${isFrontiers ? 0.3 : 1}) scale(0.1)`"
           style="opacity: 0.7"
         />
@@ -292,6 +292,7 @@ import Vue from "vue";
 import { Component, Prop, Watch } from "vue-property-decorator";
 import Engine, {
   Building,
+  effectiveRange,
   Expansion,
   factionPlanet,
   hasExpansion,
@@ -341,6 +342,18 @@ export default class PlayerInfo extends Vue {
 
   get playerData() {
     return this.player?.data;
+  }
+
+  get playerRange(): number {
+    return effectiveRange(this.playerData);
+  }
+
+  get rangeTooltip(): string {
+    const data = this.playerData;
+    if (data && this.playerRange !== data.range) {
+      return "Range (includes +1 from the claimed Range spaceship tech tile)";
+    }
+    return "Range";
   }
 
   playerClick(player: Player) {

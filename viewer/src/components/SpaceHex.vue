@@ -8,8 +8,8 @@
       :data-sector-type="lostFleetSectorBadge.kind"
       transform="translate(-0.84,-0.79)"
     >
-      <rect width="0.72" height="0.34" rx="0.12" ry="0.12" />
-      <text x="0.36" y="0.17">{{ lostFleetSectorBadge.label }}</text>
+      <rect :width="badgeWidth" height="0.34" rx="0.12" ry="0.12" />
+      <text :x="badgeWidth / 2" y="0.17">{{ lostFleetSectorBadge.label }}</text>
     </g>
     <use
       v-for="(l, i) in federationLines"
@@ -346,16 +346,42 @@ export default class SpaceHex extends Vue {
   }
 
   get lostFleetSectorBadge(): { kind: "interspace" | "deep-space"; label: string } | null {
-    // full tile id (IS3, DS14), matching the labels on hex-selection command buttons so a
-    // "Build mine IS3" button can be located on the map at a glance
     switch (this.sectorType) {
       case LostFleetSectorType.Interspace:
-        return { kind: "interspace", label: this.hex.data.sector };
+        // Interspace tiles sit between sectors and have no id printed on the physical tile, so
+        // reference them by which sectors they border (e.g. "IS123" borders sectors 1, 2, 3)
+        // instead of an arbitrary internal id.
+        return { kind: "interspace", label: this.interspaceBorderLabel };
       case LostFleetSectorType.DeepSpace:
-        return { kind: "deep-space", label: this.hex.data.sector.split("_")[0] };
+        // A physical Deep Space tile is 3 mutually-adjacent hexes sharing one id
+        // (DS<n>_0/_1/_2) - only the first hex renders the badge, not all 3, since all 3 would
+        // otherwise show the identical label stacked on top of each other.
+        return this.hex.data.sector.endsWith("_0")
+          ? { kind: "deep-space", label: this.hex.data.sector.split("_")[0].replace(/^DS/, "") }
+          : null;
       default:
         return null;
     }
+  }
+
+  get badgeWidth(): number {
+    const label = this.lostFleetSectorBadge?.label ?? "";
+    return Math.max(0.72, 0.22 + label.length * 0.13);
+  }
+
+  /** Sorted, deduped sector numbers this Interspace hex is grid-adjacent to, e.g. "IS123". */
+  private get interspaceBorderLabel(): string {
+    const sectorNumber = (sector: string): string => (sector[0] === "s" ? sector.slice(1) : sector);
+    const borders = new Set<string>();
+    for (const neighbour of this.map.grid.neighbours(this.hex)) {
+      if (classifySectorId(neighbour.data.sector) === LostFleetSectorType.Space) {
+        borders.add(sectorNumber(neighbour.data.sector));
+      }
+    }
+    // sector names aren't always pure numbers (e.g. an extra "6B" tile alongside "6"), so sort
+    // numerically first and fall back to a plain string compare for same-number variants.
+    const sorted = [...borders].sort((a, b) => parseInt(a, 10) - parseInt(b, 10) || a.localeCompare(b));
+    return "IS" + sorted.join("");
   }
 
   private get sectorTypeLabel(): string {

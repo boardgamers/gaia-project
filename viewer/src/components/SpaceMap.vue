@@ -33,45 +33,21 @@
     <image v-if="showCharts" xlink:href="../assets/other/line-chart.svg" :height=155/211*22 width="22" x="-11" y="-8"
     v-b-modal.chart-button role="button" :transform="`translate(${bounds.right - 1.9}, ${bounds.top + 1.4}) scale(0.1)`"
     />
-    <g
-      v-if="isLostFleet"
-      class="lost-fleet-map-legend"
-      :transform="`translate(${bounds.left + 0.3}, ${bounds.top + 9.2})`"
-    >
-      <rect class="lost-fleet-map-legend__panel" width="5.5" height="5.4" rx="0.4" ry="0.4" />
-      <text class="lost-fleet-map-legend__title" transform="translate(0.5, 1)">Lost Fleet</text>
-      <g class="lost-fleet-map-legend__row" data-kind="interspace" transform="translate(0.55, 1.95)">
-        <rect
-          class="lost-fleet-map-legend__swatch lost-fleet-map-legend__swatch--interspace"
-          width="1.2"
-          height="0.68"
-          rx="0.18"
-          ry="0.18"
-        />
-        <text class="lost-fleet-map-legend__label" transform="translate(0.6, 0.47)">IS</text>
-        <text class="lost-fleet-map-legend__copy" transform="translate(1.7, 0.5)">Interspace</text>
-      </g>
-      <g class="lost-fleet-map-legend__row" data-kind="deep-space" transform="translate(0.55, 3)">
-        <rect
-          class="lost-fleet-map-legend__swatch lost-fleet-map-legend__swatch--deep-space"
-          width="1.2"
-          height="0.68"
-          rx="0.18"
-          ry="0.18"
-        />
-        <DeepSpaceSector transform="translate(0.6, 0.34) scale(0.055)" />
-        <text class="lost-fleet-map-legend__copy" transform="translate(1.7, 0.5)">Deep Space</text>
-      </g>
-      <g class="lost-fleet-map-legend__row" data-kind="ship" transform="translate(0.55, 4.05)">
-        <circle class="lost-fleet-map-legend__ship" cx="0.6" cy="0.34" r="0.34" />
-        <text class="lost-fleet-map-legend__label" transform="translate(0.6, 0.46)">T</text>
-        <text class="lost-fleet-map-legend__copy" transform="translate(1.7, 0.5)">T/R/M/E Ship</text>
-      </g>
-    </g>
+    <rect
+      v-for="(planet, i) in terraformingColors"
+      :key="planet"
+      :class="['lost-fleet-terraform-swatch', 'planet-fill', planet]"
+      width="0.9"
+      height="0.9"
+      :x="bounds.right - 7.5 + i * 1.05"
+      :y="bounds.top + 0.3"
+      v-b-tooltip
+      :title="`Terraforming board color ${i + 1}`"
+    />
     <g
       v-for="(color, i) in colorLegend"
       :key="i"
-      :transform="`translate(${bounds.left + 0.6}, ${bounds.top + (isLostFleet ? 15.4 : 7.8) + 2 * i}) scale(.8)`"
+      :transform="`translate(${bounds.left + 0.6}, ${bounds.top + 7 + 2 * i}) scale(.8)`"
     >
       <rect width="2" height="2" class="color-legend leech" :class="color.class" />
       <text class="color-legend" transform="translate(1, 1.55)">{{ color.text }}</text>
@@ -88,16 +64,18 @@ import Engine, {
   GaiaHex,
   LostFleetSectorType,
   hasExpansion,
+  Planet,
   SpaceMap as SpaceMapData,
 } from "@gaia-project/engine";
+import { lostFleetTerraformingBoard } from "@gaia-project/engine/src/factions";
 import { hexCenter } from "../graphics/hex";
+import { gameSeed } from "../logic/utils";
 import Sector from "./Sector.vue";
 import { CubeCoordinates } from "hexagrid";
 import FactionWheel from "./FactionWheel.vue";
 import Definitions from "./definitions/Definitions.vue";
 import { MapMode, MapModeType } from "../data/actions";
 import SpaceHex from "./SpaceHex.vue";
-import DeepSpaceSector from "./Conditions/DeepSpaceSector.vue";
 
 @Component<SpaceMap>({
   components: {
@@ -105,7 +83,6 @@ import DeepSpaceSector from "./Conditions/DeepSpaceSector.vue";
     Definitions,
     Sector,
     SpaceHex,
-    DeepSpaceSector,
   },
 })
 export default class SpaceMap extends Vue {
@@ -145,6 +122,17 @@ export default class SpaceMap extends Vue {
 
   get isLostFleet(): boolean {
     return hasExpansion(this.engine.expansions, Expansion.LostFleet);
+  }
+
+  /** The Tinkeroids/Moweyds shared terraforming-color row (RULES_CLARIFICATIONS.md §B5), shown as
+   * 7 plain squares in the map's top-right corner - same colors as LostFleetTerraformingBoard.vue's
+   * "shared row", just without any of that component's text/cards for a quick at-a-glance read. */
+  get terraformingColors(): Planet[] {
+    if (!this.isLostFleet) {
+      return [];
+    }
+    const seed = gameSeed(this.engine);
+    return seed ? lostFleetTerraformingBoard(seed) : [];
   }
 
   /**
@@ -191,7 +179,11 @@ export default class SpaceMap extends Vue {
       return { left: -13, top: -11.5, right: 13, bottom: 12.5 };
     }
     const hexPad = 1.3;
-    const sidebar = 6;
+    // Was 6 when a Lost Fleet legend box also lived in this sidebar (removed). The faction wheel
+    // (translate(...) + 2.6 half-width at its scale(0.65)) is now the binding constraint on this
+    // reserved width, not the old legend - 5.6 is the smallest value that still clears it with
+    // margin (see SpaceMap.spec.ts's "keeps the wheel ... in the left sidebar" test).
+    const sidebar = 5.6;
     return { left: minX - hexPad - sidebar, top: minY - hexPad, right: maxX + hexPad, bottom: maxY + hexPad };
   }
 
@@ -223,58 +215,5 @@ export default class SpaceMap extends Vue {
 text.color-legend {
   fill: white;
   stroke: white;
-}
-
-.lost-fleet-map-legend {
-  pointer-events: none;
-}
-
-.lost-fleet-map-legend__panel {
-  fill: rgb(255 255 255 / 92%);
-  stroke: #c8d3e3;
-  stroke-width: 0.06px;
-}
-
-.lost-fleet-map-legend__title {
-  fill: #172e62;
-  font-size: 0.56px;
-  font-weight: 700;
-  text-anchor: start;
-}
-
-.lost-fleet-map-legend__swatch,
-.lost-fleet-map-legend__ship {
-  stroke: #172e62;
-  stroke-width: 0.06px;
-}
-
-.lost-fleet-map-legend__swatch--interspace {
-  fill: #203760;
-  stroke-dasharray: 0.1 0.05;
-}
-
-.lost-fleet-map-legend__swatch--deep-space {
-  fill: #111c3d;
-}
-
-.lost-fleet-map-legend__ship {
-  fill: #efe6c4;
-}
-
-.lost-fleet-map-legend__label,
-.lost-fleet-map-legend__copy {
-  fill: #172e62;
-  dominant-baseline: central;
-}
-
-.lost-fleet-map-legend__label {
-  font-size: 0.38px;
-  font-weight: 700;
-  text-anchor: middle;
-}
-
-.lost-fleet-map-legend__copy {
-  font-size: 0.42px;
-  text-anchor: start;
 }
 </style>

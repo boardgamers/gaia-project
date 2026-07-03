@@ -62,14 +62,20 @@ describe("SpaceMap", () => {
     expect(interspaceHexCount).to.be.greaterThan(0);
     expect(deepSpaceHexCount).to.be.greaterThan(0);
     expect(container.querySelectorAll('[data-sector-type="interspace"]').length).to.equal(interspaceHexCount);
-    expect(container.querySelectorAll('[data-sector-type="deep-space"]').length).to.equal(deepSpaceHexCount);
+    // Deep Space badges: one per physical 3-hex tile, not one per hex - so strictly fewer badge
+    // elements than deep-space hexes (assuming every DS tile has all 3 of its hexes on the board).
+    const deepSpaceBadges = container.querySelectorAll('[data-sector-type="deep-space"]');
+    expect(deepSpaceBadges.length).to.be.greaterThan(0);
+    expect(deepSpaceBadges.length).to.be.lessThan(deepSpaceHexCount);
 
-    // badges carry the full tile id (IS3, DS14) so they match the hex-selection button labels
+    // Interspace badges reference the sectors they border (e.g. "IS123"), not an arbitrary id;
+    // Deep Space badges are now a bare number, not "DS<n>". Sector names aren't always pure
+    // digits (extra tiles at higher player counts can be named e.g. "6B"), hence [\dA-Z]+.
     container.querySelectorAll('[data-sector-type="interspace"] text').forEach((badge) => {
-      expect(badge.textContent.trim()).to.match(/^IS\d+$/);
+      expect(badge.textContent.trim()).to.match(/^IS[\dA-Z]+$/);
     });
     container.querySelectorAll('[data-sector-type="deep-space"] text').forEach((badge) => {
-      expect(badge.textContent.trim()).to.match(/^DS\d+$/);
+      expect(badge.textContent.trim()).to.match(/^\d+$/);
     });
     expect(container.querySelectorAll("g.space-hex-cell .lost-fleet-spaceship").length).to.equal(spaceshipHexCount);
     // per-hex ship marker matches the ship board's own minimal circle+letter treatment (same
@@ -82,15 +88,31 @@ describe("SpaceMap", () => {
       expect(mapShipMarker.querySelectorAll("text").length).to.equal(1);
       expect(mapShipMarker.querySelector("text").textContent).to.match(/^[TRME]$/);
     }
-    expect(container.querySelector('[data-kind="interspace"]')).to.not.equal(null);
-    expect(container.querySelector('[data-kind="deep-space"]')).to.not.equal(null);
-    expect(container.querySelector('[data-kind="ship"]')).to.not.equal(null);
 
-    // the legend's Deep Space swatch renders as an actual 3-hex cluster (matching the physical
-    // tile), not the same shape as the single-hex Interspace swatch, so the two are distinguishable
-    // by more than a subtle color difference.
-    expect(container.querySelector('[data-kind="deep-space"] .deep-space-sector')).to.not.equal(null);
-    expect(container.querySelectorAll('[data-kind="deep-space"] .deep-space-sector polygon').length).to.equal(3);
+    // the Lost Fleet legend (Interspace/Deep Space/Ship swatches) was removed entirely
+    expect(container.querySelector('[data-kind="interspace"]')).to.equal(null);
+    expect(container.querySelector('[data-kind="deep-space"]')).to.equal(null);
+    expect(container.querySelector('[data-kind="ship"]')).to.equal(null);
+  });
+
+  it("shows the 7 Tinkeroids/Moweyds terraforming-board colors as plain squares, top-right of the map", () => {
+    const engine = new Engine(["init 2 lost-fleet-space-map"], { lostFleet: true });
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(SpaceMap, { store });
+
+    // plain <rect> elements, no wrapping <g>/<text> - "just squares, no text or container"
+    const squares = container.querySelectorAll("rect.lost-fleet-terraform-swatch");
+    expect(squares.length).to.equal(7);
+    squares.forEach((sq) => {
+      expect(sq.getAttribute("width")).to.equal("0.9");
+      expect(sq.getAttribute("height")).to.equal("0.9");
+      expect(sq.children.length).to.equal(0);
+    });
+    // deterministic from the seed, same source as LostFleetTerraformingBoard.vue's own row
+    const colors = [...squares].map((sq) => sq.getAttribute("class").split(" ")[2]);
+    expect(new Set(colors).size).to.equal(7); // all 7 distinct planet types, no repeats
   });
 
   it("sizes the viewBox to contain every hex and keeps the wheel and legends in the left sidebar", () => {
@@ -131,12 +153,11 @@ describe("SpaceMap", () => {
         minHexX = Math.min(minHexX, c.x);
       }
 
-      // The faction wheel (ring spans +-2.6 around its anchor at scale 0.65) and the Lost Fleet
-      // legend (5.5 wide) both stay in the reserved sidebar, fully left of the leftmost hex.
+      // The faction wheel (ring spans +-2.6 around its anchor at scale 0.65) stays in the
+      // reserved sidebar, fully left of the leftmost hex. (There is no separate Lost Fleet
+      // legend anymore - it was removed; the wheel is the only thing reserving this sidebar now.)
       const wheelRight = translateX(container.querySelector(".faction-wheel")) + 2.6;
       expect(wheelRight, `${players}p wheel overlaps hexes`).to.be.below(minHexX - 1);
-      const legendRight = translateX(container.querySelector(".lost-fleet-map-legend")) + 5.5;
-      expect(legendRight, `${players}p legend overlaps hexes`).to.be.below(minHexX - 1);
     }
   });
 

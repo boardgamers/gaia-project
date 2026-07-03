@@ -1,5 +1,5 @@
 <template>
-  <g class="deep-space-sector">
+  <g :class="['deep-space-sector', { 'deep-space-sector--white': white }]">
     <polygon
       v-for="(center, i) in centers"
       :key="i"
@@ -10,7 +10,7 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component } from "vue-property-decorator";
+import { Vue, Component, Prop } from "vue-property-decorator";
 import { corners } from "../../graphics/hex";
 
 // A physical Lost Fleet Deep Space tile is a triangle of 3 mutually-adjacent hexes (not a 7-hex
@@ -20,6 +20,11 @@ const V_SPACING = Math.sqrt(3) / 2;
 
 @Component
 export default class DeepSpaceSector extends Vue {
+  // Matches the Sector icon's white fill (e.g. next to it in the newsector combo icon) instead of
+  // the dark navy used standalone (map legend, Final Scoring tile).
+  @Prop({ default: false })
+  white: boolean;
+
   get hexPoints() {
     return corners(RADIUS)
       .map((p) => `${p.x},${p.y}`)
@@ -46,6 +51,11 @@ g.deep-space-sector {
     fill: #111c3d;
     stroke: #7b88b6;
     stroke-width: 0.5;
+  }
+
+  &.deep-space-sector--white polygon {
+    fill: white;
+    stroke: black;
   }
 }
 </style>

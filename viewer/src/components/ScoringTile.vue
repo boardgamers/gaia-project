@@ -11,7 +11,12 @@
           : 34
       }, ${event.condition === 'step' ? 20 : 22}) scale(1.3)`"
     />
-    <Operator :condition="event.condition" :operator="event.operator" transform="translate(28, 27) scale(1)" />
+    <Operator
+      v-if="event.condition !== 'newsector'"
+      :condition="event.condition"
+      :operator="event.operator"
+      transform="translate(28, 27) scale(1)"
+    />
     <rect x="1" y="1" width="75" height="40" rx="2" ry="2" class="contour" />
     <g v-if="faded">
       <line y1="5" y2="35" x1="5" x2="71" stroke="#333" stroke-width="5" />

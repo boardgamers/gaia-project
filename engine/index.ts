@@ -4,7 +4,7 @@ import Engine from "./src/engine";
 import Event, { EventSource } from "./src/events";
 import SpaceMap, { parseLocation } from "./src/map";
 import Player, { BuildWarning, MAX_SATELLITES } from "./src/player";
-import PlayerData, { BrainstoneDest, MaxLeech, Power } from "./src/player-data";
+import PlayerData, { BrainstoneDest, effectiveRange, MaxLeech, Power } from "./src/player-data";
 import Reward from "./src/reward";
 
 export { boardActions, FreeAction, freeActionConversions, ResourceConversion } from "./src/actions";
@@ -85,6 +85,7 @@ export { artifactTokenRewards, artifactTokenSpec } from "./src/tiles/artifacts";
 export { finalScorings } from "./src/tiles/scoring";
 export {
   BrainstoneDest,
+  effectiveRange,
   MaxLeech,
   BuildWarning,
   Player,

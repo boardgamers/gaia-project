@@ -23,7 +23,8 @@
         filter="url(#shadow-1)"
       />
       <!--<text class="title" x="-25" y="-18">{{title}}</text>-->
-      <TechContent v-if="this.event" :event="this.event" style="pointer-events: none" />
+      <text v-if="isRangeTile" class="content smaller" x="0" y="4" text-anchor="middle">+1 range</text>
+      <TechContent v-else-if="this.event" :event="this.event" style="pointer-events: none" />
     </g>
   </svg>
 </template>
@@ -122,6 +123,11 @@ export default class TechTile extends Vue {
     }
 
     return techTileEventWithSource(this.tile, null)[0];
+  }
+
+  // The Range tile reads clearer as plain text than as an icon at this size - owner request.
+  get isRangeTile(): boolean {
+    return this.tile === SpaceshipTechTile.Range;
   }
 
   get count() {

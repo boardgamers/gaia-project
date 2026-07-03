@@ -1528,6 +1528,104 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       scratch files), but the exact commands are in this session's transcript if a future session
       wants to re-verify the same way.
 
+58. ✅ **Map/HUD cleanup batch — CODED, TESTED & visually verified** (done 2026-07-03, same session
+    as #56/#57). 8 owner-requested items, all in `viewer/src/components/` unless noted:
+    - **Xenos free-action icon fix** (real bug, not cosmetic): `kind === 't'` and `kind === 'ta3'`
+      shared identical markup in `Resource.vue` — Xenos's "1 ore → 1 power token to bowl 3" was
+      visually indistinguishable from the base game's "1 ore → 1 power token to bowl 1". Added a
+      small bowl-number badge for `ta3`. Also fixed a real data bug found along the way:
+      `data/actions.ts`'s `OreToPowerTokenArea3` had `fast.button: PowerArea.Area2` (wrong bowl
+      entirely) instead of `Area3`.
+    - **Range icon reverted** to the pre-`f5d9510` 2-hex+arrow design in `Resource.vue`'s
+      `kind === 'r'` (found via `git log -p`, not guessed) — the owner didn't want the single-hex
+      "+1" badge redesign from that commit.
+    - **Range spaceship tech tile**: now renders as plain text `+1 range` (`TechTile.vue`) instead
+      of any icon, per owner request — separate ask from the icon revert above.
+    - **Range tech tile's effect is now actually wired** (was a documented engine gap —
+      `spaceship-techs.ts`'s own comment said "not yet wired"). New `player-data.ts` function
+      `effectiveRange(data)` = `data.range` + 1 if the Range tile is claimed and not covered by an
+      Advanced Tech tile (reuses the base game's existing `tiles.techs[].enabled` covering
+      mechanism — didn't need new tracking). Wired into `cost.ts`'s `qicForDistance` and
+      `exploration.ts`'s `qicForExplorationDistance` (both build/reach-distance checks) and
+      `PlayerInfo.vue`'s range display. Exported from the engine package (`engine/index.ts`).
+      3 new engine tests (`player-data.spec.ts`).
+    - **Setup preview was missing the booster-tile pool**: `SetupPreviewBoard.vue` composed
+      `SpaceMap`/`ResearchBoard`/`ScoringBoard`/`BoardAction`/ship components but never included
+      `Pool.vue` (the booster/federation-pool component `Game.vue` itself uses) — just an
+      omission, not a broken guard condition. Added.
+    - **Round-scoring "3 VP per colonized Deep Space or sector" tile** (`ScoringTile.LfSector3`,
+      condition `newsector`): was rendering as a plain Sector icon (identical to the base game's
+      "colonize a sector" tile), losing the Deep-Space-also-counts nuance. `Condition.vue`'s
+      `newsector` case now renders Sector + "/" + `DeepSpaceSector` side by side; added a `white`
+      prop to `DeepSpaceSector.vue` (was hardcoded dark navy) so it matches the Sector icon's
+      white fill. Also suppressed `ScoringTile.vue`'s `Operator` build-arrow specifically for
+      `newsector` (the owner's "delete the arrow" ask - the arrow is `Operator.vue`'s generic
+      trigger icon, used by every round-scoring tile, not something unique to this one, so this is
+      scoped to `newsector` only, not removed globally).
+    - **Legend removed** (`.lost-fleet-map-legend` in `SpaceMap.vue`, the "Interspace/Deep
+      Space/T/R/M/E Ship" box) entirely, along with its dead CSS and the now-unused
+      `DeepSpaceSector` import. The map's reserved left `sidebar` (in `bounds`) shrank from 6 to
+      5.6 — **not** to 0, because the faction wheel (not the legend) turned out to be the actual
+      binding width constraint on that sidebar (confirmed via `SpaceMap.spec.ts`'s existing
+      "keeps the wheel ... in the left sidebar" test, which caught an initial overly-aggressive
+      cut to `sidebar = 5` as a real wheel/hex overlap, not just a stale test assumption).
+    - **FactionWheel's 4 extra planet slots** (Gaia/Transdim/Asteroid/Protoplanet) went from a 2x2
+      block of ring-style circles below the ring (doubling the wheel's height) to a single compact
+      row of small squares directly under it — visually distinct from the ring (squares vs
+      circles) so it reads as its own small legend rather than an odd extension of the turn-order
+      wheel, and roughly halves the vertical footprint. `FactionWheel.spec.ts` updated to check
+      "1 row, 4 distinct x positions" instead of the old 2x2 assertion.
+    - **7 Tinkeroids/Moweyds terraforming-board colors** ("mowyeds and tinkeroids" in the original
+      ask — confirmed via `RULES_CLARIFICATIONS.md` §B5 and `LostFleetTerraformingBoard.vue`'s own
+      header text that this is the shared 7-color row those 2 factions draw from) now also render
+      as 7 plain squares top-right of the map (`SpaceMap.vue`), reusing the same
+      `lostFleetTerraformingBoard(seed)` engine function as the existing full `.vue` component
+      below the map. **Did not remove or replace** that existing detailed component (which also
+      shows per-faction mandatory-color locking, more than "7 colors" alone) - this is an
+      additional compact map-adjacent view, not a replacement.
+    - **Deep Space: one badge per physical tile, not one per hex.** A DS tile is 3 mutually-
+      adjacent hexes sharing one id (`DS<n>_0/_1/_2`); `SpaceHex.vue` was rendering the badge on
+      all 3, showing the same label 3x stacked. Now only the `_0` hex renders it, and the label
+      itself dropped the `DS` prefix (just the bare number, e.g. "14" not "DS14") per the owner's
+      "mark with a number" ask. The underlying hex id / move-command format is unchanged - this is
+      a display-only fix.
+    - **Interspace tiles reference the sectors they border** (e.g. "IS123" for a tile touching
+      sectors 1, 2, 3) instead of an arbitrary internal id, computed viewer-side in `SpaceHex.vue`
+      via `this.map.grid.neighbours(hex)` filtered to Space-type neighbors - **engine-side hex ids
+      (`IS<n>`) and move-command format are deliberately unchanged**, so this doesn't touch
+      replay/save compatibility. Scoped to the map badge only; hex-selection command button labels
+      (`logic/buttons/hex.ts`) still show the raw id - threading full grid access into that shared
+      utility (used across many building-placement flows) for a secondary display surface wasn't
+      worth the added risk in this batch. Sector names aren't always pure digits (e.g. "6B" at
+      higher player counts) - sort handles that (`parseInt` first, string compare as tiebreaker).
+    - **Real pre-existing bug found and fixed along the way, affecting both the new map squares
+      above and the existing `LostFleetTerraformingBoard.vue`**: both read `engine.map?.seed` to
+      derive the terraforming-board colors, but `SpaceMap.toJSON()`/`fromData()` never
+      serializes/restores `.seed` (`engine.ts:619-643`'s `Engine.fromData` explicitly restores
+      `nbPlayers`/`layout`/`lostFleet`/`placement` after `SpaceMap.fromData()`, but not `seed` -
+      it was never in the serialized data to restore). So `map.seed` is only ever defined on a
+      freshly-generated map, before any serialize/deserialize round-trip - which happens
+      constantly during normal play (this was caught by testing the self-contained
+      `?lostFleet=1` demo in a real browser after `engine.generateAvailableCommandsIfNeeded()`,
+      not by the unit tests, which happened to only ever construct fresh engines). Fixed with a
+      new `viewer/src/logic/utils.ts` function `gameSeed(engine)` that reads the seed out of
+      `moveHistory[0]` (`"init <players> <seed>"`) instead - always intact, since it's the
+      append-only replay log this whole app is built around. Both `SpaceMap.vue` and
+      `LostFleetTerraformingBoard.vue` switched to it. 3 new tests (`logic/utils.spec.ts`),
+      including one that round-trips an engine through `JSON.stringify`/`Engine.fromData` and
+      asserts `map.seed` is lost but `gameSeed()` still works.
+    - Tests: `Resource.spec.ts` updated for the range-icon revert, `FactionWheel.spec.ts` updated
+      for the compact row, `SpaceMap.spec.ts` updated (legend-removal assertions flipped to
+      "gone", new deep-space/interspace label-format assertions, new 7-square test),
+      `Condition.vue.spec.ts`'s existing `newsector` test already covered the new icon path
+      without changes needed, `player-data.spec.ts` +3, `logic/utils.spec.ts` +3.
+      **Viewer: 239/239 passing**, **engine: 535/535 passing**, both production builds clean.
+    - Verified visually with Playwright against the self-contained `?lostFleet=1` demo at a
+      393x852 iPhone-15-Pro viewport, same method as #57 — caught the seed bug above, the
+      duplicate-badge-count issue, and confirmed the final layout (legend gone, compact wheel,
+      7 squares top-right, single deep-space numbers, IS-border labels) all render correctly
+      together, not just in isolation per-component.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -1564,6 +1662,12 @@ sessions in a fresh container should expect the same.
 (see #55) surfaced intermittently across reruns during this session too (sometimes 0 failures,
 sometimes 1-2) — always the same seed-dependent test, never anything touched by #56/#57; rerun
 `npm test` a second time if you see it fail and nothing else did.
+
+**Latest full rerun after #58 (2026-07-03, same session):** viewer **239/239** (235 baseline + 3
+new `logic/utils.spec.ts` `gameSeed` cases + 1 net from `Resource.spec.ts`'s range-icon-revert
+rewrite), engine **535/535** (531 baseline + 4 new `player-data.spec.ts` `effectiveRange` cases).
+Both production builds clean. Same pre-existing flaky `SetupPreview.spec.ts` seed test as
+always — not touched, not fixed, still out of scope.
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/

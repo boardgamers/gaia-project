@@ -30,13 +30,20 @@
       :data-planet="slot.planet"
       :transform="`translate(${slot.x}, ${slot.y})`"
     >
-      <circle :r="1" :class="['planet-fill', slot.planet]" :style="`stroke-width: ${strokeWidth(slot.planet)}`" />
+      <rect
+        width="1.5"
+        height="1.5"
+        x="-0.75"
+        y="-0.75"
+        :class="['planet-fill', slot.planet]"
+        :style="`stroke-width: ${strokeWidth(slot.planet)}`"
+      />
       <text
-        :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(slot.planet)}`"
+        :style="`font-size: 1.1px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(slot.planet)}`"
       >
         {{ remainingPlanets(slot.planet) }}
       </text>
-      <circle :r="1" style="cursor: pointer; opacity: 0" @click="togglePlanetHighlight(slot.planet)" />
+      <rect width="1.5" height="1.5" x="-0.75" y="-0.75" style="cursor: pointer; opacity: 0" @click="togglePlanetHighlight(slot.planet)" />
     </g>
   </g>
 </template>
@@ -98,9 +105,12 @@ export default class FactionWheel extends Vue {
       ? [...standardExtraPlanets, ...lostFleetExtraPlanets]
       : standardExtraPlanets;
 
-    // 2 per row below the ring, so Lost Fleet's Asteroid/Protoplanet stack under Gaia/Transdim
-    // instead of widening the wheel's footprint.
-    return planets.map((planet, index) => ({ planet, x: index % 2 === 0 ? -2 : 2, y: 5 + Math.floor(index / 2) * 2.4 }));
+    // A single compact row directly under the ring (was a 2x2 block, roughly doubling the wheel's
+    // height) - square markers instead of the ring's circles so this reads as its own small
+    // legend rather than an odd extension of the turn-order ring.
+    const spacing = 2;
+    const startX = -((planets.length - 1) * spacing) / 2;
+    return planets.map((planet, index) => ({ planet, x: startX + index * spacing, y: 4.6 }));
   }
 
   factionInitial(planet: Planet): string {

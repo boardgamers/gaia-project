@@ -39,6 +39,12 @@
       x="-7.5"
       y="-7.5"
     />
+    <!-- Xenos's free action (1 ore -> 1 power token in bowl 3) otherwise renders identically to the
+         base game's bowl-1 version - this badge is the only visual difference between them. -->
+    <g v-if="kind === 'ta3'" class="token-area-badge">
+      <circle cx="5.5" cy="-5.5" r="3.2" />
+      <text x="5.5" y="-4.3">3</text>
+    </g>
     <g v-else-if="kind === 'power-ring'" class="power-ring">
       <circle r="7" />
       <circle r="3.5" />
@@ -122,16 +128,17 @@
       </text>
     </template>
     <template v-else-if="kind === 'r'">
-      <image xlink:href="../assets/resources/flat-hex.svg" :height=162/328*20 width=20 x=-10 y=-4 />
-      <text
-        v-if="count >= 1"
-        x="0"
-        y="1.2"
-        stroke="black"
-        stroke-width="0.3"
-        style="font-weight: bold; font-size: 10px; stroke-width: 0.5px"
-      >
-        {{ plus ? "+" : "" }}{{ count }}
+      <g transform="scale(1) translate(-13,0)">
+        <image xlink:href="../assets/resources/flat-hex.svg" :height=162/328*20 width=20 x=-10 y=-4 />
+      </g>
+      <g transform="scale(1) translate(13,0)">
+        <image xlink:href="../assets/resources/flat-hex.svg" :height=162/328*20 width=20 x=-10 y=-4 />
+      </g>
+      <g transform="translate(1,0) rotate(70)">
+        <image xlink:href="../assets/resources/range-arrow.svg" :height=285/164*9 width=10 x=-5 y=-8 />
+      </g>
+      <text v-if="count >= 1" x="13" y="1.2" stroke-width="0.3" style="font-weight: bold; font-size: 10px">
+        {{ count }}
       </text>
     </template>
     <template v-else-if="kind === 'ship-range'">
@@ -266,6 +273,23 @@ g.resource {
 
   .power {
     fill: var(--res-power);
+  }
+
+  .token-area-badge {
+    pointer-events: none;
+
+    circle {
+      fill: white;
+      stroke: #333;
+      stroke-width: 0.5;
+    }
+
+    text {
+      font-size: 5px;
+      font-weight: bold;
+      fill: #333;
+      text-anchor: middle;
+    }
   }
 
   .power-ring {
