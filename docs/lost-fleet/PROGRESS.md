@@ -1509,15 +1509,26 @@ As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
 
 ## Testing — required going forward
 
+**Always run test commands with `--reporter min`, not the default `spec` reporter** (standing
+instruction, added 2026-07-03 after a token-usage review): the default reporter prints one line per
+passing test (500+ lines for the full engine suite alone), which gets dumped into every session's
+context on every run. `min` prints only failures (with full failure detail — nothing is lost for
+debugging) plus the final `N passing`/`N failing` summary line. Confirmed working for both the
+engine (raw `mocha`) and the viewer (`vue-cli-service test:unit` forwards `--reporter` through to
+`mochapack`/`mocha` under the hood). Don't change the `test` npm scripts themselves (the owner may
+want full spec output when running locally) — just append `--reporter min` to the command
+invoked in a session.
+
 Real test commands (don't use raw `mocha -r ts-node/register` for the viewer — it hits stricter
 TS resolution than the real webpack-based path and gives false failures; use the actual scripts):
 
-- Engine: `cd engine && npm test` (or `npx mocha -r ts-node/register 'src/**/*.spec.ts' 'src/*.spec.ts'`
-  — equivalent for engine, which has no webpack step). **548 tests passing as of 2026-07-03.**
-- Viewer: `cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'`
-  (this is what `pnpm test` runs — uses `mochapack`/webpack, required for files that touch engine
-  types). **238 tests passing as of 2026-07-02** (one unrelated pre-existing flaky test, see #55;
-  not re-run in #56, which was engine-only and didn't touch the viewer).
+- Engine: `cd engine && npx mocha -r ts-node/register --reporter min 'src/**/*.spec.ts' 'src/*.spec.ts'`
+  (equivalent to `npm test` but with the quiet reporter). **548 tests passing as of 2026-07-03.**
+- Viewer: `cd viewer && npx vue-cli-service test:unit --timeout 4000 --reporter min 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'`
+  (this is what `pnpm test` runs, plus `--reporter min` — uses `mochapack`/webpack, required for
+  files that touch engine types). **238 tests passing as of 2026-07-02** (one unrelated
+  pre-existing flaky test, see #55; not re-run in #56, which was engine-only and didn't touch the
+  viewer).
 
 **Latest full rerun after #56:** engine **548/548** (531 baseline from #55 + 17 new: 5
 `faction-boards/lantids.spec.ts`, 12 `research-tracks.spec.ts`; no regressions). Viewer last
