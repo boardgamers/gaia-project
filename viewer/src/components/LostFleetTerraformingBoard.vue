@@ -8,25 +8,6 @@
       </p>
     </div>
 
-    <section class="lost-fleet-terraforming-board__card" data-row="board">
-      <div class="lost-fleet-terraforming-board__eyebrow">Shared row</div>
-      <div class="lost-fleet-terraforming-board__row">
-        <div
-          v-for="(planet, index) in boardPlanets"
-          :key="`board-${planet}`"
-          :data-slot="index + 1"
-          :data-planet="planet"
-          class="lost-fleet-terraforming-board__slot"
-        >
-          <svg viewBox="-1.1 -1.1 2.2 2.2" class="lost-fleet-terraforming-board__planet">
-            <Planet :planet="planet" :classes="[]" />
-          </svg>
-          <div class="lost-fleet-terraforming-board__planet-name">{{ planetName(planet) }}</div>
-          <div class="lost-fleet-terraforming-board__index">{{ index + 1 }}</div>
-        </div>
-      </div>
-    </section>
-
     <section
       v-if="showMandatoryRow"
       class="lost-fleet-terraforming-board__card lost-fleet-terraforming-board__card--mandatory"
@@ -56,42 +37,6 @@
         </div>
       </div>
     </section>
-
-    <section
-      v-for="player in terraformingPlayers"
-      :key="player.player"
-      :data-player="player.faction"
-      class="lost-fleet-terraforming-board__card"
-    >
-      <div class="lost-fleet-terraforming-board__eyebrow">{{ playerTitle(player) }}</div>
-      <template v-if="resolvedCost3Planets(player).length > 0">
-        <div class="lost-fleet-terraforming-board__subtext">
-          Exact 3-step planets for this player in this game.
-        </div>
-        <div class="lost-fleet-terraforming-board__row">
-          <div
-            v-for="(planet, index) in boardPlanets"
-            :key="`${player.player}-${planet}`"
-            :data-slot="index + 1"
-            :data-planet="planet"
-            :data-selected="resolvedCost3Planets(player).includes(planet) ? 'true' : 'false'"
-            :class="[
-              'lost-fleet-terraforming-board__slot',
-              { 'lost-fleet-terraforming-board__slot--selected': resolvedCost3Planets(player).includes(planet) },
-            ]"
-          >
-            <svg viewBox="-1.1 -1.1 2.2 2.2" class="lost-fleet-terraforming-board__planet">
-              <Planet :planet="planet" :classes="[]" />
-            </svg>
-            <div class="lost-fleet-terraforming-board__planet-name">{{ planetName(planet) }}</div>
-            <div class="lost-fleet-terraforming-board__index">{{ index + 1 }}</div>
-          </div>
-        </div>
-      </template>
-      <div v-else class="lost-fleet-terraforming-board__subtext">
-        Final 3-step colors resolve after all factions are chosen.
-      </div>
-    </section>
   </div>
 </template>
 
@@ -99,14 +44,8 @@
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
 import Engine, { Expansion, hasExpansion, Planet, Player } from "@gaia-project/engine";
-import {
-  factionPlanet,
-  isBaseGameFaction,
-  isTerraformingBoardFaction,
-  lostFleetTerraformingBoard,
-} from "@gaia-project/engine/src/factions";
+import { factionPlanet, isBaseGameFaction, lostFleetTerraformingBoard } from "@gaia-project/engine/src/factions";
 import { planetNames } from "../data/planets";
-import { factionName } from "../data/factions";
 import { gameSeed, phaseBeforeSetupBuilding } from "../logic/utils";
 import PlanetView from "./Planet.vue";
 
@@ -135,10 +74,6 @@ export default class LostFleetTerraformingBoard extends Vue {
     return this.engine.players.filter((player) => !!player.faction);
   }
 
-  get terraformingPlayers(): Player[] {
-    return this.chosenPlayers.filter((player) => isTerraformingBoardFaction(player.faction));
-  }
-
   get mandatoryPlanets(): Planet[] {
     const chosen = new Set(
       this.chosenPlayers.filter((player) => isBaseGameFaction(player.faction)).map((player) => factionPlanet(player.faction))
@@ -151,20 +86,16 @@ export default class LostFleetTerraformingBoard extends Vue {
     return phaseBeforeSetupBuilding(this.engine) && this.mandatoryPlanets.length > 0;
   }
 
+  // The shared 7-color row and the per-player "exact 3-step planets" card were removed: the row
+  // duplicated SpaceMap.vue's top-right swatches, and each Tinkeroids/Moweyds player's resolved
+  // cost-3 colors are already shown on their own faction board (PlayerInfo.vue). Only the
+  // "mandatory so far" preview (opponent home colors, before all cost-3 slots are known) remains.
   get visible(): boolean {
-    return this.isLostFleet && this.boardPlanets.length > 0 && (phaseBeforeSetupBuilding(this.engine) || this.terraformingPlayers.length > 0);
+    return this.isLostFleet && this.showMandatoryRow;
   }
 
   planetName(planet: Planet): string {
     return planetNames[planet];
-  }
-
-  playerTitle(player: Player): string {
-    return factionName(player.faction);
-  }
-
-  resolvedCost3Planets(player: Player): Planet[] {
-    return player.data?.lostFleetCost3Planets ?? [];
   }
 }
 </script>

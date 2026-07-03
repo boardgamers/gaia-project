@@ -5,7 +5,7 @@ import { makeStore } from "../store";
 import LostFleetTerraformingBoard from "./LostFleetTerraformingBoard.vue";
 
 describe("LostFleetTerraformingBoard", () => {
-  it("shows the seeded 7-color row and currently mandatory colors during setup", () => {
+  it("shows currently mandatory colors during setup, without a shared-row or per-player box", () => {
     const engine = new Engine(
       ["init 3 lost-fleet-terraforming-setup", "p1 faction tinkeroids", "p2 faction terrans"],
       { lostFleet: true }
@@ -15,15 +15,20 @@ describe("LostFleetTerraformingBoard", () => {
 
     const { container } = render(LostFleetTerraformingBoard, { store });
 
-    expect(container.querySelectorAll('[data-row="board"] [data-slot]').length).to.equal(7);
     expect(container.querySelector('[data-row="mandatory"]')).to.not.equal(null);
     expect(container.querySelector('[data-row="mandatory"] [data-planet="' + Planet.Terra + '"]')?.getAttribute("data-selected")).to.equal(
       "true"
     );
-    expect(container.textContent).to.contain("Final 3-step colors resolve after all factions are chosen.");
+    // The shared 7-color row and per-player "exact 3-step planets" card were removed - the row
+    // duplicated SpaceMap.vue's top-right swatches, and resolved colors already live on each
+    // player's own faction board (PlayerInfo.vue).
+    expect(container.querySelector('[data-row="board"]')).to.equal(null);
+    expect(container.querySelector("[data-player]")).to.equal(null);
+    expect(container.textContent).to.not.contain("Shared row");
+    expect(container.textContent).to.not.contain("Final 3-step colors resolve after all factions are chosen.");
   });
 
-  it("shows resolved 3-step colors for Tinkeroids and Moweyds after faction setup", () => {
+  it("renders nothing once faction setup finishes and there's no mandatory-so-far content left to show", () => {
     const engine = new Engine(
       [
         "init 3 lost-fleet-terraforming-resolved",
@@ -38,24 +43,8 @@ describe("LostFleetTerraformingBoard", () => {
 
     const { container } = render(LostFleetTerraformingBoard, { store });
 
-    const tinkeroidsPlanets = engine.players[0].data.lostFleetCost3Planets;
-    const moweydsPlanets = engine.players[2].data.lostFleetCost3Planets;
-
-    expect(container.querySelector('[data-player="tinkeroids"]')).to.not.equal(null);
-    expect(container.querySelector('[data-player="moweyds"]')).to.not.equal(null);
-    expect(container.querySelectorAll('[data-player="tinkeroids"] [data-selected="true"]').length).to.equal(3);
-    expect(container.querySelectorAll('[data-player="moweyds"] [data-selected="true"]').length).to.equal(3);
-
-    tinkeroidsPlanets.forEach((planet) => {
-      expect(container.querySelector('[data-player="tinkeroids"] [data-planet="' + planet + '"]')?.getAttribute("data-selected")).to.equal(
-        "true"
-      );
-    });
-
-    moweydsPlanets.forEach((planet) => {
-      expect(container.querySelector('[data-player="moweyds"] [data-planet="' + planet + '"]')?.getAttribute("data-selected")).to.equal(
-        "true"
-      );
-    });
+    // Resolved Tinkeroids/Moweyds cost-3 colors now live only on PlayerInfo.vue's own faction
+    // board (see PlayerInfo.spec.ts), not duplicated here.
+    expect(container.querySelector(".lost-fleet-terraforming-board")).to.equal(null);
   });
 });

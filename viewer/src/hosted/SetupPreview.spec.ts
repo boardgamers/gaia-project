@@ -29,19 +29,44 @@ function seedText(container: HTMLElement): string | null {
 // Full render-path coverage for the setup-preview screen: real Lost Fleet
 // components (map/research/scoring/ships/terraforming board), the live
 // click-to-rotate mechanism (no arming step), reroll/seed history, player
-// count changes, and the German-rules lock-in guard. Follows the render-path
-// testing convention from PERFORMANCE.md / SpaceMap.spec.ts.
+// count changes, and the German-rules validity guard - no separate lock-in
+// step, the preview continuously emits its current state instead. Follows
+// the render-path testing convention from PERFORMANCE.md / SpaceMap.spec.ts.
 describe("SetupPreview", () => {
   it("renders a full Lost Fleet setup with real components", async () => {
-    const { container, getByText } = render(SetupPreview, { props: { playerCount: 2 } });
+    const { container } = render(SetupPreview, { props: { playerCount: 2 } });
     await Vue.nextTick();
 
     expect(container.querySelectorAll(".sector").length).to.be.greaterThan(0);
     expect(container.querySelectorAll("svg.lost-fleet-ship").length).to.equal(3); // Rebellion excluded at 2p
-    expect(container.querySelector(".lost-fleet-terraforming-board")).to.not.equal(null);
+    // LostFleetTerraformingBoard only renders once there's a mandatory-so-far color to show (a
+    // base-game opponent faction has been picked) - no factions are chosen yet in this preview, so
+    // it stays hidden (its "shared row"/per-player boxes were removed entirely, see #3).
+    expect(container.querySelector(".lost-fleet-terraforming-board")).to.equal(null);
     expect(container.querySelector("svg.research-board")).to.not.equal(null);
     expect(seedText(container)).to.be.a("string").that.is.not.empty;
-    expect(getByText("Lock in this setup")).to.not.equal(null);
+    // No separate lock-in step - "Create game" lives in CreateGame.vue and
+    // acts on whatever SetupPreview currently emits.
+    expect(container.textContent).to.not.contain("Lock in");
+  });
+
+  it("emits the current setup state on mount and after every seed/rotation change", async () => {
+    const { container, getByText, emitted } = render(SetupPreview, { props: { playerCount: 2 } });
+    await Vue.nextTick();
+
+    const initial = emitted()["update"];
+    expect(initial).to.not.equal(undefined);
+    const initialPayload = initial[initial.length - 1][0];
+    expect(initialPayload.seed).to.equal(seedText(container));
+    expect(initialPayload.valid).to.equal(true);
+
+    await fireEvent.click(firstSectorHex(container));
+    await Vue.nextTick();
+
+    const afterRotate = emitted()["update"];
+    const latest = afterRotate[afterRotate.length - 1][0];
+    expect(latest.rotateMove).to.match(/^p2 rotate( .+ 1)?$/);
+    expect(latest.valid).to.be.a("boolean");
   });
 
   it("clicking a hex increments its sector's rotation exactly once per click", async () => {
@@ -91,8 +116,8 @@ describe("SetupPreview", () => {
     expect(container.querySelectorAll("svg.lost-fleet-ship").length).to.equal(4); // Rebellion included at 3p
   });
 
-  it("disables lock-in and shows a message for a rotation that violates the German-rules assert", async () => {
-    const { container, getByText } = render(SetupPreview, { props: { playerCount: 2 } });
+  it("shows a warning and emits valid: false for a rotation that violates the German-rules assert", async () => {
+    const { container, getByText, emitted } = render(SetupPreview, { props: { playerCount: 2 } });
     await Vue.nextTick();
 
     // Same seed/center/rotation as the engine regression test
@@ -111,24 +136,8 @@ describe("SetupPreview", () => {
     }
 
     expect(container.textContent).to.contain("Map is invalid with two planets for the same type being near each other");
-    const lockIn = getByText("Lock in this setup") as HTMLButtonElement;
-    expect(lockIn.disabled).to.equal(true);
-  });
-
-  it("emits lock-in with the seed and rotate move once a valid setup is confirmed", async () => {
-    const { container, getByText, emitted } = render(SetupPreview, { props: { playerCount: 2 } });
-    await Vue.nextTick();
-
-    await fireEvent.click(firstSectorHex(container));
-    await Vue.nextTick();
-
-    await fireEvent.click(getByText("Lock in this setup"));
-    await Vue.nextTick();
-
-    const events = emitted()["lock-in"];
-    expect(events).to.not.equal(undefined);
-    const payload = events[0][0];
-    expect(payload.seed).to.equal(seedText(container));
-    expect(payload.rotateMove).to.match(/^p2 rotate( .+ 1)?$/);
+    const events = emitted()["update"];
+    const latest = events[events.length - 1][0];
+    expect(latest.valid).to.equal(false);
   });
 });

@@ -17,6 +17,16 @@
         :hex="hex"
         :isCenter="false"
       />
+      <text
+        v-for="label in deepSpaceLabels"
+        :key="`ds-${label.id}`"
+        class="sector-name"
+        data-sector-type="deep-space"
+        :transform="`translate(${label.x}, ${label.y})`"
+        x="0"
+        y="0"
+        dy="0.35"
+      >{{ label.id }}</text>
       <circle
         v-for="(s, i) in highlightedSectors"
         :key="i"
@@ -28,7 +38,7 @@
     </g>
     <FactionWheel
       class="faction-wheel"
-      :transform="`translate(${bounds.left + 3.1}, ${bounds.top + 2.9}) scale(0.65)`"
+      :transform="`translate(${bounds.left + 2.9}, ${bounds.top + 2.9}) scale(0.65)`"
     />
     <image v-if="showCharts" xlink:href="../assets/other/line-chart.svg" :height=155/211*22 width="22" x="-11" y="-8"
     v-b-modal.chart-button role="button" :transform="`translate(${bounds.right - 1.9}, ${bounds.top + 1.4}) scale(0.1)`"
@@ -43,11 +53,13 @@
       :y="bounds.top + 0.3"
       v-b-tooltip
       :title="`Terraforming board color ${i + 1}`"
+      stroke="#1a1a1a"
+      stroke-width="0.07"
     />
     <g
       v-for="(color, i) in colorLegend"
       :key="i"
-      :transform="`translate(${bounds.left + 0.6}, ${bounds.top + 7 + 2 * i}) scale(.8)`"
+      :transform="`translate(${bounds.left + 0.6}, ${bounds.top + 8 + 2 * i}) scale(.8)`"
     >
       <rect width="2" height="2" class="color-legend leech" :class="color.class" />
       <text class="color-legend" transform="translate(1, 1.55)">{{ color.text }}</text>
@@ -69,13 +81,64 @@ import Engine, {
 } from "@gaia-project/engine";
 import { lostFleetTerraformingBoard } from "@gaia-project/engine/src/factions";
 import { hexCenter } from "../graphics/hex";
-import { gameSeed } from "../logic/utils";
+import { gameSeed, isBeforeRound1 } from "../logic/utils";
 import Sector from "./Sector.vue";
 import { CubeCoordinates } from "hexagrid";
 import FactionWheel from "./FactionWheel.vue";
 import Definitions from "./definitions/Definitions.vue";
 import { MapMode, MapModeType } from "../data/actions";
 import SpaceHex from "./SpaceHex.vue";
+
+type Point = { x: number; y: number };
+
+// Rendered (post scale(0.65)) footprint of FactionWheel.vue's content, relative to its own
+// translate anchor: the 7-planet ring is the dominant width contributor (local x in
+// [-2.93, 2.93], +1 for the planet circles' own radius); the 2x2 extra-planet grid added in
+// Lost Fleet is narrower than the ring but taller, dominating the height instead. See
+// SpaceMap.spec.ts's "keeps the wheel ... in the left sidebar" test for the derivation.
+const WHEEL_WIDTH = 5.5;
+const WHEEL_HEIGHT = 7.9;
+
+// Rendered footprint of the top-right UI, relative to `bounds.right`: the Tinkeroids/Moweyds
+// terraforming swatches (visible pre-round-1) are wider than the chart-history icon (visible once
+// every seat has a faction) - the two are never both meant to be the binding constraint at once,
+// so `bounds` just reserves whichever is currently on screen.
+const RIGHT_SWATCH_WIDTH = 7.5;
+const RIGHT_ICON_WIDTH = 3;
+const RIGHT_BAND_HEIGHT = 2.5;
+
+// Small safety gap kept between a hex's own edge (radius 1) and the nearest UI content edge, on
+// top of the content's own measured footprint.
+const CLEARANCE = 0.3;
+
+// translate() offset used by the color-legend template loop, plus its own per-item rendered size
+// (a 2x2 rect at scale(.8)).
+const LEGEND_TOP_OFFSET = 8;
+const LEGEND_ITEM_HEIGHT = 2;
+const LEGEND_ITEM_SIZE = 1.6;
+
+/** The largest x among points whose y falls within [top, top + height], i.e. how far right hexes
+ * reach into the given top band - the constraint on how much left-side room is actually free. */
+function bandMinX(points: Point[], top: number, height: number): number {
+  let min = Infinity;
+  for (const p of points) {
+    if (p.y <= top + height) {
+      min = Math.min(min, p.x);
+    }
+  }
+  return min;
+}
+
+/** Mirror of `bandMinX` for the right side. */
+function bandMaxX(points: Point[], top: number, height: number): number {
+  let max = -Infinity;
+  for (const p of points) {
+    if (p.y <= top + height) {
+      max = Math.max(max, p.x);
+    }
+  }
+  return max;
+}
 
 @Component<SpaceMap>({
   components: {
@@ -104,6 +167,34 @@ export default class SpaceMap extends Vue {
       .sort((a, b) => a.q - b.q || a.r - b.r || a.s - b.s);
   }
 
+  /**
+   * One label per physical Deep Space tile (3 mutually-adjacent hexes sharing a `DS<id>_<0-2>`
+   * sector id), centered on the centroid of its 3 hexes rather than pinned to one of them - a
+   * single hex within the tile can hold a planet, and the old per-hex badge (anchored to hex 0)
+   * sat right on top of it. Styled via the same `.sector-name` class as the big Space-sector
+   * numbers (task: "match sector label styling"), not the small badge font.
+   */
+  get deepSpaceLabels(): { id: string; x: number; y: number }[] {
+    const groups = new Map<string, GaiaHex[]>();
+    for (const hex of this.looseHexes) {
+      if (classifySectorId(hex.data.sector) === LostFleetSectorType.DeepSpace) {
+        const id = hex.data.sector.split("_")[0].replace(/^DS/, "");
+        const list = groups.get(id);
+        if (list) {
+          list.push(hex);
+        } else {
+          groups.set(id, [hex]);
+        }
+      }
+    }
+    return [...groups.entries()].map(([id, hexes]) => {
+      const centers = hexes.map((h) => hexCenter(h));
+      const x = (centers.reduce((sum, c) => sum + c.x, 0) / centers.length) * 1.01;
+      const y = (centers.reduce((sum, c) => sum + c.y, 0) / centers.length) * 1.01;
+      return { id, x, y };
+    });
+  }
+
   rotation(center: CubeCoordinates) {
     return this.$store.state.context.rotation.get(`${center.q}x${center.r}`) || 0;
   }
@@ -124,11 +215,17 @@ export default class SpaceMap extends Vue {
     return hasExpansion(this.engine.expansions, Expansion.LostFleet);
   }
 
-  /** The Tinkeroids/Moweyds shared terraforming-color row (RULES_CLARIFICATIONS.md §B5), shown as
-   * 7 plain squares in the map's top-right corner - same colors as LostFleetTerraformingBoard.vue's
-   * "shared row", just without any of that component's text/cards for a quick at-a-glance read. */
+  /**
+   * The Tinkeroids/Moweyds shared terraforming-color row (RULES_CLARIFICATIONS.md §B5), shown as 7
+   * plain bordered squares in the map's top-right corner, visible only through round-1 setup
+   * (initial mine/ship placement) - once round 1 actually begins, the terraforming board has done
+   * its job (every relevant player's cost-3 colors are locked onto their own faction board) and
+   * these squares would just be redundant map clutter for the rest of the game. The setup-preview
+   * screen's own scratch engine never advances past round 0 (see `isBeforeRound1`'s doc comment),
+   * so the squares stay visible there unconditionally.
+   */
   get terraformingColors(): Planet[] {
-    if (!this.isLostFleet) {
+    if (!this.isLostFleet || !isBeforeRound1(this.engine)) {
       return [];
     }
     const seed = gameSeed(this.engine);
@@ -153,9 +250,18 @@ export default class SpaceMap extends Vue {
   /**
    * Bounding box of every hex on the board (in rendered units, i.e. hexCenter * 1.01 like the
    * template's transforms, rotated by mapRotationDeg to match what's actually rendered), padded by
-   * one hex radius, plus a reserved left sidebar where the faction wheel / legends live so they
-   * never cover hexes. Replaces the old hardcoded viewBox, which clipped the taller Lost Fleet
-   * 3p/4p layouts.
+   * one hex radius, plus just enough extra room on the left (faction wheel + color legend) and
+   * right (terraforming swatches / chart icon) for that UI to avoid overlapping hexes.
+   *
+   * This replaces a flat, always-on 5.6-unit left sidebar that reserved the same width for the
+   * map's entire height, even though the wheel only occupies the top corner - on the taller Lost
+   * Fleet 3p/4p layouts that wasted real width the map could otherwise fill (task: "map has too
+   * much reserved white space"). Lost Fleet's sector-center geometry is fixed per player count
+   * (only which tile/rotation lands where is randomized), and is symmetric enough that the
+   * existing per-count `mapRotationDeg` choices (0/120/0 for 2p/3p/4p, already width-optimal, see
+   * that getter's doc comment) also turn out to need the least *additional* left-side padding for
+   * the wheel - so no rotation changes were needed here, just tighter, band-limited reservations
+   * instead of a full-height one.
    */
   get bounds(): { left: number; top: number; right: number; bottom: number } {
     let minX = Infinity;
@@ -165,10 +271,12 @@ export default class SpaceMap extends Vue {
     const rad = (this.mapRotationDeg * Math.PI) / 180;
     const cos = Math.cos(rad);
     const sin = Math.sin(rad);
+    const points: Point[] = [];
     for (const hex of this.map.grid.values()) {
       const c = hexCenter(hex);
       const x = (c.x * cos - c.y * sin) * 1.01;
       const y = (c.x * sin + c.y * cos) * 1.01;
+      points.push({ x, y });
       minX = Math.min(minX, x);
       maxX = Math.max(maxX, x);
       minY = Math.min(minY, y);
@@ -179,12 +287,29 @@ export default class SpaceMap extends Vue {
       return { left: -13, top: -11.5, right: 13, bottom: 12.5 };
     }
     const hexPad = 1.3;
-    // Was 6 when a Lost Fleet legend box also lived in this sidebar (removed). The faction wheel
-    // (translate(...) + 2.6 half-width at its scale(0.65)) is now the binding constraint on this
-    // reserved width, not the old legend - 5.6 is the smallest value that still clears it with
-    // margin (see SpaceMap.spec.ts's "keeps the wheel ... in the left sidebar" test).
-    const sidebar = 5.6;
-    return { left: minX - hexPad - sidebar, top: minY - hexPad, right: maxX + hexPad, bottom: maxY + hexPad };
+    const tightLeft = minX - hexPad;
+    const tightRight = maxX + hexPad;
+    const top = minY - hexPad;
+    const bottom = maxY + hexPad;
+
+    // A hex's own edge sits `hexRadius` (1 unit) away from its center in every direction, so (a)
+    // a hex just below a band's cutoff can still poke its top edge up into that band - query the
+    // band with its height extended by hexRadius to catch those - and (b) once a band-relevant
+    // hex's x is found, the content's near edge must clear that hex's OWN edge (bandX -+ radius),
+    // plus a small extra CLEARANCE margin, not just clear the hex's bare center.
+    const hexRadius = 1;
+
+    const legendCount = this.colorLegend.length;
+    const legendBottom = legendCount > 0 ? LEGEND_TOP_OFFSET + (legendCount - 1) * LEGEND_ITEM_HEIGHT + LEGEND_ITEM_SIZE : 0;
+    const leftBandHeight = Math.max(WHEEL_HEIGHT, legendBottom);
+    const leftLimit = bandMinX(points, top, leftBandHeight + hexRadius) - hexRadius - CLEARANCE - WHEEL_WIDTH;
+    const left = Math.min(tightLeft, leftLimit);
+
+    const rightWidth = this.terraformingColors.length > 0 ? RIGHT_SWATCH_WIDTH : this.showCharts ? RIGHT_ICON_WIDTH : 0;
+    const rightLimit = bandMaxX(points, top, RIGHT_BAND_HEIGHT + hexRadius) + hexRadius + CLEARANCE + rightWidth;
+    const right = rightWidth > 0 ? Math.max(tightRight, rightLimit) : tightRight;
+
+    return { left, top, right, bottom };
   }
 
   get viewBox(): string {

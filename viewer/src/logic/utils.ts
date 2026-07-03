@@ -6,6 +6,7 @@ import Engine, {
   Resource,
   Resource as ResourceEnum,
   Reward,
+  Round,
   SpaceMap,
 } from "@gaia-project/engine";
 import { upgradedBuildings } from "@gaia-project/engine/src/buildings";
@@ -32,6 +33,18 @@ export function phaseBeforeSetupBuilding(data: Engine): boolean {
     data.phase === Phase.SetupFaction ||
     data.phase === Phase.SetupAuction
   );
+}
+
+/**
+ * True through every setup phase (faction/board/auction/initial mine & ship
+ * placement, boosters) and false from the moment round 1's income phase
+ * begins - `engine.round` stays `Round.None` (0) for the whole setup stage
+ * and only becomes 1 once `beginRoundStartPhase` (move/phase.ts) runs. The
+ * setup-preview screen's scratch engine never advances past `SetupFaction`
+ * (it only ever replays the "init" move), so this is also always true there.
+ */
+export function isBeforeRound1(data: Engine): boolean {
+  return data.round === Round.None;
 }
 
 export const deltaCounter: (initial: number) => (val: number) => number = (initial: number) => {

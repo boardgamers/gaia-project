@@ -1688,6 +1688,108 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       7 squares top-right, single deep-space numbers, IS-border labels) all render correctly
       together, not just in isolation per-component.
 
+59. ✅ **10 more owner-reported setup-preview/map-layout fixes — CODED, TESTED & visually verified**
+    (done 2026-07-03, follow-up session to #58, same overall batch of user-facing polish, `viewer/`
+    only). All in `viewer/src/`:
+    - **Setup preview can now be zoomed/panned.** `hosted/SetupPreview.vue` unlocks pinch-zoom
+      (`hosted/viewport.ts`'s `setViewportZoomLocked(false)`) for as long as it's mounted, restoring
+      the Lobby/CreateGame default (locked, "one-handed phone" mode) on `beforeDestroy` — the same
+      mechanism the real game board already used, just not previously extended to this screen.
+    - **Terraforming-board squares (top-right of the map) now have a dark border**
+      (`stroke="#1a1a1a"` on `SpaceMap.vue`'s `.lost-fleet-terraform-swatch` rects) **and are hidden
+      in the live game once round 1 begins.** New `logic/utils.ts` helper `isBeforeRound1(engine)` =
+      `engine.round === Round.None` — true through every setup phase (including initial mine/ship
+      placement) and false the moment `beginRoundStartPhase` runs. The setup-preview screen's own
+      scratch engine never advances past `SetupFaction` (it only ever replays the `init` move), so
+      it's always round 0 there — the same check covers "always visible on the preview screen" for
+      free, no separate flag needed.
+    - **`LostFleetTerraformingBoard.vue`'s "shared row" box and per-player "exact 3-step planets"
+      box deleted entirely** (both setup preview and live game render this same component) — the
+      shared row duplicated the map's own top-right swatches (previous point), and each Tinkeroids/
+      Moweyds player's resolved cost-3 colors are already shown on their own faction board
+      (`PlayerInfo.vue`, confirmed via `player.data.lostFleetCost3Planets`). Only the "mandatory so
+      far" preview (opponent home colors, before all cost-3 slots are known) remains; `visible` is
+      now tied directly to `showMandatoryRow` having content, so the component simply doesn't render
+      once there's nothing left to show it for.
+    - **"Lock in this setup" button removed.** `SetupPreview.vue` no longer requires an explicit
+      confirm step — every seed/rotation change now emits a live `update` event
+      (`{seed, rotateMove, valid}`) instead of only emitting once on a button click.
+      `hosted/CreateGame.vue` tracks that as `currentSeed`/`currentRotateMove`/`setupValid` and
+      "Create game" acts on whatever's currently shown, gated only on `setupValid` (still runs the
+      same German-rules-adjacency check via `setup-preview.ts`'s `validateRotation`, just
+      continuously instead of on-click).
+    - **Map width for 3p/4p: the flat, always-on 5.6-unit left sidebar (from #58) is gone**,
+      replaced with a real-geometry-driven reservation. `SpaceMap.vue`'s `bounds` getter now computes
+      how much hex-free room actually exists in the top band the faction wheel occupies (and,
+      separately, whatever's currently visible top-right — the terraforming swatches pre-round-1, or
+      the chart-history icon once every seat has a faction), and only reserves exactly that much
+      width past the tight hex bounding box, on whichever side needs it — instead of a fixed margin
+      reserved for the map's entire height regardless of the actual per-seed/per-rotation shape.
+      Measured via a real generated Lost Fleet board (not guessed): the existing per-count
+      `mapRotationDeg` choices (0/120/0 for 2p/3p/4p, already width-optimal per #47's derivation)
+      also turn out to need the least *additional* left-side padding for the wheel, so no rotation
+      changes were needed — just the tighter reservation math. `SpaceMap.spec.ts`'s old "wheel stays
+      left of every hex on the board" assertion (implicitly locking in the full-height-sidebar
+      design) was replaced with a real overlap check between the wheel's own rendered footprint and
+      every hex's own edge (not just its bare center) within the wheel's actual vertical band.
+    - **FactionWheel's 4 extra planet slots (Gaia/Transdim/Asteroid/Protoplanet) are circles again**,
+      matching the ring's own planet markers, arranged in a compact 2x2 grid (narrower than the
+      single row of squares from #58, and narrower than the ring itself, so it's never the binding
+      width constraint) instead of squares in a single wide row.
+    - **Interspace tile "IS123" labels no longer leak a face-letter suffix.** Space sector ids for
+      sectors 5/6/7 are never plain digits — `map.ts` names them "5A"/"5B"/"6A"/"6B"/"7A"/"7B" (one
+      face or the other always in play, every player count, per §H4/§H1) — but `SpaceHex.vue`'s
+      `interspaceBorderLabel` only stripped a leading "s", not a trailing face letter, so any
+      Interspace hex bordering sector 5/6/7 rendered e.g. "IS1235B" instead of "IS123". This was not
+      an edge case: every Lost Fleet game includes at least one of sectors 5/6/7, so the bug fired in
+      effectively every game. Fixed the sector-number extraction regex; `SpaceMap.spec.ts`'s existing
+      badge-format assertion tightened from `/^IS[\dA-Z]+$/` to `/^IS\d+$/` against the
+      `lost-fleet-space-map` seed (which includes 5B/6B/7B at 2p) to regression-test it.
+    - **Deep Space labels now match the big Space-sector-number styling** (reusing the exact
+      `.sector-name` CSS class, not the small badge font) **and are centered on the centroid of all
+      3 hexes in the physical tile**, not pinned to one hex's corner (which could sit on top of
+      whichever of the 3 hexes happened to hold a planet). Moved out of `SpaceHex.vue` (a per-hex
+      component) into a new `SpaceMap.vue` getter, `deepSpaceLabels`, since centroid computation
+      needs all 3 hexes of a tile at once; `SpaceHex.vue`'s `lostFleetSectorBadge` now only handles
+      Interspace (still a genuine single-hex, on-hex label).
+    - **Sector-number labels hardened against cross-browser vertical-centering drift.** The DOM
+      math for the existing `.sector-name` text already measured pixel-perfect centered on its hex
+      in Chromium (`dx`/`dy` ≈ 0, confirmed both unrotated and after a live sector rotation via
+      `store.commit('rotate', ...)`), but `dominant-baseline: central` alone is a known
+      inconsistent-support area (notably WebKit/Safari, a common actual mobile target). Added an
+      explicit `dy="0.35"` on the `<text>` element itself (the standard cross-browser-safe
+      vertical-centering technique) as the real mechanism, keeping the CSS property only as a
+      fallback for renderers that ignore a bare `dy`. Applied to both the Space-sector numbers and
+      the new Deep Space labels (previous point), since both share the class now.
+    - **Final scoring tiles' top edge now aligns with the research track's top.** Root cause: the
+      shared `scoring-research-board` svg (`Game.vue` and `hosted/SetupPreviewBoard.vue`, identical
+      markup in both) placed `<ResearchBoard>` at its natural y=0 but `<ScoringBoard>` at `y="-25"`
+      — a fudge factor to keep the taller scoring board (its own `viewBox="0 0 80 480"` scaled by
+      `width="90"` renders ~540 outer units tall) from overflowing the shared viewBox's bottom, at
+      the cost of shifting every scoring tile, including the top-anchored `FinalScoringTile`s, ~25
+      units above the research track's top. Removed the `y="-25"` (both boards now start at the same
+      y), and grew the outer viewBox's height from 545 to 550 to keep covering ScoringBoard's ~540
+      unit height without clipping. Measured via Playwright against the real rendered page (not
+      guessed): top-of-research-track vs. top-of-first-final-scoring-tile went from a ~26px gap down
+      to ~1.7px (the two components' own small, different internal rect insets — 2 units vs. 1 —
+      not something further worth chasing). `Game.spec.ts`'s test that had locked in the old
+      `y="-25"` design (asserting the nested svg literally carried that attribute) was rewritten to
+      assert the new same-origin alignment and the still-no-clipping height invariant instead.
+    - Tests: `hosted/SetupPreview.spec.ts` (zoom-lock toggle path not itself unit-tested — it's a
+      real-DOM `document.querySelector` side effect outside the component tree — but the removed
+      lock-in button and new continuous `update` event are), `hosted/CreateGame.spec.ts`,
+      `components/SpaceMap.spec.ts` (bordered/round-gated swatches, wheel-overlap rewrite,
+      IS-label regex tightened, new Deep-Space-centroid test), `components/FactionWheel.spec.ts`
+      (2x2 circle grid), `components/LostFleetTerraformingBoard.spec.ts` (rewritten for the
+      deleted shared-row/per-player boxes), `components/Game.spec.ts` (scoring-board alignment
+      rewrite). **Viewer: 257/257 passing**, **engine: 569/569 passing** (engine untouched this
+      session; re-run anyway to confirm — no regressions), both production builds clean.
+    - Verified visually with Playwright against the self-contained `?lostFleet=1` demo: 2p/3p/4p at
+      a 1400x1400 desktop viewport (confirmed map width fill, bordered squares, 2x2 wheel circles,
+      centered Deep Space labels, aligned final scoring tiles) and 3p/4p at a 390x844 mobile
+      viewport (confirmed the map fills virtually the full screen width, the explicit goal of the
+      sidebar-reservation rework).
+
 49. ✅ **Full-game playout fuzzer, Phase 1 — generator core + driver + tier-1 structural oracles,
     CODED & TESTED** (done 2026-07-03, per `FUZZER_PLAN.md` §6 phase 1). New `engine/src/fuzz/`:
     `random-player.ts` (one arm per `Command` member, consuming ONLY `AvailableCommand.data`, never
@@ -1886,12 +1988,11 @@ TS resolution than the real webpack-based path and gives false failures; use the
 - Engine: `cd engine && npx mocha -r ts-node/register --reporter min 'src/**/*.spec.ts' 'src/*.spec.ts' '*.spec.ts'`
   (equivalent to `npm test` but with the quiet reporter — **all 3 glob patterns are required**,
   dropping the trailing `'*.spec.ts'` silently skips the root-level `wrapper.spec.ts` and undercounts
-  by 10). **548 tests passing as of 2026-07-03.**
+  by 10). **569 tests passing as of 2026-07-03** (per #59's rerun; engine itself untouched that
+  session, so this reflects growth from sessions between #58 and #59 not individually logged here).
 - Viewer: `cd viewer && npx vue-cli-service test:unit --timeout 4000 --reporter min 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'`
   (this is what `pnpm test` runs, plus `--reporter min` — uses `mochapack`/webpack, required for
-  files that touch engine types). **238 tests passing as of 2026-07-02** (one unrelated
-  pre-existing flaky test, see #55; not re-run in #56, which was engine-only and didn't touch the
-  viewer).
+  files that touch engine types). **257 tests passing as of 2026-07-03** (see #59).
 
 **Latest full rerun after #56:** engine **548/548** (531 baseline from #55 + 17 new: 5
 `faction-boards/lantids.spec.ts`, 12 `research-tracks.spec.ts`; no regressions). Viewer last
@@ -1920,6 +2021,14 @@ new `logic/utils.spec.ts` `gameSeed` cases + 1 net from `Resource.spec.ts`'s ran
 rewrite), engine **535/535** (531 baseline + 4 new `player-data.spec.ts` `effectiveRange` cases).
 Both production builds clean. Same pre-existing flaky `SetupPreview.spec.ts` seed test as
 always — not touched, not fixed, still out of scope.
+
+**Latest full rerun after #59 (2026-07-03, follow-up session):** viewer **257/257**, engine
+**569/569**, both production builds clean (`npx vue-cli-service build` run explicitly, not just
+inferred from tests passing). The pre-existing flaky `SetupPreview.spec.ts` seed test surfaced
+once during this session's iteration (1 failure out of a run) but 3 subsequent clean reruns were
+257/257 — consistent with the same known flake noted at #55/#57, not a regression; still not
+touched, still out of scope. `pnpm install` was required at session start (`node_modules` did not
+exist in this container).
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/

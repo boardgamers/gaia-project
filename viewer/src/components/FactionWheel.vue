@@ -30,20 +30,13 @@
       :data-planet="slot.planet"
       :transform="`translate(${slot.x}, ${slot.y})`"
     >
-      <rect
-        width="1.5"
-        height="1.5"
-        x="-0.75"
-        y="-0.75"
-        :class="['planet-fill', slot.planet]"
-        :style="`stroke-width: ${strokeWidth(slot.planet)}`"
-      />
+      <circle :r="1" :class="['planet-fill', slot.planet]" :style="`stroke-width: ${strokeWidth(slot.planet)}`" />
       <text
         :style="`font-size: 1.1px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(slot.planet)}`"
       >
         {{ remainingPlanets(slot.planet) }}
       </text>
-      <rect width="1.5" height="1.5" x="-0.75" y="-0.75" style="cursor: pointer; opacity: 0" @click="togglePlanetHighlight(slot.planet)" />
+      <circle :r="1" style="cursor: pointer; opacity: 0" @click="togglePlanetHighlight(slot.planet)" />
     </g>
   </g>
 </template>
@@ -105,12 +98,17 @@ export default class FactionWheel extends Vue {
       ? [...standardExtraPlanets, ...lostFleetExtraPlanets]
       : standardExtraPlanets;
 
-    // A single compact row directly under the ring (was a 2x2 block, roughly doubling the wheel's
-    // height) - square markers instead of the ring's circles so this reads as its own small
-    // legend rather than an odd extension of the turn-order ring.
+    // Circle markers (matching the ring's own planet circles) in a compact 2-column grid instead
+    // of a single wide row: narrower than the 7-planet ring itself, so it no longer widens the
+    // wheel's overall footprint - the map has more room to use the freed-up width.
     const spacing = 2;
-    const startX = -((planets.length - 1) * spacing) / 2;
-    return planets.map((planet, index) => ({ planet, x: startX + index * spacing, y: 4.6 }));
+    const columns = 2;
+    const startX = -((columns - 1) * spacing) / 2;
+    return planets.map((planet, index) => ({
+      planet,
+      x: startX + (index % columns) * spacing,
+      y: 4.6 + Math.floor(index / columns) * spacing,
+    }));
   }
 
   factionInitial(planet: Planet): string {

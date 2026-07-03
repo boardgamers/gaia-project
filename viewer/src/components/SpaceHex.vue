@@ -18,7 +18,7 @@
       :transform="`rotate(${l.rotate})`"
       pointer-events="none"
     />
-    <text class="sector-name" v-if="isCenter">
+    <text class="sector-name" v-if="isCenter" x="0" y="0" dy="0.35">
       {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
     </text>
     <g v-if="lostFleetSpaceship" class="lost-fleet-spaceship">
@@ -345,23 +345,18 @@ export default class SpaceHex extends Vue {
     return this.lostFleetSpaceship ? this.lostFleetSpaceshipLabels[this.lostFleetSpaceship] : "";
   }
 
-  get lostFleetSectorBadge(): { kind: "interspace" | "deep-space"; label: string } | null {
-    switch (this.sectorType) {
-      case LostFleetSectorType.Interspace:
-        // Interspace tiles sit between sectors and have no id printed on the physical tile, so
-        // reference them by which sectors they border (e.g. "IS123" borders sectors 1, 2, 3)
-        // instead of an arbitrary internal id.
-        return { kind: "interspace", label: this.interspaceBorderLabel };
-      case LostFleetSectorType.DeepSpace:
-        // A physical Deep Space tile is 3 mutually-adjacent hexes sharing one id
-        // (DS<n>_0/_1/_2) - only the first hex renders the badge, not all 3, since all 3 would
-        // otherwise show the identical label stacked on top of each other.
-        return this.hex.data.sector.endsWith("_0")
-          ? { kind: "deep-space", label: this.hex.data.sector.split("_")[0].replace(/^DS/, "") }
-          : null;
-      default:
-        return null;
+  // Deep Space tiles no longer render a per-hex badge here - SpaceMap.vue renders one big
+  // sector-style label centered across all 3 hexes of the tile instead (see its
+  // `deepSpaceLabels` getter), matching the sector-number styling and staying clear of whichever
+  // of the 3 hexes happens to hold a planet.
+  get lostFleetSectorBadge(): { kind: "interspace"; label: string } | null {
+    if (this.sectorType === LostFleetSectorType.Interspace) {
+      // Interspace tiles sit between sectors and have no id printed on the physical tile, so
+      // reference them by which sectors they border (e.g. "IS123" borders sectors 1, 2, 3)
+      // instead of an arbitrary internal id.
+      return { kind: "interspace", label: this.interspaceBorderLabel };
     }
+    return null;
   }
 
   get badgeWidth(): number {
@@ -369,18 +364,23 @@ export default class SpaceHex extends Vue {
     return Math.max(0.72, 0.22 + label.length * 0.13);
   }
 
-  /** Sorted, deduped sector numbers this Interspace hex is grid-adjacent to, e.g. "IS123". */
+  /**
+   * Sorted, deduped sector numbers this Interspace hex is grid-adjacent to, e.g. "IS123". Space
+   * sector ids are never plain digits for sectors 5/6/7 - they're always a face-letter variant
+   * (`map.ts`'s `s5`/`s5b`/`s6`/`s6b`/`s7`/`s7b` name to "5A"/"5B"/"6A"/"6B"/"7A"/"7B", one face or
+   * the other always in play, per RULES_CLARIFICATIONS.md §H4/H1) - so the trailing face letter
+   * must be stripped, not just an occasional leading "s", or it leaks into the label (e.g. the old
+   * "IS1235B" bug) and breaks the "named for the 3 adjacent sector numbers" convention.
+   */
   private get interspaceBorderLabel(): string {
-    const sectorNumber = (sector: string): string => (sector[0] === "s" ? sector.slice(1) : sector);
+    const sectorNumber = (sector: string): string => sector.replace(/^s/, "").replace(/[A-Za-z]+$/, "");
     const borders = new Set<string>();
     for (const neighbour of this.map.grid.neighbours(this.hex)) {
       if (classifySectorId(neighbour.data.sector) === LostFleetSectorType.Space) {
         borders.add(sectorNumber(neighbour.data.sector));
       }
     }
-    // sector names aren't always pure numbers (e.g. an extra "6B" tile alongside "6"), so sort
-    // numerically first and fall back to a plain string compare for same-number variants.
-    const sorted = [...borders].sort((a, b) => parseInt(a, 10) - parseInt(b, 10) || a.localeCompare(b));
+    const sorted = [...borders].sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
     return "IS" + sorted.join("");
   }
 
@@ -635,6 +635,10 @@ svg {
 
   .sector-name {
     text-anchor: middle;
+    // `dominant-baseline: central` alone is not reliably centered across every renderer (notably
+    // WebKit/Safari, incl. mobile) - the `dy` on the element itself (see the templates that use
+    // this class) is the actual vertical-centering mechanism; this is kept only as a safe fallback
+    // for renderers that ignore `dy` on a bare, unspanned `<text>`.
     dominant-baseline: central;
     font-size: 1px;
     fill: white;
@@ -661,10 +665,6 @@ svg {
 
     &--interspace rect {
       fill: #31507f;
-    }
-
-    &--deep-space rect {
-      fill: #4b5f97;
     }
   }
 

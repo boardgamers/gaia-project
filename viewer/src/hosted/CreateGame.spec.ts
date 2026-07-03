@@ -84,7 +84,7 @@ describe("CreateGame", () => {
     expect((inviteCheckboxes[2].element as HTMLInputElement).disabled).to.equal(true);
   });
 
-  it("keeps Create disabled until the setup preview locks in a seed", async () => {
+  it("keeps Create disabled until the setup preview reports a valid setup", async () => {
     const wrapper = mount(CreateGame, {
       propsData: { client: makeClient(), session },
       stubs: { SetupPreview: true },
@@ -95,7 +95,7 @@ describe("CreateGame", () => {
     const createButton = wrapper.findAll("button").filter((b) => b.text() === "Create game").at(0);
     expect((createButton.element as HTMLButtonElement).disabled).to.equal(true);
 
-    await wrapper.findComponent(SetupPreview as any).vm.$emit("lock-in", { seed: "s", rotateMove: "p2 rotate" });
+    await wrapper.findComponent(SetupPreview as any).vm.$emit("update", { seed: "s", rotateMove: "p2 rotate", valid: true });
     await Vue.nextTick();
 
     // Still disabled: no invited player yet for this 2p (non-test) game.

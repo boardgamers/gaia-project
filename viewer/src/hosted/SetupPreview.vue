@@ -11,14 +11,11 @@
       <b-button size="sm" variant="outline-secondary" @click="resetRotations">Reset rotations</b-button>
     </div>
     <p class="text-muted small mb-2">
-      Seed: <code>{{ seed }}</code> — click a sector on the map below to rotate it, live. Rotate freely; lock in
-      once you're happy with the setup.
+      Seed: <code>{{ seed }}</code> — click a sector on the map below to rotate it, live. Land on a setup you like,
+      then click "Create game" below — whatever's currently shown here becomes the game.
     </p>
     <b-alert :show="!!error" variant="warning">{{ error }}</b-alert>
     <div ref="board"></div>
-    <div class="mt-2">
-      <b-button variant="primary" :disabled="!!error" @click="lockIn">Lock in this setup</b-button>
-    </div>
   </div>
 </template>
 
@@ -27,6 +24,7 @@ import Engine from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop, Watch } from "vue-property-decorator";
 import { makeStore } from "../store";
+import { setViewportZoomLocked } from "./viewport";
 import { randomSeed } from "./new-game";
 import SetupPreviewBoard from "./SetupPreviewBoard.vue";
 import { buildRotateMove, validateRotation } from "./setup-preview";
@@ -62,6 +60,11 @@ export default class SetupPreview extends Vue {
 
   mounted() {
     this.seedInput = this.seed;
+    // Unlike the rest of the (one-handed-phone) Lobby/CreateGame flow, the
+    // setup preview map benefits from pinch-zoom exactly like the real game
+    // board does (viewport.ts) - unlock it for as long as this component is
+    // on screen, then restore the lobby default on teardown.
+    setViewportZoomLocked(false);
     this.nestedStore = makeStore();
     // Populate the store with a real engine BEFORE the nested app's first
     // mount: SpaceMap and friends dereference engine.map unconditionally, and
@@ -82,12 +85,13 @@ export default class SetupPreview extends Vue {
     this.nestedStore.subscribeAction(({ type, payload }) => {
       if (type === "hexClick") {
         this.nestedStore.commit("rotate", payload.hex);
-        this.revalidate();
+        this.emitState();
       }
     });
   }
 
   beforeDestroy() {
+    setViewportZoomLocked(true);
     this.nestedApp?.$destroy();
   }
 
@@ -103,7 +107,7 @@ export default class SetupPreview extends Vue {
     const engine = new Engine([`init ${this.playerCount} ${this.seed}`], { lostFleet: true });
     this.nestedStore.commit("receiveData", engine);
     this.armClickToRotate();
-    this.error = null;
+    this.emitState();
   }
 
   private armClickToRotate() {
@@ -146,7 +150,7 @@ export default class SetupPreview extends Vue {
   resetRotations() {
     this.nestedStore.commit("receiveData", this.nestedStore.state.data);
     this.armClickToRotate();
-    this.error = null;
+    this.emitState();
   }
 
   copySeed() {
@@ -157,19 +161,18 @@ export default class SetupPreview extends Vue {
     return buildRotateMove(this.playerCount, this.nestedStore.state.context.rotation);
   }
 
-  private revalidate() {
-    const result = validateRotation(this.playerCount, this.seed, this.rotateMove());
-    this.error = result.valid ? null : result.error;
-  }
-
-  lockIn() {
+  /**
+   * No separate "lock in" step: whatever's currently on screen IS the setup.
+   * Every seed/rotation change re-validates (the German-rules adjacency
+   * assert) and re-emits the current {seed, rotateMove, valid} state so
+   * CreateGame.vue can create the game directly off it at any time, instead
+   * of requiring an explicit confirmation click first.
+   */
+  private emitState() {
     const rotateMove = this.rotateMove();
     const result = validateRotation(this.playerCount, this.seed, rotateMove);
-    if (!result.valid) {
-      this.error = result.error;
-      return;
-    }
-    this.$emit("lock-in", { seed: this.seed, rotateMove });
+    this.error = result.valid ? null : result.error;
+    this.$emit("update", { seed: this.seed, rotateMove, valid: result.valid });
   }
 }
 </script>

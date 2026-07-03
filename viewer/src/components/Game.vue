@@ -13,9 +13,9 @@
       >
         <SpaceMap :class="['mb-1', 'space-map', 'col-md-7']" />
         <div class="col-md-5">
-          <svg class="scoring-research-board" :viewBox="`0 -25 ${researchBoardWidth + 120} 545`">
+          <svg class="scoring-research-board" :viewBox="`0 0 ${researchBoardWidth + 120} 550`">
             <ResearchBoard height="450" ref="researchBoard" x="-50" />
-            <ScoringBoard class="ml-4" width="90" :x="researchBoardWidth + 20" y="-25" />
+            <ScoringBoard class="ml-4" width="90" :x="researchBoardWidth + 20" />
             <BoardAction
               :scale="17"
               :transform="`translate(${45 * i + 6}, 455)`"

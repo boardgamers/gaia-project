@@ -26,8 +26,9 @@ describe("FactionWheel", () => {
     expect(container.querySelector(`[data-planet="${Planet.Asteroid}"]`)).to.not.equal(null);
     expect(container.querySelector(`[data-planet="${Planet.Protoplanet}"]`)).to.not.equal(null);
 
-    // The 4 extra planets sit in a single compact row directly under the ring (not a 2x2 block,
-    // which doubled the wheel's height) - same y, distinct x, all 4 distinct positions.
+    // The 4 extra planets sit in a compact 2x2 grid directly under the ring (narrower than a
+    // single row of 4, so it no longer widens the wheel's overall footprint), rendered as circles
+    // like the ring's own planet markers rather than squares.
     const position = (planet: Planet): { x: number; y: number } => {
       const el = container.querySelector(`.faction-wheel-extra-planet[data-planet="${planet}"]`);
       const [x, y] = /translate\((-?[\d.]+),\s*(-?[\d.]+)\)/.exec(el.getAttribute("transform")).slice(1).map(Number);
@@ -36,7 +37,14 @@ describe("FactionWheel", () => {
     const positions = [Planet.Gaia, Planet.Transdim, Planet.Asteroid, Planet.Protoplanet].map(position);
     const ys = new Set(positions.map((p) => p.y));
     const xs = new Set(positions.map((p) => p.x));
-    expect(ys.size).to.equal(1);
-    expect(xs.size).to.equal(4);
+    expect(ys.size).to.equal(2);
+    expect(xs.size).to.equal(2);
+    expect(new Set(positions.map((p) => `${p.x},${p.y}`)).size).to.equal(4);
+
+    for (const planet of [Planet.Gaia, Planet.Transdim, Planet.Asteroid, Planet.Protoplanet]) {
+      const el = container.querySelector(`.faction-wheel-extra-planet[data-planet="${planet}"]`);
+      expect(el.querySelector("circle.planet-fill"), `${planet} should render as a circle`).to.not.equal(null);
+      expect(el.querySelector("rect")).to.equal(null);
+    }
   });
 });

@@ -52,13 +52,10 @@
 
       <h6 class="mt-3">Setup preview</h6>
       <p class="text-muted small mb-2">
-        Reroll until you like the map, then click sectors to rotate them. Lock in when you're happy — that exact seed
-        and rotation become the game.
+        Reroll until you like the map, then click sectors to rotate them. Whatever's shown becomes the game when you
+        click "Create game" below.
       </p>
-      <SetupPreview :player-count="form.playerCount" @lock-in="onLockIn" />
-      <b-alert :show="!!lockedSeed" variant="success" class="mt-2 mb-3">
-        Locked in — seed <code>{{ lockedSeed }}</code>
-      </b-alert>
+      <SetupPreview :player-count="form.playerCount" @update="onSetupUpdate" />
 
       <div>
         <b-button type="submit" variant="primary" :disabled="creating || !canCreate">Create game</b-button>
@@ -89,8 +86,12 @@ export default Vue.extend({
       message: "",
       users: [] as RegisteredUser[],
       invitedUserIds: [] as string[],
-      lockedSeed: "" as string,
-      lockedRotateMove: "" as string,
+      // Continuously updated by SetupPreview's "update" event (no separate
+      // lock-in step) - whatever's current here at "Create game" click time
+      // is what gets created.
+      currentSeed: "" as string,
+      currentRotateMove: "" as string,
+      setupValid: false,
       form: {
         playerCount: 2,
         testGame: false,
@@ -105,14 +106,14 @@ export default Vue.extend({
       return this.users.filter((u) => u.id !== this.myUserId);
     },
     canCreate(): boolean {
-      if (!this.lockedSeed) {
+      if (!this.currentSeed || !this.setupValid) {
         return false;
       }
       return this.form.testGame || this.invitedUserIds.length === this.form.playerCount - 1;
     },
     blockedReason(): string {
-      if (!this.lockedSeed) {
-        return "Lock in a setup above first";
+      if (!this.currentSeed || !this.setupValid) {
+        return "Fix the invalid setup above first";
       }
       return `Invite ${this.form.playerCount - 1} more player(s) above first`;
     },
@@ -134,8 +135,8 @@ export default Vue.extend({
     setPlayerCount(count: number) {
       this.form.playerCount = count;
       this.invitedUserIds = this.invitedUserIds.slice(0, count - 1);
-      this.lockedSeed = "";
-      this.lockedRotateMove = "";
+      // SetupPreview itself rerolls to a fresh seed on a player-count change
+      // and immediately re-emits "update" with it - no need to clear here.
     },
     isInvited(userId: string): boolean {
       return this.invitedUserIds.includes(userId);
@@ -155,9 +156,10 @@ export default Vue.extend({
       }
       this.invitedUserIds = ids;
     },
-    onLockIn(payload: { seed: string; rotateMove: string }) {
-      this.lockedSeed = payload.seed;
-      this.lockedRotateMove = payload.rotateMove;
+    onSetupUpdate(payload: { seed: string; rotateMove: string; valid: boolean }) {
+      this.currentSeed = payload.seed;
+      this.currentRotateMove = payload.rotateMove;
+      this.setupValid = payload.valid;
     },
     async createGame() {
       if (!this.canCreate) {
@@ -180,7 +182,7 @@ export default Vue.extend({
                 name: this.users.find((u) => u.id === id)?.display_name ?? "",
               })),
             ];
-        const params = buildCreateGameParams({ playerCount: this.form.playerCount, seats }, this.lockedSeed, this.lockedRotateMove);
+        const params = buildCreateGameParams({ playerCount: this.form.playerCount, seats }, this.currentSeed, this.currentRotateMove);
         const { data, error } = await (this.client as any).rpc("create_game", params);
         if (error) {
           throw new Error(error.message);

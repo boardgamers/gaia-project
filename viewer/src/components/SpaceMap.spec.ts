@@ -1,4 +1,4 @@
-import Engine, { Building, classifySectorId, Faction, LostFleetSectorType, Planet } from "@gaia-project/engine";
+import Engine, { Building, classifySectorId, Faction, GaiaHex, LostFleetSectorType, Planet } from "@gaia-project/engine";
 import { render } from "@testing-library/vue";
 import { expect } from "chai";
 import fs from "fs";
@@ -62,20 +62,28 @@ describe("SpaceMap", () => {
     expect(interspaceHexCount).to.be.greaterThan(0);
     expect(deepSpaceHexCount).to.be.greaterThan(0);
     expect(container.querySelectorAll('[data-sector-type="interspace"]').length).to.equal(interspaceHexCount);
-    // Deep Space badges: one per physical 3-hex tile, not one per hex - so strictly fewer badge
+    // Deep Space labels: one per physical 3-hex tile, not one per hex - so strictly fewer label
     // elements than deep-space hexes (assuming every DS tile has all 3 of its hexes on the board).
-    const deepSpaceBadges = container.querySelectorAll('[data-sector-type="deep-space"]');
-    expect(deepSpaceBadges.length).to.be.greaterThan(0);
-    expect(deepSpaceBadges.length).to.be.lessThan(deepSpaceHexCount);
-
-    // Interspace badges reference the sectors they border (e.g. "IS123"), not an arbitrary id;
-    // Deep Space badges are now a bare number, not "DS<n>". Sector names aren't always pure
-    // digits (extra tiles at higher player counts can be named e.g. "6B"), hence [\dA-Z]+.
-    container.querySelectorAll('[data-sector-type="interspace"] text').forEach((badge) => {
-      expect(badge.textContent.trim()).to.match(/^IS[\dA-Z]+$/);
+    // Rendered directly by SpaceMap.vue now (a `.sector-name`-styled <text>, not a per-hex badge
+    // in SpaceHex.vue), so the element itself carries `data-sector-type`.
+    const deepSpaceLabels = container.querySelectorAll('[data-sector-type="deep-space"]');
+    expect(deepSpaceLabels.length).to.be.greaterThan(0);
+    expect(deepSpaceLabels.length).to.be.lessThan(deepSpaceHexCount);
+    deepSpaceLabels.forEach((label) => {
+      expect(label.tagName).to.equal("text");
+      expect(label.classList.contains("sector-name")).to.equal(true, "should match sector-number styling");
     });
-    container.querySelectorAll('[data-sector-type="deep-space"] text').forEach((badge) => {
-      expect(badge.textContent.trim()).to.match(/^\d+$/);
+
+    // Interspace badges reference the sectors they border (e.g. "IS123"), not an arbitrary id.
+    // Deep Space labels are now a bare number, not "DS<n>". Sectors 5/6/7 are always named with a
+    // face-letter suffix ("5A"/"5B" etc, see map.ts) - lost-fleet-space-map at 2p includes
+    // 5B/6B/7B, so this regression-tests that the letter never leaks into the "IS..." label
+    // (digits only after "IS", per the naming convention).
+    container.querySelectorAll('[data-sector-type="interspace"] text').forEach((badge) => {
+      expect(badge.textContent.trim()).to.match(/^IS\d+$/);
+    });
+    deepSpaceLabels.forEach((label) => {
+      expect(label.textContent.trim()).to.match(/^\d+$/);
     });
     expect(container.querySelectorAll("g.space-hex-cell .lost-fleet-spaceship").length).to.equal(spaceshipHexCount);
     // per-hex ship marker matches the ship board's own minimal circle+letter treatment (same
@@ -95,7 +103,42 @@ describe("SpaceMap", () => {
     expect(container.querySelector('[data-kind="ship"]')).to.equal(null);
   });
 
-  it("shows the 7 Tinkeroids/Moweyds terraforming-board colors as plain squares, top-right of the map", () => {
+  it("centers each Deep Space label on its 3-hex tile's centroid, not pinned to a single hex", () => {
+    const engine = new Engine(["init 2 lost-fleet-space-map"], { lostFleet: true });
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(SpaceMap, { store });
+
+    const byTile = new Map<string, GaiaHex[]>();
+    for (const hex of engine.map.grid.values()) {
+      if (classifySectorId(hex.data.sector) === LostFleetSectorType.DeepSpace) {
+        const id = hex.data.sector.split("_")[0];
+        (byTile.get(id) ?? byTile.set(id, []).get(id)).push(hex);
+      }
+    }
+    expect(byTile.size).to.be.greaterThan(0);
+
+    for (const [id, hexes] of byTile) {
+      expect(hexes.length).to.equal(3, `${id} should have all 3 of its hexes on a 2p board`);
+      // every DS<id> label element exists with the bare numeric id (no "DS" prefix, no "_0" suffix)
+      const labelForId = [...container.querySelectorAll('[data-sector-type="deep-space"]')].find(
+        (el) => el.textContent.trim() === id.replace(/^DS/, "")
+      );
+      expect(labelForId, `expected a label for ${id}`).to.not.equal(undefined);
+      const transform = labelForId.getAttribute("transform");
+      const [tx, ty] = /translate\((-?[\d.]+),\s*(-?[\d.]+)\)/.exec(transform).slice(1).map(Number);
+      // the centroid must not coincide with any single one of the tile's 3 hex centers (that was
+      // the old per-hex-badge bug this replaces) - it should sit roughly between all 3.
+      for (const hex of hexes) {
+        const c = hexCenter(hex);
+        const dist = Math.hypot(tx - c.x * 1.01, ty - c.y * 1.01);
+        expect(dist, `${id} label should not sit on a single hex center`).to.be.greaterThan(0.1);
+      }
+    }
+  });
+
+  it("shows the 7 Tinkeroids/Moweyds terraforming-board colors as bordered squares, top-right of the map, only through round-1 setup", () => {
     const engine = new Engine(["init 2 lost-fleet-space-map"], { lostFleet: true });
     const store = makeStore();
     store.commit("receiveData", engine);
@@ -108,6 +151,8 @@ describe("SpaceMap", () => {
     squares.forEach((sq) => {
       expect(sq.getAttribute("width")).to.equal("0.9");
       expect(sq.getAttribute("height")).to.equal("0.9");
+      expect(sq.getAttribute("stroke")).to.equal("#1a1a1a");
+      expect(Number(sq.getAttribute("stroke-width"))).to.be.greaterThan(0);
       expect(sq.children.length).to.equal(0);
     });
     // deterministic from the seed, same source as LostFleetTerraformingBoard.vue's own row
@@ -115,13 +160,27 @@ describe("SpaceMap", () => {
     expect(new Set(colors).size).to.equal(7); // all 7 distinct planet types, no repeats
   });
 
-  it("sizes the viewBox to contain every hex and keeps the wheel and legends in the left sidebar", () => {
+  it("hides the terraforming-board squares once round 1 begins", () => {
+    const engine = new Engine(["init 2 lost-fleet-space-map"], { lostFleet: true });
+    expect(engine.round).to.equal(0);
+    // Force the round forward without a full legal replay - only `engine.round` is read by the
+    // visibility check under test.
+    engine.round = 1;
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(SpaceMap, { store });
+
+    expect(container.querySelectorAll("rect.lost-fleet-terraform-swatch").length).to.equal(0);
+  });
+
+  it("sizes the viewBox to contain every hex and keeps the wheel clear of hexes without reserving a full-height sidebar", () => {
     // The old hardcoded viewBox (-13 -11.5 26|33.5 24) clipped the taller Lost Fleet 3p/4p
     // layouts (top hexes at y=-16.5 / -19.1) and let the faction wheel sit on top of hexes.
-    const translateX = (el: Element | null): number => {
-      const match = /translate\((-?[\d.]+)/.exec(el?.getAttribute("transform") ?? "");
+    const transformXY = (el: Element | null): { x: number; y: number } => {
+      const match = /translate\((-?[\d.]+),\s*(-?[\d.]+)\)/.exec(el?.getAttribute("transform") ?? "");
       expect(match, "expected an anchored transform").to.not.equal(null);
-      return Number(match[1]);
+      return { x: Number(match[1]), y: Number(match[2]) };
     };
 
     // Lost Fleet 3p is rendered rotated 120deg (hex-grid-aligned) to minimize the viewBox width on
@@ -142,7 +201,7 @@ describe("SpaceMap", () => {
       const { container } = render(SpaceMap, { store });
 
       const [x, y, w, h] = container.querySelector("svg").getAttribute("viewBox").split(" ").map(Number);
-      let minHexX = Infinity;
+      const hexPoints: { x: number; y: number }[] = [];
       for (const hex of engine.map.grid.values()) {
         const raw = hexCenter(hex);
         const c = rotate(raw.x * 1.01, raw.y * 1.01, rotationDeg(players));
@@ -150,14 +209,28 @@ describe("SpaceMap", () => {
         expect(c.x + 1, `${players}p hex ${hex} right of viewBox`).to.be.lte(x + w);
         expect(c.y - 1, `${players}p hex ${hex} above viewBox`).to.be.gte(y);
         expect(c.y + 1, `${players}p hex ${hex} below viewBox`).to.be.lte(y + h);
-        minHexX = Math.min(minHexX, c.x);
+        hexPoints.push(c);
       }
 
-      // The faction wheel (ring spans +-2.6 around its anchor at scale 0.65) stays in the
-      // reserved sidebar, fully left of the leftmost hex. (There is no separate Lost Fleet
-      // legend anymore - it was removed; the wheel is the only thing reserving this sidebar now.)
-      const wheelRight = translateX(container.querySelector(".faction-wheel")) + 2.6;
-      expect(wheelRight, `${players}p wheel overlaps hexes`).to.be.below(minHexX - 1);
+      // The faction wheel only needs to stay clear of hexes within its own rendered band (it no
+      // longer reserves a full-height sidebar the way the old flat 5.6-unit margin did - that's
+      // the point of the fix: the map now uses whatever width the wheel isn't actually standing
+      // on). Approximate the wheel's rendered footprint from its own known local content extents
+      // (see the WHEEL_WIDTH/WHEEL_HEIGHT derivation comment in SpaceMap.vue) and assert no hex
+      // (inflated by its own ~1-unit radius) intersects that rectangle.
+      const wheelOrigin = transformXY(container.querySelector(".faction-wheel"));
+      const wheelScale = 0.65;
+      const wheelBox = {
+        left: wheelOrigin.x - 4 * wheelScale,
+        right: wheelOrigin.x + 4 * wheelScale,
+        top: wheelOrigin.y - 4 * wheelScale,
+        bottom: wheelOrigin.y + 7.6 * wheelScale,
+      };
+      for (const p of hexPoints) {
+        const overlapsX = p.x + 1 > wheelBox.left && p.x - 1 < wheelBox.right;
+        const overlapsY = p.y + 1 > wheelBox.top && p.y - 1 < wheelBox.bottom;
+        expect(overlapsX && overlapsY, `${players}p wheel overlaps hex at (${p.x}, ${p.y})`).to.equal(false);
+      }
     }
   });
 

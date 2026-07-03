@@ -238,7 +238,7 @@ describe("Game", () => {
     vm.$destroy();
   });
 
-  it("keeps the scoring-research-board viewBox tall enough that ScoringBoard's negative y offset isn't clipped", () => {
+  it("aligns the final scoring tiles' top edge with the research track's top, and keeps the viewBox tall enough that ScoringBoard isn't clipped", () => {
     const engine = new Engine(["init 2 lf-freeze-28"], { lostFleet: true });
     engine.players.forEach((pl, index) => {
       pl.faction = [Faction.Terrans, Faction.Lantids][index];
@@ -252,11 +252,22 @@ describe("Game", () => {
     document.body.appendChild(vm.$el);
 
     const svg = vm.$el.querySelector("svg.scoring-research-board");
-    const scoringBoard = svg.querySelector('svg[y="-25"]');
-    expect(scoringBoard, "expected to find ScoringBoard's own nested svg, offset by y=-25").to.not.equal(null);
+    const researchBoard = svg.querySelector("svg.research-board");
+    const scoringBoard = researchBoard.nextElementSibling;
+    expect(scoringBoard.tagName).to.equal("svg");
+    // Both nested boards now start at the same y as each other (and as the outer viewBox), so
+    // their own top-anchored content (the research track's level-5 tile, ScoringBoard's index-0
+    // FinalScoringTile) renders at the same height - no more of ScoringBoard's own -25 offset that
+    // used to shift it, and everything it contains, above the research track's top edge.
+    expect(researchBoard.getAttribute("y")).to.equal(null);
+    expect(scoringBoard.getAttribute("y")).to.equal(null);
 
-    const [, minY] = svg.getAttribute("viewBox").split(" ").map(Number);
-    expect(minY).to.be.at.most(-25);
+    const [, minY, , height] = svg.getAttribute("viewBox").split(" ").map(Number);
+    expect(minY).to.equal(0);
+    // ScoringBoard renders at width=90 against its own `viewBox="0 0 80 480"` with no explicit
+    // height, so its rendered height auto-scales to preserve aspect ratio: 90 * (480/80) = 540 -
+    // the outer viewBox must be at least that tall (starting from y=0) to avoid clipping it.
+    expect(height).to.be.at.least(540);
 
     vm.$el.remove();
     vm.$destroy();
