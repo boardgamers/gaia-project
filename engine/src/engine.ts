@@ -15,6 +15,7 @@ import {
   Faction,
   Federation,
   FinalTile,
+  LostFleetEconomySide,
   Phase,
   Player as PlayerEnum,
   Resource,
@@ -274,6 +275,9 @@ export default class Engine {
   terraformingFederation: Federation;
   // Lost Fleet's Scoring Board Extension: the face-up side, decided once per game at setup (§E6).
   scoringExtensionSide?: ScoringBoardExtensionSide;
+  // Lost Fleet's Economy research track overlay tile: the face-up side, decided once per game at
+  // setup (§F1).
+  lostFleetEconomySide?: LostFleetEconomySide;
   availableCommands: AvailableCommand[] = [];
   availableCommand: AvailableCommand;
   phase: Phase = Phase.SetupInit;
@@ -391,16 +395,11 @@ export default class Engine {
     }
 
     const execute = () => {
-      try {
-        if (!this.executeMove(move)) {
-          if (!this.replay) {
-            assert(allowIncomplete, `Move ${move} (line ${this.moveHistory.length + 1}) is not complete!`);
-          }
-          this.newTurn = false;
+      if (!this.executeMove(move)) {
+        if (!this.replay) {
+          assert(allowIncomplete, `Move ${move} (line ${this.moveHistory.length + 1}) is not complete!`);
         }
-      } catch (e) {
-        console.log(this.assertContext());
-        throw e;
+        this.newTurn = false;
       }
     };
 
@@ -655,7 +654,9 @@ export default class Engine {
           engine.map,
           player.faction && factionVariantBoard(customization, player.faction),
           engine.expansions,
-          engine.version
+          engine.version,
+          data.players.length,
+          engine.lostFleetEconomySide
         )
       );
     }
@@ -949,11 +950,6 @@ export default class Engine {
     if (!this.availableCommand && !this.replay) {
       assert(this.availableCommand, `Command ${command} is not in the list of available commands`);
     }
-  }
-
-  private assertContext(): string {
-    return `last command: ${this.moveHistory[this.moveHistory.length - 1]}, index: ${this.moveHistory.length},
-    available: ${JSON.stringify(this.generateAvailableCommandsIfNeeded())}`;
   }
 
   doFreeActions(subPhase: SubPhase) {

@@ -643,6 +643,13 @@ export enum ScoringBoardExtensionSide {
   ExploredShips = "ships",
 }
 
+// The face-up side of Lost Fleet's Economy research track overlay tile (covers levels 3/4 income),
+// decided once per game at setup (§F1).
+export enum LostFleetEconomySide {
+  Power = "pw",
+  VictoryPoints = "vp",
+}
+
 export type AnyTechTilePos = TechTilePos | AdvTechTilePos;
 export type AnyTechTile = TechTile | AdvTechTile;
 
