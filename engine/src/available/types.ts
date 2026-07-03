@@ -181,6 +181,14 @@ export type AvailableBuilding = AvailableHex & {
   upgrade?: boolean;
   downgrade?: boolean;
   steps?: number;
+  /**
+   * Whether colonizing an Asteroid via this build consumes a Gaiaformer (§E2: the normal
+   * "Build a Mine" action requires and consumes one; also the Federation-token Build-a-Mine per
+   * the BGG designer ruling). Defaults to true; explicitly false for the routes that do NOT
+   * consume one: starting-building setup placement (§B1/§B2 — factions own 0 Gaiaformers at
+   * setup) and Eclipse's Credit action (§C4: "the 6 credits is the entire cost").
+   */
+  consumesAsteroidGaiaformer?: boolean;
 };
 export type AvailableResearchTrack = { cost: string; field: ResearchField; to: number };
 export type AvailableResearchData = { tracks: AvailableResearchTrack[] };

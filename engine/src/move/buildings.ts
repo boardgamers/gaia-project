@@ -32,7 +32,14 @@ export function moveBuild(
 
 export function placeBuilding(engine: Engine, pl: Player, building: AvailableBuilding) {
   const hex = engine.map.getS(building.coordinates);
-  pl.build(building.building, hex, Reward.parse(building.cost), engine.map, building.steps);
+  pl.build(
+    building.building,
+    hex,
+    Reward.parse(building.cost),
+    engine.map,
+    building.steps,
+    building.consumesAsteroidGaiaformer ?? true
+  );
 
   // will trigger a LeechPhase
   if ((engine.phase === Phase.RoundMove || engine.phase === Phase.RoundShip) && !isShip(building.building)) {

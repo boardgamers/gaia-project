@@ -121,6 +121,9 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
               faction === Faction.Ivits || faction === Faction.Tinkeroids ? Building.PlanetaryInstitute : Building.Mine,
             coordinates: hex.toString(),
             cost: "~",
+            // §B1/§B2: starting buildings are placed, not built via the "Build a Mine" action —
+            // no Gaiaformer is consumed on a home Asteroid (factions own 0 Gaiaformers at setup).
+            consumesAsteroidGaiaformer: false,
           });
         }
       }

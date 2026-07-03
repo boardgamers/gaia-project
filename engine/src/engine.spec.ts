@@ -105,6 +105,29 @@ describe("Engine", () => {
     ]);
   });
 
+  it("should not consume a Gaiaformer for a starting building on a home Asteroid (fuzzer finding LF-3)", () => {
+    // §E2's Gaiaformer consumption is a cost of the "Build a Mine" ACTION (rulebook p.10);
+    // starting buildings (§B1/§B2, p.13) are placed outside that action and factions own 0
+    // Gaiaformers at setup, so nothing can be consumed. The old unconditional increment
+    // permanently cost Tinkeroids/Darkanians one Gaiaformer of capacity and let the §G3
+    // "former" booster count go negative (-3 VP on pass).
+    const engine = new Engine(["init 2 lost-fleet-one-mine"], { lostFleet: true });
+    engine.move(`p1 faction ${Faction.Darkanians}`);
+    engine.move("p2 faction terrans");
+
+    while (engine.phase === Phase.SetupBuilding) {
+      const command = engine
+        .generateAvailableCommandsIfNeeded()
+        .find((c) => c.name === Command.Build) as any;
+      const building = command.data.buildings[0];
+      engine.move(`p${engine.playerToMove + 1} build ${building.building} ${building.coordinates}`);
+    }
+
+    const darkanians = engine.player(PlayerEnum.Player1);
+    expect(darkanians.data.occupied.some((hex) => hex.data.planet === Planet.Asteroid)).to.be.true;
+    expect(darkanians.data.gaiaformersUsedForAsteroid).to.equal(0);
+  });
+
   it("should have passedPlayers empty at beginning of a new round", () => {
     const moves = parseMoves(`
       init 2 randomSeed

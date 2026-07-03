@@ -443,6 +443,26 @@ describe("Lost Fleet spaceship board actions", () => {
     expect(target.hex.data.player).to.equal(PlayerEnum.Player1);
   });
 
+  it("should not consume a Gaiaformer for Eclipse's Credit-action Asteroid mine (§C4; fuzzer finding LF-3)", () => {
+    // §C4: "the mine itself is free (the 6 credits is the entire cost — distinct from the
+    // standard Asteroid-mine route in E2, which instead requires consuming a Gaiaformer)".
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    player.data.explorationShips[Spaceship.Eclipse] = 1;
+    player.data.gaiaformers = 1; // a spare Gaiaformer, which must survive the action
+    occupyPlanetsOfDistinctTypes(engine, PlayerEnum.Player1, 1);
+
+    const target = cheapestAsteroidHex(engine, PlayerEnum.Player1);
+    expect(target, "need an Asteroid planet on the board").to.not.equal(undefined);
+
+    const command = availableSpaceshipActionCommand(engine, PlayerEnum.Player1);
+    engine.turnMoves = [`build m ${target.hex.toString()}`];
+    moveSpaceshipAction(engine, command, PlayerEnum.Player1, Spaceship.Eclipse, "credit");
+
+    expect(target.hex.data.building).to.equal(Building.Mine);
+    expect(player.data.gaiaformersUsedForAsteroid).to.equal(0);
+  });
+
   it("should pay 3 credits, terraform beyond the 1 free step using ore, and build a Mine via T F Mars's Credit action", () => {
     const engine = createLostFleetRoundMoveEngine(3);
     const player = engine.player(PlayerEnum.Player1);

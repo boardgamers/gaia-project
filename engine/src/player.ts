@@ -554,13 +554,25 @@ export default class Player extends EventEmitter {
     this.receiveTriggerIncome(Condition.AdvanceResearch);
   }
 
-  build(building: Building, hex: GaiaHex, cost: Reward[], map: SpaceMap, stepsReq?: number) {
+  build(
+    building: Building,
+    hex: GaiaHex,
+    cost: Reward[],
+    map: SpaceMap,
+    stepsReq?: number,
+    consumesAsteroidGaiaformer = true
+  ) {
     this.payCosts(cost, Command.Build);
     const wasOccupied = this.data.occupied.includes(hex);
     const isNewLostPlanet = hex.data.planet === Planet.Lost && !hex.occupied();
     const isNewAsteroidColonization = hex.data.planet === Planet.Asteroid && !hex.occupied();
 
-    if (isNewAsteroidColonization) {
+    // §E2: colonizing an Asteroid consumes a Gaiaformer — but only on routes where the Gaiaformer
+    // is part of the cost. Starting-building placement (§B1/§B2, factions own 0 Gaiaformers at
+    // setup) and Eclipse's Credit action (§C4, "the 6 credits is the entire cost") pass false.
+    // (Fuzzer finding LF-3: the unconditional increment permanently cost Tinkeroids/Darkanians a
+    // Gaiaformer and let the §G3 "former" booster award negative VP.)
+    if (isNewAsteroidColonization && consumesAsteroidGaiaformer) {
       this.data.gaiaformersUsedForAsteroid += 1;
     }
 

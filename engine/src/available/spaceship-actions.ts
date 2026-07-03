@@ -157,6 +157,9 @@ export function possibleSpaceshipBuildMine(
       cost: Reward.toString(mergedRewards),
       steps,
       warnings: qicNeeded.warning ? [qicNeeded.warning] : null,
+      // §C4: Eclipse's Credit action places the mine on an Asteroid with "the 6 credits [as] the
+      // entire cost" — explicitly distinct from §E2's Gaiaformer-consuming route.
+      consumesAsteroidGaiaformer: data.ship === Spaceship.Eclipse ? false : undefined,
     });
   }
 
