@@ -1948,6 +1948,29 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       — was flagged but not fixed; **the user wants to try reproducing the originally-reported bug
       themselves before any engine change is made here.**
     Viewer: **255/255 tests pass**, production build clean.
+    - **Correction, same session, after the owner reviewed screenshots:** the `ShipActionIcon.vue`/
+      `ArtifactIcon.vue` extraction above broke the bottom-half layout - wrapping each as a nested
+      `<svg viewBox="-27 -32 54 54" width="54" height="54">` inside an outer `<g transform="translate(tx,
+      ty)">` does NOT center the component's local origin at `(tx, ty)` (a nested `<svg>` with no
+      explicit `x`/`y` places its viewport's top-left, not its viewBox center, at the parent's current
+      origin - the octagon's visual center actually lands at `(tx + 27, ty + 32)`), so the action row
+      drifted away from the Federation/Tech-tile section, which kept its own unrelated, un-shifted
+      coordinates. Reverted `LostFleetShips.vue`'s action/federation/tech/artifact markup back to
+      direct inline elements (`SpecialAction`/`Building`/`Condition`/`Resource` calls, not the two
+      extracted components), restoring the correct alignment - `ShipActionIcon.vue`/`ArtifactIcon.vue`
+      remain in place and correctly used for the icon-only button case (`RichTextView.vue`), which
+      never had this bug (no competing sibling coordinates to misalign against there). The
+      shared-logic modules (`data/spaceships.ts`/`data/artifacts.ts`) are still the single source for
+      both the board display and the buttons, just consumed as plain functions again in
+      `LostFleetShips.vue` instead of via the wrapper components.
+      Also reworked the header on the same owner request: the ship marker and full name now share one
+      row (name to the right of the marker circle), and the 4 exploration-track slots moved from a 2x2
+      grid to a single row directly beneath, minimizing the vertical gap between the two header rows.
+      `viewBox` shrank back from `"0 -16 291 112"` to `"0 0 291 96"` (no longer needs the extra top
+      margin the old separate name line required). 3 spec assertions in `LostFleetShips.spec.ts`
+      updated to match (viewBox string, single-row slot transforms, the `used` class living directly
+      on `[data-action]` again). Verified visually against real screenshots, not guessed: viewer
+      **255/255 tests pass**.
 
 ## Still MISSING — only one art-only item left
 

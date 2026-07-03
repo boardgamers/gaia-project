@@ -69,11 +69,11 @@ describe("LostFleetShips", () => {
     expect(twilight.querySelector('[data-slot="2"] .player-token')).to.equal(null);
 
     const usedAction = twilight.querySelector('[data-action="qic"]');
-    expect(usedAction.querySelector(".lost-fleet-ship__action").classList.contains("used")).to.equal(true);
+    expect(usedAction.classList.contains("used")).to.equal(true);
     expect(usedAction.querySelectorAll("line").length).to.equal(2);
 
     const readyAction = twilight.querySelector('[data-action="knowledge"]');
-    expect(readyAction.querySelector(".lost-fleet-ship__action").classList.contains("used")).to.equal(false);
+    expect(readyAction.classList.contains("used")).to.equal(false);
     expect(readyAction.querySelectorAll("line").length).to.equal(0);
   });
 
@@ -98,10 +98,10 @@ describe("LostFleetShips", () => {
     const ship = container.querySelector("svg.lost-fleet-ship");
     expect(ship.hasAttribute("width")).to.equal(false);
     expect(ship.hasAttribute("height")).to.equal(false);
-    expect(ship.getAttribute("viewBox")).to.equal("0 -16 291 112");
+    expect(ship.getAttribute("viewBox")).to.equal("0 0 291 96");
   });
 
-  it("lays the 4 exploration slots out as a 2x2 grid with an ordinal label per slot", () => {
+  it("lays the 4 exploration slots out in a single row with an ordinal label per slot", () => {
     const engine = new Engine(["init 2 lost-fleet-ships-spec"], { lostFleet: true });
     const store = makeStore();
     store.commit("receiveData", engine);
@@ -110,13 +110,13 @@ describe("LostFleetShips", () => {
     const twilight = container.querySelector(`svg.lost-fleet-ship[data-ship="${Spaceship.Twilight}"]`);
     const slots = [1, 2, 3, 4].map((i) => twilight.querySelector(`[data-slot="${i}"]`));
 
-    // 2 distinct x positions (columns) and 2 distinct y positions (rows) across the 4 slots
+    // 4 distinct x positions (one per column) but a single shared y position (one row)
     const transforms = slots.map((s) => s.getAttribute("transform"));
     expect(new Set(transforms).size).to.equal(4);
     const xs = new Set(transforms.map((t) => t.match(/translate\(([\d.]+),/)[1]));
     const ys = new Set(transforms.map((t) => t.match(/,\s*([\d.]+)\)/)[1]));
-    expect(xs.size).to.equal(2);
-    expect(ys.size).to.equal(2);
+    expect(xs.size).to.equal(4);
+    expect(ys.size).to.equal(1);
 
     // each slot shows its own ordinal (1st/2nd/3rd/4th slot), not just the power cost
     slots.forEach((slot, i) => {
