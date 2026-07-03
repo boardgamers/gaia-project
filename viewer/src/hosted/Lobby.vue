@@ -15,12 +15,12 @@
     <b-list-group class="mb-3">
       <b-list-group-item v-if="loading">Loading games…</b-list-group-item>
       <b-list-group-item v-else-if="games.length === 0">No games yet — create one below.</b-list-group-item>
-      <b-list-group-item
-        v-for="game in games"
-        :key="game.id"
-        class="d-flex justify-content-between align-items-center"
-      >
-        <a :href="`?game=${game.id}`" class="text-body text-decoration-none flex-grow-1 d-flex justify-content-between align-items-center" style="gap: 0.5rem">
+      <b-list-group-item v-for="game in games" :key="game.id" class="d-flex justify-content-between align-items-center">
+        <a
+          :href="`?game=${game.id}`"
+          class="text-body text-decoration-none flex-grow-1 d-flex justify-content-between align-items-center"
+          style="gap: 0.5rem"
+        >
           <span>
             <strong>{{ game.name || "Unnamed game" }}</strong>
             <span class="text-muted small">

@@ -436,14 +436,14 @@ build` pass, but the actual Supabase RPCs could not be exercised end-to-end live
     `raw_user_meta_data.full_name`/`.name`, falling back to the email's local part.
   - `create_game`'s `p_invites` shape changed from `{email, seat, display_name}` to
     `{user_id, seat, display_name}` — same 7-argument signature (`text,text,int,jsonb,jsonb,int,
-    text`), so this is a straight `create or replace`, not a new overload (unlike §J4's cautionary
-    tale — no argument *types* changed, only the jsonb keys inside one of them).
+text`), so this is a straight `create or replace`, not a new overload (unlike §J4's cautionary
+    tale — no argument _types_ changed, only the jsonb keys inside one of them).
     `invited_email` is still populated (resolved server-side from the matched `auth.users` row) so
     `host.ts`'s `mySeats()`/`is_game_member`'s email-fallback matching, and `claim_my_seats()`,
     keep working unchanged for both old and new rows. Duplicate `user_id`s across seats are still
     allowed (test games — see §13.2).
   - `CreateGame.vue` (new component, see below) queries `list_registered_users()` on mount and
-    renders the *other* registered users (host excluded) as a capped checkbox list — check up to
+    renders the _other_ registered users (host excluded) as a capped checkbox list — check up to
     `playerCount - 1`, further checkboxes disable once the cap is hit. No manual seat-by-seat
     email typing anymore; "Shuffle seat order" still exists, now shuffling the picked-user-id list.
 - **Create-game is now its own screen, not an inline section of the lobby.** `Lobby.vue` was split:

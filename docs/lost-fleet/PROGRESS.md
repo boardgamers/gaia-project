@@ -1108,6 +1108,7 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
     already-registered users?"), developed concurrently with #48 above on a separate branch and
     merged in afterward. Migration `supabase/migrations/0003_test_mode_and_player_counts.sql`
     (applied live to `mitawjpdxkheascdiffz`) + viewer wiring; full detail in **BACKEND.md §13**.
+
     - **Google sign-in** added to `SignIn.vue` (`signInWithOAuth({provider:"google"})`) as the
       primary button, magic link kept as fallback. Sessions already persist + auto-refresh, so
       it's genuinely sign-in-once-per-device. Needs a one-time owner OAuth setup (BACKEND.md §13.5).
@@ -1145,6 +1146,7 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
     `SpaceMap.vue`'s hardcoded viewBox (`-13 -11.5 26|33.5 24`) **clipped the taller Lost Fleet
     layouts** — measured hex extents are 3p y∈[-16.5, 11.3] and 4p y∈[-19.1, 11.3], so 3p lost ~5 hex
     rows and 4p ~7.6 units off the top. Changes:
+
     - `SpaceMap.vue` now computes the viewBox from the actual `map.grid` hex bounding box (same
       `hexCenter * 1.01` math as the template transforms), padded by one hex radius, plus a reserved
       6-unit **left sidebar** where the faction wheel, the Lost Fleet map legend, and the leech/
@@ -1169,6 +1171,7 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
     (`LostFleetShipActionsRow` + the `LostFleetSpaceships` reward cards, both HTML-chip-heavy) are
     **deleted**, replaced by a single compact `LostFleetShips.vue` strip — per ship one small SVG
     (258×96) composed entirely of base-game components:
+
     - **3 board actions** drawn exactly like the base `BoardAction` (SpecialAction octagon, power-charge
       arc art on power costs, cost badge, X-out + fade once used this round, tooltip shows effect text
       and who used it). The 5 build-bypass actions whose engine effect arrays are empty (wired via
@@ -1232,7 +1235,7 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
       Base-game hex buttons are unchanged.
     - Specs: `Commands.spec.ts` gained a real render-path test driving Eclipse's credit ship action
       through the actual Commands tree and asserting the expanded hex buttons carry the Asteroid dot
-      + name; `SpaceMap.spec.ts` now asserts every IS/DS badge matches `IS\d+` / `DS\d+`.
+      - name; `SpaceMap.spec.ts` now asserts every IS/DS badge matches `IS\d+` / `DS\d+`.
     - Verification: viewer suite **219/219** passing; badges + wheel + legend verified visually on
       the dev server. **All 4 slices of 3c are now landed** (#50 map fit, #51 ship strip, #52 tile
       iconography, #53 this) — the only deliberately deferred piece is the optional 3p/4p map
@@ -1245,6 +1248,7 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
     scoring, ship tech/federation tokens, artifact tokens, scoring-extension side), click sectors
     on the map to rotate them live (no arming step), then lock in. Faction selection stayed out of
     scope, as specified — `SetupFaction` still happens later, unaffected.
+
     - **Engine: confirmed unchanged**, as expected — `new Engine(["init N seed"], { lostFleet: true })`
       already resolves the entire random setup synchronously (`applyRandomBoardSetup`), and
       `Command.RotateSectors` already existed (`moveRotateSectors`, engine/src/move/setup.ts). One
@@ -1300,7 +1304,7 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
       draws are player-count-dependent), and "Create game" stays disabled until locked in. The
       seat-email/test-game flow below is unchanged.
     - **`supabase/migrations/0004_setup_move.sql`:** extends `create_game` (again, `create or
-      replace`, third time after 0001→0003) with a trailing `p_setup_move text default null` param;
+replace`, third time after 0001→0003) with a trailing `p_setup_move text default null` param;
       when non-null/non-empty it inserts the `moves` row for `seq = 1`, `seat = p_player_count - 1`
       (matching `beginSetupBoardPhase`'s "last player" convention), and bumps `games.move_count` to
       1 in the same transaction so the next real `commit_turn` call correctly expects `seq = 2`
@@ -1317,7 +1321,7 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
       callable, skipping the setup-move insert entirely (the exact "stuck game" failure mode 0004's
       comment warned about, reachable by any caller of the old signature). Fixed with
       **`supabase/migrations/0005_drop_stale_create_game_overload.sql`** (`drop function if exists
-      public.create_game(text, text, int, jsonb, jsonb, int)`), applied immediately after; `pg_proc`
+public.create_game(text, text, int, jsonb, jsonb, int)`), applied immediately after; `pg_proc`
       now shows exactly one `create_game` (7-arg), and the advisor listing matches the pre-#54
       baseline shape (one `create_game` entry, same acknowledged intentionally-callable-RPC set
       documented in `BACKEND.md`). 0004's misleading comment about "same identity/oid" was also
@@ -1333,7 +1337,7 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
       transform through 6 clicks back to a visually-equivalent 360°, reroll changes the seed,
       changing player count resets to a fresh seed + correct ship count, the invalid-rotation case
       disables lock-in with the German-rules message visible, and a valid lock-in emits `{ seed,
-      rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; net +13 after
+rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; net +13 after
       also relocating the one pre-existing `buildCreateGameParams` test out of `host.spec.ts`).
     - **Manual verification, done via the dev server + a temporary harness (not committed) driving
       real Chromium via Playwright:** 2p/3p/4p all render every tile category with real art;
@@ -1353,6 +1357,7 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
 55. ✅ **Nine owner-reported bugs/polish items, CODED & TESTED** (done 2026-07-02). A batch of
     gameplay-correctness and viewer-polish fixes reported directly by the owner after playing a real
     game, on branch `claude/gaia-project-fixes-knpsu3`:
+
     - **Eclipse's 6c ship action ("place a free Mine on an Asteroid in range") silently did nothing.**
       Root cause found by writing a real move-string `engine.move()` reproduction (existing tests only
       ever called `moveSpaceshipAction()` directly, skipping the string-command dispatch path): unlike
@@ -1442,7 +1447,7 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
       #45, actually 521 at this session's start per a fresh clean run — see note below — → 531 after
       this batch, +10 new tests: 1 spaceship-actions, 4 xenos, 5 scoring).
       Viewer `cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts'
-      'src/logic/**/*.spec.ts'` → **238/238** (232 baseline, confirmed accurate — → 238 after this
+'src/logic/**/*.spec.ts'` → **238/238** (232 baseline, confirmed accurate — → 238 after this
       batch, +6 new tests: 1 `Game.spec.ts`, 1 `Condition.spec.ts`, 2 `Resource.spec.ts`, 2
       `ScoringTile.spec.ts`; plus assertion extensions to 3 existing tests in `SpaceMap.spec.ts`/
       `ScoringBoard.spec.ts`, no count change from those). One **pre-existing, unrelated flaky test** found and

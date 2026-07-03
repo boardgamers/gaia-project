@@ -52,8 +52,8 @@
 
       <h6 class="mt-3">Setup preview</h6>
       <p class="text-muted small mb-2">
-        Reroll until you like the map, then click sectors to rotate them. Lock in when you're happy — that exact
-        seed and rotation become the game.
+        Reroll until you like the map, then click sectors to rotate them. Lock in when you're happy — that exact seed
+        and rotation become the game.
       </p>
       <SetupPreview :player-count="form.playerCount" @lock-in="onLockIn" />
       <b-alert :show="!!lockedSeed" variant="success" class="mt-2 mb-3">

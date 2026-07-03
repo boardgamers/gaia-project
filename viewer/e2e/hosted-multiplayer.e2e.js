@@ -65,7 +65,14 @@ function requireSession(envVar) {
 }
 
 function serveDist() {
-  const types = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".png": "image/png", ".svg": "image/svg+xml" };
+  const types = {
+    ".html": "text/html",
+    ".js": "text/javascript",
+    ".css": "text/css",
+    ".json": "application/json",
+    ".png": "image/png",
+    ".svg": "image/svg+xml",
+  };
   const server = http.createServer((req, res) => {
     const urlPath = decodeURIComponent(new URL(req.url, BASE_URL).pathname);
     let file = path.join(DIST, urlPath === "/" ? "index.html" : urlPath);
