@@ -7,7 +7,7 @@
 > anything else, including the **Testing — required going forward** section it points to — both
 > are standing process, not optional. Then ask the user "what next?" and use the **Next actions**
 > section below to guide them.
-> Last updated: **2026-07-02**.
+> Last updated: **2026-07-03**.
 
 ## Working agreements (read every session, not optional)
 
@@ -1454,6 +1454,50 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
       **Test-count correction:** this doc's "Done so far" #45 line stated 490 engine tests, but a fresh
       clean run at this session's start (`git stash`-verified) showed **521** — the real baseline had
       grown from work in sessions not fully reflected in that line. The 232 viewer baseline was accurate.
+56. ✅ **Lantids adjusted PI tile + Economy track level 3/4 overlay tile, CODED & TESTED** (done
+    2026-07-03). Closes the last 2 documented-but-not-implemented rules flagged in
+    RULES_CLARIFICATIONS.md §I2/§F1.
+    - **Lantids adjusted PI tile (§I2).** Below 4 players, Lantids use an adjusted PI tile on top of
+      the base (4p) tile's existing, unconditional "gain 2 knowledge for an additional mine on an
+      already-colonized planet" ability (already in `player.ts`'s `build()`, untouched by this
+      change — identical on every side). New `faction-boards/lantids.ts` handler on
+      `` `build-${Building.Mine}` `` adds exactly what the adjusted tile changes: solo/2p also grants
+      the same 2 knowledge for **any** mine built on a Terra hex (their home planet type), even a
+      perfectly normal first colonization not using their occupy-ability; 3p additionally charges 1
+      power for the same additional-mine trigger the base tile already covers. Both still gate on
+      `hasPlanetaryInstitute()`, matching the "PI tile" framing and the Darkanians PI-ability
+      convention. Needed a new `Player.nbPlayers` field (mirroring the existing `Player.expansions`
+      field's "set in `loadBoard`" pattern) threaded through `loadFaction`/`loadBoard`, `Player.fromData`,
+      and the two real call sites (`move/phase.ts`'s `endSetupFactionPhase`, `Engine.fromData`) so the
+      handler can read the game's actual player count. New tests in `faction-boards/lantids.spec.ts`
+      cover: 2p Terra-mine bonus with/without a PI, 3p additional-mine power charge on top of the
+      unchanged base 2-knowledge grant, 4p getting neither adjustment (base tile only), and the whole
+      thing gated off without the Lost Fleet expansion.
+    - **Economy track level 3/4 overlay tile (§F1).** One of 2 possible sides ("pw": level 3 = 1 ore +
+      2 credits + charge 3 power, level 4 = 2 ore + 2 credits + charge 2 power; "vp": level 3 = 1 ore +
+      3 credits + 1 VP, level 4 = 2 ore + 4 credits + 1 VP) is chosen at random at setup and used for
+      the whole game, covering only the base game's level 3/4 Economy income boxes — levels 0/1/2/5 are
+      untouched, and the universal "reach level 3 → charge 3 power" one-time bonus (present on every
+      research track, base game included) is preserved unchanged on both sides. Followed
+      `research-tracks.ts`'s existing `frontiersEco` overlay pattern for `researchEvents()`, plus a new
+      `LostFleetEconomySide` enum (`enums.ts`) and `engine.lostFleetEconomySide` field (mirroring
+      `ScoringBoardExtensionSide`/`engine.scoringExtensionSide`'s existing §E6 pattern exactly), set
+      once in `setup.ts`'s `applyRandomBoardSetup()` alongside the Scoring Board Extension roll. Since
+      `researchEvents()` needs the chosen side at both initial faction load and every later research
+      advance, `Player` also gained a `lostFleetEconomySide` field (same "set in `loadBoard`, read via
+      `this.` in `loadTechs`/`onResearchAdvanced`" pattern as `nbPlayers` above) rather than threading
+      it through every call. New `research-tracks.spec.ts` covers: `researchEvents()`'s pure output for
+      both sides at levels 0/1/2/3/4/5 (unchanged levels, the two overlaid levels, the preserved
+      universal level-3 bonus, and no-op without the expansion), the setup-time random side selection
+      (deterministic per seed, both sides reachable, unset without the expansion), and a player-level
+      integration check that advancing Economy research actually grants the right recurring income
+      (including the vp side's VP-per-round income).
+    - Both features are pure engine-side additions; the viewer wasn't touched and doesn't yet surface
+      the Lantids adjusted-tile numbers or which Economy overlay side is in play — flagged here for a
+      future viewer session, not fixed now (out of scope for this engine-only chunk).
+    - Verification: engine `cd engine && npm test` → **548/548** (531 baseline + 17 new: 5
+      `faction-boards/lantids.spec.ts`, 12 `research-tracks.spec.ts`). No pre-existing test needed
+      changes; no regressions.
 
 ## Still MISSING — only one art-only item left
 
@@ -1469,10 +1513,15 @@ Real test commands (don't use raw `mocha -r ts-node/register` for the viewer —
 TS resolution than the real webpack-based path and gives false failures; use the actual scripts):
 
 - Engine: `cd engine && npm test` (or `npx mocha -r ts-node/register 'src/**/*.spec.ts' 'src/*.spec.ts'`
-  — equivalent for engine, which has no webpack step). **531 tests passing as of 2026-07-02.**
+  — equivalent for engine, which has no webpack step). **548 tests passing as of 2026-07-03.**
 - Viewer: `cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'`
   (this is what `pnpm test` runs — uses `mochapack`/webpack, required for files that touch engine
-  types). **238 tests passing as of 2026-07-02** (one unrelated pre-existing flaky test, see #55).
+  types). **238 tests passing as of 2026-07-02** (one unrelated pre-existing flaky test, see #55;
+  not re-run in #56, which was engine-only and didn't touch the viewer).
+
+**Latest full rerun after #56:** engine **548/548** (531 baseline from #55 + 17 new: 5
+`faction-boards/lantids.spec.ts`, 12 `research-tracks.spec.ts`; no regressions). Viewer last
+verified at #55: **238/238**.
 
 **Latest full rerun after #55:** engine **531/531**, viewer **238/238** (both run fresh at the
 start of #55's session — the engine count had already grown to 521 from work not reflected in this

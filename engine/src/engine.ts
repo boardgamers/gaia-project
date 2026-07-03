@@ -15,6 +15,7 @@ import {
   Faction,
   Federation,
   FinalTile,
+  LostFleetEconomySide,
   Phase,
   Player as PlayerEnum,
   Resource,
@@ -274,6 +275,9 @@ export default class Engine {
   terraformingFederation: Federation;
   // Lost Fleet's Scoring Board Extension: the face-up side, decided once per game at setup (§E6).
   scoringExtensionSide?: ScoringBoardExtensionSide;
+  // Lost Fleet's Economy research track overlay tile: the face-up side, decided once per game at
+  // setup (§F1).
+  lostFleetEconomySide?: LostFleetEconomySide;
   availableCommands: AvailableCommand[] = [];
   availableCommand: AvailableCommand;
   phase: Phase = Phase.SetupInit;
@@ -655,7 +659,9 @@ export default class Engine {
           engine.map,
           player.faction && factionVariantBoard(customization, player.faction),
           engine.expansions,
-          engine.version
+          engine.version,
+          data.players.length,
+          engine.lostFleetEconomySide
         )
       );
     }

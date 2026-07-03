@@ -14,6 +14,7 @@ import {
   Federation,
   FinalTile,
   hasExpansion,
+  LostFleetEconomySide,
   Player,
   ScoringBoardExtensionSide,
   ScoringTile,
@@ -347,6 +348,10 @@ export function applyRandomBoardSetup(engine: Engine, seed: string, nbPlayers: n
       nbPlayers <= 2 || engine.map.rng() < 0.5
         ? ScoringBoardExtensionSide.VictoryPoints
         : ScoringBoardExtensionSide.ExploredShips;
+
+    // §F1: the Economy track's level 3/4 overlay tile is placed at random, one side for the whole game.
+    engine.lostFleetEconomySide =
+      engine.map.rng() < 0.5 ? LostFleetEconomySide.Power : LostFleetEconomySide.VictoryPoints;
   }
 }
 
