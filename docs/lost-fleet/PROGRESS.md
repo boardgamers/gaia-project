@@ -1770,6 +1770,53 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       Engine suite unchanged at **532/532** (tier-3 strengthens the existing LF smoke games
       rather than adding new test cases).
 
+52. ✅ **Fuzzer Phase 4 — tier-3 oracles second half (ships/artifacts/adv-tech gate/QIC overlay/
+    final scoring) + `shrink.ts` + full campaign + triage** (done 2026-07-03).
+    - New `fuzz/oracles/lost-fleet-2.ts`: `ArtifactTokenEffects` (all 13 §G6 tokens, magnitudes
+      independently re-derived, restricted to claims provably at the start of their turn so
+      "state now" is provably "state at claim time"), `shipFederationGoldSide` (§G5, the 6
+      direct-reward ship Federation tokens), `ShipActionRoundLock` (§C1-C4 per-round lock —
+      tracks round boundaries itself), `QicOverlay` (§E4 Qic1-3 absence + §K3 Eclipse's flat-2VP
+      base, verified via logged delta, not by reading the effect table back), `scoringExtensionSide`
+      (§E6 2p-always-VP persistence), `tileGatingLeaks` (Integration flag 5 leak class), and
+      `finalScoringCounts` (the 3 LF final-tile conditions — Asteroid/DeepSpaceSector/PI-Academy-
+      distance — independently re-derived from raw hex scans, NOT via `player.eventConditionCount`;
+      deliberately does NOT re-verify the shared rank→VP conversion, which is trusted base-game
+      machinery per the owner's explicit scoping). New `fuzz/shrink.ts` (prefix binary-search +
+      greedy tail-to-head segment removal, both replay-based per §J3).
+    - **Triage — findings, all oracle bugs, fixed, no engine change:** `ArtifactTokenEffects`/
+      `shipFederationGoldSide` initially expected a flat "+1 Q.I.C." for the KnowledgeQic artifact
+      and the OreQic ship Federation token, missing the **pre-existing base-game Gleens rule**
+      (`player.ts` `factionReward`, code comment "this is for Gleens getting ore instead of qics
+      until Academy2"): every Q.I.C. grant a Gleens player receives from ANY source — including
+      these new Lost Fleet rewards, which route through the same `Player.gainRewards` pipeline —
+      is substituted for an equal amount of Ore until Academy2 is built. Root-caused via a full
+      instrumented trace (isolated `Reward`/`Event` parsing was correct at every step until
+      `Player.gainRewards`'s `factionReward()` call). Not Lost Fleet content, but the new LF
+      reward paths interact with it correctly; the oracle's rigid expectation was wrong. Fixed via
+      a shared `applyGleensQicSubstitution()` helper applied at both call sites. Separately,
+      `finalScoringCounts`'s Deep-Space-sector helper needed an `isMainOccupier` check to
+      correctly exclude a Lantids-style "additional mine" guest colonization, matching the
+      engine's own `ownedPlanets`-based convention — caught and fixed before it ever produced a
+      false finding in a committed run.
+    - **2 base-game (non-Lost-Fleet) findings surfaced and NOT fixed, per explicit scope:** two
+      independent seeds (3p and 4p) hit the same class of tier-1 determinism failure — live
+      incremental play requires Taklons to resolve a Brainstone placement that a fresh sequential
+      replay of the identical seed+moves does not, both during Taklons + Planetary-Institute-
+      boosted leech/income interrupts. Zero Lost Fleet content involved (Taklons is a base
+      faction; Brainstone/RoundIncome/RoundLeech are base-game machinery); RULES_CLARIFICATIONS.md
+      has no entry covering base Taklons behavior, so there is no CONFIRMED rules basis to touch
+      engine code, and the owner's explicit instruction for this session was to trust the base
+      implementation and focus on Lost Fleet rules. Both minimized via `shrink.ts` and saved as
+      reference reproducers in `fuzz/known-issues/` (a directory deliberately NOT scanned by the
+      `npm test` regression loader, so these stay documented without permanently red-ing the
+      suite) — flagged for a future base-game-focused session, not fixed here.
+    - **Campaign: 460/462 Lost Fleet seeds clean** (40×2p + 30×3p + 30×4p first-half sweeps, a
+      150-seed + a 200-seed mixed-player-count sweep, an 80×3p and 80×4p targeted sweep; the only
+      2 non-clean seeds are the 2 base-game Taklons findings above, confirmed not double-counted
+      across sweeps). Engine suite unchanged at **564/564** (smoke-corpus fixed seeds don't happen
+      to trigger the Taklons class).
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

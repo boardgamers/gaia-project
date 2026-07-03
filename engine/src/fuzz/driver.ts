@@ -16,6 +16,7 @@ import Engine, { EngineOptions } from "../engine";
 import { chooseMovePart, GeneratorError, isConversionPart, PlayContext } from "./random-player";
 import { conservationOracles } from "./oracles/conservation";
 import { lostFleetOraclesPhase3 } from "./oracles/lost-fleet";
+import { lostFleetOraclesPhase4 } from "./oracles/lost-fleet-2";
 import { determinismMessages, runOracles, structuralOracles } from "./oracles/structural";
 import { Oracle, OracleContext, OracleFailure } from "./oracles/types";
 import { cloneEngine, cloneOptions } from "./state";
@@ -83,7 +84,7 @@ export function fuzzGame(spec: FuzzGameSpec, gameOptions: FuzzGameOptions = {}):
   const oracles = [
     ...structuralOracles(),
     ...conservationOracles(),
-    ...(spec.lostFleet ? lostFleetOraclesPhase3() : []),
+    ...(spec.lostFleet ? [...lostFleetOraclesPhase3(), ...lostFleetOraclesPhase4()] : []),
     ...(gameOptions.oracles ?? []),
   ];
   const options = baseOptions(spec);
