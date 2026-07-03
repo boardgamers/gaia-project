@@ -26,6 +26,8 @@ export interface Oracle {
   name: string;
   /** Rule source, e.g. "RULES_CLARIFICATIONS.md §C5" or "FUZZER_PLAN.md §3 tier-1 (structural)". */
   citation: string;
+  /** Run once after init, before the first line — capture per-game baselines here. */
+  startGame?(ctx: OracleContext): void;
   /** Run after every committed line. Return failure messages (empty = pass). */
   afterLine?(ctx: OracleContext): string[];
   /** Run once when the game reaches EndGame (or is aborted at the move cap). */

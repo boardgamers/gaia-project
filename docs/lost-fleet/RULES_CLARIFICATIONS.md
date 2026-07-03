@@ -769,3 +769,19 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
    own "decide at random" option unconditionally, rather than as an optional later-game variant). See §E6.
 7. ☐ K2: human review of the 4 BGG community threads (owner has BGG access) — any clear ruling found
    should be recorded directly as CONFIRMED, per owner's 2026-06-27 pre-authorization. See §K2.
+8. ☐ **Rescore-with-no-owned-token gate (fuzzer finding LF-2, 2026-07-03).** May a player take a
+   "re-score a Federation token you already own" effect while owning NO Federation token (pool or
+   ship-claimed)? Affects 2 Lost Fleet surfaces: (a) the Federation-token-shaped **Artifact** (§G6)
+   being choosable on Examine Artifact, and (b) **Twilight's Q.I.C. action** (§C1, 3 Q.I.C.). The
+   rulebook is silent. The base game's own identical mechanic (the QIC2 board action) is explicitly
+   NOT offered without an owned token (`engine/src/available/actions.ts`: "Prevent using the rescore
+   action if no federation token"), and §C1 says "same mechanic as the base game's federation
+   re-scoring" — which suggests gating both. BUT for the Artifact there is a real strategic motive
+   to allow a "wasted" pick (denying a shared-pool token to opponents), so gating it is not obviously
+   right. **Current engine behavior is neither interpretation**: the player can pay the cost
+   (6 power / 3 Q.I.C.) and then hits a forced rescore sub-decision with an empty choice list — an
+   undo-only dead end (`possibleFederationTiles(..., "player")` returns `{tiles: []}`). Options:
+   (1) gate both like QIC2; (2) gate the ship action, allow the artifact pick with no effect;
+   (3) allow both with no effect. Source: `OUR-RULING`-pending. Confidence: `INFERRED` (option 1
+   looks most consistent, NOT implemented — awaiting owner ruling per FUZZER_PLAN.md §5.3; the
+   fuzzer currently treats the dead end as an undo and picks a different action).

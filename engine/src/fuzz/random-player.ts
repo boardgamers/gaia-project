@@ -115,6 +115,18 @@ export function chooseMovePart(commands: AvailableCommand[], player: number, ctx
   return movePartFor(chosen, ctx);
 }
 
+/**
+ * Pick from a choice list that the engine may hand over EMPTY (observed: the rescore subphase
+ * offers `{tiles: [], rescore: true}` when the player owns no Federation token — finding LF-2).
+ * Returning null makes the driver treat the line like a DeadEnd: ban the opening choice, retry.
+ */
+function pickOrNull<T>(rng: Rng, items: readonly T[] | undefined): T | null {
+  if (!items || items.length === 0) {
+    return null;
+  }
+  return items[Math.floor(rng() * items.length)];
+}
+
 function movePartFor(command: AvailableCommand, ctx: PlayContext): string | null {
   const rng = ctx.rng;
 
@@ -124,31 +136,39 @@ function movePartFor(command: AvailableCommand, ctx: PlayContext): string | null
       // Bias toward the 4 new Lost Fleet factions (when offered) so LF faction mechanics
       // dominate the campaign, per the owner's Lost-Fleet-first instruction.
       const lf = factions.filter((f) => LOST_FLEET_FACTIONS.includes(f));
-      if (lf.length > 0 && rng() < 0.7) {
-        return `${Command.ChooseFaction} ${pick(rng, lf)}`;
-      }
-      return `${Command.ChooseFaction} ${pick(rng, factions)}`;
+      const faction = lf.length > 0 && rng() < 0.7 ? pick(rng, lf) : pickOrNull(rng, factions);
+      return faction === null ? null : `${Command.ChooseFaction} ${faction}`;
     }
 
     case Command.Build: {
-      const b = pick(rng, command.data.buildings);
-      return `${Command.Build} ${b.building} ${b.coordinates}`;
+      const b = pickOrNull(rng, command.data.buildings);
+      return b === null ? null : `${Command.Build} ${b.building} ${b.coordinates}`;
     }
 
-    case Command.PlaceLostPlanet:
-      return `${Command.PlaceLostPlanet} ${pick(rng, command.data.spaces).coordinates}`;
+    case Command.PlaceLostPlanet: {
+      const space = pickOrNull(rng, command.data.spaces);
+      return space === null ? null : `${Command.PlaceLostPlanet} ${space.coordinates}`;
+    }
 
-    case Command.UpgradeResearch:
-      return `${Command.UpgradeResearch} ${pick(rng, command.data.tracks).field}`;
+    case Command.UpgradeResearch: {
+      const track = pickOrNull(rng, command.data.tracks);
+      return track === null ? null : `${Command.UpgradeResearch} ${track.field}`;
+    }
 
-    case Command.ChooseTechTile:
-      return `${Command.ChooseTechTile} ${pick(rng, command.data.tiles).pos}`;
+    case Command.ChooseTechTile: {
+      const tile = pickOrNull(rng, command.data.tiles);
+      return tile === null ? null : `${Command.ChooseTechTile} ${tile.pos}`;
+    }
 
-    case Command.ChooseCoverTechTile:
-      return `${Command.ChooseCoverTechTile} ${pick(rng, command.data.tiles).pos}`;
+    case Command.ChooseCoverTechTile: {
+      const tile = pickOrNull(rng, command.data.tiles);
+      return tile === null ? null : `${Command.ChooseCoverTechTile} ${tile.pos}`;
+    }
 
-    case Command.ChooseRoundBooster:
-      return `${Command.ChooseRoundBooster} ${pick(rng, command.data.boosters)}`;
+    case Command.ChooseRoundBooster: {
+      const booster = pickOrNull(rng, command.data.boosters);
+      return booster === null ? null : `${Command.ChooseRoundBooster} ${booster}`;
+    }
 
     case Command.Pass: {
       const boosters = command.data.boosters;
@@ -161,16 +181,22 @@ function movePartFor(command: AvailableCommand, ctx: PlayContext): string | null
     case Command.EndTurn:
       return Command.EndTurn;
 
-    case Command.Action:
-      return `${Command.Action} ${pick(rng, command.data.poweracts).name}`;
+    case Command.Action: {
+      const act = pickOrNull(rng, command.data.poweracts);
+      return act === null ? null : `${Command.Action} ${act.name}`;
+    }
 
-    case Command.Special:
-      return `${Command.Special} ${pick(rng, command.data.specialacts).income}`;
+    case Command.Special: {
+      const act = pickOrNull(rng, command.data.specialacts);
+      return act === null ? null : `${Command.Special} ${act.income}`;
+    }
 
     case Command.Spend: {
-      const act = pick(rng, command.data.acts.filter((a) => !a.hide).length > 0
-        ? command.data.acts.filter((a) => !a.hide)
-        : command.data.acts);
+      const visible = command.data.acts.filter((a) => !a.hide);
+      const act = pickOrNull(rng, visible.length > 0 ? visible : command.data.acts);
+      if (act === null) {
+        return null;
+      }
       let k = 1;
       if (act.range && act.range.length > 0) {
         // In the Gaia phase spend as much as possible (Terrans must empty their Gaia area to
@@ -183,57 +209,82 @@ function movePartFor(command: AvailableCommand, ctx: PlayContext): string | null
       return `${Command.Spend} ${scaleRewardString(act.cost, k)} for ${scaleRewardString(act.income, k)}`;
     }
 
-    case Command.BurnPower:
-      return `${Command.BurnPower} ${pick(rng, command.data)}`;
-
-    case Command.ChargePower:
-      return `${Command.ChargePower} ${pick(rng, command.data.offers).offer}`;
-
-    case Command.Decline:
-      return `${Command.Decline} ${command.data.offers[0].offer}`;
-
-    case Command.BrainStone:
-      return `${Command.BrainStone} ${pick(rng, command.data.choices).area}`;
-
-    case Command.ChooseIncome:
-      return `${Command.ChooseIncome} ${pick(rng, command.data)}`;
-
-    case Command.FormFederation: {
-      const fed = pick(rng, command.data.federations);
-      const tile = pick(rng, command.data.tiles);
-      return `${Command.FormFederation} ${fed.hexes} ${tile}`;
+    case Command.BurnPower: {
+      const amount = pickOrNull(rng, command.data);
+      return amount === null ? null : `${Command.BurnPower} ${amount}`;
     }
 
-    case Command.ChooseFederationTile:
-      return `${Command.ChooseFederationTile} ${pick(rng, command.data.tiles)}`;
+    case Command.ChargePower: {
+      const offer = pickOrNull(rng, command.data.offers);
+      return offer === null ? null : `${Command.ChargePower} ${offer.offer}`;
+    }
 
-    case Command.PISwap:
-      return `${Command.PISwap} ${pick(rng, command.data.buildings).coordinates}`;
+    case Command.Decline:
+      return `${Command.Decline} ${command.data.offers[0]?.offer ?? ""}`.trimEnd();
+
+    case Command.BrainStone: {
+      const choice = pickOrNull(rng, command.data.choices);
+      return choice === null ? null : `${Command.BrainStone} ${choice.area}`;
+    }
+
+    case Command.ChooseIncome: {
+      const income = pickOrNull(rng, command.data);
+      return income === null ? null : `${Command.ChooseIncome} ${income}`;
+    }
+
+    case Command.FormFederation: {
+      const fed = pickOrNull(rng, command.data.federations);
+      const tile = pickOrNull(rng, command.data.tiles);
+      return fed === null || tile === null ? null : `${Command.FormFederation} ${fed.hexes} ${tile}`;
+    }
+
+    case Command.ChooseFederationTile: {
+      // May legitimately arrive EMPTY today: the rescore subphase offers `{tiles: []}` when the
+      // player owns no Federation token (finding LF-2, pending an owner ruling) — see the
+      // FUZZER_PLAN.md findings table.
+      const tile = pickOrNull(rng, command.data.tiles);
+      return tile === null ? null : `${Command.ChooseFederationTile} ${tile}`;
+    }
+
+    case Command.PISwap: {
+      const b = pickOrNull(rng, command.data.buildings);
+      return b === null ? null : `${Command.PISwap} ${b.coordinates}`;
+    }
 
     // ---- Lost Fleet commands ----
 
-    case Command.Explore:
-      return `${Command.Explore} ${pick(rng, command.data.ships).ship}`;
-
-    case Command.SpaceshipAction: {
-      const action = pick(rng, command.data.actions);
-      return `${Command.SpaceshipAction} ${action.ship} ${action.type}`;
+    case Command.Explore: {
+      const ship = pickOrNull(rng, command.data.ships);
+      return ship === null ? null : `${Command.Explore} ${ship.ship}`;
     }
 
-    case Command.GaiaFormTransdim:
-      return `${Command.GaiaFormTransdim} ${pick(rng, command.data.spaces).coordinates}`;
+    case Command.SpaceshipAction: {
+      const action = pickOrNull(rng, command.data.actions);
+      return action === null ? null : `${Command.SpaceshipAction} ${action.ship} ${action.type}`;
+    }
+
+    case Command.GaiaFormTransdim: {
+      const space = pickOrNull(rng, command.data.spaces);
+      return space === null ? null : `${Command.GaiaFormTransdim} ${space.coordinates}`;
+    }
 
     case Command.ExamineArtifact:
       return `${Command.ExamineArtifact}`;
 
-    case Command.ChooseArtifactToken:
-      return `${Command.ChooseArtifactToken} ${pick(rng, command.data.tokens)}`;
+    case Command.ChooseArtifactToken: {
+      const token = pickOrNull(rng, command.data.tokens);
+      return token === null ? null : `${Command.ChooseArtifactToken} ${token}`;
+    }
 
-    case Command.ChooseTinkeringTile:
-      return `${Command.ChooseTinkeringTile} ${pick(rng, command.data.tiles)}`;
+    case Command.ChooseTinkeringTile: {
+      const tile = pickOrNull(rng, command.data.tiles);
+      return tile === null ? null : `${Command.ChooseTinkeringTile} ${tile}`;
+    }
 
-    case Command.PlacePowerRing:
-      return `${Command.PlacePowerRing} ${pick(rng, command.data.spaces).coordinates}`;
+    case Command.PlacePowerRing: {
+      const space = pickOrNull(rng, command.data.spaces);
+      return space === null ? null : `${Command.PlacePowerRing} ${space.coordinates}`;
+    }
 
     // ---- outside v1 scope (plan §2) ----
     case Command.Bid:

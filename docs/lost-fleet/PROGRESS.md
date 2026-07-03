@@ -1153,6 +1153,36 @@ notifications).
     fixture-loader guard). (Note: PROGRESS previously said 490; the E2E session's commits had
     already raised the git-verified baseline to 520 before this work started.)
 
+50. ✅ **Fuzzer Phase 2 — tier-2 conservation oracles, base calibration, Lost Fleet corpus switched
+    on; findings LF-1/LF-2/LF-3 triaged per the plan's §5 protocol** (done 2026-07-03).
+    - New `fuzz/oracles/conservation.ts`: non-negativity (all resources + power bowls), **VP
+      reconciliation** against `advancedLog` (state-changed-without-logged-cause class), and
+      tile-pool conservation (boosters, tech/adv-tech incl. ship-seeded Standard Techs, Federation
+      pool + terraforming-track token + ship-seeded tokens, LF Artifact tokens). Deliberate scope
+      note recorded in the file: generic power-token-vs-log reconciliation is a mis-encoding trap
+      (direct `burn` commands never hit the log), so token safety = non-negativity + tier-3 LF
+      exact-effect checks. Base control corpus stayed silent with tier-2 on (80/80 seeds at
+      2p/3p/4p — calibration per plan §3); LF smoke seeds (4) added to `npm test`.
+    - **Finding LF-1 (engine bug, FIXED — commit `b8f34c4`):** the §B5 Terraforming-board cost-3
+      row was computed lazily from `engine.map.seed`, which `SpaceMap.toJSON()` never serializes —
+      on the real hosts' fromData-clone-per-move path the row shuffled from seed `undefined` and
+      **changed on reload vs. live play** (§J3/§B5 violation). Fixed by computing the row once in
+      `moveInit` and persisting `engine.lostFleetTerraformingRow`; regression fixture
+      `fuzz/regressions/lf-001-*.json` (red-then-green, constructor vs `slowMotion` host-style).
+    - **Finding LF-2 (rules ambiguity, NOT fixed — owner question):** the Federation-shaped
+      Artifact (§G6) and Twilight's Q.I.C. action (§C1) can be paid with zero owned Federation
+      tokens, landing in an undo-only forced rescore with an empty choice list; the base game
+      gates its identical QIC2 mechanic. Recorded as RULES_CLARIFICATIONS.md open question #8
+      with the 3 candidate interpretations — awaiting owner ruling, engine deliberately unchanged.
+    - **Finding LF-3 (engine bug, FIXED — commit `1eb9aa4`):** `player.build()` unconditionally
+      consumed a Gaiaformer on ANY new Asteroid colonization — including setup placement (§B1/§B2:
+      factions own 0 Gaiaformers at setup; Tinkeroids/Darkanians permanently lost 1 Gaiaformer of
+      capacity) and Eclipse's Credit action (§C4: "the 6 credits is the entire cost"). The §G3
+      "former" booster count went negative and paid **-3 VP on pass** (how the non-negativity
+      oracle caught it). Fixed via `AvailableBuilding.consumesAsteroidGaiaformer` (default true;
+      false at the 2 non-consuming construction sites); 2 red-then-green regression tests.
+    - Engine suite: **526/526 → 532/532** (+2 LF-3 regressions, +4 LF smoke games).
+
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
 1. **Revised Space Sector tiles 05/06/07** — the actual planet arrangement on the Lost-Fleet-specific

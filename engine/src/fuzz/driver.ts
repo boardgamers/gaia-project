@@ -14,6 +14,7 @@
  */
 import Engine, { EngineOptions } from "../engine";
 import { chooseMovePart, GeneratorError, isConversionPart, PlayContext } from "./random-player";
+import { conservationOracles } from "./oracles/conservation";
 import { determinismMessages, runOracles, structuralOracles } from "./oracles/structural";
 import { Oracle, OracleContext, OracleFailure } from "./oracles/types";
 import { cloneEngine, cloneOptions } from "./state";
@@ -74,7 +75,8 @@ export function baseOptions(spec: FuzzGameSpec): EngineOptions {
 
 export function fuzzGame(spec: FuzzGameSpec, gameOptions: FuzzGameOptions = {}): FuzzGameResult {
   const cfg = { ...DEFAULTS, ...gameOptions };
-  const oracles = [...structuralOracles(), ...(gameOptions.oracles ?? [])];
+  // Tier-1 structural + tier-2 conservation are always on; callers add tier-3 rules oracles.
+  const oracles = [...structuralOracles(), ...conservationOracles(), ...(gameOptions.oracles ?? [])];
   const options = baseOptions(spec);
   const rng: Rng = rngFromString(spec.playSeed ?? spec.gameSeed);
 
@@ -101,6 +103,10 @@ export function fuzzGame(spec: FuzzGameSpec, gameOptions: FuzzGameOptions = {}):
     gameSeed: spec.gameSeed,
     lostFleet: spec.lostFleet,
   });
+
+  for (const oracle of oracles) {
+    oracle.startGame?.(ctxFor(engine));
+  }
 
   let roundLines = 0;
   let lastRound = engine.round;

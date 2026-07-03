@@ -5,7 +5,7 @@
  */
 import { expect } from "chai";
 import { isEqual } from "lodash";
-import { smokeCorpus } from "./corpus";
+import { lostFleetSmokeCorpus, smokeCorpus } from "./corpus";
 import { fuzzGame } from "./driver";
 import { loadRegressionFixtures, replayRegression } from "./regressions";
 
@@ -13,8 +13,8 @@ describe("Fuzzer", function () {
   // Full random games; slower than a unit test but bounded (a handful of seeds, ~1s each).
   this.timeout(60000);
 
-  describe("smoke corpus (fixed seeds, end-to-end, tier-1 structural oracles)", () => {
-    for (const spec of smokeCorpus()) {
+  describe("smoke corpus (fixed seeds, end-to-end, tier-1 structural + tier-2 conservation oracles)", () => {
+    for (const spec of [...smokeCorpus(), ...lostFleetSmokeCorpus()]) {
       it(`should play ${spec.gameSeed} (${spec.players}p${spec.lostFleet ? ", Lost Fleet" : ""}) to completion with no oracle failures`, () => {
         const result = fuzzGame(spec);
 
