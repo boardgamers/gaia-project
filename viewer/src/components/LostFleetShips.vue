@@ -5,30 +5,39 @@
       :key="ship"
       class="lost-fleet-ship"
       :data-ship="ship"
-      width="258"
-      height="96"
       viewBox="0 0 258 96"
       style="overflow: visible"
     >
-      <!-- header: ship marker + name, then the 4 exploration-track slots (explored-by markers) -->
+      <!-- header: ship marker, then the 4 exploration-track slots (explored-by markers) as a 2x2 grid.
+           No ship name (dropped for space - the tooltip on the marker still gives the full name). -->
       <g class="lost-fleet-ship__header">
-        <circle cx="9" cy="9" r="8" class="lost-fleet-ship__marker-bg" />
-        <text x="9" y="12" class="lost-fleet-ship__marker">{{ shipMarker(ship) }}</text>
-        <text x="22" y="13" class="lost-fleet-ship__name" v-b-tooltip :title="shipLabel(ship)">
-          {{ shipName(ship) }}
-        </text>
+        <g v-b-tooltip :title="shipLabel(ship)">
+          <circle cx="9" cy="9" r="8" class="lost-fleet-ship__marker-bg" />
+          <text x="9" y="12" class="lost-fleet-ship__marker">{{ shipMarker(ship) }}</text>
+        </g>
         <g
           v-for="slot in explorationSlots(ship)"
           :key="slot.index"
           class="lost-fleet-ship__slot"
           :data-slot="slot.index"
-          :transform="`translate(${148 + (slot.index - 1) * 27}, 9)`"
+          :transform="`translate(${28 + ((slot.index - 1) % 2) * 18}, ${slot.index <= 2 ? 8 : 26})`"
           v-b-tooltip
           :title="slotTitle(slot)"
         >
-          <circle r="9" class="lost-fleet-ship__slot-bg" />
-          <text v-if="!slot.player" y="3" class="lost-fleet-ship__slot-cost">{{ slot.cost }}</text>
-          <Token v-else :faction="slot.player.faction" transform="scale(0.42)" />
+          <circle r="8" class="lost-fleet-ship__slot-bg" />
+          <text y="-3" class="lost-fleet-ship__slot-ordinal">{{ slot.index }}</text>
+          <template v-if="!slot.player">
+            <image
+              v-if="slot.cost > 0"
+              xlink:href="../assets/resources/power-charge.svg"
+              width="7"
+              :height="(133 / 345) * 7"
+              x="-6.5"
+              y="0"
+            />
+            <text :x="slot.cost > 0 ? 2.5 : 0" y="6.5" class="lost-fleet-ship__slot-cost">{{ slot.cost }}</text>
+          </template>
+          <Token v-else :faction="slot.player.faction" transform="translate(0, 1) scale(0.34)" />
         </g>
       </g>
 
@@ -42,30 +51,50 @@
         v-b-tooltip
         :title="actionTooltip(ship, action)"
       >
-        <SpecialAction :action="actionIncome(ship, action.type)" :board="true" x="-20" y="-25" width="40" />
+        <SpecialAction
+          :action="actionIncome(ship, action.type)"
+          :planet="actionPlanet(ship, action.type)"
+          :board="true"
+          x="-20"
+          y="-25"
+          width="40"
+        />
         <g v-if="actionOverlay(ship, action.type)" class="lost-fleet-ship__action-overlay" transform="translate(0, -5)">
-          <circle
-            v-if="actionOverlay(ship, action.type).planet"
-            r="9"
-            :class="['planet-fill', actionOverlay(ship, action.type).planet]"
-          />
-          <Building
-            v-if="actionOverlay(ship, action.type).building"
-            :building="actionOverlay(ship, action.type).building"
-            faction="gen"
-            :flat="flat"
-            outline-white
-            :transform="`translate(${actionOverlay(ship, action.type).resource ? -6 : 0}, 0) scale(2.2)`"
-          />
-          <Resource
-            v-if="actionOverlay(ship, action.type).resource"
-            :kind="actionOverlay(ship, action.type).resource"
-            :transform="`translate(${actionOverlay(ship, action.type).building ? 8 : 0}, 0)`"
-          />
-          <Condition
-            v-if="actionOverlay(ship, action.type).condition"
-            :condition="actionOverlay(ship, action.type).condition"
-          />
+          <template v-if="isMineBubble(actionOverlay(ship, action.type))">
+            <!-- same bubble language as Condition.vue's "mg" (mine on Gaia) VP icon, just bigger and asteroid-colored -->
+            <circle r="10" :class="['planet-fill', actionOverlay(ship, action.type).planet]" />
+            <Building
+              :building="actionOverlay(ship, action.type).building"
+              faction="gen"
+              :flat="flat"
+              outline-white
+              transform="scale(1.9)"
+            />
+          </template>
+          <g v-else transform="scale(0.82)">
+            <circle
+              v-if="actionOverlay(ship, action.type).planet"
+              r="9"
+              :class="['planet-fill', actionOverlay(ship, action.type).planet]"
+            />
+            <Building
+              v-if="actionOverlay(ship, action.type).building"
+              :building="actionOverlay(ship, action.type).building"
+              faction="gen"
+              :flat="flat"
+              outline-white
+              :transform="`translate(${actionOverlay(ship, action.type).resource ? -6 : 0}, 0) scale(2.2)`"
+            />
+            <Resource
+              v-if="actionOverlay(ship, action.type).resource"
+              :kind="actionOverlay(ship, action.type).resource"
+              :transform="`translate(${actionOverlay(ship, action.type).building ? 8 : 0}, 0)`"
+            />
+            <Condition
+              v-if="actionOverlay(ship, action.type).condition"
+              :condition="actionOverlay(ship, action.type).condition"
+            />
+          </g>
         </g>
         <g transform="translate(-15,-15)">
           <image v-if="costKind(action) === 'pw'" xlink:href="../assets/resources/power-charge.svg" width="20"
@@ -177,6 +206,7 @@ import {
 import { artifactTokenSpec } from "@gaia-project/engine/src/tiles/artifacts";
 import { spaceshipFederationSpec } from "@gaia-project/engine/src/tiles/spaceship-federations";
 import { spaceshipFederationDisplayRewards } from "../data/federations";
+import { factionPiecePlanet } from "../graphics/utils";
 import Building from "./Building.vue";
 import Condition from "./Condition.vue";
 import FederationTile from "./FederationTile.vue";
@@ -313,6 +343,16 @@ export default class LostFleetShips extends Vue {
     return player === undefined ? null : this.engine.player(player as PlayerEnum);
   }
 
+  /** Colors a taken ship action's octagon by the taking player's faction, like base-game BoardAction. */
+  actionPlanet(ship: Spaceship, type: SpaceshipActionType): Planet | null {
+    const user = this.actionUser(ship, type);
+    return user ? factionPiecePlanet(user.faction) : null;
+  }
+
+  isMineBubble(overlay: ActionOverlay): boolean {
+    return overlay.planet != null;
+  }
+
   actionTooltip(ship: Spaceship, action: { type: SpaceshipActionType; cost: string; effect: string }): string {
     const user = this.actionUser(ship, action.type);
     const state = user ? ` - used by ${user.name || `P${user.player + 1}`} this round` : "";
@@ -385,12 +425,16 @@ export default class LostFleetShips extends Vue {
 
 <style lang="scss">
 .lost-fleet-ships {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+  gap: 0.4rem;
 }
 
 svg.lost-fleet-ship {
+  width: 100%;
+  height: auto;
+  display: block;
+
   .lost-fleet-ship__marker-bg {
     fill: #efe6c4;
     stroke: #d8c57c;
@@ -405,20 +449,21 @@ svg.lost-fleet-ship {
     pointer-events: none;
   }
 
-  .lost-fleet-ship__name {
-    font-size: 11px;
-    font-weight: 700;
-    fill: #172e62;
-  }
-
   .lost-fleet-ship__slot-bg {
     fill: #eef2f8;
     stroke: #b8c2d4;
     stroke-width: 1;
   }
 
+  .lost-fleet-ship__slot-ordinal {
+    font-size: 5px;
+    fill: #9aa4b2;
+    text-anchor: middle;
+    pointer-events: none;
+  }
+
   .lost-fleet-ship__slot-cost {
-    font-size: 9px;
+    font-size: 7.5px;
     fill: #5f6773;
     text-anchor: middle;
     pointer-events: none;

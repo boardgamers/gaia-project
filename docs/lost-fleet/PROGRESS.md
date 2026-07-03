@@ -1484,6 +1484,49 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
     - **Not done this session:** applying the migrations live, and a real browser end-to-end pass
       through Google-authenticated sign-in (no live credentials available in this sandbox) — only
       component-level tests with a mocked Supabase client.
+57. ✅ **Lost Fleet ship board: responsive/compact layout, action coloring, icon-overlap fix, 6c
+    redesign — CODED, TESTED & visually verified** (done 2026-07-03, same session as #56).
+    `LostFleetShips.vue` (`viewer/src/components/`):
+    - The per-ship `<svg>` dropped its fixed `width="258" height="96"` attrs (kept the same
+      `viewBox`) and `.lost-fleet-ships` moved from `flex-wrap` to `display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(165px, 1fr))` — this was the actual root
+      cause of "only 1 ship fits per row with lots of dead space on mobile" (confirmed via a real
+      iPhone-15-Pro-viewport (393px) Playwright render before/after: now renders exactly 2 ships
+      per row). This same fix also closed most of the "ship action octagon looks bigger than the
+      base-game one" gap, since the whole ship (including its actions) now scales down with its
+      grid column instead of rendering at native size unconditionally — measured 26.5px vs 29.0px
+      rendered octagon width after the fix (was full native-size mismatch before).
+    - Ship name text removed from the header (was `<text x="22" ...>`); that space is now used for
+      the 4 exploration-track slots as a 2x2 grid (was a 1x4 row) with a small ordinal number
+      (1-4) per slot plus the actual power-charge icon (`power-charge.svg`, already used elsewhere)
+      next to the EXPLORATION_CHARGE_TRACK cost, instead of a bare number.
+    - Taken ship actions now get `:planet="actionPlanet(ship, type)"` on their `<SpecialAction>`,
+      mirroring `BoardAction.vue`'s exact mechanism (`factionPiecePlanet(user.faction)` →
+      `planet-fill` CSS class on the octagon) — previously a taken ship action showed only a gray
+      X with zero player-color indication, unlike every base-game power action.
+    - The action-overlay icon group (Building/Resource/Condition combos for the 5 bespoke SubPhase
+      actions) is now wrapped in `scale(0.82)` — it was previously rendered at the SAME raw scale
+      factor (`Building ... scale(2.2)`) that every other usage in the codebase always applies an
+      additional 0.55-1.5x dampening on top of, which bled into the neighboring cost badge/action.
+    - Eclipse's 6c ("place a free Mine on an Asteroid in range") now renders as its own bigger
+      (`r="10"` vs the default `r="9"`) undampened planet-fill bubble + Building icon, matching the
+      visual language of `Condition.vue`'s `'mg'` (mine-on-Gaia VP icon) case per the owner's
+      explicit ask, instead of going through the generic dampened overlay path.
+    - Map ship markers (`SpaceHex.vue`'s `.lost-fleet-spaceship`) simplified to match the ship
+      board's own minimal circle+letter marker exactly (same `#efe6c4`/`#172e62` colors, which
+      were already shared) — dropped the dashed orbit ring and the "Ship" caption pill, which the
+      ship board never had. There is no per-ship distinct color anywhere in this codebase (map and
+      ship board both use one shared tan/gold scheme, differentiated only by the T/R/M/E letter) —
+      confirmed via code search before changing anything, not assumed.
+    - Tests: 4 new cases in `LostFleetShips.spec.ts` (responsive svg has no width/height, 2x2 slot
+      grid + ordinals, action-taken coloring, 6c bubble sizing) plus new assertions in
+      `SpaceMap.spec.ts` for the simplified map marker. **Viewer: 235/235 passing** (231 baseline
+      from #56 + 4 new), excluding the same pre-existing flaky `SetupPreview.spec.ts` seed test
+      documented under #55/Testing. Production build clean.
+    - Verified visually with Playwright against the self-contained `?lostFleet=1` demo (no Supabase
+      auth needed) at a 393x852 iPhone-15-Pro viewport — screenshots are not committed (temp
+      scratch files), but the exact commands are in this session's transcript if a future session
+      wants to re-verify the same way.
 
 ## Still MISSING — only one art-only item left
 
@@ -1515,6 +1558,12 @@ start, not 238; #56 added 8 new tests: 4 `Lobby.spec.ts`, 4 `CreateGame.spec.ts`
 223). Engine not re-run this session (no engine files touched). `node_modules` did not exist at
 this session's start — `pnpm install` was required before any test command would run; future
 sessions in a fresh container should expect the same.
+
+**Latest full rerun after #57 (2026-07-03, same session as #56):** viewer **235/235** (231 baseline
++ 4 new `LostFleetShips.spec.ts` cases). The pre-existing flaky `SetupPreview.spec.ts` seed test
+(see #55) surfaced intermittently across reruns during this session too (sometimes 0 failures,
+sometimes 1-2) — always the same seed-dependent test, never anything touched by #56/#57; rerun
+`npm test` a second time if you see it fail and nothing else did.
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/

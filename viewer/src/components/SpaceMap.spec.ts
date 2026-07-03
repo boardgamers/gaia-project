@@ -72,6 +72,16 @@ describe("SpaceMap", () => {
       expect(badge.textContent.trim()).to.match(/^DS\d+$/);
     });
     expect(container.querySelectorAll("g.space-hex-cell .lost-fleet-spaceship").length).to.equal(spaceshipHexCount);
+    // per-hex ship marker matches the ship board's own minimal circle+letter treatment (same
+    // #efe6c4/#172e62 colors) - no separate orbit ring or "Ship" caption pill on top of it
+    const mapShipMarker = container.querySelector("g.space-hex-cell .lost-fleet-spaceship");
+    if (mapShipMarker) {
+      expect(mapShipMarker.querySelector(".lost-fleet-spaceship__orbit")).to.equal(null);
+      expect(mapShipMarker.querySelector(".lost-fleet-spaceship__pill")).to.equal(null);
+      expect(mapShipMarker.querySelectorAll("circle").length).to.equal(1);
+      expect(mapShipMarker.querySelectorAll("text").length).to.equal(1);
+      expect(mapShipMarker.querySelector("text").textContent).to.match(/^[TRME]$/);
+    }
     expect(container.querySelector('[data-kind="interspace"]')).to.not.equal(null);
     expect(container.querySelector('[data-kind="deep-space"]')).to.not.equal(null);
     expect(container.querySelector('[data-kind="ship"]')).to.not.equal(null);

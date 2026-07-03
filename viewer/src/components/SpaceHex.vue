@@ -22,11 +22,8 @@
       {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
     </text>
     <g v-if="lostFleetSpaceship" class="lost-fleet-spaceship">
-      <circle class="lost-fleet-spaceship__orbit" r="0.74" />
       <circle class="lost-fleet-spaceship__core" r="0.42" />
-      <rect class="lost-fleet-spaceship__pill" x="-0.48" y="0.42" width="0.96" height="0.26" rx="0.12" ry="0.12" />
       <text class="lost-fleet-spaceship__label">{{ lostFleetSpaceshipLabel }}</text>
-      <text class="lost-fleet-spaceship__copy" y="0.55">Ship</text>
     </g>
     <use v-if="powerHighlightClass" xlink:href="#space-hex" :class="['space-hex-federation', powerHighlightClass]" />
     <Planet
@@ -648,42 +645,18 @@ svg {
   .lost-fleet-spaceship {
     pointer-events: none;
 
-    &__orbit {
-      fill: none;
-      stroke: #efe6c4;
-      stroke-width: 0.05;
-      stroke-dasharray: 0.11 0.06;
-      opacity: 0.9;
-    }
-
     &__core {
       fill: #efe6c4;
       stroke: #172e62;
       stroke-width: 0.05;
     }
 
-    &__pill {
-      fill: rgb(239 230 196 / 96%);
-      stroke: #172e62;
-      stroke-width: 0.03px;
-    }
-
-    &__label,
-    &__copy {
+    &__label {
       fill: #172e62;
       text-anchor: middle;
       dominant-baseline: central;
-    }
-
-    &__label {
       font-size: 0.45px;
       font-weight: 700;
-    }
-
-    &__copy {
-      font-size: 0.16px;
-      font-weight: 700;
-      letter-spacing: 0.02em;
     }
   }
 }
