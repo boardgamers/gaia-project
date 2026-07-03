@@ -6,7 +6,7 @@
         <RichTextView :content="statusLine" />
       </h5>
     </div>
-    <div id="move-buttons">
+    <div id="move-buttons" :class="{ 'mobile-sticky-actions': showStickyMobileBar }">
       <div v-if="init" class="d-flex flex-wrap align-content-stretch">
         <MoveButton
           v-for="i in [2, 3, 4]"
@@ -51,6 +51,9 @@
         />
       </div>
     </div>
+    <!-- reserves the sticky bar's max-height so it never permanently covers page content it has
+         scrolled past - collapses to 0 on desktop widths / whenever the bar itself isn't sticky -->
+    <div v-if="showStickyMobileBar" class="mobile-sticky-actions-spacer" aria-hidden="true"></div>
   </div>
 </template>
 
@@ -256,6 +259,12 @@ export default class Commands extends Vue implements CommandController {
 
   get isChoosingFaction() {
     return !!this.factionsToChoose;
+  }
+
+  /** Frozen bottom action bar on mobile - only once real gameplay has started (round 1+), never
+   * during player-count/faction-picking/initial-building setup. */
+  get showStickyMobileBar(): boolean {
+    return !this.init && !this.isChoosingFaction && this.engine.round >= 1;
   }
 
   get titles() {
@@ -774,6 +783,33 @@ i.planet {
     &.i {
       filter: drop-shadow(0px 0px 1px black);
     }
+  }
+}
+
+// Frozen bottom action bar on mobile (round 1+ only, see Commands.vue's showStickyMobileBar) -
+// keeps refill/round-action buttons reachable without scrolling back up to the top of the page.
+// The max-height + overflow-y:auto keeps a long options list (e.g. many valid mine-building
+// spots) scrollable in place instead of growing to fill/exceed the screen.
+$mobile-sticky-actions-max-height: 40vh;
+
+@media (max-width: 767px) {
+  #move-buttons.mobile-sticky-actions {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1030;
+    max-height: $mobile-sticky-actions-max-height;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom));
+    background: var(--systemGray6, #f2f2f7);
+    border-top: 1px solid #c9c9d1;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+  }
+
+  .mobile-sticky-actions-spacer {
+    height: $mobile-sticky-actions-max-height;
   }
 }
 </style>

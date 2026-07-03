@@ -1859,6 +1859,95 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
     (`npm run fuzz -- --lf 150 --base 20`) ran clean. **569/569 engine tests pass** (was 567
     mid-session while the since-reverted "hard gate" version was in place; net +2 from the
     baseline of 567 after accounting for the revised implementation's own test set).
+59. ✅ **Ship board / ship action UI polish + a real board-state gating gap, CODED & TESTED**
+    (done 2026-07-03). A round of user-reported viewer bugs on `LostFleetShips.vue` and the ship
+    action buttons, worked through one by one:
+    - **Full ship names, single-row layout, consistent charge icon.** The ship board previously
+      showed only a single-letter marker (T/R/M/E) with the full name in a tooltip only; it now
+      prints the real name (`Twilight`/`Rebellion`/`T F Mars`/`Eclipse`) directly on the board. The
+      4-ship strip's CSS switched from `grid-template-columns: repeat(auto-fit, minmax(165px,
+      1fr))` (which collapsed to a 2×2 grid on mobile) to `grid-auto-flow: column` +
+      `grid-auto-columns: minmax(210px, 1fr)` + `overflow-x: auto`, so all ships always stay on one
+      row — narrow viewports scroll horizontally instead of stacking or shrinking to illegibility.
+      The exploration-slot charge-cost badge was hand-rolled (bare `power-charge.svg` + grey text,
+      no background) and didn't match the charge/power badge used everywhere else in the app
+      (`Resource` component's `pw` kind — a purple circle + white number); it's now a scaled-down
+      `<Resource kind="pw">` for visual consistency.
+    - **Icon-only ship action buttons + Examine Artifact icons.** `logic/buttons/lost-fleet.ts`'s
+      `spaceshipActionButton`/`chooseArtifactTokenButton` rendered plain text labels (e.g.
+      "Twilight Q.I.C. (3q)", "Knowledge + Ore"). Extracted the ship board's action-tile and
+      artifact-token visuals (already built from base-game primitives — `SpecialAction` octagon +
+      `Building`/`Resource`/`Condition` overlays, or the artifact reward-icon bubble) out of
+      `LostFleetShips.vue` into two new self-contained, store-aware components — `ShipActionIcon.vue`
+      and `ArtifactIcon.vue` (mirroring `BoardAction.vue`'s existing pattern: a component that looks
+      up its own state from `$store` given just an id prop) — plus shared data modules
+      `data/spaceships.ts` / `data/artifacts.ts` so the board display and the button icons draw from
+      one source, not two copies. Two new `RichTextElement` fields (`spaceshipAction`,
+      `artifactToken`) let `RichTextView.vue` render either component inside a normal `MoveButton`,
+      following the exact same "hidden label + icon richText + tooltip built from the real label"
+      convention `conversionButton`/`boardActionButton` already use for the base game's octagon
+      buttons. Verified end-to-end in a real browser: clicking an icon button submits the real
+      `spaceshipAction <ship> <type>` move (confirmed via the move log), not just a visual change.
+    - **Icon sizing/centering fixes on 3 specific action hexagons.** T F Mars's Instant-Gaiaforming
+      overlay (a bare `Resource kind="instant-gaiaforming"`, never gets the building-overlay
+      branch's compounded `scale(2.2)`) was tiny; Eclipse's free-mine-on-Asteroid bubble (a fixed
+      `r=10` circle sized for the smaller pre-existing octagon) had gone out of proportion once the
+      action octagons were enlarged as part of the "made bigger" request below; Eclipse's Power
+      action (`Condition` "advance research" ladder-icon overlay, originally designed for
+      round-booster-sized contexts) visually collided with its own cost badge. All 3 re-tuned via
+      iterative Playwright screenshots (not guessed blind) — dedicated transform branches per
+      overlay kind, plus a `costBadgeTransform()` helper that nudges the cost badge for the one
+      action with a `condition` overlay so it no longer overlaps the icon.
+    - **Board-state gating audit, all 12 ship actions.** Found and fixed a real gap: Twilight's
+      Power action (upgrade a Trading Station into a Research Lab) and Rebellion's Power action
+      (upgrade a Mine into a Trading Station) were offered — and their fixed ship-board fee charged
+      — purely on affordability, with no check that the player actually owned a matching building to
+      upgrade or had room left under the target building's cap. Since `pl.payCosts()` runs before
+      the chained `SpaceshipUpgradeBuilding` subphase resolves, an ungated offer would have silently
+      spent the player's power/ore for nothing (the subphase's `required: false` means it resolves
+      as a no-op, not a crash, but the cost is still gone). Fixed by pre-checking
+      `possibleSpaceshipUpgradeBuilding(...).length > 0` in `available/spaceship-actions.ts`'s main
+      gating loop, mirroring the pattern already used for T F Mars's Power/Credit and Eclipse's
+      Credit actions. Eclipse's Power action (advance any Research track) had the same gap for a
+      maxed-out research board and got the equivalent fix via
+      `possibleResearchAreas(engine, player, null)`. The other 9 of the 12 actions were audited too:
+      pure-VP/resource-gain actions (Twilight/Rebellion Knowledge, T F Mars/Eclipse Q.I.C.) need no
+      board-state gate; T F Mars's Power (Instant Gaiaforming) and T F Mars/Eclipse's Credit (build a
+      mine) were already correctly gated on a reachable target; Rebellion's/Twilight's Q.I.C.
+      (claim tech / re-score a federation token) reuse the base game's own existing
+      required/not-required listener pattern unchanged, including the owner's explicit "stays
+      choosable even with nothing to rescore" ruling (`RULES_CLARIFICATIONS.md` §K2 open question
+      #8) for Twilight's Q.I.C. — deliberately NOT re-gated, since that permissive behavior is a
+      locked decision, not a bug. New tests in `move/spaceship-actions.spec.ts`: 4 cases (no Trading
+      Station to upgrade, Research Labs already maxed, no Mine to upgrade, every research track
+      maxed). **569/569 → 573/573 engine tests pass.**
+    - **Spaceship-component tooltip no longer names the ship.** `LostFleetShips.vue`'s per-action
+      tooltip said `"Twilight (3q): Re-score a Federation token you already own"`; now it's just
+      `"(3q): Re-score a Federation token you already own"` — the ship-board context already makes
+      clear which ship's tile you're looking at, so per-component popups describe the action only.
+    - **Frozen bottom action bar on mobile.** `Commands.vue`'s round-action button list
+      (`#move-buttons`) now gets a `mobile-sticky-actions` class whenever `!init && !isChoosingFaction
+      && engine.round >= 1` (i.e. real gameplay, never during player-count/faction-picking/initial-
+      building setup) — `position: fixed` to the viewport bottom under a `max-width: 767px` media
+      query, `max-height: 40vh` with `overflow-y: auto` so a long options list scrolls in place
+      instead of growing to fill the screen, plus a same-height spacer element so the bar never
+      permanently covers page content once scrolled past. Verified in a real mobile-viewport browser
+      session: bar stays pinned while the page scrolls underneath it, disappears entirely during
+      faction-picking, and caps at the configured max-height with an internal scrollbar under an
+      artificially short viewport.
+    - Not changed, on user instruction after investigation: a reported "asteroid mine should cost a
+      Gaiaformer but doesn't" bug. The standard Build-a-Mine-on-Asteroid route already correctly
+      requires/consumes a Gaiaformer (verified via a runtime repro against the real
+      `available/buildings.ts` → `move/buildings.ts` pipeline, not just unit-level `canBuild()`
+      calls) and is already covered by an existing test. Eclipse's ship-board Credit action (6c →
+      free mine on an Asteroid, deliberately Gaiaformer-free per `RULES_CLARIFICATIONS.md` §C4 and
+      fuzzer finding LF-3) is a confirmed, locked exception, not this bug, and the user asked to
+      leave it alone. The one other gap found — Lantids building a *second* mine on an
+      already-colonized Asteroid hex substitutes their own home-planet color for cost purposes
+      (pre-existing base-game ability logic), which bypasses the Asteroid-specific Gaiaformer branch
+      — was flagged but not fixed; **the user wants to try reproducing the originally-reported bug
+      themselves before any engine change is made here.**
+    Viewer: **255/255 tests pass**, production build clean.
 
 ## Still MISSING — only one art-only item left
 
@@ -1920,6 +2009,18 @@ new `logic/utils.spec.ts` `gameSeed` cases + 1 net from `Resource.spec.ts`'s ran
 rewrite), engine **535/535** (531 baseline + 4 new `player-data.spec.ts` `effectiveRange` cases).
 Both production builds clean. Same pre-existing flaky `SetupPreview.spec.ts` seed test as
 always — not touched, not fixed, still out of scope.
+
+**Latest full rerun after #59 (2026-07-03, fresh session):** engine **573/573** (569 baseline per
+"Done so far" #54's LF-2 entry + 4 new gating-audit cases in
+`move/spaceship-actions.spec.ts`), viewer **255/255** fresh from a clean `pnpm install` (this session's
+container had no `node_modules`, same as prior sessions' experience). Both production builds clean
+(`vue-cli-service build` — only pre-existing sass/bundle-size warnings, unrelated). Same pre-existing
+flaky `SetupPreview.spec.ts` seed test observed intermittently, same as every prior session — not
+touched, not fixed. Verified interactively in a real Chromium session (Playwright against the dev
+server), not just unit tests: ship board layout/icons, icon-only ship-action and artifact buttons
+(including an end-to-end click → move-log check, not just a visual check), and the mobile sticky
+action bar (pinned while scrolling, absent during faction-picking, capped/scrollable under a
+constrained viewport).
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/

@@ -29,6 +29,8 @@
         />
       </svg>
       <BoardAction v-else-if="c.boardAction" :key="i" :action="c.boardAction" transform="scale(1.3)" />
+      <ShipActionIcon v-else-if="c.spaceshipAction" :key="i" :ship="c.spaceshipAction.ship" :type="c.spaceshipAction.type" />
+      <ArtifactIcon v-else-if="c.artifactToken != null" :key="i" :artifact="c.artifactToken" />
       <SpecialAction
         v-else-if="c.specialAction != null"
         :key="i"
@@ -70,9 +72,11 @@ import { factionColorVar } from "../../graphics/utils";
 import BoardAction from "../BoardAction.vue";
 import TechTile from "../TechTile.vue";
 import Booster from "../Booster.vue";
+import ShipActionIcon from "../ShipActionIcon.vue";
+import ArtifactIcon from "../ArtifactIcon.vue";
 
 @Component({
-  components: { Booster, TechTile, BoardAction, Building, SpecialAction },
+  components: { Booster, TechTile, BoardAction, Building, SpecialAction, ShipActionIcon, ArtifactIcon },
 })
 export default class RichTextView extends Vue {
   @Prop()

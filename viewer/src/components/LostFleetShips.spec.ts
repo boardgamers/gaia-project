@@ -34,7 +34,10 @@ describe("LostFleetShips", () => {
 
     // ships with a Standard Tech slot show a real TechTile rendering icons, not the old text fallback
     expect(container.querySelectorAll('[data-section="tech"] svg.techTile').length).to.equal(3);
-    expect(container.querySelector(".spaceship-title")).to.equal(null);
+
+    // each ship now spells out its full name on the board (not just the single-letter marker)
+    const names = [...container.querySelectorAll(".lost-fleet-ship__name")].map((el) => el.textContent);
+    expect(names).to.deep.equal(["Twilight", "Rebellion", "T F Mars", "Eclipse"]);
 
     // Twilight carries the seeded artifact tokens (one per player at 4p)
     expect(engine.tiles.artifacts.length).to.equal(4);
@@ -66,11 +69,11 @@ describe("LostFleetShips", () => {
     expect(twilight.querySelector('[data-slot="2"] .player-token')).to.equal(null);
 
     const usedAction = twilight.querySelector('[data-action="qic"]');
-    expect(usedAction.classList.contains("used")).to.equal(true);
+    expect(usedAction.querySelector(".lost-fleet-ship__action").classList.contains("used")).to.equal(true);
     expect(usedAction.querySelectorAll("line").length).to.equal(2);
 
     const readyAction = twilight.querySelector('[data-action="knowledge"]');
-    expect(readyAction.classList.contains("used")).to.equal(false);
+    expect(readyAction.querySelector(".lost-fleet-ship__action").classList.contains("used")).to.equal(false);
     expect(readyAction.querySelectorAll("line").length).to.equal(0);
   });
 
@@ -85,7 +88,7 @@ describe("LostFleetShips", () => {
     expect(container.querySelector(`svg.lost-fleet-ship[data-ship="${Spaceship.Rebellion}"]`)).to.equal(null);
   });
 
-  it("has no fixed width/height on the ship svg, so it scales to fit its grid column (2 per row on mobile)", () => {
+  it("has no fixed width/height on the ship svg, so it scales to fit its grid column (single row, scrolls on mobile)", () => {
     const engine = new Engine(["init 2 lost-fleet-ships-spec"], { lostFleet: true });
     const store = makeStore();
     store.commit("receiveData", engine);
@@ -95,7 +98,7 @@ describe("LostFleetShips", () => {
     const ship = container.querySelector("svg.lost-fleet-ship");
     expect(ship.hasAttribute("width")).to.equal(false);
     expect(ship.hasAttribute("height")).to.equal(false);
-    expect(ship.getAttribute("viewBox")).to.equal("0 0 258 96");
+    expect(ship.getAttribute("viewBox")).to.equal("0 -16 291 112");
   });
 
   it("lays the 4 exploration slots out as a 2x2 grid with an ordinal label per slot", () => {
@@ -119,15 +122,11 @@ describe("LostFleetShips", () => {
     slots.forEach((slot, i) => {
       expect(slot.querySelector(".lost-fleet-ship__slot-ordinal").textContent).to.equal(String(i + 1));
     });
-    // costs come from EXPLORATION_CHARGE_TRACK = [0, 2, 2, 4]
-    expect(slots.map((s) => s.querySelector(".lost-fleet-ship__slot-cost").textContent)).to.deep.equal([
-      "0",
-      "2",
-      "2",
-      "4",
-    ]);
-    // a non-zero cost slot shows the power-charge icon, not just a bare number
+    // costs come from EXPLORATION_CHARGE_TRACK = [0, 2, 2, 4]; the 0-cost slot is a bare number,
+    // non-zero slots show the same charge/power badge (Resource kind="pw") used everywhere else
+    expect(slots[0].querySelector(".lost-fleet-ship__slot-cost").textContent).to.equal("0");
     expect(slots[0].querySelector("image")).to.equal(null);
+    expect(slots.slice(1).map((s) => s.querySelector("g.resource text").textContent)).to.deep.equal(["2", "2", "4"]);
     expect(slots[1].querySelector("image")).to.not.equal(null);
   });
 

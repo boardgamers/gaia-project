@@ -2,16 +2,10 @@ import Engine, { ArtifactToken, AvailableCommand, Command, Spaceship } from "@ga
 import { spaceshipBoards, SpaceshipActionType } from "@gaia-project/engine/src/spaceships";
 import { artifactTokenSpec } from "@gaia-project/engine/src/tiles/artifacts";
 import { ButtonData } from "../../data";
+import { spaceshipNames } from "../../data/spaceships";
 import { hexSelectionButton } from "./hex";
 import { CommandController } from "./types";
-import { autoClickButton, hexMap, textButton } from "./utils";
-
-const spaceshipNames: Record<Spaceship, string> = {
-  [Spaceship.Twilight]: "Twilight",
-  [Spaceship.Rebellion]: "Rebellion",
-  [Spaceship.TFMars]: "T F Mars",
-  [Spaceship.Eclipse]: "Eclipse",
-};
+import { autoClickButton, hexMap, symbolButton, textButton } from "./utils";
 
 const artifactNames: Record<ArtifactToken, string> = {
   [ArtifactToken.KnowledgeOre]: "Knowledge + Ore",
@@ -59,11 +53,14 @@ export function spaceshipActionButton(
     command: command.name,
     buttons: command.data.actions.map((action) => {
       const effect = spaceshipBoards[action.ship].actions.find((entry) => entry.type === action.type)?.effect ?? "";
-      return textButton({
+      const button = symbolButton({
         label: `${spaceshipNames[action.ship]} ${spaceshipActionLabels[action.type]} (${action.cost})`,
         longLabel: effect ? `${spaceshipNames[action.ship]}: ${effect}` : undefined,
+        richText: [{ spaceshipAction: { ship: action.ship, type: action.type } }],
         command: `${action.ship} ${action.type}`,
       });
+      button.label = "<u></u>"; // icon-only - the tooltip built above from the real label still shows on hover
+      return button;
     }),
   });
 }
@@ -121,12 +118,15 @@ export function chooseArtifactTokenButton(
   return autoClickButton({
     label: "Choose Artifact",
     command: command.name,
-    buttons: command.data.tokens.map((token) =>
-      textButton({
+    buttons: command.data.tokens.map((token) => {
+      const button = symbolButton({
         label: artifactNames[token],
         longLabel: artifactTokenSpec[token],
+        richText: [{ artifactToken: token }],
         command: token,
-      })
-    ),
+      });
+      button.label = "<u></u>"; // icon-only - the tooltip built above from the real label still shows on hover
+      return button;
+    }),
   });
 }

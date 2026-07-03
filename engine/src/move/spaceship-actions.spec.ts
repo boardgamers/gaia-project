@@ -23,6 +23,7 @@ import { GaiaHex } from "../gaia-hex";
 import { Power } from "../player-data";
 import { BuildWarning } from "../player";
 import { terraformingStepsRequired } from "../planets";
+import { lastTile } from "../research-tracks";
 import { techTileEventWithSource } from "../tiles/techs";
 import { moveBuild } from "./buildings";
 import { moveSpaceshipAction } from "./spaceship-actions";
@@ -582,6 +583,60 @@ describe("Lost Fleet spaceship board actions", () => {
     expect(player.data.power.area3).to.equal(beforePower - 3);
     expect(player.data.ores).to.equal(beforeOres - 2);
     expect(hex.data.building).to.equal(Building.ResearchLab);
+  });
+
+  it("should not offer Twilight's Power action when the player has no Trading Station to upgrade", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    player.data.explorationShips[Spaceship.Twilight] = 1;
+    // player owns no buildings at all yet - nothing to upgrade into a Research Lab
+
+    const command = availableSpaceshipActionCommand(engine, PlayerEnum.Player1);
+    expect(command?.data.actions.find((a) => a.ship === Spaceship.Twilight && a.type === "power")).to.equal(
+      undefined
+    );
+  });
+
+  it("should not offer Twilight's Power action once Research Labs are already maxed", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    player.data.explorationShips[Spaceship.Twilight] = 1;
+    const [hex] = occupyPlanetsOfDistinctTypes(engine, PlayerEnum.Player1, 1);
+    hex.data.building = Building.TradingStation;
+    player.data.buildings[Building.Mine] -= 1;
+    player.data.buildings[Building.TradingStation] += 1;
+    player.data.buildings[Building.ResearchLab] = player.maxBuildings(Building.ResearchLab);
+
+    const command = availableSpaceshipActionCommand(engine, PlayerEnum.Player1);
+    expect(command?.data.actions.find((a) => a.ship === Spaceship.Twilight && a.type === "power")).to.equal(
+      undefined
+    );
+  });
+
+  it("should not offer Rebellion's Power action when the player has no Mine to upgrade", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    player.data.explorationShips[Spaceship.Rebellion] = 1;
+    // player owns no Mine yet - nothing to upgrade into a Trading Station
+
+    const command = availableSpaceshipActionCommand(engine, PlayerEnum.Player1);
+    expect(command?.data.actions.find((a) => a.ship === Spaceship.Rebellion && a.type === "power")).to.equal(
+      undefined
+    );
+  });
+
+  it("should not offer Eclipse's Power action once every research track is fully maxed", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    player.data.explorationShips[Spaceship.Eclipse] = 1;
+    for (const field of ResearchField.values(engine.expansions)) {
+      player.data.research[field] = lastTile(field);
+    }
+
+    const command = availableSpaceshipActionCommand(engine, PlayerEnum.Player1);
+    expect(command?.data.actions.find((a) => a.ship === Spaceship.Eclipse && a.type === "power")).to.equal(
+      undefined
+    );
   });
 
   it("should additionally grant 4 VP per Q.I.C. action via the qaction Advanced Tech tile (RULES_CLARIFICATIONS.md §G2)", () => {
