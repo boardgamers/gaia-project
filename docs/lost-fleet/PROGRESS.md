@@ -1133,6 +1133,26 @@ notifications).
       `HostedGameHost.buildEngine`, and a visible load-error alert instead of a dead empty
       board. The owner's real in-flight game was checked and unaffected (no `map` key).
 
+49. ✅ **Full-game playout fuzzer, Phase 1 — generator core + driver + tier-1 structural oracles,
+    CODED & TESTED** (done 2026-07-03, per `FUZZER_PLAN.md` §6 phase 1). New `engine/src/fuzz/`:
+    `random-player.ts` (one arm per `Command` member, consuming ONLY `AvailableCommand.data`, never
+    re-deriving legality; charge/income/brainstone randomized per §J2; free-action loops capped;
+    v1 scope = standard variant / no auction / no customBoardSetup, out-of-scope commands throw),
+    `driver.ts` (host-style line construction — fromData clone per attempt, commit only on
+    `newTurn`, exactly the `self-contained.ts`/`hosted/host.ts` pattern — with a DeadEnd-undo
+    retry policy mirroring the engine's deliberate "DeadEnd = you have to undo" design),
+    `oracles/structural.ts` (tier-1: playability, termination cap, seated `playerToMove`, §J1
+    commitment, §J3 determinism — constructor replay + `fromData` round trip compared on
+    normalized state), `corpus.ts` (fixed smoke seeds in `npm test`; campaign corpus for the
+    separate `npm run fuzz` CLI in `run.ts` — big campaigns deliberately NOT in `npm test`),
+    `regressions.ts` (fixture replayer: constructor vs `slowMotion` host-style vs round trip).
+    Oracle-calibration notes (base control corpus, 100/100 seeds clean at 2p/3p/4p): two benign
+    state-representation artifacts are normalized in `fuzz/state.ts` with documented reasoning
+    (`tiles.booster` `undefined`-vs-`null` after a boosterless last-round pass; `federationCache`
+    as a derived memoization). Engine test suite: **520/520 → 525/525** (+4 smoke games, +1
+    fixture-loader guard). (Note: PROGRESS previously said 490; the E2E session's commits had
+    already raised the git-verified baseline to 520 before this work started.)
+
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
 1. **Revised Space Sector tiles 05/06/07** — the actual planet arrangement on the Lost-Fleet-specific
