@@ -7,7 +7,7 @@
 > anything else, including the **Testing — required going forward** section it points to — both
 > are standing process, not optional. Then ask the user "what next?" and use the **Next actions**
 > section below to guide them.
-> Last updated: **2026-07-02**.
+> Last updated: **2026-07-03**.
 
 ## Working agreements (read every session, not optional)
 
@@ -1455,6 +1455,31 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
       clean run at this session's start (`git stash`-verified) showed **521** — the real baseline had
       grown from work in sessions not fully reflected in that line. The 232 viewer baseline was accurate.
 
+56. ✅ **Lobby delete-game, pick-from-registered-users invites, dedicated create-game screen,
+    no-zoom on both — CODED & TESTED, migration NOT YET APPLIED live** (done 2026-07-03; session
+    ran with Supabase MCP disconnected, so `0006_delete_game.sql`/`0007_registered_user_invites.sql`
+    could not be pushed to the live project this session — do that before relying on this in
+    production). Full detail in `BACKEND.md` §14; summary:
+    - New RPCs `delete_game` (creator-only) and `list_registered_users` (id/email/display_name
+      from `auth.users`).
+    - `create_game`'s invite shape changed from `{email,...}` to `{user_id,...}` (same 7-arg
+      signature, no overload risk) — a game's host now picks teammates from a checkbox list of
+      already-registered users instead of typing an email address; `invited_email` is still
+      populated server-side so existing email-fallback matching is untouched.
+    - `Lobby.vue` split: game list + new Delete button stays in `Lobby.vue`; the create-game form
+      moved to a new `viewer/src/hosted/CreateGame.vue`, reached via `?create=1` (a new branch in
+      `main.ts`/`hosted.ts`'s existing query-string routing, no Vue Router introduced). This is a
+      dedicated full-screen view, not a literal `window.open()` — see BACKEND.md §14 for why.
+      Player count is 3 buttons instead of a `<select>`; the game-name field is gone.
+    - New `viewer/src/hosted/viewport.ts` toggles the shared `<meta name="viewport">` tag so
+      Lobby/CreateGame lock pinch-zoom while the actual game board keeps it.
+    - Tests: new `Lobby.spec.ts` (4 tests), `CreateGame.spec.ts` (4 tests), `new-game.spec.ts`
+      updated for the `user_id` shape. **Viewer: 231/231 passing**, production build clean. Engine
+      untouched, not re-run this session.
+    - **Not done this session:** applying the migrations live, and a real browser end-to-end pass
+      through Google-authenticated sign-in (no live credentials available in this sandbox) — only
+      component-level tests with a mocked Supabase client.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -1478,6 +1503,13 @@ TS resolution than the real webpack-based path and gives false failures; use the
 start of #55's session — the engine count had already grown to 521 from work not reflected in this
 file's prior "490" line, confirmed via a clean run before any of #55's changes; no regressions
 either way. #55 added 10 engine tests and 6 viewer tests).
+
+**Latest full rerun after #56 (2026-07-03):** viewer **231/231** (238 baseline this doc stated for
+#55 — the actual pre-#56 baseline was 223 per a fresh `npm install` + clean run at this session's
+start, not 238; #56 added 8 new tests: 4 `Lobby.spec.ts`, 4 `CreateGame.spec.ts`, on top of that
+223). Engine not re-run this session (no engine files touched). `node_modules` did not exist at
+this session's start — `pnpm install` was required before any test command would run; future
+sessions in a fresh container should expect the same.
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/

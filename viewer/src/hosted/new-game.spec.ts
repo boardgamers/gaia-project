@@ -6,11 +6,10 @@ describe("buildCreateGameParams", () => {
   it("builds params with pristine options, the setup move, and an engine-derived first seat", () => {
     const params = buildCreateGameParams(
       {
-        name: "Test",
         playerCount: 2,
         seats: [
-          { email: "alice@example.com", name: "Alice" },
-          { email: "bob@example.com", name: "Bob" },
+          { userId: "user-alice", name: "Alice" },
+          { userId: "user-bob", name: "Bob" },
         ],
       },
       "fixed-seed",
@@ -23,8 +22,8 @@ describe("buildCreateGameParams", () => {
     expect(params.p_setup_move).to.equal("p2 rotate");
     expect(params.p_current_seat).to.be.a("number");
     expect(params.p_invites).to.deep.equal([
-      { email: "alice@example.com", seat: 0, display_name: "Alice" },
-      { email: "bob@example.com", seat: 1, display_name: "Bob" },
+      { user_id: "user-alice", seat: 0, display_name: "Alice" },
+      { user_id: "user-bob", seat: 1, display_name: "Bob" },
     ]);
   });
 
@@ -44,12 +43,11 @@ describe("buildCreateGameParams", () => {
 
     const params = buildCreateGameParams(
       {
-        name: "Test",
         playerCount: 3,
         seats: [
-          { email: "alice@example.com", name: "Alice" },
-          { email: "bob@example.com", name: "Bob" },
-          { email: "carol@example.com", name: "Carol" },
+          { userId: "user-alice", name: "Alice" },
+          { userId: "user-bob", name: "Bob" },
+          { userId: "user-carol", name: "Carol" },
         ],
       },
       "fixed-seed-3p",
@@ -61,12 +59,12 @@ describe("buildCreateGameParams", () => {
 
   it("does not mutate the options object it returns across repeated calls", () => {
     const params1 = buildCreateGameParams(
-      { name: "A", playerCount: 2, seats: [{ email: "a@example.com", name: "A" }, { email: "b@example.com", name: "B" }] },
+      { playerCount: 2, seats: [{ userId: "a", name: "A" }, { userId: "b", name: "B" }] },
       "seed-1",
       "p2 rotate"
     );
     const params2 = buildCreateGameParams(
-      { name: "B", playerCount: 2, seats: [{ email: "a@example.com", name: "A" }, { email: "b@example.com", name: "B" }] },
+      { playerCount: 2, seats: [{ userId: "a", name: "A" }, { userId: "b", name: "B" }] },
       "seed-2",
       "p2 rotate"
     );

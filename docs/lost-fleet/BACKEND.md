@@ -417,6 +417,57 @@ unopenable. Fixes:
   deterministically), so already-stored legacy rows open too. Regression-tested in `host.spec.ts`.
 - The one pre-existing broken row on the live DB was repaired in place (`options - 'map'`).
 
+## 14. Delete games, pick-from-registered-users invites, dedicated create screen (2026-07-03)
+
+Migrations `0006_delete_game.sql` and `0007_registered_user_invites.sql` — **written but NOT yet
+applied to the live project** (this session had no Supabase MCP access; run them via the
+Supabase CLI/dashboard, or a future session with `mcp__Supabase__apply_migration`, before relying
+on any of this in production). All viewer-side changes are unit-tested (`Lobby.spec.ts`,
+`CreateGame.spec.ts`, updated `new-game.spec.ts`) and the full `npm test` + `vue-cli-service
+build` pass, but the actual Supabase RPCs could not be exercised end-to-end live in this session.
+
+- **`delete_game(p_game_id)`** — new security-definer RPC, creator-only (`created_by = auth.uid()`
+  check), plain `delete from games` (players/moves cascade via existing FKs). `Lobby.vue` shows a
+  "Delete" button per game row only when `game.created_by === session.user.id`, gated by
+  `window.confirm`.
+- **Invites are now "pick from registered users," not "type an email"** (§13.3 amendment):
+  - New **`list_registered_users()`** RPC (security definer, `authenticated`-only) returns
+    `(id, email, display_name)` from `auth.users`, `display_name` derived from Google's
+    `raw_user_meta_data.full_name`/`.name`, falling back to the email's local part.
+  - `create_game`'s `p_invites` shape changed from `{email, seat, display_name}` to
+    `{user_id, seat, display_name}` — same 7-argument signature (`text,text,int,jsonb,jsonb,int,
+    text`), so this is a straight `create or replace`, not a new overload (unlike §J4's cautionary
+    tale — no argument *types* changed, only the jsonb keys inside one of them).
+    `invited_email` is still populated (resolved server-side from the matched `auth.users` row) so
+    `host.ts`'s `mySeats()`/`is_game_member`'s email-fallback matching, and `claim_my_seats()`,
+    keep working unchanged for both old and new rows. Duplicate `user_id`s across seats are still
+    allowed (test games — see §13.2).
+  - `CreateGame.vue` (new component, see below) queries `list_registered_users()` on mount and
+    renders the *other* registered users (host excluded) as a capped checkbox list — check up to
+    `playerCount - 1`, further checkboxes disable once the cap is hit. No manual seat-by-seat
+    email typing anymore; "Shuffle seat order" still exists, now shuffling the picked-user-id list.
+- **Create-game is now its own screen, not an inline section of the lobby.** `Lobby.vue` was split:
+  it now only renders the game list + delete + a `<a href="?create=1">+ New game</a>` link; the
+  old inline form (player count, test-game toggle, invites, `SetupPreview`, submit) moved to a new
+  `viewer/src/hosted/CreateGame.vue`. Routing stays consistent with the rest of this app (no Vue
+  Router in use, see §2/§9's query-string branching): `main.ts` now also treats `?create=1` as a
+  hosted-mode URL, and `hosted.ts`'s `launchHosted()` branches on it to mount `CreateGame` instead
+  of `Lobby`. **This intentionally is NOT a literal `window.open()` new browser window** — that's
+  unreliable on iOS Safari (popup blocking) and breaks PWA continuity; "a whole new window to do
+  your setup stuff" was implemented as a dedicated full-screen view instead, consistent with how
+  every other screen in this app already works (full navigations via `href`/`window.location`, no
+  in-page modals). Revisit if a literal new window/tab is still wanted.
+  - The game-name text field was dropped entirely per owner request — `buildCreateGameParams`
+    always sends `p_name: ""` now; the lobby already falls back to "Unnamed game".
+  - Player count is 3 buttons (`2`/`3`/`4`) instead of a `<select>`.
+- **No-zoom on Lobby + CreateGame only.** There's one shared `index.html`/`<meta name="viewport">`
+  for the whole SPA (§ above, no per-route HTML). New `viewer/src/hosted/viewport.ts` exports
+  `setViewportZoomLocked(locked)`, which mutates that meta tag's `content` in place.
+  `hosted.ts`'s `launchHosted()` calls it with `true` right before mounting `Lobby`/`CreateGame`,
+  and `false` right before `launchGame()` — so the actual game board keeps normal pinch-zoom
+  (useful for the map), only these two screens lock it. Since every "navigation" in this app is a
+  full page load (`href`/`window.location.search`), there's no stale-state risk between screens.
+
 ### 13.5 Google OAuth — the owner's one-time setup (~10 min)
 
 Needed once for the "Sign in with Google" button; magic link works without it.

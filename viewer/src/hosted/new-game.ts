@@ -1,9 +1,8 @@
 import Engine from "@gaia-project/engine";
 
 export type NewGameForm = {
-  name: string;
   playerCount: number;
-  seats: { email: string; name: string }[];
+  seats: { userId: string; name: string }[];
 };
 
 export function randomSeed(): string {
@@ -33,11 +32,11 @@ export function buildCreateGameParams(form: NewGameForm, seed: string, rotateMov
   );
   probe.generateAvailableCommandsIfNeeded();
   return {
-    p_name: form.name,
+    p_name: "",
     p_seed: seed,
     p_player_count: form.playerCount,
     p_options: options,
-    p_invites: form.seats.map((s, i) => ({ email: s.email, seat: i, display_name: s.name })),
+    p_invites: form.seats.map((s, i) => ({ user_id: s.userId, seat: i, display_name: s.name })),
     p_current_seat: probe.playerToMove,
     p_setup_move: rotateMove,
   };

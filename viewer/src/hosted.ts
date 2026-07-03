@@ -1,11 +1,13 @@
 import Vue from "vue";
 import Game from "./components/Game.vue";
+import CreateGame from "./hosted/CreateGame.vue";
 import HostedBar from "./hosted/HostedBar.vue";
 import { HostedGameHost, seatToLock } from "./hosted/host";
 import Lobby from "./hosted/Lobby.vue";
 import { enablePushNotifications, registerServiceWorker } from "./hosted/push";
 import SignIn from "./hosted/SignIn.vue";
 import { createSupabaseBackend, getSupabaseClient, subscribeMoves, SupabaseClient } from "./hosted/supabase-client";
+import { setViewportZoomLocked } from "./hosted/viewport";
 import launch from "./launcher";
 
 // The Supabase-hosted counterpart of self-contained.ts: instead of minting a
@@ -154,10 +156,20 @@ export default async function launchHosted(selector = "#app"): Promise<void> {
   // Match the signed-in email to any seats the user was invited to.
   await client.rpc("claim_my_seats");
 
-  const gameId = new URLSearchParams(window.location.search).get("game");
-  if (!gameId) {
-    mountChild(root, Lobby, { client, session });
+  const params = new URLSearchParams(window.location.search);
+  const gameId = params.get("game");
+  if (gameId) {
+    setViewportZoomLocked(false);
+    await launchGame(root, client, session, gameId);
     return;
   }
-  await launchGame(root, client, session, gameId);
+
+  // Lobby and create-game are meant for one-handed phone use; lock pinch-zoom
+  // there (viewport.ts), unlike the actual game board above.
+  setViewportZoomLocked(true);
+  if (params.has("create")) {
+    mountChild(root, CreateGame, { client, session });
+  } else {
+    mountChild(root, Lobby, { client, session });
+  }
 }

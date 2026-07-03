@@ -19,6 +19,11 @@
  * sandboxed environments force all browser traffic through an HTTPS proxy
  * that cannot serve loopback plain-HTTP — production mode avoids that).
  *
+ * Requires migrations 0006_delete_game.sql and 0007_registered_user_invites.sql applied to the
+ * target Supabase project (adds delete_game/list_registered_users and the user_id-based
+ * create_game invite shape) — both accounts must already be registered for the invite step to
+ * find the invitee in the picker.
+ *
  * Optional env: E2E_BASE_URL (url | "local"), E2E_PORT (default 4173),
  * PW_EXECUTABLE (chromium path), E2E_ARTIFACTS (failure screenshot dir).
  * E2E_NETWORK=intercept routes all browser traffic through Node instead of
@@ -181,6 +186,7 @@ async function main() {
 
   const pageA = await newSessionContext(browser, sessionA, "A", intercept);
   const pageB = await newSessionContext(browser, sessionB, "B", intercept);
+  // Games have no name field anymore (dropped 2026-07-03) — this is just a label for this test run's own logging.
   const gameName = `E2E ${new Date().toISOString().slice(0, 16)}`;
 
   try {
@@ -189,16 +195,14 @@ async function main() {
     await pageA.locator("h3", { hasText: "The Lost Fleet — Games" }).waitFor({ timeout: 30000 });
     check("browser A: supabase-js loaded, session accepted, lobby rendered");
 
-    // --- Create a 2p Lost Fleet game via the real form ---
-    await pageA.locator('input[placeholder="Friday fleet night"]').fill(gameName);
-    const emails = pageA.locator('input[type="email"]');
-    const names = pageA.locator('input[placeholder="Display name"]');
-    if ((await emails.nth(0).inputValue()) !== sessionA.user.email) {
-      throw new Error("seat 1 email was not prefilled with the host's address");
-    }
-    await names.nth(0).fill("Alice");
-    await emails.nth(1).fill(sessionB.user.email);
-    await names.nth(1).fill("Bob");
+    // --- Create a 2p Lost Fleet game via the real, dedicated create screen ---
+    await pageA.locator("a", { hasText: "+ New game" }).click();
+    await pageA.waitForURL(/\?create=1/, { timeout: 30000 });
+    await pageA.locator("h3", { hasText: "New game" }).waitFor({ timeout: 30000 });
+    // Invite Bob by ticking his row in the registered-users list (no email typing anymore).
+    const bobRow = pageA.locator(".custom-control", { hasText: sessionB.user.email });
+    await bobRow.waitFor({ state: "visible", timeout: 30000 });
+    await bobRow.locator('input[type="checkbox"]').check();
     await pageA.locator("button", { hasText: "Create game" }).click();
     await pageA.waitForURL(/\?game=/, { timeout: 30000 });
     const gameId = new URL(pageA.url()).searchParams.get("game");
