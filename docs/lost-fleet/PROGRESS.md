@@ -1498,6 +1498,24 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
     - Verification: engine `cd engine && npm test` → **548/548** (531 baseline + 17 new: 5
       `faction-boards/lantids.spec.ts`, 12 `research-tracks.spec.ts`). No pre-existing test needed
       changes; no regressions.
+57. ✅ **Removed a debug `console.log` that fired on every thrown error, including expected ones in
+    tests** (done 2026-07-03, follow-up from the same token-usage review that added the `--reporter
+    min` convention above). `Engine.move()`'s `execute()` wrapped `executeMove()` in a `try/catch`
+    whose `catch` block unconditionally logged `this.assertContext()` — the full move history plus a
+    `JSON.stringify()` of every currently-available command — before rethrowing. Since a large share
+    of this test suite's own tests intentionally trigger a throw (e.g.
+    `expect(() => new Engine(moves)).to.throw(...)`), this fired constantly even in a fully-passing
+    run, independent of the mocha reporter chosen. **Checked for a production risk before touching
+    it:** `viewer/src/hosted/host.ts`'s `submitMove()` catches exactly this kind of thrown error and
+    passes `errorMessage(err)` straight into a user-facing error callback in the live hosted-game UI
+    — so attaching the dumped context to `e.message` instead (the initially-considered fix) would
+    have leaked a giant JSON blob into a real player's error toast on their next invalid move. Removed
+    the `console.log` and the `try/catch` entirely (rethrow-only catch was a no-op besides the
+    logging) instead, along with the now-unused private `assertContext()` method. No test asserts on
+    this console output; failures still show full detail via the thrown error's own message/stack
+    (spot-checked with a deliberately-broken assertion). Engine **548/548** unchanged, viewer
+    **238/238** unchanged (both re-verified after this change; one viewer run hit the already-known
+    pre-existing flaky `SetupPreview.spec.ts` test from #55, confirmed unrelated by a clean rerun).
 
 ## Still MISSING — only one art-only item left
 
@@ -1522,8 +1540,10 @@ invoked in a session.
 Real test commands (don't use raw `mocha -r ts-node/register` for the viewer — it hits stricter
 TS resolution than the real webpack-based path and gives false failures; use the actual scripts):
 
-- Engine: `cd engine && npx mocha -r ts-node/register --reporter min 'src/**/*.spec.ts' 'src/*.spec.ts'`
-  (equivalent to `npm test` but with the quiet reporter). **548 tests passing as of 2026-07-03.**
+- Engine: `cd engine && npx mocha -r ts-node/register --reporter min 'src/**/*.spec.ts' 'src/*.spec.ts' '*.spec.ts'`
+  (equivalent to `npm test` but with the quiet reporter — **all 3 glob patterns are required**,
+  dropping the trailing `'*.spec.ts'` silently skips the root-level `wrapper.spec.ts` and undercounts
+  by 10). **548 tests passing as of 2026-07-03.**
 - Viewer: `cd viewer && npx vue-cli-service test:unit --timeout 4000 --reporter min 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'`
   (this is what `pnpm test` runs, plus `--reporter min` — uses `mochapack`/webpack, required for
   files that touch engine types). **238 tests passing as of 2026-07-02** (one unrelated
