@@ -82,6 +82,14 @@ export function possibleFederationTiles(engine: Engine, player: Player, from: "p
     ...pl.data.spaceshipFederations.map((fed) => fed.tile),
   ]);
 
+  // §C1/§G6, owner ruling 2026-07-03: rescoring with no owned Federation token to rescore
+  // (Twilight's Q.I.C. action, the Federation-shaped Artifact) is allowed but has no effect -
+  // offer NO command here so the triggering `processNextMove(..., required: false)` call
+  // (engine.ts) resolves it as a silent no-op instead of forcing an unanswerable choice.
+  if (from === "player" && playerTiles.length === 0) {
+    return commands;
+  }
+
   commands.push({
     name: Command.ChooseFederationTile,
     player,

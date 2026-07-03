@@ -186,6 +186,39 @@ describe("Artifact token effects (RULES_CLARIFICATIONS.md §G6)", () => {
     expect(command.data.tokens).to.deep.equal([ArtifactToken.Credit, ArtifactToken.Power, ArtifactToken.Federation]);
   });
 
+  it("should still offer the Federation-shaped token, flagged as no-effect, when the player owns no Federation token (§G6/§C1, owner ruling 2026-07-03)", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    engine.tiles.artifacts = [ArtifactToken.Credit, ArtifactToken.Power, ArtifactToken.Federation];
+
+    const command = availableArtifactTokenCommand(engine, PlayerEnum.Player1);
+    expect(command.data.tokens).to.deep.equal([ArtifactToken.Credit, ArtifactToken.Power, ArtifactToken.Federation]);
+    expect(command.data.noEffectTokens).to.deep.equal([ArtifactToken.Federation]);
+  });
+
+  it("should not flag the Federation-shaped token as no-effect once the player owns a Federation token", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    player.data.tiles.federations.push({ tile: Federation.Fed2, green: false });
+    engine.tiles.artifacts = [ArtifactToken.Federation];
+
+    const command = availableArtifactTokenCommand(engine, PlayerEnum.Player1);
+    expect(command.data.noEffectTokens).to.equal(undefined);
+  });
+
+  it("should let the player claim the Federation-shaped token with no owned Federation token, and have no effect", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    engine.tiles.artifacts = [ArtifactToken.Federation];
+
+    const beforeVp = player.data.victoryPoints;
+    const command = availableArtifactTokenCommand(engine, PlayerEnum.Player1);
+    engine.turnMoves = [];
+    moveChooseArtifactToken(engine, command, PlayerEnum.Player1, ArtifactToken.Federation);
+
+    expect(player.data.victoryPoints).to.equal(beforeVp);
+    expect(engine.tiles.artifacts).to.have.length(0);
+  });
+
   it("KnowledgeOre: grants +1 knowledge and +1 ore as ongoing income, not an immediate gain", () => {
     const engine = createLostFleetRoundMoveEngine(3);
     const player = engine.player(PlayerEnum.Player1);

@@ -22,5 +22,15 @@ export function possibleExamineArtifact(engine: Engine, player: Player): Availab
 }
 
 export function possibleArtifactTokens(engine: Engine, player: Player): AvailableCommand<Command.ChooseArtifactToken>[] {
-  return [{ name: Command.ChooseArtifactToken, player, data: { tokens: engine.tiles.artifacts as ArtifactToken[] } }];
+  const pl = engine.player(player);
+  const tokens = engine.tiles.artifacts as ArtifactToken[];
+
+  // §G6, owner ruling 2026-07-03: the Federation-shaped Artifact is still choosable with no
+  // owned Federation token to rescore; it just has no effect. Flagged so a future UI can warn
+  // before commit, matching Twilight's Q.I.C. action (available/spaceship-actions.ts).
+  const ownsAnyFederationToken = pl.data.tiles.federations.length > 0 || pl.data.spaceshipFederations.length > 0;
+  const noEffectTokens =
+    !ownsAnyFederationToken && tokens.includes(ArtifactToken.Federation) ? [ArtifactToken.Federation] : undefined;
+
+  return [{ name: Command.ChooseArtifactToken, player, data: { tokens, noEffectTokens } }];
 }

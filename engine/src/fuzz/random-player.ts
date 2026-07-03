@@ -116,9 +116,10 @@ export function chooseMovePart(commands: AvailableCommand[], player: number, ctx
 }
 
 /**
- * Pick from a choice list that the engine may hand over EMPTY (observed: the rescore subphase
- * offers `{tiles: [], rescore: true}` when the player owns no Federation token — finding LF-2).
- * Returning null makes the driver treat the line like a DeadEnd: ban the opening choice, retry.
+ * Pick from a choice list that the engine may hand over EMPTY. Returning null makes the driver
+ * treat the line like a DeadEnd: ban the opening choice, retry. (Originally added for the
+ * rescore subphase's `{tiles: []}` case, finding LF-2 — now fixed, see the comment on the
+ * `Command.ChooseFederationTile` arm below — kept as general defensive coding.)
  */
 function pickOrNull<T>(rng: Rng, items: readonly T[] | undefined): T | null {
   if (!items || items.length === 0) {
@@ -239,9 +240,10 @@ function movePartFor(command: AvailableCommand, ctx: PlayContext): string | null
     }
 
     case Command.ChooseFederationTile: {
-      // May legitimately arrive EMPTY today: the rescore subphase offers `{tiles: []}` when the
-      // player owns no Federation token (finding LF-2, pending an owner ruling) — see the
-      // FUZZER_PLAN.md findings table.
+      // The rescore subphase is never offered at all with zero owned Federation tokens (fixed
+      // per finding LF-2, owner ruling 2026-07-03: rescoring with nothing to rescore resolves as
+      // a silent no-op — see `available/federations.ts` `possibleFederationTiles`), so this
+      // command's `tiles` list is never empty in practice; `pickOrNull` stays as defensive coding.
       const tile = pickOrNull(rng, command.data.tiles);
       return tile === null ? null : `${Command.ChooseFederationTile} ${tile}`;
     }

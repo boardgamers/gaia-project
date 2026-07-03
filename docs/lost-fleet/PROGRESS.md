@@ -1836,6 +1836,30 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
     replayer (currently 1 fixture, `lf-001-*`); `npm run fuzz -- --lf N --base M [--seed-base X]`
     runs arbitrarily large campaigns on demand, never part of `npm test`.
 
+54. ✅ **LF-2 resolved by owner ruling — rescoring with no owned Federation token is now a
+    permitted no-op with a warning, CODED & TESTED** (done 2026-07-03). Closes the fuzzer's
+    findings-table Open Question #8 (`RULES_CLARIFICATIONS.md`). Owner's first instinct ("must
+    have federation token to use those actions", gating both like the base game's QIC2 action)
+    was implemented, then explicitly reversed the same session: **"you should be able to take
+    those actions... you should just be warned that you can't trigger any federation tokens and
+    then that's it."** Final behavior for both affected surfaces (Twilight's Q.I.C. action §C1,
+    the Federation-shaped Artifact §G6): the action/token stays offered/choosable even with zero
+    owned Federation tokens (pool or ship-claimed); paying the cost / claiming the token is
+    allowed and simply has no effect, instead of the old behavior (a forced, unanswerable
+    sub-decision that threw or dead-ended). New `BuildWarning.noOwnedFederationToRescore` surfaces
+    on `AvailableSpaceshipBoardAction.warnings`; `Command.ChooseArtifactToken` gained a
+    `noEffectTokens` field — both purely informational data for a future viewer chunk to render
+    (no viewer work in this session). Root fix: `engine.ts`'s shared
+    `gain-${Resource.RescoreFederation}` listener is no longer `required`, and
+    `available/federations.ts`'s `possibleFederationTiles()` now returns NO command at all for
+    the rescore branch when the player owns nothing (previously it returned one command with an
+    empty `tiles` list, which still forced an unanswerable choice regardless of the `required`
+    flag — this was the actual mechanism bug). 5 new/updated regression tests across
+    `move/spaceship-actions.spec.ts` and `move/artifacts.spec.ts`; a 170-seed validation campaign
+    (`npm run fuzz -- --lf 150 --base 20`) ran clean. **569/569 engine tests pass** (was 567
+    mid-session while the since-reverted "hard gate" version was in place; net +2 from the
+    baseline of 567 after accounting for the revised implementation's own test set).
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

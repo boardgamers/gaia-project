@@ -21,6 +21,7 @@ import {
 } from "../enums";
 import { GaiaHex } from "../gaia-hex";
 import { Power } from "../player-data";
+import { BuildWarning } from "../player";
 import { terraformingStepsRequired } from "../planets";
 import { techTileEventWithSource } from "../tiles/techs";
 import { moveBuild } from "./buildings";
@@ -205,6 +206,33 @@ describe("Lost Fleet spaceship board actions", () => {
 
     const restored = Engine.fromData(JSON.parse(JSON.stringify(engine)));
     expect(restored.spaceshipActions[Spaceship.TFMars].qic).to.equal(PlayerEnum.Player1);
+  });
+
+  it("should still offer Twilight's QIC action with a warning (not exclude it) when the player owns no Federation token (§C1, owner ruling 2026-07-03)", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    player.data.explorationShips[Spaceship.Twilight] = 1;
+
+    const command = availableSpaceshipActionCommand(engine, PlayerEnum.Player1);
+    const action = command?.data.actions.find((a) => a.ship === Spaceship.Twilight && a.type === "qic");
+    expect(action).to.not.equal(undefined);
+    expect(action.warnings).to.deep.equal([BuildWarning.noOwnedFederationToRescore]);
+  });
+
+  it("should let the player pay 3 QIC for Twilight's QIC action with no owned Federation token, and have no effect", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    player.data.explorationShips[Spaceship.Twilight] = 1;
+
+    const command = availableSpaceshipActionCommand(engine, PlayerEnum.Player1);
+    const beforeQic = player.data.qics;
+    const beforeVp = player.data.victoryPoints;
+
+    engine.turnMoves = [];
+    moveSpaceshipAction(engine, command, PlayerEnum.Player1, Spaceship.Twilight, "qic");
+
+    expect(player.data.qics).to.equal(beforeQic - 3);
+    expect(player.data.victoryPoints).to.equal(beforeVp);
   });
 
   it("should pay 3 QIC and rescore an owned Federation token via Twilight's QIC action", () => {

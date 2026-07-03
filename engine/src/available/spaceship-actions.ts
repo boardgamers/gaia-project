@@ -2,6 +2,7 @@ import { qicForDistance, terraformingCost } from "../cost";
 import Engine from "../engine";
 import { Building, Command, Planet, Player, Resource, Spaceship } from "../enums";
 import { terraformingStepsRequired } from "../planets";
+import { BuildWarning } from "../player";
 import Reward from "../reward";
 import { shipsInPlay, spaceshipActionEffects, spaceshipBoards } from "../spaceships";
 import { AvailableBuilding, AvailableCommand, AvailableHex, AvailableSpaceshipBoardAction } from "./types";
@@ -45,7 +46,22 @@ export function possibleSpaceshipActions(engine: Engine, player: Player): Availa
         continue;
       }
 
-      actions.push({ ship, type: action.type, cost: action.cost });
+      // §C1: Twilight's Q.I.C. action re-scores a Federation token the player already owns -
+      // owner ruling 2026-07-03 (RULES_CLARIFICATIONS.md §C1/§G6 open question resolved): the
+      // action is still offered with no owned Federation token (pool or ship-claimed); it just
+      // has no effect. Flagged with a warning so a future UI can surface it before commit.
+      const noOwnedFederation =
+        ship === Spaceship.Twilight &&
+        action.type === "qic" &&
+        pl.data.tiles.federations.length === 0 &&
+        pl.data.spaceshipFederations.length === 0;
+
+      actions.push({
+        ship,
+        type: action.type,
+        cost: action.cost,
+        ...(noOwnedFederation ? { warnings: [BuildWarning.noOwnedFederationToRescore] } : {}),
+      });
     }
   }
 

@@ -71,6 +71,7 @@ export type AvailableSpaceshipBoardAction = {
   ship: Spaceship;
   type: SpaceshipActionType;
   cost: string;
+  warnings?: BuildWarning[];
 };
 export type AvailableSpaceshipBoardActionData = {
   actions: AvailableSpaceshipBoardAction[];
@@ -137,7 +138,13 @@ interface CommandData {
   [Command.Build]: AvailableBuildCommandData;
   [Command.BurnPower]: number[];
   [Command.ChargePower]: { offers: Offer[] };
-  [Command.ChooseArtifactToken]: { tokens: ArtifactToken[] };
+  [Command.ChooseArtifactToken]: {
+    tokens: ArtifactToken[];
+    /** Lost Fleet §G6, owner ruling 2026-07-03: which of `tokens` would currently have no effect
+     * if chosen (today, only the Federation-shaped token with no owned Federation token to
+     * rescore) - choosing one is still allowed, this is informational for a future UI. */
+    noEffectTokens?: ArtifactToken[];
+  };
   [Command.ChooseCoverTechTile]: { tiles: StandardTechTileChoice[] };
   [Command.ChooseFaction]: Faction[];
   [Command.ChooseFederationTile]: { tiles: AvailableFederationChoice[]; rescore: boolean };

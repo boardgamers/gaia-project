@@ -517,8 +517,15 @@ export default class Engine {
     player.data.on(`gain-${Resource.TemporaryRange}`, (count: number) => {
       this.processNextMove(SubPhase.BuildMineOrGaiaFormer, null, true);
     });
+    // Not `required`: Lost Fleet's Twilight Q.I.C. action and Federation-shaped Artifact can be
+    // taken/claimed with no owned Federation token to rescore (owner ruling 2026-07-03,
+    // RULES_CLARIFICATIONS.md open question #8) - with zero tokens owned, `possibleFederationTiles`
+    // offers an empty choice list, and `required: false` lets that resolve as a silent no-op
+    // instead of forcing a Command.DeadEnd undo. The base game's own rescore action (QIC2) never
+    // reaches this with zero tokens (it's pre-filtered in available/actions.ts), so this is a no-op
+    // there.
     player.data.on(`gain-${Resource.RescoreFederation}`, () =>
-      this.processNextMove(SubPhase.RescoreFederationTile, null, true)
+      this.processNextMove(SubPhase.RescoreFederationTile, null, false)
     );
     player.data.on(`gain-${Resource.GainArtifact}`, () =>
       this.processNextMove(SubPhase.ChooseArtifactToken, null, true)

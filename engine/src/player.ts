@@ -95,6 +95,9 @@ export enum BuildWarning {
   buildingWillBePartOfFederation = "building-will-be-part-of-federation",
   ambasFederationWithoutPi = "ambas-federation-without-PI",
   ambasSwapIntoFederation = "ambas-swap-into-federation",
+  /** Lost Fleet: rescoring (Twilight's Q.I.C. action, the Federation-shaped Artifact) with no
+   * owned Federation token to rescore - owner ruling 2026-07-03: allowed, but has no effect. */
+  noOwnedFederationToRescore = "no-owned-federation-to-rescore",
 }
 
 export type BuildCheck = { cost: Reward[]; steps: number; warnings: BuildWarning[] };
