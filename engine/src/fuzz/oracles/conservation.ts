@@ -29,7 +29,7 @@ export const nonNegativeResources: Oracle = {
       const d = pl.data;
       const amounts: Array<[string, number]> = [
         ["victoryPoints", d.victoryPoints],
-        ["ore", d.ore],
+        ["ore", d.ores],
         ["credits", d.credits],
         ["knowledge", d.knowledge],
         ["qics", d.qics],

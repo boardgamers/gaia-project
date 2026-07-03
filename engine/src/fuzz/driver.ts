@@ -15,6 +15,7 @@
 import Engine, { EngineOptions } from "../engine";
 import { chooseMovePart, GeneratorError, isConversionPart, PlayContext } from "./random-player";
 import { conservationOracles } from "./oracles/conservation";
+import { lostFleetOraclesPhase3 } from "./oracles/lost-fleet";
 import { determinismMessages, runOracles, structuralOracles } from "./oracles/structural";
 import { Oracle, OracleContext, OracleFailure } from "./oracles/types";
 import { cloneEngine, cloneOptions } from "./state";
@@ -75,8 +76,16 @@ export function baseOptions(spec: FuzzGameSpec): EngineOptions {
 
 export function fuzzGame(spec: FuzzGameSpec, gameOptions: FuzzGameOptions = {}): FuzzGameResult {
   const cfg = { ...DEFAULTS, ...gameOptions };
-  // Tier-1 structural + tier-2 conservation are always on; callers add tier-3 rules oracles.
-  const oracles = [...structuralOracles(), ...conservationOracles(), ...(gameOptions.oracles ?? [])];
+  // Tier-1 structural + tier-2 conservation are always on. Tier-3 Lost Fleet rules oracles are
+  // on for LF games only (they no-op on base games anyway, via each oracle's own `ctx.lostFleet`
+  // guard, but skipping them entirely keeps the base control corpus's purpose — tier-1/2
+  // calibration only — unambiguous). Callers may add further oracles (e.g. campaign-only ones).
+  const oracles = [
+    ...structuralOracles(),
+    ...conservationOracles(),
+    ...(spec.lostFleet ? lostFleetOraclesPhase3() : []),
+    ...(gameOptions.oracles ?? []),
+  ];
   const options = baseOptions(spec);
   const rng: Rng = rngFromString(spec.playSeed ?? spec.gameSeed);
 

@@ -1183,6 +1183,38 @@ notifications).
       false at the 2 non-consuming construction sites); 2 red-then-green regression tests.
     - Engine suite: **526/526 → 532/532** (+2 LF-3 regressions, +4 LF smoke games).
 
+51. ✅ **Fuzzer Phase 3 — tier-3 Lost Fleet rules oracles, first half (planets/factions/costs rows
+    of the §3 table) + LF campaign + triage** (done 2026-07-03).
+    - New `fuzz/oracles/lost-fleet.ts`, each oracle citing its RULES_CLARIFICATIONS.md §/rulebook
+      source in code and re-stating the rule independently of the engine helper it checks (never
+      reads expected values back from the code under test): `lfBuildOffers` (§E1 Protoplanet
+      3-steps/+6VP incl. the "0 if it's your start planet" carve-out for Moweyds/Space Giants,
+      §E2 Asteroid 0-steps/no-ore-credit-cost, §B2/§B4 Darkanians/Space-Giants flat terraform
+      steps, §B5 Tinkeroids/Moweyds cost-3-set steps, §B2/§B4 vs §B1/§B5 Gaia-mine Q.I.C.
+      surcharge), `lfExploreOffers` (§C5 charge track, §D1 lowest-free-slot, §D2/§D5 deploy VP
+      cost incl. Bal T'aks' 7VP exception, §C2 Rebellion excluded at 2p), `lfFactionSetup` (§A4
+      same-color exclusivity, §B5 cost-3-set invariants), `lfMapComposition` (§H3 ship tiles in
+      play). **Caught and corrected a stale citation while writing the track-charge oracle:**
+      FUZZER_PLAN.md §3's table row says the exploration charge track is "0/2/2/3" — cross-checked
+      against RULES_CLARIFICATIONS.md §C5 (owner board-read, CONFIRMED) and the engine's own
+      `EXPLORATION_CHARGE_TRACK` constant, both of which say **0/2/2/4** (space 4 charges 4, not
+      3) — the plan's table cell is a stale typo predating the §C5 entry's correction (see
+      PROGRESS #38's `0/2/2/4` note). The oracle uses the ledger value; a comment in the oracle
+      file flags the plan discrepancy so it isn't rediscovered.
+    - Wired tier-3 into the driver for Lost Fleet games only (base games keep tier-1/2, since
+      that corpus's purpose is calibration, not LF rules checking).
+    - **Triage:** the first sweep flagged `moweyds`/`space-giants` Protoplanet mines as
+      "missing +6 VP" — traced to the oracle mis-encoding §E1's own parenthetical ("0 if it's
+      your start planet"): those 2 factions' faction-planet IS Protoplanet (§B3/§B4), so the
+      already-correct, already-tested engine behavior (PROGRESS "Done so far" #45) suppresses
+      the bonus on every Protoplanet mine they build, not just a literal starting hex. Classified
+      **oracle bug** (not an engine bug) per plan §5.3; fixed in the oracle, documented inline so
+      the misreading isn't reintroduced. No engine change.
+    - **Campaign result: 190/190 Lost Fleet seeds clean** after the oracle fix (40×2p + 30×3p +
+      30×4p targeted sweeps + a 150-seed mixed-player-count sweep, all outside `npm test`).
+      Engine suite unchanged at **532/532** (tier-3 strengthens the existing LF smoke games
+      rather than adding new test cases).
+
 ## Still MISSING — only one art-only item left
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
 1. **Revised Space Sector tiles 05/06/07** — the actual planet arrangement on the Lost-Fleet-specific
