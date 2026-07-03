@@ -1,6 +1,7 @@
-# Lost Fleet — Full-Game Playout Fuzzer: Implementation Plan (PROPOSED)
+# Lost Fleet — Full-Game Playout Fuzzer: Implementation Plan
 
-> Status: **PLAN ONLY — not started.** Owner asked for this plan 2026-07-02 after the
+> Status: **DONE (2026-07-03).** All 5 phases implemented, tested, and landed (`engine/src/fuzz/`);
+> see §8 for the campaign report and findings table. Owner asked for this plan 2026-07-02 after the
 > multiplayer E2E (PROGRESS #48). Grounded in traced engine code (§0), per the standing
 > working agreement. The defining requirement, stated by the owner: the fuzzer must
 > **compare engine behavior against the actual Lost Fleet rules along the way** — it is a
@@ -188,3 +189,44 @@ For every oracle failure, in order:
   prose is exactly where misjudgment silently corrupts the ruleset. Re-running campaigns,
   adding seeds, and mechanical regression upkeep after the oracles are stable is fine work
   for a smaller model (Sonnet).
+
+## 8. Campaign report (2026-07-03)
+
+**Status: DONE.** All 5 phases implemented and landed as separate tested commits (`engine/src/fuzz/`);
+490 base engine tests were the starting baseline and the suite grew to **564/564** (the merge with
+another concurrent session's engine work raised the baseline to 520 before this work started — see
+PROGRESS.md #49). Emphasis, per the owner's explicit 2026-07-03 instruction: prioritize the Lost
+Fleet rules surface (changes to base-game actions, new mechanics) over base-game archaeology — the
+base `boardgamers/gaia-project` implementation is trusted/working, so base-only findings are
+recorded and NOT fixed here (see the last 2 rows).
+
+Total campaign volume this session: 100 base-control seeds (tier-1/2 calibration, 2p/3p/4p, all
+clean) + roughly 1,000 Lost Fleet seeds across targeted and mixed-player-count sweeps (phases 3-5),
+plus the final two `npm run fuzz` campaigns below.
+
+| # | Seed(s) | Fixture | Oracle | Rule citation | Classification | Resolution |
+|---|---|---|---|---|---|---|
+| LF-1 | `fuzz-lf-2p-0` (found), minimized `lf-b5-cost3-row` | `fuzz/regressions/lf-001-b5-cost3-row-nondeterministic.json` | `tier1.structural.determinism` | RULES_CLARIFICATIONS.md §J3 ("engine is deterministic from seed + moves"); §B5 (rulebook p.8, cost-3 row placed once at setup) | **Engine bug** — CONFIRMED | **Fixed** (commit `b8f34c4`): `engine.lostFleetTerraformingRow` computed once in `moveInit` and persisted, instead of being recomputed lazily from `map.seed` (which `SpaceMap.toJSON()` never serializes, so every host-style fromData clone shuffled from seed `undefined`). Regression fixture red-then-green verified (constructor vs. `Engine.slowMotion` host-style replay). |
+| LF-2 | n/a (structural — any Examine Artifact / Twilight Q.I.C. action with 0 owned Federation tokens) | none (deliberately not forced into the corpus; hit incidentally during phase-2 sweeps) | generator robustness (`fuzz/random-player.ts` `pickOrNull`) | RULES_CLARIFICATIONS.md §G6 (Federation-shaped Artifact), §C1 (Twilight Q.I.C. "same mechanic as the base game's federation re-scoring") | **Rules ambiguity** | **Not resolved** — recorded as `RULES_CLARIFICATIONS.md` **Open Question #8** (3 candidate interpretations) and left for the owner; engine deliberately unchanged. The base game's identical QIC2 mechanic IS gated on owning a token, which is why the conservative reading (gate both) is flagged as most consistent, but not implemented without a ruling. |
+| LF-3 | `fuzz-lf-2p-2` | `move/spaceship-actions.spec.ts` + `engine.spec.ts` regression tests (2 new, not a JSON fixture — the finding was a unit-level cost-attribution bug, more naturally expressed as focused tests) | `tier2.conservation.non-negative` | RULES_CLARIFICATIONS.md §E2 (rulebook p.10, Asteroid mine "needs an available Gaiaformer; Gaiaformer is consumed"); §C4 (Eclipse Credit action, "the mine itself is free... distinct from the standard Asteroid-mine route in E2, which instead requires consuming a Gaiaformer"); §G3 (rulebook Appendix III, "former" booster: "3 VP per Gaiaformer... none for Gaiaformers already used to colonize an asteroid") | **Engine bug** — CONFIRMED | **Fixed** (commit `1eb9aa4`): `player.build()` unconditionally consumed a Gaiaformer on any new Asteroid colonization, including starting-building setup placement (§B1/§B2 factions own 0 Gaiaformers at setup — this permanently cost Tinkeroids/Darkanians one Gaiaformer of capacity) and Eclipse's Credit action (§C4 explicitly waives it). Symptom: the §G3 "former" booster paid **−3 VP on pass** once the negative-capacity bug accumulated. New `AvailableBuilding.consumesAsteroidGaiaformer` flag (default true; false at the 2 non-consuming sites). 2 red-then-green regression tests. |
+| oracle-1 | `fuzz-lf-2p-6`, `-17`, `-21`, `-23`, `-24`, `-29` | n/a (oracle-only; no engine fixture needed) | `tier3.lf.build-offers` (phase-3 draft) | RULES_CLARIFICATIONS.md §E1 (rulebook p.10, "+6 VP on mine (0 if it's your start planet)") | **Oracle bug** | **Fixed in the oracle**: the draft oracle required +6 VP on every Protoplanet mine, missing §E1's own carve-out — Moweyds/Space Giants have Protoplanet as their faction's home planet TYPE (§B3/§B4), so PROGRESS.md "Done so far" #45's already-correct, already-tested engine behavior suppresses the bonus on every Protoplanet mine those 2 factions build (not just a literal single starting hex). Oracle updated to special-case those 2 factions; documented inline. |
+| oracle-2 | `fuzz-lf-mix-4p-95` | n/a (oracle-only) | `tier3.lf.artifact-effects` / `tier3.lf.ship-federation-gold-side` (phase-4) | RULES_CLARIFICATIONS.md §G6 (KnowledgeQic artifact, "gain 3 knowledge + 1 Q.I.C."); §G5 (OreQic ship Federation token) | **Oracle bug** | **Fixed in the oracle**: both oracles expected a flat "+1 Q.I.C." reward, missing the **pre-existing base-game Gleens rule** (`player.ts` `factionReward`: every Q.I.C. grant from any source becomes Ore for Gleens until Academy2 is built). Not Lost Fleet content, but the new LF reward paths correctly interact with it — the oracle's expectation was wrong, not the engine. Root-caused via a full instrumented trace of the reward pipeline. Fixed via a shared `applyGleensQicSubstitution()` helper. |
+| oracle-3 | `fuzz-lf-2p-34` | n/a (oracle-only) | `tier3.lf.final-scoring-counts` (phase-4) | RULES_CLARIFICATIONS.md §H2/§G4 (Deep Space sector colonization counting) | **Oracle bug** | **Fixed in the oracle**: the independent Deep-Space-sector re-derivation counted any hex with `buildingOf(player) !== undefined`, which incorrectly includes a Lantids-style "additional mine" (guest, non-main-occupier) hex; the engine's own trusted `ownedPlanets`-based convention (main-occupier only) correctly excludes it. Oracle fixed to check `hex.isMainOccupier(player)`, matching the engine convention. |
+| BASE-1 | `fuzz-lf-3p-33` (81 lines, minimal — every line load-bearing), `fuzz-lf-mix-4p-110` (shrunk 119→105 lines) | `fuzz/known-issues/base-001-*.json`, `base-002-*.json` (reference only — deliberately NOT in `fuzz/regressions/`, which `npm test` asserts green) | `tier1.structural.determinism` | **None** — base-game Taklons + Brainstone + RoundIncome/RoundLeech machinery; no `RULES_CLARIFICATIONS.md` entry exists for base Taklons behavior | **Engine bug (suspected), OUT OF SCOPE** | **Not fixed.** Two independent seeds (3p and 4p) show live incremental play requiring Taklons to resolve a Brainstone placement that a fresh sequential replay of the identical seed+moves does not, both during Taklons' Planetary-Institute-boosted leech/income interrupts (`available/leech.ts` `getTaklonsExtraLeechOffers`). Zero Lost Fleet content involved; per the owner's explicit 2026-07-03 instruction the base implementation is trusted and this session's effort stays on Lost Fleet rules — no rules basis exists to touch engine code regardless. Flagged for a future base-game-focused session. |
+| BASE-2 | `lost-fleet-fuzz-v1-lf-2p-61` (shrunk 58→35 lines) | `fuzz/known-issues/base-003-federation-cache-staleness-nondeterminism.json` (reference only) | `tier1.structural.determinism` | **None** — base-game `Player.availableFederations()` caching; federations are vanilla Gaia Project content, no Lost Fleet ledger entry applies | **Engine bug (suspected), OUT OF SCOPE** | **Not fixed.** A fresh sequential replay ends up offering no `Command.FormFederation` at all where live/host-style play correctly does; root-caused (via a full instrumented trace) to `player.federationCache`'s early-return cache-hit path in `availableFederations()`, which is keyed only on `maxSatellites <= federationCache.availableSatellites` with no check that the underlying occupied-hex set changed since the cache was warmed. Surfaced by (not caused by) a Lost Fleet ship-federation claim move; the caching bug itself is pure base-game machinery. Flagged for a future base-game-focused session. |
+
+**Oracle-calibration notes** (not findings — recorded so they aren't rediscovered): `fuzz/state.ts`'s
+`normalizedEngineState()` intentionally excludes `players[*].data.tiles.booster`'s `undefined`-vs-`null`
+representational difference (last-round pass) and `players[*].federationCache` from state-equality
+comparisons. The `federationCache` exclusion does NOT mask BASE-2 above — that finding was caught by
+the separate "replay must not throw" check, which is independent of state-field comparison, so the
+exclusion remains safe for its original purpose (avoiding noise in the field-diff check specifically).
+
+**Regression corpus**: `fuzz/regressions/lf-001-b5-cost3-row-nondeterministic.json` (auto-replayed,
+asserted green, in `npm test`) plus 2 focused unit tests for LF-3. `fuzz/known-issues/` holds the 3
+base-game reference reproducers (base-001/002/003), deliberately excluded from the `npm test`
+regression loader so the suite stays green while the reproducers remain available for a future session.
+
+**Queued for the owner**: `RULES_CLARIFICATIONS.md` Open Question #8 (LF-2, the rescore-with-no-
+owned-token gate) — needs an explicit ruling among 3 candidate interpretations before either the
+oracle or the engine can be finalized on this point.

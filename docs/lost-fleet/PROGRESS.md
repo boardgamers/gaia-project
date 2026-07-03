@@ -1817,6 +1817,25 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       across sweeps). Engine suite unchanged at **564/564** (smoke-corpus fixed seeds don't happen
       to trigger the Taklons class).
 
+53. ✅ **Fuzzer Phase 5 — campaign report, findings table, DELIVERABLE COMPLETE** (done
+    2026-07-03). `docs/lost-fleet/FUZZER_PLAN.md` §8 now has the full campaign report: an 8-row
+    findings table (seed → fixture → oracle → rule citation → classification → resolution)
+    covering all 3 confirmed engine bugs (LF-1, LF-3, both fixed; LF-2 recorded as a rules
+    ambiguity — `RULES_CLARIFICATIONS.md` Open Question #8, awaiting an owner ruling, engine
+    deliberately unchanged), all 3 oracle-encoding bugs found and fixed during triage, and the 2
+    base-game (non-Lost-Fleet) findings that were investigated, minimized, and documented but
+    explicitly NOT fixed per the owner's scope instruction. Plan header updated from "PLAN ONLY"
+    to "DONE." A final validation campaign (`npm run fuzz -- --lf 150 --base 30 --seed-base
+    validation-round2`, a fresh unrelated seed base) ran **180/180 clean**, and the primary
+    campaign (`--lf 300 --base 60`) ran **359/360 clean** (the 1 non-clean seed is BASE-2, already
+    triaged). Total campaign volume across the whole implementation: 100 base-control seeds
+    (tier-1/2 calibration) + roughly 1,000+ Lost Fleet seeds across all phases' targeted, mixed,
+    and final validation sweeps. **Engine suite: 564/564, unchanged from Phase 4** (the campaign
+    report is documentation; no further engine or test changes in this phase). The fuzzer itself
+    is a lasting asset: `npm test` now includes 8 fixed LF/base smoke games + a regression
+    replayer (currently 1 fixture, `lf-001-*`); `npm run fuzz -- --lf N --base M [--seed-base X]`
+    runs arbitrarily large campaigns on demand, never part of `npm test`.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -2188,11 +2207,17 @@ quick-test` 152/152; `npm test` 152/154, the 2 failures pre-existing/unrelated, 
    refinement beyond those current markers and boards.
 3. **Revised Space Sector tiles 05/06/07** (§H4, the one remaining art-only TODO — see "Still MISSING"
    above) — would let Lost Fleet stop falling back to the base game's per-count face for those 3 tiles.
-   3b. **Full-game playout fuzzer with rules-conformance oracles** — plan written and owner-requested
-   (2026-07-02), see `docs/lost-fleet/FUZZER_PLAN.md`: seeded random legal playouts to completion,
-   three oracle tiers (structural / conservation / Lost-Fleet rules oracles each citing its
-   rulebook/§-ledger source), failure minimization into committed regression specs, and a strict
-   triage protocol (no engine change without a CONFIRMED rules basis). Not started — next up.
+   3b. ~~**Full-game playout fuzzer with rules-conformance oracles**~~ — **DONE 2026-07-03**, see
+   `docs/lost-fleet/FUZZER_PLAN.md` §8 (campaign report/findings table) and "Done so far" #49-#53.
+   All 5 phases landed: seeded random legal playouts to completion, 3 oracle tiers (structural /
+   conservation / Lost-Fleet rules, each citing its rulebook/§-ledger source in code), failure
+   minimization (`fuzz/shrink.ts`), and the triage protocol (no engine change without a CONFIRMED
+   rules basis) applied to every finding. 2 confirmed Lost Fleet engine bugs fixed (§B5 setup
+   nondeterminism, Asteroid-Gaiaformer over-consumption), 1 rules ambiguity queued for the owner
+   (`RULES_CLARIFICATIONS.md` Open Question #8), 3 oracle-encoding bugs caught and fixed during
+   triage, and 2 base-game (non-Lost-Fleet) findings documented but deliberately not fixed, per
+   the owner's explicit instruction to trust the base implementation and focus on Lost Fleet
+   rules. `npm run fuzz -- --lf N --base M` runs ad-hoc campaigns going forward.
    3c. ~~**Lost Fleet component UI redesign — REUSE-FIRST**~~ — **DONE 2026-07-02** (owner approved
    the traced component-by-component reuse plan, then all 4 slices landed the same day: see "Done so
    far" #50 map-fit/viewBox + wheel, #51 consolidated per-ship overview strip, #52 tile iconography,
