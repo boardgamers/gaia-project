@@ -31,7 +31,7 @@
           <b-badge :variant="badgeVariant(game)">{{ turnLabel(game) }}</b-badge>
         </a>
         <b-button
-          v-if="game.created_by === myUserId"
+          v-if="isAdmin"
           size="sm"
           variant="outline-danger"
           class="ml-2"
@@ -69,6 +69,12 @@ export default Vue.extend({
     },
     myUserId(): string {
       return (this.session as any).user?.id ?? "";
+    },
+    // Matches delete_game's own admin check (supabase/migrations/0006_delete_game.sql) - kept in
+    // sync manually since there's no roles table; the RPC is the actual enforcement point, this
+    // just avoids showing a Delete button that would only fail server-side for everyone else.
+    isAdmin(): boolean {
+      return this.userEmail.toLowerCase() === "kim.pham.nguyen2@gmail.com";
     },
   },
   created() {
