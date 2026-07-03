@@ -16,6 +16,7 @@ import {
   Federation,
   FinalTile,
   Phase,
+  Planet,
   Player as PlayerEnum,
   Resource,
   Round,
@@ -274,6 +275,12 @@ export default class Engine {
   terraformingFederation: Federation;
   // Lost Fleet's Scoring Board Extension: the face-up side, decided once per game at setup (§E6).
   scoringExtensionSide?: ScoringBoardExtensionSide;
+  // Lost Fleet's Moweyds/Tinkeroids Terraforming board: the randomized 7-color row, placed once at
+  // setup (RULES_CLARIFICATIONS.md §B5, rulebook p.8: "the 7 base colors are placed on the board in
+  // a random order"). Computed at init and PERSISTED because `SpaceMap.toJSON()` does not carry the
+  // seed — recomputing it lazily from `map.seed` after a fromData round trip broke §J3 determinism
+  // (fuzzer finding LF-1, regression fixture lf-001).
+  lostFleetTerraformingRow?: Planet[];
   availableCommands: AvailableCommand[] = [];
   availableCommand: AvailableCommand;
   phase: Phase = Phase.SetupInit;

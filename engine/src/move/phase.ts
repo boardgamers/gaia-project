@@ -212,10 +212,14 @@ function endSetupFactionPhase(engine: Engine) {
   }
 
   if (engine.options.lostFleet) {
+    // §B5: use the row persisted at init (moveInit). Legacy fallback for serialized states that
+    // predate `lostFleetTerraformingRow`: recompute from `map.seed` as before (correct on the
+    // constructor/replay path, which is how legacy games are restored).
+    const terraformingRow = engine.lostFleetTerraformingRow ?? lostFleetTerraformingBoard(engine.map.seed);
     const cost3Planets = lostFleetTerraformingCost3Planets(
       engine.players.map((pl) => ({ player: pl.player, faction: pl.faction })),
       engine.turnOrderAfterSetupAuction,
-      lostFleetTerraformingBoard(engine.map.seed)
+      terraformingRow
     );
 
     for (const [player, planets] of Object.entries(cost3Planets)) {

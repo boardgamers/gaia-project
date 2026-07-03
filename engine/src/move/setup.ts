@@ -3,7 +3,7 @@ import { uniq } from "lodash";
 import { AvailableCommand } from "../available/types";
 import Engine, { AuctionVariant } from "../engine";
 import { BoardAction, Command, Faction, Player as PlayerEnum } from "../enums";
-import { remainingFactions } from "../factions";
+import { lostFleetTerraformingBoard, remainingFactions } from "../factions";
 import SpaceMap from "../map";
 import Player from "../player";
 import { applyRandomBoardSetup, applySetupOption, SetupOption, SetupPosition, SetupType } from "../setup";
@@ -37,6 +37,14 @@ export function moveInit(engine: Engine, players: number, seed: string) {
   engine.options.map = engine.map.placement;
 
   applyRandomBoardSetup(engine, seed, players);
+
+  if (engine.options.lostFleet) {
+    // §B5 (rulebook p.8): the Moweyds/Tinkeroids Terraforming board's randomized 7-color row is
+    // placed once at setup. Compute it here (the only code path guaranteed to still have the real
+    // seed) and persist it on the engine — `SpaceMap.toJSON()` drops the seed, so recomputing the
+    // row later from `map.seed` is nondeterministic across fromData round trips (§J3; finding LF-1).
+    engine.lostFleetTerraformingRow = lostFleetTerraformingBoard(seed);
+  }
 
   // powerActions
   BoardAction.values(engine.expansions).forEach((pos: BoardAction) => {
