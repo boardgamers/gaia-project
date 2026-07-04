@@ -36,15 +36,24 @@ Read these before coding:
   (`Charts.vue` → `SilentAuctionLog.vue`).
 - Engine: 582/582 tests passing. Viewer: 303/303 tests passing (as of 2026-07-04 — trust
   `PROGRESS.md`'s "Testing" section over this line if they disagree).
-- A "Gaia 4" UI polish pass (2026-07-04, PROGRESS.md #66) fixed 12 owner-reported viewer bugs:
+- A "Gaia 4" UI polish pass (2026-07-04, PROGRESS.md #66) fixed 11 owner-reported viewer bugs:
   faction-wheel swatch spacing, the lobby game-bar's black-circle bug, taken artifacts vanishing
-  instead of showing on the player board, the Terraform Standard Tech tile's free-mine prompt never
-  firing, tiny Examine Artifact icons, the round-scoring/power-action-row layout (now derived from a
-  shared `researchBoardHeight` helper instead of a stale hardcoded height), a mobile-only dead gap
-  between Turn Order and the first faction board (which turned out to share a root cause with an
-  unreachable-log-tail bug), two Setup Preview layout bugs (duplicate scoring-tile column + a
-  cropped-off research track), overlapping Twilight artifact icons, T F Mars's QIC action showing
-  raw "tt" text instead of the tech-tile icon, and the Deep Space condition icon's color.
+  instead of showing on the player board, tiny Examine Artifact icons, the
+  round-scoring/power-action-row layout (now derived from a shared `researchBoardHeight` helper
+  instead of a stale hardcoded height), a mobile-only dead gap between Turn Order and the first
+  faction board (which turned out to share a root cause with an unreachable-log-tail bug), two
+  Setup Preview layout bugs (duplicate scoring-tile column + a cropped-off research track),
+  overlapping Twilight artifact icons, T F Mars's QIC action showing raw "tt" text instead of the
+  tech-tile icon, and the Deep Space condition icon's color.
+- **The 12th item (the Terraform Standard Tech tile's free-mine prompt) was fixed, shipped to
+  `master`, then REVERTED the same session** after it broke loading the one real in-progress game:
+  wiring an automatic trigger into `moveChooseTechTile` inserted a new required move into the game's
+  move sequence, and the hosted app always reconstructs a game by replaying its *entire* stored move
+  history through current code (no version gate) - so a game that had already claimed that tile
+  before the trigger existed had its historical log misinterpreted and threw during replay (blank
+  screen under the banner). See PROGRESS.md #66's revert note before re-attempting this: it needs a
+  way to tell old recorded history apart from a fresh move first, or any similar "new required move"
+  change will hit the same failure mode.
 - A premove feature (queue a move while it's not your turn, executed server-side so it works even
   fully offline) is fully designed and owner-approved but **not started** — see
   `docs/lost-fleet/PREMOVE_PLAN.md`, whose own "Phase 0 checklist" is the entry point for whoever

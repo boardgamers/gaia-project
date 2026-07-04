@@ -2520,9 +2520,27 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       said "Terraform ... still ha[d] no execution wired anywhere" - claiming it did nothing besides
       the flat tech-track bump. Added `possibleSpaceshipTechTileBuildMine` (a 2-step-discount sibling
       of the existing Federation-token `possibleFreeBuildMine`, refactored out of
-      `possibleFederationTokenBuildMine`) behind a new `SubPhase.SpaceshipTechTileBuildMine`, and
-      `moveChooseTechTile` (`move/research.ts`) now triggers it *before* the existing
-      `SubPhase.UpgradeResearch` bump when the claimed tile is `SpaceshipTechTile.Terraform`.
+      `possibleFederationTokenBuildMine`) behind a new `SubPhase.SpaceshipTechTileBuildMine`.
+      **REVERTED same day, right after this shipped to `master`**: wiring the trigger into
+      `moveChooseTechTile` inserted a brand-new *required* move into the game's move sequence
+      whenever the tile was claimed. The hosted app reconstructs a game by replaying its entire
+      stored move history through whatever code is currently live, with no version gate - so the
+      one real in-progress game that had already claimed this tile (before the trigger existed)
+      had its historical log misinterpreted on load and threw during replay, taking down the whole
+      page (blank screen under the banner). Confirmed the exact mechanism with a repro test (feed
+      an old-format move log - tile claim then an unrelated move, no "build m ..." entry - through
+      the wired-up code; it throws) before reverting just the `moveChooseTechTile` trigger call.
+      `possibleSpaceshipTechTileBuildMine` and the `SubPhase`/available-command wiring are left in
+      place (inert, unreachable, correct in isolation - not the cause) since removing them added no
+      safety and this needs a real fix, not just a revert. **Still open**: re-implementing the
+      "prompt on claim" UX needs a way to tell an old game's already-recorded history apart from a
+      move being made fresh, which this engine has no mechanism for today (no per-move version
+      marker, `new Engine(fullHistory, options)` always replays through current code) - don't
+      re-attempt this without solving that first, or any other "insert a new required move into an
+      existing action" change will hit the exact same failure mode. Two commits: the trigger
+      (`0966597`) then the revert (`cf1137f`), both already pushed straight to `master` (see git log
+      - this file's own numbering can't cleanly show a mid-entry revert, so both are folded into this
+      one numbered item rather than getting separate #67/#68 slots).
     - **Examine Artifact buttons' icons were tiny**: `ArtifactIcon.vue` had no size prop (hardcoded
       30x30); added one (default 30, unchanged everywhere else) and the "Choose Artifact"
       button (`RichTextView.vue`'s `artifactToken` case, the only caller) now renders at 48.
@@ -2569,10 +2587,11 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       white />` never actually took effect either, an unnoticed pre-existing instance of the same
       bug fixed as a side effect here.
     - Engine **582/582** (up from 581 - 1 new `artifacts.spec.ts` case, 1 new
-      `exploration.spec.ts` case for the Terraform tile's chained Build-a-Mine). Viewer **303/303**
-      (up from 295 - new/updated specs in `Lobby.spec.ts`, `PlayerInfo` covered via existing specs,
-      `Commands.spec.ts`, `SetupPreview.spec.ts`, `LostFleetShips.spec.ts`, `Condition.spec.ts`,
-      `logic/utils.spec.ts`). Both production builds clean.
+      `exploration.spec.ts` case testing `possibleSpaceshipTechTileBuildMine` in isolation - see the
+      revert note above, this no longer covers a wired-up `moveChooseTechTile` trigger). Viewer
+      **303/303** (up from 295 - new/updated specs in `Lobby.spec.ts`, `PlayerInfo` covered via
+      existing specs, `Commands.spec.ts`, `SetupPreview.spec.ts`, `LostFleetShips.spec.ts`,
+      `Condition.spec.ts`, `logic/utils.spec.ts`). Both production builds clean.
 
 ## Still MISSING — only one art-only item left
 
