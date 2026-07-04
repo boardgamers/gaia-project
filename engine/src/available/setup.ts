@@ -1,8 +1,11 @@
 import { difference, range } from "lodash";
 import Engine, { AuctionVariant } from "../engine";
-import { Command, Player } from "../enums";
+import { Command, Faction, Player } from "../enums";
 import { remainingFactions } from "../factions";
 import { AvailableCommand, PossibleBid } from "./types";
+
+/** Upper bound offered for a Silent Auction max-VP bid; a generous ceiling, not a real cap. */
+export const MAX_SILENT_BID = 40;
 
 export function chooseFactionOrBid(
   engine: Engine,
@@ -20,18 +23,38 @@ export function chooseFactionOrBid(
 }
 
 export function choosableFactions(engine: Engine) {
+  let factions: Faction[];
   if (engine.randomFactions) {
     if (engine.options.auction && engine.options.auction !== AuctionVariant.ChooseBid) {
       // In auction the player can pick from the pool of random factions
-      return difference(engine.randomFactions, engine.setup);
+      factions = difference(engine.randomFactions, engine.setup);
     } else {
       // Otherwise, they are limited to one specific faction
-      return engine.randomFactions.length > engine.setup.length ? [engine.randomFactions[engine.setup.length]] : [];
+      factions = engine.randomFactions.length > engine.setup.length ? [engine.randomFactions[engine.setup.length]] : [];
     }
   } else {
     // Standard
-    return remainingFactions(engine.setup, engine.expansions);
+    factions = remainingFactions(engine.setup, engine.expansions);
   }
+  return difference(factions, engine.bannedFactions);
+}
+
+/** Factions still eligible to be banned (Silent Auction's ban phase - one forced ban per player). */
+export function banableFactions(engine: Engine): Faction[] {
+  return difference(Faction.values(engine.expansions), engine.bannedFactions);
+}
+
+export function possibleFactionBans(engine: Engine, player: Player): AvailableCommand<Command.BanFaction>[] {
+  return [{ name: Command.BanFaction, player, data: banableFactions(engine) }];
+}
+
+export function possibleSilentBids(engine: Engine, player: Player): AvailableCommand<Command.SilentBid>[] {
+  const bids: PossibleBid[] = engine.setup.map((faction) => ({
+    faction,
+    bid: range(0, MAX_SILENT_BID + 1),
+  }));
+
+  return [{ name: Command.SilentBid, player, data: { bids } }];
 }
 
 export function possibleBids(engine: Engine, player: Player): AvailableCommand<Command.Bid>[] {

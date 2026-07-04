@@ -50,6 +50,18 @@
         >
       </template>
 
+      <b-form-group label="Faction selection">
+        <b-form-radio
+          v-for="option in auctionVariantOptions"
+          :key="option.value"
+          v-model="form.auctionVariant"
+          :value="option.value"
+        >
+          {{ option.label }}
+          <span class="text-muted small d-block">{{ option.description }}</span>
+        </b-form-radio>
+      </b-form-group>
+
       <h6 class="mt-3">Setup preview</h6>
       <p class="text-muted small mb-2">
         Reroll until you like the map, then click sectors to rotate them. Whatever's shown becomes the game when you
@@ -67,7 +79,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { buildCreateGameParams } from "./new-game";
+import { AUCTION_VARIANT_OPTIONS, buildCreateGameParams } from "./new-game";
 import SetupPreview from "./SetupPreview.vue";
 
 type RegisteredUser = { id: string; email: string; display_name: string };
@@ -95,10 +107,14 @@ export default Vue.extend({
       form: {
         playerCount: 2,
         testGame: false,
+        auctionVariant: "none" as "none" | "silent",
       },
     };
   },
   computed: {
+    auctionVariantOptions() {
+      return AUCTION_VARIANT_OPTIONS;
+    },
     myUserId(): string {
       return (this.session as any).user?.id ?? "";
     },
@@ -182,7 +198,11 @@ export default Vue.extend({
                 name: this.users.find((u) => u.id === id)?.display_name ?? "",
               })),
             ];
-        const params = buildCreateGameParams({ playerCount: this.form.playerCount, seats }, this.currentSeed, this.currentRotateMove);
+        const params = buildCreateGameParams(
+          { playerCount: this.form.playerCount, seats, auctionVariant: this.form.auctionVariant },
+          this.currentSeed,
+          this.currentRotateMove
+        );
         const { data, error } = await (this.client as any).rpc("create_game", params);
         if (error) {
           throw new Error(error.message);

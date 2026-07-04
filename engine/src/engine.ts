@@ -1,6 +1,7 @@
 import assert from "assert";
 import { set } from "lodash";
 import { version } from "../package.json";
+import { SilentAuctionBid, SilentAuctionStep } from "./algorithms/silent-auction";
 import { generate as generateAvailableCommands } from "./available/available-command";
 import { AvailableCommand, BrainstoneActionData } from "./available/types";
 import {
@@ -56,11 +57,13 @@ import {
   phaseSetupBooster,
   phaseSetupBuilding,
   phaseSetupFaction,
+  phaseSetupFactionBan,
   phaseSetupInit,
+  phaseSetupSilentBid,
 } from "./move/phase";
 import { moveChooseCoverTechTile, moveChooseTechTile, moveResearch } from "./move/research";
 import { moveChooseIncome, moveChooseRoundBooster, moveEndTurn, movePass } from "./move/round";
-import { moveBid, moveChooseFaction, moveRotateSectors, moveSetup } from "./move/setup";
+import { moveBanFaction, moveBid, moveChooseFaction, moveRotateSectors, moveSetup, moveSilentBid } from "./move/setup";
 import { moveShip } from "./move/ships";
 import { moveGaiaFormTransdim, moveSpaceshipAction } from "./move/spaceship-actions";
 import Player from "./player";
@@ -77,6 +80,14 @@ export enum AuctionVariant {
   ChooseBid = "choose-bid",
   /** Bid on factions while not all factions are chosen */
   BidWhileChoosing = "bid-while-choosing",
+  /**
+   * Sealed-bid ("Silent Auction") variant: a sequential ban round (one forced ban per player),
+   * then a sequential pick round (one distinct faction per player), then every player privately
+   * submits a max-VP bid for each picked faction. Once everyone has submitted, an ascending-auction
+   * algorithm (see algorithms/silent-auction.ts) automatically assigns each player the faction that
+   * maximizes their own value, at the lowest price nobody else was willing to beat.
+   */
+  Silent = "silent",
 }
 
 export type FactionVariant =
@@ -236,6 +247,11 @@ export default class Engine {
   map: SpaceMap;
   players: Player[] = [];
   setup: Faction[] = [];
+  // Silent Auction variant (AuctionVariant.Silent) state - see move/phase.ts's
+  // SetupFactionBan/SetupSilentBid phases and algorithms/silent-auction.ts.
+  bannedFactions: Faction[] = [];
+  silentAuctionBids: SilentAuctionBid[] = [];
+  silentAuctionLog: SilentAuctionStep[] = [];
   options: EngineOptions = {};
   tiles: {
     boosters: {
@@ -850,8 +866,10 @@ export default class Engine {
       },
       [Phase.SetupInit]: phaseSetupInit,
       [Phase.SetupBoard]: phaseSetupBoard,
+      [Phase.SetupFactionBan]: phaseSetupFactionBan,
       [Phase.SetupFaction]: phaseSetupFaction,
       [Phase.SetupAuction]: phaseSetupAuction,
+      [Phase.SetupSilentBid]: phaseSetupSilentBid,
       [Phase.SetupBuilding]: phaseSetupBuilding,
       [Phase.SetupBooster]: phaseSetupBooster,
       [Phase.RoundIncome]: phaseRoundIncome,
@@ -920,8 +938,10 @@ export default class Engine {
       },
       [Command.Setup]: moveSetup,
       [Command.RotateSectors]: moveRotateSectors,
+      [Command.BanFaction]: moveBanFaction,
       [Command.ChooseFaction]: moveChooseFaction,
       [Command.Bid]: moveBid,
+      [Command.SilentBid]: moveSilentBid,
       [Command.Build]: moveBuild,
       [Command.PlaceLostPlanet]: moveLostPlanet,
       [Command.MoveShip]: moveShip,

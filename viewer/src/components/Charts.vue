@@ -1,5 +1,6 @@
 <template>
   <div class="gaia-viewer-modal">
+    <SilentAuctionLog v-if="gameData.silentAuctionLog.length > 0" />
     <div class="d-flex" style="justify-content: center">
       <b-dropdown size="sm" class="mr-2 mb-2" text="Style">
         <b-dropdown-item v-for="(s, i) in chartStyles" :key="`style${i}`" @click="selectStyle(s)"
@@ -54,6 +55,7 @@ import {ChartGroup, ChartSelect, ChartStyleDisplay, ChartType} from "../logic/ch
 import PlayerCircle from "./PlayerCircle.vue";
 import BuildingImage from "./Building.vue";
 import SpecialAction from "./SpecialAction.vue";
+import SilentAuctionLog from "./SilentAuctionLog.vue";
 import Engine, {PlayerEnum} from "@gaia-project/engine";
 import {
   BarController,
@@ -91,7 +93,7 @@ Chart.register(
 type Table = { title: string; header: any[]; items: any[]; descriptions: any[] };
 
 @Component({
-  components: { PlayerCircle, BuildingImage, SpecialAction },
+  components: { PlayerCircle, BuildingImage, SpecialAction, SilentAuctionLog },
 })
 export default class Charts extends Vue {
   private setup: ChartSetup;

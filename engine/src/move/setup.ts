@@ -143,3 +143,51 @@ function executeBid(engine: Engine, player: PlayerEnum, faction: string, bid: nu
   engine.players[player].faction = faction as Faction;
   engine.players[player].data.bid = +bid;
 }
+
+export function moveBanFaction(
+  engine: Engine,
+  command: AvailableCommand<Command.BanFaction>,
+  player: PlayerEnum,
+  faction: Faction
+) {
+  assert(command.data.includes(faction), `${faction} is not available to ban`);
+  engine.bannedFactions.push(faction);
+}
+
+/**
+ * A Silent Auction bid submission: one player privately entering their entire max-VP-bid vector
+ * (one amount per faction up for auction) in a single move, e.g.
+ * "p1 silentBid itars 15 taklons 10 xenos 0".
+ */
+export function moveSilentBid(
+  engine: Engine,
+  command: AvailableCommand<Command.SilentBid>,
+  player: PlayerEnum,
+  ...params: string[]
+) {
+  assert(params.length % 2 === 0, "The silentBid command needs an even number of parameters");
+
+  const pairs: Array<[string, string]> = [];
+  for (let i = 0; i < params.length; i += 2) {
+    pairs.push([params[i], params[i + 1]]);
+  }
+
+  assert(
+    uniq(pairs.map((pair) => pair[0])).length === pairs.length,
+    "Duplicate factions are not allowed in a silent bid"
+  );
+
+  if (!engine.replay) {
+    const bidsAC = command.data.bids;
+    assert(pairs.length === bidsAC.length, "You have to submit a bid for every faction up for auction");
+    for (const [faction, bid] of pairs) {
+      const bidAC = bidsAC.find((b) => b.faction === faction);
+      assert(bidAC, `${faction} is not up for auction`);
+      assert(bidAC.bid.includes(+bid), "You have to bid a legal amount");
+    }
+  }
+
+  for (const [faction, bid] of pairs) {
+    engine.silentAuctionBids.push({ player, faction: faction as Faction, max: +bid });
+  }
+}

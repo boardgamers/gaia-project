@@ -2073,6 +2073,55 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       updated to match (viewBox string, single-row slot transforms, the `used` class living directly
       on `[data-action]` again). Verified visually against real screenshots, not guessed: viewer
       **255/255 tests pass**.
+61. ✅ **"Silent Auction" faction-selection variant — a new `AuctionVariant` option, CODED & TESTED**
+    (done 2026-07-04, owner request). Not from the rulebook: a community "Faction Auction" mechanism
+    (the Steam guide at `steamcommunity.com/sharedfiles/filedetails/?id=2506595080`), adapted per the
+    owner's explicit simplification requests during design discussion (kept fully sequential, no
+    simultaneous/hidden-info phases — see below).
+    - **Flow**: a new `AuctionVariant.Silent` (`engine/src/engine.ts`) option runs, in place of the
+      normal faction-pick: (1) **ban phase** (`Phase.SetupFactionBan`, new) — sequential, one forced
+      ban per player, from the full faction pool; (2) **pick phase** — reuses the existing
+      `Phase.SetupFaction`/`moveChooseFaction` machinery unchanged, just with `choosableFactions()`
+      now also excluding banned factions, so every player picks one distinct un-banned faction; (3)
+      **silent bid phase** (`Phase.SetupSilentBid`, new) — sequential, each player submits (in one
+      move) a private max-VP-willing-to-lose bid for every picked faction; once the last player
+      submits, the engine automatically resolves the auction.
+    - **Resolution algorithm** (`engine/src/algorithms/silent-auction.ts`, `resolveSilentAuction()`):
+      a faithful re-implementation of the guide's ascending-bid algorithm (round-robin over players;
+      on your turn, bid on whichever faction gives you the most value — max bid minus price to
+      acquire it — unless you already lead your best-value faction, in which case you're skipped;
+      ends when a full round passes with everyone skipped), including all 3 tiebreak rules (prefer
+      raising an existing bid over an untouched faction; prefer the faction you personally picked;
+      otherwise random via `engine.map.rng()` for replay determinism). Verified against the guide's
+      own worked example reproduced move-for-move in `algorithms/silent-auction.spec.ts` (a
+      corrected reading of the guide: the price a winner pays is the final bid amount itself, not
+      the "value" the guide quotes — e.g. the guide's own example winner pays 2 VP for Taklons, not
+      the "8" you'd get by misreading the value/price distinction).
+    - **Turn order** falls out of existing machinery for free: `engine.turnOrderAfterSetupAuction`
+      already maps `engine.setup` (pick order) to each faction's current owner, so "first faction
+      picked → its final winner starts the game" needed no new code once the resolution phase
+      reassigns `.faction`/`.data.bid` before calling the existing `endSetupFactionPhase()`.
+    - **Deliberately simplified per owner instruction, not a limitation discovered later**: ban,
+      pick, and bid are all sequential (no hidden/simultaneous submission, no new Supabase backend
+      work) — the owner explicitly chose this after a design discussion about the alternative
+      (a true simultaneous ban phase would have needed a new "pending picks" barrier table + RLS
+      change to the hosted multiplayer backend's one-active-seat model; sequential avoids that
+      entirely and reuses the existing move-log architecture as-is).
+    - **Viewer**: `hosted/CreateGame.vue` + `hosted/new-game.ts` gained a "Faction selection" radio
+      picker (`AUCTION_VARIANT_OPTIONS`) — "Standard" or "Silent Auction" today, designed as an
+      extensible list for future variants. The self-contained/demo viewer needed zero changes —
+      `?auction=silent` already worked via its existing raw passthrough of the `auction` query param.
+      `Commands.vue` gained a ban-faction picker (mirrors the existing faction-choice picker) and a
+      Silent Auction bid form (one numeric input per picked faction + a single submit button that
+      assembles the combined `silentBid <faction> <amount> ...` move). The statistics button
+      (`Charts.vue`) now shows a new `SilentAuctionLog.vue` section — bans, original picks, the full
+      bid matrix, the step-by-step resolution trace, and the final result/turn order — whenever
+      `engine.silentAuctionLog` is non-empty, i.e. only for games that used this variant.
+    - New tests: `algorithms/silent-auction.spec.ts` (3, incl. the guide's worked example),
+      `silent-auction-variant.spec.ts` (5, full engine integration: ban/pick/bid → assignment/turn
+      order, plus the illegal-move rejection cases), `components/Commands.spec.ts` (+2),
+      `components/SilentAuctionLog.spec.ts` (1), `components/Charts.spec.ts` (2, incl. that the
+      section stays hidden for non-auction games). **Engine 581/581, viewer 247/247 tests pass.**
 
 ## Still MISSING — only one art-only item left
 

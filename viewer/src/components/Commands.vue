@@ -50,6 +50,39 @@
           @cancel="updateRandomFaction"
         />
       </div>
+      <div v-if="isBanningFaction" class="d-flex flex-wrap align-content-stretch">
+        <MoveButton
+          v-for="faction in factionToBan.data"
+          :button="{
+            command: `${factionToBan.name} ${faction}`,
+            label: factionPickerLabel(faction),
+            tooltip: tooltip(faction),
+            shortcuts: [factionShortcut(faction)],
+          }"
+          :controller="controller"
+          :key="faction"
+        />
+      </div>
+      <div v-if="isSilentBidding" class="silent-bid-form">
+        <p class="text-muted small">
+          Privately enter the most VP you're willing to lose to win each faction. Submit once and everyone's bids
+          will be resolved automatically once all players have submitted.
+        </p>
+        <div v-for="pos in silentBidCommand.data.bids" :key="pos.faction" class="d-flex align-items-center mb-2">
+          <span class="silent-bid-faction mr-2">
+            <i :class="`planet ${factionPlanet(pos.faction)}`" :style="{ color: factionPickerColor(pos.faction) }"></i>
+            {{ factionName(pos.faction) }}
+          </span>
+          <b-form-input
+            type="number"
+            min="0"
+            :max="pos.bid[pos.bid.length - 1]"
+            v-model.number="silentBidValues[pos.faction]"
+            style="width: 6rem"
+          />
+        </div>
+        <b-btn variant="primary" @click="submitSilentBid">Submit bids</b-btn>
+      </div>
     </div>
     <!-- reserves the sticky bar's actual rendered height (tracked live via ResizeObserver, capped
          by the bar's own max-height/overflow) so it never permanently covers page content it has
@@ -222,6 +255,15 @@ export default class Commands extends Vue implements CommandController {
         this.title("Choose your faction");
         return;
       }
+      if (command.name === Command.BanFaction) {
+        this.title("Ban a faction");
+        return;
+      }
+      if (command.name === Command.SilentBid) {
+        this.title("Submit your Silent Auction bids");
+        this.silentBidValues = Object.fromEntries(command.data.bids.map((pos) => [pos.faction, 0]));
+        return;
+      }
     }
   }
 
@@ -235,6 +277,28 @@ export default class Commands extends Vue implements CommandController {
 
   get factionsToChoose(): AvailableCommand {
     return this.availableCommands?.find((c) => c.name === Command.ChooseFaction) ?? null;
+  }
+
+  get factionToBan(): AvailableCommand {
+    return this.availableCommands?.find((c) => c.name === Command.BanFaction) ?? null;
+  }
+
+  get isBanningFaction() {
+    return !!this.factionToBan;
+  }
+
+  get silentBidCommand(): AvailableCommand {
+    return this.availableCommands?.find((c) => c.name === Command.SilentBid) ?? null;
+  }
+
+  get isSilentBidding() {
+    return !!this.silentBidCommand;
+  }
+
+  submitSilentBid() {
+    const command = this.silentBidCommand;
+    const pairs = command.data.bids.map((pos) => `${pos.faction} ${this.silentBidValues[pos.faction] || 0}`);
+    this.handleCommand(`${command.name} ${pairs.join(" ")}`);
   }
 
   get playerName(): string {
@@ -721,6 +785,7 @@ export default class Commands extends Vue implements CommandController {
   private buttonChain: ButtonData[] = [];
   private allButtons: ButtonData[] = [];
   private preventFirstAutoClick = false;
+  private silentBidValues: Record<string, number> = {};
 }
 </script>
 

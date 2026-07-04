@@ -1,4 +1,13 @@
-import Engine, { Building, Command, Faction, Phase, PlayerEnum, Spaceship, SpaceshipFederation } from "@gaia-project/engine";
+import Engine, {
+  AuctionVariant,
+  Building,
+  Command,
+  Faction,
+  Phase,
+  PlayerEnum,
+  Spaceship,
+  SpaceshipFederation,
+} from "@gaia-project/engine";
 import { render, fireEvent } from "@testing-library/vue";
 import BootstrapVue from "bootstrap-vue";
 import { expect } from "chai";
@@ -344,6 +353,71 @@ describe("Commands", () => {
     const asteroidTarget = visibleButtons().find((button) => button.querySelector('[data-planet="a"]'));
     expect(asteroidTarget, "expected a hex button with an Asteroid planet dot").to.not.equal(undefined);
     expect(asteroidTarget!.textContent).to.contain("Asteroid");
+  });
+
+  it("Silent Auction: shows a ban button per available faction, and emits a banFaction move on click", async () => {
+    const engine = new Engine(["init 3 lf-silent-ban"], { auction: AuctionVariant.Silent });
+    engine.generateAvailableCommandsIfNeeded();
+
+    expect(engine.availableCommands.map((command) => command.name)).to.deep.equal([Command.BanFaction]);
+
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const wrapper = mount(Commands, { propsData: { currentMove: "" }, store });
+    const terransButton = wrapper.findAll("#move-buttons button.move-button").filter((w) => w.text().includes("Terrans"));
+
+    expect(terransButton.length).to.equal(1);
+
+    await terransButton.at(0).trigger("click");
+    await Vue.nextTick();
+
+    const emitted = wrapper.emitted("command");
+    expect(emitted).to.not.equal(undefined);
+    expect(emitted![0][0]).to.equal("p1 banFaction terrans");
+  });
+
+  it("Silent Auction: renders a bid input per picked faction, and emits a combined silentBid move on submit", async () => {
+    const engine = new Engine(
+      [
+        "init 3 lf-silent-bid",
+        "p1 banFaction terrans",
+        "p2 banFaction lantids",
+        "p3 banFaction hadsch-hallas",
+        "p1 faction itars",
+        "p2 faction xenos",
+        "p3 faction taklons",
+      ],
+      { auction: AuctionVariant.Silent }
+    );
+    engine.generateAvailableCommandsIfNeeded();
+
+    expect(engine.availableCommands.map((command) => command.name)).to.deep.equal([Command.SilentBid]);
+
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const wrapper = mount(Commands, { propsData: { currentMove: "" }, store });
+    const inputs = wrapper.findAll(".silent-bid-form input[type=number]");
+
+    expect(inputs.length).to.equal(3);
+
+    await inputs.at(0).setValue("15");
+    await inputs.at(1).setValue("0");
+    await inputs.at(2).setValue("10");
+    await wrapper.find(".silent-bid-form button").trigger("click");
+    await Vue.nextTick();
+
+    const emitted = wrapper.emitted("command");
+    expect(emitted).to.not.equal(undefined);
+    const command = emitted![emitted!.length - 1][0] as string;
+
+    // p1's provisional faction is already "itars" by this point (picked in the previous phase),
+    // so the viewer addresses the move by faction name rather than seat.
+    expect(command).to.match(/^itars silentBid /);
+    expect(command).to.include("itars 15");
+    expect(command).to.include("xenos 0");
+    expect(command).to.include("taklons 10");
   });
 
   it("renders Moweyds' power-ring special action without crashing", () => {

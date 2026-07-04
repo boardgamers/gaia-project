@@ -133,6 +133,7 @@ export type AvailableMoveShipData = { ship: Building; source: string; targets: A
 
 interface CommandData {
   [Command.Action]: AvailableBoardActionData;
+  [Command.BanFaction]: Faction[];
   [Command.Bid]: { bids: PossibleBid[] };
   [Command.BrainStone]: BrainstoneActionData;
   [Command.Build]: AvailableBuildCommandData;
@@ -171,6 +172,7 @@ interface CommandData {
   [Command.PlacePowerRing]: { spaces: AvailableHex[] };
   [Command.RotateSectors]: never;
   [Command.Setup]: AvailableSetupOption;
+  [Command.SilentBid]: { bids: PossibleBid[] };
   [Command.Special]: { specialacts: { income: string; spec: string }[] };
   [Command.Spend]: AvailableFreeActionData;
   [Command.SpaceshipAction]: AvailableSpaceshipBoardActionData;

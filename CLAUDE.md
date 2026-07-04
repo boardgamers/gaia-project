@@ -29,7 +29,12 @@ Read these before coding:
   gold-side execution, Space Giants' Exploration special action, the Scoring Board Extension gate,
   the 6 Lost Fleet Advanced Tech tiles, and Examine Artifact + Artifact-token seeding are all
   implemented and tested.
-- Engine: 490/490 tests passing. Viewer: 219/219 tests passing (as of 2026-07-02 — trust
+- A new "Silent Auction" faction-selection variant (`AuctionVariant.Silent`, PROGRESS #61) is
+  implemented and tested: sequential ban → sequential pick → sequential private bid submission →
+  automatic ascending-auction resolution (`algorithms/silent-auction.ts`), with a setup picker
+  (`hosted/CreateGame.vue`), ban/pick/bid UI (`Commands.vue`), and a statistics-panel log
+  (`Charts.vue` → `SilentAuctionLog.vue`).
+- Engine: 581/581 tests passing. Viewer: 247/247 tests passing (as of 2026-07-04 — trust
   `PROGRESS.md`'s "Testing" section over this line if they disagree).
 - The Lost Fleet component UI is reuse-first as of 2026-07-02 (PROGRESS #50-#53): all LF components
   render through base-game components (TechContent/Condition/Resource icons, FederationTile art,

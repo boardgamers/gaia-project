@@ -23,7 +23,7 @@ import { possibleFederations, possibleFederationTiles, possibleFederationTokenBu
 import { possibleLeech } from "./leech";
 import { possibleCoverTechTiles, possibleResearchAreas, possibleTechTiles } from "./research";
 import { possibleIncomes, possibleRoundBoosters } from "./round";
-import { chooseFactionOrBid, possibleBids } from "./setup";
+import { chooseFactionOrBid, possibleBids, possibleFactionBans, possibleSilentBids } from "./setup";
 import { possibleShipMovements } from "./ships";
 import {
   possibleInstantGaiaforming,
@@ -105,10 +105,14 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
       return [{ name: Command.Init } as AvailableCommand]; //doesn't have player
     case Phase.SetupBoard:
       return possibleSetupBoardActions(engine, player);
+    case Phase.SetupFactionBan:
+      return possibleFactionBans(engine, player);
     case Phase.SetupFaction:
       return chooseFactionOrBid(engine, player);
     case Phase.SetupAuction:
       return possibleBids(engine, player);
+    case Phase.SetupSilentBid:
+      return possibleSilentBids(engine, player);
     case Phase.SetupBuilding: {
       const planet = engine.player(player).planet;
       const faction = engine.player(player).faction;

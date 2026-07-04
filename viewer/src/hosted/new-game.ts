@@ -1,9 +1,43 @@
-import Engine from "@gaia-project/engine";
+import Engine, { AuctionVariant } from "@gaia-project/engine";
 
 export type NewGameForm = {
   playerCount: number;
   seats: { userId: string; name: string }[];
+  auctionVariant: AuctionVariantOption;
 };
+
+/**
+ * Faction-selection variants offered at game creation. "none" is the standard sequential pick
+ * (no bidding at all). Add future variants here and to `AUCTION_VARIANT_OPTIONS` below - the
+ * dropdown in CreateGame.vue is driven entirely off that list.
+ */
+export type AuctionVariantOption = "none" | "silent";
+
+export const AUCTION_VARIANT_OPTIONS: { value: AuctionVariantOption; label: string; description: string }[] = [
+  {
+    value: "none",
+    label: "Standard",
+    description: "Each player picks a faction in turn order, no bidding.",
+  },
+  {
+    value: "silent",
+    label: "Silent Auction",
+    description:
+      "Everyone bans one faction (in turn order), then picks one faction each, then every player privately " +
+      "submits a max-VP bid for every picked faction. An ascending-auction algorithm then assigns each player " +
+      "the faction that maximizes their own value.",
+  },
+];
+
+function engineAuctionOption(variant: AuctionVariantOption): AuctionVariant | undefined {
+  switch (variant) {
+    case "silent":
+      return AuctionVariant.Silent;
+    case "none":
+    default:
+      return undefined;
+  }
+}
 
 export function randomSeed(): string {
   return `lf-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
@@ -25,7 +59,13 @@ export function randomSeed(): string {
  * must stay exactly what the user chose.
  */
 export function buildCreateGameParams(form: NewGameForm, seed: string, rotateMove: string) {
-  const options = { lostFleet: true, advancedRules: true, factionVariant: "standard" };
+  const auction = engineAuctionOption(form.auctionVariant);
+  const options = {
+    lostFleet: true,
+    advancedRules: true,
+    factionVariant: "standard",
+    ...(auction ? { auction } : {}),
+  };
   const probe = new Engine(
     [`init ${form.playerCount} ${seed}`, rotateMove],
     JSON.parse(JSON.stringify(options))

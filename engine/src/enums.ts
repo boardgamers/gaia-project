@@ -347,6 +347,7 @@ export namespace Faction {
 
 export enum Command {
   Action = "action",
+  BanFaction = "banFaction",
   Bid = "bid",
   BrainStone = "brainstone",
   Build = "build",
@@ -372,6 +373,7 @@ export enum Command {
   RotateSectors = "rotate",
   Special = "special",
   Setup = "set",
+  SilentBid = "silentBid",
   Spend = "spend",
   SpaceshipAction = "spaceshipAction",
   ExamineArtifact = "examineArtifact",
@@ -775,8 +777,10 @@ export enum PowerArea {
 export enum Phase {
   SetupInit = "setupInit",
   SetupBoard = "setupBoard",
+  SetupFactionBan = "setupFactionBan",
   SetupFaction = "setupFaction",
   SetupAuction = "setupAuction",
+  SetupSilentBid = "setupSilentBid",
   SetupBuilding = "setupBuilding",
   SetupBooster = "setupBooster",
   BeginGame = "beginGame",

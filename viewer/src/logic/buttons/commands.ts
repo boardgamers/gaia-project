@@ -179,7 +179,9 @@ export function commandButtons(
   const conversions: AvailableConversions = {};
   const ret: ButtonData[] = [];
 
-  for (const command of commands.filter((c) => c.name != Command.ChooseFaction)) {
+  for (const command of commands.filter(
+    (c) => c.name != Command.ChooseFaction && c.name != Command.BanFaction && c.name != Command.SilentBid
+  )) {
     ret.push(...commandButton(command, engine, player, commands, conversions, controller));
   }
 

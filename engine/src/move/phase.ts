@@ -1,6 +1,7 @@
 import assert from "assert";
 import { range } from "lodash";
 import { finalRankings, gainFinalScoringVictoryPoints } from "../algorithms/scoring";
+import { resolveSilentAuction } from "../algorithms/silent-auction";
 import { stdBuildingValue } from "../buildings";
 import Engine, { AuctionVariant, LEECHING_DISTANCE } from "../engine";
 import {
@@ -47,6 +48,14 @@ export function phaseSetupBoard(engine: Engine, move: string) {
   engine.loadTurnMoves(move, { split: false, processFirst: true });
 
   if (possibleSetupBoardActions(engine, engine.currentPlayer).length === 0 || move.includes(Command.RotateSectors)) {
+    beginSetupFactionPhaseOrBan(engine);
+  }
+}
+
+export function phaseSetupFactionBan(engine: Engine, move: string) {
+  engine.loadTurnMoves(move, { split: false, processFirst: true });
+
+  if (!engine.moveToNextPlayer(engine.turnOrder, { loop: false })) {
     beginSetupFactionPhase(engine);
   }
 }
@@ -54,12 +63,14 @@ export function phaseSetupBoard(engine: Engine, move: string) {
 export function phaseSetupFaction(engine: Engine, move: string) {
   engine.loadTurnMoves(move, { split: false, processFirst: true });
   // Legacy: there might be a few games that ended up in the 4.7.0 <= version < 4.8.0 state.
-  if (engine.isVersionOrLater("4.7.0") && engine.options.auction !== AuctionVariant.ChooseBid) {
+  if (engine.isVersionOrLater("4.7.0") && engine.options.auction === AuctionVariant.BidWhileChoosing) {
     moveToNextPlayerWithoutAChosenFaction(engine);
     return;
   }
   if (!engine.moveToNextPlayer(engine.turnOrder, { loop: false })) {
-    if (engine.options.auction) {
+    if (engine.options.auction === AuctionVariant.Silent) {
+      beginSetupSilentBidPhase(engine);
+    } else if (engine.options.auction) {
       beginSetupAuctionPhase(engine);
     } else {
       endSetupFactionPhase(engine);
@@ -70,6 +81,31 @@ export function phaseSetupFaction(engine: Engine, move: string) {
 export function phaseSetupAuction(engine: Engine, move: string) {
   engine.loadTurnMoves(move, { processFirst: true });
   moveToNextPlayerWithoutAChosenFaction(engine);
+}
+
+export function phaseSetupSilentBid(engine: Engine, move: string) {
+  engine.loadTurnMoves(move, { split: false, processFirst: true });
+
+  if (!engine.moveToNextPlayer(engine.turnOrder, { loop: false })) {
+    const nominatedFaction = new Map(engine.players.map((pl) => [pl.player as PlayerEnum, pl.faction]));
+    const result = resolveSilentAuction(
+      engine.setup,
+      engine.players.map((pl) => pl.player as PlayerEnum),
+      engine.silentAuctionBids,
+      nominatedFaction,
+      () => engine.map.rng()
+    );
+    engine.silentAuctionLog = result.log;
+    for (const player of engine.players) {
+      player.faction = undefined;
+    }
+    for (const faction of engine.setup) {
+      const winner = engine.player(result.winners.get(faction));
+      winner.faction = faction;
+      winner.data.bid = result.prices.get(faction);
+    }
+    endSetupFactionPhase(engine);
+  }
 }
 
 function moveToNextPlayerWithoutAChosenFaction(engine: Engine) {
@@ -185,8 +221,28 @@ function beginSetupBoardPhase(engine: Engine) {
     // The last player is the one to rotate the sectors
     engine.currentPlayer = engine.players.slice(-1).pop().player;
   } else {
+    beginSetupFactionPhaseOrBan(engine);
+  }
+}
+
+function beginSetupFactionPhaseOrBan(engine: Engine) {
+  if (engine.options.auction === AuctionVariant.Silent) {
+    beginSetupFactionBanPhase(engine);
+  } else {
     beginSetupFactionPhase(engine);
   }
+}
+
+function beginSetupFactionBanPhase(engine: Engine) {
+  engine.changePhase(Phase.SetupFactionBan);
+  engine.turnOrder = engine.players.map((pl) => pl.player as PlayerEnum);
+  engine.moveToNextPlayer(engine.turnOrder, { loop: false });
+}
+
+function beginSetupSilentBidPhase(engine: Engine) {
+  engine.changePhase(Phase.SetupSilentBid);
+  engine.turnOrder = engine.players.map((pl) => pl.player as PlayerEnum);
+  engine.moveToNextPlayer(engine.turnOrder, { loop: false });
 }
 
 function beginSetupFactionPhase(engine: Engine) {
