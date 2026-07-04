@@ -2433,6 +2433,74 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       `Game.spec.ts`, `Commands.spec.ts`, `Lobby.spec.ts`, `host.spec.ts`). Both production builds
       clean (`vue-cli-service build`, only pre-existing bundle-size warnings).
 
+65. ✅ **Power artifact fix + a real, end-to-end auto-leech feature + a scoped premove design
+    (2026-07-04, same session as #64, continued after the owner reviewed #64's findings).**
+    - **Power artifact bug fixed** (flagged in #64, owner confirmed to fix): was a one-time
+      immediate `pl.data.power.area3 += 2` mutation instead of a recurring per-income-phase effect
+      (`engine/src/move/artifacts.ts`) - now expressed the same way the already-correct
+      Knowledge+Ore artifact is, an Income-operator reward string (`"+2ta3"` in
+      `tiles/artifacts.ts`'s `artifactTokenRewards`, reusing the existing `Resource.GainTokenArea3`
+      primitive Xenos's free action already uses - no new engine primitive needed). Viewer icon
+      (`data/artifacts.ts`) now sets `ongoingIncome: true` and the reward kind to `"2ta3"` so it
+      gets both the "+" income marker and `Resource.vue`'s existing bowl-3 badge. New
+      `ArtifactIcon.spec.ts` locks in the fix and that one-time artifacts (e.g. Credit) don't show
+      either marker.
+    - **Auto-leech implemented end-to-end** - the engine-side decision logic
+      (`auto-charge.ts`/`Engine.autoMove()`) was already complete (per #64's audit) but nothing in
+      the viewer had ever called it. No usable upstream source existed to port a UI from (no
+      vendored `boardgamers/gaia-project` copy or git remote in this workspace, and the real
+      settings UI for this lives in boardgamers.space's own separate outer site, never part of what
+      got forked) - built fresh instead:
+      - `viewer/src/logic/auto-decide.ts` (+ `auto-decide.spec.ts`): a thin, independently-tested
+        wrapper around `Engine.autoMove()` that applies a chosen `AutoCharge` preference to
+        whichever seat is currently due to act (gated by an `isEligibleSeat` predicate) and lets it
+        chain through as many auto-decidable leech interrupts as apply.
+      - A new `autoChargePower` preference (`store.ts`) - the first preference in this app anyone
+        can actually change at runtime rather than only via a build-time `VUE_APP_*` env var (every
+        other preference here is build-time-only); persisted to `localStorage` since that's a new
+        pattern for this app. A labeled dropdown in `Commands.vue`'s header (next to the Silent
+        Auction info button - shown whenever there's a decision to make at all, matching that
+        button's own visibility rule) lets a player set it: off / free-only / up to N power.
+      - Wired into `self-contained.ts` (hot-seat, no per-seat identity - applies to whoever's turn
+        it currently is, like every other preference here already does) and
+        `hosted.ts`/`hosted/host.ts` (real per-user seats - a new `AutoDecideConfig` constructor
+        param gates it to never decide on behalf of a seat the local user doesn't hold). The hosted
+        wiring required extracting a non-enqueued `applyAndCommit` core out of `submitMove` -
+        calling the public, `enqueue`-wrapping `submitMove` recursively from inside
+        `resolveAutoDecisions` (itself invoked from inside an already-enqueued callback) would have
+        deadlocked the host's internal move queue; `applyAndCommit` is the shared core both the
+        public `submitMove` and the internal auto-resolve path call directly. 4 new tests in
+        `host.spec.ts` cover: auto-commits for an owned seat, never auto-decides for a seat the
+        local user doesn't hold, "ask" (the default) stays a no-op, and it fires on `load()`/resync
+        too, not only after a manual `submitMove`.
+      - **Known, explicitly-scoped limitation**: this only resolves while a relevant browser tab
+        for that specific game is open (realtime subscription), or on the player's next visit to
+        that game - not while genuinely offline. Confirmed directly with the owner and documented
+        as the explicit tradeoff (no new backend trust surface) vs. the alternative (see below).
+    - **Premove scoped and planned, not yet built** - the owner separately asked about a "premove"
+      feature (queue a move while it's not your turn) and specifically wants it to work even fully
+      offline, which the auto-leech approach above cannot do (it needs a relevant tab open or the
+      player's next visit). Investigated whether that requires "a server-side engine
+      reimplementation" (an earlier, unrelated Claude conversation had told the owner it did) -
+      concluded it doesn't: `@gaia-project/engine`'s runtime deps are plain JS with no native
+      bindings, and Supabase Edge Functions (Deno) already run npm packages fine in this exact repo
+      (`notify`, `BACKEND.md` §6) - the real wrinkle is that this fork's engine only exists as a
+      local workspace package (`workspace:../engine`), never published anywhere an `npm:` specifier
+      could reach, so it needs vendoring into the function's deploy directory rather than a plain
+      import. Full design (data model, the trigger + Edge Function reusing the exact
+      `games_notify_update`/`current_seat`-changed pattern already in production, a new
+      `previewAvailableCommandsFor(seat)` engine method for the "show me legal moves as if it were
+      my turn" UI, race-safety against the existing `commit_turn` `seq` check, a durable
+      `premove_failures` table tied into the existing push-notification trigger instead of a
+      one-shot broadcast, and a phased rollout starting with a read-only Phase 0 spike) is written
+      up in `docs/lost-fleet/PREMOVE_PLAN.md`, with the owner's decisions on scope (hosted-mode
+      only) and the two open design questions already resolved in that doc. **Not started** -
+      next session should read that doc and begin at its "Phase 0 checklist" section.
+    - Engine **581/581**, viewer **295/295** (up from 282 - `auto-decide.spec.ts` (6),
+      `ArtifactIcon.spec.ts` (3), 4 new `host.spec.ts` auto-leech cases). `artifacts.spec.ts`'s
+      Power-artifact test rewritten (was asserting the buggy immediate-gain behavior). Both
+      production builds clean.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -2533,6 +2601,13 @@ updated spec files). Verified visually via Playwright against the running dev se
 rotation with sector/deep-space numbers and building/gaiaformer/ship icons staying upright, the
 redesigned Statistics window in both chart and table modes and at a narrow mobile width, and the
 redesigned Lobby game bar. Both production builds clean.
+
+**Latest full rerun after #65 (2026-07-04, same day, continued session):** engine **581/581**,
+viewer **295/295** (grew from 282 - see "Done so far" #65 for the full list of new/updated spec
+files: `auto-decide.spec.ts`, `ArtifactIcon.spec.ts`, 4 new `host.spec.ts` cases, `artifacts.spec.ts`'s
+Power test rewritten). Both production builds clean. The auto-leech dropdown was also confirmed
+rendering with the correct options against the running dev server via Playwright (no premove code
+exists yet to verify - see `PREMOVE_PLAN.md`).
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/
@@ -2870,6 +2945,12 @@ quick-test` 152/152; `npm test` 152/154, the 2 failures pre-existing/unrelated, 
    `master` on owner instruction 2026-07-01 (fast-forward), so the hosted mode is live on the
    production Vercel deploy. Natural follow-ups once real games run: the Phase-2 snapshot cache
    (BACKEND.md §8), lobby polish, or realtime lobby updates.
+5. **Premove (see "Done so far" #65 and `docs/lost-fleet/PREMOVE_PLAN.md`)** — a fully-designed,
+   owner-approved feature to queue a move while it's not your turn, executed server-side (a
+   vendored copy of this fork's engine in a Supabase Edge Function) so it works even if the player
+   is fully offline when their turn arrives, unlike the client-only auto-leech shipped in #65. Not
+   started - the plan doc's own "Phase 0 checklist" is a self-contained entry point (a read-only
+   spike proving the engine runs in Deno, before any schema/RPC/UI work begins).
 
 Confirm with the user before starting any of the above.
 

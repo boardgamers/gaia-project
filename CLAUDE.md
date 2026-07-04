@@ -34,8 +34,12 @@ Read these before coding:
   automatic ascending-auction resolution (`algorithms/silent-auction.ts`), with a setup picker
   (`hosted/CreateGame.vue`), ban/pick/bid UI (`Commands.vue`), and a statistics-panel log
   (`Charts.vue` → `SilentAuctionLog.vue`).
-- Engine: 581/581 tests passing. Viewer: 247/247 tests passing (as of 2026-07-04 — trust
+- Engine: 581/581 tests passing. Viewer: 295/295 tests passing (as of 2026-07-04 — trust
   `PROGRESS.md`'s "Testing" section over this line if they disagree).
+- A premove feature (queue a move while it's not your turn, executed server-side so it works even
+  fully offline) is fully designed and owner-approved but **not started** — see
+  `docs/lost-fleet/PREMOVE_PLAN.md`, whose own "Phase 0 checklist" is the entry point for whoever
+  picks it up next.
 - The Lost Fleet component UI is reuse-first as of 2026-07-02 (PROGRESS #50-#53): all LF components
   render through base-game components (TechContent/Condition/Resource icons, FederationTile art,
   TechTile, SpecialAction octagons), one compact per-ship overview strip (`LostFleetShips.vue`),
