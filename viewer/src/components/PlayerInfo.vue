@@ -138,7 +138,7 @@
             style="opacity: 0"
             v-b-modal.modal-center="'trade'"
             role="button"
-            v-b-tooltip="'Trade Bonus'"
+            v-b-tooltip.hover="'Trade Bonus'"
           />
         </g>
         <g transform="translate(37.3,3.2) scale(0.1)">
@@ -153,7 +153,7 @@
             style="opacity: 0"
             v-b-modal.modal-center="'trade'"
             role="button"
-            v-b-tooltip="'Trading Cost in pw'"
+            v-b-tooltip.hover="'Trading Cost in pw'"
           />
         </g>
 

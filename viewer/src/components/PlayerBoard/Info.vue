@@ -40,7 +40,7 @@
         </g>
         <Resource kind="q" :count="data.qics" :center-left="true" transform="translate(12.5,0) scale(0.1)" />
         <g
-          v-b-tooltip
+          v-b-tooltip.hover
           title="Leech network - number of upgradable buildings by other players within leeching distance"
           :transform="`translate(33.5,${height - 16.6}) scale(.08)`"
         >
@@ -52,7 +52,7 @@
         </g>
         <g :transform="`translate(34.7,${height - 6.8}) scale(.1)`">
           <Undo v-if="canUndo" transform="translate(-8, -8) scale(.9)" />
-          <use v-else xlink:href="#info" v-b-tooltip.html="buttonTooltip" />
+          <use v-else xlink:href="#info" v-b-tooltip.hover="buttonTooltip" />
         </g>
         <g transform="translate(15, -3) scale(0.2)">
           <VictoryPoint width="15" height="15" />
@@ -65,21 +65,21 @@
             <text class="board-text" transform="scale(4)">+{{ income("vp") }}</text>
           </g>
         </g>
-        <g transform="translate(15.2, 1.4)" v-b-tooltip title="Satellites and space stations, satellites left ">
+        <g transform="translate(15.2, 1.4)" v-b-tooltip.hover title="Satellites and space stations, satellites left ">
           <image xlink:href="../../assets/other/satellite.svg" :height=155/211*22 width="22" x="-11" y="-8"
           transform="scale(0.07)" />
           <text class="board-text" transform="translate(1,0) scale(0.8)"
             >{{ data.satellites + data.buildings.sp }}, {{ satellitesLeft }}
           </text>
         </g>
-        <g transform="translate(12.4, 3.5)" v-b-tooltip title="Sectors with a colonized planet">
+        <g transform="translate(12.4, 3.5)" v-b-tooltip.hover title="Sectors with a colonized planet">
           <image xlink:href="../../assets/conditions/sector.svg" :height=155/211*22 width="22" x="-11" y="-8"
           transform="scale(0.1)" @click="toggleMapMode('sectors')" style="cursor: pointer" />
           <text class="board-text" transform="translate(1.4,-.1) scale(0.8)" text-anchor="middle">{{ sectors }}</text>
         </g>
         <g
           transform="translate(15.2, 3.5)"
-          v-b-tooltip
+          v-b-tooltip.hover
           title="Power value of structures in federations, outside of federations"
         >
           <image xlink:href="../../assets/conditions/federation.svg" :height=155/211*22 width="22" x="-11" y="-8"

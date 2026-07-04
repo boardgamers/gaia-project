@@ -2,7 +2,7 @@
   <svg
     :class="['techTile', pos, { highlighted, covered, advanced: isAdvanced }]"
     v-if="this.count"
-    v-b-tooltip.html
+    v-b-tooltip.hover
     :title="tooltip"
     @click="onClick"
     width="60"
@@ -23,7 +23,14 @@
         filter="url(#shadow-1)"
       />
       <!--<text class="title" x="-25" y="-18">{{title}}</text>-->
-      <text v-if="isRangeTile" class="content smaller" x="0" y="4" text-anchor="middle">+1 range</text>
+      <g v-if="isRangeTile" class="range-tile-text" style="pointer-events: none">
+        <text class="range-shift" x="0" y="-2" text-anchor="middle">+1</text>
+        <text class="range-word" x="0" y="18" text-anchor="middle">range</text>
+      </g>
+      <g v-else-if="isTerraformMineTile" style="pointer-events: none">
+        <Building building="m" outline-white :flat="flat" faction="gen" transform="translate(-9, -7) scale(1.8)" />
+        <Resource kind="step" :count="2" transform="translate(9, 9) scale(1.3)" />
+      </g>
       <TechContent v-else-if="this.event" :event="this.event" style="pointer-events: none" />
     </g>
   </svg>
@@ -45,6 +52,8 @@ import Engine, {
 } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
 import TechContent from "./TechContent.vue";
+import Building from "./Building.vue";
+import Resource from "./Resource.vue";
 import { ButtonData } from "../data";
 import { prependShortcut } from "../logic/buttons/shortcuts";
 import { spaceshipTechDisplayEvent, techTileData } from "../data/tech-tiles";
@@ -54,6 +63,8 @@ import { spaceshipTechSpec } from "@gaia-project/engine/src/tiles/spaceship-tech
 @Component({
   components: {
     TechContent,
+    Building,
+    Resource,
   },
 })
 export default class TechTile extends Vue {
@@ -130,6 +141,16 @@ export default class TechTile extends Vue {
     return this.tile === SpaceshipTechTile.Range;
   }
 
+  // Needs its own mine icon so it isn't confused with the base game's plain "2 free terraforming
+  // steps" board action (Power2) - this tile also waives the mine's build cost, that one doesn't.
+  get isTerraformMineTile(): boolean {
+    return this.tile === SpaceshipTechTile.Terraform;
+  }
+
+  get flat(): boolean {
+    return this.$store.state.preferences.flatBuildings;
+  }
+
   get count() {
     if (this.countOverride !== undefined) {
       return this.countOverride;
@@ -191,6 +212,18 @@ svg {
       &.smaller {
         font-size: 9px;
       }
+    }
+
+    .range-tile-text text {
+      fill: black;
+      font-weight: bold;
+      pointer-events: none;
+    }
+    .range-tile-text .range-shift {
+      font-size: 20px;
+    }
+    .range-tile-text .range-word {
+      font-size: 13px;
     }
 
     .tech-border {

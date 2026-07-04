@@ -75,7 +75,10 @@ export function techTileData(tile: AnyTechTile | SpaceshipTechTile): TileTileDat
  */
 const spaceshipTechDisplayEvents: { [key in SpaceshipTechTile]: string } = {
   [SpaceshipTechTile.Range]: "+r",
-  [SpaceshipTechTile.Terraform]: "=> 2step",
+  // "Once" (one-time immediate), not "Activate" (repeatable special action) - the rulebook grants
+  // this exactly once, unlike the base game's Power2 board action or Space Giants' "=> 2step"
+  // faction ability, which both reuse the same "2step" reward but ARE repeatable each round.
+  [SpaceshipTechTile.Terraform]: "> 2step",
   [SpaceshipTechTile.Resource]: "o,3k",
 };
 

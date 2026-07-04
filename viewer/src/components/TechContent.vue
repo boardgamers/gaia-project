@@ -33,11 +33,7 @@
         >PASS</text
       >
     </g>
-    <Condition
-      :condition="condition"
-      v-if="condition !== 'a'"
-      :transform="`translate(${event.operator === '>>' && condition !== 'a' ? 8 : 0}, 0) scale(1.5)`"
-    />
+    <Condition :condition="condition" v-if="condition !== 'a'" :transform="conditionTransform" />
     <Resource
       v-for="(res, i) in centerRewards"
       :count="res.count"
@@ -144,6 +140,16 @@ export default class TechContent extends Vue {
 
   get condition() {
     return this.event.condition;
+  }
+
+  get conditionTransform(): string {
+    // The "shipq" octagon+QIC icon (AdvTech "4 VP / QIC action") otherwise overlaps the corner VP
+    // reward at translate(19,-19) - nudge it down and left instead of the usual translate(8, 0).
+    if (this.condition === ConditionEnum.SpaceshipQicAction) {
+      return "translate(3, 6) scale(1.5)";
+    }
+    const dx = this.event.operator === OperatorEnum.Trigger && this.condition !== ConditionEnum.AdvanceResearch ? 8 : 0;
+    return `translate(${dx}, 0) scale(1.5)`;
   }
 
   get rightRewards() {

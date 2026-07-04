@@ -7,7 +7,7 @@
 > anything else, including the **Testing — required going forward** section it points to — both
 > are standing process, not optional. Then ask the user "what next?" and use the **Next actions**
 > section below to guide them.
-> Last updated: **2026-07-03**.
+> Last updated: **2026-07-04**.
 
 ## Working agreements (read every session, not optional)
 
@@ -2122,6 +2122,68 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       order, plus the illegal-move rejection cases), `components/Commands.spec.ts` (+2),
       `components/SilentAuctionLog.spec.ts` (1), `components/Charts.spec.ts` (2, incl. that the
       section stays hidden for non-auction games). **Engine 581/581, viewer 247/247 tests pass.**
+62. ✅ **6 owner-reported tech-tile/artifact/click-info fixes, viewer-only, CODED & visually verified**
+    (done 2026-07-04). All 6 confirmed against the rules engine/rulebook first, then fixed in the
+    viewer only (no engine behavior changed):
+    - **+1 Range Standard Tech tile** (`TechTile.vue`): was one line of small white "+1 range" text;
+      now two lines ("+1" / "range"), black, bold, sized to fill the tile (`isRangeTile` branch +
+      new `.range-tile-text` styles).
+    - **Terraform Standard Tech tile** (free mine + up to 2 free terraforming steps, §G1) was
+      rendering through `TechContent`'s `Operator.Activate` path (`SpecialAction`'s orange
+      octagon) — the same look as a genuinely repeatable special action (base game `BoardAction.Power2`
+      and Space Giants' `"=> 2step"` faction ability, both of which grant *only* the 2 terraform steps,
+      no mine, and both really are repeatable once/round). Confirmed in the engine
+      (`tiles/spaceship-techs.ts`) that this tile has no execution wired at all yet (display-only) and
+      the rulebook text is "Once: receive a Build a Mine action..." — a one-time immediate effect, not
+      a repeatable action. Fixed the display event from `"=> 2step"` to `"> 2step"` (`Operator.Once`,
+      `data/tech-tiles.ts`) so it no longer renders via `SpecialAction`, and added a new
+      `isTerraformMineTile` branch in `TechTile.vue` that draws an explicit mine `Building` icon
+      alongside the terraform-step `Resource` icon, so it reads as "free mine + steps" rather than
+      "just steps."
+    - **`AdvTechTile.QAction`** ("4 VP / QIC action", `shipq` condition) icon overlapped the corner VP
+      reward. `TechContent.vue`'s condition-transform is now a computed `conditionTransform` that
+      special-cases `Condition.SpaceshipQicAction` to `translate(3, 6)` (down and left) instead of the
+      generic trigger offset `translate(8, 0)`.
+    - **`ArtifactToken.ResearchLevel` vs `ArtifactToken.ResearchTracks`** shared identical iconography
+      (both a "3vp" reward + the generic `AdvanceResearch` track-segment icon). Confirmed in
+      `move/artifacts.ts`'s `applyArtifactToken()` that `ResearchLevel` scales with
+      `ResearchField.Science` specifically (`3 * pl.data.research[ResearchField.Science]`), while
+      `ResearchTracks` is track-agnostic (counts every Research Area at level ≥3). `Condition.vue`'s
+      `"a"` icon gained an optional `color` prop overriding its 3 track-segment lines (default `#666`
+      unchanged for every other caller); `data/artifacts.ts`'s display spec gained an optional `track`
+      field (set to `ResearchField.Science` only for `ResearchLevel`); `ArtifactIcon.vue` passes
+      `var(--rt-sci)` through as that color, so the Science-scaling artifact's track lines are now
+      tinted blue while the generic one stays gray.
+    - **Artifacts had no click-for-info, and clicking round-scoring tiles appeared to do nothing until
+      a research-track tile was clicked first.** Root-caused empirically (Playwright, headless
+      Chromium): every board/tile info tooltip in the viewer uses the `v-b-tooltip` directive with its
+      *default* triggers (`hover focus`). Clicking an SVG tile focuses it, and BootstrapVue's
+      focus-triggered tooltip only hides on blur — but nothing ever blurs an SVG `<g>` just because the
+      mouse moves to hover a *different* tile, so the old tooltip stays stuck open (sometimes stacking
+      with a newly-hovered tile's tooltip), which reads as "the new tile did nothing." Fixed by adding
+      an explicit `.hover` modifier (dropping the default `focus` trigger) everywhere this pattern
+      appears on board/tile SVG elements — `ScoringTile.vue`, `ResearchTile.vue`, `TechTile.vue`,
+      `ArtifactIcon.vue`, `FinalScoringTile.vue`, `Booster.vue`, `BoardAction.vue`, `SpecialAction.vue`,
+      `ShipActionIcon.vue`, `ScoringBoard.vue` (the Scoring Board Extension tile), `Resource.vue`,
+      `SpaceMap.vue` (terraform-color swatches), `PlayerBoard/BuildingGroup.vue`, 5 spots in
+      `PlayerBoard/Info.vue`, 2 spots in `PlayerInfo.vue`, and 4 spots in `LostFleetShips.vue` —
+      matching the `.hover`-only convention already used (and never regressing) in `Charts.vue`,
+      `TableCell.vue`, and `PlayerBoard/PowerBowl.vue`. Verified via Playwright that every one of
+      round-scoring/research-track/artifact tooltips now shows correctly on a *fresh* page load with
+      zero prior interaction, and that hovering away always cleans up (`0` stray `.tooltip` DOM nodes
+      left behind) — confirmed there is no ordering dependency left. `MoveButton.vue`'s real `<b-btn>`/
+      `<b-dropdown>` action buttons were deliberately left untouched (not SVG, not prone to this bug).
+    - **Incidental reuse cleanup**: `LostFleetShips.vue` had hand-duplicated `ArtifactIcon.vue`'s
+      entire template/tooltip/reward-rendering logic inline for Twilight's artifact slots; replaced
+      with `<ArtifactIcon :artifact="artifact" />` so the track-color fix (and any future artifact
+      fix) only has to exist in one place, consistent with this project's reuse-first component
+      convention (see "Done so far" #50-53).
+    - Verified visually with Playwright (headless Chromium) against the CLAUDE.md-referenced
+      `?players=2&seed=lost-fleet-space-map&lostFleet=1` scenario plus several other seeds to surface
+      the Terraform tile, `QAction`, and both disputed artifacts. **Engine 581/581 (untouched, unrun
+      files verified clean), viewer 249/249 tests pass** (`ScoringTile.spec.ts`, `ScoringBoard.spec.ts`,
+      `LostFleetShips.spec.ts`, `LostFleetTiles.spec.ts` all rerun clean). No production/engine
+      behavior changed — this was viewer rendering + tooltip-trigger only.
 
 ## Still MISSING — only one art-only item left
 

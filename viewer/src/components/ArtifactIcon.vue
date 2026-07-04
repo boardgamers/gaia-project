@@ -1,6 +1,6 @@
 <template>
   <svg viewBox="-13 -13 26 26" width="30" height="30" style="overflow: visible">
-    <g class="lost-fleet-ship__artifact" v-b-tooltip :title="tooltip">
+    <g class="lost-fleet-ship__artifact" v-b-tooltip.hover :title="tooltip">
       <circle r="12" class="lost-fleet-ship__artifact-bg" />
       <g transform="scale(0.55)">
         <Resource
@@ -12,7 +12,12 @@
             display.condition || display.planet ? -7 : 0
           })`"
         />
-        <Condition v-if="display.condition" :condition="display.condition" transform="translate(0, 10) scale(0.8)" />
+        <Condition
+          v-if="display.condition"
+          :condition="display.condition"
+          :color="trackColor"
+          transform="translate(0, 10) scale(0.8)"
+        />
         <circle v-if="display.planet" r="6" :class="['planet-fill', display.planet]" transform="translate(0, 11)" />
       </g>
     </g>
@@ -22,7 +27,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { ArtifactToken, Condition as ConditionEnum, Planet, Reward } from "@gaia-project/engine";
+import { ArtifactToken, Condition as ConditionEnum, Planet, Reward, ResearchField } from "@gaia-project/engine";
 import { artifactTokenSpec } from "@gaia-project/engine/src/tiles/artifacts";
 import { artifactDisplay } from "../data/artifacts";
 import Condition from "./Condition.vue";
@@ -37,8 +42,14 @@ export default class ArtifactIcon extends Vue {
   @Prop()
   artifact: ArtifactToken;
 
-  get display(): { rewards: Reward[]; condition?: ConditionEnum; planet?: Planet } {
+  get display(): { rewards: Reward[]; condition?: ConditionEnum; planet?: Planet; track?: ResearchField } {
     return artifactDisplay(this.artifact);
+  }
+
+  // Distinguishes this artifact from ArtifactToken.ResearchTracks, which shares the same reward/
+  // condition icon but isn't tied to one specific track.
+  get trackColor(): string | null {
+    return this.display.track ? `var(--rt-${this.display.track})` : null;
   }
 
   get tooltip(): string {

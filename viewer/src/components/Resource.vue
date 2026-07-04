@@ -1,5 +1,5 @@
 <template>
-  <g :class="{ resource: true, 'no-tooltip': !tooltip }" v-b-tooltip :title="tooltip">
+  <g :class="{ resource: true, 'no-tooltip': !tooltip }" v-b-tooltip.hover :title="tooltip">
     <template v-if="kind === 'q'">
       <Qic v-if="!flat" class="qic" :transform="`translate(-0.5,0)`" />
       <rect v-else class="qic" width="14" height="14" x="-7" y="-7" />

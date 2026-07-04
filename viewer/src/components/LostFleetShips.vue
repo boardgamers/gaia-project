@@ -10,7 +10,7 @@
     >
       <!-- header, single row: ship marker + full name side by side -->
       <g class="lost-fleet-ship__header">
-        <g v-b-tooltip :title="shipLabel(ship)">
+        <g v-b-tooltip.hover :title="shipLabel(ship)">
           <circle cx="9" cy="9" r="8" class="lost-fleet-ship__marker-bg" />
           <text x="9" y="12" class="lost-fleet-ship__marker">{{ shipMarker(ship) }}</text>
         </g>
@@ -23,7 +23,7 @@
           class="lost-fleet-ship__slot"
           :data-slot="slot.index"
           :transform="`translate(${9 + (slot.index - 1) * 19}, 27)`"
-          v-b-tooltip
+          v-b-tooltip.hover
           :title="slotTitle(slot)"
         >
           <circle r="8" class="lost-fleet-ship__slot-bg" />
@@ -44,7 +44,7 @@
         :class="['lost-fleet-ship__action', action.type, { used: actionUser(ship, action.type) != null }]"
         :data-action="action.type"
         :transform="`translate(${29 + i * 54}, 64)`"
-        v-b-tooltip
+        v-b-tooltip.hover
         :title="actionTooltip(ship, action)"
       >
         <SpecialAction
@@ -133,7 +133,7 @@
       </g>
 
       <!-- the Federation token still up for grabs on this ship (base-game token art) -->
-      <g data-section="federation" v-b-tooltip :title="federationTooltip(ship)">
+      <g data-section="federation" v-b-tooltip.hover :title="federationTooltip(ship)">
         <FederationTile
           v-if="shipFederation(ship)"
           :rewardsOverride="federationDisplayRewards(shipFederation(ship))"
@@ -152,35 +152,10 @@
         <g
           v-for="(artifact, i) in remainingArtifacts"
           :key="artifact"
-          class="lost-fleet-ship__artifact"
           :data-artifact="artifact"
-          :transform="`translate(${236 + (i % 2) * 26}, ${49 + Math.floor(i / 2) * 26})`"
-          v-b-tooltip
-          :title="artifactTooltip(artifact)"
+          :transform="`translate(${236 + (i % 2) * 26 - 15}, ${49 + Math.floor(i / 2) * 26 - 15})`"
         >
-          <circle r="12" class="lost-fleet-ship__artifact-bg" />
-          <g transform="scale(0.55)">
-            <Resource
-              v-for="(reward, j) in artifactDisplay(artifact).rewards"
-              :key="j"
-              :kind="reward.type"
-              :count="reward.count"
-              :transform="`translate(${(j - (artifactDisplay(artifact).rewards.length - 1) / 2) * 20}, ${
-                artifactDisplay(artifact).condition || artifactDisplay(artifact).planet ? -7 : 0
-              })`"
-            />
-            <Condition
-              v-if="artifactDisplay(artifact).condition"
-              :condition="artifactDisplay(artifact).condition"
-              transform="translate(0, 10) scale(0.8)"
-            />
-            <circle
-              v-if="artifactDisplay(artifact).planet"
-              r="6"
-              :class="['planet-fill', artifactDisplay(artifact).planet]"
-              transform="translate(0, 11)"
-            />
-          </g>
+          <ArtifactIcon :artifact="artifact" />
         </g>
       </g>
     </svg>
@@ -203,10 +178,8 @@ import Engine, {
 } from "@gaia-project/engine";
 import { Player as PlayerEnum } from "@gaia-project/engine/src/enums";
 import { EXPLORATION_CHARGE_TRACK, spaceshipActionEffects, spaceshipBoards, SpaceshipActionType, shipsInPlay } from "@gaia-project/engine/src/spaceships";
-import { artifactTokenSpec } from "@gaia-project/engine/src/tiles/artifacts";
 import { spaceshipFederationSpec } from "@gaia-project/engine/src/tiles/spaceship-federations";
 import { spaceshipFederationDisplayRewards } from "../data/federations";
-import { artifactDisplay as artifactDisplaySpecFn } from "../data/artifacts";
 import {
   actionOverlay as actionOverlaySpec,
   ActionOverlay,
@@ -221,6 +194,7 @@ import {
   spaceshipNames,
 } from "../data/spaceships";
 import { factionPiecePlanet } from "../graphics/utils";
+import ArtifactIcon from "./ArtifactIcon.vue";
 import Building from "./Building.vue";
 import Condition from "./Condition.vue";
 import FederationTile from "./FederationTile.vue";
@@ -231,6 +205,7 @@ import Token from "./Token.vue";
 
 @Component({
   components: {
+    ArtifactIcon,
     Building,
     Condition,
     FederationTile,
@@ -341,14 +316,6 @@ export default class LostFleetShips extends Vue {
   federationTooltip(ship: Spaceship): string {
     const federation = this.shipFederation(ship);
     return federation ? spaceshipFederationSpec[federation] : "Federation token already claimed";
-  }
-
-  artifactDisplay(artifact: ArtifactToken): { rewards: Reward[]; condition?: ConditionEnum; planet?: Planet } {
-    return artifactDisplaySpecFn(artifact);
-  }
-
-  artifactTooltip(artifact: ArtifactToken): string {
-    return artifactTokenSpec[artifact];
   }
 
   explorationSlots(ship: Spaceship): Array<{ index: number; cost: number; player: Player | null }> {

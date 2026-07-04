@@ -51,7 +51,7 @@
       height="0.9"
       :x="bounds.right - 7.5 + i * 1.05"
       :y="bounds.top + 0.3"
-      v-b-tooltip
+      v-b-tooltip.hover
       :title="`Terraforming board color ${i + 1}`"
       stroke="#1a1a1a"
       stroke-width="0.07"

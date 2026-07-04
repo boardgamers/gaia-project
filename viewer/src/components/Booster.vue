@@ -1,7 +1,7 @@
 <template>
   <svg
     :class="['booster', { highlighted, disabled }]"
-    v-b-tooltip
+    v-b-tooltip.hover
     :title="tooltip"
     width="60"
     height="120"

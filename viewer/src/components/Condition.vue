@@ -74,9 +74,9 @@
       />
     </g>
     <g v-else-if="condition === 'a'">
-      <line x1="-15" x2="15" stroke="#666" />
-      <line x1="-15" x2="15" y1="-10" y2="-10" stroke="#666" />
-      <line x1="-15" x2="15" y1="10" y2="10" stroke="#666" />
+      <line x1="-15" x2="15" :stroke="color || '#666'" />
+      <line x1="-15" x2="15" y1="-10" y2="-10" :stroke="color || '#666'" />
+      <line x1="-15" x2="15" y1="10" y2="10" :stroke="color || '#666'" />
       <image xlink:href="../assets/operators/trigger.svg" width=15 :height=529/328*15 :transform="`rotate(180),
       translate(6, -8), scale(0.7)`" />
       <!-- <text y=-1 style="font-size: 9px">3</text>
@@ -109,6 +109,11 @@ import Sector from "./Conditions/Sector.vue";
 export default class Condition extends Vue {
   @Prop()
   condition!: ConditionEnum;
+
+  // Optional override for the "a" (AdvanceResearch/ResearchLevels) icon's track-segment lines, so
+  // tiles tied to one specific research track can be told apart from track-agnostic ones.
+  @Prop()
+  color?: string;
 
   get isBuilding() {
     return Object.values(BuildingEnum).includes(this.condition as any);
