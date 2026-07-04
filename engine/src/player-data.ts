@@ -4,6 +4,7 @@ import { cloneDeep, fromPairs } from "lodash";
 import { TRADE_COST } from "./available/ships";
 import { BrainstoneActionData, BrainstoneWarning, ChooseTechTile } from "./available/types";
 import {
+  ArtifactToken,
   Booster,
   Building,
   Command,
@@ -138,6 +139,8 @@ export default class PlayerData extends EventEmitter {
   lostPlanet = 0;
   /** Virtual planet types granted by Asteroid/Protoplanet-themed Artifact tokens, no hex placed */
   artifactPlanetTypes: Planet[] = [];
+  /** Lost Fleet Twilight: Artifact tokens claimed via Choose Artifact, kept for display under the player board */
+  artifacts: ArtifactToken[] = [];
 
   // Internal variables, not meant to be in toJSON():
   brainstoneDest: BrainstoneDest;
@@ -180,6 +183,7 @@ export default class PlayerData extends EventEmitter {
       powerRingsPlaced: this.powerRingsPlaced,
       lostPlanet: this.lostPlanet,
       artifactPlanetTypes: this.artifactPlanetTypes,
+      artifacts: this.artifacts,
       ships: this.ships,
       shipRange: this.shipRange,
       tradeBonus: this.tradeBonus,

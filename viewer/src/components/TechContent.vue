@@ -190,6 +190,7 @@ export default class TechContent extends Vue {
           ConditionEnum.SpaceshipQicAction,
           ConditionEnum.TerraformStep,
           ConditionEnum.Trade,
+          ConditionEnum.TechTile,
           ...Object.values(BuildingEnum),
         ].includes(this.event.condition as any)
       ) {

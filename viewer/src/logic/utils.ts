@@ -1,6 +1,8 @@
 import Engine, {
   Building,
+  Expansion,
   GaiaHex,
+  hasExpansion,
   Phase,
   PlayerEnum,
   Resource,
@@ -24,6 +26,40 @@ import { RichText, richTextRewards } from "../graphics/rich-text";
 export function gameSeed(engine: Engine): string | undefined {
   const init = engine.moveHistory[0];
   return init ? init.split(" ").slice(2).join(" ") || undefined : undefined;
+}
+
+// The bottommost (R1) round scoring tile's y-position in ResearchBoard.vue's 7th (Lost Fleet
+// only) column - see that file's own SCORING_TILE_Y[0]. Final scoring sits directly below it.
+// Kept in sync manually with ResearchBoard.vue, which re-exports this same value rather than
+// hardcoding its own copy, so the two can never drift apart the way Game.vue's hardcoded
+// `<ResearchBoard height="450">` once did (see `researchBoardHeight` below).
+export const BOTTOM_SCORING_TILE_Y = 316;
+const FINAL_SCORING_GAP_BELOW_ROUND_TILES = 40;
+const FINAL_SCORING_NATIVE_HEIGHT = 56;
+const FINAL_SCORING_NATIVE_GAP = 60;
+const FINAL_SCORING_SCALE = 0.9;
+const BASE_RESEARCH_BOARD_HEIGHT = 440;
+
+/**
+ * ResearchBoard.vue's own SVG viewBox height: a fixed 440 normally, or - for Lost Fleet, which
+ * grows a 7th column of round scoring tiles + final scoring under the adv-tech tile - tall enough
+ * to fit however many final scoring tiles (1 or 2) are seeded below the round scoring tiles. Used
+ * both by ResearchBoard.vue itself (its viewBox) and by Game.vue (the `height` it declares for
+ * that nested component), so the two can never drift apart the way a hardcoded height on the
+ * Game.vue side once did - see PROGRESS.md's Gaia 4 UI polish notes.
+ */
+export function researchBoardHeight(engine: Engine): number {
+  const finalScoringCount = hasExpansion(engine.expansions, Expansion.LostFleet)
+    ? engine.tiles?.scorings?.final?.length ?? 0
+    : 0;
+  if (finalScoringCount === 0) {
+    return BASE_RESEARCH_BOARD_HEIGHT;
+  }
+  const finalScoringY = BOTTOM_SCORING_TILE_Y + FINAL_SCORING_GAP_BELOW_ROUND_TILES;
+  const nativeBlockHeight =
+    finalScoringCount > 1 ? FINAL_SCORING_NATIVE_GAP + FINAL_SCORING_NATIVE_HEIGHT : FINAL_SCORING_NATIVE_HEIGHT;
+  const bottom = finalScoringY + nativeBlockHeight * FINAL_SCORING_SCALE;
+  return Math.max(BASE_RESEARCH_BOARD_HEIGHT, Math.ceil(bottom + 10));
 }
 
 export function phaseBeforeSetupBuilding(data: Engine): boolean {

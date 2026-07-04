@@ -19,7 +19,12 @@ import {
   possibleSpaceStations,
 } from "./buildings";
 import { possibleExplorations } from "./exploration";
-import { possibleFederations, possibleFederationTiles, possibleFederationTokenBuildMine } from "./federations";
+import {
+  possibleFederations,
+  possibleFederationTiles,
+  possibleFederationTokenBuildMine,
+  possibleSpaceshipTechTileBuildMine,
+} from "./federations";
 import { possibleLeech } from "./leech";
 import { possibleCoverTechTiles, possibleResearchAreas, possibleTechTiles } from "./research";
 import { possibleIncomes, possibleRoundBoosters } from "./round";
@@ -57,6 +62,8 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
       return possibleSpaceshipUpgradeBuilding(engine, player, data);
     case SubPhase.FederationTokenBuildMine:
       return possibleFederationTokenBuildMine(engine, player, data);
+    case SubPhase.SpaceshipTechTileBuildMine:
+      return possibleSpaceshipTechTileBuildMine(engine, player);
     case SubPhase.ChooseFederationTile:
       return possibleFederationTiles(engine, player, "pool");
     case SubPhase.RescoreFederationTile:

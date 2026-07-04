@@ -85,6 +85,7 @@ import TechTile from "./TechTile.vue";
 import BoardAction from "./BoardAction.vue";
 import ScoringTile from "./ScoringTile.vue";
 import FinalScoringTile from "./FinalScoringTile.vue";
+import { BOTTOM_SCORING_TILE_Y, researchBoardHeight } from "../logic/utils";
 
 // Extra width for the 7th (Scoring Board Extension + round scoring tiles + final scoring) column,
 // Lost Fleet only - the space final scoring used to occupy in the side ScoringBoard panel (and
@@ -97,16 +98,18 @@ const EXTENSION_COLUMN_WIDTH = 90;
 // between every consecutive pair. (This used to reuse ResearchTrack.vue's own level4-level0
 // y-coordinates, which are unevenly spaced on the track itself - level2-level3's 56-unit gap stood
 // out as a visibly bigger break between R4 and R5 here, where alignment with the track no longer
-// matters once final scoring was added below. Uniform spacing fixes that.)
-const SCORING_TILE_Y = [316, 278, 240, 202, 164, 126];
+// matters once final scoring was added below. Uniform spacing fixes that.) Element 0
+// (bottommost, R1) is shared with logic/utils.ts's `researchBoardHeight` as BOTTOM_SCORING_TILE_Y,
+// so Game.vue's declared render height for this whole component can never drift out of sync with
+// this array again.
+const SCORING_TILE_Y = [BOTTOM_SCORING_TILE_Y, 278, 240, 202, 164, 126];
 
 // Final scoring sits directly below the last (bottommost, R1) round scoring tile, in the same
 // column/scale, separated by the same 2-unit gap convention (36-tall tile + 2 = 38, plus this
-// tile's own 4-unit breathing room since it's a visually distinct block).
+// tile's own 4-unit breathing room since it's a visually distinct block). The matching native
+// height/gap/scale constants used to size the actual block live in logic/utils.ts's
+// `researchBoardHeight`, which this component's `viewHeight` now delegates to.
 const FINAL_SCORING_GAP_BELOW_ROUND_TILES = 40;
-const FINAL_SCORING_NATIVE_HEIGHT = 56;
-const FINAL_SCORING_NATIVE_GAP = 60; // native translate(0, 60) between the 2 tiles, see the template
-const FINAL_SCORING_SCALE = 0.9; // matches the round scoring tiles' own scale
 
 @Component({
   computed: {
@@ -120,13 +123,7 @@ const FINAL_SCORING_SCALE = 0.9; // matches the round scoring tiles' own scale
       return this.fields.length * 60 + (this.isLostFleet ? EXTENSION_COLUMN_WIDTH : 0);
     },
     viewHeight() {
-      if (!this.hasFinalScoring) {
-        return 440;
-      }
-      const nativeBlockHeight =
-        this.finalScoringCount > 1 ? FINAL_SCORING_NATIVE_GAP + FINAL_SCORING_NATIVE_HEIGHT : FINAL_SCORING_NATIVE_HEIGHT;
-      const bottom = this.finalScoringY + nativeBlockHeight * FINAL_SCORING_SCALE;
-      return Math.max(440, Math.ceil(bottom + 10));
+      return researchBoardHeight(this.$store.state.data);
     },
     isLostFleet() {
       return hasExpansion(this.expansions, Expansion.LostFleet);

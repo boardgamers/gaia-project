@@ -100,8 +100,9 @@ export default class FactionWheel extends Vue {
 
     // Circle markers (matching the ring's own planet circles) in a compact 2-column grid instead
     // of a single wide row: narrower than the 7-planet ring itself, so it no longer widens the
-    // wheel's overall footprint - the map has more room to use the freed-up width.
-    const spacing = 2;
+    // wheel's overall footprint - the map has more room to use the freed-up width. Spacing is
+    // larger than the circles' own diameter (2x radius-1) so they don't touch edge-to-edge.
+    const spacing = 2.6;
     const columns = 2;
     const startX = -((columns - 1) * spacing) / 2;
     return planets.map((planet, index) => ({

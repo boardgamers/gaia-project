@@ -117,10 +117,10 @@ export function possibleFederationTiles(engine: Engine, player: Player, from: "p
  * range QIC entirely (limitless range) but still charges full terraforming ore with no discount;
  * Terraform charges normal range QIC but discounts up to 3 terraforming steps.
  */
-export function possibleFederationTokenBuildMine(
+function possibleFreeBuildMine(
   engine: Engine,
   player: Player,
-  data: { federation: SpaceshipFederation }
+  discount: { terraformDiscount: number; waiveRangeQic: boolean }
 ): AvailableCommand<Command.Build>[] {
   const pl = engine.player(player);
   const buildings: AvailableBuilding[] = [];
@@ -145,7 +145,7 @@ export function possibleFederationTokenBuildMine(
     } else {
       const planet = hex.occupied() ? pl.planet : hex.data.planet;
       steps = terraformingStepsRequired(pl.faction, planet, pl.data.lostFleetCost3Planets);
-      const discountedSteps = data.federation === SpaceshipFederation.Terraform ? Math.max(steps - 3, 0) : steps;
+      const discountedSteps = Math.max(steps - discount.terraformDiscount, 0);
       const oreCost = terraformingCost(pl.data, discountedSteps, engine.replay);
       if (oreCost === null) {
         continue;
@@ -156,7 +156,7 @@ export function possibleFederationTokenBuildMine(
     }
 
     let qicWarning: BuildWarning | undefined;
-    if (data.federation === SpaceshipFederation.Terraform) {
+    if (!discount.waiveRangeQic) {
       const qicNeeded = qicForDistance(engine.map, hex, pl, engine.replay);
       if (qicNeeded === null) {
         continue;
@@ -186,4 +186,26 @@ export function possibleFederationTokenBuildMine(
   }
 
   return [{ name: Command.Build, player, data: { buildings } }];
+}
+
+export function possibleFederationTokenBuildMine(
+  engine: Engine,
+  player: Player,
+  data: { federation: SpaceshipFederation }
+): AvailableCommand<Command.Build>[] {
+  return possibleFreeBuildMine(engine, player, {
+    terraformDiscount: data.federation === SpaceshipFederation.Terraform ? 3 : 0,
+    waiveRangeQic: data.federation === SpaceshipFederation.Range,
+  });
+}
+
+/**
+ * The Terraform Standard Tech tile seeded on spaceship boards (§G1): once, immediately after
+ * claiming it, grants a "Build a Mine" action with up to 2 free terraforming steps (ore is still
+ * charged for any step beyond that, e.g. a 3rd step on a cost-3 planet) and without paying the
+ * mine's own build cost; range QIC is unaffected (still chargeable), unlike the Federation Range
+ * token which waives it entirely.
+ */
+export function possibleSpaceshipTechTileBuildMine(engine: Engine, player: Player): AvailableCommand<Command.Build>[] {
+  return possibleFreeBuildMine(engine, player, { terraformDiscount: 2, waiveRangeQic: false });
 }

@@ -125,7 +125,7 @@
          it. A CSS custom property (rather than the `height` style itself) lets the default/media
          query rules fully control whether that measured height actually applies. -->
     <div
-      v-if="showStickyMobileBar"
+      v-if="showStickyMobileBar && !hideSpacer"
       class="mobile-sticky-actions-spacer"
       :style="{ '--sticky-bar-height': stickyBarHeight + 'px' }"
       aria-hidden="true"
@@ -241,6 +241,15 @@ export default class Commands extends Vue implements CommandController {
 
   @Prop({ default: "" })
   remainingTime: string;
+
+  /** Suppresses the in-place mobile sticky-bar spacer below (see the template) and instead emits
+   * `sticky-bar-height` so a caller can render that reserved space wherever it actually wants it -
+   * Game.vue's graphical layout uses this to move the reserved gap from right after Turn Order
+   * (where it used to sit, as a large dead gap before the first faction board) down to the very
+   * end of the page instead. The plain list-mode layout (Table.vue) doesn't set this, so it keeps
+   * the original in-place spacer unchanged. */
+  @Prop({ default: false })
+  hideSpacer: boolean;
 
   get controller() {
     return this;
@@ -631,6 +640,7 @@ export default class Commands extends Vue implements CommandController {
       this.stickyBarObserver = new ResizeObserver(() => {
         // read the full border-box (incl. padding) so the spacer reserves the bar's real footprint
         this.stickyBarHeight = moveButtons.getBoundingClientRect().height;
+        this.$emit("sticky-bar-height", this.showStickyMobileBar ? this.stickyBarHeight : 0);
       });
       this.stickyBarObserver.observe(moveButtons);
     }
@@ -639,6 +649,7 @@ export default class Commands extends Vue implements CommandController {
       window.removeEventListener("keydown", keyListener);
       backListener();
       this.stickyBarObserver?.disconnect();
+      this.$emit("sticky-bar-height", 0);
     });
   }
 

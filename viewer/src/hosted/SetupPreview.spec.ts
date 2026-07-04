@@ -50,6 +50,33 @@ describe("SetupPreview", () => {
     expect(container.textContent).to.not.contain("Lock in");
   });
 
+  it("does not render the base game's ScoringBoard sidebar (SetupPreviewBoard is Lost Fleet only)", async () => {
+    // Regression test: SetupPreviewBoard used to render ScoringBoard unconditionally alongside
+    // ResearchBoard's own Lost Fleet round/final-scoring column, producing two adjacent columns of
+    // round scoring tiles - i.e. 12 .scoringTile elements (2x6 round tiles) instead of 6.
+    const { container } = render(SetupPreview, { props: { playerCount: 2 } });
+    await Vue.nextTick();
+
+    expect(container.querySelectorAll(".scoringTile").length).to.equal(6);
+  });
+
+  it("does not crop the left edge of the research board (its own -50 x-offset must match the outer viewBox)", async () => {
+    // Regression test: the outer <svg viewBox> used to start at x=0 while ResearchBoard was
+    // positioned at x=-50 inside it, cropping the leftmost 50 units (the research track's own left
+    // edge) off screen.
+    const { container } = render(SetupPreview, { props: { playerCount: 2 } });
+    await Vue.nextTick();
+
+    const outer = container.querySelector("svg.scoring-research-board");
+    const researchBoard = container.querySelector("svg.research-board");
+    expect(outer, "expected the outer research/scoring svg").to.not.equal(null);
+    expect(researchBoard, "expected the nested ResearchBoard svg").to.not.equal(null);
+
+    const outerMinX = Number(outer!.getAttribute("viewBox")!.split(" ")[0]);
+    expect(outerMinX).to.equal(-50);
+    expect(researchBoard!.getAttribute("x")).to.equal("-50");
+  });
+
   it("emits the current setup state on mount and after every seed/rotation change", async () => {
     const { container, getByText, emitted } = render(SetupPreview, { props: { playerCount: 2 } });
     await Vue.nextTick();

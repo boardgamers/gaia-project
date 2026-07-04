@@ -34,8 +34,17 @@ Read these before coding:
   automatic ascending-auction resolution (`algorithms/silent-auction.ts`), with a setup picker
   (`hosted/CreateGame.vue`), ban/pick/bid UI (`Commands.vue`), and a statistics-panel log
   (`Charts.vue` → `SilentAuctionLog.vue`).
-- Engine: 581/581 tests passing. Viewer: 295/295 tests passing (as of 2026-07-04 — trust
+- Engine: 582/582 tests passing. Viewer: 303/303 tests passing (as of 2026-07-04 — trust
   `PROGRESS.md`'s "Testing" section over this line if they disagree).
+- A "Gaia 4" UI polish pass (2026-07-04, PROGRESS.md #66) fixed 12 owner-reported viewer bugs:
+  faction-wheel swatch spacing, the lobby game-bar's black-circle bug, taken artifacts vanishing
+  instead of showing on the player board, the Terraform Standard Tech tile's free-mine prompt never
+  firing, tiny Examine Artifact icons, the round-scoring/power-action-row layout (now derived from a
+  shared `researchBoardHeight` helper instead of a stale hardcoded height), a mobile-only dead gap
+  between Turn Order and the first faction board (which turned out to share a root cause with an
+  unreachable-log-tail bug), two Setup Preview layout bugs (duplicate scoring-tile column + a
+  cropped-off research track), overlapping Twilight artifact icons, T F Mars's QIC action showing
+  raw "tt" text instead of the tech-tile icon, and the Deep Space condition icon's color.
 - A premove feature (queue a move while it's not your turn, executed server-side so it works even
   fully offline) is fully designed and owner-approved but **not started** — see
   `docs/lost-fleet/PREMOVE_PLAN.md`, whose own "Phase 0 checklist" is the entry point for whoever

@@ -2501,6 +2501,79 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       Power-artifact test rewritten (was asserting the buggy immediate-gain behavior). Both
       production builds clean.
 
+66. ✅ **"Gaia 4" UI polish pass - 12 owner-reported bugs, all fixed and verified visually via a
+    live dev server + Playwright (2026-07-04, new session).**
+    - **Faction wheel spacing**: the 4 extra planet-color swatches below the 7-planet ring
+      (`FactionWheel.vue`) had `spacing = 2` for `r=1` circles (diameter 2) - touching edge-to-edge.
+      Bumped to 2.6, matching the ring's own visual density.
+    - **Lobby per-game bar circles were black**: `Lobby.vue`'s player chips render `Token.vue`,
+      whose `.planet-fill.X { fill: var(--terra) }` etc. rules only resolve inside a
+      `.gaia-viewer-game`/`.gaia-viewer-modal` ancestor (`stylesheets/planets.css`) - Lobby.vue
+      never had one, so every color var fell back to unset -> black. Added the class, enlarged the
+      circle, overlaid the faction's initial letter, and moved the VP into a small badge on the
+      circle's lower-right instead of text beside it.
+    - **Taken artifacts disappeared**: `PlayerData` never recorded which Artifact tokens a player
+      had claimed (`applyArtifactToken` computed rewards but never stored the token itself). Added
+      `PlayerData.artifacts: ArtifactToken[]`, pushed on claim, and `PlayerInfo.vue` now renders them
+      via `ArtifactIcon` in the same `.tiles` row as Federation tokens/Tech tiles.
+    - **Terraform Standard Tech tile's free-mine prompt never fired**: `spaceship-techs.ts` itself
+      said "Terraform ... still ha[d] no execution wired anywhere" - claiming it did nothing besides
+      the flat tech-track bump. Added `possibleSpaceshipTechTileBuildMine` (a 2-step-discount sibling
+      of the existing Federation-token `possibleFreeBuildMine`, refactored out of
+      `possibleFederationTokenBuildMine`) behind a new `SubPhase.SpaceshipTechTileBuildMine`, and
+      `moveChooseTechTile` (`move/research.ts`) now triggers it *before* the existing
+      `SubPhase.UpgradeResearch` bump when the claimed tile is `SpaceshipTechTile.Terraform`.
+    - **Examine Artifact buttons' icons were tiny**: `ArtifactIcon.vue` had no size prop (hardcoded
+      30x30); added one (default 30, unchanged everywhere else) and the "Choose Artifact"
+      button (`RichTextView.vue`'s `artifactToken` case, the only caller) now renders at 48.
+    - **Round scoring tiles / power-action row**: `ResearchBoard.vue` declared a fixed
+      `height="450"` (Game.vue) that never matched its own real content height (440 base, up to 471
+      for Lost Fleet's round+final-scoring column) - the nested SVG silently rescaled to fit,
+      and the power-action row's hardcoded `y=455` sat wherever that happened to land. Added
+      `researchBoardHeight(engine)` (`logic/utils.ts`, shared with `ResearchBoard.vue`'s own
+      `viewHeight` and a new `SetupPreviewBoard.vue` getter) and made both the board's declared
+      height and the action row's y-offset (`researchBoardViewHeight + 5`) derive from it, so the
+      row is always pinned exactly below the board's real bottom edge, matching the pre-Lost-Fleet
+      base game, regardless of how tall the 7th column grows.
+    - **Mobile gap between Turn Order and the first faction board (also the "log unreachable" bug,
+      #12 below - same root cause)**: `Commands.vue`'s mobile sticky action bar reserves a spacer
+      for its own fixed-position footprint right where `<Commands>` is mounted - directly after
+      Turn Order - leaving a large dead gap there *and*, since nothing reserved that space at the
+      true end of the page, permanently hiding whatever real content (the log) landed in the last
+      ~260px once scrolled to the bottom, with no further scroll room to reveal it. Added a
+      `hideSpacer` prop + `sticky-bar-height` event to `Commands.vue` so `Game.vue` can suppress the
+      in-place spacer and render an equivalent one at the true end of the page instead. Verified
+      both the closed gap and the previously-hidden log tail becoming reachable, via a real
+      before/after Playwright comparison (`git stash` the fix, screenshot, restore, re-screenshot).
+    - **Setup preview layout bugs**: `SetupPreviewBoard.vue` (1) rendered the base game's
+      `ScoringBoard` unconditionally alongside `ResearchBoard`'s own Lost Fleet round/final-scoring
+      column, producing two adjacent columns of round scoring tiles, and (2) had its outer `<svg
+      viewBox>` start at x=0 while `ResearchBoard` sat at `x="-50"` inside it, cropping the
+      research track's own left edge off screen. Fixed both (added the same
+      `v-if="!engine.options.lostFleet"` guard Game.vue already uses for ScoringBoard, and aligned
+      the viewBox's minX to -50), and adopted the same `researchBoardHeight` fix as above.
+    - **Twilight's artifact icons overlapped**: a 26-unit grid repeat with icons at their native
+      30-unit size. Used the new `size` prop to render them at 24 instead - smaller than the grid
+      repeat, so consecutive icons no longer touch.
+    - **T F Mars's "VP per tech tile" QIC action showed raw text**: `Condition.vue` had no branch
+      for `Condition.TechTile` ("tt"), and `TechContent.vue`'s `showText` whitelist (the list of
+      conditions that suppress the raw-spec-string fallback) never included it either. Added a
+      `<Resource kind="tech">` branch (the existing white/blue tech-tile icon, already used for the
+      Federation "tech" token reward) and added `TechTile` to the whitelist.
+    - **Deep Space condition icon was dark navy instead of white**: `Condition.vue`'s standalone
+      `'ds'` branch never passed `DeepSpaceSector`'s `white` prop (unlike the adjacent `newsector`
+      combo icon, which already did - though that turned out to have the same bug too, see below).
+      Both now pass `:white="true"` explicitly - a bare `white` attribute (no `:`) was silently not
+      being cast to a real boolean prop value in this codebase's Vue/TS toolchain (confirmed via a
+      failing unit test), which is presumably why the `newsector` combo's own `<DeepSpaceSector
+      white />` never actually took effect either, an unnoticed pre-existing instance of the same
+      bug fixed as a side effect here.
+    - Engine **582/582** (up from 581 - 1 new `artifacts.spec.ts` case, 1 new
+      `exploration.spec.ts` case for the Terraform tile's chained Build-a-Mine). Viewer **303/303**
+      (up from 295 - new/updated specs in `Lobby.spec.ts`, `PlayerInfo` covered via existing specs,
+      `Commands.spec.ts`, `SetupPreview.spec.ts`, `LostFleetShips.spec.ts`, `Condition.spec.ts`,
+      `logic/utils.spec.ts`). Both production builds clean.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -2608,6 +2681,14 @@ files: `auto-decide.spec.ts`, `ArtifactIcon.spec.ts`, 4 new `host.spec.ts` cases
 Power test rewritten). Both production builds clean. The auto-leech dropdown was also confirmed
 rendering with the correct options against the running dev server via Playwright (no premove code
 exists yet to verify - see `PREMOVE_PLAN.md`).
+
+**Latest full rerun after #66 (2026-07-04, new session):** engine **582/582** (grew from 581 - 1
+new `artifacts.spec.ts` case, 1 new `exploration.spec.ts` case), viewer **303/303** (grew from
+295 - see "Done so far" #66 for the full list of new/updated spec files). Both production builds
+clean. Every fix in #66 was also verified visually against a running dev server via Playwright
+(screenshots + DOM/bounding-rect assertions), including a real before/after comparison (via `git
+stash`) proving the mobile spacer relocation fixes both the Turn-Order gap and the previously
+unreachable log tail.
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/

@@ -161,15 +161,16 @@
            TechTile's rendered box (from its `translate(225, 11) scale(0.9)` wrapper, a 60x64
            viewBox scaled to 0.9 = 54x57.6 screen units, an ~54x54 rendered footprint) is centered
            on screen at (252, 38) - center-x = 225 + 30*0.9 = 252, matching the same math for y.
-           ArtifactIcon is itself a self-contained nested <svg> (viewBox -13 -13 26 26, native
-           30x30 box), so a translate(x, y) here moves its TOP-LEFT corner, not its visual center -
-           its content actually renders 15 screen units right/down of that translate (half its
-           native 30-unit box), which is why every offset below is the intended on-screen center
-           minus 15. With up to 4 artifact slots (= player count, max 4p) this 2x2 grid (26-unit
-           repeat, matching the icon's own compact-overlap spacing used elsewhere) fits inside a
-           56x56 box centered on (252, 38) - i.e. within a couple of units of TechTile's own 54x54
-           footprint - instead of the old anchor (center-x 249, starting at y 44) that pushed the
-           2nd row down to a visual bottom edge of ~85, well past the ship's own 76-tall viewBox. -->
+           ArtifactIcon is itself a self-contained nested <svg> (viewBox -13 -13 26 26, rendered
+           here at size=24, smaller than its native 30x30), so a translate(x, y) here moves its
+           TOP-LEFT corner, not its visual center - its content actually renders 12 screen units
+           right/down of that translate (half its 24-unit rendered size), which is why every
+           offset below is the intended on-screen center minus 12. With up to 4 artifact slots
+           (= player count, max 4p) this 2x2 grid (26-unit repeat, bigger than each icon's own
+           24-unit size so consecutive icons no longer overlap) fits inside a 56x56 box centered
+           on (252, 38) - i.e. within a couple of units of TechTile's own 54x54 footprint -
+           instead of the old anchor (center-x 249, starting at y 44) that pushed the 2nd row down
+           to a visual bottom edge of ~85, well past the ship's own 76-tall viewBox. -->
       <g v-else data-section="artifacts">
         <g
           v-for="(artifact, i) in remainingArtifacts"
@@ -177,7 +178,9 @@
           :data-artifact="artifact"
           :transform="`translate(${224 + (i % 2) * 26}, ${10 + Math.floor(i / 2) * 26})`"
         >
-          <ArtifactIcon :artifact="artifact" />
+          <!-- size=24 < the 26-unit grid repeat above, so consecutive icons no longer overlap
+               (they used to, at the icon's native 30-unit size). -->
+          <ArtifactIcon :artifact="artifact" :size="24" />
         </g>
       </g>
     </svg>

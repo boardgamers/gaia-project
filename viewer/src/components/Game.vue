@@ -21,14 +21,17 @@
           <svg
             class="scoring-research-board"
             :viewBox="`-50 0 ${researchBoardWidth + (engine.options.lostFleet ? 110 : 120) + 50} ${
-              engine.options.lostFleet ? 510 : 550
+              engine.options.lostFleet ? researchBoardViewHeight + 60 : 550
             }`"
           >
-            <ResearchBoard height="450" ref="researchBoard" x="-50" />
+            <ResearchBoard :height="researchBoardViewHeight" ref="researchBoard" x="-50" />
             <ScoringBoard v-if="!engine.options.lostFleet" class="ml-4" width="90" :x="researchBoardWidth + 20" />
+            <!-- Always right under the research board's own bottom edge (a fixed 5-unit gap,
+                 matching the pre-Lost-Fleet base game), regardless of how tall Lost Fleet's extra
+                 round/final-scoring column makes that board - see researchBoardViewHeight. -->
             <BoardAction
               :scale="17"
-              :transform="`translate(${45 * i - 20}, 455)`"
+              :transform="`translate(${45 * i - 20}, ${researchBoardViewHeight + 5})`"
               v-for="(action, i) in actions"
               :key="action"
               :action="action"
@@ -55,7 +58,13 @@
           :class="['col-md-4', 'order-md-1', gameplayStarted ? 'order-1' : 'order-2']"
         />
         <div :class="['col-md-8', 'order-md-2', gameplayStarted ? 'order-2' : 'order-1']">
-          <Commands @command="handleCommand" v-if="canPlay" :currentMove="currentMove" />
+          <Commands
+            @command="handleCommand"
+            v-if="canPlay"
+            :currentMove="currentMove"
+            :hide-spacer="true"
+            @sticky-bar-height="stickyBarHeight = $event"
+          />
           <div v-else-if="turnPlayer && !ended" class="current-player">
             <h5>Current player</h5>
             <svg viewBox="-1.2 -1.2 2.5 4.5">
@@ -91,6 +100,12 @@
           v-if="logPlacement === 'bottom'"
         />
       </div>
+      <!-- Reserves the mobile sticky action bar's height (see Commands.vue's hide-spacer prop)
+           at the true end of the page instead of right after Turn Order, where it used to leave a
+           large dead gap before the first faction board. Same class/CSS-var contract as the
+           in-place spacer it replaces here, so the same media query still collapses it to 0 on
+           wide viewports. -->
+      <div class="mobile-sticky-actions-spacer" :style="{ '--sticky-bar-height': stickyBarHeight + 'px' }" aria-hidden="true"></div>
     </template>
     <div v-else class="d-flex flex-column">
       <SpaceMap v-if="hasMap" :class="['mb-1', 'space-map', 'col-md-7']" />
@@ -127,6 +142,7 @@ import SpaceMap from "./SpaceMap.vue";
 import LostFleetShips from "./LostFleetShips.vue";
 import LostFleetTerraformingBoard from "./LostFleetTerraformingBoard.vue";
 import TurnOrder from "./TurnOrder.vue";
+import { researchBoardHeight } from "../logic/utils";
 import { parseCommands } from "../logic/recent";
 import { LogPlacement } from "../data";
 import { ExecuteBack } from "../logic/buttons/types";
@@ -158,6 +174,10 @@ export default class Game extends Vue {
   public currentMove = "";
   public hideLog = false;
   clearCurrentMove = false;
+  // Mirrors Commands.vue's own measured mobile sticky-bar height (see its `hide-spacer` prop /
+  // `sticky-bar-height` event) so the reserved space for it can render at the end of the page
+  // instead of right after Turn Order.
+  stickyBarHeight = 0;
   // When joining a game
   name = "";
 
@@ -258,6 +278,15 @@ export default class Game extends Vue {
 
   get researchBoardWidth() {
     return ResearchField.values(this.expansions).length * 60;
+  }
+
+  // ResearchBoard.vue's own real content height (440, or up to 471 for Lost Fleet's round/final
+  // scoring column) - declaring this instead of a stale hardcoded height keeps that nested SVG at
+  // true 1:1 scale, which in turn keeps the power action row (drawn as its own sibling right after
+  // it, unconditionally) exactly where the base game always put it: right under the research
+  // board's bottom edge, regardless of how tall Lost Fleet's extra column makes that board.
+  get researchBoardViewHeight() {
+    return researchBoardHeight(this.engine);
   }
 
   get logPlacement(): LogPlacement {

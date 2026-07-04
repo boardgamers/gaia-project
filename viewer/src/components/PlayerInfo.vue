@@ -282,6 +282,14 @@
         :pos="tech.pos"
         :player="player.player"
       />
+      <span
+        v-for="(artifact, i) in playerData.artifacts"
+        class="mb-1 mr-1 d-inline-flex"
+        :key="'artifact-' + i"
+        :data-artifact="artifact"
+      >
+        <ArtifactIcon :artifact="artifact" />
+      </span>
     </div>
     <Rules :id="player.faction" :type="player.faction" />
   </div>
@@ -306,6 +314,7 @@ import TechTile from "./TechTile.vue";
 import Booster from "./Booster.vue";
 import SpecialAction from "./SpecialAction.vue";
 import FederationTile from "./FederationTile.vue";
+import ArtifactIcon from "./ArtifactIcon.vue";
 import BuildingGroup from "./PlayerBoard/BuildingGroup.vue";
 import PlayerBoardInfo from "./PlayerBoard/Info.vue";
 import PowerBowls from "./PlayerBoard/PowerBowls.vue";
@@ -328,6 +337,7 @@ type TerraformingMarker = {
     Booster,
     SpecialAction,
     FederationTile,
+    ArtifactIcon,
     BuildingGroup,
     PowerBowls,
     PlayerBoardInfo,

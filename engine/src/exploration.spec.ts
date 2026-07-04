@@ -22,6 +22,7 @@ import {
   SubPhase,
 } from "./enums";
 import { GaiaHex } from "./gaia-hex";
+import { possibleSpaceshipTechTileBuildMine } from "./available/federations";
 import { moveExplore } from "./move/exploration";
 import { moveFormFederation } from "./move/federation";
 import { moveChooseCoverTechTile, moveChooseTechTile } from "./move/research";
@@ -298,6 +299,45 @@ describe("Lost Fleet exploration", () => {
     expect(player.data.research[ResearchField.GaiaProject]).to.equal(beforeGaia + 1);
     expect(player.data.tiles.techs.find((tile) => tile.pos === Spaceship.TFMars)).to.deep.include({
       tile: SpaceshipTechTile.Resource,
+      pos: Spaceship.TFMars,
+      enabled: true,
+    });
+  });
+
+  it("should prompt a discounted Build a Mine action for the Terraform Standard Tech tile, before the tech-track bump", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+
+    occupyNearestPlanet(engine, PlayerEnum.Player1, Spaceship.TFMars);
+    player.data.explorationShips[Spaceship.TFMars] = 1;
+    engine.tiles.spaceshipTechs[Spaceship.TFMars] = { tile: SpaceshipTechTile.Terraform, count: 1 };
+
+    engine.generateAvailableCommands(SubPhase.ChooseTechTile);
+    const command = engine.findAvailableCommand(PlayerEnum.Player1, Command.ChooseTechTile);
+
+    // Confirm the discounted Build a Mine action is actually on offer (2 free terraforming steps,
+    // ore still charged for anything beyond that) before wiring it into the queued turn moves below.
+    const [buildCommand] = possibleSpaceshipTechTileBuildMine(engine, PlayerEnum.Player1);
+    expect(buildCommand, "a discounted Build a Mine action should be offered").to.not.equal(undefined);
+    const target = buildCommand.data.buildings[0];
+    const targetSteps = terraformingStepsRequired(
+      player.faction,
+      engine.map.getS(target.coordinates).data.planet,
+      player.data.lostFleetCost3Planets
+    );
+    const oreCost = Reward.parse(target.cost).find((r) => r.type === Resource.Ore)?.count ?? 0;
+    expect(oreCost).to.equal(terraformingCost(player.data, Math.max(targetSteps - 2, 0), engine.replay).count);
+
+    const beforeGaia = player.data.research[ResearchField.GaiaProject];
+    const beforeMines = player.data.buildings[Building.Mine];
+
+    engine.turnMoves = [`build m ${target.coordinates}`, "up gaia"];
+    moveChooseTechTile(engine, command, PlayerEnum.Player1, Spaceship.TFMars);
+
+    expect(player.data.buildings[Building.Mine]).to.equal(beforeMines + 1);
+    expect(player.data.research[ResearchField.GaiaProject]).to.equal(beforeGaia + 1);
+    expect(player.data.tiles.techs.find((tile) => tile.pos === Spaceship.TFMars)).to.deep.include({
+      tile: SpaceshipTechTile.Terraform,
       pos: Spaceship.TFMars,
       enabled: true,
     });

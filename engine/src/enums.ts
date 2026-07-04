@@ -813,6 +813,7 @@ export enum SubPhase {
   SpaceshipBuildMine = "spaceshipBuildMine",
   SpaceshipUpgradeBuilding = "spaceshipUpgradeBuilding",
   FederationTokenBuildMine = "federationTokenBuildMine",
+  SpaceshipTechTileBuildMine = "spaceshipTechTileBuildMine",
   ChooseArtifactToken = "chooseArtifactToken",
   PlacePowerRing = "placePowerRing",
 }

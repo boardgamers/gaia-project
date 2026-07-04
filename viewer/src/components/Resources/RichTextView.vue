@@ -30,7 +30,7 @@
       </svg>
       <BoardAction v-else-if="c.boardAction" :key="i" :action="c.boardAction" transform="scale(1.3)" />
       <ShipActionIcon v-else-if="c.spaceshipAction" :key="i" :ship="c.spaceshipAction.ship" :type="c.spaceshipAction.type" />
-      <ArtifactIcon v-else-if="c.artifactToken != null" :key="i" :artifact="c.artifactToken" />
+      <ArtifactIcon v-else-if="c.artifactToken != null" :key="i" :artifact="c.artifactToken" :size="48" />
       <SpecialAction
         v-else-if="c.specialAction != null"
         :key="i"

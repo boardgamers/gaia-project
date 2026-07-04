@@ -1,5 +1,5 @@
 <template>
-  <svg viewBox="-13 -13 26 26" width="30" height="30" style="overflow: visible">
+  <svg viewBox="-13 -13 26 26" :width="size" :height="size" style="overflow: visible">
     <g class="lost-fleet-ship__artifact" v-b-tooltip.hover :title="tooltip">
       <circle r="12" class="lost-fleet-ship__artifact-bg" />
       <g transform="scale(0.55)">
@@ -46,6 +46,9 @@ import Resource from "./Resource.vue";
 export default class ArtifactIcon extends Vue {
   @Prop()
   artifact: ArtifactToken;
+
+  @Prop({ default: 30 })
+  size: number;
 
   get display(): { rewards: Reward[]; condition?: ConditionEnum; planet?: Planet; track?: ResearchField } {
     return artifactDisplay(this.artifact);

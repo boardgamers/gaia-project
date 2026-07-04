@@ -237,6 +237,7 @@ describe("Artifact token effects (RULES_CLARIFICATIONS.md §G6)", () => {
     expect(player.resourceIncome(Resource.Knowledge)).to.equal(beforeKnowledgeIncome + 1);
     expect(player.resourceIncome(Resource.Ore)).to.equal(beforeOreIncome + 1);
     expect(engine.tiles.artifacts).to.have.length(0);
+    expect(player.data.artifacts).to.deep.equal([ArtifactToken.KnowledgeOre]);
   });
 
   it("Credit: immediately grants 3 credits + 3 ore", () => {

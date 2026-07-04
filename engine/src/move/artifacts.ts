@@ -38,6 +38,8 @@ export function moveChooseArtifactToken(
 function applyArtifactToken(engine: Engine, player: PlayerEnum, token: ArtifactToken) {
   const pl = engine.player(player);
 
+  pl.data.artifacts.push(token);
+
   const rewardSpec = artifactTokenRewards[token];
   if (rewardSpec) {
     pl.loadEvents(Event.parse([rewardSpec], Spaceship.Twilight));

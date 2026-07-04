@@ -29,7 +29,7 @@
                actually cached one (skip entirely for a brand new game, or one committed before
                0009_lobby_round_faction_score_cache.sql seeded these columns). The current-turn
                seat gets a highlighted ring instead of repeating the turnLabel text per player. -->
-          <span class="game-bar__players" v-if="playersWithSummary(game).length > 0">
+          <span class="game-bar__players gaia-viewer-game" v-if="playersWithSummary(game).length > 0">
             <span
               v-for="player in playersWithSummary(game)"
               :key="player.seat"
@@ -37,8 +37,11 @@
               :class="{ 'game-bar__player--active': player.seat === game.current_seat }"
               :title="playerBarTitle(game, player)"
             >
-              <svg viewBox="-22 -22 44 44" width="18" height="18"><Token :faction="player.faction" /></svg>
-              <span class="game-bar__score">{{ player.score != null ? player.score : "–" }}</span>
+              <span class="game-bar__avatar">
+                <svg viewBox="-22 -22 44 44"><Token :faction="player.faction" /></svg>
+                <span class="game-bar__initial">{{ factionInitial(player) }}</span>
+                <span class="game-bar__score">{{ player.score != null ? player.score : "–" }}</span>
+              </span>
             </span>
           </span>
           <b-badge :variant="badgeVariant(game)" class="ml-auto">{{ turnLabel(game) }}</b-badge>
@@ -122,6 +125,9 @@ export default Vue.extend({
         .filter((p: any) => !!p.faction)
         .slice()
         .sort((a: any, b: any) => a.seat - b.seat);
+    },
+    factionInitial(player: any): string {
+      return player.faction ? player.faction.substr(0, 1).toUpperCase() : "";
     },
     playerBarTitle(game: any, player: any): string {
       const name = player.display_name || player.invited_email;
@@ -210,8 +216,7 @@ export default Vue.extend({
 .game-bar__player {
   display: flex;
   align-items: center;
-  gap: 0.15rem;
-  padding: 0.1rem 0.3rem;
+  padding: 0.15rem;
   border-radius: 1rem;
   border: 1px solid transparent;
 
@@ -221,9 +226,44 @@ export default Vue.extend({
   }
 }
 
+.game-bar__avatar {
+  position: relative;
+  display: inline-flex;
+  width: 1.9rem;
+  height: 1.9rem;
+
+  svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+}
+
+.game-bar__initial {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.85), 0 0 3px rgba(0, 0, 0, 0.85);
+  pointer-events: none;
+}
+
 .game-bar__score {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #495057;
+  position: absolute;
+  bottom: -0.3rem;
+  right: -0.4rem;
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  background: #495057;
+  border-radius: 0.6rem;
+  padding: 0.15rem 0.3rem;
+  min-width: 0.9rem;
+  text-align: center;
+  box-shadow: 0 0 0 1px #fff;
 }
 </style>

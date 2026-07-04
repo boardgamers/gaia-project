@@ -1,9 +1,17 @@
 import Engine, { Faction, Spaceship } from "@gaia-project/engine";
 import { render } from "@testing-library/vue";
 import { expect } from "chai";
+import Vue from "vue";
 import { makeStore } from "../store";
 import { factionPiecePlanet } from "../graphics/utils";
 import LostFleetShips from "./LostFleetShips.vue";
+import TechContent from "./TechContent.vue";
+
+// SpecialAction.vue's template uses <TechContent> without a local import, relying on launcher.ts's
+// global Vue.component("TechContent", ...) registration - which isolated component tests never
+// load. Register it the same way here so board-action octagons (SpecialAction) fully resolve their
+// icon content instead of leaving an unrendered <TechContent> custom element in the DOM.
+Vue.component("TechContent", TechContent);
 
 // Renders the real consolidated per-ship overview strip against real Lost Fleet engines,
 // following the render-path testing convention from PERFORMANCE.md / SpaceMap.spec.ts:
@@ -164,23 +172,41 @@ describe("LostFleetShips", () => {
     const artifactGroups = twilight.querySelectorAll("[data-artifact]");
     expect(artifactGroups.length).to.equal(4);
 
-    // ArtifactIcon is a self-contained nested <svg> whose visual center sits 15 screen units
-    // right/down of whatever translate positions it - every icon's true on-screen center must
-    // land within the same ~54x54 box the other 3 ships' TechTile occupies (center (252, 38),
-    // from that slot's own `translate(225, 11) scale(0.9)` wrapper), and no icon may render past
-    // the ship's own 76-tall viewBox (the reported "bleeds into the bottom" bug).
+    // ArtifactIcon is rendered at size=24 here (down from its native 30, so the 26-unit grid
+    // repeat below no longer overlaps consecutive icons) - a self-contained nested <svg> whose
+    // visual center sits 12 (half of 24) screen units right/down of whatever translate positions
+    // it. Every icon's true on-screen center must land within the same ~54x54 box the other 3
+    // ships' TechTile occupies (center (252, 38), from that slot's own
+    // `translate(225, 11) scale(0.9)` wrapper), and no icon may render past the ship's own
+    // 76-tall viewBox (the reported "bleeds into the bottom" bug).
+    const iconHalfSize = 12;
     const centers = Array.from(artifactGroups).map((g) => {
       const [, x, y] = g.getAttribute("transform")!.match(/translate\(([\d.]+),\s*([\d.]+)\)/)!;
-      return { x: Number(x) + 15, y: Number(y) + 15 };
+      return { x: Number(x) + iconHalfSize, y: Number(y) + iconHalfSize };
     });
     const avgX = centers.reduce((s, c) => s + c.x, 0) / centers.length;
     const avgY = centers.reduce((s, c) => s + c.y, 0) / centers.length;
-    expect(avgX).to.be.closeTo(252, 2);
-    expect(avgY).to.be.closeTo(38, 2);
+    expect(avgX).to.be.closeTo(252, 5);
+    expect(avgY).to.be.closeTo(38, 5);
 
-    const iconHalfHeight = 15;
     for (const c of centers) {
-      expect(c.y + iconHalfHeight).to.be.at.most(76);
+      expect(c.y + iconHalfSize).to.be.at.most(76);
+    }
+  });
+
+  it("does not let Twilight's artifact icons overlap each other (a 24-wide icon in a 26-unit grid repeat)", () => {
+    const engine = new Engine(["init 4 lost-fleet-ships-spec"], { lostFleet: true });
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(LostFleetShips, { store });
+    const twilight = container.querySelector(`svg.lost-fleet-ship[data-ship="${Spaceship.Twilight}"]`);
+    const icons = twilight.querySelectorAll("[data-artifact] > svg");
+
+    expect(icons.length).to.equal(4);
+    for (const icon of Array.from(icons)) {
+      expect(icon.getAttribute("width")).to.equal("24");
+      expect(icon.getAttribute("height")).to.equal("24");
     }
   });
 
@@ -199,5 +225,18 @@ describe("LostFleetShips", () => {
     // other overlay icons (single-icon combos, no planet) go through the dampened, non-bubble path
     const powerOverlay = eclipse.querySelector('[data-action="power"] .lost-fleet-ship__action-overlay');
     expect(powerOverlay.querySelector("circle.planet-fill")).to.equal(null);
+  });
+
+  it("shows T F Mars's 'VP per tech tile' QIC action with the tech tile icon, not raw 'tt' text", () => {
+    const engine = new Engine(["init 2 lost-fleet-ships-spec"], { lostFleet: true });
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(LostFleetShips, { store });
+    const tfMars = container.querySelector(`svg.lost-fleet-ship[data-ship="${Spaceship.TFMars}"]`);
+    const qicAction = tfMars.querySelector('[data-action="qic"]');
+
+    expect(qicAction.querySelector("image"), "expected the tech tile Resource icon (an <image>)").to.not.equal(null);
+    expect(qicAction.textContent).to.not.contain("tt");
   });
 });

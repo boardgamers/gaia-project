@@ -19,11 +19,14 @@
       </g>
       <text x="0" y="3" class="newsector-combo__slash">/</text>
       <g transform="translate(6, 0) scale(0.55)">
-        <DeepSpaceSector white />
+        <DeepSpaceSector :white="true" />
       </g>
     </g>
     <Resource v-else-if="condition === 'gf'" kind="gf" />
-    <DeepSpaceSector v-else-if="condition === 'ds'" transform="scale(1.3)" />
+    <!-- white to match the base-game Sector icon's own coloring (used right above, and in the
+         newsector combo below) - the map itself keeps the dark navy fill for realism, but tile/
+         condition iconography (round scoring, adv tech tiles, ...) should read the same as Sector. -->
+    <DeepSpaceSector v-else-if="condition === 'ds'" :white="true" transform="scale(1.3)" />
     <g v-else-if="condition === 'g'" transform="scale(0.85)">
       <image
         xlink:href="../assets/conditions/planet.svg"
@@ -36,6 +39,7 @@
     </g>
     <Resource v-else-if="condition === 'step'" kind="step" />
     <Resource v-else-if="condition === 'trade'" kind="tradeShip" />
+    <Resource v-else-if="condition === 'tt'" kind="tech" />
     <circle v-else-if="condition === 'ast'" r="9" class="planet-fill a" style="stroke: black; stroke-width: 0.5" />
     <g v-else-if="condition === 'shipq'">
       <polygon

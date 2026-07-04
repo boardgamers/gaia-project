@@ -518,4 +518,16 @@ describe("Commands", () => {
     expect(spacer.style.height).to.equal("");
     expect(spacer.style.getPropertyValue("--sticky-bar-height")).to.not.equal("");
   });
+
+  it("suppresses the in-place sticky-bar spacer when hideSpacer is set, letting a caller reserve that space elsewhere instead", () => {
+    // Game.vue's graphical layout sets this so the reserved gap moves from right after Turn Order
+    // (a large dead gap before the first faction board) down to the end of the page.
+    const engine = createLostFleetRoundMoveEngine();
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(Commands, { props: { currentMove: "", hideSpacer: true }, store });
+
+    expect(container.querySelector(".mobile-sticky-actions-spacer")).to.equal(null);
+  });
 });

@@ -4,12 +4,17 @@
        Game.vue's <style>). Without it here, every color falls back to invalid/black. -->
   <div class="gaia-viewer-game">
     <SpaceMap class="mb-1 space-map" />
-    <svg class="scoring-research-board" :viewBox="`0 0 ${researchBoardWidth + 120} 550`">
-      <ResearchBoard height="450" x="-50" />
-      <ScoringBoard class="ml-4" width="90" :x="researchBoardWidth + 20" />
+    <svg
+      class="scoring-research-board"
+      :viewBox="`-50 0 ${researchBoardWidth + (engine.options.lostFleet ? 110 : 120) + 50} ${
+        engine.options.lostFleet ? researchBoardViewHeight + 60 : 550
+      }`"
+    >
+      <ResearchBoard :height="researchBoardViewHeight" x="-50" />
+      <ScoringBoard v-if="!engine.options.lostFleet" class="ml-4" width="90" :x="researchBoardWidth + 20" />
       <BoardAction
         :scale="17"
-        :transform="`translate(${45 * i + 6}, 455)`"
+        :transform="`translate(${45 * i - 20}, ${researchBoardViewHeight + 5})`"
         v-for="(action, i) in actions"
         :key="action"
         :action="action"
@@ -32,6 +37,7 @@ import Pool from "../components/Pool.vue";
 import ResearchBoard from "../components/ResearchBoard.vue";
 import ScoringBoard from "../components/ScoringBoard.vue";
 import SpaceMap from "../components/SpaceMap.vue";
+import { researchBoardHeight } from "../logic/utils";
 
 // The setup-preview counterpart of Game.vue's map/research/scoring/board-action
 // composition (Game.vue:9-34) — deliberately NOT the whole Game.vue, which
@@ -56,6 +62,10 @@ export default class SetupPreviewBoard extends Vue {
 
   get researchBoardWidth() {
     return ResearchField.values(this.engine.expansions).length * 60;
+  }
+
+  get researchBoardViewHeight() {
+    return researchBoardHeight(this.engine);
   }
 
   get actions(): BoardActionEnum[] {
