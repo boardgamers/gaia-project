@@ -95,14 +95,23 @@ describe("Lobby", () => {
     }
   });
 
-  it("links to the dedicated create-game screen instead of an inline form", async () => {
+  it("links the admin to the dedicated create-game screen instead of an inline form", async () => {
     const { client } = makeClient([]);
-    const wrapper = mount(Lobby, { propsData: { client, session: otherSession } });
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
     await Vue.nextTick();
     await Vue.nextTick();
 
     const link = wrapper.find('a[href="?create=1"]');
     expect(link.exists()).to.equal(true);
     expect(wrapper.find('input[type="email"]').exists()).to.equal(false);
+  });
+
+  it("hides the New game link from a non-admin", async () => {
+    const { client } = makeClient([]);
+    const wrapper = mount(Lobby, { propsData: { client, session: otherSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    expect(wrapper.find('a[href="?create=1"]').exists()).to.equal(false);
   });
 });

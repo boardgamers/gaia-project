@@ -13,9 +13,17 @@
       >
         <SpaceMap :class="['mb-1', 'space-map', 'col-md-7']" />
         <div class="col-md-5">
-          <svg class="scoring-research-board" :viewBox="`0 0 ${researchBoardWidth + 120} 550`">
+          <!-- For Lost Fleet, ResearchBoard itself grows a 7th column (Scoring Board Extension +
+               round scoring tiles - see ResearchBoard.vue) in the space ScoringBoard's final
+               scoring used to occupy here, before final scoring moved onto the map itself
+               (SpaceMap.vue's bottom-right corner) - so ScoringBoard only renders for the base
+               game here. -->
+          <svg
+            class="scoring-research-board"
+            :viewBox="`-50 0 ${researchBoardWidth + (engine.options.lostFleet ? 110 : 120) + 50} 550`"
+          >
             <ResearchBoard height="450" ref="researchBoard" x="-50" />
-            <ScoringBoard class="ml-4" width="90" :x="researchBoardWidth + 20" />
+            <ScoringBoard v-if="!engine.options.lostFleet" class="ml-4" width="90" :x="researchBoardWidth + 20" />
             <BoardAction
               :scale="17"
               :transform="`translate(${45 * i + 6}, 455)`"

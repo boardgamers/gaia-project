@@ -2,7 +2,7 @@
   <svg viewBox="-25 -25 50 50" width="50" height="50" style="overflow: visible">
     <g
       :class="['specialAction', { highlighted: isHighlighted, disabled, board, recent, warning }]"
-      v-b-tooltip.hover
+      v-b-tooltip.hover.html
       :title="button ? button.tooltip : null"
     >
       <polygon

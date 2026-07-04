@@ -8,7 +8,10 @@ import SetupPreview from "./SetupPreview.vue";
 Vue.use(BootstrapVue);
 
 describe("CreateGame", () => {
-  const session = { user: { id: "user-me", email: "me@example.com" } } as any;
+  // The form itself is only reachable by the admin (Lobby.vue hides the link,
+  // and this component hides the form) - use the admin email so these tests
+  // exercise the form, and cover the non-admin path separately below.
+  const session = { user: { id: "user-me", email: "kim.pham.nguyen2@gmail.com" } } as any;
   const registeredUsers = [
     { id: "user-me", email: "me@example.com", display_name: "Me" },
     { id: "user-alice", email: "alice@example.com", display_name: "Alice" },
@@ -106,5 +109,18 @@ describe("CreateGame", () => {
     await Vue.nextTick();
 
     expect((createButton.element as HTMLButtonElement).disabled).to.equal(false);
+  });
+
+  it("hides the form and shows a message for a non-admin", async () => {
+    const otherSession = { user: { id: "user-other", email: "someone-else@example.com" } } as any;
+    const wrapper = mount(CreateGame, {
+      propsData: { client: makeClient(), session: otherSession },
+      stubs: { SetupPreview: true },
+    });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    expect(wrapper.text()).to.include("Only the admin can create new games.");
+    expect(wrapper.find("form").exists()).to.equal(false);
   });
 });

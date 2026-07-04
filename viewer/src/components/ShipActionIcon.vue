@@ -1,6 +1,6 @@
 <template>
   <svg viewBox="-27 -32 54 54" width="54" height="54" style="overflow: visible">
-    <g :class="['lost-fleet-ship__action', type, { used: isUsed }]" v-b-tooltip.hover :title="tooltip">
+    <g :class="['lost-fleet-ship__action', type, { used: isUsed }]" v-b-tooltip.hover.html :title="tooltip">
       <SpecialAction :action="actionIncome" :planet="actionPlanet" :board="true" x="-23" y="-28" width="46" />
       <g v-if="overlay" class="lost-fleet-ship__action-overlay" transform="translate(0, -5)">
         <template v-if="isMineBubble(overlay)">

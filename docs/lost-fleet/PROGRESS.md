@@ -2185,6 +2185,116 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       `LostFleetShips.spec.ts`, `LostFleetTiles.spec.ts` all rerun clean). No production/engine
       behavior changed — this was viewer rendering + tooltip-trigger only.
 
+63. ✅ **3 infra items (push notifications, admin-only game creation, setup-screen flash) + 7 "Gaia 2"
+    viewer/UX items, CODED & TESTED** (done 2026-07-04). Engine untouched throughout — **581/581**
+    engine tests pass unchanged. Viewer **275/275** tests pass (grew from 257 at session start).
+    - **Push notifications, verified end-to-end, not just read.** Confirmed via the Supabase MCP
+      tools (direct queries against the live `gaia-lost-fleet` project, not just docs): DB triggers,
+      `app_config`'s seeded VAPID keys, and a real push subscription all already existed, but the
+      `notify` Edge Function itself had never been deployed (0 functions on the project) — exactly
+      BACKEND.md §11's documented gap. Deployed it live, then verified with a real
+      `net.http_post` call against a real (admin's own test) game: `200 OK`, correct
+      self-notification suppression logic. Turn-change push notifications should now actually fire.
+    - **Game creation is now admin-only.** `Lobby.vue`'s "+ New game" link and `CreateGame.vue`'s
+      whole form were visible/usable by any signed-in user; only `delete_game` had ever gotten an
+      admin check. Added the same `isAdmin` email-check gate client-side to both, **and** a matching
+      server-side check in a new migration (`0008_admin_only_create_game.sql`, applied to the live
+      project) mirroring `delete_game`'s pattern — the RPC itself now refuses non-admin callers, not
+      just the UI hiding the button.
+    - **The "2/3/4 player count" flash before an ongoing game loads was a real bug, not intentional**
+      (confirmed by tracing `hosted.ts`/`Game.vue`/`store.ts` before touching anything, per the
+      working agreement): `hosted.ts` mounted `Game.vue` synchronously against the store's
+      placeholder empty `Engine` (zero `moveHistory`) before `host.load()`'s Supabase fetch resolved,
+      and that placeholder's "no moves yet" state is indistinguishable from a genuinely fresh game
+      needing a player-count pick. Fixed by hiding `#hosted-game` behind a plain "Loading game…"
+      placeholder until the emitter's first real `"state"` event fires.
+    - **Lost Fleet map rotation, actually fixed this time** (previous attempts optimized the wrong
+      thing). Root cause, found by brute-force measuring every 60°-aligned rotation's bounding box
+      against the real sector-center + loose-hex geometry (not guessed): the old `mapRotationDeg`
+      picked whichever rotation minimized raw bounding-box *width*, which for 3p/4p left the board's
+      longest diagonal running close to vertical — leaving no natural corner pocket for the faction
+      wheel, forcing a flat ~5.5-unit gutter down the *entire* left edge (the "reserved column" the
+      owner kept flagging). Rotating so the diagonal runs bottom-left-to-top-right instead (3p: 0°,
+      was 120°; 4p: 60°, was 0°; 2p: 60°, free improvement, its board is 6-fold symmetric so every
+      rotation has the same bbox) opens a real top-left pocket that's already wheel-sized for 3p/4p —
+      verified the left gutter drops from ~5.5 units to exactly 0 for both, with the *final* viewBox
+      smaller in both dimensions despite the raw hex bbox being nominally wider. 2p has no such pocket
+      at any rotation (compact, fully symmetric shape) — instead shrunk the wheel there specifically
+      (`wheelScale` 0.65→0.45 for Lost Fleet 2p only), cutting its gutter from 5.5 to ~0.8 units.
+      `SpaceMap.vue`: `mapRotationDeg`, new `wheelScale`/`wheelScaleRatio` getters, `bounds()`'s
+      left-band math threaded through both. `SpaceMap.spec.ts` updated for the new rotation values.
+    - **1 ore + 1 knowledge artifact (`ArtifactToken.KnowledgeOre`) now shows a "+" income marker**,
+      matching the standard tech tiles' own ongoing-income convention (e.g. Tech6's "+k,c" in
+      `TechContent.vue`) — confirmed via `tiles/artifacts.ts` that this is the *only* one of the 13
+      artifact tokens that's an ongoing (per-income-phase) gain rather than a one-time effect.
+      `data/artifacts.ts` gained an `ongoingIncome` flag (true only for `KnowledgeOre`);
+      `ArtifactIcon.vue` renders a big "+" and stacks the reward icons vertically when set.
+    - **Statistics window split into two tabs** (`Charts.vue`, via `<b-tabs>`): "Statistics" (all the
+      existing chart/table controls, active by default) and "Silent Auction" (only shown when
+      `gameData.silentAuctionLog.length > 0`, not the default tab — previously it rendered
+      unconditionally above everything else).
+    - **Spaceship boards: fixed 2-column grid** (`LostFleetShips.vue`'s `.lost-fleet-ships`,
+      `grid-template-columns: repeat(2, minmax(0,1fr))`) instead of a single horizontally-scrolling
+      row, so 4 ships land in exactly 2 rows (3-ship 2p case wraps its 3rd onto its own row) — no
+      horizontal scroll. Also reworked the per-ship card layout end to end across several follow-up
+      rounds of owner feedback: player-slot markers moved onto the same row as the ship name (not a
+      separate row underneath, spaced 20 apart — was 15, which nearly touched given the circles' own
+      16-unit diameter); the header-to-actions gap tightened (viewBox 96→76 height, actions
+      translate 64→44); the federation token + tech tile brought onto the *same* horizontal line as
+      the action octagons (were sitting ~28px lower); and finally the federation token (taller than
+      the octagons, 50 vs 46 units) bottom-aligned with the actions row instead of center-aligned, so
+      its extra height bleeds *up* into the header row instead of stretching the bottom margin.
+    - **Final scoring moved onto the map itself** (`SpaceMap.vue`, bottom-right corner, opposite the
+      wheel) for Lost Fleet, reusing `FinalScoringTile.vue` unmodified. Explicitly does **NOT** expand
+      `bounds()` to fit — measured that naively reserving room the way the wheel does would cost 3-6
+      extra units of width (re-opening the very gutter the rotation fix just removed), so instead
+      `finalScoringScale` solves for the largest scale that fits **within whatever room already
+      exists** in that corner (a small brute-force search over candidate scales against the same
+      band-limited-pocket logic used for the wheel), capped at a max scale for legibility. A dedicated
+      test (`SpaceMap.spec.ts`) asserts the viewBox is bit-for-bit identical with and without final
+      scoring tiles present, locking in "never shrinks the map" as a regression guard, not just a
+      one-time visual check.
+    - **The 7th Advanced Tech tile (Scoring Board Extension) and the 6 round scoring tiles moved into
+      ResearchBoard.vue's own 7th column** (right after the 6 tracks, Lost Fleet only) — **not** onto
+      the map (an earlier draft this session wrongly put them there; corrected once the owner
+      clarified they belong beside the research track). The 7th tile aligns via the *exact same*
+      `translate(30, 79) scale(0.95)` as `ResearchTrack.vue`'s own adv-tech tiles (verified via a real
+      render: all 7 tiles' `getBoundingClientRect().y` match to sub-pixel precision), with a plain
+      text label ("25 vp" / "3 explorations" per `scoringExtensionSide`) above it — replacing the old
+      side-panel's fancier ship-circle/VP-icon graphic, per explicit instruction that plain text was
+      wanted. The 6 round scoring tiles reuse the *exact same y-coordinates* as the track's own
+      level4/level3/level2/level1/level0 tiles (108/146/202/240/278, plus one extrapolated slot at 316)
+      so the column is grid-perfect with the tracks, R6 landing immediately under the relocated 7th
+      tile. `ScoringBoard.vue` (the old side panel) is now only ever mounted for base games
+      (`Game.vue`'s `v-if="!engine.options.lostFleet"`) — simplified back to just final scoring +
+      round scoring, since Lost Fleet needs neither from it anymore. Also fixed a real (pre-existing,
+      not introduced this session) left-edge crop on the research track: `ResearchBoard`'s nested
+      `x="-50"` offset shifted content outside the outer `<svg>`'s `viewBox` (which started at `x=0`),
+      clipping ~50 units of real tile content on the left for every game, base or Lost Fleet — fixed
+      by starting the outer viewBox at `x=-50` instead (widened to match).
+    - **Turn-status text ("Xenos - your turn - Round 1") moved into the mobile sticky action bar**
+      instead of sitting alone above it. `Commands.vue`'s `#move-title` (the standalone status line)
+      now hides itself via CSS once the sticky bar is active on narrow viewports
+      (`.hide-on-mobile-sticky`), while a duplicate copy inside `#move-buttons`
+      (`.sticky-bar-title`) only displays there under the same `@media (max-width: 767px)` query —
+      avoiding showing it twice on wider screens, where `#move-buttons` isn't actually pinned.
+    - **Tooltip regression found and fixed: HTML tags were rendering as literal text** (e.g. "<b>Level
+      4:</b>" showing the tags themselves) **for 7 components.** Root-caused to entry #62 above (this
+      same session, earlier fix for the "stuck tooltip" bug): that fix correctly added `.hover`
+      everywhere, but in doing so also *dropped* the pre-existing `.html` modifier on every tooltip
+      that had one, since the edit collapsed each directive down to `v-b-tooltip.hover` uninten­tionally
+      wherever the modifier list changed. Restored `.html` (as `v-b-tooltip.hover.html`, keeping the
+      stuck-tooltip fix) on `BoardAction.vue`, `PlayerBoard/BuildingGroup.vue`, `PlayerBoard/Info.vue`,
+      `ResearchTile.vue` (also restored its lost `.left` placement modifier), `ShipActionIcon.vue`,
+      `SpecialAction.vue`, and `TechTile.vue` — the last one is exactly "ship techs" (`TechTile.vue` is
+      shared by both the research track and every ship's tech slot). Verified via a real Playwright
+      render that `<b>Level 0:</b>` now renders as an actual `<b>` element in the tooltip DOM, not
+      escaped text. The reported tooltip-arrow misalignment on ship actions/fed tokens turned out to
+      be substantially the *same* root cause as the fed/tech vertical-alignment fix above (once those
+      elements sat on their intended row, hovering them showed the arrow pointing correctly - verified
+      via real hover + `getBoundingClientRect` on the rendered `.tooltip .arrow`, within ~1px of the
+      trigger's true center in every case checked).
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -2268,6 +2378,16 @@ same base and were merged together into `master`** — #59 touched only viewer f
 map-layout), #60 touched engine + viewer ship-board files, with zero file overlap except this doc;
 re-run both full suites fresh after the merge and recorded the combined counts in the next entry
 below.
+
+**Latest full rerun after #63 (2026-07-04):** engine **581/581** (untouched, re-run to confirm no
+regression), viewer **275/275** (grew from 257 across the session's map-rotation, ship-board,
+final-scoring/research-board, and tooltip fixes — see "Done so far" #63). Verified visually via
+Playwright (headless Chromium) against the running dev server for every fix, not just unit tests:
+map rotation/gutter at 2p/3p/4p, the artifact "+" income marker, the Statistics/Silent-Auction tabs,
+the 2x2 ship-board grid + fed/tech/action alignment, final scoring in the map's bottom-right corner
+(with a dedicated regression test asserting the viewBox never changes size), the relocated 7th
+adv-tech tile's pixel-exact alignment with the research track's own row, the mobile sticky bar's
+turn-status text, and the restored tooltip `.html` rendering.
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/

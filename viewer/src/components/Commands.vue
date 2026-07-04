@@ -1,6 +1,6 @@
 <template>
   <div id="move">
-    <div id="move-title" class="d-flex align-items-center">
+    <div id="move-title" class="d-flex align-items-center" :class="{ 'hide-on-mobile-sticky': showStickyMobileBar }">
       <h5 class="mb-0">
         <span v-if="init">Pick the number of players</span>
         <RichTextView :content="statusLine" />
@@ -11,6 +11,18 @@
       <SilentAuctionInfo v-if="showSilentAuctionInfo" />
     </div>
     <div id="move-buttons" ref="moveButtons" :class="{ 'mobile-sticky-actions': showStickyMobileBar }">
+      <!-- Same status line as #move-title above, shown only inside the mobile sticky bar (once it's
+           actually pinned, i.e. narrow viewports - see the .sticky-bar-title/.hide-on-mobile-sticky
+           CSS) - freeing up the space #move-title used to occupy alone on mobile once round 1+
+           starts, instead of duplicating it on screen. -->
+      <div v-if="showStickyMobileBar" class="sticky-bar-title d-flex align-items-center">
+        <h5 class="mb-0">
+          <RichTextView :content="statusLine" />
+        </h5>
+        <b-btn v-if="showSilentAuctionInfo" v-b-modal.silent-auction-info variant="link" size="sm" class="ml-2 silent-auction-info-button">
+          How does the auction work? <b-badge variant="info" pill>i</b-badge>
+        </b-btn>
+      </div>
       <div v-if="init" class="d-flex flex-wrap align-content-stretch">
         <MoveButton
           v-for="i in [2, 3, 4]"
@@ -905,6 +917,13 @@ i.planet {
 // spots) scrollable in place instead of growing to fill/exceed the screen.
 $mobile-sticky-actions-max-height: 40vh;
 
+// The in-bar status line (.sticky-bar-title) is only meant for the narrow/mobile sticky layout -
+// on wider viewports #move-buttons isn't pinned/fixed, so keep using the standalone #move-title
+// there instead of showing the status line twice.
+.sticky-bar-title {
+  display: none;
+}
+
 @media (max-width: 767px) {
   #move-buttons.mobile-sticky-actions {
     position: fixed;
@@ -919,6 +938,16 @@ $mobile-sticky-actions-max-height: 40vh;
     background: var(--systemGray6, #f2f2f7);
     border-top: 1px solid #c9c9d1;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+
+    .sticky-bar-title {
+      display: flex;
+    }
+  }
+
+  // Hide the standalone status line above the bar once it's showing inside the sticky bar itself
+  // - avoids a duplicate and frees up the space it used to occupy alone.
+  #move-title.hide-on-mobile-sticky {
+    display: none;
   }
 
   // Fallback only - JS (Commands.vue's ResizeObserver) sets an inline height matching the bar's

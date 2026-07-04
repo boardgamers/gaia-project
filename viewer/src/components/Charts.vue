@@ -1,51 +1,57 @@
 <template>
   <div class="gaia-viewer-modal">
-    <SilentAuctionLog v-if="gameData.silentAuctionLog.length > 0" />
-    <div class="d-flex" style="justify-content: center">
-      <b-dropdown size="sm" class="mr-2 mb-2" text="Style">
-        <b-dropdown-item v-for="(s, i) in chartStyles" :key="`style${i}`" @click="selectStyle(s)"
-          >{{ s.label }}
-        </b-dropdown-item>
-      </b-dropdown>
-      <b-dropdown size="sm" class="mr-2 mb-2" text="Type">
-        <b-dropdown-item v-for="i in selects" :key="`select${i}`" @click="selectSelect(i)">{{ i }} </b-dropdown-item>
-      </b-dropdown>
-      <b-dropdown v-if="types.length > 0" size="sm" class="mr-2 mb-2" text="Sub-Type">
-        <b-dropdown-item v-for="i in types" :key="`select${i}`" @click="selectType(i)">{{ i }} </b-dropdown-item>
-      </b-dropdown>
-      <b-dropdown v-if="setup != null" size="sm" class="mr-2 mb-2" right text="Details">
-        <template v-for="(group, index) in chartKinds">
-          <b-dropdown-divider v-if="index > 0" :key="`divider${index}`" />
-          <b-dropdown-item v-for="(g, i) in group" :key="`kind${index}${i}`" @click="selectKind(g.kind)"
-            >{{ g.label }}
-          </b-dropdown-item>
-        </template>
-      </b-dropdown>
-    </div>
-    <div id="tooltip" />
-    <canvas id="graphs" v-show="chartStyle.type === 'chart'" />
-    <!-- :key is necessary to force update -->
-    <b-table
-      :key="tableKey"
-      striped
-      bordered
-      small
-      responsive="true"
-      hover
-      :class="{ compact: chartStyle.compact, 'chart-table': true }"
-      v-if="table != null"
-      :items="table.items"
-      :fields="table.header"
-      :caption="table.title"
-    >
-      <template #cell()="data">
-        <span
-          v-b-tooltip.hover
-          :title="table.descriptions ? table.descriptions[data.index] : null"
-          v-html="data.value"
-        ></span>
-      </template>
-    </b-table>
+    <b-tabs>
+      <b-tab title="Statistics" active>
+        <div class="d-flex" style="justify-content: center">
+          <b-dropdown size="sm" class="mr-2 mb-2" text="Style">
+            <b-dropdown-item v-for="(s, i) in chartStyles" :key="`style${i}`" @click="selectStyle(s)"
+              >{{ s.label }}
+            </b-dropdown-item>
+          </b-dropdown>
+          <b-dropdown size="sm" class="mr-2 mb-2" text="Type">
+            <b-dropdown-item v-for="i in selects" :key="`select${i}`" @click="selectSelect(i)">{{ i }} </b-dropdown-item>
+          </b-dropdown>
+          <b-dropdown v-if="types.length > 0" size="sm" class="mr-2 mb-2" text="Sub-Type">
+            <b-dropdown-item v-for="i in types" :key="`select${i}`" @click="selectType(i)">{{ i }} </b-dropdown-item>
+          </b-dropdown>
+          <b-dropdown v-if="setup != null" size="sm" class="mr-2 mb-2" right text="Details">
+            <template v-for="(group, index) in chartKinds">
+              <b-dropdown-divider v-if="index > 0" :key="`divider${index}`" />
+              <b-dropdown-item v-for="(g, i) in group" :key="`kind${index}${i}`" @click="selectKind(g.kind)"
+                >{{ g.label }}
+              </b-dropdown-item>
+            </template>
+          </b-dropdown>
+        </div>
+        <div id="tooltip" />
+        <canvas id="graphs" v-show="chartStyle.type === 'chart'" />
+        <!-- :key is necessary to force update -->
+        <b-table
+          :key="tableKey"
+          striped
+          bordered
+          small
+          responsive="true"
+          hover
+          :class="{ compact: chartStyle.compact, 'chart-table': true }"
+          v-if="table != null"
+          :items="table.items"
+          :fields="table.header"
+          :caption="table.title"
+        >
+          <template #cell()="data">
+            <span
+              v-b-tooltip.hover
+              :title="table.descriptions ? table.descriptions[data.index] : null"
+              v-html="data.value"
+            ></span>
+          </template>
+        </b-table>
+      </b-tab>
+      <b-tab v-if="gameData.silentAuctionLog.length > 0" title="Silent Auction">
+        <SilentAuctionLog />
+      </b-tab>
+    </b-tabs>
   </div>
 </template>
 

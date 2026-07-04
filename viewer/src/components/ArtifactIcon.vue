@@ -3,14 +3,19 @@
     <g class="lost-fleet-ship__artifact" v-b-tooltip.hover :title="tooltip">
       <circle r="12" class="lost-fleet-ship__artifact-bg" />
       <g transform="scale(0.55)">
+        <text v-if="display.ongoingIncome" class="lost-fleet-ship__artifact-plus" x="-15" y="0">+</text>
         <Resource
           v-for="(reward, j) in display.rewards"
           :key="j"
           :kind="reward.type"
           :count="reward.count"
-          :transform="`translate(${(j - (display.rewards.length - 1) / 2) * 20}, ${
-            display.condition || display.planet ? -7 : 0
-          })`"
+          :transform="
+            display.ongoingIncome
+              ? `translate(9, ${(j - (display.rewards.length - 1) / 2) * 20})`
+              : `translate(${(j - (display.rewards.length - 1) / 2) * 20}, ${
+                  display.condition || display.planet ? -7 : 0
+                })`
+          "
         />
         <Condition
           v-if="display.condition"
@@ -64,6 +69,19 @@ g.lost-fleet-ship__artifact {
     fill: #efe6c4;
     stroke: #d8c57c;
     stroke-width: 1;
+  }
+
+  // Same "+" income marker as TechContent.vue's ongoing-income tech tiles (e.g. Tech6's "+k,c"),
+  // scaled down to this icon's own coordinate system.
+  .lost-fleet-ship__artifact-plus {
+    font-size: 20px;
+    font-weight: bold;
+    fill: white;
+    stroke: black;
+    stroke-width: 0.7px;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
   }
 }
 </style>

@@ -2,7 +2,7 @@
   <svg
     :class="['techTile', pos, { highlighted, covered, advanced: isAdvanced }]"
     v-if="this.count"
-    v-b-tooltip.hover
+    v-b-tooltip.hover.html
     :title="tooltip"
     @click="onClick"
     width="60"

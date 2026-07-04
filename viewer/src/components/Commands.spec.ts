@@ -473,4 +473,32 @@ describe("Commands", () => {
 
     expect(labels()).to.include("Special Action");
   });
+
+  it("duplicates the status line inside #move-buttons (for the mobile sticky bar) once round 1+ starts, alongside the standalone copy for wider viewports", () => {
+    const engine = createLostFleetRoundMoveEngine();
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(Commands, { props: { currentMove: "" }, store });
+
+    const moveButtons = container.querySelector("#move-buttons");
+    const inBarTitle = moveButtons?.querySelector(".sticky-bar-title");
+    expect(inBarTitle, "expected a status line inside #move-buttons").to.not.equal(null);
+    expect(inBarTitle!.textContent).to.contain("Round 1");
+
+    const standaloneTitle = container.querySelector("#move-title");
+    expect(standaloneTitle?.classList.contains("hide-on-mobile-sticky")).to.equal(true);
+    expect(standaloneTitle!.textContent).to.contain("Round 1");
+  });
+
+  it("does not duplicate the status line before round 1 (faction picking) - only #move-title renders it", () => {
+    const engine = new Engine(["init 2 lf-no-auction"]);
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(Commands, { props: { currentMove: "" }, store });
+
+    expect(container.querySelector("#move-buttons .sticky-bar-title")).to.equal(null);
+    expect(container.querySelector("#move-title")?.classList.contains("hide-on-mobile-sticky")).to.equal(false);
+  });
 });

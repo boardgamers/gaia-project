@@ -25,7 +25,15 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
   const barEl = document.createElement("div");
   const gameEl = document.createElement("div");
   gameEl.id = "hosted-game";
+  // Hidden until the first real "state" arrives: the store's placeholder Engine
+  // (empty moveHistory) would otherwise render Commands.vue's "pick player count"
+  // init screen for the ~1s the Supabase fetch in host.load() takes.
+  gameEl.style.display = "none";
+  const loadingEl = document.createElement("div");
+  loadingEl.className = "text-muted text-center py-5";
+  loadingEl.textContent = "Loading game…";
   root.appendChild(barEl);
+  root.appendChild(loadingEl);
   root.appendChild(gameEl);
 
   const bar = new Vue({
@@ -52,6 +60,10 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
   }).$mount(barEl) as any;
 
   const emitter = launch("#hosted-game", Game);
+  emitter.once("ready", () => {
+    loadingEl.remove();
+    gameEl.style.display = "";
+  });
   let mySeats: number[] = [];
 
   const host = new HostedGameHost(createSupabaseBackend(client), gameId, {
@@ -85,6 +97,7 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
   try {
     await host.load();
   } catch (err) {
+    loadingEl.remove();
     const message = err instanceof Error ? err.message : String(err);
     const alert = document.createElement("div");
     alert.className = "alert alert-danger m-3";

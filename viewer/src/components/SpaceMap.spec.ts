@@ -183,9 +183,9 @@ describe("SpaceMap", () => {
       return { x: Number(match[1]), y: Number(match[2]) };
     };
 
-    // Lost Fleet 3p is rendered rotated 120deg (hex-grid-aligned) to minimize the viewBox width on
-    // narrow phone screens (SpaceMap.vue's mapRotationDeg); 2p/4p are already narrowest at 0deg.
-    const rotationDeg = (players: number) => (players === 3 ? 120 : 0);
+    // Lost Fleet boards are rotated (hex-grid-aligned) so the longest diagonal runs bottom-left to
+    // top-right (SpaceMap.vue's mapRotationDeg): 3p is closest to that at 0deg, 2p/4p at 60deg.
+    const rotationDeg = (players: number) => (players === 3 ? 0 : 60);
     const rotate = (x: number, y: number, deg: number) => {
       const rad = (deg * Math.PI) / 180;
       const cos = Math.cos(rad);
@@ -217,9 +217,14 @@ describe("SpaceMap", () => {
       // the point of the fix: the map now uses whatever width the wheel isn't actually standing
       // on). Approximate the wheel's rendered footprint from its own known local content extents
       // (see the WHEEL_WIDTH/WHEEL_HEIGHT derivation comment in SpaceMap.vue) and assert no hex
-      // (inflated by its own ~1-unit radius) intersects that rectangle.
+      // (inflated by its own ~1-unit radius) intersects that rectangle. Read the actual scale from
+      // the rendered transform too - 2p Lost Fleet renders the wheel smaller (SpaceMap.vue's
+      // wheelScale), since its board has no natural pocket at any rotation to exploit.
+      const wheelTransform = container.querySelector(".faction-wheel").getAttribute("transform") ?? "";
       const wheelOrigin = transformXY(container.querySelector(".faction-wheel"));
-      const wheelScale = 0.65;
+      const scaleMatch = /scale\((-?[\d.]+)\)/.exec(wheelTransform);
+      expect(scaleMatch, "expected a scale(...) in the wheel transform").to.not.equal(null);
+      const wheelScale = Number(scaleMatch[1]);
       const wheelBox = {
         left: wheelOrigin.x - 4 * wheelScale,
         right: wheelOrigin.x + 4 * wheelScale,
@@ -270,5 +275,33 @@ describe("SpaceMap", () => {
     expect(moweydsHex?.querySelector(".planet-fill.p")).to.not.equal(null);
     expect(moweydsHex?.querySelector(".planet-fill.faction-fill.p")).to.not.equal(null);
     expect(moweydsHex?.querySelector(".building .planet-fill.p")).to.not.equal(null);
+  });
+
+  it("renders final scoring in the bottom-right corner for a Lost Fleet game (moved off the side panel)", () => {
+    const engine = new Engine(["init 2 lost-fleet-space-map"], { lostFleet: true });
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(SpaceMap, { store });
+
+    const tiles = container.querySelectorAll(".finalScoringTile");
+    expect(tiles.length).to.equal(engine.tiles.scorings.final.length);
+  });
+
+  it("never widens the viewBox to fit final scoring - map width takes priority over that content's size", () => {
+    const withFinal = new Engine(["init 4 lost-fleet-space-map"], { lostFleet: true });
+    const storeWith = makeStore();
+    storeWith.commit("receiveData", withFinal);
+    const { container: containerWith } = render(SpaceMap, { store: storeWith });
+    const viewBoxWith = containerWith.querySelector("svg").getAttribute("viewBox");
+
+    const withoutFinal = new Engine(["init 4 lost-fleet-space-map"], { lostFleet: true });
+    withoutFinal.tiles.scorings.final = [];
+    const storeWithout = makeStore();
+    storeWithout.commit("receiveData", withoutFinal);
+    const { container: containerWithout } = render(SpaceMap, { store: storeWithout });
+    const viewBoxWithout = containerWithout.querySelector("svg").getAttribute("viewBox");
+
+    expect(viewBoxWith).to.equal(viewBoxWithout);
   });
 });

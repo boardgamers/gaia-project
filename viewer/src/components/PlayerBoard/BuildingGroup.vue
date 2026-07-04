@@ -22,7 +22,7 @@
       v-for="i in buildingList"
       :transform="`translate(${(i + 0.5) * buildingSpacing + offset}, 0)`"
       :key="i"
-      v-b-tooltip.hover
+      v-b-tooltip.hover.html
       :title="tooltip(i)"
     >
       <circle

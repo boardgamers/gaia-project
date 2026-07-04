@@ -3,7 +3,7 @@
     <g
       :transform="transform"
       :class="['boardAction', kind, { highlighted, recent, warning }]"
-      v-b-tooltip.hover
+      v-b-tooltip.hover.html
       :title="button.tooltip"
     >
       <SpecialAction

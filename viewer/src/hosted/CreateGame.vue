@@ -6,7 +6,9 @@
     </div>
     <b-alert :show="!!message" variant="info" dismissible @dismissed="message = ''">{{ message }}</b-alert>
 
-    <b-form @submit.prevent="createGame">
+    <b-alert v-if="!isAdmin" :show="true" variant="warning">Only the admin can create new games.</b-alert>
+
+    <b-form v-else @submit.prevent="createGame">
       <b-form-group label="Players">
         <b-button-group>
           <b-button
@@ -117,6 +119,14 @@ export default Vue.extend({
     },
     myUserId(): string {
       return (this.session as any).user?.id ?? "";
+    },
+    // Matches create_game's own admin check (supabase/migrations, see
+    // 0008_admin_only_create_game.sql) and Lobby.vue's isAdmin - kept in sync
+    // manually since there's no roles table; the RPC is the actual
+    // enforcement point, this just avoids showing the create form to everyone
+    // else only to have it fail server-side on submit.
+    isAdmin(): boolean {
+      return ((this.session as any).user?.email ?? "").toLowerCase() === "kim.pham.nguyen2@gmail.com";
     },
     invitableUsers(): RegisteredUser[] {
       return this.users.filter((u) => u.id !== this.myUserId);

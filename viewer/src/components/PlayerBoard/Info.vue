@@ -52,7 +52,7 @@
         </g>
         <g :transform="`translate(34.7,${height - 6.8}) scale(.1)`">
           <Undo v-if="canUndo" transform="translate(-8, -8) scale(.9)" />
-          <use v-else xlink:href="#info" v-b-tooltip.hover="buttonTooltip" />
+          <use v-else xlink:href="#info" v-b-tooltip.hover.html="buttonTooltip" />
         </g>
         <g transform="translate(15, -3) scale(0.2)">
           <VictoryPoint width="15" height="15" />

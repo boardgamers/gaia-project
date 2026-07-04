@@ -5,7 +5,7 @@
       :key="ship"
       class="lost-fleet-ship"
       :data-ship="ship"
-      viewBox="0 0 291 96"
+      viewBox="0 0 291 76"
       style="overflow: visible"
     >
       <!-- header, single row: ship marker + full name side by side -->
@@ -16,13 +16,17 @@
         </g>
         <text x="21" y="12" class="lost-fleet-ship__name">{{ shipName(ship) }}</text>
 
-        <!-- the 4 exploration-track slots (explored-by markers), single row -->
+        <!-- the 4 exploration-track slots (explored-by markers), same row as the ship name, not a
+             separate row underneath - pushed to the right side of the header row (past the longest
+             ship name, "Rebellion") while staying clear of the Federation token at x=172. Spaced 20
+             apart (was 15, which nearly touched given the circles' own 16-unit diameter) for a clear
+             gap between adjacent slots. -->
         <g
           v-for="slot in explorationSlots(ship)"
           :key="slot.index"
           class="lost-fleet-ship__slot"
           :data-slot="slot.index"
-          :transform="`translate(${9 + (slot.index - 1) * 19}, 27)`"
+          :transform="`translate(${98 + (slot.index - 1) * 20}, 9)`"
           v-b-tooltip.hover
           :title="slotTitle(slot)"
         >
@@ -43,7 +47,7 @@
         :key="action.type"
         :class="['lost-fleet-ship__action', action.type, { used: actionUser(ship, action.type) != null }]"
         :data-action="action.type"
-        :transform="`translate(${29 + i * 54}, 64)`"
+        :transform="`translate(${29 + i * 54}, 44)`"
         v-b-tooltip.hover
         :title="actionTooltip(ship, action)"
       >
@@ -132,20 +136,24 @@
         </g>
       </g>
 
-      <!-- the Federation token still up for grabs on this ship (base-game token art) -->
+      <!-- the Federation token still up for grabs on this ship (base-game token art) - bottom-
+           aligned with the action octagons' bottom edge (y=65, from translate(*, 44) + the -25/+21
+           SpecialAction box). FederationTile is taller than the octagons (50 vs 46), so the extra
+           height bleeds UP into the header row instead of stretching the bottom margin. -->
       <g data-section="federation" v-b-tooltip.hover :title="federationTooltip(ship)">
         <FederationTile
           v-if="shipFederation(ship)"
           :rewardsOverride="federationDisplayRewards(shipFederation(ship))"
           x="172"
-          y="32"
+          y="15"
           filter="url(#shadow-1)"
         />
-        <FederationTile v-else :used="true" x="172" y="32" />
+        <FederationTile v-else :used="true" x="172" y="15" />
       </g>
 
-      <!-- the Standard Tech tile seeded on this ship (Twilight has artifacts instead) -->
-      <g v-if="hasTechSlot(ship)" data-section="tech" transform="translate(225, 33) scale(0.9)">
+      <!-- the Standard Tech tile seeded on this ship (Twilight has artifacts instead) - same
+           bottom-alignment (y=65) as the federation token/actions. -->
+      <g v-if="hasTechSlot(ship)" data-section="tech" transform="translate(225, 11) scale(0.9)">
         <TechTile :pos="ship" x="0" y="0" />
       </g>
       <g v-else data-section="artifacts">
@@ -153,7 +161,7 @@
           v-for="(artifact, i) in remainingArtifacts"
           :key="artifact"
           :data-artifact="artifact"
-          :transform="`translate(${236 + (i % 2) * 26 - 15}, ${49 + Math.floor(i / 2) * 26 - 15})`"
+          :transform="`translate(${236 + (i % 2) * 26 - 15}, ${44 + Math.floor(i / 2) * 26 - 15})`"
         >
           <ArtifactIcon :artifact="artifact" />
         </g>
@@ -338,18 +346,15 @@ export default class LostFleetShips extends Vue {
 <style lang="scss">
 .lost-fleet-ships {
   display: grid;
-  // Single row, always - each ship gets a comfortable minimum width and never wraps to a 2nd row;
-  // on narrow/mobile viewports the strip scrolls horizontally instead of shrinking ships to
-  // illegibility or stacking them into a 2x2 grid.
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(210px, 1fr);
-  overflow-x: auto;
+  // Always 2 columns, so 4 ships land in exactly 2 rows (2 side by side, then 2 more) instead of a
+  // single horizontally-scrolling row - the 3-ship 2-player case wraps its 3rd ship onto its own
+  // second row the same way.
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.4rem;
 }
 
 svg.lost-fleet-ship {
   width: 100%;
-  min-width: 210px;
   height: auto;
   display: block;
 

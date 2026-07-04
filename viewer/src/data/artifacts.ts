@@ -2,9 +2,18 @@ import { ArtifactToken, Condition as ConditionEnum, Planet, Reward, ResearchFiel
 
 /** Icon rows for the 13 artifact tokens, composed only of existing Resource/Condition icons. */
 const artifactDisplaySpec: {
-  [key in ArtifactToken]: { rewards: string; condition?: ConditionEnum; planet?: Planet; track?: ResearchField };
+  [key in ArtifactToken]: {
+    rewards: string;
+    condition?: ConditionEnum;
+    planet?: Planet;
+    track?: ResearchField;
+    ongoingIncome?: boolean;
+  };
 } = {
-  [ArtifactToken.KnowledgeOre]: { rewards: "k,o" },
+  // The only one of the 13 artifact tokens that's an ongoing (per income phase) gain rather than
+  // an immediate one-time effect (RULES_CLARIFICATIONS.md §G6) - matches the "+" income marker used
+  // by the standard tech tiles' own ongoing-income tiles (e.g. Tech6's "+k,c", TechContent.vue).
+  [ArtifactToken.KnowledgeOre]: { rewards: "k,o", ongoingIncome: true },
   [ArtifactToken.Credit]: { rewards: "3c,3o" },
   [ArtifactToken.KnowledgeQic]: { rewards: "3k,q" },
   [ArtifactToken.CreditLarge]: { rewards: "5c,2o" },
@@ -23,7 +32,19 @@ const artifactDisplaySpec: {
 
 export function artifactDisplay(
   artifact: ArtifactToken
-): { rewards: Reward[]; condition?: ConditionEnum; planet?: Planet; track?: ResearchField } {
+): {
+  rewards: Reward[];
+  condition?: ConditionEnum;
+  planet?: Planet;
+  track?: ResearchField;
+  ongoingIncome?: boolean;
+} {
   const spec = artifactDisplaySpec[artifact];
-  return { rewards: Reward.parse(spec.rewards), condition: spec.condition, planet: spec.planet, track: spec.track };
+  return {
+    rewards: Reward.parse(spec.rewards),
+    condition: spec.condition,
+    planet: spec.planet,
+    track: spec.track,
+    ongoingIncome: spec.ongoingIncome,
+  };
 }

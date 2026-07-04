@@ -238,8 +238,8 @@ describe("Game", () => {
     vm.$destroy();
   });
 
-  it("aligns the final scoring tiles' top edge with the research track's top, and keeps the viewBox tall enough that ScoringBoard isn't clipped", () => {
-    const engine = new Engine(["init 2 lf-freeze-28"], { lostFleet: true });
+  it("aligns the final scoring tiles' top edge with the research track's top, and keeps the viewBox tall enough that ScoringBoard isn't clipped (base game only - Lost Fleet moved final scoring onto the map itself)", () => {
+    const engine = new Engine(["init 2 lf-freeze-28"]);
     engine.players.forEach((pl, index) => {
       pl.faction = [Faction.Terrans, Faction.Lantids][index];
       pl.loadFaction(null, engine.expansions);
@@ -268,6 +268,36 @@ describe("Game", () => {
     // height, so its rendered height auto-scales to preserve aspect ratio: 90 * (480/80) = 540 -
     // the outer viewBox must be at least that tall (starting from y=0) to avoid clipping it.
     expect(height).to.be.at.least(540);
+
+    vm.$el.remove();
+    vm.$destroy();
+  });
+
+  it("hides ScoringBoard for a Lost Fleet game - final scoring moved onto the map, the 7th adv-tech + round scoring tiles moved into ResearchBoard's own extra column", () => {
+    const engine = new Engine(["init 2 lf-scoring-extension"], { lostFleet: true });
+    engine.players.forEach((pl, index) => {
+      pl.faction = [Faction.Terrans, Faction.Lantids][index];
+      pl.loadFaction(null, engine.expansions);
+    });
+
+    const store = makeStore();
+    const vm = new (Vue.extend(Game as any))({ store }) as any;
+    vm.handleData(engine);
+    vm.$mount();
+    document.body.appendChild(vm.$el);
+
+    const svg = vm.$el.querySelector("svg.scoring-research-board");
+    const researchBoard = svg.querySelector("svg.research-board");
+
+    // ScoringBoard.vue's own fixed `viewBox="0 0 80 480"` is distinctive - assert no such element
+    // is mounted anywhere in the shared svg (BoardAction is also svg-tagged, so checking tagName
+    // alone wouldn't distinguish it).
+    const scoringBoardViewBox = [...svg.querySelectorAll("svg")].find(
+      (el) => el.getAttribute("viewBox") === "0 0 80 480"
+    );
+    expect(scoringBoardViewBox).to.equal(undefined);
+    expect(researchBoard.querySelector(".techTile.adv-ext")).to.not.equal(null);
+    expect(researchBoard.querySelectorAll(".scoringTile").length).to.be.greaterThan(0);
 
     vm.$el.remove();
     vm.$destroy();

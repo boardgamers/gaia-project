@@ -88,7 +88,7 @@ describe("LostFleetShips", () => {
     expect(container.querySelector(`svg.lost-fleet-ship[data-ship="${Spaceship.Rebellion}"]`)).to.equal(null);
   });
 
-  it("has no fixed width/height on the ship svg, so it scales to fit its grid column (single row, scrolls on mobile)", () => {
+  it("has no fixed width/height on the ship svg, so it scales to fit its 2x2 grid column", () => {
     const engine = new Engine(["init 2 lost-fleet-ships-spec"], { lostFleet: true });
     const store = makeStore();
     store.commit("receiveData", engine);
@@ -98,7 +98,7 @@ describe("LostFleetShips", () => {
     const ship = container.querySelector("svg.lost-fleet-ship");
     expect(ship.hasAttribute("width")).to.equal(false);
     expect(ship.hasAttribute("height")).to.equal(false);
-    expect(ship.getAttribute("viewBox")).to.equal("0 0 291 96");
+    expect(ship.getAttribute("viewBox")).to.equal("0 0 291 76");
   });
 
   it("lays the 4 exploration slots out in a single row with an ordinal label per slot", () => {

@@ -38,7 +38,9 @@
     </g>
     <FactionWheel
       class="faction-wheel"
-      :transform="`translate(${bounds.left + 2.9}, ${bounds.top + 2.9}) scale(0.65)`"
+      :transform="`translate(${bounds.left + 2.9 * wheelScaleRatio}, ${
+        bounds.top + 2.9 * wheelScaleRatio
+      }) scale(${wheelScale})`"
     />
     <image v-if="showCharts" xlink:href="../assets/other/line-chart.svg" :height=155/211*22 width="22" x="-11" y="-8"
     v-b-modal.chart-button role="button" :transform="`translate(${bounds.right - 1.9}, ${bounds.top + 1.4}) scale(0.1)`"
@@ -64,6 +66,13 @@
       <rect width="2" height="2" class="color-legend leech" :class="color.class" />
       <text class="color-legend" transform="translate(1, 1.55)">{{ color.text }}</text>
     </g>
+    <!-- Final scoring, moved to the bottom-right corner of the map (opposite the wheel) for Lost
+         Fleet - sized/placed to fit within the existing bounds (never expands the viewBox - map
+         width on mobile takes priority over this content's size, per explicit instruction). -->
+    <g v-if="hasFinalScoring" :transform="`translate(${bounds.right - finalScoringWidth - 0.3}, ${bounds.bottom - finalScoringHeight - 0.3}) scale(${finalScoringScale})`">
+      <FinalScoringTile :index="0" />
+      <FinalScoringTile :index="1" v-if="finalScoringCount > 1" transform="translate(0, 60)" />
+    </g>
   </svg>
 </template>
 
@@ -88,6 +97,7 @@ import FactionWheel from "./FactionWheel.vue";
 import Definitions from "./definitions/Definitions.vue";
 import { MapMode, MapModeType } from "../data/actions";
 import SpaceHex from "./SpaceHex.vue";
+import FinalScoringTile from "./FinalScoringTile.vue";
 
 type Point = { x: number; y: number };
 
@@ -95,7 +105,9 @@ type Point = { x: number; y: number };
 // translate anchor: the 7-planet ring is the dominant width contributor (local x in
 // [-2.93, 2.93], +1 for the planet circles' own radius); the 2x2 extra-planet grid added in
 // Lost Fleet is narrower than the ring but taller, dominating the height instead. See
-// SpaceMap.spec.ts's "keeps the wheel ... in the left sidebar" test for the derivation.
+// SpaceMap.spec.ts's "keeps the wheel ... in the left sidebar" test for the derivation. Both
+// scale linearly with `wheelScale` below (measured at the reference scale 0.65).
+const WHEEL_SCALE_REFERENCE = 0.65;
 const WHEEL_WIDTH = 5.5;
 const WHEEL_HEIGHT = 7.9;
 
@@ -110,6 +122,12 @@ const RIGHT_BAND_HEIGHT = 2.5;
 // Small safety gap kept between a hex's own edge (radius 1) and the nearest UI content edge, on
 // top of the content's own measured footprint.
 const CLEARANCE = 0.3;
+
+// FinalScoringTile's own native (unscaled) footprint - see that component's rect/translate.
+const FINAL_SCORING_MAX_SCALE = 0.065;
+const FINAL_SCORING_NATIVE_WIDTH = 76;
+const FINAL_SCORING_NATIVE_HEIGHT = 56;
+const FINAL_SCORING_NATIVE_GAP = 60; // native translate(0, 60) between the 2 tiles
 
 // translate() offset used by the color-legend template loop, plus its own per-item rendered size
 // (a 2x2 rect at scale(.8)).
@@ -140,10 +158,23 @@ function bandMaxX(points: Point[], top: number, height: number): number {
   return max;
 }
 
+/** Mirror of `bandMaxX`, but measuring a band anchored to the BOTTOM edge instead of the top - for
+ * the final-scoring tiles relocated into the bottom-right corner. */
+function bandMaxXBottom(points: Point[], bottom: number, height: number): number {
+  let max = -Infinity;
+  for (const p of points) {
+    if (p.y >= bottom - height) {
+      max = Math.max(max, p.x);
+    }
+  }
+  return max;
+}
+
 @Component<SpaceMap>({
   components: {
     FactionWheel,
     Definitions,
+    FinalScoringTile,
     Sector,
     SpaceHex,
   },
@@ -216,6 +247,55 @@ export default class SpaceMap extends Vue {
   }
 
   /**
+   * Final scoring, moved onto the map itself (bottom-right corner, opposite the wheel) for Lost
+   * Fleet games. The 7th Advanced Tech tile (Scoring Board Extension) and the round scoring tiles
+   * stay in the side ResearchBoard/ScoringBoard panel - see ResearchBoard.vue's 7th column, aligned
+   * with the other 6 adv-tech tiles, which is the space this final-scoring move freed up there.
+   */
+  get hasFinalScoring(): boolean {
+    return this.isLostFleet && !!this.engine.tiles?.scorings?.final?.length;
+  }
+
+  get finalScoringCount(): number {
+    return this.engine.tiles?.scorings?.final?.length ?? 0;
+  }
+
+  get finalScoringNativeHeight(): number {
+    return this.finalScoringCount > 1 ? FINAL_SCORING_NATIVE_GAP + FINAL_SCORING_NATIVE_HEIGHT : FINAL_SCORING_NATIVE_HEIGHT;
+  }
+
+  /**
+   * Largest scale (capped at FINAL_SCORING_MAX_SCALE) that fits final scoring's own footprint into
+   * whatever room is already free in the bottom-right corner, WITHOUT expanding `bounds` - keeping
+   * the map full-width on mobile takes priority over this content's size (explicit instruction).
+   * Mirrors the wheel/legend's band-limited approach, but solved for scale instead of assuming a
+   * fixed size and reserving more room for it.
+   */
+  get finalScoringScale(): number {
+    const b = this.bounds;
+    const points = this.rotatedPoints;
+    const hexRadius = 1;
+    const nativeHeight = this.finalScoringNativeHeight;
+    for (let scale = FINAL_SCORING_MAX_SCALE; scale > 0.01; scale -= 0.005) {
+      const height = nativeHeight * scale;
+      const width = FINAL_SCORING_NATIVE_WIDTH * scale;
+      const freeRight = bandMaxXBottom(points, b.bottom, height + hexRadius) + hexRadius + CLEARANCE;
+      if (b.right - freeRight >= width) {
+        return scale;
+      }
+    }
+    return 0.01;
+  }
+
+  get finalScoringWidth(): number {
+    return FINAL_SCORING_NATIVE_WIDTH * this.finalScoringScale;
+  }
+
+  get finalScoringHeight(): number {
+    return this.finalScoringNativeHeight * this.finalScoringScale;
+  }
+
+  /**
    * The Tinkeroids/Moweyds shared terraforming-color row (RULES_CLARIFICATIONS.md §B5), shown as 7
    * plain bordered squares in the map's top-right corner, visible only through round-1 setup
    * (initial mine/ship placement) - once round 1 actually begins, the terraforming board has done
@@ -235,16 +315,55 @@ export default class SpaceMap extends Vue {
   /**
    * Whole-board rotation (hex-grid-aligned, i.e. a multiple of 60deg so every hex/sector still
    * looks "upright" like a physically-rotated tile - same visual language as the existing
-   * per-sector rotation), chosen per player count to minimize the rendered width, since on a
-   * narrow phone viewport a narrower viewBox renders at a larger scale. Measured once against the
-   * fixed (seed-independent) Lost Fleet sector-center layout for each player count: 2p and 4p are
-   * already narrowest at 0deg; 3p is ~17% narrower at 120deg (27 -> 22.5 units).
+   * per-sector rotation), chosen per player count so the board's longest diagonal runs from the
+   * bottom-left to the top-right of the rendered viewBox, instead of minimizing raw bounding-box
+   * width (the previous approach, which actually made the reserved wheel gutter WORSE - see
+   * below). Measured once against the fixed (seed-independent) Lost Fleet sector-center + loose-hex
+   * layout for each player count (`engine/map-geom-tmp.ts`-style brute-force diagonal + per-rotation
+   * bbox check, not guessed): 3p's longest diagonal is closest to that 45deg orientation at 0deg
+   * (was wrongly rotated 120deg before, which is ~38deg further off); 4p's is closest at 60deg (was
+   * 0deg before, ~53deg further off). 2p's board is exactly 6-fold symmetric (identical bbox at
+   * every rotation), so 60deg is a free improvement in diagonal alignment with no width/height cost
+   * either way.
+   *
+   * This pays off beyond just the diagonal look: `bounds()` below only widens the viewBox past the
+   * tight hex bbox when the wheel doesn't already fit in the naturally-empty top-left corner. Under
+   * the old rotations, 3p/4p had NO such corner (diagonal ran closer to vertical), so the wheel
+   * forced a full extra ~5.5-unit gutter down the entire left edge - which read as a permanent
+   * reserved column since the wheel itself only occupies the top few units of that band. Under these
+   * rotations, the diagonal orientation opens up a real top-left pocket that's already
+   * wheel-sized, so that gutter drops to 0 and the final viewBox is smaller in BOTH dimensions than
+   * before, despite the raw (unpadded) hex bounding box being nominally wider. 2p has no such corner
+   * at any rotation (it's the compact, fully-symmetric board) and keeps the same fixed gutter as
+   * before - not a regression, just nothing to exploit there.
    */
   get mapRotationDeg(): number {
-    if (this.isLostFleet && this.engine.players.length === 3) {
-      return 120;
+    if (!this.isLostFleet) {
+      return 0;
     }
-    return 0;
+    return this.engine.players.length === 3 ? 0 : 60;
+  }
+
+  /**
+   * FactionWheel's render scale, relative to `WHEEL_SCALE_REFERENCE` (the scale the WHEEL_WIDTH/
+   * WHEEL_HEIGHT footprint constants were measured at). 2p Lost Fleet has no rotation that opens a
+   * natural top-left pocket (see `mapRotationDeg`'s doc comment - its board is fully 6-fold
+   * symmetric, identical bbox at every 60deg rotation), so at the reference scale it always pays
+   * the wheel's full ~5.5-unit gutter. Shrinking the wheel to 0.45 there (measured: `engine`-side
+   * brute-force search over candidate scales, see the map-rotation investigation) cuts that gutter
+   * to ~0.8 units - a 69%-size wheel in exchange for eliminating the vast majority of the reserved
+   * column - without needing a rotation change 3p/4p already get for free. 3p/4p keep the reference
+   * scale since their diagonal rotation already opens a wheel-sized pocket at full size.
+   */
+  get wheelScale(): number {
+    if (this.isLostFleet && this.engine.players.length === 2) {
+      return 0.45;
+    }
+    return WHEEL_SCALE_REFERENCE;
+  }
+
+  get wheelScaleRatio(): number {
+    return this.wheelScale / WHEEL_SCALE_REFERENCE;
   }
 
   /**
@@ -256,31 +375,36 @@ export default class SpaceMap extends Vue {
    * This replaces a flat, always-on 5.6-unit left sidebar that reserved the same width for the
    * map's entire height, even though the wheel only occupies the top corner - on the taller Lost
    * Fleet 3p/4p layouts that wasted real width the map could otherwise fill (task: "map has too
-   * much reserved white space"). Lost Fleet's sector-center geometry is fixed per player count
-   * (only which tile/rotation lands where is randomized), and is symmetric enough that the
-   * existing per-count `mapRotationDeg` choices (0/120/0 for 2p/3p/4p, already width-optimal, see
-   * that getter's doc comment) also turn out to need the least *additional* left-side padding for
-   * the wheel - so no rotation changes were needed here, just tighter, band-limited reservations
-   * instead of a full-height one.
+   * much reserved white space"). Combined with `mapRotationDeg`'s diagonal-alignment rotation
+   * (which opens a wheel-sized natural pocket for 3p/4p) and `wheelScale`'s smaller wheel for 2p
+   * (which has no such pocket at any rotation), this band-limited reservation now sits close to 0
+   * for every player count instead of a flat ~5.5 units.
    */
-  get bounds(): { left: number; top: number; right: number; bottom: number } {
-    let minX = Infinity;
-    let maxX = -Infinity;
-    let minY = Infinity;
-    let maxY = -Infinity;
+  /** Every hex center, rotated by `mapRotationDeg` to match what's actually rendered - shared by
+   * `bounds` and `finalScoringScale` so both agree on the same rotated geometry. */
+  get rotatedPoints(): Point[] {
     const rad = (this.mapRotationDeg * Math.PI) / 180;
     const cos = Math.cos(rad);
     const sin = Math.sin(rad);
     const points: Point[] = [];
     for (const hex of this.map.grid.values()) {
       const c = hexCenter(hex);
-      const x = (c.x * cos - c.y * sin) * 1.01;
-      const y = (c.x * sin + c.y * cos) * 1.01;
-      points.push({ x, y });
-      minX = Math.min(minX, x);
-      maxX = Math.max(maxX, x);
-      minY = Math.min(minY, y);
-      maxY = Math.max(maxY, y);
+      points.push({ x: (c.x * cos - c.y * sin) * 1.01, y: (c.x * sin + c.y * cos) * 1.01 });
+    }
+    return points;
+  }
+
+  get bounds(): { left: number; top: number; right: number; bottom: number } {
+    const points = this.rotatedPoints;
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+    for (const p of points) {
+      minX = Math.min(minX, p.x);
+      maxX = Math.max(maxX, p.x);
+      minY = Math.min(minY, p.y);
+      maxY = Math.max(maxY, p.y);
     }
     if (minX > maxX) {
       // no hexes (e.g. map not generated yet) - keep the old base-game frame
@@ -299,15 +423,22 @@ export default class SpaceMap extends Vue {
     // plus a small extra CLEARANCE margin, not just clear the hex's bare center.
     const hexRadius = 1;
 
+    const wheelWidth = WHEEL_WIDTH * this.wheelScaleRatio;
+    const wheelHeight = WHEEL_HEIGHT * this.wheelScaleRatio;
     const legendCount = this.colorLegend.length;
     const legendBottom = legendCount > 0 ? LEGEND_TOP_OFFSET + (legendCount - 1) * LEGEND_ITEM_HEIGHT + LEGEND_ITEM_SIZE : 0;
-    const leftBandHeight = Math.max(WHEEL_HEIGHT, legendBottom);
-    const leftLimit = bandMinX(points, top, leftBandHeight + hexRadius) - hexRadius - CLEARANCE - WHEEL_WIDTH;
+    const leftBandHeight = Math.max(wheelHeight, legendBottom);
+    const leftLimit = bandMinX(points, top, leftBandHeight + hexRadius) - hexRadius - CLEARANCE - wheelWidth;
     const left = Math.min(tightLeft, leftLimit);
 
     const rightWidth = this.terraformingColors.length > 0 ? RIGHT_SWATCH_WIDTH : this.showCharts ? RIGHT_ICON_WIDTH : 0;
-    const rightLimit = bandMaxX(points, top, RIGHT_BAND_HEIGHT + hexRadius) + hexRadius + CLEARANCE + rightWidth;
-    const right = rightWidth > 0 ? Math.max(tightRight, rightLimit) : tightRight;
+    const rightLimitTop = bandMaxX(points, top, RIGHT_BAND_HEIGHT + hexRadius) + hexRadius + CLEARANCE + rightWidth;
+    const right = rightWidth > 0 ? Math.max(tightRight, rightLimitTop) : tightRight;
+
+    // Final scoring (relocated to the bottom-right corner) deliberately does NOT expand `right`/
+    // `bottom` beyond what the wheel/legend/swatches already need - keeping the map full-width on
+    // mobile takes priority over this content's size (explicit instruction). It renders scaled to
+    // fit whatever room already exists in that corner instead; see `finalScoringScale`.
 
     return { left, top, right, bottom };
   }

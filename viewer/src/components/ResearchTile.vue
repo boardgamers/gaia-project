@@ -1,5 +1,5 @@
 <template>
-  <g :transform="`translate(0, ${y})`" v-b-tooltip.hover :title="tooltip" :class="field">
+  <g :transform="`translate(0, ${y})`" v-b-tooltip.hover.html.left :title="tooltip" :class="field">
     <rect
       x="2"
       y="2"
