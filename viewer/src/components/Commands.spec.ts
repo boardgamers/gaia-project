@@ -420,6 +420,42 @@ describe("Commands", () => {
     expect(command).to.include("taklons 10");
   });
 
+  it("Silent Auction: shows the 'how does the auction work?' info button during ban/pick/bid, and opens the explainer", async () => {
+    const engine = new Engine(["init 3 lf-silent-info"], { auction: AuctionVariant.Silent });
+    engine.generateAvailableCommandsIfNeeded();
+
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const wrapper = mount(Commands, { propsData: { currentMove: "" }, store, attachTo: document.body });
+
+    const infoButton = wrapper.find(".silent-auction-info-button");
+    expect(infoButton.exists()).to.equal(true);
+    expect(infoButton.text()).to.contain("How does the auction work?");
+
+    await infoButton.trigger("click");
+    await Vue.nextTick();
+
+    expect(document.body.textContent).to.contain("How the Silent Auction works");
+    expect(document.body.textContent).to.contain("Ban");
+
+    wrapper.destroy();
+  });
+
+  it("does not show the Silent Auction info button for a standard (non-auction) faction pick", () => {
+    const engine = new Engine(["init 2 lf-no-auction"]);
+    engine.generateAvailableCommandsIfNeeded();
+
+    expect(engine.availableCommands.map((command) => command.name)).to.deep.equal([Command.ChooseFaction]);
+
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const wrapper = mount(Commands, { propsData: { currentMove: "" }, store });
+
+    expect(wrapper.find(".silent-auction-info-button").exists()).to.equal(false);
+  });
+
   it("renders Moweyds' power-ring special action without crashing", () => {
     const engine = loadScenarioEngine("lost-fleet-moweyds-power-ring");
     const store = makeStore();

@@ -1,10 +1,14 @@
 <template>
   <div id="move">
-    <div id="move-title">
-      <h5>
+    <div id="move-title" class="d-flex align-items-center">
+      <h5 class="mb-0">
         <span v-if="init">Pick the number of players</span>
         <RichTextView :content="statusLine" />
       </h5>
+      <b-btn v-if="showSilentAuctionInfo" v-b-modal.silent-auction-info variant="link" size="sm" class="ml-2 silent-auction-info-button">
+        How does the auction work? <b-badge variant="info" pill>i</b-badge>
+      </b-btn>
+      <SilentAuctionInfo v-if="showSilentAuctionInfo" />
     </div>
     <div id="move-buttons" ref="moveButtons" :class="{ 'mobile-sticky-actions': showStickyMobileBar }">
       <div v-if="init" class="d-flex flex-wrap align-content-stretch">
@@ -101,6 +105,7 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   AdvTechTilePos,
+  AuctionVariant,
   AvailableCommand,
   BoardAction,
   BuildWarning,
@@ -108,6 +113,7 @@ import Engine, {
   Faction,
   factionPlanet,
   GaiaHex,
+  Phase,
   Player,
   Resource,
   Reward,
@@ -116,6 +122,7 @@ import Engine, {
   TechTilePos,
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
+import SilentAuctionInfo from "./SilentAuctionInfo.vue";
 import {
   ButtonData,
   GameContext,
@@ -192,6 +199,7 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
     RichTextView,
     MoveButton,
     Undo,
+    SilentAuctionInfo,
   },
 })
 export default class Commands extends Vue implements CommandController {
@@ -293,6 +301,15 @@ export default class Commands extends Vue implements CommandController {
 
   get isSilentBidding() {
     return !!this.silentBidCommand;
+  }
+
+  get showSilentAuctionInfo(): boolean {
+    return (
+      this.gameData.options.auction === AuctionVariant.Silent &&
+      (this.engine.phase === Phase.SetupFactionBan ||
+        this.engine.phase === Phase.SetupFaction ||
+        this.engine.phase === Phase.SetupSilentBid)
+    );
   }
 
   submitSilentBid() {
@@ -790,6 +807,15 @@ export default class Commands extends Vue implements CommandController {
 </script>
 
 <style lang="scss">
+.silent-auction-info-button {
+  text-decoration: none;
+  white-space: nowrap;
+
+  .badge {
+    margin-left: 0.25rem;
+  }
+}
+
 i.planet {
   &::before {
     content: "\25cf";
