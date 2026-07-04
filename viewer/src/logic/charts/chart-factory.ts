@@ -456,8 +456,12 @@ export class ChartSetup {
             data: points,
             label: key,
             backgroundColor: lookupColor(playerColor(player, style.type == "table")),
-            borderColor: "black",
-            borderWidth: 1,
+            // Thin marks over a hard black outline - the bar's own fill color already carries
+            // identity (see the dataviz skill's mark-spec guidance), and a subtle rounded end
+            // (anchored to the baseline - Chart.js's default borderSkipped already leaves the
+            // near-baseline corners square) reads as more modern than a squared-off, outlined bar.
+            borderWidth: 0,
+            borderRadius: 4,
           };
           return {
             data: d,
