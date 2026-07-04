@@ -1,4 +1,4 @@
-import Engine from "@gaia-project/engine";
+import Engine, { AuctionVariant } from "@gaia-project/engine";
 import { possibleSpecialActions } from "@gaia-project/engine/src/available/actions";
 import {
   ArtifactToken,
@@ -302,6 +302,32 @@ export const selfContainedScenarios: SelfContainedScenario[] = [
 
       return finalizeScenario(engine);
     },
+  },
+  {
+    id: "silent-auction-resolved",
+    label: "Silent Auction Resolved",
+    description:
+      "A completed Silent Auction (ban + pick + bid, all 3 players) - open the statistics button (top right) " +
+      "to see the bans, picks, bid matrix, step-by-step resolution, and final result/turn order.",
+    tags: ["setup", "silent-auction", "statistics"],
+    build: () =>
+      finalizeScenario(
+        new Engine(
+          [
+            "init 3 silent-auction-scenario",
+            "p1 banFaction terrans",
+            "p2 banFaction lantids",
+            "p3 banFaction hadsch-hallas",
+            "p1 faction itars",
+            "p2 faction xenos",
+            "p3 faction taklons",
+            "p1 silentBid itars 15 xenos 0 taklons 10",
+            "p2 silentBid itars 15 xenos 5 taklons 8",
+            "p3 silentBid itars 7 xenos 0 taklons 0",
+          ],
+          { auction: AuctionVariant.Silent, lostFleet: true }
+        )
+      ),
   },
   {
     id: "lost-fleet-moweyds-power-ring",
