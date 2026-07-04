@@ -35,7 +35,15 @@ describe("ResearchBoard", () => {
     expect(advExtGroup!.getAttribute("transform")).to.contain("translate(30, 79)");
 
     // Round scoring tiles render in the same column, "just under" the adv-tech tile.
-    expect(container.querySelectorAll(".scoringTile").length).to.equal(engine.tiles.scorings.round.length);
+    const scoringTiles = container.querySelectorAll(".scoringTile");
+    expect(scoringTiles.length).to.equal(engine.tiles.scorings.round.length);
+
+    // Each tile is 40 units tall but the track's own level slots are only 38 apart - scaled down
+    // to 0.9 (36 tall, matching ResearchTile's own height in the same slots) so consecutive tiles
+    // don't overlap.
+    for (const tile of Array.from(scoringTiles)) {
+      expect(tile.getAttribute("transform")).to.contain("scale(0.9)");
+    }
   });
 
   it("shows the explored-ships gate label when the reverse side is active", () => {

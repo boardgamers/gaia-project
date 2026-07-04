@@ -945,9 +945,11 @@ $mobile-sticky-actions-max-height: 40vh;
   }
 
   // Hide the standalone status line above the bar once it's showing inside the sticky bar itself
-  // - avoids a duplicate and frees up the space it used to occupy alone.
+  // - avoids a duplicate and frees up the space it used to occupy alone. Needs !important: the
+  // element also carries Bootstrap's .d-flex utility, which sets "display: flex !important" and
+  // would otherwise always win over this rule regardless of selector specificity.
   #move-title.hide-on-mobile-sticky {
-    display: none;
+    display: none !important;
   }
 
   // Fallback only - JS (Commands.vue's ResizeObserver) sets an inline height matching the bar's

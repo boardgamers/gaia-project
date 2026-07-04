@@ -20,13 +20,15 @@
                game here. -->
           <svg
             class="scoring-research-board"
-            :viewBox="`-50 0 ${researchBoardWidth + (engine.options.lostFleet ? 110 : 120) + 50} 550`"
+            :viewBox="`-50 0 ${researchBoardWidth + (engine.options.lostFleet ? 110 : 120) + 50} ${
+              engine.options.lostFleet ? 510 : 550
+            }`"
           >
             <ResearchBoard height="450" ref="researchBoard" x="-50" />
             <ScoringBoard v-if="!engine.options.lostFleet" class="ml-4" width="90" :x="researchBoardWidth + 20" />
             <BoardAction
               :scale="17"
-              :transform="`translate(${45 * i + 6}, 455)`"
+              :transform="`translate(${45 * i - 20}, 455)`"
               v-for="(action, i) in actions"
               :key="action"
               :action="action"

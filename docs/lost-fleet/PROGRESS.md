@@ -2316,6 +2316,44 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
     exists for this imperative DOM-mounting glue — verified via the live-browser repro instead).
     Cleaned up the throwaway auth user and test game from the production DB afterward.
 
+65. ✅ **4 follow-up layout fixes on the #63/#64 mobile Lost Fleet UI, all confirmed via real
+    Playwright measurement (`getBoundingClientRect`), not visual guessing.**
+    - **Mobile turn-status duplicate, actually hidden this time.** `#move-title.hide-on-mobile-sticky
+      { display: none; }` (added in #63) never took effect: the same element also carries
+      Bootstrap's `.d-flex` utility class, which compiles to `display: flex !important` - and
+      `!important` always wins over a plain declaration regardless of selector specificity. Added
+      `!important` to the override. Verified: `getComputedStyle(#move-title).display` was `"flex"`
+      before this fix, `"none"` after, on a live rendered page.
+    - **Round scoring tiles no longer overlap.** `ScoringTile` renders a 40-unit-tall tile, but 4 of
+      its 5 slots in the 7th research-board column (`SCORING_TILE_Y`, #63) are only 38 units apart
+      (mirroring the research track's own level-tile spacing) - a 2-unit overlap each, since the
+      *track's own* tiles are only 36 units tall in those same 38-unit slots (`ResearchTile.vue`'s
+      `height` getter). Scaled `ScoringTile` down to 0.9 (36 tall) to match, keeping the same
+      top-aligned anchor so the "aligns perfectly with the track" requirement from #63 still holds.
+      Verified before/after with real rendered bounding boxes: 4 of 6 tile-pairs overlapped by ~1.4px
+      pre-fix, 0 overlap post-fix (clean ~1.4px gaps everywhere, matching the track's own margin).
+    - **Power action icons now align with the research track's left edge.** Previously ~18px (≈26
+      SVG units, at this layout's ~0.69 px/unit scale) to the right of it - `BoardAction`'s own
+      nested `<svg viewBox="-28 -28 56 56">` local coordinate system offsets rendered content by
+      that same 28 units before the outer `translate(45*i+6, 455)` is even applied. Shifted the
+      shared per-icon transform from `45*i+6` to `45*i-20` (`Game.vue`, used by both base and Lost
+      Fleet games - same underlying bug in both). Verified: left-edge diff between the leftmost
+      power-action icon and the leftmost research-track tile was 18.0px before, 0.05px after.
+    - **Removed ~28px of unused blank space below the power actions, Lost Fleet only.** The
+      combined research-board/power-actions `<svg>`'s `viewBox` height was a flat `550` regardless
+      of game type - sized for base game's `ScoringBoard` column (which needs the full height for
+      final + round scoring), but Lost Fleet doesn't render `ScoringBoard` at all (moved to the map
+      in #63), so ~48 of those 550 units sat empty below the icons. Made the height conditional
+      (`510` for Lost Fleet, unchanged `550` for base game) - reducing viewBox height only shrinks
+      the rendered element's total height (px-per-unit scale is set by width alone), so this doesn't
+      change the size of anything, only trims the dead space. Verified: the gap between the visible
+      bottom of the power-action icons and the spaceship-boards row below dropped from ~41px to
+      ~13px.
+    - `Commands.vue`, `ResearchBoard.vue` (+ a new assertion in `ResearchBoard.spec.ts` for the
+      `scale(0.9)` fix - the `!important` and alignment fixes aren't unit-testable in jsdom since
+      they depend on real stylesheet cascade/rendering, verified via live Playwright instead),
+      `Game.vue`. Viewer 275/275 tests still pass.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

@@ -19,7 +19,15 @@
           <TechTile pos="adv-ext" x="-30" y="-30" />
         </g>
       </g>
-      <ScoringTile v-for="i in scorings" :round="i" :transform="`translate(0, ${scoringTileY(i)})`" :key="i" />
+      <!-- Scaled to 0.9 (40 units tall -> 36) so consecutive tiles fit the track's own 38-unit
+           level slots without overlapping - matches ResearchTile's own 36-unit height in the same
+           38-unit slots (see ResearchTile.vue's `height` getter), same top-aligned anchor. -->
+      <ScoringTile
+        v-for="i in scorings"
+        :round="i"
+        :transform="`translate(0, ${scoringTileY(i)}) scale(0.9)`"
+        :key="i"
+      />
     </g>
     <g v-if="$store.state.data.tiles && $store.state.data.tiles.techs['gaia']">
       <g transform="translate(30, 410) scale(0.95)">
