@@ -1,8 +1,10 @@
 # Premove — Implementation Plan
 
-> Status: **design only, nothing built yet**. Written 2026-07-04 after scoping the "does it work
-> while I'm offline" question for auto-leech and premove together. Read `BACKEND.md` first if
-> you haven't touched the hosted-mode backend before — this plan builds directly on it.
+> Status: **design finalized, nothing built yet.** Written 2026-07-04 after scoping the "does it
+> work while I'm offline" question for auto-leech and premove together, then confirmed with the
+> owner (§ Decisions below resolves what used to be open questions). Read `BACKEND.md` first if
+> you haven't touched the hosted-mode backend before — this plan builds directly on it. **Next
+> session should start at Phasing → Phase 0.**
 
 ## The question this plan answers
 
@@ -105,6 +107,48 @@ insert/update/delete policies, same as `moves`):
 - `cancel_premove(p_game_id uuid, p_seq int)` — `security definer`, deletes one of the caller's own
   queued entries.
 
+### 2b. Failure notifications: durable table, not a one-shot broadcast
+
+Decision (was an open question, now resolved): a **durable table**, not a Realtime broadcast.
+A broadcast only reaches clients connected at the exact instant it fires — the one moment the
+premove-setter is least likely to be watching, since if they were watching they wouldn't have
+needed the premove there in the first place. A table sits there until read.
+
+```sql
+create table public.premove_failures (
+  game_id    uuid not null references public.games(id) on delete cascade,
+  seat       int  not null,
+  move       text not null,
+  reason     text not null,
+  created_at timestamptz not null default now(),
+  read_at    timestamptz
+);
+alter table public.premove_failures enable row level security;
+
+create policy premove_failures_select on public.premove_failures
+  for select to authenticated
+  using (exists (select 1 from public.players
+                 where game_id = premove_failures.game_id and seat = premove_failures.seat
+                   and user_id = auth.uid()));
+```
+
+A small `mark_premove_failure_read(p_game_id uuid, p_created_at timestamptz)` RPC (or just an
+`update` the client can do directly, if a narrow update policy scoped the same way as the select
+policy above is simpler) sets `read_at`, so the client only needs to show unread rows.
+
+Being a real table also means it composes for free with the **existing push infrastructure**: the
+`notify` Edge Function already sends a push off a `games` trigger using stored VAPID keys/
+subscriptions (`BACKEND.md` §6). A sibling trigger —
+
+```sql
+create trigger premove_failures_notify
+  after insert on public.premove_failures
+  for each row execute function public.notify_game_event(); -- or a tiny dedicated variant
+```
+
+— gets you "your premove couldn't be played" as an actual push notification using plumbing that
+already exists in production, rather than inventing a second, weaker in-app-only notification path.
+
 ### 3. Trigger
 
 Reuse the *exact* existing pattern (`games_notify_update`, `BACKEND.md` §6) — same table, same
@@ -135,12 +179,13 @@ On each invocation:
 3. Check, in order: does this seat have a queued premove (`premoves` table, lowest `seq`)? If not,
    stop (auto-leech's *offline* backstop — see Phase 3 below — would also live here eventually, but
    isn't in scope for the premove MVP).
-4. Try `engine.move(premove.move)`. If it throws: delete *only that* premove row, write a small
-   `premove_failures` row (see UI section) so the player gets a clear "your premove couldn't be
-   played: <reason>" the next time they look, and stop — deliberately not falling through to try
-   `seq+1` automatically in the same pass (a failed premove likely means the situation changed in a
-   way that makes the whole rest of the queued sequence suspect too; safer to stop and let the
-   player look at fresh state before their later premoves fire).
+4. Try `engine.move(premove.move)`. If it throws: delete *only that* premove row, insert a
+   `premove_failures` row (durable table, not a one-shot broadcast — see §2b) so the player gets a
+   clear "your premove couldn't be played: <reason>" whenever they next look, not only if they
+   happen to be connected at the exact moment it fails, and stop — deliberately not falling through
+   to try `seq+1` automatically in the same pass (a failed premove likely means the situation
+   changed in a way that makes the whole rest of the queued sequence suspect too; safer to stop and
+   let the player look at fresh state before their later premoves fire).
 5. If it succeeds and completes a turn: commit via a new `commit_automated_turn(...)` SQL function
    — identical to `commit_turn` (same atomic `for update` + `seq` check, same `players`/`round`
    cache-column update) but with the `auth.uid()`/seat-ownership check removed (there is no
@@ -172,7 +217,8 @@ small bug this plan surfaces even for the auto-leech feature already shipped, no
   commands (not new button code — just a new engine instance to build them from).
 - Picking one calls `queue_premove` (not the normal move-submit path).
 - A small persistent panel: "Queued: Build mine at 3x2 [✕]" per entry, reading the `premoves` table
-  directly (RLS already scopes it to your own seat) plus any pending `premove_failures` toast.
+  directly (RLS already scopes it to your own seat), plus any unread (`read_at is null`)
+  `premove_failures` rows shown as a dismissible banner (dismiss = call the mark-read RPC).
 - Multi-round queueing (2-3 ahead): premove #2's preview is built against a *simulated* clone with
   premove #1 already applied (chain the preview off the same disposable clone), not fresh
   current-state — otherwise "plan a sequence" isn't actually what's being planned. Surface in the
@@ -196,13 +242,38 @@ small bug this plan surfaces even for the auto-leech feature already shipped, no
    execution instead of the client-only best-effort version shipped this session. Not required for
    premove to work — a separate decision once premove itself is proven out.
 
-## Open questions for you before I start on Phase 1
+## Decisions (were open questions, now resolved with the owner)
 
-1. Confirm scope: hosted mode only (self-contained hot-seat has no "away from my turn" concept,
-   so I'd skip it there entirely) — matches what we discussed last time.
-2. `premove_failures` — a real table the client subscribes to (durable, survives reload before you
-   check back), or is a one-shot realtime broadcast (simpler, but missed if you're not looking at
-   that exact moment) good enough? I'd lean durable table given the whole feature is about not
-   needing to watch in real time.
-3. OK with the Phase 0 spike happening against the live Supabase project (a throwaway test
-   function + a scratch game), or do you want it isolated some other way first?
+1. **Scope: hosted mode only.** Self-contained hot-seat has no "away from my turn" concept (one
+   browser, one person clicking through every seat in sequence) — premove doesn't apply there.
+   Hosted-mode "test games" (one person owns every seat) aren't specially designed for either way;
+   built seat-agnostically, whatever happens for that case happens, no extra work either direction.
+2. **`premove_failures` is a durable table**, not a one-shot broadcast — see §2b above for the
+   schema and the push-notification tie-in.
+3. **Phase 0 spikes against the live Supabase project**, in two steps, both read-only (no writes,
+   no trigger wired yet, nothing autonomous exists until Phase 0 passes):
+   - A throwaway scratch 2-player game (the same "test game" pattern `Lobby.vue` already
+     recognizes) — deploy the spike function, replay its move log, confirm parity with what the
+     client already computes for that same game.
+   - A **real, existing game's** move log, read-only (fetch + replay only, compare against the
+     client's own replay of the same log) — catches anything a clean scratch game wouldn't exercise
+     (Lost Fleet ship actions, artifacts, federations, whatever a live game's history actually has).
+   - If either step fails, the vendoring/import approach needs rework before Phase 1 starts — that
+     is the entire point of doing this before writing schema/RPCs/UI.
+
+## Phase 0 checklist (start here)
+
+- [ ] Decide the vendoring mechanism (predeploy copy of `engine/src` or `engine/dist` into
+      `supabase/functions/_shared/engine/`, vs. a Deno import map) and document which was chosen
+      and why in this file once picked.
+- [ ] Write `supabase/functions/_spike-engine-replay/index.ts`: given a `game_id`, fetch
+      `games`/`moves` (service role), replay via the vendored engine, return
+      `{ playerToMove, round, phase, moveHistoryLength }` as JSON. No writes.
+- [ ] Deploy it; invoke manually (curl or dashboard test-invoke) against a fresh scratch 2-player
+      game created for this purpose.
+- [ ] Invoke it against one real existing game's `game_id`; compare its output to what the running
+      viewer shows for that same game at the same move count.
+- [ ] Record the result in this file (pass/fail, and if fail, what broke) before starting Phase 1.
+- [ ] Delete or disable the spike function once Phase 0 is confirmed (it isn't part of the shipped
+      feature — Phase 1 introduces the real `resolve-automation` function from scratch, informed by
+      whatever Phase 0 learned).
