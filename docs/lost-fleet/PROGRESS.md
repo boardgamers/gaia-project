@@ -2295,6 +2295,27 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       via real hover + `getBoundingClientRect` on the rendered `.tooltip .arrow`, within ~1px of the
       trigger's true center in every case checked).
 
+64. ✅ **The #63 flash-bug fix above was incomplete — it never actually hid anything.** The owner
+    reported the "2/3/4 player count" screen still flashed in production after #63 shipped. Root
+    cause, found via a real live-browser repro (not re-reading code and assuming): `hosted.ts` set
+    `gameEl.style.display = "none"` on the div it then mounted `Game.vue` onto via
+    `launch("#hosted-game", Game)`, i.e. `new Vue(...).$mount("#hosted-game")`. Vue 2's *initial*
+    `$mount(selector)` does a replace-mount — it discards the target element's own attributes
+    (including that inline `display:none` and the `id` itself) and swaps in a freshly rendered root
+    node from the component. So the hiding was a no-op from the very first render: the placeholder
+    Engine's "pick player count" screen was visible the entire time `host.load()`'s Supabase fetch
+    was in flight, exactly as before the "fix". Confirmed with a genuine repro: a throwaway Supabase
+    auth user + an isolated 2-seat test game, driven through a real (locally-built, then verified)
+    bundle with Playwright, sampling actual computed visibility (not `textContent`, which includes
+    hidden nodes) every ~150ms — reproduced the visible flash pre-fix, confirmed it gone post-fix.
+    Fixed by wrapping the mount target in a separate parent `gameWrapperEl` that Vue's mount never
+    touches (only its child `#hosted-game` gets replaced) and hiding/showing *that* wrapper instead.
+    Rebuilt and reran the same live repro against the fixed bundle: the DOM now goes straight from
+    "Loading game…" to the real board state at every sampled point, with no intermediate flash.
+    `hosted.ts` only; no other files changed. Viewer 275/275 tests still pass (no dedicated unit test
+    exists for this imperative DOM-mounting glue — verified via the live-browser repro instead).
+    Cleaned up the throwaway auth user and test game from the production DB afterward.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

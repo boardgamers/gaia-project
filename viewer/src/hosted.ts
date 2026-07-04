@@ -23,18 +23,23 @@ function mountChild(parent: Element, component: any, props: Record<string, unkno
 
 async function launchGame(root: Element, client: SupabaseClient, session: any, gameId: string): Promise<void> {
   const barEl = document.createElement("div");
+  // Vue's initial `$mount(selector)` replaces the target element outright (attributes
+  // and inline styles included), so hiding "#hosted-game" itself is a no-op once
+  // launch() mounts onto it - the wrapper below is never touched by that replace and
+  // is what actually stays hidden until the first real "state" arrives. Without it,
+  // the store's placeholder Engine (empty moveHistory) renders Commands.vue's "pick
+  // player count" init screen for the ~1s the Supabase fetch in host.load() takes.
+  const gameWrapperEl = document.createElement("div");
+  gameWrapperEl.style.display = "none";
   const gameEl = document.createElement("div");
   gameEl.id = "hosted-game";
-  // Hidden until the first real "state" arrives: the store's placeholder Engine
-  // (empty moveHistory) would otherwise render Commands.vue's "pick player count"
-  // init screen for the ~1s the Supabase fetch in host.load() takes.
-  gameEl.style.display = "none";
+  gameWrapperEl.appendChild(gameEl);
   const loadingEl = document.createElement("div");
   loadingEl.className = "text-muted text-center py-5";
   loadingEl.textContent = "Loading game…";
   root.appendChild(barEl);
   root.appendChild(loadingEl);
-  root.appendChild(gameEl);
+  root.appendChild(gameWrapperEl);
 
   const bar = new Vue({
     data: {
@@ -62,7 +67,7 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
   const emitter = launch("#hosted-game", Game);
   emitter.once("ready", () => {
     loadingEl.remove();
-    gameEl.style.display = "";
+    gameWrapperEl.style.display = "";
   });
   let mySeats: number[] = [];
 
