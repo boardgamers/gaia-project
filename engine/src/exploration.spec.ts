@@ -304,19 +304,19 @@ describe("Lost Fleet exploration", () => {
     });
   });
 
-  it("should prompt a discounted Build a Mine action for the Terraform Standard Tech tile, before the tech-track bump", () => {
+  it("offers a discounted Build a Mine action for the Terraform Standard Tech tile (2 free terraforming steps)", () => {
+    // NOT wired into moveChooseTechTile's automatic flow (reverted - see PROGRESS.md's Gaia 4
+    // session note): forcing an extra required move into that sequence retroactively broke replay
+    // of any already-in-progress game whose stored history claimed this tile before the trigger
+    // existed, since the hosted app always reconstructs a game by replaying its full move history
+    // through current code with no version gate. `possibleSpaceshipTechTileBuildMine` itself is
+    // still correct and inert (unreachable without a caller invoking
+    // SubPhase.SpaceshipTechTileBuildMine) - this only tests it in isolation.
     const engine = createLostFleetRoundMoveEngine(3);
     const player = engine.player(PlayerEnum.Player1);
 
     occupyNearestPlanet(engine, PlayerEnum.Player1, Spaceship.TFMars);
-    player.data.explorationShips[Spaceship.TFMars] = 1;
-    engine.tiles.spaceshipTechs[Spaceship.TFMars] = { tile: SpaceshipTechTile.Terraform, count: 1 };
 
-    engine.generateAvailableCommands(SubPhase.ChooseTechTile);
-    const command = engine.findAvailableCommand(PlayerEnum.Player1, Command.ChooseTechTile);
-
-    // Confirm the discounted Build a Mine action is actually on offer (2 free terraforming steps,
-    // ore still charged for anything beyond that) before wiring it into the queued turn moves below.
     const [buildCommand] = possibleSpaceshipTechTileBuildMine(engine, PlayerEnum.Player1);
     expect(buildCommand, "a discounted Build a Mine action should be offered").to.not.equal(undefined);
     const target = buildCommand.data.buildings[0];
@@ -327,20 +327,6 @@ describe("Lost Fleet exploration", () => {
     );
     const oreCost = Reward.parse(target.cost).find((r) => r.type === Resource.Ore)?.count ?? 0;
     expect(oreCost).to.equal(terraformingCost(player.data, Math.max(targetSteps - 2, 0), engine.replay).count);
-
-    const beforeGaia = player.data.research[ResearchField.GaiaProject];
-    const beforeMines = player.data.buildings[Building.Mine];
-
-    engine.turnMoves = [`build m ${target.coordinates}`, "up gaia"];
-    moveChooseTechTile(engine, command, PlayerEnum.Player1, Spaceship.TFMars);
-
-    expect(player.data.buildings[Building.Mine]).to.equal(beforeMines + 1);
-    expect(player.data.research[ResearchField.GaiaProject]).to.equal(beforeGaia + 1);
-    expect(player.data.tiles.techs.find((tile) => tile.pos === Spaceship.TFMars)).to.deep.include({
-      tile: SpaceshipTechTile.Terraform,
-      pos: Spaceship.TFMars,
-      enabled: true,
-    });
   });
 
   it("should let an advanced tech cover a claimed ship Standard Tech tile", () => {

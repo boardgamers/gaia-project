@@ -1,16 +1,7 @@
 import assert from "assert";
 import { AvailableCommand } from "../available/types";
 import Engine from "../engine";
-import {
-  AnyTechTilePos,
-  Command,
-  Player as PlayerEnum,
-  ResearchField,
-  Spaceship,
-  SpaceshipTechTile,
-  SubPhase,
-  TechTilePos,
-} from "../enums";
+import { AnyTechTilePos, Command, Player as PlayerEnum, ResearchField, Spaceship, SubPhase, TechTilePos } from "../enums";
 import { isAdvanced } from "../tiles/techs";
 import { advanceResearchAreaPhase } from "./phase";
 
@@ -55,12 +46,6 @@ export function moveChooseTechTile(
     }
   } else {
     engine.tiles.techs[pos as AnyTechTilePos].count -= 1;
-  }
-
-  // BEFORE the tech-track bump below: the Terraform Standard Tech tile's own one-time "Build a
-  // Mine with 2 free terraforming steps" (§G1) has to resolve first.
-  if (tileAvailable.tile === SpaceshipTechTile.Terraform) {
-    engine.processNextMove(SubPhase.SpaceshipTechTileBuildMine, undefined, false);
   }
 
   // AFTER gaining the tech tile (as green federation can be flipped and lock research tracks)
