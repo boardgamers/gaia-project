@@ -1,121 +1,186 @@
-# Premove — Implementation Plan
+# Premove — Implementation Plan (consolidated, ready for handoff)
 
-> Status: **design finalized, nothing built yet.** Written 2026-07-04 after scoping the "does it
-> work while I'm offline" question for auto-leech and premove together, then confirmed with the
-> owner (§ Decisions below resolves what used to be open questions). Read `BACKEND.md` first if
-> you haven't touched the hosted-mode backend before — this plan builds directly on it. **Next
-> session should start at Phasing → Phase 0.**
+> Status: **design finalized + reviewed, nothing built yet.** Originally written 2026-07-04 and
+> owner-approved; **revised 2026-07-04 after an Opus design-review pass** that folded in nine
+> correctness fixes, the UX flow, and one scope change (see "What changed from the original design"
+> below). This document is self-contained: a fresh session (Sonnet is fine) should be able to
+> execute it end-to-end without re-deriving anything. Read `BACKEND.md` first if you haven't
+> touched the hosted-mode Supabase backend — this plan builds directly on it. **Start at Phase 0.**
 
-## The question this plan answers
+---
 
-Auto-leech (shipped this session) only resolves when a relevant browser tab is open — best-effort,
-not "works while asleep." Premove's whole point is "set it and forget it," so best-effort isn't
-good enough for it. This plan is the other route: genuine server-side execution, scoped to be as
-small a new trust boundary as it can be.
+## 0. What this feature is
 
-## Why this *isn't* "reimplement the engine server-side"
+"Premove": while it is **not** your turn, queue the move you intend to make. When your turn actually
+arrives it plays **automatically, server-side, even if you are offline** — set it and forget it.
+Scope is **hosted (multiplayer) mode only**; self-contained hot-seat has no "away from my turn"
+concept.
 
-`@gaia-project/engine`'s runtime dependencies (`eventemitter3`, `hexagrid`, `lodash`, `seedrandom`,
-`semver-compare`, `shuffle-seed`) are plain JS with no native bindings — nothing Node-specific.
-Supabase Edge Functions run on Deno, which already runs npm packages fine (the existing `notify`
-function imports `npm:@supabase/supabase-js` this way). The engine already runs outside a browser
-today — the whole test suite executes it under Node via `ts-node`/`mocha`. So "run the engine
-server-side" is really "run the same package we already have in one more place," not new game
-logic.
+The offline guarantee is the whole point, which is why this needs genuine server-side execution (a
+Supabase Edge Function that decides and commits a move no human confirmed at that moment), not the
+best-effort "only runs if a browser tab is open" path that auto-leech shipped with.
 
-**The one real wrinkle**: `npm:@gaia-project/engine` on the public registry is upstream's version
-(no Lost Fleet). This fork's actual engine only exists as a local workspace package
-(`workspace:../engine` in `viewer/package.json`) — never published anywhere an `npm:` specifier
-could reach. The edge function needs *this fork's* engine, which means vendoring/bundling it into
-the function's own deploy directory rather than a plain npm import. Concretely: a small predeploy
-step that copies `engine/src` (or `engine/dist` after `tsc`) into
-`supabase/functions/_shared/engine/`, or a Deno import map pointing at a relative path within the
-functions root. **Phase 0 below is a spike specifically to nail this down** before building
-anything on top of the assumption.
+---
 
-## What's actually new here (the trust boundary, stated plainly)
+## What changed from the original owner-approved design (read this first)
 
-Today, every move that reaches the database was validated by the *acting player's own browser*
-before being submitted — the server has never made a game decision. This plan adds a second path:
-a service-role Edge Function that decides and commits a move *no human confirmed at that moment*.
-That's a real increase in blast radius for a bug (a broken edge function could misplay a real,
-currently-running friends' game unattended), not just "one more RPC." Worth being honest about
-that cost against the benefit before building it.
+The original plan was sound. The review changed these things — one is a genuine scope decision you
+should be aware of, the rest are correctness fixes that don't change intent:
 
-## Architecture
+1. **Offline auto-leech is now in-scope, not "optional later."** *(The one real scope change.)*
+   The original treated folding auto-leech into the same edge function as an optional Phase 4. But
+   without it, the offline promise doesn't actually hold: a power-leech / charge-power decision
+   (Gaia's `Phase.RoundLeech`) interrupts *before* your normal turn, and if you're fully offline the
+   game stalls there — your premove never gets reached. So "premove that actually works offline" =
+   premove **plus** offline auto-leech resolution. It's now Phase 2 (required for the feature to
+   meet its goal), with multi-round queueing demoted to the genuinely-optional Phase 3. This reuses
+   the auto-charge preference the user already sets today; it only adds *persisting* that preference
+   so the server can honor it. If you'd rather ship premove-only first and accept "offline works
+   only when no leech interrupts," that's a valid smaller cut — but say so explicitly, because it
+   makes the headline feature conditional.
 
-### 1. New engine method (client-side preview only — not part of the offline path)
+2. **The execute-time gate must match the offer-time gate (this was an outright bug).** The original
+   edge-function logic attempted the queued premove whenever `engine.playerToMove === seat`. But a
+   leech decision makes `playerToMove === seat` while the engine is in `Phase.RoundLeech` expecting a
+   `charge`/`decline`, **not** a `RoundMove` build — so the premove would throw and be consumed as a
+   bogus failure, deleting it before the player's real turn ever arrived. Fix: the edge function only
+   attempts a premove when `engine.phase === Phase.RoundMove` (the same condition
+   `previewAvailableCommandsFor` uses to *offer* it). See §4 step 3.
 
-To show "what could I legally do if it were my turn right now" while queuing a premove, the engine
-needs a purpose-built query — not something to hack together by poking `currentPlayer`/
-`tempCurrentPlayer` on a clone and hoping `generateAvailableCommands` doesn't depend on invariants
-that setup breaks.
+3. **A cheap trigger-level gate** so the edge function (and a full engine replay) only runs when
+   there's actually work for the seat now on turn, instead of on every turn of every game forever.
+
+4. **`commit_automated_turn` must mirror the *post-0009* `commit_turn`** (8 args incl.
+   `current_round` + `player_updates`), and must set `committed_by` to the **seat owner's user_id**
+   (there is no `auth.uid()` in the function).
+
+5. **A premove is always a complete turn**, and the edge function has an explicit "applied but
+   didn't complete a turn" failure branch.
+
+6. **The edge function's own `seq_conflict` is a silent no-op**, never a premove failure.
+
+7. **Vendoring = bundle the engine to a single ESM file** (esbuild), not copy source — because the
+   engine imports bare specifiers (`lodash`, `hexagrid`, `seedrandom`, …) that Deno won't resolve
+   from copied source without a hand-maintained import map. The same bundle includes the tiny
+   `auto-decide.ts` helper so client and server run identical leech logic.
+
+8. **A retained client-vs-server replay parity test** (not just the one-time Phase 0 spike) to catch
+   engine/bundle drift, which is the thing that would silently misplay a real game.
+
+9. **Client fast-path is part of the MVP** (instant local execution when you're watching), with the
+   edge function as the offline backstop — so a watched turn doesn't wait for a trigger round-trip.
+
+Plus the UX flow in §7.
+
+---
+
+## The trust boundary (stated plainly, unchanged from original)
+
+Today every move that reaches the database was validated by the acting player's own browser before
+submission — the server has never made a game decision. This plan adds a second path: a service-role
+edge function that decides and commits a move no human confirmed at that moment. That's a real
+increase in blast radius for a bug (a broken function could misplay a real, currently-running game
+unattended). Two things keep it bounded:
+
+- **The server never invents game logic** — it replays the exact same engine the client runs and
+  only *attempts* a move the client already validated once when it was queued. The move log stays
+  the sole source of truth (`BACKEND.md §0`).
+- **The engine that runs server-side must be byte-for-byte the same logic as the client's** — which
+  is why the bundle is built from *this fork's* `engine/src` (not public npm) and why the parity
+  test (finding #8) is retained in CI, not one-shot.
+
+---
+
+## 1. Vendoring the engine into the edge function (resolves Phase 0's core question)
+
+**Decision: bundle, don't copy.** `npm:@gaia-project/engine` on the public registry is upstream
+(no Lost Fleet); this fork's engine only exists as the local workspace package. The engine's source
+uses **bare** imports (`import _ from "lodash"`, `hexagrid`, `seedrandom`, `semver-compare`,
+`shuffle-seed`, `eventemitter3`), so copying `engine/src` into the function would force a
+hand-maintained Deno import map mapping every bare specifier to the exact `npm:` version — fragile,
+and a silent drift vector.
+
+Instead, a **predeploy build step bundles the engine + its deps into one ESM file** the function
+imports directly:
+
+- Tool: **esbuild** (`format=esm`, `platform=neutral` or `browser`, `bundle=true`), entry point a
+  tiny `supabase/functions/_shared/engine-entry.ts` that re-exports what the functions need:
+  ```ts
+  export { default as Engine, Phase } from "../../../engine/src/engine";
+  export { autoDecideChargePower, parseAutoChargePreference } from "../../../viewer/src/logic/auto-decide";
+  ```
+  (`auto-decide.ts` only depends on the engine, so it bundles cleanly and guarantees the server's
+  leech logic is identical to the client's.)
+- Output: `supabase/functions/_shared/engine.bundle.js` — committed **or** rebuilt in the deploy
+  step; either way the rebuild is **wired into the function-deploy command**, never a manual copy
+  (finding #4/drift). A `package.json` script like
+  `"build:edge-engine": "esbuild supabase/functions/_shared/engine-entry.ts --bundle --format=esm --platform=neutral --outfile=supabase/functions/_shared/engine.bundle.js"`.
+- Edge functions import from `_shared/engine.bundle.js`.
+
+**Phase 0 verifies this actually runs under Deno** before anything is built on it. Specifically
+confirm the deps that reach for host globals behave: `seedrandom`/`shuffle-seed` (may touch
+`crypto`/`self`/`window`), and that no bare Node built-in (`assert`, `crypto`, …) sneaks in without
+a `node:` prefix.
+
+---
+
+## 2. Engine method (client-side preview only — never on the offline path)
+
+To show "what could I legally do if it were my turn right now" while queuing, add one engine query.
 
 ```ts
 // engine/src/engine.ts
 previewAvailableCommandsFor(seat: PlayerEnum): AvailableCommand[] | null
 ```
 
-Returns `null` (premove not offered at all right now) when:
-- `seat === this.playerToMove` (it's already their turn — show the real buttons, not a preview)
-- `seat` has already passed this round (`this.passedPlayers.includes(seat)`) — nothing left to
-  premove into *this* round
-- `this.phase !== Phase.RoundMove` (setup, scoring, endgame, federation-formation sub-choices,
-  etc. — "my normal next turn" isn't well-defined there)
+Returns `null` (premove not offered) when **any** of:
+- `seat === this.playerToMove` — it's already their turn; show the real buttons.
+- the seat has already passed this round (verify the exact field during impl — `passedPlayers`
+  or equivalent) — nothing to premove into *this* round.
+- `this.phase !== Phase.RoundMove` — setup, income, gaia, leech, scoring, endgame, auction: "my
+  normal next turn" isn't well-defined.
 
-Otherwise: clone, force `currentPlayer = seat` and clear `tempCurrentPlayer`, call the same
-command-generation path the real current player uses, return the result. This is a self-contained,
-engine-level addition — testable with plain engine unit tests, no viewer or backend involved. This
-is the one piece I flagged as unverified last time; scoping it out this way avoids needing to
-understand every invariant `generateAvailableCommands` relies on — the clone-and-override only ever
-touches the two fields whose job is specifically "whose turn is it."
+Otherwise: clone (`Engine.fromData(JSON.parse(JSON.stringify(this)))`), set `currentPlayer = seat`,
+`tempCurrentPlayer = undefined`, call the normal `generateAvailableCommands()` path, return the
+result. Self-contained, unit-testable with plain engine tests, no viewer/backend involved.
 
-**Execution never uses this method.** Attempting a stored premove is just "wait until
-`playerToMove` naturally *is* that seat, then try `engine.move(storedMove)`, catch failure" — the
-exact same code path every move already goes through.
+**Fidelity caveat (verify in Phase 1):** `generateAvailableCommands` may read `turnOrder`/position,
+not only `currentPlayer`. This is *fine for a preview* — worst case a queued move fails cleanly later
+and the player is notified — but add a test that the previewed commands for a seat match what that
+seat actually gets when its turn genuinely arrives, on a couple of real mid-round board states.
 
-### 2. Data model
+**Execution never uses this method.** Playing a stored premove is just "wait until `playerToMove`
+naturally is that seat and `phase === RoundMove`, then `engine.move(storedMove)`, catch failure" —
+the same path every move already goes through.
+
+---
+
+## 3. Data model
 
 ```sql
+-- One queued premove line per (seat, seq). seq = that seat's own queue order (1 = next to attempt).
 create table public.premoves (
-  game_id    uuid not null references public.games(id) on delete cascade,
-  seat       int  not null,
-  seq        int  not null,  -- this seat's own queue order (1 = next to attempt)
-  move       text not null,  -- exact move line, e.g. "terrans build m -1x2"
-  created_at timestamptz not null default now(),
+  game_id           uuid not null references public.games(id) on delete cascade,
+  seat              int  not null,
+  seq               int  not null,
+  move              text not null,          -- exact complete turn line, e.g. "terrans build m -1x2"
+  queued_move_count int  not null,          -- games.move_count when queued (staleness display, finding #9)
+  created_at        timestamptz not null default now(),
   primary key (game_id, seat, seq)
 );
 alter table public.premoves enable row level security;
 
--- Deliberately NARROWER than moves_select: a queued premove is private strategic intent,
--- not public history. Only the owning seat's own user can see their own queue.
+-- Deliberately NARROWER than moves_select: a queued premove is private strategic intent, not public
+-- history. Only the owning seat's own user sees their own queue.
 create policy premoves_select on public.premoves
   for select to authenticated
   using (exists (select 1 from public.players
                  where game_id = premoves.game_id and seat = premoves.seat and user_id = auth.uid()));
-```
 
-Writes go through two narrow RPCs (mirroring this project's existing pattern — no direct
-insert/update/delete policies, same as `moves`):
-
-- `queue_premove(p_game_id uuid, p_move text)` — `security definer`, checks the caller owns a seat
-  in the game, computes `seq = max(seq)+1` for that seat, inserts. **Does not re-validate game
-  legality** — same trust model as `commit_turn` today (the client is already trusted to submit
-  legal content; the RPC only enforces *who* can queue *what seat's* premove). The client only
-  offers this button after building it from `previewAvailableCommandsFor`, so by the time this RPC
-  is called the move has already been locally validated once.
-- `cancel_premove(p_game_id uuid, p_seq int)` — `security definer`, deletes one of the caller's own
-  queued entries.
-
-### 2b. Failure notifications: durable table, not a one-shot broadcast
-
-Decision (was an open question, now resolved): a **durable table**, not a Realtime broadcast.
-A broadcast only reaches clients connected at the exact instant it fires — the one moment the
-premove-setter is least likely to be watching, since if they were watching they wouldn't have
-needed the premove there in the first place. A table sits there until read.
-
-```sql
+-- Durable failure inbox (NOT a one-shot broadcast — a broadcast only reaches a client connected at
+-- the instant it fires, i.e. the one moment the premove-setter is least likely to be watching).
 create table public.premove_failures (
+  id         uuid primary key default gen_random_uuid(),
   game_id    uuid not null references public.games(id) on delete cascade,
   seat       int  not null,
   move       text not null,
@@ -130,150 +195,318 @@ create policy premove_failures_select on public.premove_failures
   using (exists (select 1 from public.players
                  where game_id = premove_failures.game_id and seat = premove_failures.seat
                    and user_id = auth.uid()));
+
+-- Phase 2 (offline auto-leech): persist the user's existing auto-charge preference per seat so the
+-- server can honor it. 'ask' (default) = never auto-decide, same as today's online behavior.
+alter table public.players add column if not exists auto_charge text not null default 'ask';
 ```
 
-A small `mark_premove_failure_read(p_game_id uuid, p_created_at timestamptz)` RPC (or just an
-`update` the client can do directly, if a narrow update policy scoped the same way as the select
-policy above is simpler) sets `read_at`, so the client only needs to show unread rows.
+**Do NOT add `premoves`/`premove_failures` to the realtime publication.** DELETE events + RLS on old
+rows are awkward, and the client already has a natural refresh point: **refetch the caller's own
+`premoves` + unread `premove_failures` whenever a `moves` row arrives** (and on load). That covers
+"my premove was consumed" and "it failed" without a second realtime channel.
 
-Being a real table also means it composes for free with the **existing push infrastructure**: the
-`notify` Edge Function already sends a push off a `games` trigger using stored VAPID keys/
-subscriptions (`BACKEND.md` §6). A sibling trigger —
+---
+
+## 4. Write paths (RPCs) and the edge function
+
+### 4a. RPCs (mirror the existing "no direct writes, security-definer only" pattern)
+
+- **`queue_premove(p_game_id uuid, p_seat int, p_move text) returns int`** — `security definer`.
+  Assert the caller owns `p_seat` (`players.user_id = auth.uid()`). Compute `seq = coalesce(max(seq),0)+1`
+  for that seat. Insert with `queued_move_count = games.move_count`. Returns the new `seq`. Does
+  **not** re-validate game legality (same trust model as `commit_turn`; the client only offers the
+  button after building it from `previewAvailableCommandsFor`, so it's been validated once already).
+  `p_seat` is explicit (not inferred) so a multi-seat owner is never ambiguous.
+
+- **`cancel_premove(p_game_id uuid, p_seat int, p_seq int) returns void`** — `security definer`,
+  deletes one of the caller's own queued entries (assert seat ownership).
+
+- **`mark_premove_failure_read(p_id uuid) returns void`** — `security definer`, sets `read_at = now()`
+  on one of the caller's own failure rows (assert seat ownership via the row's game/seat).
+
+- **`set_auto_charge(p_game_id uuid, p_seat int, p_pref text) returns void`** *(Phase 2)* —
+  `security definer`, sets `players.auto_charge` for a seat the caller owns. The client calls this
+  when the user changes their auto-charge preference while in that game (so the server copy tracks
+  the local one).
+
+- **`commit_automated_turn(...)`** *(the offline commit path)* — **identical to the post-0009
+  `commit_turn`** (same 8 inputs: `p_game_id, p_seq, p_seat, p_move, p_next_seat, p_finished,
+  p_current_round, p_player_updates`; same atomic `select … for update` + `seq = move_count+1` check;
+  same `games`/`players` cache-column updates) with two differences:
+  - **No `auth.uid()`/seat-ownership check** (there is no authenticated user here).
+  - **`committed_by` / `last_committed_by` = the seat owner's `user_id`**, looked up from `players`
+    (fall back to `games.created_by` if somehow null). This keeps `notify`'s "skip the last
+    committer" logic correct — the *next* seat gets the push, the automated seat's owner doesn't.
+  - Grants: `revoke execute … from public, anon, authenticated; grant execute … to service_role;`.
+
+  All new RPCs get the same `revoke from public, anon` + `grant to authenticated` treatment as the
+  existing ones (except `commit_automated_turn`, which is `service_role` only). Follow the exact
+  grant/`drop function` discipline in `0009` (widening args via `create or replace` creates a second
+  overload — always `drop function` the old signature first).
+
+### 4b. Trigger (fires the edge function only when there's work)
 
 ```sql
-create trigger premove_failures_notify
-  after insert on public.premove_failures
-  for each row execute function public.notify_game_event(); -- or a tiny dedicated variant
-```
+create or replace function public.notify_resolve_automation()
+returns trigger language plpgsql security definer set search_path = public, pg_temp as $$
+declare v_cfg jsonb;
+begin
+  -- Cheap gate (finding #3): only invoke when the seat now on turn actually has a premove queued.
+  -- Phase 2 widens this to: premove exists OR that seat's players.auto_charge <> 'ask'.
+  if new.current_seat is null then return null; end if;
+  if not exists (select 1 from public.premoves
+                 where game_id = new.id and seat = new.current_seat) then
+    return null;
+  end if;
+  select value into v_cfg from public.app_config where key = 'resolve_automation';
+  if v_cfg is null then return null; end if;   -- unseeded = silent no-op, same as notify
+  perform net.http_post(
+    url := v_cfg ->> 'url',
+    headers := jsonb_build_object('Content-Type','application/json',
+                                  'Authorization','Bearer ' || (v_cfg ->> 'key')),
+    body := jsonb_build_object('game_id', new.id, 'seat', new.current_seat));
+  return null;
+end; $$;
 
-— gets you "your premove couldn't be played" as an actual push notification using plumbing that
-already exists in production, rather than inventing a second, weaker in-app-only notification path.
-
-### 3. Trigger
-
-Reuse the *exact* existing pattern (`games_notify_update`, `BACKEND.md` §6) — same table, same
-"current_seat changed" condition, since that's precisely "it is now someone's turn":
-
-```sql
 create trigger games_resolve_automation
   after update on public.games
-  for each row
-  when (old.current_seat is distinct from new.current_seat)
+  for each row when (old.current_seat is distinct from new.current_seat)
   execute function public.notify_resolve_automation();
 ```
 
-`notify_resolve_automation()` is a near-copy of `notify_game_event()` — same `app_config`-driven
-URL/key lookup, same `net.http_post`, calling a new `resolve-automation` Edge Function with
-`{game_id, seat: new.current_seat}` instead of the notify payload shape.
+Seed `app_config['resolve_automation']` = `{"url": …, "key": …}` out-of-band (same pattern as the
+`notify` config; never committed). Until seeded, the trigger is a harmless no-op.
 
-### 4. The Edge Function (`resolve-automation`)
+### 4c. The `resolve-automation` edge function
 
-```
-supabase/functions/resolve-automation/index.ts
-```
+`supabase/functions/resolve-automation/index.ts`. Service-role client (like `notify`). Payload
+`{game_id, seat}`. **Resolves exactly ONE committed turn per invocation, then returns** — the
+commit's own `current_seat` change re-fires the trigger for the next seat/decision. No internal
+loop (mirrors the client's recursion via repeated trigger firings).
 
-On each invocation:
-1. Load the game row + full move log (service role) — same shape as `host.ts`'s `buildEngine`.
-2. Replay through the (vendored) engine, confirm `engine.playerToMove === payload.seat` (defends
-   against a stale/out-of-order trigger delivery — if it's since moved on, no-op and return).
-3. Check, in order: does this seat have a queued premove (`premoves` table, lowest `seq`)? If not,
-   stop (auto-leech's *offline* backstop — see Phase 3 below — would also live here eventually, but
-   isn't in scope for the premove MVP).
-4. Try `engine.move(premove.move)`. If it throws: delete *only that* premove row, insert a
-   `premove_failures` row (durable table, not a one-shot broadcast — see §2b) so the player gets a
-   clear "your premove couldn't be played: <reason>" whenever they next look, not only if they
-   happen to be connected at the exact moment it fails, and stop — deliberately not falling through
-   to try `seq+1` automatically in the same pass (a failed premove likely means the situation
-   changed in a way that makes the whole rest of the queued sequence suspect too; safer to stop and
-   let the player look at fresh state before their later premoves fire).
-5. If it succeeds and completes a turn: commit via a new `commit_automated_turn(...)` SQL function
-   — identical to `commit_turn` (same atomic `for update` + `seq` check, same `players`/`round`
-   cache-column update) but with the `auth.uid()`/seat-ownership check removed (there is no
-   authenticated user in this context) and grants restricted to `service_role` only:
-   `revoke execute ... from public, anon, authenticated; grant execute ... to service_role;`.
-   Delete the consumed premove row.
-6. That commit's own `current_seat` update fires the *same* trigger again — the next seat's queued
-   premove (or a different seat's, in a multi-seat test game) gets its own fresh invocation
-   automatically. **No internal loop needed in the function** — chaining happens the same way the
-   client-side `resolveAutoDecisions` recursion does, just via repeated trigger firings instead of a
-   local `while`.
+Per invocation:
 
-### 5. Race safety (client fast-path vs. edge function backstop)
+1. Load `games` row + full `moves` log (service role). Build the engine exactly as `host.ts`
+   `buildEngine` does: `new Engine(["init <player_count> <seed>", ...moves], engineOptions(game))`
+   then `generateAvailableCommandsIfNeeded()`. (Reuse `engineOptions`'s `map`-stripping — see
+   `host.ts` / `BACKEND.md §13.4`.)
+2. **Stale-trigger guard:** if `engine.playerToMove !== seat`, no-op return (the game moved on).
+3. **Branch on phase (the symmetric gate, finding #2):**
+   - **`engine.phase === Phase.RoundLeech`** (a pending charge/leech decision for `seat`)
+     *(Phase 2)*: read `players.auto_charge` for `seat`. If `'ask'` → **no-op return** (wait for the
+     human; leaves any queued premove untouched behind the leech). Else resolve **one** auto-charge
+     turn: on a clone, set `engine.player(seat).settings.autoChargePower = parseAutoChargePreference(pref)`
+     and call `engine.autoMove()` **once**; if it produced a completed turn, `commit_automated_turn`
+     it and return. *(Resolve one turn only — do NOT commit a multi-turn ". "-joined string as one
+     `moves` row; that breaks the one-row-per-turn / `seq` invariant. Let the trigger re-fire for any
+     further leech. Verify `autoMove()`'s single-call behavior against the engine during impl.)*
+   - **`engine.phase === Phase.RoundMove`:** find this seat's lowest-`seq` `premoves` row. None →
+     no-op return. Otherwise, on a clone, `engine.move(premove.move)`:
+     - **throws** → delete *only that* premove row, insert a `premove_failures` row
+       (`reason` = the error message), return. **Do not** fall through to `seq+1` — a failed premove
+       usually means the situation changed enough to make the rest of the queue suspect; stop and let
+       the player look at fresh state.
+     - **applies but `!copy.newTurn`** (incomplete turn — shouldn't happen if queuing enforced
+       completeness, defensive) → delete the premove, insert a `premove_failures` row
+       (`reason: "premove did not complete a turn"`), return.
+     - **applies and `copy.newTurn`** → `commit_automated_turn(seat, move, next_seat = finished ? null
+       : copy.playerToMove, finished = copy.phase === Phase.EndGame, current_round = copy.round,
+       player_updates = playerUpdates(copy))`, then delete the consumed premove row, return.
+   - **any other phase** (setup, income, gaia, scoring, endgame) → no-op return.
+4. **`seq_conflict` from the commit is a silent no-op** (finding #6): if `commit_automated_turn`
+   raises `seq_conflict`, another path (the player's own fast-path, or a duplicate trigger delivery)
+   already committed — just return, do **not** write a `premove_failures` row and do **not** delete
+   the premove (the winning path already consumed it).
 
-If the premove-setter happens to have the game open when their turn arrives, *both* their own
-client (if premove's client-side "fast path" is wired the same way auto-leech's
-`resolveAutoDecisions` is) and the edge function could race to commit the same premove.
-`commit_turn`'s (and `commit_automated_turn`'s) atomic `p_seq is distinct from v_game.move_count + 1`
-check already makes this safe — whichever lands first wins, the loser gets a `seq_conflict` and
-does nothing further. **One real fix needed**: `host.ts`'s current error handling treats *any*
-`commitTurn` failure as alarming (`onError` → user-facing message). A `seq_conflict` specifically
-means "someone else already handled this" and should silently resync instead — this is a real,
-small bug this plan surfaces even for the auto-leech feature already shipped, not just premove.
+Because each successful commit changes `current_seat`, the trigger re-fires and the next
+seat's/decision's premove or leech gets its own fresh invocation automatically.
 
-### 6. Client-side additions
+---
 
-- A "Premove" button, shown whenever `previewAvailableCommandsFor(mySeat)` returns non-null,
-  reusing the *existing* button-building logic in `logic/buttons/*` against the previewed
-  commands (not new button code — just a new engine instance to build them from).
-- Picking one calls `queue_premove` (not the normal move-submit path).
-- A small persistent panel: "Queued: Build mine at 3x2 [✕]" per entry, reading the `premoves` table
-  directly (RLS already scopes it to your own seat), plus any unread (`read_at is null`)
-  `premove_failures` rows shown as a dismissible banner (dismiss = call the mark-read RPC).
-- Multi-round queueing (2-3 ahead): premove #2's preview is built against a *simulated* clone with
-  premove #1 already applied (chain the preview off the same disposable clone), not fresh
-  current-state — otherwise "plan a sequence" isn't actually what's being planned. Surface in the
-  UI that entries beyond the first are more likely to be skipped (they depend on premove #1 landing
-  exactly as planned *and* on moves from other players that haven't happened yet).
+## 5. Client fast-path + the `seq_conflict` bug fix (both part of the MVP)
 
-## Phasing
+- **Fast-path (finding #9):** when the premove-setter has the game open and their turn arrives, run
+  the queued premove locally *immediately* through the existing `applyAndCommit` path (wired the
+  same way auto-leech's `resolveAutoDecisions` is in `host.ts`) instead of waiting for the
+  trigger→edge→commit→realtime round-trip. The edge function stays the offline backstop.
+- **Race safety** is already handled by `commit_turn`/`commit_automated_turn`'s atomic
+  `p_seq is distinct from v_game.move_count + 1` check: whichever of {fast-path, edge function}
+  lands first wins; the loser gets `seq_conflict` and does nothing.
+- **The `seq_conflict`-should-be-silent bug (real, pre-existing, affects auto-leech too):**
+  `host.ts`'s `applyAndCommit` currently treats *any* `commitTurn` failure as alarming
+  (`onError` → user-facing message, then resync). A `seq_conflict` specifically means "someone else
+  already handled this" and should **silently resync** (no error toast). Fix this in `host.ts` as
+  part of the MVP — it's needed the moment any second automated committer exists. (Detect by the
+  `seq_conflict:` prefix the RPC raises.)
 
-1. **Spike (de-risk only, no schema, no user-facing change)**: get the fork's actual engine
-   running inside a real deployed Edge Function — construct an `Engine`, replay a handful of test
-   moves, confirm parity with the same replay run client-side. This is the one assumption the whole
-   plan leans on; confirm it before writing anything else.
-2. **MVP**: single premove per seat (no queue depth yet), `premoves` table + the two RPCs, the
-   trigger + edge function, the engine's `previewAvailableCommandsFor`, the Premove button + cancel
-   UI. Fix the `seq_conflict`-should-be-silent bug from §5 as part of this (needed either way once
-   any automated path exists).
-3. **Multi-round queue**: `seq`-ordered queue per seat, chained preview building, "more likely to be
-   skipped" messaging.
-4. **Optional later**: retrofit auto-leech onto the same edge function (add "does this seat have an
-   `autoChargePower` preference" as a second check in step 3 above) so it also gets genuine offline
-   execution instead of the client-only best-effort version shipped this session. Not required for
-   premove to work — a separate decision once premove itself is proven out.
+---
 
-## Decisions (were open questions, now resolved with the owner)
+## 6. RLS / realtime summary
 
-1. **Scope: hosted mode only.** Self-contained hot-seat has no "away from my turn" concept (one
-   browser, one person clicking through every seat in sequence) — premove doesn't apply there.
-   Hosted-mode "test games" (one person owns every seat) aren't specially designed for either way;
-   built seat-agnostically, whatever happens for that case happens, no extra work either direction.
-2. **`premove_failures` is a durable table**, not a one-shot broadcast — see §2b above for the
-   schema and the push-notification tie-in.
-3. **Phase 0 spikes against the live Supabase project**, in two steps, both read-only (no writes,
-   no trigger wired yet, nothing autonomous exists until Phase 0 passes):
-   - A throwaway scratch 2-player game (the same "test game" pattern `Lobby.vue` already
-     recognizes) — deploy the spike function, replay its move log, confirm parity with what the
-     client already computes for that same game.
-   - A **real, existing game's** move log, read-only (fetch + replay only, compare against the
-     client's own replay of the same log) — catches anything a clean scratch game wouldn't exercise
-     (Lost Fleet ship actions, artifacts, federations, whatever a live game's history actually has).
-   - If either step fails, the vendoring/import approach needs rework before Phase 1 starts — that
-     is the entire point of doing this before writing schema/RPCs/UI.
+- `premoves`, `premove_failures`: SELECT scoped to the owning seat's own user (§3). No direct
+  writes — all writes via the RPCs. **Not** in the realtime publication; the client refetches them on
+  load and on every incoming `moves` row.
+- `commit_automated_turn` is `service_role`-only; everything else `authenticated`-only, `anon`/`public`
+  revoked (match `0001`/`0009`).
 
-## Phase 0 checklist (start here)
+---
 
-- [ ] Decide the vendoring mechanism (predeploy copy of `engine/src` or `engine/dist` into
-      `supabase/functions/_shared/engine/`, vs. a Deno import map) and document which was chosen
-      and why in this file once picked.
-- [ ] Write `supabase/functions/_spike-engine-replay/index.ts`: given a `game_id`, fetch
-      `games`/`moves` (service role), replay via the vendored engine, return
-      `{ playerToMove, round, phase, moveHistoryLength }` as JSON. No writes.
-- [ ] Deploy it; invoke manually (curl or dashboard test-invoke) against a fresh scratch 2-player
-      game created for this purpose.
-- [ ] Invoke it against one real existing game's `game_id`; compare its output to what the running
-      viewer shows for that same game at the same move count.
-- [ ] Record the result in this file (pass/fail, and if fail, what broke) before starting Phase 1.
-- [ ] Delete or disable the spike function once Phase 0 is confirmed (it isn't part of the shipped
-      feature — Phase 1 introduces the real `resolve-automation` function from scratch, informed by
-      whatever Phase 0 learned).
+## 7. Client UI / UX flow
+
+The hard part isn't the buttons — it's the new mental model ("the game moves for me while I'm
+away"). Everything below serves making that legible and trustworthy. Assume **mobile / PWA** is the
+primary surface (push is the primary channel; screens are small).
+
+1. **Premove is an explicit opt-in, not always-on.** During an opponent's turn the board is today's
+   read-only spectator view. Add a single **"Plan my move ▸"** affordance (shown only when
+   `previewAvailableCommandsFor(mySeat)` is non-null). Toggling it in puts the board into a visually
+   distinct **premove mode**: a persistent banner ("PREMOVE — plays automatically on your turn") and
+   action buttons styled as *queue* affordances (e.g. dashed outline), never looking like "play now."
+   This is the #1 footgun to avoid — the user must never confuse queuing with moving.
+
+2. **A premove is a complete turn.** Reuse the existing partial-move accumulation (Game.vue's ". "
+   command joining) but against the **preview clone**, and only enable **"Queue this move"** once the
+   previewed turn reaches `newTurn` on the clone (ties to finding #5 — a half-turn premove can never
+   validly execute). Show the assembled turn in plain language before queuing:
+   *"Build mine at 3x2, then charge 2 power."* Queuing calls `queue_premove` (not the normal
+   move-submit path).
+
+3. **Queue panel.** Compact, collapsible. Per entry: *"Queued: Build mine at 3x2 [✕]"* (✕ =
+   `cancel_premove`). For multi-round (Phase 3), number by rank and mark entries beyond the first
+   *"may be skipped — depends on your earlier move landing."* Optionally surface staleness from
+   `queued_move_count` vs current `move_count` ("queued 18 moves ago").
+
+4. **Failure banner.** Unread `premove_failures` rows shown as a dismissible banner on next open
+   (dismiss = `mark_premove_failure_read`), plus the push (see below). Actionable copy:
+   *"Your premove couldn't be played in <game> — open to take your turn."*
+
+5. **Success feedback / trust.** On a successful offline play the board just silently advanced.
+   Early on users won't trust the automation, so tag auto-played moves in the game log
+   (*"Played automatically from your queue"*). Cheap, and it's what makes people rely on it.
+
+6. **First-run explainer (the single most important UX element).** One-time:
+   *"Premoves play automatically when your turn comes, even if you're offline. If the board changed
+   and your move is no longer legal, it's skipped and we'll notify you."* If Phase 2 ships, add:
+   *"Leech/charge decisions before your turn are auto-resolved using your auto-charge setting."*
+
+7. **Suppress where it makes no sense.** When the user owns **all** seats (no-lock hot-seat / test
+   games, `mySeats.length >= playerCount`), hide the premove UI entirely — there's no offline
+   scenario, and `previewAvailableCommandsFor` would otherwise offer premoves for your *other* seats.
+
+8. **Cancel-vs-executed feedback.** Rare but real: you open intending to cancel, but your turn
+   arrived and the edge function already played it. Realtime resync fixes the state; make `cancel`
+   give clear feedback when the entry is already gone/played ("that move already played") rather than
+   silently doing nothing.
+
+### Notification tie-in
+
+`premove_failures` composes with the existing push infra. Add a sibling trigger that calls the same
+notify path (or a tiny variant) on `insert into premove_failures`, so "your premove couldn't be
+played" is a real push, not in-app-only. Reuse the `notify` function / `app_config` VAPID plumbing
+(`BACKEND.md §6`).
+
+**Known cosmetic interaction (accept or decide):** `notify` and `resolve-automation` both fire on the
+same `current_seat` change, so a premove that plays instantly can produce a spurious "your turn" push
+a beat before it auto-plays. The §3 trigger gate reduces the surface; if it annoys, have `notify`
+skip a seat that has a queued premove. Owner already accepted a similar leech-chain wart in
+`BACKEND.md §6`, so this is a decision, not a blocker.
+
+---
+
+## 8. Phasing
+
+- **Phase 0 — Spike (de-risk only, no schema, no user-facing change).** Prove the fork's engine runs
+  in a real deployed edge function via the bundle. Read-only. See the checklist below. **Gate: pass
+  Phase 0 and check in with the owner before Phase 1.**
+
+- **Phase 1 — Premove MVP.** Single premove per seat (no queue depth). `premoves` +
+  `premove_failures` tables, `queue_premove`/`cancel_premove`/`mark_premove_failure_read`/
+  `commit_automated_turn` RPCs, the gated trigger, the `resolve-automation` function (with the
+  `RoundMove`-only gate and `seq_conflict` no-op — but **without** the leech branch yet),
+  `previewAvailableCommandsFor`, the Premove button + queue/cancel UI + failure banner, the client
+  fast-path, and the `host.ts` `seq_conflict`-silent fix. **Limitation to document loudly:** offline
+  progress works *as long as no leech decision intervenes* before your turn; if one does, the premove
+  stays safely queued (not consumed) but the game waits at the leech until you're online. Phase 2
+  closes that gap.
+
+- **Phase 2 — Offline auto-leech (required for the full offline promise).** Add `players.auto_charge`
+  + `set_auto_charge`, persist the client's existing auto-charge preference to it, widen the trigger
+  gate to `premove exists OR auto_charge <> 'ask'`, add the `RoundLeech` branch to
+  `resolve-automation`, bundle `auto-decide.ts` into the engine bundle. Now a fully-offline player
+  with auto-charge enabled progresses past leech interrupts into their queued premove.
+
+- **Phase 3 — Multi-round queue (genuinely optional).** `seq`-ordered depth per seat; premove #2's
+  preview is built against a disposable clone with premove #1 already applied (chain the preview off
+  the same clone), not fresh current-state; "more likely to be skipped" UI messaging.
+
+### Open decisions to confirm with the owner (don't block Phase 0)
+
+- **Stale-queue on pass / round boundary (finding #9):** if you queue a move then *manually pass*
+  before your turn, should the queue auto-clear? Cleanly-illegal stale premoves fail safely; the risk
+  is a still-*legal*-but-unwanted move. Recommendation: clear a seat's premoves when it passes, and
+  keep `queued_move_count` for a staleness warning regardless. Confirm.
+- **Spurious "your turn" push** (§7 notification tie-in): accept, or have `notify` skip
+  premove-queued seats? Recommendation: accept for MVP, revisit if annoying.
+- **Ship Phase 1 alone, or Phase 1+2 together?** The feature's headline ("works offline") is only
+  fully true after Phase 2. Recommendation: ship them together, or ship Phase 1 with the limitation
+  stated in-product.
+
+---
+
+## 9. Testing strategy
+
+- **Engine unit tests** for `previewAvailableCommandsFor` (the three null cases; a real RoundMove
+  case; the fidelity check in §2).
+- **Host unit tests** for the `seq_conflict`-silent fix and the client fast-path (extend
+  `host.spec.ts` style — mocked backend, asserts silent resync on `seq_conflict`, commits premove on
+  own turn).
+- **Edge-function tests** for `resolve-automation`: RoundMove premove success/commit; premove throws
+  → failure row + premove deleted, no cascade; incomplete-turn → failure row; wrong-phase (RoundLeech)
+  → no-op, premove untouched; stale trigger (`playerToMove !== seat`) → no-op; `seq_conflict` → silent
+  no-op. Phase 2: RoundLeech + `auto_charge` → one auto-charge turn committed; `auto_charge = 'ask'`
+  → no-op.
+- **Retained parity test (finding #8):** replay a recorded game's move log through the **bundled**
+  engine and through the client engine; assert identical `playerToMove / round / phase /
+  moveHistory.length` at every step. This is the drift guard — keep it in CI, don't delete it after
+  Phase 0.
+- **E2E:** extend `viewer/e2e/hosted-multiplayer.e2e.js` (two real browsers vs. the live project) to
+  queue a premove in one browser, advance the game from the other until the premover's turn, and
+  assert the premove auto-plays and fans out.
+
+---
+
+## Phase 0 checklist (START HERE — read-only, no writes, no trigger, nothing autonomous)
+
+> The live Supabase project is **`gaia-lost-fleet`** — find its ref via `list_projects` (do not
+> assume). This is a **live project with real running games**; both steps below are strictly
+> read-only (fetch + replay + compare). If you are ever unsure whether an action mutates anything,
+> **stop and ask.**
+
+- [ ] Confirm the live schema state first (`BACKEND.md §14` notes migrations `0006/0007` may not be
+      applied live) — read-only via MCP, so Phase 1 migrations stack on the right base.
+- [ ] Set up the bundle: `engine-entry.ts` (§1), the esbuild `build:edge-engine` script, produce
+      `supabase/functions/_shared/engine.bundle.js`. Confirm it imports under Deno
+      (`deno check`) — watch `seedrandom`/`shuffle-seed`/host globals and bare Node built-ins (§1).
+- [ ] Write `supabase/functions/_spike-engine-replay/index.ts`: given `{game_id}`, fetch
+      `games`/`moves` (service role), replay via the bundled engine, return
+      `{ playerToMove, round, phase, moveHistoryLength }` as JSON. **No writes.**
+- [ ] Deploy it; invoke it (curl / dashboard test-invoke) against a **fresh scratch 2-player test
+      game** created for this purpose; confirm parity with what the running viewer computes for that
+      same game at the same move count.
+- [ ] Invoke it against **one real existing game's** `game_id`; compare its output to what the viewer
+      shows for that game at the same move count (catches Lost Fleet ship actions, artifacts,
+      federations, auction — whatever a live history exercises that a clean game wouldn't).
+- [ ] Record the result here (pass/fail; if fail, what broke and how the bundling approach needs to
+      change) **before** starting Phase 1.
+- [ ] Delete/disable the spike function once confirmed (Phase 1 introduces the real
+      `resolve-automation` from scratch, informed by what Phase 0 learned).
+- [ ] Turn the scratch-game replay into the **retained parity test** (§9, finding #8) rather than
+      throwing that harness away.
+
+### Phase 0 result (fill in)
+
+- Date:
+- Pass / fail:
+- Bundling approach that worked (and anything that surprised you about running the engine in Deno):
+- Anything that needs to change before Phase 1:
