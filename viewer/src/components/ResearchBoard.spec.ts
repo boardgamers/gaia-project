@@ -57,6 +57,40 @@ describe("ResearchBoard", () => {
     expect(getByText("3 explorations")).to.not.equal(null);
   });
 
+  it("spaces every round scoring tile the same distance apart", () => {
+    const engine = new Engine(["init 2 lf-scoring-extension"], { lostFleet: true });
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(ResearchBoard, { store });
+
+    const ys = Array.from(container.querySelectorAll(".scoringTile")).map((tile) => {
+      const match = tile.getAttribute("transform")!.match(/translate\(0, (-?\d+(?:\.\d+)?)\)/);
+      return Number(match![1]);
+    });
+    const gaps = new Set(ys.slice(1).map((y, i) => Math.abs(y - ys[i])));
+    expect(gaps.size).to.equal(1);
+  });
+
+  it("renders final scoring directly below the round scoring tiles, in the same column", () => {
+    const engine = new Engine(["init 2 lost-fleet-space-map"], { lostFleet: true });
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(ResearchBoard, { store });
+
+    const tiles = container.querySelectorAll(".finalScoringTile");
+    expect(tiles.length).to.equal(engine.tiles.scorings.final.length);
+
+    const scoringTiles = container.querySelectorAll(".scoringTile");
+    const lastRoundTileY = Math.max(
+      ...Array.from(scoringTiles).map((tile) => Number(tile.getAttribute("transform")!.match(/translate\(0, (-?\d+)\)/)![1]))
+    );
+    const finalGroup = tiles[0].closest("g[transform]")!;
+    const finalY = Number(finalGroup.getAttribute("transform")!.match(/translate\(0, (-?\d+)\)/)![1]);
+    expect(finalY).to.be.greaterThan(lastRoundTileY);
+  });
+
   it("widens the viewBox by the extra column's width for Lost Fleet games", () => {
     const withoutExt = new Engine(["init 2 base-game-seed"]);
     const storeWithout = makeStore();

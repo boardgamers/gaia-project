@@ -6,6 +6,7 @@
         v-for="center in this.sectors"
         :center="center"
         :key="`${center.q}x{center.r}`"
+        :contentRotation="mapRotationDeg"
         :style="`transform: translate(${hexCenter(center).x * 1.01}px, ${hexCenter(center).y * 1.01}px) rotate(${
           rotation(center) * 60
         }deg);`"
@@ -16,13 +17,14 @@
         :transform="`translate(${hexCenter(hex).x * 1.01}, ${hexCenter(hex).y * 1.01})`"
         :hex="hex"
         :isCenter="false"
+        :contentRotation="mapRotationDeg"
       />
       <text
         v-for="label in deepSpaceLabels"
         :key="`ds-${label.id}`"
         class="sector-name"
         data-sector-type="deep-space"
-        :transform="`translate(${label.x}, ${label.y})`"
+        :transform="`translate(${label.x}, ${label.y}) rotate(${-mapRotationDeg})`"
         x="0"
         y="0"
         dy="0.35"
@@ -66,13 +68,6 @@
       <rect width="2" height="2" class="color-legend leech" :class="color.class" />
       <text class="color-legend" transform="translate(1, 1.55)">{{ color.text }}</text>
     </g>
-    <!-- Final scoring, moved to the bottom-right corner of the map (opposite the wheel) for Lost
-         Fleet - sized/placed to fit within the existing bounds (never expands the viewBox - map
-         width on mobile takes priority over this content's size, per explicit instruction). -->
-    <g v-if="hasFinalScoring" :transform="`translate(${bounds.right - finalScoringWidth - 0.3}, ${bounds.bottom - finalScoringHeight - 0.3}) scale(${finalScoringScale})`">
-      <FinalScoringTile :index="0" />
-      <FinalScoringTile :index="1" v-if="finalScoringCount > 1" transform="translate(0, 60)" />
-    </g>
   </svg>
 </template>
 
@@ -97,7 +92,6 @@ import FactionWheel from "./FactionWheel.vue";
 import Definitions from "./definitions/Definitions.vue";
 import { MapMode, MapModeType } from "../data/actions";
 import SpaceHex from "./SpaceHex.vue";
-import FinalScoringTile from "./FinalScoringTile.vue";
 
 type Point = { x: number; y: number };
 
@@ -122,12 +116,6 @@ const RIGHT_BAND_HEIGHT = 2.5;
 // Small safety gap kept between a hex's own edge (radius 1) and the nearest UI content edge, on
 // top of the content's own measured footprint.
 const CLEARANCE = 0.3;
-
-// FinalScoringTile's own native (unscaled) footprint - see that component's rect/translate.
-const FINAL_SCORING_MAX_SCALE = 0.065;
-const FINAL_SCORING_NATIVE_WIDTH = 76;
-const FINAL_SCORING_NATIVE_HEIGHT = 56;
-const FINAL_SCORING_NATIVE_GAP = 60; // native translate(0, 60) between the 2 tiles
 
 // translate() offset used by the color-legend template loop, plus its own per-item rendered size
 // (a 2x2 rect at scale(.8)).
@@ -158,23 +146,10 @@ function bandMaxX(points: Point[], top: number, height: number): number {
   return max;
 }
 
-/** Mirror of `bandMaxX`, but measuring a band anchored to the BOTTOM edge instead of the top - for
- * the final-scoring tiles relocated into the bottom-right corner. */
-function bandMaxXBottom(points: Point[], bottom: number, height: number): number {
-  let max = -Infinity;
-  for (const p of points) {
-    if (p.y >= bottom - height) {
-      max = Math.max(max, p.x);
-    }
-  }
-  return max;
-}
-
 @Component<SpaceMap>({
   components: {
     FactionWheel,
     Definitions,
-    FinalScoringTile,
     Sector,
     SpaceHex,
   },
@@ -244,55 +219,6 @@ export default class SpaceMap extends Vue {
 
   get isLostFleet(): boolean {
     return hasExpansion(this.engine.expansions, Expansion.LostFleet);
-  }
-
-  /**
-   * Final scoring, moved onto the map itself (bottom-right corner, opposite the wheel) for Lost
-   * Fleet games. The 7th Advanced Tech tile (Scoring Board Extension) and the round scoring tiles
-   * stay in the side ResearchBoard/ScoringBoard panel - see ResearchBoard.vue's 7th column, aligned
-   * with the other 6 adv-tech tiles, which is the space this final-scoring move freed up there.
-   */
-  get hasFinalScoring(): boolean {
-    return this.isLostFleet && !!this.engine.tiles?.scorings?.final?.length;
-  }
-
-  get finalScoringCount(): number {
-    return this.engine.tiles?.scorings?.final?.length ?? 0;
-  }
-
-  get finalScoringNativeHeight(): number {
-    return this.finalScoringCount > 1 ? FINAL_SCORING_NATIVE_GAP + FINAL_SCORING_NATIVE_HEIGHT : FINAL_SCORING_NATIVE_HEIGHT;
-  }
-
-  /**
-   * Largest scale (capped at FINAL_SCORING_MAX_SCALE) that fits final scoring's own footprint into
-   * whatever room is already free in the bottom-right corner, WITHOUT expanding `bounds` - keeping
-   * the map full-width on mobile takes priority over this content's size (explicit instruction).
-   * Mirrors the wheel/legend's band-limited approach, but solved for scale instead of assuming a
-   * fixed size and reserving more room for it.
-   */
-  get finalScoringScale(): number {
-    const b = this.bounds;
-    const points = this.rotatedPoints;
-    const hexRadius = 1;
-    const nativeHeight = this.finalScoringNativeHeight;
-    for (let scale = FINAL_SCORING_MAX_SCALE; scale > 0.01; scale -= 0.005) {
-      const height = nativeHeight * scale;
-      const width = FINAL_SCORING_NATIVE_WIDTH * scale;
-      const freeRight = bandMaxXBottom(points, b.bottom, height + hexRadius) + hexRadius + CLEARANCE;
-      if (b.right - freeRight >= width) {
-        return scale;
-      }
-    }
-    return 0.01;
-  }
-
-  get finalScoringWidth(): number {
-    return FINAL_SCORING_NATIVE_WIDTH * this.finalScoringScale;
-  }
-
-  get finalScoringHeight(): number {
-    return this.finalScoringNativeHeight * this.finalScoringScale;
   }
 
   /**
@@ -380,8 +306,8 @@ export default class SpaceMap extends Vue {
    * (which has no such pocket at any rotation), this band-limited reservation now sits close to 0
    * for every player count instead of a flat ~5.5 units.
    */
-  /** Every hex center, rotated by `mapRotationDeg` to match what's actually rendered - shared by
-   * `bounds` and `finalScoringScale` so both agree on the same rotated geometry. */
+  /** Every hex center, rotated by `mapRotationDeg` to match what's actually rendered - used by
+   * `bounds` so hex positions agree with what's actually on screen. */
   get rotatedPoints(): Point[] {
     const rad = (this.mapRotationDeg * Math.PI) / 180;
     const cos = Math.cos(rad);
@@ -434,11 +360,6 @@ export default class SpaceMap extends Vue {
     const rightWidth = this.terraformingColors.length > 0 ? RIGHT_SWATCH_WIDTH : this.showCharts ? RIGHT_ICON_WIDTH : 0;
     const rightLimitTop = bandMaxX(points, top, RIGHT_BAND_HEIGHT + hexRadius) + hexRadius + CLEARANCE + rightWidth;
     const right = rightWidth > 0 ? Math.max(tightRight, rightLimitTop) : tightRight;
-
-    // Final scoring (relocated to the bottom-right corner) deliberately does NOT expand `right`/
-    // `bottom` beyond what the wheel/legend/swatches already need - keeping the map full-width on
-    // mobile takes priority over this content's size (explicit instruction). It renders scaled to
-    // fit whatever room already exists in that corner instead; see `finalScoringScale`.
 
     return { left, top, right, bottom };
   }

@@ -43,8 +43,18 @@
         <LostFleetTerraformingBoard class="col-12" />
       </div>
       <div class="row mt-2">
-        <TurnOrder v-if="!ended && engine.players.length > 0" class="col-md-4 order-4 order-md-1" />
-        <div class="col-md-8 order-1 order-md-2">
+        <!-- Mobile order flips once real gameplay starts (round 1+): before that, Commands holds
+             the actual setup UI (player count / faction pick / starting build), so it stays first
+             like before. From round 1 on, its action buttons live in the mobile sticky bar instead
+             (see Commands.vue's showStickyMobileBar) - this column then renders only a spacer
+             reserving that bar's height, which used to sit first here, directly under the ship
+             board, as a large dead gap before Turn Order. Swapping the order once gameplay starts
+             puts Turn Order there instead, with that now-content-free spacer pushed after it. -->
+        <TurnOrder
+          v-if="!ended && engine.players.length > 0"
+          :class="['col-md-4', 'order-md-1', gameplayStarted ? 'order-1' : 'order-2']"
+        />
+        <div :class="['col-md-8', 'order-md-2', gameplayStarted ? 'order-2' : 'order-1']">
           <Commands @command="handleCommand" v-if="canPlay" :currentMove="currentMove" />
           <div v-else-if="turnPlayer && !ended" class="current-player">
             <h5>Current player</h5>
@@ -268,6 +278,13 @@ export default class Game extends Vue {
 
   get ended() {
     return this.engine.phase === Phase.EndGame;
+  }
+
+  /** Round 1+ - mirrors Commands.vue's showStickyMobileBar threshold closely enough for mobile
+   * layout ordering (see the row using it above): once true, that component's action buttons live
+   * in the fixed mobile sticky bar rather than in-flow here. */
+  get gameplayStarted(): boolean {
+    return this.engine.round >= 1;
   }
 
   get orderedPlayers(): Player[] {

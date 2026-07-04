@@ -1,8 +1,9 @@
-import Engine, { ArtifactToken, AvailableCommand, Command, Spaceship } from "@gaia-project/engine";
+import Engine, { ArtifactToken, AvailableCommand, Command, Reward, Resource, Spaceship } from "@gaia-project/engine";
 import { spaceshipBoards, SpaceshipActionType } from "@gaia-project/engine/src/spaceships";
 import { artifactTokenSpec } from "@gaia-project/engine/src/tiles/artifacts";
 import { ButtonData } from "../../data";
 import { spaceshipNames } from "../../data/spaceships";
+import { richText, richTextRewards } from "../../graphics/rich-text";
 import { hexSelectionButton } from "./hex";
 import { CommandController } from "./types";
 import { autoClickButton, hexMap, symbolButton, textButton } from "./utils";
@@ -36,12 +37,21 @@ export function exploreButton(
   return autoClickButton({
     label: "Explore",
     command: command.name,
-    buttons: command.data.ships.map((ship) =>
-      textButton({
+    buttons: command.data.ships.map((ship) => {
+      const button = symbolButton({
         label: `${spaceshipNames[ship.ship]} (${ship.cost}${ship.charge > 0 ? `, +${ship.charge}pw` : ""})`,
         command: ship.ship,
-      })
-    ),
+      });
+      // Cost shown as real reward icons (same language as building costs), not a plain-text
+      // "(4, +2pw)" string - the label above still feeds the hover tooltip.
+      button.richText = [
+        richText(`${spaceshipNames[ship.ship]} (`),
+        richTextRewards(Reward.parse(ship.cost)),
+        ...(ship.charge > 0 ? [richText(", "), richTextRewards([new Reward(ship.charge, Resource.ChargePower)])] : []),
+        richText(")"),
+      ];
+      return button;
+    }),
   });
 }
 
@@ -106,10 +116,12 @@ export function placePowerRingButton(
 export function examineArtifactButton(
   command: AvailableCommand<Command.ExamineArtifact>
 ): ButtonData {
-  return textButton({
+  const button = textButton({
     label: `Examine Artifact (${command.data.cost})`,
     command: command.name,
   });
+  button.richText = [richText("Examine Artifact ("), richTextRewards(Reward.parse(command.data.cost)), richText(")")];
+  return button;
 }
 
 export function chooseArtifactTokenButton(

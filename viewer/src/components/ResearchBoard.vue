@@ -1,5 +1,5 @@
 <template>
-  <svg :viewBox="`0 0 ${viewWidth} 440`" class="research-board">
+  <svg :viewBox="`0 0 ${viewWidth} ${viewHeight}`" class="research-board">
     <ResearchTrack
       v-for="(field, index) in [...fields].reverse()"
       :field="field"
@@ -9,9 +9,10 @@
     <text y="198" x="180" style="font-size: 12px; text-anchor: middle">Charge 3 power</text>
     <!-- The Scoring Board Extension's 7th Advanced Tech tile + the round scoring tiles, in their
          own column right after the 6 tracks - aligned with the adv-tech row (same y=79 as
-         ResearchTrack.vue's own adv-tech tile), with the round scoring tiles just under it. This is
-         the space final scoring used to occupy in the side ScoringBoard panel before it moved onto
-         the map itself (SpaceMap.vue's bottom-right corner). -->
+         ResearchTrack.vue's own adv-tech tile), with the round scoring tiles just under it, and
+         final scoring just under those - this whole column is the space final scoring used to
+         occupy in the side ScoringBoard panel (and later the map's bottom-right corner) before it
+         moved here, directly beneath the round scoring tiles it's grouped with. -->
     <g v-if="isLostFleet" :transform="`translate(${fields.length * 60}, 0)`">
       <g v-if="hasScoringExtension" v-b-tooltip.hover :title="extensionTooltip">
         <text x="30" y="40" class="extension-label">{{ gateOnShips ? "3 explorations" : "25 vp" }}</text>
@@ -21,13 +22,20 @@
       </g>
       <!-- Scaled to 0.9 (40 units tall -> 36) so consecutive tiles fit the track's own 38-unit
            level slots without overlapping - matches ResearchTile's own 36-unit height in the same
-           38-unit slots (see ResearchTile.vue's `height` getter), same top-aligned anchor. -->
+           38-unit slots (see ResearchTile.vue's `height` getter), same top-aligned anchor. Every
+           slot uses the SAME 38-unit gap (unlike the track's own uneven level spacing this column
+           used to borrow) so all round scoring tiles sit an equal distance apart. -->
       <ScoringTile
         v-for="i in scorings"
         :round="i"
         :transform="`translate(0, ${scoringTileY(i)}) scale(0.9)`"
         :key="i"
       />
+      <!-- Final scoring, directly below the round scoring tiles in the same column/scale. -->
+      <g v-if="hasFinalScoring" :transform="`translate(0, ${finalScoringY}) scale(0.9)`">
+        <FinalScoringTile :index="0" />
+        <FinalScoringTile :index="1" v-if="finalScoringCount > 1" transform="translate(0, 60)" />
+      </g>
     </g>
     <g v-if="$store.state.data.tiles && $store.state.data.tiles.techs['gaia']">
       <g transform="translate(30, 410) scale(0.95)">
@@ -76,18 +84,29 @@ import ResearchTrack from "./ResearchTrack.vue";
 import TechTile from "./TechTile.vue";
 import BoardAction from "./BoardAction.vue";
 import ScoringTile from "./ScoringTile.vue";
+import FinalScoringTile from "./FinalScoringTile.vue";
 
-// Extra width for the 7th (Scoring Board Extension + round scoring tiles) column, Lost Fleet only -
-// the space final scoring used to occupy in the side ScoringBoard panel before it moved onto the
-// map itself.
+// Extra width for the 7th (Scoring Board Extension + round scoring tiles + final scoring) column,
+// Lost Fleet only - the space final scoring used to occupy in the side ScoringBoard panel (and
+// later the map's bottom-right corner) before it moved into this column.
 const EXTENSION_COLUMN_WIDTH = 90;
 
-// Round scoring tiles' y-positions in the 7th column, reusing the SAME y-coordinates as
-// ResearchTrack.vue's own level4/level3/level2/level1/level0 tiles (108/146/202/240/278) so the
-// column aligns perfectly with the track grid instead of an unrelated fixed spacing - R6 (the
-// first/topmost) lands exactly at "level 4", immediately below the adv-tech tile above it. A 6th
-// slot (for the rare case of 6 round scoring tiles) continues the last (38-unit) gap.
-const SCORING_TILE_Y = [316, 278, 240, 202, 146, 108];
+// Round scoring tiles' y-positions in the 7th column, top-aligned with the adv-tech row (R6, the
+// topmost, sits immediately below the adv-tech tile above it) and spaced by a uniform 38 units
+// each - every tile is 40 native units tall, scaled to 0.9 (36 tall), leaving the same 2-unit gap
+// between every consecutive pair. (This used to reuse ResearchTrack.vue's own level4-level0
+// y-coordinates, which are unevenly spaced on the track itself - level2-level3's 56-unit gap stood
+// out as a visibly bigger break between R4 and R5 here, where alignment with the track no longer
+// matters once final scoring was added below. Uniform spacing fixes that.)
+const SCORING_TILE_Y = [316, 278, 240, 202, 164, 126];
+
+// Final scoring sits directly below the last (bottommost, R1) round scoring tile, in the same
+// column/scale, separated by the same 2-unit gap convention (36-tall tile + 2 = 38, plus this
+// tile's own 4-unit breathing room since it's a visually distinct block).
+const FINAL_SCORING_GAP_BELOW_ROUND_TILES = 40;
+const FINAL_SCORING_NATIVE_HEIGHT = 56;
+const FINAL_SCORING_NATIVE_GAP = 60; // native translate(0, 60) between the 2 tiles, see the template
+const FINAL_SCORING_SCALE = 0.9; // matches the round scoring tiles' own scale
 
 @Component({
   computed: {
@@ -100,11 +119,29 @@ const SCORING_TILE_Y = [316, 278, 240, 202, 146, 108];
     viewWidth() {
       return this.fields.length * 60 + (this.isLostFleet ? EXTENSION_COLUMN_WIDTH : 0);
     },
+    viewHeight() {
+      if (!this.hasFinalScoring) {
+        return 440;
+      }
+      const nativeBlockHeight =
+        this.finalScoringCount > 1 ? FINAL_SCORING_NATIVE_GAP + FINAL_SCORING_NATIVE_HEIGHT : FINAL_SCORING_NATIVE_HEIGHT;
+      const bottom = this.finalScoringY + nativeBlockHeight * FINAL_SCORING_SCALE;
+      return Math.max(440, Math.ceil(bottom + 10));
+    },
     isLostFleet() {
       return hasExpansion(this.expansions, Expansion.LostFleet);
     },
     scorings() {
       return this.$store.state.data.tiles.scorings.round.length;
+    },
+    hasFinalScoring() {
+      return this.isLostFleet && !!this.$store.state.data.tiles?.scorings?.final?.length;
+    },
+    finalScoringCount() {
+      return this.$store.state.data.tiles?.scorings?.final?.length ?? 0;
+    },
+    finalScoringY() {
+      return SCORING_TILE_Y[0] + FINAL_SCORING_GAP_BELOW_ROUND_TILES;
     },
     hasScoringExtension() {
       return !!this.$store.state.data.tiles?.techs?.["adv-ext"];
@@ -128,6 +165,7 @@ const SCORING_TILE_Y = [316, 278, 240, 202, 146, 108];
     TechTile,
     BoardAction,
     ScoringTile,
+    FinalScoringTile,
   },
 })
 export default class ResearchBoard extends Vue {}

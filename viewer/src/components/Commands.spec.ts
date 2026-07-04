@@ -501,4 +501,21 @@ describe("Commands", () => {
     expect(container.querySelector("#move-buttons .sticky-bar-title")).to.equal(null);
     expect(container.querySelector("#move-title")?.classList.contains("hide-on-mobile-sticky")).to.equal(false);
   });
+
+  it("drives the mobile sticky-bar spacer's height from a CSS custom property, not a direct inline height", () => {
+    // The spacer must render as ~0 height on wide viewports (nothing fixed-position there to
+    // compensate for) and only take up real space under the narrow-viewport media query - a
+    // direct inline `height: Npx` would apply unconditionally everywhere instead, doubling the
+    // button list's own footprint with an identical blank gap on desktop.
+    const engine = createLostFleetRoundMoveEngine();
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(Commands, { props: { currentMove: "" }, store });
+
+    const spacer = container.querySelector(".mobile-sticky-actions-spacer") as HTMLElement;
+    expect(spacer, "expected the sticky-bar spacer to render once round 1+ starts").to.not.equal(null);
+    expect(spacer.style.height).to.equal("");
+    expect(spacer.style.getPropertyValue("--sticky-bar-height")).to.not.equal("");
+  });
 });

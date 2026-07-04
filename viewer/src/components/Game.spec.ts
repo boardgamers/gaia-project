@@ -273,7 +273,46 @@ describe("Game", () => {
     vm.$destroy();
   });
 
-  it("hides ScoringBoard for a Lost Fleet game - final scoring moved onto the map, the 7th adv-tech + round scoring tiles moved into ResearchBoard's own extra column", () => {
+  it("keeps Turn Order before Commands on mobile during setup, but flips to Turn Order first once round 1 starts", () => {
+    const setupEngine = new Engine(["init 2 lf-freeze-28"]);
+
+    const gameplayEngine = new Engine(["init 2 lf-freeze-28"]);
+    gameplayEngine.players.forEach((pl, index) => {
+      pl.faction = [Faction.Terrans, Faction.Lantids][index];
+      pl.loadFaction(null, gameplayEngine.expansions);
+    });
+    gameplayEngine.phase = Phase.RoundMove;
+    gameplayEngine.round = 1;
+    gameplayEngine.turnOrder = gameplayEngine.players.map((pl) => pl.player);
+    gameplayEngine.currentPlayer = PlayerEnum.Player1;
+
+    for (const [engine, expectCommandsFirst] of [
+      [setupEngine, true],
+      [gameplayEngine, false],
+    ] as const) {
+      const store = makeStore();
+      const vm = new (Vue.extend(Game as any))({ store }) as any;
+      vm.handleData(engine);
+      vm.$mount();
+      document.body.appendChild(vm.$el);
+
+      const turnOrderCol = vm.$el.querySelector(".col-md-4.order-md-1");
+      // Commands (or the "current player" fallback) always lives in the other, wider column.
+      const commandsCol = vm.$el.querySelector(".col-md-8.order-md-2");
+      expect(turnOrderCol, "expected a Turn Order column").to.not.equal(null);
+      expect(commandsCol, "expected a Commands column").to.not.equal(null);
+
+      const turnOrderIsFirstOnMobile = turnOrderCol.classList.contains("order-1");
+      const commandsIsFirstOnMobile = commandsCol.classList.contains("order-1");
+      expect(turnOrderIsFirstOnMobile).to.equal(!expectCommandsFirst);
+      expect(commandsIsFirstOnMobile).to.equal(expectCommandsFirst);
+
+      vm.$el.remove();
+      vm.$destroy();
+    }
+  });
+
+  it("hides ScoringBoard for a Lost Fleet game - final scoring, the 7th adv-tech tile, and the round scoring tiles all moved into ResearchBoard's own extra column", () => {
     const engine = new Engine(["init 2 lf-scoring-extension"], { lostFleet: true });
     engine.players.forEach((pl, index) => {
       pl.faction = [Faction.Terrans, Faction.Lantids][index];

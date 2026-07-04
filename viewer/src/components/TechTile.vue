@@ -28,8 +28,8 @@
         <text class="range-word" x="0" y="18" text-anchor="middle">range</text>
       </g>
       <g v-else-if="isTerraformMineTile" style="pointer-events: none">
-        <Building building="m" outline-white :flat="flat" faction="gen" transform="translate(-9, -7) scale(1.8)" />
-        <Resource kind="step" :count="2" transform="translate(9, 9) scale(1.3)" />
+        <Building building="m" outline-white :flat="flat" faction="gen" transform="translate(-11, 0) scale(2.2)" />
+        <Resource kind="step" :count="2" transform="translate(8, 0) scale(1.3)" />
       </g>
       <TechContent v-else-if="this.event" :event="this.event" style="pointer-events: none" />
     </g>

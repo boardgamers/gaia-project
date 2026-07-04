@@ -156,12 +156,26 @@
       <g v-if="hasTechSlot(ship)" data-section="tech" transform="translate(225, 11) scale(0.9)">
         <TechTile :pos="ship" x="0" y="0" />
       </g>
+      <!-- Twilight has no Standard Tech slot (see `hasTechSlot` above) - this artifact grid fills
+           the exact same slot instead, so it must match that slot's own footprint precisely:
+           TechTile's rendered box (from its `translate(225, 11) scale(0.9)` wrapper, a 60x64
+           viewBox scaled to 0.9 = 54x57.6 screen units, an ~54x54 rendered footprint) is centered
+           on screen at (252, 38) - center-x = 225 + 30*0.9 = 252, matching the same math for y.
+           ArtifactIcon is itself a self-contained nested <svg> (viewBox -13 -13 26 26, native
+           30x30 box), so a translate(x, y) here moves its TOP-LEFT corner, not its visual center -
+           its content actually renders 15 screen units right/down of that translate (half its
+           native 30-unit box), which is why every offset below is the intended on-screen center
+           minus 15. With up to 4 artifact slots (= player count, max 4p) this 2x2 grid (26-unit
+           repeat, matching the icon's own compact-overlap spacing used elsewhere) fits inside a
+           56x56 box centered on (252, 38) - i.e. within a couple of units of TechTile's own 54x54
+           footprint - instead of the old anchor (center-x 249, starting at y 44) that pushed the
+           2nd row down to a visual bottom edge of ~85, well past the ship's own 76-tall viewBox. -->
       <g v-else data-section="artifacts">
         <g
           v-for="(artifact, i) in remainingArtifacts"
           :key="artifact"
           :data-artifact="artifact"
-          :transform="`translate(${236 + (i % 2) * 26 - 15}, ${44 + Math.floor(i / 2) * 26 - 15})`"
+          :transform="`translate(${224 + (i % 2) * 26}, ${10 + Math.floor(i / 2) * 26})`"
         >
           <ArtifactIcon :artifact="artifact" />
         </g>

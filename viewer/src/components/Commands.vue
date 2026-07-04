@@ -102,11 +102,17 @@
     </div>
     <!-- reserves the sticky bar's actual rendered height (tracked live via ResizeObserver, capped
          by the bar's own max-height/overflow) so it never permanently covers page content it has
-         scrolled past, without reserving more blank space than the bar actually uses -->
+         scrolled past, without reserving more blank space than the bar actually uses. Only takes
+         up real height inside the narrow-viewport media query below, where #move-buttons is
+         actually `position: fixed` and needs compensating for - on wider screens the bar renders
+         normally in-flow (no fixed overlay to cover anything), so this must collapse to 0 there
+         instead of doubling the button list's own height with an identical blank gap underneath
+         it. A CSS custom property (rather than the `height` style itself) lets the default/media
+         query rules fully control whether that measured height actually applies. -->
     <div
       v-if="showStickyMobileBar"
       class="mobile-sticky-actions-spacer"
-      :style="{ height: stickyBarHeight + 'px' }"
+      :style="{ '--sticky-bar-height': stickyBarHeight + 'px' }"
       aria-hidden="true"
     ></div>
   </div>
@@ -924,6 +930,13 @@ $mobile-sticky-actions-max-height: 40vh;
   display: none;
 }
 
+// Default/wide-viewport state: no fixed bar overlay exists to compensate for, so the spacer must
+// not reserve any space (see the template comment above) - only the narrow-viewport media query
+// below opts it back in, sized from the `--sticky-bar-height` custom property.
+.mobile-sticky-actions-spacer {
+  height: 0;
+}
+
 @media (max-width: 767px) {
   #move-buttons.mobile-sticky-actions {
     position: fixed;
@@ -952,9 +965,11 @@ $mobile-sticky-actions-max-height: 40vh;
     display: none !important;
   }
 
-  // Fallback only - JS (Commands.vue's ResizeObserver) sets an inline height matching the bar's
-  // actual rendered size so the spacer doesn't over-reserve blank space for a short button list.
+  // JS (Commands.vue's ResizeObserver) sets --sticky-bar-height to match the bar's actual
+  // rendered size so the spacer doesn't over-reserve blank space for a short button list; the
+  // max-height caps it the same way the bar itself is capped.
   .mobile-sticky-actions-spacer {
+    height: var(--sticky-bar-height, 0px);
     max-height: $mobile-sticky-actions-max-height;
   }
 }

@@ -152,6 +152,38 @@ describe("LostFleetShips", () => {
     expect(readyPolygon.classList.contains("planet-fill")).to.equal(false);
   });
 
+  it("keeps Twilight's artifact grid centered on the tech-tile slot and within the ship's own viewBox", () => {
+    const engine = new Engine(["init 4 lost-fleet-ships-spec"], { lostFleet: true });
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(LostFleetShips, { store });
+    const twilight = container.querySelector(`svg.lost-fleet-ship[data-ship="${Spaceship.Twilight}"]`);
+
+    // 4 artifacts at 4p -> a full 2x2 grid
+    const artifactGroups = twilight.querySelectorAll("[data-artifact]");
+    expect(artifactGroups.length).to.equal(4);
+
+    // ArtifactIcon is a self-contained nested <svg> whose visual center sits 15 screen units
+    // right/down of whatever translate positions it - every icon's true on-screen center must
+    // land within the same ~54x54 box the other 3 ships' TechTile occupies (center (252, 38),
+    // from that slot's own `translate(225, 11) scale(0.9)` wrapper), and no icon may render past
+    // the ship's own 76-tall viewBox (the reported "bleeds into the bottom" bug).
+    const centers = Array.from(artifactGroups).map((g) => {
+      const [, x, y] = g.getAttribute("transform")!.match(/translate\(([\d.]+),\s*([\d.]+)\)/)!;
+      return { x: Number(x) + 15, y: Number(y) + 15 };
+    });
+    const avgX = centers.reduce((s, c) => s + c.x, 0) / centers.length;
+    const avgY = centers.reduce((s, c) => s + c.y, 0) / centers.length;
+    expect(avgX).to.be.closeTo(252, 2);
+    expect(avgY).to.be.closeTo(38, 2);
+
+    const iconHalfHeight = 15;
+    for (const c of centers) {
+      expect(c.y + iconHalfHeight).to.be.at.most(76);
+    }
+  });
+
   it("draws Eclipse's free-mine-on-Asteroid action (6c) as a bigger planet bubble than other overlay icons", () => {
     const engine = new Engine(["init 2 lost-fleet-ships-spec"], { lostFleet: true });
     const store = makeStore();

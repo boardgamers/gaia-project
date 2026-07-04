@@ -2,15 +2,6 @@
   <g :id="`${hex}`" class="space-hex-cell">
     <title v-text="tooltip" />
     <use xlink:href="#space-hex" :class="polygonClasses(hex)" @click="hexClick(hex)" />
-    <g
-      v-if="lostFleetSectorBadge"
-      :class="['lost-fleet-sector-badge', `lost-fleet-sector-badge--${lostFleetSectorBadge.kind}`]"
-      :data-sector-type="lostFleetSectorBadge.kind"
-      transform="translate(-0.84,-0.79)"
-    >
-      <rect :width="badgeWidth" height="0.34" rx="0.12" ry="0.12" />
-      <text :x="badgeWidth / 2" y="0.17">{{ lostFleetSectorBadge.label }}</text>
-    </g>
     <use
       v-for="(l, i) in federationLines"
       :key="`fl-${i}`"
@@ -18,75 +9,93 @@
       :transform="`rotate(${l.rotate})`"
       pointer-events="none"
     />
-    <text class="sector-name" v-if="isCenter" x="0" y="0" dy="0.35">
-      {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
-    </text>
-    <g v-if="lostFleetSpaceship" class="lost-fleet-spaceship">
-      <circle class="lost-fleet-spaceship__core" r="0.42" />
-      <text class="lost-fleet-spaceship__label">{{ lostFleetSpaceshipLabel }}</text>
-    </g>
     <use v-if="powerHighlightClass" xlink:href="#space-hex" :class="['space-hex-federation', powerHighlightClass]" />
-    <Planet
-      v-if="showPlanet"
-      :planet="hex.data.planet"
-      :faction="faction(hex.data.player)"
-      :classes="planetClasses(hex)"
-    />
-    <Building
-      style="stroke-width: 10"
-      v-if="hex.data.building"
-      :building="hex.data.building"
-      :faction="faction(hex.data.player)"
-      outline
-      :flat="flat"
-      transform="scale(0.1)"
-    />
-    <Building
-      style="stroke-width: 10"
-      v-if="highlightBuilding"
-      :building="highlightBuilding.building"
-      :faction="faction(highlightBuilding.player)"
-      outline
-      :flat="flat"
-      transform="scale(0.1)"
-    />
-    <Building
-      style="stroke-width: 10"
-      v-if="hex.data.additionalMine !== undefined"
-      :faction="faction(hex.data.additionalMine)"
-      building="m"
-      transform="translate(0.4, 0.2) scale(0.09)"
-      class="additionalMine"
-      :flat="flat"
-      outline
-    />
-    <Building
-      v-for="(s, i) in ships"
-      :key="`b-${i}`"
-      :building="s.type"
-      :ship-moved="s.moved"
-      :faction="faction(s.player)"
-      outline
-      :flat="flat"
-      :transform="shipTransform(i)"
-    />
-    <Building
-      v-for="(p, i) in hex.customPosts"
-      :key="`cp-${i}`"
-      building="customsPost"
-      :faction="faction(p)"
-      outline
-      :flat="flat"
-      :transform="radiusTransform(p, 0.05)"
-    />
-    <g v-for="(p, i) in hex.tradeTokens" :key="`tt-${i}`">
-      <Planet :planet="playerPlanet(p)" :transform="radiusTransform(p, 0.35)" />
-    </g>
     <use
       v-if="mapModeHighlight !== null"
       xlink:href="#space-hex"
       :class="['space-hex-federation', 'planet', 'planet-fill', playerPlanet(mapModeHighlight)]"
     />
+    <!-- Content that must stay upright regardless of the whole-board `contentRotation` screen-fit
+         rotation (numbers, labels, buildings, gaiaformers, ships) - counter-rotated here so it
+         doesn't inherit that purely-cosmetic tilt. This deliberately does NOT cancel out any
+         per-sector setup rotation (chosen by the player during map setup, see Commands.vue's
+         `buildRotateMove`) - that one is a real "physically rotated tile" state and its content
+         (incl. the sector number) is supposed to visually rotate with it, same as a real cardboard
+         tile would. -->
+    <g :transform="`rotate(${-contentRotation})`">
+      <g
+        v-if="lostFleetSectorBadge"
+        :class="['lost-fleet-sector-badge', `lost-fleet-sector-badge--${lostFleetSectorBadge.kind}`]"
+        :data-sector-type="lostFleetSectorBadge.kind"
+        transform="translate(-0.84,-0.79)"
+      >
+        <rect :width="badgeWidth" height="0.34" rx="0.12" ry="0.12" />
+        <text :x="badgeWidth / 2" y="0.17">{{ lostFleetSectorBadge.label }}</text>
+      </g>
+      <text class="sector-name" v-if="isCenter" x="0" y="0" dy="0.35">
+        {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
+      </text>
+      <g v-if="lostFleetSpaceship" class="lost-fleet-spaceship">
+        <circle class="lost-fleet-spaceship__core" r="0.42" />
+        <text class="lost-fleet-spaceship__label">{{ lostFleetSpaceshipLabel }}</text>
+      </g>
+      <Planet
+        v-if="showPlanet"
+        :planet="hex.data.planet"
+        :faction="faction(hex.data.player)"
+        :classes="planetClasses(hex)"
+      />
+      <Building
+        style="stroke-width: 10"
+        v-if="hex.data.building"
+        :building="hex.data.building"
+        :faction="faction(hex.data.player)"
+        outline
+        :flat="flat"
+        transform="scale(0.1)"
+      />
+      <Building
+        style="stroke-width: 10"
+        v-if="highlightBuilding"
+        :building="highlightBuilding.building"
+        :faction="faction(highlightBuilding.player)"
+        outline
+        :flat="flat"
+        transform="scale(0.1)"
+      />
+      <Building
+        style="stroke-width: 10"
+        v-if="hex.data.additionalMine !== undefined"
+        :faction="faction(hex.data.additionalMine)"
+        building="m"
+        transform="translate(0.4, 0.2) scale(0.09)"
+        class="additionalMine"
+        :flat="flat"
+        outline
+      />
+      <Building
+        v-for="(s, i) in ships"
+        :key="`b-${i}`"
+        :building="s.type"
+        :ship-moved="s.moved"
+        :faction="faction(s.player)"
+        outline
+        :flat="flat"
+        :transform="shipTransform(i)"
+      />
+      <Building
+        v-for="(p, i) in hex.customPosts"
+        :key="`cp-${i}`"
+        building="customsPost"
+        :faction="faction(p)"
+        outline
+        :flat="flat"
+        :transform="radiusTransform(p, 0.05)"
+      />
+      <g v-for="(p, i) in hex.tradeTokens" :key="`tt-${i}`">
+        <Planet :planet="playerPlanet(p)" :transform="radiusTransform(p, 0.35)" />
+      </g>
+    </g>
   </g>
 </template>
 
@@ -149,6 +158,9 @@ export default class SpaceHex extends Vue {
 
   @Prop()
   isCenter: boolean;
+
+  @Prop({ default: 0 })
+  contentRotation: number;
 
   shipTransform(index: number): string {
     switch (this.ships.length) {

@@ -6,6 +6,7 @@
       :transform="`translate(${centerOffset(hex).x}, ${centerOffset(hex).y})`"
       :hex="hex"
       :isCenter="isCenter(hex)"
+      :contentRotation="contentRotation"
     />
   </g>
 </template>
@@ -26,6 +27,9 @@ import { CubeCoordinates, Hex } from "hexagrid";
 export default class Sector extends Vue {
   @Prop()
   center: CubeCoordinates;
+
+  @Prop({ default: 0 })
+  contentRotation: number;
 
   centerOffset(hex: GaiaHex) {
     return hexCenter({

@@ -277,31 +277,13 @@ describe("SpaceMap", () => {
     expect(moweydsHex?.querySelector(".building .planet-fill.p")).to.not.equal(null);
   });
 
-  it("renders final scoring in the bottom-right corner for a Lost Fleet game (moved off the side panel)", () => {
+  it("does not render final scoring on the map itself (it lives in ResearchBoard's 7th column instead)", () => {
     const engine = new Engine(["init 2 lost-fleet-space-map"], { lostFleet: true });
     const store = makeStore();
     store.commit("receiveData", engine);
 
     const { container } = render(SpaceMap, { store });
 
-    const tiles = container.querySelectorAll(".finalScoringTile");
-    expect(tiles.length).to.equal(engine.tiles.scorings.final.length);
-  });
-
-  it("never widens the viewBox to fit final scoring - map width takes priority over that content's size", () => {
-    const withFinal = new Engine(["init 4 lost-fleet-space-map"], { lostFleet: true });
-    const storeWith = makeStore();
-    storeWith.commit("receiveData", withFinal);
-    const { container: containerWith } = render(SpaceMap, { store: storeWith });
-    const viewBoxWith = containerWith.querySelector("svg").getAttribute("viewBox");
-
-    const withoutFinal = new Engine(["init 4 lost-fleet-space-map"], { lostFleet: true });
-    withoutFinal.tiles.scorings.final = [];
-    const storeWithout = makeStore();
-    storeWithout.commit("receiveData", withoutFinal);
-    const { container: containerWithout } = render(SpaceMap, { store: storeWithout });
-    const viewBoxWithout = containerWithout.querySelector("svg").getAttribute("viewBox");
-
-    expect(viewBoxWith).to.equal(viewBoxWithout);
+    expect(container.querySelectorAll(".finalScoringTile").length).to.equal(0);
   });
 });
