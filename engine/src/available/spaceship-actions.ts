@@ -3,6 +3,7 @@ import Engine from "../engine";
 import { Building, Command, Planet, Player, Resource, Spaceship } from "../enums";
 import { terraformingStepsRequired } from "../planets";
 import { BuildWarning } from "../player";
+import { possibleResearchAreas } from "./research";
 import Reward from "../reward";
 import { shipsInPlay, spaceshipActionEffects, spaceshipBoards } from "../spaceships";
 import { AvailableBuilding, AvailableCommand, AvailableHex, AvailableSpaceshipBoardAction } from "./types";
@@ -39,6 +40,38 @@ export function possibleSpaceshipActions(engine: Engine, player: Player): Availa
         (ship === Spaceship.Eclipse || ship === Spaceship.TFMars) &&
         action.type === "credit" &&
         possibleSpaceshipBuildMine(engine, player, { ship }).length === 0
+      ) {
+        continue;
+      }
+      // §C1/§C2: Twilight's Power action upgrades a Trading Station into a Research Lab, and
+      // Rebellion's upgrades a Mine into a Trading Station - both need an owned building of the
+      // right kind AND an unbuilt slot for the target, exactly like a normal building upgrade.
+      // Without this gate the fixed ship-board fee (paid up front) would be spent for nothing
+      // whenever no legal upgrade target exists.
+      if (
+        ship === Spaceship.Twilight &&
+        action.type === "power" &&
+        possibleSpaceshipUpgradeBuilding(engine, player, {
+          from: Building.TradingStation,
+          to: Building.ResearchLab,
+        }).length === 0
+      ) {
+        continue;
+      }
+      if (
+        ship === Spaceship.Rebellion &&
+        action.type === "power" &&
+        possibleSpaceshipUpgradeBuilding(engine, player, { from: Building.Mine, to: Building.TradingStation })
+          .length === 0
+      ) {
+        continue;
+      }
+      // Eclipse's Power action advances 1 level on any Research track - only offer it while at
+      // least one track still has room (not maxed / not blocked by another player at the last tile).
+      if (
+        ship === Spaceship.Eclipse &&
+        action.type === "power" &&
+        !possibleResearchAreas(engine, player, null).some((c) => c.name === Command.UpgradeResearch)
       ) {
         continue;
       }

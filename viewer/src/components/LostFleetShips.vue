@@ -5,37 +5,33 @@
       :key="ship"
       class="lost-fleet-ship"
       :data-ship="ship"
-      viewBox="0 0 258 96"
+      viewBox="0 0 291 96"
       style="overflow: visible"
     >
-      <!-- header: ship marker, then the 4 exploration-track slots (explored-by markers) as a 2x2 grid.
-           No ship name (dropped for space - the tooltip on the marker still gives the full name). -->
+      <!-- header, single row: ship marker + full name side by side -->
       <g class="lost-fleet-ship__header">
         <g v-b-tooltip :title="shipLabel(ship)">
           <circle cx="9" cy="9" r="8" class="lost-fleet-ship__marker-bg" />
           <text x="9" y="12" class="lost-fleet-ship__marker">{{ shipMarker(ship) }}</text>
         </g>
+        <text x="21" y="12" class="lost-fleet-ship__name">{{ shipName(ship) }}</text>
+
+        <!-- the 4 exploration-track slots (explored-by markers), single row -->
         <g
           v-for="slot in explorationSlots(ship)"
           :key="slot.index"
           class="lost-fleet-ship__slot"
           :data-slot="slot.index"
-          :transform="`translate(${28 + ((slot.index - 1) % 2) * 18}, ${slot.index <= 2 ? 8 : 26})`"
+          :transform="`translate(${9 + (slot.index - 1) * 19}, 27)`"
           v-b-tooltip
           :title="slotTitle(slot)"
         >
           <circle r="8" class="lost-fleet-ship__slot-bg" />
           <text y="-3" class="lost-fleet-ship__slot-ordinal">{{ slot.index }}</text>
           <template v-if="!slot.player">
-            <image
-              v-if="slot.cost > 0"
-              xlink:href="../assets/resources/power-charge.svg"
-              width="7"
-              :height="(133 / 345) * 7"
-              x="-6.5"
-              y="0"
-            />
-            <text :x="slot.cost > 0 ? 2.5 : 0" y="6.5" class="lost-fleet-ship__slot-cost">{{ slot.cost }}</text>
+            <!-- same charge/power badge used everywhere else (Resource kind="pw"), just scaled down -->
+            <Resource v-if="slot.cost > 0" kind="pw" :count="slot.cost" transform="translate(0, 2) scale(0.5)" />
+            <text v-else x="0" y="6.5" class="lost-fleet-ship__slot-cost">0</text>
           </template>
           <Token v-else :faction="slot.player.faction" transform="translate(0, 1) scale(0.34)" />
         </g>
@@ -47,7 +43,7 @@
         :key="action.type"
         :class="['lost-fleet-ship__action', action.type, { used: actionUser(ship, action.type) != null }]"
         :data-action="action.type"
-        :transform="`translate(${27 + i * 48}, 62)`"
+        :transform="`translate(${29 + i * 54}, 64)`"
         v-b-tooltip
         :title="actionTooltip(ship, action)"
       >
@@ -55,22 +51,36 @@
           :action="actionIncome(ship, action.type)"
           :planet="actionPlanet(ship, action.type)"
           :board="true"
-          x="-20"
+          x="-23"
           y="-25"
-          width="40"
+          width="46"
         />
         <g v-if="actionOverlay(ship, action.type)" class="lost-fleet-ship__action-overlay" transform="translate(0, -5)">
           <template v-if="isMineBubble(actionOverlay(ship, action.type))">
-            <!-- same bubble language as Condition.vue's "mg" (mine on Gaia) VP icon, just bigger and asteroid-colored -->
-            <circle r="10" :class="['planet-fill', actionOverlay(ship, action.type).planet]" />
-            <Building
-              :building="actionOverlay(ship, action.type).building"
-              faction="gen"
-              :flat="flat"
-              outline-white
-              transform="scale(1.9)"
-            />
+            <!-- same bubble language as Condition.vue's "mg" (mine on Gaia) VP icon, just bigger and asteroid-colored;
+                 nudged down from the octagon's visual center so it doesn't crowd the cost badge above it -->
+            <g transform="translate(0, 5) scale(1.2)">
+              <circle r="10" :class="['planet-fill', actionOverlay(ship, action.type).planet]" />
+              <Building
+                :building="actionOverlay(ship, action.type).building"
+                faction="gen"
+                :flat="flat"
+                outline-white
+                transform="scale(1.9)"
+              />
+            </g>
           </template>
+          <!-- resource-only overlays (no building) never get the building branch's compounded scale(2.2),
+               so they read much smaller than their siblings - boost and re-center them here. -->
+          <g
+            v-else-if="actionOverlay(ship, action.type).resource && !actionOverlay(ship, action.type).building"
+            transform="translate(0, 6) scale(1.3)"
+          >
+            <Resource :kind="actionOverlay(ship, action.type).resource" />
+          </g>
+          <g v-else-if="actionOverlay(ship, action.type).condition" transform="translate(2, 13) scale(0.48)">
+            <Condition :condition="actionOverlay(ship, action.type).condition" />
+          </g>
           <g v-else transform="scale(0.82)">
             <circle
               v-if="actionOverlay(ship, action.type).planet"
@@ -90,30 +100,26 @@
               :kind="actionOverlay(ship, action.type).resource"
               :transform="`translate(${actionOverlay(ship, action.type).building ? 8 : 0}, 0)`"
             />
-            <Condition
-              v-if="actionOverlay(ship, action.type).condition"
-              :condition="actionOverlay(ship, action.type).condition"
-            />
           </g>
         </g>
-        <g transform="translate(-15,-15)">
-          <image v-if="costKind(action) === 'pw'" xlink:href="../assets/resources/power-charge.svg" width="20"
+        <g :transform="costBadgeTransform(ship, action.type)">
+          <image v-if="costKind(action.cost) === 'pw'" xlink:href="../assets/resources/power-charge.svg" width="20"
           :height=133/345*20 transform="scale(-1,1) translate(-9, -12)" />
           <rect
             x="-8"
             y="-8"
             width="16"
             height="16"
-            :rx="costKind(action) === 'pw' ? 8 : 0"
-            :ry="costKind(action) === 'pw' ? 8 : 0"
+            :rx="costKind(action.cost) === 'pw' ? 8 : 0"
+            :ry="costKind(action.cost) === 'pw' ? 8 : 0"
             stroke="black"
             stroke-width="1"
-            :fill="costFill(action)"
+            :fill="costFill(action.cost)"
             transform="scale(0.8)"
           />
-          <text x="-3" y="3.5" class="lost-fleet-ship__cost">{{ costNumber(action) }}</text>
+          <text x="-3" y="3.5" class="lost-fleet-ship__cost">{{ costNumber(action.cost) }}</text>
           <Resource
-            v-for="(extra, j) in extraCosts(action)"
+            v-for="(extra, j) in extraCosts(action.cost)"
             :key="j"
             :kind="extra.type"
             :count="extra.count"
@@ -131,15 +137,15 @@
         <FederationTile
           v-if="shipFederation(ship)"
           :rewardsOverride="federationDisplayRewards(shipFederation(ship))"
-          x="149"
+          x="172"
           y="32"
           filter="url(#shadow-1)"
         />
-        <FederationTile v-else :used="true" x="149" y="32" />
+        <FederationTile v-else :used="true" x="172" y="32" />
       </g>
 
       <!-- the Standard Tech tile seeded on this ship (Twilight has artifacts instead) -->
-      <g v-if="hasTechSlot(ship)" data-section="tech" transform="translate(202, 33) scale(0.9)">
+      <g v-if="hasTechSlot(ship)" data-section="tech" transform="translate(225, 33) scale(0.9)">
         <TechTile :pos="ship" x="0" y="0" />
       </g>
       <g v-else data-section="artifacts">
@@ -148,7 +154,7 @@
           :key="artifact"
           class="lost-fleet-ship__artifact"
           :data-artifact="artifact"
-          :transform="`translate(${213 + (i % 2) * 26}, ${49 + Math.floor(i / 2) * 26})`"
+          :transform="`translate(${236 + (i % 2) * 26}, ${49 + Math.floor(i / 2) * 26})`"
           v-b-tooltip
           :title="artifactTooltip(artifact)"
         >
@@ -195,17 +201,25 @@ import Engine, {
   Spaceship,
   SpaceshipFederation,
 } from "@gaia-project/engine";
-import { Building as BuildingEnum, Player as PlayerEnum } from "@gaia-project/engine/src/enums";
-import {
-  EXPLORATION_CHARGE_TRACK,
-  spaceshipActionEffects,
-  spaceshipBoards,
-  SpaceshipActionType,
-  shipsInPlay,
-} from "@gaia-project/engine/src/spaceships";
+import { Player as PlayerEnum } from "@gaia-project/engine/src/enums";
+import { EXPLORATION_CHARGE_TRACK, spaceshipActionEffects, spaceshipBoards, SpaceshipActionType, shipsInPlay } from "@gaia-project/engine/src/spaceships";
 import { artifactTokenSpec } from "@gaia-project/engine/src/tiles/artifacts";
 import { spaceshipFederationSpec } from "@gaia-project/engine/src/tiles/spaceship-federations";
 import { spaceshipFederationDisplayRewards } from "../data/federations";
+import { artifactDisplay as artifactDisplaySpecFn } from "../data/artifacts";
+import {
+  actionOverlay as actionOverlaySpec,
+  ActionOverlay,
+  costBadgeTransform as costBadgeTransformFn,
+  costFill as costFillFn,
+  costNumber as costNumberFn,
+  costKind as costKindFn,
+  extraCosts as extraCostsFn,
+  isMineBubble as isMineBubbleFn,
+  spaceshipLabels,
+  spaceshipMarkers,
+  spaceshipNames,
+} from "../data/spaceships";
 import { factionPiecePlanet } from "../graphics/utils";
 import Building from "./Building.vue";
 import Condition from "./Condition.vue";
@@ -214,73 +228,6 @@ import Resource from "./Resource.vue";
 import SpecialAction from "./SpecialAction.vue";
 import TechTile from "./TechTile.vue";
 import Token from "./Token.vue";
-
-const spaceshipNames: Record<Spaceship, string> = {
-  [Spaceship.Twilight]: "Twilight",
-  [Spaceship.Rebellion]: "Rebellion",
-  [Spaceship.TFMars]: "T F Mars",
-  [Spaceship.Eclipse]: "Eclipse",
-};
-
-const spaceshipLabels: Record<Spaceship, string> = {
-  [Spaceship.Twilight]: "Nautilaks",
-  [Spaceship.Rebellion]: "Vo'Kron",
-  [Spaceship.TFMars]: "Gaia Federation",
-  [Spaceship.Eclipse]: "Eridani Empire",
-};
-
-const spaceshipMarkers: Record<Spaceship, string> = {
-  [Spaceship.Twilight]: "T",
-  [Spaceship.Rebellion]: "R",
-  [Spaceship.TFMars]: "M",
-  [Spaceship.Eclipse]: "E",
-};
-
-type ActionOverlay = {
-  building?: BuildingEnum;
-  planet?: Planet;
-  resource?: string;
-  condition?: ConditionEnum;
-};
-
-/**
- * Display-only icons for the ship actions whose engine effect arrays are empty because they are
- * wired via bespoke SubPhases rather than declarative rewards (see engine spaceships.ts). Composed
- * exclusively of existing base-game primitives - no new art.
- */
-const shipActionOverlays: { [key in Spaceship]?: Partial<{ [key in SpaceshipActionType]: ActionOverlay }> } = {
-  [Spaceship.Twilight]: {
-    power: { building: BuildingEnum.ResearchLab },
-  },
-  [Spaceship.Rebellion]: {
-    power: { building: BuildingEnum.TradingStation },
-  },
-  [Spaceship.TFMars]: {
-    power: { resource: "instant-gaiaforming" },
-    credit: { building: BuildingEnum.Mine, resource: "step" },
-  },
-  [Spaceship.Eclipse]: {
-    power: { condition: ConditionEnum.AdvanceResearch },
-    credit: { building: BuildingEnum.Mine, planet: Planet.Asteroid },
-  },
-};
-
-/** Icon rows for the 13 artifact tokens, again composed only of existing Resource/Condition icons. */
-const artifactDisplaySpec: { [key in ArtifactToken]: { rewards: string; condition?: ConditionEnum; planet?: Planet } } = {
-  [ArtifactToken.KnowledgeOre]: { rewards: "k,o" },
-  [ArtifactToken.Credit]: { rewards: "3c,3o" },
-  [ArtifactToken.KnowledgeQic]: { rewards: "3k,q" },
-  [ArtifactToken.CreditLarge]: { rewards: "5c,2o" },
-  [ArtifactToken.Power]: { rewards: "2t" },
-  [ArtifactToken.Asteroid]: { rewards: "7vp", planet: Planet.Asteroid },
-  [ArtifactToken.Protoplanet]: { rewards: "7vp", planet: Planet.Protoplanet },
-  [ArtifactToken.ResearchLevel]: { rewards: "3vp", condition: ConditionEnum.AdvanceResearch },
-  [ArtifactToken.ResearchTracks]: { rewards: "3vp", condition: ConditionEnum.AdvanceResearch },
-  [ArtifactToken.Federation]: { rewards: "fed" },
-  [ArtifactToken.GaiaProject]: { rewards: "3vp", condition: ConditionEnum.GaiaFormer },
-  [ArtifactToken.PlanetTypes]: { rewards: "3vp", condition: ConditionEnum.PlanetType },
-  [ArtifactToken.DeepSpace]: { rewards: "3vp", condition: ConditionEnum.DeepSpaceSector },
-};
 
 @Component({
   components: {
@@ -335,7 +282,7 @@ export default class LostFleetShips extends Vue {
   }
 
   actionOverlay(ship: Spaceship, type: SpaceshipActionType): ActionOverlay | null {
-    return shipActionOverlays[ship]?.[type] ?? null;
+    return actionOverlaySpec(ship, type);
   }
 
   actionUser(ship: Spaceship, type: SpaceshipActionType): Player | null {
@@ -350,34 +297,33 @@ export default class LostFleetShips extends Vue {
   }
 
   isMineBubble(overlay: ActionOverlay): boolean {
-    return overlay.planet != null;
+    return isMineBubbleFn(overlay);
   }
 
   actionTooltip(ship: Spaceship, action: { type: SpaceshipActionType; cost: string; effect: string }): string {
     const user = this.actionUser(ship, action.type);
     const state = user ? ` - used by ${user.name || `P${user.player + 1}`} this round` : "";
-    return `${this.shipName(ship)} (${action.cost}): ${action.effect}${state}`;
+    return `(${action.cost}): ${action.effect}${state}`;
   }
 
-  costRewards(action: { cost: string }): Reward[] {
-    return Reward.parse(action.cost);
+  costKind(cost: string): string {
+    return costKindFn(cost);
   }
 
-  costKind(action: { cost: string }): string {
-    return this.costRewards(action)[0].type;
+  costNumber(cost: string): number {
+    return costNumberFn(cost);
   }
 
-  costNumber(action: { cost: string }): number {
-    return this.costRewards(action)[0].count;
+  extraCosts(cost: string): Reward[] {
+    return extraCostsFn(cost);
   }
 
-  extraCosts(action: { cost: string }): Reward[] {
-    return this.costRewards(action).slice(1);
+  costFill(cost: string): string {
+    return costFillFn(cost);
   }
 
-  costFill(action: { cost: string }): string {
-    const fills = { pw: "#984FF1", q: "green", k: "#3b82f6", c: "#d6a23c" };
-    return fills[this.costKind(action)] ?? "green";
+  costBadgeTransform(ship: Spaceship, type: SpaceshipActionType): string {
+    return costBadgeTransformFn(ship, type);
   }
 
   hasTechSlot(ship: Spaceship): boolean {
@@ -398,8 +344,7 @@ export default class LostFleetShips extends Vue {
   }
 
   artifactDisplay(artifact: ArtifactToken): { rewards: Reward[]; condition?: ConditionEnum; planet?: Planet } {
-    const spec = artifactDisplaySpec[artifact];
-    return { rewards: Reward.parse(spec.rewards), condition: spec.condition, planet: spec.planet };
+    return artifactDisplaySpecFn(artifact);
   }
 
   artifactTooltip(artifact: ArtifactToken): string {
@@ -426,14 +371,27 @@ export default class LostFleetShips extends Vue {
 <style lang="scss">
 .lost-fleet-ships {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+  // Single row, always - each ship gets a comfortable minimum width and never wraps to a 2nd row;
+  // on narrow/mobile viewports the strip scrolls horizontally instead of shrinking ships to
+  // illegibility or stacking them into a 2x2 grid.
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(210px, 1fr);
+  overflow-x: auto;
   gap: 0.4rem;
 }
 
 svg.lost-fleet-ship {
   width: 100%;
+  min-width: 210px;
   height: auto;
   display: block;
+
+  .lost-fleet-ship__name {
+    font-size: 9px;
+    font-weight: 700;
+    fill: #172e62;
+    pointer-events: none;
+  }
 
   .lost-fleet-ship__marker-bg {
     fill: #efe6c4;

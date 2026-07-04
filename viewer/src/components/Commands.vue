@@ -6,7 +6,7 @@
         <RichTextView :content="statusLine" />
       </h5>
     </div>
-    <div id="move-buttons">
+    <div id="move-buttons" ref="moveButtons" :class="{ 'mobile-sticky-actions': showStickyMobileBar }">
       <div v-if="init" class="d-flex flex-wrap align-content-stretch">
         <MoveButton
           v-for="i in [2, 3, 4]"
@@ -51,6 +51,15 @@
         />
       </div>
     </div>
+    <!-- reserves the sticky bar's actual rendered height (tracked live via ResizeObserver, capped
+         by the bar's own max-height/overflow) so it never permanently covers page content it has
+         scrolled past, without reserving more blank space than the bar actually uses -->
+    <div
+      v-if="showStickyMobileBar"
+      class="mobile-sticky-actions-spacer"
+      :style="{ height: stickyBarHeight + 'px' }"
+      aria-hidden="true"
+    ></div>
   </div>
 </template>
 
@@ -257,6 +266,18 @@ export default class Commands extends Vue implements CommandController {
   get isChoosingFaction() {
     return !!this.factionsToChoose;
   }
+
+  /** Frozen bottom action bar on mobile - only once real gameplay has started (round 1+), never
+   * during player-count/faction-picking/initial-building setup. */
+  get showStickyMobileBar(): boolean {
+    return !this.init && !this.isChoosingFaction && this.engine.round >= 1;
+  }
+
+  /** Live-tracked rendered height of #move-buttons (already capped by its own CSS max-height +
+   * overflow-y:auto), so the layout spacer below it reserves exactly that much space - not a
+   * blanket max-height's worth of blank page whenever the button list is short. */
+  private stickyBarHeight = 0;
+  private stickyBarObserver: ResizeObserver | null = null;
 
   get titles() {
     return this.commandTitles.length === 0 ? [`Your turn - Round ${this.engine.round}`] : this.commandTitles;
@@ -471,9 +492,19 @@ export default class Commands extends Vue implements CommandController {
       }
     });
 
+    const moveButtons = this.$refs.moveButtons as HTMLElement;
+    if (moveButtons && typeof ResizeObserver !== "undefined") {
+      this.stickyBarObserver = new ResizeObserver(() => {
+        // read the full border-box (incl. padding) so the spacer reserves the bar's real footprint
+        this.stickyBarHeight = moveButtons.getBoundingClientRect().height;
+      });
+      this.stickyBarObserver.observe(moveButtons);
+    }
+
     this.$on("hook:beforeDestroy", () => {
       window.removeEventListener("keydown", keyListener);
       backListener();
+      this.stickyBarObserver?.disconnect();
     });
   }
 
@@ -774,6 +805,35 @@ i.planet {
     &.i {
       filter: drop-shadow(0px 0px 1px black);
     }
+  }
+}
+
+// Frozen bottom action bar on mobile (round 1+ only, see Commands.vue's showStickyMobileBar) -
+// keeps refill/round-action buttons reachable without scrolling back up to the top of the page.
+// The max-height + overflow-y:auto keeps a long options list (e.g. many valid mine-building
+// spots) scrollable in place instead of growing to fill/exceed the screen.
+$mobile-sticky-actions-max-height: 40vh;
+
+@media (max-width: 767px) {
+  #move-buttons.mobile-sticky-actions {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1030;
+    max-height: $mobile-sticky-actions-max-height;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom));
+    background: var(--systemGray6, #f2f2f7);
+    border-top: 1px solid #c9c9d1;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+  }
+
+  // Fallback only - JS (Commands.vue's ResizeObserver) sets an inline height matching the bar's
+  // actual rendered size so the spacer doesn't over-reserve blank space for a short button list.
+  .mobile-sticky-actions-spacer {
+    max-height: $mobile-sticky-actions-max-height;
   }
 }
 </style>
