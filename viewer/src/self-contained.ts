@@ -3,6 +3,7 @@ import { AuctionVariant, Layout } from "@gaia-project/engine/src/engine";
 import Game from "./components/Game.vue";
 import Wrapper from "./components/Wrapper.vue";
 import launch from "./launcher";
+import { autoDecideChargePower, parseAutoChargePreference } from "./logic/auto-decide";
 import { LoadFromJson, LoadFromJsonType } from "./store";
 import { loadScenarioEngine, parseScenarioFromQuery } from "./self-contained-scenarios";
 import { loadEngineFromData, parseLoadFromQuery } from "./self-contained-state";
@@ -134,6 +135,13 @@ function launchSelfContained(selector = "#app", debug = true) {
       // Only save updated version if a full turn was done
       if (copy.newTurn) {
         engine = copy;
+
+        // "Auto leech" (see logic/auto-decide.ts): hot-seat/self-contained play has no per-browser
+        // "my seat" concept - whoever's turn it now is uses the same local preference, exactly
+        // like every other viewer preference (flatBuildings etc.) already does.
+        const pref = parseAutoChargePreference(emitter.store.state.preferences.autoChargePower as string);
+        autoDecideChargePower(engine, pref);
+        engine.generateAvailableCommandsIfNeeded();
       }
     }
 

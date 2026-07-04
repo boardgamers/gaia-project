@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { engineOptions, HostedGameHost, initMoveLine, seatToLock } from "./host";
+import { AutoDecideConfig, engineOptions, HostedGameHost, initMoveLine, seatToLock } from "./host";
 import { CommitTurnArgs, GameRow, HostedBackend, MoveRow, PlayerRow } from "./types";
 
 // Committed-turn lines from a known-valid engine fixture
@@ -81,13 +81,18 @@ class FakeBackend implements HostedBackend {
   }
 }
 
-function makeHost(backend: FakeBackend) {
+function makeHost(backend: FakeBackend, autoDecide?: AutoDecideConfig) {
   const states: any[] = [];
   const errors: string[] = [];
-  const host = new HostedGameHost(backend, "game-1", {
-    onState: (data) => states.push(data),
-    onError: (message) => errors.push(message),
-  });
+  const host = new HostedGameHost(
+    backend,
+    "game-1",
+    {
+      onState: (data) => states.push(data),
+      onError: (message) => errors.push(message),
+    },
+    autoDecide
+  );
   return { host, states, errors };
 }
 
@@ -227,6 +232,75 @@ describe("hosted game host", () => {
     await host.submitMove("nevlas charge 1pw");
     expect(backend.commits).to.have.length(2);
     expect(backend.commits[1].seat).to.equal(1);
+  });
+
+  describe("auto leech", () => {
+    it("auto-commits a leech interrupt for the local user's own seat, without a manual submitMove", async () => {
+      const backend = new FakeBackend(gameRow(), playerRows());
+      backend.seedMoves(SETUP_MOVES);
+      const { host } = makeHost(backend, {
+        isMySeat: (seat) => seat === 1, // this browser is nevlas (seat 1)
+        getAutoChargePower: () => "decline-cost",
+      });
+      await host.load();
+
+      // Triggers nevlas' leech interrupt; nevlas' own seat is auto-decidable, so it commits on
+      // its own without any second submitMove call for it.
+      await host.submitMove("terrans build ts -1x2.");
+
+      expect(backend.commits).to.have.length(2);
+      expect(backend.commits[0].nextSeat).to.equal(1);
+      expect(backend.commits[1].seat).to.equal(1);
+      expect(backend.commits[1].move).to.contain("charge");
+    });
+
+    it("never auto-decides for a seat the local user doesn't hold", async () => {
+      const backend = new FakeBackend(gameRow(), playerRows());
+      backend.seedMoves(SETUP_MOVES);
+      const { host } = makeHost(backend, {
+        isMySeat: (seat) => seat === 0, // this browser is terrans (seat 0), not nevlas
+        getAutoChargePower: () => "decline-cost",
+      });
+      await host.load();
+
+      await host.submitMove("terrans build ts -1x2.");
+
+      // Only terrans' own build committed - nevlas' interrupt is left pending for nevlas' own
+      // browser session to decide, exactly like before this feature existed.
+      expect(backend.commits).to.have.length(1);
+      expect(host.engine.playerToMove).to.equal(1);
+    });
+
+    it("does nothing when the preference is 'ask' (the default) even for the local user's own seat", async () => {
+      const backend = new FakeBackend(gameRow(), playerRows());
+      backend.seedMoves(SETUP_MOVES);
+      const { host } = makeHost(backend, {
+        isMySeat: () => true,
+        getAutoChargePower: () => "ask",
+      });
+      await host.load();
+
+      await host.submitMove("terrans build ts -1x2.");
+
+      expect(backend.commits).to.have.length(1);
+      expect(host.engine.playerToMove).to.equal(1);
+    });
+
+    it("auto-decides on load/resync too, not just after a manual submitMove", async () => {
+      const backend = new FakeBackend(gameRow(), playerRows());
+      // The stored log already ends with the triggering build - the interrupt is pending the
+      // moment this session loads, before any local submitMove happens.
+      backend.seedMoves([...SETUP_MOVES, "terrans build ts -1x2."]);
+      const { host } = makeHost(backend, {
+        isMySeat: (seat) => seat === 1,
+        getAutoChargePower: () => "decline-cost",
+      });
+
+      await host.load();
+
+      expect(backend.commits).to.have.length(1);
+      expect(backend.commits[0].seat).to.equal(1);
+    });
   });
 
   it("rejects an illegal move locally without contacting the backend", async () => {

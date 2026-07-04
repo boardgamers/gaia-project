@@ -9,6 +9,21 @@
         How does the auction work? <b-badge variant="info" pill>i</b-badge>
       </b-btn>
       <SilentAuctionInfo v-if="showSilentAuctionInfo" />
+      <!-- "Auto leech": lets the engine's own already-implemented decision logic
+           (engine/src/auto-charge.ts) auto-resolve power-charge/decline offers instead of asking
+           every time - a per-browser preference (never synced/persisted as part of game state),
+           so it's shown wherever there's a decision to make at all, same as everywhere else. -->
+      <b-form-select
+        v-if="!init"
+        size="sm"
+        class="ml-auto auto-leech-select"
+        style="width: auto"
+        v-b-tooltip.hover
+        title="Auto leech: automatically accept or decline power-charge offers up to this amount, instead of asking every time"
+        :value="autoChargePower"
+        @change="setAutoChargePower"
+        :options="autoChargePowerOptions"
+      />
     </div>
     <div id="move-buttons" ref="moveButtons" :class="{ 'mobile-sticky-actions': showStickyMobileBar }">
       <!-- Same status line as #move-title above, shown only inside the mobile sticky bar (once it's
@@ -319,6 +334,26 @@ export default class Commands extends Vue implements CommandController {
 
   get isSilentBidding() {
     return !!this.silentBidCommand;
+  }
+
+  get autoChargePower(): string {
+    return String(this.$store.state.preferences.autoChargePower ?? "ask");
+  }
+
+  get autoChargePowerOptions() {
+    return [
+      { value: "ask", text: "Auto leech: off (ask every time)" },
+      { value: "decline-cost", text: "Auto leech: free only (decline anything with a cost)" },
+      { value: "1", text: "Auto leech: up to 1 power" },
+      { value: "2", text: "Auto leech: up to 2 power" },
+      { value: "3", text: "Auto leech: up to 3 power" },
+      { value: "4", text: "Auto leech: up to 4 power" },
+      { value: "5", text: "Auto leech: up to 5 power" },
+    ];
+  }
+
+  setAutoChargePower(value: string) {
+    this.$store.commit("preferences", { autoChargePower: value });
   }
 
   get showSilentAuctionInfo(): boolean {

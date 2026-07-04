@@ -8,7 +8,7 @@ export const artifactTokenSpec: { [key in ArtifactToken]: string } = {
   [ArtifactToken.Credit]: "Immediately gain 3 credits + 3 ore.",
   [ArtifactToken.KnowledgeQic]: "Immediately gain 3 knowledge + 1 Q.I.C.",
   [ArtifactToken.CreditLarge]: "Immediately gain 5 credits + 2 ore.",
-  [ArtifactToken.Power]: "Immediately gain 2 power as income, placed directly in Area III.",
+  [ArtifactToken.Power]: "Ongoing: gain an extra 2 power every income phase, placed directly in Area III.",
   [ArtifactToken.Asteroid]:
     "Immediately and only once gain 7 VP; counts as building a mine and colonizing an Asteroid " +
     "(no sector allocation, no mine physically placed).",
@@ -28,14 +28,18 @@ export const artifactTokenSpec: { [key in ArtifactToken]: string } = {
 
 /**
  * Reward.parse-compatible strings for the tokens whose effect is a plain resource grant.
- * The remaining 8 tokens (Power, Asteroid, Protoplanet, ResearchLevel, ResearchTracks,
- * GaiaProject, PlanetTypes, DeepSpace) need bespoke logic and are handled directly in
- * move/artifacts.ts's applyArtifactToken().
+ * The remaining 7 tokens (Asteroid, Protoplanet, ResearchLevel, ResearchTracks, GaiaProject,
+ * PlanetTypes, DeepSpace) need bespoke logic and are handled directly in move/artifacts.ts's
+ * applyArtifactToken().
  */
 export const artifactTokenRewards: Partial<{ [key in ArtifactToken]: string }> = {
   [ArtifactToken.KnowledgeOre]: "+k,o",
   [ArtifactToken.Credit]: "3c,3o",
   [ArtifactToken.KnowledgeQic]: "3k,q",
   [ArtifactToken.CreditLarge]: "5c,2o",
+  // Income (every round), straight into Area 3 - same primitive Xenos's free action uses
+  // (actions.ts's OreToPowerTokenArea3, "1ta3"), just as a recurring Income-operator reward
+  // instead of a one-time grant.
+  [ArtifactToken.Power]: "+2ta3",
   [ArtifactToken.Federation]: ">fed",
 };

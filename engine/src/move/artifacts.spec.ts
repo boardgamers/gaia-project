@@ -285,19 +285,20 @@ describe("Artifact token effects (RULES_CLARIFICATIONS.md §G6)", () => {
     expect(player.data.ores).to.equal(beforeOres + 2);
   });
 
-  it("Power: immediately grants 2 power, placed directly in Area III", () => {
+  it("Power: grants 2 power into Area III as ongoing income, not an immediate gain", () => {
     const engine = createLostFleetRoundMoveEngine(3);
     const player = engine.player(PlayerEnum.Player1);
     engine.tiles.artifacts = [ArtifactToken.Power];
 
     const beforeArea3 = player.data.power.area3;
-    const beforeVp = player.data.victoryPoints;
+    const beforeArea3Income = player.resourceIncome(Resource.GainTokenArea3);
 
     const command = availableArtifactTokenCommand(engine, PlayerEnum.Player1);
     moveChooseArtifactToken(engine, command, PlayerEnum.Player1, ArtifactToken.Power);
 
-    expect(player.data.power.area3).to.equal(beforeArea3 + 2);
-    expect(player.data.victoryPoints).to.equal(beforeVp);
+    expect(player.data.power.area3).to.equal(beforeArea3);
+    expect(player.resourceIncome(Resource.GainTokenArea3)).to.equal(beforeArea3Income + 2);
+    expect(engine.tiles.artifacts).to.have.length(0);
   });
 
   it("Asteroid: immediately grants 7 VP and counts as colonizing an Asteroid", () => {

@@ -1,5 +1,21 @@
 import Engine, { Phase } from "@gaia-project/engine";
+import { AutoCharge } from "@gaia-project/engine/src/player";
+import { autoDecideChargePower } from "../logic/auto-decide";
 import { CommitTurnArgs, GameRow, HostedBackend, HostedCallbacks, MoveRow, PlayerRow, PlayerUpdate } from "./types";
+
+/**
+ * "Auto leech" (see logic/auto-decide.ts) - unlike self-contained's hot-seat mode, hosted play has
+ * real per-user seats, so this must never auto-decide on behalf of a seat the local user doesn't
+ * hold (`isMySeat`) even if their own preference happens to be enabled. `getAutoChargePower` is a
+ * live getter (not a snapshotted value) so a mid-game preference change takes effect on the very
+ * next state update, not just future games.
+ */
+export type AutoDecideConfig = {
+  isMySeat: (seat: number) => boolean;
+  getAutoChargePower: () => AutoCharge;
+};
+
+const noAutoDecide: AutoDecideConfig = { isMySeat: () => false, getAutoChargePower: () => "ask" };
 
 export function initMoveLine(game: GameRow): string {
   return `init ${game.player_count} ${game.seed}`;
@@ -71,7 +87,8 @@ export class HostedGameHost {
   constructor(
     private readonly backend: HostedBackend,
     private readonly gameId: string,
-    private readonly callbacks: HostedCallbacks
+    private readonly callbacks: HostedCallbacks,
+    private readonly autoDecide: AutoDecideConfig = noAutoDecide
   ) {}
 
   /** Committed turns == engine.moveHistory minus the init line at index 0. */
@@ -97,6 +114,7 @@ export class HostedGameHost {
       this.players = players;
       this.engine = this.buildEngine(game, moves);
       this.emitState(this.engine);
+      await this.resolveAutoDecisions();
     });
   }
 
@@ -107,47 +125,59 @@ export class HostedGameHost {
    * and only kept locally once the backend accepted it.
    */
   submitMove(move: string): Promise<void> {
-    return this.enqueue(async () => {
-      const copy = this.clone();
-      if (!move) {
-        this.emitState(copy);
-        return;
-      }
-      // The seat this turn line belongs to: whoever the engine says must act
-      // (accounts for mid-turn leech interrupts via tempCurrentPlayer).
-      const seat = copy.playerToMove;
-      try {
-        copy.move(move);
-        copy.generateAvailableCommandsIfNeeded();
-      } catch (err) {
-        this.callbacks.onError?.(`Invalid move "${move}": ${errorMessage(err)}`);
-        this.emitState(this.engine);
-        return;
-      }
+    return this.enqueue(() => this.applyAndCommit(move));
+  }
 
-      if (copy.newTurn) {
-        const finished = copy.phase === Phase.EndGame;
-        const args: CommitTurnArgs = {
-          gameId: this.gameId,
-          seq: this.committedMoveCount + 1,
-          seat,
-          move,
-          nextSeat: finished ? null : copy.playerToMove,
-          finished,
-          currentRound: copy.round,
-          playerUpdates: playerUpdates(copy),
-        };
-        try {
-          await this.backend.commitTurn(args);
-        } catch (err) {
-          this.callbacks.onError?.(`Could not save the turn (${errorMessage(err)}); reloading the game state.`);
-          await this.resyncNow();
-          return;
-        }
-        this.engine = copy;
-      }
+  /**
+   * The actual "apply one move line, commit if it completed a turn" logic - deliberately NOT
+   * wrapped in `enqueue` itself (only the public `submitMove` is), since `resolveAutoDecisions`
+   * below must call this directly: it runs from INSIDE an already-executing enqueued callback, and
+   * routing back through the public, `enqueue`-wrapping `submitMove` from there would deadlock
+   * (the appended task would wait on `this.queue`, which is the very callback it's called from).
+   */
+  private async applyAndCommit(move: string): Promise<void> {
+    const copy = this.clone();
+    if (!move) {
       this.emitState(copy);
-    });
+      return;
+    }
+    // The seat this turn line belongs to: whoever the engine says must act
+    // (accounts for mid-turn leech interrupts via tempCurrentPlayer).
+    const seat = copy.playerToMove;
+    try {
+      copy.move(move);
+      copy.generateAvailableCommandsIfNeeded();
+    } catch (err) {
+      this.callbacks.onError?.(`Invalid move "${move}": ${errorMessage(err)}`);
+      this.emitState(this.engine);
+      return;
+    }
+
+    if (copy.newTurn) {
+      const finished = copy.phase === Phase.EndGame;
+      const args: CommitTurnArgs = {
+        gameId: this.gameId,
+        seq: this.committedMoveCount + 1,
+        seat,
+        move,
+        nextSeat: finished ? null : copy.playerToMove,
+        finished,
+        currentRound: copy.round,
+        playerUpdates: playerUpdates(copy),
+      };
+      try {
+        await this.backend.commitTurn(args);
+      } catch (err) {
+        this.callbacks.onError?.(`Could not save the turn (${errorMessage(err)}); reloading the game state.`);
+        await this.resyncNow();
+        return;
+      }
+      this.engine = copy;
+    }
+    this.emitState(copy);
+    // After emitting, not before: a chained auto-decision computes/commits/emits its own
+    // further state, which must never be overwritten by this call's own (now-stale) copy.
+    await this.resolveAutoDecisions();
   }
 
   /** Realtime INSERT handler for the moves table. */
@@ -165,6 +195,9 @@ export class HostedGameHost {
           if (copy.newTurn) {
             this.engine = copy;
             this.emitState(copy);
+            // A remote move can hand control straight to one of the local user's own seats
+            // (a leech interrupt), so this is a real trigger point too, not just submitMove.
+            await this.resolveAutoDecisions();
             return;
           }
           // A stored row that doesn't complete a turn contradicts the
@@ -182,9 +215,19 @@ export class HostedGameHost {
     return this.enqueue(() => this.resyncNow());
   }
 
+  /**
+   * Re-emits without re-fetching - also the first point that reliably knows which seats are
+   * "mine" in practice (hosted.ts computes `mySeats` only after `load()` resolves, then calls this
+   * explicitly), so this is where auto-decisions actually get a chance to run for the very first
+   * state a session sees, not just subsequent moves/remote updates.
+   */
   emitCurrentState(): void {
     if (this.engine) {
       this.emitState(this.engine);
+      // Called directly from hosted.ts, not from inside an existing enqueued callback (unlike
+      // every other call site above) - route through the real queue so it can't race a concurrent
+      // move/remote-update.
+      this.enqueue(() => this.resolveAutoDecisions()).catch((err) => this.callbacks.onError?.(errorMessage(err)));
     }
   }
 
@@ -193,6 +236,30 @@ export class HostedGameHost {
     this.game = game;
     this.engine = this.buildEngine(game, moves);
     this.emitState(this.engine);
+    await this.resolveAutoDecisions();
+  }
+
+  /**
+   * "Auto leech" (see logic/auto-decide.ts and the AutoDecideConfig doc comment above) - a no-op
+   * unless it's currently one of the local user's own seats to decide something auto-decidable per
+   * their own preference. Computes the resulting move on a disposable clone and, if there is one,
+   * runs it through the same apply/commit logic a manual click would use (so other seated players
+   * see it exactly like any other move) - never mutates `this.engine` directly itself.
+   */
+  private async resolveAutoDecisions(): Promise<void> {
+    if (!this.engine || this.engine.playerToMove === undefined) {
+      return;
+    }
+    const autoChargePower = this.autoDecide.getAutoChargePower();
+    if (autoChargePower === "ask" || !this.autoDecide.isMySeat(this.engine.playerToMove)) {
+      return;
+    }
+
+    const move = autoDecideChargePower(this.clone(), autoChargePower, this.autoDecide.isMySeat);
+    if (move) {
+      // Not `submitMove` - see applyAndCommit's own doc comment on why that would deadlock here.
+      await this.applyAndCommit(move);
+    }
   }
 
   private buildEngine(game: GameRow, moves: MoveRow[]): Engine {

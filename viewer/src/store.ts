@@ -29,7 +29,10 @@ type Preference =
   | "warnings"
   | "autoClick"
   | "statistics"
-  | "uiMode";
+  | "uiMode"
+  | "autoChargePower";
+
+const AUTO_CHARGE_POWER_STORAGE_KEY = "autoChargePower";
 
 export enum UiMode {
   graphical = "graphical",
@@ -103,6 +106,14 @@ const gaiaViewer = {
       warnings: process.env.VUE_APP_warnings ?? "modalDialog",
       statistics: process.env.VUE_APP_statistics ?? "auto",
       uiMode: process.env.VUE_APP_uiMode ?? "graphical",
+      // "Auto leech": a purely local, per-browser convenience - never part of synced/persisted
+      // game state (see logic/auto-decide.ts) - so it's the one preference read back from
+      // localStorage rather than a fresh env-var default every load, matching what a user expects
+      // from a "preference" toggle they set once.
+      autoChargePower:
+        (typeof localStorage !== "undefined" && localStorage.getItem(AUTO_CHARGE_POWER_STORAGE_KEY)) ||
+        process.env.VUE_APP_autoChargePower ||
+        "ask",
     },
     player: null,
     avatars: [] as string[],
@@ -200,6 +211,9 @@ const gaiaViewer = {
         ...state.preferences,
         ...preferences,
       };
+      if ("autoChargePower" in preferences && typeof localStorage !== "undefined") {
+        localStorage.setItem(AUTO_CHARGE_POWER_STORAGE_KEY, String(preferences.autoChargePower));
+      }
     },
 
     player(state: State, data: { index?: number }) {

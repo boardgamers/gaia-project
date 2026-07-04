@@ -17,7 +17,10 @@ const artifactDisplaySpec: {
   [ArtifactToken.Credit]: { rewards: "3c,3o" },
   [ArtifactToken.KnowledgeQic]: { rewards: "3k,q" },
   [ArtifactToken.CreditLarge]: { rewards: "5c,2o" },
-  [ArtifactToken.Power]: { rewards: "2t" },
+  // Ongoing (per income phase) like KnowledgeOre above, and "ta3" (not the plain "t" bowl-1 power
+  // token) so Resource.vue's bowl-3 badge shows it goes straight into Area 3, same as Xenos's free
+  // action.
+  [ArtifactToken.Power]: { rewards: "2ta3", ongoingIncome: true },
   [ArtifactToken.Asteroid]: { rewards: "7vp", planet: Planet.Asteroid },
   [ArtifactToken.Protoplanet]: { rewards: "7vp", planet: Planet.Protoplanet },
   // Scales with the Science track specifically (move/artifacts.ts's applyArtifactToken()) - colored

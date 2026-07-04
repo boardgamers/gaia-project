@@ -44,9 +44,6 @@ function applyArtifactToken(engine: Engine, player: PlayerEnum, token: ArtifactT
   }
 
   switch (token) {
-    case ArtifactToken.Power:
-      pl.data.power.area3 += 2;
-      break;
     case ArtifactToken.Asteroid:
       pl.gainRewards([new Reward(7, Resource.VictoryPoint)], Spaceship.Twilight);
       pl.data.artifactPlanetTypes.push(Planet.Asteroid);

@@ -9,6 +9,7 @@ import SignIn from "./hosted/SignIn.vue";
 import { createSupabaseBackend, getSupabaseClient, subscribeMoves, SupabaseClient } from "./hosted/supabase-client";
 import { setViewportZoomLocked } from "./hosted/viewport";
 import launch from "./launcher";
+import { parseAutoChargePreference } from "./logic/auto-decide";
 
 // The Supabase-hosted counterpart of self-contained.ts: instead of minting a
 // fresh Engine per load, it boots a stored game (seed + committed move log),
@@ -71,33 +72,44 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
   });
   let mySeats: number[] = [];
 
-  const host = new HostedGameHost(createSupabaseBackend(client), gameId, {
-    onState: (data: any) => {
-      emitter.emit("state", data);
-      bar.gameName = host.game?.name ?? "";
-      bar.finished = data.phase === "endGame";
-      const turnSeat = data.playerToMove;
-      bar.turnPlayerName = data.players?.[turnSeat]?.name ?? `Player ${turnSeat + 1}`;
-      bar.myTurn = !bar.finished && mySeats.includes(turnSeat);
-      const playerCount = host.game?.player_count ?? 0;
-      bar.mySeatName =
-        mySeats.length >= playerCount && mySeats.length > 0
-          ? "all seats (test game)"
-          : mySeats.length > 0
-          ? data.players?.[mySeats[0]]?.name ?? `Player ${mySeats[0] + 1}`
-          : "";
-      // Re-lock on every state so a user playing several (but not all) seats
-      // gets whichever of their seats must act now (leech interrupts included).
-      const lock = seatToLock(mySeats, playerCount, turnSeat);
-      if (lock !== null) {
-        emitter.emit("player", { index: lock });
-      }
+  const host = new HostedGameHost(
+    createSupabaseBackend(client),
+    gameId,
+    {
+      onState: (data: any) => {
+        emitter.emit("state", data);
+        bar.gameName = host.game?.name ?? "";
+        bar.finished = data.phase === "endGame";
+        const turnSeat = data.playerToMove;
+        bar.turnPlayerName = data.players?.[turnSeat]?.name ?? `Player ${turnSeat + 1}`;
+        bar.myTurn = !bar.finished && mySeats.includes(turnSeat);
+        const playerCount = host.game?.player_count ?? 0;
+        bar.mySeatName =
+          mySeats.length >= playerCount && mySeats.length > 0
+            ? "all seats (test game)"
+            : mySeats.length > 0
+            ? data.players?.[mySeats[0]]?.name ?? `Player ${mySeats[0] + 1}`
+            : "";
+        // Re-lock on every state so a user playing several (but not all) seats
+        // gets whichever of their seats must act now (leech interrupts included).
+        const lock = seatToLock(mySeats, playerCount, turnSeat);
+        if (lock !== null) {
+          emitter.emit("player", { index: lock });
+        }
+      },
+      onError: (message: string) => {
+        emitter.emit("error", message);
+        console.error("[hosted]", message);
+      },
     },
-    onError: (message: string) => {
-      emitter.emit("error", message);
-      console.error("[hosted]", message);
-    },
-  });
+    {
+      // "Auto leech" (host.ts's AutoDecideConfig) - never decide on behalf of a seat that isn't
+      // one of this user's own, and always read the live preference (not a value snapshotted at
+      // launch), so a mid-game toggle takes effect immediately.
+      isMySeat: (seat) => mySeats.includes(seat),
+      getAutoChargePower: () => parseAutoChargePreference(emitter.store.state.preferences.autoChargePower as string),
+    }
+  );
 
   try {
     await host.load();
