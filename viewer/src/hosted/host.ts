@@ -1,5 +1,5 @@
 import Engine, { Phase } from "@gaia-project/engine";
-import { CommitTurnArgs, GameRow, HostedBackend, HostedCallbacks, MoveRow, PlayerRow } from "./types";
+import { CommitTurnArgs, GameRow, HostedBackend, HostedCallbacks, MoveRow, PlayerRow, PlayerUpdate } from "./types";
 
 export function initMoveLine(game: GameRow): string {
   return `init ${game.player_count} ${game.seed}`;
@@ -37,6 +37,17 @@ export function seatToLock(mySeats: number[], playerCount: number, playerToMove:
     return null;
   }
   return playerToMove !== undefined && mySeats.includes(playerToMove) ? playerToMove : mySeats[0];
+}
+
+/**
+ * Cached lobby-list display data (see 0009_lobby_round_faction_score_cache.sql) - a seat's faction
+ * isn't chosen yet during setup, so it's simply omitted until it is (the lobby row falls back to
+ * whatever it cached from a previous commit, or nothing yet for a brand new game).
+ */
+export function playerUpdates(engine: Engine): PlayerUpdate[] {
+  return engine.players
+    .filter((pl) => !!pl.faction)
+    .map((pl) => ({ seat: pl.player, faction: pl.faction, score: pl.data.victoryPoints }));
 }
 
 /**
@@ -123,6 +134,8 @@ export class HostedGameHost {
           move,
           nextSeat: finished ? null : copy.playerToMove,
           finished,
+          currentRound: copy.round,
+          playerUpdates: playerUpdates(copy),
         };
         try {
           await this.backend.commitTurn(args);

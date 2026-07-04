@@ -28,13 +28,14 @@ function gameRow(): GameRow {
     status: "active",
     current_seat: 0,
     move_count: 0,
+    current_round: null,
     };
 }
 
 function playerRows(): PlayerRow[] {
   return [
-    { game_id: "game-1", seat: 0, invited_email: "alice@example.com", user_id: "user-alice", display_name: "Alice" },
-    { game_id: "game-1", seat: 1, invited_email: "bob@example.com", user_id: null, display_name: "Bob" },
+    { game_id: "game-1", seat: 0, invited_email: "alice@example.com", user_id: "user-alice", display_name: "Alice", faction: null, score: null },
+    { game_id: "game-1", seat: 1, invited_email: "bob@example.com", user_id: null, display_name: "Bob", faction: null, score: null },
   ];
 }
 
@@ -187,6 +188,25 @@ describe("hosted game host", () => {
     expect(commit.finished).to.equal(false);
     expect(commit.nextSeat).to.equal(host.engine.playerToMove);
     expect(host.committedMoveCount).to.equal(1);
+  });
+
+  it("caches the current round and each faction-having seat's score on every commit (for the Lobby list)", async () => {
+    const backend = new FakeBackend(gameRow(), playerRows());
+    backend.seedMoves([]);
+    const { host } = makeHost(backend);
+    await host.load();
+
+    // Before any faction is picked, nothing has a faction yet - playerUpdates is empty rather
+    // than sending half-formed entries.
+    await host.submitMove("p1 faction terrans");
+    expect(backend.commits[0].currentRound).to.equal(0);
+    expect(backend.commits[0].playerUpdates).to.deep.equal([{ seat: 0, faction: "terrans", score: 10 }]);
+
+    await host.submitMove("p2 faction nevlas");
+    expect(backend.commits[1].playerUpdates).to.deep.equal([
+      { seat: 0, faction: "terrans", score: 10 },
+      { seat: 1, faction: "nevlas", score: 10 },
+    ]);
   });
 
   it("reports the leech decider as next seat when a build interrupts turn order (§J2)", async () => {

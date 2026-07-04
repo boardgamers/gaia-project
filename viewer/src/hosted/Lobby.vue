@@ -15,20 +15,33 @@
     <b-list-group class="mb-3">
       <b-list-group-item v-if="loading">Loading games…</b-list-group-item>
       <b-list-group-item v-else-if="games.length === 0">No games yet — create one below.</b-list-group-item>
-      <b-list-group-item v-for="game in games" :key="game.id" class="d-flex justify-content-between align-items-center">
-        <a
-          :href="`?game=${game.id}`"
-          class="text-body text-decoration-none flex-grow-1 d-flex justify-content-between align-items-center"
-          style="gap: 0.5rem"
-        >
-          <span>
+      <b-list-group-item v-for="game in games" :key="game.id" class="game-bar d-flex align-items-center">
+        <a :href="`?game=${game.id}`" class="text-body text-decoration-none flex-grow-1 game-bar__link">
+          <span class="game-bar__round" v-if="game.current_round">R{{ game.current_round }}</span>
+          <span class="game-bar__title">
             <strong>{{ game.name || "Unnamed game" }}</strong>
             <span class="text-muted small">
               · {{ game.player_count }}p · {{ game.options && game.options.lostFleet ? "Lost Fleet" : "base game"
               }}<template v-if="isTestGame(game)"> · test game</template>
             </span>
           </span>
-          <b-badge :variant="badgeVariant(game)">{{ turnLabel(game) }}</b-badge>
+          <!-- Per-seat faction + score, boardgamers.space-style - only once at least one seat has
+               actually cached one (skip entirely for a brand new game, or one committed before
+               0009_lobby_round_faction_score_cache.sql seeded these columns). The current-turn
+               seat gets a highlighted ring instead of repeating the turnLabel text per player. -->
+          <span class="game-bar__players" v-if="playersWithSummary(game).length > 0">
+            <span
+              v-for="player in playersWithSummary(game)"
+              :key="player.seat"
+              class="game-bar__player"
+              :class="{ 'game-bar__player--active': player.seat === game.current_seat }"
+              :title="playerBarTitle(game, player)"
+            >
+              <svg viewBox="-22 -22 44 44" width="18" height="18"><Token :faction="player.faction" /></svg>
+              <span class="game-bar__score">{{ player.score != null ? player.score : "–" }}</span>
+            </span>
+          </span>
+          <b-badge :variant="badgeVariant(game)" class="ml-auto">{{ turnLabel(game) }}</b-badge>
         </a>
         <b-button
           v-if="isAdmin"
@@ -48,9 +61,12 @@
 <script lang="ts">
 import Vue from "vue";
 import { enablePushNotifications } from "./push";
+import Token from "../components/Token.vue";
+import { factionName } from "../data/factions";
 
 export default Vue.extend({
   name: "HostedLobby",
+  components: { Token },
   props: {
     client: { type: Object, required: true },
     session: { type: Object, required: true },
@@ -97,6 +113,21 @@ export default Vue.extend({
     playerAtSeat(game: any, seat: number | null): any {
       return (game.players ?? []).find((p: any) => p.seat === seat);
     },
+    // Only seats with a cached faction (seeded once that player picks one and their first
+    // post-migration move commits, see host.ts's `playerUpdates`) - a brand new game, or one that
+    // hasn't seen a move since 0009_lobby_round_faction_score_cache.sql, shows nothing here rather
+    // than empty placeholder chips.
+    playersWithSummary(game: any): any[] {
+      return (game.players ?? [])
+        .filter((p: any) => !!p.faction)
+        .slice()
+        .sort((a: any, b: any) => a.seat - b.seat);
+    },
+    playerBarTitle(game: any, player: any): string {
+      const name = player.display_name || player.invited_email;
+      const vp = player.score != null ? `${player.score} VP` : "no score yet";
+      return `${name} — ${factionName(player.faction)} — ${vp}`;
+    },
     isTestGame(game: any): boolean {
       const players = game.players ?? [];
       return players.length > 0 && players.every((p: any) => p.user_id === this.myUserId);
@@ -142,3 +173,57 @@ export default Vue.extend({
   },
 });
 </script>
+
+<style lang="scss" scoped>
+.game-bar__link {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.game-bar__round {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #495057;
+  background: #e9ecef;
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.4rem;
+}
+
+.game-bar__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-bar__players {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.game-bar__player {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 1rem;
+  border: 1px solid transparent;
+
+  &--active {
+    border-color: var(--success, #28a745);
+    background: rgba(40, 167, 69, 0.08);
+  }
+}
+
+.game-bar__score {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #495057;
+}
+</style>

@@ -106,6 +106,45 @@ describe("Lobby", () => {
     expect(wrapper.find('input[type="email"]').exists()).to.equal(false);
   });
 
+  it("shows round, per-player faction/score, and highlights whoever's turn it is", async () => {
+    const game = {
+      id: "g-active",
+      name: "Friends game",
+      created_by: "user-admin",
+      player_count: 2,
+      options: {},
+      status: "active",
+      current_seat: 1,
+      current_round: 3,
+      players: [
+        { seat: 0, invited_email: "alice@example.com", user_id: "user-admin", display_name: "Alice", faction: "terrans", score: 24 },
+        { seat: 1, invited_email: "bob@example.com", user_id: "user-other", display_name: "Bob", faction: "nevlas", score: 31 },
+      ],
+    };
+    const { client } = makeClient([game]);
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    expect(wrapper.text()).to.contain("R3");
+    const players = wrapper.findAll(".game-bar__player");
+    expect(players.length).to.equal(2);
+    expect(players.at(0).text()).to.contain("24");
+    expect(players.at(1).text()).to.contain("31");
+    expect(players.at(0).classes()).to.not.contain("game-bar__player--active");
+    expect(players.at(1).classes()).to.contain("game-bar__player--active");
+  });
+
+  it("shows no round badge or player chips for a game with no cached lobby data yet", async () => {
+    const { client } = makeClient(sampleGames);
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    expect(wrapper.find(".game-bar__round").exists()).to.equal(false);
+    expect(wrapper.find(".game-bar__player").exists()).to.equal(false);
+  });
+
   it("hides the New game link from a non-admin", async () => {
     const { client } = makeClient([]);
     const wrapper = mount(Lobby, { propsData: { client, session: otherSession } });

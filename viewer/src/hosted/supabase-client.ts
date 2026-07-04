@@ -62,6 +62,8 @@ export function createSupabaseBackend(client: SupabaseClient): HostedBackend {
           p_move: args.move,
           p_next_seat: args.nextSeat,
           p_finished: args.finished,
+          p_current_round: args.currentRound,
+          p_player_updates: args.playerUpdates,
         })
       ),
   };
