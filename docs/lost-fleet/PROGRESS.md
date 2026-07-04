@@ -2354,6 +2354,85 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       they depend on real stylesheet cascade/rendering, verified via live Playwright instead),
       `Game.vue`. Viewer 275/275 tests still pass.
 
+64. ✅ **Gaia 3 UI layout pass (2026-07-04)** - a batch of owner-reported layout bugs plus two "free
+    creativity" redesigns, all on `claude/gaia3-ui-layout-fixes-h3uzra`:
+    - **Map rotation fixed**: numbers, buildings, gaiaformers, ships, and labels were rotating along
+      with the whole-board `mapRotationDeg` screen-fit rotation (#55's diagonal-alignment feature),
+      instead of staying upright like a physically-rotated tile - SpaceHex.vue's non-hex-shape
+      content is now wrapped in a counter-rotating `<g>`, passed a `contentRotation` prop through
+      Sector.vue from SpaceMap.vue. Deliberately does NOT counter-rotate the separate, real
+      per-sector setup rotation (`Commands.vue`'s `buildRotateMove`) - that one is supposed to visibly
+      rotate its content, same as a real cardboard tile.
+    - **Mobile whitespace between the ship board and Turn Order fixed** - actually two bugs: the
+      mobile sticky action bar's height-reserving spacer (`Commands.vue`) was rendering
+      unconditionally, silently doubling the button list's own height with an identical blank gap on
+      **desktop** too (nothing had scoped it to the narrow-viewport media query); fixed by driving its
+      height from a `--sticky-bar-height` custom property that only the `@media (max-width: 767px)`
+      block ever sets non-zero. Separately, on mobile, that same spacer's column no longer sorts ahead
+      of Turn Order (`Game.vue`'s `order-1`/`order-4` classes) once real gameplay (round 1+) starts -
+      only during setup, where the column's real content (faction picking etc.) still benefits from
+      being first.
+    - **Round scoring tile spacing made uniform** (`ResearchBoard.vue`) - was inheriting the research
+      track's own uneven level-slot gaps (a 56-unit gap between two 38-unit ones), which showed up as
+      a visibly bigger break between the R4 and R5 tiles once this column stopped needing to align
+      with the track. Final scoring now renders in the same column, directly below the round tiles,
+      instead of the map's bottom-right corner (where #63 had put it) - `SpaceMap.vue` lost the whole
+      `hasFinalScoring`/`finalScoringScale` band-fitting subsystem as a result.
+    - **Twilight's artifact grid re-centered** (`LostFleetShips.vue`) - the root cause (not just the
+      symptom) was that `ArtifactIcon.vue` is a self-contained nested `<svg>`, whose visual center
+      sits 15 screen units away from wherever a `translate()` places it; the anchor math had been
+      getting this compensation wrong across several past sessions. Now centered on the exact same
+      slot (252, 38) the other 3 ships' Standard Tech tile occupies, with a regression test
+      (`LostFleetShips.spec.ts`) asserting both the centering and that no icon can render past the
+      ship board's own 76-tall viewBox again.
+    - **Free-mine + 2-terraform tech tile icon fixed** (`TechTile.vue`) - mine and terraform-step
+      icons were diagonal and disconnected; now same row, mine bigger and on the left, overlapped by
+      the terraform arrows, matching the base game's mine+terraform composition language.
+    - **Explore and Examine Artifact costs now show reward icons** instead of plain-text
+      `"(4, +2pw)"` labels (`logic/buttons/lost-fleet.ts`), matching the existing building-cost icon
+      convention. Ship-action costs were already icon-based (`ShipActionIcon.vue`) - audited, no
+      other text-cost spots found.
+    - **Investigated, confirmed already correct, no change made**: the +1 range expansion tech is
+      already reflected in `PlayerInfo.vue`'s range display (`effectiveRange()`); T F Mars's "3c" ship
+      action does not grant a free mine (matches the base game's charge-3-for-1-terraform pattern,
+      `RULES_CLARIFICATIONS.md` §C3).
+    - **Confirmed engine bug, NOT yet fixed (owner needs to confirm before it's touched)**: the
+      "2 power → Area 3" artifact is coded as an immediate one-time gain
+      (`engine/src/move/artifacts.ts:47-49`) instead of a recurring per-income-phase effect like the
+      correctly-implemented Knowledge+Ore artifact right next to it; iconography also has no "+"
+      income marker or bowl-3 badge. Fix direction identified (reuse `Resource.GainTokenArea3`, the
+      same primitive Xenos's free action already uses) but not applied. All other 12 artifacts
+      audited as correct.
+    - **Auto-leech: engine-complete, viewer has no UI for it at all.** `engine/src/auto-charge.ts` +
+      per-player `Settings` (`autoChargePower`/`autoBrainstone`/`autoIncome`) are fully implemented,
+      but there is no settings modal/toggle anywhere in `viewer/`, and no engine `Command` to change a
+      seated player's settings after game start. No `upstream` git remote or vendored
+      `boardgamers/gaia-project` copy exists in this workspace to port a UI from - would need
+      designing fresh. Not started, pending owner direction.
+    - **Lobby redesigned** (boardgamers.space-style game bar, `Lobby.vue`): each row now shows a round
+      badge and a per-seat faction icon + score chip, with the current-turn seat highlighted, instead
+      of only a plain status badge. Since the engine is client-side and authoritative, there's no
+      server-side way to derive round/faction/score from the move log alone -
+      `0009_lobby_round_faction_score_cache.sql` (applied to the live project) adds
+      `games.current_round`/`players.faction`/`players.score`, populated by the already-loaded client
+      engine passing its own freshly-computed numbers into `commit_turn` alongside each move
+      (`host.ts`'s `playerUpdates`). Purely a cached display convenience, never read by game logic, so
+      a stale/missing value (games committed before this migration) only affects that row's display
+      until its next move.
+    - **Statistics window redesigned** (`Charts.vue`, `chart-factory.ts`): the 4 unlabeled, mixed-concern
+      dropdowns (one conflating chart-vs-table with a separate compact flag) became a labeled toolbar
+      (View / Breakdown / Details dropdowns + a Chart/Table segmented control + a standalone Compact
+      switch) in a card matching the app's existing muted-gray convention; table gained a sticky
+      header. Chart.js visuals got a light touch-up (thinner lines, dot-style legend, softer
+      gridlines, bars lost their hard black outline for a rounded unbordered end) via `Chart.defaults`
+      plus one dataset tweak - the underlying data/label computation in `logic/charts/*` (and its
+      fixture-comparison tests) is untouched. Verified interactively via Playwright in chart mode,
+      table mode, and a narrow mobile width.
+    - Engine **581/581** tests pass (untouched this session). Viewer **282/282** tests pass (up from
+      275 - new/updated specs in `SpaceMap.spec.ts`, `ResearchBoard.spec.ts`, `LostFleetShips.spec.ts`,
+      `Game.spec.ts`, `Commands.spec.ts`, `Lobby.spec.ts`, `host.spec.ts`). Both production builds
+      clean (`vue-cli-service build`, only pre-existing bundle-size warnings).
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -2447,6 +2526,13 @@ the 2x2 ship-board grid + fed/tech/action alignment, final scoring in the map's 
 (with a dedicated regression test asserting the viewBox never changes size), the relocated 7th
 adv-tech tile's pixel-exact alignment with the research track's own row, the mobile sticky bar's
 turn-status text, and the restored tooltip `.html` rendering.
+
+**Latest full rerun after #64 (2026-07-04, same day, separate session):** engine **581/581**
+(untouched), viewer **282/282** (grew from 275 - see "Done so far" #64 for the full list of new/
+updated spec files). Verified visually via Playwright against the running dev server: map
+rotation with sector/deep-space numbers and building/gaiaformer/ship icons staying upright, the
+redesigned Statistics window in both chart and table modes and at a narrow mobile width, and the
+redesigned Lobby game bar. Both production builds clean.
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/
