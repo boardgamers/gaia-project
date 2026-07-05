@@ -2603,6 +2603,30 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       RoundLeech branch is part of that same not-yet-deployed function); Phase 3 (multi-round
       queue depth); the log/UI trust-building touches noted in #66.
 
+68. ✅ **Premove race-condition audit, 2026-07-05, same session as #66-#67** — no code changes; the
+    user asked, twice, whether every "board state changed between queue-time and execution-time"
+    scenario is actually safe. Verified by reading source (not inferring) for: federation token
+    exhaustion (`engine.ts` live `tiles.federations`), research-track level-5 single-occupancy cap
+    (`available/research.ts`'s `canResearchField`), explore-target contention
+    (`move/exploration.ts`'s assert against fresh `command.data.ships`), Ivits Space Station vs.
+    another player's Lost Planet placement (`available/buildings.ts`'s `possibleSpaceStations`
+    excludes any `hex.hasPlanet()`), federation formation vs. Lost Planet placement
+    (`move/buildings.ts`'s `moveLostPlanet` calls `notifyOfNewPlanet` on every player, nulling
+    `federationCache`), Gaiaforming contention (`available/spaceship-actions.ts`'s
+    `possibleInstantGaiaforming` skips any hex with `hex.data.building` set), and Gaiaformer-built
+    free mine on a contested Asteroid (`player.ts`'s `canOccupy` checks `hex.data.player` live).
+    **Conclusion: all of these are already covered by the general mechanism** (premove execution
+    replays full history, calls `generateAvailableCommands()` fresh, then `.move()` asserts/throws
+    on anything not in that freshly-computed list; illegal → clean failure, never partial-commit) —
+    none needed premove-specific code, since none of them are premove-specific problems (the base
+    engine already had to handle "board changed since I last looked" for leech-decision interrupts
+    mid-turn). Cheap, valuable follow-ups identified but **not yet built** (see "Next actions"):
+    (a) a small batch of regression tests pinning these exact race conditions (fed token taken, adv
+    tech taken, research-track cap, explore contention, Lost-Planet-vs-space-station/federation,
+    Gaiaforming/Asteroid contention) so a future refactor can't silently reopen one; (b) a
+    success notification - today only premove *failures* surface (banner), a queued premove that
+    executes successfully is silent. Both are additive/low-risk, no schema changes needed.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -2934,6 +2958,15 @@ section originally said Chunk 2 must also carry the _full_ `planets.ts` terrafor
    exact shape for adv-tech/federation/booster/scoring enum members when those chunks come up.
 
 ## Next actions
+
+**Confirmed with the user, 2026-07-05: continue with Phase 3 (multi-round premove queue) next.**
+Two other cheap/valuable items were identified in #68 and offered but not yet started (ask the
+user which they want alongside Phase 3, don't assume): (a) regression tests for the premove
+race-condition scenarios enumerated in #68; (b) a "premove executed: `<move text>`" success
+notification (only failures currently surface). Also still outstanding, unchanged from #66/#67:
+deploying `resolve-automation` (Supabase CLI + access token, owner action) and seeding
+`app_config['resolve_automation']` — needed for the actual fully-offline promise; until then
+premoves/auto-leech only run via client-side paths.
 
 Chunks 1-7b plus Darkanians' PI follow-up, the core Explore action, the federation-claim hook, the
 Standard-Tech claim hook, the full Spaceship Boards live-gameplay wiring, the gold-side execution
