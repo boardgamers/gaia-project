@@ -112,7 +112,7 @@ async function composeUpMove(page, categoryLabel, trackLabel) {
   await page.locator("button", { hasText: "Confirm End Turn" }).click();
 }
 
-async function committedMoves(page, gameId) {
+async function fetchMoves(page, gameId) {
   return page.evaluate(
     async ([url, anon, ref, game]) => {
       const stored = JSON.parse(window.localStorage.getItem(`sb-${ref}-auth-token`));
@@ -125,7 +125,20 @@ async function committedMoves(page, gameId) {
   );
 }
 
-async function waitForMoveCount(page, gameId, count, timeout = 20000) {
+// The intercepted-network relay (proxy-network.js) occasionally returns a transient empty/short
+// result for a single fetch under this sandbox's TLS-relay setup even once waitForMoveCount has
+// already observed the real (larger) count server-side - retry a few times rather than trust one
+// fetch as ground truth.
+async function committedMoves(page, gameId, minLength = 0) {
+  let moves = await fetchMoves(page, gameId);
+  for (let i = 0; i < 5 && moves.length < minLength; i++) {
+    await page.waitForTimeout(1000);
+    moves = await fetchMoves(page, gameId);
+  }
+  return moves;
+}
+
+async function waitForMoveCount(page, gameId, count, timeout = 40000) {
   await page.waitForFunction(
     async ([url, anon, ref, game, n]) => {
       const stored = JSON.parse(window.localStorage.getItem(`sb-${ref}-auth-token`));
@@ -188,18 +201,26 @@ async function main() {
     check("browser B (Bob): loaded game directly, locked out (Alice to move)");
 
     // --- Bob queues a 2-deep Sequential premove chain, entirely before Alice moves at all ---
+    const pill = pageB.locator("button", { hasText: "Premoves" });
     await pageB.locator("button", { hasText: "Plan my move" }).click();
     await composeUpMove(pageB, "Research", "Terraforming");
     await pageB.locator("button", { hasText: "Queue this move" }).click();
+    await pageB.waitForFunction(() => {
+      const btn = [...document.querySelectorAll("button")].find((b) => b.textContent.includes("Premoves"));
+      return btn && btn.textContent.includes("(1)");
+    }, { timeout: 15000 });
     check("browser B: queued premove #1 (up terra) via real UI");
     await pageB.screenshot({ path: path.join(ARTIFACTS, "phase3-after-queue1.png"), fullPage: true });
 
     await pageB.locator("button", { hasText: "Plan my move" }).click();
     await composeUpMove(pageB, "Research", "Navigation");
     await pageB.locator("button", { hasText: "Queue this move" }).click();
+    await pageB.waitForFunction(() => {
+      const btn = [...document.querySelectorAll("button")].find((b) => b.textContent.includes("Premoves"));
+      return btn && btn.textContent.includes("(2)");
+    }, { timeout: 15000 });
     check("browser B: queued premove #2 (up nav) via real UI");
 
-    const pill = pageB.locator("button", { hasText: "Premoves" });
     console.log("  pill text:", await pill.textContent());
     await pill.click();
     await pageB.waitForSelector(".premove-overview .premove-row", { timeout: 10000 });
@@ -213,18 +234,20 @@ async function main() {
     await pageB.locator("button", { hasText: /^Close$/ }).click().catch(() => undefined);
     await pageB.keyboard.press("Escape").catch(() => undefined);
 
+    const baseline = (await committedMoves(pageA, GAME_ID)).length;
+
     // --- Alice makes her real move #1 (via the real UI), handing the turn to Bob ---
     await composeUpMove(pageA, "Research", "Gaia Project");
     check("browser A: committed her real move #1 (up gaia) via real UI");
 
     // --- Bob's premove #1 should now fire automatically, server-side, with NO action from B ---
-    await waitForMoveCount(pageA, GAME_ID, 2, 20000);
-    let moves = await committedMoves(pageA, GAME_ID);
-    console.log("  moves after Alice's move #1:", JSON.stringify(moves));
-    if (moves.length !== 2 || moves[1].seat !== 1) {
-      throw new Error(`expected premove #1 to auto-fire for seat 1, got ${JSON.stringify(moves)}`);
+    await waitForMoveCount(pageA, GAME_ID, baseline + 2, 20000);
+    let moves = await committedMoves(pageA, GAME_ID, baseline + 2);
+    console.log("  moves after Alice's move #1:", JSON.stringify(moves.slice(baseline)));
+    if (moves.length !== baseline + 2 || moves[baseline + 1].seat !== 1) {
+      throw new Error(`expected premove #1 to auto-fire for seat 1, got ${JSON.stringify(moves.slice(baseline))}`);
     }
-    check(`browser B's premove #1 fired automatically: ${moves[1].move}`);
+    check(`browser B's premove #1 fired automatically: ${moves[baseline + 1].move}`);
 
     // --- Alice makes her real move #2, handing the turn to Bob again ---
     await pageA.reload();
@@ -234,13 +257,13 @@ async function main() {
     check("browser A: committed her real move #2 (up eco) via real UI");
 
     // --- Bob's premove #2 should now fire automatically too ---
-    await waitForMoveCount(pageA, GAME_ID, 4, 20000);
-    moves = await committedMoves(pageA, GAME_ID);
-    console.log("  moves after Alice's move #2:", JSON.stringify(moves));
-    if (moves.length !== 4 || moves[3].seat !== 1) {
-      throw new Error(`expected premove #2 to auto-fire for seat 1, got ${JSON.stringify(moves)}`);
+    await waitForMoveCount(pageA, GAME_ID, baseline + 4, 20000);
+    moves = await committedMoves(pageA, GAME_ID, baseline + 4);
+    console.log("  moves after Alice's move #2:", JSON.stringify(moves.slice(baseline)));
+    if (moves.length !== baseline + 4 || moves[baseline + 3].seat !== 1) {
+      throw new Error(`expected premove #2 to auto-fire for seat 1, got ${JSON.stringify(moves.slice(baseline))}`);
     }
-    check(`browser B's premove #2 fired automatically, IN ORDER: ${moves[3].move}`);
+    check(`browser B's premove #2 fired automatically, IN ORDER: ${moves[baseline + 3].move}`);
 
     console.log(`\nALL CHECKS PASSED - game ${GAME_ID} left in place for inspection/cleanup.`);
     return 0;
