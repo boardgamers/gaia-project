@@ -2,6 +2,7 @@
   "license": "MIT",
   "packageManager": "pnpm@9.12.0",
   "scripts": {
+    "build:edge-engine": "esbuild supabase/functions/_shared/engine-entry.ts --bundle --format=esm --platform=neutral --alias:assert=node:assert --external:node:assert --banner:js=\"globalThis.seedrandom=globalThis.seedrandom;\" --outfile=supabase/functions/_shared/engine.bundle.js",
     "commit-msg-check": "node scripts/check-commit-msg.js",
     "lint-staged": "lint-staged",
     "postinstall": "husky install",
@@ -9,6 +10,7 @@
     "prettier-check": "prettier --plugin-search-dir=. --check ."
   },
   "devDependencies": {
+    "esbuild": "^0.28.1",
     "husky": "^5.0.9",
     "lint-staged": "^10.5.4",
     "prettier": "^2.2.1",

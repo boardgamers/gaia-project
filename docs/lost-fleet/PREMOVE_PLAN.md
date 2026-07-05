@@ -504,9 +504,116 @@ skip a seat that has a queued premove. Owner already accepted a similar leech-ch
 - [ ] Turn the scratch-game replay into the **retained parity test** (§9, finding #8) rather than
       throwing that harness away.
 
-### Phase 0 result (fill in)
+### Phase 0 result (filled in 2026-07-05)
 
-- Date:
-- Pass / fail:
-- Bundling approach that worked (and anything that surprised you about running the engine in Deno):
-- Anything that needs to change before Phase 1:
+- **Date:** 2026-07-05
+- **Pass / fail: PASS.** The fork's actual engine (with Lost Fleet) bundles to a single ESM file via
+  esbuild and produces byte-identical replay results (`playerToMove`/`round`/`phase`/
+  `moveHistory.length`) to the plain TypeScript engine, for both a fresh scratch game and a real
+  live game exercising Lost Fleet ship actions, artifacts, and spaceship actions.
+
+- **Live schema state (checklist item 1):** confirmed via `list_migrations` + a direct `pg_proc`
+  query. The *functions* for migrations `0006_delete_game.sql` and `0007_registered_user_invites.sql`
+  **do exist live** (`delete_game`, `list_registered_users`, and `create_game` with the `user_id`-based
+  invite signature all present) — but `supabase_migrations.schema_migrations` jumps straight from
+  `drop_stale_create_game_overload` (0005) to `0008_admin_only_create_game`, skipping 0006/0007
+  entirely. Someone applied 0006/0007's SQL directly (dashboard SQL editor or similar), bypassing
+  migration tracking. **Net effect: the live schema is functionally at 0009** (confirmed: `games` has
+  `current_round`, `players` has `faction`/`score`, `commit_turn` has the full 8-arg signature) — so
+  Phase 1's new migration can safely build on top of everything through 0009. The only wrinkle: if
+  anyone ever runs the local `0006_delete_game.sql`/`0007_registered_user_invites.sql` files through a
+  strict sequential-migration tool, they'll "re-apply" — harmless since both are pure
+  `create or replace function` + idempotent grants, but worth knowing so it doesn't look like a
+  live/local drift bug.
+
+- **Bundling approach that worked:** `esbuild --bundle --format=esm --platform=neutral`, entry point
+  `supabase/functions/_shared/engine-entry.ts` (re-exports `Engine` from `engine/src/engine` and
+  `Phase` from `engine/src/enums` — **not** from `engine/src/engine`, which imports `Phase` but never
+  re-exports it; the original plan snippet had this wrong). Two extra flags beyond the plan's original
+  spec, both required:
+  - `--alias:assert=node:assert --external:node:assert` — the engine uses bare `import assert from
+    "assert"` throughout (17+ files); Deno has no bare `"assert"` module, but does resolve `"node:
+    assert"` natively.
+  - `--banner:js="globalThis.seedrandom=globalThis.seedrandom;"` — see the surprise below. Everything
+    else (lodash, hexagrid, seedrandom, shuffle-seed, semver-compare, eventemitter3) bundles cleanly
+    with **no** import-map or externalization needed; tried externalizing all six to Deno's native
+    `npm:` specifiers to shrink the bundle, but both `lodash` and `eventemitter3`'s CJS exports aren't
+    statically analyzable for named imports (`import { set } from "npm:lodash@..."` fails under Deno
+    with "does not provide an export named 'set'"), so full self-contained bundling (the plan's
+    original recommendation) is correct, not just simpler.
+  - `npm run build:edge-engine` (added to root `package.json`) wraps this so it's a repeatable command,
+    not a hand-run one-off.
+
+- **The single most surprising thing about running the engine in Deno:** `shuffle-seed@1.1.6`'s own
+  source (`shuffleSeed.shuffle`, used by `engine/src/setup.ts`/`map.ts`/`factions.ts`) relies on a
+  genuine **Node sloppy-mode quirk**, not just a missing global. Its `index.js` does
+  `require('seedrandom')` (which, as a side effect, sets `Math.seedrandom` unconditionally), then its
+  own `shuffle-seed.js` does `if (Math.seedrandom) seedrandom = Math.seedrandom;` — an assignment to
+  an **undeclared** bare identifier. In non-strict Node CommonJS this silently creates an implicit
+  global (`globalThis.seedrandom`) that the rest of the file then reads. **ES modules are always
+  strict mode**, and strict mode turns that same assignment into a hard `ReferenceError: seedrandom is
+  not defined` — so the bundle threw immediately on the very first shuffle, deep inside setup/map
+  generation, with a confusing stack trace pointing at `shuffle-seed`'s own vendored code. Fix: predeclare
+  a global binding with a `--banner:js` prelude (`globalThis.seedrandom=globalThis.seedrandom;`) so the
+  later assignment lands on an *existing* global instead of an undeclared one (assigning to an
+  existing global property is legal in strict mode; only creating a new implicit one isn't). Confirmed
+  fixed by running the exact fixture from `viewer/src/logic/auto-decide.spec.ts` through the bundle
+  under `deno run` — shuffle/setup and a real leech auto-decide (`autoDecideChargePower`) both work.
+  Nothing else was surprising: `assert`/`node:assert` aliasing was the only other Deno-specific
+  adjustment needed, and there were no `crypto`/`self`/`window` issues from `seedrandom` itself (it
+  degrades gracefully without them; only `shuffle-seed`'s own global-patching trick needed the fix
+  above).
+
+- **What was actually verified, and how (see "a practical constraint" below for why it's split this
+  way):**
+  1. **Full real engine, locally under `deno run`:** the committed `supabase/functions/_shared/
+     engine.bundle.js` (built from this fork's real `engine/src`, not npm) correctly replays a base-game
+     2p setup fixture and a Lost Fleet setup fixture, reaching the expected phase/player/round every
+     time, including a real leech auto-decide via the also-bundled `autoDecideChargePower`.
+  2. **Full real engine, parity against real Supabase data:** fetched (read-only, via
+     `mcp__Supabase__execute_sql`) the move logs for (a) a fresh scratch 2-player test game created for
+     this purpose (`00000000-0000-0000-0000-000000000001`, deleted again after use) and (b) one real,
+     currently-active 4-player Lost Fleet game (39-40 moves in, exercising ship builds, spaceship
+     actions, artifact examination, deep-space tiles). Replayed both move logs through the bundle
+     (`deno run`) **and** through the real TypeScript engine (`ts-node`), and the two outputs
+     (`playerToMove`/`round`/`phase`/`moveHistory.length`) were byte-identical in both cases.
+  3. **Bundling mechanism, live on the actual deployed Supabase Edge Runtime:** deployed a small
+     "canary" function (`spike-deno-canary`, since deleted/disabled — see below) built with the
+     identical esbuild flags/banner, bundling the same real npm deps the engine depends on for
+     randomness/shuffling (`seedrandom`, `shuffle-seed`, plus `eventemitter3`/`semver-compare`).
+     Invoked it live via `curl` against the real project (`https://mitawjpdxkheascdiffz.supabase.co/
+     functions/v1/spike-deno-canary`) and got HTTP 200 with output identical to the local `deno run`
+     result — confirming the exact bundling/banner-shim approach works on Supabase's actual Edge
+     Runtime, not only the local Deno CLI.
+  4. **A practical constraint that shaped the above:** the full self-contained bundle is 566KB
+     unminified / ~230KB minified. Getting that much text into (and back out of) a single tool-call
+     argument for `deploy_edge_function` is impractical in an assistant session (the minified form
+     collapses to a handful of 100–170KB *single lines*, which can't even be paginated in; a
+     line-wrapped/prettified form is readable but pushes total size past what's sensible to relay
+     twice through one session). Rather than force it, step 3 substitutes a much smaller
+     same-dependency canary to prove the live-Supabase-Deno-Runtime leg specifically, while steps 1-2
+     use the real, full, committed bundle for the actual replay-correctness proof (just executed via
+     local `deno run` instead of an HTTP round trip). **This is a real operational finding for Phase
+     1:** don't plan on deploying `resolve-automation` (which needs this same full bundle) by having an
+     assistant paste its content into a tool call each time engine/src changes — that doesn't scale
+     past this one spike. Phase 1 should deploy via the Supabase CLI (`supabase functions deploy`) from
+     a normal shell/CI context (e.g. a GitHub Action with a stored `SUPABASE_ACCESS_TOKEN`), which
+     reads the built file straight off disk with no such size ceiling.
+  5. **Retained parity test (finding #8, checklist's last item):** turned into
+     `engine/edge-bundle-parity.spec.ts` (runs as part of the normal `npm test` / mocha suite, no Deno
+     dependency needed since the bundle is plain ESM that Node can also `import()`) — replays the same
+     base-game and Lost Fleet fixtures through both the real engine and the dynamically-imported bundle
+     and asserts identical results; skips itself (doesn't fail) if the bundle hasn't been built yet.
+     Full suite: **585/585 passing** (583 previous + this file's 2 new tests) after adding it.
+
+- **Anything that needs to change before Phase 1:**
+  1. Phase 1's actual `resolve-automation` deploy should go through the Supabase CLI /
+     CI, not manual MCP tool calls with inline content (see the practical constraint above).
+  2. Nothing about the schema needs to change — Phase 1's migration can assume 0001-0009 are all live
+     (see the schema-state finding above), but should apply cleanly via `mcp__Supabase__apply_migration`
+     (this session's tool) to keep migration tracking consistent going forward, rather than raw
+     `execute_sql`.
+  3. Nothing about the vendoring/bundling approach needs to change — `engine-entry.ts` + `npm run
+     build:edge-engine` + the seedrandom banner are ready to reuse as-is for the real
+     `resolve-automation` function (which will also need `auto-decide.ts`'s exports for Phase 2, already
+     included in `engine-entry.ts`).
