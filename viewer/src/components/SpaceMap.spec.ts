@@ -155,7 +155,7 @@ describe("SpaceMap", () => {
       expect(Number(sq.getAttribute("stroke-width"))).to.be.greaterThan(0);
       expect(sq.children.length).to.equal(0);
     });
-    // deterministic from the seed, same source as LostFleetTerraformingBoard.vue's own row
+    // deterministic from the seed via factions.ts's lostFleetTerraformingBoard()
     const colors = [...squares].map((sq) => sq.getAttribute("class").split(" ")[2]);
     expect(new Set(colors).size).to.equal(7); // all 7 distinct planet types, no repeats
   });

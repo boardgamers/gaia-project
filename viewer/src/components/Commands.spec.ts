@@ -355,7 +355,7 @@ describe("Commands", () => {
     expect(asteroidTarget!.textContent).to.contain("Asteroid");
   });
 
-  it("Silent Auction: shows a ban button per available faction, and emits a banFaction move on click", async () => {
+  it("Silent Auction: shows a ban button per available faction, and asks for confirmation before emitting a banFaction move", async () => {
     const engine = new Engine(["init 3 lf-silent-ban"], { auction: AuctionVariant.Silent });
     engine.generateAvailableCommandsIfNeeded();
 
@@ -364,7 +364,12 @@ describe("Commands", () => {
     const store = makeStore();
     store.commit("receiveData", engine);
 
-    const wrapper = mount(Commands, { propsData: { currentMove: "" }, store });
+    const wrapper = mount(Commands, { propsData: { currentMove: "" }, store, attachTo: document.body });
+    // MoveButton only wires up its buttonController (needed by the modal click handler) in its
+    // `updated()` hook, not `mounted()` - force one settle cycle first, same as the render passes
+    // that naturally happen before a real user can click.
+    wrapper.vm.$forceUpdate();
+    await Vue.nextTick();
     const terransButton = wrapper.findAll("#move-buttons button.move-button").filter((w) => w.text().includes("Terrans"));
 
     expect(terransButton.length).to.equal(1);
@@ -372,9 +377,23 @@ describe("Commands", () => {
     await terransButton.at(0).trigger("click");
     await Vue.nextTick();
 
+    // A ban, just like a faction pick, must be confirmed via a modal instead of banning immediately.
+    expect(wrapper.emitted("command")).to.equal(undefined);
+    const modalTitle = document.querySelector(".gaia-viewer-modal .modal-title");
+    expect(modalTitle?.textContent).to.contain("Terrans");
+    const okButton = Array.from(document.querySelectorAll<HTMLButtonElement>(".gaia-viewer-modal .modal-footer button")).find(
+      (b) => b.textContent?.includes("ban")
+    );
+    expect(okButton, "expected an 'OK, I ban this one!' confirm button").to.not.equal(undefined);
+
+    await fireEvent.click(okButton!);
+    await Vue.nextTick();
+
     const emitted = wrapper.emitted("command");
     expect(emitted).to.not.equal(undefined);
     expect(emitted![0][0]).to.equal("p1 banFaction terrans");
+
+    wrapper.destroy();
   });
 
   it("Silent Auction: renders a bid input per picked faction, and emits a combined silentBid move on submit", async () => {
@@ -500,6 +519,29 @@ describe("Commands", () => {
 
     expect(container.querySelector("#move-buttons .sticky-bar-title")).to.equal(null);
     expect(container.querySelector("#move-title")?.classList.contains("hide-on-mobile-sticky")).to.equal(false);
+  });
+
+  it("hides the auto-leech select before round 1 (faction picking) - nothing to leech from yet", () => {
+    const engine = new Engine(["init 2 lf-no-auction"]);
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(Commands, { props: { currentMove: "" }, store });
+
+    expect(container.querySelector(".auto-leech-select")).to.equal(null);
+  });
+
+  it("shows the auto-leech select once round 1 starts, reachable from both the standalone title and the mobile sticky bar", () => {
+    const engine = createLostFleetRoundMoveEngine();
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(Commands, { props: { currentMove: "" }, store });
+
+    const selects = container.querySelectorAll(".auto-leech-select");
+    expect(selects.length).to.equal(2);
+    expect(container.querySelector("#move-title .auto-leech-select")).to.not.equal(null);
+    expect(container.querySelector("#move-buttons .sticky-bar-title .auto-leech-select")).to.not.equal(null);
   });
 
   it("drives the mobile sticky-bar spacer's height from a CSS custom property, not a direct inline height", () => {

@@ -39,10 +39,6 @@ describe("SetupPreview", () => {
 
     expect(container.querySelectorAll(".sector").length).to.be.greaterThan(0);
     expect(container.querySelectorAll("svg.lost-fleet-ship").length).to.equal(3); // Rebellion excluded at 2p
-    // LostFleetTerraformingBoard only renders once there's a mandatory-so-far color to show (a
-    // base-game opponent faction has been picked) - no factions are chosen yet in this preview, so
-    // it stays hidden (its "shared row"/per-player boxes were removed entirely, see #3).
-    expect(container.querySelector(".lost-fleet-terraforming-board")).to.equal(null);
     expect(container.querySelector("svg.research-board")).to.not.equal(null);
     expect(seedText(container)).to.be.a("string").that.is.not.empty;
     // No separate lock-in step - "Create game" lives in CreateGame.vue and

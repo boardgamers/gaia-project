@@ -11,10 +11,11 @@
       <SilentAuctionInfo v-if="showSilentAuctionInfo" />
       <!-- "Auto leech": lets the engine's own already-implemented decision logic
            (engine/src/auto-charge.ts) auto-resolve power-charge/decline offers instead of asking
-           every time - a per-browser preference (never synced/persisted as part of game state),
-           so it's shown wherever there's a decision to make at all, same as everywhere else. -->
+           every time - a per-browser preference (never synced/persisted as part of game state).
+           Hidden before round 1 (see showAutoLeechSelect) - faction pick/ban/silent-auction-bid/
+           initial-building setup have nothing to leech from yet. -->
       <b-form-select
-        v-if="!init"
+        v-if="showAutoLeechSelect"
         size="sm"
         class="ml-auto auto-leech-select"
         style="width: auto"
@@ -26,18 +27,6 @@
       />
     </div>
     <div id="move-buttons" ref="moveButtons" :class="{ 'mobile-sticky-actions': showStickyMobileBar }">
-      <!-- Same status line as #move-title above, shown only inside the mobile sticky bar (once it's
-           actually pinned, i.e. narrow viewports - see the .sticky-bar-title/.hide-on-mobile-sticky
-           CSS) - freeing up the space #move-title used to occupy alone on mobile once round 1+
-           starts, instead of duplicating it on screen. -->
-      <div v-if="showStickyMobileBar" class="sticky-bar-title d-flex align-items-center">
-        <h5 class="mb-0">
-          <RichTextView :content="statusLine" />
-        </h5>
-        <b-btn v-if="showSilentAuctionInfo" v-b-modal.silent-auction-info variant="link" size="sm" class="ml-2 silent-auction-info-button">
-          How does the auction work? <b-badge variant="info" pill>i</b-badge>
-        </b-btn>
-      </div>
       <div v-if="init" class="d-flex flex-wrap align-content-stretch">
         <MoveButton
           v-for="i in [2, 3, 4]"
@@ -86,8 +75,8 @@
           v-for="faction in factionToBan.data"
           :button="{
             command: `${factionToBan.name} ${faction}`,
+            modal: modalDialog(factionName(faction), tooltip(faction), 'OK, I ban this one!'),
             label: factionPickerLabel(faction),
-            tooltip: tooltip(faction),
             shortcuts: [factionShortcut(faction)],
           }"
           :controller="controller"
@@ -113,6 +102,30 @@
           />
         </div>
         <b-btn variant="primary" @click="submitSilentBid">Submit bids</b-btn>
+      </div>
+      <!-- Same status line as #move-title above, shown only inside the mobile sticky bar (once it's
+           actually pinned, i.e. narrow viewports - see the .sticky-bar-title/.hide-on-mobile-sticky
+           CSS) - freeing up the space #move-title used to occupy alone on mobile once round 1+
+           starts, instead of duplicating it on screen. Placed last (below the action buttons) as a
+           highlighted banner, so the buttons themselves are reachable first. -->
+      <div v-if="showStickyMobileBar" class="sticky-bar-title d-flex align-items-center">
+        <h5 class="mb-0">
+          <RichTextView :content="statusLine" />
+        </h5>
+        <b-btn v-if="showSilentAuctionInfo" v-b-modal.silent-auction-info variant="link" size="sm" class="ml-2 silent-auction-info-button">
+          How does the auction work? <b-badge variant="info" pill>i</b-badge>
+        </b-btn>
+        <b-form-select
+          v-if="showAutoLeechSelect"
+          size="sm"
+          class="ml-auto auto-leech-select"
+          style="width: auto"
+          v-b-tooltip.hover
+          title="Auto leech: automatically accept or decline power-charge offers up to this amount, instead of asking every time"
+          :value="autoChargePower"
+          @change="setAutoChargePower"
+          :options="autoChargePowerOptions"
+        />
       </div>
     </div>
     <!-- reserves the sticky bar's actual rendered height (tracked live via ResizeObserver, capped
@@ -201,10 +214,11 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
       return factionDesc(faction, factionVariantBoard(this.factionCustomization, faction)?.board, this.engine.expansions);
     },
 
-    modalDialog(title: string, msg: string): ModalButtonData {
+    modalDialog(title: string, msg: string, okTitle?: string): ModalButtonData {
       return {
         title: title,
         content: msg,
+        okTitle,
         show(s: boolean) {
           show = s;
         },
@@ -414,6 +428,19 @@ export default class Commands extends Vue implements CommandController {
    * during player-count/faction-picking/initial-building setup. */
   get showStickyMobileBar(): boolean {
     return !this.init && !this.isChoosingFaction && this.engine.round >= 1;
+  }
+
+  /** Auto-leech is a per-round-action preference - hide it during player-count/faction-picking/
+   * banning/silent-auction-bidding/initial-building setup, same "round 1+" boundary as
+   * showStickyMobileBar, so it doesn't show before there's anything to leech from. */
+  get showAutoLeechSelect(): boolean {
+    return (
+      !this.init &&
+      !this.isChoosingFaction &&
+      !this.isBanningFaction &&
+      !this.isSilentBidding &&
+      this.engine.round >= 1
+    );
   }
 
   /** Live-tracked rendered height of #move-buttons (already capped by its own CSS max-height +
@@ -971,9 +998,19 @@ $mobile-sticky-actions-max-height: 40vh;
 
 // The in-bar status line (.sticky-bar-title) is only meant for the narrow/mobile sticky layout -
 // on wider viewports #move-buttons isn't pinned/fixed, so keep using the standalone #move-title
-// there instead of showing the status line twice.
+// there instead of showing the status line twice. Styled as a highlighted banner so it reads as
+// "current turn status," distinct from the action buttons sitting above it in the same bar.
 .sticky-bar-title {
   display: none;
+  margin-top: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  background: var(--warningLight, #fff3cd);
+  border: 1px solid var(--warning, #ffc107);
+
+  h5 {
+    font-weight: 600;
+  }
 }
 
 // Default/wide-viewport state: no fixed bar overlay exists to compensate for, so the spacer must

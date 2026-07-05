@@ -21,7 +21,6 @@
       />
     </svg>
     <LostFleetShips class="mt-2" />
-    <LostFleetTerraformingBoard class="mt-2" />
     <Pool class="mt-2" />
   </div>
 </template>
@@ -32,7 +31,6 @@ import { Component } from "vue-property-decorator";
 import Engine, { BoardAction as BoardActionEnum, ResearchField } from "@gaia-project/engine";
 import BoardAction from "../components/BoardAction.vue";
 import LostFleetShips from "../components/LostFleetShips.vue";
-import LostFleetTerraformingBoard from "../components/LostFleetTerraformingBoard.vue";
 import Pool from "../components/Pool.vue";
 import ResearchBoard from "../components/ResearchBoard.vue";
 import ScoringBoard from "../components/ScoringBoard.vue";
@@ -51,7 +49,6 @@ import { researchBoardHeight } from "../logic/utils";
     ScoringBoard,
     BoardAction,
     LostFleetShips,
-    LostFleetTerraformingBoard,
     Pool,
   },
 })

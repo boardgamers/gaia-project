@@ -42,9 +42,6 @@
       <div class="row mt-2" v-if="engine.options.lostFleet">
         <LostFleetShips class="col-12" />
       </div>
-      <div class="row mt-2" v-if="engine.options.lostFleet">
-        <LostFleetTerraformingBoard class="col-12" />
-      </div>
       <div class="row mt-2">
         <!-- Mobile order flips once real gameplay starts (round 1+): before that, Commands holds
              the actual setup UI (player count / faction pick / starting build), so it stays first
@@ -181,7 +178,6 @@ import ResearchBoard from "./ResearchBoard.vue";
 import ScoringBoard from "./ScoringBoard.vue";
 import SpaceMap from "./SpaceMap.vue";
 import LostFleetShips from "./LostFleetShips.vue";
-import LostFleetTerraformingBoard from "./LostFleetTerraformingBoard.vue";
 import TurnOrder from "./TurnOrder.vue";
 import { researchBoardHeight } from "../logic/utils";
 import { parseCommands } from "../logic/recent";
@@ -207,7 +203,6 @@ const PREMOVE_EXPLAINER_DISMISSED_KEY = "premoveExplainerDismissed";
     ScoringBoard,
     SpaceMap,
     LostFleetShips,
-    LostFleetTerraformingBoard,
     TurnOrder,
     Rules,
     Table,

@@ -217,12 +217,13 @@ export default Vue.extend({
   display: flex;
   align-items: center;
   padding: 0.15rem;
-  border-radius: 1rem;
-  border: 1px solid transparent;
+  border-radius: 50%;
+  border: 2px solid transparent;
 
   &--active {
     border-color: var(--success, #28a745);
-    background: rgba(40, 167, 69, 0.08);
+    background: rgba(40, 167, 69, 0.35);
+    box-shadow: 0 0 0 1px var(--success, #28a745);
   }
 }
 

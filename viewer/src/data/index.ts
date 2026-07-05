@@ -13,7 +13,13 @@ export type ButtonWarning = {
   okButton?: { label: string; action: () => void };
 };
 
-export type ModalButtonData = { title: string; content: string; canActivate: () => boolean; show: (boolean) => void };
+export type ModalButtonData = {
+  title: string;
+  content: string;
+  canActivate: () => boolean;
+  show: (boolean) => void;
+  okTitle?: string;
+};
 
 export type SpecialActionIncome = string;
 

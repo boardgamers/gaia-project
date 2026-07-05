@@ -37,7 +37,7 @@
       @hide="modalCancel"
       dialog-class="gaia-viewer-modal"
       :title="button.modal.title"
-      ok-title="OK, I pick this one!"
+      :ok-title="button.modal.okTitle || 'OK, I pick this one!'"
     >
       <div v-html="button.modal.content"></div>
     </b-modal>
