@@ -239,9 +239,16 @@ export default class Game extends Vue {
 
   // Premove (PREMOVE_PLAN.md) - hosted mode only. `premoveBackup` is the real engine state to
   // restore to once the preview is queued or cancelled (same "stash the real state, swap
-  // state.data to a preview, restore later" shape as replayData above).
+  // state.data to a preview, restore later" shape as replayData above). `premoveComposeBase` is
+  // the FORCED preview clone startPremove() builds (this seat's turn, any prior queued moves in
+  // a Sequential chain already applied) - applyPremoveMove() must always replay the full
+  // accumulated move string from this stable base, never from `this.engine` (which handleData()
+  // mutates on every partial-move call, so replaying the full string on top of it would
+  // re-execute an already-applied partial move) nor from `premoveBackup` (which lacks the
+  // "force this seat's turn" override and any prior chain moves).
   premoveMode = false;
   premoveBackup: Engine = null;
+  premoveComposeBase: Engine = null;
   premoveSeat: number = null;
   premoveReady = false;
   premoveDraftMove = "";
@@ -535,6 +542,7 @@ export default class Game extends Vue {
     // state (empty priorMoves), since every rank is an alternative for the one upcoming turn.
     const priorMoves = this.effectivePremoveMode === "sequential" ? this.myQueuedPremoves.map((p) => p.move) : [];
     const clone = buildSequentialChainPreview(this.engine, seat, priorMoves);
+    this.premoveComposeBase = JSON.parse(JSON.stringify(clone));
     this.handleData(clone);
   }
 
@@ -545,18 +553,22 @@ export default class Game extends Vue {
     this.premoveMode = false;
     this.premoveReady = false;
     this.premoveSeat = null;
+    this.premoveComposeBase = null;
     const backup = this.premoveBackup;
     this.premoveBackup = null;
     this.handleData(Engine.fromData(backup));
   }
 
   applyPremoveMove(move: string) {
-    // Always replay the FULL accumulated move string from the stable pre-premove snapshot, never
-    // from `this.engine` - handleData() below commits the (mutated, partial-move-applied) result
-    // back into `this.engine` on every call, so cloning from `this.engine` here would re-execute an
-    // already-applied partial move on top of itself and throw "Cannot execute a move after
-    // executing an incomplete move" the moment a premove needs more than one click to compose.
-    const copy = Engine.fromData(JSON.parse(JSON.stringify(this.premoveBackup)));
+    // Always replay the FULL accumulated move string from the stable compose-base snapshot taken
+    // once in startPremove(), never from `this.engine` - handleData() below commits the (mutated,
+    // partial-move-applied) result back into `this.engine` on every call, so cloning from
+    // `this.engine` here would re-execute an already-applied partial move on top of itself and
+    // throw "Cannot execute a move after executing an incomplete move" the moment a premove needs
+    // more than one click to compose. `premoveBackup` alone isn't right either - it lacks the
+    // "force this seat's turn" override and any prior Sequential-chain moves that
+    // buildSequentialChainPreview baked into premoveComposeBase.
+    const copy = Engine.fromData(JSON.parse(JSON.stringify(this.premoveComposeBase)));
     if (move) {
       try {
         copy.move(move);
