@@ -211,6 +211,40 @@ describe("hosted game host", () => {
     expect(states[0].playerToMove).to.equal(host.engine.playerToMove);
   });
 
+  it("skips rebuilding/re-emitting on a resync that finds nothing new (spurious tab-foreground/reconnect resync)", async () => {
+    const backend = new FakeBackend(gameRow(), playerRows());
+    backend.seedMoves(SETUP_MOVES);
+    const { host, states } = makeHost(backend);
+    await host.load();
+
+    const engineBeforeResync = host.engine;
+    expect(states).to.have.length(1);
+
+    // Nothing changed server-side - this mirrors hosted.ts's visibilitychange listener firing on
+    // every tab foreground, or a realtime channel reconnecting with no new moves in between.
+    await host.resync();
+
+    expect(states, "a no-op resync must not emit a new state").to.have.length(1);
+    expect(host.engine, "a no-op resync must not replace the Engine object").to.equal(engineBeforeResync);
+  });
+
+  it("still rebuilds/re-emits on a resync that finds a real new move", async () => {
+    const backend = new FakeBackend(gameRow(), playerRows());
+    backend.seedMoves(SETUP_MOVES);
+    const { host, states } = makeHost(backend);
+    await host.load();
+
+    // Simulate another client/tab committing a move directly against the backend, bypassing this
+    // host entirely (the scenario a resync is actually meant to catch up on). Per this file's
+    // SETUP_MOVES doc comment, the next legal turn is terrans' "build ts -1x2.".
+    backend.seedMoves([...SETUP_MOVES, "terrans build ts -1x2."]);
+
+    await host.resync();
+
+    expect(states, "a real change must still emit a new state").to.have.length(2);
+    expect(host.committedMoveCount).to.equal(SETUP_MOVES.length + 1);
+  });
+
   it("maps the session user to seats by user id and by invited email", async () => {
     const backend = new FakeBackend(gameRow(), playerRows());
     backend.seedMoves(SETUP_MOVES);

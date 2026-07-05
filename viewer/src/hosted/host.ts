@@ -312,9 +312,25 @@ export class HostedGameHost {
 
   private async resyncNow(): Promise<void> {
     const [game, moves] = await Promise.all([this.backend.fetchGame(this.gameId), this.backend.fetchMoves(this.gameId)]);
+
+    // A resync can fire for reasons that have nothing to do with the game actually changing - a
+    // backgrounded tab coming back to the foreground (hosted.ts's visibilitychange listener), or a
+    // realtime channel reconnecting after a network blip. Rebuilding the Engine and re-emitting
+    // unconditionally in those cases replaces the store's Engine with a new object even when its
+    // content is identical, which Commands.vue's `watch: availableCommands` treats as a real
+    // change - resetting `commandChain`/`buttonChain`, i.e. wiping out whatever multi-step
+    // selection (e.g. mid-way through picking a Build-a-Mine hex) the user was in, with no action
+    // of their own. Skip the rebuild when nothing has actually landed since our current engine:
+    // `committedMoveCount` is always live (derived from `this.engine.moveHistory`, kept in sync by
+    // every local commit/remote-move-apply already), so comparing it against the freshly-fetched
+    // move count is reliable without needing `this.game`'s own cached fields to be kept in perfect
+    // sync everywhere.
+    const unchanged = this.engine && moves.length === this.committedMoveCount && game.status === this.game?.status;
     this.game = game;
-    this.engine = this.buildEngine(game, moves);
-    this.emitState(this.engine);
+    if (!unchanged) {
+      this.engine = this.buildEngine(game, moves);
+      this.emitState(this.engine);
+    }
     await this.refreshPremoveState();
     await this.resolveAutoDecisions();
   }
