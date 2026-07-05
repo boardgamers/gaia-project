@@ -341,4 +341,104 @@ describe("Game", () => {
     vm.$el.remove();
     vm.$destroy();
   });
+
+  describe("premove (hosted mode)", () => {
+    const SETUP_MOVES = [
+      "init 2 randomSeed",
+      "p1 faction terrans",
+      "p2 faction nevlas",
+      "terrans build m -1x2",
+      "nevlas build m -1x0",
+      "nevlas build m 0x-4",
+      "terrans build m -4x-1",
+      "nevlas booster booster7",
+      "terrans booster booster3",
+    ];
+
+    function mountAsSeat(seatIndex: number | undefined) {
+      const engine = new Engine(SETUP_MOVES);
+      const store = makeStore();
+      if (seatIndex !== undefined) {
+        store.commit("player", { index: seatIndex });
+      }
+      const vm = new (Vue.extend(Game as any))({ store }) as any;
+      vm.handleData(engine);
+      vm.$mount();
+      document.body.appendChild(vm.$el);
+      return vm;
+    }
+
+    it("offers Plan my move for a locked seat whose turn it isn't", () => {
+      // playerToMove is 0 (terrans); this session is locked to seat 1 (nevlas).
+      const vm = mountAsSeat(1);
+
+      expect(vm.premoveOffered).to.equal(true);
+      expect(vm.$el.textContent).to.contain("Plan my move");
+
+      vm.$el.remove();
+      vm.$destroy();
+    });
+
+    it("does not offer a premove for the seat currently on turn", () => {
+      const vm = mountAsSeat(0);
+
+      expect(vm.premoveOffered).to.equal(false);
+
+      vm.$el.remove();
+      vm.$destroy();
+    });
+
+    it("does not offer a premove with no seat lock (spectator or hot-seat test game)", () => {
+      const vm = mountAsSeat(undefined);
+
+      expect(vm.premoveOffered).to.equal(false);
+      expect(vm.$el.textContent).to.not.contain("Plan my move");
+
+      vm.$el.remove();
+      vm.$destroy();
+    });
+
+    it("startPremove swaps into a preview clone where it's the locked seat's turn, and cancelPremoveMode restores the real state", () => {
+      const vm = mountAsSeat(1);
+
+      vm.startPremove();
+
+      expect(vm.premoveMode).to.equal(true);
+      expect(vm.canPlay).to.equal(true);
+      expect(vm.engine.playerToMove).to.equal(1);
+
+      vm.cancelPremoveMode();
+
+      expect(vm.premoveMode).to.equal(false);
+      expect(vm.engine.playerToMove).to.equal(0);
+
+      vm.$el.remove();
+      vm.$destroy();
+    });
+
+    it("composing a full turn via premoveMove enables Queue this move, and queuing dispatches it with the locked seat", () => {
+      const vm = mountAsSeat(1);
+      vm.startPremove();
+
+      const dispatched: any[] = [];
+      const originalDispatch = vm.$store.dispatch.bind(vm.$store);
+      vm.$store.dispatch = (type: string, payload: unknown) => {
+        dispatched.push({ type, payload });
+        return originalDispatch(type, payload);
+      };
+
+      expect(vm.premoveReady).to.equal(false);
+      // A research track upgrade completes the turn in one command (no further prompts).
+      vm.applyPremoveMove("nevlas up terra.");
+      expect(vm.premoveReady).to.equal(true);
+
+      vm.queueCurrentPremove();
+
+      expect(dispatched).to.deep.equal([{ type: "queuePremove", payload: { seat: 1, move: "nevlas up terra." } }]);
+      expect(vm.premoveMode).to.equal(false);
+
+      vm.$el.remove();
+      vm.$destroy();
+    });
+  });
 });

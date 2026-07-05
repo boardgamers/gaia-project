@@ -345,6 +345,68 @@ describe("Engine", () => {
     expect(engine.player(PlayerEnum.Player2).data.victoryPoints).to.equal(124);
   });
 
+  describe("previewAvailableCommandsFor", () => {
+    const setupMoves = `
+      init 2 randomSeed
+      p1 faction terrans
+      p2 faction nevlas
+      terrans build m -1x2
+      nevlas build m -1x0
+      nevlas build m 0x-4
+      terrans build m -4x-1
+      nevlas booster booster7
+      terrans booster booster3
+    `;
+
+    it("returns null for the seat whose turn it already is", () => {
+      const engine = new Engine(parseMoves(setupMoves));
+      expect(engine.phase).to.equal(Phase.RoundMove);
+      expect(engine.playerToMove).to.equal(PlayerEnum.Player1);
+      expect(engine.previewAvailableCommandsFor(PlayerEnum.Player1)).to.equal(null);
+    });
+
+    it("returns the seat's legal commands as if it were their turn", () => {
+      const engine = new Engine(parseMoves(setupMoves));
+      const preview = engine.previewAvailableCommandsFor(PlayerEnum.Player2);
+      expect(preview).to.not.equal(null);
+      expect(preview.some((c) => c.player === PlayerEnum.Player2)).to.equal(true);
+    });
+
+    it("does not mutate the real engine", () => {
+      const engine = new Engine(parseMoves(setupMoves));
+      const before = JSON.stringify(engine);
+      engine.previewAvailableCommandsFor(PlayerEnum.Player2);
+      expect(JSON.stringify(engine)).to.equal(before);
+      expect(engine.playerToMove).to.equal(PlayerEnum.Player1);
+    });
+
+    it("returns null for a seat that has already passed this round", () => {
+      const engine = new Engine(
+        parseMoves(`
+          init 2 randomSeed
+          p1 faction lantids
+          p2 faction gleens
+          p1 build m -4x2
+          p2 build m -2x2
+          p2 build m 1x2
+          p1 build m -4x-1
+          p2 booster booster3
+          p1 booster booster4
+          p1 pass booster5
+        `)
+      );
+      expect(engine.phase).to.equal(Phase.RoundMove);
+      expect(engine.passedPlayers).to.include(PlayerEnum.Player1);
+      expect(engine.previewAvailableCommandsFor(PlayerEnum.Player1)).to.equal(null);
+    });
+
+    it("returns null outside of Phase.RoundMove (e.g. during setup)", () => {
+      const engine = new Engine(parseMoves("init 2 randomSeed\np1 faction terrans"));
+      expect(engine.phase).to.not.equal(Phase.RoundMove);
+      expect(engine.previewAvailableCommandsFor(PlayerEnum.Player2)).to.equal(null);
+    });
+  });
+
   describe("fromData", () => {
     it("should be able to load/save state", function () {
       this.timeout(10000);

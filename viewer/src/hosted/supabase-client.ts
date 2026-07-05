@@ -1,5 +1,13 @@
 import { supabaseConfig } from "./config";
-import { CommitTurnArgs, GameRow, HostedBackend, MoveRow, PlayerRow } from "./types";
+import {
+  CommitTurnArgs,
+  GameRow,
+  HostedBackend,
+  MoveRow,
+  PlayerRow,
+  PremoveFailureRow,
+  PremoveRow,
+} from "./types";
 
 // supabase-js v2 is loaded at runtime from its self-contained UMD bundle
 // instead of npm: this repo's webpack 4 cannot parse post-ES2019 syntax
@@ -66,6 +74,25 @@ export function createSupabaseBackend(client: SupabaseClient): HostedBackend {
           p_player_updates: args.playerUpdates,
         })
       ),
+    // RLS already scopes these to the caller's own seats (0010_premoves.sql), so no seat filter.
+    fetchPremoves: (gameId): Promise<PremoveRow[]> =>
+      unwrap(client.from("premoves").select("seat,seq,move,queued_move_count").eq("game_id", gameId).order("seq")),
+    fetchPremoveFailures: (gameId): Promise<PremoveFailureRow[]> =>
+      unwrap(
+        client
+          .from("premove_failures")
+          .select("id,seat,move,reason,read_at")
+          .eq("game_id", gameId)
+          .is("read_at", null)
+          .order("created_at")
+      ),
+    queuePremove: (gameId, seat, move): Promise<number> =>
+      unwrap(client.rpc("queue_premove", { p_game_id: gameId, p_seat: seat, p_move: move })),
+    cancelPremove: (gameId, seat, seq): Promise<void> =>
+      unwrap(client.rpc("cancel_premove", { p_game_id: gameId, p_seat: seat, p_seq: seq })),
+    markPremoveFailureRead: (id): Promise<void> => unwrap(client.rpc("mark_premove_failure_read", { p_id: id })),
+    setAutoCharge: (gameId, seat, pref): Promise<void> =>
+      unwrap(client.rpc("set_auto_charge", { p_game_id: gameId, p_seat: seat, p_pref: pref })),
   };
 }
 

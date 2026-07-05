@@ -58,6 +58,21 @@
           :class="['col-md-4', 'order-md-1', gameplayStarted ? 'order-1' : 'order-2']"
         />
         <div :class="['col-md-8', 'order-md-2', gameplayStarted ? 'order-2' : 'order-1']">
+          <div v-if="premoveMode" class="alert alert-info premove-banner">
+            <strong>PREMOVE</strong> — plays automatically on your turn.
+            <div class="small" v-if="!premoveReady">Build the move you want, then queue it below.</div>
+            <div class="mt-2">
+              <button
+                type="button"
+                class="btn btn-sm btn-primary mr-2"
+                :disabled="!premoveReady"
+                @click="queueCurrentPremove"
+              >
+                Queue this move
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" @click="cancelPremoveMode">Cancel</button>
+            </div>
+          </div>
           <Commands
             @command="handleCommand"
             v-if="canPlay"
@@ -70,6 +85,32 @@
             <svg viewBox="-1.2 -1.2 2.5 4.5">
               <PlayerCircle :player="turnPlayer" />
             </svg>
+            <div v-if="premoveOffered" class="premove-offer mt-2">
+              <button type="button" class="btn btn-sm btn-outline-primary" @click="startPremove">Plan my move ▸</button>
+              <div class="text-muted small mt-1" v-if="!premoveExplainerDismissed">
+                Premoves play automatically when your turn comes, even if you're offline. If the board changed and
+                your move is no longer legal, it's skipped and we'll notify you.
+                <button type="button" class="btn btn-link btn-sm p-0" @click="dismissPremoveExplainer">Got it</button>
+              </div>
+            </div>
+          </div>
+          <div v-if="myQueuedPremoves.length" class="premove-queue small mt-2">
+            <div v-for="p in myQueuedPremoves" :key="`${p.seat}-${p.seq}`">
+              Queued: {{ p.move }}
+              <button
+                type="button"
+                class="btn btn-link btn-sm p-0 text-danger"
+                @click="cancelQueuedPremove(p.seat, p.seq)"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+          <div v-if="myUnreadFailures.length" class="alert alert-warning premove-failures small mt-2">
+            <div v-for="f in myUnreadFailures" :key="f.id">
+              Your premove couldn't be played: {{ f.reason }}
+              <button type="button" class="btn btn-link btn-sm p-0" @click="markFailureRead(f.id)">Dismiss</button>
+            </div>
           </div>
         </div>
       </div>
@@ -150,6 +191,9 @@ import { currentPlayer } from "@gaia-project/engine/wrapper";
 import { UiMode } from "../store";
 import Table from "./Table.vue";
 import { orderedPlayers } from "../data/player";
+import { PremoveFailureRow, PremoveRow } from "../hosted/types";
+
+const PREMOVE_EXPLAINER_DISMISSED_KEY = "premoveExplainerDismissed";
 
 @Component<Game>({
   components: {
@@ -183,6 +227,17 @@ export default class Game extends Vue {
 
   replayData: { current: number; backup: Engine } = null;
 
+  // Premove (PREMOVE_PLAN.md) - hosted mode only. `premoveBackup` is the real engine state to
+  // restore to once the preview is queued or cancelled (same "stash the real state, swap
+  // state.data to a preview, restore later" shape as replayData above).
+  premoveMode = false;
+  premoveBackup: Engine = null;
+  premoveSeat: number = null;
+  premoveReady = false;
+  premoveDraftMove = "";
+  premoveExplainerDismissed =
+    typeof localStorage !== "undefined" && localStorage.getItem(PREMOVE_EXPLAINER_DISMISSED_KEY) === "true";
+
   @Prop()
   options: EngineOptions;
 
@@ -198,7 +253,19 @@ export default class Game extends Vue {
   created(this: Game) {
     const unsub = this.$store.subscribeAction(({ type, payload }) => {
       if (type === "externalData") {
+        // Real state just arrived - a premove-in-progress preview is no longer meaningful (the
+        // board may have changed), so drop it rather than risk building a turn against stale data.
+        if (this.premoveMode) {
+          this.premoveMode = false;
+          this.premoveBackup = null;
+          this.premoveSeat = null;
+          this.premoveReady = false;
+        }
         this.handleData(Engine.fromData(payload));
+        return;
+      }
+      if (type === "premoveMove") {
+        this.applyPremoveMove(payload as string);
         return;
       }
       if (type === "replayStart") {
@@ -364,6 +431,114 @@ export default class Game extends Vue {
     }
   }
 
+  /**
+   * Premove (PREMOVE_PLAN.md). The seat this session would premove for: exactly the seat
+   * `seatToLock` (host.ts) already resolved into `$store.state.player.index` - whichever of this
+   * user's owned seats must act next, falling back to their first owned seat while someone else is
+   * on turn. A user who owns ALL seats (test game) or none at all never gets a lock at all
+   * (`state.player` stays null), so `premoveOffered` below is automatically false for both - no
+   * extra plumbing needed to satisfy "suppress where it makes no sense" (PREMOVE_PLAN.md §7.7).
+   */
+  get myLockedSeat(): number | undefined {
+    return this.$store.state.player?.index;
+  }
+
+  get premoveOffered(): boolean {
+    return (
+      !this.premoveMode &&
+      !this.canPlay &&
+      !this.ended &&
+      this.myLockedSeat !== undefined &&
+      this.engine.previewAvailableCommandsFor(this.myLockedSeat) !== null
+    );
+  }
+
+  get myQueuedPremoves(): PremoveRow[] {
+    return (this.$store.state.premoves as PremoveRow[]) ?? [];
+  }
+
+  get myUnreadFailures(): PremoveFailureRow[] {
+    return (this.$store.state.premoveFailures as PremoveFailureRow[]) ?? [];
+  }
+
+  startPremove() {
+    const seat = this.myLockedSeat;
+    if (seat === undefined) {
+      return;
+    }
+    this.premoveBackup = JSON.parse(JSON.stringify(this.engine));
+    this.premoveSeat = seat;
+    this.premoveMode = true;
+    this.premoveReady = false;
+
+    const clone = Engine.fromData(JSON.parse(JSON.stringify(this.engine)));
+    clone.currentPlayer = seat;
+    clone.tempCurrentPlayer = undefined;
+    // Force a fresh regeneration, not generateAvailableCommandsIfNeeded(): the JSON clone still
+    // carries the REAL currentPlayer's cached availableCommands, which would otherwise be reused
+    // as-is despite currentPlayer now being reassigned (same trap Engine.previewAvailableCommandsFor
+    // itself avoids for exactly this reason).
+    clone.generateAvailableCommands();
+    this.handleData(clone);
+  }
+
+  cancelPremoveMode() {
+    if (!this.premoveBackup) {
+      return;
+    }
+    this.premoveMode = false;
+    this.premoveReady = false;
+    this.premoveSeat = null;
+    const backup = this.premoveBackup;
+    this.premoveBackup = null;
+    this.handleData(Engine.fromData(backup));
+  }
+
+  applyPremoveMove(move: string) {
+    const copy = Engine.fromData(JSON.parse(JSON.stringify(this.engine)));
+    if (move) {
+      try {
+        copy.move(move);
+        copy.generateAvailableCommandsIfNeeded();
+      } catch {
+        // Invalid partial command while composing a premove - Commands.vue only offers legal
+        // buttons in the first place, so this shouldn't normally happen; just ignore it.
+        return;
+      }
+    }
+    this.premoveReady = copy.newTurn;
+    // `move` is always the FULL accumulated turn line so far (handleCommand builds it up with
+    // ". " before ever calling addMove) - capture it now, before handleData resets currentMove to
+    // "" the instant a turn completes (same as it does for a real committed move).
+    if (copy.newTurn) {
+      this.premoveDraftMove = move;
+    }
+    this.handleData(copy);
+  }
+
+  queueCurrentPremove() {
+    if (!this.premoveReady || this.premoveSeat === null) {
+      return;
+    }
+    this.$store.dispatch("queuePremove", { seat: this.premoveSeat, move: this.premoveDraftMove });
+    this.cancelPremoveMode();
+  }
+
+  cancelQueuedPremove(seat: number, seq: number) {
+    this.$store.dispatch("cancelPremove", { seat, seq });
+  }
+
+  markFailureRead(id: string) {
+    this.$store.dispatch("markPremoveFailureRead", id);
+  }
+
+  dismissPremoveExplainer() {
+    this.premoveExplainerDismissed = true;
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(PREMOVE_EXPLAINER_DISMISSED_KEY, "true");
+    }
+  }
+
   handleData(data: Engine, keepMoveHistory?: boolean) {
     for (const sector of document.getElementsByClassName("sector") as any as Element[]) {
       sector.classList.add("notransition");
@@ -444,7 +619,10 @@ export default class Game extends Vue {
 
   addMove(command: string) {
     this.$store.commit("clearContext");
-    this.$store.dispatch("move", command);
+    // Premove (PREMOVE_PLAN.md): while composing a premove, commands accumulate against the
+    // preview clone only (handled locally by this component's own subscribeAction handler above)
+    // and never reach the launcher's real "move" forwarding to the backend.
+    this.$store.dispatch(this.premoveMode ? "premoveMove" : "move", command);
   }
 }
 </script>

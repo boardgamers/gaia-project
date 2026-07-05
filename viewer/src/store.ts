@@ -5,6 +5,7 @@ import Vue, { markRaw } from "vue";
 import Vuex from "vuex";
 import { ButtonData, GameContext, HexSelection, HighlightHex, SpecialActionIncome } from "./data";
 import { FastConversionEvent, MapMode } from "./data/actions";
+import { PremoveFailureRow, PremoveRow } from "./hosted/types";
 import { ExecuteBack, FastConversionTooltips } from "./logic/buttons/types";
 import {
   CommandObject,
@@ -59,6 +60,9 @@ export type State = {
     [key in Preference]: boolean | string;
   };
   player: { index?: number; auth?: string } | null;
+  /** Hosted mode only (PREMOVE_PLAN.md) - always empty in self-contained hot-seat play. */
+  premoves: PremoveRow[];
+  premoveFailures: PremoveFailureRow[];
 };
 
 function indexCommands(commands, command: Command) {
@@ -117,6 +121,8 @@ const gaiaViewer = {
     },
     player: null,
     avatars: [] as string[],
+    premoves: [],
+    premoveFailures: [],
   } as State,
   mutations: {
     receiveData(state: State, data: Engine) {
@@ -223,6 +229,11 @@ const gaiaViewer = {
     avatars(state, data) {
       state.avatars = data;
     },
+
+    premoveState(state: State, data: { premoves: PremoveRow[]; failures: PremoveFailureRow[] }) {
+      state.premoves = data.premoves;
+      state.premoveFailures = data.failures;
+    },
   },
   actions: {
     // No body, used for signalling with store.subscribeAction
@@ -235,6 +246,13 @@ const gaiaViewer = {
     // API COMMUNICATION
     playerClick(context: any, player: Player) {},
     move(context: any, move: string) {},
+    // Premove (PREMOVE_PLAN.md) - accumulates a command against a local preview clone only; never
+    // reaches the launcher's "move" forwarding (see Game.vue's own subscribeAction handler, which
+    // intercepts this type before it would otherwise be a no-op here).
+    premoveMove(context: any, move: string) {},
+    queuePremove(context: any, payload: { seat: number; move: string }) {},
+    cancelPremove(context: any, payload: { seat: number; seq: number }) {},
+    markPremoveFailureRead(context: any, id: string) {},
     replayInfo(context: any, info: { start: number; end: number; current: number }) {},
     // ^ up - down v
     externalData(context: any, data: Engine) {},
