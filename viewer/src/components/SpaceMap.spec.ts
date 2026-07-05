@@ -227,7 +227,9 @@ describe("SpaceMap", () => {
       const wheelScale = Number(scaleMatch[1]);
       const wheelBox = {
         left: wheelOrigin.x - 4 * wheelScale,
-        right: wheelOrigin.x + 4 * wheelScale,
+        // Lost Fleet's Asteroid/Protoplanet column sits to the right of the ring (FactionWheel.vue's
+        // extraPlanetSlots), reaching local x = 6.1 - wider than the base-game ring alone.
+        right: wheelOrigin.x + 6.1 * wheelScale,
         top: wheelOrigin.y - 4 * wheelScale,
         bottom: wheelOrigin.y + 7.6 * wheelScale,
       };

@@ -96,13 +96,17 @@ import SpaceHex from "./SpaceHex.vue";
 type Point = { x: number; y: number };
 
 // Rendered (post scale(0.65)) footprint of FactionWheel.vue's content, relative to its own
-// translate anchor: the 7-planet ring is the dominant width contributor (local x in
-// [-2.93, 2.93], +1 for the planet circles' own radius); the 2x2 extra-planet grid added in
-// Lost Fleet is narrower than the ring but taller, dominating the height instead. See
-// SpaceMap.spec.ts's "keeps the wheel ... in the left sidebar" test for the derivation. Both
-// scale linearly with `wheelScale` below (measured at the reference scale 0.65).
+// translate anchor: the 7-planet ring is the dominant width contributor in the base game (local x
+// in [-2.93, 2.93], +1 for the planet circles' own radius) and drives WHEEL_WIDTH_BASE. In Lost
+// Fleet, Asteroid/Protoplanet sit in their own column to the right of the ring instead of a 3rd/4th
+// slot below it (FactionWheel.vue's extraPlanetSlots): that column reaches local x = ring radius
+// (3) + margin (2.1) + its own circle radius (1) = 6.1, wider than the base ring, so Lost Fleet
+// needs its own, larger WHEEL_WIDTH_LOST_FLEET. Height is still ring-vs-below-wheel-row dominated
+// either way. See SpaceMap.spec.ts's "keeps the wheel ... in the left sidebar" test for the
+// derivation. Both scale linearly with `wheelScale` below (measured at the reference scale 0.65).
 const WHEEL_SCALE_REFERENCE = 0.65;
-const WHEEL_WIDTH = 5.5;
+const WHEEL_WIDTH_BASE = 5.5;
+const WHEEL_WIDTH_LOST_FLEET = 7;
 const WHEEL_HEIGHT = 7.9;
 
 // Rendered footprint of the top-right UI, relative to `bounds.right`: the Tinkeroids/Moweyds
@@ -349,7 +353,7 @@ export default class SpaceMap extends Vue {
     // plus a small extra CLEARANCE margin, not just clear the hex's bare center.
     const hexRadius = 1;
 
-    const wheelWidth = WHEEL_WIDTH * this.wheelScaleRatio;
+    const wheelWidth = (this.isLostFleet ? WHEEL_WIDTH_LOST_FLEET : WHEEL_WIDTH_BASE) * this.wheelScaleRatio;
     const wheelHeight = WHEEL_HEIGHT * this.wheelScaleRatio;
     const legendCount = this.colorLegend.length;
     const legendBottom = legendCount > 0 ? LEGEND_TOP_OFFSET + (legendCount - 1) * LEGEND_ITEM_HEIGHT + LEGEND_ITEM_SIZE : 0;

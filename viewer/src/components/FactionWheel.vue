@@ -94,22 +94,35 @@ export default class FactionWheel extends Vue {
   }
 
   get extraPlanetSlots(): Array<{ planet: Planet; x: number; y: number }> {
-    const planets = this.gameData.options.lostFleet
-      ? [...standardExtraPlanets, ...lostFleetExtraPlanets]
-      : standardExtraPlanets;
-
-    // Circle markers (matching the ring's own planet circles) in a compact 2-column grid instead
-    // of a single wide row: narrower than the 7-planet ring itself, so it no longer widens the
-    // wheel's overall footprint - the map has more room to use the freed-up width. Spacing is
-    // larger than the circles' own diameter (2x radius-1) so they don't touch edge-to-edge.
+    // Circle markers (matching the ring's own planet circles). Gaia/Transdim sit in a row below
+    // the wheel; the ring's own lowest circles reach y = r*cos(25.71deg) + 1 (their own radius) =
+    // ~3.7 at r=3, so the below-wheel row's circle centers need to clear that by more than 1 (its
+    // own radius) - use a visible margin instead of the bare minimum so they never look like
+    // they're touching.
     const spacing = 2.6;
-    const columns = 2;
-    const startX = -((columns - 1) * spacing) / 2;
-    return planets.map((planet, index) => ({
+    const belowY = this.r + 2.1;
+    const below = standardExtraPlanets.map((planet, index) => ({
       planet,
-      x: startX + (index % columns) * spacing,
-      y: 4.6 + Math.floor(index / columns) * spacing,
+      x: -((standardExtraPlanets.length - 1) * spacing) / 2 + index * spacing,
+      y: belowY,
     }));
+
+    if (!this.gameData.options.lostFleet) {
+      return below;
+    }
+
+    // Lost Fleet's Asteroid/Protoplanet sit in their own column to the right of the wheel instead
+    // of a 3rd/4th slot below it - keeps the below-wheel row to the 2 standard planets and gives
+    // the map sidebar back the width the old 2-column grid used. The ring's own rightmost circles
+    // reach x = r*sin(77.14deg) + 1 = ~3.9 at r=3; same margin approach as belowY above.
+    const rightX = this.r + 2.1;
+    const right = lostFleetExtraPlanets.map((planet, index) => ({
+      planet,
+      x: rightX,
+      y: -((lostFleetExtraPlanets.length - 1) * spacing) / 2 + index * spacing,
+    }));
+
+    return [...below, ...right];
   }
 
   factionInitial(planet: Planet): string {
