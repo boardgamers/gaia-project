@@ -27,7 +27,8 @@ const tls = require("tls");
 function bundledWs() {
   const candidates = [];
   try {
-    candidates.push(path.join(path.dirname(require.resolve("playwright-core")), "utilsBundle.js"));
+    const coreDir = path.dirname(require.resolve("playwright-core"));
+    candidates.push(path.join(coreDir, "utilsBundle.js"), path.join(coreDir, "lib", "utilsBundle.js"));
   } catch (err) {
     /* fall through */
   }
