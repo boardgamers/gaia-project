@@ -442,10 +442,13 @@ skip a seat that has a queued premove. Owner already accepted a similar leech-ch
   is actually deployed, a fully-offline player with auto-charge enabled will progress past leech
   interrupts into their queued premove.
 
-- **Phase 3 — Multi-round queue (genuinely optional).** Not started. `seq`-ordered depth per seat;
-  premove #2's preview is built against a disposable clone with premove #1 already applied (chain
-  the preview off the same clone), not fresh current-state; "more likely to be skipped" UI
-  messaging.
+- **Phase 3 — Multi-slot queue: Sequential + Priority (design finalized 2026-07-05).** Not started
+  in code. Two mutually-exclusive per-seat queue modes, both up to depth 3, both available at every
+  player count. **The full design is the "Phase 3 design" section below (10.1–10.8)** — read it
+  instead of this bullet. Short version:
+  *Sequential* = a chain of your next N turns (#2 previewed against a clone with #1 applied); *Priority*
+  = up to 3 ranked alternatives for the **one** upcoming turn, first legal one wins. `seq`-ordered
+  either way, disambiguated by a new `mode` column.
 
 **Deploying `resolve-automation` is now the single remaining blocker** for the whole feature's
 offline promise (Phases 1 and 2 are both otherwise complete) — see PROGRESS.md #66's note on why
@@ -464,6 +467,172 @@ deploy resolve-automation --project-ref mitawjpdxkheascdiffz`, then seed
 - **Ship Phase 1 alone, or Phase 1+2 together?** The feature's headline ("works offline") is only
   fully true after Phase 2. Recommendation: ship them together, or ship Phase 1 with the limitation
   stated in-product.
+
+---
+
+## Phase 3 design — Sequential + Priority premoves (finalized 2026-07-05)
+
+> Owner-refined over two design passes (2026-07-05). This section supersedes the one-line Phase 3
+> bullet in §8. **Nothing here is built yet** — it is the spec a Phase 3 implementation session
+> executes. Read §2 (`previewAvailableCommandsFor`), §3 (data model), §4c (executor), §5 (fast-path)
+> and §7 (UX) first; this section only states the *deltas* from Phase 1/2, not the whole feature.
+
+### 10.1 Two modes, never combined
+
+A seat's queue is in exactly one mode at a time:
+
+- **Sequential** — a script of your next *N* turns. Premove #2's legal options are previewed against
+  a disposable clone with #1 **already applied**; #3 against a clone with #1+#2 applied (chain the
+  preview off the same clone, not fresh current state). It is a plan, not a wishlist.
+- **Priority** — up to *N* ranked **alternatives for the single upcoming turn**. All ranks are
+  previewed against the **same fresh current state** (one turn ahead only). At execution time the
+  lowest-rank *legal* option fires; the rest are discarded.
+
+Both are capped at **depth 3**. Both are available at **every player count** (owner decision
+2026-07-05 — no player-count cap on sequential depth; a legal-but-suboptimal outcome from deep
+premoving is explicitly the player's own risk to take, so we do **not** try to detect or block it).
+
+**They are not combined** (no per-turn priority lists inside a multi-turn chain — that needs a
+combinatorial preview against every possible winner of each earlier turn, and an illegible UI; see
+the "Can they be combined?" analysis in the design thread). Switching a seat's mode **clears that
+seat's queue** (with a confirm), because the two modes interpret `seq` and failure incompatibly.
+
+### 10.2 Why the two modes are genuinely different (and both wanted)
+
+- **Sequential = throughput** (advance more of *your* turns while away); **Priority = insurance**
+  (guarantee *a* good turn even if the board shifts). Orthogonal axes: depth vs. breadth.
+- Sequential fails hard at the first broken link; Priority degrades gracefully (worst case: all
+  ranks illegal → one notification). Neither can catch "still legal but now suboptimal" — Priority
+  only falls through on *illegal*, not *bad*. That ceiling is accepted, not designed around (owner
+  decision): the info button states it honestly so an auto-played legal-but-bad move reads as the
+  opted-in tradeoff, not a misplay.
+- Sequential is strongest in 2p (one opponent action between your turns) and increasingly
+  speculative at higher counts (~6 opponent actions before your 2nd turn in 4p) — but it stays
+  available everywhere; the staleness surfacing (§10.6) is how the risk is communicated rather than
+  prevented.
+- Good Priority use cases that aren't obvious: **pass-and-take-booster** ("pass taking booster A > B
+  > C") and any contested claim (federation token, advanced tech, artifact) — exactly the scenarios
+  the #69 race-condition audit enumerated.
+
+### 10.3 Data model delta (extends §3)
+
+```sql
+-- Distinguish the two queue interpretations. All of a seat's rows share one mode.
+alter table public.premoves
+  add column if not exists mode text not null default 'sequential'
+    check (mode in ('sequential','priority'));
+```
+
+`seq` keeps its meaning "1 = first to attempt": turn-order in Sequential, priority-rank in Priority.
+No other schema change — `premove_failures`, RLS, and the realtime-exclusion all carry over.
+
+### 10.4 RPC deltas (extend §4a)
+
+- **`queue_premove` gains `p_mode text`.** Assert the seat's existing rows (if any) are the **same
+  mode**; reject a mismatch with a distinct error the client turns into "switch mode clears your
+  queue first." `seq = coalesce(max(seq),0)+1` as today.
+- **`cancel_all_premoves(p_game_id, p_seat) returns void`** *(new)* — clears a seat's whole queue in
+  one call (used by the mode toggle, and by §10.7 reconciliation). Security-definer, seat-ownership
+  asserted, same grant treatment as the other authenticated RPCs.
+- **`reorder_premove(p_game_id, p_seat, p_seq, p_direction text) returns void`** *(new, Priority
+  only)* — swaps a row's `seq` with its neighbour (up/down) so the user can re-rank without
+  cancel+rebuild. Reject on a sequential queue (order there is turn-order, not a preference).
+- **`cancel_premove`** (single-row) keeps working; the **cascade** on a sequential cancel (§10.5) is
+  applied client-side by also cancelling the dependent higher-`seq` rows, or add a
+  `p_cascade boolean` — implementer's choice, but the *behaviour* is mandatory.
+
+### 10.5 Executor delta — the resolver branches on `mode` (extends §4c)
+
+The single most important Phase 3 change: **factor the queue-resolution decision into one shared
+helper** (`resolvePremoveQueue(engine, seat, rows, mode)` in a spot both the client fast-path in
+`host.ts` and the `resolve-automation` edge function import — same pattern as `auto-decide.ts`), so
+online and offline resolution are byte-identical. It still resolves **exactly one committed turn per
+invocation** and commits **one `moves` row** (the one-row-per-turn / `seq` invariant is unchanged).
+
+- **Sequential** (this is essentially today's Phase 1 behaviour + cascade cleanup):
+  - Take the lowest-`seq` row. `engine.move()` on a clone.
+  - **success + `newTurn`** → `commit_automated_turn`, delete that row. Remaining rows are untouched;
+    because the resolver always takes the lowest remaining `seq`, **#2 automatically becomes the next
+    to fire** (the UI renumbers for display — §10.6). No renumbering write needed.
+  - **throws** → delete that row **and cascade-delete every higher-`seq` row for the seat** (they
+    were previewed assuming this one landed), write **one** `premove_failures` row noting the cascade
+    ("premove 1 failed; 2–3 discarded — they depended on it"). Do not attempt the rest.
+  - **applies but `!newTurn`** → same as Phase 1 (delete, failure row "did not complete a turn").
+- **Priority**:
+  - Iterate rows in ascending `seq` (rank 1 first). For each, `engine.move()` on a **fresh clone**.
+  - First rank that **applies + `newTurn`** → `commit_automated_turn`, then **delete ALL of the
+    seat's premove rows** (the one turn is used). A success toast names the rank that fired and, if
+    it wasn't rank 1, that the higher choice was no longer possible.
+  - A rank that **throws** is silently skipped to the next rank (no failure row).
+  - **All ranks illegal** → write **one** `premove_failures` row ("none of your N ranked premoves
+    were legal") and delete all the seat's rows.
+  - Still one clone-`move()` per rank but only one `commit_automated_turn` — read-only clones for the
+    losers, so the one-row-per-turn invariant holds.
+- **`seq_conflict` from the commit stays a silent no-op** (§4c finding #6) in both modes.
+- **Stale-trigger guard and the `phase === RoundMove` gate are unchanged** (§4c steps 2–3); the
+  Phase 2 `RoundLeech` auto-charge branch is orthogonal and runs before either mode's `RoundMove`
+  resolution, exactly as today.
+
+### 10.6 UI / UX (extends §7)
+
+Board, **off-turn**, stays uncluttered — just two small affordances in the sticky command area:
+
+1. **`Plan my move ▸`** — enters premove-compose mode on the board (the existing Phase 1 banner +
+   dashed "queue" affordances). Composing must happen on the board; "Queue this move" appends the
+   assembled complete turn to the current-mode list at the next `seq`.
+2. **`⚡ Premoves (n) ▸`** pill (count badge) — opens the **overview modal**, which is the whole
+   management surface (moved off the board per owner decision 2026-07-05, to protect mobile
+   real-estate):
+   - **Mode toggle** `Sequential | Priority` (switching clears the queue, with a confirm).
+   - The **list**: numbered chain (Sequential) or ranked, **reorderable** up/down (Priority). Per row:
+     plain-language turn summary ("Build mine at 3x2, then charge 2"), **staleness** ("queued 12
+     moves ago" from `queued_move_count` vs current `move_count`), **live-legality** (re-run the
+     preview on each incoming `moves` row and grey out rows gone illegal — "no longer possible"),
+     and ✕ cancel (cascade in Sequential, promote-next in Priority).
+   - An **ⓘ info button** (Silent-Auction-style modal) explaining both modes, the legal-but-suboptimal
+     caveat, and that leech needs auto-charge for full offline.
+3. **Inline "will fire" line** when you open about-to-be-your-turn ("Priority 1 will play: …" /
+   "Next: Build mine at 3x2") so the common case needs **zero taps** — the single best trust-builder,
+   and nearly free because the preview already re-runs on each `moves` row.
+4. **`auto_charge = 'ask'` inline warning at queue time**: "a charge decision before your turn will
+   still pause until you're online — enable auto-charge to fully automate." Closes the #1 "why didn't
+   my premove run" confusion.
+
+**Notifications:** **failures push** (existing infra, §7 tie-in). **Successes are quiet, in-app
+only** — the log tag "played from your queue" plus a subtle toast on next open; **no push on
+success** (a fast async game auto-plays many turns; a push each would be spam). Priority success
+toast names the rank that fired; sequential failure toast notes the cascade.
+
+### 10.7 Reconciliation rules (answers the "manual move / round advance" questions)
+
+- A premove **fires instantly** when it becomes your turn (fast-path if the tab is open, edge
+  function if offline) — there is no "manually move instead of #1" step in the normal flow. To do
+  something different, cancel/edit during the opponents' turns.
+- On fire / round advance: the consumed row is deleted; the resolver always plays the lowest
+  remaining `seq`, so **#2 becomes #1, #3 becomes #2**, and the modal renumbers. (Priority deletes
+  the whole set on fire, so there is nothing to renumber.)
+- **Manual move while a queue exists** (rare — e.g. you moved on another device, or fast-path didn't
+  run): the seat's queue is now stale for a turn that already happened. On the next `moves` refetch,
+  reconcile: Sequential → pop the consumed head (or `cancel_all` if it can't be matched); Priority →
+  `cancel_all` (the list was for the turn you just took). A stale row that survives fails safely at
+  its next turn (illegal → notification), so this is a cleanliness measure, not a correctness
+  backstop.
+- **Manual pass** clears the seat's queue (the round-boundary open-decision from §8, now resolved:
+  clear on pass).
+
+### 10.8 Testing delta (extends §9)
+
+- Engine/resolver unit tests for **Sequential**: chain preview (#2 built on #1's clone); success →
+  consume + next-becomes-head; first-link throw → cascade-delete + single failure row.
+- Resolver unit tests for **Priority**: rank-1 legal → fires + clears all; rank-1 illegal, rank-2
+  legal → rank-2 fires (toast names it) + clears all; all illegal → single failure row + clears all.
+- **Shared-resolver parity**: assert `host.ts` fast-path and the edge function produce identical
+  decisions for the same `(engine, seat, rows, mode)` (extends the finding-#8 parity discipline).
+- Mode-guard tests: `queue_premove` rejects a mismatched `mode`; `reorder_premove` rejects on a
+  sequential queue; `cancel_all_premoves` clears both.
+- E2E: queue a 2-deep sequential chain in one browser, advance from the other, assert both fire in
+  order and the overview renumbers; queue a 3-rank priority set where rank 1 is made illegal by the
+  other browser, assert rank 2 fires.
 
 ---
 

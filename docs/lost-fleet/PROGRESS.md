@@ -3157,14 +3157,27 @@ session, and this session's resync fix (`hosted/host.ts`) removes another plausi
 session's fixes, get exact repro details (device/browser, does "Hide log until next turn" happen to
 be checked, does it happen right after a specific action) rather than guessing further blind.
 
-**Confirmed with the user, 2026-07-05: continue with Phase 3 (multi-round premove queue) next.**
+**Confirmed with the user, 2026-07-05: continue with Phase 3 (multi-slot premove queue) next — and
+its design is now FINALIZED (design-only, no code yet).** Two design passes with the owner settled
+on **two mutually-exclusive queue modes**, both depth 3, both at every player count:
+- **Sequential** — a chain of your next N turns (#2 previewed against a clone with #1 applied).
+- **Priority** — up to 3 ranked alternatives for the single upcoming turn, first legal one wins.
+
+They are never combined; switching mode clears the seat's queue. The full spec (data-model `mode`
+column, the mode-branching shared resolver `resolvePremoveQueue`, cascade-on-sequential-failure vs
+fall-through-on-priority, the `⚡ Premoves (n)` pill → overview **modal** with reorder + live-legality
+greying, quiet-in-app success / push-on-failure notifications, `auto_charge='ask'` queue-time
+warning, and the manual-move / round-advance renumber reconciliation) is written up in
+**`PREMOVE_PLAN.md` → "Phase 3 design — Sequential + Priority premoves (finalized 2026-07-05)"
+(§10.1–10.8)**. A Phase 3 implementation session should execute that section.
+
 Two other cheap/valuable items were identified in #69 and offered but not yet started (ask the
 user which they want alongside Phase 3, don't assume): (a) regression tests for the premove
 race-condition scenarios enumerated in #68; (b) a "premove executed: `<move text>`" success
-notification (only failures currently surface). Also still outstanding, unchanged from #66/#67:
-deploying `resolve-automation` (Supabase CLI + access token, owner action) and seeding
-`app_config['resolve_automation']` — needed for the actual fully-offline promise; until then
-premoves/auto-leech only run via client-side paths.
+notification (only failures currently surface — now folded into the Phase 3 design's quiet-in-app
+success path). Also still outstanding, unchanged from #66/#67: deploying `resolve-automation`
+(Supabase CLI + access token, owner action) and seeding `app_config['resolve_automation']` — needed
+for the actual fully-offline promise; until then premoves/auto-leech only run via client-side paths.
 
 Chunks 1-7b plus Darkanians' PI follow-up, the core Explore action, the federation-claim hook, the
 Standard-Tech claim hook, the full Spaceship Boards live-gameplay wiring, the gold-side execution
