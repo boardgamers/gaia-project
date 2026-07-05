@@ -15337,6 +15337,25 @@ var Engine3 = class _Engine {
     this.availableCommands = null;
     this.availableCommand = null;
   }
+  /**
+   * "Premove" support (PREMOVE_PLAN.md §2): what `seat` could legally do right now if it were their
+   * turn, without it actually being their turn. Returns `null` (premove not offered) when it already
+   * is their turn (the real buttons apply), when they've already passed this round (nothing to
+   * premove into), or when the phase isn't `RoundMove` (setup/income/gaia/leech/scoring/endgame/
+   * auction all have a differently-shaped "next turn" that isn't well-defined to preview).
+   *
+   * Never mutates `this` - operates on a disposable clone, exactly like every other preview/replay
+   * path in this engine (`fromData(JSON.parse(JSON.stringify(...)))`).
+   */
+  previewAvailableCommandsFor(seat) {
+    if (seat === this.playerToMove || this.passedPlayers.includes(seat) || this.phase !== "roundMove" /* RoundMove */) {
+      return null;
+    }
+    const clone2 = _Engine.fromData(JSON.parse(JSON.stringify(this)));
+    clone2.currentPlayer = seat;
+    clone2.tempCurrentPlayer = void 0;
+    return clone2.generateAvailableCommands();
+  }
   addPlayer(player) {
     this.players.push(player);
     player.data.on(

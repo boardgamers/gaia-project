@@ -2501,6 +2501,77 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       Power-artifact test rewritten (was asserting the buggy immediate-gain behavior). Both
       production builds clean.
 
+66. ✅ **Premove Phase 0 (spike) + Phase 1 (MVP), 2026-07-05** — see `docs/lost-fleet/PREMOVE_PLAN.md`
+    for the full design and its filled-in "Phase 0 result" section.
+    - **Phase 0 (verification spike, no schema/UI changes):** proved the fork's real engine (with
+      Lost Fleet) bundles to a single ESM file via esbuild and runs correctly under Deno, both
+      locally (`deno run`, exercising a base-game setup and a Lost Fleet setup) and live on the real
+      `gaia-lost-fleet` Supabase project (a small same-dependency canary function, deployed,
+      invoked, and since disabled). Found and fixed a genuine bug along the way: `shuffle-seed`'s
+      own source relies on a Node sloppy-mode quirk (an assignment to an undeclared bare
+      `seedrandom` identifier that silently becomes an implicit global) that throws under strict-mode
+      ES modules; fixed with a one-line `--banner:js` shim. Replayed a fresh scratch game and one
+      real, currently-active 4-player Lost Fleet game through the bundle and confirmed byte-identical
+      output against the plain TypeScript engine. Confirmed the live schema is functionally at
+      migration 0009 (0006/0007 were applied out-of-band, outside migration tracking, but the
+      functions/columns all exist). Added `engine/edge-bundle-parity.spec.ts` as a retained drift
+      guard (runs in the normal `npm test` suite, no Deno needed).
+    - **Phase 1 (MVP), same session, after owner go-ahead:**
+      - `Engine.previewAvailableCommandsFor(seat)` (engine.ts) - "what could this seat legally do
+        right now if it were their turn", returning `null` when it already is their turn, they've
+        passed this round, or the phase isn't `RoundMove`. 5 new engine tests.
+      - `0010_premoves.sql` (applied live via the Supabase MCP): `premoves` + `premove_failures`
+        tables (RLS scoped narrower than the public move log - only the owning seat's own user sees
+        their queue), `queue_premove`/`cancel_premove`/`mark_premove_failure_read` RPCs,
+        `commit_automated_turn` (service-role only, mirrors 0009's 8-arg `commit_turn`), and the
+        gated `games_resolve_automation` trigger (fires only when the seat now on turn has a premove
+        queued; still a no-op until `app_config['resolve_automation']` is seeded).
+      - `supabase/functions/resolve-automation/` - the real offline-commit Edge Function. Its
+        decision logic (`logic.ts`) is plain TS with no Deno/network dependency and is fully unit
+        tested (7 cases: stale trigger, no premove queued, successful commit + cleanup, illegal
+        premove → failure row, incomplete-turn premove → failure row, `RoundLeech` is a no-op that
+        leaves the premove untouched, `seq_conflict` is a silent no-op) - `index.ts` is just the
+        `Deno.serve`/service-role-client plumbing around it. **Written and thoroughly tested, but
+        NOT yet deployed** - the full engine bundle (566KB) is too large to relay through an
+        assistant tool call (see Phase 0's own finding); deploying it needs the Supabase CLI
+        (`supabase functions deploy resolve-automation --project-ref mitawjpdxkheascdiffz`) run from
+        a real shell/CI with an access token, which this session didn't have. Until it's deployed
+        (and `app_config['resolve_automation']` seeded, same bootstrap step `notify` already needed -
+        see `BACKEND.md` §11), the trigger stays a harmless no-op, so nothing already live is
+        affected - but the *offline* half of the offline promise won't work until that owner action
+        happens.
+      - **Client (works today without waiting on the function above):** `host.ts` gained the
+        seq_conflict-silent fix (a real, previously-unfixed bug: any commit rejection showed an alarm
+        toast, even the routine "someone else already committed" case - now silent for
+        `seq_conflict` specifically, still surfaced for genuine failures), premove RPC wrappers, and
+        a fast-path (`resolveAutoDecisions` now also checks for a queued premove once it's genuinely
+        this seat's turn in `Phase.RoundMove`, plays it through the normal `commit_turn` path
+        instantly if this session is watching, and cleans up the row on success - a failed fast-path
+        attempt is left for the offline function to clean up rather than duplicating that
+        bookkeeping or showing a confusing "Invalid move" toast for something the user never typed).
+      - **UI (`Game.vue`):** a "Plan my move ▸" button replaces the read-only "Current player" view
+        when it's not this session's turn but `previewAvailableCommandsFor` offers one; toggling it
+        swaps the board into a preview clone (reusing the exact same partial-move accumulation
+        Commands.vue already does for a real turn, routed to a local-only `premoveMove` store action
+        instead of the real `move` action so nothing touches the network until "Queue this move" is
+        clicked), with a first-run explainer, a queue-panel entry with cancel, and a failure banner
+        with dismiss. Automatically suppressed for a user with no locked seat (owns all seats/test
+        game, or owns none) since `$store.state.player` is unset in both cases already - no extra
+        plumbing needed. **Known gap:** only wired into the graphical map layout, not the compact
+        table-mode view.
+      - Found and fixed one real bug while building the UI: the preview clone must call
+        `generateAvailableCommands()` (forced), not `generateAvailableCommandsIfNeeded()` - the
+        latter returns the JSON-cloned engine's stale cached commands for the *real* current player,
+        not the forced preview seat.
+      - Engine **595/595** (588 after Phase 0 + 7 resolve-automation logic tests), viewer **306/306**
+        (5 new `host.spec.ts` premove cases + 5 new `Game.spec.ts` premove cases, on top of Phase 0's
+        unrelated count). Both production builds not re-verified this session (unit tests only).
+    - **Not done / explicitly deferred:** deploying `resolve-automation` + seeding
+      `app_config['resolve_automation']` (owner action, see above); Phase 2 (offline auto-leech -
+      without it, offline progress stalls at any leech decision until the player is back online,
+      exactly as documented in the plan); Phase 3 (multi-round queue depth); the "tag auto-played
+      moves in the log" trust-building touch from the plan's UX section; table-mode UI.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -2945,12 +3016,16 @@ quick-test` 152/152; `npm test` 152/154, the 2 failures pre-existing/unrelated, 
    `master` on owner instruction 2026-07-01 (fast-forward), so the hosted mode is live on the
    production Vercel deploy. Natural follow-ups once real games run: the Phase-2 snapshot cache
    (BACKEND.md §8), lobby polish, or realtime lobby updates.
-5. **Premove (see "Done so far" #65 and `docs/lost-fleet/PREMOVE_PLAN.md`)** — a fully-designed,
-   owner-approved feature to queue a move while it's not your turn, executed server-side (a
-   vendored copy of this fork's engine in a Supabase Edge Function) so it works even if the player
-   is fully offline when their turn arrives, unlike the client-only auto-leech shipped in #65. Not
-   started - the plan doc's own "Phase 0 checklist" is a self-contained entry point (a read-only
-   spike proving the engine runs in Deno, before any schema/RPC/UI work begins).
+5. **Premove (see "Done so far" #66 and `docs/lost-fleet/PREMOVE_PLAN.md`)** — Phase 0 (spike) and
+   Phase 1 (MVP: schema, RPCs, client fast-path, UI) are DONE. Still open, in order:
+   - **Deploy `resolve-automation`** (owner action — needs the Supabase CLI + an access token this
+     session didn't have; the function is written and unit-tested, just not live) and seed
+     `app_config['resolve_automation']` (same bootstrap step `notify` needed, `BACKEND.md` §11).
+     Until then the trigger is a harmless no-op and premoves only play via the client fast-path
+     (works while a tab is open/visited; doesn't yet work fully offline).
+   - **Phase 2 (offline auto-leech)** — required for the feature's actual headline ("works
+     offline"); without it, offline progress stalls at any leech decision. See the plan's phasing.
+   - **Phase 3 (multi-round queue depth)** — genuinely optional.
 
 Confirm with the user before starting any of the above.
 

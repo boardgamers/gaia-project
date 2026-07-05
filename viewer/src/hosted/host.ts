@@ -1,7 +1,23 @@
 import Engine, { Phase } from "@gaia-project/engine";
 import { AutoCharge } from "@gaia-project/engine/src/player";
 import { autoDecideChargePower } from "../logic/auto-decide";
-import { CommitTurnArgs, GameRow, HostedBackend, HostedCallbacks, MoveRow, PlayerRow, PlayerUpdate } from "./types";
+import {
+  CommitTurnArgs,
+  GameRow,
+  HostedBackend,
+  HostedCallbacks,
+  MoveRow,
+  PlayerRow,
+  PlayerUpdate,
+  PremoveFailureRow,
+  PremoveRow,
+} from "./types";
+
+const SEQ_CONFLICT_PREFIX = "seq_conflict";
+
+function isSeqConflict(err: unknown): boolean {
+  return errorMessage(err).includes(SEQ_CONFLICT_PREFIX);
+}
 
 /**
  * "Auto leech" (see logic/auto-decide.ts) - unlike self-contained's hot-seat mode, hosted play has
@@ -79,6 +95,8 @@ export class HostedGameHost {
   engine: Engine;
   game: GameRow;
   players: PlayerRow[] = [];
+  premoves: PremoveRow[] = [];
+  premoveFailures: PremoveFailureRow[] = [];
 
   // Serializes submit/remote/resync so an in-flight commit can't interleave
   // with a realtime apply on the same engine.
@@ -114,7 +132,35 @@ export class HostedGameHost {
       this.players = players;
       this.engine = this.buildEngine(game, moves);
       this.emitState(this.engine);
+      await this.refreshPremoveState();
       await this.resolveAutoDecisions();
+    });
+  }
+
+  /**
+   * Premove (PREMOVE_PLAN.md §4a) - `p_seat` is explicit (not inferred) so a multi-seat owner is
+   * never ambiguous. Queuing/cancelling doesn't touch the engine at all (the client only offers the
+   * button after building a legal turn against a preview clone - see Engine.previewAvailableCommandsFor
+   * - so there's nothing to apply locally); just refreshes the cached list for display.
+   */
+  queuePremove(seat: number, move: string): Promise<void> {
+    return this.enqueue(async () => {
+      await this.backend.queuePremove(this.gameId, seat, move);
+      await this.refreshPremoveState();
+    });
+  }
+
+  cancelPremove(seat: number, seq: number): Promise<void> {
+    return this.enqueue(async () => {
+      await this.backend.cancelPremove(this.gameId, seat, seq);
+      await this.refreshPremoveState();
+    });
+  }
+
+  markPremoveFailureRead(id: string): Promise<void> {
+    return this.enqueue(async () => {
+      await this.backend.markPremoveFailureRead(id);
+      await this.refreshPremoveState();
     });
   }
 
@@ -134,12 +180,18 @@ export class HostedGameHost {
    * below must call this directly: it runs from INSIDE an already-executing enqueued callback, and
    * routing back through the public, `enqueue`-wrapping `submitMove` from there would deadlock
    * (the appended task would wait on `this.queue`, which is the very callback it's called from).
+   *
+   * `source: "premove"` (the fast-path in resolveAutoDecisions) swallows an invalid-move failure
+   * silently instead of surfacing it as a user-facing error: the user never typed this move, a stale
+   * premove is an expected/recoverable situation, and the offline edge function's own trigger fired
+   * from this exact same current_seat change independently of this fast-path, so it will delete the
+   * premove and record the failure on its own - duplicating that bookkeeping here would race it.
    */
-  private async applyAndCommit(move: string): Promise<void> {
+  private async applyAndCommit(move: string, source: "manual" | "auto" | "premove" = "manual"): Promise<boolean> {
     const copy = this.clone();
     if (!move) {
       this.emitState(copy);
-      return;
+      return false;
     }
     // The seat this turn line belongs to: whoever the engine says must act
     // (accounts for mid-turn leech interrupts via tempCurrentPlayer).
@@ -148,9 +200,11 @@ export class HostedGameHost {
       copy.move(move);
       copy.generateAvailableCommandsIfNeeded();
     } catch (err) {
-      this.callbacks.onError?.(`Invalid move "${move}": ${errorMessage(err)}`);
+      if (source !== "premove") {
+        this.callbacks.onError?.(`Invalid move "${move}": ${errorMessage(err)}`);
+      }
       this.emitState(this.engine);
-      return;
+      return false;
     }
 
     if (copy.newTurn) {
@@ -168,16 +222,24 @@ export class HostedGameHost {
       try {
         await this.backend.commitTurn(args);
       } catch (err) {
-        this.callbacks.onError?.(`Could not save the turn (${errorMessage(err)}); reloading the game state.`);
+        // seq_conflict means someone else (another tab, another automated committer) already
+        // landed the next turn - not alarming, just stale local state. Silently resync instead of
+        // showing a scary error for something that isn't actually a problem (this also affects
+        // auto-leech and the premove fast-path below, both of which can race a commit the same way).
+        if (!isSeqConflict(err)) {
+          this.callbacks.onError?.(`Could not save the turn (${errorMessage(err)}); reloading the game state.`);
+        }
         await this.resyncNow();
-        return;
+        return false;
       }
       this.engine = copy;
     }
     this.emitState(copy);
+    await this.refreshPremoveState();
     // After emitting, not before: a chained auto-decision computes/commits/emits its own
     // further state, which must never be overwritten by this call's own (now-stale) copy.
     await this.resolveAutoDecisions();
+    return copy.newTurn;
   }
 
   /** Realtime INSERT handler for the moves table. */
@@ -195,6 +257,9 @@ export class HostedGameHost {
           if (copy.newTurn) {
             this.engine = copy;
             this.emitState(copy);
+            // A moves row arrived (PREMOVE_PLAN.md §3's refresh rule) - a committed turn, ours or
+            // not, is exactly the moment the server may have consumed (or newly offered) a premove.
+            await this.refreshPremoveState();
             // A remote move can hand control straight to one of the local user's own seats
             // (a leech interrupt), so this is a real trigger point too, not just submitMove.
             await this.resolveAutoDecisions();
@@ -236,6 +301,7 @@ export class HostedGameHost {
     this.game = game;
     this.engine = this.buildEngine(game, moves);
     this.emitState(this.engine);
+    await this.refreshPremoveState();
     await this.resolveAutoDecisions();
   }
 
@@ -245,20 +311,63 @@ export class HostedGameHost {
    * their own preference. Computes the resulting move on a disposable clone and, if there is one,
    * runs it through the same apply/commit logic a manual click would use (so other seated players
    * see it exactly like any other move) - never mutates `this.engine` directly itself.
+   *
+   * Once there's no more auto-leech work, tries the premove fast-path (PREMOVE_PLAN.md §5): if it's
+   * now genuinely this seat's turn (Phase.RoundMove) and this session owns that seat and has a
+   * premove queued for it, play it immediately through the normal commit path instead of waiting for
+   * the offline edge function's trigger round-trip. `commit_turn`/`commit_automated_turn`'s atomic
+   * seq check means whichever of {this fast-path, the edge function} lands first wins - the loser
+   * gets `seq_conflict` and silently resyncs (see applyAndCommit's catch above); a premove that's
+   * gone stale/illegal by the time this runs is left for the edge function to clean up (delete +
+   * failure row) rather than duplicating that bookkeeping on the client.
    */
   private async resolveAutoDecisions(): Promise<void> {
     if (!this.engine || this.engine.playerToMove === undefined) {
       return;
     }
+    const seat = this.engine.playerToMove;
     const autoChargePower = this.autoDecide.getAutoChargePower();
-    if (autoChargePower === "ask" || !this.autoDecide.isMySeat(this.engine.playerToMove)) {
-      return;
+    if (autoChargePower !== "ask" && this.autoDecide.isMySeat(seat)) {
+      const move = autoDecideChargePower(this.clone(), autoChargePower, this.autoDecide.isMySeat);
+      if (move) {
+        // Not `submitMove` - see applyAndCommit's own doc comment on why that would deadlock here.
+        await this.applyAndCommit(move, "auto");
+        return;
+      }
     }
 
-    const move = autoDecideChargePower(this.clone(), autoChargePower, this.autoDecide.isMySeat);
-    if (move) {
-      // Not `submitMove` - see applyAndCommit's own doc comment on why that would deadlock here.
-      await this.applyAndCommit(move);
+    if (this.engine.phase === Phase.RoundMove && this.autoDecide.isMySeat(seat)) {
+      const queued = this.premoves.filter((p) => p.seat === seat).sort((a, b) => a.seq - b.seq)[0];
+      if (queued) {
+        const committed = await this.applyAndCommit(queued.move, "premove");
+        // Unlike the offline edge function (which uses commit_automated_turn and deletes the
+        // premove row itself), this fast-path went through the normal commit_turn RPC - so on
+        // success, the row it just consumed must be cleaned up here, or it would sit there and be
+        // attempted again next time this seat's turn comes around.
+        if (committed) {
+          try {
+            await this.backend.cancelPremove(this.gameId, seat, queued.seq);
+            await this.refreshPremoveState();
+          } catch {
+            // Best-effort: worst case a played premove lingers in the list until the next refresh
+            // notices it's gone from the server's perspective too (RLS still scopes it correctly).
+          }
+        }
+      }
+    }
+  }
+
+  private async refreshPremoveState(): Promise<void> {
+    try {
+      const [premoves, failures] = await Promise.all([
+        this.backend.fetchPremoves(this.gameId),
+        this.backend.fetchPremoveFailures(this.gameId),
+      ]);
+      this.premoves = premoves;
+      this.premoveFailures = failures;
+      this.callbacks.onPremoveState?.(premoves, failures);
+    } catch {
+      // Best-effort display data - never blocks gameplay if it fails to load.
     }
   }
 

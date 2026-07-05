@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { AutoDecideConfig, engineOptions, HostedGameHost, initMoveLine, seatToLock } from "./host";
-import { CommitTurnArgs, GameRow, HostedBackend, MoveRow, PlayerRow } from "./types";
+import { CommitTurnArgs, GameRow, HostedBackend, MoveRow, PlayerRow, PremoveFailureRow, PremoveRow } from "./types";
 
 // Committed-turn lines from a known-valid engine fixture
 // (engine/src/engine.spec.ts "should allow players to upgrade a mine to a TS").
@@ -44,6 +44,9 @@ class FakeBackend implements HostedBackend {
   commits: CommitTurnArgs[] = [];
   fetchMovesCalls = 0;
   failNextCommitWith: string | null = null;
+  premoves: PremoveRow[] = [];
+  premoveFailures: PremoveFailureRow[] = [];
+  private nextFailureId = 1;
 
   constructor(private game: GameRow, private players: PlayerRow[]) {}
 
@@ -78,6 +81,37 @@ class FakeBackend implements HostedBackend {
     this.moves.push({ game_id: args.gameId, seq: args.seq, seat: args.seat, move: args.move });
     this.game.move_count = args.seq;
     this.game.current_seat = args.nextSeat;
+  }
+
+  async fetchPremoves(): Promise<PremoveRow[]> {
+    return this.premoves.map((p) => ({ ...p }));
+  }
+
+  async fetchPremoveFailures(): Promise<PremoveFailureRow[]> {
+    return this.premoveFailures.filter((f) => f.read_at === null).map((f) => ({ ...f }));
+  }
+
+  async queuePremove(_gameId: string, seat: number, move: string): Promise<number> {
+    const forSeat = this.premoves.filter((p) => p.seat === seat);
+    const seq = (forSeat.length ? forSeat[forSeat.length - 1].seq : 0) + 1;
+    this.premoves.push({ seat, seq, move, queued_move_count: this.moves.length });
+    return seq;
+  }
+
+  async cancelPremove(_gameId: string, seat: number, seq: number): Promise<void> {
+    this.premoves = this.premoves.filter((p) => !(p.seat === seat && p.seq === seq));
+  }
+
+  async markPremoveFailureRead(id: string): Promise<void> {
+    const failure = this.premoveFailures.find((f) => f.id === id);
+    if (failure) {
+      failure.read_at = new Date().toISOString();
+    }
+  }
+
+  // Test helper mirroring what resolve-automation (or a genuinely failed fast-path) would do.
+  seedPremoveFailure(seat: number, move: string, reason: string): void {
+    this.premoveFailures.push({ id: String(this.nextFailureId++), seat, move, reason, read_at: null });
   }
 }
 
@@ -318,7 +352,7 @@ describe("hosted game host", () => {
     expect(states[states.length - 1].moveHistory).to.have.length(1);
   });
 
-  it("resyncs from the stored log when the backend rejects a commit", async () => {
+  it("silently resyncs (no error toast) on a seq_conflict rejection", async () => {
     const backend = new FakeBackend(gameRow(), playerRows());
     backend.seedMoves(SETUP_MOVES.slice(0, 2));
     const { host, errors } = makeHost(backend);
@@ -331,10 +365,24 @@ describe("hosted game host", () => {
     const fetchesBefore = backend.fetchMovesCalls;
     await host.submitMove("terrans build m -1x2");
 
-    expect(errors).to.have.length(1);
+    // seq_conflict means someone else already handled it - not alarming, so no error toast.
+    expect(errors).to.deep.equal([]);
     expect(backend.fetchMovesCalls).to.equal(fetchesBefore + 1);
     // after resync the engine includes the move the other client committed
     expect(host.committedMoveCount).to.equal(3);
+  });
+
+  it("still surfaces a genuine (non-seq_conflict) commit failure as an error", async () => {
+    const backend = new FakeBackend(gameRow(), playerRows());
+    backend.seedMoves([]);
+    const { host, errors } = makeHost(backend);
+    await host.load();
+
+    backend.failNextCommitWith = "network error: could not reach the server";
+    await host.submitMove("p1 faction terrans");
+
+    expect(errors).to.have.length(1);
+    expect(errors[0]).to.contain("Could not save the turn");
   });
 
   it("applies a consecutive remote move incrementally", async () => {
@@ -413,5 +461,112 @@ describe("hosted game host", () => {
     const rendered = states[states.length - 1];
     expect(rendered.moveHistory).to.have.length(SETUP_MOVES.length + 2);
     expect(rendered.newTurn).to.equal(false);
+  });
+
+  describe("premove", () => {
+    // Terrans (seat 0) is about to build at 3B0, which triggers a leech decision for nevlas (seat
+    // 1) before nevlas's real turn - the same §J2 interrupt fixture used elsewhere.
+    const BUILD_TRIGGERING_LEECH = "terrans build m 3B0.";
+    const NEVLAS_PREMOVE = "nevlas build m 1B0.";
+
+    it("does not fire the queued premove while a leech decision is pending (Phase 1 has no auto-charge)", async () => {
+      const backend = new FakeBackend(gameRow(), playerRows());
+      backend.seedMoves(SETUP_MOVES);
+      const { host } = makeHost(backend, {
+        isMySeat: (seat) => seat === 1, // this browser is nevlas
+        getAutoChargePower: () => "ask", // Phase 1: no auto-charge, so the leech waits for a human
+      });
+      await host.load();
+      await host.queuePremove(1, NEVLAS_PREMOVE);
+
+      await host.submitMove(BUILD_TRIGGERING_LEECH);
+
+      // Only terrans' build committed - the leech is still pending, and the queued premove is left
+      // untouched behind it rather than being (wrongly) played during Phase.RoundLeech.
+      expect(backend.commits).to.have.length(1);
+      expect(host.engine.phase).to.equal("roundLeech");
+      expect(host.premoves).to.deep.equal([{ seat: 1, seq: 1, move: NEVLAS_PREMOVE, queued_move_count: SETUP_MOVES.length }]);
+    });
+
+    it("fires the fast-path the instant it's genuinely this seat's turn (Phase.RoundMove), and cleans up the row", async () => {
+      const backend = new FakeBackend(gameRow(), playerRows());
+      backend.seedMoves(SETUP_MOVES);
+      const { host } = makeHost(backend, {
+        isMySeat: (seat) => seat === 1,
+        getAutoChargePower: () => "ask",
+      });
+      await host.load();
+      await host.queuePremove(1, NEVLAS_PREMOVE);
+
+      await host.submitMove(BUILD_TRIGGERING_LEECH);
+      // A human (this same session) decides the leech manually - Phase 2 would auto-decide this;
+      // Phase 1 doesn't, so it's a normal submitMove.
+      await host.submitMove("nevlas decline");
+
+      // The leech decline itself is one commit; the fast-path's own commit of the queued premove
+      // is the next one, with no further submitMove call needed for it.
+      expect(backend.commits).to.have.length(3);
+      expect(backend.commits[1].move).to.equal("nevlas decline");
+      expect(backend.commits[2].seat).to.equal(1);
+      expect(backend.commits[2].move).to.equal(NEVLAS_PREMOVE);
+      expect(host.premoves).to.deep.equal([]);
+      expect(host.engine.playerToMove).to.equal(0);
+    });
+
+    it("leaves a since-illegal premove queued (not swallowed as an error) for the offline path to clean up", async () => {
+      const backend = new FakeBackend(gameRow(), playerRows());
+      backend.seedMoves(SETUP_MOVES);
+      const { host, errors } = makeHost(backend, {
+        isMySeat: (seat) => seat === 1,
+        getAutoChargePower: () => "ask",
+      });
+      await host.load();
+      // Queue a move that is legal right now but will already have been played as this same
+      // fixture's manual leech-decline turn by the time nevlas's real turn arrives - by then 1B0 is
+      // no longer available the same way twice, but to keep this deterministic, queue something
+      // straightforwardly illegal instead (nonsense coordinates).
+      await host.queuePremove(1, "nevlas build m 99x99.");
+
+      await host.submitMove(BUILD_TRIGGERING_LEECH);
+      await host.submitMove("nevlas decline");
+
+      // The fast-path swallowed the failure silently (no error toast) rather than surfacing
+      // "Invalid move ...:" for something the user never typed - see applyAndCommit's doc comment.
+      expect(errors).to.deep.equal([]);
+      // Unlike a successful fast-path, a failed one leaves the row alone: the client doesn't
+      // duplicate resolve-automation's own delete-and-record-failure bookkeeping.
+      expect(host.premoves).to.have.length(1);
+      expect(host.premoves[0].move).to.equal("nevlas build m 99x99.");
+    });
+
+    it("cancelPremove removes a queued entry", async () => {
+      const backend = new FakeBackend(gameRow(), playerRows());
+      backend.seedMoves(SETUP_MOVES);
+      const { host } = makeHost(backend);
+      await host.load();
+
+      const seq1 = await backend.queuePremove("game-1", 1, NEVLAS_PREMOVE);
+      await host.load(); // re-fetch cached premove state the way a fresh page load would
+      expect(host.premoves).to.have.length(1);
+
+      await host.cancelPremove(1, seq1);
+
+      expect(host.premoves).to.deep.equal([]);
+    });
+
+    it("exposes unread premove failures and lets the client mark them read", async () => {
+      const backend = new FakeBackend(gameRow(), playerRows());
+      backend.seedMoves(SETUP_MOVES);
+      backend.seedPremoveFailure(1, "nevlas build m 99x99.", "Impossible to execute build command");
+      const { host } = makeHost(backend);
+
+      await host.load();
+      expect(host.premoveFailures).to.have.length(1);
+      const id = host.premoveFailures[0].id;
+
+      await host.markPremoveFailureRead(id);
+
+      expect(host.premoveFailures).to.deep.equal([]);
+    });
   });
 });

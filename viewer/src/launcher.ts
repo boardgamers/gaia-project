@@ -39,6 +39,8 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
   });
   item.addListener("preferences", (data) => store.commit("preferences", data));
   item.addListener("player", (data) => store.commit("player", data));
+  // Premove (PREMOVE_PLAN.md) - hosted-mode-only; self-contained mode never emits this.
+  item.addListener("premoveState", (data) => store.commit("premoveState", data));
   item.addListener("replay:start", () => {
     store.dispatch("replayStart");
     replaying = true;
@@ -73,6 +75,11 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
       lastMovedAt = Date.now();
 
       item.emit("move", payload);
+      return;
+    }
+
+    if (type === "queuePremove" || type === "cancelPremove" || type === "markPremoveFailureRead") {
+      item.emit(type, payload);
       return;
     }
 

@@ -47,6 +47,12 @@ export type CommitTurnArgs = {
   playerUpdates: PlayerUpdate[];
 };
 
+// Premove (PREMOVE_PLAN.md, Phase 1) - RLS already scopes selects to the caller's own seats, so
+// fetches don't take a seat filter; queue/cancel take an explicit seat since a multi-seat owner is
+// never ambiguous (see the RPCs in 0010_premoves.sql).
+export type PremoveRow = { seat: number; seq: number; move: string; queued_move_count: number };
+export type PremoveFailureRow = { id: string; seat: number; move: string; reason: string; read_at: string | null };
+
 // The data layer the game host needs. Implemented for real over supabase-js
 // in supabase-client.ts and faked in host.spec.ts.
 export interface HostedBackend {
@@ -54,10 +60,17 @@ export interface HostedBackend {
   fetchPlayers(gameId: string): Promise<PlayerRow[]>;
   fetchMoves(gameId: string): Promise<MoveRow[]>;
   commitTurn(args: CommitTurnArgs): Promise<void>;
+  fetchPremoves(gameId: string): Promise<PremoveRow[]>;
+  fetchPremoveFailures(gameId: string): Promise<PremoveFailureRow[]>;
+  queuePremove(gameId: string, seat: number, move: string): Promise<number>;
+  cancelPremove(gameId: string, seat: number, seq: number): Promise<void>;
+  markPremoveFailureRead(id: string): Promise<void>;
 }
 
 export type HostedCallbacks = {
   /** Serialized engine JSON, ready for the launcher's "state" event. */
   onState: (engineData: unknown) => void;
   onError?: (message: string) => void;
+  /** Refetched on load and whenever a moves row arrives (PREMOVE_PLAN.md §3's refresh rule). */
+  onPremoveState?: (premoves: PremoveRow[], failures: PremoveFailureRow[]) => void;
 };

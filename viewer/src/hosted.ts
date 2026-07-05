@@ -101,6 +101,9 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
         emitter.emit("error", message);
         console.error("[hosted]", message);
       },
+      onPremoveState: (premoves, failures) => {
+        emitter.emit("premoveState", { premoves, failures });
+      },
     },
     {
       // "Auto leech" (host.ts's AutoDecideConfig) - never decide on behalf of a seat that isn't
@@ -135,6 +138,11 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
     host.submitMove(move);
   });
   emitter.on("fetchState", () => host.emitCurrentState());
+  // Premove (PREMOVE_PLAN.md) - Game.vue dispatches these with the seat the premove targets
+  // (never inferred, so a multi-seat owner is never ambiguous - see host.ts's own RPCs).
+  emitter.on("queuePremove", ({ seat, move }: { seat: number; move: string }) => host.queuePremove(seat, move));
+  emitter.on("cancelPremove", ({ seat, seq }: { seat: number; seq: number }) => host.cancelPremove(seat, seq));
+  emitter.on("markPremoveFailureRead", (id: string) => host.markPremoveFailureRead(id));
 
   // The first SUBSCRIBED fires right after load and would be a redundant
   // resync; only catch up on RE-subscribes (dropped connection recovered).
