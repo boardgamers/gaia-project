@@ -13,12 +13,14 @@ import {
   Player as PlayerEnum,
   ResearchField,
   Resource,
+  ScoringTile,
   Spaceship,
   SubPhase,
 } from "../enums";
 import { GaiaHex } from "../gaia-hex";
 import { classifySectorId, LostFleetSectorType } from "../lost-fleet-map";
 import { Power } from "../player-data";
+import { roundScoringEvents } from "../tiles/scoring";
 import { moveChooseArtifactToken, moveExamineArtifact } from "./artifacts";
 
 function createLostFleetRoundMoveEngine(
@@ -328,6 +330,37 @@ describe("Artifact token effects (RULES_CLARIFICATIONS.md §G6)", () => {
 
     expect(player.data.victoryPoints).to.equal(beforeVp + 7);
     expect(player.data.artifactPlanetTypes).to.include(Planet.Protoplanet);
+  });
+
+  it("Asteroid: also triggers the Lost Fleet planet3 round scoring bonus for a new planet type", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    player.loadEvents(roundScoringEvents(ScoringTile.LfPlanet3, 1));
+    engine.tiles.artifacts = [ArtifactToken.Asteroid];
+
+    const beforeVp = player.data.victoryPoints;
+
+    const command = availableArtifactTokenCommand(engine, PlayerEnum.Player1);
+    moveChooseArtifactToken(engine, command, PlayerEnum.Player1, ArtifactToken.Asteroid);
+
+    // 7 VP from the artifact itself + 3 VP from the "new planet type" round scoring bonus
+    expect(player.data.victoryPoints).to.equal(beforeVp + 7 + 3);
+  });
+
+  it("Protoplanet: does not re-trigger the planet3 round scoring bonus if already colonized via a mine", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    player.loadEvents(roundScoringEvents(ScoringTile.LfPlanet3, 1));
+    player.data.artifactPlanetTypes.push(Planet.Protoplanet);
+    engine.tiles.artifacts = [ArtifactToken.Protoplanet];
+
+    const beforeVp = player.data.victoryPoints;
+
+    const command = availableArtifactTokenCommand(engine, PlayerEnum.Player1);
+    moveChooseArtifactToken(engine, command, PlayerEnum.Player1, ArtifactToken.Protoplanet);
+
+    // Only the artifact's own 7 VP - no second "new planet type" bonus for a type already held
+    expect(player.data.victoryPoints).to.equal(beforeVp + 7);
   });
 
   it("ResearchLevel: immediately grants 3 VP per level reached in the Science research area", () => {

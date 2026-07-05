@@ -12,6 +12,7 @@ import {
   Spaceship,
 } from "../enums";
 import Event from "../events";
+import Player from "../player";
 import Reward from "../reward";
 import { artifactTokenRewards } from "../tiles/artifacts";
 
@@ -47,12 +48,10 @@ function applyArtifactToken(engine: Engine, player: PlayerEnum, token: ArtifactT
 
   switch (token) {
     case ArtifactToken.Asteroid:
-      pl.gainRewards([new Reward(7, Resource.VictoryPoint)], Spaceship.Twilight);
-      pl.data.artifactPlanetTypes.push(Planet.Asteroid);
+      applyArtifactPlanetType(pl, Planet.Asteroid);
       break;
     case ArtifactToken.Protoplanet:
-      pl.gainRewards([new Reward(7, Resource.VictoryPoint)], Spaceship.Twilight);
-      pl.data.artifactPlanetTypes.push(Planet.Protoplanet);
+      applyArtifactPlanetType(pl, Planet.Protoplanet);
       break;
     case ArtifactToken.ResearchLevel:
       // VERIFY: see tiles/artifacts.ts - which Research Area this token uses was never confirmed by the
@@ -86,5 +85,21 @@ function applyArtifactToken(engine: Engine, player: PlayerEnum, token: ArtifactT
         Spaceship.Twilight
       );
       break;
+  }
+}
+
+// The Asteroid/Protoplanet artifacts count as building a mine and colonizing that planet type
+// (RULES_CLARIFICATIONS.md §G6) - including, for the rest of the game, the Lost Fleet round
+// scoring tile that rewards the first mine on a new planet type (§G4 "planet3"), same as a real
+// build would via player.ts's build()/Condition.NewPlanetType trigger.
+function applyArtifactPlanetType(pl: Player, planet: Planet) {
+  const alreadyColonized =
+    pl.ownedPlanets.some((hex) => hex.data.planet === planet) || pl.data.artifactPlanetTypes.includes(planet);
+
+  pl.gainRewards([new Reward(7, Resource.VictoryPoint)], Spaceship.Twilight);
+  pl.data.artifactPlanetTypes.push(planet);
+
+  if (!alreadyColonized) {
+    pl.receiveTriggerIncome(Condition.NewPlanetType);
   }
 }
