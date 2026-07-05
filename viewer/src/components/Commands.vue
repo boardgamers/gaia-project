@@ -25,7 +25,10 @@
         v-b-tooltip.hover
         title="Auto leech: automatically accept or decline power-charge offers up to this amount, instead of asking every time"
       >
-        <template #button-content>{{ autoChargePowerShortLabel }}</template>
+        <template #button-content>
+          <span class="auto-leech-dot" :class="autoChargePowerActive ? 'active' : 'inactive'"></span>
+          {{ autoChargePowerShortLabel }}
+        </template>
         <b-dropdown-item
           v-for="opt in autoChargePowerOptions"
           :key="opt.value"
@@ -134,7 +137,10 @@
           v-b-tooltip.hover
           title="Auto leech: automatically accept or decline power-charge offers up to this amount, instead of asking every time"
         >
-          <template #button-content>{{ autoChargePowerShortLabel }}</template>
+          <template #button-content>
+          <span class="auto-leech-dot" :class="autoChargePowerActive ? 'active' : 'inactive'"></span>
+          {{ autoChargePowerShortLabel }}
+        </template>
           <b-dropdown-item
             v-for="opt in autoChargePowerOptions"
             :key="opt.value"
@@ -395,6 +401,13 @@ export default class Commands extends Vue implements CommandController {
 
   setAutoChargePower(value: string) {
     this.$store.commit("preferences", { autoChargePower: value });
+  }
+
+  /** Whether auto-leech will currently act on its own instead of asking every time - drives the
+   * dot indicator on the dropdown button (pulsing green when active, static red when off), since
+   * the short label alone ("Leech: off" vs "Leech: 3") is easy to miss at a glance. */
+  get autoChargePowerActive(): boolean {
+    return this.autoChargePower !== "ask";
   }
 
   /** Short label for the auto-leech dropdown button itself - the full sentence lives in the menu
@@ -936,6 +949,38 @@ export default class Commands extends Vue implements CommandController {
 
   .badge {
     margin-left: 0.25rem;
+  }
+}
+
+// Status dot on the auto-leech dropdown button - green/pulsing while it's set to actually act on
+// its own, static red while off ("ask every time"), so the button's current state reads at a
+// glance without parsing its ("Leech: off"/"Leech: 3") text.
+.auto-leech-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 0.3rem;
+  border-radius: 50%;
+
+  &.inactive {
+    background: var(--oxide, #ff160a);
+  }
+
+  &.active {
+    background: var(--highlighted, #2c4);
+    animation: auto-leech-pulse 1.6s infinite;
+  }
+}
+
+@keyframes auto-leech-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--highlighted-rgb, 32, 204, 68), 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 5px rgba(var(--highlighted-rgb, 32, 204, 68), 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--highlighted-rgb, 32, 204, 68), 0);
   }
 }
 
