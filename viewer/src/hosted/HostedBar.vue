@@ -15,7 +15,15 @@
       <span v-else class="text-muted small ml-2">Spectating</span>
     </span>
     <span>
-      <b-button size="sm" variant="outline-secondary" :disabled="pushBusy" @click="$emit('enable-push')">
+      <b-badge
+        v-if="pushEnabled"
+        variant="success"
+        v-b-tooltip.hover
+        title="This device is registered for turn notifications. Enable it separately on any other device you play from."
+      >
+        🔔 Notifications on
+      </b-badge>
+      <b-button v-else size="sm" variant="outline-secondary" :disabled="pushBusy" @click="$emit('enable-push')">
         Enable notifications
       </b-button>
     </span>
@@ -34,6 +42,7 @@ export default Vue.extend({
     myTurn: { type: Boolean, default: false },
     finished: { type: Boolean, default: false },
     pushBusy: { type: Boolean, default: false },
+    pushEnabled: { type: Boolean, default: false },
   },
 });
 </script>

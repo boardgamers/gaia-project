@@ -97,6 +97,13 @@
         <image xlink:href='../assets/resources/dig-arrow.svg' width=14 :height=325/308*14 x=-13 y=-7 /> <image
         xlink:href='../assets/resources/dig-arrow.svg' width=14 :height=325/308*14 x=-9 y=-2 />
       </template>
+      <!-- Lost Fleet's "terra" Federation token (RULES_CLARIFICATIONS.md §G5) grants up to 3 free
+           terraforming steps - one more than any base-game source, so this case didn't exist before. -->
+      <template v-else-if="count === 3">
+        <image xlink:href='../assets/resources/dig-arrow.svg' width=14 :height=325/308*14 x=-14 y=-9 /> <image
+        xlink:href='../assets/resources/dig-arrow.svg' width=14 :height=325/308*14 x=-10 y=-4 /> <image
+        xlink:href='../assets/resources/dig-arrow.svg' width=14 :height=325/308*14 x=-6 y=1 />
+      </template>
     </template>
     <template v-else-if="kind === 'd'">
       <g transform="translate(3,0)">

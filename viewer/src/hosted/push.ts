@@ -16,6 +16,24 @@ export function pushSupported(): boolean {
   return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
 }
 
+/**
+ * Whether this device already has a live push subscription - checked entirely browser-side
+ * (Notification.permission + an actual PushManager subscription), no Supabase round trip needed.
+ * Lets the UI show "notifications enabled" instead of an "Enable notifications" button that would
+ * otherwise offer to (re-)request permission indefinitely, with no memory of a prior grant.
+ */
+export async function isPushEnabled(): Promise<boolean> {
+  if (!pushSupported() || Notification.permission !== "granted") {
+    return false;
+  }
+  const registration = await navigator.serviceWorker.getRegistration();
+  if (!registration) {
+    return false;
+  }
+  const subscription = await registration.pushManager.getSubscription();
+  return subscription != null;
+}
+
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (!("serviceWorker" in navigator)) {
     return null;

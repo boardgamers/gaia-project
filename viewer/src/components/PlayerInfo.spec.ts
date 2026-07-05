@@ -89,4 +89,26 @@ describe("PlayerInfo terraforming strip", () => {
     expect(shipFed, "claimed ship Federation token should render in the tiles row").to.not.equal(null);
     expect(shipFed?.querySelector("image")).to.not.equal(null);
   });
+
+  it("renders the Terraform ship Federation token with a free-mine icon and 3 terraform-step arrows, not a plain reward icon", () => {
+    const engine = new Engine(["init 2 player-info-ship-fed-terra", "p1 faction terrans", "p2 faction hadsch-hallas"], {
+      lostFleet: true,
+    });
+
+    engine.players[0].data.spaceshipFederations.push({ tile: SpaceshipFederation.Terraform, green: true });
+
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(PlayerInfo, { props: { player: engine.players[0] }, store });
+    const shipFed = container.querySelector(`[data-ship-federation="${SpaceshipFederation.Terraform}"]`);
+
+    expect(shipFed, "claimed Terraform ship Federation token should render in the tiles row").to.not.equal(null);
+    expect(shipFed?.querySelector(".building"), "expected a mine building icon, matching the free-mine tech tile's icon style")
+      .to.not.equal(null);
+    const arrows = Array.from(shipFed?.querySelectorAll("image") ?? []).filter((img) =>
+      img.outerHTML.includes("dig-arrow")
+    );
+    expect(arrows.length, "expected 3 terraform-step arrows").to.equal(3);
+  });
 });

@@ -255,12 +255,13 @@ export function classifySectorId(sector: string): LostFleetSectorType {
 
 /**
  * Identifies which "sector" a hex belongs to for effects that count distinct Lost Fleet sectors
- * colonized (e.g. Darkanians' PI ability; later also the `deep`/`deeppass` Advanced Tech tiles and
- * the "most Deep Space sectors" Final Scoring tile). A Deep Space Sector tile is a 3-hex cluster
- * that counts as a single sector, so its `DS<tileId>_<0-2>` hex ids are normalized by stripping the
- * per-hex suffix. Interspace tiles are never sectors and have no key.
+ * colonized (e.g. Darkanians' PI ability; the `deep`/`deeppass` Advanced Tech tiles; the "most Deep
+ * Space sectors" Final Scoring tile; and the base game's "most sectors" Final Scoring tile, which
+ * Lost Fleet's "Space/Deep Space sector" wording extends to Deep Space too). A Deep Space Sector
+ * tile is a 3-hex cluster that counts as a single sector, so its `DS<tileId>_<0-2>` hex ids are
+ * normalized by stripping the per-hex suffix. Interspace tiles are never sectors and have no key.
  */
-function lostFleetSectorKey(hex: GaiaHex): string | undefined {
+export function lostFleetSectorKey(hex: GaiaHex): string | undefined {
   const type = classifySectorId(hex.data.sector);
   if (type === LostFleetSectorType.Interspace) {
     return undefined;

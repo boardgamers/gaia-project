@@ -121,6 +121,7 @@
            CSS) - freeing up the space #move-title used to occupy alone on mobile once round 1+
            starts, instead of duplicating it on screen. Placed last (below the action buttons) as a
            highlighted banner, so the buttons themselves are reachable first. -->
+      <StickyResourceBar v-if="showResourceBar" :player="myPlayer" class="sticky-resource-bar-row" />
       <div v-if="showStickyMobileBar" class="sticky-bar-title d-flex align-items-center">
         <h5 class="mb-0">
           <RichTextView :content="statusLine" />
@@ -133,6 +134,8 @@
           size="sm"
           variant="outline-secondary"
           right
+          dropup
+          boundary="viewport"
           class="ml-auto auto-leech-select"
           v-b-tooltip.hover
           title="Auto leech: automatically accept or decline power-charge offers up to this amount, instead of asking every time"
@@ -215,6 +218,7 @@ import { prependShortcut } from "../logic/buttons/shortcuts";
 import { CubeCoordinates } from "hexagrid";
 import { autoClickStrategy } from "../logic/buttons/autoClick";
 import RichTextView from "./Resources/RichTextView.vue";
+import StickyResourceBar from "./StickyResourceBar.vue";
 import { richText, RichText } from "../graphics/rich-text";
 import { chargePowerToPay } from "../logic/utils";
 import { factionColor } from "../graphics/utils";
@@ -268,6 +272,7 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
   },
   components: {
     RichTextView,
+    StickyResourceBar,
     MoveButton,
     Undo,
     SilentAuctionInfo,
@@ -486,6 +491,20 @@ export default class Commands extends Vue implements CommandController {
       !this.isSilentBidding &&
       this.engine.round >= 1
     );
+  }
+
+  /** The viewing user's own player (not necessarily whoever's turn it is), same "viewing seat"
+   * lookup used elsewhere (e.g. FactionWheel.vue, BoardAction.vue) - falls back to the active
+   * player in self-contained/hot-seat mode, where there's no separate logged-in seat. */
+  get myPlayer(): Player | null {
+    const index = this.$store.state.player?.index ?? this.engine.currentPlayer;
+    return index == null ? null : this.engine.players[index];
+  }
+
+  /** Same visibility rule as the auto-leech select - nothing to show before a player has a faction
+   * and the game has actually started. */
+  get showResourceBar(): boolean {
+    return this.showAutoLeechSelect && !!this.myPlayer?.faction;
   }
 
   /** Live-tracked rendered height of #move-buttons (already capped by its own CSS max-height +
@@ -1073,22 +1092,28 @@ i.planet {
 // spots) scrollable in place instead of growing to fill/exceed the screen.
 $mobile-sticky-actions-max-height: 40vh;
 
-// The in-bar status line (.sticky-bar-title) is only meant for the narrow/mobile sticky layout -
-// on wider viewports #move-buttons isn't pinned/fixed, so keep using the standalone #move-title
-// there instead of showing the status line twice. Styled as a highlighted banner so it reads as
-// "current turn status," distinct from the action buttons sitting above it in the same bar.
-// Scoped under #move-buttons (not a bare .sticky-bar-title) so this selector's specificity beats
-// Bootstrap's .d-flex utility outright - .d-flex is "display: flex !important" too, so relying on
-// !important alone to win a tie would depend on unpredictable stylesheet source order (verified
-// empirically: a bare !important here did NOT reliably win). See the matching note on
+// The in-bar status line (.sticky-bar-title) and the resource bar above it are only meant for the
+// narrow/mobile sticky layout - on wider viewports #move-buttons isn't pinned/fixed, so keep using
+// the standalone #move-title/full player board there instead of showing this twice. Scoped under
+// #move-buttons (not a bare .sticky-bar-title) so this selector's specificity beats Bootstrap's
+// .d-flex utility outright - .d-flex is "display: flex !important" too, so relying on !important
+// alone to win a tie would depend on unpredictable stylesheet source order (verified empirically:
+// a bare !important here did NOT reliably win). See the matching note on
 // #move-title.hide-on-mobile-sticky below for the same footgun on the other side of this toggle.
+#move-buttons .sticky-resource-bar-row {
+  display: none !important;
+}
+
+// No longer a Bootstrap "warning" alert box (that read as an actual alert, not a status footer).
+// Instead the status strip is its own full-bleed band at the bottom of the bar - its background
+// tint against the button area's own background *is* the divider, reinforced by a slim accent
+// line, rather than a boxed-in banner floating inside the bar.
 #move-buttons .sticky-bar-title {
   display: none !important;
-  margin-top: 0.5rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  background: var(--warningLight, #fff3cd);
-  border: 1px solid var(--warning, #ffc107);
+  margin: 0.5rem -0.5rem calc(-0.5rem - env(safe-area-inset-bottom));
+  padding: 0.4rem 0.5rem calc(0.4rem + env(safe-area-inset-bottom));
+  border-top: 2px solid var(--highlighted, #2c4);
+  background: var(--systemGray5, #e5e5ea);
 
   // Small enough that the status text stays on one (or two, at most) lines instead of the default
   // h5 size wrapping across several - that wrapping used to be what made this banner so tall.
@@ -1127,6 +1152,10 @@ $mobile-sticky-actions-max-height: 40vh;
     background: var(--systemGray6, #f2f2f7);
     border-top: 1px solid #c9c9d1;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+
+    .sticky-resource-bar-row {
+      display: flex !important;
+    }
 
     .sticky-bar-title {
       display: flex !important;

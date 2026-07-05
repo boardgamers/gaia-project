@@ -278,6 +278,45 @@ describe("Player", () => {
       expect(player.finalCount(FinalTile.DeepSpaceSector)).to.equal(2);
     });
 
+    it("should count a Space sector and a Deep Space sector as 2 distinct sectors for the base 'most sectors' final scoring", () => {
+      const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+      player.faction = Faction.Terrans;
+
+      player.data.occupied.push(
+        new GaiaHex(0, 0, { sector: "s1", planet: Planet.Terra, player: PlayerEnum.Player1, building: Building.Mine }),
+        new GaiaHex(1, -1, {
+          sector: "DS11_0",
+          planet: Planet.Protoplanet,
+          player: PlayerEnum.Player1,
+          building: Building.Mine,
+        })
+      );
+
+      expect(player.finalCount(FinalTile.Sector)).to.equal(2);
+    });
+
+    it("should not double-count 2 structures within the same Deep Space tile as 2 sectors for the base 'most sectors' final scoring", () => {
+      const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+      player.faction = Faction.Terrans;
+
+      player.data.occupied.push(
+        new GaiaHex(0, 0, {
+          sector: "DS11_0",
+          planet: Planet.Protoplanet,
+          player: PlayerEnum.Player1,
+          building: Building.Mine,
+        }),
+        new GaiaHex(1, -1, {
+          sector: "DS11_1",
+          planet: Planet.Asteroid,
+          player: PlayerEnum.Player1,
+          building: Building.TradingStation,
+        })
+      );
+
+      expect(player.finalCount(FinalTile.Sector)).to.equal(1);
+    });
+
     it("should score the longest range from the Planetary Institute to either Academy for the Lost Fleet distance final scoring", () => {
       const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
       player.faction = Faction.Terrans;

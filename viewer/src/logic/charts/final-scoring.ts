@@ -150,7 +150,7 @@ const planetTypes: FinalScoringExtractLog = ExtractLog.wrapper(() => {
 });
 
 const sectors: FinalScoringExtractLog = ExtractLog.wrapper(() => {
-  const sectors = new Set<string>();
+  const seen = new Set<string>();
 
   return planetCounter(
     () => true,
@@ -158,11 +158,18 @@ const sectors: FinalScoringExtractLog = ExtractLog.wrapper(() => {
     () => true,
     false,
     (cmd, log, planet, location) => {
-      const l = parseLocation(location);
-      if (sectors.has(l.sector)) {
+      // Lost Fleet: Interspace locations aren't sectors, and a 3-hex Deep Space Sector tile is one
+      // sector (normalize its per-hex suffix) - both use `location` directly instead of `parseLocation`,
+      // which only understands base-game "<sector><suffix>" coordinates and throws on IS/DS ones.
+      const type = classifySectorId(location);
+      if (type === LostFleetSectorType.Interspace) {
         return 0;
       }
-      sectors.add(l.sector);
+      const key = type === LostFleetSectorType.DeepSpace ? location.replace(/_\d+$/, "") : parseLocation(location).sector;
+      if (seen.has(key)) {
+        return 0;
+      }
+      seen.add(key);
       return 1;
     }
   );

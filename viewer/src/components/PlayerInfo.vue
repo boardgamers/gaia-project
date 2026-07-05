@@ -269,6 +269,7 @@
         class="mb-1 mr-1"
         :key="'ship-fed-' + i"
         :data-ship-federation="fed.tile"
+        :spaceship-federation="fed.tile"
         :rewardsOverride="shipFederationRewards(fed.tile)"
         :used="!fed.green"
         :numTiles="1"

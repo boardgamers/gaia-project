@@ -1,5 +1,12 @@
 <template>
-  <svg viewBox="-25 -25 50 50" width="50" height="50" style="overflow: visible">
+  <svg
+    viewBox="-25 -25 50 50"
+    width="50"
+    height="50"
+    style="overflow: visible"
+    v-b-tooltip.hover
+    :title="tooltip"
+  >
     <g :class="['federationTile', { disabled }]">
       <image xlink:href="../assets/conditions/federation.svg" :height=739/636*50 v-if="!disabled" style="color: #247B0A"
       width=50 x=-25 y=-25 :filter=filter /> <image xlink:href="../assets/conditions/federation-used.svg"
@@ -8,7 +15,22 @@
       <text x="16.5" y="-15.5" v-if="numTiles > 1">
         {{ numTiles }}
       </text>
-      <g v-if="rewards.length > 0">
+      <!-- Mimics TechTile.vue's isTerraformMineTile icon (free mine + terraforming-step arrows), just
+           with 3 arrows instead of 2 - this token's bonus Build-a-Mine action is the same shape as
+           that Standard Tech tile's, one step more generous. A generic reward loop can't render this:
+           it's not a plain reward (no direct resource gain). Inlines Resource.vue's own "step" markup
+           (rather than using <Resource kind="step"> directly) because Resource.vue imports this file
+           back for kind="fed", and importing Resource here in turn would be a circular dependency. -->
+      <g v-if="isTerraformMineToken" style="pointer-events: none">
+        <Building building="m" outline-white faction="gen" transform="translate(-11, 0) scale(2.2)" />
+        <g transform="translate(8, 0) scale(1.3)">
+          <image xlink:href="../assets/resources/dig-planet.svg" width="20" height="20" x="-10" y="-10" />
+          <image xlink:href="../assets/resources/dig-arrow.svg" width="14" :height="(325 / 308) * 14" x="-14" y="-9" />
+          <image xlink:href="../assets/resources/dig-arrow.svg" width="14" :height="(325 / 308) * 14" x="-10" y="-4" />
+          <image xlink:href="../assets/resources/dig-arrow.svg" width="14" :height="(325 / 308) * 14" x="-6" y="1" />
+        </g>
+      </g>
+      <g v-else-if="rewards.length > 0">
         <Resource
           v-for="(reward, i) in rewards"
           :key="i"
@@ -26,10 +48,14 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Federation as FederationEnum, Reward } from "@gaia-project/engine";
+import { Federation as FederationEnum, Reward, SpaceshipFederation } from "@gaia-project/engine";
 import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
+import { spaceshipFederationSpec } from "@gaia-project/engine/src/tiles/spaceship-federations";
+import Building from "./Building.vue";
 
-@Component
+@Component({
+  components: { Building },
+})
 export default class FederationTile extends Vue {
   @Prop()
   federation: FederationEnum;
@@ -47,11 +73,25 @@ export default class FederationTile extends Vue {
   @Prop()
   rewardsOverride?: Reward[];
 
+  /** Set for Lost Fleet spaceship Federation tokens - drives this component's own tooltip (matching
+   * every other tile type's self-hosted-tooltip convention) and the Terraform token's dedicated icon,
+   * neither of which a bare `rewardsOverride: Reward[]` carries enough information for. */
+  @Prop()
+  spaceshipFederation?: SpaceshipFederation;
+
   get rewards(): Reward[] {
     if (this.rewardsOverride) {
       return this.rewardsOverride;
     }
     return this.federation !== undefined ? federationRewards(this.federation) : [];
+  }
+
+  get isTerraformMineToken(): boolean {
+    return this.spaceshipFederation === SpaceshipFederation.Terraform;
+  }
+
+  get tooltip(): string | undefined {
+    return this.spaceshipFederation !== undefined ? spaceshipFederationSpec[this.spaceshipFederation] : undefined;
   }
 
   get disabled() {

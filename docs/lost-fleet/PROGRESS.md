@@ -2853,6 +2853,65 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       `resolve-automation` itself); do that once deployment happens.
     - The #69 race-condition regression tests were explicitly OUT of scope for this session (owner
       chose Phase 3 + the quiet notification, not the regression tests, when asked) - still open.
+72. ✅ **"Gaia 7" UI + scoring punch list (2026-07-05, new session), 8 items:**
+    - **Final-scoring `Sector` tile bug, FOUND AND FIXED**: `Condition.Sector` (`player.ts`) uniqued
+      raw `hex.data.sector` strings directly instead of using the `lostFleetSectorKey` normalization
+      already established for Deep Space (`colonizedDeepSpaceSectorCount`/`isNewLostFleetSector` in
+      `lost-fleet-map.ts`) - 2+ structures inside the SAME 3-hex Deep Space Sector tile were
+      overcounted as separate sectors instead of 1. Exported `lostFleetSectorKey` and reused it in
+      `Condition.Sector`; a Space sector + a Deep Space sector correctly still count as 2 distinct
+      sectors (matching §the PI ability's "Space/Deep Space sector, Interspace ≠ sector" wording) -
+      that part of the owner's reported "2 sectors" example was already correct. 2 new `player.spec.ts`
+      cases. Audited every other Final Scoring condition (Structure/StructureFed/PlanetType/Gaia/
+      Satellite/Asteroid/PlanetaryInstituteAcademyDistance/DeepSpaceSector) - all already correct, no
+      other bugs found. Also fixed the same raw-sector-string bug (plus a latent crash: `parseLocation`
+      asserts on Lost Fleet's `IS`/`DS`-prefixed coordinates) in the viewer's "Sectors" stats-chart
+      source (`logic/charts/final-scoring.ts`).
+    - **Mobile sticky bottom bar (`Commands.vue`) redesigned**: the auto-leech dropdown now opens
+      `dropup` with `boundary="viewport"` so its 7 options are no longer clipped by the bar's own
+      `overflow-y:auto`/`max-height:40vh` (owner-reported "can't see all options on mobile", root cause
+      was Bootstrap-Vue defaulting the dropdown's positioning boundary to its scroll-clipping ancestor).
+      The status-line strip dropped its Bootstrap "warning" alert styling (amber box) for a full-bleed
+      band whose own background tint (`--systemGray5` against the button area's `--systemGray6`) plus a
+      slim `--highlighted` top accent line *is* the divider, instead of looking like an actual warning.
+      New `StickyResourceBar.vue` (mobile-only, same visibility gate as the bar itself) echoes the
+      player board's top-right corner - credits/ore/knowledge/QIC, `PowerBowls` (reused verbatim, all 4
+      areas), available Gaiaformers (`Condition.GaiaFormer`), range, and terraforming-cost discount -
+      at native icon size instead of the board's `scale(0.1)`, shown for the viewing user's own seat
+      (`$store.state.player.index ?? engine.currentPlayer`, same lookup as `FactionWheel.vue`/
+      `BoardAction.vue`). Verified visually via a headless-Chromium screenshot pass (dev server +
+      `playwright-core` against `?scenario=lost-fleet-overview` at a 390px mobile viewport) - dropdown
+      fully visible opening upward, resource bar legible, no amber banner, nothing duplicated on desktop.
+    - **Push-notification banner** now reflects actual state instead of always showing "Enable
+      notifications": new `push.ts` `isPushEnabled()` checks `Notification.permission` +
+      `PushManager.getSubscription()` browser-side (no Supabase round trip); `HostedBar.vue` and
+      `Lobby.vue` show a "🔔 Notifications on" badge once true, refreshed after enabling. Per the
+      `push_subscriptions` schema (`0001_multiplayer.sql`, no `game_id` column, keyed by `user_id` +
+      device `endpoint`), this was already account+device-level, not per-game - now visible in the UI
+      too, not just the schema.
+    - **Ship Federation token tap-to-describe, FOUND AND FIXED**: unlike every other tile type,
+      `FederationTile.vue` never self-hosted a `v-b-tooltip` (root-cause of the owner's "fed tokens on
+      a ship" example never showing a description) - 2 of its 3 call sites (`PlayerInfo.vue`'s claimed-
+      token rows) had no external tooltip wrapper either, only `LostFleetShips.vue`'s still-on-the-ship
+      copy did. Added a `spaceshipFederation` prop + self-hosted tooltip (`spaceshipFederationSpec`)
+      matching `TechTile.vue`'s convention, wired at all 3 call sites.
+    - **T F Mars's "3C" credit action icon** no longer shows a mine (it grants 1 free terraforming step
+      via a credit-for-ore substitution, NOT a free mine - `RULES_CLARIFICATIONS.md` §C3; showing a
+      mine implied otherwise). `data/spaceships.ts`'s `shipActionOverlays[TFMars].credit` dropped its
+      `building: Mine` field.
+    - **"terra" Federation token icon** now mimics the Standard Tech "Terraform" tile's icon (free mine
+      + terraform-step arrows) with 3 arrows instead of 2, matching its actually-3-steps effect
+      (`FederationTile.vue`'s new `isTerraformMineToken` branch). Inlines Resource.vue's own "step"
+      markup rather than reusing `<Resource kind="step">` directly - `Resource.vue` imports
+      `FederationTile.vue` (for `kind="fed"`), so importing it back would be a circular module
+      dependency (confirmed empirically: it silently rendered as an unresolved `<Resource>` tag with no
+      content). Also added a `count === 3` branch to `Resource.vue`'s own `kind === "step"` rendering
+      (previously silently rendered 0 arrows for count 3 - no source granted 3 free steps before this
+      token existed).
+    - Engine **610/610**, viewer **344/344** (both grew from new tests this session), both suites
+      re-run clean multiple times (one apparent viewer failure mid-session was pre-existing rotation-
+      test flakiness in unrelated map code, reproduced as flaky on a clean rerun, not caused by this
+      session's changes).
 
 ## Still MISSING — only one art-only item left
 

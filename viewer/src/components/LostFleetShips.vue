@@ -141,15 +141,18 @@
            visual footprint well past its raw 50-unit height) actually lines up with the action
            octagons' bottom edge instead of visibly overshooting past it - measured empirically via
            getBoundingClientRect() on a live render, not just the raw un-shadowed geometry. -->
-      <g data-section="federation" v-b-tooltip.hover :title="federationTooltip(ship)">
+      <g data-section="federation">
         <FederationTile
           v-if="shipFederation(ship)"
           :rewardsOverride="federationDisplayRewards(shipFederation(ship))"
+          :spaceship-federation="shipFederation(ship)"
           x="172"
           y="8"
           filter="url(#shadow-1)"
         />
-        <FederationTile v-else :used="true" x="172" y="8" />
+        <g v-else v-b-tooltip.hover :title="federationTooltip(ship)">
+          <FederationTile :used="true" x="172" y="8" />
+        </g>
       </g>
 
       <!-- the Standard Tech tile seeded on this ship (Twilight has artifacts instead) - nudged down

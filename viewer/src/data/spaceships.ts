@@ -43,7 +43,10 @@ const shipActionOverlays: { [key in Spaceship]?: Partial<{ [key in SpaceshipActi
   },
   [Spaceship.TFMars]: {
     power: { resource: "instant-gaiaforming" },
-    credit: { building: BuildingEnum.Mine, resource: "step" },
+    // No Building overlay here: unlike Eclipse's Asteroid credit action below, the mine itself is
+    // NOT free (RULES_CLARIFICATIONS.md §C3) - the 3 credits only substitute for 1 terraforming
+    // step's ore cost, so the icon must show just that step, not a (misleadingly free-looking) mine.
+    credit: { resource: "step" },
   },
   [Spaceship.Eclipse]: {
     power: { condition: ConditionEnum.AdvanceResearch },
