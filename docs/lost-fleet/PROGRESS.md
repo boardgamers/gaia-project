@@ -2799,6 +2799,61 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
     - 5 commits, ~20 files changed, 4 new engine tests + ~20 new/updated viewer tests, all suites
       green (see the rerun note above). Full diff is on `claude/gaia-5-ui-gameplay-6cqp7x`.
 
+71. ✅ **Premove Phase 3 - Sequential + Priority multi-slot queues (2026-07-05), per
+    `PREMOVE_PLAN.md` §10.1-10.8.** Code/schema/tests complete; **not deployed** (same standing
+    blocker as Phases 1-2 - see "Next actions"). Two mutually-exclusive per-seat queue modes, both
+    depth 3, both at every player count, never combined:
+    - **Sequential** - a chain of the seat's next N turns. The composer (`Game.vue`'s "Plan my
+      move ▸") previews entry #2+ against a clone with every earlier queued entry already applied
+      (`logic/premove-preview.ts`'s `buildSequentialChainPreview`, forcing the seat's turn before
+      EACH replayed step, not just once at the end - the first version of this got that wrong and a
+      new unit test caught it before it shipped). At execution, only the lowest-`seq` entry is
+      attempted; a throw cascade-discards everything queued behind it (one `premove_failures` row
+      noting the cascade); the defensive "applied but didn't complete a turn" case does not cascade.
+    - **Priority** - up to 3 ranked alternatives for the single upcoming turn, all previewed against
+      the SAME fresh current state. First legal rank (ascending) fires and the whole list clears;
+      an illegal rank is silently skipped; all-illegal writes one failure row.
+    - **Shared resolver** (`viewer/src/logic/premove-resolver.ts`'s `resolvePremoveQueue`) is the
+      ONE place either mode's branching logic is decided, imported by both `host.ts`'s client
+      fast-path and `resolve-automation/logic.ts`'s edge-function path (same pattern as
+      `auto-decide.ts`) - it's engine-agnostic (no `@gaia-project/engine` import) so it stayed
+      dependency-free for fast unit testing while still being the literal same code both paths run
+      in production.
+    - **Migration `0012_premove_phase3_queues.sql`**: `premoves.mode` column (check-constrained,
+      default `'sequential'`); `queue_premove` gains `p_mode` + a same-mode/depth-3 guard (rejects a
+      mismatched mode with a `mode_mismatch:` prefix the client turns into "switch mode clears your
+      queue first"); new `cancel_all_premoves`/`reorder_premove` RPCs (the latter priority-only).
+      This repo has no SQL test harness, so the mode-guard behavior was verified against a genuine
+      local Postgres 16 instance (roles/tables stubbed, the real migration file applied as-is, 9
+      assertions covering mode mismatch, depth cap, reorder rejection on a sequential queue,
+      cancel-all on both modes, and seat-ownership) rather than skipped - fully local, never touched
+      the live Supabase project.
+    - **UI**: the old always-visible flat queue list moved into a `⚡ Premoves (n) ▸` pill → overview
+      modal (`PremoveModal.vue`) per owner decision - mode toggle (switch clears the queue, with a
+      confirm), a reorderable list for Priority, per-row staleness (`queued_move_count` vs current)
+      and live-legality greying (re-simulated per row), an inline "will fire" line, an ⓘ info modal
+      explaining both modes' tradeoffs, and an `auto_charge='ask'` warning at queue time.
+    - **Reconciliation (§10.7)**: a manual move for a seat that still has a queue (most commonly:
+      the fast-path's own attempt already failed silently) pops just the matching Sequential head,
+      or clears everything otherwise (Priority always; a pass always, even matching the head, since
+      it ends the seat's round participation). Gated to only fire for the seat's genuine
+      `Phase.RoundMove` turn - the first version of this reconciled on RoundLeech charge/decline
+      commits too, which wiped a still-valid queue before the seat's real turn ever arrived; 2 of
+      `host.spec.ts`'s new cases exist specifically because they caught this before it shipped.
+    - **Quiet success notification** (owner-confirmed in scope alongside Phase 3): a fast-path-played
+      premove fires `onPremovePlayed` -> a dismissible in-app notice (names the rank when Priority
+      didn't fire rank 1); never a push (only failures push, unchanged).
+    - **Tests**: `premove-resolver.spec.ts` (9, generic fake-engine), `premove-preview.spec.ts` (4,
+      real engine), 7 new `host.spec.ts` cases, 4 new `resolve-automation-logic.spec.ts` cases (real
+      bundled engine), plus the local-Postgres mode-guard pass above. Engine **608/608**, viewer
+      **343/343** (both grew from this session's own baseline reruns below), both production builds
+      clean. The two-browser Phase 3 E2E scenario from §10.8's last bullet was NOT run (or added to
+      `viewer/e2e/hosted-multiplayer.e2e.js`) - that script only runs manually against the LIVE
+      project, and Phase 3's schema/RPCs aren't deployed there yet (same blocker as
+      `resolve-automation` itself); do that once deployment happens.
+    - The #69 race-condition regression tests were explicitly OUT of scope for this session (owner
+      chose Phase 3 + the quiet notification, not the regression tests, when asked) - still open.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -2923,6 +2978,21 @@ session. Every layout/alignment fix was verified against a real running dev serv
 (screenshots, `getBoundingClientRect()` measurements, and a real engine state loaded through the
 viewer's own "Load" dialog to exercise the actual Build-a-Mine cost-display code path) - not just
 unit tests, per the standing "read the actual code/render it, don't guess" agreement.
+
+**Latest full rerun after #71 (2026-07-05, new session, Premove Phase 3):** engine **608/608** (604
+baseline + 4 new `resolve-automation-logic.spec.ts` Phase 3 cases), viewer **343/343** (323 baseline
++ 20 new: 9 `premove-resolver.spec.ts`, 4 `premove-preview.spec.ts`, 7 `host.spec.ts`). Both
+production builds clean (`npx vue-cli-service build` run explicitly). Migration `0012`'s mode-guard
+RPCs were separately verified against a genuine local Postgres 16 instance (not part of either
+suite above - see "Done so far" #71) since this repo has no SQL test harness; that pass is a
+one-time local check, not a retained automated test, so it isn't part of this rerun count. Two real
+implementation bugs were caught and fixed by tests written for this session before they shipped: the
+Sequential chain-preview composer not re-forcing the seat's turn before each replayed step (so a
+2nd queued entry silently previewed against the ORIGINAL unmodified state instead of the chain), and
+client-side reconciliation firing on a `Phase.RoundLeech` charge/decline decision for the same seat
+(wiping a still-valid queue before the seat's real `RoundMove` turn ever arrived) - both fixed in
+`viewer/src/logic/premove-preview.ts` and `viewer/src/hosted/host.ts` respectively before this
+count.
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/
@@ -3157,27 +3227,23 @@ session, and this session's resync fix (`hosted/host.ts`) removes another plausi
 session's fixes, get exact repro details (device/browser, does "Hide log until next turn" happen to
 be checked, does it happen right after a specific action) rather than guessing further blind.
 
-**Confirmed with the user, 2026-07-05: continue with Phase 3 (multi-slot premove queue) next — and
-its design is now FINALIZED (design-only, no code yet).** Two design passes with the owner settled
-on **two mutually-exclusive queue modes**, both depth 3, both at every player count:
-- **Sequential** — a chain of your next N turns (#2 previewed against a clone with #1 applied).
-- **Priority** — up to 3 ranked alternatives for the single upcoming turn, first legal one wins.
-
-They are never combined; switching mode clears the seat's queue. The full spec (data-model `mode`
-column, the mode-branching shared resolver `resolvePremoveQueue`, cascade-on-sequential-failure vs
-fall-through-on-priority, the `⚡ Premoves (n)` pill → overview **modal** with reorder + live-legality
-greying, quiet-in-app success / push-on-failure notifications, `auto_charge='ask'` queue-time
-warning, and the manual-move / round-advance renumber reconciliation) is written up in
-**`PREMOVE_PLAN.md` → "Phase 3 design — Sequential + Priority premoves (finalized 2026-07-05)"
-(§10.1–10.8)**. A Phase 3 implementation session should execute that section.
-
-Two other cheap/valuable items were identified in #69 and offered but not yet started (ask the
-user which they want alongside Phase 3, don't assume): (a) regression tests for the premove
-race-condition scenarios enumerated in #68; (b) a "premove executed: `<move text>`" success
-notification (only failures currently surface — now folded into the Phase 3 design's quiet-in-app
-success path). Also still outstanding, unchanged from #66/#67: deploying `resolve-automation`
-(Supabase CLI + access token, owner action) and seeding `app_config['resolve_automation']` — needed
-for the actual fully-offline promise; until then premoves/auto-leech only run via client-side paths.
+**Premove Phase 3 (multi-slot Sequential + Priority queues) is DONE in code/schema/tests, 2026-07-05
+— see "Done so far" #71.** Owner confirmed doing Phase 3 alongside the quiet success notification,
+explicitly NOT the #69 race-condition regression tests (still open, unchanged from #68/#69 - that
+audit found no code changes needed but the regression tests it recommended were never written).
+Mode-switch-clears-with-confirm and the manual-move/pass reconciliation rules were confirmed
+matching §10.7 as specified before implementation started. **Not yet deployed** - migration `0012`
+needs to reach the live project before Phase 3 is actually usable, same standing blocker as
+`resolve-automation` itself (still not deployed either, unchanged from #66/#67 - Supabase CLI +
+access token, owner action; `app_config['resolve_automation']` also needs seeding once it is). Until
+both are deployed, premoves (any mode) and auto-leech only run via client-side paths (work while a
+tab is open/visited, not fully offline yet) - this is unchanged from before Phase 3, just now also
+true for the new modes. The two-browser Phase 3 E2E scenario from `PREMOVE_PLAN.md` §10.8's last
+bullet was deliberately not added to `viewer/e2e/hosted-multiplayer.e2e.js` yet, since that script
+only runs manually against the LIVE project and Phase 3's schema/RPCs aren't live - do that once
+deployment happens, alongside whatever manual soak-testing feels warranted for a UI-heavy feature
+that only got unit/component-level coverage this session (see #71's testing notes on what specifically
+wasn't run: no live two-browser check of the actual `PremoveModal.vue` overview UI in a real browser).
 
 Chunks 1-7b plus Darkanians' PI follow-up, the core Explore action, the federation-claim hook, the
 Standard-Tech claim hook, the full Spaceship Boards live-gameplay wiring, the gold-side execution

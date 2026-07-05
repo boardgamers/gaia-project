@@ -434,7 +434,9 @@ describe("Game", () => {
 
       vm.queueCurrentPremove();
 
-      expect(dispatched).to.deep.equal([{ type: "queuePremove", payload: { seat: 1, move: "nevlas up terra." } }]);
+      expect(dispatched).to.deep.equal([
+        { type: "queuePremove", payload: { seat: 1, move: "nevlas up terra.", mode: "sequential" } },
+      ]);
       expect(vm.premoveMode).to.equal(false);
 
       vm.$el.remove();

@@ -41,6 +41,8 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
   item.addListener("player", (data) => store.commit("player", data));
   // Premove (PREMOVE_PLAN.md) - hosted-mode-only; self-contained mode never emits this.
   item.addListener("premoveState", (data) => store.commit("premoveState", data));
+  // Phase 3 (§10.6) - hosted-mode-only quiet success notice.
+  item.addListener("premovePlayed", (data) => store.commit("premovePlayed", data));
   item.addListener("replay:start", () => {
     store.dispatch("replayStart");
     replaying = true;

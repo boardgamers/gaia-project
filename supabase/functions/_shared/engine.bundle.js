@@ -7216,23 +7216,23 @@ var SpaceshipFederation = /* @__PURE__ */ ((SpaceshipFederation6) => {
   }
   SpaceshipFederation6.values = values;
 })(SpaceshipFederation || (SpaceshipFederation = {}));
-var ArtifactToken = /* @__PURE__ */ ((ArtifactToken4) => {
-  ArtifactToken4["KnowledgeOre"] = "artifact-knowledgeore";
-  ArtifactToken4["Credit"] = "artifact-credit";
-  ArtifactToken4["KnowledgeQic"] = "artifact-knowledgeqic";
-  ArtifactToken4["CreditLarge"] = "artifact-creditlarge";
-  ArtifactToken4["Power"] = "artifact-power";
-  ArtifactToken4["Asteroid"] = "artifact-asteroid";
-  ArtifactToken4["Protoplanet"] = "artifact-protoplanet";
-  ArtifactToken4["ResearchLevel"] = "artifact-researchlevel";
-  ArtifactToken4["ResearchTracks"] = "artifact-researchtracks";
-  ArtifactToken4["Federation"] = "artifact-federation";
-  ArtifactToken4["GaiaProject"] = "artifact-gaiaproject";
-  ArtifactToken4["PlanetTypes"] = "artifact-planettypes";
-  ArtifactToken4["DeepSpace"] = "artifact-deepspace";
-  return ArtifactToken4;
+var ArtifactToken = /* @__PURE__ */ ((ArtifactToken5) => {
+  ArtifactToken5["KnowledgeOre"] = "artifact-knowledgeore";
+  ArtifactToken5["Credit"] = "artifact-credit";
+  ArtifactToken5["KnowledgeQic"] = "artifact-knowledgeqic";
+  ArtifactToken5["CreditLarge"] = "artifact-creditlarge";
+  ArtifactToken5["Power"] = "artifact-power";
+  ArtifactToken5["Asteroid"] = "artifact-asteroid";
+  ArtifactToken5["Protoplanet"] = "artifact-protoplanet";
+  ArtifactToken5["ResearchLevel"] = "artifact-researchlevel";
+  ArtifactToken5["ResearchTracks"] = "artifact-researchtracks";
+  ArtifactToken5["Federation"] = "artifact-federation";
+  ArtifactToken5["GaiaProject"] = "artifact-gaiaproject";
+  ArtifactToken5["PlanetTypes"] = "artifact-planettypes";
+  ArtifactToken5["DeepSpace"] = "artifact-deepspace";
+  return ArtifactToken5;
 })(ArtifactToken || {});
-((ArtifactToken4) => {
+((ArtifactToken5) => {
   function values(expansions) {
     if (!hasExpansion(expansions, 4 /* LostFleet */)) {
       return [];
@@ -7253,7 +7253,7 @@ var ArtifactToken = /* @__PURE__ */ ((ArtifactToken4) => {
       "artifact-deepspace" /* DeepSpace */
     ];
   }
-  ArtifactToken4.values = values;
+  ArtifactToken5.values = values;
 })(ArtifactToken || (ArtifactToken = {}));
 
 // engine/src/setup.ts
@@ -7842,6 +7842,9 @@ function findOperator(spec) {
 }
 var tradeSource = "trade";
 var tradeCostSource = "tradeCost";
+function isTileOrBoosterSource(source) {
+  return typeof source === "string" && (source.startsWith("booster") || source.startsWith("tech-") || source.startsWith("adv-"));
+}
 var Event = class _Event {
   constructor(spec, source) {
     this.activated = false;
@@ -10756,6 +10759,15 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
   get actions() {
     return this.events["=>" /* Activate */].map((event) => event.action());
   }
+  /**
+   * Special actions with no Booster/Tech-tile/Advanced-Tech-tile of their own to render them on
+   * (faction-innate ones like Space Giants' Exploration board or Ivits' Planetary Institute) -
+   * the only ones the player board's "under the mines" row should show, since a Booster/Tech-tile/
+   * Advanced-Tech-tile-granted special action is already shown on its own component.
+   */
+  get actionsWithoutTile() {
+    return this.events["=>" /* Activate */].filter((event) => !isTileOrBoosterSource(event.source)).map((event) => event.action());
+  }
   progress(finalTile) {
     return this.eventConditionCount(finalScorings[finalTile].condition);
   }
@@ -13045,6 +13057,8 @@ var PlayerData2 = class _PlayerData extends import_eventemitter32.EventEmitter {
     this.lostPlanet = 0;
     /** Virtual planet types granted by Asteroid/Protoplanet-themed Artifact tokens, no hex placed */
     this.artifactPlanetTypes = [];
+    /** Lost Fleet Twilight: Artifact tokens claimed via Choose Artifact, kept for display under the player board */
+    this.artifacts = [];
     this.temporaryRange = 0;
     this.temporaryStep = 0;
     this.canUpgradeResearch = true;
@@ -13084,6 +13098,7 @@ var PlayerData2 = class _PlayerData extends import_eventemitter32.EventEmitter {
       powerRingsPlaced: this.powerRingsPlaced,
       lostPlanet: this.lostPlanet,
       artifactPlanetTypes: this.artifactPlanetTypes,
+      artifacts: this.artifacts,
       ships: this.ships,
       shipRange: this.shipRange,
       tradeBonus: this.tradeBonus,
@@ -14080,7 +14095,7 @@ function possibleFederationTiles(engine, player, from) {
   });
   return commands;
 }
-function possibleFederationTokenBuildMine(engine, player, data) {
+function possibleFreeBuildMine(engine, player, discount) {
   const pl = engine.player(player);
   const buildings = [];
   if (pl.data.buildings["m" /* Mine */] >= pl.maxBuildings("m" /* Mine */)) {
@@ -14100,7 +14115,7 @@ function possibleFederationTokenBuildMine(engine, player, data) {
     } else {
       const planet = hex.occupied() ? pl.planet : hex.data.planet;
       steps = terraformingStepsRequired(pl.faction, planet, pl.data.lostFleetCost3Planets);
-      const discountedSteps = data.federation === "ship-fed-terraform" /* Terraform */ ? Math.max(steps - 3, 0) : steps;
+      const discountedSteps = Math.max(steps - discount.terraformDiscount, 0);
       const oreCost = terraformingCost(pl.data, discountedSteps, engine.replay);
       if (oreCost === null) {
         continue;
@@ -14110,7 +14125,7 @@ function possibleFederationTokenBuildMine(engine, player, data) {
       }
     }
     let qicWarning;
-    if (data.federation === "ship-fed-terraform" /* Terraform */) {
+    if (!discount.waiveRangeQic) {
       const qicNeeded = qicForDistance(engine.map, hex, pl, engine.replay);
       if (qicNeeded === null) {
         continue;
@@ -14136,6 +14151,15 @@ function possibleFederationTokenBuildMine(engine, player, data) {
     return [];
   }
   return [{ name: "build" /* Build */, player, data: { buildings } }];
+}
+function possibleFederationTokenBuildMine(engine, player, data) {
+  return possibleFreeBuildMine(engine, player, {
+    terraformDiscount: data.federation === "ship-fed-terraform" /* Terraform */ ? 3 : 0,
+    waiveRangeQic: data.federation === "ship-fed-range" /* Range */
+  });
+}
+function possibleSpaceshipTechTileBuildMine(engine, player) {
+  return possibleFreeBuildMine(engine, player, { terraformDiscount: 2, waiveRangeQic: false });
 }
 
 // engine/src/available/leech.ts
@@ -14293,6 +14317,8 @@ function generate(engine, subPhase = null, data) {
       return possibleSpaceshipUpgradeBuilding(engine, player, data);
     case "federationTokenBuildMine" /* FederationTokenBuildMine */:
       return possibleFederationTokenBuildMine(engine, player, data);
+    case "spaceshipTechTileBuildMine" /* SpaceshipTechTileBuildMine */:
+      return possibleSpaceshipTechTileBuildMine(engine, player);
     case "chooseFederationTile" /* ChooseFederationTile */:
       return possibleFederationTiles(engine, player, "pool");
     case "rescoreFederationTile" /* RescoreFederationTile */:
@@ -14481,18 +14507,17 @@ function moveChooseArtifactToken(engine, command, player, token) {
 }
 function applyArtifactToken(engine, player, token) {
   const pl = engine.player(player);
+  pl.data.artifacts.push(token);
   const rewardSpec = artifactTokenRewards[token];
   if (rewardSpec) {
     pl.loadEvents(Event.parse([rewardSpec], "twilight" /* Twilight */));
   }
   switch (token) {
     case "artifact-asteroid" /* Asteroid */:
-      pl.gainRewards([new Reward(7, "vp" /* VictoryPoint */)], "twilight" /* Twilight */);
-      pl.data.artifactPlanetTypes.push("a" /* Asteroid */);
+      applyArtifactPlanetType(pl, "a" /* Asteroid */);
       break;
     case "artifact-protoplanet" /* Protoplanet */:
-      pl.gainRewards([new Reward(7, "vp" /* VictoryPoint */)], "twilight" /* Twilight */);
-      pl.data.artifactPlanetTypes.push("p" /* Protoplanet */);
+      applyArtifactPlanetType(pl, "p" /* Protoplanet */);
       break;
     case "artifact-researchlevel" /* ResearchLevel */:
       pl.gainRewards(
@@ -14524,6 +14549,14 @@ function applyArtifactToken(engine, player, token) {
         "twilight" /* Twilight */
       );
       break;
+  }
+}
+function applyArtifactPlanetType(pl, planet) {
+  const alreadyColonized = pl.ownedPlanets.some((hex) => hex.data.planet === planet) || pl.data.artifactPlanetTypes.includes(planet);
+  pl.gainRewards([new Reward(7, "vp" /* VictoryPoint */)], "twilight" /* Twilight */);
+  pl.data.artifactPlanetTypes.push(planet);
+  if (!alreadyColonized) {
+    pl.receiveTriggerIncome("newplanet" /* NewPlanetType */);
   }
 }
 

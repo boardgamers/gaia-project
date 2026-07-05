@@ -10,6 +10,13 @@
 // Phase 2 (docs/lost-fleet/PREMOVE_PLAN.md's phasing) added the Phase.RoundLeech/auto-charge
 // branch below. Any OTHER non-RoundMove phase (setup, income, gaia, scoring, endgame) is still a
 // no-op: the premove stays queued untouched, waiting for its moment.
+//
+// Phase 3 (§10.5) factored the RoundMove branch's own mode-branching (Sequential vs Priority) out
+// into resolvePremoveQueue, a shared helper also imported by host.ts's client fast-path, so online
+// and offline resolution can never drift - this file's own job is now just: fetch the seat's queue,
+// hand it to the resolver, and translate its decision into commits/deletes/failure rows.
+
+import { INCOMPLETE_TURN_REASON, resolvePremoveQueue } from "../../../viewer/src/logic/premove-resolver.ts";
 
 export type GameRow = {
   id: string;
@@ -20,7 +27,8 @@ export type GameRow = {
 };
 
 export type MoveRow = { seq: number; move: string };
-export type PremoveRow = { seq: number; move: string };
+export type PremoveMode = "sequential" | "priority";
+export type PremoveRow = { seq: number; move: string; mode: PremoveMode };
 
 export type PlayerUpdate = { seat: number; faction: string; score: number };
 
@@ -59,7 +67,9 @@ export type EngineInstance = {
 export type Backend = {
   fetchGame(gameId: string): Promise<GameRow>;
   fetchMoves(gameId: string): Promise<MoveRow[]>;
-  fetchLowestSeqPremove(gameId: string, seat: number): Promise<PremoveRow | null>;
+  /** All of the seat's queued rows, any order (the resolver sorts by seq itself). Empty when
+   * nothing is queued. */
+  fetchPremoveQueue(gameId: string, seat: number): Promise<PremoveRow[]>;
   deletePremove(gameId: string, seat: number, seq: number): Promise<void>;
   insertPremoveFailure(gameId: string, seat: number, move: string, reason: string): Promise<void>;
   commitAutomatedTurn(args: CommitAutomatedTurnArgs): Promise<void>;
@@ -72,7 +82,7 @@ export type Result =
   | { outcome: "wrong-phase"; phase: string }
   | { outcome: "premove-failed"; reason: string }
   | { outcome: "premove-incomplete-turn" }
-  | { outcome: "committed"; seq: number }
+  | { outcome: "committed"; seq: number; rank?: number; totalRanks?: number }
   | { outcome: "seq-conflict" }
   | { outcome: "replay-failed"; reason: string }
   | { outcome: "leech-ask" }
@@ -132,41 +142,45 @@ export async function resolveOneAutomatedTurn(
     return { outcome: "wrong-phase", phase: engine.phase };
   }
 
-  const premove = await backend.fetchLowestSeqPremove(gameId, seat);
-  if (!premove) {
+  const queue = await backend.fetchPremoveQueue(gameId, seat);
+  if (queue.length === 0) {
+    return { outcome: "no-premove-queued" };
+  }
+  const mode = queue[0].mode;
+
+  const resolution = resolvePremoveQueue(
+    () => {
+      const clone = new Engine([initLine, ...ordered.map((m) => m.move)], engineOptions(game));
+      clone.generateAvailableCommandsIfNeeded();
+      return clone;
+    },
+    seat,
+    queue,
+    mode
+  );
+
+  if (resolution.outcome === "none") {
     return { outcome: "no-premove-queued" };
   }
 
-  const clone = new Engine([initLine, ...ordered.map((m) => m.move)], engineOptions(game));
-  clone.generateAvailableCommandsIfNeeded();
-
-  let threw: unknown = null;
-  try {
-    clone.move(premove.move);
-    clone.generateAvailableCommandsIfNeeded();
-  } catch (err) {
-    threw = err;
+  if (resolution.outcome === "failed") {
+    for (const seq of resolution.consumedSeqs) {
+      await backend.deletePremove(gameId, seat, seq);
+    }
+    await backend.insertPremoveFailure(gameId, seat, resolution.failedMove, resolution.reason);
+    return resolution.reason === INCOMPLETE_TURN_REASON
+      ? { outcome: "premove-incomplete-turn" }
+      : { outcome: "premove-failed", reason: resolution.reason };
   }
 
-  if (threw) {
-    const reason = threw instanceof Error ? threw.message : String(threw);
-    await backend.deletePremove(gameId, seat, premove.seq);
-    await backend.insertPremoveFailure(gameId, seat, premove.move, reason);
-    return { outcome: "premove-failed", reason };
-  }
-
-  if (!clone.newTurn) {
-    await backend.deletePremove(gameId, seat, premove.seq);
-    await backend.insertPremoveFailure(gameId, seat, premove.move, "premove did not complete a turn");
-    return { outcome: "premove-incomplete-turn" };
-  }
-
+  // resolution.outcome === "success"
+  const clone = resolution.resultEngine as unknown as EngineInstance;
   const finished = clone.phase === Phase.EndGame;
   const commitArgs: CommitAutomatedTurnArgs = {
     gameId,
     seq: ordered.length + 1,
     seat,
-    move: premove.move,
+    move: resolution.move,
     nextSeat: finished ? null : (clone.playerToMove as number),
     finished,
     currentRound: clone.round,
@@ -178,15 +192,17 @@ export async function resolveOneAutomatedTurn(
   } catch (err) {
     if (isSeqConflict(err)) {
       // Someone else already handled this (the player's own fast-path, or a duplicate trigger
-      // delivery) - silent no-op, do NOT write a failure row and do NOT delete the premove (the
-      // winning path already consumed it).
+      // delivery) - silent no-op, do NOT write a failure row and do NOT delete any premove rows
+      // (the winning path already consumed them - finding #6, unchanged by Phase 3).
       return { outcome: "seq-conflict" };
     }
     throw err;
   }
 
-  await backend.deletePremove(gameId, seat, premove.seq);
-  return { outcome: "committed", seq: commitArgs.seq };
+  for (const seq of resolution.consumedSeqs) {
+    await backend.deletePremove(gameId, seat, seq);
+  }
+  return { outcome: "committed", seq: commitArgs.seq, rank: resolution.rank, totalRanks: resolution.totalRanks };
 }
 
 /**

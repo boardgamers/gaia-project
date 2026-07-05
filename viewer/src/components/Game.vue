@@ -83,8 +83,15 @@
             <svg viewBox="-1.2 -1.2 2.5 4.5">
               <PlayerCircle :player="turnPlayer" />
             </svg>
-            <div v-if="premoveOffered" class="premove-offer mt-2">
-              <button type="button" class="btn btn-sm btn-outline-primary" @click="startPremove">Plan my move ▸</button>
+            <div v-if="premoveOffered && !premoveMode" class="premove-offer mt-2">
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-primary mr-2"
+                :disabled="myQueuedPremoves.length >= 3"
+                @click="startPremove"
+              >
+                Plan my move ▸
+              </button>
               <div class="text-muted small mt-1" v-if="!premoveExplainerDismissed">
                 Premoves play automatically when your turn comes, even if you're offline. If the board changed and
                 your move is no longer legal, it's skipped and we'll notify you.
@@ -92,23 +99,26 @@
               </div>
             </div>
           </div>
-          <div v-if="myQueuedPremoves.length" class="premove-queue small mt-2">
-            <div v-for="p in myQueuedPremoves" :key="`${p.seat}-${p.seq}`">
-              Queued: {{ p.move }}
-              <button
-                type="button"
-                class="btn btn-link btn-sm p-0 text-danger"
-                @click="cancelQueuedPremove(p.seat, p.seq)"
-              >
-                ✕
-              </button>
-            </div>
+          <div v-if="showPremovePill" class="mt-2">
+            <button type="button" class="btn btn-sm btn-outline-info" v-b-modal.premove-overview>
+              ⚡ Premoves ({{ myQueuedPremoves.length }}) ▸
+            </button>
           </div>
+          <PremoveModal
+            v-if="myLockedSeat !== undefined"
+            :seat="myLockedSeat"
+            :compose-mode-preference="premoveModePreference"
+            @mode-preference="setPremoveModePreference"
+          />
           <div v-if="myUnreadFailures.length" class="alert alert-warning premove-failures small mt-2">
             <div v-for="f in myUnreadFailures" :key="f.id">
               Your premove couldn't be played: {{ f.reason }}
               <button type="button" class="btn btn-link btn-sm p-0" @click="markFailureRead(f.id)">Dismiss</button>
             </div>
+          </div>
+          <div v-if="premovePlayedNotice" class="alert alert-light premove-played small mt-2 py-1 px-2">
+            Played automatically from your queue{{ premovePlayedNoticeSuffix }}: {{ premovePlayedNotice.move }}
+            <button type="button" class="btn btn-link btn-sm p-0" @click="dismissPremovePlayedNotice">Dismiss</button>
           </div>
         </div>
       </div>
@@ -188,9 +198,12 @@ import { currentPlayer } from "@gaia-project/engine/wrapper";
 import { UiMode } from "../store";
 import Table from "./Table.vue";
 import { orderedPlayers } from "../data/player";
-import { PremoveFailureRow, PremoveRow } from "../hosted/types";
+import { PremoveFailureRow, PremoveMode, PremoveRow } from "../hosted/types";
+import { buildSequentialChainPreview } from "../logic/premove-preview";
+import PremoveModal from "./PremoveModal.vue";
 
 const PREMOVE_EXPLAINER_DISMISSED_KEY = "premoveExplainerDismissed";
+const PREMOVE_MODE_PREFERENCE_KEY = "premoveModePreference";
 
 @Component<Game>({
   components: {
@@ -207,6 +220,7 @@ const PREMOVE_EXPLAINER_DISMISSED_KEY = "premoveExplainerDismissed";
     TurnOrder,
     Rules,
     Table,
+    PremoveModal,
     Charts: () => import("./Charts.vue"),
   },
 })
@@ -233,6 +247,12 @@ export default class Game extends Vue {
   premoveDraftMove = "";
   premoveExplainerDismissed =
     typeof localStorage !== "undefined" && localStorage.getItem(PREMOVE_EXPLAINER_DISMISSED_KEY) === "true";
+  // Phase 3 (§10.1/§10.6) - which mode a FRESH queue (no existing rows yet) should be composed
+  // into; once a seat has rows, their shared `mode` column is authoritative instead (see
+  // PremoveModal's own `mode` getter). Remembered per-browser like the explainer dismissal above.
+  premoveModePreference: PremoveMode =
+    (typeof localStorage !== "undefined" && (localStorage.getItem(PREMOVE_MODE_PREFERENCE_KEY) as PremoveMode)) ||
+    "sequential";
 
   @Prop()
   options: EngineOptions;
@@ -451,12 +471,49 @@ export default class Game extends Vue {
       !this.canPlay &&
       !this.ended &&
       this.myLockedSeat !== undefined &&
+      this.myQueuedPremoves.length < 3 &&
       this.engine.previewAvailableCommandsFor(this.myLockedSeat) !== null
     );
   }
 
   get myQueuedPremoves(): PremoveRow[] {
-    return (this.$store.state.premoves as PremoveRow[]) ?? [];
+    const seat = this.myLockedSeat;
+    if (seat === undefined) {
+      return [];
+    }
+    return ((this.$store.state.premoves as PremoveRow[]) ?? [])
+      .filter((p) => p.seat === seat)
+      .sort((a, b) => a.seq - b.seq);
+  }
+
+  /** Phase 3 (§10.1) - the mode a NEW composed entry joins: an existing queue's own mode (all of a
+   * seat's rows share one), or the remembered preference for a fresh queue. */
+  get effectivePremoveMode(): PremoveMode {
+    return this.myQueuedPremoves.length > 0 ? this.myQueuedPremoves[0].mode : this.premoveModePreference;
+  }
+
+  get showPremovePill(): boolean {
+    return this.myLockedSeat !== undefined && !this.ended && (this.myQueuedPremoves.length > 0 || this.premoveOffered);
+  }
+
+  get premovePlayedNotice(): { seat: number; move: string; rank?: number; totalRanks?: number } | null {
+    return this.$store.state.premovePlayedNotice ?? null;
+  }
+
+  get premovePlayedNoticeSuffix(): string {
+    const notice = this.premovePlayedNotice;
+    return notice?.rank && notice.totalRanks && notice.totalRanks > 1 ? ` (priority ${notice.rank} of ${notice.totalRanks})` : "";
+  }
+
+  dismissPremovePlayedNotice() {
+    this.$store.commit("dismissPremovePlayedNotice");
+  }
+
+  setPremoveModePreference(mode: PremoveMode) {
+    this.premoveModePreference = mode;
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(PREMOVE_MODE_PREFERENCE_KEY, mode);
+    }
   }
 
   get myUnreadFailures(): PremoveFailureRow[] {
@@ -465,7 +522,7 @@ export default class Game extends Vue {
 
   startPremove() {
     const seat = this.myLockedSeat;
-    if (seat === undefined) {
+    if (seat === undefined || this.myQueuedPremoves.length >= 3) {
       return;
     }
     this.premoveBackup = JSON.parse(JSON.stringify(this.engine));
@@ -473,14 +530,11 @@ export default class Game extends Vue {
     this.premoveMode = true;
     this.premoveReady = false;
 
-    const clone = Engine.fromData(JSON.parse(JSON.stringify(this.engine)));
-    clone.currentPlayer = seat;
-    clone.tempCurrentPlayer = undefined;
-    // Force a fresh regeneration, not generateAvailableCommandsIfNeeded(): the JSON clone still
-    // carries the REAL currentPlayer's cached availableCommands, which would otherwise be reused
-    // as-is despite currentPlayer now being reassigned (same trap Engine.previewAvailableCommandsFor
-    // itself avoids for exactly this reason).
-    clone.generateAvailableCommands();
+    // Phase 3 (§10.1) - sequential chains: preview the next slot against a clone with every
+    // already-queued move applied first. Priority previews always against the SAME fresh current
+    // state (empty priorMoves), since every rank is an alternative for the one upcoming turn.
+    const priorMoves = this.effectivePremoveMode === "sequential" ? this.myQueuedPremoves.map((p) => p.move) : [];
+    const clone = buildSequentialChainPreview(this.engine, seat, priorMoves);
     this.handleData(clone);
   }
 
@@ -522,12 +576,12 @@ export default class Game extends Vue {
     if (!this.premoveReady || this.premoveSeat === null) {
       return;
     }
-    this.$store.dispatch("queuePremove", { seat: this.premoveSeat, move: this.premoveDraftMove });
+    this.$store.dispatch("queuePremove", {
+      seat: this.premoveSeat,
+      move: this.premoveDraftMove,
+      mode: this.effectivePremoveMode,
+    });
     this.cancelPremoveMode();
-  }
-
-  cancelQueuedPremove(seat: number, seq: number) {
-    this.$store.dispatch("cancelPremove", { seat, seq });
   }
 
   markFailureRead(id: string) {

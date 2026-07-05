@@ -55,17 +55,19 @@ Read these before coding:
   way to tell old recorded history apart from a fresh move first, or any similar "new required move"
   change will hit the same failure mode.
 - Premove (queue a move while it's not your turn, executed server-side so it works even fully
-  offline): Phase 0 (spike), Phase 1 (MVP — schema, RPCs, client fast-path, UI), and Phase 2
-  (offline auto-leech) are all DONE in code/schema/tests, see `docs/lost-fleet/PROGRESS.md` #66-#68
-  and `docs/lost-fleet/PREMOVE_PLAN.md`'s "Phase 0 result". A race-condition audit (#68) verified
-  the existing validation mechanism already safely handles every "board state changed between
-  queue-time and execution-time" scenario considered so far, with no code changes needed.
-  **`resolve-automation` (incl. Phase 2's RoundLeech branch) is written and tested but NOT
-  deployed** — the one remaining blocker for the feature's actual offline promise (needs the
-  Supabase CLI + an access token, an owner action — `app_config['resolve_automation']` also needs
-  seeding once it is deployed). Until then, premoves and auto-leech only run via the client-side
-  paths (work while a tab is open/visited, not fully offline yet). Phase 3 (multi-round queue) is
-  next up, per owner instruction 2026-07-05 — see PROGRESS.md's "Next actions".
+  offline): Phase 0 (spike), Phase 1 (MVP — schema, RPCs, client fast-path, UI), Phase 2 (offline
+  auto-leech), and Phase 3 (multi-slot Sequential + Priority queues) are all DONE in code/schema/
+  tests, see `docs/lost-fleet/PROGRESS.md` #66-#68 and #71 and `docs/lost-fleet/PREMOVE_PLAN.md`'s
+  "Phase 0 result" and §10.1-10.8. A race-condition audit (#68) verified the existing validation
+  mechanism already safely handles every "board state changed between queue-time and
+  execution-time" scenario considered so far, with no code changes needed (its recommended
+  regression tests remain unwritten — out of scope for the Phase 3 session by owner choice).
+  **`resolve-automation` (incl. Phase 2's RoundLeech branch) and migration `0012` (Phase 3's
+  `mode` column + RPCs) are written and tested but NOT deployed** — the one remaining blocker for
+  the feature's actual offline promise, and for Phase 3 being usable at all (needs the Supabase CLI
+  + an access token, an owner action — `app_config['resolve_automation']` also needs seeding once
+  deployed). Until then, premoves (any mode) and auto-leech only run via the client-side paths (work
+  while a tab is open/visited, not fully offline yet).
 - The Lost Fleet component UI is reuse-first as of 2026-07-02 (PROGRESS #50-#53): all LF components
   render through base-game components (TechContent/Condition/Resource icons, FederationTile art,
   TechTile, SpecialAction octagons), one compact per-ship overview strip (`LostFleetShips.vue`),

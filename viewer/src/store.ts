@@ -5,7 +5,7 @@ import Vue, { markRaw } from "vue";
 import Vuex from "vuex";
 import { ButtonData, GameContext, HexSelection, HighlightHex, SpecialActionIncome } from "./data";
 import { FastConversionEvent, MapMode } from "./data/actions";
-import { PremoveFailureRow, PremoveRow } from "./hosted/types";
+import { PremoveFailureRow, PremoveMode, PremoveRow } from "./hosted/types";
 import { ExecuteBack, FastConversionTooltips } from "./logic/buttons/types";
 import {
   CommandObject,
@@ -63,6 +63,10 @@ export type State = {
   /** Hosted mode only (PREMOVE_PLAN.md) - always empty in self-contained hot-seat play. */
   premoves: PremoveRow[];
   premoveFailures: PremoveFailureRow[];
+  /** Phase 3 (§10.6) - quiet, in-app-only "played from your queue" notice for the most recent
+   * fast-path success; null once dismissed or superseded. Never sourced from a push - see
+   * host.ts's onPremovePlayed doc comment. */
+  premovePlayedNotice: { seat: number; move: string; rank?: number; totalRanks?: number } | null;
 };
 
 function indexCommands(commands, command: Command) {
@@ -123,6 +127,7 @@ const gaiaViewer = {
     avatars: [] as string[],
     premoves: [],
     premoveFailures: [],
+    premovePlayedNotice: null,
   } as State,
   mutations: {
     receiveData(state: State, data: Engine) {
@@ -234,6 +239,14 @@ const gaiaViewer = {
       state.premoves = data.premoves;
       state.premoveFailures = data.failures;
     },
+
+    premovePlayed(state: State, data: { seat: number; move: string; rank?: number; totalRanks?: number }) {
+      state.premovePlayedNotice = data;
+    },
+
+    dismissPremovePlayedNotice(state: State) {
+      state.premovePlayedNotice = null;
+    },
   },
   actions: {
     // No body, used for signalling with store.subscribeAction
@@ -250,8 +263,12 @@ const gaiaViewer = {
     // reaches the launcher's "move" forwarding (see Game.vue's own subscribeAction handler, which
     // intercepts this type before it would otherwise be a no-op here).
     premoveMove(context: any, move: string) {},
-    queuePremove(context: any, payload: { seat: number; move: string }) {},
+    queuePremove(context: any, payload: { seat: number; move: string; mode: PremoveMode }) {},
     cancelPremove(context: any, payload: { seat: number; seq: number }) {},
+    // Phase 3 (§10.4) - clears a seat's whole queue (mode-toggle confirm, "start over").
+    cancelAllPremoves(context: any, payload: { seat: number }) {},
+    // Phase 3 (§10.4), priority mode only.
+    reorderPremove(context: any, payload: { seat: number; seq: number; direction: "up" | "down" }) {},
     markPremoveFailureRead(context: any, id: string) {},
     replayInfo(context: any, info: { start: number; end: number; current: number }) {},
     // ^ up - down v

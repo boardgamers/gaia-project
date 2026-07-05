@@ -1,6 +1,7 @@
 import Engine, { Phase } from "@gaia-project/engine";
 import { AutoCharge } from "@gaia-project/engine/src/player";
 import { autoDecideChargePower } from "../logic/auto-decide";
+import { PremoveResolution, resolvePremoveQueue } from "../logic/premove-resolver";
 import {
   CommitTurnArgs,
   GameRow,
@@ -10,6 +11,7 @@ import {
   PlayerRow,
   PlayerUpdate,
   PremoveFailureRow,
+  PremoveMode,
   PremoveRow,
 } from "./types";
 
@@ -17,6 +19,14 @@ const SEQ_CONFLICT_PREFIX = "seq_conflict";
 
 function isSeqConflict(err: unknown): boolean {
   return errorMessage(err).includes(SEQ_CONFLICT_PREFIX);
+}
+
+/** A move line is "<player> <command> <args...>", possibly several joined by ". " - true if any of
+ * them is a pass (§8/§10.7: a manual pass always clears the seat's queue, regardless of mode). */
+function isPassMove(move: string): boolean {
+  return move
+    .split(". ")
+    .some((part) => part.trim().split(/\s+/)[1] === "pass");
 }
 
 /**
@@ -143,9 +153,9 @@ export class HostedGameHost {
    * button after building a legal turn against a preview clone - see Engine.previewAvailableCommandsFor
    * - so there's nothing to apply locally); just refreshes the cached list for display.
    */
-  queuePremove(seat: number, move: string): Promise<void> {
+  queuePremove(seat: number, move: string, mode: PremoveMode = "sequential"): Promise<void> {
     return this.enqueue(async () => {
-      await this.backend.queuePremove(this.gameId, seat, move);
+      await this.backend.queuePremove(this.gameId, seat, move, mode);
       await this.refreshPremoveState();
     });
   }
@@ -153,6 +163,23 @@ export class HostedGameHost {
   cancelPremove(seat: number, seq: number): Promise<void> {
     return this.enqueue(async () => {
       await this.backend.cancelPremove(this.gameId, seat, seq);
+      await this.refreshPremoveState();
+    });
+  }
+
+  /** Phase 3 (§10.4) - clears a seat's whole queue: the mode-toggle confirm, or the user just
+   * wanting to start over instead of cancelling entries one at a time. */
+  cancelAllPremoves(seat: number): Promise<void> {
+    return this.enqueue(async () => {
+      await this.backend.cancelAllPremoves(this.gameId, seat);
+      await this.refreshPremoveState();
+    });
+  }
+
+  /** Phase 3 (§10.4), priority mode only - the RPC itself rejects a sequential queue. */
+  reorderPremove(seat: number, seq: number, direction: "up" | "down"): Promise<void> {
+    return this.enqueue(async () => {
+      await this.backend.reorderPremove(this.gameId, seat, seq, direction);
       await this.refreshPremoveState();
     });
   }
@@ -210,6 +237,11 @@ export class HostedGameHost {
     // The seat this turn line belongs to: whoever the engine says must act
     // (accounts for mid-turn leech interrupts via tempCurrentPlayer).
     const seat = copy.playerToMove;
+    // Captured before the move mutates `copy` - reconciliation (below) must only fire for the
+    // seat's genuine RoundMove turn, never for a RoundLeech charge/decline decision that merely
+    // happens to belong to the same seat (a queued premove is for the seat's UPCOMING turn, which
+    // hasn't happened yet just because a leech interrupt got resolved).
+    const phaseBeforeMove = this.engine.phase;
     try {
       copy.move(move);
       copy.generateAvailableCommandsIfNeeded();
@@ -247,6 +279,14 @@ export class HostedGameHost {
         return false;
       }
       this.engine = copy;
+      // Phase 3 (§10.7) - a manual move for a seat that still has a queue on file means the queue
+      // didn't get the chance to fire for this turn (most commonly: the fast-path's own attempt
+      // already failed silently and the human is now looking at the real board). Reconcile before
+      // it goes stale for the seat's NEXT turn too. Not for source "premove"/"auto" - those are the
+      // queue firing itself / an unrelated leech decision, nothing to reconcile there.
+      if (source === "manual" && phaseBeforeMove === Phase.RoundMove) {
+        await this.reconcileStaleQueue(seat, move);
+      }
     }
     this.emitState(copy);
     await this.refreshPremoveState();
@@ -254,6 +294,36 @@ export class HostedGameHost {
     // further state, which must never be overwritten by this call's own (now-stale) copy.
     await this.resolveAutoDecisions();
     return copy.newTurn;
+  }
+
+  /**
+   * Phase 3 (§10.7) - a stale queue left behind by a manual move that bypassed it (own device or
+   * another one). A cleanliness measure, not a correctness backstop: a stale row that survives
+   * fails safely at its next attempted use anyway (illegal -> notification), so a best-effort
+   * failure here is never alarming.
+   *
+   * Sequential pops just the consumed head when it matches (the rest of the chain is still a valid
+   * plan); anything else (a non-matching head, or priority mode entirely - the ranked list was only
+   * ever for this one turn) clears the whole queue.
+   */
+  private async reconcileStaleQueue(seat: number, playedMove: string): Promise<void> {
+    const rows = this.premoves.filter((p) => p.seat === seat).sort((a, b) => a.seq - b.seq);
+    if (rows.length === 0) {
+      return;
+    }
+    try {
+      if (isPassMove(playedMove)) {
+        // A pass ends this seat's participation in the round - any still-queued premoves (built
+        // assuming the seat keeps acting this round) are moot regardless of mode (§8, resolved).
+        await this.backend.cancelAllPremoves(this.gameId, seat);
+      } else if (rows[0].mode === "sequential" && rows[0].move === playedMove) {
+        await this.backend.cancelPremove(this.gameId, seat, rows[0].seq);
+      } else {
+        await this.backend.cancelAllPremoves(this.gameId, seat);
+      }
+    } catch {
+      // best-effort - see doc comment above.
+    }
   }
 
   /** Realtime INSERT handler for the moves table. */
@@ -264,6 +334,10 @@ export class HostedGameHost {
         return;
       }
       if (row.seq === this.committedMoveCount + 1) {
+        // Same RoundMove-only gate as applyAndCommit's own reconciliation call, captured before the
+        // move mutates the clone - a remote RoundLeech decision for one of my seats is not that
+        // seat's real turn, and must never be treated as one for reconciliation purposes.
+        const phaseBeforeMove = this.engine.phase;
         const copy = this.clone();
         try {
           copy.move(row.move);
@@ -271,6 +345,12 @@ export class HostedGameHost {
           if (copy.newTurn) {
             this.engine = copy;
             this.emitState(copy);
+            // Phase 3 (§10.7) - this move came from somewhere other than our own fast-path (another
+            // device, or the offline edge function): reconcile a stale queue the same way a manual
+            // move does. Idempotent when the edge function already consumed the row(s) itself.
+            if (this.autoDecide.isMySeat(row.seat) && phaseBeforeMove === Phase.RoundMove) {
+              await this.reconcileStaleQueue(row.seat, row.move);
+            }
             // A moves row arrived (PREMOVE_PLAN.md §3's refresh rule) - a committed turn, ours or
             // not, is exactly the moment the server may have consumed (or newly offered) a premove.
             await this.refreshPremoveState();
@@ -342,14 +422,16 @@ export class HostedGameHost {
    * runs it through the same apply/commit logic a manual click would use (so other seated players
    * see it exactly like any other move) - never mutates `this.engine` directly itself.
    *
-   * Once there's no more auto-leech work, tries the premove fast-path (PREMOVE_PLAN.md §5): if it's
-   * now genuinely this seat's turn (Phase.RoundMove) and this session owns that seat and has a
-   * premove queued for it, play it immediately through the normal commit path instead of waiting for
-   * the offline edge function's trigger round-trip. `commit_turn`/`commit_automated_turn`'s atomic
-   * seq check means whichever of {this fast-path, the edge function} lands first wins - the loser
-   * gets `seq_conflict` and silently resyncs (see applyAndCommit's catch above); a premove that's
-   * gone stale/illegal by the time this runs is left for the edge function to clean up (delete +
-   * failure row) rather than duplicating that bookkeeping on the client.
+   * Once there's no more auto-leech work, tries the premove fast-path (PREMOVE_PLAN.md §5, mode-
+   * aware since Phase 3 §10.5): if it's now genuinely this seat's turn (Phase.RoundMove) and this
+   * session owns that seat and has a queue for it, decide via the SAME shared `resolvePremoveQueue`
+   * the offline edge function uses, and play the winning move immediately through the normal commit
+   * path instead of waiting for the edge function's trigger round-trip. `commit_turn`/
+   * `commit_automated_turn`'s atomic seq check means whichever of {this fast-path, the edge
+   * function} lands first wins - the loser gets `seq_conflict` and silently resyncs (see
+   * applyAndCommit's catch above). A "failed" resolution is left entirely for the edge function to
+   * clean up (delete + failure row) rather than duplicating that bookkeeping on the client - same
+   * Phase 1 philosophy, now covering the cascade/all-illegal cases too.
    */
   private async resolveAutoDecisions(): Promise<void> {
     if (!this.engine || this.engine.playerToMove === undefined) {
@@ -367,21 +449,30 @@ export class HostedGameHost {
     }
 
     if (this.engine.phase === Phase.RoundMove && this.autoDecide.isMySeat(seat)) {
-      const queued = this.premoves.filter((p) => p.seat === seat).sort((a, b) => a.seq - b.seq)[0];
-      if (queued) {
-        const committed = await this.applyAndCommit(queued.move, "premove");
-        // Unlike the offline edge function (which uses commit_automated_turn and deletes the
-        // premove row itself), this fast-path went through the normal commit_turn RPC - so on
-        // success, the row it just consumed must be cleaned up here, or it would sit there and be
-        // attempted again next time this seat's turn comes around.
-        if (committed) {
-          try {
-            await this.backend.cancelPremove(this.gameId, seat, queued.seq);
-            await this.refreshPremoveState();
-          } catch {
-            // Best-effort: worst case a played premove lingers in the list until the next refresh
-            // notices it's gone from the server's perspective too (RLS still scopes it correctly).
+      const rows = this.premoves.filter((p) => p.seat === seat);
+      if (rows.length === 0) {
+        return;
+      }
+      const mode = rows[0].mode;
+      const decision: PremoveResolution = resolvePremoveQueue(() => this.clone(), seat, rows, mode);
+      if (decision.outcome !== "success") {
+        return;
+      }
+      const committed = await this.applyAndCommit(decision.move, "premove");
+      // Unlike the offline edge function (which uses commit_automated_turn and deletes the
+      // premove row(s) itself), this fast-path went through the normal commit_turn RPC - so on
+      // success, every row the resolver consumed must be cleaned up here, or it would sit there and
+      // be attempted again next time this seat's turn comes around.
+      if (committed) {
+        this.callbacks.onPremovePlayed?.(seat, decision.move, { rank: decision.rank, totalRanks: decision.totalRanks });
+        try {
+          for (const seq of decision.consumedSeqs) {
+            await this.backend.cancelPremove(this.gameId, seat, seq);
           }
+          await this.refreshPremoveState();
+        } catch {
+          // Best-effort: worst case a played premove lingers in the list until the next refresh
+          // notices it's gone from the server's perspective too (RLS still scopes it correctly).
         }
       }
     }

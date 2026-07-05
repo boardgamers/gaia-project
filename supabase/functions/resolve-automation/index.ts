@@ -36,19 +36,17 @@ function makeBackend(supabase: ReturnType<typeof createClient>): Backend {
       }
       return (data ?? []) as MoveRow[];
     },
-    async fetchLowestSeqPremove(gameId: string, seat: number): Promise<PremoveRow | null> {
+    async fetchPremoveQueue(gameId: string, seat: number): Promise<PremoveRow[]> {
       const { data, error } = await supabase
         .from("premoves")
-        .select("seq,move")
+        .select("seq,move,mode")
         .eq("game_id", gameId)
         .eq("seat", seat)
-        .order("seq", { ascending: true })
-        .limit(1)
-        .maybeSingle();
+        .order("seq", { ascending: true });
       if (error) {
         throw new Error(error.message);
       }
-      return (data as PremoveRow | null) ?? null;
+      return (data ?? []) as PremoveRow[];
     },
     async deletePremove(gameId: string, seat: number, seq: number): Promise<void> {
       const { error } = await supabase

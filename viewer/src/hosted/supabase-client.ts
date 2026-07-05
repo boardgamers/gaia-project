@@ -76,7 +76,7 @@ export function createSupabaseBackend(client: SupabaseClient): HostedBackend {
       ),
     // RLS already scopes these to the caller's own seats (0010_premoves.sql), so no seat filter.
     fetchPremoves: (gameId): Promise<PremoveRow[]> =>
-      unwrap(client.from("premoves").select("seat,seq,move,queued_move_count").eq("game_id", gameId).order("seq")),
+      unwrap(client.from("premoves").select("seat,seq,move,mode,queued_move_count").eq("game_id", gameId).order("seq")),
     fetchPremoveFailures: (gameId): Promise<PremoveFailureRow[]> =>
       unwrap(
         client
@@ -86,10 +86,14 @@ export function createSupabaseBackend(client: SupabaseClient): HostedBackend {
           .is("read_at", null)
           .order("created_at")
       ),
-    queuePremove: (gameId, seat, move): Promise<number> =>
-      unwrap(client.rpc("queue_premove", { p_game_id: gameId, p_seat: seat, p_move: move })),
+    queuePremove: (gameId, seat, move, mode): Promise<number> =>
+      unwrap(client.rpc("queue_premove", { p_game_id: gameId, p_seat: seat, p_move: move, p_mode: mode })),
     cancelPremove: (gameId, seat, seq): Promise<void> =>
       unwrap(client.rpc("cancel_premove", { p_game_id: gameId, p_seat: seat, p_seq: seq })),
+    cancelAllPremoves: (gameId, seat): Promise<void> =>
+      unwrap(client.rpc("cancel_all_premoves", { p_game_id: gameId, p_seat: seat })),
+    reorderPremove: (gameId, seat, seq, direction): Promise<void> =>
+      unwrap(client.rpc("reorder_premove", { p_game_id: gameId, p_seat: seat, p_seq: seq, p_direction: direction })),
     markPremoveFailureRead: (id): Promise<void> => unwrap(client.rpc("mark_premove_failure_read", { p_id: id })),
     setAutoCharge: (gameId, seat, pref): Promise<void> =>
       unwrap(client.rpc("set_auto_charge", { p_game_id: gameId, p_seat: seat, p_pref: pref })),

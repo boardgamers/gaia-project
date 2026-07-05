@@ -104,6 +104,11 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
       onPremoveState: (premoves, failures) => {
         emitter.emit("premoveState", { premoves, failures });
       },
+      // Phase 3 (§10.6) - quiet, in-app-only success feedback for a fast-path-played premove; never
+      // a push (only failures push - see premove_failures' existing notify tie-in).
+      onPremovePlayed: (seat, move, info) => {
+        emitter.emit("premovePlayed", { seat, move, ...info });
+      },
     },
     {
       // "Auto leech" (host.ts's AutoDecideConfig) - never decide on behalf of a seat that isn't
@@ -140,8 +145,15 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
   emitter.on("fetchState", () => host.emitCurrentState());
   // Premove (PREMOVE_PLAN.md) - Game.vue dispatches these with the seat the premove targets
   // (never inferred, so a multi-seat owner is never ambiguous - see host.ts's own RPCs).
-  emitter.on("queuePremove", ({ seat, move }: { seat: number; move: string }) => host.queuePremove(seat, move));
+  emitter.on("queuePremove", ({ seat, move, mode }: { seat: number; move: string; mode: "sequential" | "priority" }) =>
+    host.queuePremove(seat, move, mode)
+  );
   emitter.on("cancelPremove", ({ seat, seq }: { seat: number; seq: number }) => host.cancelPremove(seat, seq));
+  // Phase 3 (§10.4/§10.6)
+  emitter.on("cancelAllPremoves", ({ seat }: { seat: number }) => host.cancelAllPremoves(seat));
+  emitter.on("reorderPremove", ({ seat, seq, direction }: { seat: number; seq: number; direction: "up" | "down" }) =>
+    host.reorderPremove(seat, seq, direction)
+  );
   emitter.on("markPremoveFailureRead", (id: string) => host.markPremoveFailureRead(id));
 
   // Phase 2 (offline auto-leech) - push the local preference to the server for each of this

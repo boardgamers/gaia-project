@@ -1,6 +1,15 @@
 import { expect } from "chai";
 import { AutoDecideConfig, engineOptions, HostedGameHost, initMoveLine, seatToLock } from "./host";
-import { CommitTurnArgs, GameRow, HostedBackend, MoveRow, PlayerRow, PremoveFailureRow, PremoveRow } from "./types";
+import {
+  CommitTurnArgs,
+  GameRow,
+  HostedBackend,
+  MoveRow,
+  PlayerRow,
+  PremoveFailureRow,
+  PremoveMode,
+  PremoveRow,
+} from "./types";
 
 // Committed-turn lines from a known-valid engine fixture
 // (engine/src/engine.spec.ts "should allow players to upgrade a mine to a TS").
@@ -91,15 +100,44 @@ class FakeBackend implements HostedBackend {
     return this.premoveFailures.filter((f) => f.read_at === null).map((f) => ({ ...f }));
   }
 
-  async queuePremove(_gameId: string, seat: number, move: string): Promise<number> {
+  async queuePremove(_gameId: string, seat: number, move: string, mode: PremoveMode): Promise<number> {
     const forSeat = this.premoves.filter((p) => p.seat === seat);
+    if (forSeat.length > 0 && forSeat[0].mode !== mode) {
+      throw new Error(`mode_mismatch: seat's queue is already in ${forSeat[0].mode} mode`);
+    }
+    if (forSeat.length >= 3) {
+      throw new Error("queue is full (max 3)");
+    }
     const seq = (forSeat.length ? forSeat[forSeat.length - 1].seq : 0) + 1;
-    this.premoves.push({ seat, seq, move, queued_move_count: this.moves.length });
+    this.premoves.push({ seat, seq, move, mode, queued_move_count: this.moves.length });
     return seq;
   }
 
   async cancelPremove(_gameId: string, seat: number, seq: number): Promise<void> {
     this.premoves = this.premoves.filter((p) => !(p.seat === seat && p.seq === seq));
+  }
+
+  async cancelAllPremoves(_gameId: string, seat: number): Promise<void> {
+    this.premoves = this.premoves.filter((p) => p.seat !== seat);
+  }
+
+  async reorderPremove(_gameId: string, seat: number, seq: number, direction: "up" | "down"): Promise<void> {
+    const forSeat = this.premoves.filter((p) => p.seat === seat).sort((a, b) => a.seq - b.seq);
+    const i = forSeat.findIndex((p) => p.seq === seq);
+    if (i === -1) {
+      throw new Error("no such queued premove");
+    }
+    if (forSeat[i].mode !== "priority") {
+      throw new Error("reordering only applies to a priority queue");
+    }
+    const j = direction === "up" ? i - 1 : i + 1;
+    if (j < 0 || j >= forSeat.length) {
+      return;
+    }
+    const a = forSeat[i].seq;
+    const b = forSeat[j].seq;
+    forSeat[i].seq = b;
+    forSeat[j].seq = a;
   }
 
   async markPremoveFailureRead(id: string): Promise<void> {
@@ -531,7 +569,9 @@ describe("hosted game host", () => {
       // untouched behind it rather than being (wrongly) played during Phase.RoundLeech.
       expect(backend.commits).to.have.length(1);
       expect(host.engine.phase).to.equal("roundLeech");
-      expect(host.premoves).to.deep.equal([{ seat: 1, seq: 1, move: NEVLAS_PREMOVE, queued_move_count: SETUP_MOVES.length }]);
+      expect(host.premoves).to.deep.equal([
+        { seat: 1, seq: 1, move: NEVLAS_PREMOVE, mode: "sequential", queued_move_count: SETUP_MOVES.length },
+      ]);
     });
 
     it("fires the fast-path the instant it's genuinely this seat's turn (Phase.RoundMove), and cleans up the row", async () => {
@@ -591,7 +631,7 @@ describe("hosted game host", () => {
       const { host } = makeHost(backend);
       await host.load();
 
-      const seq1 = await backend.queuePremove("game-1", 1, NEVLAS_PREMOVE);
+      const seq1 = await backend.queuePremove("game-1", 1, NEVLAS_PREMOVE, "sequential");
       await host.load(); // re-fetch cached premove state the way a fresh page load would
       expect(host.premoves).to.have.length(1);
 
@@ -637,6 +677,137 @@ describe("hosted game host", () => {
 
       expect(errors).to.have.length(1);
       expect(errors[0]).to.contain("auto-charge preference");
+    });
+
+    describe("Phase 3: multi-slot queues", () => {
+      // "terrans up terra." hands turn straight to nevlas (seat 1) in Phase.RoundMove with no leech
+      // interrupt, unlike BUILD_TRIGGERING_LEECH above - a cleaner fixture for exercising the
+      // multi-slot resolver itself without an interleaved leech decision.
+      const TERRANS_HANDS_OFF = "terrans up terra.";
+
+      it("sequential: fires the head via the fast-path and leaves the rest queued for next time", async () => {
+        const backend = new FakeBackend(gameRow(), playerRows());
+        backend.seedMoves(SETUP_MOVES);
+        const { host } = makeHost(backend, { isMySeat: (seat) => seat === 1, getAutoChargePower: () => "ask" });
+        await host.load();
+        await host.queuePremove(1, "nevlas up terra.", "sequential");
+        await host.queuePremove(1, "nevlas pass booster4", "sequential");
+
+        await host.submitMove(TERRANS_HANDS_OFF);
+
+        expect(backend.commits).to.have.length(2);
+        expect(backend.commits[1].move).to.equal("nevlas up terra.");
+        expect(host.premoves).to.have.length(1);
+        expect(host.premoves[0].move).to.equal("nevlas pass booster4");
+        expect(host.engine.playerToMove).to.equal(0);
+      });
+
+      it("sequential: a cascade failure is left entirely for the offline path (client touches nothing)", async () => {
+        const backend = new FakeBackend(gameRow(), playerRows());
+        backend.seedMoves(SETUP_MOVES);
+        const { host } = makeHost(backend, { isMySeat: (seat) => seat === 1, getAutoChargePower: () => "ask" });
+        await host.load();
+        await host.queuePremove(1, "nevlas build m 99x99.", "sequential");
+        await host.queuePremove(1, "nevlas up terra.", "sequential");
+
+        await host.submitMove(TERRANS_HANDS_OFF);
+
+        // Only terrans' own move committed - the fast-path saw a "failed" resolution (the head threw,
+        // which would cascade the second entry away too) and left both rows alone, same Phase 1
+        // philosophy of never duplicating the edge function's failure bookkeeping on the client.
+        expect(backend.commits).to.have.length(1);
+        expect(host.premoves).to.have.length(2);
+      });
+
+      it("priority: skips an illegal rank 1, fires rank 2, clears the whole queue, and reports which rank fired", async () => {
+        const backend = new FakeBackend(gameRow(), playerRows());
+        backend.seedMoves(SETUP_MOVES);
+        const played: { seat: number; move: string; rank?: number; totalRanks?: number }[] = [];
+        const host = new HostedGameHost(
+          backend,
+          "game-1",
+          { onState: () => undefined, onPremovePlayed: (seat, move, info) => played.push({ seat, move, ...info }) },
+          { isMySeat: (seat) => seat === 1, getAutoChargePower: () => "ask" }
+        );
+        await host.load();
+        await host.queuePremove(1, "nevlas build m 99x99.", "priority");
+        await host.queuePremove(1, "nevlas up terra.", "priority");
+
+        await host.submitMove(TERRANS_HANDS_OFF);
+
+        expect(backend.commits).to.have.length(2);
+        expect(backend.commits[1].move).to.equal("nevlas up terra.");
+        expect(host.premoves).to.deep.equal([]);
+        expect(played).to.deep.equal([{ seat: 1, move: "nevlas up terra.", rank: 2, totalRanks: 2 }]);
+      });
+
+      describe("reconciliation (§10.7)", () => {
+        // isMySeat always false: the fast-path never fires for nevlas, simulating "the queue landed
+        // (or didn't) some other way" so a manual submitMove for nevlas' own real turn is reachable
+        // to test against, instead of the fast-path racing ahead of it.
+        function noFastPathHost(backend: FakeBackend) {
+          return makeHost(backend, { isMySeat: () => false, getAutoChargePower: () => "ask" });
+        }
+
+        it("pops just the matching head when a sequential premove's own move is submitted manually", async () => {
+          const backend = new FakeBackend(gameRow(), playerRows());
+          backend.seedMoves(SETUP_MOVES);
+          const { host } = noFastPathHost(backend);
+          await host.load();
+          await host.queuePremove(1, "nevlas up terra.", "sequential");
+          await host.queuePremove(1, "nevlas pass booster4", "sequential");
+
+          await host.submitMove(TERRANS_HANDS_OFF);
+          await host.submitMove("nevlas up terra.");
+
+          expect(host.premoves).to.have.length(1);
+          expect(host.premoves[0].move).to.equal("nevlas pass booster4");
+        });
+
+        it("clears the whole queue when a manual move does not match the sequential head", async () => {
+          const backend = new FakeBackend(gameRow(), playerRows());
+          backend.seedMoves(SETUP_MOVES);
+          const { host } = noFastPathHost(backend);
+          await host.load();
+          await host.queuePremove(1, "nevlas up terra.", "sequential");
+
+          await host.submitMove(TERRANS_HANDS_OFF);
+          await host.submitMove("nevlas pass booster4");
+
+          expect(host.premoves).to.deep.equal([]);
+        });
+
+        it("clears the whole queue on a manual pass even when it exactly matches a sequential head", async () => {
+          const backend = new FakeBackend(gameRow(), playerRows());
+          backend.seedMoves(SETUP_MOVES);
+          const { host } = noFastPathHost(backend);
+          await host.load();
+          await host.queuePremove(1, "nevlas pass booster4", "sequential");
+          await host.queuePremove(1, "nevlas up terra.", "sequential");
+
+          await host.submitMove(TERRANS_HANDS_OFF);
+          await host.submitMove("nevlas pass booster4");
+
+          // A pass ends the round for this seat - the whole queue clears, not just the matched head.
+          expect(host.premoves).to.deep.equal([]);
+        });
+
+        it("does not reconcile a leech decision made for the same seat (not the seat's real turn)", async () => {
+          const backend = new FakeBackend(gameRow(), playerRows());
+          backend.seedMoves(SETUP_MOVES);
+          const { host } = noFastPathHost(backend);
+          await host.load();
+          await host.queuePremove(1, "nevlas up terra.", "sequential");
+
+          // terrans' Trading Station upgrade triggers a leech decision for nevlas BEFORE nevlas' real
+          // RoundMove turn - deciding it manually must not touch the queued premove.
+          await host.submitMove("terrans build ts -1x2.");
+          await host.submitMove("nevlas decline");
+
+          expect(host.premoves).to.have.length(1);
+          expect(host.premoves[0].move).to.equal("nevlas up terra.");
+        });
+      });
     });
   });
 });
