@@ -2567,10 +2567,41 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
         (5 new `host.spec.ts` premove cases + 5 new `Game.spec.ts` premove cases, on top of Phase 0's
         unrelated count). Both production builds not re-verified this session (unit tests only).
     - **Not done / explicitly deferred:** deploying `resolve-automation` + seeding
-      `app_config['resolve_automation']` (owner action, see above); Phase 2 (offline auto-leech -
-      without it, offline progress stalls at any leech decision until the player is back online,
-      exactly as documented in the plan); Phase 3 (multi-round queue depth); the "tag auto-played
-      moves in the log" trust-building touch from the plan's UX section; table-mode UI.
+      `app_config['resolve_automation']` (owner action, see above); Phase 3 (multi-round queue
+      depth); the "tag auto-played moves in the log" trust-building touch from the plan's UX
+      section; table-mode UI.
+
+67. ✅ **Premove Phase 2 (offline auto-leech), 2026-07-05, same session as #66** — closes the gap
+    #66 explicitly deferred: without this, a fully-offline player with a queued premove would still
+    stall at any pending leech/charge decision (`Phase.RoundLeech`) forever, since that decision
+    comes *before* their premove's turn and nothing was resolving it while they're away.
+    - `0011_premove_auto_charge.sql` (applied live): `players.auto_charge` column (default `'ask'`
+      - identical to today's online-only behavior until a player opts in), a `set_auto_charge`
+      RPC (seat-ownership checked, same pattern as `queue_premove`), and the
+      `games_resolve_automation` trigger widened to also fire when the seat now on turn has
+      `auto_charge <> 'ask'` (previously only fired when a premove was queued).
+    - `resolve-automation/logic.ts` gained a `Phase.RoundLeech` branch (`resolveLeech`): reads the
+      seat's `auto_charge`; `'ask'` is a no-op (leaves any queued premove untouched, waits for a
+      human); otherwise sets `engine.player(seat).settings.autoChargePower` on a clone and calls
+      `engine.autoMove()` **exactly once** (never looped here - the plan's own finding #8 warning:
+      looping and committing a multi-turn `". "`-joined string as one `moves` row would break the
+      one-row-per-turn/`seq` invariant; if more leech remains for the same seat, the commit's own
+      `current_seat` change re-fires the trigger for another invocation). 4 new tests: `'ask'` no-op,
+      successful auto-decide + commit, a still-pending leech correctly leaves a queued premove
+      untouched rather than jumping ahead to it, and `seq_conflict` is silent here too.
+    - Client: `host.ts` gained `setAutoCharge(seat, pref)` (best-effort - a save failure reports an
+      error but never blocks gameplay, since the *client's* own online auto-leech path is
+      unaffected either way); `hosted.ts` pushes the local `autoChargePower` preference to the
+      server for each of the session's own seats once at launch (covers a preference already set
+      from a previous game) and again on every future change (subscribed at the Vuex mutation
+      level, since the preference dropdown in `Commands.vue` commits `"preferences"` directly
+      rather than dispatching an action - the same reason `launcher.ts` itself already uses
+      `store.subscribe`, not `subscribeAction`, for its "info"/"error" mirroring).
+    - Engine **599/599** (+4), viewer **308/308** (+2 `host.spec.ts` cases). Both production builds
+      clean.
+    - **Still not done:** deploying `resolve-automation` (same owner action #66 flagged - Phase 2's
+      RoundLeech branch is part of that same not-yet-deployed function); Phase 3 (multi-round
+      queue depth); the log/UI trust-building touches noted in #66.
 
 ## Still MISSING — only one art-only item left
 
@@ -3016,15 +3047,16 @@ quick-test` 152/152; `npm test` 152/154, the 2 failures pre-existing/unrelated, 
    `master` on owner instruction 2026-07-01 (fast-forward), so the hosted mode is live on the
    production Vercel deploy. Natural follow-ups once real games run: the Phase-2 snapshot cache
    (BACKEND.md §8), lobby polish, or realtime lobby updates.
-5. **Premove (see "Done so far" #66 and `docs/lost-fleet/PREMOVE_PLAN.md`)** — Phase 0 (spike) and
-   Phase 1 (MVP: schema, RPCs, client fast-path, UI) are DONE. Still open, in order:
+5. **Premove (see "Done so far" #66-#67 and `docs/lost-fleet/PREMOVE_PLAN.md`)** — Phase 0 (spike),
+   Phase 1 (MVP: schema, RPCs, client fast-path, UI), and Phase 2 (offline auto-leech) are all DONE
+   in code, schema, and tests. Still open:
    - **Deploy `resolve-automation`** (owner action — needs the Supabase CLI + an access token this
-     session didn't have; the function is written and unit-tested, just not live) and seed
-     `app_config['resolve_automation']` (same bootstrap step `notify` needed, `BACKEND.md` §11).
-     Until then the trigger is a harmless no-op and premoves only play via the client fast-path
-     (works while a tab is open/visited; doesn't yet work fully offline).
-   - **Phase 2 (offline auto-leech)** — required for the feature's actual headline ("works
-     offline"); without it, offline progress stalls at any leech decision. See the plan's phasing.
+     session didn't have; the function, including Phase 2's RoundLeech branch, is written and
+     unit-tested, just not live) and seed `app_config['resolve_automation']` (same bootstrap step
+     `notify` needed, `BACKEND.md` §11). **This is the one remaining blocker for the feature's
+     actual headline ("works offline")** - until it's deployed, the trigger is a harmless no-op and
+     premoves/auto-leech only run via the client-side paths (work while a tab is open/visited, not
+     fully offline yet).
    - **Phase 3 (multi-round queue depth)** — genuinely optional.
 
 Confirm with the user before starting any of the above.

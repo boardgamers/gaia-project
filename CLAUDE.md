@@ -34,16 +34,18 @@ Read these before coding:
   automatic ascending-auction resolution (`algorithms/silent-auction.ts`), with a setup picker
   (`hosted/CreateGame.vue`), ban/pick/bid UI (`Commands.vue`), and a statistics-panel log
   (`Charts.vue` → `SilentAuctionLog.vue`).
-- Engine: 595/595 tests passing. Viewer: 306/306 tests passing (as of 2026-07-05 — trust
+- Engine: 599/599 tests passing. Viewer: 308/308 tests passing (as of 2026-07-05 — trust
   `PROGRESS.md`'s "Testing" section over this line if they disagree).
 - Premove (queue a move while it's not your turn, executed server-side so it works even fully
-  offline): Phase 0 (spike) and Phase 1 (MVP — schema, RPCs, client fast-path, UI) are DONE, see
-  `docs/lost-fleet/PROGRESS.md` #66 and `docs/lost-fleet/PREMOVE_PLAN.md`'s "Phase 0 result".
-  **`resolve-automation` is written and tested but NOT deployed** (needs the Supabase CLI + an
-  access token, an owner action — `app_config['resolve_automation']` also needs seeding once it
-  is); until then premoves only play via the client fast-path (works while a tab is open/visited,
-  not fully offline yet). Phase 2 (offline auto-leech, required for the actual offline promise) and
-  Phase 3 (multi-round queue) are still open — see PROGRESS.md's "Next actions" #5.
+  offline): Phase 0 (spike), Phase 1 (MVP — schema, RPCs, client fast-path, UI), and Phase 2
+  (offline auto-leech) are all DONE in code/schema/tests, see `docs/lost-fleet/PROGRESS.md` #66-#67
+  and `docs/lost-fleet/PREMOVE_PLAN.md`'s "Phase 0 result". **`resolve-automation` (incl. Phase 2's
+  RoundLeech branch) is written and tested but NOT deployed** — the one remaining blocker for the
+  feature's actual offline promise (needs the Supabase CLI + an access token, an owner action —
+  `app_config['resolve_automation']` also needs seeding once it is deployed). Until then, premoves
+  and auto-leech only run via the client-side paths (work while a tab is open/visited, not fully
+  offline yet). Phase 3 (multi-round queue) is still open, genuinely optional — see PROGRESS.md's
+  "Next actions" #5.
 - The Lost Fleet component UI is reuse-first as of 2026-07-02 (PROGRESS #50-#53): all LF components
   render through base-game components (TechContent/Condition/Resource icons, FederationTile art,
   TechTile, SpecialAction octagons), one compact per-ship overview strip (`LostFleetShips.vue`),

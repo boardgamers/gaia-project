@@ -65,6 +65,9 @@ export interface HostedBackend {
   queuePremove(gameId: string, seat: number, move: string): Promise<number>;
   cancelPremove(gameId: string, seat: number, seq: number): Promise<void>;
   markPremoveFailureRead(id: string): Promise<void>;
+  // Phase 2 (offline auto-leech) - persists the client's existing auto-charge preference per seat
+  // so resolve-automation can honor it while the player is offline.
+  setAutoCharge(gameId: string, seat: number, pref: string): Promise<void>;
 }
 
 export type HostedCallbacks = {

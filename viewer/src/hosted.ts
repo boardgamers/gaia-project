@@ -144,6 +144,25 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
   emitter.on("cancelPremove", ({ seat, seq }: { seat: number; seq: number }) => host.cancelPremove(seat, seq));
   emitter.on("markPremoveFailureRead", (id: string) => host.markPremoveFailureRead(id));
 
+  // Phase 2 (offline auto-leech) - push the local preference to the server for each of this
+  // user's own seats: once now (covers a preference already set from a previous game via
+  // localStorage, before any in-game change happens here) and again on every future change (the
+  // preference dropdown commits the "preferences" mutation directly, not an action - see
+  // Commands.vue - so this listens at the mutation level, the same way launcher.ts already does
+  // for "info"/"error").
+  const pushAutoCharge = () => {
+    const pref = String(emitter.store.state.preferences.autoChargePower ?? "ask");
+    for (const seat of mySeats) {
+      host.setAutoCharge(seat, pref);
+    }
+  };
+  pushAutoCharge();
+  emitter.store.subscribe(({ type, payload }: { type: string; payload: any }) => {
+    if (type === "preferences" && payload && "autoChargePower" in payload) {
+      pushAutoCharge();
+    }
+  });
+
   // The first SUBSCRIBED fires right after load and would be a redundant
   // resync; only catch up on RE-subscribes (dropped connection recovered).
   let subscribedOnce = false;

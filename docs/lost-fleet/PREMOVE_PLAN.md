@@ -416,11 +416,13 @@ skip a seat that has a queued premove. Owner already accepted a similar leech-ch
 
 ## 8. Phasing
 
-- **Phase 0 — Spike (de-risk only, no schema, no user-facing change).** Prove the fork's engine runs
-  in a real deployed edge function via the bundle. Read-only. See the checklist below. **Gate: pass
-  Phase 0 and check in with the owner before Phase 1.**
+- **Phase 0 — Spike (de-risk only, no schema, no user-facing change).** ✅ **DONE 2026-07-05** — see
+  "Phase 0 result" below. Prove the fork's engine runs in a real deployed edge function via the
+  bundle. Read-only. See the checklist below. **Gate: pass Phase 0 and check in with the owner
+  before Phase 1.**
 
-- **Phase 1 — Premove MVP.** Single premove per seat (no queue depth). `premoves` +
+- **Phase 1 — Premove MVP.** ✅ **DONE (code/schema/tests) 2026-07-05, `resolve-automation` NOT YET
+  DEPLOYED** — see PROGRESS.md #66. Single premove per seat (no queue depth). `premoves` +
   `premove_failures` tables, `queue_premove`/`cancel_premove`/`mark_premove_failure_read`/
   `commit_automated_turn` RPCs, the gated trigger, the `resolve-automation` function (with the
   `RoundMove`-only gate and `seq_conflict` no-op — but **without** the leech branch yet),
@@ -430,15 +432,26 @@ skip a seat that has a queued premove. Owner already accepted a similar leech-ch
   stays safely queued (not consumed) but the game waits at the leech until you're online. Phase 2
   closes that gap.
 
-- **Phase 2 — Offline auto-leech (required for the full offline promise).** Add `players.auto_charge`
-  + `set_auto_charge`, persist the client's existing auto-charge preference to it, widen the trigger
-  gate to `premove exists OR auto_charge <> 'ask'`, add the `RoundLeech` branch to
-  `resolve-automation`, bundle `auto-decide.ts` into the engine bundle. Now a fully-offline player
-  with auto-charge enabled progresses past leech interrupts into their queued premove.
+- **Phase 2 — Offline auto-leech (required for the full offline promise).** ✅ **DONE (code/schema/
+  tests) 2026-07-05, same caveat as Phase 1 — `resolve-automation` not yet deployed** — see
+  PROGRESS.md #67. Added `players.auto_charge` + `set_auto_charge`, persisted the client's existing
+  auto-charge preference to it, widened the trigger gate to `premove exists OR auto_charge <>
+  'ask'`, added the `RoundLeech` branch to `resolve-automation` (a single `engine.autoMove()` call
+  per invocation, never looped server-side), bundled `auto-decide.ts`'s `parseAutoChargePreference`
+  into the engine bundle (already wired in `engine-entry.ts` since Phase 0). Once `resolve-automation`
+  is actually deployed, a fully-offline player with auto-charge enabled will progress past leech
+  interrupts into their queued premove.
 
-- **Phase 3 — Multi-round queue (genuinely optional).** `seq`-ordered depth per seat; premove #2's
-  preview is built against a disposable clone with premove #1 already applied (chain the preview off
-  the same clone), not fresh current-state; "more likely to be skipped" UI messaging.
+- **Phase 3 — Multi-round queue (genuinely optional).** Not started. `seq`-ordered depth per seat;
+  premove #2's preview is built against a disposable clone with premove #1 already applied (chain
+  the preview off the same clone), not fresh current-state; "more likely to be skipped" UI
+  messaging.
+
+**Deploying `resolve-automation` is now the single remaining blocker** for the whole feature's
+offline promise (Phases 1 and 2 are both otherwise complete) — see PROGRESS.md #66's note on why
+this session couldn't do it (no Supabase CLI access token) and what's needed (`supabase functions
+deploy resolve-automation --project-ref mitawjpdxkheascdiffz`, then seed
+`app_config['resolve_automation']` per BACKEND.md §11's pattern).
 
 ### Open decisions to confirm with the owner (don't block Phase 0)
 

@@ -165,6 +165,20 @@ export class HostedGameHost {
   }
 
   /**
+   * Phase 2 (offline auto-leech) - persists the local auto-charge preference for `seat` so
+   * resolve-automation can honor it while this session isn't around to run the client-side
+   * version itself. Best-effort: a failure here shouldn't block or alarm about ordinary gameplay,
+   * since the online auto-leech path (`resolveAutoDecisions` above) keeps working regardless.
+   */
+  async setAutoCharge(seat: number, pref: string): Promise<void> {
+    try {
+      await this.backend.setAutoCharge(this.gameId, seat, pref);
+    } catch (err) {
+      this.callbacks.onError?.(`Could not save your auto-charge preference: ${errorMessage(err)}`);
+    }
+  }
+
+  /**
    * The launcher "move" handler. The payload is the whole turn line so far
    * (Game.vue accumulates commands with ". "), so an incomplete line is just
    * rendered from a throwaway clone; a complete one is committed atomically

@@ -66,6 +66,7 @@ describe("resolve-automation logic", () => {
       commitAutomatedTurn: async (args) => {
         committed.push(args);
       },
+      fetchAutoCharge: async () => "ask",
       ...overrides,
     };
     return { backend, deleted, failures, committed };
@@ -123,26 +124,105 @@ describe("resolve-automation logic", () => {
     expect(failures[0].reason).to.equal("premove did not complete a turn");
   });
 
-  it("is a no-op outside of Phase.RoundMove (e.g. RoundLeech), leaving the premove untouched", async () => {
+  it("is a no-op for any other non-RoundMove/RoundLeech phase (e.g. setup), leaving the premove untouched", async () => {
     const engineModule = await loadEngineModule();
-    const movesUpToLeech = [...SETUP_MOVES, "terrans build ts -1x2."]; // triggers nevlas's leech decision
-    const premove: PremoveRow = { seq: 1, move: "nevlas build m -3x3" };
+    // Right after "p2 faction nevlas", still SetupBuilding (terrans, seat 0, to place first), not
+    // RoundMove.
+    const setupOnly = SETUP_MOVES.slice(0, 2);
+    const premove: PremoveRow = { seq: 1, move: "terrans build m -1x2" };
     const { backend, deleted, failures, committed } = fakeBackend({
-      fetchMoves: async () => movesUpToLeech.map((move, i) => ({ seq: i + 1, move })),
+      fetchMoves: async () => setupOnly.map((move, i) => ({ seq: i + 1, move })),
       fetchGame: async () => ({
         id: "g1",
         seed: "randomSeed",
         player_count: 2,
         options: {},
-        move_count: movesUpToLeech.length,
+        move_count: setupOnly.length,
       }),
       fetchLowestSeqPremove: async () => premove,
     });
-    const result = await resolveOneAutomatedTurn(engineModule, backend, "g1", 1);
+    const result = await resolveOneAutomatedTurn(engineModule, backend, "g1", 0);
     expect(result.outcome).to.equal("wrong-phase");
     expect(deleted).to.have.length(0);
     expect(failures).to.have.length(0);
     expect(committed).to.have.length(0);
+  });
+
+  describe("Phase 2: RoundLeech / auto-charge", () => {
+    // terrans build ts -1x2. triggers a leech decision (charge/decline) for nevlas (seat 1).
+    const movesUpToLeech = [...SETUP_MOVES, "terrans build ts -1x2."];
+
+    function leechFixture(overrides: Partial<Backend> = {}) {
+      return fakeBackend({
+        fetchMoves: async () => movesUpToLeech.map((move, i) => ({ seq: i + 1, move })),
+        fetchGame: async () => ({
+          id: "g1",
+          seed: "randomSeed",
+          player_count: 2,
+          options: {},
+          move_count: movesUpToLeech.length,
+        }),
+        ...overrides,
+      });
+    }
+
+    it("leaves a pending leech decision for a human when auto_charge is 'ask' (the default), premove untouched", async () => {
+      const engineModule = await loadEngineModule();
+      const premove: PremoveRow = { seq: 1, move: "nevlas build m -3x3" };
+      const { backend, deleted, failures, committed } = leechFixture({
+        fetchLowestSeqPremove: async () => premove,
+        fetchAutoCharge: async () => "ask",
+      });
+      const result = await resolveOneAutomatedTurn(engineModule, backend, "g1", 1);
+      expect(result).to.deep.equal({ outcome: "leech-ask" });
+      expect(deleted).to.have.length(0);
+      expect(failures).to.have.length(0);
+      expect(committed).to.have.length(0);
+    });
+
+    it("auto-decides and commits exactly one leech turn when auto_charge is enabled", async () => {
+      const engineModule = await loadEngineModule();
+      const { backend, committed, deleted } = leechFixture({
+        fetchAutoCharge: async () => "decline-cost",
+      });
+      const result = await resolveOneAutomatedTurn(engineModule, backend, "g1", 1);
+      expect(result.outcome).to.equal("committed");
+      expect(committed).to.have.length(1);
+      expect(committed[0].seat).to.equal(1);
+      expect(committed[0].seq).to.equal(movesUpToLeech.length + 1);
+      expect(committed[0].move).to.contain("charge");
+      // No premove was queued in this fixture, so nothing to delete - the leech commit path
+      // doesn't touch the premoves table at all.
+      expect(deleted).to.have.length(0);
+    });
+
+    it("does not fire the premove while the leech is still pending (Phase.RoundLeech, not RoundMove)", async () => {
+      const engineModule = await loadEngineModule();
+      const premove: PremoveRow = { seq: 1, move: "nevlas build m -3x3" };
+      const { backend, deleted, failures, committed } = leechFixture({
+        fetchLowestSeqPremove: async () => premove,
+        fetchAutoCharge: async () => "decline-cost",
+      });
+      const result = await resolveOneAutomatedTurn(engineModule, backend, "g1", 1);
+      // The leech commit happens; the premove is left for the NEXT invocation (re-fired by this
+      // commit's own current_seat change) once the engine is genuinely back in Phase.RoundMove.
+      expect(result.outcome).to.equal("committed");
+      expect(committed[0].move).to.not.equal(premove.move);
+      expect(deleted).to.have.length(0);
+      expect(failures).to.have.length(0);
+    });
+
+    it("silently no-ops on seq_conflict for a leech commit too", async () => {
+      const engineModule = await loadEngineModule();
+      const { backend } = leechFixture({
+        fetchAutoCharge: async () => "decline-cost",
+        commitAutomatedTurn: async () => {
+          throw new Error("seq_conflict: expected 10, got 10");
+        },
+      });
+      const result = await resolveOneAutomatedTurn(engineModule, backend, "g1", 1);
+      expect(result).to.deep.equal({ outcome: "seq-conflict" });
+    });
   });
 
   it("silently no-ops on seq_conflict without touching the premove", async () => {

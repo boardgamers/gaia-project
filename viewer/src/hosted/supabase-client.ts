@@ -91,6 +91,8 @@ export function createSupabaseBackend(client: SupabaseClient): HostedBackend {
     cancelPremove: (gameId, seat, seq): Promise<void> =>
       unwrap(client.rpc("cancel_premove", { p_game_id: gameId, p_seat: seat, p_seq: seq })),
     markPremoveFailureRead: (id): Promise<void> => unwrap(client.rpc("mark_premove_failure_read", { p_id: id })),
+    setAutoCharge: (gameId, seat, pref): Promise<void> =>
+      unwrap(client.rpc("set_auto_charge", { p_game_id: gameId, p_seat: seat, p_pref: pref })),
   };
 }
 

@@ -109,6 +109,18 @@ class FakeBackend implements HostedBackend {
     }
   }
 
+  autoCharge: Record<number, string> = {};
+  failNextSetAutoChargeWith: string | null = null;
+
+  async setAutoCharge(_gameId: string, seat: number, pref: string): Promise<void> {
+    if (this.failNextSetAutoChargeWith) {
+      const message = this.failNextSetAutoChargeWith;
+      this.failNextSetAutoChargeWith = null;
+      throw new Error(message);
+    }
+    this.autoCharge[seat] = pref;
+  }
+
   // Test helper mirroring what resolve-automation (or a genuinely failed fast-path) would do.
   seedPremoveFailure(seat: number, move: string, reason: string): void {
     this.premoveFailures.push({ id: String(this.nextFailureId++), seat, move, reason, read_at: null });
@@ -567,6 +579,30 @@ describe("hosted game host", () => {
       await host.markPremoveFailureRead(id);
 
       expect(host.premoveFailures).to.deep.equal([]);
+    });
+
+    it("setAutoCharge persists the preference for a seat (Phase 2)", async () => {
+      const backend = new FakeBackend(gameRow(), playerRows());
+      backend.seedMoves(SETUP_MOVES);
+      const { host } = makeHost(backend);
+      await host.load();
+
+      await host.setAutoCharge(1, "decline-cost");
+
+      expect(backend.autoCharge).to.deep.equal({ 1: "decline-cost" });
+    });
+
+    it("setAutoCharge fails soft (reports an error, doesn't throw) so a save hiccup never blocks gameplay", async () => {
+      const backend = new FakeBackend(gameRow(), playerRows());
+      backend.seedMoves(SETUP_MOVES);
+      const { host, errors } = makeHost(backend);
+      await host.load();
+
+      backend.failNextSetAutoChargeWith = "network error";
+      await host.setAutoCharge(1, "decline-cost");
+
+      expect(errors).to.have.length(1);
+      expect(errors[0]).to.contain("auto-charge preference");
     });
   });
 });

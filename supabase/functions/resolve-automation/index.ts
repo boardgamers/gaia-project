@@ -1,16 +1,15 @@
 // The offline premove commit path (PREMOVE_PLAN.md §4c). Triggered by the `games_resolve_automation`
-// trigger (0010_premoves.sql) whenever current_seat changes AND that seat has a premove queued.
-// Payload: {game_id, seat}. Resolves exactly ONE committed turn per invocation and returns - a
-// successful commit changes current_seat again, which re-fires the trigger for whatever's next.
+// trigger (0010/0011_*.sql) whenever current_seat changes AND that seat has a premove queued or
+// auto-charge enabled (Phase 2). Payload: {game_id, seat}. Resolves exactly ONE committed turn per
+// invocation and returns - a successful commit changes current_seat again, which re-fires the
+// trigger for whatever's next.
 //
 // The actual decision logic lives in logic.ts (plain TS, no Deno/network dependency, unit-testable
 // with a fake backend); this file is just the Deno.serve + service-role-client plumbing around it,
 // mirroring supabase/functions/notify/index.ts's own shape.
-//
-// Phase 1 only: the Phase.RoundLeech/auto-charge branch is Phase 2.
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
-import { Engine, Phase } from "../_shared/engine.bundle.js";
+import { Engine, Phase, parseAutoChargePreference } from "../_shared/engine.bundle.js";
 import { Backend, CommitAutomatedTurnArgs, GameRow, MoveRow, PremoveRow, resolveOneAutomatedTurn } from "./logic.ts";
 
 function makeBackend(supabase: ReturnType<typeof createClient>): Backend {
@@ -85,6 +84,18 @@ function makeBackend(supabase: ReturnType<typeof createClient>): Backend {
         throw new Error(error.message);
       }
     },
+    async fetchAutoCharge(gameId: string, seat: number): Promise<string> {
+      const { data, error } = await supabase
+        .from("players")
+        .select("auto_charge")
+        .eq("game_id", gameId)
+        .eq("seat", seat)
+        .single();
+      if (error || !data) {
+        throw new Error(error?.message ?? "player not found");
+      }
+      return data.auto_charge ?? "ask";
+    },
   };
 }
 
@@ -107,7 +118,12 @@ Deno.serve(async (req) => {
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
   try {
-    const result = await resolveOneAutomatedTurn({ Engine, Phase }, makeBackend(supabase), game_id, seat);
+    const result = await resolveOneAutomatedTurn(
+      { Engine, Phase, parseAutoChargePreference },
+      makeBackend(supabase),
+      game_id,
+      seat
+    );
     return new Response(JSON.stringify(result), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err) {
     console.error("resolve-automation failed:", err instanceof Error ? err.message : err);
