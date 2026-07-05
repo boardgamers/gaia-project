@@ -40,7 +40,12 @@ import { factionPlanet, tinkeringTileSpec, tinkeringTilesForRound } from "./fact
 import { federationCost, FederationInfo, isOutclassedBy, parseFederationLocation } from "./federation";
 import { GaiaHex } from "./gaia-hex";
 import { IncomeSelection } from "./income";
-import { colonizedDeepSpaceSectorCount, isNewLostFleetSector, lostFleetSectorKey } from "./lost-fleet-map";
+import {
+  classifySectorId,
+  colonizedDeepSpaceSectorCount,
+  isNewLostFleetSector,
+  LostFleetSectorType,
+} from "./lost-fleet-map";
 import SpaceMap from "./map";
 import { terraformingStepsRequired } from "./planets";
 import PlayerData from "./player-data";
@@ -1098,15 +1103,18 @@ export default class Player extends EventEmitter {
         // adding a new one, so it must not count again on top of the slot it covers.
         return this.data.tiles.techs.filter((tech) => !isAdvanced(tech.pos)).length;
       case Condition.Sector:
-        // A Lost Fleet Deep Space Sector tile is a 3-hex cluster that counts as a single sector
-        // (RULES_CLARIFICATIONS.md line 132), so this normalizes via lostFleetSectorKey instead of
-        // uniquing raw hex.data.sector ids directly (that would over-count 2+ structures within the
-        // same Deep Space tile as separate sectors). No-op change for the base game.
+        // Owner ruling: for this generic "sector" count (the base "most sectors" Final Scoring tile,
+        // and the base Advanced Tech tiles that pay per sector), a Deep Space Sector tile does NOT
+        // count - only real Space Sector tiles do. Deliberately narrower than Condition.NewSector /
+        // Darkanians' PI ability just below, which DO include Deep Space because their rulebook text
+        // explicitly says "Space sector / Deep Space sector" (RULES_CLARIFICATIONS.md line 132) -
+        // this condition's tiles have no such text either way, so there's no confirmed rule to defer
+        // to, and the owner chose "sectors are sectors, not deep space" for all of them. No-op change
+        // for the base game (no Deep Space hexes exist there).
         return uniq(
           this.data.occupied
-            .filter((hex) => hex.colonizedBy(this.player))
-            .map((hex) => lostFleetSectorKey(hex))
-            .filter((key) => key !== undefined)
+            .filter((hex) => hex.colonizedBy(this.player) && classifySectorId(hex.data.sector) === LostFleetSectorType.Space)
+            .map((hex) => hex.data.sector)
         ).length;
       case Condition.Structure:
         return this.data.occupied.filter((hex) => hex.colonizedBy(this.player)).length;

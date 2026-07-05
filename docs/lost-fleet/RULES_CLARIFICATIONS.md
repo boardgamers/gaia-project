@@ -421,7 +421,17 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   - Advanced Tech `planetpass`: when you pass, gain 1 VP per planet type colonized.
   - Final Scoring `planet`: most planet types colonized (counts Protoplanet/Asteroid incl. via Artifact,
     and the Lost Planet).
-- G5. New Federation tokens (8), all confirmed (rulebook Appendix VI for 4; owner board-read 2026-06-27
+- G4c. **Deep Space Sectors do NOT count for the base game's unmodified "most sectors" Final Scoring
+  tile** (`FinalTile.Sector`/`Condition.Sector` — engine `player.ts`), nor for the 2 base Advanced Tech
+  tiles that pay per sector (1 ore/sector, 2 VP/sector — same shared `Condition.Sector`). Only a real
+  Space Sector tile counts as a sector for these; Interspace already didn't count either way. **Source:
+  OUR-RULING (owner, 2026-07-05) — there is no rulebook text either way** for this specific tile/these
+  2 tiles (the base game predates Deep Space and Lost Fleet's own appendix only reprints the 3 *new*
+  Final Scoring tiles, not this pre-existing one). This is deliberately narrower than `Condition.NewSector`
+  (the `sector3` Round Scoring tile) and Darkanians' PI ability, which DO count Deep Space — those two
+  have their own explicit rulebook text ("Space sector / Deep Space sector", rulebook p.6/p.13, line 132
+  above) that this ruling does not override. Do not "fix" `Condition.Sector` to match `Condition.NewSector`
+  again without re-confirming this ruling — the split is deliberate, not an oversight.
   for the other 4 — their gear-shaped badge is VP, not an unidentified resource as previously guessed):
   - **c:** Immediately gain 8 VP + 8 credits. CONFIRMED (BOARD-ART).
   - **k:** Immediately gain 4 VP + 4 knowledge. CONFIRMED (BOARD-ART).

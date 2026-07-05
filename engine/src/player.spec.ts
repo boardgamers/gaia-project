@@ -278,7 +278,7 @@ describe("Player", () => {
       expect(player.finalCount(FinalTile.DeepSpaceSector)).to.equal(2);
     });
 
-    it("should count a Space sector and a Deep Space sector as 2 distinct sectors for the base 'most sectors' final scoring", () => {
+    it("should count only the Space sector, not the Deep Space sector, for the base 'most sectors' final scoring (owner ruling: Deep Space never counts as a sector here)", () => {
       const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
       player.faction = Faction.Terrans;
 
@@ -292,10 +292,10 @@ describe("Player", () => {
         })
       );
 
-      expect(player.finalCount(FinalTile.Sector)).to.equal(2);
+      expect(player.finalCount(FinalTile.Sector)).to.equal(1);
     });
 
-    it("should not double-count 2 structures within the same Deep Space tile as 2 sectors for the base 'most sectors' final scoring", () => {
+    it("should count 0 sectors for the base 'most sectors' final scoring when every structure is in Deep Space", () => {
       const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
       player.faction = Faction.Terrans;
 
@@ -314,7 +314,7 @@ describe("Player", () => {
         })
       );
 
-      expect(player.finalCount(FinalTile.Sector)).to.equal(1);
+      expect(player.finalCount(FinalTile.Sector)).to.equal(0);
     });
 
     it("should score the longest range from the Planetary Institute to either Academy for the Lost Fleet distance final scoring", () => {

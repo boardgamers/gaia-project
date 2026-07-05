@@ -158,14 +158,14 @@ const sectors: FinalScoringExtractLog = ExtractLog.wrapper(() => {
     () => true,
     false,
     (cmd, log, planet, location) => {
-      // Lost Fleet: Interspace locations aren't sectors, and a 3-hex Deep Space Sector tile is one
-      // sector (normalize its per-hex suffix) - both use `location` directly instead of `parseLocation`,
-      // which only understands base-game "<sector><suffix>" coordinates and throws on IS/DS ones.
-      const type = classifySectorId(location);
-      if (type === LostFleetSectorType.Interspace) {
+      // Owner ruling: a Deep Space Sector never counts as a sector for this tile (only real Space
+      // Sector tiles do), matching Condition.Sector in the engine (player.ts) - Interspace locations
+      // aren't sectors either. Checked via `location` directly instead of `parseLocation`, which only
+      // understands base-game "<sector><suffix>" coordinates and throws on Lost Fleet's IS/DS ones.
+      if (classifySectorId(location) !== LostFleetSectorType.Space) {
         return 0;
       }
-      const key = type === LostFleetSectorType.DeepSpace ? location.replace(/_\d+$/, "") : parseLocation(location).sector;
+      const key = parseLocation(location).sector;
       if (seen.has(key)) {
         return 0;
       }

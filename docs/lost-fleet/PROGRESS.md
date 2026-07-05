@@ -2854,19 +2854,27 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
     - The #69 race-condition regression tests were explicitly OUT of scope for this session (owner
       chose Phase 3 + the quiet notification, not the regression tests, when asked) - still open.
 72. ✅ **"Gaia 7" UI + scoring punch list (2026-07-05, new session), 8 items:**
-    - **Final-scoring `Sector` tile bug, FOUND AND FIXED**: `Condition.Sector` (`player.ts`) uniqued
-      raw `hex.data.sector` strings directly instead of using the `lostFleetSectorKey` normalization
-      already established for Deep Space (`colonizedDeepSpaceSectorCount`/`isNewLostFleetSector` in
-      `lost-fleet-map.ts`) - 2+ structures inside the SAME 3-hex Deep Space Sector tile were
-      overcounted as separate sectors instead of 1. Exported `lostFleetSectorKey` and reused it in
-      `Condition.Sector`; a Space sector + a Deep Space sector correctly still count as 2 distinct
-      sectors (matching §the PI ability's "Space/Deep Space sector, Interspace ≠ sector" wording) -
-      that part of the owner's reported "2 sectors" example was already correct. 2 new `player.spec.ts`
-      cases. Audited every other Final Scoring condition (Structure/StructureFed/PlanetType/Gaia/
-      Satellite/Asteroid/PlanetaryInstituteAcademyDistance/DeepSpaceSector) - all already correct, no
-      other bugs found. Also fixed the same raw-sector-string bug (plus a latent crash: `parseLocation`
-      asserts on Lost Fleet's `IS`/`DS`-prefixed coordinates) in the viewer's "Sectors" stats-chart
-      source (`logic/charts/final-scoring.ts`).
+    - **Final-scoring `Sector` tile bug, FOUND AND FIXED, then owner-ruled** (see `RULES_CLARIFICATIONS.md`
+      §G4c): `Condition.Sector` (`player.ts`) uniqued raw `hex.data.sector` strings directly, so 2+
+      structures inside the SAME 3-hex Deep Space Sector tile were overcounted as separate sectors
+      instead of 1 - the reported bug. First fix made Deep Space count as 1 normalized sector (matching
+      Darkanians' PI ability's "Space/Deep Space sector" wording); **owner then ruled Deep Space should
+      NOT count at all for this tile** ("sectors are sectors, not deep space"), overriding that first
+      pass - `Condition.Sector` now only counts real Space Sector tiles. This is deliberately narrower
+      than `Condition.NewSector` (`sector3` Round Scoring tile) and Darkanians' PI ability, which keep
+      counting Deep Space because THEIR rulebook text explicitly names it (verbatim "Space sector /
+      Deep Space sector", `RULES_CLARIFICATIONS.md` line 132) - unlike the base "most sectors" tile,
+      which the rulebook never updated for Deep Space either way, so there was no confirmed text to
+      defer to. Same shared `Condition.Sector` also drives the 2 base Advanced Tech tiles that pay per
+      sector (1 ore/sector, 2 VP/sector), so the ruling applies there too, automatically. 2 new/updated
+      `player.spec.ts` cases. Audited every other Final Scoring condition (Structure/StructureFed/
+      PlanetType/Gaia/Satellite/Asteroid/PlanetaryInstituteAcademyDistance/DeepSpaceSector) - all already
+      correct, no other bugs found. Also fixed the viewer's independent "Sectors" duplicate
+      implementations to match (and stop drifting from the engine in the future): `data/stats.ts`'s
+      `sectors()` (fed the player-board "Sectors with a colonized planet" icon/stats table, never fixed
+      even in the first pass - now just delegates to `Condition.Sector` instead of re-implementing it)
+      and the "Sectors" stats-chart source (`logic/charts/final-scoring.ts`, which also had a latent
+      crash: `parseLocation` asserts on Lost Fleet's `IS`/`DS`-prefixed coordinates).
     - **Mobile sticky bottom bar (`Commands.vue`) redesigned**: the auto-leech dropdown now opens
       `dropup` with `boundary="viewport"` so its 7 options are no longer clipped by the bar's own
       `overflow-y:auto`/`max-height:40vh` (owner-reported "can't see all options on mobile", root cause
@@ -2908,7 +2916,7 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       content). Also added a `count === 3` branch to `Resource.vue`'s own `kind === "step"` rendering
       (previously silently rendered 0 arrows for count 3 - no source granted 3 free steps before this
       token existed).
-    - Engine **610/610**, viewer **344/344** (both grew from new tests this session), both suites
+    - Engine **610/610**, viewer **345/345** (both grew from new tests this session), both suites
       re-run clean multiple times (one apparent viewer failure mid-session was pre-existing rotation-
       test flakiness in unrelated map code, reproduced as flaky on a clean rerun, not caused by this
       session's changes).
