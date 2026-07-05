@@ -80,7 +80,13 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
       return;
     }
 
-    if (type === "queuePremove" || type === "cancelPremove" || type === "markPremoveFailureRead") {
+    if (
+      type === "queuePremove" ||
+      type === "cancelPremove" ||
+      type === "cancelAllPremoves" ||
+      type === "reorderPremove" ||
+      type === "markPremoveFailureRead"
+    ) {
       item.emit(type, payload);
       return;
     }
