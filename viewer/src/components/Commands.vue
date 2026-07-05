@@ -13,18 +13,28 @@
            (engine/src/auto-charge.ts) auto-resolve power-charge/decline offers instead of asking
            every time - a per-browser preference (never synced/persisted as part of game state).
            Hidden before round 1 (see showAutoLeechSelect) - faction pick/ban/silent-auction-bid/
-           initial-building setup have nothing to leech from yet. -->
-      <b-form-select
+           initial-building setup have nothing to leech from yet. A dropdown (not a <select>) so the
+           button itself can show a short label instead of the full option text, which used to force
+           the status line to wrap onto several lines on narrow screens. -->
+      <b-dropdown
         v-if="showAutoLeechSelect"
         size="sm"
+        variant="outline-secondary"
+        right
         class="ml-auto auto-leech-select"
-        style="width: auto"
         v-b-tooltip.hover
         title="Auto leech: automatically accept or decline power-charge offers up to this amount, instead of asking every time"
-        :value="autoChargePower"
-        @change="setAutoChargePower"
-        :options="autoChargePowerOptions"
-      />
+      >
+        <template #button-content>{{ autoChargePowerShortLabel }}</template>
+        <b-dropdown-item
+          v-for="opt in autoChargePowerOptions"
+          :key="opt.value"
+          :active="opt.value === autoChargePower"
+          @click="setAutoChargePower(opt.value)"
+        >
+          {{ opt.text }}
+        </b-dropdown-item>
+      </b-dropdown>
     </div>
     <div id="move-buttons" ref="moveButtons" :class="{ 'mobile-sticky-actions': showStickyMobileBar }">
       <div v-if="init" class="d-flex flex-wrap align-content-stretch">
@@ -115,17 +125,25 @@
         <b-btn v-if="showSilentAuctionInfo" v-b-modal.silent-auction-info variant="link" size="sm" class="ml-2 silent-auction-info-button">
           How does the auction work? <b-badge variant="info" pill>i</b-badge>
         </b-btn>
-        <b-form-select
+        <b-dropdown
           v-if="showAutoLeechSelect"
           size="sm"
+          variant="outline-secondary"
+          right
           class="ml-auto auto-leech-select"
-          style="width: auto"
           v-b-tooltip.hover
           title="Auto leech: automatically accept or decline power-charge offers up to this amount, instead of asking every time"
-          :value="autoChargePower"
-          @change="setAutoChargePower"
-          :options="autoChargePowerOptions"
-        />
+        >
+          <template #button-content>{{ autoChargePowerShortLabel }}</template>
+          <b-dropdown-item
+            v-for="opt in autoChargePowerOptions"
+            :key="opt.value"
+            :active="opt.value === autoChargePower"
+            @click="setAutoChargePower(opt.value)"
+          >
+            {{ opt.text }}
+          </b-dropdown-item>
+        </b-dropdown>
       </div>
     </div>
     <!-- reserves the sticky bar's actual rendered height (tracked live via ResizeObserver, capped
@@ -377,6 +395,20 @@ export default class Commands extends Vue implements CommandController {
 
   setAutoChargePower(value: string) {
     this.$store.commit("preferences", { autoChargePower: value });
+  }
+
+  /** Short label for the auto-leech dropdown button itself - the full sentence lives in the menu
+   * options (autoChargePowerOptions), not on the button, so the button doesn't force the status
+   * line next to it to wrap. */
+  get autoChargePowerShortLabel(): string {
+    switch (this.autoChargePower) {
+      case "ask":
+        return "Leech: off";
+      case "decline-cost":
+        return "Leech: free";
+      default:
+        return `Leech: ${this.autoChargePower}`;
+    }
   }
 
   get showSilentAuctionInfo(): boolean {
@@ -1008,13 +1040,24 @@ $mobile-sticky-actions-max-height: 40vh;
 #move-buttons .sticky-bar-title {
   display: none !important;
   margin-top: 0.5rem;
-  padding: 0.35rem 0.6rem;
+  padding: 0.25rem 0.5rem;
   border-radius: 6px;
   background: var(--warningLight, #fff3cd);
   border: 1px solid var(--warning, #ffc107);
 
+  // Small enough that the status text stays on one (or two, at most) lines instead of the default
+  // h5 size wrapping across several - that wrapping used to be what made this banner so tall.
   h5 {
+    font-size: 0.85rem;
     font-weight: 600;
+    line-height: 1.2;
+  }
+
+  // The auto-leech dropdown's own button - kept tiny (just "Leech: ..."), so it doesn't compete
+  // with the status text for width. The full option text still shows in the opened menu.
+  .auto-leech-select .btn {
+    padding: 0.15rem 0.4rem;
+    font-size: 0.75rem;
   }
 }
 
