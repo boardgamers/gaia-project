@@ -136,51 +136,46 @@
         </g>
       </g>
 
-      <!-- the Federation token still up for grabs on this ship (base-game token art) - bottom-
-           aligned with the action octagons' bottom edge (y=65, from translate(*, 44) + the -25/+21
-           SpecialAction box). FederationTile is taller than the octagons (50 vs 46), so the extra
-           height bleeds UP into the header row instead of stretching the bottom margin. -->
+      <!-- the Federation token still up for grabs on this ship (base-game token art) - nudged up
+           from y=15 to y=8 so its rendered bottom (its "shadow-1" drop-shadow filter inflates its
+           visual footprint well past its raw 50-unit height) actually lines up with the action
+           octagons' bottom edge instead of visibly overshooting past it - measured empirically via
+           getBoundingClientRect() on a live render, not just the raw un-shadowed geometry. -->
       <g data-section="federation" v-b-tooltip.hover :title="federationTooltip(ship)">
         <FederationTile
           v-if="shipFederation(ship)"
           :rewardsOverride="federationDisplayRewards(shipFederation(ship))"
           x="172"
-          y="15"
+          y="8"
           filter="url(#shadow-1)"
         />
-        <FederationTile v-else :used="true" x="172" y="15" />
+        <FederationTile v-else :used="true" x="172" y="8" />
       </g>
 
-      <!-- the Standard Tech tile seeded on this ship (Twilight has artifacts instead) - same
-           bottom-alignment (y=65) as the federation token/actions. -->
-      <g v-if="hasTechSlot(ship)" data-section="tech" transform="translate(225, 11) scale(0.9)">
+      <!-- the Standard Tech tile seeded on this ship (Twilight has artifacts instead) - nudged down
+           from translate(*, 11) to translate(*, 14) so its rendered bottom lines up with the action
+           octagons' bottom edge instead of sitting visibly short of it (measured empirically, same
+           as the Federation tile above). -->
+      <g v-if="hasTechSlot(ship)" data-section="tech" transform="translate(225, 14) scale(0.9)">
         <TechTile :pos="ship" x="0" y="0" />
       </g>
       <!-- Twilight has no Standard Tech slot (see `hasTechSlot` above) - this artifact grid fills
-           the exact same slot instead, so it must match that slot's own footprint precisely:
-           TechTile's rendered box (from its `translate(225, 11) scale(0.9)` wrapper, a 60x64
-           viewBox scaled to 0.9 = 54x57.6 screen units, an ~54x54 rendered footprint) is centered
-           on screen at (252, 38) - center-x = 225 + 30*0.9 = 252, matching the same math for y.
-           ArtifactIcon is itself a self-contained nested <svg> (viewBox -13 -13 26 26, rendered
-           here at size=24, smaller than its native 30x30), so a translate(x, y) here moves its
-           TOP-LEFT corner, not its visual center - its content actually renders 12 screen units
-           right/down of that translate (half its 24-unit rendered size), which is why every
-           offset below is the intended on-screen center minus 12. With up to 4 artifact slots
-           (= player count, max 4p) this 2x2 grid (26-unit repeat, bigger than each icon's own
-           24-unit size so consecutive icons no longer overlap) fits inside a 56x56 box centered
-           on (252, 38) - i.e. within a couple of units of TechTile's own 54x54 footprint -
-           instead of the old anchor (center-x 249, starting at y 44) that pushed the 2nd row down
-           to a visual bottom edge of ~85, well past the ship's own 76-tall viewBox. -->
+           the exact same slot instead, bottom-aligned with the action octagons like that slot,
+           and with bigger icons (28, up from 24) per owner feedback - measured empirically via
+           getBoundingClientRect() against the action octagons' bottom edge, same as the
+           Federation/Tech tweaks above. The 30-unit grid repeat (up from 26) keeps the bigger
+           28-wide icons from overlapping each other. With up to 4 artifact slots (= player count,
+           max 4p), the lowest row's icons bottom out at 39+28=67, still inside the ship's own
+           76-tall viewBox. -->
       <g v-else data-section="artifacts">
         <g
           v-for="(artifact, i) in remainingArtifacts"
           :key="artifact"
           :data-artifact="artifact"
-          :transform="`translate(${224 + (i % 2) * 26}, ${10 + Math.floor(i / 2) * 26})`"
+          :transform="`translate(${222 + (i % 2) * 30}, ${9 + Math.floor(i / 2) * 30})`"
         >
-          <!-- size=24 < the 26-unit grid repeat above, so consecutive icons no longer overlap
-               (they used to, at the icon's native 30-unit size). -->
-          <ArtifactIcon :artifact="artifact" :size="24" />
+          <!-- size=28 < the 30-unit grid repeat above, so consecutive icons no longer overlap. -->
+          <ArtifactIcon :artifact="artifact" :size="28" />
         </g>
       </g>
     </svg>
