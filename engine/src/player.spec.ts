@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import "mocha";
 import {
+  Booster,
   Building,
   Expansion,
   Faction,
@@ -17,6 +18,7 @@ import { classifySectorId, LostFleetSectorType } from "./lost-fleet-map";
 import SpaceMap from "./map";
 import Player from "./player";
 import Reward from "./reward";
+import { boosterEvents } from "./tiles/boosters";
 
 describe("Player", () => {
   describe("canBuild", () => {
@@ -516,6 +518,27 @@ describe("Player", () => {
       };
       player.notifyOfNewPlanet(lostPlanet);
       expect(player.federationCache).to.equal(null);
+    });
+  });
+
+  describe("actionsWithoutTile", () => {
+    it("excludes Booster-granted special actions (already shown on the booster's own tile)", () => {
+      const player = new Player(Expansion.None, PlayerEnum.Player1);
+      player.faction = Faction.Terrans;
+      player.loadFaction(null);
+      player.loadEvents(boosterEvents(Booster.Booster4));
+
+      expect(player.actions.map((a) => a.rewards)).to.include("step");
+      expect(player.actionsWithoutTile.map((a) => a.rewards)).to.not.include("step");
+    });
+
+    it("keeps faction-innate special actions with no tile of their own (e.g. Space Giants')", () => {
+      const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+      player.faction = Faction.SpaceGiants;
+      player.loadFaction(null);
+
+      expect(player.actions.map((a) => a.rewards)).to.include("2step");
+      expect(player.actionsWithoutTile.map((a) => a.rewards)).to.include("2step");
     });
   });
 });

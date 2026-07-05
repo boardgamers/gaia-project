@@ -33,7 +33,7 @@ import {
   TechTilePos,
   TinkeringTile,
 } from "./enums";
-import Event, { EventSource } from "./events";
+import Event, { EventSource, isTileOrBoosterSource } from "./events";
 import { factionBoard, FactionBoard, FactionBoardRaw } from "./faction-boards";
 import { FactionBoardVariant } from "./faction-boards/types";
 import { factionPlanet, tinkeringTileSpec, tinkeringTilesForRound } from "./factions";
@@ -154,6 +154,18 @@ export default class Player extends EventEmitter {
 
   get actions() {
     return this.events[Operator.Activate].map((event) => event.action());
+  }
+
+  /**
+   * Special actions with no Booster/Tech-tile/Advanced-Tech-tile of their own to render them on
+   * (faction-innate ones like Space Giants' Exploration board or Ivits' Planetary Institute) -
+   * the only ones the player board's "under the mines" row should show, since a Booster/Tech-tile/
+   * Advanced-Tech-tile-granted special action is already shown on its own component.
+   */
+  get actionsWithoutTile() {
+    return this.events[Operator.Activate]
+      .filter((event) => !isTileOrBoosterSource(event.source))
+      .map((event) => event.action());
   }
 
   progress(finalTile: FinalTile) {

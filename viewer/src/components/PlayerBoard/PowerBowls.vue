@@ -23,6 +23,7 @@
     </g>
     <g :transform="`translate(${2 * r * spacing}, 0)`">
       <PowerBowl :player="player" area="area3" class="power-bowl" />
+      <text y="1.7" transform="scale(0.7)" v-if="showIncome && income('ta3')">+{{ income("ta3") }}</text>
       <text class="label" y="2.6" x="0">III</text>
     </g>
     <text class="label" transform="translate(-3.5, 0) scale(0.75)" v-if="showIncome && income('pw')"

@@ -239,7 +239,7 @@
         </g>
 
         <SpecialAction
-          v-for="(action, i) in player.actions"
+          v-for="(action, i) in player.actionsWithoutTile"
           :action="[action.rewards]"
           :player="player"
           :recent="recentAction(i)"
@@ -404,7 +404,7 @@ export default class PlayerInfo extends Vue {
   }
 
   recentAction(i: number): boolean {
-    const action = this.player.actions[i];
+    const action = this.player.actionsWithoutTile[i];
     const commands = this.$store.getters.recentActions.get(this.faction) ?? [];
     return commands.some((c) => c.args[0] === action.rewards);
   }
