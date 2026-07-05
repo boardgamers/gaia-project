@@ -111,6 +111,7 @@ import Engine, {
   Planet as PlanetEnum,
   Player,
   PlayerEnum,
+  Reward,
   shipsInHex,
   SpaceMap as ISpaceMap,
   Spaceship,
@@ -128,6 +129,7 @@ import { leechPlanets, radiusTranslate, upgradableBuildingsOfOtherPlayers } from
 import { Ship } from "@gaia-project/engine/src/enums";
 import { MapMode, MapModeType } from "../data/actions";
 import { isFree } from "../logic/buttons/utils";
+import { splitCostBonus } from "../data/resources";
 import { max } from "lodash";
 import { factionPiecePlanet } from "../graphics/utils";
 
@@ -297,8 +299,17 @@ export default class SpaceHex extends Vue {
 
   cost(hex: GaiaHex) {
     const data = this.highlightedHexes?.get(hex);
+    if (!data || isFree(data.cost)) {
+      return "";
+    }
 
-    return data && !isFree(data.cost) ? data.cost.replace(/,/g, ", ") : "";
+    // A cost can contain a negative-count Victory Point "bonus" entry (e.g. the Protoplanet mine
+    // bonus) that nets as a real VP gain when paid - show it as a distinct "+N VP bonus" note
+    // instead of a literal "-N", which reads backwards. See data/resources.ts's splitCostBonus.
+    const { cost, bonus } = splitCostBonus(Reward.parse(data.cost));
+    const costText = cost.map((r) => r.toString()).join(", ");
+    const bonusText = bonus.length > 0 ? ` (+${bonus.reduce((sum, r) => sum + r.count, 0)} VP bonus)` : "";
+    return costText + bonusText;
   }
 
   hexClick(hex: GaiaHex) {

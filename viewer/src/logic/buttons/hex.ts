@@ -12,6 +12,7 @@ import { sortBy } from "lodash";
 import { ButtonData, HighlightHex } from "../../data";
 import { buildingData } from "../../data/building";
 import { planetNames } from "../../data/planets";
+import { splitCostBonus } from "../../data/resources";
 import { RichText, richText, richTextArrow, richTextPlanet, richTextRewards } from "../../graphics/rich-text";
 import { prependShortcut, tooltipWithShortcut } from "./shortcuts";
 import { CommandController } from "./types";
@@ -83,11 +84,15 @@ export function hexSelectionButton(
         label.push(richText(`Build ${buildingData[highlightHex.building].name} for`));
       }
       if (highlightHex.cost != null) {
-        label.push(
-          richTextRewards(
-            isFree(highlightHex.cost) ? [new Reward(0, Resource.Credit)] : Reward.parse(highlightHex.cost)
-          )
-        );
+        if (isFree(highlightHex.cost)) {
+          label.push(richTextRewards([new Reward(0, Resource.Credit)]));
+        } else {
+          const { cost, bonus } = splitCostBonus(Reward.parse(highlightHex.cost));
+          label.push(richTextRewards(cost));
+          for (const b of bonus) {
+            label.push(richText(`(+${b.count} VP bonus)`));
+          }
+        }
       }
 
       b.warning = buttonWarnings(highlightHex.warnings);
