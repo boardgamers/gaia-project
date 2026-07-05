@@ -551,7 +551,12 @@ export default class Game extends Vue {
   }
 
   applyPremoveMove(move: string) {
-    const copy = Engine.fromData(JSON.parse(JSON.stringify(this.engine)));
+    // Always replay the FULL accumulated move string from the stable pre-premove snapshot, never
+    // from `this.engine` - handleData() below commits the (mutated, partial-move-applied) result
+    // back into `this.engine` on every call, so cloning from `this.engine` here would re-execute an
+    // already-applied partial move on top of itself and throw "Cannot execute a move after
+    // executing an incomplete move" the moment a premove needs more than one click to compose.
+    const copy = Engine.fromData(JSON.parse(JSON.stringify(this.premoveBackup)));
     if (move) {
       try {
         copy.move(move);
