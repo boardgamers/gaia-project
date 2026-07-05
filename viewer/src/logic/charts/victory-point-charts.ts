@@ -195,9 +195,13 @@ export const victoryPointSources = (
       roundValues: passIncomeProjection(Booster.values(expansion), false),
     },
     {
-      types: BoardAction.values(expansion),
+      // T F Mars/Eclipse's spaceship-board QIC action grants VP directly (2vp, +1vp per tech
+      // tile/planet type) - tagged with the ship itself as source (spaceships.ts's
+      // spaceshipActionEffects), not a BoardAction, but it's still a QIC action so it belongs here
+      // rather than under "Spaceship" (which is just the VP cost of exploring - see below).
+      types: [...BoardAction.values(expansion), Spaceship.TFMars, Spaceship.Eclipse],
       label: "QIC",
-      description: "QIC actions",
+      description: "QIC actions, including T F Mars/Eclipse's spaceship-board QIC action",
       color: "--specialAction",
     },
     {
@@ -234,10 +238,23 @@ export const victoryPointSources = (
       color: "--protoplanet",
     },
     {
-      types: Spaceship.values(expansion),
+      // The only VP a spaceship board action itself costs or grants is exploring (deploying a
+      // shuttle onto a spaceship) - 5 VP normally, 7 VP for Bal T'aks (exploration.ts's
+      // explorationCost) - tagged Command.Explore regardless of which ship. The spaceship boards'
+      // own actions (qic/power/knowledge/credit) pay in QIC/power/ore/knowledge, never VP, except
+      // T F Mars/Eclipse's qic action, which is counted under "QIC" above instead.
+      types: [Command.Explore],
       label: "Spaceship",
-      description: "Artifact tokens and Lost Fleet spaceship board actions",
+      description: "VP cost paid to explore (deploy) a spaceship",
       color: "--rt-int",
+    },
+    {
+      // Every artifact-token VP grant is tagged Spaceship.Twilight (move/artifacts.ts) regardless
+      // of which spaceship board the artifact was drawn/examined from.
+      types: [Spaceship.Twilight],
+      label: "Artifacts",
+      description: "VP granted by Artifact tokens",
+      color: "--lost",
     },
     {
       types: ["chart-final1"],
