@@ -1,0 +1,23 @@
+name: Supabase - Deploy Edge Function
+
+on:
+  workflow_dispatch:
+    inputs:
+      function_name:
+        description: "Edge function to deploy (folder name under supabase/functions)"
+        default: resolve-automation
+      project_ref:
+        description: "Supabase project ref"
+        default: mitawjpdxkheascdiffz
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npx supabase functions deploy ${{ github.event.inputs.function_name }} --project-ref ${{ github.event.inputs.project_ref }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
