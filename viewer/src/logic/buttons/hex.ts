@@ -89,8 +89,10 @@ export function hexSelectionButton(
         } else {
           const { cost, bonus } = splitCostBonus(Reward.parse(highlightHex.cost));
           label.push(richTextRewards(cost));
-          for (const b of bonus) {
-            label.push(richText(`(+${b.count} VP bonus)`));
+          if (bonus.length > 0) {
+            // A leading "+" (plain text, not run through Resource.vue - its count display has no
+            // generic "this is a gain" concept) keeps the icon from reading as more cost.
+            label.push(richText("+"), richTextRewards(bonus));
           }
         }
       }
