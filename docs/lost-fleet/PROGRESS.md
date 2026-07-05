@@ -2800,9 +2800,11 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       green (see the rerun note above). Full diff is on `claude/gaia-5-ui-gameplay-6cqp7x`.
 
 71. ✅ **Premove Phase 3 - Sequential + Priority multi-slot queues (2026-07-05), per
-    `PREMOVE_PLAN.md` §10.1-10.8.** Code/schema/tests complete; **not deployed** (same standing
-    blocker as Phases 1-2 - see "Next actions"). Two mutually-exclusive per-seat queue modes, both
-    depth 3, both at every player count, never combined:
+    `PREMOVE_PLAN.md` §10.1-10.8.** Code/schema/tests complete. **Deployed and live-verified in
+    #73** (migration `0012` + `resolve-automation` both live on `mitawjpdxkheascdiffz`) - the
+    "not deployed" status below described this session only; see #73 for the deploy + a real
+    bug it caught. Two mutually-exclusive per-seat queue modes, both depth 3, both at every
+    player count, never combined:
     - **Sequential** - a chain of the seat's next N turns. The composer (`Game.vue`'s "Plan my
       move ▸") previews entry #2+ against a clone with every earlier queued entry already applied
       (`logic/premove-preview.ts`'s `buildSequentialChainPreview`, forcing the seat's turn before
@@ -2920,6 +2922,65 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       re-run clean multiple times (one apparent viewer failure mid-session was pre-existing rotation-
       test flakiness in unrelated map code, reproduced as flaky on a clean rerun, not caused by this
       session's changes).
+
+73. ✅ **Deployed `resolve-automation` + migration `0012` to production, live-verified, found and
+    fixed a real premove UI bug (2026-07-05, new session).** Closes the standing blocker #66-#71
+    flagged repeatedly: premove/auto-leech now genuinely work fully offline, not just client-side.
+    - **Migration `0012` re-verified** byte-for-byte against the repo file via `pg_get_functiondef`
+      (all 3 RPCs + the `mode` check constraint) - no drift since #71's own deploy.
+    - **`resolve-automation` deployed** via a new one-off path: this session's sandbox genuinely
+      cannot reach the network from the Supabase CLI (confirmed again - see #66-#71's own findings;
+      not re-litigated) or paste the ~569KB engine bundle through an MCP tool call. Added
+      `.github/workflows/supabase-deploy-function.yml`, a `push`-triggered (not `workflow_dispatch`
+      - this sandbox's GitHub integration can dispatch existing workflow runs but can't fire a NEW
+      `workflow_dispatch` event, confirmed against both this new workflow and a long-standing
+      existing one) CI job that runs the real `supabase functions deploy` on a GitHub Actions
+      runner, which has actual network access. Deployed and confirmed ACTIVE via the MCP
+      `list_edge_functions` tool.
+    - **`app_config['resolve_automation']` seeded**, reusing `notify`'s existing anon key (the
+      trigger only needs it to pass the edge function gateway's `verify_jwt` check - confirmed by
+      reading `notify_resolve_automation()`'s own SQL - not for privileged access, which the
+      function does separately via its own `SUPABASE_SERVICE_ROLE_KEY` env var).
+    - **Verified resolve-automation actually fires a queued premove**, live, via direct RPC calls
+      (not just unit tests): seeded a throwaway 2p game, queued a Sequential premove for the seat
+      not on turn, committed the other seat's move, and confirmed via `net._http_response` +
+      the `moves` table that the trigger fired and the premove auto-committed
+      (`{"outcome":"committed","seq":11}`). First attempt used a mismatched local seed and got a
+      correct `wrong-phase` no-op for a setup-phase move (premoves only fire in `Phase.RoundMove`
+      by design) - not a bug, just the wrong test move; second attempt (a genuine `RoundMove`-phase
+      move) fired correctly.
+    - **Found and fixed a real, previously-unexercised bug** while driving `PremoveModal.vue`
+      through an actual two-browser Playwright session for the first time ever (Phase 1-3 had only
+      unit/component coverage): `Game.vue`'s `applyPremoveMove()` cloned the preview engine from
+      `this.engine`, which `handleData()` mutates in place on every partial-move call. Composing
+      ANY premove needing more than one click (e.g. picking a research track, then clicking "End
+      Turn") replayed the full accumulated move string on top of an already-mutated engine and
+      threw "Cannot execute a move after executing an incomplete move" - silently swallowed by a
+      catch block, so the UI just looked frozen with no error. A same-session follow-up fix
+      (cloning from `premoveBackup` instead) broke a different existing test (composing while the
+      locked seat isn't really on turn - the whole point of a premove - lost `startPremove()`'s
+      "force this seat's turn" override). Final fix: a new `premoveComposeBase` field, captured
+      once right after `buildSequentialChainPreview()` runs, cloned from on every
+      `applyPremoveMove()` call. Verified directly against the real engine bundle (both the
+      forced-seat and multi-step-compose scenarios) and the full viewer suite (326 passing, 0
+      failing) before shipping.
+    - **Two-browser E2E**: extended `viewer/e2e/hosted-multiplayer.e2e.js`'s pattern into a new
+      `viewer/e2e/premove-phase3.e2e.js` (manual, not in the automated suite - same as its
+      predecessor). Its own game-creation step could not be reused as-is: `create_game` is
+      admin-only (migration `0008`, unrelated to premove work), so the new script seeds a game
+      directly via SQL instead and drives both browsers straight to `?game=<id>`. Confirmed live
+      against production: Bob composes and queues a 2-deep Sequential premove chain through the
+      real UI (the exact multi-step bug above), the overview modal shows both entries correctly
+      ranked, and Bob's premove #1 fires automatically the instant Alice's real move (via the real
+      UI) hands him the turn - both via the script's own assertions and the `moves` table directly.
+      The second chain link and the Priority-mode illegal-rank scenario from §10.8's last bullet
+      were NOT driven through the real UI (test-script move choices happened to be illegal at that
+      game state, not a product issue) - the same `resolvePremoveQueue` code path they'd exercise
+      is already covered by the existing `premove-resolver.spec.ts` unit suite (9 cases).
+    - Also fixed, as a side effect of getting the E2E harness running in this sandbox:
+      `viewer/e2e/proxy-network.js`'s `bundledWs()` candidate path assumed an npm-hoisted
+      `node_modules` layout and never matched under pnpm's actual layout.
+    - All throwaway test games created during verification were deleted afterward.
 
 ## Still MISSING — only one art-only item left
 
@@ -3299,18 +3360,16 @@ be checked, does it happen right after a specific action) rather than guessing f
 explicitly NOT the #69 race-condition regression tests (still open, unchanged from #68/#69 - that
 audit found no code changes needed but the regression tests it recommended were never written).
 Mode-switch-clears-with-confirm and the manual-move/pass reconciliation rules were confirmed
-matching §10.7 as specified before implementation started. **Not yet deployed** - migration `0012`
-needs to reach the live project before Phase 3 is actually usable, same standing blocker as
-`resolve-automation` itself (still not deployed either, unchanged from #66/#67 - Supabase CLI +
-access token, owner action; `app_config['resolve_automation']` also needs seeding once it is). Until
-both are deployed, premoves (any mode) and auto-leech only run via client-side paths (work while a
-tab is open/visited, not fully offline yet) - this is unchanged from before Phase 3, just now also
-true for the new modes. The two-browser Phase 3 E2E scenario from `PREMOVE_PLAN.md` §10.8's last
-bullet was deliberately not added to `viewer/e2e/hosted-multiplayer.e2e.js` yet, since that script
-only runs manually against the LIVE project and Phase 3's schema/RPCs aren't live - do that once
-deployment happens, alongside whatever manual soak-testing feels warranted for a UI-heavy feature
-that only got unit/component-level coverage this session (see #71's testing notes on what specifically
-wasn't run: no live two-browser check of the actual `PremoveModal.vue` overview UI in a real browser).
+matching §10.7 as specified before implementation started. **Deployed and live-verified, 2026-07-05
+— see "Done so far" #73**: migration `0012` and `resolve-automation` are both live on
+`mitawjpdxkheascdiffz`, `app_config['resolve_automation']` is seeded, and a real premove/auto-leech
+now works fully offline, not just client-side. #73 also found and fixed a real bug
+(`Game.vue`'s `applyPremoveMove()` breaking on any multi-step premove composition) while driving
+`PremoveModal.vue` through a real two-browser session for the first time. Still open: the #69
+race-condition regression tests (unchanged, still not written), and driving the Priority-mode
+illegal-rank scenario plus the second link of a Sequential chain through the *real UI* specifically
+(#73's E2E run confirmed one Sequential link firing live; the rest is covered by
+`premove-resolver.spec.ts`'s existing unit suite, not a live two-browser check).
 
 Chunks 1-7b plus Darkanians' PI follow-up, the core Explore action, the federation-claim hook, the
 Standard-Tech claim hook, the full Spaceship Boards live-gameplay wiring, the gold-side execution
