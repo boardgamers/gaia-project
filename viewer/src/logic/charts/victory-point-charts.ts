@@ -17,6 +17,7 @@ import Engine, {
   Resource,
   Round,
   RoundScoring,
+  Spaceship,
   TechPos,
 } from "@gaia-project/engine";
 import { boosterData } from "../../data/boosters";
@@ -225,6 +226,18 @@ export const victoryPointSources = (
       label: "Federation",
       description: "Re-scoring is counted as QIC action",
       color: colorCodes.federation.color,
+    },
+    {
+      types: [Command.Build],
+      label: "Building",
+      description: "Protoplanet mine bonus (+6 VP)",
+      color: "--protoplanet",
+    },
+    {
+      types: Spaceship.values(expansion),
+      label: "Spaceship",
+      description: "Artifact tokens and Lost Fleet spaceship board actions",
+      color: "--rt-int",
     },
     {
       types: ["chart-final1"],
