@@ -7,7 +7,7 @@
 > anything else, including the **Testing — required going forward** section it points to — both
 > are standing process, not optional. Then ask the user "what next?" and use the **Next actions**
 > section below to guide them.
-> Last updated: **2026-07-04**.
+> Last updated: **2026-07-05**.
 
 ## Working agreements (read every session, not optional)
 
@@ -2719,6 +2719,86 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
     success notification - today only premove *failures* surface (banner), a queued premove that
     executes successfully is silent. Both are additive/low-risk, no schema changes needed.
 
+70. ✅ **"Gaia 5" owner punch list (2026-07-05, new session) — 16 items, all resolved and
+    verified.** Owner sent a large mixed bug/polish list; each item below cites the actual root
+    cause found by reading code (not guessed), not just the symptom:
+    - **Protoplanet build cost showed a literal "-6" instead of the +6 VP gain it actually is**
+      (the engine encodes the bonus as a `-6vp` cost entry that nets to a gain when paid, per
+      `player.ts`'s `payCosts`). New `data/resources.ts` `splitCostBonus()` pulls that entry out
+      and both `logic/buttons/hex.ts`'s button label and `SpaceHex.vue`'s tooltip now show
+      `"2c, 10o (+6 VP bonus)"` instead. Verified against a real engine state (built via the
+      public API, a Protoplanet within build range) loaded through the viewer's own "Load" dialog.
+    - **Statistics tab was missing two real VP sources**: `Command.Build` (the Protoplanet bonus
+      above) and `Spaceship` (every artifact-token VP grant, always tagged `Spaceship.Twilight`,
+      plus any VP-granting ship board action) - both existed in the engine's own per-move change
+      log already, just weren't recognized categories in `victory-point-charts.ts`. Added as
+      "Building"/"Spaceship"; regenerated the 6 affected `chart.spec.ts` golden fixtures (purely
+      additive - every existing per-player total is unchanged).
+    - **Action buttons/mid-selection state randomly reset, especially after backgrounding the app
+      on iPhone.** Root cause: `hosted.ts`'s `visibilitychange` listener (and a realtime-channel
+      reconnect) call `host.resync()` unconditionally, and `resyncNow()` always rebuilt a brand-new
+      `Engine` and re-emitted it even when nothing had changed - Commands.vue's
+      `watch: availableCommands` treats any new Engine reference as a real change and resets
+      `commandChain`/`buttonChain`, wiping whatever multi-step selection (e.g. a Build-a-Mine hex
+      pick) the player was mid-way through. Fixed by skipping the rebuild/re-emit when a resync
+      finds nothing new (compares against `committedMoveCount`, already live). 2 new `host.spec.ts`
+      cases (no-op resync vs. a resync that finds a real move).
+    - **"Can't find the log" investigated at length** (light/heavy content, mobile/desktop,
+      before/after this session's other fixes, and against the pre-session code via a temporary
+      `git worktree`) - could not reproduce a standalone log-hiding bug; #66 (previous session)
+      already fixed the closely-related "unreachable log tail" issue, and this session's resync
+      fix (above) removes another plausible source of "the UI reset and something looked missing."
+      Flagged to the owner as unresolved-but-unreproduced rather than guessed at further.
+    - Deleted `LostFleetTerraformingBoard.vue` entirely (the redundant "mandatory so far" panel
+      during faction selection - owner called it out as duplicating the map's own 7-color swatches)
+      and its 2 call sites (`Game.vue`, `hosted/SetupPreviewBoard.vue`).
+    - Auto-leech select: hidden before round 1 (was gated only on the very first "pick player
+      count" screen, so it showed through faction pick/ban/silent-bid/initial-building too), and
+      added into the mobile sticky bar (was completely unreachable there once round 1 started,
+      hidden by `#move-title`'s mobile CSS with nothing replacing it in the bar itself).
+    - Power artifact: added the bowl-III "+2" income indicator to `PowerBowls.vue` (bowl I already
+      had one; bowl III didn't), confirming the artifact's engine-side effect was already correct.
+    - Sticky mobile action bar: moved the turn-status line to a highlighted banner below the action
+      buttons (was above) - and while verifying this in a real browser, caught a real pre-existing
+      bug (not introduced this session, confirmed via `git show` on the pre-session commit): a bare
+      `.sticky-bar-title { display: none }` couldn't reliably beat Bootstrap's `.d-flex` (itself
+      `!important`), so the banner was showing on every viewport width, not just the narrow mobile
+      one. Fixed by scoping both rules under `#move-buttons` for real specificity instead of relying
+      on `!important` alone.
+    - Closed 2 layout gaps, both root-caused via live `getBoundingClientRect()` measurements against
+      a running dev server: the base-game power/QIC action row was anchored to Lost Fleet's
+      variable-height 7th research-board column instead of the (shorter, fixed-height) 6 tracks
+      themselves; the topmost round-scoring tile (R6) sat 18.5 units below the Scoring Board
+      Extension tile above it vs. a uniform ~2-unit gap everywhere else in that column.
+    - Faction wheel: added real clearance between the ring and the row of extra-planet circles
+      below it (was visibly touching), and moved Lost Fleet's Asteroid/Protoplanet circles to their
+      own column to the right of the wheel instead of a 3rd/4th slot in that row - `SpaceMap.vue`'s
+      reserved left-sidebar width now accounts for the wider Lost Fleet footprint.
+    - Ship board alignment: the Federation tile, Standard Tech tile slot, and Twilight's artifact
+      grid were all meant to bottom-align with the 3 action octagons, but didn't - measured
+      empirically (a `filter="url(#shadow-1)"` drop-shadow was inflating the Federation tile's
+      visual footprint past its raw geometry, so pure math had gotten it wrong) and nudged each
+      into alignment; Twilight's artifact icons also enlarged (24 -> 28) per owner feedback,
+      confirmed still within the ship board's own height.
+    - Asteroid/Protoplanet 7VP artifacts now correctly trigger the Lost Fleet "new planet type"
+      round-scoring bonus too (previously only counted for the separate condition-count-based
+      final/round tiles) - the artifact counts as colonizing that planet type per the rulebook, but
+      the round-scoring trigger only fired from an actual `build()` call, which artifacts never make.
+    - Lobby: the current-turn ring is now a real circle (`border-radius: 50%`, was a fixed `1rem`
+      that only looked round by coincidence at one specific avatar size) with a stronger fill/border.
+    - Player board's info icon now also responds to click/tap (was hover-only, so it silently did
+      nothing on touch devices - it's a static help legend, not a game action).
+    - Silent Auction: banning a faction now asks for confirmation via the same modal flow as
+      picking one (was missing entirely - a ban committed immediately on click).
+    - Special-action icons de-duplicated: a Booster/Tech-tile/Advanced-Tech-tile's special action
+      was shown both on its own component AND in a generic "under the mines" row that listed every
+      special action the player had regardless of source. New `Player.actionsWithoutTile` engine
+      getter (+ `Event.isTileOrBoosterSource` helper, prefix-based: `booster`/`tech-`/`adv-`) scopes
+      that row down to genuinely sourceless specials (Space Giants, Ivits, Tinkeroids), which have
+      no tile of their own to show it on.
+    - 5 commits, ~20 files changed, 4 new engine tests + ~20 new/updated viewer tests, all suites
+      green (see the rerun note above). Full diff is on `claude/gaia-5-ui-gameplay-6cqp7x`.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -2834,6 +2914,15 @@ clean. Every fix in #66 was also verified visually against a running dev server 
 (screenshots + DOM/bounding-rect assertions), including a real before/after comparison (via `git
 stash`) proving the mobile spacer relocation fixes both the Turn-Order gap and the previously
 unreachable log tail.
+
+**Latest full rerun after #70 (2026-07-05, new session, "Gaia 5" punch list):** engine **604/604**
+(grew from a pre-session baseline of 600 - `git log` shows more untracked growth between #66 and
+this session than this doc captured; 4 new cases this session, see #70), viewer **323/323** (grew
+from 303 - many new/updated spec files, see #70). Both suites re-run clean at the very end of the
+session. Every layout/alignment fix was verified against a real running dev server via Playwright
+(screenshots, `getBoundingClientRect()` measurements, and a real engine state loaded through the
+viewer's own "Load" dialog to exercise the actual Build-a-Mine cost-display code path) - not just
+unit tests, per the standing "read the actual code/render it, don't guess" agreement.
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/
@@ -3058,6 +3147,15 @@ section originally said Chunk 2 must also carry the _full_ `planets.ts` terrafor
    exact shape for adv-tech/federation/booster/scoring enum members when those chunks come up.
 
 ## Next actions
+
+**Open from #70 (2026-07-05 "Gaia 5" session), needs owner confirmation:** the reported "can't find
+the log at the bottom" issue could not be reproduced despite substantial effort (light/heavy game
+states, mobile/desktop viewports, before/after this session's fixes via a temporary `git worktree`
+at the pre-session commit). #66 already fixed the closely-related "unreachable log tail" bug last
+session, and this session's resync fix (`hosted/host.ts`) removes another plausible cause of
+"something in the UI looked like it vanished." If the owner still sees this after pulling this
+session's fixes, get exact repro details (device/browser, does "Hide log until next turn" happen to
+be checked, does it happen right after a specific action) rather than guessing further blind.
 
 **Confirmed with the user, 2026-07-05: continue with Phase 3 (multi-round premove queue) next.**
 Two other cheap/valuable items were identified in #69 and offered but not yet started (ask the
