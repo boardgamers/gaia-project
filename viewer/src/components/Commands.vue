@@ -1000,8 +1000,13 @@ $mobile-sticky-actions-max-height: 40vh;
 // on wider viewports #move-buttons isn't pinned/fixed, so keep using the standalone #move-title
 // there instead of showing the status line twice. Styled as a highlighted banner so it reads as
 // "current turn status," distinct from the action buttons sitting above it in the same bar.
-.sticky-bar-title {
-  display: none;
+// Scoped under #move-buttons (not a bare .sticky-bar-title) so this selector's specificity beats
+// Bootstrap's .d-flex utility outright - .d-flex is "display: flex !important" too, so relying on
+// !important alone to win a tie would depend on unpredictable stylesheet source order (verified
+// empirically: a bare !important here did NOT reliably win). See the matching note on
+// #move-title.hide-on-mobile-sticky below for the same footgun on the other side of this toggle.
+#move-buttons .sticky-bar-title {
+  display: none !important;
   margin-top: 0.5rem;
   padding: 0.35rem 0.6rem;
   border-radius: 6px;
@@ -1036,7 +1041,7 @@ $mobile-sticky-actions-max-height: 40vh;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
 
     .sticky-bar-title {
-      display: flex;
+      display: flex !important;
     }
   }
 

@@ -26,12 +26,13 @@
           >
             <ResearchBoard :height="researchBoardViewHeight" ref="researchBoard" x="-50" />
             <ScoringBoard v-if="!engine.options.lostFleet" class="ml-4" width="90" :x="researchBoardWidth + 20" />
-            <!-- Always right under the research board's own bottom edge (a fixed 5-unit gap,
-                 matching the pre-Lost-Fleet base game), regardless of how tall Lost Fleet's extra
-                 round/final-scoring column makes that board - see researchBoardViewHeight. -->
+            <!-- Right under the 6 tracks' own bottom edge (BASE_RESEARCH_BOARD_HEIGHT, a fixed
+                 5-unit gap) - NOT researchBoardViewHeight, which Lost Fleet's 7th column (round
+                 scoring + final scoring, positioned further right) can inflate well past where the
+                 tracks themselves actually end, leaving a large visible gap here otherwise. -->
             <BoardAction
               :scale="17"
-              :transform="`translate(${45 * i - 20}, ${researchBoardViewHeight + 5})`"
+              :transform="`translate(${45 * i - 20}, ${baseResearchBoardHeight + 5})`"
               v-for="(action, i) in actions"
               :key="action"
               :action="action"
@@ -179,7 +180,7 @@ import ScoringBoard from "./ScoringBoard.vue";
 import SpaceMap from "./SpaceMap.vue";
 import LostFleetShips from "./LostFleetShips.vue";
 import TurnOrder from "./TurnOrder.vue";
-import { researchBoardHeight } from "../logic/utils";
+import { BASE_RESEARCH_BOARD_HEIGHT, researchBoardHeight } from "../logic/utils";
 import { parseCommands } from "../logic/recent";
 import { LogPlacement } from "../data";
 import { ExecuteBack } from "../logic/buttons/types";
@@ -344,11 +345,17 @@ export default class Game extends Vue {
 
   // ResearchBoard.vue's own real content height (440, or up to 471 for Lost Fleet's round/final
   // scoring column) - declaring this instead of a stale hardcoded height keeps that nested SVG at
-  // true 1:1 scale, which in turn keeps the power action row (drawn as its own sibling right after
-  // it, unconditionally) exactly where the base game always put it: right under the research
-  // board's bottom edge, regardless of how tall Lost Fleet's extra column makes that board.
+  // true 1:1 scale, so it always reserves enough room for however tall Lost Fleet's extra 7th
+  // column gets.
   get researchBoardViewHeight() {
     return researchBoardHeight(this.engine);
+  }
+
+  // The 6 tracks' own fixed content height, independent of researchBoardViewHeight above - used to
+  // anchor the power/QIC action row to the tracks' own bottom edge (see the template comment by
+  // its transform) instead of Lost Fleet's taller, 7th-column-inflated board height.
+  get baseResearchBoardHeight() {
+    return BASE_RESEARCH_BOARD_HEIGHT;
   }
 
   get logPlacement(): LogPlacement {

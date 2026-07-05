@@ -92,17 +92,19 @@ import { BOTTOM_SCORING_TILE_Y, researchBoardHeight } from "../logic/utils";
 // later the map's bottom-right corner) before it moved into this column.
 const EXTENSION_COLUMN_WIDTH = 90;
 
-// Round scoring tiles' y-positions in the 7th column, top-aligned with the adv-tech row (R6, the
-// topmost, sits immediately below the adv-tech tile above it) and spaced by a uniform 38 units
-// each - every tile is 40 native units tall, scaled to 0.9 (36 tall), leaving the same 2-unit gap
-// between every consecutive pair. (This used to reuse ResearchTrack.vue's own level4-level0
-// y-coordinates, which are unevenly spaced on the track itself - level2-level3's 56-unit gap stood
-// out as a visibly bigger break between R4 and R5 here, where alignment with the track no longer
-// matters once final scoring was added below. Uniform spacing fixes that.) Element 0
-// (bottommost, R1) is shared with logic/utils.ts's `researchBoardHeight` as BOTTOM_SCORING_TILE_Y,
-// so Game.vue's declared render height for this whole component can never drift out of sync with
-// this array again.
-const SCORING_TILE_Y = [BOTTOM_SCORING_TILE_Y, 278, 240, 202, 164, 126];
+// Round scoring tiles' y-positions in the 7th column, top-aligned with the adv-tech row and spaced
+// by a uniform 38 units each - every tile is 40 native units tall, scaled to 0.9 (36 tall), leaving
+// the same 2-unit gap between every consecutive pair. (This used to reuse ResearchTrack.vue's own
+// level4-level0 y-coordinates, which are unevenly spaced on the track itself - level2-level3's
+// 56-unit gap stood out as a visibly bigger break between R4 and R5 here, where alignment with the
+// track no longer matters once final scoring was added below. Uniform spacing fixes that.)
+// R6 (index 5, the topmost) sits at 110 so it picks up that same ~2-unit gap under the adv-tech
+// tile above it (translate(30, 79) scale(0.95) => bottom edge 79 + 30*0.95 = 107.5) - the previous
+// 126 left an 18.5-unit gap there, visibly bigger than the 2-unit gap between every other pair.
+// Element 0 (bottommost, R1) is shared with logic/utils.ts's `researchBoardHeight` as
+// BOTTOM_SCORING_TILE_Y, so Game.vue's declared render height for this whole component can never
+// drift out of sync with this array again.
+const SCORING_TILE_Y = [BOTTOM_SCORING_TILE_Y, 262, 224, 186, 148, 110];
 
 // Final scoring sits directly below the last (bottommost, R1) round scoring tile, in the same
 // column/scale, separated by the same 2-unit gap convention (36-tall tile + 2 = 38, plus this

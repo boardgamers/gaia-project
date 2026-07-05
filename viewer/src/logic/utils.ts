@@ -33,12 +33,17 @@ export function gameSeed(engine: Engine): string | undefined {
 // Kept in sync manually with ResearchBoard.vue, which re-exports this same value rather than
 // hardcoding its own copy, so the two can never drift apart the way Game.vue's hardcoded
 // `<ResearchBoard height="450">` once did (see `researchBoardHeight` below).
-export const BOTTOM_SCORING_TILE_Y = 316;
+export const BOTTOM_SCORING_TILE_Y = 300;
 const FINAL_SCORING_GAP_BELOW_ROUND_TILES = 40;
 const FINAL_SCORING_NATIVE_HEIGHT = 56;
 const FINAL_SCORING_NATIVE_GAP = 60;
 const FINAL_SCORING_SCALE = 0.9;
-const BASE_RESEARCH_BOARD_HEIGHT = 440;
+// The 6 research tracks' own fixed content height (independent of Lost Fleet's 7th column, which
+// can grow taller than this to fit final scoring - see researchBoardHeight below). Exported so
+// Game.vue can anchor the base-game power/QIC action row to the tracks' own bottom edge instead of
+// to researchBoardHeight()'s Lost-Fleet-inflated value, which left a large visible gap under the
+// (shorter) tracks whenever the 7th column's final scoring tiles made the board taller overall.
+export const BASE_RESEARCH_BOARD_HEIGHT = 440;
 
 /**
  * ResearchBoard.vue's own SVG viewBox height: a fixed 440 normally, or - for Lost Fleet, which

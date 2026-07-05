@@ -37,7 +37,7 @@ describe("Utils", () => {
       const engine = new Engine(["init 2 my-cool-seed"], { lostFleet: true });
 
       expect(engine.tiles.scorings.final).to.have.length(2);
-      expect(researchBoardHeight(engine)).to.equal(471);
+      expect(researchBoardHeight(engine)).to.equal(455);
     });
   });
 
