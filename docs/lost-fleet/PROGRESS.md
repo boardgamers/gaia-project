@@ -3055,6 +3055,33 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       and `getBoundingClientRect()` measurements against the real running dev server, not just unit
       tests, including finding a real game seed that seeds specific artifacts/federations to compare
       against their design references pixel-for-pixel.
+    - **Same-session follow-up round, from live owner feedback on the above (still 2026-07-06):**
+      moved the sticky bar's status-line title from the bottom to the top (first thing read when
+      the bar comes into view, not buried below the buttons); gave the resource bar (now the
+      bottom-most row) its own divider from the buttons above plus an extra fixed buffer beyond
+      `env(safe-area-inset-bottom)`, since the inset value alone still let its wide, edge-to-edge
+      row of icons sit close enough to the iPhone 16's bottom rounded corners to look clipped;
+      dropped the sector/federation/research-track additions entirely per owner instruction (judged
+      not worth the clutter in practice); moved VP to the end of the row; replaced the reused
+      `PowerBowls` component (the player board's own triangular layout, "the same 3 identical bowls"
+      at this scale) with 3 separate circles, one per bowl, each its own shade - then, on further
+      owner feedback, enlarged both the circles and the count text, and matched the count text's
+      font-weight to `Resource.vue`'s own shared count-text style (removing a bespoke heavier/
+      outlined treatment) so it reads as the same typographic family as the other resource counts,
+      just bigger. Also fixed a real bug the `.click` tooltip trigger (see this item's own tooltip
+      fix above) introduced: a click-opened tooltip no longer auto-hid when tapping a *different*
+      component the way a hover-only one naturally did, so one could get stuck open - fixed with a
+      capture-phase document click listener in `launcher.ts` that emits BootstrapVue's global
+      `bv::hide::tooltip` root event (closing every open tooltip) before the newly-tapped element's
+      own click handler runs, verified live via Playwright (exactly one tooltip visible after
+      clicking a second component). Also found and fixed a pre-existing test-isolation leak while
+      chasing a StickyResourceBar.spec.ts failure that only reproduced in the full suite, never
+      alone: `SpaceMap.spec.ts` mutates `store.state.preferences.flatBuildings` on what turned out to
+      be a shared mutable default-state object, leaking into later test files' fresh stores in the
+      same process - not fixed at the root (out of scope for this session), but the new spec's own
+      assertion was narrowed to a dedicated `.sticky-resource-bar__bowl` class so it no longer
+      depends on being the only thing in the container that renders a `<circle>`. Viewer **355/355**,
+      production build clean.
 
 ## Still MISSING — only one art-only item left
 

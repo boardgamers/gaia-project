@@ -40,6 +40,45 @@
       </b-dropdown>
     </div>
     <div id="move-buttons" ref="moveButtons" :class="{ 'mobile-sticky-actions': showStickyMobileBar }">
+      <!-- Same status line as #move-title above, shown only inside the mobile sticky bar (once it's
+           actually pinned, i.e. narrow viewports - see the .sticky-bar-title/.hide-on-mobile-sticky
+           CSS) - freeing up the space #move-title used to occupy alone on mobile once round 1+
+           starts, instead of duplicating it on screen. Placed first (above the action buttons) so
+           whose-turn/what's-happening is the first thing read when the bar comes into view, not
+           buried below a scrollable list of buttons. -->
+      <div v-if="showStickyMobileBar" class="sticky-bar-title d-flex align-items-center">
+        <h5 class="mb-0">
+          <RichTextView :content="statusLine" />
+        </h5>
+        <b-btn v-if="showSilentAuctionInfo" v-b-modal.silent-auction-info variant="link" size="sm" class="ml-2 silent-auction-info-button">
+          How does the auction work? <b-badge variant="info" pill>i</b-badge>
+        </b-btn>
+        <b-dropdown
+          v-if="showAutoLeechSelect"
+          size="sm"
+          variant="outline-secondary"
+          right
+          dropup
+          boundary="window"
+          :popper-opts="{ positionFixed: true }"
+          class="ml-auto auto-leech-select"
+          v-b-tooltip.hover
+          title="Auto leech: automatically accept or decline power-charge offers up to this amount, instead of asking every time"
+        >
+          <template #button-content>
+          <span class="auto-leech-dot" :class="autoChargePowerActive ? 'active' : 'inactive'"></span>
+          {{ autoChargePowerShortLabel }}
+        </template>
+          <b-dropdown-item
+            v-for="opt in autoChargePowerOptions"
+            :key="opt.value"
+            :active="opt.value === autoChargePower"
+            @click="setAutoChargePower(opt.value)"
+          >
+            {{ opt.text }}
+          </b-dropdown-item>
+        </b-dropdown>
+      </div>
       <div v-if="init" class="d-flex flex-wrap align-content-stretch">
         <MoveButton
           v-for="i in [2, 3, 4]"
@@ -116,45 +155,10 @@
         </div>
         <b-btn variant="primary" @click="submitSilentBid">Submit bids</b-btn>
       </div>
-      <!-- Same status line as #move-title above, shown only inside the mobile sticky bar (once it's
-           actually pinned, i.e. narrow viewports - see the .sticky-bar-title/.hide-on-mobile-sticky
-           CSS) - freeing up the space #move-title used to occupy alone on mobile once round 1+
-           starts, instead of duplicating it on screen. Placed last (below the action buttons) as a
-           highlighted banner, so the buttons themselves are reachable first. -->
+      <!-- Placed last (below the action buttons, at the very bottom of the sticky bar) - see the
+           .sticky-resource-bar-row CSS for the divider separating it from the buttons above and the
+           extra bottom clearance keeping it clear of the screen's rounded bottom corners. -->
       <StickyResourceBar v-if="showResourceBar" :player="myPlayer" class="sticky-resource-bar-row" />
-      <div v-if="showStickyMobileBar" class="sticky-bar-title d-flex align-items-center">
-        <h5 class="mb-0">
-          <RichTextView :content="statusLine" />
-        </h5>
-        <b-btn v-if="showSilentAuctionInfo" v-b-modal.silent-auction-info variant="link" size="sm" class="ml-2 silent-auction-info-button">
-          How does the auction work? <b-badge variant="info" pill>i</b-badge>
-        </b-btn>
-        <b-dropdown
-          v-if="showAutoLeechSelect"
-          size="sm"
-          variant="outline-secondary"
-          right
-          dropup
-          boundary="window"
-          :popper-opts="{ positionFixed: true }"
-          class="ml-auto auto-leech-select"
-          v-b-tooltip.hover
-          title="Auto leech: automatically accept or decline power-charge offers up to this amount, instead of asking every time"
-        >
-          <template #button-content>
-          <span class="auto-leech-dot" :class="autoChargePowerActive ? 'active' : 'inactive'"></span>
-          {{ autoChargePowerShortLabel }}
-        </template>
-          <b-dropdown-item
-            v-for="opt in autoChargePowerOptions"
-            :key="opt.value"
-            :active="opt.value === autoChargePower"
-            @click="setAutoChargePower(opt.value)"
-          >
-            {{ opt.text }}
-          </b-dropdown-item>
-        </b-dropdown>
-      </div>
     </div>
     <!-- reserves the sticky bar's actual rendered height (tracked live via ResizeObserver, capped
          by the bar's own max-height/overflow) so it never permanently covers page content it has
@@ -1093,7 +1097,7 @@ i.planet {
 // spots) scrollable in place instead of growing to fill/exceed the screen.
 $mobile-sticky-actions-max-height: 40vh;
 
-// The in-bar status line (.sticky-bar-title) and the resource bar above it are only meant for the
+// The in-bar status line (.sticky-bar-title) and the resource bar below it are only meant for the
 // narrow/mobile sticky layout - on wider viewports #move-buttons isn't pinned/fixed, so keep using
 // the standalone #move-title/full player board there instead of showing this twice. Scoped under
 // #move-buttons (not a bare .sticky-bar-title) so this selector's specificity beats Bootstrap's
@@ -1101,21 +1105,30 @@ $mobile-sticky-actions-max-height: 40vh;
 // alone to win a tie would depend on unpredictable stylesheet source order (verified empirically:
 // a bare !important here did NOT reliably win). See the matching note on
 // #move-title.hide-on-mobile-sticky below for the same footgun on the other side of this toggle.
+// Also carries a divider separating it from the buttons above (mirroring the status title's own
+// border below, on the other side of the buttons) and extra bottom clearance beyond the
+// container's own safe-area-inset-bottom padding - it's the last row in the sticky bar, closest to
+// the screen's physical bottom edge, and its wide, edge-to-edge row of icons was still visually
+// cropped by the bottom rounded corners on devices like the iPhone 16 with just the inset value.
 #move-buttons .sticky-resource-bar-row {
   display: none !important;
+  border-top: 1px solid #c9c9d1;
+  margin-top: 0.4rem;
+  padding-top: 0.4rem;
+  padding-bottom: 0.5rem;
 }
 
 // No longer a Bootstrap "warning" alert box (that read as an actual alert, not a status footer).
-// Instead the status strip is its own full-bleed band at the bottom of the bar - its background
-// tint against the button area's own background *is* the divider, reinforced by a slim accent
-// line, rather than a boxed-in banner floating inside the bar.
+// Instead the status strip is its own full-bleed band at the top of the bar - its background tint
+// against the button area's own background *is* the divider, reinforced by a slim accent line,
+// rather than a boxed-in banner floating inside the bar. Pulled to the top (not bottom) edges -
+// this bar is `position: fixed` at the bottom of the viewport, so only its bottom edge is ever near
+// the screen's rounded corners/home-indicator strip, hence no top safe-area-inset here.
 #move-buttons .sticky-bar-title {
   display: none !important;
-  margin: 0.5rem calc(-0.5rem - env(safe-area-inset-right)) calc(-0.5rem - env(safe-area-inset-bottom))
-    calc(-0.5rem - env(safe-area-inset-left));
-  padding: 0.4rem calc(0.5rem + env(safe-area-inset-right)) calc(0.4rem + env(safe-area-inset-bottom))
-    calc(0.5rem + env(safe-area-inset-left));
-  border-top: 2px solid var(--highlighted, #2c4);
+  margin: calc(-0.5rem) calc(-0.5rem - env(safe-area-inset-right)) 0.5rem calc(-0.5rem - env(safe-area-inset-left));
+  padding: 0.4rem calc(0.5rem + env(safe-area-inset-right)) 0.4rem calc(0.5rem + env(safe-area-inset-left));
+  border-bottom: 2px solid var(--highlighted, #2c4);
   background: var(--systemGray5, #e5e5ea);
 
   // Small enough that the status text stays on one (or two, at most) lines instead of the default
@@ -1151,7 +1164,11 @@ $mobile-sticky-actions-max-height: 40vh;
     max-height: $mobile-sticky-actions-max-height;
     overflow-y: auto;
     margin: 0;
-    padding: 0.5rem calc(0.5rem + env(safe-area-inset-right)) calc(0.5rem + env(safe-area-inset-bottom))
+    // Extra +8px buffer on top of the safe-area-inset-bottom value itself: the last row in the bar
+    // (the resource bar) is wide/edge-to-edge, and sitting exactly at the computed inset boundary
+    // still visually clipped its sides against the bottom rounded corners on the iPhone 16 - a
+    // small fixed margin beyond the inset gives it real clearance from where the curve starts.
+    padding: 0.5rem calc(0.5rem + env(safe-area-inset-right)) calc(0.5rem + env(safe-area-inset-bottom) + 8px)
       calc(0.5rem + env(safe-area-inset-left));
     background: var(--systemGray6, #f2f2f7);
     border-top: 1px solid #c9c9d1;

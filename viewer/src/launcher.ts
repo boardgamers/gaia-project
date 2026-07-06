@@ -32,6 +32,22 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
     render: (h) => h("div", { class: "container-fluid py-2" }, [h(component)]),
   }).$mount(selector);
 
+  // Tooltips also carry `.click` (see the touchstart-arm comment above this function) so a first
+  // tap always shows one, but that means a click-opened tooltip no longer auto-hides on its own
+  // the way a hover-only one did when the pointer moved elsewhere - tapping a different component
+  // left the previous one stuck open. A capture-phase listener fires before the newly-tapped
+  // element's own tooltip-show handler (which only runs on bubble), so this closes every
+  // currently-open tooltip first, then the tap's own handler opens (or re-opens) its own normally.
+  if (typeof document !== "undefined") {
+    document.addEventListener(
+      "click",
+      () => {
+        app.$emit("bv::hide::tooltip");
+      },
+      true
+    );
+  }
+
   const item: EventEmitter & { store: typeof store; app: Vue } = Object.assign(new EventEmitter(), { store, app });
 
   let replaying = false;

@@ -1,9 +1,6 @@
 <template>
   <div class="sticky-resource-bar d-flex align-items-center flex-wrap">
     <svg viewBox="-8 -8 16 16" width="18" height="18">
-      <Resource kind="vp" :count="playerData.victoryPoints" tooltip="Victory Points" />
-    </svg>
-    <svg viewBox="-8 -8 16 16" width="18" height="18">
       <Resource kind="c" :count="playerData.credits" tooltip="Credits" />
     </svg>
     <svg viewBox="-8 -8 16 16" width="18" height="18">
@@ -15,8 +12,20 @@
     <svg viewBox="-8 -8 16 16" width="18" height="18">
       <Resource kind="q" :count="playerData.qics" tooltip="Q.I.C." />
     </svg>
-    <svg viewBox="-9.5 -8.5 19 17" width="26" height="23" class="sticky-resource-bar__bowls">
-      <PowerBowls :player="player" />
+    <!-- 3 separate circles (not the player board's own triangular PowerBowls layout, which reads as
+         "the same 3 identical bowls" at this small a scale) - one per bowl, each its own shade
+         (reusing PowerBowls.vue's I/II/III colors) so which bowl is which is obvious at a glance. -->
+    <svg
+      v-for="area in powerAreas"
+      :key="area.key"
+      viewBox="-10 -10 20 20"
+      width="22"
+      height="22"
+      v-b-tooltip.hover
+      :title="`Bowl ${area.label}: ${area.count} power`"
+    >
+      <circle r="9.5" class="sticky-resource-bar__bowl" :style="`fill: ${area.color}`" />
+      <text class="sticky-resource-bar__count">{{ area.count }}</text>
     </svg>
     <svg viewBox="-8 -8 16 16" width="18" height="18">
       <Resource kind="gf" :count="availableGaiaformers" tooltip="Available Gaia Formers" />
@@ -27,69 +36,46 @@
     <svg viewBox="-11 -8 22 16" width="24" height="18">
       <Resource kind="d" :count="playerData.terraformCostDiscount" tooltip="Terraforming Cost" />
     </svg>
-    <svg viewBox="-9 -9 18 18" width="20" height="20" v-b-tooltip.hover title="Sectors occupied">
-      <Sector transform="scale(0.75)" />
-      <text class="sticky-resource-bar__count">{{ sectors }}</text>
+    <svg viewBox="-8 -8 16 16" width="18" height="18">
+      <Resource kind="vp" :count="playerData.victoryPoints" tooltip="Victory Points" />
     </svg>
-    <svg viewBox="-9 -9 18 18" width="20" height="20" v-b-tooltip.hover title="Federation tokens formed">
-      <g transform="scale(0.28)">
-        <Federation :used="true" />
-      </g>
-      <text class="sticky-resource-bar__count">{{ federations }}</text>
-    </svg>
-    <!-- Reuses the same per-track color variables (--rt-*) as the shared research board
-         (ResearchTile.vue) - one small pip per track showing this player's current level, so the
-         same "which track is which color" reading carries over to the sticky bar. -->
-    <div class="sticky-resource-bar__research d-flex align-items-center" v-b-tooltip.hover title="Research levels">
-      <svg viewBox="-8 -8 16 16" width="16" height="16" v-for="field in researchFields" :key="field">
-        <circle r="7.5" :style="`fill: var(--rt-${field})`" />
-        <text class="sticky-resource-bar__count">{{ playerData.research[field] }}</text>
-      </svg>
-    </div>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Engine, { Condition, effectiveRange, Player, PlayerData, ResearchField } from "@gaia-project/engine";
+import { Condition, effectiveRange, Player, PlayerData } from "@gaia-project/engine";
 import Resource from "./Resource.vue";
-import PowerBowls from "./PlayerBoard/PowerBowls.vue";
-import Sector from "./Conditions/Sector.vue";
-import Federation from "./FederationTile.vue";
+
+type PowerAreaDisplay = { key: string; label: string; count: number; color: string };
+
+// Same 3 shades as PowerBowls.vue's .power-bowl--1/2/3 (the player board's own bowl coloring) -
+// kept as a literal copy rather than importing that component's CSS classes, so this bar's own
+// compact circle-per-bowl layout doesn't couple to the player board's triangular arrangement.
+const POWER_AREA_COLORS = ["#c9a3e0", "#9855c9", "#5c1f82"];
 
 /** Compact, always-visible echo of the top-right/power-bowl corner of the player board (see
  * PlayerInfo.vue), reusing the same icon components at native size instead of the board's own
  * scale(0.1) - meant for the mobile sticky bar, where the full board can be scrolled out of view. */
 @Component({
-  components: { Resource, PowerBowls, Sector, Federation },
+  components: { Resource },
 })
 export default class StickyResourceBar extends Vue {
   @Prop()
   player: Player;
 
-  get engine(): Engine {
-    return this.$store.state.data;
-  }
-
   get playerData(): PlayerData {
     return this.player.data;
   }
 
-  get sectors(): number {
-    return this.player.eventConditionCount(Condition.Sector);
-  }
-
-  /** Federation tokens already formed - a cheap, always-available proxy for "federation progress"
-   * (the true "how many satellites until the next federation" figure needs a spanning-tree search
-   * over the map, `Player.possibleFederations()`, which is too expensive to recompute on every
-   * render of an always-visible bar - see PERFORMANCE.md). */
-  get federations(): number {
-    return this.player.eventConditionCount(Condition.Federation);
-  }
-
-  get researchFields(): ResearchField[] {
-    return ResearchField.values(this.engine.expansions);
+  get powerAreas(): PowerAreaDisplay[] {
+    const power = this.playerData.power;
+    return [
+      { key: "area1", label: "I", count: power.area1, color: POWER_AREA_COLORS[0] },
+      { key: "area2", label: "II", count: power.area2, color: POWER_AREA_COLORS[1] },
+      { key: "area3", label: "III", count: power.area3, color: POWER_AREA_COLORS[2] },
+    ];
   }
 
   get range(): number {
@@ -118,25 +104,15 @@ export default class StickyResourceBar extends Vue {
     overflow: visible;
   }
 
-  &__bowls {
-    margin: 0 0.15rem;
-  }
-
-  &__research {
-    gap: 0.05rem;
-    border-left: 1px solid #ccc;
-    padding-left: 0.35rem;
-    margin-left: 0.1rem;
-  }
-
+  // Matches Resource.vue's own count-text styling (its shared "text" rule) instead of a bespoke
+  // weight/outline, so the bowl numbers read as the same typographic family as every other
+  // resource count in this bar, just bigger.
   &__count {
     text-anchor: middle;
     dominant-baseline: central;
-    font-size: 7px;
-    font-weight: bold;
+    font-size: 12px;
+    font-weight: 600;
     fill: white;
-    stroke: black;
-    stroke-width: 0.4px;
     pointer-events: none;
   }
 }
