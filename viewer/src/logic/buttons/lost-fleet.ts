@@ -44,9 +44,20 @@ export function exploreButton(
       });
       // Cost shown as real reward icons (same language as building costs), not a plain-text
       // "(4, +2pw)" string - the label above still feeds the hover tooltip.
+      //
+      // A later exploration slot's power charge (ship.charge, from the 4-space charge track) is a
+      // genuine *gain* alongside the cost, not just a bigger cost - the same "cost and gain shown
+      // together" shape as any power/QIC special-action octagon elsewhere in the game, which always
+      // signs the cost side negative (see Event.action()'s "-cost,+reward" string) so it reads
+      // unambiguously against the (unsigned) gain next to it. A standalone cost with no accompanying
+      // gain in the same button (charge === 0, e.g. the first exploration slot) has nothing to
+      // disambiguate against, so it stays unsigned instead - matching a building's plain "2c 1o".
       button.richText = [
         richText(`${spaceshipNames[ship.ship]} (`),
-        richTextRewards(Reward.parse(ship.cost), true),
+        richTextRewards(
+          ship.charge > 0 ? Reward.negative(Reward.parse(ship.cost)) : Reward.parse(ship.cost),
+          ship.charge === 0
+        ),
         ...(ship.charge > 0 ? [richText(", "), richTextRewards([new Reward(ship.charge, Resource.ChargePower)])] : []),
         richText(")"),
       ];

@@ -3240,6 +3240,30 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
         step rather than after. Not fixed (nothing found to fix); flagged to the owner to confirm the
         exact move order via the game log if it recurs.
       Viewer 357/357, production build clean throughout.
+    - **Ninth same-session round (still 2026-07-06): owner pushed back on the Explore-ship cost fix**
+      ("this breaks the logic of how costs are shown in general... building a mine also says e.g.
+      '2c 1o' without a minus... we should be consistent"), then raised a sharper example: exploring
+      into a *later* exploration slot (e.g. slot 2) both costs VP/QIC *and* separately gains a power
+      charge (`EXPLORATION_CHARGE_TRACK`, the ship's 4-space charge track, `available/exploration.ts`'s
+      `ship.charge`) - so which convention actually applies when a cost and a gain show up in the
+      *same* button? Traced this back to the app's own established pattern for exactly this shape:
+      every power/QIC special-action octagon in the game (`Event.action()`, `engine/src/events.ts`)
+      already renders as `"-cost,+reward"` - the cost side explicitly negative, distinguishing it from
+      the gain shown right next to it - whereas a *standalone* cost with nothing else in the same
+      button (a building's "2c 1o", Examine Artifact's token cost, an exploration slot with
+      `charge === 0`) has nothing to disambiguate against and stays a plain unsigned number, exactly
+      as the owner described. Fixed `exploreButton` (`viewer/src/logic/buttons/lost-fleet.ts`) to
+      match both established conventions depending on which actually applies: `ship.charge > 0` (a
+      combined cost+gain button) now negates the cost via `Reward.negative(...)` while leaving the
+      charge itself unsigned (mirroring `Event.action()`'s pattern - the charge's own `Resource.
+      ChargePower` ("pw") icon is already visually distinct from a hypothetical "pay-pw" cost icon, so
+      no extra "+" is needed there either); `ship.charge === 0` (a standalone cost, e.g. the first
+      exploration slot) keeps the plain, unsigned `noPlus` display from the previous round unchanged.
+      Verified directly by calling `exploreButton()` with both a `charge: 2` and a `charge: 0` ship and
+      inspecting the resulting reward strings (`ts-node --transpile-only`), then added a permanent
+      regression spec, `viewer/src/logic/buttons/lost-fleet.spec.ts` (3 tests: standalone-cost
+      unsigned, combined-cost negative-signed with an unsigned charge alongside it, and Examine
+      Artifact's unchanged standalone-cost case). Viewer 360/360, production build clean.
 
 ## Still MISSING — only one art-only item left
 
