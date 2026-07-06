@@ -8,6 +8,7 @@ import Engine, {
   Phase,
   Player,
   PlayerEnum,
+  Spaceship,
   TechTilePos,
 } from "@gaia-project/engine";
 import { AnyTechTilePos } from "@gaia-project/engine/src/enums";
@@ -22,7 +23,7 @@ import { MovesSlice, ownTurn, parsedMove, ParsedMove } from "../logic/recent";
 import { playerTableRow } from "../logic/table/info-table";
 import { logPlayerTables } from "../logic/table/player";
 import { boosterData } from "./boosters";
-import { advancedTechTileData, baseTechTileData } from "./tech-tiles";
+import { advancedTechTileData, baseTechTileData, spaceshipTechTileData } from "./tech-tiles";
 
 type LogCounter = {
   consumeChanges: (a: ExtractLogArg<any>) => void;
@@ -31,8 +32,21 @@ type LogCounter = {
 };
 
 function replaceTech(data: Engine, pos: AnyTechTilePos) {
-  const tile = data.tiles.techs[pos].tile;
-  return pos.startsWith("adv") ? advancedTechTileData[tile].name : baseTechTileData[tile].name;
+  if (pos.startsWith("adv")) {
+    return advancedTechTileData[data.tiles.techs[pos].tile].name;
+  }
+  if (Spaceship.values(data.expansions).includes(pos as unknown as Spaceship)) {
+    // A spaceship's tech-tile pool entry (engine.tiles.spaceshipTechs) is deleted the instant its
+    // single copy is claimed (move/research.ts) - unlike a base-board tech position, whose pool
+    // entry survives forever (only its count decrements). Describing an already-claimed ship tile
+    // from the log (which always redescribes a move that already happened) needs the permanent
+    // record in whichever player claimed it, since the pool entry itself is long gone by the time
+    // the log renders. This was a real bug: previously always looked in `tiles.techs` (the
+    // base-board pool only) and threw for every Lost Fleet game with a claimed ship tech tile.
+    const claimed = data.players.flatMap((p) => p.data.tiles.techs).find((t) => t.pos === pos);
+    return spaceshipTechTileData[claimed.tile as keyof typeof spaceshipTechTileData].name;
+  }
+  return baseTechTileData[data.tiles.techs[pos as TechTilePos].tile].name;
 }
 
 export function replaceMove(data: Engine, move: ParsedMove): ParsedMove {

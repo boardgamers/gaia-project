@@ -3412,6 +3412,34 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       extended an existing test rather than adding one - 1 new assertion set, no new `it()`), viewer
       **374/374** (up from 369 in #75 - `host.spec.ts` +2, `Game.spec.ts` +5). Both production builds
       clean, re-run after every change. `PremoveModal.vue` deleted; nothing else referenced it.
+77. ✅ **Root-caused and fixed the "the log has disappeared" bug** the owner had reported 3 times
+    across multiple sessions (see #70's "could not be reproduced" note and the earlier "one specific
+    hosted game only, still open" entry) - finally pinned down with a live Supabase MCP connection
+    that became available this session, letting the actual production game (Darkanians vs. Xenos,
+    `5d7bf624-79fd-436d-9db9-c9f9e40a340e`, the owner's own 2p game) be queried directly instead of
+    guessing blind. Replaying that game's real 78-move history through the current engine confirmed
+    it reaches a healthy `roundMove` phase with no exception (ruling out a replay-breaking bug, the
+    scarier alternative) - then rendering `AdvancedLog.vue` against that exact real engine state
+    reproduced a real, 100%-reproducible crash: `data/log.ts`'s `replaceTech()` only ever looked up a
+    claimed tech tile's type in `engine.tiles.techs` (the base-board pool, keyed by research-field
+    position). For a Lost Fleet ship's tech-tile slot, that pool entry
+    (`engine.tiles.spaceshipTechs`) is deleted the instant its single copy is claimed
+    (`move/research.ts`) - unlike a base-board position's pool entry, which survives forever (only
+    its count decrements) - so describing an already-played "tech tfmars"-style move from the log
+    (which always redescribes history against CURRENT state, never a per-move snapshot) threw
+    `Cannot read properties of undefined (reading 'tile')`. Vue's error handling silently stops
+    rendering just the failing component subtree on an uncaught render error, so only
+    `AdvancedLog.vue` vanished (including its own "Hide log"/"Show everything" checkboxes, both
+    inside the same `v-if`) while the rest of the game rendered normally - exactly the "log
+    specifically gone, everything else fine" symptom, and exactly why it looked mysterious: it only
+    reproduces for a Lost Fleet game where a ship's tech tile was claimed AND the "Extended Log"
+    preference is on. Fixed by having `replaceTech()` fall back to searching every player's own
+    permanent `tiles.techs` claim record (never deleted, even once covered) for spaceship positions,
+    instead of the pool that's already gone by the time it claims. New regression test in
+    `data/log.spec.ts` builds a real Lost Fleet engine, pushes a claimed ship tech tile with its pool
+    entry deliberately absent (reproducing the exact state that used to throw), and asserts
+    `replaceMove` both doesn't throw and produces the correct description. Engine untouched, viewer
+    **375/375** (+1), production build clean.
 
 ## Still MISSING — only one art-only item left
 
