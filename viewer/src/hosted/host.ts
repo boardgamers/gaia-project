@@ -167,6 +167,15 @@ export class HostedGameHost {
     });
   }
 
+  /** Premove UI redesign (Gaia 9) - "stage until confirmed" for an edit: nothing is sent until
+   * this is actually called, so backing out of an in-progress edit leaves the original untouched. */
+  editPremove(seat: number, seq: number, move: string): Promise<void> {
+    return this.enqueue(async () => {
+      await this.backend.editPremove(this.gameId, seat, seq, move);
+      await this.refreshPremoveState();
+    });
+  }
+
   /** Phase 3 (§10.4) - clears a seat's whole queue: the mode-toggle confirm, or the user just
    * wanting to start over instead of cancelling entries one at a time. */
   cancelAllPremoves(seat: number): Promise<void> {

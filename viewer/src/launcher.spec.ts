@@ -4,17 +4,25 @@ import launch from "./launcher";
 
 // Regression test for a real bug found in a live two-browser session (docs/lost-fleet/PROGRESS.md
 // #73): launcher.ts's store.subscribeAction handler is the ONLY bridge from a Vuex action dispatch
-// (e.g. PremoveModal.vue's `this.$store.dispatch("cancelAllPremoves", ...)`) to the event emitter
+// (e.g. PremoveBar.vue's `this.$store.dispatch("cancelAllPremoves", ...)`) to the event emitter
 // hosted.ts listens on to actually call the backend. `cancelAllPremoves` and `reorderPremove` were
-// dispatched by PremoveModal.vue but never added to this bridge's forwarding list, so the mode-
+// dispatched by the premove UI but never added to this bridge's forwarding list, so the mode-
 // switch-clears-queue and reorder buttons did nothing server-side despite the UI (confirm dialog,
 // button press state) looking like they worked - completely invisible to unit tests, since
-// PremoveModal.vue itself has no component-level test and every other premove test exercises
+// PremoveBar.vue itself has no component-level test and every other premove test exercises
 // host.ts/resolvePremoveQueue directly, never through this bridge. Pin every premove-related action
-// type actually dispatched from a component so a future one silently missing this list fails loudly
-// here instead of only in a live session.
+// type actually dispatched from a component (including `editPremove`, added for the Gaia 9 premove
+// UI redesign - Game.vue's queueCurrentPremove dispatches it) so a future one silently missing this
+// list fails loudly here instead of only in a live session.
 describe("launcher's store-to-emitter bridge", () => {
-  const premoveActionTypes = ["queuePremove", "cancelPremove", "cancelAllPremoves", "reorderPremove", "markPremoveFailureRead"];
+  const premoveActionTypes = [
+    "queuePremove",
+    "cancelPremove",
+    "editPremove",
+    "cancelAllPremoves",
+    "reorderPremove",
+    "markPremoveFailureRead",
+  ];
 
   for (const type of premoveActionTypes) {
     it(`forwards a "${type}" dispatch to the emitter`, () => {

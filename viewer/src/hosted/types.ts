@@ -67,6 +67,9 @@ export interface HostedBackend {
   fetchPremoveFailures(gameId: string): Promise<PremoveFailureRow[]>;
   queuePremove(gameId: string, seat: number, move: string, mode: PremoveMode): Promise<number>;
   cancelPremove(gameId: string, seat: number, seq: number): Promise<void>;
+  // Premove UI redesign (Gaia 9) - updates a queued premove's move in place (Sequential also
+  // cascade-deletes everything after it, same as a cancel there - see the migration).
+  editPremove(gameId: string, seat: number, seq: number, move: string): Promise<void>;
   // Phase 3 (§10.4) - clears a seat's whole queue in one call: the mode-toggle confirm, and the
   // §10.7 reconciliation cases.
   cancelAllPremoves(gameId: string, seat: number): Promise<void>;

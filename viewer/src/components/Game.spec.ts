@@ -396,12 +396,13 @@ describe("Game", () => {
       return vm;
     }
 
-    it("offers Plan my move for a locked seat whose turn it isn't", () => {
+    it("offers the premove sticky bar for a locked seat whose turn it isn't", () => {
       // playerToMove is 0 (terrans); this session is locked to seat 1 (nevlas).
       const vm = mountAsSeat(1);
 
       expect(vm.premoveOffered).to.equal(true);
-      expect(vm.$el.textContent).to.contain("Plan my move");
+      expect(vm.$el.textContent).to.contain("Sequential premove");
+      expect(vm.$el.textContent).to.contain("Priority premove");
 
       vm.$el.remove();
       vm.$destroy();
@@ -439,18 +440,19 @@ describe("Game", () => {
       const vm = mountAsSeat(undefined);
 
       expect(vm.premoveOffered).to.equal(false);
-      expect(vm.$el.textContent).to.not.contain("Plan my move");
+      expect(vm.$el.textContent).to.not.contain("Sequential premove");
 
       vm.$el.remove();
       vm.$destroy();
     });
 
-    it("startPremove swaps into a preview clone where it's the locked seat's turn, and cancelPremoveMode restores the real state", () => {
+    it("onStartNewPremove swaps into a preview clone where it's the locked seat's turn, and cancelPremoveMode restores the real state", () => {
       const vm = mountAsSeat(1);
 
-      vm.startPremove();
+      vm.onStartNewPremove({ mode: "sequential", switchingModes: false });
 
       expect(vm.premoveMode).to.equal(true);
+      expect(vm.premoveEditSeq).to.equal(null);
       expect(vm.canPlay).to.equal(true);
       expect(vm.engine.playerToMove).to.equal(1);
 
@@ -465,7 +467,7 @@ describe("Game", () => {
 
     it("composing a full turn via premoveMove enables Queue this move, and queuing dispatches it with the locked seat", () => {
       const vm = mountAsSeat(1);
-      vm.startPremove();
+      vm.onStartNewPremove({ mode: "sequential", switchingModes: false });
 
       const dispatched: any[] = [];
       const originalDispatch = vm.$store.dispatch.bind(vm.$store);
@@ -485,6 +487,60 @@ describe("Game", () => {
         { type: "queuePremove", payload: { seat: 1, move: "nevlas up terra.", mode: "sequential" } },
       ]);
       expect(vm.premoveMode).to.equal(false);
+
+      vm.$el.remove();
+      vm.$destroy();
+    });
+
+    it("editing a queued premove stages the change: cancelPremoveMode before confirming leaves the original queue untouched", () => {
+      const vm = mountAsSeat(1);
+      vm.$store.commit("premoveState", {
+        premoves: [{ seat: 1, seq: 1, move: "nevlas up terra.", mode: "sequential", queued_move_count: 0 }],
+        failures: [],
+      });
+
+      vm.startEditPremove(1);
+
+      expect(vm.premoveMode).to.equal(true);
+      expect(vm.premoveEditSeq).to.equal(1);
+
+      const dispatched: any[] = [];
+      const originalDispatch = vm.$store.dispatch.bind(vm.$store);
+      vm.$store.dispatch = (type: string, payload: unknown) => {
+        dispatched.push({ type, payload });
+        return originalDispatch(type, payload);
+      };
+
+      // Backing out without confirming must not touch the backend at all.
+      vm.cancelPremoveMode();
+
+      expect(dispatched).to.deep.equal([]);
+      expect(vm.premoveMode).to.equal(false);
+      expect(vm.premoveEditSeq).to.equal(null);
+
+      vm.$el.remove();
+      vm.$destroy();
+    });
+
+    it("confirming an edit dispatches editPremove (not queuePremove) with the original seq", () => {
+      const vm = mountAsSeat(1);
+      vm.$store.commit("premoveState", {
+        premoves: [{ seat: 1, seq: 1, move: "nevlas up terra.", mode: "sequential", queued_move_count: 0 }],
+        failures: [],
+      });
+      vm.startEditPremove(1);
+
+      const dispatched: any[] = [];
+      const originalDispatch = vm.$store.dispatch.bind(vm.$store);
+      vm.$store.dispatch = (type: string, payload: unknown) => {
+        dispatched.push({ type, payload });
+        return originalDispatch(type, payload);
+      };
+
+      vm.applyPremoveMove("nevlas up nav.");
+      vm.queueCurrentPremove();
+
+      expect(dispatched).to.deep.equal([{ type: "editPremove", payload: { seat: 1, seq: 1, move: "nevlas up nav." } }]);
 
       vm.$el.remove();
       vm.$destroy();

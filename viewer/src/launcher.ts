@@ -127,6 +127,7 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
     if (
       type === "queuePremove" ||
       type === "cancelPremove" ||
+      type === "editPremove" ||
       type === "cancelAllPremoves" ||
       type === "reorderPremove" ||
       type === "markPremoveFailureRead"

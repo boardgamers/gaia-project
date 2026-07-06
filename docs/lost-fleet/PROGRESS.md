@@ -3275,8 +3275,7 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       as every other standalone cost in the app. Updated `lost-fleet.spec.ts`'s combined-cost test to
       match (cost stays unsigned; the charge itself was always unsigned already, unaffected). Viewer
       360/360, production build clean.
-75. ✅ **"Gaia 9" owner punch list (2026-07-06, new session), in progress - premove UI redesign
-    (item below) still open, everything else done:**
+75. ✅ **"Gaia 9" owner punch list (2026-07-06, new session), first half:**
     - **Exposed active-player picks during faction-select/round-0 setup**: root-caused, not just
       patched over - a real race in `hosted.ts`: `host.load()`'s first `onState` can fire (and, via
       the "ready" listener, unhide the game) before `mySeats` is computed (only known once `load()`
@@ -3355,12 +3354,64 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       across two real browser sessions (would need a live Supabase project + two authenticated users;
       the client-side wiring and no-dot-outside-hosted-mode behavior are unit-tested, but the actual
       cross-browser green/yellow/grey behavior is not).
-    - **Still open, not started**: the premove UI redesign (sticky bar with Sequential/Priority
-      buttons + tabs for queued entries, replacing the existing "Plan my move" + "Premoves (n)" modal)
-      - full design brainstormed and confirmed with the owner (edit stages until re-confirmed; tabs
-      replace the modal on both mobile and desktop; Priority edits never cascade, Sequential edits
-      cascade downstream like existing Sequential cancel does; mode-switch stays mutually-exclusive
-      with confirm-to-clear) but not yet built.
+76. ✅ **"Gaia 9" owner punch list, second half (2026-07-06, same session): premove UI redesign,
+    plus two more owner-reported items found while working through it.**
+    - **Premove UI redesign** - replaced `PremoveModal.vue` (a "Plan my move ▸" button + a
+      "⚡ Premoves (n) ▸" pill opening a modal list) with a new always-visible-off-turn
+      `PremoveBar.vue`: `+ Sequential premove`/`+ Priority premove` buttons (disabled per-mode past
+      depth 3; switching to the other mode with an existing queue confirms then clears it, same
+      invariant as before), a tab per queued entry (`Premove 1-3` / `Priority 1-3`, on both mobile
+      and desktop per the owner's confirmed answer), and a detail panel per tab (summary, staleness/
+      legality, Edit, Cancel, reorder ▲▼ for Priority). Composing (new or edit) reuses the existing
+      board-composition flow unchanged (Commands.vue building up a move against a preview clone).
+      **Editing is a true update-in-place, not a client-side cancel+re-queue**: a cancel-then-
+      `queue_premove` (which always appends at `seq = max+1`) would silently demote a Priority edit
+      to the back of the list, since ranks aren't necessarily contiguous once a middle one's been
+      cancelled - so a new `edit_premove` RPC (migration `0014_premove_edit.sql`) updates the row's
+      `move` in place (cascade-deleting everything after it, Sequential only, matching the owner's
+      confirmed answer) in one atomic call. This also gives "stage until confirmed" for free -
+      nothing touches the row until the edit is actually confirmed, so backing out mid-edit leaves
+      the original completely untouched (owner-confirmed answer, verified by a dedicated test
+      asserting zero dispatches on cancel). Threaded the new `editPremove` action through the full
+      dispatch chain (`store.ts` → `launcher.ts`'s bridge → `hosted.ts` → `host.ts` → the RPC),
+      extending `launcher.spec.ts`'s existing regression-guard test (added specifically after a past
+      session's bridge-forwarding gap, PROGRESS #73) rather than trusting a new action type to be
+      wired correctly by inspection alone. Full data-model reuse of what `PremoveModal.vue` already
+      had (rows/mode/legalMap/staleness/willFireLine) - `PremoveModal.vue` deleted outright, nothing
+      else referenced it. 2 new `host.spec.ts` cases (Sequential cascade, Priority no-cascade) plus 5
+      new `Game.spec.ts` cases (bar text, new-premove compose, edit-stages-until-confirmed, edit
+      dispatches `editPremove` not `queuePremove`). **Not independently verified against a live
+      deploy** (same no-Deno/Supabase-CLI gap as `0013`'s migration/edge-function change above) -
+      the RPC's SQL was reasoned through carefully and follows the exact pattern of `0010`-`0013`,
+      and a live-dev-server Playwright check of `PremoveBar.vue`'s own rendering hit an unrelated
+      crash in a hand-rolled test harness (poking store state without going through a real hosted
+      session's full setup) rather than a bug in the component itself - treat the whole premove-edit
+      path as unit-tested-only until exercised through a real two-browser hosted session.
+    - **Statistics chart deleted**, table-only now (separate, smaller owner ask from mid-session):
+      dropped the Chart/Table toggle, the `<canvas>`/Chart.js instantiation in `Charts.vue`, and the
+      now-fully-dead `statistics` preference/`StatisticsDisplay` enum (nothing else read either).
+      `chart-factory.ts`/`table.ts` untouched - still the shared data source the table view was
+      always built from.
+    - **Lost Fleet's "Resource" ship tech tile ("gain 1 ore and 3 knowledge immediately") never
+      granted anything** - a real, previously-undiscovered engine bug the owner found by hand
+      ("took it and it didn't grant me those resources"), not a misunderstanding: `techs.ts`'s
+      `techTileEvents()` unconditionally returned `[]` for all 3 ship tech tiles, and
+      `spaceship-techs.ts`'s own doc comment already admitted this exact gap ("Resource still has no
+      execution wired anywhere") - Range doesn't need it (a continuous modifier read directly off
+      the tile's `enabled` flag) and Terraform's chained Build-a-Mine prompt is deliberately NOT
+      auto-triggered (see the Gaia 4 revert note elsewhere in this doc), but Resource's flat one-time
+      reward fits the same `Operator.Once`/condition-None shape as any base-game tech tile's flat
+      reward (e.g. Tech1's "o,q") and was simply never wired to it. Fixed by special-casing it in
+      `techTileEvents()` to a real `Event.parse(["o,3k"], ...)`, granted synchronously via the
+      existing `gainTechTile` → `loadEvents` → `gainRewards` path - **not** a new required move (the
+      exact failure mode that made the Terraform trigger unsafe to ship), just an existing move doing
+      more, so old game replays retroactively (and correctly) grant it too. Extended the existing
+      "claims a ship Standard Tech tile" test (`exploration.spec.ts`) with ore/knowledge assertions
+      rather than adding a new one, since the fixture already claims exactly this tile.
+    - Engine **618/618** (up from 618 pre-session net-flat count-wise since #75's tech-tile fix
+      extended an existing test rather than adding one - 1 new assertion set, no new `it()`), viewer
+      **374/374** (up from 369 in #75 - `host.spec.ts` +2, `Game.spec.ts` +5). Both production builds
+      clean, re-run after every change. `PremoveModal.vue` deleted; nothing else referenced it.
 
 ## Still MISSING — only one art-only item left
 
@@ -3515,15 +3566,23 @@ a real touch-context (`hasTouch: true`) Playwright check confirming the tooltip 
 fresh browser context - the exact gap prior sessions' tooltip fixes were missing (see "Done so far"
 #74's own note).
 
-**Latest full rerun after #75 (2026-07-06, same day, new session, "Gaia 9" punch list, in
-progress):** engine **618/618** (untouched), viewer **369/369** (354 baseline + 15 net new:
+**Latest full rerun after #75 (2026-07-06, same day, new session, "Gaia 9" punch list, first
+half):** engine **618/618** (untouched), viewer **369/369** (354 baseline + 15 net new:
 `retry.spec.ts` (new file, 3 cases), `TurnOrder.spec.ts` (new file, 3 cases), plus new cases in
 `Game.spec.ts` and `PlayerInfo.spec.ts`). Both production builds clean, re-run after every change
 in the session rather than once at the end. See "Done so far" #75 for the full list of what was
 verified live via Playwright vs. what's explicitly unverified (the `notify` edge function/migration
 `0013`, and cross-browser presence behavior) - same "no Deno/Supabase CLI in this sandbox" gap prior
-sessions hit for backend-only files. The premove UI redesign is still open at the end of this
-rerun.
+sessions hit for backend-only files.
+
+**Latest full rerun after #76 (2026-07-06, same day, same session, "Gaia 9" punch list, second
+half - premove UI redesign):** engine **618/618** (1 existing test extended with new assertions,
+not a new `it()`, so the count itself doesn't move), viewer **374/374** (369 baseline + 5 net new:
+`host.spec.ts` +2, `Game.spec.ts` +5, `PremoveModal.vue`'s own zero tests removed with the file).
+Both production builds clean. See "Done so far" #76 for what's explicitly unverified (the
+`edit_premove` RPC against a live deploy, and `PremoveBar.vue`'s own rendering/interaction through a
+real two-browser hosted session - same sandbox limitation as #75's notify/presence changes). This
+closes out the full "Gaia 9" punch list from this session.
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/
@@ -3749,12 +3808,12 @@ section originally said Chunk 2 must also carry the _full_ `planets.ts` terrafor
 
 ## Next actions
 
-**In progress from #75 (2026-07-06 "Gaia 9" session):** the premove UI redesign (sticky bar with
-Sequential/Priority buttons + per-entry tabs, replacing "Plan my move" + the "Premoves (n)" modal)
-is fully designed and owner-confirmed (see #75's last bullet for the exact confirmed decisions) but
-not yet built - pick this up first. Also worth a live pass once a real Supabase CLI/session is
-available: #75's `notify` edge function change and the presence/heartbeat system were reasoned
-through carefully but never exercised against a real deploy or a genuine two-browser session.
+**Done from #75-#76 (2026-07-06 "Gaia 9" session), needs a live pass once a real Supabase CLI/
+session is available:** several pieces from this session were reasoned through carefully and
+unit-tested but never exercised against a real deploy or a genuine multi-browser hosted session -
+#75's `notify` edge function change + the presence/heartbeat system (migration `0013`), and #76's
+`edit_premove` RPC (migration `0014`) + the new `PremoveBar.vue`'s actual rendering/interaction.
+Worth a dedicated live-verification pass before trusting these fully.
 
 **Open from #70 (2026-07-05 "Gaia 5" session), needs owner confirmation:** the reported "can't find
 the log at the bottom" issue could not be reproduced despite substantial effort (light/heavy game

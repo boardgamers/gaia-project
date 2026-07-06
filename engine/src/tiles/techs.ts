@@ -58,6 +58,16 @@ export function techTileEventSource(pos: AnyTechTilePos): AdvTechTilePos | TechP
 }
 
 export function techTileEvents(chooseTechTile: ChooseTechTile): Event[] {
+  // The Resource ship tech tile ("gain 1 ore and 3 knowledge immediately", spaceship-techs.ts) is a
+  // plain flat one-time reward - fits the same Operator.Once/condition-None shape as any base-game
+  // tech tile's flat reward (e.g. Tech1's "o,q"), so it's granted the same way: synchronously via
+  // Player.loadEvent's gainRewards call, with no extra move/subphase (unlike Range, a continuous
+  // modifier read directly off the tile's `enabled` flag elsewhere, or Terraform, whose chained
+  // Build-a-Mine prompt is deliberately NOT auto-triggered - see spaceship-techs.ts's doc comment
+  // and PROGRESS.md's Gaia 4 revert note on why a NEW required move there breaks old replays).
+  if (chooseTechTile.tile === SpaceshipTechTile.Resource) {
+    return Event.parse(["o,3k"], chooseTechTile.pos);
+  }
   if (isSpaceshipTechTile(chooseTechTile.tile)) {
     return [];
   }

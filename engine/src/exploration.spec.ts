@@ -286,6 +286,8 @@ describe("Lost Fleet exploration", () => {
     const command = engine.findAvailableCommand(PlayerEnum.Player1, Command.ChooseTechTile);
     const shipTech = command.data.tiles.find((tile) => tile.pos === Spaceship.TFMars);
     const beforeGaia = player.data.research[ResearchField.GaiaProject];
+    const beforeOre = player.data.ores;
+    const beforeKnowledge = player.data.knowledge;
 
     expect(shipTech).to.deep.equal({
       tile: SpaceshipTechTile.Resource,
@@ -302,6 +304,11 @@ describe("Lost Fleet exploration", () => {
       pos: Spaceship.TFMars,
       enabled: true,
     });
+    // The Resource tile's "gain 1 ore and 3 knowledge immediately" (spaceship-techs.ts) was
+    // previously never wired to any reward at all - confirmed granted now, synchronously as part
+    // of this same claim move (not a separate one requiring its own extra move/subphase).
+    expect(player.data.ores).to.equal(beforeOre + 1);
+    expect(player.data.knowledge).to.equal(beforeKnowledge + 3);
   });
 
   it("offers a discounted Build a Mine action for the Terraform Standard Tech tile (2 free terraforming steps)", () => {

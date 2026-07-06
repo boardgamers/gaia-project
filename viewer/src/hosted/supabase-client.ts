@@ -90,6 +90,8 @@ export function createSupabaseBackend(client: SupabaseClient): HostedBackend {
       unwrap(client.rpc("queue_premove", { p_game_id: gameId, p_seat: seat, p_move: move, p_mode: mode })),
     cancelPremove: (gameId, seat, seq): Promise<void> =>
       unwrap(client.rpc("cancel_premove", { p_game_id: gameId, p_seat: seat, p_seq: seq })),
+    editPremove: (gameId, seat, seq, move): Promise<void> =>
+      unwrap(client.rpc("edit_premove", { p_game_id: gameId, p_seat: seat, p_seq: seq, p_move: move })),
     cancelAllPremoves: (gameId, seat): Promise<void> =>
       unwrap(client.rpc("cancel_all_premoves", { p_game_id: gameId, p_seat: seat })),
     reorderPremove: (gameId, seat, seq, direction): Promise<void> =>

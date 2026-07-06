@@ -1,12 +1,14 @@
 import { SpaceshipTechTile } from "../enums";
 
-// Effect text only - none of these 3 tiles' effects fit the declarative Reward/Event grammar
-// (Range is a passive, continuously-conditional modifier; Terraform/Resource are one-time
-// bespoke effects). Range's actual effect IS wired despite that - see player-data.ts's
-// effectiveRange(), which checks tiles.techs for this tile's enabled flag directly rather than
-// going through Reward parsing. Terraform's chained Build-a-Mine is wired in
-// move/research.ts (moveChooseTechTile) via SubPhase.SpaceshipTechTileBuildMine. Resource still
-// has no execution wired anywhere.
+// Effect text only, for display. Range's actual effect is wired in player-data.ts's
+// effectiveRange(), which checks tiles.techs for this tile's enabled flag directly (a passive,
+// continuously-conditional modifier, doesn't fit the declarative Reward/Event grammar). Resource
+// IS wired through that grammar (techs.ts's techTileEvents special-cases it to a plain
+// Operator.Once "o,3k" reward - it's a flat one-time grant, so it fits fine). Terraform's chained
+// Build-a-Mine prompt is deliberately NOT auto-triggered - `possibleSpaceshipTechTileBuildMine`
+// exists and is correct but unreachable without a caller invoking
+// SubPhase.SpaceshipTechTileBuildMine, which nothing currently does (reverted - see PROGRESS.md's
+// Gaia 4 session note on why a new required move there broke replay of an in-progress game).
 export const spaceshipTechSpec: { [key in SpaceshipTechTile]: string } = {
   [SpaceshipTechTile.Range]:
     "Your basic range increases by 1 for the rest of the game, as long as the tile is not covered by an Advanced Tech tile.",

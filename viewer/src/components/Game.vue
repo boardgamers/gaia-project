@@ -68,8 +68,15 @@
              just takes the full width on every viewport. -->
         <div class="col-12">
           <div v-if="premoveMode" class="alert alert-info premove-banner">
-            <strong>PREMOVE</strong> — plays automatically on your turn.
+            <strong>{{ premoveEditSeq !== null ? "EDITING PREMOVE" : "PREMOVE" }}</strong> — plays automatically on
+            your turn.
             <div class="small" v-if="!premoveReady">Build the move you want, then queue it below.</div>
+            <div class="small text-warning" v-if="premoveEditDownstreamCount > 0">
+              This will also discard the {{ premoveEditDownstreamCount }} premove{{
+                premoveEditDownstreamCount === 1 ? "" : "s"
+              }}
+              queued after it.
+            </div>
             <div class="mt-2">
               <button
                 type="button"
@@ -77,7 +84,7 @@
                 :disabled="!premoveReady"
                 @click="queueCurrentPremove"
               >
-                Queue this move
+                {{ premoveEditSeq !== null ? "Save changes" : "Queue this move" }}
               </button>
               <button type="button" class="btn btn-sm btn-outline-secondary" @click="cancelPremoveMode">Cancel</button>
             </div>
@@ -94,33 +101,30 @@
             <svg viewBox="-1.2 -1.2 2.5 4.5">
               <PlayerCircle :player="turnPlayer" />
             </svg>
-            <div v-if="premoveOffered && !premoveMode" class="premove-offer mt-2">
-              <button
-                type="button"
-                class="btn btn-sm btn-outline-primary mr-2"
-                :disabled="myQueuedPremoves.length >= 3"
-                @click="startPremove"
-              >
-                Plan my move ▸
-              </button>
-              <div class="text-muted small mt-1" v-if="!premoveExplainerDismissed">
-                Premoves play automatically when your turn comes, even if you're offline. If the board changed and
-                your move is no longer legal, it's skipped and we'll notify you.
-                <button type="button" class="btn btn-link btn-sm p-0" @click="dismissPremoveExplainer">Got it</button>
-              </div>
+            <div class="text-muted small mt-1" v-if="premoveOffered && !premoveExplainerDismissed">
+              Premoves play automatically when your turn comes, even if you're offline. If the board changed and your
+              move is no longer legal, it's skipped and we'll notify you.
+              <button type="button" class="btn btn-link btn-sm p-0" @click="dismissPremoveExplainer">Got it</button>
             </div>
           </div>
-          <div v-if="showPremovePill" class="mt-2">
-            <button type="button" class="btn btn-sm btn-outline-info" v-b-modal.premove-overview>
-              ⚡ Premoves ({{ myQueuedPremoves.length }}) ▸
+          <div v-if="showPremoveBar && !premoveMode" class="mt-2">
+            <PremoveBar
+              :seat="myLockedSeat"
+              :compose-mode-preference="premoveModePreference"
+              @mode-preference="setPremoveModePreference"
+              @start-new="onStartNewPremove"
+              @start-edit="startEditPremove"
+            />
+          </div>
+          <div v-if="premoveEditCascadeNotice !== null" class="alert alert-light small mt-2 py-1 px-2">
+            Premove updated - {{ premoveEditCascadeNotice }} queued move{{
+              premoveEditCascadeNotice === 1 ? "" : "s"
+            }}
+            after it {{ premoveEditCascadeNotice === 1 ? "was" : "were" }} discarded since they depended on it.
+            <button type="button" class="btn btn-link btn-sm p-0" @click="premoveEditCascadeNotice = null">
+              Dismiss
             </button>
           </div>
-          <PremoveModal
-            v-if="myLockedSeat !== undefined"
-            :seat="myLockedSeat"
-            :compose-mode-preference="premoveModePreference"
-            @mode-preference="setPremoveModePreference"
-          />
           <div v-if="myUnreadFailures.length" class="alert alert-warning premove-failures small mt-2">
             <div v-for="f in myUnreadFailures" :key="f.id">
               Your premove couldn't be played: {{ f.reason }}
@@ -211,7 +215,7 @@ import Table from "./Table.vue";
 import { orderedPlayers } from "../data/player";
 import { PremoveFailureRow, PremoveMode, PremoveRow } from "../hosted/types";
 import { buildSequentialChainPreview } from "../logic/premove-preview";
-import PremoveModal from "./PremoveModal.vue";
+import PremoveBar from "./PremoveBar.vue";
 
 const PREMOVE_EXPLAINER_DISMISSED_KEY = "premoveExplainerDismissed";
 const PREMOVE_MODE_PREFERENCE_KEY = "premoveModePreference";
@@ -231,7 +235,7 @@ const PREMOVE_MODE_PREFERENCE_KEY = "premoveModePreference";
     TurnOrder,
     Rules,
     Table,
-    PremoveModal,
+    PremoveBar,
     Charts: () => import("./Charts.vue"),
   },
 })
@@ -263,6 +267,15 @@ export default class Game extends Vue {
   premoveSeat: number = null;
   premoveReady = false;
   premoveDraftMove = "";
+  // Premove UI redesign (Gaia 9) - null while composing a brand-new entry; the existing row's
+  // `seq` while editing one instead (queueCurrentPremove below dispatches editPremove rather than
+  // queuePremove in that case). "Stage until confirmed": nothing about the existing row changes
+  // until the edit is actually confirmed, so backing out of an edit leaves it untouched.
+  premoveEditSeq: number | null = null;
+  // One-shot dismissible notice ("N discarded") shown after confirming a Sequential edit that had
+  // downstream entries - the count is captured at confirm time since the rows are already gone by
+  // the time the notice renders.
+  premoveEditCascadeNotice: number | null = null;
   premoveExplainerDismissed =
     typeof localStorage !== "undefined" && localStorage.getItem(PREMOVE_EXPLAINER_DISMISSED_KEY) === "true";
   // Phase 3 (§10.1/§10.6) - which mode a FRESH queue (no existing rows yet) should be composed
@@ -294,6 +307,7 @@ export default class Game extends Vue {
           this.premoveBackup = null;
           this.premoveSeat = null;
           this.premoveReady = false;
+          this.premoveEditSeq = null;
         }
         this.handleData(Engine.fromData(payload));
         return;
@@ -508,8 +522,17 @@ export default class Game extends Vue {
     return this.myQueuedPremoves.length > 0 ? this.myQueuedPremoves[0].mode : this.premoveModePreference;
   }
 
-  get showPremovePill(): boolean {
+  get showPremoveBar(): boolean {
     return this.myLockedSeat !== undefined && !this.ended && (this.myQueuedPremoves.length > 0 || this.premoveOffered);
+  }
+
+  /** How many entries editing the seat's currently-being-edited Sequential premove would discard -
+   * 0 outside an edit, in Priority mode (no cascade there), or if editing the last entry. */
+  get premoveEditDownstreamCount(): number {
+    if (this.premoveEditSeq === null || this.effectivePremoveMode !== "sequential") {
+      return 0;
+    }
+    return this.myQueuedPremoves.filter((p) => p.seq > this.premoveEditSeq).length;
   }
 
   get premovePlayedNotice(): { seat: number; move: string; rank?: number; totalRanks?: number } | null {
@@ -536,11 +559,17 @@ export default class Game extends Vue {
     return (this.$store.state.premoveFailures as PremoveFailureRow[]) ?? [];
   }
 
-  startPremove() {
+  /** Starts composing a brand-new queued entry (PremoveBar's "+ Sequential"/"+ Priority" buttons).
+   * `switchingModes` is true when the caller just triggered a mode switch (which clears the
+   * existing queue via a separate async dispatch) - in that case `priorMoves` is forced empty
+   * rather than read from `myQueuedPremoves`, since those rows may not have been cancelled in the
+   * store yet and are about to disappear regardless. */
+  onStartNewPremove({ mode, switchingModes }: { mode: PremoveMode; switchingModes: boolean }) {
     const seat = this.myLockedSeat;
-    if (seat === undefined || this.myQueuedPremoves.length >= 3) {
+    if (seat === undefined || (!switchingModes && this.myQueuedPremoves.length >= 3)) {
       return;
     }
+    this.premoveEditSeq = null;
     this.premoveBackup = JSON.parse(JSON.stringify(this.engine));
     this.premoveSeat = seat;
     this.premoveMode = true;
@@ -549,7 +578,31 @@ export default class Game extends Vue {
     // Phase 3 (§10.1) - sequential chains: preview the next slot against a clone with every
     // already-queued move applied first. Priority previews always against the SAME fresh current
     // state (empty priorMoves), since every rank is an alternative for the one upcoming turn.
-    const priorMoves = this.effectivePremoveMode === "sequential" ? this.myQueuedPremoves.map((p) => p.move) : [];
+    const priorMoves = !switchingModes && mode === "sequential" ? this.myQueuedPremoves.map((p) => p.move) : [];
+    const clone = buildSequentialChainPreview(this.engine, seat, priorMoves);
+    this.premoveComposeBase = JSON.parse(JSON.stringify(clone));
+    this.handleData(clone);
+  }
+
+  /** Starts editing an existing queued entry (PremoveBar's "Edit" button) - previews against a
+   * clone with every entry BEFORE this one already applied (Sequential) or the fresh current state
+   * (Priority), exactly like composing a new entry at this same position would. Nothing is sent to
+   * the server yet ("stage until confirmed") - queueCurrentPremove only calls editPremove once the
+   * edit is actually confirmed. */
+  startEditPremove(seq: number) {
+    const seat = this.myLockedSeat;
+    const row = this.myQueuedPremoves.find((p) => p.seq === seq);
+    if (seat === undefined || !row) {
+      return;
+    }
+    this.premoveEditSeq = seq;
+    this.premoveBackup = JSON.parse(JSON.stringify(this.engine));
+    this.premoveSeat = seat;
+    this.premoveMode = true;
+    this.premoveReady = false;
+
+    const priorMoves =
+      row.mode === "sequential" ? this.myQueuedPremoves.filter((p) => p.seq < seq).map((p) => p.move) : [];
     const clone = buildSequentialChainPreview(this.engine, seat, priorMoves);
     this.premoveComposeBase = JSON.parse(JSON.stringify(clone));
     this.handleData(clone);
@@ -563,6 +616,7 @@ export default class Game extends Vue {
     this.premoveReady = false;
     this.premoveSeat = null;
     this.premoveComposeBase = null;
+    this.premoveEditSeq = null;
     const backup = this.premoveBackup;
     this.premoveBackup = null;
     this.handleData(Engine.fromData(backup));
@@ -602,11 +656,21 @@ export default class Game extends Vue {
     if (!this.premoveReady || this.premoveSeat === null) {
       return;
     }
-    this.$store.dispatch("queuePremove", {
-      seat: this.premoveSeat,
-      move: this.premoveDraftMove,
-      mode: this.effectivePremoveMode,
-    });
+    if (this.premoveEditSeq !== null) {
+      const discarded = this.premoveEditDownstreamCount;
+      this.$store.dispatch("editPremove", {
+        seat: this.premoveSeat,
+        seq: this.premoveEditSeq,
+        move: this.premoveDraftMove,
+      });
+      this.premoveEditCascadeNotice = discarded > 0 ? discarded : null;
+    } else {
+      this.$store.dispatch("queuePremove", {
+        seat: this.premoveSeat,
+        move: this.premoveDraftMove,
+        mode: this.effectivePremoveMode,
+      });
+    }
     this.cancelPremoveMode();
   }
 

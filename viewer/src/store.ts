@@ -279,6 +279,8 @@ const gaiaViewer = {
     premoveMove(context: any, move: string) {},
     queuePremove(context: any, payload: { seat: number; move: string; mode: PremoveMode }) {},
     cancelPremove(context: any, payload: { seat: number; seq: number }) {},
+    // Premove UI redesign (Gaia 9) - update-in-place ("stage until confirmed", see host.ts).
+    editPremove(context: any, payload: { seat: number; seq: number; move: string }) {},
     // Phase 3 (§10.4) - clears a seat's whole queue (mode-toggle confirm, "start over").
     cancelAllPremoves(context: any, payload: { seat: number }) {},
     // Phase 3 (§10.4), priority mode only.

@@ -1,0 +1,323 @@
+<template>
+  <div class="premove-bar">
+    <div v-if="willFireLine" class="premove-bar__will-fire small">{{ willFireLine }}</div>
+
+    <div class="premove-bar__actions d-flex align-items-center flex-wrap">
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-primary mr-2 mb-1"
+        :disabled="!canStartNew('sequential')"
+        @click="requestStartNew('sequential')"
+      >
+        + Sequential premove
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-primary mr-2 mb-1"
+        :disabled="!canStartNew('priority')"
+        @click="requestStartNew('priority')"
+      >
+        + Priority premove
+      </button>
+      <button type="button" class="btn btn-link btn-sm p-0 mb-1" v-b-modal.premove-info>ⓘ What's the difference?</button>
+    </div>
+
+    <div v-if="rows.length > 0" class="premove-bar__tabs d-flex flex-wrap" role="tablist">
+      <button
+        v-for="(row, i) in rows"
+        :key="row.seq"
+        type="button"
+        role="tab"
+        class="premove-bar__tab"
+        :aria-selected="selectedSeq === row.seq"
+        :class="{ 'premove-bar__tab--active': selectedSeq === row.seq, 'text-muted': !legalMap[row.seq] }"
+        @click="toggleSelected(row.seq)"
+      >
+        {{ tabLabel(i) }}
+      </button>
+    </div>
+
+    <div v-if="selectedRow" class="premove-bar__detail small">
+      <div class="premove-bar__detail-move">{{ selectedRow.move }}</div>
+      <div v-if="!legalMap[selectedRow.seq]" class="text-muted">no longer possible</div>
+      <div v-else-if="staleness(selectedRow) > 0" class="text-muted">
+        queued {{ staleness(selectedRow) }} move{{ staleness(selectedRow) === 1 ? "" : "s" }} ago
+      </div>
+      <div v-if="mode === 'sequential' && downstreamCount(selectedRow) > 0" class="text-warning mt-1">
+        Editing this will also discard the {{ downstreamCount(selectedRow) }} premove{{
+          downstreamCount(selectedRow) === 1 ? "" : "s"
+        }}
+        queued after it.
+      </div>
+      <div class="mt-1">
+        <button type="button" class="btn btn-sm btn-outline-secondary mr-1" @click="edit(selectedRow)">Edit</button>
+        <button
+          v-if="mode === 'priority' && selectedIndex > 0"
+          type="button"
+          class="btn btn-link btn-sm p-0 mr-1"
+          title="Move up"
+          @click="reorder(selectedRow.seq, 'up')"
+        >
+          ▲
+        </button>
+        <button
+          v-if="mode === 'priority' && selectedIndex < rows.length - 1"
+          type="button"
+          class="btn btn-link btn-sm p-0 mr-1"
+          title="Move down"
+          @click="reorder(selectedRow.seq, 'down')"
+        >
+          ▼
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-danger" @click="cancel(selectedRow)">Cancel</button>
+      </div>
+    </div>
+
+    <div v-if="autoCharge === 'ask' && rows.length > 0" class="text-muted small mt-1">
+      A charge decision before your turn will still pause until you're online - enable auto-charge in preferences to
+      fully automate.
+    </div>
+
+    <b-modal id="premove-info" size="lg" title="Premove modes" ok-only>
+      <p>
+        <b>Sequential</b> is a chain of your next turns: entry 2 is previewed assuming entry 1 already landed, and so
+        on. It's throughput - more of your own turns get played while you're away. If an early link breaks (the board
+        changed enough that it's no longer legal), everything queued behind it is discarded too, since it was planned
+        assuming that link would land. Editing a link has the same effect as breaking it, for the same reason.
+      </p>
+      <p>
+        <b>Priority</b> is up to 3 ranked alternatives for your <i>single</i> upcoming turn. The first one that's
+        still legal when your turn arrives is the one that plays; the rest are discarded. It's insurance - useful for
+        "pass taking booster A, or B, or C" or any contested claim (federation token, advanced tech, artifact) where
+        you want a fallback instead of a single bet. Editing one rank never affects the others.
+      </p>
+      <p class="text-muted small">
+        Neither mode can tell "still legal" from "still a good idea" - Priority only falls through on an
+        <i>illegal</i> option, not a merely worse one. Switching between modes clears your current queue, since the
+        two interpret the queue differently. A pending charge/leech decision before your turn still needs
+        auto-charge enabled to resolve automatically while you're offline.
+      </p>
+    </b-modal>
+  </div>
+</template>
+
+<script lang="ts">
+import Engine, { PlayerEnum } from "@gaia-project/engine";
+import { Component, Prop, Vue } from "vue-property-decorator";
+import { PremoveMode, PremoveRow } from "../hosted/types";
+import { buildSequentialChainPreview } from "../logic/premove-preview";
+
+@Component
+export default class PremoveBar extends Vue {
+  @Prop()
+  seat: number;
+
+  @Prop()
+  composeModePreference: PremoveMode;
+
+  private selectedSeq: number | null = null;
+
+  get engine(): Engine {
+    return this.$store.state.data;
+  }
+
+  get autoCharge(): string {
+    return this.$store.state.preferences.autoChargePower as string;
+  }
+
+  get rows(): PremoveRow[] {
+    return ((this.$store.state.premoves as PremoveRow[]) ?? [])
+      .filter((p) => p.seat === this.seat)
+      .sort((a, b) => a.seq - b.seq);
+  }
+
+  get mode(): PremoveMode {
+    return this.rows.length > 0 ? this.rows[0].mode : this.composeModePreference;
+  }
+
+  get selectedRow(): PremoveRow | null {
+    return this.rows.find((r) => r.seq === this.selectedSeq) ?? null;
+  }
+
+  get selectedIndex(): number {
+    return this.rows.findIndex((r) => r.seq === this.selectedSeq);
+  }
+
+  tabLabel(index: number): string {
+    return `${this.mode === "sequential" ? "Premove" : "Priority"} ${index + 1}`;
+  }
+
+  toggleSelected(seq: number) {
+    this.selectedSeq = this.selectedSeq === seq ? null : seq;
+  }
+
+  downstreamCount(row: PremoveRow): number {
+    return this.rows.filter((r) => r.seq > row.seq).length;
+  }
+
+  get committedMoveCount(): number {
+    return this.engine.moveHistory.length - 1;
+  }
+
+  staleness(row: PremoveRow): number {
+    return this.committedMoveCount - row.queued_move_count;
+  }
+
+  private isLegal(base: Engine, move: string): boolean {
+    const clone = Engine.fromData(JSON.parse(JSON.stringify(base)));
+    clone.currentPlayer = this.seat as PlayerEnum;
+    clone.tempCurrentPlayer = undefined;
+    clone.generateAvailableCommands();
+    try {
+      clone.move(move);
+      clone.generateAvailableCommandsIfNeeded();
+      return clone.newTurn;
+    } catch {
+      return false;
+    }
+  }
+
+  get legalMap(): Record<number, boolean> {
+    const result: Record<number, boolean> = {};
+    if (this.rows.length === 0) {
+      return result;
+    }
+    if (this.mode === "priority") {
+      // Every rank previews against the SAME fresh current state (§10.1) - independent of each other.
+      for (const row of this.rows) {
+        result[row.seq] = this.isLegal(this.engine, row.move);
+      }
+      return result;
+    }
+    // Sequential: each entry previews against a clone with every earlier entry already applied; a
+    // broken link makes everything behind it moot too (mirrors the resolver's own cascade, §10.5).
+    let priorMoves: string[] = [];
+    let broken = false;
+    for (const row of this.rows) {
+      if (broken) {
+        result[row.seq] = false;
+        continue;
+      }
+      const clone = buildSequentialChainPreview(this.engine, this.seat, priorMoves);
+      const ok = this.isLegal(clone, row.move);
+      result[row.seq] = ok;
+      if (ok) {
+        priorMoves = [...priorMoves, row.move];
+      } else {
+        broken = true;
+      }
+    }
+    return result;
+  }
+
+  get willFireLine(): string | null {
+    if (this.rows.length === 0 || this.engine.playerToMove === this.seat) {
+      return null;
+    }
+    if (this.mode === "sequential") {
+      return this.legalMap[this.rows[0].seq] ? `Next: ${this.rows[0].move}` : null;
+    }
+    const map = this.legalMap;
+    const firstLegalIndex = this.rows.findIndex((r) => map[r.seq]);
+    if (firstLegalIndex === -1) {
+      return null;
+    }
+    return `Priority ${firstLegalIndex + 1} will play: ${this.rows[firstLegalIndex].move}`;
+  }
+
+  canStartNew(candidateMode: PremoveMode): boolean {
+    if (this.rows.length === 0) {
+      return true;
+    }
+    if (this.mode === candidateMode) {
+      return this.rows.length < 3;
+    }
+    // A different mode is always startable - switching clears the existing queue first (with a
+    // confirm), same invariant as before this redesign.
+    return true;
+  }
+
+  requestStartNew(mode: PremoveMode) {
+    if (this.rows.length > 0 && this.mode !== mode) {
+      if (typeof window !== "undefined" && !window.confirm(`Switching to ${mode} mode clears your current queue. Continue?`)) {
+        return;
+      }
+      this.$store.dispatch("cancelAllPremoves", { seat: this.seat });
+      this.$emit("mode-preference", mode);
+      // The switch (cancelAllPremoves) is async and may not have landed in the store yet - tell
+      // the parent this is a fresh start regardless, so it doesn't compose against a queue that's
+      // about to disappear.
+      this.$emit("start-new", { mode, switchingModes: true });
+      this.selectedSeq = null;
+      return;
+    }
+    this.$emit("mode-preference", mode);
+    this.$emit("start-new", { mode, switchingModes: false });
+  }
+
+  edit(row: PremoveRow) {
+    this.$emit("start-edit", row.seq);
+  }
+
+  cancel(row: PremoveRow) {
+    // §10.6: cascade in Sequential (everything behind a cancelled entry was previewed assuming it
+    // landed), single-row in Priority (each rank is independent).
+    const toCancel = this.mode === "sequential" ? this.rows.filter((r) => r.seq >= row.seq) : [row];
+    for (const r of toCancel) {
+      this.$store.dispatch("cancelPremove", { seat: this.seat, seq: r.seq });
+    }
+    if (this.selectedSeq !== null && toCancel.some((r) => r.seq === this.selectedSeq)) {
+      this.selectedSeq = null;
+    }
+  }
+
+  reorder(seq: number, direction: "up" | "down") {
+    this.$store.dispatch("reorderPremove", { seat: this.seat, seq, direction });
+  }
+}
+</script>
+
+<style lang="scss">
+.premove-bar {
+  border: 1px solid var(--systemGray5, #e5e5ea);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--systemGray6, #f8f9fb);
+
+  &__will-fire {
+    margin-bottom: 0.35rem;
+  }
+
+  &__tabs {
+    margin-top: 0.4rem;
+    gap: 0.3rem;
+  }
+
+  &__tab {
+    border: 1px solid var(--systemGray4, #d1d1d6);
+    background: white;
+    border-radius: 999px;
+    padding: 0.15rem 0.65rem;
+    font-size: 0.78rem;
+    cursor: pointer;
+
+    &--active {
+      background: #1c2b4a;
+      color: white;
+      border-color: #1c2b4a;
+    }
+  }
+
+  &__detail {
+    margin-top: 0.5rem;
+    padding: 0.4rem 0.5rem;
+    background: white;
+    border: 1px solid var(--systemGray5, #e5e5ea);
+    border-radius: 0.4rem;
+  }
+
+  &__detail-move {
+    font-weight: 600;
+  }
+}
+</style>

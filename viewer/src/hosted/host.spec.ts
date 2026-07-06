@@ -121,6 +121,18 @@ class FakeBackend implements HostedBackend {
     this.premoves = this.premoves.filter((p) => p.seat !== seat);
   }
 
+  // Mirrors 0014_premove_edit.sql: update in place, cascading downstream deletes for Sequential.
+  async editPremove(_gameId: string, seat: number, seq: number, move: string): Promise<void> {
+    const row = this.premoves.find((p) => p.seat === seat && p.seq === seq);
+    if (!row) {
+      throw new Error("no premove queued at that position");
+    }
+    row.move = move;
+    if (row.mode === "sequential") {
+      this.premoves = this.premoves.filter((p) => !(p.seat === seat && p.seq > seq));
+    }
+  }
+
   async reorderPremove(_gameId: string, seat: number, seq: number, direction: "up" | "down"): Promise<void> {
     const forSeat = this.premoves.filter((p) => p.seat === seat).sort((a, b) => a.seq - b.seq);
     const i = forSeat.findIndex((p) => p.seq === seq);
@@ -638,6 +650,43 @@ describe("hosted game host", () => {
       await host.cancelPremove(1, seq1);
 
       expect(host.premoves).to.deep.equal([]);
+    });
+
+    it("editPremove updates a Sequential entry's move in place and cascades everything after it", async () => {
+      const backend = new FakeBackend(gameRow(), playerRows());
+      backend.seedMoves(SETUP_MOVES);
+      const { host } = makeHost(backend);
+      await host.load();
+
+      const seq1 = await backend.queuePremove("game-1", 1, "nevlas build m 1B0.", "sequential");
+      await backend.queuePremove("game-1", 1, "nevlas pass booster3", "sequential");
+      await host.load();
+      expect(host.premoves).to.have.length(2);
+
+      await host.editPremove(1, seq1, NEVLAS_PREMOVE);
+
+      expect(host.premoves).to.deep.equal([
+        { seat: 1, seq: seq1, move: NEVLAS_PREMOVE, mode: "sequential", queued_move_count: SETUP_MOVES.length },
+      ]);
+    });
+
+    it("editPremove updates a Priority entry in place without touching the other ranks", async () => {
+      const backend = new FakeBackend(gameRow(), playerRows());
+      backend.seedMoves(SETUP_MOVES);
+      const { host } = makeHost(backend);
+      await host.load();
+
+      const seq1 = await backend.queuePremove("game-1", 1, "nevlas build m 1B0.", "priority");
+      const seq2 = await backend.queuePremove("game-1", 1, "nevlas pass booster3", "priority");
+      await host.load();
+
+      await host.editPremove(1, seq2, NEVLAS_PREMOVE);
+
+      const bySeq = [...host.premoves].sort((a, b) => a.seq - b.seq);
+      expect(bySeq).to.deep.equal([
+        { seat: 1, seq: seq1, move: "nevlas build m 1B0.", mode: "priority", queued_move_count: SETUP_MOVES.length },
+        { seat: 1, seq: seq2, move: NEVLAS_PREMOVE, mode: "priority", queued_move_count: SETUP_MOVES.length },
+      ]);
     });
 
     it("exposes unread premove failures and lets the client mark them read", async () => {

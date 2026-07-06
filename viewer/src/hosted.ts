@@ -186,6 +186,9 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
     host.queuePremove(seat, move, mode)
   );
   emitter.on("cancelPremove", ({ seat, seq }: { seat: number; seq: number }) => host.cancelPremove(seat, seq));
+  emitter.on("editPremove", ({ seat, seq, move }: { seat: number; seq: number; move: string }) =>
+    host.editPremove(seat, seq, move)
+  );
   // Phase 3 (§10.4/§10.6)
   emitter.on("cancelAllPremoves", ({ seat }: { seat: number }) => host.cancelAllPremoves(seat));
   emitter.on("reorderPremove", ({ seat, seq, direction }: { seat: number; seq: number; direction: "up" | "down" }) =>
