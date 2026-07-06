@@ -3146,6 +3146,25 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       pre-existing Space Giants/Booster5 ones), never auto-inserted into a replay sequence, so old
       games without that move in their history should replay unaffected regardless of faction. Still
       open - asked the owner for the specific game/browser console errors to pin down further.
+    - **Seventh same-session round (still 2026-07-06): fixed a tooltip flash-then-vanish regression**
+      introduced by the #20 fix above. Root cause (found by reading bootstrap-vue's `bv-tooltip.js`
+      source): the #20 fix's capture-phase `document` click listener unconditionally force-hid every
+      open tooltip on every click, then bootstrap-vue's own bubble-phase click handler toggled
+      `activeTrigger.click` and immediately re-showed it — a hide-then-instant-reshow within the same
+      tap that reads as "flashes and vanishes." Fix (`launcher.ts`): skip the force-hide when the
+      click target (or an ancestor, via `.closest()`) already carries bootstrap-vue's own
+      `aria-describedby` marker — the attribute it sets for exactly as long as that element's own
+      tooltip is shown — so that element's own toggle handler runs untouched instead of racing with
+      a blanket hide. Verified via Playwright against a real `.hover.click` tooltip (an artifact icon
+      in the `lost-fleet-artifact-choice` scenario): tapping it now stays open past 430ms (previously
+      would have raced), and tapping a *different* tooltip target still correctly closes the first and
+      opens the second (regression check against #20 held). Noted one minor side effect: re-tapping
+      the *same* already-open tooltip a second time no longer closes it (only tapping elsewhere does)
+      — because skipping the force-hide also skips resetting the sticky `activeTrigger.hover` flag
+      that mobile tap-emulation never naturally clears, so the click-trigger's own close-toggle keeps
+      losing to the still-active hover trigger. Not something the owner asked for and not a regression
+      from before #20 (same-element re-tap wasn't a reported behavior), so left as-is; flagged here in
+      case it's noticed later. Viewer 357/357, production build clean.
 
 ## Still MISSING — only one art-only item left
 

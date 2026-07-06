@@ -36,12 +36,28 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
   // tap always shows one, but that means a click-opened tooltip no longer auto-hides on its own
   // the way a hover-only one did when the pointer moved elsewhere - tapping a different component
   // left the previous one stuck open. A capture-phase listener fires before the newly-tapped
-  // element's own tooltip-show handler (which only runs on bubble), so this closes every
-  // currently-open tooltip first, then the tap's own handler opens (or re-opens) its own normally.
+  // element's own tooltip-show handler (which only runs on bubble), so this closes whatever
+  // tooltip is currently open before the tap's own handler runs.
+  //
+  // Critically, this must NOT fire when the click target is the element whose tooltip is already
+  // open (or a descendant of it) - bootstrap-vue's own click handler *toggles* a click-armed
+  // trigger (activeTrigger.click = !activeTrigger.click), so force-hiding it a moment before that
+  // toggle runs left the toggle re-opening (or, on rapid re-taps, immediately re-closing) a
+  // tooltip that had just been forcibly hidden out from under it - the tooltip would flash and
+  // vanish within the same tap instead of behaving like a normal open/close toggle. Bootstrap-vue
+  // marks a trigger element with `aria-describedby` for exactly as long as its tooltip is shown
+  // (see addAriaDescribedby()/removeAriaDescribedby() in its source), so checking for that
+  // attribute on the click target (or an ancestor, since the target is often an inner SVG shape
+  // one level below the actual v-b-tooltip-bound element) reliably distinguishes "close some
+  // other tooltip" from "let this element's own toggle handle itself."
   if (typeof document !== "undefined") {
     document.addEventListener(
       "click",
-      () => {
+      (event) => {
+        const target = event.target as Element | null;
+        if (target?.closest?.("[aria-describedby]")) {
+          return;
+        }
         app.$emit("bv::hide::tooltip");
       },
       true
