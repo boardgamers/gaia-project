@@ -3554,6 +3554,32 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
     - Viewer **381/381** (no new tests added this round - existing `HostedBar.spec.ts`/`Game.spec.ts`
       cases from #78 already cover the merged-banner behavior these fixes touch), production build
       clean.
+80. ✅ **"Gaia 10" session, 3rd round (2026-07-06, same day): the "X to move" status text had
+    nowhere to show once it wasn't the local viewer's turn - restored it, desktop-only.**
+    - Confirmed live (not assumed) exactly what the owner asked about: with a real spectator (a
+      signed-in user for whom it's the OTHER player's turn), Commands.vue - which owns both the
+      normal `#move-title` status line AND the mobile sticky-bar equivalent - unmounts entirely
+      (`Game.vue`'s `v-if="canPlay"`), so literally nothing said whose turn it was, on desktop OR
+      mobile. (When it IS the viewer's own turn, `#move-title` already shows fine on both - that
+      path was never broken.)
+    - Fixed by adding the old "Your turn"/"X to move" text back into `HostedBar.vue`, computed
+      directly from the store (`$store.state.player`, the same "am I locked to act" signal
+      `Game.vue`'s own `canPlay` already trusts - no new prop threading through `hosted.ts` needed)
+      - but **desktop-only** (`d-none d-md-inline-block`), so it doesn't duplicate/compete with
+      Commands.vue's mobile sticky bar for space, per the owner's explicit "on mobile only in the
+      sticky menu" instruction. `TurnOrder`'s circles still show on every viewport regardless.
+    - Verified live at both viewport sizes with a real spectator: desktop shows a "Bob to move"
+      badge next to the circles; mobile shows circles only, badge absent (screenshots taken).
+    - Also fixed a real, previously-latent test-suite bug this surfaced: `store.ts`'s `gaiaViewer`
+      object is a shared object literal, not a factory - every `makeStore()` call across every spec
+      file wraps the SAME underlying `state` object, so a `state.player` mutation committed by one
+      test can silently leak into another test's "fresh" store. Nothing had read `state.player` in
+      an assertion before, so this had never surfaced - the new `HostedBar.spec.ts` case does, and
+      failed intermittently by suite execution order until it explicitly resets
+      `store.state.player = null` itself. The `gaiaViewer.state` factory-function fix (the proper
+      general fix) was deliberately left alone as out of scope for this session - flagging here in
+      case another latent-state-leak test failure surfaces later.
+    - Viewer **381/381** (1 `HostedBar.spec.ts` case rewritten, not net-new), production build clean.
 
 ## Still MISSING — only one art-only item left
 

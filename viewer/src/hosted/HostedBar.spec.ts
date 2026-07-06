@@ -5,16 +5,25 @@ import { makeStore } from "../store";
 import HostedBar from "./HostedBar.vue";
 
 describe("HostedBar", () => {
-  it("renders Turn Order (not an 'X to move' text badge) for an ongoing game (PROGRESS.md Gaia 10)", () => {
+  it("renders Turn Order alongside a desktop-only status badge for an ongoing game (PROGRESS.md Gaia 10 follow-up)", () => {
     const engine = new Engine(["init 2 hosted-bar-turn-order", "p1 faction terrans", "p2 faction hadsch-hallas"]);
+    engine.turnOrder = engine.players.map((pl) => pl.player);
     const store = makeStore();
     store.commit("receiveData", engine);
+    // gaiaViewer's `state` is a shared object literal, not a factory - makeStore() calls in
+    // *other* spec files can leave state.player set from a prior test. Reset explicitly so this
+    // test's outcome doesn't depend on suite execution order.
+    store.state.player = null;
 
-    const { container, queryByText } = render(HostedBar, { props: { finished: false }, store });
+    const { container, getByText } = render(HostedBar, { props: { finished: false }, store });
 
     expect(container.querySelector(".turn-order"), "expected the Turn Order circles to render").to.not.equal(null);
-    expect(queryByText(/to move/), "the old text badge should be gone").to.equal(null);
-    expect(queryByText("Your turn"), "the old text badge should be gone").to.equal(null);
+    // The old "X to move" text is back (Commands.vue's own status line/sticky bar has nowhere to
+    // show it once it isn't the local viewer's turn), but only for desktop - d-none hides it below
+    // the md breakpoint so it doesn't compete with Commands.vue's mobile sticky bar for space.
+    const badge = getByText(/to move/);
+    expect(badge.className).to.contain("d-none");
+    expect(badge.className).to.contain("d-md-inline-block");
   });
 
   it("still shows a 'Game finished' badge instead of Turn Order once the game has ended", () => {
