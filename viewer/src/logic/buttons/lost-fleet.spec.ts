@@ -23,7 +23,7 @@ describe("lost-fleet buttons", () => {
       expect(rewardsElement.noPlus).to.equal(true);
     });
 
-    it("shows the cost as negative when a later exploration slot's power charge is gained alongside it", () => {
+    it("still shows the cost as a plain, unsigned number even when a later exploration slot's power charge is gained alongside it - consistent across ships in the same list, some of which gain no charge", () => {
       const command: AvailableCommand<Command.Explore> = {
         name: Command.Explore,
         data: {
@@ -35,7 +35,8 @@ describe("lost-fleet buttons", () => {
 
       const [button] = exploreButton(command).buttons;
       const [costElement, chargeElement] = button.richText.filter((el) => el.rewards);
-      expect(rewardStrings(costElement.rewards)).to.deep.equal(["-2q", "-5vp"]);
+      expect(rewardStrings(costElement.rewards)).to.deep.equal(["2q", "5vp"]);
+      expect(costElement.noPlus).to.equal(true);
       expect(rewardStrings(chargeElement.rewards)).to.deep.equal(["2pw"]);
     });
   });

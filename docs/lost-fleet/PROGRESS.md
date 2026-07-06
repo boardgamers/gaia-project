@@ -3264,6 +3264,17 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       regression spec, `viewer/src/logic/buttons/lost-fleet.spec.ts` (3 tests: standalone-cost
       unsigned, combined-cost negative-signed with an unsigned charge alongside it, and Examine
       Artifact's unchanged standalone-cost case). Viewer 360/360, production build clean.
+    - **Tenth same-session round (still 2026-07-06): reverted the previous round's conditional
+      negative-sign convention.** Owner feedback with a screenshot of the actual Explore ship list:
+      with several ships to choose between in the same list - some gaining an exploration-slot power
+      charge alongside their cost, some not - having the cost's sign flip between buttons ("Twilight
+      (-1 -5, charge)" next to "T F Mars (2 5)" with no charge) read as *more* confusing than helpful,
+      not less, contrary to the previous round's reasoning from the special-action-octagon convention.
+      Reverted `exploreButton` to always show the cost as a plain, unsigned number regardless of
+      whether a charge is gained alongside it - one consistent rule for every ship in the list, same
+      as every other standalone cost in the app. Updated `lost-fleet.spec.ts`'s combined-cost test to
+      match (cost stays unsigned; the charge itself was always unsigned already, unaffected). Viewer
+      360/360, production build clean.
 
 ## Still MISSING — only one art-only item left
 
