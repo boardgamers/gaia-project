@@ -3516,6 +3516,44 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       1 new `Game.spec.ts` case), engine untouched, production build clean. Same pre-existing flaky
       `SetupPreview.spec.ts` seed test as every prior session (confirmed via clean isolated and
       full-suite reruns) - not touched, not fixed.
+79. ✅ **"Gaia 10" session, follow-up round (2026-07-06, same day): 4 more real bugs the owner found
+    by actually looking at the merged banner live, plus 2 questions answered.**
+    - **Turn-order avatars all rendered black in the top banner** - real bug, root-caused: every
+      faction/planet color is a CSS custom property (`--terra`, `--gaia`, etc., `planets.css`)
+      scoped to a `.gaia-viewer-game` class, which `Game.vue`'s own root div carries but
+      `HostedBar.vue` (a separate Vue root mounted as a sibling, not a descendant) never did - so
+      `var(--terra)` etc. resolved to nothing and every circle fell back to the SVG default black
+      fill. `Lobby.vue` and `SetupPreviewBoard.vue` already carry this same class for exactly this
+      reason (rendering faction-colored pieces outside `Game.vue`'s tree) - `HostedBar.vue` now does
+      too. Confirmed live: circles render their real colors now, not black.
+    - **Banner too tall** - `TurnOrder.vue` gained a `compact` prop (130x42 vs. the original
+      250x80), used only from `HostedBar.vue`; the standalone local/hot-seat banner is untouched.
+      Confirmed live: banner is 51px tall now (was 96px+).
+    - **Notification button wrapping onto its own row** - now `position: absolute` in the banner's
+      top-right corner instead of a third flex item that could wrap under the turn-order circles,
+      matching the owner's explicit "keep it top right" - guaranteed regardless of how wide the
+      other content gets, not just less likely to wrap.
+    - **"You play <name>" text removed** - owner said unnecessary; deleted the whole
+      `mySeatName` prop/data thread (`HostedBar.vue`, `hosted.ts`) since nothing else read it.
+    - **Owner question: does the banner handle an off-turn leech decision?** Yes, unchanged by this
+      work - `PlayerCircle.vue`'s existing `stroke()` already draws a distinct pink ring for
+      `engine.tempCurrentPlayer` (the leech decider) separate from the green ring for the actual
+      `currentPlayer`/`playerToMove`, and `TurnOrder`/`PlayerCircle` are the same components
+      whether embedded in `HostedBar` or the standalone banner - nothing new needed, just confirmed
+      and explained rather than assumed.
+    - **Redundant "Current player" block removed from the main game view** (`Game.vue`, the
+      `<h5>Current player</h5>` + single `PlayerCircle` shown instead of `Commands` when it isn't
+      your turn) - now that the top banner already shows the full turn order with the active player
+      highlighted, this was exactly the "old redundant part" the owner flagged. Kept the premove
+      explainer text that block also carried (unrelated content, folded its condition into the
+      surrounding `v-else-if` instead of losing it), removed the now-dead `PlayerCircle` import and
+      `.current-player` CSS rule.
+    - **Verified live again** with the real production Supabase project + a real screenshot (not
+      just unit tests): compact single-row banner, real faction colors, bell icon pinned top-right,
+      no "You play" text.
+    - Viewer **381/381** (no new tests added this round - existing `HostedBar.spec.ts`/`Game.spec.ts`
+      cases from #78 already cover the merged-banner behavior these fixes touch), production build
+      clean.
 
 ## Still MISSING — only one art-only item left
 

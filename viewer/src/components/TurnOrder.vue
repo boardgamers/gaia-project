@@ -1,6 +1,6 @@
 <template>
   <div class="turn-order">
-    <svg viewBox="-1.2 -1.2 12.5 4" width="250" height="80" style="max-width: 100%">
+    <svg viewBox="-1.2 -1.2 12.5 4" :width="compact ? 130 : 250" :height="compact ? 42 : 80" style="max-width: 100%">
       <PlayerCircle
         v-for="(player, index) in turnOrder"
         :key="index"
@@ -22,7 +22,7 @@
   </div>
 </template>
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue } from "vue-property-decorator";
 import Engine, { Player, Phase } from "@gaia-project/engine";
 import PlayerCircle from "./PlayerCircle.vue";
 import { phaseBeforeSetupBuilding } from "../logic/utils";
@@ -32,6 +32,11 @@ import { presenceStatus, PresenceStatus } from "../hosted/presence";
   components: { PlayerCircle },
 })
 export default class TurnOrder extends Vue {
+  // Smaller rendering for HostedBar.vue's slim top banner (PROGRESS.md Gaia 10) - the standalone
+  // banner (self-contained/hot-seat play, Game.vue) keeps the original larger size.
+  @Prop({ default: false, type: Boolean })
+  compact: boolean;
+
   get gameData(): Engine {
     return this.$store.state.data;
   }

@@ -98,16 +98,16 @@
             :hide-spacer="true"
             @sticky-bar-height="stickyBarHeight = $event"
           />
-          <div v-else-if="turnPlayer && !ended" class="current-player">
-            <h5>Current player</h5>
-            <svg viewBox="-1.2 -1.2 2.5 4.5">
-              <PlayerCircle :player="turnPlayer" />
-            </svg>
-            <div class="text-muted small mt-1" v-if="premoveOffered && !premoveExplainerDismissed">
-              Premoves play automatically when your turn comes, even if you're offline. If the board changed and your
-              move is no longer legal, it's skipped and we'll notify you.
-              <button type="button" class="btn btn-link btn-sm p-0" @click="dismissPremoveExplainer">Got it</button>
-            </div>
+          <!-- The old "Current player" heading + circle here was redundant with the turn-order
+               banner at the top of the page (PROGRESS.md Gaia 10) - removed, keeping only the
+               premove explainer this block also carried. -->
+          <div
+            v-else-if="turnPlayer && !ended && premoveOffered && !premoveExplainerDismissed"
+            class="text-muted small"
+          >
+            Premoves play automatically when your turn comes, even if you're offline. If the board changed and your
+            move is no longer legal, it's skipped and we'll notify you.
+            <button type="button" class="btn btn-link btn-sm p-0" @click="dismissPremoveExplainer">Got it</button>
           </div>
           <div v-if="showPremoveBar && !premoveMode" class="mt-2">
             <PremoveBar
@@ -200,7 +200,6 @@ import BoardAction from "./BoardAction.vue";
 import Commands from "./Commands.vue";
 import Pool from "./Pool.vue";
 import Rules from "./Rules.vue";
-import PlayerCircle from "./PlayerCircle.vue";
 import PlayerInfo from "./PlayerInfo.vue";
 import ResearchBoard from "./ResearchBoard.vue";
 import ScoringBoard from "./ScoringBoard.vue";
@@ -227,7 +226,6 @@ const PREMOVE_MODE_PREFERENCE_KEY = "premoveModePreference";
     AdvancedLog,
     BoardAction,
     Commands,
-    PlayerCircle,
     PlayerInfo,
     Pool,
     ResearchBoard,
@@ -807,9 +805,4 @@ export default class Game extends Vue {
   }
 }
 
-.current-player {
-  & > svg {
-    max-width: 50px;
-  }
-}
 </style>

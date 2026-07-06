@@ -58,7 +58,6 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
     store: emitter.store,
     data: {
       gameName: "",
-      mySeatName: "",
       finished: false,
       pushBusy: false,
       pushEnabled: false,
@@ -112,12 +111,6 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
         bar.finished = data.phase === "endGame";
         const turnSeat = data.playerToMove;
         const playerCount = host.game?.player_count ?? 0;
-        bar.mySeatName =
-          mySeats.length >= playerCount && mySeats.length > 0
-            ? "all seats (test game)"
-            : mySeats.length > 0
-            ? data.players?.[mySeats[0]]?.name ?? `Player ${mySeats[0] + 1}`
-            : "";
         // Re-lock on every state so a user playing several (but not all) seats
         // gets whichever of their seats must act now (leech interrupts included).
         const lock = seatToLock(mySeats, playerCount, turnSeat);
