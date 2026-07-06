@@ -3089,6 +3089,23 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       line that fades out at both ends instead of a flat gray rule - all without changing icon sizes
       or the bar's overall height, per explicit owner instruction. Viewer 355/355 (unchanged, no new
       tests needed - purely visual), production build clean.
+    - **Fourth same-session round (still 2026-07-06): a full visual redesign of the whole mobile
+      sticky bar**, not just the resource row - the owner explicitly asked for this after the
+      all-white resource-bar pill from the prior round turned out to be nearly invisible on a real
+      device, and to "rethink it from the bottom." New design: the status-line strip is now a dark
+      navy gradient "header" band (with a small decorative "grab handle" bar, a common bottom-sheet
+      affordance) instead of a same-lightness-as-everything-else gray strip, which both reads as a
+      clear visual anchor and guarantees text contrast outright rather than relying on a thin accent
+      line; the whole bar has rounded top corners and a deeper layered shadow so it reads as a
+      distinct floating "sheet" over the page; every move-button gets rounded corners, a soft
+      gradient fill, and a press/scale-down feedback state (scoped strictly to this sticky-bar
+      context via `#move-buttons.mobile-sticky-actions .move-button .btn`, so buttons elsewhere -
+      desktop layout, faction picker, etc. - are untouched); and the resource bar's chip is no longer
+      a borderless white pill but a rounded card with a real solid border (not just a shadow, which
+      is what made the previous version nearly invisible) plus a tinted gradient background. All
+      changes are visual only - button click handlers, dropdown behavior, and layout logic are
+      unchanged. Viewer 355/355, production build clean, verified visually via Playwright screenshots
+      of the live dev server (both the dark header + buttons and the resource card in isolation).
 
 ## Still MISSING — only one art-only item left
 

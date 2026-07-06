@@ -1105,46 +1105,49 @@ $mobile-sticky-actions-max-height: 40vh;
 // alone to win a tie would depend on unpredictable stylesheet source order (verified empirically:
 // a bare !important here did NOT reliably win). See the matching note on
 // #move-title.hide-on-mobile-sticky below for the same footgun on the other side of this toggle.
-// Also carries a divider separating it from the buttons above (mirroring the status title's own
-// border below, on the other side of the buttons) and extra bottom clearance beyond the
-// container's own safe-area-inset-bottom padding - it's the last row in the sticky bar, closest to
-// the screen's physical bottom edge, and its wide, edge-to-edge row of icons was still visually
-// cropped by the bottom rounded corners on devices like the iPhone 16 with just the inset value.
-// The divider itself is a soft gradient hairline that fades out at both ends (via ::before) rather
-// than a flat edge-to-edge gray rule, so it reads as a deliberate accent instead of a leftover
-// table-border line.
+// The resource bar (last row, closest to the screen's physical bottom edge) sits in its own
+// rounded card - a real solid (not just shadow) border for guaranteed contrast regardless of
+// display/color profile, per owner feedback that an earlier all-white pill version was nearly
+// invisible - plus a soft tinted gradient so it reads as a distinct "shelf" rather than a plain
+// strip, and enough bottom clearance to stay clear of the bottom rounded corners on devices like
+// the iPhone 16.
 #move-buttons .sticky-resource-bar-row {
   display: none !important;
+  margin-top: 0.55rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 14px;
+  border: 1px solid rgba(31, 45, 82, 0.16);
+  background: linear-gradient(135deg, #eef1fb 0%, #e4e9f7 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 1px 2px rgba(31, 45, 82, 0.06);
+}
+
+// The status strip is the sheet's own dark "header" band - deliberately contrasting with the light
+// button/resource area below it, both to visually anchor "this is the important line" and to
+// guarantee text contrast outright rather than relying on a thin accent line against a
+// same-lightness background. Full-bleed to the sheet's outer edges (matching its rounded top
+// corners) and pulled up over the container's own top padding, which is sized to leave room for
+// the small "grab handle" bar this element draws at its own top edge - a common bottom-sheet
+// affordance, purely decorative.
+#move-buttons .sticky-bar-title {
+  display: none !important;
   position: relative;
-  margin-top: 0.4rem;
-  padding-top: 0.4rem;
-  padding-bottom: 0.5rem;
+  margin: calc(-1.1rem) calc(-0.6rem - env(safe-area-inset-right)) 0.6rem calc(-0.6rem - env(safe-area-inset-left));
+  padding: 1rem calc(0.85rem + env(safe-area-inset-right)) 0.55rem calc(0.85rem + env(safe-area-inset-left));
+  border-radius: 20px 20px 0 0;
+  background: linear-gradient(135deg, #1c2b4a 0%, #2f4a7a 100%);
+  color: #f3f5fa;
 
   &::before {
     content: "";
     position: absolute;
-    top: 0;
-    left: 15%;
-    right: 15%;
-    height: 2px;
+    top: 0.45rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 4px;
     border-radius: 2px;
-    background: linear-gradient(90deg, transparent, var(--highlighted, #2c4), transparent);
-    opacity: 0.6;
+    background: rgba(255, 255, 255, 0.28);
   }
-}
-
-// No longer a Bootstrap "warning" alert box (that read as an actual alert, not a status footer).
-// Instead the status strip is its own full-bleed band at the top of the bar - its background tint
-// against the button area's own background *is* the divider, reinforced by a slim accent line,
-// rather than a boxed-in banner floating inside the bar. Pulled to the top (not bottom) edges -
-// this bar is `position: fixed` at the bottom of the viewport, so only its bottom edge is ever near
-// the screen's rounded corners/home-indicator strip, hence no top safe-area-inset here.
-#move-buttons .sticky-bar-title {
-  display: none !important;
-  margin: calc(-0.5rem) calc(-0.5rem - env(safe-area-inset-right)) 0.5rem calc(-0.5rem - env(safe-area-inset-left));
-  padding: 0.4rem calc(0.5rem + env(safe-area-inset-right)) 0.4rem calc(0.5rem + env(safe-area-inset-left));
-  border-bottom: 2px solid var(--highlighted, #2c4);
-  background: var(--systemGray5, #e5e5ea);
 
   // Small enough that the status text stays on one (or two, at most) lines instead of the default
   // h5 size wrapping across several - that wrapping used to be what made this banner so tall.
@@ -1152,13 +1155,28 @@ $mobile-sticky-actions-max-height: 40vh;
     font-size: 0.85rem;
     font-weight: 600;
     line-height: 1.2;
+    color: inherit;
   }
 
-  // The auto-leech dropdown's own button - kept tiny (just "Leech: ..."), so it doesn't compete
-  // with the status text for width. The full option text still shows in the opened menu.
+  // Both the auction-info link and the auto-leech dropdown default to Bootstrap's grey
+  // outline/link styling, which reads as a muddy near-invisible smudge against a dark background -
+  // recolored to sit clearly on the dark header instead, same sizing/behavior otherwise.
+  .silent-auction-info-button {
+    color: #d7e2ff;
+  }
+
   .auto-leech-select .btn {
     padding: 0.15rem 0.4rem;
     font-size: 0.75rem;
+    color: #f3f5fa;
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.3);
+
+    &:hover,
+    &:focus {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.2);
+    }
   }
 }
 
@@ -1183,11 +1201,32 @@ $mobile-sticky-actions-max-height: 40vh;
     // (the resource bar) is wide/edge-to-edge, and sitting exactly at the computed inset boundary
     // still visually clipped its sides against the bottom rounded corners on the iPhone 16 - a
     // small fixed margin beyond the inset gives it real clearance from where the curve starts.
-    padding: 0.5rem calc(0.5rem + env(safe-area-inset-right)) calc(0.5rem + env(safe-area-inset-bottom) + 8px)
-      calc(0.5rem + env(safe-area-inset-left));
-    background: var(--systemGray6, #f2f2f7);
-    border-top: 1px solid #c9c9d1;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+    padding: 1.1rem calc(0.6rem + env(safe-area-inset-right)) calc(0.6rem + env(safe-area-inset-bottom) + 8px)
+      calc(0.6rem + env(safe-area-inset-left));
+    border-radius: 20px 20px 0 0;
+    background: linear-gradient(180deg, #ffffff 0%, #eef1f6 100%);
+    box-shadow: 0 -12px 28px rgba(20, 26, 50, 0.18), 0 -1px 0 rgba(255, 255, 255, 0.6);
+
+    // Every move-button gets a refreshed "keycap" look here (rounded corners, soft gradient/
+    // shadow, a satisfying press state) instead of Bootstrap's flat default - scoped to this
+    // sticky-bar context only, so the same buttons elsewhere (desktop layout, faction picker,
+    // etc.) are untouched.
+    .move-button .btn {
+      border-radius: 12px;
+      border-color: rgba(31, 45, 82, 0.14);
+      box-shadow: 0 1px 2px rgba(31, 45, 82, 0.08);
+      transition: transform 0.08s ease-out, box-shadow 0.08s ease-out;
+
+      &:active {
+        transform: scale(0.97);
+        box-shadow: inset 0 1px 2px rgba(31, 45, 82, 0.15);
+      }
+    }
+
+    .btn-secondary:not(.active):not(.warning) {
+      background: linear-gradient(180deg, #ffffff 0%, #e7ebf3 100%);
+      color: #33415c;
+    }
 
     .sticky-resource-bar-row {
       display: flex !important;
