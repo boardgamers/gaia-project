@@ -3082,6 +3082,13 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       assertion was narrowed to a dedicated `.sticky-resource-bar__bowl` class so it no longer
       depends on being the only thing in the container that renders a `<circle>`. Viewer **355/355**,
       production build clean.
+    - **Third same-session round (still 2026-07-06):** the resource bar's icons are now centered
+      (`justify-content: center`) instead of left-packed, and the bar itself got a lightweight visual
+      refresh - a soft rounded "chip" background (subtle tonal gradient, inset hairline, faint drop
+      shadow) instead of a flat borderless strip, and the divider above it is now a gradient accent
+      line that fades out at both ends instead of a flat gray rule - all without changing icon sizes
+      or the bar's overall height, per explicit owner instruction. Viewer 355/355 (unchanged, no new
+      tests needed - purely visual), production build clean.
 
 ## Still MISSING — only one art-only item left
 

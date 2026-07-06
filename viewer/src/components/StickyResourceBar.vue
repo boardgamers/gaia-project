@@ -98,6 +98,16 @@ export default class StickyResourceBar extends Vue {
 .sticky-resource-bar {
   gap: 0.35rem;
   min-height: 24px;
+  // Centered as a group instead of left-packed - reads as one deliberate strip of info rather
+  // than a leftover row of icons trailing off toward the left edge.
+  justify-content: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  // A soft "chip" - a faint tonal gradient + inset hairline + a whisper of drop shadow - instead
+  // of a flat, borderless strip, without adding any real height (the icons themselves are
+  // untouched; this is just a couple of px of padding plus a rounded background behind them).
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.65), rgba(0, 0, 0, 0.015));
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.05);
 
   svg {
     flex: 0 0 auto;

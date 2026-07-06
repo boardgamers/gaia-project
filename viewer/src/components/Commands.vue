@@ -1110,12 +1110,27 @@ $mobile-sticky-actions-max-height: 40vh;
 // container's own safe-area-inset-bottom padding - it's the last row in the sticky bar, closest to
 // the screen's physical bottom edge, and its wide, edge-to-edge row of icons was still visually
 // cropped by the bottom rounded corners on devices like the iPhone 16 with just the inset value.
+// The divider itself is a soft gradient hairline that fades out at both ends (via ::before) rather
+// than a flat edge-to-edge gray rule, so it reads as a deliberate accent instead of a leftover
+// table-border line.
 #move-buttons .sticky-resource-bar-row {
   display: none !important;
-  border-top: 1px solid #c9c9d1;
+  position: relative;
   margin-top: 0.4rem;
   padding-top: 0.4rem;
   padding-bottom: 0.5rem;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 15%;
+    right: 15%;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--highlighted, #2c4), transparent);
+    opacity: 0.6;
+  }
 }
 
 // No longer a Bootstrap "warning" alert box (that read as an actual alert, not a status footer).
