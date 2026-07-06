@@ -1,10 +1,40 @@
-import Engine from "@gaia-project/engine";
+import Engine, { PowerArea } from "@gaia-project/engine";
 import { render } from "@testing-library/vue";
 import { expect } from "chai";
 import { makeStore } from "../store";
 import StickyResourceBar from "./StickyResourceBar.vue";
 
 describe("StickyResourceBar", () => {
+  it("marks the bowl holding Taklons' Brainstone with a B badge, and no others", () => {
+    const engine = new Engine(["init 2 sticky-resource-bar-brainstone-spec", "p1 faction taklons", "p2 faction terrans"], {
+      lostFleet: true,
+    });
+    const player = engine.players[0];
+    player.data.brainstone = PowerArea.Area2;
+
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(StickyResourceBar, { props: { player }, store });
+
+    expect(container.querySelectorAll(".sticky-resource-bar__brainstone").length).to.equal(1);
+    expect(container.querySelector(".sticky-resource-bar__brainstone-label").textContent).to.equal("B");
+  });
+
+  it("shows no Brainstone badge for factions without one", () => {
+    const engine = new Engine(["init 2 sticky-resource-bar-no-brainstone-spec", "p1 faction terrans", "p2 faction hadsch-hallas"], {
+      lostFleet: true,
+    });
+    const player = engine.players[0];
+
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(StickyResourceBar, { props: { player }, store });
+
+    expect(container.querySelector(".sticky-resource-bar__brainstone")).to.equal(null);
+  });
+
   it("shows victory points last, and one distinctly-colored circle per power bowl", () => {
     const engine = new Engine(["init 2 sticky-resource-bar-spec", "p1 faction terrans", "p2 faction hadsch-hallas"], {
       lostFleet: true,

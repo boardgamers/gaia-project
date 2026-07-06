@@ -14,7 +14,10 @@
     </svg>
     <!-- 3 separate circles (not the player board's own triangular PowerBowls layout, which reads as
          "the same 3 identical bowls" at this small a scale) - one per bowl, each its own shade
-         (reusing PowerBowls.vue's I/II/III colors) so which bowl is which is obvious at a glance. -->
+         (reusing PowerBowls.vue's I/II/III colors) so which bowl is which is obvious at a glance.
+         Taklons' Brainstone (a single shared token that substitutes for a normal power token in
+         whichever bowl it currently sits in, see player.data.brainstone) gets its own small "B"
+         badge in the corner of that bowl - same convention as the engine's own powerLogString(). -->
     <svg
       v-for="area in powerAreas"
       :key="area.key"
@@ -22,10 +25,14 @@
       width="22"
       height="22"
       v-b-tooltip.hover
-      :title="`Bowl ${area.label}: ${area.count} power`"
+      :title="`Bowl ${area.label}: ${area.count} power${area.hasBrainstone ? ' (holds the Brainstone)' : ''}`"
     >
       <circle r="9.5" class="sticky-resource-bar__bowl" :style="`fill: ${area.color}`" />
       <text class="sticky-resource-bar__count">{{ area.count }}</text>
+      <g v-if="area.hasBrainstone" transform="translate(6.5, -6.5)">
+        <circle r="4.5" class="sticky-resource-bar__brainstone" />
+        <text class="sticky-resource-bar__brainstone-label">B</text>
+      </g>
     </svg>
     <svg viewBox="-8 -8 16 16" width="18" height="18">
       <Resource kind="gf" :count="availableGaiaformers" tooltip="Available Gaia Formers" />
@@ -45,10 +52,10 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Condition, effectiveRange, Player, PlayerData } from "@gaia-project/engine";
+import { Condition, effectiveRange, Player, PlayerData, PowerArea } from "@gaia-project/engine";
 import Resource from "./Resource.vue";
 
-type PowerAreaDisplay = { key: string; label: string; count: number; color: string };
+type PowerAreaDisplay = { key: PowerArea; label: string; count: number; color: string; hasBrainstone: boolean };
 
 // Same 3 shades as PowerBowls.vue's .power-bowl--1/2/3 (the player board's own bowl coloring) -
 // kept as a literal copy rather than importing that component's CSS classes, so this bar's own
@@ -71,11 +78,12 @@ export default class StickyResourceBar extends Vue {
 
   get powerAreas(): PowerAreaDisplay[] {
     const power = this.playerData.power;
+    const brainstone = this.playerData.brainstone;
     return [
-      { key: "area1", label: "I", count: power.area1, color: POWER_AREA_COLORS[0] },
-      { key: "area2", label: "II", count: power.area2, color: POWER_AREA_COLORS[1] },
-      { key: "area3", label: "III", count: power.area3, color: POWER_AREA_COLORS[2] },
-    ];
+      { key: PowerArea.Area1, label: "I", count: power.area1, color: POWER_AREA_COLORS[0] },
+      { key: PowerArea.Area2, label: "II", count: power.area2, color: POWER_AREA_COLORS[1] },
+      { key: PowerArea.Area3, label: "III", count: power.area3, color: POWER_AREA_COLORS[2] },
+    ].map((area) => ({ ...area, hasBrainstone: area.key === brainstone }));
   }
 
   get range(): number {
@@ -118,6 +126,23 @@ export default class StickyResourceBar extends Vue {
     dominant-baseline: central;
     font-size: 12px;
     font-weight: 600;
+    fill: white;
+    pointer-events: none;
+  }
+
+  // Taklons' Brainstone badge - a small black-and-white "B" circle overlaid on whichever bowl
+  // currently holds it, distinct from the bowl's own count text so both stay legible together.
+  &__brainstone {
+    fill: #222;
+    stroke: white;
+    stroke-width: 1px;
+  }
+
+  &__brainstone-label {
+    text-anchor: middle;
+    dominant-baseline: central;
+    font-size: 7px;
+    font-weight: 700;
     fill: white;
     pointer-events: none;
   }

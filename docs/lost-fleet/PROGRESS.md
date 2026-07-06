@@ -3106,6 +3106,14 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       changes are visual only - button click handlers, dropdown behavior, and layout logic are
       unchanged. Viewer 355/355, production build clean, verified visually via Playwright screenshots
       of the live dev server (both the dark header + buttons and the resource card in isolation).
+    - **Fifth same-session round (still 2026-07-06):** Taklons' Brainstone (a single shared token
+      that substitutes for a normal power token in whichever bowl it currently occupies,
+      `player.data.brainstone: PowerArea`) now gets a small black "B" badge overlaid on that bowl's
+      circle in the sticky resource bar, matching the same convention the engine's own
+      `powerLogString()` already uses for text logs. Works generically off `player.data.brainstone`
+      with no faction check needed, since that field stays `null` for every faction except Taklons.
+      2 new tests (badge present on the correct bowl only; absent entirely for non-Taklons players).
+      Viewer 357/357, production build clean.
 
 ## Still MISSING — only one art-only item left
 
