@@ -3114,6 +3114,38 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       with no faction check needed, since that field stays `null` for every faction except Taklons.
       2 new tests (badge present on the correct bowl only; absent entirely for non-Taklons players).
       Viewer 357/357, production build clean.
+    - **Sixth same-session round (still 2026-07-06):** dropped the resource bar's card/border
+      entirely (owner feedback: still read as "a pill," wanted removed, not just re-shaped) - it's
+      back to plain icons with just a hairline `border-top` divider from the buttons above. Tightened
+      spacing throughout the whole sticky bar for a more compact feel: the dark header's padding,
+      the container's own top/side padding, and move-button margins (down from Bootstrap's `.mr-2`/
+      `.mb-2` 0.5rem default to 0.35rem, scoped to this sticky-bar context only). Also added a fix
+      for native pinch-zoom (intentionally still allowed on the game board, see `hosted/viewport.ts`)
+      visibly scaling the fixed sticky bar along with the map: a VisualViewport-API-driven
+      counter-transform in `Commands.vue`'s `mounted()` hook keeps the bar's on-screen size/position
+      constant regardless of zoom level, recalculated both on `visualViewport` resize/scroll events
+      and inside the existing ResizeObserver (needed too, since the bar first becoming the fixed
+      sticky layout - e.g. once round 1 starts - isn't itself a visualViewport event and was
+      initially missed). Verified the identity/no-zoom case renders an exact no-op transform via
+      Playwright; the actual pinch-zoom math could not be exercised end-to-end in this sandbox (no
+      real touch-capable device/OS-level gesture available) - flagged to the owner as needing
+      real-device confirmation. Viewer 357/357, production build clean.
+    - **Also investigated (same round): owner-reported "the log has disappeared" on one specific
+      hosted game only** (not a general regression - other games still show it fine). Ruled out: the
+      sticky-bar spacer/height mechanism (tested at 2 viewport sizes, log renders correctly above the
+      bar both times, no mismatch), and `LogPlacement`'s dead `"off"` value (nothing in the codebase
+      can actually set it - `store.ts`'s default is `"bottom"` and it's read-only everywhere else, so
+      it can't explain a single-game-only symptom). Given the owner confirmed even the "Hide log"
+      checkbox itself is missing (not just an empty table), the most likely remaining explanation is
+      `AdvancedLog`'s own `v-if="engine.phase !== 'setupInit'"` gate, or a replay-time exception in
+      that one game's specific move history - `factionBoard()`'s new `expansion` parameter (this
+      session's Gleens change, see the 4th "Done so far" entry above) was audited for the same
+      "silently breaks replay of an old game" failure mode documented for the reverted Terraform-tile
+      trigger (see item #66's revert note) and judged safe: the new ability is purely additive and
+      optional (an available `=> range+2` special action a player chooses to invoke, like the
+      pre-existing Space Giants/Booster5 ones), never auto-inserted into a replay sequence, so old
+      games without that move in their history should replay unaffected regardless of faction. Still
+      open - asked the owner for the specific game/browser console errors to pin down further.
 
 ## Still MISSING — only one art-only item left
 

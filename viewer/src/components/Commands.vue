@@ -517,6 +517,7 @@ export default class Commands extends Vue implements CommandController {
    * blanket max-height's worth of blank page whenever the button list is short. */
   private stickyBarHeight = 0;
   private stickyBarObserver: ResizeObserver | null = null;
+  private visualViewportListener: (() => void) | null = null;
 
   get titles() {
     return this.commandTitles.length === 0 ? [`Your turn - Round ${this.engine.round}`] : this.commandTitles;
@@ -732,19 +733,60 @@ export default class Commands extends Vue implements CommandController {
     });
 
     const moveButtons = this.$refs.moveButtons as HTMLElement;
+
+    // Pinch-zooming the game board (allowed on purpose - see hosted/viewport.ts) also scales any
+    // `position: fixed` element, since native pinch-zoom enlarges the whole layout viewport
+    // including fixed content - a fixed bottom bar visibly balloons in size along with the map
+    // instead of staying put. The VisualViewport API reports the zoomed-in "visual" viewport
+    // separately from the unchanged "layout" viewport `position: fixed` actually anchors to, so a
+    // counter-transform (shrink back by 1/scale, then re-anchor to the visual viewport's own
+    // bottom-left corner) keeps the bar's on-screen size and position constant regardless of zoom.
+    // Recalculated both on visualViewport resize/scroll (actual zoom/pan) AND inside the
+    // ResizeObserver below (covers #move-buttons first becoming the fixed sticky bar, e.g. once
+    // round 1 starts, which isn't itself a visualViewport event).
+    const vv = window.visualViewport;
+    const updateZoomTransform = () => {
+      if (!moveButtons || !vv) {
+        return;
+      }
+      // Only the narrow/mobile sticky layout is ever `position: fixed` - on wider viewports
+      // #move-buttons renders normally in-flow, where this counter-transform doesn't apply.
+      if (!this.showStickyMobileBar) {
+        moveButtons.style.transform = "";
+        return;
+      }
+      const scale = vv.scale || 1;
+      const x = vv.offsetLeft;
+      const y = vv.offsetTop + vv.height - window.innerHeight;
+      moveButtons.style.transform = `translate(${x}px, ${y}px) scale(${1 / scale})`;
+    };
+
     if (moveButtons && typeof ResizeObserver !== "undefined") {
       this.stickyBarObserver = new ResizeObserver(() => {
         // read the full border-box (incl. padding) so the spacer reserves the bar's real footprint
         this.stickyBarHeight = moveButtons.getBoundingClientRect().height;
         this.$emit("sticky-bar-height", this.showStickyMobileBar ? this.stickyBarHeight : 0);
+        updateZoomTransform();
       });
       this.stickyBarObserver.observe(moveButtons);
+    }
+
+    if (moveButtons && vv) {
+      updateZoomTransform();
+      vv.addEventListener("resize", updateZoomTransform);
+      vv.addEventListener("scroll", updateZoomTransform);
+      this.visualViewportListener = () => {
+        vv.removeEventListener("resize", updateZoomTransform);
+        vv.removeEventListener("scroll", updateZoomTransform);
+        moveButtons.style.transform = "";
+      };
     }
 
     this.$on("hook:beforeDestroy", () => {
       window.removeEventListener("keydown", keyListener);
       backListener();
       this.stickyBarObserver?.disconnect();
+      this.visualViewportListener?.();
       this.$emit("sticky-bar-height", 0);
     });
   }
@@ -1105,20 +1147,13 @@ $mobile-sticky-actions-max-height: 40vh;
 // alone to win a tie would depend on unpredictable stylesheet source order (verified empirically:
 // a bare !important here did NOT reliably win). See the matching note on
 // #move-title.hide-on-mobile-sticky below for the same footgun on the other side of this toggle.
-// The resource bar (last row, closest to the screen's physical bottom edge) sits in its own
-// rounded card - a real solid (not just shadow) border for guaranteed contrast regardless of
-// display/color profile, per owner feedback that an earlier all-white pill version was nearly
-// invisible - plus a soft tinted gradient so it reads as a distinct "shelf" rather than a plain
-// strip, and enough bottom clearance to stay clear of the bottom rounded corners on devices like
-// the iPhone 16.
+// The resource bar (last row) no longer sits in its own card - just a plain hairline divider from
+// the buttons above and a little breathing room, kept minimal to stay compact.
 #move-buttons .sticky-resource-bar-row {
   display: none !important;
-  margin-top: 0.55rem;
-  padding: 0.4rem 0.5rem;
-  border-radius: 14px;
-  border: 1px solid rgba(31, 45, 82, 0.16);
-  background: linear-gradient(135deg, #eef1fb 0%, #e4e9f7 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 1px 2px rgba(31, 45, 82, 0.06);
+  margin-top: 0.35rem;
+  padding-top: 0.3rem;
+  border-top: 1px solid rgba(28, 43, 74, 0.14);
 }
 
 // The status strip is the sheet's own dark "header" band - deliberately contrasting with the light
@@ -1127,23 +1162,24 @@ $mobile-sticky-actions-max-height: 40vh;
 // same-lightness background. Full-bleed to the sheet's outer edges (matching its rounded top
 // corners) and pulled up over the container's own top padding, which is sized to leave room for
 // the small "grab handle" bar this element draws at its own top edge - a common bottom-sheet
-// affordance, purely decorative.
+// affordance, purely decorative. Kept compact - just enough padding for the handle and a
+// comfortable tap target, not a deep banner.
 #move-buttons .sticky-bar-title {
   display: none !important;
   position: relative;
-  margin: calc(-1.1rem) calc(-0.6rem - env(safe-area-inset-right)) 0.6rem calc(-0.6rem - env(safe-area-inset-left));
-  padding: 1rem calc(0.85rem + env(safe-area-inset-right)) 0.55rem calc(0.85rem + env(safe-area-inset-left));
-  border-radius: 20px 20px 0 0;
+  margin: calc(-0.7rem) calc(-0.5rem - env(safe-area-inset-right)) 0.4rem calc(-0.5rem - env(safe-area-inset-left));
+  padding: 0.65rem calc(0.7rem + env(safe-area-inset-right)) 0.35rem calc(0.7rem + env(safe-area-inset-left));
+  border-radius: 16px 16px 0 0;
   background: linear-gradient(135deg, #1c2b4a 0%, #2f4a7a 100%);
   color: #f3f5fa;
 
   &::before {
     content: "";
     position: absolute;
-    top: 0.45rem;
+    top: 0.35rem;
     left: 50%;
     transform: translateX(-50%);
-    width: 36px;
+    width: 32px;
     height: 4px;
     border-radius: 2px;
     background: rgba(255, 255, 255, 0.28);
@@ -1197,24 +1233,41 @@ $mobile-sticky-actions-max-height: 40vh;
     max-height: $mobile-sticky-actions-max-height;
     overflow-y: auto;
     margin: 0;
+    // Anchors the JS-driven counter-transform (Commands.vue's visualViewport listener, keeping
+    // this bar's on-screen size/position constant while the user pinch-zooms the map) at this
+    // element's own bottom-left corner, matching how it's actually positioned (bottom:0; left:0).
+    transform-origin: left bottom;
     // Extra +8px buffer on top of the safe-area-inset-bottom value itself: the last row in the bar
     // (the resource bar) is wide/edge-to-edge, and sitting exactly at the computed inset boundary
     // still visually clipped its sides against the bottom rounded corners on the iPhone 16 - a
     // small fixed margin beyond the inset gives it real clearance from where the curve starts.
-    padding: 1.1rem calc(0.6rem + env(safe-area-inset-right)) calc(0.6rem + env(safe-area-inset-bottom) + 8px)
-      calc(0.6rem + env(safe-area-inset-left));
-    border-radius: 20px 20px 0 0;
+    padding: 0.7rem calc(0.5rem + env(safe-area-inset-right)) calc(0.45rem + env(safe-area-inset-bottom) + 8px)
+      calc(0.5rem + env(safe-area-inset-left));
+    border-radius: 16px 16px 0 0;
     background: linear-gradient(180deg, #ffffff 0%, #eef1f6 100%);
     box-shadow: 0 -12px 28px rgba(20, 26, 50, 0.18), 0 -1px 0 rgba(255, 255, 255, 0.6);
 
     // Every move-button gets a refreshed "keycap" look here (rounded corners, soft gradient/
     // shadow, a satisfying press state) instead of Bootstrap's flat default - scoped to this
     // sticky-bar context only, so the same buttons elsewhere (desktop layout, faction picker,
-    // etc.) are untouched.
+    // etc.) are untouched. Margins tightened from Bootstrap's default .mr-2/.mb-2 (0.5rem, both
+    // !important utility classes - hence needing !important here too) down to 0.35rem, so more
+    // buttons fit per row without wasted gutters, per owner feedback that the bar had too much
+    // room around its content.
+    .mr-2.move-button {
+      margin-right: 0.35rem !important;
+    }
+
+    .mb-2.move-button {
+      margin-bottom: 0.35rem !important;
+    }
+
     .move-button .btn {
-      border-radius: 12px;
+      border-radius: 10px;
       border-color: rgba(31, 45, 82, 0.14);
       box-shadow: 0 1px 2px rgba(31, 45, 82, 0.08);
+      padding-top: 0.3rem;
+      padding-bottom: 0.3rem;
       transition: transform 0.08s ease-out, box-shadow 0.08s ease-out;
 
       &:active {
