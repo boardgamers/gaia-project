@@ -13,7 +13,7 @@
            slot-ordinal number, since the marker letter + circle position already identify the ship
            and slot; only the power-charge cost (or claiming player's token) needs to show per slot. -->
       <g class="lost-fleet-ship__header">
-        <g v-b-tooltip.hover :title="shipLabel(ship)">
+        <g v-b-tooltip.hover.nofade :title="shipLabel(ship)">
           <circle cx="9" cy="9" r="8" class="lost-fleet-ship__marker-bg" />
           <text x="9" y="12" class="lost-fleet-ship__marker">{{ shipMarker(ship) }}</text>
         </g>
@@ -24,7 +24,7 @@
           class="lost-fleet-ship__slot"
           :data-slot="slot.index"
           :transform="`translate(${9 + slot.index * 20}, 9)`"
-          v-b-tooltip.hover
+          v-b-tooltip.hover.nofade
           :title="slotTitle(slot)"
         >
           <circle r="8" class="lost-fleet-ship__slot-bg" />
@@ -44,7 +44,7 @@
         :class="['lost-fleet-ship__action', action.type, { used: actionUser(ship, action.type) != null }]"
         :data-action="action.type"
         :transform="`translate(${29 + i * 54}, 44)`"
-        v-b-tooltip.hover
+        v-b-tooltip.hover.nofade
         :title="actionTooltip(ship, action)"
       >
         <SpecialAction

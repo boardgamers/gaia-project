@@ -758,6 +758,18 @@ export default class Commands extends Vue implements CommandController {
       const scale = vv.scale || 1;
       const x = vv.offsetLeft;
       const y = vv.offsetTop + vv.height - window.innerHeight;
+      // Any non-"none" transform on this element - even a no-op identity one - makes it a new
+      // CSS containing block for `position: fixed` descendants (spec behavior, not a bug), which
+      // broke the auto-leech dropdown's `positionFixed: true` Popper menu: Popper computed its
+      // position assuming true viewport-relative fixed positioning, but the browser then rendered
+      // it relative to *this* (transformed) ancestor instead, landing the menu mid-page and
+      // clipped down to a sliver. Only set a real transform while actually zoomed/panned (the
+      // no-op identity case is by far the common one, so skip it entirely rather than applying
+      // "translate(0px, 0px) scale(1)").
+      if (scale === 1 && x === 0 && y === 0) {
+        moveButtons.style.transform = "";
+        return;
+      }
       moveButtons.style.transform = `translate(${x}px, ${y}px) scale(${1 / scale})`;
     };
 

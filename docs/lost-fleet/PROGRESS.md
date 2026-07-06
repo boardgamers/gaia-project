@@ -3165,6 +3165,69 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       losing to the still-active hover trigger. Not something the owner asked for and not a regression
       from before #20 (same-element re-tap wasn't a reported behavior), so left as-is; flagged here in
       case it's noticed later. Viewer 357/357, production build clean.
+    - **Eighth same-session round (still 2026-07-06): owner reported the #22 tooltip fix hadn't fully
+      landed** ("research track still flashes," "ship board shows several tooltips open at once"),
+      plus a separate auto-leech dropdown-cropping regression. Investigated each as a genuinely
+      distinct root cause rather than re-patching the same click-listener:
+      - **Ship board "several tooltips open at once"**: confirmed via Playwright this wasn't a
+        permanent stuck-open bug (converged to exactly 1 visible tooltip within ~200-400ms either
+        way) but bootstrap-vue's own default CSS fade transition creating a real, visible overlap
+        window between the old tooltip fading out and the new one fading in - reproducible even with
+        the click listener fully disabled (i.e. native hover-triggered close has the same overlap).
+        Fixed by adding the `.nofade` modifier to `LostFleetShips.vue`'s three `.hover`-only tooltip
+        triggers (ship header/exploration-slot/action-tile), making close/open instant so at most one
+        is ever on-screen. Verified: all 6 checkpoints from t=50ms to t=1500ms now show exactly 1.
+      - **Research track "still flashes"**: root-caused as a *different* mechanism entirely, confirmed
+        via a temporary `@testing-library/vue` DOM-identity check (render `ResearchBoard`, click a
+        `.research-tile.highlighted` tile, compare the tooltip-owning `<g>` node before/after by
+        reference) - clicking a *highlighted* (i.e. actually clickable, move-triggering) research tile
+        dispatches the real `researchClick` Vuex action, and Vue's reactive re-render genuinely
+        destroys and recreates that exact DOM node (confirmed: `before === after` is `false`), killing
+        the bv-tooltip instance mid-open regardless of any click-listener fix - there's no "stays open"
+        possible here since the element itself is gone. Non-highlighted (pure info) research tiles
+        already work correctly (verified: tooltip survives past 430ms, same as artifact icons). This
+        is a UX question (should tapping an actionable tile peek info first, or commit immediately as
+        today?) rather than a tooltip bug, so left as-is pending owner input rather than guessing at a
+        behavior change.
+      - **Auto-leech dropdown cropped to "a few millimeters"**: root-caused to the #21-round
+        VisualViewport pinch-zoom counter-transform (`Commands.vue`'s `updateZoomTransform`) applying
+        a CSS `transform` to `#move-buttons` *unconditionally* whenever the mobile sticky bar is shown
+        - including the identity no-zoom case (`translate(0px, 0px) scale(1)`). Per CSS spec, *any*
+        non-`none` transform on an ancestor (even a visual no-op) creates a new containing block/
+        stacking context for `position: fixed` descendants, which broke the auto-leech dropdown's
+        `positionFixed: true` Popper menu: confirmed via Playwright that although Popper still computed
+        a plausible-looking bounding box, `elementFromPoint()` at that box's center hit the game
+        board/player-board content instead of the dropdown (trapped in the transformed ancestor's own
+        stacking context, painting behind later main-content siblings) - only the sliver that happened
+        to overlap the sticky bar's own elevated z-index was actually visible, matching "just the
+        bottom few millimeters" exactly. Fixed by only writing a real transform when an actual zoom/pan
+        is in effect (`scale !== 1 || x !== 0 || y !== 0`), leaving `transform: ""` for the by-far-more-
+        common no-zoom case so no containing block is created. Verified via Playwright: computed
+        transform is now `none`, and the dropdown renders fully on top showing all 7 options, exactly
+        where `dropup` + `boundary="window"` intend.
+      - **Also fixed 3 separate owner-reported icon-sign bugs** (found via a background research
+        agent, all sharing one root cause: `Resource.vue`'s hard-coded "+" prefix for positive `t`/
+        `ta3` reward counts assumes any such reward it's asked to draw is a gain, but 3 call sites in
+        `viewer/src/logic/buttons/lost-fleet.ts` passed a *cost* reward string straight through
+        unnegated): Examine Artifact's button now shows "-6" (was "+6"); Itars/Nevlas's Explore-ship
+        buttons now show "-1" for the extra token cost (was "+1"); and the same buttons' VP cost now
+        shows e.g. "-5"/"-7" (was a bare, unsigned "5"/"7") - all three fixed by wrapping the existing
+        `Reward.parse(cost)` calls in `Reward.negative(...)` (the codebase's own established idiom for
+        this, already used identically in `research.ts`/`ships.ts`), in `examineArtifactButton` and
+        `exploreButton`. Verified visually via Playwright: "Examine Artifact (-6)", "Twilight (-5)",
+        "T F Mars (-2 -5)", "Eclipse (-2 -5)".
+      - **Investigated the reported "GaiaProject artifact didn't move my VP tracker" as a possible real
+        bug**: found `engine/src/move/artifacts.ts`'s `ArtifactToken.GaiaProject` case correctly computes
+        `3 * pl.data.research[ResearchField.GaiaProject]` VP and calls `gainRewards`, which mutates
+        `player.data.victoryPoints` directly - the same field both `PlayerBoard/Info.vue` and
+        `StickyResourceBar.vue` render with a plain, uncached reactive binding. A dedicated existing
+        test (`engine/src/move/artifacts.spec.ts`, "GaiaProject: immediately grants 3 VP per step up
+        the Gaiaforming track") already covers exactly this and passes. No engine or display bug found
+        - the likely explanation is the Gaiaforming track was still at level 0 at the moment the token
+        was chosen (3 × 0 = 0 VP is correct, not a bug), or the token was chosen *before* the research
+        step rather than after. Not fixed (nothing found to fix); flagged to the owner to confirm the
+        exact move order via the game log if it recurs.
+      Viewer 357/357, production build clean throughout.
 
 ## Still MISSING — only one art-only item left
 
