@@ -7,7 +7,7 @@
 > anything else, including the **Testing — required going forward** section it points to — both
 > are standing process, not optional. Then ask the user "what next?" and use the **Next actions**
 > section below to guide them.
-> Last updated: **2026-07-05**.
+> Last updated: **2026-07-06**.
 
 ## Working agreements (read every session, not optional)
 
@@ -2982,6 +2982,80 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       `node_modules` layout and never matched under pnpm's actual layout.
     - All throwaway test games created during verification were deleted afterward.
 
+74. ✅ **"Gaia 8" UI + rules punch list (2026-07-06, new session), 12 owner-reported items:**
+    - **Notification toggle**: `push.ts` had no unsubscribe path at all - added
+      `disablePushNotifications()` (unsubscribes the PushManager subscription + deletes its
+      `push_subscriptions` row) and turned the static "Notifications on" badge in `HostedBar.vue`/
+      `Lobby.vue` into a clickable button wired to it.
+    - **Sticky bar text clipping on iPhone 16**: `Commands.vue`'s `.sticky-bar-title` and the fixed
+      `#move-buttons.mobile-sticky-actions` bar only ever padded `env(safe-area-inset-bottom)`, never
+      `-left`/`-right` - added both so the status text stops sitting flush against the rounded-corner
+      display edge.
+    - **Power bowls redesign**: `PowerBowls.vue`'s 3 area bowls were all the identical purple - gave
+      bowls I/II/III progressively darker shades so which is which reads at a glance, especially at
+      the sticky bar's small scale where the "I"/"II"/"III" labels are illegible.
+    - **Federation/Artifact tooltip needing a prior tap ("raised 4 times")**: root-caused via a fresh
+      Explore pass - all 35 `v-b-tooltip` usages in the app are `.hover`-only, which depends on
+      WebKit/mobile browsers synthesizing `mouseenter` on tap, a quirk that doesn't fire on the very
+      first tap of a session unless some element already has a click handler; the two prior "fixes"
+      (PROGRESS #62, #71-ish) both addressed a real but different bug (stuck focus-tooltips) and were
+      only ever verified with synthetic mouse hover, never real touch. Fixed two ways: (1)
+      `launcher.ts` now binds a no-op `touchstart` listener on `document.body` at boot, arming
+      hover-emulation globally before any tap happens; (2) `FederationTile.vue`, `ArtifactIcon.vue`,
+      and `LostFleetShips.vue`'s federation tooltip wrapper now also carry `.click` as a
+      hover-independent guarantee. Verified live via Playwright with `hasTouch: true` on a genuinely
+      fresh browser context (no prior interaction) - first click on both now shows the tooltip
+      immediately. No WebKit binary exists in this sandbox to test the exact Safari quirk directly,
+      but the `.click` fix doesn't depend on that quirk at all.
+    - **Ship board header redesign**: `LostFleetShips.vue` dropped the ship name text and each slot's
+      ordinal number (kept only the power-charge badge), and reflowed the 4 exploration slots to sit
+      immediately next to the marker circle, evenly spaced 20 apart - 5 same-size circles in one row.
+    - **Two-sided Lost Fleet Economy tile (§F1)**: both sides were already fully implemented and
+      randomized in the engine (`research-tracks.ts`, `setup.ts`) - but the viewer's `ResearchTile.vue`
+      and `data/research.ts` never passed `engine.lostFleetEconomySide` into `researchEvents()`, so the
+      VP-income side was silently never displayed even when the engine had picked it. Fixed both call
+      sites; verified the coded values match RULES_CLARIFICATIONS.md §F1 exactly.
+    - **Round scoring tile icons too small**: the "new sector / deep space" combo icon in
+      `Condition.vue` was scaled at 0.55 (vs. 1.3-1.5 for the standalone icons it's built from) -
+      bumped to 0.75 with adjusted spacing.
+    - **Artifact iconography**: the "3 VP + 1 per planet type" artifact now shows 2 reward badges
+      (mimicking Eclipse's "2vp, pt > vp" ship action, the same flat+per-unit shape) instead of a
+      single "3" that read as flat-only; the "3 VP per Gaiaforming step" artifact now uses the same
+      advance-a-track icon as the Science-track artifact (was the plain `gf` resource icon, which
+      looked identical to just gaining a gaiaformer) with matching track-color tinting; `Condition.vue`'s
+      "a" icon now tints the whole track box with the track color, not just the 3 lines.
+    - **Space Giants PI tech tile, Deep Space tile inventory**: both already fully implemented -
+      verified via engine grep/tests, no changes needed.
+    - **Gleens +2 range special action (§I5)**: was genuinely missing (COMPONENTS.md/
+      RULES_CLARIFICATIONS.md already flagged it as spec-only). Added a `lostFleetIncome` field to
+      `FactionBoardVariants` (types.ts) - extra income entries applied only under Lost Fleet, since
+      plain `income` has no expansion filtering of its own - threaded `expansion` through
+      `factionBoard()`/`FactionBoard`'s constructor, and gave Gleens `lostFleetIncome: ["=> range+2"]`,
+      reusing the same Activate-operator/`hasActiveBooster` plumbing as Space Giants' `"=> 2step"` and
+      Booster5's `"=> range+3"`. 2 new tests confirm it's present under Lost Fleet and absent otherwise.
+    - **"Free mine, unlimited range" Federation tile had no mine icon**: added an `isRangeMineToken`
+      branch to `FederationTile.vue` (mirroring the existing Terraform-token branch) showing a real
+      mine icon next to the range icon, then (same session, owner follow-up) nudged the whole group
+      down and added an "∞" symbol to make "unlimited" explicit.
+    - **Follow-up fixes from live owner feedback on the above**, same session: the `KnowledgeOre`
+      artifact's "+" sign bled past the icon circle's left edge with a large empty gap before the
+      reward icons (measured via `getBoundingClientRect()`, fixed by moving both inward); the sticky
+      bar's auto-leech dropdown was missing its "off" option when opened from the mobile sticky bar -
+      root cause was `#move-buttons`'s `overflow-y: auto` clipping the upward-opening Popper menu,
+      fixed with `boundary="window"` + `popper-opts.positionFixed: true` (Popper v1's documented
+      escape hatch for poppers inside scrolling/fixed containers), verified live at a 375x700 mobile
+      viewport with all 7 options now visible; and the sticky resource bar was expanded with VP,
+      sector count, a federation-tokens-formed count, and a 6/7-pip research-track strip colored with
+      the same `--rt-*` vars as the main research board - deliberately did NOT add a live "distance to
+      next federation" metric, since that needs `Player.possibleFederations()`'s spanning-tree search
+      over the map, too expensive to run on every render of an always-visible bar (see PERFORMANCE.md).
+    - Engine **618/618**, viewer **354/354** (up from 351 pre-session - 3 new spec files:
+      `StickyResourceBar.spec.ts`, `push.spec.ts`, plus `gleens.spec.ts`/`LostFleetShips.spec.ts`
+      additions), both production builds clean. Every visual fix verified via Playwright screenshots
+      and `getBoundingClientRect()` measurements against the real running dev server, not just unit
+      tests, including finding a real game seed that seeds specific artifacts/federations to compare
+      against their design references pixel-for-pixel.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -3121,6 +3195,19 @@ client-side reconciliation firing on a `Phase.RoundLeech` charge/decline decisio
 (wiping a still-valid queue before the seat's real `RoundMove` turn ever arrived) - both fixed in
 `viewer/src/logic/premove-preview.ts` and `viewer/src/hosted/host.ts` respectively before this
 count.
+
+**Latest full rerun after #74 (2026-07-06, new session, "Gaia 8" punch list):** engine **618/618**
+(608 baseline + 8 new: 2 `research-tracks`-adjacent gleens.spec.ts range-special-action cases + the
+rest from `LostFleetShips.spec.ts` header-layout rewrites), viewer **354/354** (343 baseline + 11
+net new: `StickyResourceBar.spec.ts` (new file), `push.spec.ts` (new file), plus
+`LostFleetShips.spec.ts` header/slot assertions rewritten for the removed ship name/ordinal). Both
+production builds clean. Every visual/layout fix in this session was verified against a real running
+dev server via Playwright (screenshots + `getBoundingClientRect()` measurements), including finding
+a real engine seed (`artifact-seed-13`) that seeds the specific artifacts needed to compare the new
+iconography pixel-for-pixel against its design reference (Eclipse's "2vp, pt > vp" ship action), and
+a real touch-context (`hasTouch: true`) Playwright check confirming the tooltip fix on a genuinely
+fresh browser context - the exact gap prior sessions' tooltip fixes were missing (see "Done so far"
+#74's own note).
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/

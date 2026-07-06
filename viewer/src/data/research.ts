@@ -68,7 +68,7 @@ const researchEffectCounters: ResearchEffectCounter[] = [
 ];
 
 export function researchEventsWithCounters(engine: Engine, field: ResearchField, level: number): Event[] {
-  let events = researchEvents(field, level, engine.expansions);
+  let events = researchEvents(field, level, engine.expansions, engine.lostFleetEconomySide);
 
   const counters = researchEffectCounters.filter(
     (c) => c.field == field && (c.expansion == null || c.expansion == engine.expansions)
@@ -79,7 +79,7 @@ export function researchEventsWithCounters(engine: Engine, field: ResearchField,
   const vals = {};
 
   [...Array(level + 1).keys()]
-    .map((l) => researchEvents(field, l, engine.expansions))
+    .map((l) => researchEvents(field, l, engine.expansions, engine.lostFleetEconomySide))
     .forEach((events, l) => {
       for (const e of events) {
         p.gainRewards(e.rewards, e.source);

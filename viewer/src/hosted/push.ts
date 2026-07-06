@@ -81,3 +81,24 @@ export async function enablePushNotifications(client: SupabaseClient, userId: st
   }
   return "Turn notifications enabled on this device.";
 }
+
+/**
+ * Opt-out flow: unsubscribes this device's push manager and removes its stored subscription row,
+ * so the `notify` Edge Function stops pushing to it.
+ */
+export async function disablePushNotifications(client: SupabaseClient): Promise<string> {
+  if (!pushSupported()) {
+    return "This browser can't do push notifications.";
+  }
+  const registration = await navigator.serviceWorker.getRegistration();
+  const subscription = await registration?.pushManager.getSubscription();
+  if (subscription) {
+    const endpoint = subscription.endpoint;
+    await subscription.unsubscribe();
+    const { error } = await client.from("push_subscriptions").delete().eq("endpoint", endpoint);
+    if (error) {
+      return `Could not remove the subscription: ${error.message}`;
+    }
+  }
+  return "Turn notifications disabled on this device.";
+}

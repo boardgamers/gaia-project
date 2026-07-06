@@ -43,9 +43,9 @@ describe("LostFleetShips", () => {
     // ships with a Standard Tech slot show a real TechTile rendering icons, not the old text fallback
     expect(container.querySelectorAll('[data-section="tech"] svg.techTile').length).to.equal(3);
 
-    // each ship now spells out its full name on the board (not just the single-letter marker)
-    const names = [...container.querySelectorAll(".lost-fleet-ship__name")].map((el) => el.textContent);
-    expect(names).to.deep.equal(["Twilight", "Rebellion", "T F Mars", "Eclipse"]);
+    // the ship name text was dropped - the single-letter marker circle is enough, freeing the
+    // header row for 5 same-size circles (marker + 4 exploration slots) in a row
+    expect(container.querySelectorAll(".lost-fleet-ship__name").length).to.equal(0);
 
     // Twilight carries the seeded artifact tokens (one per player at 4p)
     expect(engine.tiles.artifacts.length).to.equal(4);
@@ -109,7 +109,7 @@ describe("LostFleetShips", () => {
     expect(ship.getAttribute("viewBox")).to.equal("0 0 291 76");
   });
 
-  it("lays the 4 exploration slots out in a single row with an ordinal label per slot", () => {
+  it("lays the ship marker + 4 exploration slots out as 5 evenly-spaced circles in a single row", () => {
     const engine = new Engine(["init 2 lost-fleet-ships-spec"], { lostFleet: true });
     const store = makeStore();
     store.commit("receiveData", engine);
@@ -121,14 +121,21 @@ describe("LostFleetShips", () => {
     // 4 distinct x positions (one per column) but a single shared y position (one row)
     const transforms = slots.map((s) => s.getAttribute("transform"));
     expect(new Set(transforms).size).to.equal(4);
-    const xs = new Set(transforms.map((t) => t.match(/translate\(([\d.]+),/)[1]));
+    const xs = [...transforms.map((t) => Number(t.match(/translate\(([\d.]+),/)[1]))];
     const ys = new Set(transforms.map((t) => t.match(/,\s*([\d.]+)\)/)[1]));
-    expect(xs.size).to.equal(4);
+    expect(new Set(xs).size).to.equal(4);
     expect(ys.size).to.equal(1);
 
-    // each slot shows its own ordinal (1st/2nd/3rd/4th slot), not just the power cost
-    slots.forEach((slot, i) => {
-      expect(slot.querySelector(".lost-fleet-ship__slot-ordinal").textContent).to.equal(String(i + 1));
+    // evenly spaced 20 apart, same spacing as the gap from the marker circle (cx=9) to slot 1 -
+    // i.e. 5 same-size circles (marker + 4 slots) in one evenly-spaced row, no per-slot ordinal
+    // number (removed - the power-charge badge is the only number shown per slot).
+    const sortedXs = xs.slice().sort((a, b) => a - b);
+    for (let i = 1; i < sortedXs.length; i++) {
+      expect(sortedXs[i] - sortedXs[i - 1]).to.equal(20);
+    }
+    expect(sortedXs[0] - 9).to.equal(20);
+    slots.forEach((slot) => {
+      expect(slot.querySelector(".lost-fleet-ship__slot-ordinal")).to.equal(null);
     });
     // costs come from EXPLORATION_CHARGE_TRACK = [0, 2, 2, 4]; the 0-cost slot is a bare number,
     // non-zero slots show the same charge/power badge (Resource kind="pw") used everywhere else

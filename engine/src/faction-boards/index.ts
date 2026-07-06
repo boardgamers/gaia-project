@@ -1,6 +1,6 @@
 import { maxBy } from "lodash";
 import { FactionCustomization, FactionVariant } from "../engine";
-import { Faction } from "../enums";
+import { Expansion, Faction } from "../enums";
 import Ambas from "./ambas";
 import BalTaks from "./baltaks";
 import Bescods from "./bescods";
@@ -80,6 +80,6 @@ export function latestVariantVersion(variant: FactionVariant) {
   );
 }
 
-export function factionBoard(faction: Faction, variant?: FactionBoardRaw): FactionBoard {
-  return new FactionBoard(factionBoards[faction], variant);
+export function factionBoard(faction: Faction, variant?: FactionBoardRaw, expansion?: Expansion): FactionBoard {
+  return new FactionBoard(factionBoards[faction], variant, expansion);
 }

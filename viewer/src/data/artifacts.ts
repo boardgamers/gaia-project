@@ -28,8 +28,19 @@ const artifactDisplaySpec: {
   [ArtifactToken.ResearchLevel]: { rewards: "3vp", condition: ConditionEnum.AdvanceResearch, track: ResearchField.Science },
   [ArtifactToken.ResearchTracks]: { rewards: "3vp", condition: ConditionEnum.AdvanceResearch },
   [ArtifactToken.Federation]: { rewards: "fed" },
-  [ArtifactToken.GaiaProject]: { rewards: "3vp", condition: ConditionEnum.GaiaFormer },
-  [ArtifactToken.PlanetTypes]: { rewards: "3vp", condition: ConditionEnum.PlanetType },
+  // Mimics ResearchLevel above (advance-a-track icon, colored by that track) instead of the
+  // GaiaFormer resource icon - a gaiaformer token doesn't communicate "level up this track" any
+  // more clearly than the "gf" piece art itself does, and it also looked identical to actually
+  // gaining a gaiaformer resource.
+  [ArtifactToken.GaiaProject]: {
+    rewards: "3vp",
+    condition: ConditionEnum.AdvanceResearch,
+    track: ResearchField.GaiaProject,
+  },
+  // Two reward badges (3 + 1), matching the flat-plus-per-type layout of Eclipse's ship-board "2vp,
+  // pt > vp" action (spaceships.ts) for the same "flat VP + 1 VP per planet type" effect - a single
+  // "3" reward with the planet-type wheel below read as just "3 VP", not "3 VP + 1 per type".
+  [ArtifactToken.PlanetTypes]: { rewards: "3vp,1vp", condition: ConditionEnum.PlanetType },
   [ArtifactToken.DeepSpace]: { rewards: "3vp", condition: ConditionEnum.DeepSpaceSector },
 };
 

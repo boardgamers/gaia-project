@@ -14,11 +14,11 @@
     <PlanetType v-else-if="condition === 'pt' || condition === 'newplanet'" transform="scale(1.1)" />
     <Sector v-else-if="condition === 's'" transform="scale(1.5)" />
     <g v-else-if="condition === 'newsector'" class="newsector-combo">
-      <g transform="translate(-6, 0) scale(0.55)">
+      <g transform="translate(-8, 0) scale(0.75)">
         <Sector />
       </g>
       <text x="0" y="3" class="newsector-combo__slash">/</text>
-      <g transform="translate(6, 0) scale(0.55)">
+      <g transform="translate(8, 0) scale(0.75)">
         <DeepSpaceSector :white="true" />
       </g>
     </g>
@@ -78,6 +78,9 @@
       />
     </g>
     <g v-else-if="condition === 'a'">
+      <!-- when tied to one specific research track (color set), tint the whole track box, not just
+           the segment lines, so it reads at a glance as "that track" rather than "some track". -->
+      <rect v-if="color" x="-15" y="-12" width="30" height="24" :fill="color" opacity="0.35" />
       <line x1="-15" x2="15" :stroke="color || '#666'" />
       <line x1="-15" x2="15" y1="-10" y2="-10" :stroke="color || '#666'" />
       <line x1="-15" x2="15" y1="10" y2="10" :stroke="color || '#666'" />

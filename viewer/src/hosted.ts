@@ -4,7 +4,7 @@ import CreateGame from "./hosted/CreateGame.vue";
 import HostedBar from "./hosted/HostedBar.vue";
 import { HostedGameHost, seatToLock } from "./hosted/host";
 import Lobby from "./hosted/Lobby.vue";
-import { enablePushNotifications, isPushEnabled, registerServiceWorker } from "./hosted/push";
+import { disablePushNotifications, enablePushNotifications, isPushEnabled, registerServiceWorker } from "./hosted/push";
 import SignIn from "./hosted/SignIn.vue";
 import { createSupabaseBackend, getSupabaseClient, subscribeMoves, SupabaseClient } from "./hosted/supabase-client";
 import { setViewportZoomLocked } from "./hosted/viewport";
@@ -59,6 +59,12 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
           "enable-push": async () => {
             bar.pushBusy = true;
             window.alert(await enablePushNotifications(client, session.user.id));
+            bar.pushEnabled = await isPushEnabled();
+            bar.pushBusy = false;
+          },
+          "disable-push": async () => {
+            bar.pushBusy = true;
+            window.alert(await disablePushNotifications(client));
             bar.pushEnabled = await isPushEnabled();
             bar.pushBusy = false;
           },

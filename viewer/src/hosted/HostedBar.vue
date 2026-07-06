@@ -15,14 +15,17 @@
       <span v-else class="text-muted small ml-2">Spectating</span>
     </span>
     <span>
-      <b-badge
+      <b-button
         v-if="pushEnabled"
+        size="sm"
         variant="success"
+        :disabled="pushBusy"
         v-b-tooltip.hover
-        title="This device is registered for turn notifications. Enable it separately on any other device you play from."
+        title="This device is registered for turn notifications. Enable it separately on any other device you play from. Click to turn off."
+        @click="$emit('disable-push')"
       >
         🔔 Notifications on
-      </b-badge>
+      </b-button>
       <b-button v-else size="sm" variant="outline-secondary" :disabled="pushBusy" @click="$emit('enable-push')">
         Enable notifications
       </b-button>

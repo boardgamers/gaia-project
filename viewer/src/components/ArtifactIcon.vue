@@ -1,9 +1,19 @@
 <template>
   <svg viewBox="-13 -13 26 26" :width="size" :height="size" style="overflow: visible">
-    <g class="lost-fleet-ship__artifact" v-b-tooltip.hover :title="tooltip">
+    <!-- .click alongside .hover: on real touch devices, a first tap doesn't always synthesize the
+         mouseenter that .hover-only tooltips rely on (a well-known WebKit/mobile quirk - see
+         launcher.ts's touchstart-arm workaround for the general case), and this artifact icon is
+         commonly the very first thing a player taps in a session, before that workaround has a
+         chance to help. A real click/tap always fires, so it's a hover-independent guarantee. -->
+    <g class="lost-fleet-ship__artifact" v-b-tooltip.hover.click :title="tooltip">
       <circle r="12" class="lost-fleet-ship__artifact-bg" />
       <g transform="scale(0.55)">
-        <text v-if="display.ongoingIncome" class="lost-fleet-ship__artifact-plus" x="-15" y="0">+</text>
+        <!-- x=-15 used to put the "+" past the artifact circle's own left edge (measured via a real
+             render: text center -15 with a ~16-wide glyph spans to -23, past the circle's -21.8
+             boundary in this same pre-scale coordinate system) and left a large gap before the
+             reward icons at translate(9, ...) - moved to -10 (and the icons in from 9 to 8) so both
+             sit with a small even gap, comfortably inside the circle on both sides. -->
+        <text v-if="display.ongoingIncome" class="lost-fleet-ship__artifact-plus" x="-10" y="0">+</text>
         <Resource
           v-for="(reward, j) in display.rewards"
           :key="j"
@@ -11,7 +21,7 @@
           :count="reward.count"
           :transform="
             display.ongoingIncome
-              ? `translate(9, ${(j - (display.rewards.length - 1) / 2) * 20})`
+              ? `translate(8, ${(j - (display.rewards.length - 1) / 2) * 20})`
               : `translate(${(j - (display.rewards.length - 1) / 2) * 20}, ${
                   display.condition || display.planet ? -7 : 0
                 })`

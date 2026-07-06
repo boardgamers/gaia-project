@@ -1,10 +1,25 @@
 import { expect } from "chai";
+import { factionBoard } from ".";
 import Engine, { EngineOptions } from "../engine";
-import { Federation, Player } from "../enums";
+import { Expansion, Faction, Federation, Operator, Player } from "../enums";
 
 const parseMoves = Engine.parseMoves;
 
 describe("gleens", () => {
+  it("should grant a once-per-round +2 range special action under Lost Fleet (§I5)", () => {
+    const board = factionBoard(Faction.Gleens, undefined, Expansion.LostFleet);
+    const activated = board.income.filter((e) => e.operator === Operator.Activate);
+
+    expect(activated.some((e) => e.spec === "=> range+2")).to.equal(true);
+  });
+
+  it("should not have the +2 range special action outside Lost Fleet", () => {
+    const board = factionBoard(Faction.Gleens);
+    const activated = board.income.filter((e) => e.operator === Operator.Activate);
+
+    expect(activated.some((e) => e.spec === "=> range+2")).to.equal(false);
+  });
+
   it("should grant gleens an ore instead of qic when upgrading navigation without an academy", () => {
     const engine = new Engine(
       parseMoves(`

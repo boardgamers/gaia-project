@@ -1,10 +1,15 @@
 <template>
+  <!-- .click alongside .hover: on real touch devices, a first tap doesn't always synthesize the
+       mouseenter that .hover-only tooltips rely on (a well-known WebKit/mobile quirk - see
+       launcher.ts's touchstart-arm workaround for the general case), and this Federation tile is
+       commonly the very first thing a player taps in a session, before that workaround has a
+       chance to help. A real click/tap always fires, so it's a hover-independent guarantee. -->
   <svg
     viewBox="-25 -25 50 50"
     width="50"
     height="50"
     style="overflow: visible"
-    v-b-tooltip.hover
+    v-b-tooltip.hover.click
     :title="tooltip"
   >
     <g :class="['federationTile', { disabled }]">
@@ -29,6 +34,30 @@
           <image xlink:href="../assets/resources/dig-arrow.svg" width="14" :height="(325 / 308) * 14" x="-10" y="-4" />
           <image xlink:href="../assets/resources/dig-arrow.svg" width="14" :height="(325 / 308) * 14" x="-6" y="1" />
         </g>
+      </g>
+      <!-- Same "free mine" pairing as the Terraform token above (a bonus Build-a-Mine action), just
+           with the plain range icon instead of terraforming-step arrows, since this token's bonus
+           mine has unlimited range rather than free terraforming steps. Was previously the generic
+           "range" reward icon alone with no mine icon at all, reading as "gain range" rather than
+           "gain a mine, at any range". -->
+      <g v-else-if="isRangeMineToken" style="pointer-events: none" transform="translate(0, 3)">
+        <Building building="m" outline-white faction="gen" transform="translate(-11, 0) scale(2.2)" />
+        <g transform="translate(9, 0) scale(1.2)">
+          <image xlink:href="../assets/resources/flat-hex.svg" :height="(162 / 328) * 20" width="15" y="-9" x="-2" />
+          <image xlink:href="../assets/resources/flat-hex.svg" :height="(162 / 328) * 20" width="20" y="3" x="-10" />
+          <image
+            xlink:href="../assets/resources/range-arrow.svg"
+            :height="(285 / 164) * 9"
+            width="9"
+            y="-8"
+            x="-2"
+            transform="rotate(5)"
+          />
+        </g>
+        <!-- "unlimited range" - the plain hex+arrow range icon alone doesn't distinguish this from
+             a normal +1/+2 range gain, so mark it with the infinity symbol used nowhere else in the
+             icon set. -->
+        <text x="9" y="14" class="lost-fleet-federation__unlimited">∞</text>
       </g>
       <g v-else-if="rewards.length > 0">
         <Resource
@@ -90,6 +119,10 @@ export default class FederationTile extends Vue {
     return this.spaceshipFederation === SpaceshipFederation.Terraform;
   }
 
+  get isRangeMineToken(): boolean {
+    return this.spaceshipFederation === SpaceshipFederation.Range;
+  }
+
   get tooltip(): string | undefined {
     return this.spaceshipFederation !== undefined ? spaceshipFederationSpec[this.spaceshipFederation] : undefined;
   }
@@ -114,6 +147,14 @@ g {
       dominant-baseline: middle;
       font-size: 12px;
       pointer-events: none;
+    }
+
+    .lost-fleet-federation__unlimited {
+      font-size: 11px;
+      font-weight: bold;
+      fill: white;
+      stroke: black;
+      stroke-width: 0.5px;
     }
   }
 }

@@ -13,6 +13,15 @@ Vue.component("Condition", Condition);
 Vue.component("TechContent", TechContent);
 Vue.component("Resource", Resource);
 
+// iOS Safari (and older mobile Chrome) only emits `mouseenter`/`:hover` on the first tap of a
+// session if some element on the page already has a click listener bound - otherwise the first
+// tap on any `.hover`-triggered tooltip (v-b-tooltip) is swallowed and only the *second* tap
+// (after tapping something else first) shows it. Binding a no-op touchstart listener up front
+// arms hover emulation immediately, so the very first tap on any tooltip target works.
+if (typeof document !== "undefined") {
+  document.body.addEventListener("touchstart", () => undefined, true);
+}
+
 function launch(selector: string, component: VueConstructor<Vue> = Game) {
   let lastMovedAt: number = 0;
 

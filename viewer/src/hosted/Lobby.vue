@@ -3,14 +3,17 @@
     <div class="d-flex justify-content-between align-items-center">
       <h3 class="mb-0">The Lost Fleet — Games</h3>
       <div>
-        <b-badge
+        <b-button
           v-if="pushEnabled"
+          size="sm"
           variant="success"
+          :disabled="pushBusy"
           v-b-tooltip.hover
-          title="This device is registered for turn notifications. Enable it separately on any other device you play from."
+          title="This device is registered for turn notifications. Enable it separately on any other device you play from. Click to turn off."
+          @click="disablePush"
         >
           🔔 Notifications on
-        </b-badge>
+        </b-button>
         <b-button v-else size="sm" variant="outline-secondary" @click="enablePush" :disabled="pushBusy"
           >Enable notifications</b-button
         >
@@ -71,7 +74,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { enablePushNotifications, isPushEnabled } from "./push";
+import { disablePushNotifications, enablePushNotifications, isPushEnabled } from "./push";
 import Token from "../components/Token.vue";
 import { factionName } from "../data/factions";
 
@@ -182,6 +185,12 @@ export default Vue.extend({
     async enablePush() {
       this.pushBusy = true;
       this.message = await enablePushNotifications(this.client, (this.session as any).user.id);
+      this.pushEnabled = await isPushEnabled();
+      this.pushBusy = false;
+    },
+    async disablePush() {
+      this.pushBusy = true;
+      this.message = await disablePushNotifications(this.client);
       this.pushEnabled = await isPushEnabled();
       this.pushBusy = false;
     },

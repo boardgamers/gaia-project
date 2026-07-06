@@ -135,7 +135,8 @@
           variant="outline-secondary"
           right
           dropup
-          boundary="viewport"
+          boundary="window"
+          :popper-opts="{ positionFixed: true }"
           class="ml-auto auto-leech-select"
           v-b-tooltip.hover
           title="Auto leech: automatically accept or decline power-charge offers up to this amount, instead of asking every time"
@@ -1110,8 +1111,10 @@ $mobile-sticky-actions-max-height: 40vh;
 // line, rather than a boxed-in banner floating inside the bar.
 #move-buttons .sticky-bar-title {
   display: none !important;
-  margin: 0.5rem -0.5rem calc(-0.5rem - env(safe-area-inset-bottom));
-  padding: 0.4rem 0.5rem calc(0.4rem + env(safe-area-inset-bottom));
+  margin: 0.5rem calc(-0.5rem - env(safe-area-inset-right)) calc(-0.5rem - env(safe-area-inset-bottom))
+    calc(-0.5rem - env(safe-area-inset-left));
+  padding: 0.4rem calc(0.5rem + env(safe-area-inset-right)) calc(0.4rem + env(safe-area-inset-bottom))
+    calc(0.5rem + env(safe-area-inset-left));
   border-top: 2px solid var(--highlighted, #2c4);
   background: var(--systemGray5, #e5e5ea);
 
@@ -1148,7 +1151,8 @@ $mobile-sticky-actions-max-height: 40vh;
     max-height: $mobile-sticky-actions-max-height;
     overflow-y: auto;
     margin: 0;
-    padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom));
+    padding: 0.5rem calc(0.5rem + env(safe-area-inset-right)) calc(0.5rem + env(safe-area-inset-bottom))
+      calc(0.5rem + env(safe-area-inset-left));
     background: var(--systemGray6, #f2f2f7);
     border-top: 1px solid #c9c9d1;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);

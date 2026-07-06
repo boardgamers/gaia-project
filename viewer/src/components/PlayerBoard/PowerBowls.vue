@@ -13,16 +13,16 @@
       <PowerBowl :player="player" area="gaia" class="gaia-bowl" gaia="true" />
     </g>
     <g :transform="`translate(${-r * spacing}, ${2 * r * sin60 * spacing})`">
-      <PowerBowl :player="player" area="area1" class="power-bowl" />
+      <PowerBowl :player="player" area="area1" class="power-bowl power-bowl--1" />
       <text y="1.7" transform="scale(0.7)" v-if="showIncome && income('t')">+{{ income("t") }}</text>
       <text class="label" x="-2.6">I</text>
     </g>
     <g :transform="`translate(${-r * spacing}, ${-2 * r * sin60 * spacing})`">
-      <PowerBowl :player="player" area="area2" class="power-bowl" />
+      <PowerBowl :player="player" area="area2" class="power-bowl power-bowl--2" />
       <text class="label" x="-2.6">II</text>
     </g>
     <g :transform="`translate(${2 * r * spacing}, 0)`">
-      <PowerBowl :player="player" area="area3" class="power-bowl" />
+      <PowerBowl :player="player" area="area3" class="power-bowl power-bowl--3" />
       <text y="1.7" transform="scale(0.7)" v-if="showIncome && income('ta3')">+{{ income("ta3") }}</text>
       <text class="label" y="2.6" x="0">III</text>
     </g>
@@ -90,8 +90,19 @@ export default class PowerBowls extends Vue {
     fill: #00aa00;
   }
 
-  .power-bowl circle {
-    fill: purple;
+  // Bowls I -> III get progressively darker shades of the same purple, so which bowl is which
+  // reads at a glance even at the sticky resource bar's small scale, where the "I"/"II"/"III"
+  // labels are too small to be legible.
+  .power-bowl--1 circle {
+    fill: #c9a3e0;
+  }
+
+  .power-bowl--2 circle {
+    fill: #9855c9;
+  }
+
+  .power-bowl--3 circle {
+    fill: #5c1f82;
   }
 
   .power {

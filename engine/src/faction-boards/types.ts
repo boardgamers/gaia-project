@@ -1,6 +1,6 @@
 import { get, set } from "lodash";
 import { FactionVariant } from "../engine";
-import { Building, Command, Expansion, Faction, Operator, Phase, PowerArea } from "../enums";
+import { Building, Command, Expansion, Faction, hasExpansion, Operator, Phase, PowerArea } from "../enums";
 import Event from "../events";
 import Player from "../player";
 import Reward from "../reward";
@@ -30,6 +30,12 @@ export type FactionBoardVariants = {
   faction: Faction;
   standard: FactionBoardRaw;
   variants?: (FactionBoardVariant & { type: FactionVariant; players?: number; version: number })[];
+  // Extra income entries (in the same string syntax as FactionBoardRaw.income) that only apply
+  // under the Lost Fleet expansion - for existing base-game factions that gained a new ability
+  // from Lost Fleet's per-faction delta list (RULES_CLARIFICATIONS.md §I), without changing their
+  // base-game board. Unlike `standard.income`, these are appended conditionally in FactionBoard's
+  // constructor rather than always loaded, since `income` has no expansion filtering of its own.
+  lostFleetIncome?: string[];
 };
 
 const defaultBoard: FactionBoardRaw = {
@@ -142,8 +148,12 @@ export class FactionBoard {
   brainstone: PowerArea;
   handlers?: { [event: string]: (player: Player, ...args: any[]) => any };
 
-  constructor(input: FactionBoardVariants, variant?: FactionBoardRaw) {
+  constructor(input: FactionBoardVariants, variant?: FactionBoardRaw, expansion?: Expansion) {
     Object.assign(this, merge({}, defaultBoard, input.standard, variant ?? {}));
+
+    if (input.lostFleetIncome && hasExpansion(expansion, Expansion.LostFleet)) {
+      this.income = [...(this.income as any), ...input.lostFleetIncome];
+    }
 
     const buildings = Building.values(Expansion.All);
     const toRewards = [`${Building.TradingStation}.isolatedCost`].concat(buildings.map((bld) => `${bld}.cost`));

@@ -8,30 +8,26 @@
       viewBox="0 0 291 76"
       style="overflow: visible"
     >
-      <!-- header, single row: ship marker + full name side by side -->
+      <!-- header, single row: ship marker circle + the 4 exploration-slot circles, 5 circles total
+           evenly spaced (20 apart, matching the marker's own diameter) - no ship name text and no
+           slot-ordinal number, since the marker letter + circle position already identify the ship
+           and slot; only the power-charge cost (or claiming player's token) needs to show per slot. -->
       <g class="lost-fleet-ship__header">
         <g v-b-tooltip.hover :title="shipLabel(ship)">
           <circle cx="9" cy="9" r="8" class="lost-fleet-ship__marker-bg" />
           <text x="9" y="12" class="lost-fleet-ship__marker">{{ shipMarker(ship) }}</text>
         </g>
-        <text x="21" y="12" class="lost-fleet-ship__name">{{ shipName(ship) }}</text>
 
-        <!-- the 4 exploration-track slots (explored-by markers), same row as the ship name, not a
-             separate row underneath - pushed to the right side of the header row (past the longest
-             ship name, "Rebellion") while staying clear of the Federation token at x=172. Spaced 20
-             apart (was 15, which nearly touched given the circles' own 16-unit diameter) for a clear
-             gap between adjacent slots. -->
         <g
           v-for="slot in explorationSlots(ship)"
           :key="slot.index"
           class="lost-fleet-ship__slot"
           :data-slot="slot.index"
-          :transform="`translate(${98 + (slot.index - 1) * 20}, 9)`"
+          :transform="`translate(${9 + slot.index * 20}, 9)`"
           v-b-tooltip.hover
           :title="slotTitle(slot)"
         >
           <circle r="8" class="lost-fleet-ship__slot-bg" />
-          <text y="-3" class="lost-fleet-ship__slot-ordinal">{{ slot.index }}</text>
           <template v-if="!slot.player">
             <!-- same charge/power badge used everywhere else (Resource kind="pw"), just scaled down -->
             <Resource v-if="slot.cost > 0" kind="pw" :count="slot.cost" transform="translate(0, 2) scale(0.5)" />
@@ -150,7 +146,7 @@
           y="8"
           filter="url(#shadow-1)"
         />
-        <g v-else v-b-tooltip.hover :title="federationTooltip(ship)">
+        <g v-else v-b-tooltip.hover.click :title="federationTooltip(ship)">
           <FederationTile :used="true" x="172" y="8" />
         </g>
       </g>
@@ -214,7 +210,6 @@ import {
   isMineBubble as isMineBubbleFn,
   spaceshipLabels,
   spaceshipMarkers,
-  spaceshipNames,
 } from "../data/spaceships";
 import { factionPiecePlanet } from "../graphics/utils";
 import ArtifactIcon from "./ArtifactIcon.vue";
@@ -257,10 +252,6 @@ export default class LostFleetShips extends Vue {
 
   get remainingArtifacts(): ArtifactToken[] {
     return this.engine.tiles.artifacts ?? [];
-  }
-
-  shipName(ship: Spaceship): string {
-    return spaceshipNames[ship];
   }
 
   shipLabel(ship: Spaceship): string {
@@ -373,13 +364,6 @@ svg.lost-fleet-ship {
   height: auto;
   display: block;
 
-  .lost-fleet-ship__name {
-    font-size: 9px;
-    font-weight: 700;
-    fill: #172e62;
-    pointer-events: none;
-  }
-
   .lost-fleet-ship__marker-bg {
     fill: #efe6c4;
     stroke: #d8c57c;
@@ -398,13 +382,6 @@ svg.lost-fleet-ship {
     fill: #eef2f8;
     stroke: #b8c2d4;
     stroke-width: 1;
-  }
-
-  .lost-fleet-ship__slot-ordinal {
-    font-size: 5px;
-    fill: #9aa4b2;
-    text-anchor: middle;
-    pointer-events: none;
   }
 
   .lost-fleet-ship__slot-cost {
