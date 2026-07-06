@@ -35,34 +35,12 @@
             </b-dropdown>
           </div>
           <div class="stats-window__spacer" />
-          <div class="stats-window__field">
-            <label class="stats-window__label">Format</label>
-            <div class="stats-window__segmented" role="group" aria-label="Chart or table view">
-              <button
-                type="button"
-                class="stats-window__segment"
-                :class="{ 'stats-window__segment--active': !isTable }"
-                @click="setTable(false)"
-              >
-                Chart
-              </button>
-              <button
-                type="button"
-                class="stats-window__segment"
-                :class="{ 'stats-window__segment--active': isTable }"
-                @click="setTable(true)"
-              >
-                Table
-              </button>
-            </div>
-          </div>
           <div class="stats-window__field stats-window__field--compact">
             <b-form-checkbox switch size="sm" v-model="compact" @change="loadChart">Compact</b-form-checkbox>
           </div>
         </div>
         <div id="tooltip" />
         <div class="stats-window__surface">
-          <canvas id="graphs" v-show="chartStyle.type === 'chart'" />
           <!-- :key is necessary to force update -->
           <b-table
             :key="tableKey"
@@ -102,52 +80,9 @@ import BuildingImage from "./Building.vue";
 import SpecialAction from "./SpecialAction.vue";
 import SilentAuctionLog from "./SilentAuctionLog.vue";
 import Engine, {PlayerEnum} from "@gaia-project/engine";
-import {
-  BarController,
-  BarElement,
-  CategoryScale,
-  Chart,
-  ChartConfiguration,
-  Filler,
-  Legend,
-  LinearScale,
-  LineController,
-  LineElement,
-  PointElement,
-  Title,
-  Tooltip,
-} from "chart.js";
+import type {ChartConfiguration} from "chart.js";
 import {barChartKind, ChartKind, ChartKindDisplay, ChartSetup, lineChartKind, TableMeta,} from "../logic/charts/chart-factory";
 import {tableHeader, tableItems} from "../logic/charts/table";
-import {StatisticsDisplay} from "../data";
-
-Chart.register(
-  LineController,
-  LineElement,
-  Title,
-  CategoryScale,
-  Tooltip,
-  Legend,
-  Filler,
-  LinearScale,
-  PointElement,
-  BarController,
-  BarElement
-);
-
-// Global visual polish, applied once - a leaner line weight and a dot-style legend read as more
-// current than Chart.js's own defaults (a 3px line and big color-swatch legend keys), without
-// touching any dataset's actual data/labels (every chart JSON fixture only snapshots those, not
-// styling, so this is safe against the fixture-comparison tests in chart.spec.ts). Left as
-// close to Chart.js's own light-background defaults as possible - the surrounding modal is a
-// plain white Bootstrap modal, not the game board's dark theme, so no color inversion here.
-Chart.defaults.color = "#495057";
-Chart.defaults.borderColor = "rgba(0, 0, 0, 0.06)";
-Chart.defaults.elements.line.borderWidth = 2;
-Chart.defaults.elements.point.radius = 3;
-Chart.defaults.elements.point.hoverRadius = 5;
-Chart.defaults.plugins.legend.labels.usePointStyle = true;
-Chart.defaults.plugins.legend.labels.padding = 12;
 
 type Table = { title: string; header: any[]; items: any[]; descriptions: any[] };
 
@@ -156,22 +91,23 @@ type Table = { title: string; header: any[]; items: any[]; descriptions: any[] }
 })
 export default class Charts extends Vue {
   private setup: ChartSetup;
-  private isTable = false;
   private compact = false;
   private chartSelect: ChartSelect = null;
   private chartType: ChartType | null;
   private chartKinds: ChartKindDisplay[][] = [];
   private chartKind: ChartKind = barChartKind;
   private tableKey = 0;
-  private chart: Chart = null;
   private table: Table = null;
 
   get gameData(): Engine {
     return this.$store.state.data;
   }
 
+  // Statistics is table-only now (the chart view was removed) - `type` stays "table" so
+  // chart-factory.ts/table.ts (which still build the underlying data both views used to share)
+  // keep formatting for that branch.
   get chartStyle() {
-    return { type: this.isTable ? "table" : "chart", compact: this.compact, label: "" } as const;
+    return { type: "table", compact: this.compact, label: "" } as const;
   }
 
   get selects(): ChartSelect[] {
@@ -201,21 +137,12 @@ export default class Charts extends Vue {
   }
 
   mounted() {
-    const pref = this.$store.state.preferences.statistics as StatisticsDisplay;
-    this.isTable = pref === "table";
     this.compact = window.innerWidth < 500;
     this.selectSelect(ChartGroup.vp);
   }
 
   isCommonKind() {
     return typeof this.chartKind == "number" || this.chartKind == barChartKind || this.chartKind == lineChartKind;
-  }
-
-  setTable(table: boolean) {
-    if (this.isTable != table) {
-      this.isTable = table;
-      this.loadChart();
-    }
   }
 
   selectSelect(s: ChartSelect) {
@@ -246,50 +173,28 @@ export default class Charts extends Vue {
     this.chartKinds = this.setup.kinds(this.gameData, factory);
 
     const data = this.gameData;
-    const isChart = this.chartStyle.type == "chart";
-    const colorLookup = (color: string): string => {
-      const canvas =  this.canvas();
-      return color.startsWith("--") && isChart
-        ? window.getComputedStyle(canvas).getPropertyValue(color)
-        : color;
-    };
+    // No canvas to resolve CSS custom properties against now that the chart view is gone - table
+    // formatting never used raw "--foo" colors anyway, so passing colors through unchanged is enough.
+    const colorLookup = (color: string): string => color;
 
     if (this.chartKind === barChartKind) {
       const config = this.setup.newBarChart(this.chartStyle, factory, data, colorLookup);
-      this.newChart(config.chart, config.table);
+      this.buildTable(config.chart, config.table);
     } else if (this.chartKind === lineChartKind) {
-      this.newChart(this.setup.newLineChart(this.chartStyle, factory, data, PlayerEnum.All, colorLookup));
+      this.buildTable(this.setup.newLineChart(this.chartStyle, factory, data, PlayerEnum.All, colorLookup));
     } else {
-      this.newChart(this.setup.newLineChart(this.chartStyle, factory, data, this.chartKind, colorLookup));
+      this.buildTable(this.setup.newLineChart(this.chartStyle, factory, data, this.chartKind, colorLookup));
     }
   }
 
-  private canvas(): HTMLCanvasElement {
-    return document.getElementById("graphs") as HTMLCanvasElement;
-  }
-
-  private newChart(config: ChartConfiguration<any>, tableMeta?: TableMeta) {
-    if (this.chartStyle.type == "chart") {
-      this.destroyChart();
-      this.chart = new Chart(this.canvas(), config);
-      this.table = null;
-    } else {
-      this.table = {
-        title: config.options.plugins.title.text,
-        header: tableHeader(this.chartStyle, config, tableMeta),
-        items: tableItems(config, tableMeta),
-        descriptions: tableMeta?.descriptions,
-      };
-      this.tableKey++;
-      this.destroyChart();
-    }
-  }
-
-  private destroyChart() {
-    if (this.chart) {
-      this.chart.destroy();
-      this.chart = null;
-    }
+  private buildTable(config: ChartConfiguration<any>, tableMeta?: TableMeta) {
+    this.table = {
+      title: config.options.plugins.title.text,
+      header: tableHeader(this.chartStyle, config, tableMeta),
+      items: tableItems(config, tableMeta),
+      descriptions: tableMeta?.descriptions,
+    };
+    this.tableKey++;
   }
 }
 </script>
@@ -345,32 +250,6 @@ export default class Charts extends Vue {
 
   .stats-window__spacer {
     flex: 1 1 auto;
-  }
-
-  .stats-window__segmented {
-    display: inline-flex;
-    border: 1px solid #ced4da;
-    border-radius: 0.25rem;
-    overflow: hidden;
-  }
-
-  .stats-window__segment {
-    border: none;
-    background: white;
-    padding: 0.25rem 0.75rem;
-    font-size: 0.8rem;
-    line-height: 1.5;
-    color: #495057;
-    cursor: pointer;
-
-    &:not(:first-child) {
-      border-left: 1px solid #ced4da;
-    }
-
-    &--active {
-      background: #495057;
-      color: white;
-    }
   }
 
   .stats-window__surface {

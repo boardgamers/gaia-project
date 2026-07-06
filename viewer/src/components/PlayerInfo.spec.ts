@@ -1,5 +1,6 @@
-import Engine from "@gaia-project/engine";
-import { Spaceship, SpaceshipFederation, SpaceshipTechTile } from "@gaia-project/engine/src/enums";
+import Engine, { Operator } from "@gaia-project/engine";
+import { Booster, Spaceship, SpaceshipFederation, SpaceshipTechTile } from "@gaia-project/engine/src/enums";
+import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
 import { render } from "@testing-library/vue";
 import { expect } from "chai";
 import { makeStore } from "../store";
@@ -110,5 +111,26 @@ describe("PlayerInfo terraforming strip", () => {
       img.outerHTML.includes("dig-arrow")
     );
     expect(arrows.length, "expected 3 terraform-step arrows").to.equal(3);
+  });
+
+  it("marks a booster's special action with the same used-X as a power action, once activated", () => {
+    const engine = new Engine(["init 2 player-info-booster-used", "p1 faction terrans", "p2 faction hadsch-hallas"]);
+    const player = engine.players[0];
+    player.data.tiles.booster = Booster.Booster4;
+    player.loadEvents(boosterEvents(Booster.Booster4));
+
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container: before } = render(PlayerInfo, { props: { player }, store });
+    expect(before.querySelector("svg.booster g.specialAction.disabled"), "not yet used").to.equal(null);
+
+    const activateEvent = player.events[Operator.Activate].find((e) => e.source === Booster.Booster4);
+    activateEvent.activated = true;
+
+    const { container: after } = render(PlayerInfo, { props: { player }, store });
+    expect(after.querySelector("svg.booster g.specialAction.disabled"), "marked used after activation").to.not.equal(
+      null
+    );
   });
 });

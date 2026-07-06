@@ -273,7 +273,7 @@ describe("Game", () => {
     vm.$destroy();
   });
 
-  it("keeps Turn Order before Commands on mobile during setup, but flips to Turn Order first once round 1 starts", () => {
+  it("renders Turn Order in a banner at the top of the page (before the map), and gives the Commands column the full row width", () => {
     const setupEngine = new Engine(["init 2 lf-freeze-28"]);
 
     const gameplayEngine = new Engine(["init 2 lf-freeze-28"]);
@@ -286,26 +286,29 @@ describe("Game", () => {
     gameplayEngine.turnOrder = gameplayEngine.players.map((pl) => pl.player);
     gameplayEngine.currentPlayer = PlayerEnum.Player1;
 
-    for (const [engine, expectCommandsFirst] of [
-      [setupEngine, true],
-      [gameplayEngine, false],
-    ] as const) {
+    // Turn Order's top-banner placement (PROGRESS.md Gaia 9) no longer depends on whether
+    // gameplay has started - unlike the old mobile order-flip it replaced, both engines below
+    // should render it identically, at the very top of the page.
+    for (const engine of [setupEngine, gameplayEngine]) {
       const store = makeStore();
       const vm = new (Vue.extend(Game as any))({ store }) as any;
       vm.handleData(engine);
       vm.$mount();
       document.body.appendChild(vm.$el);
 
-      const turnOrderCol = vm.$el.querySelector(".col-md-4.order-md-1");
-      // Commands (or the "current player" fallback) always lives in the other, wider column.
-      const commandsCol = vm.$el.querySelector(".col-md-8.order-md-2");
-      expect(turnOrderCol, "expected a Turn Order column").to.not.equal(null);
-      expect(commandsCol, "expected a Commands column").to.not.equal(null);
+      const banner = vm.$el.querySelector(".turn-order-banner");
+      expect(banner, "expected a top turn-order banner").to.not.equal(null);
+      expect(banner.querySelector(".turn-order"), "expected TurnOrder mounted inside the banner").to.not.equal(null);
 
-      const turnOrderIsFirstOnMobile = turnOrderCol.classList.contains("order-1");
-      const commandsIsFirstOnMobile = commandsCol.classList.contains("order-1");
-      expect(turnOrderIsFirstOnMobile).to.equal(!expectCommandsFirst);
-      expect(commandsIsFirstOnMobile).to.equal(expectCommandsFirst);
+      // The banner must precede the map/research-board row in document order - "top of the page".
+      const mapRow = vm.$el.querySelector(".space-map")?.closest(".row");
+      expect(mapRow, "expected the map row").to.not.equal(null);
+      expect(banner.compareDocumentPosition(mapRow) & Node.DOCUMENT_POSITION_FOLLOWING).to.not.equal(0);
+
+      // Commands (or the "current player" fallback) no longer shares its row with Turn Order, so
+      // the old split-column classes are both gone entirely.
+      expect(vm.$el.querySelector(".col-md-4.order-md-1"), "old Turn Order column class should be gone").to.equal(null);
+      expect(vm.$el.querySelector(".col-md-8.order-md-2"), "old Commands column class should be gone").to.equal(null);
 
       vm.$el.remove();
       vm.$destroy();
@@ -337,6 +340,31 @@ describe("Game", () => {
     expect(scoringBoardViewBox).to.equal(undefined);
     expect(researchBoard.querySelector(".techTile.adv-ext")).to.not.equal(null);
     expect(researchBoard.querySelectorAll(".scoringTile").length).to.be.greaterThan(0);
+
+    vm.$el.remove();
+    vm.$destroy();
+  });
+
+  it("narrows the Lost Fleet ship-board row to the research-board sidebar's own width from md upward, without touching its mobile-default column class", () => {
+    const engine = new Engine(["init 2 lf-ship-board-width"], { lostFleet: true });
+    engine.players.forEach((pl, index) => {
+      pl.faction = [Faction.Terrans, Faction.Lantids][index];
+      pl.loadFaction(null, engine.expansions);
+    });
+
+    const store = makeStore();
+    const vm = new (Vue.extend(Game as any))({ store }) as any;
+    vm.handleData(engine);
+    vm.$mount();
+    document.body.appendChild(vm.$el);
+
+    const shipsCol = vm.$el.querySelector(".lost-fleet-ships")?.closest(".col-12");
+    expect(shipsCol, "expected the ship-board wrapper to still carry the mobile-default col-12").to.not.equal(null);
+    // Same fraction/offset as the research-board sidebar's own `col-md-5` above it - this (not any
+    // change to LostFleetShips.vue's own unconditional 2-column grid CSS, which stays shared with
+    // mobile) is what fixes the abnormally large desktop ship boards.
+    expect(shipsCol.classList.contains("col-md-5")).to.equal(true);
+    expect(shipsCol.classList.contains("offset-md-7")).to.equal(true);
 
     vm.$el.remove();
     vm.$destroy();
@@ -374,6 +402,25 @@ describe("Game", () => {
 
       expect(vm.premoveOffered).to.equal(true);
       expect(vm.$el.textContent).to.contain("Plan my move");
+
+      vm.$el.remove();
+      vm.$destroy();
+    });
+
+    it("hides Commands (canPlay false) for everyone while locked to hosted.ts's pending placeholder seat", () => {
+      // playerToMove is 0 (terrans) - a real lock to seat 0 would make canPlay true, but the
+      // impossible placeholder index hosted.ts locks to before its real seat lock resolves
+      // (see hosted.ts's "close a race" comment) must keep canPlay false regardless of whose turn
+      // it actually is, so no viewer sees the active player's in-progress picks during that window.
+      const vm = mountAsSeat(-1);
+
+      expect(vm.engine.playerToMove).to.equal(0);
+      expect(vm.canPlay).to.equal(false);
+      // Regression check: myLockedSeat must reject the out-of-range placeholder rather than pass
+      // it through - premoveOffered calls into the engine with it and previously threw.
+      expect(vm.myLockedSeat).to.equal(undefined);
+      expect(() => vm.premoveOffered).to.not.throw();
+      expect(vm.premoveOffered).to.equal(false);
 
       vm.$el.remove();
       vm.$destroy();

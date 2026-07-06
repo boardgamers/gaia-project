@@ -3275,6 +3275,92 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       as every other standalone cost in the app. Updated `lost-fleet.spec.ts`'s combined-cost test to
       match (cost stays unsigned; the charge itself was always unsigned already, unaffected). Viewer
       360/360, production build clean.
+75. ✅ **"Gaia 9" owner punch list (2026-07-06, new session), in progress - premove UI redesign
+    (item below) still open, everything else done:**
+    - **Exposed active-player picks during faction-select/round-0 setup**: root-caused, not just
+      patched over - a real race in `hosted.ts`: `host.load()`'s first `onState` can fire (and, via
+      the "ready" listener, unhide the game) before `mySeats` is computed (only known once `load()`
+      resolves), so `seatToLock([], ...)` returns `null`, no `"player"` event fires, and
+      `$store.state.player` stays its default `null` - which `Game.vue`'s `canPlay` deliberately
+      treats as "no lock, anyone may act" for local hot-seat play. In hosted play that default was
+      wrong for this window: every viewer's `canPlay` was briefly `true`. Fixed by locking to an
+      impossible placeholder seat (`{index: -1}`) synchronously before `host.load()` even starts, so
+      `canPlay` is `false` for everyone until the real per-seat lock replaces it. Exposed a second
+      real bug while fixing this: `Game.vue`'s `myLockedSeat` passed that placeholder straight
+      through to `premoveOffered`, which called `engine.previewAvailableCommandsFor(-1)` and threw -
+      `myLockedSeat` now bounds-checks the index against `engine.players.length`. 2 new `Game.spec.ts`
+      cases cover both.
+    - **Ship boards abnormally large on desktop**: root cause was structural, not a sizing constant -
+      `LostFleetShips.vue`'s own CSS (2-column grid, shared unconditionally with mobile) was correct
+      at every viewport; the ship-board *row* just wasn't width-constrained to match the
+      research-board sidebar the way everything else in that row is. Fixed purely with responsive
+      Bootstrap classes in `Game.vue` (`col-12 col-md-5 offset-md-7`, the same fraction/offset as the
+      research board's own `col-md-5` column) - mobile's `col-12` is untouched, so its DOM/CSS is
+      byte-for-byte identical to before (confirmed via a `git stash` before/after `getBoundingClientRect()`
+      diff). Measured live via Playwright at a 1400px desktop viewport: the ship-board power-action
+      octagons now render at ~41.5px vs. the base game's ~42.2px - within 2%, no extra scale factor
+      needed.
+    - **Turn-order banner + presence indicators**: moved `TurnOrder` out of its old row (which
+      order-flipped against Commands on mobile, now-removed dead code, `gameplayStarted` deleted) into
+      a new banner at the very top of the page on every viewport, dropping the standalone "Turn order"
+      heading text per owner instruction. Built presence from scratch (nothing existed before): a
+      shared Supabase Realtime Presence channel (`hosted/presence.ts`, no schema needed - Presence is
+      channel-only), tracked in `hosted.ts` as `{context: {type: "game"|"lobby", gameId?}, focused:
+      document.visibilityState === "visible"}`, surfaced through the store (`seatUsers`, `presence`)
+      to a new small `presence-dot` on `PlayerCircle.vue` (top-left, green/yellow/grey per the owner's
+      spec). Outside hosted mode (no `?game=` in the URL) it correctly renders no dot at all - verified
+      with 3 new `TurnOrder.spec.ts` cases (none/green+grey/yellow) plus a live Playwright check that
+      the banner itself renders and sizes correctly on both viewports.
+    - **Turn notifications firing when the game is already open, or a premove will play it anyway**:
+      both conditions needed new plumbing since neither existed. (a) "already open": a lightweight
+      per-seat heartbeat (`players.last_active_at`, migration `0013_notify_presence_gate.sql`'s
+      `mark_seat_active` RPC) the client calls every 20s while visible - `notify`'s turn-push branch
+      now skips a seat active within the last 45s. (b) "premove will play it": a straight readback of
+      the same `premoves` existence check `notify_resolve_automation` already does - this was
+      literally an open decision already logged in `PREMOVE_PLAN.md` §8 ("have `notify` skip a seat
+      with a queued premove"), now resolved yes. **Not independently verified against a live deploy**
+      (no Deno/Supabase CLI in this session, same limitation prior sessions hit) - logic was reasoned
+      through carefully and the migration follows the exact pattern of `0010`-`0012`, but treat it as
+      unverified until exercised for real.
+    - **Booster special action needs the same used-X as power actions**: the "used" flag already
+      existed in the engine (`Event.activated`, reset every round in `cleanUpPhase`) and
+      `SpecialAction.vue` already had an unused `disabled` prop drawing the exact marker - just wasn't
+      wired from `Booster.vue`/`TechContent.vue`. One new prop threaded through, matched by `source`
+      (the booster enum) against the player's own `events[Operator.Activate]`.
+    - **Mobile sticky bar detaching/"elastic jumping" on scroll**: root cause was the pinch-zoom
+      counter-transform (`Commands.vue`, added for a legitimate earlier fix) reacting to *any*
+      `visualViewport` resize/scroll event, not just genuine pinch-zoom - iOS's address-bar
+      show/hide during ordinary scrolling and elastic overscroll bounce at the top/bottom both fire
+      those events with a nonzero offset even at `scale === 1`, and the old code applied
+      `translate(x, y) scale(1)` anyway. Now gates strictly on `scale !== 1`.
+    - **Statistics: chart view removed, table-only now** - dropped the Chart/Table toggle, the
+      `<canvas>`/Chart.js instantiation, and the now-fully-dead `statistics` preference/
+      `StatisticsDisplay` enum (nothing else read either). `chart-factory.ts`/`table.ts` are untouched -
+      they're still the shared data source the table view was always built from.
+    - **PWA: switching back to the app after a turn-notification push shows stale state** (needs a
+      full close+reopen to fix) - root cause: `hosted.ts`'s `visibilitychange`/realtime-reconnect
+      handlers called `host.resync()` without awaiting or catching its promise. A resync attempted
+      the instant a backgrounded tab/PWA resumes can hit a transient network error before the
+      device's radio is actually back (common on mobile) - that silently rejected with no retry.
+      Extracted a small `retryWithBackoff` helper (`logic/retry.ts`, unit-tested, 3 cases) and wrapped
+      both call sites (1s/3s/6s backoff) instead of a bare fire-and-forget call.
+    - Engine **618/618** (untouched), viewer **369/369** (up from 360 - new/updated spec files:
+      `retry.spec.ts`, `TurnOrder.spec.ts` (both new), plus additions to `Game.spec.ts`,
+      `PlayerInfo.spec.ts`). Production build clean, re-run after every change in this session, not
+      just once at the end. Every layout/sizing change was verified against a real running dev server
+      via Playwright (screenshots + `getBoundingClientRect()` measurements + a `git stash` before/
+      after diff for the mobile-unchanged claim) - not just unit tests. **Explicitly NOT verified**:
+      the `notify` edge function and `0013`'s SQL (no Deno/Supabase CLI available this session, same
+      gap prior sessions hit for this family of files) and the presence/heartbeat system end-to-end
+      across two real browser sessions (would need a live Supabase project + two authenticated users;
+      the client-side wiring and no-dot-outside-hosted-mode behavior are unit-tested, but the actual
+      cross-browser green/yellow/grey behavior is not).
+    - **Still open, not started**: the premove UI redesign (sticky bar with Sequential/Priority
+      buttons + tabs for queued entries, replacing the existing "Plan my move" + "Premoves (n)" modal)
+      - full design brainstormed and confirmed with the owner (edit stages until re-confirmed; tabs
+      replace the modal on both mobile and desktop; Priority edits never cascade, Sequential edits
+      cascade downstream like existing Sequential cancel does; mode-switch stays mutually-exclusive
+      with confirm-to-clear) but not yet built.
 
 ## Still MISSING — only one art-only item left
 
@@ -3428,6 +3514,16 @@ iconography pixel-for-pixel against its design reference (Eclipse's "2vp, pt > v
 a real touch-context (`hasTouch: true`) Playwright check confirming the tooltip fix on a genuinely
 fresh browser context - the exact gap prior sessions' tooltip fixes were missing (see "Done so far"
 #74's own note).
+
+**Latest full rerun after #75 (2026-07-06, same day, new session, "Gaia 9" punch list, in
+progress):** engine **618/618** (untouched), viewer **369/369** (354 baseline + 15 net new:
+`retry.spec.ts` (new file, 3 cases), `TurnOrder.spec.ts` (new file, 3 cases), plus new cases in
+`Game.spec.ts` and `PlayerInfo.spec.ts`). Both production builds clean, re-run after every change
+in the session rather than once at the end. See "Done so far" #75 for the full list of what was
+verified live via Playwright vs. what's explicitly unverified (the `notify` edge function/migration
+`0013`, and cross-browser presence behavior) - same "no Deno/Supabase CLI in this sandbox" gap prior
+sessions hit for backend-only files. The premove UI redesign is still open at the end of this
+rerun.
 
 **Convention for future sessions:** there was no test that mounted the actual hex-map component
 tree (`SpaceMap.vue` → `Sector.vue` → `SpaceHex.vue` + the global `Definitions.vue`/
@@ -3652,6 +3748,13 @@ section originally said Chunk 2 must also carry the _full_ `planets.ts` terrafor
    exact shape for adv-tech/federation/booster/scoring enum members when those chunks come up.
 
 ## Next actions
+
+**In progress from #75 (2026-07-06 "Gaia 9" session):** the premove UI redesign (sticky bar with
+Sequential/Priority buttons + per-entry tabs, replacing "Plan my move" + the "Premoves (n)" modal)
+is fully designed and owner-confirmed (see #75's last bullet for the exact confirmed decisions) but
+not yet built - pick this up first. Also worth a live pass once a real Supabase CLI/session is
+available: #75's `notify` edge function change and the presence/heartbeat system were reasoned
+through carefully but never exercised against a real deploy or a genuine two-browser session.
 
 **Open from #70 (2026-07-05 "Gaia 5" session), needs owner confirmation:** the reported "can't find
 the log at the bottom" issue could not be reproduced despite substantial effort (light/heavy game

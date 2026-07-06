@@ -5,11 +5,13 @@ import HostedBar from "./hosted/HostedBar.vue";
 import { HostedGameHost, seatToLock } from "./hosted/host";
 import Lobby from "./hosted/Lobby.vue";
 import { disablePushNotifications, enablePushNotifications, isPushEnabled, registerServiceWorker } from "./hosted/push";
+import { trackPresence } from "./hosted/presence";
 import SignIn from "./hosted/SignIn.vue";
 import { createSupabaseBackend, getSupabaseClient, subscribeMoves, SupabaseClient } from "./hosted/supabase-client";
 import { setViewportZoomLocked } from "./hosted/viewport";
 import launch from "./launcher";
 import { parseAutoChargePreference } from "./logic/auto-decide";
+import { retryWithBackoff } from "./logic/retry";
 
 // The Supabase-hosted counterpart of self-contained.ts: instead of minting a
 // fresh Engine per load, it boots a stored game (seed + committed move log),
@@ -83,6 +85,19 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
   });
   let mySeats: number[] = [];
 
+  // Close a race that briefly exposed the active player's in-progress faction-pick/round-0 buttons
+  // to every connected viewer: `host.load()` below can emit its first "state" (and thus flip the
+  // game visible via the "ready" listener above) before `mySeats` is known (it's only computed
+  // once `load()` resolves, at "mySeats = host.mySeats(...)" below). Until then, `onState`'s
+  // `seatToLock([], ...)` returns null, so no "player" event fires and `$store.state.player` stays
+  // its default `null` - which Game.vue's `canPlay` deliberately treats as "no lock, anyone may
+  // act" for local hot-seat play. In hosted play that default is wrong for this brief window: it
+  // makes every viewer's `canPlay` true until the real per-seat lock arrives. Locking to an
+  // impossible seat index up front makes `canPlay` false for everyone (including the true active
+  // player, briefly) until `host.emitCurrentState()` re-locks with the real seat below - a strictly
+  // safer default for hosted play than exposing the active player's picker to onlookers.
+  emitter.emit("player", { index: -1 });
+
   const host = new HostedGameHost(
     createSupabaseBackend(client),
     gameId,
@@ -144,6 +159,17 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
   }
 
   mySeats = host.mySeats(session.user.id, session.user.email);
+
+  // Presence (PROGRESS.md Gaia 9) - the seat->user_id map (for matching a seat's turn-order dot to
+  // its presence entry) is only known once host.players is populated by load() above; the presence
+  // channel join itself doesn't need to wait on that, but there's nothing useful to track before a
+  // gameId exists, so it's started here too rather than earlier.
+  emitter.emit(
+    "seatUsers",
+    Object.fromEntries(host.players.map((p) => [p.seat, p.user_id]))
+  );
+  trackPresence(client, session.user.id, { type: "game", gameId }, (state) => emitter.emit("presence", state));
+
   // Seat locking happens inside onState via seatToLock (launcher.ts "player"
   // -> store.state.player -> Game.vue's canPlay): a user with SOME seats is
   // locked to whichever of theirs must act; a user with ALL seats (test game)
@@ -186,6 +212,20 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
     }
   });
 
+  // host.resync()'s own promise was previously left unawaited/uncaught at both call sites below -
+  // a resync attempted right as a backgrounded tab/PWA resumes (or a realtime channel reconnects)
+  // can hit a transient network error before the device's radio is actually back (a well-known
+  // mobile gotcha), silently rejecting with no retry: the app then sits on stale state - "still
+  // shows it wasn't my turn" - until something else (a full close+reopen, which calls host.load()
+  // fresh) happens to try again. Retry a few times with backoff before giving up quietly; the next
+  // visibilitychange/reconnect will try again regardless if the device is still genuinely offline.
+  const resyncWithRetry = () =>
+    retryWithBackoff(
+      () => host.resync(),
+      [1000, 3000, 6000],
+      (err) => console.error("[hosted] resync failed after retries", err)
+    );
+
   // The first SUBSCRIBED fires right after load and would be a redundant
   // resync; only catch up on RE-subscribes (dropped connection recovered).
   let subscribedOnce = false;
@@ -195,15 +235,33 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
     (row) => host.applyRemoteMove(row),
     () => {
       if (subscribedOnce) {
-        host.resync();
+        resyncWithRetry();
       }
       subscribedOnce = true;
     }
   );
 
+  // Heartbeat (Gaia 9, PROGRESS.md) - lets the server-side `notify` function tell "has the game
+  // open right now" apart from "merely subscribed to realtime," so it can skip the redundant push
+  // (see 0013_notify_presence_gate.sql). Only this session's own seats can be marked (mySeats;
+  // mark_seat_active asserts seat ownership itself too) - a spectator or a session with no seats
+  // here has nothing to heartbeat. Interval comfortably shorter than the server's staleness
+  // threshold (45s) so ordinary timer jitter never makes an open tab look inactive.
+  const markSeatsActive = () => {
+    if (document.visibilityState !== "visible") {
+      return;
+    }
+    for (const seat of mySeats) {
+      client.rpc("mark_seat_active", { p_game_id: gameId, p_seat: seat }).catch(() => undefined);
+    }
+  };
+  markSeatsActive();
+  setInterval(markSeatsActive, 20_000);
+
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
-      host.resync();
+      resyncWithRetry();
+      markSeatsActive();
     }
   });
 }

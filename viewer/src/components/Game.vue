@@ -7,6 +7,16 @@
     <Rules id="trade" type="trade" />
 
     <template v-if="uiMode === 'graphical'">
+      <!-- Turn Order, at the very top of the page (PROGRESS.md Gaia 9) - it used to live further
+           down, sharing a row with Commands and order-flipping against it on mobile; a fixed top
+           banner is simpler and also gives each player's circle room for a presence dot (green =
+           actively viewing this game right now, yellow = present in the lobby or another game,
+           grey = no live presence at all - see hosted/presence.ts). -->
+      <div class="row" v-if="!ended && engine.players.length > 0">
+        <div class="col-12 turn-order-banner">
+          <TurnOrder />
+        </div>
+      </div>
       <div
         :class="['row', 'no-gutters', 'justify-content-center', engine.players.length > 2 ? 'medium-map' : 'small-map']"
         v-if="hasMap"
@@ -41,21 +51,22 @@
         </div>
       </div>
       <div class="row mt-2" v-if="engine.options.lostFleet">
-        <LostFleetShips class="col-12" />
+        <!-- Mobile (below the col-md breakpoint) keeps its existing plain full-width `col-12` -
+             untouched from before this change. From md upward, `col-md-5 offset-md-7` (the exact
+             same fraction/offset as the research-board sidebar's own `col-md-5` above) narrows this
+             to sit directly under that sidebar instead of spanning the whole row - which is also
+             what was making the ship boards render abnormally large on desktop: they were scaling
+             their unconditional 2-column grid (LostFleetShips.vue's own CSS, shared with mobile and
+             deliberately left untouched here) up to the *entire* row's width instead of just the
+             sidebar's ~5/12 share of it. -->
+        <LostFleetShips class="col-12 col-md-5 offset-md-7" />
       </div>
       <div class="row mt-2">
-        <!-- Mobile order flips once real gameplay starts (round 1+): before that, Commands holds
-             the actual setup UI (player count / faction pick / starting build), so it stays first
-             like before. From round 1 on, its action buttons live in the mobile sticky bar instead
-             (see Commands.vue's showStickyMobileBar) - this column then renders only a spacer
-             reserving that bar's height, which used to sit first here, directly under the ship
-             board, as a large dead gap before Turn Order. Swapping the order once gameplay starts
-             puts Turn Order there instead, with that now-content-free spacer pushed after it. -->
-        <TurnOrder
-          v-if="!ended && engine.players.length > 0"
-          :class="['col-md-4', 'order-md-1', gameplayStarted ? 'order-1' : 'order-2']"
-        />
-        <div :class="['col-md-8', 'order-md-2', gameplayStarted ? 'order-2' : 'order-1']">
+        <!-- Turn Order used to live in this row (col-md-4, order-flipped against this column on
+             mobile) - it's now a banner at the very top of the page instead (Game.vue's
+             turn-order-banner, PROGRESS.md Gaia 9), so this column is the row's only content and
+             just takes the full width on every viewport. -->
+        <div class="col-12">
           <div v-if="premoveMode" class="alert alert-info premove-banner">
             <strong>PREMOVE</strong> — plays automatically on your turn.
             <div class="small" v-if="!premoveReady">Build the move you want, then queue it below.</div>
@@ -405,13 +416,6 @@ export default class Game extends Vue {
     return this.engine.phase === Phase.EndGame;
   }
 
-  /** Round 1+ - mirrors Commands.vue's showStickyMobileBar threshold closely enough for mobile
-   * layout ordering (see the row using it above): once true, that component's action buttons live
-   * in the fixed mobile sticky bar rather than in-flow here. */
-  get gameplayStarted(): boolean {
-    return this.engine.round >= 1;
-  }
-
   get orderedPlayers(): Player[] {
     return orderedPlayers(this.engine);
   }
@@ -469,7 +473,12 @@ export default class Game extends Vue {
    * extra plumbing needed to satisfy "suppress where it makes no sense" (PREMOVE_PLAN.md §7.7).
    */
   get myLockedSeat(): number | undefined {
-    return this.$store.state.player?.index;
+    const index = this.$store.state.player?.index;
+    // Bounds-checked, not a raw passthrough: hosted.ts briefly locks every viewer to an
+    // out-of-range placeholder seat (index -1) while it waits to learn the real one (see its own
+    // "close a race" comment) - premoveOffered/myQueuedPremoves/etc. below would otherwise treat
+    // -1 as a real locked seat and crash calling into the engine with an invalid player index.
+    return index !== undefined && index >= 0 && index < this.engine.players.length ? index : undefined;
   }
 
   get premoveOffered(): boolean {

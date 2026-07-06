@@ -5,6 +5,7 @@ import Vue, { markRaw } from "vue";
 import Vuex from "vuex";
 import { ButtonData, GameContext, HexSelection, HighlightHex, SpecialActionIncome } from "./data";
 import { FastConversionEvent, MapMode } from "./data/actions";
+import { PresenceState } from "./hosted/presence";
 import { PremoveFailureRow, PremoveMode, PremoveRow } from "./hosted/types";
 import { ExecuteBack, FastConversionTooltips } from "./logic/buttons/types";
 import {
@@ -29,7 +30,6 @@ type Preference =
   | "extendedLog"
   | "warnings"
   | "autoClick"
-  | "statistics"
   | "uiMode"
   | "autoChargePower";
 
@@ -67,6 +67,11 @@ export type State = {
    * fast-path success; null once dismissed or superseded. Never sourced from a push - see
    * host.ts's onPremovePlayed doc comment. */
   premovePlayedNotice: { seat: number; move: string; rank?: number; totalRanks?: number } | null;
+  /** Hosted mode only - seat -> user id, for matching a seat to its presence entry below. Never
+   * populated in self-contained hot-seat play (no accounts/seats to map). */
+  seatUsers: Record<number, string | null>;
+  /** Hosted mode only (presence.ts) - the shared cross-page roster, keyed by user id. */
+  presence: PresenceState;
 };
 
 function indexCommands(commands, command: Command) {
@@ -112,7 +117,6 @@ const gaiaViewer = {
       logPlacement: process.env.VUE_APP_logPlacement ?? "bottom",
       extendedLog: !!process.env.VUE_APP_extendedLog,
       warnings: process.env.VUE_APP_warnings ?? "modalDialog",
-      statistics: process.env.VUE_APP_statistics ?? "auto",
       uiMode: process.env.VUE_APP_uiMode ?? "graphical",
       // "Auto leech": a purely local, per-browser convenience - never part of synced/persisted
       // game state (see logic/auto-decide.ts) - so it's the one preference read back from
@@ -128,6 +132,8 @@ const gaiaViewer = {
     premoves: [],
     premoveFailures: [],
     premovePlayedNotice: null,
+    seatUsers: {},
+    presence: {},
   } as State,
   mutations: {
     receiveData(state: State, data: Engine) {
@@ -246,6 +252,14 @@ const gaiaViewer = {
 
     dismissPremovePlayedNotice(state: State) {
       state.premovePlayedNotice = null;
+    },
+
+    seatUsers(state: State, data: Record<number, string | null>) {
+      state.seatUsers = data;
+    },
+
+    presence(state: State, data: PresenceState) {
+      state.presence = data;
     },
   },
   actions: {

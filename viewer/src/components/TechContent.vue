@@ -1,7 +1,15 @@
 <template>
   <g>
     <text :class="['content', { smaller: content.length >= 10 }]" x="-25" y="0" v-if="showText">{{ content }}</text>
-    <SpecialAction v-if="isAction" :action="[event.action().rewards]" y="-20" width="40" height="40" x="-20" />
+    <SpecialAction
+      v-if="isAction"
+      :action="[event.action().rewards]"
+      y="-20"
+      width="40"
+      height="40"
+      x="-20"
+      :disabled="disabled"
+    />
     <Condition :condition="condition" v-if="condition === 'a'" transform="scale(1.5)" />
     <Resource
       v-if="cornerReward"
@@ -113,6 +121,11 @@ import SpecialAction from "./SpecialAction.vue";
 export default class TechContent extends Vue {
   @Prop()
   event!: Event;
+
+  /** Drives the same X-strikethrough marker BoardAction.vue uses for used power actions, via
+   * SpecialAction.vue's existing `disabled` prop - only meaningful when `isAction` is true. */
+  @Prop({ default: false, type: Boolean })
+  disabled: boolean;
 
   get content(): string {
     return this.event.spec;

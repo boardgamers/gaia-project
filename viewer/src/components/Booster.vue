@@ -22,7 +22,11 @@
     />
     <line x1="-29" x2="29" y1="-8" y2="-8" stroke="#aaa" stroke-width="2" />
     <TechContent :event="event1" transform="translate(0, -33)" />
-    <TechContent :event="event2" :transform="`translate(0, ${30 - (event2.operator === '+' ? 4 : 0)})`" />
+    <TechContent
+      :event="event2"
+      :transform="`translate(0, ${30 - (event2.operator === '+' ? 4 : 0)})`"
+      :disabled="specialActionUsed"
+    />
   </svg>
 </template>
 
@@ -48,6 +52,11 @@ export default class Booster extends Vue {
 
   @Prop({ default: false, type: Boolean })
   highlighted: boolean;
+
+  /** Mirrors BoardAction.vue's used-power-action X marker for this booster's own special action -
+   * distinct from `disabled` above (which fades the whole tile when the player has passed). */
+  @Prop({ default: false, type: Boolean })
+  specialActionUsed: boolean;
 
   get tileObject(): Event[] {
     return boosterEvents(this.booster);

@@ -756,6 +756,17 @@ export default class Commands extends Vue implements CommandController {
         return;
       }
       const scale = vv.scale || 1;
+      // Only ever compensate for genuine pinch-zoom (scale !== 1). `vv.offsetTop`/`vv.height` also
+      // shift transiently at scale === 1 - iOS's address bar hiding/showing during an ordinary
+      // scroll, and elastic overscroll bounce at the very top/bottom of the page - both fire
+      // `visualViewport` resize/scroll events with a nonzero offset despite no real zoom. Applying
+      // `translate(x, y) scale(1)` in that case is exactly the bug: the fixed bar visibly detaches
+      // and floats mid-screen on scroll, or "elastic jumps" at the scroll extremes. Gating on scale
+      // alone (not also x/y) keeps the bar genuinely fixed whenever the user isn't actually zoomed.
+      if (scale === 1) {
+        moveButtons.style.transform = "";
+        return;
+      }
       const x = vv.offsetLeft;
       const y = vv.offsetTop + vv.height - window.innerHeight;
       // Any non-"none" transform on this element - even a no-op identity one - makes it a new
@@ -766,7 +777,7 @@ export default class Commands extends Vue implements CommandController {
       // clipped down to a sliver. Only set a real transform while actually zoomed/panned (the
       // no-op identity case is by far the common one, so skip it entirely rather than applying
       // "translate(0px, 0px) scale(1)").
-      if (scale === 1 && x === 0 && y === 0) {
+      if (x === 0 && y === 0) {
         moveButtons.style.transform = "";
         return;
       }

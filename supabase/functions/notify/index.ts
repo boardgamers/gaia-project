@@ -17,7 +17,20 @@ type PlayerRow = {
   user_id: string | null;
   invited_email: string;
   display_name: string;
+  last_active_at: string | null;
 };
+
+// Comfortably larger than the client's own heartbeat interval (viewer/src/hosted.ts, ~20s while
+// the tab is open and visible) so ordinary network/timer jitter never produces a false "they have
+// it open" - but still short enough that closing the tab quickly resumes normal notifications.
+const RECENTLY_ACTIVE_MS = 45_000;
+
+function hasGameOpen(player: PlayerRow, now: number): boolean {
+  if (!player.last_active_at) {
+    return false;
+  }
+  return now - new Date(player.last_active_at).getTime() < RECENTLY_ACTIVE_MS;
+}
 
 type GameRow = {
   id: string;
@@ -43,7 +56,7 @@ function gameLabel(game: GameRow): string {
   return game.name || "your Lost Fleet game";
 }
 
-function buildNotifications(type: string, game: GameRow): Notification[] {
+function buildNotifications(type: string, game: GameRow, hasQueuedPremove: boolean, now: number = Date.now()): Notification[] {
   if (type === "insert") {
     // Invite pushes reach only friends who already have an account + a
     // subscribed device; everyone else gets the link out-of-band.
@@ -68,6 +81,13 @@ function buildNotifications(type: string, game: GameRow): Notification[] {
   }
   const current = game.players.find((p) => p.seat === game.current_seat);
   if (!current || current.user_id === null || current.user_id === game.last_committed_by) {
+    return [];
+  }
+  // Gaia 9 (PROGRESS.md): only push "your turn" when the player doesn't already have the game
+  // open (hasGameOpen, via the mark_seat_active heartbeat) AND no premove is queued to play the
+  // move for them automatically (hasQueuedPremove - a straight readback of the same existence
+  // check notify_resolve_automation already does in Postgres, see 0010_premoves.sql).
+  if (hasGameOpen(current, now) || hasQueuedPremove) {
     return [];
   }
   return [
@@ -104,7 +124,17 @@ Deno.serve(async (req) => {
     return new Response("game not found", { status: 404 });
   }
 
-  const notifications = buildNotifications(type, game as GameRow);
+  let hasQueuedPremove = false;
+  if (type === "update" && (game as GameRow).current_seat !== null) {
+    const { count } = await supabase
+      .from("premoves")
+      .select("seat", { count: "exact", head: true })
+      .eq("game_id", game_id)
+      .eq("seat", (game as GameRow).current_seat);
+    hasQueuedPremove = (count ?? 0) > 0;
+  }
+
+  const notifications = buildNotifications(type, game as GameRow, hasQueuedPremove);
   if (notifications.length === 0) {
     return new Response(JSON.stringify({ sent: 0 }), { status: 200 });
   }

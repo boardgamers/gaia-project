@@ -5,6 +5,10 @@
       {{ initial() }}
     </text>
     <text :style="`font-size: 1px; text-anchor: middle;`" y="2">{{ name() }}</text>
+    <!-- Presence indicator (PROGRESS.md Gaia 9) - top-left of the token, only when a caller passes
+         a status (TurnOrder.vue does; other PlayerCircle usages - the solo "current player"
+         placeholder, charts - leave it unset and render exactly as before). -->
+    <circle v-if="presenceStatus" :cx="-0.75" :cy="-0.75" :r="0.28" :class="['presence-dot', presenceStatus]" />
   </g>
 </template>
 <script lang="ts">
@@ -12,6 +16,7 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 import Engine, { AuctionVariant, Phase, Planet, Player, PlayerEnum } from "@gaia-project/engine";
 import { phaseBeforeSetupBuilding } from "../logic/utils";
 import { factionPiecePlanet } from "../graphics/utils";
+import { PresenceStatus } from "../hosted/presence";
 
 @Component
 export default class PlayerCircle extends Vue {
@@ -23,6 +28,9 @@ export default class PlayerCircle extends Vue {
 
   @Prop({ type: Boolean, default: false })
   chart: boolean;
+
+  @Prop({ default: null })
+  presenceStatus: PresenceStatus | null;
 
   get gameData(): Engine {
     return this.$store.state.data;
@@ -108,3 +116,21 @@ export default class PlayerCircle extends Vue {
   }
 }
 </script>
+<style lang="scss">
+.presence-dot {
+  stroke: white;
+  stroke-width: 0.08px;
+
+  &.green {
+    fill: #2ecc71;
+  }
+
+  &.yellow {
+    fill: #f1c40f;
+  }
+
+  &.grey {
+    fill: #95a5a6;
+  }
+}
+</style>

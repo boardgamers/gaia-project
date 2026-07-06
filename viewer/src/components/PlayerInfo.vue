@@ -176,6 +176,7 @@
             height="120"
             :booster="playerData.tiles.booster"
             :disabled="passed"
+            :special-action-used="boosterSpecialActionUsed"
           />
         </g>
 
@@ -305,6 +306,7 @@ import Engine, {
   Expansion,
   factionPlanet,
   hasExpansion,
+  Operator,
   Planet,
   Player,
   SpaceshipFederation,
@@ -525,6 +527,17 @@ export default class PlayerInfo extends Vue {
 
   get passed() {
     return (this.engine.passedPlayers || []).includes(this.player.player);
+  }
+
+  // Mirrors BoardAction.vue's `faded`/power-action X marker for the booster's own special action -
+  // matched by `source` (boosterEvents() tags each event with the Booster enum it came from) rather
+  // than by array position, since only the "=> ..." event of a booster is ever Activate-operator.
+  get boosterSpecialActionUsed() {
+    const booster = this.playerData.tiles.booster;
+    if (!booster) {
+      return false;
+    }
+    return this.player.events[Operator.Activate].some((e) => e.source === booster && e.activated);
   }
 
   get round() {
