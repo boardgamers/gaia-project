@@ -164,6 +164,7 @@
           :gaia="playerData.gaiaformersInGaia"
           :player="player"
           :placed="playerData.buildings.gf"
+          :asteroid-consumed="playerData.gaiaformersUsedForAsteroid"
           :resource="[]"
           :discount="playerData ? playerData.gaiaFormingDiscount() : 0"
         />

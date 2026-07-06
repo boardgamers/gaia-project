@@ -119,6 +119,12 @@ export default class BuildingGroup extends Vue {
   @Prop({ default: 0 })
   gaia: number;
 
+  // Lost Fleet §E2: a Gaiaformer consumed to colonize an Asteroid is gone forever - it never
+  // becomes a map overlay (unlike `placed`/`gaia`), so without this the slot kept rendering as an
+  // available Gaiaformer token.
+  @Prop({ default: 0 })
+  asteroidConsumed: number;
+
   @Prop({ default: 0 })
   destroyed: number;
 
@@ -233,7 +239,7 @@ export default class BuildingGroup extends Vue {
     if (this.ac1 || this.ac2) {
       return i === 0 ? !this.ac1 : !this.ac2;
     }
-    return i >= this.placed + this.gaia;
+    return i >= this.placed + this.gaia + this.asteroidConsumed;
   }
 
   isDeployed(i: number): boolean {

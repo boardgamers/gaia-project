@@ -3440,6 +3440,82 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
     entry deliberately absent (reproducing the exact state that used to throw), and asserts
     `replaceMove` both doesn't throw and produces the correct description. Engine untouched, viewer
     **375/375** (+1), production build clean.
+78. ✅ **"Gaia 10" owner punch list (2026-07-06, new session): Gaiaformer-asteroid display bug fixed,
+    online-status presence dot root-caused and fixed for real (not just unit-tested) via a live
+    Supabase MCP connection, booster used-X confirmed already correct.**
+    - **Gaiaformer tokens didn't disappear from the faction board once consumed to colonize an
+      Asteroid (§E2)** - confirmed the owner's report was correct, not a misunderstanding. The
+      engine already tracks this correctly (`player.data.gaiaformersUsedForAsteroid`, permanently
+      incremented, already excluded from `Condition.GaiaFormer` scoring per `player.ts`) but two
+      viewer display paths never read it: `BuildingGroup.vue`'s `showBuilding()` only excluded
+      slots covered by `placed`/`gaia` (a Gaiaformer that becomes a map overlay or moves to the Gaia
+      area), not ones spent on an Asteroid (which go straight to a Mine, no overlay at all) - so a
+      spent Gaiaformer's slot kept rendering as an available token. Added an `asteroidConsumed` prop
+      (`PlayerInfo.vue` now passes `playerData.gaiaformersUsedForAsteroid`) folded into
+      `showBuilding()`'s threshold. The Statistics table's `available/total` Gaiaformer count
+      (`logic/table/buildings.ts`) had the identical gap, fixed the same way. 2 new
+      `BuildingGroup.spec.ts` cases (consumed slot renders empty vs. an unused one still renders).
+    - **Booster special-action used-X**: already correct, shipped in "Gaia 9" (#75) - re-verified via
+      `PlayerInfo.spec.ts`'s existing "marks a booster's special action with the same used-X as a
+      power action" case rather than re-implementing anything.
+    - **Online-status presence dot was never actually green, even for a player with the game open**:
+      #75 shipped the client-side plumbing but flagged the cross-browser behavior as unverified (no
+      Supabase CLI that session). This session had a live Supabase MCP connection to the real
+      project, so the bug was root-caused for real instead of guessed at: two throwaway signed-in
+      browsers (`e2e-alice@lostfleet.test`/`e2e-bob@lostfleet.test`, session tokens minted via the
+      password grant, matching `BACKEND.md` §12's pattern) against a hand-seeded live game showed
+      `presence` staying `{}` forever in the store - `seatUsers` was fine, so the gap was upstream.
+      A raw supabase-js repro (bypassing the app) isolated it to two independent, compounding causes:
+      (1) this project has Realtime Authorization on by default (RLS enabled on
+      `realtime.messages`, zero policies) and `hosted/presence.ts`'s channel wasn't even marked
+      `private: true`, so it was never granted access to begin with - fixed with a new migration
+      (`0015_realtime_presence_authorization.sql`, applied live) plus `private: true` on both
+      `trackPresence`'s and `subscribePresence`'s channels; (2) even with that fixed, the pinned
+      CDN `supabase-js@2.45.4` (`hosted/supabase-client.ts`, chosen in 2024 for build-tool
+      compatibility, unrelated to Realtime) turned out too old to complete the newer private-channel
+      Presence handshake this project's Realtime server expects - `subscribe`/`track` both silently
+      "succeed" but no `sync`/`join` event ever fires, for anyone, forever. Confirmed live with a
+      version-pinned raw client that 2.110.0 fixes it and 2.45.4 doesn't; bumped the CDN pin.
+      Bumping it also surfaced a real regression to fix: `hosted.ts`'s heartbeat called
+      `client.rpc(...).catch(...)` directly on the query builder, which is thenable but not a real
+      Promise - 2.45.4 happened to expose `.catch` anyway, 2.110.0 doesn't, so it would have thrown
+      synchronously in production. Wrapped in `Promise.resolve(...)`. **Verified against the real
+      production Supabase project with the actual built app** (not just the raw repro): two signed-
+      in browsers against a real game both show `presence-dot green` for both players, and the
+      ordinary move-commit + realtime fan-out path (a separate, unrelated `postgres_changes`
+      channel) still works after the version bump. Test game and its throwaway data cleaned up
+      afterward.
+    - **Turn-order banner folded into the existing top banner**: the owner clarified (after this
+      session asked) that Gaia 9's new standalone `.turn-order-banner` row should live INSIDE
+      `HostedBar.vue` (the pre-existing top banner with the "Your turn"/"X to move" badge), not as
+      its own separate strip above it, with the turn-order circles' own highlight ring replacing the
+      text badge entirely (same layout on mobile and desktop - no special-casing). `HostedBar.vue`
+      now renders `<TurnOrder v-else />` in place of the old `<b-badge>` for an ongoing game (kept
+      the badge only for the `finished` state, since there's no "whose turn" to show then).
+      `TurnOrder` needs `$store` (engine/presence/seatUsers) - `bar`'s root Vue instance in
+      `hosted.ts` didn't have one before (it was a bare `new Vue({data, render})`, separate from the
+      Game tree's store), so `hosted.ts` now constructs `launch()` (and its store) before `bar` and
+      passes `store: emitter.store` into it, sharing the exact same reactive store the Game tree
+      uses. `Game.vue`'s own standalone banner now only renders outside hosted mode (a new
+      `isHostedMode` computed, same "?game=" URL check `TurnOrder.vue`/`presence.ts` already use) -
+      self-contained/hot-seat play is untouched. Removed the now-dead `myTurn`/`turnPlayerName`
+      props/data that only existed to feed the deleted text badge. New `HostedBar.spec.ts` (3
+      cases: Turn Order renders instead of text for an ongoing game, "Game finished" badge still
+      shows once ended, bell-only button has no text) + 1 new `Game.spec.ts` case (standalone banner
+      suppressed when `?game=` is present).
+    - **Notification button reduced to icon-only**: owner clarified this meant dropping the visible
+      text label ("Enable notifications" / "🔔 Notifications on") to save horizontal space, keeping
+      only the bell - NOT about the `window.alert()` confirmation dialog (left as-is, out of scope).
+      Both button states in `HostedBar.vue` now show just "🔔"; added a tooltip to the "off" state
+      (the "on" state already had one) so removing the text doesn't lose all context.
+    - **Verified live against the real production Supabase project with the actual built app**
+      (not just unit tests): two signed-in browsers on a real hosted game both show the merged
+      banner rendering Turn Order (with green presence dots) correctly with no console errors from
+      this change, and the ordinary move-commit + realtime fan-out path still works through it.
+    - Viewer **381/381** (up from 375 - 2 new `BuildingGroup.spec.ts` + 3 new `HostedBar.spec.ts` +
+      1 new `Game.spec.ts` case), engine untouched, production build clean. Same pre-existing flaky
+      `SetupPreview.spec.ts` seed test as every prior session (confirmed via clean isolated and
+      full-suite reruns) - not touched, not fixed.
 
 ## Still MISSING — only one art-only item left
 

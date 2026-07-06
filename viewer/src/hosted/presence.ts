@@ -24,7 +24,11 @@ export function trackPresence(
   context: PresenceContext,
   onState: (state: PresenceState) => void
 ): () => void {
-  const channel = client.channel(CHANNEL_NAME, { config: { presence: { key: userId } } });
+  // `private: true` is required for this project: Realtime Authorization is on by default (RLS on
+  // `realtime.messages`, migration 0015_realtime_presence_authorization.sql grants authenticated
+  // users select/insert) and a non-private channel is never granted access to read/write it, so
+  // presence silently never syncs without this - confirmed live before adding it.
+  const channel = client.channel(CHANNEL_NAME, { config: { presence: { key: userId }, private: true } });
 
   const track = () => {
     channel.track({ context, focused: document.visibilityState === "visible" } as PresenceMeta);
@@ -51,7 +55,7 @@ export function trackPresence(
  * presence separately, or has none of its own to track.
  */
 export function subscribePresence(client: SupabaseClient, onState: (state: PresenceState) => void): () => void {
-  const channel = client.channel(CHANNEL_NAME, { config: { presence: { key: "__readonly__" } } });
+  const channel = client.channel(CHANNEL_NAME, { config: { presence: { key: "__readonly__" }, private: true } });
   channel.on("presence", { event: "sync" }, () => onState(channel.presenceState() as PresenceState));
   channel.subscribe();
   return () => client.removeChannel(channel);

@@ -11,8 +11,10 @@
            down, sharing a row with Commands and order-flipping against it on mobile; a fixed top
            banner is simpler and also gives each player's circle room for a presence dot (green =
            actively viewing this game right now, yellow = present in the lobby or another game,
-           grey = no live presence at all - see hosted/presence.ts). -->
-      <div class="row" v-if="!ended && engine.players.length > 0">
+           grey = no live presence at all - see hosted/presence.ts). Hosted mode instead folds this
+           into HostedBar.vue's own top banner (PROGRESS.md Gaia 10), replacing its "X to move" text
+           - so this standalone banner only renders for self-contained/hot-seat play now. -->
+      <div class="row" v-if="!ended && engine.players.length > 0 && !isHostedMode">
         <div class="col-12 turn-order-banner">
           <TurnOrder />
         </div>
@@ -428,6 +430,13 @@ export default class Game extends Vue {
 
   get ended() {
     return this.engine.phase === Phase.EndGame;
+  }
+
+  // Hosted mode (a "?game=" URL) has its own top banner (HostedBar.vue) with Turn Order folded
+  // into it (PROGRESS.md Gaia 10, replacing the old separate standalone banner below) - only
+  // self-contained/hot-seat play (no such banner exists) still renders Turn Order here.
+  get isHostedMode(): boolean {
+    return typeof window !== "undefined" && new URLSearchParams(window.location.search).has("game");
   }
 
   get orderedPlayers(): Player[] {

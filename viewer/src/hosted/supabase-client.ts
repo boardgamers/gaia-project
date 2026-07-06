@@ -14,7 +14,14 @@ import {
 // inside node_modules, and the library's type declarations need TS >= 4
 // (the viewer pins 3.9). The browser parses the bundle, webpack and tsc
 // never see it. Version-pinned so a CDN release can't change behavior.
-const SUPABASE_JS_URL = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js";
+//
+// Bumped from 2.45.4 (2024) to 2.110.0 (PROGRESS.md Gaia 10): confirmed live against the real
+// project that 2.45.4's realtime-js never delivers a "sync"/"join" event for a private Presence
+// channel (subscribe + track() both silently succeed, but the state stays permanently empty on
+// every client, self included) - this project's Realtime server expects the newer Authorization
+// handshake that 2.45.4 predates. 2.110.0 was verified end-to-end (two real signed-in browsers,
+// cross-tab presence sync) against this exact project before the bump.
+const SUPABASE_JS_URL = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0/dist/umd/supabase.js";
 
 // Minimal structural typing for the slice of the client we use.
 export type SupabaseClient = any;

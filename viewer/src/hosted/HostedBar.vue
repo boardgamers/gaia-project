@@ -7,10 +7,9 @@
       <a href="?lobby=1">← Games</a>
       <strong class="ml-2">{{ gameName || "Unnamed game" }}</strong>
     </span>
-    <span>
-      <b-badge :variant="finished ? 'secondary' : myTurn ? 'success' : 'info'">
-        {{ finished ? "Game finished" : myTurn ? "Your turn" : `${turnPlayerName} to move` }}
-      </b-badge>
+    <span class="d-flex align-items-center" style="gap: 0.5rem">
+      <b-badge v-if="finished" variant="secondary">Game finished</b-badge>
+      <TurnOrder v-else />
       <span v-if="mySeatName" class="text-muted small ml-2">You play {{ mySeatName }}</span>
       <span v-else class="text-muted small ml-2">Spectating</span>
     </span>
@@ -24,10 +23,18 @@
         title="This device is registered for turn notifications. Enable it separately on any other device you play from. Click to turn off."
         @click="$emit('disable-push')"
       >
-        🔔 Notifications on
+        🔔
       </b-button>
-      <b-button v-else size="sm" variant="outline-secondary" :disabled="pushBusy" @click="$emit('enable-push')">
-        Enable notifications
+      <b-button
+        v-else
+        size="sm"
+        variant="outline-secondary"
+        :disabled="pushBusy"
+        v-b-tooltip.hover
+        title="Enable turn notifications on this device"
+        @click="$emit('enable-push')"
+      >
+        🔔
       </b-button>
     </span>
   </div>
@@ -35,14 +42,14 @@
 
 <script lang="ts">
 import Vue from "vue";
+import TurnOrder from "../components/TurnOrder.vue";
 
 export default Vue.extend({
   name: "HostedBar",
+  components: { TurnOrder },
   props: {
     gameName: { type: String, default: "" },
-    turnPlayerName: { type: String, default: "" },
     mySeatName: { type: String, default: "" },
-    myTurn: { type: Boolean, default: false },
     finished: { type: Boolean, default: false },
     pushBusy: { type: Boolean, default: false },
     pushEnabled: { type: Boolean, default: false },

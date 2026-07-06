@@ -44,12 +44,21 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
   root.appendChild(loadingEl);
   root.appendChild(gameWrapperEl);
 
+  // Created before `bar` so HostedBar.vue can embed <TurnOrder /> (PROGRESS.md Gaia 10, folded in
+  // to replace the old "X to move" text) sharing the SAME store as the Game tree below - TurnOrder
+  // reads engine/presence state via `this.$store`, which only works if `bar`'s root Vue instance is
+  // given this same store at construction (Vuex injects `$store` from the root's `store` option).
+  const emitter = launch("#hosted-game", Game);
+  emitter.once("ready", () => {
+    loadingEl.remove();
+    gameWrapperEl.style.display = "";
+  });
+
   const bar = new Vue({
+    store: emitter.store,
     data: {
       gameName: "",
-      turnPlayerName: "",
       mySeatName: "",
-      myTurn: false,
       finished: false,
       pushBusy: false,
       pushEnabled: false,
@@ -78,11 +87,6 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
     bar.pushEnabled = enabled;
   });
 
-  const emitter = launch("#hosted-game", Game);
-  emitter.once("ready", () => {
-    loadingEl.remove();
-    gameWrapperEl.style.display = "";
-  });
   let mySeats: number[] = [];
 
   // Close a race that briefly exposed the active player's in-progress faction-pick/round-0 buttons
@@ -107,8 +111,6 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
         bar.gameName = host.game?.name ?? "";
         bar.finished = data.phase === "endGame";
         const turnSeat = data.playerToMove;
-        bar.turnPlayerName = data.players?.[turnSeat]?.name ?? `Player ${turnSeat + 1}`;
-        bar.myTurn = !bar.finished && mySeats.includes(turnSeat);
         const playerCount = host.game?.player_count ?? 0;
         bar.mySeatName =
           mySeats.length >= playerCount && mySeats.length > 0
@@ -255,7 +257,10 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
       return;
     }
     for (const seat of mySeats) {
-      client.rpc("mark_seat_active", { p_game_id: gameId, p_seat: seat }).catch(() => undefined);
+      // supabase-js's query builder is thenable but not a real Promise (no direct .catch), so wrap
+      // it - regressed silently with the 2.110.0 bump (PROGRESS.md Gaia 10) since 2.45.4 happened
+      // to expose .catch directly.
+      Promise.resolve(client.rpc("mark_seat_active", { p_game_id: gameId, p_seat: seat })).catch(() => undefined);
     }
   };
   markSeatsActive();

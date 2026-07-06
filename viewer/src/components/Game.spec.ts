@@ -315,6 +315,28 @@ describe("Game", () => {
     }
   });
 
+  it("suppresses the standalone Turn Order banner in hosted mode (folded into HostedBar.vue instead, PROGRESS.md Gaia 10)", () => {
+    const originalSearch = window.location.search;
+    window.history.pushState({}, "", "?game=some-game-id");
+    try {
+      const engine = new Engine(["init 2 lf-freeze-28"]);
+      const store = makeStore();
+      const vm = new (Vue.extend(Game as any))({ store }) as any;
+      vm.handleData(engine);
+      vm.$mount();
+      document.body.appendChild(vm.$el);
+
+      expect(vm.$el.querySelector(".turn-order-banner"), "hosted mode should not render its own banner").to.equal(
+        null
+      );
+
+      vm.$el.remove();
+      vm.$destroy();
+    } finally {
+      window.history.pushState({}, "", `${window.location.pathname}${originalSearch}`);
+    }
+  });
+
   it("hides ScoringBoard for a Lost Fleet game - final scoring, the 7th adv-tech tile, and the round scoring tiles all moved into ResearchBoard's own extra column", () => {
     const engine = new Engine(["init 2 lf-scoring-extension"], { lostFleet: true });
     engine.players.forEach((pl, index) => {

@@ -16,7 +16,7 @@ function buildingTooltip(p: Player, engine: Engine, b: Building): string {
 
 function gaiaFormers(p: Player): string {
   const total = p.data.gaiaformers;
-  const available = total - p.data.buildings.gf - p.data.gaiaformersInGaia;
+  const available = total - p.data.buildings.gf - p.data.gaiaformersInGaia - p.data.gaiaformersUsedForAsteroid;
   if (available == 0 && total == 0) {
     return "";
   }
