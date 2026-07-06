@@ -15,6 +15,7 @@
           :kind="r.type"
           :count="r.count"
           :plus="r.type === 'r'"
+          :no-plus="c.noPlus"
         />
       </svg>
       <svg v-else-if="c.building != null" :key="i" viewBox="0 0 10 10" width="36" height="36">
@@ -85,7 +86,7 @@ export default class RichTextView extends Vue {
   get filteredContent(): RichText {
     return this.content.flatMap((c) => {
       if (c.rewards) {
-        return c.rewards.map((r) => ({ rewards: [r] } as RichTextElement));
+        return c.rewards.map((r) => ({ rewards: [r], noPlus: c.noPlus } as RichTextElement));
       }
       return c;
     });

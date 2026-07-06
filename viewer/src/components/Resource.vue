@@ -202,7 +202,7 @@
       "
       :class="{ plus: count === '+' }"
       :text-decoration="kind === 'burn-token' ? 'line-through' : ''"
-      >{{ (kind === "t" || kind === "ta3") && count > 0 ? "+" : "" }}{{ count }}</text
+      >{{ !noPlus && (kind === "t" || kind === "ta3") && count > 0 ? "+" : "" }}{{ count }}</text
     >
     <text x="0" y="0" v-if="kind == 'brainstone'">B</text>
   </g>
@@ -246,6 +246,13 @@ export default class Resource extends Vue {
   /** Show a "+" before the count (kind "r" only) - true when this icon represents a gain, not a raw total. */
   @Prop({ default: false })
   plus: boolean;
+
+  /** Suppress the automatic "+" normally shown for a positive "t"/"ta3" count - for the rare case
+   * where a token count of this kind is a cost being paid, not income being gained, so it should
+   * read as a plain number, matching every other cost icon (e.g. "2c 1o" building costs never get
+   * a sign at all). */
+  @Prop({ default: false })
+  noPlus: boolean;
 
   get flat() {
     return this.$store.state.preferences.flatBuildings;

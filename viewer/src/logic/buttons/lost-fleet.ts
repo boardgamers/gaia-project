@@ -46,7 +46,7 @@ export function exploreButton(
       // "(4, +2pw)" string - the label above still feeds the hover tooltip.
       button.richText = [
         richText(`${spaceshipNames[ship.ship]} (`),
-        richTextRewards(Reward.negative(Reward.parse(ship.cost))),
+        richTextRewards(Reward.parse(ship.cost), true),
         ...(ship.charge > 0 ? [richText(", "), richTextRewards([new Reward(ship.charge, Resource.ChargePower)])] : []),
         richText(")"),
       ];
@@ -122,7 +122,7 @@ export function examineArtifactButton(
   });
   button.richText = [
     richText("Examine Artifact ("),
-    richTextRewards(Reward.negative(Reward.parse(command.data.cost))),
+    richTextRewards(Reward.parse(command.data.cost), true),
     richText(")"),
   ];
   return button;

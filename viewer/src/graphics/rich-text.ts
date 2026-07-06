@@ -8,6 +8,9 @@ export type RichTextBuilding = { type: Building; faction: Faction; count: number
 export type RichTextElement = {
   text?: string;
   rewards?: Reward[];
+  /** For `rewards` only: suppress the auto-"+" a "t"/"ta3" reward would otherwise get, for the
+   * rare case where it represents a cost being paid rather than income being gained. */
+  noPlus?: boolean;
   building?: RichTextBuilding;
   specialAction?: SpecialActionIncome;
   boardAction?: BoardAction;
@@ -23,8 +26,8 @@ export function richText(s: string): RichTextElement {
   return { text: s };
 }
 
-export function richTextRewards(rewards: Reward[]): RichTextElement {
-  return { rewards };
+export function richTextRewards(rewards: Reward[], noPlus = false): RichTextElement {
+  return noPlus ? { rewards, noPlus } : { rewards };
 }
 
 export function richTextBuilding(type: Building, faction: Faction, count = 1, skipResource = false): RichTextElement {

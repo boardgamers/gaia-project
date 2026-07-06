@@ -3205,17 +3205,29 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
         common no-zoom case so no containing block is created. Verified via Playwright: computed
         transform is now `none`, and the dropdown renders fully on top showing all 7 options, exactly
         where `dropup` + `boundary="window"` intend.
-      - **Also fixed 3 separate owner-reported icon-sign bugs** (found via a background research
-        agent, all sharing one root cause: `Resource.vue`'s hard-coded "+" prefix for positive `t`/
-        `ta3` reward counts assumes any such reward it's asked to draw is a gain, but 3 call sites in
-        `viewer/src/logic/buttons/lost-fleet.ts` passed a *cost* reward string straight through
-        unnegated): Examine Artifact's button now shows "-6" (was "+6"); Itars/Nevlas's Explore-ship
-        buttons now show "-1" for the extra token cost (was "+1"); and the same buttons' VP cost now
-        shows e.g. "-5"/"-7" (was a bare, unsigned "5"/"7") - all three fixed by wrapping the existing
-        `Reward.parse(cost)` calls in `Reward.negative(...)` (the codebase's own established idiom for
-        this, already used identically in `research.ts`/`ships.ts`), in `examineArtifactButton` and
-        `exploreButton`. Verified visually via Playwright: "Examine Artifact (-6)", "Twilight (-5)",
-        "T F Mars (-2 -5)", "Eclipse (-2 -5)".
+      - **Also fixed 2 owner-reported icon-sign bugs** (found via a background research agent, both
+        sharing one root cause: `Resource.vue`'s hard-coded "+" prefix for positive `t`/`ta3` reward
+        counts assumes any such reward it's asked to draw is a gain, but 2 call sites in
+        `viewer/src/logic/buttons/lost-fleet.ts` passed a *cost* reward string straight through,
+        picking up an incorrect "+"): Examine Artifact's button and Itars/Nevlas's Explore-ship
+        buttons' token cost. First attempt wrapped the cost in `Reward.negative(...)` (the codebase's
+        existing idiom for showing a cost as "-N", used in `research.ts`/`ships.ts`) to show "-6"/"-1"
+        - but the owner correctly pointed out this broke consistency with how every *other* cost in the
+        app displays (e.g. a building's "2c 1o" cost is plain, unsigned digits, never "-2c -1o"), and
+        that a bare, unsigned number was the actually-consistent fix, not an explicit minus sign.
+        Reverted the negation and instead added a `noPlus` prop to `Resource.vue` (threaded through
+        `richTextRewards(rewards, noPlus?)` -> `RichTextElement.noPlus` -> `RichTextView.vue`'s
+        `<Resource :no-plus="c.noPlus">`) that suppresses *only* the erroneous auto-"+" for these 2
+        cost call sites, leaving every genuine `t`/`ta3` income display (e.g. `ResearchBoard.vue`'s
+        "+1" token-gain icon) untouched. Examine Artifact now shows a plain "6" (was "+6"); Itars/
+        Nevlas's Explore-ship buttons now show a plain "1"/"2" for the token cost (was "+1"); the VP
+        part of those same buttons was never actually wrong (bare "5"/"7" already matched the "2c 1o"
+        convention) and needed no change once the negation was reverted. Verified visually via
+        Playwright: "Examine Artifact (6)", "Twilight (5)", "T F Mars (2 5)", "Eclipse (2 5)". Viewer
+        357/357, production build clean (one pre-existing exact-object-equality test,
+        `commands.spec.ts`'s "should assign shortcut for free action," needed `richTextRewards` to omit
+        the new `noPlus` key entirely rather than always including it as `false` - fixed by only adding
+        the key when true).
       - **Investigated the reported "GaiaProject artifact didn't move my VP tracker" as a possible real
         bug**: found `engine/src/move/artifacts.ts`'s `ArtifactToken.GaiaProject` case correctly computes
         `3 * pl.data.research[ResearchField.GaiaProject]` VP and calls `gainRewards`, which mutates
