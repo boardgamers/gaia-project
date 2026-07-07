@@ -15,7 +15,8 @@ if (!VALID_BUMPS.has(bumpType) || !title || changes.length === 0) {
 
 const repoRoot = path.resolve(__dirname, "..");
 const viewerPackagePath = path.join(repoRoot, "viewer", "package.json");
-const releasePath = path.join(repoRoot, "viewer", "src", "hosted", "release.json");
+const hostedReleasePath = path.join(repoRoot, "viewer", "src", "hosted", "release.json");
+const publicReleasePath = path.join(repoRoot, "viewer", "public", "release.json");
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -47,7 +48,7 @@ function bumpVersion(version, type) {
 }
 
 const viewerPackage = readJson(viewerPackagePath);
-const releaseData = readJson(releasePath);
+const releaseData = readJson(hostedReleasePath);
 const nextVersion = bumpVersion(viewerPackage.version, bumpType);
 const releasedAt = new Date().toISOString().slice(0, 10);
 
@@ -67,6 +68,7 @@ releaseData.entries = [
 ];
 
 writeJson(viewerPackagePath, viewerPackage);
-writeJson(releasePath, releaseData);
+writeJson(hostedReleasePath, releaseData);
+writeJson(publicReleasePath, releaseData);
 
 console.log(`Updated viewer release to v${nextVersion}`);

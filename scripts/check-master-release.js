@@ -6,7 +6,8 @@ const { execFileSync } = require("child_process");
 
 const repoRoot = path.resolve(__dirname, "..");
 const viewerPackagePath = path.join(repoRoot, "viewer", "package.json");
-const releasePath = path.join(repoRoot, "viewer", "src", "hosted", "release.json");
+const hostedReleasePath = path.join(repoRoot, "viewer", "src", "hosted", "release.json");
+const publicReleasePath = path.join(repoRoot, "viewer", "public", "release.json");
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -50,8 +51,14 @@ function changedFilesBetween(baseRef, headRef) {
 
 function assertReleaseMetadata() {
   const viewerPackage = readJson(viewerPackagePath);
-  const releaseData = readJson(releasePath);
+  const hostedReleaseData = readJson(hostedReleasePath);
+  const publicReleaseData = readJson(publicReleasePath);
+  const releaseData = hostedReleaseData;
   const latestEntry = releaseData.entries?.[0];
+
+  if (JSON.stringify(hostedReleaseData) !== JSON.stringify(publicReleaseData)) {
+    throw new Error("viewer/src/hosted/release.json and viewer/public/release.json must stay identical.");
+  }
 
   if (viewerPackage.version !== releaseData.version) {
     throw new Error(
@@ -107,7 +114,7 @@ function main() {
       continue;
     }
 
-    const missing = ["viewer/package.json", "viewer/src/hosted/release.json"].filter(
+    const missing = ["viewer/package.json", "viewer/src/hosted/release.json", "viewer/public/release.json"].filter(
       (required) => !changedFiles.includes(required)
     );
     if (missing.length > 0) {

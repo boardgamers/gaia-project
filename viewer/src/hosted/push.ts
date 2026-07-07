@@ -1,5 +1,6 @@
 import { supabaseConfig } from "./config";
 import { SupabaseClient } from "./supabase-client";
+import { startHostedUpdatePrompt } from "./update-prompt";
 
 function urlBase64ToUint8Array(base64Url: string): Uint8Array {
   const padding = "=".repeat((4 - (base64Url.length % 4)) % 4);
@@ -38,7 +39,11 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
   if (!("serviceWorker" in navigator)) {
     return null;
   }
-  return navigator.serviceWorker.register("/sw.js");
+  const registration = await navigator.serviceWorker.register("/sw.js");
+  startHostedUpdatePrompt({
+    registrationUpdate: () => registration.update(),
+  });
+  return registration;
 }
 
 /**
