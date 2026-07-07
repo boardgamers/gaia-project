@@ -79,19 +79,6 @@
               }}
               queued after it.
             </div>
-            <div class="mt-2">
-              <button
-                type="button"
-                class="btn btn-sm btn-primary mr-2"
-                :disabled="!premoveReady"
-                @click="queueCurrentPremove"
-              >
-                {{ premoveEditSeq !== null ? "Save changes" : "Queue now" }}
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" @click="cancelPremoveMode">
-                Cancel premove
-              </button>
-            </div>
           </div>
           <Commands
             @command="handleCommand"

@@ -1,6 +1,6 @@
 <template>
   <div class="turn-order">
-    <svg viewBox="-1.2 -1.2 12.5 4" :width="compact ? 130 : 250" :height="compact ? 42 : 80" style="max-width: 100%">
+    <svg viewBox="-1.2 -1.2 12.5 4" :width="compact ? 152 : 250" :height="compact ? 52 : 80" style="max-width: 100%">
       <PlayerCircle
         v-for="(player, index) in turnOrder"
         :key="index"

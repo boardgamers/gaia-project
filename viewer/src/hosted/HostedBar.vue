@@ -1,25 +1,22 @@
 <template>
   <div
-    class="gaia-viewer-game d-flex align-items-center px-3 py-1 mb-2 border-bottom bg-light position-relative"
-    style="gap: 0.75rem; min-height: 0; flex-wrap: nowrap; padding-right: 3rem"
+    class="gaia-viewer-game hosted-bar d-flex px-3 py-1 mb-2 border-bottom bg-light position-relative"
+    style="gap: 0.75rem; flex-wrap: nowrap; padding-right: 3rem"
   >
-    <span class="text-truncate">
-      <a href="?lobby=1">← Games</a>
+    <span class="hosted-bar__title text-truncate">
+      <a href="?lobby=1" aria-label="Back to lobby" class="hosted-bar__back">&larr;</a>
       <strong class="ml-2">{{ gameName || "Unnamed game" }}</strong>
     </span>
     <template v-if="finished">
       <b-badge variant="secondary">Game finished</b-badge>
     </template>
     <template v-else>
-      <!-- Desktop only (PROGRESS.md Gaia 10 follow-up #2): the old "Your turn"/"X to move" text
-           had nowhere left to show once it stopped being the local viewer's turn (Commands.vue,
-           which carries the mobile sticky-bar equivalent, unmounts entirely when it isn't your
-           turn) - on desktop there's room for it here; on mobile this banner stays circles-only
-           (d-none d-md-*) so it doesn't compete with Commands.vue's own sticky bar for space. -->
       <b-badge :variant="myTurn ? 'success' : 'info'" class="d-none d-md-inline-block">
         {{ myTurn ? "Your turn" : `${turnPlayerName} to move` }}
       </b-badge>
-      <TurnOrder compact />
+      <div class="hosted-bar__turn-order">
+        <TurnOrder compact />
+      </div>
     </template>
     <span
       class="d-flex align-items-center justify-content-center position-absolute"
@@ -65,10 +62,6 @@ export default Vue.extend({
     pushEnabled: { type: Boolean, default: false },
   },
   computed: {
-    // $store.state.player is the seat this session is locked to act as right now (seatToLock in
-    // hosted.ts already resolves "whichever of my seats must act now, leech interrupts included"
-    // to a real index, or leaves it unset/placeholder otherwise) - the same signal Game.vue's own
-    // canPlay already trusts, reused here instead of threading a separate prop through hosted.ts.
     myTurn(): boolean {
       const lockedSeat = this.$store.state.player?.index;
       const turnSeat = this.$store.state.data?.playerToMove;
@@ -85,3 +78,39 @@ export default Vue.extend({
   },
 });
 </script>
+
+<style lang="scss" scoped>
+.hosted-bar {
+  align-items: stretch;
+  min-height: 58px;
+}
+
+.hosted-bar__title {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.hosted-bar__back {
+  text-decoration: none;
+}
+
+.hosted-bar__turn-order {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  min-height: 0;
+}
+
+::v-deep(.hosted-bar__turn-order .turn-order) {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+::v-deep(.hosted-bar__turn-order .turn-order > svg) {
+  width: auto !important;
+  height: 100% !important;
+  max-height: 52px;
+}
+</style>

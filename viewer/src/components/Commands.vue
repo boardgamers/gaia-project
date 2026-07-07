@@ -6,24 +6,6 @@
         <RichTextView :content="statusLine" />
       </h5>
       <b-badge v-if="showYourTurnLabel" variant="success" class="ml-2">Your turn</b-badge>
-      <b-btn
-        v-if="showPremoveConfirm"
-        size="sm"
-        variant="primary"
-        class="ml-2"
-        @click="$emit('confirm-premove')"
-      >
-        {{ premoveConfirmLabel }}
-      </b-btn>
-      <b-btn
-        v-if="showPremoveCancel"
-        size="sm"
-        variant="outline-secondary"
-        class="ml-2"
-        @click="$emit('cancel-premove')"
-      >
-        Cancel premove
-      </b-btn>
       <b-btn v-if="showSilentAuctionInfo" v-b-modal.silent-auction-info variant="link" size="sm" class="ml-2 silent-auction-info-button">
         How does the auction work? <b-badge variant="info" pill>i</b-badge>
       </b-btn>
@@ -70,24 +52,6 @@
           <RichTextView :content="statusLine" />
         </h5>
         <b-badge v-if="showYourTurnLabel" variant="success" class="ml-2">Your turn</b-badge>
-        <b-btn
-          v-if="showPremoveConfirm"
-          size="sm"
-          variant="primary"
-          class="ml-2"
-          @click="$emit('confirm-premove')"
-        >
-          {{ premoveConfirmLabel }}
-        </b-btn>
-        <b-btn
-          v-if="showPremoveCancel"
-          size="sm"
-          variant="outline-secondary"
-          class="ml-2"
-          @click="$emit('cancel-premove')"
-        >
-          Cancel premove
-        </b-btn>
         <b-btn v-if="showSilentAuctionInfo" v-b-modal.silent-auction-info variant="link" size="sm" class="ml-2 silent-auction-info-button">
           How does the auction work? <b-badge variant="info" pill>i</b-badge>
         </b-btn>
@@ -139,6 +103,22 @@
           <template>
             <Undo v-if="canUndo" transform="scale(1.2)" />
           </template>
+        </b-btn>
+      </div>
+      <div v-if="showPremoveConfirm || showPremoveCancel" class="d-flex flex-wrap align-content-stretch">
+        <b-btn
+          v-if="showPremoveConfirm"
+          :class="['mr-2', 'mb-2', 'move-button', 'premove-inline-action', 'premove-inline-action--confirm']"
+          @click="$emit('confirm-premove')"
+        >
+          {{ premoveConfirmLabel }}
+        </b-btn>
+        <b-btn
+          v-if="showPremoveCancel"
+          :class="['mr-2', 'mb-2', 'move-button', 'premove-inline-action']"
+          @click="$emit('cancel-premove')"
+        >
+          Cancel premove
         </b-btn>
       </div>
       <div v-if="isChoosingFaction" class="d-flex flex-wrap align-content-stretch">
@@ -1122,6 +1102,17 @@ export default class Commands extends Vue implements CommandController {
   }
   100% {
     box-shadow: 0 0 0 0 rgba(var(--highlighted-rgb, 32, 204, 68), 0);
+  }
+}
+
+.premove-inline-action {
+  border-radius: 10px;
+  border-color: rgba(31, 45, 82, 0.14);
+  box-shadow: 0 1px 2px rgba(31, 45, 82, 0.08);
+
+  &--confirm {
+    background: linear-gradient(180deg, #2f72d8 0%, #2258ad 100%);
+    border-color: rgba(34, 88, 173, 0.4);
   }
 }
 

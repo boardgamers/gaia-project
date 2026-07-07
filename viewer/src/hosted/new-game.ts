@@ -13,15 +13,22 @@ export type NewGameForm = {
  */
 export type AuctionVariantOption = "none" | "silent";
 
-export const AUCTION_VARIANT_OPTIONS: { value: AuctionVariantOption; label: string; description: string }[] = [
+export const AUCTION_VARIANT_OPTIONS: {
+  value: AuctionVariantOption;
+  label: string;
+  summary: string;
+  description: string;
+}[] = [
   {
     value: "none",
     label: "Standard",
+    summary: "Take turns choosing factions.",
     description: "Each player picks a faction in turn order, no bidding.",
   },
   {
     value: "silent",
     label: "Silent Auction",
+    summary: "Ban, pick, then submit private VP bids.",
     description:
       "Everyone bans one faction (in turn order), then picks one faction each, then every player privately " +
       "submits a max-VP bid for every picked faction. An ascending-auction algorithm then assigns each player " +

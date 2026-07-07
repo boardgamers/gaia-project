@@ -9,7 +9,7 @@
     <div class="premove-bar__actions d-flex align-items-center flex-wrap">
       <button
         type="button"
-        class="btn btn-sm btn-outline-primary mr-2 mb-1"
+        class="btn btn-sm btn-secondary premove-bar__action-button mr-2 mb-2"
         :disabled="!canStartNew('sequential')"
         @click="requestStartNew('sequential')"
       >
@@ -17,13 +17,15 @@
       </button>
       <button
         type="button"
-        class="btn btn-sm btn-outline-primary mr-2 mb-1"
+        class="btn btn-sm btn-secondary premove-bar__action-button mr-2 mb-2"
         :disabled="!canStartNew('priority')"
         @click="requestStartNew('priority')"
       >
         + Priority premove
       </button>
-      <button type="button" class="btn btn-link btn-sm p-0 mb-1" v-b-modal.premove-info>ⓘ What's the difference?</button>
+      <button type="button" class="btn btn-link btn-sm p-0 mb-2 premove-bar__info-link" v-b-modal.premove-info>
+        ⓘ What's the difference?
+      </button>
     </div>
 
     <div v-if="rows.length > 0" class="premove-bar__tabs d-flex flex-wrap" role="tablist">
@@ -328,6 +330,14 @@ export default class PremoveBar extends Vue {
     gap: 0.3rem;
   }
 
+  &__action-button {
+    border-radius: 10px;
+    border-color: rgba(31, 45, 82, 0.14);
+    background: linear-gradient(180deg, #ffffff 0%, #e7ebf3 100%);
+    color: #33415c;
+    box-shadow: 0 1px 2px rgba(31, 45, 82, 0.08);
+  }
+
   &__tab {
     border: 1px solid var(--systemGray4, #d1d1d6);
     background: white;
@@ -366,14 +376,23 @@ export default class PremoveBar extends Vue {
     max-height: 35vh;
     overflow-y: auto;
     margin: 0;
-    padding: 0.55rem calc(0.65rem + env(safe-area-inset-right)) calc(0.55rem + env(safe-area-inset-bottom))
-      calc(0.65rem + env(safe-area-inset-left));
+    padding: 0.7rem calc(0.5rem + env(safe-area-inset-right)) calc(0.45rem + env(safe-area-inset-bottom) + 8px)
+      calc(0.5rem + env(safe-area-inset-left));
     border-radius: 16px 16px 0 0;
     border-left: 0;
     border-right: 0;
     border-bottom: 0;
-    background: linear-gradient(180deg, #f9fbff 0%, #eef3fb 100%);
-    box-shadow: 0 -8px 22px rgba(20, 26, 50, 0.14);
+    background: linear-gradient(180deg, #ffffff 0%, #eef1f6 100%);
+    box-shadow: 0 -12px 28px rgba(20, 26, 50, 0.18), 0 -1px 0 rgba(255, 255, 255, 0.6);
+
+    .premove-bar__action-button {
+      transition: transform 0.08s ease-out, box-shadow 0.08s ease-out;
+
+      &:active {
+        transform: scale(0.97);
+        box-shadow: inset 0 1px 2px rgba(31, 45, 82, 0.15);
+      }
+    }
   }
 }
 </style>
