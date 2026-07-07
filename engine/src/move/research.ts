@@ -1,7 +1,16 @@
 import assert from "assert";
 import { AvailableCommand } from "../available/types";
 import Engine from "../engine";
-import { AnyTechTilePos, Command, Player as PlayerEnum, ResearchField, Spaceship, SubPhase, TechTilePos } from "../enums";
+import {
+  AnyTechTilePos,
+  Command,
+  Player as PlayerEnum,
+  ResearchField,
+  Spaceship,
+  SpaceshipTechTile,
+  SubPhase,
+  TechTilePos,
+} from "../enums";
 import { isAdvanced } from "../tiles/techs";
 import { advanceResearchAreaPhase } from "./phase";
 
@@ -46,6 +55,10 @@ export function moveChooseTechTile(
     }
   } else {
     engine.tiles.techs[pos as AnyTechTilePos].count -= 1;
+  }
+
+  if (tileAvailable.tile === SpaceshipTechTile.Terraform) {
+    engine.processNextMove(SubPhase.SpaceshipTechTileBuildMine, null, false);
   }
 
   // AFTER gaining the tech tile (as green federation can be flipped and lock research tracks)

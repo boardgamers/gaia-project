@@ -63,8 +63,7 @@ export function techTileEvents(chooseTechTile: ChooseTechTile): Event[] {
   // tech tile's flat reward (e.g. Tech1's "o,q"), so it's granted the same way: synchronously via
   // Player.loadEvent's gainRewards call, with no extra move/subphase (unlike Range, a continuous
   // modifier read directly off the tile's `enabled` flag elsewhere, or Terraform, whose chained
-  // Build-a-Mine prompt is deliberately NOT auto-triggered - see spaceship-techs.ts's doc comment
-  // and PROGRESS.md's Gaia 4 revert note on why a NEW required move there breaks old replays).
+  // Build-a-Mine prompt is executed from moveChooseTechTile before the follow-up tech-track bump).
   if (chooseTechTile.tile === SpaceshipTechTile.Resource) {
     return Event.parse(["o,3k"], chooseTechTile.pos);
   }

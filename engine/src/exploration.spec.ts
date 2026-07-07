@@ -311,29 +311,55 @@ describe("Lost Fleet exploration", () => {
     expect(player.data.knowledge).to.equal(beforeKnowledge + 3);
   });
 
-  it("offers a discounted Build a Mine action for the Terraform Standard Tech tile (2 free terraforming steps)", () => {
-    // NOT wired into moveChooseTechTile's automatic flow (reverted - see PROGRESS.md's Gaia 4
-    // session note): forcing an extra required move into that sequence retroactively broke replay
-    // of any already-in-progress game whose stored history claimed this tile before the trigger
-    // existed, since the hosted app always reconstructs a game by replaying its full move history
-    // through current code with no version gate. `possibleSpaceshipTechTileBuildMine` itself is
-    // still correct and inert (unreachable without a caller invoking
-    // SubPhase.SpaceshipTechTileBuildMine) - this only tests it in isolation.
+  it("prompts the Terraform Standard Tech tile's discounted Build a Mine before the tech-track bump", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    const beforeResearch = { ...player.data.research };
+
+    player.data.explorationShips[Spaceship.TFMars] = 1;
+    engine.tiles.spaceshipTechs[Spaceship.TFMars] = { tile: SpaceshipTechTile.Terraform, count: 1 };
+    occupyNearestPlanet(engine, PlayerEnum.Player1, Spaceship.TFMars);
+
+    engine.generateAvailableCommands(SubPhase.ChooseTechTile);
+    const techCommand = engine.findAvailableCommand(PlayerEnum.Player1, Command.ChooseTechTile);
+    let availableCommands: AvailableCommand[] | undefined;
+    try {
+      moveChooseTechTile(engine, techCommand, PlayerEnum.Player1, Spaceship.TFMars);
+      expect.fail("claiming the Terraform tech should pause on its immediate Build-a-Mine prompt");
+    } catch (err) {
+      availableCommands = err.availableCommands;
+    }
+
+    expect(availableCommands, "the immediate follow-up prompt should expose build choices").to.not.equal(undefined);
+    expect(availableCommands.every((command) => command.name === Command.Build)).to.be.true;
+    expect(player.data.research).to.deep.equal(beforeResearch);
+    expect(player.data.tiles.techs.find((tile) => tile.pos === Spaceship.TFMars)).to.deep.include({
+      tile: SpaceshipTechTile.Terraform,
+      pos: Spaceship.TFMars,
+      enabled: true,
+    });
+  });
+
+  it("offers a discounted Build a Mine action for the Terraform Standard Tech tile, still charging extra ore and range QIC", () => {
     const engine = createLostFleetRoundMoveEngine(3);
     const player = engine.player(PlayerEnum.Player1);
 
     occupyNearestPlanet(engine, PlayerEnum.Player1, Spaceship.TFMars);
 
+    const target = cheapestHexNeedingRangeAndTerraforming(engine, PlayerEnum.Player1, player.faction);
+    expect(target, "need a target that still requires both terraforming ore and range QIC").to.not.equal(undefined);
+
     const [buildCommand] = possibleSpaceshipTechTileBuildMine(engine, PlayerEnum.Player1);
     expect(buildCommand, "a discounted Build a Mine action should be offered").to.not.equal(undefined);
-    const target = buildCommand.data.buildings[0];
-    const targetSteps = terraformingStepsRequired(
-      player.faction,
-      engine.map.getS(target.coordinates).data.planet,
-      player.data.lostFleetCost3Planets
-    );
-    const oreCost = Reward.parse(target.cost).find((r) => r.type === Resource.Ore)?.count ?? 0;
-    expect(oreCost).to.equal(terraformingCost(player.data, Math.max(targetSteps - 2, 0), engine.replay).count);
+
+    const buildTarget = buildCommand.data.buildings.find((building) => building.coordinates === target.hex.toString());
+    expect(buildTarget, "the discounted Build a Mine action should include the chosen target").to.not.equal(undefined);
+
+    const oreCost = Reward.parse(buildTarget.cost).find((reward) => reward.type === Resource.Ore)?.count ?? 0;
+    const qicCost = Reward.parse(buildTarget.cost).find((reward) => reward.type === Resource.Qic)?.count ?? 0;
+
+    expect(oreCost).to.equal(terraformingCost(player.data, Math.max(target.steps - 2, 0), engine.replay).count);
+    expect(qicCost).to.equal(target.qic);
   });
 
   it("should let an advanced tech cover a claimed ship Standard Tech tile", () => {
