@@ -145,6 +145,29 @@ describe("Lobby", () => {
     expect(wrapper.find(".game-bar__player").exists()).to.equal(false);
   });
 
+  it("still labels another player's hot-seat game as a test game when the admin views it", async () => {
+    const { client } = makeClient([
+      {
+        id: "g-test-theirs",
+        name: "Other test",
+        created_by: "user-other",
+        player_count: 2,
+        options: {},
+        status: "active",
+        current_seat: 0,
+        players: [
+          { seat: 0, invited_email: "other@example.com", user_id: "user-other", display_name: "Other A" },
+          { seat: 1, invited_email: "other@example.com", user_id: "user-other", display_name: "Other B" },
+        ],
+      },
+    ]);
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    expect(wrapper.text()).to.contain("test game");
+  });
+
   it("shows the New game link for a non-admin too", async () => {
     const { client } = makeClient([]);
     const wrapper = mount(Lobby, { propsData: { client, session: otherSession } });

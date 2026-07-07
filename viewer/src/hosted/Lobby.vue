@@ -151,7 +151,8 @@ export default Vue.extend({
     },
     isTestGame(game: any): boolean {
       const players = game.players ?? [];
-      return players.length > 0 && players.every((p: any) => p.user_id === this.myUserId);
+      const userIds = players.map((p: any) => p.user_id).filter((id: string | null) => !!id);
+      return userIds.length > 0 && new Set(userIds).size < players.length;
     },
     turnLabel(game: any): string {
       if (game.status === "finished") {
