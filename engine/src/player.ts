@@ -446,7 +446,7 @@ export default class Player extends EventEmitter {
   maxBuildings(building: Building) {
     switch (building) {
       case Building.GaiaFormer:
-        return this.data.gaiaformers - this.data.gaiaformersInGaia;
+        return this.data.gaiaformers - this.data.gaiaformersInGaia - this.data.gaiaformersUsedForAsteroid;
       case Building.TradeShip:
         return this.data.tradeShips;
       default:

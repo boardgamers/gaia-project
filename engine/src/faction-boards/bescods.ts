@@ -19,7 +19,7 @@ const bescods: FactionBoardVariants = {
         income: [["+4pw", "+2t"]],
       },
     },
-    income: ["k,4o,15c,q", "+o", "=> up-lowest"],
+    income: ["3k,4o,15c,q", "+o", "=> up-lowest"],
   },
   variants: [
     {

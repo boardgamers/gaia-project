@@ -162,6 +162,25 @@ describe("Player", () => {
       expect(player.data.buildings[Building.Mine]).to.equal(1);
     });
 
+    it("should not allow that consumed Gaiaformer to be reused for a later Gaiaforming action", () => {
+      const map = new SpaceMap(2, "asteroid-gaiaformer-reuse");
+      const asteroid = Array.from(map.grid.values()).find((h) => h.data.planet !== Planet.Empty && !h.data.building);
+      const transdim = Array.from(map.grid.values()).find((h) => h.data.planet === Planet.Transdim && !h.data.building);
+
+      asteroid.data.planet = Planet.Asteroid;
+
+      expect(transdim, "need an unoccupied Transdim planet").to.not.equal(undefined);
+
+      const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+      player.faction = Faction.Terrans;
+      player.loadFaction(null);
+
+      const { cost } = player.canBuild(map, asteroid, Planet.Asteroid, Building.Mine, false, false);
+      player.build(Building.Mine, asteroid, cost, map);
+
+      expect(player.canBuild(map, transdim, Planet.Transdim, Building.GaiaFormer, false, false)).to.equal(null);
+    });
+
     it("should grant Darkanians 2 credits and 1 knowledge only for the first colonization in each Space/Deep Space sector", () => {
       const map = new SpaceMap(2, "darkanians-sector-reward", false, "standard", true);
       const colonizableHexes = [...map.grid.values()].filter((hex) => hex.data.planet !== Planet.Empty && !hex.data.building);
