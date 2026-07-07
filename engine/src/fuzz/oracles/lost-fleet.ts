@@ -32,12 +32,9 @@ const TERRAIN_COLORS: readonly Planet[] = [
 ];
 
 /**
- * §C5 (owner board-read 2026-06-27, re-confirmed via the PROGRESS #35 revert): the shared
- * 4-space exploration charge track is 0 / 2 / 2 / 4.
- * NOTE: FUZZER_PLAN.md §3's table cell says "0/2/2/3" — that is a typo in the PLAN; the §C5
- * ledger entry (which outranks the plan per its own §0 trust order) says space 4 charges 4.
+ * §C5: the shared 4-space exploration charge track is 0 / 2 / 2 / 3.
  */
-const EXPLORATION_CHARGE_TRACK_C5: readonly number[] = [0, 2, 2, 4];
+const EXPLORATION_CHARGE_TRACK_C5: readonly number[] = [0, 2, 2, 3];
 
 const LF_FACTIONS: readonly Faction[] = [
   Faction.Tinkeroids,
@@ -226,7 +223,7 @@ function withinBaseRange(engine: Engine, occupied: GaiaHex[], hex: GaiaHex, rang
 
 /**
  * Explore offers obey the exploration rules:
- * - §C5 (owner board-read; plan-table's 0/2/2/3 is a typo): the 4-space charge track is 0/2/2/4,
+ * - §C5: the 4-space charge track is 0/2/2/3,
  *   space 1 charging nothing (its occupant is by definition the first explorer, §D1).
  * - §D1: the shuttle goes to the lowest-numbered free space of that ship.
  * - §D2/§D5 (rulebook p.9, exhaustive): deploying costs 5 VP — 7 VP only for Bal T'aks.
@@ -260,7 +257,7 @@ export const lfExploreOffers: Oracle = {
         const expectedCharge = EXPLORATION_CHARGE_TRACK_C5[offer.slot - 1];
         if (offer.charge !== expectedCharge) {
           messages.push(
-            `${label}: §C5 charge track (0/2/2/4) gives ${expectedCharge} power for space ${offer.slot}, offer says ${offer.charge}`
+            `${label}: §C5 charge track (0/2/2/3) gives ${expectedCharge} power for space ${offer.slot}, offer says ${offer.charge}`
           );
         }
         // §D1: lowest-numbered free space.

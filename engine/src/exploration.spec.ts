@@ -194,6 +194,31 @@ describe("Lost Fleet exploration", () => {
     expect(restored.player(PlayerEnum.Player1).data.explorationShips[Spaceship.Twilight]).to.equal(2);
   });
 
+  it("should only charge 3 power for the fourth exploration slot", () => {
+    const engine = createLostFleetRoundMoveEngine(4);
+    occupyNearestPlanet(engine, PlayerEnum.Player1, Spaceship.Twilight);
+    engine.player(PlayerEnum.Player2).data.explorationShips[Spaceship.Twilight] = 1;
+    engine.player(PlayerEnum.Player3).data.explorationShips[Spaceship.Twilight] = 2;
+    engine.player(PlayerEnum.Player4).data.explorationShips[Spaceship.Twilight] = 3;
+
+    const player = engine.player(PlayerEnum.Player1);
+    player.data.power = new Power(0, 3, 0, 0);
+
+    const command = availableExploreCommand(engine);
+    const twilight = command.data.ships.find((entry) => entry.ship === Spaceship.Twilight);
+
+    expect(twilight).to.not.equal(undefined);
+    expect(twilight.slot).to.equal(4);
+    expect(twilight.charge).to.equal(3);
+
+    moveExplore(engine, command, PlayerEnum.Player1, Spaceship.Twilight);
+
+    expect(player.data.explorationShips[Spaceship.Twilight]).to.equal(4);
+    expect(player.data.power.area1).to.equal(0);
+    expect(player.data.power.area2).to.equal(0);
+    expect(player.data.power.area3).to.equal(3);
+  });
+
   it("should enforce the one-shuttle-per-ship rule and the 2-player shuttle limit", () => {
     const engine = createLostFleetRoundMoveEngine(2);
     occupyNearestPlanet(engine, PlayerEnum.Player1, Spaceship.Twilight);
