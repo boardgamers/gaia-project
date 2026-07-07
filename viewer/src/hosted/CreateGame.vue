@@ -8,7 +8,7 @@
 
     <b-form @submit.prevent="createGame">
       <div class="create-game-grid">
-        <section class="create-game-card">
+        <section class="create-game-section">
           <div class="create-game-section__label">Players</div>
           <p class="create-game-help mb-2">Pick seat count, then switch on hot-seat test mode if needed.</p>
           <div class="create-game-count-row">
@@ -26,7 +26,7 @@
           </div>
         </section>
 
-        <section class="create-game-card">
+        <section class="create-game-section">
           <div class="create-game-section__label">Faction Selection</div>
           <p class="create-game-help mb-2">Choose how factions get assigned before setup begins.</p>
           <div class="create-game-variant-grid">
@@ -61,7 +61,7 @@
           </div>
         </section>
 
-        <section v-if="!form.testGame" class="create-game-card create-game-card--full">
+        <section v-if="!form.testGame" class="create-game-section create-game-section--full">
           <div class="d-flex align-items-start justify-content-between flex-wrap mb-2" style="gap: 0.5rem">
             <div>
               <div class="create-game-section__label mb-1">Invite {{ form.playerCount - 1 }} More</div>
@@ -80,12 +80,15 @@
           <div v-else-if="invitableUsers.length === 0" class="text-muted small">
             No other registered players yet - they need to sign in once first.
           </div>
-          <div v-else class="create-game-invite-grid">
+          <div v-else class="create-game-invite-list">
             <label
               v-for="user in invitableUsers"
               :key="user.id"
-              class="create-game-invite"
-              :class="{ 'create-game-invite--disabled': !isInvited(user.id) && invitedUserIds.length >= form.playerCount - 1 }"
+              class="create-game-invite-row"
+              :class="{
+                'create-game-invite-row--selected': isInvited(user.id),
+                'create-game-invite-row--disabled': !isInvited(user.id) && invitedUserIds.length >= form.playerCount - 1,
+              }"
             >
               <input
                 type="checkbox"
@@ -93,15 +96,15 @@
                 :disabled="!isInvited(user.id) && invitedUserIds.length >= form.playerCount - 1"
                 @change="toggleInvite(user.id)"
               />
-              <span class="create-game-invite__text">
-                <strong>{{ user.display_name }}</strong>
-                <span class="text-muted small">{{ user.email }}</span>
+              <span class="create-game-invite-row__name">
+                {{ user.display_name }}
               </span>
+              <span v-if="isInvited(user.id)" class="create-game-invite-row__seat">Seat {{ inviteSeatNumber(user.id) }}</span>
             </label>
           </div>
         </section>
 
-        <section class="create-game-card create-game-card--full create-game-card--preview">
+        <section class="create-game-section create-game-section--full create-game-section--preview">
           <div class="d-flex align-items-start justify-content-between flex-wrap mb-2" style="gap: 0.5rem">
             <div>
               <div class="create-game-section__label mb-1">Setup Preview</div>
@@ -210,6 +213,10 @@ export default Vue.extend({
         this.invitedUserIds = [...this.invitedUserIds, userId];
       }
     },
+    inviteSeatNumber(userId: string) {
+      const index = this.invitedUserIds.indexOf(userId);
+      return index >= 0 ? index + 2 : null;
+    },
     isAuctionInfoOpen(value: "none" | "silent") {
       return !!this.openAuctionInfo[value];
     },
@@ -279,22 +286,21 @@ export default Vue.extend({
 .create-game-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: 0.85rem 1rem;
 }
 
-.create-game-card {
-  border: 1px solid rgba(28, 43, 74, 0.1);
-  border-radius: 14px;
-  padding: 0.75rem 0.85rem;
-  background: linear-gradient(180deg, #fff 0%, #f7f9fc 100%);
-  box-shadow: 0 1px 2px rgba(20, 26, 50, 0.05);
+.create-game-section {
+  min-width: 0;
+  padding-bottom: 0.15rem;
 }
 
-.create-game-card--full {
+.create-game-section--full {
   grid-column: 1 / -1;
 }
 
-.create-game-card--preview {
+.create-game-section--preview {
+  border-top: 1px solid rgba(28, 43, 74, 0.1);
+  padding-top: 0.8rem;
   margin-bottom: 6rem;
 }
 
@@ -337,16 +343,15 @@ export default Vue.extend({
   width: 100%;
   text-align: left;
   border: 1px solid rgba(28, 43, 74, 0.12);
-  border-radius: 12px;
-  padding: 0.65rem 0.7rem;
-  background: linear-gradient(180deg, #fff 0%, #eef2f8 100%);
+  border-radius: 10px;
+  padding: 0.55rem 0.65rem;
+  background: #fff;
   color: #2a354d;
-  box-shadow: 0 1px 2px rgba(20, 26, 50, 0.06);
 
   &--active {
     border-color: rgba(43, 93, 184, 0.4);
-    background: linear-gradient(180deg, #f2f7ff 0%, #dfe9fb 100%);
-    box-shadow: 0 0 0 1px rgba(43, 93, 184, 0.12), 0 4px 12px rgba(43, 93, 184, 0.12);
+    background: #f4f8ff;
+    box-shadow: 0 0 0 1px rgba(43, 93, 184, 0.08);
   }
 }
 
@@ -367,7 +372,7 @@ export default Vue.extend({
 .create-game-variant__detail {
   margin-top: 0.45rem;
   padding-top: 0.45rem;
-  border-top: 1px solid rgba(43, 93, 184, 0.14);
+  border-top: 1px solid rgba(28, 43, 74, 0.1);
   font-size: 0.8rem;
   line-height: 1.3;
   color: #44506a;
@@ -389,25 +394,25 @@ export default Vue.extend({
   flex: 0 0 auto;
 }
 
-.create-game-invite-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
+.create-game-invite-list {
+  border-top: 1px solid rgba(28, 43, 74, 0.1);
 }
 
-.create-game-invite {
+.create-game-invite-row {
   display: flex;
-  align-items: flex-start;
-  gap: 0.55rem;
+  align-items: center;
+  gap: 0.6rem;
   min-width: 0;
-  padding: 0.5rem 0.55rem;
-  border: 1px solid rgba(28, 43, 74, 0.12);
-  border-radius: 12px;
-  background: white;
+  padding: 0.45rem 0.1rem;
+  border-bottom: 1px solid rgba(28, 43, 74, 0.1);
   cursor: pointer;
 
   input {
-    margin-top: 0.15rem;
+    margin: 0;
+  }
+
+  &--selected {
+    color: #204b93;
   }
 
   &--disabled {
@@ -415,10 +420,20 @@ export default Vue.extend({
   }
 }
 
-.create-game-invite__text {
+.create-game-invite-row__name {
   min-width: 0;
-  display: flex;
-  flex-direction: column;
+  flex: 1 1 auto;
+  font-size: 0.92rem;
+}
+
+.create-game-invite-row__seat {
+  flex: 0 0 auto;
+  padding: 0.12rem 0.42rem;
+  border-radius: 999px;
+  background: #e9f1ff;
+  color: #2558ad;
+  font-size: 0.72rem;
+  font-weight: 700;
 }
 
 .create-game-sticky-bar {
@@ -462,7 +477,7 @@ export default Vue.extend({
     grid-template-columns: 1fr;
   }
 
-  .create-game-card--preview {
+  .create-game-section--preview {
     margin-bottom: 6.4rem;
   }
 
@@ -480,7 +495,6 @@ export default Vue.extend({
 @media (max-width: 359px) {
   .create-game-count-row,
   .create-game-variant-grid,
-  .create-game-invite-grid,
   .create-game-sticky-bar__buttons {
     grid-template-columns: 1fr;
   }

@@ -54,15 +54,10 @@ describe("CreateGame", () => {
     expect(wrapper.text()).to.include("Alice");
     expect(wrapper.text()).to.include("Bob");
     expect(wrapper.text()).to.include("Carol");
-    // "Me" only appears as the host, never as an invitable checkbox option
-    const checkboxLabels = wrapper.findAll('input[type="checkbox"] + label, .custom-control-label');
-    let sawMe = false;
-    for (let i = 0; i < checkboxLabels.length; i++) {
-      if (checkboxLabels.at(i).text().includes("me@example.com")) {
-        sawMe = true;
-      }
-    }
-    expect(sawMe).to.equal(false);
+    expect(wrapper.text()).to.not.include("me@example.com");
+    expect(wrapper.text()).to.not.include("alice@example.com");
+    expect(wrapper.text()).to.not.include("bob@example.com");
+    expect(wrapper.text()).to.not.include("carol@example.com");
   });
 
   it("caps invited players at playerCount - 1 (2p game only needs 1 other player)", async () => {
