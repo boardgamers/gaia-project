@@ -1,7 +1,19 @@
 {
-  "version": "5.13.1",
+  "version": "5.13.2",
   "releasedAt": "2026-07-07",
   "entries": [
+    {
+      "version": "5.13.2",
+      "releasedAt": "2026-07-07",
+      "kind": "update",
+      "title": "Desktop turn notifications stay on while game is open",
+      "impact": "",
+      "changes": [
+        "Desktop subscriptions now still receive turn notifications even if that player already has the game open.",
+        "Mobile and installed-PWA subscriptions keep the existing active-tab suppression behavior.",
+        "Master pushes now redeploy the notify Edge Function as well as resolve-automation."
+      ]
+    },
     {
       "version": "5.13.1",
       "releasedAt": "2026-07-07",

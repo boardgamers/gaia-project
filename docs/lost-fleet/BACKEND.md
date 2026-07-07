@@ -211,9 +211,10 @@ RLS enabled on all three tables. One membership predicate, used everywhere
 > no domain verification — Web Push is free and provider-less (browser push services + VAPID).
 
 - **Subscriptions:** a `push_subscriptions` table (user_id, endpoint unique, `p256dh`/`auth`
-  keys). The viewer registers a service worker and, on an explicit "Enable notifications"
-  button (permission prompts require a user gesture), calls `pushManager.subscribe()` with the
-  VAPID public key and upserts the subscription. Per-user, multi-device.
+  keys, plus `user_agent`). The viewer registers a service worker and, on an explicit "Enable
+  notifications" button (permission prompts require a user gesture), calls
+  `pushManager.subscribe()` with the VAPID public key and upserts the subscription. Per-user,
+  multi-device.
 - **Trigger:** Postgres trigger (`pg_net`) on `games` INSERT (invites) and UPDATE of
   `current_seat`/`status` → HTTP POST `{game_id, type}` to Edge Function `notify`. The
   function URL + anon key live in an `app_config` table (RLS on, no policies → service-role
@@ -229,7 +230,9 @@ RLS enabled on all three tables. One membership predicate, used everywhere
 - **Accepted caveats (owner acknowledged):** iOS needs the viewer installed to the home screen
   as a PWA (iOS 16.4+) before push works; each device grants permission once; a player with no
   subscribed device gets no notification (game unaffected). First-time invitees can't receive
-  an invite push (no account yet) — the host shares the game link out-of-band once.
+  an invite push (no account yet) — the host shares the game link out-of-band once. Turn pushes
+  now stay aggressive on desktop subscriptions even when that player already has the game open,
+  while mobile/PWA subscriptions keep the old "already open" suppression behavior.
 - Known cosmetic wart, accepted for v1: a leech chain produces a couple of rapid turn-change
   pushes. Fine for a friend group; debounce later if it annoys.
 
