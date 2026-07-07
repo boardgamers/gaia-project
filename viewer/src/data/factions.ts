@@ -11,12 +11,13 @@ import {
   Planet,
   Player,
   PowerArea,
+  Resource,
   terraformingStepsRequired,
 } from "@gaia-project/engine";
 import { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
 import { GAIA_FORMER_COST } from "@gaia-project/engine/src/faction-boards/types";
 import { factionColor, factionPiecePlanet, planetFill } from "../graphics/utils";
-import { allBuildings, buildingName } from "./building";
+import { buildingName } from "./building";
 
 export const factionData: {
   [faction in Faction]: { name: string; ability: string; PI: string; shortcut: string; strategyLink?: string };
@@ -190,6 +191,89 @@ function formatIncome(income: Event[]): string {
   return income.length == 0 ? "~" : income.join(", ");
 }
 
+function resourceBadgeHtml(type: string, count: number, label: string): string {
+  return `<span class="faction-preview__resource faction-preview__resource--${type}">
+    <span class="faction-preview__resource-glyph">${label}</span>
+    <span class="faction-preview__resource-count">${count}</span>
+  </span>`;
+}
+
+function rewardBadgeHtml(reward: { count: number; type: Resource }): string {
+  switch (reward.type) {
+    case Resource.Credit:
+      return resourceBadgeHtml("credit", reward.count, "C");
+    case Resource.Ore:
+      return resourceBadgeHtml("ore", reward.count, "O");
+    case Resource.Knowledge:
+      return resourceBadgeHtml("knowledge", reward.count, "K");
+    case Resource.Qic:
+      return resourceBadgeHtml("qic", reward.count, "Q");
+    case Resource.GainToken:
+      return resourceBadgeHtml("token", reward.count, "T");
+    case Resource.ChargePower:
+      return resourceBadgeHtml("power", reward.count, "PW");
+    case Resource.UpgradeTerraforming:
+      return resourceBadgeHtml("research", reward.count, "Terra");
+    case Resource.UpgradeNavigation:
+      return resourceBadgeHtml("research", reward.count, "Nav");
+    case Resource.UpgradeIntelligence:
+      return resourceBadgeHtml("research", reward.count, "Int");
+    case Resource.UpgradeGaiaProject:
+      return resourceBadgeHtml("research", reward.count, "Gaia");
+    case Resource.UpgradeEconomy:
+      return resourceBadgeHtml("research", reward.count, "Eco");
+    case Resource.UpgradeScience:
+      return resourceBadgeHtml("research", reward.count, "Sci");
+    case Resource.UpgradeLowest:
+      return resourceBadgeHtml("research", reward.count, "Any");
+    default:
+      return resourceBadgeHtml("generic", reward.count, reward.type.toUpperCase());
+  }
+}
+
+function buildingStockCount(building: Building): number {
+  switch (building) {
+    case Building.Mine:
+      return 8;
+    case Building.TradingStation:
+      return 4;
+    case Building.ResearchLab:
+      return 3;
+    case Building.PlanetaryInstitute:
+      return 1;
+    case Building.Academy1:
+    case Building.Academy2:
+      return 1;
+    case Building.GaiaFormer:
+      return 3;
+    default:
+      return 0;
+  }
+}
+
+function lostFleetNotes(faction: Faction, expansion: Expansion): string[] {
+  if ((expansion & Expansion.LostFleet) === 0) {
+    return [];
+  }
+
+  switch (faction) {
+    case Faction.Xenos:
+      return ["Lost Fleet adds a free action: spend 1 ore to gain 1 power directly into Area III."];
+    case Faction.Gleens:
+      return ["Lost Fleet adds a special action that grants +2 range, including for Explore."];
+    case Faction.Tinkeroids:
+      return ["Starts with the Planetary Institute already built instead of two mines."];
+    case Faction.Darkanians:
+      return ["Starts with one mine instead of two, and standard planets always terraform in 1 step."];
+    case Faction.Moweyds:
+      return ["Starts with one mine and an Exploration Shuttle already on T F Mars."];
+    case Faction.SpaceGiants:
+      return ["Starts with one mine instead of two, and standard planets always terraform in 2 steps."];
+    default:
+      return [];
+  }
+}
+
 export function buildingDesc(b: Building, faction: Faction, board: FactionBoard, player?: Player) {
   const cost = board.buildings[b].cost;
   const income = " -> " + board.buildings[b].income.map((i) => formatIncome(i)).join(" / ");
@@ -202,51 +286,64 @@ export function buildingDesc(b: Building, faction: Faction, board: FactionBoard,
 
 export function factionDesc(faction: Faction, variant: FactionBoardRaw | null, expansion: Expansion) {
   const board = factionBoard(faction, variant);
-  const p = factionPlanet(faction);
-
-  const buildingDescription =
-    "<ul>" +
-    allBuildings(expansion, false)
-      .map((bld) => `<li><b>${buildingName(bld, faction)}</b> - ${buildingDesc(bld, faction, board)}</li>`)
-      .join("\n") +
-    "</ul>";
-  const startingIncome = board.income.filter((ev) => ev.operator === Operator.Once);
-  const roundIncome = board.income.filter((ev) => ev.operator === Operator.Income);
+  const startingIncome = board.income.filter((ev) => ev.operator === Operator.Once).flatMap((ev) => ev.rewards);
+  const roundIncome = board.income.filter((ev) => ev.operator === Operator.Income).flatMap((ev) => ev.rewards);
+  const buildingCards = [Building.Mine, Building.TradingStation, Building.ResearchLab, Building.Academy1, Building.Academy2, Building.PlanetaryInstitute]
+    .map((building) => {
+      const cost = board.buildings[building].cost.join(", ") || "~";
+      const income = board.buildings[building].income.map((row) => formatIncome(row)).join(" / ") || "~";
+      return `<div class="faction-preview__building">
+        <div class="faction-preview__building-top">
+          <span class="faction-preview__building-name">${buildingName(building, faction)}</span>
+          <span class="faction-preview__building-stock">x${buildingStockCount(building)}</span>
+        </div>
+        <div class="faction-preview__building-line"><span>Cost</span><strong>${cost}</strong></div>
+        <div class="faction-preview__building-line"><span>Income</span><strong>${income}</strong></div>
+      </div>`;
+    })
+    .join("");
+  const lostFleetChanges = lostFleetNotes(faction, expansion);
 
   const data = factionData[faction];
-  const strategy = data.strategyLink
-    ? `<iframe sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" src="${data.strategyLink}" width="640" height="480" allow="autoplay"></iframe>`
-    : "";
 
   return `
-  <div class="faction-desc" style="background-color: ${factionColor(faction)}; color: ${planetFill(
+  <div class="faction-desc faction-preview" style="background-color: ${factionColor(faction)}; color: ${planetFill(
     factionPiecePlanet(faction)
-  )}; padding: 1rem">
-    <b>Ability: </b> ${data.ability} </br>
-    <b>Planetary Institute: </b> ${data.PI}<br/>
-    <b>Buildings:</b> ${buildingDescription}
-    <b>Starting Power:</b> area 1: ${board.power.area1}${
-    board.brainstone == PowerArea.Area1 ? ", brainstone" : ""
-  }, area 2: ${board.power.area2} </br>
-    <b>Starting Income:</b> ${startingIncome.toString().replace(/,/g, ", ")} </br>
-    <b>Round Income:</b> ${roundIncome} </br>
-    <span style="white-space: nowrap; line-height: 1em">
-      <b>Steps:</b>
-      ${[0, 1, 2, 3]
-        .map(
-          (i) =>
-            `<span class="ml-2">${planetsWithSteps(faction, i)
-              .map(
-                (p) =>
-                  `<svg width="15" height="20" viewbox="0 0 15 15" >
-          <circle cx="7" cy="6" r="6"  class="player-token planet-fill ${p}" />
-        </svg>`
-              )
-              .join("")} ${i}</span>`
-        )
-        .join("")}
-    </span> </br>
-    ${strategy}
+  )};">
+    <div class="faction-preview__header">
+      <div class="faction-preview__title">${data.name}</div>
+      <div class="faction-preview__subtitle">Starting resources</div>
+      <div class="faction-preview__resources">
+        ${startingIncome.map((reward) => rewardBadgeHtml(reward)).join("")}
+        ${resourceBadgeHtml("power", board.power.area1, "I")}
+        ${resourceBadgeHtml("power", board.power.area2, "II")}
+        ${board.brainstone === PowerArea.Area1 ? resourceBadgeHtml("brainstone", 1, "B") : ""}
+      </div>
+      <div class="faction-preview__subtitle">Round income</div>
+      <div class="faction-preview__resources">
+        ${roundIncome.map((reward) => rewardBadgeHtml(reward)).join("")}
+      </div>
+    </div>
+    <div class="faction-preview__board">
+      <div class="faction-preview__board-title">Faction board</div>
+      <div class="faction-preview__building-grid">${buildingCards}</div>
+    </div>
+    ${
+      lostFleetChanges.length > 0
+        ? `<div class="faction-preview__lost-fleet">
+            <div class="faction-preview__board-title">Lost Fleet changes</div>
+            <ul>${lostFleetChanges.map((line) => `<li>${line}</li>`).join("")}</ul>
+          </div>`
+        : ""
+    }
+    <details class="faction-preview__accordion">
+      <summary>Faction ability</summary>
+      <div class="faction-preview__accordion-body">${data.ability}</div>
+    </details>
+    <details class="faction-preview__accordion">
+      <summary>Planetary Institute ability</summary>
+      <div class="faction-preview__accordion-body">${data.PI}</div>
+    </details>
   </div>
   `;
 }

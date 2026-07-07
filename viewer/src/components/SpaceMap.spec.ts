@@ -174,6 +174,19 @@ describe("SpaceMap", () => {
     expect(container.querySelectorAll("rect.lost-fleet-terraform-swatch").length).to.equal(0);
   });
 
+  it("also hides the terraforming-board squares as soon as every seat has chosen a faction, even before round 1 starts", () => {
+    const engine = new Engine(["init 2 lost-fleet-space-map"], { lostFleet: true });
+    engine.players[0].faction = Faction.Tinkeroids;
+    engine.players[1].faction = Faction.Terrans;
+
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(SpaceMap, { store });
+
+    expect(container.querySelectorAll("rect.lost-fleet-terraform-swatch").length).to.equal(0);
+  });
+
   it("sizes the viewBox to contain every hex and keeps the wheel clear of hexes without reserving a full-height sidebar", () => {
     // The old hardcoded viewBox (-13 -11.5 26|33.5 24) clipped the taller Lost Fleet 3p/4p
     // layouts (top hexes at y=-16.5 / -19.1) and let the faction wheel sit on top of hexes.

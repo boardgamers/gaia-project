@@ -396,6 +396,8 @@ export default Vue.extend({
 
 .create-game-invite-list {
   border-top: 1px solid rgba(28, 43, 74, 0.1);
+  max-height: 15.25rem;
+  overflow-y: auto;
 }
 
 .create-game-invite-row {

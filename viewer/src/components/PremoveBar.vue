@@ -6,6 +6,21 @@
   >
     <div v-if="willFireLine" class="premove-bar__will-fire small">{{ willFireLine }}</div>
 
+    <div v-if="rows.length > 0" class="premove-bar__tabs d-flex flex-wrap" role="tablist">
+      <button
+        v-for="(row, i) in rows"
+        :key="row.seq"
+        type="button"
+        role="tab"
+        class="premove-bar__tab"
+        :aria-selected="selectedSeq === row.seq"
+        :class="{ 'premove-bar__tab--active': selectedSeq === row.seq, 'text-muted': !legalMap[row.seq] }"
+        @click="toggleSelected(row.seq)"
+      >
+        {{ tabLabel(i) }}
+      </button>
+    </div>
+
     <div class="premove-bar__actions d-flex align-items-center flex-wrap">
       <button
         type="button"
@@ -28,21 +43,6 @@
       </button>
     </div>
 
-    <div v-if="rows.length > 0" class="premove-bar__tabs d-flex flex-wrap" role="tablist">
-      <button
-        v-for="(row, i) in rows"
-        :key="row.seq"
-        type="button"
-        role="tab"
-        class="premove-bar__tab"
-        :aria-selected="selectedSeq === row.seq"
-        :class="{ 'premove-bar__tab--active': selectedSeq === row.seq, 'text-muted': !legalMap[row.seq] }"
-        @click="toggleSelected(row.seq)"
-      >
-        {{ tabLabel(i) }}
-      </button>
-    </div>
-
     <div v-if="selectedRow" class="premove-bar__detail small">
       <div class="premove-bar__detail-move">{{ selectedRow.move }}</div>
       <div v-if="!legalMap[selectedRow.seq]" class="text-muted">no longer possible</div>
@@ -55,27 +55,31 @@
         }}
         queued after it.
       </div>
-      <div class="mt-1">
-        <button type="button" class="btn btn-sm btn-outline-secondary mr-1" @click="edit(selectedRow)">Edit</button>
+      <div class="mt-2 premove-bar__detail-actions d-flex flex-wrap">
+        <button type="button" class="btn btn-sm btn-secondary premove-bar__mini-button mr-1 mb-1" @click="edit(selectedRow)">
+          Edit
+        </button>
         <button
           v-if="mode === 'priority' && selectedIndex > 0"
           type="button"
-          class="btn btn-link btn-sm p-0 mr-1"
+          class="btn btn-sm btn-secondary premove-bar__mini-button mr-1 mb-1"
           title="Move up"
           @click="reorder(selectedRow.seq, 'up')"
         >
-          ▲
+          Move up
         </button>
         <button
           v-if="mode === 'priority' && selectedIndex < rows.length - 1"
           type="button"
-          class="btn btn-link btn-sm p-0 mr-1"
+          class="btn btn-sm btn-secondary premove-bar__mini-button mr-1 mb-1"
           title="Move down"
           @click="reorder(selectedRow.seq, 'down')"
         >
-          ▼
+          Move down
         </button>
-        <button type="button" class="btn btn-sm btn-outline-danger" @click="cancel(selectedRow)">Cancel</button>
+        <button type="button" class="btn btn-sm btn-secondary premove-bar__mini-button mr-1 mb-1" @click="cancel(selectedRow)">
+          Cancel premove
+        </button>
       </div>
     </div>
 
@@ -317,20 +321,25 @@ export default class PremoveBar extends Vue {
 <style lang="scss">
 .premove-bar {
   border: 1px solid var(--systemGray5, #e5e5ea);
-  border-radius: 0.5rem;
-  padding: 0.5rem 0.6rem;
-  background: var(--systemGray6, #f8f9fb);
+  border-radius: 0.9rem;
+  padding: 0.7rem 0.7rem 0.6rem;
+  background: linear-gradient(180deg, #ffffff 0%, #eef1f6 100%);
+  box-shadow: 0 8px 24px rgba(20, 26, 50, 0.12), 0 1px 2px rgba(31, 45, 82, 0.08);
 
   &__will-fire {
     margin-bottom: 0.35rem;
+    font-weight: 600;
+    color: #33415c;
   }
 
   &__tabs {
-    margin-top: 0.4rem;
+    margin: -1.2rem 0 0.55rem;
     gap: 0.3rem;
+    padding-left: 0.15rem;
   }
 
-  &__action-button {
+  &__action-button,
+  &__mini-button {
     border-radius: 10px;
     border-color: rgba(31, 45, 82, 0.14);
     background: linear-gradient(180deg, #ffffff 0%, #e7ebf3 100%);
@@ -339,12 +348,15 @@ export default class PremoveBar extends Vue {
   }
 
   &__tab {
-    border: 1px solid var(--systemGray4, #d1d1d6);
-    background: white;
-    border-radius: 999px;
-    padding: 0.15rem 0.65rem;
+    border: 1px solid rgba(28, 43, 74, 0.16);
+    border-bottom: 0;
+    background: linear-gradient(180deg, #f9fbff 0%, #e8edf5 100%);
+    border-radius: 14px 14px 0 0;
+    padding: 0.28rem 0.8rem 0.32rem;
     font-size: 0.78rem;
+    font-weight: 700;
     cursor: pointer;
+    box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.7), 0 8px 18px rgba(20, 26, 50, 0.08);
 
     &--active {
       background: #1c2b4a;
@@ -363,6 +375,10 @@ export default class PremoveBar extends Vue {
 
   &__detail-move {
     font-weight: 600;
+  }
+
+  &__detail-actions {
+    gap: 0.15rem;
   }
 }
 

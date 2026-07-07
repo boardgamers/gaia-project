@@ -235,7 +235,7 @@ export default class SpaceMap extends Vue {
    * so the squares stay visible there unconditionally.
    */
   get terraformingColors(): Planet[] {
-    if (!this.isLostFleet || !isBeforeRound1(this.engine)) {
+    if (!this.isLostFleet || !isBeforeRound1(this.engine) || this.engine.players.every((player) => !!player.faction)) {
       return [];
     }
     const seed = gameSeed(this.engine);

@@ -3,6 +3,7 @@ import Engine, {
   Building,
   Command,
   Faction,
+  Planet,
   Phase,
   PlayerEnum,
   Spaceship,
@@ -103,19 +104,19 @@ describe("Commands", () => {
         button.textContent?.includes(name)
       );
 
-    const tinkeroidsIcon = buttonFor("Tinkeroids")?.querySelector<HTMLElement>("i.planet");
-    const darkaniansIcon = buttonFor("Darkanians")?.querySelector<HTMLElement>("i.planet");
-    const moweydsIcon = buttonFor("Moweyds")?.querySelector<HTMLElement>("i.planet");
-    const spaceGiantsIcon = buttonFor("Space Giants")?.querySelector<HTMLElement>("i.planet");
+    const tinkeroidsIcon = buttonFor("Tinkeroids")?.querySelector<SVGElement>("svg[data-planet]");
+    const darkaniansIcon = buttonFor("Darkanians")?.querySelector<SVGElement>("svg[data-planet]");
+    const moweydsIcon = buttonFor("Moweyds")?.querySelector<SVGElement>("svg[data-planet]");
+    const spaceGiantsIcon = buttonFor("Space Giants")?.querySelector<SVGElement>("svg[data-planet]");
 
     expect(tinkeroidsIcon).to.not.equal(null);
     expect(darkaniansIcon).to.not.equal(null);
     expect(moweydsIcon).to.not.equal(null);
     expect(spaceGiantsIcon).to.not.equal(null);
-    expect(tinkeroidsIcon?.getAttribute("style")).to.contain("#ff66b3");
-    expect(darkaniansIcon?.getAttribute("style")).to.contain("#ff66b3");
-    expect(moweydsIcon?.getAttribute("style")).to.contain("#30d5c8");
-    expect(spaceGiantsIcon?.getAttribute("style")).to.contain("#30d5c8");
+    expect(tinkeroidsIcon?.getAttribute("data-planet")).to.equal(Planet.Asteroid);
+    expect(darkaniansIcon?.getAttribute("data-planet")).to.equal(Planet.Asteroid);
+    expect(moweydsIcon?.getAttribute("data-planet")).to.equal(Planet.Protoplanet);
+    expect(spaceGiantsIcon?.getAttribute("data-planet")).to.equal(Planet.Protoplanet);
   });
 
   it("renders Tinkeroids' round-start tinkering choice after Lost Fleet setup", async () => {

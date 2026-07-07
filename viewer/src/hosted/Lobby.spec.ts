@@ -65,6 +65,7 @@ describe("Lobby", () => {
 
     const buttons = wrapper.findAll("button").filter((b) => b.text() === "Delete");
     expect(buttons.length).to.equal(2);
+    expect(wrapper.find('a[href="?users=1"]').exists()).to.equal(true);
   });
 
   it("shows no Delete button at all for a non-admin, even for a game they created", async () => {
@@ -77,6 +78,7 @@ describe("Lobby", () => {
 
     const buttons = wrapper.findAll("button").filter((b) => b.text() === "Delete");
     expect(buttons.length).to.equal(0);
+    expect(wrapper.find('a[href="?users=1"]').exists()).to.equal(false);
   });
 
   it("calls delete_game and refreshes after the admin confirms deletion", async () => {
@@ -150,12 +152,12 @@ describe("Lobby", () => {
     await Vue.nextTick();
 
     expect(wrapper.text()).to.contain("R3");
-    const players = wrapper.findAll(".game-bar__player");
+    const players = wrapper.findAll(".game-card__player");
     expect(players.length).to.equal(2);
     expect(players.at(0).text()).to.contain("24");
     expect(players.at(1).text()).to.contain("31");
-    expect(players.at(0).classes()).to.not.contain("game-bar__player--active");
-    expect(players.at(1).classes()).to.contain("game-bar__player--active");
+    expect(players.at(0).classes()).to.not.contain("game-card__player--active");
+    expect(players.at(1).classes()).to.contain("game-card__player--active");
   });
 
   it("shows no round badge or player chips for a game with no cached lobby data yet", async () => {
@@ -164,8 +166,8 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    expect(wrapper.find(".game-bar__round").exists()).to.equal(false);
-    expect(wrapper.find(".game-bar__player").exists()).to.equal(false);
+    expect(wrapper.find(".game-card__round").exists()).to.equal(false);
+    expect(wrapper.find(".game-card__player").exists()).to.equal(false);
   });
 
   it("shows the current version and expands the changelog on demand", async () => {
@@ -174,8 +176,8 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    expect(wrapper.text()).to.contain("Version 5.12.0");
-    expect(wrapper.text()).to.contain("2026-07-07");
+    expect(wrapper.text()).to.contain("Version 5.13.2");
+    expect(wrapper.text()).to.not.contain("2026-07-07");
     expect(wrapper.find(".release-modal").exists()).to.equal(false);
 
     const toggle = wrapper.find(".lobby-meta__toggle-link");
@@ -186,6 +188,44 @@ describe("Lobby", () => {
     expect(wrapper.text()).to.contain("Hosted changelog");
     expect(wrapper.text()).to.contain("Release tracking and hosted lobby changelog");
     expect(wrapper.text()).to.contain("The hosted lobby now shows the current app version and release date.");
+  });
+
+  it("defaults to Active games and moves finished games into the Finished tab", async () => {
+    const { client } = makeClient([
+      {
+        id: "g-active",
+        name: "Still going",
+        created_by: "user-other",
+        player_count: 2,
+        options: {},
+        status: "active",
+        current_seat: 0,
+        players: [],
+      },
+      {
+        id: "g-finished",
+        name: "Already done",
+        created_by: "user-other",
+        player_count: 2,
+        options: {},
+        status: "finished",
+        current_seat: null,
+        players: [],
+      },
+    ]);
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    expect(wrapper.text()).to.contain("Still going");
+    expect(wrapper.text()).to.not.contain("Already done");
+
+    const finishedTab = wrapper.findAll("button").filter((b) => b.text().includes("Finished")).at(0);
+    await finishedTab.trigger("click");
+    await Vue.nextTick();
+
+    expect(wrapper.text()).to.not.contain("Still going");
+    expect(wrapper.text()).to.contain("Already done");
   });
 
   it("shows R0 for a game still in faction selection instead of hiding the badge", async () => {
@@ -209,7 +249,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
 
     expect(wrapper.text()).to.contain("R0");
-    expect(wrapper.findAll(".game-bar__player").length).to.equal(1);
+    expect(wrapper.findAll(".game-card__player").length).to.equal(1);
   });
 
   it("still labels another player's hot-seat game as a test game when the admin views it", async () => {
@@ -232,7 +272,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    expect(wrapper.text()).to.contain("test game");
+    expect(wrapper.text()).to.contain("Test game");
   });
 
   it("shows the New game link for a non-admin too", async () => {
@@ -278,7 +318,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
 
     expect(wrapper.text()).to.contain("R4");
-    expect(wrapper.findAll(".game-bar__player").length).to.equal(2);
+    expect(wrapper.findAll(".game-card__player").length).to.equal(2);
   });
 
   it("removes the realtime channel when the lobby unmounts", async () => {

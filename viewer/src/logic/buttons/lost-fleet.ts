@@ -125,14 +125,10 @@ export function examineArtifactButton(
   command: AvailableCommand<Command.ExamineArtifact>
 ): ButtonData {
   const button = textButton({
-    label: `Examine Artifact (${command.data.cost})`,
+    label: "Examine Artifact",
     command: command.name,
   });
-  button.richText = [
-    richText("Examine Artifact ("),
-    richTextRewards(Reward.parse(command.data.cost), true),
-    richText(")"),
-  ];
+  button.richText = [richText("Examine Artifact")];
   return button;
 }
 

@@ -1,5 +1,6 @@
 <template>
   <g>
+    <title v-if="presenceTooltip">{{ presenceTooltip }}</title>
     <circle :r="1" :style="stroke()" :class="['player-token', 'planet-fill', planet()]" />
     <text :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(planet())}`">
       {{ initial() }}
@@ -32,6 +33,19 @@ export default class PlayerCircle extends Vue {
   @Prop({ default: null })
   presenceStatus: PresenceStatus | null;
 
+  get presenceTooltip(): string | null {
+    switch (this.presenceStatus) {
+      case "green":
+        return "Viewing this game right now";
+      case "yellow":
+        return "Online elsewhere in the app";
+      case "grey":
+        return "Offline right now";
+      default:
+        return null;
+    }
+  }
+
   get gameData(): Engine {
     return this.$store.state.data;
   }
@@ -43,9 +57,9 @@ export default class PlayerCircle extends Vue {
 
     if (this.gameData.players[this.gameData.currentPlayer] === this.player) {
       if (this.gameData.players[this.gameData.playerToMove] === this.player) {
-        return "stroke-width: 0.16px !important; stroke: #2C4";
+        return "stroke-width: 0.22px !important; stroke: #2C4";
       } else {
-        return "stroke-width: 0.10px !important; stroke: #2C4";
+        return "stroke-width: 0.14px !important; stroke: #2C4";
       }
     }
 

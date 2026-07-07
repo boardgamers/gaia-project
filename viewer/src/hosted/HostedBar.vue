@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div
     class="gaia-viewer-game hosted-bar d-flex px-3 py-1 mb-2 border-bottom bg-light position-relative"
     style="gap: 0.75rem; flex-wrap: nowrap; padding-right: 3rem"
@@ -11,7 +11,7 @@
       <b-badge variant="secondary">Game finished</b-badge>
     </template>
     <template v-else>
-      <b-badge :variant="myTurn ? 'success' : 'info'" class="d-none d-md-inline-block">
+      <b-badge :variant="myTurn ? 'success' : 'info'" class="hosted-bar__turn-pill">
         {{ myTurn ? "Your turn" : `${turnPlayerName} to move` }}
       </b-badge>
       <div class="hosted-bar__turn-order">
@@ -31,7 +31,7 @@
         title="This device is registered for turn notifications. Enable it separately on any other device you play from. Click to turn off."
         @click="$emit('disable-push')"
       >
-        🔔
+        &#128276;
       </b-button>
       <b-button
         v-else
@@ -42,7 +42,7 @@
         title="Enable turn notifications on this device"
         @click="$emit('enable-push')"
       >
-        🔔
+        &#128276;
       </b-button>
     </span>
   </div>
@@ -102,6 +102,11 @@ export default Vue.extend({
   min-height: 0;
 }
 
+.hosted-bar__turn-pill {
+  align-self: center;
+  white-space: nowrap;
+}
+
 ::v-deep(.hosted-bar__turn-order .turn-order) {
   display: flex;
   align-items: center;
@@ -113,4 +118,18 @@ export default Vue.extend({
   height: 100% !important;
   max-height: 52px;
 }
+
+@media (max-width: 767px) {
+  .hosted-bar {
+    gap: 0.5rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 2.9rem !important;
+  }
+
+  .hosted-bar__turn-pill {
+    font-size: 0.68rem;
+    padding: 0.22rem 0.42rem;
+  }
+}
 </style>
+

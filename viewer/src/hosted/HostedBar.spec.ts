@@ -5,7 +5,7 @@ import { makeStore } from "../store";
 import HostedBar from "./HostedBar.vue";
 
 describe("HostedBar", () => {
-  it("renders Turn Order alongside a desktop-only status badge for an ongoing game (PROGRESS.md Gaia 10 follow-up)", () => {
+  it("renders Turn Order alongside an always-visible status badge for an ongoing game", () => {
     const engine = new Engine(["init 2 hosted-bar-turn-order", "p1 faction terrans", "p2 faction hadsch-hallas"]);
     engine.turnOrder = engine.players.map((pl) => pl.player);
     const store = makeStore();
@@ -18,12 +18,8 @@ describe("HostedBar", () => {
     const { container, getByText } = render(HostedBar, { props: { finished: false }, store });
 
     expect(container.querySelector(".turn-order"), "expected the Turn Order circles to render").to.not.equal(null);
-    // The old "X to move" text is back (Commands.vue's own status line/sticky bar has nowhere to
-    // show it once it isn't the local viewer's turn), but only for desktop - d-none hides it below
-    // the md breakpoint so it doesn't compete with Commands.vue's mobile sticky bar for space.
     const badge = getByText(/to move/);
-    expect(badge.className).to.contain("d-none");
-    expect(badge.className).to.contain("d-md-inline-block");
+    expect(badge.className).to.contain("hosted-bar__turn-pill");
   });
 
   it("does not show 'Your turn' when the session is merely locked to one of its seats while another seat is active", () => {

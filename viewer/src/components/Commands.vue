@@ -5,7 +5,6 @@
         <span v-if="init">Pick the number of players</span>
         <RichTextView :content="statusLine" />
       </h5>
-      <b-badge v-if="showYourTurnLabel" variant="success" class="ml-2">Your turn</b-badge>
       <b-btn v-if="showSilentAuctionInfo" v-b-modal.silent-auction-info variant="link" size="sm" class="ml-2 silent-auction-info-button">
         How does the auction work? <b-badge variant="info" pill>i</b-badge>
       </b-btn>
@@ -51,7 +50,6 @@
         <h5 class="mb-0">
           <RichTextView :content="statusLine" />
         </h5>
-        <b-badge v-if="showYourTurnLabel" variant="success" class="ml-2">Your turn</b-badge>
         <b-btn v-if="showSilentAuctionInfo" v-b-modal.silent-auction-info variant="link" size="sm" class="ml-2 silent-auction-info-button">
           How does the auction work? <b-badge variant="info" pill>i</b-badge>
         </b-btn>
@@ -121,13 +119,13 @@
           Cancel premove
         </b-btn>
       </div>
-      <div v-if="isChoosingFaction" class="d-flex flex-wrap align-content-stretch">
+      <div v-if="isChoosingFaction" class="d-flex flex-wrap align-content-stretch faction-picker-buttons">
         <MoveButton
           v-for="faction in factionsToChoose.data"
           :button="{
             command: `${factionsToChoose.name} ${faction}`,
             modal: modalDialog(factionName(faction), tooltip(faction)),
-            label: factionPickerLabel(faction),
+            richText: factionPickerLabel(faction),
             shortcuts: [factionShortcut(faction)],
           }"
           :controller="controller"
@@ -140,13 +138,13 @@
           @cancel="updateRandomFaction"
         />
       </div>
-      <div v-if="isBanningFaction" class="d-flex flex-wrap align-content-stretch">
+      <div v-if="isBanningFaction" class="d-flex flex-wrap align-content-stretch faction-picker-buttons">
         <MoveButton
           v-for="faction in factionToBan.data"
           :button="{
             command: `${factionToBan.name} ${faction}`,
             modal: modalDialog(factionName(faction), tooltip(faction), 'OK, I ban this one!'),
-            label: factionPickerLabel(faction),
+            richText: factionPickerLabel(faction),
             shortcuts: [factionShortcut(faction)],
           }"
           :controller="controller"
@@ -237,12 +235,11 @@ import { ActionPayload, SubscribeActionOptions, SubscribeOptions } from "vuex";
 import { CommandController, ExecuteBack, FastConversionTooltips } from "../logic/buttons/types";
 import { buttonStringLabel, callOnShow } from "../logic/buttons/utils";
 import { commandButtons, replaceRepeat } from "../logic/buttons/commands";
-import { prependShortcut } from "../logic/buttons/shortcuts";
 import { CubeCoordinates } from "hexagrid";
 import { autoClickStrategy } from "../logic/buttons/autoClick";
 import RichTextView from "./Resources/RichTextView.vue";
 import StickyResourceBar from "./StickyResourceBar.vue";
-import { richText, RichText } from "../graphics/rich-text";
+import { richText, RichText, richTextPlanet } from "../graphics/rich-text";
 import { chargePowerToPay } from "../logic/utils";
 import { factionColor } from "../graphics/utils";
 
@@ -539,11 +536,6 @@ export default class Commands extends Vue implements CommandController {
     return this.showAutoLeechSelect && !!this.myPlayer?.faction;
   }
 
-  get showYourTurnLabel(): boolean {
-    const lockedSeat = this.$store.state.player?.index;
-    return !this.init && this.gameData.playerToMove !== undefined && (lockedSeat === undefined || lockedSeat === this.gameData.playerToMove);
-  }
-
   /** Live-tracked rendered height of #move-buttons (already capped by its own CSS max-height +
    * overflow-y:auto), so the layout spacer below it reserves exactly that much space - not a
    * blanket max-height's worth of blank page whenever the button list is short. */
@@ -571,13 +563,8 @@ export default class Commands extends Vue implements CommandController {
     return factionColor(faction);
   }
 
-  factionPickerLabel(faction: Faction) {
-    return prependShortcut(
-      this.factionShortcut(faction),
-      `${this.factionName(faction)} <i class='planet ${this.factionPlanet(faction)}' style='color: ${this.factionPickerColor(
-        faction
-      )}'></i>`
-    );
+  factionPickerLabel(faction: Faction): RichText {
+    return [richText(this.factionName(faction)), richTextPlanet(this.factionPlanet(faction))];
   }
 
   updateRandomFaction() {
@@ -1113,6 +1100,185 @@ export default class Commands extends Vue implements CommandController {
   &--confirm {
     background: linear-gradient(180deg, #2f72d8 0%, #2258ad 100%);
     border-color: rgba(34, 88, 173, 0.4);
+  }
+}
+
+.faction-preview {
+  padding: 1rem;
+  color: #f8fafc;
+}
+
+.faction-preview__header,
+.faction-preview__board,
+.faction-preview__lost-fleet {
+  background: rgba(10, 16, 28, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  padding: 0.8rem 0.85rem;
+}
+
+.faction-preview__board,
+.faction-preview__lost-fleet {
+  margin-top: 0.7rem;
+}
+
+.faction-preview__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.faction-preview__subtitle,
+.faction-preview__board-title {
+  margin-top: 0.55rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(248, 250, 252, 0.82);
+}
+
+.faction-preview__resources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.38rem;
+}
+
+.faction-preview__resource {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  min-height: 1.9rem;
+  padding: 0.2rem 0.5rem 0.2rem 0.24rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.faction-preview__resource-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.38rem;
+  height: 1.38rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #0f172a;
+  background: #ffffff;
+}
+
+.faction-preview__resource-count {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.faction-preview__resource--credit .faction-preview__resource-glyph {
+  background: #ffd166;
+}
+
+.faction-preview__resource--ore .faction-preview__resource-glyph {
+  background: #f4976c;
+}
+
+.faction-preview__resource--knowledge .faction-preview__resource-glyph {
+  background: #b8e1ff;
+}
+
+.faction-preview__resource--qic .faction-preview__resource-glyph {
+  background: #b388ff;
+  color: #fff;
+}
+
+.faction-preview__resource--power .faction-preview__resource-glyph,
+.faction-preview__resource--token .faction-preview__resource-glyph,
+.faction-preview__resource--brainstone .faction-preview__resource-glyph {
+  background: #dda0ff;
+}
+
+.faction-preview__resource--research .faction-preview__resource-glyph {
+  background: #8be9fd;
+  min-width: auto;
+  padding: 0 0.4rem;
+}
+
+.faction-preview__resource--generic .faction-preview__resource-glyph {
+  min-width: auto;
+  padding: 0 0.4rem;
+}
+
+.faction-preview__building-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.faction-preview__building {
+  padding: 0.55rem 0.65rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.faction-preview__building-top,
+.faction-preview__building-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.faction-preview__building-name,
+.faction-preview__building-stock,
+.faction-preview__building-line strong {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.faction-preview__building-line {
+  margin-top: 0.22rem;
+  font-size: 0.72rem;
+  color: rgba(248, 250, 252, 0.84);
+}
+
+.faction-preview__lost-fleet ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.faction-preview__accordion {
+  margin-top: 0.7rem;
+  border-radius: 12px;
+  background: rgba(10, 16, 28, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+
+  summary {
+    cursor: pointer;
+    padding: 0.7rem 0.85rem;
+    font-weight: 700;
+    outline: none;
+  }
+}
+
+.faction-preview__accordion-body {
+  padding: 0 0.85rem 0.8rem;
+  color: rgba(248, 250, 252, 0.92);
+  line-height: 1.45;
+}
+
+.faction-picker-buttons {
+  .move-button .btn {
+    border-radius: 12px;
+    border-color: rgba(31, 45, 82, 0.14);
+    background: linear-gradient(180deg, #ffffff 0%, #e7ebf3 100%);
+    color: #24324b;
+    box-shadow: 0 1px 2px rgba(31, 45, 82, 0.08);
+    font-weight: 600;
+  }
+
+  .move-button i.planet::before {
+    font-size: 18px;
   }
 }
 

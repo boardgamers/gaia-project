@@ -173,6 +173,7 @@
         :style="{ '--sticky-bar-height': totalStickyFooterHeight + 'px' }"
         aria-hidden="true"
       ></div>
+      <AutoLeechFab v-if="showOffTurnAutoLeechFab" :bottom-offset="offTurnAutoLeechBottomOffset" />
     </template>
     <div v-else class="d-flex flex-column">
       <SpaceMap v-if="hasMap" :class="['mb-1', 'space-map', 'col-md-7']" />
@@ -219,6 +220,7 @@ import { orderedPlayers } from "../data/player";
 import { PremoveFailureRow, PremoveMode, PremoveRow } from "../hosted/types";
 import { buildSequentialChainPreview } from "../logic/premove-preview";
 import PremoveBar from "./PremoveBar.vue";
+import AutoLeechFab from "./AutoLeechFab.vue";
 
 const PREMOVE_EXPLAINER_DISMISSED_KEY = "premoveExplainerDismissed";
 const PREMOVE_MODE_PREFERENCE_KEY = "premoveModePreference";
@@ -238,6 +240,7 @@ const PREMOVE_MODE_PREFERENCE_KEY = "premoveModePreference";
     Rules,
     Table,
     PremoveBar,
+    AutoLeechFab,
     Charts: () => import("./Charts.vue"),
   },
 })
@@ -415,6 +418,19 @@ export default class Game extends Vue {
 
   get totalStickyFooterHeight() {
     return this.stickyBarHeight + this.premoveBarHeight;
+  }
+
+  get showOffTurnAutoLeechFab(): boolean {
+    return (
+      !this.canPlay &&
+      !this.ended &&
+      this.engine.round >= Round.Round1 &&
+      this.myLockedSeat !== undefined
+    );
+  }
+
+  get offTurnAutoLeechBottomOffset(): number {
+    return this.premoveBarHeight > 0 ? this.premoveBarHeight + 10 : 0;
   }
 
   get logPlacement(): LogPlacement {
@@ -827,6 +843,14 @@ export default class Game extends Vue {
   .small-map,
   .medium-map {
     flex-wrap: wrap;
+  }
+
+  .scoring-research-board {
+    width: calc(100% + 1rem);
+    max-width: none;
+    max-height: none;
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
   }
 }
 
