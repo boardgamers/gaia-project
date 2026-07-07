@@ -1,7 +1,19 @@
 {
-  "version": "5.13.2",
+  "version": "5.13.3",
   "releasedAt": "2026-07-07",
   "entries": [
+    {
+      "version": "5.13.3",
+      "releasedAt": "2026-07-07",
+      "kind": "update",
+      "title": "Lobby redesign and mobile control polish",
+      "impact": "",
+      "changes": [
+        "The hosted lobby now uses the new compact card layout with Active and Finished tabs, swipe-to-delete for admins, and the updated Lost Fleet branding.",
+        "Mobile game chrome now shows the turn state in the top bar, gives off-turn auto-leech its own floating control, and restyles premove tabs/buttons to match the main action bar.",
+        "Faction picking and previews were refreshed with icon-based starting resources, cleaner faction buttons, the duplicate Examine Artifact cost text was removed, and Lost Fleet setup colors now hide once factions are chosen."
+      ]
+    },
     {
       "version": "5.13.2",
       "releasedAt": "2026-07-07",
