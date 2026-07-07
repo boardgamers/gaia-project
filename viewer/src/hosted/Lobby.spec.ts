@@ -168,6 +168,26 @@ describe("Lobby", () => {
     expect(wrapper.find(".game-bar__player").exists()).to.equal(false);
   });
 
+  it("shows the current version and expands the changelog on demand", async () => {
+    const { client } = makeClient([]);
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    expect(wrapper.text()).to.contain("Version 5.12.0");
+    expect(wrapper.text()).to.contain("2026-07-07");
+    expect(wrapper.find(".release-modal").exists()).to.equal(false);
+
+    const toggle = wrapper.find(".lobby-meta__toggle-link");
+    await toggle.trigger("click");
+    await Vue.nextTick();
+
+    expect(wrapper.find(".release-modal").exists()).to.equal(true);
+    expect(wrapper.text()).to.contain("Hosted changelog");
+    expect(wrapper.text()).to.contain("Release tracking and hosted lobby changelog");
+    expect(wrapper.text()).to.contain("The hosted lobby now shows the current app version and release date.");
+  });
+
   it("shows R0 for a game still in faction selection instead of hiding the badge", async () => {
     const { client } = makeClient([
       {

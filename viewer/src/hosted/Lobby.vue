@@ -20,7 +20,42 @@
         <b-button size="sm" variant="outline-secondary" @click="signOut">Sign out</b-button>
       </div>
     </div>
-    <div class="text-muted small mb-3">{{ userEmail }}</div>
+    <div class="lobby-meta text-muted small mb-3">
+      <span>{{ userEmail }}</span>
+      <span class="lobby-meta__sep">·</span>
+      <span class="font-weight-bold">Version {{ currentRelease.version }}</span>
+      <span class="lobby-meta__sep">·</span>
+      <span>{{ currentRelease.releasedAt }}</span>
+      <span class="lobby-meta__sep">·</span>
+      <a href="" class="lobby-meta__toggle-link" @click.prevent="showReleaseNotes = true">View changelog</a>
+    </div>
+    <div v-if="showReleaseNotes" class="release-modal-backdrop" @click.self="showReleaseNotes = false">
+      <div class="release-modal shadow-lg" role="dialog" aria-modal="true" aria-label="Changelog">
+        <div class="release-modal__header">
+          <div>
+            <div class="release-notes__eyebrow text-uppercase text-muted small">Recent changes</div>
+            <h4 class="release-modal__title mb-0">Hosted changelog</h4>
+          </div>
+          <button type="button" class="release-modal__close" aria-label="Close changelog" @click="showReleaseNotes = false">
+            ×
+          </button>
+        </div>
+        <div class="release-modal__body">
+          <div v-for="entry in releaseEntries" :key="`${entry.version}-${entry.releasedAt}`" class="release-notes__entry">
+            <div class="release-notes__heading">
+              <span class="release-notes__kind">{{ entry.kind }}</span>
+              <strong>v{{ entry.version }}</strong>
+              <span class="text-muted">· {{ entry.releasedAt }}</span>
+            </div>
+            <div class="release-notes__title">{{ entry.title }}</div>
+            <div v-if="entry.impact" class="release-notes__impact text-muted small">Impact: {{ entry.impact }}</div>
+            <ul class="release-notes__list mb-0">
+              <li v-for="change in entry.changes" :key="change">{{ change }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
     <b-alert :show="!!message" variant="info" dismissible @dismissed="message = ''">{{ message }}</b-alert>
 
     <b-list-group class="mb-3">
@@ -68,7 +103,9 @@
       </b-list-group-item>
     </b-list-group>
 
-    <a href="?create=1" class="btn btn-primary">+ New game</a>
+    <div class="d-flex flex-wrap" style="gap: 0.5rem">
+      <a href="?create=1" class="btn btn-primary">+ New game</a>
+    </div>
   </div>
 </template>
 
@@ -77,6 +114,16 @@ import Vue from "vue";
 import { disablePushNotifications, enablePushNotifications, isPushEnabled } from "./push";
 import Token from "../components/Token.vue";
 import { factionName } from "../data/factions";
+import releaseData from "./release.json";
+
+type ReleaseEntry = {
+  version: string;
+  releasedAt: string;
+  kind: string;
+  title: string;
+  impact?: string;
+  changes: string[];
+};
 
 export default Vue.extend({
   name: "HostedLobby",
@@ -93,6 +140,7 @@ export default Vue.extend({
       pushEnabled: false,
       message: "",
       gamesChannel: null as any,
+      showReleaseNotes: false,
     };
   },
   computed: {
@@ -107,6 +155,15 @@ export default Vue.extend({
     // just avoids showing a Delete button that would only fail server-side for everyone else.
     isAdmin(): boolean {
       return this.userEmail.toLowerCase() === "kim.pham.nguyen2@gmail.com";
+    },
+    currentRelease(): { version: string; releasedAt: string } {
+      return {
+        version: (releaseData as any).version,
+        releasedAt: (releaseData as any).releasedAt,
+      };
+    },
+    releaseEntries(): ReleaseEntry[] {
+      return ((releaseData as any).entries ?? []).slice(0, 6);
     },
   },
   created() {
@@ -219,6 +276,126 @@ export default Vue.extend({
 </script>
 
 <style lang="scss" scoped>
+.lobby-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.lobby-meta__sep {
+  color: #adb5bd;
+}
+
+.lobby-meta__toggle-link {
+  color: #0b5ed7;
+  text-decoration: none;
+}
+
+.lobby-meta__toggle-link:hover {
+  color: #084298;
+  text-decoration: underline;
+}
+
+.release-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(15, 23, 42, 0.42);
+}
+
+.release-modal {
+  width: min(100%, 42rem);
+  max-height: min(80vh, 44rem);
+  overflow: hidden;
+  border: 1px solid #dce6f0;
+  border-radius: 0.85rem;
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+}
+
+.release-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.1rem 0.85rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.release-modal__title {
+  font-size: 1.05rem;
+}
+
+.release-modal__close {
+  border: 0;
+  background: transparent;
+  color: #6c757d;
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 0;
+}
+
+.release-modal__close:hover {
+  color: #212529;
+}
+
+.release-modal__body {
+  overflow-y: auto;
+  padding: 1rem 1.1rem 1.15rem;
+}
+
+.release-notes__eyebrow {
+  letter-spacing: 0.08em;
+  margin-bottom: 0.2rem;
+}
+
+.release-notes__entry + .release-notes__entry {
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.release-notes__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin-bottom: 0.2rem;
+}
+
+.release-notes__kind {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #0b5ed7;
+  background: #e7f1ff;
+  border-radius: 999px;
+  padding: 0.22rem 0.45rem;
+}
+
+.release-notes__title {
+  font-weight: 600;
+  color: #212529;
+}
+
+.release-notes__impact {
+  margin-top: 0.15rem;
+}
+
+.release-notes__list {
+  margin-top: 0.45rem;
+  padding-left: 1.15rem;
+}
+
 .game-bar__link {
   display: flex;
   align-items: center;

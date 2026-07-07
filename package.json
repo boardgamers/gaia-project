@@ -3,11 +3,13 @@
   "packageManager": "pnpm@9.12.0",
   "scripts": {
     "build:edge-engine": "esbuild supabase/functions/_shared/engine-entry.ts --bundle --format=esm --platform=neutral --alias:assert=node:assert --external:node:assert --banner:js=\"globalThis.seedrandom=globalThis.seedrandom;\" --outfile=supabase/functions/_shared/engine.bundle.js",
+    "check-master-release": "node scripts/check-master-release.js",
     "commit-msg-check": "node scripts/check-commit-msg.js",
     "lint-staged": "lint-staged",
     "postinstall": "husky install",
     "prettier": "prettier --plugin-search-dir=. --write .",
-    "prettier-check": "prettier --plugin-search-dir=. --check ."
+    "prettier-check": "prettier --plugin-search-dir=. --check .",
+    "release:viewer": "node scripts/update-viewer-release.js"
   },
   "devDependencies": {
     "esbuild": "^0.28.1",
