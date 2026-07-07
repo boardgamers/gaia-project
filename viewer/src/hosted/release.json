@@ -1,7 +1,18 @@
 {
-  "version": "5.13.0",
+  "version": "5.13.1",
   "releasedAt": "2026-07-07",
   "entries": [
+    {
+      "version": "5.13.1",
+      "releasedAt": "2026-07-07",
+      "kind": "update",
+      "title": "Fix fourth spaceship exploration reward",
+      "impact": "",
+      "changes": [
+        "In 4-player Lost Fleet games, the fourth exploration slot on a ship board now charges exactly 3 power instead of 4.",
+        "The Lost Fleet exploration tests and rules oracle were updated to lock in the 0/2/2/3 shuttle track."
+      ]
+    },
     {
       "version": "5.13.0",
       "releasedAt": "2026-07-07",
